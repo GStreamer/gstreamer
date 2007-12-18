@@ -61,7 +61,6 @@ struct _GstFlacDec {
   GstPad        *srcpad;
 
   gboolean       init;
-  gboolean       need_newsegment;
 
   guint64        offset;      /* current byte offset of input */
 
@@ -75,6 +74,7 @@ struct _GstFlacDec {
   gboolean       discont;
   GstEvent      *close_segment;
   GstEvent      *start_segment;
+  GstTagList    *tags;
 
   GstFlowReturn  last_flow;   /* the last flow return received from either
                                * gst_pad_push or gst_pad_buffer_alloc */

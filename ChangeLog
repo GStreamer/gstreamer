@@ -1,3 +1,13 @@
+2007-12-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/flac/gstflacdec.c: (gst_flac_dec_reset_decoders),
+	(gst_flac_dec_update_metadata), (gst_flac_dec_metadata_callback),
+	(gst_flac_dec_write):
+	* ext/flac/gstflacdec.h:
+	Remove some unused vars.
+	Do more cleanup of leftover events and tags.
+	Output tags after the segment event. Fixes #504018.
+
 2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/avi/gstavisubtitle.c: (IS_BOM_UTF8), (IS_BOM_UTF16_BE),

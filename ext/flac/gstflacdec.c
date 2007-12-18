@@ -259,6 +259,19 @@ gst_flac_dec_reset_decoders (GstFlacDec * flacdec)
     flacdec->adapter = NULL;
   }
 
+  if (flacdec->close_segment) {
+    gst_event_unref (flacdec->close_segment);
+    flacdec->close_segment = NULL;
+  }
+  if (flacdec->start_segment) {
+    gst_event_unref (flacdec->start_segment);
+    flacdec->start_segment = NULL;
+  }
+  if (flacdec->tags) {
+    gst_tag_list_free (flacdec->tags);
+    flacdec->tags = NULL;
+  }
+
   flacdec->segment.last_stop = 0;
   flacdec->offset = 0;
   flacdec->init = TRUE;
@@ -371,7 +384,10 @@ gst_flac_dec_update_metadata (GstFlacDec * flacdec,
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
       GST_TAG_AUDIO_CODEC, "FLAC", NULL);
 
-  gst_element_found_tags_for_pad (GST_ELEMENT (flacdec), flacdec->srcpad, list);
+  if (flacdec->tags)
+    gst_tag_list_free (flacdec->tags);
+  flacdec->tags = list;
+
 
   return TRUE;
 }
@@ -900,20 +916,13 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         "rate", G_TYPE_INT, frame->header.sample_rate,
         "channels", G_TYPE_INT, channels, NULL);
 
-    if (!gst_pad_set_caps (flacdec->srcpad, caps)) {
-      GST_ELEMENT_ERROR (flacdec, CORE, NEGOTIATION, (NULL),
-          ("Failed to negotiate caps %" GST_PTR_FORMAT, caps));
-      flacdec->last_flow = GST_FLOW_ERROR;
-      gst_caps_unref (caps);
-      return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
-    }
-
-    gst_caps_unref (caps);
-
     flacdec->depth = depth;
     flacdec->width = width;
     flacdec->channels = channels;
     flacdec->sample_rate = frame->header.sample_rate;
+
+    gst_pad_set_caps (flacdec->srcpad, caps);
+    gst_caps_unref (caps);
   }
 
   if (flacdec->close_segment) {
@@ -923,6 +932,12 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   if (flacdec->start_segment) {
     gst_pad_push_event (flacdec->srcpad, flacdec->start_segment);
     flacdec->start_segment = NULL;
+  }
+
+  if (flacdec->tags) {
+    gst_element_found_tags_for_pad (GST_ELEMENT (flacdec), flacdec->srcpad,
+        flacdec->tags);
+    flacdec->tags = NULL;
   }
 
   ret = gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
@@ -1247,7 +1262,6 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (dec, "newsegment event in TIME format => framed");
         dec->framed = TRUE;
         res = gst_pad_push_event (dec->srcpad, event);
-        dec->need_newsegment = FALSE;
 
         /* this won't work for the first newsegment event though ... */
         if (gst_flac_dec_convert_src (dec->srcpad, GST_FORMAT_TIME, cur,
@@ -1264,7 +1278,6 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (dec, "newsegment event in %s format => not framed",
             gst_format_get_name (fmt));
         dec->framed = FALSE;
-        dec->need_newsegment = TRUE;
         gst_event_unref (event);
         res = TRUE;
       }
@@ -1962,8 +1975,6 @@ gst_flac_dec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      flacdec->segment.last_stop = 0;
-      flacdec->need_newsegment = TRUE;
       flacdec->seeking = FALSE;
       flacdec->channels = 0;
       flacdec->depth = 0;
