@@ -125,6 +125,7 @@ check_correct_buffer (guint8 * src_data, guint src_size, guint8 * dst_data,
   GstBuffer *buffer = gst_buffer_new ();
   GstBuffer *newBuffer;
   GstElement *avisubtitle = setup_avisubtitle ();
+  GstEvent *event;
 
   fail_unless (g_list_length (buffers) == 0, "Buffers list needs to be empty");
   gst_buffer_set_data (buffer, src_data, src_size);
@@ -132,21 +133,34 @@ check_correct_buffer (guint8 * src_data, guint src_size, guint8 * dst_data,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
   ASSERT_BUFFER_REFCOUNT (buffer, "inbuffer", 1);
+  event = gst_event_new_seek (1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+      GST_SEEK_TYPE_SET, 2 * GST_SECOND, GST_SEEK_TYPE_SET, 5 * GST_SECOND);
+  fail_unless (gst_element_send_event (avisubtitle, event) == FALSE,
+      "Seeking is not possible when there is no buffer yet");
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK,
       "not accepted a correct buffer");
   ASSERT_BUFFER_REFCOUNT (buffer, "inbuffer", 1);
   /* a new buffer is created in the list */
   fail_unless (g_list_length (buffers) == 1,
       "No new buffer in the buffers list");
+  event = gst_event_new_seek (1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+      GST_SEEK_TYPE_SET, 2 * GST_SECOND, GST_SEEK_TYPE_SET, 5 * GST_SECOND);
+  fail_unless (gst_element_send_event (avisubtitle, event) == TRUE,
+      "seeking should be working now");
+  fail_unless (g_list_length (buffers) == 2,
+      "After seeking we need another buffer in the buffers");
   newBuffer = GST_BUFFER (buffers->data);
   buffers = g_list_remove (buffers, newBuffer);
-  fail_unless (g_list_length (buffers) == 0, "Buffers list needs to be empty");
+  fail_unless (g_list_length (buffers) == 1, "Buffers list needs to be empty");
   fail_unless (GST_BUFFER_SIZE (newBuffer) == dst_size,
       "size of the new buffer is wrong ( %d != %d)",
       GST_BUFFER_SIZE (newBuffer), dst_size);
   fail_unless (memcmp (GST_BUFFER_DATA (newBuffer), dst_data, dst_size) == 0,
       "data of the buffer is not correct");
   gst_buffer_unref (newBuffer);
+  /* free the buffer from seeking */
+  gst_buffer_unref (GST_BUFFER (buffers->data));
+  buffers = g_list_remove (buffers, buffers->data);
   fail_unless (gst_element_set_state (avisubtitle,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
   cleanup_avisubtitle (avisubtitle);
@@ -157,7 +171,8 @@ GST_START_TEST (test_avisubtitle_negative)
 {
   guint8 wrong_magic[] =
       { 0x47, 0x41, 0x41, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00 };
+    0x00, 0x00
+  };
   guint8 wrong_fixed_word_2[] = {
     0x47, 0x41, 0x42, 0x32, 0x00, 0x02, 0x01, 0x10,
     0x00, 0x00, 0x00, 0x45, 0x00, 0x6e, 0x00, 0x67,

@@ -1,3 +1,9 @@
+2007-12-18  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* gst/avi/gstavisubtitle.c:
+	* tests/check/elements/avisubtitle.c:
+	Add seeking support for avi subtitle
+
 2007-12-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/flac/gstflacdec.c: (gst_flac_dec_reset_decoders),

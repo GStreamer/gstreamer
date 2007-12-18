@@ -18,7 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* FIXME: handle seeks, documentation */
+/* FIXME: documentation */
 
 /* example of a subtitle chunk in an avi file
  * 00000000: 47 41 42 32 00 02 00 10 00 00 00 45 00 6e 00 67  GAB2.......E.n.g
@@ -60,6 +60,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 static GstFlowReturn gst_avi_subtitle_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn gst_avi_subtitle_change_state (GstElement * element,
     GstStateChange transition);
+static gboolean gst_avi_subtitle_send_event (GstElement * element,
+    GstEvent * event);
 
 GST_BOILERPLATE (GstAviSubtitle, gst_avi_subtitle, GstElement,
     GST_TYPE_ELEMENT);
@@ -244,6 +246,23 @@ done:
   return ret;
 }
 
+static gboolean
+gst_avi_subtitle_send_event (GstElement * element, GstEvent * event)
+{
+  GstAviSubtitle *avisubtitle = GST_AVI_SUBTITLE (element);
+  gboolean ret = FALSE;
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
+    if (avisubtitle->subfile) {
+      if (gst_pad_push (avisubtitle->src,
+              gst_buffer_ref (avisubtitle->subfile)) == GST_FLOW_OK)
+        ret = TRUE;
+    }
+  }
+  gst_event_unref (event);
+  return ret;
+}
+
 static void
 gst_avi_subtitle_base_init (gpointer klass)
 {
@@ -269,6 +288,8 @@ gst_avi_subtitle_class_init (GstAviSubtitleClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_avi_subtitle_change_state);
+  gstelement_class->send_event =
+      GST_DEBUG_FUNCPTR (gst_avi_subtitle_send_event);
 }
 
 static void
@@ -281,6 +302,8 @@ gst_avi_subtitle_init (GstAviSubtitle * self, GstAviSubtitleClass * klass)
   gst_pad_set_chain_function (self->sink,
       GST_DEBUG_FUNCPTR (gst_avi_subtitle_chain));
   gst_element_add_pad (GST_ELEMENT (self), self->sink);
+
+  self->subfile = NULL;
 }
 
 static GstStateChangeReturn
