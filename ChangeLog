@@ -1,5 +1,10 @@
 2007-12-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst-libs/gst/interfaces/interfaces.h:
+	  Also remove interfaces.h from CVS as it is not needed anymore.
+
+2007-12-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst-libs/gst/interfaces/Makefile.am:
 	  interfaces.h is not used anymore so remove it from the build
 	  process.
