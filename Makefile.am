@@ -24,10 +24,8 @@ DIST_SUBDIRS = 			\
 	gconf
 
 
-win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
-
-debug:
-	echo $(win32)
+# include before EXTRA_DIST for win32 assignment
+include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
 	gst-plugins-good.spec depcomp \
