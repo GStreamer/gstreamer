@@ -580,14 +580,16 @@ class FilteredLogModel (FilteredLogModelBase):
 
     def __remove_range (self, start, end):
 
+        self.logger.debug ("removing line range first = %i, last = %i",
+                           start, end)
         del self.line_offsets[start:end + 1]
         del self.line_levels[start:end + 1]
         for super_index in self.super_index[start:end + 1]:
             del self.from_super_index[super_index]
         del self.super_index[start:end + 1]
-        if start > 0:
+        if start == 0:
             for super_index in self.super_index:
-                self.from_super_index[super_index] -= start
+                self.from_super_index[super_index] -= end
 
 class Filter (object):
 
