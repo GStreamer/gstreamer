@@ -139,7 +139,8 @@ check_correct_buffer (guint8 * src_data, guint src_size, guint8 * dst_data,
       "Seeking is not possible when there is no buffer yet");
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK,
       "not accepted a correct buffer");
-  ASSERT_BUFFER_REFCOUNT (buffer, "inbuffer", 1);
+  /* we gave away our reference to the buffer, don't assume anything */
+  buffer = NULL;
   /* a new buffer is created in the list */
   fail_unless (g_list_length (buffers) == 1,
       "No new buffer in the buffers list");
