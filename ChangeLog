@@ -1,3 +1,14 @@
+2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* Makefile.am:
+	  Include common/win32.mak for CRLF check of win32 project
+	  files (see #393626).
+
+	* configure.ac:
+	  Bump requirements to -base CVS for libgstvideo additions in
+	  glimagesink. Disable glimagesink until the missing files get
+	  checked in.
+
 2007-12-17  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/Makefile.am:

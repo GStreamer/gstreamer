@@ -45,8 +45,8 @@ AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
 dnl *** remove rtpmanager/equalizer stuff below when this is updated
-GST_REQ=0.10.14.1
-GSTPB_REQ=0.10.14.1
+GST_REQ=0.10.15.1
+GSTPB_REQ=0.10.15.1
 
 dnl *** autotools stuff ****
 
@@ -294,6 +294,8 @@ LIBS="$LIBS $X_LIBS"
 AG_GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
   AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,,
                       GL/gl.h, HAVE_OPENGL="yes", HAVE_OPENGL="no")
+  dnl disable until the build gets fixed
+  HAVE_OPENGL="no"
 ])
 CPPFLAGS="$save_CPPFLAGS"
 LIBS="$save_LIBS"
