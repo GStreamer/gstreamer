@@ -1,3 +1,15 @@
+2007-12-18  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/avi/Makefile.am:
+	* gst/avi/gstavi.c:
+	* gst/avi/gstavisubtitle.c:
+	* gst/avi/gstavisubtitle.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/avisubtitle.c:
+	* win32/common/config.h:
+		Add avi subtitle element for bug #442034. Need seeking support
+		and more support for character conversion.
+
 2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* Makefile.am:

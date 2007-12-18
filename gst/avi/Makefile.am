@@ -3,12 +3,14 @@ plugin_LTLIBRARIES = libgstavi.la
 libgstavi_la_SOURCES = \
 	gstavi.c \
 	gstavimux.c \
-	gstavidemux.c
+	gstavidemux.c \
+	gstavisubtitle.c
 
 noinst_HEADERS = \
 	avi-ids.h \
 	gstavimux.h \
-	gstavidemux.h
+	gstavidemux.h \
+	gstavisubtitle.h
 
 libgstavi_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
 	-I$(top_srcdir)/gst-libs

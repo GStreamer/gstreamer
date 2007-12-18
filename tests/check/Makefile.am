@@ -60,6 +60,7 @@ check_PROGRAMS = \
 	elements/audioamplify \
 	elements/audiodynamic \
 	elements/avimux \
+	elements/avisubtitle \
 	elements/id3demux \
 	elements/level \
 	elements/matroskamux \
