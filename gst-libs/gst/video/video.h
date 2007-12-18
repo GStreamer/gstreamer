@@ -25,6 +25,19 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+  GST_VIDEO_FORMAT_UNKNOWN,
+  GST_VIDEO_FORMAT_I420,
+  GST_VIDEO_FORMAT_YV12,
+  GST_VIDEO_FORMAT_YUY2,
+  GST_VIDEO_FORMAT_UYVY,
+  GST_VIDEO_FORMAT_AYUV,
+  GST_VIDEO_FORMAT_RGBx,
+  GST_VIDEO_FORMAT_BGRx,
+  GST_VIDEO_FORMAT_xRGB,
+  GST_VIDEO_FORMAT_xBGR
+} GstVideoFormat;
+
 #define GST_VIDEO_BYTE1_MASK_32  "0xFF000000"
 #define GST_VIDEO_BYTE2_MASK_32  "0x00FF0000"
 #define GST_VIDEO_BYTE3_MASK_32  "0x0000FF00"
@@ -193,6 +206,37 @@ gboolean gst_video_calculate_display_ratio (guint *dar_n, guint *dar_d,
             guint video_width, guint video_height, 
             guint video_par_n, guint video_par_d, 
             guint display_par_n, guint display_par_d);
+
+gboolean gst_video_format_parse_caps (GstCaps *caps, GstVideoFormat *format,
+    int *width, int *height);
+gboolean gst_video_parse_caps_framerate (GstCaps *caps,
+    int *fps_n, int *fps_d);
+gboolean gst_video_parse_caps_pixel_aspect_ratio (GstCaps *caps,
+    int *par_n, int *par_d);
+GstCaps * gst_video_format_new_caps (GstVideoFormat format,
+    int width, int height, int framerate_n, int framerate_d,
+    int par_n, int par_d);
+GstVideoFormat gst_video_format_from_fourcc (guint32 fourcc);
+guint32 gst_video_format_to_fourcc (GstVideoFormat format);
+GstVideoFormat gst_video_format_from_rgb32_masks (int red_mask, int green_mask, int blue_mask);
+gboolean gst_video_format_is_rgb (GstVideoFormat format);
+gboolean gst_video_format_is_yuv (GstVideoFormat format);
+gboolean gst_video_format_has_alpha (GstVideoFormat format);
+int gst_video_format_get_row_stride (GstVideoFormat format, int component,
+    int width);
+int gst_video_format_get_pixel_stride (GstVideoFormat format, int component);
+int gst_video_format_get_component_width (GstVideoFormat format, int component,
+    int width);
+int gst_video_format_get_component_height (GstVideoFormat format, int component,
+    int height);
+int gst_video_format_get_component_offset (GstVideoFormat format, int component,
+    int width, int height);
+int gst_video_format_get_size (GstVideoFormat format, int width, int height);
+gboolean gst_video_format_convert (GstVideoFormat format, int width, int height,
+    int fps_n, int fps_d,
+    GstFormat src_format, gint64 src_value,
+    GstFormat dest_format, gint64 * dest_value);
+
 
 G_END_DECLS
 

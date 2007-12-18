@@ -1,3 +1,11 @@
+2007-12-17  David Schleef  <ds@schleef.org>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/video.h:
+	  Add new GstVideFormat enum and write a bunch of helper functions
+	  based around it.
+
 2007-12-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* Makefile.am:
