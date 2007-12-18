@@ -24,8 +24,10 @@ struct _GstAviSubtitle
 {
   GstElement parent;
 
-  GstPad* src;
-  GstPad* sink;
+  GstPad    *src;
+  GstPad    *sink;
+
+  GstBuffer *subfile;  /* the complete subtitle file in one buffer */
 };
 
 struct _GstAviSubtitleClass

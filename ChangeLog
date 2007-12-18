@@ -1,3 +1,16 @@
+2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/avi/gstavisubtitle.c: (src_template),
+	  (gst_avi_subtitle_extract_utf8_file),
+	  (gst_avi_subtitle_parse_gab2_chunk), (gst_avi_subtitle_chain),
+	  (gst_avi_subtitle_base_init), (gst_avi_subtitle_class_init),
+	  (gst_avi_subtitle_init), (gst_avi_subtitle_change_state):
+	* gst/avi/gstavisubtitle.h:
+	  Refactor a bit; fix name extraction; don't assume all the data
+	  in the chunk is actually subtitle data, there may be padding at
+	  the end; fix GST_ELEMENT_ERROR usage; store extracted subtitle
+	  file so it's there to send again after a seek (for future use).
+
 2007-12-18  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/avi/Makefile.am:
