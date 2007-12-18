@@ -1,3 +1,9 @@
+2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* Makefile.am:
+	  Include common/win32.mak for CRLF check of win32 project
+	  files (see #393626).
+
 2007-12-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
