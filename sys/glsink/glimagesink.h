@@ -27,7 +27,6 @@
 #include <gst/video/video.h>
 
 #include "glvideo.h"
-#include <gstvideo-common.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_glimage_sink);
 

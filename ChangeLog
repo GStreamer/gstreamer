@@ -1,5 +1,21 @@
 2007-12-17  David Schleef  <ds@schleef.org>
 
+	* sys/glsink/Makefile.am:
+	* sys/glsink/glimagesink.c:
+	* sys/glsink/glimagesink.h:
+	* sys/glsink/glvideo.c:
+	* sys/glsink/glvideo.h:
+	* sys/glsink/gstopengl.c:
+	* sys/glsink/gstglupload.c:
+	  Use new GstVideoFormat checked into -base.  Add new glupload
+	  element to upload raw video into a GLXPixbuf.  Untested.  Will
+	  likely crash your motorcycle if you try it.
+	* sys/glsink/gstvideo-common.c:
+	* sys/glsink/gstvideo-common.h:
+	  Remove.
+
+2007-12-17  David Schleef  <ds@schleef.org>
+
 	* gst/multifile/gstmultifilesrc.c:
 	* gst/multifile/gstmultifilesrc.h:
 	  When subsequent files are read, if the file doesn't exist, send

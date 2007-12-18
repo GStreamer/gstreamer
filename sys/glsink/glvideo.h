@@ -53,6 +53,8 @@ GstGLDisplay *gst_gl_display_new (const char *display_name);
 gboolean gst_gl_display_can_handle_type (GstGLDisplay *display,
     GstGLImageType type);
 void gst_gl_display_free (GstGLDisplay *display);
+void gst_gl_display_lock (GstGLDisplay *display);
+void gst_gl_display_unlock (GstGLDisplay *display);
 
 /* drawable */
 

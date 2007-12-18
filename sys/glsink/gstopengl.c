@@ -32,6 +32,9 @@
 
 #include <glimagesink.h>
 
+GType gst_gl_upload_get_type (void);
+
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -42,6 +45,16 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_MARGINAL, GST_TYPE_GLIMAGE_SINK)) {
     return FALSE;
   }
+  if (!gst_element_register (plugin, "glupload",
+          GST_RANK_MARGINAL, gst_gl_upload_get_type ())) {
+    return FALSE;
+  }
+#if 0
+  if (!gst_element_register (plugin, "gldownload",
+          GST_RANK_MARGINAL, GST_TYPE_GL_DOWNLOAD)) {
+    return FALSE;
+  }
+#endif
 
   return TRUE;
 }
