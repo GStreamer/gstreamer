@@ -1233,12 +1233,10 @@ gst_ffmpegdemux_loop (GstPad * pad)
   else
     outsize = pkt.size;
 
-  ret = gst_pad_alloc_buffer_and_set_caps (srcpad,
+  stream->last_flow = gst_pad_alloc_buffer_and_set_caps (srcpad,
       GST_CLOCK_TIME_NONE, outsize, GST_PAD_CAPS (srcpad), &outbuf);
-  /* we can ignore not linked */
-  if (ret == GST_FLOW_NOT_LINKED)
-    goto done;
-  if (ret != GST_FLOW_OK)
+
+  if ((ret = gst_ffmpegdemux_aggregated_flow (demux)) != GST_FLOW_OK)
     goto no_buffer;
 
   /* copy the data from packet into the target buffer
@@ -1314,26 +1312,28 @@ pause:
     demux->running = FALSE;
     gst_pad_pause_task (demux->sinkpad);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
-      if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-        gint64 stop;
+    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+      if (ret == GST_FLOW_UNEXPECTED) {
+        if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+          gint64 stop;
 
-        if ((stop = demux->segment.stop) == -1)
-          stop = demux->segment.duration;
+          if ((stop = demux->segment.stop) == -1)
+            stop = demux->segment.duration;
 
-        GST_LOG_OBJECT (demux, "posting segment done");
-        gst_element_post_message (GST_ELEMENT (demux),
-            gst_message_new_segment_done (GST_OBJECT (demux),
-                demux->segment.format, stop));
+          GST_LOG_OBJECT (demux, "posting segment done");
+          gst_element_post_message (GST_ELEMENT (demux),
+              gst_message_new_segment_done (GST_OBJECT (demux),
+                  demux->segment.format, stop));
+        } else {
+          GST_LOG_OBJECT (demux, "pushing eos");
+          gst_ffmpegdemux_push_event (demux, gst_event_new_eos ());
+        }
       } else {
-        GST_LOG_OBJECT (demux, "pushing eos");
+        GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+            ("Internal data stream error."),
+            ("streaming stopped, reason %s", gst_flow_get_name (ret)));
         gst_ffmpegdemux_push_event (demux, gst_event_new_eos ());
       }
-    } else if (GST_FLOW_IS_FATAL (ret)) {
-      GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-          ("Internal data stream error."),
-          ("streaming stopped, reason %s", gst_flow_get_name (ret)));
-      gst_ffmpegdemux_push_event (demux, gst_event_new_eos ());
     }
     return;
   }
@@ -1352,7 +1352,7 @@ read_failed:
     if (demux->flushing)
       ret = GST_FLOW_WRONG_STATE;
     else
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_ERROR;
     GST_OBJECT_UNLOCK (demux);
 
     goto pause;

@@ -1,3 +1,9 @@
+2007-12-18  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):
+	Fix demuxer to stop properly (emit an error message on the bus) if no
+	pads are linked. Use aggregated flow return values a bit more.
+
 2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* Makefile.am:
