@@ -1,3 +1,9 @@
+2007-12-18  Andy Wingo  <wingo@pobox.com>
+
+	* examples/switch.py: New file, a basic demo for a single-stream
+	switcher. Could be expanded later -- look at
+	flumotion.component.combiners.switch.switch for some inspiration.
+
 2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* Makefile.am:
