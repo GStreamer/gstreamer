@@ -1,3 +1,29 @@
+2007-12-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* win32/common/gstenumtypes.c: (register_gst_buffer_flag),
+	(register_gst_buffer_copy_flags), (register_gst_clock_flags),
+	(register_gst_debug_graph_details),
+	(register_gst_state_change_return), (register_gst_state_change),
+	(register_gst_element_flags), (register_gst_core_error),
+	(register_gst_library_error), (register_gst_resource_error),
+	(register_gst_stream_error), (register_gst_event_type_flags),
+	(register_gst_event_type), (register_gst_index_entry_type),
+	(register_gst_assoc_flags), (register_gst_message_type),
+	(register_gst_mini_object_flags), (register_gst_pad_link_return),
+	(register_gst_flow_return), (register_gst_pad_template_flags),
+	(register_gst_pipeline_flags), (register_gst_plugin_error),
+	(register_gst_tag_merge_mode), (register_gst_alloc_trace_flags),
+	(register_gst_type_find_probability), (register_gst_parse_error):
+	Some indention fixes by gst-indent.
+
+
+	Patch by: Matthias Bolte <photon at mail dot upb dot de>
+
+	* win32/vs8/grammar.vcproj:
+	* win32/vs8/libgstcontroller.vcproj:
+	* win32/vs8/libgstreamer.vcproj:
+	Fix compilation with VS8 and include some missing files.
+
 2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsttaglist.c:

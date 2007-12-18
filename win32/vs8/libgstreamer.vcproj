@@ -40,7 +40,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../..,../common"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBGSTREAMER_EXPORTS;HAVE_CONFIG_H;HAVE_WIN32"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBGSTREAMER_EXPORTS;HAVE_CONFIG_H;HAVE_WIN32;YY_NO_UNISTD_H"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -121,7 +121,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="../..,../common"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBGSTREAMER_EXPORTS;HAVE_CONFIG_H;HAVE_WIN32"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBGSTREAMER_EXPORTS;HAVE_CONFIG_H;HAVE_WIN32;YY_NO_UNISTD_H"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -221,6 +221,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\gst\gstdebugutils.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\gst\gstelement.c"
 				>
 			</File>
@@ -294,6 +298,10 @@
 			</File>
 			<File
 				RelativePath="..\..\gst\gstpadtemplate.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\gst\gstparamspecs.c"
 				>
 			</File>
 			<File

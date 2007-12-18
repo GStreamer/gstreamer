@@ -188,11 +188,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\libs\gst\controller\gstcontrolsource.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\libs\gst\controller\gsthelper.c"
 				>
 			</File>
 			<File
 				RelativePath="..\..\libs\gst\controller\gstinterpolation.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libs\gst\controller\gstinterpolationcontrolsource.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libs\gst\controller\gstlfocontrolsource.c"
 				>
 			</File>
 			<File
