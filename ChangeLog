@@ -1,3 +1,9 @@
+2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gsttaglist.c:
+	  Small docs addition: mention that the strings returned by
+	  gst_tag_list_get_string*() are in UTF-8 encoding.
+
 2007-12-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* Makefile.am:
