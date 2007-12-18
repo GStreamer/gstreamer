@@ -3,6 +3,7 @@
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2005 Jan Schmidt <thaytan@mad.scientist.com>
  * Copyright (C) 2007 Wim Taymans <wim.taymans@gmail.com>
+ * Copyright (C) 2007 Andy Wingo <wingo@pobox.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -60,7 +61,7 @@ enum
 
 enum
 {
-  PAD_PROP_LAST_STOP_TIME = 1
+  PAD_PROP_RUNNING_TIME = 1
 };
 
 enum
@@ -119,6 +120,7 @@ static void gst_selector_pad_get_property (GObject * object,
 
 static GstPadClass *selector_pad_parent_class = NULL;
 
+static gint64 gst_selector_pad_get_running_time (GstSelectorPad * pad);
 static void gst_selector_pad_reset (GstSelectorPad * pad);
 static gboolean gst_selector_pad_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_selector_pad_getcaps (GstPad * pad);
@@ -163,10 +165,9 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
 
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_selector_pad_get_property);
-  g_object_class_install_property (gobject_class, PAD_PROP_LAST_STOP_TIME,
-      g_param_spec_uint64 ("last-stop-time", "Last stop time",
-          "Last stop time seen on pad", 0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
-          G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, PAD_PROP_RUNNING_TIME,
+      g_param_spec_int64 ("running-time", "Running time",
+          "Running time of stream on pad", 0, G_MAXINT64, 0, G_PARAM_READABLE));
 
   gobject_class->finalize = gst_selector_pad_finalize;
 }
@@ -174,6 +175,7 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
 static void
 gst_selector_pad_init (GstSelectorPad * pad)
 {
+  gst_selector_pad_reset (pad);
 }
 
 static void
@@ -193,19 +195,37 @@ gst_selector_pad_get_property (GObject * object, guint prop_id,
   GstSelectorPad *spad = GST_SELECTOR_PAD_CAST (object);
 
   switch (prop_id) {
-    case PAD_PROP_LAST_STOP_TIME:{
-      GST_OBJECT_LOCK (object);
-      if (spad->active)
-        g_value_set_uint64 (value, spad->segment.last_stop);
-      else
-        g_value_set_uint64 (value, GST_CLOCK_TIME_NONE);
-      GST_OBJECT_UNLOCK (object);
+    case PAD_PROP_RUNNING_TIME:
+      g_value_set_int64 (value, gst_selector_pad_get_running_time (spad));
       break;
-    }
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gint64
+gst_selector_pad_get_running_time (GstSelectorPad * pad)
+{
+  gint64 ret = 0;
+
+  GST_OBJECT_LOCK (pad);
+
+  if (pad->active) {
+    gint64 last_stop = pad->segment.last_stop;
+
+    if (last_stop >= 0)
+      ret = gst_segment_to_running_time (&pad->segment, GST_FORMAT_TIME,
+          last_stop);
+  }
+
+  GST_OBJECT_UNLOCK (pad);
+
+  GST_DEBUG_OBJECT (pad, "running time: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (ret));
+
+  return ret;
 }
 
 static void
@@ -446,9 +466,9 @@ static GstStateChangeReturn gst_stream_selector_change_state (GstElement *
     element, GstStateChange transition);
 static GList *gst_stream_selector_get_linked_pads (GstPad * pad);
 static GstCaps *gst_stream_selector_getcaps (GstPad * pad);
-static GstClockTime gst_stream_selector_block (GstStreamSelector * self);
+static gint64 gst_stream_selector_block (GstStreamSelector * self);
 static void gst_stream_selector_switch (GstStreamSelector * self,
-    const gchar * pad_name, GstClockTime stop_time, GstClockTime start_time);
+    const gchar * pad_name, gint64 stop_time, gint64 start_time);
 
 static GstElementClass *parent_class = NULL;
 
@@ -512,33 +532,61 @@ gst_stream_selector_class_init (GstStreamSelectorClass * klass)
 
   /**
    * GstStreamSelector::block:
-   * @streamselector: the streamselector element to emit this signal on
+   * @streamselector: the #GstStreamSelector
    *
    * Block all sink pads in preparation for a switch. Returns the stop time of
-   * the current switch segment, or #GST_CLOCK_TIME_NONE if there is no current
+   * the current switch segment, as a running time, or 0 if there is no current
    * active pad or the current active pad never received data.
    */
   gst_stream_selector_signals[SIGNAL_BLOCK] =
       g_signal_new ("block", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstStreamSelectorClass, block),
-      NULL, NULL, gst_switch_marshal_UINT64__VOID, G_TYPE_UINT64, 0);
+      NULL, NULL, gst_switch_marshal_INT64__VOID, G_TYPE_INT64, 0);
   /**
    * GstStreamSelector::switch:
-   * @streamselector: the streamselector element to emit this signal on
+   * @streamselector: the #GstStreamSelector
    * @pad:            name of pad to switch to
-   * @stop_time:      time at which to close the previous segment, or
-   *                  #GST_CLOCK_TIME_NONE for the last time on the previously
-   *                  active pad
-   * @start_time:     start time for new segment, or foo
+   * @stop_time:      running time at which to close the previous segment, or -1
+   *                  to use the running time of the previously active sink pad
+   * @start_time:     running time at which to start the new segment, or -1 to
+   *                  use the running time of the newly active sink pad
    *
-   * Switch the given open file descriptor to multifdsink to write to and
-   * specify the burst parameters for the new connection.
+   * Switch to a new feed. The segment opened by the previously active pad, if
+   * any, will be closed, and a new segment opened before data flows again.
+   *
+   * This signal must be emitted when the element has been blocked via the <link
+   * linkend="GstStreamSelector-block">block</link> signal.
+   *
+   * If you have a stream with only one switch element, such as an audio-only
+   * stream, a stream switch should be performed by first emitting the block
+   * signal, and then emitting the switch signal with -1 for the stop and start
+   * time values.
+   *
+   * The intention of the @stop_time and @start_time arguments is to allow
+   * multiple switch elements to switch and maintain stream synchronization.
+   * When switching a stream with multiple feeds, you will need as many switch
+   * elements as you have feeds. For example, a feed with audio and video will
+   * have one switch element between the audio feeds and one for video.
+   *
+   * A switch over multiple switch elements should be performed as follows:
+   * First, emit the <link linkend="GstStreamSelector-block">block</link>
+   * signal, collecting the returned values. The maximum running time returned
+   * by block should then be used as the time at which to close the previous
+   * segment.
+   *
+   * Then, query the running times of the new audio and video pads that you will
+   * switch to. Naturally, these pads are on separate switch elements. Take the
+   * minimum running time for those streams and use it for the time at which to
+   * open the new segment.
+   *
+   * If @pad is the same as the current active pad, the element will cancel any
+   * previous block without adjusting segments.
    */
   gst_stream_selector_signals[SIGNAL_SWITCH] =
       g_signal_new ("switch", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstStreamSelectorClass, switch_),
-      NULL, NULL, gst_switch_marshal_VOID__STRING_UINT64_UINT64,
-      G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_UINT64, G_TYPE_UINT64);
+      NULL, NULL, gst_switch_marshal_VOID__STRING_INT64_INT64,
+      G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_INT64, G_TYPE_INT64);
 
   klass->block = GST_DEBUG_FUNCPTR (gst_stream_selector_block);
   klass->switch_ = GST_DEBUG_FUNCPTR (gst_stream_selector_switch);
@@ -580,9 +628,32 @@ gst_stream_selector_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+/* Solve the following equation for B.timestamp, and set that as the segment
+ * stop:
+ * B.running_time = (B.timestamp - NS.start) / NS.abs_rate + NS.accum
+ */
+static gint64
+gst_segment_get_timestamp (GstSegment * segment, gint64 running_time)
+{
+  return (running_time - segment->accum) * segment->abs_rate + segment->start;
+}
+
+static void
+gst_segment_set_stop (GstSegment * segment, gint64 running_time)
+{
+  segment->stop = gst_segment_get_timestamp (segment, running_time);
+  segment->last_stop = -1;
+}
+
+static void
+gst_segment_set_start (GstSegment * segment, gint64 running_time)
+{
+  segment->start = gst_segment_get_timestamp (segment, running_time);
+}
+
 static void
 gst_stream_selector_set_active_pad (GstStreamSelector * self,
-    const gchar * pad_name, GstClockTime stop_time, GstClockTime start_time)
+    const gchar * pad_name, gint64 stop_time, gint64 start_time)
 {
   GstPad *pad;
   GstSelectorPad *old, *new;
@@ -601,20 +672,18 @@ gst_stream_selector_set_active_pad (GstStreamSelector * self,
   old = GST_SELECTOR_PAD_CAST (self->active_sinkpad);
   new = GST_SELECTOR_PAD_CAST (pad);
 
-  if (old && old->active && !self->pending_stop
-      && GST_CLOCK_TIME_IS_VALID (stop_time)) {
+  if (old && old->active && !self->pending_stop && stop_time >= 0) {
     /* schedule a last_stop update if one isn't already scheduled, and a
        segment has been pushed before. */
     memcpy (&self->pending_stop_segment, &old->segment,
         sizeof (self->pending_stop_segment));
-    gst_segment_set_last_stop (&self->pending_stop_segment,
-        old->segment.format, stop_time);
+    gst_segment_set_stop (&self->pending_stop_segment, stop_time);
     self->pending_stop = TRUE;
   }
 
-  if (new && GST_CLOCK_TIME_IS_VALID (start_time)) {
+  if (new && new->active && start_time >= 0) {
     /* schedule a new segment push */
-    new->segment.start = start_time;
+    gst_segment_set_start (&new->segment, start_time);
     new->segment_pending = TRUE;
   }
 
@@ -842,10 +911,11 @@ gst_stream_selector_change_state (GstElement * element,
   return result;
 }
 
-static GstClockTime
+static gint64
 gst_stream_selector_block (GstStreamSelector * self)
 {
-  GstClockTime ret = GST_CLOCK_TIME_NONE;
+  gint64 ret = 0;
+  GstSelectorPad *spad;
 
   GST_OBJECT_LOCK (self);
 
@@ -853,20 +923,12 @@ gst_stream_selector_block (GstStreamSelector * self)
     GST_WARNING_OBJECT (self, "switch already blocked");
 
   self->blocked = TRUE;
+  spad = GST_SELECTOR_PAD_CAST (self->active_sinkpad);
 
-  if (self->active_sinkpad) {
-    GstSelectorPad *spad = GST_SELECTOR_PAD_CAST (self->active_sinkpad);
-
-    if (spad->active) {
-      ret = spad->segment.last_stop;
-      GST_DEBUG_OBJECT (self, "last stop on %" GST_PTR_FORMAT ": %"
-          GST_TIME_FORMAT, spad, GST_TIME_ARGS (ret));
-    } else {
-      GST_DEBUG_OBJECT (self, "pad %" GST_PTR_FORMAT " never got data", spad);
-    }
-  } else {
+  if (self->active_sinkpad)
+    ret = gst_selector_pad_get_running_time (spad);
+  else
     GST_DEBUG_OBJECT (self, "no active pad while blocking");
-  }
 
   GST_OBJECT_UNLOCK (self);
 
@@ -884,7 +946,7 @@ gst_stream_selector_push_pending_stop (GstStreamSelector * self)
     GstSegment *seg = &self->pending_stop_segment;
 
     event = gst_event_new_new_segment_full (TRUE, seg->rate,
-        seg->applied_rate, seg->format, seg->start, seg->last_stop, seg->time);
+        seg->applied_rate, seg->format, seg->start, seg->stop, seg->stop);
 
     self->pending_stop = FALSE;
   }
@@ -895,9 +957,10 @@ gst_stream_selector_push_pending_stop (GstStreamSelector * self)
     gst_pad_push_event (self->srcpad, event);
 }
 
+/* stop_time and start_time are running times */
 static void
 gst_stream_selector_switch (GstStreamSelector * self, const gchar * pad_name,
-    GstClockTime stop_time, GstClockTime start_time)
+    gint64 stop_time, gint64 start_time)
 {
   g_return_if_fail (self->blocked == TRUE);
 

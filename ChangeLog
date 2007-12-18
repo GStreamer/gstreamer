@@ -1,3 +1,19 @@
+2007-12-18  Andy Wingo  <wingo@pobox.com>
+
+	* gst/switch/gstswitch-marshal.list:
+	* gst/switch/gstswitch.h (struct _GstStreamSelectorClass): 
+	* gst/switch/gstswitch.c (enum, gst_selector_pad_class_init)
+	(gst_selector_pad_get_property)
+	(gst_selector_pad_get_running_time)
+	(gst_stream_selector_class_init, gst_segment_get_timestamp)
+	(gst_segment_set_stop, gst_segment_set_start)
+	(gst_stream_selector_set_active_pad, gst_stream_selector_block)
+	(gst_stream_selector_push_pending_stop)
+	(gst_stream_selector_switch): Change so that the signals and
+	properties deal in running time, not buffer time. Document the
+	signals more. Change uint64 in API to int64, to reflect what's in
+	GstSegment.
+
 2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* Makefile.am:

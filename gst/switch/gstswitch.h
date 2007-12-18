@@ -58,9 +58,9 @@ struct _GstStreamSelector {
 struct _GstStreamSelectorClass {
   GstElementClass parent_class;
 
-  GstClockTime (*block)	(GstStreamSelector *self);
+  gint64 (*block)	(GstStreamSelector *self);
   void (*switch_)	(GstStreamSelector *self, const gchar *pad_name,
-                         GstClockTime stop_time, GstClockTime start_time);
+                         gint64 stop_time, gint64 start_time);
 };
 
 GType gst_stream_selector_get_type (void);
