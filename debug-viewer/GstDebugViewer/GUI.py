@@ -961,15 +961,20 @@ class MessageColumn (TextColumn):
         highlighters = self.highlighters
         id_ = self.id
 
+        # FIXME: This should be none; need to investigate
+        # `cellrenderertext.props.attributes = None' failure (param conversion
+        # error like `treeview.props.model = None').
+        no_attrs = AttrList ()
+
         def message_data_func (props, row):
 
             props.text = row[id_]
             if not highlighters:
-                props.attributes = None
+                props.attributes = no_attrs
             for highlighter in highlighters.values ():
                 ranges = highlighter (row)
                 if not ranges:
-                    props.attributes = None
+                    props.attributes = no_attrs
                 else:
                     attrlist = AttrList ()
                     for start, end in ranges:
