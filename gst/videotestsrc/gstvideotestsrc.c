@@ -114,6 +114,7 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_CHECKERS4, "Checkers 4px", "checkers-4"},
     {GST_VIDEO_TEST_SRC_CHECKERS8, "Checkers 8px", "checkers-8"},
     {GST_VIDEO_TEST_SRC_CIRCULAR, "Circular", "circular"},
+    {GST_VIDEO_TEST_SRC_BLINK, "Blink", "blink"},
     {0, NULL, NULL}
   };
 
@@ -153,7 +154,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_PATTERN,
       g_param_spec_enum ("pattern", "Pattern",
           "Type of test pattern to generate", GST_TYPE_VIDEO_TEST_SRC_PATTERN,
-          1, G_PARAM_READWRITE));
+          GST_VIDEO_TEST_SRC_SMPTE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class,
       PROP_TIMESTAMP_OFFSET, g_param_spec_int64 ("timestamp-offset",
           "Timestamp offset",
@@ -246,6 +247,9 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
       break;
     case GST_VIDEO_TEST_SRC_CIRCULAR:
       videotestsrc->make_image = gst_video_test_src_circular;
+      break;
+    case GST_VIDEO_TEST_SRC_BLINK:
+      videotestsrc->make_image = gst_video_test_src_black;
       break;
     default:
       g_assert_not_reached ();
@@ -565,8 +569,18 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
 #endif
 
-  src->make_image (src, (void *) GST_BUFFER_DATA (outbuf),
-      src->width, src->height);
+  if (src->pattern_type == GST_VIDEO_TEST_SRC_BLINK) {
+    if (src->n_frames & 0x1) {
+      gst_video_test_src_white (src, (void *) GST_BUFFER_DATA (outbuf),
+          src->width, src->height);
+    } else {
+      gst_video_test_src_black (src, (void *) GST_BUFFER_DATA (outbuf),
+          src->width, src->height);
+    }
+  } else {
+    src->make_image (src, (void *) GST_BUFFER_DATA (outbuf),
+        src->width, src->height);
+  }
 
   GST_BUFFER_TIMESTAMP (outbuf) = src->timestamp_offset + src->running_time;
   GST_BUFFER_OFFSET (outbuf) = src->n_frames;

@@ -1,5 +1,12 @@
 2007-12-17  David Schleef  <ds@schleef.org>
 
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/gstvideotestsrc.h:
+	  Add a "blink" pattern.  Turn on the pain.  Apologies.  It's useful
+	  for testing vertical refresh synchronization.
+
+2007-12-17  David Schleef  <ds@schleef.org>
+
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* gst-libs/gst/video/video.c:
 	* gst-libs/gst/video/video.h:
