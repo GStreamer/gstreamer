@@ -811,6 +811,9 @@ gst_ring_buffer_start (GstRingBuffer * buf)
   if (G_UNLIKELY (buf->abidata.ABI.flushing))
     goto flushing;
 
+  if (G_UNLIKELY (!buf->acquired))
+    goto not_acquired;
+
   /* if stopped, set to started */
   res = g_atomic_int_compare_and_exchange (&buf->state,
       GST_RING_BUFFER_STATE_STOPPED, GST_RING_BUFFER_STATE_STARTED);
@@ -852,6 +855,13 @@ done:
 
 flushing:
   {
+    GST_DEBUG_OBJECT (buf, "we are flushing");
+    GST_OBJECT_UNLOCK (buf);
+    return FALSE;
+  }
+not_acquired:
+  {
+    GST_DEBUG_OBJECT (buf, "we are not acquired");
     GST_OBJECT_UNLOCK (buf);
     return FALSE;
   }
@@ -918,6 +928,9 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
   if (G_UNLIKELY (buf->abidata.ABI.flushing))
     goto flushing;
 
+  if (G_UNLIKELY (!buf->acquired))
+    goto not_acquired;
+
   res = gst_ring_buffer_pause_unlocked (buf);
   GST_OBJECT_UNLOCK (buf);
 
@@ -926,6 +939,13 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
   /* ERRORS */
 flushing:
   {
+    GST_DEBUG_OBJECT (buf, "we are flushing");
+    GST_OBJECT_UNLOCK (buf);
+    return FALSE;
+  }
+not_acquired:
+  {
+    GST_DEBUG_OBJECT (buf, "not acquired");
     GST_OBJECT_UNLOCK (buf);
     return FALSE;
   }
@@ -1011,18 +1031,23 @@ gst_ring_buffer_delay (GstRingBuffer * buf)
 
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), 0);
 
-  res = 0;
-
   /* buffer must be acquired */
   if (G_UNLIKELY (!gst_ring_buffer_is_acquired (buf)))
-    goto done;
+    goto not_acquired;
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->delay))
     res = rclass->delay (buf);
+  else
+    res = 0;
 
-done:
   return res;
+
+not_acquired:
+  {
+    GST_DEBUG_OBJECT (buf, "not acquired");
+    return 0;
+  }
 }
 
 /**
