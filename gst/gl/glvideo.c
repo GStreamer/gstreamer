@@ -182,6 +182,18 @@ gst_gl_display_free (GstGLDisplay * display)
   g_free (display);
 }
 
+void
+gst_gl_display_lock (GstGLDisplay * display)
+{
+  g_mutex_lock (display->lock);
+}
+
+void
+gst_gl_display_unlock (GstGLDisplay * display)
+{
+  g_mutex_unlock (display->lock);
+}
+
 
 /* drawable */
 

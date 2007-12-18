@@ -402,7 +402,7 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   gst_caps_unref (intersection);
 
-  ok = gst_video_parse_caps (caps, &format, &width, &height);
+  ok = gst_video_format_parse_caps (caps, &format, &width, &height);
   ok &= gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
   ok &= gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
 
