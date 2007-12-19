@@ -274,15 +274,13 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
 
   if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;
-  else
-    g_return_if_fail (segment->format == format);
 
   update_start = update_stop = TRUE;
 
-  /* start is never invalid */
+  /* segment->start is never invalid */
   switch (start_type) {
     case GST_SEEK_TYPE_NONE:
-      /* no update to segment */
+      /* no update to segment, take previous start */
       start = segment->start;
       update_start = FALSE;
       break;
@@ -290,13 +288,17 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
       /* start holds desired position, map -1 to the start */
       if (start == -1)
         start = 0;
+      /* start must be 0 or the formats must match */
+      g_return_if_fail (start == 0 || segment->format == format);
       break;
     case GST_SEEK_TYPE_CUR:
-      /* add start to currently configure segment */
+      g_return_if_fail (start == 0 || segment->format == format);
+      /* add start to currently configured segment */
       start = segment->start + start;
       break;
     case GST_SEEK_TYPE_END:
       if (segment->duration != -1) {
+        g_return_if_fail (start == 0 || segment->format == format);
         /* add start to total length */
         start = segment->duration + start;
       } else {
@@ -319,18 +321,24 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
       update_stop = FALSE;
       break;
     case GST_SEEK_TYPE_SET:
-      /* stop holds required value */
+      /* stop holds required value, if it's not -1, it must be of the same
+       * format as the segment. */
+      g_return_if_fail (stop == -1 || segment->format == format);
       break;
     case GST_SEEK_TYPE_CUR:
-      if (segment->stop != -1)
+      if (segment->stop != -1) {
+        /* only add compatible formats or 0 */
+        g_return_if_fail (stop == 0 || segment->format == format);
         stop = segment->stop + stop;
-      else
+      } else
         stop = -1;
       break;
     case GST_SEEK_TYPE_END:
-      if (segment->duration != -1)
+      if (segment->duration != -1) {
+        /* only add compatible formats or 0 */
+        g_return_if_fail (stop == 0 || segment->format == format);
         stop = segment->duration + stop;
-      else {
+      } else {
         stop = segment->stop;
         update_stop = FALSE;
       }
@@ -373,8 +381,7 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
     *update = last_stop != segment->last_stop;
 
   /* update new position */
-  if (last_stop != segment->last_stop)
-    segment->last_stop = last_stop;
+  segment->last_stop = last_stop;
 
   segment->time = start;
   segment->stop = stop;

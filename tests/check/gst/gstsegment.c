@@ -436,6 +436,137 @@ GST_START_TEST (segment_seek_reverse)
 GST_END_TEST;
 
 /* mess with the segment structure in the bytes format */
+GST_START_TEST (segment_seek_rate)
+{
+  GstSegment segment;
+  gboolean update;
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+
+  /* configure segment to rate 2.0, format does not matter when we don't specify
+   * a start or stop position. */
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_UNDEFINED,
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_NONE, -1, &update);
+  fail_unless (segment.format == GST_FORMAT_BYTES);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == -1);
+  fail_unless (segment.rate == 2.0);
+  fail_unless (update == FALSE);
+
+  /* 0 is the same in all formats and should not fail */
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_NONE, -1, &update);
+  fail_unless (segment.format == GST_FORMAT_BYTES);
+
+  /* set to -1 means start from 0 */
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_SET, -1, GST_SEEK_TYPE_NONE, -1, &update);
+  fail_unless (segment.format == GST_FORMAT_BYTES);
+  fail_unless (segment.start == 0);
+
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_CUR, 0, GST_SEEK_TYPE_NONE, -1, &update);
+
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_END, 0, GST_SEEK_TYPE_NONE, -1, &update);
+
+  /* -1 for end is fine too in all formats */
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_SET, -1, &update);
+
+  /* 0 as relative end is fine too */
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_CUR, 0, &update);
+
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_END, 0, &update);
+
+  /* set a real stop position, this must happen in bytes */
+  gst_segment_set_seek (&segment, 3.0,
+      GST_FORMAT_BYTES,
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_SET, 100, &update);
+  fail_unless (segment.format == GST_FORMAT_BYTES);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 100);
+  fail_unless (segment.rate == 3.0);
+  /* no seek should happen, we just updated the stop position in forward
+   * playback mode.*/
+  fail_unless (update == FALSE);
+
+  /* 0 as relative end is fine too */
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_CUR, 0, &update);
+  fail_unless (segment.stop == 100);
+
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_END, 0, &update);
+  fail_unless (segment.stop == 100);
+
+  /* -1 for end is fine too in all formats */
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_SET, -1, &update);
+  fail_unless (segment.stop == -1);
+
+  /* set some duration, stop -1 END seeks will now work with the
+   * duration, if the formats match */
+  gst_segment_set_duration (&segment, GST_FORMAT_BYTES, 200);
+  fail_unless (segment.duration == 200);
+
+  /* seek to end in any format with 0 should set the stop to the
+   * duration */
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_END, 0, &update);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.duration == 200);
+
+  /* subtract 100 from the end */
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_BYTES, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_END, -100, &update);
+  fail_unless (segment.stop == 100);
+  fail_unless (segment.duration == 200);
+
+  /* add 100 to the duration, this should be clamped to the duration */
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_BYTES, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_END, 100, &update);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.duration == 200);
+
+  /* add 300 to the start, this should be clamped to the duration */
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_BYTES, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_CUR, 300, GST_SEEK_TYPE_END, 0, &update);
+  fail_unless (segment.start == 200);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.duration == 200);
+
+  /* subtract 300 from the start, this should be clamped to 0 */
+  gst_segment_set_seek (&segment, 2.0,
+      GST_FORMAT_BYTES, GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_CUR, -300, GST_SEEK_TYPE_END, 0, &update);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.duration == 200);
+}
+
+GST_END_TEST;
+
+/* mess with the segment structure in the bytes format */
 GST_START_TEST (segment_newsegment_open)
 {
   GstSegment segment;
@@ -1505,6 +1636,7 @@ gst_segment_suite (void)
   tcase_add_test (tc_chain, segment_seek_nosize);
   tcase_add_test (tc_chain, segment_seek_size);
   tcase_add_test (tc_chain, segment_seek_reverse);
+  tcase_add_test (tc_chain, segment_seek_rate);
   tcase_add_test (tc_chain, segment_newsegment_open);
   tcase_add_test (tc_chain, segment_newsegment_closed);
   tcase_add_test (tc_chain, segment_newsegment_streamtime);

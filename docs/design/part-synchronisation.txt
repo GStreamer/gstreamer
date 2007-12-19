@@ -59,15 +59,18 @@ The clock and pipeline now provides a running_time to all elements that want to
 perform synchronisation. Indeed, the running time can be observed in each
 element (during the PLAYING state) as:
   
-  running_time = absolute_time - base_time
+  C.running_time = absolute_time - base_time
+
+We note C.running_time as the running_time obtained by looking at the clock.
+This value is monotonically increasing at the rate of the clock.
 
 
 Timestamps
 ----------
  
 The GstBuffer timestamps and the preceeding NEW_SEGMENT event (See
-part-streams.txt) define a transformation of the buffers to running_time as
-follows:
+part-streams.txt) define a transformation of the buffer timestamps to
+running_time as follows:
 
 The following notation is used:
 
@@ -76,6 +79,7 @@ The following notation is used:
 
  NS:  NEWSEGMENT event preceeding the buffers.
   - NS.start: start field in the NEWSEGMENT event
+  - NS.stop: stop field in the NEWSEGMENT event
   - NS.rate: rate field of NEWSEGMENT event
   - NS.abs_rate: absolute value of rate field of NEWSEGMENT event
   - NS.time: time field in the NEWSEGMENT event
@@ -89,9 +93,12 @@ to these boundaries (see also part-segments.txt).
 The following transformation to running_time exist:
 
     if (NS.rate > 0.0)
-      running_time = (B.timestamp - NS.start) / NS.abs_rate + NS.accum
+      B.running_time = (B.timestamp - NS.start) / NS.abs_rate + NS.accum
     else
-      running_time = (NS.stop - B.timestamp) / NS.abs_rate + NS.accum
+      B.running_time = (NS.stop - B.timestamp) / NS.abs_rate + NS.accum
+
+We write B.running_time as the running_time obtained from the NEWSEGMENT event
+and the buffers of that segment.
 
 The first displayable buffer will yield a value of 0 (since B.timestamp ==
 NS.start and NS.accum == 0).
@@ -100,7 +107,7 @@ For NS.rate > 1.0, the timestamps will be scaled down to increase the playback
 rate. Likewise, a rate between 0.0 and 1.0 will slow down playback.
 
 For negative rates, timestamps are received stop NS.stop to NS.start so that the
-first buffer received will be transformed into running_time of 0 (B.timestamp ==
+first buffer received will be transformed into B.running_time of 0 (B.timestamp ==
 NS.stop and NS.accum == 0).
 
 
@@ -121,7 +128,7 @@ As we have seen, we can get a running_time:
 We prefix C. and B. before the two running times to note how they were
 calculated.
 
-The task of synchronized playback is to make sure that we play be buffer with
+The task of synchronized playback is to make sure that we play a buffer with
 B.running_time at the moment when the clock reaches the same C.running_time.
 
 Thus the following must hold:
@@ -162,7 +169,7 @@ between 0 and the total duration of the media file.
 It is the stream time that is used for:
 
   - report the POSITION query in the pipeline
-  - the position used in seek queries
+  - the position used in seek events/queries
   - the position used to synchronize controller values
 
 Stream time is calculated using the buffer times and the preceeding NEWSEGMENT

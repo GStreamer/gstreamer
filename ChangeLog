@@ -1,3 +1,20 @@
+2007-12-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-synchronisation.txt:
+	Small updates.
+
+	* gst/gstsegment.c: (gst_segment_set_seek),
+	(gst_segment_set_newsegment_full), (gst_segment_to_stream_time),
+	(gst_segment_to_running_time):
+	The seek format can be different from the segment format when the start
+	and stop values are not to be updated, when we only do a rate change for
+	example.
+
+	* tests/check/gst/gstsegment.c: (GST_START_TEST),
+	(gst_segment_suite):
+	Add a testcase for the rate-only seeks, checking that the format is
+	correctly ignored when start and stop are not updated.
+
 2007-12-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Matthias Bolte <photon at mail dot upb dot de>
