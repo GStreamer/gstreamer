@@ -273,15 +273,17 @@ gst_valve_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GST_OBJECT_LOCK (GST_OBJECT (valve));
   if (valve->drop)
   {
+    GST_OBJECT_UNLOCK (GST_OBJECT (valve));
     *buf = gst_buffer_new_and_alloc (size);
     GST_BUFFER_OFFSET (*buf) = offset;
     gst_buffer_set_caps (*buf, caps);
   }
   else
   {
-    ret = valve->original_allocfunc (pad, offset, size, caps, buf);
+    GstPadBufferAllocFunction allocfunc = valve->original_allocfunc;
+    GST_OBJECT_UNLOCK (GST_OBJECT (valve));
+    ret = allocfunc (pad, offset, size, caps, buf);
   }
-  GST_OBJECT_UNLOCK (GST_OBJECT (valve));
 
   gst_object_unref (valve);
 
