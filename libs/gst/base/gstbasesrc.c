@@ -154,36 +154,21 @@
  * been processed and the pipeline can safely be stopped.
  * </para>
  * <para>
- * Since GStreamer 0.10.3 an application may simply set the source
- * element to NULL or READY state to make it send an EOS event downstream.
- * The application should lock the state of the source afterwards, so that
- * shutting down the pipeline from PLAYING doesn't temporarily start up the
- * source element for a second time:
- * <programlisting>
- * ...
- * // stop recording
- * gst_element_set_state (audio_source, #GST_STATE_NULL);
- * gst_element_set_locked_state (audio_source, %TRUE);
- * ...
- * </programlisting>
- * Now the application should wait for an EOS message
- * to be posted on the pipeline's bus. Once it has received
- * an EOS message, it may safely shut down the entire pipeline:
- * <programlisting>
- * ...
- * // everything done - shut down pipeline
- * gst_element_set_state (pipeline, #GST_STATE_NULL);
- * gst_element_set_locked_state (audio_source, %FALSE);
- * ...
- * </programlisting>
+ * Since GStreamer 0.10.16 an application may send an EOS event to a source
+ * element to make it send an EOS event downstream. This can typically be done
+ * with the gst_element_send_event() function on the element or its parent bin.
  * </para>
  * <para>
- * Note that setting the source element to NULL or READY when the 
- * pipeline is in the PAUSED state may cause a deadlock since the streaming
- * thread might be blocked in PREROLL.
+ * After the EOS has been sent to the element, the application should wait for
+ * an EOS message to be posted on the pipeline's bus. Once this EOS message is
+ * received, it may safely shut down the entire pipeline.
  * </para>
  * <para>
- * Last reviewed on 2007-09-13 (0.10.15)
+ * The old behaviour for controlled shutdown introduced since GStreamer 0.10.3
+ * is still available but deprecated as it is dangerous and less flexible.
+ * </para>
+ * <para>
+ * Last reviewed on 2007-12-19 (0.10.16)
  * </para>
  * </refsect2>
  */
@@ -248,6 +233,9 @@ struct _GstBaseSrcPrivate
   /* two segments to be sent in the streaming thread with STREAM_LOCK */
   GstEvent *close_segment;
   GstEvent *start_segment;
+
+  /* if EOS is pending */
+  gboolean pending_eos;
 
   /* startup latency is the time it takes between going to PLAYING and producing
    * the first BUFFER with running_time 0. This value is included in the latency
@@ -1278,8 +1266,12 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
 
       /* downstream serialized events */
     case GST_EVENT_EOS:
-      /* FIXME, queue EOS and make sure the task or pull function 
-       * perform the EOS actions. */
+      /* queue EOS and make sure the task or pull function 
+       * performs the EOS actions. */
+      GST_LIVE_LOCK (src);
+      src->priv->pending_eos = TRUE;
+      GST_LIVE_UNLOCK (src);
+      result = TRUE;
       break;
     case GST_EVENT_NEWSEGMENT:
       /* sending random NEWSEGMENT downstream can break sync. */
@@ -1787,8 +1779,11 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
   status = gst_base_src_do_sync (src, *buf);
 
   /* waiting for the clock could have made us flushing */
-  if (src->priv->flushing)
+  if (G_UNLIKELY (src->priv->flushing))
     goto flushing;
+
+  if (G_UNLIKELY (src->priv->pending_eos))
+    goto eos;
 
   switch (status) {
     case GST_CLOCK_EARLY:
@@ -1863,6 +1858,13 @@ flushing:
     *buf = NULL;
     return GST_FLOW_WRONG_STATE;
   }
+eos:
+  {
+    GST_DEBUG_OBJECT (src, "we are EOS");
+    gst_buffer_unref (*buf);
+    *buf = NULL;
+    return GST_FLOW_UNEXPECTED;
+  }
 }
 
 static GstFlowReturn
@@ -1875,8 +1877,12 @@ gst_base_src_pad_get_range (GstPad * pad, guint64 offset, guint length,
   src = GST_BASE_SRC (gst_pad_get_parent (pad));
 
   GST_LIVE_LOCK (src);
-  if (src->priv->flushing)
+  if (G_UNLIKELY (src->priv->flushing))
     goto flushing;
+
+  /* if we're EOS, return right away */
+  if (G_UNLIKELY (src->priv->pending_eos))
+    goto eos;
 
   res = gst_base_src_get_range (src, offset, length, buf);
 
@@ -1892,6 +1898,12 @@ flushing:
   {
     GST_DEBUG_OBJECT (src, "we are flushing");
     res = GST_FLOW_WRONG_STATE;
+    goto done;
+  }
+eos:
+  {
+    GST_DEBUG_OBJECT (src, "we are EOS");
+    res = GST_FLOW_UNEXPECTED;
     goto done;
   }
 }
@@ -1967,8 +1979,12 @@ gst_base_src_loop (GstPad * pad)
   src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
   GST_LIVE_LOCK (src);
-  if (src->priv->flushing)
+  if (G_UNLIKELY (src->priv->flushing))
     goto flushing;
+
+  /* if we're EOS, return right away */
+  if (G_UNLIKELY (src->priv->pending_eos))
+    goto eos;
 
   src->priv->last_sent_eos = FALSE;
 
@@ -1990,11 +2006,11 @@ gst_base_src_loop (GstPad * pad)
     goto null_buffer;
 
   /* push events to close/start our segment before we push the buffer. */
-  if (src->priv->close_segment) {
+  if (G_UNLIKELY (src->priv->close_segment)) {
     gst_pad_push_event (pad, src->priv->close_segment);
     src->priv->close_segment = NULL;
   }
-  if (src->priv->start_segment) {
+  if (G_UNLIKELY (src->priv->start_segment)) {
     gst_pad_push_event (pad, src->priv->start_segment);
     src->priv->start_segment = NULL;
   }
@@ -2051,7 +2067,7 @@ gst_base_src_loop (GstPad * pad)
     goto pause;
   }
 
-  if (eos) {
+  if (G_UNLIKELY (eos)) {
     GST_INFO_OBJECT (src, "pausing after end of segment");
     ret = GST_FLOW_UNEXPECTED;
     goto pause;
@@ -2066,6 +2082,13 @@ flushing:
     GST_DEBUG_OBJECT (src, "we are flushing");
     GST_LIVE_UNLOCK (src);
     ret = GST_FLOW_WRONG_STATE;
+    goto pause;
+  }
+eos:
+  {
+    GST_DEBUG_OBJECT (src, "we are EOS");
+    GST_LIVE_UNLOCK (src);
+    ret = GST_FLOW_UNEXPECTED;
     goto pause;
   }
 pause:
@@ -2340,6 +2363,8 @@ gst_base_src_set_flushing (GstBaseSrc * basesrc,
   if (flushing) {
     /* if we are locked in the live lock, signal it to make it flush */
     basesrc->live_running = TRUE;
+    /* clear pending EOS if any */
+    basesrc->priv->pending_eos = FALSE;
 
     /* step 1, now that we have the LIVE lock, clear our unlock request */
     if (bclass->unlock_stop)
@@ -2595,6 +2620,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
         gst_pad_push_event (basesrc->srcpad, gst_event_new_eos ());
         basesrc->priv->last_sent_eos = TRUE;
       }
+      basesrc->priv->pending_eos = FALSE;
       event_p = &basesrc->data.ABI.pending_seek;
       gst_event_replace (event_p, NULL);
       event_p = &basesrc->priv->close_segment;

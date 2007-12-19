@@ -1,5 +1,19 @@
 2007-12-19  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_send_event),
+	(gst_base_src_get_range), (gst_base_src_pad_get_range),
+	(gst_base_src_loop), (gst_base_src_set_flushing),
+	(gst_base_src_change_state):
+	Allow sending EOS to the source to make it send out an EOS event from
+	the streaming thread.
+	Update docs and deprecate the old NULL/READY shutdown method.
+
+	* tests/check/libs/basesrc.c: (GST_START_TEST),
+	(gst_basesrc_suite):
+	Add unit test for controlled shutdown.
+
+2007-12-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/design/part-synchronisation.txt:
 	Small updates.
 
