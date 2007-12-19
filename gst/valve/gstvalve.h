@@ -52,7 +52,11 @@ struct _GstValve
 {
   GstBaseTransform parent;
 
+  /* Protected by the object lock */
   gboolean      drop;
+
+  /* Protected by the stream lock*/
+  gboolean      discont;
 
   GstPadBufferAllocFunction original_allocfunc;
 
