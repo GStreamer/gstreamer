@@ -65,10 +65,10 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
  * meta_data [in]: metadata handler to be inited
  * parse [in]: pass TRUE for demuxing and FALSE for muxing
  * options [in]: which types of metadata will be processed (EXIF, IPTC and/or XMP).
- *  Look at 'MetaOption' to see the available options.
+ *  Look at 'MetaOptions' to see the available options.
  */
 void
-metadata_init (MetaData * meta_data, const gboolean parse, const guint8 options)
+metadata_init (MetaData * meta_data, const MetaOptions options)
 {
   meta_data->state = STATE_NULL;
   meta_data->img_type = IMG_NONE;
@@ -77,9 +77,8 @@ metadata_init (MetaData * meta_data, const gboolean parse, const guint8 options)
   meta_data->exif_adapter = NULL;
   meta_data->iptc_adapter = NULL;
   meta_data->xmp_adapter = NULL;
-  meta_data->parse = parse;
 
-  if (parse) {
+  if (meta_data->options & META_OPT_DEMUX) {
     /* when parsing we will probably strip only 3 chunk (exif, iptc and xmp)
        so we use 4 just in case there is more than one chunk of them.
        But this is just for convinience, 'cause the chunk_array incriases dinamically */
@@ -105,13 +104,13 @@ metadata_dispose (MetaData * meta_data)
 
   switch (meta_data->img_type) {
     case IMG_JPEG:
-      if (G_LIKELY (meta_data->parse))
+      if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
         metadataparse_jpeg_dispose (&meta_data->format_data.jpeg_parse);
       else
         metadatamux_jpeg_dispose (&meta_data->format_data.jpeg_mux);
       break;
     case IMG_PNG:
-      if (G_LIKELY (meta_data->parse))
+      if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
         metadataparse_png_dispose (&meta_data->format_data.png_parse);
       else
         metadatamux_png_dispose (&meta_data->format_data.png_mux);
@@ -176,7 +175,7 @@ metadata_parse (MetaData * meta_data, const guint8 * buf,
 
   switch (meta_data->img_type) {
     case IMG_JPEG:
-      if (G_LIKELY (meta_data->parse))
+      if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
         ret =
             metadataparse_jpeg_parse (&meta_data->format_data.jpeg_parse,
             (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
@@ -188,7 +187,7 @@ metadata_parse (MetaData * meta_data, const guint8 * buf,
             next_size);
       break;
     case IMG_PNG:
-      if (G_LIKELY (meta_data->parse))
+      if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
         ret =
             metadataparse_png_parse (&meta_data->format_data.png_parse,
             (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
@@ -233,13 +232,13 @@ metadata_lazy_update (MetaData * meta_data)
 {
   switch (meta_data->img_type) {
     case IMG_JPEG:
-      if (G_LIKELY (meta_data->parse))
+      if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
         metadataparse_jpeg_lazy_update (&meta_data->format_data.jpeg_parse);
       else
         metadatamux_jpeg_lazy_update (&meta_data->format_data.jpeg_mux);
       break;
     case IMG_PNG:
-      if (G_LIKELY (meta_data->parse))
+      if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
         metadataparse_png_lazy_update (&meta_data->format_data.png_parse);
       else
         metadatamux_png_lazy_update (&meta_data->format_data.png_mux);
@@ -293,7 +292,7 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
     xmp = &meta_data->xmp_adapter;
 
   if (buf[0] == 0xFF && buf[1] == 0xD8 && buf[2] == 0xFF) {
-    if (G_LIKELY (meta_data->parse))
+    if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
       metadataparse_jpeg_init (&meta_data->format_data.jpeg_parse, exif, iptc,
           xmp, &meta_data->strip_chunks, &meta_data->inject_chunks,
           meta_data->options & META_OPT_PARSE_ONLY);
@@ -314,7 +313,7 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
 
   if (buf[0] == 0x89 && buf[1] == 0x50 && buf[2] == 0x4E && buf[3] == 0x47 &&
       buf[4] == 0x0D && buf[5] == 0x0A && buf[6] == 0x1A && buf[7] == 0x0A) {
-    if (G_LIKELY (meta_data->parse))
+    if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
       metadataparse_png_init (&meta_data->format_data.png_parse, exif, iptc,
           xmp, &meta_data->strip_chunks, &meta_data->inject_chunks,
           meta_data->options & META_OPT_PARSE_ONLY);

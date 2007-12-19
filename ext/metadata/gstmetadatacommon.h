@@ -69,7 +69,7 @@ struct _GstMetadataCommon {
 };
 
 extern void
-gst_metadata_common_init(GstMetadataCommon *common, gboolean parse, guint8 options);
+gst_metadata_common_init(GstMetadataCommon *common, MetaOptions options);
 
 extern void
 gst_metadata_common_dispose(GstMetadataCommon *common);

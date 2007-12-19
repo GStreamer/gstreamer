@@ -14,7 +14,8 @@ libgstmetadata_la_SOURCES =	gstmetadata.c       \
 				metadataparseutil.c \
 				metadatatypes.c     \
 				gstmetadatamux.c    \
-				metadatatags.c
+				metadatatags.c      \
+				gstbasemetadata.c
 
 libgstmetadata_ladir = $(includedir)/gstreamer-@GST_MAJORMINOR@/metadata
 libgstmetadata_la_HEADERS = metadatatags.h
@@ -35,5 +36,6 @@ noinst_HEADERS = 	gstmetadatademux.h   \
 			metadataxmp.h        \
 			metadataparseutil.h  \
 			metadatatypes.h      \
-			gstmetadatamux.h 
+			gstmetadatamux.h     \
+			gstbasemetadata.h
 

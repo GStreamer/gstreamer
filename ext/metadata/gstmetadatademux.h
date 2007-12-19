@@ -46,7 +46,7 @@
 
 #include <gst/gst.h>
 
-#include "gstmetadatacommon.h"
+#include "gstbasemetadata.h"
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
@@ -65,36 +65,12 @@ typedef struct _GstMetadataDemuxClass GstMetadataDemuxClass;
 
 struct _GstMetadataDemux
 {
-  GstElement element;
-
-  GstPad *sinkpad, *srcpad;
-
-  GstMetadataCommon common;
-
-  guint8 options;
-
-  gboolean need_send_tag;
-
-  GstAdapter *adapter_parsing;
-  GstAdapter *adapter_holding;
-  guint32 next_offset;
-  guint32 next_size;
-  ImageType img_type;
-
-  gint64 offset_orig;  /* offset in original stream */
-  gint64 offset;       /* offset in current stream */
-
-  GstBuffer * prepend_buffer;
-
-  gboolean need_more_data;
-
-
-
+  GstBaseMetadata element;
 };
 
 struct _GstMetadataDemuxClass
 {
-  GstElementClass parent_class;
+  GstBaseMetadataClass parent_class;
 };
 
 extern GType gst_metadata_demux_get_type (void);

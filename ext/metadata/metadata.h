@@ -56,14 +56,16 @@ G_BEGIN_DECLS
 
 /* *INDENT-OFF* */
 
-typedef enum _tag_MetaOption
+typedef enum _tag_MetaOptions
 {
   META_OPT_EXIF       = (1 << 0),
   META_OPT_IPTC       = (1 << 1),
   META_OPT_XMP        = (1 << 2),
-  META_OPT_PARSE_ONLY = (1 << 3),
-  META_OPT_ALL        = (1 << 4) - 1
-} MetaOption;
+  META_OPT_PARSE_ONLY = (1 << 3), /* only makes sense with META_OPT_DEMUX */
+  META_OPT_DEMUX      = (1 << 4),
+  META_OPT_MUX        = (1 << 5),
+  META_OPT_ALL        = (1 << 6) - 1
+} MetaOptions;
 /* *INDENT-ON* */
 
 typedef enum _tag_MetaState
@@ -100,13 +102,11 @@ typedef struct _tag_MetaData
   MetadataChunkArray strip_chunks;
   MetadataChunkArray inject_chunks;
 
-  gboolean parse; /* true - parsing, false - muxing */
-
 } MetaData;
 
 #define META_DATA_IMG_TYPE(p) (p).img_type
 
-extern void metadata_init (MetaData * meta_data, const gboolean parse, const guint8 options);
+extern void metadata_init (MetaData * meta_data, const MetaOptions options);
 
 extern void metadata_dispose (MetaData * meta_data);
 

@@ -1,0 +1,164 @@
+/*
+ * GStreamer
+ * Copyright 2007 Edgard Lima <edgard.lima@indt.org.br>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Alternatively, the contents of this file may be used under the
+ * GNU Lesser General Public License Version 2.1 (the "LGPL"), in
+ * which case the following provisions apply instead of the ones
+ * mentioned above:
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifndef __GST_BASE_METADATA_H__
+#define __GST_BASE_METADATA_H__
+
+#include <gst/gst.h>
+
+#include "gstmetadatacommon.h"
+
+G_BEGIN_DECLS
+
+/* #defines don't like whitespacey bits */
+#define GST_TYPE_BASE_METADATA		(gst_base_metadata_get_type())
+#define GST_BASE_METADATA(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_METADATA,GstBaseMetadata))
+#define GST_BASE_METADATA_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_METADATA,GstBaseMetadataClass))
+#define GST_BASE_METADATA_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_METADATA, GstBaseMetadataClass))
+#define GST_IS_BASE_METADATA(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_METADATA))
+#define GST_IS_BASE_METADATA_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_METADATA))
+#define GST_BASE_METADATA_CAST(obj)		((GstBaseMetadata *)(obj))
+
+typedef struct _GstBaseMetadata GstBaseMetadata;
+typedef struct _GstBaseMetadataClass GstBaseMetadataClass;
+
+typedef enum _tag_BaseMetadataType {
+  BASE_METADATA_DEMUXING,
+  BASE_METADATA_MUXING
+} BaseMetadataType;
+
+
+/**
+ * GST_BASE_METADATA_SRC_PAD:
+ * @obj: base metadata instance
+ *
+ * Gives the pointer to the #GstPad object of the element.
+ */
+#define GST_BASE_METADATA_SRC_PAD(obj)      (GST_BASE_METADATA_CAST (obj)->srcpad)
+
+/**
+ * GST_BASE_METADATA_SINK_PAD:
+ * @obj: base metadata instance
+ *
+ * Gives the pointer to the #GstPad object of the element.
+ */
+#define GST_BASE_METADATA_SINK_PAD(obj)     (GST_BASE_METADATA_CAST (obj)->sinkpad)
+
+#define GST_BASE_METADATA_EXIF_ADAPTER(obj) (GST_BASE_METADATA_CAST (obj)->common.metadata.exif_adapter)
+#define GST_BASE_METADATA_IPTC_ADAPTER(obj) (GST_BASE_METADATA_CAST (obj)->common.metadata.iptc_adapter)
+#define GST_BASE_METADATA_XMP_ADAPTER(obj) (GST_BASE_METADATA_CAST (obj)->common.metadata.xmp_adapter)
+
+#define GST_BASE_METADATA_IMG_TYPE(obj) (GST_BASE_METADATA_CAST (obj)->img_type)
+
+
+/**
+ * GstBaseMetadata:
+ * @element: the parent element.
+ *
+ * The opaque #GstBaseMetadata data structure.
+ */
+struct _GstBaseMetadata
+{
+  GstElement element;
+
+  /*< protected >*/
+  GstPad *sinkpad, *srcpad;
+
+  /*< private >*/
+  GstMetadataCommon common;
+
+  MetaOptions options;
+
+  gboolean need_processing;
+
+  GstAdapter *adapter_parsing;
+  GstAdapter *adapter_holding;
+  guint32 next_offset;
+  guint32 next_size;
+  ImageType img_type;
+
+  gint64 offset_orig;  /* offset in original stream */
+  gint64 offset;       /* offset in current stream */
+
+  GstBuffer * prepend_buffer;
+
+  gboolean need_more_data;
+
+};
+
+struct _GstBaseMetadataClass
+{
+  GstElementClass parent_class;
+
+  void (*processing) (GstBaseMetadata *basemetadata);
+
+  gboolean (*set_caps) (GstPad * pad, GstCaps * caps);
+
+  GstCaps* (*get_src_caps) (GstPad * pad);
+  GstCaps* (*get_sink_caps) (GstPad * pad);
+
+  gboolean (*sink_event) (GstPad * pad, GstEvent * event);
+
+};
+
+extern GType
+gst_base_metadata_get_type (void);
+
+extern void
+gst_base_metadata_set_option_flag(GstBaseMetadata *metadata, const MetaOptions options);
+
+extern void
+gst_base_metadata_unset_option_flag(GstBaseMetadata *metadata, const MetaOptions options);
+
+extern MetaOptions
+gst_base_metadata_get_option_flag(const GstBaseMetadata *metadata);
+
+extern void
+gst_base_metadata_update_segment_with_new_buffer (GstBaseMetadata *metadata,
+    guint8 ** buf, guint32 * size, MetadataChunkType type);
+
+extern void
+gst_base_metadata_chunk_array_remove_zero_size (GstBaseMetadata *metadata);
+
+G_END_DECLS
+#endif /* __GST_BASE_METADATA_H__ */

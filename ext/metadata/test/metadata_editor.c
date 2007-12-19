@@ -928,6 +928,7 @@ me_gst_setup_view_pipeline (const gchar * filename, GdkWindow * window)
 
   /* set elements's properties */
   g_object_set (gst_source, "location", filename, NULL);
+  g_object_set (gst_metadata_demux, "parse-only", TRUE, NULL);
   g_object_set (gst_video_sink, "force-aspect-ratio", TRUE, NULL);
 
 

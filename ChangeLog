@@ -1,3 +1,25 @@
+2007-12-19  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/Makefile.am:
+	* ext/metadata/TODO:
+	* ext/metadata/gstbasemetadata.c:
+	* ext/metadata/gstbasemetadata.h:
+	* ext/metadata/gstmetadatacommon.c:
+	* ext/metadata/gstmetadatacommon.h:
+	* ext/metadata/gstmetadatademux.c:
+	* ext/metadata/gstmetadatademux.h:
+	* ext/metadata/gstmetadatamux.c:
+	* ext/metadata/gstmetadatamux.h:
+	* ext/metadata/metadata.c:
+	* ext/metadata/metadata.h:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadataparsejpeg.c:
+	* ext/metadata/metadataparsepng.c:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/metadatatags.h:
+	* ext/metadata/test/metadata_editor.c:
+	  New base class for metadata elements.
+
 2007-12-18  Andy Wingo  <wingo@pobox.com>
 
 	* gst/switch/gstswitch-marshal.list:

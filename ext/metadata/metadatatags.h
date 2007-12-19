@@ -69,7 +69,7 @@ typedef enum {
 #define GST_TAG_IMAGE_XRESOLUTION "image-xresolution"
 #define GST_TAG_IMAGE_YRESOLUTION "image-yresolution"
 
-#define GST_TAG_CAPTURE_EXPOSURE_TIME      "capture-exposute-time"
+#define GST_TAG_CAPTURE_EXPOSURE_TIME      "capture-exposure-time"
 #define GST_TAG_CAPTURE_FNUMBER            "captute-fnumber"
 #define GST_TAG_CAPTURE_EXPOSURE_PROGRAM   "capture-exposure-program"
 #define GST_TAG_CAPTURE_BRIGHTNESS         "capture-brightness"

@@ -150,10 +150,9 @@ done:
  */
 
 void
-gst_metadata_common_init (GstMetadataCommon * common, gboolean parse,
-    guint8 options)
+gst_metadata_common_init (GstMetadataCommon * common, MetaOptions options)
 {
-  metadata_init (&common->metadata, parse, options);
+  metadata_init (&common->metadata, options);
 }
 
 void

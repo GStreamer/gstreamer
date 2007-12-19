@@ -3,6 +3,7 @@ This file contains a list of things to be done as well some open issues (questio
 
 TODO:
 
+0- Remove "common" file (put inside class)
 1- Add individual tags IPTC and XMP (and more for EXIF)
 2- Get properties like 'width' and 'height' from caps
 3- Review the code (in order to move to gst-plugins-good)
@@ -16,4 +17,8 @@ OPEN ISSUES:
   is the metadata still valid? which fields are no valid anymore?
 3- Add GST_TYPE_FRACTION support for GStreamer TAGS
 4- After decided issue (4) put more things to gstmetadatacommon (or else create a Class)
+
+KNOWN BUGS
+
+1- exposure-time, exposure-program and fnumber can't be read from a file saved from scratch (whithout WHOLE_CHUNK from previous file)
 
