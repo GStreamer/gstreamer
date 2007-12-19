@@ -79,7 +79,9 @@ static GstFlowReturn gst_valve_transform_ip (GstBaseTransform *trans,
 static gboolean gst_valve_event (GstBaseTransform *trans, GstEvent *event);
 static GstFlowReturn gst_valve_buffer_alloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
-
+static GstFlowReturn gst_valve_prepare_output_buffer (GstBaseTransform *trans,
+    GstBuffer * in_buf, gint out_size, GstCaps * out_caps,
+    GstBuffer ** out_buf);
 
 static void
 _do_init (GType type)
@@ -120,6 +122,8 @@ gst_valve_class_init (GstValveClass *klass)
 
   gstbasetransform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_valve_transform_ip);
+  gstbasetransform_class->prepare_output_buffer =
+      GST_DEBUG_FUNCPTR (gst_valve_prepare_output_buffer);
   gstbasetransform_class->event =
       GST_DEBUG_FUNCPTR (gst_valve_event);
   gstbasetransform_class->src_event =
@@ -138,7 +142,8 @@ static void
 gst_valve_init (GstValve *valve, GstValveClass *klass)
 {
 
-  valve->drop = 0;
+  valve->drop = FALSE;
+  valve->discont = FALSE;
 
   valve->original_allocfunc =
     GST_BASE_TRANSFORM (valve)->sinkpad->bufferallocfunc;
@@ -149,7 +154,7 @@ gst_valve_init (GstValve *valve, GstValveClass *klass)
 
 
 #if GST_VERSION_MINOR >= 10 &&  GST_VERSION_MICRO >= 13
-  gst_base_transform_set_passthrough ((GstBaseTransform *)valve, TRUE);
+  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (valve), FALSE);
 #endif
 
 }
@@ -201,22 +206,48 @@ gst_valve_get_property (GObject *object,
 }
 
 static GstFlowReturn
-gst_valve_transform_ip (GstBaseTransform *trans, GstBuffer *buf)
+gst_valve_prepare_output_buffer (GstBaseTransform *trans, GstBuffer * in_buf,
+                                 gint out_size, GstCaps * out_caps,
+                                 GstBuffer ** out_buf)
 {
   GstValve *valve = GST_VALVE (trans);
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_OBJECT_LOCK (GST_OBJECT (trans));
-  if (valve->drop) {
+  if (valve->drop)
+  {
 #if GST_VERSION_MINOR >= 10 &&  GST_VERSION_MICRO >= 13
     ret = GST_BASE_TRANSFORM_FLOW_DROPPED;
 #endif
-    buf = NULL;
+    *out_buf = NULL;
+    valve->discont = TRUE;
+  }
+  else
+  {
+    if (valve->discont)
+    {
+      *out_buf = gst_buffer_make_metadata_writable (in_buf);
+      GST_BUFFER_FLAG_SET (*out_buf, GST_BUFFER_FLAG_DISCONT);
+      valve->discont = FALSE;
+
+    }
+    else
+    {
+      *out_buf = in_buf;
+    }
+    gst_buffer_ref (*out_buf);
   }
   GST_OBJECT_UNLOCK (GST_OBJECT (trans));
 
   return ret;
 }
+
+static GstFlowReturn
+gst_valve_transform_ip (GstBaseTransform *trans, GstBuffer *buf)
+{
+  return GST_FLOW_OK;
+}
+
 
 static gboolean
 gst_valve_event (GstBaseTransform *trans, GstEvent *event)
