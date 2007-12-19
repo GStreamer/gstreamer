@@ -74,10 +74,11 @@ static void gst_valve_get_property (GObject *object,
     guint prop_id, GValue *value, GParamSpec *pspec);
 static void gst_valve_dispose (GObject *object);
 
-static GstFlowReturn
-gst_valve_transform_ip (GstBaseTransform *trans, GstBuffer *buf);
-static gboolean
-gst_valve_event (GstBaseTransform *trans, GstEvent *event);
+static GstFlowReturn gst_valve_transform_ip (GstBaseTransform *trans,
+    GstBuffer *buf);
+static gboolean gst_valve_event (GstBaseTransform *trans, GstEvent *event);
+static GstFlowReturn gst_valve_buffer_alloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf);
 
 
 static void
@@ -138,6 +139,14 @@ gst_valve_init (GstValve *valve, GstValveClass *klass)
 {
 
   valve->drop = 0;
+
+  valve->original_allocfunc =
+    GST_BASE_TRANSFORM (valve)->sinkpad->bufferallocfunc;
+
+  gst_pad_set_bufferalloc_function (
+      GST_BASE_TRANSFORM (valve)->sinkpad,
+      GST_DEBUG_FUNCPTR(gst_valve_buffer_alloc));
+
 
 #if GST_VERSION_MINOR >= 10 &&  GST_VERSION_MICRO >= 13
   gst_base_transform_set_passthrough ((GstBaseTransform *)valve, TRUE);
@@ -222,6 +231,32 @@ gst_valve_event (GstBaseTransform *trans, GstEvent *event)
 
   return ret;
 }
+
+static GstFlowReturn
+gst_valve_buffer_alloc (GstPad * pad, guint64 offset, guint size,
+                        GstCaps * caps, GstBuffer ** buf)
+{
+  GstValve *valve = GST_VALVE (gst_pad_get_parent_element (pad));
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  GST_OBJECT_LOCK (GST_OBJECT (valve));
+  if (valve->drop)
+  {
+    *buf = gst_buffer_new_and_alloc (size);
+    GST_BUFFER_OFFSET (*buf) = offset;
+    gst_buffer_set_caps (*buf, caps);
+  }
+  else
+  {
+    ret = valve->original_allocfunc (pad, offset, size, caps, buf);
+  }
+  GST_OBJECT_UNLOCK (GST_OBJECT (valve));
+
+  gst_object_unref (valve);
+
+  return ret;
+}
+
 
 gboolean
 gst_valve_plugin_init (GstPlugin *plugin)

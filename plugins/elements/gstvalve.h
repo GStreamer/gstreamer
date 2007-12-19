@@ -54,6 +54,8 @@ struct _GstValve
 
   gboolean      drop;
 
+  GstPadBufferAllocFunction original_allocfunc;
+
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };
