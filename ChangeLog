@@ -1,3 +1,13 @@
+2007-12-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Peter Kjellerstedt <pkj axis com>
+
+	* libs/gst/check/gstcheck.h:
+	  Fix detection of the check version we're compiling against (would
+	  otherwise break if check goes v0.10.0); correctly report the
+	  name of the failed test again in case of failure, instead of
+	  just 'tf' (fixes #504499).
+
 2007-12-19  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_send_event),

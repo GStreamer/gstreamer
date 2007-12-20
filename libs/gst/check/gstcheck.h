@@ -94,7 +94,9 @@ gst_check_message_error (msg, GST_MESSAGE_ERROR,		\
  *
  * wrapper for checks END_TEST
  */
-#if CHECK_MAJOR_VERSION >= 0 && CHECK_MINOR_VERSION >= 9 && CHECK_MICRO_VERSION >= 4
+#if CHECK_MAJOR_VERSION > 0 || \
+    (CHECK_MAJOR_VERSION == 0 && CHECK_MINOR_VERSION > 9) || \
+    (CHECK_MAJOR_VERSION == 0 && CHECK_MINOR_VERSION == 9 && CHECK_MICRO_VERSION > 3)
 #define GST_START_TEST(__testname) \
 static void __testname (int __i__)\
 {\
@@ -401,16 +403,28 @@ int main (int argc, char **argv)				\
 
 gboolean _gst_check_run_test_func (const gchar * func_name);
 
+#if CHECK_MAJOR_VERSION > 0 || \
+    (CHECK_MAJOR_VERSION == 0 && CHECK_MINOR_VERSION > 9) || \
+    (CHECK_MAJOR_VERSION == 0 && CHECK_MINOR_VERSION == 9 && CHECK_MICRO_VERSION > 3)
 static inline void
-__gst_tcase_add_test (TCase * tc, TFun tf, const gchar * func_name)
+__gst_tcase_add_test (TCase * tc, TFun tf, const char * fname, int signal,
+    int start, int end)
 {
-  if (_gst_check_run_test_func (func_name)) {
-    tcase_add_test (tc, tf);
+  if (_gst_check_run_test_func (fname)) {
+    _tcase_add_test (tc, tf, fname, signal, start, end);
   }
 }
+#else
+static inline void
+__gst_tcase_add_test (TCase * tc, TFun tf, const char * fname, int signal)
+{
+  if (_gst_check_run_test_func (fname)) {
+    _tcase_add_test (tc, tf, fname, signal);
+  }
+}
+#endif
 
-#undef tcase_add_test
-#define tcase_add_test(tc,tf) __gst_tcase_add_test(tc,tf,G_STRINGIFY(tf))
+#define _tcase_add_test __gst_tcase_add_test
 
 G_END_DECLS
 
