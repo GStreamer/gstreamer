@@ -90,7 +90,7 @@ skip_junk:
     goto too_small;
 
   *_chunk_data = buf;
-  *_offset += 8 + ((size + 1) & ~1);
+  *_offset += 8 + GST_ROUND_UP_2 (size);
 
   return GST_FLOW_OK;
 
@@ -166,7 +166,7 @@ gst_riff_parse_chunk (GstElement * element, GstBuffer * buf,
     *chunk_data = NULL;
 
   *_fourcc = fourcc;
-  *_offset += 8 + ((size + 1) & ~1);
+  *_offset += 8 + GST_ROUND_UP_2 (size);
 
   return TRUE;
 

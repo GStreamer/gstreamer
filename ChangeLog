@@ -1,3 +1,8 @@
+2007-12-20  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* gst-libs/gst/riff/riff-read.c:
+	Use GST_ROUND_UP_2 macro
+
 2007-12-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/.cvsignore:
