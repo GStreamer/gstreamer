@@ -1,3 +1,9 @@
+2007-12-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/equalizer/.cvsignore:
+	* gst/switch/.cvsignore:
+	  Ignore more.
+
 2007-12-19  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/Makefile.am:
