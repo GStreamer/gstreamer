@@ -110,6 +110,9 @@ struct _GstPlayBaseBinClass {
   /* virtual fuctions */
   gboolean (*setup_output_pads) (GstPlayBaseBin *play_base_bin,
                                  GstPlayBaseGroup *group);
+
+  void     (*set_subtitles_visible) (GstPlayBaseBin *play_base_bin,
+                                     gboolean visible);
 };
 
 GType gst_play_base_bin_get_type (void);

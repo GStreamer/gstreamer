@@ -1,3 +1,19 @@
+2007-12-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_class_init):
+	* gst/playback/gstplaybasebin.c: (set_subtitles_visible),
+	  (set_active_source):
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),
+	  (setup_sinks), (playbin_set_subtitles_visible):
+	  Make switching off of subtitles work. To avoid all kind of
+	  problems with unlinking of the subtitle input, we just keep
+	  the subtitle inputs linked as they are and tell textoverlay
+	  not to render them. Fixes #373011.
+	  Other subtitle switching issues (esp. when there are both
+	  external and in-stream subtitles) remain. They'll be solved
+	  in playbin2.
+
 2007-12-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gststreamselector.c: (gst_selector_pad_init):

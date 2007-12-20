@@ -400,6 +400,7 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
    *
    * Since: 0.10.15
    **/
+  /* FIXME 0.11: rename to "visible" or "text-visible" or "render-text" */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SILENT,
       g_param_spec_boolean ("silent", "silent",
           "Whether to render the text string",

@@ -2380,6 +2380,17 @@ muted_group_change_state (GstElement * element,
 }
 #endif
 
+static void
+set_subtitles_visible (GstPlayBaseBin * play_base_bin, gboolean visible)
+{
+  GstPlayBaseBinClass *klass = GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin);
+
+  /* we use a vfunc for this since we don't have a reference to the
+   * textoverlay element, but playbin does */
+  if (klass != NULL && klass->set_subtitles_visible != NULL)
+    klass->set_subtitles_visible (play_base_bin, visible);
+}
+
 /*
  * Caller has group-lock held.
  */
@@ -2401,6 +2412,17 @@ set_active_source (GstPlayBaseBin * play_base_bin,
   if (!group || !group->type[type - 1].preroll) {
     GST_LOG ("No active group, or group for type %d has no preroll", type);
     return;
+  }
+
+  /* HACK: instead of unlinking the subtitle input (= lots of hassle,
+   * especially if subtitles come from an external source), just tell
+   * textoverlay not to render them */
+  if (type == GST_STREAM_TYPE_TEXT) {
+    gboolean visible = (source_num != -1);
+
+    set_subtitles_visible (play_base_bin, visible);
+    if (!visible)
+      return;
   }
 
   sel = group->type[type - 1].selector;

@@ -324,6 +324,8 @@ static void gst_play_bin_dispose (GObject * object);
 static gboolean setup_sinks (GstPlayBaseBin * play_base_bin,
     GstPlayBaseGroup * group);
 static void remove_sinks (GstPlayBin * play_bin);
+static void playbin_set_subtitles_visible (GstPlayBaseBin * play_base_bin,
+    gboolean visible);
 
 static void gst_play_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -428,6 +430,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_play_bin_handle_message);
 
   playbasebin_klass->setup_output_pads = setup_sinks;
+  playbasebin_klass->set_subtitles_visible = playbin_set_subtitles_visible;
 }
 
 static void
@@ -1623,6 +1626,20 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
   }
 
   return res;
+}
+
+static void
+playbin_set_subtitles_visible (GstPlayBaseBin * play_base_bin, gboolean visible)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (play_base_bin);
+
+  /* we're ignoring the case of someone setting the 'current-text' property
+   * before textoverlay is set up (which is probably okay, since playbasebin
+   * will just select the first subtitle stream as active stream regardless) */
+  if (playbin->textoverlay_element != NULL) {
+    GST_LOG_OBJECT (playbin, "setting subtitle visibility to %d", visible);
+    g_object_set (playbin->textoverlay_element, "silent", !visible, NULL);
+  }
 }
 
 /* Send an event to our sinks until one of them works; don't then send to the
