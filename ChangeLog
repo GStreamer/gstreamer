@@ -1,5 +1,10 @@
 2007-12-20  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/.cvsignore:
+	  Ignore more.
+
+2007-12-20  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_class_init):
 	* gst/playback/gstplaybasebin.c: (set_subtitles_visible),
 	  (set_active_source):
