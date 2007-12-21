@@ -1,11 +1,14 @@
 
 This file contains a list of things to be done as well some open issues (questions) related to design/implementation.
 
-* I (Edgard Lima - alima - edgard.lima@indt.org.br) will be on vacation until 05-Jan-2008. After that I will be back on it.
+INFO:
+
+1- I (Edgard Lima - alima - edgard.lima@indt.org.br) will be on vacation until 05-Jan-2008. After that I will be back on it.
+2- to see what tags are mapped so far run 'grep -n GST_TAG *.[ch]' into this folder.
 
 TODO:
 
-1- Add individual tags IPTC and XMP (and more for EXIF)
+1- Add individual XMP tags (and more for EXIF and IPTC)
 2- Get properties like 'width' and 'height' from caps
 3- Review the code (in order to move to gst-plugins-good)
 4- Document how the plugin works (atchitecture and interaction beteween modules)
@@ -17,8 +20,9 @@ OPEN ISSUES:
   ex: file.jpeg has XMP, then we do filesrc ! metadataparse ! jpegdec ! pngenc ! metadatamux ! files
   is the metadata still valid? which fields are no valid anymore?
 3- Add GST_TYPE_FRACTION support for GStreamer TAGS
+4- currently, in JPEG files, if there is a Photoshop segment, everything inside it but IPTC will be lost. From the point of view of implementation it is easy, but I still don't now how to solve from the point of view of "designing". Anyway I think it is not so important.
 
 KNOWN BUGS
 
 1- exposure-time, exposure-program and fnumber can't be read from a file saved from scratch (whithout WHOLE_CHUNK from previous file)
-  I believe it is a bu in libexif
+  I believe it is a bug in libexif

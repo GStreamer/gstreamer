@@ -42,6 +42,7 @@
  */
 
 #include "metadataparseutil.h"
+#include <string.h>
 
 void
 metadataparse_util_tag_list_add_chunk (GstTagList * taglist,

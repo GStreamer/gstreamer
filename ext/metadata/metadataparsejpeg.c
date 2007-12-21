@@ -199,7 +199,7 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
   static const char JfifHeader[] = "JFIF";
   static const unsigned char ExifHeader[] =
       { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
-  static const char IptcHeader[] = "Photoshop 3.0";
+  static const char PhotoshopHeader[] = "Photoshop 3.0";
   static const char XmpHeader[] = "http://ns.adobe.com/xap/1.0/";
 
   *next_start = *buf;
@@ -354,7 +354,7 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
         }
 
 
-        if (0 == memcmp (IptcHeader, *buf, 14)) {
+        if (0 == memcmp (PhotoshopHeader, *buf, 14)) {
 
           if (!jpeg_data->parse_only) {
 

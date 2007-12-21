@@ -156,20 +156,20 @@ extern GType
 gst_base_metadata_get_type (void);
 
 extern void
-gst_base_metadata_set_option_flag(GstBaseMetadata *metadata, const MetaOptions options);
+gst_base_metadata_set_option_flag(GstBaseMetadata *base, const MetaOptions options);
 
 extern void
-gst_base_metadata_unset_option_flag(GstBaseMetadata *metadata, const MetaOptions options);
+gst_base_metadata_unset_option_flag(GstBaseMetadata *base, const MetaOptions options);
 
 extern MetaOptions
-gst_base_metadata_get_option_flag(const GstBaseMetadata *metadata);
+gst_base_metadata_get_option_flag(const GstBaseMetadata *base);
 
 extern void
-gst_base_metadata_update_segment_with_new_buffer (GstBaseMetadata *metadata,
+gst_base_metadata_update_segment_with_new_buffer (GstBaseMetadata *base,
     guint8 ** buf, guint32 * size, MetadataChunkType type);
 
 extern void
-gst_base_metadata_chunk_array_remove_zero_size (GstBaseMetadata *metadata);
+gst_base_metadata_chunk_array_remove_zero_size (GstBaseMetadata *base);
 
 G_END_DECLS
 #endif /* __GST_BASE_METADATA_H__ */

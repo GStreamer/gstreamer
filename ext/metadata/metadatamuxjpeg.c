@@ -75,6 +75,35 @@ metadatamux_wrap_chunk (MetadataChunk * chunk, const guint8 * buf,
   }
 }
 
+#ifdef HAVE_IPTC
+static gboolean
+metadatamux_wrap_iptc_with_ps3 (unsigned char **buf, unsigned int *buf_size)
+{
+  unsigned int out_size = *buf_size + 4096;
+  unsigned char *outbuf = g_new (unsigned char, out_size);
+  int size_written;
+  gboolean ret = TRUE;
+
+  size_written =
+      iptc_jpeg_ps3_save_iptc (NULL, 0, *buf, *buf_size, outbuf, out_size);
+
+  g_free (*buf);
+  *buf = NULL;
+  *buf_size = 0;
+
+  if (size_written < 0) {
+    g_free (outbuf);
+    ret = FALSE;
+  } else {
+    *buf_size = size_written;
+    *buf = outbuf;
+  }
+
+  return ret;
+
+}
+#endif /* #ifdef HAVE_IPTC */
+
 void
 metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
 {
@@ -93,21 +122,12 @@ metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
         case MD_CHUNK_IPTC:
 #ifdef HAVE_IPTC
         {
-          unsigned int size = jpeg_data->inject_chunks->chunk[i].size + 256;
-          unsigned char *buf = g_new (guint8, size);
-
-          size = iptc_jpeg_ps3_save_iptc (NULL, 0,
-              jpeg_data->inject_chunks->chunk[i].data,
-              jpeg_data->inject_chunks->chunk[i].size, buf, size);
-          if (size > 0) {
-            g_free (jpeg_data->inject_chunks->chunk[i].data);
-            jpeg_data->inject_chunks->chunk[i].data = buf;
-            jpeg_data->inject_chunks->chunk[i].size = size;
+          if (metadatamux_wrap_iptc_with_ps3 (&jpeg_data->inject_chunks->
+                  chunk[i].data, &jpeg_data->inject_chunks->chunk[i].size)) {
             metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i], NULL,
                 0, 0xFF, 0xED);
           } else {
             GST_ERROR ("Invalid IPTC chunk\n");
-            g_free (buf);
             /* FIXME: remove entry from list */
           }
         }
@@ -225,7 +245,6 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
   static const char JfifHeader[] = "JFIF";
   static const unsigned char ExifHeader[] =
       { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
-  static const char IptcHeader[] = "Photoshop 3.0";
   static const char XmpHeader[] = "http://ns.adobe.com/xap/1.0/";
 
   *next_start = *buf;

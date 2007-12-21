@@ -263,10 +263,10 @@ gboolean
 gst_base_metadata_strip_push_buffer (GstBaseMetadata * base,
     gint64 offset_orig, GstBuffer ** prepend, GstBuffer ** buf)
 {
-  MetadataChunk *strip = base->metadata->strip_chunks.chunk;
-  MetadataChunk *inject = base->metadata->inject_chunks.chunk;
-  const gsize strip_len = base->metadata->strip_chunks.len;
-  const gsize inject_len = base->metadata->inject_chunks.len;
+  MetadataChunk *strip = META_DATA_STRIP_CHUNKS (base->metadata).chunk;
+  MetadataChunk *inject = META_DATA_INJECT_CHUNKS (base->metadata).chunk;
+  const gsize strip_len = META_DATA_STRIP_CHUNKS (base->metadata).len;
+  const gsize inject_len = META_DATA_INJECT_CHUNKS (base->metadata).len;
 
   gboolean buffer_reallocated = FALSE;
 
@@ -493,10 +493,10 @@ gboolean
 gst_base_metadata_translate_pos_to_orig (GstBaseMetadata * base,
     gint64 pos, gint64 * orig_pos, GstBuffer ** buf)
 {
-  MetadataChunk *strip = base->metadata->strip_chunks.chunk;
-  MetadataChunk *inject = base->metadata->inject_chunks.chunk;
-  const gsize strip_len = base->metadata->strip_chunks.len;
-  const gsize inject_len = base->metadata->inject_chunks.len;
+  MetadataChunk *strip = META_DATA_STRIP_CHUNKS (base->metadata).chunk;
+  MetadataChunk *inject = META_DATA_INJECT_CHUNKS (base->metadata).chunk;
+  const gsize strip_len = META_DATA_STRIP_CHUNKS (base->metadata).len;
+  const gsize inject_len = META_DATA_INJECT_CHUNKS (base->metadata).len;
   const gint64 duration_orig = base->duration_orig;
   const gint64 duration = base->duration;
 
@@ -597,8 +597,8 @@ gst_base_metadata_calculate_offsets (GstBaseMetadata * base)
   int i, j;
   guint32 append_size;
   guint32 bytes_striped, bytes_inject;
-  MetadataChunk *strip = base->metadata->strip_chunks.chunk;
-  MetadataChunk *inject = base->metadata->inject_chunks.chunk;
+  MetadataChunk *strip = META_DATA_STRIP_CHUNKS (base->metadata).chunk;
+  MetadataChunk *inject = META_DATA_INJECT_CHUNKS (base->metadata).chunk;
   gsize strip_len;
   gsize inject_len;
 
@@ -607,8 +607,8 @@ gst_base_metadata_calculate_offsets (GstBaseMetadata * base)
 
   metadata_lazy_update (base->metadata);
 
-  strip_len = base->metadata->strip_chunks.len;
-  inject_len = base->metadata->inject_chunks.len;
+  strip_len = META_DATA_STRIP_CHUNKS (base->metadata).len;
+  inject_len = META_DATA_INJECT_CHUNKS (base->metadata).len;
 
   bytes_striped = 0;
   bytes_inject = 0;
@@ -1661,23 +1661,22 @@ done:
 }
 
 void
-gst_base_metadata_set_option_flag (GstBaseMetadata * metadata,
-    MetaOptions options)
+gst_base_metadata_set_option_flag (GstBaseMetadata * base, MetaOptions options)
 {
-  metadata->options |= options;
+  base->options |= options;
 }
 
 void
-gst_base_metadata_unset_option_flag (GstBaseMetadata * metadata,
+gst_base_metadata_unset_option_flag (GstBaseMetadata * base,
     MetaOptions options)
 {
-  metadata->options &= ~options;
+  base->options &= ~options;
 }
 
 MetaOptions
-gst_base_metadata_get_option_flag (const GstBaseMetadata * metadata)
+gst_base_metadata_get_option_flag (const GstBaseMetadata * base)
 {
-  return metadata->options;
+  return base->options;
 }
 
 void
@@ -1685,8 +1684,8 @@ gst_base_metadata_update_segment_with_new_buffer (GstBaseMetadata * base,
     guint8 ** buf, guint32 * size, MetadataChunkType type)
 {
   int i;
-  MetadataChunk *inject = base->metadata->inject_chunks.chunk;
-  const gsize inject_len = base->metadata->inject_chunks.len;
+  MetadataChunk *inject = META_DATA_INJECT_CHUNKS (base->metadata).chunk;
+  const gsize inject_len = META_DATA_INJECT_CHUNKS (base->metadata).len;
 
   if (!(buf && size))
     goto done;
@@ -1714,7 +1713,8 @@ done:
 }
 
 void
-gst_base_metadata_chunk_array_remove_zero_size (GstBaseMetadata * metadata)
+gst_base_metadata_chunk_array_remove_zero_size (GstBaseMetadata * base)
 {
-  metadata_chunk_array_remove_zero_size (&metadata->metadata->inject_chunks);
+  metadata_chunk_array_remove_zero_size (&META_DATA_INJECT_CHUNKS (base->
+          metadata));
 }

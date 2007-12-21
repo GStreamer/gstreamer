@@ -106,6 +106,9 @@ typedef struct _tag_MetaData
 
 #define META_DATA_IMG_TYPE(p) (p)->img_type
 
+#define META_DATA_STRIP_CHUNKS(p) (p)->strip_chunks
+#define META_DATA_INJECT_CHUNKS(p) (p)->inject_chunks
+
 extern void metadata_init (MetaData ** meta_data, const MetaOptions options);
 
 extern void metadata_dispose (MetaData ** meta_data);
