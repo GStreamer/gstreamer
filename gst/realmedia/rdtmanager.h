@@ -69,9 +69,18 @@ struct _GstRDTManagerClass {
   GstElementClass parent_class;
 
   /* get the caps for pt */
-  GstCaps* (*request_pt_map)  (GstRDTManager *rtpdec, guint session, guint pt);
+  GstCaps* (*request_pt_map)    (GstRDTManager *rtpdec, guint session, guint pt);
 
-  void     (*clear_pt_map)    (GstRDTManager *rtpdec);
+  void     (*clear_pt_map)      (GstRDTManager *rtpdec);
+
+  void     (*on_new_ssrc)       (GstRDTManager *rtpdec, guint session, guint32 ssrc);
+  void     (*on_ssrc_collision) (GstRDTManager *rtpdec, guint session, guint32 ssrc);
+  void     (*on_ssrc_validated) (GstRDTManager *rtpdec, guint session, guint32 ssrc);
+  void     (*on_ssrc_active)    (GstRDTManager *rtpdec, guint session, guint32 ssrc);
+  void     (*on_ssrc_sdes)      (GstRDTManager *rtpdec, guint session, guint32 ssrc);
+  void     (*on_bye_ssrc)       (GstRDTManager *rtpdec, guint session, guint32 ssrc);
+  void     (*on_bye_timeout)    (GstRDTManager *rtpdec, guint session, guint32 ssrc);
+  void     (*on_timeout)        (GstRDTManager *rtpdec, guint session, guint32 ssrc);
 };
 
 GType gst_rdt_manager_get_type(void);

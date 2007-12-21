@@ -72,6 +72,15 @@ enum
 {
   SIGNAL_REQUEST_PT_MAP,
   SIGNAL_CLEAR_PT_MAP,
+
+  SIGNAL_ON_NEW_SSRC,
+  SIGNAL_ON_SSRC_COLLISION,
+  SIGNAL_ON_SSRC_VALIDATED,
+  SIGNAL_ON_SSRC_ACTIVE,
+  SIGNAL_ON_SSRC_SDES,
+  SIGNAL_ON_BYE_SSRC,
+  SIGNAL_ON_BYE_TIMEOUT,
+  SIGNAL_ON_TIMEOUT,
   LAST_SIGNAL
 };
 
@@ -251,6 +260,37 @@ gst_rdt_manager_marshal_BOXED__UINT_UINT (GClosure * closure,
   g_value_take_boxed (return_value, v_return);
 }
 
+void
+gst_rdt_manager_marshal_VOID__UINT_UINT (GClosure * closure,
+    GValue * return_value,
+    guint n_param_values,
+    const GValue * param_values,
+    gpointer invocation_hint, gpointer marshal_data)
+{
+  typedef void (*GMarshalFunc_VOID__UINT_UINT) (gpointer data1,
+      guint arg_1, guint arg_2, gpointer data2);
+  register GMarshalFunc_VOID__UINT_UINT callback;
+  register GCClosure *cc = (GCClosure *) closure;
+  register gpointer data1, data2;
+
+  g_return_if_fail (n_param_values == 3);
+
+  if (G_CCLOSURE_SWAP_DATA (closure)) {
+    data1 = closure->data;
+    data2 = g_value_peek_pointer (param_values + 0);
+  } else {
+    data1 = g_value_peek_pointer (param_values + 0);
+    data2 = closure->data;
+  }
+  callback =
+      (GMarshalFunc_VOID__UINT_UINT) (marshal_data ? marshal_data : cc->
+      callback);
+
+  callback (data1,
+      g_marshal_value_peek_uint (param_values + 1),
+      g_marshal_value_peek_uint (param_values + 2), data2);
+}
+
 static void
 gst_rdt_manager_class_init (GstRDTManagerClass * g_class)
 {
@@ -285,10 +325,57 @@ gst_rdt_manager_class_init (GstRDTManagerClass * g_class)
       NULL, NULL, gst_rdt_manager_marshal_BOXED__UINT_UINT, GST_TYPE_CAPS, 2,
       G_TYPE_UINT, G_TYPE_UINT);
 
+  /**
+   * GstRDTManager::clear-pt-map:
+   * @rtpbin: the object which received the signal
+   *
+   * Clear all previously cached pt-mapping obtained with
+   * GstRDTManager::request-pt-map.
+   */
   gst_rdt_manager_signals[SIGNAL_CLEAR_PT_MAP] =
       g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRDTManagerClass, clear_pt_map),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+  /**
+   * GstRDTManager::on-bye-ssrc:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the SSRC 
+   *
+   * Notify of an SSRC that became inactive because of a BYE packet.
+   */
+  gst_rdt_manager_signals[SIGNAL_ON_BYE_SSRC] =
+      g_signal_new ("on-bye-ssrc", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRDTManagerClass, on_bye_ssrc),
+      NULL, NULL, gst_rdt_manager_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
+  /**
+   * GstRDTManager::on-bye-timeout:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the SSRC 
+   *
+   * Notify of an SSRC that has timed out because of BYE
+   */
+  gst_rdt_manager_signals[SIGNAL_ON_BYE_TIMEOUT] =
+      g_signal_new ("on-bye-timeout", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRDTManagerClass, on_bye_timeout),
+      NULL, NULL, gst_rdt_manager_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
+  /**
+   * GstRDTManager::on-timeout:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the SSRC 
+   *
+   * Notify of an SSRC that has timed out
+   */
+  gst_rdt_manager_signals[SIGNAL_ON_TIMEOUT] =
+      g_signal_new ("on-timeout", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRDTManagerClass, on_timeout),
+      NULL, NULL, gst_rdt_manager_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
 
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rdt_manager_provide_clock);
