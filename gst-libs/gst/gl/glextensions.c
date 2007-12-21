@@ -122,3 +122,60 @@ DEFINE_FUNC_RET (glXWaitForSbcOML, Bool,
 DEFINE_FUNC_RET (glXSwapIntervalSGI, int, (int interval), (interval));
 
 DEFINE_FUNC_RET (glXSwapIntervalMESA, int, (unsigned int interval), (interval));
+
+#if 0
+DEFINE_FUNC (glBindFramebufferEXT, (int target, uint framebuffer),
+    (target, framebuffer));
+
+DEFINE_FUNC (glDeleteRenderbuffersEXT, (int n, unsigned int *renderbuffers),
+    (n, renderbuffers));
+DEFINE_FUNC (glGenRenderbuffersEXT, (int n, unsigned int *renderbuffers),
+    (n, renderbuffers));
+DEFINE_FUNC (glRenderbufferStorageEXT, (int target, int internalformat,
+        int width, int height), (target, internalformat, width, height));
+DEFINE_FUNC (glBindRenderbufferEXT, (int target, unsigned int renderbuffer),
+    (target, renderbuffer));
+DEFINE_FUNC (glFramebufferRenderbufferEXT,
+    (int target, int attachment, int renderbuffertarget,
+        unsigned int renderbuffer), (target, attachment, renderbuffertarget,
+        renderbuffer));
+#endif
+
+/* EXT_framebuffer_object */
+DEFINE_FUNC_RET (glIsRenderbufferEXT, Bool,
+    (GLuint renderbuffer), (renderbuffer));
+DEFINE_FUNC (glBindRenderbufferEXT,
+    (GLenum target, GLuint renderbuffer), (target, renderbuffer));
+DEFINE_FUNC (glDeleteRenderbuffersEXT,
+    (GLsizei n, GLuint * renderbuffers), (n, renderbuffers));
+DEFINE_FUNC (glGenRenderbuffersEXT,
+    (GLsizei n, GLuint * renderbuffers), (n, renderbuffers));
+DEFINE_FUNC (glRenderbufferStorageEXT,
+    (GLenum target, GLenum internalformat, GLsizei width, GLsizei height),
+    (target, internalformat, width, height));
+DEFINE_FUNC (glGetRenderbufferParameterivEXT,
+    (GLenum target, GLenum pname, GLint * params), (target, pname, params));
+DEFINE_FUNC_RET (glIsFramebufferEXT, Bool, (GLuint framebuffer), (framebuffer));
+DEFINE_FUNC (glBindFramebufferEXT,
+    (GLenum target, GLuint framebuffer), (target, framebuffer));
+DEFINE_FUNC (glDeleteFramebuffersEXT,
+    (GLsizei n, GLuint * framebuffers), (n, framebuffers));
+DEFINE_FUNC (glGenFramebuffersEXT,
+    (GLsizei n, GLuint * framebuffers), (n, framebuffers));
+DEFINE_FUNC_RET (glCheckFramebufferStatusEXT, GLenum,
+    (GLenum target), (target));
+DEFINE_FUNC (glFramebufferTexture1DEXT,
+    (GLenum target, GLenum attachment, GLenum textarget, GLuint texture,
+        GLint level), (target, attachment, textarget, texture, level));
+DEFINE_FUNC (glFramebufferTexture2DEXT, (GLenum target, GLenum attachment,
+        GLenum textarget, GLuint texture, GLint level), (target, attachment,
+        textarget, texture, level));
+DEFINE_FUNC (glFramebufferTexture3DEXT, (GLenum target, GLenum attachment,
+        GLenum textarget, GLuint texture, GLint level, GLint zoffset), (target,
+        attachment, textarget, texture, level, zoffset));
+DEFINE_FUNC (glFramebufferRenderbufferEXT, (GLenum target, GLenum attachment,
+        GLenum renderbuffertarget, GLuint renderbuffer), (target, attachment,
+        renderbuffertarget, renderbuffer));
+DEFINE_FUNC (glGetFramebufferAttachmentParameterivEXT, (GLenum target,
+        GLenum pname, GLint * params), (target, pname, params));
+DEFINE_FUNC (glGenerateMipmapEXT, (GLenum target), (target));

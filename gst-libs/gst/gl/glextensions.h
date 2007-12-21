@@ -29,6 +29,30 @@ Bool glXWaitForSbcOML (Display *, GLXDrawable, int64_t, int64_t *, int64_t *, in
 int glXSwapIntervalSGI (int);
 int glXSwapIntervalMESA (unsigned int);
 
+/* EXT_framebuffer_object */
+Bool glIsRenderbufferEXT (GLuint renderbuffer);
+void glBindRenderbufferEXT (GLenum target, GLuint renderbuffer);
+void glDeleteRenderbuffersEXT (GLsizei n, GLuint *renderbuffers);
+void glGenRenderbuffersEXT (GLsizei n, GLuint *renderbuffers);
+void glRenderbufferStorageEXT (GLenum target, GLenum internalformat,
+    GLsizei width, GLsizei height);
+void glGetRenderbufferParameterivEXT (GLenum target, GLenum pname, GLint *params);
+Bool glIsFramebufferEXT (GLuint framebuffer);
+void glBindFramebufferEXT (GLenum target, GLuint framebuffer);
+void glDeleteFramebuffersEXT (GLsizei n, GLuint *framebuffers);
+void glGenFramebuffersEXT (GLsizei n, GLuint *framebuffers);
+GLenum glCheckFramebufferStatusEXT (GLenum target);
+void glFramebufferTexture1DEXT (GLenum target, GLenum attachment,
+    GLenum textarget, GLuint texture, GLint level);
+void glFramebufferTexture2DEXT (GLenum target, GLenum attachment,
+    GLenum textarget, GLuint texture, GLint level);
+void glFramebufferTexture3DEXT (GLenum target, GLenum attachment,
+    GLenum textarget, GLuint texture, GLint level, GLint zoffset);
+void glFramebufferRenderbufferEXT (GLenum target, GLenum attachment,
+    GLenum renderbuffertarget, GLuint renderbuffer);
+void glGetFramebufferAttachmentParameterivEXT (GLenum target, GLenum pname,
+    GLint *params);
+void glGenerateMipmapEXT (GLenum target);
 
 #endif
 
