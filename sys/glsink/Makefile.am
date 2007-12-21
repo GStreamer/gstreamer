@@ -7,7 +7,9 @@ libgstglimagesink_la_SOURCES = \
 	gstopengl.c \
 	glextensions.c \
 	gstglbuffer.c \
-	gstglupload.c
+	gstglupload.c \
+	gstgldownload.c \
+	gstglfilter.c
 libgstglimagesink_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS)
 libgstglimagesink_la_LIBADD = $(X_LIBS) $(XSHM_LIBS) -lGL \

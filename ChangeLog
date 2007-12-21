@@ -1,3 +1,22 @@
+2007-12-20  David Schleef  <ds@schleef.org>
+
+	* sys/glsink/Makefile.am:
+	* sys/glsink/glextensions.c:
+	* sys/glsink/glextensions.h:
+	* sys/glsink/glimagesink.c:
+	* sys/glsink/glimagesink.h:
+	* sys/glsink/glvideo.c:
+	* sys/glsink/glvideo.h:
+	* sys/glsink/gstglbuffer.c:
+	* sys/glsink/gstglbuffer.h:
+	* sys/glsink/gstgldownload.c:
+	* sys/glsink/gstglfilter.c:
+	* sys/glsink/gstglupload.c:
+	* sys/glsink/gstopengl.c:
+	  Switch to using framebuffer_objects instead of GLXPixmaps,
+	  because that's what my driver supports.  Remove GLDrawable,
+	  since GstGLDisplay now has a default drawable and context.
+
 2007-12-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/equalizer/.cvsignore:
