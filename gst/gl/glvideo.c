@@ -27,33 +27,115 @@
 
 #include <string.h>
 
+static void gst_gl_display_finalize (GObject * object);
+static void gst_gl_display_init_tmp_window (GstGLDisplay * display);
 
-static gboolean gst_gl_display_check_features (GstGLDisplay * display);
+GST_BOILERPLATE (GstGLDisplay, gst_gl_display, GObject, G_TYPE_OBJECT);
 
-
-GstGLDisplay *
-gst_gl_display_new (const char *display_name)
+static void
+gst_gl_display_base_init (gpointer g_class)
 {
-  GstGLDisplay *display;
-  gboolean usable;
 
-  display = g_malloc0 (sizeof (GstGLDisplay));
+}
 
-  display->display = XOpenDisplay (display_name);
-  if (display->display == NULL) {
-    g_free (display);
-    return NULL;
-  }
+static void
+gst_gl_display_class_init (GstGLDisplayClass * klass)
+{
+  G_OBJECT_CLASS (klass)->finalize = gst_gl_display_finalize;
+}
 
-  usable = gst_gl_display_check_features (display);
-  if (!usable) {
-    g_free (display);
-    return NULL;
-  }
+static void
+gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
+{
 
   display->lock = g_mutex_new ();
 
-  return display;
+}
+
+static void
+gst_gl_display_finalize (GObject * object)
+{
+  GstGLDisplay *display = GST_GL_DISPLAY (object);
+
+  if (display->assigned_window == None) {
+    XDestroyWindow (display->display, display->window);
+  }
+  if (display->context) {
+    glXDestroyContext (display->display, display->context);
+  }
+  if (display->visinfo) {
+    XFree (display->visinfo);
+  }
+  if (display->display) {
+    XCloseDisplay (display->display);
+  }
+
+  if (display->lock) {
+    g_mutex_free (display->lock);
+  }
+}
+
+static gboolean gst_gl_display_check_features (GstGLDisplay * display);
+
+GstGLDisplay *
+gst_gl_display_new (void)
+{
+  return g_object_new (GST_TYPE_GL_DISPLAY, NULL);
+}
+
+#define HANDLE_X_ERRORS
+#ifdef HANDLE_X_ERRORS
+static int
+x_error_handler (Display * display, XErrorEvent * event)
+{
+  g_assert_not_reached ();
+}
+#endif
+
+gboolean
+gst_gl_display_connect (GstGLDisplay * display, const char *display_name)
+{
+  gboolean usable;
+  XGCValues values;
+  XPixmapFormatValues *px_formats;
+  int n_formats;
+  int i;
+
+  display->display = XOpenDisplay (display_name);
+  if (display->display == NULL) {
+    return FALSE;
+  }
+#ifdef HANDLE_X_ERRORS
+  XSynchronize (display->display, True);
+  XSetErrorHandler (x_error_handler);
+#endif
+
+  usable = gst_gl_display_check_features (display);
+  if (!usable) {
+    return FALSE;
+  }
+
+  display->screen = DefaultScreenOfDisplay (display->display);
+  display->screen_num = DefaultScreen (display->display);
+  display->visual = DefaultVisual (display->display, display->screen_num);
+  display->root = DefaultRootWindow (display->display);
+  display->white = XWhitePixel (display->display, display->screen_num);
+  display->black = XBlackPixel (display->display, display->screen_num);
+  display->depth = DefaultDepthOfScreen (display->screen);
+
+  display->gc = XCreateGC (display->display,
+      DefaultRootWindow (display->display), 0, &values);
+
+  px_formats = XListPixmapFormats (display->display, &n_formats);
+  for (i = 0; i < n_formats; i++) {
+    GST_DEBUG ("%d: depth %d bpp %d pad %d", i,
+        px_formats[i].depth,
+        px_formats[i].bits_per_pixel, px_formats[i].scanline_pad);
+  }
+
+  gst_gl_display_init_tmp_window (display);
+
+  return TRUE;
 }
 
 static gboolean
@@ -161,56 +243,29 @@ gst_gl_display_can_handle_type (GstGLDisplay * display, GstGLImageType type)
 }
 
 void
-gst_gl_display_free (GstGLDisplay * display)
-{
-  /* sure hope nobody is using it as it's being freed */
-  g_mutex_lock (display->lock);
-  g_mutex_unlock (display->lock);
-
-  if (display->context) {
-    glXDestroyContext (display->display, display->context);
-  }
-  if (display->visinfo) {
-    XFree (display->visinfo);
-  }
-  if (display->display) {
-    XCloseDisplay (display->display);
-  }
-
-  g_mutex_free (display->lock);
-
-  g_free (display);
-}
-
-void
 gst_gl_display_lock (GstGLDisplay * display)
 {
   g_mutex_lock (display->lock);
+  glXMakeCurrent (display->display, display->window, display->context);
 }
 
 void
 gst_gl_display_unlock (GstGLDisplay * display)
 {
+  glXMakeCurrent (display->display, None, NULL);
   g_mutex_unlock (display->lock);
 }
 
-
-/* drawable */
-
-GstGLDrawable *
-gst_gl_drawable_new_window (GstGLDisplay * display)
+static void
+gst_gl_display_init_tmp_window (GstGLDisplay * display)
 {
-  GstGLDrawable *drawable;
   XSetWindowAttributes attr = { 0 };
   int scrnum;
   int mask;
   Window root;
   Screen *screen;
 
-  drawable = g_malloc0 (sizeof (GstGLDrawable));
-
-  g_mutex_lock (display->lock);
-  drawable->display = display;
+  GST_ERROR ("creating temp window");
 
   screen = XDefaultScreenOfDisplay (display->display);
   scrnum = XScreenNumberOfScreen (screen);
@@ -229,114 +284,72 @@ gst_gl_drawable_new_window (GstGLDisplay * display)
 
   mask = CWBackPixel | CWBorderPixel | CWColormap | CWOverrideRedirect;
 
-  drawable->window = XCreateWindow (display->display,
+  display->window = XCreateWindow (display->display,
       root, 0, 0, 100, 100,
       0, display->visinfo->depth, InputOutput,
       display->visinfo->visual, mask, &attr);
-  XMapWindow (display->display, drawable->window);
-  drawable->destroy_on_free = TRUE;
-
-  g_mutex_unlock (display->lock);
-
-  return drawable;
+  XMapWindow (display->display, display->window);
+  XSync (display->display, FALSE);
 }
 
-GstGLDrawable *
-gst_gl_drawable_new_root_window (GstGLDisplay * display)
+static void
+gst_gl_display_destroy_tmp_window (GstGLDisplay * display)
 {
-  GstGLDrawable *drawable;
-  int scrnum;
-  Screen *screen;
-
-  drawable = g_malloc0 (sizeof (GstGLDrawable));
-
-  g_mutex_lock (display->lock);
-  drawable->display = display;
-
-  screen = XDefaultScreenOfDisplay (display->display);
-  scrnum = XScreenNumberOfScreen (screen);
-
-  drawable->window = XRootWindow (display->display, scrnum);
-  drawable->destroy_on_free = FALSE;
-  g_mutex_unlock (display->lock);
-
-  return drawable;
-}
-
-GstGLDrawable *
-gst_gl_drawable_new_from_window (GstGLDisplay * display, Window window)
-{
-  GstGLDrawable *drawable;
-
-  drawable = g_malloc0 (sizeof (GstGLDrawable));
-
-  g_mutex_lock (display->lock);
-  drawable->display = display;
-
-  drawable->window = window;
-  drawable->destroy_on_free = FALSE;
-
-  g_mutex_unlock (display->lock);
-  return drawable;
+  XDestroyWindow (display->display, display->window);
 }
 
 void
-gst_gl_drawable_free (GstGLDrawable * drawable)
+gst_gl_display_set_window (GstGLDisplay * display, Window window)
 {
+  g_mutex_lock (display->lock);
 
-  g_mutex_lock (drawable->display->lock);
-  if (drawable->destroy_on_free) {
-    XDestroyWindow (drawable->display->display, drawable->window);
+  if (window != display->assigned_window) {
+    if (display->assigned_window == None) {
+      gst_gl_display_destroy_tmp_window (display);
+    }
+    display->assigned_window = window;
+    if (display->assigned_window == None) {
+      gst_gl_display_init_tmp_window (display);
+    } else {
+      display->window = window;
+    }
   }
-  g_mutex_unlock (drawable->display->lock);
 
-  g_free (drawable);
+  g_mutex_unlock (display->lock);
 }
 
 void
-gst_gl_drawable_lock (GstGLDrawable * drawable)
-{
-  g_mutex_lock (drawable->display->lock);
-  glXMakeCurrent (drawable->display->display, drawable->window,
-      drawable->display->context);
-}
-
-void
-gst_gl_drawable_unlock (GstGLDrawable * drawable)
-{
-  glXMakeCurrent (drawable->display->display, None, NULL);
-  g_mutex_unlock (drawable->display->lock);
-}
-
-void
-gst_gl_drawable_update_attributes (GstGLDrawable * drawable)
+gst_gl_display_update_attributes (GstGLDisplay * display)
 {
   XWindowAttributes attr;
 
-  XGetWindowAttributes (drawable->display->display, drawable->window, &attr);
-  drawable->win_width = attr.width;
-  drawable->win_height = attr.height;
-
+  if (display->window != None) {
+    XGetWindowAttributes (display->display, display->window, &attr);
+    display->win_width = attr.width;
+    display->win_height = attr.height;
+  } else {
+    display->win_width = 0;
+    display->win_height = 0;
+  }
 }
 
 void
-gst_gl_drawable_clear (GstGLDrawable * drawable)
+gst_gl_display_clear (GstGLDisplay * display)
 {
-
-  gst_gl_drawable_lock (drawable);
+  gst_gl_display_lock (display);
 
   glDepthFunc (GL_LESS);
   glEnable (GL_DEPTH_TEST);
   glClearColor (0.2, 0.2, 0.2, 1.0);
-  glViewport (0, 0, drawable->win_width, drawable->win_height);
+  glViewport (0, 0, display->win_width, display->win_height);
 
-  gst_gl_drawable_unlock (drawable);
+  gst_gl_display_unlock (display);
 }
 
 
 
 static void
-draw_rect_texture (GstGLDrawable * drawable, GstGLImageType type,
+draw_rect_texture (GstGLDisplay * display, GstGLImageType type,
     void *data, int width, int height)
 {
   GLuint texture;
@@ -437,7 +450,7 @@ draw_rect_texture (GstGLDrawable * drawable, GstGLImageType type,
 }
 
 static void
-draw_pow2_texture (GstGLDrawable * drawable, GstGLImageType type,
+draw_pow2_texture (GstGLDisplay * display, GstGLImageType type,
     void *data, int width, int height)
 {
   int pow2_width;
@@ -544,14 +557,14 @@ draw_pow2_texture (GstGLDrawable * drawable, GstGLImageType type,
 }
 
 void
-gst_gl_drawable_draw_image (GstGLDrawable * drawable, GstGLImageType type,
+gst_gl_display_draw_image (GstGLDisplay * display, GstGLImageType type,
     void *data, int width, int height)
 {
   g_return_if_fail (data != NULL);
   g_return_if_fail (width > 0);
   g_return_if_fail (height > 0);
 
-  gst_gl_drawable_lock (drawable);
+  gst_gl_display_lock (display);
 
 #if 0
   /* Doesn't work */
@@ -561,9 +574,9 @@ gst_gl_drawable_draw_image (GstGLDrawable * drawable, GstGLImageType type,
     int64_t sbc = 1234;
     gboolean ret;
 
-    ret = glXGetSyncValuesOML (drawable->display->display, drawable->window,
+    ret = glXGetSyncValuesOML (display->display, display->window,
         &ust, &mst, &sbc);
-    GST_ERROR ("sync values %d %lld %lld %lld", ret, ust, mst, sbc);
+    GST_DEBUG ("sync values %d %lld %lld %lld", ret, ust, mst, sbc);
   }
 #endif
 
@@ -574,16 +587,15 @@ gst_gl_drawable_draw_image (GstGLDrawable * drawable, GstGLImageType type,
     int32_t den = 1234;
     gboolean ret;
 
-    ret = glXGetMscRateOML (drawable->display->display, drawable->window,
-        &num, &den);
-    GST_ERROR ("rate %d %d %d", ret, num, den);
+    ret = glXGetMscRateOML (display->display, display->window, &num, &den);
+    GST_DEBUG ("rate %d %d %d", ret, num, den);
   }
 #endif
 
-  gst_gl_drawable_update_attributes (drawable);
+  gst_gl_display_update_attributes (display);
 
-  glXSwapIntervalSGI (1);
-  glViewport (0, 0, drawable->win_width, drawable->win_height);
+  //glXSwapIntervalSGI (1);
+  glViewport (0, 0, display->win_width, display->win_height);
 
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -598,23 +610,22 @@ gst_gl_drawable_draw_image (GstGLDrawable * drawable, GstGLImageType type,
 
   glColor4f (1, 1, 1, 1);
 
-  if (drawable->display->have_texture_rectangle) {
-    draw_rect_texture (drawable, type, data, width, height);
+  if (display->have_texture_rectangle) {
+    draw_rect_texture (display, type, data, width, height);
   } else {
-    draw_pow2_texture (drawable, type, data, width, height);
+    draw_pow2_texture (display, type, data, width, height);
   }
 
-  glXSwapBuffers (drawable->display->display, drawable->window);
+  glXSwapBuffers (display->display, display->window);
 #if 0
   /* Doesn't work */
   {
-    ret = glXSwapBuffersMscOML (drawable->display->display, drawable->window,
-        0, 1, 0);
+    ret = glXSwapBuffersMscOML (display->display, display->window, 0, 1, 0);
     if (ret == 0) {
-      GST_ERROR ("glXSwapBuffersMscOML failed");
+      GST_DEBUG ("glXSwapBuffersMscOML failed");
     }
   }
 #endif
 
-  gst_gl_drawable_unlock (drawable);
+  gst_gl_display_unlock (display);
 }

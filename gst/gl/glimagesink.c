@@ -282,27 +282,22 @@ static gboolean
 gst_glimage_sink_start (GstBaseSink * bsink)
 {
   GstGLImageSink *glimage_sink;
+  gboolean ret;
 
   GST_DEBUG ("start");
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  glimage_sink->display = gst_gl_display_new (glimage_sink->display_name);
-  if (glimage_sink->display == NULL) {
+  glimage_sink->display = gst_gl_display_new ();
+  ret = gst_gl_display_connect (glimage_sink->display,
+      glimage_sink->display_name);
+  if (!ret) {
     GST_ERROR ("failed to open display");
     return FALSE;
   }
 
   if (glimage_sink->window_id) {
-    glimage_sink->drawable =
-        gst_gl_drawable_new_from_window (glimage_sink->display,
-        glimage_sink->window_id);
-  } else {
-    glimage_sink->drawable = gst_gl_drawable_new_window (glimage_sink->display);
-  }
-  if (glimage_sink->drawable == NULL) {
-    GST_ERROR ("failed to create window");
-    return FALSE;
+    gst_gl_display_set_window (glimage_sink->display, glimage_sink->window_id);
   }
 
   GST_DEBUG ("start done");
@@ -319,11 +314,9 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  gst_gl_drawable_free (glimage_sink->drawable);
-  gst_gl_display_free (glimage_sink->display);
+  g_object_unref (glimage_sink->display);
 
   glimage_sink->display = NULL;
-  glimage_sink->drawable = NULL;
 
   return TRUE;
 }
@@ -461,7 +454,7 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  gst_gl_drawable_draw_image (glimage_sink->drawable,
+  gst_gl_display_draw_image (glimage_sink->display,
       glimage_sink->type, GST_BUFFER_DATA (buf),
       GST_VIDEO_SINK_WIDTH (glimage_sink),
       GST_VIDEO_SINK_HEIGHT (glimage_sink));
@@ -495,11 +488,7 @@ gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay, XID window_id)
     return;
   }
   glimage_sink->window_id = window_id;
-  if (glimage_sink->drawable) {
-    gst_gl_drawable_free (glimage_sink->drawable);
-    glimage_sink->drawable =
-        gst_gl_drawable_new_from_window (glimage_sink->display, window_id);
-  }
+  gst_gl_display_set_window (glimage_sink->display, glimage_sink->window_id);
 }
 
 static void

@@ -58,7 +58,6 @@ struct _GstGLImageSink
   int par_n, par_d;
 
   GstGLDisplay *display;
-  GstGLDrawable *drawable;
   GstGLImageType type;
 
   XID window_id;

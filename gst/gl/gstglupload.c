@@ -78,7 +78,7 @@ static GstStaticPadTemplate gst_gl_upload_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
     );
 
 enum
@@ -99,6 +99,9 @@ static void gst_gl_upload_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn gst_gl_upload_chain (GstPad * pad, GstBuffer * buf);
 static void gst_gl_upload_reset (GstGLUpload * upload);
+static GstStateChangeReturn
+gst_gl_upload_change_state (GstElement * element, GstStateChange transition);
+static gboolean gst_gl_upload_sink_setcaps (GstPad * pad, GstCaps * caps);
 
 
 static void
@@ -123,11 +126,18 @@ gst_gl_upload_class_init (GstGLUploadClass * klass)
   gobject_class->set_property = gst_gl_upload_set_property;
   gobject_class->get_property = gst_gl_upload_get_property;
 
+  GST_ELEMENT_CLASS (klass)->change_state = gst_gl_upload_change_state;
 }
 
 static void
 gst_gl_upload_init (GstGLUpload * upload, GstGLUploadClass * klass)
 {
+  gst_element_create_all_pads (GST_ELEMENT (upload));
+
+  upload->sinkpad = gst_element_get_static_pad (GST_ELEMENT (upload), "sink");
+  upload->srcpad = gst_element_get_static_pad (GST_ELEMENT (upload), "src");
+
+  gst_pad_set_setcaps_function (upload->sinkpad, gst_gl_upload_sink_setcaps);
   gst_pad_set_chain_function (upload->sinkpad, gst_gl_upload_chain);
 
   gst_gl_upload_reset (upload);
@@ -162,6 +172,61 @@ gst_gl_upload_get_property (GObject * object, guint prop_id,
 static void
 gst_gl_upload_reset (GstGLUpload * upload)
 {
+  if (upload->display) {
+    g_object_unref (upload->display);
+    upload->display = NULL;
+  }
+  upload->format = GST_VIDEO_FORMAT_BGRx;
+}
+
+static gboolean
+gst_gl_upload_start (GstGLUpload * upload)
+{
+  gboolean ret;
+
+  upload->format = GST_VIDEO_FORMAT_BGRx;
+  upload->display = gst_gl_display_new ();
+  ret = gst_gl_display_connect (upload->display, NULL);
+
+  return ret;
+}
+
+static gboolean
+gst_gl_upload_stop (GstGLUpload * upload)
+{
+  gst_gl_upload_reset (upload);
+
+  return TRUE;
+}
+
+static gboolean
+gst_gl_upload_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstGLUpload *upload;
+  GstVideoFormat format;
+  int height;
+  int width;
+  gboolean ret;
+  GstCaps *srccaps;
+
+  upload = GST_GL_UPLOAD (gst_pad_get_parent (pad));
+
+  ret = gst_video_format_parse_caps (caps, &format, &width, &height);
+  if (!ret)
+    return FALSE;
+
+  upload->format = format;
+  upload->width = width;
+  upload->height = height;
+
+  GST_ERROR ("setcaps %d %d %d", format, width, height);
+
+  srccaps = gst_caps_new_simple ("video/x-raw-gl",
+      "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
+  ret = gst_pad_set_caps (upload->srcpad, srccaps);
+  gst_caps_unref (srccaps);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -177,10 +242,55 @@ gst_gl_upload_chain (GstPad * pad, GstBuffer * buf)
 
   gst_buffer_copy_metadata (GST_BUFFER (outbuf), buf,
       GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
+  gst_buffer_set_caps (GST_BUFFER (outbuf), GST_PAD_CAPS (upload->srcpad));
+
+  GST_DEBUG ("uploading %p size %d", GST_BUFFER_DATA (buf),
+      GST_BUFFER_SIZE (buf));
   gst_gl_buffer_upload (outbuf, GST_BUFFER_DATA (buf));
 
   gst_pad_push (upload->srcpad, GST_BUFFER (outbuf));
 
   gst_object_unref (upload);
   return GST_FLOW_OK;
+}
+
+static GstStateChangeReturn
+gst_gl_upload_change_state (GstElement * element, GstStateChange transition)
+{
+  GstGLUpload *upload;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  GST_DEBUG ("change state");
+
+  upload = GST_GL_UPLOAD (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_gl_upload_start (upload);
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_gl_upload_stop (upload);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }

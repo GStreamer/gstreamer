@@ -6,9 +6,6 @@
 #include <GL/gl.h>
 #include <gst/gst.h>
 
-typedef struct _GstGLDisplay GstGLDisplay;
-typedef struct _GstGLDrawable GstGLDrawable;
-
 typedef enum {
   GST_GL_IMAGE_TYPE_RGBx,
   GST_GL_IMAGE_TYPE_BGRx,
@@ -19,54 +16,71 @@ typedef enum {
   GST_GL_IMAGE_TYPE_AYUV,
 } GstGLImageType;
 
+typedef struct _GstGLDisplay GstGLDisplay;
+typedef struct _GstGLDisplayClass GstGLDisplayClass;
+
+#define GST_TYPE_GL_DISPLAY \
+      (gst_gl_display_get_type())
+#define GST_GL_DISPLAY(obj) \
+      (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_DISPLAY,GstGLDisplay))
+#define GST_GL_DISPLAY_CLASS(klass) \
+      (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GL_DISPLAY,GstGLDisplayClass))
+#define GST_IS_GL_DISPLAY(obj) \
+      (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_DISPLAY))
+#define GST_IS_GL_DISPLAY_CLASS(klass) \
+      (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GL_DISPLAY))
+
 
 struct _GstGLDisplay {
+  GObject object;
+
   Display *display;
+  GC gc;
   XVisualInfo *visinfo;
   GLXContext context;
   GMutex *lock;
 
   Screen *screen;
-  int scrnum;
+  int screen_num;
+  Visual *visual;
   Window root;
+  guint32 white;
+  guint32 black;
+  int depth;
 
   int max_texture_size;
 
   gboolean have_ycbcr_texture;
   gboolean have_texture_rectangle;
   gboolean have_color_matrix;
-}; 
-
-struct _GstGLDrawable {
-  GstGLDisplay *display;
 
   Window window;
-
-  gboolean destroy_on_free;
+  Window assigned_window;
 
   int win_width;
   int win_height;
+
+}; 
+
+struct _GstGLDisplayClass {
+  GObjectClass object_class;
 };
 
+GType gst_gl_display_get_type (void);
 
-GstGLDisplay *gst_gl_display_new (const char *display_name);
+
+GstGLDisplay *gst_gl_display_new (void);
+gboolean gst_gl_display_connect (GstGLDisplay *display,
+    const char *display_name);
 gboolean gst_gl_display_can_handle_type (GstGLDisplay *display,
     GstGLImageType type);
-void gst_gl_display_free (GstGLDisplay *display);
 void gst_gl_display_lock (GstGLDisplay *display);
 void gst_gl_display_unlock (GstGLDisplay *display);
-
-/* drawable */
-
-GstGLDrawable * gst_gl_drawable_new_window (GstGLDisplay *display);
-GstGLDrawable * gst_gl_drawable_new_root_window (GstGLDisplay *display);
-GstGLDrawable * gst_gl_drawable_new_from_window (GstGLDisplay *display, Window window);
-void gst_gl_drawable_free (GstGLDrawable *drawable);
-void gst_gl_drawable_lock (GstGLDrawable *drawable);
-void gst_gl_drawable_unlock (GstGLDrawable *drawable);
-void gst_gl_drawable_update_attributes (GstGLDrawable *drawable);
-void gst_gl_drawable_clear (GstGLDrawable *drawable);
-void gst_gl_drawable_draw_image (GstGLDrawable *drawable, GstGLImageType type, void *data, int width, int height);
+void gst_gl_display_set_window (GstGLDisplay *display, Window window);
+void gst_gl_display_update_attributes (GstGLDisplay *display);
+void gst_gl_display_clear (GstGLDisplay *display);
+void gst_gl_display_draw_image (GstGLDisplay * display, GstGLImageType type,
+    void *data, int width, int height);
 
 
 #endif
