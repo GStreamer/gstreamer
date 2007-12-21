@@ -510,6 +510,73 @@ GST_START_TEST (test_push_negotiation)
 
 GST_END_TEST;
 
+/* see that an unref also unlinks the pads */
+GST_START_TEST (test_src_unref_unlink)
+{
+  GstPad *src, *sink;
+  GstCaps *caps;
+  GstPadLinkReturn plr;
+
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_if (sink == NULL);
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  fail_if (src == NULL);
+
+  caps = gst_caps_from_string ("foo/bar");
+
+  gst_pad_set_caps (src, caps);
+  gst_pad_set_caps (sink, caps);
+
+  plr = gst_pad_link (src, sink);
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
+
+  /* unref the srcpad */
+  gst_object_unref (src);
+
+  /* sink should be unlinked now */
+  fail_if (gst_pad_is_linked (sink));
+
+  /* cleanup */
+  gst_object_unref (sink);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+/* see that an unref also unlinks the pads */
+GST_START_TEST (test_sink_unref_unlink)
+{
+  GstPad *src, *sink;
+  GstCaps *caps;
+  GstPadLinkReturn plr;
+
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_if (sink == NULL);
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  fail_if (src == NULL);
+
+  caps = gst_caps_from_string ("foo/bar");
+
+  gst_pad_set_caps (src, caps);
+  gst_pad_set_caps (sink, caps);
+
+  plr = gst_pad_link (src, sink);
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
+
+  /* unref the sinkpad */
+  gst_object_unref (sink);
+
+  /* src should be unlinked now */
+  fail_if (gst_pad_is_linked (src));
+
+  /* cleanup */
+  gst_object_unref (src);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
 
 Suite *
 gst_pad_suite (void)
@@ -530,6 +597,8 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_push_linked);
   tcase_add_test (tc_chain, test_flowreturn);
   tcase_add_test (tc_chain, test_push_negotiation);
+  tcase_add_test (tc_chain, test_src_unref_unlink);
+  tcase_add_test (tc_chain, test_sink_unref_unlink);
 
   return s;
 }

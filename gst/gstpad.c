@@ -367,12 +367,22 @@ static void
 gst_pad_dispose (GObject * object)
 {
   GstPad *pad = GST_PAD (object);
+  GstPad *peer;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, pad, "dispose");
 
-  /* we don't hold a ref to the peer so we can just set the
-   * peer to NULL. */
-  GST_PAD_PEER (pad) = NULL;
+  /* unlink the peer pad */
+  if ((peer = gst_pad_get_peer (pad))) {
+    /* window for MT unsafeness, someone else could unlink here
+     * and then we call unlink with wrong pads. The unlink
+     * function would catch this and safely return failed. */
+    if (GST_PAD_IS_SRC (pad))
+      gst_pad_unlink (pad, peer);
+    else
+      gst_pad_unlink (peer, pad);
+
+    gst_object_unref (peer);
+  }
 
   /* clear the caps */
   gst_caps_replace (&GST_PAD_CAPS (pad), NULL);

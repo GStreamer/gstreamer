@@ -1,3 +1,14 @@
+2007-12-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c: (gst_pad_dispose):
+	Really unlink the peer pad instead of setting the peer pointer to NULL
+	when we dispose the pad.
+	This correctly calls the unlink functions and makes sure that the peer
+	does not have a handle to invalid memory. See #504671.
+
+	* tests/check/gst/gstpad.c: (GST_START_TEST), (gst_pad_suite):
+	Add testsuite for above case.
+
 2007-12-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Peter Kjellerstedt <pkj axis com>
