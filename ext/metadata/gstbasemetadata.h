@@ -45,8 +45,7 @@
 #define __GST_BASE_METADATA_H__
 
 #include <gst/gst.h>
-
-#include "gstmetadatacommon.h"
+#include "metadata.h"
 
 G_BEGIN_DECLS
 
@@ -84,12 +83,18 @@ typedef enum _tag_BaseMetadataType {
  */
 #define GST_BASE_METADATA_SINK_PAD(obj)     (GST_BASE_METADATA_CAST (obj)->sinkpad)
 
-#define GST_BASE_METADATA_EXIF_ADAPTER(obj) (GST_BASE_METADATA_CAST (obj)->common.metadata.exif_adapter)
-#define GST_BASE_METADATA_IPTC_ADAPTER(obj) (GST_BASE_METADATA_CAST (obj)->common.metadata.iptc_adapter)
-#define GST_BASE_METADATA_XMP_ADAPTER(obj) (GST_BASE_METADATA_CAST (obj)->common.metadata.xmp_adapter)
+#define GST_BASE_METADATA_EXIF_ADAPTER(obj) (GST_BASE_METADATA_CAST (obj)->metadata->exif_adapter)
+#define GST_BASE_METADATA_IPTC_ADAPTER(obj) (GST_BASE_METADATA_CAST (obj)->metadata->iptc_adapter)
+#define GST_BASE_METADATA_XMP_ADAPTER(obj) (GST_BASE_METADATA_CAST (obj)->metadata->xmp_adapter)
 
 #define GST_BASE_METADATA_IMG_TYPE(obj) (GST_BASE_METADATA_CAST (obj)->img_type)
 
+
+typedef enum _tag_MetadataState
+{
+  MT_STATE_NULL,                /* still need to check media type */
+  MT_STATE_PARSED
+} MetadataState;
 
 /**
  * GstBaseMetadata:
@@ -104,25 +109,31 @@ struct _GstBaseMetadata
   /*< protected >*/
   GstPad *sinkpad, *srcpad;
 
+  MetaData *metadata; /* handle for parsing module */
+
+  ImageType img_type;
+
   /*< private >*/
-  GstMetadataCommon common;
+
+  gint64 duration_orig;     /* durarion of stream */
+  gint64 duration;          /* durarion of modified stream */
+
+  MetadataState state;
 
   MetaOptions options;
 
-  gboolean need_processing;
+  gboolean need_processing; /* still need some action before send first buffer */
 
   GstAdapter *adapter_parsing;
   GstAdapter *adapter_holding;
   guint32 next_offset;
   guint32 next_size;
-  ImageType img_type;
-
+  gboolean need_more_data;
   gint64 offset_orig;  /* offset in original stream */
   gint64 offset;       /* offset in current stream */
 
+  GstBuffer * append_buffer;
   GstBuffer * prepend_buffer;
-
-  gboolean need_more_data;
 
 };
 

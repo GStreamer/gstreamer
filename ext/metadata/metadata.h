@@ -104,11 +104,11 @@ typedef struct _tag_MetaData
 
 } MetaData;
 
-#define META_DATA_IMG_TYPE(p) (p).img_type
+#define META_DATA_IMG_TYPE(p) (p)->img_type
 
-extern void metadata_init (MetaData * meta_data, const MetaOptions options);
+extern void metadata_init (MetaData ** meta_data, const MetaOptions options);
 
-extern void metadata_dispose (MetaData * meta_data);
+extern void metadata_dispose (MetaData ** meta_data);
 
 extern MetadataParsingReturn
 metadata_parse (MetaData * meta_data, const guint8 * buf,

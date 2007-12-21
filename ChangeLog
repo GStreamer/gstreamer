@@ -1,3 +1,15 @@
+2007-12-21  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/Makefile.am:
+	* ext/metadata/TODO:
+	* ext/metadata/gstbasemetadata.c:
+	* ext/metadata/gstbasemetadata.h:
+	* ext/metadata/gstmetadatacommon.c:
+	* ext/metadata/gstmetadatacommon.h:
+	* ext/metadata/metadata.c:
+	* ext/metadata/metadata.h:
+	  Removed gstmetadatacommon.
+
 2007-12-20  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/Makefile.am:

@@ -1,7 +1,6 @@
 plugin_LTLIBRARIES = libgstmetadata.la
 
 libgstmetadata_la_SOURCES =	gstmetadata.c       \
-				gstmetadatacommon.c \
 				gstmetadatademux.c  \
 				metadata.c          \
 				metadataparsejpeg.c \
@@ -25,7 +24,6 @@ libgstmetadata_la_LIBADD = $(METADATA_LIBS) -lgsttag-@GST_MAJORMINOR@ $(GST_PLUG
 libgstmetadata_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = 	gstmetadatademux.h   \
-			gstmetadatacommon.h  \
 			metadata.h           \
 			metadataparsejpeg.h  \
 			metadatamuxjpeg.h    \

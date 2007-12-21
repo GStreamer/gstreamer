@@ -68,28 +68,36 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
  *  Look at 'MetaOptions' to see the available options.
  */
 void
-metadata_init (MetaData * meta_data, const MetaOptions options)
+metadata_init (MetaData ** meta_data, const MetaOptions options)
 {
-  meta_data->state = STATE_NULL;
-  meta_data->img_type = IMG_NONE;
-  meta_data->options = options;
-  meta_data->offset_orig = 0;
-  meta_data->exif_adapter = NULL;
-  meta_data->iptc_adapter = NULL;
-  meta_data->xmp_adapter = NULL;
 
-  if (meta_data->options & META_OPT_DEMUX) {
+  if (meta_data == NULL)
+    return;
+  if ((*meta_data))
+    metadata_dispose (meta_data);
+
+  (*meta_data) = g_new (MetaData, 1);
+
+  (*meta_data)->state = STATE_NULL;
+  (*meta_data)->img_type = IMG_NONE;
+  (*meta_data)->options = options;
+  (*meta_data)->offset_orig = 0;
+  (*meta_data)->exif_adapter = NULL;
+  (*meta_data)->iptc_adapter = NULL;
+  (*meta_data)->xmp_adapter = NULL;
+
+  if ((*meta_data)->options & META_OPT_DEMUX) {
     /* when parsing we will probably strip only 3 chunk (exif, iptc and xmp)
        so we use 4 just in case there is more than one chunk of them.
        But this is just for convinience, 'cause the chunk_array incriases dinamically */
-    metadata_chunk_array_init (&meta_data->strip_chunks, 4);
+    metadata_chunk_array_init (&(*meta_data)->strip_chunks, 4);
     /* at most 1 chunk will be injected (JPEG JFIF) */
-    metadata_chunk_array_init (&meta_data->inject_chunks, 1);
+    metadata_chunk_array_init (&(*meta_data)->inject_chunks, 1);
   } else {
     /* at most 1 chunk will be striped (JPEG JFIF) */
-    metadata_chunk_array_init (&meta_data->strip_chunks, 1);
+    metadata_chunk_array_init (&(*meta_data)->strip_chunks, 1);
     /* at most 3 chunk will be injected (EXIF, IPTC, XMP) */
-    metadata_chunk_array_init (&meta_data->inject_chunks, 3);
+    metadata_chunk_array_init (&(*meta_data)->inject_chunks, 3);
   }
 
 }
@@ -99,41 +107,47 @@ metadata_init (MetaData * meta_data, const MetaOptions options)
  * Call this function to free any resource allocated by 'metadata_init'
  */
 void
-metadata_dispose (MetaData * meta_data)
+metadata_dispose (MetaData ** meta_data)
 {
 
-  switch (meta_data->img_type) {
+  if (meta_data == NULL || (*meta_data) == NULL)
+    return;
+
+  switch ((*meta_data)->img_type) {
     case IMG_JPEG:
-      if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
-        metadataparse_jpeg_dispose (&meta_data->format_data.jpeg_parse);
+      if (G_LIKELY ((*meta_data)->options & META_OPT_DEMUX))
+        metadataparse_jpeg_dispose (&(*meta_data)->format_data.jpeg_parse);
       else
-        metadatamux_jpeg_dispose (&meta_data->format_data.jpeg_mux);
+        metadatamux_jpeg_dispose (&(*meta_data)->format_data.jpeg_mux);
       break;
     case IMG_PNG:
-      if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
-        metadataparse_png_dispose (&meta_data->format_data.png_parse);
+      if (G_LIKELY ((*meta_data)->options & META_OPT_DEMUX))
+        metadataparse_png_dispose (&(*meta_data)->format_data.png_parse);
       else
-        metadatamux_png_dispose (&meta_data->format_data.png_mux);
+        metadatamux_png_dispose (&(*meta_data)->format_data.png_mux);
       break;
   }
 
-  metadata_chunk_array_free (&meta_data->strip_chunks);
-  metadata_chunk_array_free (&meta_data->inject_chunks);
+  metadata_chunk_array_free (&(*meta_data)->strip_chunks);
+  metadata_chunk_array_free (&(*meta_data)->inject_chunks);
 
-  if (meta_data->xmp_adapter) {
-    gst_object_unref (meta_data->xmp_adapter);
-    meta_data->xmp_adapter = NULL;
+  if ((*meta_data)->xmp_adapter) {
+    gst_object_unref ((*meta_data)->xmp_adapter);
+    (*meta_data)->xmp_adapter = NULL;
   }
 
-  if (meta_data->iptc_adapter) {
-    gst_object_unref (meta_data->iptc_adapter);
-    meta_data->iptc_adapter = NULL;
+  if ((*meta_data)->iptc_adapter) {
+    gst_object_unref ((*meta_data)->iptc_adapter);
+    (*meta_data)->iptc_adapter = NULL;
   }
 
-  if (meta_data->exif_adapter) {
-    gst_object_unref (meta_data->exif_adapter);
-    meta_data->exif_adapter = NULL;
+  if ((*meta_data)->exif_adapter) {
+    gst_object_unref ((*meta_data)->exif_adapter);
+    (*meta_data)->exif_adapter = NULL;
   }
+
+  g_free (*meta_data);
+  *meta_data = NULL;
 
 }
 
