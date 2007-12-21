@@ -1,5 +1,13 @@
 2007-12-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/libs/controller.c:
+	* tests/check/libs/typefindhelper.c:
+	* tests/check/pipelines/parse-launch.c:
+	  Don't use GST_PLUGIN_DEFINE_STATIC, it is not portable and is
+	  going to be deprecated (see #498924).
+
+2007-12-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gsttypefind.c: (gst_type_find_register):
 	  Make gst_type_find_register work for static typefind functions,
 	  ie. allow passing plugin == NULL (prerequisite for #498924).

@@ -30,6 +30,9 @@
 
 #include <gst/check/gstcheck.h>
 
+#define GST_TYPE_PARSE_TEST_ELEMENT (gst_parse_test_element_get_type())
+static GType gst_parse_test_element_get_type (void);
+
 static GstElement *
 setup_pipeline (const gchar * pipe_descr)
 {
@@ -416,6 +419,9 @@ run_delayed_test (const gchar * pipe_str, const gchar * peer,
 
 GST_START_TEST (delayed_link)
 {
+  fail_unless (gst_element_register (NULL, "parsetestelement",
+          GST_RANK_NONE, GST_TYPE_PARSE_TEST_ELEMENT));
+
   /* This tests the delayed linking support in parse_launch by creating
    * a test element based on bin, which contains a fakesrc and a sometimes 
    * pad-template, and trying to link to a fakesink. When the bin transitions
@@ -443,8 +449,6 @@ GST_START_TEST (delayed_link)
 }
 
 GST_END_TEST;
-
-#define GST_TYPE_PARSE_TEST_ELEMENT (gst_parse_test_element_get_type())
 
 typedef struct _GstParseTestElement
 {
@@ -532,21 +536,7 @@ gst_parse_test_element_change_state (GstElement * element,
   return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
-static gboolean
-gst_register_parse_element (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "parsetestelement", GST_RANK_NONE,
-          GST_TYPE_PARSE_TEST_ELEMENT))
-    return FALSE;
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    "parsetestelement", "Test element for parse launch",
-    gst_register_parse_element, VERSION, GST_LICENSE, GST_PACKAGE_NAME,
-    GST_PACKAGE_ORIGIN);
-
-Suite *
+static Suite *
 parse_suite (void)
 {
   Suite *s = suite_create ("Parse Launch syntax");

@@ -68,7 +68,7 @@ struct _GstTestMonoSourceClass
   GstElementClass parent_class;
 };
 
-GType gst_test_mono_source_get_type (void);
+static GType gst_test_mono_source_get_type (void);
 
 static void
 gst_test_mono_source_get_property (GObject * object,
@@ -187,7 +187,7 @@ gst_test_mono_source_base_init (GstTestMonoSourceClass * klass)
   gst_element_class_set_details (element_class, &details);
 }
 
-GType
+static GType
 gst_test_mono_source_get_type (void)
 {
   static GType type = 0;
@@ -212,42 +212,20 @@ gst_test_mono_source_get_type (void)
   return type;
 }
 
+/* so we don't have to paste the gst_element_register into 50 places below */
 static gboolean
-plugin_init (GstPlugin * plugin)
+local_gst_controller_init (int *argc, char ***argv)
 {
-  gboolean res = TRUE;
+  fail_unless (gst_controller_init (argc, argv));
 
-  res &= gst_element_register (plugin, "testmonosource", GST_RANK_NONE,
-      GST_TYPE_TEST_MONO_SOURCE);
-  return res;
+  fail_unless (gst_element_register (NULL, "testmonosource", GST_RANK_NONE,
+          GST_TYPE_TEST_MONO_SOURCE));
+
+  return TRUE;
 }
 
-GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "gst-test",
-    "controller test plugin - several unit test support elements",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+#define gst_controller_init(a,b) local_gst_controller_init(a,b)
 
-/*
-static void __attribute__ ((constructor))
-_gst_plugin_static_init__plugin_init (void)
-{
-  static GstPluginDesc plugin_desc_ = {
-    GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "gst-test",
-    "controller test plugin - several unit test support elements",
-    plugin_init,
-    VERSION,
-    GST_LICENSE,
-    PACKAGE,
-    GST_PACKAGE,
-    GST_ORIGIN,
-    GST_PADDING_INIT
-  };
-  _gst_plugin_register_static (&plugin_desc_);
-}
-*/
 /* TESTS */
 /* double init should not harm */
 GST_START_TEST (controller_init)

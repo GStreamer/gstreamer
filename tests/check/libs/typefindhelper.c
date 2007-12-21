@@ -33,6 +33,8 @@ static const guint8 vorbisid[30] = { 0x01, 0x76, 0x6f, 0x72, 0x62, 0x69, 0x73,
   0x00, 0x03, 0xf4, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0xb8, 0x01
 };
 
+static void foobar_typefind (GstTypeFind * tf, gpointer unused);
+
 static GstStaticCaps foobar_caps = GST_STATIC_CAPS ("foo/x-bar");
 
 #define FOOBAR_CAPS (gst_static_caps_get (&foobar_caps))
@@ -40,9 +42,15 @@ static GstStaticCaps foobar_caps = GST_STATIC_CAPS ("foo/x-bar");
 /* make sure the entire data in the buffer is available for peeking */
 GST_START_TEST (test_buffer_range)
 {
+  static gchar *foobar_exts[] = { "foobar", NULL };
+
   GstStructure *s;
   GstBuffer *buf;
   GstCaps *caps;
+
+  fail_unless (gst_type_find_register (NULL, "foo/x-bar",
+          GST_RANK_PRIMARY + 50, foobar_typefind, foobar_exts, FOOBAR_CAPS,
+          NULL, NULL));
 
   buf = gst_buffer_new ();
   fail_unless (buf != NULL);
@@ -65,7 +73,7 @@ GST_START_TEST (test_buffer_range)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_typefindhelper_suite (void)
 {
   Suite *s = suite_create ("typefindhelper");
@@ -114,22 +122,3 @@ foobar_typefind (GstTypeFind * tf, gpointer unused)
 
   gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, FOOBAR_CAPS);
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  static gchar *foobar_exts[] = { "foobar", NULL };
-
-  if (!gst_type_find_register (plugin, "foo/x-bar", GST_RANK_PRIMARY + 50,
-          foobar_typefind, foobar_exts, FOOBAR_CAPS, NULL, NULL)) {
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "dummy typefind functions",
-    "dummy typefind functions",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
