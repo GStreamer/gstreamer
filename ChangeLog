@@ -1,5 +1,15 @@
 2007-12-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/elements/playbin.c: (test_sink_usage_video_only_stream),
+	  (test_suburi_error_unknowntype), (test_suburi_error_invalidfile),
+	  (test_suburi_error_wrongproto), (test_missing_primary_decoder):
+	* tests/check/libs/cddabasesrc.c: (GST_START_TEST), (GST_START_TEST),
+	  (cddabasesrc_suite):
+	  Don't use GST_PLUGIN_DEFINE_STATIC, it's not portable and will be
+	  deprecated in the future (see #498924).
+
+2007-12-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gststreamselector.c: (gst_selector_pad_event):
 	  Don't leak event.
 

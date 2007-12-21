@@ -28,6 +28,9 @@
 
 #ifndef GST_DISABLE_REGISTRY
 
+static GType gst_red_video_src_get_type (void);
+static GType gst_codec_src_get_type (void);
+
 #define DEFINE_TEST(func) \
     static void func (void);                            \
     \
@@ -46,6 +49,9 @@ DEFINE_TEST (test_sink_usage_video_only_stream)
 {
   GstElement *playbin, *fakevideosink, *fakeaudiosink;
   GstState cur_state, pending_state;
+
+  fail_unless (gst_element_register (NULL, "redvideosrc", GST_RANK_PRIMARY,
+          gst_red_video_src_get_type ()));
 
   playbin = gst_element_factory_make ("playbin", "playbin");
   fail_unless (playbin != NULL, "Failed to create playbin element");
@@ -96,6 +102,9 @@ DEFINE_TEST (test_suburi_error_unknowntype)
 {
   GstElement *playbin, *fakesink;
 
+  fail_unless (gst_element_register (NULL, "redvideosrc", GST_RANK_PRIMARY,
+          gst_red_video_src_get_type ()));
+
   playbin = gst_element_factory_make ("playbin", "playbin");
   fail_unless (playbin != NULL, "Failed to create playbin element");
 
@@ -127,6 +136,9 @@ DEFINE_TEST (test_suburi_error_invalidfile)
 {
   GstElement *playbin, *fakesink;
 
+  fail_unless (gst_element_register (NULL, "redvideosrc", GST_RANK_PRIMARY,
+          gst_red_video_src_get_type ()));
+
   playbin = gst_element_factory_make ("playbin", "playbin");
   fail_unless (playbin != NULL, "Failed to create playbin element");
 
@@ -156,6 +168,9 @@ DEFINE_TEST (test_suburi_error_wrongproto)
      static void test_suburi_error_wrongproto (void)
 {
   GstElement *playbin, *fakesink;
+
+  fail_unless (gst_element_register (NULL, "redvideosrc", GST_RANK_PRIMARY,
+          gst_red_video_src_get_type ()));
 
   playbin = gst_element_factory_make ("playbin", "playbin");
   fail_unless (playbin != NULL, "Failed to create playbin element");
@@ -318,6 +333,9 @@ DEFINE_TEST (test_missing_primary_decoder)
   GstElement *playbin;
   GError *err = NULL;
   GstBus *bus;
+
+  fail_unless (gst_element_register (NULL, "codecsrc", GST_RANK_PRIMARY,
+          gst_codec_src_get_type ()));
 
   playbin = create_playbin ("codec://");
 
@@ -569,27 +587,6 @@ static void
 gst_codec_src_init (GstCodecSrc * src, GstCodecSrcClass * klass)
 {
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "redvideosrc", GST_RANK_PRIMARY,
-          gst_red_video_src_get_type ())) {
-    return FALSE;
-  }
-  if (!gst_element_register (plugin, "codecsrc", GST_RANK_PRIMARY,
-          gst_codec_src_get_type ())) {
-    return FALSE;
-  }
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE_STATIC
-    (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "playbin-test-elements",
-    "static elements for the playbin unit test",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
 #endif /* GST_DISABLE_REGISTRY */
 

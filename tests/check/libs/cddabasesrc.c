@@ -270,27 +270,13 @@ gst_cd_foo_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
   return buf;
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "cdfoosrc", GST_RANK_SECONDARY,
-          GST_TYPE_CD_FOO_SRC))
-    return FALSE;
-
-  return TRUE;
-}
-
-
-GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "cdfoosrc",
-    "Read audio from CD",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
-
 GST_START_TEST (test_discid_calculations)
 {
   GstElement *foosrc;
   gint i;
+
+  fail_unless (gst_element_register (NULL, "cdfoosrc", GST_RANK_SECONDARY,
+          GST_TYPE_CD_FOO_SRC));
 
   foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
 
@@ -315,6 +301,9 @@ GST_START_TEST (test_buffer_timestamps)
   GstClockTime prev_ts, prev_duration, ts;
   GstPad *sinkpad;
   gint i;
+
+  fail_unless (gst_element_register (NULL, "cdfoosrc", GST_RANK_SECONDARY,
+          GST_TYPE_CD_FOO_SRC));
 
   pipeline = gst_pipeline_new ("pipeline");
   foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
@@ -372,19 +361,4 @@ cddabasesrc_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = cddabasesrc_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (cddabasesrc)
