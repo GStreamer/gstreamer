@@ -1,3 +1,12 @@
+2007-12-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gsttypefind.c: (gst_type_find_register):
+	  Make gst_type_find_register work for static typefind functions,
+	  ie. allow passing plugin == NULL (prerequisite for #498924).
+
+	* gst/gstelementfactory.c: (gst_element_register):
+	  Small docs addition.
+
 2007-12-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstpad.c: (gst_pad_dispose):

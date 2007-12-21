@@ -254,7 +254,8 @@ gst_element_factory_cleanup (GstElementFactory * factory)
 
 /**
  * gst_element_register:
- * @plugin: #GstPlugin to register the element with
+ * @plugin: #GstPlugin to register the element with, or NULL for a static
+ * element (note that passing NULL only works in GStreamer 0.10.13 and later)
  * @name: name of elements of this type
  * @rank: rank of element (higher rank means more importance when autoplugging)
  * @type: GType of element to register

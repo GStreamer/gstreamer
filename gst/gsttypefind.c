@@ -51,7 +51,8 @@ gst_type_find_get_type (void)
 
 /**
  * gst_type_find_register:
- * @plugin: A #GstPlugin.
+ * @plugin: A #GstPlugin, or NULL for a static typefind function (note that
+ *    passing NULL only works in GStreamer 0.10.16 and later)
  * @name: The name for registering
  * @rank: The rank (or importance) of this typefind function
  * @func: The #GstTypeFindFunction to use
@@ -76,7 +77,6 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
 {
   GstTypeFindFactory *factory;
 
-  g_return_val_if_fail (plugin != NULL, FALSE);
   g_return_val_if_fail (name != NULL, FALSE);
   g_return_val_if_fail (func != NULL, FALSE);
 
@@ -96,7 +96,11 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
   factory->function = func;
   factory->user_data = data;
   factory->user_data_notify = data_notify;
-  GST_PLUGIN_FEATURE (factory)->plugin_name = plugin->desc.name;        /* interned string */
+  if (plugin && plugin->desc.name) {
+    GST_PLUGIN_FEATURE (factory)->plugin_name = plugin->desc.name;      /* interned string */
+  } else {
+    GST_PLUGIN_FEATURE (factory)->plugin_name = "NULL";
+  }
   GST_PLUGIN_FEATURE (factory)->loaded = TRUE;
 
   gst_registry_add_feature (gst_registry_get_default (),
