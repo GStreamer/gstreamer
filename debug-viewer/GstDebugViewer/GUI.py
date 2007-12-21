@@ -568,6 +568,7 @@ class FilteredLogModel (FilteredLogModelBase):
         range_model = self.super_model
         super_start, super_end = range_model.line_index_range
 
+        # FIXME: This is too simple!
         start_index = self.line_index_from_super (super_start)
         end_index = self.line_index_from_super (super_end)
 
