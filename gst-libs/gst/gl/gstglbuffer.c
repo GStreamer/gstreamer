@@ -5,6 +5,8 @@
 
 #include <gstglbuffer.h>
 #include <glvideo.h>
+#include <GL/glext.h>
+#include <unistd.h>
 #include "glextensions.h"
 
 #include <string.h>
@@ -86,7 +88,7 @@ gst_gl_buffer_new (GstGLDisplay * display, GstVideoFormat format,
   GstGLBuffer *buffer;
   XGCValues values = { 0 };
 
-  g_return_val_if_fail (format == GST_VIDEO_FORMAT_BGRx, NULL);
+  g_return_val_if_fail (format == GST_VIDEO_FORMAT_RGB, NULL);
   g_return_val_if_fail (width > 0, NULL);
   g_return_val_if_fail (height > 0, NULL);
 
@@ -112,17 +114,35 @@ gst_gl_buffer_new (GstGLDisplay * display, GstVideoFormat format,
     }
     case GST_GL_BUFFER_RBO:
     {
+      GLuint fbo;
+
       gst_gl_display_lock (buffer->display);
 
+      glGenFramebuffersEXT (1, &fbo);
+      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
+
       glGenRenderbuffersEXT (1, &buffer->rbo);
+      gst_gl_display_check_error (buffer->display, __LINE__);
       glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, buffer->rbo);
+      gst_gl_display_check_error (buffer->display, __LINE__);
 
       glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
           GL_COLOR_ATTACHMENT1_EXT, GL_RENDERBUFFER_EXT, buffer->rbo);
+      gst_gl_display_check_error (buffer->display, __LINE__);
       glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_RGB,
           buffer->width, buffer->height);
+      gst_gl_display_check_error (buffer->display, __LINE__);
 
+      glDrawBuffer (GL_COLOR_ATTACHMENT1_EXT);
+      glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
+      {
+        GLint status;
 
+        status = glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT);
+        g_assert (status == GL_FRAMEBUFFER_COMPLETE_EXT);
+      }
+
+      glDeleteFramebuffersEXT (1, &fbo);
 
       gst_gl_display_unlock (buffer->display);
       break;
@@ -170,6 +190,8 @@ gst_gl_buffer_upload (GstGLBuffer * buffer, void *data)
     {
       unsigned int fbo;
 
+      g_assert (glIsRenderbufferEXT (buffer->rbo));
+
       glGenFramebuffersEXT (1, &fbo);
       glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
 
@@ -177,11 +199,40 @@ gst_gl_buffer_upload (GstGLBuffer * buffer, void *data)
           GL_COLOR_ATTACHMENT1_EXT, GL_RENDERBUFFER_EXT, buffer->rbo);
 
       glDrawBuffer (GL_COLOR_ATTACHMENT1_EXT);
-      //glWindowPos2iARB(0, 0);
-      glDrawPixels (buffer->width, buffer->height, GL_RGBA,
+      glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
+
+      g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
+          GL_FRAMEBUFFER_COMPLETE_EXT);
+
+#if 0
+      {
+        void *newdata;
+
+        /* FIXME: Some timing issue causes this to work.  Note that
+         * we're not actually using the copied buffer. */
+
+        gst_gl_display_check_error (buffer->display, __LINE__);
+        glWindowPos2iARB (0, 0);
+        glDrawPixels (buffer->width, buffer->height, GL_RGB,
+            GL_UNSIGNED_BYTE, data);
+
+        newdata = malloc (4 * buffer->width * buffer->height);
+        //memcpy (newdata, data, 1*buffer->width*buffer->height);
+        memset (newdata, 255, 3 * buffer->width * buffer->height);
+        free (newdata);
+      }
+#else
+      gst_gl_display_check_error (buffer->display, __LINE__);
+      glWindowPos2iARB (0, 0);
+      glDrawPixels (buffer->width, buffer->height, GL_RGB,
           GL_UNSIGNED_BYTE, data);
+#endif
+      gst_gl_display_check_error (buffer->display, __LINE__);
 
       glDeleteFramebuffersEXT (1, &fbo);
+      gst_gl_display_check_error (buffer->display, __LINE__);
+
+      g_assert (glIsRenderbufferEXT (buffer->rbo));
 
       break;
     }
@@ -223,8 +274,13 @@ gst_gl_buffer_download (GstGLBuffer * buffer, void *data)
       glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
           GL_COLOR_ATTACHMENT1_EXT, GL_RENDERBUFFER_EXT, buffer->rbo);
 
+      glDrawBuffer (GL_COLOR_ATTACHMENT1_EXT);
       glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
-      glReadPixels (0, 0, buffer->width, buffer->height, GL_RGBA,
+
+      g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
+          GL_FRAMEBUFFER_COMPLETE_EXT);
+
+      glReadPixels (0, 0, buffer->width, buffer->height / 2, GL_RGBA,
           GL_UNSIGNED_BYTE, data);
 
       glDeleteFramebuffersEXT (1, &fbo);

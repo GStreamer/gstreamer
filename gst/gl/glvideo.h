@@ -81,7 +81,9 @@ void gst_gl_display_update_attributes (GstGLDisplay *display);
 void gst_gl_display_clear (GstGLDisplay *display);
 void gst_gl_display_draw_image (GstGLDisplay * display, GstGLImageType type,
     void *data, int width, int height);
-
+void gst_gl_display_draw_rbo (GstGLDisplay * display, GLuint rbo,
+    int width, int height);
+void gst_gl_display_check_error (GstGLDisplay *display, int line);
 
 #endif
 

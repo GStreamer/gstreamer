@@ -71,7 +71,7 @@ static GstStaticPadTemplate gst_gl_download_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
 static GstStaticPadTemplate gst_gl_download_sink_pad_template =
@@ -178,19 +178,15 @@ gst_gl_download_reset (GstGLDownload * download)
     g_object_unref (download->display);
     download->display = NULL;
   }
-  download->format = GST_VIDEO_FORMAT_BGRx;
+  download->format = GST_VIDEO_FORMAT_RGB;
 }
 
 static gboolean
 gst_gl_download_start (GstGLDownload * download)
 {
-  gboolean ret;
+  download->format = GST_VIDEO_FORMAT_RGB;
 
-  download->format = GST_VIDEO_FORMAT_BGRx;
-  download->display = gst_gl_display_new ();
-  ret = gst_gl_display_connect (download->display, NULL);
-
-  return ret;
+  return TRUE;
 }
 
 static gboolean
@@ -211,15 +207,20 @@ gst_gl_download_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   download = GST_GL_DOWNLOAD (gst_pad_get_parent (pad));
 
+  GST_ERROR ("called with %" GST_PTR_FORMAT, caps);
+
   structure = gst_caps_get_structure (caps, 0);
 
   ret = gst_structure_get_int (structure, "width", &download->width);
   ret &= gst_structure_get_int (structure, "height", &download->height);
-  if (!ret)
+  if (!ret) {
+    GST_ERROR ("bad caps");
     return FALSE;
+  }
 
   srccaps = gst_video_format_new_caps (download->format,
       download->width, download->height, 30, 1, 1, 1);
+  GST_ERROR ("srccaps %" GST_PTR_FORMAT, srccaps);
   ret = gst_pad_set_caps (download->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
@@ -233,16 +234,17 @@ gst_gl_download_chain (GstPad * pad, GstBuffer * buf)
   GstGLBuffer *inbuf = GST_GL_BUFFER (buf);
   GstBuffer *outbuf;
 
-  GST_ERROR ("got here");
   download = GST_GL_DOWNLOAD (gst_pad_get_parent (pad));
 
-  outbuf = gst_buffer_new_and_alloc (inbuf->width * inbuf->height * 4);
+  outbuf =
+      gst_buffer_new_and_alloc (gst_video_format_get_size (download->format,
+          inbuf->width, inbuf->height));
 
   gst_buffer_copy_metadata (GST_BUFFER (outbuf), buf,
       GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
   gst_buffer_set_caps (GST_BUFFER (outbuf), GST_PAD_CAPS (download->srcpad));
 
-  GST_ERROR ("downloading %p size %d",
+  GST_DEBUG ("downloading %p size %d",
       GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
   gst_gl_buffer_download (inbuf, GST_BUFFER_DATA (outbuf));
 

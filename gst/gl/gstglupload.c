@@ -53,6 +53,8 @@ struct _GstGLUpload
   GstVideoFormat format;
   int width;
   int height;
+
+  gboolean peek;
 };
 
 struct _GstGLUploadClass
@@ -78,7 +80,7 @@ static GstStaticPadTemplate gst_gl_upload_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
 enum
@@ -176,7 +178,8 @@ gst_gl_upload_reset (GstGLUpload * upload)
     g_object_unref (upload->display);
     upload->display = NULL;
   }
-  upload->format = GST_VIDEO_FORMAT_BGRx;
+  upload->format = GST_VIDEO_FORMAT_RGB;
+  upload->peek = TRUE;
 }
 
 static gboolean
@@ -184,7 +187,7 @@ gst_gl_upload_start (GstGLUpload * upload)
 {
   gboolean ret;
 
-  upload->format = GST_VIDEO_FORMAT_BGRx;
+  upload->format = GST_VIDEO_FORMAT_RGB;
   upload->display = gst_gl_display_new ();
   ret = gst_gl_display_connect (upload->display, NULL);
 
@@ -247,6 +250,12 @@ gst_gl_upload_chain (GstPad * pad, GstBuffer * buf)
   GST_DEBUG ("uploading %p size %d", GST_BUFFER_DATA (buf),
       GST_BUFFER_SIZE (buf));
   gst_gl_buffer_upload (outbuf, GST_BUFFER_DATA (buf));
+  gst_buffer_unref (buf);
+
+  if (upload->peek) {
+    gst_gl_display_draw_rbo (outbuf->display, outbuf->rbo,
+        outbuf->width, outbuf->height);
+  }
 
   gst_pad_push (upload->srcpad, GST_BUFFER (outbuf));
 
