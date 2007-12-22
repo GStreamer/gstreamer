@@ -54,5 +54,7 @@ void glGetFramebufferAttachmentParameterivEXT (GLenum target, GLenum pname,
     GLint *params);
 void glGenerateMipmapEXT (GLenum target);
 
+void glWindowPos2iARB (GLint x, GLint y);
+
 #endif
 

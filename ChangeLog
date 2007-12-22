@@ -1,3 +1,16 @@
+2007-12-21  David Schleef  <ds@schleef.org>
+
+	* sys/glsink/glextensions.c:
+	* sys/glsink/glextensions.h:
+	* sys/glsink/glvideo.c:
+	* sys/glsink/glvideo.h:
+	* sys/glsink/gstglbuffer.c:
+	* sys/glsink/gstgldownload.c:
+	* sys/glsink/gstglupload.c:
+	  A careful read of the documentation reveals that I can't use
+	  renderbuffers as textures.  Duh.  Checkpoint because I'm about
+	  to rewrite a bunch of code.
+
 2007-12-21  Edgard Lima,,,,  <edgard.lima@indt.org.br>
 
 	* ext/metadata/TODO:

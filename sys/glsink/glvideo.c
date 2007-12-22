@@ -247,11 +247,13 @@ gst_gl_display_lock (GstGLDisplay * display)
 {
   g_mutex_lock (display->lock);
   glXMakeCurrent (display->display, display->window, display->context);
+  gst_gl_display_check_error (display, __LINE__);
 }
 
 void
 gst_gl_display_unlock (GstGLDisplay * display)
 {
+  gst_gl_display_check_error (display, __LINE__);
   glXMakeCurrent (display->display, None, NULL);
   g_mutex_unlock (display->lock);
 }
@@ -344,6 +346,17 @@ gst_gl_display_clear (GstGLDisplay * display)
   glViewport (0, 0, display->win_width, display->win_height);
 
   gst_gl_display_unlock (display);
+}
+
+void
+gst_gl_display_check_error (GstGLDisplay * display, int line)
+{
+  GLenum err = glGetError ();
+
+  if (err) {
+    GST_ERROR ("GL Error 0x%x at line %d", (int) err, line);
+    g_assert (0);
+  }
 }
 
 
@@ -626,6 +639,106 @@ gst_gl_display_draw_image (GstGLDisplay * display, GstGLImageType type,
     }
   }
 #endif
+
+  gst_gl_display_unlock (display);
+}
+
+void
+gst_gl_display_draw_rbo (GstGLDisplay * display, GLuint rbo,
+    int width, int height)
+{
+  GLuint texture;
+  GLuint fbo;
+
+  g_return_if_fail (width > 0);
+  g_return_if_fail (height > 0);
+  g_return_if_fail (rbo != None);
+
+  gst_gl_display_lock (display);
+
+  g_assert (display->window != None);
+  g_assert (display->context != NULL);
+
+  gst_gl_display_update_attributes (display);
+
+  glViewport (0, 0, display->win_width, display->win_height);
+
+  glClearColor (0.3, 0.3, 0.3, 1.0);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  glMatrixMode (GL_MODELVIEW);
+  glLoadIdentity ();
+
+  glDisable (GL_CULL_FACE);
+  glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+
+  glColor4f (1, 1, 1, 1);
+
+  glGenFramebuffersEXT (1, &fbo);
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
+
+  glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
+      GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, rbo);
+
+  glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
+  glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
+
+  g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
+      GL_FRAMEBUFFER_COMPLETE_EXT);
+
+#if 1
+  {
+    void *buffer;
+
+    buffer = malloc (320 * 240 * 4);
+    memset (buffer, random (), 320 * 240 * 4);
+    free (buffer);
+  }
+#endif
+
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glGenTextures (1, &texture);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB, width, height, 0,
+      GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+      GL_TEXTURE_RECTANGLE_ARB, texture, 0);
+
+  glDrawBuffer (0);
+  glReadBuffer (0);
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+  glColor4f (1, 0, 1, 1);
+  gst_gl_display_check_error (display, __LINE__);
+//glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  glBegin (GL_QUADS);
+
+  glNormal3f (0, 0, -1);
+
+  glTexCoord2f (width, 0);
+  glVertex3f (0.9, 0.9, 0);
+  glTexCoord2f (0, 0);
+  glVertex3f (-0.9, 0.9, 0);
+  glTexCoord2f (0, height);
+  glVertex3f (-0.9, -0.9, 0);
+  glTexCoord2f (width, height);
+  glVertex3f (0.9, -0.9, 0);
+  glEnd ();
+  gst_gl_display_check_error (display, __LINE__);
+  glDeleteTextures (1, &texture);
+
+  glDeleteFramebuffersEXT (1, &fbo);
+  gst_gl_display_check_error (display, __LINE__);
+
+  glXSwapBuffers (display->display, display->window);
 
   gst_gl_display_unlock (display);
 }

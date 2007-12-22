@@ -179,3 +179,5 @@ DEFINE_FUNC (glFramebufferRenderbufferEXT, (GLenum target, GLenum attachment,
 DEFINE_FUNC (glGetFramebufferAttachmentParameterivEXT, (GLenum target,
         GLenum pname, GLint * params), (target, pname, params));
 DEFINE_FUNC (glGenerateMipmapEXT, (GLenum target), (target));
+
+DEFINE_FUNC (glWindowPos2iARB, (GLint x, GLint y), (x, y));
