@@ -1,3 +1,8 @@
+2007-12-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstobject.c:
+	  Fix typo in the gst_object_{ref,unref} documentation.
+
 2007-12-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/libs/controller.c:

@@ -304,7 +304,7 @@ gst_object_init (GTypeInstance * instance, gpointer g_class)
  * gst_object_ref:
  * @object: a #GstObject to reference
  *
- * Increments the refence count on @object. This function
+ * Increments the reference count on @object. This function
  * does not take the lock on @object because it relies on
  * atomic refcounting.
  *
@@ -333,7 +333,7 @@ gst_object_ref (gpointer object)
  * gst_object_unref:
  * @object: a #GstObject to unreference
  *
- * Decrements the refence count on @object.  If reference count hits
+ * Decrements the reference count on @object.  If reference count hits
  * zero, destroy @object. This function does not take the lock
  * on @object as it relies on atomic refcounting.
  *
