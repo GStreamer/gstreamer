@@ -35,7 +35,13 @@ typedef enum {
   GST_VIDEO_FORMAT_RGBx,
   GST_VIDEO_FORMAT_BGRx,
   GST_VIDEO_FORMAT_xRGB,
-  GST_VIDEO_FORMAT_xBGR
+  GST_VIDEO_FORMAT_xBGR,
+  GST_VIDEO_FORMAT_RGBA,
+  GST_VIDEO_FORMAT_BGRA,
+  GST_VIDEO_FORMAT_ARGB,
+  GST_VIDEO_FORMAT_ABGR,
+  GST_VIDEO_FORMAT_RGB,
+  GST_VIDEO_FORMAT_BGR
 } GstVideoFormat;
 
 #define GST_VIDEO_BYTE1_MASK_32  "0xFF000000"
@@ -218,7 +224,6 @@ GstCaps * gst_video_format_new_caps (GstVideoFormat format,
     int par_n, int par_d);
 GstVideoFormat gst_video_format_from_fourcc (guint32 fourcc);
 guint32 gst_video_format_to_fourcc (GstVideoFormat format);
-GstVideoFormat gst_video_format_from_rgb32_masks (int red_mask, int green_mask, int blue_mask);
 gboolean gst_video_format_is_rgb (GstVideoFormat format);
 gboolean gst_video_format_is_yuv (GstVideoFormat format);
 gboolean gst_video_format_has_alpha (GstVideoFormat format);

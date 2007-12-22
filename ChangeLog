@@ -1,3 +1,9 @@
+2007-12-21  David Schleef  <ds@schleef.org>
+
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/video.h:
+	  Add additional RGBA and RGB-24 video formats.
+
 2007-12-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/elements/playbin.c: (test_sink_usage_video_only_stream),
