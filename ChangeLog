@@ -1,3 +1,17 @@
+2007-12-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_set_property),
+	  (gst_video_scale_get_property), (gst_video_scale_transform_caps),
+	  (gst_video_scale_transform):
+	  Don't claim to be able to handle/transform caps that can't really
+	  be handled by the currently selected scaling method (here: RGB or
+	  packed YUV with 4-tap method). Also add locking to method property.
+
+	* tests/check/pipelines/simple-launch-lines.c: (setup_pipeline),
+	  (test_basetransform_based):
+	  Some test pipelines for the above (not entirely valgrind clean yet
+	  apparently).
+
 2007-12-21  David Schleef  <ds@schleef.org>
 
 	* gst-libs/gst/video/video.c:

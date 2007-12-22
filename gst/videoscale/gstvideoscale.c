@@ -307,11 +307,13 @@ static void
 gst_video_scale_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVideoScale *src = GST_VIDEO_SCALE (object);
+  GstVideoScale *vscale = GST_VIDEO_SCALE (object);
 
   switch (prop_id) {
     case PROP_METHOD:
-      src->method = g_value_get_enum (value);
+      GST_OBJECT_LOCK (vscale);
+      vscale->method = g_value_get_enum (value);
+      GST_OBJECT_UNLOCK (vscale);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -323,11 +325,13 @@ static void
 gst_video_scale_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstVideoScale *src = GST_VIDEO_SCALE (object);
+  GstVideoScale *vscale = GST_VIDEO_SCALE (object);
 
   switch (prop_id) {
     case PROP_METHOD:
-      g_value_set_enum (value, src->method);
+      GST_OBJECT_LOCK (vscale);
+      g_value_set_enum (value, vscale->method);
+      GST_OBJECT_UNLOCK (vscale);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -343,14 +347,33 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   GstCaps *ret;
   GstStructure *structure;
   const GValue *par;
+  gint method;
+
+  /* this function is always called with a simple caps */
+  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
 
   videoscale = GST_VIDEO_SCALE (trans);
 
+  GST_OBJECT_LOCK (videoscale);
+  method = videoscale->method;
+  GST_OBJECT_UNLOCK (videoscale);
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  /* check compatibility of format and method before we copy the input caps */
+  if (method == GST_VIDEO_SCALE_4TAP) {
+    guint32 fourcc;
+
+    if (!gst_structure_has_name (structure, "video/x-raw-yuv"))
+      goto method_not_implemented_for_format;
+    if (!gst_structure_get_fourcc (structure, "format", &fourcc))
+      goto method_not_implemented_for_format;
+    if (fourcc != GST_MAKE_FOURCC ('I', '4', '2', '0') &&
+        fourcc != GST_MAKE_FOURCC ('Y', 'V', '1', '2'))
+      goto method_not_implemented_for_format;
+  }
+
   ret = gst_caps_copy (caps);
-
-  /* this function is always called with a simple caps */
-  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (ret), NULL);
-
   structure = gst_caps_get_structure (ret, 0);
 
   gst_structure_set (structure,
@@ -378,6 +401,13 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);
 
   return ret;
+
+method_not_implemented_for_format:
+  {
+    GST_DEBUG_OBJECT (trans, "method %d not implemented for format %"
+        GST_PTR_FORMAT ", returning empty caps", method, caps);
+    return gst_caps_new_empty ();
+  }
 }
 
 static int
@@ -709,8 +739,13 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
   VSImage dest_v;
   VSImage src_u;
   VSImage src_v;
+  gint method;
 
   videoscale = GST_VIDEO_SCALE (trans);
+
+  GST_OBJECT_LOCK (videoscale);
+  method = videoscale->method;
+  GST_OBJECT_UNLOCK (videoscale);
 
   src = &videoscale->src;
   dest = &videoscale->dest;
@@ -719,7 +754,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
   gst_video_scale_prepare_image (videoscale->format, out, dest, &dest_u,
       &dest_v);
 
-  switch (videoscale->method) {
+  switch (method) {
     case GST_VIDEO_SCALE_NEAREST:
       switch (videoscale->format) {
         case GST_VIDEO_SCALE_RGBx:
@@ -815,6 +850,8 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           vs_image_scale_4tap_Y (&dest_v, &src_v, videoscale->tmp_buf);
           break;
         default:
+          /* FIXME: update gst_video_scale_transform_caps once RGB and/or
+           * other YUV formats work too */
           goto unsupported;
       }
       break;
@@ -832,7 +869,7 @@ unsupported:
   {
     GST_ELEMENT_ERROR (videoscale, STREAM, NOT_IMPLEMENTED, (NULL),
         ("Unsupported format %d for scaling method %d",
-            videoscale->format, videoscale->method));
+            videoscale->format, method));
     return GST_FLOW_ERROR;
   }
 unknown_mode:
