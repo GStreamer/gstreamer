@@ -1,3 +1,39 @@
+2007-12-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* gst/rawparse/Makefile.am:
+	* gst/rawparse/README:
+	* gst/rawparse/gstaudioparse.c: (gst_audio_parse_format_get_type),
+	(gst_audio_parse_endianness_get_type), (gst_audio_parse_base_init),
+	(gst_audio_parse_class_init), (gst_audio_parse_init),
+	(gst_audio_parse_set_property), (gst_audio_parse_get_property),
+	(gst_audio_parse_update_frame_size), (gst_audio_parse_get_caps):
+	* gst/rawparse/gstaudioparse.h:
+	* gst/rawparse/gstrawparse.c: (gst_raw_parse_base_init),
+	(gst_raw_parse_class_init), (gst_raw_parse_init),
+	(gst_raw_parse_dispose),
+	(gst_raw_parse_class_set_src_pad_template),
+	(gst_raw_parse_class_set_multiple_frames_per_buffer),
+	(gst_raw_parse_reset), (gst_raw_parse_chain),
+	(gst_raw_parse_convert), (gst_raw_parse_sink_event),
+	(gst_raw_parse_src_event), (gst_raw_parse_src_query_type),
+	(gst_raw_parse_src_query), (gst_raw_parse_set_framesize),
+	(gst_raw_parse_set_fps), (gst_raw_parse_get_fps),
+	(gst_raw_parse_is_negotiated):
+	* gst/rawparse/gstrawparse.h:
+	* gst/rawparse/gstvideoparse.c: (gst_video_parse_format_get_type),
+	(gst_video_parse_endianness_get_type), (gst_video_parse_base_init),
+	(gst_video_parse_class_init), (gst_video_parse_init),
+	(gst_video_parse_set_property), (gst_video_parse_get_property),
+	(gst_video_parse_format_to_fourcc),
+	(gst_video_parse_update_frame_size), (gst_video_parse_get_caps):
+	* gst/rawparse/gstvideoparse.h:
+	* gst/rawparse/plugin.c: (plugin_init):
+	Add new plugin rawparse that contains a base class for raw data
+	parsers and the two elements audioparse and videoparse that can
+	be used to parse raw audio and video. These are inspired by the
+	old videoparse element which the new rawparse plugin deprecates.
+
 2007-12-21  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/glextensions.c:

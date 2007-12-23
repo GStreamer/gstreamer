@@ -100,6 +100,7 @@ GST_PLUGINS_ALL="\
   mve \
   nsf \
   nuvdemux \
+  rawparse \
   real \
   replaygain \
   rtpmanager \
@@ -110,7 +111,6 @@ GST_PLUGINS_ALL="\
   stereo \
   switch \
   tta \
-  videoparse \
   videosignal \
   vmnc \
   xingheader \
@@ -1078,6 +1078,7 @@ gst/multifile/Makefile
 gst/mve/Makefile
 gst/nsf/Makefile
 gst/nuvdemux/Makefile
+gst/rawparse/Makefile
 gst/replaygain/Makefile
 gst/rtpmanager/Makefile
 gst/sdp/Makefile
@@ -1087,7 +1088,6 @@ gst/speexresample/Makefile
 gst/stereo/Makefile
 gst/switch/Makefile
 gst/tta/Makefile
-gst/videoparse/Makefile
 gst/videosignal/Makefile
 gst/vmnc/Makefile
 gst/xingheader/Makefile
