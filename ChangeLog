@@ -1,3 +1,10 @@
+2007-12-23  David Schleef  <ds@schleef.org>
+
+	* gst/videoparse/Makefile.am:
+	* gst/videoparse/README:
+	* gst/videoparse/gstvideoparse.c:
+	  Remove videoparse element, because it was moved to gst/rawparse/
+
 2007-12-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/rawparse/gstrawparse.c: (gst_raw_parse_src_event):
