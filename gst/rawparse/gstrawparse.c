@@ -440,6 +440,11 @@ gst_raw_parse_src_event (GstPad * pad, GstEvent * event)
             gst_raw_parse_convert (rp, format, stop, GST_FORMAT_BYTES, &stop);
 
         if (ret) {
+          /* Seek on a frame boundary */
+          start -= start % rp->framesize;
+          if (stop != -1)
+            stop += rp->framesize - stop % rp->framesize;
+
           event =
               gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, start_type,
               start, stop_type, stop);

@@ -1,5 +1,11 @@
 2007-12-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/rawparse/gstrawparse.c: (gst_raw_parse_src_event):
+	Always seek on frame boundaries, will produce nothing useful
+	otherwise.
+
+2007-12-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	* gst/rawparse/Makefile.am:
 	* gst/rawparse/README:
