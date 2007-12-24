@@ -1,3 +1,8 @@
+2007-12-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstsystemclock.c: (gst_system_clock_id_wait_jitter_unlocked):
+	Add some more docs to explain why a FIXME was wrongly added. 
+
 2007-12-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstobject.c:

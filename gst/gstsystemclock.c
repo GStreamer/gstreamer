@@ -363,7 +363,8 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
   GstClockTime entryt, real, now, target;
   GstClockTimeDiff diff;
 
-  /* need to call the overridden method */
+  /* need to call the overridden method because we want to sync against the time
+   * of the clock, whatever the subclass uses as a clock. */
   real = GST_CLOCK_GET_CLASS (clock)->get_internal_time (clock);
   entryt = GST_CLOCK_ENTRY_TIME (entry);
 
@@ -371,12 +372,13 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
   if (jitter) {
     *jitter = GST_CLOCK_DIFF (entryt, now);
   }
+  /* the diff of the entry with the clock is the amount of time we have to
+   * wait */
   diff = entryt - now;
-  /* FIXME: should that be not just:
-   * target = GST_CLOCK_GET_CLASS (clock)->get_internal_time (clock) + diff;
-   * or even
-   * target = real + diff;
-   */
+  /* Our GCond implementation expects an absolute time against the system clock
+   * as a timeout value. We use our internal time to get the system time and add
+   * the expected timeout to it, this gives us the absolute time of the
+   * timeout. */
   target = gst_system_clock_get_internal_time (clock) + diff;
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p"
