@@ -4,7 +4,7 @@
 #endif
 
 #include <gstglbuffer.h>
-#include <glvideo.h>
+#include <gstgldisplay.h>
 #include <GL/glext.h>
 #include <unistd.h>
 #include "glextensions.h"
