@@ -1,5 +1,22 @@
 2007-12-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Based on Patch by: Laurent Glayal <spglegle at yahoo dot fr>
+
+	* configure.ac:
+	Check for stdio_ext.h for the filesink changes.
+
+	* plugins/elements/gstfilesink.c: (buffer_mode_get_type),
+	(gst_file_sink_class_init), (gst_file_sink_init),
+	(gst_file_sink_dispose), (gst_file_sink_set_property),
+	(gst_file_sink_get_property), (gst_file_sink_open_file),
+	(gst_file_sink_close_file):
+	* plugins/elements/gstfilesink.h:
+	Add two properties to control the buffering mode and size.
+	API: GstFileSink::buffer-mode
+	API: GstFileSink::buffer-size
+
+2007-12-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstsystemclock.c: (gst_system_clock_id_wait_jitter_unlocked):
 	Add some more docs to explain why a FIXME was wrongly added. 
 

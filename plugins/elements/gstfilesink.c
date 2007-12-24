@@ -36,6 +36,9 @@
 
 #include <gst/gst.h>
 #include <stdio.h>              /* for fseeko() */
+#ifdef HAVE_STDIO_EXT_H
+#include <stdio_ext.h>          /* for __fbufsize, for debugging */
+#endif
 #include <errno.h>
 #include "gstfilesink.h"
 #include <string.h>
@@ -50,13 +53,40 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+#define GST_TYPE_BUFFER_MODE (buffer_mode_get_type ())
+static GType
+buffer_mode_get_type (void)
+{
+  static GType buffer_mode_type = 0;
+  static const GEnumValue buffer_mode[] = {
+    {-1, "Default buffering", "default"},
+    {_IOFBF, "Fully buffered", "full"},
+    {_IOLBF, "Line buffered", "line"},
+    {_IONBF, "Unbuffered", "unbuffered"},
+    {0, NULL, NULL},
+  };
+
+  if (!buffer_mode_type) {
+    buffer_mode_type =
+        g_enum_register_static ("GstFileSinkBufferMode", buffer_mode);
+  }
+  return buffer_mode_type;
+}
+
 GST_DEBUG_CATEGORY_STATIC (gst_file_sink_debug);
 #define GST_CAT_DEFAULT gst_file_sink_debug
 
+#define DEFAULT_LOCATION 	NULL
+#define DEFAULT_BUFFER_MODE 	-1
+#define DEFAULT_BUFFER_SIZE 	64 * 1024
+
 enum
 {
-  ARG_0,
-  ARG_LOCATION
+  PROP_0,
+  PROP_LOCATION,
+  PROP_BUFFER_MODE,
+  PROP_BUFFER_SIZE,
+  PROP_LAST
 };
 
 static void gst_file_sink_dispose (GObject * object);
@@ -122,14 +152,24 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
 
+  gobject_class->dispose = gst_file_sink_dispose;
+
   gobject_class->set_property = gst_file_sink_set_property;
   gobject_class->get_property = gst_file_sink_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_LOCATION,
+  g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "File Location",
           "Location of the file to write", NULL, G_PARAM_READWRITE));
 
-  gobject_class->dispose = gst_file_sink_dispose;
+  g_object_class_install_property (gobject_class, PROP_BUFFER_MODE,
+      g_param_spec_enum ("buffer-mode", "Buffering mode",
+          "The buffering mode to use", GST_TYPE_BUFFER_MODE,
+          DEFAULT_BUFFER_MODE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_BUFFER_SIZE,
+      g_param_spec_uint ("buffer-size", "Buffering size",
+          "Size of buffer in number of bytes for line or full buffer-mode", 0,
+          G_MAXUINT, DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE));
 
   gstbasesink_class->get_times = NULL;
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_file_sink_start);
@@ -154,6 +194,9 @@ gst_file_sink_init (GstFileSink * filesink, GstFileSinkClass * g_class)
 
   filesink->filename = NULL;
   filesink->file = NULL;
+  filesink->buffer_mode = DEFAULT_BUFFER_MODE;
+  filesink->buffer_size = DEFAULT_BUFFER_SIZE;
+  filesink->buffer = NULL;
 
   gst_base_sink_set_sync (GST_BASE_SINK (filesink), FALSE);
 }
@@ -169,6 +212,9 @@ gst_file_sink_dispose (GObject * object)
   sink->uri = NULL;
   g_free (sink->filename);
   sink->filename = NULL;
+  g_free (sink->buffer);
+  sink->buffer = NULL;
+  sink->buffer_size = 0;
 }
 
 static gboolean
@@ -204,8 +250,14 @@ gst_file_sink_set_property (GObject * object, guint prop_id,
   GstFileSink *sink = GST_FILE_SINK (object);
 
   switch (prop_id) {
-    case ARG_LOCATION:
+    case PROP_LOCATION:
       gst_file_sink_set_location (sink, g_value_get_string (value));
+      break;
+    case PROP_BUFFER_MODE:
+      sink->buffer_mode = g_value_get_enum (value);
+      break;
+    case PROP_BUFFER_SIZE:
+      sink->buffer_size = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -220,8 +272,14 @@ gst_file_sink_get_property (GObject * object, guint prop_id, GValue * value,
   GstFileSink *sink = GST_FILE_SINK (object);
 
   switch (prop_id) {
-    case ARG_LOCATION:
+    case PROP_LOCATION:
       g_value_set_string (value, sink->filename);
+      break;
+    case PROP_BUFFER_MODE:
+      g_value_set_enum (value, sink->buffer_mode);
+      break;
+    case PROP_BUFFER_SIZE:
+      g_value_set_uint (value, sink->buffer_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -232,6 +290,8 @@ gst_file_sink_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_file_sink_open_file (GstFileSink * sink)
 {
+  gint mode;
+
   /* open the file */
   if (sink->filename == NULL || sink->filename[0] == '\0')
     goto no_filename;
@@ -239,6 +299,35 @@ gst_file_sink_open_file (GstFileSink * sink)
   sink->file = fopen (sink->filename, "wb");
   if (sink->file == NULL)
     goto open_failed;
+
+  /* see if we are asked to perform a specific kind of buffering */
+  if ((mode = sink->buffer_mode) != -1) {
+    size_t buffer_size;
+
+    /* free previous buffer if any */
+    g_free (sink->buffer);
+
+    if (mode == _IONBF) {
+      /* no buffering */
+      sink->buffer = NULL;
+      buffer_size = 0;
+    } else {
+      /* allocate buffer */
+      sink->buffer = g_malloc (sink->buffer_size);
+      buffer_size = sink->buffer_size;
+    }
+#ifdef HAVE_STDIO_EXT_H
+    GST_DEBUG_OBJECT (sink, "change buffer size %d to %d, mode %d",
+        __fbufsize (sink->file), buffer_size, mode);
+#else
+    GST_DEBUG_OBJECT (sink, "change  buffer size to %d, mode %d",
+        sink->buffer_size, mode);
+#endif
+    if (setvbuf (sink->file, sink->buffer, mode, buffer_size) != 0) {
+      GST_WARNING_OBJECT (sink, "warning: setvbuf failed: %s",
+          g_strerror (errno));
+    }
+  }
 
   sink->current_pos = 0;
   /* try to seek in the file to figure out if it is seekable */
@@ -274,6 +363,9 @@ gst_file_sink_close_file (GstFileSink * sink)
 
     GST_DEBUG_OBJECT (sink, "closed file");
     sink->file = NULL;
+
+    g_free (sink->buffer);
+    sink->buffer = NULL;
   }
   return;
 

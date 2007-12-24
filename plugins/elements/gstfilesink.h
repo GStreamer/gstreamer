@@ -58,6 +58,10 @@ struct _GstFileSink {
 
   gboolean seekable;
   guint64 current_pos;
+
+  gint    buffer_mode;
+  guint   buffer_size;
+  gchar  *buffer;
 };
 
 struct _GstFileSinkClass {

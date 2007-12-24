@@ -315,6 +315,9 @@ AC_CHECK_HEADERS([process.h])
 dnl Check for sys/utsname.h for uname
 AC_CHECK_HEADERS([sys/utsname.h])
 
+dnl Check for stdio_ext.f for __fbufsize
+AC_CHECK_HEADERS([stdio_ext.h])
+
 dnl *** checks for types/defines ***
 
 dnl *** checks for structures ***
