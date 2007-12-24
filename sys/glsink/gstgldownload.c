@@ -250,6 +250,7 @@ gst_gl_download_chain (GstPad * pad, GstBuffer * buf)
 
   gst_pad_push (download->srcpad, GST_BUFFER (outbuf));
 
+  gst_buffer_unref (buf);
   gst_object_unref (download);
   return GST_FLOW_OK;
 }

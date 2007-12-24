@@ -1,5 +1,12 @@
 2007-12-24  David Schleef  <ds@schleef.org>
 
+	* sys/glsink/gstglbuffer.c:
+	* sys/glsink/gstgldownload.c:
+	* sys/glsink/gstglfilter.c:
+	  Clean up code.  Fix a few leaks.
+
+2007-12-24  David Schleef  <ds@schleef.org>
+
 	* sys/glsink/Makefile.am:
 	* sys/glsink/glimagesink.h:
 	* sys/glsink/glvideo.c:

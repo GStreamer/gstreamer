@@ -246,6 +246,7 @@ gst_gl_filter_chain (GstPad * pad, GstBuffer * buf)
 
   gst_pad_push (filter->srcpad, GST_BUFFER (outbuf));
 
+  gst_buffer_unref (buf);
   gst_object_unref (filter);
   return GST_FLOW_OK;
 }
