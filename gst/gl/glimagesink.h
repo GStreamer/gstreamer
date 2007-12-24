@@ -58,7 +58,7 @@ struct _GstGLImageSink
   int par_n, par_d;
 
   GstGLDisplay *display;
-  GstGLImageType type;
+  GstVideoFormat type;
 
   XID window_id;
 };

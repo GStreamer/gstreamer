@@ -80,7 +80,7 @@ static GstStaticPadTemplate gst_gl_upload_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx)
     );
 
 enum
@@ -178,7 +178,7 @@ gst_gl_upload_reset (GstGLUpload * upload)
     g_object_unref (upload->display);
     upload->display = NULL;
   }
-  upload->format = GST_VIDEO_FORMAT_RGB;
+  upload->format = GST_VIDEO_FORMAT_RGBx;
   upload->peek = TRUE;
 }
 
@@ -187,7 +187,7 @@ gst_gl_upload_start (GstGLUpload * upload)
 {
   gboolean ret;
 
-  upload->format = GST_VIDEO_FORMAT_RGB;
+  upload->format = GST_VIDEO_FORMAT_RGBx;
   upload->display = gst_gl_display_new ();
   ret = gst_gl_display_connect (upload->display, NULL);
 
@@ -253,7 +253,7 @@ gst_gl_upload_chain (GstPad * pad, GstBuffer * buf)
   gst_buffer_unref (buf);
 
   if (upload->peek) {
-    gst_gl_display_draw_rbo (outbuf->display, outbuf->rbo,
+    gst_gl_display_draw_texture (outbuf->display, outbuf->texture,
         outbuf->width, outbuf->height);
   }
 

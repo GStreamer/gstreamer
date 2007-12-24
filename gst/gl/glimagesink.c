@@ -410,31 +410,7 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   glimage_sink->par_n = par_n;
   glimage_sink->par_d = par_d;
 
-  switch (format) {
-    case GST_VIDEO_FORMAT_YUY2:
-      glimage_sink->type = GST_GL_IMAGE_TYPE_YUY2;
-      break;
-    case GST_VIDEO_FORMAT_UYVY:
-      glimage_sink->type = GST_GL_IMAGE_TYPE_UYVY;
-      break;
-    case GST_VIDEO_FORMAT_AYUV:
-      glimage_sink->type = GST_GL_IMAGE_TYPE_AYUV;
-      break;
-    case GST_VIDEO_FORMAT_RGBx:
-      glimage_sink->type = GST_GL_IMAGE_TYPE_RGBx;
-      break;
-    case GST_VIDEO_FORMAT_BGRx:
-      glimage_sink->type = GST_GL_IMAGE_TYPE_BGRx;
-      break;
-    case GST_VIDEO_FORMAT_xRGB:
-      glimage_sink->type = GST_GL_IMAGE_TYPE_xRGB;
-      break;
-    case GST_VIDEO_FORMAT_xBGR:
-      glimage_sink->type = GST_GL_IMAGE_TYPE_xBGR;
-      break;
-    default:
-      break;
-  }
+  glimage_sink->type = format;
 
 #if 0
   if (!glimage_sink->window) {

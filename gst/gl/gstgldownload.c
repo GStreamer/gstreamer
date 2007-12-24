@@ -71,7 +71,7 @@ static GstStaticPadTemplate gst_gl_download_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx)
     );
 
 static GstStaticPadTemplate gst_gl_download_sink_pad_template =
@@ -178,13 +178,13 @@ gst_gl_download_reset (GstGLDownload * download)
     g_object_unref (download->display);
     download->display = NULL;
   }
-  download->format = GST_VIDEO_FORMAT_RGB;
+  download->format = GST_VIDEO_FORMAT_RGBx;
 }
 
 static gboolean
 gst_gl_download_start (GstGLDownload * download)
 {
-  download->format = GST_VIDEO_FORMAT_RGB;
+  download->format = GST_VIDEO_FORMAT_RGBx;
 
   return TRUE;
 }
