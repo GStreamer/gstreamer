@@ -4,8 +4,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <xcb/xcb.h>
-#include <glvideo.h>
+#include <gstgldisplay.h>
 
 typedef struct _GstGLBuffer GstGLBuffer;
 

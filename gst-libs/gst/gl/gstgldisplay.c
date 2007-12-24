@@ -1,4 +1,4 @@
-/* glvideo.c
+/* gstgldisplay.c
  * Copyright (C) 2007 David A. Schleef <ds@schleef.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "glvideo.h"
+#include "gstgldisplay.h"
 #include "glextensions.h"
 #include <gst/gst.h>
 
