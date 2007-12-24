@@ -1,5 +1,17 @@
 2007-12-24  David Schleef  <ds@schleef.org>
 
+	* sys/glsink/Makefile.am:
+	* sys/glsink/glimagesink.h:
+	* sys/glsink/glvideo.c:
+	* sys/glsink/glvideo.h:
+	* sys/glsink/gstglbuffer.c:
+	* sys/glsink/gstglbuffer.h:
+	* sys/glsink/gstgldisplay.c:
+	* sys/glsink/gstgldisplay.h:
+	  Rename glvideo.[ch] to gstgldisplay.[ch].
+
+2007-12-24  David Schleef  <ds@schleef.org>
+
 	* sys/glsink/glimagesink.c:
 	* sys/glsink/glimagesink.h:
 	* sys/glsink/glvideo.c:

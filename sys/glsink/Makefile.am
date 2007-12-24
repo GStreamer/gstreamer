@@ -3,7 +3,7 @@ plugin_LTLIBRARIES = libgstglimagesink.la
 
 libgstglimagesink_la_SOURCES = \
 	glimagesink.c \
-	glvideo.c \
+	gstgldisplay.c \
 	gstopengl.c \
 	glextensions.c \
 	gstglbuffer.c \
@@ -19,6 +19,6 @@ libgstglimagesink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
 	glimagesink.h \
-	glvideo.h \
+	gstgldisplay.h \
 	glextensions.h \
 	gstglbuffer.h
