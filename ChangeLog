@@ -1,3 +1,18 @@
+2007-12-24  David Schleef  <ds@schleef.org>
+
+	* sys/glsink/glimagesink.c:
+	* sys/glsink/glimagesink.h:
+	* sys/glsink/glvideo.c:
+	* sys/glsink/glvideo.h:
+	* sys/glsink/gstglbuffer.c:
+	* sys/glsink/gstglbuffer.h:
+	* sys/glsink/gstgldownload.c:
+	* sys/glsink/gstglfilter.c:
+	* sys/glsink/gstglupload.c:
+	  Rewrite a bunch of code to use textures as the intermediate
+	  instead of renderbuffers.  upload, download, filtering all
+	  work.
+
 2007-12-23  David Schleef  <ds@schleef.org>
 
 	* gst/videoparse/Makefile.am:

@@ -5,16 +5,7 @@
 #include <GL/glx.h>
 #include <GL/gl.h>
 #include <gst/gst.h>
-
-typedef enum {
-  GST_GL_IMAGE_TYPE_RGBx,
-  GST_GL_IMAGE_TYPE_BGRx,
-  GST_GL_IMAGE_TYPE_xRGB,
-  GST_GL_IMAGE_TYPE_xBGR,
-  GST_GL_IMAGE_TYPE_YUY2,
-  GST_GL_IMAGE_TYPE_UYVY,
-  GST_GL_IMAGE_TYPE_AYUV,
-} GstGLImageType;
+#include <gst/video/video.h>
 
 typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstGLDisplayClass GstGLDisplayClass;
@@ -73,17 +64,21 @@ GstGLDisplay *gst_gl_display_new (void);
 gboolean gst_gl_display_connect (GstGLDisplay *display,
     const char *display_name);
 gboolean gst_gl_display_can_handle_type (GstGLDisplay *display,
-    GstGLImageType type);
+    GstVideoFormat type);
 void gst_gl_display_lock (GstGLDisplay *display);
 void gst_gl_display_unlock (GstGLDisplay *display);
 void gst_gl_display_set_window (GstGLDisplay *display, Window window);
 void gst_gl_display_update_attributes (GstGLDisplay *display);
 void gst_gl_display_clear (GstGLDisplay *display);
-void gst_gl_display_draw_image (GstGLDisplay * display, GstGLImageType type,
+void gst_gl_display_draw_image (GstGLDisplay * display, GstVideoFormat type,
     void *data, int width, int height);
 void gst_gl_display_draw_rbo (GstGLDisplay * display, GLuint rbo,
     int width, int height);
+void gst_gl_display_draw_texture (GstGLDisplay * display, GLuint texture,
+    int width, int height);
 void gst_gl_display_check_error (GstGLDisplay *display, int line);
+GLuint gst_gl_display_upload_texture_rectangle (GstGLDisplay *display,
+    GstVideoFormat type, void *data, int width, int height);
 
 #endif
 

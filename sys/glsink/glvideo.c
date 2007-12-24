@@ -224,18 +224,18 @@ gst_gl_display_check_features (GstGLDisplay * display)
 }
 
 gboolean
-gst_gl_display_can_handle_type (GstGLDisplay * display, GstGLImageType type)
+gst_gl_display_can_handle_type (GstGLDisplay * display, GstVideoFormat type)
 {
   switch (type) {
-    case GST_GL_IMAGE_TYPE_RGBx:
-    case GST_GL_IMAGE_TYPE_BGRx:
-    case GST_GL_IMAGE_TYPE_xRGB:
-    case GST_GL_IMAGE_TYPE_xBGR:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
       return TRUE;
-    case GST_GL_IMAGE_TYPE_YUY2:
-    case GST_GL_IMAGE_TYPE_UYVY:
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
       return display->have_ycbcr_texture;
-    case GST_GL_IMAGE_TYPE_AYUV:
+    case GST_VIDEO_FORMAT_AYUV:
       return display->have_color_matrix;
     default:
       return FALSE;
@@ -360,9 +360,68 @@ gst_gl_display_check_error (GstGLDisplay * display, int line)
 }
 
 
+GLuint
+gst_gl_display_upload_texture_rectangle (GstGLDisplay * display,
+    GstVideoFormat type, void *data, int width, int height)
+{
+  GLuint texture;
+
+  glGenTextures (1, &texture);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+
+  switch (type) {
+    case GST_VIDEO_FORMAT_RGBx:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
+          0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_RGBA, GL_UNSIGNED_BYTE, data);
+      break;
+    case GST_VIDEO_FORMAT_BGRx:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
+          0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_BGRA, GL_UNSIGNED_BYTE, data);
+      break;
+    case GST_VIDEO_FORMAT_xRGB:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
+          0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
+      break;
+    case GST_VIDEO_FORMAT_xBGR:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
+          0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width, height,
+          0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, data);
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width, height,
+          0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, data);
+      break;
+    case GST_VIDEO_FORMAT_AYUV:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
+          0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+
+  return texture;
+}
+
 
 static void
-draw_rect_texture (GstGLDisplay * display, GstGLImageType type,
+draw_rect_texture (GstGLDisplay * display, GstVideoFormat type,
     void *data, int width, int height)
 {
   GLuint texture;
@@ -371,52 +430,57 @@ draw_rect_texture (GstGLDisplay * display, GstGLImageType type,
 
 #ifdef GL_TEXTURE_RECTANGLE_ARB
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glGenTextures (1, &texture);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  //glGenTextures (1, &texture);
+  //glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+
+  texture = gst_gl_display_upload_texture_rectangle (display, type,
+      data, width, height);
+
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
+#if 0
   switch (type) {
-    case GST_GL_IMAGE_TYPE_RGBx:
+    case GST_VIDEO_FORMAT_RGBx:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_RGBA, GL_UNSIGNED_BYTE, data);
       break;
-    case GST_GL_IMAGE_TYPE_BGRx:
+    case GST_VIDEO_FORMAT_BGRx:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_BGRA, GL_UNSIGNED_BYTE, data);
       break;
-    case GST_GL_IMAGE_TYPE_xRGB:
+    case GST_VIDEO_FORMAT_xRGB:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
       break;
-    case GST_GL_IMAGE_TYPE_xBGR:
+    case GST_VIDEO_FORMAT_xBGR:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
       break;
-    case GST_GL_IMAGE_TYPE_YUY2:
+    case GST_VIDEO_FORMAT_YUY2:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width, height,
           0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, data);
       break;
-    case GST_GL_IMAGE_TYPE_UYVY:
+    case GST_VIDEO_FORMAT_UYVY:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width, height,
           0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, data);
       break;
-    case GST_GL_IMAGE_TYPE_AYUV:
+    case GST_VIDEO_FORMAT_AYUV:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
@@ -427,7 +491,7 @@ draw_rect_texture (GstGLDisplay * display, GstGLImageType type,
   }
 
 #ifdef GL_POST_COLOR_MATRIX_RED_BIAS
-  if (type == GST_GL_IMAGE_TYPE_AYUV) {
+  if (type == GST_VIDEO_FORMAT_AYUV) {
     const double matrix[16] = {
       1, 1, 1, 0,
       0, -0.344 * 1, 1.770 * 1, 0,
@@ -440,6 +504,7 @@ draw_rect_texture (GstGLDisplay * display, GstGLImageType type,
     glPixelTransferf (GL_POST_COLOR_MATRIX_GREEN_BIAS, (0.344 + 0.714) / 2);
     glPixelTransferf (GL_POST_COLOR_MATRIX_BLUE_BIAS, -1.770 / 2);
   }
+#endif
 #endif
 
   glColor4f (1, 0, 1, 1);
@@ -463,7 +528,7 @@ draw_rect_texture (GstGLDisplay * display, GstGLImageType type,
 }
 
 static void
-draw_pow2_texture (GstGLDisplay * display, GstGLImageType type,
+draw_pow2_texture (GstGLDisplay * display, GstVideoFormat type,
     void *data, int width, int height)
 {
   int pow2_width;
@@ -487,43 +552,43 @@ draw_pow2_texture (GstGLDisplay * display, GstGLImageType type,
   glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
   switch (type) {
-    case GST_GL_IMAGE_TYPE_RGBx:
+    case GST_VIDEO_FORMAT_RGBx:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, pow2_width, pow2_height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
           GL_RGBA, GL_UNSIGNED_BYTE, data);
       break;
-    case GST_GL_IMAGE_TYPE_BGRx:
+    case GST_VIDEO_FORMAT_BGRx:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, pow2_width, pow2_height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
           GL_BGRA, GL_UNSIGNED_BYTE, data);
       break;
-    case GST_GL_IMAGE_TYPE_xRGB:
+    case GST_VIDEO_FORMAT_xRGB:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, pow2_width, pow2_height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
           GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
       break;
-    case GST_GL_IMAGE_TYPE_xBGR:
+    case GST_VIDEO_FORMAT_xBGR:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, pow2_width, pow2_height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
           GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
       break;
-    case GST_GL_IMAGE_TYPE_YUY2:
+    case GST_VIDEO_FORMAT_YUY2:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_YCBCR_MESA, pow2_width, pow2_height,
           0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
           GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, data);
       break;
-    case GST_GL_IMAGE_TYPE_UYVY:
+    case GST_VIDEO_FORMAT_UYVY:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_YCBCR_MESA, pow2_width, pow2_height,
           0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
           GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, data);
       break;
-    case GST_GL_IMAGE_TYPE_AYUV:
+    case GST_VIDEO_FORMAT_AYUV:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, pow2_width, pow2_height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
@@ -534,7 +599,7 @@ draw_pow2_texture (GstGLDisplay * display, GstGLImageType type,
   }
 
 #ifdef GL_POST_COLOR_MATRIX_RED_BIAS
-  if (type == GST_GL_IMAGE_TYPE_AYUV) {
+  if (type == GST_VIDEO_FORMAT_AYUV) {
     const double matrix[16] = {
       1, 1, 1, 0,
       0, -0.344 * 1, 1.770 * 1, 0,
@@ -570,7 +635,7 @@ draw_pow2_texture (GstGLDisplay * display, GstGLImageType type,
 }
 
 void
-gst_gl_display_draw_image (GstGLDisplay * display, GstGLImageType type,
+gst_gl_display_draw_image (GstGLDisplay * display, GstVideoFormat type,
     void *data, int width, int height)
 {
   g_return_if_fail (data != NULL);
@@ -736,6 +801,67 @@ gst_gl_display_draw_rbo (GstGLDisplay * display, GLuint rbo,
   glDeleteTextures (1, &texture);
 
   glDeleteFramebuffersEXT (1, &fbo);
+  gst_gl_display_check_error (display, __LINE__);
+
+  glXSwapBuffers (display->display, display->window);
+
+  gst_gl_display_unlock (display);
+}
+
+void
+gst_gl_display_draw_texture (GstGLDisplay * display, GLuint texture,
+    int width, int height)
+{
+  g_return_if_fail (width > 0);
+  g_return_if_fail (height > 0);
+  g_return_if_fail (texture != None);
+
+  gst_gl_display_lock (display);
+
+  g_assert (display->window != None);
+  g_assert (display->context != NULL);
+
+  gst_gl_display_update_attributes (display);
+
+  glViewport (0, 0, display->win_width, display->win_height);
+
+  glClearColor (0.3, 0.3, 0.3, 1.0);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  glMatrixMode (GL_MODELVIEW);
+  glLoadIdentity ();
+
+  glDisable (GL_CULL_FACE);
+  glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+
+  glColor4f (1, 1, 1, 1);
+
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+  glColor4f (1, 0, 1, 1);
+  gst_gl_display_check_error (display, __LINE__);
+  glBegin (GL_QUADS);
+
+  glNormal3f (0, 0, -1);
+
+  glTexCoord2f (width, 0);
+  glVertex3f (0.9, 0.9, 0);
+  glTexCoord2f (0, 0);
+  glVertex3f (-0.9, 0.9, 0);
+  glTexCoord2f (0, height);
+  glVertex3f (-0.9, -0.9, 0);
+  glTexCoord2f (width, height);
+  glVertex3f (0.9, -0.9, 0);
+  glEnd ();
   gst_gl_display_check_error (display, __LINE__);
 
   glXSwapBuffers (display->display, display->window);

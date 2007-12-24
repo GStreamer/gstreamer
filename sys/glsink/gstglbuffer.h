@@ -17,7 +17,8 @@ typedef struct _GstGLBuffer GstGLBuffer;
 typedef enum {
   GST_GL_BUFFER_UNKNOWN,
   GST_GL_BUFFER_XIMAGE,
-  GST_GL_BUFFER_RBO
+  GST_GL_BUFFER_RBO,
+  GST_GL_BUFFER_TEXTURE
 } GstGLBufferType;
 
 struct _GstGLBuffer {
@@ -31,6 +32,7 @@ struct _GstGLBuffer {
   GC gc;
 
   GLuint rbo;
+  GLuint texture;
 
   int width;
   int height;

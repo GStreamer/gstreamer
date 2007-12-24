@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gstglbuffer.h>
+#include "glextensions.h"
 
 #define GST_CAT_DEFAULT gst_gl_filter_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -178,7 +179,7 @@ gst_gl_filter_reset (GstGLFilter * filter)
     g_object_unref (filter->display);
     filter->display = NULL;
   }
-  filter->format = GST_VIDEO_FORMAT_BGRx;
+  filter->format = GST_VIDEO_FORMAT_RGBx;
 }
 
 static gboolean
@@ -186,7 +187,7 @@ gst_gl_filter_start (GstGLFilter * filter)
 {
   gboolean ret;
 
-  filter->format = GST_VIDEO_FORMAT_BGRx;
+  filter->format = GST_VIDEO_FORMAT_RGBx;
   filter->display = gst_gl_display_new ();
   ret = gst_gl_display_connect (filter->display, NULL);
 
@@ -335,81 +336,73 @@ dump_fbconfigs (Display * display)
 static gboolean
 gst_gl_filter_transform (GstGLBuffer * outbuf, GstGLBuffer * inbuf)
 {
-  GstGLDisplay *display;
+  GstGLDisplay *display = inbuf->display;
+  unsigned int fbo;
 
-#if 0
-  int pixmapAttribs[] = {
-    GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_RECTANGLE_EXT,
-    GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGBA_EXT,
-    None
-  };
-#endif
-  GLXFBConfig *fbconfigs;
-  int n;
-  int i;
-  GLXDrawable glxpixmap;
-  GLXContext context = 0;
-  int fb_index = 0;
-  int attrib[] = { GLX_RGBA, GLX_RED_SIZE, 8,
-    GLX_GREEN_SIZE, 8, GLX_BLUE_SIZE, 8, None
-  };
-  XVisualInfo *visinfo;
-
-  display = outbuf->display;
   gst_gl_display_lock (display);
 
-  //context = glXCreateContext (display->display, visinfo, NULL, True);
+  glGenFramebuffersEXT (1, &fbo);
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
 
-  dump_fbconfigs (display->display);
+  /* FIXME: This should be part of buffer creation */
+  glGenTextures (1, &outbuf->texture);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, outbuf->texture);
+  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+      outbuf->width, outbuf->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-  fbconfigs = glXGetFBConfigs (display->display, display->screen_num, &n);
-  for (i = 0; i < n; i++) {
-    XVisualInfo *visinfo;
-    int value;
+  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
+      GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_RECTANGLE_ARB, outbuf->texture, 0);
 
-    GST_DEBUG ("fbconfig %d", i);
+  glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
+  glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
 
-    visinfo = glXGetVisualFromFBConfig (display->display, fbconfigs[i]);
-    GST_DEBUG ("visinfo %p", visinfo);
+  g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
+      GL_FRAMEBUFFER_COMPLETE_EXT);
 
-    glXGetFBConfigAttrib (display->display, fbconfigs[i],
-        GLX_DRAWABLE_TYPE, &value);
-    if (!(value & GLX_WINDOW_BIT)) {
-      GST_DEBUG ("GLX_DRAWABLE_TYPE doesn't have GLX_WINDOW_BIT set");
-      continue;
-    }
+  glViewport (0, 0, outbuf->width, outbuf->height);
 
-    glXGetFBConfigAttrib (display->display, fbconfigs[i],
-        GLX_BIND_TO_TEXTURE_TARGETS_EXT, &value);
-    if (!(value & GLX_TEXTURE_2D_BIT_EXT)) {
-      GST_DEBUG
-          ("GLX_BIND_TO_TEXTURE_TARGETS_EXT doesn't have GLX_TEXTURE_2D_BIT_EXT set");
-      continue;
-    }
+  glClearColor (0.3, 0.3, 0.3, 1.0);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glXGetFBConfigAttrib (display->display, fbconfigs[i],
-        GLX_BIND_TO_TEXTURE_RGBA_EXT, &value);
-    GST_DEBUG ("GLX_BIND_TO_TEXTURE_RGBA_EXT %d", value);
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
 
-  }
+  glMatrixMode (GL_MODELVIEW);
+  glLoadIdentity ();
 
-  fb_index = 0;
+  glDisable (GL_CULL_FACE);
+  glEnableClientState (GL_TEXTURE_COORD_ARRAY);
 
-#if 0
-  {
-    pb = glXCreatePbuffer (display->display, fbconfigs[fb_index], attribs);
-  }
-#endif
+  glColor4f (1, 1, 1, 1);
 
-  XSync (display->display, False);
-  visinfo = glXChooseVisual (display->display, 0, attrib);
-  glxpixmap = glXCreateGLXPixmap (display->display, visinfo, outbuf->pixmap);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, inbuf->texture);
 
-  XSync (display->display, False);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-  glXMakeCurrent (display->display, glxpixmap, context);
+  glColor4f (1, 0, 1, 1);
+  glBegin (GL_QUADS);
 
-  glXMakeCurrent (display->display, None, NULL);
+  glNormal3f (0, 0, -1);
+
+  glTexCoord2f (inbuf->width, 0);
+  glVertex3f (0.9, -0.9, 0);
+  glTexCoord2f (0, 0);
+  glVertex3f (-1.0, -1.0, 0);
+  glTexCoord2f (0, inbuf->height);
+  glVertex3f (-1.0, 1.0, 0);
+  glTexCoord2f (inbuf->width, inbuf->height);
+  glVertex3f (1.0, 1.0, 0);
+  glEnd ();
+
+  glFlush ();
+
+  glDeleteFramebuffersEXT (1, &fbo);
+
   gst_gl_display_unlock (display);
 
   return TRUE;
