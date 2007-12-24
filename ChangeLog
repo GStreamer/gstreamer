@@ -14,6 +14,7 @@
 	Add two properties to control the buffering mode and size.
 	API: GstFileSink::buffer-mode
 	API: GstFileSink::buffer-size
+	Fixes #500150.
 
 2007-12-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
