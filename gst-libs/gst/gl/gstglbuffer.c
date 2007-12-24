@@ -27,6 +27,9 @@ gst_gl_buffer_finalize (GstGLBuffer * buffer)
     case GST_GL_BUFFER_RBO:
       glDeleteRenderbuffersEXT (1, &buffer->rbo);
       break;
+    case GST_GL_BUFFER_TEXTURE:
+      glDeleteTextures (1, &buffer->texture);
+      break;
     default:
       g_assert_not_reached ();
       break;
@@ -88,14 +91,14 @@ gst_gl_buffer_new (GstGLDisplay * display, GstVideoFormat format,
   GstGLBuffer *buffer;
   XGCValues values = { 0 };
 
-  g_return_val_if_fail (format == GST_VIDEO_FORMAT_RGB, NULL);
+  g_return_val_if_fail (format == GST_VIDEO_FORMAT_RGBx, NULL);
   g_return_val_if_fail (width > 0, NULL);
   g_return_val_if_fail (height > 0, NULL);
 
   buffer = (GstGLBuffer *) gst_mini_object_new (GST_TYPE_GL_BUFFER);
 
   buffer->display = g_object_ref (display);
-  buffer->type = GST_GL_BUFFER_RBO;
+  buffer->type = GST_GL_BUFFER_TEXTURE;
 
   buffer->width = width;
   buffer->height = height;
@@ -147,6 +150,8 @@ gst_gl_buffer_new (GstGLDisplay * display, GstVideoFormat format,
       gst_gl_display_unlock (buffer->display);
       break;
     }
+    case GST_GL_BUFFER_TEXTURE:
+      break;
     default:
       g_assert_not_reached ();
   }
@@ -236,6 +241,11 @@ gst_gl_buffer_upload (GstGLBuffer * buffer, void *data)
 
       break;
     }
+    case GST_GL_BUFFER_TEXTURE:
+      buffer->texture =
+          gst_gl_display_upload_texture_rectangle (buffer->display,
+          GST_VIDEO_FORMAT_RGBx, data, buffer->width, buffer->height);
+      break;
     default:
       g_assert_not_reached ();
   }
@@ -287,6 +297,29 @@ gst_gl_buffer_download (GstGLBuffer * buffer, void *data)
 
       break;
     }
+    case GST_GL_BUFFER_TEXTURE:
+    {
+      unsigned int fbo;
+
+      glGenFramebuffersEXT (1, &fbo);
+      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
+
+      glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
+          GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_RECTANGLE_ARB,
+          buffer->texture, 0);
+
+      glDrawBuffer (GL_COLOR_ATTACHMENT1_EXT);
+      glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
+
+      g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
+          GL_FRAMEBUFFER_COMPLETE_EXT);
+
+      glReadPixels (0, 0, buffer->width, buffer->height, GL_RGBA,
+          GL_UNSIGNED_BYTE, data);
+
+      glDeleteFramebuffersEXT (1, &fbo);
+    }
+      break;
     default:
       g_assert_not_reached ();
   }
