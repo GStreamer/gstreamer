@@ -125,25 +125,17 @@ gst_gl_buffer_new (GstGLDisplay * display, GstVideoFormat format,
       glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
 
       glGenRenderbuffersEXT (1, &buffer->rbo);
-      gst_gl_display_check_error (buffer->display, __LINE__);
       glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, buffer->rbo);
-      gst_gl_display_check_error (buffer->display, __LINE__);
 
       glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
           GL_COLOR_ATTACHMENT1_EXT, GL_RENDERBUFFER_EXT, buffer->rbo);
-      gst_gl_display_check_error (buffer->display, __LINE__);
       glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_RGB,
           buffer->width, buffer->height);
-      gst_gl_display_check_error (buffer->display, __LINE__);
 
       glDrawBuffer (GL_COLOR_ATTACHMENT1_EXT);
       glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
-      {
-        GLint status;
-
-        status = glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT);
-        g_assert (status == GL_FRAMEBUFFER_COMPLETE_EXT);
-      }
+      g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
+          GL_FRAMEBUFFER_COMPLETE_EXT);
 
       glDeleteFramebuffersEXT (1, &fbo);
 
@@ -209,33 +201,12 @@ gst_gl_buffer_upload (GstGLBuffer * buffer, void *data)
       g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
           GL_FRAMEBUFFER_COMPLETE_EXT);
 
-#if 0
-      {
-        void *newdata;
-
-        /* FIXME: Some timing issue causes this to work.  Note that
-         * we're not actually using the copied buffer. */
-
-        gst_gl_display_check_error (buffer->display, __LINE__);
-        glWindowPos2iARB (0, 0);
-        glDrawPixels (buffer->width, buffer->height, GL_RGB,
-            GL_UNSIGNED_BYTE, data);
-
-        newdata = malloc (4 * buffer->width * buffer->height);
-        //memcpy (newdata, data, 1*buffer->width*buffer->height);
-        memset (newdata, 255, 3 * buffer->width * buffer->height);
-        free (newdata);
-      }
-#else
       gst_gl_display_check_error (buffer->display, __LINE__);
       glWindowPos2iARB (0, 0);
       glDrawPixels (buffer->width, buffer->height, GL_RGB,
           GL_UNSIGNED_BYTE, data);
-#endif
-      gst_gl_display_check_error (buffer->display, __LINE__);
 
       glDeleteFramebuffersEXT (1, &fbo);
-      gst_gl_display_check_error (buffer->display, __LINE__);
 
       g_assert (glIsRenderbufferEXT (buffer->rbo));
 
