@@ -179,7 +179,7 @@ gst_gl_upload_reset (GstGLUpload * upload)
     upload->display = NULL;
   }
   upload->format = GST_VIDEO_FORMAT_RGBx;
-  upload->peek = TRUE;
+  upload->peek = FALSE;
 }
 
 static gboolean
