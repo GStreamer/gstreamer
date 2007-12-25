@@ -267,7 +267,7 @@ gst_gl_display_init_tmp_window (GstGLDisplay * display)
   Window root;
   Screen *screen;
 
-  GST_ERROR ("creating temp window");
+  GST_DEBUG ("creating temp window");
 
   screen = XDefaultScreenOfDisplay (display->display);
   scrnum = XScreenNumberOfScreen (screen);
@@ -290,7 +290,7 @@ gst_gl_display_init_tmp_window (GstGLDisplay * display)
       root, 0, 0, 100, 100,
       0, display->visinfo->depth, InputOutput,
       display->visinfo->visual, mask, &attr);
-  XMapWindow (display->display, display->window);
+  //XMapWindow (display->display, display->window);
   XSync (display->display, FALSE);
 }
 
