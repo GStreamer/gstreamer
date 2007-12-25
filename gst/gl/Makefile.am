@@ -9,6 +9,8 @@ libgstglimagesink_la_SOURCES = \
 	gstglbuffer.c \
 	gstglupload.c \
 	gstgldownload.c \
+	gstgltestsrc.c \
+	gltestsrc.c \
 	gstglfilter.c
 libgstglimagesink_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS)
@@ -21,4 +23,6 @@ noinst_HEADERS = \
 	glimagesink.h \
 	gstgldisplay.h \
 	glextensions.h \
+	gstgltestsrc.h \
+	gltestsrc.h \
 	gstglbuffer.h

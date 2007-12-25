@@ -35,6 +35,7 @@
 GType gst_gl_upload_get_type (void);
 GType gst_gl_download_get_type (void);
 GType gst_gl_filter_get_type (void);
+GType gst_gl_test_src_get_type (void);
 
 
 static gboolean
@@ -57,6 +58,10 @@ plugin_init (GstPlugin * plugin)
   }
   if (!gst_element_register (plugin, "glfilter",
           GST_RANK_NONE, gst_gl_filter_get_type ())) {
+    return FALSE;
+  }
+  if (!gst_element_register (plugin, "gltestsrc",
+          GST_RANK_NONE, gst_gl_test_src_get_type ())) {
     return FALSE;
   }
 

@@ -207,20 +207,20 @@ gst_gl_download_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   download = GST_GL_DOWNLOAD (gst_pad_get_parent (pad));
 
-  GST_ERROR ("called with %" GST_PTR_FORMAT, caps);
+  GST_DEBUG ("called with %" GST_PTR_FORMAT, caps);
 
   structure = gst_caps_get_structure (caps, 0);
 
   ret = gst_structure_get_int (structure, "width", &download->width);
   ret &= gst_structure_get_int (structure, "height", &download->height);
   if (!ret) {
-    GST_ERROR ("bad caps");
+    GST_DEBUG ("bad caps");
     return FALSE;
   }
 
   srccaps = gst_video_format_new_caps (download->format,
       download->width, download->height, 30, 1, 1, 1);
-  GST_ERROR ("srccaps %" GST_PTR_FORMAT, srccaps);
+  GST_DEBUG ("srccaps %" GST_PTR_FORMAT, srccaps);
   ret = gst_pad_set_caps (download->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
