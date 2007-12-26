@@ -3734,7 +3734,9 @@ gst_avi_demux_loop (GstPad * pad)
       }
       break;
     default:
-      g_assert_not_reached ();
+      GST_ERROR_OBJECT (avi, "unknown state %d", avi->state);
+      res = GST_FLOW_ERROR;
+      goto pause;
   }
 
   GST_LOG_OBJECT (avi, "state: %d res:%s", avi->state, gst_flow_get_name (res));

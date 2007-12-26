@@ -280,7 +280,7 @@ composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
       break;
     default:
       /* Should not reach here */
-      g_assert_not_reached ();
+      g_return_if_reached ();
   }
 
   /* possible optimisation:

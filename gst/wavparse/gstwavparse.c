@@ -1821,7 +1821,7 @@ gst_wavparse_chain (GstPad * pad, GstBuffer * buf)
         goto done;
       break;
     default:
-      g_assert_not_reached ();
+      g_return_val_if_reached (GST_FLOW_ERROR);
   }
 done:
   return ret;

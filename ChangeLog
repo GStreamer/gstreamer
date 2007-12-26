@@ -1,3 +1,12 @@
+2007-12-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_loop):
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_chain):
+	* sys/ximage/gstximagesrc.c: (composite_pixel):
+	  Fix 'xyz may be used uninitialized' compiler warnings caused
+	  by broken g_assert_not_reached() macro in GLib-2.15.x (it's
+	  not really nice to abort in any case). Fixes #505745.
+
 2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/elements/avisubtitle.c: (check_correct_buffer):
