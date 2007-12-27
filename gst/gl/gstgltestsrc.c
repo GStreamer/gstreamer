@@ -522,18 +522,12 @@ gst_gl_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   GST_LOG_OBJECT (src, "creating buffer %dx%d image for frame %d",
       src->width, src->height, (gint) src->n_frames);
 
-  outbuf = gst_gl_buffer_new (src->display, GST_VIDEO_FORMAT_RGBx,
+  outbuf = gst_gl_buffer_new (src->display, GST_GL_BUFFER_FORMAT_RGB,
       src->width, src->height);
   gst_buffer_set_caps (GST_BUFFER (outbuf),
       GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
 
   gst_gl_display_lock (outbuf->display);
-
-  /* FIXME: This should be part of buffer creation */
-  glGenTextures (1, &outbuf->texture);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, outbuf->texture);
-  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-      outbuf->width, outbuf->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
   glGenFramebuffersEXT (1, &fbo);
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);

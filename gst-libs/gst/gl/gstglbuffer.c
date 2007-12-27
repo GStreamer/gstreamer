@@ -18,22 +18,14 @@ gst_gl_buffer_finalize (GstGLBuffer * buffer)
 {
   gst_gl_display_lock (buffer->display);
 
-  switch (buffer->type) {
-    case GST_GL_BUFFER_XIMAGE:
-      GST_DEBUG ("freeing pixmap %ld", buffer->pixmap);
-      XFreeGC (buffer->display->display, buffer->gc);
-      XFreePixmap (buffer->display->display, buffer->pixmap);
-      break;
-    case GST_GL_BUFFER_RBO:
-      glDeleteRenderbuffersEXT (1, &buffer->rbo);
-      break;
-    case GST_GL_BUFFER_TEXTURE:
-      glDeleteTextures (1, &buffer->texture);
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
+  glDeleteTextures (1, &buffer->texture);
+  if (buffer->texture_u) {
+    glDeleteTextures (1, &buffer->texture_u);
   }
+  if (buffer->texture_v) {
+    glDeleteTextures (1, &buffer->texture_v);
+  }
+
   gst_gl_display_unlock (buffer->display);
   g_object_unref (buffer->display);
 
@@ -85,215 +77,194 @@ gst_gl_buffer_get_type (void)
 
 
 GstGLBuffer *
-gst_gl_buffer_new (GstGLDisplay * display, GstVideoFormat format,
+gst_gl_buffer_new (GstGLDisplay * display, GstGLBufferFormat format,
     int width, int height)
 {
   GstGLBuffer *buffer;
-  XGCValues values = { 0 };
 
-  g_return_val_if_fail (format == GST_VIDEO_FORMAT_RGBx, NULL);
   g_return_val_if_fail (width > 0, NULL);
   g_return_val_if_fail (height > 0, NULL);
 
   buffer = (GstGLBuffer *) gst_mini_object_new (GST_TYPE_GL_BUFFER);
 
   buffer->display = g_object_ref (display);
-  buffer->type = GST_GL_BUFFER_TEXTURE;
-
   buffer->width = width;
   buffer->height = height;
 
-  switch (buffer->type) {
-    case GST_GL_BUFFER_XIMAGE:
-    {
-      buffer->pixmap = XCreatePixmap (display->display,
-          DefaultRootWindow (display->display), width, height, 32);
-      XSync (display->display, False);
-
-      buffer->gc = XCreateGC (display->display, buffer->pixmap, 0, &values);
-
-      GST_DEBUG ("new pixmap %dx%d xid %ld", width, height, buffer->pixmap);
+  gst_gl_display_lock (buffer->display);
+  glGenTextures (1, &buffer->texture);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture);
+  switch (format) {
+    case GST_GL_BUFFER_FORMAT_RGBA:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+          buffer->width, buffer->height, 0, GL_RGBA, GL_FLOAT, NULL);
       break;
-    }
-    case GST_GL_BUFFER_RBO:
-    {
-      GLuint fbo;
-
-      gst_gl_display_lock (buffer->display);
-
-      glGenFramebuffersEXT (1, &fbo);
-      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
-
-      glGenRenderbuffersEXT (1, &buffer->rbo);
-      glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, buffer->rbo);
-
-      glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
-          GL_COLOR_ATTACHMENT1_EXT, GL_RENDERBUFFER_EXT, buffer->rbo);
-      glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_RGB,
-          buffer->width, buffer->height);
-
-      glDrawBuffer (GL_COLOR_ATTACHMENT1_EXT);
-      glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
-      g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
-          GL_FRAMEBUFFER_COMPLETE_EXT);
-
-      glDeleteFramebuffersEXT (1, &fbo);
-
-      gst_gl_display_unlock (buffer->display);
-      break;
-    }
-    case GST_GL_BUFFER_TEXTURE:
+    case GST_GL_BUFFER_FORMAT_RGB:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
+          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       break;
     default:
-      g_assert_not_reached ();
+      g_warning ("GL buffer format not handled");
   }
+
+  gst_gl_display_unlock (buffer->display);
 
   return buffer;
 }
 
-void
-gst_gl_buffer_upload (GstGLBuffer * buffer, void *data)
+GstGLBuffer *
+gst_gl_buffer_new_from_data (GstGLDisplay * display, GstVideoFormat format,
+    int width, int height, void *data)
 {
-  Display *display = buffer->display->display;
+  GstGLBuffer *buffer;
+  int comp;
 
-  GST_DEBUG ("uploading %p %dx%d", data, buffer->width, buffer->height);
+  g_return_val_if_fail (width > 0, NULL);
+  g_return_val_if_fail (height > 0, NULL);
+  g_return_val_if_fail (data != NULL, NULL);
+
+  GST_DEBUG ("uploading %p %dx%d", data, width, height);
+
+  buffer = (GstGLBuffer *) gst_mini_object_new (GST_TYPE_GL_BUFFER);
+  buffer->display = g_object_ref (display);
+  buffer->width = width;
+  buffer->height = height;
 
   gst_gl_display_lock (buffer->display);
+  glGenTextures (1, &buffer->texture);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture);
 
-  switch (buffer->type) {
-    case GST_GL_BUFFER_XIMAGE:
-    {
-      XImage *image;
-      Visual *visual;
-      int depth;
-      int bpp;
-
-      visual = DefaultVisual (display, 0);
-      depth = 32;
-      bpp = 32;
-
-      image = XCreateImage (display, visual, depth, ZPixmap, 0, NULL,
-          buffer->width, buffer->height, bpp, 0);
-      GST_DEBUG ("image %p", image);
-      image->data = data;
-
-      XPutImage (display, buffer->pixmap, buffer->gc,
-          image, 0, 0, 0, 0, buffer->width, buffer->height);
-
-      XDestroyImage (image);
+  switch (format) {
+    case GST_VIDEO_FORMAT_RGBx:
+      buffer->format = GST_GL_BUFFER_FORMAT_RGB;
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_RGBA, GL_UNSIGNED_BYTE, data);
       break;
-    }
-    case GST_GL_BUFFER_RBO:
-    {
-      unsigned int fbo;
-
-      g_assert (glIsRenderbufferEXT (buffer->rbo));
-
-      glGenFramebuffersEXT (1, &fbo);
-      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
-
-      glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
-          GL_COLOR_ATTACHMENT1_EXT, GL_RENDERBUFFER_EXT, buffer->rbo);
-
-      glDrawBuffer (GL_COLOR_ATTACHMENT1_EXT);
-      glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
-
-      g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
-          GL_FRAMEBUFFER_COMPLETE_EXT);
-
-      gst_gl_display_check_error (buffer->display, __LINE__);
-      glWindowPos2iARB (0, 0);
-      glDrawPixels (buffer->width, buffer->height, GL_RGB,
-          GL_UNSIGNED_BYTE, data);
-
-      glDeleteFramebuffersEXT (1, &fbo);
-
-      g_assert (glIsRenderbufferEXT (buffer->rbo));
-
+    case GST_VIDEO_FORMAT_BGRx:
+      buffer->format = GST_GL_BUFFER_FORMAT_RGB;
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_BGRA, GL_UNSIGNED_BYTE, data);
       break;
-    }
-    case GST_GL_BUFFER_TEXTURE:
-      buffer->texture =
-          gst_gl_display_upload_texture_rectangle (buffer->display,
-          GST_VIDEO_FORMAT_RGBx, data, buffer->width, buffer->height);
+    case GST_VIDEO_FORMAT_xRGB:
+      buffer->format = GST_GL_BUFFER_FORMAT_RGB;
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
+      break;
+    case GST_VIDEO_FORMAT_xBGR:
+      buffer->format = GST_GL_BUFFER_FORMAT_RGB;
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+      buffer->format = GST_GL_BUFFER_FORMAT_YUYV;
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width, height,
+          0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, data);
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      buffer->format = GST_GL_BUFFER_FORMAT_YUYV;
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width, height,
+          0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, data);
+      break;
+    case GST_VIDEO_FORMAT_AYUV:
+      buffer->format = GST_GL_BUFFER_FORMAT_RGB;
+      buffer->is_yuv = TRUE;
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
+      break;
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+      buffer->format = GST_GL_BUFFER_FORMAT_PLANAR420;
+      buffer->is_yuv = TRUE;
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+          buffer->width, buffer->height,
+          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+
+      glGenTextures (1, &buffer->texture_u);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture_u);
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+          GST_ROUND_UP_2 (buffer->width) / 2,
+          GST_ROUND_UP_2 (buffer->height) / 2,
+          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+      comp = (format == GST_VIDEO_FORMAT_I420) ? 1 : 2;
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+          GST_ROUND_UP_2 (buffer->width) / 2,
+          GST_ROUND_UP_2 (buffer->height) / 2,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE,
+          (guint8 *) data +
+          gst_video_format_get_component_offset (format, comp, width, height));
+
+      glGenTextures (1, &buffer->texture_v);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture_v);
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+          GST_ROUND_UP_2 (buffer->width) / 2,
+          GST_ROUND_UP_2 (buffer->height) / 2,
+          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+      comp = (format == GST_VIDEO_FORMAT_I420) ? 2 : 1;
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+          GST_ROUND_UP_2 (buffer->width) / 2,
+          GST_ROUND_UP_2 (buffer->height) / 2,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE,
+          (guint8 *) data +
+          gst_video_format_get_component_offset (format, comp, width, height));
       break;
     default:
       g_assert_not_reached ();
   }
 
   gst_gl_display_unlock (buffer->display);
+
+  return buffer;
 }
 
 
 void
 gst_gl_buffer_download (GstGLBuffer * buffer, void *data)
 {
-  gst_gl_display_lock (buffer->display);
+  GLuint fbo;
 
   GST_DEBUG ("downloading");
 
-  switch (buffer->type) {
-    case GST_GL_BUFFER_XIMAGE:
-    {
-      XImage *image;
+  gst_gl_display_lock (buffer->display);
 
-      image = XGetImage (buffer->display->display, buffer->pixmap,
-          0, 0, buffer->width, buffer->height, 0xffffffff, ZPixmap);
+  glGenFramebuffersEXT (1, &fbo);
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
 
-      memcpy (data, image->data, buffer->width * buffer->height * 4);
+  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
+      GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_RECTANGLE_ARB, buffer->texture, 0);
 
-      XDestroyImage (image);
-      break;
-    }
-    case GST_GL_BUFFER_RBO:
-    {
-      unsigned int fbo;
+  glDrawBuffer (GL_COLOR_ATTACHMENT1_EXT);
+  glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
 
-      glGenFramebuffersEXT (1, &fbo);
-      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
+  g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
+      GL_FRAMEBUFFER_COMPLETE_EXT);
 
-      glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
-          GL_COLOR_ATTACHMENT1_EXT, GL_RENDERBUFFER_EXT, buffer->rbo);
+  /* needs a reset function */
+  glMatrixMode (GL_COLOR);
+  glLoadIdentity ();
+  glPixelTransferf (GL_POST_COLOR_MATRIX_RED_BIAS, 0);
+  glPixelTransferf (GL_POST_COLOR_MATRIX_GREEN_BIAS, 0);
+  glPixelTransferf (GL_POST_COLOR_MATRIX_BLUE_BIAS, 0);
 
-      glDrawBuffer (GL_COLOR_ATTACHMENT1_EXT);
-      glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
+  glReadPixels (0, 0, buffer->width, buffer->height, GL_RGBA,
+      GL_UNSIGNED_BYTE, data);
 
-      g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
-          GL_FRAMEBUFFER_COMPLETE_EXT);
-
-      glReadPixels (0, 0, buffer->width, buffer->height / 2, GL_RGBA,
-          GL_UNSIGNED_BYTE, data);
-
-      glDeleteFramebuffersEXT (1, &fbo);
-
-      break;
-    }
-    case GST_GL_BUFFER_TEXTURE:
-    {
-      unsigned int fbo;
-
-      glGenFramebuffersEXT (1, &fbo);
-      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
-
-      glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
-          GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_RECTANGLE_ARB,
-          buffer->texture, 0);
-
-      glDrawBuffer (GL_COLOR_ATTACHMENT1_EXT);
-      glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
-
-      g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
-          GL_FRAMEBUFFER_COMPLETE_EXT);
-
-      glReadPixels (0, 0, buffer->width, buffer->height, GL_RGBA,
-          GL_UNSIGNED_BYTE, data);
-
-      glDeleteFramebuffersEXT (1, &fbo);
-    }
-      break;
-    default:
-      g_assert_not_reached ();
-  }
+  glDeleteFramebuffersEXT (1, &fbo);
 
   gst_gl_display_unlock (buffer->display);
 }

@@ -430,8 +430,6 @@ draw_rect_texture (GstGLDisplay * display, GstVideoFormat type,
 
 #ifdef GL_TEXTURE_RECTANGLE_ARB
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  //glGenTextures (1, &texture);
-  //glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
   texture = gst_gl_display_upload_texture_rectangle (display, type,
       data, width, height);
