@@ -44,7 +44,18 @@ GstGLBuffer * gst_gl_buffer_new (GstGLDisplay *display,
     GstGLBufferFormat format, int width, int height);
 GstGLBuffer * gst_gl_buffer_new_from_data (GstGLDisplay *display,
     GstVideoFormat format, int width, int height, void *data);
-void gst_gl_buffer_download (GstGLBuffer *buffer, void *data);
+void gst_gl_buffer_download (GstGLBuffer *buffer, GstVideoFormat format,
+    void *data);
+
+
+#define GST_GL_VIDEO_CAPS \
+  "video/x-raw-gl," \
+  "format=(int)[0,10]," \
+  "width=(int)[1,2048]," \
+  "height=(int)[1,2048]," \
+  "pixel-aspect-ratio=(fraction)1/1," \
+  "framerate=(fraction)[0/1,100/1]"
+
 
 #endif
 

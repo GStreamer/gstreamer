@@ -68,8 +68,6 @@ static const GstElementDetails element_details = GST_ELEMENT_DETAILS ("FIXME",
     "FIXME example filter",
     "FIXME <fixme@fixme.com>");
 
-#define GST_GL_VIDEO_CAPS "video/x-raw-gl"
-
 static GstStaticPadTemplate gst_gl_upload_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,

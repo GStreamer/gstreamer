@@ -90,6 +90,9 @@ gst_gl_buffer_new (GstGLDisplay * display, GstGLBufferFormat format,
   buffer->display = g_object_ref (display);
   buffer->width = width;
   buffer->height = height;
+  /* this is not strictly true, but it's used for compatibility with
+   * queue and BaseTransform */
+  GST_BUFFER_SIZE (buffer) = width * height * 4;
 
   gst_gl_display_lock (buffer->display);
   glGenTextures (1, &buffer->texture);
@@ -129,6 +132,9 @@ gst_gl_buffer_new_from_data (GstGLDisplay * display, GstVideoFormat format,
   buffer->display = g_object_ref (display);
   buffer->width = width;
   buffer->height = height;
+  /* this is not strictly true, but it's used for compatibility with
+   * queue and BaseTransform */
+  GST_BUFFER_SIZE (buffer) = width * height * 4;
 
   gst_gl_display_lock (buffer->display);
   glGenTextures (1, &buffer->texture);
@@ -234,7 +240,7 @@ gst_gl_buffer_new_from_data (GstGLDisplay * display, GstVideoFormat format,
 
 
 void
-gst_gl_buffer_download (GstGLBuffer * buffer, void *data)
+gst_gl_buffer_download (GstGLBuffer * buffer, GstVideoFormat format, void *data)
 {
   GLuint fbo;
 
@@ -254,15 +260,33 @@ gst_gl_buffer_download (GstGLBuffer * buffer, void *data)
   g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
       GL_FRAMEBUFFER_COMPLETE_EXT);
 
-  /* needs a reset function */
+  /* we need a reset function */
   glMatrixMode (GL_COLOR);
   glLoadIdentity ();
   glPixelTransferf (GL_POST_COLOR_MATRIX_RED_BIAS, 0);
   glPixelTransferf (GL_POST_COLOR_MATRIX_GREEN_BIAS, 0);
   glPixelTransferf (GL_POST_COLOR_MATRIX_BLUE_BIAS, 0);
 
-  glReadPixels (0, 0, buffer->width, buffer->height, GL_RGBA,
-      GL_UNSIGNED_BYTE, data);
+  switch (format) {
+    case GST_VIDEO_FORMAT_RGBx:
+      glReadPixels (0, 0, buffer->width, buffer->height, GL_RGBA,
+          GL_UNSIGNED_BYTE, data);
+      break;
+    case GST_VIDEO_FORMAT_BGRx:
+      glReadPixels (0, 0, buffer->width, buffer->height, GL_BGRA,
+          GL_UNSIGNED_BYTE, data);
+      break;
+    case GST_VIDEO_FORMAT_xBGR:
+      glReadPixels (0, 0, buffer->width, buffer->height, GL_RGBA,
+          GL_UNSIGNED_INT_8_8_8_8, data);
+      break;
+    case GST_VIDEO_FORMAT_xRGB:
+      glReadPixels (0, 0, buffer->width, buffer->height, GL_BGRA,
+          GL_UNSIGNED_INT_8_8_8_8, data);
+      break;
+    default:
+      g_assert_not_reached ();
+  }
 
   glDeleteFramebuffersEXT (1, &fbo);
 

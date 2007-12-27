@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 #include <gstglbuffer.h>
 
@@ -42,10 +43,7 @@ typedef void (*GstGLDownloadProcessFunc) (GstGLDownload *, guint8 *, guint);
 
 struct _GstGLDownload
 {
-  GstElement element;
-
-  GstPad *srcpad;
-  GstPad *sinkpad;
+  GstBaseTransform base_transform;
 
   /* < private > */
 
@@ -57,7 +55,7 @@ struct _GstGLDownload
 
 struct _GstGLDownloadClass
 {
-  GstElementClass element_class;
+  GstBaseTransformClass base_transform_class;
 };
 
 static const GstElementDetails element_details = GST_ELEMENT_DETAILS ("FIXME",
@@ -65,13 +63,12 @@ static const GstElementDetails element_details = GST_ELEMENT_DETAILS ("FIXME",
     "FIXME example filter",
     "FIXME <fixme@fixme.com>");
 
-#define GST_GL_VIDEO_CAPS "video/x-raw-gl"
-
 static GstStaticPadTemplate gst_gl_download_src_pad_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB ";"
+        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_xBGR)
     );
 
 static GstStaticPadTemplate gst_gl_download_sink_pad_template =
@@ -89,19 +86,26 @@ enum
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_gl_download_debug, "gldownload", 0, "gldownload element");
 
-GST_BOILERPLATE_FULL (GstGLDownload, gst_gl_download, GstElement,
-    GST_TYPE_ELEMENT, DEBUG_INIT);
+GST_BOILERPLATE_FULL (GstGLDownload, gst_gl_download, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
 static void gst_gl_download_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_download_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_gl_download_chain (GstPad * pad, GstBuffer * buf);
 static void gst_gl_download_reset (GstGLDownload * download);
-static GstStateChangeReturn
-gst_gl_download_change_state (GstElement * element, GstStateChange transition);
-static gboolean gst_gl_download_sink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_gl_download_set_caps (GstBaseTransform * bt,
+    GstCaps * incaps, GstCaps * outcaps);
+static GstCaps *gst_gl_download_transform_caps (GstBaseTransform * bt,
+    GstPadDirection direction, GstCaps * caps);
+static gboolean gst_gl_download_start (GstBaseTransform * bt);
+static gboolean gst_gl_download_stop (GstBaseTransform * bt);
+static GstFlowReturn gst_gl_download_transform (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean
+gst_gl_download_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
+    guint * size);
 
 
 static void
@@ -126,22 +130,19 @@ gst_gl_download_class_init (GstGLDownloadClass * klass)
   gobject_class->set_property = gst_gl_download_set_property;
   gobject_class->get_property = gst_gl_download_get_property;
 
-  GST_ELEMENT_CLASS (klass)->change_state = gst_gl_download_change_state;
+  GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
+      gst_gl_download_transform_caps;
+  GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_download_transform;
+  GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_download_start;
+  GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_download_stop;
+  GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_download_set_caps;
+  GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size =
+      gst_gl_download_get_unit_size;
 }
 
 static void
 gst_gl_download_init (GstGLDownload * download, GstGLDownloadClass * klass)
 {
-  gst_element_create_all_pads (GST_ELEMENT (download));
-
-  download->sinkpad =
-      gst_element_get_static_pad (GST_ELEMENT (download), "sink");
-  download->srcpad = gst_element_get_static_pad (GST_ELEMENT (download), "src");
-
-  gst_pad_set_setcaps_function (download->sinkpad,
-      gst_gl_download_sink_setcaps);
-  gst_pad_set_chain_function (download->sinkpad, gst_gl_download_chain);
-
   gst_gl_download_reset (download);
 }
 
@@ -182,116 +183,138 @@ gst_gl_download_reset (GstGLDownload * download)
 }
 
 static gboolean
-gst_gl_download_start (GstGLDownload * download)
+gst_gl_download_start (GstBaseTransform * bt)
 {
+  GstGLDownload *download = GST_GL_DOWNLOAD (bt);
+
   download->format = GST_VIDEO_FORMAT_RGBx;
 
   return TRUE;
 }
 
 static gboolean
-gst_gl_download_stop (GstGLDownload * download)
+gst_gl_download_stop (GstBaseTransform * bt)
 {
+  GstGLDownload *download = GST_GL_DOWNLOAD (bt);
+
   gst_gl_download_reset (download);
 
   return TRUE;
 }
 
-static gboolean
-gst_gl_download_sink_setcaps (GstPad * pad, GstCaps * caps)
+static GstCaps *
+gst_gl_download_transform_caps (GstBaseTransform * bt,
+    GstPadDirection direction, GstCaps * caps)
 {
   GstGLDownload *download;
-  gboolean ret;
   GstStructure *structure;
-  GstCaps *srccaps;
+  GstCaps *newcaps;
+  GstStructure *newstruct;
+  const GValue *width_value;
+  const GValue *height_value;
+  const GValue *framerate_value;
+  const GValue *par_value;
 
-  download = GST_GL_DOWNLOAD (gst_pad_get_parent (pad));
-
-  GST_DEBUG ("called with %" GST_PTR_FORMAT, caps);
+  download = GST_GL_DOWNLOAD (bt);
 
   structure = gst_caps_get_structure (caps, 0);
 
-  ret = gst_structure_get_int (structure, "width", &download->width);
-  ret &= gst_structure_get_int (structure, "height", &download->height);
+  width_value = gst_structure_get_value (structure, "width");
+  height_value = gst_structure_get_value (structure, "height");
+  framerate_value = gst_structure_get_value (structure, "framerate");
+  par_value = gst_structure_get_value (structure, "pixel-aspect-ratio");
+
+  if (direction == GST_PAD_SINK) {
+    newcaps = gst_caps_new_simple ("video/x-raw-rgb", NULL);
+  } else {
+    newcaps = gst_caps_new_simple ("video/x-raw-gl", NULL);
+  }
+  newstruct = gst_caps_get_structure (newcaps, 0);
+  gst_structure_set_value (newstruct, "width", width_value);
+  gst_structure_set_value (newstruct, "height", height_value);
+  gst_structure_set_value (newstruct, "framerate", framerate_value);
+  if (par_value) {
+    gst_structure_set_value (newstruct, "pixel-aspect-ratio", par_value);
+  } else {
+    gst_structure_set (newstruct, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        1, 1, NULL);
+  }
+
+  return newcaps;
+}
+
+static gboolean
+gst_gl_download_set_caps (GstBaseTransform * bt, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  GstGLDownload *download;
+  gboolean ret;
+
+  download = GST_GL_DOWNLOAD (bt);
+
+  GST_DEBUG ("called with %" GST_PTR_FORMAT, incaps);
+
+  ret = gst_video_format_parse_caps (outcaps, &download->format,
+      &download->width, &download->height);
+
   if (!ret) {
     GST_DEBUG ("bad caps");
     return FALSE;
   }
 
-  srccaps = gst_video_format_new_caps (download->format,
-      download->width, download->height, 30, 1, 1, 1);
-  GST_DEBUG ("srccaps %" GST_PTR_FORMAT, srccaps);
-  ret = gst_pad_set_caps (download->srcpad, srccaps);
-  gst_caps_unref (srccaps);
-
   return ret;
+}
+
+static gboolean
+gst_gl_download_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
+    guint * size)
+{
+  gboolean ret;
+  GstStructure *structure;
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (gst_structure_has_name (structure, "video/x-raw-gl")) {
+    int width;
+    int height;
+
+    ret = gst_structure_get_int (structure, "width", &width);
+    ret &= gst_structure_get_int (structure, "height", &height);
+
+    /* FIXME */
+    *size = width * height * 4;
+  } else {
+    int width;
+    int height;
+
+    ret = gst_structure_get_int (structure, "width", &width);
+    ret &= gst_structure_get_int (structure, "height", &height);
+
+    /* FIXME */
+    *size = width * height * 4;
+  }
+
+
+  return TRUE;
 }
 
 static GstFlowReturn
-gst_gl_download_chain (GstPad * pad, GstBuffer * buf)
+gst_gl_download_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   GstGLDownload *download;
-  GstGLBuffer *inbuf = GST_GL_BUFFER (buf);
-  GstBuffer *outbuf;
+  GstGLBuffer *gl_inbuf = GST_GL_BUFFER (inbuf);
 
-  download = GST_GL_DOWNLOAD (gst_pad_get_parent (pad));
+  download = GST_GL_DOWNLOAD (trans);
 
-  outbuf =
-      gst_buffer_new_and_alloc (gst_video_format_get_size (download->format,
-          inbuf->width, inbuf->height));
-
-  gst_buffer_copy_metadata (GST_BUFFER (outbuf), buf,
-      GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
-  gst_buffer_set_caps (GST_BUFFER (outbuf), GST_PAD_CAPS (download->srcpad));
+  if (download->display == NULL) {
+    download->display = g_object_ref (gl_inbuf->display);
+  } else {
+    g_assert (download->display == gl_inbuf->display);
+  }
 
   GST_DEBUG ("downloading %p size %d",
       GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
-  gst_gl_buffer_download (inbuf, GST_BUFFER_DATA (outbuf));
+  gst_gl_buffer_download (gl_inbuf, download->format, GST_BUFFER_DATA (outbuf));
 
-  gst_pad_push (download->srcpad, GST_BUFFER (outbuf));
-
-  gst_buffer_unref (buf);
-  gst_object_unref (download);
   return GST_FLOW_OK;
-}
-
-static GstStateChangeReturn
-gst_gl_download_change_state (GstElement * element, GstStateChange transition)
-{
-  GstGLDownload *download;
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-
-  GST_DEBUG ("change state");
-
-  download = GST_GL_DOWNLOAD (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_gl_download_start (download);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_gl_download_stop (download);
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-
-  return ret;
 }

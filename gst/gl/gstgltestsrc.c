@@ -53,8 +53,6 @@
 GST_DEBUG_CATEGORY_STATIC (gl_test_src_debug);
 #define GST_CAT_DEFAULT gl_test_src_debug
 
-#define GST_GL_VIDEO_CAPS "video/x-raw-gl,width=(int)[1,2048],height=(int)[1,2048],framerate=(fraction)[0/1,100/1],pixel_aspect_ratio=(fraction)[0/1,100/1]"
-
 static const GstElementDetails gl_test_src_details =
 GST_ELEMENT_DETAILS ("Video test source",
     "Source/Video",
