@@ -50,7 +50,8 @@ struct _GstGLUpload
   /* < private > */
 
   GstGLDisplay *display;
-  GstVideoFormat format;
+  GstVideoFormat video_format;
+  GstGLBufferFormat format;
   int width;
   int height;
 
@@ -77,10 +78,14 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate gst_gl_upload_sink_pad_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx ";"
+        GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_xRGB ";"
+        GST_VIDEO_CAPS_xBGR ";"
+        GST_VIDEO_CAPS_YUV ("{ YUY2, UYVY, AYUV, YV12, I420 }"))
     );
 
 enum
@@ -178,7 +183,7 @@ gst_gl_upload_reset (GstGLUpload * upload)
     g_object_unref (upload->display);
     upload->display = NULL;
   }
-  upload->format = GST_VIDEO_FORMAT_RGBx;
+  upload->format = GST_GL_BUFFER_FORMAT_RGB;
   upload->peek = FALSE;
 }
 
@@ -187,7 +192,7 @@ gst_gl_upload_start (GstGLUpload * upload)
 {
   gboolean ret;
 
-  upload->format = GST_VIDEO_FORMAT_RGBx;
+  upload->format = GST_GL_BUFFER_FORMAT_RGB;
   upload->display = gst_gl_display_new ();
   ret = gst_gl_display_connect (upload->display, NULL);
 
@@ -206,7 +211,7 @@ static gboolean
 gst_gl_upload_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstGLUpload *upload;
-  GstVideoFormat format;
+  GstVideoFormat video_format;
   int height;
   int width;
   gboolean ret;
@@ -214,15 +219,15 @@ gst_gl_upload_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   upload = GST_GL_UPLOAD (gst_pad_get_parent (pad));
 
-  ret = gst_video_format_parse_caps (caps, &format, &width, &height);
+  ret = gst_video_format_parse_caps (caps, &video_format, &width, &height);
   if (!ret)
     return FALSE;
 
-  upload->format = format;
+  upload->video_format = video_format;
   upload->width = width;
   upload->height = height;
 
-  GST_ERROR ("setcaps %d %d %d", format, width, height);
+  GST_DEBUG ("setcaps %d %d %d", video_format, width, height);
 
   srccaps = gst_caps_new_simple ("video/x-raw-gl",
       "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
@@ -240,8 +245,9 @@ gst_gl_upload_chain (GstPad * pad, GstBuffer * buf)
 
   upload = GST_GL_UPLOAD (gst_pad_get_parent (pad));
 
-  outbuf = gst_gl_buffer_new (upload->display, upload->format,
-      upload->width, upload->height);
+  outbuf = gst_gl_buffer_new_from_data (upload->display,
+      upload->video_format, upload->width, upload->height,
+      GST_BUFFER_DATA (buf));
 
   gst_buffer_copy_metadata (GST_BUFFER (outbuf), buf,
       GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
@@ -249,7 +255,6 @@ gst_gl_upload_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG ("uploading %p size %d", GST_BUFFER_DATA (buf),
       GST_BUFFER_SIZE (buf));
-  gst_gl_buffer_upload (outbuf, GST_BUFFER_DATA (buf));
   gst_buffer_unref (buf);
 
   if (upload->peek) {

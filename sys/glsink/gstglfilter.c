@@ -25,46 +25,12 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gstglbuffer.h>
+#include <gstglfilter.h>
 #include "glextensions.h"
 
 #define GST_CAT_DEFAULT gst_gl_filter_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define GST_TYPE_GL_FILTER            (gst_gl_filter_get_type())
-#define GST_GL_FILTER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_FILTER,GstGLFilter))
-#define GST_IS_GL_FILTER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_FILTER))
-#define GST_GL_FILTER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_GL_FILTER,GstGLFilterClass))
-#define GST_IS_GL_FILTER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_FILTER))
-#define GST_GL_FILTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_FILTER,GstGLFilterClass))
-typedef struct _GstGLFilter GstGLFilter;
-typedef struct _GstGLFilterClass GstGLFilterClass;
-
-typedef void (*GstGLFilterProcessFunc) (GstGLFilter *, guint8 *, guint);
-
-struct _GstGLFilter
-{
-  GstElement element;
-
-  GstPad *srcpad;
-  GstPad *sinkpad;
-
-  /* < private > */
-
-  GstGLDisplay *display;
-  GstVideoFormat format;
-  int width;
-  int height;
-};
-
-struct _GstGLFilterClass
-{
-  GstElementClass element_class;
-};
-
-static const GstElementDetails element_details = GST_ELEMENT_DETAILS ("FIXME",
-    "Filter/Effect",
-    "FIXME example filter",
-    "FIXME <fixme@fixme.com>");
 
 #define GST_GL_VIDEO_CAPS "video/x-raw-gl"
 
@@ -82,11 +48,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
     );
 
-enum
-{
-  PROP_0
-};
-
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filter_debug, "glfilter", 0, "glfilter element");
 
@@ -103,16 +64,14 @@ static void gst_gl_filter_reset (GstGLFilter * filter);
 static GstStateChangeReturn
 gst_gl_filter_change_state (GstElement * element, GstStateChange transition);
 static gboolean gst_gl_filter_sink_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_gl_filter_transform (GstGLBuffer * outbuf,
-    GstGLBuffer * inbuf);
+static gboolean gst_gl_filter_do_transform (GstGLFilter * filter,
+    GstGLBuffer * outbuf, GstGLBuffer * inbuf);
 
 
 static void
 gst_gl_filter_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details (element_class, &element_details);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_filter_src_pad_template));
@@ -179,17 +138,26 @@ gst_gl_filter_reset (GstGLFilter * filter)
     g_object_unref (filter->display);
     filter->display = NULL;
   }
-  filter->format = GST_VIDEO_FORMAT_RGBx;
+  filter->format = GST_GL_BUFFER_FORMAT_RGB;
 }
 
 static gboolean
 gst_gl_filter_start (GstGLFilter * filter)
 {
+  GstGLFilterClass *filter_class;
   gboolean ret;
 
-  filter->format = GST_VIDEO_FORMAT_RGBx;
+  filter_class = GST_GL_FILTER_GET_CLASS (filter);
+
+  filter->format = GST_GL_BUFFER_FORMAT_RGB;
   filter->display = gst_gl_display_new ();
   ret = gst_gl_display_connect (filter->display, NULL);
+  if (!ret)
+    return FALSE;
+
+  if (filter_class->start) {
+    ret = filter_class->start (filter);
+  }
 
   return ret;
 }
@@ -197,7 +165,19 @@ gst_gl_filter_start (GstGLFilter * filter)
 static gboolean
 gst_gl_filter_stop (GstGLFilter * filter)
 {
+  GstGLFilterClass *filter_class;
+  gboolean ret;
+
+  filter_class = GST_GL_FILTER_GET_CLASS (filter);
+
   gst_gl_filter_reset (filter);
+
+  if (filter_class->stop) {
+    ret = filter_class->stop (filter);
+  }
+
+  g_object_unref (filter->display);
+  filter->display = NULL;
 
   return TRUE;
 }
@@ -218,7 +198,7 @@ gst_gl_filter_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (!ret)
     return FALSE;
 
-  GST_ERROR ("setcaps %d %d", filter->width, filter->height);
+  GST_DEBUG ("setcaps %d %d", filter->width, filter->height);
 
   ret = gst_pad_set_caps (filter->srcpad, caps);
 
@@ -242,7 +222,7 @@ gst_gl_filter_chain (GstPad * pad, GstBuffer * buf)
       GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
   gst_buffer_set_caps (GST_BUFFER (outbuf), GST_PAD_CAPS (filter->srcpad));
 
-  gst_gl_filter_transform (outbuf, inbuf);
+  gst_gl_filter_do_transform (filter, outbuf, inbuf);
 
   gst_pad_push (filter->srcpad, GST_BUFFER (outbuf));
 
@@ -292,64 +272,20 @@ gst_gl_filter_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-void
-dump_fbconfigs (Display * display)
-{
-  GLXFBConfig *fbconfigs;
-  int n;
-  int i;
-  int j;
-  int ret;
-  int value;
-  struct
-  {
-    int attr;
-    char *name;
-  } list[] = {
-    {
-    GLX_DRAWABLE_TYPE, "drawable type"}, {
-    GLX_BIND_TO_TEXTURE_TARGETS_EXT, "bind to texture targets"}, {
-    GLX_BIND_TO_TEXTURE_RGBA_EXT, "bind to texture rgba"}, {
-    GLX_MAX_PBUFFER_WIDTH, "max pbuffer width"}, {
-    GLX_MAX_PBUFFER_HEIGHT, "max pbuffer height"}, {
-    GLX_MAX_PBUFFER_PIXELS, "max pbuffer pixels"}, {
-    GLX_RENDER_TYPE, "render type"}, {
-    0, 0}
-  };
-
-  g_print ("screen count: %d\n", ScreenCount (display));
-
-  fbconfigs = glXGetFBConfigs (display, 0, &n);
-  for (i = 0; i < n; i++) {
-    g_print ("%d:\n", i);
-    for (j = 0; list[j].attr; j++) {
-      ret = glXGetFBConfigAttrib (display, fbconfigs[i], list[j].attr, &value);
-      if (ret != Success) {
-        g_print ("%s: failed\n", list[j].name);
-      } else {
-        g_print ("%s: %d\n", list[j].name, value);
-      }
-    }
-  }
-
-}
-
 static gboolean
-gst_gl_filter_transform (GstGLBuffer * outbuf, GstGLBuffer * inbuf)
+gst_gl_filter_do_transform (GstGLFilter * filter,
+    GstGLBuffer * outbuf, GstGLBuffer * inbuf)
 {
   GstGLDisplay *display = inbuf->display;
+  GstGLFilterClass *filter_class;
   unsigned int fbo;
+
+  filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
   gst_gl_display_lock (display);
 
   glGenFramebuffersEXT (1, &fbo);
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
-
-  /* FIXME: This should be part of buffer creation */
-  glGenTextures (1, &outbuf->texture);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, outbuf->texture);
-  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-      outbuf->width, outbuf->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
   glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
       GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_RECTANGLE_ARB, outbuf->texture, 0);
@@ -379,6 +315,9 @@ gst_gl_filter_transform (GstGLBuffer * outbuf, GstGLBuffer * inbuf)
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, inbuf->texture);
 
+  filter_class->transform (filter, outbuf, inbuf);
+
+#if 0
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -399,6 +338,7 @@ gst_gl_filter_transform (GstGLBuffer * outbuf, GstGLBuffer * inbuf)
   glTexCoord2f (inbuf->width, inbuf->height);
   glVertex3f (1.0, 1.0, 0);
   glEnd ();
+#endif
 
   glFlush ();
 

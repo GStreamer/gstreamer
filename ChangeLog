@@ -1,3 +1,24 @@
+2007-12-26  David Schleef  <ds@schleef.org>
+
+	* sys/glsink/BUGS:
+	* sys/glsink/Makefile.am:
+	* sys/glsink/gstglbuffer.c:
+	* sys/glsink/gstglbuffer.h:
+	* sys/glsink/gstglconvert.c:
+	* sys/glsink/gstgldisplay.c:
+	* sys/glsink/gstglfilter.c:
+	* sys/glsink/gstglfilter.h:
+	* sys/glsink/gstglfilterexample.c:
+	* sys/glsink/gstgltestsrc.c:
+	* sys/glsink/gstglupload.c:
+	* sys/glsink/gstopengl.c:
+	  Remove code that handles non-texture buffers.  Add a
+	  GstGLBufferFormat type that corresponds to how to use the
+	  texture, not the original video format.  Convert gstflfilter.c
+	  into a base class, add glfilterexample and glconvert elements.
+	* sys/glsink/color_matrix.c:
+	  Minor ramblings about color conversion matrices.
+
 2007-12-24  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/Makefile.am:
