@@ -1,5 +1,12 @@
 2007-12-26  David Schleef  <ds@schleef.org>
 
+	* sys/glsink/glimagesink.c:
+	* sys/glsink/gstglupload.c:
+	  Change glimagesink over to using GL buffers.  This breaks
+	  glimagesink for normal operation, but should be fixed soon.
+
+2007-12-26  David Schleef  <ds@schleef.org>
+
 	* sys/glsink/gltestsrc.c:
 	* sys/glsink/gstglbuffer.c:
 	* sys/glsink/gstglbuffer.h:

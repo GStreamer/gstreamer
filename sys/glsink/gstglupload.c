@@ -214,10 +214,14 @@ gst_gl_upload_sink_setcaps (GstPad * pad, GstCaps * caps)
   int width;
   gboolean ret;
   GstCaps *srccaps;
+  int fps_n, fps_d;
+  int par_n, par_d;
 
   upload = GST_GL_UPLOAD (gst_pad_get_parent (pad));
 
   ret = gst_video_format_parse_caps (caps, &video_format, &width, &height);
+  ret &= gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
+
   if (!ret)
     return FALSE;
 
@@ -227,8 +231,16 @@ gst_gl_upload_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG ("setcaps %d %d %d", video_format, width, height);
 
+  par_n = 1;
+  par_d = 1;
+  gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
+
   srccaps = gst_caps_new_simple ("video/x-raw-gl",
-      "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
+      "format", G_TYPE_INT, 0,
+      "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
+      "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+
   ret = gst_pad_set_caps (upload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
