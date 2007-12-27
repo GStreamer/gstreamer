@@ -190,6 +190,8 @@ gst_gl_filter_example_transform (GstGLFilter * filter, GstGLBuffer * outbuf,
     GstGLBuffer * inbuf)
 {
   //GstGLFilterExample *example = GST_GL_FILTER_EXAMPLE(filter);
+  int i, j;
+  double *vertex_x, *vertex_y;
 
   glDisable (GL_CULL_FACE);
   glEnableClientState (GL_TEXTURE_COORD_ARRAY);
@@ -203,6 +205,8 @@ gst_gl_filter_example_transform (GstGLFilter * filter, GstGLBuffer * outbuf,
   glColor4f (1, 0, 1, 1);
 
 #define GAIN 0.5
+  /* just for fun.  swap red and blue components.  Doesn't work on my
+   * driver. */
   {
     const double matrix[16] = {
       0, 0, 1.0, 0,
@@ -218,20 +222,70 @@ gst_gl_filter_example_transform (GstGLFilter * filter, GstGLBuffer * outbuf,
     glPixelTransferf (GL_POST_COLOR_MATRIX_BLUE_BIAS, (1 - GAIN) / 2);
   }
 
-  glBegin (GL_QUADS);
-  glNormal3f (0, 0, -1);
-  glTexCoord2f (inbuf->width, 0);
-  glVertex3f (0.9, -0.9, 0);
-  glTexCoord2f (0, 0);
-  glVertex3f (-1.0, -1.0, 0);
-  glTexCoord2f (0, inbuf->height);
-  glVertex3f (-1.0, 1.0, 0);
-  glTexCoord2f (inbuf->width, inbuf->height);
-  glVertex3f (1.0, 1.0, 0);
-  glEnd ();
+  /* load raster-scanning matrix */
+  {
+    const double matrix[16] = {
+      2.0, 0, 0, 0,
+      0, 2.0, 0, 0,
+      0, 0, 1, 0,
+      -1, -1, 0, 1
+    };
+    glMatrixMode (GL_MODELVIEW);
+    glLoadMatrixd (matrix);
+  }
+  /* load texture raster-scanning matrix */
+  {
+    double matrix[16] = {
+      1.0, 0, 0, 0,
+      0, 1.0, 0, 0,
+      0, 0, 1, 0,
+      -1, -1, 0, 1
+    };
+    matrix[0] = inbuf->width;
+    matrix[5] = inbuf->height;
+    glMatrixMode (GL_TEXTURE);
+    glLoadMatrixd (matrix);
+  }
+
+#define N 10
+#define SCALE (1.0/N)
+#define NOISE() (0.1*SCALE*g_random_double_range(-1,1))
+  vertex_x = malloc (sizeof (double) * (N + 1) * (N + 1));
+  vertex_y = malloc (sizeof (double) * (N + 1) * (N + 1));
+  for (j = 0; j < N + 1; j++) {
+    for (i = 0; i < N + 1; i++) {
+      vertex_x[j * (N + 1) + i] = i * SCALE + NOISE ();
+      vertex_y[j * (N + 1) + i] = j * SCALE + NOISE ();
+    }
+  }
+  for (j = 0; j < N; j++) {
+    for (i = 0; i < N; i++) {
+      glBegin (GL_QUADS);
+      glNormal3f (0, 0, -1);
+      glTexCoord2f (i * SCALE, j * SCALE);
+      glVertex3f (vertex_x[j * (N + 1) + i], vertex_y[j * (N + 1) + i], 0);
+      glTexCoord2f ((i + 1) * SCALE, j * SCALE);
+      glVertex3f (vertex_x[j * (N + 1) + (i + 1)],
+          vertex_y[j * (N + 1) + (i + 1)], 0);
+      glTexCoord2f ((i + 1) * SCALE, (j + 1) * SCALE);
+      glVertex3f (vertex_x[(j + 1) * (N + 1) + (i + 1)],
+          vertex_y[(j + 1) * (N + 1) + (i + 1)], 0);
+      glTexCoord2f (i * SCALE, (j + 1) * SCALE);
+      glVertex3f (vertex_x[(j + 1) * (N + 1) + i],
+          vertex_y[(j + 1) * (N + 1) + i], 0);
+      glEnd ();
+    }
+  }
+  free (vertex_x);
+  free (vertex_y);
+
 
   glFlush ();
 
+  glMatrixMode (GL_MODELVIEW);
+  glLoadIdentity ();
+  glMatrixMode (GL_TEXTURE);
+  glLoadIdentity ();
   glMatrixMode (GL_COLOR);
   glLoadIdentity ();
   glPixelTransferf (GL_POST_COLOR_MATRIX_RED_SCALE, 1.0);

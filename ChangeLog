@@ -1,5 +1,20 @@
 2007-12-26  David Schleef  <ds@schleef.org>
 
+	* sys/glsink/gltestsrc.c:
+	* sys/glsink/gstglbuffer.c:
+	* sys/glsink/gstglbuffer.h:
+	* sys/glsink/gstgldownload.c:
+	* sys/glsink/gstglfilter.c:
+	* sys/glsink/gstglfilterexample.c:
+	* sys/glsink/gstgltestsrc.c:
+	* sys/glsink/gstglupload.c:
+	  Convert gldownload to BaseTransform.  Make glfilterexample
+	  visually interesting.  Add support for various formats to
+	  downloading.  Fix a few places where we leak GL state to
+	  other elements (bad, but hard to prevent).
+
+2007-12-26  David Schleef  <ds@schleef.org>
+
 	* sys/glsink/BUGS:
 	* sys/glsink/Makefile.am:
 	* sys/glsink/gstglbuffer.c:

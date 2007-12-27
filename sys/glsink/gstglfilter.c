@@ -32,8 +32,6 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 
-#define GST_GL_VIDEO_CAPS "video/x-raw-gl"
-
 static GstStaticPadTemplate gst_gl_filter_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
