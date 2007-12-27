@@ -27,6 +27,7 @@
 #include <gst/interfaces/xoverlay.h>
 #include <gst/video/gstvideosink.h>
 #include <gst/video/video.h>
+#include "gstglbuffer.h"
 
 #include <string.h>
 
@@ -68,7 +69,7 @@ static gboolean gst_glimage_sink_interface_supported (GstImplementsInterface *
 static void gst_glimage_sink_implements_init (GstImplementsInterfaceClass *
     klass);
 
-static void gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink);
+//static void gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink);
 
 static const GstElementDetails gst_glimage_sink_details =
 GST_ELEMENT_DETAILS ("OpenGL video sink",
@@ -82,12 +83,14 @@ GST_ELEMENT_DETAILS ("OpenGL video sink",
 #define YUV_CAPS
 #endif
 static GstStaticPadTemplate gst_glimage_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR YUV_CAPS)
+    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
     );
+
+//GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
+//GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR YUV_CAPS)
 
 enum
 {
@@ -150,7 +153,8 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
 
   gstelement_class->change_state = gst_glimage_sink_change_state;
 
-  gstbasesink_class->get_caps = gst_glimage_sink_get_caps;
+  if (0)
+    gstbasesink_class->get_caps = gst_glimage_sink_get_caps;
   gstbasesink_class->set_caps = gst_glimage_sink_set_caps;
   gstbasesink_class->get_times = gst_glimage_sink_get_times;
   gstbasesink_class->preroll = gst_glimage_sink_render;
@@ -166,7 +170,7 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink,
 {
 
   glimage_sink->display_name = NULL;
-  gst_glimage_sink_update_caps (glimage_sink);
+  //gst_glimage_sink_update_caps (glimage_sink);
 }
 
 static void
@@ -282,12 +286,14 @@ static gboolean
 gst_glimage_sink_start (GstBaseSink * bsink)
 {
   GstGLImageSink *glimage_sink;
-  gboolean ret;
+
+  //gboolean ret;
 
   GST_DEBUG ("start");
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
+#if 0
   glimage_sink->display = gst_gl_display_new ();
   ret = gst_gl_display_connect (glimage_sink->display,
       glimage_sink->display_name);
@@ -299,6 +305,7 @@ gst_glimage_sink_start (GstBaseSink * bsink)
   if (glimage_sink->window_id) {
     gst_gl_display_set_window (glimage_sink->display, glimage_sink->window_id);
   }
+#endif
 
   GST_DEBUG ("start done");
 
@@ -375,42 +382,42 @@ static gboolean
 gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstGLImageSink *glimage_sink;
-  GstCaps *intersection;
   int width;
   int height;
   gboolean ok;
   int fps_n, fps_d;
   int par_n, par_d;
   GstVideoFormat format;
+  GstStructure *structure;
 
   GST_DEBUG ("set caps with %" GST_PTR_FORMAT, caps);
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  intersection = gst_caps_intersect (glimage_sink->caps, caps);
-
-  if (gst_caps_is_empty (intersection)) {
-    return FALSE;
+  structure = gst_caps_get_structure (caps, 0);
+  if (0) {
+    ok = gst_video_format_parse_caps (caps, &format, &width, &height);
+    ok &= gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
+    ok &= gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
+  } else {
+    ok = gst_structure_get_int (structure, "width", &width);
+    ok &= gst_structure_get_int (structure, "height", &height);
+    ok &= gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
+    ok &= gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
   }
-
-  gst_caps_unref (intersection);
-
-  ok = gst_video_format_parse_caps (caps, &format, &width, &height);
-  ok &= gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
-  ok &= gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
 
   if (!ok)
     return FALSE;
 
   GST_VIDEO_SINK_WIDTH (glimage_sink) = width;
   GST_VIDEO_SINK_HEIGHT (glimage_sink) = height;
-  glimage_sink->format = format;
+  //glimage_sink->format = format;
   glimage_sink->fps_n = fps_n;
   glimage_sink->fps_d = fps_d;
   glimage_sink->par_n = par_n;
   glimage_sink->par_d = par_d;
 
-  glimage_sink->type = format;
+  //glimage_sink->type = format;
 
 #if 0
   if (!glimage_sink->window) {
@@ -425,15 +432,71 @@ static GstFlowReturn
 gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
+  GstGLBuffer *gl_buffer = GST_GL_BUFFER (buf);
+  GstGLDisplay *display;
 
   GST_DEBUG ("render");
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  gst_gl_display_draw_image (glimage_sink->display,
-      glimage_sink->type, GST_BUFFER_DATA (buf),
-      GST_VIDEO_SINK_WIDTH (glimage_sink),
-      GST_VIDEO_SINK_HEIGHT (glimage_sink));
+  if (glimage_sink->display == NULL) {
+    glimage_sink->display = g_object_ref (gl_buffer->display);
+    if (glimage_sink->window_id) {
+      gst_gl_display_set_window (glimage_sink->display,
+          glimage_sink->window_id);
+    }
+  } else {
+    g_assert (gl_buffer->display == glimage_sink->display);
+  }
+
+  display = gl_buffer->display;
+
+  gst_gl_display_lock (display);
+
+  /* FIXME polling causes a round-trip delay.  This should be changed
+   * to catch structure events */
+  gst_gl_display_update_attributes (display);
+  glViewport (0, 0, display->win_width, display->win_height);
+
+  glClearColor (0.3, 0.3, 0.3, 1.0);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  glMatrixMode (GL_MODELVIEW);
+  glLoadIdentity ();
+
+  glDisable (GL_CULL_FACE);
+  glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+
+  glColor4f (1, 1, 1, 1);
+
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, gl_buffer->texture);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+  glColor4f (1, 0, 1, 1);
+
+  glBegin (GL_QUADS);
+  glNormal3f (0, 0, -1);
+  glTexCoord2f (gl_buffer->width, 0);
+  glVertex3f (1.0, 1.0, 0);
+  glTexCoord2f (0, 0);
+  glVertex3f (-1.0, 1.0, 0);
+  glTexCoord2f (0, gl_buffer->height);
+  glVertex3f (-1.0, -1.0, 0);
+  glTexCoord2f (gl_buffer->width, gl_buffer->height);
+  glVertex3f (1.0, -1.0, 0);
+  glEnd ();
+
+  glXSwapBuffers (display->display, display->window);
+
+  gst_gl_display_unlock (display);
 
   return GST_FLOW_OK;
 }
@@ -464,7 +527,9 @@ gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay, XID window_id)
     return;
   }
   glimage_sink->window_id = window_id;
-  gst_gl_display_set_window (glimage_sink->display, glimage_sink->window_id);
+  if (glimage_sink->display) {
+    gst_gl_display_set_window (glimage_sink->display, glimage_sink->window_id);
+  }
 }
 
 static void
@@ -503,6 +568,7 @@ gst_glimage_sink_implements_init (GstImplementsInterfaceClass * klass)
  * helper functions
  */
 
+#if 0
 static void
 gst_caps_set_all (GstCaps * caps, char *field, ...)
 {
@@ -518,7 +584,9 @@ gst_caps_set_all (GstCaps * caps, char *field, ...)
     va_end (var_args);
   }
 }
+#endif
 
+#if 0
 static void
 gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink)
 {
@@ -555,3 +623,4 @@ gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink)
 
   gst_caps_replace (&glimage_sink->caps, caps);
 }
+#endif
