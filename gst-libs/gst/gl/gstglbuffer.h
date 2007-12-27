@@ -14,24 +14,25 @@ typedef struct _GstGLBuffer GstGLBuffer;
 #define GST_GL_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GL_BUFFER, GstGLBuffer))
 
 typedef enum {
-  GST_GL_BUFFER_UNKNOWN,
-  GST_GL_BUFFER_XIMAGE,
-  GST_GL_BUFFER_RBO,
-  GST_GL_BUFFER_TEXTURE
-} GstGLBufferType;
+  GST_GL_BUFFER_FORMAT_RGBA,
+  GST_GL_BUFFER_FORMAT_RGB,
+  GST_GL_BUFFER_FORMAT_YUYV,
+  GST_GL_BUFFER_FORMAT_PLANAR444,
+  GST_GL_BUFFER_FORMAT_PLANAR422,
+  GST_GL_BUFFER_FORMAT_PLANAR420
+} GstGLBufferFormat;
 
 struct _GstGLBuffer {
   GstBuffer buffer;
 
   GstGLDisplay *display;
 
-  GstGLBufferType type;
+  GstGLBufferFormat format;
+  gboolean is_yuv;
 
-  XID pixmap;
-  GC gc;
-
-  GLuint rbo;
   GLuint texture;
+  GLuint texture_u;
+  GLuint texture_v;
 
   int width;
   int height;
@@ -39,9 +40,10 @@ struct _GstGLBuffer {
 
 GType gst_gl_buffer_get_type (void);
 
-GstGLBuffer * gst_gl_buffer_new (GstGLDisplay *display, GstVideoFormat format,
-    int width, int height);
-void gst_gl_buffer_upload (GstGLBuffer *buffer, void *data);
+GstGLBuffer * gst_gl_buffer_new (GstGLDisplay *display,
+    GstGLBufferFormat format, int width, int height);
+GstGLBuffer * gst_gl_buffer_new_from_data (GstGLDisplay *display,
+    GstVideoFormat format, int width, int height, void *data);
 void gst_gl_buffer_download (GstGLBuffer *buffer, void *data);
 
 #endif
