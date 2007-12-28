@@ -1,5 +1,12 @@
 2007-12-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Based on patch by: Laurent Glayal  <spglegle yahoo fr>
+
+	* gst/gstvalue.c: (gst_value_is_fixed):
+	  Optimisation: bail out of the loop as early as possible (#500143).
+
+2007-12-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstcaps.c: (gst_caps_to_string):
 	* gst/gstinfo.c: (gst_debug_construct_term_color):
 	* gst/gstparse.c: (gst_parse_launchv):

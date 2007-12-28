@@ -3330,7 +3330,6 @@ gst_value_is_fixed (const GValue * value)
   GType type = G_VALUE_TYPE (value);
 
   if (type == GST_TYPE_ARRAY) {
-    gboolean fixed = TRUE;
     gint size, n;
     const GValue *kid;
 
@@ -3338,10 +3337,10 @@ gst_value_is_fixed (const GValue * value)
     size = gst_value_array_get_size (value);
     for (n = 0; n < size; n++) {
       kid = gst_value_array_get_value (value, n);
-      fixed &= gst_value_is_fixed (kid);
+      if (!gst_value_is_fixed (kid))
+        return FALSE;
     }
-
-    return fixed;
+    return TRUE;
   }
 
   return gst_type_is_fixed (type);
