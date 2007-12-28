@@ -1799,7 +1799,7 @@ gst_caps_to_string (const GstCaps * caps)
 
     if (i > 0) {
       /* ';' is now added by gst_structure_to_string */
-      g_string_append (s, " ");
+      g_string_append_c (s, ' ');
     }
 
     structure = gst_caps_get_structure (caps, i);

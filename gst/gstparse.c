@@ -112,7 +112,7 @@ gst_parse_launchv (const gchar ** argv, GError ** error)
     tmp = _gst_parse_escape (arg);
     g_string_append (str, tmp);
     g_free (tmp);
-    g_string_append (str, " ");
+    g_string_append_c (str, ' ');
     argvp++;
   }
 

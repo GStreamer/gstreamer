@@ -1,5 +1,15 @@
 2007-12-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstcaps.c: (gst_caps_to_string):
+	* gst/gstinfo.c: (gst_debug_construct_term_color):
+	* gst/gstparse.c: (gst_parse_launchv):
+	* gst/gstutils.c: (gst_util_dump_mem):
+	* gst/gstvalue.c: (gst_value_serialize_any_list),
+	  (gst_value_transform_any_list_string):
+	  Bunch of gratuitous nano-optimisations.
+
+2007-12-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/generic/sinks.c: (async_done_func),
 	  (async_done_eos_func):
 	  Fix leak in unit test (bus sync handler must unref the message

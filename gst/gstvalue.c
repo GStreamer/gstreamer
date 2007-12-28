@@ -97,14 +97,16 @@ gst_value_serialize_any_list (const GValue * value, const gchar * begin,
   GValue *v;
   gchar *s_val;
 
-  s = g_string_new (begin);
+  /* estimate minimum string length to minimise re-allocs in GString */
+  s = g_string_sized_new (2 + (6 * array->len) + 2);
+  g_string_append (s, begin);
   for (i = 0; i < array->len; i++) {
     v = &g_array_index (array, GValue, i);
     s_val = gst_value_serialize (v);
     g_string_append (s, s_val);
     g_free (s_val);
     if (i < array->len - 1) {
-      g_string_append (s, ", ");
+      g_string_append_len (s, ", ", 2);
     }
   }
   g_string_append (s, end);
@@ -123,12 +125,14 @@ gst_value_transform_any_list_string (const GValue * src_value,
 
   array = src_value->data[0].v_pointer;
 
-  s = g_string_new (begin);
+  /* estimate minimum string length to minimise re-allocs in GString */
+  s = g_string_sized_new (2 + (10 * array->len) + 2);
+  g_string_append (s, begin);
   for (i = 0; i < array->len; i++) {
     list_value = &g_array_index (array, GValue, i);
 
     if (i != 0) {
-      g_string_append (s, ", ");
+      g_string_append_len (s, ", ", 2);
     }
     list_s = g_strdup_value_contents (list_value);
     g_string_append (s, list_s);

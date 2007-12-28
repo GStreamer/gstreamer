@@ -57,9 +57,9 @@ gst_util_dump_mem (const guchar * mem, guint size)
   i = j = 0;
   while (i < size) {
     if (g_ascii_isprint (mem[i]))
-      g_string_append_printf (chars, "%c", mem[i]);
+      g_string_append_c (chars, mem[i]);
     else
-      g_string_append_printf (chars, ".");
+      g_string_append_c (chars, '.');
 
     g_string_append_printf (string, "%02x ", mem[i]);
 
