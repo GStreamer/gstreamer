@@ -22,6 +22,8 @@
 #include <libsoup/soup.h>
 #include "gstsouphttpsrc.h"
 
+#include <gst/tag/tag.h>
+
 GST_DEBUG_CATEGORY_STATIC (souphttpsrc_debug);
 #define GST_CAT_DEFAULT souphttpsrc_debug
 
@@ -296,36 +298,14 @@ gst_souphttp_src_get_property (GObject * object, guint prop_id,
   }
 }
 
-static char *
-unicodify (const char *str, int len, ...)
+static gchar *
+gst_souphttp_src_unicodify (const gchar * str)
 {
-  char *ret = NULL, *cset;
-  va_list args;
-  gsize bytes_read, bytes_written;
+  const gchar *env_vars[] = { "GST_ICY_TAG_ENCODING",
+    "GST_TAG_ENCODING", NULL
+  };
 
-  if (g_utf8_validate (str, len, NULL))
-    return g_strndup (str, len >= 0 ? len : strlen (str));
-
-  va_start (args, len);
-  while ((cset = va_arg (args, char *)) != NULL)
-  {
-    if (!strcmp (cset, "locale"))
-      ret = g_locale_to_utf8 (str, len, &bytes_read, &bytes_written, NULL);
-    else
-      ret = g_convert (str, len, "UTF-8", cset,
-          &bytes_read, &bytes_written, NULL);
-    if (ret)
-      break;
-  }
-  va_end (args);
-
-  return ret;
-}
-
-static char *
-gst_souphttp_src_unicodify (const char *str)
-{
-  return unicodify (str, -1, "locale", "ISO-8859-1", NULL);
+  return gst_tag_freeform_string_to_utf8 (str, -1, env_vars);
 }
 
 static GstFlowReturn
@@ -523,6 +503,7 @@ static void
 soup_got_headers (SoupMessage * msg, GstSouphttpSrc * src)
 {
   const char *value;
+  GstTagList *tag_list;
 
   GST_DEBUG_OBJECT (src, "got headers");
 
@@ -539,11 +520,14 @@ soup_got_headers (SoupMessage * msg, GstSouphttpSrc * src)
   }
 
   /* Icecast stuff */
+  tag_list = gst_tag_list_new ();
+
   if ((value =
           soup_message_get_header (msg->response_headers,
               "icy-metaint")) != NULL) {
     gint icy_metaint = atoi (value);
 
+    GST_DEBUG_OBJECT (src, "icy-metaint: %s (parsed: %d)", value, icy_metaint);
     if (icy_metaint > 0)
       src->icy_caps = gst_caps_new_simple ("application/x-icy",
           "metadata-interval", G_TYPE_INT, icy_metaint, NULL);
@@ -554,23 +538,39 @@ soup_got_headers (SoupMessage * msg, GstSouphttpSrc * src)
               "icy-name")) != NULL) {
     g_free (src->iradio_name);
     src->iradio_name = gst_souphttp_src_unicodify (value);
-    if (src->iradio_name)
+    if (src->iradio_name) {
       g_object_notify (G_OBJECT (src), "iradio-name");
+      gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_ORGANIZATION,
+          src->iradio_name, NULL);
+    }
   }
   if ((value =
           soup_message_get_header (msg->response_headers,
               "icy-genre")) != NULL) {
     g_free (src->iradio_genre);
     src->iradio_genre = gst_souphttp_src_unicodify (value);
-    if (src->iradio_genre)
+    if (src->iradio_genre) {
       g_object_notify (G_OBJECT (src), "iradio-genre");
+      gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_GENRE,
+          src->iradio_genre, NULL);
+    }
   }
   if ((value =
           soup_message_get_header (msg->response_headers, "icy-url")) != NULL) {
     g_free (src->iradio_url);
     src->iradio_url = gst_souphttp_src_unicodify (value);
-    if (src->iradio_url)
+    if (src->iradio_url) {
       g_object_notify (G_OBJECT (src), "iradio-url");
+      gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_LOCATION,
+          src->iradio_url, NULL);
+    }
+  }
+  if (!gst_tag_list_is_empty (tag_list)) {
+    GST_DEBUG_OBJECT (src,
+        "calling gst_element_found_tags with %" GST_PTR_FORMAT, tag_list);
+    gst_element_found_tags (GST_ELEMENT_CAST (src), tag_list);
+  } else {
+    gst_tag_list_free (tag_list);
   }
 
   /* Handle HTTP errors. */
@@ -745,22 +745,17 @@ gst_souphttp_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->set_uri = gst_souphttp_src_uri_set_uri;
 }
 
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and pad templates
- * register the features
- */
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  /* note: do not upgrade rank before we depend on a libsoup version where
+   * icecast is supported properly out of the box */
   return gst_element_register (plugin, "souphttpsrc", GST_RANK_NONE,
       GST_TYPE_SOUPHTTP_SRC);
 }
 
-/* this is the structure that gst-register looks for
- * so keep the name plugin_desc, or you cannot get your plug-in registered */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "soup",
     "libsoup http client src",
-    plugin_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
