@@ -1,3 +1,11 @@
+2007-12-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/soup/Makefile.am:
+	* ext/soup/gstsouphttpsrc.c: (gst_souphttp_src_get_property),
+	  (gst_souphttp_src_unicodify), (soup_got_headers):
+	  Use gst_tag_freeform_string_to_utf8() and post radio station
+	  info as tags on the bus.
+
 2007-12-26  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/glimagesink.c:
