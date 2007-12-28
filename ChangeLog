@@ -1,3 +1,36 @@
+2007-12-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c: (gst_play_bin_class_init),
+	(gst_play_bin_finalize), (gst_play_bin_set_uri),
+	(gst_play_bin_set_suburi), (gst_play_bin_set_property),
+	(gst_play_bin_get_property), (pad_removed_cb), (drained_cb),
+	(autoplug_select_cb), (activate_group), (deactivate_group),
+	(setup_next_source), (save_current_group),
+	(gst_play_bin_change_state):
+	Code cleanups.
+	Remove next-uri, we can use the uri property just fine.
+	Fix some crasher.
+	Unref uridecodebin when switching.
+	Fix going to READY.
+
+	* gst/playback/gstplaysink.c: (gst_play_sink_class_init),
+	(gst_play_sink_init), (gst_play_sink_dispose),
+	(gst_play_sink_finalize), (gst_play_sink_vis_unblocked),
+	(gst_play_sink_vis_blocked), (gst_play_sink_set_video_sink),
+	(gst_play_sink_set_audio_sink), (gst_play_sink_set_vis_plugin),
+	(gst_play_sink_set_property), (gst_play_sink_get_property),
+	(gen_video_chain), (gen_text_element), (gen_audio_chain),
+	(gen_vis_element), (gst_play_sink_get_mode),
+	(gst_play_sink_set_mode), (gst_play_sink_set_flags),
+	(gst_play_sink_get_flags), (gst_play_sink_request_pad),
+	(gst_play_sink_release_pad), (gst_play_sink_send_event_to_sink),
+	(gst_play_sink_change_state):
+	* gst/playback/gstplaysink.h:
+	Add some locking to make things threadsafe.
+
+	* gst/playback/test7.c: (about_to_finish_cb):
+	Fix test.
+
 2007-12-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videoscale/gstvideoscale.c: (gst_video_scale_set_property),

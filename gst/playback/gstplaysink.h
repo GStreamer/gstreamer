@@ -71,6 +71,22 @@ typedef enum {
   GST_PLAY_SINK_TYPE_LAST      = 5
 } GstPlaySinkType;
 
+/**
+ * GstPlaySinkFlags:
+ * @GST_PLAY_SINK_FLAG_SOFT_VOLUME: Use software volume in the sink
+ * @GST_PLAY_SINK_FLAG_NATIVE_AUDIO: only allow native audio formats, this omits
+ *   configuration of audioconvert and audioresample.
+ * @GST_PLAY_SINK_FLAG_NATIVE_VIDEO: only allow native video formats, this omits
+ *   configuration of ffmpegcolorspace and videoscale.
+ *
+ * Extra flags to configure the behaviour of the sinks.
+ */
+typedef enum {
+  GST_PLAY_SINK_FLAG_SOFT_VOLUME   = (1 << 0),
+  GST_PLAY_SINK_FLAG_NATIVE_AUDIO  = (1 << 1),
+  GST_PLAY_SINK_FLAG_NATIVE_VIDEO  = (1 << 2)
+} GstPlaySinkFlags;
+
 typedef struct _GstPlaySink GstPlaySink;
 typedef struct _GstPlaySinkClass GstPlaySinkClass;
 
@@ -79,12 +95,15 @@ GType gst_play_sink_get_type (void);
 GstPad *         gst_play_sink_request_pad    (GstPlaySink *playsink, GstPlaySinkType type);
 void             gst_play_sink_release_pad    (GstPlaySink *playsink, GstPad *pad);
 
-void             gst_play_sink_set_video_sink (GstPlaySink * play_sink, GstElement * sink);
-void             gst_play_sink_set_audio_sink (GstPlaySink * play_sink, GstElement * sink);
-void             gst_play_sink_set_vis_plugin (GstPlaySink * play_sink, GstElement * vis);
+void             gst_play_sink_set_video_sink (GstPlaySink * playsink, GstElement * sink);
+void             gst_play_sink_set_audio_sink (GstPlaySink * playsink, GstElement * sink);
+void             gst_play_sink_set_vis_plugin (GstPlaySink * playsink, GstElement * vis);
 
-GstPlaySinkMode  gst_play_sink_get_mode       (GstPlaySink *playsink);
+gboolean         gst_play_sink_set_flags      (GstPlaySink * playsink, GstPlaySinkFlags flags);
+GstPlaySinkFlags gst_play_sink_get_flags      (GstPlaySink * playsink);
+
 gboolean         gst_play_sink_set_mode       (GstPlaySink *playsink, GstPlaySinkMode mode);
+GstPlaySinkMode  gst_play_sink_get_mode       (GstPlaySink *playsink);
 
 G_END_DECLS
 

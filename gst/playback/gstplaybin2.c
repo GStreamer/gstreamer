@@ -291,6 +291,7 @@ struct _GstSourceGroup
   GstPlayBin *playbin;
 
   gboolean valid;               /* the group has valid info to start playback */
+  gboolean active;              /* the group is active */
 
   /* properties */
   gchar *uri;
@@ -316,6 +317,8 @@ struct _GstPlayBin
   GstSourceGroup *curr_group;   /* pointer to the currently playing group */
   GstSourceGroup *next_group;   /* pointer to the next group */
 
+  gboolean about_to_finish;     /* the about-to-finish signal is emited */
+
   /* properties */
   guint connection_speed;       /* connection speed in bits/sec (0 = unknown) */
 
@@ -338,8 +341,6 @@ enum
   PROP_0,
   PROP_URI,
   PROP_SUBURI,
-  PROP_NEXT_URI,
-  PROP_NEXT_SUBURI,
   PROP_STREAMINFO,
   PROP_SOURCE,
   PROP_CURRENT_VIDEO,
@@ -363,7 +364,7 @@ enum
 };
 
 static void gst_play_bin_class_init (GstPlayBinClass * klass);
-static void gst_play_bin_init (GstPlayBin * play_bin);
+static void gst_play_bin_init (GstPlayBin * playbin);
 static void gst_play_bin_finalize (GObject * object);
 
 static void gst_play_bin_set_property (GObject * object, guint prop_id,
@@ -438,12 +439,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_SUBURI,
       g_param_spec_string ("suburi", ".sub-URI", "Optional URI of a subtitle",
           NULL, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_klass, PROP_NEXT_URI,
-      g_param_spec_string ("next-uri", "Next URI",
-          "URI of the next media to play", NULL, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_klass, PROP_NEXT_SUBURI,
-      g_param_spec_string ("next-suburi", "Next .sub-URI",
-          "Optional URI of a next subtitle", NULL, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_klass, PROP_STREAMINFO,
       g_param_spec_value_array ("stream-info",
@@ -569,17 +564,17 @@ gst_play_bin_init (GstPlayBin * playbin)
 static void
 gst_play_bin_finalize (GObject * object)
 {
-  GstPlayBin *play_bin;
+  GstPlayBin *playbin;
 
-  play_bin = GST_PLAY_BIN (object);
+  playbin = GST_PLAY_BIN (object);
 
-  g_value_array_free (play_bin->elements);
+  g_value_array_free (playbin->elements);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
-gst_play_bin_set_uri (GstPlayBin * play_bin, const gchar * uri)
+gst_play_bin_set_uri (GstPlayBin * playbin, const gchar * uri)
 {
   GstSourceGroup *group;
 
@@ -588,8 +583,8 @@ gst_play_bin_set_uri (GstPlayBin * play_bin, const gchar * uri)
     return;
   }
 
-  GST_OBJECT_LOCK (play_bin);
-  group = play_bin->next_group;
+  GST_OBJECT_LOCK (playbin);
+  group = playbin->next_group;
 
   /* if we have no previous uri, or the new uri is different from the
    * old one, replug */
@@ -598,16 +593,16 @@ gst_play_bin_set_uri (GstPlayBin * play_bin, const gchar * uri)
   group->valid = TRUE;
 
   GST_DEBUG ("setting new uri to %s", uri);
-  GST_OBJECT_UNLOCK (play_bin);
+  GST_OBJECT_UNLOCK (playbin);
 }
 
 static void
-gst_play_bin_set_suburi (GstPlayBin * play_bin, const gchar * suburi)
+gst_play_bin_set_suburi (GstPlayBin * playbin, const gchar * suburi)
 {
   GstSourceGroup *group;
 
-  GST_OBJECT_LOCK (play_bin);
-  group = play_bin->next_group;
+  GST_OBJECT_LOCK (playbin);
+  group = playbin->next_group;
 
   if ((!suburi && !group->suburi) ||
       (suburi && group->suburi && !strcmp (group->suburi, suburi)))
@@ -619,29 +614,23 @@ gst_play_bin_set_suburi (GstPlayBin * play_bin, const gchar * suburi)
   GST_DEBUG ("setting new .sub uri to %s", suburi);
 
 done:
-  GST_OBJECT_UNLOCK (play_bin);
+  GST_OBJECT_UNLOCK (playbin);
 }
 
 static void
 gst_play_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstPlayBin *play_bin;
+  GstPlayBin *playbin;
 
-  play_bin = GST_PLAY_BIN (object);
+  playbin = GST_PLAY_BIN (object);
 
   switch (prop_id) {
     case PROP_URI:
-      gst_play_bin_set_uri (play_bin, g_value_get_string (value));
+      gst_play_bin_set_uri (playbin, g_value_get_string (value));
       break;
     case PROP_SUBURI:
-      gst_play_bin_set_suburi (play_bin, g_value_get_string (value));
-      break;
-    case PROP_NEXT_URI:
-      gst_play_bin_set_uri (play_bin, g_value_get_string (value));
-      break;
-    case PROP_NEXT_SUBURI:
-      gst_play_bin_set_suburi (play_bin, g_value_get_string (value));
+      gst_play_bin_set_suburi (playbin, g_value_get_string (value));
       break;
     case PROP_VIDEO_SINK:
       break;
@@ -654,9 +643,9 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
     case PROP_FONT_DESC:
       break;
     case PROP_CONNECTION_SPEED:
-      GST_OBJECT_LOCK (play_bin);
-      play_bin->connection_speed = g_value_get_uint (value) * 1000;
-      GST_OBJECT_UNLOCK (play_bin);
+      GST_OBJECT_LOCK (playbin);
+      playbin->connection_speed = g_value_get_uint (value) * 1000;
+      GST_OBJECT_UNLOCK (playbin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -668,38 +657,29 @@ static void
 gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstPlayBin *play_bin;
+  GstPlayBin *playbin;
 
-  play_bin = GST_PLAY_BIN (object);
+  playbin = GST_PLAY_BIN (object);
 
   switch (prop_id) {
     case PROP_URI:
-      GST_OBJECT_LOCK (play_bin);
-      /* get the currently playing group first, then the queued one */
-      if (play_bin->curr_group)
-        g_value_set_string (value, play_bin->curr_group->uri);
+      GST_OBJECT_LOCK (playbin);
+      /* get the currently playing group first, then the queued one, just in
+       * case we did not yet start playback. */
+      if (playbin->curr_group)
+        g_value_set_string (value, playbin->curr_group->uri);
       else
-        g_value_set_string (value, play_bin->next_group->uri);
-      GST_OBJECT_UNLOCK (play_bin);
+        g_value_set_string (value, playbin->next_group->uri);
+      GST_OBJECT_UNLOCK (playbin);
       break;
     case PROP_SUBURI:
-      GST_OBJECT_LOCK (play_bin);
+      GST_OBJECT_LOCK (playbin);
       /* get the currently playing group first, then the queued one */
-      if (play_bin->curr_group)
-        g_value_set_string (value, play_bin->curr_group->suburi);
+      if (playbin->curr_group)
+        g_value_set_string (value, playbin->curr_group->suburi);
       else
-        g_value_set_string (value, play_bin->next_group->suburi);
-      GST_OBJECT_UNLOCK (play_bin);
-      break;
-    case PROP_NEXT_URI:
-      GST_OBJECT_LOCK (play_bin);
-      g_value_set_string (value, play_bin->next_group->uri);
-      GST_OBJECT_UNLOCK (play_bin);
-      break;
-    case PROP_NEXT_SUBURI:
-      GST_OBJECT_LOCK (play_bin);
-      g_value_set_string (value, play_bin->next_group->suburi);
-      GST_OBJECT_UNLOCK (play_bin);
+        g_value_set_string (value, playbin->next_group->suburi);
+      GST_OBJECT_UNLOCK (playbin);
       break;
     case PROP_VIDEO_SINK:
       break;
@@ -712,9 +692,9 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_FRAME:
       break;
     case PROP_CONNECTION_SPEED:
-      GST_OBJECT_LOCK (play_bin);
-      g_value_set_uint (value, play_bin->connection_speed / 1000);
-      GST_OBJECT_UNLOCK (play_bin);
+      GST_OBJECT_LOCK (playbin);
+      g_value_set_uint (value, playbin->connection_speed / 1000);
+      GST_OBJECT_UNLOCK (playbin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -861,8 +841,11 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   /* unlink the pad now (can fail, the pad is unlinked before it's removed) */
   gst_pad_unlink (pad, peer);
 
-  /* get selector */
+  /* get selector, this can be NULL when the element is removing the pads
+   * because it's being disposed. */
   selector = GST_ELEMENT_CAST (gst_pad_get_parent (peer));
+  if (!selector)
+    goto no_selector;
 
   /* release the pad to the selector, this will make the selector choose a new
    * pad. */
@@ -876,6 +859,11 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 not_linked:
   {
     GST_DEBUG_OBJECT (playbin, "pad not linked");
+    return;
+  }
+no_selector:
+  {
+    GST_DEBUG_OBJECT (playbin, "selector not found");
     return;
   }
 }
@@ -947,9 +935,15 @@ drained_cb (GstElement * decodebin, GstSourceGroup * group)
 
   GST_DEBUG_OBJECT (playbin, "about to finish in group %p", group);
 
+  /* mark use as sending out the about-to-finish signal. When the app sets a URI
+   * when this signal is emited, we're marking it as next-uri */
+  playbin->about_to_finish = TRUE;
+
   /* after this call, we should have a next group to activate or we EOS */
   g_signal_emit (G_OBJECT (playbin),
       gst_play_bin_signals[SIGNAL_ABOUT_TO_FINISH], 0, NULL);
+
+  playbin->about_to_finish = FALSE;
 
   /* now activate the next group. If the app did not set a next-uri, this will
    * fail and we can do EOS */
@@ -1048,41 +1042,19 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   return GST_AUTOPLUG_SELECT_EXPOSE;
 }
 
-/* unlink a group of uridecodebins from the sink */
-static void
-unlink_group (GstPlayBin * playbin, GstSourceGroup * group)
-{
-  gint i;
-
-  GST_DEBUG_OBJECT (playbin, "unlinking group %p", group);
-
-  for (i = 0; i < 3; i++) {
-    GstSourceSelect *select = &group->selector[i];
-
-    if (!select->selector)
-      continue;
-
-    GST_DEBUG_OBJECT (playbin, "unlinking selector %s", select->media);
-    gst_pad_unlink (select->srcpad, select->sinkpad);
-
-    /* release back */
-    gst_play_sink_release_pad (playbin->playsink, select->sinkpad);
-    select->sinkpad = NULL;
-
-    gst_object_unref (select->srcpad);
-    select->srcpad = NULL;
-
-    gst_element_set_state (select->selector, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (playbin), select->selector);
-    select->selector = NULL;
-  }
-  group->valid = FALSE;
-}
-
 static gboolean
 activate_group (GstPlayBin * playbin, GstSourceGroup * group)
 {
   GstElement *uridecodebin;
+
+  g_return_val_if_fail (group->valid, FALSE);
+  g_return_val_if_fail (!group->active, FALSE);
+
+  if (group->uridecodebin) {
+    gst_element_set_state (group->uridecodebin, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (playbin), group->uridecodebin);
+    group->uridecodebin = NULL;
+  }
 
   uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
   if (!uridecodebin)
@@ -1116,6 +1088,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
 
   gst_element_set_state (uridecodebin, GST_STATE_PAUSED);
 
+  group->active = TRUE;
+
   return TRUE;
 
   /* ERRORS */
@@ -1125,7 +1099,45 @@ no_decodebin:
   }
 }
 
-/* setup the next group to play */
+/* unlink a group of uridecodebins from the sink */
+static gboolean
+deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
+{
+  gint i;
+
+  g_return_val_if_fail (group->valid, FALSE);
+  g_return_val_if_fail (group->active, FALSE);
+
+  GST_DEBUG_OBJECT (playbin, "unlinking group %p", group);
+
+  for (i = 0; i < 3; i++) {
+    GstSourceSelect *select = &group->selector[i];
+
+    if (!select->selector)
+      continue;
+
+    GST_DEBUG_OBJECT (playbin, "unlinking selector %s", select->media);
+    gst_pad_unlink (select->srcpad, select->sinkpad);
+
+    /* release back */
+    gst_play_sink_release_pad (playbin->playsink, select->sinkpad);
+    select->sinkpad = NULL;
+
+    gst_object_unref (select->srcpad);
+    select->srcpad = NULL;
+
+    gst_element_set_state (select->selector, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (playbin), select->selector);
+    select->selector = NULL;
+  }
+  group->active = FALSE;
+
+  return TRUE;
+}
+
+/* setup the next group to play, this assumes the next_group is valid and
+ * configured. It swaps out the current_group and activates the valid 
+ * next_group. */
 static gboolean
 setup_next_source (GstPlayBin * playbin)
 {
@@ -1142,7 +1154,8 @@ setup_next_source (GstPlayBin * playbin)
   old_group = playbin->curr_group;
   if (old_group && old_group->valid) {
     /* unlink our pads with the sink */
-    unlink_group (playbin, old_group);
+    deactivate_group (playbin, old_group);
+    old_group->valid = FALSE;
   }
 
   /* activate the new group */
@@ -1168,22 +1181,45 @@ activate_failed:
   }
 }
 
+/* The group that is currently playing is copied again to the
+ * next_group.
+ */
+static gboolean
+save_current_group (GstPlayBin * playbin)
+{
+  GstSourceGroup *curr_group;
+
+  GST_DEBUG_OBJECT (playbin, "save current group");
+
+  /* see if there is a current group */
+  curr_group = playbin->curr_group;
+  if (curr_group && curr_group->valid) {
+    /* unlink our pads with the sink */
+    deactivate_group (playbin, curr_group);
+  }
+  /* swap old and new */
+  playbin->curr_group = playbin->next_group;
+  playbin->next_group = curr_group;
+
+  return TRUE;
+}
+
 static GstStateChangeReturn
 gst_play_bin_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  GstPlayBin *play_bin;
+  GstPlayBin *playbin;
 
-  play_bin = GST_PLAY_BIN (element);
+  playbin = GST_PLAY_BIN (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (play_bin->playsink == NULL) {
-        play_bin->playsink = g_object_new (GST_TYPE_PLAY_SINK, NULL);
-        gst_bin_add (GST_BIN_CAST (play_bin),
-            GST_ELEMENT_CAST (play_bin->playsink));
+      if (playbin->playsink == NULL) {
+        playbin->playsink = g_object_new (GST_TYPE_PLAY_SINK, NULL);
+        gst_bin_add (GST_BIN_CAST (playbin),
+            GST_ELEMENT_CAST (playbin->playsink));
       }
-      if (!setup_next_source (play_bin))
+      if (!setup_next_source (playbin))
         goto source_failed;
       break;
     default:
@@ -1201,10 +1237,13 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       /* FIXME Release audio device when we implement that */
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (play_bin->playsink) {
-        gst_bin_remove (GST_BIN_CAST (play_bin),
-            GST_ELEMENT_CAST (play_bin->playsink));
-        play_bin->playsink = NULL;
+      save_current_group (playbin);
+      if (playbin->playsink) {
+        gst_element_set_state (GST_ELEMENT_CAST (playbin->playsink),
+            GST_STATE_NULL);
+        gst_bin_remove (GST_BIN_CAST (playbin),
+            GST_ELEMENT_CAST (playbin->playsink));
+        playbin->playsink = NULL;
       }
       break;
     default:

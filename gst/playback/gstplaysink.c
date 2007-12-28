@@ -64,11 +64,18 @@ typedef struct
   GstElement *sink;
 } GstPlayVideoChain;
 
+#define GST_PLAY_SINK_GET_LOCK(playsink) (((GstPlaySink *)playsink)->lock)
+#define GST_PLAY_SINK_LOCK(playsink)     g_mutex_lock (GST_PLAY_SINK_GET_LOCK (playsink))
+#define GST_PLAY_SINK_UNLOCK(playsink)   g_mutex_unlock (GST_PLAY_SINK_GET_LOCK (playsink))
+
 struct _GstPlaySink
 {
   GstBin bin;
 
+  GMutex *lock;
+
   GstPlaySinkMode mode;
+  GstPlaySinkFlags flags;
 
   GstPlayChain *audiochain;
   GstPlayChain *videochain;
@@ -120,8 +127,9 @@ enum
 };
 
 static void gst_play_sink_class_init (GstPlaySinkClass * klass);
-static void gst_play_sink_init (GstPlaySink * play_sink);
+static void gst_play_sink_init (GstPlaySink * playsink);
 static void gst_play_sink_dispose (GObject * object);
+static void gst_play_sink_finalize (GObject * object);
 
 static void gst_play_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -186,6 +194,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
   gobject_klass->get_property = gst_play_sink_get_property;
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_sink_dispose);
+  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_sink_finalize);
 
   g_object_class_install_property (gobject_klass, PROP_VIDEO_SINK,
       g_param_spec_object ("video-sink", "Video Sink",
@@ -222,97 +231,112 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
 }
 
 static void
-gst_play_sink_init (GstPlaySink * play_sink)
+gst_play_sink_init (GstPlaySink * playsink)
 {
   /* init groups */
-  play_sink->video_sink = NULL;
-  play_sink->audio_sink = NULL;
-  play_sink->visualisation = NULL;
-  play_sink->pending_visualisation = NULL;
-  play_sink->textoverlay_element = NULL;
-  play_sink->volume = 1.0;
-  play_sink->font_desc = NULL;
+  playsink->video_sink = NULL;
+  playsink->audio_sink = NULL;
+  playsink->visualisation = NULL;
+  playsink->pending_visualisation = NULL;
+  playsink->textoverlay_element = NULL;
+  playsink->volume = 1.0;
+  playsink->font_desc = NULL;
+  playsink->flags = GST_PLAY_SINK_FLAG_SOFT_VOLUME;
+
+  playsink->lock = g_mutex_new ();
 }
 
 static void
 gst_play_sink_dispose (GObject * object)
 {
-  GstPlaySink *play_sink;
+  GstPlaySink *playsink;
 
-  play_sink = GST_PLAY_SINK (object);
+  playsink = GST_PLAY_SINK (object);
 
-  if (play_sink->audio_sink != NULL) {
-    gst_element_set_state (play_sink->audio_sink, GST_STATE_NULL);
-    gst_object_unref (play_sink->audio_sink);
-    play_sink->audio_sink = NULL;
+  if (playsink->audio_sink != NULL) {
+    gst_element_set_state (playsink->audio_sink, GST_STATE_NULL);
+    gst_object_unref (playsink->audio_sink);
+    playsink->audio_sink = NULL;
   }
-  if (play_sink->video_sink != NULL) {
-    gst_element_set_state (play_sink->video_sink, GST_STATE_NULL);
-    gst_object_unref (play_sink->video_sink);
-    play_sink->video_sink = NULL;
+  if (playsink->video_sink != NULL) {
+    gst_element_set_state (playsink->video_sink, GST_STATE_NULL);
+    gst_object_unref (playsink->video_sink);
+    playsink->video_sink = NULL;
   }
-  if (play_sink->visualisation != NULL) {
-    gst_element_set_state (play_sink->visualisation, GST_STATE_NULL);
-    gst_object_unref (play_sink->visualisation);
-    play_sink->visualisation = NULL;
+  if (playsink->visualisation != NULL) {
+    gst_element_set_state (playsink->visualisation, GST_STATE_NULL);
+    gst_object_unref (playsink->visualisation);
+    playsink->visualisation = NULL;
   }
-  if (play_sink->pending_visualisation != NULL) {
-    gst_element_set_state (play_sink->pending_visualisation, GST_STATE_NULL);
-    gst_object_unref (play_sink->pending_visualisation);
-    play_sink->pending_visualisation = NULL;
+  if (playsink->pending_visualisation != NULL) {
+    gst_element_set_state (playsink->pending_visualisation, GST_STATE_NULL);
+    gst_object_unref (playsink->pending_visualisation);
+    playsink->pending_visualisation = NULL;
   }
-  if (play_sink->textoverlay_element != NULL) {
-    gst_object_unref (play_sink->textoverlay_element);
-    play_sink->textoverlay_element = NULL;
+  if (playsink->textoverlay_element != NULL) {
+    gst_object_unref (playsink->textoverlay_element);
+    playsink->textoverlay_element = NULL;
   }
-  g_free (play_sink->font_desc);
-  play_sink->font_desc = NULL;
+  g_free (playsink->font_desc);
+  playsink->font_desc = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_play_sink_finalize (GObject * object)
+{
+  GstPlaySink *playsink;
+
+  playsink = GST_PLAY_SINK (object);
+
+  g_mutex_free (playsink->lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
 gst_play_sink_vis_unblocked (GstPad * tee_pad, gboolean blocked,
     gpointer user_data)
 {
-  GstPlaySink *play_sink = GST_PLAY_SINK (user_data);
+  GstPlaySink *playsink = GST_PLAY_SINK (user_data);
 
-  if (play_sink->pending_visualisation)
+  if (playsink->pending_visualisation)
     gst_pad_set_blocked_async (tee_pad, FALSE, gst_play_sink_vis_unblocked,
-        play_sink);
+        playsink);
 }
 
 static void
 gst_play_sink_vis_blocked (GstPad * tee_pad, gboolean blocked,
     gpointer user_data)
 {
-  GstPlaySink *play_sink = GST_PLAY_SINK (user_data);
+  GstPlaySink *playsink = GST_PLAY_SINK (user_data);
   GstBin *vis_bin = NULL;
   GstPad *vis_sink_pad = NULL, *vis_src_pad = NULL, *vqueue_pad = NULL;
   GstState bin_state;
   GstElement *pending_visualisation;
 
-  GST_OBJECT_LOCK (play_sink);
-  pending_visualisation = play_sink->pending_visualisation;
-  play_sink->pending_visualisation = NULL;
-  GST_OBJECT_UNLOCK (play_sink);
+  GST_OBJECT_LOCK (playsink);
+  pending_visualisation = playsink->pending_visualisation;
+  playsink->pending_visualisation = NULL;
+  GST_OBJECT_UNLOCK (playsink);
 
   /* We want to disable visualisation */
   if (!GST_IS_ELEMENT (pending_visualisation)) {
     /* Set visualisation element to READY */
-    gst_element_set_state (play_sink->visualisation, GST_STATE_READY);
+    gst_element_set_state (playsink->visualisation, GST_STATE_READY);
     goto beach;
   }
 
   vis_bin =
-      GST_BIN_CAST (gst_object_get_parent (GST_OBJECT_CAST (play_sink->
+      GST_BIN_CAST (gst_object_get_parent (GST_OBJECT_CAST (playsink->
               visualisation)));
 
   if (!GST_IS_BIN (vis_bin) || !GST_IS_PAD (tee_pad)) {
     goto beach;
   }
 
-  vis_src_pad = gst_element_get_pad (play_sink->visualisation, "src");
+  vis_src_pad = gst_element_get_pad (playsink->visualisation, "src");
   vis_sink_pad = gst_pad_get_peer (tee_pad);
 
   /* Can be fakesink */
@@ -341,11 +365,11 @@ gst_play_sink_vis_blocked (GstPad * tee_pad, gboolean blocked,
   }
 
   /* Remove from vis_bin */
-  gst_bin_remove (vis_bin, play_sink->visualisation);
+  gst_bin_remove (vis_bin, playsink->visualisation);
   /* Set state to NULL */
-  gst_element_set_state (play_sink->visualisation, GST_STATE_NULL);
+  gst_element_set_state (playsink->visualisation, GST_STATE_NULL);
   /* And loose our ref */
-  gst_object_unref (play_sink->visualisation);
+  gst_object_unref (playsink->visualisation);
 
   if (pending_visualisation) {
     /* Ref this new visualisation element before adding to the bin */
@@ -368,8 +392,8 @@ gst_play_sink_vis_blocked (GstPad * tee_pad, gboolean blocked,
   }
 
   /* We are done */
-  gst_object_unref (play_sink->visualisation);
-  play_sink->visualisation = pending_visualisation;
+  gst_object_unref (playsink->visualisation);
+  playsink->visualisation = pending_visualisation;
 
 beach:
   if (vis_sink_pad) {
@@ -387,41 +411,41 @@ beach:
 
   /* Unblock the pad */
   gst_pad_set_blocked_async (tee_pad, FALSE, gst_play_sink_vis_unblocked,
-      play_sink);
+      playsink);
 }
 
 void
-gst_play_sink_set_video_sink (GstPlaySink * play_sink, GstElement * sink)
+gst_play_sink_set_video_sink (GstPlaySink * playsink, GstElement * sink)
 {
-  GST_OBJECT_LOCK (play_sink);
-  if (play_sink->video_sink)
-    gst_object_unref (play_sink->video_sink);
+  GST_OBJECT_LOCK (playsink);
+  if (playsink->video_sink)
+    gst_object_unref (playsink->video_sink);
 
   if (sink) {
     gst_object_ref (sink);
     gst_object_sink (sink);
   }
-  play_sink->video_sink = sink;
-  GST_OBJECT_UNLOCK (play_sink);
+  playsink->video_sink = sink;
+  GST_OBJECT_UNLOCK (playsink);
 }
 
 void
-gst_play_sink_set_audio_sink (GstPlaySink * play_sink, GstElement * sink)
+gst_play_sink_set_audio_sink (GstPlaySink * playsink, GstElement * sink)
 {
-  GST_OBJECT_LOCK (play_sink);
-  if (play_sink->audio_sink)
-    gst_object_unref (play_sink->audio_sink);
+  GST_OBJECT_LOCK (playsink);
+  if (playsink->audio_sink)
+    gst_object_unref (playsink->audio_sink);
 
   if (sink) {
     gst_object_ref (sink);
     gst_object_sink (sink);
   }
-  play_sink->audio_sink = sink;
-  GST_OBJECT_UNLOCK (play_sink);
+  playsink->audio_sink = sink;
+  GST_OBJECT_UNLOCK (playsink);
 }
 
 void
-gst_play_sink_set_vis_plugin (GstPlaySink * play_sink,
+gst_play_sink_set_vis_plugin (GstPlaySink * playsink,
     GstElement * pending_visualisation)
 {
   /* Take ownership */
@@ -432,19 +456,19 @@ gst_play_sink_set_vis_plugin (GstPlaySink * play_sink,
 
   /* Do we already have a visualisation change pending? If yes, change the
    * pending vis with the new one. */
-  GST_OBJECT_LOCK (play_sink);
-  if (play_sink->pending_visualisation) {
-    gst_object_unref (play_sink->pending_visualisation);
-    play_sink->pending_visualisation = pending_visualisation;
-    GST_OBJECT_UNLOCK (play_sink);
+  GST_OBJECT_LOCK (playsink);
+  if (playsink->pending_visualisation) {
+    gst_object_unref (playsink->pending_visualisation);
+    playsink->pending_visualisation = pending_visualisation;
+    GST_OBJECT_UNLOCK (playsink);
   } else {
-    GST_OBJECT_UNLOCK (play_sink);
+    GST_OBJECT_UNLOCK (playsink);
     /* Was there a visualisation already set ? */
-    if (play_sink->visualisation != NULL) {
+    if (playsink->visualisation != NULL) {
       GstBin *vis_bin = NULL;
 
       vis_bin =
-          GST_BIN_CAST (gst_object_get_parent (GST_OBJECT_CAST (play_sink->
+          GST_BIN_CAST (gst_object_get_parent (GST_OBJECT_CAST (playsink->
                   visualisation)));
 
       /* Check if the visualisation is already in a bin */
@@ -452,7 +476,7 @@ gst_play_sink_set_vis_plugin (GstPlaySink * play_sink,
         GstPad *vis_sink_pad = NULL, *tee_pad = NULL;
 
         /* Now get tee pad and block it async */
-        vis_sink_pad = gst_element_get_pad (play_sink->visualisation, "sink");
+        vis_sink_pad = gst_element_get_pad (playsink->visualisation, "sink");
         if (!GST_IS_PAD (vis_sink_pad)) {
           goto beach;
         }
@@ -461,10 +485,10 @@ gst_play_sink_set_vis_plugin (GstPlaySink * play_sink,
           goto beach;
         }
 
-        play_sink->pending_visualisation = pending_visualisation;
+        playsink->pending_visualisation = pending_visualisation;
         /* Block with callback */
         gst_pad_set_blocked_async (tee_pad, TRUE, gst_play_sink_vis_blocked,
-            play_sink);
+            playsink);
       beach:
         if (vis_sink_pad) {
           gst_object_unref (vis_sink_pad);
@@ -474,10 +498,10 @@ gst_play_sink_set_vis_plugin (GstPlaySink * play_sink,
         }
         gst_object_unref (vis_bin);
       } else {
-        play_sink->visualisation = pending_visualisation;
+        playsink->visualisation = pending_visualisation;
       }
     } else {
-      play_sink->visualisation = pending_visualisation;
+      playsink->visualisation = pending_visualisation;
     }
   }
 }
@@ -486,34 +510,34 @@ static void
 gst_play_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstPlaySink *play_sink;
+  GstPlaySink *playsink;
 
-  play_sink = GST_PLAY_SINK (object);
+  playsink = GST_PLAY_SINK (object);
 
   switch (prop_id) {
     case PROP_VIDEO_SINK:
-      gst_play_sink_set_video_sink (play_sink, g_value_get_object (value));
+      gst_play_sink_set_video_sink (playsink, g_value_get_object (value));
       break;
     case PROP_AUDIO_SINK:
-      gst_play_sink_set_audio_sink (play_sink, g_value_get_object (value));
+      gst_play_sink_set_audio_sink (playsink, g_value_get_object (value));
       break;
     case PROP_VIS_PLUGIN:
-      gst_play_sink_set_vis_plugin (play_sink, g_value_get_object (value));
+      gst_play_sink_set_vis_plugin (playsink, g_value_get_object (value));
       break;
     case PROP_VOLUME:
-      GST_OBJECT_LOCK (play_sink);
-      play_sink->volume = g_value_get_double (value);
-      GST_OBJECT_UNLOCK (play_sink);
+      GST_OBJECT_LOCK (playsink);
+      playsink->volume = g_value_get_double (value);
+      GST_OBJECT_UNLOCK (playsink);
       break;
     case PROP_FONT_DESC:
-      GST_OBJECT_LOCK (play_sink);
-      g_free (play_sink->font_desc);
-      play_sink->font_desc = g_strdup (g_value_get_string (value));
-      if (play_sink->textoverlay_element) {
-        g_object_set (G_OBJECT (play_sink->textoverlay_element),
+      GST_OBJECT_LOCK (playsink);
+      g_free (playsink->font_desc);
+      playsink->font_desc = g_strdup (g_value_get_string (value));
+      if (playsink->textoverlay_element) {
+        g_object_set (G_OBJECT (playsink->textoverlay_element),
             "font-desc", g_value_get_string (value), NULL);
       }
-      GST_OBJECT_UNLOCK (play_sink);
+      GST_OBJECT_UNLOCK (playsink);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -525,30 +549,30 @@ static void
 gst_play_sink_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstPlaySink *play_sink;
+  GstPlaySink *playsink;
 
-  play_sink = GST_PLAY_SINK (object);
+  playsink = GST_PLAY_SINK (object);
 
   switch (prop_id) {
     case PROP_VIDEO_SINK:
-      GST_OBJECT_LOCK (play_sink);
-      g_value_set_object (value, play_sink->video_sink);
-      GST_OBJECT_UNLOCK (play_sink);
+      GST_OBJECT_LOCK (playsink);
+      g_value_set_object (value, playsink->video_sink);
+      GST_OBJECT_UNLOCK (playsink);
       break;
     case PROP_AUDIO_SINK:
-      GST_OBJECT_LOCK (play_sink);
-      g_value_set_object (value, play_sink->audio_sink);
-      GST_OBJECT_UNLOCK (play_sink);
+      GST_OBJECT_LOCK (playsink);
+      g_value_set_object (value, playsink->audio_sink);
+      GST_OBJECT_UNLOCK (playsink);
       break;
     case PROP_VIS_PLUGIN:
-      GST_OBJECT_LOCK (play_sink);
-      g_value_set_object (value, play_sink->visualisation);
-      GST_OBJECT_UNLOCK (play_sink);
+      GST_OBJECT_LOCK (playsink);
+      g_value_set_object (value, playsink->visualisation);
+      GST_OBJECT_UNLOCK (playsink);
       break;
     case PROP_VOLUME:
-      GST_OBJECT_LOCK (play_sink);
-      g_value_set_double (value, play_sink->volume);
-      GST_OBJECT_UNLOCK (play_sink);
+      GST_OBJECT_LOCK (playsink);
+      g_value_set_double (value, playsink->volume);
+      GST_OBJECT_UNLOCK (playsink);
       break;
     case PROP_FRAME:
     {
@@ -624,17 +648,17 @@ activate_chain (GstPlayChain * chain, gboolean activate)
  *           
  */
 static GstPlayChain *
-gen_video_chain (GstPlaySink * play_sink, gboolean raw)
+gen_video_chain (GstPlaySink * playsink, gboolean raw)
 {
   GstPlayVideoChain *chain;
   GstBin *bin;
   GstPad *pad;
 
   chain = g_new0 (GstPlayVideoChain, 1);
-  chain->chain.playsink = gst_object_ref (play_sink);
+  chain->chain.playsink = gst_object_ref (playsink);
 
-  if (play_sink->video_sink) {
-    chain->sink = play_sink->video_sink;
+  if (playsink->video_sink) {
+    chain->sink = playsink->video_sink;
   } else {
     chain->sink = gst_element_factory_make ("autovideosink", "videosink");
     if (chain->sink == NULL) {
@@ -697,8 +721,8 @@ gen_video_chain (GstPlaySink * play_sink, gboolean raw)
   /* ERRORS */
 no_sinks:
   {
-    post_missing_element_message (play_sink, "autovideosink");
-    GST_ELEMENT_ERROR (play_sink, CORE, MISSING_PLUGIN,
+    post_missing_element_message (playsink, "autovideosink");
+    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Both autovideosink and xvimagesink elements are missing.")),
         (NULL));
     free_chain ((GstPlayChain *) chain);
@@ -706,8 +730,8 @@ no_sinks:
   }
 no_colorspace:
   {
-    post_missing_element_message (play_sink, "ffmpegcolorspace");
-    GST_ELEMENT_ERROR (play_sink, CORE, MISSING_PLUGIN,
+    post_missing_element_message (playsink, "ffmpegcolorspace");
+    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "ffmpegcolorspace"), (NULL));
     free_chain ((GstPlayChain *) chain);
@@ -716,8 +740,8 @@ no_colorspace:
 
 no_videoscale:
   {
-    post_missing_element_message (play_sink, "videoscale");
-    GST_ELEMENT_ERROR (play_sink, CORE, MISSING_PLUGIN,
+    post_missing_element_message (playsink, "videoscale");
+    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "videoscale"), ("possibly a liboil version mismatch?"));
     free_chain ((GstPlayChain *) chain);
@@ -725,7 +749,7 @@ no_videoscale:
   }
 link_failed:
   {
-    GST_ELEMENT_ERROR (play_sink, CORE, PAD,
+    GST_ELEMENT_ERROR (playsink, CORE, PAD,
         (NULL), ("Failed to configure the video sink."));
     free_chain ((GstPlayChain *) chain);
     return NULL;
@@ -748,13 +772,13 @@ link_failed:
  *  videosink without the text_sink pad.
  */
 static GstElement *
-gen_text_element (GstPlaySink * play_sink)
+gen_text_element (GstPlaySink * playsink)
 {
   GstElement *element, *csp, *overlay, *vbin;
   GstPad *pad;
 
   /* Create the video rendering bin, error is posted when this fails. */
-  vbin = gen_video_element (play_sink);
+  vbin = gen_video_element (playsink);
   if (!vbin)
     return NULL;
 
@@ -771,12 +795,12 @@ gen_text_element (GstPlaySink * play_sink)
   /* Set some parameters */
   g_object_set (G_OBJECT (overlay),
       "halign", "center", "valign", "bottom", NULL);
-  if (play_sink->font_desc) {
-    g_object_set (G_OBJECT (overlay), "font-desc", play_sink->font_desc, NULL);
+  if (playsink->font_desc) {
+    g_object_set (G_OBJECT (overlay), "font-desc", playsink->font_desc, NULL);
   }
 
   /* Take a ref */
-  play_sink->textoverlay_element = GST_ELEMENT_CAST (gst_object_ref (overlay));
+  playsink->textoverlay_element = GST_ELEMENT_CAST (gst_object_ref (overlay));
 
   /* we know this will succeed, as the video bin already created one before */
   csp = gst_element_factory_make ("ffmpegcolorspace", "subtitlecsp");
@@ -805,8 +829,8 @@ gen_text_element (GstPlaySink * play_sink)
   /* ERRORS */
 no_overlay:
   {
-    post_missing_element_message (play_sink, "textoverlay");
-    GST_WARNING_OBJECT (play_sink,
+    post_missing_element_message (playsink, "textoverlay");
+    GST_WARNING_OBJECT (playsink,
         "No overlay (pango) element, subtitles disabled");
     return vbin;
   }
@@ -827,7 +851,7 @@ no_overlay:
  *  +-------------------------------------------------------------+
  */
 static GstPlayChain *
-gen_audio_chain (GstPlaySink * play_sink, gboolean raw)
+gen_audio_chain (GstPlaySink * playsink, gboolean raw)
 {
   GstPlayAudioChain *chain;
   GstBin *bin;
@@ -835,10 +859,10 @@ gen_audio_chain (GstPlaySink * play_sink, gboolean raw)
   GstPad *pad;
 
   chain = g_new0 (GstPlayAudioChain, 1);
-  chain->chain.playsink = gst_object_ref (play_sink);
+  chain->chain.playsink = gst_object_ref (playsink);
 
-  if (play_sink->audio_sink) {
-    chain->sink = play_sink->audio_sink;
+  if (playsink->audio_sink) {
+    chain->sink = playsink->audio_sink;
   } else {
     chain->sink = gst_element_factory_make ("autoaudiosink", "audiosink");
     if (chain->sink == NULL) {
@@ -864,14 +888,19 @@ gen_audio_chain (GstPlaySink * play_sink, gboolean raw)
       goto no_audioresample;
     gst_bin_add (bin, chain->resample);
 
-    chain->volume = gst_element_factory_make ("volume", "volume");
-    g_object_set (G_OBJECT (chain->volume), "volume", play_sink->volume, NULL);
-    gst_bin_add (bin, chain->volume);
-
     res = gst_element_link_pads (chain->conv, "src", chain->resample, "sink");
-    res &=
-        gst_element_link_pads (chain->resample, "src", chain->volume, "sink");
-    res &= gst_element_link_pads (chain->volume, "src", chain->sink, NULL);
+
+    if (playsink->flags & GST_PLAY_SINK_FLAG_SOFT_VOLUME) {
+      chain->volume = gst_element_factory_make ("volume", "volume");
+      g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
+      gst_bin_add (bin, chain->volume);
+
+      res &=
+          gst_element_link_pads (chain->resample, "src", chain->volume, "sink");
+      res &= gst_element_link_pads (chain->volume, "src", chain->sink, NULL);
+    } else {
+      res &= gst_element_link_pads (chain->resample, "src", chain->sink, NULL);
+    }
     if (!res)
       goto link_failed;
 
@@ -888,16 +917,16 @@ gen_audio_chain (GstPlaySink * play_sink, gboolean raw)
   /* ERRORS */
 no_sinks:
   {
-    post_missing_element_message (play_sink, "autoaudiosink");
-    GST_ELEMENT_ERROR (play_sink, CORE, MISSING_PLUGIN,
+    post_missing_element_message (playsink, "autoaudiosink");
+    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Both autoaudiosink and alsasink elements are missing.")), (NULL));
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }
 no_audioconvert:
   {
-    post_missing_element_message (play_sink, "audioconvert");
-    GST_ELEMENT_ERROR (play_sink, CORE, MISSING_PLUGIN,
+    post_missing_element_message (playsink, "audioconvert");
+    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "audioconvert"), ("possibly a liboil version mismatch?"));
     free_chain ((GstPlayChain *) chain);
@@ -906,8 +935,8 @@ no_audioconvert:
 
 no_audioresample:
   {
-    post_missing_element_message (play_sink, "audioresample");
-    GST_ELEMENT_ERROR (play_sink, CORE, MISSING_PLUGIN,
+    post_missing_element_message (playsink, "audioresample");
+    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "audioresample"), ("possibly a liboil version mismatch?"));
     free_chain ((GstPlayChain *) chain);
@@ -915,7 +944,7 @@ no_audioresample:
   }
 link_failed:
   {
-    GST_ELEMENT_ERROR (play_sink, CORE, PAD,
+    GST_ELEMENT_ERROR (playsink, CORE, PAD,
         (NULL), ("Failed to configure the audio sink."));
     free_chain ((GstPlayChain *) chain);
     return NULL;
@@ -947,7 +976,7 @@ link_failed:
  *  +-----------------------------------------------------------------------+
  */
 static GstElement *
-gen_vis_element (GstPlaySink * play_sink)
+gen_vis_element (GstPlaySink * playsink)
 {
   gboolean res;
   GstElement *element;
@@ -962,10 +991,10 @@ gen_vis_element (GstPlaySink * play_sink)
   GstPad *pad, *rpad;
 
   /* errors are already posted when these fail. */
-  asink = gen_audio_element (play_sink);
+  asink = gen_audio_element (playsink);
   if (!asink)
     return NULL;
-  vsink = gen_video_element (play_sink);
+  vsink = gen_video_element (playsink);
   if (!vsink) {
     gst_object_unref (asink);
     return NULL;
@@ -998,9 +1027,9 @@ gen_vis_element (GstPlaySink * play_sink)
     goto no_audioconvert;
   gst_bin_add (GST_BIN_CAST (element), conv2);
 
-  if (play_sink->visualisation) {
-    gst_object_ref (play_sink->visualisation);
-    vis = play_sink->visualisation;
+  if (playsink->visualisation) {
+    gst_object_ref (playsink->visualisation);
+    vis = playsink->visualisation;
   } else {
     vis = gst_element_factory_make ("goom", "vis");
     if (!vis)
@@ -1038,8 +1067,8 @@ gen_vis_element (GstPlaySink * play_sink)
   /* ERRORS */
 no_audioconvert:
   {
-    post_missing_element_message (play_sink, "audioconvert");
-    GST_ELEMENT_ERROR (play_sink, CORE, MISSING_PLUGIN,
+    post_missing_element_message (playsink, "audioconvert");
+    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "audioconvert"), ("possibly a liboil version mismatch?"));
     gst_object_unref (element);
@@ -1047,8 +1076,8 @@ no_audioconvert:
   }
 no_audioresample:
   {
-    post_missing_element_message (play_sink, "audioresample");
-    GST_ELEMENT_ERROR (play_sink, CORE, MISSING_PLUGIN,
+    post_missing_element_message (playsink, "audioresample");
+    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "audioresample"), (NULL));
     gst_object_unref (element);
@@ -1056,8 +1085,8 @@ no_audioresample:
   }
 no_goom:
   {
-    post_missing_element_message (play_sink, "goom");
-    GST_ELEMENT_ERROR (play_sink, CORE, MISSING_PLUGIN,
+    post_missing_element_message (playsink, "goom");
+    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "goom"), (NULL));
     gst_object_unref (element);
@@ -1065,7 +1094,7 @@ no_goom:
   }
 link_failed:
   {
-    GST_ELEMENT_ERROR (play_sink, CORE, PAD,
+    GST_ELEMENT_ERROR (playsink, CORE, PAD,
         (NULL), ("Failed to configure the visualisation element."));
     gst_object_unref (element);
     return NULL;
@@ -1078,9 +1107,9 @@ gst_play_sink_get_mode (GstPlaySink * playsink)
 {
   GstPlaySinkMode res;
 
-  GST_OBJECT_LOCK (playsink);
+  GST_PLAY_SINK_LOCK (playsink);
   res = playsink->mode;
-  GST_OBJECT_LOCK (playsink);
+  GST_PLAY_SINK_UNLOCK (playsink);
 
   return res;
 }
@@ -1091,6 +1120,9 @@ gst_play_sink_get_mode (GstPlaySink * playsink)
 gboolean
 gst_play_sink_set_mode (GstPlaySink * playsink, GstPlaySinkMode mode)
 {
+  GST_DEBUG_OBJECT (playsink, "setting mode to %d", mode);
+
+  GST_PLAY_SINK_LOCK (playsink);
   if (mode & GST_PLAY_SINK_MODE_AUDIO && playsink->audio_pad) {
     if (!playsink->audiochain)
       playsink->audiochain =
@@ -1126,9 +1158,37 @@ gst_play_sink_set_mode (GstPlaySink * playsink, GstPlaySinkMode mode)
   }
 
   playsink->mode = mode;
+  GST_PLAY_SINK_UNLOCK (playsink);
 
   return TRUE;
 }
+
+gboolean
+gst_play_sink_set_flags (GstPlaySink * playsink, GstPlaySinkFlags flags)
+{
+  g_return_val_if_fail (GST_IS_PLAY_SINK (playsink), FALSE);
+
+  GST_OBJECT_LOCK (playsink);
+  playsink->flags = flags;
+  GST_OBJECT_LOCK (playsink);
+
+  return TRUE;
+}
+
+GstPlaySinkFlags
+gst_play_sink_get_flags (GstPlaySink * playsink)
+{
+  GstPlaySinkFlags res;
+
+  g_return_val_if_fail (GST_IS_PLAY_SINK (playsink), 0);
+
+  GST_OBJECT_LOCK (playsink);
+  res = playsink->flags;
+  GST_OBJECT_LOCK (playsink);
+
+  return res;
+}
+
 
 GstPad *
 gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
@@ -1137,6 +1197,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
   gboolean created = FALSE;
   gboolean raw = FALSE;
 
+  GST_PLAY_SINK_LOCK (playsink);
   switch (type) {
     case GST_PLAY_SINK_TYPE_AUDIO_RAW:
       raw = TRUE;
@@ -1172,10 +1233,13 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       res = NULL;
       break;
   }
+  GST_PLAY_SINK_UNLOCK (playsink);
+
   if (created && res) {
     gst_pad_set_active (res, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (playsink), res);
   }
+
   return res;
 }
 
@@ -1184,6 +1248,7 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
 {
   GstPad **res = NULL;
 
+  GST_PLAY_SINK_LOCK (playsink);
   if (pad == playsink->video_pad) {
     res = &playsink->video_pad;
   } else if (pad == playsink->audio_pad) {
@@ -1191,6 +1256,7 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
   } else if (pad == playsink->text_pad) {
     res = &playsink->text_pad;
   }
+  GST_PLAY_SINK_UNLOCK (playsink);
 
   if (*res) {
     gst_pad_set_active (*res, FALSE);
@@ -1203,25 +1269,25 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
  * remaining sinks (unlike GstBin)
  */
 static gboolean
-gst_play_sink_send_event_to_sink (GstPlaySink * play_sink, GstEvent * event)
+gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event)
 {
   gboolean res = TRUE;
 
-  if (play_sink->audiochain) {
+  if (playsink->audiochain) {
     gst_event_ref (event);
-    if ((res = gst_element_send_event (play_sink->audiochain->bin, event))) {
-      GST_DEBUG_OBJECT (play_sink, "Sent event succesfully to audio sink");
+    if ((res = gst_element_send_event (playsink->audiochain->bin, event))) {
+      GST_DEBUG_OBJECT (playsink, "Sent event succesfully to audio sink");
       goto done;
     }
-    GST_DEBUG_OBJECT (play_sink, "Event failed when sent to audio sink");
+    GST_DEBUG_OBJECT (playsink, "Event failed when sent to audio sink");
   }
-  if (play_sink->videochain) {
+  if (playsink->videochain) {
     gst_event_ref (event);
-    if ((res = gst_element_send_event (play_sink->videochain->bin, event))) {
-      GST_DEBUG_OBJECT (play_sink, "Sent event succesfully to video sink");
+    if ((res = gst_element_send_event (playsink->videochain->bin, event))) {
+      GST_DEBUG_OBJECT (playsink, "Sent event succesfully to video sink");
       goto done;
     }
-    GST_DEBUG_OBJECT (play_sink, "Event failed when sent to video sink");
+    GST_DEBUG_OBJECT (playsink, "Event failed when sent to video sink");
   }
 done:
   gst_event_unref (event);
@@ -1253,9 +1319,9 @@ static GstStateChangeReturn
 gst_play_sink_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  GstPlaySink *play_sink;
+  GstPlaySink *playsink;
 
-  play_sink = GST_PLAY_SINK (element);
+  playsink = GST_PLAY_SINK (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
