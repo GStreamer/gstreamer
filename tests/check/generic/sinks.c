@@ -1008,6 +1008,9 @@ async_done_func (GstBus * bus, GstMessage * msg, GstElement * sink)
     fail_unless (position == 10 * GST_SECOND, "position is wrong");
   }
 
+  /* we must unref the message if we return DROP */
+  gst_message_unref (msg);
+
   /* we can drop the message, nothing is listening for it. */
   return GST_BUS_DROP;
 }
@@ -1167,6 +1170,8 @@ async_done_eos_func (GstBus * bus, GstMessage * msg, GstElement * sink)
 
     fail_unless (position == 10 * GST_SECOND, "position is wrong");
   }
+  /* we must unref the message if we return DROP */
+  gst_message_unref (msg);
   /* we can drop the message, nothing is listening for it. */
   return GST_BUS_DROP;
 }
@@ -1244,9 +1249,6 @@ gst_sinks_suite (void)
 {
   Suite *s = suite_create ("Sinks");
   TCase *tc_chain = tcase_create ("general");
-
-  /* time out after 10s, not the default 3, we need this for the last test. */
-  tcase_set_timeout (tc_chain, 10);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_sink);
