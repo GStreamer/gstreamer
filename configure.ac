@@ -294,8 +294,6 @@ LIBS="$LIBS $X_LIBS"
 AG_GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
   AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,,
                       GL/gl.h, HAVE_OPENGL="yes", HAVE_OPENGL="no")
-  dnl disable until the build gets fixed
-  HAVE_OPENGL="no"
 ])
 CPPFLAGS="$save_CPPFLAGS"
 LIBS="$save_LIBS"

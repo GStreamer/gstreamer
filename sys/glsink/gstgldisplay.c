@@ -57,15 +57,17 @@ gst_gl_display_finalize (GObject * object)
 {
   GstGLDisplay *display = GST_GL_DISPLAY (object);
 
-  if (display->assigned_window == None) {
+  GST_DEBUG ("finalize %p", object);
+
+  if (display->window != None) {
     XDestroyWindow (display->display, display->window);
   }
   if (display->context) {
     glXDestroyContext (display->display, display->context);
   }
-  if (display->visinfo) {
-    XFree (display->visinfo);
-  }
+  //if (display->visinfo) {
+  //  XFree (display->visinfo);
+  //}
   if (display->display) {
     XCloseDisplay (display->display);
   }
@@ -165,11 +167,28 @@ gst_gl_display_check_features (GstGLDisplay * display)
     GST_DEBUG ("No GLX extension");
     return FALSE;
   }
+#if 0
+  {
+    int i;
+    int n;
 
-  visinfo = glXChooseVisual (display->display, scrnum, attrib);
-  if (visinfo == NULL) {
-    GST_DEBUG ("No usable visual");
-    return FALSE;
+    visinfo = XGetVisualInfo (display->display, 0, NULL, &n);
+    for (i = 0; i < n; i++) {
+      GST_ERROR ("%d: %d %ld", i, visinfo[i].depth, visinfo[i].visualid);
+      if (visinfo[i].depth == 32)
+        break;
+    }
+
+    visinfo += i;
+  }
+#endif
+
+  if (1) {
+    visinfo = glXChooseVisual (display->display, scrnum, attrib);
+    if (visinfo == NULL) {
+      GST_DEBUG ("No usable visual");
+      return FALSE;
+    }
   }
 
   display->visinfo = visinfo;
@@ -184,6 +203,8 @@ gst_gl_display_check_features (GstGLDisplay * display)
   attr.override_redirect = True;
 
   mask = CWBackPixel | CWBorderPixel | CWColormap | CWOverrideRedirect;
+
+  GST_ERROR ("creating window with visual %ld", visinfo->visualid);
 
   window = XCreateWindow (display->display, root, 0, 0,
       100, 100, 0, visinfo->depth, InputOutput, visinfo->visual, mask, &attr);
@@ -245,8 +266,16 @@ gst_gl_display_can_handle_type (GstGLDisplay * display, GstVideoFormat type)
 void
 gst_gl_display_lock (GstGLDisplay * display)
 {
+  gboolean ret;
+
+  g_assert (display->window != None);
+  g_assert (display->context != NULL);
+
   g_mutex_lock (display->lock);
-  glXMakeCurrent (display->display, display->window, display->context);
+  ret = glXMakeCurrent (display->display, display->window, display->context);
+  if (!ret) {
+    g_warning ("glxMakeCurrent failed");
+  }
   gst_gl_display_check_error (display, __LINE__);
 }
 
@@ -265,7 +294,10 @@ gst_gl_display_init_tmp_window (GstGLDisplay * display)
   int scrnum;
   int mask;
   Window root;
+  Window parent_window;
   Screen *screen;
+  int width;
+  int height;
 
   GST_DEBUG ("creating temp window");
 
@@ -277,20 +309,29 @@ gst_gl_display_init_tmp_window (GstGLDisplay * display)
   attr.border_pixel = 0;
   attr.colormap = XCreateColormap (display->display, root,
       display->visinfo->visual, AllocNone);
-  attr.override_redirect = False;
-#if 0
-  if (display->parent_window) {
+  if (display->parent_window != None) {
+    XWindowAttributes parent_attr;
+
     attr.override_redirect = True;
+    parent_window = display->parent_window;
+
+    XGetWindowAttributes (display->display, parent_window, &parent_attr);
+    width = parent_attr.width;
+    height = parent_attr.height;
+  } else {
+    attr.override_redirect = False;
+    parent_window = root;
+    width = 100;
+    height = 100;
   }
-#endif
 
   mask = CWBackPixel | CWBorderPixel | CWColormap | CWOverrideRedirect;
 
   display->window = XCreateWindow (display->display,
-      root, 0, 0, 100, 100,
+      parent_window, 0, 0, width, height,
       0, display->visinfo->depth, InputOutput,
       display->visinfo->visual, mask, &attr);
-  //XMapWindow (display->display, display->window);
+  XMapWindow (display->display, display->window);
   XSync (display->display, FALSE);
 }
 
@@ -305,6 +346,7 @@ gst_gl_display_set_window (GstGLDisplay * display, Window window)
 {
   g_mutex_lock (display->lock);
 
+#if 0
   if (window != display->assigned_window) {
     if (display->assigned_window == None) {
       gst_gl_display_destroy_tmp_window (display);
@@ -316,6 +358,18 @@ gst_gl_display_set_window (GstGLDisplay * display, Window window)
       display->window = window;
     }
   }
+#else
+  if (window != display->parent_window) {
+    gst_gl_display_destroy_tmp_window (display);
+
+    display->parent_window = window;
+
+    gst_gl_display_init_tmp_window (display);
+
+    //XReparentWindow (display->display, display->window,
+    //  display->assigned_window, 0, 0);
+  }
+#endif
 
   g_mutex_unlock (display->lock);
 }
@@ -327,6 +381,10 @@ gst_gl_display_update_attributes (GstGLDisplay * display)
 
   if (display->window != None) {
     XGetWindowAttributes (display->display, display->window, &attr);
+
+    GST_DEBUG ("window visual %ld display visual %ld",
+        attr.visual->visualid, display->visinfo->visual->visualid);
+
     display->win_width = attr.width;
     display->win_height = attr.height;
   } else {
@@ -670,7 +728,7 @@ gst_gl_display_draw_image (GstGLDisplay * display, GstVideoFormat type,
 
   gst_gl_display_update_attributes (display);
 
-  //glXSwapIntervalSGI (1);
+  glXSwapIntervalSGI (1);
   glViewport (0, 0, display->win_width, display->win_height);
 
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

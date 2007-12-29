@@ -49,21 +49,27 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filter_debug, "glfilter", 0, "glfilter element");
 
-GST_BOILERPLATE_FULL (GstGLFilter, gst_gl_filter, GstElement,
-    GST_TYPE_ELEMENT, DEBUG_INIT);
+GST_BOILERPLATE_FULL (GstGLFilter, gst_gl_filter, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
 static void gst_gl_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_gl_filter_chain (GstPad * pad, GstBuffer * buf);
 static void gst_gl_filter_reset (GstGLFilter * filter);
-static GstStateChangeReturn
-gst_gl_filter_change_state (GstElement * element, GstStateChange transition);
-static gboolean gst_gl_filter_sink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_gl_filter_start (GstBaseTransform * bt);
+static gboolean gst_gl_filter_stop (GstBaseTransform * bt);
+static gboolean gst_gl_filter_get_unit_size (GstBaseTransform * trans,
+    GstCaps * caps, guint * size);
+static GstFlowReturn gst_gl_filter_transform (GstBaseTransform * bt,
+    GstBuffer * inbuf, GstBuffer * outbuf);
+static GstFlowReturn gst_gl_filter_prepare_output_buffer (GstBaseTransform *
+    trans, GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf);
+static gboolean gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
+    GstCaps * outcaps);
 static gboolean gst_gl_filter_do_transform (GstGLFilter * filter,
-    GstGLBuffer * outbuf, GstGLBuffer * inbuf);
+    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 
 
 static void
@@ -86,19 +92,22 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
   gobject_class->set_property = gst_gl_filter_set_property;
   gobject_class->get_property = gst_gl_filter_get_property;
 
-  GST_ELEMENT_CLASS (klass)->change_state = gst_gl_filter_change_state;
+  GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_filter_transform;
+  GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_filter_start;
+  GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_stop;
+  GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_filter_set_caps;
+  GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_filter_get_unit_size;
+  GST_BASE_TRANSFORM_CLASS (klass)->prepare_output_buffer =
+      gst_gl_filter_prepare_output_buffer;
 }
 
 static void
 gst_gl_filter_init (GstGLFilter * filter, GstGLFilterClass * klass)
 {
-  gst_element_create_all_pads (GST_ELEMENT (filter));
+  //gst_element_create_all_pads (GST_ELEMENT (filter));
 
   filter->sinkpad = gst_element_get_static_pad (GST_ELEMENT (filter), "sink");
   filter->srcpad = gst_element_get_static_pad (GST_ELEMENT (filter), "src");
-
-  gst_pad_set_setcaps_function (filter->sinkpad, gst_gl_filter_sink_setcaps);
-  gst_pad_set_chain_function (filter->sinkpad, gst_gl_filter_chain);
 
   gst_gl_filter_reset (filter);
 }
@@ -136,143 +145,108 @@ gst_gl_filter_reset (GstGLFilter * filter)
     g_object_unref (filter->display);
     filter->display = NULL;
   }
-  filter->format = GST_GL_BUFFER_FORMAT_RGB;
+  filter->format = GST_GL_BUFFER_FORMAT_UNKNOWN;
+  filter->width = 0;
+  filter->height = 0;
 }
 
 static gboolean
-gst_gl_filter_start (GstGLFilter * filter)
+gst_gl_filter_start (GstBaseTransform * bt)
 {
-  GstGLFilterClass *filter_class;
-  gboolean ret;
-
-  filter_class = GST_GL_FILTER_GET_CLASS (filter);
-
-  filter->format = GST_GL_BUFFER_FORMAT_RGB;
-  filter->display = gst_gl_display_new ();
-  ret = gst_gl_display_connect (filter->display, NULL);
-  if (!ret)
-    return FALSE;
-
-  if (filter_class->start) {
-    ret = filter_class->start (filter);
-  }
-
-  return ret;
-}
-
-static gboolean
-gst_gl_filter_stop (GstGLFilter * filter)
-{
-  GstGLFilterClass *filter_class;
-  gboolean ret;
-
-  filter_class = GST_GL_FILTER_GET_CLASS (filter);
-
-  gst_gl_filter_reset (filter);
-
-  if (filter_class->stop) {
-    ret = filter_class->stop (filter);
-  }
-
-  g_object_unref (filter->display);
-  filter->display = NULL;
 
   return TRUE;
 }
 
 static gboolean
-gst_gl_filter_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_gl_filter_stop (GstBaseTransform * bt)
+{
+  GstGLFilter *filter = GST_GL_FILTER (bt);
+
+  gst_gl_filter_reset (filter);
+
+  return TRUE;
+}
+
+static gboolean
+gst_gl_filter_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
+    guint * size)
+{
+  gboolean ret;
+  GstGLBufferFormat format;
+  int width;
+  int height;
+
+  ret = gst_gl_buffer_format_parse_caps (caps, &format, &width, &height);
+  if (ret) {
+    *size = gst_gl_buffer_format_get_size (format, width, height);
+  }
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_gl_filter_prepare_output_buffer (GstBaseTransform * trans,
+    GstBuffer * inbuf, gint size, GstCaps * caps, GstBuffer ** buf)
+{
+  GstGLFilter *filter;
+  GstGLBuffer *gl_inbuf = GST_GL_BUFFER (inbuf);
+  GstGLBuffer *gl_outbuf;
+
+  filter = GST_GL_FILTER (trans);
+
+  if (filter->display == NULL) {
+    filter->display = gl_inbuf->display;
+  }
+
+  gl_outbuf = gst_gl_buffer_new_with_format (filter->display,
+      filter->format, filter->width, filter->height);
+
+  *buf = GST_BUFFER (gl_outbuf);
+  gst_buffer_set_caps (*buf, caps);
+
+  return GST_FLOW_OK;
+}
+
+static gboolean
+gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
+    GstCaps * outcaps)
 {
   GstGLFilter *filter;
   gboolean ret;
-  GstStructure *structure;
 
-  filter = GST_GL_FILTER (gst_pad_get_parent (pad));
+  filter = GST_GL_FILTER (bt);
 
-  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_gl_buffer_format_parse_caps (incaps, &filter->format,
+      &filter->width, &filter->height);
 
-  ret = gst_structure_get_int (structure, "width", &filter->width);
-  ret &= gst_structure_get_int (structure, "height", &filter->height);
-  if (!ret)
+  if (!ret) {
+    GST_DEBUG ("bad caps");
     return FALSE;
+  }
 
-  GST_DEBUG ("setcaps %d %d", filter->width, filter->height);
-
-  ret = gst_pad_set_caps (filter->srcpad, caps);
+  GST_ERROR ("set_caps %d %d", filter->width, filter->height);
 
   return ret;
 }
 
 static GstFlowReturn
-gst_gl_filter_chain (GstPad * pad, GstBuffer * buf)
+gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   GstGLFilter *filter;
-  GstGLBuffer *inbuf;
-  GstGLBuffer *outbuf;
+  GstGLBuffer *gl_inbuf = GST_GL_BUFFER (inbuf);
+  GstGLBuffer *gl_outbuf = GST_GL_BUFFER (outbuf);
 
-  filter = GST_GL_FILTER (gst_pad_get_parent (pad));
-  inbuf = GST_GL_BUFFER (buf);
+  filter = GST_GL_FILTER (bt);
 
-  outbuf = gst_gl_buffer_new (inbuf->display, filter->format,
-      filter->width, filter->height);
+  gst_gl_filter_do_transform (filter, gl_inbuf, gl_outbuf);
 
-  gst_buffer_copy_metadata (GST_BUFFER (outbuf), buf,
-      GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
-  gst_buffer_set_caps (GST_BUFFER (outbuf), GST_PAD_CAPS (filter->srcpad));
-
-  gst_gl_filter_do_transform (filter, outbuf, inbuf);
-
-  gst_pad_push (filter->srcpad, GST_BUFFER (outbuf));
-
-  gst_buffer_unref (buf);
-  gst_object_unref (filter);
   return GST_FLOW_OK;
-}
-
-static GstStateChangeReturn
-gst_gl_filter_change_state (GstElement * element, GstStateChange transition)
-{
-  GstGLFilter *filter;
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-
-  GST_DEBUG ("change state");
-
-  filter = GST_GL_FILTER (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_gl_filter_start (filter);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_gl_filter_stop (filter);
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-
-  return ret;
 }
 
 static gboolean
 gst_gl_filter_do_transform (GstGLFilter * filter,
-    GstGLBuffer * outbuf, GstGLBuffer * inbuf)
+    GstGLBuffer * inbuf, GstGLBuffer * outbuf)
 {
   GstGLDisplay *display = inbuf->display;
   GstGLFilterClass *filter_class;
@@ -311,9 +285,10 @@ gst_gl_filter_do_transform (GstGLFilter * filter,
   glColor4f (1, 1, 1, 1);
 
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glActiveTexture (GL_TEXTURE0);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, inbuf->texture);
 
-  filter_class->transform (filter, outbuf, inbuf);
+  filter_class->filter (filter, inbuf, outbuf);
 
 #if 0
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

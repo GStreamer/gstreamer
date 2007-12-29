@@ -46,7 +46,8 @@ struct _GstGLDisplay {
   gboolean have_color_matrix;
 
   Window window;
-  Window assigned_window;
+  //Window assigned_window;
+  Window parent_window;
 
   int win_width;
   int win_height;

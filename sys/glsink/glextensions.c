@@ -49,6 +49,7 @@ DEFINE_FUNC_RET (glCreateShaderObjectARB, GLhandleARB,
     (GLenum shaderType), (shaderType));
 #if 0
 typedef GLhandleARB type_glCreateShaderObjectARB (GLenum shaderType);
+
 GLhandleARB
 glCreateShaderObjectARB (GLenum shaderType)
 {
@@ -181,3 +182,8 @@ DEFINE_FUNC (glGetFramebufferAttachmentParameterivEXT, (GLenum target,
 DEFINE_FUNC (glGenerateMipmapEXT, (GLenum target), (target));
 
 DEFINE_FUNC (glWindowPos2iARB, (GLint x, GLint y), (x, y));
+
+DEFINE_FUNC (glGenProgramsARB, (GLsizei a, GLuint * b), (a, b));
+DEFINE_FUNC (glBindProgramARB, (GLenum a, GLuint b), (a, b));
+DEFINE_FUNC (glProgramStringARB,
+    (GLenum a, GLenum b, GLsizei c, const GLvoid * d), (a, b, c, d));

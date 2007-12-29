@@ -217,6 +217,8 @@ gst_gl_download_transform_caps (GstBaseTransform * bt,
 
   download = GST_GL_DOWNLOAD (bt);
 
+  GST_ERROR ("transform caps %" GST_PTR_FORMAT, caps);
+
   structure = gst_caps_get_structure (caps, 0);
 
   width_value = gst_structure_get_value (structure, "width");
@@ -227,7 +229,9 @@ gst_gl_download_transform_caps (GstBaseTransform * bt,
   if (direction == GST_PAD_SINK) {
     newcaps = gst_caps_new_simple ("video/x-raw-rgb", NULL);
   } else {
-    newcaps = gst_caps_new_simple ("video/x-raw-gl", NULL);
+    newcaps = gst_caps_new_simple ("video/x-raw-gl",
+        "format", G_TYPE_INT, GST_GL_BUFFER_FORMAT_RGBA,
+        "is_yuv", G_TYPE_BOOLEAN, FALSE, NULL);
   }
   newstruct = gst_caps_get_structure (newcaps, 0);
   gst_structure_set_value (newstruct, "width", width_value);
@@ -239,6 +243,8 @@ gst_gl_download_transform_caps (GstBaseTransform * bt,
     gst_structure_set (newstruct, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         1, 1, NULL);
   }
+
+  GST_ERROR ("new caps %" GST_PTR_FORMAT, newcaps);
 
   return newcaps;
 }
@@ -258,7 +264,7 @@ gst_gl_download_set_caps (GstBaseTransform * bt, GstCaps * incaps,
       &download->width, &download->height);
 
   if (!ret) {
-    GST_DEBUG ("bad caps");
+    GST_ERROR ("bad caps");
     return FALSE;
   }
 
@@ -271,30 +277,27 @@ gst_gl_download_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
 {
   gboolean ret;
   GstStructure *structure;
+  int width;
+  int height;
 
   structure = gst_caps_get_structure (caps, 0);
   if (gst_structure_has_name (structure, "video/x-raw-gl")) {
-    int width;
-    int height;
+    GstGLBufferFormat format;
 
-    ret = gst_structure_get_int (structure, "width", &width);
-    ret &= gst_structure_get_int (structure, "height", &height);
-
-    /* FIXME */
-    *size = width * height * 4;
+    ret = gst_gl_buffer_format_parse_caps (caps, &format, &width, &height);
+    if (ret) {
+      *size = gst_gl_buffer_format_get_size (format, width, height);
+    }
   } else {
-    int width;
-    int height;
+    GstVideoFormat format;
 
-    ret = gst_structure_get_int (structure, "width", &width);
-    ret &= gst_structure_get_int (structure, "height", &height);
-
-    /* FIXME */
-    *size = width * height * 4;
+    ret = gst_video_format_parse_caps (caps, &format, &width, &height);
+    if (ret) {
+      *size = gst_video_format_get_size (format, width, height);
+    }
   }
 
-
-  return TRUE;
+  return ret;
 }
 
 static GstFlowReturn
