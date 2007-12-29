@@ -166,7 +166,7 @@ gst_gio_base_src_get_size (GstBaseSrc * base_src, guint64 * size)
     GError *err = NULL;
 
     info = g_file_input_stream_query_info (G_FILE_INPUT_STREAM (src->stream),
-        G_FILE_ATTRIBUTE_STD_SIZE, src->cancel, &err);
+        G_FILE_ATTRIBUTE_STANDARD_SIZE, src->cancel, &err);
 
     if (info != NULL) {
       *size = g_file_info_get_size (info);

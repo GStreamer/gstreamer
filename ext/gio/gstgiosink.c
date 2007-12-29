@@ -182,8 +182,7 @@ gst_gio_sink_start (GstBaseSink * base_sink)
   }
 
   stream =
-      G_OUTPUT_STREAM (g_file_create (file, G_FILE_CREATE_FLAGS_NONE, cancel,
-          &err));
+      G_OUTPUT_STREAM (g_file_create (file, G_FILE_CREATE_NONE, cancel, &err));
   success = (stream != NULL);
 
   g_object_unref (file);

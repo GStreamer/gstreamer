@@ -22,8 +22,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstbufferstraw.h>
-#include <gio/gmemoryinputstream.h>
-#include <gio/gmemoryoutputstream.h>
+#include <gio/gio.h>
 
 static gboolean got_eos = FALSE;
 

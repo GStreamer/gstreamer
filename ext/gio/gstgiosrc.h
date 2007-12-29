@@ -25,7 +25,6 @@
 #include "gstgio.h"
 #include "gstgiobasesrc.h"
 
-#include <gio/gfile.h>
 #include <gst/base/gstbasesrc.h>
 
 G_BEGIN_DECLS

@@ -22,8 +22,7 @@
 #ifndef __GST_GIO_H__
 #define __GST_GIO_H__
 
-#include <gio/gioerror.h>
-#include <gio/gseekable.h>
+#include <gio/gio.h>
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
