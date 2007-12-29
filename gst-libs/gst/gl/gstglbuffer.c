@@ -77,11 +77,24 @@ gst_gl_buffer_get_type (void)
 
 
 GstGLBuffer *
-gst_gl_buffer_new (GstGLDisplay * display, GstGLBufferFormat format,
-    int width, int height)
+gst_gl_buffer_new (GstGLDisplay * display, int width, int height)
+{
+  g_return_val_if_fail (display != NULL, NULL);
+  g_return_val_if_fail (width > 0, NULL);
+  g_return_val_if_fail (height > 0, NULL);
+
+  return gst_gl_buffer_new_with_format (display, GST_GL_BUFFER_FORMAT_RGBA,
+      width, height);
+}
+
+GstGLBuffer *
+gst_gl_buffer_new_with_format (GstGLDisplay * display,
+    GstGLBufferFormat format, int width, int height)
 {
   GstGLBuffer *buffer;
 
+  g_return_val_if_fail (format != GST_GL_BUFFER_FORMAT_UNKNOWN, NULL);
+  g_return_val_if_fail (display != NULL, NULL);
   g_return_val_if_fail (width > 0, NULL);
   g_return_val_if_fail (height > 0, NULL);
 
@@ -90,9 +103,9 @@ gst_gl_buffer_new (GstGLDisplay * display, GstGLBufferFormat format,
   buffer->display = g_object_ref (display);
   buffer->width = width;
   buffer->height = height;
-  /* this is not strictly true, but it's used for compatibility with
-   * queue and BaseTransform */
-  GST_BUFFER_SIZE (buffer) = width * height * 4;
+  buffer->format = format;
+  GST_BUFFER_SIZE (buffer) = gst_gl_buffer_format_get_size (format, width,
+      height);
 
   gst_gl_display_lock (buffer->display);
   glGenTextures (1, &buffer->texture);
@@ -100,11 +113,69 @@ gst_gl_buffer_new (GstGLDisplay * display, GstGLBufferFormat format,
   switch (format) {
     case GST_GL_BUFFER_FORMAT_RGBA:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-          buffer->width, buffer->height, 0, GL_RGBA, GL_FLOAT, NULL);
+          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       break;
     case GST_GL_BUFFER_FORMAT_RGB:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
-          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+          buffer->width, buffer->height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+      break;
+    case GST_GL_BUFFER_FORMAT_YUYV:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA,
+          buffer->width, buffer->height,
+          0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
+      break;
+    case GST_GL_BUFFER_FORMAT_PLANAR444:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+          buffer->width, buffer->height,
+          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+
+      glGenTextures (1, &buffer->texture_u);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture_u);
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+          buffer->width, buffer->height,
+          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+
+      glGenTextures (1, &buffer->texture_v);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture_v);
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+          buffer->width, buffer->height,
+          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+      break;
+    case GST_GL_BUFFER_FORMAT_PLANAR422:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+          buffer->width, buffer->height,
+          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+
+      glGenTextures (1, &buffer->texture_u);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture_u);
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+          GST_ROUND_UP_2 (buffer->width) / 2, buffer->height,
+          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+
+      glGenTextures (1, &buffer->texture_v);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture_v);
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+          GST_ROUND_UP_2 (buffer->width) / 2, buffer->height,
+          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+      break;
+    case GST_GL_BUFFER_FORMAT_PLANAR420:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+          buffer->width, buffer->height,
+          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+
+      glGenTextures (1, &buffer->texture_u);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture_u);
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+          GST_ROUND_UP_2 (buffer->width) / 2,
+          GST_ROUND_UP_2 (buffer->height) / 2,
+          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+
+      glGenTextures (1, &buffer->texture_v);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture_v);
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+          GST_ROUND_UP_2 (buffer->width) / 2,
+          GST_ROUND_UP_2 (buffer->height) / 2,
+          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
       break;
     default:
       g_warning ("GL buffer format not handled");
@@ -116,137 +187,134 @@ gst_gl_buffer_new (GstGLDisplay * display, GstGLBufferFormat format,
 }
 
 GstGLBuffer *
-gst_gl_buffer_new_from_data (GstGLDisplay * display, GstVideoFormat format,
-    int width, int height, void *data)
+gst_gl_buffer_new_from_video_format (GstGLDisplay * display,
+    GstVideoFormat video_format, int width, int height)
 {
   GstGLBuffer *buffer;
-  int comp;
 
   g_return_val_if_fail (width > 0, NULL);
   g_return_val_if_fail (height > 0, NULL);
-  g_return_val_if_fail (data != NULL, NULL);
+
+  buffer = gst_gl_buffer_new_with_format (display,
+      gst_gl_buffer_format_from_video_format (video_format), width, height);
+
+  switch (video_format) {
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+      buffer->is_yuv = FALSE;
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+      /* counterintuitive: when you use a GL_YCBCR_MESA texture, the
+       * colorspace is automatically converted, so it's referred to
+       * as RGB */
+      buffer->is_yuv = FALSE;
+      break;
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+      buffer->is_yuv = TRUE;
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+
+  return buffer;
+}
+
+void
+gst_gl_buffer_upload (GstGLBuffer * buffer, GstVideoFormat video_format,
+    void *data)
+{
+  int width = buffer->width;
+  int height = buffer->height;
 
   GST_DEBUG ("uploading %p %dx%d", data, width, height);
 
-  buffer = (GstGLBuffer *) gst_mini_object_new (GST_TYPE_GL_BUFFER);
-  buffer->display = g_object_ref (display);
-  buffer->width = width;
-  buffer->height = height;
-  /* this is not strictly true, but it's used for compatibility with
-   * queue and BaseTransform */
-  GST_BUFFER_SIZE (buffer) = width * height * 4;
+  g_return_if_fail (buffer->format ==
+      gst_gl_buffer_format_from_video_format (video_format));
 
   gst_gl_display_lock (buffer->display);
-  glGenTextures (1, &buffer->texture);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture);
 
-  switch (format) {
+  switch (video_format) {
     case GST_VIDEO_FORMAT_RGBx:
-      buffer->format = GST_GL_BUFFER_FORMAT_RGB;
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_RGBA, GL_UNSIGNED_BYTE, data);
       break;
     case GST_VIDEO_FORMAT_BGRx:
-      buffer->format = GST_GL_BUFFER_FORMAT_RGB;
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_BGRA, GL_UNSIGNED_BYTE, data);
       break;
+    case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_xRGB:
-      buffer->format = GST_GL_BUFFER_FORMAT_RGB;
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
       break;
     case GST_VIDEO_FORMAT_xBGR:
-      buffer->format = GST_GL_BUFFER_FORMAT_RGB;
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
       break;
     case GST_VIDEO_FORMAT_YUY2:
-      buffer->format = GST_GL_BUFFER_FORMAT_YUYV;
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width, height,
-          0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, data);
       break;
     case GST_VIDEO_FORMAT_UYVY:
-      buffer->format = GST_GL_BUFFER_FORMAT_YUYV;
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width, height,
-          0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, data);
       break;
-    case GST_VIDEO_FORMAT_AYUV:
-      buffer->format = GST_GL_BUFFER_FORMAT_RGB;
-      buffer->is_yuv = TRUE;
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-          buffer->width, buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
-          GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
-      break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-      buffer->format = GST_GL_BUFFER_FORMAT_PLANAR420;
-      buffer->is_yuv = TRUE;
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-          buffer->width, buffer->height,
-          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 
-      glGenTextures (1, &buffer->texture_u);
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture_u);
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-          GST_ROUND_UP_2 (buffer->width) / 2,
-          GST_ROUND_UP_2 (buffer->height) / 2,
-          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-      comp = (format == GST_VIDEO_FORMAT_I420) ? 1 : 2;
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
           GST_ROUND_UP_2 (buffer->width) / 2,
           GST_ROUND_UP_2 (buffer->height) / 2,
           GL_LUMINANCE, GL_UNSIGNED_BYTE,
           (guint8 *) data +
-          gst_video_format_get_component_offset (format, comp, width, height));
+          gst_video_format_get_component_offset (video_format, 1, width,
+              height));
 
-      glGenTextures (1, &buffer->texture_v);
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, buffer->texture_v);
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-          GST_ROUND_UP_2 (buffer->width) / 2,
-          GST_ROUND_UP_2 (buffer->height) / 2,
-          0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-      comp = (format == GST_VIDEO_FORMAT_I420) ? 2 : 1;
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
           GST_ROUND_UP_2 (buffer->width) / 2,
           GST_ROUND_UP_2 (buffer->height) / 2,
           GL_LUMINANCE, GL_UNSIGNED_BYTE,
           (guint8 *) data +
-          gst_video_format_get_component_offset (format, comp, width, height));
+          gst_video_format_get_component_offset (video_format, 2, width,
+              height));
       break;
     default:
       g_assert_not_reached ();
   }
 
   gst_gl_display_unlock (buffer->display);
-
-  return buffer;
 }
 
 
 void
-gst_gl_buffer_download (GstGLBuffer * buffer, GstVideoFormat format, void *data)
+gst_gl_buffer_download (GstGLBuffer * buffer, GstVideoFormat video_format,
+    void *data)
 {
   GLuint fbo;
+
+  g_return_if_fail (buffer->format ==
+      gst_gl_buffer_format_from_video_format (video_format));
 
   GST_DEBUG ("downloading");
 
   gst_gl_display_lock (buffer->display);
+
+  /* we need a reset function */
+  glMatrixMode (GL_COLOR);
+  glLoadIdentity ();
+  glPixelTransferf (GL_POST_COLOR_MATRIX_RED_BIAS, 0);
+  glPixelTransferf (GL_POST_COLOR_MATRIX_GREEN_BIAS, 0);
+  glPixelTransferf (GL_POST_COLOR_MATRIX_BLUE_BIAS, 0);
 
   glGenFramebuffersEXT (1, &fbo);
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
@@ -260,14 +328,7 @@ gst_gl_buffer_download (GstGLBuffer * buffer, GstVideoFormat format, void *data)
   g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
       GL_FRAMEBUFFER_COMPLETE_EXT);
 
-  /* we need a reset function */
-  glMatrixMode (GL_COLOR);
-  glLoadIdentity ();
-  glPixelTransferf (GL_POST_COLOR_MATRIX_RED_BIAS, 0);
-  glPixelTransferf (GL_POST_COLOR_MATRIX_GREEN_BIAS, 0);
-  glPixelTransferf (GL_POST_COLOR_MATRIX_BLUE_BIAS, 0);
-
-  switch (format) {
+  switch (video_format) {
     case GST_VIDEO_FORMAT_RGBx:
       glReadPixels (0, 0, buffer->width, buffer->height, GL_RGBA,
           GL_UNSIGNED_BYTE, data);
@@ -280,9 +341,41 @@ gst_gl_buffer_download (GstGLBuffer * buffer, GstVideoFormat format, void *data)
       glReadPixels (0, 0, buffer->width, buffer->height, GL_RGBA,
           GL_UNSIGNED_INT_8_8_8_8, data);
       break;
+    case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_xRGB:
       glReadPixels (0, 0, buffer->width, buffer->height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8, data);
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+      g_warning ("video format not supported for download from GL texture");
+      break;
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+      glReadPixels (0, 0, buffer->width, buffer->height,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+
+      glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
+          GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_RECTANGLE_ARB,
+          buffer->texture_u, 0);
+      glReadPixels (0, 0,
+          GST_ROUND_UP_2 (buffer->width) / 2,
+          GST_ROUND_UP_2 (buffer->height) / 2,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE,
+          (guint8 *) data +
+          gst_video_format_get_component_offset (video_format, 1, buffer->width,
+              buffer->height));
+
+      glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
+          GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_RECTANGLE_ARB,
+          buffer->texture_v, 0);
+      glReadPixels (0, 0,
+          GST_ROUND_UP_2 (buffer->width) / 2,
+          GST_ROUND_UP_2 (buffer->height) / 2,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE,
+          (guint8 *) data +
+          gst_video_format_get_component_offset (video_format, 2, buffer->width,
+              buffer->height));
       break;
     default:
       g_assert_not_reached ();
@@ -291,4 +384,68 @@ gst_gl_buffer_download (GstGLBuffer * buffer, GstVideoFormat format, void *data)
   glDeleteFramebuffersEXT (1, &fbo);
 
   gst_gl_display_unlock (buffer->display);
+}
+
+
+
+/* buffer format */
+
+GstGLBufferFormat
+gst_gl_buffer_format_from_video_format (GstVideoFormat format)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_AYUV:
+      return GST_GL_BUFFER_FORMAT_RGBA;
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+      return GST_GL_BUFFER_FORMAT_RGB;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+      return GST_GL_BUFFER_FORMAT_YUYV;
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+      return GST_GL_BUFFER_FORMAT_PLANAR420;
+    case GST_VIDEO_FORMAT_UNKNOWN:
+      return GST_GL_BUFFER_FORMAT_UNKNOWN;
+  }
+
+  g_return_val_if_reached (GST_GL_BUFFER_FORMAT_UNKNOWN);
+}
+
+int
+gst_gl_buffer_format_get_size (GstGLBufferFormat format, int width, int height)
+{
+  /* this is not strictly true, but it's used for compatibility with
+   * queue and BaseTransform */
+  return width * height * 4;
+}
+
+gboolean
+gst_gl_buffer_format_parse_caps (GstCaps * caps, GstGLBufferFormat * format,
+    int *width, int *height)
+{
+  GstStructure *structure;
+  int format_as_int;
+  gboolean ret;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (!gst_structure_has_name (structure, "video/x-raw-gl")) {
+    return FALSE;
+  }
+
+  ret = gst_structure_get_int (structure, "format", &format_as_int);
+  *format = format_as_int;
+  ret &= gst_structure_get_int (structure, "width", width);
+  ret &= gst_structure_get_int (structure, "height", height);
+
+  return ret;
 }

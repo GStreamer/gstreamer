@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 #include <gstglbuffer.h>
 
@@ -42,7 +43,7 @@ typedef void (*GstGLUploadProcessFunc) (GstGLUpload *, guint8 *, guint);
 
 struct _GstGLUpload
 {
-  GstElement element;
+  GstBaseTransform base_transform;
 
   GstPad *srcpad;
   GstPad *sinkpad;
@@ -60,7 +61,7 @@ struct _GstGLUpload
 
 struct _GstGLUploadClass
 {
-  GstElementClass element_class;
+  GstBaseTransformClass base_transform_class;
 };
 
 static const GstElementDetails element_details = GST_ELEMENT_DETAILS ("FIXME",
@@ -94,19 +95,29 @@ enum
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_gl_upload_debug, "glupload", 0, "glupload element");
 
-GST_BOILERPLATE_FULL (GstGLUpload, gst_gl_upload, GstElement,
-    GST_TYPE_ELEMENT, DEBUG_INIT);
+GST_BOILERPLATE_FULL (GstGLUpload, gst_gl_upload, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
 static void gst_gl_upload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_upload_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_gl_upload_chain (GstPad * pad, GstBuffer * buf);
 static void gst_gl_upload_reset (GstGLUpload * upload);
-static GstStateChangeReturn
-gst_gl_upload_change_state (GstElement * element, GstStateChange transition);
-static gboolean gst_gl_upload_sink_setcaps (GstPad * pad, GstCaps * caps);
+
+static void gst_gl_upload_reset (GstGLUpload * upload);
+static gboolean gst_gl_upload_set_caps (GstBaseTransform * bt,
+    GstCaps * incaps, GstCaps * outcaps);
+static GstCaps *gst_gl_upload_transform_caps (GstBaseTransform * bt,
+    GstPadDirection direction, GstCaps * caps);
+static gboolean gst_gl_upload_start (GstBaseTransform * bt);
+static gboolean gst_gl_upload_stop (GstBaseTransform * bt);
+static GstFlowReturn gst_gl_upload_prepare_output_buffer (GstBaseTransform *
+    trans, GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf);
+static GstFlowReturn gst_gl_upload_transform (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_gl_upload_get_unit_size (GstBaseTransform * trans,
+    GstCaps * caps, guint * size);
 
 
 static void
@@ -131,19 +142,20 @@ gst_gl_upload_class_init (GstGLUploadClass * klass)
   gobject_class->set_property = gst_gl_upload_set_property;
   gobject_class->get_property = gst_gl_upload_get_property;
 
-  GST_ELEMENT_CLASS (klass)->change_state = gst_gl_upload_change_state;
+  GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
+      gst_gl_upload_transform_caps;
+  GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_upload_transform;
+  GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_upload_start;
+  GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_upload_stop;
+  GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_upload_set_caps;
+  GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_upload_get_unit_size;
+  GST_BASE_TRANSFORM_CLASS (klass)->prepare_output_buffer =
+      gst_gl_upload_prepare_output_buffer;
 }
 
 static void
 gst_gl_upload_init (GstGLUpload * upload, GstGLUploadClass * klass)
 {
-  gst_element_create_all_pads (GST_ELEMENT (upload));
-
-  upload->sinkpad = gst_element_get_static_pad (GST_ELEMENT (upload), "sink");
-  upload->srcpad = gst_element_get_static_pad (GST_ELEMENT (upload), "src");
-
-  gst_pad_set_setcaps_function (upload->sinkpad, gst_gl_upload_sink_setcaps);
-  gst_pad_set_chain_function (upload->sinkpad, gst_gl_upload_chain);
 
   gst_gl_upload_reset (upload);
 }
@@ -186,25 +198,30 @@ gst_gl_upload_reset (GstGLUpload * upload)
 }
 
 static gboolean
-gst_gl_upload_start (GstGLUpload * upload)
+gst_gl_upload_start (GstBaseTransform * bt)
 {
+  GstGLUpload *upload = GST_GL_UPLOAD (bt);
   gboolean ret;
 
   upload->format = GST_GL_BUFFER_FORMAT_RGB;
   upload->display = gst_gl_display_new ();
   ret = gst_gl_display_connect (upload->display, NULL);
+  //upload->format = GST_VIDEO_FORMAT_RGBx;
 
-  return ret;
+  return TRUE;
 }
 
 static gboolean
-gst_gl_upload_stop (GstGLUpload * upload)
+gst_gl_upload_stop (GstBaseTransform * bt)
 {
+  GstGLUpload *upload = GST_GL_UPLOAD (bt);
+
   gst_gl_upload_reset (upload);
 
   return TRUE;
 }
 
+#if 0
 static gboolean
 gst_gl_upload_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -246,7 +263,9 @@ gst_gl_upload_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   return ret;
 }
+#endif
 
+#if 0
 static GstFlowReturn
 gst_gl_upload_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -277,44 +296,142 @@ gst_gl_upload_chain (GstPad * pad, GstBuffer * buf)
   gst_object_unref (upload);
   return GST_FLOW_OK;
 }
+#endif
 
-static GstStateChangeReturn
-gst_gl_upload_change_state (GstElement * element, GstStateChange transition)
+static GstCaps *
+gst_gl_upload_transform_caps (GstBaseTransform * bt,
+    GstPadDirection direction, GstCaps * caps)
 {
   GstGLUpload *upload;
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstStructure *structure;
+  GstCaps *newcaps;
+  GstStructure *newstruct;
+  const GValue *width_value;
+  const GValue *height_value;
+  const GValue *framerate_value;
+  const GValue *par_value;
 
-  GST_DEBUG ("change state");
+  upload = GST_GL_UPLOAD (bt);
 
-  upload = GST_GL_UPLOAD (element);
+  GST_ERROR ("transform caps %" GST_PTR_FORMAT, caps);
 
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_gl_upload_start (upload);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
+  structure = gst_caps_get_structure (caps, 0);
+
+  width_value = gst_structure_get_value (structure, "width");
+  height_value = gst_structure_get_value (structure, "height");
+  framerate_value = gst_structure_get_value (structure, "framerate");
+  par_value = gst_structure_get_value (structure, "pixel-aspect-ratio");
+
+  if (direction == GST_PAD_SRC) {
+    newcaps = gst_caps_new_simple ("video/x-raw-rgb", NULL);
+  } else {
+    newcaps = gst_caps_new_simple ("video/x-raw-gl",
+        "format", G_TYPE_INT, GST_GL_BUFFER_FORMAT_RGBA,
+        "is_yuv", G_TYPE_BOOLEAN, FALSE, NULL);
+  }
+  newstruct = gst_caps_get_structure (newcaps, 0);
+  gst_structure_set_value (newstruct, "width", width_value);
+  gst_structure_set_value (newstruct, "height", height_value);
+  gst_structure_set_value (newstruct, "framerate", framerate_value);
+  if (par_value) {
+    gst_structure_set_value (newstruct, "pixel-aspect-ratio", par_value);
+  } else {
+    gst_structure_set (newstruct, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        1, 1, NULL);
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
+  GST_ERROR ("new caps %" GST_PTR_FORMAT, newcaps);
 
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_gl_upload_stop (upload);
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
+  return newcaps;
+}
+
+static gboolean
+gst_gl_upload_set_caps (GstBaseTransform * bt, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  GstGLUpload *upload;
+  gboolean ret;
+
+  upload = GST_GL_UPLOAD (bt);
+
+  GST_DEBUG ("called with %" GST_PTR_FORMAT, incaps);
+
+  ret = gst_video_format_parse_caps (incaps, &upload->video_format,
+      &upload->width, &upload->height);
+
+  if (!ret) {
+    GST_DEBUG ("bad caps");
+    return FALSE;
   }
 
   return ret;
+}
+
+static gboolean
+gst_gl_upload_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
+    guint * size)
+{
+  gboolean ret;
+  GstStructure *structure;
+  int width;
+  int height;
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (gst_structure_has_name (structure, "video/x-raw-gl")) {
+    GstGLBufferFormat format;
+
+    ret = gst_gl_buffer_format_parse_caps (caps, &format, &width, &height);
+    if (ret) {
+      *size = gst_gl_buffer_format_get_size (format, width, height);
+    }
+  } else {
+    GstVideoFormat format;
+
+    ret = gst_video_format_parse_caps (caps, &format, &width, &height);
+    if (ret) {
+      *size = gst_video_format_get_size (format, width, height);
+    }
+  }
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_gl_upload_prepare_output_buffer (GstBaseTransform * trans,
+    GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf)
+{
+  GstGLUpload *upload;
+  GstGLBuffer *gl_outbuf;
+
+  upload = GST_GL_UPLOAD (trans);
+
+  gl_outbuf = gst_gl_buffer_new_from_video_format (upload->display,
+      upload->video_format, upload->width, upload->height);
+
+  *buf = GST_BUFFER (gl_outbuf);
+  gst_buffer_set_caps (*buf, caps);
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_gl_upload_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+    GstBuffer * outbuf)
+{
+  GstGLUpload *upload;
+  GstGLBuffer *gl_outbuf = GST_GL_BUFFER (outbuf);
+
+  upload = GST_GL_UPLOAD (trans);
+
+  GST_DEBUG ("uploading %p size %d",
+      GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf));
+  gst_gl_buffer_upload (gl_outbuf, upload->video_format,
+      GST_BUFFER_DATA (inbuf));
+
+  if (upload->peek) {
+    gst_gl_display_draw_texture (gl_outbuf->display, gl_outbuf->texture,
+        gl_outbuf->width, gl_outbuf->height);
+  }
+
+  return GST_FLOW_OK;
 }

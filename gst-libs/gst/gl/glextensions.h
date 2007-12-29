@@ -56,5 +56,9 @@ void glGenerateMipmapEXT (GLenum target);
 
 void glWindowPos2iARB (GLint x, GLint y);
 
+void glGenProgramsARB (GLsizei, GLuint *);
+void glBindProgramARB (GLenum, GLuint);
+void glProgramStringARB (GLenum, GLenum, GLsizei, const GLvoid *);
+
 #endif
 

@@ -520,8 +520,7 @@ gst_gl_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   GST_LOG_OBJECT (src, "creating buffer %dx%d image for frame %d",
       src->width, src->height, (gint) src->n_frames);
 
-  outbuf = gst_gl_buffer_new (src->display, GST_GL_BUFFER_FORMAT_RGB,
-      src->width, src->height);
+  outbuf = gst_gl_buffer_new (src->display, src->width, src->height);
   gst_buffer_set_caps (GST_BUFFER (outbuf),
       GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
 
@@ -540,6 +539,7 @@ gst_gl_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
       GL_FRAMEBUFFER_COMPLETE_EXT);
 
   glViewport (0, 0, outbuf->width, outbuf->height);
+  gst_gl_display_check_error (outbuf->display, __LINE__);
 
 #if 0
   glClearColor (0.3, 0.3, 0.3, 1.0);
@@ -556,8 +556,10 @@ gst_gl_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   }
 
   glFlush ();
+  gst_gl_display_check_error (outbuf->display, __LINE__);
 
   glDeleteFramebuffersEXT (1, &fbo);
+  gst_gl_display_check_error (outbuf->display, __LINE__);
 
   gst_gl_display_unlock (outbuf->display);
 

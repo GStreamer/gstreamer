@@ -301,11 +301,11 @@ gst_glimage_sink_start (GstBaseSink * bsink)
     GST_ERROR ("failed to open display");
     return FALSE;
   }
+#endif
 
-  if (glimage_sink->window_id) {
+  if (glimage_sink->display && glimage_sink->window_id) {
     gst_gl_display_set_window (glimage_sink->display, glimage_sink->window_id);
   }
-#endif
 
   GST_DEBUG ("start done");
 
@@ -321,9 +321,10 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  g_object_unref (glimage_sink->display);
-
-  glimage_sink->display = NULL;
+  if (glimage_sink->display) {
+    g_object_unref (glimage_sink->display);
+    glimage_sink->display = NULL;
+  }
 
   return TRUE;
 }
@@ -417,14 +418,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   glimage_sink->par_n = par_n;
   glimage_sink->par_d = par_d;
 
-  //glimage_sink->type = format;
-
-#if 0
-  if (!glimage_sink->window) {
-    gst_glimage_sink_create_window (glimage_sink);
-  }
-#endif
-
   return TRUE;
 }
 
@@ -441,21 +434,23 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   if (glimage_sink->display == NULL) {
     glimage_sink->display = g_object_ref (gl_buffer->display);
+#if 1
     if (glimage_sink->window_id) {
       gst_gl_display_set_window (glimage_sink->display,
           glimage_sink->window_id);
     }
+#endif
   } else {
     g_assert (gl_buffer->display == glimage_sink->display);
   }
 
   display = gl_buffer->display;
 
-  gst_gl_display_lock (display);
-
   /* FIXME polling causes a round-trip delay.  This should be changed
    * to catch structure events */
   gst_gl_display_update_attributes (display);
+
+  gst_gl_display_lock (display);
   glViewport (0, 0, display->win_width, display->win_height);
 
   glClearColor (0.3, 0.3, 0.3, 1.0);
@@ -519,7 +514,7 @@ gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay, XID window_id)
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (overlay));
 
-  GST_DEBUG ("set_xwindow_id");
+  GST_DEBUG ("set_xwindow_id %ld", window_id);
 
   glimage_sink = GST_GLIMAGE_SINK (overlay);
 

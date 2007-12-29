@@ -59,24 +59,6 @@ static const GstElementDetails element_details = GST_ELEMENT_DETAILS ("FIXME",
     "FIXME example filter",
     "FIXME <fixme@fixme.com>");
 
-#if 0
-#define GST_GL_VIDEO_CAPS "video/x-raw-gl"
-
-static GstStaticPadTemplate gst_gl_filter_example_src_pad_template =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
-    );
-
-static GstStaticPadTemplate gst_gl_filter_example_sink_pad_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
-    );
-#endif
-
 enum
 {
   PROP_0
@@ -93,11 +75,8 @@ static void gst_gl_filter_example_set_property (GObject * object, guint prop_id,
 static void gst_gl_filter_example_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_gl_filter_example_reset (GstGLFilterExample * filter);
-static gboolean gst_gl_filter_example_transform (GstGLFilter * filter,
-    GstGLBuffer * outbuf, GstGLBuffer * inbuf);
-static gboolean gst_gl_filter_example_start (GstGLFilter * filter);
-static gboolean gst_gl_filter_example_stop (GstGLFilter * filter);
+static gboolean gst_gl_filter_example_filter (GstGLFilter * filter,
+    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 
 
 static void
@@ -106,13 +85,6 @@ gst_gl_filter_example_base_init (gpointer klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_set_details (element_class, &element_details);
-
-#if 0
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gl_filter_example_src_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gl_filter_example_sink_pad_template));
-#endif
 }
 
 static void
@@ -124,16 +96,13 @@ gst_gl_filter_example_class_init (GstGLFilterExampleClass * klass)
   gobject_class->set_property = gst_gl_filter_example_set_property;
   gobject_class->get_property = gst_gl_filter_example_get_property;
 
-  GST_GL_FILTER_CLASS (klass)->transform = gst_gl_filter_example_transform;
-  GST_GL_FILTER_CLASS (klass)->start = gst_gl_filter_example_start;
-  GST_GL_FILTER_CLASS (klass)->stop = gst_gl_filter_example_stop;
+  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_example_filter;
 }
 
 static void
 gst_gl_filter_example_init (GstGLFilterExample * filter,
     GstGLFilterExampleClass * klass)
 {
-  gst_gl_filter_example_reset (filter);
 }
 
 static void
@@ -162,32 +131,9 @@ gst_gl_filter_example_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-gst_gl_filter_example_reset (GstGLFilterExample * filter)
-{
-
-}
-
 static gboolean
-gst_gl_filter_example_start (GstGLFilter * _filter)
-{
-  //GstGLFilterExample *filter = GST_GL_FILTER_EXAMPLE(_filter);
-
-  return TRUE;
-}
-
-static gboolean
-gst_gl_filter_example_stop (GstGLFilter * _filter)
-{
-  GstGLFilterExample *filter = GST_GL_FILTER_EXAMPLE (_filter);
-
-  gst_gl_filter_example_reset (filter);
-  return TRUE;
-}
-
-static gboolean
-gst_gl_filter_example_transform (GstGLFilter * filter, GstGLBuffer * outbuf,
-    GstGLBuffer * inbuf)
+gst_gl_filter_example_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
+    GstGLBuffer * outbuf)
 {
   //GstGLFilterExample *example = GST_GL_FILTER_EXAMPLE(filter);
   int i, j;

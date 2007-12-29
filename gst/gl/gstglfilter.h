@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/base/gstbasetransform.h>
 #include <gstglbuffer.h>
 
 #define GST_TYPE_GL_FILTER            (gst_gl_filter_get_type())
@@ -35,13 +36,11 @@ typedef struct _GstGLFilter GstGLFilter;
 typedef struct _GstGLFilterClass GstGLFilterClass;
 
 typedef gboolean (*GstGLFilterProcessFunc) (GstGLFilter *filter,
-    GstGLBuffer *outbuf, GstGLBuffer *inbuf);
-typedef gboolean (*GstGLFilterStartFunc) (GstGLFilter *filter);
-typedef gboolean (*GstGLFilterStopFunc) (GstGLFilter *filter);
+    GstGLBuffer *inbuf, GstGLBuffer *outbuf);
 
 struct _GstGLFilter
 {
-  GstElement element;
+  GstBaseTransform base_transform;
 
   GstPad *srcpad;
   GstPad *sinkpad;
@@ -56,10 +55,8 @@ struct _GstGLFilter
 
 struct _GstGLFilterClass
 {
-  GstElementClass element_class;
-  GstGLFilterProcessFunc transform;
-  GstGLFilterStartFunc start;
-  GstGLFilterStopFunc stop;
+  GstBaseTransformClass base_transform_class;
+  GstGLFilterProcessFunc filter;
 };
 
 GType gst_gl_filter_get_type(void);
