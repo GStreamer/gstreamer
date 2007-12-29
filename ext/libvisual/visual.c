@@ -673,7 +673,11 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
           rate = VISUAL_AUDIO_SAMPLE_RATE_96000;
           break;
         default:
-          g_assert_not_reached ();
+          visual_object_unref (VISUAL_OBJECT (lbuf));
+          visual_object_unref (VISUAL_OBJECT (rbuf));
+          GST_ERROR_OBJECT (visual, "unsupported rate %d", visual->rate);
+          ret = GST_FLOW_ERROR;
+          goto beach;
           break;
       }
 
@@ -738,10 +742,11 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
       break;
   }
 
+beach:
+
   if (outbuf != NULL)
     gst_buffer_unref (outbuf);
 
-beach:
   gst_object_unref (visual);
 
   return ret;

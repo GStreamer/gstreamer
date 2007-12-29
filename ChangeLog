@@ -1,3 +1,10 @@
+2007-12-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/libvisual/visual.c: (gst_visual_chain):
+	Fix 'xyz may be used uninitialized' compiler warnings caused
+	by broken g_assert_not_reached() macro in GLib-2.15.x and don't
+	abort() in any case but properly report the error.
+
 2007-12-28  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstplaybin2.c: (gst_play_bin_class_init),
