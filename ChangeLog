@@ -1,3 +1,10 @@
+2007-12-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/flac/gstflacdec.c: (gst_flac_dec_write):
+	Fix 'xyz may be used uninitialized' compiler warnings caused
+	by broken g_assert_not_reached() macro in GLib-2.15.x and don't
+	abort() in any case but properly report the error.
+
 2007-12-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_loop):

@@ -899,7 +899,9 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
       width = 32;
       break;
     default:
-      g_assert_not_reached ();
+      GST_ERROR_OBJECT (flacdec, "unsupported depth %d", depth);
+      ret = GST_FLOW_ERROR;
+      goto done;
   }
 
   if (!GST_PAD_CAPS (flacdec->srcpad)) {
