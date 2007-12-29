@@ -313,13 +313,11 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf)
   ts = GST_BUFFER_TIMESTAMP (buf);
   ret = gst_ssa_parse_push_line (parse, txt, ts, GST_BUFFER_DURATION (buf));
 
-  if (ret != GST_FLOW_OK) {
-    if (GST_CLOCK_TIME_IS_VALID (ts)) {
-      /* just advance time without sending anything */
-      gst_pad_push_event (parse->srcpad,
-          gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, ts, -1, ts));
-      ret = GST_FLOW_OK;
-    }
+  if (ret != GST_FLOW_OK && GST_CLOCK_TIME_IS_VALID (ts)) {
+    /* just advance time without sending anything */
+    gst_pad_push_event (parse->srcpad,
+        gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, ts, -1, ts));
+    ret = GST_FLOW_OK;
   }
 
   g_free (txt);

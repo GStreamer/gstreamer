@@ -1,6 +1,11 @@
 2007-12-29  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/subparse/gstssaparse.c:
+	combine if's
+
+2007-12-29  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/subparse/gstssaparse.c:
 	remove duplicate log message
 
 2007-12-29  Sebastian Dröge  <slomo@circular-chaos.org>
