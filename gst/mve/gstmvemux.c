@@ -1320,7 +1320,7 @@ gst_mve_mux_request_new_pad (GstElement * element,
     mvemux->video_pad_eos = FALSE;
     pad = mvemux->videosink;
   } else {
-    g_assert_not_reached ();
+    g_return_val_if_reached (NULL);
   }
 
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_mve_mux_chain));

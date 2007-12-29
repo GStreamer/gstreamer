@@ -1,5 +1,15 @@
 2007-12-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/ladspa/gstladspa.c: (gst_ladspa_get_property):
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_show_frame):
+	* gst/mve/gstmvemux.c: (gst_mve_mux_request_new_pad):
+	* sys/dvb/dvbbasebin.c: (dvb_base_bin_class_init):
+	Fix 'xyz may be used uninitialized' compiler warnings caused
+	by broken g_assert_not_reached() macro in GLib-2.15.x and don't
+	abort() in any case but properly report the error.
+
+2007-12-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	* ext/gio/gstgio.c:
 	* ext/gio/gstgio.h:

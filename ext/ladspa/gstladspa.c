@@ -424,7 +424,7 @@ gst_ladspa_get_property (GObject * object, guint prop_id, GValue * value,
     controls = gsp->control_out;
     prop_id -= gsp_class->num_control_in;
   } else {
-    g_assert_not_reached ();
+    g_return_if_reached ();
   }
 
   /* now see what type it is */
@@ -439,7 +439,7 @@ gst_ladspa_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_float (value, controls[prop_id]);
       break;
     default:
-      g_assert_not_reached ();
+      g_return_if_reached ();
   }
 }
 

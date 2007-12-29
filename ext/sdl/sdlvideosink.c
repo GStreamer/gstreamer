@@ -778,7 +778,9 @@ gst_sdlvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
           v = y + I420_V_OFFSET (sdlvideosink->width, sdlvideosink->height);
           break;
         default:
-          g_assert_not_reached ();
+          gst_sdlvideosink_unlock (sdlvideosink);
+          g_mutex_unlock (sdlvideosink->lock);
+          g_return_val_if_reached (GST_FLOW_ERROR);
       }
 
       /* Y Plane */
