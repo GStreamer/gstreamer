@@ -29,8 +29,6 @@
 #include "gstgiostreamsink.h"
 #include "gstgiostreamsrc.h"
 
-#include <gio/gvfs.h>
-
 GST_DEBUG_CATEGORY_STATIC (gst_gio_debug);
 #define GST_CAT_DEFAULT gst_gio_debug
 

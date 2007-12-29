@@ -1,3 +1,23 @@
+2007-12-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* ext/gio/gstgio.c:
+	* ext/gio/gstgio.h:
+	* ext/gio/gstgiobasesink.h:
+	* ext/gio/gstgiobasesrc.c: (gst_gio_base_src_get_size):
+	* ext/gio/gstgiobasesrc.h:
+	* ext/gio/gstgiosink.c: (gst_gio_sink_start):
+	* ext/gio/gstgiosink.h:
+	* ext/gio/gstgiosrc.h:
+	* ext/gio/gstgiostreamsink.h:
+	* ext/gio/gstgiostreamsrc.h:
+	* tests/check/pipelines/gio.c:
+	Update to latest API changes in GLib/GIO and require at least
+	gio-2.0 2.15.0 for this.
+	
+	* ext/gio/Makefile.am:
+	Add GST_PLUGIN_LDFLAGS to LDFLAGS.
+
 2007-12-28  David Schleef  <ds@schleef.org>
 
 	* configure.ac:
