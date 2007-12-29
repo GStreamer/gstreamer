@@ -222,8 +222,20 @@ gst_ssa_parse_remove_override_codes (GstSsaParse * parse, gchar * txt)
   return removed_any;
 }
 
+/**
+ * gst_ssa_parse_push_line:
+ * @parse: caller element
+ * @txt: text to push
+ * @start: timestamp for the buffer
+ * @duration: duration for the buffer
+ *
+ * Parse the text in a buffer with the given properties and
+ * push it to the srcpad of the @parse element
+ *
+ * Returns: result of the push of the created buffer
+ */
 static GstFlowReturn
-gst_ssa_parse_parse_line (GstSsaParse * parse, gchar * txt,
+gst_ssa_parse_push_line (GstSsaParse * parse, gchar * txt,
     GstClockTime start, GstClockTime duration)
 {
   GstFlowReturn ret;
@@ -274,7 +286,8 @@ gst_ssa_parse_parse_line (GstSsaParse * parse, gchar * txt,
   ret = gst_pad_push (parse->srcpad, buf);
 
   if (ret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (parse, "Push returned flow %s", gst_flow_get_name (ret));
+    GST_DEBUG_OBJECT (parse, "Push of text '%s' returned flow %s", txt,
+        gst_flow_get_name (ret));
   }
 
   return ret;
@@ -298,10 +311,9 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf)
     return GST_FLOW_UNEXPECTED;
 
   ts = GST_BUFFER_TIMESTAMP (buf);
-  ret = gst_ssa_parse_parse_line (parse, txt, ts, GST_BUFFER_DURATION (buf));
+  ret = gst_ssa_parse_push_line (parse, txt, ts, GST_BUFFER_DURATION (buf));
 
   if (ret != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (parse, "Failed to parse dialog line '%s'", txt);
     if (GST_CLOCK_TIME_IS_VALID (ts)) {
       /* just advance time without sending anything */
       gst_pad_push_event (parse->srcpad,

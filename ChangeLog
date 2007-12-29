@@ -1,3 +1,8 @@
+2007-12-29  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/subparse/gstssaparse.c:
+	remove duplicate log message
+
 2007-12-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/libvisual/visual.c: (gst_visual_chain):
