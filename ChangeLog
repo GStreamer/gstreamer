@@ -4,13 +4,6 @@
 	  Put back the tcase_set_timeout(), apparently it's needed after
 	  all; fix it up in a way that makes things work with valgrind too.
 
-2007-12-30  Tim-Philipp Müller  <tim at centricular dot net>
-
-	* gst/gst_private.h: (STRUCTURE_ESTIMATED_STRING_LEN):
-	* gst/gstcaps.c: (gst_caps_to_string):
-	* gst/gststructure.c: (GST_ASCII_IS_STRING),
-	  (priv_gst_structure_append_to_gstring), (gst_structure_to_string):
-
 2007-12-30  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/gstdebugutils.c:
