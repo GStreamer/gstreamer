@@ -1249,6 +1249,13 @@ gst_sinks_suite (void)
 {
   Suite *s = suite_create ("Sinks");
   TCase *tc_chain = tcase_create ("general");
+  guint timeout = 10;
+
+  /* time out after 10s, not the default 3, we need this for the last test.
+   * We need a longer timeout when running under valgrind though. */
+  if (g_getenv ("CK_DEFAULT_TIMEOUT") != NULL)
+    timeout = MAX (10, atoi (g_getenv ("CK_DEFAULT_TIMEOUT")));
+  tcase_set_timeout (tc_chain, timeout);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_sink);
