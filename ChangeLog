@@ -1,3 +1,8 @@
+2007-12-30  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/gstdebugutils.c:
+	add warning when failed to open file for writing
+
 2007-12-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Based on patch by: Laurent Glayal  <spglegle yahoo fr>

@@ -478,8 +478,10 @@ _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
     /* write footer */
     fprintf (out, "}\n");
     fclose (out);
+    GST_INFO ("wrote bin graph to : '%s'", full_file_name);
+  } else {
+    GST_WARNING ("Failed to open file '%s' for writing", full_file_name);
   }
-  GST_INFO ("wrote bin graph to : '%s'", full_file_name);
   g_free (full_file_name);
 }
 
