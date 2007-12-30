@@ -156,6 +156,8 @@ static const gchar *rtsp_headers[] = {
   "Language",                   /* Language */
   "PlayerStarttime",            /* PlayerStarttime */
 
+  "Location",                   /* Location */
+
   NULL
 };
 
@@ -173,7 +175,7 @@ rtsp_init_status (void)
   DEF_STATUS (GST_RTSP_STS_LOW_ON_STORAGE, "Low on Storage Space");
   DEF_STATUS (GST_RTSP_STS_MULTIPLE_CHOICES, "Multiple Choices");
   DEF_STATUS (GST_RTSP_STS_MOVED_PERMANENTLY, "Moved Permanently");
-  DEF_STATUS (GST_RTSP_STS_MOVE_TEMPORARILY, "Moved Temporarily");
+  DEF_STATUS (GST_RTSP_STS_MOVE_TEMPORARILY, "Move Temporarily");
   DEF_STATUS (GST_RTSP_STS_SEE_OTHER, "See Other");
   DEF_STATUS (GST_RTSP_STS_NOT_MODIFIED, "Not Modified");
   DEF_STATUS (GST_RTSP_STS_USE_PROXY, "Use Proxy");

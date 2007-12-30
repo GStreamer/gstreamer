@@ -1,3 +1,10 @@
+2007-12-30  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspdefs.c: (rtsp_init_status):
+	* gst-libs/gst/rtsp/gstrtspdefs.h:
+	Add Location header so that we can start implementing redirects.
+	See #506025.
+
 2007-12-29  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/subparse/gstssaparse.c:

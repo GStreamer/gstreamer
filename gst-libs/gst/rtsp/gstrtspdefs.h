@@ -277,6 +277,10 @@ typedef enum {
   GST_RTSP_HDR_MAX_ASM_WIDTH,       /* SupportsMaximumASMBandwidth */
   GST_RTSP_HDR_LANGUAGE,            /* Language */
   GST_RTSP_HDR_PLAYER_START_TIME,   /* PlayerStarttime */
+
+  /* Since 0.10.16 */
+  GST_RTSP_HDR_LOCATION             /* Location */
+
 } GstRTSPHeaderField;
 
 typedef enum {
