@@ -1751,7 +1751,7 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
         width = result.w;
         height = result.h;
         size = bpp * width * height;
-        GST_DEBUG ("peed pad accepts our desired caps %" GST_PTR_FORMAT
+        GST_DEBUG ("peer pad accepts our desired caps %" GST_PTR_FORMAT
             " buffer size is now %d bytes", desired_caps, size);
       } else {
         GST_DEBUG ("peer pad does not accept our desired caps %" GST_PTR_FORMAT,

@@ -1,3 +1,8 @@
+2007-12-31  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* sys/ximage/ximagesink.c:
+	fix typo
+
 2007-12-30  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/rtsp/gstrtspdefs.c: (rtsp_init_status):
