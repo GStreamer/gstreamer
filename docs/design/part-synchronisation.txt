@@ -180,5 +180,29 @@ event as follows:
 For negative rates, B.timestamp will go backwards from NS.stop to NS.start,
 making the stream time go backwards.
 
+In the PLAYING state, it is also possible to use the pipeline clock to derive
+the current stream_time.
+
+Give the two formulas above to match the clock times with buffer timestamps
+allows us to rewrite the above formula for stream_time (and for positive rates).
+
+    C.running_time = absolute_time - base_time
+    B.running_time = (B.timestamp - NS.start) / NS.abs_rate + NS.accum
+
+  =>
+    absolute_time - base_time = (B.timestamp - NS.start) / NS.abs_rate + NS.accum
+
+  =>
+    absolute_time - base_time = (B.timestamp - NS.start) / NS.abs_rate + NS.accum
+
+  =>
+    (B.timestamp - NS.start) = (absolute_time - base_time - NS.accum) * NS.abs_rate
+
+  =>
+    stream_time = (absolute_time - base_time - NS.accum) * NS.abs_rate * NS.abs_applied_rate + NS.time
+
+This last formula is typically used in sinks to report the current position in
+an accurate and efficient way.
+
 Note that the stream time is never used for synchronisation against the clock.
 

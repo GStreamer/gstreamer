@@ -1,3 +1,8 @@
+2007-12-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-synchronisation.txt:
+	Some more info on how the stream_time in GstBaseSink is done.
+
 2007-12-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/generic/sinks.c: (gst_sinks_suite):
