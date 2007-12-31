@@ -1,5 +1,11 @@
 2007-12-31  David Schleef  <ds@schleef.org>
 
+	* tests/check/Makefile.am:
+	  Second attempt at disabling theoraenc test long enough to
+	  get buildbot to compile -base.
+
+2007-12-31  David Schleef  <ds@schleef.org>
+
 	* tests/check/pipelines/theoraenc.c:
 	  Disable theoraenc test long enough to get the buildbot to
 	  compile a recent -base.
