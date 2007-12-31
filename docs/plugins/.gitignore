@@ -3,6 +3,7 @@ Makefile.in
 
 *-decl.txt
 *-decl-list.txt
+*-undeclared.txt
 *-undocumented.txt
 *-unused.txt
 

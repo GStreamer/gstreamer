@@ -1,3 +1,8 @@
+2007-12-31  David Schleef  <ds@schleef.org>
+
+	* docs/plugins/.cvsignore:
+	  Add *-undeclared.txt
+
 2007-12-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/realmedia/rdtmanager.c:
