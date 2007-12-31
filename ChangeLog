@@ -1,3 +1,11 @@
+2007-12-30  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* sys/glsink/Makefile.am:
+	  Switch to using pkgconfig to detect libGL.  Since we use
+	  recent features added to Mesa, there's no point in adding
+	  a check for pre-pkgconfig versions.
+
 2007-12-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ladspa/gstladspa.c: (gst_ladspa_get_property):

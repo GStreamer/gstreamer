@@ -286,17 +286,16 @@ dnl *** sys plug-ins ***
 
 dnl OpenGL
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENGL, true)
-AG_GST_CHECK_X
-save_CPPFLAGS="$CPPFLAGS"
-save_LIBS="$LIBS"
-CPPFLAGS="$CPPFLAGS $X_CFLAGS"
-LIBS="$LIBS $X_LIBS"
 AG_GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
-  AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,,
-                      GL/gl.h, HAVE_OPENGL="yes", HAVE_OPENGL="no")
+  PKG_CHECK_MODULES(GL, gl >= 7.1.0, [
+    HAVE_GL="yes"
+    AC_SUBST(GL_CFLAGS)
+    AC_SUBST(GL_LIBS)
+  ],[
+    HAVE_GL=no
+    AC_MSG_RESULT(no)
+  ])
 ])
-CPPFLAGS="$save_CPPFLAGS"
-LIBS="$save_LIBS"
 
 dnl check for QuickTime
 translit(dnm, m, l) AM_CONDITIONAL(USE_QUICKTIME, true)
