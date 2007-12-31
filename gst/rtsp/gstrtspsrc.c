@@ -3216,11 +3216,17 @@ gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPMessage * request,
 {
   GstRTSPStatusCode int_code = GST_RTSP_STS_OK;
   GstRTSPResult res;
+  gint count;
   gboolean retry;
   GstRTSPMethod method;
 
+  count = 0;
   do {
     retry = FALSE;
+
+    /* make sure we don't loop forever */
+    if (count++ > 8)
+      break;
 
     /* save method so we can disable it when the server complains */
     method = request->type_data.request.method;
@@ -3228,12 +3234,16 @@ gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPMessage * request,
     if ((res = gst_rtspsrc_try_send (src, request, response, &int_code)) < 0)
       goto error;
 
-    if (int_code == GST_RTSP_STS_UNAUTHORIZED) {
-      if (gst_rtspsrc_setup_auth (src, response)) {
-        /* Try the request/response again after configuring the auth info
-         * and loop again */
-        retry = TRUE;
-      }
+    switch (int_code) {
+      case GST_RTSP_STS_UNAUTHORIZED:
+        if (gst_rtspsrc_setup_auth (src, response)) {
+          /* Try the request/response again after configuring the auth info
+           * and loop again */
+          retry = TRUE;
+        }
+        break;
+      default:
+        break;
     }
   } while (retry == TRUE);
 
@@ -3261,6 +3271,29 @@ error_response:
         GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), ("%s",
                 response->type_data.response.reason));
         break;
+      case GST_RTSP_STS_MOVED_PERMANENTLY:
+      case GST_RTSP_STS_MOVE_TEMPORARILY:
+      {
+        gchar *new_location;
+
+        GST_DEBUG_OBJECT (src, "got redirection");
+        /* if we don't have a Location Header, we must error */
+        if (gst_rtsp_message_get_header (response, GST_RTSP_HDR_LOCATION,
+                &new_location, 0) < 0)
+          break;
+
+        /* When we receive a redirect result, we go back to the INIT state after
+         * parsing the new URI. The caller should do the needed steps to issue
+         * a new setup when it detects this state change. */
+        GST_DEBUG_OBJECT (src, "redirection to %s", new_location);
+
+        gst_rtspsrc_uri_set_uri (GST_URI_HANDLER (src), new_location);
+
+        src->need_redirect = TRUE;
+        src->state = GST_RTSP_STATE_INIT;
+        res = GST_RTSP_OK;
+        break;
+      }
       case GST_RTSP_STS_NOT_ACCEPTABLE:
       case GST_RTSP_STS_NOT_IMPLEMENTED:
       case GST_RTSP_STS_METHOD_NOT_ALLOWED:
@@ -3816,9 +3849,11 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
   GST_RTSP_STATE_LOCK (src);
 
+restart:
   /* reset our state */
   gst_segment_init (&src->segment, GST_FORMAT_TIME);
   src->need_range = TRUE;
+  src->need_redirect = FALSE;
 
   /* can't continue without a valid url */
   if (G_UNLIKELY (src->url == NULL))
@@ -3875,6 +3910,21 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   GST_DEBUG_OBJECT (src, "send describe...");
   if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
     goto send_error;
+
+  /* we only perform redirect for the describe, currently */
+  if (src->need_redirect) {
+    /* close connection, we don't have to send a TEARDOWN yet, ignore the
+     * result. */
+    gst_rtsp_connection_close (src->connection);
+    gst_rtsp_connection_free (src->connection);
+    src->connection = NULL;
+
+    gst_rtsp_message_unset (&request);
+    gst_rtsp_message_unset (&response);
+
+    /* and now retry */
+    goto restart;
+  }
 
   /* check if reply is SDP */
   gst_rtsp_message_get_header (&response, GST_RTSP_HDR_CONTENT_TYPE, &respcont,

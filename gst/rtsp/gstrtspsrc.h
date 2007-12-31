@@ -176,6 +176,7 @@ struct _GstRTSPSrc {
   GstRTSPLowerTrans  cur_protocols;
   gboolean           tried_url_auth;
   gchar             *addr;
+  gboolean           need_redirect;
 
   /* supported methods */
   gint               methods;

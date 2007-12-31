@@ -1,3 +1,9 @@
+2007-12-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send), (gst_rtspsrc_open):
+	* gst/rtsp/gstrtspsrc.h:
+	Implement redirect for the DESCRIBE reply. Fixes #506025.
+
 2007-12-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/flac/gstflacdec.c: (gst_flac_dec_write):
