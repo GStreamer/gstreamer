@@ -1352,9 +1352,10 @@ stop_cb (GtkButton * button, gpointer data)
     if (ret == GST_STATE_CHANGE_FAILURE)
       goto failed;
 
-    set_scale (0.0);
-
     state = GST_STATE_READY;
+
+    set_update_scale (FALSE);
+    set_scale (0.0);
 
     /* if one uses parse_launch, play, stop and play again it fails as all the
      * pads after the demuxer can't be reconnected
