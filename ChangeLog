@@ -1,3 +1,9 @@
+2007-12-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	(gst_rtp_ssrc_demux_change_state):
+	Don't clean up pads when going to PAUSED.
+
 2007-12-30  David Schleef  <ds@schleef.org>
 
 	* configure.ac:
