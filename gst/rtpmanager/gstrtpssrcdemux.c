@@ -643,6 +643,7 @@ gst_rtp_ssrc_demux_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_rtp_ssrc_demux_reset (demux);
       break;
