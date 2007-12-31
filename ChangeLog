@@ -1,5 +1,11 @@
 2007-12-31  David Schleef  <ds@schleef.org>
 
+	* docs/libs/.cvsignore:
+	* docs/plugins/.cvsignore:
+	  Add *-undeclared.txt to fix buildbot.
+
+2007-12-31  David Schleef  <ds@schleef.org>
+
 	* tests/check/Makefile.am:
 	  Second attempt at disabling theoraenc test long enough to
 	  get buildbot to compile -base.

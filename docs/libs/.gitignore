@@ -7,6 +7,7 @@ Makefile.in
 *-decl.txt
 *-decl-list.txt
 *-presed-scan.c
+*-undeclared.txt
 *-undocumented.txt
 *-unused.txt
 *.args
