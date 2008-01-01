@@ -10,14 +10,16 @@ pygstdir = $(pkgpyexecdir)
 pygst_PYTHON = __init__.py
 
 pygstexecdir = $(pkgpyexecdir)
-pygstexec_LTLIBRARIES = _gst.la $(interface_lib)
+pygstexec_LTLIBRARIES = _gst.la $(interface_lib) $(pbutils_lib)
 
 interface_lib = interfaces.la
+pbutils_lib = pbutils.la
 
 defs_DATA = gst-types.defs \
 	gst-extrafuncs.defs \
 	libs.defs \
-	base.defs
+	base.defs \
+	pbutils.defs
 defsdir = $(pkgdatadir)/$(GST_MAJORMINOR)/defs
 
 noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstexception.h
@@ -41,7 +43,7 @@ versioned_overrides = \
 
 INCLUDES = $(PYTHON_INCLUDES)
 EXTRA_DIST = $(defs_DATA) $(versioned_overrides) common.h arg-types.py
-GEN_FILES = arg-types.py gst-types.defs libs.defs base.defs
+GEN_FILES = arg-types.py gst-types.defs libs.defs base.defs pbutils.defs
 
 # GStreamer bindings
 _gst_la_CFLAGS = $(common_cflags)
@@ -92,6 +94,19 @@ INTERFACES_DEFS = interfaces.defs xoverlay.defs
 CLEANFILES += interfaces.c
 EXTRA_DIST += $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) 
 interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) $(GEN_FILES)
+
+# GStreamer pbutils bindings
+pbutils_la_CFLAGS = $(common_cflags) $(GST_PLUGINS_BASE_CFLAGS)
+pbutils_la_LIBADD = $(common_libadd) $(GST_PLUGINS_BASE_LIBS) -lgstpbutils-0.10
+pbutils_la_LDFLAGS = $(common_ldflags) \
+	-export-symbols-regex "^(initpbutils|_PyGObject_API).*" $(GST_PLUGINS_BASE_LIBS)
+pbutils_la_SOURCES = pbutilsmodule.c gst-argtypes.c
+nodist_pbutils_la_SOURCES = pbutils.c
+PBUTILS_OVERRIDES = pbutils.override
+PBUTILS_DEFS = pbutils.defs
+CLEANFILES += pbutils.c
+EXTRA_DIST += $(PBUTILS_DEFS) $(PBUTILS_OVERRIDES)
+pbutils.c: $(PBUTILS_DEFS) $(PBUTILS_OVERRIDES) $(GEN_FILES)
 
 .defs.c: 
 	($(PYTHON) $(top_srcdir)/codegen/codegen.py \

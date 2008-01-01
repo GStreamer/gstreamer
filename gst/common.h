@@ -68,7 +68,7 @@ typedef struct {
     GstIterator *iter;
 } PyGstIterator;
 
-PyTypeObject PyGstIterator_Type;
+extern PyTypeObject PyGstIterator_Type;
 
 
 /* from gst-types.c */

@@ -1,3 +1,18 @@
+2008-01-01  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/Makefile.am:
+	* gst/common.h:
+	* gst/pbutils.defs:
+	* gst/pbutils.override:
+	* gst/pbutilsmodule.c: (initpbutils):
+	new gst.pbutils module that wraps the gst-plugins-base pbutils
+	helper library.
+	* testsuite/Makefile.am:
+	* testsuite/common.py:
+	* testsuite/test_pbutils.py:
+	Test case for gst.pbutils
+	Fixes #472822
+
 2007-12-18  Andy Wingo  <wingo@pobox.com>
 
 	* examples/switch.py: New file, a basic demo for a single-stream

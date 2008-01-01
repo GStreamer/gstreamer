@@ -1,0 +1,278 @@
+;; -*- scheme -*-
+; object definitions ...
+;; Enumerations and flags ...
+
+(define-enum InstallPluginsReturn
+  (in-module "Gst")
+  (c-name "GstInstallPluginsReturn")
+  (gtype-id "GST_TYPE_INSTALL_PLUGINS_RETURN")
+  (values
+    '("success" "GST_INSTALL_PLUGINS_SUCCESS")
+    '("not-found" "GST_INSTALL_PLUGINS_NOT_FOUND")
+    '("error" "GST_INSTALL_PLUGINS_ERROR")
+    '("partial-success" "GST_INSTALL_PLUGINS_PARTIAL_SUCCESS")
+    '("user-abort" "GST_INSTALL_PLUGINS_USER_ABORT")
+    '("crashed" "GST_INSTALL_PLUGINS_CRASHED")
+    '("invalid" "GST_INSTALL_PLUGINS_INVALID")
+    '("started-ok" "GST_INSTALL_PLUGINS_STARTED_OK")
+    '("internal-failure" "GST_INSTALL_PLUGINS_INTERNAL_FAILURE")
+    '("helper-missing" "GST_INSTALL_PLUGINS_HELPER_MISSING")
+    '("install-in-progress" "GST_INSTALL_PLUGINS_INSTALL_IN_PROGRESS")
+  )
+)
+
+
+;; From descriptions.h
+
+(define-function add_codec_description_to_tag_list
+  (c-name "gst_pb_utils_add_codec_description_to_tag_list")
+  (return-type "gboolean")
+  (parameters
+    '("GstTagList*" "taglist")
+    '("const-gchar*" "codec_tag")
+    '("const-GstCaps*" "caps")
+  )
+)
+
+(define-function get_codec_description
+  (c-name "gst_pb_utils_get_codec_description")
+  (return-type "gchar*")
+  (parameters
+    '("const-GstCaps*" "caps")
+  )
+)
+
+(define-function get_source_description
+  (c-name "gst_pb_utils_get_source_description")
+  (return-type "gchar*")
+  (parameters
+    '("const-gchar*" "protocol")
+  )
+)
+
+(define-function get_sink_description
+  (c-name "gst_pb_utils_get_sink_description")
+  (return-type "gchar*")
+  (parameters
+    '("const-gchar*" "protocol")
+  )
+)
+
+(define-function get_decoder_description
+  (c-name "gst_pb_utils_get_decoder_description")
+  (return-type "gchar*")
+  (parameters
+    '("const-GstCaps*" "caps")
+  )
+)
+
+(define-function get_encoder_description
+  (c-name "gst_pb_utils_get_encoder_description")
+  (return-type "gchar*")
+  (parameters
+    '("const-GstCaps*" "caps")
+  )
+)
+
+(define-function get_element_description
+  (c-name "gst_pb_utils_get_element_description")
+  (return-type "gchar*")
+  (parameters
+    '("const-gchar*" "factory_name")
+  )
+)
+
+
+
+;; From install-plugins.h
+
+(define-function install_plugins_context_new
+  (c-name "gst_install_plugins_context_new")
+  (is-constructor-of "GstInstallPluginsContext")
+  (return-type "GstInstallPluginsContext*")
+)
+
+(define-method free
+  (of-object "GstInstallPluginsContext")
+  (c-name "gst_install_plugins_context_free")
+  (return-type "none")
+)
+
+(define-method set_xid
+  (of-object "GstInstallPluginsContext")
+  (c-name "gst_install_plugins_context_set_xid")
+  (return-type "none")
+  (parameters
+    '("guint" "xid")
+  )
+)
+
+(define-function install_plugins_async
+  (c-name "gst_install_plugins_async")
+  (return-type "GstInstallPluginsReturn")
+  (parameters
+    '("gchar**" "details")
+    '("GstInstallPluginsContext*" "ctx")
+    '("GstInstallPluginsResultFunc" "func")
+    '("gpointer" "user_data")
+  )
+)
+
+(define-function install_plugins_sync
+  (c-name "gst_install_plugins_sync")
+  (return-type "GstInstallPluginsReturn")
+  (parameters
+    '("gchar**" "details")
+    '("GstInstallPluginsContext*" "ctx")
+  )
+)
+
+(define-method get_name
+  (of-object "GstInstallPluginsReturn")
+  (c-name "gst_install_plugins_return_get_name")
+  (return-type "const-gchar*")
+)
+
+(define-function install_plugins_installation_in_progress
+  (c-name "gst_install_plugins_installation_in_progress")
+  (return-type "gboolean")
+)
+
+(define-function install_plugins_supported
+  (c-name "gst_install_plugins_supported")
+  (return-type "gboolean")
+)
+
+
+
+;; From missing-plugins.h
+
+(define-function missing_uri_source_message_new
+  (c-name "gst_missing_uri_source_message_new")
+  (is-constructor-of "GstMissingUriSourceMessage")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstElement*" "element")
+    '("const-gchar*" "protocol")
+  )
+)
+
+(define-function missing_uri_sink_message_new
+  (c-name "gst_missing_uri_sink_message_new")
+  (is-constructor-of "GstMissingUriSinkMessage")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstElement*" "element")
+    '("const-gchar*" "protocol")
+  )
+)
+
+(define-function missing_element_message_new
+  (c-name "gst_missing_element_message_new")
+  (is-constructor-of "GstMissingElementMessage")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstElement*" "element")
+    '("const-gchar*" "factory_name")
+  )
+)
+
+(define-function missing_decoder_message_new
+  (c-name "gst_missing_decoder_message_new")
+  (is-constructor-of "GstMissingDecoderMessage")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstElement*" "element")
+    '("const-GstCaps*" "decode_caps")
+  )
+)
+
+(define-function missing_encoder_message_new
+  (c-name "gst_missing_encoder_message_new")
+  (is-constructor-of "GstMissingEncoderMessage")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstElement*" "element")
+    '("const-GstCaps*" "encode_caps")
+  )
+)
+
+(define-function missing_plugin_message_get_installer_detail
+  (c-name "gst_missing_plugin_message_get_installer_detail")
+  (return-type "gchar*")
+  (parameters
+    '("GstMessage*" "msg")
+  )
+)
+
+(define-function missing_plugin_message_get_description
+  (c-name "gst_missing_plugin_message_get_description")
+  (return-type "gchar*")
+  (parameters
+    '("GstMessage*" "msg")
+  )
+)
+
+(define-function is_missing_plugin_message
+  (c-name "gst_is_missing_plugin_message")
+  (return-type "gboolean")
+  (parameters
+    '("GstMessage*" "msg")
+  )
+)
+
+(define-function missing_uri_source_installer_detail_new
+  (c-name "gst_missing_uri_source_installer_detail_new")
+  (is-constructor-of "GstMissingUriSourceInstallerDetail")
+  (return-type "gchar*")
+  (parameters
+    '("const-gchar*" "protocol")
+  )
+)
+
+(define-function missing_uri_sink_installer_detail_new
+  (c-name "gst_missing_uri_sink_installer_detail_new")
+  (is-constructor-of "GstMissingUriSinkInstallerDetail")
+  (return-type "gchar*")
+  (parameters
+    '("const-gchar*" "protocol")
+  )
+)
+
+(define-function missing_element_installer_detail_new
+  (c-name "gst_missing_element_installer_detail_new")
+  (is-constructor-of "GstMissingElementInstallerDetail")
+  (return-type "gchar*")
+  (parameters
+    '("const-gchar*" "factory_name")
+  )
+)
+
+(define-function missing_decoder_installer_detail_new
+  (c-name "gst_missing_decoder_installer_detail_new")
+  (is-constructor-of "GstMissingDecoderInstallerDetail")
+  (return-type "gchar*")
+  (parameters
+    '("const-GstCaps*" "decode_caps")
+  )
+)
+
+(define-function missing_encoder_installer_detail_new
+  (c-name "gst_missing_encoder_installer_detail_new")
+  (is-constructor-of "GstMissingEncoderInstallerDetail")
+  (return-type "gchar*")
+  (parameters
+    '("const-GstCaps*" "encode_caps")
+  )
+)
+
+
+
+;; From pbutils.h
+
+(define-function init
+  (c-name "gst_pb_utils_init")
+  (return-type "none")
+)
+
+

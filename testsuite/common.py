@@ -67,7 +67,7 @@ import gst
 file = gst.__file__
 assert file.startswith(path), 'bad gst path: %s' % file
 
-# gst's interfaces and play are in topbuilddir/gst
+# gst's interfaces is in topbuilddir/gst
 path = os.path.abspath(os.path.join(topbuilddir, 'gst'))
 try:
    import gst.interfaces
@@ -77,6 +77,17 @@ except ImportError:
    gst.interfaces = interfaces
 file = gst.interfaces.__file__
 assert file.startswith(path), 'bad gst.interfaces path: %s' % file
+
+# gst's pbutils is in topbuilddir/gst
+path = os.path.abspath(os.path.join(topbuilddir, 'gst'))
+try:
+   import gst.pbutils
+except ImportError:
+   # hack: we import it from our builddir/gst/.libs instead; ugly
+   import pbutils
+   gst.pbutils = pbutils
+file = gst.pbutils.__file__
+assert file.startswith(path), 'bad gst.pbutils path: %s' % file
 
 # testhelper needs gstltihooks
 import gstltihooks
