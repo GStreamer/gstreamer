@@ -372,7 +372,6 @@ gst_trm_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_trm_emit_signature (trm);
       trm_Delete (trm->trm);
       trm->trm = NULL;
       trm->data_available = FALSE;

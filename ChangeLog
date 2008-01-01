@@ -1,3 +1,24 @@
+2007-12-31  David Schleef  <ds@schleef.org>
+
+	* ext/musicbrainz/gsttrm.c:
+	  Don't emit signiture when going to READY, because it might
+	  not be ready.
+	* ext/nas/nassink.c:
+	  Remove useless call that sleeps for 5 seconds.  Yup, it calls
+	  sleep(1) 5 times.  Go NAS.
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/rfbdecoder.c:
+	  Initialize our debug categories properly.
+	* gst/rawparse/gstrawparse.c:
+	  Don't register element details for a non-element.  Be much more
+	  rude when subclass doesn't set a pad template (assert!).  Don't
+	  unref the pad template; we don't own it.
+	* gst/videosignal/gstvideoanalyse.c:
+	  Initialize debug category.
+	* tests/check/Makefile.am:
+	  Ignore nassink element in tests because it has unavoidable
+	  long timeouts.
+
 2007-12-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpssrcdemux.c:

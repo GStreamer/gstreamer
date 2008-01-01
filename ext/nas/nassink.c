@@ -171,12 +171,6 @@ gst_nas_sink_getcaps (GstBaseSink * bsink)
 
   server = nassink->audio;
 
-  if (server == NULL) {
-    /* FIXME: is it really a good idea to do a potentially long blocking call
-     * like this here? (tpm) */
-    server = AuOpenServer (nassink->host, 0, NULL, 0, NULL, NULL);
-  }
-
   templatecaps = gst_static_pad_template_get_caps (&sink_factory);
 
   if (server == NULL)
@@ -333,8 +327,10 @@ gst_nas_sink_open (GstAudioSink * asink)
 
   /* Open Server */
   sink->audio = AuOpenServer (sink->host, 0, NULL, 0, NULL, NULL);
-  if (sink->audio == NULL)
+  if (sink->audio == NULL) {
+    GST_DEBUG_OBJECT (sink, "opening failed");
     return FALSE;
+  }
   sink->flow = AuNone;
   sink->need_data = 0;
 

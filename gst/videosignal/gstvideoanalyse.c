@@ -348,6 +348,9 @@ gst_video_analyse_get_type (void)
 
     video_analyse_type = g_type_register_static (GST_TYPE_VIDEO_FILTER,
         "GstVideoAnalyse", &video_analyse_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (video_analyse_debug, "videoanalyse", 0,
+        "Video Analyse element");
   }
   return video_analyse_type;
 }

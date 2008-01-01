@@ -53,12 +53,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_raw_parse_debug);
 #define GST_CAT_DEFAULT gst_raw_parse_debug
 
-static const GstElementDetails raw_parse_details =
-GST_ELEMENT_DETAILS ("Raw parser base class",
-    "Filter/Raw",
-    "Parses byte streams into raw frames",
-    "Sebastian Dröge <slomo@circular-chaos.org>");
-
 GST_BOILERPLATE (GstRawParse, gst_raw_parse, GstElement, GST_TYPE_ELEMENT);
 
 static void
@@ -71,7 +65,6 @@ gst_raw_parse_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_raw_parse_sink_pad_template));
-  gst_element_class_set_details (gstelement_class, &raw_parse_details);
 }
 
 static void
@@ -101,17 +94,11 @@ gst_raw_parse_init (GstRawParse * rp, GstRawParseClass * g_class)
   if (src_pad_template) {
     rp->srcpad = gst_pad_new_from_template (src_pad_template, "src");
   } else {
-    GstCaps *caps;
-
-    GST_WARNING ("Subclass didn't specify a src pad template, using ANY caps");
-    rp->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-    caps = gst_caps_new_any ();
-    gst_pad_set_caps (rp->srcpad, caps);
-    gst_caps_unref (caps);
+    g_warning ("Subclass didn't specify a src pad template");
+    g_assert_not_reached ();
   }
 
   gst_element_add_pad (GST_ELEMENT (rp), rp->srcpad);
-  g_object_unref (src_pad_template);
 
   gst_pad_set_event_function (rp->srcpad, gst_raw_parse_src_event);
 

@@ -86,7 +86,11 @@ static gboolean gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event);
 static GstFlowReturn gst_rfb_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
 
-GST_BOILERPLATE (GstRfbSrc, gst_rfb_src, GstPushSrc, GST_TYPE_PUSH_SRC);
+#define DEBUG_INIT(bla) \
+    GST_DEBUG_CATEGORY_INIT (rfbsrc_debug, "rfbsrc", 0, "rfb src element");
+
+GST_BOILERPLATE_FULL (GstRfbSrc, gst_rfb_src, GstPushSrc, GST_TYPE_PUSH_SRC,
+    DEBUG_INIT);
 
 static void
 gst_rfb_src_base_init (gpointer g_class)
@@ -148,8 +152,6 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_rfb_src_event);
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_rfb_src_create);
-
-  GST_DEBUG_CATEGORY_INIT (rfbsrc_debug, "rfbsrc", 0, "Rfb source");
 }
 
 static void

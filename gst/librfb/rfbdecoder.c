@@ -61,6 +61,13 @@ RfbDecoder *
 rfb_decoder_new (void)
 {
   RfbDecoder *decoder = g_new0 (RfbDecoder, 1);
+  static gboolean debug_inited = FALSE;
+
+  if (!debug_inited) {
+    /* FIXME this is the wrong place to int this */
+    GST_DEBUG_CATEGORY_INIT (rfbdecoder_debug, "rfbdecoder", 0, "Rfb source");
+    debug_inited = TRUE;
+  }
 
   decoder->fd = -1;
 
@@ -108,6 +115,7 @@ rfb_decoder_connect_tcp (RfbDecoder * decoder, gchar * addr, guint port)
   if (connect (decoder->fd, (struct sockaddr *) &sa,
           sizeof (struct sockaddr)) == -1) {
     close (decoder->fd);
+    decoder->fd = -1;
     GST_WARNING ("connection failed");
     return FALSE;
   }
@@ -126,8 +134,6 @@ rfb_decoder_connect_tcp (RfbDecoder * decoder, gchar * addr, guint port)
 gboolean
 rfb_decoder_iterate (RfbDecoder * decoder)
 {
-  GST_DEBUG_CATEGORY_INIT (rfbdecoder_debug, "rfbdecoder", 0, "Rfb source");
-
   g_return_val_if_fail (decoder != NULL, FALSE);
   g_return_val_if_fail (decoder->fd != -1, FALSE);
 
