@@ -52,12 +52,10 @@ check_buffer_timestamp (GstBuffer * buffer, GstClockTime timestamp)
 static void
 check_buffer_duration (GstBuffer * buffer, GstClockTime duration)
 {
-#if 0
   fail_unless (GST_BUFFER_DURATION (buffer) == duration,
       "expected duration %" GST_TIME_FORMAT
       ", but got duration %" GST_TIME_FORMAT,
       GST_TIME_ARGS (duration), GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
-#endif
 }
 
 static void

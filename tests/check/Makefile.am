@@ -63,8 +63,7 @@ check_vorbis =
 endif
 
 if USE_THEORA
-#check_theora = pipelines/theoraenc
-check_theora =
+check_theora = pipelines/theoraenc
 else
 check_theora =
 endif

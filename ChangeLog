@@ -1,5 +1,12 @@
 2007-12-31  David Schleef  <ds@schleef.org>
 
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/theoraenc.c:
+	  Reenable theoraenc test, which fails on the buildbot but
+	  not locally.
+
+2007-12-31  David Schleef  <ds@schleef.org>
+
 	* docs/libs/.cvsignore:
 	* docs/plugins/.cvsignore:
 	  Add *-undeclared.txt to fix buildbot.
