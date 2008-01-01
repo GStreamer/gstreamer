@@ -1,3 +1,10 @@
+2008-01-01  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/pbutils/Makefile.am:
+	* gst-libs/gst/pbutils/pbutils.h:
+	Use glib-enum generator to have a proper enum GType for
+	GST_TYPE_INSTALL_PLUGINS_RETURN so we can easily wrap it in bindings.
+
 2007-12-31  David Schleef  <ds@schleef.org>
 
 	* tests/check/Makefile.am:
