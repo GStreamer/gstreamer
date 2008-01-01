@@ -35,6 +35,11 @@ mark_log_group = 3
 
 success_result = "0"
 
+skip_lines = 0
+max_lines = 500
+filter_regex = re.compile ('')
+skip_regex = re.compile('')
+
 class BaseMark:
     colors = 0, 0, 0
     def __init__(self, timestamp, log):
@@ -102,11 +107,31 @@ class SyscallParser:
 def parse_strace(filename):
     parser = SyscallParser ()
 
+    global skip_lines
+    global max_lines
+    global skip_regex
+
+    skip_found = False
+
     for line in file(filename, "r").readlines():
         if line == "":
             break
 
-        parser.add_line (line)
+        if not skip_found:
+            if skip_regex.search(line):
+                skip_found = True
+            else:
+                continue
+
+        if skip_lines > 0:
+            skip_lines -= 1
+            continue
+
+        if len(parser.syscalls) >= max_lines:
+            break
+
+        if filter_regex.search(line):
+            parser.add_line (line)
 
     return parser.syscalls
 
@@ -127,10 +152,10 @@ def compute_syscall_metrics(syscalls):
     metrics.width = PLOT_WIDTH
 
     last_timestamp = syscalls[num_syscalls - 1].timestamp
-    num_seconds = int(math.ceil(last_timestamp))
 
-    time_height = num_seconds * PIXELS_PER_SECOND
+    time_height = int(math.ceil(last_timestamp * PIXELS_PER_SECOND))
     line_height = num_syscalls * PIXELS_PER_LINE
+
     if time_height > line_height:
         metrics.height = time_height
         print "Adjusting PIXELS_PER_LINE = %d" % PIXELS_PER_LINE
@@ -139,7 +164,7 @@ def compute_syscall_metrics(syscalls):
     else:
         metrics.height = line_height
         print "Adjusting PIXELS_PER_SECOND %d" % PIXELS_PER_SECOND
-        PIXELS_PER_SECOND = metrics.height / num_seconds
+        PIXELS_PER_SECOND = int(math.ceil(metrics.height / last_timestamp))
         print "          PIXELS_PER_SECOND %d" % PIXELS_PER_SECOND
 
     text_ypos = 0
@@ -216,12 +241,28 @@ def plot_syscalls_to_surface(syscalls, metrics):
     return surface
 
 def main(args):
+
+    global skip_lines
+    global max_lines
+    global filter_regex
+    global skip_regex
+
     option_parser = optparse.OptionParser(
         usage="usage: %prog -o output.png <debug.log>")
     option_parser.add_option("-o",
                              "--output", dest="output",
                              metavar="FILE",
                              help="Name of output file (output is a PNG file)")
+    option_parser.add_option("-s",
+                             "--skip", dest="skip",
+                             metavar="LINES",
+                             help="Skip a number of loglines at the beginning of the file or wait till a regular expression happens")
+    option_parser.add_option("-m",
+                             "--max-lines", dest="max",
+                             help="max lines that need to be plotted")
+    option_parser.add_option("-f",
+                             "--filter", dest="filter",
+                             help="filter the log lines on a regular expression")
 
     options, args = option_parser.parse_args()
 
@@ -235,6 +276,19 @@ def main(args):
 
     in_filename = args[0]
     out_filename = options.output
+
+    if options.skip:
+        try:
+            skip_lines = int(options.skip)
+        except:
+            skip_regex = re.compile(options.skip)
+            skip_lines = 0
+
+    if options.max:
+        max_lines = int(options.max)
+
+    if options.filter:
+        filter_regex = re.compile(options.filter)
 
     syscalls = []
     for syscall in parse_strace(in_filename):
