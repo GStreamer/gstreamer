@@ -1782,41 +1782,36 @@ class Window (object):
 
     def handle_hide_after_line_action_activate (self, action):
 
-        model = self.log_view.props.model
-        first_index = model.line_index_to_top (0)
-        try:
-            filtered_line_index = self.get_active_line_index ()
-        except ValueError:
-            return
-        last_index = model.line_index_to_top (filtered_line_index)
-
-        self.logger.info ("hiding lines after %i (abs %i), first line is abs %i",
-                          filtered_line_index,
-                          last_index,
-                          first_index)
-
-        self.push_view_state ()
-        self.log_range.set_range (first_index, last_index)
-        if self.log_filter:
-            self.log_filter.super_model_changed_range ()
-        self.update_model ()
-        self.pop_view_state ()
-        self.actions.show_hidden_lines.props.sensitive = True
+        self.hide_range (after = True)
 
     def handle_hide_before_line_action_activate (self, action):
 
+        self.hide_range (after = False)
+
+    def hide_range (self, after):
+
+        model = self.log_view.props.model
         try:
             filtered_line_index = self.get_active_line_index ()
         except ValueError:
             return
-        model = self.log_view.props.model
-        first_index = model.line_index_to_top (filtered_line_index)
-        last_index = model.line_index_to_top (len (model) - 1)
 
-        self.logger.info ("hiding lines before %i (abs %i), last line is abs %i",
-                          filtered_line_index,
-                          first_index,
-                          last_index)
+        if after:
+            first_index = model.line_index_to_top (0)
+            last_index = model.line_index_to_top (filtered_line_index)
+
+            self.logger.info ("hiding lines after %i (abs %i), first line is abs %i",
+                              filtered_line_index,
+                              last_index,
+                              first_index)
+        else:
+            first_index = model.line_index_to_top (filtered_line_index)
+            last_index = model.line_index_to_top (len (model) - 1)
+
+            self.logger.info ("hiding lines before %i (abs %i), last line is abs %i",
+                              filtered_line_index,
+                              first_index,
+                              last_index)
 
         self.push_view_state ()
         self.log_range.set_range (first_index, last_index)
