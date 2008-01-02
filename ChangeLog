@@ -1,3 +1,9 @@
+2008-01-02  David Schleef  <ds@schleef.org>
+
+	* tests/check/Makefile.am:
+	  Disable vcdsrc in states test because it takes too much time
+	  to get to PLAYING if it can find a device.
+
 2007-12-31  David Schleef  <ds@schleef.org>
 
 	* ext/musicbrainz/gsttrm.c:
