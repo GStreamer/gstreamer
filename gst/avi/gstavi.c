@@ -43,7 +43,7 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_AVI_DEMUX) ||
       !gst_element_register (plugin, "avimux", GST_RANK_NONE,
           GST_TYPE_AVI_MUX) ||
-      !gst_element_register (plugin, "avisubtitle", GST_RANK_NONE,
+      !gst_element_register (plugin, "avisubtitle", GST_RANK_PRIMARY,
           GST_TYPE_AVI_SUBTITLE)) {
     return FALSE;
   }

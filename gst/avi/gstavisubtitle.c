@@ -57,6 +57,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-subtitle")
     );
 
+static void gst_avi_subtitle_title_tag (GstAviSubtitle * sub, gchar * title);
 static GstFlowReturn gst_avi_subtitle_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn gst_avi_subtitle_change_state (GstElement * element,
     GstStateChange transition);
@@ -134,6 +135,24 @@ gst_avi_subtitle_extract_file (GstAviSubtitle * sub, GstBuffer * buffer,
   return ret;
 }
 
+/**
+ * gst_avi_subtitle_title_tag:
+ * @sub: subtitle element
+ * @title: the title of this subtitle stream
+ *
+ * Send an event to the srcpad of the @sub element with the title
+ * of the subtitle stream as a GST_TAG_TITLE
+ */
+static void
+gst_avi_subtitle_title_tag (GstAviSubtitle * sub, gchar * title)
+{
+  GstTagList *temp_list = gst_tag_list_new ();
+
+  gst_tag_list_add (temp_list, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, title,
+      NULL);
+  gst_pad_push_event (sub->src, gst_event_new_tag (temp_list));
+}
+
 static GstFlowReturn
 gst_avi_subtitle_parse_gab2_chunk (GstAviSubtitle * sub, GstBuffer * buf)
 {
@@ -160,8 +179,8 @@ gst_avi_subtitle_parse_gab2_chunk (GstAviSubtitle * sub, GstBuffer * buf)
       NULL, NULL, NULL);
 
   if (name_utf8) {
-    /* FIXME: put in a taglist */
     GST_LOG_OBJECT (sub, "subtitle name: %s", name_utf8);
+    gst_avi_subtitle_title_tag (sub, name_utf8);
     g_free (name_utf8);
   }
 

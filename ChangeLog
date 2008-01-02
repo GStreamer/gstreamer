@@ -1,3 +1,10 @@
+2008-01-02  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/avi/gstavi.c:
+	increase rank because no known issues anymore ...
+	* gst/avi/gstavisubtitle.c:
+	send subtitle name to the srcpad
+
 2007-12-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send), (gst_rtspsrc_open):
