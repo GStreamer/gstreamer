@@ -1,3 +1,9 @@
+2008-01-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst-libs/gst/audio/gstaudiofilter.c:
+	(gst_audio_filter_class_init), (gst_audio_filter_get_unit_size):
+	Implement get_unit_size() vmethod of GstBaseTransform.
+
 2008-01-01  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst-libs/gst/pbutils/Makefile.am:

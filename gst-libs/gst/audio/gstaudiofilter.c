@@ -65,6 +65,8 @@ static GstStateChangeReturn gst_audio_filter_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_audio_filter_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
+static gboolean gst_audio_filter_get_unit_size (GstBaseTransform * btrans,
+    GstCaps * caps, guint * size);
 
 static GstElementClass *parent_class = NULL;
 
@@ -117,6 +119,8 @@ gst_audio_filter_class_init (gpointer klass, gpointer class_data)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_audio_filter_change_state);
   basetrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_audio_filter_set_caps);
+  basetrans_class->get_unit_size =
+      GST_DEBUG_FUNCPTR (gst_audio_filter_get_unit_size);
 }
 
 static void
@@ -185,6 +189,25 @@ gst_audio_filter_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   if (klass->setup)
     ret = klass->setup (filter, &filter->format);
+
+  return ret;
+}
+
+static gboolean
+gst_audio_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
+    guint * size)
+{
+  GstStructure *structure;
+  gboolean ret = TRUE;
+  gint width, channels;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  ret &= gst_structure_get_int (structure, "width", &width);
+  ret &= gst_structure_get_int (structure, "channels", &channels);
+
+  if (ret)
+    *size = (width / 8) * channels;
 
   return ret;
 }
