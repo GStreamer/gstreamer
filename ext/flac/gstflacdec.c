@@ -54,6 +54,7 @@
 #include "gstflacdec.h"
 #include <gst/gst-i18n-plugin.h>
 #include <gst/gsttagsetter.h>
+#include <gst/base/gsttypefindhelper.h>
 
 #include <gst/tag/tag.h>
 
@@ -299,6 +300,8 @@ gst_flac_dec_setup_seekable_decoder (GstFlacDec * dec)
       gst_flac_dec_write_seekable);
   FLAC__seekable_stream_decoder_set_metadata_respond (dec->seekable_decoder,
       FLAC__METADATA_TYPE_VORBIS_COMMENT);
+  FLAC__seekable_stream_decoder_set_metadata_respond (dec->seekable_decoder,
+      FLAC__METADATA_TYPE_PICTURE);
   FLAC__seekable_stream_decoder_set_metadata_callback (dec->seekable_decoder,
       gst_flac_dec_metadata_callback_seekable);
   FLAC__seekable_stream_decoder_set_error_callback (dec->seekable_decoder,
@@ -308,6 +311,8 @@ gst_flac_dec_setup_seekable_decoder (GstFlacDec * dec)
   dec->seekable_decoder = FLAC__stream_decoder_new ();
   FLAC__stream_decoder_set_metadata_respond (dec->seekable_decoder,
       FLAC__METADATA_TYPE_VORBIS_COMMENT);
+  FLAC__stream_decoder_set_metadata_respond (dec->seekable_decoder,
+      FLAC__METADATA_TYPE_PICTURE);
   FLAC__stream_decoder_set_md5_checking (dec->seekable_decoder, false); /* no point calculating since it's never checked here */
 #endif
 }
@@ -328,6 +333,8 @@ gst_flac_dec_setup_stream_decoder (GstFlacDec * dec)
       gst_flac_dec_write_stream);
   FLAC__stream_decoder_set_metadata_respond (dec->stream_decoder,
       FLAC__METADATA_TYPE_VORBIS_COMMENT);
+  FLAC__stream_decoder_set_metadata_respond (dec->stream_decoder,
+      FLAC__METADATA_TYPE_PICTURE);
   FLAC__stream_decoder_set_metadata_callback (dec->stream_decoder,
       gst_flac_dec_metadata_callback_stream);
   FLAC__stream_decoder_set_error_callback (dec->stream_decoder,
@@ -337,6 +344,8 @@ gst_flac_dec_setup_stream_decoder (GstFlacDec * dec)
   FLAC__stream_decoder_set_md5_checking (dec->stream_decoder, false);   /* no point calculating since it's never checked here */
   FLAC__stream_decoder_set_metadata_respond (dec->stream_decoder,
       FLAC__METADATA_TYPE_VORBIS_COMMENT);
+  FLAC__stream_decoder_set_metadata_respond (dec->stream_decoder,
+      FLAC__METADATA_TYPE_PICTURE);
 #endif
 }
 
@@ -564,6 +573,130 @@ gst_flac_dec_scan_for_last_block (GstFlacDec * flacdec, gint64 * samples)
   }
 }
 
+static gchar *
+gst_flac_normalize_picture_mime_type (const gchar * old_mime_type,
+    gboolean * is_pic_uri)
+{
+  gchar *mime_str;
+
+  g_return_val_if_fail (old_mime_type != NULL, NULL);
+
+  /* Make lower-case */
+  mime_str = g_ascii_strdown (old_mime_type, -1);
+
+  /* Fix up 'jpg' => 'jpeg' in mime/media type */
+  if (g_ascii_strcasecmp (mime_str, "jpg") == 0 ||
+      g_ascii_strcasecmp (mime_str, "image/jpg") == 0) {
+    g_free (mime_str);
+    mime_str = g_strdup ("image/jpeg");
+  }
+
+  /* Check if the picture is a URI reference */
+  *is_pic_uri = (strcmp (mime_str, "-->") == 0);
+
+  if (!(*is_pic_uri) && *mime_str && strchr (mime_str, '/') == NULL) {
+    gchar *tmp = g_strdup_printf ("image/%s", mime_str);
+
+    g_free (mime_str);
+    mime_str = tmp;
+  }
+
+  return mime_str;
+}
+
+static void
+gst_flac_extract_picture_buffer (GstFlacDec * flacdec,
+    const FLAC__StreamMetadata * metadata)
+{
+  /* Most of this is copied from gst/id3demux/id3v2frames.c */
+  gchar *mime_type;
+  GstBuffer *image;
+  GstCaps *image_caps;
+  FLAC__StreamMetadata_Picture picture;
+  gboolean is_pic_uri;
+
+  g_return_if_fail (metadata->type == FLAC__METADATA_TYPE_PICTURE);
+
+  GST_LOG ("Got PICTURE block");
+  picture = metadata->data.picture;
+
+  is_pic_uri = FALSE;
+  mime_type = gst_flac_normalize_picture_mime_type (picture.mime_type,
+      &is_pic_uri);
+
+  GST_DEBUG ("PICTURE MIME-type is: \"%s\"", mime_type);
+  GST_DEBUG ("image data is %u bytes", picture.data_length);
+
+  if (is_pic_uri) {
+    gchar *uri;
+
+    uri = g_strndup ((gchar *) picture.data, picture.data_length);
+    GST_DEBUG ("image URI: %s", uri);
+
+    image = gst_buffer_new ();
+    GST_BUFFER_MALLOCDATA (image) = (guint8 *) uri;     /* take ownership */
+    GST_BUFFER_DATA (image) = (guint8 *) uri;
+    GST_BUFFER_SIZE (image) = picture.data_length;
+
+    image_caps = gst_caps_new_simple ("text/uri-list", NULL);
+  }
+
+  else {
+    image = gst_buffer_new_and_alloc (picture.data_length);
+    memcpy (GST_BUFFER_DATA (image), picture.data, picture.data_length);
+
+    /* if possible use GStreamer media type rather than declared type */
+    image_caps = gst_type_find_helper_for_buffer (NULL, image, NULL);
+    if (image_caps) {
+      GST_DEBUG ("Found GStreamer media type: %" GST_PTR_FORMAT, image_caps);
+    } else if (mime_type && *mime_type) {
+      GST_DEBUG ("No GStreamer media type found, using declared type: \"%s\"",
+          mime_type);
+      image_caps = gst_caps_new_simple (mime_type, NULL);
+    } else {
+      GST_DEBUG ("Empty declared mime type, ignoring image frame");
+      image = NULL;
+      image_caps = NULL;
+    }
+  }
+
+  g_free (mime_type);
+
+  if (image && image_caps) {
+    GstTagList *tags;
+    FLAC__StreamMetadata_Picture_Type pic_type = picture.type;
+
+    tags = gst_tag_list_new ();
+
+    if (pic_type > 20) {
+      pic_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
+    }
+
+    gst_structure_set (gst_caps_get_structure (image_caps, 0),
+        "image-type", GST_TYPE_TAG_IMAGE_TYPE,
+        (GstTagImageType) pic_type, NULL);
+
+    gst_buffer_set_caps (image, image_caps);
+    gst_caps_unref (image_caps);
+    if (pic_type == 1 || pic_type == 2) {
+      /* file icon of some sort */
+      gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
+          GST_TAG_PREVIEW_IMAGE, image, NULL);
+    } else {
+      gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_IMAGE, image, NULL);
+    }
+    gst_buffer_unref (image);
+
+    /* Announce discovered tags */
+    gst_element_found_tags_for_pad (GST_ELEMENT (flacdec), flacdec->srcpad,
+        tags);
+  } else {
+    if (image)
+      gst_buffer_unref (image);
+    GST_DEBUG ("problem parsing PICTURE block, skipping");
+  }
+}
+
 static void
 gst_flac_dec_metadata_callback (GstFlacDec * flacdec,
     const FLAC__StreamMetadata * metadata)
@@ -607,6 +740,10 @@ gst_flac_dec_metadata_callback (GstFlacDec * flacdec,
             flacdec->segment.rate, flacdec->segment.applied_rate,
             GST_FORMAT_TIME, 0, duration, 0);
       }
+      break;
+    }
+    case FLAC__METADATA_TYPE_PICTURE:{
+      gst_flac_extract_picture_buffer (flacdec, metadata);
       break;
     }
     case FLAC__METADATA_TYPE_VORBIS_COMMENT:

@@ -1,3 +1,15 @@
+2008-01-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: John Millikin <jmillikin at gmail dot com>
+
+	* ext/flac/gstflacdec.c: (gst_flac_dec_setup_seekable_decoder),
+	(gst_flac_dec_setup_stream_decoder),
+	(gst_flac_normalize_picture_mime_type),
+	(gst_flac_extract_picture_buffer),
+	(gst_flac_dec_metadata_callback):
+	Emit metadata messages when a PICTURE block is encountered.
+	Fixes #506715.
+
 2008-01-02  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/avi/gstavi.c:
