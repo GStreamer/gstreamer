@@ -1,3 +1,14 @@
+2008-01-03  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/Makefile.am:
+	* gst/mpegtsparse/flutspatinfo.c:
+	* gst/mpegtsparse/flutspatinfo.h:
+	* gst/mpegtsparse/flutspmtinfo.c:
+	* gst/mpegtsparse/flutspmtinfo.h:
+	* gst/mpegtsparse/flutspmtstreaminfo.c:
+	* gst/mpegtsparse/flutspmtstreaminfo.h:
+	Remove no longer needed files.
+
 2008-01-02  David Schleef  <ds@schleef.org>
 
 	* tests/check/Makefile.am:
