@@ -52,13 +52,6 @@
 GST_DEBUG_CATEGORY_STATIC (audiofilter_dbg);
 #define GST_CAT_DEFAULT audiofilter_dbg
 
-static const GstElementDetails audio_filter_details =
-GST_ELEMENT_DETAILS ("Audio filter base class",
-    "Filter/Effect/Audio",
-    "Filters audio",
-    "David Schleef <ds@schleef.org>");
-
-static void gst_audio_filter_base_init (gpointer g_class);
 static void gst_audio_filter_class_init (gpointer g_class, gpointer class_data);
 static void gst_audio_filter_init (GTypeInstance * instance, gpointer g_class);
 static GstStateChangeReturn gst_audio_filter_change_state (GstElement * element,
@@ -78,7 +71,7 @@ gst_audio_filter_get_type (void)
   if (!audio_filter_type) {
     const GTypeInfo audio_filter_info = {
       sizeof (GstAudioFilterClass),
-      gst_audio_filter_base_init,
+      NULL,
       NULL,
       gst_audio_filter_class_init,
       NULL,
@@ -94,15 +87,6 @@ gst_audio_filter_get_type (void)
         "GstAudioFilter", &audio_filter_info, G_TYPE_FLAG_ABSTRACT);
   }
   return audio_filter_type;
-}
-
-static void
-gst_audio_filter_base_init (gpointer g_class)
-{
-  GstAudioFilterClass *klass = (GstAudioFilterClass *) g_class;
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details (element_class, &audio_filter_details);
 }
 
 static void

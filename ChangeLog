@@ -1,3 +1,8 @@
+2008-01-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst-libs/gst/audio/gstaudiofilter.c: (gst_audio_filter_get_type):
+	Don't set element details for the abstract GstAudioFilter class.
+
 2008-01-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/audio/gstaudiofilter.c:
