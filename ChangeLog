@@ -1,3 +1,9 @@
+2008-01-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* docs/faq/gst-uninstalled:
+	Clarify the comments to make the usage of this script and what it
+	does easier to understand.
+
 2008-01-01  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* tools/gst-plot-timeline.py:

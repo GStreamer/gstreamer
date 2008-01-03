@@ -2,18 +2,22 @@
 #
 # this script is in CVS as gstreamer/docs/faq/gst-uninstalled
 #
-# set up environment to use and develop gstreamer and friends uninstalled
+# It will set up the environment to use and develop gstreamer and projects
+# that use gstreamer with an uninstalled CVS checkout of gstreamer and the
+# plugin modules.
 #
-# set up PATH, LD_LIBRARY_PATH, PKG_CONFIG_PATH, GST_PLUGIN_PATH, MANPATH,
-# PYTHONPATH
+# It will set up LD_LIBRARY_PATH, DYLD_LIBRARY_PATH, PKG_CONFIG_PATH,
+# GST_PLUGIN_PATH, GST_PLUGIN_SYSTEM_PATH, GST_REGISTRY, MANPATH, PYTHONPATH
+# to prefer the uninstalled versions but also contain the installed ones.
+# The only exception to this is, that no system installed plugins will be
+# used but only the uninstalled ones.
 #
-# prefer uninstalled versions, but also put installed ones on the path
+# This script assumes that the relevant modules are checked out one by one
+# under a given tree specified below in MYGST.
 #
-# this script assumes that the relevant modules are checked out one by one
-# under a given tree specified below in MYGST
-#
-# symlink this script in a directory in your path (for example $HOME/bin)
-# to a name that reflects the version of your checkout
+# Symlink this script in a directory in your path (for example $HOME/bin). You
+# must name the symlink gst-something, where something is the subdirectory
+# of MYGST that contains your gstreamer module checkouts.
 #
 # e.g.:
 # - mkdir $HOME/gst/head
@@ -21,11 +25,14 @@
 # - checkout copies of gstreamer modules in $HOME/gst/head
 # - gst-head
 
-# this script is run -i so that PS1 doesn't get cleared
+# This script is run -i so that PS1 doesn't get cleared
 
-# change this variable to a different location depending on where you
-# store your cvs checkouts
+# Change this variable to the location of your gstreamer CVS checkouts
 MYGST=$HOME/gst
+
+#
+# Everything below this line shouldn't be edited!
+#
 
 # extract version from $0
 # if this script is called "gst-head" then version will be "head"
