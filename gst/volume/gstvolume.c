@@ -50,6 +50,8 @@
 #include <gst/audio/audio.h>
 #include <gst/interfaces/mixer.h>
 #include <gst/controller/gstcontroller.h>
+#include <gst/audio/audio.h>
+#include <gst/audio/gstaudiofilter.h>
 #include <liboil/liboil.h>
 
 #include "gstvolume.h"
@@ -102,79 +104,40 @@ enum
   PROP_VOLUME
 };
 
-static GstStaticPadTemplate volume_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) {32, 64}; "
-        "audio/x-raw-int, "
-        "channels = (int) [ 1, MAX ], "
-        "rate = (int) [ 1,  MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
-        "signed = (bool) TRUE; "
-        "audio/x-raw-int, "
-        "channels = (int) [ 1, MAX ], "
-        "rate = (int) [ 1,  MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "signed = (bool) TRUE; "
-        "audio/x-raw-int, "
-        "channels = (int) [ 1, MAX ], "
-        "rate = (int) [ 1,  MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 24, "
-        "depth = (int) 24, "
-        "signed = (bool) TRUE; "
-        "audio/x-raw-int, "
-        "channels = (int) [ 1, MAX ], "
-        "rate = (int) [ 1,  MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32, " "depth = (int) 32, " "signed = (bool) TRUE")
-    );
-
-static GstStaticPadTemplate volume_src_template = GST_STATIC_PAD_TEMPLATE
-    ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) {32, 64}; "
-        "audio/x-raw-int, "
-        "channels = (int) [ 1, MAX ], "
-        "rate = (int) [ 1,  MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
-        "signed = (bool) TRUE; "
-        "audio/x-raw-int, "
-        "channels = (int) [ 1, MAX ], "
-        "rate = (int) [ 1,  MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "signed = (bool) TRUE; "
-        "audio/x-raw-int, "
-        "channels = (int) [ 1, MAX ], "
-        "rate = (int) [ 1,  MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 24, "
-        "depth = (int) 24, "
-        "signed = (bool) TRUE; "
-        "audio/x-raw-int, "
-        "channels = (int) [ 1, MAX ], "
-        "rate = (int) [ 1,  MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32, " "depth = (int) 32, " "signed = (bool) TRUE")
-    );
+#define ALLOWED_CAPS \
+        "audio/x-raw-float, " \
+        "rate = (int) [ 1, MAX ], " \
+        "channels = (int) [ 1, MAX ], " \
+        "endianness = (int) BYTE_ORDER, " \
+        "width = (int) {32, 64}; " \
+        "audio/x-raw-int, " \
+        "channels = (int) [ 1, MAX ], " \
+        "rate = (int) [ 1,  MAX ], " \
+        "endianness = (int) BYTE_ORDER, " \
+        "width = (int) 8, " \
+        "depth = (int) 8, " \
+        "signed = (bool) TRUE; " \
+        "audio/x-raw-int, " \
+        "channels = (int) [ 1, MAX ], " \
+        "rate = (int) [ 1,  MAX ], " \
+        "endianness = (int) BYTE_ORDER, " \
+        "width = (int) 16, " \
+        "depth = (int) 16, " \
+        "signed = (bool) TRUE; " \
+        "audio/x-raw-int, " \
+        "channels = (int) [ 1, MAX ], " \
+        "rate = (int) [ 1,  MAX ], " \
+        "endianness = (int) BYTE_ORDER, " \
+        "width = (int) 24, " \
+        "depth = (int) 24, " \
+        "signed = (bool) TRUE; " \
+        "audio/x-raw-int, " \
+        "channels = (int) [ 1, MAX ], " \
+        "rate = (int) [ 1,  MAX ], " \
+        "endianness = (int) BYTE_ORDER, " \
+        "width = (int) 32, " \
+	"depth = (int) 32, " \
+	"signed = (bool) TRUE"
 
 static void gst_volume_interface_init (GstImplementsInterfaceClass * klass);
 static void gst_volume_mixer_init (GstMixerClass * iface);
@@ -197,8 +160,8 @@ static void gst_volume_mixer_init (GstMixerClass * iface);
     g_type_add_interface_static (type, GST_TYPE_MIXER, &volmixer_info); \
   }
 
-GST_BOILERPLATE_FULL (GstVolume, gst_volume, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, _init_interfaces);
+GST_BOILERPLATE_FULL (GstVolume, gst_volume, GstAudioFilter,
+    GST_TYPE_AUDIO_FILTER, _init_interfaces);
 
 static void volume_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -209,8 +172,8 @@ static void volume_update_mute (const GValue * value, gpointer data);
 
 static GstFlowReturn volume_transform_ip (GstBaseTransform * base,
     GstBuffer * outbuf);
-static gboolean volume_set_caps (GstBaseTransform * base, GstCaps * incaps,
-    GstCaps * outcaps);
+static gboolean volume_setup (GstAudioFilter * filter,
+    GstRingBufferSpec * format);
 
 static void volume_process_double (GstVolume * this, gpointer bytes,
     guint n_bytes);
@@ -236,13 +199,17 @@ static void volume_process_int8_clamp (GstVolume * this, gpointer bytes,
 
 /* helper functions */
 
-static void
+static gboolean
 volume_choose_func (GstVolume * this)
 {
   this->process = NULL;
-  switch (this->format) {
-    case GST_VOLUME_FORMAT_INT:
-      switch (this->width) {
+
+  if (GST_AUDIO_FILTER (this)->format.caps == NULL)
+    return FALSE;
+
+  switch (GST_AUDIO_FILTER (this)->format.type) {
+    case GST_BUFTYPE_LINEAR:
+      switch (GST_AUDIO_FILTER (this)->format.width) {
         case 32:
           /* only clamp if the gain is greater than 1.0
            * FIXME: real_vol_i can change while processing the buffer!
@@ -281,8 +248,8 @@ volume_choose_func (GstVolume * this)
           break;
       }
       break;
-    case GST_VOLUME_FORMAT_FLOAT:
-      switch (this->width) {
+    case GST_BUFTYPE_FLOAT:
+      switch (GST_AUDIO_FILTER (this)->format.width) {
         case 32:
           this->process = volume_process_float;
           break;
@@ -294,6 +261,8 @@ volume_choose_func (GstVolume * this)
     default:
       break;
   }
+
+  return (this->process != NULL);
 }
 
 static void
@@ -419,12 +388,14 @@ static void
 gst_volume_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstAudioFilterClass *filter_class = GST_AUDIO_FILTER_CLASS (g_class);
+  GstCaps *caps;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&volume_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&volume_sink_template));
   gst_element_class_set_details (element_class, &volume_details);
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (filter_class, caps);
+  gst_caps_unref (caps);
 }
 
 static void
@@ -432,9 +403,11 @@ gst_volume_class_init (GstVolumeClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
+  GstAudioFilterClass *filter_class;
 
   gobject_class = (GObjectClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
+  filter_class = (GstAudioFilterClass *) (klass);
 
   gobject_class->set_property = volume_set_property;
   gobject_class->get_property = volume_get_property;
@@ -452,7 +425,7 @@ gst_volume_class_init (GstVolumeClass * klass)
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "volume", 0, "Volume gain");
 
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (volume_transform_ip);
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (volume_set_caps);
+  filter_class->setup = GST_DEBUG_FUNCPTR (volume_setup);
 }
 
 static void
@@ -467,7 +440,6 @@ gst_volume_init (GstVolume * this, GstVolumeClass * g_class)
   this->volume_i32 = this->real_vol_i32 = VOLUME_UNITY_INT32;
   this->volume_f = this->real_vol_f = 1.0;
   this->tracklist = NULL;
-  this->format = GST_VOLUME_FORMAT_NONE;
 
   track = g_object_new (GST_TYPE_MIXER_TRACK, NULL);
 
@@ -690,39 +662,15 @@ volume_process_int8_clamp (GstVolume * this, gpointer bytes, guint n_bytes)
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-volume_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
+volume_setup (GstAudioFilter * filter, GstRingBufferSpec * format)
 {
-  GstVolume *this = GST_VOLUME (base);
-  const gchar *mimetype;
-  GstStructure *structure;
+  GstVolume *this = GST_VOLUME (filter);
 
-  GST_DEBUG_OBJECT (this,
-      "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
-
-  structure = gst_caps_get_structure (incaps, 0);
-  gst_structure_get_int (structure, "width", &this->width);
-  mimetype = gst_structure_get_name (structure);
-
-  /* based on mimetype, choose the correct volume_process format */
-  if (strcmp (mimetype, "audio/x-raw-int") == 0) {
-    this->format = GST_VOLUME_FORMAT_INT;
-    GST_DEBUG_OBJECT (this, "use int: %u", this->width);
-  } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
-    this->format = GST_VOLUME_FORMAT_FLOAT;
-    GST_DEBUG_OBJECT (this, "use float: %u", this->width);
+  if (volume_choose_func (this)) {
+    return TRUE;
   } else {
-    this->process = NULL;
-    goto invalid_format;
-  }
-  volume_choose_func (this);
-
-  return TRUE;
-
-  /* ERRORS */
-invalid_format:
-  {
     GST_ELEMENT_ERROR (this, CORE, NEGOTIATION,
-        ("Invalid incoming caps: %" GST_PTR_FORMAT, incaps), (NULL));
+        ("Invalid incoming format"), (NULL));
     return FALSE;
   }
 }

@@ -25,6 +25,8 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <gst/audio/audio.h>
+#include <gst/audio/gstaudiofilter.h>
 
 G_BEGIN_DECLS
 
@@ -42,19 +44,13 @@ G_BEGIN_DECLS
 typedef struct _GstVolume GstVolume;
 typedef struct _GstVolumeClass GstVolumeClass;
 
-typedef enum {
-  GST_VOLUME_FORMAT_NONE,
-  GST_VOLUME_FORMAT_INT, 	 
-  GST_VOLUME_FORMAT_FLOAT 	 
-} GstVolumeFormat;
-
 /**
  * GstVolume:
  *
  * Opaque data structure.
  */
 struct _GstVolume {
-  GstBaseTransform element;
+  GstAudioFilter element;
 
   void (*process)(GstVolume*, gpointer, guint);
 
@@ -66,13 +62,11 @@ struct _GstVolume {
   gfloat volume_f, real_vol_f; /* _f(loat) values on each update */
   
   GList *tracklist;
-  GstVolumeFormat format;       /* caps variables */
-  gint width;
   gboolean silent_buffer;       /* flag for silent buffers */
 };
 
 struct _GstVolumeClass {
-  GstBaseTransformClass parent_class;
+  GstAudioFilterClass parent_class;
 };
 
 GType gst_volume_get_type (void);
