@@ -1,3 +1,15 @@
+2008-01-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/parse/parse.l:
+	Use "%option never-interactive" to prevent useless calls to isatty()
+	on every input when parsing. Also use "%option noinput" to not define
+	the static input/yyinput functions which we don't use anyway. This
+	removes a compiler warning with gcc 4.3 and saves some bytes in the
+	library.
+	
+	* gst/parse/lex._gst_parse_yy.pre.c:
+	Regenerated for the above change.
+
 2008-01-04  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstpad.c: (fixate_value):

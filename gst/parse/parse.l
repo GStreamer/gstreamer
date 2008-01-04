@@ -66,6 +66,8 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)
 %option nounput
 %option reentrant
 %option bison-bridge
+%option never-interactive
+%option noinput
 %%
 
 {_assignment} {

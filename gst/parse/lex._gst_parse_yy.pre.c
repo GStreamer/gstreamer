@@ -837,7 +837,8 @@ PRINT (const char *format, ...)
 /* get pad/element references and stuff with dots right */
 /* links */
 
-#line 837 "lex._gst_parse_yy.c"
+#define YY_NO_INPUT 1
+#line 838 "lex._gst_parse_yy.c"
 
 #define INITIAL 0
 #define value 1
@@ -1063,10 +1064,10 @@ YY_DECL {
   register int yy_act;
   struct yyguts_t *yyg = (struct yyguts_t *) yyscanner;
 
-#line 69 "parse.l"
+#line 71 "parse.l"
 
 
-#line 1068 "lex._gst_parse_yy.c"
+#line 1069 "lex._gst_parse_yy.c"
 
   yylval = yylval_param;
 
@@ -1124,15 +1125,12 @@ YY_DECL {
           yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
       ++yy_cp;
     }
-    while (yy_base[yy_current_state] != 1331);
+    while (yy_current_state != 176);
+    yy_cp = yyg->yy_last_accepting_cpos;
+    yy_current_state = yyg->yy_last_accepting_state;
 
   yy_find_action:
     yy_act = yy_accept[yy_current_state];
-    if (yy_act == 0) {          /* have to back up */
-      yy_cp = yyg->yy_last_accepting_cpos;
-      yy_current_state = yyg->yy_last_accepting_state;
-      yy_act = yy_accept[yy_current_state];
-    }
 
     YY_DO_BEFORE_ACTION;
 
@@ -1149,7 +1147,7 @@ YY_DECL {
       case 1:
 /* rule 1 can match eol */
         YY_RULE_SETUP
-#line 71 "parse.l"
+#line 73 "parse.l"
       {
         /* "=" */
         PRINT ("ASSIGNMENT: %s", yytext);
@@ -1158,7 +1156,7 @@ YY_DECL {
         return ASSIGNMENT;
       }
         YY_BREAK case 2:YY_RULE_SETUP
-#line 79 "parse.l"
+#line 81 "parse.l"
       {
         yytext++;
         PRINT ("PADREF: %s", yytext);
@@ -1167,7 +1165,7 @@ YY_DECL {
         return PADREF;
       }
         YY_BREAK case 3:YY_RULE_SETUP
-#line 87 "parse.l"
+#line 89 "parse.l"
       {
         PRINT ("REF: %s", yytext);
         yylval->s = gst_parse_strdup (yytext);
@@ -1177,7 +1175,7 @@ YY_DECL {
         YY_BREAK case 4:
 /* rule 4 can match eol */
           YY_RULE_SETUP
-#line 94 "parse.l"
+#line 96 "parse.l"
       {
         gchar *pos = yytext;
 
@@ -1190,7 +1188,7 @@ YY_DECL {
           return BINREF;
       }
         YY_BREAK case 5:YY_RULE_SETUP
-#line 104 "parse.l"
+#line 106 "parse.l"
       {
         PRINT ("IDENTIFIER: %s", yytext);
         yylval->s = gst_parse_strdup (yytext);
@@ -1200,7 +1198,7 @@ YY_DECL {
         YY_BREAK case 6:
 /* rule 6 can match eol */
           YY_RULE_SETUP
-#line 111 "parse.l"
+#line 113 "parse.l"
       {
         gchar *c = yytext;
 
@@ -1227,7 +1225,7 @@ YY_DECL {
         YY_BREAK case 7:
 /* rule 7 can match eol */
           YY_RULE_SETUP
-#line 129 "parse.l"
+#line 131 "parse.l"
       {
         PRINT ("URL: %s", yytext);
         yylval->s = g_strdup (yytext);
@@ -1236,7 +1234,7 @@ YY_DECL {
         return PARSE_URL;
       }
         YY_BREAK case 8:YY_RULE_SETUP
-#line 137 "parse.l"
+#line 139 "parse.l"
       {
         PRINT ("OPERATOR: [%s]", yytext);
         return *yytext;
@@ -1244,22 +1242,22 @@ YY_DECL {
         YY_BREAK case 9:
 /* rule 9 can match eol */
           YY_RULE_SETUP
-#line 139 "parse.l"
+#line 141 "parse.l"
       {
         PRINT ("SPACE: [%s]", yytext);
       }
         YY_BREAK case 10:YY_RULE_SETUP
-#line 141 "parse.l"
+#line 143 "parse.l"
       {
         PRINT ("Invalid Lexer element: %s\n", yytext);
         return *yytext;
       }
         YY_BREAK case 11:YY_RULE_SETUP
-#line 146 "parse.l"
+#line 148 "parse.l"
           ECHO;
 
         YY_BREAK
-#line 1269 "lex._gst_parse_yy.c"
+#line 1266 "lex._gst_parse_yy.c"
       case YY_STATE_EOF (INITIAL):
       case YY_STATE_EOF (value):
         yyterminate ();
@@ -1322,7 +1320,8 @@ YY_DECL {
           }
 
           else {
-            yy_cp = yyg->yy_c_buf_p;
+            yy_cp = yyg->yy_last_accepting_cpos;
+            yy_current_state = yyg->yy_last_accepting_state;
             goto yy_find_action;
           }
         }
@@ -1755,10 +1754,6 @@ _gst_parse_yy_delete_buffer (YY_BUFFER_STATE b, yyscan_t yyscanner)
   _gst_parse_yyfree ((void *) b, yyscanner);
 }
 
-#ifndef __cplusplus
-extern int isatty (int);
-#endif /* __cplusplus */
-
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
  * such as during a _gst_parse_yyrestart() or at EOF.
@@ -1783,7 +1778,7 @@ _gst_parse_yy_init_buffer (YY_BUFFER_STATE b, FILE * file, yyscan_t yyscanner)
     b->yy_bs_column = 0;
   }
 
-  b->yy_is_interactive = file ? (isatty (fileno (file)) > 0) : 0;
+  b->yy_is_interactive = 0;
 
   errno = oerrno;
 }
@@ -2374,7 +2369,7 @@ _gst_parse_yyfree (void *ptr, yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 146 "parse.l"
+#line 148 "parse.l"
 
 
 /* A Bison parser, made by GNU Bison 2.3.  */
