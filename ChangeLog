@@ -1,3 +1,10 @@
+2008-01-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_loop):
+	Don't unref the popped buffer when we don't have ownership.
+	Fixes #507020.
+
 2008-01-03  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/Makefile.am:

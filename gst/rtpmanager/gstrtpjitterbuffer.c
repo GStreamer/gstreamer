@@ -971,7 +971,7 @@ static void
 gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
 {
   GstRtpJitterBufferPrivate *priv;
-  GstBuffer *outbuf = NULL;
+  GstBuffer *outbuf;
   GstFlowReturn result;
   guint16 seqnum;
   GstClockTime timestamp, out_time;
@@ -1152,8 +1152,6 @@ flushing:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "we are flushing");
     gst_pad_pause_task (priv->srcpad);
-    if (outbuf)
-      gst_buffer_unref (outbuf);
     JBUF_UNLOCK (priv);
     return;
   }
