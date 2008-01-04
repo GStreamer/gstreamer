@@ -1,3 +1,17 @@
+2008-01-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	Don't register the WavPack demuxer and decoder. They don't work,
+	we have better ones and the output of the demuxer/input of the
+	decoder is in a different format than what audio/x-wavpack of the
+	wavpack plugin is (it seems that the demuxer strips of the wavpack
+	headers from every frame).
+
+	This fixes typefinding of Wavpack files again, as the ffmpeg
+	typefinder was preffered for some reason and gave
+	application/x-gst_ff-wv instead of audio/x-wavpack.
+
 2007-12-18  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):

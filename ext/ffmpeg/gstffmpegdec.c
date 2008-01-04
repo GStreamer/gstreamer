@@ -498,7 +498,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
     case CODEC_ID_MPEG4:
     case CODEC_ID_MJPEG:
     case CODEC_ID_MP3:
-  case CODEC_ID_VC1:
+    case CODEC_ID_VC1:
       GST_LOG_OBJECT (ffmpegdec, "not using parser, blacklisted codec");
       ffmpegdec->pctx = NULL;
       break;
@@ -695,7 +695,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
   switch (context->codec_type) {
     case CODEC_TYPE_VIDEO:
-    /* some ffmpeg video plugins don't see the point in setting codec_type ... */
+      /* some ffmpeg video plugins don't see the point in setting codec_type ... */
     case CODEC_TYPE_UNKNOWN:
       avcodec_align_dimensions (context, &width, &height);
 
@@ -2272,6 +2272,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     if (!strcmp (in_plugin->name, "gif") ||
         !strcmp (in_plugin->name, "vorbis") ||
         !strcmp (in_plugin->name, "mpeg1video") ||
+        !strcmp (in_plugin->name, "wavpack") ||
         !strcmp (in_plugin->name, "mp2")) {
       GST_LOG ("Ignoring decoder %s", in_plugin->name);
       goto next;
