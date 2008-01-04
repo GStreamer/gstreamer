@@ -1,3 +1,9 @@
+2008-01-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c: (fixate_value):
+	Don't crash when trying to fixate and empty list.
+	Fixes #506643.
+
 2008-01-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/faq/gst-uninstalled:

@@ -2120,7 +2120,12 @@ fixate_value (GValue * dest, const GValue * src)
   } else if (G_VALUE_TYPE (src) == GST_TYPE_LIST) {
     GValue temp = { 0 };
 
+    /* list could be empty */
+    if (gst_value_list_get_size (src) <= 0)
+      return FALSE;
+
     gst_value_init_and_copy (&temp, gst_value_list_get_value (src, 0));
+
     if (!fixate_value (dest, &temp))
       gst_value_init_and_copy (dest, &temp);
     g_value_unset (&temp);
