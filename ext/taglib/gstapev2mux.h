@@ -29,11 +29,11 @@ G_BEGIN_DECLS
 typedef struct _GstApev2Mux GstApev2Mux;
 typedef struct _GstApev2MuxClass GstApev2MuxClass;
 
-typedef struct _GstApev2Mux {
+struct _GstApev2Mux {
   GstTagLibMux  taglibmux;
 };
 
-typedef struct _GstApev2MuxClass {
+struct _GstApev2MuxClass {
   GstTagLibMuxClass  taglibmux_class;
 };
 
