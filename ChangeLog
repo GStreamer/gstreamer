@@ -1,3 +1,8 @@
+2008-01-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstdebugutils.c: (_gst_debug_bin_to_dot_file):
+	  Log the reason why fopen fails in addition to the fact that it failed.
+	  
 2008-01-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/parse/parse.l:
