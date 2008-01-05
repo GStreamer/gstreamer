@@ -600,6 +600,17 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
           xvimage->size, expected_size);
     }
 
+    /* Be verbose about our XvImage stride */
+    {
+      guint plane;
+
+      for (plane = 0; plane < xvimage->xvimage->num_planes; plane++) {
+        GST_DEBUG_OBJECT (xvimagesink, "Plane %u has a pitch of %d bytes, "
+            "offset of %d", plane, xvimage->xvimage->pitches[plane],
+            xvimage->xvimage->offsets[plane]);
+      }
+    }
+
     xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
         IPC_CREAT | 0777);
     if (xvimage->SHMInfo.shmid == -1) {
