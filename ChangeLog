@@ -1,3 +1,22 @@
+2008-01-05  Julien Moutte  <julien@fluendo.com>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	(gst_directdraw_sink_set_window_id),
+	(gst_directdraw_sink_set_caps), (gst_directdraw_sink_change_state),
+	(gst_directdraw_sink_buffer_alloc),
+	(gst_directdraw_sink_draw_borders),
+	(gst_directdraw_sink_show_frame),
+	(gst_directdraw_sink_setup_ddraw),
+	(gst_directdraw_sink_window_thread),
+	(gst_directdraw_sink_get_ddrawcaps),
+	(gst_directdraw_sink_surface_create): Make sure we create our
+	internal window only when we need it. That will give a chance to
+	the application to get the prepare-xwindow-id bus message. Draw
+	black borders when keeping aspect ratio. Handle the case where our
+	rendering window disappears (closed or errors) like other sinks
+	do. Various 80 columns fixes, improve state change order. That
+	element could need some more love.
+
 2008-01-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/taglib/gstapev2mux.h:
