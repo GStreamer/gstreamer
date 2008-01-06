@@ -31,32 +31,24 @@
 /* I know all of these have a shift of 6 bits */
 #define GRANULEPOS_SHIFT 6
 
-static void
-check_buffer_is_header (GstBuffer * buffer, gboolean is_header)
-{
-  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer,
-          GST_BUFFER_FLAG_IN_CAPS) == is_header,
-      "GST_BUFFER_IN_CAPS is set to %d but expected %d",
-      GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS), is_header);
-}
 
-static void
-check_buffer_timestamp (GstBuffer * buffer, GstClockTime timestamp)
-{
-  fail_unless (GST_BUFFER_TIMESTAMP (buffer) == timestamp,
-      "expected timestamp %" GST_TIME_FORMAT
-      ", but got timestamp %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (timestamp), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
-}
+#define check_buffer_is_header(buffer,is_header) \
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer,   \
+          GST_BUFFER_FLAG_IN_CAPS) == is_header, \
+      "GST_BUFFER_IN_CAPS is set to %d but expected %d", \
+      GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS), is_header)
 
-static void
-check_buffer_duration (GstBuffer * buffer, GstClockTime duration)
-{
-  fail_unless (GST_BUFFER_DURATION (buffer) == duration,
-      "expected duration %" GST_TIME_FORMAT
-      ", but got duration %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (duration), GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
-}
+#define check_buffer_timestamp(buffer,timestamp) \
+  fail_unless (GST_BUFFER_TIMESTAMP (buffer) == timestamp, \
+      "expected timestamp %" GST_TIME_FORMAT \
+      ", but got timestamp %" GST_TIME_FORMAT, \
+      GST_TIME_ARGS (timestamp), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)))
+
+#define check_buffer_duration(buffer,duration) \
+  fail_unless (GST_BUFFER_DURATION (buffer) == duration, \
+      "expected duration %" GST_TIME_FORMAT \
+      ", but got duration %" GST_TIME_FORMAT, \
+      GST_TIME_ARGS (duration), GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)))
 
 static void
 check_buffer_granulepos (GstBuffer * buffer, gint64 granulepos)
