@@ -2,7 +2,7 @@
 #define __GST_GLEXTENSIONS_H__
 
 #include <GL/gl.h>
-#include <glib.h>
+//#include <glib.h>
 
 int gl_have_extension (const char *name);
 

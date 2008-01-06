@@ -54,6 +54,9 @@ struct _GstGLImageSink
   /* caps */
   GstCaps *caps;
   GstVideoFormat format;
+  int width;
+  int height;
+  gboolean is_gl;
   int fps_n, fps_d;
   int par_n, par_d;
 

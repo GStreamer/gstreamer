@@ -83,14 +83,14 @@ GST_ELEMENT_DETAILS ("OpenGL video sink",
 #define YUV_CAPS
 #endif
 static GstStaticPadTemplate gst_glimage_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS ";"
+        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
+        GST_VIDEO_CAPS_YUV ("{ AYUV, UYVY, YUY2 }"))
     );
-
-//GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
-//GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR YUV_CAPS)
 
 enum
 {
@@ -287,24 +287,13 @@ gst_glimage_sink_start (GstBaseSink * bsink)
 {
   GstGLImageSink *glimage_sink;
 
-  //gboolean ret;
-
   GST_DEBUG ("start");
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-#if 0
-  glimage_sink->display = gst_gl_display_new ();
-  ret = gst_gl_display_connect (glimage_sink->display,
-      glimage_sink->display_name);
-  if (!ret) {
-    GST_ERROR ("failed to open display");
-    return FALSE;
-  }
-#endif
-
   if (glimage_sink->display && glimage_sink->window_id) {
     gst_gl_display_set_window (glimage_sink->display, glimage_sink->window_id);
+    gst_gl_display_set_visible (glimage_sink->display, TRUE);
   }
 
   GST_DEBUG ("start done");
@@ -322,6 +311,7 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
   if (glimage_sink->display) {
+    gst_gl_display_set_visible (glimage_sink->display, FALSE);
     g_object_unref (glimage_sink->display);
     glimage_sink->display = NULL;
   }
@@ -390,29 +380,34 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   int par_n, par_d;
   GstVideoFormat format;
   GstStructure *structure;
+  gboolean is_gl;
 
   GST_DEBUG ("set caps with %" GST_PTR_FORMAT, caps);
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
   structure = gst_caps_get_structure (caps, 0);
-  if (0) {
-    ok = gst_video_format_parse_caps (caps, &format, &width, &height);
-    ok &= gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
-    ok &= gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
-  } else {
+  if (gst_structure_has_name (structure, "video/x-raw-gl")) {
+    is_gl = TRUE;
+    format = GST_VIDEO_FORMAT_UNKNOWN;
     ok = gst_structure_get_int (structure, "width", &width);
     ok &= gst_structure_get_int (structure, "height", &height);
-    ok &= gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
-    ok &= gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
+  } else {
+    is_gl = FALSE;
+    ok = gst_video_format_parse_caps (caps, &format, &width, &height);
   }
+  ok &= gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
+  ok &= gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
 
   if (!ok)
     return FALSE;
 
   GST_VIDEO_SINK_WIDTH (glimage_sink) = width;
   GST_VIDEO_SINK_HEIGHT (glimage_sink) = height;
-  //glimage_sink->format = format;
+  glimage_sink->is_gl = is_gl;
+  glimage_sink->format = format;
+  glimage_sink->width = width;
+  glimage_sink->height = height;
   glimage_sink->fps_n = fps_n;
   glimage_sink->fps_d = fps_d;
   glimage_sink->par_n = par_n;
@@ -425,73 +420,53 @@ static GstFlowReturn
 gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
-  GstGLBuffer *gl_buffer = GST_GL_BUFFER (buf);
+  GstGLBuffer *gl_buffer;
   GstGLDisplay *display;
-
-  GST_DEBUG ("render");
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  if (glimage_sink->display == NULL) {
-    glimage_sink->display = g_object_ref (gl_buffer->display);
-#if 1
-    if (glimage_sink->window_id) {
-      gst_gl_display_set_window (glimage_sink->display,
-          glimage_sink->window_id);
+  if (glimage_sink->is_gl) {
+    gl_buffer = GST_GL_BUFFER (gst_buffer_ref (buf));
+
+    if (glimage_sink->display == NULL) {
+      glimage_sink->display = g_object_ref (gl_buffer->display);
+      if (glimage_sink->window_id) {
+        gst_gl_display_set_window (glimage_sink->display,
+            glimage_sink->window_id);
+      }
+    } else {
+      g_assert (gl_buffer->display == glimage_sink->display);
     }
-#endif
+    display = gl_buffer->display;
+
   } else {
-    g_assert (gl_buffer->display == glimage_sink->display);
+    if (glimage_sink->display == NULL) {
+      gboolean ret;
+
+      glimage_sink->display = gst_gl_display_new ();
+      ret = gst_gl_display_connect (glimage_sink->display, NULL);
+      if (!ret) {
+        g_object_unref (glimage_sink->display);
+        return GST_FLOW_ERROR;
+      }
+      if (glimage_sink->window_id) {
+        gst_gl_display_set_window (glimage_sink->display,
+            glimage_sink->window_id);
+      }
+      gst_gl_display_set_visible (glimage_sink->display, TRUE);
+    }
+    display = glimage_sink->display;
+
+    gl_buffer = gst_gl_buffer_new_from_video_format (display,
+        glimage_sink->format, glimage_sink->width, glimage_sink->height);
+    gst_gl_buffer_upload (gl_buffer, glimage_sink->format,
+        GST_BUFFER_DATA (buf));
   }
 
-  display = gl_buffer->display;
+  gst_gl_display_draw_texture (display, gl_buffer->texture,
+      gl_buffer->width, gl_buffer->height);
 
-  /* FIXME polling causes a round-trip delay.  This should be changed
-   * to catch structure events */
-  gst_gl_display_update_attributes (display);
-
-  gst_gl_display_lock (display);
-  glViewport (0, 0, display->win_width, display->win_height);
-
-  glClearColor (0.3, 0.3, 0.3, 1.0);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
-
-  glMatrixMode (GL_MODELVIEW);
-  glLoadIdentity ();
-
-  glDisable (GL_CULL_FACE);
-  glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-
-  glColor4f (1, 1, 1, 1);
-
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, gl_buffer->texture);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-  glColor4f (1, 0, 1, 1);
-
-  glBegin (GL_QUADS);
-  glNormal3f (0, 0, -1);
-  glTexCoord2f (gl_buffer->width, 0);
-  glVertex3f (1.0, 1.0, 0);
-  glTexCoord2f (0, 0);
-  glVertex3f (-1.0, 1.0, 0);
-  glTexCoord2f (0, gl_buffer->height);
-  glVertex3f (-1.0, -1.0, 0);
-  glTexCoord2f (gl_buffer->width, gl_buffer->height);
-  glVertex3f (1.0, -1.0, 0);
-  glEnd ();
-
-  glXSwapBuffers (display->display, display->window);
-
-  gst_gl_display_unlock (display);
+  gst_buffer_unref (GST_BUFFER (gl_buffer));
 
   return GST_FLOW_OK;
 }
@@ -557,65 +532,3 @@ gst_glimage_sink_implements_init (GstImplementsInterfaceClass * klass)
 {
   klass->supported = gst_glimage_sink_interface_supported;
 }
-
-
-/*
- * helper functions
- */
-
-#if 0
-static void
-gst_caps_set_all (GstCaps * caps, char *field, ...)
-{
-  GstStructure *structure;
-  va_list var_args;
-  int i;
-
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    structure = gst_caps_get_structure (caps, i);
-
-    va_start (var_args, field);
-    gst_structure_set_valist (structure, field, var_args);
-    va_end (var_args);
-  }
-}
-#endif
-
-#if 0
-static void
-gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink)
-{
-  GstCaps *caps;
-  int max_size;
-
-  if (glimage_sink->display == NULL) {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
-            (glimage_sink)));
-    gst_caps_replace (&glimage_sink->caps, caps);
-    return;
-  }
-
-  caps =
-      gst_caps_from_string (GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
-      GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR);
-#ifdef GL_YCBCR_MESA
-  if (glimage_sink->display->have_ycbcr_texture) {
-    GstCaps *ycaps =
-        gst_caps_from_string (GST_VIDEO_CAPS_YUV ("{ AYUV, UYVY, YUY2 }"));
-    gst_caps_append (ycaps, caps);
-    caps = ycaps;
-  }
-#endif
-
-  max_size = glimage_sink->display->max_texture_size;
-  if (max_size == 0) {
-    max_size = 1024;
-  }
-
-  gst_caps_set_all (caps,
-      "width", GST_TYPE_INT_RANGE, 16, max_size,
-      "height", GST_TYPE_INT_RANGE, 16, max_size, NULL);
-
-  gst_caps_replace (&glimage_sink->caps, caps);
-}
-#endif
