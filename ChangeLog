@@ -1,3 +1,14 @@
+2008-01-06  David Schleef  <ds@schleef.org>
+
+	Patch by: Sean D'Epagnier <sean@depagnier.com>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/fbdev/Makefile.am:
+	* sys/fbdev/gstfbdevsink.c:
+	* sys/fbdev/gstfbdevsink.h:
+	  Add fbdev-based video sink.  Linux-only.  See bug #506549.
+
 2008-01-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

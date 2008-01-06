@@ -22,6 +22,12 @@ endif
 # CDROM_DIR=
 # endif
 
+if USE_FBDEV
+FBDEV_DIR=fbdev
+else
+FBDEV_DIR=
+endif
+
 if USE_OPENGL
 GL_DIR=glsink
 else
@@ -40,6 +46,6 @@ else
 QT_DIR=
 endif
 
-SUBDIRS = $(GL_DIR) $(DVB_DIR) $(VCD_DIR) $(QT_DIR)
+SUBDIRS = $(FBDEV_DIR) $(GL_DIR) $(DVB_DIR) $(VCD_DIR) $(QT_DIR)
 
-DIST_SUBDIRS = glsink dvb vcd qtwrapper
+DIST_SUBDIRS = fbdev glsink dvb vcd qtwrapper

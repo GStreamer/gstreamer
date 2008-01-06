@@ -581,6 +581,14 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
   AC_SUBST(FAAD_IS_NEAAC)
 ])
 
+dnl *** fbdev ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_FBDEV, true)
+AG_GST_CHECK_FEATURE(FBDEV, [linux framebuffer], fbdevsink, [
+  if test "x$HAVE_FBDEV" != "xyes"; then
+    AC_CHECK_HEADER([linux/fb.h], HAVE_FBDEV=yes, HAVE_FBDEV=no)
+  fi
+])
+
 dnl *** libgio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
 AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
@@ -972,6 +980,7 @@ AM_CONDITIONAL(USE_DTS, false)
 AM_CONDITIONAL(USE_DIVX, false)
 AM_CONDITIONAL(USE_FAAC, false)
 AM_CONDITIONAL(USE_FAAD, false)
+AM_CONDITIONAL(USE_FBDEV, false)
 AM_CONDITIONAL(USE_GIO, false)
 AM_CONDITIONAL(USE_GSM, false)
 AM_CONDITIONAL(USE_IVORBIS, false)
@@ -1094,6 +1103,7 @@ gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/app/Makefile
 sys/Makefile
+sys/fbdev/Makefile
 sys/glsink/Makefile
 sys/dvb/Makefile
 sys/qtwrapper/Makefile
