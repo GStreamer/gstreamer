@@ -1,3 +1,13 @@
+2008-01-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* ext/gio/gstgiobasesrc.c: (gst_gio_base_src_get_size):
+	* tests/check/pipelines/gio.c: (free_input), (GST_START_TEST):
+	Update to GMemoryInputStream API changes in GLib SVN and require
+	gio-2.0 >= 2.15.1 for this. Fixes bug #507584.
+	We can also report the duration for every GSeekable, not only
+	GFileInputStream and GMemoryInputStream.
+
 2008-01-05  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/glimagesink.c:

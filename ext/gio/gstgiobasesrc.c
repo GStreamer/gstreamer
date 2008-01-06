@@ -185,15 +185,52 @@ gst_gio_base_src_get_size (GstBaseSrc * base_src, guint64 * size)
 
       g_clear_error (&err);
     }
-  } else if (G_IS_MEMORY_INPUT_STREAM (src->stream)) {
-    gsize data_size;
+  } else if (GST_GIO_STREAM_IS_SEEKABLE (src->stream)) {
+    goffset old;
+    goffset stream_size;
+    gboolean ret;
+    GSeekable *seekable = G_SEEKABLE (src->stream);
+    GError *err = NULL;
 
-    data_size =
-        g_memory_input_stream_get_data_size (G_MEMORY_INPUT_STREAM (src->
-            stream));
+    old = g_seekable_tell (seekable);
 
-    if (data_size != -1) {
-      *size = data_size;
+    ret = g_seekable_seek (seekable, 0, G_SEEK_END, src->cancel, &err);
+    if (!ret) {
+      if (!gst_gio_error (src, "g_seekable_seek", &err, NULL)) {
+        if (GST_GIO_ERROR_MATCHES (err, NOT_SUPPORTED))
+          GST_DEBUG_OBJECT (src,
+              "Seeking to the end of stream is not supported");
+        else
+          GST_WARNING_OBJECT (src, "Seeking to end of stream failed: %s",
+              err->message);
+        g_clear_error (&err);
+      } else {
+        GST_WARNING_OBJECT (src, "Seeking to end of stream failed");
+      }
+
+      return FALSE;
+    }
+
+    stream_size = g_seekable_tell (seekable);
+
+    ret = g_seekable_seek (seekable, old, G_SEEK_SET, src->cancel, &err);
+    if (!ret) {
+      if (!gst_gio_error (src, "g_seekable_seek", &err, NULL)) {
+        if (GST_GIO_ERROR_MATCHES (err, NOT_SUPPORTED))
+          GST_ERROR_OBJECT (src, "Seeking to the old position not supported");
+        else
+          GST_ERROR_OBJECT (src, "Seeking to the old position failed: %s",
+              err->message);
+        g_clear_error (&err);
+      } else {
+        GST_ERROR_OBJECT (src, "Seeking to the old position faile");
+      }
+
+      return FALSE;
+    }
+
+    if (stream_size >= 0) {
+      *size = stream_size;
       return TRUE;
     }
   }
