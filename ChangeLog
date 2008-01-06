@@ -1,5 +1,18 @@
 2008-01-05  David Schleef  <ds@schleef.org>
 
+	* sys/glsink/glimagesink.c:
+	* sys/glsink/glimagesink.h:
+	* sys/glsink/gstglbuffer.h:
+	* sys/glsink/gstgldisplay.c:
+	* sys/glsink/gstgldisplay.h:
+	* sys/glsink/gstglupload.c:
+	  Handle xoverlay exposes correctly.  This means glimagesink works
+	  correctly most of the time in totem (fullscreening being an
+	  execption).  Doesn't handle expose events directly to the GL
+	  window.
+
+2008-01-05  David Schleef  <ds@schleef.org>
+
 	* sys/glsink/glextensions.c:
 	* sys/glsink/glextensions.h:
 	* sys/glsink/glimagesink.c:

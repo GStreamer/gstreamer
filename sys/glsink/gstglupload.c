@@ -430,7 +430,7 @@ gst_gl_upload_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   if (upload->peek) {
     gst_gl_display_draw_texture (gl_outbuf->display, gl_outbuf->texture,
-        gl_outbuf->width, gl_outbuf->height);
+        gl_outbuf->width, gl_outbuf->height, FALSE);
   }
 
   return GST_FLOW_OK;
