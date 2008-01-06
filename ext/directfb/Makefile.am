@@ -3,8 +3,8 @@ plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 plugin_LTLIBRARIES = libgstdfbvideosink.la
 
 libgstdfbvideosink_la_SOURCES =  dfbvideosink.c
-libgstdfbvideosink_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
-			       $(DIRECTFB_CFLAGS) $(LIBOIL_CFLAGS)
+libgstdfbvideosink_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+			       $(DIRECTFB_CFLAGS)
 libgstdfbvideosink_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 			       -lgstvideo-$(GST_MAJORMINOR) \
 			       -lgstinterfaces-$(GST_MAJORMINOR) \

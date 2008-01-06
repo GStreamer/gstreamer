@@ -581,10 +581,14 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
         "DirectFB fullscreen");
     if (!dfbvideosink->dfb) {
       DFBGraphicsDeviceDescription hw_caps;
+      char *argv[] = { "-", "--dfb:quiet", NULL };
+      int argc = 2;
+      char **args;
 
       GST_DEBUG_OBJECT (dfbvideosink, "initializing DirectFB");
 
-      ret = DirectFBInit (0, NULL);
+      args = argv;
+      ret = DirectFBInit (&argc, &args);
 
       if (ret != DFB_OK) {
         GST_WARNING_OBJECT (dfbvideosink, "DirectFB initialization failed");
@@ -1570,7 +1574,9 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     /* Center / Clip */
     gst_video_sink_center_rect (src, dst, &result, FALSE);
 
-    res = surface->GetSubSurface (surface, (DFBRectangle *) & result, &dest);
+    res =
+        surface->GetSubSurface (surface, (DFBRectangle *) (void *) &result,
+        &dest);
     if (res != DFB_OK) {
       GST_WARNING_OBJECT (dfbvideosink, "failed when getting a sub surface");
       ret = GST_FLOW_UNEXPECTED;
@@ -1639,7 +1645,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
     if (dfbvideosink->hw_scaling) {
       dfbvideosink->primary->StretchBlit (dfbvideosink->primary,
-          surface->surface, NULL, (DFBRectangle *) & result);
+          surface->surface, NULL, (DFBRectangle *) (void *) &result);
     } else {
       DFBRectangle clip;
 

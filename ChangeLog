@@ -1,5 +1,12 @@
 2008-01-06  David Schleef  <ds@schleef.org>
 
+	* ext/directfb/Makefile.am:
+	  Add GST_CFLAGS.  Otherwise we don't get -Wall -Werror.
+	* ext/directfb/dfbvideosink.c:
+	  Getting tired of directfb's chatter.  Quiet it.
+
+2008-01-06  David Schleef  <ds@schleef.org>
+
 	Patch by: Sean D'Epagnier <sean@depagnier.com>
 
 	* configure.ac:
