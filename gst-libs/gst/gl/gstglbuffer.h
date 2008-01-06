@@ -41,6 +41,9 @@ struct _GstGLBuffer {
 
 GType gst_gl_buffer_get_type (void);
 
+#define gst_gl_buffer_ref(x) ((GstGLBuffer *)(gst_buffer_ref((GstBuffer *)(x))))
+#define gst_gl_buffer_unref(x) (gst_buffer_unref((GstBuffer *)(x)))
+
 GstGLBuffer * gst_gl_buffer_new (GstGLDisplay *display,
     int width, int height);
 GstGLBuffer * gst_gl_buffer_new_with_format (GstGLDisplay *display,
