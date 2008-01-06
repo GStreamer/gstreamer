@@ -1,3 +1,15 @@
+2008-01-05  David Schleef  <ds@schleef.org>
+
+	* sys/glsink/glextensions.c:
+	* sys/glsink/glextensions.h:
+	* sys/glsink/glimagesink.c:
+	* sys/glsink/glimagesink.h:
+	* sys/glsink/gstgldisplay.c:
+	* sys/glsink/gstgldisplay.h:
+	* sys/glsink/gstopengl.c:
+	  Reenable video/x-raw-rgb and x-raw-yuv for glimagesink.  Enable
+	  vblank synchronization.  Remove unused code.
+
 2008-01-04  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:

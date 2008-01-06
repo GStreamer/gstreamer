@@ -46,7 +46,7 @@ struct _GstGLDisplay {
   gboolean have_color_matrix;
 
   Window window;
-  //Window assigned_window;
+  gboolean visible;
   Window parent_window;
 
   int win_width;
@@ -80,6 +80,7 @@ void gst_gl_display_draw_texture (GstGLDisplay * display, GLuint texture,
 void gst_gl_display_check_error (GstGLDisplay *display, int line);
 GLuint gst_gl_display_upload_texture_rectangle (GstGLDisplay *display,
     GstVideoFormat type, void *data, int width, int height);
+void gst_gl_display_set_visible (GstGLDisplay *display, gboolean visible);
 
 #endif
 
