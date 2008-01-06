@@ -6,6 +6,7 @@
 #include <GL/glx.h>
 #include <GL/glxext.h>
 #include <string.h>
+#include <glib.h>
 
 #include "glextensions.h"
 
