@@ -57,6 +57,12 @@ message_handler (GstBus * bus, GstMessage * msg, gpointer data)
   return TRUE;
 }
 
+static void
+free_input (gpointer data)
+{
+  g_free (data);
+}
+
 GST_START_TEST (test_memory_stream)
 {
   GMainLoop *loop;
@@ -70,6 +76,8 @@ GST_START_TEST (test_memory_stream)
   guint8 *in_data;
   GByteArray *out_data;
   gint i;
+  GstFormat fmt = GST_FORMAT_BYTES;
+  gint64 duration;
 
   got_eos = FALSE;
 
@@ -78,8 +86,8 @@ GST_START_TEST (test_memory_stream)
     in_data[i] = i % 256;
 
   input =
-      G_MEMORY_INPUT_STREAM (g_memory_input_stream_from_data (in_data, 512));
-  g_memory_input_stream_set_free_data (input, TRUE);
+      G_MEMORY_INPUT_STREAM (g_memory_input_stream_new_from_data (in_data, 512,
+          free_input));
 
   out_data = g_byte_array_new ();
   output = G_MEMORY_OUTPUT_STREAM (g_memory_output_stream_new (out_data));
@@ -104,6 +112,11 @@ GST_START_TEST (test_memory_stream)
   bus = gst_element_get_bus (bin);
   gst_bus_add_watch (bus, message_handler, loop);
   gst_object_unref (bus);
+
+  gst_element_set_state (bin, GST_STATE_PAUSED);
+
+  fail_unless (gst_element_query_duration (bin, &fmt, &duration));
+  fail_unless_equals_int (duration, 512);
 
   gst_element_set_state (bin, GST_STATE_PLAYING);
 
