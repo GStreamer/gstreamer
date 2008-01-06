@@ -310,6 +310,10 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
+  if (glimage_sink->stored_buffer) {
+    gst_buffer_unref (glimage_sink->stored_buffer);
+    glimage_sink->stored_buffer = NULL;
+  }
   if (glimage_sink->display) {
     gst_gl_display_set_visible (glimage_sink->display, FALSE);
     g_object_unref (glimage_sink->display);
@@ -425,6 +429,10 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
+  if (glimage_sink->stored_buffer) {
+    gst_buffer_unref (glimage_sink->stored_buffer);
+    glimage_sink->stored_buffer = NULL;
+  }
   if (glimage_sink->is_gl) {
     gl_buffer = GST_GL_BUFFER (gst_buffer_ref (buf));
 
@@ -463,8 +471,9 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
         GST_BUFFER_DATA (buf));
   }
 
+  glimage_sink->stored_buffer = gst_gl_buffer_ref (gl_buffer);
   gst_gl_display_draw_texture (display, gl_buffer->texture,
-      gl_buffer->width, gl_buffer->height);
+      gl_buffer->width, gl_buffer->height, TRUE);
 
   gst_buffer_unref (GST_BUFFER (gl_buffer));
 
@@ -505,8 +514,20 @@ gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay, XID window_id)
 static void
 gst_glimage_sink_expose (GstXOverlay * overlay)
 {
-  /* FIXME */
+  GstGLImageSink *glimagesink = GST_GLIMAGE_SINK (overlay);
+
   GST_DEBUG ("expose");
+
+  if (glimagesink->display) {
+    gst_gl_display_update_window (glimagesink->display);
+  }
+
+  if (glimagesink->stored_buffer) {
+    GstGLBuffer *gl_buffer = glimagesink->stored_buffer;
+
+    gst_gl_display_draw_texture (gl_buffer->display, gl_buffer->texture,
+        gl_buffer->width, gl_buffer->height, FALSE);
+  }
 }
 
 static void

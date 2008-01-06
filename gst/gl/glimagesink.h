@@ -27,6 +27,7 @@
 #include <gst/video/video.h>
 
 #include "gstgldisplay.h"
+#include "gstglbuffer.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_glimage_sink);
 
@@ -61,6 +62,7 @@ struct _GstGLImageSink
   int par_n, par_d;
 
   GstGLDisplay *display;
+  GstGLBuffer *stored_buffer;
 
   XID window_id;
 };

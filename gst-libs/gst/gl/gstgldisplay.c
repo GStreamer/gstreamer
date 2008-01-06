@@ -345,14 +345,45 @@ gst_gl_display_set_window (GstGLDisplay * display, Window window)
 {
   g_mutex_lock (display->lock);
 
-  if (window != display->parent_window) {
-    gst_gl_display_destroy_tmp_window (display);
-
+  if (display->display == NULL) {
     display->parent_window = window;
+  } else {
+    if (window != display->parent_window) {
+      XSync (display->display, False);
 
-    gst_gl_display_init_tmp_window (display);
+      gst_gl_display_destroy_tmp_window (display);
+
+      display->parent_window = window;
+
+      gst_gl_display_init_tmp_window (display);
+    }
   }
 
+  g_mutex_unlock (display->lock);
+}
+
+void
+gst_gl_display_update_window (GstGLDisplay * display)
+{
+  XWindowAttributes attr;
+
+  g_return_if_fail (display != NULL);
+
+  g_mutex_lock (display->lock);
+  if (display->window != None && display->parent_window != None) {
+    XSync (display->display, False);
+    XGetWindowAttributes (display->display, display->parent_window, &attr);
+
+    GST_DEBUG ("new size %d %d", attr.width, attr.height);
+
+    if (display->win_width != attr.width || display->win_height != attr.height) {
+      XResizeWindow (display->display, display->window,
+          attr.width, attr.height);
+      //XSync (display->display, False);
+    }
+    display->win_width = attr.width;
+    display->win_height = attr.height;
+  }
   g_mutex_unlock (display->lock);
 }
 
@@ -372,6 +403,17 @@ gst_gl_display_update_attributes (GstGLDisplay * display)
   } else {
     display->win_width = 0;
     display->win_height = 0;
+  }
+}
+
+void
+gst_gl_display_set_window_size (GstGLDisplay * display, int width, int height)
+{
+  if (display->win_width != width || display->win_height != height) {
+    display->win_width = width;
+    display->win_height = height;
+    XResizeWindow (display->display, display->window, width, height);
+    XSync (display->display, False);
   }
 }
 
@@ -752,7 +794,7 @@ gst_gl_display_draw_image (GstGLDisplay * display, GstVideoFormat type,
 
 void
 gst_gl_display_draw_texture (GstGLDisplay * display, GLuint texture,
-    int width, int height)
+    int width, int height, gboolean sync)
 {
   g_return_if_fail (width > 0);
   g_return_if_fail (height > 0);
@@ -763,7 +805,7 @@ gst_gl_display_draw_texture (GstGLDisplay * display, GLuint texture,
   g_assert (display->window != None);
   g_assert (display->context != NULL);
 
-  gst_gl_display_update_attributes (display);
+  //gst_gl_display_update_attributes (display);
 #if 0
   /* Doesn't work */
   {
@@ -778,10 +820,11 @@ gst_gl_display_draw_texture (GstGLDisplay * display, GLuint texture,
   }
 #endif
 
-#if 1
-  /* Doesn't work */
-  glXSwapIntervalSGI (1);
-#endif
+  if (sync) {
+    glXSwapIntervalSGI (1);
+  } else {
+    glXSwapIntervalSGI (0);
+  }
 
   glViewport (0, 0, display->win_width, display->win_height);
 
