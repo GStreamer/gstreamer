@@ -264,7 +264,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 #define GST_IS_PLAY_BIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLAY_BIN))
 
 #define VOLUME_MAX_DOUBLE 10.0
-#define CONNECTION_SPEED_DEFAULT 0
 
 typedef struct _GstPlayBin GstPlayBin;
 typedef struct _GstPlayBinClass GstPlayBinClass;
@@ -276,7 +275,6 @@ struct _GstSourceSelect
 {
   const gchar *media;           /* the media type of the selector */
   GstPlaySinkType type;         /* the sink pad type of the selector */
-  GstPlaySinkMode mode;         /* the sink pad mode of the selector */
 
   GstElement *selector;         /* the selector */
   gint current;                 /* the currently selected stream */
@@ -336,6 +334,27 @@ struct _GstPlayBinClass
 };
 
 /* props */
+#define DEFAULT_URI               NULL
+#define DEFAULT_SUBURI            NULL
+#define DEFAULT_STREAMINFO        NULL
+#define DEFAULT_SOURCE            NULL
+#define DEFAULT_FLAGS             GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_TEXT | \
+	                          GST_PLAY_FLAG_SOFT_VOLUME
+#define DEFAULT_N_VIDEO           0
+#define DEFAULT_CURRENT_VIDEO     -1
+#define DEFAULT_N_AUDIO           0
+#define DEFAULT_CURRENT_AUDIO     -1
+#define DEFAULT_N_TEXT            0
+#define DEFAULT_CURRENT_TEXT      -1
+#define DEFAULT_SUBTITLE_ENCODING NULL
+#define DEFAULT_AUDIO_SINK        NULL
+#define DEFAULT_VIDEO_SINK        NULL
+#define DEFAULT_VIS_PLUGIN        NULL
+#define DEFAULT_VOLUME            1.0
+#define DEFAULT_FRAME             NULL
+#define DEFAULT_FONT_DESC         NULL
+#define DEFAULT_CONNECTION_SPEED  0
+
 enum
 {
   PROP_0,
@@ -343,8 +362,12 @@ enum
   PROP_SUBURI,
   PROP_STREAMINFO,
   PROP_SOURCE,
+  PROP_FLAGS,
+  PROP_N_VIDEO,
   PROP_CURRENT_VIDEO,
+  PROP_N_AUDIO,
   PROP_CURRENT_AUDIO,
+  PROP_N_TEXT,
   PROP_CURRENT_TEXT,
   PROP_SUBTITLE_ENCODING,
   PROP_AUDIO_SINK,
@@ -433,9 +456,22 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
 
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_bin_finalize);
 
+  /**
+   * GstPlayBin:uri
+   *
+   * Set the next URI that playbin will play. This property can be set from the
+   * about-to-finish signal to queue the next media file.
+   */
   g_object_class_install_property (gobject_klass, PROP_URI,
       g_param_spec_string ("uri", "URI", "URI of the media to play",
           NULL, G_PARAM_READWRITE));
+
+  /**
+   * GstPlayBin:suburi
+   *
+   * Set the next subtitle URI that playbin will play. This property can be
+   * set from the about-to-finish signal to queue the next subtitle media file.
+   */
   g_object_class_install_property (gobject_klass, PROP_SUBURI,
       g_param_spec_string ("suburi", ".sub-URI", "Optional URI of a subtitle",
           NULL, G_PARAM_READWRITE));
@@ -450,18 +486,70 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_param_spec_object ("source", "Source", "Source element",
           GST_TYPE_ELEMENT, G_PARAM_READABLE));
 
+  g_object_class_install_property (gobject_klass, PROP_FLAGS,
+      g_param_spec_flags ("flags", "Flags", "Flags to control behaviour",
+          GST_TYPE_PLAY_FLAGS, DEFAULT_FLAGS, G_PARAM_READWRITE));
+
+  /**
+   * GstPlayBin:n-video
+   *
+   * Get the total number of available video streams. 
+   */
+  g_object_class_install_property (gobject_klass, PROP_N_VIDEO,
+      g_param_spec_int ("n-video", "Number Video",
+          "Total number of video streams", 0, G_MAXINT, 0, G_PARAM_READABLE));
+  /**
+   * GstPlayBin:current-video
+   *
+   * Get or set the currently playing video stream. By default the first video
+   * stream with data is played.
+   *
+   * Setting this property to -2 will disable the video stream.
+   */
   g_object_class_install_property (gobject_klass, PROP_CURRENT_VIDEO,
-      g_param_spec_int ("current-video", "Current video",
-          "Currently playing video stream (-1 = none)",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE));
+      g_param_spec_int ("current-video", "Current Video",
+          "Currently playing video stream (-1 = auto, -2 = none)",
+          -2, G_MAXINT, -1, G_PARAM_READWRITE));
+  /**
+   * GstPlayBin:n-audio
+   *
+   * Get the total number of available audio streams. 
+   */
+  g_object_class_install_property (gobject_klass, PROP_N_AUDIO,
+      g_param_spec_int ("n-audio", "Number Audio",
+          "Total number of audio streams", 0, G_MAXINT, 0, G_PARAM_READABLE));
+  /**
+   * GstPlayBin:current-audio
+   *
+   * Get or set the currently playing audio stream. By default the first audio
+   * stream with data is played.
+   *
+   * Setting this property to -2 will disable the audio stream.
+   */
   g_object_class_install_property (gobject_klass, PROP_CURRENT_AUDIO,
       g_param_spec_int ("current-audio", "Current audio",
-          "Currently playing audio stream (-1 = none)",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE));
+          "Currently playing audio stream (-1 = none, -2 = none)",
+          -2, G_MAXINT, -1, G_PARAM_READWRITE));
+  /**
+   * GstPlayBin:n-text
+   *
+   * Get the total number of available subtitle streams. 
+   */
+  g_object_class_install_property (gobject_klass, PROP_N_TEXT,
+      g_param_spec_int ("n-text", "Number Text",
+          "Total number of text streams", 0, G_MAXINT, 0, G_PARAM_READABLE));
+  /**
+   * GstPlayBin:current-text
+   *
+   * Get or set the currently playing subtitle stream. By default the first audio
+   * stream with data is played.
+   *
+   * Setting this property to -2 will disable the text stream.
+   */
   g_object_class_install_property (gobject_klass, PROP_CURRENT_TEXT,
-      g_param_spec_int ("current-text", "Current text",
-          "Currently playing text stream (-1 = none)",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE));
+      g_param_spec_int ("current-text", "Current Text",
+          "Currently playing text stream (-1 = none, -2 = none)",
+          -2, G_MAXINT, -1, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_klass, PROP_SUBTITLE_ENCODING,
       g_param_spec_string ("subtitle-encoding", "subtitle encoding",
@@ -482,6 +570,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_param_spec_object ("vis-plugin", "Vis plugin",
           "the visualization element to use (NULL = none)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+
   g_object_class_install_property (gobject_klass, PROP_VOLUME,
       g_param_spec_double ("volume", "volume", "volume",
           0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
@@ -498,7 +587,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_CONNECTION_SPEED,
       g_param_spec_uint ("connection-speed", "Connection Speed",
           "Network connection speed in kbps (0 = unknown)",
-          0, G_MAXUINT, CONNECTION_SPEED_DEFAULT, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_CONNECTION_SPEED, G_PARAM_READWRITE));
   /**
    * GstPlayBin::about-to-finish:
    *
@@ -527,19 +616,14 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->playbin = playbin;
   group->selector[0].media = "audio/x-raw-";
   group->selector[0].type = GST_PLAY_SINK_TYPE_AUDIO_RAW;
-  group->selector[0].mode = GST_PLAY_SINK_MODE_AUDIO;
   group->selector[1].media = "audio/";
   group->selector[1].type = GST_PLAY_SINK_TYPE_AUDIO;
-  group->selector[1].mode = GST_PLAY_SINK_MODE_AUDIO;
   group->selector[2].media = "video/x-raw-";
   group->selector[2].type = GST_PLAY_SINK_TYPE_VIDEO_RAW;
-  group->selector[2].mode = GST_PLAY_SINK_MODE_VIDEO;
   group->selector[3].media = "video/";
   group->selector[3].type = GST_PLAY_SINK_TYPE_VIDEO;
-  group->selector[3].mode = GST_PLAY_SINK_MODE_VIDEO;
   group->selector[4].media = "text/";
   group->selector[4].type = GST_PLAY_SINK_TYPE_TEXT;
-  group->selector[4].mode = GST_PLAY_SINK_MODE_TEXT;
 }
 
 static void
@@ -557,6 +641,11 @@ gst_play_bin_init (GstPlayBin * playbin)
   type = GST_FACTORY_LIST_DECODER | GST_FACTORY_LIST_SINK;
   playbin->elements = gst_factory_list_get_elements (type);
   gst_factory_list_debug (playbin->elements);
+
+  /* add sink */
+  playbin->playsink = g_object_new (GST_TYPE_PLAY_SINK, NULL);
+  gst_bin_add (GST_BIN_CAST (playbin), GST_ELEMENT_CAST (playbin->playsink));
+  gst_play_sink_set_flags (playbin->playsink, DEFAULT_FLAGS);
 
   /* get the caps */
 }
@@ -632,6 +721,17 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
     case PROP_SUBURI:
       gst_play_bin_set_suburi (playbin, g_value_get_string (value));
       break;
+    case PROP_FLAGS:
+      gst_play_sink_set_flags (playbin->playsink, g_value_get_flags (value));
+      break;
+    case PROP_CURRENT_VIDEO:
+      break;
+    case PROP_CURRENT_AUDIO:
+      break;
+    case PROP_CURRENT_TEXT:
+      break;
+    case PROP_SUBTITLE_ENCODING:
+      break;
     case PROP_VIDEO_SINK:
       break;
     case PROP_AUDIO_SINK:
@@ -681,6 +781,27 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
         g_value_set_string (value, playbin->next_group->suburi);
       GST_OBJECT_UNLOCK (playbin);
       break;
+    case PROP_STREAMINFO:
+      break;
+    case PROP_SOURCE:
+      break;
+    case PROP_FLAGS:
+      g_value_set_flags (value, gst_play_sink_get_flags (playbin->playsink));
+      break;
+    case PROP_N_VIDEO:
+      break;
+    case PROP_CURRENT_VIDEO:
+      break;
+    case PROP_N_AUDIO:
+      break;
+    case PROP_CURRENT_AUDIO:
+      break;
+    case PROP_N_TEXT:
+      break;
+    case PROP_CURRENT_TEXT:
+      break;
+    case PROP_SUBTITLE_ENCODING:
+      break;
     case PROP_VIDEO_SINK:
       break;
     case PROP_AUDIO_SINK:
@@ -690,6 +811,8 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_VOLUME:
       break;
     case PROP_FRAME:
+      break;
+    case PROP_FONT_DESC:
       break;
     case PROP_CONNECTION_SPEED:
       GST_OBJECT_LOCK (playbin);
@@ -881,7 +1004,6 @@ static void
 no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 {
   GstPlayBin *playbin;
-  GstPlaySinkMode mode = 0;
   GstPadLinkReturn res;
   gint i;
 
@@ -896,12 +1018,11 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
       select->sinkpad =
           gst_play_sink_request_pad (playbin->playsink, select->type);
       res = gst_pad_link (select->srcpad, select->sinkpad);
-      GST_DEBUG_OBJECT (playbin, "linking type %s: %d", select->media, res);
-      mode |= select->mode;
+      GST_DEBUG_OBJECT (playbin, "linked type %s: %d", select->media, res);
     }
   }
   /* configure the modes now */
-  gst_play_sink_set_mode (playbin->playsink, mode);
+  gst_play_sink_reconfigure (playbin->playsink);
 }
 
 /* send an EOS event to all of the selectors */
@@ -1214,11 +1335,6 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (playbin->playsink == NULL) {
-        playbin->playsink = g_object_new (GST_TYPE_PLAY_SINK, NULL);
-        gst_bin_add (GST_BIN_CAST (playbin),
-            GST_ELEMENT_CAST (playbin->playsink));
-      }
       if (!setup_next_source (playbin))
         goto source_failed;
       break;
@@ -1238,13 +1354,6 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       save_current_group (playbin);
-      if (playbin->playsink) {
-        gst_element_set_state (GST_ELEMENT_CAST (playbin->playsink),
-            GST_STATE_NULL);
-        gst_bin_remove (GST_BIN_CAST (playbin),
-            GST_ELEMENT_CAST (playbin->playsink));
-        playbin->playsink = NULL;
-      }
       break;
     default:
       break;

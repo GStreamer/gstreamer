@@ -22,6 +22,8 @@
 
 #include <gst/gst.h>
 
+#include "gstplay-enum.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_PLAY_SINK \
@@ -34,22 +36,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PLAY_SINK))
 #define GST_IS_PLAY_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PLAY_SINK))
-
-/**
- * GstPlaySinkMode:
- * @GST_PLAY_SINK_MODE_VIDEO:
- * @GST_PLAY_SINK_MODE_AUDIO:
- * @GST_PLAY_SINK_MODE_TEXT:
- * @GST_PLAY_SINK_MODE_VIS:
- *
- * Features to enable in the sink.
- */
-typedef enum {
-  GST_PLAY_SINK_MODE_VIDEO       = (1 << 0),
-  GST_PLAY_SINK_MODE_AUDIO       = (1 << 1),
-  GST_PLAY_SINK_MODE_TEXT        = (1 << 2),
-  GST_PLAY_SINK_MODE_VIS         = (1 << 3)
-} GstPlaySinkMode;
 
 /**
  * GstPlaySinkType:
@@ -71,22 +57,6 @@ typedef enum {
   GST_PLAY_SINK_TYPE_LAST      = 5
 } GstPlaySinkType;
 
-/**
- * GstPlaySinkFlags:
- * @GST_PLAY_SINK_FLAG_SOFT_VOLUME: Use software volume in the sink
- * @GST_PLAY_SINK_FLAG_NATIVE_AUDIO: only allow native audio formats, this omits
- *   configuration of audioconvert and audioresample.
- * @GST_PLAY_SINK_FLAG_NATIVE_VIDEO: only allow native video formats, this omits
- *   configuration of ffmpegcolorspace and videoscale.
- *
- * Extra flags to configure the behaviour of the sinks.
- */
-typedef enum {
-  GST_PLAY_SINK_FLAG_SOFT_VOLUME   = (1 << 0),
-  GST_PLAY_SINK_FLAG_NATIVE_AUDIO  = (1 << 1),
-  GST_PLAY_SINK_FLAG_NATIVE_VIDEO  = (1 << 2)
-} GstPlaySinkFlags;
-
 typedef struct _GstPlaySink GstPlaySink;
 typedef struct _GstPlaySinkClass GstPlaySinkClass;
 
@@ -99,11 +69,10 @@ void             gst_play_sink_set_video_sink (GstPlaySink * playsink, GstElemen
 void             gst_play_sink_set_audio_sink (GstPlaySink * playsink, GstElement * sink);
 void             gst_play_sink_set_vis_plugin (GstPlaySink * playsink, GstElement * vis);
 
-gboolean         gst_play_sink_set_flags      (GstPlaySink * playsink, GstPlaySinkFlags flags);
-GstPlaySinkFlags gst_play_sink_get_flags      (GstPlaySink * playsink);
+gboolean         gst_play_sink_set_flags      (GstPlaySink * playsink, GstPlayFlags flags);
+GstPlayFlags     gst_play_sink_get_flags      (GstPlaySink * playsink);
 
-gboolean         gst_play_sink_set_mode       (GstPlaySink *playsink, GstPlaySinkMode mode);
-GstPlaySinkMode  gst_play_sink_get_mode       (GstPlaySink *playsink);
+gboolean         gst_play_sink_reconfigure    (GstPlaySink * playsink);
 
 G_END_DECLS
 

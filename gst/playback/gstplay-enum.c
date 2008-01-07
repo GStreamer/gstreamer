@@ -20,6 +20,7 @@
 #include "gstplay-enum.h"
 
 #define C_ENUM(v) ((gint) v)
+#define C_FLAGS(v) ((guint) v)
 
 static void
 register_gst_autoplug_select_result (GType * id)
@@ -41,5 +42,34 @@ gst_autoplug_select_result_get_type (void)
   static GOnce once = G_ONCE_INIT;
 
   g_once (&once, (GThreadFunc) register_gst_autoplug_select_result, &id);
+  return id;
+}
+
+static void
+register_gst_play_flags (GType * id)
+{
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_PLAY_FLAG_VIDEO), "Render the video stream", "video"},
+    {C_FLAGS (GST_PLAY_FLAG_AUDIO), "Render the audio stream", "audio"},
+    {C_FLAGS (GST_PLAY_FLAG_TEXT), "Render subtitles", "text"},
+    {C_FLAGS (GST_PLAY_FLAG_VIS),
+          "Render visualisation when no video is present", "vis"},
+    {C_FLAGS (GST_PLAY_FLAG_SOFT_VOLUME), "Use software volume", "soft-volume"},
+    {C_FLAGS (GST_PLAY_FLAG_NATIVE_AUDIO), "Only use native audio formats",
+          "native-audio"},
+    {C_FLAGS (GST_PLAY_FLAG_NATIVE_VIDEO), "Only use native video formats",
+          "native-video"},
+    {0, NULL, NULL}
+  };
+  *id = g_flags_register_static ("GstPlayFlags", values);
+}
+
+GType
+gst_play_flags_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_gst_play_flags, &id);
   return id;
 }
