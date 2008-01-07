@@ -591,6 +591,22 @@ gst_alsa_mixer_get_volume (GstAlsaMixer * mixer, GstMixerTrack * track,
   }
 }
 
+static gboolean
+check_if_volumes_are_the_same (guint num_channels, gint * volumes)
+{
+  guint i;
+
+  if (num_channels <= 1)
+    return TRUE;
+
+  for (i = 1; i < num_channels; i++) {
+    if (volumes[i] != volumes[0])
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 void
 gst_alsa_mixer_set_volume (GstAlsaMixer * mixer, GstMixerTrack * track,
     gint * volumes)
@@ -610,10 +626,17 @@ gst_alsa_mixer_set_volume (GstAlsaMixer * mixer, GstMixerTrack * track,
       for (i = 0; i < track->num_channels; i++)
         alsa_track->volumes[i] = volumes[i];
     } else {
-      for (i = 0; i < track->num_channels; i++) {
-        alsa_track->volumes[i] = volumes[i];
-        snd_mixer_selem_set_playback_volume (alsa_track->element, i,
-            volumes[i]);
+      if (check_if_volumes_are_the_same (track->num_channels, volumes)) {
+        snd_mixer_selem_set_playback_volume_all (alsa_track->element,
+            volumes[0]);
+        for (i = 0; i < track->num_channels; i++)
+          alsa_track->volumes[i] = volumes[0];
+      } else {
+        for (i = 0; i < track->num_channels; i++) {
+          alsa_track->volumes[i] = volumes[i];
+          snd_mixer_selem_set_playback_volume (alsa_track->element, i,
+              volumes[i]);
+        }
       }
     }
 
@@ -622,9 +645,17 @@ gst_alsa_mixer_set_volume (GstAlsaMixer * mixer, GstMixerTrack * track,
     /* Is emulated record flag activated? */
     if (track->flags & GST_MIXER_TRACK_RECORD ||
         alsa_track->alsa_flags & GST_ALSA_MIXER_TRACK_CSWITCH) {
-      for (i = 0; i < track->num_channels; i++) {
-        alsa_track->volumes[i] = volumes[i];
-        snd_mixer_selem_set_capture_volume (alsa_track->element, i, volumes[i]);
+      if (check_if_volumes_are_the_same (track->num_channels, volumes)) {
+        snd_mixer_selem_set_capture_volume_all (alsa_track->element,
+            volumes[0]);
+        for (i = 0; i < track->num_channels; i++)
+          alsa_track->volumes[i] = volumes[0];
+      } else {
+        for (i = 0; i < track->num_channels; i++) {
+          alsa_track->volumes[i] = volumes[i];
+          snd_mixer_selem_set_capture_volume (alsa_track->element, i,
+              volumes[i]);
+        }
       }
     } else {
       for (i = 0; i < track->num_channels; i++)

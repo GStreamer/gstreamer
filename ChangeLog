@@ -1,5 +1,16 @@
 2008-01-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Bastien Nocera <hadess at hadess net>
+
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_get_volume),
+	  (check_if_volumes_are_the_same), (gst_alsa_mixer_set_volume):
+	  Use snd_mixer_selem_set_{playback|capture}_volume_all() if
+	  the volume is the same for all channels. This works around
+	  some problem in alsa that leaves us with inconsistent state
+	  for some reason (#486840).
+
+2008-01-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Jerone Young <jerone at gmail com>
 
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_find_master_mixer):
