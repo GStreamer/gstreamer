@@ -1,3 +1,16 @@
+2008-01-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_default_do_seek),
+	(gst_base_src_loop):
+	Don't update the last_stop position in do_seek, that's the position we
+	did a seek to.
+	Read backwards when we have a negative rate.
+
+	* tests/check/elements/filesrc.c: (event_func), (wait_eos),
+	(setup_filesrc), (cleanup_filesrc), (GST_START_TEST),
+	(filesrc_suite):
+	Add check for reverse reading.
+
 2008-01-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Alexis Ballier <aballier at gentoo org>

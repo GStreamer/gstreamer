@@ -895,11 +895,9 @@ gst_base_src_default_do_seek (GstBaseSrc * src, GstSegment * segment)
 
   /* update our offset if the start/stop position was updated */
   if (segment->format == GST_FORMAT_BYTES) {
-    segment->last_stop = segment->start;
     segment->time = segment->start;
   } else if (segment->start == 0) {
     /* seek to start, we can implement a default for this. */
-    segment->last_stop = 0;
     segment->time = 0;
     res = TRUE;
   } else
@@ -1973,6 +1971,7 @@ gst_base_src_loop (GstPad * pad)
   GstFlowReturn ret;
   gint64 position;
   gboolean eos;
+  gulong blocksize;
 
   eos = FALSE;
 
@@ -1988,13 +1987,26 @@ gst_base_src_loop (GstPad * pad)
 
   src->priv->last_sent_eos = FALSE;
 
+  blocksize = src->blocksize;
+
   /* if we operate in bytes, we can calculate an offset */
-  if (src->segment.format == GST_FORMAT_BYTES)
+  if (src->segment.format == GST_FORMAT_BYTES) {
     position = src->segment.last_stop;
-  else
+    /* for negative rates, start with subtracting the blocksize */
+    if (src->segment.rate < 0.0) {
+      /* we cannot go below segment.start */
+      if (position > src->segment.start + blocksize)
+        position -= blocksize;
+      else {
+        /* last block, remainder up to segment.start */
+        blocksize = position - src->segment.start;
+        position = src->segment.start;
+      }
+    }
+  } else
     position = -1;
 
-  ret = gst_base_src_get_range (src, position, src->blocksize, &buf);
+  ret = gst_base_src_get_range (src, position, blocksize, &buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     GST_INFO_OBJECT (src, "pausing after gst_base_src_get_range() = %s",
         gst_flow_get_name (ret));
@@ -2018,8 +2030,14 @@ gst_base_src_loop (GstPad * pad)
   /* figure out the new position */
   switch (src->segment.format) {
     case GST_FORMAT_BYTES:
-      position += GST_BUFFER_SIZE (buf);
+    {
+      guint bufsize = GST_BUFFER_SIZE (buf);
+
+      /* we subtracted above for negative rates */
+      if (src->segment.rate >= 0.0)
+        position += bufsize;
       break;
+    }
     case GST_FORMAT_TIME:
     {
       GstClockTime start, duration;
@@ -2032,23 +2050,44 @@ gst_base_src_loop (GstPad * pad)
       else
         position = src->segment.last_stop;
 
-      if (GST_CLOCK_TIME_IS_VALID (duration))
-        position += duration;
+      if (GST_CLOCK_TIME_IS_VALID (duration)) {
+        if (src->segment.rate >= 0.0)
+          position += duration;
+        else if (position > duration)
+          position -= duration;
+        else
+          position = 0;
+      }
       break;
     }
     case GST_FORMAT_DEFAULT:
-      position = GST_BUFFER_OFFSET_END (buf);
+      if (src->segment.rate >= 0.0)
+        position = GST_BUFFER_OFFSET_END (buf);
+      else
+        position = GST_BUFFER_OFFSET (buf);
       break;
     default:
       position = -1;
       break;
   }
   if (position != -1) {
-    if (src->segment.stop != -1) {
-      if (position >= src->segment.stop) {
-        eos = TRUE;
-        position = src->segment.stop;
+    if (src->segment.rate >= 0.0) {
+      /* positive rate, check if we reached the stop */
+      if (src->segment.stop != -1) {
+        if (position >= src->segment.stop) {
+          eos = TRUE;
+          position = src->segment.stop;
+        }
       }
+    } else {
+      /* negative rate, check if we reached the start. start is always set to
+       * something different from -1 */
+      if (position <= src->segment.start) {
+        eos = TRUE;
+        position = src->segment.start;
+      }
+      /* when going reverse, all buffers are DISCONT */
+      src->priv->discont = TRUE;
     }
     gst_segment_set_last_stop (&src->segment, src->segment.format, position);
   }

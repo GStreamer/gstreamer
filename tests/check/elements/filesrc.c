@@ -25,9 +25,11 @@
 
 #include <gst/check/gstcheck.h>
 
-gboolean have_eos = FALSE;
+static gboolean have_eos = FALSE;
+static GCond *eos_cond;
+static GMutex *event_mutex;
 
-GstPad *mysinkpad;
+static GstPad *mysinkpad;
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -37,14 +39,31 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 gboolean
 event_func (GstPad * pad, GstEvent * event)
 {
+  gboolean res = TRUE;
+
+  g_mutex_lock (event_mutex);
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     have_eos = TRUE;
-    gst_event_unref (event);
-    return TRUE;
+    GST_DEBUG ("signal EOS");
+    g_cond_broadcast (eos_cond);
   }
+  g_mutex_unlock (event_mutex);
 
   gst_event_unref (event);
-  return FALSE;
+
+  return res;
+}
+
+void
+wait_eos (void)
+{
+  g_mutex_lock (event_mutex);
+  GST_DEBUG ("waiting for EOS");
+  while (!have_eos) {
+    g_cond_wait (eos_cond, event_mutex);
+  }
+  GST_DEBUG ("received EOS");
+  g_mutex_unlock (event_mutex);
 }
 
 GstElement *
@@ -57,6 +76,10 @@ setup_filesrc ()
   mysinkpad = gst_check_setup_sink_pad (filesrc, &sinktemplate, NULL);
   gst_pad_set_event_function (mysinkpad, event_func);
   gst_pad_set_active (mysinkpad, TRUE);
+
+  eos_cond = g_cond_new ();
+  event_mutex = g_mutex_new ();
+
   return filesrc;
 }
 
@@ -66,6 +89,9 @@ cleanup_filesrc (GstElement * filesrc)
   gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_sink_pad (filesrc);
   gst_check_teardown_element (filesrc);
+
+  g_cond_free (eos_cond);
+  g_mutex_free (event_mutex);
 }
 
 GST_START_TEST (test_seeking)
@@ -91,6 +117,41 @@ GST_START_TEST (test_seeking)
   gst_query_parse_seeking (seeking_query, NULL, &seekable, NULL, NULL);
   fail_unless (seekable == TRUE);
   gst_query_unref (seeking_query);
+
+  fail_unless (gst_element_set_state (src,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
+  /* cleanup */
+  cleanup_filesrc (src);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_reverse)
+{
+  GstElement *src;
+
+#ifndef TESTFILE
+#error TESTFILE not defined
+#endif
+  src = setup_filesrc ();
+
+  g_object_set (G_OBJECT (src), "location", TESTFILE, NULL);
+  /* we're going to perform the seek in ready */
+  fail_unless (gst_element_set_state (src,
+          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to ready");
+
+  /* reverse seek from end to start */
+  gst_element_seek (src, -1.0, GST_FORMAT_BYTES, 0, GST_SEEK_TYPE_SET, 100,
+      GST_SEEK_TYPE_SET, -1);
+
+  fail_unless (gst_element_set_state (src,
+          GST_STATE_PAUSED) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to paused");
+
+  /* wait for EOS */
+  wait_eos ();
 
   fail_unless (gst_element_set_state (src,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
@@ -323,6 +384,7 @@ filesrc_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_seeking);
+  tcase_add_test (tc_chain, test_reverse);
   tcase_add_test (tc_chain, test_pull);
   tcase_add_test (tc_chain, test_coverage);
   tcase_add_test (tc_chain, test_uri_interface);
