@@ -1323,12 +1323,12 @@ gst_directdraw_sink_window_thread (GstDirectDrawSink * ddrawsink)
       WS_OVERLAPPEDWINDOW | WS_SIZEBOX, 0, 0, 640, 480, NULL, NULL,
       WndClass.hInstance, NULL);
   if (ddrawsink->video_window == NULL)
-    return FALSE;
+    return NULL;
 
   /* Set the clipper on that window */
   IDirectDrawClipper_SetHWnd (ddrawsink->clipper, 0, ddrawsink->video_window);
 
-  /* signal application we create a window */
+  /* signal application we created a window */
   gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (ddrawsink),
       (gulong) ddrawsink->video_window);
 

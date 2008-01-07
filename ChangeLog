@@ -1,3 +1,9 @@
+2008-01-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	  (gst_directdraw_sink_window_thread):
+	  FALSE is not a gpointer.
+
 2008-01-05  Julien Moutte  <julien@fluendo.com>
 
 	* sys/directdraw/gstdirectdrawsink.c:
