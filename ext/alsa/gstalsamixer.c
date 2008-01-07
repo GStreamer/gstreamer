@@ -155,6 +155,16 @@ gst_alsa_mixer_find_master_mixer (GstAlsaMixer * mixer, snd_mixer_t * handle)
     element = snd_mixer_elem_next (element);
   }
 
+  /* If not, check if we have a playback mixer labelled as 'PCM' */
+  element = snd_mixer_first_elem (handle);
+  for (i = 0; i < count; i++) {
+    if (snd_mixer_selem_has_playback_volume (element) &&
+        strcmp (snd_mixer_selem_get_name (element), "PCM") == 0) {
+      return element;
+    }
+    element = snd_mixer_elem_next (element);
+  }
+
   /* If not, check if we have a playback mixer with both volume and switch */
   element = snd_mixer_first_elem (handle);
   for (i = 0; i < count; i++) {
