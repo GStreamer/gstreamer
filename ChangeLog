@@ -1,3 +1,16 @@
+2008-01-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Alexis Ballier <aballier at gentoo org>
+
+	* tests/check/gst/gstabi.c:
+	* tests/check/gst/struct_ppc64.h:
+	* tests/check/libs/libsabi.c:
+	* tests/check/libs/struct_ppc64.h:
+	  Decide which header to include based on the userland ABI target
+	  and not the kernel/cpu. Fix up structure sizes of ppc64 header
+	  for 64-bit userland (#503590).  Might need something similar for
+	  x86 too.
+
 2008-01-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstdebugutils.c: (_gst_debug_bin_to_dot_file):
