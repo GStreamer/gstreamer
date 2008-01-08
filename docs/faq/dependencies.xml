@@ -87,7 +87,7 @@ plugins for video available.
       <answer>
         <para>
 GStreamer actively supports such efforts, and in the case of 
-<ulink url="http://ladspa.org/"><citetitle>LADPSA</citetitle></ulink>,
+<ulink url="http://ladspa.org/"><citetitle>LADSPA</citetitle></ulink>,
 we already have a wrapper plugin.  This wrapper plug-in detects the LADSPA
 plugins present on your system at register time.
         </para>

@@ -1,3 +1,7 @@
+2008-01-07  David Schleef  <ds@schleef.org>
+
+	* docs/faq/dependencies.xml: Fix typo.
+
 2008-01-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_default_do_seek),
