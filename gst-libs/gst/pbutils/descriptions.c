@@ -60,9 +60,12 @@ typedef struct
 } FormatInfo;
 
 static const FormatInfo formats[] = {
-  /* container formats with static descriptions */
+  /* container/tag formats with static descriptions */
   {"application/ogg", "Ogg", FLAG_CONTAINER},
   {"application/vnd.rn-realmedia", "Realmedia", FLAG_CONTAINER},
+  {"application/x-id3", N_("ID3 tag"), FLAG_CONTAINER},
+  {"application/x-ape", N_("APE tag"), FLAG_CONTAINER},
+  {"application/x-icy", N_("ICY internet radio"), FLAG_CONTAINER},
   {"video/x-fli", "FLI/FLC/FLX Animation", FLAG_CONTAINER},
   {"video/x-flv", "Flash", FLAG_CONTAINER},
   {"video/x-matroska", "Matroska", FLAG_CONTAINER},
