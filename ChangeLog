@@ -1,3 +1,10 @@
+2008-01-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/base/gstbasetransform.c:
+	  (gst_base_transform_transform_size):
+	  Print element name with g_warning() if there's a problem
+	  with the unit size.
+
 2008-01-07  David Schleef  <ds@schleef.org>
 
 	Patch by: Damien Lespiau <damien.lespiau@gmail.com>

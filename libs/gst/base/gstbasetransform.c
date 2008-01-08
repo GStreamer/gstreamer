@@ -526,20 +526,21 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
 no_in_size:
   {
     GST_DEBUG_OBJECT (trans, "could not get in_size");
-    g_warning ("could not get in_size");
+    g_warning ("%s: could not get in_size", GST_ELEMENT_NAME (trans));
     return FALSE;
   }
 no_multiple:
   {
     GST_DEBUG_OBJECT (trans, "Size %u is not a multiple of unit size %u", size,
         inunitsize);
-    g_warning ("Size %u is not a multiple of unit size %u", size, inunitsize);
+    g_warning ("%s: size %u is not a multiple of unit size %u",
+        GST_ELEMENT_NAME (trans), size, inunitsize);
     return FALSE;
   }
 no_out_size:
   {
     GST_DEBUG_OBJECT (trans, "could not get out_size");
-    g_warning ("could not get out_size");
+    g_warning ("%s: could not get out_size", GST_ELEMENT_NAME (trans));
     return FALSE;
   }
 }
