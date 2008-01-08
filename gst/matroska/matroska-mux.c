@@ -51,6 +51,10 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
   "height = (int) [ 16, 4096 ], " \
   "framerate = (fraction) [ 0, MAX ]"
 
+#define COMMON_VIDEO_CAPS_NO_FRAMERATE \
+  "width = (int) [ 16, 4096 ], " \
+  "height = (int) [ 16, 4096 ] "
+
 static GstStaticPadTemplate videosink_templ =
     GST_STATIC_PAD_TEMPLATE ("video_%d",
     GST_PAD_SINK,
@@ -74,7 +78,7 @@ static GstStaticPadTemplate videosink_templ =
         "video/x-msmpeg, "
         COMMON_VIDEO_CAPS "; "
         "image/jpeg, "
-        COMMON_VIDEO_CAPS "; "
+        COMMON_VIDEO_CAPS_NO_FRAMERATE "; "
         "video/x-theora; "
         "video/x-dirac, "
         COMMON_VIDEO_CAPS "; "

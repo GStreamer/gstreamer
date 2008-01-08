@@ -1,5 +1,12 @@
 2008-01-08  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/matroska/matroska-mux.c: (COMMON_VIDEO_CAPS_NO_FRAMERATE),
+	  (videosink_templ):
+	  Also fix up pad templates to indicate that image/jpeg doesn't
+	  absolutely require the framerate property to be set (#504081).
+
+2008-01-08  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Based on patch by: Wouter Cloetens  <wouter at mind be>
 
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_video_pad_setcaps),
