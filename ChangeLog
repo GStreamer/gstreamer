@@ -1,3 +1,21 @@
+2008-01-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Based on patch by: Wouter Cloetens  <wouter at mind be>
+
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_video_pad_setcaps),
+	  (gst_matroska_mux_request_new_pad), (gst_matroska_mux_release_pad),
+	  (gst_matroska_mux_finish), (gst_matroska_mux_collected):
+	* gst/matroska/matroska-mux.h:
+	  Keep track of first and last timestamps for each incoming stream,
+	  so we can calculate the total duration for live sources and other
+	  input where we can't query the duration from the start or where
+	  there's no constant framerate from which we can deduce the
+	  duration; also use calculated/observed duration if it is bigger
+	  than the previously queried duration. Furthermore, use
+	  gst_pad_query_peer_duration() and take into account that it may
+	  return TRUE but still a duration of CLOCK_TIME_NONE, which easily
+	  screws up comparisons when using unsigned integers. Fixes #504081.
+
 2008-01-08  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

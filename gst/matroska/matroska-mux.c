@@ -513,10 +513,10 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstMatroskaTrackVideoContext *videocontext;
   GstMatroskaMux *mux;
   GstMatroskaPad *collect_pad;
+  GstStructure *structure;
   const gchar *mimetype;
   gint width, height, pixel_width, pixel_height;
-  const GValue *framerate;
-  GstStructure *structure;
+  gint fps_d, fps_n;
 
   mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
 
@@ -541,16 +541,16 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   /* get general properties */
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
-  framerate = gst_structure_get_value (structure, "framerate");
-  if (framerate == NULL || !GST_VALUE_HOLDS_FRACTION (framerate))
-    return FALSE;
-
   videocontext->pixel_width = width;
   videocontext->pixel_height = height;
-  context->default_duration = gst_util_uint64_scale_int (GST_SECOND,
-      gst_value_get_fraction_denominator (framerate),
-      gst_value_get_fraction_numerator (framerate));
-
+  if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+    context->default_duration =
+        gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
+    GST_LOG_OBJECT (pad, "default duration = %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (context->default_duration));
+  } else {
+    context->default_duration = 0;
+  }
   if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
           &pixel_width, &pixel_height)) {
     if (pixel_width > pixel_height) {
@@ -1136,6 +1136,8 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   context->flags = GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT;
   collect_pad->track = context;
   collect_pad->buffer = NULL;
+  collect_pad->start_ts = GST_CLOCK_TIME_NONE;
+  collect_pad->end_ts = GST_CLOCK_TIME_NONE;
 
   /* FIXME: hacked way to override/extend the event function of
    * GstCollectPads; because it sets its own event function giving the
@@ -1176,6 +1178,13 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
     GstMatroskaPad *collect_pad = (GstMatroskaPad *) cdata;
 
     if (cdata->pad == pad) {
+      GstClockTime min_dur;     /* observed minimum duration */
+
+      /* no need to check if start_ts and end_ts are set, in the worst case
+       * they're both -1 and we'll end up with a duration of 0 again */
+      min_dur = GST_CLOCK_DIFF (collect_pad->start_ts, collect_pad->end_ts);
+      if (collect_pad->duration < min_dur)
+        collect_pad->duration = min_dur;
       if (collect_pad->duration > mux->duration)
         mux->duration = collect_pad->duration;
       gst_matroska_pad_free (collect_pad);
@@ -1351,23 +1360,22 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
       collected = g_slist_next (collected)) {
     GstMatroskaPad *collect_pad;
     GstFormat format = GST_FORMAT_TIME;
-    GstPad *thepad, *peerpad;
+    GstPad *thepad;
     gint64 trackduration;
 
     collect_pad = (GstMatroskaPad *) collected->data;
     thepad = collect_pad->collect.pad;
 
     /* Query the total length of the track. */
-    peerpad = gst_pad_get_peer (thepad);
-    GST_DEBUG_OBJECT (thepad, "querying duration");
-    if (gst_pad_query_duration (peerpad, &format, &trackduration)) {
+    GST_DEBUG_OBJECT (thepad, "querying peer duration");
+    if (gst_pad_query_peer_duration (thepad, &format, &trackduration)) {
       GST_DEBUG_OBJECT (thepad, "duration: %" GST_TIME_FORMAT,
           GST_TIME_ARGS (trackduration));
-      if ((gdouble) trackduration > duration) {
+      if (trackduration != GST_CLOCK_TIME_NONE &&
+          (gdouble) trackduration > duration) {
         duration = (gdouble) trackduration;
       }
     }
-    gst_object_unref (peerpad);
   }
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION,
       duration / gst_guint64_to_gdouble (mux->time_scale));
@@ -1600,13 +1608,23 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   for (collected = mux->collect->data; collected;
       collected = g_slist_next (collected)) {
     GstMatroskaPad *collect_pad;
+    GstClockTime min_duration;  /* observed minimum duration */
 
     collect_pad = (GstMatroskaPad *) collected->data;
 
+    /* no need to check if start_ts and end_ts are set, in the worst case
+     * they're both -1 and we'll end up with a duration of 0 again */
+    min_duration = GST_CLOCK_DIFF (collect_pad->start_ts, collect_pad->end_ts);
+    if (collect_pad->duration < min_duration)
+      collect_pad->duration = min_duration;
+    GST_DEBUG_OBJECT (collect_pad, "final track duration: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (collect_pad->duration));
     if (collect_pad->duration > duration)
       duration = collect_pad->duration;
   }
   if (duration != 0) {
+    GST_DEBUG_OBJECT (mux, "final total duration: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (duration));
     pos = mux->ebml_write->pos;
     gst_ebml_write_seek (ebml, mux->duration_pos);
     gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION,
@@ -1919,6 +1937,18 @@ gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data)
       break;
     }
     GST_DEBUG_OBJECT (best->collect.pad, "best pad");
+
+    /* make note of first and last encountered timestamps, so we can calculate
+     * the actual duration later when we send an updated header on eos */
+    best->end_ts = GST_BUFFER_TIMESTAMP (best->buffer);
+    if (GST_BUFFER_DURATION_IS_VALID (best->buffer))
+      best->end_ts += GST_BUFFER_DURATION (best->buffer);
+    else if (best->track->default_duration)
+      best->end_ts += best->track->default_duration;
+
+    if (G_UNLIKELY (best->start_ts == GST_CLOCK_TIME_NONE)) {
+      best->start_ts = GST_BUFFER_TIMESTAMP (best->buffer);
+    }
 
     /* write one buffer */
     ret = gst_matroska_mux_write_data (mux, best);
