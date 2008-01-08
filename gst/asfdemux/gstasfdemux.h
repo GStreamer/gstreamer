@@ -142,6 +142,9 @@ struct _GstASFDemux {
   gchar              **languages;
   guint                num_languages;
 
+  GstCaps             *metadata;         /* metadata, for delayed parsing; one
+                                          * structure ('stream-N') per stream */
+
   GSList              *ext_stream_props; /* for delayed processing (buffers) */
   GSList              *mut_ex_streams;   /* mutually exclusive streams */
 

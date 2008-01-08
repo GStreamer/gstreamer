@@ -110,6 +110,8 @@ static void gst_asf_demux_descramble_buffer (GstASFDemux * demux,
     AsfStream * stream, GstBuffer ** p_buffer);
 static void gst_asf_demux_activate_stream (GstASFDemux * demux,
     AsfStream * stream);
+static GstStructure *gst_asf_demux_get_metadata_for_stream (GstASFDemux * d,
+    guint stream_num);
 
 GST_BOILERPLATE (GstASFDemux, gst_asf_demux, GstElement, GST_TYPE_ELEMENT);
 
@@ -189,6 +191,10 @@ gst_asf_demux_reset (GstASFDemux * demux)
   if (demux->taglist) {
     gst_tag_list_free (demux->taglist);
     demux->taglist = NULL;
+  }
+  if (demux->metadata) {
+    gst_caps_unref (demux->metadata);
+    demux->metadata = NULL;
   }
   demux->state = GST_ASF_DEMUX_STATE_HEADER;
   g_free (demux->objpath);
@@ -1716,6 +1722,16 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
   if (caps == NULL) {
     caps = gst_caps_new_simple ("video/x-asf-unknown", "fourcc",
         GST_TYPE_FOURCC, video->tag, NULL);
+  } else {
+    GstStructure *s;
+    gint ax, ay;
+
+    s = gst_asf_demux_get_metadata_for_stream (demux, id);
+    if (gst_structure_get_int (s, "AspectRatioX", &ax) &&
+        gst_structure_get_int (s, "AspectRatioY", &ay)) {
+      gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+          ax, ay, NULL);
+    }
   }
 
   /* add fourcc format to caps, some proprietary decoders seem to need it */
@@ -2133,6 +2149,103 @@ not_enough_data:
   {
     GST_WARNING ("Unexpected end of data parsing ext content desc object");
     gst_tag_list_free (taglist);
+    return GST_FLOW_OK;         /* not really fatal */
+  }
+}
+
+static GstStructure *
+gst_asf_demux_get_metadata_for_stream (GstASFDemux * demux, guint stream_num)
+{
+  gchar sname[32];
+  guint i;
+
+  g_snprintf (sname, sizeof (sname), "stream-%u", stream_num);
+
+  for (i = 0; i < gst_caps_get_size (demux->metadata); ++i) {
+    GstStructure *s;
+
+    s = gst_caps_get_structure (demux->metadata, i);
+    if (gst_structure_has_name (s, sname))
+      return s;
+  }
+
+  gst_caps_append_structure (demux->metadata, gst_structure_empty_new (sname));
+
+  /* try lookup again; demux->metadata took ownership of the structure, so we
+   * can't really make any assumptions about what happened to it, so we can't
+   * just return it directly after appending it */
+  return gst_asf_demux_get_metadata_for_stream (demux, stream_num);
+}
+
+static GstFlowReturn
+gst_asf_demux_process_metadata (GstASFDemux * demux, guint8 * data,
+    guint64 size)
+{
+  guint16 blockcount, i;
+
+  GST_INFO_OBJECT (demux, "object is a metadata object");
+
+  /* Content Descriptor Count */
+  if (size < 2)
+    goto not_enough_data;
+
+  blockcount = gst_asf_demux_get_uint16 (&data, &size);
+
+  for (i = 0; i < blockcount; ++i) {
+    GstStructure *s;
+    guint16 lang_idx, stream_num, name_len, data_type;
+    guint32 data_len, ival;
+    gchar *name_utf8;
+
+    if (size < (2 + 2 + 2 + 2 + 4))
+      goto not_enough_data;
+
+    lang_idx = gst_asf_demux_get_uint16 (&data, &size);
+    stream_num = gst_asf_demux_get_uint16 (&data, &size);
+    name_len = gst_asf_demux_get_uint16 (&data, &size);
+    data_type = gst_asf_demux_get_uint16 (&data, &size);
+    data_len = gst_asf_demux_get_uint32 (&data, &size);
+
+    if (size < name_len + data_len)
+      goto not_enough_data;
+
+    /* convert name to UTF-8 */
+    name_utf8 = g_convert ((gchar *) data, name_len, "UTF-8", "UTF-16LE",
+        NULL, NULL, NULL);
+    gst_asf_demux_skip_bytes (name_len, &data, &size);
+
+    if (name_utf8 == NULL) {
+      GST_WARNING ("Failed to convert value name to UTF8, skipping");
+      gst_asf_demux_skip_bytes (data_len, &data, &size);
+      continue;
+    }
+
+    if (data_type != ASF_DEMUX_DATA_TYPE_DWORD) {
+      gst_asf_demux_skip_bytes (data_len, &data, &size);
+      continue;
+    }
+
+    /* read DWORD */
+    if (size < 4)
+      goto not_enough_data;
+
+    ival = gst_asf_demux_get_uint32 (&data, &size);
+
+    /* skip anything else there may be, just in case */
+    gst_asf_demux_skip_bytes (data_len - 4, &data, &size);
+
+    s = gst_asf_demux_get_metadata_for_stream (demux, stream_num);
+    gst_structure_set (s, name_utf8, G_TYPE_INT, ival, NULL);
+    g_free (name_utf8);
+  }
+
+  GST_INFO_OBJECT (demux, "metadata = %" GST_PTR_FORMAT, demux->metadata);
+  return GST_FLOW_OK;
+
+  /* Errors */
+not_enough_data:
+  {
+    GST_WARNING ("Unexpected end of data parsing metadata object");
     return GST_FLOW_OK;         /* not really fatal */
   }
 }
@@ -2889,6 +3002,9 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
           gst_asf_demux_process_ext_content_desc (demux, *p_data,
           obj_data_size);
       break;
+    case ASF_OBJ_METADATA_OBJECT:
+      ret = gst_asf_demux_process_metadata (demux, *p_data, obj_data_size);
+      break;
     case ASF_OBJ_EXTENDED_STREAM_PROPS:{
       GstBuffer *buf;
 
@@ -2922,7 +3038,6 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     case ASF_OBJ_INDEX:
     case ASF_OBJ_PADDING:
     case ASF_OBJ_BITRATE_MUTEX:
-    case ASF_OBJ_METADATA_OBJECT:
     case ASF_OBJ_COMPATIBILITY:
     case ASF_OBJ_INDEX_PLACEHOLDER:
     case ASF_OBJ_INDEX_PARAMETERS:
@@ -3769,6 +3884,7 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
       demux->need_newsegment = TRUE;
       demux->segment_running = FALSE;
       demux->adapter = gst_adapter_new ();
+      demux->metadata = gst_caps_new_empty ();
       demux->data_size = 0;
       demux->data_offset = 0;
       demux->index_offset = 0;
@@ -3784,6 +3900,7 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_asf_demux_reset (demux);
       break;
     default:
