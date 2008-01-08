@@ -242,12 +242,15 @@ static void
 gst_audio_panorama_init (GstAudioPanorama * filter,
     GstAudioPanoramaClass * klass)
 {
+
   filter->panorama = 0;
   filter->method = METHOD_PSYCHOACOUSTIC;
   filter->width = 0;
   filter->channels = 0;
   filter->format_float = FALSE;
   filter->process = NULL;
+
+  gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (filter), TRUE);
 }
 
 static gboolean
@@ -633,6 +636,12 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (outbuf)))
     gst_object_sync_values (G_OBJECT (filter), GST_BUFFER_TIMESTAMP (outbuf));
+
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP))) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
+    memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
+    return GST_FLOW_OK;
+  }
 
   filter->process (filter, GST_BUFFER_DATA (inbuf),
       GST_BUFFER_DATA (outbuf), num_samples);

@@ -785,11 +785,11 @@ gst_audio_chebyshev_freq_limit_transform_ip (GstBaseTransform * base,
   guint num_samples =
       GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
 
-  if (gst_base_transform_is_passthrough (base))
-    return GST_FLOW_OK;
-
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buf)))
     gst_object_sync_values (G_OBJECT (filter), GST_BUFFER_TIMESTAMP (buf));
+
+  if (gst_base_transform_is_passthrough (base))
+    return GST_FLOW_OK;
 
   if (!filter->have_coeffs)
     generate_coefficients (filter);

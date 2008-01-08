@@ -1,3 +1,27 @@
+2008-01-08  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* gst/audiofx/audioamplify.c:
+	(gst_audio_amplify_clipping_method_get_type),
+	(gst_audio_amplify_init), (gst_audio_amplify_transform_ip):
+	* gst/audiofx/audiodynamic.c: (gst_audio_dynamic_init),
+	(gst_audio_dynamic_transform_ip):
+	* gst/audiofx/audioinvert.c: (gst_audio_invert_init),
+	(gst_audio_invert_transform_ip):
+	* gst/audiofx/audiopanorama.c: (gst_audio_panorama_init),
+	(gst_audio_panorama_transform):
+	* gst/level/gstlevel.c: (gst_level_init):
+	Make elements GST_BUFFER_FLAG_GAP aware and call
+	gst_base_transform_set_gap_aware for this.
+	Bump core requirement to CVS.
+	
+	* gst/audiofx/audiochebyshevfreqband.c:
+	(gst_audio_chebyshev_freq_band_transform_ip):
+	* gst/audiofx/audiochebyshevfreqlimit.c:
+	(gst_audio_chebyshev_freq_limit_transform_ip):
+	Also sync GObject properties to the controller if operating
+	in passthrough mode.
+
 2008-01-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/directdraw/gstdirectdrawsink.c:

@@ -280,6 +280,7 @@ gst_audio_dynamic_init (GstAudioDynamic * filter, GstAudioDynamicClass * klass)
   filter->characteristics = CHARACTERISTICS_HARD_KNEE;
   filter->mode = MODE_COMPRESSOR;
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
+  gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (filter), TRUE);
 }
 
 static void
@@ -699,11 +700,12 @@ gst_audio_dynamic_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   guint num_samples =
       GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
 
-  if (gst_base_transform_is_passthrough (base))
-    return GST_FLOW_OK;
-
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buf)))
     gst_object_sync_values (G_OBJECT (filter), GST_BUFFER_TIMESTAMP (buf));
+
+  if (gst_base_transform_is_passthrough (base) ||
+      G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP)))
+    return GST_FLOW_OK;
 
   filter->process (filter, GST_BUFFER_DATA (buf), num_samples);
 

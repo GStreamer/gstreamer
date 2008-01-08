@@ -215,6 +215,8 @@ gst_level_init (GstLevel * filter, GstLevelClass * g_class)
   filter->message = TRUE;
 
   filter->process = NULL;
+
+  gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (filter), TRUE);
 }
 
 static void
