@@ -41,7 +41,7 @@ typedef enum {
   GST_DP_VERSION_1_0,
 } GstDPVersion;
 
-GType gst_dp_version_get_type ();
+GType gst_dp_version_get_type (void);
 #define GST_TYPE_DP_VERSION (gst_dp_version_get_type ())
 
 /**
