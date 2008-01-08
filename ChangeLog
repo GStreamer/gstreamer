@@ -1,5 +1,16 @@
 2008-01-07  David Schleef  <ds@schleef.org>
 
+	Patch by: Damien Lespiau <damien.lespiau@gmail.com>
+
+	* libs/gst/controller/gstcontroller.h:
+	* libs/gst/controller/gstcontrolsource.h:
+	* libs/gst/controller/gstinterpolationcontrolsource.h:
+	* libs/gst/controller/gstlfocontrolsource.h:
+	* libs/gst/dataprotocol/dataprotocol.h:
+	  Fix empty prototypes.  Fixes bug #507957.
+
+2008-01-07  David Schleef  <ds@schleef.org>
+
 	* docs/faq/dependencies.xml: Fix typo.
 
 2008-01-07  Wim Taymans  <wim.taymans@collabora.co.uk>

@@ -90,12 +90,12 @@ struct _GstLFOControlSourceClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_lfo_control_source_get_type ();
-GType gst_lfo_waveform_get_type ();
+GType gst_lfo_control_source_get_type (void);
+GType gst_lfo_waveform_get_type (void);
 
 /* Functions */
 
-GstLFOControlSource *gst_lfo_control_source_new ();
+GstLFOControlSource *gst_lfo_control_source_new (void);
 
 G_END_DECLS
 

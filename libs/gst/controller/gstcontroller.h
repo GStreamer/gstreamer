@@ -84,7 +84,7 @@ struct _GstControllerClass
   gpointer       _gst_reserved[GST_PADDING];
 };
 
-GType gst_controller_get_type ();
+GType gst_controller_get_type (void);
 
 /* GstController functions */
 

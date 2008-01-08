@@ -91,11 +91,11 @@ struct _GstInterpolationControlSourceClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_interpolation_control_source_get_type ();
+GType gst_interpolation_control_source_get_type (void);
 
 /* Functions */
 
-GstInterpolationControlSource *gst_interpolation_control_source_new ();
+GstInterpolationControlSource *gst_interpolation_control_source_new (void);
 gboolean gst_interpolation_control_source_set_interpolation_mode (GstInterpolationControlSource *self, GstInterpolateMode mode);
 gboolean gst_interpolation_control_source_set (GstInterpolationControlSource * self, GstClockTime timestamp, GValue * value);
 gboolean gst_interpolation_control_source_set_from_list (GstInterpolationControlSource * self, GSList * timedvalues);

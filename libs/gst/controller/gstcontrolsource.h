@@ -150,7 +150,7 @@ struct _GstControlSourceClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_control_source_get_type ();
+GType gst_control_source_get_type (void);
 
 /* Functions */
 
