@@ -939,7 +939,19 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
     gst_bin_add (GST_BIN (decode_bin), element);
 
     /* set to READY first so it is ready, duh. */
-    gst_element_set_state (element, GST_STATE_READY);
+    if (gst_element_set_state (element,
+            GST_STATE_READY) == GST_STATE_CHANGE_FAILURE) {
+      GST_WARNING_OBJECT (decode_bin, "Couldn't set %s to READY",
+          GST_ELEMENT_NAME (element));
+      /* get rid of the sinkpad */
+      gst_object_unref (sinkpad);
+      /* this element did not work, remove it again and continue trying
+       * other elements, the element will be disposed. */
+      /* FIXME: shouldn't we do this before adding it to the bin so that no
+       * error messages get through to the app? (tpm) */
+      gst_bin_remove (GST_BIN (decode_bin), element);
+      continue;
+    }
 
     if ((ret = gst_pad_link (usedsrcpad, sinkpad)) != GST_PAD_LINK_OK) {
       GST_DEBUG_OBJECT (decode_bin, "link failed on pad %s:%s, reason %d",
@@ -974,8 +986,16 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
       /* now that we added the element we can try to continue autoplugging
        * on it until we have a raw type */
       close_link (element, decode_bin);
+
       /* change the state of the element to that of the parent */
-      gst_element_set_state (element, GST_STATE_PAUSED);
+      if ((gst_element_set_state (element,
+                  GST_STATE_PAUSED)) == GST_STATE_CHANGE_FAILURE) {
+        GST_WARNING_OBJECT (decode_bin, "Couldn't set %s to PAUSED",
+            GST_ELEMENT_NAME (element));
+        gst_element_set_state (element, GST_STATE_NULL);
+        gst_bin_remove (GST_BIN (decode_bin), element);
+        continue;
+      }
 
       result = element;
 

@@ -1,3 +1,9 @@
+2008-01-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstdecodebin.c: (try_to_link_1):
+	  Make sure we error out correctly if we can't activate one of
+	  the elements we've added.  Fixes #508138.
+	  
 2008-01-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Bastien Nocera <hadess at hadess net>
