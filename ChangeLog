@@ -1,5 +1,14 @@
 2008-01-08  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/tag/gsttagdemux.c: (gst_tag_demux_pull_start_tag):
+	  Post an error message if we can't pull as many bytes as we need
+	  for the tag. This makes sure the user gets to see a proper error
+	  message if a file with a partial ID3 tag is fed to decodebin, and
+	  not a 'no ID3 tag demuxer' error, which would be confusing
+	  (see #508138).
+
+2008-01-08  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/pbutils/descriptions.c: (formats):
 	  Add description strings for ID3, APE, and ICY tags.
 

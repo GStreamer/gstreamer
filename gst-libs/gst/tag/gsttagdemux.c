@@ -1035,6 +1035,8 @@ gst_tag_demux_pull_start_tag (GstTagDemux * demux, GstTagList ** tags)
       if (GST_BUFFER_SIZE (buffer) < tagsize) {
         GST_DEBUG_OBJECT (demux, "Only managed to read %u bytes from file",
             GST_BUFFER_SIZE (buffer));
+        GST_ELEMENT_ERROR (demux, STREAM, DECODE,
+            (_("Failed to read tag: not enough data")), (NULL));
         goto done;
       }
     }
