@@ -1099,14 +1099,25 @@ mpg123_parse_xing_header (struct mad_header *header,
       ptr += 4;
     }
     if (xflags & XING_TOC_FLAG) {
+      guchar old = 0;
+
       lprintf ("toc found\n");
       if (ptr >= (buf + bufsize - XING_TOC_LENGTH))
         return 0;
+      if (*ptr != 0) {
+        lprintf ("skipping broken Xing TOC\n");
+        goto skip_toc;
+      }
       for (i = 0; i < XING_TOC_LENGTH; i++) {
         xtoc[i] = *(ptr + i);
+        if (old > xtoc[i]) {
+          lprintf ("skipping broken Xing TOC\n");
+          goto skip_toc;
+        }
         lprintf ("%d ", xtoc[i]);
       }
       lprintf ("\n");
+    skip_toc:
       ptr += XING_TOC_LENGTH;
     }
 

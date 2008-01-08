@@ -1,3 +1,12 @@
+2008-01-08  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/mad/gstmad.c: (mpg123_parse_xing_header):
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_handle_first_frame):
+	Make sure that the Xing TOC starts with 0 and the entries
+	are increasing over time. Otherwise it's broken and should
+	be skipped. Fixes bug #507821.
+
 2008-01-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/gstasfdemux.c: (asfdemux_dbg), (gst_asf_demux_reset),

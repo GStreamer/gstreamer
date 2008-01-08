@@ -759,9 +759,23 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
     if (xing_flags & XING_TOC_FLAG) {
       int i, percent = 0;
       guchar *table = mp3parse->xing_seek_table;
+      guchar old = 0;
+
+      if (data[0] != 0) {
+        GST_WARNING_OBJECT (mp3parse, "Skipping broken Xing TOC");
+        mp3parse->xing_flags &= ~XING_TOC_FLAG;
+        goto skip_toc;
+      }
 
       /* xing seek table: percent time -> 1/256 bytepos */
-      memcpy (mp3parse->xing_seek_table, data, 100);
+      for (i = 0; i < 100; i++) {
+        mp3parse->xing_seek_table[i] = data[i];
+        if (old > data[i]) {
+          GST_WARNING_OBJECT (mp3parse, "Skipping broken Xing TOC");
+          mp3parse->xing_flags &= ~XING_TOC_FLAG;
+          goto skip_toc;
+        }
+      }
 
       /* build inverse table: 1/256 bytepos -> 1/100 percent time */
       for (i = 0; i < 256; i++) {
@@ -788,6 +802,7 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
           mp3parse->xing_seek_table_inverse[i] = (guint16) (fx * 100);
         }
       }
+    skip_toc:
       data += 100;
     } else {
       memset (mp3parse->xing_seek_table, 0, 100);
