@@ -1677,7 +1677,6 @@ create_send_rtp_sink (GstRtpSession * rtpsession)
   rtpsession->send_rtp_src =
       gst_pad_new_from_static_template (&rtpsession_send_rtp_src_template,
       "send_rtp_src");
-  gst_pad_use_fixed_caps (rtpsession->send_rtp_src);
   gst_pad_set_internal_link_function (rtpsession->send_rtp_src,
       gst_rtp_session_internal_links);
   gst_pad_set_active (rtpsession->send_rtp_src, TRUE);

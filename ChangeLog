@@ -1,3 +1,9 @@
+2008-01-09  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c: (create_send_rtp_sink):
+	Don't set fixed caps, we can basically do everything the upsteam peer
+	pad can renegotiate to. Fixes #507940.
+
 2008-01-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* Makefile.am:
