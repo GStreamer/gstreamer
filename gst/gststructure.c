@@ -429,20 +429,16 @@ gst_structure_id_set_value (GstStructure * structure,
   g_return_if_fail (G_IS_VALUE (value));
   g_return_if_fail (IS_MUTABLE (structure));
 
-  /* if someones disables GST_DEBUG output, they probably do it for
-   * performance reasons, so skip the UTF-8 check here as well then */
-#ifndef GST_DISABLE_GST_DEBUG
   if (G_VALUE_HOLDS_STRING (value)) {
     const gchar *s;
 
     s = g_value_get_string (value);
-    if (s != NULL && !g_utf8_validate (s, -1, NULL)) {
+    if (G_UNLIKELY (s != NULL && !g_utf8_validate (s, -1, NULL))) {
       g_warning ("Trying to set string field '%s' on structure, but string is "
           "not valid UTF-8. Please file a bug.", g_quark_to_string (field));
       return;
     }
   }
-#endif
 
   gsfield.name = field;
   gst_value_init_and_copy (&gsfield.value, value);

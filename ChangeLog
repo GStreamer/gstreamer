@@ -1,3 +1,11 @@
+2008-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gststructure.c: (gst_structure_id_set_value):
+	  Always check UTF-8 conformance of structure strings and not only
+	  if the debugging system is enabled; reasoning: the behaviour of
+	  the actual code shouldn't really change depending on whether the
+	  debugging system is enabled or not (#508291).
+
 2008-01-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* Makefile.am:
