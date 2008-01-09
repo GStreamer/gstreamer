@@ -1199,10 +1199,19 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
      * next time it is scheduled. */
     if (src->priv->start_segment)
       gst_event_unref (src->priv->start_segment);
-    src->priv->start_segment =
-        gst_event_new_new_segment_full (FALSE,
-        src->segment.rate, src->segment.applied_rate, src->segment.format,
-        src->segment.last_stop, stop, src->segment.time);
+    if (src->segment.rate >= 0.0) {
+      /* forward, we send data from last_stop to stop */
+      src->priv->start_segment =
+          gst_event_new_new_segment_full (FALSE,
+          src->segment.rate, src->segment.applied_rate, src->segment.format,
+          src->segment.last_stop, stop, src->segment.time);
+    } else {
+      /* reverse, we send data from stop to last_stop */
+      src->priv->start_segment =
+          gst_event_new_new_segment_full (FALSE,
+          src->segment.rate, src->segment.applied_rate, src->segment.format,
+          src->segment.start, src->segment.last_stop, src->segment.time);
+    }
   }
 
   src->priv->discont = TRUE;

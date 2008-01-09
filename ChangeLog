@@ -1,5 +1,11 @@
 2008-01-09  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek),
+	(gst_base_src_loop):
+	The start segment for reverse playback goes from start to last_stop.
+
+2008-01-09  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Peter Kjellerstedt <pkj axis com>
 
 	* gst/gstclock.h:
