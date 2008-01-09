@@ -1,3 +1,11 @@
+2008-01-09  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.c:
+	Update some comments.
+
+	* tools/gst-inspect.c: (print_element_properties_info):
+	Improve printing of flags.
+
 2008-01-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/base/gstbasetransform.c:

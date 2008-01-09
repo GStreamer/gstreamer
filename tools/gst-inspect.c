@@ -511,7 +511,7 @@ print_element_properties_info (GstElement * element)
           }
 
           n_print
-              ("%-23.23s Flags \"%s\" Default: %d, \"%s\" Current: %d, \"%s\"",
+              ("%-23.23s Flags \"%s\" Default: 0x%08x, \"%s\" Current: 0x%08x, \"%s\"",
               "", g_type_name (G_VALUE_TYPE (&value)), pflags->default_value,
               (def_flags ? def_flags->str : "(none)"), flags_value,
               (cur_flags ? cur_flags->str : "(none)"));
