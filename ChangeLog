@@ -1,3 +1,8 @@
+2008-01-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* Makefile.am:
+	  Remove old coverage target in favour of "make lcov".
+
 2008-01-09  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek),

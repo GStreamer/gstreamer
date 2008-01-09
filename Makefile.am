@@ -48,7 +48,7 @@ clean-bbg:
 GCOV_DIRS=gst libs
 
 ## .PHONY so it always rebuilds it
-.PHONY: coverage-report.txt test-coverage-report.html lcov
+.PHONY: coverage-report.txt
 
 coverage-report.txt:
 	BBG_FILES=`find $(GCOV_DIRS) -name "*.bbg"` ;			  \
@@ -67,21 +67,11 @@ coverage-report.txt:
 	echo $$C_FILES ;						  \
 	$(top_builddir)/testsuite/decode-gcov --report $$C_FILES > coverage-report.txt
 
-test-coverage-report.html:
-	mkdir -p ./coverage
-	lcov --directory . --zerocounters
-	-$(MAKE) check
-	lcov --directory . --capture --output-file ./coverage/$(PACKAGE).info
-	genhtml -o ./coverage --num-spaces 2 ./coverage/$(PACKAGE).info
-	
 check-coverage: clean-gcov all check coverage-report.txt
 	cat coverage-report.txt
 
 else
 coverage-report.txt:
-	echo "Need to reconfigure with --enable-gcov"
-	
-test-coverage-report.html:
 	echo "Need to reconfigure with --enable-gcov"
 
 check-coverage:
