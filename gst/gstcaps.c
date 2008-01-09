@@ -1773,7 +1773,7 @@ gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
 gchar *
 gst_caps_to_string (const GstCaps * caps)
 {
-  guint i;
+  guint i, slen;
   GString *s;
 
   /* NOTE:  This function is potentially called by the debug system,
@@ -1792,10 +1792,15 @@ gst_caps_to_string (const GstCaps * caps)
     return g_strdup ("EMPTY");
   }
 
-  s = g_string_new ("");
+  /* estimate a rough string length to avoid unnecessary reallocs in GString */
+  slen = 0;
+  for (i = 0; i < caps->structs->len; i++) {
+    slen += STRUCTURE_ESTIMATED_STRING_LEN (gst_caps_get_structure (caps, i));
+  }
+
+  s = g_string_sized_new (slen);
   for (i = 0; i < caps->structs->len; i++) {
     GstStructure *structure;
-    char *sstr;
 
     if (i > 0) {
       /* ';' is now added by gst_structure_to_string */
@@ -1803,15 +1808,12 @@ gst_caps_to_string (const GstCaps * caps)
     }
 
     structure = gst_caps_get_structure (caps, i);
-    sstr = gst_structure_to_string (structure);
-    g_string_append (s, sstr);
-    g_free (sstr);
+    priv_gst_structure_append_to_gstring (structure, s);
   }
   if (s->len && s->str[s->len - 1] == ';') {
     /* remove latest ';' */
     s->str[--s->len] = '\0';
   }
-
   return g_string_free (s, FALSE);
 }
 

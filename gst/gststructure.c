@@ -1506,6 +1506,39 @@ gst_structure_value_get_generic_type (GValue * val)
       ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
       ((c) == '.'))
 
+gboolean
+priv_gst_structure_append_to_gstring (const GstStructure * structure,
+    GString * s)
+{
+  GstStructureField *field;
+  guint i;
+
+  g_return_val_if_fail (s != NULL, FALSE);
+
+  g_string_append (s, g_quark_to_string (structure->name));
+  for (i = 0; i < structure->fields->len; i++) {
+    char *t;
+    GType type;
+
+    field = GST_STRUCTURE_FIELD (structure, i);
+
+    t = gst_value_serialize (&field->value);
+    type = gst_structure_value_get_generic_type (&field->value);
+
+    g_string_append_len (s, ", ", 2);
+    /* FIXME: do we need to escape fieldnames? */
+    g_string_append (s, g_quark_to_string (field->name));
+    g_string_append_len (s, "=(", 2);
+    g_string_append (s, gst_structure_to_abbr (type));
+    g_string_append_c (s, ')');
+    g_string_append (s, GST_STR_NULL (t));
+    g_free (t);
+  }
+
+  g_string_append_c (s, ';');
+  return TRUE;
+}
+
 /**
  * gst_structure_to_string:
  * @structure: a #GstStructure
@@ -1518,9 +1551,7 @@ gst_structure_value_get_generic_type (GValue * val)
 gchar *
 gst_structure_to_string (const GstStructure * structure)
 {
-  GstStructureField *field;
   GString *s;
-  guint i;
 
   /* NOTE:  This function is potentially called by the debug system,
    * so any calls to gst_log() (and GST_DEBUG(), GST_LOG(), etc.)
@@ -1530,25 +1561,10 @@ gst_structure_to_string (const GstStructure * structure)
 
   g_return_val_if_fail (structure != NULL, NULL);
 
-  s = g_string_new ("");
-  g_string_append_printf (s, "%s", g_quark_to_string (structure->name));
-  for (i = 0; i < structure->fields->len; i++) {
-    char *t;
-    GType type;
-
-    field = GST_STRUCTURE_FIELD (structure, i);
-
-    t = gst_value_serialize (&field->value);
-    type = gst_structure_value_get_generic_type (&field->value);
-
-    /* FIXME: do we need to escape fieldnames? */
-    g_string_append_printf (s, ", %s=(%s)%s", g_quark_to_string (field->name),
-        gst_structure_to_abbr (type), GST_STR_NULL (t));
-    g_free (t);
-  }
-
-  g_string_append_c (s, ';');
-
+  /* we estimate a minimum size based on the number of fields in order to
+   * avoid unnecessary reallocs within GString */
+  s = g_string_sized_new (STRUCTURE_ESTIMATED_STRING_LEN (structure));
+  priv_gst_structure_append_to_gstring (structure, s);
   return g_string_free (s, FALSE);
 }
 

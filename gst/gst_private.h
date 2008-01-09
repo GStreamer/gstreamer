@@ -39,6 +39,7 @@ extern const char             g_log_domain_gstreamer[];
 
 /* Needed for GstRegistry * */
 #include "gstregistry.h"
+#include "gststructure.h"
 
 G_BEGIN_DECLS
 
@@ -64,6 +65,13 @@ void  _gst_value_initialize (void);
 /* Private registry functions */
 gboolean _priv_gst_registry_remove_cache_plugins (GstRegistry *registry);
 void _priv_gst_registry_cleanup (void);
+
+/* used in both gststructure.c and gstcaps.c; numbers are completely made up */
+#define STRUCTURE_ESTIMATED_STRING_LEN(s) (16 + (s)->fields->len * 22)
+
+gboolean  priv_gst_structure_append_to_gstring (const GstStructure * structure,
+                                                GString            * s);
+
 
 /*** debugging categories *****************************************************/
 

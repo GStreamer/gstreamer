@@ -1,5 +1,19 @@
 2008-01-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gst_private.h: (STRUCTURE_ESTIMATED_STRING_LEN):
+	* gst/gstcaps.c: (gst_caps_to_string):
+	* gst/gststructure.c: (GST_ASCII_IS_STRING),
+	  (priv_gst_structure_append_to_gstring), (gst_structure_to_string):
+	  Yet another gratuitous GString micro-optimisation: add a (private)
+	  function that serialises a structure appending to an existing
+	  GString, so that when we serialise caps we don't need to alloc+free
+	  a throwaway GString for each structure (each of which also entailing
+	  multiple reallocs on the way); also use g_string_sized_new() in
+	  various places with an approximate string length to avoid reallocs
+	  within GString. See #500143.
+
+2008-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gststructure.c: (gst_structure_id_set_value):
 	  Always check UTF-8 conformance of structure strings and not only
 	  if the debugging system is enabled; reasoning: the behaviour of
