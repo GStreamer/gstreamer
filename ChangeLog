@@ -1,7 +1,12 @@
 2008-01-09  Stefan Kost  <ensonic@users.sf.net>
 
+	* ChangeLog:
+	  Fix ChangeLog typo.
+
+2008-01-09  Stefan Kost  <ensonic@users.sf.net>
+
 	* Makefile.am:
-	  Include lcov.mak to allow builging coverage reports. Guard
+	  Include lcov.mak to allow building coverage reports. Guard
 	  check-torture target like in the other packages.
 
 2008-01-09  Sameer Naik  <sameer@damagehead.com>
