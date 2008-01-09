@@ -1,3 +1,14 @@
+2008-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Based on patch by: Tommi Myöhänen <ext-tommi.myohanen nokia com>
+
+	* gst/id3demux/id3v2frames.c: (parse_comment_frame):
+	  Make sure the ISO 639-X language code in ID3v2 COMM frames
+	  is actually valid UTF-8 (or rather: ASCII), so we don't end
+	  up with non-UTF8 strings in tags if there's garbage in the
+	  language field. Also make sure the language code is always
+	  lower case. Fixes: #508291.
+
 2008-01-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* ChangeLog:

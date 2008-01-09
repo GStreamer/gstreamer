@@ -225,10 +225,10 @@ parse_comment_frame (ID3TagsWorking * work)
     return FALSE;
 
   encoding = work->parse_data[0];
-  language[0] = work->parse_data[1];
-  language[1] = work->parse_data[2];
-  language[2] = work->parse_data[3];
-  language[3] = 0;
+  language[0] = g_ascii_tolower (work->parse_data[1]);
+  language[1] = g_ascii_tolower (work->parse_data[2]);
+  language[2] = g_ascii_tolower (work->parse_data[3]);
+  language[3] = '\0';
 
   parse_split_strings (encoding, (gchar *) work->parse_data + 4,
       work->parse_size - 4, &fields);
@@ -250,7 +250,11 @@ parse_comment_frame (ID3TagsWorking * work)
       sscanf (description, "c%u", &dummy) != 1) {
     gchar *s;
 
-    if (language[0] != '\0') {
+    /* must be either an ISO-639-1 or ISO-639-2 language code */
+    if (language[0] != '\0' &&
+        g_ascii_isalpha (language[0]) &&
+        g_ascii_isalpha (language[1]) &&
+        (g_ascii_isalpha (language[2]) || language[2] == '\0')) {
       s = g_strdup_printf ("%s[%s]=%s", description, language, text);
     } else {
       s = g_strdup_printf ("%s=%s", description, text);
