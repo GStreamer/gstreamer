@@ -1,3 +1,9 @@
+2008-01-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* Makefile.am:
+	  Include lcov.mak to allow builging coverage reports. Guard
+	  check-torture target like in the other packages.
+
 2008-01-09  Sameer Naik  <sameer@damagehead.com>
 
 	reviewed by: Edward Hervey  <edward.hervey@collabora.co.uk>
