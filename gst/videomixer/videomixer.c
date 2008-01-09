@@ -647,7 +647,7 @@ gst_videomixer_reset (GstVideoMixer * mix)
 }
 
 static void
-gst_videomixer_init (GstVideoMixer * mix)
+gst_videomixer_init (GstVideoMixer * mix, GstVideoMixerClass * g_class)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (mix);
 

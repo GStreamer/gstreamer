@@ -1,3 +1,8 @@
+2008-01-09  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/videomixer/videomixer.c: (gst_videomixer_init):
+	Fix error from my last commit.
+
 2008-01-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Based on patch by: Tommi Myöhänen <ext-tommi.myohanen nokia com>
