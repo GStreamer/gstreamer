@@ -35,7 +35,7 @@ dist-local: dist-clean
 		if [ `ls -d $(TMP_DIST_DIR)/$$d*/ | wc -w` != "" ]; \
 		then for id in `cd $(TMP_DIST_DIR)/$$d && ls -d */`; \
 			do mkdir $(DIST_DIR)/$$d$$id; \
-			cp $(TMP_DIST_DIR)/$$d$$id/*.c $(TMP_DIST_DIR)/$$d$$id/*.h $(DIST_DIR)/$$d$$id; \ 
+			cp $(TMP_DIST_DIR)/$$d$$id/*.c $(TMP_DIST_DIR)/$$d$$id/*.h $(DIST_DIR)/$$d$$id; \
 			done \
 		fi \
 	done 
