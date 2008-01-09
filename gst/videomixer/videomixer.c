@@ -137,6 +137,7 @@ struct _GstVideoMixer
   gint in_width, in_height;
   gint out_width, out_height;
   gboolean setcaps;
+  gboolean sendseg;
 
   GstVideoMixerBackground background;
 
@@ -354,6 +355,7 @@ gst_videomixer_set_master_geometry (GstVideoMixer * mix)
       || mix->in_height != height || mix->fps_n != fps_n
       || mix->fps_d != fps_d) {
     mix->setcaps = TRUE;
+    mix->sendseg = TRUE;
     mix->master = master;
     mix->in_width = width;
     mix->in_height = height;
@@ -495,9 +497,6 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
         "height = (int) [ 1, max ]," "framerate = (fraction) [ 0/1, MAX ]")
     );
 
-static void gst_videomixer_base_init (gpointer g_class);
-static void gst_videomixer_class_init (GstVideoMixerClass * klass);
-static void gst_videomixer_init (GstVideoMixer * videomixer);
 static void gst_videomixer_finalize (GObject * object);
 
 static GstCaps *gst_videomixer_getcaps (GstPad * pad);
@@ -514,33 +513,63 @@ static void gst_videomixer_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_videomixer_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
-
 /*static guint gst_videomixer_signals[LAST_SIGNAL] = { 0 }; */
 
-static GType
-gst_videomixer_get_type (void)
+static void gst_videomixer_child_proxy_init (gpointer g_iface,
+    gpointer iface_data);
+static void _do_init (GType object_type);
+
+GST_BOILERPLATE_FULL (GstVideoMixer, gst_videomixer, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
+
+static void
+_do_init (GType object_type)
 {
-  static GType videomixer_type = 0;
+  const GInterfaceInfo child_proxy_info = {
+    (GInterfaceInitFunc) gst_videomixer_child_proxy_init,
+    NULL,
+    NULL
+  };
+  g_type_add_interface_static (object_type, GST_TYPE_CHILD_PROXY,
+      &child_proxy_info);
+  GST_INFO ("GstChildProxy interface registered");
+}
 
-  if (!videomixer_type) {
-    static const GTypeInfo videomixer_info = {
-      sizeof (GstVideoMixerClass),
-      gst_videomixer_base_init,
-      NULL,
-      (GClassInitFunc) gst_videomixer_class_init,
-      NULL,
-      NULL,
-      sizeof (GstVideoMixer),
-      0,
-      (GInstanceInitFunc) gst_videomixer_init,
-    };
+static GstObject *
+gst_videomixer_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
+    guint index)
+{
+  GstVideoMixer *mix = GST_VIDEO_MIXER (child_proxy);
+  GstObject *obj;
 
-    videomixer_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstVideoMixer",
-        &videomixer_info, 0);
-  }
-  return videomixer_type;
+  GST_VIDEO_MIXER_STATE_LOCK (mix);
+  if ((obj = g_slist_nth_data (mix->sinkpads, index)))
+    gst_object_ref (obj);
+  GST_VIDEO_MIXER_STATE_UNLOCK (mix);
+  return obj;
+}
+
+static guint
+gst_videomixer_child_proxy_get_children_count (GstChildProxy * child_proxy)
+{
+  guint count = 0;
+  GstVideoMixer *mix = GST_VIDEO_MIXER (child_proxy);
+
+  GST_VIDEO_MIXER_STATE_LOCK (mix);
+  count = mix->numpads;
+  GST_VIDEO_MIXER_STATE_UNLOCK (mix);
+  GST_INFO ("Children Count: %d", count);
+  return count;
+}
+
+static void
+gst_videomixer_child_proxy_init (gpointer g_iface, gpointer iface_data)
+{
+  GstChildProxyInterface *iface = g_iface;
+
+  GST_INFO ("intializing child proxy interface");
+  iface->get_child_by_index = gst_videomixer_child_proxy_get_child_by_index;
+  iface->get_children_count = gst_videomixer_child_proxy_get_children_count;
 }
 
 static void
@@ -605,6 +634,7 @@ gst_videomixer_reset (GstVideoMixer * mix)
   mix->out_height = 0;
   mix->fps_n = mix->fps_d = 0;
   mix->setcaps = FALSE;
+  mix->sendseg = FALSE;
 
   /* clean up collect data */
   walk = mix->collect->data;
@@ -638,7 +668,6 @@ gst_videomixer_init (GstVideoMixer * mix)
   mix->state_lock = g_mutex_new ();
   /* initialize variables */
   gst_videomixer_reset (mix);
-
 }
 
 static void
@@ -742,10 +771,10 @@ gst_videomixer_request_new_pad (GstElement * element,
 
   /* add the pad to the element */
   gst_element_add_pad (element, GST_PAD (mixpad));
+  gst_child_proxy_child_added (GST_OBJECT (mix), GST_OBJECT (mixpad));
 
   return GST_PAD (mixpad);
 }
-
 
 static void
 gst_videomixer_release_pad (GstElement * element, GstPad * pad)
@@ -765,6 +794,7 @@ gst_videomixer_release_pad (GstElement * element, GstPad * pad)
   mix->sinkpads = g_slist_remove (mix->sinkpads, pad);
   gst_videomixer_collect_free (mixpad->mixcol);
   gst_collect_pads_remove_pad (mix->collect, pad);
+  gst_child_proxy_child_removed (GST_OBJECT (mix), GST_OBJECT (mixpad));
   /* determine possibly new geometry and master */
   gst_videomixer_set_master_geometry (mix);
   mix->numpads--;
@@ -1083,6 +1113,17 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
         GST_LOG ("pop returned a NULL buffer");
       }
     }
+    if (mix->sendseg && (mixpad == mix->master)) {
+      GstEvent *event;
+      GstSegment *segment = &data->segment;
+
+      GST_INFO ("_sending play segment");
+      event = gst_event_new_new_segment (FALSE, segment->rate, segment->format,
+          segment->start, segment->stop, segment->time);
+      gst_pad_push_event (mix->srcpad, event);
+      mix->sendseg = FALSE;
+    }
+
     if (mixcol->buffer != NULL && GST_CLOCK_TIME_IS_VALID (mixpad->queued)) {
       /* got a buffer somewhere so we're not eos */
       eos = FALSE;

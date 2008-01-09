@@ -1,3 +1,18 @@
+2008-01-09  Sameer Naik  <sameer@damagehead.com>
+
+	reviewed by: Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/videomixer/videomixer.c:
+	(gst_videomixer_set_master_geometry), (_do_init),
+	(gst_videomixer_child_proxy_get_child_by_index),
+	(gst_videomixer_child_proxy_get_children_count),
+	(gst_videomixer_child_proxy_init), (gst_videomixer_reset),
+	(gst_videomixer_init), (gst_videomixer_request_new_pad),
+	(gst_videomixer_release_pad), (gst_videomixer_fill_queues):
+	Implement GstChildProxy interface.
+	Send newsegment at the right moment
+	Fixes #488879
+
 2008-01-09  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/alpha/Makefile.am:
