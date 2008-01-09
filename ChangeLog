@@ -1,3 +1,9 @@
+2008-01-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* Makefile.am:
+	  Include lcov.mak to allow building coverage reports. Add top-level
+	  check targets similar to other gst packages.
+
 2008-01-06  David Schleef  <ds@schleef.org>
 
 	* ext/directfb/Makefile.am:

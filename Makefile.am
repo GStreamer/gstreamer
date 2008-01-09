@@ -33,7 +33,15 @@ include $(top_srcdir)/common/release.mak
 include $(top_srcdir)/common/po.mak
 
 check-valgrind:
-	@true
+	cd tests/check && make check-valgrind
 
+if HAVE_GST_CHECK
 check-torture:
-	@true
+	cd tests/check && make torture
+else
+check-torture:
+	true
+endif
+
+include $(top_srcdir)/common/coverage/lcov.mak
+
