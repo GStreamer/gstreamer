@@ -115,6 +115,7 @@ static void
 gst_rtp_vorbis_pay_init (GstRtpVorbisPay * rtpvorbispay,
     GstRtpVorbisPayClass * klass)
 {
+  /* needed because of GST_BOILERPLATE */
 }
 
 static gboolean

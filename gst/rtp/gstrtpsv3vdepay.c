@@ -33,19 +33,6 @@ GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Extracts SVQ3 video from RTP packets (no RFC)",
     "Wim Taymans <wim@fluendo.com>");
 
-/* RtpSV3VDepay signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-  ARG_FREQUENCY
-};
-
 static GstStaticPadTemplate gst_rtp_sv3v_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -68,10 +55,6 @@ GST_BOILERPLATE (GstRtpSV3VDepay, gst_rtp_sv3v_depay, GstBaseRTPDepayload,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void gst_rtp_sv3v_depay_finalize (GObject * object);
-static void gst_rtp_sv3v_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtp_sv3v_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn gst_rtp_sv3v_depay_change_state (GstElement *
     element, GstStateChange transition);
@@ -112,9 +95,6 @@ gst_rtp_sv3v_depay_class_init (GstRtpSV3VDepayClass * klass)
   gstbasertpdepayload_class->set_caps = gst_rtp_sv3v_depay_setcaps;
 
   gobject_class->finalize = gst_rtp_sv3v_depay_finalize;
-
-  gobject_class->set_property = gst_rtp_sv3v_depay_set_property;
-  gobject_class->get_property = gst_rtp_sv3v_depay_get_property;
 
   gstelement_class->change_state = gst_rtp_sv3v_depay_change_state;
 }
@@ -270,36 +250,6 @@ bad_packet:
     GST_ELEMENT_WARNING (rtpsv3vdepay, STREAM, DECODE,
         ("Packet did not validate"), (NULL));
     return NULL;
-  }
-}
-
-static void
-gst_rtp_sv3v_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpSV3VDepay *rtpsv3vdepay;
-
-  rtpsv3vdepay = GST_RTP_SV3V_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rtp_sv3v_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstRtpSV3VDepay *rtpsv3vdepay;
-
-  rtpsv3vdepay = GST_RTP_SV3V_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
   }
 }
 

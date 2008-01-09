@@ -136,6 +136,7 @@ gst_rtp_amr_pay_class_init (GstRtpAMRPayClass * klass)
 static void
 gst_rtp_amr_pay_init (GstRtpAMRPay * rtpamrpay, GstRtpAMRPayClass * klass)
 {
+  /* needed because of GST_BOILERPLATE */
 }
 
 static gboolean

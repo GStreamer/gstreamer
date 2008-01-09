@@ -36,17 +36,6 @@ GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Extracts raw audio from RTP packets",
     "Zeeshan Ali <zak147@yahoo.com>," "Wim Taymans <wim@fluendo.com>");
 
-/* RtpL16Depay signals and args */
-enum
-{
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-};
-
 static GstStaticPadTemplate gst_rtp_L16_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -89,11 +78,6 @@ static gboolean gst_rtp_L16_depay_setcaps (GstBaseRTPDepayload * depayload,
 static GstBuffer *gst_rtp_L16_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
-static void gst_rtp_L16_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtp_L16_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static GstStateChangeReturn gst_rtp_L16_depay_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -113,18 +97,13 @@ gst_rtp_L16_depay_base_init (gpointer klass)
 static void
 gst_rtp_L16_depay_class_init (GstRtpL16DepayClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->set_property = gst_rtp_L16_depay_set_property;
-  gobject_class->get_property = gst_rtp_L16_depay_get_property;
 
   gstelement_class->change_state = gst_rtp_L16_depay_change_state;
 
@@ -139,6 +118,7 @@ static void
 gst_rtp_L16_depay_init (GstRtpL16Depay * rtpL16depay,
     GstRtpL16DepayClass * klass)
 {
+  /* needed because of GST_BOILERPLATE */
 }
 
 static gint
@@ -250,36 +230,6 @@ empty_packet:
   }
 }
 
-static void
-gst_rtp_L16_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpL16Depay *rtpL16depay;
-
-  rtpL16depay = GST_RTP_L16_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rtp_L16_depay_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstRtpL16Depay *rtpL16depay;
-
-  rtpL16depay = GST_RTP_L16_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
 static GstStateChangeReturn
 gst_rtp_L16_depay_change_state (GstElement * element, GstStateChange transition)
 {
@@ -288,21 +238,25 @@ gst_rtp_L16_depay_change_state (GstElement * element, GstStateChange transition)
 
   rtpL16depay = GST_RTP_L16_DEPAY (element);
 
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    default:
-      break;
-  }
+  /*
+     switch (transition) {
+     case GST_STATE_CHANGE_NULL_TO_READY:
+     break;
+     default:
+     break;
+     }
+   */
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
+  /*
+     switch (transition) {
+     case GST_STATE_CHANGE_READY_TO_NULL:
+     break;
+     default:
+     break;
+     }
+   */
   return ret;
 }
 

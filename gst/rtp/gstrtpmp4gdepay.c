@@ -37,18 +37,6 @@ GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Extracts MPEG4 elementary streams from RTP packets (RFC 3640)",
     "Wim Taymans <wim@fluendo.com>");
 
-/* RtpMP4GDepay signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-};
-
 static GstStaticPadTemplate gst_rtp_mp4g_depay_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -99,11 +87,6 @@ static gboolean gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload,
 static GstBuffer *gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
-static void gst_rtp_mp4g_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtp_mp4g_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static GstStateChangeReturn gst_rtp_mp4g_depay_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -135,8 +118,6 @@ gst_rtp_mp4g_depay_class_init (GstRtpMP4GDepayClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_rtp_mp4g_depay_finalize;
-  gobject_class->set_property = gst_rtp_mp4g_depay_set_property;
-  gobject_class->get_property = gst_rtp_mp4g_depay_get_property;
 
   gstelement_class->change_state = gst_rtp_mp4g_depay_change_state;
 
@@ -383,36 +364,6 @@ bad_packet:
     GST_ELEMENT_WARNING (rtpmp4gdepay, STREAM, DECODE,
         ("Packet did not validate."), (NULL));
     return NULL;
-  }
-}
-
-static void
-gst_rtp_mp4g_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpMP4GDepay *rtpmp4gdepay;
-
-  rtpmp4gdepay = GST_RTP_MP4G_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rtp_mp4g_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstRtpMP4GDepay *rtpmp4gdepay;
-
-  rtpmp4gdepay = GST_RTP_MP4G_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
   }
 }
 

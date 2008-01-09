@@ -77,21 +77,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
         /* "auxiliarydatasizelength = (string) [0, 64]" */ )
     );
 
-enum
-{
-  PROP_0,
-};
-
 
 static void gst_rtp_mp4g_pay_class_init (GstRtpMP4GPayClass * klass);
 static void gst_rtp_mp4g_pay_base_init (GstRtpMP4GPayClass * klass);
 static void gst_rtp_mp4g_pay_init (GstRtpMP4GPay * rtpmp4gpay);
 static void gst_rtp_mp4g_pay_finalize (GObject * object);
-
-static void gst_rtp_mp4g_pay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtp_mp4g_pay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 
 static gboolean gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
@@ -150,9 +140,6 @@ gst_rtp_mp4g_pay_class_init (GstRtpMP4GPayClass * klass)
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->set_property = gst_rtp_mp4g_pay_set_property;
-  gobject_class->get_property = gst_rtp_mp4g_pay_get_property;
 
   gobject_class->finalize = gst_rtp_mp4g_pay_finalize;
 
@@ -548,34 +535,6 @@ gst_rtp_mp4g_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   ret = gst_rtp_mp4g_pay_flush (rtpmp4gpay);
 
   return ret;
-}
-
-static void
-gst_rtp_mp4g_pay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpMP4GPay *rtpmp4gpay;
-
-  rtpmp4gpay = GST_RTP_MP4G_PAY (object);
-
-  switch (prop_id) {
-    default:
-      break;
-  }
-}
-
-static void
-gst_rtp_mp4g_pay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstRtpMP4GPay *rtpmp4gpay;
-
-  rtpmp4gpay = GST_RTP_MP4G_PAY (object);
-
-  switch (prop_id) {
-    default:
-      break;
-  }
 }
 
 gboolean

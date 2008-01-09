@@ -109,6 +109,7 @@ static void
 gst_rtp_gsm_depay_init (GstRTPGSMDepay * rtpgsmdepay,
     GstRTPGSMDepayClass * klass)
 {
+  /* needed because of GST_BOILERPLATE */
 }
 
 static gboolean

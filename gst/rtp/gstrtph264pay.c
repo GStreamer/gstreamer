@@ -66,11 +66,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 static void gst_rtp_h264_pay_finalize (GObject * object);
 
-static void gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static GstStateChangeReturn gst_rtp_h264_pay_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -107,8 +102,6 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_h264_pay_finalize;
-  gobject_class->set_property = gst_rtp_h264_pay_set_property;
-  gobject_class->get_property = gst_rtp_h264_pay_get_property;
 
   gstelement_class->change_state = gst_rtp_h264_pay_change_state;
 
@@ -535,36 +528,6 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   gst_buffer_unref (buffer);
 
   return GST_FLOW_ERROR;
-}
-
-static void
-gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpH264Pay *rtph264pay;
-
-  rtph264pay = GST_RTP_H264_PAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstRtpH264Pay *rtph264pay;
-
-  rtph264pay = GST_RTP_H264_PAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static GstStateChangeReturn

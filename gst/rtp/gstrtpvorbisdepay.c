@@ -41,18 +41,6 @@ GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Extracts Vorbis Audio from RTP packets (draft-04 of RFC XXXX)",
     "Wim Taymans <wim@fluendo.com>");
 
-/* RtpVorbisDepay signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-};
-
 static GstStaticPadTemplate gst_rtp_vorbis_depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -89,10 +77,6 @@ static gboolean gst_rtp_vorbis_depay_setcaps (GstBaseRTPDepayload * depayload,
 static GstBuffer *gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
-static void gst_rtp_vorbis_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtp_vorbis_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 static void gst_rtp_vorbis_depay_finalize (GObject * object);
 
 static GstStateChangeReturn gst_rtp_vorbis_depay_change_state (GstElement *
@@ -123,8 +107,6 @@ gst_rtp_vorbis_depay_class_init (GstRtpVorbisDepayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  gobject_class->set_property = gst_rtp_vorbis_depay_set_property;
-  gobject_class->get_property = gst_rtp_vorbis_depay_get_property;
   gobject_class->finalize = gst_rtp_vorbis_depay_finalize;
 
   gstelement_class->change_state = gst_rtp_vorbis_depay_change_state;
@@ -674,36 +656,6 @@ length_short:
     GST_ELEMENT_WARNING (rtpvorbisdepay, STREAM, DECODE,
         (NULL), ("Packet contains invalid data"));
     return NULL;
-  }
-}
-
-static void
-gst_rtp_vorbis_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpVorbisDepay *rtpvorbisdepay;
-
-  rtpvorbisdepay = GST_RTP_VORBIS_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rtp_vorbis_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstRtpVorbisDepay *rtpvorbisdepay;
-
-  rtpvorbisdepay = GST_RTP_VORBIS_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
   }
 }
 

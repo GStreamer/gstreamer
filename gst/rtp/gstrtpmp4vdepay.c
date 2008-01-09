@@ -36,17 +36,6 @@ GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Extracts MPEG4 video from RTP packets (RFC 3016)",
     "Wim Taymans <wim@fluendo.com>");
 
-/* RtpMP4VDepay signals and args */
-enum
-{
-  LAST_SIGNAL
-};
-
-enum
-{
-  PROP_0,
-};
-
 static GstStaticPadTemplate gst_rtp_mp4v_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -81,11 +70,6 @@ static gboolean gst_rtp_mp4v_depay_setcaps (GstBaseRTPDepayload * depayload,
 static GstBuffer *gst_rtp_mp4v_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
-static void gst_rtp_mp4v_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtp_mp4v_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static GstStateChangeReturn gst_rtp_mp4v_depay_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -115,8 +99,6 @@ gst_rtp_mp4v_depay_class_init (GstRtpMP4VDepayClass * klass)
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_mp4v_depay_finalize;
-  gobject_class->set_property = gst_rtp_mp4v_depay_set_property;
-  gobject_class->get_property = gst_rtp_mp4v_depay_get_property;
 
   gstelement_class->change_state = gst_rtp_mp4v_depay_change_state;
 
@@ -230,36 +212,6 @@ bad_packet:
     GST_ELEMENT_WARNING (rtpmp4vdepay, STREAM, DECODE,
         ("Packet did not validate"), (NULL));
     return NULL;
-  }
-}
-
-static void
-gst_rtp_mp4v_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpMP4VDepay *rtpmp4vdepay;
-
-  rtpmp4vdepay = GST_RTP_MP4V_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rtp_mp4v_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstRtpMP4VDepay *rtpmp4vdepay;
-
-  rtpmp4vdepay = GST_RTP_MP4V_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
   }
 }
 

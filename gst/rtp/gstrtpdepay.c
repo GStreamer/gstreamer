@@ -30,20 +30,6 @@ GST_ELEMENT_DETAILS ("RTP depayloader",
     "Accepts raw RTP and RTCP packets and sends them forward",
     "Wim Taymans <wim@fluendo.com>");
 
-/* GstRTPDepay signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-  ARG_SKIP
-      /* FILL ME */
-};
-
 static GstStaticPadTemplate gst_rtp_depay_src_rtp_template =
 GST_STATIC_PAD_TEMPLATE ("srcrtp",
     GST_PAD_SRC,
@@ -72,18 +58,13 @@ GST_STATIC_PAD_TEMPLATE ("sinkrtcp",
     GST_STATIC_CAPS ("application/x-rtcp")
     );
 
-static void gst_rtp_depay_class_init (gpointer g_class);
+static void gst_rtp_depay_class_init (GstRTPDepayClass * klass);
 static void gst_rtp_depay_init (GstRTPDepay * rtpdepay);
 
 static GstCaps *gst_rtp_depay_getcaps (GstPad * pad);
 static GstFlowReturn gst_rtp_depay_chain_rtp (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_rtp_depay_chain_rtcp (GstPad * pad,
     GstBuffer * buffer);
-
-static void gst_rtp_depay_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_rtp_depay_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn gst_rtp_depay_change_state (GstElement * element,
     GstStateChange transition);
@@ -117,15 +98,9 @@ gst_rtp_depay_get_type (void)
 }
 
 static void
-gst_rtp_depay_class_init (gpointer g_class)
+gst_rtp_depay_class_init (GstRTPDepayClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstRTPDepayClass *klass;
-
-  klass = (GstRTPDepayClass *) g_class;
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_depay_src_rtp_template));
@@ -136,11 +111,6 @@ gst_rtp_depay_class_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_depay_sink_rtcp_template));
   gst_element_class_set_details (gstelement_class, &rtpdepay_details);
-
-  gobject_class->set_property = gst_rtp_depay_set_property;
-  gobject_class->get_property = gst_rtp_depay_get_property;
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP, g_param_spec_int ("skip", "skip", "skip", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -220,38 +190,6 @@ gst_rtp_depay_chain_rtcp (GstPad * pad, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
-static void
-gst_rtp_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRTPDepay *src;
-
-  src = GST_RTP_DEPAY (object);
-
-  switch (prop_id) {
-    case ARG_SKIP:
-      break;
-    default:
-      break;
-  }
-}
-
-static void
-gst_rtp_depay_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstRTPDepay *src;
-
-  src = GST_RTP_DEPAY (object);
-
-  switch (prop_id) {
-    case ARG_SKIP:
-      break;
-    default:
-      break;
-  }
-}
-
 static GstStateChangeReturn
 gst_rtp_depay_change_state (GstElement * element, GstStateChange transition)
 {
@@ -260,21 +198,25 @@ gst_rtp_depay_change_state (GstElement * element, GstStateChange transition)
 
   rtpdepay = GST_RTP_DEPAY (element);
 
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      break;
-    default:
-      break;
-  }
+  /*
+     switch (transition) {
+     case GST_STATE_CHANGE_PAUSED_TO_READY:
+     break;
+     default:
+     break;
+     }
+   */
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      break;
-    default:
-      break;
-  }
+  /*
+     switch (transition) {
+     case GST_STATE_CHANGE_PAUSED_TO_READY:
+     break;
+     default:
+     break;
+     }
+   */
 
   return ret;
 }

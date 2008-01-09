@@ -39,19 +39,6 @@ GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Extracts H264 video from RTP packets (RFC 3984)",
     "Wim Taymans <wim@fluendo.com>");
 
-/* RtpH264Depay signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-  ARG_FREQUENCY
-};
-
 static GstStaticPadTemplate gst_rtp_h264_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -90,10 +77,6 @@ GST_BOILERPLATE (GstRtpH264Depay, gst_rtp_h264_depay, GstBaseRTPDepayload,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void gst_rtp_h264_depay_finalize (GObject * object);
-static void gst_rtp_h264_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtp_h264_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn gst_rtp_h264_depay_change_state (GstElement *
     element, GstStateChange transition);
@@ -128,8 +111,6 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_h264_depay_finalize;
-  gobject_class->set_property = gst_rtp_h264_depay_set_property;
-  gobject_class->get_property = gst_rtp_h264_depay_get_property;
 
   gstelement_class->change_state = gst_rtp_h264_depay_change_state;
 
@@ -530,36 +511,6 @@ not_implemented:
     GST_ELEMENT_ERROR (rtph264depay, STREAM, FORMAT,
         (NULL), ("NAL unit type %d not supported yet", nal_unit_type));
     return NULL;
-  }
-}
-
-static void
-gst_rtp_h264_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpH264Depay *rtph264depay;
-
-  rtph264depay = GST_RTP_H264_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rtp_h264_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstRtpH264Depay *rtph264depay;
-
-  rtph264depay = GST_RTP_H264_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
   }
 }
 

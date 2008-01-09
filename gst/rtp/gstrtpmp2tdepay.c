@@ -136,13 +136,9 @@ gst_rtp_mp2t_depay_class_init (GstRtpMP2TDepayClass * klass)
 }
 
 static void
-gst_rtp_mp2t_depay_init (GstRtpMP2TDepay * depayload,
+gst_rtp_mp2t_depay_init (GstRtpMP2TDepay * rtpmp2tdepay,
     GstRtpMP2TDepayClass * klass)
 {
-  GstRtpMP2TDepay *rtpmp2tdepay;
-
-  rtpmp2tdepay = GST_RTP_MP2T_DEPAY (depayload);
-
   rtpmp2tdepay->skip_first_bytes = DEFAULT_SKIP_FIRST_BYTES;
 }
 

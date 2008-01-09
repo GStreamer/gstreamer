@@ -43,17 +43,6 @@ GST_ELEMENT_DETAILS ("RTP H263 packet depayloader",
     "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
     "Edward Hervey <bilboed@bilboed.com>");
 
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-};
-
 #define GST_RFC2190A_HEADER_LEN 4
 #define GST_RFC2190B_HEADER_LEN 8
 #define GST_RFC2190C_HEADER_LEN 12
@@ -84,10 +73,6 @@ GST_BOILERPLATE (GstRtpH263Depay, gst_rtp_h263_depay, GstBaseRTPDepayload,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void gst_rtp_h263_depay_finalize (GObject * object);
-static void gst_rtp_h263_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtp_h263_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn gst_rtp_h263_depay_change_state (GstElement *
     element, GstStateChange transition);
@@ -106,7 +91,6 @@ gst_rtp_h263_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_h263_depay_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_h263_depay_sink_template));
-
 
   gst_element_class_set_details (element_class, &gst_rtp_h263depay_details);
 }
@@ -128,9 +112,6 @@ gst_rtp_h263_depay_class_init (GstRtpH263DepayClass * klass)
   gstbasertpdepayload_class->set_caps = gst_rtp_h263_depay_setcaps;
 
   gobject_class->finalize = gst_rtp_h263_depay_finalize;
-
-  gobject_class->set_property = gst_rtp_h263_depay_set_property;
-  gobject_class->get_property = gst_rtp_h263_depay_get_property;
 
   gstelement_class->change_state = gst_rtp_h263_depay_change_state;
 
@@ -351,36 +332,6 @@ bad_packet:
     GST_ELEMENT_WARNING (rtph263depay, STREAM, DECODE,
         ("Packet did not validate"), (NULL));
     return NULL;
-  }
-}
-
-static void
-gst_rtp_h263_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpH263Depay *rtph263depay;
-
-  rtph263depay = GST_RTP_H263_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rtp_h263_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstRtpH263Depay *rtph263depay;
-
-  rtph263depay = GST_RTP_H263_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
   }
 }
 

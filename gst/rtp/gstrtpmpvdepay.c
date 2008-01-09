@@ -36,18 +36,6 @@ GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Extracts MPEG video from RTP packets (RFC 2250)",
     "Wim Taymans <wim@fluendo.com>");
 
-/* RtpMPVDepay signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-};
-
 /* FIXME, we set the mpeg version to 2, we should ideally be looking at contents
  * of the stream to figure out the version */
 static GstStaticPadTemplate gst_rtp_mpv_depay_src_template =
@@ -80,11 +68,6 @@ static gboolean gst_rtp_mpv_depay_setcaps (GstBaseRTPDepayload * depayload,
 static GstBuffer *gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
-static void gst_rtp_mpv_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtp_mpv_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static GstStateChangeReturn gst_rtp_mpv_depay_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -114,9 +97,6 @@ gst_rtp_mpv_depay_class_init (GstRtpMPVDepayClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->set_property = gst_rtp_mpv_depay_set_property;
-  gobject_class->get_property = gst_rtp_mpv_depay_get_property;
-
   gstelement_class->change_state = gst_rtp_mpv_depay_change_state;
 
   gstbasertpdepayload_class->set_caps = gst_rtp_mpv_depay_setcaps;
@@ -130,6 +110,7 @@ static void
 gst_rtp_mpv_depay_init (GstRtpMPVDepay * rtpmpvdepay,
     GstRtpMPVDepayClass * klass)
 {
+  /* needed because of GST_BOILERPLATE */
 }
 
 static gboolean
@@ -227,36 +208,6 @@ empty_packet:
     GST_ELEMENT_WARNING (rtpmpvdepay, STREAM, DECODE,
         (NULL), ("Empty payload."));
     return NULL;
-  }
-}
-
-static void
-gst_rtp_mpv_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpMPVDepay *rtpmpvdepay;
-
-  rtpmpvdepay = GST_RTP_MPV_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rtp_mpv_depay_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstRtpMPVDepay *rtpmpvdepay;
-
-  rtpmpvdepay = GST_RTP_MPV_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
   }
 }
 

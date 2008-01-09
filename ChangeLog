@@ -1,3 +1,31 @@
+2008-01-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/rtp/gstasteriskh263.c:
+	* gst/rtp/gstrtpL16depay.c:
+	* gst/rtp/gstrtpac3depay.c:
+	* gst/rtp/gstrtpamrpay.c:
+	* gst/rtp/gstrtpdepay.c:
+	* gst/rtp/gstrtpgsmdepay.c:
+	* gst/rtp/gstrtph263depay.c:
+	* gst/rtp/gstrtph263pdepay.c:
+	* gst/rtp/gstrtph263ppay.c:
+	* gst/rtp/gstrtph264depay.c:
+	* gst/rtp/gstrtph264pay.c:
+	* gst/rtp/gstrtpmp2tdepay.c:
+	* gst/rtp/gstrtpmp4adepay.c:
+	* gst/rtp/gstrtpmp4gdepay.c:
+	* gst/rtp/gstrtpmp4gpay.c:
+	* gst/rtp/gstrtpmp4vdepay.c:
+	* gst/rtp/gstrtpmpadepay.c:
+	* gst/rtp/gstrtpmpvdepay.c:
+	* gst/rtp/gstrtpsv3vdepay.c:
+	* gst/rtp/gstrtptheoradepay.c:
+	* gst/rtp/gstrtptheorapay.c:
+	* gst/rtp/gstrtpvorbisdepay.c:
+	* gst/rtp/gstrtpvorbispay.c:
+	  Remove copy/paste unused code (property setters and getter) found by
+	  the coverage suite (yay, saves ~20k on disk).
+
 2008-01-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/matroska-mux.c: (COMMON_VIDEO_CAPS_NO_FRAMERATE),

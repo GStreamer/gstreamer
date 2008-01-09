@@ -119,6 +119,7 @@ static void
 gst_rtp_theora_pay_init (GstRtpTheoraPay * rtptheorapay,
     GstRtpTheoraPayClass * klass)
 {
+  /* needed because of GST_BOILERPLATE */
 }
 
 static gboolean
