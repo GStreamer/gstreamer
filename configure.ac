@@ -250,7 +250,8 @@ else
   dnl libgstffmpeg.la: include dirs
   FFMPEG_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
-                 -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec -Wno-deprecated-declarations"
+                 -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec \
+                 -Wno-deprecated-declarations"
 
   dnl libgstffmpeg.la: libs to statically link to        
   FFMPEG_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libavformat/libavformat.a \
@@ -258,10 +259,10 @@ else
                \$(top_builddir)/gst-libs/ext/ffmpeg/libavutil/libavutil.a \
               -lz"
   dnl
-  POSTPROC_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libpostproc \
-                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
-                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
-                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec"
+  POSTPROC_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libpostproc	\
+                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil 	\
+                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec 	\
+                   -Wno-deprecated-declarations"
 
   dnl libgstpostproc.la: libs to statically link to
   POSTPROC_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libpostproc/libpostproc.a \

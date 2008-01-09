@@ -1,3 +1,8 @@
+2008-01-09  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	postproc needs some headers present in libavcodec/*.h
+
 2008-01-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/ext/Makefile.am:
