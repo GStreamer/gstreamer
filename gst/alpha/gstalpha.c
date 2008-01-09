@@ -22,6 +22,7 @@
 #endif
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/controller/gstcontroller.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -58,6 +59,9 @@ GstAlphaMethod;
 #define ROUND_UP_4(x) (((x) + 3) & ~3)
 #define ROUND_UP_8(x) (((x) + 7) & ~7)
 
+#define GST_CAT_DEFAULT gst_alpha_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+
 struct _GstAlpha
 {
   GstElement element;
@@ -91,6 +95,8 @@ struct _GstAlpha
   guint8 accept_angle_ctg;
   guint8 one_over_kc;
   guint8 kfgy_scale;
+
+  GstSegment segment;
 };
 
 struct _GstAlphaClass
@@ -163,6 +169,7 @@ static void gst_alpha_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_alpha_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_alpha_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_alpha_sink_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn gst_alpha_change_state (GstElement * element,
     GstStateChange transition);
@@ -247,22 +254,28 @@ gst_alpha_class_init (GstAlphaClass * klass)
           DEFAULT_METHOD, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "The value for the alpha channel",
-          0.0, 1.0, DEFAULT_ALPHA, (GParamFlags) G_PARAM_READWRITE));
+          0.0, 1.0, DEFAULT_ALPHA,
+          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TARGET_R,
-      g_param_spec_uint ("target_r", "Target Red", "The Red target", 0,
-          255, DEFAULT_TARGET_R, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_uint ("target_r", "Target Red", "The Red target", 0, 255,
+          DEFAULT_TARGET_R,
+          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TARGET_G,
-      g_param_spec_uint ("target_g", "Target Green", "The Green target", 0,
-          255, DEFAULT_TARGET_G, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_uint ("target_g", "Target Green", "The Green target", 0, 255,
+          DEFAULT_TARGET_G,
+          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TARGET_B,
-      g_param_spec_uint ("target_b", "Target Blue", "The Blue target",
-          0, 255, DEFAULT_TARGET_B, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_uint ("target_b", "Target Blue", "The Blue target", 0, 255,
+          DEFAULT_TARGET_B,
+          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ANGLE,
       g_param_spec_float ("angle", "Angle", "Size of the colorcube to change",
-          0.0, 90.0, DEFAULT_ANGLE, (GParamFlags) G_PARAM_READWRITE));
+          0.0, 90.0, DEFAULT_ANGLE,
+          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NOISE_LEVEL,
       g_param_spec_float ("noise_level", "Noise Level", "Size of noise radius",
-          0.0, 64.0, DEFAULT_NOISE_LEVEL, (GParamFlags) G_PARAM_READWRITE));
+          0.0, 64.0, DEFAULT_NOISE_LEVEL,
+          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   gstelement_class->change_state = gst_alpha_change_state;
 }
@@ -276,6 +289,7 @@ gst_alpha_init (GstAlpha * alpha)
   gst_element_add_pad (GST_ELEMENT (alpha), alpha->sinkpad);
   gst_pad_set_chain_function (alpha->sinkpad, gst_alpha_chain);
   gst_pad_set_setcaps_function (alpha->sinkpad, gst_alpha_sink_setcaps);
+  gst_pad_set_event_function (alpha->sinkpad, gst_alpha_sink_event);
 
   alpha->srcpad =
       gst_pad_new_from_static_template (&gst_alpha_src_template, "src");
@@ -288,6 +302,8 @@ gst_alpha_init (GstAlpha * alpha)
   alpha->target_b = DEFAULT_TARGET_B;
   alpha->angle = DEFAULT_ANGLE;
   alpha->noise_level = DEFAULT_NOISE_LEVEL;
+
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "alpha", 0, "Alpha adding element");
 }
 
 /* do we need this function? */
@@ -790,6 +806,40 @@ gst_alpha_init_params (GstAlpha * alpha)
   alpha->kg = MIN (kgl, 127);
 }
 
+static gboolean
+gst_alpha_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstAlpha *alpha;
+  gboolean ret;
+
+  alpha = GST_ALPHA (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (&alpha->segment, GST_FORMAT_UNDEFINED);
+      break;
+    case GST_EVENT_NEWSEGMENT:{
+      GstFormat format;
+      gdouble rate, arate;
+      gint64 start, stop, time;
+      gboolean update;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
+
+      gst_segment_set_newsegment_full (&alpha->segment, update, rate, arate,
+          format, start, stop, time);
+      break;
+    }
+    default:
+      break;
+  }
+
+  ret = gst_pad_push_event (alpha->srcpad, event);
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_alpha_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -797,6 +847,7 @@ gst_alpha_chain (GstPad * pad, GstBuffer * buffer)
   GstBuffer *outbuf;
   gint new_width, new_height;
   GstFlowReturn ret;
+  GstClockTime timestamp;
 
   alpha = GST_ALPHA (GST_PAD_PARENT (pad));
 
@@ -824,6 +875,11 @@ gst_alpha_chain (GstPad * pad, GstBuffer * buffer)
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (alpha->srcpad));
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
+  timestamp = gst_segment_to_stream_time (&alpha->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buffer));
+  GST_LOG ("Got stream time of %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
+  if (GST_CLOCK_TIME_IS_VALID (timestamp))
+    gst_object_sync_values (G_OBJECT (alpha), timestamp);
 
   switch (alpha->method) {
     case ALPHA_METHOD_SET:
@@ -852,6 +908,16 @@ gst_alpha_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_buffer_unref (buffer);
 
+  /* Update last stop position in segment */
+  if (GST_BUFFER_TIMESTAMP (outbuf) != GST_CLOCK_TIME_NONE) {
+    GstClockTime last_stop = GST_BUFFER_TIMESTAMP (outbuf);
+
+    if (GST_BUFFER_DURATION (outbuf) != GST_CLOCK_TIME_NONE)
+      last_stop += GST_BUFFER_DURATION (outbuf);
+
+    gst_segment_set_last_stop (&alpha->segment, GST_FORMAT_TIME, last_stop);
+  }
+
   ret = gst_pad_push (alpha->srcpad, outbuf);
 
   return ret;
@@ -869,6 +935,7 @@ gst_alpha_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_segment_init (&alpha->segment, GST_FORMAT_UNDEFINED);
       gst_alpha_init_params (alpha);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -892,6 +959,8 @@ gst_alpha_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_controller_init (NULL, NULL);
+
   return gst_element_register (plugin, "alpha", GST_RANK_NONE, GST_TYPE_ALPHA);
 }
 

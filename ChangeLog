@@ -1,3 +1,12 @@
+2008-01-09  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/alpha/Makefile.am:
+	* gst/alpha/gstalpha.c: (gst_alpha_class_init), (gst_alpha_init),
+	(gst_alpha_sink_event), (gst_alpha_chain),
+	(gst_alpha_change_state), (plugin_init):
+	Make the various properties of 'alpha' controllable. This allows doing
+	niceties like fade-in/fade-out.
+
 2008-01-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/rtp/gstasteriskh263.c:
