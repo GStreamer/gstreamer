@@ -197,6 +197,7 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
   GST_PADDING_INIT				        \
 };
 
+#ifndef GST_DISABLE_DEPRECATED
 /**
  * GST_PLUGIN_DEFINE_STATIC:
  * @major: major version number of the gstreamer-core that plugin was compiled for
@@ -212,6 +213,10 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
  * This macro needs to be used to define the entry point and meta data of a
  * local plugin. One would use this macro to define a local plugin that can only
  * be used by the own application.
+ *
+ * Deprecated: Use gst_plugin_register_static() instead. This macro was
+ * deprecated because it uses constructors, which is a compiler feature not
+ * available on all compilers.
  */
 #define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,package,origin)  \
 static void GST_GNUC_CONSTRUCTOR			\
@@ -232,6 +237,7 @@ _gst_plugin_static_init__ ##init (void)			\
   };							\
   _gst_plugin_register_static (&plugin_desc_);		\
 }
+#endif
 
 /**
  * GST_LICENSE_UNKNOWN:
@@ -258,7 +264,11 @@ typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
 
 GType                   gst_plugin_get_type             (void);
 
+#ifndef GST_DISABLE_DEPRECATED
 void			_gst_plugin_register_static	(GstPluginDesc *desc);
+#endif
+
+gboolean		gst_plugin_register_static	(const GstPluginDesc *desc);
 
 G_CONST_RETURN gchar*	gst_plugin_get_name		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_description	(GstPlugin *plugin);

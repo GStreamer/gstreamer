@@ -1,5 +1,24 @@
 2008-01-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gst.c: (init_post):
+	* gst/gstplugin.c: (_gst_plugin_register_static),
+	  (gst_plugin_register_static), (_gst_plugin_initialize),
+	  (gst_plugin_register_func):
+	* gst/gstplugin.h: (GST_PLUGIN_DEFINE_STATIC):
+	  API: add gst_plugin_register_static() and deprecate
+	  GST_PLUGIN_DEFINE_STATIC, since it's not portable
+	  (#498924).
+	  Also, in _gst_plugin_register_static(), make sure to call
+	  g_thread_init() before calling GLib functions such as
+	  g_list_append() if we're not initialised yet, since that
+	  may lead to random crashes with older GSlice/GLib versions.
+
+	* tests/check/gst/gstplugin.c:
+	  Adapt unit test to above changes.
+
+2008-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gst_private.h: (STRUCTURE_ESTIMATED_STRING_LEN):
 	* gst/gstcaps.c: (gst_caps_to_string):
 	* gst/gststructure.c: (GST_ASCII_IS_STRING),

@@ -25,6 +25,10 @@
 
 #include <gst/check/gstcheck.h>
 
+#ifdef GST_DISABLE_DEPRECATED
+void _gst_plugin_register_static (GstPluginDesc * desc);
+#endif
+
 static gboolean
 register_check_elements (GstPlugin * plugin)
 {
@@ -46,11 +50,27 @@ static GstPluginDesc plugin_desc = {
   GST_PADDING_INIT
 };
 
+static GstPluginDesc plugin_desc2 = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "more-elements",
+  "more-elements",
+  register_check_elements,
+  VERSION,
+  GST_LICENSE,
+  PACKAGE,
+  GST_PACKAGE_NAME,
+  GST_PACKAGE_ORIGIN,
+
+  GST_PADDING_INIT
+};
+
 GST_START_TEST (test_register_static)
 {
   GstPlugin *plugin;
 
   _gst_plugin_register_static (&plugin_desc);
+  gst_plugin_register_static (&plugin_desc2);
 
   plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
 

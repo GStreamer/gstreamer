@@ -106,7 +106,7 @@ static const gchar *valid_licenses[] = {
 };
 
 static GstPlugin *gst_plugin_register_func (GstPlugin * plugin,
-    GstPluginDesc * desc);
+    const GstPluginDesc * desc);
 static void gst_plugin_desc_copy (GstPluginDesc * dest,
     const GstPluginDesc * src);
 static void gst_plugin_desc_free (GstPluginDesc * desc);
@@ -156,6 +156,7 @@ gst_plugin_error_quark (void)
   return quark;
 }
 
+#ifndef GST_REMOVE_DEPRECATED
 /* this function can be called in the GCC constructor extension, before
  * the _gst_plugin_initialize() was called. In that case, we store the
  * plugin description in a list to initialize it when we open the main
@@ -165,23 +166,57 @@ gst_plugin_error_quark (void)
 void
 _gst_plugin_register_static (GstPluginDesc * desc)
 {
+  g_return_if_fail (desc != NULL);
+
   if (!_gst_plugin_inited) {
+    /* Must call g_thread_init() before calling GLib functions such as
+     * g_list_prepend() ... */
+    if (!g_thread_supported ())
+      g_thread_init (NULL);
+
     if (GST_CAT_DEFAULT)
       GST_LOG ("queueing static plugin \"%s\" for loading later on",
           desc->name);
     _gst_plugin_static = g_list_prepend (_gst_plugin_static, desc);
   } else {
-    GstPlugin *plugin;
-
-    if (GST_CAT_DEFAULT)
-      GST_LOG ("attempting to load static plugin \"%s\" now...", desc->name);
-    plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
-    if (gst_plugin_register_func (plugin, desc)) {
-      if (GST_CAT_DEFAULT)
-        GST_INFO ("loaded static plugin \"%s\"", desc->name);
-      gst_default_registry_add_plugin (plugin);
-    }
+    gst_plugin_register_static (desc);
   }
+}
+#endif
+
+/**
+ * gst_plugin_register_static:
+ * @desc: a #GstPluginDesc describing the plugin.
+ *
+ * Registers a static plugin, ie. a plugin which is private to an application
+ * or library and contained within the application or library (as opposed to
+ * being shipped as a separate module file).
+ *
+ * You must make sure that GStreamer has been initialised (with gst_init() or
+ * via gst_init_get_option_group()) before calling this function.
+ *
+ * Returns: TRUE if the plugin was registered correctly, otherwise FALSE.
+ *
+ * Since: 0.10.16
+ */
+gboolean
+gst_plugin_register_static (const GstPluginDesc * desc)
+{
+  GstPlugin *plugin;
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (desc != NULL, FALSE);
+
+  /* make sure gst_init() has been called */
+  g_return_val_if_fail (_gst_plugin_inited != FALSE, FALSE);
+
+  GST_LOG ("attempting to load static plugin \"%s\" now...", desc->name);
+  plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+  if (gst_plugin_register_func (plugin, desc) != NULL) {
+    GST_INFO ("loaded static plugin \"%s\"", desc->name);
+    res = gst_default_registry_add_plugin (plugin);
+  }
+  return res;
 }
 
 void
@@ -190,8 +225,7 @@ _gst_plugin_initialize (void)
   _gst_plugin_inited = TRUE;
 
   /* now register all static plugins */
-  g_list_foreach (_gst_plugin_static, (GFunc) _gst_plugin_register_static,
-      NULL);
+  g_list_foreach (_gst_plugin_static, (GFunc) gst_plugin_register_static, NULL);
 }
 
 /* this function could be extended to check if the plugin license matches the
@@ -225,7 +259,7 @@ gst_plugin_check_version (gint major, gint minor)
 }
 
 static GstPlugin *
-gst_plugin_register_func (GstPlugin * plugin, GstPluginDesc * desc)
+gst_plugin_register_func (GstPlugin * plugin, const GstPluginDesc * desc)
 {
   if (!gst_plugin_check_version (desc->major_version, desc->minor_version)) {
     if (GST_CAT_DEFAULT)

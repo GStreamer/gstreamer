@@ -993,10 +993,10 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   _gst_message_initialize ();
   _gst_tag_initialize ();
 
-  /* register core plugins */
-  _gst_plugin_register_static (&plugin_desc);
-
   _gst_plugin_initialize ();
+
+  /* register core plugins */
+  gst_plugin_register_static (&plugin_desc);
 
   /*
    * Any errors happening below this point are non-fatal, we therefore mark

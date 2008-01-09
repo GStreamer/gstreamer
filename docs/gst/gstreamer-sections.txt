@@ -1549,6 +1549,7 @@ gst_plugin_load_file
 gst_plugin_load
 gst_plugin_load_by_name
 gst_plugin_list_free
+gst_plugin_register_static
 <SUBSECTION Standard>
 GstPluginClass
 GST_PLUGIN
