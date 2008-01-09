@@ -1,5 +1,13 @@
 2008-01-09  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Peter Kjellerstedt <pkj axis com>
+
+	* gst/gstclock.h:
+	Cast the results from the timeval/spec_to_time macros to what the
+	docs say it casts to, a GstClockTime. fixes #508175.
+
+2008-01-09  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstbuffer.c:
 	Update some comments.
 

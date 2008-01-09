@@ -157,7 +157,7 @@ typedef gpointer GstClockID;
  *
  * Convert a GTimeVal to a #GstClockTime.
  */
-#define GST_TIMEVAL_TO_TIME(tv)		((tv).tv_sec * GST_SECOND + (tv).tv_usec * GST_USECOND)
+#define GST_TIMEVAL_TO_TIME(tv)		(GstClockTime)((tv).tv_sec * GST_SECOND + (tv).tv_usec * GST_USECOND)
 
 /**
  * GST_TIME_TO_TIMEVAL:
@@ -184,7 +184,7 @@ G_STMT_START {							\
  *
  * Convert a struct timespec (see man pselect) to a #GstClockTime.
  */
-#define GST_TIMESPEC_TO_TIME(ts)		((ts).tv_sec * GST_SECOND + (ts).tv_nsec * GST_NSECOND)
+#define GST_TIMESPEC_TO_TIME(ts)	(GstClockTime)((ts).tv_sec * GST_SECOND + (ts).tv_nsec * GST_NSECOND)
 /**
  * GST_TIME_TO_TIMESPEC:
  * @t: The GstClockTime to convert
