@@ -24,17 +24,26 @@
  * @short_description: Interface for multi child elements.
  * @see_also: #GstBin
  *
- * This interface abstracts handling of property sets for child elements.
- * Imagine elements such as mixers or polyphonic generators. They all have
- * multiple #GstPad or some kind of voice objects. The element acts as a
- * parent for those child objects. Each child has the same properties.
+ * This interface abstracts handling of property sets for elements with
+ * children. Imagine elements such as mixers or polyphonic generators. They all
+ * have multiple #GstPad or some kind of voice objects. Another use case are
+ * container elements like #GstBin.
+ * The element implementing the interface acts as a parent for those child
+ * objects.
  *
  * By implementing this interface the child properties can be accessed from the
  * parent element by using gst_child_proxy_get() and gst_child_proxy_set().
  *
  * Property names are written as "child-name::property-name". The whole naming
  * scheme is recursive. Thus "child1::child2::property" is valid too, if
- * "child1" also implements the #GstChildProxy interface.
+ * "child1" and "child2" implement the #GstChildProxy interface.
+ */
+/* FIXME-0.11:
+ * it would be nice to make gst_child_proxy_get_child_by_name virtual too and
+ * use GObject instead of GstObject. We could eventually provide the current
+ * implementation as a default if children are GstObjects.
+ * This change would allow to propose the interface for inclusion with
+ * glib/gobject. IMHO this is useful for GtkContainer and compound widgets too.
  */
 
 #include "gst_private.h"

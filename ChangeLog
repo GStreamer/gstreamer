@@ -1,3 +1,8 @@
+2008-01-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstchildproxy.c:
+	  Improve docs and add some ideas for making this more general-purpose.
+
 2008-01-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst_private.h: (GST_CAT_TYPES):
