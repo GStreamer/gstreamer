@@ -443,7 +443,8 @@ class FilteredLogModel (FilteredLogModelBase):
         self.reset ()
         self.__active_process = None
         self.__filter_progress = 0.
-        
+        self.__old_super_model_range = super_model.line_index_range
+
     def reset (self):
 
         del self.line_offsets[:]
@@ -563,26 +564,72 @@ class FilteredLogModel (FilteredLogModelBase):
 
         return self.super_index[line_index]
 
+    def __filtered_indices_in_range (self, first, last):
+
+        # FIXME: Rewrite using bisection!
+
+        if first < 0:
+            raise ValueError ("first cannot be negative (got %r)" % (first,))
+
+        count = 0
+        for i in self.super_index:
+            if i >= first and i <= last:
+                count += 1
+
+        return count
+
     def super_model_changed_range (self):
 
         range_model = self.super_model
+        old_start, old_end = self.__old_super_model_range
         super_start, super_end = range_model.line_index_range
 
-        # FIXME: This is too simple!
-        start_index = self.line_index_from_super (super_start)
-        end_index = self.line_index_from_super (super_end)
+        super_start_offset = super_start - old_start
+        if super_start_offset < 0:
+            # TODO:
+            raise NotImplementedError ("Only handling further restriction of the range")
 
-        last_index = len (self.line_offsets) - 1
-        if end_index < last_index:
-            self.__remove_range (end_index + 1, last_index)
+        super_end_offset = super_end - old_end
+        if super_end_offset > 0:
+            # TODO:
+            raise NotImplementedError ("Only handling further restriction of the range")
 
-        if start_index > 0:
-            self.__remove_range (0, start_index - 1)
+        if super_end_offset < 0:
+            if not self.super_index:
+                # Identity; there are no filters.
+                end_offset = len (self.line_offsets) + super_end_offset
+            else:
+                n_filtered = self.__filtered_indices_in_range (super_end + 1 - super_start,
+                                                               old_end - super_start)
+                end_offset = len (self.line_offsets) - n_filtered
+            end = len (self.line_offsets) - 1 # FIXME
+            assert end_offset <= end
+            self.__remove_range (end_offset, end)
+
+        if super_start_offset > 0:
+            if not self.super_index:
+                # Identity; there are no filters.
+                start_offset = super_start_offset
+            else:
+                n_filtered = self.__filtered_indices_in_range (old_start, super_start)
+                assert n_filtered > 0
+                start_offset = n_filtered
+            self.__remove_range (0, start_offset - 1)
+
+        self.__old_super_model_range = (super_start, super_end,)
 
     def __remove_range (self, start, end):
 
+        if start < 0:
+            raise ValueError ("start cannot be negative (got %r)" % (start,))
+        if end > len (self.line_offsets) - 1:
+            raise ValueError ("end value out of range (got %r)" % (end,))
+        if start > end:
+            raise ValueError ("start cannot be greater than end")
+
         self.logger.debug ("removing line range first = %i, last = %i",
                            start, end)
+
         del self.line_offsets[start:end + 1]
         del self.line_levels[start:end + 1]
         for super_index in self.super_index[start:end + 1]:
@@ -1249,11 +1296,11 @@ class ViewColumnManager (ColumnManager):
             self.size_column (column, view, model)
         self.columns_sized = True
 
-class LineViewLogModel (FilteredLogModel):
+class LineViewLogModel (FilteredLogModelBase):
 
     def __init__ (self, super_model):
 
-        FilteredLogModel.__init__ (self, super_model)
+        FilteredLogModelBase.__init__ (self, super_model)
 
         self.line_offsets = []
         self.line_levels = []
