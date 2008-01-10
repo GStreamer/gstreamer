@@ -67,7 +67,7 @@ tool_run "$autoheader"
 echo timestamp > stamp-h.in 2> /dev/null
 
 tool_run "$autoconf"
-tool_run "$automake" "-a -c"
+tool_run "$automake" "-a -c -Wno-portability"
 
 # if enable exists, add an -enable option for each of the lines in that file
 if test -f enable; then

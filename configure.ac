@@ -46,6 +46,12 @@ AC_SUBST(GSTPB_REQ, 0.10.0.2)
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
+dnl find a compiler
+AC_PROG_CC
+
+dnl check if the compiler supports '-c' and '-o' options
+AM_PROG_CC_C_O
+
 AG_GST_ARG_GCOV
 
 dnl check for python
