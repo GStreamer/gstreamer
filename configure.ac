@@ -260,6 +260,9 @@ dnl *** checks for programs ***
 dnl find a compiler
 AC_PROG_CC
 
+dnl check if the compiler supports '-c' and '-o' options
+AM_PROG_CC_C_O
+
 dnl find an assembler
 AM_PROG_AS
 
