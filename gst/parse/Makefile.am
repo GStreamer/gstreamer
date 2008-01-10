@@ -5,7 +5,6 @@ CLEANFILES = grammar.tab.h grammar.output
 EXTRA_DIST = \
 	grammar.y \
 	parse.l \
-	types.h \
 	grammar.tab.pre.c \
 	grammar.tab.pre.h \
 	lex._gst_parse_yy.pre.c
@@ -21,7 +20,7 @@ CLEANFILES += grammar.tab.c lex._gst_parse_yy.c
 libgstparse_la_CFLAGS = $(GST_ALL_CFLAGS)
 libgstparse_la_LIBADD = $(GST_ALL_LIBS)
 
-noinst_HEADERS = grammar.tab.h
+noinst_HEADERS = grammar.tab.h types.h
 
 all: grammar.tab.pre.c grammar.tab.pre.h lex._gst_parse_yy.pre.c
 
