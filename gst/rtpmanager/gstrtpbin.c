@@ -56,8 +56,8 @@
  * </para>
  * <para>
  * To use gstrtpbin as a sender, request a send_rtp_sink_%%d pad, which will
- * automatically create a send_rtp_src_%%d pad. The session number must be specified when
- * requesting the sink pad. The session manager will modify the
+ * automatically create a send_rtp_src_%%d pad. If the session number is not provided,
+ * the pad from the lowest available session will be returned. The session manager will modify the
  * SSRC in the RTP packets to its own SSRC and wil forward the packets on the
  * send_rtp_src_%%d pad after updating its internal state.
  * </para>
