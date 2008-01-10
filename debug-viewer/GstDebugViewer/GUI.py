@@ -611,7 +611,7 @@ class FilteredLogModel (FilteredLogModelBase):
                 # Identity; there are no filters.
                 start_offset = super_start_offset
             else:
-                n_filtered = self.__filtered_indices_in_range (old_start, super_start)
+                n_filtered = self.__filtered_indices_in_range (old_start, super_start - 1)
                 assert n_filtered > 0
                 start_offset = n_filtered
             self.__remove_range (0, start_offset - 1)
@@ -625,7 +625,7 @@ class FilteredLogModel (FilteredLogModelBase):
         if end > len (self.line_offsets) - 1:
             raise ValueError ("end value out of range (got %r)" % (end,))
         if start > end:
-            raise ValueError ("start cannot be greater than end")
+            raise ValueError ("start cannot be greater than end (got %r, %r)" % (start, end,))
 
         self.logger.debug ("removing line range first = %i, last = %i",
                            start, end)
