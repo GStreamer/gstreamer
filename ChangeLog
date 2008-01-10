@@ -1,3 +1,14 @@
+2008-01-10  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* autogen.sh:
+	  Add -Wno-portability to the automake parameters to stop warnings
+	  about GNU make extensions being used. We require GNU make in almost
+	  every Makefile anyway.
+	  
+	* configure.ac:
+	  Use AM_PROG_CC_C_O as a compiler that accepts both -c and -o
+	  at the same time is required for per target flags.
+
 2008-01-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gsttagdemux.c: (gst_tag_demux_pull_start_tag):
