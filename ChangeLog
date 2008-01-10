@@ -1,3 +1,9 @@
+2008-01-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst_private.h: (GST_CAT_TYPES):
+	  Add GST_CAT_TYPES, for consistency, and so that the other
+	  debug categories don't make fun of it. Spotted by Saur on IRC.
+
 2008-01-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/parse/Makefile.am:
@@ -13,6 +19,12 @@
 	* configure.ac:
 	  Use AM_PROG_CC_C_O as a compiler that accepts both -c and -o
 	  at the same time is required for per target flags.
+
+2008-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstmacros.h:
+	  Include glib/gmacros.h for G_BEGIN_DECLS. Check if
+	  __GNUC__ is defined before using it.
 
 2008-01-09  Tim-Philipp Müller  <tim at centricular dot net>
 

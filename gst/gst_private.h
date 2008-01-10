@@ -117,6 +117,7 @@ extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_SIGNAL;
 extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PROBE;
 extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_REGISTRY;
 extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_QOS;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_TYPES; /* FIXME 0.11: remove? */
 
 #else
 
@@ -149,6 +150,7 @@ extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_QOS;
 #define GST_CAT_PROBE            NULL
 #define GST_CAT_REGISTRY         NULL
 #define GST_CAT_QOS              NULL
+#define GST_CAT_TYPES            NULL
 
 #endif
 
