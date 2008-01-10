@@ -1,3 +1,11 @@
+2008-01-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mad/gstmad.c: (GST_TYPE_MAD_MODE),
+	  (GST_TYPE_MAD_EMPHASIS), (GST_TAG_EMPHASIS), (CHECK_HEADER):
+	  Call g_type_class_ref() from a thread-safe context and not
+	  from the streaming thread to avoid GLib screwing up (see
+	  bug #349410 and #493432). Comment out unused code.
+
 2008-01-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (clear_queued), (flush_queued),

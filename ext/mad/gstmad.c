@@ -106,8 +106,9 @@ _do_init (GType type)
 
 GST_BOILERPLATE_FULL (GstMad, gst_mad, GstElement, GST_TYPE_ELEMENT, _do_init);
 
+/*
 #define GST_TYPE_MAD_LAYER (gst_mad_layer_get_type())
-G_GNUC_UNUSED static GType
+static GType
 gst_mad_layer_get_type (void)
 {
   static GType mad_layer_type = 0;
@@ -124,9 +125,10 @@ gst_mad_layer_get_type (void)
   }
   return mad_layer_type;
 }
+*/
 
 #define GST_TYPE_MAD_MODE (gst_mad_mode_get_type())
-G_GNUC_UNUSED static GType
+static GType
 gst_mad_mode_get_type (void)
 {
   static GType mad_mode_type = 0;
@@ -146,7 +148,7 @@ gst_mad_mode_get_type (void)
 }
 
 #define GST_TYPE_MAD_EMPHASIS (gst_mad_emphasis_get_type())
-G_GNUC_UNUSED static GType
+static GType
 gst_mad_emphasis_get_type (void)
 {
   static GType mad_emphasis_type = 0;
@@ -211,12 +213,17 @@ gst_mad_class_init (GstMadClass * klass)
 #define GST_TAG_MODE     "mode"
 #define GST_TAG_EMPHASIS "emphasis"
 
+  /* FIXME 0.11: strings!? why? */
   gst_tag_register (GST_TAG_LAYER, GST_TAG_FLAG_ENCODED, G_TYPE_UINT,
       "layer", "MPEG audio layer", NULL);
   gst_tag_register (GST_TAG_MODE, GST_TAG_FLAG_ENCODED, G_TYPE_STRING,
       "mode", "MPEG audio channel mode", NULL);
   gst_tag_register (GST_TAG_EMPHASIS, GST_TAG_FLAG_ENCODED, G_TYPE_STRING,
       "emphasis", "MPEG audio emphasis", NULL);
+
+  /* ref these here from a thread-safe context (ie. not the streaming thread) */
+  g_type_class_ref (GST_TYPE_MAD_MODE);
+  g_type_class_ref (GST_TYPE_MAD_EMPHASIS);
 }
 
 static void
@@ -896,10 +903,10 @@ G_STMT_START{                                                   \
     GEnumValue *emphasis;
 
     mode =
-        g_enum_get_value (g_type_class_ref (GST_TYPE_MAD_MODE),
+        g_enum_get_value (g_type_class_peek (GST_TYPE_MAD_MODE),
         mad->header.mode);
     emphasis =
-        g_enum_get_value (g_type_class_ref (GST_TYPE_MAD_EMPHASIS),
+        g_enum_get_value (g_type_class_peek (GST_TYPE_MAD_EMPHASIS),
         mad->header.emphasis);
     list = gst_tag_list_new ();
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
