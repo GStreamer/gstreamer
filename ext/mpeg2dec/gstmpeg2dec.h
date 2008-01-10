@@ -116,6 +116,11 @@ struct _GstMpeg2dec {
   /* QoS stuff */ /* with LOCK*/
   gdouble        proportion;
   GstClockTime   earliest_time;
+
+  /* gather/decode queues for reverse playback */
+  GList *gather;
+  GList *decode;
+  GList *queued;
 };
 
 struct _GstMpeg2decClass {

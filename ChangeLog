@@ -1,3 +1,14 @@
+2008-01-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (clear_queued), (flush_queued),
+	(handle_picture), (clip_buffer), (handle_slice),
+	(gst_mpeg2dec_chain), (gst_mpeg2dec_sink_event),
+	(gst_mpeg2dec_change_state):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	Add buffer clipping.
+	Add basic reverse playback support. Not complete yet when dealing with 
+	non-closed GOPs.
+
 2008-01-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* autogen.sh:

@@ -680,6 +680,35 @@ clear_buffers (GstMpeg2dec * mpeg2dec)
   *bufpen = NULL;
 }
 
+static void
+clear_queued (GstMpeg2dec * mpeg2dec)
+{
+  g_list_foreach (mpeg2dec->queued, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (mpeg2dec->queued);
+  mpeg2dec->queued = NULL;
+}
+
+static GstFlowReturn
+flush_queued (GstMpeg2dec * mpeg2dec)
+{
+  GstFlowReturn res;
+
+  while (mpeg2dec->queued) {
+    GstBuffer *buf = GST_BUFFER_CAST (mpeg2dec->queued->data);
+
+    GST_LOG_OBJECT (mpeg2dec, "pushing buffer %p, timestamp %"
+        GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT, buf,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+    /* iterate ouput queue an push downstream */
+    res = gst_pad_push (mpeg2dec->srcpad, buf);
+
+    mpeg2dec->queued = g_list_delete_link (mpeg2dec->queued, mpeg2dec->queued);
+  }
+  return res;
+}
+
 static GstFlowReturn
 handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 {
@@ -705,6 +734,11 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   switch (type) {
     case PIC_FLAG_CODING_TYPE_I:
       mpeg2_skip (mpeg2dec->decoder, 0);
+      if (mpeg2dec->segment.rate < 0.0) {
+        /* negative rate, flush the queued pictures in reverse */
+        GST_DEBUG_OBJECT (mpeg2dec, "flushing queued buffers");
+        flush_queued (mpeg2dec);
+      }
     case PIC_FLAG_CODING_TYPE_P:
       bufpen = &mpeg2dec->ip_buffers[mpeg2dec->ip_bufpos];
       GST_DEBUG_OBJECT (mpeg2dec, "I/P unref %p, ref %p", *bufpen, outbuf);
@@ -739,6 +773,49 @@ no_buffer:
   {
     return ret;
   }
+}
+
+/* try to clip the buffer to the segment boundaries */
+static gboolean
+clip_buffer (GstMpeg2dec * dec, GstBuffer * buf)
+{
+  gboolean res = TRUE;
+  GstClockTime in_ts, in_dur, stop;
+  gint64 cstart, cstop;
+
+  in_ts = GST_BUFFER_TIMESTAMP (buf);
+  in_dur = GST_BUFFER_DURATION (buf);
+
+  GST_LOG_OBJECT (dec,
+      "timestamp:%" GST_TIME_FORMAT " , duration:%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (in_ts), GST_TIME_ARGS (in_dur));
+
+  /* can't clip without TIME segment */
+  if (dec->segment.format != GST_FORMAT_TIME)
+    goto beach;
+
+  /* we need a start time */
+  if (!GST_CLOCK_TIME_IS_VALID (in_ts))
+    goto beach;
+
+  /* generate valid stop, if duration unknown, we have unknown stop */
+  stop =
+      GST_CLOCK_TIME_IS_VALID (in_dur) ? (in_ts + in_dur) : GST_CLOCK_TIME_NONE;
+
+  /* now clip */
+  if (!(res = gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
+              in_ts, stop, &cstart, &cstop)))
+    goto beach;
+
+  /* update timestamp and possibly duration if the clipped stop time is
+   * valid */
+  GST_BUFFER_TIMESTAMP (buf) = cstart;
+  if (GST_CLOCK_TIME_IS_VALID (cstop))
+    GST_BUFFER_DURATION (buf) = cstop - cstart;
+
+beach:
+  GST_LOG_OBJECT (dec, "%sdropping", (res ? "not " : ""));
+  return res;
 }
 
 static GstFlowReturn
@@ -838,6 +915,10 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   if (mpeg2dec->discont_state != MPEG2DEC_DISC_NONE)
     goto drop;
 
+  /* check for clipping */
+  if (!clip_buffer (mpeg2dec, outbuf))
+    goto clipped;
+
   if (GST_CLOCK_TIME_IS_VALID (time)) {
     gboolean need_skip;
     GstClockTime qostime;
@@ -859,12 +940,6 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
       goto dropping_qos;
   }
 
-  GST_LOG_OBJECT (mpeg2dec, "pushing buffer %p, timestamp %"
-      GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
-      outbuf,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
-
   /* ref before pushing it out, so we still have the ref in our
    * array of buffers */
   gst_buffer_ref (outbuf);
@@ -872,8 +947,24 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   /* do cropping if needed */
   crop_buffer (mpeg2dec, &outbuf);
 
-  ret = gst_pad_push (mpeg2dec->srcpad, outbuf);
-  GST_DEBUG_OBJECT (mpeg2dec, "pushed with result %s", gst_flow_get_name (ret));
+  if (mpeg2dec->segment.rate >= 0.0) {
+    /* forward: push right away */
+    GST_LOG_OBJECT (mpeg2dec, "pushing buffer %p, timestamp %"
+        GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
+        outbuf,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
+
+    ret = gst_pad_push (mpeg2dec->srcpad, outbuf);
+    GST_DEBUG_OBJECT (mpeg2dec, "pushed with result %s",
+        gst_flow_get_name (ret));
+  } else {
+    /* reverse: queue, we'll push in reverse when we receive the next (previous)
+     * keyframe. */
+    GST_DEBUG_OBJECT (mpeg2dec, "queued frame");
+    mpeg2dec->queued = g_list_prepend (mpeg2dec->queued, outbuf);
+    ret = GST_FLOW_OK;
+  }
 
   return ret;
 
@@ -892,6 +983,11 @@ drop:
   {
     GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, discont state %d",
         mpeg2dec->discont_state);
+    return GST_FLOW_OK;
+  }
+clipped:
+  {
+    GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, clipped");
     return GST_FLOW_OK;
   }
 dropping_qos:
@@ -948,6 +1044,15 @@ gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf)
   size = GST_BUFFER_SIZE (buf);
   data = GST_BUFFER_DATA (buf);
   pts = GST_BUFFER_TIMESTAMP (buf);
+
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    GST_LOG_OBJECT (mpeg2dec, "DISCONT, reset decoder");
+    /* when we receive a discont, reset our state as to not create too much
+     * distortion in the picture due to missing packets */
+    mpeg2_reset (mpeg2dec->decoder, 0);
+    mpeg2_skip (mpeg2dec->decoder, 1);
+    mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
+  }
 
   GST_LOG_OBJECT (mpeg2dec, "received buffer, timestamp %"
       GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
@@ -1095,11 +1200,13 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
       if (format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
 
-      if (rate <= 0.0)
-        goto newseg_wrong_rate;
-
       /* now configure the values */
       gst_segment_set_newsegment_full (&mpeg2dec->segment, update,
+          rate, arate, format, start, stop, time);
+
+      GST_DEBUG_OBJECT (mpeg2dec,
+          "Pushing newseg rate %g, applied rate %g, format %d, start %"
+          G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", pos %" G_GINT64_FORMAT,
           rate, arate, format, start, stop, time);
 
       ret = gst_pad_push_event (mpeg2dec->srcpad, event);
@@ -1115,6 +1222,7 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
       gst_mpeg2dec_qos_reset (mpeg2dec);
       mpeg2_reset (mpeg2dec->decoder, 0);
       mpeg2_skip (mpeg2dec->decoder, 1);
+      clear_queued (mpeg2dec);
       ret = gst_pad_push_event (mpeg2dec->srcpad, event);
       break;
     }
@@ -1138,12 +1246,6 @@ done:
 newseg_wrong_format:
   {
     GST_DEBUG_OBJECT (mpeg2dec, "received non TIME newsegment");
-    gst_event_unref (event);
-    goto done;
-  }
-newseg_wrong_rate:
-  {
-    GST_DEBUG_OBJECT (mpeg2dec, "negative rates not supported yet");
     gst_event_unref (event);
     goto done;
   }
@@ -1615,6 +1717,7 @@ gst_mpeg2dec_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_mpeg2dec_qos_reset (mpeg2dec);
+      clear_queued (mpeg2dec);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (mpeg2dec->decoder) {
