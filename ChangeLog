@@ -1,3 +1,13 @@
+2008-01-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	  (gst_base_audio_sink_class_init):
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	  (gst_base_audio_src_class_init):
+	  Ref audio clock class from a thread-safe context to make sure
+	  we're not bit by GObjects lack of thread-safety here (#349410),
+	   however unlikely that may be in practice.
+
 2008-01-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* autogen.sh:

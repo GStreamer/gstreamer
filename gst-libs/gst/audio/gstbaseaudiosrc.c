@@ -169,6 +169,10 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
   gstbasesrc_class->check_get_range =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_check_get_range);
   gstbasesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_base_audio_src_fixate);
+
+  /* ref class from a thread-safe context to work around missing bit of
+   * thread-safety in GObject */
+  g_type_class_ref (GST_TYPE_AUDIO_CLOCK);
 }
 
 static void

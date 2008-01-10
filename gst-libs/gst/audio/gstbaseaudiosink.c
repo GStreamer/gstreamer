@@ -209,6 +209,10 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_async_play);
   gstbasesink_class->activate_pull =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_activate_pull);
+
+  /* ref class from a thread-safe context to work around missing bit of
+   * thread-safety in GObject */
+  g_type_class_ref (GST_TYPE_AUDIO_CLOCK);
 }
 
 static void
