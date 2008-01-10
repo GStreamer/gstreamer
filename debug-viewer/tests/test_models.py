@@ -92,6 +92,32 @@ class TestDynamicFilter (TestCase):
         self.assertEquals (rows, rows_ranged)
         self.assertEquals (rows, rows_filtered)
 
+        self.assertEquals ([ranged_model.line_index_from_super (i)
+                            for i in range (20)],
+                           range (20))
+        self.assertEquals ([ranged_model.line_index_to_super (i)
+                            for i in range (20)],
+                           range (20))
+        self.assertEquals ([ranged_model.line_index_from_top (i)
+                            for i in range (20)],
+                           range (20))
+        self.assertEquals ([ranged_model.line_index_to_top (i)
+                            for i in range (20)],
+                           range (20))
+
+        self.assertEquals ([filtered_model.line_index_from_super (i)
+                            for i in range (20)],
+                           range (20))
+        self.assertEquals ([filtered_model.line_index_to_super (i)
+                            for i in range (20)],
+                           range (20))
+        self.assertEquals ([filtered_model.line_index_from_top (i)
+                            for i in range (20)],
+                           range (20))
+        self.assertEquals ([filtered_model.line_index_to_top (i)
+                            for i in range (20)],
+                           range (20))
+
         ranged_model.set_range (5, 15)
         self.__dump_model (ranged_model, "ranged model (5, 15)")
         filtered_model.super_model_changed_range ()
@@ -104,6 +130,32 @@ class TestDynamicFilter (TestCase):
         rows_filtered = row_list (filtered_model)
         self.assertEquals (rows_ranged, rows_filtered)
 
+        self.assertEquals ([ranged_model.line_index_from_super (i)
+                            for i in range (5, 16)],
+                           range (11))
+        self.assertEquals ([ranged_model.line_index_to_super (i)
+                            for i in range (11)],
+                           range (5, 16))
+        self.assertEquals ([ranged_model.line_index_from_top (i)
+                            for i in range (5, 16)],
+                           range (11))
+        self.assertEquals ([ranged_model.line_index_to_top (i)
+                            for i in range (11)],
+                           range (5, 16))
+
+        self.assertEquals ([filtered_model.line_index_from_super (i)
+                            for i in range (11)],
+                           range (11))
+        self.assertEquals ([filtered_model.line_index_to_super (i)
+                            for i in range (11)],
+                           range (11))
+        self.assertEquals ([filtered_model.line_index_from_top (i)
+                            for i in range (5, 16)],
+                           range (11))
+        self.assertEquals ([filtered_model.line_index_to_top (i)
+                            for i in range (11)],
+                           range (5, 16))
+
         filtered_model.add_filter (GUI.CategoryFilter ("EVEN"),
                                    Common.Data.DefaultDispatcher ())
         rows_filtered = row_list (filtered_model)
@@ -111,15 +163,44 @@ class TestDynamicFilter (TestCase):
 
         self.__dump_model (filtered_model, "filtered model")
 
+        self.assertEquals ([filtered_model.line_index_from_super (i)
+                            for i in range (0, 11, 2)],
+                           range (6))
+        self.assertEquals ([filtered_model.line_index_from_top (i)
+                            for i in range (5, 16, 2)],
+                           range (6))
+
         ranged_model.set_range (7, 12)
+        self.__dump_model (ranged_model, "ranged model (7, 12)")
         filtered_model.super_model_changed_range ()
 
-        self.__dump_model (ranged_model, "ranged model (7, 12)")
-
-        rows_ranged = row_list (ranged_model)
-        self.assertEquals (rows_ranged, range (7, 13))
+        self.assertEquals (row_list (ranged_model), range (7, 13))
+        self.assertEquals ([ranged_model.line_index_from_super (i)
+                            for i in range (7, 13)],
+                           range (6))
+        self.assertEquals ([ranged_model.line_index_to_super (i)
+                            for i in range (6)],
+                           range (7, 13))
+        self.assertEquals ([ranged_model.line_index_from_top (i)
+                            for i in range (7, 13)],
+                           range (6))
+        self.assertEquals ([ranged_model.line_index_to_top (i)
+                            for i in range (6)],
+                           range (7, 13))
 
         self.__dump_model (filtered_model, "filtered model (ranged 7, 12)")
+        self.assertEquals ([filtered_model.line_index_from_super (i)
+                            for i in range (0, 6, 2)],
+                           range (3))
+        self.assertEquals ([filtered_model.line_index_to_super (i)
+                            for i in range (3)],
+                           range (0, 6, 2))
+        self.assertEquals ([filtered_model.line_index_from_top (i)
+                            for i in range (7, 12, 2)],
+                           range (3))
+        self.assertEquals ([filtered_model.line_index_to_top (i)
+                            for i in range (3)],
+                           range (7, 12, 2))
 
         rows_filtered = row_list (filtered_model)
         self.assertEquals (rows_filtered, range (7, 13, 2))

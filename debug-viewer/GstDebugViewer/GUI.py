@@ -587,12 +587,14 @@ class FilteredLogModel (FilteredLogModelBase):
         super_start_offset = super_start - old_start
         if super_start_offset < 0:
             # TODO:
-            raise NotImplementedError ("Only handling further restriction of the range")
+            raise NotImplementedError ("Only handling further restriction of the range"
+                                       " (start offset = %i)" % (super_start_offset,))
 
         super_end_offset = super_end - old_end
         if super_end_offset > 0:
             # TODO:
-            raise NotImplementedError ("Only handling further restriction of the range")
+            raise NotImplementedError ("Only handling further restriction of the range"
+                                       " (end offset = %i)" % (super_end_offset,))
 
         if super_end_offset < 0:
             if not self.super_index:
@@ -604,6 +606,7 @@ class FilteredLogModel (FilteredLogModelBase):
                 end_offset = len (self.line_offsets) - n_filtered
             end = len (self.line_offsets) - 1 # FIXME
             assert end_offset <= end
+
             self.__remove_range (end_offset, end)
 
         if super_start_offset > 0:
@@ -614,7 +617,17 @@ class FilteredLogModel (FilteredLogModelBase):
                 n_filtered = self.__filtered_indices_in_range (old_start, super_start - 1)
                 assert n_filtered > 0
                 start_offset = n_filtered
+
             self.__remove_range (0, start_offset - 1)
+
+            from_super = self.from_super_index
+            for i in self.super_index:
+                old_index = from_super[i]
+                del from_super[i]
+                from_super[i - super_start_offset] = old_index - start_offset
+
+            for i in range (len (self.super_index)):
+                self.super_index[i] -= super_start_offset
 
         self.__old_super_model_range = (super_start, super_end,)
 
@@ -635,9 +648,6 @@ class FilteredLogModel (FilteredLogModelBase):
         for super_index in self.super_index[start:end + 1]:
             del self.from_super_index[super_index]
         del self.super_index[start:end + 1]
-        if start == 0:
-            for super_index in self.super_index:
-                self.from_super_index[super_index] -= end
 
 class Filter (object):
 
