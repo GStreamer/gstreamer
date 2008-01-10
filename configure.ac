@@ -74,6 +74,9 @@ AC_PROG_CC
 AM_PROG_CC_STDC
 AS="${CC}"
 
+dnl check if the compiler supports '-c' and '-o' options
+AM_PROG_CC_C_O
+
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
