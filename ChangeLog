@@ -1,3 +1,8 @@
+2008-01-10  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	Allow request_new_pad with name NULL (bug #508515)
+
 2008-01-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* autogen.sh:
