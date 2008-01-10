@@ -2082,6 +2082,35 @@ pad_failed:
   }
 }
 
+/* If the requested name is NULL we should create a name with
+ * the session number assuming we want the lowest posible session
+ * with a free pad like the template */
+static gchar *
+gst_rtp_bin_get_free_pad_name (GstElement * element, GstPadTemplate * templ)
+{
+  gboolean name_found = FALSE;
+  gint session = 0;
+  GstPad *pad = NULL;
+  GstIterator *pad_it = NULL;
+  gchar *pad_name = NULL;
+
+  GST_DEBUG_OBJECT (element, "find a free pad name for template");
+  while (!name_found) {
+    g_free (pad_name);
+    pad_name = g_strdup_printf (templ->name_template, session++);
+    pad_it = gst_element_iterate_pads (GST_ELEMENT (element));
+    name_found = TRUE;
+    while (gst_iterator_next (pad_it, (gpointer) & pad) == GST_ITERATOR_OK) {
+      if (strcmp (gst_pad_get_name (pad), pad_name) == 0)
+        name_found = FALSE;
+    }
+    gst_iterator_free (pad_it);
+  }
+
+  GST_DEBUG_OBJECT (element, "free pad name found: '%s'", pad_name);
+  return pad_name;
+}
+
 /* 
  */
 static GstPad *
@@ -2091,6 +2120,7 @@ gst_rtp_bin_request_new_pad (GstElement * element,
   GstRtpBin *rtpbin;
   GstElementClass *klass;
   GstPad *result;
+  gchar *pad_name = NULL;
 
   g_return_val_if_fail (templ != NULL, NULL);
   g_return_val_if_fail (GST_IS_RTP_BIN (element), NULL);
@@ -2100,21 +2130,32 @@ gst_rtp_bin_request_new_pad (GstElement * element,
 
   GST_RTP_BIN_LOCK (rtpbin);
 
+  if (name == NULL) {
+    /* use a free pad name */
+    pad_name = gst_rtp_bin_get_free_pad_name (element, templ);
+  } else {
+    /* use the provided name */
+    pad_name = g_strdup (name);
+  }
+
+  GST_DEBUG ("Trying to request a pad with name %s", pad_name);
+
   /* figure out the template */
   if (templ == gst_element_class_get_pad_template (klass, "recv_rtp_sink_%d")) {
-    result = create_recv_rtp (rtpbin, templ, name);
+    result = create_recv_rtp (rtpbin, templ, pad_name);
   } else if (templ == gst_element_class_get_pad_template (klass,
           "recv_rtcp_sink_%d")) {
-    result = create_recv_rtcp (rtpbin, templ, name);
+    result = create_recv_rtcp (rtpbin, templ, pad_name);
   } else if (templ == gst_element_class_get_pad_template (klass,
           "send_rtp_sink_%d")) {
-    result = create_send_rtp (rtpbin, templ, name);
+    result = create_send_rtp (rtpbin, templ, pad_name);
   } else if (templ == gst_element_class_get_pad_template (klass,
           "send_rtcp_src_%d")) {
-    result = create_rtcp (rtpbin, templ, name);
+    result = create_rtcp (rtpbin, templ, pad_name);
   } else
     goto wrong_template;
 
+  g_free (pad_name);
   GST_RTP_BIN_UNLOCK (rtpbin);
 
   return result;
@@ -2122,6 +2163,7 @@ gst_rtp_bin_request_new_pad (GstElement * element,
   /* ERRORS */
 wrong_template:
   {
+    g_free (pad_name);
     GST_RTP_BIN_UNLOCK (rtpbin);
     g_warning ("gstrtpbin: this is not our template");
     return NULL;
