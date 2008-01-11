@@ -23,7 +23,6 @@
 #include <gst/rtp/gstrtcpbuffer.h>
 #include <gst/netbuffer/gstnetbuffer.h>
 
-#include "gstrtpbin-marshal.h"
 
 #include "rtpsession.h"
 
@@ -536,13 +535,138 @@ rtp_session_set_callbacks (RTPSession * sess, RTPSessionCallbacks * callbacks,
 {
   g_return_if_fail (RTP_IS_SESSION (sess));
 
-  sess->callbacks.process_rtp = callbacks->process_rtp;
-  sess->callbacks.send_rtp = callbacks->send_rtp;
-  sess->callbacks.send_rtcp = callbacks->send_rtcp;
-  sess->callbacks.sync_rtcp = callbacks->sync_rtcp;
-  sess->callbacks.clock_rate = callbacks->clock_rate;
-  sess->callbacks.reconsider = callbacks->reconsider;
-  sess->user_data = user_data;
+  if (callbacks->process_rtp) {
+    sess->callbacks.process_rtp = callbacks->process_rtp;
+    sess->process_rtp_user_data = user_data;
+  }
+  if (callbacks->send_rtp) {
+    sess->callbacks.send_rtp = callbacks->send_rtp;
+    sess->send_rtp_user_data = user_data;
+  }
+  if (callbacks->send_rtcp) {
+    sess->callbacks.send_rtcp = callbacks->send_rtcp;
+    sess->send_rtcp_user_data = user_data;
+  }
+  if (callbacks->sync_rtcp) {
+    sess->callbacks.sync_rtcp = callbacks->sync_rtcp;
+    sess->sync_rtcp_user_data = user_data;
+  }
+  if (callbacks->clock_rate) {
+    sess->callbacks.clock_rate = callbacks->clock_rate;
+    sess->clock_rate_user_data = user_data;
+  }
+  if (callbacks->reconsider) {
+    sess->callbacks.reconsider = callbacks->reconsider;
+    sess->reconsider_user_data = user_data;
+  }
+}
+
+/**
+ * rtp_session_set_process_rtp_callback:
+ * @sess: an #RTPSession
+ * @callback: callback to set
+ * @user_data: user data passed in the callback
+ *
+ * Configure only the process_rtp callback to be notified of the process_rtp action.
+ */
+void
+rtp_session_set_process_rtp_callback (RTPSession * sess,
+    RTPSessionProcessRTP callback, gpointer user_data)
+{
+  g_return_if_fail (RTP_IS_SESSION (sess));
+
+  sess->callbacks.process_rtp = callback;
+  sess->process_rtp_user_data = user_data;
+}
+
+/**
+ * rtp_session_set_send_rtp_callback:
+ * @sess: an #RTPSession
+ * @callback: callback to set
+ * @user_data: user data passed in the callback
+ *
+ * Configure only the send_rtp callback to be notified of the send_rtp action.
+ */
+void
+rtp_session_set_send_rtp_callback (RTPSession * sess,
+    RTPSessionSendRTP callback, gpointer user_data)
+{
+  g_return_if_fail (RTP_IS_SESSION (sess));
+
+  sess->callbacks.send_rtp = callback;
+  sess->send_rtp_user_data = user_data;
+}
+
+/**
+ * rtp_session_set_send_rtcp_callback:
+ * @sess: an #RTPSession
+ * @callback: callback to set
+ * @user_data: user data passed in the callback
+ *
+ * Configure only the send_rtcp callback to be notified of the send_rtcp action.
+ */
+void
+rtp_session_set_send_rtcp_callback (RTPSession * sess,
+    RTPSessionSendRTCP callback, gpointer user_data)
+{
+  g_return_if_fail (RTP_IS_SESSION (sess));
+
+  sess->callbacks.send_rtcp = callback;
+  sess->send_rtcp_user_data = user_data;
+}
+
+/**
+ * rtp_session_set_sync_rtcp_callback:
+ * @sess: an #RTPSession
+ * @callback: callback to set
+ * @user_data: user data passed in the callback
+ *
+ * Configure only the sync_rtcp callback to be notified of the sync_rtcp action.
+ */
+void
+rtp_session_set_sync_rtcp_callback (RTPSession * sess,
+    RTPSessionSyncRTCP callback, gpointer user_data)
+{
+  g_return_if_fail (RTP_IS_SESSION (sess));
+
+  sess->callbacks.sync_rtcp = callback;
+  sess->sync_rtcp_user_data = user_data;
+}
+
+/**
+ * rtp_session_set_clock_rate_callback:
+ * @sess: an #RTPSession
+ * @callback: callback to set
+ * @user_data: user data passed in the callback
+ *
+ * Configure only the clock_rate callback to be notified of the clock_rate action.
+ */
+void
+rtp_session_set_clock_rate_callback (RTPSession * sess,
+    RTPSessionClockRate callback, gpointer user_data)
+{
+  g_return_if_fail (RTP_IS_SESSION (sess));
+
+  sess->callbacks.clock_rate = callback;
+  sess->clock_rate_user_data = user_data;
+}
+
+/**
+ * rtp_session_set_reconsider_callback:
+ * @sess: an #RTPSession
+ * @callback: callback to set
+ * @user_data: user data passed in the callback
+ *
+ * Configure only the reconsider callback to be notified of the reconsider action.
+ */
+void
+rtp_session_set_reconsider_callback (RTPSession * sess,
+    RTPSessionReconsider callback, gpointer user_data)
+{
+  g_return_if_fail (RTP_IS_SESSION (sess));
+
+  sess->callbacks.reconsider = callback;
+  sess->reconsider_user_data = user_data;
 }
 
 /**
@@ -686,7 +810,7 @@ source_push_rtp (RTPSource * source, GstBuffer * buffer, RTPSession * session)
     if (session->callbacks.send_rtp)
       result =
           session->callbacks.send_rtp (session, source, buffer,
-          session->user_data);
+          session->send_rtp_user_data);
     else
       gst_buffer_unref (buffer);
 
@@ -697,7 +821,7 @@ source_push_rtp (RTPSource * source, GstBuffer * buffer, RTPSession * session)
     if (session->callbacks.process_rtp)
       result =
           session->callbacks.process_rtp (session, source, buffer,
-          session->user_data);
+          session->process_rtp_user_data);
     else
       gst_buffer_unref (buffer);
   }
@@ -712,7 +836,9 @@ source_clock_rate (RTPSource * source, guint8 pt, RTPSession * session)
   gint result;
 
   if (session->callbacks.clock_rate)
-    result = session->callbacks.clock_rate (session, pt, session->user_data);
+    result =
+        session->callbacks.clock_rate (session, pt,
+        session->clock_rate_user_data);
   else
     result = -1;
 
@@ -1343,7 +1469,7 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
 
         /* notify app of reconsideration */
         if (sess->callbacks.reconsider)
-          sess->callbacks.reconsider (sess, sess->user_data);
+          sess->callbacks.reconsider (sess, sess->reconsider_user_data);
       }
     }
 
@@ -1450,7 +1576,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer)
   /* notify caller of sr packets in the callback */
   if (is_sr && sess->callbacks.sync_rtcp)
     result = sess->callbacks.sync_rtcp (sess, sess->source, buffer,
-        sess->user_data);
+        sess->sync_rtcp_user_data);
   else
     gst_buffer_unref (buffer);
 
@@ -1600,7 +1726,7 @@ rtp_session_send_bye (RTPSession * sess, const gchar * reason)
 
   /* notify app of reconsideration */
   if (sess->callbacks.reconsider)
-    sess->callbacks.reconsider (sess, sess->user_data);
+    sess->callbacks.reconsider (sess, sess->reconsider_user_data);
 done:
   RTP_SESSION_UNLOCK (sess);
 
@@ -1985,7 +2111,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime time, guint64 ntpnstime)
 
     if (sess->callbacks.send_rtcp)
       result = sess->callbacks.send_rtcp (sess, sess->source, data.rtcp,
-          sess->user_data);
+          sess->send_rtcp_user_data);
     else
       gst_buffer_unref (data.rtcp);
   }

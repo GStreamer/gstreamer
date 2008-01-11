@@ -1,5 +1,24 @@
 2008-01-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Youness Alaoui <youness dot alaoui at collabora dot co dot uk>
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_clock_rate):
+	* gst/rtpmanager/rtpsession.c: (rtp_session_set_callbacks),
+	(rtp_session_set_process_rtp_callback),
+	(rtp_session_set_send_rtp_callback),
+	(rtp_session_set_send_rtcp_callback),
+	(rtp_session_set_sync_rtcp_callback),
+	(rtp_session_set_clock_rate_callback),
+	(rtp_session_set_reconsider_callback), (source_push_rtp),
+	(source_clock_rate), (rtp_session_process_bye),
+	(rtp_session_process_rtcp), (rtp_session_send_bye),
+	(rtp_session_on_timeout):
+	* gst/rtpmanager/rtpsession.h:
+	Make it possible to use different user_data for each of the callbacks.
+	Fixes #508587.
+
+2008-01-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/mpegvideoparse/mpegpacketiser.c: (mpeg_util_find_start_code):
 	Small meaningless cleanup.
 

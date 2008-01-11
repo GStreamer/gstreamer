@@ -85,10 +85,10 @@ typedef GstFlowReturn (*RTPSessionSendRTCP) (RTPSession *sess, RTPSource *src, G
  * RTPSessionSyncRTCP:
  * @sess: an #RTPSession
  * @src: the #RTPSource
- * @buffer: the RTCP buffer ready for sending
+ * @buffer: the RTCP buffer ready for synchronisation
  * @user_data: user data specified when registering
  *
- * This callback will be called when @sess has and SR @buffer ready for doing
+ * This callback will be called when @sess has an SR @buffer ready for doing
  * synchronisation between streams.
  *
  * Returns: a #GstFlowReturn.
@@ -133,8 +133,8 @@ typedef void (*RTPSessionReconsider) (RTPSession *sess, gpointer user_data);
 typedef struct {
   RTPSessionProcessRTP  process_rtp;
   RTPSessionSendRTP     send_rtp;
-  RTPSessionSendRTCP    send_rtcp;
   RTPSessionSyncRTCP    sync_rtcp;
+  RTPSessionSendRTCP    send_rtcp;
   RTPSessionClockRate   clock_rate;
   RTPSessionReconsider  reconsider;
 } RTPSessionCallbacks;
@@ -177,8 +177,13 @@ struct _RTPSession {
   gchar        *bye_reason;
   gboolean      sent_bye;
 
-  RTPSessionCallbacks callbacks;
-  gpointer            user_data;
+  RTPSessionCallbacks   callbacks;
+  gpointer              process_rtp_user_data;
+  gpointer              send_rtp_user_data;
+  gpointer              send_rtcp_user_data;
+  gpointer              sync_rtcp_user_data;
+  gpointer              clock_rate_user_data;
+  gpointer              reconsider_user_data;
 
   RTPSessionStats stats;
 
@@ -211,8 +216,26 @@ GType rtp_session_get_type (void);
 
 /* create and configure */
 RTPSession*     rtp_session_new           (void);
-void            rtp_session_set_callbacks          (RTPSession *sess, 
+void            rtp_session_set_callbacks          (RTPSession *sess,
 		                                    RTPSessionCallbacks *callbacks,
+                                                    gpointer user_data);
+void            rtp_session_set_process_rtp_callback   (RTPSession * sess,
+                                                    RTPSessionProcessRTP callback,
+                                                    gpointer user_data);
+void            rtp_session_set_send_rtp_callback  (RTPSession * sess,
+                                                    RTPSessionSendRTP callback,
+                                                    gpointer user_data);
+void            rtp_session_set_send_rtcp_callback   (RTPSession * sess,
+                                                    RTPSessionSendRTCP callback,
+                                                    gpointer user_data);
+void            rtp_session_set_sync_rtcp_callback   (RTPSession * sess,
+                                                    RTPSessionSyncRTCP callback,
+                                                    gpointer user_data);
+void            rtp_session_set_clock_rate_callback   (RTPSession * sess,
+                                                    RTPSessionClockRate callback,
+                                                    gpointer user_data);
+void            rtp_session_set_reconsider_callback (RTPSession * sess,
+                                                    RTPSessionReconsider callback,
                                                     gpointer user_data);
 void            rtp_session_set_bandwidth          (RTPSession *sess, gdouble bandwidth);
 gdouble         rtp_session_get_bandwidth          (RTPSession *sess);
