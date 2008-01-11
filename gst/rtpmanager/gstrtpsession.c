@@ -286,8 +286,8 @@ static void gst_rtp_session_reconsider (RTPSession * sess, gpointer user_data);
 static RTPSessionCallbacks callbacks = {
   gst_rtp_session_process_rtp,
   gst_rtp_session_send_rtp,
-  gst_rtp_session_send_rtcp,
   gst_rtp_session_sync_rtcp,
+  gst_rtp_session_send_rtcp,
   gst_rtp_session_clock_rate,
   gst_rtp_session_reconsider
 };
@@ -1188,6 +1188,8 @@ gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
   GST_RTP_SESSION_LOCK (rtpsession);
   ipayload = payload;           /* make compiler happy */
   caps = g_hash_table_lookup (priv->ptmap, GINT_TO_POINTER (ipayload));
+  /* TODO : check if we should really goto done. This will return -1
+   * instead of the clock rate of the caps we just found! */
   if (caps)
     goto done;
 
@@ -1208,6 +1210,7 @@ gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
 
   gst_rtp_session_cache_caps (rtpsession, caps);
 
+  /* TODO : This is where we should 'goto' */
   s = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_int (s, "clock-rate", &result))
     goto no_clock_rate;
