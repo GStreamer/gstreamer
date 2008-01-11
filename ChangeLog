@@ -1,3 +1,12 @@
+2008-01-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtp/gstrtptheoradepay.c: (gst_rtp_theora_depay_setcaps):
+	* gst/rtp/gstrtptheorapay.c:
+	Fix the clock rate to 90000 as required by the RFC.
+	Fixes #508644.
+
 2008-01-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/elements/icydemux.c: (GST_START_TEST), (icydemux_suite):
