@@ -1,3 +1,18 @@
+2008-01-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/mpegvideoparse/mpegpacketiser.c: (mpeg_util_find_start_code):
+	Small meaningless cleanup.
+
+	* gst/mpegvideoparse/mpegvideoparse.c: (gst_mpegvideoparse_flush),
+	(mpegvideoparse_drain_avail), (gst_mpegvideoparse_chain_forward),
+	(scan_keyframe), (gst_mpegvideoparse_flush_decode),
+	(gst_mpegvideoparse_chain_reverse), (gst_mpegvideoparse_chain),
+	(mpv_parse_sink_event), (gst_mpegvideoparse_change_state):
+	* gst/mpegvideoparse/mpegvideoparse.h:
+	Track segment events.
+	Do the first part of reverse playback by sending data between two
+	I-frames to the decoder.
+
 2008-01-10  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/rtpmanager/gstrtpbin.c:

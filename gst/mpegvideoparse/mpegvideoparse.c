@@ -296,6 +296,13 @@ gst_mpegvideoparse_flush (MpegVideoParse * mpegvideoparse)
   GST_DEBUG_OBJECT (mpegvideoparse, "mpegvideoparse: flushing");
 
   mpegvideoparse->next_offset = GST_BUFFER_OFFSET_NONE;
+
+  g_list_foreach (mpegvideoparse->gather, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (mpegvideoparse->gather);
+  mpegvideoparse->gather = NULL;
+  g_list_foreach (mpegvideoparse->decode, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (mpegvideoparse->decode);
+  mpegvideoparse->decode = NULL;
 }
 
 static GstFlowReturn
@@ -309,7 +316,7 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
   while ((cur != NULL) && (res == GST_FLOW_OK)) {
     /* Handle the block */
     GST_LOG_OBJECT (mpegvideoparse,
-        "Have block of size %u with pack_type 0x%02x and flags 0x%02x\n",
+        "Have block of size %u with pack_type 0x%02x and flags 0x%02x",
         cur->length, cur->first_pack_type, cur->flags);
 
     /* Don't start pushing out buffers until we've seen a sequence header */
@@ -375,18 +382,11 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
 }
 
 static GstFlowReturn
-gst_mpegvideoparse_chain (GstPad * pad, GstBuffer * buf)
+gst_mpegvideoparse_chain_forward (MpegVideoParse * mpegvideoparse,
+    gboolean discont, GstBuffer * buf)
 {
-  MpegVideoParse *mpegvideoparse;
   GstFlowReturn res;
-  gboolean have_discont;
   guint64 next_offset = GST_BUFFER_OFFSET_NONE;
-
-  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
-
-  mpegvideoparse =
-      GST_MPEGVIDEOPARSE (gst_object_get_parent (GST_OBJECT (pad)));
 
   GST_DEBUG_OBJECT (mpegvideoparse,
       "mpegvideoparse: received buffer of %u bytes with ts %"
@@ -396,12 +396,10 @@ gst_mpegvideoparse_chain (GstPad * pad, GstBuffer * buf)
   /* If we have an offset, and the incoming offset doesn't match, 
      or we have a discont, handle it first by flushing out data
      we have collected. */
-  have_discont = GST_BUFFER_IS_DISCONT (buf);
-
   if (mpegvideoparse->next_offset != GST_BUFFER_OFFSET_NONE) {
     if (GST_BUFFER_OFFSET_IS_VALID (buf)) {
       if (mpegvideoparse->next_offset != GST_BUFFER_OFFSET (buf))
-        have_discont = TRUE;
+        discont = TRUE;
       next_offset = GST_BUFFER_OFFSET (buf) + GST_BUFFER_SIZE (buf);
     } else {
       next_offset = mpegvideoparse->next_offset + GST_BUFFER_SIZE (buf);
@@ -409,7 +407,7 @@ gst_mpegvideoparse_chain (GstPad * pad, GstBuffer * buf)
   }
 
   /* Clear out any existing stuff if the new buffer is discontinuous */
-  if (have_discont) {
+  if (discont) {
     GST_DEBUG_OBJECT (mpegvideoparse, "Have discont packet, draining data");
     mpegvideoparse->need_discont = TRUE;
 
@@ -417,9 +415,8 @@ gst_mpegvideoparse_chain (GstPad * pad, GstBuffer * buf)
     res = mpegvideoparse_drain_avail (mpegvideoparse);
     mpeg_packetiser_flush (&mpegvideoparse->packer);
     if (res != GST_FLOW_OK) {
-      mpegvideoparse->next_offset = next_offset;
       gst_buffer_unref (buf);
-      return res;
+      goto done;
     }
   }
 
@@ -429,10 +426,277 @@ gst_mpegvideoparse_chain (GstPad * pad, GstBuffer * buf)
   /* And push out what we can */
   res = mpegvideoparse_drain_avail (mpegvideoparse);
 
+done:
   /* Update our offset */
   mpegvideoparse->next_offset = next_offset;
 
+  return res;
+}
+
+/* scan the decode queue for a picture header with an I frame and return the
+ * index in the first buffer. We only scan the first buffer and possibly a
+ * couple of bytes of the next buffers to find the I frame. Scanning is done
+ * backwards because the first buffer could contain many picture start codes
+ * with I frames. */
+static guint
+scan_keyframe (MpegVideoParse * mpegvideoparse)
+{
+  guint64 scanword;
+  guint count;
+  GList *walk;
+  GstBuffer *head;
+  guint8 *data;
+  guint size;
+
+  /* we use an 8 byte buffer, this is enough to hold the picture start code and
+   * the picture header bits we are interested in. We init to 0xff so that when
+   * we have a valid picture start without the header bits, we will be able to
+   * detect this because it will generate an invalid picture type. */
+  scanword = ~0LL;
+
+  GST_LOG_OBJECT (mpegvideoparse, "scan keyframe");
+
+  /* move to the second buffer if we can, we should have at least one buffer */
+  walk = mpegvideoparse->decode;
+  g_return_val_if_fail (walk != NULL, -1);
+
+  head = GST_BUFFER_CAST (walk->data);
+
+  count = 0;
+  walk = g_list_next (walk);
+  while (walk) {
+    GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+
+    data = GST_BUFFER_DATA (buf);
+    size = GST_BUFFER_SIZE (buf);
+
+    GST_LOG_OBJECT (mpegvideoparse, "collect remaining %d bytes from %p",
+        6 - count, buf);
+
+    while (size > 0 && count < 6) {
+      scanword = (scanword << 8) | *data++;
+      size--;
+      count++;
+    }
+    if (count == 6)
+      break;
+
+    walk = g_list_next (walk);
+  }
+  /* move bits to the beginning of the word now */
+  if (count)
+    scanword = (scanword << (8 * (8 - count)));
+
+  GST_LOG_OBJECT (mpegvideoparse, "scanword 0x%016llx", scanword);
+
+  data = GST_BUFFER_DATA (head);
+  size = GST_BUFFER_SIZE (head);
+
+  while (size > 0) {
+    scanword = (((guint64) data[size - 1]) << 56) | (scanword >> 8);
+
+    GST_LOG_OBJECT (mpegvideoparse, "scanword at %d 0x%016llx", size - 1,
+        scanword);
+
+    /* check picture start and picture type */
+    if ((scanword & 0xffffffff00380000LL) == 0x0000010000080000LL)
+      break;
+
+    size--;
+  }
+  return size - 1;
+}
+
+/* For reverse playback we use a technique that can be used for
+ * any keyframe based video codec.
+ *
+ * Input:
+ *  Buffer decoding order:  7  8  9  4  5  6  1  2  3  EOS
+ *  Keyframe flag:                      K        K
+ *  Discont flag:           D        D        D
+ *
+ * - Each Discont marks a discont in the decoding order.
+ * - The keyframes mark where we can start decoding. For mpeg they are either
+ *   set by the demuxer or we have to scan the buffers for a syncword and
+ *   picture header with an I frame.
+ *
+ * First we prepend incomming buffers to the gather queue, whenever we receive
+ * a discont, we flush out the gather queue.
+ *
+ * The above data will be accumulated in the gather queue like this:
+ *
+ *   gather queue:  9  8  7
+ *                        D
+ *
+ * Whe buffer 4 is received (with a DISCONT), we flush the gather queue like
+ * this:
+ *
+ *   while (gather)
+ *     take head of queue and prepend to decode queue.
+ *     if we copied a keyframe, decode the decode queue.
+ *
+ * After we flushed the gather queue, we add 4 to the (now empty) gather queue.
+ * We get the following situation:
+ *
+ *  gather queue:    4
+ *  decode queue:    7  8  9
+ *
+ * After we received 5 (Keyframe) and 6:
+ *
+ *  gather queue:    6  5  4
+ *  decode queue:    7  8  9
+ *
+ * When we receive 1 (DISCONT) which triggers a flush of the gather queue:
+ *
+ *   Copy head of the gather queue (6) to decode queue:
+ *
+ *    gather queue:    5  4
+ *    decode queue:    6  7  8  9
+ *
+ *   Copy head of the gather queue (5) to decode queue. This is a keyframe so we
+ *   can start decoding.
+ *
+ *    gather queue:    4
+ *    decode queue:    5  6  7  8  9
+ *
+ *   Decode frames in decode queue, we don't actually do the decoding but we
+ *   will send the decode queue to the downstream element. This will empty the
+ *   decoding queue again.
+ *
+ *   Copy head of the gather queue (4) to decode queue, we flushed the gather
+ *   queue and can now store input buffer in the gather queue:
+ *
+ *    gather queue:    1
+ *    decode queue:    4
+ *
+ *  When we receive EOS, the queue looks like:
+ *
+ *    gather queue:    3  2  1
+ *    decode queue:    4
+ *
+ *  Fill decode queue, first keyframe we copy is 2:
+ *
+ *    gather queue:    1
+ *    decode queue:    2  3  4
+ *
+ *  After pushing the decode queue:
+ *
+ *    gather queue:    1
+ *    decode queue:    
+ *
+ *  Leftover buffer 1 cannot be decoded and must be discarded.
+ */
+static GstFlowReturn
+gst_mpegvideoparse_flush_decode (MpegVideoParse * mpegvideoparse, guint idx)
+{
+  GstFlowReturn res = GST_FLOW_OK;
+  GstBuffer *head = NULL;
+
+  while (mpegvideoparse->decode) {
+    GstBuffer *buf;
+
+    buf = GST_BUFFER_CAST (mpegvideoparse->decode->data);
+
+    if (idx != -1) {
+      GstBuffer *temp;
+
+      if (idx > 0) {
+        /* first buffer, split at the point where the picture start was
+         * detected and store as the new head of the decoding list. */
+        head = gst_buffer_create_sub (buf, 0, idx);
+        /* push the remainder after the picture sync point downstream, this is the
+         * first DISCONT buffer we push. */
+        temp = gst_buffer_create_sub (buf, idx, GST_BUFFER_SIZE (buf) - idx);
+        /* don't need old buffer anymore and swap new buffer */
+        gst_buffer_unref (buf);
+        buf = temp;
+      }
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+      idx = -1;
+    } else {
+      /* next buffers are not discont */
+      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
+    }
+
+    GST_DEBUG_OBJECT (mpegvideoparse, "pushing buffer %p, ts %" GST_TIME_FORMAT,
+        buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+    res = gst_pad_push (mpegvideoparse->srcpad, buf);
+
+    mpegvideoparse->decode =
+        g_list_delete_link (mpegvideoparse->decode, mpegvideoparse->decode);
+  }
+  if (head) {
+    /* store remainder of the buffer */
+    mpegvideoparse->decode = g_list_prepend (mpegvideoparse->decode, head);
+  }
+  return res;
+}
+
+static GstFlowReturn
+gst_mpegvideoparse_chain_reverse (MpegVideoParse * mpegvideoparse,
+    gboolean discont, GstBuffer * buf)
+{
+  GstFlowReturn res = GST_FLOW_OK;
+
+  /* if we have a discont, move buffers to the decode list */
+  if (G_UNLIKELY (discont)) {
+    GST_DEBUG_OBJECT (mpegvideoparse, "received discont,gathering buffers");
+
+    while (mpegvideoparse->gather) {
+      GstBuffer *gbuf;
+      guint keyframeidx;
+
+      gbuf = GST_BUFFER_CAST (mpegvideoparse->gather->data);
+      /* remove from the gather list */
+      mpegvideoparse->gather =
+          g_list_delete_link (mpegvideoparse->gather, mpegvideoparse->gather);
+      /* copy to decode queue */
+      mpegvideoparse->decode = g_list_prepend (mpegvideoparse->decode, gbuf);
+
+      GST_DEBUG_OBJECT (mpegvideoparse, "copied decoding buffer %p, len %d",
+          gbuf, g_list_length (mpegvideoparse->decode));
+
+      /* check if we copied a keyframe, we scan the buffers on the decode queue.
+       * We only need to scan the first buffer and at most 3 bytes of the second
+       * buffer. We return the index of the keyframe (or -1 when nothing was
+       * found) */
+      while ((keyframeidx = scan_keyframe (mpegvideoparse)) != -1) {
+        GST_DEBUG_OBJECT (mpegvideoparse, "copied keyframe at %u", keyframeidx);
+        res = gst_mpegvideoparse_flush_decode (mpegvideoparse, keyframeidx);
+      }
+    }
+  }
+
+  if (buf) {
+    /* add buffer to gather queue */
+    GST_DEBUG_OBJECT (mpegvideoparse, "gathering buffer %p, size %u", buf,
+        GST_BUFFER_SIZE (buf));
+    mpegvideoparse->gather = g_list_prepend (mpegvideoparse->gather, buf);
+  }
+
+  return res;
+}
+
+static GstFlowReturn
+gst_mpegvideoparse_chain (GstPad * pad, GstBuffer * buf)
+{
+  MpegVideoParse *mpegvideoparse;
+  GstFlowReturn res;
+  gboolean discont;
+
+  mpegvideoparse =
+      GST_MPEGVIDEOPARSE (gst_object_get_parent (GST_OBJECT (pad)));
+
+  discont = GST_BUFFER_IS_DISCONT (buf);
+
+  if (mpegvideoparse->segment.rate > 0.0)
+    res = gst_mpegvideoparse_chain_forward (mpegvideoparse, discont, buf);
+  else
+    res = gst_mpegvideoparse_chain_reverse (mpegvideoparse, discont, buf);
+
   gst_object_unref (mpegvideoparse);
+
   return res;
 }
 
@@ -483,35 +747,49 @@ mpv_parse_sink_event (GstPad * pad, GstEvent * event)
         /* Unknown incoming segment format. Output a default open-ended 
          * TIME segment */
         gst_event_unref (event);
+
+        /* set new values */
+        format = GST_FORMAT_TIME;
+        start = 0;
+        stop = GST_CLOCK_TIME_NONE;
+        pos = 0;
+        /* create a new segment with these values */
         event = gst_event_new_new_segment_full (update, rate, applied_rate,
-            GST_FORMAT_TIME, 0, GST_CLOCK_TIME_NONE, 0);
+            format, start, stop, pos);
       }
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-          &format, &start, &stop, &pos);
+      /* now configure the values */
+      gst_segment_set_newsegment_full (&mpegvideoparse->segment, update,
+          rate, applied_rate, format, start, stop, pos);
 
       GST_DEBUG_OBJECT (mpegvideoparse,
           "Pushing newseg rate %g, applied rate %g, format %d, start %"
           G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", pos %" G_GINT64_FORMAT,
           rate, applied_rate, format, start, stop, pos);
 
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (mpegvideoparse->srcpad, event);
       break;
     }
     case GST_EVENT_FLUSH_STOP:
+      GST_DEBUG_OBJECT (mpegvideoparse, "flush stop");
       gst_mpegvideoparse_flush (mpegvideoparse);
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (mpegvideoparse->srcpad, event);
       break;
     case GST_EVENT_EOS:
       /* Push any remaining buffers out, then flush. */
-      mpeg_packetiser_handle_eos (&mpegvideoparse->packer);
-      mpegvideoparse_drain_avail (mpegvideoparse);
-      gst_mpegvideoparse_flush (mpegvideoparse);
-
-      res = gst_pad_event_default (pad, event);
+      GST_DEBUG_OBJECT (mpegvideoparse, "received EOS");
+      if (mpegvideoparse->segment.rate >= 0.0) {
+        mpeg_packetiser_handle_eos (&mpegvideoparse->packer);
+        mpegvideoparse_drain_avail (mpegvideoparse);
+        gst_mpegvideoparse_flush (mpegvideoparse);
+      } else {
+        gst_mpegvideoparse_chain_reverse (mpegvideoparse, TRUE, NULL);
+        gst_mpegvideoparse_flush_decode (mpegvideoparse, 0);
+      }
+      res = gst_pad_push_event (mpegvideoparse->srcpad, event);
       break;
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (mpegvideoparse->srcpad, event);
       break;
   }
 
@@ -530,6 +808,14 @@ gst_mpegvideoparse_change_state (GstElement * element,
       GST_STATE_CHANGE_FAILURE);
 
   mpegvideoparse = GST_MPEGVIDEOPARSE (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_segment_init (&mpegvideoparse->segment, GST_FORMAT_UNDEFINED);
+      break;
+    default:
+      break;
+  }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 

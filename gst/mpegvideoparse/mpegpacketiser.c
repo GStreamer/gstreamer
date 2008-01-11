@@ -89,10 +89,12 @@ mpeg_packetiser_flush (MPEGPacketiser * p)
 guint8 *
 mpeg_util_find_start_code (guint32 * sync_word, guint8 * cur, guint8 * end)
 {
-  guint32 code = *sync_word;
+  guint32 code;
 
   if (G_UNLIKELY (cur == NULL))
     return NULL;
+
+  code = *sync_word;
 
   while (cur < end) {
     code <<= 8;

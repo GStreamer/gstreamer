@@ -43,6 +43,7 @@ struct _MpegVideoParse {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
+  GstSegment segment;
 
   gint64 next_offset;
   gboolean need_discont;
@@ -53,6 +54,10 @@ struct _MpegVideoParse {
 
   /* Packetise helper */
   MPEGPacketiser packer;
+
+  /* gather/decode queues for reverse playback */
+  GList *gather;
+  GList *decode;
 };
 
 struct _MpegVideoParseClass {
