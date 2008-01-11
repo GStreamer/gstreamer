@@ -1188,11 +1188,10 @@ gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
   GST_RTP_SESSION_LOCK (rtpsession);
   ipayload = payload;           /* make compiler happy */
   caps = g_hash_table_lookup (priv->ptmap, GINT_TO_POINTER (ipayload));
-  /* TODO : check if we should really goto done. This will return -1
-   * instead of the clock rate of the caps we just found! */
   if (caps)
-    goto done;
+    goto found;
 
+  /* not found in the cache, try to get it with a signal */
   g_value_init (&args[0], GST_TYPE_ELEMENT);
   g_value_set_object (&args[0], rtpsession);
   g_value_init (&args[1], G_TYPE_UINT);
@@ -1210,7 +1209,7 @@ gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
 
   gst_rtp_session_cache_caps (rtpsession, caps);
 
-  /* TODO : This is where we should 'goto' */
+found:
   s = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_int (s, "clock-rate", &result))
     goto no_clock_rate;

@@ -1,5 +1,11 @@
 2008-01-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_clock_rate):
+	If we find the caps in the cache, use it to parse the clock-rate instead
+	of returning an error. Fixes a TODO as found by Youness Alaoui.
+
+2008-01-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Youness Alaoui <youness dot alaoui at collabora dot co dot uk>
 
 	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_clock_rate):
