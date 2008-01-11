@@ -663,28 +663,27 @@ gst_flac_extract_picture_buffer (GstFlacDec * flacdec,
   g_free (mime_type);
 
   if (image && image_caps) {
-    GstTagList *tags;
-    FLAC__StreamMetadata_Picture_Type pic_type = picture.type;
+    GstTagList *tags = gst_tag_list_new ();
 
-    tags = gst_tag_list_new ();
-
-    if (pic_type > 20) {
-      pic_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
-    }
-
-    gst_structure_set (gst_caps_get_structure (image_caps, 0),
-        "image-type", GST_TYPE_TAG_IMAGE_TYPE,
-        (GstTagImageType) pic_type, NULL);
-
-    gst_buffer_set_caps (image, image_caps);
-    gst_caps_unref (image_caps);
-    if (pic_type == 1 || pic_type == 2) {
-      /* file icon of some sort */
+    if (picture.type == 1 || picture.type == 2) {
+      /* file icon for preview. Don't add image-type to caps, since it only 
+       * makes sense for there to be one of these. */
+      gst_buffer_set_caps (image, image_caps);
       gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
           GST_TAG_PREVIEW_IMAGE, image, NULL);
     } else {
+      GstTagImageType gst_tag_pic_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
+
+      if (picture.type >= 0x03 && picture.type <= 0x14)
+        gst_tag_pic_type = (GstTagImageType) ((gint) (picture.type) - 2);
+
+      gst_structure_set (gst_caps_get_structure (image_caps, 0),
+          "image-type", GST_TYPE_TAG_IMAGE_TYPE, gst_tag_pic_type, NULL);
+
+      gst_buffer_set_caps (image, image_caps);
       gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_IMAGE, image, NULL);
     }
+    gst_caps_unref (image_caps);
     gst_buffer_unref (image);
 
     /* Announce discovered tags */

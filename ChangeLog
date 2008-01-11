@@ -1,3 +1,16 @@
+2008-01-11  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* ext/flac/gstflacdec.c: (gst_flac_extract_picture_buffer):
+	* gst/id3demux/id3v2frames.c: (parse_picture_frame):
+	Generate the image-type values correctly. Leave them out of the caps
+	when outputting a "preview image" tag, since it only makes sense
+	to have one of those - the type is irrelevant.
+
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	(gst_sunaudiomixer_ctrl_open):
+	If we can, mark the mixer multiple open when we use it, in case
+	(for some reason) the process wants to open it again elsewhere.
+
 2008-01-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Olivier Crete <tester at tester dot ca>

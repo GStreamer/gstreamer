@@ -616,22 +616,29 @@ parse_picture_frame (ID3TagsWorking * work)
   }
 
   if (image && image_caps) {
-    if (pic_type > 0x14)
-      pic_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
-    gst_structure_set (gst_caps_get_structure (image_caps, 0),
-        "image-type", GST_TYPE_TAG_IMAGE_TYPE,
-        (GstTagImageType) pic_type, NULL);
 
-    gst_buffer_set_caps (image, image_caps);
-    gst_caps_unref (image_caps);
     if (pic_type == 0x01 || pic_type == 0x02) {
-      /* file icon of some sort */
+      /* file icon for preview. Don't add image-type to caps, since there
+       * is only supposed to be one of these. */
+      gst_buffer_set_caps (image, image_caps);
       gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
           GST_TAG_PREVIEW_IMAGE, image, NULL);
     } else {
+      GstTagImageType gst_tag_pic_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
+
+      /* Remap the ID3v2 APIC type our ImageType enum */
+      if (pic_type >= 0x3 && pic_type <= 0x14)
+        gst_tag_pic_type = (GstTagImageType) (pic_type - 2);
+
+      gst_structure_set (gst_caps_get_structure (image_caps, 0),
+          "image-type", GST_TYPE_TAG_IMAGE_TYPE, gst_tag_pic_type, NULL);
+
+      gst_buffer_set_caps (image, image_caps);
       gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
           GST_TAG_IMAGE, image, NULL);
     }
+
+    gst_caps_unref (image_caps);
     gst_buffer_unref (image);
   }
 
