@@ -110,7 +110,7 @@ create_test_buffer ()
 
   caps = gst_caps_new_simple ("audio/x-raw-float",
       "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 1,
-      "endianess", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);
 
