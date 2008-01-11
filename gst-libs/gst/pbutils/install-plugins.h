@@ -21,7 +21,7 @@
 #ifndef __GST_PB_UTILS_INSTALL_PLUGINS_H__
 #define __GST_PB_UTILS_INSTALL_PLUGINS_H__
 
-#include <glib.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 
@@ -96,6 +96,9 @@ typedef enum {
  *
  * Since: 0.10.12
  */
+
+#define GST_TYPE_INSTALL_PLUGINS_CONTEXT	(gst_install_plugins_context_get_type())
+
 typedef struct _GstInstallPluginsContext GstInstallPluginsContext;
 
 GstInstallPluginsContext * gst_install_plugins_context_new (void);
@@ -104,6 +107,8 @@ void   gst_install_plugins_context_free    (GstInstallPluginsContext * ctx);
 
 void   gst_install_plugins_context_set_xid (GstInstallPluginsContext * ctx,
                                             guint                      xid);
+
+GType  gst_install_plugins_context_get_type (void);
 
 /**
  * GstInstallPluginsResultFunc:

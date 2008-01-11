@@ -1,3 +1,12 @@
+2008-01-11  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/pbutils/install-plugins.c:
+	(gst_install_plugins_context_copy),
+	(gst_install_plugins_context_get_type):
+	* gst-libs/gst/pbutils/install-plugins.h:
+	Add GBoxed GType for GstInstallPluginsContext, this eases the wrapping
+	for bindings.
+
 2008-01-11  Michael Smith <msmith@fluendo.com>
 
 	* ext/theora/theoradec.c: (gst_theora_dec_class_init),
