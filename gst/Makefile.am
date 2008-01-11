@@ -100,7 +100,7 @@ pbutils_la_CFLAGS = $(common_cflags) $(GST_PLUGINS_BASE_CFLAGS)
 pbutils_la_LIBADD = $(common_libadd) $(GST_PLUGINS_BASE_LIBS) -lgstpbutils-0.10
 pbutils_la_LDFLAGS = $(common_ldflags) \
 	-export-symbols-regex "^(initpbutils|_PyGObject_API).*" $(GST_PLUGINS_BASE_LIBS)
-pbutils_la_SOURCES = pbutilsmodule.c gst-argtypes.c
+pbutils_la_SOURCES = pbutilsmodule.c gst-argtypes.c pygstminiobject.c
 nodist_pbutils_la_SOURCES = pbutils.c
 PBUTILS_OVERRIDES = pbutils.override
 PBUTILS_DEFS = pbutils.defs

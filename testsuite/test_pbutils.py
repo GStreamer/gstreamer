@@ -55,6 +55,11 @@ class Descriptions(TestCase):
     def testAddCodecDescription(self):
         assert hasattr(gst.pbutils, 'add_codec_description_to_tag_list')
 
+class InstallPlugins(TestCase):
+
+    def testPluginsContext(self):
+        assert hasattr(gst.pbutils, "InstallPluginsContext")
+
 # TODO
 # Add tests for the other parts of pbutils:
 # * missing-plugins

@@ -1,3 +1,18 @@
+2008-01-11  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/Makefile.am:
+	gst.pbutils also needs to handle miniobjects
+	* gst/pbutils.defs:
+	Add new InstallPluginsContext boxed definition.
+	All the *_new() functions should be accessible (and not act as
+	constructors).
+	* gst/pbutils.override:
+	Add override for install_plugins_sync().
+	* gst/pbutilsmodule.c:
+	Add pygst_debug debug category in this module too.
+	* testsuite/test_pbutils.py:
+	Test existence of new API. Needs more tests.
+
 2008-01-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* autogen.sh:

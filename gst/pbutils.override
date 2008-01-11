@@ -28,6 +28,9 @@ headers
 #include <gst/gst.h>
 
 #include <gst/pbutils/pbutils.h>
+#include "pygstminiobject.h"
+GST_DEBUG_CATEGORY_EXTERN (pygst_debug);
+#define GST_CAT_DEFAULT pygst_debug
 
 %%
 modulename gst.pbutils
@@ -44,5 +47,66 @@ include
 ignore-glob
  _*
  *init
+ *_free
  *_get_type
 %%
+override gst_install_plugins_sync kwargs
+static PyObject *
+_wrap_gst_install_plugins_sync(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "details", "context", NULL };
+    PyObject *py_ctx;
+    GstInstallPluginsContext *ctx;
+    GstInstallPluginsReturn ret;
+    gchar **details;
+    gint len;
+    PyObject *py_ret;
+    PyObject *py_details;
+    Py_ssize_t i;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO:install_plugins_async",
+				     kwlist, &py_details, &py_ctx))
+	return NULL;
+
+    if (!pyg_boxed_check(py_ctx, GST_TYPE_INSTALL_PLUGINS_CONTEXT)) {
+	PyErr_SetString(PyExc_TypeError, "Argument 2 must be a gst.pbutils.InstallPluginsContext");
+	return NULL;
+    }
+
+    len = PySequence_Size(py_details);
+    if ((!PySequence_Check(py_details)) || (len < 1)) {
+	PyErr_SetString(PyExc_TypeError, "Details need to be a non-empty list or tuple of strings");
+	Py_DECREF(py_details);
+	return NULL;
+    }
+
+    details = g_new0(gchar*, len+1);
+
+    /* Check all items in py_details are strings */
+    for (i = 0; i < len; i++) {
+	PyObject *py_str = PySequence_GetItem(py_details, i);
+	gchar *str;
+
+	if (!PyString_Check(py_str)) {
+	    PyErr_SetString(PyExc_TypeError, "Details need to be a non-empty list or tuple of strings");
+	    Py_DECREF(py_str);
+	    Py_DECREF(py_details);
+	    return NULL;
+	}
+	if (!(str = PyString_AsString(py_str))) {
+	    Py_DECREF(py_str);
+	    Py_DECREF(py_details);
+	    return NULL;
+	}
+	details[i] = g_strdup(str);
+	Py_DECREF(py_str);
+    }
+    
+    ctx = (GstInstallPluginsContext *) pyg_boxed_get(py_ctx, GstInstallPluginsContext);
+    ret = gst_install_plugins_sync(details, ctx);
+
+    g_strfreev(details);
+
+    py_ret = pyg_enum_from_gtype(GST_TYPE_INSTALL_PLUGINS_RETURN, ret);
+    return py_ret;
+}

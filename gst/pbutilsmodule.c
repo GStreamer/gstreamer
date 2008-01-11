@@ -32,6 +32,8 @@ void pypbutils_add_constants(PyObject *module, const gchar *strip_prefix);
 		
 extern PyMethodDef pypbutils_functions[];
 
+GST_DEBUG_CATEGORY (pygst_debug); /* for python code */
+
 DL_EXPORT(void)
 initpbutils (void)
 {

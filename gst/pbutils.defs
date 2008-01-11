@@ -2,6 +2,12 @@
 ; object definitions ...
 ;; Enumerations and flags ...
 
+(define-boxed InstallPluginsContext
+  (in-module "Gst")
+  (c-name "GstInstallPluginsContext")
+  (gtype-id "GST_TYPE_INSTALL_PLUGINS_CONTEXT")
+)
+
 (define-enum InstallPluginsReturn
   (in-module "Gst")
   (c-name "GstInstallPluginsReturn")
@@ -149,7 +155,6 @@
 
 (define-function missing_uri_source_message_new
   (c-name "gst_missing_uri_source_message_new")
-  (is-constructor-of "GstMissingUriSourceMessage")
   (return-type "GstMessage*")
   (parameters
     '("GstElement*" "element")
@@ -159,7 +164,6 @@
 
 (define-function missing_uri_sink_message_new
   (c-name "gst_missing_uri_sink_message_new")
-  (is-constructor-of "GstMissingUriSinkMessage")
   (return-type "GstMessage*")
   (parameters
     '("GstElement*" "element")
@@ -169,7 +173,6 @@
 
 (define-function missing_element_message_new
   (c-name "gst_missing_element_message_new")
-  (is-constructor-of "GstMissingElementMessage")
   (return-type "GstMessage*")
   (parameters
     '("GstElement*" "element")
@@ -179,7 +182,6 @@
 
 (define-function missing_decoder_message_new
   (c-name "gst_missing_decoder_message_new")
-  (is-constructor-of "GstMissingDecoderMessage")
   (return-type "GstMessage*")
   (parameters
     '("GstElement*" "element")
@@ -189,7 +191,6 @@
 
 (define-function missing_encoder_message_new
   (c-name "gst_missing_encoder_message_new")
-  (is-constructor-of "GstMissingEncoderMessage")
   (return-type "GstMessage*")
   (parameters
     '("GstElement*" "element")
@@ -223,7 +224,6 @@
 
 (define-function missing_uri_source_installer_detail_new
   (c-name "gst_missing_uri_source_installer_detail_new")
-  (is-constructor-of "GstMissingUriSourceInstallerDetail")
   (return-type "gchar*")
   (parameters
     '("const-gchar*" "protocol")
@@ -232,7 +232,6 @@
 
 (define-function missing_uri_sink_installer_detail_new
   (c-name "gst_missing_uri_sink_installer_detail_new")
-  (is-constructor-of "GstMissingUriSinkInstallerDetail")
   (return-type "gchar*")
   (parameters
     '("const-gchar*" "protocol")
@@ -241,7 +240,6 @@
 
 (define-function missing_element_installer_detail_new
   (c-name "gst_missing_element_installer_detail_new")
-  (is-constructor-of "GstMissingElementInstallerDetail")
   (return-type "gchar*")
   (parameters
     '("const-gchar*" "factory_name")
@@ -250,7 +248,6 @@
 
 (define-function missing_decoder_installer_detail_new
   (c-name "gst_missing_decoder_installer_detail_new")
-  (is-constructor-of "GstMissingDecoderInstallerDetail")
   (return-type "gchar*")
   (parameters
     '("const-GstCaps*" "decode_caps")
@@ -259,7 +256,6 @@
 
 (define-function missing_encoder_installer_detail_new
   (c-name "gst_missing_encoder_installer_detail_new")
-  (is-constructor-of "GstMissingEncoderInstallerDetail")
   (return-type "gchar*")
   (parameters
     '("const-GstCaps*" "encode_caps")
