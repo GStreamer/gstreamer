@@ -59,6 +59,14 @@ class Model (GUI.LogModelBase):
 
         return ""
 
+class IdentityFilter (GUI.Filter):
+
+    def __init__ (self):
+
+        def filter_func (row):
+            return True
+        self.filter_func = filter_func
+
 class RandomFilter (GUI.Filter):
 
     def __init__ (self, seed):
@@ -71,6 +79,72 @@ class RandomFilter (GUI.Filter):
         self.filter_func = filter_func
 
 class TestDynamicFilter (TestCase):
+
+    def test_unset_filter_rerange (self):
+
+        full_model = Model ()
+        ranged_model = GUI.RangeFilteredLogModel (full_model)
+        # FIXME: Call to .reset should not be needed.
+        ranged_model.reset ()
+        filtered_model = GUI.FilteredLogModel (ranged_model)
+        row_list = self.__row_list
+
+        self.assertEquals (row_list (full_model), range (20))
+        self.assertEquals (row_list (ranged_model), range (20))
+        self.assertEquals (row_list (filtered_model), range (20))
+
+        ranged_model.set_range (5, 15)
+        filtered_model.super_model_changed_range ()
+
+        self.assertEquals (row_list (ranged_model), range (5, 16))
+        self.assertEquals (row_list (filtered_model), range (5, 16))
+
+        self.assertEquals ([filtered_model.line_index_from_super (i)
+                            for i in range (11)],
+                           range (11))
+        self.assertEquals ([filtered_model.line_index_to_super (i)
+                            for i in range (11)],
+                           range (11))
+        self.assertEquals ([filtered_model.line_index_from_top (i)
+                            for i in range (5, 16)],
+                           range (11))
+        self.assertEquals ([filtered_model.line_index_to_top (i)
+                            for i in range (11)],
+                           range (5, 16))
+
+    def test_identity_filter_rerange (self):
+
+        full_model = Model ()
+        ranged_model = GUI.RangeFilteredLogModel (full_model)
+        # FIXME: Call to .reset should not be needed.
+        ranged_model.reset ()
+        filtered_model = GUI.FilteredLogModel (ranged_model)
+        row_list = self.__row_list
+
+        self.assertEquals (row_list (full_model), range (20))
+        self.assertEquals (row_list (ranged_model), range (20))
+        self.assertEquals (row_list (filtered_model), range (20))
+
+        filtered_model.add_filter (IdentityFilter (),
+                                   Common.Data.DefaultDispatcher ())
+        ranged_model.set_range (5, 15)
+        filtered_model.super_model_changed_range ()
+
+        self.assertEquals (row_list (ranged_model), range (5, 16))
+        self.assertEquals (row_list (filtered_model), range (5, 16))
+
+        self.assertEquals ([filtered_model.line_index_from_super (i)
+                            for i in range (11)],
+                           range (11))
+        self.assertEquals ([filtered_model.line_index_to_super (i)
+                            for i in range (11)],
+                           range (11))
+        self.assertEquals ([filtered_model.line_index_from_top (i)
+                            for i in range (5, 16)],
+                           range (11))
+        self.assertEquals ([filtered_model.line_index_to_top (i)
+                            for i in range (11)],
+                           range (5, 16))
 
     def test_filtered_range_refilter (self):
 
