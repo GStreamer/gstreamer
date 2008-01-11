@@ -51,6 +51,15 @@
 #define GST_CAT_DEFAULT theoradec_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+/* With libtheora-1.0beta1 the granulepos scheme was changed:
+ * where earlier the granulepos refered to the index/beginning
+ * of a frame, it now refers to the end, which matches the use
+ * in vorbis/speex. There don't seem to be defines for the
+ * theora version we're compiling against, so we'll just use
+ * a run-time check for now. See theora_enc_get_ogg_packet_end_time().
+ */
+static gboolean use_old_granulepos;
+
 #define THEORA_DEF_CROP         TRUE
 enum
 {
@@ -141,6 +150,8 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
   gstelement_class->change_state = theora_dec_change_state;
 
   GST_DEBUG_CATEGORY_INIT (theoradec_debug, "theoradec", 0, "Theora decoder");
+
+  use_old_granulepos = (theora_version_number () <= 0x00030200);
 }
 
 static void
@@ -212,11 +223,13 @@ _theora_ilog (unsigned int v)
   return (ret);
 }
 
+/* Return the frame number (starting from zero) corresponding to this 
+ * granulepos */
 static gint64
 _theora_granule_frame (GstTheoraDec * dec, gint64 granulepos)
 {
   guint ilog;
-  gint framecount;
+  gint framenum;
 
   if (granulepos == -1)
     return -1;
@@ -225,16 +238,21 @@ _theora_granule_frame (GstTheoraDec * dec, gint64 granulepos)
 
   /* granulepos is last ilog bits for counting pframes since last iframe and 
    * bits in front of that for the framenumber of the last iframe. */
-  framecount = granulepos >> ilog;
-  framecount += granulepos - (framecount << ilog);
+  framenum = granulepos >> ilog;
+  framenum += granulepos - (framenum << ilog);
 
-  GST_DEBUG_OBJECT (dec, "framecount=%d, ilog=%u", framecount, ilog);
+  /* This is 1-based for current libtheora, 0 based for old. Fix up. */
+  if (!use_old_granulepos)
+    framenum -= 1;
 
-  return framecount;
+  GST_DEBUG_OBJECT (dec, "framecount=%d, ilog=%u", framenum, ilog);
+
+  return framenum;
 }
 
+/* Return the frame start time corresponding to this granulepos */
 static GstClockTime
-_theora_granule_time (GstTheoraDec * dec, gint64 granulepos)
+_theora_granule_start_time (GstTheoraDec * dec, gint64 granulepos)
 {
   gint64 framecount;
 
@@ -407,7 +425,7 @@ theora_dec_sink_convert (GstPad * pad,
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_TIME:
-          *dest_value = _theora_granule_time (dec, src_value);
+          *dest_value = _theora_granule_start_time (dec, src_value);
           break;
         default:
           res = FALSE;
@@ -1224,9 +1242,9 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
   if (dec->have_header) {
     if (packet.granulepos != -1) {
       dec->granulepos = packet.granulepos;
-      dec->last_timestamp = _theora_granule_time (dec, packet.granulepos);
+      dec->last_timestamp = _theora_granule_start_time (dec, packet.granulepos);
     } else if (dec->last_timestamp != -1) {
-      dec->last_timestamp = _theora_granule_time (dec, dec->granulepos);
+      dec->last_timestamp = _theora_granule_start_time (dec, dec->granulepos);
     }
     if (dec->last_timestamp == -1 && GST_BUFFER_TIMESTAMP_IS_VALID (buf))
       dec->last_timestamp = GST_BUFFER_TIMESTAMP (buf);

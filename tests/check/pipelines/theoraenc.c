@@ -23,6 +23,8 @@
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstbufferstraw.h>
 
+#include <theora/theora.h>
+
 #ifndef GST_DISABLE_PARSE
 
 #define TIMESTAMP_OFFSET G_GINT64_CONSTANT(3249870963)
@@ -50,11 +52,28 @@
       ", but got duration %" GST_TIME_FORMAT, \
       GST_TIME_ARGS (duration), GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)))
 
+static gboolean old_libtheora;
+
+static void
+check_libtheora (void)
+{
+  old_libtheora = (theora_version_number () <= 0x00030200);
+}
+
 static void
 check_buffer_granulepos (GstBuffer * buffer, gint64 granulepos)
 {
   GstClockTime clocktime;
   int framecount;
+
+  /* With old versions of libtheora, the granulepos represented the
+   * start time, not end time. Adapt for that. */
+  if (old_libtheora) {
+    if (granulepos >> GRANULEPOS_SHIFT)
+      granulepos -= 1 << GRANULEPOS_SHIFT;
+    else if (granulepos)
+      granulepos -= 1;
+  }
 
   fail_unless (GST_BUFFER_OFFSET_END (buffer) == granulepos,
       "expected granulepos %" G_GUINT64_FORMAT
@@ -87,6 +106,15 @@ check_buffer_granulepos_from_starttime (GstBuffer * buffer,
   gint64 granulepos, expected, framecount;
 
   granulepos = GST_BUFFER_OFFSET_END (buffer);
+  /* Now convert to 'granulepos for start time', depending on libtheora 
+   * version */
+  if (!old_libtheora) {
+    if (granulepos & ((1 << GRANULEPOS_SHIFT) - 1))
+      granulepos -= 1;
+    else if (granulepos)
+      granulepos -= 1 << GRANULEPOS_SHIFT;
+  }
+
   framecount = granulepos >> GRANULEPOS_SHIFT;
   framecount += granulepos & ((1 << GRANULEPOS_SHIFT) - 1);
   expected = gst_util_uint64_scale (starttime, FRAMERATE, GST_SECOND);
@@ -95,7 +123,7 @@ check_buffer_granulepos_from_starttime (GstBuffer * buffer,
       "expected frame count %" G_GUINT64_FORMAT
       " or %" G_GUINT64_FORMAT
       ", but got frame count %" G_GUINT64_FORMAT,
-      expected, expected + 1, granulepos);
+      expected, expected + 1, framecount);
 }
 
 GST_START_TEST (test_granulepos_offset)
@@ -257,7 +285,7 @@ GST_START_TEST (test_continuity)
     check_buffer_timestamp (buffer, 0);
     /* plain division because I know the answer is exact */
     check_buffer_duration (buffer, GST_SECOND / 10);
-    check_buffer_granulepos (buffer, 0);
+    check_buffer_granulepos (buffer, 1 << GRANULEPOS_SHIFT);
     check_buffer_is_header (buffer, FALSE);
 
     next_timestamp = GST_BUFFER_DURATION (buffer);
@@ -268,7 +296,7 @@ GST_START_TEST (test_continuity)
     buffer = gst_buffer_straw_get_buffer (bin, pad);
     check_buffer_timestamp (buffer, next_timestamp);
     check_buffer_duration (buffer, GST_SECOND / 10);
-    check_buffer_granulepos (buffer, 1);
+    check_buffer_granulepos (buffer, (1 << GRANULEPOS_SHIFT) | 1);
     check_buffer_is_header (buffer, FALSE);
 
     gst_buffer_unref (buffer);
@@ -360,7 +388,7 @@ GST_START_TEST (test_discontinuity)
     check_buffer_timestamp (buffer, 0);
     /* plain division because I know the answer is exact */
     check_buffer_duration (buffer, GST_SECOND / 10);
-    check_buffer_granulepos (buffer, 0);
+    check_buffer_granulepos (buffer, 1 << GRANULEPOS_SHIFT);
     check_buffer_is_header (buffer, FALSE);
     fail_if (GST_BUFFER_IS_DISCONT (buffer), "expected continuous buffer yo");
     gst_buffer_unref (buffer);
@@ -369,8 +397,8 @@ GST_START_TEST (test_discontinuity)
     buffer = gst_buffer_straw_get_buffer (bin, pad);
     check_buffer_duration (buffer, GST_SECOND / 10);
     /* After a discont, we'll always get a keyframe, so this one should be 
-     * 2<<GRANULEPOS_SHIFT */
-    check_buffer_granulepos (buffer, 2 << GRANULEPOS_SHIFT);
+     * 3<<GRANULEPOS_SHIFT */
+    check_buffer_granulepos (buffer, 3 << GRANULEPOS_SHIFT);
     check_buffer_is_header (buffer, FALSE);
     fail_unless (GST_BUFFER_IS_DISCONT (buffer),
         "expected discontinuous buffer yo");
@@ -381,7 +409,7 @@ GST_START_TEST (test_discontinuity)
     fail_if (GST_BUFFER_IS_DISCONT (buffer), "expected continuous buffer yo");
     /* plain division because I know the answer is exact */
     check_buffer_duration (buffer, GST_SECOND / 10);
-    check_buffer_granulepos (buffer, (2 << GRANULEPOS_SHIFT) + 1);
+    check_buffer_granulepos (buffer, (3 << GRANULEPOS_SHIFT) | 1);
     check_buffer_is_header (buffer, FALSE);
     gst_buffer_unref (buffer);
   }
@@ -405,6 +433,8 @@ theoraenc_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+
+  check_libtheora ();
 
 #ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_granulepos_offset);

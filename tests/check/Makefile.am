@@ -288,6 +288,9 @@ pipelines_vorbisdec_CFLAGS = $(AM_CFLAGS)
 pipelines_oggmux_LDADD = $(LDADD) $(OGG_LIBS)
 pipelines_oggmux_CFLAGS = $(AM_CFLAGS) $(OGG_CFLAGS)
 
+pipelines_theoraenc_CFLAGS = $(GST_CFLAGS) $(THEORA_CFLAGS)
+pipelines_theoraenc_LDADD = $(LDADD) $(THEORA_LIBS)
+
 pipelines_simple_launch_lines_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)

@@ -1,3 +1,26 @@
+2008-01-11  Michael Smith <msmith@fluendo.com>
+
+	* ext/theora/theoradec.c: (gst_theora_dec_class_init),
+	(_theora_granule_frame), (_theora_granule_start_time),
+	(theora_dec_sink_convert), (theora_dec_decode_buffer):
+	  Adapt for post-alpha meaning of granulepos, when we
+	  have a newer version of libtheora.
+	* ext/theora/theoraenc.c: (gst_theora_enc_class_init),
+	(theora_enc_get_ogg_packet_end_time), (theora_enc_sink_event),
+	(theora_enc_is_discontinuous), (theora_enc_chain):
+	  Likewise.
+	* tests/check/Makefile.am:
+	  Link libtheora into theoraenc test so we can check which version of
+	  libtheora we're testing against.
+	* tests/check/pipelines/theoraenc.c: (check_libtheora),
+	(check_buffer_granulepos),
+	(check_buffer_granulepos_from_starttime), (GST_START_TEST),
+	(theoraenc_suite):
+	  Adapt tests to check the values that are now defined for theora; make
+	  the tests backwards-adapt the passed values if we're running against an
+	  old libtheora.
+	  Fixes #497964
+
 2008-01-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
