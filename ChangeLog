@@ -1,3 +1,8 @@
+2008-01-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/elements/icydemux.c: (GST_START_TEST), (icydemux_suite):
+	  Don't use deprecated GST_PLUGIN_DEFINE_STATIC.
+
 2008-01-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* autogen.sh:

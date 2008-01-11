@@ -72,20 +72,6 @@ typefind_succeed (GstTypeFind * tf, gpointer private)
   }
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gst_type_find_register (plugin, "success", GST_RANK_PRIMARY, typefind_succeed,
-      NULL, gst_static_caps_get (&typefind_caps), NULL, NULL);
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    "gst-test",
-    "test plugin for icydemux",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
-
 static void
 icydemux_found_pad (GstElement * src, GstPad * pad, gpointer data)
 {
@@ -162,6 +148,10 @@ GST_START_TEST (test_demux)
   const GValue *tag_val;
   const gchar *tag;
   GstCaps *caps;
+
+  fail_unless (gst_type_find_register (NULL, "success", GST_RANK_PRIMARY,
+          typefind_succeed, NULL, gst_static_caps_get (&typefind_caps), NULL,
+          NULL));
 
   fake_typefind_caps = TRUE;
 
@@ -252,19 +242,4 @@ icydemux_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = icydemux_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (icydemux)
