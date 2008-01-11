@@ -1,3 +1,14 @@
+2008-01-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/elements/rganalysis.c: (test_buffer_const_float_mono),
+	  (test_buffer_const_float_stereo), (test_buffer_const_int16_mono),
+	  (test_buffer_const_int16_stereo), (test_buffer_square_float_mono),
+	  (test_buffer_square_float_stereo), (test_buffer_square_int16_mono),
+	  (test_buffer_square_int16_stereo):
+	* tests/check/elements/rglimiter.c: (create_test_buffer):
+	* tests/check/elements/rgvolume.c: (test_buffer_new):
+	  It's "endianness", not "endianess". Fixes unit tests.
+
 2008-01-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_clock_rate):

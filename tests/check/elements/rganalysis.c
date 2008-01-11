@@ -365,7 +365,7 @@ test_buffer_const_float_mono (gint sample_rate, gsize n_frames, gfloat value)
 
   caps = gst_caps_new_simple ("audio/x-raw-float",
       "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1,
-      "endianess", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);
 
@@ -390,7 +390,7 @@ test_buffer_const_float_stereo (gint sample_rate, gsize n_frames,
 
   caps = gst_caps_new_simple ("audio/x-raw-float",
       "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2,
-      "endianess", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);
 
@@ -413,7 +413,7 @@ test_buffer_const_int16_mono (gint sample_rate, gint depth, gsize n_frames,
 
   caps = gst_caps_new_simple ("audio/x-raw-int",
       "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1,
-      "endianess", G_TYPE_INT, G_BYTE_ORDER, "signed", G_TYPE_BOOLEAN, TRUE,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, "signed", G_TYPE_BOOLEAN, TRUE,
       "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, depth, NULL);
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);
@@ -439,7 +439,7 @@ test_buffer_const_int16_stereo (gint sample_rate, gint depth, gsize n_frames,
 
   caps = gst_caps_new_simple ("audio/x-raw-int",
       "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2,
-      "endianess", G_TYPE_INT, G_BYTE_ORDER, "signed", G_TYPE_BOOLEAN, TRUE,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, "signed", G_TYPE_BOOLEAN, TRUE,
       "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, depth, NULL);
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);
@@ -473,7 +473,7 @@ test_buffer_square_float_mono (gint * accumulator, gint sample_rate,
 
   caps = gst_caps_new_simple ("audio/x-raw-float",
       "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1,
-      "endianess", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);
 
@@ -506,7 +506,7 @@ test_buffer_square_float_stereo (gint * accumulator, gint sample_rate,
 
   caps = gst_caps_new_simple ("audio/x-raw-float",
       "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2,
-      "endianess", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);
 
@@ -536,7 +536,7 @@ test_buffer_square_int16_mono (gint * accumulator, gint sample_rate,
 
   caps = gst_caps_new_simple ("audio/x-raw-int",
       "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1,
-      "endianess", G_TYPE_INT, G_BYTE_ORDER, "signed", G_TYPE_BOOLEAN, TRUE,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, "signed", G_TYPE_BOOLEAN, TRUE,
       "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, depth, NULL);
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);
@@ -570,7 +570,7 @@ test_buffer_square_int16_stereo (gint * accumulator, gint sample_rate,
 
   caps = gst_caps_new_simple ("audio/x-raw-int",
       "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2,
-      "endianess", G_TYPE_INT, G_BYTE_ORDER, "signed", G_TYPE_BOOLEAN, TRUE,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, "signed", G_TYPE_BOOLEAN, TRUE,
       "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, depth, NULL);
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);

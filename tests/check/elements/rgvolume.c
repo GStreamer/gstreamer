@@ -179,7 +179,7 @@ test_buffer_new (gfloat value)
     data[i] = value;
 
   caps = gst_caps_from_string ("audio/x-raw-float, "
-      "rate = 8000, channels = 1, endianess = BYTE_ORDER, width = 32");
+      "rate = 8000, channels = 1, endianness = BYTE_ORDER, width = 32");
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);
 
