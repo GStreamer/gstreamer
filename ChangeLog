@@ -1,3 +1,8 @@
+2008-01-12  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst-libs/gst/tag/Makefile.am:
+	Fix include path order
+
 2008-01-11  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst-libs/gst/pbutils/install-plugins.c:
