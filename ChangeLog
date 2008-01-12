@@ -1,3 +1,33 @@
+2008-01-12  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/gst.c:
+	_gst_trace_on is already provided by gsttrace.h, no need to declare
+	it ourselves.
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	Add 'buffers', 'check_cond' and 'check_mutex' from libgstcheck
+	and remove strange tcase_add_test which is outputting a warning.
+
+	* libs/gst/check/gstcheck.c:
+	* libs/gst/check/gstcheck.h:
+	Properly declare 'buffers', 'check_cond', 'check_mutex' extern
+	and define them in gstcheck.c instead of having every .c file whcih
+	includes gstcheck.h be defining its own copy and relying on symbol
+	interposing to marry them all, which doesn't work on Solaris.
+
+	* tests/check/elements/identity.c: (GST_START_TEST):
+	Don't define 'buffers' locally, it comes from libgstcheck.
+
+	* tests/check/generic/sinks.c: (send_buffer):
+	Fix type of variable (GstFlowReturn, not GstStateChangeReturn)
+
+	* tests/check/gst/gststructure.c: (GST_START_TEST):
+	* tests/check/gst/gstsystemclock.c: (GST_START_TEST):
+	* tests/check/gst/gstutils.c: (GST_START_TEST):
+	* tests/check/gst/gstvalue.c: (GST_START_TEST):
+	Add a bunch of casts to make various constants fit the types
+	they're being assigned to.
+
 2008-01-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstchildproxy.c:

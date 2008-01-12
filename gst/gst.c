@@ -133,8 +133,6 @@ static gboolean gst_initialized = FALSE;
 static GList *plugin_paths = NULL;      /* for delayed processing in post_init */
 #endif
 
-extern gint _gst_trace_on;
-
 #ifndef GST_DISABLE_GST_DEBUG
 extern const gchar *priv_gst_dump_dot_dir;
 #endif

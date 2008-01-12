@@ -48,10 +48,10 @@ extern gboolean _gst_check_raised_warning;
 extern gboolean _gst_check_expecting_log;
 
 /* global variables used in test methods */
-GList * buffers;
+extern GList * buffers;
 
-GMutex *check_mutex;
-GCond *check_cond;
+extern GMutex *check_mutex;
+extern GCond *check_cond;
 
 typedef struct
 {

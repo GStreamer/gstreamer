@@ -319,10 +319,11 @@ GST_START_TEST (test_periodic_multi)
 GST_END_TEST
 GST_START_TEST (test_diff)
 {
-  GstClockTime time1[] =
-      { 0, -1, 0, 1, 2 * GST_SECOND, -GST_SECOND, -GST_SECOND };
+  GstClockTime time1[] = { 0, (GstClockTime) - 1, 0, 1, 2 * GST_SECOND,
+    (GstClockTime) - GST_SECOND, (GstClockTime) - GST_SECOND
+  };
   GstClockTime time2[] =
-      { 0, 1, 1, 0, 1 * GST_SECOND, -GST_SECOND, GST_SECOND };
+      { 0, 1, 1, 0, 1 * GST_SECOND, (GstClockTime) - GST_SECOND, GST_SECOND };
   GstClockTimeDiff d[] = { 0, 2, 1, -1, -GST_SECOND, 0, 2 * GST_SECOND };
   guint i;
 

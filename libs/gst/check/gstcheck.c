@@ -43,6 +43,10 @@ GMutex *mutex;
 GCond *start_cond;              /* used to notify main thread of thread startups */
 GCond *sync_cond;               /* used to synchronize all threads and main thread */
 
+GList *buffers = NULL;
+GMutex *check_mutex = NULL;
+GCond *check_cond = NULL;
+
 gboolean _gst_check_debug = FALSE;
 gboolean _gst_check_raised_critical = FALSE;
 gboolean _gst_check_raised_warning = FALSE;

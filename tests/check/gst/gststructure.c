@@ -44,9 +44,9 @@ GST_START_TEST (test_from_string_int)
     0xFFFF,
     0xFFFF,
     0x7FFFFFFF,
-    0x80000000,
-    0xFF000000,
-    0xFF000000,
+    (gint) 0x80000000,
+    (gint) 0xFF000000,
+    (gint) 0xFF000000,
   };
   GstStructure *structure;
   int i;

@@ -178,21 +178,21 @@ GST_START_TEST (test_deserialize_gint)
     "0xFFFFFFFFFFFFFFFF",
     "0xEFFFFFFF",
   };
+  /* some casts need to be explicit because of unsigned -> signed */
   gint results[] = {
     123456,
     -123456,
     0xFFFF,
     0xFFFF,
     0x7FFFFFFF,
-    0x80000000,
-    0x80000000,
-    0xFF000000,
+    (gint) 0x80000000,
+    (gint) 0x80000000,
+    (gint) 0xFF000000,
     -1,
-    0xFFFFFFFF,
+    (gint) 0xFFFFFFFF,
     -1,
-    /* cast needs to be explicit because of unsigned -> signed */
     (gint) 0xFFFFFFFFFFFFFFFFLL,
-    0xEFFFFFFF,
+    (gint) 0xEFFFFFFF,
   };
   int i;
 
@@ -261,7 +261,7 @@ GST_START_TEST (test_deserialize_guint)
   };
   guint results[] = {
     123456,
-    -123456,
+    (guint) - 123456,
     0xFFFF,
     0xFFFF,
     0x7FFFFFFF,

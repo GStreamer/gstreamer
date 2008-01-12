@@ -1019,7 +1019,7 @@ static void
 send_buffer (GstPad * sinkpad)
 {
   GstBuffer *buffer;
-  GstStateChangeReturn ret;
+  GstFlowReturn ret;
 
   /* push a second buffer */
   GST_DEBUG ("pushing last buffer");

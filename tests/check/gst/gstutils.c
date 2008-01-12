@@ -283,9 +283,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_guint64_to_gdouble)
 {
-  guint64 from[] = { 0, 1, 100, 10000, G_GINT64_CONSTANT (1) << 63,
-    (G_GINT64_CONSTANT (1) << 63) + 1,
-    (G_GINT64_CONSTANT (1) << 63) + (G_GINT64_CONSTANT (1) << 62)
+  guint64 from[] = { 0, 1, 100, 10000, (guint64) (1) << 63,
+    ((guint64) (1) << 63) + 1,
+    ((guint64) (1) << 63) + (G_GINT64_CONSTANT (1) << 62)
   };
   gdouble to[] = { 0., 1., 100., 10000., 9223372036854775808.,
     9223372036854775809., 13835058055282163712.
@@ -312,9 +312,9 @@ GST_START_TEST (test_gdouble_to_guint64)
   gdouble from[] = { 0., 1., 100., 10000., 9223372036854775808.,
     9223372036854775809., 13835058055282163712.
   };
-  guint64 to[] = { 0, 1, 100, 10000, G_GINT64_CONSTANT (1) << 63,
-    (G_GINT64_CONSTANT (1) << 63) + 1,
-    (G_GINT64_CONSTANT (1) << 63) + (G_GINT64_CONSTANT (1) << 62)
+  guint64 to[] = { 0, 1, 100, 10000, (guint64) (1) << 63,
+    ((guint64) (1) << 63) + 1,
+    ((guint64) (1) << 63) + (G_GINT64_CONSTANT (1) << 62)
   };
   guint64 tolerance[] = { 0, 0, 0, 0, 0, 1, 1 };
   gint i;

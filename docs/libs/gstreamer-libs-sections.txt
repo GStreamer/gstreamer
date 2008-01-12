@@ -543,7 +543,9 @@ GST_CHECK_MAIN
 gst_check_chain_func
 gst_check_abi_list
 
-tcase_add_test
+buffers
+check_cond
+check_mutex
 </SECTION>
 
 <SECTION>
