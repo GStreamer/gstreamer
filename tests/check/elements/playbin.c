@@ -378,7 +378,7 @@ DEFINE_TEST (test_missing_primary_decoder)
 
 /*** redvideo:// source ***/
 
-static guint
+static GstURIType
 gst_red_video_src_uri_get_type (void)
 {
   return GST_URI_SRC;
@@ -487,7 +487,7 @@ gst_red_video_src_init (GstRedVideoSrc * src, GstRedVideoSrcClass * klass)
 
 /*** codec:// source ***/
 
-static guint
+static GstURIType
 gst_codec_src_uri_get_type (void)
 {
   return GST_URI_SRC;

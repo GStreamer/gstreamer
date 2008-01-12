@@ -1,5 +1,17 @@
 2008-01-12  Jan Schmidt  <Jan.Schmidt@sun.com>
 
+	* tests/check/Makefile.am:
+	Fix CFLAGS to also pull in the gstcheck cflags from AM_CFLAGS.
+
+	* tests/check/elements/audiorate.c: (do_perfect_stream_test):
+	* tests/check/elements/playbin.c:
+	* tests/check/libs/mixer.c: (test_element_interface_supported),
+	(gst_implements_interface_init):
+	* tests/check/libs/rtp.c: (GST_START_TEST):
+	Fix various assignment type mismatches.
+
+2008-01-12  Jan Schmidt  <Jan.Schmidt@sun.com>
+
 	* configure.ac:
 	* gst-libs/gst/rtsp/Makefile.am:
 	Add test to see if hstrerror is available or if we need libresolv

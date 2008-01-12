@@ -87,7 +87,8 @@ test_element_class_init (TestElementClass * klass)
 }
 
 static gboolean
-test_element_interface_supported (TestElement * this, GType interface_type)
+test_element_interface_supported (GstImplementsInterface * ifacE,
+    GType interface_type)
 {
   if (interface_type == GST_TYPE_MIXER)
     return TRUE;
@@ -98,7 +99,7 @@ test_element_interface_supported (TestElement * this, GType interface_type)
 static void
 gst_implements_interface_init (GstImplementsInterfaceClass * klass)
 {
-  klass->supported = (gpointer) test_element_interface_supported;
+  klass->supported = test_element_interface_supported;
 }
 
 static void

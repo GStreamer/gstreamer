@@ -66,8 +66,8 @@ GST_START_TEST (test_rtp_buffer)
 
   /* check ssrc offset */
   gst_rtp_buffer_set_ssrc (buf, 0xf04043C2);
-  fail_unless_equals_int (gst_rtp_buffer_get_ssrc (buf), 0xf04043c2);
-  fail_unless_equals_int (GST_READ_UINT32_BE (data + 4 + 4), 0xf04043c2);
+  fail_unless_equals_int (gst_rtp_buffer_get_ssrc (buf), (gint) 0xf04043c2);
+  fail_unless_equals_int (GST_READ_UINT32_BE (data + 4 + 4), (gint) 0xf04043c2);
   gst_rtp_buffer_set_ssrc (buf, 0);
   fail_unless_equals_int (gst_rtp_buffer_get_ssrc (buf), 0);
   fail_unless_equals_int (GST_READ_UINT32_BE (data + 4 + 4), 0);

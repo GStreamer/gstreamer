@@ -191,7 +191,7 @@ do_perfect_stream_test (guint rate, guint width, gdouble drop_probability,
   GstPad *srcpad;
   GList *l, *bufs = NULL;
   GstClockTime next_time = GST_CLOCK_TIME_NONE;
-  gint64 next_offset = GST_BUFFER_OFFSET_NONE;
+  guint64 next_offset = GST_BUFFER_OFFSET_NONE;
 
   caps = gst_caps_new_simple ("audio/x-raw-int", "rate", G_TYPE_INT,
       rate, "width", G_TYPE_INT, width, NULL);
