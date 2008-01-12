@@ -1,5 +1,6 @@
 /*
- * (c) 2006 Christophe Fergeau  <teuf@gnome.org>
+ * Copyright (c) 2006 Christophe Fergeau  <teuf@gnome.org>
+ * Copyright (c) 2008 Sebastian Dröge  <slomo@circular-chaos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,17 +19,29 @@
  */
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
-typedef struct _GstXingMuxPriv GstXingMuxPriv;
+typedef struct _GstXingSeekEntry
+{
+  gint64 timestamp;
+  gint byte;
+} GstXingSeekEntry;
 
 /* Definition of structure storing data for this element. */
 typedef struct _GstXingMux {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
-  
-  GstXingMuxPriv *priv;
 
+  GstAdapter *adapter;
+  GstClockTime duration;
+  guint64 byte_count;
+  guint64 frame_count;
+  GList *seek_table;
+  gboolean sent_xing;
+
+  /* Copy of the first frame header */
+  guint32 first_header;
 } GstXingMux;
 
 /* Standard definition defining a class for this element. */
