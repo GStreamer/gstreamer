@@ -1,5 +1,6 @@
 /*
- * (c) 2006 Christophe Fergeau  <teuf@gnome.org>
+ * Copyright (c) 2006 Christophe Fergeau  <teuf@gnome.org>
+ * Copyright (c) 2008 Sebastian Dröge  <slomo@circular-chaos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,6 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* Xing SDK: http://www.mp3-tech.org/programmer/sources/vbrheadersdk.zip */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -31,44 +33,23 @@ GST_DEBUG_CATEGORY_STATIC (xing_mux_debug);
 GST_BOILERPLATE (GstXingMux, gst_xing_mux, GstElement, GST_TYPE_ELEMENT);
 
 /* Xing Header stuff */
-struct _GstXingMuxPriv
-{
-  GstClockTime duration;
-  guint64 byte_count;
-  GList *seek_table;
-  gboolean flush;
-};
-
 #define GST_XING_FRAME_FIELD   (1 << 0)
 #define GST_XING_BYTES_FIELD   (1 << 1)
 #define GST_XING_TOC_FIELD     (1 << 2)
 #define GST_XING_QUALITY_FIELD (1 << 3)
 
-static const int XING_FRAME_SIZE = 417;
-
+static void gst_xing_mux_finalize (GObject * obj);
 static GstStateChangeReturn
 gst_xing_mux_change_state (GstElement * element, GstStateChange transition);
 static GstFlowReturn gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_xing_mux_sink_event (GstPad * pad, GstEvent * event);
-
-
-static void
-gst_xing_mux_finalize (GObject * obj)
-{
-  GstXingMux *xing = GST_XING_MUX (obj);
-
-  g_free (xing->priv);
-  xing->priv = NULL;
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
 
 static GstStaticPadTemplate gst_xing_mux_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg, "
-        "mpegversion = (int) 1, " "layer = (int) 3"));
+        "mpegversion = (int) 1, " "layer = (int) [ 1, 3 ]"));
 
 
 static GstStaticPadTemplate gst_xing_mux_src_template =
@@ -76,8 +57,270 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg, "
-        "mpegversion = (int) 1, " "layer = (int) 3"));
+        "mpegversion = (int) 1, " "layer = (int) [ 1, 3 ]"));
+static const guint mp3types_bitrates[2][3][16] = {
+  {
+        {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448,},
+        {0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384,},
+        {0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320,}
+      },
+  {
+        {0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256,},
+        {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160,},
+        {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160,}
+      },
+};
 
+static const guint mp3types_freqs[3][3] = { {44100, 48000, 32000},
+{22050, 24000, 16000},
+{11025, 12000, 8000}
+};
+
+static gboolean
+parse_header (guint32 header, guint * ret_size, guint * ret_spf,
+    gulong * ret_rate)
+{
+  guint length, spf;
+  gulong mode, samplerate, bitrate, layer, channels, padding;
+  gint lsf, mpg25;
+
+  if ((header & 0xffe00000) != 0xffe00000) {
+    g_warning ("invalid sync");
+    return FALSE;
+  }
+
+  if (((header >> 19) & 3) == 0x01) {
+    g_warning ("invalid MPEG version");
+    return FALSE;
+  }
+
+  if (((header >> 17) & 3) == 0x00) {
+    g_warning ("invalid MPEG layer");
+    return FALSE;
+  }
+
+  if (((header >> 12) & 0xf) == 0xf || ((header >> 12) & 0xf) == 0x0) {
+    g_warning ("invalid bitrate");
+    return FALSE;
+  }
+
+  if (((header >> 10) & 0x3) == 0x3) {
+    g_warning ("invalid sampling rate");
+    return FALSE;
+  }
+
+  if (header & 0x00000002) {
+    g_warning ("invalid emphasis");
+    return FALSE;
+  }
+
+  if (header & (1 << 20)) {
+    lsf = (header & (1 << 19)) ? 0 : 1;
+    mpg25 = 0;
+  } else {
+    lsf = 1;
+    mpg25 = 1;
+  }
+
+  if (header & (1 << 20)) {
+    lsf = (header & (1 << 19)) ? 0 : 1;
+    mpg25 = 0;
+  } else {
+    lsf = 1;
+    mpg25 = 1;
+  }
+
+  layer = 4 - ((header >> 17) & 0x3);
+
+  bitrate = (header >> 12) & 0xF;
+  bitrate = mp3types_bitrates[lsf][layer - 1][bitrate] * 1000;
+  if (bitrate == 0)
+    return 0;
+
+  samplerate = (header >> 10) & 0x3;
+  samplerate = mp3types_freqs[lsf + mpg25][samplerate];
+
+  padding = (header >> 9) & 0x1;
+
+  mode = (header >> 6) & 0x3;
+  channels = (mode == 3) ? 1 : 2;
+
+  switch (layer) {
+    case 1:
+      length = 4 * ((bitrate * 12) / samplerate + padding);
+      break;
+    case 2:
+      length = (bitrate * 144) / samplerate + padding;
+      break;
+    default:
+    case 3:
+      length = (bitrate * 144) / (samplerate << lsf) + padding;
+      break;
+  }
+
+  if (layer == 1)
+    spf = 384;
+  else if (layer == 2 || lsf == 0)
+    spf = 1152;
+  else
+    spf = 576;
+
+  if (ret_size)
+    *ret_size = length;
+  if (ret_spf)
+    *ret_spf = spf;
+  if (ret_rate)
+    *ret_rate = samplerate;
+
+  return TRUE;
+}
+
+static guint
+get_xing_offset (guint32 header)
+{
+  guint mpeg_version = (header >> 19) & 3;
+  guint channel_mode = (header >> 6) & 0x3;
+
+  if (mpeg_version == 0x11) {
+    if (channel_mode == 0x11) {
+      return 0x11;
+    } else {
+      return 0x20;
+    }
+  } else {
+    if (channel_mode == 0x11) {
+      return 0x09;
+    } else {
+      return 0x11;
+    }
+  }
+}
+
+static gboolean
+has_xing_header (guint32 header, guchar * data, gsize size)
+{
+  data += 4;
+  data += get_xing_offset (header);
+
+  if (memcmp (data, "Xing", 4) == 0 || memcmp (data, "Info", 4) == 0)
+    return TRUE;
+  else
+    return FALSE;
+}
+
+static GstBuffer *
+generate_xing_header (GstXingMux * xing)
+{
+  guint32 *xing_flags;
+  GstBuffer *xing_header;
+  guchar *data;
+
+  guint32 header;
+  guint32 header_be;
+  guint size, spf;
+  gulong rate;
+
+  gint64 duration;
+  gint64 byte_count;
+
+  header = xing->first_header;
+  /* Set bitrate */
+  /* TODO: Choose smallest possible value */
+  header &= 0xffff0fff;
+  header |= 0xa << 12;          /* 0101b */
+
+  parse_header (header, &size, &spf, &rate);
+
+  if (gst_pad_alloc_buffer_and_set_caps (xing->srcpad, 0, size,
+          GST_PAD_CAPS (xing->srcpad), &xing_header) != GST_FLOW_OK) {
+    xing_header = gst_buffer_new_and_alloc (size);
+    gst_buffer_set_caps (xing_header, GST_PAD_CAPS (xing->srcpad));
+  }
+
+  data = GST_BUFFER_DATA (xing_header);
+  memset (data, 0, size);
+  header_be = GUINT32_TO_BE (header);
+  memcpy (data, &header_be, 4);
+
+  data += 4;
+  data += get_xing_offset (header);
+
+  memcpy (data, "Xing", 4);
+  data += 4;
+
+  xing_flags = (guint32 *) data;
+  data += 4;
+
+  if (xing->duration != GST_CLOCK_TIME_NONE) {
+    duration = xing->duration;
+  } else {
+    GstFormat fmt = GST_FORMAT_TIME;
+
+    if (!gst_pad_query_peer_duration (xing->sinkpad, &fmt, &duration))
+      duration = GST_CLOCK_TIME_NONE;
+  }
+
+  if (duration != GST_CLOCK_TIME_NONE) {
+    guint32 number_of_frames;
+
+    /* The Xing Header contains a NumberOfFrames field, which verifies to:
+     * Duration = NumberOfFrames *SamplesPerFrame/SamplingRate
+     * SamplesPerFrame and SamplingRate are values for the current frame. 
+     */
+    number_of_frames = gst_util_uint64_scale (duration, rate, GST_SECOND) / spf;
+    GST_DEBUG ("Setting number of frames to %u", number_of_frames);
+    number_of_frames = GUINT32_TO_BE (number_of_frames);
+    memcpy (data, &number_of_frames, 4);
+    *xing_flags |= GST_XING_FRAME_FIELD;
+    data += 4;
+  }
+
+  if (xing->byte_count != 0) {
+    byte_count = xing->byte_count;
+  } else {
+    GstFormat fmt = GST_FORMAT_BYTES;
+
+    if (!gst_pad_query_peer_duration (xing->sinkpad, &fmt, &byte_count))
+      byte_count = 0;
+    if (byte_count == -1)
+      byte_count = 0;
+  }
+
+  if (byte_count != 0) {
+    GST_DEBUG ("Setting number of bytes to %u", byte_count);
+    byte_count = GUINT32_TO_BE (byte_count);
+    memcpy (data, &byte_count, 4);
+    *xing_flags |= GST_XING_BYTES_FIELD;
+    data += 4;
+    byte_count = GUINT32_FROM_BE (byte_count);
+  }
+
+  if (xing->seek_table != NULL && byte_count != 0
+      && duration != GST_CLOCK_TIME_NONE) {
+    GList *it;
+    gint percent = 0;
+
+    *xing_flags |= GST_XING_TOC_FIELD;
+
+    GST_DEBUG ("Writing seek table");
+    for (it = xing->seek_table; it != NULL && percent < 100; it = it->next) {
+      GstXingSeekEntry *entry = (GstXingSeekEntry *) it->data;
+      gint64 byte;
+
+      if ((entry->timestamp * 100) / duration >= percent) {
+        byte = (entry->byte * 256) / byte_count;
+        GST_DEBUG ("  %d %% -- %d 1/256", percent, byte);
+        *data = byte;
+        data++;
+        percent++;
+      }
+    }
+  }
+
+  GST_DEBUG ("Setting Xing flags to 0x%x\n", *xing_flags);
+  *xing_flags = GUINT32_TO_BE (*xing_flags);
+  return xing_header;
+}
 
 static void
 gst_xing_mux_base_init (gpointer g_class)
@@ -89,7 +332,6 @@ gst_xing_mux_base_init (gpointer g_class)
       "Formatter/Metadata",
       "Adds a Xing header to the beginning of a VBR MP3 file",
       "Christophe Fergeau <teuf@gnome.org>");
-
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_xing_mux_src_template));
@@ -113,13 +355,34 @@ gst_xing_mux_class_init (GstXingMuxClass * klass)
 }
 
 static void
-xing_set_flush (GstXingMux * xing, gboolean flush)
+gst_xing_mux_finalize (GObject * obj)
 {
-  if (xing->priv == NULL) {
-    return;
+  GstXingMux *xing = GST_XING_MUX (obj);
+
+  if (xing->adapter) {
+    g_object_unref (xing->adapter);
+    xing->adapter = NULL;
   }
-  xing->priv->flush = flush;
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
+
+static void
+xing_reset (GstXingMux * xing)
+{
+  xing->duration = GST_CLOCK_TIME_NONE;
+  xing->byte_count = 0;
+
+  gst_adapter_clear (xing->adapter);
+
+  if (xing->seek_table) {
+    g_list_foreach (xing->seek_table, (GFunc) g_free, NULL);
+    xing->seek_table = NULL;
+  }
+
+  xing->sent_xing = FALSE;
+}
+
 
 static void
 gst_xing_mux_init (GstXingMux * xing, GstXingMuxClass * xingmux_class)
@@ -144,156 +407,92 @@ gst_xing_mux_init (GstXingMux * xing, GstXingMuxClass * xingmux_class)
           "src"), "src");
   gst_element_add_pad (GST_ELEMENT (xing), xing->srcpad);
 
-  xing->priv = g_malloc0 (sizeof (GstXingMuxPriv));
-  xing_set_flush (xing, TRUE);
-  xing->priv->duration = GST_CLOCK_TIME_NONE;
+  xing->adapter = gst_adapter_new ();
 
-}
-
-G_GNUC_UNUSED static void
-xing_update_data (GstXingMux * xing, gint bytes, guint64 duration)
-{
-  if (xing->priv == NULL) {
-    return;
-  }
-  xing->priv->byte_count += bytes;
-
-  if (duration == GST_CLOCK_TIME_NONE) {
-    return;
-  }
-  if (xing->priv->duration == GST_CLOCK_TIME_NONE) {
-    xing->priv->duration = duration;
-  } else {
-    xing->priv->duration += duration;
-  }
-}
-
-static GstBuffer *
-xing_generate_header (GstXingMux * xing)
-{
-  guint32 xing_flags;
-  GstBuffer *header;
-  guint32 *data;
-
-  /* Dummy header that we will stick at the beginning of our frame
-   *
-   * 0xffe => synchronization bits
-   * 0x1b  => 11010b (11b == MPEG1 | 01b == Layer III | 0b == no CRC)
-   * 0x9   => 128kbps
-   * 0x00  => 00b == 44100 Hz | 0b == no padding | 0b == private bit
-   * 0x44  => 0010b 0010b (00b == stereo | 10b == (unused) mode extension)
-   *                      (0b == no copyright bit | 0b == original bit)
-   *                      (00b == no emphasis)
-   *
-   * Such a frame (MPEG1 Layer III) contains 1152 samples, its size is thus:
-   * (1152*(128000/8))/44100 = 417.96 rounded to the next smaller integer, i.e.
-   * 417.
-   * 
-   * There are also 32 bytes (ie 8 32 bits values) to skip after the header 
-   * for such frames
-   */
-  const guint8 mp3_header[4] = { 0xff, 0xfb, 0x90, 0x44 };
-  const int SIDE_INFO_SIZE = 32 / sizeof (guint32);
-
-  header = gst_buffer_new_and_alloc (XING_FRAME_SIZE);
-
-  data = (guint32 *) GST_BUFFER_DATA (header);
-  memset (data, 0, XING_FRAME_SIZE);
-  memcpy (data, mp3_header, 4);
-  memcpy (&data[8 + 1], "Xing", 4);
-
-  xing_flags = 0;
-  if (xing->priv->duration != GST_CLOCK_TIME_NONE) {
-    guint32 number_of_frames;
-
-    /* The Xing Header contains a NumberOfFrames field, which verifies to:
-     * Duration = NumberOfFrames *SamplesPerFrame/SamplingRate
-     * SamplesPerFrame and SamplingRate are values for the current frame, 
-     * ie 1152 and 44100 in our case.
-     */
-
-    /* FIXME: Better count the actual number of frames as the calculation
-     * below introduces rounding errors
-     */
-    number_of_frames = gst_util_uint64_scale (xing->priv->duration, 44100,
-        GST_SECOND) / 1152;
-    data[SIDE_INFO_SIZE + 3] = GUINT32_TO_BE (number_of_frames);
-
-    xing_flags |= GST_XING_FRAME_FIELD;
-  }
-
-  if (xing->priv->byte_count != 0) {
-    xing_flags |= GST_XING_BYTES_FIELD;
-    data[SIDE_INFO_SIZE + 4] = GUINT32_TO_BE (xing->priv->byte_count);
-  }
-
-  /* TODO: Un-#ifdef when it's implemented :) xing code in VbrTag.c looks like
-   * it could be stolen
-   */
-#if 0
-  if (xing->priv->seek_table != NULL) {
-    GList *it;
-
-    xing_flags |= GST_XING_TOC_FIELD;
-    for (it = xing->priv->seek_table; it != NULL; it = it->next) {
-      /* do something */
-    }
-  }
-#endif
-
-  data[SIDE_INFO_SIZE + 2] = GUINT32_TO_BE (xing_flags);
-  gst_buffer_set_caps (header, GST_PAD_CAPS (xing->srcpad));
-  //  gst_util_dump_mem ((guchar *)data, XING_FRAME_SIZE);
-  return header;
-}
-
-static gboolean
-xing_ready_to_flush (GstXingMux * xing)
-{
-  if (xing->priv == NULL) {
-    return FALSE;
-  }
-  return xing->priv->flush;
-}
-
-static void
-xing_push_header (GstXingMux * xing)
-{
-  GstBuffer *header;
-  GstEvent *event;
-
-  /* FIXME: should actually be after any ID3v2/APE tags and before the real
-   * MP3 frames.
-   */
-  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-      0, GST_CLOCK_TIME_NONE, 0);
-
-  if (G_UNLIKELY (!gst_pad_push_event (xing->srcpad, event))) {
-    GST_WARNING ("Failed to seek to position 0 for pushing the Xing header");
-    return;
-  }
-
-  header = xing_generate_header (xing);
-  xing_set_flush (xing, FALSE);
-  GST_INFO ("Writing real Xing header to beginning of stream");
-  gst_pad_push (xing->srcpad, header);
+  xing_reset (xing);
 }
 
 static GstFlowReturn
 gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstXingMux *xing = GST_XING_MUX (GST_OBJECT_PARENT (pad));
+  GstXingMux *xing = GST_XING_MUX (GST_PAD_PARENT (pad));
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  xing_update_data (xing, GST_BUFFER_SIZE (buffer),
-      GST_BUFFER_DURATION (buffer));
+  gst_adapter_push (xing->adapter, buffer);
 
-  if (xing_ready_to_flush (xing)) {
-    GST_INFO ("Writing empty Xing header to stream");
-    gst_pad_push (xing->srcpad, xing_generate_header (xing));
-    xing_set_flush (xing, FALSE);
+  while (gst_adapter_available (xing->adapter) >= 4) {
+    const guchar *data = gst_adapter_peek (xing->adapter, 4);
+    guint32 header;
+    GstBuffer *outbuf;
+    GstClockTime duration;
+    guint size, spf;
+    gulong rate;
+    GstXingSeekEntry *seek_entry;
+
+    header = GST_READ_UINT32_BE (data);
+
+    if (!parse_header (header, &size, &spf, &rate)) {
+      GST_DEBUG ("Lost sync, resyncing");
+      gst_adapter_flush (xing->adapter, 1);
+      continue;
+    }
+
+    if (gst_adapter_available (xing->adapter) < size)
+      break;
+
+    outbuf = gst_adapter_take_buffer (xing->adapter, size);
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (xing->srcpad));
+
+    if (!xing->sent_xing) {
+      if (has_xing_header (header, GST_BUFFER_DATA (outbuf), size)) {
+        GST_LOG_OBJECT (xing, "Dropping old Xing header");
+        gst_buffer_unref (outbuf);
+        continue;
+      } else {
+        GstBuffer *xing_header;
+        guint64 xing_header_size;
+
+        xing->first_header = header;
+
+        xing_header = generate_xing_header (xing);
+        xing_header_size = GST_BUFFER_SIZE (xing_header);
+
+        if (GST_FLOW_IS_FATAL (ret = gst_pad_push (xing->srcpad, xing_header))) {
+          GST_ERROR_OBJECT (xing, "Failed to push Xing header: %s",
+              gst_flow_get_name (ret));
+          gst_buffer_unref (xing_header);
+          gst_buffer_unref (outbuf);
+          return ret;
+        }
+
+        xing->byte_count += xing_header_size;
+        xing->sent_xing = TRUE;
+      }
+    }
+
+    seek_entry = g_new (GstXingSeekEntry, 1);
+    seek_entry->timestamp =
+        (xing->duration == GST_CLOCK_TIME_NONE) ? 0 : xing->duration;
+    /* Workaround for parsers checking that the first seek table entry is 0 */
+    seek_entry->byte = (seek_entry->timestamp == 0) ? 0 : xing->byte_count;
+    xing->seek_table = g_list_append (xing->seek_table, seek_entry);
+
+    xing->byte_count += GST_BUFFER_SIZE (outbuf);
+
+    duration = gst_util_uint64_scale (spf, GST_SECOND, rate);
+    if (xing->duration == GST_CLOCK_TIME_NONE)
+      xing->duration = duration;
+    else
+      xing->duration += duration;
+
+    if (GST_FLOW_IS_FATAL (ret = gst_pad_push (xing->srcpad, outbuf))) {
+      GST_ERROR_OBJECT (xing, "Failed to push MP3 frame: %s",
+          gst_flow_get_name (ret));
+      return ret;
+    }
   }
 
-  return gst_pad_push (xing->srcpad, buffer);
+  return ret;
 }
 
 static gboolean
@@ -307,38 +506,45 @@ gst_xing_mux_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
-    {
-      gboolean update;
-      gdouble rate;
-      GstFormat format;
-      gint64 value, end_value, base;
+      if (xing->sent_xing) {
+        GST_ERROR ("Already sent Xing header, dropping NEWSEGMENT event!");
 
-      gst_event_parse_new_segment (event, &update, &rate, &format,
-          &value, &end_value, &base);
-      gst_event_unref (event);
-      if (format == GST_FORMAT_BYTES && gst_pad_is_linked (xing->srcpad)) {
-        GstEvent *new_event;
-
-        GST_INFO ("Adjusting NEW_SEGMENT event by %d", XING_FRAME_SIZE);
-        value += XING_FRAME_SIZE;
-        if (end_value != -1) {
-          end_value += XING_FRAME_SIZE;
-        }
-
-        new_event = gst_event_new_new_segment (update, rate, format,
-            value, end_value, base);
-        result = gst_pad_push_event (xing->srcpad, new_event);
-      } else {
+        gst_event_unref (event);
         result = FALSE;
+      } else {
+        result = gst_pad_push_event (xing->srcpad, event);
       }
-    }
       break;
 
-    case GST_EVENT_EOS:
+    case GST_EVENT_EOS:{
+      GstEvent *n_event;
+
       GST_DEBUG_OBJECT (xing, "handling EOS event");
-      xing_push_header (xing);
+
+      if (xing->sent_xing) {
+
+        n_event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
+            0, GST_CLOCK_TIME_NONE, 0);
+
+        if (G_UNLIKELY (!gst_pad_push_event (xing->srcpad, n_event))) {
+          GST_WARNING
+              ("Failed to seek to position 0 for pushing the Xing header");
+        } else {
+          GstBuffer *header;
+          GstFlowReturn ret;
+
+          header = generate_xing_header (xing);
+
+          GST_INFO ("Writing real Xing header to beginning of stream");
+
+          if (GST_FLOW_IS_FATAL (ret = gst_pad_push (xing->srcpad, header)))
+            GST_WARNING ("Failed to push updated Xing header: %s\n",
+                gst_flow_get_name (ret));
+        }
+      }
       result = gst_pad_push_event (xing->srcpad, event);
       break;
+    }
     default:
       result = gst_pad_event_default (pad, event);
       break;
@@ -361,8 +567,7 @@ gst_xing_mux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      memset (xing->priv, 0, sizeof (GstXingMuxPriv));
-      xing_set_flush (xing, TRUE);
+      xing_reset (xing);
       break;
     default:
       break;

@@ -1,3 +1,16 @@
+2008-01-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/xingheader/Makefile.am:
+	* gst/xingheader/gstxingmux.c: (parse_header), (get_xing_offset),
+	(has_xing_header), (generate_xing_header),
+	(gst_xing_mux_base_init), (gst_xing_mux_finalize), (xing_reset),
+	(gst_xing_mux_init), (gst_xing_mux_chain),
+	(gst_xing_mux_sink_event), (gst_xing_mux_change_state):
+	* gst/xingheader/gstxingmux.h:
+	Major cleanup and rewrite of xingmux with less bugs and new features:
+	- Handles other layers as 3
+	- Write TOC
+
 2008-01-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/elements/rganalysis.c: (test_buffer_const_float_mono),
