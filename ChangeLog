@@ -1,5 +1,12 @@
 2008-01-12  Jan Schmidt  <Jan.Schmidt@sun.com>
 
+	* configure.ac:
+	* gst-libs/gst/rtsp/Makefile.am:
+	Add test to see if hstrerror is available or if we need libresolv
+	(Solaris) for it, then use it in libgstrtsp.
+
+2008-01-12  Jan Schmidt  <Jan.Schmidt@sun.com>
+
 	* gst-libs/gst/tag/Makefile.am:
 	Fix include path order
 

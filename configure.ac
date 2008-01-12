@@ -221,6 +221,16 @@ if test "x$HAVE_WINSOCK2_H" = "xyes"; then
   AC_SUBST(WIN32_LIBS)
 fi
 
+dnl check for hstrerror, for gst-libs/gst/rtsp
+save_libs="$LIBS"
+AC_CHECK_FUNC(hstrerror, ,
+    AC_CHECK_LIB(resolv, hstrerror, ,
+        [AC_DEFINE(NO_HSTRERROR, 1,
+             [Define if you have no native hstrerror() function.])]))
+HSTRERROR_LIBS=$LIBS
+AC_SUBST(HSTRERROR_LIBS)
+LIBS="$save_libs"
+
 dnl used in gst-libs/gst/pbutils and associated unit test
 AC_CHECK_HEADERS([process.h sys/types.h sys/wait.h sys/stat.h])
 
