@@ -1,3 +1,20 @@
+2008-01-13  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	Bump requirement to core and -base >= 0.10.12 .
+	* gst/Makefile.am:
+	* gst/gstversion.override.in:
+	* gst/gst-0.10.10.ignore:
+	* gst/gst-0.10.11.ignore:
+	* gst/gst-0.10.12.ignore:
+	* gst/gst-0.10.3.ignore:
+	* gst/gst-0.10.4.ignore:
+	* gst/gst-0.10.5.ignore:
+	* gst/gst-0.10.6.ignore:
+	* gst/gst-0.10.7.ignore:
+	* gst/gst-pb-0.10.11.ignore:
+	Remove no-longer needed files.
+
 2008-01-13  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/vs6/libgstpython.dsp:

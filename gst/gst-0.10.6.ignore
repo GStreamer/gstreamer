@@ -1,8 +1,0 @@
-%%
-ignore
-  gst_event_new_new_segment_full
-  gst_event_parse_new_segment_full
-  gst_segment_set_newsegment_full
-  gst_adapter_take_buffer
-  gst_dp_packetizer_new
-%%

@@ -40,8 +40,8 @@ AC_SUBST(PYGTK_REQ, 2.6.3)
 AC_SUBST(PYGOBJECT_REQ, 2.11.2)
 AC_SUBST(GLIB_REQ,  2.8.0)
 AC_SUBST(GTK_REQ,   2.6.0)
-AC_SUBST(GST_REQ,   0.10.2)
-AC_SUBST(GSTPB_REQ, 0.10.0.2)
+AC_SUBST(GST_REQ,   0.10.12)
+AC_SUBST(GSTPB_REQ, 0.10.12)
 
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
@@ -97,66 +97,6 @@ dnl _ new core/base is released (add lines + gst-0.10.MINOR.ignore)
 
 if test "x$GST_CVS_VERSION" = "x"
 then
-  if test $GST_MINOR_VERSION -lt "3"
-  then
-    IGNORE_GST_0_10_3="gst-0.10.3.ignore"
-  else
-    IGNORE_GST_0_10_3=""
-  fi
-
-  if test $GST_MINOR_VERSION -lt "4"
-  then
-    IGNORE_GST_0_10_4="gst-0.10.4.ignore"
-  else
-    IGNORE_GST_0_10_4=""
-  fi
-
-  if test $GST_MINOR_VERSION -lt "5"
-  then
-    IGNORE_GST_0_10_5="gst-0.10.5.ignore"
-  else
-    IGNORE_GST_0_10_5=""
-  fi
-
-  if test $GST_MINOR_VERSION -lt "6"
-  then
-    IGNORE_GST_0_10_6="gst-0.10.6.ignore"
-  else
-    IGNORE_GST_0_10_6=""
-  fi
-
-  dnl 0.10.8 was a brown paperbag release
-
-  if test $GST_MINOR_VERSION -lt "8"
-  then
-    IGNORE_GST_0_10_7="gst-0.10.7.ignore"
-  else
-    IGNORE_GST_0_10_7=""
-  fi
-
-  dnl 0.10.9 didn't bring any new wrappable API
-
-  if test $GST_MINOR_VERSION -lt "10"
-  then
-    IGNORE_GST_0_10_10="gst-0.10.10.ignore"
-  else
-    IGNORE_GST_0_10_10=""
-  fi
-
-  if test $GST_MINOR_VERSION -lt "11"
-  then
-    IGNORE_GST_0_10_11="gst-0.10.11.ignore"
-  else
-    IGNORE_GST_0_10_11=""
-  fi
-
-  if test $GST_MINOR_VERSION -lt "12"
-  then
-    IGNORE_GST_0_10_12="gst-0.10.12.ignore"
-  else
-    IGNORE_GST_0_10_12=""
-  fi
-
   if test $GST_MINOR_VERSION -lt "13"
   then
     IGNORE_GST_0_10_13="gst-0.10.13.ignore"
@@ -179,14 +119,6 @@ then
   fi
 
   dnl plugins base
-  if test $GST_PB_MINOR_VERSION -lt "11"
-  then
-    IGNORE_GST_PB_0_10_11="gst-pb-0.10.11.ignore"
-  else
-    IGNORE_GST_PB_0_10_11=""
-    AC_DEFINE_UNQUOTED(HAVE_VIDEO_ORIENTATION_INTERFACE, 1, [We can use the videoorientation interface])
-  fi
-
   if test $GST_PB_MINOR_VERSION -lt "14"
   then
     IGNORE_GST_PB_0_10_14="gst-pb-0.10.14.ignore"
@@ -203,34 +135,16 @@ then
 
 
 else
-  IGNORE_GST_0_10_3=""
-  IGNORE_GST_0_10_4=""
-  IGNORE_GST_0_10_5=""
-  IGNORE_GST_0_10_6=""
-  IGNORE_GST_0_10_7=""
-  IGNORE_GST_0_10_10=""
-  IGNORE_GST_0_10_11=""
-  IGNORE_GST_0_10_12=""
   IGNORE_GST_0_10_13=""
   IGNORE_GST_0_10_14=""
   IGNORE_GST_0_10_15=""
-  IGNORE_GST_PB_0_10_11=""
   IGNORE_GST_PB_0_10_14=""
   IGNORE_GST_PB_0_10_15=""
-  AC_DEFINE_UNQUOTED(HAVE_VIDEO_ORIENTATION_INTERFACE, 1, [We can use the videoorientation interface])
 fi
-AC_SUBST(IGNORE_GST_0_10_3)
-AC_SUBST(IGNORE_GST_0_10_4)
-AC_SUBST(IGNORE_GST_0_10_5)
-AC_SUBST(IGNORE_GST_0_10_6)
-AC_SUBST(IGNORE_GST_0_10_7)
-AC_SUBST(IGNORE_GST_0_10_10)
-AC_SUBST(IGNORE_GST_0_10_11)
-AC_SUBST(IGNORE_GST_0_10_12)
+AC_DEFINE_UNQUOTED(HAVE_VIDEO_ORIENTATION_INTERFACE, 1, [We can use the videoorientation interface])
 AC_SUBST(IGNORE_GST_0_10_13)
 AC_SUBST(IGNORE_GST_0_10_14)
 AC_SUBST(IGNORE_GST_0_10_15)
-AC_SUBST(IGNORE_GST_PB_0_10_11)
 AC_SUBST(IGNORE_GST_PB_0_10_14)
 AC_SUBST(IGNORE_GST_PB_0_10_15)
 AC_SUBST(HAVE_VIDEO_ORIENTATION)

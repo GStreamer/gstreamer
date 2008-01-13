@@ -25,18 +25,9 @@ defsdir = $(pkgdatadir)/$(GST_MAJORMINOR)/defs
 noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstexception.h
 
 versioned_overrides = \
-	gst-0.10.3.ignore	\
-	gst-0.10.4.ignore	\
-	gst-0.10.5.ignore	\
-	gst-0.10.6.ignore	\
-	gst-0.10.7.ignore	\
-	gst-0.10.10.ignore	\
-	gst-0.10.11.ignore 	\
-	gst-0.10.12.ignore 	\
 	gst-0.10.13.ignore 	\
 	gst-0.10.14.ignore 	\
 	gst-0.10.15.ignore 	\
-	gst-pb-0.10.11.ignore	\
 	gst-pb-0.10.14.ignore	\
 	gst-pb-0.10.15.ignore	\
 	gst-disable-loadsave.ignore
