@@ -1,7 +1,9 @@
 
 /* Generated data (by glib-mkenums) */
 
-#include <multichannel.h>
+#include "multichannel-enumtypes.h"
+
+#include "multichannel.h"
 
 /* enumerations from "multichannel.h" */
 GType

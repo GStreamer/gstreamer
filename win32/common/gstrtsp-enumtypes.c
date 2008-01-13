@@ -1,7 +1,9 @@
 
 /* Generated data (by glib-mkenums) */
 
-#include <gstrtsp.h>
+#include "gstrtsp-enumtypes.h"
+
+#include "gstrtspdefs.h"
 
 /* enumerations from "gstrtspdefs.h" */
 GType
@@ -225,6 +227,7 @@ gst_rtsp_header_field_get_type (void)
       {GST_RTSP_HDR_LANGUAGE, "GST_RTSP_HDR_LANGUAGE", "language"},
       {GST_RTSP_HDR_PLAYER_START_TIME, "GST_RTSP_HDR_PLAYER_START_TIME",
             "player-start-time"},
+      {GST_RTSP_HDR_LOCATION, "GST_RTSP_HDR_LOCATION", "location"},
       {0, NULL, NULL}
     };
     etype = g_enum_register_static ("GstRTSPHeaderField", values);
