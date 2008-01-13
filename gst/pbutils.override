@@ -19,6 +19,7 @@
  */
 %%
 headers
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -32,6 +33,43 @@ headers
 GST_DEBUG_CATEGORY_EXTERN (pygst_debug);
 #define GST_CAT_DEFAULT pygst_debug
 
+static void
+install_plugins_result_handler(GstInstallPluginsReturn result, gpointer user_data)
+{
+    PyGILState_STATE state;
+    PyObject *callback, *args;
+    PyObject *py_user_data;
+    PyObject *py_result;
+    PyObject *ret;
+    gint i, len;
+    
+    if (user_data == NULL)
+	return;
+
+    state = pyg_gil_state_ensure();
+
+    py_user_data = (PyObject*) user_data;
+    py_result = pyg_enum_from_gtype(GST_TYPE_INSTALL_PLUGINS_RETURN, result);
+
+    callback = PyTuple_GetItem(py_user_data, 0);
+    args = Py_BuildValue("(N)", py_result);
+
+    len = PyTuple_Size(py_user_data);
+    for (i = 1; i < len; ++i) {
+	PyObject *tuple = args;
+	args = PySequence_Concat(tuple, PyTuple_GetItem(py_user_data, i));
+	Py_DECREF(tuple);
+    }
+    
+    ret = PyObject_CallObject(callback, args);
+
+    if (PyErr_Occurred())
+	PyErr_Print();
+
+    Py_DECREF(args);
+    pyg_gil_state_release(state);
+
+}
 %%
 modulename gst.pbutils
 %%
@@ -64,7 +102,7 @@ _wrap_gst_install_plugins_sync(PyGObject *self, PyObject *args, PyObject *kwargs
     PyObject *py_details;
     Py_ssize_t i;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO:install_plugins_async",
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO:install_plugins_sync",
 				     kwlist, &py_details, &py_ctx))
 	return NULL;
 
@@ -103,7 +141,105 @@ _wrap_gst_install_plugins_sync(PyGObject *self, PyObject *args, PyObject *kwargs
     }
     
     ctx = (GstInstallPluginsContext *) pyg_boxed_get(py_ctx, GstInstallPluginsContext);
+
+    pyg_begin_allow_threads;
     ret = gst_install_plugins_sync(details, ctx);
+    pyg_end_allow_threads;
+
+    g_strfreev(details);
+
+    py_ret = pyg_enum_from_gtype(GST_TYPE_INSTALL_PLUGINS_RETURN, ret);
+    return py_ret;
+}
+%%
+override gst_install_plugins_async args
+static PyObject *
+_wrap_gst_install_plugins_async(PyGObject *self, PyObject *args)
+{
+    PyObject *py_ctx, *py_ret, *py_details, *callback, *cbargs, *data;
+    GstInstallPluginsContext *ctx;
+    GstInstallPluginsReturn ret;
+    gchar **details;
+    gint len;
+    Py_ssize_t i;
+
+    if (PyTuple_Size(args) < 3) {
+	PyErr_SetString(PyExc_TypeError, "install_plugins_async requires at least 3 arguments");
+	return NULL;
+    }
+
+    py_ctx = PySequence_GetItem(args, 1);
+
+    if (!pyg_boxed_check(py_ctx, GST_TYPE_INSTALL_PLUGINS_CONTEXT)) {
+	PyErr_SetString(PyExc_TypeError, "Argument 2 must be a gst.pbutils.InstallPluginsContext");
+	Py_DECREF(py_ctx);
+	return NULL;
+    }
+
+    py_details = PySequence_GetItem(args, 0);
+    if ((!PySequence_Check(py_details)) || (PySequence_Size(py_details) < 1)) {
+	PyErr_SetString(PyExc_TypeError, "Details need to be a non-empty list or tuple of strings");
+	Py_DECREF(py_ctx);
+	Py_DECREF(py_details);
+	return NULL;
+    }
+
+    len = PySequence_Size(py_details);
+    details = g_new0(gchar*, len+1);
+
+    /* Check all items in py_details are strings */
+    for (i = 0; i < len; i++) {
+	PyObject *py_str = PySequence_GetItem(py_details, i);
+	gchar *str;
+
+	if (!PyString_Check(py_str)) {
+	    PyErr_SetString(PyExc_TypeError, "Details need to be a non-empty list or tuple of strings");
+	    Py_DECREF(py_str);
+	    Py_DECREF(py_ctx);
+	    Py_DECREF(py_details);
+	    g_strfreev(details);
+	    return NULL;
+	}
+	if (!(str = PyString_AsString(py_str))) {
+	    Py_DECREF(py_str);
+	    Py_DECREF(py_ctx);
+	    Py_DECREF(py_details);
+	    g_strfreev(details);
+	    return NULL;
+	}
+	details[i] = g_strdup(str);
+	Py_DECREF(py_str);
+    }
+
+    callback = PySequence_GetItem(args, 2);
+    if (!PyCallable_Check(callback)) {
+	PyErr_SetString(PyExc_TypeError, "callback is not callable");
+	Py_DECREF(callback);
+	Py_DECREF(py_ctx);
+	Py_DECREF(py_details);
+	g_strfreev(details);
+    }
+    
+    if (!(cbargs = PySequence_GetSlice(args, 3, PyTuple_Size(args)))) {
+	Py_DECREF(callback);
+	Py_DECREF(py_ctx);
+	Py_DECREF(py_details);
+	g_strfreev(details);
+	return NULL;
+    }
+    if (!(data = Py_BuildValue("(ON)", callback, cbargs))) {
+	Py_DECREF(py_details);
+	Py_DECREF(py_ctx);
+	Py_DECREF(callback);
+	Py_DECREF(cbargs);
+    }
+
+    ctx = (GstInstallPluginsContext *) pyg_boxed_get(py_ctx, GstInstallPluginsContext);
+    pyg_begin_allow_threads;
+    ret = gst_install_plugins_async(details, ctx,
+				    (GstInstallPluginsResultFunc) install_plugins_result_handler,
+				    data);
+    pyg_end_allow_threads;
 
     g_strfreev(details);
 
