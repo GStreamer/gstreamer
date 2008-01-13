@@ -1,3 +1,21 @@
+2008-01-13  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c: (is_multicast_address):
+	Include Winsock2.h for VS6 and use a different way initialize
+	hints structure so it can build with VS6.
+	* win32/MANIFEST:
+	* win32/vs6/libgstsdp.dsp:
+	* win32/common/libgstsdp.def:
+	Add new files for libgstsdp.
+	* win32/vs6/grammar.dsp:
+	Copy pbutils-enumtypes* from win32/common to pbutils sources folder.
+	* win32/vs6/gst_plugins_base.dsw:
+	* win32/vs6/libgstdecodebin.dsp:
+	* win32/vs6/libgstdecodebin2.dsp:
+	* win32/vs6/libgstplaybin.dsp:
+	* win32/vs6/libgstvolume.dsp:
+	Add new dependencies to the link list.
+
 2008-01-13  Julien Moutte  <julien@fluendo.com>
 
 	* win32/common/config.h:

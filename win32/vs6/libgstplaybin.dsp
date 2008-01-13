@@ -104,11 +104,31 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\lib\gstreamer-0.10
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=..\..\gst\playback\gstfactorylists.c
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\gst\playback\gstplay-enum.c"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\playback\gstplayback.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\playback\gstplaybasebin.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\gst\playback\gstplaybin.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\playback\gstplaybin2.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\playback\gstplaysink.c
 # End Source File
 # Begin Source File
 

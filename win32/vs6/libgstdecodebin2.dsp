@@ -108,7 +108,19 @@ SOURCE=..\..\gst\playback\gstdecodebin2.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\gst\playback\gstfactorylists.c
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\gst\playback\gstplay-enum.c"
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\gst\playback\gstplay-marshal.c"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\playback\gsturidecodebin.c
 # End Source File
 # End Group
 # Begin Group "Header Files"

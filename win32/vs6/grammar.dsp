@@ -379,5 +379,46 @@ BuildCmds= \
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE="..\common\pbutils-enumtypes.c"
+
+!IF  "$(CFG)" == "grammar - Win32 Release"
+
+# Begin Custom Build
+InputPath="..\common\pbutils-enumtypes.c"
+
+BuildCmds= \
+	copy ..\common\pbutils-enumtypes.h ..\..\gst-libs\gst\pbutils \
+	copy ..\common\pbutils-enumtypes.c ..\..\gst-libs\gst\pbutils
+	
+
+"..\..\gst-libs\gst\pbutils\pbutils-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst-libs\gst\pbutils\pbutils-enumtypes.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
+
+# Begin Custom Build
+InputPath="..\common\pbutils-enumtypes.c"
+
+BuildCmds= \
+	copy ..\common\pbutils-enumtypes.h ..\..\gst-libs\gst\pbutils \
+	copy ..\common\pbutils-enumtypes.c ..\..\gst-libs\gst\pbutils
+	
+
+"..\..\gst-libs\gst\pbutils\pbutils-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst-libs\gst\pbutils\pbutils-enumtypes.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
 # End Target
 # End Project

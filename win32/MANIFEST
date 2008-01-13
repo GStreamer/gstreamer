@@ -13,10 +13,14 @@ win32/common/libgstnetbuffer.def
 win32/common/libgstpbutils.def
 win32/common/libgstriff.def
 win32/common/libgstrtp.def
+win32/common/libgstrtsp.def
+win32/common/libgstsdp.def
 win32/common/libgsttag.def
 win32/common/libgstvideo.def
 win32/common/multichannel-enumtypes.c
 win32/common/multichannel-enumtypes.h
+win32/common/pbutils-enumtypes.c
+win32/common/pbutils-enumtypes.h
 win32/vs6/gst_plugins_base.dsw
 win32/vs6/grammar.dsp
 win32/vs6/libgstadder.dsp
@@ -39,6 +43,7 @@ win32/vs6/libgstpbutils.dsp
 win32/vs6/libgstplaybin.dsp
 win32/vs6/libgstriff.dsp
 win32/vs6/libgstrtp.dsp
+win32/vs6/libgstsdp.dsp
 win32/vs6/libgstsinesrc.dsp
 win32/vs6/libgstsubparse.dsp
 win32/vs6/libgsttag.dsp

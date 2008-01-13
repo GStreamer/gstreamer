@@ -38,6 +38,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name grammar
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libgstinterfaces
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -116,6 +119,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name grammar
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libgstpbutils
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -145,6 +151,18 @@ Package=<4>
 ###############################################################################
 
 Project: "libgstfft"=".\libgstfft.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libgstgdp"=".\libgstgdp.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -263,6 +281,18 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name grammar
     End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "libgstsdp"=".\libgstsdp.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################

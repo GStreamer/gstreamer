@@ -68,6 +68,9 @@
 #include <glib.h>               /* for G_OS_WIN32 */
 
 #ifdef G_OS_WIN32
+#ifdef _MSC_VER
+#include <Winsock2.h>
+#endif
 #include <ws2tcpip.h>
 #else
 #include <sys/socket.h>
@@ -316,13 +319,13 @@ gst_sdp_message_free (GstSDPMessage * msg)
 static gboolean
 is_multicast_address (const gchar * host_name, guint * family)
 {
-  struct addrinfo hints = {
-    .ai_socktype = SOCK_DGRAM
-  };
+  struct addrinfo hints;
   struct addrinfo *ai;
   struct addrinfo *res;
   gboolean ret = FALSE;
   int err;
+
+  hints.ai_socktype = SOCK_DGRAM;
 
   g_return_val_if_fail (host_name, FALSE);
 
