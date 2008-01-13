@@ -1,3 +1,13 @@
+2008-01-13  Olivier Crete  <tester@tester.ca>
+
+	reviewed by: Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gstpad.override:
+	* testsuite/test_pad.py:
+	Re-implement wrapping of gst_pad_add_*probe in order to avoid leaks of
+	user-data associated with the probes.
+	Fixes #504786
+
 2008-01-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/pbutils.override:

@@ -457,18 +457,21 @@ class PadProbePipeTest(TestCase):
 
         handle = None
         self._num_times_called = 0
-        def buffer_probe(pad, buffer):
+        def buffer_probe(pad, buffer, data):
             self._num_times_called += 1
             pad.remove_buffer_probe(handle)
             return True
 
         pad = self.fakesrc.get_pad('src')
-        handle = pad.add_buffer_probe(buffer_probe)
+        data = []
+        handle = pad.add_buffer_probe(buffer_probe, data)
         self.pipeline.set_state(gst.STATE_PLAYING)
         m = self.pipeline.get_bus().poll(gst.MESSAGE_EOS, -1)
         assert m
         assert self._num_times_called == 1
         self.pipeline.set_state(gst.STATE_NULL)
+        assert sys.getrefcount(buffer_probe) == 2
+        assert sys.getrefcount(data) == 2
         # FIXME: having m going out of scope doesn't seem to be enough
         # to get it gc collected, and it keeps a ref to the pipeline.
         # Look for a way to not have to do this explicitly
