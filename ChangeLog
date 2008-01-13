@@ -1,3 +1,8 @@
+2008-01-13  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/vs6/libgstpython.dsp:
+	Setup two different builds, one for Python24 and one for Python25.
+
 2008-01-13  Olivier Crete  <tester@tester.ca>
 
 	reviewed by: Edward Hervey  <edward.hervey@collabora.co.uk>
