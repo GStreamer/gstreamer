@@ -238,8 +238,6 @@ generate_xing_header (GstXingMux * xing)
     xing_offset = get_xing_offset (header);
   } while (size < (4 + xing_offset + 4 + 4 + 4 + 4 + 100) && bitrate < 0xfe);
 
-  g_print ("0x%x\n", bitrate);
-
   if (bitrate == 0xfe) {
     GST_ERROR ("No usable bitrate found!");
     return NULL;

@@ -1,5 +1,10 @@
 2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/xingheader/gstxingmux.c: (generate_xing_header):
+	Remove accidentially leftover debug printf.
+
+2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/xingheader/gstxingmux.c: (has_xing_header),
 	(generate_xing_header), (gst_xing_mux_chain),
 	(gst_xing_mux_sink_event):
