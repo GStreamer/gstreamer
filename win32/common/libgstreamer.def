@@ -40,6 +40,7 @@ EXPORTS
 	_gst_element_error_printf
 	_gst_plugin_register_static
 	_gst_trace_add_entry
+	_gst_trace_on DATA
 	gst_activate_mode_get_type
 	gst_alloc_trace_available
 	gst_alloc_trace_flags_get_type
@@ -645,6 +646,7 @@ EXPORTS
 	gst_plugin_load_by_name
 	gst_plugin_load_file
 	gst_plugin_name_filter
+	gst_plugin_register_static
 	gst_print_element_args
 	gst_print_pad_caps
 	gst_query_get_structure

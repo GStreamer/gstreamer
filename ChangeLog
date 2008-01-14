@@ -1,3 +1,8 @@
+2008-01-14  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* win32/common/libgstreamer.def:
+	Add new API declarations
+
 2008-01-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstminiobject.c:
