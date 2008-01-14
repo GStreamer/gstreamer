@@ -1,3 +1,8 @@
+2008-01-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/base/gstbasetransform.c:
+	  Fix long property description for QoS.
+
 2008-01-12  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst/gst.c:
