@@ -1,3 +1,13 @@
+2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/xingheader/gstxingmux.c: (has_xing_header),
+	(generate_xing_header), (gst_xing_mux_chain),
+	(gst_xing_mux_sink_event):
+	Choose smallest possible frame size for the Xing header, properly
+	set the timestamp, duration and offset on the outgoing buffers,
+	only send NEWSEGMENT events in BYTE format downstream and also
+	drop VBRI headers if already existing.
+
 2008-01-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/xingheader/Makefile.am:
