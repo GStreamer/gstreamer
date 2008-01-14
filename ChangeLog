@@ -1,6 +1,11 @@
 2008-01-14  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* configure.ac:
+	0.10.9.2 pre-release
+
+2008-01-14  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
 	* gst/Makefile.am:
 	* gst/base.defs:
 	* gst/gst-0.10.15.ignore:
