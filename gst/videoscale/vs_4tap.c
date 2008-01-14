@@ -95,7 +95,7 @@ vs_4tap_init (void)
 
 void
 vs_scanline_resample_4tap_Y (uint8_t * dest, uint8_t * src,
-    int n, int *xacc, int increment)
+    int n, int src_width, int *xacc, int increment)
 {
   int i;
   int j;
@@ -107,15 +107,19 @@ vs_scanline_resample_4tap_Y (uint8_t * dest, uint8_t * src,
   for (i = 0; i < n; i++) {
     j = acc >> 16;
     x = (acc & 0xff00) >> 8;
-    y = (vs_4tap_taps[x][0] * src[MAX (j - 1, 0)] +
-        vs_4tap_taps[x][1] * src[j] +
-        vs_4tap_taps[x][2] * src[j + 1] +
-        vs_4tap_taps[x][3] * src[j + 2] + (1 << (SHIFT - 1))) >> SHIFT;
-    if (y < 0)
-      y = 0;
-    if (y > 255)
-      y = 255;
-    dest[i] = y;
+    if (j - 1 >= 0 && j + 2 < src_width) {
+      y = vs_4tap_taps[x][0] * src[MAX (j - 1, 0)];
+      y += vs_4tap_taps[x][1] * src[j];
+      y += vs_4tap_taps[x][2] * src[j + 1];
+      y += vs_4tap_taps[x][3] * src[j + 2];
+    } else {
+      y = vs_4tap_taps[x][0] * src[CLAMP (j - 1, 0, src_width - 1)];
+      y += vs_4tap_taps[x][1] * src[CLAMP (j, 0, src_width - 1)];
+      y += vs_4tap_taps[x][2] * src[CLAMP (j + 1, 0, src_width - 1)];
+      y += vs_4tap_taps[x][3] * src[CLAMP (j + 2, 0, src_width - 1)];
+    }
+    y += (1 << (SHIFT - 1));
+    dest[i] = CLAMP (y >> SHIFT, 0, 255);
     acc += increment;
   }
   *xacc = acc;
@@ -127,20 +131,21 @@ vs_scanline_merge_4tap_Y (uint8_t * dest, uint8_t * src1, uint8_t * src2,
 {
   int i;
   int y;
+  int a, b, c, d;
 
   acc = (acc >> 8) & 0xff;
+  a = vs_4tap_taps[acc][0];
+  b = vs_4tap_taps[acc][1];
+  c = vs_4tap_taps[acc][2];
+  d = vs_4tap_taps[acc][3];
   for (i = 0; i < n; i++) {
-    y = (vs_4tap_taps[acc][0] * src1[i] +
-        vs_4tap_taps[acc][1] * src2[i] +
-        vs_4tap_taps[acc][2] * src3[i] +
-        vs_4tap_taps[acc][3] * src4[i] + (1 << (SHIFT - 1))) >> SHIFT;
-    if (y < 0)
-      y = 0;
-    if (y > 255)
-      y = 255;
-    dest[i] = y;
+    y = a * src1[i];
+    y += b * src2[i];
+    y += c * src3[i];
+    y += d * src4[i];
+    y += (1 << (SHIFT - 1));
+    dest[i] = CLAMP (y >> SHIFT, 0, 255);
   }
-
 }
 
 
@@ -163,7 +168,8 @@ vs_image_scale_4tap_Y (const VSImage * dest, const VSImage * src,
   for (i = 0; i < 4; i++) {
     xacc = 0;
     vs_scanline_resample_4tap_Y (tmpbuf + i * dest->width,
-        src->pixels + i * src->stride, dest->width, &xacc, x_increment);
+        src->pixels + i * src->stride, dest->width, src->width,
+        &xacc, x_increment);
   }
 
   yacc = 0;
@@ -178,7 +184,7 @@ vs_image_scale_4tap_Y (const VSImage * dest, const VSImage * src,
         xacc = 0;
         vs_scanline_resample_4tap_Y (tmpbuf + ((k + 3) & 3) * dest->width,
             src->pixels + (k + 3) * src->stride,
-            dest->width, &xacc, x_increment);
+            dest->width, src->width, &xacc, x_increment);
       }
     }
 
