@@ -1,5 +1,14 @@
 2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Mark Nauwelaerts <manauw at syknet dot be>
+	
+	* ext/lame/gstlame.c: (gst_lame_sink_setcaps),
+	(gst_lame_sink_event):
+	Correctly set number of channels when using mono-encoding mode
+	and fix the duration calculation of the EOS buffer.
+
+2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
 	(gst_mp3parse_handle_first_frame):
 	Guard against 0 values in the Xing header as frame count and
