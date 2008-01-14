@@ -3215,10 +3215,10 @@ gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPMessage * request,
     GstRTSPMessage * response, GstRTSPStatusCode * code)
 {
   GstRTSPStatusCode int_code = GST_RTSP_STS_OK;
-  GstRTSPResult res;
+  GstRTSPResult res = GST_RTSP_ERROR;
   gint count;
   gboolean retry;
-  GstRTSPMethod method;
+  GstRTSPMethod method = GST_RTSP_INVALID;
 
   count = 0;
   do {

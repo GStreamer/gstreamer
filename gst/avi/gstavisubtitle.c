@@ -78,7 +78,7 @@ gst_avi_subtitle_extract_file (GstAviSubtitle * sub, GstBuffer * buffer,
     guint offset, guint len)
 {
   const gchar *input_enc = NULL;
-  GstBuffer *ret;
+  GstBuffer *ret = NULL;
   gchar *data;
 
   data = (gchar *) GST_BUFFER_DATA (buffer) + offset;
@@ -110,6 +110,8 @@ gst_avi_subtitle_extract_file (GstAviSubtitle * sub, GstBuffer * buffer,
     GST_WARNING_OBJECT (sub, "unspecified encoding, and not UTF-8");
     return NULL;
   }
+
+  g_return_val_if_fail (ret != NULL || input_enc != NULL, NULL);
 
   if (input_enc) {
     GError *err = NULL;

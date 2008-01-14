@@ -1,3 +1,10 @@
+2008-01-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/avi/gstavisubtitle.c: (gst_avi_subtitle_extract_file):
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send):
+	  Initialise variables to work around (false) 'foo might be used
+	  uninitialized in this function' warnings by gcc-3.3.3 (#509298).
+
 2008-01-11  David Schleef  <ds@schleef.org>
 
 	* docs/plugins/.cvsignore:
