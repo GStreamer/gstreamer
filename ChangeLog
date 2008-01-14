@@ -1,5 +1,16 @@
 2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_reset),
+	(gst_mp3parse_emit_frame), (gst_mp3parse_handle_first_frame),
+	(mp3parse_total_bytes), (mp3parse_total_time):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	Add initial support for reading VBRI headers as found in VBR files
+	created by some Fraunhofer encoders. Currently we only read the
+	number of frames and bytes (and calculate duration, etc from this)
+	but there is also a seek table that we currently don't use.
+
+2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Mark Nauwelaerts <manauw at syknet dot be>
 	
 	* ext/lame/gstlame.c: (gst_lame_sink_setcaps),
