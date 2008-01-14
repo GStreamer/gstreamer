@@ -4245,6 +4245,11 @@
   )
 )
 
+(define-function util_get_timestamp
+  (c-name "gst_util_get_timestamp")
+  (return-type "GstClockTime")
+)
+
 (define-function pad_load_and_link
   (c-name "gst_pad_load_and_link")
   (return-type "none")
@@ -4442,6 +4447,14 @@
 (define-function plugin_get_type
   (c-name "gst_plugin_get_type")
   (return-type "GType")
+)
+
+(define-function plugin_register_static
+  (c-name "gst_plugin_register_static")
+  (return-type "gboolean")
+  (parameters
+    '("const-GstPluginDesc*" "desc")
+  )
 )
 
 (define-method get_name

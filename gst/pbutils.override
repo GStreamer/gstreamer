@@ -33,6 +33,7 @@ headers
 GST_DEBUG_CATEGORY_EXTERN (pygst_debug);
 #define GST_CAT_DEFAULT pygst_debug
 
+#ifdef HAVE_PLUGINS_INSTALL
 static void
 install_plugins_result_handler(GstInstallPluginsReturn result, gpointer user_data)
 {
@@ -70,6 +71,7 @@ install_plugins_result_handler(GstInstallPluginsReturn result, gpointer user_dat
     pyg_gil_state_release(state);
 
 }
+#endif
 %%
 modulename gst.pbutils
 %%

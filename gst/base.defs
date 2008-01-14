@@ -617,6 +617,15 @@
   (return-type "gboolean")
 )
 
+(define-method set_gap_aware
+  (of-object "GstBaseTransform")
+  (c-name "gst_base_transform_set_gap_aware")
+  (return-type "none")
+  (parameters
+    '("gboolean" "gap_aware")
+  )
+)
+
 (define-virtual transform_caps
   (of-object "GstBaseTransform")
   (return-type "GstCaps*")

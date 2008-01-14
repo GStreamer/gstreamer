@@ -118,6 +118,13 @@ then
     IGNORE_GST_0_10_15=""
   fi
 
+  if test $GST_MINOR_VERSION -lt "16"
+  then
+    IGNORE_GST_0_10_16="gst-0.10.16.ignore"
+  else
+    IGNORE_GST_0_10_16=""
+  fi
+
   dnl plugins base
   if test $GST_PB_MINOR_VERSION -lt "14"
   then
@@ -126,28 +133,32 @@ then
     IGNORE_GST_PB_0_10_14=""
   fi
 
-  if test $GST_PB_MINOR_VERSION -lt "15"
+  if test $GST_PB_MINOR_VERSION -lt "16"
   then
-    IGNORE_GST_PB_0_10_15="gst-pb-0.10.15.ignore"
+    IGNORE_GST_PB_0_10_16="gst-pb-0.10.16.ignore"
   else
-    IGNORE_GST_PB_0_10_15=""
+    IGNORE_GST_PB_0_10_16=""
+    AC_DEFINE_UNQUOTED(HAVE_PLUGINS_INSTALL, 1, [We can use the plugins-install methods])
   fi
-
 
 else
   IGNORE_GST_0_10_13=""
   IGNORE_GST_0_10_14=""
   IGNORE_GST_0_10_15=""
+  IGNORE_GST_0_10_16=""
   IGNORE_GST_PB_0_10_14=""
-  IGNORE_GST_PB_0_10_15=""
+  IGNORE_GST_PB_0_10_16=""
+  AC_DEFINE_UNQUOTED(HAVE_PLUGINS_INSTALL, 1, [We can use the plugins-install methods])
 fi
 AC_DEFINE_UNQUOTED(HAVE_VIDEO_ORIENTATION_INTERFACE, 1, [We can use the videoorientation interface])
 AC_SUBST(IGNORE_GST_0_10_13)
 AC_SUBST(IGNORE_GST_0_10_14)
 AC_SUBST(IGNORE_GST_0_10_15)
+AC_SUBST(IGNORE_GST_0_10_16)
 AC_SUBST(IGNORE_GST_PB_0_10_14)
-AC_SUBST(IGNORE_GST_PB_0_10_15)
+AC_SUBST(IGNORE_GST_PB_0_10_16)
 AC_SUBST(HAVE_VIDEO_ORIENTATION)
+AC_SUBST(HAVE_PLUGINS_INSTALL)
 
 dnl check for gstreamer-base; uninstalled is selected preferentially
 PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,

@@ -28,8 +28,9 @@ versioned_overrides = \
 	gst-0.10.13.ignore 	\
 	gst-0.10.14.ignore 	\
 	gst-0.10.15.ignore 	\
+	gst-0.10.16.ignore 	\
 	gst-pb-0.10.14.ignore	\
-	gst-pb-0.10.15.ignore	\
+	gst-pb-0.10.16.ignore	\
 	gst-disable-loadsave.ignore
 
 INCLUDES = $(PYTHON_INCLUDES)

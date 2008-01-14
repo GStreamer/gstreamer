@@ -1,3 +1,19 @@
+2008-01-14  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/base.defs:
+	* gst/gst-0.10.15.ignore:
+	* gst/gst-0.10.16.ignore:
+	* gst/gst-pb-0.10.15.ignore:
+	* gst/gst-pb-0.10.16.ignore:
+	* gst/gst.defs:
+	* gst/gstversion.override.in:
+	* gst/pbutils.override:
+	* testsuite/test_pbutils.py:
+	Series of update for new API added to 0.10.16.
+	Remove wrong ignore file for 0.10.15 -base.
+
 2008-01-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* configure.ac:
