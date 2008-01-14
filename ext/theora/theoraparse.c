@@ -313,6 +313,7 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
 {
   GstCaps *caps;
   gint i;
+  guint32 bitstream_version;
 
   g_assert (!parse->streamheader_received);
 
@@ -340,6 +341,16 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
   parse->fps_n = parse->info.fps_numerator;
   parse->fps_d = parse->info.fps_denominator;
   parse->shift = _theora_ilog (parse->info.keyframe_frequency_force - 1);
+
+  /* With libtheora-1.0beta1 the granulepos scheme was changed:
+   * where earlier the granulepos refered to the index/beginning
+   * of a frame, it now refers to the end, which matches the use
+   * in vorbis/speex. We check the bitstream version from the header so
+   * we know which way to interpret the incoming granuepos
+   */
+  bitstream_version = (parse->info.version_major << 16) |
+      (parse->info.version_minor << 8) | parse->info.version_subminor;
+  parse->is_old_bitstream = (bitstream_version <= 0x00030200);
 
   parse->streamheader_received = TRUE;
 }
@@ -391,28 +402,36 @@ theora_parse_clear_queue (GstTheoraParse * parse)
 }
 
 static gint64
-make_granulepos (gint64 keyframe, gint64 frame, gint shift)
+make_granulepos (GstTheoraParse * parse, gint64 keyframe, gint64 frame)
 {
   if (keyframe == -1)
     keyframe = 0;
+  /* If using newer theora, offset the granulepos by +1, see comment
+   * in theora_parse_set_streamheader */
+  if (!parse->is_old_bitstream)
+    keyframe += 1;
 
   g_return_val_if_fail (frame >= keyframe, -1);
-  g_return_val_if_fail (frame - keyframe < 1 << shift, -1);
+  g_return_val_if_fail (frame - keyframe < 1 << parse->shift, -1);
 
-  return (keyframe << shift) + (frame - keyframe);
+  return (keyframe << parse->shift) + (frame - keyframe);
 }
 
 static void
-parse_granulepos (gint64 granulepos, gint shift, gint64 * keyframe,
-    gint64 * frame)
+parse_granulepos (GstTheoraParse * parse, gint64 granulepos,
+    gint64 * keyframe, gint64 * frame)
 {
   gint64 kf;
 
-  kf = granulepos >> shift;
+  kf = granulepos >> parse->shift;
+  /* If using newer theora, offset the granulepos by -1, see comment
+   * in theora_parse_set_streamheader */
+  if (!parse->is_old_bitstream)
+    kf -= 1;
   if (keyframe)
     *keyframe = kf;
   if (frame)
-    *frame = kf + (granulepos & ((1 << shift) - 1));
+    *frame = kf + (granulepos & ((1 << parse->shift) - 1));
 }
 
 static gboolean
@@ -474,7 +493,7 @@ theora_parse_push_buffer (GstTheoraParse * parse, GstBuffer * buf,
   next_time = gst_util_uint64_scale_int (GST_SECOND * (frame + 1),
       parse->fps_d, parse->fps_n);
 
-  GST_BUFFER_OFFSET_END (buf) = make_granulepos (keyframe, frame, parse->shift);
+  GST_BUFFER_OFFSET_END (buf) = make_granulepos (parse, keyframe, frame);
   GST_BUFFER_OFFSET (buf) = this_time;
   GST_BUFFER_TIMESTAMP (buf) = this_time;
   GST_BUFFER_DURATION (buf) = next_time - this_time;
@@ -521,7 +540,7 @@ theora_parse_drain_queue_prematurely (GstTheoraParse * parse)
 
     if (parse->prev_keyframe < 0) {
       if (GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
-        parse_granulepos (GST_BUFFER_OFFSET_END (buf), parse->shift,
+        parse_granulepos (parse, GST_BUFFER_OFFSET_END (buf),
             &parse->prev_keyframe, NULL);
       } else {
         /* No previous keyframe known; can't extract one from this frame. That
@@ -550,7 +569,7 @@ theora_parse_drain_queue (GstTheoraParse * parse, gint64 granulepos)
   GstFlowReturn ret = GST_FLOW_OK;
   gint64 keyframe, prev_frame, frame;
 
-  parse_granulepos (granulepos, parse->shift, &keyframe, &frame);
+  parse_granulepos (parse, granulepos, &keyframe, &frame);
 
   prev_frame = frame - g_queue_get_length (parse->buffer_queue);
   if (prev_frame < parse->prev_frame) {
@@ -606,7 +625,7 @@ theora_parse_queue_buffer (GstTheoraParse * parse, GstBuffer * buf)
 
   if (GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
     if (parse->prev_keyframe < 0) {
-      parse_granulepos (GST_BUFFER_OFFSET_END (buf), parse->shift,
+      parse_granulepos (parse, GST_BUFFER_OFFSET_END (buf),
           &parse->prev_keyframe, NULL);
     }
     ret = theora_parse_drain_queue (parse, GST_BUFFER_OFFSET_END (buf));

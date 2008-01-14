@@ -1,3 +1,12 @@
+2008-01-14  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/theora/gsttheoradec.h:
+	* ext/theora/gsttheoraparse.h:
+	* ext/theora/theoradec.c:
+	* ext/theora/theoraparse.c:
+	Take a 2nd stab at handling libtheora granulepos changes in the decoder
+	and parser by inspecting the bitstream version of the incoming data.
+
 2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

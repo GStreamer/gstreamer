@@ -51,15 +51,6 @@
 #define GST_CAT_DEFAULT theoradec_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-/* With libtheora-1.0beta1 the granulepos scheme was changed:
- * where earlier the granulepos refered to the index/beginning
- * of a frame, it now refers to the end, which matches the use
- * in vorbis/speex. There don't seem to be defines for the
- * theora version we're compiling against, so we'll just use
- * a run-time check for now. See theora_enc_get_ogg_packet_end_time().
- */
-static gboolean use_old_granulepos;
-
 #define THEORA_DEF_CROP         TRUE
 enum
 {
@@ -150,8 +141,6 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
   gstelement_class->change_state = theora_dec_change_state;
 
   GST_DEBUG_CATEGORY_INIT (theoradec_debug, "theoradec", 0, "Theora decoder");
-
-  use_old_granulepos = (theora_version_number () <= 0x00030200);
 }
 
 static void
@@ -242,7 +231,7 @@ _theora_granule_frame (GstTheoraDec * dec, gint64 granulepos)
   framenum += granulepos - (framenum << ilog);
 
   /* This is 1-based for current libtheora, 0 based for old. Fix up. */
-  if (!use_old_granulepos)
+  if (!dec->is_old_bitstream)
     framenum -= 1;
 
   GST_DEBUG_OBJECT (dec, "framecount=%d, ilog=%u", framenum, ilog);
@@ -791,6 +780,7 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean eret;
   GstEvent *event;
+  guint32 bitstream_version;
 
   GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
       dec->info.fps_numerator, dec->info.fps_denominator,
@@ -840,6 +830,16 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   }
 
   dec->granule_shift = _theora_ilog (dec->info.keyframe_frequency_force - 1);
+
+  /* With libtheora-1.0beta1 the granulepos scheme was changed:
+   * where earlier the granulepos refered to the index/beginning
+   * of a frame, it now refers to the end, which matches the use
+   * in vorbis/speex. We check the bitstream version from the header so
+   * we know which way to interpret the incoming granuepos
+   */
+  bitstream_version = (dec->info.version_major << 16) |
+      (dec->info.version_minor << 8) | dec->info.version_subminor;
+  dec->is_old_bitstream = (bitstream_version <= 0x00030200);
 
   GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
       dec->width, dec->height, dec->offset_x, dec->offset_y);

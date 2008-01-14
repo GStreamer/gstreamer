@@ -57,6 +57,7 @@ struct _GstTheoraParse {
   guint                 packetno;
   gboolean              send_streamheader;
   gboolean              streamheader_received;
+  gboolean		is_old_bitstream;
   GstBuffer *		streamheader[3];
 
   GQueue *		event_queue;
