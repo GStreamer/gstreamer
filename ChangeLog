@@ -1,5 +1,11 @@
 2008-01-14  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* win32/common/libgstsdp.def:
+	* win32/common/libgstvideo.def:
+	Add new API declarations
+
+2008-01-14  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* ext/theora/gsttheoradec.h:
 	* ext/theora/gsttheoraparse.h:
 	* ext/theora/theoradec.c:

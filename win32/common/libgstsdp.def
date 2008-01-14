@@ -1,5 +1,4 @@
 EXPORTS
-	gst_sdp_message_new
 	gst_sdp_media_add_attribute
 	gst_sdp_media_add_bandwidth
 	gst_sdp_media_add_connection
@@ -61,6 +60,7 @@ EXPORTS
 	gst_sdp_message_get_zone
 	gst_sdp_message_init
 	gst_sdp_message_medias_len
+	gst_sdp_message_new
 	gst_sdp_message_parse_buffer
 	gst_sdp_message_phones_len
 	gst_sdp_message_set_connection
