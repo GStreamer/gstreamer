@@ -1,3 +1,10 @@
+2008-01-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	As found by: Tommi Myöhänen <ext-tommi.myohanen nokia com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_rtpinfo):
+	Use atoll to parse the rtptime with enough precision. Fixes #509329.
+
 2008-01-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/avi/gstavisubtitle.c: (gst_avi_subtitle_extract_file):

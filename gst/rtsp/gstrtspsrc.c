@@ -4202,7 +4202,7 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
       } else if (g_str_has_prefix (fields[j], "seq=")) {
         seqbase = atoi (fields[j] + 4);
       } else if (g_str_has_prefix (fields[j], "rtptime=")) {
-        timebase = atol (fields[j] + 8);
+        timebase = atoll (fields[j] + 8);
       }
     }
     g_strfreev (fields);
