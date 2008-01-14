@@ -1,3 +1,11 @@
+2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_handle_first_frame):
+	Guard against 0 values in the Xing header as frame count and
+	byte count and calculate the bitrate when we have all values
+	we need and not before.
+
 2008-01-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstmad.c: (GST_TYPE_MAD_MODE),

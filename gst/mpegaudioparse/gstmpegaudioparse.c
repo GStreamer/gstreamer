@@ -96,6 +96,8 @@ static gboolean mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
     gint64 bytepos, GstClockTime * ts);
 static gboolean
 mp3parse_total_bytes (GstMPEGAudioParse * mp3parse, gint64 * total);
+static gboolean
+mp3parse_total_time (GstMPEGAudioParse * mp3parse, GstClockTime * total);
 
 /*static guint gst_mp3parse_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -704,6 +706,8 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
   if (read_id == xing_id || read_id == info_id) {
     guint32 xing_flags;
     guint bytes_needed = xing_offset + XING_HDR_MIN;
+    gint64 total_bytes;
+    GstClockTime total_time;
 
     GST_DEBUG_OBJECT (mp3parse, "Found Xing header marker 0x%x", xing_id);
 
@@ -729,19 +733,15 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
     data += xing_offset + XING_HDR_MIN;
 
     if (xing_flags & XING_FRAMES_FLAG) {
-      gint64 total_bytes;
-
       mp3parse->xing_frames = GST_READ_UINT32_BE (data);
-      mp3parse->xing_total_time = gst_util_uint64_scale (GST_SECOND,
-          (guint64) (mp3parse->xing_frames) * (mp3parse->spf), mp3parse->rate);
-
-      /* We know the total time. If we also know the upstream size, compute the 
-       * total bitrate, rounded up to the nearest kbit/sec */
-      if (mp3parse_total_bytes (mp3parse, &total_bytes)) {
-        mp3parse->xing_bitrate = gst_util_uint64_scale (total_bytes,
-            8 * GST_SECOND, mp3parse->xing_total_time);
-        mp3parse->xing_bitrate += 500;
-        mp3parse->xing_bitrate -= mp3parse->xing_bitrate % 1000;
+      if (mp3parse->xing_frames == 0) {
+        GST_WARNING_OBJECT (mp3parse,
+            "Invalid number of frames in Xing header");
+        mp3parse->xing_flags &= ~XING_FRAMES_FLAG;
+      } else {
+        mp3parse->xing_total_time = gst_util_uint64_scale (GST_SECOND,
+            (guint64) (mp3parse->xing_frames) * (mp3parse->spf),
+            mp3parse->rate);
       }
 
       data += 4;
@@ -752,9 +752,25 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
 
     if (xing_flags & XING_BYTES_FLAG) {
       mp3parse->xing_bytes = GST_READ_UINT32_BE (data);
+      if (mp3parse->xing_bytes == 0) {
+        GST_WARNING_OBJECT (mp3parse, "Invalid number of bytes in Xing header");
+        mp3parse->xing_flags &= ~XING_BYTES_FLAG;
+      }
+
       data += 4;
-    } else
+    } else {
       mp3parse->xing_bytes = 0;
+    }
+
+    /* If we know the upstream size and duration, compute the 
+     * total bitrate, rounded up to the nearest kbit/sec */
+    if (mp3parse_total_time (mp3parse, &total_time) &&
+        mp3parse_total_bytes (mp3parse, &total_bytes)) {
+      mp3parse->xing_bitrate = gst_util_uint64_scale (total_bytes,
+          8 * GST_SECOND, total_time);
+      mp3parse->xing_bitrate += 500;
+      mp3parse->xing_bitrate -= mp3parse->xing_bitrate % 1000;
+    }
 
     if (xing_flags & XING_TOC_FLAG) {
       int i, percent = 0;
