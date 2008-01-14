@@ -1,6 +1,12 @@
 2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/xingheader/gstxingmux.c: (generate_xing_header):
+	Bitrate is 4 bits, not 8 so check for 0xe as maximum value instead
+	of 0xfe.
+
+2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/xingheader/gstxingmux.c: (generate_xing_header):
 	Remove accidentially leftover debug printf.
 
 2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
