@@ -691,7 +691,7 @@ clear_queued (GstMpeg2dec * mpeg2dec)
 static GstFlowReturn
 flush_queued (GstMpeg2dec * mpeg2dec)
 {
-  GstFlowReturn res;
+  GstFlowReturn res = GST_FLOW_OK;
 
   while (mpeg2dec->queued) {
     GstBuffer *buf = GST_BUFFER_CAST (mpeg2dec->queued->data);
