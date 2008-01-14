@@ -278,6 +278,9 @@ gst_mp3parse_reset (GstMPEGAudioParse * mp3parse)
   mp3parse->vbri_frames = 0;
   mp3parse->vbri_total_time = 0;
   mp3parse->vbri_bytes = 0;
+  mp3parse->vbri_seek_points = 0;
+  g_free (mp3parse->vbri_seek_table);
+  mp3parse->vbri_seek_table = NULL;
 
   if (mp3parse->seek_table) {
     g_list_foreach (mp3parse->seek_table, (GFunc) g_free, NULL);
@@ -852,8 +855,7 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
   } else if (read_id == vbri_id) {
     gint64 total_bytes, total_frames;
     GstClockTime total_time;
-
-    /* guint16 nseek_points; */
+    guint16 nseek_points;
 
     GST_DEBUG_OBJECT (mp3parse, "Found VBRI header marker 0x%x", vbri_id);
     if (avail < offset + 26) {
@@ -866,10 +868,8 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
     data = gst_adapter_peek (mp3parse->adapter, offset + 26);
     data += offset + 4;
 
-    g_print ("0x%x %c\n", *(data - 1), *(data - 1));
-
     if (GST_READ_UINT16_BE (data) != 0x0001) {
-      GST_DEBUG_OBJECT (mp3parse,
+      GST_WARNING_OBJECT (mp3parse,
           "Unsupported VBRI version 0x%x", GST_READ_UINT16_BE (data));
       return;
     }
@@ -904,41 +904,74 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
       mp3parse->vbri_bitrate -= mp3parse->vbri_bitrate % 1000;
     }
 
-    /* TODO: Parse seek table and use everywhere.
-     *       See http://groups.google.com/group/alt.music.mp3/browse_thread/thread/4036a2ad8f2ed55d/a528fc7afdf353f6?#a528fc7afdf353f6
-     */
-#if 0
     nseek_points = GST_READ_UINT16_BE (data);
     data += 2;
 
-    if (GST_READ_UINT32_BE (data) != 0x0102) {
-      GST_DEBUG_OBJECT (mp3parse, "Unsupported VBRI seek table");
-      return;
-    } else if (nseek_points > 0) {
-      guint stride;
+    if (nseek_points > 0) {
+      guint scale, seek_bytes, seek_frames;
+      gint i;
 
-      data += 4;
+      mp3parse->vbri_seek_points = nseek_points;
 
-      stride = GST_READ_UINT16_BE (data);
-      if (stride == 0) {
-        GST_DEBUG_OBJECT (mp3parse, "Unsupported VBRI seek table");
-        return;
+      scale = GST_READ_UINT16_BE (data);
+      data += 2;
+
+      seek_bytes = GST_READ_UINT16_BE (data);
+      data += 2;
+
+      seek_frames = GST_READ_UINT16_BE (data);
+      data += 2;
+
+      if (scale == 0 || seek_bytes == 0 || seek_bytes == 3 || seek_bytes > 4
+          || seek_frames == 0) {
+        GST_WARNING_OBJECT (mp3parse, "Unsupported VBRI seek table");
+        goto out_vbri;
       }
 
-      if (avail < offset + 26 + nseek_points * 2) {
-        GST_DEBUG_OBJECT (mp3parse,
+      if (avail < offset + 26 + nseek_points * seek_bytes) {
+        GST_WARNING_OBJECT (mp3parse,
             "Not enough data to read VBRI seek table (need %d)",
-            offset + 26 + nseek_points * 2);
-        return;
+            offset + 26 + nseek_points * seek_bytes);
+        goto out_vbri;
+      }
+
+      if (seek_frames * nseek_points < total_frames - seek_frames ||
+          seek_frames * nseek_points > total_frames + seek_frames) {
+        GST_WARNING_OBJECT (mp3parse,
+            "VBRI seek table doesn't cover the complete file");
+        goto out_vbri;
       }
 
       data =
-          gst_adapter_peek (mp3parse->adapter, offset + 26 + nseek_points * 2);
+          gst_adapter_peek (mp3parse->adapter,
+          offset + 26 + nseek_points * seek_bytes);
       data += offset + 26;
 
 
+      /* VBRI seek table: frame/seek_frames -> byte */
+      mp3parse->vbri_seek_table = g_new (guint32, nseek_points);
+      if (seek_bytes == 4)
+        for (i = 0; i < nseek_points; i++) {
+          mp3parse->vbri_seek_table[i] =
+              (i > 0) ? mp3parse->vbri_seek_table[i - 1] : 0;
+          mp3parse->vbri_seek_table[i] += GST_READ_UINT32_BE (data) * scale;
+          data += 4;
+      } else if (seek_bytes == 2)
+        for (i = 0; i < nseek_points; i++) {
+          mp3parse->vbri_seek_table[i] =
+              (i > 0) ? mp3parse->vbri_seek_table[i - 1] : 0;
+          mp3parse->vbri_seek_table[i] += GST_READ_UINT16_BE (data) * scale;
+          data += 2;
+      } else                    /* seek_bytes == 1 */
+        for (i = 0; i < nseek_points; i++) {
+          mp3parse->vbri_seek_table[i] =
+              (i > 0) ? mp3parse->vbri_seek_table[i - 1] : 0;
+          mp3parse->vbri_seek_table[i] += GST_READ_UINT8 (data) * scale;
+          data += 1;
+        }
     }
-#endif
+  out_vbri:
+
     GST_DEBUG_OBJECT (mp3parse, "VBRI header reported %u frames, time %"
         GST_TIME_FORMAT ", bytes %u", mp3parse->vbri_frames,
         GST_TIME_ARGS (mp3parse->vbri_total_time), mp3parse->vbri_bytes);
@@ -1335,6 +1368,18 @@ mp3parse_time_to_bytepos (GstMPEGAudioParse * mp3parse, GstClockTime ts,
     return TRUE;
   }
 
+  if (mp3parse->vbri_seek_table &&
+      mp3parse_total_bytes (mp3parse, &total_bytes) &&
+      mp3parse_total_time (mp3parse, &total_time)) {
+    gint i = gst_util_uint64_scale (ts, mp3parse->vbri_seek_points, total_time);
+
+    i = CLAMP (i, 0, mp3parse->vbri_seek_points);
+
+    *bytepos = mp3parse->vbri_seek_table[i];
+
+    return TRUE;
+  }
+
   if (mp3parse->avg_bitrate == 0)
     goto no_bitrate;
 
@@ -1380,6 +1425,22 @@ mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
     fx = fa + (fb - fa) * (pos - index);
 
     *ts = (1.0 / 10000.0) * fx * gst_util_guint64_to_gdouble (total_time);
+
+    return TRUE;
+  }
+
+  if (mp3parse->vbri_seek_table &&
+      mp3parse_total_bytes (mp3parse, &total_bytes) &&
+      mp3parse_total_time (mp3parse, &total_time)) {
+    gint i = 0;
+
+    while (mp3parse->vbri_seek_table[i] < bytepos
+        && i < mp3parse->vbri_seek_points)
+      i++;
+
+    i = CLAMP (i, 0, mp3parse->vbri_seek_points);
+
+    *ts = gst_util_uint64_scale (total_time, i, mp3parse->vbri_seek_points);
 
     return TRUE;
   }

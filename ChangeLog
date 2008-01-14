@@ -1,3 +1,13 @@
+2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_reset),
+	(gst_mp3parse_handle_first_frame), (mp3parse_time_to_bytepos),
+	(mp3parse_bytepos_to_time):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	Add support for seeking based on the VBRI seek table. Might make
+	sense to use interpolation in the table later to get hopefully a
+	bit more accurate values.
+
 2008-01-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (clear_queued), (flush_queued),

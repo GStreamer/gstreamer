@@ -108,6 +108,8 @@ struct _GstMPEGAudioParse {
   GstClockTime vbri_total_time;
   guint32 vbri_bytes;
   guint vbri_bitrate;
+  guint vbri_seek_points;
+  guint32 *vbri_seek_table;
 
   /* Accurate seeking */
   GList *seek_table;
