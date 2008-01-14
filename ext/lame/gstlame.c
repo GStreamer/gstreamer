@@ -974,7 +974,7 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
         if (size > 0 && lame->last_flow == GST_FLOW_OK) {
           gint64 duration;
 
-          duration = gst_util_uint64_scale_int (size, 8 * GST_SECOND,
+          duration = gst_util_uint64_scale (size, 8 * GST_SECOND,
               1000 * lame->bitrate);
 
           if (lame->last_ts == GST_CLOCK_TIME_NONE) {

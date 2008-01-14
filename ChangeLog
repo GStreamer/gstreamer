@@ -1,5 +1,11 @@
 2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/lame/gstlame.c: (gst_lame_sink_event):
+	Use gst_util_uint64_scale instead of gst_util_uint64_scale_int
+	as 8 * GST_SECOND is too large for int.
+
+2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_reset),
 	(gst_mp3parse_emit_frame), (gst_mp3parse_handle_first_frame),
 	(mp3parse_total_bytes), (mp3parse_total_time):
