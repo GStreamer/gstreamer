@@ -1,0 +1,13 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst/audio
+includedir=${pcfiledir}/../gst-libs
+
+Name: GStreamer Audio Library, Uninstalled
+Description: Audio helper functions and base classes, uninstalled
+Version: @VERSION@
+Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@ gstreamer-interfaces-@GST_MAJORMINOR@
+
+Libs: -L${libdir} ${libdir}/libgstaudio-@GST_MAJORMINOR@.la
+Cflags: -I${includedir}
+

@@ -1,0 +1,13 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst/fft
+includedir=${pcfiledir}/../gst-libs
+
+Name: GStreamer FFT Library, Uninstalled
+Description: FFT implementation, uninstalled
+Version: @VERSION@
+Requires: gstreamer-@GST_MAJORMINOR@
+
+Libs: -L${libdir} ${libdir}/libgstfft-@GST_MAJORMINOR@.la -lm
+Cflags: -I${includedir}
+

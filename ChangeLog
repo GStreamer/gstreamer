@@ -1,3 +1,37 @@
+2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-audio-uninstalled.pc.in:
+	* pkgconfig/gstreamer-audio.pc.in:
+	* pkgconfig/gstreamer-cdda-uninstalled.pc.in:
+	* pkgconfig/gstreamer-cdda.pc.in:
+	* pkgconfig/gstreamer-fft-uninstalled.pc.in:
+	* pkgconfig/gstreamer-fft.pc.in:
+	* pkgconfig/gstreamer-floatcast-uninstalled.pc.in:
+	* pkgconfig/gstreamer-floatcast.pc.in:
+	* pkgconfig/gstreamer-interfaces-uninstalled.pc.in:
+	* pkgconfig/gstreamer-interfaces.pc.in:
+	* pkgconfig/gstreamer-netbuffer-uninstalled.pc.in:
+	* pkgconfig/gstreamer-netbuffer.pc.in:
+	* pkgconfig/gstreamer-pbutils-uninstalled.pc.in:
+	* pkgconfig/gstreamer-pbutils.pc.in:
+	* pkgconfig/gstreamer-riff-uninstalled.pc.in:
+	* pkgconfig/gstreamer-riff.pc.in:
+	* pkgconfig/gstreamer-rtp-uninstalled.pc.in:
+	* pkgconfig/gstreamer-rtp.pc.in:
+	* pkgconfig/gstreamer-rtsp-uninstalled.pc.in:
+	* pkgconfig/gstreamer-rtsp.pc.in:
+	* pkgconfig/gstreamer-sdp-uninstalled.pc.in:
+	* pkgconfig/gstreamer-sdp.pc.in:
+	* pkgconfig/gstreamer-tag-uninstalled.pc.in:
+	* pkgconfig/gstreamer-tag.pc.in:
+	* pkgconfig/gstreamer-video-uninstalled.pc.in:
+	* pkgconfig/gstreamer-video.pc.in:
+	Provide one pkg-config file for every gst-plugins-base library.
+	This makes linking to those libraries much more intuitive and
+	provides standard pkg-config behaviour for them. Fixes bug #499697.
+
 2008-01-13  David Schleef  <ds@schleef.org>
 
 	* gst/videoscale/vs_4tap.c:

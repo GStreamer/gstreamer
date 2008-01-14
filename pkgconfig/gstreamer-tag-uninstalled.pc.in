@@ -1,0 +1,13 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst/tag
+includedir=${pcfiledir}/../gst-libs
+
+Name: GStreamer Tag Library, Uninstalled
+Description: Tag base classes and helper functions, uninstalled
+Version: @VERSION@
+Requires: gstreamer-@GST_MAJORMINOR@
+
+Libs: -L${libdir} ${libdir}/libgsttag-@GST_MAJORMINOR@.la
+Cflags: -I${includedir}
+

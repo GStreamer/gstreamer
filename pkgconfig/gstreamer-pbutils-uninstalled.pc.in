@@ -1,0 +1,13 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst/pbutils
+includedir=${pcfiledir}/../gst-libs
+
+Name: GStreamer Base Utils Library, Uninstalled
+Description: General utility functions, uninstalled
+Version: @VERSION@
+Requires: gstreamer-@GST_MAJORMINOR@
+
+Libs: -L${libdir} ${libdir}/libgstpbutils-@GST_MAJORMINOR@.la
+Cflags: -I${includedir}
+

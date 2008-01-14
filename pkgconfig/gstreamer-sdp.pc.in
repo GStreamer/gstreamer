@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
+
+Name: GStreamer SDP Library
+Description: SDP helper functions
+Requires: glib-2.0
+Version: @VERSION@
+Libs: -L${libdir} -lgstsdp-@GST_MAJORMINOR@
+Cflags: -I${includedir}
+

@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
+
+Name: GStreamer FFT Library
+Description: FFT implementation
+Requires: gstreamer-@GST_MAJORMINOR@
+Version: @VERSION@
+Libs: -L${libdir} -lgstfft-@GST_MAJORMINOR@ -lm
+Cflags: -I${includedir}
+

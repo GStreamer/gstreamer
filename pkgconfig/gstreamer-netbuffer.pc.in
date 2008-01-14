@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
+
+Name: GStreamer Network Buffer Library
+Description: Network buffer for use in network sources/sinks
+Requires: gstreamer-@GST_MAJORMINOR@
+Version: @VERSION@
+Libs: -L${libdir} -lgstnetbuffer-@GST_MAJORMINOR@
+Cflags: -I${includedir}
+
