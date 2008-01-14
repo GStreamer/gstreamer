@@ -235,7 +235,7 @@ gst_mini_object_is_writable (const GstMiniObject * mini_object)
  * gst_mini_object_make_writable:
  * @mini_object: the mini-object to make writable
  *
- * Checks if a mini-object is writable.  If not, a writeable copy is made and
+ * Checks if a mini-object is writable.  If not, a writable copy is made and
  * returned.  This gives away the reference to the original mini object,
  * and returns a reference to the new object.
  *
@@ -270,7 +270,7 @@ gst_mini_object_make_writable (GstMiniObject * mini_object)
  * of @mini-object, see gst_mini_object_is_writable(). It is 
  * important to note that keeping additional references to
  * GstMiniObject instances can potentially increase the number
- * of memcpy operations in a pipeline, especially if the minibject
+ * of memcpy operations in a pipeline, especially if the miniobject
  * is a #GstBuffer.
  *
  * Returns: the mini-object.
@@ -280,7 +280,7 @@ gst_mini_object_ref (GstMiniObject * mini_object)
 {
   g_return_val_if_fail (mini_object != NULL, NULL);
   /* we cannot assert that the refcount > 0 since a bufferalloc
-   * function might resurect an object
+   * function might resurrect an object
    g_return_val_if_fail (mini_object->refcount > 0, NULL);
    */
 #ifdef DEBUG_REFCOUNT

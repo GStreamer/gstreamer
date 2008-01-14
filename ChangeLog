@@ -1,5 +1,10 @@
 2008-01-14  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstminiobject.c:
+	  Spelling fixes for the API docs.
+
+2008-01-14  Stefan Kost  <ensonic@users.sf.net>
+
 	* libs/gst/base/gstbasetransform.c:
 	  Fix long property description for QoS.
 
