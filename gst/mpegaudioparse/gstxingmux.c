@@ -202,7 +202,8 @@ has_xing_header (guint32 header, guchar * data, gsize size)
   data += 4;
   data += get_xing_offset (header);
 
-  if (memcmp (data, "Xing", 4) == 0 || memcmp (data, "Info", 4) == 0)
+  if (memcmp (data, "Xing", 4) == 0 ||
+      memcmp (data, "Info", 4) == 0 || memcmp (data, "VBRI", 4) == 0)
     return TRUE;
   else
     return FALSE;
@@ -217,19 +218,32 @@ generate_xing_header (GstXingMux * xing)
 
   guint32 header;
   guint32 header_be;
-  guint size, spf;
+  guint size, spf, xing_offset;
   gulong rate;
+  guint bitrate = 0x00;
 
   gint64 duration;
   gint64 byte_count;
 
   header = xing->first_header;
-  /* Set bitrate */
-  /* TODO: Choose smallest possible value */
-  header &= 0xffff0fff;
-  header |= 0xa << 12;          /* 0101b */
 
-  parse_header (header, &size, &spf, &rate);
+  /* Set bitrate and choose lowest possible size */
+  do {
+    bitrate++;
+
+    header &= 0xffff0fff;
+    header |= bitrate << 12;
+
+    parse_header (header, &size, &spf, &rate);
+    xing_offset = get_xing_offset (header);
+  } while (size < (4 + xing_offset + 4 + 4 + 4 + 4 + 100) && bitrate < 0xfe);
+
+  g_print ("0x%x\n", bitrate);
+
+  if (bitrate == 0xfe) {
+    GST_ERROR ("No usable bitrate found!");
+    return NULL;
+  }
 
   if (gst_pad_alloc_buffer_and_set_caps (xing->srcpad, 0, size,
           GST_PAD_CAPS (xing->srcpad), &xing_header) != GST_FLOW_OK) {
@@ -243,7 +257,7 @@ generate_xing_header (GstXingMux * xing)
   memcpy (data, &header_be, 4);
 
   data += 4;
-  data += get_xing_offset (header);
+  data += xing_offset;
 
   memcpy (data, "Xing", 4);
   data += 4;
@@ -455,6 +469,13 @@ gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer)
         xing->first_header = header;
 
         xing_header = generate_xing_header (xing);
+
+        if (xing_header == NULL) {
+          GST_ERROR ("Can't generate Xing header");
+          gst_buffer_unref (outbuf);
+          return GST_FLOW_ERROR;
+        }
+
         xing_header_size = GST_BUFFER_SIZE (xing_header);
 
         if (GST_FLOW_IS_FATAL (ret = gst_pad_push (xing->srcpad, xing_header))) {
@@ -477,9 +498,17 @@ gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer)
     seek_entry->byte = (seek_entry->timestamp == 0) ? 0 : xing->byte_count;
     xing->seek_table = g_list_append (xing->seek_table, seek_entry);
 
+    duration = gst_util_uint64_scale (spf, GST_SECOND, rate);
+
+    GST_BUFFER_TIMESTAMP (outbuf) =
+        (xing->duration == GST_CLOCK_TIME_NONE) ? 0 : xing->duration;
+    GST_BUFFER_DURATION (outbuf) = duration;
+    GST_BUFFER_OFFSET (outbuf) = xing->byte_count;
+    GST_BUFFER_OFFSET_END (outbuf) =
+        xing->byte_count + GST_BUFFER_SIZE (outbuf);
+
     xing->byte_count += GST_BUFFER_SIZE (outbuf);
 
-    duration = gst_util_uint64_scale (spf, GST_SECOND, rate);
     if (xing->duration == GST_CLOCK_TIME_NONE)
       xing->duration = duration;
     else
@@ -508,11 +537,23 @@ gst_xing_mux_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
       if (xing->sent_xing) {
         GST_ERROR ("Already sent Xing header, dropping NEWSEGMENT event!");
-
         gst_event_unref (event);
         result = FALSE;
       } else {
-        result = gst_pad_push_event (xing->srcpad, event);
+        GstFormat fmt;
+
+        gst_event_parse_new_segment (event, NULL, NULL, &fmt, NULL, NULL, NULL);
+
+        if (fmt == GST_FORMAT_BYTES) {
+          result = gst_pad_push_event (xing->srcpad, event);
+        } else {
+          gst_event_unref (event);
+
+          event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
+              0, GST_CLOCK_TIME_NONE, 0);
+
+          result = gst_pad_push_event (xing->srcpad, event);
+        }
       }
       break;
 
@@ -535,11 +576,16 @@ gst_xing_mux_sink_event (GstPad * pad, GstEvent * event)
 
           header = generate_xing_header (xing);
 
-          GST_INFO ("Writing real Xing header to beginning of stream");
+          if (header == NULL) {
+            GST_ERROR ("Can't generate Xing header");
+          } else {
 
-          if (GST_FLOW_IS_FATAL (ret = gst_pad_push (xing->srcpad, header)))
-            GST_WARNING ("Failed to push updated Xing header: %s\n",
-                gst_flow_get_name (ret));
+            GST_INFO ("Writing real Xing header to beginning of stream");
+
+            if (GST_FLOW_IS_FATAL (ret = gst_pad_push (xing->srcpad, header)))
+              GST_WARNING ("Failed to push updated Xing header: %s\n",
+                  gst_flow_get_name (ret));
+          }
         }
       }
       result = gst_pad_push_event (xing->srcpad, event);
