@@ -43,68 +43,10 @@
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
-
-#include <string.h>
+#include "multipartmux.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_multipart_mux_debug);
 #define GST_CAT_DEFAULT gst_multipart_mux_debug
-
-#define GST_TYPE_MULTIPART_MUX (gst_multipart_mux_get_type())
-#define GST_MULTIPART_MUX(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTIPART_MUX, GstMultipartMux))
-#define GST_MULTIPART_MUX_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTIPART_MUX, GstMultipartMux))
-#define GST_MULTIPART_MUX_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MULTIPART_MUX, GstMultipartMuxClass))
-#define GST_IS_MULTIPART_MUX(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTIPART_MUX))
-#define GST_IS_MULTIPART_MUX_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTIPART_MUX))
-
-typedef struct _GstMultipartMux GstMultipartMux;
-typedef struct _GstMultipartMuxClass GstMultipartMuxClass;
-
-/* all information needed for one multipart stream */
-typedef struct
-{
-  GstCollectData collect;       /* we extend the CollectData */
-
-  GstBuffer *buffer;            /* the queued buffer for this pad */
-  GstClockTime timestamp;       /* its timestamp, converted to running_time so that we can
-                                   correctly sort over multiple segments. */
-}
-GstMultipartPad;
-
-/**
- * GstMultipartMux:
- *
- * The opaque #GstMultipartMux structure.
- */
-struct _GstMultipartMux
-{
-  GstElement element;
-
-  /* pad */
-  GstPad *srcpad;
-
-  /* sinkpads */
-  GstCollectPads *collect;
-
-  gint numpads;
-
-  /* offset in stream */
-  guint64 offset;
-
-  /* boundary string */
-  gchar *boundary;
-
-  gboolean negotiated;
-  gboolean need_segment;
-};
-
-struct _GstMultipartMuxClass
-{
-  GstElementClass parent_class;
-
-  GHashTable *mimetypes;
-};
 
 /* elementfactory information */
 static const GstElementDetails gst_multipart_mux_details =

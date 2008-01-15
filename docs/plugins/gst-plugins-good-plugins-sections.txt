@@ -450,8 +450,6 @@ gst_id3v2_mux_plugin_init
 <FILE>element-jpegdec</FILE>
 <TITLE>jpegdec</TITLE>
 GstJpegDec
-GstJpegDecErrorMgr
-GstJpegDecSourceMgr
 <SUBSECTION Standard>
 GstJpegDecClass
 GST_JPEG_DEC
@@ -502,8 +500,7 @@ GST_MULTIPART_MUX
 GST_MULTIPART_MUX_CLASS
 GST_IS_MULTIPART_MUX
 GST_IS_MULTIPART_MUX_CLASS
-gst_multipart_mux_get_type
-gst_multipart_mux_plugin_init
+GST_MULTIPART_MUX_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -517,8 +514,9 @@ GST_MULTIPART_DEMUX
 GST_MULTIPART_DEMUX_CLASS
 GST_IS_MULTIPART_DEMUX
 GST_IS_MULTIPART_DEMUX_CLASS
-gst_multipart_demux_get_type
-gst_multipart_demux_plugin_init
+MULTIPART_DATA_EOS
+MULTIPART_DATA_ERROR
+MULTIPART_NEED_MORE_DATA
 </SECTION>
 
 <SECTION>
@@ -627,8 +625,6 @@ gst_osxvideosink_get_type
 <FILE>element-pngdec</FILE>
 <TITLE>pngdec</TITLE>
 GstPngDec
-GstPngDecErrorMgr
-GstPngDecSourceMgr
 <SUBSECTION Standard>
 GstPngDecClass
 GST_PNGDEC
@@ -664,7 +660,6 @@ GST_PROGRESS_REPORT
 GST_PROGRESS_REPORT_CLASS
 GST_IS_PROGRESS_REPORT
 GST_IS_PROGRESS_REPORT_CLASS
-gst_progress_report_get_type
 </SECTION>
 
 <SECTION>
