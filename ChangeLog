@@ -1,5 +1,15 @@
 2008-01-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-gamma.xml:
+	* docs/plugins/inspect/plugin-monoscope.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	  Add 3 more plugins to docs.
+
+2008-01-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
 	* sys/osxvideo/osxvideosink.h:
 	  Revert previous change caused by a file that got stuck on an old

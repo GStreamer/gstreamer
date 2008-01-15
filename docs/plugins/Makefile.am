@@ -111,6 +111,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/icydemux/gsticydemux.h \
 	$(top_srcdir)/gst/id3demux/gstid3demux.h \
 	$(top_srcdir)/gst/level/gstlevel.h \
+	$(top_srcdir)/gst/monoscope/gstmonoscope.h \
 	$(top_srcdir)/gst/multipart/multipartdemux.h \
 	$(top_srcdir)/gst/multipart/multipartmux.h \
 	$(top_srcdir)/gst/qtdemux/qtdemux.h \
@@ -119,6 +120,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \
 	$(top_srcdir)/gst/udp/gstudpsrc.h \
 	$(top_srcdir)/gst/videocrop/gstvideocrop.h \
+	$(top_srcdir)/gst/videofilter/gstgamma.h \
 	$(top_srcdir)/gst/videofilter/gstvideobalance.h \
 	$(top_srcdir)/gst/videofilter/gstvideoflip.h \
 	$(top_srcdir)/gst/videomixer/videomixer.h \
