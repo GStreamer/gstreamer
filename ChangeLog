@@ -1,5 +1,13 @@
 2008-01-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* sys/osxaudio/gstosxaudiosink.h:
+	* sys/osxvideo/osxvideosink.h:
+	  Managed to resolve most unused declarations. Filed a bug for one left.	  
+
+2008-01-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
 	  Cleanup section file.
 

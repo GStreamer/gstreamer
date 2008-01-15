@@ -1,7 +1,5 @@
 /* GStreamer
- * Copyright (C) 2004-6 Zaheer Abbas Merali <zaheerabbas at merali dot org>
- * Copyright (C) 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
- *
+ * Copyright (C) 2004 Zaheer Abbas Merali <zaheerabbas at merali dot org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,62 +15,65 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
- *
- *
- * The development of this code was made possible due to the involvement of Pioneers 
- * of the Inevitable, the creators of the Songbird Music player
- * 
  */
  
-#ifndef __GST_OSX_VIDEO_SINK_H__
-#define __GST_OSX_VIDEO_SINK_H__
+#ifndef __GST_OSXVIDEOSINK_H__
+#define __GST_OSXVIDEOSINK_H__
 
+
+#include <gst/gst.h>
 #include <gst/video/gstvideosink.h>
 
 #include <string.h>
 #include <math.h>
-#include <Cocoa/Cocoa.h>
 
+#define HAVE_OSX
+#ifdef HAVE_OSX
 #include <QuickTime/QuickTime.h>
 #import "cocoawindow.h"
-
-GST_DEBUG_CATEGORY_EXTERN (gst_debug_osx_video_sink);
-#define GST_CAT_DEFAULT gst_debug_osx_video_sink
+#endif
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_OSX_VIDEO_SINK \
-  (gst_osx_video_sink_get_type())
-#define GST_OSX_VIDEO_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_OSX_VIDEO_SINK, GstOSXVideoSink))
-#define GST_OSX_VIDEO_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_OSX_VIDEO_SINK, GstOSXVideoSinkClass))
-#define GST_IS_OSX_VIDEO_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_OSX_VIDEO_SINK))
-#define GST_IS_OSX_VIDEO_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_OSX_VIDEO_SINK))
+#define GST_TYPE_OSXVIDEOSINK \
+  (gst_osxvideosink_get_type())
+#define GST_OSXVIDEOSINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_OSXVIDEOSINK, GstOSXVideoSink))
+#define GST_OSXVIDEOSINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_OSXVIDEOSINK, GstOSXVideoSinkClass))
+#define GST_IS_OSXVIDEOSINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_OSXVIDEOSINK))
+#define GST_IS_OSXVIDEOSINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_OSXVIDEOSINK))
 
 typedef struct _GstOSXWindow GstOSXWindow;
+typedef struct _GstOSXImage GstOSXImage;
 
 typedef struct _GstOSXVideoSink GstOSXVideoSink;
 typedef struct _GstOSXVideoSinkClass GstOSXVideoSinkClass;
-
-#define GST_TYPE_OSXVIDEOBUFFER (gst_osxvideobuffer_get_type())
 
 /* OSXWindow stuff */
 struct _GstOSXWindow {
   gint width, height;
   gboolean internal;
-  GstOSXVideoSinkWindow* win;
+#ifdef HAVE_OSX
+  GstWindow* win;
   GstGLView* gstview;
-  NSAutoreleasePool *pool;
+#endif
 };
 
 struct _GstOSXVideoSink {
   /* Our element stuff */
   GstVideoSink videosink;
+
   GstOSXWindow *osxwindow;
+  GstOSXImage *osximage;
+  GstOSXImage *cur_image;
   
+  int width;
+  int height;
+  guint32 format;
+
   gint fps_n;
   gint fps_d;
   
@@ -88,20 +89,13 @@ struct _GstOSXVideoSink {
 
 struct _GstOSXVideoSinkClass {
   GstVideoSinkClass parent_class;
+
+  /* signal callbacks */
+  void (*view_created) (GstElement* element, gpointer view);
 };
 
-GType gst_osx_video_sink_get_type(void);
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
-@interface NSApplication(AppleMenu)
-- (void)setAppleMenu:(NSMenu *)menu;
-@end
-#endif
-
-@interface GstAppDelegate : NSObject
-- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender;
-@end
+GType gst_osxvideosink_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_OSX_VIDEO_SINK_H__ */
+#endif /* __GST_OSXVIDEOSINK_H__ */

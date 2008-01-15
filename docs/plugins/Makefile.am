@@ -111,6 +111,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/icydemux/gsticydemux.h \
 	$(top_srcdir)/gst/id3demux/gstid3demux.h \
 	$(top_srcdir)/gst/level/gstlevel.h \
+	$(top_srcdir)/gst/multipart/multipartdemux.h \
+	$(top_srcdir)/gst/multipart/multipartmux.h \
 	$(top_srcdir)/gst/qtdemux/qtdemux.h \
 	$(top_srcdir)/gst/rtsp/gstrtpdec.h \
 	$(top_srcdir)/gst/rtsp/gstrtspsrc.h \
@@ -131,13 +133,12 @@ EXTRA_HFILES = \
 	$(top_srcdir)/sys/oss/gstossmixerelement.h \
 	$(top_srcdir)/sys/oss/gstosssink.h \
 	$(top_srcdir)/sys/oss/gstosssrc.h \
+	$(top_srcdir)/sys/osxaudio/gstosxaudiosrc.h \
+	$(top_srcdir)/sys/osxaudio/gstosxaudiosink.h \
+	$(top_srcdir)/sys/osxvideo/osxvideosink.h \
 	$(top_srcdir)/sys/osxvideo/osxvideosink.h \
 	$(top_srcdir)/sys/v4l2/gstv4l2src.h \
 	$(top_srcdir)/sys/ximage/gstximagesrc.h
-
-# file that need splitting a header
-#	$(top_srcdir)/gst/multipart/multipartdemux.c
-#	$(top_srcdir)/gst/multipart/multipartmux.c
 
 
 # example code that needs to be converted to xml and placed in xml/
