@@ -42,53 +42,19 @@ gst_apev2_mux_plugin_init
 </SECTION>
 
 <SECTION>
-<FILE>element-audiopanorama</FILE>
-<TITLE>audiopanorama</TITLE>
-GstAudioPanorama
-<SUBSECTION Standard>
-GstAudioPanoramaClass
-GST_AUDIO_PANORAMA
-GST_AUDIO_PANORAMA_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>element-audioinvert</FILE>
-<TITLE>audioinvert</TITLE>
-GstAudioInvert
-<SUBSECTION Standard>
-GstAudioInvertClass
-GST_AUDIO_INVERT
-GST_AUDIO_INVERT_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>element-audioamplify</FILE>
 <TITLE>audioamplify</TITLE>
 GstAudioAmplify
 <SUBSECTION Standard>
 GstAudioAmplifyClass
+GstAudioAmplifyProcessFunc
 GST_AUDIO_AMPLIFY
 GST_AUDIO_AMPLIFY_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>element-audiodynamic</FILE>
-<TITLE>audiodynamic</TITLE>
-GstAudioDynamic
-<SUBSECTION Standard>
-GstAudioDynamicClass
-GST_AUDIO_DYNAMIC
-GST_AUDIO_DYNAMIC_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>element-audiochebyshevfreqlimit</FILE>
-<TITLE>audiochebyshevfreqlimit</TITLE>
-GstAudioChebyshevFreqLimit
-<SUBSECTION Standard>
-GstAudioChebyshevFreqLimitClass
-GST_AUDIO_CHEBYSHEV_FREQ_LIMIT
-GST_AUDIO_CHEBYSHEV_FREQ_LIMIT_CLASS
+GST_AUDIO_AMPLIFY_GET_CLASS
+GST_IS_AUDIO_AMPLIFY
+GST_IS_AUDIO_AMPLIFY_CLASS
+GST_TYPE_AUDIO_AMPLIFY
+gst_audio_amplify_get_type
 </SECTION>
 
 <SECTION>
@@ -97,8 +63,78 @@ GST_AUDIO_CHEBYSHEV_FREQ_LIMIT_CLASS
 GstAudioChebyshevFreqBand
 <SUBSECTION Standard>
 GstAudioChebyshevFreqBandClass
+GstAudioChebyshevFreqBandProcessFunc
 GST_AUDIO_CHEBYSHEV_FREQ_BAND
 GST_AUDIO_CHEBYSHEV_FREQ_BAND_CLASS
+GST_AUDIO_CHEBYSHEV_FREQ_BAND_GET_CLASS
+GST_IS_AUDIO_CHEBYSHEV_FREQ_BAND
+GST_IS_AUDIO_CHEBYSHEV_FREQ_BAND_CLASS
+GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND
+gst_audio_chebyshev_freq_band_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-audiochebyshevfreqlimit</FILE>
+<TITLE>audiochebyshevfreqlimit</TITLE>
+GstAudioChebyshevFreqLimit
+<SUBSECTION Standard>
+GstAudioChebyshevFreqLimitClass
+GstAudioChebyshevFreqLimitProcessFunc
+GST_AUDIO_CHEBYSHEV_FREQ_LIMIT
+GST_AUDIO_CHEBYSHEV_FREQ_LIMIT_CLASS
+GST_AUDIO_CHEBYSHEV_FREQ_LIMIT_GET_CLASS
+GST_IS_AUDIO_CHEBYSHEV_FREQ_LIMIT
+GST_IS_AUDIO_CHEBYSHEV_FREQ_LIMIT_CLASS
+GST_TYPE_AUDIO_CHEBYSHEV_FREQ_LIMIT
+gst_audio_chebyshev_freq_limit_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-audiodynamic</FILE>
+<TITLE>audiodynamic</TITLE>
+GstAudioDynamic
+GstAudioDynamicProcessFunc
+<SUBSECTION Standard>
+GstAudioDynamicClass
+GST_AUDIO_DYNAMIC
+GST_AUDIO_DYNAMIC_CLASS
+GST_AUDIO_DYNAMIC_GET_CLASS
+GST_IS_AUDIO_DYNAMIC
+GST_IS_AUDIO_DYNAMIC_CLASS
+GST_TYPE_AUDIO_DYNAMIC
+gst_audio_dynamic_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-audioinvert</FILE>
+<TITLE>audioinvert</TITLE>
+GstAudioInvert
+<SUBSECTION Standard>
+GstAudioInvertClass
+GstAudioInvertProcessFunc
+GST_AUDIO_INVERT
+GST_AUDIO_INVERT_CLASS
+GST_AUDIO_INVERT_GET_CLASS
+GST_IS_AUDIO_INVERT
+GST_IS_AUDIO_INVERT_CLASS
+GST_TYPE_AUDIO_INVERT
+gst_audio_invert_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-audiopanorama</FILE>
+<TITLE>audiopanorama</TITLE>
+GstAudioPanorama
+<SUBSECTION Standard>
+GstAudioPanoramaClass
+GstAudioPanoramaProcessFunc
+GST_AUDIO_PANORAMA
+GST_AUDIO_PANORAMA_CLASS
+GST_AUDIO_PANORAMA_GET_CLASS
+GST_IS_AUDIO_PANORAMA
+GST_IS_AUDIO_PANORAMA_CLASS
+GST_TYPE_AUDIO_PANORAMA
+gst_audio_panorama_get_type
 </SECTION>
 
 <SECTION>
@@ -135,6 +171,12 @@ gst_auto_video_sink_get_type
 GstAviDemux
 <SUBSECTION Standard>
 GstAviDemuxClass
+GstAviAudioPad
+GstAviCollectData
+GstAviDemuxHeaderState
+GstAviDemuxState
+GstAviPad
+GstAviVideoPad
 GST_TYPE_AVI_DEMUX
 GST_AVI_DEMUX
 GST_AVI_DEMUX_CLASS
@@ -142,6 +184,14 @@ GST_IS_AVI_DEMUX
 GST_IS_AVI_DEMUX_CLASS
 GST_AVI_DEMUX_MAX_STREAMS
 gst_avi_demux_get_type
+GST_AVI_DISABLE_INDEX_ARRAY
+GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME
+GST_AVI_INDEX_OF_CHUNKS
+GST_AVI_INDEX_OF_INDEXES
+GST_AVI_SUPERINDEX_COUNT
+avi_stream_context
+gst_avi_index_entry
+gst_avi_superindex_entry
 </SECTION>
 
 <SECTION>
@@ -371,6 +421,7 @@ GST_ID3V2_MUX_CLASS
 GST_IS_ID3V2_MUX
 GST_IS_ID3V2_MUX_CLASS
 gst_id3v2_mux_get_type
+gst_id3v2_mux_plugin_init
 </SECTION>
 
 <SECTION>
@@ -533,14 +584,16 @@ GST_TYPE_OSX_AUDIO_SINK
 GstOSXVideoSink
 <SUBSECTION Standard>
 GstOSXVideoSinkClass
+GstOSXImage
 <SUBSECTION Private>
-GST_IS_OSX_VIDEO_SINK
-GST_IS_OSX_VIDEO_SINK_CLASS
-GST_OSX_VIDEO_SINK
-GST_OSX_VIDEO_SINK_CLASS
+GST_IS_OSXVIDEOSINK
+GST_IS_OSXVIDEOSINK_CLASS
+GST_OSXVIDEOSINK
+GST_OSXVIDEOSINK_CLASS
 GST_TYPE_OSXVIDEOBUFFER
-GST_TYPE_OSX_VIDEO_SINK
+GST_TYPE_OSXVIDEOSINK
 GstOSXWindow
+gst_osxvideosink_get_type
 </SECTION>
 
 <SECTION>
@@ -551,12 +604,12 @@ GstPngDecErrorMgr
 GstPngDecSourceMgr
 <SUBSECTION Standard>
 GstPngDecClass
-GST_PNG_DEC
-GST_IS_PNG_DEC
-GST_TYPE_PNG_DEC
-GST_PNG_DEC_CLASS
-GST_IS_PNG_DEC_CLASS
-gst_png_dec_get_type
+GST_PNGDEC
+GST_IS_PNGDEC
+GST_TYPE_PNGDEC
+GST_PNGDEC_CLASS
+GST_IS_PNGDEC_CLASS
+gst_pngdec_get_type
 </SECTION>
 
 <SECTION>
@@ -593,6 +646,15 @@ gst_progress_report_get_type
 GstQTDemux
 <SUBSECTION Standard>
 GstQTDemuxClass
+QtDemuxStream
+GST_IS_QTDEMUX
+GST_IS_QTDEMUX_CLASS
+GST_QTDEMUX
+GST_QTDEMUX_CAST
+GST_QTDEMUX_CLASS
+GST_QTDEMUX_MAX_STREAMS
+GST_TYPE_QTDEMUX
+gst_qtdemux_get_type
 </SECTION>
 
 <SECTION>
@@ -693,6 +755,13 @@ GST_IS_UDPSRC_CLASS
 GstVideoCrop
 <SUBSECTION Standard>
 GstVideoCropClass
+VideoCropPixelFormat
+GstVideoCropImageDetails
+GST_IS_VIDEO_CROP
+GST_IS_VIDEO_CROP_CLASS
+GST_VIDEO_CROP
+GST_VIDEO_CROP_CLASS
+GST_TYPE_VIDEO_CROP
 </SECTION>
 
 <SECTION>
@@ -762,9 +831,26 @@ DEFAULT_PAD_ALPHA
 DEFAULT_PAD_XPOS
 DEFAULT_PAD_YPOS
 DEFAULT_PAD_ZORDER
-ROUND_UP_2
-ROUND_UP_4
-ROUND_UP_8
+</SECTION>
+
+<SECTION>
+<FILE>element-v4l2src</FILE>
+<TITLE>v4l2src</TITLE>
+GstV4l2Src
+<SUBSECTION Standard>
+GST_V4L2_MAX_BUFFERS
+GST_V4L2_MIN_BUFFERS
+GST_V4L2_MAX_SIZE
+GstV4l2BufferPool
+GstV4l2Buffer
+GstV4l2Src
+GstV4l2SrcClass
+GST_V4L2SRC
+GST_IS_V4L2SRC
+GST_TYPE_V4L2SRC
+gst_v4l2src_get_type
+GST_V4L2SRC_CLASS
+GST_IS_V4L2SRC_CLASS
 </SECTION>
 
 <SECTION>
@@ -773,6 +859,12 @@ ROUND_UP_8
 GstWaveFormSink
 <SUBSECTION Standard>
 GstWaveFormSinkClass
+GST_IS_WAVEFORM_SINK
+GST_IS_WAVEFORM_SINK_CLASS
+GST_WAVEFORM_SINK
+GST_WAVEFORM_SINK_CLASS
+GST_TYPE_WAVEFORM_SINK
+gst_waveform_sink_get_type
 </SECTION>
 
 <SECTION>
@@ -781,6 +873,13 @@ GstWaveFormSinkClass
 GstWavpackDec
 <SUBSECTION Standard>
 GstWavpackDecClass
+GST_IS_WAVPACK_DEC
+GST_IS_WAVPACK_DEC_CLASS
+GST_WAVPACK_DEC
+GST_WAVPACK_DEC_CLASS
+GST_TYPE_WAVPACK_DEC
+gst_wavpack_dec_get_type
+gst_wavpack_dec_plugin_init
 </SECTION>
 
 <SECTION>
@@ -789,6 +888,13 @@ GstWavpackDecClass
 GstWavpackEnc
 <SUBSECTION Standard>
 GstWavpackEncClass
+GST_IS_WAVPACK_ENC
+GST_IS_WAVPACK_ENC_CLASS
+GST_WAVPACK_ENC
+GST_WAVPACK_ENC_CLASS
+GST_TYPE_WAVPACK_ENC
+gst_wavpack_enc_get_type
+gst_wavpack_enc_plugin_init
 </SECTION>
 
 <SECTION>
@@ -797,6 +903,14 @@ GstWavpackEncClass
 GstWavpackParse
 <SUBSECTION Standard>
 GstWavpackParseClass
+GstWavpackParseIndexEntry
+GST_IS_WAVPACK_PARSE
+GST_IS_WAVPACK_PARSE_CLASS
+GST_WAVPACK_PARSE
+GST_WAVPACK_PARSE_CLASS
+GST_TYPE_WAVPACK_PARSE
+gst_wavpack_parse_get_type
+gst_wavpack_parse_plugin_init
 </SECTION>
 
 <SECTION>
@@ -812,25 +926,6 @@ GST_TYPE_WAVPARSE
 gst_wavparse_get_type
 GST_WAVPARSE_CLASS
 GST_IS_WAVPARSE_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>element-v4l2src</FILE>
-<TITLE>v4l2src</TITLE>
-GstV4l2Src
-<SUBSECTION Standard>
-GST_V4L2_MAX_BUFFERS
-GST_V4L2_MIN_BUFFERS
-GstV4l2BufferPool
-GstV4l2Buffer
-GstV4l2Src
-GstV4l2SrcClass
-GST_V4L2SRC
-GST_IS_V4L2SRC
-GST_TYPE_V4L2SRC
-gst_v4l2src_get_type
-GST_V4L2SRC_CLASS
-GST_IS_V4L2SRC_CLASS
 </SECTION>
 
 <SECTION>
