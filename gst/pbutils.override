@@ -33,6 +33,11 @@ headers
 GST_DEBUG_CATEGORY_EXTERN (pygst_debug);
 #define GST_CAT_DEFAULT pygst_debug
 
+/* Boonky define that allows for backwards compatibility with Python 2.4 */
+#if PY_VERSION_HEX < 0x02050000
+#define Py_ssize_t int
+#endif
+
 #ifdef HAVE_PLUGINS_INSTALL
 static void
 install_plugins_result_handler(GstInstallPluginsReturn result, gpointer user_data)

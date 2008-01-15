@@ -1,3 +1,9 @@
+2008-01-15  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/pbutils.override:
+	Fix compilation against Python 2.4.
+	Fixes: #509522
+
 2008-01-14  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* configure.ac:
