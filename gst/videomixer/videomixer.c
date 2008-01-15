@@ -51,36 +51,15 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
+#include <gst/controller/gstcontroller.h>
 
 #include <stdlib.h>
 #include <string.h>
 
+#include "videomixer.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_videomixer_debug);
 #define GST_CAT_DEFAULT gst_videomixer_debug
-
-#define GST_TYPE_VIDEO_MIXER_PAD (gst_videomixer_pad_get_type())
-#define GST_VIDEO_MIXER_PAD(obj) \
-        (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_MIXER_PAD, GstVideoMixerPad))
-#define GST_VIDEO_MIXER_PAD_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_MIXER_PAD, GstVideoMixerPadiClass))
-#define GST_IS_VIDEO_MIXER_PAD(obj) \
-        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_MIXER_PAD))
-#define GST_IS_VIDEO_MIXER_PAD_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_MIXER_PAD))
-
-typedef struct _GstVideoMixerPad GstVideoMixerPad;
-typedef struct _GstVideoMixerPadClass GstVideoMixerPadClass;
-typedef struct _GstVideoMixerCollect GstVideoMixerCollect;
-
-#define GST_TYPE_VIDEO_MIXER (gst_videomixer_get_type())
-#define GST_VIDEO_MIXER(obj) \
-        (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_MIXER, GstVideoMixer))
-#define GST_VIDEO_MIXER_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_MIXER, GstVideoMixerClass))
-#define GST_IS_VIDEO_MIXER(obj) \
-        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_MIXER))
-#define GST_IS_VIDEO_MIXER_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_MIXER))
 
 #define GST_VIDEO_MIXER_GET_STATE_LOCK(mix) \
   (GST_VIDEO_MIXER(mix)->state_lock)
@@ -91,69 +70,9 @@ typedef struct _GstVideoMixerCollect GstVideoMixerCollect;
 
 static GType gst_videomixer_get_type (void);
 
-typedef struct _GstVideoMixer GstVideoMixer;
-typedef struct _GstVideoMixerClass GstVideoMixerClass;
 
-/**
- * GstVideoMixerBackground:
- * @VIDEO_MIXER_BACKGROUND_CHECKER: checker pattern background
- * @VIDEO_MIXER_BACKGROUND_BLACK: solid color black background
- * @VIDEO_MIXER_BACKGROUND_WHITE: solid color white background
- *
- * The different backgrounds videomixer can blend over.
- */
-typedef enum
-{
-  VIDEO_MIXER_BACKGROUND_CHECKER,
-  VIDEO_MIXER_BACKGROUND_BLACK,
-  VIDEO_MIXER_BACKGROUND_WHITE
-}
-GstVideoMixerBackground;
-
-/**
- * GstVideoMixer:
- *
- * The opaque #GstVideoMixer structure.
- */
-struct _GstVideoMixer
-{
-  GstElement element;
-
-  /* pad */
-  GstPad *srcpad;
-
-  /* Lock to prevent the state to change while blending */
-  GMutex *state_lock;
-  /* Sink pads using Collect Pads from core's base library */
-  GstCollectPads *collect;
-  /* sinkpads, a GSList of GstVideoMixerPads */
-  GSList *sinkpads;
-
-  gint numpads;
-
-  /* the master pad */
-  GstVideoMixerPad *master;
-
-  gint in_width, in_height;
-  gint out_width, out_height;
-  gboolean setcaps;
-  gboolean sendseg;
-
-  GstVideoMixerBackground background;
-
-  gint fps_n;
-  gint fps_d;
-};
-
-struct _GstVideoMixerClass
-{
-  GstElementClass parent_class;
-};
-
-static void gst_videomixer_pad_base_init (gpointer g_class);
 static void gst_videomixer_pad_class_init (GstVideoMixerPadClass * klass);
 static void gst_videomixer_pad_init (GstVideoMixerPad * mixerpad);
-
 static void gst_videomixer_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_videomixer_pad_set_property (GObject * object, guint prop_id,
@@ -174,39 +93,6 @@ enum
   ARG_PAD_ALPHA
 };
 
-struct _GstVideoMixerCollect
-{
-  GstCollectData collect;       /* we extend the CollectData */
-
-  GstBuffer *buffer;            /* the queued buffer for this pad */
-
-  GstVideoMixerPad *mixpad;
-};
-
-/* all information needed for one video stream */
-struct _GstVideoMixerPad
-{
-  GstPad parent;                /* subclass the pad */
-
-  gint64 queued;
-
-  guint in_width, in_height;
-  gint fps_n;
-  gint fps_d;
-
-  gint xpos, ypos;
-  guint zorder;
-  gint blend_mode;
-  gdouble alpha;
-
-  GstVideoMixerCollect *mixcol;
-};
-
-struct _GstVideoMixerPadClass
-{
-  GstPadClass parent_class;
-};
-
 static GType
 gst_videomixer_pad_get_type (void)
 {
@@ -215,7 +101,7 @@ gst_videomixer_pad_get_type (void)
   if (!videomixer_pad_type) {
     static const GTypeInfo videomixer_pad_info = {
       sizeof (GstVideoMixerPadClass),
-      gst_videomixer_pad_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_videomixer_pad_class_init,
       NULL,
@@ -232,11 +118,6 @@ gst_videomixer_pad_get_type (void)
 }
 
 static void
-gst_videomixer_pad_base_init (gpointer g_class)
-{
-}
-
-static void
 gst_videomixer_pad_class_init (GstVideoMixerPadClass * klass)
 {
   GObjectClass *gobject_class;
@@ -250,16 +131,19 @@ gst_videomixer_pad_class_init (GstVideoMixerPadClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_PAD_ZORDER,
       g_param_spec_uint ("zorder", "Z-Order", "Z Order of the picture",
-          0, 10000, DEFAULT_PAD_ZORDER, G_PARAM_READWRITE));
+          0, 10000, DEFAULT_PAD_ZORDER,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_PAD_XPOS,
       g_param_spec_int ("xpos", "X Position", "X Position of the picture",
-          G_MININT, G_MAXINT, DEFAULT_PAD_XPOS, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, DEFAULT_PAD_XPOS,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_PAD_YPOS,
       g_param_spec_int ("ypos", "Y Position", "Y Position of the picture",
-          G_MININT, G_MAXINT, DEFAULT_PAD_YPOS, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, DEFAULT_PAD_YPOS,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_PAD_ALPHA,
-      g_param_spec_double ("alpha", "Alpha", "Alpha of the picture",
-          0.0, 1.0, DEFAULT_PAD_ALPHA, G_PARAM_READWRITE));
+      g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
+          DEFAULT_PAD_ALPHA, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 }
 
 static void

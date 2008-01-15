@@ -14,8 +14,7 @@
       <longname>Auto audio sink</longname>
       <class>Sink/Audio</class>
       <description>Wrapper audio sink for automatically detected audio sink</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
-    Jan Schmidt &lt;thaytan@noraisin.net</author>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;012Jan Schmidt &lt;thaytan@noraisin.net</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -30,8 +29,7 @@
       <longname>Auto video sink</longname>
       <class>Sink/Video</class>
       <description>Wrapper video sink for automatically detected video sink</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
-    Jan Schmidt &lt;thaytan@noraisin.net</author>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;012Jan Schmidt &lt;thaytan@noraisin.net</author>
       <pads>
         <caps>
           <name>sink</name>

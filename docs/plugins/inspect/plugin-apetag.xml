@@ -14,19 +14,19 @@
       <longname>APE tag demuxer</longname>
       <class>Codec/Demuxer/Metadata</class>
       <description>Read and output APE tags while demuxing the contents</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Tim-Philipp M303274ller &lt;tim centricular net&gt;</author>
       <pads>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
-        </caps>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>application/x-apetag</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
         </caps>
       </pads>
     </element>

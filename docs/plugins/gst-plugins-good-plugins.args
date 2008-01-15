@@ -209,6 +209,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstUDPSrc::sock</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Socket Handle</NICK>
+<BLURB>Socket currently in use for UDP reception. (-1 = no socket).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSMPTE::border</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -326,6 +336,16 @@
 <NICK>TCP Timeout</NICK>
 <BLURB>Fail after timeout microseconds on TCP connections (0 = disabled).</BLURB>
 <DEFAULT>20000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::connection-speed</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 2147483</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Connection Speed</NICK>
+<BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1846,6 +1866,46 @@
 <NICK>Bytes to serve</NICK>
 <BLURB>Number of bytes received to serve to clients.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::clients</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Clients</NICK>
+<BLURB>A comma separated list of host:port pairs with destinations.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::closefd</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Close sockfd</NICK>
+<BLURB>Close sockfd if passed as property on state change.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::sock</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Socket Handle</NICK>
+<BLURB>Socket currently in use for UDP sending. (-1 == no socket).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::sockfd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Socket Handle</NICK>
+<BLURB>Socket to use for UDP sending. (-1 == allocate).</BLURB>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17121,7 +17181,7 @@
 <ARG>
 <NAME>GstAudioDynamic::ratio</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,inf]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratio</NICK>
 <BLURB>Ratio that should be applied.</BLURB>
@@ -17329,9 +17389,19 @@
 </ARG>
 
 <ARG>
+<NAME>GstV4l2Src::always-copy</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Always Copy</NICK>
+<BLURB>If the buffer will or not be used directly from mmap.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudioChebyshevFreqBand::lower-frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>[0,100000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Lower frequency</NICK>
 <BLURB>Start frequency of the band (Hz).</BLURB>
@@ -17361,7 +17431,7 @@
 <ARG>
 <NAME>GstAudioChebyshevFreqBand::ripple</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>[0,200]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ripple</NICK>
 <BLURB>Amount of ripple (dB).</BLURB>
@@ -17381,7 +17451,7 @@
 <ARG>
 <NAME>GstAudioChebyshevFreqBand::upper-frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>[0,100000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Upper frequency</NICK>
 <BLURB>Stop frequency of the band (Hz).</BLURB>
@@ -17436,5 +17506,55 @@
 <NICK>Type</NICK>
 <BLURB>Type of the chebychev filter.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRndBufferSize::max</NAME>
+<TYPE>glong</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>maximum</NICK>
+<BLURB>maximum buffer size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRndBufferSize::min</NAME>
+<TYPE>glong</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>mininum</NICK>
+<BLURB>mininum buffer size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRndBufferSize::seed</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>random number seed</NICK>
+<BLURB>seed for randomness (initialized when going from READY to PAUSED).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAutoAudioSink::filter-caps</NAME>
+<TYPE>GstCaps</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Filter caps</NICK>
+<BLURB>Filter sink candidates using these caps.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAutoVideoSink::filter-caps</NAME>
+<TYPE>GstCaps</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Filter caps</NICK>
+<BLURB>Filter sink candidates using these caps.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 

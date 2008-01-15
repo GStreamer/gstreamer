@@ -14,17 +14,17 @@
       <longname>AudioAmplify</longname>
       <class>Filter/Effect/Audio</class>
       <description>Amplifies an audio stream by a given factor</description>
-      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -35,17 +35,17 @@
       <longname>AudioChebyshevFreqBand</longname>
       <class>Filter/Effect/Audio</class>
       <description>Chebyshev band pass and band reject filter</description>
-      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -56,17 +56,17 @@
       <longname>AudioChebyshevFreqLimit</longname>
       <class>Filter/Effect/Audio</class>
       <description>Chebyshev low pass and high pass filter</description>
-      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -77,17 +77,17 @@
       <longname>AudioDynamic</longname>
       <class>Filter/Effect/Audio</class>
       <description>Compressor and Expander</description>
-      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -98,17 +98,17 @@
       <longname>AudioInvert</longname>
       <class>Filter/Effect/Audio</class>
       <description>Swaps upper and lower half of audio samples</description>
-      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -122,16 +122,16 @@
       <author>Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)2, endianness=(int)1234, width=(int)32; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)2, endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)32; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)2, endianness=(int)1234, width=(int)32; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)2, endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
         </caps>
       </pads>
     </element>

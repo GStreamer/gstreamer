@@ -17,14 +17,14 @@
       <author>David A. Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>ANY</details>
         </caps>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>ANY</details>
         </caps>

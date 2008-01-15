@@ -278,3 +278,57 @@ guint  arg1
 guint  arg2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstRTPDec::on-bye-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPDec *gstrtpdec
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPDec::on-bye-timeout</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPDec *gstrtpdec
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPDec::on-new-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPDec *gstrtpdec
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPDec::on-ssrc-collision</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPDec *gstrtpdec
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPDec::on-ssrc-validated</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPDec *gstrtpdec
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPDec::on-timeout</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPDec *gstrtpdec
+guint  arg1
+guint  arg2
+</SIGNAL>
+

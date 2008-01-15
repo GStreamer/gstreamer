@@ -29,7 +29,7 @@
       <longname>UDP packet sender</longname>
       <class>Sink/Network</class>
       <description>Send data over the network via UDP</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -59,8 +59,7 @@
       <longname>UDP packet receiver</longname>
       <class>Source/Network</class>
       <description>Receive data over the network via UDP</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;
-    Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;012Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;</author>
       <pads>
         <caps>
           <name>src</name>

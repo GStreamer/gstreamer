@@ -14,7 +14,7 @@
       <longname>CD audio source (CDDA)</longname>
       <class>Source/File</class>
       <description>Read audio from CD using libcdio</description>
-      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+      <author>Tim-Philipp M303274ller &lt;tim centricular net&gt;</author>
       <pads>
         <caps>
           <name>src</name>

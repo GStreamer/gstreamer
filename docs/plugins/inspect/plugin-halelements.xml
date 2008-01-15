@@ -14,7 +14,7 @@
       <longname>HAL audio sink</longname>
       <class>Sink/Audio</class>
       <description>Audio sink for sound device access via HAL</description>
-      <author>Jürg Billeter &lt;j@bitron.ch&gt;</author>
+      <author>J303274rg Billeter &lt;j@bitron.ch&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -29,7 +29,7 @@
       <longname>HAL audio source</longname>
       <class>Source/Audio</class>
       <description>Audio source for sound device access via HAL</description>
-      <author>Jürg Billeter &lt;j@bitron.ch&gt;</author>
+      <author>J303274rg Billeter &lt;j@bitron.ch&gt;</author>
       <pads>
         <caps>
           <name>src</name>
