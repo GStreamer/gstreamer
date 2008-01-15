@@ -29,6 +29,7 @@
 GST_DEBUG_CATEGORY_STATIC (mp3parse_debug);
 #define GST_CAT_DEFAULT mp3parse_debug
 
+#define GST_READ_UINT24_BE(p) (p[2] | (p[1] << 8) | (p[0] << 16))
 
 /* elementfactory information */
 static GstElementDetails mp3parse_details = {
@@ -922,8 +923,7 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
       seek_frames = GST_READ_UINT16_BE (data);
       data += 2;
 
-      if (scale == 0 || seek_bytes == 0 || seek_bytes == 3 || seek_bytes > 4
-          || seek_frames == 0) {
+      if (scale == 0 || seek_bytes == 0 || seek_bytes > 4 || seek_frames == 0) {
         GST_WARNING_OBJECT (mp3parse, "Unsupported VBRI seek table");
         goto out_vbri;
       }
@@ -952,21 +952,19 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
       mp3parse->vbri_seek_table = g_new (guint32, nseek_points);
       if (seek_bytes == 4)
         for (i = 0; i < nseek_points; i++) {
-          mp3parse->vbri_seek_table[i] =
-              (i > 0) ? mp3parse->vbri_seek_table[i - 1] : 0;
-          mp3parse->vbri_seek_table[i] += GST_READ_UINT32_BE (data) * scale;
+          mp3parse->vbri_seek_table[i] = GST_READ_UINT32_BE (data) * scale;
           data += 4;
+      } else if (seek_bytes == 3)
+        for (i = 0; i < nseek_points; i++) {
+          mp3parse->vbri_seek_table[i] = GST_READ_UINT24_BE (data) * scale;
+          data += 3;
       } else if (seek_bytes == 2)
         for (i = 0; i < nseek_points; i++) {
-          mp3parse->vbri_seek_table[i] =
-              (i > 0) ? mp3parse->vbri_seek_table[i - 1] : 0;
-          mp3parse->vbri_seek_table[i] += GST_READ_UINT16_BE (data) * scale;
+          mp3parse->vbri_seek_table[i] = GST_READ_UINT16_BE (data) * scale;
           data += 2;
       } else                    /* seek_bytes == 1 */
         for (i = 0; i < nseek_points; i++) {
-          mp3parse->vbri_seek_table[i] =
-              (i > 0) ? mp3parse->vbri_seek_table[i - 1] : 0;
-          mp3parse->vbri_seek_table[i] += GST_READ_UINT8 (data) * scale;
+          mp3parse->vbri_seek_table[i] = GST_READ_UINT8 (data) * scale;
           data += 1;
         }
     }
@@ -1371,11 +1369,28 @@ mp3parse_time_to_bytepos (GstMPEGAudioParse * mp3parse, GstClockTime ts,
   if (mp3parse->vbri_seek_table &&
       mp3parse_total_bytes (mp3parse, &total_bytes) &&
       mp3parse_total_time (mp3parse, &total_time)) {
-    gint i = gst_util_uint64_scale (ts, mp3parse->vbri_seek_points, total_time);
+    gint i, j;
+    gdouble a, b, fa, fb;
 
-    i = CLAMP (i, 0, mp3parse->vbri_seek_points);
+    i = gst_util_uint64_scale (ts, mp3parse->vbri_seek_points - 1, total_time);
+    i = CLAMP (i, 0, mp3parse->vbri_seek_points - 1);
 
-    *bytepos = mp3parse->vbri_seek_table[i];
+    a = gst_guint64_to_gdouble (gst_util_uint64_scale (i, total_time,
+            mp3parse->vbri_seek_points));
+    fa = 0.0;
+    for (j = i; j >= 0; j--)
+      fa += mp3parse->vbri_seek_table[j];
+
+    if (i + 1 < mp3parse->vbri_seek_points) {
+      b = gst_guint64_to_gdouble (gst_util_uint64_scale (i + 1, total_time,
+              mp3parse->vbri_seek_points));
+      fb = fa + mp3parse->vbri_seek_table[i + 1];
+    } else {
+      b = gst_guint64_to_gdouble (total_time);
+      fb = total_bytes;
+    }
+
+    *bytepos = fa + ((fb - fa) / (b - a)) * (ts - a);
 
     return TRUE;
   }
@@ -1433,14 +1448,31 @@ mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
       mp3parse_total_bytes (mp3parse, &total_bytes) &&
       mp3parse_total_time (mp3parse, &total_time)) {
     gint i = 0;
+    guint64 sum = 0;
+    gdouble a, b, fa, fb;
 
-    while (mp3parse->vbri_seek_table[i] < bytepos
-        && i < mp3parse->vbri_seek_points)
+
+    do {
+      sum += mp3parse->vbri_seek_table[i];
       i++;
+    } while (i + 1 < mp3parse->vbri_seek_points
+        && sum + mp3parse->vbri_seek_table[i] < bytepos);
+    i--;
 
-    i = CLAMP (i, 0, mp3parse->vbri_seek_points);
+    a = gst_guint64_to_gdouble (sum);
+    fa = gst_guint64_to_gdouble (gst_util_uint64_scale (i, total_time,
+            mp3parse->vbri_seek_points));
 
-    *ts = gst_util_uint64_scale (total_time, i, mp3parse->vbri_seek_points);
+    if (i + 1 < mp3parse->vbri_seek_points) {
+      b = a + mp3parse->vbri_seek_table[i + 1];
+      fb = gst_guint64_to_gdouble (gst_util_uint64_scale (i + 1, total_time,
+              mp3parse->vbri_seek_points));
+    } else {
+      b = total_bytes;
+      fb = gst_guint64_to_gdouble (total_time);
+    }
+
+    *ts = gst_gdouble_to_guint64 (fa + ((fb - fa) / (b - a)) * (bytepos - a));
 
     return TRUE;
   }

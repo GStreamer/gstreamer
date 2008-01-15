@@ -1,3 +1,13 @@
+2008-01-15  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_handle_first_frame), (mp3parse_time_to_bytepos),
+	(mp3parse_bytepos_to_time):
+	Interpolate the VBRI seek table entries to get better results,
+	support 3 byte seek table entries and prevent overflows in the
+	seek table by adding the relative offsets when using the seek
+	table in a large enough data type.
+
 2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_reset),
