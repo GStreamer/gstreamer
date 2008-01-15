@@ -1,6 +1,13 @@
 2008-01-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* sys/osxvideo/osxvideosink.h:
+	  Revert previous change caused by a file that got stuck on an old
+	  revision.
+
+2008-01-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
 	* gst/multipart/Makefile.am:
 	* gst/multipart/multipartdemux.c:
 	* gst/multipart/multipartdemux.h:
