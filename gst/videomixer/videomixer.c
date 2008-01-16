@@ -1031,10 +1031,10 @@ gst_videomixer_blend_buffers (GstVideoMixer * mix, GstBuffer * outbuf)
     walk = g_slist_next (walk);
 
     if (mixcol->buffer != NULL) {
+      gst_object_sync_values (G_OBJECT (pad),
+          GST_BUFFER_TIMESTAMP (mixcol->buffer));
       gst_videomixer_blend_ayuv_ayuv (GST_BUFFER_DATA (mixcol->buffer),
-          pad->xpos, pad->ypos,
-          pad->in_width, pad->in_height,
-          pad->alpha,
+          pad->xpos, pad->ypos, pad->in_width, pad->in_height, pad->alpha,
           GST_BUFFER_DATA (outbuf), mix->out_width, mix->out_height);
       if (pad == mix->master) {
         GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (mixcol->buffer);
