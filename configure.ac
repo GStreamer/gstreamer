@@ -595,7 +595,7 @@ AG_GST_CHECK_FEATURE(FBDEV, [linux framebuffer], fbdevsink, [
 dnl *** libgio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
 AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
-  PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.15.1, HAVE_GIO="yes", [
+  PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.15.2, HAVE_GIO="yes", [
     HAVE_GIO="no"
     AC_MSG_RESULT(no)
   ])

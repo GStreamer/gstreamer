@@ -1,3 +1,9 @@
+2008-01-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* tests/check/pipelines/gio.c: (GST_START_TEST):
+	Update for API changes in GIO and require GIO 2.15.2 for this.
+
 2008-01-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/xingheader/gstxingmux.c: (generate_xing_header):
