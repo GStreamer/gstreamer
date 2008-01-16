@@ -95,6 +95,9 @@ struct _GstFFMpegDec
   GstClockTime dur1, dur2;
 
   gboolean is_realvideo;
+
+  /* reverse playback queue */
+  GList *queued;
 };
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
@@ -1292,6 +1295,35 @@ alloc_failed:
   }
 }
 
+static void
+clear_queued (GstFFMpegDec *ffmpegdec)
+{
+  g_list_foreach (ffmpegdec->queued, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (ffmpegdec->queued);
+  ffmpegdec->queued = NULL;
+}
+
+static GstFlowReturn
+flush_queued (GstFFMpegDec *ffmpegdec)
+{
+  GstFlowReturn res = GST_FLOW_OK;
+
+  while (ffmpegdec->queued) {
+    GstBuffer *buf = GST_BUFFER_CAST (ffmpegdec->queued->data);
+
+    GST_LOG_OBJECT (ffmpegdec, "pushing buffer %p, timestamp %"
+        GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT, buf,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+    /* iterate ouput queue an push downstream */
+    res = gst_pad_push (ffmpegdec->srcpad, buf);
+
+    ffmpegdec->queued = g_list_delete_link (ffmpegdec->queued, ffmpegdec->queued);
+  }
+  return res;
+}
+
 /* gst_ffmpegdec_[video|audio]_frame:
  * ffmpegdec:
  * data: pointer to the data to decode
@@ -1304,7 +1336,6 @@ alloc_failed:
  * Returns: number of bytes used in decoding. The check for successful decode is
  *   outbuf being non-NULL.
  */
-
 static gint
 gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
     guint8 * data, guint size,
@@ -1377,6 +1408,10 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   /* check if we are dealing with a keyframe here */
   iskeyframe = check_keyframe (ffmpegdec);
+
+  if (iskeyframe) {
+    *ret = flush_queued (ffmpegdec);
+  }
 
   /* when we're waiting for a keyframe, see if we have one or drop the current
    * non-keyframe */
@@ -1682,7 +1717,6 @@ clipped:
   }
 }
 
-
 /* gst_ffmpegdec_frame:
  * ffmpegdec:
  * data: pointer to the data to decode
@@ -1765,8 +1799,17 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
     }
     /* set caps */
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
-    /* and off we go */
-    *ret = gst_pad_push (ffmpegdec->srcpad, outbuf);
+
+    if (ffmpegdec->segment.rate > 0.0) {
+      /* and off we go */
+      *ret = gst_pad_push (ffmpegdec->srcpad, outbuf);
+    }
+    else {
+      /* reverse playback, queue frame till later */
+      GST_DEBUG_OBJECT (ffmpegdec, "queued frame");
+      ffmpegdec->queued = g_list_prepend (ffmpegdec->queued, outbuf);
+      *ret = GST_FLOW_OK;
+    }
   } else {
     GST_DEBUG_OBJECT (ffmpegdec, "We didn't get a decoded buffer");
   }
@@ -1813,7 +1856,8 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:{
+    case GST_EVENT_EOS:
+    {
       if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
         gint have_data, len, try = 0;
 
@@ -1829,9 +1873,14 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
             break;
         } while (try++ < 10);
       }
+      if (ffmpegdec->segment.rate < 0.0) {
+	/* if we have some queued frames for reverse playback, flush them now */
+        flush_queued (ffmpegdec);
+      }
       break;
     }
-    case GST_EVENT_FLUSH_STOP:{
+    case GST_EVENT_FLUSH_STOP:
+    {
       if (ffmpegdec->opened) {
         avcodec_flush_buffers (ffmpegdec->context);
       }
@@ -1842,9 +1891,11 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_init (&ffmpegdec->segment, GST_FORMAT_TIME);
       ffmpegdec->tstamp1 = ffmpegdec->tstamp2 = GST_CLOCK_TIME_NONE;
       ffmpegdec->dur1 = ffmpegdec->dur2 = GST_CLOCK_TIME_NONE;
+      clear_queued (ffmpegdec);
       break;
     }
-    case GST_EVENT_NEWSEGMENT:{
+    case GST_EVENT_NEWSEGMENT:
+    {
       gboolean update;
       GstFormat fmt;
       gint64 start, stop, time;
@@ -1852,10 +1903,6 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_new_segment_full (event, &update, &rate, &arate, &fmt,
           &start, &stop, &time);
-
-      /* no negative rates for now */
-      if (rate <= 0.0)
-        goto newseg_wrong_rate;
 
       switch (fmt) {
         case GST_FORMAT_TIME:
@@ -1920,12 +1967,6 @@ done:
   return ret;
 
   /* ERRORS */
-newseg_wrong_rate:
-  {
-    GST_WARNING_OBJECT (ffmpegdec, "negative rates not supported yet");
-    gst_event_unref (event);
-    goto done;
-  }
 no_bitrate:
   {
     GST_WARNING_OBJECT (ffmpegdec, "no bitrate to convert BYTES to TIME");
@@ -2179,6 +2220,7 @@ gst_ffmpegdec_change_state (GstElement * element, GstStateChange transition)
         ffmpegdec->last_buffer = NULL;
       }
       GST_OBJECT_UNLOCK (ffmpegdec);
+      clear_queued (ffmpegdec);
       break;
     default:
       break;
