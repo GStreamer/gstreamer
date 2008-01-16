@@ -42,12 +42,27 @@ G_BEGIN_DECLS
 typedef struct _GstH264Parse GstH264Parse;
 typedef struct _GstH264ParseClass GstH264ParseClass;
 
+typedef struct _GstNalList GstNalList;
+
 struct _GstH264Parse
 {
   GstElement element;
 
-  GstPad *sink;
-  GstPad *src;
+  GstPad *sinkpad;
+  GstPad *srcpad;
+
+  gboolean split_packetized;
+
+  GstSegment segment;
+  gboolean packetized;
+  gboolean discont;
+
+  /* gather/decode queues for reverse playback */
+  GList *gather;
+  GstNalList *decode;
+  gboolean have_sps;
+  gboolean have_pps;
+  gboolean have_i_frame;
 
   GstAdapter *adapter;
 };

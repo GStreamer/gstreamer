@@ -1,3 +1,20 @@
+2008-01-16  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/h264parse/gsth264parse.c: (gst_nal_list_new),
+	(gst_nal_list_prepend_link), (gst_nal_list_delete_head),
+	(gst_nal_bs_init), (gst_nal_bs_read), (gst_nal_bs_eos),
+	(gst_nal_bs_read_ue), (gst_h264_parse_class_init),
+	(gst_h264_parse_init), (gst_h264_parse_set_property),
+	(gst_h264_parse_get_property), (gst_h264_parse_sink_setcaps),
+	(gst_h264_parse_clear_queues), (gst_h264_parse_chain_forward),
+	(gst_h264_parse_flush_decode), (gst_h264_parse_queue_buffer),
+	(gst_h264_parse_find_start_reverse),
+	(gst_h264_parse_chain_reverse), (gst_h264_parse_chain),
+	(gst_h264_parse_sink_event), (gst_h264_parse_change_state):
+	* gst/h264parse/gsth264parse.h:
+	Add reverse playback support for containers that don't know how to
+	properly send data between I-frames.
+
 2008-01-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
