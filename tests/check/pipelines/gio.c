@@ -57,12 +57,6 @@ message_handler (GstBus * bus, GstMessage * msg, gpointer data)
   return TRUE;
 }
 
-static void
-free_input (gpointer data)
-{
-  g_free (data);
-}
-
 GST_START_TEST (test_memory_stream)
 {
   GMainLoop *loop;
@@ -74,7 +68,7 @@ GST_START_TEST (test_memory_stream)
   GMemoryOutputStream *output;
 
   guint8 *in_data;
-  GByteArray *out_data;
+  guint8 *out_data;
   gint i;
   GstFormat fmt = GST_FORMAT_BYTES;
   gint64 duration;
@@ -82,16 +76,16 @@ GST_START_TEST (test_memory_stream)
   got_eos = FALSE;
 
   in_data = g_new (guint8, 512);
+  out_data = g_new (guint8, 512);
   for (i = 0; i < 512; i++)
     in_data[i] = i % 256;
 
   input =
       G_MEMORY_INPUT_STREAM (g_memory_input_stream_new_from_data (in_data, 512,
-          free_input));
+          (GDestroyNotify) g_free));
 
-  out_data = g_byte_array_new ();
-  output = G_MEMORY_OUTPUT_STREAM (g_memory_output_stream_new (out_data));
-  g_memory_output_stream_set_free_data (output, TRUE);
+  output = G_MEMORY_OUTPUT_STREAM (g_memory_output_stream_new (out_data, 512,
+          (GReallocFunc) g_realloc, (GDestroyNotify) g_free));
 
   loop = g_main_loop_new (NULL, FALSE);
 
@@ -128,7 +122,7 @@ GST_START_TEST (test_memory_stream)
   fail_unless (got_eos);
 
   for (i = 0; i < 512; i++)
-    fail_unless_equals_int (in_data[i], out_data->data[i]);
+    fail_unless_equals_int (in_data[i], out_data[i]);
 
   g_object_unref (input);
   g_object_unref (output);
