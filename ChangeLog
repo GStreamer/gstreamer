@@ -1,3 +1,8 @@
+2008-01-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	  Remove duplicate entry.
+
 2008-01-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/Makefile.am:
