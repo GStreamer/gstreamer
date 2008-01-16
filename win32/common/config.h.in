@@ -12,8 +12,14 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* We can use the plugins-install methods */
+#define HAVE_PLUGINS_INSTALL 1
+
 /* Defined if we have a 2.12 series pygobject */
 #undef HAVE_PYGOBJECT_2_12
+
+/* Defined if we have a 2.16 series pygobject */
+#undef HAVE_PYGOBJECT_2_16
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -40,40 +46,43 @@
 #undef HAVE_VALGRIND
 
 /* We can use the videoorientation interface */
-#undef HAVE_VIDEO_ORIENTATION_INTERFACE
+#define HAVE_VIDEO_ORIENTATION_INTERFACE 1
+
+/* Define to 1 if your C compiler doesn't accept -c and -o together. */
+#undef NO_MINUS_C_MINUS_O
 
 /* Name of package */
-#undef PACKAGE
+#define PACKAGE "@PACKAGE@"
 
 /* Define to the address where bug reports for this package should be sent. */
-#undef PACKAGE_BUGREPORT
+#define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME
+#define PACKAGE_NAME "@PACKAGE_NAME@"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
+#define PACKAGE_STRING "@PACKAGE_STRING@"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME
+#define PACKAGE_TARNAME "@PACKAGE_TARNAME@"
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION
+#define PACKAGE_VERSION "@PACKAGE_VERSION@"
 
 /* PyGst major version */
-#undef PYGST_MAJOR_VERSION
+#define PYGST_MAJOR_VERSION @PACKAGE_VERSION_MAJOR@
 
 /* PyGst micro version */
-#undef PYGST_MICRO_VERSION
+#define PYGST_MICRO_VERSION @PACKAGE_VERSION_MICRO@
 
 /* PyGst minor version */
-#undef PYGST_MINOR_VERSION
+#define PYGST_MINOR_VERSION @PACKAGE_VERSION_MINOR@
 
 /* PyGst nano version */
-#undef PYGST_NANO_VERSION
+#define PYGST_NANO_VERSION @PACKAGE_VERSION_NANO@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
 /* Version number of package */
-#undef VERSION
+#define VERSION "@VERSION@"

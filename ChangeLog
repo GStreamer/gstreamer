@@ -1,3 +1,11 @@
+2008-01-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Reviewed by : Edward Hervey  <edward.hervey@collabora.co.uk>
+	* configure.ac:
+	* win32/common/config.h.in:
+	Fix symbol generation for win32.
+	Fixes #509766
+
 2008-01-15  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/pbutils.override:
