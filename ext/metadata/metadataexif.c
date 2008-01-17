@@ -88,6 +88,7 @@ typedef struct _tag_MEUserData
 typedef struct _tag_MapIntStr
 {
   ExifTag exif;
+  ExifIfd ifd;
   const gchar *str;
 } MapIntStr;
 
@@ -98,21 +99,35 @@ static void exif_content_foreach_entry_func (ExifEntry * entry, void *);
 
 /* *INDENT-OFF* */
 static MapIntStr mappedTags[] = {
-  {EXIF_TAG_MAKE,               /*ASCII,*/     GST_TAG_DEVICE_MAKE,              /*STRING*/},
-  {EXIF_TAG_MODEL,              /*ASCII,*/     GST_TAG_DEVICE_MODEL,             /*STRING*/},
-  {EXIF_TAG_SOFTWARE,           /*ASCII,*/     GST_TAG_CREATOR_TOOL,             /*STRING*/},
-  {EXIF_TAG_X_RESOLUTION,       /*RATIONAL,*/  GST_TAG_IMAGE_XRESOLUTION,        /*FRACTION*/},   /* inches */
-  {EXIF_TAG_Y_RESOLUTION,       /*RATIONAL,*/  GST_TAG_IMAGE_YRESOLUTION,        /*FRACTION*/},   /* inches */
-  {EXIF_TAG_EXPOSURE_TIME,      /*RATIONAL,*/  GST_TAG_CAPTURE_EXPOSURE_TIME,    /*FRACTION*/},
-  {EXIF_TAG_FNUMBER,            /*RATIONAL,*/  GST_TAG_CAPTURE_FNUMBER,          /*FRACTION*/},
-  {EXIF_TAG_EXPOSURE_PROGRAM,   /*SHORT,*/     GST_TAG_CAPTURE_EXPOSURE_PROGRAM, /*UINT*/},
-  {EXIF_TAG_BRIGHTNESS_VALUE,   /*SRATIONAL,*/ GST_TAG_CAPTURE_BRIGHTNESS,       /*FRACTION*/},
-  {EXIF_TAG_WHITE_BALANCE,      /*SHORT,*/     GST_TAG_CAPTURE_WHITE_BALANCE,    /*UINT*/},
-  {EXIF_TAG_DIGITAL_ZOOM_RATIO, /*RATIONAL,*/  GST_TAG_CAPTURE_DIGITAL_ZOOM,     /*FRACTION*/},
-  {EXIF_TAG_GAIN_CONTROL,       /*SHORT,*/     GST_TAG_CAPTURE_GAIN,             /*UINT*/},
-  {EXIF_TAG_CONTRAST,           /*SHORT,*/     GST_TAG_CAPTURE_CONTRAST,         /*INT*/},
-  {EXIF_TAG_SATURATION,         /*SHORT,*/     GST_TAG_CAPTURE_SATURATION,       /*INT*/},
-  {0, NULL}
+  {EXIF_TAG_MAKE,               /*ASCII,*/     EXIF_IFD_0,
+   GST_TAG_DEVICE_MAKE,              /*STRING*/},
+  {EXIF_TAG_MODEL,              /*ASCII,*/     EXIF_IFD_0,
+   GST_TAG_DEVICE_MODEL,             /*STRING*/},
+  {EXIF_TAG_SOFTWARE,           /*ASCII,*/     EXIF_IFD_0,
+   GST_TAG_CREATOR_TOOL,             /*STRING*/},
+  {EXIF_TAG_X_RESOLUTION,       /*RATIONAL,*/  EXIF_IFD_0,
+   GST_TAG_IMAGE_XRESOLUTION,        /*FRACTION*/},   /* inches */
+  {EXIF_TAG_Y_RESOLUTION,       /*RATIONAL,*/  EXIF_IFD_0,
+   GST_TAG_IMAGE_YRESOLUTION,        /*FRACTION*/},   /* inches */
+  {EXIF_TAG_EXPOSURE_TIME,      /*RATIONAL,*/  EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_EXPOSURE_TIME,    /*FRACTION*/},
+  {EXIF_TAG_FNUMBER,            /*RATIONAL,*/  EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_FNUMBER,          /*FRACTION*/},
+  {EXIF_TAG_EXPOSURE_PROGRAM,   /*SHORT,*/     EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_EXPOSURE_PROGRAM, /*UINT*/},
+  {EXIF_TAG_BRIGHTNESS_VALUE,   /*SRATIONAL,*/ EXIF_IFD_0,
+   GST_TAG_CAPTURE_BRIGHTNESS,       /*FRACTION*/},
+  {EXIF_TAG_WHITE_BALANCE,      /*SHORT,*/     EXIF_IFD_0,
+   GST_TAG_CAPTURE_WHITE_BALANCE,    /*UINT*/},
+  {EXIF_TAG_DIGITAL_ZOOM_RATIO, /*RATIONAL,*/  EXIF_IFD_0,
+   GST_TAG_CAPTURE_DIGITAL_ZOOM,     /*FRACTION*/},
+  {EXIF_TAG_GAIN_CONTROL,       /*SHORT,*/     EXIF_IFD_0,
+   GST_TAG_CAPTURE_GAIN,             /*UINT*/},
+  {EXIF_TAG_CONTRAST,           /*SHORT,*/     EXIF_IFD_0,
+   GST_TAG_CAPTURE_CONTRAST,         /*INT*/},
+  {EXIF_TAG_SATURATION,         /*SHORT,*/     EXIF_IFD_0,
+   GST_TAG_CAPTURE_SATURATION,       /*INT*/},
+  {0, EXIF_IFD_COUNT, NULL}
 };
 /* *INDENT-ON* */
 
@@ -134,13 +149,15 @@ metadataparse_exif_get_tag_from_exif (ExifTag exif, GType * type)
 }
 
 static ExifTag
-metadataparse_exif_get_exif_from_tag (const gchar * tag, GType * type)
+metadataparse_exif_get_exif_from_tag (const gchar * tag, GType * type,
+    ExifIfd * ifd)
 {
   int i = 0;
 
   while (mappedTags[i].exif) {
     if (0 == strcmp (mappedTags[i].str, tag)) {
       *type = gst_tag_get_type (tag);
+      *ifd = mappedTags[i].ifd;
       break;
     }
     ++i;
@@ -361,13 +378,12 @@ done:
       "      Title: %s\n"
       "      Description: %s\n",
       entry,
-      exif_tag_get_name_in_ifd (entry->tag, EXIF_IFD_0),
+      exif_tag_get_name (entry->tag),
       exif_format_get_name (entry->format),
       entry->size,
       (int) (entry->components),
       exif_entry_get_value (entry, buf, sizeof (buf)),
-      exif_tag_get_title_in_ifd (entry->tag, EXIF_IFD_0),
-      exif_tag_get_description_in_ifd (entry->tag, EXIF_IFD_0));
+      exif_tag_get_title (entry->tag), exif_tag_get_description (entry->tag));
 
   return;
 
@@ -449,9 +465,10 @@ metadataexif_for_each_tag_in_list (const GstTagList * list, const gchar * tag,
   ExifTag exif_tag;
   GType type;
   ExifEntry *entry = NULL;
+  ExifIfd ifd;
   const ExifByteOrder byte_order = exif_data_get_byte_order (ed);
 
-  exif_tag = metadataparse_exif_get_exif_from_tag (tag, &type);
+  exif_tag = metadataparse_exif_get_exif_from_tag (tag, &type, &ifd);
 
   if (!exif_tag)
     goto done;
@@ -462,7 +479,7 @@ metadataexif_for_each_tag_in_list (const GstTagList * list, const gchar * tag,
     exif_entry_ref (entry);
   else {
     entry = exif_entry_new ();
-    exif_content_add_entry (ed->ifd[EXIF_IFD_0], entry);
+    exif_content_add_entry (ed->ifd[ifd], entry);
     exif_entry_initialize (entry, exif_tag);
   }
 
