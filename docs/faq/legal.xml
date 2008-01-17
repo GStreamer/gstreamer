@@ -20,7 +20,7 @@ by the FSF lawyer team and verified by FSF lawyer and law professor Eben Moglen.
 Can someone distribute the combination of
 <itemizedlist>
   <listitem><para>GStreamer, the LGPL library</para></listitem>
-  <listitem><para>Totem, a GPL playback application</para></listitem>
+  <listitem><para>MyPlayer, a GPL playback application</para></listitem>
   <listitem><para>The binary-only Sorenson decoder</para></listitem>
 </itemizedlist>
 together in one distribution/operating system ? If not, what
@@ -30,18 +30,22 @@ needs to be changed to make this possible ?
 
       <answer>
         <para>
-This would be a problem, because the GStreamer and Totem licenses would
-forbid it.  In order to link GStreamer to Totem, you need to use section
+This would be a problem, because the GStreamer and MyPlayer licenses would
+forbid it.  In order to link GStreamer to MyPlayer, you need to use section
 3 of the LGPL to convert GStreamer to GPL.  The GPL version of GStreamer
-forbids linking to the Sorenson decoder.  Anyway, the Totem GPL
+forbids linking to the Sorenson decoder.  Anyway, the MyPlayer GPL
 license forbids this.  
         </para>
 
         <para>
-If the authors of Totem want to permit this, we have an
+If the authors of MyPlayer want to permit this, we have an
 exception for them: the controlled interface exception from the FAQ.
 The idea of this is that you can't get around the GPL just by including
 a LGPL bit in the middle.
+        </para>
+
+        <para>
+Note: MyPlayer is a completely fictituous application at the time of writing.
         </para>
 
       </answer>
