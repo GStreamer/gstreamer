@@ -70,6 +70,8 @@ struct _GstMultiUDPSink {
   gboolean       closefd;
 
   gboolean       externalfd;
+
+  gboolean       auto_multicast;
 };
 
 struct _GstMultiUDPSinkClass {

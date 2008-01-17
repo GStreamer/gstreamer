@@ -80,6 +80,7 @@ enum
 #define DEFAULT_CLOSEFD            TRUE
 #define DEFAULT_SOCK               -1
 #define DEFAULT_CLIENTS            NULL
+#define DEFAULT_AUTO_MULTICAST     TRUE
 
 enum
 {
@@ -89,7 +90,8 @@ enum
   PROP_SOCKFD,
   PROP_CLOSEFD,
   PROP_SOCK,
-  PROP_CLIENTS
+  PROP_CLIENTS,
+  PROP_AUTO_MULTICAST
       /* FILL ME */
 };
 
@@ -285,6 +287,11 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
       g_param_spec_string ("clients", "Clients",
           "A comma separated list of host:port pairs with destinations",
           DEFAULT_CLIENTS, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_AUTO_MULTICAST,
+      g_param_spec_boolean ("auto-multicast",
+          "Automatically join/leave multicast groups",
+          "Automatically join/leave the multicast groups, FALSE means user"
+          " has to do it himself", DEFAULT_AUTO_MULTICAST, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
@@ -308,6 +315,7 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   sink->sockfd = DEFAULT_SOCKFD;
   sink->closefd = DEFAULT_CLOSEFD;
   sink->externalfd = (sink->sockfd != -1);
+  sink->auto_multicast = DEFAULT_AUTO_MULTICAST;
 }
 
 static void
@@ -462,6 +470,9 @@ gst_multiudpsink_set_property (GObject * object, guint prop_id,
     case PROP_CLIENTS:
       gst_multiudpsink_set_clients_string (udpsink, g_value_get_string (value));
       break;
+    case PROP_AUTO_MULTICAST:
+      udpsink->auto_multicast = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -495,6 +506,9 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_CLIENTS:
       g_value_take_string (value,
           gst_multiudpsink_get_clients_string (udpsink));
+      break;
+    case PROP_AUTO_MULTICAST:
+      g_value_set_boolean (value, udpsink->auto_multicast);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -565,7 +579,7 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
 
   for (clients = sink->clients; clients; clients = g_list_next (clients)) {
     client = (GstUDPClient *) clients->data;
-    if (client->multi_addr.imr_multiaddr.s_addr)
+    if (client->multi_addr.imr_multiaddr.s_addr && sink->auto_multicast)
       join_multicast (client);
   }
   return TRUE;
@@ -631,7 +645,8 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
       client->theiraddr.sin_addr = *((struct in_addr *) &addr);
     }
     /* if init_send has already been called, set sockopts for multicast */
-    if (*client->sock > 0 && client->multi_addr.imr_multiaddr.s_addr)
+    if (*client->sock > 0 && client->multi_addr.imr_multiaddr.s_addr &&
+        sink->auto_multicast)
       join_multicast (client);
   }
   /* we dont need to lookup for localhost */
@@ -712,7 +727,7 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
   g_get_current_time (&now);
   client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
 
-  if (client->multi_addr.imr_multiaddr.s_addr)
+  if (client->multi_addr.imr_multiaddr.s_addr && sink->auto_multicast)
     leave_multicast (client);
 
   /* Unlock to emit signal before we delete the actual client */

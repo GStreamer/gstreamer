@@ -1,3 +1,16 @@
+2008-01-17  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init),
+	(gst_multiudpsink_init), (gst_multiudpsink_set_property),
+	(gst_multiudpsink_get_property), (gst_multiudpsink_init_send),
+	(gst_multiudpsink_add_internal), (gst_multiudpsink_remove):
+	* gst/udp/gstmultiudpsink.h:
+	Add property to automatically join a multicast group or not. This can be
+	useful when sharing a socket between multiple elements.
+	Fixes #509531.
+
 2008-01-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/videomixer/Makefile.am:
