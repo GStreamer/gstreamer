@@ -367,6 +367,11 @@ gst_h264_parse_clear_queues (GstH264Parse * h264parse)
     h264parse->decode = gst_nal_list_delete_head (h264parse->decode);
   }
   h264parse->decode = NULL;
+  h264parse->decode_len = 0;
+  if (h264parse->prev) {
+    gst_buffer_unref (h264parse->prev);
+    h264parse->prev = NULL;
+  }
   gst_adapter_clear (h264parse->adapter);
   h264parse->have_i_frame = FALSE;
 }
@@ -476,6 +481,7 @@ gst_h264_parse_flush_decode (GstH264Parse * h264parse)
     res = gst_pad_push (h264parse->srcpad, buf);
 
     h264parse->decode = gst_nal_list_delete_head (h264parse->decode);
+    h264parse->decode_len--;
   }
   /* the i frame is gone now */
   h264parse->have_i_frame = FALSE;
@@ -575,8 +581,11 @@ gst_h264_parse_queue_buffer (GstH264Parse * parse, GstBuffer * buffer)
     /* we're going to add a new I-frame in the queue */
     parse->have_i_frame = TRUE;
 
-  GST_DEBUG_OBJECT (parse, "copy %d bytes of NAL to decode queue", size);
   parse->decode = gst_nal_list_prepend_link (parse->decode, link);
+  parse->decode_len++;
+  GST_DEBUG_OBJECT (parse,
+      "copied %d bytes of NAL to decode queue. queue size %d", size,
+      parse->decode_len);
 
   return res;
 }
@@ -590,7 +599,6 @@ gst_h264_parse_find_start_reverse (GstH264Parse * parse, guint8 * data,
   while (size > 0) {
     /* the sync code is kept in reverse */
     search = (search << 8) | (data[size - 1]);
-    GST_DEBUG_OBJECT (parse, "start code 0x%08x", search);
     if (search == 0x01000000)
       break;
 
@@ -618,7 +626,8 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
 
     /* init start code accumulator */
     stop = -1;
-    prev = NULL;
+    prev = h264parse->prev;
+    h264parse->prev = NULL;
 
     while (h264parse->gather) {
       GstBuffer *gbuf;
@@ -642,6 +651,7 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
         if (prev) {
           /* if we have a previous buffer or a leftover, merge them together
            * now */
+          GST_DEBUG_OBJECT (h264parse, "merging previous buffer");
           gbuf = gst_buffer_join (gbuf, prev);
           prev = NULL;
         }
@@ -650,33 +660,38 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
         data = GST_BUFFER_DATA (gbuf);
 
         while (last > 0) {
+          GST_DEBUG_OBJECT (h264parse, "scan from %u", last);
           /* find a start code searching backwards in this buffer */
           start =
               gst_h264_parse_find_start_reverse (h264parse, data, last, &code);
-          GST_DEBUG_OBJECT (h264parse, "found start %d", start);
-
           if (start != -1) {
             GstBuffer *decode;
 
+            GST_DEBUG_OBJECT (h264parse, "found start code at %u", start);
+
             /* we found a start code, copy everything starting from it to the
              * decode queue. */
-            if (start != 0)
-              decode = gst_buffer_create_sub (gbuf, start, last - start);
-            else
-              decode = gbuf;
+            decode = gst_buffer_create_sub (gbuf, start, last - start);
 
             /* see what we have here */
             res = gst_h264_parse_queue_buffer (h264parse, decode);
+
+            last = start;
           } else {
             /* no start code found, keep the buffer and merge with potential next
              * buffer. */
-            GST_DEBUG_OBJECT (h264parse, "keeping buffer");
+            GST_DEBUG_OBJECT (h264parse, "no start code, keeping buffer to %u",
+                last);
             prev = gst_buffer_create_sub (gbuf, 0, last);
             gst_buffer_unref (gbuf);
+            break;
           }
-          last = start;
         }
       }
+    }
+    if (prev) {
+      GST_DEBUG_OBJECT (h264parse, "keeping buffer");
+      h264parse->prev = prev;
     }
   }
   if (buffer) {
@@ -717,7 +732,8 @@ gst_h264_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   discont = GST_BUFFER_IS_DISCONT (buffer);
 
-  GST_DEBUG_OBJECT (h264parse, "received buffer");
+  GST_DEBUG_OBJECT (h264parse, "received buffer of size %u",
+      GST_BUFFER_SIZE (buffer));
 
   if (h264parse->segment.rate > 0.0)
     res = gst_h264_parse_chain_forward (h264parse, discont, buffer);

@@ -59,7 +59,9 @@ struct _GstH264Parse
 
   /* gather/decode queues for reverse playback */
   GList *gather;
+  GstBuffer *prev;
   GstNalList *decode;
+  gint decode_len;
   gboolean have_sps;
   gboolean have_pps;
   gboolean have_i_frame;
