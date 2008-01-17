@@ -300,8 +300,11 @@ gst_flac_dec_setup_seekable_decoder (GstFlacDec * dec)
       gst_flac_dec_write_seekable);
   FLAC__seekable_stream_decoder_set_metadata_respond (dec->seekable_decoder,
       FLAC__METADATA_TYPE_VORBIS_COMMENT);
+/* FIXME: remove ifdef once we depend on flac >= 1.2.x */
+#ifdef FLAC__METADATA_TYPE_PICTURE
   FLAC__seekable_stream_decoder_set_metadata_respond (dec->seekable_decoder,
       FLAC__METADATA_TYPE_PICTURE);
+#endif
   FLAC__seekable_stream_decoder_set_metadata_callback (dec->seekable_decoder,
       gst_flac_dec_metadata_callback_seekable);
   FLAC__seekable_stream_decoder_set_error_callback (dec->seekable_decoder,
@@ -333,8 +336,11 @@ gst_flac_dec_setup_stream_decoder (GstFlacDec * dec)
       gst_flac_dec_write_stream);
   FLAC__stream_decoder_set_metadata_respond (dec->stream_decoder,
       FLAC__METADATA_TYPE_VORBIS_COMMENT);
+/* FIXME: remove ifdef once we depend on flac >= 1.2.x */
+#ifdef FLAC__METADATA_TYPE_PICTURE
   FLAC__stream_decoder_set_metadata_respond (dec->stream_decoder,
       FLAC__METADATA_TYPE_PICTURE);
+#endif
   FLAC__stream_decoder_set_metadata_callback (dec->stream_decoder,
       gst_flac_dec_metadata_callback_stream);
   FLAC__stream_decoder_set_error_callback (dec->stream_decoder,
@@ -573,6 +579,8 @@ gst_flac_dec_scan_for_last_block (GstFlacDec * flacdec, gint64 * samples)
   }
 }
 
+/* FIXME: remove ifdef once we depend on flac >= 1.2.x */
+#ifdef FLAC__METADATA_TYPE_PICTURE
 static gchar *
 gst_flac_normalize_picture_mime_type (const gchar * old_mime_type,
     gboolean * is_pic_uri)
@@ -695,6 +703,7 @@ gst_flac_extract_picture_buffer (GstFlacDec * flacdec,
     GST_DEBUG ("problem parsing PICTURE block, skipping");
   }
 }
+#endif /* FLAC__METADATA_TYPE_PICTURE */
 
 static void
 gst_flac_dec_metadata_callback (GstFlacDec * flacdec,
@@ -741,10 +750,14 @@ gst_flac_dec_metadata_callback (GstFlacDec * flacdec,
       }
       break;
     }
+
+/* FIXME: remove ifdef once we depend on flac >= 1.2.x */
+#ifdef FLAC__METADATA_TYPE_PICTURE
     case FLAC__METADATA_TYPE_PICTURE:{
       gst_flac_extract_picture_buffer (flacdec, metadata);
       break;
     }
+#endif
     case FLAC__METADATA_TYPE_VORBIS_COMMENT:
       gst_flac_dec_update_metadata (flacdec, metadata);
       break;
