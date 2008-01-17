@@ -62,7 +62,8 @@ struct _GstLame {
   gint bitrate;
   gfloat compression_ratio;
   gint quality;
-  gint mode;
+  gint mode; /* actual mode in use now */
+  gint requested_mode; /* requested mode by user/app */
   gboolean force_ms;
   gboolean free_format;
   gboolean copyright;

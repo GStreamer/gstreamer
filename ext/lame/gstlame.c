@@ -624,6 +624,7 @@ gst_lame_init (GstLame * lame)
   lame->quality = 5;            /* lame_get_quality (lame->lgf);
                                  * => -1/out of range */
   lame->mode = lame_get_mode (lame->lgf);
+  lame->requested_mode = lame->mode;
   lame->force_ms = lame_get_force_ms (lame->lgf);
   lame->free_format = lame_get_free_format (lame->lgf);
   lame->copyright = lame_get_copyright (lame->lgf);
@@ -741,7 +742,7 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
       lame->quality = g_value_get_enum (value);
       break;
     case ARG_MODE:
-      lame->mode = g_value_get_enum (value);
+      lame->requested_mode = g_value_get_enum (value);
       break;
     case ARG_FORCE_MS:
       lame->force_ms = g_value_get_boolean (value);
@@ -856,7 +857,7 @@ gst_lame_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_enum (value, lame->quality);
       break;
     case ARG_MODE:
-      g_value_set_enum (value, lame->mode);
+      g_value_set_enum (value, lame->requested_mode);
       break;
     case ARG_FORCE_MS:
       g_value_set_boolean (value, lame->force_ms);
@@ -1207,6 +1208,8 @@ gst_lame_setup (GstLame * lame)
   /* force mono encoding if we only have one channel */
   if (lame->num_channels == 1)
     lame->mode = 3;
+  else
+    lame->mode = lame->requested_mode;
 
   CHECK_ERROR (lame_set_num_channels (lame->lgf, lame->num_channels));
   CHECK_AND_FIXUP_BITRATE (lame, "bitrate", lame->bitrate, lame->free_format);
