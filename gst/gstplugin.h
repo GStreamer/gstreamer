@@ -197,7 +197,6 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
   GST_PADDING_INIT				        \
 };
 
-#ifndef GST_DISABLE_DEPRECATED
 /**
  * GST_PLUGIN_DEFINE_STATIC:
  * @major: major version number of the gstreamer-core that plugin was compiled for
@@ -218,6 +217,9 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
  * deprecated because it uses constructors, which is a compiler feature not
  * available on all compilers.
  */
+/* We don't have deprecation guards here on purpose, it's enough to have
+ * deprecation guards around _gst_plugin_register_static(), and will result in
+ * much better error messages when compiling with -DGST_DISABLE_DEPRECATED */
 #define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,package,origin)  \
 static void GST_GNUC_CONSTRUCTOR			\
 _gst_plugin_static_init__ ##init (void)			\
@@ -237,7 +239,6 @@ _gst_plugin_static_init__ ##init (void)			\
   };							\
   _gst_plugin_register_static (&plugin_desc_);		\
 }
-#endif
 
 /**
  * GST_LICENSE_UNKNOWN:

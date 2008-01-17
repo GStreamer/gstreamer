@@ -1,5 +1,14 @@
 2008-01-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstplugin.h: (GST_PLUGIN_DEFINE_STATIC):
+	  Remove deprecation guards around GST_PLUGIN_DEFINE_STATIC.
+	  This makes gtk-doc complain, but results in slightly better
+	  compiler errors. The old _gst_plugin_register_static() is
+	  still guarded, so there'll be a compiler warning about that
+	  instead. Fixes #510187 too.
+
+2008-01-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gst.c: (init_post):
 	* gst/gstplugin.c: (_gst_plugin_register_static),
 	  (gst_plugin_register_static), (_gst_plugin_initialize):
