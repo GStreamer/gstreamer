@@ -44,6 +44,7 @@
 #include "gltestsrc.h"
 #include "gstglbuffer.h"
 #include "glextensions.h"
+#include <gst/gst-i18n-plugin.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -587,7 +588,7 @@ gst_gl_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
 not_negotiated:
   {
     GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),
-        ("format wasn't negotiated before get function"));
+        (_("format wasn't negotiated before get function")));
     return GST_FLOW_NOT_NEGOTIATED;
   }
 eos:
