@@ -1,3 +1,14 @@
+2008-01-17  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlame.h:
+	Fix the case where you initially have stereo input, and so lame's
+	mode is not set to mono, and then you get input with mono audio and
+	soon after you get stereo input again. What happened before this
+	commit is that it would keep the encoding mode as mono. It should
+	change it back to the one requested by the app (or the default one)
+	if not requested.
+
 2008-01-15  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
