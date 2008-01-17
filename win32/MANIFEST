@@ -43,6 +43,7 @@ win32/vs6/libgstpbutils.dsp
 win32/vs6/libgstplaybin.dsp
 win32/vs6/libgstriff.dsp
 win32/vs6/libgstrtp.dsp
+win32/vs6/libgstrtsp.dsp
 win32/vs6/libgstsdp.dsp
 win32/vs6/libgstsinesrc.dsp
 win32/vs6/libgstsubparse.dsp
