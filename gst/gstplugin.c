@@ -179,14 +179,30 @@ _gst_plugin_register_static (GstPluginDesc * desc)
           desc->name);
     _gst_plugin_static = g_list_prepend (_gst_plugin_static, desc);
   } else {
-    gst_plugin_register_static (desc);
+    gst_plugin_register_static (desc->major_version, desc->minor_version,
+        desc->name, desc->description, desc->plugin_init, desc->version,
+        desc->license, desc->source, desc->package, desc->origin);
   }
 }
 #endif
 
 /**
  * gst_plugin_register_static:
- * @desc: a #GstPluginDesc describing the plugin.
+ * @major_version: the major version number of the GStreamer core that the
+ *     plugin was compiled for, you can just use GST_VERSION_MAJOR here
+ * @minor_version: the minor version number of the GStreamer core that the
+ *     plugin was compiled for, you can just use GST_VERSION_MINOR here
+ * @name: a unique name of the plugin (ideally prefixed with an application- or
+ *     library-specific namespace prefix in order to avoid name conflicts in
+ *     case a similar plugin with the same name ever gets added to GStreamer)
+ * @description: description of the plugin
+ * @init_func: pointer to the init function of this plugin.
+ * @version: version string of the plugin
+ * @license: effective license of plugin. Must be one of the approved licenses
+ *     (see #GstPluginDesc above) or the plugin will not be registered.
+ * @source: source module plugin belongs to
+ * @package: shipped package plugin belongs to
+ * @origin: URL to provider of plugin
  *
  * Registers a static plugin, ie. a plugin which is private to an application
  * or library and contained within the application or library (as opposed to
@@ -200,21 +216,35 @@ _gst_plugin_register_static (GstPluginDesc * desc)
  * Since: 0.10.16
  */
 gboolean
-gst_plugin_register_static (const GstPluginDesc * desc)
+gst_plugin_register_static (gint major_version, gint minor_version,
+    const gchar * name, gchar * description, GstPluginInitFunc init_func,
+    const gchar * version, const gchar * license, const gchar * source,
+    const gchar * package, const gchar * origin)
 {
+  GstPluginDesc desc = { major_version, minor_version, name, description,
+    init_func, version, license, source, package, origin,
+  };
   GstPlugin *plugin;
   gboolean res = FALSE;
 
-  g_return_val_if_fail (desc != NULL, FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+  g_return_val_if_fail (description != NULL, FALSE);
+  g_return_val_if_fail (init_func != NULL, FALSE);
+  g_return_val_if_fail (version != NULL, FALSE);
+  g_return_val_if_fail (license != NULL, FALSE);
+  g_return_val_if_fail (source != NULL, FALSE);
+  g_return_val_if_fail (package != NULL, FALSE);
+  g_return_val_if_fail (origin != NULL, FALSE);
 
   /* make sure gst_init() has been called */
   g_return_val_if_fail (_gst_plugin_inited != FALSE, FALSE);
 
-  GST_LOG ("attempting to load static plugin \"%s\" now...", desc->name);
+  GST_LOG ("attempting to load static plugin \"%s\" now...", name);
   plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
-  if (gst_plugin_register_func (plugin, desc) != NULL) {
-    GST_INFO ("loaded static plugin \"%s\"", desc->name);
+  if (gst_plugin_register_func (plugin, &desc) != NULL) {
+    GST_INFO ("registered static plugin \"%s\"", name);
     res = gst_default_registry_add_plugin (plugin);
+    GST_INFO ("added static plugin \"%s\", result: %d", name, res);
   }
   return res;
 }

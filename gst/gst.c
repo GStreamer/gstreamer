@@ -625,21 +625,6 @@ gst_register_core_elements (GstPlugin * plugin)
   return TRUE;
 }
 
-static GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "staticelements",
-  "core elements linked into the GStreamer library",
-  gst_register_core_elements,
-  VERSION,
-  GST_LICENSE,
-  PACKAGE,
-  GST_PACKAGE_NAME,
-  GST_PACKAGE_ORIGIN,
-
-  GST_PADDING_INIT
-};
-
 #ifndef GST_DISABLE_REGISTRY
 
 typedef enum
@@ -994,7 +979,10 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   _gst_plugin_initialize ();
 
   /* register core plugins */
-  gst_plugin_register_static (&plugin_desc);
+  gst_plugin_register_static (GST_VERSION_MAJOR, GST_VERSION_MINOR,
+      "staticelements", "core elements linked into the GStreamer library",
+      gst_register_core_elements, VERSION, GST_LICENSE, PACKAGE,
+      GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
   /*
    * Any errors happening below this point are non-fatal, we therefore mark

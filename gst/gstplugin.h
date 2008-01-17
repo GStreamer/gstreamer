@@ -268,7 +268,16 @@ GType                   gst_plugin_get_type             (void);
 void			_gst_plugin_register_static	(GstPluginDesc *desc);
 #endif
 
-gboolean		gst_plugin_register_static	(const GstPluginDesc *desc);
+gboolean		gst_plugin_register_static	(gint major_version,
+                                                         gint minor_version,
+                                                         const gchar *name,
+                                                         gchar *description,
+                                                         GstPluginInitFunc init_func,
+                                                         const gchar *version,
+                                                         const gchar *license,
+                                                         const gchar *source,
+                                                         const gchar *package,
+                                                         const gchar *origin);
 
 G_CONST_RETURN gchar*	gst_plugin_get_name		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_description	(GstPlugin *plugin);
