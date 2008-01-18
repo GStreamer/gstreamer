@@ -475,6 +475,11 @@ gst_h264_parse_flush_decode (GstH264Parse * h264parse)
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
     }
 
+    if (link->i_frame)
+      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    else
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+
     GST_DEBUG_OBJECT (h264parse, "pushing buffer %p, ts %" GST_TIME_FORMAT,
         buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
@@ -500,6 +505,7 @@ gst_h264_parse_queue_buffer (GstH264Parse * parse, GstBuffer * buffer)
   GstNalBs bs;
   GstNalList *link;
   GstFlowReturn res = GST_FLOW_OK;
+  GstClockTime timestamp;
 
   /* create new NALU link */
   link = gst_nal_list_new (buffer);
@@ -507,11 +513,14 @@ gst_h264_parse_queue_buffer (GstH264Parse * parse, GstBuffer * buffer)
   /* first parse the buffer */
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   link->slice = FALSE;
   link->i_frame = FALSE;
 
-  GST_DEBUG_OBJECT (parse, "analyse buffer of size %u", size);
+  GST_DEBUG_OBJECT (parse,
+      "analyse buffer of size %u, timestamp %" GST_TIME_FORMAT, size,
+      GST_TIME_ARGS (buffer));
 
   /* now parse all the NAL units in this buffer, for bytestream we only have one
    * NAL unit but for packetized streams we can have multiple ones */
@@ -620,6 +629,7 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
     guint start, stop, last;
     guint32 code;
     GstBuffer *prev;
+    GstClockTime timestamp;
 
     GST_DEBUG_OBJECT (h264parse,
         "received discont, copy gathered buffers for decoding");
@@ -658,6 +668,11 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
 
         last = GST_BUFFER_SIZE (gbuf);
         data = GST_BUFFER_DATA (gbuf);
+        timestamp = GST_BUFFER_TIMESTAMP (gbuf);
+
+        GST_DEBUG_OBJECT (h264parse,
+            "buffer size: %u, timestamp %" GST_TIME_FORMAT, last,
+            GST_TIME_ARGS (timestamp));
 
         while (last > 0) {
           GST_DEBUG_OBJECT (h264parse, "scan from %u", last);
@@ -672,6 +687,8 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
             /* we found a start code, copy everything starting from it to the
              * decode queue. */
             decode = gst_buffer_create_sub (gbuf, start, last - start);
+
+            GST_BUFFER_TIMESTAMP (decode) = timestamp;
 
             /* see what we have here */
             res = gst_h264_parse_queue_buffer (h264parse, decode);
