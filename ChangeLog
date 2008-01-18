@@ -1,5 +1,10 @@
 2008-01-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/soup/gstsouphttpsrc.c: (gst_souphttp_src_uri_get_protocols):
+	Add support for WebDAV.
+
+2008-01-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Wouter Cloetens <wouter at mind dot be>
 
 	* ext/soup/gstsouphttpsrc.c: (gst_souphttp_src_class_init),
