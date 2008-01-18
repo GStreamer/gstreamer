@@ -1,5 +1,10 @@
 2008-01-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/multifile/gstmultifilesrc.c: (gst_multi_file_src_create):
+	Fix memory leak spotted by the unit test.
+
+2008-01-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/Makefile.am:
 	Enable spectrum test again.
 
