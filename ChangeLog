@@ -1,5 +1,13 @@
 2008-01-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/equalizer.c: (setup_equalizer),
+	(cleanup_equalizer), (GST_START_TEST), (equalizer_suite), (main):
+	Add some minimal tests for the equalizer plugin.
+
+2008-01-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/equalizer/gstiirequalizer.c: (gst_iir_equalizer_finalize):
 	Unparent all bands from the equalizer when finalizing to stop
 	leaking	them.
