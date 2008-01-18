@@ -1,3 +1,12 @@
+2008-01-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
+	(gst_ffmpegdec_open), (gst_ffmpegdec_get_buffer),
+	(gst_ffmpegdec_release_buffer), (gst_ffmpegdec_video_frame),
+	(gst_ffmpegdec_sink_event), (gst_ffmpegdec_chain):
+	Rewrite timestamping code to let ffmpeg track timestamps.
+	Fixes #482660, #337866.
+
 2008-01-16  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdec.c: (clear_queued), (flush_queued),
