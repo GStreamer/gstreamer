@@ -7,3 +7,45 @@
    fun:ne_addr_resolve
    fun:ne_begin_request
 }
+
+{
+   <suppression for a singleton in GIO that can't be cleaned up>
+   Memcheck:Leak
+   fun:realloc
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:g_type_create_instance
+   fun:g_object_constructor
+   fun:g_object_newv
+   fun:g_object_new_valist
+   fun:g_object_new
+   fun:get_default_vfs
+   fun:g_once_impl
+   fun:g_vfs_get_default
+}
+
+{
+   <suppression for a singleton in GIO that can't be cleaned up>
+   Memcheck:Leak
+   fun:malloc
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:g_type_create_instance
+   fun:g_object_constructor
+   fun:g_object_newv
+   fun:g_object_new_valist
+   fun:g_object_new
+   fun:get_default_vfs
+   fun:g_once_impl
+   fun:g_vfs_get_default
+}
+
