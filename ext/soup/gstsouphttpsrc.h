@@ -53,6 +53,8 @@ struct _GstSouphttpSrc {
   gboolean have_size;                   /* Received and parsed Content-Length header. */
   guint64 content_size;                 /* Value of Content-Length header. */
   guint64 read_position;                /* Current position. */
+  gboolean seekable;                    /* FALSE if the server does not support Range. */
+  guint64 request_position;             /* Seek to this position. */
 
   /* Shoutcast/icecast metadata extraction handling. */
   gboolean iradio_mode;

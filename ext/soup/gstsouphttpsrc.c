@@ -68,11 +68,14 @@ static gboolean gst_souphttp_src_start (GstBaseSrc * bsrc);
 static gboolean gst_souphttp_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_souphttp_src_get_size (GstBaseSrc * bsrc, guint64 * size);
 static gboolean gst_souphttp_src_is_seekable (GstBaseSrc * bsrc);
+static gboolean gst_souphttp_src_do_seek (GstBaseSrc * bsrc,
+    GstSegment * segment);
 static gboolean gst_souphttp_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_souphttp_src_unlock_stop (GstBaseSrc * bsrc);
 
 static gboolean gst_souphttp_src_set_location (GstSouphttpSrc * src,
     const gchar * uri);
+static gboolean soup_add_range_header (GstSouphttpSrc * src, guint64 offset);
 
 static void soup_got_headers (SoupMessage * msg, GstSouphttpSrc * src);
 static void soup_finished (SoupMessage * msg, GstSouphttpSrc * src);
@@ -172,6 +175,7 @@ gst_souphttp_src_class_init (GstSouphttpSrcClass * klass)
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_souphttp_src_get_size);
   gstbasesrc_class->is_seekable =
       GST_DEBUG_FUNCPTR (gst_souphttp_src_is_seekable);
+  gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_souphttp_src_do_seek);
 
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_souphttp_src_create);
 
@@ -196,7 +200,9 @@ gst_souphttp_src_init (GstSouphttpSrc * src, GstSouphttpSrcClass * g_class)
   src->msg = NULL;
   src->interrupted = FALSE;
   src->have_size = FALSE;
+  src->seekable = TRUE;
   src->read_position = 0;
+  src->request_position = 0;
 }
 
 static void
@@ -315,9 +321,17 @@ gst_souphttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   src = GST_SOUPHTTP_SRC (psrc);
 
-  src->ret = GST_FLOW_CUSTOM_ERROR;
-  src->outbuf = outbuf;
-
+  if (src->msg && (src->request_position != src->read_position)) {
+    if (src->msg->status == SOUP_MESSAGE_STATUS_IDLE) {
+      soup_add_range_header (src, src->request_position);
+    } else {
+      GST_DEBUG_OBJECT (src, "Seek from position %" G_GUINT64_FORMAT
+          " to %" G_GUINT64_FORMAT ": requeueing connection request",
+          src->read_position, src->request_position);
+      soup_session_cancel_message (src->session, src->msg);
+      src->msg = NULL;
+    }
+  }
   if (!src->msg) {
     src->msg = soup_message_new (SOUP_METHOD_GET, src->location);
     if (!src->msg) {
@@ -340,8 +354,11 @@ gst_souphttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     g_signal_connect (src->msg, "finished", G_CALLBACK (soup_finished), src);
     g_signal_connect (src->msg, "got_chunk", G_CALLBACK (soup_got_chunk), src);
     soup_message_set_flags (src->msg, SOUP_MESSAGE_OVERWRITE_CHUNKS);
+    soup_add_range_header (src, src->request_position);
   }
 
+  src->ret = GST_FLOW_CUSTOM_ERROR;
+  src->outbuf = outbuf;
   do {
     if (src->interrupted) {
       soup_session_cancel_message (src->session, src->msg);
@@ -484,7 +501,44 @@ gst_souphttp_src_get_size (GstBaseSrc * bsrc, guint64 * size)
 static gboolean
 gst_souphttp_src_is_seekable (GstBaseSrc * bsrc)
 {
-  return FALSE;
+  GstSouphttpSrc *src = GST_SOUPHTTP_SRC (bsrc);
+
+  return src->seekable;
+}
+
+static gboolean
+gst_souphttp_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
+{
+  GstSouphttpSrc *src = GST_SOUPHTTP_SRC (bsrc);
+
+  GST_DEBUG_OBJECT (src, "do_seek(%" G_GUINT64_FORMAT ")", segment->start);
+
+  if (src->read_position == segment->start)
+    return TRUE;
+
+  if (!src->seekable)
+    return FALSE;
+
+  /* Wait for create() to handle the jump in offset. */
+  src->request_position = segment->start;
+  return TRUE;
+}
+
+static gboolean
+soup_add_range_header (GstSouphttpSrc * src, guint64 offset)
+{
+  gchar buf[64];
+  gint rc;
+
+  soup_message_remove_header (src->msg->request_headers, "Range");
+  if (offset) {
+    rc = g_snprintf (buf, sizeof (buf), "bytes=%" G_GUINT64_FORMAT "-", offset);
+    if (rc > sizeof (buf) || rc < 0)
+      return FALSE;
+    soup_message_add_header (src->msg->request_headers, "Range", buf);
+  }
+  src->read_position = offset;
+  return TRUE;
 }
 
 static gboolean
@@ -575,6 +629,16 @@ soup_got_headers (SoupMessage * msg, GstSouphttpSrc * src)
 
   /* Handle HTTP errors. */
   soup_parse_status (msg, src);
+
+  /* Check if Range header was respected. */
+  if (src->ret == GST_FLOW_CUSTOM_ERROR &&
+      src->read_position && msg->status_code != SOUP_STATUS_PARTIAL_CONTENT) {
+    src->seekable = FALSE;
+    GST_ELEMENT_ERROR (src, RESOURCE, READ,
+        ("\"%s\": failed to seek; server does not accept Range HTTP header",
+            src->location), (NULL));
+    src->ret = GST_FLOW_ERROR;
+  }
 }
 
 /* Have body. Signal EOS. */
@@ -610,6 +674,7 @@ static void
 soup_got_chunk (SoupMessage * msg, GstSouphttpSrc * src)
 {
   GstBaseSrc *basesrc;
+  guint64 new_position;
 
   if (G_UNLIKELY (msg != src->msg)) {
     GST_DEBUG_OBJECT (src, "got chunk, but not for current message");
@@ -625,7 +690,10 @@ soup_got_chunk (SoupMessage * msg, GstSouphttpSrc * src)
   if (G_LIKELY (src->ret == GST_FLOW_OK)) {
     memcpy (GST_BUFFER_DATA (*src->outbuf), msg->response.body,
         msg->response.length);
-    src->read_position += msg->response.length;
+    new_position = src->read_position + msg->response.length;
+    if (G_LIKELY (src->request_position == src->read_position))
+      src->request_position = new_position;
+    src->read_position = new_position;
   }
 
   g_main_loop_quit (src->loop);
