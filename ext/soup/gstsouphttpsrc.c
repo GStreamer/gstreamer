@@ -782,7 +782,7 @@ gst_souphttp_src_uri_get_type (void)
 static gchar **
 gst_souphttp_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "http", "https", NULL };
+  static gchar *protocols[] = { "http", "https", "dav", "davs", NULL };
   return protocols;
 }
 
