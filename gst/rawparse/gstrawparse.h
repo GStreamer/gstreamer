@@ -52,6 +52,7 @@ struct _GstRawParse
   GstPad *sinkpad;
   GstPad *srcpad;
 
+  GstActivateMode mode;
   GstAdapter *adapter;
 
   int framesize;
@@ -60,11 +61,14 @@ struct _GstRawParse
 
   gboolean discont;
   guint64 n_frames;
+  gint64 offset;
 
   GstSegment segment;
 
+  gint64 upstream_length;
+
   gboolean negotiated;
-  gboolean have_new_segment;
+  gboolean need_newsegment;
 };
 
 struct _GstRawParseClass

@@ -1,5 +1,18 @@
 2008-01-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/rawparse/gstrawparse.c: (gst_raw_parse_class_init),
+	(gst_raw_parse_init), (gst_raw_parse_reset),
+	(gst_raw_parse_set_src_caps), (gst_raw_parse_push_buffer),
+	(gst_raw_parse_chain), (gst_raw_parse_loop),
+	(gst_raw_parse_sink_activate), (gst_raw_parse_sink_activatepull),
+	(gst_raw_parse_change_state), (gst_raw_parse_sink_event),
+	(gst_raw_parse_handle_seek_push), (gst_raw_parse_handle_seek_pull),
+	(gst_raw_parse_src_event), (gst_raw_parse_src_query):
+	* gst/rawparse/gstrawparse.h:
+	Implement pull mode.
+
+2008-01-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/multifile/gstmultifilesrc.c: (gst_multi_file_src_create):
 	Fix memory leak spotted by the unit test.
 
