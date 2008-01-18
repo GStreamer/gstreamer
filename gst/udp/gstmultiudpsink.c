@@ -542,7 +542,8 @@ leave_multicast (GstUDPClient * client)
 {
   if (setsockopt (*(client->sock), IPPROTO_IP, IP_DROP_MEMBERSHIP,
           &(client->multi_addr), sizeof (client->multi_addr)) < 0)
-    perror ("setsockopt IP_DROP_MEMBERSHIP\n");
+    GST_WARNING ("setsockopt IP_DROP_MEMBERSHIP failed '%s'",
+        g_strerror (errno));
 }
 
 /* create a socket for sending to remote machine */
