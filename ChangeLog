@@ -1,5 +1,11 @@
 2008-01-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/equalizer/gstiirequalizer.c: (gst_iir_equalizer_finalize):
+	Unparent all bands from the equalizer when finalizing to stop
+	leaking	them.
+
+2008-01-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/soup/gstsouphttpsrc.c: (gst_souphttp_src_uri_get_protocols):
 	Add support for WebDAV.
 
