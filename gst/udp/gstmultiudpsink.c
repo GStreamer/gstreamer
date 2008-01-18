@@ -727,7 +727,8 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
   g_get_current_time (&now);
   client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
 
-  if (client->multi_addr.imr_multiaddr.s_addr && sink->auto_multicast)
+  if (*(client->sock) != -1 && client->multi_addr.imr_multiaddr.s_addr
+      && sink->auto_multicast)
     leave_multicast (client);
 
   /* Unlock to emit signal before we delete the actual client */
