@@ -1744,6 +1744,34 @@ no_codec:
 }
 
 static void
+gst_ffmpegdec_drain (GstFFMpegDec * ffmpegdec)
+{
+  GstFFMpegDecClass *oclass;
+
+  oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
+  if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
+    gint have_data, len, try = 0;
+
+    GST_LOG_OBJECT (ffmpegdec,
+        "codec has delay capabilities, calling until ffmpeg has drained everything");
+
+    do {
+      GstFlowReturn ret;
+
+      len = gst_ffmpegdec_frame (ffmpegdec, NULL, 0, &have_data,
+          GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, &ret);
+      if (len < 0 || have_data == 0)
+        break;
+    } while (try++ < 10);
+  }
+  if (ffmpegdec->segment.rate < 0.0) {
+    /* if we have some queued frames for reverse playback, flush them now */
+    flush_queued (ffmpegdec);
+  }
+}
+
+static void
 gst_ffmpegdec_flush_pcache (GstFFMpegDec * ffmpegdec)
 {
   if (ffmpegdec->pcache) {
@@ -1776,25 +1804,7 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
-      if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
-        gint have_data, len, try = 0;
-
-        GST_LOG_OBJECT (ffmpegdec,
-            "codec has delay capabilities, calling until ffmpeg has drained everything");
-
-        do {
-          GstFlowReturn ret;
-
-          len = gst_ffmpegdec_frame (ffmpegdec, NULL, 0, &have_data,
-              GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, &ret);
-          if (len < 0 || have_data == 0)
-            break;
-        } while (try++ < 10);
-      }
-      if (ffmpegdec->segment.rate < 0.0) {
-	/* if we have some queued frames for reverse playback, flush them now */
-        flush_queued (ffmpegdec);
-      }
+      gst_ffmpegdec_drain (ffmpegdec);
       break;
     }
     case GST_EVENT_FLUSH_STOP:
@@ -1921,17 +1931,13 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
    * case of a network error, better show the errors than to drop all data.. */
   if (G_UNLIKELY (discont)) {
     GST_DEBUG_OBJECT (ffmpegdec, "received DISCONT");
+    /* drain what we have queued */
+    gst_ffmpegdec_drain (ffmpegdec);
     gst_ffmpegdec_flush_pcache (ffmpegdec);
     avcodec_flush_buffers (ffmpegdec->context);
     ffmpegdec->waiting_for_key = TRUE;
     ffmpegdec->discont = TRUE;
     ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
-
-    /* flush on discont */
-    if (ffmpegdec->segment.rate < 0.0) {
-      /* flush out queued reverse frames */
-      ret = flush_queued (ffmpegdec);
-    }
   }
 
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));

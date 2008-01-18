@@ -1,5 +1,11 @@
 2008-01-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_drain),
+	(gst_ffmpegdec_sink_event), (gst_ffmpegdec_chain):
+	Flush delayed frames on DISCONT if we have them.
+
+2008-01-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_video_frame),
 	(gst_ffmpegdec_chain):
 	Flush on DISCONT because ffmpeg does not reliably tell us about
