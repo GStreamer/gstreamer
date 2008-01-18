@@ -1343,10 +1343,6 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   /* check if we are dealing with a keyframe here */
   iskeyframe = check_keyframe (ffmpegdec);
 
-  if (iskeyframe) {
-    *ret = flush_queued (ffmpegdec);
-  }
-
   /* when we're waiting for a keyframe, see if we have one or drop the current
    * non-keyframe */
   if (G_UNLIKELY (ffmpegdec->waiting_for_key)) {
@@ -1910,23 +1906,32 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   gint size, bsize, len, have_data;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime in_timestamp, in_duration;
+  gboolean discont;
 
   ffmpegdec = (GstFFMpegDec *) (GST_PAD_PARENT (pad));
 
   if (G_UNLIKELY (!ffmpegdec->opened))
     goto not_negotiated;
 
+  discont = GST_BUFFER_IS_DISCONT (inbuf);
+
   /* The discont flags marks a buffer that is not continuous with the previous
    * buffer. This means we need to clear whatever data we currently have. We
    * currently also wait for a new keyframe, which might be suboptimal in the
    * case of a network error, better show the errors than to drop all data.. */
-  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DISCONT))) {
+  if (G_UNLIKELY (discont)) {
     GST_DEBUG_OBJECT (ffmpegdec, "received DISCONT");
     gst_ffmpegdec_flush_pcache (ffmpegdec);
     avcodec_flush_buffers (ffmpegdec->context);
     ffmpegdec->waiting_for_key = TRUE;
     ffmpegdec->discont = TRUE;
     ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
+
+    /* flush on discont */
+    if (ffmpegdec->segment.rate < 0.0) {
+      /* flush out queued reverse frames */
+      ret = flush_queued (ffmpegdec);
+    }
   }
 
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
