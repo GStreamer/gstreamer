@@ -283,6 +283,7 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
     if (multifilesrc->successful_read) {
       /* If we've read at least one buffer successfully, not finding the
        * next file is EOS. */
+      g_free (filename);
       return GST_FLOW_UNEXPECTED;
     } else {
       goto handle_error;
