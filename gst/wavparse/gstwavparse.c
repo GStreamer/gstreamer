@@ -1140,6 +1140,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     wav->vbr = FALSE;
 
     g_free (header);
+    header = NULL;
 
     /* do format specific handling */
     switch (wav->format) {
@@ -1381,8 +1382,7 @@ invalid_blockalign:
   {
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
         ("Stream claims blockalign = %u, which is more than %u - invalid data",
-            header->blockalign,
-            header->channels * (guint) ceil (header->size / 8.0)));
+            wav->blockalign, wav->channels * (guint) ceil (wav->depth / 8.0)));
     g_free (codec_name);
     return GST_FLOW_ERROR;
   }
