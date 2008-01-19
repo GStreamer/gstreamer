@@ -6,7 +6,7 @@
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers):
 	Set variable to NULL after freeing it to prevent double frees
 	or make failures by another use of it afterwards more obvious
-	and fix use of it after the freeing.
+	and fix use of it after the freeing. Fixes bug #510592.
 
 2008-01-18  Thijs Vermeir  <thijsvermeir@gmail.com>
 
