@@ -1,5 +1,13 @@
 2008-01-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/rawparse/gstrawparse.c: (gst_raw_parse_push_buffer),
+	(gst_raw_parse_loop):
+	Handle framesizes > 4096 with multiple frames per buffer correctly
+	in pull mode and handle short reads better.
+	Also put offset and offset_end on outgoing buffers.
+
+2008-01-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/rawparse/gstrawparse.c: (gst_raw_parse_loop):
 	Improve handling of unknown or too small upstream sizes in
 	pull mode.

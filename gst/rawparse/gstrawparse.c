@@ -221,9 +221,13 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
         gst_util_uint64_scale (rp->n_frames, GST_SECOND * rp->fps_d, rp->fps_n);
     GST_BUFFER_DURATION (buffer) =
         gst_util_uint64_scale (nframes * GST_SECOND, rp->fps_d, rp->fps_n);
+    GST_BUFFER_OFFSET (buffer) = rp->offset / rp->framesize;
+    GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET (buffer) + nframes;
   } else {
     GST_BUFFER_TIMESTAMP (buffer) = rp->segment.start;
     GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_OFFSET (buffer) = rp->offset / rp->framesize;
+    GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET (buffer) + nframes;
   }
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (rp->srcpad));
   if (rp->discont) {
@@ -296,7 +300,7 @@ gst_raw_parse_loop (GstElement * element)
     goto pause;
   }
 
-  if (rp_class->multiple_frames_per_buffer)
+  if (rp_class->multiple_frames_per_buffer && rp->framesize < 4096)
     size = 4096 - (4096 % rp->framesize);
   else
     size = rp->framesize;
@@ -330,10 +334,15 @@ gst_raw_parse_loop (GstElement * element)
     GST_DEBUG_OBJECT (rp, "Short read at offset %" G_GINT64_FORMAT
         ", got only %u of %u bytes", rp->offset, GST_BUFFER_SIZE (buffer),
         size);
-    gst_buffer_unref (buffer);
-    buffer = NULL;
-    ret = GST_FLOW_UNEXPECTED;
-    goto pause;
+
+    if (size > rp->framesize) {
+      GST_BUFFER_SIZE (buffer) -= GST_BUFFER_SIZE (buffer) % rp->framesize;
+    } else {
+      gst_buffer_unref (buffer);
+      buffer = NULL;
+      ret = GST_FLOW_UNEXPECTED;
+      goto pause;
+    }
   }
 
   if (rp->need_newsegment) {
