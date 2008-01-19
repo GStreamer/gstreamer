@@ -297,7 +297,7 @@ gst_raw_parse_loop (GstElement * element)
   }
 
   if (rp_class->multiple_frames_per_buffer)
-    size = 1024 * rp->framesize;
+    size = 4096 - (4096 % rp->framesize);
   else
     size = rp->framesize;
 
@@ -651,7 +651,12 @@ gst_raw_parse_handle_seek_push (GstRawParse * rp, GstEvent * event)
           start, stop_type, stop);
 
       ret = gst_pad_push_event (rp->sinkpad, event);
+    } else {
+      GST_DEBUG_OBJECT (rp, "Seek failed: couldn't convert to byte positions");
     }
+  } else {
+    GST_DEBUG_OBJECT (rp,
+        "seeking is only supported in TIME or DEFAULT format");
   }
   return ret;
 }
