@@ -304,13 +304,14 @@ gst_raw_parse_loop (GstElement * element)
   if (rp->offset + size > rp->upstream_length) {
     GstFormat fmt = GST_FORMAT_BYTES;
 
-    if (!gst_pad_query_peer_duration (rp->sinkpad, &fmt, &rp->upstream_length)
-        || rp->upstream_length < rp->offset + rp->framesize) {
+    if (!gst_pad_query_peer_duration (rp->sinkpad, &fmt, &rp->upstream_length)) {
+      GST_WARNING_OBJECT (rp,
+          "Could not get upstream duration, trying to pull frame by frame");
+      size = rp->framesize;
+    } else if (rp->upstream_length < rp->offset + rp->framesize) {
       ret = GST_FLOW_UNEXPECTED;
       goto pause;
-    }
-
-    if (rp->offset + size > rp->upstream_length) {
+    } else if (rp->offset + size > rp->upstream_length) {
       size = rp->upstream_length - rp->offset;
       size -= size % rp->framesize;
     }
