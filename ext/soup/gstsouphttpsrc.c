@@ -558,6 +558,7 @@ soup_got_headers (SoupMessage * msg, GstSouphttpSrc * src)
 {
   const char *value;
   GstTagList *tag_list;
+  GstBaseSrc *basesrc;
 
   GST_DEBUG_OBJECT (src, "got headers");
 
@@ -568,6 +569,9 @@ soup_got_headers (SoupMessage * msg, GstSouphttpSrc * src)
     src->have_size = TRUE;
     GST_DEBUG_OBJECT (src, "size = %llu", src->content_size);
 
+    basesrc = GST_BASE_SRC_CAST (src);
+    gst_segment_set_duration (&basesrc->segment, GST_FORMAT_BYTES,
+        src->content_size);
     gst_element_post_message (GST_ELEMENT (src),
         gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_BYTES,
             src->content_size));
