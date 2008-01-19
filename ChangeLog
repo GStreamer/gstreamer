@@ -1,3 +1,9 @@
+2008-01-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_class_init):
+	Don't add pad templates for the base class but only in the
+	subclasses.
+
 2008-01-17  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/lame/gstlame.c:

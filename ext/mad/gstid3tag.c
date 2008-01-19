@@ -285,7 +285,7 @@ gst_id3_tag_class_init (gpointer g_class, gpointer class_data)
             G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     gst_element_class_add_pad_template (gstelement_class,
         gst_static_pad_template_get (&id3_tag_src_any_template_factory));
-  } else {
+  } else if (tag_class->type & GST_ID3_TAG_PARSE_MUX) {
     gst_element_class_add_pad_template (gstelement_class,
         gst_static_pad_template_get (&id3_tag_src_id3_template_factory));
   }
@@ -303,7 +303,7 @@ gst_id3_tag_class_init (gpointer g_class, gpointer class_data)
   if (tag_class->type == GST_ID3_TAG_PARSE_MUX) {
     gst_element_class_add_pad_template (gstelement_class,
         gst_static_pad_template_get (&id3_tag_sink_any_template_factory));
-  } else {
+  } else if (tag_class->type & GST_ID3_TAG_PARSE_DEMUX) {
     gst_element_class_add_pad_template (gstelement_class,
         gst_static_pad_template_get (&id3_tag_sink_id3_template_factory));
   }
