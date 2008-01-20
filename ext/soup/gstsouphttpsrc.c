@@ -559,22 +559,26 @@ soup_got_headers (SoupMessage * msg, GstSouphttpSrc * src)
   const char *value;
   GstTagList *tag_list;
   GstBaseSrc *basesrc;
+  guint64 newsize;
 
   GST_DEBUG_OBJECT (src, "got headers");
 
   /* Parse Content-Length. */
   value = soup_message_get_header (msg->response_headers, "Content-Length");
   if (value != NULL) {
-    src->content_size = g_ascii_strtoull (value, NULL, 10);
-    src->have_size = TRUE;
-    GST_DEBUG_OBJECT (src, "size = %llu", src->content_size);
+    newsize = src->request_position + g_ascii_strtoull (value, NULL, 10);
+    if (!src->have_size || (src->content_size != newsize)) {
+      src->content_size = newsize;
+      src->have_size = TRUE;
+      GST_DEBUG_OBJECT (src, "size = %llu", src->content_size);
 
-    basesrc = GST_BASE_SRC_CAST (src);
-    gst_segment_set_duration (&basesrc->segment, GST_FORMAT_BYTES,
-        src->content_size);
-    gst_element_post_message (GST_ELEMENT (src),
-        gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_BYTES,
-            src->content_size));
+      basesrc = GST_BASE_SRC_CAST (src);
+      gst_segment_set_duration (&basesrc->segment, GST_FORMAT_BYTES,
+          src->content_size);
+      gst_element_post_message (GST_ELEMENT (src),
+          gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_BYTES,
+              src->content_size));
+    }
   }
 
   /* Icecast stuff */

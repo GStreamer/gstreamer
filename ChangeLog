@@ -1,3 +1,11 @@
+2008-01-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Wouter Cloetens <wouter at mind dot be>
+
+	* ext/soup/gstsouphttpsrc.c: (soup_got_headers):
+	Report the size of the stream as the total size instead of
+	the remaining Content-Length, which is wrong after a seek.
+
 2008-01-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/rawparse/gstrawparse.c: (gst_raw_parse_push_buffer),
