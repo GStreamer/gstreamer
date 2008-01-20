@@ -70,7 +70,8 @@
 
 #define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING
 
-static GList *_gst_plugin_static = NULL;
+static guint _num_static_plugins;       /* 0    */
+static GstPluginDesc *_static_plugins;  /* NULL */
 static gboolean _gst_plugin_inited;
 
 /* static variables for segfault handling of plugin loading */
@@ -169,15 +170,14 @@ _gst_plugin_register_static (GstPluginDesc * desc)
   g_return_if_fail (desc != NULL);
 
   if (!_gst_plugin_inited) {
-    /* Must call g_thread_init() before calling GLib functions such as
-     * g_list_prepend() ... */
-    if (!g_thread_supported ())
-      g_thread_init (NULL);
-
-    if (GST_CAT_DEFAULT)
-      GST_LOG ("queueing static plugin \"%s\" for loading later on",
-          desc->name);
-    _gst_plugin_static = g_list_prepend (_gst_plugin_static, desc);
+    /* We can't use any GLib functions here, since g_thread_init hasn't been
+     * called yet, and we can't call it here either, or programs that don't
+     * guard their g_thread_init calls in main() will just abort */
+    ++_num_static_plugins;
+    _static_plugins =
+        realloc (_static_plugins, _num_static_plugins * sizeof (GstPluginDesc));
+    /* assume strings in the GstPluginDesc are static const or live forever */
+    _static_plugins[_num_static_plugins - 1] = *desc;
   } else {
     gst_plugin_register_static (desc->major_version, desc->minor_version,
         desc->name, desc->description, desc->plugin_init, desc->version,
@@ -252,10 +252,26 @@ gst_plugin_register_static (gint major_version, gint minor_version,
 void
 _gst_plugin_initialize (void)
 {
+  guint i;
+
   _gst_plugin_inited = TRUE;
 
   /* now register all static plugins */
-  g_list_foreach (_gst_plugin_static, (GFunc) gst_plugin_register_static, NULL);
+  GST_INFO ("registering %u static plugins", _num_static_plugins);
+  for (i = 0; i < _num_static_plugins; ++i) {
+    gst_plugin_register_static (_static_plugins[i].major_version,
+        _static_plugins[i].minor_version, _static_plugins[i].name,
+        _static_plugins[i].description, _static_plugins[i].plugin_init,
+        _static_plugins[i].version, _static_plugins[i].license,
+        _static_plugins[i].source, _static_plugins[i].package,
+        _static_plugins[i].origin);
+  }
+
+  if (_static_plugins) {
+    free (_static_plugins);
+    _static_plugins = NULL;
+    _num_static_plugins = 0;
+  }
 }
 
 /* this function could be extended to check if the plugin license matches the

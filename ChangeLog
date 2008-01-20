@@ -1,3 +1,30 @@
+2008-01-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstplugin.c: (_gst_plugin_initialize):
+	  Fix old-style static plugins via GST_PLUGIN_DEFINE_STATIC
+	  again, which I broke two commits ago when changing the API
+	  of gst_plugin_register_static(): the g_list_foreach() in
+	  _gst_plugin_register_static still assumed the old function
+	  signature and would therefore fail (re-fixes #510187).
+
+	* gst/gstplugin.c: (_num_static_plugins), (_static_plugins),
+	  (_gst_plugin_register_static), (gst_plugin_register_static):
+	  Revert the (technically correct) change to call g_thread_init() from
+	  the pre-main() constructor. This will break programs which call
+	  g_thread_init() without an if (!g_thread_supported()) guard in their
+	  main function. We could just blame it on GLib or the application, but
+	  it's probably best to just avoid this altogether and simply not use
+	  any GLib functions here and use plain old malloc() with a simple
+	  array to store the plugins to register later when gst_init() is
+	  finally called (re-fixes #510187).
+
+	* tests/check/gst/gstplugin.c: (GST_GNUC_CONSTRUCTOR_DEFINED),
+	  (GST_GNUC_CONSTRUCTOR_DEFINED), (plugin_init_counter),
+	  (plugin1_init), (plugin2_init), (plugin3_init), (GST_START_TEST),
+	  (GST_START_TEST), (gst_plugin_suite):
+	  Dumb unit test to make sure the old GST_PLUGIN_DEFINE_STATIC still
+	  works.
+
 2008-01-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstplugin.h: (GST_PLUGIN_DEFINE_STATIC):

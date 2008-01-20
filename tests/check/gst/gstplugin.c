@@ -29,6 +29,64 @@
 void _gst_plugin_register_static (GstPluginDesc * desc);
 #endif
 
+/* keep in sync with GST_GNUC_CONSTRUCTOR in gstmacros.h (ideally we'd just
+ * do it there, but I don't want to touch that now, and also we really want
+ * to deprecate this macro in the long run, I think) */
+#if defined (__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4))
+#define GST_GNUC_CONSTRUCTOR_DEFINED
+#else
+#undef GST_GNUC_CONSTRUCTOR_DEFINED
+#endif
+
+#ifdef GST_GNUC_CONSTRUCTOR_DEFINED
+/* ------------------------------------------------------------------------- */
+/* To make sure the old and deprecated GST_PLUGIN_DEFINE_STATIC still works  */
+
+static guint plugin_init_counter;       /* 0 */
+
+static gboolean
+plugin1_init (GstPlugin * plugin)
+{
+  ++plugin_init_counter;
+  return TRUE;
+}
+
+static gboolean
+plugin2_init (GstPlugin * plugin)
+{
+  ++plugin_init_counter;
+  return TRUE;
+}
+
+static gboolean
+plugin3_init (GstPlugin * plugin)
+{
+  ++plugin_init_counter;
+  return TRUE;
+}
+
+GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR, GST_VERSION_MINOR, "plugin-1",
+    "some static elements 1", plugin1_init, VERSION, GST_LICENSE, PACKAGE,
+    GST_PACKAGE_ORIGIN);
+
+GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR, GST_VERSION_MINOR, "plugin-2",
+    "some static elements 2", plugin2_init, VERSION, GST_LICENSE, PACKAGE,
+    GST_PACKAGE_ORIGIN);
+
+GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR, GST_VERSION_MINOR, "plugin-3",
+    "some static elements 3", plugin3_init, VERSION, GST_LICENSE, PACKAGE,
+    GST_PACKAGE_ORIGIN);
+
+GST_START_TEST (test_old_register_static)
+{
+  fail_unless (plugin_init_counter == 3);
+}
+
+GST_END_TEST;
+
+#endif /* GST_GNUC_CONSTRUCTOR_DEFINED */
+
+
 static gboolean
 register_check_elements (GstPlugin * plugin)
 {
@@ -308,6 +366,9 @@ gst_plugin_suite (void)
   tcase_set_timeout (tc_chain, 60);
 
   suite_add_tcase (s, tc_chain);
+#ifdef GST_GNUC_CONSTRUCTOR_DEFINED
+  tcase_add_test (tc_chain, test_old_register_static);
+#endif
   tcase_add_test (tc_chain, test_register_static);
   tcase_add_test (tc_chain, test_registry);
   tcase_add_test (tc_chain, test_load_coreelements);
