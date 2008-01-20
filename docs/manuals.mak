@@ -94,7 +94,7 @@ $(BUILDDIR)/$(MAIN): $(XML) $(CSS) $(EXTRA_SRC)
 # xsltproc --nonet /usr/share/xml/docbook/stylesheet/nwalsh/html/docbook.xsl pwg.xml
 # 
 html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
-	@make check-local
+	@$(MAKE) check-local
 	@echo "*** Generating HTML output ***"
 	@-mkdir -p html
 	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
@@ -108,14 +108,14 @@ html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
           cp $(PNG_BUILT) html/images || true
 
 $(DOC).ps: $(BUILDDIR)/$(MAIN) $(EPS_BUILT) $(PNG_SRC) $(FIG_SRC)
-	@make check-local
+	@$(MAKE) check-local
 	@echo "*** Generating PS output ***"
 	@cp -f $(srcdir)/../image-eps $(BUILDDIR)/image.entities
 	cd $(BUILDDIR) && docbook2ps -o .. $(MAIN)
 #	export LC_PAPER=$(PAPER_LOCALE) && cd $(BUILDDIR) && xmlto ps -o .. $(MAIN)
 
 $(DOC).pdf: $(DOC).ps
-	@make check-local
+	@$(MAKE) check-local
 	@echo "*** Generating PDF output ***"
 	@ps2pdf $(DOC).ps
 
