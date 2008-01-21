@@ -118,7 +118,7 @@ def default_log_line_regex_ ():
     THREAD = r"(0x[0-9a-f]+) +" #r"\((0x[0-9a-f]+) - "
     # "0:00:00.777913000  "
     TIME = r"([0-9]+:[0-9][0-9]:[0-9][0-9]\.[0-9]+) +"
-    CATEGORY = "([A-Za-z_-]+) +" # "GST_REFCOUNTING ", "flacdec "
+    CATEGORY = "([A-Za-z0-9_-]+) +" # "GST_REFCOUNTING ", "flacdec "
     # "  3089 "
     PID = r"([0-9]+) +"
     FILENAME = r"([^:]+):"
