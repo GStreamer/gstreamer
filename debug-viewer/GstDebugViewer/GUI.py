@@ -1367,7 +1367,7 @@ class WrappingMessageColumn (MessageColumn):
 
         col = self.view_column
         col.props.max_width = width
-        col.get_cells ()[0].props.wrap_width = width
+        col.get_cell_renderers ()[0].props.wrap_width = width
         col.queue_resize ()
 
 class LineViewColumnManager (ColumnManager):
