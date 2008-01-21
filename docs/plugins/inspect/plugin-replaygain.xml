@@ -14,17 +14,17 @@
       <longname>ReplayGain analysis</longname>
       <class>Filter/Analyzer/Audio</class>
       <description>Perform the ReplayGain analysis</description>
-      <author>René Stadler &lt;mail@renestadler.de&gt;</author>
+      <author>Ren303251 Stadler &lt;mail@renestadler.de&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, endianness=(int)1234, channels=(int){ 1, 2 }, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }; audio/x-raw-int, width=(int)16, depth=(int)[ 1, 16 ], signed=(boolean)true, endianness=(int)1234, channels=(int){ 1, 2 }, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, endianness=(int)1234, channels=(int){ 1, 2 }, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }; audio/x-raw-int, width=(int)16, depth=(int)[ 1, 16 ], signed=(boolean)true, endianness=(int)1234, channels=(int){ 1, 2 }, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }</details>
         </caps>
@@ -35,17 +35,17 @@
       <longname>ReplayGain limiter</longname>
       <class>Filter/Effect/Audio</class>
       <description>Apply signal compression to raw audio data</description>
-      <author>René Stadler &lt;mail@renestadler.de&gt;</author>
+      <author>Ren303251 Stadler &lt;mail@renestadler.de&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ], endianness=(int)1234</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ], endianness=(int)1234</details>
         </caps>
@@ -56,17 +56,17 @@
       <longname>ReplayGain volume</longname>
       <class>Filter/Effect/Audio</class>
       <description>Apply ReplayGain volume adjustment</description>
-      <author>René Stadler &lt;mail@renestadler.de&gt;</author>
+      <author>Ren303251 Stadler &lt;mail@renestadler.de&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)32; audio/x-raw-int, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)32; audio/x-raw-int, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
         </caps>

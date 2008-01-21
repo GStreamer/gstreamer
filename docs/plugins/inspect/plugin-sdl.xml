@@ -29,9 +29,7 @@
       <longname>SDL video sink</longname>
       <class>Sink/Video</class>
       <description>An SDL-based videosink</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
-    Edgard Lima &lt;edgard.lima@indt.org.br&gt;
-    Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;012Edgard Lima &lt;edgard.lima@indt.org.br&gt;012Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

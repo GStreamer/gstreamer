@@ -14,17 +14,17 @@
       <longname>H264Parse</longname>
       <class>Codec/Parser</class>
       <description>Parses raw h264 stream</description>
-      <author>Michal Benes &lt;michal.benes@itonis.tv&gt;</author>
+      <author>Michal Benes &lt;michal.benes@itonis.tv&gt;,Wim Taymans &lt;wim.taymans@gmail.com</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-h264</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>video/x-h264</details>
         </caps>

@@ -14,28 +14,10 @@
       <longname>RTP Bin</longname>
       <class>Filter/Network/RTP</class>
       <description>Implement an RTP bin</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>recv_rtp_sink_%d</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>application/x-rtp</details>
-        </caps>
-        <caps>
-          <name>recv_rtcp_sink_%d</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>application/x-rtcp</details>
-        </caps>
-        <caps>
-          <name>send_rtp_sink_%d</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>application/x-rtp</details>
-        </caps>
-        <caps>
-          <name>recv_rtp_src_%d_%d_%d</name>
+          <name>send_rtp_src_%d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>application/x-rtp</details>
@@ -47,9 +29,27 @@
           <details>application/x-rtcp</details>
         </caps>
         <caps>
-          <name>send_rtp_src_%d</name>
+          <name>recv_rtp_src_%d_%d_%d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>send_rtp_sink_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>recv_rtcp_sink_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtcp</details>
+        </caps>
+        <caps>
+          <name>recv_rtp_sink_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
           <details>application/x-rtp</details>
         </caps>
       </pads>
@@ -59,12 +59,12 @@
       <longname>RTP Client</longname>
       <class>Filter/Network/RTP</class>
       <description>Implement an RTP client</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>rtp_sink_%d</name>
-          <direction>sink</direction>
-          <presence>request</presence>
+          <name>rtp_src_%d_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
           <details>application/x-rtp</details>
         </caps>
         <caps>
@@ -74,9 +74,9 @@
           <details>application/x-rtcp</details>
         </caps>
         <caps>
-          <name>rtp_src_%d_%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
+          <name>rtp_sink_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
           <details>application/x-rtp</details>
         </caps>
       </pads>
@@ -89,16 +89,16 @@
       <author>Philippe Kalaf &lt;philippe.kalaf@collabora.co.uk&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>application/x-rtp, clock-rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
         </caps>
       </pads>
     </element>
@@ -110,16 +110,16 @@
       <author>Kai Vehmanen &lt;kai.vehmanen@nokia.com&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-rtp</details>
-        </caps>
-        <caps>
           <name>src_%d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>application/x-rtp, payload=(int)[ 0, 255 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
         </caps>
       </pads>
     </element>
@@ -128,28 +128,16 @@
       <longname>RTP Session</longname>
       <class>Filter/Network/RTP</class>
       <description>Implement an RTP session</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>recv_rtp_sink</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>application/x-rtp</details>
-        </caps>
-        <caps>
-          <name>recv_rtcp_sink</name>
-          <direction>sink</direction>
+          <name>send_rtcp_src</name>
+          <direction>source</direction>
           <presence>request</presence>
           <details>application/x-rtcp</details>
         </caps>
         <caps>
-          <name>send_rtp_sink</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>application/x-rtp</details>
-        </caps>
-        <caps>
-          <name>recv_rtp_src</name>
+          <name>send_rtp_src</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>application/x-rtp</details>
@@ -161,16 +149,28 @@
           <details>application/x-rtcp</details>
         </caps>
         <caps>
-          <name>send_rtp_src</name>
+          <name>recv_rtp_src</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>application/x-rtp</details>
         </caps>
         <caps>
-          <name>send_rtcp_src</name>
-          <direction>source</direction>
+          <name>send_rtp_sink</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>recv_rtcp_sink</name>
+          <direction>sink</direction>
           <presence>request</presence>
           <details>application/x-rtcp</details>
+        </caps>
+        <caps>
+          <name>recv_rtp_sink</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtp</details>
         </caps>
       </pads>
     </element>
@@ -179,18 +179,12 @@
       <longname>RTP SSRC Demux</longname>
       <class>Demux/Network/RTP</class>
       <description>Splits RTP streams based on the SSRC</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-rtp</details>
-        </caps>
-        <caps>
-          <name>rtcp_sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
+          <name>rtcp_src_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
           <details>application/x-rtcp</details>
         </caps>
         <caps>
@@ -200,10 +194,16 @@
           <details>application/x-rtp</details>
         </caps>
         <caps>
-          <name>rtcp_src_%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
+          <name>rtcp_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
           <details>application/x-rtcp</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
         </caps>
       </pads>
     </element>

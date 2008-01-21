@@ -14,17 +14,17 @@
       <longname>Band-pass and Band-reject Windowed sinc filter</longname>
       <class>Filter/Effect/Audio</class>
       <description>Band-pass Windowed sinc filter</description>
-      <author>Thomas &lt;thomas@apestaart.org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Thomas &lt;thomas@apestaart.org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -38,14 +38,14 @@
       <author>Monty &lt;monty@xiph.org&gt;, Thomas &lt;thomas@apestaart.org&gt;, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)32</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)32</details>
         </caps>
@@ -56,17 +56,17 @@
       <longname>LPWSinc</longname>
       <class>Filter/Effect/Audio</class>
       <description>Low-pass and High-pass Windowed sinc filter</description>
-      <author>Thomas &lt;thomas@apestaart.org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Thomas &lt;thomas@apestaart.org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>

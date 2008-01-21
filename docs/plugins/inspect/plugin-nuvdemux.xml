@@ -17,10 +17,10 @@
       <author>Renato Araujo Oliveira Filho &lt;renato.filho@indt.org.br&gt;,Rosfran Borges &lt;rosfran.borges@indt.org.br&gt;</author>
       <pads>
         <caps>
-          <name>audio_src</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-nuv</details>
         </caps>
         <caps>
           <name>video_src</name>
@@ -29,10 +29,10 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-nuv</details>
+          <name>audio_src</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
         </caps>
       </pads>
     </element>

@@ -79,10 +79,12 @@ IGNORE_CFILES =
 # we add all .h files of elements that have signals/args we want
 # sadly this also pulls in the private methods - maybe we should
 # move those around in the source ?
+#
 # also, we should add some stuff here conditionally based on whether
 # or not the plugin will actually build
 # but I'm not sure about that - it might be this Just Works given that
 # the registry won't have the element
+# -> it just works (TM) (ensonic)
 
 # FIXME: not ported yet
 #	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.c 
@@ -95,23 +97,30 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/amrwb/gstamrwbdec.h \
 	$(top_srcdir)/ext/amrwb/gstamrwbenc.h \
 	$(top_srcdir)/ext/amrwb/gstamrwbparse.h \
+	$(top_srcdir)/ext/dc1394/gstdc1394.h \
 	$(top_srcdir)/ext/directfb/dfbvideosink.h \
 	$(top_srcdir)/ext/gio/gstgiosink.h \
 	$(top_srcdir)/ext/gio/gstgiosrc.h \
+	$(top_srcdir)/ext/gio/gstgiostreamsink.h \
+	$(top_srcdir)/ext/gio/gstgiostreamsrc.h \
+	$(top_srcdir)/ext/ivorbis/vorbisdec.h \
 	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
-	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
-	$(top_srcdir)/ext/sdl/sdlvideosink.h \
+	$(top_srcdir)/ext/mythtv/gstmythtvsrc.h \
+	$(top_srcdir)/ext/theora/theoradec.h \
 	$(top_srcdir)/ext/timidity/gsttimidity.h \
 	$(top_srcdir)/ext/timidity/gstwildmidi.h \
+	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer3bands.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer10bands.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizernbands.h \
+	$(top_srcdir)/gst/festival/gstfestival.h \
 	$(top_srcdir)/gst/filter/gstlpwsinc.h \
 	$(top_srcdir)/gst/filter/gstbpwsinc.h \
 	$(top_srcdir)/gst/modplug/gstmodplug.h \
 	$(top_srcdir)/gst/multifile/gstmultifilesink.h \
 	$(top_srcdir)/gst/multifile/gstmultifilesrc.h \
+	$(top_srcdir)/gst/nuvdemux/gstnuvdemux.h \
 	$(top_srcdir)/gst/replaygain/gstrganalysis.h \
 	$(top_srcdir)/gst/replaygain/gstrglimiter.h \
 	$(top_srcdir)/gst/replaygain/gstrgvolume.h \
@@ -121,11 +130,15 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/rtpmanager/gstrtpptdemux.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpsession.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpssrcdemux.h \
+	$(top_srcdir)/gst/sdp/gstsdpdemux.h \
 	$(top_srcdir)/gst/spectrum/gstspectrum.h \
+	$(top_srcdir)/gst/speed/gstspeed.h \
 	$(top_srcdir)/gst/speexresample/gstspeexresample.h \
 	$(top_srcdir)/gst/videosignal/gstvideoanalyse.h \
 	$(top_srcdir)/gst/videosignal/gstvideodetect.h \
-	$(top_srcdir)/gst/videosignal/gstvideomark.h
+	$(top_srcdir)/gst/videosignal/gstvideomark.h \
+	$(top_srcdir)/sys/dvb/gstdvbsrc.h \
+	$(top_srcdir)/sys/glsink/gstgltestsrc.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

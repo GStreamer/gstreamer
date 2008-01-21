@@ -17,9 +17,9 @@
       <author>Alessandro Decina &lt;alessandro@nnva.org&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
+          <name>program_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
           <details>video/mpegts, systemstream=(boolean)true</details>
         </caps>
         <caps>
@@ -29,9 +29,9 @@
           <details>video/mpegts, systemstream=(boolean)true</details>
         </caps>
         <caps>
-          <name>program_%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
           <details>video/mpegts, systemstream=(boolean)true</details>
         </caps>
       </pads>

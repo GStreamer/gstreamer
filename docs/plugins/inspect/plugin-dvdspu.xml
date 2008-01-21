@@ -17,10 +17,10 @@
       <author>Jan Schmidt &lt;jan@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>subpicture</name>
+          <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw-yuv, format=(fourcc){ I420 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]</details>
+          <details>video/x-dvd-subpicture</details>
         </caps>
         <caps>
           <name>video</name>
@@ -29,10 +29,10 @@
           <details>video/x-raw-yuv, format=(fourcc){ I420 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]</details>
         </caps>
         <caps>
-          <name>subpicture</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-dvd-subpicture</details>
+          <details>video/x-raw-yuv, format=(fourcc){ I420 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]</details>
         </caps>
       </pads>
     </element>

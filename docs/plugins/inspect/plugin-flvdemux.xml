@@ -17,10 +17,10 @@
       <author>Julien Moutte &lt;julien@moutte.net&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-flv</details>
+          <name>video</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
         </caps>
         <caps>
           <name>audio</name>
@@ -29,10 +29,10 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>video</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-flv</details>
         </caps>
       </pads>
     </element>

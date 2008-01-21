@@ -14,8 +14,7 @@
       <longname>S/PDIF ALSA audiosink</longname>
       <class>Sink/Audio</class>
       <description>Feeds audio to S/PDIF interfaces through the ALSA sound driver</description>
-      <author>Martin Soto &lt;martinsoto@users.sourceforge.net&gt;
-    Michael Smith &lt;msmith@fluendo.com&gt;</author>
+      <author>Martin Soto &lt;martinsoto@users.sourceforge.net&gt;012Michael Smith &lt;msmith@fluendo.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

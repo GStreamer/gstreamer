@@ -17,16 +17,16 @@
       <author>Christophe Fergeau &lt;teuf@gnome.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/mpeg, mpegversion=(int)1, layer=(int)3</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/mpeg, mpegversion=(int)1, layer=(int)3</details>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ]</details>
         </caps>
       </pads>
     </element>
