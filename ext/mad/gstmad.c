@@ -239,6 +239,7 @@ gst_mad_init (GstMad * mad, GstMadClass * klass)
   gst_pad_set_chain_function (mad->sinkpad, GST_DEBUG_FUNCPTR (gst_mad_chain));
   gst_pad_set_event_function (mad->sinkpad,
       GST_DEBUG_FUNCPTR (gst_mad_sink_event));
+
   template = gst_static_pad_template_get (&mad_src_template_factory);
   mad->srcpad = gst_pad_new_from_template (template, "src");
   gst_object_unref (template);
@@ -250,6 +251,7 @@ gst_mad_init (GstMad * mad, GstMadClass * klass)
   gst_pad_set_query_type_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_get_query_types));
   gst_pad_use_fixed_caps (mad->srcpad);
+
   mad->tempbuffer = g_malloc (MAD_BUFFER_MDLEN * 3);
   mad->tempsize = 0;
   mad->base_byte_offset = 0;
@@ -279,10 +281,10 @@ gst_mad_dispose (GObject * object)
 
   gst_mad_set_index (GST_ELEMENT (object), NULL);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-
   g_free (mad->tempbuffer);
   mad->tempbuffer = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
