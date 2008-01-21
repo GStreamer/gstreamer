@@ -31,16 +31,16 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_THEORA_DEC \
+#define GST_TYPE_THEORA_DEC_EXP \
   (gst_theoradec_get_type())
-#define GST_THEORA_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_THEORA_DEC,GstTheoraExpDec))
-#define GST_THEORA_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_THEORA_DEC,GstTheoraExpDecClass))
-#define GST_IS_THEORA_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_THEORA_DEC))
-#define GST_IS_THEORA_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_THEORA_DEC))
+#define GST_THEORA_DEC_EXP(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_THEORA_DEC_EXP,GstTheoraExpDec))
+#define GST_THEORA_DEC_EXP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_THEORA_DEC_EXP,GstTheoraExpDecClass))
+#define GST_IS_THEORA_DEC_EXP(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_THEORA_DEC_EXP))
+#define GST_IS_THEORA_DEC_EXP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_THEORA_DEC_EXP))
 
 typedef struct _GstTheoraExpDec GstTheoraExpDec;
 typedef struct _GstTheoraExpDecClass GstTheoraExpDecClass;

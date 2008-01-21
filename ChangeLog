@@ -1,5 +1,12 @@
 2008-01-21  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* ext/theora/theoradec.c:
+	* ext/theora/theoradec.h:
+	  Coherent namespace usage and adding symbold from unused to sections.
+
+2008-01-21  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
 	  Add symbols from -unused.txt to the right place.

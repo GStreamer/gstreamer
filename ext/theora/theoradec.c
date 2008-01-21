@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:element-theoradec
- * @see_also: theoraenc, oggdemux
+ * SECTION:element-theoradecexp
+ * @see_also: theoradec, theoraenc, oggdemux
  *
  * <refsect2>
  * <para>
@@ -217,7 +217,7 @@ theora_dec_src_convert (GstPad * pad,
     return TRUE;
   }
 
-  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+  dec = GST_THEORA_DEC_EXP (gst_pad_get_parent (pad));
 
   /* we need the info part before we can done something */
   if (!dec->have_header)
@@ -300,7 +300,7 @@ theora_dec_sink_convert (GstPad * pad,
     return TRUE;
   }
 
-  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+  dec = GST_THEORA_DEC_EXP (gst_pad_get_parent (pad));
 
   /* we need the info part before we can done something */
   if (!dec->have_header)
@@ -366,7 +366,7 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
 
   gboolean res = FALSE;
 
-  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+  dec = GST_THEORA_DEC_EXP (gst_pad_get_parent (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -488,7 +488,7 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
   gboolean res = TRUE;
   GstTheoraExpDec *dec;
 
-  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+  dec = GST_THEORA_DEC_EXP (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -569,7 +569,7 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
   gboolean ret = FALSE;
   GstTheoraExpDec *dec;
 
-  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+  dec = GST_THEORA_DEC_EXP (gst_pad_get_parent (pad));
 
   GST_LOG_OBJECT (dec, "handling event");
   switch (GST_EVENT_TYPE (event)) {
@@ -1281,7 +1281,7 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn result = GST_FLOW_OK;
   gboolean isheader;
 
-  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+  dec = GST_THEORA_DEC_EXP (gst_pad_get_parent (pad));
 
   /* resync on DISCONT */
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
@@ -1361,7 +1361,7 @@ done:
 static GstStateChangeReturn
 theora_dec_change_state (GstElement * element, GstStateChange transition)
 {
-  GstTheoraExpDec *dec = GST_THEORA_DEC (element);
+  GstTheoraExpDec *dec = GST_THEORA_DEC_EXP (element);
   GstStateChangeReturn ret;
 
 
