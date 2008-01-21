@@ -110,7 +110,7 @@ GST_DVD_SPU_CLASS
 GST_IS_DVD_SPU
 GST_IS_DVD_SPU_CLASS
 GST_TYPE_DVD_SPU
-gst_dvdspu_get_type
+gst_dvd_spu_get_type
 SpuColour
 SpuLineCtrlI
 SpuPacket

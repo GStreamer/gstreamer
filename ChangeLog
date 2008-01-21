@@ -1,5 +1,10 @@
 2008-01-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	  Update docs file too.
+
+2008-01-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/dvdspu/gstdvdspu-render.c: (gst_dvd_spu_render_spu):
 	* gst/dvdspu/gstdvdspu.c: (dvdspu_debug), (GST_CAT_DEFAULT),
 	  (subpic_sink_factory), (gst_dvd_spu_base_init),
