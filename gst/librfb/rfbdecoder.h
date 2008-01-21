@@ -105,8 +105,6 @@ void rfb_decoder_send_key_event (RfbDecoder * decoder,
     guint key, gboolean down_flag);
 void rfb_decoder_send_pointer_event (RfbDecoder * decoder,
     gint button_mask, gint x, gint y);
-guint8 *
-	rfb_decoder_message_set_encodings ( GSList *encodings_list);
 
 G_END_DECLS
 #endif

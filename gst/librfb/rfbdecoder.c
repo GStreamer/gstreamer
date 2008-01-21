@@ -286,7 +286,7 @@ rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
   return TRUE;
 }
 
-/**
+/*
  * a string describing the reason (where a string is specified as a length followed
  * by that many ASCII characters)
  **/
@@ -314,7 +314,7 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
 {
   guint8 *buffer = NULL;
 
-  /**
+  /*
    * Version 3.3 The server decides the security type and sends a single word
    *
    * The security-type may only take the value 0, 1 or 2. A value of 0 means that the
@@ -347,10 +347,10 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
       }
       break;
     case SECURITY_VNC:
-        /**
-         * VNC authentication is to be used and protocol data is to be sent unencrypted. The
-         * server sends a random 16-byte challenge
-         */
+      /*
+       * VNC authentication is to be used and protocol data is to be sent unencrypted. The
+       * server sends a random 16-byte challenge
+       */
       GST_DEBUG ("Security type is VNC Authentication");
       /* VNC Authentication can't be used if the password is not set */
       if (!decoder->password) {
@@ -376,7 +376,7 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
   return TRUE;
 }
 
-/**
+/*
  * The server sends a word to inform the client whether the security handshaking was
  * successful.
  */
@@ -401,7 +401,7 @@ rfb_decoder_state_security_result (RfbDecoder * decoder)
   return TRUE;
 }
 
-guint8 *
+static guint8 *
 rfb_decoder_message_set_encodings (GSList * encodings_list)
 {
 
@@ -422,7 +422,7 @@ rfb_decoder_message_set_encodings (GSList * encodings_list)
   return message;
 }
 
-/**
+/*
  * rfb_decoder_state_set_encodings:
  * @decoder: The rfb context
  *

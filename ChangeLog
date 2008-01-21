@@ -1,3 +1,10 @@
+2008-01-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+	  Don't use gtk-doc comment style for non gtk-doc comments.
+	  Make one static function static.
+
 2008-01-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Gabriel Bouvigne <bouvigne at mp3-tech dot org>
