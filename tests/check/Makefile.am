@@ -11,7 +11,7 @@ TESTS_ENVIRONMENT = \
 	GST_PLUGIN_SYSTEM_PATH=					\
 	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/sys:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)			\
 	GST_TEST_FILES_PATH=$(TEST_FILES_DIRECTORY) \
-	STATE_IGNORE_ELEMENTS="aasink autovideosink cacasink cairotextoverlay"
+	STATE_IGNORE_ELEMENTS="aasink autovideosink cacasink cairotextoverlay gconfvideosrc"
 
 # ths core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.*
@@ -100,18 +100,18 @@ elements_audiopanorama_CFLAGS = \
 	$(GST_BASE_CFLAGS) $(GST_CONTROLLER_CFLAGS) \
 	$(CFLAGS) $(AM_CFLAGS)
 
-elements_cmmldec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS)
-elements_cmmlenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS)
+elements_cmmldec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+elements_cmmlenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
-elements_alphacolor_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS)
+elements_alphacolor_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 elements_sunaudio_CFLAGS = \
-	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) \
 	$(AM_CFLAGS)
 elements_sunaudio_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-@GST_MAJORMINOR@ \
 	$(LDADD)
 
 elements_videocrop_LDADD = $(LDADD) $(GST_BASE_LIBS)
-elements_videocrop_CFLAGS = $(CFLAGS) $(AM_CFLAGS) $(GST_BASE_CFLAGS)
+elements_videocrop_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 

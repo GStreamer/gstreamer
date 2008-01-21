@@ -56,8 +56,9 @@ GST_START_TEST (test_autovideosink_ghostpad_error_case)
 
   gst_bin_add_many (GST_BIN (pipeline), src, filter, sink, NULL);
 
-  fail_unless (gst_element_link (src, filter));
-  fail_unless (gst_element_link (filter, sink));
+  fail_unless (gst_element_link (src, filter), "Failed to link src to filter");
+  fail_unless (gst_element_link (filter, sink),
+      "Failed to link filter to sink");
 
   /* this should fail, there's no such format */
   state_ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
@@ -68,7 +69,8 @@ GST_START_TEST (test_autovideosink_ghostpad_error_case)
    * deadlock or block anywhere when autovideosink resets the ghostpad
    * targets etc. */
   state_ret = gst_element_set_state (pipeline, GST_STATE_NULL);
-  fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS,
+      "State change on pipeline failed");
 
   /* clean up */
   gst_object_unref (pipeline);

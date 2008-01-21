@@ -1,5 +1,15 @@
 2008-01-21  Jan Schmidt  <Jan.Schmidt@sun.com>
 
+	* tests/check/Makefile.am:
+	Fix up some CFLAGS sets.
+	Don't include gconfvideosrc in the states test.
+
+	* tests/check/elements/autodetect.c: (GST_START_TEST):
+	Add some error strings to fail_unless arguments to fix some weird
+	compiler errors on Solaris.
+
+2008-01-21  Jan Schmidt  <Jan.Schmidt@sun.com>
+
 	* configure.ac:
 	Detect video4linux headers on Solaris too.
 	* sys/v4l2/gstv4l2colorbalance.h:
