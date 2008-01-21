@@ -124,7 +124,7 @@ ac3p_parse(ac3_padder *padder);
  * ac3p_frame
  * @padder: The padder structure.
  *
- * Returns a pointer to the padded frame contained in the padder.
+ * Returns: a pointer to the padded frame contained in the padder.
  */
 #define ac3p_frame(padder) ((guint8 *) &((padder)->frame))
 
@@ -132,7 +132,7 @@ ac3p_parse(ac3_padder *padder);
  * ac3p_frame_size
  * @padder: The padder structure.
  *
- * Returns the length in bytes of the last read raw AC3 frame.
+ * Returns: the length in bytes of the last read raw AC3 frame.
  */
 #define ac3p_frame_size(padder) ((padder)->ac3_frame_size * 2)
 

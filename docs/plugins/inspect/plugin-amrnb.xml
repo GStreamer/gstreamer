@@ -35,7 +35,7 @@
       <longname>AMR-NB audio encoder</longname>
       <class>Codec/Encoder/Audio</class>
       <description>Adaptive Multi-Rate Narrow-Band audio encoder</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>src</name>

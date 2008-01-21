@@ -54,6 +54,7 @@ GST_TYPE_MAD
 gst_mad_get_type
 gst_id3_tag_get_type
 gst_mad_id3_to_tag_list
+gst_mad_tag_list_to_id3_tag
 </SECTION>
 
 <SECTION>
@@ -68,6 +69,67 @@ GST_IS_LAME
 GST_IS_LAME_CLASS
 GST_TYPE_LAME
 gst_lame_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rdtmanager</FILE>
+<TITLE>rdtmanager</TITLE>
+GstRDTManager
+<SUBSECTION Standard>
+GstRDTManagerClass
+GstRDTManagerSession
+GST_RDT_MANAGER
+GST_RDT_MANAGER_CLASS
+GST_IS_RDT_MANAGER
+GST_IS_RDT_MANAGER_CLASS
+GST_TYPE_RDT_MANAGER
+gst_rdt_manager_get_type
+gst_rdt_manager_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-rademux</FILE>
+<TITLE>rademux</TITLE>
+GstRealAudioDemux
+<SUBSECTION Standard>
+GstRealAudioDemuxClass
+GstRealAudioDemuxState
+GST_REAL_AUDIO_DEMUX
+GST_REAL_AUDIO_DEMUX_CLASS
+GST_IS_REAL_AUDIO_DEMUX
+GST_IS_REAL_AUDIO_DEMUX_CLASS
+GST_TYPE_REAL_AUDIO_DEMUX
+gst_real_audio_demux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rtspreal</FILE>
+<TITLE>rtspreal</TITLE>
+GstRTSPReal
+<SUBSECTION Standard>
+GstRTSPRealClass
+GstRTSPRealStream
+GST_RTSP_REAL
+GST_RTSP_REAL_CLASS
+GST_IS_RTSP_REAL
+GST_IS_RTSP_REAL_CLASS
+GST_TYPE_RTSP_REAL
+gst_rtsp_real_get_type
+gst_rtsp_real_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-rtspwms</FILE>
+<TITLE>rtspwms</TITLE>
+GstRTSPWMS
+<SUBSECTION Standard>
+GstRTSPWMSClass
+GST_RTSP_WMS
+GST_RTSP_WMS_CLASS
+GST_IS_RTSP_WMS
+GST_IS_RTSP_WMS_CLASS
+GST_TYPE_RTSP_WMS
+gst_rtsp_wms_get_type
 </SECTION>
 
 <SECTION>
@@ -96,5 +158,8 @@ GST_IS_SYNAESTHESIA
 GST_IS_SYNAESTHESIA_CLASS
 GST_TYPE_SYNAESTHESIA
 gst_synaesthesia_get_type
+SYNAES_HEIGHT
+SYNAES_SAMPLES
+SYNAES_WIDTH
 </SECTION>
 

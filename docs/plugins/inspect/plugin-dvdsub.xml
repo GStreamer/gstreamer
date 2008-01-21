@@ -1,6 +1,6 @@
 <plugin>
   <name>dvdsub</name>
-  <description>Decode DVD subtitles to AYUV video frames</description>
+  <description>DVD subtitle parser and decoder</description>
   <filename>../../gst/dvdsub/.libs/libgstdvdsub.so</filename>
   <basename>libgstdvdsub.so</basename>
   <version>0.10.6.1</version>
@@ -11,10 +11,10 @@
   <elements>
     <element>
       <name>dvdsubdec</name>
-      <longname>DVD subtitle Decoder</longname>
+      <longname>DVD subtitle decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>Decodes DVD subtitles into AYUV video frames</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -27,6 +27,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw-yuv, format=(fourcc)AYUV, width=(int)720, height=(int)576, framerate=(fraction)0/1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>dvdsubparse</name>
+      <longname>DVD subtitle parser</longname>
+      <class>Codec/Parser/Subtitle</class>
+      <description>Parses and packetizes DVD subtitle streams</description>
+      <author>Mark Nauwelaerts &lt;mnauw@users.sourceforge.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-dvd-subpicture</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-dvd-subpicture, parsed=(boolean)true</details>
         </caps>
       </pads>
     </element>

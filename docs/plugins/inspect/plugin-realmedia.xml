@@ -14,19 +14,19 @@
       <longname>RealAudio Demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>Demultiplex a RealAudio file</description>
-      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+      <author>Tim-Philipp M303274ller &lt;tim centricular net&gt;</author>
       <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-pn-realaudio</details>
-        </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-pn-realaudio</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,49 @@
       <author>Lutz Mueller &lt;lutz at topfrose dot de&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rdt, media=(string)application, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)X-REAL-RDT</details>
+        </caps>
+        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>application/vnd.rn-realmedia</details>
         </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rdtmanager</name>
+      <longname>RTP Decoder</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Accepts raw RTP and RTCP packets and sends them forward</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
         <caps>
-          <name>sink</name>
+          <name>rtcp_src_%d</name>
+          <direction>source</direction>
+          <presence>request</presence>
+          <details>application/x-rtcp</details>
+        </caps>
+        <caps>
+          <name>recv_rtp_src_%d_%d_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>application/x-rdt</details>
+        </caps>
+        <caps>
+          <name>recv_rtcp_sink_%d</name>
           <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-rdt, media=(string)application, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)x-real-rdt</details>
+          <presence>request</presence>
+          <details>application/x-rtcp</details>
+        </caps>
+        <caps>
+          <name>recv_rtp_sink_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rdt</details>
         </caps>
       </pads>
     </element>
@@ -59,10 +92,10 @@
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/vnd.rn-realmedia</details>
+          <name>audio_%02d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
         </caps>
         <caps>
           <name>video_%02d</name>
@@ -71,11 +104,21 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>audio_%02d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/vnd.rn-realmedia</details>
         </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtspreal</name>
+      <longname>RealMedia RTSP Extension</longname>
+      <class>Network/Extension/Protocol</class>
+      <description>Extends RTSP so that it can handle RealMedia setup</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+    
       </pads>
     </element>
   </elements>

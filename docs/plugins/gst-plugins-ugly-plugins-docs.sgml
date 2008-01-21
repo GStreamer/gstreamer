@@ -23,15 +23,22 @@
 
   <chapter>
     <title>gst-plugins-ugly Plugins</title>
+    <xi:include href="xml/plugin-a52dec.xml" />
     <xi:include href="xml/plugin-amrnb.xml" />
+    <xi:include href="xml/plugin-asf.xml" />
     <xi:include href="xml/plugin-dvdlpcmdec.xml" />
+    <xi:include href="xml/plugin-dvdnav.xml" />
+    <xi:include href="xml/plugin-dvdread.xml" />
+    <xi:include href="xml/plugin-dvdsub.xml" />
+    <xi:include href="xml/plugin-iec958.xml" />
     <xi:include href="xml/plugin-lame.xml" />
     <xi:include href="xml/plugin-mad.xml" />
+    <xi:include href="xml/plugin-mpeg2dec.xml" />
     <xi:include href="xml/plugin-mpegaudioparse.xml" />
     <xi:include href="xml/plugin-mpegstream.xml" />
+    <xi:include href="xml/plugin-realmedia.xml" />
     <xi:include href="xml/plugin-rmdemux.xml" />
     <xi:include href="xml/plugin-siddec.xml" />
     <xi:include href="xml/plugin-synaesthesia.xml" />
-
   </chapter>
 </book>

@@ -77,8 +77,7 @@
       <longname>MPEG Demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>Demultiplexes MPEG1 and MPEG2 System Streams</description>
-      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;
-    Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;012Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -111,8 +110,7 @@
       <longname>MPEG System Parser</longname>
       <class>Codec/Parser</class>
       <description>Parses MPEG1 and MPEG2 System Streams</description>
-      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;
-    Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;012Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
