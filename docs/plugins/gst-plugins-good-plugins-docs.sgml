@@ -15,12 +15,12 @@
     <xi:include href="xml/element-alphacolor.xml" />
     <xi:include href="xml/element-apedemux.xml" />
     <xi:include href="xml/element-apev2mux.xml" />
-    <xi:include href="xml/element-audiopanorama.xml" />
-    <xi:include href="xml/element-audioinvert.xml" />
     <xi:include href="xml/element-audioamplify.xml" />
-    <xi:include href="xml/element-audiodynamic.xml" />
-    <xi:include href="xml/element-audiochebyshevfreqlimit.xml" />
     <xi:include href="xml/element-audiochebyshevfreqband.xml" />
+    <xi:include href="xml/element-audiochebyshevfreqlimit.xml" />
+    <xi:include href="xml/element-audiodynamic.xml" />
+    <xi:include href="xml/element-audioinvert.xml" />
+    <xi:include href="xml/element-audiopanorama.xml" />
     <xi:include href="xml/element-autoaudiosink.xml" />
     <xi:include href="xml/element-autovideosink.xml" />
     <xi:include href="xml/element-avidemux.xml" />
@@ -46,24 +46,25 @@
     <xi:include href="xml/element-jpegenc.xml" />
     <xi:include href="xml/element-level.xml" />
     <xi:include href="xml/element-monoscope.xml" />
-    <xi:include href="xml/element-multiudpsink.xml" />
-    <xi:include href="xml/element-multipartmux.xml" />
     <xi:include href="xml/element-multipartdemux.xml" />
+    <xi:include href="xml/element-multipartmux.xml" />
+    <xi:include href="xml/element-multiudpsink.xml" />
     <xi:include href="xml/element-ossmixer.xml" />
     <xi:include href="xml/element-osssink.xml" />
     <xi:include href="xml/element-osssrc.xml" />
     <xi:include href="xml/element-osxaudiosink.xml" />
     <xi:include href="xml/element-osxaudiosrc.xml" />
     <xi:include href="xml/element-osxvideosink.xml" />
-    <xi:include href="xml/element-progressreport.xml" />
-    <xi:include href="xml/element-pngenc.xml" />
     <xi:include href="xml/element-pngdec.xml" />
+    <xi:include href="xml/element-pngenc.xml" />
+    <xi:include href="xml/element-progressreport.xml" />
     <xi:include href="xml/element-qtdemux.xml" />
-    <xi:include href="xml/element-rtspsrc.xml" />
     <xi:include href="xml/element-rtpdec.xml" />
+    <xi:include href="xml/element-rtspsrc.xml" />
     <xi:include href="xml/element-smokedec.xml" />
     <xi:include href="xml/element-smokeenc.xml" />
     <xi:include href="xml/element-udpsrc.xml" />
+    <xi:include href="xml/element-v4l2src.xml" />
     <xi:include href="xml/element-videobalance.xml" />
     <xi:include href="xml/element-videocrop.xml" />
     <xi:include href="xml/element-videoflip.xml" />
@@ -73,13 +74,11 @@
     <xi:include href="xml/element-wavpackenc.xml" />
     <xi:include href="xml/element-wavpackparse.xml" />
     <xi:include href="xml/element-wavparse.xml" />
-    <xi:include href="xml/element-v4l2src.xml" />
     <xi:include href="xml/element-ximagesrc.xml" />
   </chapter>
 
   <chapter>
     <title>gst-plugins-good Plugins</title>
-
     <xi:include href="xml/plugin-1394.xml" />
     <xi:include href="xml/plugin-aasink.xml" />
     <xi:include href="xml/plugin-alaw.xml" />
@@ -88,6 +87,7 @@
     <xi:include href="xml/plugin-annodex.xml" />
     <xi:include href="xml/plugin-apetag.xml" />
     <xi:include href="xml/plugin-audiofx.xml" />
+    <xi:include href="xml/plugin-auparse.xml" />
     <xi:include href="xml/plugin-autodetect.xml" />
     <xi:include href="xml/plugin-avi.xml" />
     <xi:include href="xml/plugin-cacasink.xml" />
@@ -105,11 +105,13 @@
     <xi:include href="xml/plugin-flxdec.xml" />
     <xi:include href="xml/plugin-gamma.xml" />
     <xi:include href="xml/plugin-gconfelements.xml" />
+    <xi:include href="xml/plugin-gdkpixbuf.xml" />
     <xi:include href="xml/plugin-goom.xml" />
     <xi:include href="xml/plugin-halelements.xml" />
     <xi:include href="xml/plugin-icydemux.xml" />
     <xi:include href="xml/plugin-id3demux.xml" />
     <xi:include href="xml/plugin-jpeg.xml" />
+    <xi:include href="xml/plugin-ladspa.xml" />
     <xi:include href="xml/plugin-level.xml" />
     <xi:include href="xml/plugin-matroska.xml" />
     <xi:include href="xml/plugin-monoscope.xml" />
@@ -128,16 +130,16 @@
     <xi:include href="xml/plugin-speex.xml" />
     <xi:include href="xml/plugin-taglib.xml" />
     <xi:include href="xml/plugin-udp.xml" />
+    <xi:include href="xml/plugin-video4linux2.xml" />
+    <xi:include href="xml/plugin-videobalance.xml" />
     <xi:include href="xml/plugin-videobox.xml" />
     <xi:include href="xml/plugin-videocrop.xml" />
-    <xi:include href="xml/plugin-videobalance.xml" />
     <xi:include href="xml/plugin-videoflip.xml" />
     <xi:include href="xml/plugin-videomixer.xml" />
     <xi:include href="xml/plugin-waveform.xml" />
     <xi:include href="xml/plugin-wavenc.xml" />
     <xi:include href="xml/plugin-wavpack.xml" />
     <xi:include href="xml/plugin-wavparse.xml" />
-    <xi:include href="xml/plugin-video4linux2.xml" />
     <xi:include href="xml/plugin-ximagesrc.xml" />
   </chapter>
 </book>
