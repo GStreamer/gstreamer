@@ -22,11 +22,14 @@
  * SECTION:element-spectrum
  *
  * <refsect2>
+ * <para>
  * The Spectrum element analyzes the frequency spectrum of an audio signal.
  * If <link linkend="GstSpectrum--message">message property</link> is #TRUE it
  * sends analysis results as application message named
  * <classname>&quot;spectrum&quot;</classname> after each interval of time given
  * by the <link linkend="GstSpectrum--interval">interval property</link>.
+ * </para>
+ * <para>
  * The message's structure contains two fields:
  * <itemizedlist>
  * <listitem>
@@ -53,11 +56,14 @@
  *   </para>
  * </listitem>
  * </itemizedlist>
- *
+ * </para>
+ * <para>
  * This element cannot be used with the gst-launch command in a sensible way.
  * The included demo shows how to use it in an application.
- *
+ * </para>
+ * <para>
  * Last reviewed on 2007-11-11 (0.10.6)
+ * </para>
  * </refsect2>
  */
 
