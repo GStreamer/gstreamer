@@ -41,6 +41,20 @@ gst_amrwbparse_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-dc1394</FILE>
+<TITLE>dc1394</TITLE>
+GstDc1394
+<SUBSECTION Standard>
+GstDc1394Class
+GST_DC1394
+GST_DC1394_CLASS
+GST_IS_DC1394
+GST_IS_DC1394_CLASS
+GST_TYPE_DC1394
+gst_dc1394_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-dfbvideosink</FILE>
 <TITLE>dfbvideosink</TITLE>
 GstDfbVideoSink
@@ -58,6 +72,54 @@ GST_DFBSURFACE
 GST_IS_DFBSURFACE
 GST_TYPE_DFBSURFACE
 gst_dfbsurface_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-dvbsrc</FILE>
+<TITLE>dvbsrc</TITLE>
+GstDvbSrc
+<SUBSECTION Standard>
+GstDvbSrcClass
+GstDvbSrcParam
+GstDvbSrcPol
+GST_DVBSRC
+GST_DVBSRC_CLASS
+GST_IS_DVBSRC
+GST_IS_DVBSRC_CLASS
+GST_TYPE_DVBSRC
+gst_dvbsrc_get_type
+gst_dvbsrc_plugin_init
+DEFAULT_BUFFER_SIZE
+DEFAULT_DEVICE
+DEFAULT_DISEQC_SRC
+DEFAULT_SYMBOL_RATE
+MAX_FILTERS
+IPACKS
+IN_SIZE
+TS_SIZE
+</SECTION>
+
+<SECTION>
+<FILE>element-dvdspu</FILE>
+<TITLE>dvdspu</TITLE>
+GstDVDSpu
+<SUBSECTION Standard>
+GstDVDSpuClass
+GST_DVD_SPU
+GST_DVD_SPU_CLASS
+GST_IS_DVD_SPU
+GST_IS_DVD_SPU_CLASS
+GST_TYPE_DVD_SPU
+gst_dvdspu_get_type
+SpuColour
+SpuLineCtrlI
+SpuPacket
+SpuPixCtrlI
+SpuRect
+SpuState
+DVD_SPU_LOCK
+DVD_SPU_UNLOCK
+SPU_STATE_FLAGS_MASK
 </SECTION>
 
 <SECTION>
@@ -103,6 +165,24 @@ gst_iir_equalizer_nbands_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-festival</FILE>
+<TITLE>festival</TITLE>
+GstFestival
+<SUBSECTION Standard>
+GstFestivalClass
+GstFestivalFlags
+GST_FESTIVAL
+GST_FESTIVAL_CLASS
+GST_IS_FESTIVAL
+GST_IS_FESTIVAL_CLASS
+GST_TYPE_FESTIVAL
+gst_festival_get_type
+FESTIVAL_DEFAULT_SERVER_HOST
+FESTIVAL_DEFAULT_SERVER_PORT
+FESTIVAL_DEFAULT_TEXT_MODE
+</SECTION>
+
+<SECTION>
 <FILE>element-giosink</FILE>
 <TITLE>giosink</TITLE>
 GstGioSink
@@ -130,6 +210,33 @@ GST_TYPE_GIO_SRC
 gst_gio_src_get_type
 </SECTION>
 
+<SECTION>
+<FILE>element-giostreamsink</FILE>
+<TITLE>giostreamsink</TITLE>
+GstGioStreamSink
+<SUBSECTION Standard>
+GstGioStreamSinkClass
+GST_GIO_STREAM_SINK
+GST_GIO_STREAM_SINK_CLASS
+GST_IS_GIO_STREAM_SINK
+GST_IS_GIO_STREAM_SINK_CLASS
+GST_TYPE_GIO_STREAM_SINK
+gst_gio_stream_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-giostreamsrc</FILE>
+<TITLE>giostreamsrc</TITLE>
+GstGioStreamSrc
+<SUBSECTION Standard>
+GstGioStreamSrcClass
+GST_GIO_STREAM_SRC
+GST_GIO_STREAM_SRC_CLASS
+GST_IS_GIO_STREAM_SRC
+GST_IS_GIO_STREAM_SRC_CLASS
+GST_TYPE_GIO_STREAM_SRC
+gst_gio_stream_src_get_type
+</SECTION>
 
 <SECTION>
 <FILE>element-bpwsinc</FILE>
@@ -137,6 +244,7 @@ gst_gio_src_get_type
 GstBPWSinc
 <SUBSECTION Standard>
 GstBPWSincClass
+GstBPWSincProcessFunc
 GST_BPWSINC
 GST_BPWSINC_CLASS
 GST_IS_BPWSINC
@@ -151,12 +259,28 @@ gst_bpwsinc_get_type
 GstLPWSinc
 <SUBSECTION Standard>
 GstLPWSincClass
+GstLPWSincProcessFunc
 GST_LPWSINC
 GST_LPWSINC_CLASS
 GST_IS_LPWSINC
 GST_IS_LPWSINC_CLASS
 GST_TYPE_LPWSINC
 gst_lpwsinc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-ivorbisdec</FILE>
+<TITLE>ivorbisdec</TITLE>
+GstIVorbisDec
+<SUBSECTION Standard>
+GstIVorbisDecClass
+GST_IVORBIS_DEC
+GST_IVORBIS_DEC_CLASS
+GST_IVORBIS_DEC_GET_CLASS
+GST_IS_IVORBIS_DEC
+GST_IS_IVORBIS_DEC_CLASS
+GST_TYPE_IVORBIS_DEC
+gst_ivorbis_dec_get_type
 </SECTION>
 
 <SECTION>
@@ -215,6 +339,36 @@ GST_IS_MULTI_FILE_SINK
 GST_IS_MULTI_FILE_SINK_CLASS
 GST_TYPE_MULTI_FILE_SINK
 gst_multi_file_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-mythtvsrc</FILE>
+<TITLE>mythtvsrc</TITLE>
+GstMythtvSrc
+<SUBSECTION Standard>
+GstMythtvSrcClass
+GstMythtvState
+GST_MYTHTV_SRC
+GST_MYTHTV_SRC_CLASS
+GST_IS_MYTHTV_SRC
+GST_IS_MYTHTV_SRC_CLASS
+GST_TYPE_MYTHTV_SRC
+gst_mythtv_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-nvudemux</FILE>
+<TITLE>nvudemux</TITLE>
+GstNuvDemux
+<SUBSECTION Standard>
+GstNuvDemuxClass
+GstNuvDemuxState
+GST_NUV_DEMUX
+GST_NUV_DEMUX_CLASS
+GST_IS_NUV_DEMUX
+GST_IS_NUV_DEMUX_CLASS
+GST_TYPE_NUV_DEMUX
+gst_nuv_demux_get_type
 </SECTION>
 
 <SECTION>
@@ -382,17 +536,53 @@ gst_sdlvideosink_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-sdpdemux</FILE>
+<TITLE>sdpdemux</TITLE>
+GstSDPDemux
+<SUBSECTION Standard>
+GstSDPDemuxClass
+GstSDPStream
+GST_SDP_DEMUX
+GST_SDP_DEMUX_CLASS
+GST_IS_SDP_DEMUX
+GST_IS_SDP_DEMUX_CLASS
+GST_TYPE_SDP_DEMUX
+gst_sdp_demux_get_type
+GST_SDP_DEMUX_CAST
+GST_SDP_STREAM_GET_LOCK
+GST_SDP_STREAM_LOCK
+GST_SDP_STREAM_UNLOCK
+</SECTION>
+
+<SECTION>
 <FILE>element-spectrum</FILE>
 <TITLE>spectrum</TITLE>
 GstSpectrum
 <SUBSECTION Standard>
 GstSpectrumClass
+GstSpectrumFFTFreeFunc
+GstSpectrumProcessFunc
 GST_SPECTRUM
 GST_SPECTRUM_CLASS
 GST_IS_SPECTRUM
 GST_IS_SPECTRUM_CLASS
 GST_TYPE_SPECTRUM
 gst_spectrum_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-speed</FILE>
+<TITLE>speed</TITLE>
+GstSpeed
+<SUBSECTION Standard>
+GstSpeedClass
+GstSpeedFormat
+GST_SPEED
+GST_SPEED_CLASS
+GST_IS_SPEED
+GST_IS_SPEED_CLASS
+GST_TYPE_SPEED
+gst_speed_get_type
 </SECTION>
 
 <SECTION>

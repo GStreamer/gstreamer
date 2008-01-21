@@ -1,6 +1,19 @@
 2008-01-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	  Add symbols from -unused.txt to the right place.
+
+	* gst/dvdspu/gstdvdspu.c:
+	* gst/dvdspu/gstdvdspu.h:
+	  Coherent namespace usage.
+
+	* gst/spectrum/gstspectrum.c:
+	  Fix broken XML fragment in doc snippet even more.
+
+2008-01-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
 	  Update include list.
 
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:

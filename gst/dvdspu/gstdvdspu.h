@@ -24,10 +24,10 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_DVD_SPU \
-  (dvdspu_get_type())
-#define DVD_SPU(obj) \
+  (gst_dvdspu_get_type())
+#define GST_DVD_SPU(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DVD_SPU,GstDVDSpu))
-#define DVD_SPU_CLASS(klass) \
+#define GST_DVD_SPU_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DVD_SPU,GstDVDSpuClass))
 #define GST_IS_DVD_SPU(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DVD_SPU))
@@ -39,6 +39,7 @@ G_BEGIN_DECLS
 
 typedef struct GstDVDSpu      GstDVDSpu;
 typedef struct GstDVDSpuClass GstDVDSpuClass;
+
 typedef struct SpuRect SpuRect;
 typedef struct SpuPixCtrlI SpuPixCtrlI;
 typedef struct SpuLineCtrlI SpuLineCtrlI;
@@ -46,7 +47,6 @@ typedef struct SpuColour SpuColour;
 typedef enum SpuStateFlags SpuStateFlags;
 typedef struct SpuState SpuState;
 typedef struct SpuPacket SpuPacket;
-
 typedef enum SpuCmd SpuCmd;
 
 /* Describe the limits of a rectangle */
@@ -218,8 +218,7 @@ struct GstDVDSpuClass
   GstElementClass parent_class;
 };
 
-GType gstdvdspu_get_type (void);
-void gstdvdspu_render_spu (GstDVDSpu *dvdspu, GstBuffer *buf);
+GType gst_dvdspu_get_type (void);
 
 G_END_DECLS
 

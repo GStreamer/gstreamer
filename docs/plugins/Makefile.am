@@ -107,6 +107,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
 	$(top_srcdir)/ext/mythtv/gstmythtvsrc.h \
+	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
+	$(top_srcdir)/ext/sdl/sdlvideosink.h \
 	$(top_srcdir)/ext/theora/theoradec.h \
 	$(top_srcdir)/ext/timidity/gsttimidity.h \
 	$(top_srcdir)/ext/timidity/gstwildmidi.h \
