@@ -520,7 +520,7 @@ gst_h264_parse_queue_buffer (GstH264Parse * parse, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (parse,
       "analyse buffer of size %u, timestamp %" GST_TIME_FORMAT, size,
-      GST_TIME_ARGS (buffer));
+      GST_TIME_ARGS (timestamp));
 
   /* now parse all the NAL units in this buffer, for bytestream we only have one
    * NAL unit but for packetized streams we can have multiple ones */
