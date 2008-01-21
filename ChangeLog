@@ -1,5 +1,10 @@
 2008-01-21  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* configure.ac:
+	0.10.9.4 pre-release
+
+2008-01-21  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* Makefile.am:
 	Include PYTHON_INCLUDES in the common CFLAGS in the top-level.
 	Fixes: #510437
