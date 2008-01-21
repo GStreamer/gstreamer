@@ -33,6 +33,11 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#ifdef __sun
+/* Needed on older Solaris Nevada builds (72 at least) */
+#include <stropts.h>
+#include <sys/ioccom.h>
+#endif
 #include "v4l2_calls.h"
 #include "gstv4l2tuner.h"
 #include "gstv4l2xoverlay.h"

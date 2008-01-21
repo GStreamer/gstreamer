@@ -36,6 +36,11 @@
 #include "v4l2src_calls.h"
 #include <sys/time.h>
 #include <unistd.h>
+#ifdef __sun
+/* Needed on older Solaris Nevada builds (72 at least) */
+#include <stropts.h>
+#include <sys/ioccom.h>
+#endif
 
 #include "gstv4l2tuner.h"
 
@@ -98,7 +103,7 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
   if (!resuscitated) {
     GST_LOG ("buffer %p not recovered, unmapping", buffer);
     gst_mini_object_unref (GST_MINI_OBJECT (pool));
-    munmap (GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
+    munmap ((void *) GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
   }
 }
 
@@ -173,7 +178,7 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
   GST_LOG ("  length:    %u", ret->vbuffer.length);
   GST_LOG ("  input:     %u", ret->vbuffer.input);
 
-  data = mmap (0, ret->vbuffer.length,
+  data = (guint8 *) mmap (0, ret->vbuffer.length,
       PROT_READ | PROT_WRITE, MAP_SHARED, pool->video_fd,
       ret->vbuffer.m.offset);
 

@@ -1,3 +1,17 @@
+2008-01-21  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* configure.ac:
+	Detect video4linux headers on Solaris too.
+	* sys/v4l2/gstv4l2colorbalance.h:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/v4l2_calls.c:
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2_buffer_finalize),
+	(gst_v4l2_buffer_new):
+
+	Make v4l2 build on Solaris.
+	Patch by: Brian Cameron  <brian.cameron at sun dot com>
+	Fixes: #510505
+
 2008-01-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:

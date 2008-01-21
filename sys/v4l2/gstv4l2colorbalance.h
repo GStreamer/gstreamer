@@ -79,7 +79,7 @@ interface_as_function ## _color_balance_set_value (GstColorBalance * balance,   
                                                    gint value)                        \
 {                                                                                     \
   Type *this = (Type*) balance;                                                       \
-  return gst_v4l2_color_balance_set_value(this->v4l2object, channel, value);          \
+  gst_v4l2_color_balance_set_value(this->v4l2object, channel, value);          \
 }                                                                                     \
                                                                                       \
 static gint                                                                           \

@@ -473,10 +473,15 @@ AG_GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
   AC_MSG_CHECKING([Checking for uptodate v4l2 installation])
   AC_TRY_COMPILE([
 #include <sys/types.h>
+#ifdef __sun /* Solaris */
+#include <sys/types.h>
+#include <sys/videodev2.h>
+#else /* Linux */
 #include <linux/types.h>
 #define _LINUX_TIME_H
 #define __user
 #include <linux/videodev2.h>
+#endif
 #if defined(V4L2_MAJOR_VERSION) || defined(V4L2_MINOR_VERSION)
 #error too early v4l2 version or no v4l2 at all
 #endif
@@ -488,13 +493,19 @@ return 0;
     ], [
       HAVE_GST_V4L2="no"
       AC_MSG_RESULT(no)
-      AC_CHECK_HEADER(linux/videodev2.h,
+
+      HAVE_VIDEODEV=no
+      AC_CHECK_HEADER(linux/videodev2.h, [ HAVE_VIDEODEV=yes ],
       [
+        AC_CHECK_HEADER(sys/videodev2.h, [ HAVE_VIDEODEV=yes ])
+      ])
+
+      if test "x$HAVE_VIDEODEV" = "xyes"; then
         AC_MSG_WARN([video4linux2 headers were found, but they're old.])
         AC_MSG_WARN([Please update v4l2 to compile the v4l2 plugins])
-      ], [
+      else
         AC_MSG_WARN([video4linux2 was not found])
-      ])
+      fi
     ])
 
   if [ test x$HAVE_GST_V4L2 = xyes ]; then
@@ -503,10 +514,15 @@ return 0;
     AC_MSG_CHECKING(struct v4l2_buffer declaration)
     AC_TRY_COMPILE([
 #include <sys/types.h>
+#ifdef __sun /* Solaris */
+#include <sys/types.h>
+#include <sys/videodev2.h>
+#else /* Linux */
 #include <linux/types.h>
 #define _LINUX_TIME_H
 #define __user
 #include <linux/videodev2.h>
+#endif
     ],[
 struct v4l2_buffer buf;
 buf.index = 0;

@@ -37,10 +37,14 @@
  * errors here, check your linux/time.h && sys/time.h header setup.
  */
 #include <sys/types.h>
+#ifndef __sun
 #include <linux/types.h>
 #define _LINUX_TIME_H
 #define __user
 #include <linux/videodev2.h>
+#else
+#include <sys/videodev2.h>
+#endif
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
