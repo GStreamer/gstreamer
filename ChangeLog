@@ -1,3 +1,10 @@
+2008-01-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_video_frame),
+	(gst_ffmpegdec_chain):
+	Remove some more overly clever code that does nothing but mess up
+	timestamps.
+
 2008-01-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_drain),

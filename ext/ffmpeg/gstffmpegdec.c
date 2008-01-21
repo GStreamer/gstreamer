@@ -1367,8 +1367,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   if (ffmpegdec->picture->pts != -1) {
     GST_LOG_OBJECT (ffmpegdec, "using timestamp returned by ffmpeg");
     /* Get (interpolated) timestamp from FFMPEG */
-    in_timestamp = gst_ffmpeg_time_ff_to_gst ((guint64) ffmpegdec->picture->pts,
-        ffmpegdec->context->time_base);
+    in_timestamp = (GstClockTime)ffmpegdec->picture->pts;
   }
   if (!GST_CLOCK_TIME_IS_VALID (in_timestamp)) {
     in_timestamp = ffmpegdec->next_ts;
@@ -1995,20 +1994,16 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     /* parse, if at all possible */
     if (ffmpegdec->pctx) {
       gint res;
-      gint64 ffpts;
-
-      /* convert timestamp to ffmpeg timestamp */
-      ffpts =
-          gst_ffmpeg_time_gst_to_ff (in_timestamp,
-          ffmpegdec->context->time_base);
 
       GST_LOG_OBJECT (ffmpegdec,
-          "Calling av_parser_parse with ts:%" GST_TIME_FORMAT ", ffpts:%"
-          G_GINT64_FORMAT, GST_TIME_ARGS (in_timestamp), ffpts);
+          "Calling av_parser_parse with ts:%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (in_timestamp));
 
-      /* feed the parser */
+      /* feed the parser. We store the raw gstreamer timestamp because
+       * converting it to ffmpeg timestamps can corrupt it if the framerate is
+       * wrong. */
       res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
-          &data, &size, bdata, bsize, ffpts, ffpts);
+          &data, &size, bdata, bsize, in_timestamp, in_timestamp);
 
       GST_LOG_OBJECT (ffmpegdec,
           "parser returned res %d and size %d", res, size);
@@ -2016,8 +2011,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       /* store pts for get_buffer */
       ffmpegdec->in_ts = ffmpegdec->pctx->pts;
 
-      GST_LOG_OBJECT (ffmpegdec, "consuming %d bytes. ffpts:%"
-          G_GINT64_FORMAT, size, ffmpegdec->pctx->pts);
+      GST_LOG_OBJECT (ffmpegdec, "consuming %d bytes. ts:%"
+          GST_TIME_FORMAT, size, GST_TIME_ARGS (ffmpegdec->pctx->pts));
 
       /* there is output, set pointers for next round. */
       bsize -= res;
@@ -2035,8 +2030,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       data = bdata;
       size = bsize;
 
-      ffmpegdec->in_ts = gst_ffmpeg_time_gst_to_ff (in_timestamp,
-          ffmpegdec->context->time_base);
+      ffmpegdec->in_ts = in_timestamp;
     }
 
     /* decode a frame of audio/video now */
