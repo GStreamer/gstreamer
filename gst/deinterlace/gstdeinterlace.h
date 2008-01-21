@@ -40,14 +40,25 @@ struct _GstDeinterlace {
 
   gint         width;
   gint         height;
+  gint         uv_height;
+  guint32      fourcc;
 
   gboolean     show_deinterlaced_area_only;
+  gboolean     show_noninterlaced_area_only;
   gboolean     blend;
+  gboolean     deinterlace;
   gint         threshold_blend; /* here we start blending */
   gint         threshold;       /* here we start interpolating TODO FIXME */
   gint         edge_detect;
 
   gint         picsize;
+  gint         y_stride;
+  gint         u_stride;
+  gint         v_stride;
+  gint         y_off;
+  gint         u_off;
+  gint         v_off;
+
   guchar      *src;
 };
 

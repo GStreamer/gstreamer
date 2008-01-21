@@ -28,16 +28,6 @@
 #include "gstdeinterlace.h"
 #include <gst/video/video.h>
 
-/* these macros are adapted from videotestsrc, paint_setup_I420() */
-#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
-#define GST_VIDEO_I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
-#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
-
-#define GST_VIDEO_I420_Y_OFFSET(w,h) (0)
-#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
-#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
-
-#define GST_VIDEO_I420_SIZE(w,h) (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
 /* elementfactory information */
 static const GstElementDetails deinterlace_details =
@@ -47,29 +37,33 @@ GST_ELEMENT_DETAILS ("Deinterlace",
     "Wim Taymans <wim@fluendo.com>");
 
 #define DEFAULT_DI_AREA_ONLY  FALSE
+#define DEFAULT_NI_AREA_ONLY  FALSE
 #define DEFAULT_BLEND         FALSE
-#define DEFAULT_THRESHOLD     50
+#define DEFAULT_DEINTERLACE   TRUE
+#define DEFAULT_THRESHOLD     20
 #define DEFAULT_EDGE_DETECT   25
 
 enum
 {
   ARG_0,
   ARG_DI_ONLY,
+  ARG_NI_ONLY,
   ARG_BLEND,
   ARG_THRESHOLD,
-  ARG_EDGE_DETECT
+  ARG_EDGE_DETECT,
+  ARG_DEINTERLACE
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, Y42B }"))
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, Y42B }"))
     );
 
 GST_BOILERPLATE (GstDeinterlace, gst_deinterlace, GstBaseTransform,
@@ -112,9 +106,17 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
   gobject_class->set_property = gst_deinterlace_set_property;
   gobject_class->get_property = gst_deinterlace_get_property;
 
+  g_object_class_install_property (gobject_class, ARG_DEINTERLACE,
+      g_param_spec_boolean ("deinterlace", "deinterlace",
+          "turn deinterlacing on/off", DEFAULT_DEINTERLACE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_DI_ONLY,
-      g_param_spec_boolean ("di-area-only", "di-area-only", "di-area-only",
-          DEFAULT_DI_AREA_ONLY, G_PARAM_READWRITE));
+      g_param_spec_boolean ("di-area-only", "di-area-only",
+          "displays deinterlaced areas only", DEFAULT_DI_AREA_ONLY,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_NI_ONLY,
+      g_param_spec_boolean ("ni-area-only", "ni-area-only",
+          "displays non-interlaced areas only", DEFAULT_DI_AREA_ONLY,
+          G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BLEND,
       g_param_spec_boolean ("blend", "blend", "blend", DEFAULT_BLEND,
           G_PARAM_READWRITE));
@@ -137,7 +139,9 @@ static void
 gst_deinterlace_init (GstDeinterlace * filter, GstDeinterlaceClass * klass)
 {
   filter->show_deinterlaced_area_only = DEFAULT_DI_AREA_ONLY;
+  filter->show_noninterlaced_area_only = DEFAULT_NI_AREA_ONLY;
   filter->blend = DEFAULT_BLEND;
+  filter->deinterlace = DEFAULT_DEINTERLACE;
   filter->threshold = DEFAULT_THRESHOLD;
   filter->edge_detect = DEFAULT_EDGE_DETECT;
   /*filter->threshold_blend = 0;  */
@@ -175,6 +179,7 @@ gst_deinterlace_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 {
   GstDeinterlace *filter;
   GstStructure *s;
+  gint picsize;
 
   filter = GST_DEINTERLACE (trans);
 
@@ -186,11 +191,45 @@ gst_deinterlace_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     return FALSE;
   }
 
+  if (!gst_structure_get_fourcc (s, "format", &filter->fourcc))
+    return FALSE;
+
   GST_LOG_OBJECT (filter, "width x height = %d x %d", filter->width,
       filter->height);
 
-  if (filter->picsize != GST_VIDEO_I420_SIZE (filter->width, filter->height)) {
-    filter->picsize = GST_VIDEO_I420_SIZE (filter->width, filter->height);
+  /*4:2:0 */
+  filter->uv_height = filter->height / 2;
+  filter->y_stride = GST_ROUND_UP_4 (filter->width);
+  filter->u_stride = GST_ROUND_UP_8 (filter->width) / 2;
+  filter->v_stride = GST_ROUND_UP_8 (filter->width) / 2;
+
+  filter->y_off = 0;
+  filter->u_off = 0 + filter->y_stride * GST_ROUND_UP_2 (filter->height);
+  filter->v_off =
+      filter->u_off + filter->u_stride * (GST_ROUND_UP_2 (filter->height) / 2);
+
+  picsize =
+      (filter->v_off +
+      (filter->v_stride * GST_ROUND_UP_2 (filter->height) / 2));
+
+  /*4:2:2 */
+  if (filter->fourcc == GST_MAKE_FOURCC ('Y', '4', '2', 'B')) {
+    filter->uv_height = filter->height;
+    filter->y_stride = GST_ROUND_UP_4 (filter->width);
+    filter->u_stride = GST_ROUND_UP_8 (filter->width) / 2;
+    filter->v_stride = GST_ROUND_UP_8 (filter->width) / 2;
+
+    filter->y_off = 0;
+    filter->u_off = 0 + filter->y_stride * GST_ROUND_UP_2 (filter->height);
+    filter->v_off =
+        filter->u_off + filter->u_stride * (GST_ROUND_UP_2 (filter->height));
+
+    picsize =
+        (filter->v_off + (filter->v_stride * GST_ROUND_UP_2 (filter->height)));
+  }
+
+  if (filter->picsize != picsize) {
+    filter->picsize = picsize;
     g_free (filter->src);       /* free + alloc avoids memcpy */
     filter->src = g_malloc0 (filter->picsize);
     GST_LOG_OBJECT (filter, "temp buffer size %d", filter->picsize);
@@ -204,13 +243,16 @@ gst_deinterlace_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstDeinterlace *filter;
   gboolean bShowDeinterlacedAreaOnly;
+  gboolean bShowNoninterlacedAreaOnly;
   gint y0, y1, y2, y3;
-  guchar *psrc1, *psrc2, *psrc3, *pdst1, *yuvptr, *src;
+  guchar *psrc1, *pdst1, *yuvptr, *src;
   gint iInterlaceValue0, iInterlaceValue1, iInterlaceValue2;
-  gint x, y;
+  gint x, y, p;
   gint y_line;
   guchar *y_dst, *y_src;
+  guchar fill_value;
   gboolean bBlend;
+  gboolean bDeinterlace;
   gint iThreshold;
   gint iEdgeDetect;
   gint width, height;
@@ -221,25 +263,18 @@ gst_deinterlace_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   GST_OBJECT_LOCK (filter);
   bBlend = filter->blend;
+  bDeinterlace = filter->deinterlace;
   iThreshold = filter->threshold;
   iEdgeDetect = filter->edge_detect;
   bShowDeinterlacedAreaOnly = filter->show_deinterlaced_area_only;
+  bShowNoninterlacedAreaOnly = filter->show_noninterlaced_area_only;
   GST_OBJECT_UNLOCK (filter);
 
-  width = filter->width;
-  height = filter->height;
   src = filter->src;
   yuvptr = GST_BUFFER_DATA (buf);
 
   memcpy (filter->src, yuvptr, filter->picsize);
 
-  y_dst = yuvptr;               /* dst y pointer */
-  /* we should not change u,v because one u, v value stands for */
-  /* 2 pixels per 2 lines = 4 pixel and we don't want to change */
-  /* the color of */
-
-  y_line = GST_VIDEO_I420_Y_ROWSTRIDE (width);
-  y_src = src;
 
   iThreshold = iThreshold * iThreshold * 4;
   /* We don't want an integer overflow in the interlace calculation. */
@@ -247,65 +282,93 @@ gst_deinterlace_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     iEdgeDetect = 180;
   iEdgeDetect = iEdgeDetect * iEdgeDetect;
 
-  y1 = 0;                       /* Avoid compiler warning. The value is not used. */
-  for (x = 0; x < width; x++) {
-    psrc3 = y_src + x;
-    y3 = *psrc3;
-    psrc2 = psrc3 + y_line;
-    y2 = *psrc2;
-    pdst1 = y_dst + x;
-    iInterlaceValue1 = iInterlaceValue2 = 0;
-    for (y = 0; y <= height; y++) {
-      psrc1 = psrc2;
-      psrc2 = psrc3;
-      psrc3 = psrc3 + y_line;
-      y0 = y1;
-      y1 = y2;
-      y2 = y3;
-      if (y < height - 1) {
-        y3 = *psrc3;
-      } else {
-        y3 = y1;
-      }
+  for (p = 0; p < 3; p++) {
+    switch (p) {
+      case 0:
+        y_dst = yuvptr + filter->y_off; /* dst y pointer */
+        y_line = filter->y_stride;
+        y_src = src + filter->y_off;
+        width = filter->width;
+        height = filter->height;
+        fill_value = 0;
+        break;
+      case 1:
+        y_dst = yuvptr + filter->u_off; /* dst U pointer */
+        y_line = filter->u_stride;
+        y_src = src + filter->u_off;
+        width = filter->width / 2;
+        height = filter->uv_height;
+        fill_value = 128;
+        break;
+      case 2:
+        y_dst = yuvptr + filter->v_off; /* dst V pointer */
+        y_line = filter->v_stride;
+        y_src = src + filter->v_off;
+        width = filter->width / 2;
+        height = filter->uv_height;
+        fill_value = 128;
+        break;
+    }
 
-      iInterlaceValue0 = iInterlaceValue1;
-      iInterlaceValue1 = iInterlaceValue2;
+    for (x = 0; x < width; x++) {
+      pdst1 = y_dst + x;
+      psrc1 = y_src + x;
+      iInterlaceValue1 = iInterlaceValue2 = 0;
 
-      if (y < height)
-        iInterlaceValue2 = ((y1 - y2) * (y3 - y2) -
-            ((iEdgeDetect * (y1 - y3) * (y1 - y3)) >> 12)) * 10;
-      else
-        iInterlaceValue2 = 0;
+      for (y = 0; y < height; y++, psrc1 += y_line, pdst1 += y_line) {
+        /* current line is 1 */
+        y0 = y1 = y2 = y3 = *psrc1;
+        if (y > 0)
+          y0 = *(psrc1 - y_line);
+        if (y < (height - 1))
+          y2 = *(psrc1 + y_line);
+        if (y < (height - 2))
+          y3 = *(psrc1 + 2 * y_line);
 
-      if (y > 0) {
-        if (iInterlaceValue0 + 2 * iInterlaceValue1 + iInterlaceValue2 >
-            iThreshold) {
-          if (bBlend) {
-            *pdst1 = (unsigned char) ((y0 + 2 * y1 + y2) >> 2);
+        iInterlaceValue0 = iInterlaceValue1;
+        iInterlaceValue1 = iInterlaceValue2;
+
+        if (y < height - 1)
+          iInterlaceValue2 =
+              (ABS (y1 - y2) * ABS (y3 - y2) - ((iEdgeDetect * (y1 - y3) * (y1 -
+                          y3)) >> 12)) * 10;
+        else
+          iInterlaceValue2 = 0;
+
+        if ((iInterlaceValue0 + 2 * iInterlaceValue1 + iInterlaceValue2 >
+                iThreshold) && (y > 0)) {
+          if (bShowNoninterlacedAreaOnly) {
+            *pdst1 = fill_value;        /* blank the point and so the interlac area */
           } else {
-            /* this method seems to work better than blending if the */
-            /* quality is pretty bad and the half pics don't fit together */
-            if ((y % 2) == 1) { /* if odd simply copy the value */
+            if (bDeinterlace) {
+              if (bBlend) {
+                *pdst1 = (unsigned char) ((y0 + 2 * y1 + y2) >> 2);
+              } else {
+                /* this method seems to work better than blending if the */
+                /* quality is pretty bad and the half pics don't fit together */
+                if ((y % 2) == 1) {     /* if odd simply copy the value */
+                  *pdst1 = *psrc1;
+                } else {        /* if even interpolate the line (upper + lower)/2 */
+                  *pdst1 = (unsigned char) ((y0 + y2) >> 1);
+                }
+              }
+            } else {
               *pdst1 = *psrc1;
-              /**pdst1 = 0; // FIXME this is for adjusting an initial iThreshold */
-            } else {            /* even interpolate the even line (upper + lower)/2 */
-              *pdst1 = (unsigned char) ((y0 + y2) >> 1);
-              /**pdst1 = 0; // FIXME this is for adjusting an initial iThreshold */
             }
           }
+
         } else {
           /* so we went below the treshold and therefore we don't have to  */
           /* change anything */
           if (bShowDeinterlacedAreaOnly) {
             /* this is for testing to see how we should tune the treshhold */
             /* and shows as the things that haven't change because the  */
-            /* threshhold was to low?? (or shows that everything is ok :-) */
-            *pdst1 = 0;         /* blank the point and so the interlac area */
+            /* threshold was to low?? (or shows that everything is ok :-) */
+            *pdst1 = fill_value;        /* blank the point and so the non-interlac area */
           } else {
             *pdst1 = *psrc1;
           }
         }
-        pdst1 = pdst1 + y_line;
       }
     }
   }
@@ -323,8 +386,14 @@ gst_deinterlace_set_property (GObject * object, guint prop_id,
 
   GST_OBJECT_LOCK (filter);
   switch (prop_id) {
+    case ARG_DEINTERLACE:
+      filter->deinterlace = g_value_get_boolean (value);
+      break;
     case ARG_DI_ONLY:
       filter->show_deinterlaced_area_only = g_value_get_boolean (value);
+      break;
+    case ARG_NI_ONLY:
+      filter->show_noninterlaced_area_only = g_value_get_boolean (value);
       break;
     case ARG_BLEND:
       filter->blend = g_value_get_boolean (value);
@@ -352,8 +421,14 @@ gst_deinterlace_get_property (GObject * object, guint prop_id, GValue * value,
 
   GST_OBJECT_LOCK (filter);
   switch (prop_id) {
+    case ARG_DEINTERLACE:
+      g_value_set_boolean (value, filter->deinterlace);
+      break;
     case ARG_DI_ONLY:
       g_value_set_boolean (value, filter->show_deinterlaced_area_only);
+      break;
+    case ARG_NI_ONLY:
+      g_value_set_boolean (value, filter->show_noninterlaced_area_only);
       break;
     case ARG_BLEND:
       g_value_set_boolean (value, filter->blend);

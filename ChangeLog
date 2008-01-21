@@ -1,3 +1,18 @@
+2008-01-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Gabriel Bouvigne <bouvigne at mp3-tech dot org>
+
+	* gst/deinterlace/gstdeinterlace.c: (gst_deinterlace_class_init),
+	(gst_deinterlace_init), (gst_deinterlace_set_caps),
+	(gst_deinterlace_transform_ip), (gst_deinterlace_set_property),
+	(gst_deinterlace_get_property):
+	* gst/deinterlace/gstdeinterlace.h:
+	Provide 4:2:2 support
+	Also deinterlace chroma planes
+	Allow to turn on/off deinterlacing
+	Change of default thresholds, in order to provide acceptable results
+	with default params. Fixes #511001.
+
 2008-01-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
