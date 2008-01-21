@@ -1,6 +1,6 @@
 SUBDIRS = codegen gst examples testsuite pkgconfig
 
-common_cflags = $(PYGOBJECT_CFLAGS) $(GST_CFLAGS) $(GST_OPTION_CFLAGS) -fno-strict-aliasing
+common_cflags = $(PYTHON_INCLUDES) $(PYGOBJECT_CFLAGS) $(GST_CFLAGS) $(GST_OPTION_CFLAGS) -fno-strict-aliasing
 common_libadd = $(GST_LIBS) $(GST_OPTION_LIBS)
 common_ldflags = -module -avoid-version
 
