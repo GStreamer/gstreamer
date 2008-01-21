@@ -393,7 +393,7 @@ dvdspu_blend_comp_buffers (SpuState * state, guint8 * planes[3])
 }
 
 void
-gstdvdspu_render_spu (GstDVDSpu * dvdspu, GstBuffer * buf)
+gst_dvd_spu_render_spu (GstDVDSpu * dvdspu, GstBuffer * buf)
 {
   SpuState *state = &dvdspu->spu_state;
   guint8 *planes[3];            /* YUV frame pointers */

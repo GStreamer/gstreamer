@@ -1,3 +1,31 @@
+2008-01-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/dvdspu/gstdvdspu-render.c: (gst_dvd_spu_render_spu):
+	* gst/dvdspu/gstdvdspu.c: (dvdspu_debug), (GST_CAT_DEFAULT),
+	  (subpic_sink_factory), (gst_dvd_spu_base_init),
+	  (gst_dvd_spu_class_init), (gst_dvd_spu_init), (gst_dvd_spu_clear),
+	  (gst_dvd_spu_dispose), (gst_dvd_spu_finalize),
+	  (gst_dvd_spu_flush_spu_info), (gst_dvd_spu_buffer_alloc),
+	  (gst_dvd_spu_src_event), (gst_dvd_spu_video_set_caps),
+	  (gst_dvd_spu_video_proxy_getcaps), (gst_dvd_spu_video_event),
+	  (gst_dvd_spu_video_chain), (dvspu_handle_vid_buffer),
+	  (gst_dvd_spu_redraw_still), (gst_dvd_spu_parse_chg_colcon),
+	  (gst_dvd_spu_exec_cmd_blk), (gst_dvd_spu_finish_spu_buf),
+	  (gst_dvd_spu_setup_cmd_blk), (gst_dvd_spu_handle_new_spu_buf),
+	  (gst_dvd_spu_handle_dvd_event), (gst_dvd_spu_advance_spu),
+	  (gst_dvd_spu_check_still_updates), (gst_dvd_spu_subpic_chain),
+	  (gst_dvd_spu_subpic_event), (gst_dvd_spu_change_state),
+	  (gst_dvd_spu_plugin_init):
+	* gst/dvdspu/gstdvdspu.h: (GST_TYPE_DVD_SPU):
+	  Fix up dvdspu element again after previous namespace mangling:
+	  rename debug category variable to old name, matching that in
+	  dvdspu-render.c, to avoid undefined symbol error when loading
+	  the module; same for the _render function in dvdspu-render.c:
+	  we must use the same name in both .c files; change functions
+	  now called gstgst_* back to gst_* again; and while we're at it,
+	  we may as well canonicalise the namespace properly, namely to
+	  gst_dvd_spu_*.
+
 2008-01-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:

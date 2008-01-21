@@ -24,7 +24,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_DVD_SPU \
-  (gst_dvdspu_get_type())
+  (gst_dvd_spu_get_type())
 #define GST_DVD_SPU(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DVD_SPU,GstDVDSpu))
 #define GST_DVD_SPU_CLASS(klass) \
@@ -218,7 +218,7 @@ struct GstDVDSpuClass
   GstElementClass parent_class;
 };
 
-GType gst_dvdspu_get_type (void);
+GType gst_dvd_spu_get_type (void);
 
 G_END_DECLS
 
