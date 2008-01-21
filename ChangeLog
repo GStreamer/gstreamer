@@ -1,5 +1,21 @@
 2008-01-21  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	  Update lists again. Those whole can build ivorbisdec, mythtvsrc,
+	  nvudemux and theoradecexp, please commit the inspect/plugin-xxx.xml.
+
+	* docs/plugins/inspect/plugin-gstinterlace.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml
+	* docs/plugins/inspect/plugin-videoparse.xml:
+	  Replace videoparse with rawparse.
+
+	* gst/dvdspu/gstdvdspu.h:
+	  Help gtk-doc to recognize the object struct.
+
+2008-01-21  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/librfb/rfbdecoder.c:
 	* gst/librfb/rfbdecoder.h:
 	  Don't use gtk-doc comment style for non gtk-doc comments.

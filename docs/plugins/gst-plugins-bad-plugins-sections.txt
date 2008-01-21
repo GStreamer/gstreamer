@@ -41,6 +41,20 @@ gst_amrwbparse_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-audioparse</FILE>
+<TITLE>audioparse</TITLE>
+GstAudioParse
+<SUBSECTION Standard>
+GstAudioParseClass
+GST_AUDIO_PARSE
+GST_AUDIO_PARSE_CLASS
+GST_IS_AUDIO_PARSE
+GST_IS_AUDIO_PARSE_CLASS
+GST_TYPE_AUDIO_PARSE
+gst_audio_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-dc1394</FILE>
 <TITLE>dc1394</TITLE>
 GstDc1394
@@ -681,6 +695,20 @@ GST_TYPE_VIDEO_MARK
 gst_video_mark_get_type
 GST_VIDEO_MARK_CLASS
 GST_IS_VIDEO_MARK_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-videoparse</FILE>
+<TITLE>videoparse</TITLE>
+GstVideoParse
+<SUBSECTION Standard>
+GstVideoParseClass
+GST_VIDEO_PARSE
+GST_VIDEO_PARSE_CLASS
+GST_IS_VIDEO_PARSE
+GST_IS_VIDEO_PARSE_CLASS
+GST_TYPE_VIDEO_PARSE
+gst_video_parse_get_type
 </SECTION>
 
 <SECTION>

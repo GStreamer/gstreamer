@@ -37,8 +37,8 @@ G_BEGIN_DECLS
 #define DVD_SPU_LOCK(s) g_mutex_lock ((s)->spu_lock);
 #define DVD_SPU_UNLOCK(s) g_mutex_unlock ((s)->spu_lock);
 
-typedef struct GstDVDSpu      GstDVDSpu;
-typedef struct GstDVDSpuClass GstDVDSpuClass;
+typedef struct _GstDVDSpu      GstDVDSpu;
+typedef struct _GstDVDSpuClass GstDVDSpuClass;
 
 typedef struct SpuRect SpuRect;
 typedef struct SpuPixCtrlI SpuPixCtrlI;
@@ -183,8 +183,7 @@ struct SpuPacket {
   GstEvent *event;
 };
 
-struct GstDVDSpu
-{
+struct _GstDVDSpu {
   GstElement element;
 
   GstPad *videosinkpad;
@@ -213,8 +212,7 @@ struct GstDVDSpu
   GstBuffer *pending_frame;
 };
 
-struct GstDVDSpuClass 
-{
+struct _GstDVDSpuClass {
   GstElementClass parent_class;
 };
 

@@ -123,6 +123,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/multifile/gstmultifilesink.h \
 	$(top_srcdir)/gst/multifile/gstmultifilesrc.h \
 	$(top_srcdir)/gst/nuvdemux/gstnuvdemux.h \
+	$(top_srcdir)/gst/rawparse/gstaudioparse.h
+	$(top_srcdir)/gst/rawparse/gstvideoparse.h
 	$(top_srcdir)/gst/replaygain/gstrganalysis.h \
 	$(top_srcdir)/gst/replaygain/gstrglimiter.h \
 	$(top_srcdir)/gst/replaygain/gstrgvolume.h \
