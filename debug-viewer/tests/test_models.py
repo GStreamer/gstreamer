@@ -146,6 +146,71 @@ class TestDynamicFilter (TestCase):
                             for i in range (11)],
                            range (5, 16))
 
+    def test_filtered_range_refilter_skip (self):
+
+        full_model = Model ()
+        ranged_model = GUI.RangeFilteredLogModel (full_model)
+        # FIXME: Call to .reset should not be needed.
+        ranged_model.reset ()
+        filtered_model = GUI.FilteredLogModel (ranged_model)
+
+        row_list = self.__row_list
+
+        filtered_model.add_filter (GUI.CategoryFilter ("EVEN"),
+                                   Common.Data.DefaultDispatcher ())
+        self.__dump_model (filtered_model, "filtered")
+
+        self.assertEquals (row_list (filtered_model), range (1, 20, 2))
+        self.assertEquals ([filtered_model.line_index_from_super (i)
+                            for i in range (1, 20, 2)],
+                           range (10))
+        self.assertEquals ([filtered_model.line_index_to_super (i)
+                            for i in range (10)],
+                           range (1, 20, 2))
+        self.assertEquals ([filtered_model.line_index_from_top (i)
+                            for i in range (1, 20, 2)],
+                           range (10))
+        self.assertEquals ([filtered_model.line_index_to_top (i)
+                            for i in range (10)],
+                           range (1, 20, 2))
+
+        ranged_model.set_range (1, 19)
+        self.__dump_model (ranged_model, "ranged (1, 19)")
+        filtered_model.super_model_changed_range ()
+        self.__dump_model (filtered_model, "filtered range")
+
+        self.assertEquals ([filtered_model.line_index_from_super (i)
+                            for i in range (0, 19, 2)],
+                           range (10))
+        self.assertEquals ([filtered_model.line_index_to_super (i)
+                            for i in range (10)],
+                           range (0, 19, 2))
+        self.assertEquals ([filtered_model.line_index_from_top (i)
+                            for i in range (1, 20, 2)],
+                           range (10))
+        self.assertEquals ([filtered_model.line_index_to_top (i)
+                            for i in range (10)],
+                           range (1, 20, 2))
+
+        ranged_model.set_range (2, 19)
+        self.__dump_model (ranged_model, "ranged (2, 19)")
+        filtered_model.super_model_changed_range ()
+        self.__dump_model (filtered_model, "filtered range")
+
+        self.assertEquals (row_list (filtered_model), range (3, 20, 2))
+        self.assertEquals ([filtered_model.line_index_from_super (i)
+                            for i in range (1, 18, 2)],
+                           range (9))
+        self.assertEquals ([filtered_model.line_index_to_super (i)
+                            for i in range (9)],
+                           range (1, 18, 2))
+        self.assertEquals ([filtered_model.line_index_from_top (i)
+                            for i in range (3, 20, 2)],
+                           range (9))
+        self.assertEquals ([filtered_model.line_index_to_top (i)
+                            for i in range (9)],
+                           range (3, 20, 2))
+
     def test_filtered_range_refilter (self):
 
         full_model = Model ()
@@ -335,7 +400,7 @@ class TestDynamicFilter (TestCase):
 
         if not hasattr (model, "super_model"):
             # Top model.
-            print "\t|%s|" % ("|".join ([str (i).rjust (2) for i in self.__row_list (model)]),),
+            print "\t(%s)" % ("|".join ([str (i).rjust (2) for i in self.__row_list (model)]),),
         else:
             top_model = model.super_model
             if hasattr (top_model, "super_model"):
@@ -345,7 +410,7 @@ class TestDynamicFilter (TestCase):
             output = ["  "] * len (top_indices)
             for i, position in enumerate (positions):
                 output[position] = str (i).rjust (2)
-            print "\t|%s|" % ("|".join (output),),
+            print "\t(%s)" % ("|".join (output),),
 
         if comment is None:
             print

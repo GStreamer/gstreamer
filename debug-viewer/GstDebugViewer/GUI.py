@@ -612,13 +612,14 @@ class FilteredLogModel (FilteredLogModelBase):
         if super_start_offset > 0:
             if not self.super_index:
                 # Identity; there are no filters.
-                start_offset = super_start_offset
+                n_filtered = super_start_offset
+                start_offset = n_filtered
             else:
-                n_filtered = self.__filtered_indices_in_range (old_start, super_start - 1)
-                assert n_filtered > 0
+                n_filtered = self.__filtered_indices_in_range (0, super_start_offset - 1)
                 start_offset = n_filtered
 
-            self.__remove_range (0, start_offset - 1)
+            if n_filtered > 0:
+                self.__remove_range (0, start_offset - 1)
 
             from_super = self.from_super_index
             for i in self.super_index:
