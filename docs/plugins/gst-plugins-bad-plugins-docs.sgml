@@ -42,7 +42,7 @@
     <xi:include href="xml/element-multifilesink.xml" />
     <xi:include href="xml/element-multifilesrc.xml" />
     <!--xi:include href="xml/element-mythtvsrc.xml" /-->
-    <!--xi:include href="xml/element-nvudemux.xml" /-->
+    <xi:include href="xml/element-nuvdemux.xml" />
     <xi:include href="xml/element-rganalysis.xml" />
     <xi:include href="xml/element-rglimiter.xml" />
     <xi:include href="xml/element-rgvolume.xml" />

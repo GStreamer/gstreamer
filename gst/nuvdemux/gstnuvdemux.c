@@ -24,7 +24,8 @@
  *
  * <refsect2>
  * <para>
- * Demuxes an .nuv file into raw or compressed audio and/or video streams.
+ * Demuxes MythTVs NuppelVideo .nuv file into raw or compressed audio and/or
+ * video streams.
  * </para>
  * <para>
  * This element currently only supports pull-based scheduling.
@@ -66,7 +67,7 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_EVENT);
 static const GstElementDetails gst_nuv_demux_details =
 GST_ELEMENT_DETAILS ("Nuv demuxer",
     "Codec/Demuxer",
-    "Demultiplex a .nuv file into audio and video",
+    "Demultiplex a mythtv .nuv file into audio and video",
     "Renato Araujo Oliveira Filho <renato.filho@indt.org.br>,"
     "Rosfran Borges <rosfran.borges@indt.org.br>");
 

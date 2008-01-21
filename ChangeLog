@@ -1,5 +1,13 @@
 2008-01-21  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* gst/nuvdemux/gstnuvdemux.c:
+	  One less to do. Its 'nuv' not 'nvu'. As an extra bonus I mention what
+	  it actually is.
+
+2008-01-21  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
