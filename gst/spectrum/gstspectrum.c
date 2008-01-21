@@ -52,7 +52,7 @@
  *   the phase for each frequency band. The value is between -pi and pi.
  *   </para>
  * </listitem>
-
+ * </itemizedlist>
  *
  * This element cannot be used with the gst-launch command in a sensible way.
  * The included demo shows how to use it in an application.
