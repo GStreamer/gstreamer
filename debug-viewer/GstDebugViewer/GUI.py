@@ -697,12 +697,9 @@ class SubRange (object):
 
     def __iter__ (self):
 
-        # FIXME: Use itertools, should be faster!
         l = self.l
-        i = self.start
-        while i < self.stop:
+        for i in xrange (self.start, self.stop):
             yield l[i]
-            i += 1
 
 class RangeFilteredLogModel (FilteredLogModelBase):
 
