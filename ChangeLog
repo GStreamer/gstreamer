@@ -1,3 +1,14 @@
+2008-01-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/Makefile.am:
+	* gst/mpegtsparse/gstmpegdesc.c:
+	* gst/mpegtsparse/gstmpegdesc.h:
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	* gst/mpegtsparse/mpegtsparse.c:
+	Added descriptor searching infrastructure from Fluendo TS demuxer.
+	Add channel name and provider to the sdt structure sent in the
+	bus message.
+
 2008-01-22  Julien Moutte  <julien@fluendo.com>
 
 	* gst/h264parse/gsth264parse.c: (gst_h264_parse_chain_forward):

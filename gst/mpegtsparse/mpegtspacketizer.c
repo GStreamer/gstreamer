@@ -22,6 +22,7 @@
  */
 
 #include "mpegtspacketizer.h"
+#include "gstmpegdesc.h"
 
 GST_DEBUG_CATEGORY_STATIC (mpegts_packetizer_debug);
 #define GST_CAT_DEFAULT mpegts_packetizer_debug
@@ -318,7 +319,7 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer * packetizer,
     /* include tag and length */
     desc = g_string_new_len ((gchar *) data - 2, length + 2);
     data += length;
-
+    /* G_TYPE_GSTING is a GBoxed type and is used so properly marshalled from python */
     g_value_init (&value, G_TYPE_GSTRING);
     g_value_take_boxed (&value, desc);
     g_value_array_append (descriptors, &value);
@@ -808,6 +809,37 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
         gst_structure_free (service);
         goto error;
       }
+      guint8 *service_descriptor;
+      GstMPEGDescriptor *mpegdescriptor =
+          gst_mpeg_descriptor_parse (data, descriptors_loop_length);
+      service_descriptor =
+          gst_mpeg_descriptor_find (mpegdescriptor, DESC_DVB_SERVICE);
+      if (service_descriptor != NULL) {
+        guint serviceprovider_name_length =
+            DESC_DVB_SERVICE_provider_name_length (service_descriptor);
+        gchar *serviceprovider_name =
+            (gchar *) DESC_DVB_SERVICE_provider_name_text (service_descriptor);
+        guint servicename_length =
+            DESC_DVB_SERVICE_name_length (service_descriptor);
+        gchar *servicename =
+            (gchar *) DESC_DVB_SERVICE_name_text (service_descriptor);
+        if (servicename[0] < 0x20) {
+          servicename_length -= 1;
+          servicename += 1;
+        }
+        if (serviceprovider_name[0] < 0x20) {
+          serviceprovider_name_length -= 1;
+          serviceprovider_name += 1;
+        }
+
+        gst_structure_set (service, "name", G_TYPE_STRING,
+            g_strndup (servicename, servicename_length), NULL);
+        gst_structure_set (service, "provider-name", G_TYPE_STRING,
+            g_strndup (serviceprovider_name, serviceprovider_name_length),
+            NULL);
+      }
+
+      gst_mpeg_descriptor_free (mpegdescriptor);
 
       descriptors = g_value_array_new (0);
       if (!mpegts_packetizer_parse_descriptors (packetizer,
@@ -819,6 +851,8 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
 
       gst_structure_set (service, "descriptors", G_TYPE_VALUE_ARRAY,
           descriptors, NULL);
+      /* get provider and service name from descriptors */
+
       g_value_array_free (descriptors);
     }
 
