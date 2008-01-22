@@ -127,7 +127,7 @@ struct _GstFFMpegDecClassParams
 
 #define DEFAULT_LOWRES			0
 #define DEFAULT_SKIPFRAME		0
-#define DEFAULT_DIRECT_RENDERING	TRUE
+#define DEFAULT_DIRECT_RENDERING	FALSE
 
 enum
 {
@@ -278,7 +278,7 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
             "At which resolution to decode images",
             GST_FFMPEGDEC_TYPE_LOWRES, 0, G_PARAM_READWRITE));
     g_object_class_install_property (gobject_class, PROP_DIRECT_RENDERING,
-        g_param_spec_boolean ("direct", "Direct Rendering",
+        g_param_spec_boolean ("direct-rendering", "Direct Rendering",
             "Enable direct rendering",
             DEFAULT_DIRECT_RENDERING, G_PARAM_READWRITE));
   }

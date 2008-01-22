@@ -1,3 +1,11 @@
+2008-01-22  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_class_init):
+	Disable direct-rendering by default until buffer allocation works
+	correctly.
+	Rename the alias of the direct rendering property from 'direct' to
+	'direct-rendering'.
+
 2008-01-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_setcaps),
