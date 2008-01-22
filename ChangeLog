@@ -1,5 +1,11 @@
 2008-01-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_set_property),
+	(gst_ffmpegdec_get_property):
+	Implement get/set for the new property too.
+
+2008-01-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_class_init),
 	(gst_ffmpegdec_init), (gst_ffmpegdec_close), (gst_ffmpegdec_open),
 	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_get_buffer),

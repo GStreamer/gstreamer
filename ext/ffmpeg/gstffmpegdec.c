@@ -2175,6 +2175,9 @@ gst_ffmpegdec_set_property (GObject * object,
       ffmpegdec->hurry_up = ffmpegdec->context->hurry_up =
           g_value_get_enum (value);
       break;
+    case PROP_DIRECT_RENDERING:
+      ffmpegdec->direct_rendering = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2193,6 +2196,9 @@ gst_ffmpegdec_get_property (GObject * object,
       break;
     case PROP_SKIPFRAME:
       g_value_set_enum (value, ffmpegdec->context->hurry_up);
+      break;
+    case PROP_DIRECT_RENDERING:
+      g_value_set_boolean (value, ffmpegdec->direct_rendering);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
