@@ -1,3 +1,8 @@
+2008-01-22  Julien Moutte  <julien@fluendo.com>
+
+	* gst/h264parse/gsth264parse.c: (gst_h264_parse_chain_forward):
+	Parse NAL units in forward mode to mark delta units flags.
+
 2008-01-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:

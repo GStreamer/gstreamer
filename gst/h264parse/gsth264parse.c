@@ -395,6 +395,7 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
     gint next_nalu_pos = -1;
     guint32 nalu_size;
     gint avail;
+    gboolean delta_unit = TRUE;
 
     avail = gst_adapter_available (h264parse->adapter);
     if (avail < 5)
@@ -424,6 +425,59 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
         next_nalu_pos = avail;
       }
     }
+    /* Figure out if this is a delta unit */
+    {
+      gint nal_type = (data[4] & 0x1f);
+      gint nal_ref_idc = (data[4] & 0x60) >> 5;
+
+      GST_DEBUG_OBJECT (h264parse, "NAL type: %d, ref_idc: %d", nal_type,
+          nal_ref_idc);
+
+      /* first parse some things needed to get to the frame type */
+      if (nal_type >= NAL_SLICE && nal_type <= NAL_SLICE_IDR) {
+        GstNalBs bs;
+        gint first_mb_in_slice, slice_type;
+        guint8 *bs_data = (guint8 *) data + 5;
+
+        gst_nal_bs_init (&bs, bs_data, avail - 5);
+
+        first_mb_in_slice = gst_nal_bs_read_ue (&bs);
+        slice_type = gst_nal_bs_read_ue (&bs);
+
+        GST_DEBUG_OBJECT (h264parse, "first MB: %d, slice type: %d",
+            first_mb_in_slice, slice_type);
+
+        switch (slice_type) {
+          case 0:
+          case 5:
+          case 3:
+          case 8:              /* SP */
+            /* P frames */
+            GST_DEBUG_OBJECT (h264parse, "we have a P slice");
+            delta_unit = TRUE;
+            break;
+          case 1:
+          case 6:
+            /* B frames */
+            GST_DEBUG_OBJECT (h264parse, "we have a B slice");
+            delta_unit = TRUE;
+            break;
+          case 2:
+          case 7:
+          case 4:
+          case 9:
+            /* I frames */
+            GST_DEBUG_OBJECT (h264parse, "we have an I slice");
+            delta_unit = FALSE;
+            break;
+        }
+      } else if (nal_type >= NAL_SPS && nal_type <= NAL_PPS) {
+        /* This can be considered as a non delta unit */
+        GST_DEBUG_OBJECT (h264parse, "we have a SPS or PPS NAL");
+        delta_unit = FALSE;
+      }
+    }
+
     /* we have a packet */
     if (next_nalu_pos > 0) {
       GstBuffer *outbuf;
@@ -437,6 +491,10 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
       if (h264parse->discont) {
         GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
         h264parse->discont = FALSE;
+      }
+
+      if (delta_unit) {
+        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
       }
 
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (h264parse->srcpad));
