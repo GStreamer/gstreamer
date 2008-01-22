@@ -1,5 +1,19 @@
 2008-01-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_class_init),
+	(gst_ffmpegdec_init), (gst_ffmpegdec_close), (gst_ffmpegdec_open),
+	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_get_buffer),
+	(gst_ffmpegdec_release_buffer), (get_output_buffer),
+	(gst_ffmpegdec_video_frame), (gst_ffmpegdec_audio_frame),
+	(gst_ffmpegdec_frame), (gst_ffmpegdec_change_state),
+	(gst_ffmpegdec_set_property), (gst_ffmpegdec_get_property):
+	Reenable pad_alloc, seem to work now.
+	Added property to easily disable it later on.
+	Remove some old code that tried hard to break the get_buffer
+	functions. Fixes #321662.
+
+2008-01-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_flags_get_type):
 	Add h263 to the list of codecs using the mpeg flags and options.
 	Add some more H263 specific flags. Fixes #421068.

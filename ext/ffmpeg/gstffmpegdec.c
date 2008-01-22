@@ -35,8 +35,6 @@
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
 
-//#define FORCE_OUR_GET_BUFFER
-
 typedef struct _GstFFMpegDec GstFFMpegDec;
 
 struct _GstFFMpegDec
@@ -77,11 +75,13 @@ struct _GstFFMpegDec
   AVCodecParserContext *pctx;
   GstBuffer *pcache;
 
-  GstBuffer *last_buffer;
-
   GValue *par;                  /* pixel aspect ratio of incoming data */
+  gboolean current_dr;          /* if direct rendering is enabled */
 
-  gint hurry_up, lowres;
+  /* some properties */
+  gint hurry_up;
+  gint lowres;
+  gboolean direct_rendering;
 
   /* QoS stuff *//* with LOCK */
   gdouble proportion;
@@ -125,11 +125,16 @@ struct _GstFFMpegDecClassParams
 #define GST_IS_FFMPEGDEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGDEC))
 
+#define DEFAULT_LOWRES			0
+#define DEFAULT_SKIPFRAME		0
+#define DEFAULT_DIRECT_RENDERING	TRUE
+
 enum
 {
-  ARG_0,
-  ARG_LOWRES,
-  ARG_SKIPFRAME
+  PROP_0,
+  PROP_LOWRES,
+  PROP_SKIPFRAME,
+  PROP_DIRECT_RENDERING
 };
 
 /* A number of function prototypes are given so we can refer to them later. */
@@ -264,14 +269,18 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
   gobject_class->get_property = gst_ffmpegdec_get_property;
 
   if (klass->in_plugin->type == CODEC_TYPE_VIDEO) {
-    g_object_class_install_property (gobject_class, ARG_SKIPFRAME,
+    g_object_class_install_property (gobject_class, PROP_SKIPFRAME,
         g_param_spec_enum ("skip-frame", "Skip frames",
             "Which types of frames to skip during decoding",
             GST_FFMPEGDEC_TYPE_SKIPFRAME, 0, G_PARAM_READWRITE));
-    g_object_class_install_property (gobject_class, ARG_LOWRES,
+    g_object_class_install_property (gobject_class, PROP_LOWRES,
         g_param_spec_enum ("lowres", "Low resolution",
             "At which resolution to decode images",
             GST_FFMPEGDEC_TYPE_LOWRES, 0, G_PARAM_READWRITE));
+    g_object_class_install_property (gobject_class, PROP_DIRECT_RENDERING,
+        g_param_spec_boolean ("direct", "Direct Rendering",
+            "Enable direct rendering",
+            DEFAULT_DIRECT_RENDERING, G_PARAM_READWRITE));
   }
 
   gstelement_class->change_state = gst_ffmpegdec_change_state;
@@ -311,8 +320,7 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->opened = FALSE;
   ffmpegdec->waiting_for_key = TRUE;
   ffmpegdec->hurry_up = ffmpegdec->lowres = 0;
-
-  ffmpegdec->last_buffer = NULL;
+  ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
 
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
@@ -440,6 +448,8 @@ gst_ffmpegdec_close (GstFFMpegDec * ffmpegdec)
   if (!ffmpegdec->opened)
     return;
 
+  GST_LOG_OBJECT (ffmpegdec, "closing ffmpeg codec");
+
   if (ffmpegdec->par) {
     g_free (ffmpegdec->par);
     ffmpegdec->par = NULL;
@@ -542,7 +552,6 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
   }
 
   ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
-  ffmpegdec->last_buffer = NULL;
   /* FIXME, reset_qos holds the LOCK */
   ffmpegdec->proportion = 0.0;
   ffmpegdec->earliest_time = -1;
@@ -585,6 +594,7 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   /* set buffer functions */
   ffmpegdec->context->get_buffer = gst_ffmpegdec_get_buffer;
   ffmpegdec->context->release_buffer = gst_ffmpegdec_release_buffer;
+  ffmpegdec->context->draw_horiz_band = NULL;
 
   /* get size and so */
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
@@ -624,9 +634,20 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (ffmpegdec, "Using framerate from codec");
   }
 
-  if (oclass->in_plugin->id != CODEC_ID_H264) {
-    /* do *not* draw edges */
-    ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
+  /* figure out if we can use direct rendering */
+  ffmpegdec->current_dr = FALSE;
+  if (ffmpegdec->direct_rendering) {
+    GST_DEBUG_OBJECT (ffmpegdec, "trying to enable direct rendering");
+    if (!oclass->in_plugin->capabilities & CODEC_CAP_DR1) {
+      GST_DEBUG_OBJECT (ffmpegdec, "direct rendering not supported");
+    }
+    else {
+      GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
+      /* do *not* draw edges when in direct rendering, for some reason it draws
+       * outside of the memory. */
+      ffmpegdec->current_dr = TRUE;
+      ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
+    } 
   }
 
   /* workaround encoder bugs */
@@ -691,6 +712,13 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
    * picture back from ffmpeg we can use this to correctly timestamp the output
    * buffer */
   picture->pts = ffmpegdec->in_ts;
+  /* make sure we don't free the buffer when it's not ours */
+  picture->opaque = NULL;
+
+  if (!ffmpegdec->current_dr) {
+    GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled");
+    return avcodec_default_get_buffer (context, picture);
+  }
 
   switch (context->codec_type) {
     case CODEC_TYPE_VIDEO:
@@ -701,28 +729,22 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
       bufsize = avpicture_get_size (context->pix_fmt, width, height);
 
       if ((width != context->width) || (height != context->height) || 1) {
-#ifdef FORCE_OUR_GET_BUFFER
         context->width = width;
         context->height = height;
-#else
-	/* make sure we don't free the buffer when it's not ours */
-	picture->opaque = NULL;
-        return avcodec_default_get_buffer (context, picture);
-#endif
       }
 
       if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
         GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
             ("Failed to link ffmpeg decoder to next element"));
-	picture->opaque = NULL;
         return avcodec_default_get_buffer (context, picture);
       }
 
       if (gst_pad_alloc_buffer_and_set_caps (ffmpegdec->srcpad,
               GST_BUFFER_OFFSET_NONE, bufsize, GST_PAD_CAPS (ffmpegdec->srcpad),
-              &buf) != GST_FLOW_OK)
-        return -1;
-      ffmpegdec->last_buffer = buf;
+              &buf) != GST_FLOW_OK) {
+        /* when allocation fails, still provide a default buffer */
+        return avcodec_default_get_buffer (context, picture);
+      }
 
       gst_ffmpeg_avpicture_fill ((AVPicture *) picture,
           GST_BUFFER_DATA (buf),
@@ -734,18 +756,13 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
       break;
   }
 
-  /* tell ffmpeg we own this buffer
-   *
-   * we also use an evil hack (keep buffer in base[0])
-   * to keep a reference to the buffer in release_buffer(),
-   * so that we can ref() it here and unref() it there
-   * so that we don't need to copy data */
+  /* tell ffmpeg we own this buffer, tranfer the ref we have on the buffer to
+   * the opaque data. */
   picture->type = FF_BUFFER_TYPE_USER;
   picture->age = G_MAXINT;
-  gst_buffer_ref (buf);
   picture->opaque = buf;
 
-  GST_LOG_OBJECT (ffmpegdec, "END");
+  GST_LOG_OBJECT (ffmpegdec, "returned buffer %p", buf);
 
   return 0;
 }
@@ -757,20 +774,20 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
   GstBuffer *buf;
   GstFFMpegDec *ffmpegdec;
 
+  ffmpegdec = (GstFFMpegDec *) context->opaque;
+
+  GST_DEBUG_OBJECT (ffmpegdec, "release buffer");
+
   /* check if it was our buffer */
   if (picture->opaque == NULL) {
     avcodec_default_release_buffer (context, picture);
     return;
   }
 
-  buf = GST_BUFFER (picture->opaque);
-
-  ffmpegdec = (GstFFMpegDec *) context->opaque;
-
-  if (buf == ffmpegdec->last_buffer)
-    ffmpegdec->last_buffer = NULL;
+  /* we remove the opaque data now */
+  buf = GST_BUFFER_CAST (picture->opaque);
+  GST_DEBUG_OBJECT (ffmpegdec, "release buffer %p", buf);
   gst_buffer_unref (buf);
-
   picture->opaque = NULL;
 
   /* zero out the reference in ffmpeg */
@@ -1166,15 +1183,16 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
    * its own buffers and copy to our own buffer afterwards... */
   /* BUFFER CREATION */
   if (ffmpegdec->picture->opaque != NULL) {
+    GST_LOG_OBJECT (ffmpegdec, "using opaque buffer");
     *outbuf = (GstBuffer *) ffmpegdec->picture->opaque;
-    if (*outbuf == ffmpegdec->last_buffer)
-      ffmpegdec->last_buffer = NULL;
-    if (*outbuf != NULL)
-      ret = GST_FLOW_OK;
+    gst_buffer_ref (*outbuf);
+    ret = GST_FLOW_OK;
   } else {
     AVPicture pic;
     gint fsize;
     gint width, height;
+
+    GST_LOG_OBJECT (ffmpegdec, "get output buffer");
 
     /* see if we need renegotiation */
     if (G_UNLIKELY (!gst_ffmpegdec_negotiate (ffmpegdec)))
@@ -1339,6 +1357,8 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
       ffmpegdec->picture->coded_picture_number);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: display %d",
       ffmpegdec->picture->display_picture_number);
+  GST_DEBUG_OBJECT (ffmpegdec, "picture: opaque %p",
+      ffmpegdec->picture->opaque);
 
   /* check if we are dealing with a keyframe here */
   iskeyframe = check_keyframe (ffmpegdec);
@@ -1551,12 +1571,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
       GST_TIME_ARGS (ffmpegdec->next_ts));
 
   /* outgoing buffer */
-  if (!ffmpegdec->last_buffer)
-    *outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
-  else {
-    *outbuf = ffmpegdec->last_buffer;
-    ffmpegdec->last_buffer = NULL;
-  }
+  *outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
 
   len = avcodec_decode_audio2 (ffmpegdec->context,
       (int16_t *) GST_BUFFER_DATA (*outbuf), &have_data, data, size);
@@ -1612,7 +1627,6 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
 
   } else if (len > 0 && have_data == 0) {
     /* cache output, because it may be used for caching (in-place) */
-    ffmpegdec->last_buffer = *outbuf;
     *outbuf = NULL;
   } else {
     gst_buffer_unref (*outbuf);
@@ -1704,8 +1718,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 
   if (outbuf) {
     GST_LOG_OBJECT (ffmpegdec,
-        "Decoded data, now pushing buffer with timestamp %" GST_TIME_FORMAT
-        " and duration %" GST_TIME_FORMAT,
+        "Decoded data, now pushing buffer %p with timestamp %" GST_TIME_FORMAT
+        " and duration %" GST_TIME_FORMAT, outbuf,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
 
@@ -2137,10 +2151,6 @@ gst_ffmpegdec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_OBJECT_LOCK (ffmpegdec);
       gst_ffmpegdec_close (ffmpegdec);
-      if (ffmpegdec->last_buffer != NULL) {
-        gst_buffer_unref (ffmpegdec->last_buffer);
-        ffmpegdec->last_buffer = NULL;
-      }
       GST_OBJECT_UNLOCK (ffmpegdec);
       clear_queued (ffmpegdec);
       break;
@@ -2158,10 +2168,10 @@ gst_ffmpegdec_set_property (GObject * object,
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) object;
 
   switch (prop_id) {
-    case ARG_LOWRES:
+    case PROP_LOWRES:
       ffmpegdec->lowres = ffmpegdec->context->lowres = g_value_get_enum (value);
       break;
-    case ARG_SKIPFRAME:
+    case PROP_SKIPFRAME:
       ffmpegdec->hurry_up = ffmpegdec->context->hurry_up =
           g_value_get_enum (value);
       break;
@@ -2178,10 +2188,10 @@ gst_ffmpegdec_get_property (GObject * object,
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) object;
 
   switch (prop_id) {
-    case ARG_LOWRES:
+    case PROP_LOWRES:
       g_value_set_enum (value, ffmpegdec->context->lowres);
       break;
-    case ARG_SKIPFRAME:
+    case PROP_SKIPFRAME:
       g_value_set_enum (value, ffmpegdec->context->hurry_up);
       break;
     default:
