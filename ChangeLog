@@ -1,6 +1,12 @@
 2008-01-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/mpegtspacketizer.c:
+	Parsed and added network name to the nit structure sent
+	in the bus message.
+
+2008-01-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
 	Remove leaks introduced by not freeing g_strndup'd strings.
 	Fix start_time and duration parsing in EIT.
 

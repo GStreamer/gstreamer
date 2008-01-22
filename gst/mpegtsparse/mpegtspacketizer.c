@@ -606,6 +606,28 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
       gst_structure_free (nit);
       goto error;
     }
+    guint8 *networkname_descriptor;
+    GstMPEGDescriptor *mpegdescriptor =
+        gst_mpeg_descriptor_parse (data, descriptors_loop_length);
+    networkname_descriptor =
+        gst_mpeg_descriptor_find (mpegdescriptor, DESC_DVB_NETWORK_NAME);
+    if (networkname_descriptor != NULL) {
+      gchar *networkname_tmp;
+      guint networkname_length =
+          DESC_DVB_NETWORK_NAME_length (networkname_descriptor);
+      gchar *networkname =
+          (gchar *) DESC_DVB_NETWORK_NAME_text (networkname_descriptor);
+      if (networkname[0] < 0x20) {
+        networkname_length -= 1;
+        networkname += 1;
+      }
+      networkname_tmp = g_strndup (networkname, networkname_length);
+      gst_structure_set (nit, "network-name", G_TYPE_STRING, networkname_tmp,
+          NULL);
+      g_free (networkname_tmp);
+    }
+
+    gst_mpeg_descriptor_free (mpegdescriptor);
 
     descriptors = g_value_array_new (0);
     if (!mpegts_packetizer_parse_descriptors (packetizer,
