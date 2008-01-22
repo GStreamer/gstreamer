@@ -581,8 +581,10 @@ class FilteredLogModel (FilteredLogModelBase):
     def super_model_changed_range (self):
 
         range_model = self.super_model
-        old_start, old_end = self.__old_super_model_range
-        super_start, super_end = range_model.line_index_range
+        old_start, old_stop = self.__old_super_model_range
+        old_end = old_stop - 1
+        super_start, super_stop = range_model.line_index_range
+        super_end = super_stop - 1
 
         super_start_offset = super_start - old_start
         if super_start_offset < 0:
@@ -630,7 +632,7 @@ class FilteredLogModel (FilteredLogModelBase):
             for i in range (len (self.super_index)):
                 self.super_index[i] -= super_start_offset
 
-        self.__old_super_model_range = (super_start, super_end,)
+        self.__old_super_model_range = (super_start, super_stop,)
 
     def __remove_range (self, start, end):
 
@@ -674,14 +676,16 @@ class CategoryFilter (Filter):
 
 class SubRange (object):
 
-    def __init__ (self, l, start, end):
+    __slots__ = ("l", "start", "stop",)
 
-        if start > end:
-            raise ValueError ("need start <= end")
+    def __init__ (self, l, start, stop):
+
+        if start > stop:
+            raise ValueError ("need start <= stop (got %r, %r)" % (start, stop,))
 
         self.l = l
         self.start = start
-        self.end = end
+        self.stop = stop
 
     def __getitem__ (self, i):
 
@@ -689,14 +693,14 @@ class SubRange (object):
 
     def __len__ (self):
 
-        return self.end - self.start + 1
+        return self.stop - self.start
 
     def __iter__ (self):
 
         # FIXME: Use itertools, should be faster!
         l = self.l
         i = self.start
-        while i <= self.end:
+        while i < self.stop:
             yield l[i]
             i += 1
 
@@ -710,25 +714,25 @@ class RangeFilteredLogModel (FilteredLogModelBase):
 
         self.line_index_range = None
 
-    def set_range (self, start_index, last_index):
+    def set_range (self, start_index, stop_index):
 
-        self.logger.debug ("setting range to first = %i, last = %i",
-                           start_index, last_index)
+        self.logger.debug ("setting range to start = %i, stop = %i",
+                           start_index, stop_index)
 
-        self.line_index_range = (start_index, last_index,)
+        self.line_index_range = (start_index, stop_index,)
         self.line_offsets = SubRange (self.super_model.line_offsets,
-                                      start_index, last_index)
+                                      start_index, stop_index)
         self.line_levels = SubRange (self.super_model.line_levels,
-                                     start_index, last_index)
+                                     start_index, stop_index)
 
     def reset (self):
 
         self.logger.debug ("reset")
 
-        first_index = 0
-        last_index = len (self.super_model) - 1
+        start_index = 0
+        stop_index = len (self.super_model)
 
-        self.set_range (first_index, last_index,)
+        self.set_range (start_index, stop_index,)
 
     def line_index_to_super (self, line_index):
 
@@ -738,9 +742,9 @@ class RangeFilteredLogModel (FilteredLogModelBase):
 
     def line_index_from_super (self, li):
 
-        start, end = self.line_index_range
+        start, stop = self.line_index_range
 
-        if li < start or li > end:
+        if li < start or li >= stop:
             raise IndexError ("not in range")
 
         return li - start
@@ -1494,6 +1498,10 @@ class LineView (object):
 
     def handle_log_view_selection_changed (self, selection):
 
+        line_model = self.line_view.props.model
+        if line_model is None or len (line_model) == 0:
+            return
+
         model, tree_iter = selection.get_selected ()
 
         if tree_iter is None:
@@ -1502,9 +1510,6 @@ class LineView (object):
         path = model.get_path (tree_iter)
         line_index = model.line_index_to_super (path[0])
 
-        line_model = self.line_view.props.model
-        if line_model is None:
-            return
         if len (line_model) == 0:
             line_model.insert_line (0, line_index)
         else:
@@ -1872,7 +1877,9 @@ class Window (object):
                               last_index)
 
         self.push_view_state ()
-        self.log_range.set_range (first_index, last_index)
+        start_index = first_index
+        stop_index = last_index + 1
+        self.log_range.set_range (start_index, stop_index)
         if self.log_filter:
             self.log_filter.super_model_changed_range ()
         self.update_model ()

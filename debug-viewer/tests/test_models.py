@@ -31,6 +31,40 @@ from unittest import TestCase, main as test_main
 
 from GstDebugViewer import Common, Data, GUI
 
+class TestSubRange (TestCase):
+
+    def test_len (self):
+
+        l = range (20)
+
+        sr = GUI.SubRange (l, 0, 20)
+        self.assertEquals (len (sr), 20)
+
+        sr = GUI.SubRange (l, 10, 20)
+        self.assertEquals (len (sr), 10)
+
+        sr = GUI.SubRange (l, 0, 10)
+        self.assertEquals (len (sr), 10)
+
+        sr = GUI.SubRange (l, 5, 15)
+        self.assertEquals (len (sr), 10)
+
+    def test_iter (self):
+
+        l = range (20)
+
+        sr = GUI.SubRange (l, 0, 20)
+        self.assertEquals (list (sr), l)
+
+        sr = GUI.SubRange (l, 10, 20)
+        self.assertEquals (list (sr), range (10, 20))
+
+        sr = GUI.SubRange (l, 0, 10)
+        self.assertEquals (list (sr), range (0, 10))
+
+        sr = GUI.SubRange (l, 5, 15)
+        self.assertEquals (list (sr), range (5, 15))
+
 class Model (GUI.LogModelBase):
 
     def __init__ (self):
@@ -93,7 +127,7 @@ class TestDynamicFilter (TestCase):
         self.assertEquals (row_list (ranged_model), range (20))
         self.assertEquals (row_list (filtered_model), range (20))
 
-        ranged_model.set_range (5, 15)
+        ranged_model.set_range (5, 16)
         filtered_model.super_model_changed_range ()
 
         self.assertEquals (row_list (ranged_model), range (5, 16))
@@ -127,7 +161,7 @@ class TestDynamicFilter (TestCase):
 
         filtered_model.add_filter (IdentityFilter (),
                                    Common.Data.DefaultDispatcher ())
-        ranged_model.set_range (5, 15)
+        ranged_model.set_range (5, 16)
         filtered_model.super_model_changed_range ()
 
         self.assertEquals (row_list (ranged_model), range (5, 16))
@@ -174,8 +208,8 @@ class TestDynamicFilter (TestCase):
                             for i in range (10)],
                            range (1, 20, 2))
 
-        ranged_model.set_range (1, 19)
-        self.__dump_model (ranged_model, "ranged (1, 19)")
+        ranged_model.set_range (1, 20)
+        self.__dump_model (ranged_model, "ranged (1, 20)")
         filtered_model.super_model_changed_range ()
         self.__dump_model (filtered_model, "filtered range")
 
@@ -192,8 +226,8 @@ class TestDynamicFilter (TestCase):
                             for i in range (10)],
                            range (1, 20, 2))
 
-        ranged_model.set_range (2, 19)
-        self.__dump_model (ranged_model, "ranged (2, 19)")
+        ranged_model.set_range (2, 20)
+        self.__dump_model (ranged_model, "ranged (2, 20)")
         filtered_model.super_model_changed_range ()
         self.__dump_model (filtered_model, "filtered range")
 
@@ -257,8 +291,8 @@ class TestDynamicFilter (TestCase):
                             for i in range (20)],
                            range (20))
 
-        ranged_model.set_range (5, 15)
-        self.__dump_model (ranged_model, "ranged model (5, 15)")
+        ranged_model.set_range (5, 16)
+        self.__dump_model (ranged_model, "ranged model (5, 16)")
         filtered_model.super_model_changed_range ()
 
         rows_ranged = row_list (ranged_model)
@@ -309,8 +343,8 @@ class TestDynamicFilter (TestCase):
                             for i in range (5, 16, 2)],
                            range (6))
 
-        ranged_model.set_range (7, 12)
-        self.__dump_model (ranged_model, "ranged model (7, 12)")
+        ranged_model.set_range (7, 13)
+        self.__dump_model (ranged_model, "ranged model (7, 13)")
         filtered_model.super_model_changed_range ()
 
         self.assertEquals (row_list (ranged_model), range (7, 13))
@@ -362,14 +396,14 @@ class TestDynamicFilter (TestCase):
         random_rows = row_list (filtered_model)
 
         self.__dump_model (filtered_model)
-        ranged_model.set_range (10, 19)
-        self.__dump_model (ranged_model, "ranged_model (10, 19)")
+        ranged_model.set_range (10, 20)
+        self.__dump_model (ranged_model, "ranged_model (10, 20)")
         self.assertEquals (row_list (ranged_model), range (10, 20))
         filtered_model.super_model_changed_range ()
         self.__dump_model (filtered_model)
         self.assertEquals (row_list (filtered_model), [x for x in range (10, 20) if x in random_rows])
 
-        ranged_model.set_range (0, 19)
+        ranged_model.set_range (0, 20)
         self.assertEquals (row_list (ranged_model), range (0, 20))
 
         ranged_model = GUI.RangeFilteredLogModel (full_model)
@@ -381,8 +415,8 @@ class TestDynamicFilter (TestCase):
         self.__dump_model (filtered_model, "filtered model")
         self.assertEquals (row_list (filtered_model), random_rows)
 
-        ranged_model.set_range (0, 9)
-        self.__dump_model (ranged_model, "ranged model (0, 9)")
+        ranged_model.set_range (0, 10)
+        self.__dump_model (ranged_model, "ranged model (0, 10)")
         filtered_model.super_model_changed_range ()
         self.assertEquals (row_list (ranged_model), range (0, 10))
         self.__dump_model (filtered_model)
