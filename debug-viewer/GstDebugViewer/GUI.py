@@ -1729,6 +1729,7 @@ class Window (object):
     def push_view_state (self):
 
         self.default_index = None
+        self.default_start_index = None
 
         model = self.log_view.props.model
         if model is None:
@@ -1746,6 +1747,12 @@ class Window (object):
 
         self.default_index = super_index
 
+        vis_range = self.log_view.get_visible_range ()
+        if vis_range is not None:
+            start_path, end_path = vis_range
+            start_index = start_path[0]
+            self.default_start_index = model.line_index_to_top (start_index)
+
     def update_model (self, model = None):
 
         if model is None:
@@ -1758,30 +1765,47 @@ class Window (object):
             self.log_view.set_model (None)
         self.log_view.props.model = model
 
-    def pop_view_state (self):
-
-        selected_index = self.default_index
-        if selected_index is None:
-            return
+    def pop_view_state (self, scroll_to_selection = False):
 
         model = self.log_view.props.model
         if model is None:
             return
 
-        try:
-            select_index = model.line_index_from_top (selected_index)
-        except IndexError, exc:
-            self.logger.debug ("abs line index %i filtered out, not reselecting",
-                               selected_index)
-        else:
-            assert select_index >= 0
-            sel = self.log_view.get_selection ()
-            path = (select_index,)
-            sel.select_path (path)
+        selected_index = self.default_index
+        start_index = self.default_start_index
+        
+        if selected_index is not None:
 
-            # FIXME: Instead of scrolling to the selected row, try to restore
-            # the previous visible range.
-            self.log_view.scroll_to_cell (path, use_align = True, row_align = .5)
+            try:
+                select_index = model.line_index_from_top (selected_index)
+            except IndexError, exc:
+                self.logger.debug ("abs line index %i filtered out, not reselecting",
+                                   selected_index)
+            else:
+                assert select_index >= 0
+                sel = self.log_view.get_selection ()
+                path = (select_index,)
+                sel.select_path (path)
+
+                if start_index is None or scroll_to_selection:
+                    self.log_view.scroll_to_cell (path, use_align = True, row_align = .5)
+
+        if start_index is not None and not scroll_to_selection:
+
+            def traverse ():
+                for i in xrange (start_index, len (model)):
+                    yield i
+                for i in xrange (start_index - 1, 0, -1):
+                    yield i
+            for current_index in traverse ():
+                try:
+                    target_index = model.line_index_from_top (current_index)
+                except IndexError:
+                    continue
+                else:
+                    path = (target_index,)
+                    self.log_view.scroll_to_cell (path, use_align = True, row_align = 0.)
+                    break
 
     def update_view (self):
 
@@ -1890,7 +1914,7 @@ class Window (object):
         self.log_range.reset ()
         self.log_filter = None
         self.update_model (self.log_range)
-        self.pop_view_state ()
+        self.pop_view_state (scroll_to_selection = True)
         self.actions.show_hidden_lines.props.sensitive = False
 
     def handle_edit_copy_line_action_activate (self, action):
