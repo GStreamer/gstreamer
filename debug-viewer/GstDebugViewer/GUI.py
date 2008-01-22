@@ -564,7 +564,7 @@ class FilteredLogModel (FilteredLogModelBase):
 
         return self.super_index[line_index]
 
-    def __filtered_indices_in_range (self, first, last):
+    def __filtered_indices_in_range (self, first, end):
 
         # FIXME: Rewrite using bisection!
 
@@ -573,7 +573,7 @@ class FilteredLogModel (FilteredLogModelBase):
 
         count = 0
         for i in self.super_index:
-            if i >= first and i <= last:
+            if i >= first and i < end:
                 count += 1
 
         return count
@@ -582,9 +582,7 @@ class FilteredLogModel (FilteredLogModelBase):
 
         range_model = self.super_model
         old_start, old_stop = self.__old_super_model_range
-        old_end = old_stop - 1
         super_start, super_stop = range_model.line_index_range
-        super_end = super_stop - 1
 
         super_start_offset = super_start - old_start
         if super_start_offset < 0:
@@ -592,7 +590,7 @@ class FilteredLogModel (FilteredLogModelBase):
             raise NotImplementedError ("Only handling further restriction of the range"
                                        " (start offset = %i)" % (super_start_offset,))
 
-        super_end_offset = super_end - old_end
+        super_end_offset = super_stop - old_stop
         if super_end_offset > 0:
             # TODO:
             raise NotImplementedError ("Only handling further restriction of the range"
@@ -603,13 +601,13 @@ class FilteredLogModel (FilteredLogModelBase):
                 # Identity; there are no filters.
                 end_offset = len (self.line_offsets) + super_end_offset
             else:
-                n_filtered = self.__filtered_indices_in_range (super_end + 1 - super_start,
-                                                               old_end - super_start)
+                n_filtered = self.__filtered_indices_in_range (super_stop - super_start,
+                                                               old_stop - super_start)
                 end_offset = len (self.line_offsets) - n_filtered
-            end = len (self.line_offsets) - 1 # FIXME
-            assert end_offset <= end
+            stop = len (self.line_offsets) # FIXME?
+            assert end_offset < stop
 
-            self.__remove_range (end_offset, end)
+            self.__remove_range (end_offset, stop)
 
         if super_start_offset > 0:
             if not self.super_index:
@@ -617,11 +615,11 @@ class FilteredLogModel (FilteredLogModelBase):
                 n_filtered = super_start_offset
                 start_offset = n_filtered
             else:
-                n_filtered = self.__filtered_indices_in_range (0, super_start_offset - 1)
+                n_filtered = self.__filtered_indices_in_range (0, super_start_offset)
                 start_offset = n_filtered
 
             if n_filtered > 0:
-                self.__remove_range (0, start_offset - 1)
+                self.__remove_range (0, start_offset)
 
             from_super = self.from_super_index
             for i in self.super_index:
@@ -634,23 +632,25 @@ class FilteredLogModel (FilteredLogModelBase):
 
         self.__old_super_model_range = (super_start, super_stop,)
 
-    def __remove_range (self, start, end):
+    def __remove_range (self, start, stop):
 
         if start < 0:
             raise ValueError ("start cannot be negative (got %r)" % (start,))
-        if end > len (self.line_offsets) - 1:
-            raise ValueError ("end value out of range (got %r)" % (end,))
-        if start > end:
-            raise ValueError ("start cannot be greater than end (got %r, %r)" % (start, end,))
+        if start == stop:
+            return
+        if stop > len (self.line_offsets):
+            raise ValueError ("stop value out of range (got %r)" % (stop,))
+        if start > stop:
+            raise ValueError ("start cannot be greater than stop (got %r, %r)" % (start, stop,))
 
-        self.logger.debug ("removing line range first = %i, last = %i",
-                           start, end)
+        self.logger.debug ("removing line range (%i, %i)",
+                           start, stop)
 
-        del self.line_offsets[start:end + 1]
-        del self.line_levels[start:end + 1]
-        for super_index in self.super_index[start:end + 1]:
+        del self.line_offsets[start:stop]
+        del self.line_levels[start:stop]
+        for super_index in self.super_index[start:stop]:
             del self.from_super_index[super_index]
-        del self.super_index[start:end + 1]
+        del self.super_index[start:stop]
 
 class Filter (object):
 
