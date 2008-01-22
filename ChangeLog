@@ -1,5 +1,11 @@
 2008-01-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	Add event name and description to the eit structure
+	sent in the bus message.
+
+2008-01-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* gst/mpegtsparse/mpegtsparse.c:
 	Revert const removal from previous commit.
 

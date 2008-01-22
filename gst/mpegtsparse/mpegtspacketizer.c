@@ -994,6 +994,36 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
         gst_structure_free (event);
         goto error;
       }
+      guint8 *event_descriptor;
+      GstMPEGDescriptor *mpegdescriptor =
+          gst_mpeg_descriptor_parse (data, descriptors_loop_length);
+      event_descriptor =
+          gst_mpeg_descriptor_find (mpegdescriptor, DESC_DVB_SHORT_EVENT);
+      if (event_descriptor != NULL) {
+        guint eventname_length =
+            DESC_DVB_SHORT_EVENT_name_length (event_descriptor);
+        gchar *eventname =
+            (gchar *) DESC_DVB_SHORT_EVENT_name_text (event_descriptor);
+        guint eventdescription_length =
+            DESC_DVB_SHORT_EVENT_description_length (event_descriptor);
+        gchar *eventdescription =
+            (gchar *) DESC_DVB_SHORT_EVENT_description_text (event_descriptor);
+        if (eventname[0] < 0x20) {
+          eventname_length -= 1;
+          eventname += 1;
+        }
+        if (eventdescription[0] < 0x20) {
+          eventdescription_length -= 1;
+          eventdescription += 1;
+        }
+
+        gst_structure_set (event, "name", G_TYPE_STRING, g_strndup (eventname,
+                eventname_length), NULL);
+        gst_structure_set (event, "description", G_TYPE_STRING,
+            g_strndup (eventdescription, eventdescription_length), NULL);
+      }
+
+      gst_mpeg_descriptor_free (mpegdescriptor);
 
       descriptors = g_value_array_new (0);
       if (!mpegts_packetizer_parse_descriptors (packetizer,
