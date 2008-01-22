@@ -1,3 +1,11 @@
+2008-01-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Thijs Vermeir <thijsvermeir at gmail dot com>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	(gst_rtp_buffer_get_extension_data):
+	Fix typos and wrong extension check. Fixes #511274.
+
 2008-01-18  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* po/sk.po:

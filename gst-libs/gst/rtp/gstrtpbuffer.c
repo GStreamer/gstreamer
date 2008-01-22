@@ -592,11 +592,11 @@ gst_rtp_buffer_set_extension (GstBuffer * buffer, gboolean extension)
  * @data: location for data
  * @wordlen: location for length of @data in 32 bits words
  *
- * Get the extension data. @bits will contain the extrnsion 16 bits of custom
+ * Get the extension data. @bits will contain the extension 16 bits of custom
  * data. @data will point to the data in the extension and @wordlen will contain
  * the length of @data in 32 bits words.
  *
- * If @buffer did not contain an extenstion, this function will return %FALSE
+ * If @buffer did not contain an extension, this function will return %FALSE
  * with @bits, @data and @wordlen unchanged.
  * 
  * Returns: TRUE if @buffer had the extension bit set.
@@ -613,7 +613,7 @@ gst_rtp_buffer_get_extension_data (GstBuffer * buffer, guint16 * bits,
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, FALSE);
 
-  if (GST_RTP_HEADER_EXTENSION (buffer))
+  if (!GST_RTP_HEADER_EXTENSION (buffer))
     return FALSE;
 
   /* move to the extension */
