@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-theoradecexp
+ * @short_description: decoder theora video using the experimental decoder
  * @see_also: theoradec, theoraenc, oggdemux
  *
  * <refsect2>

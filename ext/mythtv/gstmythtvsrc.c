@@ -17,6 +17,7 @@
 
 /**
  * SECTION:element-mythtvsrc
+ * @short_description: stream from remore mythtv server
  *
  * <refsect2>
  * <para>

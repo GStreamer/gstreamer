@@ -52,7 +52,8 @@ typedef struct _GstIVorbisDecClass GstIVorbisDecClass;
  */
 struct _GstIVorbisDec {
   GstElement            element;
-
+  
+  /* < private > */
   GstPad *              sinkpad;
   GstPad *              srcpad;
 

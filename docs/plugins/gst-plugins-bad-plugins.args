@@ -1331,7 +1331,7 @@
 <ARG>
 <NAME>GstSpeed::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.1,40]</RANGE>
+<RANGE>[0,1,40]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>speed</NICK>
 <BLURB>speed.</BLURB>
@@ -2039,6 +2039,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRfbSrc::use-copyrect</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use copyrect encoding</NICK>
+<BLURB>Use copyrect encoding.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDeinterlace::blend</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -2054,7 +2064,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>di-area-only</NICK>
-<BLURB>di-area-only.</BLURB>
+<BLURB>displays deinterlaced areas only.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -2076,6 +2086,26 @@
 <NICK>threshold</NICK>
 <BLURB>threshold.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDeinterlace::deinterlace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>deinterlace</NICK>
+<BLURB>turn deinterlacing on/off.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDeinterlace::ni-area-only</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ni-area-only</NICK>
+<BLURB>displays non-interlaced areas only.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12471,7 +12501,7 @@
 <ARG>
 <NAME>ladspa-delayorama::Delay-range</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[1e-04,6]</RANGE>
+<RANGE>[0,0001,6]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Delay-range</NICK>
 <BLURB>Delay-range.</BLURB>
@@ -17015,7 +17045,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Dry-Wet-Balance</NICK>
 <BLURB>Dry-Wet-Balance.</BLURB>
-<DEFAULT>0.5</DEFAULT>
+<DEFAULT>0,5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17853,7 +17883,7 @@
 <TYPE>gchararray</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Active Pad</NICK>
+<NICK>Active pad</NICK>
 <BLURB>Name of the currently active sink pad.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
@@ -18035,7 +18065,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern sensitivity</NICK>
 <BLURB>The sensitivity around the center for detecting the markers (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0.3</DEFAULT>
+<DEFAULT>0,3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18075,7 +18105,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern center</NICK>
 <BLURB>The center of the black/white separation (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0.5</DEFAULT>
+<DEFAULT>0,5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18225,7 +18255,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>stereo</NICK>
 <BLURB>stereo.</BLURB>
-<DEFAULT>0.1</DEFAULT>
+<DEFAULT>0,1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18279,6 +18309,116 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpSession::bandwidth</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bandwidth</NICK>
+<BLURB>The bandwidth of the session.</BLURB>
+<DEFAULT>64000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::num-active-sources</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num Active Sources</NICK>
+<BLURB>The number of active sources in the session.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::num-sources</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num Sources</NICK>
+<BLURB>The number of sources in the session.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::rtcp-fraction</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTCP Fraction</NICK>
+<BLURB>The fraction of the bandwidth used for RTCP.</BLURB>
+<DEFAULT>3000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::sdes-cname</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES CNAME</NICK>
+<BLURB>The CNAME to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::sdes-email</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES EMAIL</NICK>
+<BLURB>The EMAIL to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::sdes-location</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES LOCATION</NICK>
+<BLURB>The LOCATION to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::sdes-name</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES NAME</NICK>
+<BLURB>The NAME to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::sdes-note</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES NOTE</NICK>
+<BLURB>The NOTE to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::sdes-phone</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES PHONE</NICK>
+<BLURB>The PHONE to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::sdes-tool</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES TOOL</NICK>
+<BLURB>The TOOL to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpJitterBuffer::drop-on-latency</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -18316,6 +18456,76 @@
 <NICK>Buffer latency in ms</NICK>
 <BLURB>Default amount of ms to buffer in the jitterbuffers.</BLURB>
 <DEFAULT>200</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::sdes-cname</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES CNAME</NICK>
+<BLURB>The CNAME to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::sdes-email</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES EMAIL</NICK>
+<BLURB>The EMAIL to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::sdes-location</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES LOCATION</NICK>
+<BLURB>The LOCATION to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::sdes-name</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES NAME</NICK>
+<BLURB>The NAME to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::sdes-note</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES NOTE</NICK>
+<BLURB>The NOTE to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::sdes-phone</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES PHONE</NICK>
+<BLURB>The PHONE to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::sdes-tool</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES TOOL</NICK>
+<BLURB>The TOOL to put in SDES messages of this session.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18566,5 +18776,285 @@
 <NICK>Quality</NICK>
 <BLURB>Resample quality with 0 being the lowest and 10 being the best.</BLURB>
 <DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioParse::channels</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channels</NICK>
+<BLURB>Number of channels in raw stream.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioParse::depth</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Depth</NICK>
+<BLURB>Depth of audio samples in raw stream.</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioParse::endianness</NAME>
+<TYPE>GstAudioParseEndianness</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Endianness</NICK>
+<BLURB>Endianness of audio samples in raw stream.</BLURB>
+<DEFAULT>Little Endian</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioParse::format</NAME>
+<TYPE>GstAudioParseFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format</NICK>
+<BLURB>Format of audio samples in raw stream.</BLURB>
+<DEFAULT>Integer</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioParse::rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Rate</NICK>
+<BLURB>Rate of audio samples in raw stream.</BLURB>
+<DEFAULT>44100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioParse::signed</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>signed</NICK>
+<BLURB>Sign of audio samples in raw stream.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioParse::width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Width of audio samples in raw stream.</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoParse::alpha-mask</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha mask</NICK>
+<BLURB>Alpha mask of images in raw stream.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoParse::blue-mask</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Blue mask</NICK>
+<BLURB>Blue mask of images in raw stream.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoParse::bpp</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bpp</NICK>
+<BLURB>Bits per pixel of images in raw stream.</BLURB>
+<DEFAULT>24</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoParse::depth</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Depth</NICK>
+<BLURB>Depth of images in raw stream.</BLURB>
+<DEFAULT>24</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoParse::endianness</NAME>
+<TYPE>GstVideoParseEndianness</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Endianness</NICK>
+<BLURB>Endianness of images in raw stream.</BLURB>
+<DEFAULT>Little Endian</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoParse::format</NAME>
+<TYPE>GstVideoParseFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format</NICK>
+<BLURB>Format of images in raw stream.</BLURB>
+<DEFAULT>I420</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoParse::framerate</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frame Rate</NICK>
+<BLURB>Frame rate of images in raw stream.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoParse::green-mask</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Green mask</NICK>
+<BLURB>Green mask of images in raw stream.</BLURB>
+<DEFAULT>65280</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoParse::height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Height</NICK>
+<BLURB>Height of images in raw stream.</BLURB>
+<DEFAULT>240</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoParse::pixel-aspect-ratio</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>Pixel aspect ratio of images in raw stream.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoParse::red-mask</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Red mask</NICK>
+<BLURB>Red mask of images in raw stream.</BLURB>
+<DEFAULT>16711680</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoParse::width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Width of images in raw stream.</BLURB>
+<DEFAULT>320</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMetadataParse::exif</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>EXIF</NICK>
+<BLURB>Send EXIF metadata ?.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMetadataParse::iptc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IPTC</NICK>
+<BLURB>Send IPTC metadata ?.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMetadataParse::xmp</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>XMP</NICK>
+<BLURB>Send XMP metadata ?.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMetadataMux::exif</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>EXIF</NICK>
+<BLURB>Send EXIF metadata ?.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMetadataMux::iptc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IPTC</NICK>
+<BLURB>Send IPTC metadata ?.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMetadataMux::xmp</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>XMP</NICK>
+<BLURB>Send XMP metadata ?.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAmrwbEnc::band-mode</NAME>
+<TYPE>GstAmrwbEncBandMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Band Mode</NICK>
+<BLURB>Encoding Band Mode (Kbps).</BLURB>
+<DEFAULT>MR660</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFBDEVSink::device</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>device</NICK>
+<BLURB>The framebuffer device eg: /dev/fb0.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstH264Parse::split-packetized</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Split packetized</NICK>
+<BLURB>Split NAL units of packetized streams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

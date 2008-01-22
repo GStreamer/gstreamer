@@ -13,7 +13,7 @@
       <name>nuvdemux</name>
       <longname>Nuv demuxer</longname>
       <class>Codec/Demuxer</class>
-      <description>Demultiplex a .nuv file into audio and video</description>
+      <description>Demultiplex a mythtv .nuv file into audio and video</description>
       <author>Renato Araujo Oliveira Filho &lt;renato.filho@indt.org.br&gt;,Rosfran Borges &lt;rosfran.borges@indt.org.br&gt;</author>
       <pads>
         <caps>

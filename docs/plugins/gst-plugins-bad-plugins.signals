@@ -86,6 +86,14 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpSession::on-ssrc-sdes</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRtpPtDemux::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>
@@ -212,6 +220,15 @@ guint  arg2
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpBin::on-ssrc-sdes</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstCDAudio::track-change</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
@@ -261,5 +278,22 @@ GstAppSink *gstappsink
 <RETURNS>GstBuffer*</RETURNS>
 <FLAGS>l</FLAGS>
 GstAppSink *gstappsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSwitch::block</NAME>
+<RETURNS>gint64</RETURNS>
+<FLAGS>l</FLAGS>
+GstSwitch *gstswitch
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSwitch::switch</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSwitch *gstswitch
+gchar *arg1
+gint64  arg2
+gint64  arg3
 </SIGNAL>
 

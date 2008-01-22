@@ -1,3 +1,26 @@
+2008-01-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	  Add missing eol \
+
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	  Place object names to standard sectionas plugin dont document those.
+
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-nuvdemux.xml:
+	  regenerate.
+	  
+	* ext/ivorbis/vorbisdec.c:
+	* ext/ivorbis/vorbisdec.h:
+	  Mark private vars and add short desc.
+
+	* ext/mythtv/gstmythtvsrc.c:
+	* ext/theora/theoradec.c:
+	  Add short desc.
+
 2008-01-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
