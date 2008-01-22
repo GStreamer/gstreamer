@@ -798,6 +798,7 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
     scrambled = (tmp >> 4) & 0x01;
     descriptors_loop_length = tmp & 0x0FFF;
 
+    /* TODO send tag event down relevant pad for channel name and provider */
     service_name = g_strdup_printf ("service-%d", service_id);
     service = gst_structure_new (service_name, NULL);
     g_free (service_name);
@@ -815,6 +816,7 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
       service_descriptor =
           gst_mpeg_descriptor_find (mpegdescriptor, DESC_DVB_SERVICE);
       if (service_descriptor != NULL) {
+        gchar *servicename_tmp, *serviceprovider_name_tmp;
         guint serviceprovider_name_length =
             DESC_DVB_SERVICE_provider_name_length (service_descriptor);
         gchar *serviceprovider_name =
@@ -831,12 +833,15 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
           serviceprovider_name_length -= 1;
           serviceprovider_name += 1;
         }
-
-        gst_structure_set (service, "name", G_TYPE_STRING,
-            g_strndup (servicename, servicename_length), NULL);
-        gst_structure_set (service, "provider-name", G_TYPE_STRING,
-            g_strndup (serviceprovider_name, serviceprovider_name_length),
+        servicename_tmp = g_strndup (servicename, servicename_length);
+        serviceprovider_name_tmp =
+            g_strndup (serviceprovider_name, serviceprovider_name_length);
+        gst_structure_set (service, "name", G_TYPE_STRING, servicename_tmp,
             NULL);
+        gst_structure_set (service, "provider-name", G_TYPE_STRING,
+            serviceprovider_name_tmp, NULL);
+        g_free (servicename_tmp);
+        g_free (serviceprovider_name_tmp);
       }
 
       gst_mpeg_descriptor_free (mpegdescriptor);
@@ -851,7 +856,6 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
 
       gst_structure_set (service, "descriptors", G_TYPE_VALUE_ARRAY,
           descriptors, NULL);
-      /* get provider and service name from descriptors */
 
       g_value_array_free (descriptors);
     }
@@ -899,8 +903,10 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
   gboolean free_ca_mode;
   guint event_id, running_status;
   guint64 start_and_duration;
-  GstClockTime start_time, duration;
-  guint8 *data, *end;
+  guint16 mjd;
+  guint year, month, day, hour, minute, second;
+  guint duration;
+  guint8 *data, *end, *duration_ptr, *utc_ptr;
   guint16 descriptors_loop_length;
   GValue events = { 0 };
   GValue event_value = { 0 };
@@ -969,20 +975,52 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
     event_id = GST_READ_UINT16_BE (data);
     data += 2;
     start_and_duration = GST_READ_UINT64_BE (data);
-    start_time = start_and_duration >> 24;
-    duration = start_and_duration & 0xFFFFFF;
+    duration_ptr = data + 5;
+    utc_ptr = data + 2;
+    mjd = GST_READ_UINT16_BE (data);
+    if (mjd == G_MAXUINT16) {
+      year = 1900;
+      month = day = hour = minute = second = 0;
+    } else {
+      /* See EN 300 468 Annex C */
+      year = (guint32) (((mjd - 15078.2) / 365.25));
+      month = (guint8) ((mjd - 14956.1 - (guint) (year * 365.25)) / 30.6001);
+      day = mjd - 14956 - (guint) (year * 365.25) - (guint) (month * 30.6001);
+      if (month == 14 || month == 15) {
+        year++;
+        month = month - 1 - 12;
+      } else {
+        month--;
+      }
+      year += 1900;
+      hour = ((utc_ptr[0] & 0xF0) >> 4) * 10 + (utc_ptr[0] & 0x0F);
+      minute = ((utc_ptr[1] & 0xF0) >> 4) * 10 + (utc_ptr[1] & 0x0F);
+      second = ((utc_ptr[2] & 0xF0) >> 4) * 10 + (utc_ptr[2] & 0x0F);
+    }
+
+    duration = (((duration_ptr[0] & 0xF0) >> 4) * 10 +
+        (duration_ptr[0] & 0x0F)) * 60 * 60 +
+        (((duration_ptr[1] & 0xF0) >> 4) * 10 +
+        (duration_ptr[1] & 0x0F)) * 60 +
+        ((duration_ptr[2] & 0xF0) >> 4) * 10 + (duration_ptr[2] & 0x0F);
+
     data += 8;
     running_status = *data >> 5;
     free_ca_mode = (*data >> 4) & 0x01;
     descriptors_loop_length = GST_READ_UINT16_BE (data) & 0x0FFF;
     data += 2;
 
+    /* TODO: send tag event down relevant pad saying what is currently playing */
     event_name = g_strdup_printf ("event-%d", event_id);
-    /* FIXME: parse the date */
     event = gst_structure_new (event_name,
         "event-id", G_TYPE_UINT, event_id,
-        "start-time", G_TYPE_UINT, 0,
-        "duration", G_TYPE_UINT, 0,
+        "year", G_TYPE_UINT, year,
+        "month", G_TYPE_UINT, month,
+        "day", G_TYPE_UINT, day,
+        "hour", G_TYPE_UINT, hour,
+        "minute", G_TYPE_UINT, minute,
+        "second", G_TYPE_UINT, second,
+        "duration", G_TYPE_UINT, duration,
         "running-status", G_TYPE_UINT, running_status,
         "free-ca-mode", G_TYPE_BOOLEAN, free_ca_mode, NULL);
     g_free (event_name);
@@ -1000,6 +1038,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
       event_descriptor =
           gst_mpeg_descriptor_find (mpegdescriptor, DESC_DVB_SHORT_EVENT);
       if (event_descriptor != NULL) {
+        gchar *eventname_tmp, *eventdescription_tmp;
         guint eventname_length =
             DESC_DVB_SHORT_EVENT_name_length (event_descriptor);
         gchar *eventname =
@@ -1016,11 +1055,15 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
           eventdescription_length -= 1;
           eventdescription += 1;
         }
+        eventname_tmp = g_strndup (eventname, eventname_length),
+            eventdescription_tmp =
+            g_strndup (eventdescription, eventdescription_length);
 
-        gst_structure_set (event, "name", G_TYPE_STRING, g_strndup (eventname,
-                eventname_length), NULL);
+        gst_structure_set (event, "name", G_TYPE_STRING, eventname_tmp, NULL);
         gst_structure_set (event, "description", G_TYPE_STRING,
-            g_strndup (eventdescription, eventdescription_length), NULL);
+            eventdescription_tmp, NULL);
+        g_free (eventname_tmp);
+        g_free (eventdescription_tmp);
       }
 
       gst_mpeg_descriptor_free (mpegdescriptor);

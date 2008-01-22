@@ -1,6 +1,12 @@
 2008-01-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/mpegtspacketizer.c:
+	Remove leaks introduced by not freeing g_strndup'd strings.
+	Fix start_time and duration parsing in EIT.
+
+2008-01-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
 	Add event name and description to the eit structure
 	sent in the bus message.
 
