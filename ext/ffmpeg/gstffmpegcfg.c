@@ -263,6 +263,7 @@ gst_ffmpeg_flags_get_type (void)
   if (!ffmpeg_flags_type) {
     static const GFlagsValue ffmpeg_flags[] = {
       {CODEC_FLAG_4MV, "Allow 4 MV per MB", "4mv"},
+      {CODEC_FLAG_H263P_AIV, "H.263 alternative inter VLC", "aiv"},
       {CODEC_FLAG_QPEL, "Quartel Pel Motion Compensation", "qpel"},
       {CODEC_FLAG_GMC, "GMC", "gmc"},
       {CODEC_FLAG_MV0, "Always try a MB with MV (0,0)", "mv0"},
@@ -281,6 +282,7 @@ gst_ffmpeg_flags_get_type (void)
       {CODEC_FLAG_CBP_RD, "Rate Distoration Optimization for CBP", "cbp-rd"},
       {CODEC_FLAG_QP_RD, "Rate Distoration Optimization for QP selection",
           "qp-rd"},
+      {CODEC_FLAG_H263P_SLICE_STRUCT, "H263 slice struct", "ss"},
       {CODEC_FLAG_SVCD_SCAN_OFFSET,
           "Reserve space for SVCD scan offset user data", "scanoffset"},
       {CODEC_FLAG_CLOSED_GOP, "Closed GOP", "closedgop"},
@@ -359,6 +361,7 @@ static gint mpeg[] = {
   CODEC_ID_MSMPEG4V3,
   CODEC_ID_MPEG1VIDEO,
   CODEC_ID_MPEG2VIDEO,
+  CODEC_ID_H263P,
   CODEC_ID_FLV1,
   CODEC_ID_NONE
 };

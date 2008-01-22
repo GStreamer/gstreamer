@@ -1,3 +1,9 @@
+2008-01-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_flags_get_type):
+	Add h263 to the list of codecs using the mpeg flags and options.
+	Add some more H263 specific flags. Fixes #421068.
+
 2008-01-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
