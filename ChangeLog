@@ -1,5 +1,10 @@
 2008-01-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* gst/mpegtsparse/mpegtsparse.c:
+	Revert const removal from previous commit.
+
+2008-01-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* gst/mpegtsparse/Makefile.am:
 	* gst/mpegtsparse/gstmpegdesc.c:
 	* gst/mpegtsparse/gstmpegdesc.h:
