@@ -1537,7 +1537,17 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "au") ||
         !strcmp (in_plugin->name, "tta") ||
         !strcmp (in_plugin->name, "rm") ||
-        !strcmp (in_plugin->name, "amr") || !strcmp (in_plugin->name, "gif"))
+        !strcmp (in_plugin->name, "amr") ||
+        !strcmp (in_plugin->name, "ogg") ||
+        !strcmp (in_plugin->name, "aiff") ||
+        !strcmp (in_plugin->name, "ape") ||
+        !strcmp (in_plugin->name, "dv") ||
+        !strcmp (in_plugin->name, "flv") ||
+        !strcmp (in_plugin->name, "mpc") ||
+        !strcmp (in_plugin->name, "mpegts") ||
+        !strcmp (in_plugin->name, "nuv") ||
+        !strcmp (in_plugin->name, "swf") ||
+        !strcmp (in_plugin->name, "voc") || !strcmp (in_plugin->name, "gif"))
       register_typefind_func = FALSE;
 
     /* Set the rank of demuxers know to work to MARGINAL.

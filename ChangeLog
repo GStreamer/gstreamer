@@ -1,3 +1,9 @@
+2008-01-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	Don't register typefinders for which we have better replacements
+	in base. Fixes bug #510985.
+
 2008-01-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_video_frame),
