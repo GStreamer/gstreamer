@@ -1,5 +1,19 @@
 2008-01-22  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-musepack.xml:
+	  Regenerate.
+  
+	* docs/plugins/inspect/plugin-tremor.xml:
+	  Add vorbisidec aka trmor.
+
+	* ext/dc1394/gstdc1394.c:
+	  Add short description.
+
+2008-01-22  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/plugins/Makefile.am:
 	  Add missing eol \
 

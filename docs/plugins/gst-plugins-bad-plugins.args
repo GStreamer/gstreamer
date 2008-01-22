@@ -19058,3 +19058,23 @@
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>Ivorbisfile::metadata</NAME>
+<TYPE>GstCaps</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Metadata</NICK>
+<BLURB>(logical) Stream metadata.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>Ivorbisfile::streaminfo</NAME>
+<TYPE>GstCaps</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>stream</NICK>
+<BLURB>(logical) Stream information.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+

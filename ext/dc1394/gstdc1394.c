@@ -20,9 +20,14 @@
 
 /**
  * SECTION:element-dc1394
+ * @short_description: source for IIDC firewire cameras
  *
  * <refsect2>
  * <title>Example launch line</title>
+ * <para>
+ * Source for IIDC (Instrumentation & Industrial Digital Camera) firewire
+ * cameras.
+ * </para>
  * <para>
  * <programlisting>
  * gst-launch -v dc1394 camera-number=0 ! xvimagesink
