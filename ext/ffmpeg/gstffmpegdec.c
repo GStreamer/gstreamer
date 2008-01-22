@@ -641,6 +641,9 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
     if (!oclass->in_plugin->capabilities & CODEC_CAP_DR1) {
       GST_DEBUG_OBJECT (ffmpegdec, "direct rendering not supported");
     }
+    if (oclass->in_plugin->id == CODEC_ID_H264) {
+      GST_DEBUG_OBJECT (ffmpegdec, "direct rendering disabled for H264");
+    }
     else {
       GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
       /* do *not* draw edges when in direct rendering, for some reason it draws
@@ -759,7 +762,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   /* tell ffmpeg we own this buffer, tranfer the ref we have on the buffer to
    * the opaque data. */
   picture->type = FF_BUFFER_TYPE_USER;
-  picture->age = G_MAXINT;
+  picture->age = 256*256*256*64;
   picture->opaque = buf;
 
   GST_LOG_OBJECT (ffmpegdec, "returned buffer %p", buf);

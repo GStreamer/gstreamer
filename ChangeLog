@@ -1,5 +1,11 @@
 2008-01-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_setcaps),
+	(gst_ffmpegdec_get_buffer):
+	Disable direct rendering for h264 since it does not always work.
+
+2008-01-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_set_property),
 	(gst_ffmpegdec_get_property):
 	Implement get/set for the new property too.
