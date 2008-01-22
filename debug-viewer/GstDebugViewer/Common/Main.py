@@ -302,7 +302,11 @@ class OptionParser (object):
         self.options = options
 
         self.__remaining_args = []
-        self.__entries.append ((gobject.OPTION_REMAINING, "\0", 0, "", "",))
+
+        # Remaining args parsing with pygobject does not work with glib before
+        # 2.13.2 (e.g. Ubuntu Feisty).
+        ## if gobject.glib_version >= (2, 13, 2,):
+        ##     self.__entries.append ((gobject.OPTION_REMAINING, "\0", 0, "", "",))
 
     def add_option (self, long_name, short_name = None, description = None,
                     arg_name = None, arg_parser = None, hidden = False):
@@ -329,9 +333,10 @@ class OptionParser (object):
 
     def __handle_option (self, option, arg, group):
 
-        if option == gobject.OPTION_REMAINING:
-            self.__remaining_args.append (arg)
-            return
+        # See __init__ for glib requirement.
+        ## if option == gobject.OPTION_REMAINING:
+        ##     self.__remaining_args.append (arg)
+        ##     return
 
         for entry in self.__entries:
             long_name, short_name = entry[:2]
@@ -357,9 +362,11 @@ class OptionParser (object):
         group.add_entries (self.__entries)
         
         try:
-            context.parse (argv)
+            result_argv = context.parse (argv)
         except gobject.GError, exc:
             raise OptionError (exc.message)
+
+        self.__remaining_args = result_argv[1:]
 
         self.handle_parse_complete (self.__remaining_args)
 
