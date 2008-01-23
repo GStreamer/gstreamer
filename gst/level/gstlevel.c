@@ -79,10 +79,10 @@
 #include "config.h"
 #endif
 #include <string.h>
+#include <math.h>
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include "gstlevel.h"
-#include "math.h"
 
 GST_DEBUG_CATEGORY_STATIC (level_debug);
 #define GST_CAT_DEFAULT level_debug
