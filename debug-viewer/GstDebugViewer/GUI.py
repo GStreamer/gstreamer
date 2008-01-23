@@ -30,6 +30,7 @@ import os
 import os.path
 from operator import add
 from sets import Set
+from bisect import bisect_right, bisect_left
 import logging
 
 import pygtk
@@ -564,19 +565,15 @@ class FilteredLogModel (FilteredLogModelBase):
 
         return self.super_index[line_index]
 
-    def __filtered_indices_in_range (self, first, end):
+    def __filtered_indices_in_range (self, start, stop):
 
-        # FIXME: Rewrite using bisection!
+        if start < 0:
+            raise ValueError ("start cannot be negative (got %r)" % (start,))
 
-        if first < 0:
-            raise ValueError ("first cannot be negative (got %r)" % (first,))
+        super_start = bisect_left (self.super_index, start)
+        super_stop = bisect_left (self.super_index, stop)
 
-        count = 0
-        for i in self.super_index:
-            if i >= first and i < end:
-                count += 1
-
-        return count
+        return super_stop - super_start
 
     def super_model_changed_range (self):
 
@@ -1478,7 +1475,6 @@ class LineView (object):
         if len (line_model):
             timestamps = [row[line_model.COL_TIME] for row in line_model]
             row = log_model[(line_index,)]
-            from bisect import bisect_right
             position = bisect_right (timestamps, row[line_model.COL_TIME])
         else:
             position = 0
