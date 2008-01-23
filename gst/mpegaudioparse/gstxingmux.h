@@ -21,33 +21,10 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
-typedef struct _GstXingSeekEntry
-{
-  gint64 timestamp;
-  gint byte;
-} GstXingSeekEntry;
+#ifndef __GST_XINGMUX_H__
+#define __GST_XINGMUX_H__
 
-/* Definition of structure storing data for this element. */
-typedef struct _GstXingMux {
-  GstElement element;
-
-  GstPad *sinkpad, *srcpad;
-
-  GstAdapter *adapter;
-  GstClockTime duration;
-  guint64 byte_count;
-  guint64 frame_count;
-  GList *seek_table;
-  gboolean sent_xing;
-
-  /* Copy of the first frame header */
-  guint32 first_header;
-} GstXingMux;
-
-/* Standard definition defining a class for this element. */
-typedef struct _GstXingMuxClass {
-  GstElementClass parent_class;
-} GstXingMuxClass;
+G_BEGIN_DECLS
 
 /* Standard macros for defining types for this element.  */
 #define GST_TYPE_XING_MUX \
@@ -61,5 +38,48 @@ typedef struct _GstXingMuxClass {
 #define GST_IS_XING_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XING_MUX))
 
+typedef struct _GstXingMux GstXingMux;
+typedef struct _GstXingMuxClass GstXingMuxClass;
+
+/* Definition of structure storing data for this element. */
+
+/**
+ * GstXingMux:
+ *
+ * Opaque data structure.
+ */
+struct _GstXingMux {
+  GstElement element;
+
+  GstPad *sinkpad, *srcpad;
+
+  /* < private > */
+
+  GstAdapter *adapter;
+  GstClockTime duration;
+  guint64 byte_count;
+  guint64 frame_count;
+  GList *seek_table;
+  gboolean sent_xing;
+
+  /* Copy of the first frame header */
+  guint32 first_header;
+};
+
+/* Standard definition defining a class for this element. */
+
+/**
+ * GstXingMuxClass:
+ *
+ * Opaque data structure.
+ */
+struct _GstXingMuxClass {
+  GstElementClass parent_class;
+};
+
 /* Standard function returning type information. */
-GType gst_my_filter_get_type (void);
+GType gst_xing_mux_get_type (void);
+
+G_END_DECLS
+
+#endif /* __GST_XINGMUX_H__ */
