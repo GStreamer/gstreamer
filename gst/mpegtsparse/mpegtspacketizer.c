@@ -548,7 +548,7 @@ GstStructure *
 mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
     MpegTSPacketizerSection * section)
 {
-  GstStructure *nit = NULL, *transport = NULL;
+  GstStructure *nit = NULL, *transport = NULL, *satellite = NULL;
   guint8 *data, *end, *entry_begin;
   guint16 network_id, transport_stream_id, original_network_id;
   guint tmp;
@@ -626,7 +626,6 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
           NULL);
       g_free (networkname_tmp);
     }
-
     gst_mpeg_descriptor_free (mpegdescriptor);
 
     descriptors = g_value_array_new (0);
@@ -681,6 +680,134 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
         gst_structure_free (transport);
         goto error;
       }
+      GstMPEGDescriptor *mpegdescriptor =
+          gst_mpeg_descriptor_parse (data, descriptors_loop_length);
+      guint8 *satellitedelivery;
+
+      if ((satellitedelivery =
+              gst_mpeg_descriptor_find (mpegdescriptor,
+                  DESC_DVB_SATELLITE_DELIVERY_SYSTEM))) {
+
+        guint8 *frequency_bcd =
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_frequency (satellitedelivery);
+        guint32 frequency =
+            10 * ((frequency_bcd[3] & 0x0F) +
+            10 * ((frequency_bcd[3] & 0xF0) >> 4) +
+            100 * (frequency_bcd[2] & 0x0F) +
+            1000 * ((frequency_bcd[2] & 0xF0) >> 4) +
+            10000 * (frequency_bcd[1] & 0x0F) +
+            100000 * ((frequency_bcd[1] & 0xF0) >> 4) +
+            1000000 * (frequency_bcd[0] & 0x0F) +
+            10000000 * ((frequency_bcd[0] & 0xF0) >> 4));
+        guint8 *orbital_bcd =
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_orbital_position
+            (satellitedelivery);
+        gfloat orbital =
+            (orbital_bcd[1] & 0x0F) / 10. + ((orbital_bcd[1] & 0xF0) >> 4) +
+            10 * (orbital_bcd[0] & 0x0F) + 100 * ((orbital_bcd[0] & 0xF0) >> 4);
+        gboolean east =
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_west_east_flag
+            (satellitedelivery);
+        guint8 polarization =
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_polarization (satellitedelivery);
+        gchar *polarization_str;
+        guint8 modulation =
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_modulation (satellitedelivery);
+        gchar *modulation_str;
+        guint8 *symbol_rate_bcd =
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_symbol_rate (satellitedelivery);
+        guint32 symbol_rate =
+            (symbol_rate_bcd[2] & 0x0F) +
+            10 * ((symbol_rate_bcd[2] & 0xF0) >> 4) +
+            100 * (symbol_rate_bcd[1] & 0x0F) +
+            1000 * ((symbol_rate_bcd[1] & 0xF0) >> 4) +
+            10000 * (symbol_rate_bcd[0] & 0x0F) +
+            100000 * ((symbol_rate_bcd[0] & 0xF0) >> 4);
+        guint8 fec_inner =
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_fec_inner (satellitedelivery);
+        gchar *fec_inner_str;
+
+        switch (polarization) {
+          case 0:
+            polarization_str = g_strdup ("horizontal");
+            break;
+          case 1:
+            polarization_str = g_strdup ("vertical");
+            break;
+          case 2:
+            polarization_str = g_strdup ("left");
+            break;
+          case 3:
+            polarization_str = g_strdup ("right");
+            break;
+          default:
+            polarization_str = g_strdup ("");
+        }
+        switch (fec_inner) {
+          case 0:
+            fec_inner_str = g_strdup ("undefined");
+            break;
+          case 1:
+            fec_inner_str = g_strdup ("1/2");
+            break;
+          case 2:
+            fec_inner_str = g_strdup ("2/3");
+            break;
+          case 3:
+            fec_inner_str = g_strdup ("3/4");
+            break;
+          case 4:
+            fec_inner_str = g_strdup ("5/6");
+            break;
+          case 5:
+            fec_inner_str = g_strdup ("7/8");
+            break;
+          case 6:
+            fec_inner_str = g_strdup ("8/9");
+            break;
+          case 0xF:
+            fec_inner_str = g_strdup ("none");
+            break;
+          default:
+            fec_inner_str = g_strdup ("reserved");
+        }
+        switch (modulation) {
+          case 0x00:
+            modulation_str = g_strdup ("undefined");
+            break;
+          case 0x01:
+            modulation_str = g_strdup ("QAM16");
+            break;
+          case 0x02:
+            modulation_str = g_strdup ("QAM32");
+            break;
+          case 0x03:
+            modulation_str = g_strdup ("QAM64");
+            break;
+          case 0x04:
+            modulation_str = g_strdup ("QAM128");
+            break;
+          case 0x05:
+            modulation_str = g_strdup ("QAM256");
+            break;
+          default:
+            modulation_str = g_strdup ("reserved");
+        }
+        satellite = gst_structure_new ("satellite",
+            "orbital", G_TYPE_FLOAT, orbital,
+            "east-or-west", G_TYPE_STRING, east ? "east" : "west",
+            "modulation", G_TYPE_STRING, modulation_str,
+            "frequency", G_TYPE_UINT, frequency,
+            "polarization", G_TYPE_STRING, polarization_str,
+            "symbol-rate", G_TYPE_UINT, symbol_rate,
+            "inner-fec", G_TYPE_STRING, fec_inner_str, NULL);
+        g_free (polarization_str);
+        g_free (fec_inner_str);
+        g_free (modulation_str);
+        gst_structure_set (transport, "satellite", GST_TYPE_STRUCTURE,
+            satellite, NULL);
+      }
+      gst_mpeg_descriptor_free (mpegdescriptor);
 
       descriptors = g_value_array_new (0);
       if (!mpegts_packetizer_parse_descriptors (packetizer,

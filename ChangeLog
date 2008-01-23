@@ -1,3 +1,11 @@
+2008-01-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/gstmpegdesc.h:
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	Parsed the satellite delivery system descriptor and
+	added into nit's transport structure for delivery
+	over the bus.
+
 2008-01-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/mpegtspacketizer.c:

@@ -265,6 +265,15 @@
 #define DESC_DVB_SHORT_EVENT_description_text(desc) (desc + 6 + DESC_DVB_SHORT_EVENT_name_length(desc) + 1)
 #define DESC_DVB_SHORT_EVENT_description_length(desc)	(desc[6 + DESC_DVB_SHORT_EVENT_name_length(desc)])
 
+/* DVB Satellite Delivery System Descriptor */
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_frequency(desc)	(desc + 2)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_orbital_position(desc)	(desc + 6)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_west_east_flag(desc)	((desc[8] & 0x80) == 0x80)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_polarization(desc)	((desc[8] & 0x60) >> 5)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_modulation(desc)	(desc[8] & 0x1F)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_symbol_rate(desc)	(desc + 9)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_fec_inner(desc)	(desc[12] & 0x0F)
+
 typedef struct {
   guint    n_desc;
   guint8   data_length;
