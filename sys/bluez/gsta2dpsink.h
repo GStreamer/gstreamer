@@ -22,7 +22,8 @@
  */
 
 #include <gst/gst.h>
-#include <gst/base/gstbasesink.h>
+#include <gst/rtp/gstbasertppayload.h>
+#include "gsta2dpsendersink.h"
 
 G_BEGIN_DECLS
 
@@ -40,31 +41,27 @@ G_BEGIN_DECLS
 typedef struct _GstA2dpSink GstA2dpSink;
 typedef struct _GstA2dpSinkClass GstA2dpSinkClass;
 
-struct bluetooth_data;
-
 struct _GstA2dpSink {
-	GstBaseSink sink;
+	GstBin bin;
+
+	GstBaseRTPPayload *rtp;
+	GstA2dpSenderSink *sink;
+	GstElement *capsfilter;
 
 	gchar *device;
-	GIOChannel *stream;
 
-	struct bluetooth_data *data;
-	GIOChannel *server;
+	GstGhostPad *ghostpad;
+	GstPadSetCapsFunction ghostpad_setcapsfunc;
+	GstPadEventFunction ghostpad_eventfunc;
 
-	/* stream connection data */
-	GstCaps *stream_caps;
-
-	GstCaps *dev_caps;
-
-	GMutex *sink_lock;
-
-	guint watch_id;
+	GstEvent *newseg_event;
 };
 
 struct _GstA2dpSinkClass {
-	GstBaseSinkClass parent_class;
+	GstBinClass parent_class;
 };
 
 GType gst_a2dp_sink_get_type(void);
+gboolean gst_a2dp_sink_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
