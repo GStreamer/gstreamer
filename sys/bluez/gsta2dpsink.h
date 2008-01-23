@@ -47,9 +47,9 @@ struct _GstA2dpSink {
 	GstBaseRTPPayload *rtp;
 	GstA2dpSenderSink *sink;
 	GstElement *capsfilter;
-	GstElement *mpegparse;
 
 	gchar *device;
+	gboolean sink_is_in_bin;
 
 	GstGhostPad *ghostpad;
 	GstPadSetCapsFunction ghostpad_setcapsfunc;
