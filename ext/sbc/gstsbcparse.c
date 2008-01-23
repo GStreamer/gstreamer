@@ -56,171 +56,86 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         "allocation = (string) { snr, loudness },"
         "bitpool = (int) [ 2, 64 ]"));
 
-/* Creates a fixed caps from the caps given. */
-/* FIXME use gstsbcutil caps fixating function */
-static GstCaps *
-sbc_parse_select_caps (GstSbcParse * parse, GstCaps * caps)
-{
-  GstCaps *result;
-  GstStructure *structure;
-  const GValue *value;
-  gboolean error = FALSE;
-  gint temp, rate, channels, blocks, subbands, bitpool;
-  const gchar *allocation = NULL;
-  const gchar *mode = NULL;
-  const gchar *error_message = NULL;
-  gchar *str;
-
-  str = gst_caps_to_string (caps);
-  GST_DEBUG_OBJECT (parse, "Parsing caps: %s", str);
-  g_free (str);
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_has_field (structure, "rate")) {
-    error = TRUE;
-    error_message = "no rate.";
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "rate");
-    if (GST_VALUE_HOLDS_LIST (value))
-      temp = gst_sbc_select_rate_from_list (value);
-    else
-      temp = g_value_get_int (value);
-    rate = temp;
-  }
-
-  if (!gst_structure_has_field (structure, "channels")) {
-    error = TRUE;
-    error_message = "no channels.";
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "channels");
-    if (GST_VALUE_HOLDS_INT_RANGE (value))
-      temp = gst_sbc_select_channels_from_range (value);
-    else
-      temp = g_value_get_int (value);
-    channels = temp;
-  }
-
-  if (!gst_structure_has_field (structure, "blocks")) {
-    error = TRUE;
-    error_message = "no blocks.";
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "blocks");
-    if (GST_VALUE_HOLDS_LIST (value))
-      temp = gst_sbc_select_blocks_from_list (value);
-    else
-      temp = g_value_get_int (value);
-    blocks = temp;
-  }
-
-  if (!gst_structure_has_field (structure, "subbands")) {
-    error = TRUE;
-    error_message = "no subbands.";
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "subbands");
-    if (GST_VALUE_HOLDS_LIST (value))
-      temp = gst_sbc_select_subbands_from_list (value);
-    else
-      temp = g_value_get_int (value);
-    subbands = temp;
-  }
-
-  if (!gst_structure_has_field (structure, "bitpool")) {
-    error = TRUE;
-    error_message = "no bitpool";
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "bitpool");
-    if (GST_VALUE_HOLDS_INT_RANGE (value))
-      temp = gst_sbc_select_bitpool_from_range (value);
-    else
-      temp = g_value_get_int (value);
-    bitpool = temp;
-  }
-
-  if (!gst_structure_has_field (structure, "allocation")) {
-    error = TRUE;
-    error_message = "no allocation.";
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "allocation");
-    if (GST_VALUE_HOLDS_LIST (value))
-      allocation = gst_sbc_get_allocation_from_list (value);
-    else
-      allocation = g_value_get_string (value);
-  }
-
-  if (!gst_structure_has_field (structure, "mode")) {
-    error = TRUE;
-    error_message = "no mode.";
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "mode");
-    if (GST_VALUE_HOLDS_LIST (value))
-      mode = gst_sbc_get_mode_from_list (value);
-    else
-      mode = g_value_get_string (value);
-  }
-
-error:
-  if (error) {
-    GST_ERROR_OBJECT (parse, "Invalid input caps: %s", error_message);
-    return NULL;
-  }
-
-  result = gst_caps_new_simple ("audio/x-sbc",
-      "rate", G_TYPE_INT, rate,
-      "channels", G_TYPE_INT, channels,
-      "mode", G_TYPE_STRING, mode,
-      "blocks", G_TYPE_INT, blocks,
-      "subbands", G_TYPE_INT, subbands,
-      "allocation", G_TYPE_STRING, allocation,
-      "bitpool", G_TYPE_INT, bitpool, NULL);
-  parse->sbc.rate = rate;
-  parse->sbc.channels = channels;
-  parse->sbc.blocks = blocks;
-  parse->sbc.subbands = subbands;
-  parse->sbc.bitpool = bitpool;
-  parse->sbc.joint = gst_sbc_get_mode_int (mode);
-  parse->sbc.allocation = gst_sbc_get_allocation_mode_int (allocation);
-
-  return result;
-}
-
 static gboolean
 sbc_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstSbcParse *parse;
-  GstCaps *inter, *other, *srccaps;
+  GstStructure *structure;
+  gint rate, channels;
 
   parse = GST_SBC_PARSE (GST_PAD_PARENT (pad));
 
-  other = gst_pad_peer_get_caps (parse->srcpad);
-  if (other == NULL)
-    other = gst_caps_new_any ();
+  structure = gst_caps_get_structure (caps, 0);
 
-  inter = gst_caps_intersect (caps, other);
-  if (gst_caps_is_empty (inter)) {
-    gst_caps_unref (inter);
+  if (!gst_structure_get_int (structure, "rate", &rate))
     return FALSE;
-  }
-  srccaps = sbc_parse_select_caps (parse, inter);
-  if (srccaps == NULL) {
-    gst_caps_unref (inter);
+
+  if (!gst_structure_get_int (structure, "channels", &channels))
     return FALSE;
-  }
 
-  gst_pad_set_caps (parse->srcpad, srccaps);
+  if (!(parse->rate == 0 || rate == parse->rate))
+    return FALSE;
 
-  gst_caps_unref (inter);
-  gst_caps_unref (other);
-  gst_caps_unref (srccaps);
+  if (!(parse->channels == 0 || channels == parse->channels))
+    return FALSE;
 
-  return TRUE;
+  parse->rate = rate;
+  parse->channels = channels;
+
+  return gst_sbc_util_fill_sbc_params (&parse->sbc, caps);
+}
+
+static GstCaps *
+sbc_parse_src_getcaps (GstPad * pad)
+{
+  GstCaps *caps;
+  const GstCaps *allowed_caps;
+  GstStructure *structure;
+  GValue *value;
+  GstSbcParse *parse = GST_SBC_PARSE (GST_PAD_PARENT (pad));
+
+  allowed_caps = gst_pad_get_allowed_caps (pad);
+  if (allowed_caps == NULL)
+    allowed_caps = gst_pad_get_pad_template_caps (pad);
+  caps = gst_caps_copy (allowed_caps);
+
+  value = g_new0 (GValue, 1);
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (parse->rate != 0)
+    gst_sbc_util_set_structure_int_param (structure, "rate",
+        parse->rate, value);
+  if (parse->channels != 0)
+    gst_sbc_util_set_structure_int_param (structure, "channels",
+        parse->channels, value);
+
+  g_free (value);
+
+  return caps;
+}
+
+static gboolean
+sbc_parse_src_acceptcaps (GstPad * pad, GstCaps * caps)
+{
+  GstStructure *structure;
+  GstSbcParse *parse;
+  gint rate, channels;
+
+  parse = GST_SBC_PARSE (GST_PAD_PARENT (pad));
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (!gst_structure_get_int (structure, "rate", &rate))
+    return FALSE;
+  if (!gst_structure_get_int (structure, "channels", &channels))
+    return FALSE;
+
+  if ((parse->rate == 0 || parse->rate == rate)
+      && (parse->channels == 0 || parse->channels == channels))
+    return TRUE;
+
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -235,11 +150,13 @@ sbc_parse_chain (GstPad * pad, GstBuffer * buffer)
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   if (parse->buffer) {
-    GstBuffer *temp = buffer;
+    GstBuffer *temp;
+    temp = buffer;
     buffer = gst_buffer_span (parse->buffer, 0, buffer,
-        GST_BUFFER_SIZE (parse->buffer) + GST_BUFFER_SIZE (buffer));
-    gst_buffer_unref (temp);
+        GST_BUFFER_SIZE (parse->buffer)
+        + GST_BUFFER_SIZE (buffer));
     gst_buffer_unref (parse->buffer);
+    gst_buffer_unref (temp);
     parse->buffer = NULL;
   }
 
@@ -299,11 +216,13 @@ sbc_parse_change_state (GstElement * element, GstStateChange transition)
 
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG ("Finish subband codec");
+
       if (parse->buffer) {
         gst_buffer_unref (parse->buffer);
         parse->buffer = NULL;
       }
       sbc_finish (&parse->sbc);
+
       break;
 
     default:
@@ -353,5 +272,17 @@ gst_sbc_parse_init (GstSbcParse * self, GstSbcParseClass * klass)
 
   self->srcpad =
       gst_pad_new_from_static_template (&sbc_parse_src_factory, "src");
+  gst_pad_set_getcaps_function (self->srcpad,
+      GST_DEBUG_FUNCPTR (sbc_parse_src_getcaps));
+  gst_pad_set_acceptcaps_function (self->srcpad,
+      GST_DEBUG_FUNCPTR (sbc_parse_src_acceptcaps));
+  /* FIXME get encoding parameters on set caps */
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
+}
+
+gboolean
+gst_sbc_parse_plugin_init (GstPlugin * plugin)
+{
+  return gst_element_register (plugin, "sbcparse",
+      GST_RANK_NONE, GST_TYPE_SBC_PARSE);
 }

@@ -192,3 +192,10 @@ gst_sbc_dec_init (GstSbcDec * self, GstSbcDecClass * klass)
   self->srcpad = gst_pad_new_from_static_template (&sbc_dec_src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 }
+
+gboolean
+gst_sbc_dec_plugin_init (GstPlugin * plugin)
+{
+  return gst_element_register (plugin, "sbcdec",
+      GST_RANK_PRIMARY, GST_TYPE_SBC_DEC);
+}

@@ -49,3 +49,21 @@ const gchar *gst_sbc_get_mode_string(int joint);
 GstCaps* gst_sbc_caps_from_sbc(sbc_capabilities_t *sbc, gint channels);
 
 GstCaps* gst_sbc_util_caps_fixate(GstCaps *caps, gchar** error_message);
+
+void gst_sbc_util_set_structure_int_param(GstStructure *structure,
+			const gchar* field, gint field_value,
+			GValue *value);
+
+void gst_sbc_util_set_structure_string_param(GstStructure *structure,
+			const gchar* field, const gchar* field_value,
+			GValue *value);
+
+gboolean gst_sbc_util_fill_sbc_params(sbc_t *sbc, GstCaps *caps);
+
+gint gst_sbc_util_calc_frame_len(gint subbands, gint channels,
+                gint blocks, gint bitpool, gint channel_mode);
+
+gint gst_sbc_util_calc_bitrate(gint frame_len, gint rate, gint subbands,
+		gint blocks);
+
+gint64 gst_sbc_util_calc_frame_duration(gint rate, gint blocks, gint subbands);

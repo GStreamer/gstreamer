@@ -50,6 +50,9 @@ struct _GstSbcParse {
 	GstBuffer *buffer;
 
 	sbc_t sbc;
+
+	gint channels;
+	gint rate;
 };
 
 struct _GstSbcParseClass {
@@ -57,5 +60,7 @@ struct _GstSbcParseClass {
 };
 
 GType gst_sbc_parse_get_type(void);
+
+gboolean gst_sbc_parse_plugin_init(GstPlugin *plugin);
 
 G_END_DECLS

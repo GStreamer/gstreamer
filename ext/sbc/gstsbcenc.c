@@ -121,32 +121,6 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 
 gboolean gst_sbc_enc_fill_sbc_params (GstSbcEnc * enc, GstCaps * caps);
 
-static void
-sbc_enc_set_structure_int_param (GstSbcEnc * enc,
-    GstStructure * structure, const gchar * field, gint field_value)
-{
-  GValue *value;
-
-  value = g_new0 (GValue, 1);
-  value = g_value_init (value, G_TYPE_INT);
-  g_value_set_int (value, field_value);
-  gst_structure_set_value (structure, field, value);
-  g_free (value);
-}
-
-static void
-sbc_enc_set_structure_string_param (GstSbcEnc * enc,
-    GstStructure * structure, const gchar * field, const gchar * field_value)
-{
-  GValue *value;
-
-  value = g_new0 (GValue, 1);
-  value = g_value_init (value, G_TYPE_STRING);
-  g_value_set_string (value, field_value);
-  gst_structure_set_value (structure, field, value);
-  g_free (value);
-}
-
 static GstCaps *
 sbc_enc_generate_srcpad_caps (GstSbcEnc * enc)
 {
@@ -155,41 +129,48 @@ sbc_enc_generate_srcpad_caps (GstSbcEnc * enc)
   GEnumValue *enum_value;
   GEnumClass *enum_class;
   gchar *temp;
+  GValue *value;
 
   src_caps = gst_caps_copy (gst_pad_get_pad_template_caps (enc->srcpad));
   structure = gst_caps_get_structure (src_caps, 0);
 
+  value = g_new0 (GValue, 1);
+
   if (enc->rate != 0)
-    sbc_enc_set_structure_int_param (enc, structure, "rate", enc->rate);
+    gst_sbc_util_set_structure_int_param (structure, "rate", enc->rate, value);
 
   if (enc->channels != 0)
-    sbc_enc_set_structure_int_param (enc, structure, "channels", enc->channels);
+    gst_sbc_util_set_structure_int_param (structure, "channels",
+        enc->channels, value);
 
   if (enc->subbands != 0)
-    sbc_enc_set_structure_int_param (enc, structure, "subbands", enc->subbands);
+    gst_sbc_util_set_structure_int_param (structure, "subbands",
+        enc->subbands, value);
 
   if (enc->blocks != 0)
-    sbc_enc_set_structure_int_param (enc, structure, "blocks", enc->blocks);
+    gst_sbc_util_set_structure_int_param (structure, "blocks",
+        enc->blocks, value);
 
   if (enc->mode != BT_A2DP_CHANNEL_MODE_AUTO) {
     enum_class = g_type_class_ref (GST_TYPE_SBC_MODE);
     enum_value = g_enum_get_value (enum_class, enc->mode);
-    sbc_enc_set_structure_string_param (enc, structure, "mode",
-        enum_value->value_nick);
+    gst_sbc_util_set_structure_string_param (structure, "mode",
+        enum_value->value_nick, value);
     g_type_class_unref (enum_class);
   }
 
   if (enc->allocation != BT_A2DP_ALLOCATION_AUTO) {
     enum_class = g_type_class_ref (GST_TYPE_SBC_ALLOCATION);
     enum_value = g_enum_get_value (enum_class, enc->allocation);
-    sbc_enc_set_structure_string_param (enc, structure, "allocation",
-        enum_value->value_nick);
+    gst_sbc_util_set_structure_string_param (structure, "allocation",
+        enum_value->value_nick, value);
     g_type_class_unref (enum_class);
   }
 
   temp = gst_caps_to_string (src_caps);
   GST_DEBUG_OBJECT (enc, "Srcpad caps: %s", temp);
   g_free (temp);
+  g_free (value);
 
   return src_caps;
 }
@@ -207,22 +188,9 @@ sbc_enc_src_getcaps (GstPad * pad)
 static gboolean
 sbc_enc_src_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstCaps *srcpad_caps;
-  GstCaps *temp_caps;
-  gboolean res = TRUE;
   GstSbcEnc *enc = GST_SBC_ENC (GST_PAD_PARENT (pad));
 
   GST_LOG_OBJECT (enc, "setting srcpad caps");
-
-  srcpad_caps = sbc_enc_generate_srcpad_caps (enc);
-  temp_caps = gst_caps_intersect (srcpad_caps, caps);
-  if (temp_caps == GST_CAPS_NONE)
-    res = FALSE;
-
-  gst_caps_unref (temp_caps);
-  gst_caps_unref (srcpad_caps);
-
-  g_return_val_if_fail (res, FALSE);
 
   return gst_sbc_enc_fill_sbc_params (enc, caps);
 }
@@ -317,39 +285,16 @@ error:
 gboolean
 gst_sbc_enc_fill_sbc_params (GstSbcEnc * enc, GstCaps * caps)
 {
-  GstStructure *structure;
-  gint rate, channels, subbands, blocks, bitpool;
-  const gchar *mode;
-  const gchar *allocation;
 
-  g_assert (gst_caps_is_fixed (caps));
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (structure, "rate", &rate))
-    return FALSE;
-  if (!gst_structure_get_int (structure, "channels", &channels))
-    return FALSE;
-  if (!gst_structure_get_int (structure, "subbands", &subbands))
-    return FALSE;
-  if (!gst_structure_get_int (structure, "blocks", &blocks))
-    return FALSE;
-  if (!gst_structure_get_int (structure, "bitpool", &bitpool))
+  if (!gst_sbc_util_fill_sbc_params (&enc->sbc, caps))
     return FALSE;
 
-  if (!(mode = gst_structure_get_string (structure, "mode")))
-    return FALSE;
-  if (!(allocation = gst_structure_get_string (structure, "allocation")))
-    return FALSE;
-
-  enc->rate = enc->sbc.rate = rate;
-  enc->channels = enc->sbc.channels = channels;
-  enc->blocks = enc->sbc.blocks = blocks;
-  enc->subbands = enc->sbc.subbands = subbands;
-  enc->sbc.bitpool = bitpool;
-  enc->mode = enc->sbc.joint = gst_sbc_get_mode_int (mode);
-  enc->allocation = enc->sbc.allocation =
-      gst_sbc_get_allocation_mode_int (allocation);
+  enc->rate = enc->sbc.rate;
+  enc->channels = enc->sbc.channels;
+  enc->blocks = enc->sbc.blocks;
+  enc->subbands = enc->sbc.subbands;
+  enc->mode = enc->sbc.joint;
+  enc->allocation = enc->sbc.allocation;
   enc->codesize = sbc_get_codesize (&enc->sbc);
   enc->frame_length = sbc_get_frame_length (&enc->sbc);
   enc->frame_duration = sbc_get_frame_duration (&enc->sbc);
@@ -391,6 +336,8 @@ sbc_enc_chain (GstPad * pad, GstBuffer * buffer)
     gst_adapter_flush (adapter, consumed);
 
     GST_BUFFER_TIMESTAMP (output) = GST_BUFFER_TIMESTAMP (buffer);
+    /* we have only 1 frame */
+    GST_BUFFER_DURATION (output) = enc->frame_duration;
 
     res = gst_pad_push (enc->srcpad, output);
     if (res != GST_FLOW_OK)
@@ -587,5 +534,15 @@ gst_sbc_enc_init (GstSbcEnc * self, GstSbcEncClass * klass)
   self->rate = SBC_ENC_DEFAULT_RATE;
   self->channels = SBC_ENC_DEFAULT_CHANNELS;
 
+  self->frame_length = 0;
+  self->frame_duration = 0;
+
   self->adapter = gst_adapter_new ();
+}
+
+gboolean
+gst_sbc_enc_plugin_init (GstPlugin * plugin)
+{
+  return gst_element_register (plugin, "sbcenc",
+      GST_RANK_NONE, GST_TYPE_SBC_ENC);
 }

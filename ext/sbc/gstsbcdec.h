@@ -58,4 +58,6 @@ struct _GstSbcDecClass {
 
 GType gst_sbc_dec_get_type(void);
 
+gboolean gst_sbc_dec_plugin_init(GstPlugin *plugin);
+
 G_END_DECLS

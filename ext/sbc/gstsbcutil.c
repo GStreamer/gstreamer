@@ -26,6 +26,7 @@
 #endif
 
 #include "ipc.h"
+#include <math.h>
 #include "gstsbcutil.h"
 
 /*
@@ -315,4 +316,106 @@ error:
       "bitpool", G_TYPE_INT, bitpool, NULL);
 
   return result;
+}
+
+/**
+ * Sets the int field_value to the  param "field" on the structure.
+ * value is used to do the operation, it must be a uninitialized (zero-filled)
+ * GValue, it will be left unitialized at the end of the function.
+ */
+void
+gst_sbc_util_set_structure_int_param (GstStructure * structure,
+    const gchar * field, gint field_value, GValue * value)
+{
+  value = g_value_init (value, G_TYPE_INT);
+  g_value_set_int (value, field_value);
+  gst_structure_set_value (structure, field, value);
+  g_value_unset (value);
+}
+
+/**
+ * Sets the string field_value to the  param "field" on the structure.
+ * value is used to do the operation, it must be a uninitialized (zero-filled)
+ * GValue, it will be left unitialized at the end of the function.
+ */
+void
+gst_sbc_util_set_structure_string_param (GstStructure * structure,
+    const gchar * field, const gchar * field_value, GValue * value)
+{
+  value = g_value_init (value, G_TYPE_STRING);
+  g_value_set_string (value, field_value);
+  gst_structure_set_value (structure, field, value);
+  g_value_unset (value);
+}
+
+gboolean
+gst_sbc_util_fill_sbc_params (sbc_t * sbc, GstCaps * caps)
+{
+  GstStructure *structure;
+  gint rate, channels, subbands, blocks, bitpool;
+  const gchar *mode;
+  const gchar *allocation;
+
+  g_assert (gst_caps_is_fixed (caps));
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (!gst_structure_get_int (structure, "rate", &rate))
+    return FALSE;
+  if (!gst_structure_get_int (structure, "channels", &channels))
+    return FALSE;
+  if (!gst_structure_get_int (structure, "subbands", &subbands))
+    return FALSE;
+  if (!gst_structure_get_int (structure, "blocks", &blocks))
+    return FALSE;
+  if (!gst_structure_get_int (structure, "bitpool", &bitpool))
+    return FALSE;
+
+  if (!(mode = gst_structure_get_string (structure, "mode")))
+    return FALSE;
+  if (!(allocation = gst_structure_get_string (structure, "allocation")))
+    return FALSE;
+
+  sbc->rate = rate;
+  sbc->channels = channels;
+  sbc->blocks = blocks;
+  sbc->subbands = subbands;
+  sbc->bitpool = bitpool;
+  sbc->joint = gst_sbc_get_mode_int (mode);
+  sbc->allocation = gst_sbc_get_allocation_mode_int (allocation);
+
+  return TRUE;
+}
+
+gint
+gst_sbc_util_calc_frame_len (gint subbands, gint channels,
+    gint blocks, gint bitpool, gint channel_mode)
+{
+  gint len;
+  gint join;
+  len = 4 + (4 * subbands * channels) / 8;
+
+  if (channel_mode == BT_A2DP_CHANNEL_MODE_MONO ||
+      channel_mode == BT_A2DP_CHANNEL_MODE_DUAL_CHANNEL)
+    len += ((blocks * channels * bitpool) + 7) / 8;
+  else {
+    join = channel_mode == BT_A2DP_CHANNEL_MODE_JOINT_STEREO ? 1 : 0;
+    len += ((join * subbands + blocks * bitpool) + 7) / 8;
+  }
+
+  return len;
+}
+
+gint
+gst_sbc_util_calc_bitrate (gint frame_len, gint rate, gint subbands,
+    gint blocks)
+{
+  return (((frame_len * 8 * rate / subbands) / blocks) / 1000);
+}
+
+gint64
+gst_sbc_util_calc_frame_duration (gint rate, gint blocks, gint subbands)
+{
+  gint64 res = 1000000;
+  return res * blocks * subbands / rate;
 }

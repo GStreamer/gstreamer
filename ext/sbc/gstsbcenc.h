@@ -68,4 +68,6 @@ struct _GstSbcEncClass {
 
 GType gst_sbc_enc_get_type(void);
 
+gboolean gst_sbc_enc_plugin_init(GstPlugin *plugin);
+
 G_END_DECLS
