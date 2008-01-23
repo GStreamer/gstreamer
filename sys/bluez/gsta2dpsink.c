@@ -60,7 +60,12 @@ static GstStaticPadTemplate gst_a2dp_sink_factory =
         "blocks = (int) { 4, 8, 12, 16 }, "
         "subbands = (int) { 4, 8 }, "
         "allocation = (string) { snr, loudness }, "
-        "bitpool = (int) [ 2, " TEMPLATE_MAX_BITPOOL_STR " ]; "));
+        "bitpool = (int) [ 2, " TEMPLATE_MAX_BITPOOL_STR " ]; " "audio/mpeg;"));
+
+static gboolean gst_a2dp_sink_handle_event (GstPad * pad, GstEvent * event);
+static gboolean gst_a2dp_sink_set_caps (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_a2dp_sink_get_caps (GstPad * pad);
+static gboolean gst_a2dp_sink_init_caps_filter (GstA2dpSink * self);
 
 static void
 gst_a2dp_sink_base_init (gpointer g_class)
@@ -117,28 +122,98 @@ gst_a2dp_sink_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+gst_a2dp_sink_init_ghost_pad (GstA2dpSink * self)
+{
+  GstPad *capsfilter_pad;
+
+  /* we search for the capsfilter sinkpad */
+  capsfilter_pad = gst_element_get_static_pad (self->capsfilter, "sink");
+
+  /* now we add a ghostpad */
+  self->ghostpad = GST_GHOST_PAD (gst_ghost_pad_new ("sink", capsfilter_pad));
+  g_object_unref (capsfilter_pad);
+
+  /* the getcaps of our ghostpad must reflect the device caps */
+  gst_pad_set_getcaps_function (GST_PAD (self->ghostpad),
+      gst_a2dp_sink_get_caps);
+  self->ghostpad_setcapsfunc = GST_PAD_SETCAPSFUNC (self->ghostpad);
+  gst_pad_set_setcaps_function (GST_PAD (self->ghostpad),
+      GST_DEBUG_FUNCPTR (gst_a2dp_sink_set_caps));
+
+  /* we need to handle events on our own and we also need the eventfunc
+   * of the ghostpad for forwarding calls */
+  self->ghostpad_eventfunc = GST_PAD_EVENTFUNC (GST_PAD (self->ghostpad));
+  gst_pad_set_event_function (GST_PAD (self->ghostpad),
+      gst_a2dp_sink_handle_event);
+
+  if (!gst_element_add_pad (GST_ELEMENT (self), GST_PAD (self->ghostpad)))
+    GST_ERROR_OBJECT (self, "failed to add ghostpad");
+
+  return TRUE;
+}
+
 static GstStateChangeReturn
 gst_a2dp_sink_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstA2dpSink *self = GST_A2DP_SINK (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      gst_element_set_state (GST_ELEMENT (self->sink), GST_STATE_READY);
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      self->taglist = gst_tag_list_new ();
       break;
 
-    case GST_STATE_CHANGE_READY_TO_NULL:
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      self->sink =
+          GST_A2DP_SENDER_SINK (gst_element_factory_make ("a2dpsendersink",
+              "sendersink"));
+      if (self->sink == NULL) {
+        GST_WARNING_OBJECT (self, "failed to create a2dpsendersink");
+        return GST_STATE_CHANGE_FAILURE;
+      }
+
+      if (self->device != NULL)
+        gst_a2dp_sender_sink_set_device (self->sink, self->device);
+
+      ret = gst_element_set_state (GST_ELEMENT (self->sink), GST_STATE_READY);
+      break;
+    default:
+      break;
+  }
+
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (self->taglist) {
+        gst_tag_list_free (self->taglist);
+        self->taglist = NULL;
+      }
       if (self->newseg_event != NULL) {
         gst_event_unref (self->newseg_event);
         self->newseg_event = NULL;
       }
+      if (self->taglist) {
+        gst_tag_list_free (self->taglist);
+        self->taglist = NULL;
+      }
+      break;
+
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (!gst_bin_remove (GST_BIN (self), GST_ELEMENT (self->sink)))
+        GST_WARNING_OBJECT (self, "Failed to remove "
+            "a2dpsendersink from bin");
       break;
 
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return ret;
 }
 
 static void
@@ -287,10 +362,62 @@ cleanup_and_fail:
 }
 
 static gboolean
+gst_a2dp_sink_init_rtp_mpeg_element (GstA2dpSink * self)
+{
+  GstElement *rtppay;
+
+  /* FIXME we will need a internal mpegparse for identifying
+   * stream stuff */
+
+  rtppay = gst_element_factory_make ("rtpmpapay", "rtp");
+  if (rtppay == NULL) {
+    GST_ERROR_OBJECT (self, "Couldn't create rtpmpapay");
+    return FALSE;
+  }
+
+  if (!gst_bin_add (GST_BIN (self), rtppay)) {
+    GST_ERROR_OBJECT (self, "failed to add rtpmpapay to the bin");
+    goto cleanup_and_fail;
+  }
+
+  if (gst_element_set_state (rtppay, GST_STATE_READY) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_ERROR_OBJECT (self, "rtpmpapay failed to go to ready");
+    goto remove_element_and_fail;
+  }
+
+  if (!gst_element_link (self->capsfilter, rtppay)) {
+    GST_ERROR_OBJECT (self, "couldn't link capsfilter " "to rtpmpapay");
+    goto remove_element_and_fail;
+  }
+
+  self->rtp = GST_BASE_RTP_PAYLOAD (rtppay);
+
+  gst_element_set_state (rtppay, GST_STATE_PAUSED);
+
+  return TRUE;
+
+remove_element_and_fail:
+  gst_element_set_state (rtppay, GST_STATE_NULL);
+  gst_bin_remove (GST_BIN (self), rtppay);
+  return FALSE;
+
+cleanup_and_fail:
+  if (rtppay != NULL)
+    g_object_unref (G_OBJECT (rtppay));
+
+  return FALSE;
+}
+
+static gboolean
 gst_a2dp_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstA2dpSink *self;
   GstStructure *structure;
+  GstEvent *event;
+  GstPad *capsfilterpad;
+  gboolean crc;
+  gchar *mode = NULL;
 
   self = GST_A2DP_SINK (GST_PAD_PARENT (pad));
   GST_INFO_OBJECT (self, "setting caps");
@@ -298,15 +425,38 @@ gst_a2dp_sink_set_caps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   /* first, we need to create our rtp payloader */
-  if (gst_structure_has_name (structure, "audio/x-sbc"))
-    gst_a2dp_sink_init_rtp_sbc_element (self);
-  else {
+  if (gst_structure_has_name (structure, "audio/x-sbc")) {
+    if (!gst_a2dp_sink_init_rtp_sbc_element (self))
+      return FALSE;
+  } else if (gst_structure_has_name (structure, "audio/mpeg")) {
+    if (!gst_a2dp_sink_init_rtp_mpeg_element (self))
+      return FALSE;
+  } else {
     GST_ERROR_OBJECT (self, "Unexpected media type");
     return FALSE;
   }
 
   if (!gst_a2dp_sink_init_sender_sink (self))
     return FALSE;
+
+  /* check if we should push the taglist FIXME should we push this?
+   * we can send the tags directly if needed */
+  if (self->taglist != NULL && gst_structure_has_name (structure, "audio/mpeg")) {
+
+    event = gst_event_new_tag (self->taglist);
+
+    /* send directly the crc */
+    if (gst_tag_list_get_boolean (self->taglist, "has-crc", &crc))
+      gst_a2dp_sender_sink_set_crc (self->sink, crc);
+
+    if (gst_tag_list_get_string (self->taglist, "channel-mode", &mode))
+      gst_a2dp_sender_sink_set_channel_mode (self->sink, mode);
+
+    capsfilterpad = gst_ghost_pad_get_target (self->ghostpad);
+    gst_pad_send_event (capsfilterpad, event);
+    self->taglist = NULL;
+    g_free (mode);
+  }
 
   if (!gst_a2dp_sender_sink_set_device_caps (self->sink, caps))
     return FALSE;
@@ -328,6 +478,7 @@ static gboolean
 gst_a2dp_sink_handle_event (GstPad * pad, GstEvent * event)
 {
   GstA2dpSink *self;
+  GstTagList *taglist = NULL;
 
   self = GST_A2DP_SINK (GST_PAD_PARENT (pad));
 
@@ -337,6 +488,16 @@ gst_a2dp_sink_handle_event (GstPad * pad, GstEvent * event)
     if (self->newseg_event != NULL)
       gst_event_unref (self->newseg_event);
     self->newseg_event = gst_event_ref (event);
+  } else if (GST_EVENT_TYPE (event) == GST_EVENT_TAG &&
+      gst_element_get_parent (GST_ELEMENT (self->sink)) !=
+      GST_OBJECT_CAST (self)) {
+    if (self->taglist == NULL) {
+      gst_event_parse_tag (event, &self->taglist);
+    } else {
+      gst_event_parse_tag (event, &taglist);
+      gst_tag_list_insert (self->taglist, taglist, GST_TAG_MERGE_REPLACE);
+    }
+    /* FIXME handle tag events */
   }
 
   return self->ghostpad_eventfunc (GST_PAD (self->ghostpad), event);
@@ -365,47 +526,22 @@ failed:
 static void
 gst_a2dp_sink_init (GstA2dpSink * self, GstA2dpSinkClass * klass)
 {
-  GstPad *capsfilter_pad;
-
   self->sink = NULL;
   self->rtp = NULL;
   self->device = NULL;
   self->capsfilter = NULL;
+  self->mpegparse = NULL;
   self->newseg_event = NULL;
+  self->taglist = NULL;
+  self->ghostpad = NULL;
 
   /* we initialize our capsfilter */
   gst_a2dp_sink_init_caps_filter (self);
   g_object_set (self->capsfilter, "caps",
       gst_static_pad_template_get_caps (&gst_a2dp_sink_factory), NULL);
 
-  /* we search for the capsfilter sinkpad */
-  capsfilter_pad = gst_element_get_static_pad (self->capsfilter, "sink");
+  gst_a2dp_sink_init_ghost_pad (self);
 
-  /* now we add a ghostpad */
-  self->ghostpad = GST_GHOST_PAD (gst_ghost_pad_new ("sink", capsfilter_pad));
-  g_object_unref (capsfilter_pad);
-
-  /* the getcaps of our ghostpad must reflect the device caps */
-  gst_pad_set_getcaps_function (GST_PAD (self->ghostpad),
-      gst_a2dp_sink_get_caps);
-  self->ghostpad_setcapsfunc = GST_PAD_SETCAPSFUNC (self->ghostpad);
-  gst_pad_set_setcaps_function (GST_PAD (self->ghostpad),
-      GST_DEBUG_FUNCPTR (gst_a2dp_sink_set_caps));
-
-  /* we need to handle events on our own and we also need the eventfunc
-   * of the ghostpad for forwarding calls */
-  self->ghostpad_eventfunc = GST_PAD_EVENTFUNC (GST_PAD (self->ghostpad));
-  gst_pad_set_event_function (GST_PAD (self->ghostpad),
-      gst_a2dp_sink_handle_event);
-
-  if (!gst_element_add_pad (GST_ELEMENT (self), GST_PAD (self->ghostpad)))
-    GST_ERROR_OBJECT (self, "failed to add ghostpad");
-
-  self->sink =
-      GST_A2DP_SENDER_SINK (gst_element_factory_make ("a2dpsendersink",
-          "sendersink"));
-  if (self->sink == NULL)
-    GST_WARNING_OBJECT (self, "failed to create a2dpsendersink");
 }
 
 gboolean

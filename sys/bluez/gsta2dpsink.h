@@ -47,6 +47,7 @@ struct _GstA2dpSink {
 	GstBaseRTPPayload *rtp;
 	GstA2dpSenderSink *sink;
 	GstElement *capsfilter;
+	GstElement *mpegparse;
 
 	gchar *device;
 
@@ -55,6 +56,9 @@ struct _GstA2dpSink {
 	GstPadEventFunction ghostpad_eventfunc;
 
 	GstEvent *newseg_event;
+	/* Store the tags received before the a2dpsender sink is created
+	 * when it is created we forward this to it */
+	GstTagList *taglist;
 };
 
 struct _GstA2dpSinkClass {
