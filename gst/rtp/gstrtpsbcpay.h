@@ -48,6 +48,7 @@ struct _GstRtpSBCPay {
 	GstBaseRTPPayload base;
 
 	GstAdapter *adapter;
+	GstClockTime timestamp;
 
 	guint frame_length;
 
