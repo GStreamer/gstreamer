@@ -134,8 +134,7 @@ gst_a2dp_sink_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DEVICE:
       if (self->sink != NULL)
-        gst_a2dp_sender_sink_set_device (self->sink,
-            g_value_get_string (value));
+        gst_avdtp_sink_set_device (self->sink, g_value_get_string (value));
 
       if (self->device != NULL)
         g_free (self->device);
@@ -158,7 +157,7 @@ gst_a2dp_sink_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DEVICE:
       if (self->sink != NULL) {
-        device = gst_a2dp_sender_sink_get_device (self->sink);
+        device = gst_avdtp_sink_get_device (self->sink);
         if (device != NULL)
           g_value_take_string (value, device);
       }
@@ -228,15 +227,14 @@ gst_a2dp_sink_change_state (GstElement * element, GstStateChange transition)
       self->sink_is_in_bin = FALSE;
 
       self->sink =
-          GST_A2DP_SENDER_SINK (gst_element_factory_make ("a2dpsendersink",
-              "sendersink"));
+          GST_AVDTP_SINK (gst_element_factory_make ("avdtpsink", "avdtpsink"));
       if (self->sink == NULL) {
-        GST_WARNING_OBJECT (self, "failed to create a2dpsendersink");
+        GST_WARNING_OBJECT (self, "failed to create avdtpsink");
         return GST_STATE_CHANGE_FAILURE;
       }
 
       if (self->device != NULL)
-        gst_a2dp_sender_sink_set_device (self->sink, self->device);
+        gst_avdtp_sink_set_device (self->sink, self->device);
 
       ret = gst_element_set_state (GST_ELEMENT (self->sink), GST_STATE_READY);
       break;
@@ -264,8 +262,7 @@ gst_a2dp_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (self->sink_is_in_bin) {
         if (!gst_bin_remove (GST_BIN (self), GST_ELEMENT (self->sink)))
-          GST_WARNING_OBJECT (self, "Failed to remove "
-              "a2dpsendersink from bin");
+          GST_WARNING_OBJECT (self, "Failed to remove " "avdtpsink from bin");
       } else if (self->sink != NULL) {
         gst_element_set_state (GST_ELEMENT (self->sink), GST_STATE_NULL);
         g_object_unref (G_OBJECT (self->sink));
@@ -308,7 +305,7 @@ gst_a2dp_sink_class_init (GstA2dpSinkClass * klass)
 static GstCaps *
 gst_a2dp_sink_get_device_caps (GstA2dpSink * self)
 {
-  return gst_a2dp_sender_sink_get_device_caps (self->sink);
+  return gst_avdtp_sink_get_device_caps (self->sink);
 }
 
 static GstCaps *
@@ -340,31 +337,31 @@ gst_a2dp_sink_init_sender_sink (GstA2dpSink * self)
   GstElement *sink;
 
   if (self->sink == NULL)
-    sink = gst_element_factory_make ("a2dpsendersink", "sendersink");
+    sink = gst_element_factory_make ("avdtpsink", "avdtosink");
   else
     sink = GST_ELEMENT (self->sink);
 
   if (sink == NULL) {
-    GST_ERROR_OBJECT (self, "Couldn't create a2dpsendersink");
+    GST_ERROR_OBJECT (self, "Couldn't create avdtpsink");
     return FALSE;
   }
 
   if (!gst_bin_add (GST_BIN (self), sink)) {
-    GST_ERROR_OBJECT (self, "failed to add a2dpsendersink " "to the bin");
+    GST_ERROR_OBJECT (self, "failed to add avdtpsink " "to the bin");
     goto cleanup_and_fail;
   }
 
   if (gst_element_set_state (sink, GST_STATE_READY) == GST_STATE_CHANGE_FAILURE) {
-    GST_ERROR_OBJECT (self, "a2dpsendersink failed to go to ready");
+    GST_ERROR_OBJECT (self, "avdtpsink failed to go to ready");
     goto remove_element_and_fail;
   }
 
   if (!gst_element_link (GST_ELEMENT (self->rtp), sink)) {
-    GST_ERROR_OBJECT (self, "couldn't link rtpsbcpay " "to a2dpsendersink");
+    GST_ERROR_OBJECT (self, "couldn't link rtpsbcpay " "to avdtpsink");
     goto remove_element_and_fail;
   }
 
-  self->sink = GST_A2DP_SENDER_SINK (sink);
+  self->sink = GST_AVDTP_SINK (sink);
   self->sink_is_in_bin = TRUE;
   g_object_set (G_OBJECT (self->sink), "device", self->device, NULL);
 
@@ -461,10 +458,10 @@ gst_a2dp_sink_init_dynamic_elements (GstA2dpSink * self, GstCaps * caps)
 
     /* send directly the crc */
     if (gst_tag_list_get_boolean (self->taglist, "has-crc", &crc))
-      gst_a2dp_sender_sink_set_crc (self->sink, crc);
+      gst_avdtp_sink_set_crc (self->sink, crc);
 
     if (gst_tag_list_get_string (self->taglist, "channel-mode", &mode))
-      gst_a2dp_sender_sink_set_channel_mode (self->sink, mode);
+      gst_avdtp_sink_set_channel_mode (self->sink, mode);
 
     capsfilterpad = gst_ghost_pad_get_target (self->ghostpad);
     gst_pad_send_event (capsfilterpad, event);
@@ -472,11 +469,11 @@ gst_a2dp_sink_init_dynamic_elements (GstA2dpSink * self, GstCaps * caps)
     g_free (mode);
   }
 
-  if (!gst_a2dp_sender_sink_set_device_caps (self->sink, caps))
+  if (!gst_avdtp_sink_set_device_caps (self->sink, caps))
     return FALSE;
 
   g_object_set (G_OBJECT (self->rtp), "mtu",
-      gst_a2dp_sender_sink_get_link_mtu (self->sink), NULL);
+      gst_avdtp_sink_get_link_mtu (self->sink), NULL);
 
   /* we forward our new segment here if we have one */
   if (self->newseg_event) {

@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertppayload.h>
-#include "gsta2dpsendersink.h"
+#include "gstavdtpsink.h"
 
 G_BEGIN_DECLS
 
@@ -45,7 +45,7 @@ struct _GstA2dpSink {
 	GstBin bin;
 
 	GstBaseRTPPayload *rtp;
-	GstA2dpSenderSink *sink;
+	GstAvdtpSink *sink;
 	GstElement *capsfilter;
 
 	gchar *device;
