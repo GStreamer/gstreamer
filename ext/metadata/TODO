@@ -22,6 +22,7 @@ OPEN ISSUES:
 4- Add GST_TYPE_FRACTION support for GStreamer TAGS
 5- currently, in JPEG files, if there is a Photoshop segment, everything inside it but IPTC will be lost. From the point of view of implementation it is easy, but I still don't now how to solve from the point of view of "designing". Anyway I think it is not so important.
 6- language is not considered in XMP (How to do it with GStreamer?)
+7- Add a helper function that convert from value to string. For example, aperture-size is 2.7 and the app wants to show "f/2.7", 'contrast' is a range and the app wants to show as "Normal", "Soft", "Hard". For the time being it is up to the APP to make this conversion.
 
 KNOWN BUGS
 

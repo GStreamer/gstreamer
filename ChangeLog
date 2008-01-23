@@ -1,3 +1,18 @@
+2008-01-23  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* ext/metadata/TODO:
+	* ext/metadata/gstbasemetadata.c:
+	* ext/metadata/gstbasemetadata.h:
+	* ext/metadata/gstmetadatademux.c:
+	* ext/metadata/gstmetadatademux.h:
+	* ext/metadata/gstmetadatamux.c:
+	* ext/metadata/gstmetadatamux.h:
+	* ext/metadata/metadatatags.c:
+	  Add some documentation.
+
 2008-01-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

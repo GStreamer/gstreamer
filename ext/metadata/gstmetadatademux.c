@@ -42,16 +42,55 @@
  */
 
 /**
- * SECTION:metadatademux-metadata
+ * SECTION: element-metadatademux
+ * @short_description: element that parse or demux metadata from image files
+ * @see_also: #metadatamux
  *
  * <refsect2>
+ * <para>
+ * This element parses image files JPEG and PNG, to find metadata chunks (EXIF,
+ * IPTC, XMP) in it, and then send individual tags as a 'tag message' do the
+ * application and as 'tag event' to the next element in pipeline. It also
+ * strips out the metadata chunks from original stream (unless the 'parse-only'
+ * property is set to 'true'). In addition the whole metadata chunk (striped
+ * or not) it also sent as a message to the application bus, so the application
+ * can have more controls about the metadata.
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch -v -m filesrc location=./test.jpeg ! metadatademux ! fakesink silent=TRUE
+ * gst-launch -v -m filesrc location=./test.jpeg ! metadatademux ! fakesink
+ * silent=TRUE
+ * </programlisting>
+ * <programlisting>
+ * GST_DEBUG:*metadata:5 gst-launch filesrc location=./test.jpeg ! 
+ * metadatademux ! fakesink
  * </programlisting>
  * </para>
+ * <title>Application sample code using 'libexif' to have more control</title>
+ * <para>
+ * <programlisting>
+ * val = gst_tag_list_get_value_index (taglist, GST_TAG_EXIF, 0);
+ * if (val) {
+ *  exif_chunk = gst_value_get_buffer (val);
+ *  if (exif_chunk) {
+ *    ed = exif_data_new_from_data (GST_BUFFER_DATA (exif_chunk),
+ *        GST_BUFFER_SIZE (exif_chunk));
+ *  }
+ * }
+ * </programlisting>
+ * This same idea can be used to handle IPTC and XMP directly by using
+ * libdata and exempi (or any other libraries). Notice: the whole metadata
+ * chunk sent as a message to the application contains only metadata data, i.e.
+ * the wrapper specific to the file format (JPEG, PNG, ...) is already
+ * striped out.
+ * </para>
  * </refsect2>
+ */
+
+
+/*
+ * includes
  */
 
 #ifdef HAVE_CONFIG_H
@@ -70,16 +109,13 @@
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_metadata_demux_debug);
-#define GST_CAT_DEFAULT gst_metadata_demux_debug
 
-#define GOTO_DONE_IF_NULL(ptr) do { if ( NULL == (ptr) ) goto done; } while(FALSE)
-#define GOTO_DONE_IF_NULL_AND_FAIL(ptr, ret) do { if ( NULL == (ptr) ) { (ret) = FALSE; goto done; } } while(FALSE)
+/*
+ * enum and types
+ */
 
-/* Filter signals and args */
 enum
 {
-  /* FILL ME */
   LAST_SIGNAL
 };
 
@@ -88,6 +124,19 @@ enum
   ARG_0,
   ARG_PARSE_ONLY
 };
+
+/*
+ * defines and static global vars
+ */
+
+
+GST_DEBUG_CATEGORY_STATIC (gst_metadata_demux_debug);
+#define GST_CAT_DEFAULT gst_metadata_demux_debug
+
+#define GOTO_DONE_IF_NULL(ptr) \
+    do { if ( NULL == (ptr) ) goto done; } while(FALSE)
+#define GOTO_DONE_IF_NULL_AND_FAIL(ptr, ret) \
+    do { if ( NULL == (ptr) ) { (ret) = FALSE; goto done; } } while(FALSE)
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -105,10 +154,26 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "image/png, " "tags-extracted = (bool) true")
     );
 
-GST_BOILERPLATE (GstMetadataDemux, gst_metadata_demux, GstBaseMetadata,
-    GST_TYPE_BASE_METADATA);
-
 static GstMetadataDemuxClass *metadata_parent_class = NULL;
+
+/*
+ * static helper functions declaration
+ */
+
+static gboolean
+gst_metadata_demux_configure_srccaps (GstMetadataDemux * filter);
+
+/*
+ * GObject callback functions declaration
+ */
+
+static void gst_metadata_demux_base_init (gpointer gclass);
+
+static void gst_metadata_demux_class_init (GstMetadataDemuxClass * klass);
+
+static void
+gst_metadata_demux_init (GstMetadataDemux * filter,
+    GstMetadataDemuxClass * gclass);
 
 static void gst_metadata_demux_dispose (GObject * object);
 
@@ -116,24 +181,86 @@ static void gst_metadata_demux_finalize (GObject * object);
 
 static void gst_metadata_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+
 static void gst_metadata_demux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_metadata_demux_get_caps (GstPad * pad);
-static gboolean gst_metadata_demux_set_caps (GstPad * pad, GstCaps * caps);
-static gboolean gst_metadata_demux_sink_event (GstPad * pad, GstEvent * event);
+/*
+ * GstBaseMetadata virtual functions declaration
+ */
 
 static void gst_metadata_demux_send_tags (GstBaseMetadata * base);
+
+static gboolean gst_metadata_demux_set_caps (GstPad * pad, GstCaps * caps);
+
+static GstCaps *gst_metadata_demux_get_caps (GstPad * pad);
+
+static gboolean gst_metadata_demux_sink_event (GstPad * pad, GstEvent * event);
+
+
+/*
+ * GST BOILERPLATE
+ */
+
+GST_BOILERPLATE (GstMetadataDemux, gst_metadata_demux, GstBaseMetadata,
+    GST_TYPE_BASE_METADATA);
+
+/*
+ * static helper functions implementation
+ */
+
+static gboolean
+gst_metadata_demux_configure_srccaps (GstMetadataDemux * filter)
+{
+  GstCaps *caps = NULL;
+  gboolean ret = FALSE;
+  gchar *mime = NULL;
+
+  switch (GST_BASE_METADATA_IMG_TYPE (filter)) {
+    case IMG_JPEG:
+      mime = "image/jpeg";
+      break;
+    case IMG_PNG:
+      mime = "image/png";
+      break;
+    default:
+      ret = FALSE;
+      goto done;
+      break;
+  }
+
+  caps =
+      gst_caps_new_simple (mime, "tags-extracted", G_TYPE_BOOLEAN, TRUE, NULL);
+
+  ret = gst_pad_set_caps (GST_BASE_METADATA_SRC_PAD (filter), caps);
+
+done:
+
+  if (caps) {
+    gst_caps_unref (caps);
+    caps = NULL;
+  }
+
+  return ret;
+
+}
+
+/*
+ * GObject callback functions implementation
+ */
 
 static void
 gst_metadata_demux_base_init (gpointer gclass)
 {
+/* *INDENT-OFF* */
   static GstElementDetails element_details = {
-    "Metadata demuxr",
-    "Demuxr/Extracter/Metadata",
-    "Send metadata tags (EXIF, IPTC and XMP) and remove metadata chunks from stream",
+    "Metadata demuxer",
+    "Demuxer/Extracter/Metadata",
+    "Send metadata tags (EXIF, IPTC and XMP) and "
+      "remove metadata chunks from stream",
     "Edgard Lima <edgard.lima@indt.org.br>"
   };
+/* *INDENT-ON* */
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_add_pad_template (element_class,
@@ -143,7 +270,6 @@ gst_metadata_demux_base_init (gpointer gclass)
   gst_element_class_set_details (element_class, &element_details);
 }
 
-/* initialize the plugin's class */
 static void
 gst_metadata_demux_class_init (GstMetadataDemuxClass * klass)
 {
@@ -180,11 +306,6 @@ gst_metadata_demux_class_init (GstMetadataDemuxClass * klass)
 
 }
 
-/* initialize the new element
- * instantiate pads and add them to element
- * set functions
- * initialize structure
- */
 static void
 gst_metadata_demux_init (GstMetadataDemux * filter,
     GstMetadataDemuxClass * gclass)
@@ -250,6 +371,23 @@ gst_metadata_demux_finalize (GObject * object)
   G_OBJECT_CLASS (metadata_parent_class)->finalize (object);
 }
 
+
+/*
+ * GstBaseMetadata virtual functions implementation
+ */
+
+/*
+ * gst_metadata_demux_send_tags:
+ * @base: the base metadata instance
+ * 
+ * Send individual tags as message to the bus and as event to the next
+ * element, and send the whole metadata chunk (with file specific wrapper
+ * striped) to the next element as a event.
+ *
+ * Returns: nothing
+ *
+ */
+
 static void
 gst_metadata_demux_send_tags (GstBaseMetadata * base)
 {
@@ -259,6 +397,8 @@ gst_metadata_demux_send_tags (GstBaseMetadata * base)
   GstTagList *taglist = gst_tag_list_new ();
   GstEvent *event;
   GstPad *srcpad = GST_BASE_METADATA_SRC_PAD (filter);
+
+  /* get whole chunk */
 
   if (gst_base_metadata_get_option_flag (base) & META_OPT_EXIF)
     metadataparse_exif_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
@@ -284,6 +424,8 @@ gst_metadata_demux_send_tags (GstBaseMetadata * base)
   if (!taglist)
     taglist = gst_tag_list_new ();
 
+  /*get individual tags */
+
   if (gst_base_metadata_get_option_flag (base) & META_OPT_EXIF)
     metadataparse_exif_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
         GST_BASE_METADATA_EXIF_ADAPTER (base), METADATA_TAG_MAP_INDIVIDUALS);
@@ -306,44 +448,6 @@ gst_metadata_demux_send_tags (GstBaseMetadata * base)
 
 }
 
-static gboolean
-gst_metadata_demux_configure_srccaps (GstMetadataDemux * filter)
-{
-  GstCaps *caps = NULL;
-  gboolean ret = FALSE;
-  gchar *mime = NULL;
-
-  switch (GST_BASE_METADATA_IMG_TYPE (filter)) {
-    case IMG_JPEG:
-      mime = "image/jpeg";
-      break;
-    case IMG_PNG:
-      mime = "image/png";
-      break;
-    default:
-      ret = FALSE;
-      goto done;
-      break;
-  }
-
-  caps =
-      gst_caps_new_simple (mime, "tags-extracted", G_TYPE_BOOLEAN, TRUE, NULL);
-
-  ret = gst_pad_set_caps (GST_BASE_METADATA_SRC_PAD (filter), caps);
-
-done:
-
-  if (caps) {
-    gst_caps_unref (caps);
-    caps = NULL;
-  }
-
-  return ret;
-
-}
-
-
-/* this function handles the link with other elements */
 static gboolean
 gst_metadata_demux_set_caps (GstPad * pad, GstCaps * caps)
 {

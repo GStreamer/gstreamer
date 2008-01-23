@@ -83,34 +83,34 @@ metadata_tags_exif_register (void)
   gst_tag_register (GST_TAG_CAPTURE_FNUMBER, GST_TAG_FLAG_META,
       GST_TYPE_FRACTION, GST_TAG_CAPTURE_FNUMBER, "F number (focal ratio)",
       NULL);
-  /**
-    0 - not defined
-    1- Manual
-    2- Normal program
-    3- Aperture priority
-    4- Shutter priority
-    5- Creative program (biased toward death of field)
-    6- Action program (biased toward fast shutter speed)
-    7- Portrait mode (for closeup photos with the background out of focus)
-    8- Landscape mode (for landscape photos with the background in focus)
-    *** exif is until here ***
-    9- Night
-    10- Back-light
-    11- Spotlight
-    12- Snow
-    13- Beach
-  */
+  /*
+     0 - not defined
+     1- Manual
+     2- Normal program
+     3- Aperture priority
+     4- Shutter priority
+     5- Creative program (biased toward death of field)
+     6- Action program (biased toward fast shutter speed)
+     7- Portrait mode (for closeup photos with the background out of focus)
+     8- Landscape mode (for landscape photos with the background in focus)
+     *** exif is until here ***
+     9- Night
+     10- Back-light
+     11- Spotlight
+     12- Snow
+     13- Beach
+   */
   gst_tag_register (GST_TAG_CAPTURE_EXPOSURE_PROGRAM, GST_TAG_FLAG_META,
       G_TYPE_UINT, GST_TAG_CAPTURE_EXPOSURE_PROGRAM,
       "Class of program used for exposure", NULL);
-  /** The unit is the APEX value.
-      Ordinarily it is given in the range of -99.99 to 99.99.
-      if numerator is 0xFFFFFFFF means unknown      
-  */
+  /* The unit is the APEX value.
+     Ordinarily it is given in the range of -99.99 to 99.99.
+     if numerator is 0xFFFFFFFF means unknown      
+   */
   gst_tag_register (GST_TAG_CAPTURE_BRIGHTNESS, GST_TAG_FLAG_META,
       GST_TYPE_FRACTION, GST_TAG_CAPTURE_BRIGHTNESS,
       "Brightness (APEX from -99.99 to 99.99)", NULL);
-  /**
+  /*
      0- Auto
      1- Off
      *** exif is until here ***
@@ -122,39 +122,39 @@ metadata_tags_exif_register (void)
      7- Incandescent
      8- Flash
      9- Horizon (sun on the horizon)
-  */
+   */
   gst_tag_register (GST_TAG_CAPTURE_WHITE_BALANCE, GST_TAG_FLAG_META,
       G_TYPE_UINT, GST_TAG_CAPTURE_WHITE_BALANCE, "White balance mode", NULL);
-  /** if Zero ZOOM not used
+  /* if Zero ZOOM not used
    */
   gst_tag_register (GST_TAG_CAPTURE_DIGITAL_ZOOM, GST_TAG_FLAG_META,
       GST_TYPE_FRACTION, GST_TAG_CAPTURE_DIGITAL_ZOOM, "Digital zoom ratio",
       NULL);
-  /**
+  /*
      0- None
      1- Low gain up
      2- High gain up
      3- Low gain down
      4- High gain down
-  */
+   */
   gst_tag_register (GST_TAG_CAPTURE_GAIN, GST_TAG_FLAG_META, G_TYPE_UINT,
       GST_TAG_CAPTURE_GAIN, "", NULL);
-  /**
+  /*
      from -100 to 100
      [-100, -34] - soft
      [-33, 33] - normal
      [34, 100] - hard
      *** exif is just 0, 1, 2 (normal, soft and hard)
-  */
+   */
   gst_tag_register (GST_TAG_CAPTURE_CONTRAST, GST_TAG_FLAG_META, G_TYPE_INT,
       GST_TAG_CAPTURE_CONTRAST, "", NULL);
-  /**
+  /*
      from -100 to 100
      [-100, -34] - low
      [-33, 33] - normal
      [34, 100] - high
      *** exif is just 0, 1, 2 (normal, low and high)
-  */
+   */
   gst_tag_register (GST_TAG_CAPTURE_SATURATION, GST_TAG_FLAG_META, G_TYPE_INT,
       GST_TAG_CAPTURE_SATURATION, "", NULL);
 

@@ -42,16 +42,38 @@
  */
 
 /**
- * SECTION:metadatamux-metadata
+ * SECTION: element-metadatamux
  *
  * <refsect2>
+ * <para>
+ * This element writes tags into metadata (EXIF, IPTC and XMP) chunks, and
+ * writes the chunks into image files (JPEG, PNG). Tags the are received as
+ * GST_EVENT_TAG event or set by the application using #GstTagSetter interface.
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch -v -m filesrc location=./test.jpeg ! metadatamux ! fakesink silent=TRUE
+ * gst-launch -v -m filesrc location=orig.jpeg ! metadatamux ! filesink
+ * location=dest.jpeg
+ * </programlisting>
+ * <programlisting>
+ * gst-launch -v -m filesrc location=orig.png ! metadatademux ! pngdec ! 
+ * ffmpegcolorspace ! jpegenc ! metadatamux ! filesink location=dest.jpeg
  * </programlisting>
  * </para>
+ * <title>How it works</title>
+ * <para>
+ * If this element receives a GST_TAG_EXIF, GST_TAG_IPTC or GST_TAG_XMP which
+ * are whole chunk metadata tags, then this whole chunk will be modified by
+ * individual tags received and written to the file. Otherwise, a new chunk
+ * will be created from the scratch and then modified in same way.
+ * </para>
  * </refsect2>
+ */
+
+
+/*
+ * includes
  */
 
 #ifdef HAVE_CONFIG_H
@@ -70,25 +92,34 @@
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_metadata_mux_debug);
-#define GST_CAT_DEFAULT gst_metadata_mux_debug
+/*
+ * enum and types
+ */
 
-#define GOTO_DONE_IF_NULL(ptr) do { if ( NULL == (ptr) ) goto done; } while(FALSE)
-#define GOTO_DONE_IF_NULL_AND_FAIL(ptr, ret) do { if ( NULL == (ptr) ) { (ret) = FALSE; goto done; } } while(FALSE)
-
-/* Filter signals and args */
 enum
 {
-  /* FILL ME */
   LAST_SIGNAL
 };
 
 enum
 {
   ARG_0,
-  ARG_PARSE_ONLY
 };
 
+
+/*
+ * defines and static global vars
+ */
+
+
+GST_DEBUG_CATEGORY_STATIC (gst_metadata_mux_debug);
+#define GST_CAT_DEFAULT gst_metadata_mux_debug
+
+#define GOTO_DONE_IF_NULL(ptr) \
+    do { if ( NULL == (ptr) ) goto done; } while(FALSE)
+
+#define GOTO_DONE_IF_NULL_AND_FAIL(ptr, ret) \
+    do { if ( NULL == (ptr) ) { (ret) = FALSE; goto done; } } while(FALSE)
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -103,6 +134,51 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("image/jpeg; " "image/png")
     );
 
+static GstMetadataMuxClass *metadata_parent_class = NULL;
+
+/*
+ * static helper functions declaration
+ */
+
+static gboolean gst_metadata_mux_configure_srccaps (GstMetadataMux * filter);
+
+/*
+ * GObject callback functions declaration
+ */
+
+static void gst_metadata_mux_base_init (gpointer gclass);
+
+static void gst_metadata_mux_class_init (GstMetadataMuxClass * klass);
+
+static void
+gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass);
+
+static void gst_metadata_mux_dispose (GObject * object);
+
+static void gst_metadata_mux_finalize (GObject * object);
+
+static void gst_metadata_mux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+
+static void gst_metadata_mux_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
+/*
+ * GstBaseMetadata virtual functions declaration
+ */
+
+static void gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base);
+
+static gboolean gst_metadata_mux_set_caps (GstPad * pad, GstCaps * caps);
+
+static GstCaps *gst_metadata_mux_get_caps (GstPad * pad);
+
+static gboolean gst_metadata_mux_sink_event (GstPad * pad, GstEvent * event);
+
+/*
+ * GST BOILERPLATE
+ */
+
 static void
 gst_metadata_mux_add_interfaces (GType type)
 {
@@ -115,188 +191,10 @@ gst_metadata_mux_add_interfaces (GType type)
 GST_BOILERPLATE_FULL (GstMetadataMux, gst_metadata_mux, GstBaseMetadata,
     GST_TYPE_BASE_METADATA, gst_metadata_mux_add_interfaces);
 
-static GstMetadataMuxClass *metadata_parent_class = NULL;
 
-static void gst_metadata_mux_dispose (GObject * object);
-
-static void gst_metadata_mux_finalize (GObject * object);
-
-static void gst_metadata_mux_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_metadata_mux_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
-static GstCaps *gst_metadata_mux_get_caps (GstPad * pad);
-static gboolean gst_metadata_mux_set_caps (GstPad * pad, GstCaps * caps);
-static gboolean gst_metadata_mux_sink_event (GstPad * pad, GstEvent * event);
-
-static void gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base);
-
-static void
-gst_metadata_mux_base_init (gpointer gclass)
-{
-  static GstElementDetails element_details = {
-    "Metadata muxr",
-    "Muxr/Extracter/Metadata",
-    "Send metadata tags (EXIF, IPTC and XMP) and remove metadata chunks from stream",
-    "Edgard Lima <edgard.lima@indt.org.br>"
-  };
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &element_details);
-}
-
-/* initialize the plugin's class */
-static void
-gst_metadata_mux_class_init (GstMetadataMuxClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBaseMetadataClass *gstbasemetadata_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasemetadata_class = (GstBaseMetadataClass *) klass;
-
-  metadata_parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_metadata_mux_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_metadata_mux_finalize);
-
-  gobject_class->set_property = gst_metadata_mux_set_property;
-  gobject_class->get_property = gst_metadata_mux_get_property;
-
-  g_object_class_install_property (gobject_class, ARG_PARSE_ONLY,
-      g_param_spec_boolean ("parse-only", "parse-only",
-          "If TRUE, don't strip out any chunk", FALSE, G_PARAM_READWRITE));
-
-  gstbasemetadata_class->processing =
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_create_chunks_from_tags);
-  gstbasemetadata_class->set_caps =
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_set_caps);
-  gstbasemetadata_class->get_sink_caps =
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_get_caps);
-  gstbasemetadata_class->get_src_caps =
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_get_caps);
-  gstbasemetadata_class->sink_event =
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_sink_event);
-
-}
-
-/* initialize the new element
- * instantiate pads and add them to element
- * set functions
- * initialize structure
+/*
+ * static helper functions implementation
  */
-static void
-gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass)
-{
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
-
-  gst_base_metadata_set_option_flag (GST_BASE_METADATA (filter),
-      META_OPT_EXIF | META_OPT_IPTC | META_OPT_XMP | META_OPT_MUX);
-
-}
-
-static void
-gst_metadata_mux_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstMetadataMux *filter = GST_METADATA_MUX (object);
-
-  switch (prop_id) {
-    case ARG_PARSE_ONLY:
-      if (g_value_get_boolean (value))
-        gst_base_metadata_set_option_flag (GST_BASE_METADATA (object),
-            META_OPT_PARSE_ONLY);
-      else
-        gst_base_metadata_unset_option_flag (GST_BASE_METADATA (object),
-            META_OPT_PARSE_ONLY);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_metadata_mux_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  guint8 option =
-      gst_base_metadata_get_option_flag (GST_BASE_METADATA (object));
-
-  switch (prop_id) {
-    case ARG_PARSE_ONLY:
-      g_value_set_boolean (value, option & META_OPT_PARSE_ONLY);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-
-
-static void
-gst_metadata_mux_dispose (GObject * object)
-{
-  GstMetadataMux *filter = NULL;
-
-  G_OBJECT_CLASS (metadata_parent_class)->dispose (object);
-}
-
-static void
-gst_metadata_mux_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (metadata_parent_class)->finalize (object);
-}
-
-static void
-gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base)
-{
-
-  GstMetadataMux *filter = GST_METADATA_MUX (base);
-  GstMessage *msg;
-  GstTagSetter *setter = GST_TAG_SETTER (filter);
-  const GstTagList *taglist = gst_tag_setter_get_tag_list (setter);
-  GstEvent *event;
-  guint8 *buf = NULL;
-  guint32 size = 0;
-
-  if (taglist) {
-
-    if (gst_base_metadata_get_option_flag (base) & META_OPT_EXIF) {
-      metadatamux_exif_create_chunk_from_tag_list (&buf, &size, taglist);
-      gst_base_metadata_update_segment_with_new_buffer (base, &buf, &size,
-          MD_CHUNK_EXIF);
-    }
-
-    if (gst_base_metadata_get_option_flag (base) & META_OPT_IPTC) {
-      metadatamux_iptc_create_chunk_from_tag_list (&buf, &size, taglist);
-      gst_base_metadata_update_segment_with_new_buffer (base, &buf, &size,
-          MD_CHUNK_IPTC);
-    }
-
-    if (gst_base_metadata_get_option_flag (base) & META_OPT_XMP) {
-      metadatamux_xmp_create_chunk_from_tag_list (&buf, &size, taglist);
-      gst_base_metadata_update_segment_with_new_buffer (base, &buf, &size,
-          MD_CHUNK_XMP);
-    }
-
-  }
-
-  if (buf) {
-    g_free (buf);
-  }
-
-  gst_base_metadata_chunk_array_remove_zero_size (base);
-
-}
 
 static gboolean
 gst_metadata_mux_configure_srccaps (GstMetadataMux * filter)
@@ -333,8 +231,172 @@ done:
 
 }
 
+/*
+ * GObject callback functions declaration
+ */
 
-/* this function handles the link with other elements */
+static void
+gst_metadata_mux_base_init (gpointer gclass)
+{
+/* *INDENT-OFF* */
+  static GstElementDetails element_details = {
+    "Metadata muxer",
+    "Muxer/Extracter/Metadata",
+    "Write metadata (EXIF, IPTC and XMP) into a image stream",
+    "Edgard Lima <edgard.lima@indt.org.br>"
+  };
+/* *INDENT-ON* */
+  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_set_details (element_class, &element_details);
+}
+
+static void
+gst_metadata_mux_class_init (GstMetadataMuxClass * klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+  GstBaseMetadataClass *gstbasemetadata_class;
+
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+  gstbasemetadata_class = (GstBaseMetadataClass *) klass;
+
+  metadata_parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_metadata_mux_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_metadata_mux_finalize);
+
+  gobject_class->set_property = gst_metadata_mux_set_property;
+  gobject_class->get_property = gst_metadata_mux_get_property;
+
+  gstbasemetadata_class->processing =
+      GST_DEBUG_FUNCPTR (gst_metadata_mux_create_chunks_from_tags);
+  gstbasemetadata_class->set_caps =
+      GST_DEBUG_FUNCPTR (gst_metadata_mux_set_caps);
+  gstbasemetadata_class->get_sink_caps =
+      GST_DEBUG_FUNCPTR (gst_metadata_mux_get_caps);
+  gstbasemetadata_class->get_src_caps =
+      GST_DEBUG_FUNCPTR (gst_metadata_mux_get_caps);
+  gstbasemetadata_class->sink_event =
+      GST_DEBUG_FUNCPTR (gst_metadata_mux_sink_event);
+
+}
+
+static void
+gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass)
+{
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
+
+  gst_base_metadata_set_option_flag (GST_BASE_METADATA (filter),
+      META_OPT_EXIF | META_OPT_IPTC | META_OPT_XMP | META_OPT_MUX);
+
+}
+
+static void
+gst_metadata_mux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMetadataMux *filter = GST_METADATA_MUX (object);
+
+  switch (prop_id) {
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_metadata_mux_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  guint8 option =
+      gst_base_metadata_get_option_flag (GST_BASE_METADATA (object));
+
+  switch (prop_id) {
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+
+
+static void
+gst_metadata_mux_dispose (GObject * object)
+{
+  GstMetadataMux *filter = NULL;
+
+  G_OBJECT_CLASS (metadata_parent_class)->dispose (object);
+}
+
+static void
+gst_metadata_mux_finalize (GObject * object)
+{
+  G_OBJECT_CLASS (metadata_parent_class)->finalize (object);
+}
+
+
+/*
+ * GstBaseMetadata virtual functions implementation
+ */
+
+/*
+ * gst_metadata_mux_create_chunks_from_tags:
+ * @base: the base metadata instance
+ * 
+ * This function creates new metadata (EXIF, IPTC, XMP) chunks with the tags
+ * received and add it to the list of segments that will be injected to the
+ * resulting file by #GstBaseMetadata.
+ *
+ * Returns: nothing
+ *
+ */
+
+static void
+gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base)
+{
+
+  GstMetadataMux *filter = GST_METADATA_MUX (base);
+  GstMessage *msg;
+  GstTagSetter *setter = GST_TAG_SETTER (filter);
+  const GstTagList *taglist = gst_tag_setter_get_tag_list (setter);
+  GstEvent *event;
+  guint8 *buf = NULL;
+  guint32 size = 0;
+
+  if (taglist) {
+
+    if (gst_base_metadata_get_option_flag (base) & META_OPT_EXIF) {
+      metadatamux_exif_create_chunk_from_tag_list (&buf, &size, taglist);
+      gst_base_metadata_update_inject_segment_with_new_data (base, &buf, &size,
+          MD_CHUNK_EXIF);
+    }
+
+    if (gst_base_metadata_get_option_flag (base) & META_OPT_IPTC) {
+      metadatamux_iptc_create_chunk_from_tag_list (&buf, &size, taglist);
+      gst_base_metadata_update_inject_segment_with_new_data (base, &buf, &size,
+          MD_CHUNK_IPTC);
+    }
+
+    if (gst_base_metadata_get_option_flag (base) & META_OPT_XMP) {
+      metadatamux_xmp_create_chunk_from_tag_list (&buf, &size, taglist);
+      gst_base_metadata_update_inject_segment_with_new_data (base, &buf, &size,
+          MD_CHUNK_XMP);
+    }
+
+  }
+
+  if (buf) {
+    g_free (buf);
+  }
+
+}
+
 static gboolean
 gst_metadata_mux_set_caps (GstPad * pad, GstCaps * caps)
 {

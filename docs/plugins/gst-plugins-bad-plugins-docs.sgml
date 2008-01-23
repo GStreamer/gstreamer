@@ -38,6 +38,8 @@
     <xi:include href="xml/element-ivorbisdec.xml" />
     <xi:include href="xml/element-jackaudiosink.xml" />
     <xi:include href="xml/element-lpwsinc.xml" />
+    <xi:include href="xml/element-metadatademux.xml" />
+    <xi:include href="xml/element-metadatamux.xml" />
     <xi:include href="xml/element-modplug.xml" />
     <xi:include href="xml/element-multifilesink.xml" />
     <xi:include href="xml/element-multifilesrc.xml" />

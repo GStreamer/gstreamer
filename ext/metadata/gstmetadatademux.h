@@ -49,23 +49,34 @@
 #include "gstbasemetadata.h"
 
 G_BEGIN_DECLS
-/* #defines don't like whitespacey bits */
+
+/* *INDENT-OFF* */
 #define GST_TYPE_METADATA_DEMUX \
   (gst_metadata_demux_get_type())
 #define GST_METADATA_DEMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_METADATA_DEMUX,GstMetadataDemux))
 #define GST_METADATA_DEMUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_METADATA_DEMUX,GstMetadataDemuxClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_METADATA_DEMUX,\
+  GstMetadataDemuxClass))
 #define GST_IS_METADATA_DEMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_METADATA_DEMUX))
 #define GST_IS_METADATA_DEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_METADATA_DEMUX))
+/* *INDENT-ON* */
+
 typedef struct _GstMetadataDemux GstMetadataDemux;
 typedef struct _GstMetadataDemuxClass GstMetadataDemuxClass;
 
+
+/**
+ * GstMetadataDemux:
+ *
+ * The opaque #GstMetadataDemux data structure.
+ */
+
 struct _GstMetadataDemux
 {
-  GstBaseMetadata element;
+  GstBaseMetadata metadata;
 };
 
 struct _GstMetadataDemuxClass

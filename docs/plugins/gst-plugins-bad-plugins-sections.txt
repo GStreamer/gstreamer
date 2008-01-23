@@ -313,6 +313,34 @@ gst_jack_audio_sink_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-metadatademux</FILE>
+<TITLE>metadatademux</TITLE>
+GstMetadataDemux
+<SUBSECTION Standard>
+GstMetadataDemuxClass
+GST_METADATA_DEMUX
+GST_METADATA_DEMUX_CLASS
+GST_IS_METADATA_DEMUX
+GST_IS_METADATA_DEMUX_CLASS
+GST_TYPE_METADATA_DEMUX
+gst_metadata_demux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-metadatamux</FILE>
+<TITLE>metadatamux</TITLE>
+GstMetadataMux
+<SUBSECTION Standard>
+GstMetadataMuxClass
+GST_METADATA_MUX
+GST_METADATA_MUX_CLASS
+GST_IS_METADATA_MUX
+GST_IS_METADATA_MUX_CLASS
+GST_TYPE_METADATA_MUX
+gst_metadata_mux_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-modplug</FILE>
 <TITLE>modplug</TITLE>
 <SUBSECTION Standard>

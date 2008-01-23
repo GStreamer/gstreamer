@@ -106,6 +106,9 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/ivorbis/vorbisdec.h \
 	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
+	$(top_srcdir)/ext/metadata/gstbasemetadata.h \
+	$(top_srcdir)/ext/metadata/gstmetadatademux.h \
+	$(top_srcdir)/ext/metadata/gstmetadatamux.h \
 	$(top_srcdir)/ext/mythtv/gstmythtvsrc.h \
 	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
 	$(top_srcdir)/ext/sdl/sdlvideosink.h \

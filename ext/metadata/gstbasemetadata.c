@@ -42,16 +42,57 @@
  */
 
 /**
- * SECTION:metadatabase-metadata
+ * SECTION: gstbasemetadata
+ * @short_description: Base class for metadata handling elements
+ *
+ * This is a generice base class for metadata handling elements. The following
+ * types of elements are supported:
+ * <itemizedlist>
+ *   <listitem><para>parsers (only parse data)</para></listitem>
+ *   <listitem><para>demuxers (parse data and remove metadata chunks)</para>
+ *   </listitem>
+ *   <listitem><para>muxers</para></listitem>
+ *   <listitem><para>any other kind of element that wants to handle chunks in
+ *     file formats based on chunks</para></listitem>
+ * </itemizedlist>
  *
  * <refsect2>
- * <title>Example launch line</title>
  * <para>
- * <programlisting>
- * gst-launch -v -m filesrc location=./test.jpeg ! metadatabase ! fakesink silent=TRUE
- * </programlisting>
+ * This a abstract element that parses a stream and find chunks and offset
+ * where new chunks could be injected into it.
+ * Basically, the only thing need by implementors (parsers, (de)muxers) is to
+ * set virtual methods that will be used to setup the caps and do some
+ * 'processing', which is called after the stream is completely parsed and
+ * before the first buffer is sent to the next element. Usualy the 'processing'
+ * function will send tags messages and event in case of parsers and demuxers,
+ * and add chunks to be injected (using the helper function
+ * #gst_base_metadata_update_inject_segment_with_new_data in case of muxers.
+ * </para>
+ * <para>
+ * This can work in 'pull' and 'push' scheduling modes. In case of push mode,
+ * the stream will be parsed during sink activation if #gst_pad_get_range is
+ * available on upstream element. If get_range function is not available
+ * upstream, then the data will be hold until the stream is completly parsed,
+ * and then after that the fisrt buffer will be pushed downstream. The same
+ * happens with pull mode, if the downstream element calls gst_pad_get_range
+ * it will only gets data after the stream has been completely parsed.
+ * </para>
+ * <para>
+ * Seek, and query duration will only be available after the stream has been
+ * parsed. Query position will always be 0 (zero) before the stream is
+ * completely parsed.
+ * </para>
+ * <para>
+ * Currently there is implementation for JPEG and PNG (demux mode only)
+ * stream types and EXIF, IPTC and XMP metadatas.
  * </para>
  * </refsect2>
+ * 
+ * Last reviewed on 2008-01-21 (0.10.15)
+ */
+
+/*
+ * includes
  */
 
 #ifdef HAVE_CONFIG_H
@@ -62,24 +103,16 @@
 
 #include "gstbasemetadata.h"
 
-#include "metadataexif.h"
-
-#include "metadataiptc.h"
-
 #include "metadataxmp.h"
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_base_metadata_debug);
-#define GST_CAT_DEFAULT gst_base_metadata_debug
+/*
+ * enum and types
+ */
 
-#define GOTO_DONE_IF_NULL(ptr) do { if ( NULL == (ptr) ) goto done; } while(FALSE)
-#define GOTO_DONE_IF_NULL_AND_FAIL(ptr, ret) do { if ( NULL == (ptr) ) { (ret) = FALSE; goto done; } } while(FALSE)
-
-/* Filter signals and args */
 enum
 {
-  /* FILL ME */
   LAST_SIGNAL
 };
 
@@ -91,7 +124,66 @@ enum
   ARG_XMP
 };
 
+/*
+ * defines and static global vars
+ */
+
+GST_DEBUG_CATEGORY_STATIC (gst_base_metadata_debug);
+#define GST_CAT_DEFAULT gst_base_metadata_debug
+
 static GstBaseMetadataClass *parent_class = NULL;
+
+/*
+ * static helper functions declaration
+ */
+
+static void gst_base_metadata_init_members (GstBaseMetadata * filter);
+
+static void gst_base_metadata_dispose_members (GstBaseMetadata * filter);
+
+const gchar *gst_base_metadata_get_type_name (int img_type);
+
+static gboolean gst_base_metadata_pull_range_parse (GstBaseMetadata * filter);
+
+static gboolean gst_base_metadata_configure_caps (GstBaseMetadata * filter);
+
+static gboolean gst_base_metadata_processing (GstBaseMetadata * filter);
+
+static void gst_base_metadata_reset_streaming (GstBaseMetadata * filter);
+
+static void gst_base_metadata_reset_parsing (GstBaseMetadata * filter);
+
+static int
+gst_base_metadata_parse (GstBaseMetadata * filter, const guint8 * buf,
+    guint32 size);
+
+static gboolean
+gst_base_metadata_strip_push_buffer (GstBaseMetadata * base,
+    gint64 offset_orig, GstBuffer ** prepend, GstBuffer ** buf);
+
+static int
+gst_base_metadata_buf_get_intersection_seg (const gint64 offset, guint32 size,
+    const gint64 seg_offset, const guint32 seg_size,
+    gint64 * boffset, guint32 * bsize);
+
+static gboolean
+gst_base_metadata_translate_pos_to_orig (GstBaseMetadata * base,
+    gint64 pos, gint64 * orig_pos, GstBuffer ** buf);
+
+static gboolean gst_base_metadata_calculate_offsets (GstBaseMetadata * base);
+
+
+/*
+ * GObject callback functions declaration
+ */
+
+static void gst_base_metadata_base_init (gpointer gclass);
+
+static void gst_base_metadata_class_init (GstBaseMetadataClass * klass);
+
+static void
+gst_base_metadata_init (GstBaseMetadata * filter,
+    GstBaseMetadataClass * gclass);
 
 static void gst_base_metadata_dispose (GObject * object);
 
@@ -99,17 +191,21 @@ static void gst_base_metadata_finalize (GObject * object);
 
 static void gst_base_metadata_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+
 static void gst_base_metadata_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
+/*
+ * GStreamer callback functions declaration
+ */
 
 static GstStateChangeReturn
 gst_base_metadata_change_state (GstElement * element,
     GstStateChange transition);
 
 static gboolean gst_base_metadata_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_base_metadata_sink_event (GstPad * pad, GstEvent * event);
 
-static GstFlowReturn gst_base_metadata_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_base_metadata_sink_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_base_metadata_checkgetrange (GstPad * srcpad);
 
@@ -117,31 +213,20 @@ static GstFlowReturn
 gst_base_metadata_get_range (GstPad * pad, guint64 offset_orig, guint size,
     GstBuffer ** buf);
 
+static GstFlowReturn gst_base_metadata_chain (GstPad * pad, GstBuffer * buf);
+
 static gboolean gst_base_metadata_sink_activate (GstPad * pad);
 
 static gboolean
 gst_base_metadata_src_activate_pull (GstPad * pad, gboolean active);
 
-static gboolean gst_base_metadata_pull_range_base (GstBaseMetadata * filter);
-
-static void gst_base_metadata_init_members (GstBaseMetadata * filter);
-static void gst_base_metadata_dispose_members (GstBaseMetadata * filter);
-
-static gboolean gst_base_metadata_configure_caps (GstBaseMetadata * filter);
-
-static int
-gst_base_metadata_parse (GstBaseMetadata * filter, const guint8 * buf,
-    guint32 size);
-
 static const GstQueryType *gst_base_metadata_get_query_types (GstPad * pad);
 
 static gboolean gst_base_metadata_src_query (GstPad * pad, GstQuery * query);
 
-static void gst_base_metadata_base_init (gpointer gclass);
-static void gst_base_metadata_class_init (GstBaseMetadataClass * klass);
-static void
-gst_base_metadata_init (GstBaseMetadata * filter,
-    GstBaseMetadataClass * gclass);
+/*
+ * GST BOILERPLATE
+ */
 
 GType
 gst_base_metadata_get_type (void)
@@ -167,79 +252,375 @@ gst_base_metadata_get_type (void)
   return base_metadata_type;
 }
 
-/* static helper function */
-
 /*
- * offset - offset of buffer in original stream
- * size - size of buffer
- * seg_offset - offset of segment in original stream
- * seg_size - size of segment
- * boffset - offset inside buffer where segment starts (-1 for no intersection)
- * bsize - size of intersection
- * seg_binter - if segment start inside buffer is zero. if segment start before
- *               buffer and intersect, it is the offset inside segment.
- *
- * ret:
- *  -1 - segment before buffer
- *   0 - segment intersects
- *   1 - segment after buffer
+ *static helper functions implementation
  */
 
-static int
-gst_base_metadata_get_strip_seg (const gint64 offset, guint32 size,
-    const gint64 seg_offset, const guint32 seg_size,
-    gint64 * boffset, guint32 * bsize, guint32 * seg_binter)
+static void
+gst_base_metadata_init_members (GstBaseMetadata * filter)
 {
-  int ret = -1;
 
-  *boffset = -1;
-  *bsize = 0;
-  *seg_binter = -1;
+  filter->metadata = NULL;
 
-  /* all segment after buffer */
-  if (seg_offset >= offset + size) {
-    ret = 1;
+  filter->img_type = IMG_NONE;
+
+  filter->duration_orig = 0;
+  filter->duration = 0;
+
+  filter->state = MT_STATE_NULL;
+
+  filter->options = META_OPT_EXIF | META_OPT_IPTC | META_OPT_XMP;
+
+  filter->need_processing = FALSE;
+
+  filter->adapter_parsing = NULL;
+  filter->adapter_holding = NULL;
+  filter->next_offset = 0;
+  filter->next_size = 0;
+  filter->need_more_data = FALSE;
+  filter->offset_orig = 0;
+  filter->offset = 0;
+
+  filter->append_buffer = NULL;
+  filter->prepend_buffer = NULL;
+
+}
+
+static void
+gst_base_metadata_dispose_members (GstBaseMetadata * filter)
+{
+
+  /* buffers used to build output buffer */
+
+  if (filter->prepend_buffer) {
+    gst_buffer_unref (filter->prepend_buffer);
+    filter->prepend_buffer = NULL;
+  }
+
+  if (filter->append_buffer) {
+    gst_buffer_unref (filter->append_buffer);
+    filter->append_buffer = NULL;
+  }
+
+  /* adapter used during parsing process */
+
+  if (filter->adapter_parsing) {
+    gst_object_unref (filter->adapter_parsing);
+    filter->adapter_parsing = NULL;
+  }
+
+  if (filter->adapter_holding) {
+    gst_object_unref (filter->adapter_holding);
+    filter->adapter_holding = NULL;
+  }
+
+  metadata_dispose (&filter->metadata);
+
+}
+
+const gchar *
+gst_base_metadata_get_type_name (int img_type)
+{
+  gchar *type_name = NULL;
+
+  switch (img_type) {
+    case IMG_JPEG:
+      type_name = "jpeg";
+      break;
+    case IMG_PNG:
+      type_name = "png";
+      break;
+    default:
+      type_name = "invalid type";
+      break;
+  }
+  return type_name;
+}
+
+static gboolean
+gst_base_metadata_pull_range_parse (GstBaseMetadata * filter)
+{
+
+  int res;
+  gboolean ret = TRUE;
+  guint32 offset = 0;
+  gint64 duration = 0;
+  GstFormat format = GST_FORMAT_BYTES;
+
+  if (!(ret =
+          gst_pad_query_peer_duration (filter->sinkpad, &format, &duration))) {
+    /* this should never happen, but try chain anyway */
+    ret = TRUE;
+    goto done;
+  }
+  filter->duration_orig = duration;
+
+  if (format != GST_FORMAT_BYTES) {
+    /* this should never happen, but try chain anyway */
+    ret = TRUE;
     goto done;
   }
 
-  if (seg_offset < offset) {
-    /* segment start somewhere before buffer */
+  do {
+    GstFlowReturn flow;
+    GstBuffer *buf = NULL;
 
-    /* all segment before buffer */
-    if (seg_offset + seg_size <= offset) {
-      ret = -1;
+    offset += filter->next_offset;
+
+    /* 'filter->next_size' only says the minimum required number of bytes.
+       We try provided more bytes (4096) just to avoid a lot of calls to
+       'metadata_parse'
+       returning META_PARSING_NEED_MORE_DATA */
+    if (filter->next_size < 4096) {
+      if (duration - offset < 4096) {
+        /* In case there is no 4096 bytes available upstream.
+           It should be done upstream but we do here for safety */
+        filter->next_size = duration - offset;
+      } else {
+        filter->next_size = 4096;
+      }
+    }
+
+    flow =
+        gst_pad_pull_range (filter->sinkpad, offset, filter->next_size, &buf);
+    if (GST_FLOW_OK != flow) {
+      ret = FALSE;
       goto done;
     }
 
-    *seg_binter = offset - seg_offset;
-    *boffset = 0;
-
-    /* FIXME : optimize to >= size -> = size */
-    if (seg_offset + seg_size >= offset + size) {
-      /* segment cover all buffer */
-      *bsize = size;
-    } else {
-      /* segment goes from start of buffer to somewhere before end */
-      *bsize = seg_size - *seg_binter;
+    res =
+        gst_base_metadata_parse (filter, GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf));
+    if (res == META_PARSING_ERROR) {
+      ret = FALSE;
+      goto done;
     }
 
-    ret = 0;
+    gst_buffer_unref (buf);
 
+  } while (res == META_PARSING_NEED_MORE_DATA);
+
+done:
+
+  return ret;
+
+}
+
+static gboolean
+gst_base_metadata_configure_caps (GstBaseMetadata * filter)
+{
+  GstCaps *caps = NULL;
+  gboolean ret = FALSE;
+  gchar *mime = NULL;
+  GstPad *peer = NULL;
+
+  peer = gst_pad_get_peer (filter->sinkpad);
+
+  switch (filter->img_type) {
+    case IMG_JPEG:
+      mime = "image/jpeg";
+      break;
+    case IMG_PNG:
+      mime = "image/png";
+      break;
+    default:
+      goto done;
+      break;
+  }
+
+  caps = gst_caps_new_simple (mime, NULL);
+
+  if (!gst_pad_set_caps (peer, caps)) {
+    goto done;
+  }
+
+  ret = gst_pad_set_caps (filter->sinkpad, caps);
+
+done:
+
+  if (caps) {
+    gst_caps_unref (caps);
+    caps = NULL;
+  }
+
+  if (peer) {
+    gst_object_unref (peer);
+    peer = NULL;
+  }
+
+  return ret;
+
+}
+
+/*
+ * gst_base_metadata_processing:
+ * @filter: the base metadata instance
+ *
+ * Do some external 'process', if not done yet, just after parse the stream
+ * and before give the fisrt buffer downstream.
+ * Typically here the tag message and events will be sent, in case of demuxer
+ * and new chunks will be added in case of muxers.
+ * @see_also: #gst_base_metadata_calculate_offsets
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%TRUE no need futher processing, or the processing has
+ * been done</para></listitem>
+ * <listitem><para>%FALSE, if error. It is, need futher processing but
+ * #gst_base_metadata_calculate_offsets fails</para></listitem>
+ * </itemizedlist>
+ *
+ */
+
+static gboolean
+gst_base_metadata_processing (GstBaseMetadata * filter)
+{
+  gboolean ret = TRUE;
+  GstBaseMetadataClass *bclass = GST_BASE_METADATA_GET_CLASS (filter);
+
+  if (filter->need_processing) {
+    bclass->processing (filter);
+    if (gst_base_metadata_calculate_offsets (filter)) {
+      filter->need_processing = FALSE;
+    } else {
+      ret = FALSE;
+    }
+  }
+
+  return ret;
+
+}
+
+/*
+ * gst_base_metadata_reset_streaming:
+ * @filter: the base metadata instance
+ *
+ * Clean the streaming process. The parser status is not changed.
+ * @see_also: #gst_base_metadata_reset_parsing
+ *
+ * Returns: nothing
+ *
+ */
+
+static void
+gst_base_metadata_reset_streaming (GstBaseMetadata * filter)
+{
+  filter->offset_orig = 0;
+  filter->offset = 0;
+  if (filter->adapter_holding)
+    gst_adapter_clear (filter->adapter_holding);
+}
+
+/*
+ * gst_base_metadata_reset_parsing:
+ * @filter: the base metadata instance
+ *
+ * Reset the parsing process to start from the beginning again.
+ * @see_also: #gst_base_metadata_reset_streaming
+ *
+ * Returns: nothing
+ *
+ */
+
+static void
+gst_base_metadata_reset_parsing (GstBaseMetadata * filter)
+{
+
+
+  if (filter->prepend_buffer) {
+    gst_buffer_unref (filter->prepend_buffer);
+    filter->prepend_buffer = NULL;
+  }
+
+  if (filter->append_buffer) {
+    gst_buffer_unref (filter->append_buffer);
+    filter->append_buffer = NULL;
+  }
+
+  if (filter->adapter_parsing)
+    gst_adapter_clear (filter->adapter_parsing);
+
+  if (filter->adapter_holding)
+    gst_adapter_clear (filter->adapter_holding);
+
+  filter->img_type = IMG_NONE;
+  filter->duration_orig = 0;
+  filter->duration = 0;
+  filter->state = MT_STATE_NULL;
+  filter->need_processing = FALSE;
+  filter->next_offset = 0;
+  filter->next_size = 0;
+  filter->need_more_data = FALSE;
+  filter->offset_orig = 0;
+  filter->offset = 0;
+
+  metadata_dispose (&filter->metadata);
+
+}
+
+/*
+ * gst_base_metadata_parse
+ * @filter: the base metadata instance
+ * @buf: buffer to be parsed
+ * @size: size of the buffer in bytes
+ *
+ * Parse the current buffer.
+ * This buffer must be provided by another function wich keeps track of the
+ * correct offset in the input stream.* 
+ * If this function returns META_PARSING_NEED_MORE_DATA, the calling function
+ * must look at @filter->next_offset and @filter->next_size to jump (forward)
+ * in input stream to provide the correct data in @buf for the next call.
+ * @see_also: #gst_base_metadata_pull_range_parse #gst_base_metadata_chain
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%META_PARSING_ERROR if there was an error</para></listitem>
+ * <listitem><para>%META_PARSING_DONE if the parse has completly finished
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_NEED_MORE_DATA if need another buffer</para>
+ * </listitem>
+ * </itemizedlist>
+ */
+
+static int
+gst_base_metadata_parse (GstBaseMetadata * filter, const guint8 * buf,
+    guint32 size)
+{
+
+  int ret = META_PARSING_ERROR;
+
+  filter->next_offset = 0;
+  filter->next_size = 0;
+
+  ret = metadata_parse (filter->metadata, buf, size,
+      &filter->next_offset, &filter->next_size);
+
+  if (ret == META_PARSING_ERROR) {
+    if (META_DATA_IMG_TYPE (filter->metadata) == IMG_NONE) {
+      /* image type not recognized */
+      GST_ELEMENT_ERROR (filter, STREAM, TYPE_NOT_FOUND, (NULL),
+          ("Only jpeg and png are supported"));
+      goto done;
+    }
+  } else if (ret == META_PARSING_NEED_MORE_DATA) {
+    filter->need_more_data = TRUE;
   } else {
-    /* segment start somewhere into buffer */
+    filter->state = MT_STATE_PARSED;
+    filter->need_more_data = FALSE;
+    filter->need_processing = TRUE;
+  }
 
-    *boffset = seg_offset - offset;
-    *seg_binter = 0;
-
-    if (seg_offset + seg_size <= offset + size) {
-      /* all segment into buffer */
-      *bsize = seg_size;
-    } else {
-      *bsize = size - *boffset;
+  /* reconfigure caps if it is different from type detected by 'base_metadata'
+     function */
+  if (filter->img_type != META_DATA_IMG_TYPE (filter->metadata)) {
+    filter->img_type = META_DATA_IMG_TYPE (filter->metadata);
+    if (!gst_base_metadata_configure_caps (filter)) {
+      GST_ELEMENT_ERROR (filter, STREAM, FORMAT, (NULL),
+          ("Couldn't reconfigure caps for %s",
+              gst_base_metadata_get_type_name (filter->img_type)));
+      ret = META_PARSING_ERROR;
+      goto done;
     }
-
-    ret = 0;
-
   }
 
 done:
@@ -248,18 +629,34 @@ done:
 
 }
 
+
 /*
- * extern functions declaration
+ * gst_base_metadata_strip_push_buffer:
+ * @base: the base metadata instance
+ * @offset_orig: the offset in original input stream of the buffer that will
+ * have data striped or injected
+ * @prepend: a buffer (can be NULL) that will be completely injected in the
+ * beginning og @buf
+ * @buf: a pointer to a buffer that will be modified (data striped/injected or
+ * prepended)
+ *
+ * Strip bytes from @buf that are part of some chunk that will be striped. Add
+ * a whole injected chunk if some inject chunk starts into the buffer. Prepend
+ * additonal data if @prepend is not NULL. After using the @prepend buffer it
+ * will be release and set to NULL.
+ * @see_also: #gst_base_metadata_get_range #gst_base_metadata_chain
+ * #gst_base_metadata_buf_get_intersection_seg
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%TRUE if the buffer has been striped or injected (@prepend
+ * doesn't change the return value).</para></listitem>
+ * <listitem><para>%FALSE if it hasn't changed.</para></listitem>
+ * </itemizedlist>
+ *
  */
 
-/*
-
-/*
- *  TRUE -> buffer striped or injeted
- *  FALSE -> buffer unmodified
- */
-
-gboolean
+static gboolean
 gst_base_metadata_strip_push_buffer (GstBaseMetadata * base,
     gint64 offset_orig, GstBuffer ** prepend, GstBuffer ** buf)
 {
@@ -268,13 +665,12 @@ gst_base_metadata_strip_push_buffer (GstBaseMetadata * base,
   const gsize strip_len = META_DATA_STRIP_CHUNKS (base->metadata).len;
   const gsize inject_len = META_DATA_INJECT_CHUNKS (base->metadata).len;
 
-  gboolean buffer_reallocated = FALSE;
+  gboolean buffer_is_ok_to_change = FALSE;
 
   guint32 size_buf_in = GST_BUFFER_SIZE (*buf);
 
   gint64 *boffset_strip = NULL;
   guint32 *bsize_strip = NULL;
-  guint32 *seg_binter_strip = NULL;
 
   int i, j;
   gboolean need_free_strip = FALSE;
@@ -283,6 +679,12 @@ gst_base_metadata_strip_push_buffer (GstBaseMetadata * base,
   guint32 injected_bytes = 0;
 
   guint32 prepend_size = prepend && *prepend ? GST_BUFFER_SIZE (*prepend) : 0;
+
+  /*
+   * check all the 'inject chunks' having the 'original offset' starting into
+   * the buffer
+   * and calculates how many bytes will be injectd
+   */
 
   if (inject_len) {
 
@@ -302,31 +704,38 @@ gst_base_metadata_strip_push_buffer (GstBaseMetadata * base,
   }
 
   /*
-   * strip segments
+   * strip step
    */
 
   if (strip_len == 0)
     goto inject;
 
+  /* just try to do fast allocation on stack */
   if (G_UNLIKELY (strip_len > 16)) {
     boffset_strip = g_new (gint64, strip_len);
     bsize_strip = g_new (guint32, strip_len);
-    seg_binter_strip = g_new (guint32, strip_len);
     need_free_strip = TRUE;
   } else {
     boffset_strip = g_alloca (sizeof (boffset_strip[0]) * strip_len);
     bsize_strip = g_alloca (sizeof (bsize_strip[0]) * strip_len);
-    seg_binter_strip = g_alloca (sizeof (seg_binter_strip[0]) * strip_len);
   }
 
   memset (bsize_strip, 0x00, sizeof (bsize_strip[0]) * strip_len);
 
+  /*
+   * calculate the number of bytes from the buffer bytes that intersect some
+   * 'strip chunk'.
+   * also get the position and size of segments into current buffer
+   * (boffset_strip[i] and bsize_strip[i])
+   * that will be striped
+   */
+
   for (i = 0; i < strip_len; ++i) {
     int res;
 
-    res = gst_base_metadata_get_strip_seg (offset_orig, size_buf_in,
-        strip[i].offset_orig, strip[i].size, &boffset_strip[i], &bsize_strip[i],
-        &seg_binter_strip[i]);
+    res = gst_base_metadata_buf_get_intersection_seg (offset_orig, size_buf_in,
+        strip[i].offset_orig, strip[i].size,
+        &boffset_strip[i], &bsize_strip[i]);
 
     /* segment is after size (segments are sorted) */
     striped_bytes += bsize_strip[i];
@@ -340,8 +749,10 @@ gst_base_metadata_strip_push_buffer (GstBaseMetadata * base,
 
     guint8 *data;
 
-    if (!buffer_reallocated) {
-      buffer_reallocated = TRUE;
+    if (!buffer_is_ok_to_change) {
+      /* create a new buffer if there is no space on currect buffer or if is
+         read-only */
+      buffer_is_ok_to_change = TRUE;
       if (injected_bytes + prepend_size > striped_bytes) {
         GstBuffer *new_buf =
             gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + injected_bytes +
@@ -365,6 +776,7 @@ gst_base_metadata_strip_push_buffer (GstBaseMetadata * base,
 
     data = GST_BUFFER_DATA (*buf);
 
+    /* strip out the bytes from buffer */
     striped_bytes = 0;
     for (i = 0; i < strip_len; ++i) {
       /* intersect */
@@ -390,8 +802,10 @@ inject:
     guint8 *data;
     guint32 striped_so_far;
 
-    if (!buffer_reallocated) {
-      buffer_reallocated = TRUE;
+    if (!buffer_is_ok_to_change) {
+      /* create a new buffer fs there is no space on currect buffer or if is
+         read-only */
+      buffer_is_ok_to_change = TRUE;
       if (injected_bytes + prepend_size > striped_bytes) {
         GstBuffer *new_buf =
             gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + injected_bytes +
@@ -427,6 +841,9 @@ inject:
         else
           break;
       }
+
+      /* inject the whole inject chunk if the 'original offset' is inside the
+         original buffer */
 
       if (inject[i].offset_orig >= offset_orig) {
         if (inject[i].offset_orig <
@@ -476,7 +893,6 @@ done:
   if (need_free_strip) {
     g_free (boffset_strip);
     g_free (bsize_strip);
-    g_free (seg_binter_strip);
   }
 
   return injected_bytes || striped_bytes;
@@ -484,12 +900,111 @@ done:
 }
 
 /*
- * pos - position in stream striped
- * orig_pos - position in original stream
- * return TRUE - position in original buffer
- *        FALSE - position in inserted chunk
+ * gst_base_metadata_buf_get_intersection_seg:
+ * @offset: offset of buffer in original stream
+ * @size: size of buffer
+ * @seg_offset: offset of segment in original stream
+ * @seg_size: size of segment
+ * @boffset: offset inside buffer where segment starts (-1 for no intersection)
+ * @bsize:size of intersection
+ *
+ * Calculate which bytes into the buffer given by @offset and @size intersetcs
+ * the segment given by @seg_offset and @seg_size
+ * @see_also: #gst_base_metadata_strip_push_buffer
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%-1 if the segment is completly before the buffer</para>
+ * </listitem>
+ * <listitem><para>%0 if the segment intersects</para></listitem>
+ * <listitem><para>%1 if the segment is after the buffer</para></listitem>
+ * </itemizedlist>
  */
-gboolean
+
+static int
+gst_base_metadata_buf_get_intersection_seg (const gint64 offset, guint32 size,
+    const gint64 seg_offset, const guint32 seg_size,
+    gint64 * boffset, guint32 * bsize)
+{
+  int ret = -1;
+
+  *boffset = -1;
+  *bsize = 0;
+
+  /* all segment after buffer */
+  if (seg_offset >= offset + size) {
+    ret = 1;
+    goto done;
+  }
+
+  if (seg_offset < offset) {
+    /* segment start somewhere before buffer */
+
+    /* all segment before buffer */
+    if (seg_offset + seg_size <= offset) {
+      ret = -1;
+      goto done;
+    }
+
+    *boffset = 0;
+
+    /* FIXME : optimize to >= size -> = size */
+    if (seg_offset + seg_size >= offset + size) {
+      /* segment cover all buffer */
+      *bsize = size;
+    } else {
+      /* segment goes from start of buffer to somewhere before end */
+      *bsize = seg_size - (offset - seg_offset);
+    }
+
+    ret = 0;
+
+  } else {
+    /* segment start somewhere into buffer */
+
+    *boffset = seg_offset - offset;
+
+    if (seg_offset + seg_size <= offset + size) {
+      /* all segment into buffer */
+      *bsize = seg_size;
+    } else {
+      *bsize = size - *boffset;
+    }
+
+    ret = 0;
+
+  }
+
+done:
+
+  return ret;
+
+}
+
+/*
+ * gst_base_metadata_translate_pos_to_orig:
+ * @base: the base metadata instance
+ * @pos: position in output stream
+ * @orig_pos: position in original stream
+ * @buf: if not NULL, will have data that starts at some point into a injected
+ * chunk
+ *
+ * Given a position in output stream (@pos), returns the position in original 
+ * stream (@orig_pos) that contains the same data. If @pos is into a injected
+ * chunk, @orig_pos will contains the position just after the position in which
+ * the chunk has been insert and @buf (if non null) will be filled with
+ * injected bytes starting in @pos until the and of injected chunk.
+ * @see_also: #gst_base_metadata_src_event #gst_base_metadata_get_range
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%TRUE if @pos is in original buffer</para></listitem>
+ * <listitem><para>%FALSE if @pos is into a injected chunk</para></listitem>
+ * </itemizedlist>
+ *
+ */
+
+static gboolean
 gst_base_metadata_translate_pos_to_orig (GstBaseMetadata * base,
     gint64 pos, gint64 * orig_pos, GstBuffer ** buf)
 {
@@ -585,13 +1100,24 @@ done:
 }
 
 /*
- * return:
- *   -1 -> error
- *    0 -> succeded
- *    1 -> need more data
+ * gst_base_metadata_calculate_offsets:
+ * @base: the base metadata instance
+ *
+ * Recalculates the offset of injected chunks after take in account new sizes
+ * written by the 'muxers elements' and wrapped with bytes by the correct
+ * file type handler.
+ * @see_also: #gst_base_metadata_processing #metadata_lazy_update
+ * #gst_base_metadata_update_inject_segment_with_new_data
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%TRUE if succeded</para></listitem>
+ * <listitem><para>%FALSE if fails. Which happens if the stream hasn't been
+ * completely parsed yet</para></listitem>
+ * </itemizedlist>
  */
 
-gboolean
+static gboolean
 gst_base_metadata_calculate_offsets (GstBaseMetadata * base)
 {
   int i, j;
@@ -601,9 +1127,15 @@ gst_base_metadata_calculate_offsets (GstBaseMetadata * base)
   MetadataChunk *inject = META_DATA_INJECT_CHUNKS (base->metadata).chunk;
   gsize strip_len;
   gsize inject_len;
+  gboolean ret = TRUE;
 
-  if (base->state != MT_STATE_PARSED)
-    return FALSE;
+  if (base->state != MT_STATE_PARSED) {
+    ret = FALSE;
+    goto done;
+  }
+
+  metadata_chunk_array_remove_zero_size (&META_DATA_INJECT_CHUNKS (base->
+          metadata));
 
   metadata_lazy_update (base->metadata);
 
@@ -626,7 +1158,11 @@ gst_base_metadata_calculate_offsets (GstBaseMetadata * base)
     bytes_inject += inject[i].size;
   }
 
-  /* calculate append (doesnt make much sense, but, anyway..) */
+  /* FIXME: For the time being we don't have append buffers 'cause in the case
+     of files we are handling it is not possible to append after the last byte
+     on original stream (which is part of a kind of end-of-file chunk) */
+#if 0
+  /* calculate append buffer */
   append_size = 0;
   for (i = inject_len - 1; i >= 0; --i) {
     if (inject[i].offset_orig == base->duration_orig)
@@ -649,6 +1185,7 @@ gst_base_metadata_calculate_offsets (GstBaseMetadata * base)
       }
     }
   }
+#endif
 
   if (base->duration_orig) {
     base->duration = base->duration_orig;
@@ -660,32 +1197,16 @@ gst_base_metadata_calculate_offsets (GstBaseMetadata * base)
     }
   }
 
-  return TRUE;
+done:
+
+  return ret;
 
 }
 
-const gchar *
-gst_base_metadata_get_type_name (int img_type)
-{
-  gchar *type_name = NULL;
 
-  switch (img_type) {
-    case IMG_JPEG:
-      type_name = "jpeg";
-      break;
-    case IMG_PNG:
-      type_name = "png";
-      break;
-    default:
-      type_name = "invalid type";
-      break;
-  }
-  return type_name;
-}
-
-
-/* gstreamer functions */
-
+/*
+ * GObject callback functions implementation
+ */
 
 static void
 gst_base_metadata_base_init (gpointer gclass)
@@ -694,7 +1215,6 @@ gst_base_metadata_base_init (gpointer gclass)
       "basemetadata element");
 }
 
-/* initialize the plugin's class */
 static void
 gst_base_metadata_class_init (GstBaseMetadataClass * klass)
 {
@@ -728,11 +1248,6 @@ gst_base_metadata_class_init (GstBaseMetadataClass * klass)
 
 }
 
-/* initialize the new element
- * instantiate pads and add them to element
- * set functions
- * initialize structure
- */
 static void
 gst_base_metadata_init (GstBaseMetadata * filter, GstBaseMetadataClass * gclass)
 {
@@ -781,6 +1296,26 @@ gst_base_metadata_init (GstBaseMetadata * filter, GstBaseMetadataClass * gclass)
 
   gst_base_metadata_init_members (filter);
 
+}
+
+static void
+gst_base_metadata_dispose (GObject * object)
+{
+  GstBaseMetadata *filter = NULL;
+
+  filter = GST_BASE_METADATA (object);
+
+  gst_base_metadata_dispose_members (filter);
+
+  metadataparse_xmp_dispose ();
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_base_metadata_finalize (GObject * object)
+{
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -836,58 +1371,48 @@ gst_base_metadata_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* GstElement vmethod implementations */
 
-static gboolean
-gst_base_metadata_processing (GstBaseMetadata * filter)
+/*
+ * GStreamer callback functions declaration
+ */
+
+static GstStateChangeReturn
+gst_base_metadata_change_state (GstElement * element, GstStateChange transition)
 {
-  gboolean ret = TRUE;
-  GstBaseMetadataClass *bclass = GST_BASE_METADATA_GET_CLASS (filter);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstBaseMetadata *filter = GST_BASE_METADATA (element);
 
-  if (filter->need_processing) {
-    bclass->processing (filter);
-    if (gst_base_metadata_calculate_offsets (filter)) {
-      filter->need_processing = FALSE;
-    } else {
-      ret = FALSE;
-    }
-  }
-
-  return ret;
-
-}
-
-static gboolean
-gst_base_metadata_sink_event (GstPad * pad, GstEvent * event)
-{
-  GstBaseMetadata *filter = NULL;
-  gboolean ret = FALSE;
-  GstBaseMetadataClass *bclass;
-
-  filter = GST_BASE_METADATA (gst_pad_get_parent (pad));
-  bclass = GST_BASE_METADATA_GET_CLASS (filter);
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      if (filter->need_more_data) {
-        GST_ELEMENT_WARNING (filter, STREAM, DECODE, (NULL),
-            ("Need more data. Unexpected EOS"));
-      }
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      gst_base_metadata_reset_parsing (filter);
+      metadata_init (&filter->metadata, filter->options);
       break;
-    case GST_EVENT_TAG:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (filter->metadata == NULL)
+        metadata_init (&filter->metadata, filter->options);
       break;
     default:
       break;
   }
 
-  ret = bclass->sink_event (pad, event);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto done;
 
-  gst_object_unref (filter);
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_base_metadata_reset_streaming (filter);
+      if (filter->state != MT_STATE_PARSED)
+        gst_base_metadata_reset_parsing (filter);
+      break;
+    default:
+      break;
+  }
+
+done:
 
   return ret;
-
 }
-
 
 static gboolean
 gst_base_metadata_src_event (GstPad * pad, GstEvent * event)
@@ -945,7 +1470,13 @@ gst_base_metadata_src_event (GstPad * pad, GstEvent * event)
         filter->prepend_buffer = NULL;
       }
 
-      /* FIXME: related to append */
+      /* FIXME: if some chunk is injected after the end of original file
+         (which is not the case for any file type currently handled), appending
+         a buffer should be taken in account
+       */
+
+      /* translate position and setup filter-prepend to be prepend to the
+         striped/injected buffer in next 'chain' calling */
       filter->offset = start;
       gst_base_metadata_translate_pos_to_orig (filter, start, &start,
           &filter->prepend_buffer);
@@ -973,7 +1504,7 @@ gst_base_metadata_src_event (GstPad * pad, GstEvent * event)
   }
 
   ret = gst_pad_event_default (pad, event);
-  event = NULL;                 /* event has another owner */
+  event = NULL;
 
 done:
 
@@ -987,233 +1518,30 @@ done:
 
 }
 
-static void
-gst_base_metadata_dispose (GObject * object)
+static gboolean
+gst_base_metadata_sink_event (GstPad * pad, GstEvent * event)
 {
   GstBaseMetadata *filter = NULL;
-
-  filter = GST_BASE_METADATA (object);
-
-  gst_base_metadata_dispose_members (filter);
-
-  metadataparse_xmp_dispose ();
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-gst_base_metadata_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-gst_base_metadata_dispose_members (GstBaseMetadata * filter)
-{
-
-  /* buffers used to build output buffer */
-
-  if (filter->prepend_buffer) {
-    gst_buffer_unref (filter->prepend_buffer);
-    filter->prepend_buffer = NULL;
-  }
-
-  if (filter->append_buffer) {
-    gst_buffer_unref (filter->append_buffer);
-    filter->append_buffer = NULL;
-  }
-
-  /* adapter used during parsing process */
-
-  if (filter->adapter_parsing) {
-    gst_object_unref (filter->adapter_parsing);
-    filter->adapter_parsing = NULL;
-  }
-
-  if (filter->adapter_holding) {
-    gst_object_unref (filter->adapter_holding);
-    filter->adapter_holding = NULL;
-  }
-
-  metadata_dispose (&filter->metadata);
-
-}
-
-static void
-gst_base_metadata_init_members (GstBaseMetadata * filter)
-{
-
-  filter->metadata = NULL;
-
-  filter->img_type = IMG_NONE;
-
-  filter->duration_orig = 0;
-  filter->duration = 0;
-
-  filter->state = MT_STATE_NULL;
-
-  filter->options = META_OPT_EXIF | META_OPT_IPTC | META_OPT_XMP;
-
-  filter->need_processing = FALSE;
-
-  filter->adapter_parsing = NULL;
-  filter->adapter_holding = NULL;
-  filter->next_offset = 0;
-  filter->next_size = 0;
-  filter->need_more_data = FALSE;
-  filter->offset_orig = 0;
-  filter->offset = 0;
-
-  filter->append_buffer = NULL;
-  filter->prepend_buffer = NULL;
-
-}
-
-static void
-gst_base_metadata_reset_streaming (GstBaseMetadata * filter)
-{
-  filter->offset_orig = 0;
-  filter->offset = 0;
-  if (filter->adapter_holding)
-    gst_adapter_clear (filter->adapter_holding);
-}
-
-static void
-gst_base_metadata_reset_parsing (GstBaseMetadata * filter)
-{
-
-
-  if (filter->prepend_buffer) {
-    gst_buffer_unref (filter->prepend_buffer);
-    filter->prepend_buffer = NULL;
-  }
-
-  if (filter->append_buffer) {
-    gst_buffer_unref (filter->append_buffer);
-    filter->append_buffer = NULL;
-  }
-
-  if (filter->adapter_parsing)
-    gst_adapter_clear (filter->adapter_parsing);
-
-  if (filter->adapter_holding)
-    gst_adapter_clear (filter->adapter_holding);
-
-  filter->img_type = IMG_NONE;
-  filter->duration_orig = 0;
-  filter->duration = 0;
-  filter->state = MT_STATE_NULL;
-  filter->need_processing = FALSE;
-  filter->next_offset = 0;
-  filter->next_size = 0;
-  filter->need_more_data = FALSE;
-  filter->offset_orig = 0;
-  filter->offset = 0;
-
-  metadata_dispose (&filter->metadata);
-
-}
-
-static gboolean
-gst_base_metadata_configure_caps (GstBaseMetadata * filter)
-{
-  GstCaps *caps = NULL;
   gboolean ret = FALSE;
-  gchar *mime = NULL;
-  GstPad *peer = NULL;
+  GstBaseMetadataClass *bclass;
 
-  peer = gst_pad_get_peer (filter->sinkpad);
+  filter = GST_BASE_METADATA (gst_pad_get_parent (pad));
+  bclass = GST_BASE_METADATA_GET_CLASS (filter);
 
-  switch (filter->img_type) {
-    case IMG_JPEG:
-      mime = "image/jpeg";
-      break;
-    case IMG_PNG:
-      mime = "image/png";
-      break;
-    default:
-      goto done;
-      break;
-  }
-
-  caps = gst_caps_new_simple (mime, NULL);
-
-  if (!gst_pad_set_caps (peer, caps)) {
-    goto done;
-  }
-
-  ret = gst_pad_set_caps (filter->sinkpad, caps);
-
-done:
-
-  if (caps) {
-    gst_caps_unref (caps);
-    caps = NULL;
-  }
-
-  if (peer) {
-    gst_object_unref (peer);
-    peer = NULL;
-  }
-
-  return ret;
-
-}
-
-static const GstQueryType *
-gst_base_metadata_get_query_types (GstPad * pad)
-{
-  static const GstQueryType gst_base_metadata_src_query_types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_FORMATS,
-    0
-  };
-
-  return gst_base_metadata_src_query_types;
-}
-
-static gboolean
-gst_base_metadata_src_query (GstPad * pad, GstQuery * query)
-{
-  gboolean ret = FALSE;
-  GstFormat format;
-  GstBaseMetadata *filter = GST_BASE_METADATA (gst_pad_get_parent (pad));
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_POSITION:
-      gst_query_parse_position (query, &format, NULL);
-
-      if (format == GST_FORMAT_BYTES) {
-        gst_query_set_position (query, GST_FORMAT_BYTES, filter->offset);
-        ret = TRUE;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      if (filter->need_more_data) {
+        GST_ELEMENT_WARNING (filter, STREAM, DECODE, (NULL),
+            ("Need more data. Unexpected EOS"));
       }
       break;
-    case GST_QUERY_DURATION:
-
-      if (!gst_base_metadata_processing (filter)) {
-        ret = FALSE;
-        goto done;
-      }
-
-      gst_query_parse_duration (query, &format, NULL);
-
-      if (format == GST_FORMAT_BYTES) {
-        if (filter->duration >= 0) {
-          gst_query_set_duration (query, GST_FORMAT_BYTES, filter->duration);
-          ret = TRUE;
-        }
-      }
-      break;
-    case GST_QUERY_FORMATS:
-      gst_query_set_formats (query, 1, GST_FORMAT_BYTES);
-      ret = TRUE;
+    case GST_EVENT_TAG:
       break;
     default:
       break;
   }
 
-done:
+  ret = bclass->sink_event (pad, event);
 
   gst_object_unref (filter);
 
@@ -1221,69 +1549,85 @@ done:
 
 }
 
-/*
- * Do parsing step-by-step and reconfigure caps if need
- * return:
- *   META_PARSING_ERROR
- *   META_PARSING_DONE
- *   META_PARSING_NEED_MORE_DATA
- */
-
-static int
-gst_base_metadata_parse (GstBaseMetadata * filter, const guint8 * buf,
-    guint32 size)
+static gboolean
+gst_base_metadata_checkgetrange (GstPad * srcpad)
 {
+  GstBaseMetadata *filter = NULL;
 
-  int ret = META_PARSING_ERROR;
+  filter = GST_BASE_METADATA (GST_PAD_PARENT (srcpad));
 
-  filter->next_offset = 0;
-  filter->next_size = 0;
+  return gst_pad_check_pull_range (filter->sinkpad);
+}
 
-  ret = metadata_parse (filter->metadata, buf, size,
-      &filter->next_offset, &filter->next_size);
+static GstFlowReturn
+gst_base_metadata_get_range (GstPad * pad,
+    guint64 offset, guint size, GstBuffer ** buf)
+{
+  GstBaseMetadata *filter = NULL;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gint64 offset_orig = 0;
+  guint size_orig;
+  GstBuffer *prepend = NULL;
+  gboolean need_append = FALSE;
 
-  if (ret == META_PARSING_ERROR) {
-    if (META_DATA_IMG_TYPE (filter->metadata) == IMG_NONE) {
-      /* image type not recognized */
-      GST_ELEMENT_ERROR (filter, STREAM, TYPE_NOT_FOUND, (NULL),
-          ("Only jpeg and png are supported"));
-      goto done;
-    }
-  } else if (ret == META_PARSING_NEED_MORE_DATA) {
-    filter->need_more_data = TRUE;
-  } else {
-    filter->state = MT_STATE_PARSED;
-    filter->need_more_data = FALSE;
-    filter->need_processing = TRUE;
+  filter = GST_BASE_METADATA (GST_PAD_PARENT (pad));
+
+  if (!gst_base_metadata_processing (filter)) {
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 
-  /* reconfigure caps if it is different from type detected by 'base_metadata' function */
-  if (filter->img_type != META_DATA_IMG_TYPE (filter->metadata)) {
-    filter->img_type = META_DATA_IMG_TYPE (filter->metadata);
-    if (!gst_base_metadata_configure_caps (filter)) {
-      GST_ELEMENT_ERROR (filter, STREAM, FORMAT, (NULL),
-          ("Couldn't reconfigure caps for %s",
-              gst_base_metadata_get_type_name (filter->img_type)));
-      ret = META_PARSING_ERROR;
-      goto done;
+  if (offset + size > filter->duration) {
+    size = filter->duration - offset;
+  }
+
+  size_orig = size;
+
+  gst_base_metadata_translate_pos_to_orig (filter, offset,
+      &offset_orig, &prepend);
+
+  if (size > 1) {
+    gint64 pos;
+
+    pos = offset + size - 1;
+    gst_base_metadata_translate_pos_to_orig (filter, pos, &pos, NULL);
+    size_orig = pos + 1 - offset_orig;
+  }
+
+  if (size_orig) {
+
+    ret = gst_pad_pull_range (filter->sinkpad, offset_orig, size_orig, buf);
+
+    if (ret == GST_FLOW_OK && *buf) {
+      gst_base_metadata_strip_push_buffer (filter, offset_orig, &prepend, buf);
+
+      if (GST_BUFFER_SIZE (*buf) < size) {
+        /* need append */
+        need_append = TRUE;
+      }
+
     }
+  } else {
+    *buf = prepend;
   }
 
 done:
+
+  if (need_append) {
+    /* FIXME: together with SEEK and
+     * gst_base_metadata_translate_pos_to_orig
+     * this way if chunk is added in the end we are in trouble
+     * ...still not implemented 'cause it will not be the
+     * case for the time being (All the file types handled
+     * have a kind of end-of-file chunk (or mark, so nothing
+     * will be injected after it)
+     */
+  }
 
   return ret;
 
 }
 
-/* chain function
- * this function does the actual processing
- */
-
-/* FIXME */
-/* Current base is just done before is pull mode could be activated */
-/* may be it is possible to base in chain mode by doing some trick with gst-adapter */
-/* the pipeline below would be a test for that case */
-/* gst-launch-0.10 filesrc location=Exif.jpg ! queue !  metadatabase ! filesink location=gen3.jpg */
 
 static GstFlowReturn
 gst_base_metadata_chain (GstPad * pad, GstBuffer * buf)
@@ -1422,74 +1766,6 @@ done:
 }
 
 static gboolean
-gst_base_metadata_pull_range_base (GstBaseMetadata * filter)
-{
-
-  int res;
-  gboolean ret = TRUE;
-  guint32 offset = 0;
-  gint64 duration = 0;
-  GstFormat format = GST_FORMAT_BYTES;
-
-  if (!(ret =
-          gst_pad_query_peer_duration (filter->sinkpad, &format, &duration))) {
-    /* this should never happen, but try chain anyway */
-    ret = TRUE;
-    goto done;
-  }
-  filter->duration_orig = duration;
-
-  if (format != GST_FORMAT_BYTES) {
-    /* this should never happen, but try chain anyway */
-    ret = TRUE;
-    goto done;
-  }
-
-  do {
-    GstFlowReturn flow;
-    GstBuffer *buf = NULL;
-
-    offset += filter->next_offset;
-
-    /* 'filter->next_size' only says the minimum required number of bytes.
-       We try provided more bytes (4096) just to avoid a lot of calls to 'metadata_parse'
-       returning META_PARSING_NEED_MORE_DATA */
-    if (filter->next_size < 4096) {
-      if (duration - offset < 4096) {
-        /* In case there is no 4096 bytes available upstream.
-           It should be done upstream but we do here for safety */
-        filter->next_size = duration - offset;
-      } else {
-        filter->next_size = 4096;
-      }
-    }
-
-    flow =
-        gst_pad_pull_range (filter->sinkpad, offset, filter->next_size, &buf);
-    if (GST_FLOW_OK != flow) {
-      ret = FALSE;
-      goto done;
-    }
-
-    res =
-        gst_base_metadata_parse (filter, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf));
-    if (res == META_PARSING_ERROR) {
-      ret = FALSE;
-      goto done;
-    }
-
-    gst_buffer_unref (buf);
-
-  } while (res == META_PARSING_NEED_MORE_DATA);
-
-done:
-
-  return ret;
-
-}
-
-static gboolean
 gst_base_metadata_sink_activate (GstPad * pad)
 {
   GstBaseMetadata *filter = NULL;
@@ -1500,14 +1776,14 @@ gst_base_metadata_sink_activate (GstPad * pad)
 
   if (!gst_pad_check_pull_range (pad) ||
       !gst_pad_activate_pull (filter->sinkpad, TRUE)) {
-    /* FIXME: currently it is not possible to base in chain. Fail here ? */
-    /* nothing to be done by now, activate push mode */
+    /* FIXME: currently it is not possible to base in chain. Fail here ?
+       nothing to be done by now, activate push mode */
     return gst_pad_activate_push (pad, TRUE);
   }
 
   /* try to base */
   if (filter->state == MT_STATE_NULL) {
-    ret = gst_base_metadata_pull_range_base (filter);
+    ret = gst_base_metadata_pull_range_parse (filter);
   }
 
 done:
@@ -1526,83 +1802,6 @@ done:
 }
 
 static gboolean
-gst_base_metadata_checkgetrange (GstPad * srcpad)
-{
-  GstBaseMetadata *filter = NULL;
-
-  filter = GST_BASE_METADATA (GST_PAD_PARENT (srcpad));
-
-  return gst_pad_check_pull_range (filter->sinkpad);
-}
-
-static GstFlowReturn
-gst_base_metadata_get_range (GstPad * pad,
-    guint64 offset, guint size, GstBuffer ** buf)
-{
-  GstBaseMetadata *filter = NULL;
-  GstFlowReturn ret = GST_FLOW_OK;
-  gint64 offset_orig = 0;
-  guint size_orig;
-  GstBuffer *prepend = NULL;
-  gboolean need_append = FALSE;
-
-  filter = GST_BASE_METADATA (GST_PAD_PARENT (pad));
-
-  if (!gst_base_metadata_processing (filter)) {
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
-
-  if (offset + size > filter->duration) {
-    size = filter->duration - offset;
-  }
-
-  size_orig = size;
-
-  gst_base_metadata_translate_pos_to_orig (filter, offset,
-      &offset_orig, &prepend);
-
-  if (size > 1) {
-    gint64 pos;
-
-    pos = offset + size - 1;
-    gst_base_metadata_translate_pos_to_orig (filter, pos, &pos, NULL);
-    size_orig = pos + 1 - offset_orig;
-  }
-
-  if (size_orig) {
-
-    ret = gst_pad_pull_range (filter->sinkpad, offset_orig, size_orig, buf);
-
-    if (ret == GST_FLOW_OK && *buf) {
-      gst_base_metadata_strip_push_buffer (filter, offset_orig, &prepend, buf);
-
-      if (GST_BUFFER_SIZE (*buf) < size) {
-        /* need append */
-        need_append = TRUE;
-      }
-
-    }
-  } else {
-    *buf = prepend;
-  }
-
-done:
-
-  if (need_append) {
-    /* FIXME: together with SEEK and
-     * gst_base_metadata_translate_pos_to_orig
-     * this way if chunk is added in the end we are in trolble
-     * ...still not implemented 'cause it will not be the
-     * case for the time being
-     */
-  }
-
-  return ret;
-
-}
-
-static gboolean
 gst_base_metadata_src_activate_pull (GstPad * pad, gboolean active)
 {
   GstBaseMetadata *filter = NULL;
@@ -1613,7 +1812,7 @@ gst_base_metadata_src_activate_pull (GstPad * pad, gboolean active)
   ret = gst_pad_activate_pull (filter->sinkpad, active);
 
   if (ret && filter->state == MT_STATE_NULL) {
-    ret = gst_base_metadata_pull_range_base (filter);
+    ret = gst_base_metadata_pull_range_parse (filter);
   }
 
   gst_object_unref (filter);
@@ -1621,35 +1820,54 @@ gst_base_metadata_src_activate_pull (GstPad * pad, gboolean active)
   return ret;
 }
 
-
-static GstStateChangeReturn
-gst_base_metadata_change_state (GstElement * element, GstStateChange transition)
+static const GstQueryType *
+gst_base_metadata_get_query_types (GstPad * pad)
 {
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstBaseMetadata *filter = GST_BASE_METADATA (element);
+  static const GstQueryType gst_base_metadata_src_query_types[] = {
+    GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    GST_QUERY_FORMATS,
+    0
+  };
 
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      gst_base_metadata_reset_parsing (filter);
-      metadata_init (&filter->metadata, filter->options);
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (filter->metadata == NULL)
-        metadata_init (&filter->metadata, filter->options);
-      break;
-    default:
-      break;
-  }
+  return gst_base_metadata_src_query_types;
+}
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    goto done;
+static gboolean
+gst_base_metadata_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean ret = FALSE;
+  GstFormat format;
+  GstBaseMetadata *filter = GST_BASE_METADATA (gst_pad_get_parent (pad));
 
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_base_metadata_reset_streaming (filter);
-      if (filter->state != MT_STATE_PARSED)
-        gst_base_metadata_reset_parsing (filter);
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+      gst_query_parse_position (query, &format, NULL);
+
+      if (format == GST_FORMAT_BYTES) {
+        gst_query_set_position (query, GST_FORMAT_BYTES, filter->offset);
+        ret = TRUE;
+      }
+      break;
+    case GST_QUERY_DURATION:
+
+      if (!gst_base_metadata_processing (filter)) {
+        ret = FALSE;
+        goto done;
+      }
+
+      gst_query_parse_duration (query, &format, NULL);
+
+      if (format == GST_FORMAT_BYTES) {
+        if (filter->duration >= 0) {
+          gst_query_set_duration (query, GST_FORMAT_BYTES, filter->duration);
+          ret = TRUE;
+        }
+      }
+      break;
+    case GST_QUERY_FORMATS:
+      gst_query_set_formats (query, 1, GST_FORMAT_BYTES);
+      ret = TRUE;
       break;
     default:
       break;
@@ -1657,14 +1875,49 @@ gst_base_metadata_change_state (GstElement * element, GstStateChange transition)
 
 done:
 
+  gst_object_unref (filter);
+
   return ret;
+
 }
+
+/*
+ * extern functions declaration
+ */
+
+/**
+ * gst_base_metadata_set_option_flag:
+ * @base: the base metadata instance
+ * @options: mode of operation
+ *
+ * Set how the this base class will behaviour. As a demuxer or muxer. Hanlding
+ * EXIF, IPTC, XMP or not.
+ * @see_also: #gst_base_metadata_unset_option_flag
+ * #gst_base_metadata_get_option_flag 
+ *
+ * Returns: nothing
+ *
+ */
 
 void
 gst_base_metadata_set_option_flag (GstBaseMetadata * base, MetaOptions options)
 {
   base->options |= options;
 }
+
+/**
+ * gst_base_metadata_unset_option_flag:
+ * @base: the base metadata instance
+ * @options: mode of operation
+ *
+ * Set how the this base class will behaviour. As a demuxer or muxer. Hanlding
+ * EXIF, IPTC, XMP or not.
+ * @see_also: #gst_base_metadata_set_option_flag
+ * #gst_base_metadata_get_option_flag 
+ *
+ * Returns: nothing
+ *
+ */
 
 void
 gst_base_metadata_unset_option_flag (GstBaseMetadata * base,
@@ -1673,23 +1926,55 @@ gst_base_metadata_unset_option_flag (GstBaseMetadata * base,
   base->options &= ~options;
 }
 
+/**
+ * gst_base_metadata_get_option_flag:
+ * @base: the base metadata instance
+ *
+ * Check how the this base class will behaviour. As a demuxer or muxer.
+ * Hanlding EXIF, IPTC, XMP or not.
+ * @see_also: #gst_base_metadata_set_option_flag
+ * #gst_base_metadata_unset_option_flag
+ *
+ * Returns: The current mode of operation
+ *
+ */
+
 MetaOptions
 gst_base_metadata_get_option_flag (const GstBaseMetadata * base)
 {
   return base->options;
 }
 
-void
-gst_base_metadata_update_segment_with_new_buffer (GstBaseMetadata * base,
-    guint8 ** buf, guint32 * size, MetadataChunkType type)
+
+/**
+ * gst_base_metadata_update_inject_segment_with_new_data:
+ * @base: the base metadata instance
+ * @data: new data to be injected
+ * @size: the size in bytes of @data
+ * @type: kind of metadata chunk it is (currently EXIF, IPTC or XMP)
+ *
+ * If the file type specification of the parsed stream allows a chunk of @type,
+ * set the @data and @size of the segment to be injected. This the @data has
+ * been injected (metadata type supported by the stream @type) then, the
+ * the @data ownership will be taken and @data and @size willl be set to 0;
+ * Hanlding EXIF, IPTC, XMP or not.
+ * @see_also: #gst_base_metadata_calculate_offsets
+ *
+ * Returns: Nothing
+ *
+ */
+
+void gst_base_metadata_update_inject_segment_with_new_data
+    (GstBaseMetadata * base,
+    guint8 ** data, guint32 * size, MetadataChunkType type)
 {
   int i;
   MetadataChunk *inject = META_DATA_INJECT_CHUNKS (base->metadata).chunk;
   const gsize inject_len = META_DATA_INJECT_CHUNKS (base->metadata).len;
 
-  if (!(buf && size))
+  if (!(data && size))
     goto done;
-  if (*buf == 0)
+  if (*data == 0)
     goto done;
   if (*size == 0)
     goto done;
@@ -1699,9 +1984,9 @@ gst_base_metadata_update_segment_with_new_buffer (GstBaseMetadata * base,
       inject[i].size = *size;
       if (inject[i].data)
         g_free (inject[i].data);
-      inject[i].data = *buf;
+      inject[i].data = *data;
       *size = 0;
-      *buf = 0;
+      *data = 0;
       break;
     }
   }
@@ -1710,11 +1995,4 @@ done:
 
   return;
 
-}
-
-void
-gst_base_metadata_chunk_array_remove_zero_size (GstBaseMetadata * base)
-{
-  metadata_chunk_array_remove_zero_size (&META_DATA_INJECT_CHUNKS (base->
-          metadata));
 }

@@ -49,14 +49,20 @@
 
 G_BEGIN_DECLS
 
-/* #defines don't like whitespacey bits */
-#define GST_TYPE_BASE_METADATA		(gst_base_metadata_get_type())
-#define GST_BASE_METADATA(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_METADATA,GstBaseMetadata))
-#define GST_BASE_METADATA_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_METADATA,GstBaseMetadataClass))
-#define GST_BASE_METADATA_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_METADATA, GstBaseMetadataClass))
-#define GST_IS_BASE_METADATA(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_METADATA))
-#define GST_IS_BASE_METADATA_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_METADATA))
-#define GST_BASE_METADATA_CAST(obj)		((GstBaseMetadata *)(obj))
+/* *INDENT-OFF* */
+#define GST_TYPE_BASE_METADATA            (gst_base_metadata_get_type())
+#define GST_BASE_METADATA(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),\
+  GST_TYPE_BASE_METADATA,GstBaseMetadata))
+#define GST_BASE_METADATA_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),\
+  GST_TYPE_BASE_METADATA,GstBaseMetadataClass))
+#define GST_BASE_METADATA_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),\
+  GST_TYPE_BASE_METADATA, GstBaseMetadataClass))
+#define GST_IS_BASE_METADATA(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),\
+  GST_TYPE_BASE_METADATA))
+#define GST_IS_BASE_METADATA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),\
+  GST_TYPE_BASE_METADATA))
+#define GST_BASE_METADATA_CAST(obj)       ((GstBaseMetadata *)(obj))
+/* *INDENT-ON* */
 
 typedef struct _GstBaseMetadata GstBaseMetadata;
 typedef struct _GstBaseMetadataClass GstBaseMetadataClass;
@@ -98,7 +104,6 @@ typedef enum _tag_MetadataState
 
 /**
  * GstBaseMetadata:
- * @element: the parent element.
  *
  * The opaque #GstBaseMetadata data structure.
  */
@@ -165,11 +170,8 @@ extern MetaOptions
 gst_base_metadata_get_option_flag(const GstBaseMetadata *base);
 
 extern void
-gst_base_metadata_update_segment_with_new_buffer (GstBaseMetadata *base,
-    guint8 ** buf, guint32 * size, MetadataChunkType type);
-
-extern void
-gst_base_metadata_chunk_array_remove_zero_size (GstBaseMetadata *base);
+gst_base_metadata_update_inject_segment_with_new_data (GstBaseMetadata *base,
+    guint8 ** data, guint32 * size, MetadataChunkType type);
 
 G_END_DECLS
 #endif /* __GST_BASE_METADATA_H__ */

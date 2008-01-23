@@ -49,7 +49,8 @@
 #include "gstbasemetadata.h"
 
 G_BEGIN_DECLS
-/* #defines don't like whitespacey bits */
+
+/* *INDENT-OFF* */
 #define GST_TYPE_METADATA_MUX \
   (gst_metadata_mux_get_type())
 #define GST_METADATA_MUX(obj) \
@@ -60,12 +61,20 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_METADATA_MUX))
 #define GST_IS_METADATA_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_METADATA_MUX))
+/* *INDENT-ON* */
+
 typedef struct _GstMetadataMux GstMetadataMux;
 typedef struct _GstMetadataMuxClass GstMetadataMuxClass;
 
+/**
+ * GstMetadataMux:
+ *
+ * The opaque #GstMetadataMux data structure.
+ */
+
 struct _GstMetadataMux
 {
-  GstBaseMetadata element;
+  GstBaseMetadata metadata;
 };
 
 struct _GstMetadataMuxClass
