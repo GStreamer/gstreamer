@@ -1,3 +1,11 @@
+2008-01-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/gstdvbsrc.c:
+	Do not go on forever if problem with reading from dvr, rather
+	return NULL.
+	Handle some cleanup issues of closing filedescriptors when
+	failing to tune or similar.
+
 2008-01-23 Christian Schaller <christian.schaller@collabora.co.uk>
 
 	* gst/rawparse/Makefile.am: Add missing header files to noinst_headers

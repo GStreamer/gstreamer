@@ -877,6 +877,9 @@ read_device (int fd, int adapter_number, int frontend_number, int size)
             ("Unable to read after %u attempts from device: /dev/dvb/adapter%d/dvr%d (%d)",
             attempts, adapter_number, frontend_number, errno);
       }
+      if (attempts % 100 == 0) {
+        return NULL;
+      }
     } else if (errno == -EINTR) {       // poll interrupted
       ;
     }
@@ -942,13 +945,20 @@ gst_dvbsrc_start (GstBaseSrc * bsrc)
   gst_dvbsrc_open_frontend (src);
   if (!gst_dvbsrc_tune (src)) {
     GST_ERROR_OBJECT (src, "Not able to lock on to the dvb channel");
+    close (src->fd_frontend);
     return FALSE;
   }
   if (!gst_dvbsrc_frontend_status (src)) {
+    /* unset filters also */
+    gst_dvbsrc_unset_pes_filters (src);
+    close (src->fd_frontend);
     return FALSE;
   }
   if (!gst_dvbsrc_open_dvr (src)) {
     GST_ERROR_OBJECT (src, "Not able to open dvr_device");
+    /* unset filters also */
+    gst_dvbsrc_unset_pes_filters (src);
+    close (src->fd_frontend);
     return FALSE;
   }
 
