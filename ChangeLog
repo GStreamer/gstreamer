@@ -1,3 +1,8 @@
+2008-01-23 Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* gst/rawparse/Makefile.am: Add missing header files to noinst_headers
+	* gst-plugins-bad.spec: update for latest changes
+
 2008-01-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/plugins/Makefile.am:

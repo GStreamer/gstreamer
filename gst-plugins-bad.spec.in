@@ -94,7 +94,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstnuvdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmultifile.so
-%{_libdir}/gstreamer-%{majorminor}/libgstvideoparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrfbsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstreal.so
@@ -115,6 +114,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstsdpelem.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspeexresample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg4videoparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfbdevsink.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsrc.h
@@ -151,6 +152,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Jan 23 2008 Christian Schaller <christian at collabora dot co uk>
+- Update spec with fbdev sink and rawparse, remove videoparse
+
 * Fri Dec 14 2007 Christian Schaller <christian at collabora dot co uk>
 - Update spec file with timidity, libgstdvb, libgstsdpelem, libgstspeexresample, libgstmpeg4videoparse
 
