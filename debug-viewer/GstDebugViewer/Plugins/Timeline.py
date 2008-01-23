@@ -499,7 +499,7 @@ class TimelineWidget (gtk.DrawingArea):
             self.logger.debug ("level distribution sentinel has no data yet")
             return
 
-        theme = GUI.LevelColorThemeTango ()
+        colors = GUI.LevelColorThemeTango ().colors
         dist_data = self.process.dist_sentinel.data
 
         def cumulative_level_counts (*levels):
@@ -508,18 +508,18 @@ class TimelineWidget (gtk.DrawingArea):
 
         level = Data.debug_level_info
         levels_prev = (Data.debug_level_log, Data.debug_level_debug,)
-        ctx.set_source_rgb (*(theme.colors_float (level)[1]))
+        ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
         self.__draw_graph (ctx, w, h, maximum,
                            list (cumulative_level_counts (level, *levels_prev)))
 
         level = Data.debug_level_debug
         levels_prev = (Data.debug_level_log,)
-        ctx.set_source_rgb (*(theme.colors_float (level)[1]))
+        ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
         self.__draw_graph (ctx, w, h, maximum,
                            list (cumulative_level_counts (level, *levels_prev)))
 
         level = Data.debug_level_log
-        ctx.set_source_rgb (*(theme.colors_float (level)[1]))
+        ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
         self.__draw_graph (ctx, w, h, maximum, [counts[level] for counts in dist_data])
 
         # Draw error and warning triangle indicators:
@@ -531,7 +531,7 @@ class TimelineWidget (gtk.DrawingArea):
             ctx.close_path ()            
 
         for level in (Data.debug_level_warning, Data.debug_level_error,):
-            ctx.set_source_rgb (*(theme.colors_float (level)[1]))
+            ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
             for i, counts in enumerate (dist_data):
                 if counts[level] == 0:
                     continue

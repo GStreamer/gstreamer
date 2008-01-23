@@ -99,6 +99,12 @@ debug_level_warning = DebugLevel ("WARN")
 debug_level_info = DebugLevel ("INFO")
 debug_level_debug = DebugLevel ("DEBUG")
 debug_level_log = DebugLevel ("LOG")
+debug_levels = [debug_level_none,
+                debug_level_log,
+                debug_level_debug,
+                debug_level_info,
+                debug_level_warning,
+                debug_level_error]
 
 # For stripping color codes:
 _escape = re.compile ("\x1b\\[[0-9;]*m")

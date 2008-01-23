@@ -53,6 +53,10 @@ class Color (object):
 
         self._fields = tuple ((int (hs, 16) for hs in (s[:2], s[2:4], s[4:],)))
 
+    def gdk_color (self):
+
+        return gtk.gdk.color_parse (self.hex_string ())
+
     def hex_string (self):
 
         return "#%02x%02x%02x" % self._fields
@@ -84,7 +88,9 @@ class TangoPalette (ColorPalette):
 
     def __init__ (self):
 
-        for name, r, g, b in  [("butter1", 252, 233, 79),
+        for name, r, g, b in  [("black", 0, 0, 0,),
+                               ("white", 255, 255, 255,),
+                               ("butter1", 252, 233, 79),
                                ("butter2", 237, 212, 0),
                                ("butter3", 196, 160, 0),
                                ("chameleon1", 138, 226, 52),
@@ -119,21 +125,9 @@ class ColorTheme (object):
 
         self.colors = {}
 
-    def add_color (self, key, fg_color, bg_color = None, bg_color2 = None):
+    def add_color (self, key, *colors):
 
-        self.colors[key] = (fg_color, bg_color, bg_color2,)
-
-    def colors_float (self, key):
-
-        return tuple ((self.hex_string_to_floats (color)
-                       for color in self.colors[key]))
-
-    @staticmethod
-    def hex_string_to_floats (s):
-
-        if s.startswith ("#"):
-            s = s[1:]
-        return tuple ((float (int (hs, 16)) / 255. for hs in (s[:2], s[2:4], s[4:],)))
+        self.colors[key] = colors
 
 class LevelColorTheme (ColorTheme):
 
@@ -145,12 +139,19 @@ class LevelColorThemeTango (LevelColorTheme):
 
         LevelColorTheme.__init__ (self)
 
-        self.add_color (Data.debug_level_none, None, None, None)
-        self.add_color (Data.debug_level_log, "#000000", "#ad7fa8", "#e0a4d9")
-        self.add_color (Data.debug_level_debug, "#000000", "#729fcf", "#8cc4ff")
-        self.add_color (Data.debug_level_info, "#000000", "#8ae234", "#9dff3b")
-        self.add_color (Data.debug_level_warning, "#000000", "#fcaf3e", "#ffc266")
-        self.add_color (Data.debug_level_error, "#ffffff", "#ef2929", "#ff4545")
+        p = TangoPalette.get ()
+        self.add_color (Data.debug_level_none,
+                        None, None, None)
+        self.add_color (Data.debug_level_log,
+                        p.black, p.plum1, Color ("#e0a4d9"))
+        self.add_color (Data.debug_level_debug,
+                        p.black, p.skyblue1, Color ("#8cc4ff"))
+        self.add_color (Data.debug_level_info,
+                        p.black, p.chameleon1, Color ("#9dff3b"))
+        self.add_color (Data.debug_level_warning,
+                        p.black, p.orange1, Color ("#ffc266"))
+        self.add_color (Data.debug_level_error,
+                        p.white, p.scarletred1, Color ("#ff4545"))
 
 class ThreadColorTheme (ColorTheme):
 
@@ -893,16 +894,21 @@ class LevelColumn (TextColumn):
     def get_data_func ():
 
         theme = LevelColorThemeTango ()
-        colors = theme.colors
+        colors = dict ((level, tuple ((c.gdk_color ()
+                                       for c in theme.colors[level])),)
+                       for level in Data.debug_levels
+                       if level != Data.debug_level_none)
         def level_data_func (cell_props, level, path):
             cell_props.text = level.name[0]
-            cell_colors = colors[level]
-            # FIXME: Use GdkColors!
-            cell_props.foreground = cell_colors[0]
-            if path[0] % 2:
-                cell_props.background = cell_colors[1]
+            if level in colors:
+                cell_colors = colors[level]
             else:
-                cell_props.background = cell_colors[2]
+                cell_colors = (None, None, None,)
+            cell_props.foreground_gdk = cell_colors[0]
+            if path[0] % 2:
+                cell_props.background_gdk = cell_colors[1]
+            else:
+                cell_props.background_gdk = cell_colors[2]
 
         return level_data_func
 
