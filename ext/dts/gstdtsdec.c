@@ -17,6 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* TODO: - Port to libdca API instead of relying on the compat header.
+ *         libdca is the successor of libdts:
+ *         http://www.videolan.org/developers/libdca.html
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -56,14 +61,14 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-dts;" "audio/x-private1-dts")
     );
 
-#if defined(LIBDTS_FIXED)
+#if defined(LIBDTS_FIXED) || defined(LIBDCA_FIXED)
 #define DTS_CAPS "audio/x-raw-int, " \
     "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", " \
     "signed = (boolean) true, " \
     "width = (int) 16, " \
     "depth = (int) 16"
 #define SAMPLE_WIDTH 16
-#elif defined(LIBDTS_DOUBLE)
+#elif defined(LIBDTS_DOUBLE) || defined(LIBDCA_DOUBLE)
 #define DTS_CAPS "audio/x-raw-float, " \
     "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", " \
     "width = (int) 64"

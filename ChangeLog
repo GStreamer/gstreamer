@@ -1,3 +1,13 @@
+2008-01-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* ext/dts/gstdtsdec.c:
+	Add support for building against libdca (with the libdts compat
+	header). Fixes bug #511530.
+
+	Should probably be ported to libdca as some points as it's the
+	successor of libdts.
+
 2008-01-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c:

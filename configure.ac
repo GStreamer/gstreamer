@@ -420,8 +420,13 @@ AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
 dnl *** DTS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DTS, true)
 AG_GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
+  HAVE_DTS="yes"
   AG_GST_CHECK_LIBHEADER(DTS, dts_pic, dts_init, -lm, dts.h,
-    DTS_LIBS="-ldts_pic -lm")
+    DTS_LIBS="-ldts_pic -lm", HAVE_DTS="no")
+  if test $HAVE_DTS = "no"; then
+    AG_GST_CHECK_LIBHEADER(DTS, dca, dca_init, -lm, dts.h,
+      DTS_LIBS="-ldca -lm")
+  fi
   AC_SUBST(DTS_LIBS)
 ])
 
