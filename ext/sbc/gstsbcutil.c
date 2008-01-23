@@ -95,13 +95,23 @@ gst_sbc_get_allocation_from_list (const GValue * value)
 
 /*
  * Selects one mode from the ones on the list
- * TODO - use a better aproach
  */
 const gchar *
-gst_sbc_get_mode_from_list (const GValue * value)
+gst_sbc_get_mode_from_list (const GValue * list)
 {
-  guint size = gst_value_list_get_size (value);
-  return g_value_get_string (gst_value_list_get_value (value, size - 1));
+  int i;
+  const GValue *value;
+  const gchar *aux;
+
+  guint size = gst_value_list_get_size (list);
+  for (i = 0; i < size; i++) {
+    value = gst_value_list_get_value (list, i);
+    aux = g_value_get_string (value);
+    if (strcmp ("stereo", aux) == 0) {
+      return "stereo";
+    }
+  }
+  return g_value_get_string (gst_value_list_get_value (list, size - 1));
 }
 
 gint
@@ -166,6 +176,61 @@ gst_sbc_get_allocation_string (int alloc)
     default:
       return NULL;
   }
+}
+
+/* channel mode */
+#define SBC_CM_MONO             0x00
+#define SBC_CM_DUAL_CHANNEL     0x01
+#define SBC_CM_STEREO           0x02
+#define SBC_CM_JOINT_STEREO     0x03
+
+/* allocation mode */
+#define SBC_AM_LOUDNESS         0x00
+#define SBC_AM_SNR              0x01
+
+const gchar *
+gst_sbc_get_mode_string_from_sbc_t (int channels, int joint)
+{
+  if (channels == 2 && joint == 1)
+    return "joint";
+  else if (channels == 2 && joint == 0)
+    return "stereo";
+  else
+    return NULL;
+}
+
+const gchar *
+gst_sbc_get_allocation_string_from_sbc_t (int alloc)
+{
+  switch (alloc) {
+    case SBC_AM_LOUDNESS:
+      return "loudness";
+    case SBC_AM_SNR:
+      return "snr";
+    default:
+      return NULL;
+  }
+}
+
+GstCaps *
+gst_sbc_parse_caps_from_sbc (sbc_t * sbc)
+{
+  GstCaps *caps;
+  const gchar *mode_str;
+  const gchar *allocation_str;
+
+  mode_str = gst_sbc_get_mode_string_from_sbc_t (sbc->channels, sbc->joint);
+  allocation_str = gst_sbc_get_allocation_string_from_sbc_t (sbc->allocation);
+  caps = gst_caps_new_simple ("audio/x-sbc",
+      "rate", G_TYPE_INT, sbc->rate,
+      "channels", G_TYPE_INT, sbc->channels,
+      "mode", G_TYPE_STRING, mode_str,
+      "subbands", G_TYPE_INT, sbc->subbands,
+      "blocks", G_TYPE_INT, sbc->blocks,
+      "allocation", G_TYPE_STRING, allocation_str,
+      "bitpool", G_TYPE_INT, sbc->bitpool, NULL);
+
+  return caps;
 }
 
 GstCaps *

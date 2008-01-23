@@ -47,6 +47,7 @@ gint gst_sbc_get_mode_int(const gchar *mode);
 const gchar *gst_sbc_get_mode_string(int joint);
 
 GstCaps* gst_sbc_caps_from_sbc(sbc_capabilities_t *sbc, gint channels);
+GstCaps* gst_sbc_parse_caps_from_sbc(sbc_t *sbc);
 
 GstCaps* gst_sbc_util_caps_fixate(GstCaps *caps, gchar** error_message);
 
