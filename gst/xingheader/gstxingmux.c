@@ -20,6 +20,31 @@
 
 /* Xing SDK: http://www.mp3-tech.org/programmer/sources/vbrheadersdk.zip */
 
+
+/**
+ * SECTION:element-xingmux
+ * @short_description: Adds a Xing header to MP3 files
+ *
+ * <refsect2>
+ * <para>
+ * xingmux adds a Xing header to MP3 files. This contains information about the duration and size
+ * of the file and a seek table and is very useful for getting an almost correct duration and better
+ * seeking on VBR MP3 files.
+ * </para>
+ * <para>
+ * This element will remove any existing Xing, LAME or VBRI headers from the beginning of the file.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch audiotestsrc num-buffers=1000 ! audioconvert ! lame ! xingmux ! filesink location=test.mp3
+ * gst-launch filesrc location=test.mp3 ! xingmux ! filesink location=test2.mp3
+ * gst-launch filesrc location=test.mp3 ! mp3parse ! xingmux ! filesink location=test2.mp3
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -37,6 +62,12 @@ GST_BOILERPLATE (GstXingMux, gst_xing_mux, GstElement, GST_TYPE_ELEMENT);
 #define GST_XING_BYTES_FIELD   (1 << 1)
 #define GST_XING_TOC_FIELD     (1 << 2)
 #define GST_XING_QUALITY_FIELD (1 << 3)
+
+typedef struct _GstXingSeekEntry
+{
+  gint64 timestamp;
+  gint byte;
+} GstXingSeekEntry;
 
 static void gst_xing_mux_finalize (GObject * obj);
 static GstStateChangeReturn

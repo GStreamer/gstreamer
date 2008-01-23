@@ -80,19 +80,19 @@ GST_START_TEST (test_xing_remux)
   GstElement *xingmux;
   GstBuffer *inbuffer;
   GList *it;
-  guint8 *verify_data;
+  const guint8 *verify_data;
 
   xingmux = setup_xingmux ();
+
+  fail_unless (gst_element_set_state (xingmux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (test_xing));
   memcpy (GST_BUFFER_DATA (inbuffer), test_xing, sizeof (test_xing));
 
   gst_buffer_set_caps (inbuffer, GST_PAD_CAPS (mysrcpad));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-
-
-  /* FIXME: why are the xingmux pads flushing? */
-  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_flush_stop ()));
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);

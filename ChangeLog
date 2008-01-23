@@ -1,5 +1,17 @@
 2008-01-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* gst/xingheader/gstxingmux.c:
+	* gst/xingheader/gstxingmux.h:
+	Add documentation for the xingheader plugin.
+
+	* tests/check/elements/xingmux.c: (GST_START_TEST):
+	Set element state to PLAYING before doing something else.
+
+2008-01-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/Makefile.am:
 	* tests/check/elements/.cvsignore:
 	* tests/check/elements/xingmux.c: (setup_xingmux),
