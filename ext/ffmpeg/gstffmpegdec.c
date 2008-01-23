@@ -77,6 +77,8 @@ struct _GstFFMpegDec
   /* parsing */
   AVCodecParserContext *pctx;
   GstBuffer *pcache;
+  guint8 *padded;
+  guint padded_size;
 
   GValue *par;                  /* pixel aspect ratio of incoming data */
   gboolean current_dr;          /* if direct rendering is enabled */
@@ -86,6 +88,7 @@ struct _GstFFMpegDec
   gint hurry_up;
   gint lowres;
   gboolean direct_rendering;
+  gboolean do_padding;
 
   /* QoS stuff *//* with LOCK */
   gdouble proportion;
@@ -132,13 +135,15 @@ struct _GstFFMpegDecClassParams
 #define DEFAULT_LOWRES			0
 #define DEFAULT_SKIPFRAME		0
 #define DEFAULT_DIRECT_RENDERING	FALSE
+#define DEFAULT_DO_PADDING		TRUE
 
 enum
 {
   PROP_0,
   PROP_LOWRES,
   PROP_SKIPFRAME,
-  PROP_DIRECT_RENDERING
+  PROP_DIRECT_RENDERING,
+  PROP_DO_PADDING
 };
 
 /* A number of function prototypes are given so we can refer to them later. */
@@ -285,6 +290,10 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
         g_param_spec_boolean ("direct-rendering", "Direct Rendering",
             "Enable direct rendering",
             DEFAULT_DIRECT_RENDERING, G_PARAM_READWRITE));
+    g_object_class_install_property (gobject_class, PROP_DO_PADDING,
+        g_param_spec_boolean ("do-padding", "Do Padding",
+            "Add 0 padding before decoding data",
+            DEFAULT_DO_PADDING, G_PARAM_READWRITE));
   }
 
   gstelement_class->change_state = gst_ffmpegdec_change_state;
@@ -325,6 +334,7 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->waiting_for_key = TRUE;
   ffmpegdec->hurry_up = ffmpegdec->lowres = 0;
   ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
+  ffmpegdec->do_padding = DEFAULT_DO_PADDING;
 
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
@@ -1268,8 +1278,8 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
   if (ffmpegdec->picture->opaque != NULL) {
     /* we allocated a picture already for ffmpeg to decode into, let's pick it
      * up and use it now. */
-    GST_LOG_OBJECT (ffmpegdec, "using opaque buffer");
     *outbuf = (GstBuffer *) ffmpegdec->picture->opaque;
+    GST_LOG_OBJECT (ffmpegdec, "using opaque buffer %p", *outbuf);
 #ifndef EXTRA_REF
     gst_buffer_ref (*outbuf);
 #endif
@@ -1986,7 +1996,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 {
   GstFFMpegDec *ffmpegdec;
   GstFFMpegDecClass *oclass;
-  guint8 *data, *bdata;
+  guint8 *data, *bdata, *pdata;
   gint size, bsize, len, have_data;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime in_timestamp, in_duration;
@@ -2108,9 +2118,26 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       ffmpegdec->in_ts = in_timestamp;
     }
 
+    if (ffmpegdec->do_padding) {
+      /* add padding */
+      if (ffmpegdec->padded_size <= size + FF_INPUT_BUFFER_PADDING_SIZE) {
+        ffmpegdec->padded_size = size + FF_INPUT_BUFFER_PADDING_SIZE;
+        ffmpegdec->padded = g_realloc (ffmpegdec->padded, ffmpegdec->padded_size);
+        GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
+			ffmpegdec->padded_size); 
+      }
+      memcpy (ffmpegdec->padded, data, size);
+      memset (ffmpegdec->padded + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
+
+      pdata = ffmpegdec->padded;
+    }
+    else {
+      pdata = data;
+    }
+
     /* decode a frame of audio/video now */
     len =
-        gst_ffmpegdec_frame (ffmpegdec, data, size, &have_data, in_timestamp,
+        gst_ffmpegdec_frame (ffmpegdec, pdata, size, &have_data, in_timestamp,
         in_duration, &ret);
 
     if (ret != GST_FLOW_OK) {
@@ -2214,6 +2241,9 @@ gst_ffmpegdec_change_state (GstElement * element, GstStateChange transition)
       gst_ffmpegdec_close (ffmpegdec);
       GST_OBJECT_UNLOCK (ffmpegdec);
       clear_queued (ffmpegdec);
+      g_free (ffmpegdec->padded);
+      ffmpegdec->padded = NULL;
+      ffmpegdec->padded_size = 0;
       break;
     default:
       break;
@@ -2239,6 +2269,9 @@ gst_ffmpegdec_set_property (GObject * object,
     case PROP_DIRECT_RENDERING:
       ffmpegdec->direct_rendering = g_value_get_boolean (value);
       break;
+    case PROP_DO_PADDING:
+      ffmpegdec->do_padding = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2260,6 +2293,9 @@ gst_ffmpegdec_get_property (GObject * object,
       break;
     case PROP_DIRECT_RENDERING:
       g_value_set_boolean (value, ffmpegdec->direct_rendering);
+      break;
+    case PROP_DO_PADDING:
+      g_value_set_boolean (value, ffmpegdec->do_padding);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

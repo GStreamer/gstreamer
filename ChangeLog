@@ -1,5 +1,14 @@
 2008-01-23  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_class_init),
+	(gst_ffmpegdec_init), (get_output_buffer), (gst_ffmpegdec_chain),
+	(gst_ffmpegdec_change_state), (gst_ffmpegdec_set_property),
+	(gst_ffmpegdec_get_property):
+	Add padding to input data before feeding it to ffmpeg. Also add option
+	to disable this (although it does not seem to cause slowdown).
+
+2008-01-23  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_setcaps),
 	(alloc_output_buffer), (gst_ffmpegdec_get_buffer),
 	(gst_ffmpegdec_release_buffer), (gst_ffmpegdec_negotiate),
