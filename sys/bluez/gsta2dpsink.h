@@ -25,6 +25,9 @@
 #include <gst/rtp/gstbasertppayload.h>
 #include "gstavdtpsink.h"
 
+#ifndef __GST_A2DP_SINK_H__
+#define __GST_A2DP_SINK_H__
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_A2DP_SINK \
@@ -47,6 +50,7 @@ struct _GstA2dpSink {
 	GstBaseRTPPayload *rtp;
 	GstAvdtpSink *sink;
 	GstElement *capsfilter;
+	GstElement *fakesink;
 
 	gchar *device;
 	gboolean sink_is_in_bin;
@@ -59,6 +63,8 @@ struct _GstA2dpSink {
 	/* Store the tags received before the a2dpsender sink is created
 	 * when it is created we forward this to it */
 	GstTagList *taglist;
+
+	GMutex *cb_mutex;
 };
 
 struct _GstA2dpSinkClass {
@@ -68,4 +74,8 @@ struct _GstA2dpSinkClass {
 GType gst_a2dp_sink_get_type(void);
 gboolean gst_a2dp_sink_plugin_init (GstPlugin * plugin);
 
+GstCaps *gst_a2dp_sink_get_device_caps(GstA2dpSink *self);
+
 G_END_DECLS
+
+#endif
