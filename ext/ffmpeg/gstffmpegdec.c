@@ -35,6 +35,9 @@
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
 
+/* define to enable alternative buffer refcounting algorithm */
+#undef EXTRA_REF
+
 typedef struct _GstFFMpegDec GstFFMpegDec;
 
 struct _GstFFMpegDec
@@ -77,6 +80,7 @@ struct _GstFFMpegDec
 
   GValue *par;                  /* pixel aspect ratio of incoming data */
   gboolean current_dr;          /* if direct rendering is enabled */
+  gboolean extra_ref;           /* keep extra ref around in get/release */
 
   /* some properties */
   gint hurry_up;
@@ -636,21 +640,26 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
 
   /* figure out if we can use direct rendering */
   ffmpegdec->current_dr = FALSE;
+  ffmpegdec->extra_ref = FALSE;
   if (ffmpegdec->direct_rendering) {
     GST_DEBUG_OBJECT (ffmpegdec, "trying to enable direct rendering");
     if (!oclass->in_plugin->capabilities & CODEC_CAP_DR1) {
       GST_DEBUG_OBJECT (ffmpegdec, "direct rendering not supported");
     }
     if (oclass->in_plugin->id == CODEC_ID_H264) {
-      GST_DEBUG_OBJECT (ffmpegdec, "direct rendering disabled for H264");
+      GST_DEBUG_OBJECT (ffmpegdec, "direct rendering setup for H264");
+      ffmpegdec->current_dr = TRUE;
+      ffmpegdec->extra_ref = TRUE;
     }
     else {
       GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
       /* do *not* draw edges when in direct rendering, for some reason it draws
        * outside of the memory. */
       ffmpegdec->current_dr = TRUE;
-      ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
     } 
+  }
+  if (ffmpegdec->current_dr) {
+    ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
   }
 
   /* workaround encoder bugs */
@@ -694,19 +703,65 @@ open_failed:
   }
 }
 
+static GstFlowReturn
+alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
+    gint width, gint height)
+{
+  GstFlowReturn ret;
+  gint fsize;
+
+  ret = GST_FLOW_ERROR;
+  *outbuf = NULL;
+
+  GST_LOG_OBJECT (ffmpegdec, "alloc output buffer");
+
+  /* see if we need renegotiation */
+  if (G_UNLIKELY (!gst_ffmpegdec_negotiate (ffmpegdec)))
+    goto negotiate_failed;
+
+  /* get the size of the gstreamer output buffer given a
+   * width/height/format */
+  fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
+      width, height);
+
+  if (!ffmpegdec->context->palctrl) {
+    /* no pallete, we can use the buffer size to alloc */
+    ret = gst_pad_alloc_buffer_and_set_caps (ffmpegdec->srcpad,
+        GST_BUFFER_OFFSET_NONE, fsize,
+        GST_PAD_CAPS (ffmpegdec->srcpad), outbuf);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto alloc_failed;
+  } else {
+    /* for paletted data we can't use pad_alloc_buffer(), because
+     * fsize contains the size of the palette, so the overall size
+     * is bigger than ffmpegcolorspace's unit size, which will
+     * prompt GstBaseTransform to complain endlessly ... */
+    *outbuf = gst_buffer_new_and_alloc (fsize);
+    gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
+    ret = GST_FLOW_OK;
+  }
+  return ret;
+
+  /* special cases */
+negotiate_failed:
+  {
+    GST_DEBUG_OBJECT (ffmpegdec, "negotiate failed");
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+alloc_failed:
+  {
+    GST_DEBUG_OBJECT (ffmpegdec, "pad_alloc failed");
+    return ret;
+  }
+}
+
 static int
 gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 {
   GstBuffer *buf = NULL;
-  gulong bufsize = 0;
   GstFFMpegDec *ffmpegdec;
-  int width;
-  int height;
 
   ffmpegdec = (GstFFMpegDec *) context->opaque;
-
-  width = context->width;
-  height = context->height;
 
   GST_DEBUG_OBJECT (ffmpegdec, "getting buffer, apply pts %"G_GINT64_FORMAT,
 		  ffmpegdec->in_ts);
@@ -719,7 +774,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   picture->opaque = NULL;
 
   if (!ffmpegdec->current_dr) {
-    GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled");
+    GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
     return avcodec_default_get_buffer (context, picture);
   }
 
@@ -727,32 +782,45 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
     case CODEC_TYPE_VIDEO:
       /* some ffmpeg video plugins don't see the point in setting codec_type ... */
     case CODEC_TYPE_UNKNOWN:
-      avcodec_align_dimensions (context, &width, &height);
+    {
+      GstFlowReturn ret;
+      gint width, height;
+      gint clip_width, clip_height;
 
-      bufsize = avpicture_get_size (context->pix_fmt, width, height);
+      /* take width and height before clipping */
+      width = context->width;
+      height = context->height;
+      /* take final clipped output size */
+      if ((clip_width = ffmpegdec->format.video.clip_width) == -1)
+	clip_width = width;
+      if ((clip_height = ffmpegdec->format.video.clip_height) == -1)
+	clip_height = height;
 
-      if ((width != context->width) || (height != context->height) || 1) {
-        context->width = width;
-        context->height = height;
-      }
+      /* this is the size ffmpeg needs for the buffer */
+      avcodec_align_dimensions(context, &width, &height);
 
-      if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
-        GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-            ("Failed to link ffmpeg decoder to next element"));
+      GST_LOG_OBJECT (ffmpegdec, "aligned outsize %d/%d, clip %d/%d", 
+		      width, height, clip_width, clip_height);
+
+      if (width != clip_width || height != clip_height) {
+        /* We can't alloc if we need to clip the output buffer later */
+        GST_LOG_OBJECT (ffmpegdec, "we need clipping, fallback alloc");
         return avcodec_default_get_buffer (context, picture);
       }
 
-      if (gst_pad_alloc_buffer_and_set_caps (ffmpegdec->srcpad,
-              GST_BUFFER_OFFSET_NONE, bufsize, GST_PAD_CAPS (ffmpegdec->srcpad),
-              &buf) != GST_FLOW_OK) {
-        /* when allocation fails, still provide a default buffer */
+      /* alloc with aligned dimensions for ffmpeg */
+      ret = alloc_output_buffer (ffmpegdec, &buf, width, height);
+      if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+	/* alloc default buffer when we can't get one from downstream */
+        GST_LOG_OBJECT (ffmpegdec, "alloc failed, fallback alloc");
         return avcodec_default_get_buffer (context, picture);
       }
 
+      /* copy the right pointers and strides in the picture object */
       gst_ffmpeg_avpicture_fill ((AVPicture *) picture,
-          GST_BUFFER_DATA (buf),
-          context->pix_fmt, context->width, context->height);
+          GST_BUFFER_DATA (buf), context->pix_fmt, width, height);
       break;
+    }
     case CODEC_TYPE_AUDIO:
     default:
       g_assert_not_reached ();
@@ -764,6 +832,13 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   picture->type = FF_BUFFER_TYPE_USER;
   picture->age = 256*256*256*64;
   picture->opaque = buf;
+
+#ifdef EXTRA_REF
+  if (picture->reference != 0 || ffmpegdec->extra_ref) {
+    GST_DEBUG_OBJECT (ffmpegdec, "adding extra ref");
+    gst_buffer_ref (buf);
+  }
+#endif
 
   GST_LOG_OBJECT (ffmpegdec, "returned buffer %p", buf);
 
@@ -779,10 +854,9 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
 
   ffmpegdec = (GstFFMpegDec *) context->opaque;
 
-  GST_DEBUG_OBJECT (ffmpegdec, "release buffer");
-
   /* check if it was our buffer */
   if (picture->opaque == NULL) {
+    GST_DEBUG_OBJECT (ffmpegdec, "default release buffer");
     avcodec_default_release_buffer (context, picture);
     return;
   }
@@ -790,8 +864,16 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
   /* we remove the opaque data now */
   buf = GST_BUFFER_CAST (picture->opaque);
   GST_DEBUG_OBJECT (ffmpegdec, "release buffer %p", buf);
-  gst_buffer_unref (buf);
   picture->opaque = NULL;
+
+#ifdef EXTRA_REF
+  if (picture->reference != 0 || ffmpegdec->extra_ref) {
+    GST_DEBUG_OBJECT (ffmpegdec, "remove extra ref");
+    gst_buffer_unref (buf);
+  }
+#else
+  gst_buffer_unref (buf);
+#endif
 
   /* zero out the reference in ffmpeg */
   for (i = 0; i < 4; i++) {
@@ -936,6 +1018,8 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
       height = ffmpegdec->format.video.clip_height;
 
       if (width != -1 && height != -1) {
+        /* overwrite the output size with the dimension of the
+	 * clipping region */
         gst_caps_set_simple (caps,
             "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
       }
@@ -1178,54 +1262,33 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
 {
   GstFlowReturn ret;
 
-  ret = GST_FLOW_ERROR;
+  ret = GST_FLOW_OK;
   *outbuf = NULL;
 
-  /* libavcodec constantly crashes on stupid buffer allocation
-   * errors inside. This drives me crazy, so we let it allocate
-   * its own buffers and copy to our own buffer afterwards... */
-  /* BUFFER CREATION */
   if (ffmpegdec->picture->opaque != NULL) {
+    /* we allocated a picture already for ffmpeg to decode into, let's pick it
+     * up and use it now. */
     GST_LOG_OBJECT (ffmpegdec, "using opaque buffer");
     *outbuf = (GstBuffer *) ffmpegdec->picture->opaque;
+#ifndef EXTRA_REF
     gst_buffer_ref (*outbuf);
-    ret = GST_FLOW_OK;
+#endif
   } else {
     AVPicture pic;
-    gint fsize;
     gint width, height;
-
+    
     GST_LOG_OBJECT (ffmpegdec, "get output buffer");
 
-    /* see if we need renegotiation */
-    if (G_UNLIKELY (!gst_ffmpegdec_negotiate (ffmpegdec)))
-      goto negotiate_failed;
-
-    /* figure out size of output buffer */
+    /* figure out size of output buffer, this is the clipped output size because
+     * we will copy the picture into it. */
     if ((width = ffmpegdec->format.video.clip_width) == -1)
       width = ffmpegdec->context->width;
     if ((height = ffmpegdec->format.video.clip_height) == -1)
       height = ffmpegdec->context->height;
 
-    fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
-        width, height);
-
-    if (!ffmpegdec->context->palctrl) {
-      ret = gst_pad_alloc_buffer_and_set_caps (ffmpegdec->srcpad,
-          GST_BUFFER_OFFSET_NONE, fsize,
-          GST_PAD_CAPS (ffmpegdec->srcpad), outbuf);
-      if (G_UNLIKELY (ret != GST_FLOW_OK))
-        goto alloc_failed;
-
-    } else {
-      /* for paletted data we can't use pad_alloc_buffer(), because
-       * fsize contains the size of the palette, so the overall size
-       * is bigger than ffmpegcolorspace's unit size, which will
-       * prompt GstBaseTransform to complain endlessly ... */
-      *outbuf = gst_buffer_new_and_alloc (fsize);
-      gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
-      ret = GST_FLOW_OK;
-    }
+    ret = alloc_output_buffer (ffmpegdec, outbuf, width, height);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto alloc_failed;
 
     /* original ffmpeg code does not handle odd sizes correctly.
      * This patched up version does */
@@ -1242,11 +1305,6 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
   return ret;
 
   /* special cases */
-negotiate_failed:
-  {
-    GST_DEBUG_OBJECT (ffmpegdec, "negotiate failed");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
 alloc_failed:
   {
     GST_DEBUG_OBJECT (ffmpegdec, "pad_alloc failed");

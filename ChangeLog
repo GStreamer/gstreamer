@@ -1,3 +1,14 @@
+2008-01-23  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_setcaps),
+	(alloc_output_buffer), (gst_ffmpegdec_get_buffer),
+	(gst_ffmpegdec_release_buffer), (gst_ffmpegdec_negotiate),
+	(get_output_buffer):
+	Change the pad_alloc calculations for weird clipped sizes, refactor the
+	code a bit.
+	Add support for some different refcounting algorithm. 
+	Direct rendering still disabled by default.
+
 2008-01-22  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_class_init):
