@@ -1828,7 +1828,7 @@ class Window (object):
 
     def handle_new_window_action_activate (self, action):
 
-        pass
+        self.app.open_window ()
 
     def handle_open_file_action_activate (self, action):
 
@@ -2190,7 +2190,9 @@ class App (object):
 
         self.load_plugins ()
 
-        self.windows = [Window (self)]
+        self.windows = []
+
+        self.open_window ()
 
     def detach (self):
 
@@ -2207,14 +2209,20 @@ class App (object):
         else:
             self.detach ()
 
+    def open_window (self):
+
+        self.windows.append (Window (self))
+
     def close_window (self, window):
 
-        # GtkTreeView takes some time to go down for large files.  Let's block
-        # until the window is hidden:
-        gobject.idle_add (gtk.main_quit)
-        gtk.main ()
-        
-        gtk.main_quit ()
+        self.windows.remove (window)
+        if not self.windows:
+            # GtkTreeView takes some time to go down for large files.  Let's block
+            # until the window is hidden:
+            gobject.idle_add (gtk.main_quit)
+            gtk.main ()
+
+            gtk.main_quit ()
 
 import time
 
