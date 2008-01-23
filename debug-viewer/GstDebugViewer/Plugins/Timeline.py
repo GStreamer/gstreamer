@@ -55,6 +55,8 @@ class LineFrequencySentinel (object):
         model_iter_nth_child = self.model.iter_nth_child
         col_id = self.model.COL_TIME
 
+        # TODO: Rewrite using a lightweight view object + bisect.
+
         while True:
             middle = (last_index - first_index) // 2 + first_index
             if middle == first_index:
