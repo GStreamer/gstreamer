@@ -1,3 +1,16 @@
+2008-01-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/xingmux.c: (setup_xingmux),
+	(cleanup_xingmux), (GST_START_TEST), (xingmux_suite), (main):
+	* tests/check/elements/xingmux_testdata.h:
+	Add simple unit test for the xingmux element.
+
+	* gst/xingheader/gstxingmux.c: (generate_xing_header),
+	(gst_xing_mux_finalize), (xing_reset):
+	Fix a memleak and invalid seek tables with less than 100 MP3 frames.
+
 2008-01-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/gstmpegdesc.h:

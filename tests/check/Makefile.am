@@ -74,7 +74,10 @@ check_PROGRAMS = \
 	elements/rglimiter \
 	elements/rgvolume \
 	elements/y4menc \
-	elements/spectrum
+	elements/spectrum \
+	elements/xingmux
+
+noinst_HEADERS = elements/xingmux_testdata.h
 
 TESTS = $(check_PROGRAMS)
 

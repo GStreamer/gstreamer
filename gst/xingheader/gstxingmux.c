@@ -319,12 +319,23 @@ generate_xing_header (GstXingMux * xing)
       GstXingSeekEntry *entry = (GstXingSeekEntry *) it->data;
       gint64 byte;
 
-      if ((entry->timestamp * 100) / duration >= percent) {
+      while ((entry->timestamp * 100) / duration >= percent) {
         byte = (entry->byte * 256) / byte_count;
         GST_DEBUG ("  %d %% -- %d 1/256", percent, byte);
         *data = byte;
         data++;
         percent++;
+      }
+    }
+
+    if (percent < 100) {
+      guchar b = *(data - 1);
+      gint i;
+
+      for (i = percent; i < 100; i++) {
+        GST_DEBUG ("  %d %% -- %d 1/256", i, b);
+        *data = b;
+        data++;
       }
     }
   }
@@ -376,6 +387,12 @@ gst_xing_mux_finalize (GObject * obj)
     xing->adapter = NULL;
   }
 
+  if (xing->seek_table) {
+    g_list_foreach (xing->seek_table, (GFunc) g_free, NULL);
+    g_list_free (xing->seek_table);
+    xing->seek_table = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
@@ -389,6 +406,7 @@ xing_reset (GstXingMux * xing)
 
   if (xing->seek_table) {
     g_list_foreach (xing->seek_table, (GFunc) g_free, NULL);
+    g_list_free (xing->seek_table);
     xing->seek_table = NULL;
   }
 
