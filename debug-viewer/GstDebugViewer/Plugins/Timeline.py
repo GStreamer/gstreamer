@@ -683,8 +683,9 @@ class TimelineFeature (FeatureBase):
         box.pack_start (self.vtimeline, False, False, 0)
         self.vtimeline.hide ()
 
-        window.widgets.log_view_scrolled_window.props.vadjustment.connect ("value-changed",
-                                                                           self.handle_log_view_adjustment_value_changed)
+        handler = self.handle_log_view_adjustment_value_changed
+        adjustment = window.widgets.log_view_scrolled_window.props.vadjustment
+        adjustment.connect ("value-changed", handler)
 
         handler = self.handle_show_action_toggled
         action = self.action_group.get_action ("show-timeline")
