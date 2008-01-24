@@ -869,8 +869,8 @@ class TimelineFeature (FeatureBase):
 
         handler = self.handle_show_action_toggled
         action = self.action_group.get_action ("show-timeline")
-        action.connect ("toggled", handler)
         action.props.active = self.state.shown
+        action.connect ("toggled", handler)
 
     def handle_show_action_toggled (self, action):
 
