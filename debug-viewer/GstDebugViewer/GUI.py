@@ -1628,7 +1628,7 @@ class Window (object):
         self.log_view.drag_dest_unset ()
         self.log_view.set_search_column (-1)
 
-        self.view_popup = ui.get_widget ("/ui/menubar/ViewMenu").get_submenu ()
+        self.view_popup = ui.get_widget ("/ui/context/LogViewContextMenu").get_submenu ()
         Common.GUI.widget_add_popup_menu (self.log_view, self.view_popup)
 
         self.line_view = LineView ()
