@@ -1644,6 +1644,8 @@ class Window (object):
         self.log_view = self.widgets.log_view
         self.log_view.drag_dest_unset ()
         self.log_view.set_search_column (-1)
+        sel = self.log_view.get_selection ()
+        sel.connect ("changed", self.handle_log_view_selection_changed)
 
         self.view_popup = ui.get_widget ("/ui/context/LogViewContextMenu").get_submenu ()
         Common.GUI.widget_add_popup_menu (self.log_view, self.view_popup)
@@ -1838,6 +1840,20 @@ class Window (object):
             path = (line_index,)
             tree_iter = model.get_iter (path)
             model.row_changed (path, tree_iter)
+
+    def handle_log_view_selection_changed (self, selection):
+
+        try:
+            line_index = self.get_active_line_index ()
+        except ValueError:
+            first_selected = True
+            last_selected = True
+        else:
+            first_selected = (line_index == 0)
+            last_selected = (line_index == len (self.log_view.props.model) - 1)
+
+        self.actions.hide_before_line.props.sensitive = not first_selected
+        self.actions.hide_after_line.props.sensitive = not last_selected
 
     def handle_window_delete_event (self, window, event):
 
