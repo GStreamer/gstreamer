@@ -414,6 +414,7 @@ class TimelineWidget (gtk.DrawingArea):
             self.__redraw ()
 
         gc = gtk.gdk.GC (self.window)
+        # FIXME: Accept a subregion here to speed up partial expose.
         self.window.draw_drawable (gc, self.__offscreen, 0, 0, 0, 0, -1, -1)
         self.__draw_position (self.window)
 
