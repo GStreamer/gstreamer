@@ -672,6 +672,24 @@ class CategoryFilter (Filter):
             return row[col_id] != category
         self.filter_func = category_filter_func
 
+class ObjectFilter (Filter):
+
+    def __init__ (self, object_):
+
+        col_id = LogModelBase.COL_OBJECT
+        def object_filter_func (row):
+            return row[col_id] != object_
+        self.filter_func = object_filter_func
+
+class FilenameFilter (Filter):
+
+    def __init__ (self, filename):
+
+        col_id = LogModelBase.COL_FILENAME
+        def filename_filter_func (row):
+            return row[col_id] != filename
+        self.filter_func = filename_filter_func
+
 class SubRange (object):
 
     __slots__ = ("l", "start", "stop",)
@@ -1599,11 +1617,10 @@ class Window (object):
                             ("edit-copy-message", gtk.STOCK_COPY, _("Copy message"), ""),
                             ("hide-log-level", None, _("Hide log level")),
                             ("hide-log-category", None, _("Hide log category")),
-                            ("hide-log-object", None, _("Hide object"))])
+                            ("hide-log-object", None, _("Hide object")),
+                            ("hide-filename", None, _("Hide filename"))])
         group.props.sensitive = False
         self.actions.add_group (group)
-
-        self.actions.hide_log_object.props.visible = False
 
         self.actions.add_group (self.column_manager.action_group)
 
@@ -1667,7 +1684,7 @@ class Window (object):
                             "hide-before-line", "hide-after-line", "show-hidden-lines",
                             "edit-copy-line", "edit-copy-message",
                             "hide-log-level", "hide-log-category", "hide-log-object",
-                            "show-about",):
+                            "hide-filename", "show-about",):
             name = action_name.replace ("-", "_")
             action = getattr (self.actions, name)
             handler = getattr (self, "handle_%s_action_activate" % (name,))
@@ -2009,7 +2026,15 @@ class Window (object):
 
     def handle_hide_log_object_action_activate (self, action):
 
-        pass
+        row = self.get_active_line ()
+        object_ = row[LogModelBase.COL_OBJECT]
+        self.add_model_filter (ObjectFilter (object_))
+
+    def handle_hide_filename_action_activate (self, action):
+
+        row = self.get_active_line ()
+        filename = row[LogModelBase.COL_FILENAME]
+        self.add_model_filter (FilenameFilter (filename))
 
     def handle_show_about_action_activate (self, action):
 
