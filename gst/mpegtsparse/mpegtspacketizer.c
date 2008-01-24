@@ -613,22 +613,20 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
         gst_mpeg_descriptor_find (mpegdescriptor, DESC_DVB_NETWORK_NAME);
     if (networkname_descriptor != NULL) {
       gchar *networkname_tmp;
-      guint networkname_length =
+
+      /* No need to bounds check this value as it comes from the descriptor length itself */
+      guint8 networkname_length =
           DESC_DVB_NETWORK_NAME_length (networkname_descriptor);
       gchar *networkname =
           (gchar *) DESC_DVB_NETWORK_NAME_text (networkname_descriptor);
-      if ((guint8 *) networkname + networkname_length <
-          networkname_descriptor + DESC_LENGTH (networkname_descriptor)) {
-
-        if (networkname[0] < 0x20) {
-          networkname_length -= 1;
-          networkname += 1;
-        }
-        networkname_tmp = g_strndup (networkname, networkname_length);
-        gst_structure_set (nit, "network-name", G_TYPE_STRING, networkname_tmp,
-            NULL);
-        g_free (networkname_tmp);
+      if (networkname[0] < 0x20) {
+        networkname_length -= 1;
+        networkname += 1;
       }
+      networkname_tmp = g_strndup (networkname, networkname_length);
+      gst_structure_set (nit, "network-name", G_TYPE_STRING, networkname_tmp,
+          NULL);
+      g_free (networkname_tmp);
     }
     gst_mpeg_descriptor_free (mpegdescriptor);
 
@@ -1119,11 +1117,8 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
             DESC_DVB_SERVICE_name_length (service_descriptor);
         gchar *servicename =
             (gchar *) DESC_DVB_SERVICE_name_text (service_descriptor);
-        if ((guint8 *) servicename + servicename_length <
-            service_descriptor + DESC_LENGTH (service_descriptor)
-            && (guint8 *) serviceprovider_name + serviceprovider_name_length <
-            service_descriptor + DESC_LENGTH (service_descriptor)) {
-
+        if (servicename_length + serviceprovider_name_length + 2 <=
+            DESC_LENGTH (service_descriptor)) {
           if (servicename[0] < 0x20) {
             servicename_length -= 1;
             servicename += 1;
@@ -1346,10 +1341,8 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
             DESC_DVB_SHORT_EVENT_description_length (event_descriptor);
         gchar *eventdescription =
             (gchar *) DESC_DVB_SHORT_EVENT_description_text (event_descriptor);
-        if ((guint8 *) eventname + eventname_length <
-            event_descriptor + DESC_LENGTH (event_descriptor)
-            && (guint8 *) eventdescription + eventdescription_length <
-            event_descriptor + DESC_LENGTH (event_descriptor)) {
+        if (eventname_length + eventdescription_length + 2 <=
+            DESC_LENGTH (event_descriptor)) {
           if (eventname[0] < 0x20) {
             eventname_length -= 1;
             eventname += 1;

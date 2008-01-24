@@ -241,8 +241,8 @@
 #define DESC_DVB_STREAM_IDENTIFIER_component_tag(desc)  (desc[2])
 
 /* DVB Network Name descriptor */
-#define DESC_DVB_NETWORK_NAME_length(desc)  (GST_READ_UINT8((desc)+2))
-#define DESC_DVB_NETWORK_NAME_text(desc)    (desc+3)
+#define DESC_DVB_NETWORK_NAME_length(desc)  (GST_READ_UINT8((desc)+1))
+#define DESC_DVB_NETWORK_NAME_text(desc)    (desc+2)
 
 /* DVB Service Descriptor */
 #define DESC_DVB_SERVICE_type(desc) (desc[2])
