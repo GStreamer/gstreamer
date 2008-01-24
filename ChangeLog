@@ -1,3 +1,10 @@
+2008-01-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Use AC_TRY_COMPILE instead of AC_TRY_RUN to check for
+	  _POSIX_TIMER, _POSIX_MONOTONIC_CLOCK, etc. Makes configure
+	  not fail when trying to crosscompile on OpenEmbedded (#511750).
+
 2008-01-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/manuals.mak:
