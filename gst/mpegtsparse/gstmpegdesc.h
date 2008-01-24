@@ -142,6 +142,7 @@
 /* 0x7D and 0x7E are reserved for future use */
 #define DESC_DVB_EXTENSION      0x7F
 /* 0x80 - 0xFE are user defined */
+#define DESC_DTG_LOGICAL_CHANNEL	0x83 /* from DTG D-Book */
 /* 0xFF is forbidden */
 
 /* common for all descriptors */
@@ -273,6 +274,17 @@
 #define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_modulation(desc)	(desc[8] & 0x1F)
 #define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_symbol_rate(desc)	(desc + 9)
 #define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_fec_inner(desc)	(desc[12] & 0x0F)
+
+/* DVB Terrestrial Delivery System Descriptor */
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_frequency(desc)	(GST_READ_UINT32_BE((desc) + 2))
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_bandwidth(desc)	(desc[6] & 0xE0)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_constellation(desc)	(desc[7] & 0xC0)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_hierarchy(desc)	(desc[7] & 0x38)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_code_rate_hp(desc)	(desc[7] & 0x07)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_code_rate_lp(desc)	(desc[8] & 0xE0)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_guard_interval(desc)	(desc[8] & 0x18)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_transmission_mode(desc)	(desc[8] & 0x06)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_other_frequency(desc)	((desc[8] & 0x01) == 0x01)
 
 typedef struct {
   guint    n_desc;

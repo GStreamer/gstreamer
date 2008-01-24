@@ -1,3 +1,11 @@
+2008-01-24  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/gstmpegdesc.h:
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	Parse and add to relevant bus messages the terrestrial delivery
+	system descriptor and the logical channel descriptor.
+	Do bounds checking on data stored in descriptor before use.
+
 2008-01-23  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* docs/plugins/Makefile.am:

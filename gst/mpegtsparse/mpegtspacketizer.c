@@ -548,7 +548,7 @@ GstStructure *
 mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
     MpegTSPacketizerSection * section)
 {
-  GstStructure *nit = NULL, *transport = NULL, *satellite = NULL;
+  GstStructure *nit = NULL, *transport = NULL, *delivery_structure = NULL;
   guint8 *data, *end, *entry_begin;
   guint16 network_id, transport_stream_id, original_network_id;
   guint tmp;
@@ -617,14 +617,18 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
           DESC_DVB_NETWORK_NAME_length (networkname_descriptor);
       gchar *networkname =
           (gchar *) DESC_DVB_NETWORK_NAME_text (networkname_descriptor);
-      if (networkname[0] < 0x20) {
-        networkname_length -= 1;
-        networkname += 1;
+      if ((guint8 *) networkname + networkname_length <
+          networkname_descriptor + DESC_LENGTH (networkname_descriptor)) {
+
+        if (networkname[0] < 0x20) {
+          networkname_length -= 1;
+          networkname += 1;
+        }
+        networkname_tmp = g_strndup (networkname, networkname_length);
+        gst_structure_set (nit, "network-name", G_TYPE_STRING, networkname_tmp,
+            NULL);
+        g_free (networkname_tmp);
       }
-      networkname_tmp = g_strndup (networkname, networkname_length);
-      gst_structure_set (nit, "network-name", G_TYPE_STRING, networkname_tmp,
-          NULL);
-      g_free (networkname_tmp);
     }
     gst_mpeg_descriptor_free (mpegdescriptor);
 
@@ -682,14 +686,14 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
       }
       GstMPEGDescriptor *mpegdescriptor =
           gst_mpeg_descriptor_parse (data, descriptors_loop_length);
-      guint8 *satellitedelivery;
+      guint8 *delivery;
 
-      if ((satellitedelivery =
+      if ((delivery =
               gst_mpeg_descriptor_find (mpegdescriptor,
                   DESC_DVB_SATELLITE_DELIVERY_SYSTEM))) {
 
         guint8 *frequency_bcd =
-            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_frequency (satellitedelivery);
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_frequency (delivery);
         guint32 frequency =
             10 * ((frequency_bcd[3] & 0x0F) +
             10 * ((frequency_bcd[3] & 0xF0) >> 4) +
@@ -700,22 +704,20 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
             1000000 * (frequency_bcd[0] & 0x0F) +
             10000000 * ((frequency_bcd[0] & 0xF0) >> 4));
         guint8 *orbital_bcd =
-            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_orbital_position
-            (satellitedelivery);
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_orbital_position (delivery);
         gfloat orbital =
             (orbital_bcd[1] & 0x0F) / 10. + ((orbital_bcd[1] & 0xF0) >> 4) +
             10 * (orbital_bcd[0] & 0x0F) + 100 * ((orbital_bcd[0] & 0xF0) >> 4);
         gboolean east =
-            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_west_east_flag
-            (satellitedelivery);
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_west_east_flag (delivery);
         guint8 polarization =
-            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_polarization (satellitedelivery);
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_polarization (delivery);
         gchar *polarization_str;
         guint8 modulation =
-            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_modulation (satellitedelivery);
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_modulation (delivery);
         gchar *modulation_str;
         guint8 *symbol_rate_bcd =
-            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_symbol_rate (satellitedelivery);
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_symbol_rate (delivery);
         guint32 symbol_rate =
             (symbol_rate_bcd[2] & 0x0F) +
             10 * ((symbol_rate_bcd[2] & 0xF0) >> 4) +
@@ -724,76 +726,76 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
             10000 * (symbol_rate_bcd[0] & 0x0F) +
             100000 * ((symbol_rate_bcd[0] & 0xF0) >> 4);
         guint8 fec_inner =
-            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_fec_inner (satellitedelivery);
+            DESC_DVB_SATELLITE_DELIVERY_SYSTEM_fec_inner (delivery);
         gchar *fec_inner_str;
 
         switch (polarization) {
           case 0:
-            polarization_str = g_strdup ("horizontal");
+            polarization_str = "horizontal";
             break;
           case 1:
-            polarization_str = g_strdup ("vertical");
+            polarization_str = "vertical";
             break;
           case 2:
-            polarization_str = g_strdup ("left");
+            polarization_str = "left";
             break;
           case 3:
-            polarization_str = g_strdup ("right");
+            polarization_str = "right";
             break;
           default:
-            polarization_str = g_strdup ("");
+            polarization_str = "";
         }
         switch (fec_inner) {
           case 0:
-            fec_inner_str = g_strdup ("undefined");
+            fec_inner_str = "undefined";
             break;
           case 1:
-            fec_inner_str = g_strdup ("1/2");
+            fec_inner_str = "1/2";
             break;
           case 2:
-            fec_inner_str = g_strdup ("2/3");
+            fec_inner_str = "2/3";
             break;
           case 3:
-            fec_inner_str = g_strdup ("3/4");
+            fec_inner_str = "3/4";
             break;
           case 4:
-            fec_inner_str = g_strdup ("5/6");
+            fec_inner_str = "5/6";
             break;
           case 5:
-            fec_inner_str = g_strdup ("7/8");
+            fec_inner_str = "7/8";
             break;
           case 6:
-            fec_inner_str = g_strdup ("8/9");
+            fec_inner_str = "8/9";
             break;
           case 0xF:
-            fec_inner_str = g_strdup ("none");
+            fec_inner_str = "none";
             break;
           default:
-            fec_inner_str = g_strdup ("reserved");
+            fec_inner_str = "reserved";
         }
         switch (modulation) {
           case 0x00:
-            modulation_str = g_strdup ("undefined");
+            modulation_str = "undefined";
             break;
           case 0x01:
-            modulation_str = g_strdup ("QAM16");
+            modulation_str = "QAM16";
             break;
           case 0x02:
-            modulation_str = g_strdup ("QAM32");
+            modulation_str = "QAM32";
             break;
           case 0x03:
-            modulation_str = g_strdup ("QAM64");
+            modulation_str = "QAM64";
             break;
           case 0x04:
-            modulation_str = g_strdup ("QAM128");
+            modulation_str = "QAM128";
             break;
           case 0x05:
-            modulation_str = g_strdup ("QAM256");
+            modulation_str = "QAM256";
             break;
           default:
-            modulation_str = g_strdup ("reserved");
+            modulation_str = "reserved";
         }
-        satellite = gst_structure_new ("satellite",
+        delivery_structure = gst_structure_new ("satellite",
             "orbital", G_TYPE_FLOAT, orbital,
             "east-or-west", G_TYPE_STRING, east ? "east" : "west",
             "modulation", G_TYPE_STRING, modulation_str,
@@ -801,11 +803,154 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
             "polarization", G_TYPE_STRING, polarization_str,
             "symbol-rate", G_TYPE_UINT, symbol_rate,
             "inner-fec", G_TYPE_STRING, fec_inner_str, NULL);
-        g_free (polarization_str);
-        g_free (fec_inner_str);
-        g_free (modulation_str);
-        gst_structure_set (transport, "satellite", GST_TYPE_STRUCTURE,
-            satellite, NULL);
+        gst_structure_set (transport, "delivery", GST_TYPE_STRUCTURE,
+            delivery_structure, NULL);
+      } else if ((delivery =
+              gst_mpeg_descriptor_find (mpegdescriptor,
+                  DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM))) {
+
+        guint32 frequency =
+            DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_frequency (delivery) * 10;
+        guint8 bandwidth =
+            DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_bandwidth (delivery);
+        guint8 constellation =
+            DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_constellation (delivery);
+        guint8 hierarchy =
+            DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_hierarchy (delivery);
+        guint8 code_rate_hp =
+            DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_code_rate_hp (delivery);
+        guint8 code_rate_lp =
+            DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_code_rate_lp (delivery);
+        guint8 guard_interval =
+            DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_guard_interval (delivery);
+        guint8 transmission_mode =
+            DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_transmission_mode (delivery);
+        gboolean other_frequency =
+            DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_other_frequency (delivery);
+        gchar *constellation_str, *code_rate_hp_str, *code_rate_lp_str,
+            *transmission_mode_str;
+        int i;
+
+        /* do the stuff */
+        /* bandwidth is 8 if 0, 7 if 1, 6 if 2, reserved otherwise */
+        if (bandwidth <= 2)
+          bandwidth = 8 - bandwidth;
+        else
+          bandwidth = 0;
+        switch (constellation) {
+          case 0:
+            constellation_str = "QPSK";
+            break;
+          case 1:
+            constellation_str = "QAM16";
+            break;
+          case 2:
+            constellation_str = "QAM64";
+            break;
+          default:
+            constellation_str = "reserved";
+        }
+        /* hierarchy is 4 if 3, 2 if 2, 1 if 1, 0 if 0, reserved if > 3 */
+        if (hierarchy <= 3) {
+          if (hierarchy == 3)
+            hierarchy = 4;
+        } else {
+          hierarchy = 0;
+        }
+
+        switch (code_rate_hp) {
+          case 0:
+            code_rate_hp_str = "1/2";
+            break;
+          case 1:
+            code_rate_hp_str = "2/3";
+            break;
+          case 2:
+            code_rate_hp_str = "3/4";
+            break;
+          case 3:
+            code_rate_hp_str = "5/6";
+            break;
+          case 4:
+            code_rate_hp_str = "7/8";
+            break;
+          default:
+            code_rate_hp_str = "reserved";
+        }
+
+        switch (code_rate_lp) {
+          case 0:
+            code_rate_lp_str = "1/2";
+            break;
+          case 1:
+            code_rate_lp_str = "2/3";
+            break;
+          case 2:
+            code_rate_lp_str = "3/4";
+            break;
+          case 3:
+            code_rate_lp_str = "5/6";
+            break;
+          case 4:
+            code_rate_lp_str = "7/8";
+            break;
+          default:
+            code_rate_lp_str = "reserved";
+        }
+        /* guard is 32 if 0, 16 if 1, 8 if 2, 4 if 4 */
+        for (i = 0; i < guard_interval - 4; i++) {
+          guard_interval *= 2;
+        }
+        switch (transmission_mode) {
+          case 0:
+            transmission_mode_str = "2k";
+            break;
+          case 1:
+            transmission_mode_str = "8k";
+            break;
+          default:
+            transmission_mode_str = "reserved";
+        }
+        delivery_structure = gst_structure_new ("terrestrial",
+            "frequency", G_TYPE_UINT, frequency,
+            "bandwidth", G_TYPE_UINT, bandwidth,
+            "constellation", G_TYPE_STRING, constellation_str,
+            "hierarchy", G_TYPE_UINT, hierarchy,
+            "code-rate-hp", G_TYPE_STRING, code_rate_hp_str,
+            "code-rate-lp", G_TYPE_STRING, code_rate_lp_str,
+            "guard-interval", G_TYPE_UINT, guard_interval,
+            "transmission-mode", G_TYPE_STRING, transmission_mode_str,
+            "other-frequency", G_TYPE_BOOLEAN, other_frequency, NULL);
+        gst_structure_set (transport, "delivery", GST_TYPE_STRUCTURE,
+            delivery_structure, NULL);
+      }
+      if ((delivery =
+              gst_mpeg_descriptor_find (mpegdescriptor,
+                  DESC_DTG_LOGICAL_CHANNEL))) {
+        guint8 *current_pos = delivery + 2;
+        GValue channel_numbers = { 0 };
+
+        g_value_init (&channel_numbers, GST_TYPE_LIST);
+        while (current_pos < delivery + DESC_LENGTH (delivery)) {
+          GstStructure *channel;
+          GValue channel_value = { 0 };
+          guint16 service_id = GST_READ_UINT16_BE (current_pos);
+
+          current_pos += 2;
+          guint16 logical_channel_number =
+              GST_READ_UINT16_BE (current_pos) & 0x03ff;
+          channel =
+              gst_structure_new ("channels", "service-id", G_TYPE_UINT,
+              service_id, "logical-channel-number", G_TYPE_UINT,
+              logical_channel_number, NULL);
+          g_value_init (&channel_value, GST_TYPE_STRUCTURE);
+          g_value_take_boxed (&channel_value, channel);
+          gst_value_list_append_value (&channel_numbers, &channel_value);
+          g_value_unset (&channel_value);
+          current_pos += 2;
+        }
+        gst_structure_set_value (transport, "channels", &channel_numbers);
+        g_value_unset (&channel_numbers);
       }
       gst_mpeg_descriptor_free (mpegdescriptor);
 
@@ -966,33 +1111,38 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
           gst_mpeg_descriptor_find (mpegdescriptor, DESC_DVB_SERVICE);
       if (service_descriptor != NULL) {
         gchar *servicename_tmp, *serviceprovider_name_tmp;
-        guint serviceprovider_name_length =
+        guint8 serviceprovider_name_length =
             DESC_DVB_SERVICE_provider_name_length (service_descriptor);
         gchar *serviceprovider_name =
             (gchar *) DESC_DVB_SERVICE_provider_name_text (service_descriptor);
-        guint servicename_length =
+        guint8 servicename_length =
             DESC_DVB_SERVICE_name_length (service_descriptor);
         gchar *servicename =
             (gchar *) DESC_DVB_SERVICE_name_text (service_descriptor);
-        if (servicename[0] < 0x20) {
-          servicename_length -= 1;
-          servicename += 1;
-        }
-        if (serviceprovider_name[0] < 0x20) {
-          serviceprovider_name_length -= 1;
-          serviceprovider_name += 1;
-        }
-        servicename_tmp = g_strndup (servicename, servicename_length);
-        serviceprovider_name_tmp =
-            g_strndup (serviceprovider_name, serviceprovider_name_length);
-        gst_structure_set (service, "name", G_TYPE_STRING, servicename_tmp,
-            NULL);
-        gst_structure_set (service, "provider-name", G_TYPE_STRING,
-            serviceprovider_name_tmp, NULL);
-        g_free (servicename_tmp);
-        g_free (serviceprovider_name_tmp);
-      }
+        if ((guint8 *) servicename + servicename_length <
+            service_descriptor + DESC_LENGTH (service_descriptor)
+            && (guint8 *) serviceprovider_name + serviceprovider_name_length <
+            service_descriptor + DESC_LENGTH (service_descriptor)) {
 
+          if (servicename[0] < 0x20) {
+            servicename_length -= 1;
+            servicename += 1;
+          }
+          if (serviceprovider_name[0] < 0x20) {
+            serviceprovider_name_length -= 1;
+            serviceprovider_name += 1;
+          }
+          servicename_tmp = g_strndup (servicename, servicename_length);
+          serviceprovider_name_tmp =
+              g_strndup (serviceprovider_name, serviceprovider_name_length);
+          gst_structure_set (service, "name", G_TYPE_STRING, servicename_tmp,
+              NULL);
+          gst_structure_set (service, "provider-name", G_TYPE_STRING,
+              serviceprovider_name_tmp, NULL);
+          g_free (servicename_tmp);
+          g_free (serviceprovider_name_tmp);
+        }
+      }
       gst_mpeg_descriptor_free (mpegdescriptor);
 
       descriptors = g_value_array_new (0);
@@ -1188,31 +1338,36 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
           gst_mpeg_descriptor_find (mpegdescriptor, DESC_DVB_SHORT_EVENT);
       if (event_descriptor != NULL) {
         gchar *eventname_tmp, *eventdescription_tmp;
-        guint eventname_length =
+        guint8 eventname_length =
             DESC_DVB_SHORT_EVENT_name_length (event_descriptor);
         gchar *eventname =
             (gchar *) DESC_DVB_SHORT_EVENT_name_text (event_descriptor);
-        guint eventdescription_length =
+        guint8 eventdescription_length =
             DESC_DVB_SHORT_EVENT_description_length (event_descriptor);
         gchar *eventdescription =
             (gchar *) DESC_DVB_SHORT_EVENT_description_text (event_descriptor);
-        if (eventname[0] < 0x20) {
-          eventname_length -= 1;
-          eventname += 1;
-        }
-        if (eventdescription[0] < 0x20) {
-          eventdescription_length -= 1;
-          eventdescription += 1;
-        }
-        eventname_tmp = g_strndup (eventname, eventname_length),
-            eventdescription_tmp =
-            g_strndup (eventdescription, eventdescription_length);
+        if ((guint8 *) eventname + eventname_length <
+            event_descriptor + DESC_LENGTH (event_descriptor)
+            && (guint8 *) eventdescription + eventdescription_length <
+            event_descriptor + DESC_LENGTH (event_descriptor)) {
+          if (eventname[0] < 0x20) {
+            eventname_length -= 1;
+            eventname += 1;
+          }
+          if (eventdescription[0] < 0x20) {
+            eventdescription_length -= 1;
+            eventdescription += 1;
+          }
+          eventname_tmp = g_strndup (eventname, eventname_length),
+              eventdescription_tmp =
+              g_strndup (eventdescription, eventdescription_length);
 
-        gst_structure_set (event, "name", G_TYPE_STRING, eventname_tmp, NULL);
-        gst_structure_set (event, "description", G_TYPE_STRING,
-            eventdescription_tmp, NULL);
-        g_free (eventname_tmp);
-        g_free (eventdescription_tmp);
+          gst_structure_set (event, "name", G_TYPE_STRING, eventname_tmp, NULL);
+          gst_structure_set (event, "description", G_TYPE_STRING,
+              eventdescription_tmp, NULL);
+          g_free (eventname_tmp);
+          g_free (eventdescription_tmp);
+        }
       }
 
       gst_mpeg_descriptor_free (mpegdescriptor);
