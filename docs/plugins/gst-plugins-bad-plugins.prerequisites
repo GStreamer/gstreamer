@@ -1,4 +1,4 @@
 GstChildProxy GstObject
+GstTagSetter GstElement
 GstImplementsInterface GstElement
 GstXOverlay GstImplementsInterface GstElement
-GstColorBalance GstImplementsInterface GstElement

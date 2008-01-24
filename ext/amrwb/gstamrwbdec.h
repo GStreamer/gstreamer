@@ -42,6 +42,11 @@ G_BEGIN_DECLS
 typedef struct _GstAmrwbDec GstAmrwbDec;
 typedef struct _GstAmrwbDecClass GstAmrwbDecClass;
 
+/**
+ * GstAmrwbDec:
+ *
+ * Opaque data structure.
+ */
 struct _GstAmrwbDec {
   GstElement element;
 

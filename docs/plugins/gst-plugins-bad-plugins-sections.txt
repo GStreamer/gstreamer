@@ -1,8 +1,8 @@
 <SECTION>
 <FILE>element-amrwbdec</FILE>
 <TITLE>amrwbdec</TITLE>
-<SUBSECTION Standard>
 GstAmrwbDec
+<SUBSECTION Standard>
 GstAmrwbDecClass
 GST_AMRWBDEC
 GST_AMRWBDEC_CLASS
@@ -15,8 +15,8 @@ gst_amrwbdec_get_type
 <SECTION>
 <FILE>element-amrwbenc</FILE>
 <TITLE>amrwbenc</TITLE>
-<SUBSECTION Standard>
 GstAmrwbEnc
+<SUBSECTION Standard>
 GstAmrwbEncClass
 GST_AMRWBENC
 GST_AMRWBENC_CLASS
@@ -29,8 +29,8 @@ gst_amrwbenc_get_type
 <SECTION>
 <FILE>element-amrwbparse</FILE>
 <TITLE>amrwbparse</TITLE>
-<SUBSECTION Standard>
 GstAmrwbParse
+<SUBSECTION Standard>
 GstAmrwbParseClass
 GST_AMRWBPARSE
 GST_AMRWBPARSE_CLASS
@@ -43,8 +43,8 @@ gst_amrwbparse_get_type
 <SECTION>
 <FILE>element-audioparse</FILE>
 <TITLE>audioparse</TITLE>
-<SUBSECTION Standard>
 GstAudioParse
+<SUBSECTION Standard>
 GstAudioParseClass
 GST_AUDIO_PARSE
 GST_AUDIO_PARSE_CLASS
@@ -57,8 +57,8 @@ gst_audio_parse_get_type
 <SECTION>
 <FILE>element-dc1394</FILE>
 <TITLE>dc1394</TITLE>
-<SUBSECTION Standard>
 GstDc1394
+<SUBSECTION Standard>
 GstDc1394Class
 GST_DC1394
 GST_DC1394_CLASS
@@ -91,8 +91,8 @@ gst_dfbsurface_get_type
 <SECTION>
 <FILE>element-dvbsrc</FILE>
 <TITLE>dvbsrc</TITLE>
-<SUBSECTION Standard>
 GstDvbSrc
+<SUBSECTION Standard>
 GstDvbSrcClass
 GstDvbSrcParam
 GstDvbSrcPol
@@ -116,8 +116,8 @@ TS_SIZE
 <SECTION>
 <FILE>element-dvdspu</FILE>
 <TITLE>dvdspu</TITLE>
-<SUBSECTION Standard>
 GstDVDSpu
+<SUBSECTION Standard>
 GstDVDSpuClass
 GST_DVD_SPU
 GST_DVD_SPU_CLASS
@@ -139,8 +139,8 @@ SPU_STATE_FLAGS_MASK
 <SECTION>
 <FILE>element-equalizer-3bands</FILE>
 <TITLE>equalizer-3bands</TITLE>
-<SUBSECTION Standard>
 GstIirEqualizer3Bands
+<SUBSECTION Standard>
 GstIirEqualizer3BandsClass
 GST_IIR_EQUALIZER_3BANDS
 GST_IIR_EQUALIZER_3BANDS_CLASS
@@ -153,8 +153,8 @@ gst_iir_equalizer_3bands_get_type
 <SECTION>
 <FILE>element-equalizer-10bands</FILE>
 <TITLE>equalizer-10bands</TITLE>
-<SUBSECTION Standard>
 GstIirEqualizer10Bands
+<SUBSECTION Standard>
 GstIirEqualizer10BandsClass
 GST_IIR_EQUALIZER_10BANDS
 GST_IIR_EQUALIZER_10BANDS_CLASS
@@ -167,8 +167,8 @@ gst_iir_equalizer_10bands_get_type
 <SECTION>
 <FILE>element-equalizer-nbands</FILE>
 <TITLE>equalizer-nbands</TITLE>
-<SUBSECTION Standard>
 GstIirEqualizerNBands
+<SUBSECTION Standard>
 GstIirEqualizerNBandsClass
 GST_IIR_EQUALIZER_NBANDS
 GST_IIR_EQUALIZER_NBANDS_CLASS
@@ -181,8 +181,8 @@ gst_iir_equalizer_nbands_get_type
 <SECTION>
 <FILE>element-festival</FILE>
 <TITLE>festival</TITLE>
-<SUBSECTION Standard>
 GstFestival
+<SUBSECTION Standard>
 GstFestivalClass
 GstFestivalFlags
 GST_FESTIVAL
@@ -298,8 +298,8 @@ gst_ivorbis_dec_get_type
 
 <SECTION>
 <FILE>element-jackaudiosink</FILE>
-<TITLE>jackaudiosink</TITLE>
 GstJackAudioSink
+<TITLE>jackaudiosink</TITLE>
 GstJackConnect
 <SUBSECTION Standard>
 GstJackAudioSinkClass
@@ -343,8 +343,8 @@ gst_metadata_mux_get_type
 <SECTION>
 <FILE>element-modplug</FILE>
 <TITLE>modplug</TITLE>
-<SUBSECTION Standard>
 GstModPlug
+<SUBSECTION Standard>
 GstModPlugClass
 GST_MODPLUG
 GST_MODPLUG_CLASS
@@ -357,8 +357,8 @@ gst_modplug_get_type
 <SECTION>
 <FILE>element-multifilesrc</FILE>
 <TITLE>multifilesrc</TITLE>
-<SUBSECTION Standard>
 GstMultiFileSrc
+<SUBSECTION Standard>
 GstMultiFileSrcClass
 GST_MULTI_FILE_SRC
 GST_MULTI_FILE_SRC_CLASS
@@ -371,8 +371,8 @@ gst_multi_file_src_get_type
 <SECTION>
 <FILE>element-multifilesink</FILE>
 <TITLE>multifilesink</TITLE>
-<SUBSECTION Standard>
 GstMultiFileSink
+<SUBSECTION Standard>
 GstMultiFileSinkClass
 GST_MULTI_FILE_SINK
 GST_MULTI_FILE_SINK_CLASS
@@ -385,8 +385,8 @@ gst_multi_file_sink_get_type
 <SECTION>
 <FILE>element-mythtvsrc</FILE>
 <TITLE>mythtvsrc</TITLE>
-<SUBSECTION Standard>
 GstMythtvSrc
+<SUBSECTION Standard>
 GstMythtvSrcClass
 GstMythtvState
 GST_MYTHTV_SRC
@@ -400,8 +400,8 @@ gst_mythtv_src_get_type
 <SECTION>
 <FILE>element-nuvdemux</FILE>
 <TITLE>nuvdemux</TITLE>
-<SUBSECTION Standard>
 GstNuvDemux
+<SUBSECTION Standard>
 GstNuvDemuxClass
 GstNuvDemuxState
 GST_NUV_DEMUX
@@ -457,8 +457,8 @@ gst_rg_volume_get_type
 <SECTION>
 <FILE>element-gstrtpbin</FILE>
 <TITLE>gstrtpbin</TITLE>
-<SUBSECTION Standard>
 GstRtpBin
+<SUBSECTION Standard>
 GstRtpBinPrivate
 GstRtpBinClass
 GST_RTP_BIN 
@@ -472,8 +472,8 @@ GST_IS_RTP_BIN_CLASS
 <SECTION>
 <FILE>element-gstrtpclient</FILE>
 <TITLE>gstrtpclient</TITLE>
-<SUBSECTION Standard>
 GstRtpClient
+<SUBSECTION Standard>
 GstRtpClientClass
 GstRtpClientPrivate
 GST_RTP_CLIENT
@@ -502,8 +502,8 @@ GST_IS_RTP_JITTER_BUFFER_CLASS
 <SECTION>
 <FILE>element-gstrtpptdemux</FILE>
 <TITLE>gstrtpptdemux</TITLE>
-<SUBSECTION Standard>
 GstRtpPtDemux
+<SUBSECTION Standard>
 GstRtpPtDemuxClass
 GstRtpPtDemuxPad
 GST_RTP_PT_DEMUX
@@ -517,8 +517,8 @@ GST_IS_RTP_PT_DEMUX_CLASS
 <SECTION>
 <FILE>element-gstrtpsession</FILE>
 <TITLE>gstrtpsession</TITLE>
-<SUBSECTION Standard>
 GstRtpSession
+<SUBSECTION Standard>
 GstRtpSessionClass
 GstRtpSessionPrivate
 GST_RTP_SESSION
@@ -533,8 +533,8 @@ GST_RTP_SESSION_CAST
 <SECTION>
 <FILE>element-gstrtpssrcdemux</FILE>
 <TITLE>gstrtpssrcdemux</TITLE>
-<SUBSECTION Standard>
 GstRtpSsrcDemux
+<SUBSECTION Standard>
 GstRtpSsrcDemuxClass
 GstRtpSsrcDemuxPad
 GST_RTP_SSRC_DEMUX
@@ -548,8 +548,8 @@ GST_IS_RTP_SSRC_DEMUX_CLASS
 <SECTION>
 <FILE>element-sdlaudiosink</FILE>
 <TITLE>sdlaudiosink</TITLE>
-<SUBSECTION Standard>
 GstSDLAudioSink
+<SUBSECTION Standard>
 GstSDLAudioSinkClass
 GST_SDLAUDIOSINK
 GST_SDLAUDIOSINK_CLASS
@@ -564,8 +564,8 @@ gstsdl_semaphore
 <SECTION>
 <FILE>element-sdlvideosink</FILE>
 <TITLE>sdlvideosink</TITLE>
-<SUBSECTION Standard>
 GstSDLVideoSink
+<SUBSECTION Standard>
 GstSDLVideoSinkFlags
 GstSDLVideoSinkClass
 GST_SDLVIDEOSINK
@@ -579,8 +579,8 @@ gst_sdlvideosink_get_type
 <SECTION>
 <FILE>element-sdpdemux</FILE>
 <TITLE>sdpdemux</TITLE>
-<SUBSECTION Standard>
 GstSDPDemux
+<SUBSECTION Standard>
 GstSDPDemuxClass
 GstSDPStream
 GST_SDP_DEMUX
@@ -598,8 +598,8 @@ GST_SDP_STREAM_UNLOCK
 <SECTION>
 <FILE>element-spectrum</FILE>
 <TITLE>spectrum</TITLE>
-<SUBSECTION Standard>
 GstSpectrum
+<SUBSECTION Standard>
 GstSpectrumClass
 GstSpectrumFFTFreeFunc
 GstSpectrumProcessFunc
@@ -614,8 +614,8 @@ gst_spectrum_get_type
 <SECTION>
 <FILE>element-speed</FILE>
 <TITLE>speed</TITLE>
-<SUBSECTION Standard>
 GstSpeed
+<SUBSECTION Standard>
 GstSpeedClass
 GstSpeedFormat
 GST_SPEED
@@ -656,8 +656,8 @@ GST_TYPE_THEORA_DEC_EXP
 <SECTION>
 <FILE>element-timidity</FILE>
 <TITLE>timidity</TITLE>
-<SUBSECTION Standard>
 GstTimidity
+<SUBSECTION Standard>
 GstTimidityClass
 GST_TIMIDITY
 GST_TIMIDITY_CLASS
@@ -727,8 +727,8 @@ GST_IS_VIDEO_MARK_CLASS
 <SECTION>
 <FILE>element-videoparse</FILE>
 <TITLE>videoparse</TITLE>
-<SUBSECTION Standard>
 GstVideoParse
+<SUBSECTION Standard>
 GstVideoParseClass
 GST_VIDEO_PARSE
 GST_VIDEO_PARSE_CLASS
@@ -741,8 +741,8 @@ gst_video_parse_get_type
 <SECTION>
 <FILE>element-wildmidi</FILE>
 <TITLE>wildmidi</TITLE>
-<SUBSECTION Standard>
 GstWildmidi
+<SUBSECTION Standard>
 GstWildmidiClass
 GST_WILDMIDI
 GST_WILDMIDI_CLASS

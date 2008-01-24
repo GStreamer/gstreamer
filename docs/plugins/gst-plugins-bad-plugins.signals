@@ -1,251 +1,4 @@
 <SIGNAL>
-<NAME>GstXvidEnc::frame-encoded</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstXvidEnc *gstxvidenc
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpSsrcDemux::new-ssrc-pad</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpSsrcDemux *gstrtpssrcdemux
-guint  arg1
-GstPad *arg2
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpSession::clear-pt-map</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>a</FLAGS>
-GstRtpSession *gstrtpsession
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpSession::request-pt-map</NAME>
-<RETURNS>GstCaps*</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpSession *gstrtpsession
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpSession::on-bye-ssrc</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpSession *gstrtpsession
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpSession::on-bye-timeout</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpSession *gstrtpsession
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpSession::on-new-ssrc</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpSession *gstrtpsession
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpSession::on-ssrc-collision</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpSession *gstrtpsession
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpSession::on-ssrc-validated</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpSession *gstrtpsession
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpSession::on-timeout</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpSession *gstrtpsession
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpSession::on-ssrc-active</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpSession *gstrtpsession
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpSession::on-ssrc-sdes</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpSession *gstrtpsession
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpPtDemux::clear-pt-map</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>la</FLAGS>
-GstRtpPtDemux *gstrtpptdemux
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpPtDemux::new-payload-type</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpPtDemux *gstrtpptdemux
-guint  arg1
-GstPad *arg2
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpPtDemux::payload-type-change</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpPtDemux *gstrtpptdemux
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpPtDemux::request-pt-map</NAME>
-<RETURNS>GstCaps*</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpPtDemux *gstrtpptdemux
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpJitterBuffer *gstrtpjitterbuffer
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpJitterBuffer::request-pt-map</NAME>
-<RETURNS>GstCaps*</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpJitterBuffer *gstrtpjitterbuffer
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpBin::clear-pt-map</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>la</FLAGS>
-GstRtpBin *gstrtpbin
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpBin::request-pt-map</NAME>
-<RETURNS>GstCaps*</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpBin *gstrtpbin
-guint  arg1
-guint  arg2
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpBin::on-bye-ssrc</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpBin *gstrtpbin
-guint  arg1
-guint  arg2
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpBin::on-bye-timeout</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpBin *gstrtpbin
-guint  arg1
-guint  arg2
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpBin::on-new-ssrc</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpBin *gstrtpbin
-guint  arg1
-guint  arg2
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpBin::on-ssrc-collision</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpBin *gstrtpbin
-guint  arg1
-guint  arg2
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpBin::on-ssrc-validated</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpBin *gstrtpbin
-guint  arg1
-guint  arg2
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpBin::on-timeout</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpBin *gstrtpbin
-guint  arg1
-guint  arg2
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpBin::on-ssrc-active</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpBin *gstrtpbin
-guint  arg1
-guint  arg2
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRtpBin::on-ssrc-sdes</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpBin *gstrtpbin
-guint  arg1
-guint  arg2
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstCDAudio::track-change</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstCDAudio *gstcdaudio
-gint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>MpegTSParse::pmt-info</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-MpegTSParse *mpegtsparse
-gint  arg1
-MpegTSPmtInfo *arg2
-</SIGNAL>
-
-<SIGNAL>
 <NAME>GstAppSink::eos</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
@@ -295,5 +48,236 @@ GstSwitch *gstswitch
 gchar *arg1
 gint64  arg2
 gint64  arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::clear-pt-map</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstRtpBin *gstrtpbin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::on-bye-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::on-bye-timeout</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::on-new-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::on-ssrc-active</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::on-ssrc-collision</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::on-ssrc-sdes</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::on-ssrc-validated</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::on-timeout</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::request-pt-map</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpJitterBuffer *gstrtpjitterbuffer
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpJitterBuffer::request-pt-map</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpJitterBuffer *gstrtpjitterbuffer
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpPtDemux::clear-pt-map</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstRtpPtDemux *gstrtpptdemux
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpPtDemux::new-payload-type</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpPtDemux *gstrtpptdemux
+guint  arg1
+GstPad *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpPtDemux::payload-type-change</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpPtDemux *gstrtpptdemux
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpPtDemux::request-pt-map</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpPtDemux *gstrtpptdemux
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::clear-pt-map</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>a</FLAGS>
+GstRtpSession *gstrtpsession
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::on-bye-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::on-bye-timeout</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::on-new-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::on-ssrc-active</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::on-ssrc-collision</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::on-ssrc-sdes</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::on-ssrc-validated</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::on-timeout</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::request-pt-map</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSsrcDemux::new-ssrc-pad</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSsrcDemux *gstrtpssrcdemux
+guint  arg1
+GstPad *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCDAudio::track-change</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstCDAudio *gstcdaudio
+gint  arg1
 </SIGNAL>
 
