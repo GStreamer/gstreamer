@@ -622,32 +622,16 @@ class TimelineWidget (gtk.DrawingArea):
         # FIXME:
         req.height = 64
 
-class TimelineState (Common.GUI.StateSection):
+class AttachedWindow (object):
 
-    _name = "timeline"
+    def __init__ (self, feature, window):
 
-    shown = Common.GUI.StateBool ("shown", default = True)
-
-class TimelineFeature (FeatureBase):
-
-    def __init__ (self, app):
-
-        self.logger = logging.getLogger ("ui.timeline")
-
-        self.action_group = gtk.ActionGroup ("TimelineActions")
-        self.action_group.add_toggle_actions ([("show-timeline",
-                                                None, _("_Timeline"),)])
-
-        self.state = app.state.sections[TimelineState._name]
-
-    def handle_attach_window (self, window):
-
-        self.log_view = window.log_view
+        self.window = window
 
         ui = window.ui_manager
 
-        ui.insert_action_group (self.action_group, 0)
-        
+        ui.insert_action_group (feature.action_group, 0)
+
         self.merge_id = ui.new_merge_id ()
         ui.add_ui (self.merge_id, "/menubar/ViewMenu/ViewMenuAdditions",
                    "ViewTimeline", "show-timeline",
@@ -688,31 +672,27 @@ class TimelineFeature (FeatureBase):
         adjustment.connect ("value-changed", handler)
 
         handler = self.handle_show_action_toggled
-        action = self.action_group.get_action ("show-timeline")
+        action = feature.action_group.get_action ("show-timeline")
         action.connect ("toggled", handler)
-        action.props.active = self.state.shown
+        handler (action)
 
         handler = self.handle_log_view_notify_model
-        self.notify_model_id = self.log_view.connect ("notify::model", handler)
+        self.notify_model_id = window.log_view.connect ("notify::model", handler)
 
-    def handle_detach_window (self, window):
+    def detach (self, feature):
 
-        self.log_view.disconnect (self.notify_model_id)
-        self.log_view = None
+        self.window.log_view.disconnect (self.notify_model_id)
+        self.notify_model_id = None
 
-        window.ui_manager.remove_ui (self.merge_id)
+        self.window.ui_manager.remove_ui (self.merge_id)
         self.merge_id = None
 
-        window.ui_manager.remove_action_group (self.action_group)
+        self.window.ui_manager.remove_action_group (feature.action_group)
 
         self.timeline.destroy ()
         self.timeline = None
 
-    def handle_attach_log_file (self, window, log_file):
-
-        pass
-
-    def handle_detach_log_file (self, window, log_file):
+    def handle_detach_log_file (self, log_file):
 
         self.timeline.clear ()
         self.vtimeline.clear ()
@@ -736,10 +716,20 @@ class TimelineFeature (FeatureBase):
             return False
         gobject.idle_add (idle_update, priority = gobject.PRIORITY_LOW)
 
+    def handle_log_view_adjustment_value_changed (self, adj):
+
+        # FIXME: If not visible, disconnect this handler!
+        if not self.timeline.props.visible:
+            return
+
+        self.update_timeline_position ()
+        self.update_vtimeline ()
+
     def update_timeline_position (self):
 
-        model = self.log_view.props.model
-        visible_range = self.log_view.get_visible_range ()
+        view = self.window.log_view
+        model = view.props.model
+        visible_range = view.get_visible_range ()
         if visible_range is None:
             return
         start_path, end_path = visible_range
@@ -752,19 +742,11 @@ class TimelineFeature (FeatureBase):
         
         self.timeline.update_position (ts1, ts2)
 
-    def handle_log_view_adjustment_value_changed (self, adj):
-
-        # FIXME: If not visible, disconnect this handler!
-        if not self.timeline.props.visible:
-            return
-
-        self.update_timeline_position ()
-        self.update_vtimeline ()
-
     def update_vtimeline (self):
 
-        model = self.log_view.props.model
-        visible_range = self.log_view.get_visible_range ()
+        view = self.window.log_view
+        model = view.props.model
+        visible_range = view.get_visible_range ()
         if visible_range is None:
             return
         start_path, end_path = visible_range
@@ -772,21 +754,25 @@ class TimelineFeature (FeatureBase):
         if not start_path or not end_path:
             return
 
-        column = self.log_view.get_column (0)
-        bg_rect = self.log_view.get_background_area (start_path, column)
+        column = view.get_column (0)
+        bg_rect = view.get_background_area (start_path, column)
         cell_height = bg_rect.height
-        cell_rect = self.log_view.get_cell_area (start_path, column)
+        cell_rect = view.get_cell_area (start_path, column)
         try:
-            first_y = self.log_view.convert_bin_window_to_widget_coords (cell_rect.x, cell_rect.y)[1]
+            first_y = view.convert_bin_window_to_widget_coords (cell_rect.x, cell_rect.y)[1]
         except (AttributeError, SystemError,):
             # AttributeError is with PyGTK before 2.12.  SystemError is raised
             # with PyGTK 2.12.0, pygtk bug #479012.
             first_y = cell_rect.y % cell_height
-            if not hasattr (self, "_warn_tree_view_coords"):
+
+            global _warn_tree_view_coords
+            try:
+                _warn_tree_view_coords
+            except NameError:
                 self.logger.warning ("tree view coordinate conversion method "
                                      "not available, using aproximate offset")
                 # Only warn once:
-                self._warn_tree_view_coords = True
+                _warn_tree_view_coords = True
 
         data = []
         tree_iter = model.get_iter (start_path)
@@ -803,11 +789,9 @@ class TimelineFeature (FeatureBase):
         if show:
             self.timeline.show ()
             self.vtimeline.show ()
-            self.state.shown = True
         else:
             self.timeline.hide ()
             self.vtimeline.hide ()
-            self.state.shown = False
 
     def handle_timeline_button_press_event (self, widget, event):
 
@@ -859,14 +843,67 @@ class TimelineFeature (FeatureBase):
 
         count = sum (data[:pos + 1])
 
-        model = self.log_view.props.model
+        view = self.window.log_view
+        model = view.props.model
         row = model[count]
         path = (count,)
-        self.log_view.scroll_to_cell (path, use_align = True, row_align = .5)
-        sel = self.log_view.get_selection ()
+        view.scroll_to_cell (path, use_align = True, row_align = .5)
+        sel = view.get_selection ()
         sel.select_path (path)
         
         return False
+
+class TimelineFeature (FeatureBase):
+
+    def __init__ (self, app):
+
+        self.logger = logging.getLogger ("ui.timeline")
+
+        self.action_group = gtk.ActionGroup ("TimelineActions")
+        self.action_group.add_toggle_actions ([("show-timeline",
+                                                None, _("_Timeline"),)])
+
+        self.state = app.state.sections[TimelineState._name]
+
+        self.attached_windows = {}
+
+        handler = self.handle_show_action_toggled
+        action = self.action_group.get_action ("show-timeline")
+        action.connect ("toggled", handler)
+        action.props.active = self.state.shown
+
+    def handle_show_action_toggled (self, action):
+
+        show = action.props.active
+
+        if show:
+            self.state.shown = True
+        else:
+            self.state.shown = False
+
+    def handle_attach_window (self, window):
+
+        self.attached_windows[window] = AttachedWindow (self, window)
+
+    def handle_detach_window (self, window):
+
+        attached_window = self.attached_windows.pop (window)
+        attached_window.detach (self)
+
+    def handle_attach_log_file (self, window, log_file):
+
+        pass
+
+    def handle_detach_log_file (self, window, log_file):
+
+        attached_window = self.attached_windows[window]
+        attached_window.handle_detach_log_file (log_file)
+
+class TimelineState (Common.GUI.StateSection):
+
+    _name = "timeline"
+
+    shown = Common.GUI.StateBool ("shown", default = True)
 
 class Plugin (PluginBase):
 
