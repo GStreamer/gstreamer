@@ -667,7 +667,8 @@ class TimelineFeature (FeatureBase):
         box = window.get_top_attach_point ()
 
         self.timeline = TimelineWidget ()
-        self.timeline.add_events (gtk.gdk.ALL_EVENTS_MASK) # FIXME
+        self.timeline.add_events (gtk.gdk.BUTTON1_MOTION_MASK |
+                                  gtk.gdk.BUTTON_PRESS_MASK)
         self.timeline.connect ("button-press-event", self.handle_timeline_button_press_event)
         self.timeline.connect ("motion-notify-event", self.handle_timeline_motion_notify_event)
         box.pack_start (self.timeline, False, False, 0)
