@@ -107,8 +107,8 @@ gst_sbc_get_mode_from_list (const GValue * list)
   for (i = 0; i < size; i++) {
     value = gst_value_list_get_value (list, i);
     aux = g_value_get_string (value);
-    if (strcmp ("stereo", aux) == 0) {
-      return "stereo";
+    if (strcmp ("joint", aux) == 0) {
+      return "joint";
     }
   }
   return g_value_get_string (gst_value_list_get_value (list, size - 1));
@@ -140,6 +140,20 @@ gst_sbc_get_mode_int (const gchar * mode)
     return BT_A2DP_CHANNEL_MODE_MONO;
   else if (g_ascii_strcasecmp (mode, "auto") == 0)
     return BT_A2DP_CHANNEL_MODE_AUTO;
+  else
+    return -1;
+}
+
+/* FIXME add dual when sbc_t supports it */
+gboolean
+gst_sbc_get_mode_int_for_sbc_t (const gchar * mode)
+{
+  if (g_ascii_strcasecmp (mode, "joint") == 0)
+    return TRUE;
+  else if (g_ascii_strcasecmp (mode, "stereo") == 0)
+    return FALSE;
+  else if (g_ascii_strcasecmp (mode, "mono") == 0)
+    return FALSE;
   else
     return -1;
 }
@@ -195,6 +209,8 @@ gst_sbc_get_mode_string_from_sbc_t (int channels, int joint)
     return "joint";
   else if (channels == 2 && joint == 0)
     return "stereo";
+  else if (channels == 1 && joint == 0)
+    return "mono";
   else
     return NULL;
 }
@@ -446,7 +462,7 @@ gst_sbc_util_fill_sbc_params (sbc_t * sbc, GstCaps * caps)
   sbc->blocks = blocks;
   sbc->subbands = subbands;
   sbc->bitpool = bitpool;
-  sbc->joint = gst_sbc_get_mode_int (mode);
+  sbc->joint = gst_sbc_get_mode_int_for_sbc_t (mode);
   sbc->allocation = gst_sbc_get_allocation_mode_int (allocation);
 
   return TRUE;
