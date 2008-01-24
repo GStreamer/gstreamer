@@ -1,6 +1,6 @@
 <plugin>
   <name>metadata</name>
-  <description>Metadata (EXIF, IPTC and XMP) image (JPEG, TIFF) parser and muxer</description>
+  <description>Metadata (EXIF, IPTC and XMP) image (JPEG, TIFF) demuxer and muxer</description>
   <filename>../../ext/metadata/.libs/libgstmetadata.so</filename>
   <basename>libgstmetadata.so</basename>
   <version>0.10.5.1</version>
@@ -10,42 +10,42 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>metadatamux</name>
-      <longname>Metadata muxer</longname>
-      <class>Muxer/Metadata</class>
-      <description>Convert tags to metadata (EXIF, IPTC and XMP) and insert into the stream</description>
+      <name>metadatademux</name>
+      <longname>Metadata demuxer</longname>
+      <class>Demuxer/Extracter/Metadata</class>
+      <description>Send metadata tags (EXIF, IPTC and XMP) and remove metadata chunks from stream</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
       <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>image/jpeg, tags-extracted=(boolean)true; image/png, tags-extracted=(boolean)true</details>
-        </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>image/jpeg; image/png</details>
+          <details>image/jpeg, tags-extracted=(boolean)true; image/png, tags-extracted=(boolean)true</details>
         </caps>
-      </pads>
-    </element>
-    <element>
-      <name>metadataparse</name>
-      <longname>Metadata parser</longname>
-      <class>Parser/Extracter/Metadata</class>
-      <description>Send metadata tags (EXIF, IPTC and XMP) while passing throught the contents</description>
-      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
-      <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>image/jpeg, tags-extracted=(boolean)false; image/png, tags-extracted=(boolean)false</details>
         </caps>
+      </pads>
+    </element>
+    <element>
+      <name>metadatamux</name>
+      <longname>Metadata muxer</longname>
+      <class>Muxer/Extracter/Metadata</class>
+      <description>Write metadata (EXIF, IPTC and XMP) into a image stream</description>
+      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
+      <pads>
         <caps>
           <name>src</name>
           <direction>source</direction>
+          <presence>always</presence>
+          <details>image/jpeg; image/png</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>image/jpeg, tags-extracted=(boolean)true; image/png, tags-extracted=(boolean)true</details>
         </caps>

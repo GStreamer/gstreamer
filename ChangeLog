@@ -1,3 +1,10 @@
+2008-01-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/inspect/plugin-metadata.xml:
+	  Update this too, hopefully fixes the docs build (does at least
+	  for me, after make clean in docs/plugins).
+
 2008-01-24  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/gstmpegdesc.h:

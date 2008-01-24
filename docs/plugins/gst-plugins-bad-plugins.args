@@ -18769,6 +18769,66 @@
 </ARG>
 
 <ARG>
+<NAME>GstSouphttpSrc::iradio-genre</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-genre</NICK>
+<BLURB>Genre of the stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSouphttpSrc::iradio-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>iradio-mode</NICK>
+<BLURB>Enable internet radio mode (extraction of shoutcast/icecast metadata).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSouphttpSrc::iradio-name</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-name</NICK>
+<BLURB>Name of the stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSouphttpSrc::iradio-title</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-title</NICK>
+<BLURB>Name of currently playing song.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSouphttpSrc::iradio-url</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-url</NICK>
+<BLURB>Homepage URL for radio stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSouphttpSrc::user-agent</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>User-Agent</NICK>
+<BLURB>Value of the User-Agent HTTP request header field.</BLURB>
+<DEFAULT>"GStreamer souphttpsrc"</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSpeexResample::quality</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[0,10]</RANGE>
@@ -19076,5 +19136,90 @@
 <NICK>stream</NICK>
 <BLURB>(logical) Stream information.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMetadataDemux::parse-only</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>parse-only</NICK>
+<BLURB>If TRUE, don't strip out any chunk.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMythtvSrc::location</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>The location. In the form:
+			myth://a.com/file.nuv
+			myth://a.com:23223/file.nuv
+			myth://a.com/?channel=123
+			myth://a.com/?channel=Channel%203
+			a.com/file.nuv - default scheme 'myth'.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMythtvSrc::mythtv-channel</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>mythtv-channel</NICK>
+<BLURB>Change MythTV channel number.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMythtvSrc::mythtv-enable-timing-position</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>mythtv-enable-timing-position</NICK>
+<BLURB>Enable MythTV Live TV content size continuous updating.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMythtvSrc::mythtv-live</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>mythtv-live</NICK>
+<BLURB>Enable MythTV Live TV content streaming.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMythtvSrc::mythtv-live-chainid</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>mythtv-live-chainid</NICK>
+<BLURB>Sets the MythTV chain ID (from TV Chain).</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMythtvSrc::mythtv-live-id</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,200]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>mythtv-live-id</NICK>
+<BLURB>Change MythTV version.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMythtvSrc::mythtv-version</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[26,30]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>mythtv-version</NICK>
+<BLURB>Change MythTV version.</BLURB>
+<DEFAULT>26</DEFAULT>
 </ARG>
 
