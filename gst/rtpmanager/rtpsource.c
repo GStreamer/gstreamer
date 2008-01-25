@@ -878,7 +878,7 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
         /* remove packets from queue if there are too many */
         while (g_queue_get_length (src->packets) > RTP_MAX_PROBATION_LEN) {
           q = g_queue_pop_head (src->packets);
-          gst_object_unref (q);
+          gst_buffer_unref (q);
         }
         goto done;
       }
