@@ -1,3 +1,11 @@
+2008-01-25  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c:
+	* gst/rtp/gstrtpmpvpay.c:
+	* gst/rtp/gstrtpmpvpay.h:
+	Add MPEG2 video payloader
+
 2008-01-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/level/gstlevel.c:
