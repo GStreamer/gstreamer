@@ -50,7 +50,7 @@ class OptionParser (Common.Main.LogOptionParser):
 
     def get_parameter_string (self):
 
-        return _("[FILENAME] - Display and analyze debug log files")
+        return _("[FILENAME] - Display and analyze GStreamer debug log files")
 
     def handle_parse_complete (self, remaining_args):
 
