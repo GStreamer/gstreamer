@@ -679,12 +679,14 @@ gst_dvbsrc_close_devices (GstDvbSrc * object)
   return TRUE;
 }
 
+/* TODO: should open the frontend at NULL to READY to inform app the caps */
 static gboolean
 gst_dvbsrc_open_frontend (GstDvbSrc * object)
 {
   struct dvb_frontend_info fe_info;
   char *adapter_desc = NULL;
   gchar *frontend_dev;
+  GstStructure *adapter_structure;
 
   frontend_dev = g_strdup_printf ("/dev/dvb/adapter%d/frontend%d",
       object->adapter_number, object->frontend_number);
@@ -723,21 +725,41 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object)
   switch (object->adapter_type) {
     case FE_QPSK:
       adapter_desc = "DVB-S";
+      adapter_structure = gst_structure_new ("dvb-adapter",
+          "type", G_TYPE_STRING, adapter_desc,
+          "auto-fec", G_TYPE_BOOLEAN, fe_info.caps & FE_CAN_FEC_AUTO, NULL);
       break;
     case FE_QAM:
       adapter_desc = "DVB-C";
+      adapter_structure = gst_structure_new ("dvb-adapter",
+          "type", G_TYPE_STRING, adapter_desc,
+          "auto-inversion", G_TYPE_BOOLEAN,
+          fe_info.caps & FE_CAN_INVERSION_AUTO, "auto-qam", G_TYPE_BOOLEAN,
+          fe_info.caps & FE_CAN_QAM_AUTO, "auto-fec", G_TYPE_BOOLEAN,
+          fe_info.caps & FE_CAN_FEC_AUTO, NULL);
       break;
     case FE_OFDM:
       adapter_desc = "DVB-T";
+      adapter_structure = gst_structure_new ("dvb-adapter",
+          "type", G_TYPE_STRING, adapter_desc,
+          "auto-inversion", G_TYPE_BOOLEAN,
+          fe_info.caps & FE_CAN_INVERSION_AUTO, "auto-qam", G_TYPE_BOOLEAN,
+          fe_info.caps & FE_CAN_QAM_AUTO, "auto-transmission-mode",
+          G_TYPE_BOOLEAN, fe_info.caps & FE_CAN_TRANSMISSION_MODE_AUTO,
+          "auto-guard-interval", G_TYPE_BOOLEAN,
+          fe_info.caps & FE_CAN_GUARD_INTERVAL_AUTO, "auto-hierarchy",
+          G_TYPE_BOOLEAN, fe_info.caps % FE_CAN_HIERARCHY_AUTO, "auto-fec",
+          G_TYPE_BOOLEAN, fe_info.caps & FE_CAN_FEC_AUTO, NULL);
       break;
     default:
       g_error ("Unknown frontend type: %d", object->adapter_type);
+      adapter_structure = gst_structure_new ("dvb-adapter",
+          "type", G_TYPE_STRING, "unknown", NULL);
   }
 
-  /*g_signal_emit (G_OBJECT (object), gst_dvbsrc_signals[ADAPTER_TYPE_SIGNAL],
-     0, object->adapter_type); */
-
   GST_INFO_OBJECT (object, "DVB card: %s ", fe_info.name);
+  gst_element_post_message (GST_ELEMENT_CAST (object), gst_message_new_element
+      (GST_OBJECT (object), adapter_structure));
   g_free (frontend_dev);
   return TRUE;
 }
@@ -923,6 +945,9 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
       gst_caps_unref (caps);
     } else {
       GST_DEBUG_OBJECT (object, "Failed to read from device");
+      gst_element_post_message (GST_ELEMENT_CAST (object),
+          gst_message_new_element (GST_OBJECT (object),
+              gst_structure_empty_new ("dvb-read-failure")));
     }
 
     if (object->stats_interval != 0 &&

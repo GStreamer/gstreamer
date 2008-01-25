@@ -1,5 +1,13 @@
 2008-01-25  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* sys/dvb/gstdvbsrc.c:
+	Post bus message about adapter type and it's capabilities,
+	when opening the frontend.
+	After failing to read from the dvr, post a bus message to
+	inform the app.
+
+2008-01-25  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* gst/mpegtsparse/mpegtspacketizer.c:
 	The logic for the guard interval calculation was totally wrong.
 	Fixed.
