@@ -1,3 +1,10 @@
+2008-01-24  David Schleef  <ds@schleef.org>
+
+	Patch by: Olivier Crete <tester@tester.ca>
+
+	* gst/rtpmanager/rtpsource.c: Fix unref of buffer using the
+	  wrong function.  Fixes #511920
+
 2008-01-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/Makefile.am:
