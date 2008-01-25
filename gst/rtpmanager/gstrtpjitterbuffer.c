@@ -451,8 +451,6 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
   if (priv->clock_rate <= 0)
     goto wrong_rate;
 
-  rtp_jitter_buffer_set_clock_rate (priv->jbuf, priv->clock_rate);
-
   GST_DEBUG_OBJECT (jitterbuffer, "got clock-rate %d", priv->clock_rate);
 
   /* gah, clock-base is uint. If we don't have a base, we will use the first
@@ -822,8 +820,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
     gst_rtp_jitter_buffer_get_clock_rate (jitterbuffer, pt);
     if (priv->clock_rate == -1)
       goto not_negotiated;
-
-    rtp_jitter_buffer_set_clock_rate (priv->jbuf, priv->clock_rate);
   }
 
   /* take the timestamp of the buffer. This is the time when the packet was
@@ -875,7 +871,8 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   /* now insert the packet into the queue in sorted order. This function returns
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
    * have a duplicate. */
-  if (!rtp_jitter_buffer_insert (priv->jbuf, buffer, timestamp, &tail))
+  if (!rtp_jitter_buffer_insert (priv->jbuf, buffer, timestamp,
+          priv->clock_rate, &tail))
     goto duplicate;
 
   /* signal addition of new buffer when the _loop is waiting. */

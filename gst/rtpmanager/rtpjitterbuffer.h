@@ -54,8 +54,6 @@ struct _RTPJitterBuffer {
 
   GQueue        *packets;
 
-  gint           clock_rate;
-
   /* for calculating skew */
   GstClockTime   base_time;
   GstClockTime   base_rtptime;
@@ -78,13 +76,12 @@ GType rtp_jitter_buffer_get_type (void);
 /* managing lifetime */
 RTPJitterBuffer*      rtp_jitter_buffer_new              (void);
 
-void                  rtp_jitter_buffer_set_clock_rate   (RTPJitterBuffer *jbuf, gint clock_rate);
-gint                  rtp_jitter_buffer_get_clock_rate   (RTPJitterBuffer *jbuf);
-
 void                  rtp_jitter_buffer_reset_skew       (RTPJitterBuffer *jbuf);
 
 gboolean              rtp_jitter_buffer_insert           (RTPJitterBuffer *jbuf, GstBuffer *buf,
-		                                          GstClockTime time, gboolean *tail);
+		                                          GstClockTime time,
+		                                          guint32 clock_rate,
+		                                          gboolean *tail);
 GstBuffer *           rtp_jitter_buffer_peek             (RTPJitterBuffer *jbuf);
 GstBuffer *           rtp_jitter_buffer_pop              (RTPJitterBuffer *jbuf);
 
