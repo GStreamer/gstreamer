@@ -3,6 +3,18 @@
 	Patch by: Olivier Crete <tester@tester.ca>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_jitter_buffer_sink_parse_caps), (gst_rtp_jitter_buffer_chain):
+	* gst/rtpmanager/rtpjitterbuffer.c: (calculate_skew),
+	(rtp_jitter_buffer_insert):
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	Remove the fixed clock-rate from the jitterbuffer and extend it so that
+	a clock-rate can be provided with each buffer instead. Fixes #511686.
+
+2008-01-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Olivier Crete <tester@tester.ca>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
 	(gst_rtp_jitter_buffer_init), (gst_rtp_jitter_buffer_change_state),
 	(gst_rtp_jitter_buffer_chain), (gst_rtp_jitter_buffer_loop):
 	Remove old unused variable.
