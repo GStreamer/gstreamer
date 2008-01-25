@@ -151,6 +151,7 @@ struct _GstRtpJitterBufferPrivate
   gboolean eos;
 
   /* clock rate and rtp timestamp offset */
+  gint last_pt;
   gint32 clock_rate;
   gint64 clock_base;
   gint64 prev_ts_offset;
@@ -162,7 +163,6 @@ struct _GstRtpJitterBufferPrivate
   /* for sync */
   GstSegment segment;
   GstClockID clock_id;
-  guint32 waiting_seqnum;
   /* the latency of the upstream peer, we have to take this into account when
    * synchronizing the buffers. */
   GstClockTime peer_latency;
@@ -338,8 +338,6 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer,
   priv->jbuf = rtp_jitter_buffer_new ();
   priv->jbuf_lock = g_mutex_new ();
   priv->jbuf_cond = g_cond_new ();
-
-  priv->waiting_seqnum = -1;
 
   priv->srcpad =
       gst_pad_new_from_static_template (&gst_rtp_jitter_buffer_src_template,
@@ -604,6 +602,7 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       priv->clock_rate = -1;
       priv->clock_base = -1;
       priv->peer_latency = 0;
+      priv->last_pt = -1;
       /* block until we go to PLAYING */
       priv->blocked = TRUE;
       /* reset skew detection initialy */
@@ -808,6 +807,12 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 
   priv = jitterbuffer->priv;
 
+  if (priv->last_pt != gst_rtp_buffer_get_payload_type (buffer)) {
+    priv->last_pt = gst_rtp_buffer_get_payload_type (buffer);
+    /* reset clock-rate so that we get a new one */
+    priv->clock_rate = -1;
+  }
+
   if (priv->clock_rate == -1) {
     guint8 pt;
 
@@ -910,7 +915,7 @@ not_negotiated:
     GST_WARNING_OBJECT (jitterbuffer, "No clock-rate in caps!");
     gst_buffer_unref (buffer);
     gst_object_unref (jitterbuffer);
-    return GST_FLOW_NOT_NEGOTIATED;
+    return GST_FLOW_OK;
   }
 out_flushing:
   {
@@ -1065,7 +1070,6 @@ again:
 
     /* create an entry for the clock */
     id = priv->clock_id = gst_clock_new_single_shot_id (clock, sync_time);
-    priv->waiting_seqnum = seqnum;
     GST_OBJECT_UNLOCK (jitterbuffer);
 
     /* release the lock so that the other end can push stuff or unlock */
@@ -1077,7 +1081,6 @@ again:
     /* and free the entry */
     gst_clock_id_unref (id);
     priv->clock_id = NULL;
-    priv->waiting_seqnum = -1;
 
     /* at this point, the clock could have been unlocked by a timeout, a new
      * tail element was added to the queue or because we are shutting down. Check
