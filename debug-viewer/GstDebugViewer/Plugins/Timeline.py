@@ -405,7 +405,7 @@ class TimelineWidget (gtk.DrawingArea):
         self.__draw (self.__offscreen)
         self.__update_from_offscreen ()
 
-    def __update_from_offscreen (self):
+    def __update_from_offscreen (self, rect = None):
 
         if not self.props.visible:
             return
@@ -414,9 +414,13 @@ class TimelineWidget (gtk.DrawingArea):
             self.__redraw ()
 
         gc = gtk.gdk.GC (self.window)
-        # FIXME: Accept a subregion here to speed up partial expose.
-        self.window.draw_drawable (gc, self.__offscreen, 0, 0, 0, 0, -1, -1)
-        self.__draw_position (self.window)
+        if rect is None:
+            self.window.draw_drawable (gc, self.__offscreen, 0, 0, 0, 0, -1, -1)
+            self.__draw_position (self.window)
+        else:
+            x, y, w, h = rect
+            self.window.draw_drawable (gc, self.__offscreen, x, y, x, y, w, h)
+            self.__draw_position (self.window, clip = rect)
 
     def update (self, model):
 
@@ -569,7 +573,7 @@ class TimelineWidget (gtk.DrawingArea):
         else:
             return False
 
-    def __draw_position (self, drawable):
+    def __draw_position (self, drawable, clip = None):
 
         if not self.__have_position ():
             return
@@ -583,8 +587,17 @@ class TimelineWidget (gtk.DrawingArea):
         position1 = int (float (start_ts - first_ts) / step)
         position2 = int (float (end_ts - first_ts) / step)
 
+        if clip:
+            clip_x, clip_y, clip_w, clip_h = clip
+            if clip_x + clip_w < position1 - 1 or clip_x > position2 + 1:
+                return
+
         ctx = drawable.cairo_create ()
         x, y, w, h = self.get_allocation ()
+
+        if clip:
+            ctx.rectangle (*clip)
+            ctx.clip ()
 
         line_width = position2 - position1
         if line_width <= 1:
@@ -601,7 +614,7 @@ class TimelineWidget (gtk.DrawingArea):
     def __handle_expose_event (self, self_, event):
 
         if self.__offscreen:
-            self.__update_from_offscreen ()
+            self.__update_from_offscreen (event.area)
         else:
             self.__redraw ()
         return True
