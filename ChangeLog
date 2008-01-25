@@ -1,3 +1,14 @@
+2008-01-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Olivier Crete <tester@tester.ca>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_init), (gst_rtp_jitter_buffer_change_state),
+	(gst_rtp_jitter_buffer_chain), (gst_rtp_jitter_buffer_loop):
+	Remove old unused variable.
+	Track pt on input buffers and get the clock-rate when it changes.
+	Ignore packets with unknown clock-rate. See #511686.
+
 2008-01-25  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c:
