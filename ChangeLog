@@ -1,5 +1,14 @@
 2008-01-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_base_init),
+	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_video_frame):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_base_init):
+	When doing QoS, don't drop the frame before decoding because we might
+	drop an important reference frame, just make the decoder hurry_up on
+	this frame.
+
+2008-01-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c:
 	(gst_ffmpeg_formatid_get_codecids):
 	Add H263+ to valid 3GP muxing formats. Fixes #511476.

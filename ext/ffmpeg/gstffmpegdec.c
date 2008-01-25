@@ -242,7 +242,7 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
       (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
   details.description = g_strdup_printf ("FFMPEG %s decoder",
       params->in_plugin->name);
-  details.author = "Wim Taymans <wim@fluendo.com>, "
+  details.author = "Wim Taymans <wim.taymans@gmail.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
       "Edward Hervey <bilboed@bilboed.com>";
   gst_element_class_set_details (element_class, &details);
@@ -674,7 +674,6 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
 
   /* workaround encoder bugs */
   ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
-
   ffmpegdec->context->error_resilience = 1;
 
   /* for slow cpus */
@@ -1373,6 +1372,8 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   gint have_data;
   gboolean iskeyframe;
   gboolean mode_switch;
+  gboolean decode;
+  gint hurry_up;
 
   *ret = GST_FLOW_OK;
   *outbuf = NULL;
@@ -1382,11 +1383,9 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   /* in case we skip frames */
   ffmpegdec->picture->pict_type = -1;
 
-  /* run QoS code, returns FALSE if we can skip decoding this
-   * frame entirely. */
-  if (G_UNLIKELY (!gst_ffmpegdec_do_qos (ffmpegdec, in_timestamp,
-              &mode_switch)))
-    goto drop_qos;
+  /* run QoS code, we don't stop decoding the frame when we are late because
+   * else we might skip a reference frame */
+  decode = gst_ffmpegdec_do_qos (ffmpegdec, in_timestamp, &mode_switch);
 
   if (ffmpegdec->is_realvideo && data != NULL) {
     gint slice_count;
@@ -1406,9 +1405,21 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
     }
   }
 
+  if (!decode) {
+    /* no decoding needed, save previous hurry_up value and brutely skip
+     * decoding everything */
+    hurry_up = ffmpegdec->context->hurry_up;
+    ffmpegdec->context->hurry_up = 2;
+  }
+
   /* now decode the frame */
   len = avcodec_decode_video (ffmpegdec->context,
       ffmpegdec->picture, &have_data, data, size);
+
+  /* restore previous state */
+  if (!decode)
+    ffmpegdec->context->hurry_up = hurry_up;
+
 
   GST_DEBUG_OBJECT (ffmpegdec, "after decode: len %d, have_data %d",
       len, have_data);
@@ -1527,15 +1538,6 @@ beach:
   return len;
 
   /* special cases */
-drop_qos:
-  {
-    GST_WARNING_OBJECT (ffmpegdec, "Dropping frame because of QoS");
-    /* drop a frame, set discont on next buffer, pretend we decoded the complete
-     * buffer */
-    ffmpegdec->discont = TRUE;
-    len = size;
-    goto beach;
-  }
 drop_non_keyframe:
   {
     GST_WARNING_OBJECT (ffmpegdec, "Dropping non-keyframe (seek/init)");

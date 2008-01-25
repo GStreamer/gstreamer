@@ -137,7 +137,7 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
       (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
   details.description = g_strdup_printf ("FFMPEG %s encoder",
       params->in_plugin->name);
-  details.author = "Wim Taymans <wim.taymans@chello.be>, "
+  details.author = "Wim Taymans <wim.taymans@gmail.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>";
   gst_element_class_set_details (element_class, &details);
   g_free (details.longname);
