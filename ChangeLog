@@ -1,3 +1,9 @@
+2008-01-25  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/gstdvbsrc.c:
+	Open frontend in NULL->READY so caps about dvb adapter can be
+	seen by the app.
+
 2008-01-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Olivier Crete <tester@tester.ca>

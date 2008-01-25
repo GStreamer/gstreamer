@@ -271,6 +271,9 @@ static GstFlowReturn gst_dvbsrc_create (GstPushSrc * element,
 
 static gboolean gst_dvbsrc_start (GstBaseSrc * bsrc);
 static gboolean gst_dvbsrc_stop (GstBaseSrc * bsrc);
+static GstStateChangeReturn gst_dvbsrc_change_state (GstElement * element,
+    GstStateChange transition);
+
 static gboolean gst_dvbsrc_unlock (GstBaseSrc * bsrc);
 static gboolean gst_dvbsrc_is_seekable (GstBaseSrc * bsrc);
 static gboolean gst_dvbsrc_get_size (GstBaseSrc * src, guint64 * size);
@@ -330,6 +333,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   gobject_class->get_property = gst_dvbsrc_get_property;
   gobject_class->finalize = gst_dvbsrc_finalize;
 
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_dvbsrc_change_state);
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dvbsrc_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dvbsrc_stop);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_dvbsrc_unlock);
@@ -679,7 +683,6 @@ gst_dvbsrc_close_devices (GstDvbSrc * object)
   return TRUE;
 }
 
-/* TODO: should open the frontend at NULL to READY to inform app the caps */
 static gboolean
 gst_dvbsrc_open_frontend (GstDvbSrc * object)
 {
@@ -961,6 +964,31 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
   return retval;
 
 }
+
+static GstStateChangeReturn
+gst_dvbsrc_change_state (GstElement * element, GstStateChange transition)
+{
+  GstDvbSrc *src;
+  GstStateChangeReturn ret;
+
+  src = GST_DVBSRC (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      /* open frontend then close it again, just so caps sent */
+      gst_dvbsrc_open_frontend (src);
+      if (src->fd_frontend) {
+        close (src->fd_frontend);
+      }
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
+
 
 static gboolean
 gst_dvbsrc_start (GstBaseSrc * bsrc)
