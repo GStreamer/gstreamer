@@ -827,8 +827,6 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
             DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_other_frequency (delivery);
         gchar *constellation_str, *code_rate_hp_str, *code_rate_lp_str,
             *transmission_mode_str;
-        int i;
-
         /* do the stuff */
         /* bandwidth is 8 if 0, 7 if 1, 6 if 2, reserved otherwise */
         if (bandwidth <= 2)
@@ -896,8 +894,21 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
             code_rate_lp_str = "reserved";
         }
         /* guard is 32 if 0, 16 if 1, 8 if 2, 4 if 4 */
-        for (i = 0; i < guard_interval - 4; i++) {
-          guard_interval *= 2;
+        switch (guard_interval) {
+          case 0:
+            guard_interval = 32;
+            break;
+          case 1:
+            guard_interval = 16;
+            break;
+          case 2:
+            guard_interval = 8;
+            break;
+          case 4:
+            guard_interval = 4;
+            break;
+          default:             /* make it default to 32 */
+            guard_interval = 32;
         }
         switch (transmission_mode) {
           case 0:
