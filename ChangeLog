@@ -1,3 +1,9 @@
+2008-01-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	(gst_ffmpeg_formatid_get_codecids):
+	Add H263+ to valid 3GP muxing formats. Fixes #511476.
+
 2008-01-23  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_class_init),

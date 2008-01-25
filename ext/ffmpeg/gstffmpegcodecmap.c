@@ -1894,7 +1894,7 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
     *audio_codec_list = mov_audio_list;
   } else if ((!strcmp (format_name, "3gp") || !strcmp (format_name, "3g2"))) {
     static enum CodecID tgp_video_list[] = {
-      CODEC_ID_MPEG4, CODEC_ID_H263, CODEC_ID_H264,
+      CODEC_ID_MPEG4, CODEC_ID_H263, CODEC_ID_H263P, CODEC_ID_H264,
       CODEC_ID_NONE
     };
     static enum CodecID tgp_audio_list[] = {
