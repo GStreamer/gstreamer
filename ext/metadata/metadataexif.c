@@ -41,14 +41,44 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * SECTION: metadataexif
+ * @short_description: This module provides functions to extract tags from
+ * EXIF metadata chunks and create EXIF chunks from metadata tags.
+ * @see_also: #metadatatags.[c/h]
+ *
+ * If libexif isn't available at compilation time, only the whole chunk
+ * (#METADATA_TAG_MAP_WHOLECHUNK) tags is created. It means that individual
+ * tags aren't mapped.
+ *
+ * Last reviewed on 2008-01-24 (0.10.15)
+ */
+
+/*
+ * includes
+ */
+
 #include "metadataexif.h"
 #include "metadataparseutil.h"
 #include "metadatatags.h"
 
+/*
+ * defines
+ */
+
 GST_DEBUG_CATEGORY (gst_metadata_exif_debug);
 #define GST_CAT_DEFAULT gst_metadata_exif_debug
 
+/*
+ * Implementation when libexif isn't available at compilation time
+ */
+
 #ifndef HAVE_EXIF
+
+/*
+ * extern functions implementations
+ */
+
 
 void
 metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
@@ -56,8 +86,7 @@ metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
 {
 
   if (mapping & METADATA_TAG_MAP_WHOLECHUNK) {
-    GST_LOG
-        ("EXIF not defined, here I should send just one tag as whole chunk");
+    GST_LOG ("EXIF not defined, sending just one tag as whole chunk");
     metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_EXIF,
         adapter);
   }
@@ -73,10 +102,22 @@ metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
 
 #else /* ifndef HAVE_EXIF */
 
+/*
+ * Implementation when libexif is available at compilation time
+ */
+
+/*
+ * includes
+ */
+
 #include <libexif/exif-data.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+/*
+ * enum and types
+ */
 
 typedef struct _tag_MEUserData
 {
@@ -92,10 +133,9 @@ typedef struct _tag_MapIntStr
   const gchar *str;
 } MapIntStr;
 
-static void
-exif_data_foreach_content_func (ExifContent * content, void *callback_data);
-
-static void exif_content_foreach_entry_func (ExifEntry * entry, void *);
+/*
+ * defines and static global vars
+ */
 
 /* *INDENT-OFF* */
 static MapIntStr mappedTags[] = {
@@ -131,41 +171,47 @@ static MapIntStr mappedTags[] = {
 };
 /* *INDENT-ON* */
 
-static const gchar *
-metadataparse_exif_get_tag_from_exif (ExifTag exif, GType * type)
-{
-  int i = 0;
+/*
+ * static helper functions declaration
+ */
 
-  while (mappedTags[i].exif) {
-    if (exif == mappedTags[i].exif) {
-      *type = gst_tag_get_type (mappedTags[i].str);
-      break;
-    }
-    ++i;
-  }
-
-  return mappedTags[i].str;
-
-}
+static const gchar *metadataparse_exif_get_tag_from_exif (ExifTag exif,
+    GType * type);
 
 static ExifTag
-metadataparse_exif_get_exif_from_tag (const gchar * tag, GType * type,
-    ExifIfd * ifd)
-{
-  int i = 0;
+metadatamux_exif_get_exif_from_tag (const gchar * tag, GType * type,
+    ExifIfd * ifd);
 
-  while (mappedTags[i].exif) {
-    if (0 == strcmp (mappedTags[i].str, tag)) {
-      *type = gst_tag_get_type (tag);
-      *ifd = mappedTags[i].ifd;
-      break;
-    }
-    ++i;
-  }
+static void
+metadataparse_exif_data_foreach_content_func (ExifContent * content,
+    void *callback_data);
 
-  return mappedTags[i].exif;
+static void
+metadataparse_exif_content_foreach_entry_func (ExifEntry * entry,
+    void *user_data);
 
-}
+static void
+metadatamux_exif_for_each_tag_in_list (const GstTagList * list,
+    const gchar * tag, gpointer user_data);
+
+/*
+ * extern functions implementations
+ */
+
+/*
+ * metadataparse_exif_tag_list_add:
+ * @taglist: tag list in which extracted tags will be added
+ * @mode: tag list merge mode
+ * @adapter: contains the EXIF metadata chunk
+ * @mapping: if is to extract individual tags and/or the whole chunk.
+ * 
+ * This function gets a EXIF chunk (@adapter) and extract tags from it 
+ * and the add to @taglist.
+ * Note: The EXIF chunk (@adapetr) must NOT be wrapped by any bytes specific
+ * to any file format
+ *
+ * Returns: nothing
+ */
 
 void
 metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
@@ -195,8 +241,8 @@ metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
     goto done;
   }
 
-  exif_data_foreach_content (exif, exif_data_foreach_content_func,
-      (void *) &user_data);
+  exif_data_foreach_content (exif,
+      metadataparse_exif_data_foreach_content_func, (void *) &user_data);
 
 done:
 
@@ -207,44 +253,178 @@ done:
 
 }
 
+/*
+ * metadatamux_exif_create_chunk_from_tag_list:
+ * @buf: buffer that will have the created EXIF chunk
+ * @size: size of the buffer that will be created
+ * @taglist: list of tags to be added to EXIF chunk
+ *
+ * Get tags from @taglist, create a EXIF chunk based on it and save to @buf.
+ * Note: The EXIF chunk is NOT wrapped by any bytes specific to any file format
+ *
+ * Returns: nothing
+ */
+
+void
+metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
+    const GstTagList * taglist)
+{
+  ExifData *ed = NULL;
+  GstBuffer *exif_chunk = NULL;
+  const GValue *val = NULL;
+
+  if (!(buf && size))
+    goto done;
+  if (*buf) {
+    g_free (*buf);
+    *buf = NULL;
+  }
+  *size = 0;
+
+  val = gst_tag_list_get_value_index (taglist, GST_TAG_EXIF, 0);
+  if (val) {
+    exif_chunk = gst_value_get_buffer (val);
+    if (exif_chunk) {
+      ed = exif_data_new_from_data (GST_BUFFER_DATA (exif_chunk),
+          GST_BUFFER_SIZE (exif_chunk));
+    }
+  }
+
+  if (!ed) {
+    ed = exif_data_new ();
+    exif_data_set_data_type (ed, EXIF_DATA_TYPE_COMPRESSED);
+    exif_data_fix (ed);
+  }
+
+  gst_tag_list_foreach (taglist, metadatamux_exif_for_each_tag_in_list, ed);
+
+  exif_data_save_data (ed, buf, size);
+
+
+done:
+
+  if (ed)
+    exif_data_unref (ed);
+
+  return;
+}
+
+
+/*
+ * static helper functions implementation
+ */
+
+/*
+ * metadataparse_exif_get_tag_from_exif:
+ * @exif: EXIF tag to look for
+ * @type: the type of the GStreamer tag mapped to @exif
+ *
+ * This returns the GStreamer tag mapped to an EXIF tag.
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>The GStreamer tag mapped to the @exif
+ * </para></listitem>
+ * <listitem><para>%NULL if there is no mapped GST tag for @exif
+ * </para></listitem>
+ * </itemizedlist>
+ */
+
+static const gchar *
+metadataparse_exif_get_tag_from_exif (ExifTag exif, GType * type)
+{
+  int i = 0;
+
+  while (mappedTags[i].exif) {
+    if (exif == mappedTags[i].exif) {
+      *type = gst_tag_get_type (mappedTags[i].str);
+      break;
+    }
+    ++i;
+  }
+
+  return mappedTags[i].str;
+
+}
+
+/*
+ * metadatamux_exif_get_exif_from_tag:
+ * @tag: GST tag to look for
+ * @type: the type of the GStreamer @tag
+ * @ifd: the place into EXIF chunk @exif belongs to.
+ *
+ * This returns thet EXIF tag mapped to an GStreamer @tag.
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>The EXIF tag mapped to the GST @tag
+ * </para></listitem>
+ * <listitem><para>0 if there is no mapped EXIF tag for GST @tag
+ * </para></listitem>
+ * </itemizedlist>
+ */
+
+static ExifTag
+metadatamux_exif_get_exif_from_tag (const gchar * tag, GType * type,
+    ExifIfd * ifd)
+{
+  int i = 0;
+
+  while (mappedTags[i].exif) {
+    if (0 == strcmp (mappedTags[i].str, tag)) {
+      *type = gst_tag_get_type (tag);
+      *ifd = mappedTags[i].ifd;
+      break;
+    }
+    ++i;
+  }
+
+  return mappedTags[i].exif;
+
+}
+
+/*
+ * metadataparse_exif_data_foreach_content_func:
+ * @content: EXIF structure from libexif containg a IFD
+ * @user_data: pointer to #MEUserData
+ *
+ * This function designed to be called for each EXIF IFD in a EXIF chunk. This
+ * function gets calls another function for each tag into @content. Then all
+ * tags into a EXIF chunk can be extracted to a tag list in @user_data.
+ * @see_also: #metadataparse_exif_tag_list_add
+ * #metadataparse_exif_content_foreach_entry_func
+ *
+ * Returns: nothing
+ */
+
 static void
-exif_data_foreach_content_func (ExifContent * content, void *user_data)
+metadataparse_exif_data_foreach_content_func (ExifContent * content,
+    void *user_data)
 {
   ExifIfd ifd = exif_content_get_ifd (content);
 
   GST_LOG ("\n  Content %p: %s (ifd=%d)", content, exif_ifd_get_name (ifd),
       ifd);
-  exif_content_foreach_entry (content, exif_content_foreach_entry_func,
-      user_data);
+  exif_content_foreach_entry (content,
+      metadataparse_exif_content_foreach_entry_func, user_data);
 }
 
-#if 0
-static gboolean
-exif_fast_mdc (glong n, glong d, gulong * m)
-{
-  gboolean ret = FALSE;
-
-  static const int a[] =
-      { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 39, 41, 43, 47, 49, 53, 0 };
-  int i = 0;
-
-  *m = 1;
-
-  while (a[i] <= n && a[i] <= d) {
-    while ((n % a[i] == 0) && (d % a[i]) == 0) {
-      *m *= a[i];
-      ret = TRUE;
-    }
-    ++i;
-  }
-
-  return ret;
-
-}
-#endif
+/*
+ * metadataparse_exif_content_foreach_entry_func:
+ * @entry: EXIF structure from libexif having a EXIF tag
+ * @user_data: pointer to #MEUserData
+ *
+ * This function designed to be called for each EXIF tag in a EXIF IFD. This
+ * function gets the EXIF tag from @entry and then add to the tag list
+ * in @user_data by using a merge mode also specified in @user_data
+ * @see_also: #metadataparse_exif_data_foreach_content_func
+ *
+ * Returns: nothing
+ */
 
 static void
-exif_content_foreach_entry_func (ExifEntry * entry, void *user_data)
+metadataparse_exif_content_foreach_entry_func (ExifEntry * entry,
+    void *user_data)
 {
   char buf[2048];
   MEUserData *meudata = (MEUserData *) user_data;
@@ -390,76 +570,22 @@ done:
 }
 
 /*
+ * metadatamux_exif_for_each_tag_in_list:
+ * @list: GStreamer tag list from which @tag belongs to
+ * @tag: GStreamer tag to be added to the EXIF chunk
+ * @user_data: pointer to #ExifData in which the tag will be added
  *
+ * This function designed to be called for each tag in GST tag list. This
+ * function adds get the tag value from tag @list and then add it to the EXIF
+ * chunk by using #ExifData and related functions from libexif
+ * @see_also: #metadatamux_exif_create_chunk_from_tag_list
+ *
+ * Returns: nothing
  */
 
-static ExifRational
-float_to_rational (gfloat f)
-{
-  ExifRational r;
-  int i = 6;                    /* precision */
-
-  r.denominator = 1;
-
-  while (i--) {
-    if (f == floorf (f)) {
-      break;
-    }
-    f *= 10.0f;
-    r.denominator *= 10;
-  }
-
-  r.numerator = f;
-
-  if (!(r.numerator & 0x1 || r.denominator & 0x1)) {
-    /* divide both by 2 */
-    r.numerator >>= 1;
-    r.denominator >>= 1;
-  }
-  if (r.numerator % 5 == 0 && r.denominator % 5 == 0) {
-    r.numerator /= 5;
-    r.denominator /= 5;
-  }
-
-  return r;
-
-}
-
-static ExifSRational
-float_to_srational (gfloat f)
-{
-  ExifSRational sr;
-  int i = 6;                    /* precision */
-
-  sr.denominator = 1;
-
-  while (i--) {
-    if (f == floorf (f)) {
-      break;
-    }
-    f *= 10.0f;
-    sr.denominator *= 10;
-  }
-
-  sr.numerator = f;
-
-  if (!(sr.numerator & 0x1 || sr.denominator & 0x1)) {
-    /* divide both by 2 */
-    sr.numerator >>= 1;
-    sr.denominator >>= 1;
-  }
-  if (sr.numerator % 5 == 0 && sr.denominator % 5 == 0) {
-    sr.numerator /= 5;
-    sr.denominator /= 5;
-  }
-
-  return sr;
-
-}
-
 static void
-metadataexif_for_each_tag_in_list (const GstTagList * list, const gchar * tag,
-    gpointer user_data)
+metadatamux_exif_for_each_tag_in_list (const GstTagList * list,
+    const gchar * tag, gpointer user_data)
 {
   ExifData *ed = (ExifData *) user_data;
   ExifTag exif_tag;
@@ -468,7 +594,7 @@ metadataexif_for_each_tag_in_list (const GstTagList * list, const gchar * tag,
   ExifIfd ifd;
   const ExifByteOrder byte_order = exif_data_get_byte_order (ed);
 
-  exif_tag = metadataparse_exif_get_exif_from_tag (tag, &type, &ifd);
+  exif_tag = metadatamux_exif_get_exif_from_tag (tag, &type, &ifd);
 
   if (!exif_tag)
     goto done;
@@ -505,7 +631,9 @@ metadataexif_for_each_tag_in_list (const GstTagList * list, const gchar * tag,
             entry->tag == EXIF_TAG_Y_RESOLUTION) {
           ExifEntry *unit_entry = NULL;
 
-          if ((unit_entry = exif_data_get_entry (ed, EXIF_TAG_RESOLUTION_UNIT))) {
+          unit_entry = exif_data_get_entry (ed, EXIF_TAG_RESOLUTION_UNIT);
+
+          if (unit_entry) {
             ExifShort vsh = exif_get_short (unit_entry->data, byte_order);
 
             if (vsh != 2)       /* inches */
@@ -568,48 +696,5 @@ done:
 
 }
 
-void
-metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
-    const GstTagList * taglist)
-{
-  ExifData *ed = NULL;
-  GstBuffer *exif_chunk = NULL;
-  const GValue *val = NULL;
-
-  if (!(buf && size))
-    goto done;
-  if (*buf) {
-    g_free (*buf);
-    *buf = NULL;
-  }
-  *size = 0;
-
-  val = gst_tag_list_get_value_index (taglist, GST_TAG_EXIF, 0);
-  if (val) {
-    exif_chunk = gst_value_get_buffer (val);
-    if (exif_chunk) {
-      ed = exif_data_new_from_data (GST_BUFFER_DATA (exif_chunk),
-          GST_BUFFER_SIZE (exif_chunk));
-    }
-  }
-
-  if (!ed) {
-    ed = exif_data_new ();
-    exif_data_set_data_type (ed, EXIF_DATA_TYPE_COMPRESSED);
-    exif_data_fix (ed);
-  }
-
-  gst_tag_list_foreach (taglist, metadataexif_for_each_tag_in_list, ed);
-
-  exif_data_save_data (ed, buf, size);
-
-
-done:
-
-  if (ed)
-    exif_data_unref (ed);
-
-  return;
-}
 
 #endif /* else (ifndef HAVE_EXIF) */

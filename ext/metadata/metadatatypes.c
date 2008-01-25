@@ -41,9 +41,40 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * SECTION: metadatatypes
+ * @short_description: This module contains function to operates a list of
+ * chunks
+ *
+ * Last reviewed on 2008-01-24 (0.10.15)
+ */
+
+/*
+ * includes
+ */
+
 #include "metadatatypes.h"
 
 #include <string.h>
+
+/*
+ * extern functions implementations
+ */
+
+/*
+ * metadata_chunk_array_init:
+ * @array: an array of chunks
+ * @alloc_size: number of chunks that can be added to the array without futher
+ * allocation
+ *
+ * Call this function before any other function in this module.
+ * Nerver call this function a second time without call
+ * #metadata_chunk_array_free beteween them
+ * An example of use is:
+ * int test() { MetadataChunkArray a; metadata_chunk_array_init(&a, 1); ... }
+ *
+ * Returns: nothing
+ */
 
 void
 metadata_chunk_array_init (MetadataChunkArray * array, gsize alloc_size)
@@ -52,6 +83,16 @@ metadata_chunk_array_init (MetadataChunkArray * array, gsize alloc_size)
   array->chunk = g_new0 (MetadataChunk, alloc_size);
   array->allocated_len = alloc_size;
 }
+
+/*
+ * metadata_chunk_array_free:
+ * @array: an array of chunks
+ *
+ * Call this function after have finished using the @array to free any internal
+ * memory alocated by it. 
+ *
+ * Returns: nothing
+ */
 
 void
 metadata_chunk_array_free (MetadataChunkArray * array)
@@ -64,6 +105,17 @@ metadata_chunk_array_free (MetadataChunkArray * array)
   }
 }
 
+/*
+ * metadata_chunk_array_clear:
+ * @array: an array of chunks
+ *
+ * Free memory allocated internally by each chunk and set the @array->len to 0
+ * (zero). So, the number of chunks into the array will be zero,
+ * but the number of slots into the array to strore chunks will be kept
+ *
+ * Returns: nothing
+ */
+
 void
 metadata_chunk_array_clear (MetadataChunkArray * array)
 {
@@ -74,6 +126,19 @@ metadata_chunk_array_clear (MetadataChunkArray * array)
     }
   }
 }
+
+/*
+ * metadata_chunk_array_append:
+ * @array: an array of chunks
+ * @chunk: chunk to be append
+ *
+ * Just append a @chunk to the end of the @array. The @array now will be the
+ * owner of @chunk->data. Just call this function if you a sure the @array 
+ * chunks will be sorted by @chunk->offset_orig anyway.
+ * @see_also: #metadata_chunk_array_append_sorted
+ *
+ * Returns: nothing
+ */
 
 void
 metadata_chunk_array_append (MetadataChunkArray * array, MetadataChunk * chunk)
@@ -86,6 +151,19 @@ metadata_chunk_array_append (MetadataChunkArray * array, MetadataChunk * chunk)
   memcpy (&array->chunk[array->len], chunk, sizeof (MetadataChunk));
   ++array->len;
 }
+
+/*
+ * metadata_chunk_array_append_sorted:
+ * @array: an array of chunks
+ * @chunk: chunk to be append
+ *
+ * Append a @chunk sorted by @chunk->offset_orig the @array. The @array now
+ * will be the owner of @chunk->data. This function supposes that @array 
+ * is already sorted by @chunk->offset_orig.
+ * @see_also: #metadata_chunk_array_append
+ *
+ * Returns: nothing
+ */
 
 void
 metadata_chunk_array_append_sorted (MetadataChunkArray * array,
@@ -115,6 +193,18 @@ metadata_chunk_array_append_sorted (MetadataChunkArray * array,
   return;
 
 }
+
+/*
+ * metadata_chunk_array_remove_zero_size:
+ * @array: an array of chunks
+ *
+ * This function removes all the chunks in @array that has 'chunk.size == 0'.
+ * It is possible to have the 'chunk.data==NULL' and 'chunk.size != 0', those
+ * chunks are used by muxer for lazy 'filling' and are not removed by this
+ * function.
+ *
+ * Returns: nothing
+ */
 
 void
 metadata_chunk_array_remove_zero_size (MetadataChunkArray * array)

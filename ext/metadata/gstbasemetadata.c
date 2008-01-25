@@ -1291,7 +1291,7 @@ gst_base_metadata_init (GstBaseMetadata * filter, GstBaseMetadataClass * gclass)
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
-  metadataparse_xmp_init ();
+  metadata_xmp_init ();
   /* init members */
 
   gst_base_metadata_init_members (filter);
@@ -1307,7 +1307,7 @@ gst_base_metadata_dispose (GObject * object)
 
   gst_base_metadata_dispose_members (filter);
 
-  metadataparse_xmp_dispose ();
+  metadata_xmp_dispose ();
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

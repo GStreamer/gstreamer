@@ -50,6 +50,10 @@
 
 G_BEGIN_DECLS
 
+/*
+ * external function prototypes
+ */
+
 extern void
 metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
     GstAdapter * adapter, MetadataTagMapping mapping);

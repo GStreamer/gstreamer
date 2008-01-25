@@ -41,8 +41,37 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * SECTION: metadataparseutil
+ * @short_description: This module has some util function for parsing.
+ *
+ * Last reviewed on 2008-01-24 (0.10.15)
+ */
+
+/*
+ * includes
+ */
+
 #include "metadataparseutil.h"
 #include <string.h>
+
+/*
+ * extern functions implementations
+ */
+
+/*
+ * metadataparse_util_tag_list_add_chunk:
+ * @taglist: tag list in which the whole chunk tag will be added
+ * @mode: GStreamer merge mode
+ * @name: name of the tag (ex: GST_TAG_EXIF, GST_TAG_IPTC, GST_TAG_XMP)
+ * @adapter: contains the whole chunk to be added as tag to @taglist
+ *
+ * This function get all the bytes from @adapter, create a GST_BUFFER, copy
+ * the bytes to it and then add it to @taglist as a tage @name using a
+ * merge @mode.
+ *
+ * Returns: nothing.
+ */
 
 void
 metadataparse_util_tag_list_add_chunk (GstTagList * taglist,
@@ -63,6 +92,39 @@ metadataparse_util_tag_list_add_chunk (GstTagList * taglist,
   }
 
 }
+
+/*
+ * metadataparse_util_hold_chunk:
+ * @read: number of bytes that still need to be hold
+ * @buf: [in] data to be parsed
+ * @bufsize: [in] size of @buf in bytes
+ * @next_start: indicates a pointer after the @buf where the next parsing step
+ * should start from
+ * @next_size: indicates the minimal size of the the buffer to be given on
+ * the next call to the parser
+ * @adapter: adapter to hold the chunk
+ * NOTE: To have a explanation of each parameters of this function look at the
+ * documentation of #metadataparse_jpeg_reading or #metadataparse_png_reading
+ *
+ * This function holds a chunk into the adapter. If there is enough bytes
+ * (*@read > *@bufsize), then it just hold and make the parser continue after
+ * the chunk by setting @next_start properly. Otherwise, if there is not
+ * enough bytes in @buf, it just set @next_start and @next_size, to make the
+ * parse return META_PARSING_NEED_MORE_DATA and request the caller the proper
+ * offset and size, so in the sencond time this function is called it should
+ * (or must) have enough data hold the whole chunk.
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%META_PARSING_ERROR
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_DONE if the chunk bas been completely hold
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_NEED_MORE_DATA if this function should be
+ * called again (look @next_start and @next_size)
+ * </para></listitem>
+ * </itemizedlist>
+ */
 
 MetadataParsingReturn
 metadataparse_util_hold_chunk (guint32 * read, guint8 ** buf,
@@ -94,6 +156,16 @@ metadataparse_util_hold_chunk (guint32 * read, guint8 ** buf,
 
   return ret;
 }
+
+/*
+ * metadataparse_util_jump_chunk:
+ * NOTE: To have a explanation of each parameters of this function look at
+ * the documentation of #metadataparse_util_hold_chunk
+ *
+ * This function works in the same way as #metadataparse_util_hold_chunk, but
+ * just skip the bytes instead of also hold it
+ *
+ */
 
 MetadataParsingReturn
 metadataparse_util_jump_chunk (guint32 * read, guint8 ** buf,

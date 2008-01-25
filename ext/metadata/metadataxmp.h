@@ -50,13 +50,17 @@
 
 G_BEGIN_DECLS
 
+/*
+ * external function prototypes
+ */
+
+extern gboolean metadata_xmp_init (void);
+
+extern void metadata_xmp_dispose (void);
+
 extern void
 metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
     GstAdapter * adapter, MetadataTagMapping mapping);
-
-extern gboolean metadataparse_xmp_init (void);
-
-extern void metadataparse_xmp_dispose (void);
 
 extern void
 metadatamux_xmp_create_chunk_from_tag_list (guint8 ** buf, guint32 *size,

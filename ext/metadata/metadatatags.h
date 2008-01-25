@@ -44,16 +44,28 @@
 #ifndef __GST_METADATA_TAGS_H__
 #define __GST_METADATA_TAGS_H__
 
+/*
+ * includes
+ */
+
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
+
+/*
+ * enum and types
+ */
 
 /* set bit to desired mapping */
 typedef enum {
   METADATA_TAG_MAP_INDIVIDUALS = 1 << 0,
   METADATA_TAG_MAP_WHOLECHUNK =  1 << 1
 } MetadataTagMapping;
+
+/*
+ * defines
+ */
 
 #define GST_TAG_EXIF "exif"
 
@@ -78,6 +90,10 @@ typedef enum {
 #define GST_TAG_CAPTURE_GAIN               "capture-gain"
 #define GST_TAG_CAPTURE_CONTRAST           "capture-contrast"
 #define GST_TAG_CAPTURE_SATURATION         "capture-saturation"
+
+/*
+ * external function prototypes
+ */
 
 extern void
 metadata_tags_register (void);

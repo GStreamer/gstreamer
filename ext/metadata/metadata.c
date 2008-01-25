@@ -41,32 +41,67 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * SECTION: metadata
+ * @short_description: This module provides high-level functions to parse files
+ *
+ * This module find out the stream type (JPEG or PNG), and provide functions to
+ * the caller to know where are the metadata chunks and where should it be
+ * written, as well, it gives the caller the metedata chunk to be written and
+ * also gets a metadata chunk and wraps it according the strem type
+ * specification.
+ *
+ * <refsect2>
+ * <para>
+ * #metadata_init must be called before any other function in this module and
+ * must be paired with a call to #metadata_dispose. #metadata_parse is used to
+ * parse the stream (find the metadata chunks and the place it should be
+ * written to. And #metadata_lazy_update is used by muxers to wrap the metadata
+ * chunk according the stream type specification. Actually after indentify the
+ * stream type, the real jog of parsing is delivered to speciallized module.
+ * See, #metadata[mux/parse][jpeg/png].[c/h] files.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2008-01-24 (0.10.15)
+ */
+
+/*
+ * includes
+ */
+
 #include <string.h>
 
 #include "metadata.h"
 
 /*
- *static declarations
+ * static helper functions declaration
  */
 
 static MetadataParsingReturn
-metadata_parse_none (MetaData * meta_data, const guint8 * buf,
-    guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
+metadata_parse_none (MetaData * meta_data, const guint8 * data,
+    guint32 * data_size, guint8 ** next_start, guint32 * next_size);
 
 /*
  * extern functions implementations
  */
 
 /*
- * Init metadata handle vars.
- * This function must becalled before any other function from this module.
- * This functoin must not be called twice without call 'metadata_dispose'
+ * metadata_init:
+ * @meta_data: [in] metadata handler to be inited
+ * @options: [in] which types of metadata will be processed (EXIF, IPTC and/or
+ * XMP) and how it will be handled (DEMUXING or MUXING). Look at #MetaOptions
+ * to see the available options.
+ *
+ * Init metadata handle.
+ * This function must be called before any other function from this module.
+ * This function must not be called twice without call to #metadata_dispose
  * beteween them.
- * meta_data [in]: metadata handler to be inited
- * parse [in]: pass TRUE for demuxing and FALSE for muxing
- * options [in]: which types of metadata will be processed (EXIF, IPTC and/or XMP).
- *  Look at 'MetaOptions' to see the available options.
+ * @see_also: #metadata_dispose #metadata_parse
+ *
+ * Returns: nothing
  */
+
 void
 metadata_init (MetaData ** meta_data, const MetaOptions options)
 {
@@ -89,7 +124,8 @@ metadata_init (MetaData ** meta_data, const MetaOptions options)
   if ((*meta_data)->options & META_OPT_DEMUX) {
     /* when parsing we will probably strip only 3 chunk (exif, iptc and xmp)
        so we use 4 just in case there is more than one chunk of them.
-       But this is just for convinience, 'cause the chunk_array incriases dinamically */
+       But this is just for convinience, 'cause the chunk_array increases
+       dinamically */
     metadata_chunk_array_init (&(*meta_data)->strip_chunks, 4);
     /* at most 1 chunk will be injected (JPEG JFIF) */
     metadata_chunk_array_init (&(*meta_data)->inject_chunks, 1);
@@ -103,9 +139,15 @@ metadata_init (MetaData ** meta_data, const MetaOptions options)
 }
 
 /*
- * Dispose medadata handler data.
- * Call this function to free any resource allocated by 'metadata_init'
+ * metadata_dispose:
+ * @meta_data: [in] metadata handler to be freed
+ *
+ * Call this function to free any resource allocated by #metadata_init
+ * @see_also: #metadata_init
+ *
+ * Returns: nothing
  */
+
 void
 metadata_dispose (MetaData ** meta_data)
 {
@@ -151,27 +193,41 @@ metadata_dispose (MetaData ** meta_data)
 
 }
 
+
 /*
- * meta_data [in]: metata handle
- * buf [in]: data to be parsed
- * bufsize [in]: size of data in bytes
- * next_offset [out]: number of bytes to jump from the begining of 'buf' in the next call.
- *  i.e, 0 (zero) mean that in the next call to function "buf" must have the same
- *  data (probably resized, see 'size')
- * size [out]: number of minimal bytes in buf for the next call to this function
- * return:
- *   META_PARSING_ERROR
- *   META_PARSING_DONE
- *   META_PARSING_NEED_MORE_DATA (look 'next_offset' and 'size')
- * when this function returns 0 you have strip and inject chunks ready to use
- * If you change the contents of strip and inject chunks, you have to call
- *   'metadata_lazy_update' (this is the case when muxing)
- * see MetaData->strip_chunks and MetaData->inject_chunks
+ * metadata_parse:
+ * @meta_data: [in] metadata handle
+ * @buf: [in] data to be parsed
+ * @buf_size: [in] size of @buf in bytes
+ * @next_offset: [out] number of bytes to jump from the begining of @buf in
+ * the next call. i.e, 0 (zero) mean that in the next call this function @buf
+ * must have the same data (probably resized, see @next_size)
+ * @next_size: [out] number of minimal bytes in @buf for the next call to this
+ * function
+ *
+ * This function is used to parse the stream step-by-step incrementaly, which
+ * means, discover the stream type and find the metadata chunks
+ * (#META_OPT_DEMUX),  or point out where metadata chunks should be written 
+ * (#META_OPT_MUX). It is important to notice that there could be both strip
+ * and inject chunks in both demuxing and muxing modes.
+ * @see_also: #metadata_init #META_DATA_STRIP_CHUNKS #META_DATA_INJECT_CHUNKS
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%META_PARSING_ERROR
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_DONE if parse has finished. Now strip and
+ * inject chunks has been found
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_NEED_MORE_DATA if this function should be
+ * called again (look @next_offset and @next_size)
+ * </para></listitem>
+ * </itemizedlist>
  */
 
 MetadataParsingReturn
 metadata_parse (MetaData * meta_data, const guint8 * buf,
-    guint32 bufsize, guint32 * next_offset, guint32 * next_size)
+    guint32 buf_size, guint32 * next_offset, guint32 * next_size)
 {
 
   int ret = META_PARSING_DONE;
@@ -180,7 +236,7 @@ metadata_parse (MetaData * meta_data, const guint8 * buf,
 
   if (meta_data->state == STATE_NULL) {
     ret =
-        metadata_parse_none (meta_data, buf, &bufsize, &next_start, next_size);
+        metadata_parse_none (meta_data, buf, &buf_size, &next_start, next_size);
     if (ret == META_PARSING_DONE)
       meta_data->state = STATE_READING;
     else
@@ -192,24 +248,24 @@ metadata_parse (MetaData * meta_data, const guint8 * buf,
       if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
         ret =
             metadataparse_jpeg_parse (&meta_data->format_data.jpeg_parse,
-            (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
+            (guint8 *) buf, &buf_size, meta_data->offset_orig, &next_start,
             next_size);
       else
         ret =
             metadatamux_jpeg_parse (&meta_data->format_data.jpeg_mux,
-            (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
+            (guint8 *) buf, &buf_size, meta_data->offset_orig, &next_start,
             next_size);
       break;
     case IMG_PNG:
       if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
         ret =
             metadataparse_png_parse (&meta_data->format_data.png_parse,
-            (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
+            (guint8 *) buf, &buf_size, meta_data->offset_orig, &next_start,
             next_size);
       else
         ret =
             metadatamux_png_parse (&meta_data->format_data.png_mux,
-            (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
+            (guint8 *) buf, &buf_size, meta_data->offset_orig, &next_start,
             next_size);
       break;
     default:
@@ -232,13 +288,24 @@ done:
 }
 
 /*
- * This function must be called after 'metadata_parse' and after the element has modified the 'segments'.
+ * metadata_lazy_update:
+ * @meta_data: [in] metata handle
+ *
+ * This function must be called after #metadata_parse and after the element
+ * has modified the segments (chunks)
+ * Data written to #META_DATA_INJECT_CHUNKS will be properly wrapped
  * This function is really importante in case o muxing 'cause:
- * 1- 'cause gives the oportunity to muxers to wrapper new segments with apropriate bytes
- *   ex: in case of JPEG it can wrap the EXIF chunk (created using tags) with chunk id and chunk size
- * 2- 'cause gives the oportunity to muxer to decide if some chunks should still be striped/injected
- *   ex: if there is no EXIF chunk to be inserted, the muxer decides to not strip JFIF anymore
- * see MetaData->strip_chunks and MetaData->inject_chunks
+ * 1- 'cause gives the oportunity to muxers to wrapper new segments with
+ * apropriate bytes
+ *   ex: in case of JPEG it can wrap the EXIF chunk (created using tags) with
+ * chunk id and chunk size
+ * 2- 'cause gives the oportunity to muxer to decide if some chunks should
+ * still be striped/injected
+ *   ex: if there is no EXIF chunk to be inserted, the muxer decides to not
+ * strip JFIF anymore
+ * @see_also: #metadata_parse #META_DATA_INJECT_CHUNKS
+ *
+ * Returns: nothing
  */
 
 void
@@ -266,15 +333,38 @@ metadata_lazy_update (MetaData * meta_data)
 
 
 /*
- * static functions implementation
+ * static helper functions implementation
  */
 
 /*
- * Find out the type of the stream
+ * metadata_parse_none:
+ * @meta_data: [in] metata handle
+ * @buf: [in] data to be parsed
+ * @buf_size: [in] size of @buf in bytes
+ * @next_offset: [out] number of bytes to jump from the begining of @buf in
+ * the next call. i.e, 0 (zero) mean that in the next call this function @buf
+ * must have the same data (probably resized, see @next_size)
+ * @next_size: [out] number of minimal bytes in @buf for the next call to this
+ * function
+ *
+ * Parse the fisrt bytes of the stream to identify the stream type
+ * @see_also: metadata_parse
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%META_PARSING_ERROR none of the alloed strem types (JPEG,
+ * PNG) has been identified
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_DONE if the stream type has been identified
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_NEED_MORE_DATA if this function should be
+ * called again (look @next_offset and @next_size)
+ * </para></listitem>
+ * </itemizedlist>
  */
 static MetadataParsingReturn
 metadata_parse_none (MetaData * meta_data, const guint8 * buf,
-    guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
+    guint32 * buf_size, guint8 ** next_start, guint32 * next_size)
 {
 
   int ret = META_PARSING_ERROR;
@@ -292,7 +382,7 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
    */
 
   /* we need at least 3 bytes to see if it is JPEG */
-  if (*bufsize < 3) {
+  if (*buf_size < 3) {
     *next_size = 3;
     ret = META_PARSING_NEED_MORE_DATA;
     goto done;
@@ -319,7 +409,7 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
   }
 
   /* we need at least 8 bytes to see if it is PNG */
-  if (*bufsize < 8) {
+  if (*buf_size < 8) {
     *next_size = 8;
     ret = META_PARSING_NEED_MORE_DATA;
     goto done;

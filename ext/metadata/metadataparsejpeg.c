@@ -41,13 +41,61 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "metadataparsejpeg.h"
+/*
+ * SECTION: metadataparsejpeg
+ * @short_description: This module provides functions to parse JPEG files
+ *
+ * This module parses a JPEG stream finding metadata chunks, and marking them
+ * to be removed from the stream and saving them in a adapter.
+ *
+ * <refsect2>
+ * <para>
+ * #metadataparse_jpeg_init must be called before any other function in this
+ * module and must be paired with a call to #metadataparse_jpeg_dispose.
+ * #metadataparse_jpeg_parse is used to parse the stream (find the metadata
+ * chunks and the place it should be written to.
+ * #metadataparse_jpeg_lazy_update do nothing.
+ * </para>
+ * <para>
+ * This module tries to find metadata chunk until it reaches the "start of scan
+ * image". So if the metadata chunk, which could be EXIF, XMP or IPTC (inside 
+ * Photoshop), is after the "start of scan image" it will not be found. This is
+ * 'cause of performance reason and 'cause we believe that files with metadata
+ * chunk after the "scan of image" chunk are very bad practice, so we don't
+ * worry about them.
+ * </para>
+ * <para>
+ * If it is working in non-parse_only mode, and the first chunk is a EXIF
+ * instead of a JFIF chunk, the EXIF chunk will be marked for removal and a new
+ * JFIF chunk will be create and marked to be injected as the first chunk.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2008-01-24 (0.10.15)
+ */
+
+/*
+ * includes
+ */
 
 #include <string.h>
+
+#include "metadataparsejpeg.h"
 
 #ifdef HAVE_IPTC
 #include <libiptcdata/iptc-jpeg.h>
 #endif
+
+/*
+ * defines and macros
+ */
+
+/* returns the current byte, advance to the next one and decrease the size */
+#define READ(buf, size) ( (size)--, *((buf)++) )
+
+/*
+ * static helper functions declaration
+ */
 
 static MetadataParsingReturn
 metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
@@ -72,13 +120,30 @@ static MetadataParsingReturn
 metadataparse_jpeg_jump (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
-#define READ(buf, size) ( (size)--, *((buf)++) )
+/*
+ * extern functions implementations
+ */
 
-void
-metadataparse_jpeg_lazy_update (JpegParseData * jpeg_data)
-{
-  /* nothing to do */
-}
+/*
+ * metadataparse_jpeg_init:
+ * @jpeg_data: [in] jpeg data handler to be inited
+ * @exif_adpt: where to create/write an adapter to hold the EXIF chunk found
+ * @iptc_adpt: where to create/write an adapter to hold the IPTC chunk found
+ * @xmp_adpt: where to create/write an adapter to hold the XMP chunk found
+ * @strip_chunks: Array of chunks (offset and size) marked for removal
+ * @inject_chunks: Array of chunks (offset, data, size) marked for injection
+ * @parse_only: TRUE if it should only find the chunks and write then to the
+ * adapter (@exif_adpt, @iptc_adpt, @xmp_adpt). Or FALSE if should also put
+ * them on @strip_chunks.
+ *
+ * Init jpeg data handle.
+ * This function must be called before any other function from this module.
+ * This function must not be called twice without call to
+ * #metadataparse_jpeg_dispose beteween them.
+ * @see_also: #metadataparse_jpeg_dispose #metadataparse_jpeg_parse
+ *
+ * Returns: nothing
+ */
 
 void
 metadataparse_jpeg_init (JpegParseData * jpeg_data, GstAdapter ** exif_adpt,
@@ -100,6 +165,17 @@ metadataparse_jpeg_init (JpegParseData * jpeg_data, GstAdapter ** exif_adpt,
 
 }
 
+/*
+ * metadataparse_jpeg_dispose:
+ * @jpeg_data: [in] jpeg data handler to be freed
+ *
+ * Call this function to free any resource allocated by
+ * #metadataparse_jpeg_init
+ * @see_also: #metadataparse_jpeg_init
+ *
+ * Returns: nothing
+ */
+
 void
 metadataparse_jpeg_dispose (JpegParseData * jpeg_data)
 {
@@ -107,6 +183,42 @@ metadataparse_jpeg_dispose (JpegParseData * jpeg_data)
   jpeg_data->iptc_adapter = NULL;
   jpeg_data->xmp_adapter = NULL;
 }
+
+/*
+ * metadata_parse:
+ * @jpeg_data: [in] jpeg data handle
+ * @buf: [in] data to be parsed
+ * @bufsize: [in] size of @buf in bytes
+ * @offset: is the offset where @buf starts from the beginnig of the whole 
+ * stream
+ * @next_start: is a pointer after @buf which indicates where @buf should start
+ * on the next call to this function. It means, that after returning, this
+ * function has consumed *@next_start - @buf bytes. Which also means 
+ * that @offset should also be incremanted by (*@next_start - @buf) for the
+ * next time.
+ * @next_size: [out] number of minimal bytes in @buf for the next call to this
+ * function
+ *
+ * This function is used to parse a JPEG stream step-by-step incrementally.
+ * Basically this function works like a state machine, that will run in a loop
+ * while there is still bytes in @buf to be read or it has finished parsing.
+ * If the it hasn't parsed yet and there is no more data in @buf, then the
+ * current state is saved and a indication will be make about the buffer to
+ * be passed by the caller function.
+ * @see_also: #metadataparse_jpeg_init
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%META_PARSING_ERROR
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_DONE if parse has finished. Now strip and
+ * inject chunks has been found
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_NEED_MORE_DATA if this function should be
+ * called again (look @next_start and @next_size)
+ * </para></listitem>
+ * </itemizedlist>
+ */
 
 MetadataParsingReturn
 metadataparse_jpeg_parse (JpegParseData * jpeg_data, guint8 * buf,
@@ -118,9 +230,18 @@ metadataparse_jpeg_parse (JpegParseData * jpeg_data, guint8 * buf,
   guint8 mark[2] = { 0x00, 0x00 };
   const guint8 *step_buf = buf;
 
+  /* step_buf holds where buf starts. this const value will be passed to
+     the nested parsing function, so those function knows how far they from
+     the initial buffer. This is not related to the beginning of the whole
+     stream, it is just related to the buf passed in this step to this
+     function */
+
   *next_start = buf;
 
   if (jpeg_data->state == JPEG_PARSE_NULL) {
+
+    /* only the first time this function is called it will verify the stream
+       type to be sure it is a JPEG */
 
     if (*bufsize < 2) {
       *next_size = (buf - *next_start) + 2;
@@ -184,6 +305,68 @@ done:
 
 }
 
+/*
+ * metadataparse_jpeg_lazy_update:
+ * @jpeg_data: [in] jpeg data handle
+ * 
+ * This function do nothing
+ * @see_also: metadata_lazy_update
+ *
+ * Returns: nothing
+ */
+
+void
+metadataparse_jpeg_lazy_update (JpegParseData * jpeg_data)
+{
+  /* nothing to do */
+}
+
+/*
+ * static helper functions implementation
+ */
+
+/*
+ * metadataparse_jpeg_reading:
+ * @jpeg_data: [in] jpeg data handle
+ * @buf: [in] data to be parsed. @buf will increment during the parsing step.
+ * So it will hold the next byte to be read inside a parsing function or on
+ * the next nested parsing function. And so, @bufsize will decrement.
+ * @bufsize: [in] size of @buf in bytes. This value will decrement during the
+ * parsing for the same reason that @buf will advance.
+ * @offset: is the offset where @step_buf starts from the beginnig of the
+ * stream
+ * @step_buf: holds the pointer to the buffer passed to
+ * #metadataparse_jpeg_parse. It means that any point inside this function
+ * the offset (related to the beginning of the whole stream) after the last 
+ * byte read so far is "(*buf - step_buf) + offset"
+ * @next_start: is a pointer after @step_buf which indicates where the next
+ * call to #metadataparse_jpeg_parse should start on the next call to this
+ * function. It means, that after return, this function has
+ * consumed *@next_start - @buf bytes. Which also means that @offset should
+ * also be incremanted by (*@next_start - @buf) for the next time.
+ * @next_size: [out] number of minimal bytes in @buf for the next call to this
+ * function
+ *
+ * This function is used to parse a JPEG stream step-by-step incrementally.
+ * If this function finds a EXIF, IPTC or XMP chunk (or a chunk that should be
+ * jumped), then it changes the state of the parsing process so that the
+ * remaing parsing can be done by another more specialized function.
+ * @see_also: #metadataparse_jpeg_init #metadataparse_jpeg_exif
+ * #metadataparse_jpeg_iptc #metadataparse_jpeg_xmp #metadataparse_jpeg_jump
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%META_PARSING_ERROR
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_DONE if parse has finished. Now strip and
+ * inject chunks has been found. Or some chunk has been found and should be
+ * held or jumped.
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_NEED_MORE_DATA if this function should be
+ * called again (look @next_start and @next_size)
+ * </para></listitem>
+ * </itemizedlist>
+ */
 
 /* look for markers */
 static MetadataParsingReturn
@@ -218,7 +401,8 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
       ret = META_PARSING_DONE;
       jpeg_data->state = JPEG_PARSE_DONE;
       goto done;
-    } else if (mark[1] == 0xDA) {       /* start of scan, lets not look behinf of this */
+    } else if (mark[1] == 0xDA) {
+      /* start of scan image, lets not look behind of this */
       ret = META_PARSING_DONE;
       jpeg_data->state = JPEG_PARSE_DONE;
       goto done;
@@ -264,7 +448,9 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
           if (!jpeg_data->parse_only) {
 
             memset (&chunk, 0x00, sizeof (MetadataChunk));
-            chunk.offset_orig = (*buf - step_buf) + offset - 4; /* maker + size */
+
+            chunk.offset_orig = (*buf - step_buf) + offset - 4; /* 4 == maker + size */
+
             chunk.size = chunk_size + 2;        /* chunk size plus app marker */
             chunk.type = MD_CHUNK_EXIF;
 
@@ -276,14 +462,14 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
           if (!jpeg_data->jfif_found) {
             /* only inject if no JFIF has been found */
 
-            static const guint8 segment[] = { 0xff, 0xe0, 0x00, 0x10,
-              0x4a, 0x46, 0x49, 0x46, 0x00,
-              0x01, 0x02,
-              0x00, 0x00, 0x01, 0x00, 0x01,
-              0x00, 0x00
-            };
-
             if (!jpeg_data->parse_only) {
+
+              static const guint8 segment[] = { 0xff, 0xe0, 0x00, 0x10,
+                0x4a, 0x46, 0x49, 0x46, 0x00,
+                0x01, 0x02,
+                0x00, 0x00, 0x01, 0x00, 0x01,
+                0x00, 0x00
+              };
 
               memset (&chunk, 0x00, sizeof (MetadataChunk));
               chunk.offset_orig = 2;
@@ -321,7 +507,7 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
               MetadataChunk chunk;
 
               memset (&chunk, 0x00, sizeof (MetadataChunk));
-              chunk.offset_orig = (*buf - step_buf) + offset - 4;       /* maker + size */
+              chunk.offset_orig = (*buf - step_buf) + offset - 4;       /* 4 == maker + size */
               chunk.size = chunk_size + 2;      /* chunk size plus app marker */
               chunk.type = MD_CHUNK_XMP;
 
@@ -344,7 +530,9 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
       }
     }
 #ifdef HAVE_IPTC
-    else if (mark[1] == 0xED) { /* may be it is photoshop and may be there is iptc */
+    else if (mark[1] == 0xED) {
+      /* may be it is photoshop and may be there is iptc */
+
       if (chunk_size >= 16) {   /* size2 "Photoshop 3.0" */
 
         if (*bufsize < 14) {
@@ -361,7 +549,7 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
             MetadataChunk chunk;
 
             memset (&chunk, 0x00, sizeof (MetadataChunk));
-            chunk.offset_orig = (*buf - step_buf) + offset - 4; /* maker + size */
+            chunk.offset_orig = (*buf - step_buf) + offset - 4; /* 4 == maker + size */
             chunk.size = chunk_size + 2;        /* chunk size plus app marker */
             chunk.type = MD_CHUNK_IPTC;
 
@@ -400,6 +588,43 @@ done:
 
 }
 
+/*
+ * metadataparse_jpeg_exif:
+ * @jpeg_data: [in] jpeg data handle
+ * @buf: [in] data to be parsed
+ * @bufsize: [in] size of @buf in bytes
+ * @next_start: look at #metadataparse_jpeg_reading
+ * @next_size: look at #metadataparse_jpeg_reading
+ * NOTE: To have a explanation of each parameters of this function look at
+ * the documentation of #metadataparse_jpeg_reading
+ *
+ * This function saves the EXIF chunk to @jpeg_data->exif_adapter and makes the
+ * parsing process point to the next buffer after the EXIF chunk.
+ * This function will be called by the parsing process 'cause at some point
+ * #metadataparse_jpeg_reading found out the EXIF chunk, skipped the JPEG
+ * wrapper bytes and changed the state of parsing process to JPEG_PARSE_EXIF.
+ * Which just happens if @jpeg_data->parse_only is FALSE and there is a EXIF
+ * chunk into the stream and @jpeg_data->exif_adapter is not NULL.
+ * This function will just be called once even if there is more than one EXIF
+ * chunk in the stream. This function do it by setting @jpeg_data->exif_adapter
+ * to NULL.
+ * After this function has completely parsed (hold) the chunk, it changes the
+ * parsing state back to JPEG_PARSE_READING which makes
+ * #metadataparse_jpeg_reading to be called again
+ * @see_also: #metadataparse_util_hold_chunk #metadataparse_jpeg_reading
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%META_PARSING_ERROR
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_DONE if the chunk bas been completely hold
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_NEED_MORE_DATA if this function should be
+ * called again (look @next_start and @next_size)
+ * </para></listitem>
+ * </itemizedlist>
+ */
+
 static MetadataParsingReturn
 metadataparse_jpeg_exif (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
@@ -418,6 +643,15 @@ metadataparse_jpeg_exif (JpegParseData * jpeg_data, guint8 ** buf,
   return ret;
 
 }
+
+/*
+ * metadataparse_jpeg_iptc:
+ *
+ * Look at #metadataparse_jpeg_exif. This function has the same behavior as
+ * that. The only difference is that this function also cut out others
+ * PhotoShop data and only holds IPTC data in it.
+ *
+ */
 
 #ifdef HAVE_IPTC
 static MetadataParsingReturn
@@ -443,6 +677,7 @@ metadataparse_jpeg_iptc (JpegParseData * jpeg_data, guint8 ** buf,
     size = gst_adapter_available (*jpeg_data->iptc_adapter);
     buf = gst_adapter_peek (*jpeg_data->iptc_adapter, size);
 
+    /* FIXME: currently we are trhowing away others PhotoShop data */
     res = iptc_jpeg_ps3_find_iptc (buf, size, &iptc_len);
 
     if (res < 0) {
@@ -473,6 +708,14 @@ metadataparse_jpeg_iptc (JpegParseData * jpeg_data, guint8 ** buf,
 }
 #endif
 
+/*
+ * metadataparse_jpeg_xmp:
+ *
+ * Look at #metadataparse_jpeg_exif. This function has the same behavior as
+ * that.
+ *
+ */
+
 static MetadataParsingReturn
 metadataparse_jpeg_xmp (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
@@ -489,6 +732,32 @@ metadataparse_jpeg_xmp (JpegParseData * jpeg_data, guint8 ** buf,
   }
   return ret;
 }
+
+/*
+ * metadataparse_jpeg_jump:
+ * @jpeg_data: [in] jpeg data handle
+ * @buf: [in] data to be parsed
+ * @bufsize: [in] size of @buf in bytes
+ * @next_start: look at #metadataparse_jpeg_reading
+ * @next_size: look at #metadataparse_jpeg_reading
+ * NOTE: To have a explanation of each parameters of this function look at
+ * the documentation of #metadataparse_jpeg_reading
+ *
+ * This function just makes a chunk we are not interested in to be jumped.
+ * This is done basically by incrementing  @next_start and @buf,
+ * and decreasing @bufsize and setting the next parsing state properly.
+ * @see_also: #metadataparse_jpeg_reading #metadataparse_util_jump_chunk
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%META_PARSING_DONE if bytes has been skiped and there is
+ * still data in @buf
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_NEED_MORE_DATA if the skiped bytes end at
+ * some point after @buf + @bufsize
+ * </para></listitem>
+ * </itemizedlist>
+ */
 
 static MetadataParsingReturn
 metadataparse_jpeg_jump (JpegParseData * jpeg_data, guint8 ** buf,

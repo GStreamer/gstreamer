@@ -44,9 +44,17 @@
 #ifndef __METADATATYPES_H__
 #define __METADATATYPES_H__
 
+/*
+ * includes
+ */
+
 #include <glib.h>
 
 G_BEGIN_DECLS
+
+/*
+ * enum and types
+ */
 
 /* *INDENT-OFF* */
 
@@ -78,9 +86,13 @@ typedef struct _tag_MetadataChunk
 typedef struct _tag_MetadataChunkArray
 {
   MetadataChunk * chunk;
-  gsize len;    
-  gsize allocated_len;
+  gsize len;  /* number of chunks into aray */
+  gsize allocated_len; /* number of slots into the array to store chunks */
 } MetadataChunkArray;
+
+/*
+ * external function prototypes
+ */
 
 extern void
 metadata_chunk_array_init(MetadataChunkArray * array, gsize alloc_size);
@@ -94,11 +106,9 @@ metadata_chunk_array_clear(MetadataChunkArray * array);
 extern void
 metadata_chunk_array_append(MetadataChunkArray * array, MetadataChunk * chunk);
 
-/* sorted by offset (chunk supposed to be already sorted
- * returns false if chunks are inserted in same offset
- */
 extern void
-metadata_chunk_array_append_sorted(MetadataChunkArray * array, MetadataChunk * chunk);
+metadata_chunk_array_append_sorted(MetadataChunkArray * array,
+    MetadataChunk * chunk);
 
 extern void
 metadata_chunk_array_remove_zero_size (MetadataChunkArray * array);

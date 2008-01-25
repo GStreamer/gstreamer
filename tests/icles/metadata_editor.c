@@ -523,7 +523,7 @@ ui_create ()
 {
   int ret = 0;
 
-  ui_glade_xml = glade_xml_new ("MetadataEditorMain.glade", NULL, NULL);
+  ui_glade_xml = glade_xml_new ("metadata_editor.glade", NULL, NULL);
 
   if (!ui_glade_xml) {
     fprintf (stderr, "glade_xml_new failed\n");

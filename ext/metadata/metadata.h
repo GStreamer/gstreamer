@@ -44,6 +44,10 @@
 #ifndef __METADATA_H__
 #define __METADATA_H__
 
+/*
+ * includes
+ */
+
 #include <gst/base/gstadapter.h>
 #include "metadatatypes.h"
 
@@ -54,16 +58,19 @@
 
 G_BEGIN_DECLS
 
-/* *INDENT-OFF* */
+/*
+ * enum and types
+ */
 
+/* *INDENT-OFF* */
 typedef enum _tag_MetaOptions
 {
   META_OPT_EXIF       = (1 << 0),
   META_OPT_IPTC       = (1 << 1),
   META_OPT_XMP        = (1 << 2),
   META_OPT_PARSE_ONLY = (1 << 3), /* only makes sense with META_OPT_DEMUX */
-  META_OPT_DEMUX      = (1 << 4),
-  META_OPT_MUX        = (1 << 5),
+  META_OPT_DEMUX      = (1 << 4), /* to operates in demuxing mode */
+  META_OPT_MUX        = (1 << 5), /* to operates in muxing mode */
   META_OPT_ALL        = (1 << 6) - 1
 } MetaOptions;
 /* *INDENT-ON* */
@@ -104,10 +111,18 @@ typedef struct _tag_MetaData
 
 } MetaData;
 
+/*
+ * defines and macros
+ */
+
 #define META_DATA_IMG_TYPE(p) (p)->img_type
 
 #define META_DATA_STRIP_CHUNKS(p) (p)->strip_chunks
 #define META_DATA_INJECT_CHUNKS(p) (p)->inject_chunks
+
+/*
+ * external function prototypes
+ */
 
 extern void metadata_init (MetaData ** meta_data, const MetaOptions options);
 
@@ -115,7 +130,7 @@ extern void metadata_dispose (MetaData ** meta_data);
 
 extern MetadataParsingReturn
 metadata_parse (MetaData * meta_data, const guint8 * buf,
-    guint32 bufsize, guint32 * next_offset, guint32 * next_size);
+    guint32 buf_size, guint32 * next_offset, guint32 * next_size);
 
 
 extern void metadata_lazy_update (MetaData * meta_data);

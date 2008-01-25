@@ -41,7 +41,66 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * SECTION: metadatatags
+ * @short_description: This module contains has tag definitions to be mapped
+ * to EXIF, IPTC and XMP tags.
+ *
+ * This module register tags need for image metadata but aren't already define
+ * in GStreamer base. So, the EXIF, IPTC and XMP tags can be mapped to tags
+ * not registered in this file (tags already in GST base)
+ *
+ * Last reviewed on 2008-01-24 (0.10.15)
+ */
+
+/*
+ * includes
+ */
+
 #include "metadatatags.h"
+
+/*
+ * static helper functions declaration
+ */
+
+static void metadata_tags_exif_register (void);
+
+static void metadata_tags_iptc_register (void);
+
+static void metadata_tags_xmp_register (void);
+
+/*
+ * extern functions implementations
+ */
+
+void
+metadata_tags_register (void)
+{
+
+  /* whole chunk tags */
+
+  gst_tag_register (GST_TAG_EXIF, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, GST_TAG_EXIF, "exif metadata chunk", NULL);
+
+  gst_tag_register (GST_TAG_IPTC, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, GST_TAG_IPTC, "iptc metadata chunk", NULL);
+
+  gst_tag_register (GST_TAG_XMP, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, GST_TAG_XMP, "xmp metadata chunk", NULL);
+
+  /* tags related to some metadata */
+
+  metadata_tags_exif_register ();
+  metadata_tags_iptc_register ();
+  metadata_tags_xmp_register ();
+
+}
+
+
+/*
+ * static helper functions implementation
+ */
+
 
 /*
  * EXIF tags
@@ -177,32 +236,5 @@ metadata_tags_iptc_register (void)
 static void
 metadata_tags_xmp_register (void)
 {
-
-}
-
-/*
- *
- */
-
-void
-metadata_tags_register (void)
-{
-
-  /* whole chunk tags */
-
-  gst_tag_register (GST_TAG_EXIF, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, GST_TAG_EXIF, "exif metadata chunk", NULL);
-
-  gst_tag_register (GST_TAG_IPTC, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, GST_TAG_IPTC, "iptc metadata chunk", NULL);
-
-  gst_tag_register (GST_TAG_XMP, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, GST_TAG_XMP, "xmp metadata chunk", NULL);
-
-  /* tags related to some metadata */
-
-  metadata_tags_exif_register ();
-  metadata_tags_iptc_register ();
-  metadata_tags_xmp_register ();
 
 }

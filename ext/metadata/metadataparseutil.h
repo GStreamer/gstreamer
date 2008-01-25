@@ -44,12 +44,20 @@
 #ifndef __GST_METADATAPARSE_UTIL_H__
 #define __GST_METADATAPARSE_UTIL_H__
 
+/*
+ * includes
+ */
+
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
 #include "metadatatypes.h"
 
 G_BEGIN_DECLS
+
+/*
+ * external function prototypes
+ */
 
 extern void
 metadataparse_util_tag_list_add_chunk (GstTagList * taglist,
