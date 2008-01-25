@@ -464,7 +464,6 @@ class FilteredLogModel (FilteredLogModelBase):
         YIELD_LIMIT = 10000
 
         self.logger.debug ("preparing new filter")
-        self.filters.append (filter)
         ## del self.line_offsets[:]
         ## del self.line_levels[:]
         new_line_offsets = []
@@ -518,6 +517,8 @@ class FilteredLogModel (FilteredLogModelBase):
         if self.__active_process is not None:
             raise ValueError ("dispatched a filter process already")
 
+        self.filters.append (filter)
+
         self.__dispatcher = dispatcher
         self.__active_process = self.__filter_process (filter)
         dispatcher (self.__active_process)
@@ -525,11 +526,13 @@ class FilteredLogModel (FilteredLogModelBase):
     def abort_process (self):
 
         if self.__active_process is None:
-            return
+            raise ValueError ("no filter process running")
 
         self.__dispatcher.cancel ()
         self.__active_process = None
         self.__dispatcher = None
+
+        del self.filters[-1]
 
     def get_filter_progress (self):
 
@@ -2004,18 +2007,12 @@ class Window (object):
 
     def handle_filter_progress_dialog_cancel (self):
 
-        return
-
         self.progress_dialog.destroy ()
         self.progress_dialog = None
 
-        # FIXME: Implement filter cancelling correctly; the stuff below does
-        # not work.
-        
         self.log_filter.abort_process ()
-        self.log_filter.reset ()
-        # FIXME:
-        self.actions.show_hidden_lines.activate ()
+        self.log_view.props.model = self.log_filter
+        self.pop_view_state ()
 
     def handle_log_filter_process_finished (self):
 
