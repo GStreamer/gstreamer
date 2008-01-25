@@ -1519,7 +1519,7 @@ class LineView (object):
     def handle_log_view_selection_changed (self, selection):
 
         line_model = self.line_view.props.model
-        if line_model is None or len (line_model) == 0:
+        if line_model is None:
             return
 
         model, tree_iter = selection.get_selected ()
