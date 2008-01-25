@@ -2,6 +2,15 @@
 
 	Patch by: Olivier Crete <tester@tester.ca>
 
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_associate),
+	(create_stream), (payload_type_change), (new_ssrc_pad_found):
+	Also handle lip-sync when the clock-rate is not provided with caps but
+	with a signal.
+
+2008-01-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Olivier Crete <tester@tester.ca>
+
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
 	(gst_jitter_buffer_sink_parse_caps), (gst_rtp_jitter_buffer_chain):
 	* gst/rtpmanager/rtpjitterbuffer.c: (calculate_skew),
