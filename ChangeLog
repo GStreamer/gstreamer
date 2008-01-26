@@ -1,5 +1,12 @@
 2008-01-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_class_init):
+	* gst/filter/gstlpwsinc.c: (gst_lpwsinc_class_init):
+	Don't implement get_unit_size() ourselves, the GstAudioFilter base
+	class already does this for us.
+
+2008-01-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/soundtouch/gstpitch.cc:
 	Allow seeking only in TIME and DEFAULT format, other formats will
 	not work as expected. Also handle a stop position of -1 correctly

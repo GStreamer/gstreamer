@@ -175,8 +175,6 @@ static void bpwsinc_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn bpwsinc_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean bpwsinc_get_unit_size (GstBaseTransform * base, GstCaps * caps,
-    guint * size);
 static gboolean bpwsinc_start (GstBaseTransform * base);
 static gboolean bpwsinc_event (GstBaseTransform * base, GstEvent * event);
 
@@ -259,7 +257,6 @@ gst_bpwsinc_class_init (GstBPWSincClass * klass)
           WINDOW_HAMMING, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   trans_class->transform = GST_DEBUG_FUNCPTR (bpwsinc_transform);
-  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (bpwsinc_get_unit_size);
   trans_class->start = GST_DEBUG_FUNCPTR (bpwsinc_start);
   trans_class->event = GST_DEBUG_FUNCPTR (bpwsinc_event);
   filter_class->setup = GST_DEBUG_FUNCPTR (bpwsinc_setup);
@@ -558,24 +555,6 @@ bpwsinc_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 }
 
 /* GstBaseTransform vmethod implementations */
-
-static gboolean
-bpwsinc_get_unit_size (GstBaseTransform * base, GstCaps * caps, guint * size)
-{
-  gint width, channels;
-  GstStructure *structure;
-  gboolean ret;
-
-  g_assert (size);
-
-  structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width", &width);
-  ret &= gst_structure_get_int (structure, "channels", &channels);
-
-  *size = width * channels / 8;
-
-  return ret;
-}
 
 static GstFlowReturn
 bpwsinc_transform (GstBaseTransform * base, GstBuffer * inbuf,
