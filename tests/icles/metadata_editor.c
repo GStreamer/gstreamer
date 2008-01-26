@@ -398,7 +398,7 @@ on_cell_edited (GtkCellRendererText * renderer, gchar * str_path,
   GtkTreePath *path = NULL;
   GtkTreeIter iter;
   GtkTreeModel *model = NULL;
-  const guint32 col_index = (guint32) user_data;
+  const gint col_index = GPOINTER_TO_INT (user_data);
   const gchar *tag = gtk_entry_get_text (ui_entry_insert_tag);
 
   path = gtk_tree_path_new_from_string (str_path);
@@ -459,7 +459,7 @@ ui_add_columns (GtkTreeView * tree_view, const gchar * title, gint col_index,
   if (editable) {
     g_object_set (renderer, "editable", TRUE, NULL);
     g_signal_connect (G_OBJECT (renderer), "edited",
-        G_CALLBACK (on_cell_edited), (gpointer) col_index);
+        G_CALLBACK (on_cell_edited), GINT_TO_POINTER (col_index));
   }
 
   if ((tree_col = gtk_tree_view_column_new_with_attributes (title, renderer,

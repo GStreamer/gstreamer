@@ -245,6 +245,14 @@ AC_SUBST(GTK_CFLAGS)
 AC_SUBST(HAVE_GTK)
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
+dnl libglade is optional and only used in examples
+HAVE_GLADE=NO
+PKG_CHECK_MODULES(GLADE, libglade-2.0 >= 2.6.0, HAVE_GLADE=yes, HAVE_GLADE=no)
+AC_SUBST(GLADE_LIBS)
+AC_SUBST(GLADE_CFLAGS)
+AC_SUBST(HAVE_GLADE)
+AM_CONDITIONAL(HAVE_GLADE, test "x$HAVE_GLADE" = "xyes")
+
 dnl set license and copyright notice
 GST_LICENSE="LGPL"
 AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])

@@ -1,3 +1,16 @@
+2008-01-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Check for libglade-2.0, for the metadata-editor example.
+
+	* tests/icles/Makefile.am:
+	  Only try to build the metadata-editor example if we have gtk and
+	  glade (otherwise the build would just fail ...); fix build in
+	  uninstalled setup.
+
+	* tests/icles/metadata_editor.c: (on_cell_edited), (ui_add_columns):
+	  Fix compiler warnings (use GLib macros to cast pointer <-> int).
+
 2008-01-25  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/TODO:

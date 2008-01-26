@@ -12,18 +12,23 @@ GST_SOUNDTOUCH_TESTS =
 endif
 
 if USE_METADATA
+if HAVE_GLADE
+if HAVE_GTK
 
 GST_METADATA_TESTS = metadata_editor
 
 metadata_editor_SOURCES = metadata_editor.c
-metadata_editor_CFLAGS  = $(GST_CFLAGS) \
-		`pkg-config --cflags gstreamer-0.10 libglade-2.0 gtk+-2.0`
-metadata_editor_LDADD   = $(GST_LIBS)
-metadata_editor_LDFLAGS = $(GST_PLUGIN_LDFLAGS) \
-		-Wl -export-dynamic \
-		-lgstinterfaces-0.10 \
-		`pkg-config --libs gstreamer-0.10 libglade-2.0 gtk+-2.0`
-
+metadata_editor_CFLAGS  = \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(GLADE_CFLAGS)
+metadata_editor_LDADD   = \
+	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-0.10 $(GST_LIBS) $(GLADE_LIBS)
+metadata_editor_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+else
+GST_METADATA_TESTS =
+endif
+else
+GST_METADATA_TESTS =
+endif
 else
 GST_METADATA_TESTS =
 endif
