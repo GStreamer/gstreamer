@@ -17,6 +17,18 @@
  *
  */
 
+#define FLOAT_SAMPLES 1
+#include <soundtouch/SoundTouch.h>
+/* FIXME: workaround for SoundTouch.h of version 1.3.1 defining those
+ * variables while it shouldn't. */
+#undef VERSION
+#undef PACKAGE_VERSION
+#undef PACKAGE_TARNAME
+#undef PACKAGE_STRING
+#undef PACKAGE_NAME
+#undef PACKAGE_BUGREPORT
+#undef PACKAGE
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -25,9 +37,6 @@
 #include <gst/controller/gstcontroller.h>
 #include "gstpitch.hh"
 #include <math.h>
-
-#define FLOAT_SAMPLES
-#include <soundtouch/SoundTouch.h>
 
 /* wtf ?
 #ifdef G_PARAM_READWRITE

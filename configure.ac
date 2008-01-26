@@ -885,9 +885,11 @@ AG_GST_CHECK_FEATURE(SNDFILE, [sndfile plug-in], sfsrc sfsink, [
 dnl *** soundtouch ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SOUNDTOUCH, true)
 AG_GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
-  PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch, HAVE_SOUNDTOUCH=yes, [
-    HAVE_SOUNDTOUCH=no
-     AC_MSG_RESULT(no)])
+  PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch-1.0,
+    HAVE_SOUNDTOUCH=yes, 
+    PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch,
+      HAVE_SOUNDTOUCH=yes,
+      HAVE_SOUNDTOUCH=no))
   AC_SUBST(SOUNDTOUCH_CFLAGS)
   AC_SUBST(SOUNDTOUCH_LIBS)
   if test "x$HAVE_CXX" != "xyes"; then

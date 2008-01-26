@@ -1,3 +1,11 @@
+2008-01-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* ext/soundtouch/gstpitch.cc:
+	Add support for libsoundtouch 1.3.1 and add an ugly workaround for
+	the header definined PACKAGE and other variables for which we need
+	our own values from config.h.
+
 2008-01-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
