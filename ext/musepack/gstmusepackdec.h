@@ -20,8 +20,8 @@
 #ifndef __GST_MUSEPACK_DEC_H__
 #define __GST_MUSEPACK_DEC_H__
 
-#include <gst/gst.h>
 #include <mpcdec/mpcdec.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 

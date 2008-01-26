@@ -21,10 +21,10 @@
 #include "config.h"
 #endif
 
+#include "gstmusepackreader.h"
 #include <gst/gst.h>
 #include <string.h>
 
-#include "gstmusepackreader.h"
 
 GST_DEBUG_CATEGORY_EXTERN (musepackdec_debug);
 #define GST_CAT_DEFAULT musepackdec_debug

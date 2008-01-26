@@ -1,5 +1,13 @@
 2008-01-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/musepack/gstmusepackdec.h:
+	* ext/musepack/gstmusepackreader.c:
+	First include the libmpcdec headers before everything else as they
+	#define TRUE and FALSE unconditionally and we otherwise get conflicts
+	with the ones that GLib defines.
+
+2008-01-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	* ext/soundtouch/gstpitch.cc:
 	Add support for libsoundtouch 1.3.1 and add an ugly workaround for
