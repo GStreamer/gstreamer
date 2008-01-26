@@ -660,13 +660,12 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
       GST_DEBUG_OBJECT (ffmpegdec, "direct rendering setup for H264");
       ffmpegdec->current_dr = TRUE;
       ffmpegdec->extra_ref = TRUE;
-    }
-    else {
+    } else {
       GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
       /* do *not* draw edges when in direct rendering, for some reason it draws
        * outside of the memory. */
       ffmpegdec->current_dr = TRUE;
-    } 
+    }
   }
   if (ffmpegdec->current_dr) {
     ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
@@ -772,8 +771,8 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
   ffmpegdec = (GstFFMpegDec *) context->opaque;
 
-  GST_DEBUG_OBJECT (ffmpegdec, "getting buffer, apply pts %"G_GINT64_FORMAT,
-		  ffmpegdec->in_ts);
+  GST_DEBUG_OBJECT (ffmpegdec, "getting buffer, apply pts %" G_GINT64_FORMAT,
+      ffmpegdec->in_ts);
 
   /* apply the last timestamp we have seen to this picture, when we get the
    * picture back from ffmpeg we can use this to correctly timestamp the output
@@ -801,15 +800,15 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
       height = context->height;
       /* take final clipped output size */
       if ((clip_width = ffmpegdec->format.video.clip_width) == -1)
-	clip_width = width;
+        clip_width = width;
       if ((clip_height = ffmpegdec->format.video.clip_height) == -1)
-	clip_height = height;
+        clip_height = height;
 
       /* this is the size ffmpeg needs for the buffer */
-      avcodec_align_dimensions(context, &width, &height);
+      avcodec_align_dimensions (context, &width, &height);
 
-      GST_LOG_OBJECT (ffmpegdec, "aligned outsize %d/%d, clip %d/%d", 
-		      width, height, clip_width, clip_height);
+      GST_LOG_OBJECT (ffmpegdec, "aligned outsize %d/%d, clip %d/%d",
+          width, height, clip_width, clip_height);
 
       if (width != clip_width || height != clip_height) {
         /* We can't alloc if we need to clip the output buffer later */
@@ -820,7 +819,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
       /* alloc with aligned dimensions for ffmpeg */
       ret = alloc_output_buffer (ffmpegdec, &buf, width, height);
       if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-	/* alloc default buffer when we can't get one from downstream */
+        /* alloc default buffer when we can't get one from downstream */
         GST_LOG_OBJECT (ffmpegdec, "alloc failed, fallback alloc");
         return avcodec_default_get_buffer (context, picture);
       }
@@ -839,7 +838,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   /* tell ffmpeg we own this buffer, tranfer the ref we have on the buffer to
    * the opaque data. */
   picture->type = FF_BUFFER_TYPE_USER;
-  picture->age = 256*256*256*64;
+  picture->age = 256 * 256 * 256 * 64;
   picture->opaque = buf;
 
 #ifdef EXTRA_REF
@@ -1028,7 +1027,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
 
       if (width != -1 && height != -1) {
         /* overwrite the output size with the dimension of the
-	 * clipping region */
+         * clipping region */
         gst_caps_set_simple (caps,
             "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
       }
@@ -1285,7 +1284,7 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
   } else {
     AVPicture pic;
     gint width, height;
-    
+
     GST_LOG_OBJECT (ffmpegdec, "get output buffer");
 
     /* figure out size of output buffer, this is the clipped output size because
@@ -1322,7 +1321,7 @@ alloc_failed:
 }
 
 static void
-clear_queued (GstFFMpegDec *ffmpegdec)
+clear_queued (GstFFMpegDec * ffmpegdec)
 {
   g_list_foreach (ffmpegdec->queued, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (ffmpegdec->queued);
@@ -1330,7 +1329,7 @@ clear_queued (GstFFMpegDec *ffmpegdec)
 }
 
 static GstFlowReturn
-flush_queued (GstFFMpegDec *ffmpegdec)
+flush_queued (GstFFMpegDec * ffmpegdec)
 {
   GstFlowReturn res = GST_FLOW_OK;
 
@@ -1345,7 +1344,8 @@ flush_queued (GstFFMpegDec *ffmpegdec)
     /* iterate ouput queue an push downstream */
     res = gst_pad_push (ffmpegdec->srcpad, buf);
 
-    ffmpegdec->queued = g_list_delete_link (ffmpegdec->queued, ffmpegdec->queued);
+    ffmpegdec->queued =
+        g_list_delete_link (ffmpegdec->queued, ffmpegdec->queued);
   }
   return res;
 }
@@ -1373,7 +1373,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   gboolean iskeyframe;
   gboolean mode_switch;
   gboolean decode;
-  gint hurry_up;
+  gint hurry_up = 0;
 
   *ret = GST_FLOW_OK;
   *outbuf = NULL;
@@ -1469,7 +1469,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   if (ffmpegdec->picture->pts != -1) {
     GST_LOG_OBJECT (ffmpegdec, "using timestamp returned by ffmpeg");
     /* Get (interpolated) timestamp from FFMPEG */
-    in_timestamp = (GstClockTime)ffmpegdec->picture->pts;
+    in_timestamp = (GstClockTime) ffmpegdec->picture->pts;
   }
   if (!GST_CLOCK_TIME_IS_VALID (in_timestamp)) {
     in_timestamp = ffmpegdec->next_ts;
@@ -1807,8 +1807,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
     if (ffmpegdec->segment.rate > 0.0) {
       /* and off we go */
       *ret = gst_pad_push (ffmpegdec->srcpad, outbuf);
-    }
-    else {
+    } else {
       /* reverse playback, queue frame till later */
       GST_DEBUG_OBJECT (ffmpegdec, "queued frame");
       ffmpegdec->queued = g_list_prepend (ffmpegdec->queued, outbuf);
@@ -2124,16 +2123,16 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       /* add padding */
       if (ffmpegdec->padded_size <= size + FF_INPUT_BUFFER_PADDING_SIZE) {
         ffmpegdec->padded_size = size + FF_INPUT_BUFFER_PADDING_SIZE;
-        ffmpegdec->padded = g_realloc (ffmpegdec->padded, ffmpegdec->padded_size);
+        ffmpegdec->padded =
+            g_realloc (ffmpegdec->padded, ffmpegdec->padded_size);
         GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
-			ffmpegdec->padded_size); 
+            ffmpegdec->padded_size);
       }
       memcpy (ffmpegdec->padded, data, size);
       memset (ffmpegdec->padded + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
 
       pdata = ffmpegdec->padded;
-    }
-    else {
+    } else {
       pdata = data;
     }
 
@@ -2143,8 +2142,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
         in_duration, &ret);
 
     if (ret != GST_FLOW_OK) {
-      GST_LOG_OBJECT (ffmpegdec, "breaking because of flow ret %s", 
-		      gst_flow_get_name (ret));
+      GST_LOG_OBJECT (ffmpegdec, "breaking because of flow ret %s",
+          gst_flow_get_name (ret));
       /* bad flow retun, make sure we discard all data and exit */
       bsize = 0;
       break;
@@ -2157,8 +2156,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
          * data we tried. */
         GST_LOG_OBJECT (ffmpegdec, "Decoding didn't return any data, breaking");
         break;
-      }
-      else if (len < 0) {
+      } else if (len < 0) {
         /* a decoding error happened, we must break and try again with next data. */
         GST_LOG_OBJECT (ffmpegdec, "Decoding error, breaking");
         bsize = 0;
@@ -2168,16 +2166,15 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
        * already when using the parser. */
       bsize -= len;
       bdata += len;
-    }
-    else {
+    } else {
       if (len == 0) {
         /* nothing was decoded, this could be because no data was available or
          * because we were skipping frames. Since we have a parser we can
-	 * continue with the next frame */
-        GST_LOG_OBJECT (ffmpegdec, "Decoding didn't return any data, trying next");
-      }
-      else if (len < 0) {
-	/* we have a context that will bring us to the next frame */
+         * continue with the next frame */
+        GST_LOG_OBJECT (ffmpegdec,
+            "Decoding didn't return any data, trying next");
+      } else if (len < 0) {
+        /* we have a context that will bring us to the next frame */
         GST_LOG_OBJECT (ffmpegdec, "Decoding error, trying next");
       }
     }
