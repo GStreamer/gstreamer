@@ -38,13 +38,6 @@
 #include "gstpitch.hh"
 #include <math.h>
 
-/* wtf ?
-#ifdef G_PARAM_READWRITE
-#  undef G_PARAM_READWRITE
-#endif
-#define G_PARAM_READWRITE ((GParamFlags)(G_PARAM_READABLE | G_PARAM_WRITABLE))
-*/
-
 GST_DEBUG_CATEGORY_STATIC (pitch_debug);
 #define GST_CAT_DEFAULT pitch_debug
 
@@ -216,6 +209,15 @@ gst_pitch_dispose (GObject * object)
 }
 
 static void
+gst_pitch_update_duration (GstPitch * pitch)
+{
+  GstMessage *m;
+
+  m = gst_message_new_duration (GST_OBJECT (pitch), GST_FORMAT_TIME, -1);
+  gst_element_post_message (GST_ELEMENT (pitch), m);
+}
+
+static void
 gst_pitch_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -227,21 +229,26 @@ gst_pitch_set_property (GObject * object, guint prop_id,
       pitch->tempo = g_value_get_float (value);
       pitch->priv->stream_time_ratio = pitch->tempo * pitch->rate;
       pitch->priv->st->setTempo (pitch->tempo);
+      GST_OBJECT_UNLOCK (pitch);
+      gst_pitch_update_duration (pitch);
       break;
     case ARG_RATE:
       pitch->rate = g_value_get_float (value);
       pitch->priv->stream_time_ratio = pitch->tempo * pitch->rate;
       pitch->priv->st->setRate (pitch->rate);
+      GST_OBJECT_UNLOCK (pitch);
+      gst_pitch_update_duration (pitch);
       break;
     case ARG_PITCH:
       pitch->pitch = g_value_get_float (value);
       pitch->priv->st->setPitch (pitch->pitch);
+      GST_OBJECT_UNLOCK (pitch);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      GST_OBJECT_UNLOCK (pitch);
       break;
   }
-  GST_OBJECT_UNLOCK (pitch);
 }
 
 static void
@@ -324,8 +331,6 @@ gst_pitch_forward_buffer (GstPitch * pitch, GstBuffer * buffer)
   pitch->next_buffer_offset += samples;
   GST_BUFFER_OFFSET_END (buffer) = pitch->next_buffer_offset;
 
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (pitch->srcpad));
-
   GST_LOG ("pushing buffer [%" GST_TIME_FORMAT "]-[%" GST_TIME_FORMAT
       "] (%d samples)", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (pitch->next_buffer_time), samples);
@@ -347,14 +352,22 @@ gst_pitch_prepare_buffer (GstPitch * pitch)
 
   samples = pitch->priv->st->numSamples ();
   if (samples == 0)
-    return NULL;;
+    return NULL;
 
-  buffer = gst_buffer_new_and_alloc (samples * pitch->sample_size);
+  if (gst_pad_alloc_buffer_and_set_caps (pitch->srcpad, GST_BUFFER_OFFSET_NONE,
+          samples * pitch->sample_size, GST_PAD_CAPS (pitch->srcpad), &buffer)
+      != GST_FLOW_OK) {
+    buffer = gst_buffer_new_and_alloc (samples * pitch->sample_size);
+    gst_buffer_set_caps (buffer, GST_PAD_CAPS (pitch->srcpad));
+  }
+
   samples =
       priv->st->receiveSamples ((gfloat *) GST_BUFFER_DATA (buffer), samples);
 
-  if (samples <= 0)
+  if (samples <= 0) {
+    gst_buffer_unref (buffer);
     return NULL;
+  }
 
   GST_BUFFER_DURATION (buffer) = samples * pitch->sample_duration;
   /* temporary store samples here, to avoid having to recalculate this */
@@ -415,15 +428,22 @@ gst_pitch_src_event (GstPad * pad, GstEvent * event)
       gst_event_parse_seek (event, &rate, &format, &flags,
           &cur_type, &cur, &stop_type, &stop);
 
-      cur = (gint64) (cur * stream_time_ratio);
-      stop = (gint64) (stop * stream_time_ratio);
-
       gst_event_unref (event);
 
-      event = gst_event_new_seek (rate, format, flags,
-          cur_type, cur, stop_type, stop);
+      if (format == GST_FORMAT_TIME || format == GST_FORMAT_DEFAULT) {
+        cur = (gint64) (cur * stream_time_ratio);
+        if (stop != -1)
+          stop = (gint64) (stop * stream_time_ratio);
 
-      res = gst_pad_event_default (pad, event);
+        event = gst_event_new_seek (rate, format, flags,
+            cur_type, cur, stop_type, stop);
+        res = gst_pad_event_default (pad, event);
+      } else {
+        GST_WARNING_OBJECT (pitch,
+            "Seeking only supported in TIME or DEFAULT format");
+        res = FALSE;
+      }
+
       break;
     }
     default:
@@ -459,7 +479,7 @@ gst_pitch_convert (GstPitch * pitch,
     return FALSE;
   }
 
-  if (src_format == *dst_format) {
+  if (src_format == *dst_format || src_value == -1) {
     *dst_value = src_value;
     return TRUE;
   }
@@ -534,11 +554,13 @@ gst_pitch_src_query (GstPad * pad, GstQuery * query)
   gboolean res = FALSE;
   gfloat stream_time_ratio;
   gint64 next_buffer_offset;
+  GstClockTime next_buffer_time;
 
   pitch = GST_PITCH (gst_pad_get_parent (pad));
   GST_LOG ("%s query", GST_QUERY_TYPE_NAME (query));
   GST_OBJECT_LOCK (pitch);
   stream_time_ratio = pitch->priv->stream_time_ratio;
+  next_buffer_time = pitch->next_buffer_time;
   next_buffer_offset = pitch->next_buffer_offset;
   GST_OBJECT_UNLOCK (pitch);
 
@@ -576,9 +598,9 @@ gst_pitch_src_query (GstPad * pad, GstQuery * query)
         break;
       }
 
-      if (dst_format != GST_FORMAT_DEFAULT) {
-        res = gst_pitch_convert (pitch, GST_FORMAT_DEFAULT,
-            next_buffer_offset, &dst_format, &dst_value);
+      if (dst_format == GST_FORMAT_TIME) {
+        dst_value = next_buffer_time;
+        res = TRUE;
       } else {
         dst_value = next_buffer_offset;
         res = TRUE;
@@ -640,6 +662,18 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
   gst_event_parse_new_segment (*event, &update, &rate, &format, &start_value,
       &stop_value, &base);
 
+  if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT) {
+    GST_WARNING_OBJECT (pitch,
+        "Only NEWSEGMENT in TIME or DEFAULT format supported, sending"
+        "open ended NEWSEGMENT in TIME format.");
+    gst_event_unref (*event);
+    *event =
+        gst_event_new_new_segment (update, rate, GST_FORMAT_TIME, 0, -1, 0);
+    start_value = 0;
+    stop_value = -1;
+    base = 0;
+  }
+
   GST_LOG_OBJECT (pitch->sinkpad, "segment %lld - %lld (%d)", start_value,
       stop_value, format);
 
@@ -649,7 +683,8 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
   }
 
   start_value = (gint64) (start_value / stream_time_ratio);
-  stop_value = (gint64) (stop_value / stream_time_ratio);
+  if (stop_value != -1)
+    stop_value = (gint64) (stop_value / stream_time_ratio);
   base = (gint64) (base / stream_time_ratio);
 
   conv_format = GST_FORMAT_TIME;
@@ -758,7 +793,8 @@ gst_pitch_chain (GstPad * pad, GstBuffer * buffer)
     GstBuffer *out_buffer;
 
     out_buffer = gst_pitch_prepare_buffer (pitch);
-    return gst_pitch_forward_buffer (pitch, out_buffer);
+    if (out_buffer)
+      return gst_pitch_forward_buffer (pitch, out_buffer);
   }
 
   return GST_FLOW_OK;

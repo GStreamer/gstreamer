@@ -1,5 +1,20 @@
 2008-01-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/soundtouch/gstpitch.cc:
+	Allow seeking only in TIME and DEFAULT format, other formats will
+	not work as expected. Also handle a stop position of -1 correctly
+	for seeks, newsegment events and the queries. This fixes playback
+	with the pitch element if upstream doesn't know the duration or has
+	-1 as stop position in NEWSEGMENT events for other reasons. Before
+	simply nothing was played as the segment was going from 0 to 0.
+
+	Send a GST_MESSAGE_DURATION whenever the rate or tempo is changed
+	so applications can update their cached duration. Fixes bug #503308.
+
+	Some random cleanup and memory leak closing.
+
+2008-01-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/musepack/gstmusepackdec.h:
 	* ext/musepack/gstmusepackreader.c:
 	First include the libmpcdec headers before everything else as they
