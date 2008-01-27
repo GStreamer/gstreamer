@@ -1,5 +1,18 @@
 2008-01-27  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/soundtouch/gstpitch.cc:
+	* ext/soundtouch/gstpitch.hh:
+	Implement LATENCY query and notify about latency changes.
+	Unfortunately we don't have a fixed latency but it changes
+	a bit with each buffer so we only send an LATENCY event with
+	the maximum latency if it changes.
+
+	Always calculate the timestamp, duration, etc from the sample
+	rate instead of using a pre-calculated duration for one sample
+	to prevent large rounding errors.
+
+2008-01-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Based on a patch by:
 	    Hans de Goede <j dot w dot r dot degoede at hhs dot nl>
 

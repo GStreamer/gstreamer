@@ -67,11 +67,12 @@ struct _GstPitch
   gint          samplerate;      /* samplerate                           */
   gint          channels;        /* number of audio channels             */
   gsize         sample_size;     /* number of bytes for a single sample  */
-  GstClockTime  sample_duration; /* time for 1 sample                    */
 
   /* stream tracking */
   GstClockTime  next_buffer_time;
   gint64        next_buffer_offset;
+
+  GstClockTimeDiff  min_latency, max_latency;
 
   GstPitchPrivate *priv;
 };

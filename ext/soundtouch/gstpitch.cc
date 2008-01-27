@@ -194,6 +194,7 @@ gst_pitch_init (GstPitch * pitch, GstPitchClass * pitch_class)
   pitch->priv->st->setPitch (pitch->pitch);
 
   pitch->priv->stream_time_ratio = 1.0;
+  pitch->min_latency = pitch->max_latency = 0;
 }
 
 
@@ -312,7 +313,6 @@ gst_pitch_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   /* calculate sample size */
   pitch->sample_size = (sizeof (gfloat) * channels);
-  pitch->sample_duration = gst_util_uint64_scale_int (GST_SECOND, 1, rate);
 
   GST_OBJECT_UNLOCK (pitch);
 
@@ -371,7 +371,8 @@ gst_pitch_prepare_buffer (GstPitch * pitch)
     return NULL;
   }
 
-  GST_BUFFER_DURATION (buffer) = samples * pitch->sample_duration;
+  GST_BUFFER_DURATION (buffer) =
+      gst_util_uint64_scale (samples, GST_SECOND, pitch->samplerate);
   /* temporary store samples here, to avoid having to recalculate this */
   GST_BUFFER_OFFSET (buffer) = (gint64) samples;
 
@@ -466,18 +467,17 @@ gst_pitch_convert (GstPitch * pitch,
     GstFormat * dst_format, gint64 * dst_value)
 {
   gboolean res = TRUE;
-  GstClockTime sample_duration;
   guint sample_size;
+  gint samplerate;
 
   g_return_val_if_fail (dst_format && dst_value, FALSE);
 
   GST_OBJECT_LOCK (pitch);
-  sample_duration = pitch->sample_duration;
   sample_size = pitch->sample_size;
+  samplerate = pitch->samplerate;
   GST_OBJECT_UNLOCK (pitch);
 
-  if (sample_size == 0 || sample_duration == 0 ||
-      sample_duration == GST_CLOCK_TIME_NONE) {
+  if (sample_size == 0 || samplerate == 0) {
     return FALSE;
   }
 
@@ -490,11 +490,12 @@ gst_pitch_convert (GstPitch * pitch,
     case GST_FORMAT_BYTES:
       switch (*dst_format) {
         case GST_FORMAT_TIME:
-          *dst_value = src_value / sample_size;
-          *dst_value *= sample_duration;
+          *dst_value =
+              gst_util_uint64_scale_int (src_value, GST_SECOND,
+              sample_size * samplerate);
           break;
         case GST_FORMAT_DEFAULT:
-          *dst_value = src_value / sample_size;
+          *dst_value = gst_util_uint64_scale_int (src_value, 1, sample_size);
           break;
         default:
           res = FALSE;
@@ -504,11 +505,13 @@ gst_pitch_convert (GstPitch * pitch,
     case GST_FORMAT_TIME:
       switch (*dst_format) {
         case GST_FORMAT_BYTES:
-          *dst_value = src_value / sample_duration;
-          *dst_value *= sample_size;
+          *dst_value =
+              gst_util_uint64_scale_int (src_value, samplerate * sample_size,
+              GST_SECOND);
           break;
         case GST_FORMAT_DEFAULT:
-          *dst_value = src_value / sample_duration;
+          *dst_value =
+              gst_util_uint64_scale_int (src_value, samplerate, GST_SECOND);
           break;
         default:
           res = FALSE;
@@ -518,10 +521,11 @@ gst_pitch_convert (GstPitch * pitch,
     case GST_FORMAT_DEFAULT:
       switch (*dst_format) {
         case GST_FORMAT_BYTES:
-          *dst_value = src_value * sample_size;
+          *dst_value = gst_util_uint64_scale_int (src_value, sample_size, 1);
           break;
         case GST_FORMAT_TIME:
-          *dst_value = src_value * sample_duration;
+          *dst_value =
+              gst_util_uint64_scale_int (src_value, GST_SECOND, samplerate);
           break;
         default:
           res = FALSE;
@@ -543,6 +547,7 @@ gst_pitch_get_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
     GST_QUERY_CONVERT,
+    GST_QUERY_LATENCY,
     GST_QUERY_NONE
   };
 
@@ -627,6 +632,46 @@ gst_pitch_src_query (GstPad * pad, GstQuery * query)
       if (res) {
         gst_query_set_convert (query, src_format, src_value,
             dst_format, dst_value);
+      }
+      break;
+    }
+    case GST_QUERY_LATENCY:
+    {
+      GstClockTime min, max;
+      gboolean live;
+      GstPad *peer;
+
+      if ((peer = gst_pad_get_peer (pitch->sinkpad))) {
+        if ((res = gst_pad_query (peer, query))) {
+          gst_query_parse_latency (query, &live, &min, &max);
+
+          GST_DEBUG ("Peer latency: min %"
+              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+          /* add our own latency */
+
+          GST_DEBUG ("Our latency: min %" GST_TIME_FORMAT
+              ", max %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (pitch->min_latency),
+              GST_TIME_ARGS (pitch->max_latency));
+
+          min += pitch->min_latency;
+          if (max != GST_CLOCK_TIME_NONE)
+            max += pitch->max_latency;
+          else
+            max = pitch->max_latency;
+
+          GST_DEBUG ("Calculated total latency : min %"
+              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+          g_print ("Calculated total latency : min %"
+              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+          gst_query_set_latency (query, live, min, max);
+        }
+        gst_object_unref (peer);
       }
       break;
     }
@@ -728,10 +773,12 @@ gst_pitch_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       gst_pitch_flush_buffer (pitch, FALSE);
       pitch->priv->st->clear ();
+      pitch->min_latency = pitch->max_latency = 0;
       break;
     case GST_EVENT_EOS:
       gst_pitch_flush_buffer (pitch, TRUE);
       pitch->priv->st->clear ();
+      pitch->min_latency = pitch->max_latency = 0;
       break;
     case GST_EVENT_NEWSEGMENT:
       if (!gst_pitch_process_segment (pitch, &event)) {
@@ -742,6 +789,7 @@ gst_pitch_sink_event (GstPad * pad, GstEvent * event)
         event = NULL;
       }
       pitch->priv->st->clear ();
+      pitch->min_latency = pitch->max_latency = 0;
       break;
     default:
       break;
@@ -755,16 +803,40 @@ gst_pitch_sink_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+static void
+gst_pitch_update_latency (GstPitch * pitch, GstClockTime timestamp)
+{
+  GstClockTimeDiff current_latency, min_latency, max_latency;
+
+  current_latency =
+      timestamp / pitch->priv->stream_time_ratio - pitch->next_buffer_time;
+
+  min_latency = MIN (pitch->min_latency, current_latency);
+  max_latency = MAX (pitch->max_latency, current_latency);
+
+  if (pitch->min_latency != min_latency || pitch->max_latency != max_latency) {
+    pitch->min_latency = min_latency;
+    pitch->max_latency = max_latency;
+
+    gst_pad_push_event (pitch->sinkpad, gst_event_new_latency (max_latency));
+    gst_element_post_message (GST_ELEMENT (pitch),
+        gst_message_new_latency (GST_OBJECT (pitch)));
+  }
+}
+
 static GstFlowReturn
 gst_pitch_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstPitch *pitch;
   GstPitchPrivate *priv;
+  GstClockTime timestamp;
 
   pitch = GST_PITCH (GST_PAD_PARENT (pad));
   priv = GST_PITCH_GET_PRIVATE (pitch);
 
   gst_object_sync_values (G_OBJECT (pitch), pitch->next_buffer_time);
+
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   /* push the received samples on the soundtouch buffer */
   GST_LOG_OBJECT (pitch, "incoming buffer (%d samples)",
@@ -793,6 +865,10 @@ gst_pitch_chain (GstPad * pad, GstBuffer * buffer)
       GST_BUFFER_SIZE (buffer) / pitch->sample_size);
   gst_buffer_unref (buffer);
 
+  /* Calculate latency */
+
+  gst_pitch_update_latency (pitch, timestamp);
+
   /* and try to extract some samples from the soundtouch buffer */
   if (!priv->st->isEmpty ()) {
     GstBuffer *out_buffer;
@@ -818,6 +894,7 @@ gst_pitch_change_state (GstElement * element, GstStateChange transition)
       pitch->next_buffer_time = 0;
       pitch->next_buffer_offset = 0;
       pitch->priv->st->clear ();
+      pitch->min_latency = pitch->max_latency = 0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
