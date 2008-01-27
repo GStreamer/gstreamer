@@ -818,7 +818,11 @@ gst_pitch_update_latency (GstPitch * pitch, GstClockTime timestamp)
     pitch->min_latency = min_latency;
     pitch->max_latency = max_latency;
 
-    gst_pad_push_event (pitch->sinkpad, gst_event_new_latency (max_latency));
+    /* FIXME: what about the LATENCY event? It only has
+     * one latency value, should it be current, min or max?
+     * Should it include upstream latencies?
+     */
+
     gst_element_post_message (GST_ELEMENT (pitch),
         gst_message_new_latency (GST_OBJECT (pitch)));
   }
