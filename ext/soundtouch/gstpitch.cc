@@ -204,7 +204,8 @@ gst_pitch_dispose (GObject * object)
   GstPitch *pitch = GST_PITCH (object);
 
   if (pitch->priv->st) {
-    delete (pitch->priv->st);
+    delete pitch->priv->st;
+
     pitch->priv->st = NULL;
   }
 
@@ -809,7 +810,8 @@ gst_pitch_update_latency (GstPitch * pitch, GstClockTime timestamp)
   GstClockTimeDiff current_latency, min_latency, max_latency;
 
   current_latency =
-      timestamp / pitch->priv->stream_time_ratio - pitch->next_buffer_time;
+      (GstClockTimeDiff) (timestamp / pitch->priv->stream_time_ratio) -
+      pitch->next_buffer_time;
 
   min_latency = MIN (pitch->min_latency, current_latency);
   max_latency = MAX (pitch->max_latency, current_latency);
