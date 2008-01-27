@@ -1,5 +1,10 @@
 2008-01-27  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/soundtouch/gstbpmdetect.cc:
+	Only consider a BPM value above 1.0 as valid.
+
+2008-01-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/soundtouch/Makefile.am:
 	* ext/soundtouch/gstbpmdetect.cc:
 	* ext/soundtouch/gstbpmdetect.hh:

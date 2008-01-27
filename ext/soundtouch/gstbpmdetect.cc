@@ -208,7 +208,7 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   g_free (data);
 
   bpm = bpm_detect->priv->detect->getBpm ();
-  if (bpm != 0.0 && fabs (bpm_detect->bpm - bpm) >= 1.0) {
+  if (bpm >= 1.0 && fabs (bpm_detect->bpm - bpm) >= 1.0) {
     GstTagList *tags = gst_tag_list_new ();
 
     gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE_ALL, GST_TAG_BEATS_PER_MINUTE,
