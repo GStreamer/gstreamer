@@ -199,7 +199,8 @@ change_tag_list (GstTagList ** list, const gchar * tag, const gchar * value)
       }
         break;
       default:
-        fprintf (stderr, "This app still doesn't handle type (%s)(%ld)\n",
+        fprintf (stderr,
+            "This app still doesn't handle type (%s)(%" G_GSIZE_FORMAT ")\n",
             g_type_name (type), type);
         break;
     }
