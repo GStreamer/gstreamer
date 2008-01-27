@@ -62,11 +62,10 @@ enum
 #define SUPPORTED_CAPS \
 GST_STATIC_CAPS( \
   "audio/x-raw-float, " \
-    "rate = (int) [ 8000, 48000 ], " \
+    "rate = (int) [ 8000, MAX ], " \
     "channels = (int) [ 1, 2 ], " \
     "endianness = (int) BYTE_ORDER, " \
-    "width = (int) 32, " \
-    "buffer-frames = (int) [ 0, MAX ]" \
+    "width = (int) 32" \
 )
 
 static GstStaticPadTemplate gst_pitch_sink_template =
@@ -123,6 +122,9 @@ gst_pitch_class_init (GstPitchClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (pitch_debug, "pitch", 0,
+      "audio pitch control element");
 
   gobject_class->set_property = gst_pitch_set_property;
   gobject_class->get_property = gst_pitch_get_property;
@@ -725,9 +727,11 @@ gst_pitch_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       gst_pitch_flush_buffer (pitch, FALSE);
+      pitch->priv->st->clear ();
       break;
     case GST_EVENT_EOS:
       gst_pitch_flush_buffer (pitch, TRUE);
+      pitch->priv->st->clear ();
       break;
     case GST_EVENT_NEWSEGMENT:
       if (!gst_pitch_process_segment (pitch, &event)) {
@@ -737,6 +741,7 @@ gst_pitch_sink_event (GstPad * pad, GstEvent * event)
         GST_PITCH_GET_PRIVATE (pitch)->pending_segment = event;
         event = NULL;
       }
+      pitch->priv->st->clear ();
       break;
     default:
       break;
@@ -812,6 +817,7 @@ gst_pitch_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       pitch->next_buffer_time = 0;
       pitch->next_buffer_offset = 0;
+      pitch->priv->st->clear ();
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -839,20 +845,3 @@ gst_pitch_change_state (GstElement * element, GstStateChange transition)
 
   return ret;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gst_controller_init (NULL, NULL);
-
-  GST_DEBUG_CATEGORY_INIT (pitch_debug, "pitch", 0,
-      "audio pitch control element");
-
-  return gst_element_register (plugin, "pitch", GST_RANK_NONE, GST_TYPE_PITCH);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "soundtouch",
-    "Audio Pitch Controller",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

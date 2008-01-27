@@ -1,3 +1,17 @@
+2008-01-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/soundtouch/Makefile.am:
+	* ext/soundtouch/gstbpmdetect.cc:
+	* ext/soundtouch/gstbpmdetect.hh:
+	* ext/soundtouch/plugin.c: (plugin_init):
+	Add BPM detection plugin based on SoundTouch's libBPM.
+
+	* ext/soundtouch/gstpitch.cc:
+	Allow sample rates until MAX instead of only 48kHz and remove the
+	buffer-frames field from that caps.
+	Clear the remaining samples completely when necessary to get into
+	a clean state again.
+
 2008-01-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_class_init):

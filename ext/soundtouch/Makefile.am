@@ -1,9 +1,13 @@
-plugin_LTLIBRARIES = libgstpitch.la
+plugin_LTLIBRARIES = libgstsoundtouch.la
 
-libgstpitch_la_SOURCES = gstpitch.cc
+libgstsoundtouch_la_SOURCES = \
+	plugin.c \
+	gstpitch.cc \
+	gstbpmdetect.cc
 
-libgstpitch_la_CXXFLAGS = $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(SOUNDTOUCH_CFLAGS)
-libgstpitch_la_LIBADD = $(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) $(GST_LIBS) $(SOUNDTOUCH_LIBS)
-libgstpitch_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstsoundtouch_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(SOUNDTOUCH_CFLAGS)
+libgstsoundtouch_la_CXXFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(SOUNDTOUCH_CFLAGS)
+libgstsoundtouch_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) $(GST_LIBS) $(SOUNDTOUCH_LIBS) -lgstaudio-$(GST_MAJORMINOR) -lBPM $(LIBM)
+libgstsoundtouch_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstpitch.hh
+noinst_HEADERS = gstpitch.hh gstbpmdetect.hh
