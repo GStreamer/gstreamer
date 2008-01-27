@@ -37,7 +37,11 @@ public:
 
 protected:
   /* read a frame */
+#ifdef GST_MJPEGTOOLS_19x
+  bool LoadFrame (ImagePlanes &image);
+#else
   bool LoadFrame ();
+#endif
 
 private:
   GstElement *element;

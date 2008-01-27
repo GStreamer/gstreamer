@@ -26,7 +26,11 @@
 
 #include <mpegconsts.h>
 #include <quantize.hh>
+#ifdef GST_MJPEGTOOLS_19x
+#include <ontheflyratectl.hh>
+#else
 #include <ratectl.hh>
+#endif
 #include <seqencoder.hh>
 #include <mpeg2coder.hh>
 
@@ -53,19 +57,18 @@ GstMpeg2Encoder::~GstMpeg2Encoder ()
   gst_object_unref (element);
 }
 
-gboolean GstMpeg2Encoder::setup ()
+gboolean
+GstMpeg2Encoder::setup ()
 {
-  MPEG2EncInVidParams
-      strm;
-  GstMpeg2enc *
-      enc;
+  MPEG2EncInVidParams strm;
+  GstMpeg2enc *enc;
 
   enc = GST_MPEG2ENC (element);
 
   /* I/O */
   reader = new GstMpeg2EncPictureReader (element, caps, &parms);
   reader->StreamPictureParams (strm);
-#ifdef GST_MJPEGTOOLS_18x
+#if defined(GST_MJPEGTOOLS_18x) && !defined(GST_MJPEGTOOLS_19x)
   /* chain thread caters for reading, do not need another thread for this */
   options.allow_parallel_read = FALSE;
 #endif
@@ -76,11 +79,22 @@ gboolean GstMpeg2Encoder::setup ()
 
   /* encoding internals */
   quantizer = new Quantizer (parms);
+#ifdef GST_MJPEGTOOLS_19x
+  pass1ratectl = new OnTheFlyPass1 (parms);
+  pass2ratectl = new OnTheFlyPass2 (parms);
+#else
   bitrate_controller = new OnTheFlyRateCtl (parms);
+#endif
+
 #ifdef GST_MJPEGTOOLS_18x
   /* sequencer */
+#  ifdef GST_MJPEGTOOLS_19x
+  seqencoder = new SeqEncoder (parms, *reader, *quantizer,
+      *writer, *pass1ratectl, *pass2ratectl);
+#  else
   seqencoder = new SeqEncoder (parms, *reader, *quantizer,
       *writer, *bitrate_controller);
+#  endif
 #else
   coder = new MPEG2Coder (parms, *writer);
   /* sequencer */

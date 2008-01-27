@@ -25,6 +25,10 @@
 
 #include <encoderparams.hh>
 
+#ifdef GST_MJPEGTOOLS_19x
+#include <imageplanes.hh>
+#endif
+
 #include "gstmpeg2enc.hh"
 #include "gstmpeg2encpicturereader.hh"
 
@@ -79,9 +83,17 @@ GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams & strm)
  */
 
 bool
-GstMpeg2EncPictureReader::LoadFrame ()
+#ifdef GST_MJPEGTOOLS_19x
+    GstMpeg2EncPictureReader::LoadFrame (ImagePlanes & image)
+#else
+    GstMpeg2EncPictureReader::LoadFrame ()
+#endif
 {
-  gint i, x, y, n;
+
+#ifndef GST_MJPEGTOOLS_19x
+  gint n;
+#endif
+  gint i, x, y;
   guint8 *frame;
   GstMpeg2enc *enc;
 
@@ -100,23 +112,39 @@ GstMpeg2EncPictureReader::LoadFrame ()
   }
 
   frame = GST_BUFFER_DATA (enc->buffer);
+#ifndef GST_MJPEGTOOLS_19x
   n = frames_read % input_imgs_buf_size;
+#endif
   x = encparams.horizontal_size;
   y = encparams.vertical_size;
 
   for (i = 0; i < y; i++) {
+#ifdef GST_MJPEGTOOLS_19x
+    memcpy (image.Plane (0) + i * encparams.phy_width, frame, x);
+#else
     memcpy (input_imgs_buf[n][0] + i * encparams.phy_width, frame, x);
+#endif
     frame += x;
   }
+#ifndef GST_MJPEGTOOLS_19x
   lum_mean[n] = LumMean (input_imgs_buf[n][0]);
+#endif
   x >>= 1;
   y >>= 1;
   for (i = 0; i < y; i++) {
+#ifdef GST_MJPEGTOOLS_19x
+    memcpy (image.Plane (1) + i * encparams.phy_chrom_width, frame, x);
+#else
     memcpy (input_imgs_buf[n][1] + i * encparams.phy_chrom_width, frame, x);
+#endif
     frame += x;
   }
   for (i = 0; i < y; i++) {
+#ifdef GST_MJPEGTOOLS_19x
+    memcpy (image.Plane (2) + i * encparams.phy_chrom_width, frame, x);
+#else
     memcpy (input_imgs_buf[n][2] + i * encparams.phy_chrom_width, frame, x);
+#endif
     frame += x;
   }
   gst_buffer_unref (enc->buffer);

@@ -1,5 +1,17 @@
 2008-01-27  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Based on a patch by:
+	    Hans de Goede <j dot w dot r dot degoede at hhs dot nl>
+
+	* configure.ac:
+	* ext/mpeg2enc/gstmpeg2encoder.cc:
+	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
+	* ext/mpeg2enc/gstmpeg2encpicturereader.hh:
+	Add support for building against mjpegtools 1.9 while keeping
+	compatiblity with older versions.
+
+2008-01-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/soundtouch/gstbpmdetect.cc:
 	Only consider a BPM value above 1.0 as valid.
 

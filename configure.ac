@@ -676,7 +676,14 @@ AC_SUBST(LIBMMS_LIBS)
 dnl *** mjpegtools version info ***
 dnl some may prefer older version (given quirks above)
 dnl hm, no version info seems available within mjpegtools headers
-PKG_CHECK_EXISTS(mjpegtools >= 1.8.0 mjpegtools < 1.9.0, [
+
+PKG_CHECK_EXISTS(mjpegtools >= 1.9.0 mjpegtools < 1.10.0, [
+  AC_DEFINE(GST_MJPEGTOOLS_19x, 1, [mjpegtools >= 1.9.0 is used])
+  have_mpjegtools_19x=yes
+  ], [
+  have_mpjegtools_19x=no])
+
+PKG_CHECK_EXISTS(mjpegtools >= 1.8.0, [
   AC_DEFINE(GST_MJPEGTOOLS_18x, 1, [mjpegtools >= 1.8.0 is used])
   have_mpjegtools_18x=yes
   ], [
@@ -732,7 +739,10 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
               ], [
                 mpeg2enc_headers_ok=no
               ])
+	  else
+	    mpeg2enc_headers_ok=yes
           fi
+
           if test "x$mpeg2enc_headers_ok" = "xyes"; then
             HAVE_MPEG2ENC="yes"
           fi
