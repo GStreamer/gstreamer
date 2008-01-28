@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-11-10 20:45+0000\n"
+"POT-Creation-Date: 2008-01-17 22:38+0000\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -15,30 +15,30 @@ msgstr ""
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:304
+#: gst/gst.c:302
 msgid "Print the GStreamer version"
 msgstr "Vertoon die GStreamer weergawe"
 
-#: gst/gst.c:306
+#: gst/gst.c:304
 msgid "Make all warnings fatal"
 msgstr "Maak alle waarskuwings fataal"
 
-#: gst/gst.c:310
+#: gst/gst.c:308
 msgid "Print available debug categories and exit"
 msgstr "Vertoon beskikbare ontfoutkategorië en stop"
 
-#: gst/gst.c:314
+#: gst/gst.c:312
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Verstek ontfoutvlak vanaf 1 (slegs fout) tot 5 (enigiets) of 0 vir geen "
 "afvoer"
 
-#: gst/gst.c:316
+#: gst/gst.c:314
 msgid "LEVEL"
 msgstr "VLAK"
 
-#: gst/gst.c:318
+#: gst/gst.c:316
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -46,31 +46,31 @@ msgstr ""
 "Komma-geskeide lys van kategorie_naam:vlak pare om die individuele "
 "kategorieë op te stel. Byvoorbeeld: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:321
+#: gst/gst.c:319
 msgid "LIST"
 msgstr "LYS"
 
-#: gst/gst.c:323
+#: gst/gst.c:321
 msgid "Disable colored debugging output"
 msgstr "Skakel gekleurde ontfout-afvoer af"
 
-#: gst/gst.c:326
+#: gst/gst.c:324
 msgid "Disable debugging"
 msgstr "Skakel ontfouting af"
 
-#: gst/gst.c:330
+#: gst/gst.c:328
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Aktiveer volledige diagnostiese boodskappe vir inproplaaiing"
 
-#: gst/gst.c:334
+#: gst/gst.c:332
 msgid "Colon-separated paths containing plugins"
 msgstr "Dubbelpunt-geskeide paaie wat inproppe bevat"
 
-#: gst/gst.c:334
+#: gst/gst.c:332
 msgid "PATHS"
 msgstr "PAAIE"
 
-#: gst/gst.c:337
+#: gst/gst.c:335
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -78,51 +78,51 @@ msgstr ""
 "Komma-geskeide lys van inproppe om vooraf te laai by die lys gestoor in die "
 "omgewingsveranderlike GST_PLUGIN_PATH"
 
-#: gst/gst.c:339
+#: gst/gst.c:337
 msgid "PLUGINS"
 msgstr "INPROPPE"
 
-#: gst/gst.c:342
+#: gst/gst.c:340
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Moenie segmenteringsfoute tydens inproplaaiing ondervang nie"
 
-#: gst/gst.c:347
+#: gst/gst.c:345
 msgid "Disable the use of fork() while scanning the registry"
 msgstr ""
 
-#: gst/gst.c:368
+#: gst/gst.c:366
 msgid "GStreamer Options"
 msgstr "GStreamer Opsies"
 
-#: gst/gst.c:369
+#: gst/gst.c:367
 msgid "Show GStreamer Options"
 msgstr "Wys GStreamer opsies"
 
-#: gst/gst.c:753
+#: gst/gst.c:736
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr ""
 
-#: gst/gst.c:795 gst/gst.c:811 gst/gst.c:856
+#: gst/gst.c:778 gst/gst.c:794 gst/gst.c:839
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr ""
 
-#: gst/gst.c:871
+#: gst/gst.c:854
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr ""
 
-#: gst/gst.c:1157
+#: gst/gst.c:1143
 msgid "Unknown option"
 msgstr "Onbekende opsie"
 
-#: gst/gstelement.c:290 gst/gstutils.c:2179
+#: gst/gstelement.c:290 gst/gstutils.c:2181
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FOUT: vanaf element %s: %s\n"
 
-#: gst/gstelement.c:292 gst/gstutils.c:2181 tools/gst-launch.c:460
+#: gst/gstelement.c:292 gst/gstutils.c:2183 tools/gst-launch.c:460
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -774,15 +774,15 @@ msgstr "leë pyplyn word nie toegelaat nie"
 msgid "Internal clock error."
 msgstr "Interne datavloeifout."
 
-#: libs/gst/base/gstbasesrc.c:2098 libs/gst/base/gstbasesrc.c:2109
+#: libs/gst/base/gstbasesrc.c:2164 libs/gst/base/gstbasesrc.c:2175
 msgid "Internal data flow error."
 msgstr "Interne datavloeifout."
 
-#: libs/gst/base/gstbasesink.c:2523
+#: libs/gst/base/gstbasesink.c:2522
 msgid "Internal data flow problem."
 msgstr "Interne datavloeiprobleem."
 
-#: libs/gst/base/gstbasesink.c:2665
+#: libs/gst/base/gstbasesink.c:2660
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "Interne datavloeifout."
@@ -807,26 +807,26 @@ msgstr "Fout tydens skryf na lêer \"%s\"."
 msgid "File descriptor \"%d\" is not valid."
 msgstr ""
 
-#: plugins/elements/gstfilesink.c:256
+#: plugins/elements/gstfilesink.c:345
 msgid "No file name specified for writing."
 msgstr "Geen lêernaam om heen te skryf nie."
 
-#: plugins/elements/gstfilesink.c:262
+#: plugins/elements/gstfilesink.c:351
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
 
-#: plugins/elements/gstfilesink.c:284
+#: plugins/elements/gstfilesink.c:376
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fout met toemaak van lêer \"%s\"."
 
-#: plugins/elements/gstfilesink.c:413
+#: plugins/elements/gstfilesink.c:512
 #, fuzzy, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Fout tydens skryf na lêer \"%s\"."
 
-#: plugins/elements/gstfilesink.c:420 plugins/elements/gstfilesink.c:480
+#: plugins/elements/gstfilesink.c:519 plugins/elements/gstfilesink.c:579
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fout tydens skryf na lêer \"%s\"."
@@ -855,7 +855,7 @@ msgstr "\"%s\" is 'n gids."
 msgid "File \"%s\" is a socket."
 msgstr "Lêer \"%s\" is 'n sok."
 
-#: plugins/elements/gstidentity.c:495
+#: plugins/elements/gstidentity.c:511
 msgid "Failed after iterations as requested."
 msgstr "Mislukking na die vasgestelde aantal probeerslae."
 
@@ -898,42 +898,42 @@ msgstr "titel"
 msgid "controllable"
 msgstr ""
 
-#: tools/gst-inspect.c:946
+#: tools/gst-inspect.c:979
 #, fuzzy
 msgid "Total count: "
 msgstr "aantal snitte"
 
-#: tools/gst-inspect.c:947
+#: tools/gst-inspect.c:980
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-inspect.c:949
+#: tools/gst-inspect.c:982
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-inspect.c:1259
+#: tools/gst-inspect.c:1292
 msgid "Print all elements"
 msgstr "Druk alle elemente"
 
-#: tools/gst-inspect.c:1261
+#: tools/gst-inspect.c:1294
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
 
-#: tools/gst-inspect.c:1341
+#: tools/gst-inspect.c:1374
 #, fuzzy, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
 
-#: tools/gst-inspect.c:1346
+#: tools/gst-inspect.c:1379
 #, fuzzy, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "geen bronelement vir URI \"%s\""
