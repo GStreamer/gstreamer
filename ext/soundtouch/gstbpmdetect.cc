@@ -189,23 +189,32 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   GstBPMDetect *bpm_detect = GST_BPM_DETECT (trans);
   GstAudioFilter *filter = GST_AUDIO_FILTER (trans);
   gint nsamples;
-  gfloat *data;
   gfloat bpm;
 
-  if (filter->format.channels == 0 || filter->format.rate == 0) {
-    GST_ERROR_OBJECT (bpm_detect, "No channels or rate set yet");
-    return GST_FLOW_ERROR;
+  if (G_UNLIKELY (!bpm_detect->priv->detect)) {
+    if (filter->format.channels == 0 || filter->format.rate == 0) {
+      GST_ERROR_OBJECT (bpm_detect, "No channels or rate set yet");
+      return GST_FLOW_ERROR;
+    }
+
+    bpm_detect->priv->detect =
+        new BPMDetect (filter->format.channels, filter->format.rate);
   }
 
   nsamples = GST_BUFFER_SIZE (in) / (4 * filter->format.channels);
 
-  if (!bpm_detect->priv->detect)
-    bpm_detect->priv->detect =
-        new BPMDetect (filter->format.channels, filter->format.rate);
-
-  data = (gfloat *) g_memdup (GST_BUFFER_DATA (in), GST_BUFFER_SIZE (in));
-  bpm_detect->priv->detect->inputSamples (data, nsamples);
-  g_free (data);
+  /* For stereo BPMDetect->inputSamples() does downmixing into the input
+   * data but our buffer data shouldn't be modified.
+   */
+  if (filter->format.channels == 1) {
+    bpm_detect->priv->detect->inputSamples ((gfloat *) GST_BUFFER_DATA (in),
+        nsamples);
+  } else {
+    gfloat *data =
+        (gfloat *) g_memdup (GST_BUFFER_DATA (in), GST_BUFFER_SIZE (in));
+    bpm_detect->priv->detect->inputSamples (data, nsamples);
+    g_free (data);
+  }
 
   bpm = bpm_detect->priv->detect->getBpm ();
   if (bpm >= 1.0 && fabs (bpm_detect->bpm - bpm) >= 1.0) {

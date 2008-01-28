@@ -1,3 +1,11 @@
+2008-01-28  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/soundtouch/gstbpmdetect.cc:
+	Clean up a bit and only allocate a temporary buffer for the data
+	if processing stereo data as BPMDetect downmixes from stereo to
+	mono and stores the result in the input data. Thanks to
+	Stefan Kost for the suggestions.
+
 2008-01-27  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/soundtouch/gstpitch.cc:
