@@ -1,3 +1,9 @@
+2008-01-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_rtpinfo):
+	  Use g_ascii_strtoll() instead of atoll, which is only
+	  available in C99.
+
 2008-01-25  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/rtp/Makefile.am:

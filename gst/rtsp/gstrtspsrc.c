@@ -4180,8 +4180,8 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
 
     GST_DEBUG_OBJECT (src, "parsing info %s", infos[i]);
 
-    /* init values, types of seqbase and timebase are bigger than needed so we can
-     * store -1 as uninitialized values */
+    /* init values, types of seqbase and timebase are bigger than needed so we
+     * can store -1 as uninitialized values */
     stream = NULL;
     seqbase = -1;
     timebase = -1;
@@ -4202,7 +4202,7 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
       } else if (g_str_has_prefix (fields[j], "seq=")) {
         seqbase = atoi (fields[j] + 4);
       } else if (g_str_has_prefix (fields[j], "rtptime=")) {
-        timebase = atoll (fields[j] + 8);
+        timebase = g_ascii_strtoll (fields[j] + 8, NULL, 10);
       }
     }
     g_strfreev (fields);
