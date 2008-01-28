@@ -1,6 +1,7 @@
 GObject
   GstObject
     GstPad
+    GstPadTemplate
     GstPluginFeature
       GstElementFactory
       GstTypeFindFactory
@@ -18,16 +19,17 @@ GObject
         GstFileSrc
       GstBaseSink
         GstFakeSink
+        GstFdSink
         GstFileSink
       GstQueue
       GstTee
       GstTypeFindElement
+      GstMultiQueue
     GstPlugin
     GstRegistry
     GstIndex
       GstMemIndex
       GstFileIndex
-    GstPadTemplate
   GstSignalObject
 GInterface
   GstChildProxy

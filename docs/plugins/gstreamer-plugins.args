@@ -20,7 +20,7 @@
 
 <ARG>
 <NAME>GstCapsFilter::caps</NAME>
-<TYPE>GstCaps</TYPE>
+<TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Filter caps</NICK>
@@ -100,7 +100,7 @@
 
 <ARG>
 <NAME>GstFakeSrc::last-message</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>last-message</NICK>
@@ -120,7 +120,7 @@
 
 <ARG>
 <NAME>GstFakeSrc::pattern</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>pattern</NICK>
@@ -220,7 +220,7 @@
 
 <ARG>
 <NAME>GstFakeSink::last-message</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Last Message</NICK>
@@ -290,7 +290,7 @@
 
 <ARG>
 <NAME>GstFileSrc::location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>File Location</NICK>
@@ -390,7 +390,7 @@
 
 <ARG>
 <NAME>GstIdentity::last-message</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>last-message</NICK>
@@ -456,6 +456,16 @@
 <NICK>Check for discontiguous timestamps</NICK>
 <BLURB>Send element messages if timestamps and durations do not match up.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::signal-handoffs</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Signal handoffs</NICK>
+<BLURB>Send a signal before pushing the buffer.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -560,12 +570,32 @@
 
 <ARG>
 <NAME>GstFileSink::location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>File Location</NICK>
 <BLURB>Location of the file to write.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFileSink::buffer-mode</NAME>
+<TYPE>GstFileSinkBufferMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffering mode</NICK>
+<BLURB>The buffering mode to use.</BLURB>
+<DEFAULT>Default buffering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFileSink::buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffering size</NICK>
+<BLURB>Size of buffer in number of bytes for line or full buffer-mode.</BLURB>
+<DEFAULT>65536</DEFAULT>
 </ARG>
 
 <ARG>
@@ -590,7 +620,7 @@
 
 <ARG>
 <NAME>GstTee::last-message</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Last Message</NICK>
@@ -630,7 +660,7 @@
 
 <ARG>
 <NAME>GstTypeFindElement::caps</NAME>
-<TYPE>GstCaps</TYPE>
+<TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>caps</NICK>

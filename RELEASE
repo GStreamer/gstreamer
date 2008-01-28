@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.15 "October"
+Release notes for GStreamer 0.10.16 "Special Dispensation"
         
 
 
@@ -14,7 +14,7 @@ It is, however, parallel installable with the 0.8.x series.
 
 
 The 0.10.x series has been reworked for threadsafety.  It also features
-various feature additions and enchancements.
+various feature additions and enhancements.
 
 
 This module, gstreamer, only contains core functionality.
@@ -37,84 +37,52 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Changes for asynchronous sink management
-      * New ts-offset property on basesink for adjusting clock synchronisation
-      * New GstController LFO feature
-      * Fixes and improvements in latency measurement for live pipelines
-      * Additional documentation and docs fixes
-      * Faster typefinding
-      * More tag types added
-      * Improvements in various core elements and parent classes
-      * New unit tests
-      * Allow dumping pipelines as dot graphs
-      * GstStructures now support nesting
-      * URIHandler interface can now be implemented in bindings
-      * Many other bug-fixes and improvements
+      * Monotonic/Posix clock support
+      * Dumping of dot-file graph descriptions for debugging
+      * Clean-up of exported symbols
+      * Many bug-fixes and enhancements
+      * 
 
 Bugs fixed in this release
      
-      * 496722 : DSP/DSW files in win32/vs6 directory are in unix format
-      * 476514 : [queue] Doesn't forward EOS event in all cases
-      * 456573 : allow dumping pipelines as dot graphs
-      * 475723 : cleanup static caps correctly
-      * 480341 : Memory leak at fakesink (regression in cvs)
-      * 349410 : Problems with type handling
-      * 414539 : [API] Support more GST_TAG*_SORTNAME and remove MusicBrai...
-      * 459717 : [Controller] Add GstLFOControlSource that provides values...
-      * 459809 : [API] add GST_TAG_COMPOSER
-      * 461598 : Commit Hungarian translations from TP
-      * 461599 : Some files missing from POTFILES.in
-      * 464366 : program including gst/gstbuffer.h does not compile with -...
-      * 466595 : gst_index_add_association generates corrupted entries
-      * 469402 : File uri handling on windows broken
-      * 473846 : Deadlock if sink is unable to send first buffer
-      * 474371 : Can't build libsgtcontroller with VS6
-      * 474823 : tee unit test failure
-      * 478347 : GST_STATIC_PAD_TEMPLATE macro causes warnings with g++-4.2
-      * 478401 : gstbasesrc.c ref count bug
-      * 479784 : GST_PLUGIN_DEFINE() doesn't accept BSD and MIT/X11 licences
-      * 485343 : Implement a wait_eos function in basesink
-      * 487969 : allow nested GstStructures
-      * 492077 : Build issues on Windows/MSVC
-      * 493134 : Wrong GstObject signals registration
-      * 493983 : Build issues on Windows
-      * 494343 : pre-release vs6 patch
-      * 480858 : gstqueue code cleaning
-      * 486758 : queue element fails to re-negotiate caps upstream when si...
-      * 488201 : gst_segment_set_newsegment does not accumulate correctly
-      * 492729 : PAUSED- > PLAYING returns ASYNC when triggered from bus han...
-      * 494245 : [basesink] doesn't sync correctly if segment is in BYTES ...
+      * 497859 : --disable-gst-debug option fails compilation
+      * 339279 : [gst.URIHandler] interfaces with class-global virtual met...
+      * 498694 : Patches to avoid g_signal_emit(SIGNAL_HANDOFF) on identit...
+      * 498746 : basesink is forwarding downstream events
+      * 498767 : Hangs after end of tracks since 0.10.15
+      * 498924 : deprecate GST_PLUGIN_DEFINE_STATIC because it's not portable
+      * 499007 : [gst-plot-timeline] more options
+      * 499140 : Add check to ensure .def files are kept up-to-date
+      * 500143 : Some small improvements (limiting realloc and CPU usage )
+      * 500150 : [filesink] add property to enable buffering via setvbuf()
+      * 501560 : gst_(caps|structure)_from_string() crash if structure nam...
+      * 503131 : g_intern_string SUSE 10.2
+      * 503231 : Change to GST_BUFFER_FLAG_GAP meaning can break with base...
+      * 503417 : Build failure due uninitialized variable in function 'gst...
+      * 503590 : gstreamer-0.10.15 fails tests on ppc64
+      * 503675 : broken registry files written to disk
+      * 504499 : Messages from check no longer contain the test case name
+      * 505799 : iSight camera does not work in gstreamer
+      * 506643 : crash in fixate_value/gst_value_init_and_copy on empty li...
+      * 507957 : clean-up incomplete function declarations
+      * 508175 : GST_TIMEVAL_TO_TIME() and GST_TIMESPEC_TO_TIME() need to ...
+      * 510187 : gst_plugin_register_static() API review and GST_PLUGIN_DE...
+      * 510747 : Use $(MAKE) instead of make to fix the build if GNU make ...
+      * 511750 : Configure of prereleases 15.2-15.4 fail in OpenEmbedded M...
 
 API changed in this release
      
 - API additions:
     
-* gst_base_sink_get_last_buffer()
-* GstBaseSink::last-buffer
-* GstURIHandlerInterface::get_type_full
-* GstURIHandlerInterface::get_protocols_full
-* New tag: GST_TAG_ARTIST_SORTNAME
-* New tag: GST_TAG_ALBUM_SORTNAME
-* New tag: GST_TAG_TITLE_SORTNAME
-* New tag: GST_TAG_COMPOSER
-* gst_value_set_structure()
-* gst_value_get_structure()
-* GST_VALUE_HOLDS_STRUCTURE macro
-* gst_bus_pop_filtered()
-* gst_bus_timed_pop_filtered()
-* gst_base_sink_wait_eos()
-* gst_pad_peer_query()
-* GstBaseSrc::do-timestamp
-* gst_base_src_set_do_timestamp()
-* gst_base_src_get_do_timestamp()
-* GstBaseSink::ts-offset property
-* gst_base_sink_set_ts_offset()
-* gst_base_sink_get_ts_offset()
-* GstBaseSink::async property
-* gst_base_sink_set_async_enabled()
-* gst_base_sink_is_async_enabled()
-* gst_structure_get_uint()
-* GstLFOControlSource and functions
+* GstIdentity::signal-handoffs
+* gst_util_get_timestamp()
+* gst_base_transform_set_gap_aware()
+* GstFileSink::buffer-mode
+* GstFileSink::buffer-size
+* gst_plugin_register_static()
+- API deprecations:
+    
+* GST_PLUGIN_DEFINE_STATIC()
 
 Download
 
@@ -149,25 +117,19 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
-      * 
-      * Benoit Fouet
-      * David Nečas
-      * Edgard Lima
+      * Alexis Ballier
+      * Damien Lespiau
+      * David Schleef
       * Edward Hervey
-      * Felipe Contreras
-      * Gabor Kelemen
       * Jan Schmidt
-      * Jan Schmidt - Sun Microsystems
-      * Jorge González González
       * Julien MOUTTE
-      * Michael Smith
-      * Murray Cumming
-      * Ole André Vadla Ravnås
-      * Philippe Kalaf
+      * Julien Moutte
+      * Laurent Glayal
+      * Matthias Bolte
+      * Peter Kjellerstedt
       * Sebastian Dröge
-      * Sebastien Moutte
       * Stefan Kost
-      * Steve Fink
+      * Thijs Vermeir
       * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans

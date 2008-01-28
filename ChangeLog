@@ -1,3 +1,10 @@
+=== release 0.10.16 ===
+
+2008-01-28  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  releasing 0.10.16, "Special Dispensation"
+
 2008-01-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
