@@ -427,8 +427,10 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
     }
     /* Figure out if this is a delta unit */
     {
-      gint nal_type = (data[4] & 0x1f);
-      gint nal_ref_idc = (data[4] & 0x60) >> 5;
+      gint nal_type, nal_ref_idc;
+
+      nal_type = (data[4] & 0x1f);
+      nal_ref_idc = (data[4] & 0x60) >> 5;
 
       GST_DEBUG_OBJECT (h264parse, "NAL type: %d, ref_idc: %d", nal_type,
           nal_ref_idc);

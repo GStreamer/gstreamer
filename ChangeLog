@@ -1,3 +1,9 @@
+2008-01-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/h264parse/gsth264parse.c: (gst_h264_parse_chain_forward):
+	  Try to avoid 'unused variable' compiler warning if debugging is
+	  disabled (not bullet proof, but seems to do for now). (#512654)
+
 2008-01-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/soundtouch/gstbpmdetect.cc:
