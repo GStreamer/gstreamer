@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Python bindings 0.10.9 "I've heard a lot of stories in my time"
+Release notes for GStreamer Python bindings 0.10.10 "Destination Overtime"
         
 
 
@@ -17,14 +17,18 @@ It is, however, parallel installable with the 0.8.x series.
 
 Features of this release
     
-      * Major crasher fixed when using latest pygobject
-      * Build system for Visual Studio 6
-      * Added wrapping for 0.10.15 gstreamer core/base
+      * Wrap new API for 0.10.16 GStreamer and Base releases.
+      * New gst.pbutils module wraps the gst-plugins-base pbutils library.
+      * Rework gst_pad_add_*probe function wrapping to avoid leaks.
+      * Various build fixes.
 
 Bugs fixed in this release
      
-      * 490195 : [gst.URIHandler] interfaces with class-global virtual met...
-      * 425847 : Silently overrides some functions of default module optparse
+      * 509522 : New gst-python bindings don't compile with python2.4
+      * 472822 : Wrap -base utils helper library
+      * 504786 : pad probes leak  refs to their data
+      * 509766 : generated win32/common/config.h miss some defines
+      * 510437 : Build failure due to missing Python.h
 
 Download
 
@@ -57,7 +61,8 @@ Contributors to this release
       * Andy Wingo
       * Edward Hervey
       * Jan Schmidt
-      * Johan Dahlin
+      * Olivier Crete
+      * Sebastian Dröge
       * Sebastien Moutte
-      * Stefan Kost
+      * Tim-Philipp Müller
  

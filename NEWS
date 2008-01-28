@@ -1,4 +1,19 @@
-This is GStreamer Python Bindings 0.10.9, "I've heard a lot of stories in my time"
+This is GStreamer Python Bindings 0.10.10, "Destination Overtime"
+
+Changes since 0.10.9:
+
+      * Wrap new API for 0.10.16 GStreamer and Base releases.
+      * New gst.pbutils module wraps the gst-plugins-base pbutils library.
+      * Rework gst_pad_add_*probe function wrapping to avoid leaks.
+      * Various build fixes.
+
+Bugs fixed since 0.10.9:
+
+      * 509522 : New gst-python bindings don't compile with python2.4
+      * 472822 : Wrap -base utils helper library
+      * 504786 : pad probes leak  refs to their data
+      * 509766 : generated win32/common/config.h miss some defines
+      * 510437 : Build failure due to missing Python.h
 
 Changes since 0.10.8
       * Major crasher fixed when using latest pygobject
