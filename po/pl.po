@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-base.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2008.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.14\n"
+"Project-Id-Version: gst-plugins-base 0.10.15.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-11-10 20:49+0000\n"
-"PO-Revision-Date: 2007-08-11 17:06+0200\n"
+"POT-Creation-Date: 2008-01-14 21:53+0000\n"
+"PO-Revision-Date: 2008-01-15 23:00+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -77,18 +77,16 @@ msgstr ""
 "kanałowym."
 
 #: ext/alsa/gstalsasink.c:649
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Nie udało się otworzyć urządzenia dźwiękowego do odtwarzania w trybie stereo."
+"Nie udało się otworzyć urządzenia dźwiękowego do odtwarzania. Urządzenie "
+"jest używane przez inną aplikację."
 
 #: ext/alsa/gstalsasink.c:654
-#, fuzzy
 msgid "Could not open audio device for playback."
-msgstr ""
-"Nie udało się otworzyć urządzenia dźwiękowego do odtwarzania w trybie mono."
+msgstr "Nie udało się otworzyć urządzenia dźwiękowego do odtwarzania."
 
 #: ext/alsa/gstalsasrc.c:422
 msgid "Could not open device for recording in mono mode."
@@ -108,17 +106,16 @@ msgstr ""
 "kanałowym."
 
 #: ext/alsa/gstalsasrc.c:626
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
 msgstr ""
-"Nie udało się otworzyć urządzenia dźwiękowego do nagrywania w trybie stereo."
+"Nie udało się otworzyć urządzenia dźwiękowego do nagrywania. Urządzenie jest "
+"używane przez inną aplikację."
 
 #: ext/alsa/gstalsasrc.c:631
-#, fuzzy
 msgid "Could not open audio device for recording."
-msgstr "Nie udało się otworzyć urządzenia CD do odczytu."
+msgstr "Nie udało się otworzyć urządzenia dźwiękowego do nagrywania."
 
 #: ext/cdparanoia/gstcdparanoiasrc.c:240 ext/cdparanoia/gstcdparanoiasrc.c:246
 msgid "Could not open CD device for reading."
@@ -151,11 +148,11 @@ msgstr "Nie udało się zamknąć pliku vfs \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Błąd podczas zapisu do pliku \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:3099
+#: ext/ogg/gstoggdemux.c:3103
 msgid "Internal data stream error."
 msgstr "Błąd wewnętrzny strumienia danych."
 
-#: gst/playback/gstdecodebin.c:789 gst/playback/gstdecodebin2.c:923
+#: gst/playback/gstdecodebin.c:789 gst/playback/gstdecodebin2.c:965
 #: gst/playback/gstplaybasebin.c:1526 gst/playback/gstplaybasebin.c:1662
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
@@ -163,7 +160,7 @@ msgstr ""
 "Wtyczka %s jest wymagana do otworzenia tego strumienia, ale nie jest "
 "zainstalowana."
 
-#: gst/playback/gstdecodebin.c:1581
+#: gst/playback/gstdecodebin.c:1601
 msgid "This appears to be a text file"
 msgstr "To wygląda na plik tekstowy"
 
@@ -172,11 +169,11 @@ msgstr "To wygląda na plik tekstowy"
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Niepoprawne URI podpisów \"%s\", podpisy wyłączone."
 
-#: gst/playback/gstplaybasebin.c:1632 gst/playback/gsturidecodebin.c:582
+#: gst/playback/gstplaybasebin.c:1632 gst/playback/gsturidecodebin.c:660
 msgid "No URI specified to play from."
 msgstr "Nie podano URI do odtwarzania."
 
-#: gst/playback/gstplaybasebin.c:1638 gst/playback/gsturidecodebin.c:588
+#: gst/playback/gstplaybasebin.c:1638 gst/playback/gsturidecodebin.c:666
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Niepoprawne URI \"%s\"."
@@ -189,7 +186,7 @@ msgstr "Strumieni RTSP jeszcze nie można odtwarzać."
 msgid "Could not create \"decodebin\" element."
 msgstr "Nie udało się utworzyć elementu \"decodebin\"."
 
-#: gst/playback/gstplaybasebin.c:2197 gst/playback/gsturidecodebin.c:1056
+#: gst/playback/gstplaybasebin.c:2197 gst/playback/gsturidecodebin.c:1158
 msgid "Source element is invalid."
 msgstr "Element źródłowy jest niepoprawny."
 
@@ -217,50 +214,50 @@ msgstr "To nie jest plik multimedialny"
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Wykryto strumień podpisów, ale brak strumienia obrazu."
 
-#: gst/playback/gstplaybin.c:884
+#: gst/playback/gstplaybin.c:887
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Nie ma żadnego z elementów autovideosink i xvimagesink."
 
-#: gst/playback/gstplaybin.c:892 gst/playback/gstplaybin.c:902
-#: gst/playback/gstplaybin.c:1087 gst/playback/gstplaybin.c:1097
-#: gst/playback/gstplaybin.c:1228 gst/playback/gstplaybin.c:1237
-#: gst/playback/gstplaybin.c:1246
+#: gst/playback/gstplaybin.c:895 gst/playback/gstplaybin.c:905
+#: gst/playback/gstplaybin.c:1090 gst/playback/gstplaybin.c:1100
+#: gst/playback/gstplaybin.c:1231 gst/playback/gstplaybin.c:1240
+#: gst/playback/gstplaybin.c:1249
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Brak elementu '%s' - proszę sprawdzić instalację GStreamera."
 
-#: gst/playback/gstplaybin.c:1080
+#: gst/playback/gstplaybin.c:1083
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Nie ma żadnego z elementów autoaudiosink i alsasink."
 
-#: gst/playback/gstqueue2.c:936
+#: gst/playback/gstqueue2.c:970
 msgid "No file name specified."
 msgstr "Nie podano nazwy pliku."
 
-#: gst/playback/gstqueue2.c:942
+#: gst/playback/gstqueue2.c:976
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
 
-#: gst/playback/gsturidecodebin.c:400
+#: gst/playback/gsturidecodebin.c:447
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "Brak dostępnego dekodera dla typu '%s'."
 
-#: gst/playback/gsturidecodebin.c:594
+#: gst/playback/gsturidecodebin.c:672
 msgid "This stream type cannot be played yet."
 msgstr "Tego strumienia jeszcze nie można odtworzyć."
 
-#: gst/playback/gsturidecodebin.c:605
+#: gst/playback/gsturidecodebin.c:683
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nie ma zaimplementowanej obsługi URI dla \"%s\"."
 
-#: gst/playback/gsturidecodebin.c:897
+#: gst/playback/gsturidecodebin.c:999
 msgid "Could not create \"decodebin2\" element."
 msgstr "Nie udało się utworzyć elementu \"decodebin2\"."
 
-#: gst/playback/gsturidecodebin.c:903
+#: gst/playback/gsturidecodebin.c:1005
 msgid "Could not create \"queue2\" element."
 msgstr "Nie udało się utworzyć elementu \"queue2\"."
 
@@ -284,7 +281,7 @@ msgstr "Błąd podczas wysyłania danych gdp do \"%s:%d\"."
 msgid "Connection to %s:%d refused."
 msgstr "Połączenie z %s:%d odrzucone."
 
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:618
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:667
 msgid "Can't record audio fast enough"
 msgstr "Nie można zapisywać danych dźwiękowych wystarczająco szybko"
 
@@ -333,221 +330,233 @@ msgstr "TRM ID wg MusicBrainz"
 msgid "This CD has no audio tracks"
 msgstr "Ta płyta CD nie ma ścieżek dźwiękowych"
 
-#: gst-libs/gst/pbutils/descriptions.c:90
+#: gst-libs/gst/pbutils/descriptions.c:66
+msgid "ID3 tag"
+msgstr "Znacznik ID3"
+
+#: gst-libs/gst/pbutils/descriptions.c:67
+msgid "APE tag"
+msgstr "Znacznik APE"
+
+#: gst-libs/gst/pbutils/descriptions.c:68
+msgid "ICY internet radio"
+msgstr "Radio internetowe ICY"
+
+#: gst-libs/gst/pbutils/descriptions.c:91
 msgid "Apple Lossless Audio (ALAC)"
 msgstr "Apple Lossless Audio (ALAC)"
 
-#: gst-libs/gst/pbutils/descriptions.c:98
+#: gst-libs/gst/pbutils/descriptions.c:100
 msgid "Free Lossless Audio Codec (FLAC)"
 msgstr "Free Lossless Audio Codec (FLAC)"
 
-#: gst-libs/gst/pbutils/descriptions.c:121
-#: gst-libs/gst/pbutils/descriptions.c:122
+#: gst-libs/gst/pbutils/descriptions.c:124
+#: gst-libs/gst/pbutils/descriptions.c:125
 msgid "Lossless True Audio (TTA)"
 msgstr "Lossless True Audio (TTA)"
 
-#: gst-libs/gst/pbutils/descriptions.c:130
+#: gst-libs/gst/pbutils/descriptions.c:133
 msgid "Windows Media Speech"
 msgstr "Windows Media Speech"
 
-#: gst-libs/gst/pbutils/descriptions.c:144
+#: gst-libs/gst/pbutils/descriptions.c:147
 msgid "CYUV Lossless"
 msgstr "CYUV Lossless (bezstratne CYUV)"
 
-#: gst-libs/gst/pbutils/descriptions.c:147
+#: gst-libs/gst/pbutils/descriptions.c:150
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
-#: gst-libs/gst/pbutils/descriptions.c:159
+#: gst-libs/gst/pbutils/descriptions.c:162
 msgid "Lossless MSZH"
 msgstr "Lossless MSZH"
 
-#: gst-libs/gst/pbutils/descriptions.c:165
+#: gst-libs/gst/pbutils/descriptions.c:168
 msgid "Uncompressed Gray Image"
 msgstr "Nieskompresowany obraz w szarości"
 
-#: gst-libs/gst/pbutils/descriptions.c:170
+#: gst-libs/gst/pbutils/descriptions.c:173
 msgid "Run-length encoding"
 msgstr "Kodowanie RLE"
 
-#: gst-libs/gst/pbutils/descriptions.c:204
+#: gst-libs/gst/pbutils/descriptions.c:207
 msgid "Sami subtitle format"
 msgstr "Format podpisów Sami"
 
-#: gst-libs/gst/pbutils/descriptions.c:205
+#: gst-libs/gst/pbutils/descriptions.c:208
 msgid "TMPlayer subtitle format"
 msgstr "Format podpisów TMPlayer"
 
-#: gst-libs/gst/pbutils/descriptions.c:263
+#: gst-libs/gst/pbutils/descriptions.c:267
 msgid "Uncompressed planar YUV 4:2:0"
 msgstr "Nieskompresowany planarny YUV 4:2:0"
 
-#: gst-libs/gst/pbutils/descriptions.c:266
+#: gst-libs/gst/pbutils/descriptions.c:270
 msgid "Uncompressed planar YVU 4:2:0"
 msgstr "Nieskompresowany planarny YUV 4:2:0"
 
-#: gst-libs/gst/pbutils/descriptions.c:269
-#: gst-libs/gst/pbutils/descriptions.c:279
+#: gst-libs/gst/pbutils/descriptions.c:273
+#: gst-libs/gst/pbutils/descriptions.c:283
 msgid "Uncompressed packed YUV 4:2:2"
 msgstr "Nieskompresowany spakowany YUV 4:2:2"
 
-#: gst-libs/gst/pbutils/descriptions.c:272
+#: gst-libs/gst/pbutils/descriptions.c:276
 msgid "Uncompressed packed YUV 4:1:0"
 msgstr "Nieskompresowany spakowany YUV 4:1:0"
 
-#: gst-libs/gst/pbutils/descriptions.c:275
+#: gst-libs/gst/pbutils/descriptions.c:279
 msgid "Uncompressed packed YVU 4:1:0"
 msgstr "Nieskompresowany spakowany YUV 4:1:0"
 
-#: gst-libs/gst/pbutils/descriptions.c:282
+#: gst-libs/gst/pbutils/descriptions.c:286
 msgid "Uncompressed packed YUV 4:1:1"
 msgstr "Nieskompresowany spakowany YUV 4:1:1"
 
-#: gst-libs/gst/pbutils/descriptions.c:285
+#: gst-libs/gst/pbutils/descriptions.c:289
 msgid "Uncompressed packed YUV 4:4:4"
 msgstr "Nieskompresowany spakowany YUV 4:4:4"
 
-#: gst-libs/gst/pbutils/descriptions.c:288
+#: gst-libs/gst/pbutils/descriptions.c:292
 msgid "Uncompressed planar YUV 4:2:2"
 msgstr "Nieskompresowany planarny YUV 4:2:2"
 
-#: gst-libs/gst/pbutils/descriptions.c:291
+#: gst-libs/gst/pbutils/descriptions.c:295
 msgid "Uncompressed planar YUV 4:1:1"
 msgstr "Nieskompresowany planarny YUV 4:1:1"
 
-#: gst-libs/gst/pbutils/descriptions.c:294
+#: gst-libs/gst/pbutils/descriptions.c:298
 msgid "Uncompressed black and white Y-plane"
 msgstr "Nieskompresowany czarno-biały plan Y"
 
-#: gst-libs/gst/pbutils/descriptions.c:297
+#: gst-libs/gst/pbutils/descriptions.c:301
 msgid "Uncompressed YUV"
 msgstr "Nieskompresowany YUV"
 
-#: gst-libs/gst/pbutils/descriptions.c:308
+#: gst-libs/gst/pbutils/descriptions.c:312
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Nieskompresowany %d-bitowy %s z paletą"
 
-#: gst-libs/gst/pbutils/descriptions.c:358
+#: gst-libs/gst/pbutils/descriptions.c:362
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 w wersji %d"
 
-#: gst-libs/gst/pbutils/descriptions.c:547
+#: gst-libs/gst/pbutils/descriptions.c:580
 #, c-format
 msgid "Raw %d-bit PCM audio"
 msgstr "Surowe %d-bitowy dźwięk PCM"
 
-#: gst-libs/gst/pbutils/descriptions.c:549
+#: gst-libs/gst/pbutils/descriptions.c:582
 msgid "Raw PCM audio"
 msgstr "Surowy dźwięk PCM"
 
-#: gst-libs/gst/pbutils/descriptions.c:555
+#: gst-libs/gst/pbutils/descriptions.c:588
 #, c-format
 msgid "Raw %d-bit floating-point audio"
 msgstr "Surowy %d-bitowy dźwięk zmiennoprzecinkowy"
 
-#: gst-libs/gst/pbutils/descriptions.c:557
+#: gst-libs/gst/pbutils/descriptions.c:590
 msgid "Raw floating-point audio"
 msgstr "Surowy dźwięk zmiennoprzecinkowy"
 
-#: gst-libs/gst/pbutils/descriptions.c:644
+#: gst-libs/gst/pbutils/descriptions.c:677
 msgid "Audio CD source"
 msgstr "Źródło Audio CD"
 
-#: gst-libs/gst/pbutils/descriptions.c:647
+#: gst-libs/gst/pbutils/descriptions.c:680
 msgid "DVD source"
 msgstr "Źródło DVD"
 
-#: gst-libs/gst/pbutils/descriptions.c:650
+#: gst-libs/gst/pbutils/descriptions.c:683
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Źródło RTSP (Real Time Streaming Protocol)"
 
-#: gst-libs/gst/pbutils/descriptions.c:654
+#: gst-libs/gst/pbutils/descriptions.c:687
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Źródło protokołu MMS (Microsoft Media Server)"
 
-#: gst-libs/gst/pbutils/descriptions.c:662
+#: gst-libs/gst/pbutils/descriptions.c:695
 #, c-format
 msgid "%s protocol source"
 msgstr "Źródło protokołu %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:730
+#: gst-libs/gst/pbutils/descriptions.c:763
 #, c-format
 msgid "%s video RTP depayloader"
 msgstr "Depayloader obrazu RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:732
+#: gst-libs/gst/pbutils/descriptions.c:765
 #, c-format
 msgid "%s audio RTP depayloader"
 msgstr "Depayloader dźwięku RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:734
+#: gst-libs/gst/pbutils/descriptions.c:767
 #, c-format
 msgid "%s RTP depayloader"
 msgstr "Depayloader RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:741
+#: gst-libs/gst/pbutils/descriptions.c:774
 #, c-format
 msgid "%s demuxer"
 msgstr "Demuxer %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:743
+#: gst-libs/gst/pbutils/descriptions.c:776
 #, c-format
 msgid "%s decoder"
 msgstr "Dekoder %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:778
+#: gst-libs/gst/pbutils/descriptions.c:811
 #, c-format
 msgid "%s video RTP payloader"
 msgstr "Payloader obrazu RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:780
+#: gst-libs/gst/pbutils/descriptions.c:813
 #, c-format
 msgid "%s audio RTP payloader"
 msgstr "Payloader dźwięku RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:782
+#: gst-libs/gst/pbutils/descriptions.c:815
 #, c-format
 msgid "%s RTP payloader"
 msgstr "Payloader RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:789
+#: gst-libs/gst/pbutils/descriptions.c:822
 #, c-format
 msgid "%s muxer"
 msgstr "Muxer %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:791
+#: gst-libs/gst/pbutils/descriptions.c:824
 #, c-format
 msgid "%s encoder"
 msgstr "Koder %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:822
+#: gst-libs/gst/pbutils/descriptions.c:855
 #, c-format
 msgid "GStreamer element %s"
 msgstr "Element GStreamera %s"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:551
+#: gst-libs/gst/pbutils/missing-plugins.c:550
 msgid "Unknown source element"
 msgstr "Nieznany element źródłowy"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:554
+#: gst-libs/gst/pbutils/missing-plugins.c:553
 msgid "Unknown sink element"
 msgstr "Nieznany element pochłaniający"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:557
+#: gst-libs/gst/pbutils/missing-plugins.c:556
 msgid "Unknown element"
 msgstr "Nieznany element"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:560
+#: gst-libs/gst/pbutils/missing-plugins.c:559
 msgid "Unknown decoder element"
 msgstr "Nieznany element dekodujący"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:563
+#: gst-libs/gst/pbutils/missing-plugins.c:562
 msgid "Unknown encoder element"
 msgstr "Nieznany element kodujący"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:568
+#: gst-libs/gst/pbutils/missing-plugins.c:567
 msgid "Plugin or element of unknown type"
 msgstr "Wtyczka lub element nieznanego typu"
 
@@ -569,9 +578,3 @@ msgstr "Urządzenie \"%s\" jest już używane."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nie udało się otworzyć urządzenia \"%s\" do odczytu i zapisu."
-
-#~ msgid "artist sortname"
-#~ msgstr "gatunek artysty"
-
-#~ msgid "MusicBrainz artist sortname"
-#~ msgstr "gatunek artysty wg MusicBrainz"

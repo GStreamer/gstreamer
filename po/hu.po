@@ -1,13 +1,13 @@
 # Hungarian translation of gst-plugins.
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
-# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007.
-# Copyright (C) 2004, 2006, 2007 Free Software Foundation, Inc.
+# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008.
+# Copyright (C) 2004, 2006, 2007, 2008 Free Software Foundation, Inc.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.14\n"
+"Project-Id-Version: gst-plugins-base 0.10.14.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-11-10 20:49+0000\n"
-"PO-Revision-Date: 2007-09-20 11:13+0200\n"
+"POT-Creation-Date: 2008-01-14 21:53+0000\n"
+"PO-Revision-Date: 2008-01-14 13:14+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -76,16 +76,16 @@ msgid "Could not open device for playback in %d-channel mode."
 msgstr "Nem lehet lejátszásra megnyitni az eszközt %d csatornás módban."
 
 #: ext/alsa/gstalsasink.c:649
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
-msgstr "Nem lehet lejátszásra megnyitni az eszközt sztereó módban."
+msgstr ""
+"Nem lehet lejátszásra megnyitni a hangeszközt. Az eszközt másik alkalmazás "
+"használja."
 
 #: ext/alsa/gstalsasink.c:654
-#, fuzzy
 msgid "Could not open audio device for playback."
-msgstr "Nem lehet lejátszásra megnyitni az eszközt mono módban."
+msgstr "Nem lehet lejátszásra megnyitni a hangeszközt."
 
 #: ext/alsa/gstalsasrc.c:422
 msgid "Could not open device for recording in mono mode."
@@ -101,16 +101,16 @@ msgid "Could not open device for recording in %d-channel mode"
 msgstr "Az eszköz nem nyitható meg felvételre %d csatornás módban."
 
 #: ext/alsa/gstalsasrc.c:626
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
-msgstr "Nem lehet felvételre megnyitni az eszközt sztereó módban."
+msgstr ""
+"Nem lehet felvételre megnyitni a hangeszközt. Az eszközt másik alkalmazás "
+"használja."
 
 #: ext/alsa/gstalsasrc.c:631
-#, fuzzy
 msgid "Could not open audio device for recording."
-msgstr "Nem lehet olvasásra megnyitni a CD-eszközt."
+msgstr "Nem lehet felvételre megnyitni a hangeszközt."
 
 #: ext/cdparanoia/gstcdparanoiasrc.c:240 ext/cdparanoia/gstcdparanoiasrc.c:246
 msgid "Could not open CD device for reading."
@@ -143,11 +143,11 @@ msgstr "Nem lehet bezárni a(z) \"%s\" vfs-fájlt."
 msgid "Error while writing to file \"%s\"."
 msgstr "Hiba a(z) \"%s\" fájl írása közben."
 
-#: ext/ogg/gstoggdemux.c:3099
+#: ext/ogg/gstoggdemux.c:3103
 msgid "Internal data stream error."
 msgstr "Belső adatfolyam-hiba."
 
-#: gst/playback/gstdecodebin.c:789 gst/playback/gstdecodebin2.c:923
+#: gst/playback/gstdecodebin.c:789 gst/playback/gstdecodebin2.c:965
 #: gst/playback/gstplaybasebin.c:1526 gst/playback/gstplaybasebin.c:1662
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
@@ -155,7 +155,7 @@ msgstr ""
 "Az adatfolyam lejátszásához egy %s bővítmény szükséges, de az nincs "
 "telepítve."
 
-#: gst/playback/gstdecodebin.c:1581
+#: gst/playback/gstdecodebin.c:1601
 msgid "This appears to be a text file"
 msgstr "Ez egy szövegfájlnak tűnik"
 
@@ -164,11 +164,11 @@ msgstr "Ez egy szövegfájlnak tűnik"
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Érvénytelen felirat URI: \"%s\", a feliratok letiltva."
 
-#: gst/playback/gstplaybasebin.c:1632 gst/playback/gsturidecodebin.c:582
+#: gst/playback/gstplaybasebin.c:1632 gst/playback/gsturidecodebin.c:660
 msgid "No URI specified to play from."
 msgstr "Nincs megadva URI a lejátszáshoz."
 
-#: gst/playback/gstplaybasebin.c:1638 gst/playback/gsturidecodebin.c:588
+#: gst/playback/gstplaybasebin.c:1638 gst/playback/gsturidecodebin.c:666
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Érvénytelen URI: \"%s\"."
@@ -181,7 +181,7 @@ msgstr "Az RTSP adatfolyamok még nem játszhatók le."
 msgid "Could not create \"decodebin\" element."
 msgstr "Nem hozható létre \"decodebin\" elem"
 
-#: gst/playback/gstplaybasebin.c:2197 gst/playback/gsturidecodebin.c:1056
+#: gst/playback/gstplaybasebin.c:2197 gst/playback/gsturidecodebin.c:1158
 msgid "Source element is invalid."
 msgstr "A forráselem érvénytelen."
 
@@ -209,50 +209,50 @@ msgstr "Ez nem egy médiafájl"
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Egy feliratfolyam felismerve, de nincs videofolyam."
 
-#: gst/playback/gstplaybin.c:884
+#: gst/playback/gstplaybin.c:887
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Mind az autovideosink, mind az xvimagesink elemek hiányoznak."
 
-#: gst/playback/gstplaybin.c:892 gst/playback/gstplaybin.c:902
-#: gst/playback/gstplaybin.c:1087 gst/playback/gstplaybin.c:1097
-#: gst/playback/gstplaybin.c:1228 gst/playback/gstplaybin.c:1237
-#: gst/playback/gstplaybin.c:1246
+#: gst/playback/gstplaybin.c:895 gst/playback/gstplaybin.c:905
+#: gst/playback/gstplaybin.c:1090 gst/playback/gstplaybin.c:1100
+#: gst/playback/gstplaybin.c:1231 gst/playback/gstplaybin.c:1240
+#: gst/playback/gstplaybin.c:1249
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "A(z) \"%s\" elem hiányzik - ellenőrizze a Gstreamer telepítését."
 
-#: gst/playback/gstplaybin.c:1080
+#: gst/playback/gstplaybin.c:1083
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Mind az autoaudiosink, mind az  alsasink elemek hiányoznak."
 
-#: gst/playback/gstqueue2.c:936
+#: gst/playback/gstqueue2.c:970
 msgid "No file name specified."
 msgstr "Nincs megadva fájlnév."
 
-#: gst/playback/gstqueue2.c:942
+#: gst/playback/gstqueue2.c:976
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "A(z) \"%s\" fájl nem nyitható meg olvasásra."
 
-#: gst/playback/gsturidecodebin.c:400
+#: gst/playback/gsturidecodebin.c:447
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "Nem érhető el dekódoló a(z) \"%s\" típushoz."
 
-#: gst/playback/gsturidecodebin.c:594
+#: gst/playback/gsturidecodebin.c:672
 msgid "This stream type cannot be played yet."
 msgstr "Ez az adatfolyamtípus még nem játszható le."
 
-#: gst/playback/gsturidecodebin.c:605
+#: gst/playback/gsturidecodebin.c:683
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nincs URI kezelő megvalósítva a következőhöz: \"%s\"."
 
-#: gst/playback/gsturidecodebin.c:897
+#: gst/playback/gsturidecodebin.c:999
 msgid "Could not create \"decodebin2\" element."
 msgstr "Nem hozható létre \"decodebin2\" elem."
 
-#: gst/playback/gsturidecodebin.c:903
+#: gst/playback/gsturidecodebin.c:1005
 msgid "Could not create \"queue2\" element."
 msgstr "Nem hozható létre \"queue2\" elem."
 
@@ -276,7 +276,7 @@ msgstr "Hiba a gdp küldeményadatok elküldésekor a következőnek: \"%s:%d\".
 msgid "Connection to %s:%d refused."
 msgstr "A kapcsolat visszautasítva a következőhöz: %s:%d."
 
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:618
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:667
 msgid "Can't record audio fast enough"
 msgstr "Nem lehet leég gyorsan rögzíteni a hangot"
 
@@ -325,221 +325,233 @@ msgstr "MusicBrainz szám TRM azonosítója"
 msgid "This CD has no audio tracks"
 msgstr "Ez a CD nem rendelkezik hangsávokkal"
 
-#: gst-libs/gst/pbutils/descriptions.c:90
+#: gst-libs/gst/pbutils/descriptions.c:66
+msgid "ID3 tag"
+msgstr ""
+
+#: gst-libs/gst/pbutils/descriptions.c:67
+msgid "APE tag"
+msgstr ""
+
+#: gst-libs/gst/pbutils/descriptions.c:68
+msgid "ICY internet radio"
+msgstr ""
+
+#: gst-libs/gst/pbutils/descriptions.c:91
 msgid "Apple Lossless Audio (ALAC)"
 msgstr "Apple veszteségmentes hang (ALAC)"
 
-#: gst-libs/gst/pbutils/descriptions.c:98
+#: gst-libs/gst/pbutils/descriptions.c:100
 msgid "Free Lossless Audio Codec (FLAC)"
 msgstr "Szabad veszteségmentes hangkodek (FLAC)"
 
-#: gst-libs/gst/pbutils/descriptions.c:121
-#: gst-libs/gst/pbutils/descriptions.c:122
+#: gst-libs/gst/pbutils/descriptions.c:124
+#: gst-libs/gst/pbutils/descriptions.c:125
 msgid "Lossless True Audio (TTA)"
 msgstr "Veszteségmentes valódi hang (TTA)"
 
-#: gst-libs/gst/pbutils/descriptions.c:130
+#: gst-libs/gst/pbutils/descriptions.c:133
 msgid "Windows Media Speech"
 msgstr "Windows Media beszéd"
 
-#: gst-libs/gst/pbutils/descriptions.c:144
+#: gst-libs/gst/pbutils/descriptions.c:147
 msgid "CYUV Lossless"
 msgstr "CYUV veszteségmentes"
 
-#: gst-libs/gst/pbutils/descriptions.c:147
+#: gst-libs/gst/pbutils/descriptions.c:150
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
-#: gst-libs/gst/pbutils/descriptions.c:159
+#: gst-libs/gst/pbutils/descriptions.c:162
 msgid "Lossless MSZH"
 msgstr "Veszteségmentes MSZH"
 
-#: gst-libs/gst/pbutils/descriptions.c:165
+#: gst-libs/gst/pbutils/descriptions.c:168
 msgid "Uncompressed Gray Image"
 msgstr "Tömörítetlen szürke kép"
 
-#: gst-libs/gst/pbutils/descriptions.c:170
+#: gst-libs/gst/pbutils/descriptions.c:173
 msgid "Run-length encoding"
 msgstr "Műsorhossz-kódolás"
 
-#: gst-libs/gst/pbutils/descriptions.c:204
+#: gst-libs/gst/pbutils/descriptions.c:207
 msgid "Sami subtitle format"
 msgstr "Sami feliratformátum"
 
-#: gst-libs/gst/pbutils/descriptions.c:205
+#: gst-libs/gst/pbutils/descriptions.c:208
 msgid "TMPlayer subtitle format"
 msgstr "TMPlayer feliratformátum"
 
-#: gst-libs/gst/pbutils/descriptions.c:263
+#: gst-libs/gst/pbutils/descriptions.c:267
 msgid "Uncompressed planar YUV 4:2:0"
 msgstr "Tömörítetlen síkbeli YUV 4:2:0"
 
-#: gst-libs/gst/pbutils/descriptions.c:266
+#: gst-libs/gst/pbutils/descriptions.c:270
 msgid "Uncompressed planar YVU 4:2:0"
 msgstr "Tömörítetlen síkbeli YVU 4:2:0"
 
-#: gst-libs/gst/pbutils/descriptions.c:269
-#: gst-libs/gst/pbutils/descriptions.c:279
+#: gst-libs/gst/pbutils/descriptions.c:273
+#: gst-libs/gst/pbutils/descriptions.c:283
 msgid "Uncompressed packed YUV 4:2:2"
 msgstr "Tömörítetlen pakolt YUV 4:2:2"
 
-#: gst-libs/gst/pbutils/descriptions.c:272
+#: gst-libs/gst/pbutils/descriptions.c:276
 msgid "Uncompressed packed YUV 4:1:0"
 msgstr "Tömörítetlen pakolt YUV 4:1:0"
 
-#: gst-libs/gst/pbutils/descriptions.c:275
+#: gst-libs/gst/pbutils/descriptions.c:279
 msgid "Uncompressed packed YVU 4:1:0"
 msgstr "Tömörítetlen pakolt YVU 4:1:0"
 
-#: gst-libs/gst/pbutils/descriptions.c:282
+#: gst-libs/gst/pbutils/descriptions.c:286
 msgid "Uncompressed packed YUV 4:1:1"
 msgstr "Tömörítetlen pakolt YUV 4:1:1"
 
-#: gst-libs/gst/pbutils/descriptions.c:285
+#: gst-libs/gst/pbutils/descriptions.c:289
 msgid "Uncompressed packed YUV 4:4:4"
 msgstr "Tömörítetlen pakolt YUV 4:4:4"
 
-#: gst-libs/gst/pbutils/descriptions.c:288
+#: gst-libs/gst/pbutils/descriptions.c:292
 msgid "Uncompressed planar YUV 4:2:2"
 msgstr "Tömörítetlen síkbeli YUV 4:2:2"
 
-#: gst-libs/gst/pbutils/descriptions.c:291
+#: gst-libs/gst/pbutils/descriptions.c:295
 msgid "Uncompressed planar YUV 4:1:1"
 msgstr "Tömörítetlen síkbeli YUV 4:1:1"
 
-#: gst-libs/gst/pbutils/descriptions.c:294
+#: gst-libs/gst/pbutils/descriptions.c:298
 msgid "Uncompressed black and white Y-plane"
 msgstr "Tömörítetlen fekete-fehér Y-sík"
 
-#: gst-libs/gst/pbutils/descriptions.c:297
+#: gst-libs/gst/pbutils/descriptions.c:301
 msgid "Uncompressed YUV"
 msgstr "Tömörítetlen YUV"
 
-#: gst-libs/gst/pbutils/descriptions.c:308
+#: gst-libs/gst/pbutils/descriptions.c:312
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Tömörítetlen, palettás %d bites %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:358
+#: gst-libs/gst/pbutils/descriptions.c:362
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 %d. verzió"
 
-#: gst-libs/gst/pbutils/descriptions.c:547
+#: gst-libs/gst/pbutils/descriptions.c:580
 #, c-format
 msgid "Raw %d-bit PCM audio"
 msgstr "Nyers %d bites PCM hang"
 
-#: gst-libs/gst/pbutils/descriptions.c:549
+#: gst-libs/gst/pbutils/descriptions.c:582
 msgid "Raw PCM audio"
 msgstr "Nyers PCM hang"
 
-#: gst-libs/gst/pbutils/descriptions.c:555
+#: gst-libs/gst/pbutils/descriptions.c:588
 #, c-format
 msgid "Raw %d-bit floating-point audio"
 msgstr "Nyers %d bites lebegőpontos hang"
 
-#: gst-libs/gst/pbutils/descriptions.c:557
+#: gst-libs/gst/pbutils/descriptions.c:590
 msgid "Raw floating-point audio"
 msgstr "Nyers lebegőpontos hang"
 
-#: gst-libs/gst/pbutils/descriptions.c:644
+#: gst-libs/gst/pbutils/descriptions.c:677
 msgid "Audio CD source"
 msgstr "Hang CD forrás"
 
-#: gst-libs/gst/pbutils/descriptions.c:647
+#: gst-libs/gst/pbutils/descriptions.c:680
 msgid "DVD source"
 msgstr "DVD forrás"
 
-#: gst-libs/gst/pbutils/descriptions.c:650
+#: gst-libs/gst/pbutils/descriptions.c:683
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Valósidejű adatfolyam-protokoll (RTSP) forrás"
 
-#: gst-libs/gst/pbutils/descriptions.c:654
+#: gst-libs/gst/pbutils/descriptions.c:687
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Microsoft Media Server (MMS) protokollforrás"
 
-#: gst-libs/gst/pbutils/descriptions.c:662
+#: gst-libs/gst/pbutils/descriptions.c:695
 #, c-format
 msgid "%s protocol source"
 msgstr "%s protokollforrás"
 
-#: gst-libs/gst/pbutils/descriptions.c:730
+#: gst-libs/gst/pbutils/descriptions.c:763
 #, c-format
 msgid "%s video RTP depayloader"
 msgstr "%s videó RTP dekódoló"
 
-#: gst-libs/gst/pbutils/descriptions.c:732
+#: gst-libs/gst/pbutils/descriptions.c:765
 #, c-format
 msgid "%s audio RTP depayloader"
 msgstr "%s hang RTP dekódoló"
 
-#: gst-libs/gst/pbutils/descriptions.c:734
+#: gst-libs/gst/pbutils/descriptions.c:767
 #, c-format
 msgid "%s RTP depayloader"
 msgstr "%s RTP dekódoló"
 
-#: gst-libs/gst/pbutils/descriptions.c:741
+#: gst-libs/gst/pbutils/descriptions.c:774
 #, c-format
 msgid "%s demuxer"
 msgstr "%s demuxer"
 
-#: gst-libs/gst/pbutils/descriptions.c:743
+#: gst-libs/gst/pbutils/descriptions.c:776
 #, c-format
 msgid "%s decoder"
 msgstr "%s dekódoló"
 
-#: gst-libs/gst/pbutils/descriptions.c:778
+#: gst-libs/gst/pbutils/descriptions.c:811
 #, c-format
 msgid "%s video RTP payloader"
 msgstr "%s videó RTP kódoló"
 
-#: gst-libs/gst/pbutils/descriptions.c:780
+#: gst-libs/gst/pbutils/descriptions.c:813
 #, c-format
 msgid "%s audio RTP payloader"
 msgstr "%s hang RTP kódoló"
 
-#: gst-libs/gst/pbutils/descriptions.c:782
+#: gst-libs/gst/pbutils/descriptions.c:815
 #, c-format
 msgid "%s RTP payloader"
 msgstr "%s RTP kódoló"
 
-#: gst-libs/gst/pbutils/descriptions.c:789
+#: gst-libs/gst/pbutils/descriptions.c:822
 #, c-format
 msgid "%s muxer"
 msgstr "%s egyesítő"
 
-#: gst-libs/gst/pbutils/descriptions.c:791
+#: gst-libs/gst/pbutils/descriptions.c:824
 #, c-format
 msgid "%s encoder"
 msgstr "%s kódoló"
 
-#: gst-libs/gst/pbutils/descriptions.c:822
+#: gst-libs/gst/pbutils/descriptions.c:855
 #, c-format
 msgid "GStreamer element %s"
 msgstr "GStreamer elem: %s"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:551
+#: gst-libs/gst/pbutils/missing-plugins.c:550
 msgid "Unknown source element"
 msgstr "Ismeretlen forráselem"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:554
+#: gst-libs/gst/pbutils/missing-plugins.c:553
 msgid "Unknown sink element"
 msgstr "Ismeretlen nyelőelem"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:557
+#: gst-libs/gst/pbutils/missing-plugins.c:556
 msgid "Unknown element"
 msgstr "Ismeretlen elem"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:560
+#: gst-libs/gst/pbutils/missing-plugins.c:559
 msgid "Unknown decoder element"
 msgstr "Ismeretlen dekódolóelem"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:563
+#: gst-libs/gst/pbutils/missing-plugins.c:562
 msgid "Unknown encoder element"
 msgstr "Ismeretlen kódolóelem"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:568
+#: gst-libs/gst/pbutils/missing-plugins.c:567
 msgid "Plugin or element of unknown type"
 msgstr "Ismeretlen típusú bővítmény vagy elem"
 
@@ -561,9 +573,3 @@ msgstr "A(z) \"%s\" eszköz már használatban van."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nem lehet olvasásra és írásra megnyitni a(z) \"%s\" eszközt."
-
-#~ msgid "artist sortname"
-#~ msgstr "előadó rendezett neve"
-
-#~ msgid "MusicBrainz artist sortname"
-#~ msgstr "MusicBrainz előadó rendezett neve"
