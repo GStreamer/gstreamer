@@ -1,3 +1,10 @@
+=== release 0.10.16 ===
+
+2008-01-28  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.16, "Scheduled Interruption"
+
 2008-01-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Thijs Vermeir <thijsvermeir at gmail dot com>

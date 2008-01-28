@@ -3,7 +3,7 @@
   <description>decoder bin</description>
   <filename>../../gst/playback/.libs/libgstdecodebin.so</filename>
   <basename>libgstdecodebin.so</basename>
-  <version>0.10.15</version>
+  <version>0.10.16</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -14,7 +14,7 @@
       <longname>Decoder Bin</longname>
       <class>Generic/Bin/Decoder</class>
       <description>Autoplug and decode to raw media</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

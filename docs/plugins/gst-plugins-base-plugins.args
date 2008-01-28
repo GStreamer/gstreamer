@@ -20,7 +20,7 @@
 
 <ARG>
 <NAME>GstXvImageSink::display</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Display</NICK>
@@ -40,7 +40,7 @@
 
 <ARG>
 <NAME>GstXvImageSink::pixel-aspect-ratio</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Pixel Aspect Ratio</NICK>
@@ -80,7 +80,7 @@
 
 <ARG>
 <NAME>GstXvImageSink::device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Adaptor number</NICK>
@@ -90,7 +90,7 @@
 
 <ARG>
 <NAME>GstXvImageSink::device-name</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Adaptor name</NICK>
@@ -130,7 +130,7 @@
 
 <ARG>
 <NAME>GstXImageSink::display</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Display</NICK>
@@ -140,7 +140,7 @@
 
 <ARG>
 <NAME>GstXImageSink::pixel-aspect-ratio</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Pixel Aspect Ratio</NICK>
@@ -265,7 +265,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Pattern</NICK>
 <BLURB>Type of test pattern to generate.</BLURB>
-<DEFAULT>Random (television snow)</DEFAULT>
+<DEFAULT>SMPTE 100% color bars</DEFAULT>
 </ARG>
 
 <ARG>
@@ -360,7 +360,7 @@
 
 <ARG>
 <NAME>GstTCPClientSink::host</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Host</NICK>
@@ -390,7 +390,7 @@
 
 <ARG>
 <NAME>GstTCPClientSrc::host</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Host</NICK>
@@ -420,7 +420,7 @@
 
 <ARG>
 <NAME>GstTCPServerSink::host</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>host</NICK>
@@ -440,7 +440,7 @@
 
 <ARG>
 <NAME>GstTCPServerSrc::host</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Host</NICK>
@@ -670,7 +670,7 @@
 
 <ARG>
 <NAME>GstPlayBin::audio-sink</NAME>
-<TYPE>GstElement</TYPE>
+<TYPE>GstElement*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Audio Sink</NICK>
@@ -680,7 +680,7 @@
 
 <ARG>
 <NAME>GstPlayBin::frame</NAME>
-<TYPE>GstBuffer</TYPE>
+<TYPE>GstBuffer*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Frame</NICK>
@@ -690,7 +690,7 @@
 
 <ARG>
 <NAME>GstPlayBin::subtitle-font-desc</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
 <NICK>Subtitle font description</NICK>
@@ -700,7 +700,7 @@
 
 <ARG>
 <NAME>GstPlayBin::video-sink</NAME>
-<TYPE>GstElement</TYPE>
+<TYPE>GstElement*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Video Sink</NICK>
@@ -710,7 +710,7 @@
 
 <ARG>
 <NAME>GstPlayBin::vis-plugin</NAME>
-<TYPE>GstElement</TYPE>
+<TYPE>GstElement*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Vis plugin</NICK>
@@ -800,7 +800,7 @@
 
 <ARG>
 <NAME>GstVorbisEnc::last-message</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>last-message</NICK>
@@ -980,7 +980,7 @@
 
 <ARG>
 <NAME>GstGnomeVFSSrc::handle</NAME>
-<TYPE>GnomeVFSHandle</TYPE>
+<TYPE>GnomeVFSHandle*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>GnomeVFSHandle</NICK>
@@ -990,7 +990,7 @@
 
 <ARG>
 <NAME>GstGnomeVFSSrc::iradio-genre</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>iradio-genre</NICK>
@@ -1010,7 +1010,7 @@
 
 <ARG>
 <NAME>GstGnomeVFSSrc::iradio-name</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>iradio-name</NICK>
@@ -1020,7 +1020,7 @@
 
 <ARG>
 <NAME>GstGnomeVFSSrc::iradio-title</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>iradio-title</NICK>
@@ -1030,7 +1030,7 @@
 
 <ARG>
 <NAME>GstGnomeVFSSrc::iradio-url</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>iradio-url</NICK>
@@ -1040,7 +1040,7 @@
 
 <ARG>
 <NAME>GstGnomeVFSSrc::location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>File Location</NICK>
@@ -1080,7 +1080,7 @@
 
 <ARG>
 <NAME>GstAlsaSrc::device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Device</NICK>
@@ -1090,7 +1090,7 @@
 
 <ARG>
 <NAME>GstAlsaSrc::device-name</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Device name</NICK>
@@ -1100,7 +1100,7 @@
 
 <ARG>
 <NAME>GstAlsaSink::device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Device</NICK>
@@ -1110,7 +1110,7 @@
 
 <ARG>
 <NAME>GstAlsaSink::device-name</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Device name</NICK>
@@ -1300,7 +1300,7 @@
 
 <ARG>
 <NAME>GstTextRender::font-desc</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
 <NICK>font description</NICK>
@@ -1330,7 +1330,7 @@
 
 <ARG>
 <NAME>GstTextOverlay::font-desc</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
 <NICK>font description</NICK>
@@ -1340,7 +1340,7 @@
 
 <ARG>
 <NAME>GstTextOverlay::halign</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
 <NICK>horizontal alignment</NICK>
@@ -1360,7 +1360,7 @@
 
 <ARG>
 <NAME>GstTextOverlay::text</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>text</NICK>
@@ -1370,7 +1370,7 @@
 
 <ARG>
 <NAME>GstTextOverlay::valign</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
 <NICK>vertical alignment</NICK>
@@ -1570,7 +1570,7 @@
 
 <ARG>
 <NAME>GstAlsaMixerElement::device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Device</NICK>
@@ -1580,7 +1580,7 @@
 
 <ARG>
 <NAME>GstAlsaMixerElement::device-name</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Device name</NICK>
@@ -1590,7 +1590,7 @@
 
 <ARG>
 <NAME>GstGnomeVFSSink::handle</NAME>
-<TYPE>GnomeVFSHandle</TYPE>
+<TYPE>GnomeVFSHandle*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>GnomeVFSHandle</NICK>
@@ -1600,7 +1600,7 @@
 
 <ARG>
 <NAME>GstGnomeVFSSink::location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>File Location</NICK>
@@ -1610,7 +1610,7 @@
 
 <ARG>
 <NAME>GstGnomeVFSSink::uri</NAME>
-<TYPE>GnomeVFSURI</TYPE>
+<TYPE>GnomeVFSURI*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>GnomeVFSURI</NICK>
@@ -1620,7 +1620,7 @@
 
 <ARG>
 <NAME>GstCdParanoiaSrc::generic-device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Generic device</NICK>
@@ -1660,7 +1660,7 @@
 
 <ARG>
 <NAME>GstSubParse::subtitle-encoding</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>subtitle charset encoding</NICK>
@@ -1670,7 +1670,7 @@
 
 <ARG>
 <NAME>GstTheoraParse::synchronization-points</NAME>
-<TYPE>GValueArray</TYPE>
+<TYPE>GValueArray*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Synchronization points</NICK>
@@ -1710,7 +1710,7 @@
 
 <ARG>
 <NAME>GstDecodeBin2::caps</NAME>
-<TYPE>GstCaps</TYPE>
+<TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Caps</NICK>
@@ -1720,7 +1720,7 @@
 
 <ARG>
 <NAME>GstDecodeBin2::subtitle-encoding</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>subtitle encoding</NICK>
@@ -1730,7 +1730,7 @@
 
 <ARG>
 <NAME>GstURIDecodeBin::uri</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>URI</NICK>
@@ -1750,7 +1750,7 @@
 
 <ARG>
 <NAME>GstURIDecodeBin::caps</NAME>
-<TYPE>GstCaps</TYPE>
+<TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Caps</NICK>
@@ -1760,7 +1760,7 @@
 
 <ARG>
 <NAME>GstURIDecodeBin::subtitle-encoding</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>subtitle encoding</NICK>
@@ -1850,7 +1850,7 @@
 
 <ARG>
 <NAME>GstQueue2::temp-location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Temporary File Location</NICK>
@@ -1896,5 +1896,195 @@
 <NICK>Noise shaping</NICK>
 <BLURB>Selects between different noise shaping methods.</BLURB>
 <DEFAULT>No noise shaping (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::audio-sink</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio Sink</NICK>
+<BLURB>the audio output element to use (NULL = default sink).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::connection-speed</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection Speed</NICK>
+<BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::current-audio</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -2</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Current audio</NICK>
+<BLURB>Currently playing audio stream (-1 = none, -2 = none).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::current-text</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -2</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Current Text</NICK>
+<BLURB>Currently playing text stream (-1 = none, -2 = none).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::current-video</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -2</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Current Video</NICK>
+<BLURB>Currently playing video stream (-1 = auto, -2 = none).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::flags</NAME>
+<TYPE>GstPlayFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags to control behaviour.</BLURB>
+<DEFAULT>Render the video stream|Render the audio stream|Render subtitles|Use software volume</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::frame</NAME>
+<TYPE>GstBuffer*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Frame</NICK>
+<BLURB>The last frame (NULL = no video available).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::n-audio</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Number Audio</NICK>
+<BLURB>Total number of audio streams.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::n-text</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Number Text</NICK>
+<BLURB>Total number of text streams.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::n-video</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Number Video</NICK>
+<BLURB>Total number of video streams.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::source</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Source</NICK>
+<BLURB>Source element.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::stream-info</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>StreamInfo GValueArray</NICK>
+<BLURB>value array of streaminfo.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::subtitle-encoding</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>subtitle encoding</NICK>
+<BLURB>Encoding to assume if input subtitles are not in UTF-8 encoding. If not set, the GST_SUBTITLE_ENCODING environment variable will be checked for an encoding to use. If that is not set either, ISO-8859-15 will be assumed.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::subtitle-font-desc</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Subtitle font description</NICK>
+<BLURB>Pango font description of font to be used for subtitle rendering.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::suburi</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>.sub-URI</NICK>
+<BLURB>Optional URI of a subtitle.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::uri</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>URI</NICK>
+<BLURB>URI of the media to play.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::video-sink</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video Sink</NICK>
+<BLURB>the video output element to use (NULL = default sink).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::vis-plugin</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Vis plugin</NICK>
+<BLURB>the visualization element to use (NULL = none).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::volume</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>volume</NICK>
+<BLURB>volume.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 

@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.15 "No need to argue"
+Release notes for GStreamer Base Plug-ins 0.10.16 "Scheduled Interruption"
         
 
 
@@ -54,89 +54,47 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * RTP/RTSP/RTCP/SDP support improved
-      * New FFT support library libgstfft, based on Kiss FFT
-      * New formats supported in volume and audiotestsrc
-      * Fixes in audiorate and videorate
-      * Audio capture fixes
-      * Playbin and decodebin fixes
-      * New tagdemux base class for ID3/APE style tag readers
-      * Fix a nasty crash in the X sinks on shutdown
-      * New tags supported
-      * Add support for multichannel WAV files.
-      * Preserve channel layout information when up/down-mixing.
-      * Many bug-fixes and improvements
-      * 
+      * Handle newer Theora granule-pos semantics
+      * Introducing first alpha version playbin2 - the upcoming successor to playbin
+      * Fixes in playbin handling of stream-switching
+      * New API for uniform handling of raw-video format buffers.
+      * Improvements for RTSP/RTP handling
+      * RIFF lib additions for VC-1 and AVC1 fourccs
+      * Many other bug-fixes and improvements
 
 Bugs fixed in this release
      
-      * 475395 : decodebin2 leaks request-pads
-      * 475451 : [decodebin2] leaks ghostpad
-      * 378770 : [xvimagesink] race condition in event thread?
-      * 407282 : [decodebin2] autoplug-sort signal has GList ** parameter
-      * 430677 : [audioconvert] does not preserve channel positions when f...
-      * 442654 : [volume] controller bypassed by default
-      * 445529 : [volume] support for 24/32-bit audio/x-raw-int
-      * 446766 : return code for gst_base_rtp_payload_audio_handle_event()
-      * 451970 : Subparse requires HTML parser
-      * 453650 : [audiobasesrc] two alsasrcs do not work in one pipeline
-      * 459334 : [textoverlay] expose pango line alignment property
-      * 459585 : [basertpdepayload] api without namespace
-      * 460422 : [audiotestsrc] Add support for float and double output
-      * 462805 : [alsa] compilation fails with gcc 4.2
-      * 462979 : Add 'silent' property to GstTimeOverlay
-      * 463215 : [audioconvert] compile errors
-      * 464320 : [PATCH] gst-plugins-base-0.14 does not build for win32
-      * 464666 : [playbin] QT trailer hangs in preroll with decodebin2
-      * 464690 : Add connection-speed property to uridecodebin element
-      * 465015 : [playbin] Not removed probes causes deadlocks in streamin...
-      * 465028 : some warnings with mingw
-      * 467667 : GST_FRAMES_TO_CLOCK_TIME() and GST_CLOCK_TIME_TO_FRAMES()...
-      * 468129 : [basertpaudiopayload] event handler returns the wrong value
-      * 468619 : New library gstfft: FFT library for integer and float typ...
-      * 470456 : [API] add gst_missing_*_installer_detail_new()
-      * 470766 : [ssaparse] line breaks in SSA subtitle parser
-      * 471067 : Make the SDP code useable for generating SDP descriptions
-      * 471194 : [rtpbuffer] RTP headers are wrong for win32
-      * 473097 : [baseaudiosink] gstreamer-properties hangs when testing s...
-      * 474384 : gstrtsp-enumtypes.c and .h needed for win32
-      * 474880 : [xvimagesink] [ximagesink] leaking buffer caps reference
-      * 475731 : rtspconnection is able to read incomplete messages
-      * 483620 : All Rtp buffers are discarded --  gst_rtp_buffer_get_payl...
-      * 484989 : memleak, not unrefed caps for gstbasertppayload.c
-      * 489010 : Please change default channel order for WAVE_EXT-less .wa...
-      * 491722 : [playbin] regression: crash with external subtitles
-      * 492098 : [GstFFT] Broken scaling
-      * 492114 : Build issues on Windows/MSVC
-      * 492306 : compilation errors with MinGW
-      * 492813 : Missing symbols in libgstrtp.def
-      * 493986 : Build issues on Windows (missing symbols)
-      * 494346 : pre-release vs6 patch
-      * 496548 : Including malloc.h breaks macos build
-      * 496724 : DSW file references non-existent DSP files
-      * 464079 : audiotestsrc doesn't respond to conversion queries properly
-      * 442065 : floatcast.h includes config.h and might break other apps
-      * 466717 : gst_event_new_new_segment_full:assertion `start < = stop' ...
-      * 485753 : Decodebin2 deadlocks when nulling pipeline during typefind
-      * 464028 : Move connection-speed from playbin to playbasebin
+      * 506132 : Review of changes in video/video.h
+      * 320984 : [oggdemux] cannot handle multiple chains
+      * 373011 : [playbin] throws error when switching off subtitles
+      * 436756 : Intermittent crashes in Pidgin in audioclock g_type_class...
+      * 462740 : [streamselector] patch to improve default stream selection
+      * 486840 : [alsamixer] use _all variants when setting the mixer
+      * 497964 : theoraenc test fails
+      * 498228 : gst-plugins-base-0.10.15 does not compile on FreeBSD (Gen...
+      * 499697 : Provide better pkg-config files
+      * 502497 : [subparse] SubRip subtitles starting from 0 not recognised
+      * 503440 : The control sockets used by gstrtspconnection.c are never...
+      * 503930 : [cdda] warning: 'eos' may be used uninitialized in this f...
+      * 506928 : [alsamixer] add " PCM " as master fall back for cards that ...
+      * 508138 : [decodebin] does not error out if pad activation fails
+      * 509762 : missing file in win32/MANIFEST
+      * 511274 : gst_rtp_buffer_get_extension_data is returning FALSE when...
+      * 496731 : [PATCH] xvimagesink leaks memory if initialization fails
+      * 496761 : [PATCH] RTSP message leaks memory when uninitialized
+      * 500763 : SIGSEGV while playing ogg audio file
 
 API changed in this release
      
 - API additions:
     
-* GstTagDemux base class for simple tag demuxers
-* GstBaseAudioSrc::provide-clock property
-* gst_rtcp_ntp_to_unix()
-* gst_rtcp_unix_to_ntp()
-* gst_rtp_buffer_get_header_len()
-* gst_rtp_buffer_get_extension_data()
-* gst_rtp_buffer_compare_seqnum()
-* gst_rtp_buffer_ext_timestamp()
-* gst_rtcp_packet_sdes_copy_entry()
-* gst_install_plugins_supported()
-* gst_missing_*_installer_detail_new() convenience API
-* gst_rtsp_connection_poll()
-* GstTextOverlay::line-alignment property
+* New GstVideoFormat API and helper functions in libgstvideo
+* gst_base_audio_sink_set_provide_clock()
+* gst_base_audio_sink_get_provide_clock()
+* gst_base_audio_sink_set_slave_method()
+* gst_base_audio_sink_get_slave_method()
+* gst_base_audio_src_set_provide_clock()
+* gst_base_audio_src_get_provide_clock()
 
 Download
 
@@ -166,40 +124,22 @@ Applications
   
 Contributors to this release
     
-      * Stefan Kost
-      * Alexander Shopov
-      * Damien Lespiau
-      * Dan Williams
-      * Daniel Díaz
+      * Bastien Nocera
       * David Schleef
-      * Davyd Madeley
-      * Funda Wang
-      * Haakon Sporsheim
-      * Ilkka Tuohela
-      * Jakub Bogusz
+      * Edward Hervey
       * Jan Schmidt
-      * Jason Kivlighn
-      * Jens Granseuer
-      * Johan Dahlin
-      * Jorge González González
-      * Josep Torra Valles
+      * Jerone Young
+      * Joe Peterson
       * Julien MOUTTE
-      * Laurent Glayal
+      * Julien Moutte
       * Michael Smith
-      * Mogens Jaeger
-      * Ole André Vadla Ravnås
-      * Olivier Crete
       * Peter Kjellerstedt
-      * Renato Filho
-      * René Stadler
+      * Robin Stocker
       * Sebastian Dröge
       * Sebastien Moutte
       * Stefan Kost
       * Thijs Vermeir
-      * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Tommi Myöhänen
-      * Vincent Torri
       * Wim Taymans
-      * Yang Hong
  

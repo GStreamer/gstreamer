@@ -1,9 +1,71 @@
-This is GStreamer Base Plug-ins 0.10.15, "No need to argue"
+This is GStreamer Base Plug-ins 0.10.16, "Scheduled Interruption"
 
-Please note that decodebin2 API included in this release is still
-considered unstable and WILL change in future releases. At this stage, only
-developers or early adopters should consider using the decodebin2 API embodied
-in its signals and properties.
+IMPORTANT NOTES
+
+1) Please note that decodebin2 and playbin2 API included in this release is
+still considered unstable and WILL change in future releases. At this stage,
+only developers or early adopters should consider using decodebin2 or playbin2
+API embodied in their signals and properties.
+
+2) On some systems, the current release of gst-plugins-good (0.10.6) may fail to
+build against this release of gst-plugins-base with an error like:
+
+gstid3v2mux.cc:547: error: 'GST_TAG_MUSICBRAINZ_SORTNAME' was not declared in this scope
+
+In this case, you should either patch the configure file of gst-plugins-good to
+remove -DGST_DISABLE_DEPRECATED from DEPRECATED_CFLAGS=, or else compile
+with make DEPRECATED_CFLAGS=''
+
+3) Some users may experience problems using the 'mp3parse' element from the
+previous gst-plugins-ugly release (0.10.6). This is due to a bug in mp3parse
+exposed by changes in decodebin in gst-plugins-base. It will be fixed in the
+upcoming release of gst-plugins-ugly next month. In the meantime as a
+workaround, you can set the rank of mp3parse to GST_RANK_NONE in 
+gst-plugins-ugly/gst/mpegaudioparse/gstmpegaudioparse.c when compiling, or
+or remove the /usr/lib/gstreamer-0.10/libgstmpegaudioparse.so file entirely.
+
+Changes since 0.10.15:
+    
+      * Handle newer Theora granule-pos semantics
+      * Introducing first alpha version playbin2 - the upcoming successor to
+	playbin
+      * Fixes in playbin handling of stream-switching
+      * New API for uniform handling of raw-video format buffers.
+      * Improvements for RTSP/RTP handling
+      * RIFF lib additions for VC-1 and AVC1 fourccs
+      * Many other bug-fixes and improvements
+
+Bugs fixed since 0.10.15:
+     
+      * 506132 : Review of changes in video/video.h
+      * 320984 : [oggdemux] cannot handle multiple chains
+      * 373011 : [playbin] throws error when switching off subtitles
+      * 436756 : Intermittent crashes in Pidgin in audioclock g_type_class...
+      * 462740 : [streamselector] patch to improve default stream selection
+      * 486840 : [alsamixer] use _all variants when setting the mixer
+      * 497964 : theoraenc test fails
+      * 498228 : gst-plugins-base-0.10.15 does not compile on FreeBSD (Gen...
+      * 499697 : Provide better pkg-config files 
+      * 502497 : [subparse] SubRip subtitles starting from 0 not recognised
+      * 503440 : The control sockets used by gstrtspconnection.c are never...
+      * 503930 : [cdda] warning: 'eos' may be used uninitialized in this f...
+      * 506928 : [alsamixer] add " PCM " as master fall back for cards that ...
+      * 508138 : [decodebin] does not error out if pad activation fails
+      * 509762 : missing file in win32/MANIFEST
+      * 511274 : gst_rtp_buffer_get_extension_data is returning FALSE when...
+      * 496731 : [PATCH] xvimagesink leaks memory if initialization fails
+      * 496761 : [PATCH] RTSP message leaks memory when uninitialized
+      * 500763 : SIGSEGV while playing ogg audio file
+      
+API additions since 0.10.15:
+      
+      * New GstVideoFormat API and helper functions in libgstvideo
+      * gst_base_audio_sink_set_provide_clock()
+      * gst_base_audio_sink_get_provide_clock()
+      * gst_base_audio_sink_set_slave_method()
+      * gst_base_audio_sink_get_slave_method()
+      * gst_base_audio_src_set_provide_clock()
+      * gst_base_audio_src_get_provide_clock()
 
 Changes since 0.10.14:
 

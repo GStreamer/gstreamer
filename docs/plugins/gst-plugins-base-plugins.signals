@@ -27,7 +27,7 @@ gint  arg1
 <FLAGS>l</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
-GstClientStatus *arg2
+GstClientStatus  arg2
 </SIGNAL>
 
 <SIGNAL>
@@ -61,9 +61,9 @@ gint  arg1
 GstMultiFdSink *gstmultifdsink
 gint  arg1
 gboolean  arg2
-GstTCPUnitType *arg3
+GstTCPUnitType  arg3
 guint64  arg4
-GstTCPUnitType *arg5
+GstTCPUnitType  arg5
 guint64  arg6
 </SIGNAL>
 
@@ -157,11 +157,12 @@ GstCaps *arg2
 
 <SIGNAL>
 <NAME>GstDecodeBin2::autoplug-sort</NAME>
-<RETURNS>gboolean</RETURNS>
+<RETURNS>GValueArray*</RETURNS>
 <FLAGS>l</FLAGS>
 GstDecodeBin2 *gstdecodebin2
-GstCaps *arg1
-gpointer  arg2
+GstPad *arg1
+GstCaps *arg2
+GValueArray *arg3
 </SIGNAL>
 
 <SIGNAL>
@@ -201,12 +202,19 @@ GstCaps *arg2
 
 <SIGNAL>
 <NAME>GstDecodeBin2::autoplug-select</NAME>
-<RETURNS>gint</RETURNS>
+<RETURNS>GstAutoplugSelectResult</RETURNS>
 <FLAGS>l</FLAGS>
 GstDecodeBin2 *gstdecodebin2
 GstPad *arg1
 GstCaps *arg2
-GValueArray *arg3
+GstElementFactory *arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin2::drained</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin2 *gstdecodebin2
 </SIGNAL>
 
 <SIGNAL>
@@ -229,12 +237,12 @@ GstCaps *arg2
 
 <SIGNAL>
 <NAME>GstURIDecodeBin::autoplug-select</NAME>
-<RETURNS>gint</RETURNS>
+<RETURNS>GstAutoplugSelectResult</RETURNS>
 <FLAGS>l</FLAGS>
 GstURIDecodeBin *gsturidecodebin
 GstPad *arg1
 GstCaps *arg2
-GValueArray *arg3
+GstElementFactory *arg3
 </SIGNAL>
 
 <SIGNAL>
@@ -244,5 +252,19 @@ GValueArray *arg3
 GstURIDecodeBin *gsturidecodebin
 GstPad *arg1
 GstCaps *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstURIDecodeBin::drained</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstURIDecodeBin *gsturidecodebin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin2::about-to-finish</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin2 *gstplaybin2
 </SIGNAL>
 
