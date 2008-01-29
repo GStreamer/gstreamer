@@ -3427,10 +3427,17 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
       buf = gst_avi_demux_invert (stream, buf);
 
     /* mark non-keyframes */
-    if (!(entry->flags & GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME))
+    if (!(entry->flags & GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME)) {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-
-    GST_BUFFER_TIMESTAMP (buf) = entry->ts;
+      /* AVI stores DTS as the timestamps and we don't have a way to put a DTS
+       * on a buffer yet (TIMESTAMP is PTS). We therefore only copy the DTS
+       * if we are dealing with a keyframe. Decoders are supposed to
+       * interpollate the timestamps based on framerate, which is exactly
+       * what we do too when constructing the index */
+      GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+    } else {
+      GST_BUFFER_TIMESTAMP (buf) = entry->ts;
+    }
     GST_BUFFER_DURATION (buf) = entry->dur;
     GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
@@ -3627,6 +3634,9 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         if (format != GST_FORMAT_TIME)
           goto wrong_format;
 
+        /* FIXME. this is always the DTS, not the PTS. We should only set the
+         * TIMESTAMP to the PTS (which is == PTS on I frames but we don't know
+         * about keyframes here */
         GST_BUFFER_TIMESTAMP (buf) = next_ts;
         GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
         gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));

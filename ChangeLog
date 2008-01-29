@@ -1,3 +1,11 @@
+2008-01-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_process_next_entry),
+	(gst_avi_demux_stream_data):
+	GStreamer timestamps are PTS values while AVI only knows about DTS
+	timestamps. Make sure we only copy the DTS as the buffer timestamp when
+	we are dealing with a key frame.
+
 2008-01-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/Makefile.am:
