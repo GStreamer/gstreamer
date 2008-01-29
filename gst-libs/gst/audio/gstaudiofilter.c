@@ -105,6 +105,12 @@ gst_audio_filter_class_init (gpointer klass, gpointer class_data)
   basetrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_audio_filter_set_caps);
   basetrans_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_filter_get_unit_size);
+
+  /* FIXME: Ref the GstRingerBuffer class to get it's debug category
+   * initialized. gst_ring_buffer_parse_caps () which we use later
+   * uses this debug category.
+   */
+  g_type_class_ref (GST_TYPE_RING_BUFFER);
 }
 
 static void
