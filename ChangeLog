@@ -1,5 +1,12 @@
 2008-01-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst-libs/gst/rtsp/gstrtspconnection.c: (add_date_header):
+	Cast glong to time_t as time_t might have a different type on
+	other platforms, like FreeBSD, and we get a compiler warning
+	otherwise. Fixes bug #511825.
+
+2008-01-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst-libs/gst/audio/gstaudiofilter.c:
 	(gst_audio_filter_class_init):
 	Initialize the GstRingerBuffer class to get it's debug category
