@@ -222,25 +222,21 @@ user_flush_data (png_structp png_ptr)
 static void
 user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
 {
-  GstBuffer *buffer;
   GstPngEnc *pngenc;
 
   pngenc = (GstPngEnc *) png_get_io_ptr (png_ptr);
 
-  buffer = gst_buffer_new ();
-  GST_BUFFER_MALLOCDATA (buffer) = g_memdup (data, length);
-  GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
-  GST_BUFFER_SIZE (buffer) = length;
+  if (pngenc->written + length >= GST_BUFFER_SIZE (pngenc->buffer_out)) {
+    GST_ERROR_OBJECT (pngenc, "output buffer bigger than the input buffer!?");
+    /* yuck */
+    longjmp (pngenc->png_struct_ptr->jmpbuf, 1);
 
-  if (pngenc->buffer_out) {
-    GstBuffer *merge;
+    /* never reached */
+    return;
+  }
 
-    merge = gst_buffer_merge (pngenc->buffer_out, buffer);
-    gst_buffer_unref (buffer);
-    gst_buffer_unref (pngenc->buffer_out);
-    pngenc->buffer_out = merge;
-  } else
-    pngenc->buffer_out = buffer;
+  memcpy (GST_BUFFER_DATA (pngenc->buffer_out) + pngenc->written, data, length);
+  pngenc->written += length;
 }
 
 static GstFlowReturn
@@ -250,12 +246,11 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
   gint row_index;
   png_byte *row_pointers[MAX_HEIGHT];
   GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *encoded_buf = NULL;
 
   pngenc = GST_PNGENC (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (pngenc, "BEGINNING");
-
-  pngenc->buffer_out = NULL;
 
   /* initialize png struct stuff */
   pngenc->png_struct_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
@@ -309,20 +304,26 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
         (row_index * pngenc->stride);
   }
 
+  /* allocate the output buffer */
+  pngenc->buffer_out =
+      gst_buffer_new_and_alloc (pngenc->height * pngenc->stride);
+  pngenc->written = 0;
+
   png_write_info (pngenc->png_struct_ptr, pngenc->png_info_ptr);
   png_write_image (pngenc->png_struct_ptr, row_pointers);
   png_write_end (pngenc->png_struct_ptr, NULL);
 
   user_flush_data (pngenc->png_struct_ptr);
 
+  encoded_buf = gst_buffer_create_sub (pngenc->buffer_out, 0, pngenc->written);
+
   png_destroy_info_struct (pngenc->png_struct_ptr, &pngenc->png_info_ptr);
   png_destroy_write_struct (&pngenc->png_struct_ptr, (png_infopp) NULL);
-  gst_buffer_copy_metadata (pngenc->buffer_out, buf,
-      GST_BUFFER_COPY_TIMESTAMPS);
+  gst_buffer_copy_metadata (encoded_buf, buf, GST_BUFFER_COPY_TIMESTAMPS);
   gst_buffer_unref (buf);
-  gst_buffer_set_caps (pngenc->buffer_out, GST_PAD_CAPS (pngenc->srcpad));
+  gst_buffer_set_caps (encoded_buf, GST_PAD_CAPS (pngenc->srcpad));
 
-  if ((ret = gst_pad_push (pngenc->srcpad, pngenc->buffer_out)) != GST_FLOW_OK)
+  if ((ret = gst_pad_push (pngenc->srcpad, encoded_buf)) != GST_FLOW_OK)
     goto done;
 
   if (pngenc->snapshot) {
@@ -338,6 +339,11 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 
 done:
   GST_DEBUG_OBJECT (pngenc, "END, ret:%d", ret);
+
+  if (pngenc->buffer_out != NULL) {
+    gst_buffer_unref (pngenc->buffer_out);
+    pngenc->buffer_out = NULL;
+  }
 
   gst_object_unref (pngenc);
   return ret;

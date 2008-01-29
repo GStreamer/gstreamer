@@ -44,6 +44,7 @@ struct _GstPngEnc
 
   GstPad *sinkpad, *srcpad;
   GstBuffer *buffer_out;
+  guint written;
 
   png_structp png_struct_ptr;
   png_infop png_info_ptr;

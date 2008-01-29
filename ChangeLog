@@ -1,5 +1,15 @@
 2008-01-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Alessandro Decina <alessandro at nnva dot org>
+
+	* ext/libpng/gstpngenc.c: (user_write_data), (gst_pngenc_chain):
+	* ext/libpng/gstpngenc.h:
+	Preallocate the output buffer so that g_memdup() and
+	gst_buffer_merge() aren't needed anymore. This greatly improves
+	performances and fixes #512544.
+
+2008-01-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_process_next_entry),
 	(gst_avi_demux_stream_data):
 	GStreamer timestamps are PTS values while AVI only knows about DTS
