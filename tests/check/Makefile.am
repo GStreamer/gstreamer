@@ -61,10 +61,11 @@ check_PROGRAMS = \
 	elements/audiodynamic \
 	elements/avimux \
 	elements/avisubtitle \
+	elements/icydemux \
 	elements/id3demux \
 	elements/level \
 	elements/matroskamux \
-	elements/icydemux \
+	elements/rtp-payloading \
 	elements/videocrop \
 	elements/videofilter \
 	pipelines/simple-launch-lines \
