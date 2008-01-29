@@ -1,3 +1,8 @@
+2008-01-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/elements/alphacolor.c:
+	  Remove two unused variables.
+
 2008-01-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_rtpinfo):

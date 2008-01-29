@@ -165,9 +165,7 @@ GST_START_TEST (test_rgb24)
 {
   GstElement *alphacolor;
   GstBuffer *inbuffer;
-  GstBuffer *outbuffer;
   GstCaps *incaps;
-  guint outlength;
 
   incaps = create_caps_rgb24 ();
   alphacolor = setup_alphacolor ();
