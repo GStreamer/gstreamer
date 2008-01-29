@@ -38,8 +38,8 @@ or
 
 * in any case metadataparse strips out metadata chunks (different from current implementation)
 
-3- Modify (add, change, delete tags)
 
+3- Modify (add, change, delete tags)
 
                     +--> whole chunk send as event to next element -- ... --+
                     |                                                       |
@@ -64,6 +64,7 @@ or
 Obs: By looking at the proposed design (1- view and 2- modify) seems that the metadataparse and metadatamux should not know about mapped tags.
      Only the application map the tags to/from metadata specific format. This is because, if you notice, only tags sent by application will be keep
      on new file.
+
 
 4- Convert (for example from jpeg to png)
 

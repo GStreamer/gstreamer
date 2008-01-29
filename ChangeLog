@@ -1,5 +1,12 @@
 2008-01-29  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/metadata/README:
+	  Formatting.
+	* tests/icles/metadata_editor.c:
+	  Include stdlib.h.
+
+2008-01-29  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
