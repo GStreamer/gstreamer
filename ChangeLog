@@ -1,3 +1,11 @@
+2008-01-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_video_frame):
+	Don't blindly copy input timestamp to output timestamp but prefer the
+	one attached to the picture when we can.
+	Add new variables for the output timestamp and duration to make the code
+	a little more clear.
+
 2008-01-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_video_frame):

@@ -1374,6 +1374,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   gboolean mode_switch;
   gboolean decode;
   gint hurry_up = 0;
+  GstClockTime out_timestamp, out_duration;
 
   *ret = GST_FLOW_OK;
   *outbuf = NULL;
@@ -1465,16 +1466,26 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
    *
    *  1) Copy picture timestamp if valid
    *  2) else interpolate from previous output timestamp
+   *  3) else copy input timestamp
    */
+  out_timestamp = -1;
   if (ffmpegdec->picture->pts != -1) {
-    GST_LOG_OBJECT (ffmpegdec, "using timestamp returned by ffmpeg");
     /* Get (interpolated) timestamp from FFMPEG */
-    in_timestamp = (GstClockTime) ffmpegdec->picture->pts;
+    out_timestamp = (GstClockTime) ffmpegdec->picture->pts;
+    GST_LOG_OBJECT (ffmpegdec, "using timestamp %" GST_TIME_FORMAT
+        " returned by ffmpeg", GST_TIME_ARGS (out_timestamp));
   }
-  if (!GST_CLOCK_TIME_IS_VALID (in_timestamp)) {
-    in_timestamp = ffmpegdec->next_ts;
+  if (!GST_CLOCK_TIME_IS_VALID (out_timestamp)) {
+    out_timestamp = ffmpegdec->next_ts;
+    GST_LOG_OBJECT (ffmpegdec, "using next timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (out_timestamp));
   }
-  GST_BUFFER_TIMESTAMP (*outbuf) = in_timestamp;
+  if (!GST_CLOCK_TIME_IS_VALID (out_timestamp)) {
+    out_timestamp = in_timestamp;
+    GST_LOG_OBJECT (ffmpegdec, "using in timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (out_timestamp));
+  }
+  GST_BUFFER_TIMESTAMP (*outbuf) = out_timestamp;
 
   /*
    * Duration:
@@ -1483,13 +1494,14 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
    *  2) else use input framerate
    *  3) else use ffmpeg framerate
    */
+  out_duration = -1;
   if (!GST_CLOCK_TIME_IS_VALID (in_duration)) {
     /* if we have an input framerate, use that */
     if (ffmpegdec->format.video.fps_n != -1 &&
         (ffmpegdec->format.video.fps_n != 1000 &&
             ffmpegdec->format.video.fps_d != 1)) {
       GST_LOG_OBJECT (ffmpegdec, "using input framerate for duration");
-      in_duration = gst_util_uint64_scale_int (GST_SECOND,
+      out_duration = gst_util_uint64_scale_int (GST_SECOND,
           ffmpegdec->format.video.fps_d, ffmpegdec->format.video.fps_n);
     } else {
       /* don't try to use the decoder's framerate when it seems a bit abnormal,
@@ -1498,7 +1510,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
           (ffmpegdec->context->time_base.den > 0 &&
               ffmpegdec->context->time_base.den < 1000)) {
         GST_LOG_OBJECT (ffmpegdec, "using decoder's framerate for duration");
-        in_duration = gst_util_uint64_scale_int (GST_SECOND,
+        out_duration = gst_util_uint64_scale_int (GST_SECOND,
             ffmpegdec->context->time_base.num,
             ffmpegdec->context->time_base.den);
       } else {
@@ -1507,16 +1519,17 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
     }
   } else {
     GST_LOG_OBJECT (ffmpegdec, "using in_duration");
+    out_duration = in_duration;
   }
 
   /* Take repeat_pict into account */
-  if (GST_CLOCK_TIME_IS_VALID (in_duration)) {
-    in_duration += in_duration * ffmpegdec->picture->repeat_pict / 2;
+  if (GST_CLOCK_TIME_IS_VALID (out_duration)) {
+    out_duration += out_duration * ffmpegdec->picture->repeat_pict / 2;
   }
-  GST_BUFFER_DURATION (*outbuf) = in_duration;
+  GST_BUFFER_DURATION (*outbuf) = out_duration;
 
-  if (in_timestamp != -1 && in_duration != -1)
-    ffmpegdec->next_ts = in_timestamp + in_duration;
+  if (out_timestamp != -1 && out_duration != -1)
+    ffmpegdec->next_ts = out_timestamp + out_duration;
 
   /* palette is not part of raw video frame in gst and the size
    * of the outgoing buffer needs to be adjusted accordingly */
@@ -1524,8 +1537,8 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
     GST_BUFFER_SIZE (*outbuf) -= AVPALETTE_SIZE;
 
   /* now see if we need to clip the buffer against the segment boundaries. */
-  if (G_UNLIKELY (!clip_video_buffer (ffmpegdec, *outbuf, in_timestamp,
-              in_duration)))
+  if (G_UNLIKELY (!clip_video_buffer (ffmpegdec, *outbuf, out_timestamp,
+              out_duration)))
     goto clipped;
 
   /* mark as keyframe or delta unit */
