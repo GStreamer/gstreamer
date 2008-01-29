@@ -91,6 +91,29 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
+
+/* Workaround against stupid removal of the log_level_t enum in 1.9.0rc3.
+ * Without it doesn't make much sense to implement a mjpeg_log_handler_t */
+#ifndef LOG_NONE
+#define LOG_NONE 0
+#endif
+
+#ifndef LOG_DEBUG
+#define LOG_DEBUG 1
+#endif
+
+#ifndef LOG_INFO
+#define LOG_INFO 2
+#endif
+
+#ifndef LOG_WARN
+#define LOG_WARN 3
+#endif
+
+#ifndef LOG_ERROR
+#define LOG_ERROR 4
+#endif
+
 static void gst_mpeg2enc_finalize (GObject * object);
 static void gst_mpeg2enc_reset (GstMpeg2enc * enc);
 static gboolean gst_mpeg2enc_setcaps (GstPad * pad, GstCaps * caps);
@@ -650,6 +673,7 @@ done:
 static mjpeg_log_handler_t old_handler = NULL;
 
 /* note that this will affect all mjpegtools elements/threads */
+
 static void
 gst_mpeg2enc_log_callback (log_level_t level, const char *message)
 {
