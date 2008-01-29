@@ -806,9 +806,16 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   priv = jitterbuffer->priv;
 
   if (priv->last_pt != gst_rtp_buffer_get_payload_type (buffer)) {
+    GstCaps *caps;
+
     priv->last_pt = gst_rtp_buffer_get_payload_type (buffer);
     /* reset clock-rate so that we get a new one */
     priv->clock_rate = -1;
+    /* Try to get the clock-rate from the caps first if we can. If there are no
+     * caps we must fire the signal to get the clock-rate. */
+    if ((caps = GST_BUFFER_CAPS (buffer))) {
+      gst_jitter_buffer_sink_parse_caps (jitterbuffer, caps);
+    }
   }
 
   if (priv->clock_rate == -1) {
