@@ -187,13 +187,12 @@ mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
 }
 
 static GstCaps *
-mp3_caps_create (guint layer, guint channels, guint bitrate, guint samplerate)
+mp3_caps_create (guint layer, guint channels, guint samplerate)
 {
   GstCaps *new;
 
   g_assert (layer);
   g_assert (samplerate);
-  g_assert (bitrate);
   g_assert (channels);
 
   new = gst_caps_new_simple ("audio/mpeg",
@@ -1096,19 +1095,21 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
             "%d bytes, have %d", bpf, available);
         break;
       }
+
       if (channels != mp3parse->channels ||
-          rate != mp3parse->rate ||
-          layer != mp3parse->layer || bitrate != mp3parse->bit_rate) {
+          rate != mp3parse->rate || layer != mp3parse->layer) {
         GstCaps *caps;
 
-        caps = mp3_caps_create (layer, channels, bitrate, rate);
+        caps = mp3_caps_create (layer, channels, rate);
         gst_pad_set_caps (mp3parse->srcpad, caps);
         gst_caps_unref (caps);
 
         mp3parse->channels = channels;
-        mp3parse->layer = layer;
         mp3parse->rate = rate;
-        mp3parse->bit_rate = bitrate;
+      }
+
+      if (layer != mp3parse->layer || version != mp3parse->version) {
+        mp3parse->layer = layer;
         mp3parse->version = version;
 
         /* see http://www.codeproject.com/audio/MPEGAudioInfo.asp */
@@ -1121,6 +1122,8 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
         } else
           mp3parse->spf = 1152;
       }
+
+      mp3parse->bit_rate = bitrate;
 
       mp3parse->max_bitreservoir = gst_util_uint64_scale (GST_SECOND,
           ((version == 1) ? 10 : 30) * mp3parse->spf, mp3parse->rate);
