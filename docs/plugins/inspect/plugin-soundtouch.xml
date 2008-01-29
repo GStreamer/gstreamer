@@ -1,14 +1,35 @@
 <plugin>
   <name>soundtouch</name>
-  <description>Audio Pitch Controller</description>
-  <filename>../../ext/soundtouch/.libs/libgstpitch.so</filename>
-  <basename>libgstpitch.so</basename>
+  <description>Audio Pitch Controller &amp; BPM Detection</description>
+  <filename>../../ext/soundtouch/.libs/libgstsoundtouch.so</filename>
+  <basename>libgstsoundtouch.so</basename>
   <version>0.10.5.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
+    <element>
+      <name>bpmdetect</name>
+      <longname>BPM Detector</longname>
+      <class>Filter/Analyzer/Audio</class>
+      <description>Detect the BPM of an audio stream</description>
+      <author>Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 8000, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 8000, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
+    </element>
     <element>
       <name>pitch</name>
       <longname>Pitch controller</longname>
@@ -17,16 +38,16 @@
       <author>Wouter Paesen &lt;wouter@blue-gate.be&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, rate=(int)[ 8000, 48000 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)32, buffer-frames=(int)[ 0, 2147483647 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, rate=(int)[ 8000, 48000 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)32, buffer-frames=(int)[ 0, 2147483647 ]</details>
+          <details>audio/x-raw-float, rate=(int)[ 8000, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)32</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, rate=(int)[ 8000, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)32</details>
         </caps>
       </pads>
     </element>

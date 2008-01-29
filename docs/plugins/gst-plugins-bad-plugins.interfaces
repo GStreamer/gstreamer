@@ -6,13 +6,13 @@ GstRtpClient GstChildProxy
 GstRgVolume GstChildProxy
 GstSDPDemux GstChildProxy
 GstMetadataMux GstTagSetter
+GstIirEqualizer GstChildProxy
+GstIirEqualizerNBands GstChildProxy
+GstIirEqualizer3Bands GstChildProxy
+GstIirEqualizer10Bands GstChildProxy
 GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
 GstGLImageSink GstImplementsInterface GstXOverlay
 GstNeonhttpSrc GstURIHandler
 GstMMS GstURIHandler
 GstVCDSrc GstURIHandler
 GstCDAudio GstURIHandler
-GstIirEqualizer GstChildProxy
-GstIirEqualizerNBands GstChildProxy
-GstIirEqualizer3Bands GstChildProxy
-GstIirEqualizer10Bands GstChildProxy

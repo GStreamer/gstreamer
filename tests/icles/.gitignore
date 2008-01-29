@@ -1,4 +1,5 @@
 equalizer-test
+metadata_editor
+output-selector-test
 pitch-test
-v4l2src-test
-videocrop-test
+

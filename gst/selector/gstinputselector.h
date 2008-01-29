@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 2003 Julien Moutte <julien@moutte.net>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2008 Nokia Corporation. (contact <stefan.kost@nokia.com>)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,28 +19,28 @@
  * Boston, MA 02111-1307, USA.
  */
  
-#ifndef __GST_STREAM_SELECTOR_H__
-#define __GST_STREAM_SELECTOR_H__
+#ifndef __GST_INPUT_SELECTOR_H__
+#define __GST_INPUT_SELECTOR_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_STREAM_SELECTOR \
-  (gst_stream_selector_get_type())
-#define GST_STREAM_SELECTOR(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_STREAM_SELECTOR, GstStreamSelector))
-#define GST_STREAM_SELECTOR_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_STREAM_SELECTOR, GstStreamSelectorClass))
-#define GST_IS_STREAM_SELECTOR(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_STREAM_SELECTOR))
-#define GST_IS_STREAM_SELECTOR_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_STREAM_SELECTOR))
+#define GST_TYPE_INPUT_SELECTOR \
+  (gst_input_selector_get_type())
+#define GST_INPUT_SELECTOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_INPUT_SELECTOR, GstInputSelector))
+#define GST_INPUT_SELECTOR_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_INPUT_SELECTOR, GstInputSelectorClass))
+#define GST_IS_INPUT_SELECTOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_INPUT_SELECTOR))
+#define GST_IS_INPUT_SELECTOR_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_INPUT_SELECTOR))
 
-typedef struct _GstStreamSelector GstStreamSelector;
-typedef struct _GstStreamSelectorClass GstStreamSelectorClass;
+typedef struct _GstInputSelector GstInputSelector;
+typedef struct _GstInputSelectorClass GstInputSelectorClass;
 
-struct _GstStreamSelector {
+struct _GstInputSelector {
   GstElement element;
 
   GstPad *srcpad;
@@ -55,16 +56,16 @@ struct _GstStreamSelector {
   GstSegment pending_stop_segment;
 };
 
-struct _GstStreamSelectorClass {
+struct _GstInputSelectorClass {
   GstElementClass parent_class;
 
-  gint64 (*block)	(GstStreamSelector *self);
-  void (*switch_)	(GstStreamSelector *self, const gchar *pad_name,
+  gint64 (*block)	(GstInputSelector *self);
+  void (*switch_)	(GstInputSelector *self, const gchar *pad_name,
                          gint64 stop_time, gint64 start_time);
 };
 
-GType gst_stream_selector_get_type (void);
+GType gst_input_selector_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_STREAM_SELECTOR_H__ */
+#endif /* __GST_INPUT_SELECTOR_H__ */

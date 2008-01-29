@@ -11,7 +11,7 @@
 <ARG>
 <NAME>GstPitch::pitch</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.1,10]</RANGE>
+<RANGE>[0,1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Pitch</NICK>
 <BLURB>Audio stream pitch.</BLURB>
@@ -21,7 +21,7 @@
 <ARG>
 <NAME>GstPitch::rate</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.1,10]</RANGE>
+<RANGE>[0,1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Rate</NICK>
 <BLURB>Audio stream rate.</BLURB>
@@ -31,7 +31,7 @@
 <ARG>
 <NAME>GstPitch::tempo</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.1,10]</RANGE>
+<RANGE>[0,1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Tempo</NICK>
 <BLURB>Audio stream tempo.</BLURB>
@@ -430,7 +430,7 @@
 
 <ARG>
 <NAME>GstXvidEnc::statsfile</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Statistics Filename</NICK>
@@ -530,7 +530,7 @@
 
 <ARG>
 <NAME>GstNeonhttpSrc::location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Location</NICK>
@@ -540,7 +540,7 @@
 
 <ARG>
 <NAME>GstNeonhttpSrc::proxy</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Proxy</NICK>
@@ -570,7 +570,7 @@
 
 <ARG>
 <NAME>GstNeonhttpSrc::iradio-genre</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>iradio-genre</NICK>
@@ -590,7 +590,7 @@
 
 <ARG>
 <NAME>GstNeonhttpSrc::iradio-name</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>iradio-name</NICK>
@@ -600,7 +600,7 @@
 
 <ARG>
 <NAME>GstNeonhttpSrc::iradio-url</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>iradio-url</NICK>
@@ -620,7 +620,7 @@
 
 <ARG>
 <NAME>GstNeonhttpSrc::user-agent</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
@@ -630,7 +630,7 @@
 
 <ARG>
 <NAME>GstTRM::proxy-address</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>proxy address</NICK>
@@ -1030,7 +1030,7 @@
 
 <ARG>
 <NAME>GstMMS::location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>location</NICK>
@@ -1190,7 +1190,7 @@
 
 <ARG>
 <NAME>GstGLImageSink::display</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Display</NICK>
@@ -1480,7 +1480,7 @@
 
 <ARG>
 <NAME>GstModPlug::songname</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Songname</NICK>
@@ -1670,7 +1670,7 @@
 
 <ARG>
 <NAME>GstJackAudioSink::server</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Server</NICK>
@@ -1780,7 +1780,7 @@
 
 <ARG>
 <NAME>GstDvbSrc::pids</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
 <NICK>pids</NICK>
@@ -1870,7 +1870,7 @@
 
 <ARG>
 <NAME>GstDvbSrc::polarity</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>polarity</NICK>
@@ -1900,7 +1900,7 @@
 
 <ARG>
 <NAME>GstMultiFileSink::location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>File Location</NICK>
@@ -1920,7 +1920,7 @@
 
 <ARG>
 <NAME>GstMultiFileSrc::caps</NAME>
-<TYPE>GstCaps</TYPE>
+<TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Caps</NICK>
@@ -1940,7 +1940,7 @@
 
 <ARG>
 <NAME>GstMultiFileSrc::location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>File Location</NICK>
@@ -1950,7 +1950,7 @@
 
 <ARG>
 <NAME>GstRfbSrc::host</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Host to connect to</NICK>
@@ -1970,7 +1970,7 @@
 
 <ARG>
 <NAME>GstRfbSrc::password</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
 <NICK>Password for authentication</NICK>
@@ -1980,7 +1980,7 @@
 
 <ARG>
 <NAME>GstRfbSrc::version</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>RFB protocol version</NICK>
@@ -17050,7 +17050,7 @@
 
 <ARG>
 <NAME>GstCDAudio::device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Device</NICK>
@@ -17220,7 +17220,7 @@
 
 <ARG>
 <NAME>GstX264Enc::stats-file</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Stats File</NICK>
@@ -17580,7 +17580,7 @@
 
 <ARG>
 <NAME>GstRealAudioDec::password</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Password</NICK>
@@ -17640,7 +17640,7 @@
 
 <ARG>
 <NAME>GstRealAudioDec::ra14-4-names</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Names of 14_4 driver</NICK>
@@ -17650,7 +17650,7 @@
 
 <ARG>
 <NAME>GstRealAudioDec::ra28-8-names</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Names of 28_8 driver</NICK>
@@ -17660,7 +17660,7 @@
 
 <ARG>
 <NAME>GstRealAudioDec::raatrk-names</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Names of atrk driver</NICK>
@@ -17670,7 +17670,7 @@
 
 <ARG>
 <NAME>GstRealAudioDec::racook-names</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Names of cook driver</NICK>
@@ -17680,7 +17680,7 @@
 
 <ARG>
 <NAME>GstRealAudioDec::rasipr-names</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Names of sipr driver</NICK>
@@ -17690,7 +17690,7 @@
 
 <ARG>
 <NAME>GstRealAudioDec::real-codecs-path</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
@@ -17730,7 +17730,7 @@
 
 <ARG>
 <NAME>GstRealVideoDec::real-codecs-path</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
@@ -17740,7 +17740,7 @@
 
 <ARG>
 <NAME>GstRealVideoDec::rv20-names</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Names of rv20 driver</NICK>
@@ -17750,7 +17750,7 @@
 
 <ARG>
 <NAME>GstRealVideoDec::rv30-names</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Names of rv30 driver</NICK>
@@ -17760,7 +17760,7 @@
 
 <ARG>
 <NAME>GstRealVideoDec::rv40-names</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Names of rv40 driver</NICK>
@@ -17830,7 +17830,7 @@
 
 <ARG>
 <NAME>GstSFSrc::location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>File Location</NICK>
@@ -17850,7 +17850,7 @@
 
 <ARG>
 <NAME>GstSFSink::location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>File Location</NICK>
@@ -17880,7 +17880,7 @@
 
 <ARG>
 <NAME>GstSwitch::active-pad</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Active pad</NICK>
@@ -18210,7 +18210,7 @@
 
 <ARG>
 <NAME>GstVCDSrc::device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Device</NICK>
@@ -18270,7 +18270,7 @@
 
 <ARG>
 <NAME>MpegTSParse::program-numbers</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Program Numbers</NICK>
@@ -18280,7 +18280,7 @@
 
 <ARG>
 <NAME>GstAppSink::caps</NAME>
-<TYPE>GstCaps</TYPE>
+<TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Caps</NICK>
@@ -18350,7 +18350,7 @@
 
 <ARG>
 <NAME>GstRtpSession::sdes-cname</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES CNAME</NICK>
@@ -18360,7 +18360,7 @@
 
 <ARG>
 <NAME>GstRtpSession::sdes-email</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES EMAIL</NICK>
@@ -18370,7 +18370,7 @@
 
 <ARG>
 <NAME>GstRtpSession::sdes-location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES LOCATION</NICK>
@@ -18380,7 +18380,7 @@
 
 <ARG>
 <NAME>GstRtpSession::sdes-name</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES NAME</NICK>
@@ -18390,7 +18390,7 @@
 
 <ARG>
 <NAME>GstRtpSession::sdes-note</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES NOTE</NICK>
@@ -18400,7 +18400,7 @@
 
 <ARG>
 <NAME>GstRtpSession::sdes-phone</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES PHONE</NICK>
@@ -18410,7 +18410,7 @@
 
 <ARG>
 <NAME>GstRtpSession::sdes-tool</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES TOOL</NICK>
@@ -18460,7 +18460,7 @@
 
 <ARG>
 <NAME>GstRtpBin::sdes-cname</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES CNAME</NICK>
@@ -18470,7 +18470,7 @@
 
 <ARG>
 <NAME>GstRtpBin::sdes-email</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES EMAIL</NICK>
@@ -18480,7 +18480,7 @@
 
 <ARG>
 <NAME>GstRtpBin::sdes-location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES LOCATION</NICK>
@@ -18490,7 +18490,7 @@
 
 <ARG>
 <NAME>GstRtpBin::sdes-name</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES NAME</NICK>
@@ -18500,7 +18500,7 @@
 
 <ARG>
 <NAME>GstRtpBin::sdes-note</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES NOTE</NICK>
@@ -18510,7 +18510,7 @@
 
 <ARG>
 <NAME>GstRtpBin::sdes-phone</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES PHONE</NICK>
@@ -18520,7 +18520,7 @@
 
 <ARG>
 <NAME>GstRtpBin::sdes-tool</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SDES TOOL</NICK>
@@ -18680,7 +18680,7 @@
 
 <ARG>
 <NAME>DvbBaseBin::polarity</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>polarity</NICK>
@@ -18690,7 +18690,7 @@
 
 <ARG>
 <NAME>DvbBaseBin::program-numbers</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Program Numbers</NICK>
@@ -19100,7 +19100,7 @@
 
 <ARG>
 <NAME>GstFBDEVSink::device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>device</NICK>
@@ -19120,7 +19120,7 @@
 
 <ARG>
 <NAME>Ivorbisfile::metadata</NAME>
-<TYPE>GstCaps</TYPE>
+<TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Metadata</NICK>
@@ -19130,7 +19130,7 @@
 
 <ARG>
 <NAME>Ivorbisfile::streaminfo</NAME>
-<TYPE>GstCaps</TYPE>
+<TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>stream</NICK>
@@ -19221,5 +19221,35 @@
 <NICK>mythtv-version</NICK>
 <BLURB>Change MythTV version.</BLURB>
 <DEFAULT>26</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInputSelector::active-pad</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Active pad</NICK>
+<BLURB>Name of the currently active sink pad.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOutputSelector::active-pad</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Active pad</NICK>
+<BLURB>Name of the currently active src pad.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOutputSelector::resend-latest</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Resend latest buffer</NICK>
+<BLURB>Resend latest buffer after a switch to a new pad.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

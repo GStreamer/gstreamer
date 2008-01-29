@@ -283,6 +283,20 @@ gst_lpwsinc_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-input-selector</FILE>
+<TITLE>input-selector</TITLE>
+GstInputSelector
+<SUBSECTION Standard>
+GstInputSelectorClass
+GST_INPUT_SELECTOR
+GST_INPUT_SELECTOR_CLASS
+GST_IS_INPUT_SELECTOR
+GST_IS_INPUT_SELECTOR_CLASS
+GST_TYPE_INPUT_SELECTOR
+gst_input_selector_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-ivorbisdec</FILE>
 <TITLE>ivorbisdec</TITLE>
 GstIVorbisDec
@@ -410,6 +424,20 @@ GST_IS_NUV_DEMUX
 GST_IS_NUV_DEMUX_CLASS
 GST_TYPE_NUV_DEMUX
 gst_nuv_demux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-output-selector</FILE>
+<TITLE>output-selector</TITLE>
+GstOutputSelector
+<SUBSECTION Standard>
+GstOutputSelectorClass
+GST_OUTPUT_SELECTOR
+GST_OUTPUT_SELECTOR_CLASS
+GST_IS_OUTPUT_SELECTOR
+GST_IS_OUTPUT_SELECTOR_CLASS
+GST_TYPE_OUTPUT_SELECTOR
+gst_output_selector_get_type
 </SECTION>
 
 <SECTION>

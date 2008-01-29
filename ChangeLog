@@ -1,3 +1,40 @@
+2008-01-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	* docs/plugins/inspect/plugin-metadata.xml:
+	* docs/plugins/inspect/plugin-selector.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-switch.xml:
+	* gst/selector/.cvsignore:
+	* gst/selector/Makefile.am:
+	* gst/selector/gstinputselector.c:
+	* gst/selector/gstinputselector.h:
+	* gst/selector/gstoutputselector.c:
+	* gst/selector/gstoutputselector.h:
+	* gst/selector/gstselector-marshal.list:
+	* gst/selector/gstselector.c:
+	* gst/selector/selector.vcproj:
+	* gst/switch/.cvsignore:
+	* gst/switch/Makefile.am:
+	* gst/switch/gstswitch-marshal.list:
+	* gst/switch/gstswitch.c:
+	* gst/switch/gstswitch.h:
+	* gst/switch/switch.vcproj:
+	* tests/icles/.cvsignore:
+	* tests/icles/Makefile.am:
+	* tests/icles/output-selector-test.c:
+	  Replace the switch plugin with the selector plugin. Add output-
+	  selector as the opposite of input-selectoo (was switch). Add a test
+	  for output-selector. Add docs for the elements. The vcproj needs
+	  update. Fixes #500142.
+
 2008-01-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/h264parse/gsth264parse.c: (gst_h264_parse_chain_forward):

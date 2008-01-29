@@ -11,6 +11,7 @@ else
 GST_SOUNDTOUCH_TESTS = 
 endif
 
+
 if USE_METADATA
 if HAVE_GLADE
 if HAVE_GTK
@@ -39,4 +40,13 @@ equalizer_test_CFLAGS  = $(GST_CFLAGS)
 equalizer_test_LDADD   = $(GST_LIBS)
 equalizer_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_PROGRAMS = $(GST_SOUNDTOUCH_TESTS) $(GST_METADATA_TESTS) equalizer-test
+
+output_selector_test_SOURCES = output-selector-test.c
+output_selector_test_CFLAGS  = $(GST_CFLAGS)
+output_selector_test_LDADD   = $(GST_LIBS)
+output_selector_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+
+noinst_PROGRAMS = $(GST_SOUNDTOUCH_TESTS) $(GST_METADATA_TESTS) \
+	equalizer-test output-selector-test
+

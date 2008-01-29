@@ -255,6 +255,29 @@ GObject
         ladspa-imp
       GstXvidEnc
       GstXvidDec
+      GstPitch
+      GstBaseTransform
+        GstAudioFilter
+          GstBPMDetect
+          GstStereo
+          GstSpectrum
+          GstLPWSinc
+          GstBPWSinc
+          GstIirEqualizer
+            GstIirEqualizerNBands
+            GstIirEqualizer3Bands
+            GstIirEqualizer10Bands
+        GstSpeexResample
+        GstVideoFilter
+          GstVideoAnalyse
+          GstVideoDetect
+          GstVideoMark
+        GstRgAnalysis
+        GstRgLimiter
+        GstVideoCrop
+        GstBayer2RGB
+        GstIIR
+        GstDeinterlace
       GstBaseSink
         GstSFSink
         GstVideoSink
@@ -294,27 +317,6 @@ GObject
       GstAmrwbDec
       GstAmrwbParse
       GstAmrwbEnc
-      GstBaseTransform
-        GstSpeexResample
-        GstVideoFilter
-          GstVideoAnalyse
-          GstVideoDetect
-          GstVideoMark
-        GstRgAnalysis
-        GstRgLimiter
-        GstVideoCrop
-        GstAudioFilter
-          GstStereo
-          GstSpectrum
-          GstLPWSinc
-          GstBPWSinc
-          GstIirEqualizer
-            GstIirEqualizerNBands
-            GstIirEqualizer3Bands
-            GstIirEqualizer10Bands
-        GstBayer2RGB
-        GstIIR
-        GstDeinterlace
       MpegTSParse
       GstRawParse
         GstVideoParse
@@ -341,6 +343,8 @@ GObject
       GstSpeed
       GstNsfDec
       GstDVDSpu
+      GstInputSelector
+      GstOutputSelector
       GstModPlug
       GstH264Parse
       GstFLVDemux

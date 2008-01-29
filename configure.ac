@@ -105,11 +105,11 @@ GST_PLUGINS_ALL="\
   replaygain \
   rtpmanager \
   sdp \
+  selector \
   spectrum \
   speexresample \
   speed \
   stereo \
-  switch \
   tta \
   videosignal \
   vmnc \
@@ -1116,11 +1116,11 @@ gst/rawparse/Makefile
 gst/replaygain/Makefile
 gst/rtpmanager/Makefile
 gst/sdp/Makefile
+gst/selector/Makefile
 gst/spectrum/Makefile
 gst/speed/Makefile
 gst/speexresample/Makefile
 gst/stereo/Makefile
-gst/switch/Makefile
 gst/tta/Makefile
 gst/videosignal/Makefile
 gst/vmnc/Makefile

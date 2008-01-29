@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
-	Name="switch"
+	Name="selector"
 	ProjectGUID="{979C216F-0ACF-4956-AE00-055A42D678CF}"
 	Keyword="Win32Proj">
 	<Platforms>
@@ -20,7 +20,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../../../gstreamer/win32;../../../gstreamer;../../../gstreamer/libs;../../../glib;../../../glib/glib;../../../glib/gmodule;&quot;../../gst-libs&quot;;../../../popt/include;../../../libxml2/include/libxml2"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;switch_EXPORTS;HAVE_CONFIG_H;_USE_MATH_DEFINES"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;selector_EXPORTS;HAVE_CONFIG_H;_USE_MATH_DEFINES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -33,15 +33,15 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="glib-2.0.lib gmodule-2.0.lib gthread-2.0.lib gobject-2.0.lib libgstreamer.lib gstbytestream.lib iconv.lib intl.lib"
-				OutputFile="$(OutDir)/gstswitch.dll"
+				OutputFile="$(OutDir)/gstselector.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/Debug;../../../glib/glib;../../../glib/gmodule;../../../glib/gthread;../../../glib/gobject;../../../gettext/lib;../../../libiconv/lib"
 				ModuleDefinitionFile=""
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile="$(OutDir)/switch.pdb"
+				ProgramDatabaseFile="$(OutDir)/selectro.pdb"
 				SubSystem="2"
 				OptimizeReferences="2"
-				ImportLibrary="$(OutDir)/gstswitch.lib"
+				ImportLibrary="$(OutDir)/gstselectro.lib"
 				TargetMachine="1"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -74,7 +74,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="../../../gstreamer/win32;../../../gstreamer;../../../gstreamer/libs;../../../glib;../../../glib/glib;../../../glib/gmodule;&quot;../../gst-libs&quot;;../../../popt/include;../../../libxml2/include/libxml2"
-				PreprocessorDefinitions="WIN32;NDEBUG;GST_DISABLE_GST_DEBUG;_WINDOWS;_USRDLL;switch_EXPORTS;HAVE_CONFIG_H;_USE_MATH_DEFINES"
+				PreprocessorDefinitions="WIN32;NDEBUG;GST_DISABLE_GST_DEBUG;_WINDOWS;_USRDLL;selector_EXPORTS;HAVE_CONFIG_H;_USE_MATH_DEFINES"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -85,7 +85,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="glib-2.0.lib gmodule-2.0.lib gthread-2.0.lib gobject-2.0.lib libgstreamer.lib gstbytestream.lib iconv.lib intl.lib"
-				OutputFile="$(OutDir)/gstswitch.dll"
+				OutputFile="$(OutDir)/gstselector.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/Release;../../../glib/glib;../../../glib/gmodule;../../../glib/gthread;../../../glib/gobject;../../../gettext/lib;../../../libiconv/lib"
 				ModuleDefinitionFile=""
@@ -93,7 +93,7 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary="$(OutDir)/gstswitch.lib"
+				ImportLibrary="$(OutDir)/gstselector.lib"
 				TargetMachine="1"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -126,7 +126,7 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath=".\gstswitch.c">
+				RelativePath=".\gstselector.c">
 			</File>
 		</Filter>
 		<Filter
@@ -134,7 +134,7 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
-				RelativePath=".\gstswitch.h">
+				RelativePath=".\gstselector.h">
 			</File>
 		</Filter>
 		<Filter
