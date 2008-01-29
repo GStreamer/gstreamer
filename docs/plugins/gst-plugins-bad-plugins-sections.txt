@@ -137,6 +137,20 @@ SPU_STATE_FLAGS_MASK
 </SECTION>
 
 <SECTION>
+<FILE>gstiirequalizer</FILE>
+<TITLE>GstIirEqualize</TITLE>
+GstIirEqualizer
+<SUBSECTION Standard>
+GstIirEqualizerClass
+GST_IIR_EQUALIZER
+GST_IIR_EQUALIZER_CLASS
+GST_IS_IIR_EQUALIZER
+GST_IS_IIR_EQUALIZER_CLASS
+GST_TYPE_IIR_EQUALIZER
+gst_iir_equalizer_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-equalizer-3bands</FILE>
 <TITLE>equalizer-3bands</TITLE>
 GstIirEqualizer3Bands
@@ -324,6 +338,32 @@ GST_IS_JACK_AUDIO_SINK
 GST_IS_JACK_AUDIO_SINK_CLASS
 GST_TYPE_JACK_AUDIO_SINK
 gst_jack_audio_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstbasemetadata</FILE>
+<TITLE>GstBaseMetadata/TITLE>
+GstBaseMetadata
+GST_BASE_METADATA_SINK_PAD
+GST_BASE_METADATA_SRC_PAD
+gst_base_metadata_get_option_flag
+gst_base_metadata_set_option_flag
+gst_base_metadata_unset_option_flag
+gst_base_metadata_update_inject_segment_with_new_data
+<SUBSECTION Standard>
+GstBaseMetadataClass
+GST_BASE_METADATA
+GST_BASE_METADATA_CLASS
+GST_IS_BASE_METADATA
+GST_IS_BASE_METADATA_CLASS
+GST_BASE_METADATA_GET_CLASS
+GST_BASE_METADATA_CAST
+GST_TYPE_BASE_METADATA
+gst_base_metadata_get_type
+GST_BASE_METADATA_EXIF_ADAPTER
+GST_BASE_METADATA_IPTC_ADAPTER
+GST_BASE_METADATA_XMP_ADAPTER
+GST_BASE_METADATA_IMG_TYPE
 </SECTION>
 
 <SECTION>

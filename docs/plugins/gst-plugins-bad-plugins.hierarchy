@@ -339,7 +339,6 @@ GObject
       GstXingMux
       GstTtaParse
       GstTtaDec
-      GstSwitch
       GstSpeed
       GstNsfDec
       GstDVDSpu

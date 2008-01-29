@@ -1,5 +1,13 @@
 2008-01-29  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.types:
+	  Add base classes for metadata and equalizer (no introspection yet).
+
+2008-01-29  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/metadata/README:
 	  Formatting.
 	* tests/icles/metadata_editor.c:

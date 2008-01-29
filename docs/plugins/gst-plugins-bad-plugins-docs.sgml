@@ -143,4 +143,10 @@
     <xi:include href="xml/plugin-xvid.xml" />
     <xi:include href="xml/plugin-y4menc.xml" />
   </chapter>
+
+  <chapter>
+    <title>gst-plugins-bad Classes</title>
+    <xi:include href="xml/gstbasemetadata.xml" />
+    <xi:include href="xml/gstiirequalizer.xml" />
+  </chapter>
 </book>
