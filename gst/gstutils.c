@@ -1551,8 +1551,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
                   gst_element_get_request_pad (src, srctempl->name_template);
               destpad =
                   gst_element_get_request_pad (dest, desttempl->name_template);
-              if (srcpad && destpad
-                  && pad_link_maybe_ghosting (srcpad, destpad)) {
+              if (pad_link_maybe_ghosting (srcpad, destpad)) {
                 GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
                     "linked pad %s:%s to pad %s:%s",
                     GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
@@ -1561,10 +1560,8 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
                 return TRUE;
               }
               /* it failed, so we release the request pads */
-              if (srcpad)
-                gst_element_release_request_pad (src, srcpad);
-              if (destpad)
-                gst_element_release_request_pad (dest, destpad);
+              gst_element_release_request_pad (src, srcpad);
+              gst_element_release_request_pad (dest, destpad);
             }
           }
         }
