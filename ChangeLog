@@ -1,3 +1,10 @@
+=== release 0.10.17 ===
+
+2008-01-30  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.17, "Peanut Butter and Jelly"
+
 2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst-libs/gst/interfaces/mixeroptions.c:

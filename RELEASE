@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.16 "Scheduled Interruption"
+Release notes for GStreamer Base Plug-ins 0.10.17 "Peanut Butter and Jelly"
         
 
 
@@ -54,47 +54,15 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Handle newer Theora granule-pos semantics
-      * Introducing first alpha version playbin2 - the upcoming successor to playbin
-      * Fixes in playbin handling of stream-switching
-      * New API for uniform handling of raw-video format buffers.
-      * Improvements for RTSP/RTP handling
-      * RIFF lib additions for VC-1 and AVC1 fourccs
-      * Many other bug-fixes and improvements
+      * Work-around ABI breakage due to unfortunate use of the GST_DISABLE_DEPRECATED macro
+      * Export 2 missing functions needed for bindings in the win32 build
+      * Initialise the GstRingBuffer GType from a thread-safe context
 
 Bugs fixed in this release
      
-      * 506132 : Review of changes in video/video.h
-      * 320984 : [oggdemux] cannot handle multiple chains
-      * 373011 : [playbin] throws error when switching off subtitles
-      * 436756 : Intermittent crashes in Pidgin in audioclock g_type_class...
-      * 462740 : [streamselector] patch to improve default stream selection
-      * 486840 : [alsamixer] use _all variants when setting the mixer
-      * 497964 : theoraenc test fails
-      * 498228 : gst-plugins-base-0.10.15 does not compile on FreeBSD (Gen...
-      * 499697 : Provide better pkg-config files
-      * 502497 : [subparse] SubRip subtitles starting from 0 not recognised
-      * 503440 : The control sockets used by gstrtspconnection.c are never...
-      * 503930 : [cdda] warning: 'eos' may be used uninitialized in this f...
-      * 506928 : [alsamixer] add " PCM " as master fall back for cards that ...
-      * 508138 : [decodebin] does not error out if pad activation fails
-      * 509762 : missing file in win32/MANIFEST
-      * 511274 : gst_rtp_buffer_get_extension_data is returning FALSE when...
-      * 496731 : [PATCH] xvimagesink leaks memory if initialization fails
-      * 496761 : [PATCH] RTSP message leaks memory when uninitialized
-      * 500763 : SIGSEGV while playing ogg audio file
-
-API changed in this release
-     
-- API additions:
-    
-* New GstVideoFormat API and helper functions in libgstvideo
-* gst_base_audio_sink_set_provide_clock()
-* gst_base_audio_sink_get_provide_clock()
-* gst_base_audio_sink_set_slave_method()
-* gst_base_audio_sink_get_slave_method()
-* gst_base_audio_src_set_provide_clock()
-* gst_base_audio_src_get_provide_clock()
+      * 511825 : [RTSP] compiler warning on FreeBSD
+      * 513018 : crash in Volume Control: I typed my password at t...
+      * 512334 : g_critical() when using GstAudioFilter & GST_DEBUG
 
 Download
 
@@ -124,22 +92,7 @@ Applications
   
 Contributors to this release
     
-      * Bastien Nocera
-      * David Schleef
-      * Edward Hervey
       * Jan Schmidt
-      * Jerone Young
-      * Joe Peterson
-      * Julien MOUTTE
-      * Julien Moutte
-      * Michael Smith
-      * Peter Kjellerstedt
-      * Robin Stocker
       * Sebastian Dröge
-      * Sebastien Moutte
-      * Stefan Kost
-      * Thijs Vermeir
       * Tim-Philipp Müller
-      * Tommi Myöhänen
-      * Wim Taymans
  

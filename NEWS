@@ -1,6 +1,11 @@
-This is GStreamer Base Plug-ins 0.10.16, "Scheduled Interruption"
+This is GStreamer Base Plug-ins 0.10.17, "Peanut Butter and Jelly"
 
 IMPORTANT NOTES
+
+This release is identical to 0.10.16, with several small but significant bug
+fixes. The most important one fixes crashes in gnome-volume-control and other
+consumers of the GstMixer API, due to an unfortunate ABI break. Everyone
+should use 0.10.17 instead of 0.10.16 in all cases.
 
 1) Please note that decodebin2 and playbin2 API included in this release is
 still considered unstable and WILL change in future releases. At this stage,
@@ -23,6 +28,19 @@ upcoming release of gst-plugins-ugly next month. In the meantime as a
 workaround, you can set the rank of mp3parse to GST_RANK_NONE in 
 gst-plugins-ugly/gst/mpegaudioparse/gstmpegaudioparse.c when compiling, or
 or remove the /usr/lib/gstreamer-0.10/libgstmpegaudioparse.so file entirely.
+
+Changes since 0.10.16:
+        
+      * Work-around ABI breakage due to unfortunate use of the
+        GST_DISABLE_DEPRECATED macro
+      * Export 2 missing functions needed for bindings in the win32 build
+      * Initialise the GstRingBuffer GType from a thread-safe context
+
+Bugs fixed since 0.10.16:
+        
+      * 511825 : [RTSP] compiler warning on FreeBSD
+      * 513018 : crash in Volume Control: I typed my password at t...
+      * 512334 : g_critical() when using GstAudioFilter & GST_DEBUG
 
 Changes since 0.10.15:
     

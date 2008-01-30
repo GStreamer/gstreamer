@@ -89,6 +89,7 @@ GObject
     GstClock
       GstSystemClock
         GstAudioClock
+    GstRingBuffer
   GstSignalObject
   LinkConnection
     GIOPConnection
