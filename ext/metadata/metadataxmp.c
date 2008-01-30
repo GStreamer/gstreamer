@@ -127,7 +127,7 @@ metadatamux_xmp_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
  * includes
  */
 
-#include <xmp.h>
+#include <exempi/xmp.h>
 #include <string.h>
 
 /*
@@ -829,13 +829,21 @@ metadatamux_xmp_for_each_tag_in_list (const GstTagList * list,
                 NULL, &options)) {
 
           if (XMP_IS_PROP_SIMPLE (options)) {
+#ifdef XMP_1_99_5
+            xmp_set_property (xmp, smap->schema, stagmap->xmp_tag, value, 0);
+#else
             xmp_set_property (xmp, smap->schema, stagmap->xmp_tag, value);
+#endif
           } else {
             xmp_set_array_item (xmp, smap->schema, stagmap->xmp_tag, 1,
                 value, 0);
           }
         } else {
+#ifdef XMP_1_99_5
+          xmp_set_property (xmp, smap->schema, stagmap->xmp_tag, value, 0);
+#else
           xmp_set_property (xmp, smap->schema, stagmap->xmp_tag, value);
+#endif
         }
 
         g_free (value);

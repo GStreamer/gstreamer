@@ -1,3 +1,11 @@
+2008-01-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* ext/metadata/metadataxmp.c:
+	(metadatamux_xmp_for_each_tag_in_list):
+	Fix build with exempi >= 1.99.5 and fix the include
+	path for exempi.
+
 2008-01-30  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/TODO:

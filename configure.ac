@@ -519,15 +519,10 @@ AG_GST_CHECK_FEATURE(METADATA, [METADATA muxer and demuxer], metadata, [
   PKG_CHECK_MODULES(IPTC, libiptcdata >= 1.0.2, HAVE_IPTC="yes", [
     HAVE_IPTC="no"
   ])
-  AC_CHECK_HEADER(exempi-2.0/exempi/xmp.h, 
-    [
-    AC_CHECK_LIB(exempi, xmp_init, 
-      [
-      HAVE_XMP="yes"
-      XMP_CFLAGS="-I/usr/local/include/exempi-2.0/exempi/"
-      XMP_LIBS="-lexempi"
-      ], HAVE_XMP="no")
-    ], HAVE_XMP="no")
+  PKG_CHECK_MODULES(XMP, exempi-2.0, HAVE_XMP="yes", [
+    HAVE_XMP="no"
+  ])
+  PKG_CHECK_MODULES(XMP_1_99_5, exempi-2.0 >= 1.99.5, XMP_CFLAGS="-DXMP_1_99_5 $XMP_CFLAGS", AC_MSG_RESULT(no))
   if test x$HAVE_EXIF = xyes; then
     METADATA_CFLAGS="-DHAVE_EXIF $EXIF_CFLAGS $METADATA_CFLAGS"
     METADATA_LIBS="$EXIF_LIBS $METADATA_LIBS -lm"
