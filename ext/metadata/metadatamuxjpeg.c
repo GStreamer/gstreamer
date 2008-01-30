@@ -41,6 +41,41 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * SECTION: metadatamuxjpeg
+ * @short_description: This module provides functions to parse JPEG files in
+ * order to write metadata to it.
+ *
+ * This module parses a JPEG stream to find the places in which metadata (EXIF,
+ * IPTC, XMP) chunks would be written. It also wraps metadata chunks with JPEG
+ * marks according to the specification.
+ *
+ * <refsect2>
+ * <para>
+ * #metadatamux_jpeg_init must be called before any other function in this
+ * module and must be paired with a call to #metadatamux_jpeg_dispose.
+ * #metadatamux_jpeg_parse is used to parse the stream (find the place
+ * metadata chunks should be written to).
+ * #metadatamux_jpeg_lazy_update do nothing.
+ * </para>
+ * <para>
+ * EXIF chunks will always be the first chunk (replaces JFIF). IPTC and XMP
+ * chunks will be placed or second chunk (after JFIF or EXIF) or third chunk
+ * if both (IPTC and XMP) are written to the file.
+ * </para>
+ * <para>
+ * When a EXIF chunk is written to the JPEG stream, if there is a JFIF chunk
+ * as the first chunk, it will be stripped out.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2008-01-24 (0.10.15)
+ */
+
+/*
+ * includes
+ */
+
 #include "metadatamuxjpeg.h"
 
 #include <string.h>
@@ -49,109 +84,51 @@
 #include <libiptcdata/iptc-jpeg.h>
 #endif
 
+/*
+ * defines and macros
+ */
+
+#define READ(buf, size) ( (size)--, *((buf)++) )
+
+/*
+ * static helper functions declaration
+ */
+
 static MetadataParsingReturn
 metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
     guint8 ** next_start, guint32 * next_size);
 
-#define READ(buf, size) ( (size)--, *((buf)++) )
-
 static void
 metadatamux_wrap_chunk (MetadataChunk * chunk, const guint8 * buf,
-    guint32 buf_size, guint8 a, guint8 b)
-{
-  guint8 *data = g_new (guint8, 4 + buf_size + chunk->size);
-
-  memcpy (data + 4 + buf_size, chunk->data, chunk->size);
-  g_free (chunk->data);
-  chunk->data = data;
-  chunk->size += 4 + buf_size;
-  data[0] = a;
-  data[1] = b;
-  data[2] = ((chunk->size - 2) >> 8) & 0xFF;
-  data[3] = (chunk->size - 2) & 0xFF;
-  if (buf && buf_size) {
-    memcpy (data + 4, buf, buf_size);
-  }
-}
+    guint32 buf_size, guint8 a, guint8 b);
 
 #ifdef HAVE_IPTC
 static gboolean
-metadatamux_wrap_iptc_with_ps3 (unsigned char **buf, unsigned int *buf_size)
-{
-  unsigned int out_size = *buf_size + 4096;
-  unsigned char *outbuf = g_new (unsigned char, out_size);
-  int size_written;
-  gboolean ret = TRUE;
-
-  size_written =
-      iptc_jpeg_ps3_save_iptc (NULL, 0, *buf, *buf_size, outbuf, out_size);
-
-  g_free (*buf);
-  *buf = NULL;
-  *buf_size = 0;
-
-  if (size_written < 0) {
-    g_free (outbuf);
-    ret = FALSE;
-  } else {
-    *buf_size = size_written;
-    *buf = outbuf;
-  }
-
-  return ret;
-
-}
+metadatamux_wrap_iptc_with_ps3 (unsigned char **buf, unsigned int *buf_size);
 #endif /* #ifdef HAVE_IPTC */
 
-void
-metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
-{
-  gsize i;
-  gboolean has_exif = FALSE;
 
-  for (i = 0; i < jpeg_data->inject_chunks->len; ++i) {
-    if (jpeg_data->inject_chunks->chunk[i].size > 0 &&
-        jpeg_data->inject_chunks->chunk[i].data) {
-      switch (jpeg_data->inject_chunks->chunk[i].type) {
-        case MD_CHUNK_EXIF:
-          metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i], NULL, 0,
-              0xFF, 0xE1);
-          has_exif = TRUE;
-          break;
-        case MD_CHUNK_IPTC:
-#ifdef HAVE_IPTC
-        {
-          if (metadatamux_wrap_iptc_with_ps3 (&jpeg_data->inject_chunks->
-                  chunk[i].data, &jpeg_data->inject_chunks->chunk[i].size)) {
-            metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i], NULL,
-                0, 0xFF, 0xED);
-          } else {
-            GST_ERROR ("Invalid IPTC chunk\n");
-            /* FIXME: remove entry from list */
-          }
-        }
-#endif /* #ifdef HAVE_IPTC */
-          break;
-        case MD_CHUNK_XMP:
-        {
-          static const char XmpHeader[] = "http://ns.adobe.com/xap/1.0/";
+/*
+ * extern functions implementations
+ */
 
-          metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i],
-              XmpHeader, sizeof (XmpHeader), 0xFF, 0xE1);
-        }
-          break;
-        default:
-          break;
-      }
-    }
-  }
-  if (!has_exif) {
-    /* EXIF not injected so not strip JFIF anymore */
-    metadata_chunk_array_clear (jpeg_data->strip_chunks);
-  }
-
-}
+/*
+ * metadatamux_jpeg_init:
+ * @jpeg_data: [in] jpeg data handler to be inited
+ * @strip_chunks: Array of chunks (offset and size) marked for removal
+ * @inject_chunks: Array of chunks (offset, data, size) marked for injection
+ * adapter (@exif_adpt, @iptc_adpt, @xmp_adpt). Or FALSE if should also put
+ * them on @strip_chunks.
+ *
+ * Init jpeg data handle.
+ * This function must be called before any other function from this module.
+ * This function must not be called twice without call to
+ * #metadatamux_jpeg_dispose beteween them.
+ * @see_also: #metadatamux_jpeg_dispose #metadatamux_jpeg_parse
+ *
+ * Returns: nothing
+ */
 
 void
 metadatamux_jpeg_init (JpegMuxData * jpeg_data,
@@ -164,6 +141,16 @@ metadatamux_jpeg_init (JpegMuxData * jpeg_data,
 
 }
 
+/*
+ * metadatamux_jpeg_dispose:
+ * @jpeg_data: [in] jpeg data handler to be freed
+ *
+ * Call this function to free any resource allocated by #metadatamux_jpeg_init
+ * @see_also: #metadatamux_jpeg_init
+ *
+ * Returns: nothing
+ */
+
 void
 metadatamux_jpeg_dispose (JpegMuxData * jpeg_data)
 {
@@ -172,6 +159,42 @@ metadatamux_jpeg_dispose (JpegMuxData * jpeg_data)
 
   jpeg_data->state = JPEG_MUX_NULL;
 }
+
+/*
+ * metadatamux_jpeg_parse:
+ * @jpeg_data: [in] jpeg data handle
+ * @buf: [in] data to be parsed
+ * @bufsize: [in] size of @buf in bytes
+ * @offset: is the offset where @buf starts from the beginnig of the whole 
+ * stream
+ * @next_start: is a pointer after @buf which indicates where @buf should start
+ * on the next call to this function. It means, that after returning, this
+ * function has consumed *@next_start - @buf bytes. Which also means 
+ * that @offset should also be incremanted by (*@next_start - @buf) for the
+ * next time.
+ * @next_size: [out] number of minimal bytes in @buf for the next call to this
+ * function
+ *
+ * This function is used to parse a JPEG stream step-by-step incrementally.
+ * Basically this function works like a state machine, that will run in a loop
+ * while there is still bytes in @buf to be read or it has finished parsing.
+ * If the it hasn't parsed yet and there is no more data in @buf, then the
+ * current state is saved and a indication will be make about the buffer to
+ * be passed by the caller function.
+ * @see_also: #metadatamux_jpeg_init
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%META_PARSING_ERROR
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_DONE if parse has finished. Now strip and
+ * inject chunks has been found
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_NEED_MORE_DATA if this function should be
+ * called again (look @next_start and @next_size)
+ * </para></listitem>
+ * </itemizedlist>
+ */
 
 MetadataParsingReturn
 metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
@@ -227,8 +250,114 @@ done:
 
 }
 
+/*
+ * metadatamux_jpeg_lazy_update:
+ * @jpeg_data: [in] jpeg data handle
+ * 
+ * This function wrap metadata chunk with proper JPEG marks. In case of IPTC
+ * it will be wrapped by PhotoShop and then by JPEG mark.
+ * @see_also: #metadata_lazy_update
+ *
+ * Returns: nothing
+ */
 
-/* look for markers */
+void
+metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
+{
+  gsize i;
+  gboolean has_exif = FALSE;
+
+  for (i = 0; i < jpeg_data->inject_chunks->len; ++i) {
+    if (jpeg_data->inject_chunks->chunk[i].size > 0 &&
+        jpeg_data->inject_chunks->chunk[i].data) {
+      switch (jpeg_data->inject_chunks->chunk[i].type) {
+        case MD_CHUNK_EXIF:
+          metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i], NULL, 0,
+              0xFF, 0xE1);
+          has_exif = TRUE;
+          break;
+        case MD_CHUNK_IPTC:
+#ifdef HAVE_IPTC
+        {
+          if (metadatamux_wrap_iptc_with_ps3 (&jpeg_data->inject_chunks->
+                  chunk[i].data, &jpeg_data->inject_chunks->chunk[i].size)) {
+            metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i], NULL,
+                0, 0xFF, 0xED);
+          } else {
+            GST_ERROR ("Invalid IPTC chunk\n");
+            /* FIXME: remove entry from list */
+          }
+        }
+#endif /* #ifdef HAVE_IPTC */
+          break;
+        case MD_CHUNK_XMP:
+        {
+          static const char XmpHeader[] = "http://ns.adobe.com/xap/1.0/";
+
+          metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i],
+              XmpHeader, sizeof (XmpHeader), 0xFF, 0xE1);
+        }
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  if (!has_exif) {
+    /* EXIF not injected so not strip JFIF anymore */
+    metadata_chunk_array_clear (jpeg_data->strip_chunks);
+  }
+
+}
+
+
+
+/*
+ * static helper functions implementation
+ */
+
+/*
+ * metadatamux_jpeg_reading:
+ * @jpeg_data: [in] jpeg data handle
+ * @buf: [in] data to be parsed. @buf will increment during the parsing step.
+ * So it will hold the next byte to be read inside a parsing function or on
+ * the next nested parsing function. And so, @bufsize will decrement.
+ * @bufsize: [in] size of @buf in bytes. This value will decrement during the
+ * parsing for the same reason that @buf will advance.
+ * @offset: is the offset where @step_buf starts from the beginnig of the
+ * stream
+ * @step_buf: holds the pointer to the buffer passed to
+ * #metadatamux_jpeg_parse. It means that any point inside this function
+ * the offset (related to the beginning of the whole stream) after the last 
+ * byte read so far is "(*buf - step_buf) + offset"
+ * @next_start: is a pointer after @step_buf which indicates where the next
+ * call to #metadatamux_jpeg_parse should start on the next call to this
+ * function. It means, that after return, this function has
+ * consumed *@next_start - @buf bytes. Which also means that @offset should
+ * also be incremanted by (*@next_start - @buf) for the next time.
+ * @next_size: [out] number of minimal bytes in @buf for the next call to this
+ * function
+ *
+ * This function is used to parse a JPEG stream step-by-step incrementally.
+ * If this function quickly finds the place (offset) in which EXIF, IPTC and
+ * XMP chunk should be written to.
+ * The found places are written to @jpeg_data->inject_chunks
+ * @see_also: #metadatamux_jpeg_init
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%META_PARSING_ERROR
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_DONE if parse has finished. Now strip and
+ * inject chunks has been found. Or some chunk has been found and should be
+ * held or jumped.
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_NEED_MORE_DATA if this function should be
+ * called again (look @next_start and @next_size)
+ * </para></listitem>
+ * </itemizedlist>
+ */
+
 static MetadataParsingReturn
 metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
@@ -338,3 +467,65 @@ done:
 
 
 }
+
+/*
+ * metadatamux_wrap_chunk:
+ * @chunk: chunk to be wrapped
+ * @buf: data to inject in the beginning of @chunk->data and after @a and @b
+ * @buf_size: size in bytes of @buf
+ * @a: together with @b forms the JPEG mark to be injected in the beginning
+ * @b: look at @a
+ *
+ * Wraps a chunk if a JPEG mark (@a@b) and, if @buf_size > 0, with some data
+ * (@buf)
+ *
+ * Returns: nothing
+ */
+
+static void
+metadatamux_wrap_chunk (MetadataChunk * chunk, const guint8 * buf,
+    guint32 buf_size, guint8 a, guint8 b)
+{
+  guint8 *data = g_new (guint8, 4 + buf_size + chunk->size);
+
+  memcpy (data + 4 + buf_size, chunk->data, chunk->size);
+  g_free (chunk->data);
+  chunk->data = data;
+  chunk->size += 4 + buf_size;
+  data[0] = a;
+  data[1] = b;
+  data[2] = ((chunk->size - 2) >> 8) & 0xFF;
+  data[3] = (chunk->size - 2) & 0xFF;
+  if (buf && buf_size) {
+    memcpy (data + 4, buf, buf_size);
+  }
+}
+
+#ifdef HAVE_IPTC
+static gboolean
+metadatamux_wrap_iptc_with_ps3 (unsigned char **buf, unsigned int *buf_size)
+{
+  unsigned int out_size = *buf_size + 4096;
+  unsigned char *outbuf = g_new (unsigned char, out_size);
+  int size_written;
+  gboolean ret = TRUE;
+
+  size_written =
+      iptc_jpeg_ps3_save_iptc (NULL, 0, *buf, *buf_size, outbuf, out_size);
+
+  g_free (*buf);
+  *buf = NULL;
+  *buf_size = 0;
+
+  if (size_written < 0) {
+    g_free (outbuf);
+    ret = FALSE;
+  } else {
+    *buf_size = size_written;
+    *buf = outbuf;
+  }
+
+  return ret;
+
+}
+#endif /* #ifdef HAVE_IPTC */

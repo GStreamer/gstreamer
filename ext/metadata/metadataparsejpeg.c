@@ -185,7 +185,7 @@ metadataparse_jpeg_dispose (JpegParseData * jpeg_data)
 }
 
 /*
- * metadata_parse:
+ * metadataparse_jpeg_parse:
  * @jpeg_data: [in] jpeg data handle
  * @buf: [in] data to be parsed
  * @bufsize: [in] size of @buf in bytes
@@ -310,7 +310,7 @@ done:
  * @jpeg_data: [in] jpeg data handle
  * 
  * This function do nothing
- * @see_also: metadata_lazy_update
+ * @see_also: #metadata_lazy_update
  *
  * Returns: nothing
  */

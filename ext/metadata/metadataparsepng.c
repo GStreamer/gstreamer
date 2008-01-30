@@ -152,7 +152,7 @@ metadataparse_png_dispose (PngParseData * png_data)
 }
 
 /*
- * metadata_parse:
+ * metadataparse_png_parse:
  * @png_data: [in] png data handle
  * @buf: [in] data to be parsed
  * @bufsize: [in] size of @buf in bytes
@@ -273,7 +273,7 @@ done:
  * @png_data: [in] png data handle
  * 
  * This function do nothing
- * @see_also: metadata_lazy_update
+ * @see_also: #metadata_lazy_update
  *
  * Returns: nothing
  */

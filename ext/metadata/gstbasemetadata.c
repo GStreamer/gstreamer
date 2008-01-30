@@ -159,7 +159,8 @@ gst_base_metadata_parse (GstBaseMetadata * filter, const guint8 * buf,
 
 static gboolean
 gst_base_metadata_strip_push_buffer (GstBaseMetadata * base,
-    gint64 offset_orig, GstBuffer ** prepend, GstBuffer ** buf);
+    const gint64 offset_orig, GstBuffer ** prepend, GstBuffer ** buf,
+    gboolean inject_begin);
 
 static int
 gst_base_metadata_buf_get_intersection_seg (const gint64 offset, guint32 size,
@@ -168,7 +169,7 @@ gst_base_metadata_buf_get_intersection_seg (const gint64 offset, guint32 size,
 
 static gboolean
 gst_base_metadata_translate_pos_to_orig (GstBaseMetadata * base,
-    gint64 pos, gint64 * orig_pos, GstBuffer ** buf);
+    gint64 pos, gint64 * orig_pos, GstBuffer ** buf, guint32 max_size);
 
 static gboolean gst_base_metadata_calculate_offsets (GstBaseMetadata * base);
 
@@ -639,6 +640,7 @@ done:
  * beginning og @buf
  * @buf: a pointer to a buffer that will be modified (data striped/injected or
  * prepended)
+ * @inject_begin: is TRUE can inject a chunk start exactly in @offset_orig
  *
  * Strip bytes from @buf that are part of some chunk that will be striped. Add
  * a whole injected chunk if some inject chunk starts into the buffer. Prepend
@@ -658,7 +660,8 @@ done:
 
 static gboolean
 gst_base_metadata_strip_push_buffer (GstBaseMetadata * base,
-    gint64 offset_orig, GstBuffer ** prepend, GstBuffer ** buf)
+    const gint64 offset_orig, GstBuffer ** prepend, GstBuffer ** buf,
+    gboolean inject_begin)
 {
   MetadataChunk *strip = META_DATA_STRIP_CHUNKS (base->metadata).chunk;
   MetadataChunk *inject = META_DATA_INJECT_CHUNKS (base->metadata).chunk;
@@ -692,11 +695,13 @@ gst_base_metadata_strip_push_buffer (GstBaseMetadata * base,
       int res;
 
       if (inject[i].offset_orig >= offset_orig) {
-        if (inject[i].offset_orig < offset_orig + size_buf_in) {
-          injected_bytes += inject[i].size;
-        } else {
-          /* segment is after size (segments are sorted) */
-          break;
+        if (G_LIKELY (inject_begin || inject[i].offset_orig > offset_orig)) {
+          if (inject[i].offset_orig < offset_orig + size_buf_in) {
+            injected_bytes += inject[i].size;
+          } else {
+            /* segment is after size (segments are sorted) */
+            break;
+          }
         }
       }
     }
@@ -846,20 +851,22 @@ inject:
          original buffer */
 
       if (inject[i].offset_orig >= offset_orig) {
-        if (inject[i].offset_orig <
-            offset_orig + size_buf_in + striped_bytes - injected_bytes) {
-          /* insert */
-          guint32 buf_off =
-              inject[i].offset_orig - offset_orig - striped_so_far +
-              injected_bytes;
-          memmove (data + buf_off + inject[i].size, data + buf_off,
-              size_buf_in - buf_off);
-          memcpy (data + buf_off, inject[i].data, inject[i].size);
-          injected_bytes += inject[i].size;
-          size_buf_in += inject[i].size;
-        } else {
-          /* segment is after size (segments are sorted) */
-          break;
+        if (G_LIKELY (inject_begin || inject[i].offset_orig > offset_orig)) {
+          if (inject[i].offset_orig <
+              offset_orig + size_buf_in + striped_bytes - injected_bytes) {
+            /* insert */
+            guint32 buf_off =
+                inject[i].offset_orig - offset_orig - striped_so_far +
+                injected_bytes;
+            memmove (data + buf_off + inject[i].size, data + buf_off,
+                size_buf_in - buf_off);
+            memcpy (data + buf_off, inject[i].data, inject[i].size);
+            injected_bytes += inject[i].size;
+            size_buf_in += inject[i].size;
+          } else {
+            /* segment is after size (segments are sorted) */
+            break;
+          }
         }
       }
     }
@@ -988,6 +995,7 @@ done:
  * @orig_pos: position in original stream
  * @buf: if not NULL, will have data that starts at some point into a injected
  * chunk
+ * @max_size: the maximum size to allocate to @buf. pass 0 if don't care
  *
  * Given a position in output stream (@pos), returns the position in original 
  * stream (@orig_pos) that contains the same data. If @pos is into a injected
@@ -1006,7 +1014,7 @@ done:
 
 static gboolean
 gst_base_metadata_translate_pos_to_orig (GstBaseMetadata * base,
-    gint64 pos, gint64 * orig_pos, GstBuffer ** buf)
+    gint64 pos, gint64 * orig_pos, GstBuffer ** buf, guint32 max_size)
 {
   MetadataChunk *strip = META_DATA_STRIP_CHUNKS (base->metadata).chunk;
   MetadataChunk *inject = META_DATA_INJECT_CHUNKS (base->metadata).chunk;
@@ -1014,9 +1022,11 @@ gst_base_metadata_translate_pos_to_orig (GstBaseMetadata * base,
   const gsize inject_len = META_DATA_INJECT_CHUNKS (base->metadata).len;
   const gint64 duration_orig = base->duration_orig;
   const gint64 duration = base->duration;
+  gboolean ret = TRUE;
+  const gint64 saved_pos = pos;
 
   int i;
-  gboolean ret = TRUE;
+
   guint64 new_buf_size = 0;
   guint64 injected_before = 0;
 
@@ -1032,56 +1042,67 @@ gst_base_metadata_translate_pos_to_orig (GstBaseMetadata * base,
   /* calculate for injected */
 
   /* just calculate size */
-  *orig_pos = pos;              /* save pos */
   for (i = 0; i < inject_len; ++i) {
-    /* check if pos in inside chunk */
-    if (inject[i].offset <= pos) {
+    if (pos >= inject[i].offset) {
       if (pos < inject[i].offset + inject[i].size) {
-        /* orig pos points after insert chunk */
-        new_buf_size += inject[i].size;
-        /* put pos after current chunk */
-        pos = inject[i].offset + inject[i].size;
+        /* pos is inside the chunk */
+        const guint32 offset_in_chunk = pos - inject[i].offset;
+
         ret = FALSE;
+        pos = inject[i].offset + inject[i].size;        /* put pos just after chunk */
+        new_buf_size += inject[i].size - offset_in_chunk;
+        /* we still continue, 'cause the next chunk could be just after this */
       } else {
         /* in case pos is not inside a injected chunk */
         injected_before += inject[i].size;
       }
     } else {
+      /* pos is before the chunk */
       break;
     }
   }
 
   /* alloc buffer and calcute original pos */
-  if (buf && ret == FALSE) {
-    guint8 *data;
+  if (ret == FALSE) {
 
-    if (*buf)
-      gst_buffer_unref (*buf);
-    *buf = gst_buffer_new_and_alloc (new_buf_size);
-    data = GST_BUFFER_DATA (*buf);
-    pos = *orig_pos;            /* recover saved pos */
-    for (i = 0; i < inject_len; ++i) {
-      if (inject[i].offset > pos) {
-        break;
-      }
-      if (inject[i].offset <= pos && pos < inject[i].offset + inject[i].size) {
-        memcpy (data, inject[i].data, inject[i].size);
-        data += inject[i].size;
-        pos = inject[i].offset + inject[i].size;
-        /* out position after insert chunk orig */
-        *orig_pos = inject[i].offset_orig + inject[i].size;
+    *orig_pos = pos;
+
+    if (buf) {
+      guint8 *data;
+
+      if (max_size > 0)
+        if (new_buf_size > max_size)
+          new_buf_size = max_size;
+
+      if (*buf)
+        gst_buffer_unref (*buf);
+      *buf = gst_buffer_new_and_alloc (new_buf_size);
+      data = GST_BUFFER_DATA (*buf);
+      pos = saved_pos;
+      for (i = 0; i < inject_len && new_buf_size > 0; ++i) {
+        if (inject[i].offset > pos) {
+          break;
+        }
+        if (pos < inject[i].offset + inject[i].size) {
+          const guint32 offset = pos - inject[i].offset;
+          guint32 size = inject[i].size - offset;
+
+          if (size > new_buf_size)
+            size = new_buf_size;
+          memcpy (data, inject[i].data + offset, size);
+          data += size;
+          pos = inject[i].offset + inject[i].size;
+          new_buf_size -= size;
+        }
       }
     }
-  }
 
-  if (ret == FALSE) {
-    /* if it inside a injected is already done */
     goto done;
   }
 
   /* calculate for striped */
 
-  *orig_pos = pos - injected_before;
+  *orig_pos = saved_pos - injected_before;
   for (i = 0; i < strip_len; ++i) {
     if (strip[i].offset_orig > pos) {
       break;
@@ -1479,7 +1500,7 @@ gst_base_metadata_src_event (GstPad * pad, GstEvent * event)
          striped/injected buffer in next 'chain' calling */
       filter->offset = start;
       gst_base_metadata_translate_pos_to_orig (filter, start, &start,
-          &filter->prepend_buffer);
+          &filter->prepend_buffer, 0);
       filter->offset_orig = start;
 
       if (stop_type == GST_SEEK_TYPE_CUR)
@@ -1491,7 +1512,7 @@ gst_base_metadata_src_event (GstPad * pad, GstEvent * event)
       }
       stop_type == GST_SEEK_TYPE_SET;
 
-      gst_base_metadata_translate_pos_to_orig (filter, stop, &stop, NULL);
+      gst_base_metadata_translate_pos_to_orig (filter, stop, &stop, NULL, 0);
 
       gst_event_unref (event);
       event = gst_event_new_seek (rate, format, flags,
@@ -1569,6 +1590,7 @@ gst_base_metadata_get_range (GstPad * pad,
   guint size_orig;
   GstBuffer *prepend = NULL;
   gboolean need_append = FALSE;
+  gboolean into_inject;
 
   filter = GST_BASE_METADATA (GST_PAD_PARENT (pad));
 
@@ -1583,33 +1605,44 @@ gst_base_metadata_get_range (GstPad * pad,
 
   size_orig = size;
 
-  gst_base_metadata_translate_pos_to_orig (filter, offset,
-      &offset_orig, &prepend);
+  into_inject = !gst_base_metadata_translate_pos_to_orig (filter, offset,
+      &offset_orig, &prepend, size);
 
-  if (size > 1) {
+  if (into_inject) {
+    size_orig = GST_BUFFER_SIZE (prepend) < size_orig ?
+        size_orig - GST_BUFFER_SIZE (prepend) : 0;
+  }
+
+  if (size_orig == 0) {
+    /* enough data in prepend */
+    *buf = prepend;
+    goto done;
+  }
+
+  if (size_orig > 1) {
     gint64 pos;
 
     pos = offset + size - 1;
-    gst_base_metadata_translate_pos_to_orig (filter, pos, &pos, NULL);
+    into_inject = gst_base_metadata_translate_pos_to_orig (filter, pos, &pos,
+        NULL, 0);
     size_orig = pos + 1 - offset_orig;
   }
 
-  if (size_orig) {
+  ret = gst_pad_pull_range (filter->sinkpad, offset_orig, size_orig, buf);
 
-    ret = gst_pad_pull_range (filter->sinkpad, offset_orig, size_orig, buf);
+  if (ret == GST_FLOW_OK && *buf) {
+    gst_base_metadata_strip_push_buffer (filter, offset_orig, &prepend, buf,
+        FALSE);
 
-    if (ret == GST_FLOW_OK && *buf) {
-      gst_base_metadata_strip_push_buffer (filter, offset_orig, &prepend, buf);
-
-      if (GST_BUFFER_SIZE (*buf) < size) {
-        /* need append */
-        need_append = TRUE;
-      }
-
+    if (GST_BUFFER_SIZE (*buf) < size) {
+      /* need append */
+      need_append = TRUE;
+    } else {
+      /* hide extra bytes */
+      GST_BUFFER_SIZE (*buf) = size;
     }
-  } else {
-    *buf = prepend;
   }
+
 
 done:
 
@@ -1715,7 +1748,7 @@ gst_base_metadata_chain (GstPad * pad, GstBuffer * buf)
     buf_size = GST_BUFFER_SIZE (buf);
 
     gst_base_metadata_strip_push_buffer (filter, filter->offset_orig,
-        &filter->prepend_buffer, &buf);
+        &filter->prepend_buffer, &buf, TRUE);
 
     if (buf) {                  /* may be all buffer has been striped */
       gst_buffer_set_caps (buf, GST_PAD_CAPS (filter->srcpad));
@@ -1848,6 +1881,7 @@ gst_base_metadata_src_query (GstPad * pad, GstQuery * query)
         gst_query_set_position (query, GST_FORMAT_BYTES, filter->offset);
         ret = TRUE;
       }
+
       break;
     case GST_QUERY_DURATION:
 
@@ -1864,6 +1898,7 @@ gst_base_metadata_src_query (GstPad * pad, GstQuery * query)
           ret = TRUE;
         }
       }
+
       break;
     case GST_QUERY_FORMATS:
       gst_query_set_formats (query, 1, GST_FORMAT_BYTES);

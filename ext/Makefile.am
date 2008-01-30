@@ -76,12 +76,6 @@ else
 DTS_DIR=
 endif
 
-if USE_METADATA
-METADATA_DIR=metadata
-else
-METADATA_DIR=
-endif
-
 if USE_FAAC
 FAAC_DIR=faac
 else
@@ -158,6 +152,12 @@ if USE_MPEG2ENC
 MPEG2ENC_DIR=mpeg2enc
 else
 MPEG2ENC_DIR=
+endif
+
+if USE_METADATA
+METADATA_DIR=metadata
+else
+METADATA_DIR=
 endif
 
 # if USE_MPLEX
@@ -313,6 +313,7 @@ SUBDIRS=\
 	$(LIBFAME_DIR) \
 	$(LIBMMS_DIR) \
 	$(MPEG2ENC_DIR) \
+	$(METADATA_DIR) \
 	$(MPLEX_DIR) \
 	$(MUSEPACK_DIR) \
 	$(MUSICBRAINZ_DIR) \
@@ -342,7 +343,6 @@ DIST_SUBDIRS = \
 	cdaudio \
 	dc1394 \
 	directfb \
-	metadata \
 	faac \
 	faad \
 	gio \
@@ -353,6 +353,7 @@ DIST_SUBDIRS = \
 	libmms \
 	dts \
 	divx \
+	metadata \
 	mpeg2enc \
 	musepack \
 	musicbrainz \

@@ -44,11 +44,19 @@
 #ifndef __METADATAMUX_PNG_H__
 #define __METADATAMUX_PNG_H__
 
+/*
+ * includes
+ */
+
 #include <gst/base/gstadapter.h>
 
 #include "metadatatypes.h"
 
 G_BEGIN_DECLS
+
+/*
+ * enum and types
+ */
 
 typedef enum _tag_PngMuxState
 {
@@ -69,6 +77,9 @@ typedef struct _tag_PngMuxData
 
 } PngMuxData;
 
+/*
+ * external function prototypes
+ */
 
 extern void
 metadatamux_png_init (PngMuxData * png_data,
@@ -80,7 +91,8 @@ extern void metadatamux_png_lazy_update (PngMuxData * png_data);
 
 extern MetadataParsingReturn
 metadatamux_png_parse (PngMuxData * png_data, guint8 * buf,
-    guint32 * bufsize, const guint32 offset, guint8 ** next_start, guint32 * next_size);
+    guint32 * bufsize, const guint32 offset, guint8 ** next_start,
+    guint32 * next_size);
 
 G_END_DECLS
 #endif /* __METADATAMUX_PNG_H__ */

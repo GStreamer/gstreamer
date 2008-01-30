@@ -44,9 +44,17 @@
 #ifndef __METADATAMUX_JPEG_H__
 #define __METADATAMUX_JPEG_H__
 
+/*
+ * includes
+ */
+
 #include <gst/base/gstadapter.h>
 
 #include "metadatatypes.h"
+
+/*
+ * enum and types
+ */
 
 G_BEGIN_DECLS
 
@@ -67,6 +75,9 @@ typedef struct _tag_JpegMuxData
 
 } JpegMuxData;
 
+/*
+ * external function prototypes
+ */
 
 extern void
 metadatamux_jpeg_init (JpegMuxData * jpeg_data, 
@@ -74,11 +85,12 @@ metadatamux_jpeg_init (JpegMuxData * jpeg_data,
 
 extern void metadatamux_jpeg_dispose (JpegMuxData * jpeg_data);
 
-extern void metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data);
-
 extern MetadataParsingReturn
 metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
-    guint32 * bufsize, const guint32 offset, guint8 ** next_start, guint32 * next_size);
+    guint32 * bufsize, const guint32 offset, guint8 ** next_start,
+    guint32 * next_size);
+
+extern void metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data);
 
 G_END_DECLS
 #endif /* __METADATAMUX_JPEG_H__ */

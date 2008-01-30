@@ -1,3 +1,18 @@
+2008-01-30  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/Makefile.am:
+	* ext/metadata/TODO:
+	* ext/metadata/gstbasemetadata.c:
+	* ext/metadata/gstbasemetadata.h:
+	* ext/metadata/metadatamuxjpeg.c:
+	* ext/metadata/metadatamuxjpeg.h:
+	* ext/metadata/metadatamuxpng.c:
+	* ext/metadata/metadatamuxpng.h:
+	* ext/metadata/metadataparsejpeg.c:
+	* ext/metadata/metadataparsepng.c:
+	* tests/icles/Makefile.am:
+	  Add documentation. Fix test app compilation. Fix pull mode.
+
 2008-01-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Thijs Vermeir  <thijsvermeir at gmail dot com>

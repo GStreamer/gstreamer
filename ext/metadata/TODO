@@ -26,12 +26,4 @@ OPEN ISSUES:
 
 KNOWN BUGS
 
-1- gst-launch-0.10 filesrc location=BlueSquare.png ! metadatademux ! metadatamux ! pngdec ! ffmpegcolorspace ! freeze ! xvimagesink
-
-the following pipelines work fine:
-
-gst-launch-0.10 filesrc location=BlueSquare.png ! metadatamux   ! metadatademux       ! pngdec ! ffmpegcolorspace ! freeze ! xvimagesink
-gst-launch-0.10 filesrc location=BlueSquare.png ! metadatademux ! metadatamux ! queue ! pngdec ! ffmpegcolorspace ! freeze ! xvimagesink
-gst-launch-0.10 filesrc location=BlueSquare.png !               ! metadatamux         ! pngdec ! ffmpegcolorspace ! freeze ! xvimagesink
-gst-launch-0.10 filesrc location=BlueSquare.png ! metadatademux !                     ! pngdec ! ffmpegcolorspace ! freeze ! xvimagesink
 

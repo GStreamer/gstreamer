@@ -22,7 +22,8 @@ metadata_editor_SOURCES = metadata_editor.c
 metadata_editor_CFLAGS  = \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(GLADE_CFLAGS)
 metadata_editor_LDADD   = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-0.10 $(GST_LIBS) $(GLADE_LIBS)
+	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-0.10 $(GST_LIBS) \
+	$(GLADE_LIBS) -Wl -export-dynamic
 metadata_editor_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 else
 GST_METADATA_TESTS =

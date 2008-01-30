@@ -73,27 +73,57 @@ typedef enum _tag_BaseMetadataType {
 } BaseMetadataType;
 
 
-/**
+/*
  * GST_BASE_METADATA_SRC_PAD:
  * @obj: base metadata instance
  *
  * Gives the pointer to the #GstPad object of the element.
  */
-#define GST_BASE_METADATA_SRC_PAD(obj)      (GST_BASE_METADATA_CAST (obj)->srcpad)
+#define GST_BASE_METADATA_SRC_PAD(obj) (GST_BASE_METADATA_CAST (obj)->srcpad)
 
-/**
+/*
  * GST_BASE_METADATA_SINK_PAD:
  * @obj: base metadata instance
  *
  * Gives the pointer to the #GstPad object of the element.
  */
-#define GST_BASE_METADATA_SINK_PAD(obj)     (GST_BASE_METADATA_CAST (obj)->sinkpad)
+#define GST_BASE_METADATA_SINK_PAD(obj) (GST_BASE_METADATA_CAST (obj)->sinkpad)
 
-#define GST_BASE_METADATA_EXIF_ADAPTER(obj) (GST_BASE_METADATA_CAST (obj)->metadata->exif_adapter)
-#define GST_BASE_METADATA_IPTC_ADAPTER(obj) (GST_BASE_METADATA_CAST (obj)->metadata->iptc_adapter)
-#define GST_BASE_METADATA_XMP_ADAPTER(obj) (GST_BASE_METADATA_CAST (obj)->metadata->xmp_adapter)
+/*
+ * GST_BASE_METADATA_EXIF_ADAPTER
+ * @obj: base metadata instance
+ *
+ * Gives the pointer to the EXIF #GstAdapter of the element.
+ */
+#define GST_BASE_METADATA_EXIF_ADAPTER(obj) \
+    (GST_BASE_METADATA_CAST (obj)->metadata->exif_adapter)
 
-#define GST_BASE_METADATA_IMG_TYPE(obj) (GST_BASE_METADATA_CAST (obj)->img_type)
+/*
+ * GST_BASE_METADATA_IPTC_ADAPTER
+ * @obj: base metadata instance
+ *
+ * Gives the pointer to the IPTC #GstAdapter of the element.
+ */
+#define GST_BASE_METADATA_IPTC_ADAPTER(obj) \
+    (GST_BASE_METADATA_CAST (obj)->metadata->iptc_adapter)
+
+/*
+ * GST_BASE_METADATA_XMP_ADAPTER
+ * @obj: base metadata instance
+ *
+ * Gives the pointer to the XMP #GstAdapter of the element.
+ */
+#define GST_BASE_METADATA_XMP_ADAPTER(obj) \
+    (GST_BASE_METADATA_CAST (obj)->metadata->xmp_adapter)
+
+/*
+ * GST_BASE_METADATA_IMG_TYPE
+ * @obj: base metadata instance
+ *
+ * Gives the type indentified by the parser of the element.
+ */
+#define GST_BASE_METADATA_IMG_TYPE(obj) \
+    (GST_BASE_METADATA_CAST (obj)->img_type)
 
 
 typedef enum _tag_MetadataState
@@ -127,7 +157,7 @@ struct _GstBaseMetadata
 
   MetaOptions options;
 
-  gboolean need_processing; /* still need some action before send first buffer */
+  gboolean need_processing; /* still need a action before send first buffer */
 
   GstAdapter *adapter_parsing;
   GstAdapter *adapter_holding;
@@ -161,10 +191,12 @@ extern GType
 gst_base_metadata_get_type (void);
 
 extern void
-gst_base_metadata_set_option_flag(GstBaseMetadata *base, const MetaOptions options);
+gst_base_metadata_set_option_flag(GstBaseMetadata *base,
+    const MetaOptions options);
 
 extern void
-gst_base_metadata_unset_option_flag(GstBaseMetadata *base, const MetaOptions options);
+gst_base_metadata_unset_option_flag(GstBaseMetadata *base,
+    const MetaOptions options);
 
 extern MetaOptions
 gst_base_metadata_get_option_flag(const GstBaseMetadata *base);

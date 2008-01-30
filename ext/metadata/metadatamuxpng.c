@@ -41,113 +41,88 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * SECTION: metadatamuxpng
+ * @short_description: This module provides functions to parse PNG files in
+ * order to write metadata to it.
+ *
+ * This module parses a PNG stream to find the places in which XMP metadata
+ * chunks would be written. It also wraps metadata chunks with PNG marks
+ * according to the specification.
+ *
+ * <refsect2>
+ * <para>
+ * #metadatamux_png_init must be called before any other function in this
+ * module and must be paired with a call to #metadatamux_png_dispose.
+ * #metadatamux_png_parse is used to parse the stream (find the place
+ * metadata chunks should be written to).
+ * #metadatamux_png_lazy_update do nothing.
+ * </para>
+ * <para>
+ * EXIF chunks will always be the first chunk (replaces JFIF). IPTC and XMP
+ * chunks will be placed or second chunk (after JFIF or EXIF) or third chunk
+ * if both (IPTC and XMP) are written to the file.
+ * </para>
+ * <para>
+ * When a EXIF chunk is written to the PNG stream, if there is a JFIF chunk
+ * as the first chunk, it will be stripped out.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2008-01-24 (0.10.15)
+ */
+
+/*
+ * includes
+ */
+
 #include "metadatamuxpng.h"
 
 #include <string.h>
+
+/*
+ * defines and macros
+ */
+
+#define READ(buf, size) ( (size)--, *((buf)++) )
+
+/*
+ * static helper functions declaration
+ */
 
 static MetadataParsingReturn
 metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
     guint8 ** next_start, guint32 * next_size);
 
-#define READ(buf, size) ( (size)--, *((buf)++) )
+static void metadatamux_make_crc_table (guint32 crc_table[]);
 
-static void
-make_crc_table (guint32 crc_table[])
-{
-  guint32 c;
-  guint16 n, k;
+static guint32 metadatamux_update_crc (guint32 crc, guint8 * buf, guint32 len);
 
-  for (n = 0; n < 256; n++) {
-    c = (guint32) n;
-    for (k = 0; k < 8; k++) {
-      if (c & 1)
-        c = 0xedb88320L ^ (c >> 1);
-      else
-        c = c >> 1;
-    }
-    crc_table[n] = c;
-  }
-}
+static guint32 metadatamux_calc_crc (guint8 * buf, guint32 len);
 
-static guint32
-update_crc (guint32 crc, guint8 * buf, guint32 len)
-{
-  guint32 c = crc;
-  guint32 n;
-  guint32 crc_table[256];
+static void metadatamux_wrap_xmp_chunk (MetadataChunk * chunk);
 
-  /* FIXME:  make_crc_table should be done once in life 
-     for speed up */
-  make_crc_table (crc_table);
+/*
+ * extern functions implementations
+ */
 
-  for (n = 0; n < len; n++) {
-    c = crc_table[(c ^ buf[n]) & 0xff] ^ (c >> 8);
-  }
-  return c;
-}
-
-/* Return the CRC of the bytes buf[0..len-1]. */
-static guint32
-calc_crc (guint8 * buf, guint32 len)
-{
-  return update_crc (0xffffffffL, buf, len) ^ 0xffffffffL;
-}
-
-
-static void
-metadatamux_wrap_xmp_chunk (MetadataChunk * chunk)
-{
-  static const char XmpHeader[] = "XML:com.adobe.xmp";
-  guint8 *data = NULL;
-  guint32 crc;
-
-  data = g_new (guint8, 12 + 18 + 4 + chunk->size);
-
-  memcpy (data + 8, XmpHeader, 18);
-  memset (data + 8 + 18, 0x00, 4);
-  memcpy (data + 8 + 18 + 4, chunk->data, chunk->size);
-  g_free (chunk->data);
-  chunk->data = data;
-  chunk->size += 18 + 4;
-  data[0] = (chunk->size >> 24) & 0xFF;
-  data[1] = (chunk->size >> 16) & 0xFF;
-  data[2] = (chunk->size >> 8) & 0xFF;
-  data[3] = chunk->size & 0xFF;
-  data[4] = 'i';
-  data[5] = 'T';
-  data[6] = 'X';
-  data[7] = 't';
-  crc = calc_crc (data + 4, chunk->size + 4 + 18);
-  data[chunk->size + 8] = (crc >> 24) & 0xFF;
-  data[chunk->size + 9] = (crc >> 16) & 0xFF;
-  data[chunk->size + 10] = (crc >> 8) & 0xFF;
-  data[chunk->size + 11] = crc & 0xFF;
-  chunk->size += 12;
-
-}
-
-void
-metadatamux_png_lazy_update (PngMuxData * png_data)
-{
-  gsize i;
-
-  for (i = 0; i < png_data->inject_chunks->len; ++i) {
-    if (png_data->inject_chunks->chunk[i].size > 0 &&
-        png_data->inject_chunks->chunk[i].data) {
-      switch (png_data->inject_chunks->chunk[i].type) {
-        case MD_CHUNK_XMP:
-        {
-          metadatamux_wrap_xmp_chunk (&png_data->inject_chunks->chunk[i]);
-        }
-          break;
-        default:
-          GST_ERROR ("Unexpected chunk for PNG muxer.");
-          break;
-      }
-    }
-  }
-}
+/*
+ * metadatamux_png_init:
+ * @png_data: [in] png data handler to be inited
+ * @strip_chunks: Array of chunks (offset and size) marked for removal
+ * @inject_chunks: Array of chunks (offset, data, size) marked for injection
+ * adapter (@exif_adpt, @iptc_adpt, @xmp_adpt). Or FALSE if should also put
+ * them on @strip_chunks.
+ *
+ * Init png data handle.
+ * This function must be called before any other function from this module.
+ * This function must not be called twice without call to
+ * #metadatamux_png_dispose beteween them.
+ * @see_also: #metadatamux_png_dispose #metadatamux_png_parse
+ *
+ * Returns: nothing
+ */
 
 void
 metadatamux_png_init (PngMuxData * png_data,
@@ -159,6 +134,16 @@ metadatamux_png_init (PngMuxData * png_data,
   png_data->inject_chunks = inject_chunks;
 }
 
+/*
+ * metadatamux_png_dispose:
+ * png_data: [in] png data handler to be freed
+ *
+ * Call this function to free any resource allocated by #metadatamux_png_init
+ * @see_also: #metadatamux_png_init
+ *
+ * Returns: nothing
+ */
+
 void
 metadatamux_png_dispose (PngMuxData * png_data)
 {
@@ -167,6 +152,42 @@ metadatamux_png_dispose (PngMuxData * png_data)
 
   png_data->state = PNG_MUX_NULL;
 }
+
+/*
+ * metadatamux_png_parse:
+ * @png_data: [in] png data handle
+ * @buf: [in] data to be parsed
+ * @bufsize: [in] size of @buf in bytes
+ * @offset: is the offset where @buf starts from the beginnig of the whole 
+ * stream
+ * @next_start: is a pointer after @buf which indicates where @buf should start
+ * on the next call to this function. It means, that after returning, this
+ * function has consumed *@next_start - @buf bytes. Which also means 
+ * that @offset should also be incremanted by (*@next_start - @buf) for the
+ * next time.
+ * @next_size: [out] number of minimal bytes in @buf for the next call to this
+ * function
+ *
+ * This function is used to parse a PNG stream step-by-step incrementally.
+ * Basically this function works like a state machine, that will run in a loop
+ * while there is still bytes in @buf to be read or it has finished parsing.
+ * If the it hasn't parsed yet and there is no more data in @buf, then the
+ * current state is saved and a indication will be make about the buffer to
+ * be passed by the caller function.
+ * @see_also: #metadatamux_png_init
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%META_PARSING_ERROR
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_DONE if parse has finished. Now strip and
+ * inject chunks has been found
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_NEED_MORE_DATA if this function should be
+ * called again (look @next_start and @next_size)
+ * </para></listitem>
+ * </itemizedlist>
+ */
 
 MetadataParsingReturn
 metadatamux_png_parse (PngMuxData * png_data, guint8 * buf,
@@ -230,8 +251,86 @@ done:
 
 }
 
+/*
+ * metadatamux_png_lazy_update:
+ * @png_data: [in] png data handle
+ * 
+ * This function wrap metadata chunk with proper PNG bytes.
+ * @see_also: #metadata_lazy_update
+ *
+ * Returns: nothing
+ */
 
-/* look for markers */
+void
+metadatamux_png_lazy_update (PngMuxData * png_data)
+{
+  gsize i;
+
+  for (i = 0; i < png_data->inject_chunks->len; ++i) {
+    if (png_data->inject_chunks->chunk[i].size > 0 &&
+        png_data->inject_chunks->chunk[i].data) {
+      switch (png_data->inject_chunks->chunk[i].type) {
+        case MD_CHUNK_XMP:
+        {
+          metadatamux_wrap_xmp_chunk (&png_data->inject_chunks->chunk[i]);
+        }
+          break;
+        default:
+          GST_ERROR ("Unexpected chunk for PNG muxer.");
+          break;
+      }
+    }
+  }
+}
+
+
+/*
+ * static helper functions implementation
+ */
+
+/*
+ * metadatamux_png_reading:
+ * @png_data: [in] png data handle
+ * @buf: [in] data to be parsed. @buf will increment during the parsing step.
+ * So it will hold the next byte to be read inside a parsing function or on
+ * the next nested parsing function. And so, @bufsize will decrement.
+ * @bufsize: [in] size of @buf in bytes. This value will decrement during the
+ * parsing for the same reason that @buf will advance.
+ * @offset: is the offset where @step_buf starts from the beginnig of the
+ * stream
+ * @step_buf: holds the pointer to the buffer passed to
+ * #metadatamux_png_parse. It means that any point inside this function
+ * the offset (related to the beginning of the whole stream) after the last 
+ * byte read so far is "(*buf - step_buf) + offset"
+ * @next_start: is a pointer after @step_buf which indicates where the next
+ * call to #metadatamux_png_parse should start on the next call to this
+ * function. It means, that after return, this function has
+ * consumed *@next_start - @buf bytes. Which also means that @offset should
+ * also be incremanted by (*@next_start - @buf) for the next time.
+ * @next_size: [out] number of minimal bytes in @buf for the next call to this
+ * function
+ *
+ * This function is used to parse a PNG stream step-by-step incrementally.
+ * If this function quickly finds the place (offset) in which EXIF, IPTC and
+ * XMP chunk should be written to.
+ * The found places are written to @png_data->inject_chunks
+ * @see_also: #metadatamux_png_init
+ *
+ * Returns:
+ * <itemizedlist>
+ * <listitem><para>%META_PARSING_ERROR
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_DONE if parse has finished. Now strip and
+ * inject chunks has been found. Or some chunk has been found and should be
+ * held or jumped.
+ * </para></listitem>
+ * <listitem><para>%META_PARSING_NEED_MORE_DATA if this function should be
+ * called again (look @next_start and @next_size)
+ * </para></listitem>
+ * </itemizedlist>
+ */
+
+
 static MetadataParsingReturn
 metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
@@ -285,5 +384,121 @@ done:
 
   return ret;
 
+
+}
+
+/*
+ * metadatamux_make_crc_table:
+ * @crc_table: table to be written to.
+ *
+ * Creates a startup CRC table. For optimization it should be done only once.
+ * @see_also: #metadatamux_update_crc
+ *
+ * Returns: nothing.
+ */
+
+static void
+metadatamux_make_crc_table (guint32 crc_table[])
+{
+  guint32 c;
+  guint16 n, k;
+
+  for (n = 0; n < 256; n++) {
+    c = (guint32) n;
+    for (k = 0; k < 8; k++) {
+      if (c & 1)
+        c = 0xedb88320L ^ (c >> 1);
+      else
+        c = c >> 1;
+    }
+    crc_table[n] = c;
+  }
+}
+
+/*
+ * metadatamux_update_crc:
+ * @crc: seed to calculate the CRC
+ * @buf: data to calculate the CRC for
+ * @len: size in bytes of @buf
+ *
+ * Calculates the CRC of a data buffer for a seed @crc.
+ * @see_also: #metadatamux_make_crc_table #metadatamux_calc_crc
+ *
+ * Returns: the CRC of the bytes buf[0..len-1].
+ */
+
+static guint32
+metadatamux_update_crc (guint32 crc, guint8 * buf, guint32 len)
+{
+  guint32 c = crc;
+  guint32 n;
+  guint32 crc_table[256];
+
+  /* FIXME:  make_crc_table should be done once in life 
+     for speed up. It could be written hard coded to a file */
+  metadatamux_make_crc_table (crc_table);
+
+  for (n = 0; n < len; n++) {
+    c = crc_table[(c ^ buf[n]) & 0xff] ^ (c >> 8);
+  }
+  return c;
+}
+
+/*
+ * metadatamux_calc_crc:
+ * @buf: data to calculate the CRC for
+ * @len: size in bytes of @buf
+ *
+ * Calculates the CRC of a data buffer.
+ *
+ * Returns: the CRC of the bytes buf[0..len-1].
+ */
+
+static guint32
+metadatamux_calc_crc (guint8 * buf, guint32 len)
+{
+  return metadatamux_update_crc (0xffffffffL, buf, len) ^ 0xffffffffL;
+}
+
+
+/*
+ * metadatamux_wrap_xmp_chunk:
+ * @chunk: chunk to be wrapped
+ *
+ * Wraps a XMP chunk with proper PNG bytes (mark, size and crc in the end)
+ *
+ * Returns: nothing
+ */
+
+static void
+metadatamux_wrap_xmp_chunk (MetadataChunk * chunk)
+{
+  static const char XmpHeader[] = "XML:com.adobe.xmp";
+  guint8 *data = NULL;
+  guint32 crc;
+
+  data = g_new (guint8, 12 + 18 + 4 + chunk->size);
+
+  memcpy (data + 8, XmpHeader, 18);
+  memset (data + 8 + 18, 0x00, 4);
+  memcpy (data + 8 + 18 + 4, chunk->data, chunk->size);
+  g_free (chunk->data);
+  chunk->data = data;
+  chunk->size += 18 + 4;
+  data[0] = (chunk->size >> 24) & 0xFF;
+  data[1] = (chunk->size >> 16) & 0xFF;
+  data[2] = (chunk->size >> 8) & 0xFF;
+  data[3] = chunk->size & 0xFF;
+  data[4] = 'i';
+  data[5] = 'T';
+  data[6] = 'X';
+  data[7] = 't';
+  crc = metadatamux_calc_crc (data + 4, chunk->size + 4);
+  data[chunk->size + 8] = (crc >> 24) & 0xFF;
+  data[chunk->size + 9] = (crc >> 16) & 0xFF;
+  data[chunk->size + 10] = (crc >> 8) & 0xFF;
+  data[chunk->size + 11] = crc & 0xFF;
+
+  chunk->size += 12;
 
 }
