@@ -1,5 +1,17 @@
 2008-01-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/gio/gstgiobasesink.c: (close_stream_cb),
+	(gst_gio_base_sink_stop), (gst_gio_base_sink_event),
+	(gst_gio_base_sink_render), (gst_gio_base_sink_set_stream):
+	* ext/gio/gstgiobasesrc.c: (close_stream_cb),
+	(gst_gio_base_src_stop), (gst_gio_base_src_create),
+	(gst_gio_base_src_set_stream):
+	Use async variants of the close stream functions to prevent blocking
+	for a long time there and add some more sanity checks for a correct
+	stream.
+
+2008-01-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/icles/Makefile.am:
 	Move -Wl parameter from _LDADD to _LDFLAGS to fix autogen.sh.
 
