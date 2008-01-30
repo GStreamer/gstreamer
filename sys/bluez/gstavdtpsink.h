@@ -54,6 +54,7 @@ struct _GstAvdtpSink {
 	GIOChannel *stream;
 
 	struct bluetooth_data *data;
+	gboolean autoconnect;
 	GIOChannel *server;
 
 	/* mp3 stream data (outside caps data)*/
