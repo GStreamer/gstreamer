@@ -1,3 +1,14 @@
+2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst-libs/gst/interfaces/mixeroptions.h:
+	* gst-libs/gst/interfaces/mixertrack.h:
+	Change the way these deprecated function pointers are removed
+	so that the compiled ABI is unconditionally smaller. This 
+	sets in stone an ABI break that actually occurred when the
+	things were deprecated in 0.10.14, which seems to be the best
+	fix as the only known users are oss-mixer and sunaudio-mixer in 
+	gst-plugins-good.
+
 2008-01-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* win32/common/libgstpbutils.def:

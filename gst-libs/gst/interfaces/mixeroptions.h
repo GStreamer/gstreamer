@@ -57,11 +57,11 @@ struct _GstMixerOptions {
 struct _GstMixerOptionsClass {
   GstMixerTrackClass parent;
 
-#ifndef GST_DISABLE_DEPRECATED
+#ifdef GST_MIXER_NEED_DEPRECATED
   /* signals */
   void (* option_changed) (GstMixerOptions *opts,
                            gchar           *value);
-#endif /* not GST_DISABLE_DEPRECATED */
+#endif /* GST_MIXER_NEED_DEPRECATED */
 
   gpointer _gst_reserved[GST_PADDING];
 };

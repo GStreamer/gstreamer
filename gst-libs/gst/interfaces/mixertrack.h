@@ -88,7 +88,7 @@ struct _GstMixerTrack {
 struct _GstMixerTrackClass {
   GObjectClass parent;
 
-#ifndef GST_DISABLE_DEPRECATED
+#ifdef GST_MIXER_NEED_DEPRECATED
   /* signals (deprecated) */
   void (* mute_toggled)   (GstMixerTrack *channel,
                            gboolean       mute);
@@ -96,7 +96,7 @@ struct _GstMixerTrackClass {
                            gboolean       record);
   void (* volume_changed) (GstMixerTrack *channel,
                            gint          *volumes);
-#endif /* not GST_DISABLE_DEPRECATED */
+#endif /* GST_MIXER_NEED_DEPRECATED */
 
   gpointer _gst_reserved[GST_PADDING];
 };
