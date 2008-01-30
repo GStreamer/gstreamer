@@ -1,5 +1,12 @@
 2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* gst-libs/gst/interfaces/mixeroptions.c:
+	* gst-libs/gst/interfaces/mixertrack.c:
+	Also remove the conditional registration of the signals
+	that disappeared with the ABI change in 0.10.14
+
+2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* gst-libs/gst/rtsp/gstrtspconnection.c:
 	Revert patch to gstrtspconnection.c for brown paper bag
 	release of -base. Re-opens: #511825

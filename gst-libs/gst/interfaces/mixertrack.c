@@ -136,7 +136,7 @@ gst_mixer_track_class_init (GstMixerTrackClass * klass)
           "The number of channels contained within the track",
           0, G_MAXINT, 0, G_PARAM_READABLE));
 
-#ifndef GST_DISABLE_DEPRECATED
+#if 0
   signals[SIGNAL_RECORD_TOGGLED] =
       g_signal_new ("record_toggled", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,

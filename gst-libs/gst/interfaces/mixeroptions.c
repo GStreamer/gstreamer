@@ -74,7 +74,7 @@ gst_mixer_options_class_init (GstMixerOptionsClass * klass)
   GObjectClass *object_klass = (GObjectClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
-#ifndef GST_DISABLE_DEPRECATED
+#if 0
   signals[SIGNAL_OPTION_CHANGED] =
       g_signal_new ("option_changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
