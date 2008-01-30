@@ -3344,7 +3344,7 @@ gst_type_register_static_full (GType parent_type,
 GstClockTime
 gst_util_get_timestamp (void)
 {
-#ifdef HAVE_POSIX_TIMERS
+#if defined (HAVE_POSIX_TIMERS) && defined(HAVE_MONOTONIC_CLOCK)
   struct timespec now;
 
   clock_gettime (CLOCK_MONOTONIC, &now);

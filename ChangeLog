@@ -1,5 +1,14 @@
 2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* gst/gstutils.c:
+	Fix compilation on systems that have posix timers but no
+	monotonic clock.
+	Fixes: #512715
+	Patch By: Cygwin Ports maintainer <yselkowitz at users dot sourceforge
+	dot net>
+
+2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* tools/gst-inspect.c:
 	Revert previous commit in preparation for an impromptu 0.10.17 release
 
