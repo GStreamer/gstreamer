@@ -2,6 +2,14 @@
 
 	Patch by: Wouter Cloetens <wouter at mind dot be>
 
+	* tests/check/test-cert.pem:
+	* tests/check/test-key.pem:
+	Add missing files for the unit test.
+
+2008-01-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Wouter Cloetens <wouter at mind dot be>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
