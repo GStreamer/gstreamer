@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.16 "Special Dispensation"
+Release notes for GStreamer 0.10.17 "Due Negligence"
         
 
 
@@ -37,52 +37,11 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Monotonic/Posix clock support
-      * Dumping of dot-file graph descriptions for debugging
-      * Clean-up of exported symbols
-      * Many bug-fixes and enhancements
-      * 
+      * Fix compilation on environments that have POSIX timers but not monotonic clocks
 
 Bugs fixed in this release
      
-      * 497859 : --disable-gst-debug option fails compilation
-      * 339279 : [gst.URIHandler] interfaces with class-global virtual met...
-      * 498694 : Patches to avoid g_signal_emit(SIGNAL_HANDOFF) on identit...
-      * 498746 : basesink is forwarding downstream events
-      * 498767 : Hangs after end of tracks since 0.10.15
-      * 498924 : deprecate GST_PLUGIN_DEFINE_STATIC because it's not portable
-      * 499007 : [gst-plot-timeline] more options
-      * 499140 : Add check to ensure .def files are kept up-to-date
-      * 500143 : Some small improvements (limiting realloc and CPU usage )
-      * 500150 : [filesink] add property to enable buffering via setvbuf()
-      * 501560 : gst_(caps|structure)_from_string() crash if structure nam...
-      * 503131 : g_intern_string SUSE 10.2
-      * 503231 : Change to GST_BUFFER_FLAG_GAP meaning can break with base...
-      * 503417 : Build failure due uninitialized variable in function 'gst...
-      * 503590 : gstreamer-0.10.15 fails tests on ppc64
-      * 503675 : broken registry files written to disk
-      * 504499 : Messages from check no longer contain the test case name
-      * 505799 : iSight camera does not work in gstreamer
-      * 506643 : crash in fixate_value/gst_value_init_and_copy on empty li...
-      * 507957 : clean-up incomplete function declarations
-      * 508175 : GST_TIMEVAL_TO_TIME() and GST_TIMESPEC_TO_TIME() need to ...
-      * 510187 : gst_plugin_register_static() API review and GST_PLUGIN_DE...
-      * 510747 : Use $(MAKE) instead of make to fix the build if GNU make ...
-      * 511750 : Configure of prereleases 15.2-15.4 fail in OpenEmbedded M...
-
-API changed in this release
-     
-- API additions:
-    
-* GstIdentity::signal-handoffs
-* gst_util_get_timestamp()
-* gst_base_transform_set_gap_aware()
-* GstFileSink::buffer-mode
-* GstFileSink::buffer-size
-* gst_plugin_register_static()
-- API deprecations:
-    
-* GST_PLUGIN_DEFINE_STATIC()
+      * 512715 : gst/gstutils.c and HAVE_MONOTONIC_CLOCK
 
 Download
 
@@ -117,20 +76,7 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
-      * Alexis Ballier
-      * Damien Lespiau
-      * David Schleef
-      * Edward Hervey
       * Jan Schmidt
-      * Julien MOUTTE
-      * Julien Moutte
-      * Laurent Glayal
-      * Matthias Bolte
-      * Peter Kjellerstedt
+      * Cygwin Ports Maintainer
       * Sebastian Dröge
-      * Stefan Kost
-      * Thijs Vermeir
-      * Thomas Vander Stichele
-      * Tim-Philipp Müller
-      * Wim Taymans
  

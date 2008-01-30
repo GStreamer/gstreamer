@@ -1,4 +1,13 @@
-This is GStreamer 0.10.16 "Special Dispensation"
+This is GStreamer 0.10.17 "Due Negligence"
+
+Changes since 0.10.16:
+
+      * Fix compilation on environments that have POSIX timers but not
+        monotonic clocks
+
+Bugs fixed since 0.10.16:
+      
+      * 512715 : gst/gstutils.c and HAVE_MONOTONIC_CLOCK
 
 Changes since 0.10.15:
 

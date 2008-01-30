@@ -41,12 +41,12 @@ hierarchy, and a set of media-agnostic core elements.
 
  <release>
   <Version>
-   <revision>0.10.16</revision>
+   <revision>0.10.17</revision>
    <branch>0.10</branch>
-   <name>Special Dispensation</name>
-   <created>2008-01-28</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.16.tar.bz2" />
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.16.tar.gz" />
+   <name>Due Negligence</name>
+   <created>2008-01-30</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.17.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.17.tar.gz" />
   </Version>
  </release>
 
