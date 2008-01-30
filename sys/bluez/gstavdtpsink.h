@@ -57,7 +57,6 @@ struct _GstAvdtpSink {
 	GIOChannel *server;
 
 	/* mp3 stream data (outside caps data)*/
-	gboolean mpeg_stream_changed;
 	gint mp3_using_crc;
 	gint channel_mode;
 

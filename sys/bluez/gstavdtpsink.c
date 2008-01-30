@@ -69,7 +69,7 @@ struct bluetooth_data
 };
 
 #define IS_SBC(n) (strcmp((n), "audio/x-sbc") == 0)
-#define IS_MPEG(n) (strcmp((n), "audio/mpeg") == 0)
+#define IS_MPEG_AUDIO(n) (strcmp((n), "audio/mpeg") == 0)
 
 enum
 {
@@ -88,8 +88,12 @@ GST_ELEMENT_DETAILS ("Bluetooth AVDTP sink",
 static GstStaticPadTemplate avdtp_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
-        "media = (string) \"audio\", "
-        "encoding-name = (string) \"SBC\";"
+        "media = (string) \"audio\","
+        "payload = (int) "
+        GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) { 16000, 32000, "
+        "44100, 48000 }, "
+        "encoding-name = (string) \"SBC\"; "
         "application/x-rtp, "
         "media = (string) \"audio\", "
         "payload = (int) "
@@ -234,7 +238,7 @@ gst_avdtp_sink_bluetooth_recvmsg_fd (GstAvdtpSink * sink)
 }
 
 static gboolean
-gst_avdtp_sink_init_pkt_conf (GstAvdtpSink * sink,
+gst_avdtp_sink_init_sbc_pkt_conf (GstAvdtpSink * sink,
     GstCaps * caps, sbc_capabilities_t * pkt)
 {
   sbc_capabilities_t *cfg = &sink->data->caps.sbc_capabilities;
@@ -244,9 +248,9 @@ gst_avdtp_sink_init_pkt_conf (GstAvdtpSink * sink,
   GstStructure *structure = gst_caps_get_structure (caps, 0);
 
   name = gst_structure_get_name (structure);
-  /* FIXME only sbc supported here, should suport mp3 */
+
   if (!(IS_SBC (name))) {
-    GST_ERROR_OBJECT (sink, "Unsupported format %s", name);
+    GST_ERROR_OBJECT (sink, "Unexpected format %s, " "was expecting sbc", name);
     return FALSE;
   }
 
@@ -810,7 +814,7 @@ gst_avdtp_sink_tag (const GstTagList * taglist,
 
     if (!gst_tag_list_get_boolean (taglist, tag, &crc)) {
       GST_WARNING_OBJECT (self, "failed to get crc tag");
-      self->mpeg_stream_changed = TRUE;
+      return;
     }
 
     gst_avdtp_sink_set_crc (self, crc);
@@ -819,7 +823,7 @@ gst_avdtp_sink_tag (const GstTagList * taglist,
 
     if (!gst_tag_list_get_string (taglist, tag, &channel_mode)) {
       GST_WARNING_OBJECT (self, "failed to get channel-mode tag");
-      self->mpeg_stream_changed = TRUE;
+      return;
     }
 
     self->channel_mode = gst_avdtp_sink_get_channel_mode (channel_mode);
@@ -878,7 +882,6 @@ gst_avdtp_sink_start (GstBaseSink * basesink)
   self->stream_caps = NULL;
   self->mp3_using_crc = -1;
   self->channel_mode = -1;
-  self->mpeg_stream_changed = FALSE;
 
   if (!gst_avdtp_sink_get_capabilities (self)) {
     GST_ERROR_OBJECT (self, "failed to get capabilities " "from device");
@@ -948,7 +951,15 @@ gst_avdtp_sink_init_mp3_pkt_conf (GstAvdtpSink * self, GstCaps * caps,
 {
   const GValue *value = NULL;
   gint rate, layer;
+  const gchar *name;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
+
+  name = gst_structure_get_name (structure);
+
+  if (!(IS_MPEG_AUDIO (name))) {
+    GST_ERROR_OBJECT (self, "Unexpected format %s, " "was expecting mp3", name);
+    return FALSE;
+  }
 
   /* layer */
   value = gst_structure_get_value (structure, "layer");
@@ -1007,9 +1018,6 @@ gst_avdtp_sink_init_mp3_pkt_conf (GstAvdtpSink * self, GstCaps * caps,
   /* vbr - we always say its vbr, we don't have how to know it */
   pkt->bitrate = 0x8000;
 
-  /* bitrate - we don't set anything, its vbr */
-  /* FIXME - is this right? */
-
   return TRUE;
 }
 
@@ -1035,7 +1043,7 @@ gst_avdtp_sink_configure (GstAvdtpSink * self, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   if (gst_structure_has_name (structure, "audio/x-sbc"))
-    ret = gst_avdtp_sink_init_pkt_conf (self, caps, &req->sbc_capabilities);
+    ret = gst_avdtp_sink_init_sbc_pkt_conf (self, caps, &req->sbc_capabilities);
   else if (gst_structure_has_name (structure, "audio/mpeg"))
     ret = gst_avdtp_sink_init_mp3_pkt_conf (self, caps,
         &req->mpeg_capabilities);
@@ -1168,8 +1176,8 @@ gst_avdtp_sink_class_init (GstAvdtpSinkClass * klass)
       g_param_spec_string ("device", "Device",
           "Bluetooth remote device address", NULL, G_PARAM_READWRITE));
 
-  GST_DEBUG_CATEGORY_INIT (avdtp_sink_debug, "a2dpsendersink", 0,
-      "A2DP sink element");
+  GST_DEBUG_CATEGORY_INIT (avdtp_sink_debug, "avdtpsink", 0,
+      "A2DP headset sink element");
 }
 
 static void
@@ -1183,6 +1191,11 @@ gst_avdtp_sink_init (GstAvdtpSink * self, GstAvdtpSinkClass * klass)
   self->dev_caps = NULL;
 
   self->sink_lock = g_mutex_new ();
+
+  /* FIXME this is for not synchronizing with clock, should be tested
+   * with devices to see the behaviour
+   gst_base_sink_set_sync(GST_BASE_SINK(self), FALSE);
+   */
 }
 
 static GIOError
@@ -1309,9 +1322,7 @@ gst_avdtp_sink_set_crc (GstAvdtpSink * self, gboolean crc)
 
   /* test if we already received a different crc */
   if (self->mp3_using_crc != -1 && new_crc != self->mp3_using_crc) {
-    GST_ERROR_OBJECT (self, "crc changed during stream");
-    /* FIXME test this, its not being used anywhere */
-    self->mpeg_stream_changed = TRUE;
+    GST_WARNING_OBJECT (self, "crc changed during stream");
     return;
   }
   self->mp3_using_crc = new_crc;
@@ -1326,8 +1337,8 @@ gst_avdtp_sink_set_channel_mode (GstAvdtpSink * self, const gchar * mode)
   new_mode = gst_avdtp_sink_get_channel_mode (mode);
 
   if (self->channel_mode != -1 && new_mode != self->channel_mode) {
-    GST_ERROR_OBJECT (self, "channel mode changed during stream");
-    self->mpeg_stream_changed = TRUE;
+    GST_WARNING_OBJECT (self, "channel mode changed during stream");
+    return;
   }
 
   self->channel_mode = new_mode;
