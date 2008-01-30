@@ -43,7 +43,7 @@ GST_ELEMENT_DETAILS ("Bluetooth SBC parser",
 
 static GstStaticPadTemplate sbc_parse_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-sbc"));
+    GST_STATIC_CAPS ("audio/x-sbc," "parsed = (boolean) false"));
 
 static GstStaticPadTemplate sbc_parse_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -54,89 +54,7 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         "blocks = (int) { 4, 8, 12, 16 }, "
         "subbands = (int) { 4, 8 }, "
         "allocation = (string) { snr, loudness },"
-        "bitpool = (int) [ 2, 64 ]"));
-
-static gboolean
-sbc_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstSbcParse *parse;
-  GstStructure *structure;
-  gint rate, channels;
-
-  parse = GST_SBC_PARSE (GST_PAD_PARENT (pad));
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (structure, "rate", &rate))
-    return FALSE;
-
-  if (!gst_structure_get_int (structure, "channels", &channels))
-    return FALSE;
-
-  if (!(parse->rate == 0 || rate == parse->rate))
-    return FALSE;
-
-  if (!(parse->channels == 0 || channels == parse->channels))
-    return FALSE;
-
-  parse->rate = rate;
-  parse->channels = channels;
-
-  return gst_sbc_util_fill_sbc_params (&parse->sbc, caps);
-}
-
-static GstCaps *
-sbc_parse_src_getcaps (GstPad * pad)
-{
-  GstCaps *caps;
-  const GstCaps *allowed_caps;
-  GstStructure *structure;
-  GValue *value;
-  GstSbcParse *parse = GST_SBC_PARSE (GST_PAD_PARENT (pad));
-
-  allowed_caps = gst_pad_get_allowed_caps (pad);
-  if (allowed_caps == NULL)
-    allowed_caps = gst_pad_get_pad_template_caps (pad);
-  caps = gst_caps_copy (allowed_caps);
-
-  value = g_new0 (GValue, 1);
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (parse->rate != 0)
-    gst_sbc_util_set_structure_int_param (structure, "rate",
-        parse->rate, value);
-  if (parse->channels != 0)
-    gst_sbc_util_set_structure_int_param (structure, "channels",
-        parse->channels, value);
-
-  g_free (value);
-
-  return caps;
-}
-
-static gboolean
-sbc_parse_src_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  GstStructure *structure;
-  GstSbcParse *parse;
-  gint rate, channels;
-
-  parse = GST_SBC_PARSE (GST_PAD_PARENT (pad));
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (structure, "rate", &rate))
-    return FALSE;
-  if (!gst_structure_get_int (structure, "channels", &channels))
-    return FALSE;
-
-  if ((parse->rate == 0 || parse->rate == rate)
-      && (parse->channels == 0 || parse->channels == channels))
-    return TRUE;
-
-  return FALSE;
-}
+        "bitpool = (int) [ 2, 64 ]," "parsed = (boolean) true"));
 
 static GstFlowReturn
 sbc_parse_chain (GstPad * pad, GstBuffer * buffer)
@@ -266,17 +184,10 @@ gst_sbc_parse_init (GstSbcParse * self, GstSbcParseClass * klass)
       gst_pad_new_from_static_template (&sbc_parse_sink_factory, "sink");
   gst_pad_set_chain_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (sbc_parse_chain));
-  gst_pad_set_setcaps_function (self->sinkpad,
-      GST_DEBUG_FUNCPTR (sbc_parse_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->srcpad =
       gst_pad_new_from_static_template (&sbc_parse_src_factory, "src");
-  gst_pad_set_getcaps_function (self->srcpad,
-      GST_DEBUG_FUNCPTR (sbc_parse_src_getcaps));
-  gst_pad_set_acceptcaps_function (self->srcpad,
-      GST_DEBUG_FUNCPTR (sbc_parse_src_acceptcaps));
-  /* FIXME get encoding parameters on set caps */
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 }
 

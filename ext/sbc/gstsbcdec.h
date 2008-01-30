@@ -49,6 +49,9 @@ struct _GstSbcDec {
 
 	GstBuffer *buffer;
 
+	/* caps for outgoing buffers */
+	GstCaps *outcaps;
+
 	sbc_t sbc;
 };
 

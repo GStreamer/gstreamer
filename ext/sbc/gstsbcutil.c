@@ -377,9 +377,12 @@ gst_sbc_util_caps_fixate (GstCaps * caps, gchar ** error_message)
     goto error;
   } else {
     value = gst_structure_get_value (structure, "mode");
-    if (GST_VALUE_HOLDS_LIST (value))
-      mode = gst_sbc_get_mode_from_list (value);
-    else
+    if (GST_VALUE_HOLDS_LIST (value)) {
+      if (channels == 1)
+        mode = "mono";
+      else
+        mode = gst_sbc_get_mode_from_list (value);
+    } else
       mode = g_value_get_string (value);
   }
 

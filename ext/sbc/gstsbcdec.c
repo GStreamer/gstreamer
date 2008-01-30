@@ -79,23 +79,11 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
   while (offset < size) {
     GstBuffer *output;
     GstPadTemplate *template;
-    GstCaps *caps, *temp;
+    GstCaps *caps;
     int consumed;
 
-    caps = gst_caps_new_simple ("audio/x-raw-int",
-        "rate", G_TYPE_INT, dec->sbc.rate,
-        "channels", G_TYPE_INT, dec->sbc.channels, NULL);
-
-    template = gst_static_pad_template_get (&sbc_dec_src_factory);
-
-    temp = gst_caps_intersect (caps, gst_pad_template_get_caps (template));
-
-    gst_caps_unref (caps);
-
     res = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
-        GST_BUFFER_OFFSET_NONE, codesize, temp, &output);
-
-    gst_caps_unref (temp);
+        GST_BUFFER_OFFSET_NONE, codesize, NULL, &output);
 
     if (res != GST_FLOW_OK)
       goto done;
@@ -105,7 +93,24 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
     if (consumed <= 0)
       break;
 
-    GST_BUFFER_TIMESTAMP (output) = GST_BUFFER_TIMESTAMP (buffer);
+    /* we will reuse the same caps object */
+    if (dec->outcaps == NULL) {
+      caps = gst_caps_new_simple ("audio/x-raw-int",
+          "rate", G_TYPE_INT, dec->sbc.rate,
+          "channels", G_TYPE_INT, dec->sbc.channels, NULL);
+
+      template = gst_static_pad_template_get (&sbc_dec_src_factory);
+
+      dec->outcaps = gst_caps_intersect (caps,
+          gst_pad_template_get_caps (template));
+
+      gst_caps_unref (caps);
+    }
+
+    gst_buffer_set_caps (output, dec->outcaps);
+
+    /* FIXME get a real timestamp */
+    GST_BUFFER_TIMESTAMP (output) = GST_CLOCK_TIME_NONE;
 
     res = gst_pad_push (dec->srcpad, output);
     if (res != GST_FLOW_OK)
@@ -137,6 +142,7 @@ sbc_dec_change_state (GstElement * element, GstStateChange transition)
         dec->buffer = NULL;
       }
       sbc_init (&dec->sbc, 0);
+      dec->outcaps = NULL;
       break;
 
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -146,6 +152,10 @@ sbc_dec_change_state (GstElement * element, GstStateChange transition)
         dec->buffer = NULL;
       }
       sbc_finish (&dec->sbc);
+      if (dec->outcaps) {
+        gst_caps_unref (dec->outcaps);
+        dec->outcaps = NULL;
+      }
       break;
 
     default:
@@ -191,6 +201,8 @@ gst_sbc_dec_init (GstSbcDec * self, GstSbcDecClass * klass)
 
   self->srcpad = gst_pad_new_from_static_template (&sbc_dec_src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
+
+  self->outcaps = NULL;
 }
 
 gboolean
