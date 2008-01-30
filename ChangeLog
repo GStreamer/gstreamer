@@ -1,3 +1,8 @@
+2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* tools/gst-inspect.c:
+	Revert previous commit in preparation for an impromptu 0.10.17 release
+
 2008-01-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tools/gst-inspect.c: (print_interfaces),

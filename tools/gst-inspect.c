@@ -259,8 +259,8 @@ print_interfaces (GType type)
       if (_name)
         g_print (_name);
       g_print ("\n");
+      g_free (ifaces);
     }
-    g_free (ifaces);
   }
 }
 
@@ -569,8 +569,6 @@ print_element_properties_info (GstElement * element)
       g_print (" Write only\n");
     else
       g_print ("\n");
-
-    g_value_reset (&value);
   }
   if (num_properties == 0)
     n_print ("  none\n");
@@ -730,22 +728,17 @@ print_pad_info (GstElement * element)
 
   pads = element->pads;
   while (pads) {
-    gchar *name;
-
     pad = GST_PAD (pads->data);
     pads = g_list_next (pads);
 
     n_print ("");
 
-    name = gst_pad_get_name (pad);
     if (gst_pad_get_direction (pad) == GST_PAD_SRC)
-      g_print ("  SRC: '%s'", name);
+      g_print ("  SRC: '%s'", gst_pad_get_name (pad));
     else if (gst_pad_get_direction (pad) == GST_PAD_SINK)
-      g_print ("  SINK: '%s'", name);
+      g_print ("  SINK: '%s'", gst_pad_get_name (pad));
     else
-      g_print ("  UNKNOWN!!!: '%s'", name);
-
-    g_free (name);
+      g_print ("  UNKNOWN!!!: '%s'", gst_pad_get_name (pad));
 
     g_print ("\n");
 
@@ -821,11 +814,7 @@ print_signal_info (GstElement * element)
         if ((k == 0 && !(query->signal_flags & G_SIGNAL_ACTION)) ||
             (k == 1 && (query->signal_flags & G_SIGNAL_ACTION)))
           found_signals = g_slist_append (found_signals, query);
-        else
-          g_free (query);
       }
-      g_free (signals);
-      signals = NULL;
     }
 
     if (found_signals) {
@@ -1161,7 +1150,6 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   print_signal_info (element);
   print_children_info (element);
 
-  gst_object_unref (element);
   gst_object_unref (factory);
   g_free (_name);
 
