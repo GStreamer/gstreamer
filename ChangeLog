@@ -1,3 +1,8 @@
+2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/gstutils.c:
+	Revert caps != NULL check temporarily for 0.10.17 release.
+
 2008-01-30  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/gstutils.c:
