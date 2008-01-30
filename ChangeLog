@@ -1,3 +1,9 @@
+2008-01-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* win32/common/libgstpbutils.def:
+	  Export the two new _get_type() functions which are needed
+	  by the python bindings.
+
 2008-01-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/rtsp/gstrtspconnection.c: (add_date_header):

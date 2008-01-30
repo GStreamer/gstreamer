@@ -1,10 +1,12 @@
 EXPORTS
 	gst_install_plugins_async
 	gst_install_plugins_context_free
+	gst_install_plugins_context_get_type
 	gst_install_plugins_context_new
 	gst_install_plugins_context_set_xid
 	gst_install_plugins_installation_in_progress
 	gst_install_plugins_return_get_name
+	gst_install_plugins_return_get_type
 	gst_install_plugins_supported
 	gst_install_plugins_sync
 	gst_is_missing_plugin_message
