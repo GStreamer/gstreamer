@@ -1,5 +1,11 @@
 2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	Revert patch to gstrtspconnection.c for brown paper bag
+	release of -base. Re-opens: #511825
+
+2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* gst-libs/gst/interfaces/mixeroptions.h:
 	* gst-libs/gst/interfaces/mixertrack.h:
 	Change the way these deprecated function pointers are removed
