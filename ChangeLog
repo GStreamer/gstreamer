@@ -1,3 +1,8 @@
+2008-01-30  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/gstutils.c:
+	Check if caps are not NULL (fix bug #510194)
+
 2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/gstutils.c:
