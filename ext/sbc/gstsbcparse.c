@@ -67,6 +67,7 @@ sbc_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
+  /* FIXME use a gstadpter */
   if (parse->buffer) {
     GstBuffer *temp;
     temp = buffer;
@@ -83,17 +84,26 @@ sbc_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   while (offset < size) {
     GstBuffer *output;
-    GstCaps *temp;
     int consumed;
 
-    consumed = sbc_parse (&parse->sbc, data + offset, size - offset);
+    consumed = sbc_parse (&parse->new_sbc, data + offset, size - offset);
     if (consumed <= 0)
       break;
 
-    temp = GST_PAD_CAPS (parse->srcpad);
+    if (parse->first_parsing || (memcmp (&parse->sbc,
+                &parse->new_sbc, sizeof (sbc_t)) != 0)) {
+
+      memcpy (&parse->sbc, &parse->new_sbc, sizeof (sbc_t));
+      if (parse->outcaps != NULL)
+        gst_caps_unref (parse->outcaps);
+
+      parse->outcaps = gst_sbc_parse_caps_from_sbc (&parse->sbc);
+
+      parse->first_parsing = FALSE;
+    }
 
     res = gst_pad_alloc_buffer_and_set_caps (parse->srcpad,
-        GST_BUFFER_OFFSET_NONE, consumed, temp, &output);
+        GST_BUFFER_OFFSET_NONE, consumed, parse->outcaps, &output);
 
     if (res != GST_FLOW_OK)
       goto done;
@@ -125,10 +135,11 @@ sbc_parse_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG ("Setup subband codec");
-      if (parse->buffer) {
-        gst_buffer_unref (parse->buffer);
-        parse->buffer = NULL;
-      }
+
+      parse->channels = -1;
+      parse->rate = -1;
+      parse->first_parsing = TRUE;
+
       sbc_init (&parse->sbc, 0);
       break;
 
@@ -139,8 +150,12 @@ sbc_parse_change_state (GstElement * element, GstStateChange transition)
         gst_buffer_unref (parse->buffer);
         parse->buffer = NULL;
       }
-      sbc_finish (&parse->sbc);
+      if (parse->outcaps != NULL) {
+        gst_caps_unref (parse->outcaps);
+        parse->outcaps = NULL;
+      }
 
+      sbc_finish (&parse->sbc);
       break;
 
     default:
@@ -189,6 +204,12 @@ gst_sbc_parse_init (GstSbcParse * self, GstSbcParseClass * klass)
   self->srcpad =
       gst_pad_new_from_static_template (&sbc_parse_src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
+
+  self->outcaps = NULL;
+  self->buffer = NULL;
+  self->channels = -1;
+  self->rate = -1;
+  self->first_parsing = TRUE;
 }
 
 gboolean

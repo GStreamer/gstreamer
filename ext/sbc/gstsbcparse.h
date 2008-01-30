@@ -50,6 +50,9 @@ struct _GstSbcParse {
 	GstBuffer *buffer;
 
 	sbc_t sbc;
+	sbc_t new_sbc;
+	GstCaps *outcaps;
+	gboolean first_parsing;
 
 	gint channels;
 	gint rate;
