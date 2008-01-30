@@ -1,5 +1,10 @@
 2008-01-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/icles/Makefile.am:
+	Move -Wl parameter from _LDADD to _LDFLAGS to fix autogen.sh.
+
+2008-01-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Wouter Cloetens <wouter at mind dot be>
 
 	* ext/soup/gstsouphttpsrc.c: (gst_souphttp_src_init):
