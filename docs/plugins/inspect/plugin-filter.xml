@@ -14,7 +14,7 @@
       <longname>Band-pass and Band-reject Windowed sinc filter</longname>
       <class>Filter/Effect/Audio</class>
       <description>Band-pass Windowed sinc filter</description>
-      <author>Thomas &lt;thomas@apestaart.org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Thomas &lt;thomas@apestaart.org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -56,7 +56,7 @@
       <longname>LPWSinc</longname>
       <class>Filter/Effect/Audio</class>
       <description>Low-pass and High-pass Windowed sinc filter</description>
-      <author>Thomas &lt;thomas@apestaart.org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Thomas &lt;thomas@apestaart.org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

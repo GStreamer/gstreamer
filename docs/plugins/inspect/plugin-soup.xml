@@ -6,8 +6,8 @@
   <version>0.10.5.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer</package>
-  <origin>http://gstreamer.net/</origin>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>souphttpsrc</name>

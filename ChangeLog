@@ -1,5 +1,35 @@
 2008-01-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Wouter Cloetens <wouter at mind dot be>
+
+	* ext/soup/gstsouphttpsrc.c:
+	Update documentation a bit.
+
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-alsaspdif.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-filter.xml:
+	* docs/plugins/inspect/plugin-glimagesink.xml:
+	* docs/plugins/inspect/plugin-mpegvideoparse.xml:
+	* docs/plugins/inspect/plugin-quicktime.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-sdl.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spcdec.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-speexresample.xml:
+	* docs/plugins/inspect/plugin-switch.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	Regenerate everything for the documentation changes we had.
+
+2008-01-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/gio/gstgiobasesink.c: (close_stream_cb),
 	(gst_gio_base_sink_stop), (gst_gio_base_sink_event),
 	(gst_gio_base_sink_render), (gst_gio_base_sink_set_stream):

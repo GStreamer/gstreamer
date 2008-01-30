@@ -14,7 +14,7 @@
       <longname>Audio Parse</longname>
       <class>Filter/Audio</class>
       <description>Converts stream into audio frames</description>
-      <author>Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
           <name>src</name>
@@ -35,7 +35,7 @@
       <longname>Video Parse</longname>
       <class>Filter/Video</class>
       <description>Converts stream into video frames</description>
-      <author>David Schleef &lt;ds@schleef.org&gt;, Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>David Schleef &lt;ds@schleef.org&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
           <name>src</name>

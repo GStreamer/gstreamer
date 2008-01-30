@@ -14,7 +14,7 @@
       <longname>Audio resampler</longname>
       <class>Filter/Converter/Audio</class>
       <description>Resamples audio</description>
-      <author>Sebastian Dr303266ge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

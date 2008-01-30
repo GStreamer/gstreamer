@@ -23,8 +23,14 @@
  * Supported protocols are 'http', 'https', 'dav', or 'davs'.
  * </para>
  * <para>
+ * An HTTP proxy must be specified by its URL.
+ * If the "http_proxy" environment variable is set, its value is used.
+ * The element-souphttpsrc::proxy property can be used to override the
+ * default.
+ * </para>
+ * <para>
  * In case the element-souphttpsrc::iradio-mode property is set and the
- * location is a http resource, souphttpsrc will send special Icecast HTTP
+ * location is an HTTP resource, souphttpsrc will send special Icecast HTTP
  * headers to the server to request additional Icecast meta-information. If
  * the server is not an Icecast server, it will behave as if the
  * element-souphttpsrc::iradio-mode property were not set. If it is,
@@ -37,7 +43,7 @@
  * Example pipeline:
  * <programlisting>
  * gst-launch -v souphttpsrc location=https://some.server.org/index.html
- * ! filesink location=/home/joe/server.html
+ *     ! filesink location=/home/joe/server.html
  * </programlisting>
  * The above pipeline reads a web page from a server using the HTTPS protocol
  * and writes it to a local file.
@@ -46,9 +52,9 @@
  * Another example pipeline:
  * <programlisting>
  * gst-launch -v souphttpsrc user-agent="FooPlayer 0.99 beta"
- * automatic-redirect=false proxy=http://proxy.intranet.local:8080
- * location=http://music.foobar.com/demo.mp3 ! mad ! audioconvert
- * ! audioresample ! alsasink
+ *     automatic-redirect=false proxy=http://proxy.intranet.local:8080
+ *     location=http://music.foobar.com/demo.mp3 ! mad ! audioconvert
+ *     ! audioresample ! alsasink
  * </programlisting>
  * The above pipeline will read and decode and play an mp3 file from a
  * web server using the HTTP protocol. If the server sends redirects,
@@ -61,8 +67,8 @@
  * <programlisting>
  * gst-launch -v souphttpsrc location=http://10.11.12.13/mjpeg
  * do-timestamp=true ! multipartdemux
- * ! image/jpeg,width=640,height=480 ! matroskamux
- * ! filesink location=mjpeg.mkv
+ *     ! image/jpeg,width=640,height=480 ! matroskamux
+ *     ! filesink location=mjpeg.mkv
  * </programlisting>
  * The above pipeline reads a motion JPEG stream from an IP camera
  * using the HTTP protocol, encoded as mime/multipart image/jpeg

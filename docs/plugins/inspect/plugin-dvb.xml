@@ -35,7 +35,8 @@
       <longname>DVB Source</longname>
       <class>Source/Video</class>
       <description>Digital Video Broadcast Source</description>
-      <author>P2P-VCR, C-Lab, University of Paderborn012Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <author>P2P-VCR, C-Lab, University of Paderborn
+    Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
       <pads>
         <caps>
           <name>src</name>

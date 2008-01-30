@@ -14,7 +14,7 @@
       <longname>Speed</longname>
       <class>Filter/Effect/Audio</class>
       <description>Set speed/pitch on audio/raw streams (resampler)</description>
-      <author>Andy Wingo &lt;apwingo@eos.ncsu.edu&gt;, Tim-Philipp M303274ller &lt;tim@centricular.net&gt;</author>
+      <author>Andy Wingo &lt;apwingo@eos.ncsu.edu&gt;, Tim-Philipp Müller &lt;tim@centricular.net&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

@@ -14,7 +14,7 @@
       <longname>Crop</longname>
       <class>Filter/Effect/Video</class>
       <description>Crops video into a user-defined region</description>
-      <author>Tim-Philipp M303274ller &lt;tim centricular net&gt;</author>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
       <pads>
         <caps>
           <name>src</name>

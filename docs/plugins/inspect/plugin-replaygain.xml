@@ -14,7 +14,7 @@
       <longname>ReplayGain analysis</longname>
       <class>Filter/Analyzer/Audio</class>
       <description>Perform the ReplayGain analysis</description>
-      <author>Ren303251 Stadler &lt;mail@renestadler.de&gt;</author>
+      <author>René Stadler &lt;mail@renestadler.de&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -35,7 +35,7 @@
       <longname>ReplayGain limiter</longname>
       <class>Filter/Effect/Audio</class>
       <description>Apply signal compression to raw audio data</description>
-      <author>Ren303251 Stadler &lt;mail@renestadler.de&gt;</author>
+      <author>René Stadler &lt;mail@renestadler.de&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -56,7 +56,7 @@
       <longname>ReplayGain volume</longname>
       <class>Filter/Effect/Audio</class>
       <description>Apply ReplayGain volume adjustment</description>
-      <author>Ren303251 Stadler &lt;mail@renestadler.de&gt;</author>
+      <author>René Stadler &lt;mail@renestadler.de&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
