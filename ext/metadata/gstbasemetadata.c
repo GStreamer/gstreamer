@@ -955,7 +955,6 @@ gst_base_metadata_buf_get_intersection_seg (const gint64 offset, guint32 size,
 
     *boffset = 0;
 
-    /* FIXME : optimize to >= size -> = size */
     if (seg_offset + seg_size >= offset + size) {
       /* segment cover all buffer */
       *bsize = size;
@@ -1179,9 +1178,10 @@ gst_base_metadata_calculate_offsets (GstBaseMetadata * base)
     bytes_inject += inject[i].size;
   }
 
-  /* FIXME: For the time being we don't have append buffers 'cause in the case
-     of files we are handling it is not possible to append after the last byte
-     on original stream (which is part of a kind of end-of-file chunk) */
+  /* FIXME (append): For the time being we don't have append buffers 'cause
+     in the case of files we are handling it is not possible to append after
+     the last byte on original stream (which is part of a kind of end-of-file
+     chunk) */
 #if 0
   /* calculate append buffer */
   append_size = 0;
@@ -1491,10 +1491,9 @@ gst_base_metadata_src_event (GstPad * pad, GstEvent * event)
         filter->prepend_buffer = NULL;
       }
 
-      /* FIXME: if some chunk is injected after the end of original file
-         (which is not the case for any file type currently handled), appending
-         a buffer should be taken in account
-       */
+      /* FIXME (append): if some chunk is injected after the end of original
+         file (which is not the case for any file type currently handled),
+         appending a buffer should be taken in account */
 
       /* translate position and setup filter-prepend to be prepend to the
          striped/injected buffer in next 'chain' calling */
@@ -1647,14 +1646,11 @@ gst_base_metadata_get_range (GstPad * pad,
 done:
 
   if (need_append) {
-    /* FIXME: together with SEEK and
-     * gst_base_metadata_translate_pos_to_orig
-     * this way if chunk is added in the end we are in trouble
-     * ...still not implemented 'cause it will not be the
-     * case for the time being (All the file types handled
-     * have a kind of end-of-file chunk (or mark, so nothing
-     * will be injected after it)
-     */
+    /* FIXME (append): together with SEEK and
+       gst_base_metadata_translate_pos_to_orig this way if chunk is added in
+       the end we are in trouble ...still not implemented 'cause it will not be
+       the case for the time being (All the file types handled have a kind of
+       end-of-file chunk (or mark, so nothing will be injected after it) */
   }
 
   return ret;
@@ -1775,7 +1771,7 @@ gst_base_metadata_chain (GstPad * pad, GstBuffer * buf)
     filter->offset += new_buf_size;
 
   } else {
-    /* just store while still not based */
+    /* just store while still not parsed */
     if (!filter->adapter_holding)
       filter->adapter_holding = gst_adapter_new ();
     gst_adapter_push (filter->adapter_holding, buf);
@@ -1809,8 +1805,7 @@ gst_base_metadata_sink_activate (GstPad * pad)
 
   if (!gst_pad_check_pull_range (pad) ||
       !gst_pad_activate_pull (filter->sinkpad, TRUE)) {
-    /* FIXME: currently it is not possible to base in chain. Fail here ?
-       nothing to be done by now, activate push mode */
+    /* Fail here ? nothing to be done by now, activate push mode */
     return gst_pad_activate_push (pad, TRUE);
   }
 

@@ -1,3 +1,14 @@
+2008-01-30  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/gstbasemetadata.c:
+	* ext/metadata/metadatamuxjpeg.c:
+	* ext/metadata/metadatamuxpng.c:
+	* ext/metadata/metadataparsejpeg.c:
+	* ext/metadata/metadatatypes.c:
+	* ext/metadata/metadatatypes.h:
+	* ext/metadata/metadataxmp.c:
+	  Add documentation. Speed up a bit png muxer. Fix xmp muxer.
+
 2008-01-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Wouter Cloetens <wouter at mind dot be>

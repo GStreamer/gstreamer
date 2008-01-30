@@ -264,10 +264,10 @@ done:
 void
 metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
 {
-  gsize i;
+  gint i = 0;
   gboolean has_exif = FALSE;
 
-  for (i = 0; i < jpeg_data->inject_chunks->len; ++i) {
+  while (i < jpeg_data->inject_chunks->len) {
     if (jpeg_data->inject_chunks->chunk[i].size > 0 &&
         jpeg_data->inject_chunks->chunk[i].data) {
       switch (jpeg_data->inject_chunks->chunk[i].type) {
@@ -285,7 +285,8 @@ metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
                 0, 0xFF, 0xED);
           } else {
             GST_ERROR ("Invalid IPTC chunk\n");
-            /* FIXME: remove entry from list */
+            metadata_chunk_array_remove_by_index (jpeg_data->inject_chunks, i);
+            continue;
           }
         }
 #endif /* #ifdef HAVE_IPTC */
@@ -302,7 +303,9 @@ metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
           break;
       }
     }
+    ++i;
   }
+
   if (!has_exif) {
     /* EXIF not injected so not strip JFIF anymore */
     metadata_chunk_array_clear (jpeg_data->strip_chunks);

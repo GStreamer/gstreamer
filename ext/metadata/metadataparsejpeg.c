@@ -677,7 +677,7 @@ metadataparse_jpeg_iptc (JpegParseData * jpeg_data, guint8 ** buf,
     size = gst_adapter_available (*jpeg_data->iptc_adapter);
     buf = gst_adapter_peek (*jpeg_data->iptc_adapter, size);
 
-    /* FIXME: currently we are trhowing away others PhotoShop data */
+    /* FIXME: currently we are throwing away others PhotoShop data */
     res = iptc_jpeg_ps3_find_iptc (buf, size, &iptc_len);
 
     if (res < 0) {

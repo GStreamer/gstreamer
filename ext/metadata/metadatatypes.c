@@ -223,3 +223,27 @@ metadata_chunk_array_remove_zero_size (MetadataChunkArray * array)
     }
   }
 }
+
+/*
+ * metadata_chunk_array_remove_by_index:
+ * @array: an array of chunks
+ * @i: index of chunk to be removed
+ *
+ * This function removes the chunk at index @i from @array
+ *
+ * Returns: nothing
+ */
+
+void
+metadata_chunk_array_remove_by_index (MetadataChunkArray * array, guint32 i)
+{
+
+  if (i < array->len) {
+    if (array->chunk[i].data)
+      g_free (array->chunk[i].data);
+    if (i < --array->len) {
+      memmove (&array->chunk[i], &array->chunk[i + 1],
+          sizeof (MetadataChunk) * (array->len - i));
+    }
+  }
+}

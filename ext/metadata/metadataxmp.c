@@ -154,12 +154,14 @@ typedef struct _tag_SchemaMap
 
 #define XMP_SCHEMA_NODE 0x80000000UL
 
+/* *INDENT-OFF* */
 static const SchemaTagMap schema_map_dublin_tags_map[] = {
-  {"description", GST_TAG_DESCRIPTION},
-  {"title", GST_TAG_TITLE},
-  {"rights", GST_TAG_COPYRIGHT},
+  {"description", GST_TAG_DESCRIPTION },
+  {"title",       GST_TAG_TITLE       },
+  {"rights",      GST_TAG_COPYRIGHT   },
   {NULL, NULL}
 };
+/* *INDENT-ON* */
 
 static const SchemaMap schema_map_dublin = {
   "http://purl.org/dc/elements/1.1/",
@@ -799,6 +801,8 @@ metadatamux_xmp_for_each_tag_in_list (const GstTagList * list,
 
   for (i = 0; schemas_map[i]; i++) {
 
+    /* FIXME: should try to get all of values (index) for the tag */
+
     const SchemaMap *smap = schemas_map[i];
     const SchemaTagMap *stagmap =
         metadatamux_xmp_get_tagsmap_from_gsttag (smap, tag);
@@ -818,8 +822,24 @@ metadatamux_xmp_for_each_tag_in_list (const GstTagList * list,
       }
 
       if (value) {
-        xmp_set_property (xmp, smap->schema, stagmap->xmp_tag, value);
+
+        uint32_t options = 0;
+
+        if (xmp_get_property_and_bits (xmp, smap->schema, stagmap->xmp_tag,
+                NULL, &options)) {
+
+          if (XMP_IS_PROP_SIMPLE (options)) {
+            xmp_set_property (xmp, smap->schema, stagmap->xmp_tag, value);
+          } else {
+            xmp_set_array_item (xmp, smap->schema, stagmap->xmp_tag, 1,
+                value, 0);
+          }
+        } else {
+          xmp_set_property (xmp, smap->schema, stagmap->xmp_tag, value);
+        }
+
         g_free (value);
+
       }
 
     }

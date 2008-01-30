@@ -51,11 +51,9 @@
 #include <glib.h>
 
 G_BEGIN_DECLS
-
 /*
  * enum and types
  */
-
 /* *INDENT-OFF* */
 
 typedef enum _tag_MetadataParsingReturn {
@@ -65,8 +63,8 @@ typedef enum _tag_MetadataParsingReturn {
 } MetadataParsingReturn;
 
 /* *INDENT-ON* */
-
-typedef enum _tag_MetadataChunkType {
+    typedef enum _tag_MetadataChunkType
+{
   MD_CHUNK_UNKNOWN,
   MD_CHUNK_EXIF,
   MD_CHUNK_IPTC,
@@ -75,19 +73,19 @@ typedef enum _tag_MetadataChunkType {
 
 typedef struct _tag_MetadataChunk
 {
-  gint64 offset_orig;    /* from the beginning of original file */
+  gint64 offset_orig;           /* from the beginning of original file */
   /*here just for convinience (filled by element) offset in new stream */
-  gint64 offset;         
-  guint32 size;          /* chunk or buffer size*/
-  guint8 * data;
-  MetadataChunkType type; /* used by mux to see what tags to insert here */
+  gint64 offset;
+  guint32 size;                 /* chunk or buffer size */
+  guint8 *data;
+  MetadataChunkType type;       /* used by mux to see what tags to insert here */
 } MetadataChunk;
 
 typedef struct _tag_MetadataChunkArray
 {
-  MetadataChunk * chunk;
-  gsize len;  /* number of chunks into aray */
-  gsize allocated_len; /* number of slots into the array to store chunks */
+  MetadataChunk *chunk;
+  gsize len;                    /* number of chunks into aray */
+  gsize allocated_len;          /* number of slots into the array to store chunks */
 } MetadataChunkArray;
 
 /*
@@ -95,23 +93,23 @@ typedef struct _tag_MetadataChunkArray
  */
 
 extern void
-metadata_chunk_array_init(MetadataChunkArray * array, gsize alloc_size);
+metadata_chunk_array_init (MetadataChunkArray * array, gsize alloc_size);
+
+extern void metadata_chunk_array_free (MetadataChunkArray * array);
+
+extern void metadata_chunk_array_clear (MetadataChunkArray * array);
 
 extern void
-metadata_chunk_array_free(MetadataChunkArray * array);
+metadata_chunk_array_append (MetadataChunkArray * array, MetadataChunk * chunk);
 
 extern void
-metadata_chunk_array_clear(MetadataChunkArray * array);
-
-extern void
-metadata_chunk_array_append(MetadataChunkArray * array, MetadataChunk * chunk);
-
-extern void
-metadata_chunk_array_append_sorted(MetadataChunkArray * array,
+metadata_chunk_array_append_sorted (MetadataChunkArray * array,
     MetadataChunk * chunk);
 
+extern void metadata_chunk_array_remove_zero_size (MetadataChunkArray * array);
+
 extern void
-metadata_chunk_array_remove_zero_size (MetadataChunkArray * array);
+metadata_chunk_array_remove_by_index (MetadataChunkArray * array, guint32 i);
 
 G_END_DECLS
 #endif /* __METADATATYPES_H__ */
