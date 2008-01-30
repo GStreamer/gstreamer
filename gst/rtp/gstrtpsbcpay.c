@@ -79,7 +79,7 @@ GST_ELEMENT_DETAILS ("RTP packet payloader",
 
 static GstStaticPadTemplate gst_rtp_sbc_pay_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-sbc, "    /* FIXME remove those caps? */
+    GST_STATIC_CAPS ("audio/x-sbc, "
         "rate = (int) { 16000, 32000, 44100, 48000 }, "
         "channels = (int) [ 1, 2 ], "
         "mode = (string) { mono, dual, stereo, joint }, "
@@ -91,7 +91,11 @@ static GstStaticPadTemplate gst_rtp_sbc_pay_sink_factory =
 
 static GstStaticPadTemplate gst_rtp_sbc_pay_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp")       /* FIXME put things here */
+    GST_STATIC_CAPS ("application/x-rtp, "
+        "media = (string) \"audio\","
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) { 16000, 32000, 44100, 48000 },"
+        "encoding-name = (string) \"SBC\"")
     );
 
 static void gst_rtp_sbc_pay_set_property (GObject * object, guint prop_id,
@@ -150,7 +154,7 @@ gst_rtp_sbc_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
 
   sbcpay->frame_length = frame_len;
 
-  gst_basertppayload_set_options (payload, "audio", FALSE, "SBC", rate);
+  gst_basertppayload_set_options (payload, "audio", TRUE, "SBC", rate);
 
   GST_DEBUG_OBJECT (payload, "calculated frame length: %d ", frame_len);
 
@@ -209,6 +213,8 @@ gst_rtp_sbc_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
 {
   GstRtpSBCPay *sbcpay;
   guint available;
+
+  /* FIXME check for negotiation */
 
   sbcpay = GST_RTP_SBC_PAY (payload);
   gst_adapter_push (sbcpay->adapter, gst_buffer_copy (buffer));
