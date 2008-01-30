@@ -11,6 +11,8 @@ TODO:
 2- Get properties like 'width' and 'height' from caps
 3- Review the code (in order to move to gst-plugins-good)
 4- Document how the plugin works (atchitecture and interaction beteween modules)
+5- Create a HTML with the mapping (and conversion) beteween GST tags and EXIF, IPTC and XMP tags
+6- Improve the test application (to save also in png and to make it possible to set the metadata elements properties)
 
 OPEN ISSUES:
 
@@ -23,6 +25,17 @@ OPEN ISSUES:
 5- currently, in JPEG files, if there is a Photoshop segment, everything inside it but IPTC will be lost. From the point of view of implementation it is easy, but I still don't now how to solve from the point of view of "designing". Anyway I think it is not so important.
 6- language is not considered in XMP (How to do it with GStreamer?)
 7- Add a helper function that convert from value to string. For example, aperture-size is 2.7 and the app wants to show "f/2.7", 'contrast' is a range and the app wants to show as "Normal", "Soft", "Hard". For the time being it is up to the APP to make this conversion.
+
+LINKS IN BUGZILA
+
+1- to move to good
+http://bugzilla.gnome.org/show_bug.cgi?id=513182
+2- Proposal of new tags
+http://bugzilla.gnome.org/show_bug.cgi?id=482947
+3- Discussion about the architecture 
+http://bugzilla.gnome.org/show_bug.cgi?id=486659
+4- Also extraction image width and height and set caps properly 
+http://bugzilla.gnome.org/show_bug.cgi?id=503616
 
 KNOWN BUGS
 

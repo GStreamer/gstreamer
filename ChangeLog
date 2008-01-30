@@ -1,5 +1,10 @@
 2008-01-30  Edgard Lima  <edgard.lima@indt.org.br>
 
+	* ext/metadata/TODO:
+	  Just uptade the ToDo list.
+
+2008-01-30  Edgard Lima  <edgard.lima@indt.org.br>
+
 	* ext/metadata/gstbasemetadata.c:
 	* ext/metadata/metadatamuxjpeg.c:
 	* ext/metadata/metadatamuxpng.c:
