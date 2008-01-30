@@ -128,32 +128,41 @@ gst_gio_base_src_start (GstBaseSrc * base_src)
   return TRUE;
 }
 
-static gboolean
-gst_gio_base_src_stop (GstBaseSrc * base_src)
+static void
+close_stream_cb (GObject * object, GAsyncResult * res, gpointer user_data)
 {
-  GstGioBaseSrc *src = GST_GIO_BASE_SRC (base_src);
-  gboolean success = TRUE;
+  GstGioBaseSrc *src = GST_GIO_BASE_SRC (user_data);
+  gboolean success;
   GError *err = NULL;
 
-  if (src->stream != NULL) {
-    /* FIXME: In case that the call below would block, there is no one to
-     * trigger the cancellation! */
+  success = g_input_stream_close_finish (G_INPUT_STREAM (object), res, &err);
 
-    success = g_input_stream_close (src->stream, src->cancel, &err);
-
-    if (!success && !gst_gio_error (src, "g_input_stream_close", &err, NULL)) {
-      GST_ELEMENT_ERROR (src, RESOURCE, CLOSE, (NULL),
-          ("g_input_stream_close failed: %s", err->message));
-      g_clear_error (&err);
-    }
-
-    g_object_unref (src->stream);
-    src->stream = NULL;
+  if (!success
+      && !gst_gio_error (src, "g_input_stream_close_async", &err, NULL)) {
+    GST_ELEMENT_ERROR (src, RESOURCE, CLOSE, (NULL),
+        ("g_input_stream_close_async failed: %s", err->message));
+    g_clear_error (&err);
   }
 
   GST_DEBUG_OBJECT (src, "closed stream");
 
-  return success;
+  g_object_unref (src);
+}
+
+static gboolean
+gst_gio_base_src_stop (GstBaseSrc * base_src)
+{
+  GstGioBaseSrc *src = GST_GIO_BASE_SRC (base_src);
+
+  if (G_IS_INPUT_STREAM (src->stream)) {
+    GST_DEBUG_OBJECT (src, "closing stream");
+    g_input_stream_close_async (src->stream, 0, src->cancel, close_stream_cb,
+        g_object_ref (src));
+    g_object_unref (src->stream);
+    src->stream = NULL;
+  }
+
+  return TRUE;
 }
 
 static gboolean
@@ -295,6 +304,8 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
   GstFlowReturn ret = GST_FLOW_OK;
   GError *err = NULL;
 
+  g_return_val_if_fail (G_IS_INPUT_STREAM (src->stream), GST_FLOW_ERROR);
+
   if (G_UNLIKELY (offset != src->position)) {
     if (!GST_GIO_STREAM_IS_SEEKABLE (src->stream))
       return GST_FLOW_NOT_SUPPORTED;
@@ -347,17 +358,10 @@ gst_gio_base_src_set_stream (GstGioBaseSrc * src, GInputStream * stream)
   g_return_if_fail ((GST_STATE (src) != GST_STATE_PLAYING &&
           GST_STATE (src) != GST_STATE_PAUSED));
 
-  if (src->stream) {
-    gboolean success;
-    GError *err = NULL;
-
-    success = g_input_stream_close (src->stream, src->cancel, &err);
-
-    if (!success && !gst_gio_error (src, "g_input_stream_close", &err, NULL)) {
-      GST_WARNING_OBJECT (src, "g_input_stream_close failed: %s", err->message);
-      g_clear_error (&err);
-    }
-
+  if (G_IS_INPUT_STREAM (src->stream)) {
+    GST_DEBUG_OBJECT (src, "closing old stream");
+    g_input_stream_close_async (src->stream, 0, src->cancel, close_stream_cb,
+        g_object_ref (src));
     g_object_unref (src->stream);
     src->stream = NULL;
   }
