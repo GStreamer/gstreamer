@@ -277,8 +277,9 @@ gst_souphttp_src_class_init (GstSouphttpSrcClass * klass)
 static void
 gst_souphttp_src_init (GstSouphttpSrc * src, GstSouphttpSrcClass * g_class)
 {
+  const gchar *proxy;
+
   src->location = NULL;
-  src->proxy = NULL;
   src->automatic_redirect = TRUE;
   src->user_agent = g_strdup (DEFAULT_USER_AGENT);
   src->icy_caps = NULL;
@@ -296,6 +297,12 @@ gst_souphttp_src_init (GstSouphttpSrc * src, GstSouphttpSrcClass * g_class)
   src->seekable = TRUE;
   src->read_position = 0;
   src->request_position = 0;
+  proxy = g_getenv ("http_proxy");
+  if (proxy && !gst_souphttp_src_set_proxy (src, proxy)) {
+    GST_WARNING_OBJECT (src,
+        "The proxy in the http_proxy env var (\"%s\") cannot be parsed.",
+        proxy);
+  }
 }
 
 static void
