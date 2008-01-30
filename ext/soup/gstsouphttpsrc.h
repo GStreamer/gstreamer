@@ -37,14 +37,25 @@ G_BEGIN_DECLS
 typedef struct _GstSouphttpSrc GstSouphttpSrc;
 typedef struct _GstSouphttpSrcClass GstSouphttpSrcClass;
 
+typedef enum {
+  GST_SOUPHTTP_SRC_SESSION_IO_STATUS_IDLE,
+  GST_SOUPHTTP_SRC_SESSION_IO_STATUS_QUEUED,
+  GST_SOUPHTTP_SRC_SESSION_IO_STATUS_RUNNING,
+  GST_SOUPHTTP_SRC_SESSION_IO_STATUS_FINISHED,
+} GstSouphttpSrcSessionIOStatus;
+
 struct _GstSouphttpSrc {
   GstPushSrc element;
 
   gchar * location;                     /* Full URI. */
   gchar * user_agent;                   /* User-Agent HTTP header. */
+  gboolean automatic_redirect;          /* Follow redirects. */
+  SoupURI * proxy;                      /* HTTP proxy URI. */
   GMainContext * context;               /* I/O context. */
   GMainLoop * loop;                     /* Event loop. */
   SoupSession * session;                /* Async context. */
+  GstSouphttpSrcSessionIOStatus session_io_status;
+                                        /* Async I/O status. */
   SoupMessage * msg;                    /* Request message. */
   GstFlowReturn ret;                    /* Return code from callback. */
   GstBuffer ** outbuf;                  /* Return buffer allocated by callback. */

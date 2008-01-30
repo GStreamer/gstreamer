@@ -53,6 +53,7 @@
     <xi:include href="xml/element-sdlaudiosink.xml" />
     <xi:include href="xml/element-sdlvideosink.xml" />
     <xi:include href="xml/element-sdpdemux.xml" />
+    <xi:include href="xml/element-souphttpsrc.xml" />
     <xi:include href="xml/element-spectrum.xml" />
     <xi:include href="xml/element-speed.xml" />
     <xi:include href="xml/element-speexresample.xml" />

@@ -1,3 +1,40 @@
+2008-01-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Wouter Cloetens <wouter at mind dot be>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	Add souphttpsrc to the docs.
+
+	* configure.ac:
+	* ext/soup/gstsouphttpsrc.c: (gst_souphttp_src_class_init),
+	(gst_souphttp_src_init), (gst_souphttp_src_dispose),
+	(gst_souphttp_src_set_property), (gst_souphttp_src_get_property),
+	(gst_souphttp_src_cancel_message),
+	(gst_souphttp_src_queue_message),
+	(gst_souphttp_src_add_range_header),
+	(gst_souphttp_src_session_unpause_message),
+	(gst_souphttp_src_session_pause_message),
+	(gst_souphttp_src_session_close),
+	(gst_souphttp_src_got_headers_cb), (gst_souphttp_src_got_body_cb),
+	(gst_souphttp_src_finished_cb), (gst_souphttp_src_got_chunk_cb),
+	(gst_souphttp_src_response_cb), (gst_souphttp_src_parse_status),
+	(gst_souphttp_src_create), (gst_souphttp_src_start),
+	(gst_souphttp_src_stop), (gst_souphttp_src_unlock),
+	(gst_souphttp_src_unlock_stop), (gst_souphttp_src_get_size),
+	(gst_souphttp_src_is_seekable), (gst_souphttp_src_do_seek),
+	(gst_souphttp_src_set_location), (gst_souphttp_src_set_proxy),
+	(plugin_init):
+	* ext/soup/gstsouphttpsrc.h:
+	Add support for libsoup2.4 and require it. Also implement redirection
+	and manual proxy specification. Fixes bug #510708.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/souphttpsrc.c:
+	Add unit test for souphttpsrc.
+
 2008-01-30  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/Makefile.am:

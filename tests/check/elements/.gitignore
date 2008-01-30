@@ -8,6 +8,7 @@ interleave
 lpwsinc
 mpeg2enc
 neonhttpsrc
+souphttpsrc
 rganalysis
 rglimiter
 rgvolume

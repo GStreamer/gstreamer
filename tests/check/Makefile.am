@@ -15,6 +15,8 @@ TESTS_ENVIRONMENT = \
         GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR) \
         STATE_IGNORE_ELEMENTS="vcdsrc nassink glimagesink"
 
+EXTRA_DIST = test-cert.pem test-key.pem
+
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 # override to _not_ install the test plugins
@@ -45,6 +47,12 @@ else
 check_neon = 
 endif
 
+if USE_SOUP
+check_soup = elements/souphttpsrc
+else
+check_soup = 
+endif
+
 if USE_TIMIDITY
 check_timidity=elements/timidity
 else
@@ -64,6 +72,7 @@ check_PROGRAMS = \
 	$(check_gio)  \
 	$(check_mpeg2enc)  \
 	$(check_neon)      \
+	$(check_soup)      \
 	$(check_timidity)  \
 	elements/bpwsinc  \
 	elements/equalizer  \
@@ -90,3 +99,5 @@ elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
 pipelines_gio_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
 pipelines_gio_LDADD = $(GIO_LIBS) $(LDADD)
 
+elements_souphttpsrc_CFLAGS = $(SOUP_CFLAGS) $(AM_CFLAGS)
+elements_souphttpsrc_LDADD = $(SOUP_LIBS) $(LDADD)

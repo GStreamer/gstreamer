@@ -267,6 +267,20 @@ gst_gio_stream_src_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-souphttpsrc</FILE>
+<TITLE>souphttpsrc</TITLE>
+GstSouphttpSrc
+<SUBSECTION Standard>
+GstSouphttpSrcClass
+GST_SOUPHTTP_SRC
+GST_SOUPHTTP_SRC_CLASS
+GST_IS_SOUPHTTP_SRC
+GST_IS_SOUPHTTP_SRC_CLASS
+GST_TYPE_SOUPHTTP_SRC
+gst_souphttp_src_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-bpwsinc</FILE>
 <TITLE>bpwsinc</TITLE>
 GstBPWSinc
