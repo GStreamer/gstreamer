@@ -58,26 +58,6 @@ GST_DEBUG_CATEGORY (python_debug); /* for python code */
                          o=pyg_type_wrapper_new(gtype)); \
     Py_DECREF(o);
 
-
-/* This is a timeout that gets added to the mainloop to handle SIGINT (Ctrl-C)
- * Other signals get handled at some other point where transition from
- * C -> Python is being made.
- */
-static gboolean
-python_do_pending_calls(gpointer data)
-{
-    PyGILState_STATE state;
-
-    if (PyOS_InterruptOccurred()) {
-	 state = pyg_gil_state_ensure();
-	 PyErr_SetNone(PyExc_KeyboardInterrupt);
-	 pyg_gil_state_release(state);
-    }
-
-    return TRUE;
-}
-
-
 static PyObject*
 pygstminiobject_from_gvalue(const GValue *value)
 {
@@ -268,8 +248,6 @@ init_gst (void)
      PyModule_AddStringConstant (m, "RESOURCE_ERROR",(gchar *)  g_quark_to_string(GST_RESOURCE_ERROR));
      PyModule_AddStringConstant (m, "CORE_ERROR", (gchar *) g_quark_to_string(GST_CORE_ERROR));
      PyModule_AddStringConstant (m, "STREAM_ERROR", (gchar *) g_quark_to_string(GST_STREAM_ERROR));
-
-     g_timeout_add_full (0, 100, python_do_pending_calls, NULL, NULL);
 
      if (PyErr_Occurred ()) {
 	  Py_FatalError ("can't initialize module gst");

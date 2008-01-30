@@ -1,3 +1,10 @@
+2008-01-30  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gstmodule.c: (init_gst):
+	Remove do_pending_calls timeout which has been handled more gracefully
+	in pygobject MainLoop for the past 3 years.
+	Fixes #512916
+
 2008-01-28  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
