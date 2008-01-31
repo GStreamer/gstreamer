@@ -4,13 +4,15 @@ lib_LTLIBRARIES = libgstgl-@GST_MAJORMINOR@.la
 libgstgl_@GST_MAJORMINOR@_la_SOURCES = \
 	glextensions.c \
 	gstglbuffer.c \
-	gstgldisplay.c
+	gstgldisplay.c \
+	gstglfilter.c
 
 libgstgl_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/gl
 libgstgl_@GST_MAJORMINOR@include_HEADERS = \
 	glextensions.h \
 	gstglbuffer.h \
-	gstgldisplay.h
+	gstgldisplay.h \
+	gstglfilter.h
 
 libgstgl_@GST_MAJORMINOR@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) \

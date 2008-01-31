@@ -42,9 +42,6 @@ GType gst_gl_test_src_get_type (void);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_debug_glimage_sink, "glimagesink", 0,
-      "glimagesink element");
-
   if (!gst_element_register (plugin, "glimagesink",
           GST_RANK_SECONDARY, GST_TYPE_GLIMAGE_SINK)) {
     return FALSE;
@@ -75,6 +72,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "glimagesink",
-    "OpenGL video output plugin",
+    "opengl",
+    "plugin for elements using OpenGL",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

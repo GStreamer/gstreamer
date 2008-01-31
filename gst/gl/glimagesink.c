@@ -98,8 +98,14 @@ enum
   ARG_DISPLAY
 };
 
+#define DEBUG_INIT(bla) do { \
+  GST_DEBUG_CATEGORY_INIT (gst_debug_glimage_sink, "glimagesink", 0, "glimagesink element"); \
+  gst_glimage_sink_init_interfaces(bla); \
+}while(0);
+
+
 GST_BOILERPLATE_FULL (GstGLImageSink, gst_glimage_sink, GstVideoSink,
-    GST_TYPE_VIDEO_SINK, gst_glimage_sink_init_interfaces);
+    GST_TYPE_VIDEO_SINK, DEBUG_INIT);
 
 static void
 gst_glimage_sink_init_interfaces (GType type)
