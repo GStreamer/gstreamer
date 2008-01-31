@@ -24,8 +24,9 @@ libgstopengl_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GL_CFLAGS) \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_srcdir)/gst-libs/gst/gl
-libgstopengl_la_LIBADD = $(GL_LIBS) \
+libgstopengl_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_MAJORMINOR).la \
 	$(GST_BASE_LIBS) \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) -lgstinterfaces-$(GST_MAJORMINOR)
+	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_MAJORMINOR)
 libgstopengl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
