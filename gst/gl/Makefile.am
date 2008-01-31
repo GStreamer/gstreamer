@@ -8,6 +8,7 @@ AM_LIBS = $(GST_BASE_LIBS)
 
 libgstopengl_la_SOURCES = \
 	glimagesink.c \
+	glimagesink.h \
 	gstopengl.c \
 	gstglupload.c \
 	gstgldownload.c \
