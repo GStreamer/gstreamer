@@ -81,6 +81,7 @@
 #include <string.h>
 
 #include "metadataparsejpeg.h"
+#include "metadataparseutil.h"
 
 #ifdef HAVE_IPTC
 #include <libiptcdata/iptc-jpeg.h>
@@ -434,8 +435,6 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
     } else if (mark[1] == 0xE1) {       /* may be it is Exif or XMP */
 
       if (chunk_size >= 8) {    /* size2 'EXIF' 0x00 0x00 */
-        guint8 ch;
-
         if (*bufsize < 6) {
           *next_size = (*buf - *next_start) + 6;
           ret = META_PARSING_NEED_MORE_DATA;

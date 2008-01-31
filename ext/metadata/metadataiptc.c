@@ -444,7 +444,7 @@ metadatamux_iptc_for_each_tag_in_list (const GstTagList * list,
   iptc_dataset_set_tag (dataset, record, iptc_tag);
 
   if (gst_tag_list_get_string (list, tag, &tag_value)) {
-    iptc_dataset_set_data (dataset, tag_value, strlen (tag_value),
+    iptc_dataset_set_data (dataset, (guint8 *) tag_value, strlen (tag_value),
         IPTC_DONT_VALIDATE);
     g_free (tag_value);
     tag_value = NULL;

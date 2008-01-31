@@ -168,6 +168,9 @@ metadata_dispose (MetaData ** meta_data)
       else
         metadatamux_png_dispose (&(*meta_data)->format_data.png_mux);
       break;
+    case IMG_NONE:
+    default:
+      break;
   }
 
   metadata_chunk_array_free (&(*meta_data)->strip_chunks);

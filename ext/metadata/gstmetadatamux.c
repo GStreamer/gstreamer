@@ -290,8 +290,6 @@ gst_metadata_mux_class_init (GstMetadataMuxClass * klass)
 static void
 gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
-
   gst_base_metadata_set_option_flag (GST_BASE_METADATA (filter),
       META_OPT_EXIF | META_OPT_IPTC | META_OPT_XMP | META_OPT_MUX);
 
@@ -301,8 +299,6 @@ static void
 gst_metadata_mux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstMetadataMux *filter = GST_METADATA_MUX (object);
-
   switch (prop_id) {
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -314,9 +310,6 @@ static void
 gst_metadata_mux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  guint8 option =
-      gst_base_metadata_get_option_flag (GST_BASE_METADATA (object));
-
   switch (prop_id) {
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -329,8 +322,6 @@ gst_metadata_mux_get_property (GObject * object, guint prop_id,
 static void
 gst_metadata_mux_dispose (GObject * object)
 {
-  GstMetadataMux *filter = NULL;
-
   G_OBJECT_CLASS (metadata_parent_class)->dispose (object);
 }
 
@@ -362,10 +353,8 @@ gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base)
 {
 
   GstMetadataMux *filter = GST_METADATA_MUX (base);
-  GstMessage *msg;
   GstTagSetter *setter = GST_TAG_SETTER (filter);
   const GstTagList *taglist = gst_tag_setter_get_tag_list (setter);
-  GstEvent *event;
   guint8 *buf = NULL;
   guint32 size = 0;
 

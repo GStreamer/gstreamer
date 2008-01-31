@@ -1,5 +1,37 @@
 2008-01-31  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/metadata/Makefile.am:
+	Add some relevant variables to CFLAGS and LIBADD, for example our
+	compiler warnings paramters.
+
+	* ext/metadata/gstbasemetadata.c:
+	(gst_base_metadata_strip_push_buffer),
+	(gst_base_metadata_calculate_offsets),
+	(gst_base_metadata_src_event), (gst_base_metadata_sink_activate):
+	* ext/metadata/gstmetadatademux.c: (gst_metadata_demux_init),
+	(gst_metadata_demux_set_property), (gst_metadata_demux_dispose):
+	* ext/metadata/gstmetadatamux.c: (gst_metadata_mux_init),
+	(gst_metadata_mux_set_property), (gst_metadata_mux_get_property),
+	(gst_metadata_mux_dispose),
+	(gst_metadata_mux_create_chunks_from_tags):
+	* ext/metadata/metadata.c: (metadata_dispose):
+	* ext/metadata/metadataexif.c:
+	(metadataparse_exif_content_foreach_entry_func),
+	(metadatamux_exif_for_each_tag_in_list):
+	* ext/metadata/metadataiptc.c:
+	(metadatamux_iptc_for_each_tag_in_list):
+	* ext/metadata/metadatamuxjpeg.c: (metadatamux_jpeg_lazy_update),
+	(metadatamux_jpeg_reading):
+	* ext/metadata/metadatamuxpng.c: (metadatamux_png_reading):
+	* ext/metadata/metadataparsejpeg.c: (metadataparse_jpeg_reading):
+	* ext/metadata/metadataparsepng.c:
+	* ext/metadata/metadataparseutil.h:
+	* ext/metadata/metadataxmp.c: (metadataparse_xmp_tag_list_add),
+	(metadatamux_xmp_create_chunk_from_tag_list):
+	Fix a million warnings that showed up after the above change.
+
+2008-01-31  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/soup/gstsouphttpsrc.c: (_do_init),
 	(gst_soup_http_src_base_init), (gst_soup_http_src_class_init),
 	(gst_soup_http_src_init), (gst_soup_http_src_dispose),

@@ -176,8 +176,6 @@ metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
     guint8 ** next_start, guint32 * next_size);
 
-static void metadatamux_make_crc_table (guint32 crc_table[]);
-
 static guint32 metadatamux_update_crc (guint32 crc, guint8 * buf, guint32 len);
 
 static guint32 metadatamux_calc_crc (guint8 * buf, guint32 len);
@@ -423,8 +421,6 @@ metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
   guint32 chunk_size = 0;
   MetadataChunk chunk;
 
-  static const char XmpHeader[] = "XML:com.adobe.xmp";
-
   *next_start = *buf;
 
   if (*bufsize < 8) {
@@ -475,7 +471,7 @@ done:
  * @len: size in bytes of @buf
  *
  * Calculates the CRC of a data buffer for a seed @crc.
- * @see_also: #metadatamux_make_crc_table #metadatamux_calc_crc
+ * @see_also: #metadatamux_calc_crc
  *
  * Returns: the CRC of the bytes buf[0..len-1].
  */

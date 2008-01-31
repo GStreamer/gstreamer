@@ -428,7 +428,7 @@ metadataparse_exif_content_foreach_entry_func (ExifEntry * entry,
 {
   char buf[2048];
   MEUserData *meudata = (MEUserData *) user_data;
-  GType type;
+  GType type = G_TYPE_NONE;
   ExifByteOrder byte_order;
   const gchar *tag = metadataparse_exif_get_tag_from_exif (entry->tag, &type);
 
@@ -656,7 +656,7 @@ metadatamux_exif_for_each_tag_in_list (const GstTagList * list,
           entry->components = strlen (value) + 1;
           entry->size =
               exif_format_get_size (entry->format) * entry->components;
-          entry->data = value;
+          entry->data = (guint8 *) value;
         }
       }
         break;
@@ -667,7 +667,7 @@ metadatamux_exif_for_each_tag_in_list (const GstTagList * list,
         ExifShort v_short;
 
         if (G_TYPE_UINT == type) {
-          gst_tag_list_get_uint (list, tag, &value);
+          gst_tag_list_get_uint (list, tag, (guint *) & value);
         } else {
           gst_tag_list_get_int (list, tag, &value);
         }

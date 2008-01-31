@@ -310,19 +310,14 @@ static void
 gst_metadata_demux_init (GstMetadataDemux * filter,
     GstMetadataDemuxClass * gclass)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
-
   gst_base_metadata_set_option_flag (GST_BASE_METADATA (filter),
       META_OPT_EXIF | META_OPT_IPTC | META_OPT_XMP | META_OPT_DEMUX);
-
 }
 
 static void
 gst_metadata_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstMetadataDemux *filter = GST_METADATA_DEMUX (object);
-
   switch (prop_id) {
     case ARG_PARSE_ONLY:
       if (g_value_get_boolean (value))
@@ -360,8 +355,6 @@ gst_metadata_demux_get_property (GObject * object, guint prop_id,
 static void
 gst_metadata_demux_dispose (GObject * object)
 {
-  GstMetadataDemux *filter = NULL;
-
   G_OBJECT_CLASS (metadata_parent_class)->dispose (object);
 }
 

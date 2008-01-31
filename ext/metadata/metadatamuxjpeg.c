@@ -296,7 +296,7 @@ metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
           static const char XmpHeader[] = "http://ns.adobe.com/xap/1.0/";
 
           metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i],
-              XmpHeader, sizeof (XmpHeader), 0xFF, 0xE1);
+              (guint8 *) XmpHeader, sizeof (XmpHeader), 0xFF, 0xE1);
         }
           break;
         default:
@@ -375,9 +375,6 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
   gboolean jfif_found = FALSE;
 
   static const char JfifHeader[] = "JFIF";
-  static const unsigned char ExifHeader[] =
-      { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
-  static const char XmpHeader[] = "http://ns.adobe.com/xap/1.0/";
 
   *next_start = *buf;
 

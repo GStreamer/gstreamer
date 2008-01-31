@@ -289,7 +289,7 @@ metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
 
   buf = gst_adapter_peek (adapter, size);
 
-  xmp = xmp_new (buf, size);
+  xmp = xmp_new ((gchar *) buf, size);
   if (!xmp)
     goto done;
 
@@ -338,7 +338,9 @@ metadatamux_xmp_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
   if (val) {
     xmp_chunk = gst_value_get_buffer (val);
     if (xmp_chunk)
-      xmp = xmp_new (GST_BUFFER_DATA (xmp_chunk), GST_BUFFER_SIZE (xmp_chunk));
+      xmp =
+          xmp_new ((gchar *) GST_BUFFER_DATA (xmp_chunk),
+          GST_BUFFER_SIZE (xmp_chunk));
   }
 
   if (NULL == xmp)
@@ -825,9 +827,13 @@ metadatamux_xmp_for_each_tag_in_list (const GstTagList * list,
 
         uint32_t options = 0;
 
+#ifdef XMP_1_99_5
+        if (xmp_get_property (xmp, smap->schema, stagmap->xmp_tag,
+                NULL, &options)) {
+#else
         if (xmp_get_property_and_bits (xmp, smap->schema, stagmap->xmp_tag,
                 NULL, &options)) {
-
+#endif
           if (XMP_IS_PROP_SIMPLE (options)) {
 #ifdef XMP_1_99_5
             xmp_set_property (xmp, smap->schema, stagmap->xmp_tag, value, 0);

@@ -66,6 +66,7 @@
  */
 
 #include "metadataparsepng.h"
+#include "metadataparseutil.h"
 
 #include <string.h>
 

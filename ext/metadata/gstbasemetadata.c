@@ -692,8 +692,6 @@ gst_base_metadata_strip_push_buffer (GstBaseMetadata * base,
   if (inject_len) {
 
     for (i = 0; i < inject_len; ++i) {
-      int res;
-
       if (inject[i].offset_orig >= offset_orig) {
         if (G_LIKELY (inject_begin || inject[i].offset_orig > offset_orig)) {
           if (inject[i].offset_orig < offset_orig + size_buf_in) {
@@ -838,8 +836,6 @@ inject:
     striped_so_far = 0;
     j = 0;
     for (i = 0; i < inject_len; ++i) {
-      int res;
-
       while (j < strip_len) {
         if (strip[j].offset_orig < inject[i].offset_orig)
           striped_so_far += bsize_strip[j++];
@@ -872,9 +868,6 @@ inject:
     }
 
   }
-
-
-done:
 
   if (prepend_size) {
     if (injected_bytes == 0 && striped_bytes == 0) {
@@ -1141,7 +1134,6 @@ static gboolean
 gst_base_metadata_calculate_offsets (GstBaseMetadata * base)
 {
   int i, j;
-  guint32 append_size;
   guint32 bytes_striped, bytes_inject;
   MetadataChunk *strip = META_DATA_STRIP_CHUNKS (base->metadata).chunk;
   MetadataChunk *inject = META_DATA_INJECT_CHUNKS (base->metadata).chunk;
@@ -1484,7 +1476,7 @@ gst_base_metadata_src_event (GstPad * pad, GstEvent * event)
           goto done;
         start = filter->duration + start;
       }
-      start_type == GST_SEEK_TYPE_SET;
+      start_type = GST_SEEK_TYPE_SET;
 
       if (filter->prepend_buffer) {
         gst_buffer_unref (filter->prepend_buffer);
@@ -1509,7 +1501,7 @@ gst_base_metadata_src_event (GstPad * pad, GstEvent * event)
           goto done;
         stop = filter->duration + stop;
       }
-      stop_type == GST_SEEK_TYPE_SET;
+      stop_type = GST_SEEK_TYPE_SET;
 
       gst_base_metadata_translate_pos_to_orig (filter, stop, &stop, NULL, 0);
 
@@ -1813,8 +1805,6 @@ gst_base_metadata_sink_activate (GstPad * pad)
   if (filter->state == MT_STATE_NULL) {
     ret = gst_base_metadata_pull_range_parse (filter);
   }
-
-done:
 
   if (ret) {
     gst_pad_activate_pull (pad, FALSE);
