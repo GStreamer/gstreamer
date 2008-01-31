@@ -15,7 +15,8 @@ libgstgl_@GST_MAJORMINOR@include_HEADERS = \
 	gstglfilter.h
 
 libgstgl_@GST_MAJORMINOR@_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(GST_BASE_LIBS) $(GST_LIBS) \
 	$(X_LIBS) $(GL_LIBS)
 
 libgstgl_@GST_MAJORMINOR@_la_CFLAGS = \
