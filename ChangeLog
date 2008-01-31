@@ -1,3 +1,8 @@
+2008-01-31  Stefan Kost  <ensonic@users.sf.net>
+
+	* examples/video-controller.py:
+	  Demo how to use the controller on videomixer.
+
 2008-01-31  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst/.cvsignore:
