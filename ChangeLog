@@ -1,3 +1,8 @@
+2008-01-31  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	Fix typo.
+
 2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/alpha/Makefile.am:
