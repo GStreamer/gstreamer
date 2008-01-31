@@ -1,3 +1,36 @@
+2008-01-31  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Wouter Cloetens <wouter at mind dot be>
+
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/inspect/plugin-soup.xml:
+	(gst_soup_http_src_base_init), (gst_soup_http_src_class_init),
+	(gst_soup_http_src_init), (gst_soup_http_src_dispose),
+	(gst_soup_http_src_set_property), (gst_soup_http_src_get_property),
+	(gst_soup_http_src_unicodify), (gst_soup_http_src_cancel_message),
+	(gst_soup_http_src_queue_message),
+	(gst_soup_http_src_add_range_header),
+	(gst_soup_http_src_session_unpause_message),
+	(gst_soup_http_src_session_pause_message),
+	(gst_soup_http_src_session_close),
+	(gst_soup_http_src_got_headers_cb),
+	(gst_soup_http_src_got_body_cb), (gst_soup_http_src_finished_cb),
+	(gst_soup_http_src_got_chunk_cb), (gst_soup_http_src_response_cb),
+	(gst_soup_http_src_parse_status), (gst_soup_http_src_create),
+	(gst_soup_http_src_start), (gst_soup_http_src_stop),
+	(gst_soup_http_src_unlock), (gst_soup_http_src_unlock_stop),
+	(gst_soup_http_src_get_size), (gst_soup_http_src_is_seekable),
+	(gst_soup_http_src_do_seek), (gst_soup_http_src_set_location),
+	(gst_soup_http_src_set_proxy), (gst_soup_http_src_uri_get_type),
+	(gst_soup_http_src_uri_get_protocols),
+	(gst_soup_http_src_uri_get_uri), (gst_soup_http_src_uri_set_uri),
+	(gst_soup_http_src_uri_handler_init), (plugin_init):
+	* ext/soup/gstsouphttpsrc.h:
+	Make coding style more consistent, including class renaming.
+
 2008-01-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

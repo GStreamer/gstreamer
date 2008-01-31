@@ -269,15 +269,15 @@ gst_gio_stream_src_get_type
 <SECTION>
 <FILE>element-souphttpsrc</FILE>
 <TITLE>souphttpsrc</TITLE>
-GstSouphttpSrc
+GstSoupHTTPSrc
 <SUBSECTION Standard>
-GstSouphttpSrcClass
-GST_SOUPHTTP_SRC
-GST_SOUPHTTP_SRC_CLASS
-GST_IS_SOUPHTTP_SRC
-GST_IS_SOUPHTTP_SRC_CLASS
-GST_TYPE_SOUPHTTP_SRC
-gst_souphttp_src_get_type
+GstSoupHTTPSrcClass
+GST_SOUP_HTTP_SRC
+GST_SOUP_HTTP_SRC_CLASS
+GST_IS_SOUP_HTTP_SRC
+GST_IS_SOUP_HTTP_SRC_CLASS
+GST_TYPE_SOUP_HTTP_SRC
+gst_soup_http_src_get_type
 </SECTION>
 
 <SECTION>

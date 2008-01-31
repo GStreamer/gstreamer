@@ -19,7 +19,7 @@ GObject
         GstPushSrc
           GstNeonhttpSrc
           GstMMS
-          GstSouphttpSrc
+          GstSoupHTTPSrc
           GstGLTestSrc
           GstDvbSrc
           GstVCDSrc

@@ -7,7 +7,7 @@ GstRtpBin GstChildProxy
 GstRtpClient GstChildProxy
 GstNeonhttpSrc GstURIHandler
 GstMMS GstURIHandler
-GstSouphttpSrc GstURIHandler
+GstSoupHTTPSrc GstURIHandler
 GstVCDSrc GstURIHandler
 GstGioSrc GstURIHandler
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance

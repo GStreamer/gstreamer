@@ -1,6 +1,6 @@
 <plugin>
   <name>soup</name>
-  <description>libsoup http client src</description>
+  <description>libsoup HTTP client src</description>
   <filename>../../ext/soup/.libs/libgstsouphttpsrc.so</filename>
   <basename>libgstsouphttpsrc.so</basename>
   <version>0.10.5.1</version>

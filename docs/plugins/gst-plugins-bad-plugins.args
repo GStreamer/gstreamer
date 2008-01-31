@@ -18759,7 +18759,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstSouphttpSrc::location</NAME>
+<NAME>GstSoupHTTPSrc::location</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
@@ -18769,7 +18769,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstSouphttpSrc::iradio-genre</NAME>
+<NAME>GstSoupHTTPSrc::iradio-genre</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
@@ -18779,7 +18779,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstSouphttpSrc::iradio-mode</NAME>
+<NAME>GstSoupHTTPSrc::iradio-mode</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
@@ -18789,7 +18789,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstSouphttpSrc::iradio-name</NAME>
+<NAME>GstSoupHTTPSrc::iradio-name</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
@@ -18799,7 +18799,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstSouphttpSrc::iradio-title</NAME>
+<NAME>GstSoupHTTPSrc::iradio-title</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
@@ -18809,7 +18809,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstSouphttpSrc::iradio-url</NAME>
+<NAME>GstSoupHTTPSrc::iradio-url</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
@@ -18819,7 +18819,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstSouphttpSrc::user-agent</NAME>
+<NAME>GstSoupHTTPSrc::user-agent</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
@@ -18829,7 +18829,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstSouphttpSrc::automatic-redirect</NAME>
+<NAME>GstSoupHTTPSrc::automatic-redirect</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
@@ -18839,7 +18839,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstSouphttpSrc::proxy</NAME>
+<NAME>GstSoupHTTPSrc::proxy</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
