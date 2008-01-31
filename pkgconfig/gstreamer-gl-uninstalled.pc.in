@@ -1,0 +1,15 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst
+includedir=${pcfiledir}/../gst-libs
+pluginsdir=${pcfiledir}/..
+
+Name: GStreamer OpenGL Plugins Libraries, Uninstalled
+Description: Streaming media framework, OpenGL plugins libraries, uninstalled
+Version: @VERSION@
+Requires: gstreamer-@GST_MAJORMINOR@
+
+Libs: -L${libdir}/gl
+Cflags: -I${includedir}
+
+libraries=gl
