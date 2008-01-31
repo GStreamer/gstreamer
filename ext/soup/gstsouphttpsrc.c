@@ -66,7 +66,7 @@
  * Yet another example pipeline:
  * <programlisting>
  * gst-launch -v souphttpsrc location=http://10.11.12.13/mjpeg
- * do-timestamp=true ! multipartdemux
+ *     do-timestamp=true ! multipartdemux
  *     ! image/jpeg,width=640,height=480 ! matroskamux
  *     ! filesink location=mjpeg.mkv
  * </programlisting>
@@ -99,7 +99,7 @@
 GST_DEBUG_CATEGORY_STATIC (souphttpsrc_debug);
 #define GST_CAT_DEFAULT souphttpsrc_debug
 
-static const GstElementDetails gst_souphttp_src_details =
+static const GstElementDetails gst_soup_http_src_details =
 GST_ELEMENT_DETAILS ("HTTP client source",
     "Source/Network",
     "Receive data as a client over the network via HTTP using SOUP",
@@ -126,60 +126,60 @@ enum
 
 #define DEFAULT_USER_AGENT           "GStreamer souphttpsrc"
 
-static void gst_souphttp_src_uri_handler_init (gpointer g_iface,
+static void gst_soup_http_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
-static void gst_souphttp_src_init (GstSouphttpSrc * src,
-    GstSouphttpSrcClass * g_class);
-static void gst_souphttp_src_dispose (GObject * gobject);
-static void gst_souphttp_src_set_property (GObject * object, guint prop_id,
+static void gst_soup_http_src_init (GstSoupHTTPSrc * src,
+    GstSoupHTTPSrcClass * g_class);
+static void gst_soup_http_src_dispose (GObject * gobject);
+static void gst_soup_http_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_souphttp_src_get_property (GObject * object, guint prop_id,
+static void gst_soup_http_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_souphttp_src_create (GstPushSrc * psrc,
+static GstFlowReturn gst_soup_http_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
-static gboolean gst_souphttp_src_start (GstBaseSrc * bsrc);
-static gboolean gst_souphttp_src_stop (GstBaseSrc * bsrc);
-static gboolean gst_souphttp_src_get_size (GstBaseSrc * bsrc, guint64 * size);
-static gboolean gst_souphttp_src_is_seekable (GstBaseSrc * bsrc);
-static gboolean gst_souphttp_src_do_seek (GstBaseSrc * bsrc,
+static gboolean gst_soup_http_src_start (GstBaseSrc * bsrc);
+static gboolean gst_soup_http_src_stop (GstBaseSrc * bsrc);
+static gboolean gst_soup_http_src_get_size (GstBaseSrc * bsrc, guint64 * size);
+static gboolean gst_soup_http_src_is_seekable (GstBaseSrc * bsrc);
+static gboolean gst_soup_http_src_do_seek (GstBaseSrc * bsrc,
     GstSegment * segment);
-static gboolean gst_souphttp_src_unlock (GstBaseSrc * bsrc);
-static gboolean gst_souphttp_src_unlock_stop (GstBaseSrc * bsrc);
+static gboolean gst_soup_http_src_unlock (GstBaseSrc * bsrc);
+static gboolean gst_soup_http_src_unlock_stop (GstBaseSrc * bsrc);
 
-static gboolean gst_souphttp_src_set_location (GstSouphttpSrc * src,
+static gboolean gst_soup_http_src_set_location (GstSoupHTTPSrc * src,
     const gchar * uri);
-static gboolean gst_souphttp_src_set_proxy (GstSouphttpSrc * src,
+static gboolean gst_soup_http_src_set_proxy (GstSoupHTTPSrc * src,
     const gchar * uri);
 
-static char *gst_souphttp_src_unicodify (const char *str);
+static char *gst_soup_http_src_unicodify (const char *str);
 
-static void gst_souphttp_src_cancel_message (GstSouphttpSrc * src);
-static void gst_souphttp_src_queue_message (GstSouphttpSrc * src);
-static gboolean gst_souphttp_src_add_range_header (GstSouphttpSrc * src,
+static void gst_soup_http_src_cancel_message (GstSoupHTTPSrc * src);
+static void gst_soup_http_src_queue_message (GstSoupHTTPSrc * src);
+static gboolean gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src,
     guint64 offset);
-static void gst_souphttp_src_session_unpause_message (GstSouphttpSrc * src);
-static void gst_souphttp_src_session_pause_message (GstSouphttpSrc * src);
-static void gst_souphttp_src_session_close (GstSouphttpSrc * src);
-static void gst_souphttp_src_parse_status (SoupMessage * msg,
-    GstSouphttpSrc * src);
-static void gst_souphttp_src_got_chunk_cb (SoupMessage * msg,
-    SoupBuffer * chunk, GstSouphttpSrc * src);
-static void gst_souphttp_src_response_cb (SoupSession * session,
-    SoupMessage * msg, GstSouphttpSrc * src);
-static void gst_souphttp_src_got_headers_cb (SoupMessage * msg,
-    GstSouphttpSrc * src);
-static void gst_souphttp_src_got_body_cb (SoupMessage * msg,
-    GstSouphttpSrc * src);
-static void gst_souphttp_src_finished_cb (SoupMessage * msg,
-    GstSouphttpSrc * src);
+static void gst_soup_http_src_session_unpause_message (GstSoupHTTPSrc * src);
+static void gst_soup_http_src_session_pause_message (GstSoupHTTPSrc * src);
+static void gst_soup_http_src_session_close (GstSoupHTTPSrc * src);
+static void gst_soup_http_src_parse_status (SoupMessage * msg,
+    GstSoupHTTPSrc * src);
+static void gst_soup_http_src_got_chunk_cb (SoupMessage * msg,
+    SoupBuffer * chunk, GstSoupHTTPSrc * src);
+static void gst_soup_http_src_response_cb (SoupSession * session,
+    SoupMessage * msg, GstSoupHTTPSrc * src);
+static void gst_soup_http_src_got_headers_cb (SoupMessage * msg,
+    GstSoupHTTPSrc * src);
+static void gst_soup_http_src_got_body_cb (SoupMessage * msg,
+    GstSoupHTTPSrc * src);
+static void gst_soup_http_src_finished_cb (SoupMessage * msg,
+    GstSoupHTTPSrc * src);
 
 
 static void
 _do_init (GType type)
 {
   static const GInterfaceInfo urihandler_info = {
-    gst_souphttp_src_uri_handler_init,
+    gst_soup_http_src_uri_handler_init,
     NULL,
     NULL
   };
@@ -190,22 +190,22 @@ _do_init (GType type)
       "SOUP HTTP src");
 }
 
-GST_BOILERPLATE_FULL (GstSouphttpSrc, gst_souphttp_src, GstPushSrc,
+GST_BOILERPLATE_FULL (GstSoupHTTPSrc, gst_soup_http_src, GstPushSrc,
     GST_TYPE_PUSH_SRC, _do_init);
 
 static void
-gst_souphttp_src_base_init (gpointer g_class)
+gst_soup_http_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
 
-  gst_element_class_set_details (element_class, &gst_souphttp_src_details);
+  gst_element_class_set_details (element_class, &gst_soup_http_src_details);
 }
 
 static void
-gst_souphttp_src_class_init (GstSouphttpSrcClass * klass)
+gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseSrcClass *gstbasesrc_class;
@@ -215,9 +215,9 @@ gst_souphttp_src_class_init (GstSouphttpSrcClass * klass)
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
 
-  gobject_class->set_property = gst_souphttp_src_set_property;
-  gobject_class->get_property = gst_souphttp_src_get_property;
-  gobject_class->dispose = gst_souphttp_src_dispose;
+  gobject_class->set_property = gst_soup_http_src_set_property;
+  gobject_class->get_property = gst_soup_http_src_get_property;
+  gobject_class->dispose = gst_soup_http_src_dispose;
 
   g_object_class_install_property (gobject_class,
       PROP_LOCATION,
@@ -264,24 +264,24 @@ gst_souphttp_src_class_init (GstSouphttpSrcClass * klass)
           "iradio-title",
           "Name of currently playing song", NULL, G_PARAM_READABLE));
 
-  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_souphttp_src_start);
-  gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_souphttp_src_stop);
-  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_souphttp_src_unlock);
+  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_soup_http_src_start);
+  gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_soup_http_src_stop);
+  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_soup_http_src_unlock);
   gstbasesrc_class->unlock_stop =
-      GST_DEBUG_FUNCPTR (gst_souphttp_src_unlock_stop);
-  gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_souphttp_src_get_size);
+      GST_DEBUG_FUNCPTR (gst_soup_http_src_unlock_stop);
+  gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_soup_http_src_get_size);
   gstbasesrc_class->is_seekable =
-      GST_DEBUG_FUNCPTR (gst_souphttp_src_is_seekable);
-  gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_souphttp_src_do_seek);
+      GST_DEBUG_FUNCPTR (gst_soup_http_src_is_seekable);
+  gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_soup_http_src_do_seek);
 
-  gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_souphttp_src_create);
+  gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_soup_http_src_create);
 
   GST_DEBUG_CATEGORY_INIT (souphttpsrc_debug, "souphttpsrc", 0,
       "SOUP HTTP Client Source");
 }
 
 static void
-gst_souphttp_src_init (GstSouphttpSrc * src, GstSouphttpSrcClass * g_class)
+gst_soup_http_src_init (GstSoupHTTPSrc * src, GstSoupHTTPSrcClass * g_class)
 {
   const gchar *proxy;
 
@@ -304,7 +304,7 @@ gst_souphttp_src_init (GstSouphttpSrc * src, GstSouphttpSrcClass * g_class)
   src->read_position = 0;
   src->request_position = 0;
   proxy = g_getenv ("http_proxy");
-  if (proxy && !gst_souphttp_src_set_proxy (src, proxy)) {
+  if (proxy && !gst_soup_http_src_set_proxy (src, proxy)) {
     GST_WARNING_OBJECT (src,
         "The proxy in the http_proxy env var (\"%s\") cannot be parsed.",
         proxy);
@@ -312,9 +312,9 @@ gst_souphttp_src_init (GstSouphttpSrc * src, GstSouphttpSrcClass * g_class)
 }
 
 static void
-gst_souphttp_src_dispose (GObject * gobject)
+gst_soup_http_src_dispose (GObject * gobject)
 {
-  GstSouphttpSrc *src = GST_SOUPHTTP_SRC (gobject);
+  GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (gobject);
 
   GST_DEBUG_OBJECT (src, "dispose");
   g_free (src->location);
@@ -342,10 +342,10 @@ gst_souphttp_src_dispose (GObject * gobject)
 }
 
 static void
-gst_souphttp_src_set_property (GObject * object, guint prop_id,
+gst_soup_http_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstSouphttpSrc *src = GST_SOUPHTTP_SRC (object);
+  GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
@@ -358,7 +358,7 @@ gst_souphttp_src_set_property (GObject * object, guint prop_id,
         GST_WARNING ("location property cannot be NULL");
         goto done;
       }
-      if (!gst_souphttp_src_set_location (src, location)) {
+      if (!gst_soup_http_src_set_location (src, location)) {
         GST_WARNING ("badly formatted location");
         goto done;
       }
@@ -388,7 +388,7 @@ gst_souphttp_src_set_property (GObject * object, guint prop_id,
         GST_WARNING ("proxy property cannot be NULL");
         goto done;
       }
-      if (!gst_souphttp_src_set_proxy (src, proxy)) {
+      if (!gst_soup_http_src_set_proxy (src, proxy)) {
         GST_WARNING ("badly formatted proxy URI");
         goto done;
       }
@@ -400,10 +400,10 @@ done:
 }
 
 static void
-gst_souphttp_src_get_property (GObject * object, guint prop_id,
+gst_soup_http_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstSouphttpSrc *src = GST_SOUPHTTP_SRC (object);
+  GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
@@ -447,7 +447,7 @@ gst_souphttp_src_get_property (GObject * object, guint prop_id,
 }
 
 static gchar *
-gst_souphttp_src_unicodify (const gchar * str)
+gst_soup_http_src_unicodify (const gchar * str)
 {
   const gchar *env_vars[] = { "GST_ICY_TAG_ENCODING",
     "GST_TAG_ENCODING", NULL
@@ -457,23 +457,23 @@ gst_souphttp_src_unicodify (const gchar * str)
 }
 
 static void
-gst_souphttp_src_cancel_message (GstSouphttpSrc * src)
+gst_soup_http_src_cancel_message (GstSoupHTTPSrc * src)
 {
   soup_session_cancel_message (src->session, src->msg, SOUP_STATUS_CANCELLED);
-  src->session_io_status = GST_SOUPHTTP_SRC_SESSION_IO_STATUS_IDLE;
+  src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE;
   src->msg = NULL;
 }
 
 static void
-gst_souphttp_src_queue_message (GstSouphttpSrc * src)
+gst_soup_http_src_queue_message (GstSoupHTTPSrc * src)
 {
   soup_session_queue_message (src->session, src->msg,
-      (SoupSessionCallback) gst_souphttp_src_response_cb, src);
-  src->session_io_status = GST_SOUPHTTP_SRC_SESSION_IO_STATUS_QUEUED;
+      (SoupSessionCallback) gst_soup_http_src_response_cb, src);
+  src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_QUEUED;
 }
 
 static gboolean
-gst_souphttp_src_add_range_header (GstSouphttpSrc * src, guint64 offset)
+gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src, guint64 offset)
 {
   gchar buf[64];
   gint rc;
@@ -490,19 +490,19 @@ gst_souphttp_src_add_range_header (GstSouphttpSrc * src, guint64 offset)
 }
 
 static void
-gst_souphttp_src_session_unpause_message (GstSouphttpSrc * src)
+gst_soup_http_src_session_unpause_message (GstSoupHTTPSrc * src)
 {
   soup_session_unpause_message (src->session, src->msg);
 }
 
 static void
-gst_souphttp_src_session_pause_message (GstSouphttpSrc * src)
+gst_soup_http_src_session_pause_message (GstSoupHTTPSrc * src)
 {
   soup_session_pause_message (src->session, src->msg);
 }
 
 static void
-gst_souphttp_src_session_close (GstSouphttpSrc * src)
+gst_soup_http_src_session_close (GstSoupHTTPSrc * src)
 {
   if (src->session) {
     soup_session_abort (src->session);  /* This unrefs the message. */
@@ -513,7 +513,7 @@ gst_souphttp_src_session_close (GstSouphttpSrc * src)
 }
 
 static void
-gst_souphttp_src_got_headers_cb (SoupMessage * msg, GstSouphttpSrc * src)
+gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 {
   const char *value;
   GstTagList *tag_list;
@@ -528,7 +528,7 @@ gst_souphttp_src_got_headers_cb (SoupMessage * msg, GstSouphttpSrc * src)
     return;
   }
 
-  src->session_io_status = GST_SOUPHTTP_SRC_SESSION_IO_STATUS_RUNNING;
+  src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING;
 
   /* Parse Content-Length. */
   if (soup_message_headers_get_encoding (msg->response_headers) ==
@@ -567,7 +567,7 @@ gst_souphttp_src_got_headers_cb (SoupMessage * msg, GstSouphttpSrc * src)
           soup_message_headers_get (msg->response_headers,
               "icy-name")) != NULL) {
     g_free (src->iradio_name);
-    src->iradio_name = gst_souphttp_src_unicodify (value);
+    src->iradio_name = gst_soup_http_src_unicodify (value);
     if (src->iradio_name) {
       g_object_notify (G_OBJECT (src), "iradio-name");
       gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_ORGANIZATION,
@@ -578,7 +578,7 @@ gst_souphttp_src_got_headers_cb (SoupMessage * msg, GstSouphttpSrc * src)
           soup_message_headers_get (msg->response_headers,
               "icy-genre")) != NULL) {
     g_free (src->iradio_genre);
-    src->iradio_genre = gst_souphttp_src_unicodify (value);
+    src->iradio_genre = gst_soup_http_src_unicodify (value);
     if (src->iradio_genre) {
       g_object_notify (G_OBJECT (src), "iradio-genre");
       gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_GENRE,
@@ -588,7 +588,7 @@ gst_souphttp_src_got_headers_cb (SoupMessage * msg, GstSouphttpSrc * src)
   if ((value = soup_message_headers_get (msg->response_headers, "icy-url"))
       != NULL) {
     g_free (src->iradio_url);
-    src->iradio_url = gst_souphttp_src_unicodify (value);
+    src->iradio_url = gst_soup_http_src_unicodify (value);
     if (src->iradio_url) {
       g_object_notify (G_OBJECT (src), "iradio-url");
       gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_LOCATION,
@@ -604,7 +604,7 @@ gst_souphttp_src_got_headers_cb (SoupMessage * msg, GstSouphttpSrc * src)
   }
 
   /* Handle HTTP errors. */
-  gst_souphttp_src_parse_status (msg, src);
+  gst_soup_http_src_parse_status (msg, src);
 
   /* Check if Range header was respected. */
   if (src->ret == GST_FLOW_CUSTOM_ERROR &&
@@ -619,14 +619,14 @@ gst_souphttp_src_got_headers_cb (SoupMessage * msg, GstSouphttpSrc * src)
 
 /* Have body. Signal EOS. */
 static void
-gst_souphttp_src_got_body_cb (SoupMessage * msg, GstSouphttpSrc * src)
+gst_soup_http_src_got_body_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 {
   if (G_UNLIKELY (msg != src->msg)) {
     GST_DEBUG_OBJECT (src, "got body, but not for current message");
     return;
   }
   if (G_UNLIKELY (src->session_io_status !=
-          GST_SOUPHTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
+          GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
     /* Probably a redirect. */
     return;
   }
@@ -634,19 +634,19 @@ gst_souphttp_src_got_body_cb (SoupMessage * msg, GstSouphttpSrc * src)
   src->ret = GST_FLOW_UNEXPECTED;
   if (src->loop)
     g_main_loop_quit (src->loop);
-  gst_souphttp_src_session_pause_message (src);
+  gst_soup_http_src_session_pause_message (src);
 }
 
 /* Finished. Signal EOS. */
 static void
-gst_souphttp_src_finished_cb (SoupMessage * msg, GstSouphttpSrc * src)
+gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 {
   if (G_UNLIKELY (msg != src->msg)) {
     GST_DEBUG_OBJECT (src, "finished, but not for current message");
     return;
   }
   if (G_UNLIKELY (src->session_io_status !=
-          GST_SOUPHTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
+          GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
     /* Probably a redirect. */
     return;
   }
@@ -657,8 +657,8 @@ gst_souphttp_src_finished_cb (SoupMessage * msg, GstSouphttpSrc * src)
 }
 
 static void
-gst_souphttp_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
-    GstSouphttpSrc * src)
+gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
+    GstSoupHTTPSrc * src)
 {
   GstBaseSrc *basesrc;
   guint64 new_position;
@@ -670,7 +670,7 @@ gst_souphttp_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
     return;
   }
   if (G_UNLIKELY (src->session_io_status !=
-          GST_SOUPHTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
+          GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
     /* Probably a redirect. */
     return;
   }
@@ -692,12 +692,12 @@ gst_souphttp_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
   }
 
   g_main_loop_quit (src->loop);
-  gst_souphttp_src_session_pause_message (src);
+  gst_soup_http_src_session_pause_message (src);
 }
 
 static void
-gst_souphttp_src_response_cb (SoupSession * session, SoupMessage * msg,
-    GstSouphttpSrc * src)
+gst_soup_http_src_response_cb (SoupSession * session, SoupMessage * msg,
+    GstSoupHTTPSrc * src)
 {
   if (G_UNLIKELY (msg != src->msg)) {
     GST_DEBUG_OBJECT (src, "got response %d: %s, but not for current message",
@@ -705,18 +705,18 @@ gst_souphttp_src_response_cb (SoupSession * session, SoupMessage * msg,
     return;
   }
   if (G_UNLIKELY (src->session_io_status !=
-          GST_SOUPHTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
+          GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
     /* Probably a redirect. */
     return;
   }
   GST_DEBUG_OBJECT (src, "got response %d: %s", msg->status_code,
       msg->reason_phrase);
-  gst_souphttp_src_parse_status (msg, src);
+  gst_soup_http_src_parse_status (msg, src);
   g_main_loop_quit (src->loop);
 }
 
 static void
-gst_souphttp_src_parse_status (SoupMessage * msg, GstSouphttpSrc * src)
+gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
 {
   if (SOUP_STATUS_IS_TRANSPORT_ERROR (msg->status_code)) {
     switch (msg->status_code) {
@@ -763,20 +763,20 @@ gst_souphttp_src_parse_status (SoupMessage * msg, GstSouphttpSrc * src)
 }
 
 static GstFlowReturn
-gst_souphttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
+gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
-  GstSouphttpSrc *src;
+  GstSoupHTTPSrc *src;
 
-  src = GST_SOUPHTTP_SRC (psrc);
+  src = GST_SOUP_HTTP_SRC (psrc);
 
   if (src->msg && (src->request_position != src->read_position)) {
-    if (src->session_io_status == GST_SOUPHTTP_SRC_SESSION_IO_STATUS_IDLE) {
-      gst_souphttp_src_add_range_header (src, src->request_position);
+    if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE) {
+      gst_soup_http_src_add_range_header (src, src->request_position);
     } else {
       GST_DEBUG_OBJECT (src, "Seek from position %" G_GUINT64_FORMAT
           " to %" G_GUINT64_FORMAT ": requeueing connection request",
           src->read_position, src->request_position);
-      gst_souphttp_src_cancel_message (src);
+      gst_soup_http_src_cancel_message (src);
     }
   }
   if (!src->msg) {
@@ -786,7 +786,7 @@ gst_souphttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
           (NULL), ("Error parsing URL \"%s\"", src->location));
       return GST_FLOW_ERROR;
     }
-    src->session_io_status = GST_SOUPHTTP_SRC_SESSION_IO_STATUS_IDLE;
+    src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE;
     soup_message_headers_append (src->msg->request_headers, "Connection",
         "close");
     if (src->user_agent) {
@@ -799,23 +799,23 @@ gst_souphttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     }
 
     g_signal_connect (src->msg, "got_headers",
-        G_CALLBACK (gst_souphttp_src_got_headers_cb), src);
+        G_CALLBACK (gst_soup_http_src_got_headers_cb), src);
     g_signal_connect (src->msg, "got_body",
-        G_CALLBACK (gst_souphttp_src_got_body_cb), src);
+        G_CALLBACK (gst_soup_http_src_got_body_cb), src);
     g_signal_connect (src->msg, "finished",
-        G_CALLBACK (gst_souphttp_src_finished_cb), src);
+        G_CALLBACK (gst_soup_http_src_finished_cb), src);
     g_signal_connect (src->msg, "got_chunk",
-        G_CALLBACK (gst_souphttp_src_got_chunk_cb), src);
+        G_CALLBACK (gst_soup_http_src_got_chunk_cb), src);
     soup_message_set_flags (src->msg, SOUP_MESSAGE_OVERWRITE_CHUNKS |
         src->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT);
-    gst_souphttp_src_add_range_header (src, src->request_position);
+    gst_soup_http_src_add_range_header (src, src->request_position);
   }
 
   src->ret = GST_FLOW_CUSTOM_ERROR;
   src->outbuf = outbuf;
   do {
     if (src->interrupted) {
-      gst_souphttp_src_cancel_message (src);
+      gst_soup_http_src_cancel_message (src);
       break;
     }
     if (!src->msg) {
@@ -824,18 +824,18 @@ gst_souphttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     }
 
     switch (src->session_io_status) {
-      case GST_SOUPHTTP_SRC_SESSION_IO_STATUS_IDLE:
+      case GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE:
         GST_DEBUG_OBJECT (src, "Queueing connection request");
-        gst_souphttp_src_queue_message (src);
+        gst_soup_http_src_queue_message (src);
         break;
-      case GST_SOUPHTTP_SRC_SESSION_IO_STATUS_FINISHED:
+      case GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_FINISHED:
         GST_DEBUG_OBJECT (src, "Connection closed");
-        gst_souphttp_src_cancel_message (src);
+        gst_soup_http_src_cancel_message (src);
         break;
-      case GST_SOUPHTTP_SRC_SESSION_IO_STATUS_QUEUED:
+      case GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_QUEUED:
         break;
-      case GST_SOUPHTTP_SRC_SESSION_IO_STATUS_RUNNING:
-        gst_souphttp_src_session_unpause_message (src);
+      case GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING:
+        gst_soup_http_src_session_unpause_message (src);
         break;
     }
 
@@ -849,9 +849,9 @@ gst_souphttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 }
 
 static gboolean
-gst_souphttp_src_start (GstBaseSrc * bsrc)
+gst_soup_http_src_start (GstBaseSrc * bsrc)
 {
-  GstSouphttpSrc *src = GST_SOUPHTTP_SRC (bsrc);
+  GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (bsrc);
 
   GST_DEBUG_OBJECT (src, "start(\"%s\")", src->location);
 
@@ -888,16 +888,14 @@ gst_souphttp_src_start (GstBaseSrc * bsrc)
   return TRUE;
 }
 
-/* Close the socket and associated resources
- * used both to recover from errors and go to NULL state. */
 static gboolean
-gst_souphttp_src_stop (GstBaseSrc * bsrc)
+gst_soup_http_src_stop (GstBaseSrc * bsrc)
 {
-  GstSouphttpSrc *src;
+  GstSoupHTTPSrc *src;
 
-  src = GST_SOUPHTTP_SRC (bsrc);
+  src = GST_SOUP_HTTP_SRC (bsrc);
   GST_DEBUG_OBJECT (src, "stop()");
-  gst_souphttp_src_session_close (src);
+  gst_soup_http_src_session_close (src);
   if (src->loop) {
     g_main_loop_unref (src->loop);
     g_main_context_unref (src->context);
@@ -910,11 +908,11 @@ gst_souphttp_src_stop (GstBaseSrc * bsrc)
 
 /* Interrupt a blocking request. */
 static gboolean
-gst_souphttp_src_unlock (GstBaseSrc * bsrc)
+gst_soup_http_src_unlock (GstBaseSrc * bsrc)
 {
-  GstSouphttpSrc *src;
+  GstSoupHTTPSrc *src;
 
-  src = GST_SOUPHTTP_SRC (bsrc);
+  src = GST_SOUP_HTTP_SRC (bsrc);
   GST_DEBUG_OBJECT (src, "unlock()");
 
   src->interrupted = TRUE;
@@ -925,11 +923,11 @@ gst_souphttp_src_unlock (GstBaseSrc * bsrc)
 
 /* Interrupt interrupt. */
 static gboolean
-gst_souphttp_src_unlock_stop (GstBaseSrc * bsrc)
+gst_soup_http_src_unlock_stop (GstBaseSrc * bsrc)
 {
-  GstSouphttpSrc *src;
+  GstSoupHTTPSrc *src;
 
-  src = GST_SOUPHTTP_SRC (bsrc);
+  src = GST_SOUP_HTTP_SRC (bsrc);
   GST_DEBUG_OBJECT (src, "unlock_stop()");
 
   src->interrupted = FALSE;
@@ -937,11 +935,11 @@ gst_souphttp_src_unlock_stop (GstBaseSrc * bsrc)
 }
 
 static gboolean
-gst_souphttp_src_get_size (GstBaseSrc * bsrc, guint64 * size)
+gst_soup_http_src_get_size (GstBaseSrc * bsrc, guint64 * size)
 {
-  GstSouphttpSrc *src;
+  GstSoupHTTPSrc *src;
 
-  src = GST_SOUPHTTP_SRC (bsrc);
+  src = GST_SOUP_HTTP_SRC (bsrc);
 
   if (src->have_size) {
     GST_DEBUG_OBJECT (src, "get_size() = %" G_GUINT64_FORMAT,
@@ -954,17 +952,17 @@ gst_souphttp_src_get_size (GstBaseSrc * bsrc, guint64 * size)
 }
 
 static gboolean
-gst_souphttp_src_is_seekable (GstBaseSrc * bsrc)
+gst_soup_http_src_is_seekable (GstBaseSrc * bsrc)
 {
-  GstSouphttpSrc *src = GST_SOUPHTTP_SRC (bsrc);
+  GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (bsrc);
 
   return src->seekable;
 }
 
 static gboolean
-gst_souphttp_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
+gst_soup_http_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
 {
-  GstSouphttpSrc *src = GST_SOUPHTTP_SRC (bsrc);
+  GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (bsrc);
 
   GST_DEBUG_OBJECT (src, "do_seek(%" G_GUINT64_FORMAT ")", segment->start);
 
@@ -980,7 +978,7 @@ gst_souphttp_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
 }
 
 static gboolean
-gst_souphttp_src_set_location (GstSouphttpSrc * src, const gchar * uri)
+gst_soup_http_src_set_location (GstSoupHTTPSrc * src, const gchar * uri)
 {
   if (src->location) {
     g_free (src->location);
@@ -992,7 +990,7 @@ gst_souphttp_src_set_location (GstSouphttpSrc * src, const gchar * uri)
 }
 
 static gboolean
-gst_souphttp_src_set_proxy (GstSouphttpSrc * src, const gchar * uri)
+gst_soup_http_src_set_proxy (GstSoupHTTPSrc * src, const gchar * uri)
 {
   if (src->proxy) {
     soup_uri_free (src->proxy);
@@ -1004,54 +1002,54 @@ gst_souphttp_src_set_proxy (GstSouphttpSrc * src, const gchar * uri)
 }
 
 static guint
-gst_souphttp_src_uri_get_type (void)
+gst_soup_http_src_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_souphttp_src_uri_get_protocols (void)
+gst_soup_http_src_uri_get_protocols (void)
 {
   static gchar *protocols[] = { "http", "https", "dav", "davs", NULL };
   return protocols;
 }
 
 static const gchar *
-gst_souphttp_src_uri_get_uri (GstURIHandler * handler)
+gst_soup_http_src_uri_get_uri (GstURIHandler * handler)
 {
-  GstSouphttpSrc *src = GST_SOUPHTTP_SRC (handler);
+  GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (handler);
 
   return src->location;
 }
 
 static gboolean
-gst_souphttp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_soup_http_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
-  GstSouphttpSrc *src = GST_SOUPHTTP_SRC (handler);
+  GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (handler);
 
-  return gst_souphttp_src_set_location (src, uri);
+  return gst_soup_http_src_set_location (src, uri);
 }
 
 static void
-gst_souphttp_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
+gst_soup_http_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 {
   GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
 
-  iface->get_type = gst_souphttp_src_uri_get_type;
-  iface->get_protocols = gst_souphttp_src_uri_get_protocols;
-  iface->get_uri = gst_souphttp_src_uri_get_uri;
-  iface->set_uri = gst_souphttp_src_uri_set_uri;
+  iface->get_type = gst_soup_http_src_uri_get_type;
+  iface->get_protocols = gst_soup_http_src_uri_get_protocols;
+  iface->get_uri = gst_soup_http_src_uri_get_uri;
+  iface->set_uri = gst_soup_http_src_uri_set_uri;
 }
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "souphttpsrc", GST_RANK_MARGINAL,
-      GST_TYPE_SOUPHTTP_SRC);
+      GST_TYPE_SOUP_HTTP_SRC);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "soup",
-    "libsoup http client src",
+    "libsoup HTTP client src",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
