@@ -1,3 +1,14 @@
+2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/alpha/Makefile.am:
+	* gst/alpha/gstalpha.c:
+
+	Re-write the 'alpha' plugin to be BaseTransform based, simplifying
+	some stuff, and making buffer-alloc and resizing work automatically.
+	No longer crashes on odd frame widths and heights, although there
+	seems to be a disagreement with ffmpegcolorspace about what size
+	an AYUV frame with odd height should be.
+
 2008-01-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Alessandro Decina <alessandro at nnva dot org>

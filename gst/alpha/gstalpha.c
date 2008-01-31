@@ -1,5 +1,8 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@collabora.co.uk>
+ * Copyright (C) <2007> Edward Hervey <edward.hervey@collabora.co.uk>
+ * Copyright (C) <2007> Jan Schmidt <thaytan@noraisin.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,6 +24,7 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 #include <gst/controller/gstcontroller.h>
 
@@ -55,24 +59,16 @@ typedef enum
 }
 GstAlphaMethod;
 
-#define ROUND_UP_2(x) (((x) + 1) & ~1)
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
-#define ROUND_UP_8(x) (((x) + 7) & ~7)
-
+GST_DEBUG_CATEGORY_STATIC (gst_alpha_debug);
 #define GST_CAT_DEFAULT gst_alpha_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 struct _GstAlpha
 {
-  GstElement element;
-
-  /* pads */
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstBaseTransform parent;
 
   /* caps */
-  gint in_width, in_height;
-  gint out_width, out_height;
+  GstVideoFormat format;
+  gint width, height;
   gboolean ayuv;
 
   gdouble alpha;
@@ -95,22 +91,21 @@ struct _GstAlpha
   guint8 accept_angle_ctg;
   guint8 one_over_kc;
   guint8 kfgy_scale;
-
-  GstSegment segment;
 };
 
 struct _GstAlphaClass
 {
-  GstElementClass parent_class;
+  GstBaseTransformClass parent_class;
 };
 
 /* elementfactory information */
 static const GstElementDetails gst_alpha_details =
 GST_ELEMENT_DETAILS ("Alpha filter",
     "Filter/Effect/Video",
-    "Adds an alpha channel to video",
-    "Wim Taymans <wim@fluendo.com>");
-
+    "Adds an alpha channel to video - uniform or via chroma-keying",
+    "Wim Taymans <wim@fluendo.com>\n"
+    "Edward Hervey <edward.hervey@collabora.co.uk>\n"
+    "Jan Schmidt <thaytan@noraisin.net>");
 
 /* Alpha signals and args */
 enum
@@ -151,15 +146,20 @@ static GstStaticPadTemplate gst_alpha_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV")
-        ";" GST_VIDEO_CAPS_YUV ("I420")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_YUV ("I420")
     )
     );
 
+static gboolean gst_alpha_start (GstBaseTransform * trans);
+static gboolean gst_alpha_get_unit_size (GstBaseTransform * btrans,
+    GstCaps * caps, guint * size);
+static GstCaps *gst_alpha_transform_caps (GstBaseTransform * btrans,
+    GstPadDirection direction, GstCaps * caps);
+static gboolean gst_alpha_set_caps (GstBaseTransform * btrans,
+    GstCaps * incaps, GstCaps * outcaps);
+static GstFlowReturn gst_alpha_transform (GstBaseTransform * btrans,
+    GstBuffer * in, GstBuffer * out);
 
-static void gst_alpha_base_init (gpointer g_class);
-static void gst_alpha_class_init (GstAlphaClass * klass);
-static void gst_alpha_init (GstAlpha * alpha);
 static void gst_alpha_init_params (GstAlpha * alpha);
 
 static void gst_alpha_set_property (GObject * object, guint prop_id,
@@ -167,15 +167,8 @@ static void gst_alpha_set_property (GObject * object, guint prop_id,
 static void gst_alpha_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_alpha_sink_setcaps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_alpha_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_alpha_sink_event (GstPad * pad, GstEvent * event);
-
-static GstStateChangeReturn gst_alpha_change_state (GstElement * element,
-    GstStateChange transition);
-
-
-static GstElementClass *parent_class = NULL;
+GST_BOILERPLATE (GstAlpha, gst_alpha, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM);
 
 #define GST_TYPE_ALPHA_METHOD (gst_alpha_method_get_type())
 static GType
@@ -196,32 +189,6 @@ gst_alpha_method_get_type (void)
   return alpha_method_type;
 }
 
-/* static guint gst_alpha_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_alpha_get_type (void)
-{
-  static GType alpha_type = 0;
-
-  if (!alpha_type) {
-    static const GTypeInfo alpha_info = {
-      sizeof (GstAlphaClass),
-      gst_alpha_base_init,
-      NULL,
-      (GClassInitFunc) gst_alpha_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAlpha),
-      0,
-      (GInstanceInitFunc) gst_alpha_init,
-    };
-
-    alpha_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstAlpha", &alpha_info, 0);
-  }
-  return alpha_type;
-}
-
 static void
 gst_alpha_base_init (gpointer g_class)
 {
@@ -233,17 +200,18 @@ gst_alpha_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_alpha_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_alpha_src_template));
+
+  GST_DEBUG_CATEGORY_INIT (gst_alpha_debug, "alpha", 0,
+      "alpha - Element for adding alpha channel to streams");
 }
 static void
 gst_alpha_class_init (GstAlphaClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstBaseTransformClass *btrans_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
+  btrans_class = (GstBaseTransformClass *) klass;
 
   gobject_class->set_property = gst_alpha_set_property;
   gobject_class->get_property = gst_alpha_get_property;
@@ -277,24 +245,16 @@ gst_alpha_class_init (GstAlphaClass * klass)
           0.0, 64.0, DEFAULT_NOISE_LEVEL,
           (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
-  gstelement_class->change_state = gst_alpha_change_state;
+  btrans_class->start = GST_DEBUG_FUNCPTR (gst_alpha_start);
+  btrans_class->transform = GST_DEBUG_FUNCPTR (gst_alpha_transform);
+  btrans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_alpha_get_unit_size);
+  btrans_class->transform_caps = GST_DEBUG_FUNCPTR (gst_alpha_transform_caps);
+  btrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_alpha_set_caps);
 }
 
 static void
-gst_alpha_init (GstAlpha * alpha)
+gst_alpha_init (GstAlpha * alpha, GstAlphaClass * klass)
 {
-  /* create the sink and src pads */
-  alpha->sinkpad =
-      gst_pad_new_from_static_template (&gst_alpha_sink_template, "sink");
-  gst_element_add_pad (GST_ELEMENT (alpha), alpha->sinkpad);
-  gst_pad_set_chain_function (alpha->sinkpad, gst_alpha_chain);
-  gst_pad_set_setcaps_function (alpha->sinkpad, gst_alpha_sink_setcaps);
-  gst_pad_set_event_function (alpha->sinkpad, gst_alpha_sink_event);
-
-  alpha->srcpad =
-      gst_pad_new_from_static_template (&gst_alpha_src_template, "src");
-  gst_element_add_pad (GST_ELEMENT (alpha), alpha->srcpad);
-
   alpha->alpha = DEFAULT_ALPHA;
   alpha->method = DEFAULT_METHOD;
   alpha->target_r = DEFAULT_TARGET_R;
@@ -302,8 +262,6 @@ gst_alpha_init (GstAlpha * alpha)
   alpha->target_b = DEFAULT_TARGET_B;
   alpha->angle = DEFAULT_ANGLE;
   alpha->noise_level = DEFAULT_NOISE_LEVEL;
-
-  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "alpha", 0, "Alpha adding element");
 }
 
 /* do we need this function? */
@@ -403,33 +361,77 @@ gst_alpha_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-gst_alpha_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_alpha_get_unit_size (GstBaseTransform * btrans,
+    GstCaps * caps, guint * size)
 {
-  GstAlpha *alpha;
+  GstAlpha *alpha = GST_ALPHA (btrans);
+  GstVideoFormat format;
+  gint width, height;
+
+  if (!gst_video_format_parse_caps (caps, &format, &width, &height))
+    return FALSE;
+
+  *size = gst_video_format_get_size (format, width, height);
+
+  GST_DEBUG_OBJECT (alpha, "unit size = %d for format %d w %d height %d",
+      *size, format, width, height);
+
+  return TRUE;
+}
+
+static GstCaps *
+gst_alpha_transform_caps (GstBaseTransform * btrans,
+    GstPadDirection direction, GstCaps * caps)
+{
+  GstCaps *ret;
   GstStructure *structure;
-  gboolean ret;
-  guint32 fourcc;
+  gint i;
 
-  alpha = GST_ALPHA (GST_PAD_PARENT (pad));
-  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_caps_copy (caps);
 
-  if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
-    switch (fourcc) {
-      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-        alpha->ayuv = FALSE;
-        break;
-      case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
-        alpha->ayuv = TRUE;
-        break;
-      default:
-        return FALSE;
+  /* When going from the SINK pad to the src, we just need to make sure the
+   * format is AYUV */
+  if (direction == GST_PAD_SINK) {
+    for (i = 0; i < gst_caps_get_size (ret); i++) {
+      structure = gst_caps_get_structure (ret, i);
+      gst_structure_set (structure, "format",
+          GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'), NULL);
     }
   } else {
-    return FALSE;
+    GstCaps *ayuv_caps;
+
+    /* In the other direction, prepend a copy of the caps with format AYUV, 
+     * and set the first to I420 */
+    ayuv_caps = gst_caps_copy (ret);
+
+    for (i = 0; i < gst_caps_get_size (ret); i++) {
+      structure = gst_caps_get_structure (ret, i);
+      gst_structure_set (structure, "format",
+          GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'), NULL);
+    }
+
+    gst_caps_append (ret, ayuv_caps);
   }
 
-  ret = gst_structure_get_int (structure, "width", &alpha->in_width);
-  ret &= gst_structure_get_int (structure, "height", &alpha->in_height);
+  gst_caps_do_simplify (ret);
+
+  return ret;
+}
+
+static gboolean
+gst_alpha_set_caps (GstBaseTransform * btrans,
+    GstCaps * incaps, GstCaps * outcaps)
+{
+  GstAlpha *alpha = GST_ALPHA (btrans);
+
+  if (!gst_video_format_parse_caps (incaps, &alpha->format,
+          &alpha->width, &alpha->height))
+    return FALSE;
+
+  if (alpha->format == GST_VIDEO_FORMAT_AYUV)
+    alpha->ayuv = TRUE;
+  else
+    alpha->ayuv = FALSE;
 
   return TRUE;
 }
@@ -439,28 +441,20 @@ gst_alpha_set_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
     gdouble alpha)
 {
   gint b_alpha = (gint) (alpha * 255);
-  gint i, j;
+  gint y, x;
   gint size;
   gint stride;
-  gint wrap;
 
-  width = ROUND_UP_2 (width);
-  height = ROUND_UP_2 (height);
+  stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_AYUV, 0, width);
+  size = gst_video_format_get_size (GST_VIDEO_FORMAT_AYUV, width, height);
 
-  stride = ROUND_UP_4 (width);
-  size = stride * height;
-
-  wrap = stride - width;
-
-  for (i = 0; i < height; i++) {
-    for (j = 0; j < width; j++) {
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
       *dest++ = (*src++ * b_alpha) >> 8;
       *dest++ = *src++;
       *dest++ = *src++;
       *dest++ = *src++;
     }
-    src += wrap;
-    dest += wrap;
   }
 }
 
@@ -473,24 +467,23 @@ gst_alpha_set_i420 (guint8 * src, guint8 * dest, gint width, gint height,
   guint8 *srcU;
   guint8 *srcV;
   gint i, j;
-  gint size, size2;
-  gint stride, stride2;
-  gint wrap, wrap2;
+  gint src_wrap, src_uv_wrap;
+  gint y_stride, uv_stride;
+  gboolean odd_width;
 
-  width = ROUND_UP_2 (width);
-  height = ROUND_UP_2 (height);
+  y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width);
+  uv_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width);
 
-  stride = ROUND_UP_4 (width);
-  size = stride * height;
-  stride2 = ROUND_UP_8 (width) / 2;
-  size2 = stride2 * height / 2;
-
-  wrap = stride - 2 * (width / 2);
-  wrap2 = stride2 - width / 2;
+  src_wrap = y_stride - width;
+  src_uv_wrap = uv_stride - (width / 2);
 
   srcY = src;
-  srcU = srcY + size;
-  srcV = srcU + size2;
+  srcU = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+      1, width, height);
+  srcV = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+      2, width, height);
+
+  odd_width = (width % 2 != 0);
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width / 2; j++) {
@@ -503,14 +496,21 @@ gst_alpha_set_i420 (guint8 * src, guint8 * dest, gint width, gint height,
       *dest++ = *srcU++;
       *dest++ = *srcV++;
     }
+    /* Might have one odd column left to do */
+    if (odd_width) {
+      *dest++ = b_alpha;
+      *dest++ = *srcY++;
+      *dest++ = *srcU;
+      *dest++ = *srcV;
+    }
     if (i % 2 == 0) {
       srcU -= width / 2;
       srcV -= width / 2;
     } else {
-      srcU += wrap2;
-      srcV += wrap2;
+      srcU += src_uv_wrap;
+      srcV += src_uv_wrap;
     }
-    srcY += wrap;
+    srcY += src_wrap;
   }
 }
 
@@ -523,22 +523,11 @@ gst_alpha_chroma_key_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
   guint8 *dest1;
   gint i, j;
   gint x, z, u, v, y, a;
-  gint size;
-  gint stride;
-  gint wrap;
   gint tmp, tmp1;
   gint x1, y1;
 
-  width = ROUND_UP_2 (width);
-  height = ROUND_UP_2 (height);
-
-  stride = ROUND_UP_4 (width);
-  size = stride * height;
-
   src1 = src;
   dest1 = dest;
-
-  wrap = stride - width;
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
@@ -618,8 +607,119 @@ gst_alpha_chroma_key_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
       *dest1++ = u;
       *dest1++ = v;
     }
-    dest1 += wrap;
-    src1 += wrap;
+  }
+}
+
+static void
+gst_alpha_chromakey_row_i420 (GstAlpha * alpha, guint8 * dest1, guint8 * dest2,
+    guint8 * srcY1, guint8 * srcY2, guint8 * srcU, guint8 * srcV, gint width)
+{
+  gint xpos;
+  gint b_alpha;
+  gint x, z, u, v, y11, y12, y21, y22, a;
+  gint tmp, tmp1;
+  gint x1, y1;
+
+  a = 255 * alpha->alpha;
+
+  for (xpos = 0; xpos < width / 2; xpos++) {
+    y11 = *srcY1++;
+    y12 = *srcY1++;
+    y21 = *srcY2++;
+    y22 = *srcY2++;
+    u = *srcU++ - 128;
+    v = *srcV++ - 128;
+
+    /* Convert foreground to XZ coords where X direction is defined by
+       the key color */
+    tmp = ((short) u * alpha->cb + (short) v * alpha->cr) >> 7;
+    x = CLAMP (tmp, -128, 127);
+    tmp = ((short) v * alpha->cb - (short) u * alpha->cr) >> 7;
+    z = CLAMP (tmp, -128, 127);
+
+    /* WARNING: accept angle should never be set greater than "somewhat less
+       than 90 degrees" to avoid dealing with negative/infinite tg. In reality,
+       80 degrees should be enough if foreground is reasonable. If this seems
+       to be a problem, go to alternative ways of checking point position
+       (scalar product or line equations). This angle should not be too small
+       either to avoid infinite ctg (used to suppress foreground without use of
+       division) */
+
+    tmp = ((short) (x) * alpha->accept_angle_tg) >> 4;
+    tmp = MIN (tmp, 127);
+
+    if (abs (z) > tmp) {
+      /* keep foreground Kfg = 0 */
+      b_alpha = 255;
+    } else {
+      /* Compute Kfg (implicitly) and Kbg, suppress foreground in XZ coord
+         according to Kfg */
+      tmp = ((short) (z) * alpha->accept_angle_ctg) >> 4;
+      tmp = CLAMP (tmp, -128, 127);
+      x1 = abs (tmp);
+      y1 = z;
+
+      tmp1 = x - x1;
+      tmp1 = MAX (tmp1, 0);
+      b_alpha = (((unsigned char) (tmp1) *
+              (unsigned short) (alpha->one_over_kc)) / 2);
+      b_alpha = 255 - CLAMP (b_alpha, 0, 255);
+      b_alpha = (a * b_alpha) >> 8;
+
+      tmp = ((unsigned short) (tmp1) * alpha->kfgy_scale) >> 4;
+      tmp1 = MIN (tmp, 255);
+
+      tmp = y11 - tmp1;
+      y11 = MAX (tmp, 0);
+      tmp = y12 - tmp1;
+      y12 = MAX (tmp, 0);
+      tmp = y21 - tmp1;
+      y21 = MAX (tmp, 0);
+      tmp = y22 - tmp1;
+      y22 = MAX (tmp, 0);
+
+      /* Convert suppressed foreground back to CbCr */
+      tmp = ((char) (x1) * (short) (alpha->cb) -
+          (char) (y1) * (short) (alpha->cr)) >> 7;
+      u = CLAMP (tmp, -128, 127);
+
+      tmp = ((char) (x1) * (short) (alpha->cr) +
+          (char) (y1) * (short) (alpha->cb)) >> 7;
+      v = CLAMP (tmp, -128, 127);
+
+      /* Deal with noise. For now, a circle around the key color with
+         radius of noise_level treated as exact key color. Introduces
+         sharp transitions.
+       */
+      tmp = z * (short) (z) + (x - alpha->kg) * (short) (x - alpha->kg);
+      tmp = MIN (tmp, 0xffff);
+
+      if (tmp < alpha->noise_level * alpha->noise_level) {
+        /* Uncomment this if you want total suppression within the noise circle */
+        b_alpha = 0;
+      }
+    }
+
+    u += 128;
+    v += 128;
+
+    *dest1++ = b_alpha;
+    *dest1++ = y11;
+    *dest1++ = u;
+    *dest1++ = v;
+    *dest1++ = b_alpha;
+    *dest1++ = y12;
+    *dest1++ = u;
+    *dest1++ = v;
+
+    *dest2++ = b_alpha;
+    *dest2++ = y21;
+    *dest2++ = u;
+    *dest2++ = v;
+    *dest2++ = b_alpha;
+    *dest2++ = y22;
+    *dest2++ = u;
+    *dest2++ = v;
   }
 }
 
@@ -629,144 +729,44 @@ static void
 gst_alpha_chroma_key_i420 (guint8 * src, guint8 * dest, gint width, gint height,
     GstAlpha * alpha)
 {
-  gint b_alpha;
   guint8 *srcY1, *srcY2, *srcU, *srcV;
   guint8 *dest1, *dest2;
-  gint i, j;
-  gint x, z, u, v, y11, y12, y21, y22, a;
-  gint size, size2;
-  gint stride, stride2;
-  gint wrap, wrap2, wrap3;
-  gint tmp, tmp1;
-  gint x1, y1;
+  gint ypos;
+  gint dest_stride, src_y_stride, src_uv_stride;
 
-  width = ROUND_UP_2 (width);
-  height = ROUND_UP_2 (height);
-
-  stride = ROUND_UP_4 (width);
-  size = stride * height;
-  stride2 = ROUND_UP_8 (width) / 2;
-  size2 = stride2 * height / 2;
+  dest_stride =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_AYUV, 0, width);
+  src_y_stride =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width);
+  src_uv_stride =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width);
 
   srcY1 = src;
-  srcY2 = src + stride;
-  srcU = srcY1 + size;
-  srcV = srcU + size2;
+  srcY2 = src + src_y_stride;
+
+  srcU = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+      1, width, height);
+  srcV = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+      2, width, height);
 
   dest1 = dest;
-  dest2 = dest + width * 4;
+  dest2 = dest + dest_stride;
 
-  wrap = 2 * stride - 2 * (width / 2);
-  wrap2 = stride2 - width / 2;
-  wrap3 = 8 * width - 8 * (width / 2);
+  /* Redefine Y strides to skip 2 lines at a time ... */
+  dest_stride *= 2;
+  src_y_stride *= 2;
 
-  a = 255 * alpha->alpha;
+  for (ypos = 0; ypos < height / 2; ypos++) {
 
-  for (i = 0; i < height / 2; i++) {
-    for (j = 0; j < width / 2; j++) {
-      y11 = *srcY1++;
-      y12 = *srcY1++;
-      y21 = *srcY2++;
-      y22 = *srcY2++;
-      u = *srcU++ - 128;
-      v = *srcV++ - 128;
+    gst_alpha_chromakey_row_i420 (alpha, dest1, dest2,
+        srcY1, srcY2, srcU, srcV, width);
 
-      /* Convert foreground to XZ coords where X direction is defined by
-         the key color */
-      tmp = ((short) u * alpha->cb + (short) v * alpha->cr) >> 7;
-      x = CLAMP (tmp, -128, 127);
-      tmp = ((short) v * alpha->cb - (short) u * alpha->cr) >> 7;
-      z = CLAMP (tmp, -128, 127);
-
-      /* WARNING: accept angle should never be set greater than "somewhat less
-         than 90 degrees" to avoid dealing with negative/infinite tg. In reality,
-         80 degrees should be enough if foreground is reasonable. If this seems
-         to be a problem, go to alternative ways of checking point position
-         (scalar product or line equations). This angle should not be too small
-         either to avoid infinite ctg (used to suppress foreground without use of
-         division) */
-
-      tmp = ((short) (x) * alpha->accept_angle_tg) >> 4;
-      tmp = MIN (tmp, 127);
-
-      if (abs (z) > tmp) {
-        /* keep foreground Kfg = 0 */
-        b_alpha = 255;
-      } else {
-        /* Compute Kfg (implicitly) and Kbg, suppress foreground in XZ coord
-           according to Kfg */
-        tmp = ((short) (z) * alpha->accept_angle_ctg) >> 4;
-        tmp = CLAMP (tmp, -128, 127);
-        x1 = abs (tmp);
-        y1 = z;
-
-        tmp1 = x - x1;
-        tmp1 = MAX (tmp1, 0);
-        b_alpha = (((unsigned char) (tmp1) *
-                (unsigned short) (alpha->one_over_kc)) / 2);
-        b_alpha = 255 - CLAMP (b_alpha, 0, 255);
-        b_alpha = (a * b_alpha) >> 8;
-
-        tmp = ((unsigned short) (tmp1) * alpha->kfgy_scale) >> 4;
-        tmp1 = MIN (tmp, 255);
-
-        tmp = y11 - tmp1;
-        y11 = MAX (tmp, 0);
-        tmp = y12 - tmp1;
-        y12 = MAX (tmp, 0);
-        tmp = y21 - tmp1;
-        y21 = MAX (tmp, 0);
-        tmp = y22 - tmp1;
-        y22 = MAX (tmp, 0);
-
-        /* Convert suppressed foreground back to CbCr */
-        tmp = ((char) (x1) * (short) (alpha->cb) -
-            (char) (y1) * (short) (alpha->cr)) >> 7;
-        u = CLAMP (tmp, -128, 127);
-
-        tmp = ((char) (x1) * (short) (alpha->cr) +
-            (char) (y1) * (short) (alpha->cb)) >> 7;
-        v = CLAMP (tmp, -128, 127);
-
-        /* Deal with noise. For now, a circle around the key color with
-           radius of noise_level treated as exact key color. Introduces
-           sharp transitions.
-         */
-        tmp = z * (short) (z) + (x - alpha->kg) * (short) (x - alpha->kg);
-        tmp = MIN (tmp, 0xffff);
-
-        if (tmp < alpha->noise_level * alpha->noise_level) {
-          /* Uncomment this if you want total suppression within the noise circle */
-          b_alpha = 0;
-        }
-      }
-
-      u += 128;
-      v += 128;
-
-      *dest1++ = b_alpha;
-      *dest1++ = y11;
-      *dest1++ = u;
-      *dest1++ = v;
-      *dest1++ = b_alpha;
-      *dest1++ = y12;
-      *dest1++ = u;
-      *dest1++ = v;
-      *dest2++ = b_alpha;
-      *dest2++ = y21;
-      *dest2++ = u;
-      *dest2++ = v;
-      *dest2++ = b_alpha;
-      *dest2++ = y22;
-      *dest2++ = u;
-      *dest2++ = v;
-    }
-    dest1 += wrap3;
-    dest2 += wrap3;
-    srcY1 += wrap;
-    srcY2 += wrap;
-    srcU += wrap2;
-    srcV += wrap2;
+    dest1 += dest_stride;
+    dest2 += dest_stride;
+    srcY1 += src_y_stride;
+    srcY2 += src_y_stride;
+    srcU += src_uv_stride;
+    srcV += src_uv_stride;
   }
 }
 
@@ -807,76 +807,29 @@ gst_alpha_init_params (GstAlpha * alpha)
 }
 
 static gboolean
-gst_alpha_sink_event (GstPad * pad, GstEvent * event)
+gst_alpha_start (GstBaseTransform * btrans)
 {
-  GstAlpha *alpha;
-  gboolean ret;
+  GstAlpha *alpha = GST_ALPHA (btrans);
 
-  alpha = GST_ALPHA (GST_PAD_PARENT (pad));
+  gst_alpha_init_params (alpha);
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_STOP:
-      gst_segment_init (&alpha->segment, GST_FORMAT_UNDEFINED);
-      break;
-    case GST_EVENT_NEWSEGMENT:{
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
-      gboolean update;
-
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-
-      gst_segment_set_newsegment_full (&alpha->segment, update, rate, arate,
-          format, start, stop, time);
-      break;
-    }
-    default:
-      break;
-  }
-
-  ret = gst_pad_push_event (alpha->srcpad, event);
-
-  return ret;
+  return TRUE;
 }
 
 static GstFlowReturn
-gst_alpha_chain (GstPad * pad, GstBuffer * buffer)
+gst_alpha_transform (GstBaseTransform * btrans, GstBuffer * in, GstBuffer * out)
 {
-  GstAlpha *alpha;
-  GstBuffer *outbuf;
-  gint new_width, new_height;
-  GstFlowReturn ret;
+  GstAlpha *alpha = GST_ALPHA (btrans);
+  gint width, height;
   GstClockTime timestamp;
 
-  alpha = GST_ALPHA (GST_PAD_PARENT (pad));
+  width = alpha->width;
+  height = alpha->height;
 
-  new_width = alpha->in_width;
-  new_height = alpha->in_height;
-
-  if (new_width != alpha->out_width ||
-      new_height != alpha->out_height || !GST_PAD_CAPS (alpha->srcpad)) {
-    GstCaps *newcaps;
-
-    newcaps = gst_caps_copy (gst_pad_get_negotiated_caps (alpha->sinkpad));
-    gst_caps_set_simple (newcaps,
-        "format", GST_TYPE_FOURCC, GST_STR_FOURCC ("AYUV"),
-        "width", G_TYPE_INT, new_width, "height", G_TYPE_INT, new_height, NULL);
-
-    gst_pad_set_caps (alpha->srcpad, newcaps);
-
-    alpha->out_width = new_width;
-    alpha->out_height = new_height;
-  }
-
-  outbuf =
-      gst_buffer_new_and_alloc (ROUND_UP_2 (new_width) *
-      ROUND_UP_2 (new_height) * 4);
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (alpha->srcpad));
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
-  timestamp = gst_segment_to_stream_time (&alpha->segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (buffer));
+  GST_BUFFER_TIMESTAMP (out) = GST_BUFFER_TIMESTAMP (in);
+  GST_BUFFER_DURATION (out) = GST_BUFFER_DURATION (in);
+  timestamp = gst_segment_to_stream_time (&btrans->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (in));
   GST_LOG ("Got stream time of %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     gst_object_sync_values (G_OBJECT (alpha), timestamp);
@@ -884,76 +837,29 @@ gst_alpha_chain (GstPad * pad, GstBuffer * buffer)
   switch (alpha->method) {
     case ALPHA_METHOD_SET:
       if (alpha->ayuv) {
-        gst_alpha_set_ayuv (GST_BUFFER_DATA (buffer),
-            GST_BUFFER_DATA (outbuf), new_width, new_height, alpha->alpha);
+        gst_alpha_set_ayuv (GST_BUFFER_DATA (in),
+            GST_BUFFER_DATA (out), width, height, alpha->alpha);
       } else {
-        gst_alpha_set_i420 (GST_BUFFER_DATA (buffer),
-            GST_BUFFER_DATA (outbuf), new_width, new_height, alpha->alpha);
+        gst_alpha_set_i420 (GST_BUFFER_DATA (in),
+            GST_BUFFER_DATA (out), width, height, alpha->alpha);
       }
       break;
     case ALPHA_METHOD_GREEN:
     case ALPHA_METHOD_BLUE:
     case ALPHA_METHOD_CUSTOM:
       if (alpha->ayuv) {
-        gst_alpha_chroma_key_ayuv (GST_BUFFER_DATA (buffer),
-            GST_BUFFER_DATA (outbuf), new_width, new_height, alpha);
+        gst_alpha_chroma_key_ayuv (GST_BUFFER_DATA (in),
+            GST_BUFFER_DATA (out), width, height, alpha);
       } else {
-        gst_alpha_chroma_key_i420 (GST_BUFFER_DATA (buffer),
-            GST_BUFFER_DATA (outbuf), new_width, new_height, alpha);
+        gst_alpha_chroma_key_i420 (GST_BUFFER_DATA (in),
+            GST_BUFFER_DATA (out), width, height, alpha);
       }
       break;
     default:
       break;
   }
 
-  gst_buffer_unref (buffer);
-
-  /* Update last stop position in segment */
-  if (GST_BUFFER_TIMESTAMP (outbuf) != GST_CLOCK_TIME_NONE) {
-    GstClockTime last_stop = GST_BUFFER_TIMESTAMP (outbuf);
-
-    if (GST_BUFFER_DURATION (outbuf) != GST_CLOCK_TIME_NONE)
-      last_stop += GST_BUFFER_DURATION (outbuf);
-
-    gst_segment_set_last_stop (&alpha->segment, GST_FORMAT_TIME, last_stop);
-  }
-
-  ret = gst_pad_push (alpha->srcpad, outbuf);
-
-  return ret;
-}
-
-static GstStateChangeReturn
-gst_alpha_change_state (GstElement * element, GstStateChange transition)
-{
-  GstStateChangeReturn res;
-  GstAlpha *alpha;
-
-  alpha = GST_ALPHA (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_segment_init (&alpha->segment, GST_FORMAT_UNDEFINED);
-      gst_alpha_init_params (alpha);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-    default:
-      break;
-  }
-
-  res = parent_class->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-    case GST_STATE_CHANGE_READY_TO_NULL:
-    default:
-      break;
-  }
-
-  return res;
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -967,5 +873,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "alpha",
-    "adds an alpha channel to video",
+    "adds an alpha channel to video - constant or via chroma-keying",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
