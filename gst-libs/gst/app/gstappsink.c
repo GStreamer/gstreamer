@@ -232,6 +232,7 @@ static void
 gst_app_sink_dispose (GObject * obj)
 {
   GstAppSink *appsink = GST_APP_SINK (obj);
+  GstBuffer *buffer;
 
   if (appsink->caps) {
     gst_caps_unref (appsink->caps);
@@ -241,7 +242,10 @@ gst_app_sink_dispose (GObject * obj)
     gst_buffer_unref (appsink->preroll);
     appsink->preroll = NULL;
   }
-  g_queue_foreach (appsink->queue, (GFunc) gst_mini_object_unref, NULL);
+  g_mutex_lock (appsink->mutex);
+  while ((buffer = g_queue_pop_head (appsink->queue)))
+    gst_buffer_unref (buffer);
+  g_mutex_unlock (appsink->mutex);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
