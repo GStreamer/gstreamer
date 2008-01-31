@@ -1,3 +1,9 @@
+2008-01-31  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* configure.ac:
+	Bump plugins-base requirement to 0.10.16 for the gst_video_format_*
+	API.
+
 2008-01-31  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
