@@ -155,6 +155,7 @@ typedef struct _tag_SchemaMap
 #define XMP_SCHEMA_NODE 0x80000000UL
 
 /* *INDENT-OFF* */
+/* When changing this table, update 'metadata_mapping.htm' file too. */
 static const SchemaTagMap schema_map_dublin_tags_map[] = {
   {"description", GST_TAG_DESCRIPTION },
   {"title",       GST_TAG_TITLE       },
@@ -170,6 +171,7 @@ static const SchemaMap schema_map_dublin = {
   schema_map_dublin_tags_map
 };
 
+/* When changing this table, update 'metadata_mapping.htm' file too. */
 static const SchemaMap *schemas_map[] = {
   &schema_map_dublin,
   NULL

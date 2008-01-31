@@ -1,0 +1,664 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.3  (Linux)">
+	<META NAME="AUTHOR" CONTENT="Edgard Lima">
+	<META NAME="CREATED" CONTENT="20080131;12581600">
+	<META NAME="CHANGEDBY" CONTENT="Edgard Lima">
+	<META NAME="CHANGED" CONTENT="20080131;23155400">
+	<META NAME="CHANGEDBY" CONTENT="Edgard Lima">
+	<STYLE TYPE="text/css">
+	<!--
+		@page { size: landscape; margin: 2cm }
+		TD P { margin-bottom: 0cm }
+		TD P.western { so-language: en-US }
+		P { margin-bottom: 0.21cm }
+		P.western { so-language: en-US }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" DIR="LTR">
+<P CLASS="western" STYLE="margin-bottom: 0cm"><BR>
+</P>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=32*>
+	<COL WIDTH=39*>
+	<COL WIDTH=25*>
+	<COL WIDTH=32*>
+	<COL WIDTH=32*>
+	<COL WIDTH=32*>
+	<COL WIDTH=32*>
+	<COL WIDTH=32*>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12% BGCOLOR="#cccccc">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt"><B>gsttaglist.h</B></FONT></P>
+		</TD>
+		<TD WIDTH=15% BGCOLOR="#cccccc">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt"><B>metadatatags.h</B></FONT></P>
+		</TD>
+		<TD WIDTH=10% BGCOLOR="#cccccc">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt"><B>value</B></FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#cccccc">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt"><B>type</B></FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#cccccc">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt"><B>description</B></FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#cccccc">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt"><B>EXIF</B></FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#cccccc">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt"><B>IPTC</B></FONT></P>
+		</TD>
+		<TD WIDTH=13% BGCOLOR="#cccccc">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt"><B>XMP</B></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_EXIF</FONT></P>
+		</TD>
+		<TD WIDTH=10%>
+			<P CLASS="western" ALIGN=LEFT>“<FONT SIZE=1 STYLE="font-size: 8pt">exif”</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TYPE_BUFFER</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">exif
+			chunk that could be used directly by the application</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">exif_data_new_from_data()</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_IPTC</FONT></P>
+		</TD>
+		<TD WIDTH=10% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT>“<FONT SIZE=1 STYLE="font-size: 8pt">iptc”</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TYPE_BUFFER</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">iptc
+			chunk that could be used directly by the application</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">iptc_data_new_from_data()</FONT></P>
+		</TD>
+		<TD WIDTH=13% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_XMP</FONT></P>
+		</TD>
+		<TD WIDTH=10%>
+			<P CLASS="western" ALIGN=LEFT>“<FONT SIZE=1 STYLE="font-size: 8pt">xmp”</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TYPE_BUFFER</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">xmp
+			chunk that could be used directly by the application</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">xmp_new()</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_CAPTURE_BRIGHTNESS</FONT></P>
+		</TD>
+		<TD WIDTH=10% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;capture-brightness&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TYPE_FRACTION</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;Brightness
+			(APEX from -99.99 to 99.99)&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_BRIGHTNESS_VALUE</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_CAPTURE_CONTRAST</FONT></P>
+		</TD>
+		<TD WIDTH=10%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;capture-contrast&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">G_TYPE_INT</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">from
+			-100 to 100:<BR>[-100, -34] – soft ;<BR>[-33, 33] – normal
+			;<BR>[34, 100] – hard </FONT>
+			</P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_CONTRAST<BR>0-
+			normal;<BR>1- soft;<BR>2- hard</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_CAPTURE_DIGITAL_ZOOM</FONT></P>
+		</TD>
+		<TD WIDTH=10% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;capture-digital-zoom&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TYPE_FRACTION</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;Digital
+			zoom ratio&quot;<BR>(zero, means digital zoom not used)</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_DIGITAL_ZOOM_RATIO</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_CAPTURE_EXPOSURE_PROGRAM</FONT></P>
+		</TD>
+		<TD WIDTH=10%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;capture-exposure-program&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">G_TYPE_UINT</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0.5cm"><FONT SIZE=1 STYLE="font-size: 8pt">0
+			- not defined ; 1- Manual; 2- Normal program ; 3- Aperture
+			priority ; 4- Shutter priority ; 5- Creative program (biased
+			toward death of field); 6- Action program (biased toward fast
+			shutter speed); 7- Portrait mode (for closeup photos with the
+			background out of focus) ; 8- Landscape mode (for landscape photos
+			with the background in focus) </FONT>
+			</P>
+			<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0.5cm"><FONT SIZE=1 STYLE="font-size: 8pt">***
+			exif is until here *** </FONT>
+			</P>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">9-
+			Night ; 10- Back-light ; 11- Spotlight ; 12- Snow ; 13- Beach </FONT>
+			</P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0.5cm"><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_EXPOSURE_PROGRAM</FONT></P>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">(only
+			from 0 to 8)</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_CAPTURE_EXPOSURE_TIME</FONT></P>
+		</TD>
+		<TD WIDTH=10% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;capture-exposure-time&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TYPE_FRACTION</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;Exposure
+			time in seconds&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_EXPOSURE_TIME</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_CAPTURE_FNUMBER</FONT></P>
+		</TD>
+		<TD WIDTH=10%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;captute-fnumber&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TYPE_FRACTION</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;F
+			number (focal ratio)&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_FNUMBER</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_CAPTURE_GAIN</FONT></P>
+		</TD>
+		<TD WIDTH=10% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;capture-gain&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">G_TYPE_UINT</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">0-
+			None ; 1- Low gain up ; 2- High gain up ; 3- Low gain down ; 4-
+			High gain down</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_GAIN_CONTROL</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_CAPTURE_SATURATION</FONT></P>
+		</TD>
+		<TD WIDTH=10%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;capture-saturation&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">G_TYPE_INT</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">from
+			-100 to 100:<BR>[-100, -34] – low ;<BR>[-33, 33] – normal
+			;<BR>[34, 100] - high</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_SATURATION<BR>0-
+			normal;<BR>1- low;<BR>2- high</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_CAPTURE_WHITE_BALANCE</FONT></P>
+		</TD>
+		<TD WIDTH=10% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;capture-white-balance&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">G_TYPE_UINT</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0.5cm"><FONT SIZE=1 STYLE="font-size: 8pt">0-
+			Auto; 1- Off </FONT>
+			</P>
+			<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0.5cm"><FONT SIZE=1 STYLE="font-size: 8pt">***
+			exif is until here *** </FONT>
+			</P>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">2-
+			Sunlight ; 3- Cloudy ; 4- Shade ; 5- Tungsten ; 6- Fluorescent ;
+			7- Incandescent; 8- Flash ; 9- Horizon (sun on the horizon)</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0.5cm"><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_WHITE_BALANCE</FONT></P>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">(only
+			0 and 1)</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_CREATOR_TOOL</FONT></P>
+		</TD>
+		<TD WIDTH=10%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;creator-tool&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">G_TYPE_STRING</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;The
+			name of the first known tool used to create the resource. Or
+			firmware or driver version of device&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_SOFTWARE</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_DEVICE_MAKE</FONT></P>
+		</TD>
+		<TD WIDTH=10% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;device-make&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">G_TYPE_STRING</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;The
+			manufacturer of the recording equipment&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_MAKE</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_DEVICE_MODEL</FONT></P>
+		</TD>
+		<TD WIDTH=10%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;device-model&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">G_TYPE_STRING</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;The
+			model name or model number of the equipment&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_MODEL</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_IMAGE_XRESOLUTION</FONT></P>
+		</TD>
+		<TD WIDTH=10% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;image-xresolution&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TYPE_FRACTION</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;Horizontal
+			resolution in pixels per inch&quot;.<BR>Here it is always in
+			inches.<BR>In EXIF it depends on EXIF_TAG_RESOLUTION_UNIT</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_X_RESOLUTION</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=15%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_IMAGE_YRESOLUTION</FONT></P>
+		</TD>
+		<TD WIDTH=10%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;image-yresolution&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TYPE_FRACTION</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;Vertical
+			resolution in pixels per inch&quot;.<BR>Here it is always in
+			inches.<BR>In EXIF it depends on EXIF_TAG_RESOLUTION_UNIT</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">EXIF_TAG_Y_RESOLUTION</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=13%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_COMPOSER</FONT></P>
+		</TD>
+		<TD WIDTH=15% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=10% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;composer&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">G_TYPE_STRING</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;Name
+			of the creator of the object, e.g. writer, photographer or graphic
+			artist.&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">IPTC_TAG_BYLINE</FONT></P>
+		</TD>
+		<TD WIDTH=13% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_COPYRIGHT</FONT></P>
+		</TD>
+		<TD WIDTH=15%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=10%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;copyright&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">G_TYPE_STRING</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;Any
+			necessary copyright notice.&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">IPTC_TAG_COPYRIGHT_NOTICE</FONT></P>
+		</TD>
+		<TD WIDTH=13%>
+			<P CLASS="western" ALIGN=LEFT>“<FONT SIZE=1 STYLE="font-size: 8pt">dc:rights”</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_DESCRIPTION</FONT></P>
+		</TD>
+		<TD WIDTH=15% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=10% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;description&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">G_TYPE_STRING</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;A
+			textual description of the data&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=12% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">IPTC_TAG_CAPTION</FONT></P>
+		</TD>
+		<TD WIDTH=13% BGCOLOR="#e6e6ff">
+			<P CLASS="western" ALIGN=LEFT>“<FONT SIZE=1 STYLE="font-size: 8pt">dc:description”</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">GST_TAG_TITLE</FONT></P>
+		</TD>
+		<TD WIDTH=15%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=10%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;title&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">G_TYPE_STRING</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">&quot;A
+			shorthand reference for the object.&quot;</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=1 STYLE="font-size: 8pt">-</FONT></P>
+		</TD>
+		<TD WIDTH=12%>
+			<P CLASS="western" ALIGN=LEFT><FONT SIZE=1 STYLE="font-size: 8pt">IPTC_TAG_OBJECT_NAME</FONT></P>
+		</TD>
+		<TD WIDTH=13%>
+			<P CLASS="western" ALIGN=LEFT>“<FONT SIZE=1 STYLE="font-size: 8pt">dc:title”</FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" STYLE="margin-bottom: 0cm"><BR>
+</P>
+</BODY>
+</HTML>

@@ -138,6 +138,7 @@ typedef struct _tag_MapIntStr
  */
 
 /* *INDENT-OFF* */
+/* When changing this table, update 'metadata_mapping.htm' file too. */
 static MapIntStr mappedTags[] = {
   {EXIF_TAG_MAKE,               /*ASCII,*/     EXIF_IFD_0,
    GST_TAG_DEVICE_MAKE,              /*STRING*/},

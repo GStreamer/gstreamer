@@ -67,29 +67,37 @@ typedef enum {
  * defines
  */
 
-#define GST_TAG_EXIF "exif"
+/* *INDENT-OFF* */
 
-#define GST_TAG_IPTC "iptc"
+/* whole chunk tags */
 
-#define GST_TAG_XMP "xmp"
+#define GST_TAG_EXIF                       "exif"
 
-#define GST_TAG_DEVICE_MAKE   "device-make"
-#define GST_TAG_DEVICE_MODEL  "device-model"
+#define GST_TAG_IPTC                       "iptc"
 
-#define GST_TAG_CREATOR_TOOL  "creator-tool"
+#define GST_TAG_XMP                        "xmp"
 
-#define GST_TAG_IMAGE_XRESOLUTION "image-xresolution"
-#define GST_TAG_IMAGE_YRESOLUTION "image-yresolution"
+/* individual tags */
 
+#define GST_TAG_CAPTURE_BRIGHTNESS         "capture-brightness"
+#define GST_TAG_CAPTURE_CONTRAST           "capture-contrast"
+#define GST_TAG_CAPTURE_DIGITAL_ZOOM       "capture-digital-zoom"
+#define GST_TAG_CAPTURE_EXPOSURE_PROGRAM   "capture-exposure-program"
 #define GST_TAG_CAPTURE_EXPOSURE_TIME      "capture-exposure-time"
 #define GST_TAG_CAPTURE_FNUMBER            "captute-fnumber"
-#define GST_TAG_CAPTURE_EXPOSURE_PROGRAM   "capture-exposure-program"
-#define GST_TAG_CAPTURE_BRIGHTNESS         "capture-brightness"
-#define GST_TAG_CAPTURE_WHITE_BALANCE      "capture-white-balance"
-#define GST_TAG_CAPTURE_DIGITAL_ZOOM       "capture-digital-zoom"
 #define GST_TAG_CAPTURE_GAIN               "capture-gain"
-#define GST_TAG_CAPTURE_CONTRAST           "capture-contrast"
 #define GST_TAG_CAPTURE_SATURATION         "capture-saturation"
+#define GST_TAG_CAPTURE_WHITE_BALANCE      "capture-white-balance"
+
+#define GST_TAG_CREATOR_TOOL               "creator-tool"
+
+#define GST_TAG_DEVICE_MAKE                "device-make"
+#define GST_TAG_DEVICE_MODEL               "device-model"
+
+#define GST_TAG_IMAGE_XRESOLUTION          "image-xresolution"
+#define GST_TAG_IMAGE_YRESOLUTION          "image-yresolution"
+
+/* *INDENT-ON* */
 
 /*
  * external function prototypes

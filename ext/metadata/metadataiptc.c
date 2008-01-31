@@ -137,6 +137,7 @@ typedef struct _tag_MapIntStr
  */
 
 /* *INDENT-OFF* */
+/* When changing this table, update 'metadata_mapping.htm' file too. */
 static MapIntStr mappedTags[] = {
   {IPTC_RECORD_APP_2, IPTC_TAG_OBJECT_NAME,      /*ASCII*/
    GST_TAG_TITLE      /*STRING*/},

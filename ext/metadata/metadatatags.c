@@ -50,6 +50,8 @@
  * in GStreamer base. So, the EXIF, IPTC and XMP tags can be mapped to tags
  * not registered in this file (tags already in GST base)
  *
+ * When changing this file, update 'metadata_mapping.htm' file too.
+ *
  * Last reviewed on 2008-01-24 (0.10.15)
  */
 
@@ -109,39 +111,33 @@ metadata_tags_register (void)
 static void
 metadata_tags_exif_register (void)
 {
-  /* devices tags */
-
-  gst_tag_register (GST_TAG_DEVICE_MAKE, GST_TAG_FLAG_META,
-      G_TYPE_STRING, GST_TAG_DEVICE_MAKE,
-      "The manufacturer of the recording equipment", NULL);
-  gst_tag_register (GST_TAG_DEVICE_MODEL, GST_TAG_FLAG_META, G_TYPE_STRING,
-      GST_TAG_DEVICE_MODEL, "The model name or model number of the equipment",
-      NULL);
-
-  /* generic tags */
-
-  gst_tag_register (GST_TAG_CREATOR_TOOL, GST_TAG_FLAG_META, G_TYPE_STRING,
-      GST_TAG_CREATOR_TOOL,
-      "The name of the first known tool used to create the resource."
-      " Or firmware or driver version of device", NULL);
-
-  /* image tags */
-
-  gst_tag_register (GST_TAG_IMAGE_XRESOLUTION, GST_TAG_FLAG_META,
-      GST_TYPE_FRACTION, GST_TAG_IMAGE_XRESOLUTION,
-      "Horizontal resolution in pixels per inch", NULL);
-  gst_tag_register (GST_TAG_IMAGE_YRESOLUTION, GST_TAG_FLAG_META,
-      GST_TYPE_FRACTION, GST_TAG_IMAGE_YRESOLUTION,
-      "Vertical resolution in pixels per inch", NULL);
 
   /* capture tags */
 
-  gst_tag_register (GST_TAG_CAPTURE_EXPOSURE_TIME, GST_TAG_FLAG_META,
-      GST_TYPE_FRACTION, GST_TAG_CAPTURE_EXPOSURE_TIME,
-      "Exposure time in seconds", NULL);
-  gst_tag_register (GST_TAG_CAPTURE_FNUMBER, GST_TAG_FLAG_META,
-      GST_TYPE_FRACTION, GST_TAG_CAPTURE_FNUMBER, "F number (focal ratio)",
+  /* The unit is the APEX value.
+     Ordinarily it is given in the range of -99.99 to 99.99.
+     if numerator is 0xFFFFFFFF means unknown      
+   */
+  gst_tag_register (GST_TAG_CAPTURE_BRIGHTNESS, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_CAPTURE_BRIGHTNESS,
+      "Brightness (APEX from -99.99 to 99.99)", NULL);
+
+  /*
+     from -100 to 100
+     [-100, -34] - soft
+     [-33, 33] - normal
+     [34, 100] - hard
+     *** exif is just 0, 1, 2 (normal, soft and hard)
+   */
+  gst_tag_register (GST_TAG_CAPTURE_CONTRAST, GST_TAG_FLAG_META, G_TYPE_INT,
+      GST_TAG_CAPTURE_CONTRAST, "", NULL);
+
+  /* if Zero ZOOM not used
+   */
+  gst_tag_register (GST_TAG_CAPTURE_DIGITAL_ZOOM, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_CAPTURE_DIGITAL_ZOOM, "Digital zoom ratio",
       NULL);
+
   /*
      0 - not defined
      1- Manual
@@ -162,13 +158,34 @@ metadata_tags_exif_register (void)
   gst_tag_register (GST_TAG_CAPTURE_EXPOSURE_PROGRAM, GST_TAG_FLAG_META,
       G_TYPE_UINT, GST_TAG_CAPTURE_EXPOSURE_PROGRAM,
       "Class of program used for exposure", NULL);
-  /* The unit is the APEX value.
-     Ordinarily it is given in the range of -99.99 to 99.99.
-     if numerator is 0xFFFFFFFF means unknown      
+
+  gst_tag_register (GST_TAG_CAPTURE_EXPOSURE_TIME, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_CAPTURE_EXPOSURE_TIME,
+      "Exposure time in seconds", NULL);
+  gst_tag_register (GST_TAG_CAPTURE_FNUMBER, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_CAPTURE_FNUMBER, "F number (focal ratio)",
+      NULL);
+
+  /*
+     0- None
+     1- Low gain up
+     2- High gain up
+     3- Low gain down
+     4- High gain down
    */
-  gst_tag_register (GST_TAG_CAPTURE_BRIGHTNESS, GST_TAG_FLAG_META,
-      GST_TYPE_FRACTION, GST_TAG_CAPTURE_BRIGHTNESS,
-      "Brightness (APEX from -99.99 to 99.99)", NULL);
+  gst_tag_register (GST_TAG_CAPTURE_GAIN, GST_TAG_FLAG_META, G_TYPE_UINT,
+      GST_TAG_CAPTURE_GAIN, "", NULL);
+
+  /*
+     from -100 to 100
+     [-100, -34] - low
+     [-33, 33] - normal
+     [34, 100] - high
+     *** exif is just 0, 1, 2 (normal, low and high)
+   */
+  gst_tag_register (GST_TAG_CAPTURE_SATURATION, GST_TAG_FLAG_META, G_TYPE_INT,
+      GST_TAG_CAPTURE_SATURATION, "", NULL);
+
   /*
      0- Auto
      1- Off
@@ -184,38 +201,31 @@ metadata_tags_exif_register (void)
    */
   gst_tag_register (GST_TAG_CAPTURE_WHITE_BALANCE, GST_TAG_FLAG_META,
       G_TYPE_UINT, GST_TAG_CAPTURE_WHITE_BALANCE, "White balance mode", NULL);
-  /* if Zero ZOOM not used
-   */
-  gst_tag_register (GST_TAG_CAPTURE_DIGITAL_ZOOM, GST_TAG_FLAG_META,
-      GST_TYPE_FRACTION, GST_TAG_CAPTURE_DIGITAL_ZOOM, "Digital zoom ratio",
+
+  /* generic tags */
+
+  gst_tag_register (GST_TAG_CREATOR_TOOL, GST_TAG_FLAG_META, G_TYPE_STRING,
+      GST_TAG_CREATOR_TOOL,
+      "The name of the first known tool used to create the resource."
+      " Or firmware or driver version of device", NULL);
+
+  /* devices tags */
+
+  gst_tag_register (GST_TAG_DEVICE_MAKE, GST_TAG_FLAG_META,
+      G_TYPE_STRING, GST_TAG_DEVICE_MAKE,
+      "The manufacturer of the recording equipment", NULL);
+  gst_tag_register (GST_TAG_DEVICE_MODEL, GST_TAG_FLAG_META, G_TYPE_STRING,
+      GST_TAG_DEVICE_MODEL, "The model name or model number of the equipment",
       NULL);
-  /*
-     0- None
-     1- Low gain up
-     2- High gain up
-     3- Low gain down
-     4- High gain down
-   */
-  gst_tag_register (GST_TAG_CAPTURE_GAIN, GST_TAG_FLAG_META, G_TYPE_UINT,
-      GST_TAG_CAPTURE_GAIN, "", NULL);
-  /*
-     from -100 to 100
-     [-100, -34] - soft
-     [-33, 33] - normal
-     [34, 100] - hard
-     *** exif is just 0, 1, 2 (normal, soft and hard)
-   */
-  gst_tag_register (GST_TAG_CAPTURE_CONTRAST, GST_TAG_FLAG_META, G_TYPE_INT,
-      GST_TAG_CAPTURE_CONTRAST, "", NULL);
-  /*
-     from -100 to 100
-     [-100, -34] - low
-     [-33, 33] - normal
-     [34, 100] - high
-     *** exif is just 0, 1, 2 (normal, low and high)
-   */
-  gst_tag_register (GST_TAG_CAPTURE_SATURATION, GST_TAG_FLAG_META, G_TYPE_INT,
-      GST_TAG_CAPTURE_SATURATION, "", NULL);
+
+  /* image tags */
+
+  gst_tag_register (GST_TAG_IMAGE_XRESOLUTION, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_IMAGE_XRESOLUTION,
+      "Horizontal resolution in pixels per inch", NULL);
+  gst_tag_register (GST_TAG_IMAGE_YRESOLUTION, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_IMAGE_YRESOLUTION,
+      "Vertical resolution in pixels per inch", NULL);
 
 }
 

@@ -1,3 +1,13 @@
+2008-01-31  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/metadata_mapping.htm:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadataiptc.c:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/metadatatags.h:
+	* ext/metadata/metadataxmp.c:
+	  Add documentation.
+
 2008-01-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/metadata/metadataparsejpeg.c: (metadataparse_jpeg_reading):
