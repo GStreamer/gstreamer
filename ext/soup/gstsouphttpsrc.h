@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2007> Wouter Cloetens <wouter@mind.be>
+ * Copyright (C) 2007-2008 Wouter Cloetens <wouter@mind.be>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -12,8 +12,8 @@
  * Library General Public License for more 
  */
 
-#ifndef __GST_SOUPHTTP_SRC_H__
-#define __GST_SOUPHTTP_SRC_H__
+#ifndef __GST_SOUP_HTTP_SRC_H__
+#define __GST_SOUP_HTTP_SRC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
@@ -23,66 +23,69 @@ G_BEGIN_DECLS
 
 #include <libsoup/soup.h>
 
-#define GST_TYPE_SOUPHTTP_SRC \
-  (gst_souphttp_src_get_type())
-#define GST_SOUPHTTP_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SOUPHTTP_SRC,GstSouphttpSrc))
-#define GST_SOUPHTTP_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SOUPHTTP_SRC,GstSouphttpSrcClass))
-#define GST_IS_SOUPHTTP_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SOUPHTTP_SRC))
-#define GST_IS_SOUPHTTP_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SOUPHTTP_SRC))
+#define GST_TYPE_SOUP_HTTP_SRC \
+  (gst_soup_http_src_get_type())
+#define GST_SOUP_HTTP_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SOUP_HTTP_SRC,GstSoupHTTPSrc))
+#define GST_SOUP_HTTP_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), \
+      GST_TYPE_SOUP_HTTP_SRC,GstSoupHTTPSrcClass))
+#define GST_IS_SOUP_HTTP_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SOUP_HTTP_SRC))
+#define GST_IS_SOUP_HTTP_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SOUP_HTTP_SRC))
 
-typedef struct _GstSouphttpSrc GstSouphttpSrc;
-typedef struct _GstSouphttpSrcClass GstSouphttpSrcClass;
+typedef struct _GstSoupHTTPSrc GstSoupHTTPSrc;
+typedef struct _GstSoupHTTPSrcClass GstSoupHTTPSrcClass;
 
 typedef enum {
-  GST_SOUPHTTP_SRC_SESSION_IO_STATUS_IDLE,
-  GST_SOUPHTTP_SRC_SESSION_IO_STATUS_QUEUED,
-  GST_SOUPHTTP_SRC_SESSION_IO_STATUS_RUNNING,
-  GST_SOUPHTTP_SRC_SESSION_IO_STATUS_FINISHED,
-} GstSouphttpSrcSessionIOStatus;
+  GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE,
+  GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_QUEUED,
+  GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING,
+  GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_FINISHED,
+} GstSoupHTTPSrcSessionIOStatus;
 
-struct _GstSouphttpSrc {
+struct _GstSoupHTTPSrc {
   GstPushSrc element;
 
-  gchar * location;                     /* Full URI. */
-  gchar * user_agent;                   /* User-Agent HTTP header. */
-  gboolean automatic_redirect;          /* Follow redirects. */
-  SoupURI * proxy;                      /* HTTP proxy URI. */
-  GMainContext * context;               /* I/O context. */
-  GMainLoop * loop;                     /* Event loop. */
-  SoupSession * session;                /* Async context. */
-  GstSouphttpSrcSessionIOStatus session_io_status;
-                                        /* Async I/O status. */
-  SoupMessage * msg;                    /* Request message. */
-  GstFlowReturn ret;                    /* Return code from callback. */
-  GstBuffer ** outbuf;                  /* Return buffer allocated by callback. */
-  gboolean interrupted;                 /* Signal unlock(). */
+  gchar *location;             /* Full URI. */
+  gchar *user_agent;           /* User-Agent HTTP header. */
+  gboolean automatic_redirect; /* Follow redirects. */
+  SoupURI *proxy;              /* HTTP proxy URI. */
+  GMainContext *context;       /* I/O context. */
+  GMainLoop *loop;             /* Event loop. */
+  SoupSession *session;        /* Async context. */
+  GstSoupHTTPSrcSessionIOStatus session_io_status;
+                               /* Async I/O status. */
+  SoupMessage *msg;            /* Request message. */
+  GstFlowReturn ret;           /* Return code from callback. */
+  GstBuffer **outbuf;          /* Return buffer allocated by callback. */
+  gboolean interrupted;        /* Signal unlock(). */
 
-  gboolean have_size;                   /* Received and parsed Content-Length header. */
-  guint64 content_size;                 /* Value of Content-Length header. */
-  guint64 read_position;                /* Current position. */
-  gboolean seekable;                    /* FALSE if the server does not support Range. */
-  guint64 request_position;             /* Seek to this position. */
+  gboolean have_size;          /* Received and parsed Content-Length
+                                  header. */
+  guint64 content_size;        /* Value of Content-Length header. */
+  guint64 read_position;       /* Current position. */
+  gboolean seekable;           /* FALSE if the server does not support
+                                  Range. */
+  guint64 request_position;    /* Seek to this position. */
 
   /* Shoutcast/icecast metadata extraction handling. */
   gboolean iradio_mode;
-  GstCaps * icy_caps;
-  gchar * iradio_name;
-  gchar * iradio_genre;
-  gchar * iradio_url;
-  gchar * iradio_title;
+  GstCaps *icy_caps;
+  gchar *iradio_name;
+  gchar *iradio_genre;
+  gchar *iradio_url;
+  gchar *iradio_title;
 };
 
-struct _GstSouphttpSrcClass {
+struct _GstSoupHTTPSrcClass {
   GstPushSrcClass parent_class;
 };
 
-GType gst_souphttp_src_get_type (void);
+GType gst_soup_http_src_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_SOUPHTTP_SRC_H__ */
+#endif /* __GST_SOUP_HTTP_SRC_H__ */
 
