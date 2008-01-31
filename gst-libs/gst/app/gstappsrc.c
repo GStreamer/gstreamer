@@ -48,11 +48,14 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+static void gst_app_src_dispose (GObject * object);
+static void gst_app_src_finalize (GObject * object);
+
 static void gst_app_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_app_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_app_src_dispose (GObject * object);
+
 static GstFlowReturn gst_app_src_create (GstPushSrc * psrc, GstBuffer ** buf);
 static gboolean gst_app_src_start (GstBaseSrc * psrc);
 static gboolean gst_app_src_stop (GstBaseSrc * psrc);
@@ -65,15 +68,12 @@ gst_app_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  //GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-
   GST_DEBUG_CATEGORY_INIT (app_src_debug, "appsrc", 0, "appsrc element");
 
   gst_element_class_set_details (element_class, &app_src_details);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_app_src_template));
-
 }
 
 static void
@@ -83,14 +83,24 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   GstPushSrcClass *pushsrc_class = (GstPushSrcClass *) klass;
   GstBaseSrcClass *basesrc_class = (GstBaseSrcClass *) klass;
 
+  gobject_class->dispose = gst_app_src_dispose;
+  gobject_class->finalize = gst_app_src_finalize;
+
   gobject_class->set_property = gst_app_src_set_property;
   gobject_class->get_property = gst_app_src_get_property;
-  gobject_class->dispose = gst_app_src_dispose;
 
   pushsrc_class->create = gst_app_src_create;
   basesrc_class->start = gst_app_src_start;
   basesrc_class->stop = gst_app_src_stop;
   basesrc_class->unlock = gst_app_src_unlock;
+}
+
+static void
+gst_app_src_init (GstAppSrc * appsrc, GstAppSrcClass * klass)
+{
+  appsrc->mutex = g_mutex_new ();
+  appsrc->cond = g_cond_new ();
+  appsrc->queue = g_queue_new ();
 }
 
 static void
@@ -102,28 +112,20 @@ gst_app_src_dispose (GObject * obj)
     gst_caps_unref (appsrc->caps);
     appsrc->caps = NULL;
   }
-  if (appsrc->mutex) {
-    g_mutex_free (appsrc->mutex);
-    appsrc->mutex = NULL;
-  }
-  if (appsrc->cond) {
-    g_cond_free (appsrc->cond);
-    appsrc->cond = NULL;
-  }
-  if (appsrc->queue) {
-    g_queue_free (appsrc->queue);
-    appsrc->queue = NULL;
-  }
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
 static void
-gst_app_src_init (GstAppSrc * appsrc, GstAppSrcClass * klass)
+gst_app_src_finalize (GObject * obj)
 {
-  appsrc->mutex = g_mutex_new ();
-  appsrc->cond = g_cond_new ();
-  appsrc->queue = g_queue_new ();
+  GstAppSrc *appsrc = GST_APP_SRC (obj);
+
+  g_mutex_free (appsrc->mutex);
+  g_cond_free (appsrc->cond);
+  g_queue_free (appsrc->queue);
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void

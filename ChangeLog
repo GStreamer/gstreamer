@@ -1,3 +1,14 @@
+2008-01-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsink.c: (gst_app_sink_dispose):
+	Really clean up the queue instead of just unreffing all buffers
+	in it.
+
+	* gst-libs/gst/app/gstappsrc.c: (gst_app_src_base_init),
+	(gst_app_src_class_init), (gst_app_src_init),
+	(gst_app_src_dispose), (gst_app_src_finalize):
+	Fix dispose/finalize.
+
 2008-01-31  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* ext/faad/gstfaad.c: (gst_faad_chanpos_to_gst):
