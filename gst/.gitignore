@@ -8,6 +8,7 @@ Makefile.in
 .libs
 .deps
 gst.c
+pbutils.c
 gen-*.c
 interfaces.c
 play.c

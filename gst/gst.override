@@ -1212,7 +1212,7 @@ _wrap_gst_segment_clip (PyObject * self, PyObject * args, PyObject * kwargs)
 
 %%
 override GstURIHandler__proxy_do_get_type_full
-static guint
+static GstURIType
 _wrap_GstURIHandler__proxy_do_get_type_full (GType type)
 {
     PyGILState_STATE __py_state;
