@@ -441,7 +441,7 @@ gst_faad_chanpos_from_gst (GstAudioChannelPosition * pos, guint num)
 
 static GstAudioChannelPosition *
 gst_faad_chanpos_to_gst (GstFaad * faad, guchar * fpos, guint num,
-    GstAudioChannelPosition * channel_map_failed)
+    gboolean * channel_map_failed)
 {
   GstAudioChannelPosition *pos = g_new (GstAudioChannelPosition, num);
   guint n;

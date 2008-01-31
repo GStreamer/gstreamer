@@ -1,3 +1,13 @@
+2008-01-31  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* ext/faad/gstfaad.c: (gst_faad_chanpos_to_gst):
+	Fix compiler warning by making the function signature match what
+	everyone is passing in...
+
+	* tests/icles/Makefile.am:
+	Fix the build on Solaris by removing GNU ld specific flags that
+	look unnecessary.
+
 2008-01-31  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/metadata/Makefile.am:
