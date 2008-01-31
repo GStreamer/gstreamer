@@ -383,7 +383,9 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
   static const char JfifHeader[] = "JFIF";
   static const unsigned char ExifHeader[] =
       { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
+#ifdef HAVE_IPTC
   static const char PhotoshopHeader[] = "Photoshop 3.0";
+#endif
   static const char XmpHeader[] = "http://ns.adobe.com/xap/1.0/";
 
   *next_start = *buf;

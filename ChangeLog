@@ -1,5 +1,10 @@
 2008-01-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/metadata/metadataparsejpeg.c: (metadataparse_jpeg_reading):
+	Fix compilation.
+
+2008-01-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/app/gstappsink.c: (gst_app_sink_dispose):
 	Really clean up the queue instead of just unreffing all buffers
 	in it.
