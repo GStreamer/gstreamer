@@ -185,7 +185,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     standard.index = n;
 
     if (ioctl (v4l2object->video_fd, VIDIOC_ENUMSTD, &standard) < 0) {
-      if (errno == EINVAL)
+      if (errno == EINVAL || errno == ENOTTY)
         break;                  /* end of enumeration */
       else {
         GST_ELEMENT_ERROR (e, RESOURCE, SETTINGS,

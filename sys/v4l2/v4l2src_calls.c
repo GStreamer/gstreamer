@@ -66,6 +66,12 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
 #define GST_IS_V4L2_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_BUFFER))
 #define GST_V4L2_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_BUFFER, GstV4l2Buffer))
 
+
+/* Local functions */
+static gboolean
+gst_v4l2src_get_nearest_size (GstV4l2Src * v4l2src, guint32 pixelformat,
+    gint * width, gint * height);
+
 static void
 gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
 {
@@ -853,11 +859,19 @@ default_frame_sizes:
     gint min_w, max_w, min_h, max_h;
 
     /* This code is for Linux < 2.6.19 */
-    if (!gst_v4l2src_get_size_limits (v4l2src, pixelformat, &min_w, &max_w,
-            &min_h, &max_h)) {
-      min_w = min_h = 1;
-      max_w = max_h = GST_V4L2_MAX_SIZE;
+    min_w = min_h = 1;
+    max_w = max_h = GST_V4L2_MAX_SIZE;
+    if (!gst_v4l2src_get_nearest_size (v4l2src, pixelformat, &min_w, &min_h)) {
+      GST_WARNING_OBJECT (v4l2src,
+          "Could not probe minimum capture size for pixelformat %"
+          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (pixelformat));
     }
+    if (!gst_v4l2src_get_nearest_size (v4l2src, pixelformat, &max_w, &max_h)) {
+      GST_WARNING_OBJECT (v4l2src,
+          "Could not probe maximum capture size for pixelformat %"
+          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (pixelformat));
+    }
+
     ret = gst_caps_new_empty ();
     tmp = gst_structure_copy (template);
     gst_structure_set (tmp,
@@ -1418,53 +1432,56 @@ gst_v4l2src_capture_deinit (GstV4l2Src * v4l2src)
 
 /*
  */
-gboolean
-gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
-    guint32 pixelformat, gint * min_w, gint * max_w, gint * min_h, gint * max_h)
+static gboolean
+gst_v4l2src_get_nearest_size (GstV4l2Src * v4l2src, guint32 pixelformat,
+    gint * width, gint * height)
 {
-
   struct v4l2_format fmt;
+  int fd;
+
+  g_return_val_if_fail (width != NULL, FALSE);
+  g_return_val_if_fail (height != NULL, FALSE);
 
   GST_LOG_OBJECT (v4l2src,
-      "getting size limits with format %" GST_FOURCC_FORMAT,
-      GST_FOURCC_ARGS (pixelformat));
+      "getting nearest size to %dx%d with format %" GST_FOURCC_FORMAT,
+      *width, *height, GST_FOURCC_ARGS (pixelformat));
+
+  fd = v4l2src->v4l2object->video_fd;
 
   /* get size delimiters */
   memset (&fmt, 0, sizeof (fmt));
   fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  fmt.fmt.pix.width = 0;
-  fmt.fmt.pix.height = 0;
+  fmt.fmt.pix.width = *width;
+  fmt.fmt.pix.height = *height;
   fmt.fmt.pix.pixelformat = pixelformat;
   fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
-  if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_TRY_FMT, &fmt) < 0) {
-    GST_DEBUG_OBJECT (v4l2src, "failed to get min size: %s",
-        g_strerror (errno));
-    return FALSE;
+
+  if (ioctl (fd, VIDIOC_TRY_FMT, &fmt) < 0) {
+    /* The driver might not implement TRY_FMT, in which case we will try
+       S_FMT to probe */
+    if (errno != ENOTTY)
+      return FALSE;
+
+    /* Only try S_FMT if we're not actively capturing yet, which we shouldn't
+       be, because we're still probing */
+    if (GST_V4L2_IS_ACTIVE (v4l2src->v4l2object))
+      return FALSE;
+
+    GST_LOG_OBJECT (v4l2src,
+        "Failed to probe size limit with VIDIOC_TRY_FMT, trying VIDIOC_S_FMT");
+
+    fmt.fmt.pix.width = *width;
+    fmt.fmt.pix.height = *height;
+
+    if (ioctl (fd, VIDIOC_S_FMT, &fmt) < 0)
+      return FALSE;
   }
 
-  if (min_w)
-    *min_w = fmt.fmt.pix.width;
-  if (min_h)
-    *min_h = fmt.fmt.pix.height;
-
   GST_LOG_OBJECT (v4l2src,
-      "got min size %dx%d", fmt.fmt.pix.width, fmt.fmt.pix.height);
+      "got nearest size %dx%d", fmt.fmt.pix.width, fmt.fmt.pix.height);
 
-  fmt.fmt.pix.width = GST_V4L2_MAX_SIZE;
-  fmt.fmt.pix.height = GST_V4L2_MAX_SIZE;
-  if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_TRY_FMT, &fmt) < 0) {
-    GST_DEBUG_OBJECT (v4l2src, "failed to get max size: %s",
-        g_strerror (errno));
-    return FALSE;
-  }
-
-  if (max_w)
-    *max_w = fmt.fmt.pix.width;
-  if (max_h)
-    *max_h = fmt.fmt.pix.height;
-
-  GST_LOG_OBJECT (v4l2src,
-      "got max size %dx%d", fmt.fmt.pix.width, fmt.fmt.pix.height);
+  *width = fmt.fmt.pix.width;
+  *height = fmt.fmt.pix.height;
 
   return TRUE;
 }

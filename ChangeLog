@@ -1,5 +1,21 @@
 2008-01-31  Jan Schmidt  <Jan.Schmidt@sun.com>
 
+	* sys/v4l2/v4l2_calls.c: (gst_v4l2_fill_lists):
+	Treat ENOTTY (driver does not implement ioctl) the same as
+	EINVAL since it implies there are no available standards.
+
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_probe_caps_for_format),
+	(gst_v4l2src_get_nearest_size):
+	Replace gst_v4l2src_get_size_limits with 2 calls to new function
+	gst_v4l2src_get_nearest_size, and get it to use VIDIOC_S_FMT to
+	probe if the driver does not support VIDIOC_TRY_FMT for whatever
+	reason, and if we aren't yet actively capturing.
+
+	* sys/v4l2/v4l2src_calls.h:
+	Remove replaced function declaration.
+
+2008-01-31  Jan Schmidt  <Jan.Schmidt@sun.com>
+
 	* configure.ac:
 	Bump plugins-base requirement to 0.10.16 for the gst_video_format_*
 	API.

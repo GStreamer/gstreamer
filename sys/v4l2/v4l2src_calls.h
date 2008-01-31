@@ -47,9 +47,4 @@ gboolean   gst_v4l2src_clear_format_list (GstV4l2Src * v4l2src);
 GstCaps*   gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
                                           const GstStructure *template);
 
-gboolean   gst_v4l2src_get_size_limits   (GstV4l2Src * v4l2src,
-                                          guint32 pixelformat,
-                                          gint * min_w, gint * max_w,
-                                          gint * min_h, gint * max_h);
-
 #endif /* __V4L2SRC_CALLS_H__ */
