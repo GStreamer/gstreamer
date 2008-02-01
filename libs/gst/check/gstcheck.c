@@ -3,6 +3,7 @@
  * Common code for GStreamer unittests
  *
  * Copyright (C) 2004,2006 Thomas Vander Stichele <thomas at apestaart dot org>
+ * Copyright (C) 2008 Thijs Vermeir <thijsvermeir@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -148,7 +149,7 @@ gst_check_setup_element (const gchar * factory)
   GST_DEBUG ("setup_element");
 
   element = gst_element_factory_make (factory, factory);
-  fail_if (element == NULL, "Could not create a %s", factory);
+  fail_if (element == NULL, "Could not create a '%s' element", factory);
   ASSERT_OBJECT_REFCOUNT (element, factory, 1);
   return element;
 }
@@ -268,6 +269,194 @@ gst_check_teardown_sink_pad (GstElement * element)
   ASSERT_OBJECT_REFCOUNT (sinkpad, "check sinkpad", 2);
   gst_object_unref (sinkpad);
   gst_object_unref (sinkpad);
+}
+
+/**
+ * gst_check_drop_buffers:
+ *
+ * unref all buffers created by the check element that are in the @buffers GList
+ *
+ */
+void
+gst_check_drop_buffers ()
+{
+  GstBuffer *temp_buffer;
+
+  while (g_list_length (buffers)) {
+    temp_buffer = GST_BUFFER (buffers->data);
+    buffers = g_list_remove (buffers, temp_buffer);
+    gst_buffer_unref (temp_buffer);
+  }
+}
+
+/**
+ * gst_check_caps_equal:
+ *
+ * @caps1: first caps to compare
+ * @caps2: second caps to compare
+ *
+ * Check if the caps are equal, just a wrapper
+ * around gst_caps_is_equal with some more logging
+ *
+ */
+void
+gst_check_caps_equal (GstCaps * caps1, GstCaps * caps2)
+{
+  gchar *name1 = gst_caps_to_string (caps1);
+  gchar *name2 = gst_caps_to_string (caps2);
+
+  fail_unless (gst_caps_is_equal (caps1, caps2),
+      "caps ('%s') is not equal to caps ('%s')", name1, name2);
+  g_free (name1);
+  g_free (name2);
+}
+
+/**
+ * gst_check_element_push_buffer:
+ * @element: name of the element that needs to be created
+ * @buffer_in: a list of buffers that needs to be puched to the element
+ * @buffer_out: a list of buffers that we expect from the element
+ * @last_flow_return: the last buffer push needs to give this GstFlowReturn
+ *
+ * Create an @element with the factory with the name and push the buffers in
+ * @buffer_in to this element. The element should create the buffers equal to the
+ * buffers in @buffer_out. We only check the caps, size and the data of the buffers.
+ * This function unrefs the buffers in the GList's.
+ * with @last_failing you can create a test that the last buffer should not be accepted.
+ * This can be handy if you need to setup the element with some previous buffers and than
+ * check for failing.
+ *
+ */
+void
+gst_check_element_push_buffer_list (const gchar * element_name,
+    GList * buffer_in, GList * buffer_out, GstFlowReturn last_flow_return)
+{
+  GstCaps *sink_caps;
+  GstCaps *src_caps = NULL;
+  GstElement *element;
+  GstPad *pad_peer;
+  GstPad *sink_pad = NULL;
+  GstPad *src_pad;
+
+  /* check that there are no buffers waiting */
+  gst_check_drop_buffers ();
+  /* create the element */
+  element = gst_check_setup_element (element_name);
+  fail_if (element == NULL, "failed to create the element '%s'", element_name);
+  fail_unless (GST_IS_ELEMENT (element), "the element is no element");
+  /* create the src pad */
+  GstBuffer *buffer = GST_BUFFER (buffer_in->data);
+
+  fail_unless (GST_IS_BUFFER (buffer), "There should be a buffer in buffer_in");
+  src_caps = GST_BUFFER_CAPS (buffer);
+  src_pad = gst_pad_new (NULL, GST_PAD_SRC);
+  gst_pad_set_caps (src_pad, src_caps);
+  pad_peer = gst_element_get_pad (element, "sink");
+  fail_if (pad_peer == NULL);
+  fail_unless (gst_pad_link (src_pad, pad_peer) == GST_PAD_LINK_OK,
+      "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
+  gst_object_unref (pad_peer);
+  /* activate the pad */
+  gst_pad_set_active (src_pad, TRUE);
+  GST_DEBUG ("src pad activated");
+  /* don't create the sink_pad if there is no buffer_out list */
+  if (buffer_out != NULL) {
+    GST_DEBUG ("buffer out detected, creating the sink pad");
+    /* get the sink caps */
+    sink_caps = GST_BUFFER_CAPS (GST_BUFFER (buffer_out->data));
+    fail_unless (GST_IS_CAPS (sink_caps), "buffer out don't have caps");
+    gchar *temp = gst_caps_to_string (sink_caps);
+
+    GST_DEBUG ("sink caps requested by buffer out: '%s'", temp);
+    g_free (temp);
+    fail_unless (gst_caps_is_fixed (sink_caps), "we need fixed caps");
+    /* get the sink pad */
+    sink_pad = gst_pad_new (NULL, GST_PAD_SINK);
+    fail_unless (GST_IS_PAD (sink_pad));
+    gst_pad_set_caps (sink_pad, sink_caps);
+    /* get the peer pad */
+    pad_peer = gst_element_get_pad (element, "src");
+    fail_unless (gst_pad_link (pad_peer, sink_pad) == GST_PAD_LINK_OK,
+        "Could not link sink and %s source pads", GST_ELEMENT_NAME (element));
+    gst_object_unref (pad_peer);
+    /* configure the sink pad */
+    gst_pad_set_chain_function (sink_pad, gst_check_chain_func);
+    gst_pad_set_active (sink_pad, TRUE);
+  }
+  fail_unless (gst_element_set_state (element,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  /* push all the buffers in the buffer_in list */
+  fail_unless (g_list_length (buffer_in) > 0, "the buffer_in list is empty");
+  while (g_list_length (buffer_in) > 0) {
+    GstBuffer *next_buffer = GST_BUFFER (buffer_in->data);
+
+    fail_unless (GST_IS_BUFFER (next_buffer),
+        "data in buffer_in should be a buffer");
+    /* remove the buffer from the list */
+    buffer_in = g_list_remove (buffer_in, next_buffer);
+    if (g_list_length (buffer_in) == 0) {
+      fail_unless (gst_pad_push (src_pad, next_buffer) == last_flow_return,
+          "we expext something else from the last buffer");
+    } else {
+      fail_unless (gst_pad_push (src_pad, next_buffer) == GST_FLOW_OK,
+          "Failed to push buffer in");
+    }
+  }
+  fail_unless (gst_element_set_state (element,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+  /* check that there is a buffer out */
+  fail_unless (g_list_length (buffers) == g_list_length (buffer_out),
+      "We expected %d buffers, but there are %d buffers",
+      g_list_length (buffer_out), g_list_length (buffers));
+  while (g_list_length (buffers) > 0) {
+    GstBuffer *new = GST_BUFFER (buffers->data);
+    GstBuffer *orig = GST_BUFFER (buffer_out->data);
+
+    /* remove the buffers */
+    buffers = g_list_remove (buffers, new);
+    buffer_out = g_list_remove (buffer_out, orig);
+    fail_unless (GST_BUFFER_SIZE (orig) == GST_BUFFER_SIZE (new),
+        "size of the buffers are not the same");
+    fail_unless (memcmp (GST_BUFFER_DATA (orig), GST_BUFFER_DATA (new),
+            GST_BUFFER_SIZE (new)) == 0, "data is not the same");
+    gst_check_caps_equal (GST_BUFFER_CAPS (orig), GST_BUFFER_CAPS (new));
+    gst_buffer_unref (new);
+    gst_buffer_unref (orig);
+  }
+  /* teardown the element and pads */
+  gst_pad_set_active (src_pad, FALSE);
+  gst_check_teardown_src_pad (element);
+  gst_pad_set_active (sink_pad, FALSE);
+  gst_check_teardown_sink_pad (element);
+  gst_check_teardown_element (element);
+}
+
+/**
+ * gst_check_element_push_buffer:
+ * @element: name of the element that needs to be created
+ * @buffer_in: push this buffer to the element
+ * @buffer_out: compare the result with this buffer
+ *
+ * Create an @element with the factory with the name and push the
+ * @buffer_in to this element. The element should create one buffer
+ * and this will be compared with @buffer_out. We only check the caps
+ * and the data of the buffers. This function unrefs the buffers.
+ */
+void
+gst_check_element_push_buffer (const gchar * element_name,
+    GstBuffer * buffer_in, GstBuffer * buffer_out)
+{
+  GList *in = NULL;
+  GList *out = NULL;
+
+  in = g_list_append (in, buffer_in);
+  out = g_list_append (out, buffer_out);
+
+  gst_check_element_push_buffer_list (element_name, in, out, GST_FLOW_OK);
+
+  g_list_free (in);
+  g_list_free (out);
 }
 
 void

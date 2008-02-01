@@ -3,6 +3,7 @@
  * Common code for GStreamer unittests
  *
  * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
+ * Copyright (C) <2008> Thijs Vermeir <thijsvermeir@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -63,20 +64,28 @@ GstCheckABIStruct;
 
 void gst_check_init (int *argc, char **argv[]);
 
-GstFlowReturn gst_check_chain_func (GstPad *pad, GstBuffer *buffer);
+GstFlowReturn gst_check_chain_func (GstPad * pad, GstBuffer * buffer);
 
-void gst_check_message_error (GstMessage *message, GstMessageType type, GQuark domain, gint code);
+void gst_check_message_error (GstMessage * message, GstMessageType type,
+    GQuark domain, gint code);
 
-GstElement * gst_check_setup_element (const gchar *factory);
-void gst_check_teardown_element (GstElement *element);
-GstPad * gst_check_setup_src_pad (GstElement *element,
-    GstStaticPadTemplate *template, GstCaps *caps);
-void gst_check_teardown_src_pad (GstElement *element);
-GstPad * gst_check_setup_sink_pad (GstElement *element,
-    GstStaticPadTemplate *template, GstCaps *caps);
-void gst_check_teardown_sink_pad (GstElement *element);
+GstElement *gst_check_setup_element (const gchar * factory);
+void gst_check_teardown_element (GstElement * element);
+GstPad *gst_check_setup_src_pad (GstElement * element,
+    GstStaticPadTemplate * template, GstCaps * caps);
+void gst_check_teardown_src_pad (GstElement * element);
+void gst_check_drop_buffers ();
+void gst_check_caps_equal (GstCaps * caps1, GstCaps * caps2);
+void gst_check_element_push_buffer_list (const gchar * element_name,
+    GList * buffer_in, GList * buffer_out, gboolean last_failing);
+void gst_check_element_push_buffer (const gchar * element_name,
+    GstBuffer * buffer_in, GstBuffer * buffer_out);
+GstPad *gst_check_setup_sink_pad (GstElement * element,
+    GstStaticPadTemplate * template, GstCaps * caps);
+void gst_check_teardown_sink_pad (GstElement * element);
 void gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes);
-gint gst_check_run_suite (Suite *suite, const gchar *name, const gchar *fname);
+gint gst_check_run_suite (Suite * suite, const gchar * name,
+    const gchar * fname);
 
 #define fail_unless_message_error(msg, domain, code)		\
 gst_check_message_error (msg, GST_MESSAGE_ERROR,		\

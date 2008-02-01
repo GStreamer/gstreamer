@@ -518,6 +518,10 @@ gst_check_setup_src_pad
 gst_check_teardown_element
 gst_check_teardown_sink_pad
 gst_check_teardown_src_pad
+gst_check_drop_buffers
+gst_check_caps_equal
+gst_check_element_push_buffer_list
+gst_check_element_push_buffer
 gst_check_run_suite
 
 <SUBSECTION Private>
