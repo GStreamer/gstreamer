@@ -1,3 +1,17 @@
+2008-02-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Bump core/base requirements to released versions, to avoid confusion.
+
+	* gst/deinterlace/Makefile.am:
+	* gst/deinterlace/gstdeinterlace.c: (gst_deinterlace_set_caps):
+	  Use the new GstVideoFormat API to get strides, plane offsets etc..
+	  For Y42B we still need to calculate these ourselves, since the lib
+	  in -base doesn't know about this format yet and we can't bump the
+	  requirement to CVS right now. Fix the Y42B stride, offset and size
+	  calculations for odd widths and heights while we're at it though
+	  (to match those in videotestsrc).
+
 2008-01-31  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/metadata_mapping.htm:

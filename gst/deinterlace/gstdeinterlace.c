@@ -178,54 +178,58 @@ gst_deinterlace_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstDeinterlace *filter;
+  GstVideoFormat fmt;
   GstStructure *s;
-  gint picsize;
+  guint32 fourcc;
+  gint picsize, w, h;
 
   filter = GST_DEINTERLACE (trans);
 
   g_assert (gst_caps_is_equal_fixed (incaps, outcaps));
 
   s = gst_caps_get_structure (incaps, 0);
-  if (!gst_structure_get_int (s, "width", &filter->width) ||
-      !gst_structure_get_int (s, "height", &filter->height)) {
+  if (!gst_structure_get_int (s, "width", &w) ||
+      !gst_structure_get_int (s, "height", &h) ||
+      !gst_structure_get_fourcc (s, "format", &fourcc)) {
     return FALSE;
   }
 
-  if (!gst_structure_get_fourcc (s, "format", &filter->fourcc))
-    return FALSE;
+  filter->width = w;
+  filter->height = h;
+  filter->fourcc = fourcc;
 
-  GST_LOG_OBJECT (filter, "width x height = %d x %d", filter->width,
-      filter->height);
+  GST_DEBUG_OBJECT (filter, "width x height = %d x %d, fourcc: %"
+      GST_FOURCC_FORMAT, w, h, GST_FOURCC_ARGS (fourcc));
 
-  /*4:2:0 */
-  filter->uv_height = filter->height / 2;
-  filter->y_stride = GST_ROUND_UP_4 (filter->width);
-  filter->u_stride = GST_ROUND_UP_8 (filter->width) / 2;
-  filter->v_stride = GST_ROUND_UP_8 (filter->width) / 2;
+  fmt = gst_video_format_from_fourcc (fourcc);
 
-  filter->y_off = 0;
-  filter->u_off = 0 + filter->y_stride * GST_ROUND_UP_2 (filter->height);
-  filter->v_off =
-      filter->u_off + filter->u_stride * (GST_ROUND_UP_2 (filter->height) / 2);
+  if (fmt == GST_VIDEO_FORMAT_UNKNOWN) {
+    /* this is Y42B (4:2:2 planar) which -base <= 0.10.17 doesn't know about */
+    /* FIXME: remove this once we can depend on -base >= 0.10.17.1 */
+    g_assert (fourcc == GST_MAKE_FOURCC ('Y', '4', '2', 'B'));
 
-  picsize =
-      (filter->v_off +
-      (filter->v_stride * GST_ROUND_UP_2 (filter->height) / 2));
-
-  /*4:2:2 */
-  if (filter->fourcc == GST_MAKE_FOURCC ('Y', '4', '2', 'B')) {
     filter->uv_height = filter->height;
     filter->y_stride = GST_ROUND_UP_4 (filter->width);
     filter->u_stride = GST_ROUND_UP_8 (filter->width) / 2;
     filter->v_stride = GST_ROUND_UP_8 (filter->width) / 2;
 
     filter->y_off = 0;
-    filter->u_off = 0 + filter->y_stride * GST_ROUND_UP_2 (filter->height);
-    filter->v_off =
-        filter->u_off + filter->u_stride * (GST_ROUND_UP_2 (filter->height));
+    filter->u_off = 0 + filter->y_stride * filter->height;
+    filter->v_off = filter->u_off + filter->u_stride * filter->height;
 
-    picsize =
-        (filter->v_off + (filter->v_stride * GST_ROUND_UP_2 (filter->height)));
+    picsize = filter->v_off + (filter->v_stride * filter->height);
+  } else {
+    filter->y_stride = gst_video_format_get_row_stride (fmt, 0, w);
+    filter->u_stride = gst_video_format_get_row_stride (fmt, 1, w);
+    filter->v_stride = gst_video_format_get_row_stride (fmt, 2, w);
+
+    filter->uv_height = gst_video_format_get_component_height (fmt, 1, h);
+
+    filter->y_off = gst_video_format_get_component_offset (fmt, 0, w, h);
+    filter->u_off = gst_video_format_get_component_offset (fmt, 1, w, h);
+    filter->v_off = gst_video_format_get_component_offset (fmt, 2, w, h);
+
+    picsize = gst_video_format_get_size (fmt, w, h);
   }
 
   if (filter->picsize != picsize) {
