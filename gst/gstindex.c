@@ -56,6 +56,7 @@ enum
 
 static void gst_index_class_init (GstIndexClass * klass);
 static void gst_index_init (GstIndex * index);
+static void gst_index_finalize (GObject * object);
 
 static void gst_index_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -171,6 +172,7 @@ gst_index_class_init (GstIndexClass * klass)
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_index_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_index_get_property);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_index_finalize);
 
   g_object_class_install_property (gobject_class, ARG_RESOLVER,
       g_param_spec_enum ("resolver", "Resolver",
@@ -196,6 +198,34 @@ gst_index_init (GstIndex * index)
   GST_OBJECT_FLAG_SET (index, GST_INDEX_READABLE);
 
   GST_DEBUG ("created new index");
+}
+
+static void
+gst_index_free_writer (gpointer key, gpointer value, gpointer user_data)
+{
+  GstIndexEntry *entry = (GstIndexEntry *) value;
+
+  if (entry) {
+    gst_index_entry_free (entry);
+  }
+}
+
+static void
+gst_index_finalize (GObject * object)
+{
+  GstIndex *index = GST_INDEX (object);
+
+  if (index->groups) {
+    g_list_foreach (index->groups, (GFunc) g_free, NULL);
+    g_list_free (index->groups);
+    index->groups = NULL;
+  }
+
+  if (index->writers) {
+    g_hash_table_foreach (index->writers, gst_index_free_writer, NULL);
+    g_hash_table_destroy (index->writers);
+    index->writers = NULL;
+  }
 }
 
 static void
@@ -470,6 +500,33 @@ gst_index_entry_copy (GstIndexEntry * entry)
 void
 gst_index_entry_free (GstIndexEntry * entry)
 {
+  switch (entry->type) {
+    case GST_INDEX_ENTRY_ID:
+      if (entry->data.id.description) {
+        g_free (entry->data.id.description);
+        entry->data.id.description = NULL;
+      }
+      break;
+    case GST_INDEX_ENTRY_ASSOCIATION:
+      if (entry->data.assoc.assocs) {
+        g_free (entry->data.assoc.assocs);
+        entry->data.assoc.assocs = NULL;
+      }
+      break;
+    case GST_INDEX_ENTRY_OBJECT:
+      if (entry->data.object.key) {
+        g_free (entry->data.object.key);
+        entry->data.object.key = NULL;
+      }
+      break;
+    case GST_INDEX_ENTRY_FORMAT:
+      if (entry->data.format.key) {
+        g_free (entry->data.format.key);
+        entry->data.format.key = NULL;
+      }
+      break;
+  }
+
   g_free (entry);
 }
 

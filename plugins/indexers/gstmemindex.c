@@ -107,7 +107,7 @@ enum
 
 static void gst_mem_index_class_init (GstMemIndexClass * klass);
 static void gst_mem_index_init (GstMemIndex * index);
-static void gst_mem_index_dispose (GObject * object);
+static void gst_mem_index_finalize (GObject * object);
 
 static void gst_mem_index_add_entry (GstIndex * index, GstIndexEntry * entry);
 static GstIndexEntry *gst_mem_index_get_assoc_entry (GstIndex * index, gint id,
@@ -157,10 +157,11 @@ gst_mem_index_class_init (GstMemIndexClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = gst_mem_index_dispose;
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_mem_index_finalize);
 
-  gstindex_class->add_entry = gst_mem_index_add_entry;
-  gstindex_class->get_assoc_entry = gst_mem_index_get_assoc_entry;
+  gstindex_class->add_entry = GST_DEBUG_FUNCPTR (gst_mem_index_add_entry);
+  gstindex_class->get_assoc_entry =
+      GST_DEBUG_FUNCPTR (gst_mem_index_get_assoc_entry);
 }
 
 static void
@@ -173,11 +174,52 @@ gst_mem_index_init (GstMemIndex * index)
 }
 
 static void
-gst_mem_index_dispose (GObject * object)
+gst_mem_index_free_format (gpointer key, gpointer value, gpointer user_data)
 {
-  //GstMemIndex *memindex = GST_MEM_INDEX (object);
+  GstMemIndexFormatIndex *index = (GstMemIndexFormatIndex *) value;
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  if (index->tree) {
+    g_tree_destroy (index->tree);
+  }
+
+  g_free (index);
+}
+
+static void
+gst_mem_index_free_id (gpointer key, gpointer value, gpointer user_data)
+{
+  GstMemIndexId *id_index = (GstMemIndexId *) value;
+
+  if (id_index->format_index) {
+    g_hash_table_foreach (id_index->format_index, gst_mem_index_free_format,
+        NULL);
+    g_hash_table_destroy (id_index->format_index);
+    id_index->format_index = NULL;
+  }
+
+  g_free (id_index);
+}
+
+static void
+gst_mem_index_finalize (GObject * object)
+{
+  GstMemIndex *memindex = GST_MEM_INDEX (object);
+
+  /* Delete the trees referencing the associations first */
+  if (memindex->id_index) {
+    g_hash_table_foreach (memindex->id_index, gst_mem_index_free_id, NULL);
+    g_hash_table_destroy (memindex->id_index);
+    memindex->id_index = NULL;
+  }
+
+  /* Then delete the associations themselves */
+  if (memindex->associations) {
+    g_list_foreach (memindex->associations, (GFunc) gst_index_entry_free, NULL);
+    g_list_free (memindex->associations);
+    memindex->associations = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

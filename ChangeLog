@@ -1,3 +1,15 @@
+2008-02-01  Julien Moutte  <julien@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt: Add GST_CHECK_VERSION to the docs
+	* gst/gstindex.c: (gst_index_class_init), (gst_index_free_writer),
+	(gst_index_finalize), (gst_index_entry_free),
+	(gst_index_add_association): Fix memory leaks.
+	* gst/gstversion.h.in: Add GST_CHECK_VERSION macro.
+	* plugins/indexers/gstmemindex.c: (gst_mem_index_class_init),
+	(gst_mem_index_free_format), (gst_mem_index_free_id),
+	(gst_mem_index_finalize): Fix memory leaks.
+	* win32/common/config.h: Updated to CVS HEAD.
+
 2008-02-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/README:
