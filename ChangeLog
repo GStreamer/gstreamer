@@ -1,5 +1,11 @@
 2008-02-01  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstminiobject.c: (gst_mini_object_replace):
+	When replacing a miniobject, do a quick equality check first so that we
+	can avoid a ref/unref pair.
+
+2008-02-01  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/design/part-synchronisation.txt:
 	Update some docs.
 
