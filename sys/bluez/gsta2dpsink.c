@@ -109,24 +109,24 @@ gst_a2dp_sink_init_element (GstA2dpSink * self,
 
   element = gst_element_factory_make (elementname, name);
   if (element == NULL) {
-    GST_ERROR_OBJECT (self, "Couldn't create %s", elementname);
+    GST_DEBUG_OBJECT (self, "Couldn't create %s", elementname);
     return NULL;
   }
 
   if (!gst_bin_add (GST_BIN (self), element)) {
-    GST_ERROR_OBJECT (self, "failed to add %s to the bin", elementname);
+    GST_DEBUG_OBJECT (self, "failed to add %s to the bin", elementname);
     goto cleanup_and_fail;
   }
 
   state = gst_a2dp_sink_get_state (self);
   if (gst_element_set_state (element, state) == GST_STATE_CHANGE_FAILURE) {
-    GST_ERROR_OBJECT (self, "%s failed to go to playing", elementname);
+    GST_DEBUG_OBJECT (self, "%s failed to go to playing", elementname);
     goto remove_element_and_fail;
   }
 
   if (link_to != NULL)
     if (!gst_element_link (link_to, element)) {
-      GST_ERROR_OBJECT (self, "couldn't link %s", elementname);
+      GST_DEBUG_OBJECT (self, "couldn't link %s", elementname);
       goto remove_element_and_fail;
     }
 
@@ -289,10 +289,8 @@ gst_a2dp_sink_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  if (ret == GST_STATE_CHANGE_FAILURE) {
-    g_mutex_unlock (self->cb_mutex);
+  if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
-  }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
