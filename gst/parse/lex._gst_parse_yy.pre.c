@@ -1155,7 +1155,8 @@ YY_DECL {
         BEGIN (INITIAL);
         return ASSIGNMENT;
       }
-        YY_BREAK case 2:YY_RULE_SETUP
+      YY_BREAK case 2:
+        YY_RULE_SETUP
 #line 81 "parse.l"
       {
         yytext++;
@@ -1164,7 +1165,8 @@ YY_DECL {
         BEGIN (INITIAL);
         return PADREF;
       }
-        YY_BREAK case 3:YY_RULE_SETUP
+      YY_BREAK case 3:
+        YY_RULE_SETUP
 #line 89 "parse.l"
       {
         PRINT ("REF: %s", yytext);
@@ -1172,22 +1174,23 @@ YY_DECL {
         BEGIN (INITIAL);
         return REF;
       }
-        YY_BREAK case 4:
+      YY_BREAK case 4:
 /* rule 4 can match eol */
-          YY_RULE_SETUP
+        YY_RULE_SETUP
 #line 96 "parse.l"
       {
         gchar *pos = yytext;
 
         while (!g_ascii_isspace (*pos) && (*pos != '.'))
-            pos++;
-         *pos = '\0';
-          PRINT ("BINREF: %s", yytext);
-          yylval->s = gst_parse_strdup (yytext);
-          BEGIN (INITIAL);
-          return BINREF;
+          pos++;
+        *pos = '\0';
+        PRINT ("BINREF: %s", yytext);
+        yylval->s = gst_parse_strdup (yytext);
+        BEGIN (INITIAL);
+        return BINREF;
       }
-        YY_BREAK case 5:YY_RULE_SETUP
+      YY_BREAK case 5:
+        YY_RULE_SETUP
 #line 106 "parse.l"
       {
         PRINT ("IDENTIFIER: %s", yytext);
@@ -1195,17 +1198,16 @@ YY_DECL {
         BEGIN (INITIAL);
         return IDENTIFIER;
       }
-        YY_BREAK case 6:
+      YY_BREAK case 6:
 /* rule 6 can match eol */
-          YY_RULE_SETUP
+        YY_RULE_SETUP
 #line 113 "parse.l"
       {
         gchar *c = yytext;
 
-          PRINT ("LINK: %s", yytext);
-          c++;
-        if (*c)
-        {
+        PRINT ("LINK: %s", yytext);
+        c++;
+        if (*c) {
           while (g_ascii_isspace (*c))
             c++;
           c = yylval->s = gst_parse_strdup (c);
@@ -1215,16 +1217,15 @@ YY_DECL {
             g_assert_not_reached ();
           while (g_ascii_isspace (*--c));
           *++c = '\0';
-        } else
-        {
+        } else {
           yylval->s = NULL;
         }
         BEGIN (INITIAL);
         return LINK;
       }
-        YY_BREAK case 7:
+      YY_BREAK case 7:
 /* rule 7 can match eol */
-          YY_RULE_SETUP
+        YY_RULE_SETUP
 #line 131 "parse.l"
       {
         PRINT ("URL: %s", yytext);
@@ -1233,29 +1234,31 @@ YY_DECL {
         BEGIN (INITIAL);
         return PARSE_URL;
       }
-        YY_BREAK case 8:YY_RULE_SETUP
+      YY_BREAK case 8:
+        YY_RULE_SETUP
 #line 139 "parse.l"
       {
         PRINT ("OPERATOR: [%s]", yytext);
         return *yytext;
       }
-        YY_BREAK case 9:
+      YY_BREAK case 9:
 /* rule 9 can match eol */
-          YY_RULE_SETUP
+        YY_RULE_SETUP
 #line 141 "parse.l"
       {
         PRINT ("SPACE: [%s]", yytext);
       }
-        YY_BREAK case 10:YY_RULE_SETUP
+      YY_BREAK case 10:
+        YY_RULE_SETUP
 #line 143 "parse.l"
       {
         PRINT ("Invalid Lexer element: %s\n", yytext);
         return *yytext;
       }
-        YY_BREAK case 11:YY_RULE_SETUP
+      YY_BREAK case 11:
+        YY_RULE_SETUP
 #line 148 "parse.l"
-          ECHO;
-
+            ECHO;
         YY_BREAK
 #line 1266 "lex._gst_parse_yy.c"
       case YY_STATE_EOF (INITIAL):
@@ -2437,7 +2440,7 @@ enum yytokentype
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 471 "./grammar.y"
+#line 521 "./grammar.y"
 {
   gchar *s;
   chain_t *c;

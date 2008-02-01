@@ -107,6 +107,13 @@ typedef struct {
    * but there is no such signal */
 } DelayedLink;
 
+typedef struct {
+  GstElement *parent;
+  gchar *name;
+  gchar *value_str;
+  gulong signal_id;
+} DelayedSet;
+
 /*** define SET_ERROR and ERROR macros/functions */
 
 #ifdef G_HAVE_ISO_VARARGS
@@ -265,13 +272,45 @@ G_STMT_START { \
   MAKE_LINK (link, NULL, _src, pads, NULL, NULL, NULL); \
 } G_STMT_END
 
+static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
+                                gpointer data)
+{
+  DelayedSet *set = (DelayedSet *) data;
+  GParamSpec *pspec;
+  GValue v = { 0, }; 
+  GstObject *target = NULL;
+  GType value_type;
+
+  if (gst_child_proxy_lookup (GST_OBJECT (set->parent), set->name, &target, &pspec)) { 
+    value_type = G_PARAM_SPEC_VALUE_TYPE (pspec);
+
+    GST_CAT_LOG (GST_CAT_PIPELINE, "parsing delayed property %s as a %s from %s", pspec->name,
+      g_type_name (value_type), set->value_str);
+    g_value_init (&v, value_type);
+    if (gst_value_deserialize (&v, set->value_str)) {
+      g_object_set_property (G_OBJECT (target), pspec->name, &v);
+    }
+    g_signal_handler_disconnect (child_proxy, set->signal_id);
+    g_free(set->name);
+    g_free(set->value_str);
+    g_free(set);
+  }
+
+  if (G_IS_VALUE (&v))
+    g_value_unset (&v);
+  if (target)
+    gst_object_unref (target);
+  return;
+}
+
+
 static void
 gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
 {
   GParamSpec *pspec;
   gchar *pos = value;
   GValue v = { 0, }; 
-  GstObject *target;
+  GstObject *target = NULL;
   GType value_type;
 
   /* parse the string, so the property name is null-terminated an pos points
@@ -300,21 +339,32 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
     if (!gst_value_deserialize (&v, pos))
       goto error;
     g_object_set_property (G_OBJECT (target), pspec->name, &v);
-    gst_object_unref (target);
   } else { 
-    SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
-        _("no property \"%s\" in element \"%s\""), value, \
-        GST_ELEMENT_NAME (element)); 
+    /* do a delayed set */
+    if (GST_IS_CHILD_PROXY (element)) {
+      DelayedSet *data = g_new (DelayedSet, 1);
+      
+      data->parent = element;
+      data->name = g_strdup(value);
+      data->value_str = g_strdup(pos);
+      data->signal_id = g_signal_connect(GST_OBJECT (element),"child-added", G_CALLBACK (gst_parse_new_child), data);
+    }
+    else {
+      SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
+          _("no property \"%s\" in element \"%s\""), value, \
+          GST_ELEMENT_NAME (element));
+    }
   }
 
 out:
   gst_parse_strfree (value);
   if (G_IS_VALUE (&v))
     g_value_unset (&v);
+  if (target)
+    gst_object_unref (target);
   return;
   
 error:
-  gst_object_unref (target);
   SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
          _("could not set property \"%s\" in element \"%s\" to \"%s\""), 
 	 value, GST_ELEMENT_NAME (element), pos); 
