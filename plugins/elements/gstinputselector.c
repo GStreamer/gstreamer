@@ -312,6 +312,8 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
   }
   if (forward)
     res = gst_pad_push_event (sel->srcpad, event);
+  else
+    gst_event_unref (event);
 
   gst_object_unref (sel);
 
