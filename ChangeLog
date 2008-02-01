@@ -1,3 +1,8 @@
+2008-02-01  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/selector/gstinputselector.c: (gst_selector_pad_event):
+	Don't leak event on pads that are not linked. Fixes #512826.
+
 2008-02-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
