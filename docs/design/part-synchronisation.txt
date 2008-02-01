@@ -190,13 +190,15 @@ allows us to rewrite the above formula for stream_time (and for positive rates).
     B.running_time = (B.timestamp - NS.start) / NS.abs_rate + NS.accum
 
   =>
-    absolute_time - base_time = (B.timestamp - NS.start) / NS.abs_rate + NS.accum
+    (B.timestamp - NS.start) / NS.abs_rate + NS.accum = absolute_time - base_time;
 
   =>
-    absolute_time - base_time = (B.timestamp - NS.start) / NS.abs_rate + NS.accum
+    (B.timestamp - NS.start) / NS.abs_rate = absolute_time - base_time - NS.accum;
 
   =>
     (B.timestamp - NS.start) = (absolute_time - base_time - NS.accum) * NS.abs_rate
+
+  filling (B.timestamp - NS.start) in the above formule for stream time
 
   =>
     stream_time = (absolute_time - base_time - NS.accum) * NS.abs_rate * NS.abs_applied_rate + NS.time

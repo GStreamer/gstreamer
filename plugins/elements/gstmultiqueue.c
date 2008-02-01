@@ -21,6 +21,90 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-multiqueue
+ * @short_description: Asynchronous data queues
+ * @see_also: #GstQueue
+ *
+ * <refsect2>
+ * <para>
+ * Multiqueue is similar to a normal #GstQueue with the following additional
+ * features:
+ * <orderedlist>
+ * <listitem>
+ *   <itemizedlist><title>Multiple streamhandling</title>
+ *   <listitem><para>
+ *     The element handles queueing data on more than one stream at once. To
+ *     achieve such a feature it has request sink pads (sink_%d) and
+ *     'sometimes' src pads (src_%d).
+ *   </para><para>
+ *     When requesting a given sinkpad with gst_element_get_request_pad(),
+ *     the associated srcpad for that stream will be created.
+ *     Ex: requesting sink_1 will generate src_1.
+ *   </para></listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * <listitem>
+ *   <itemizedlist><title>Non-starvation on multiple streams</title>
+ *   <listitem><para>
+ *     If more than one stream is used with the element, the streams' queues
+ *     will be dynamically grown (up to a limit), in order to ensure that no
+ *     stream is risking data starvation. This guarantees that at any given
+ *     time there are at least N bytes queued and available for each individual
+ *     stream.
+ *   </para><para>
+ *     If an EOS event comes through a srcpad, the associated queue will be
+ *     considered as 'not-empty' in the queue-size-growing algorithm.
+ *   </para></listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * <listitem>
+ *   <itemizedlist><title>Non-linked srcpads graceful handling</title>
+ *   <listitem><para>
+ *     In order to better support dynamic switching between streams, the multiqueue
+ *     (unlike the current GStreamer queue) continues to push buffers on non-linked
+ *     pads rather than shutting down.
+ *   </para><para>
+ *     In addition, to prevent a non-linked stream from very quickly consuming all
+ *     available buffers and thus 'racing ahead' of the other streams, the element
+ *     must ensure that buffers and inlined events for a non-linked stream are pushed
+ *     in the same order as they were received, relative to the other streams
+ *     controlled by the element. This means that a buffer cannot be pushed to a
+ *     non-linked pad any sooner than buffers in any other stream which were received
+ *     before it.
+ *   </para></listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * </orderedlist>
+ * </para>
+ * <para>
+ *   Data is queued until one of the limits specified by the
+ *   #GstMultiQueue:max-size-buffers, #GstMultiQueue:max-size-bytes and/or
+ *   #GstMultiQueue:max-size-time properties has been reached. Any attempt to push
+ *   more buffers into the queue will block the pushing thread until more space
+ *   becomes available. #GstMultiQueue:extra-size-buffers,
+ * </para>
+ * <para>
+ *   #GstMultiQueue:extra-size-bytes and #GstMultiQueue:extra-size-time are
+ *   currently unused.
+ * </para>
+ * <para>
+ *   The default queue size limits are 5 buffers, 10MB of data, or
+ *   two second worth of data, whichever is reached first. Note that the number
+ *   of buffers will dynamically grow depending on the fill level of 
+ *   other queues.
+ * </para>
+ * <para>
+ *   The #GstMultiQueue::underrun signal is emitted when all of the queues
+ *   are empty. The #GstMultiQueue::overrun signal is emitted when one of the
+ *   queues is filled.
+ *   Both signals are emitted from the context of the streaming thread.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2008-01-25 (0.10.17)
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

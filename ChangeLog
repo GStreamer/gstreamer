@@ -1,3 +1,14 @@
+2008-02-01  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-synchronisation.txt:
+	Update some docs.
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gstreamer-plugins-docs.sgml:
+	* docs/plugins/gstreamer-plugins-sections.txt:
+	* plugins/elements/gstmultiqueue.c:
+	Add multiqueue to the docs.
+
 2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

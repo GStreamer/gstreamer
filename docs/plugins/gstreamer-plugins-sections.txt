@@ -144,6 +144,21 @@ GST_QUEUE_CLEAR_LEVEL
 </SECTION>
 
 <SECTION>
+<FILE>element-multiqueue</FILE>
+<TITLE>multiqueue</TITLE>
+GstMultiQueue
+<SUBSECTION Standard>
+GstMultiQueueClass
+GST_MULTI_QUEUE
+GST_IS_MULTI_QUEUE
+GST_MULTI_QUEUE_CLASS
+GST_IS_MULTI_QUEUE_CLASS
+GST_TYPE_MULTI_QUEUE
+<SUBSECTION Private>
+gst_multi_queue_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-typefind</FILE>
 <TITLE>typefind</TITLE>
 GstTypeFindElement
