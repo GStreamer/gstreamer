@@ -106,6 +106,49 @@ GST_START_TEST (test_rtp_buffer)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtp_buffer_set_extension_data)
+{
+  GstBuffer *buf;
+  guint8 *data;
+  guint16 bits;
+  guint size;
+  gpointer pointer;
+
+  /* check GstRTPHeader structure alignment and packing */
+  buf = gst_rtp_buffer_new_allocate (4, 0, 0);
+  data = GST_BUFFER_DATA (buf);
+
+  /* should be impossible to set the extension data */
+  fail_unless (gst_rtp_buffer_set_extension_data (buf, 0, 4) == FALSE);
+  fail_unless (gst_rtp_buffer_get_extension (buf) == TRUE);
+
+  /* should be possible to set the extension data */
+  fail_unless (gst_rtp_buffer_set_extension_data (buf, 270, 0) == TRUE);
+  fail_unless (gst_rtp_buffer_get_extension (buf) == TRUE);
+  gst_rtp_buffer_get_extension_data (buf, &bits, &pointer, &size);
+  fail_unless (bits == 270);
+  fail_unless (size == 0);
+  fail_unless (pointer == GST_BUFFER_DATA (buf) + 16);
+  pointer = gst_rtp_buffer_get_payload (buf);
+  fail_unless (pointer == GST_BUFFER_DATA (buf) + 16);
+  gst_buffer_unref (buf);
+
+  buf = gst_rtp_buffer_new_allocate (20, 0, 0);
+  data = GST_BUFFER_DATA (buf);
+  fail_unless (gst_rtp_buffer_get_extension (buf) == FALSE);
+  fail_unless (gst_rtp_buffer_set_extension_data (buf, 333, 2) == TRUE);
+  fail_unless (gst_rtp_buffer_get_extension (buf) == TRUE);
+  gst_rtp_buffer_get_extension_data (buf, &bits, &pointer, &size);
+  fail_unless (bits == 333);
+  fail_unless (size == 2);
+  fail_unless (pointer == GST_BUFFER_DATA (buf) + 16);
+  pointer = gst_rtp_buffer_get_payload (buf);
+  fail_unless (pointer == GST_BUFFER_DATA (buf) + 24);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtp_suite (void)
 {
@@ -114,6 +157,7 @@ rtp_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_rtp_buffer);
+  tcase_add_test (tc_chain, test_rtp_buffer_set_extension_data);
   return s;
 }
 

@@ -631,6 +631,51 @@ gst_rtp_buffer_get_extension_data (GstBuffer * buffer, guint16 * bits,
 }
 
 /**
+ * gst_rtp_buffer_set_extension_data:
+ * @buffer: the buffer
+ * @bits: the bits specific for the extension
+ * @length: the length that counts the number of 32-bit words in
+ * the extension, excluding the extension header ( therefore zero is a valid length)
+ *
+ * Set the extension bit of the rtp buffer and fill in the @bits and @length of the
+ * extension header. It will refuse to set the extension data if the buffer is not
+ * large enough.
+ *
+ * Returns: True if done.
+ *
+ * Since : 0.10.18
+ */
+gboolean
+gst_rtp_buffer_set_extension_data (GstBuffer * buffer, guint16 bits,
+    guint16 length)
+{
+  guint32 min_size = 0;
+  guint8 *data;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, FALSE);
+
+  gst_rtp_buffer_set_extension (buffer, TRUE);
+  min_size =
+      GST_RTP_HEADER_LEN + GST_RTP_HEADER_CSRC_SIZE (buffer) + 4 +
+      length * sizeof (guint32);
+
+  if (min_size > GST_BUFFER_SIZE (buffer)) {
+    GST_WARNING_OBJECT (buffer,
+        "rtp buffer too small: need more than %d bytes but only have %d bytes",
+        min_size, GST_BUFFER_SIZE (buffer));
+    return FALSE;
+  }
+
+  data =
+      GST_BUFFER_DATA (buffer) + GST_RTP_HEADER_LEN +
+      GST_RTP_HEADER_CSRC_SIZE (buffer);
+  GST_WRITE_UINT16_BE (data, bits);
+  GST_WRITE_UINT16_BE (data + 2, length);
+  return TRUE;
+}
+
+/**
  * gst_rtp_buffer_get_ssrc:
  * @buffer: the buffer
  *

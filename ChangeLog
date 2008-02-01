@@ -1,3 +1,15 @@
+2008-02-01  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Thijs Vermeir <thijsvermeir at gmail dot com>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	(gst_rtp_buffer_set_extension_data):
+	* gst-libs/gst/rtp/gstrtpbuffer.h:
+	* tests/check/libs/rtp.c: (GST_START_TEST), (rtp_suite):
+	Add gst_rtp_buffer_set_extension_data() 
+	Add a unit test for this addition. Fixes #511478.
+	API: GstRTPBuffer:gst_rtp_buffer_set_extension_data()
+
 2008-01-30  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

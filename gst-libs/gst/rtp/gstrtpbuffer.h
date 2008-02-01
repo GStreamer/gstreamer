@@ -68,6 +68,7 @@ gboolean        gst_rtp_buffer_get_extension         (GstBuffer *buffer);
 void            gst_rtp_buffer_set_extension         (GstBuffer *buffer, gboolean extension);
 gboolean        gst_rtp_buffer_get_extension_data    (GstBuffer *buffer, guint16 *bits,
                                                       gpointer *data, guint *wordlen);
+gboolean        gst_rtp_buffer_set_extension_data    (GstBuffer *buffer, guint16 bits, guint16 length);
 
 guint32         gst_rtp_buffer_get_ssrc              (GstBuffer *buffer);
 void            gst_rtp_buffer_set_ssrc              (GstBuffer *buffer, guint32 ssrc);
