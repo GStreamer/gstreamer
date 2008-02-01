@@ -1,3 +1,29 @@
+2008-02-01  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c: (gst_play_bin_class_init),
+	(get_group), (get_n_pads), (gst_play_bin_get_property),
+	(pad_added_cb), (no_more_pads_cb), (perform_eos),
+	(autoplug_select_cb), (deactivate_group):
+	Remove stream-info, we going for something easier.
+	Refactor getting the current group.
+	Implement getting the number of audio/video/text streams.
+
+	* gst/playback/gststreamselector.c:
+	(gst_stream_selector_class_init), (gst_stream_selector_init),
+	(gst_stream_selector_get_property),
+	(gst_stream_selector_request_new_pad),
+	(gst_stream_selector_release_pad):
+	* gst/playback/gststreamselector.h:
+	Add property for number of pads.
+
+	* tests/examples/seek/seek.c: (set_scale), (update_flag),
+	(vis_toggle_cb), (audio_toggle_cb), (video_toggle_cb),
+	(text_toggle_cb), (update_streams), (msg_async_done),
+	(msg_state_changed), (main):
+	Block slider callback when updating the slider position.
+	Add gui elements for controlling playbin2.
+	Add callback for async_done that updates position/duration.
+
 2008-02-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/Makefile.am:

@@ -44,8 +44,10 @@ struct _GstStreamSelector {
 
   GstPad *srcpad;
 
+  guint padcount;
+
   GstPad *active_sinkpad;
-  guint nb_sinkpads;
+  guint n_pads;
 
   GstSegment segment;
 };

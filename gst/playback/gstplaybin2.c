@@ -336,7 +336,6 @@ struct _GstPlayBinClass
 /* props */
 #define DEFAULT_URI               NULL
 #define DEFAULT_SUBURI            NULL
-#define DEFAULT_STREAMINFO        NULL
 #define DEFAULT_SOURCE            NULL
 #define DEFAULT_FLAGS             GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_TEXT | \
 	                          GST_PLAY_FLAG_SOFT_VOLUME
@@ -360,7 +359,6 @@ enum
   PROP_0,
   PROP_URI,
   PROP_SUBURI,
-  PROP_STREAMINFO,
   PROP_SOURCE,
   PROP_FLAGS,
   PROP_N_VIDEO,
@@ -475,12 +473,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_SUBURI,
       g_param_spec_string ("suburi", ".sub-URI", "Optional URI of a subtitle",
           NULL, G_PARAM_READWRITE));
-
-  g_object_class_install_property (gobject_klass, PROP_STREAMINFO,
-      g_param_spec_value_array ("stream-info",
-          "StreamInfo GValueArray", "value array of streaminfo",
-          g_param_spec_object ("streaminfo", "StreamInfo", "Streaminfo object",
-              GST_TYPE_STREAM_INFO, G_PARAM_READABLE), G_PARAM_READABLE));
 
   g_object_class_install_property (gobject_klass, PROP_SOURCE,
       g_param_spec_object ("source", "Source", "Source element",
@@ -753,6 +745,32 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
   }
 }
 
+/* get the currently playing group or if nothing is playing, the next
+ * group. Must be called with the LOCK. */
+static GstSourceGroup *
+get_group (GstPlayBin * playbin)
+{
+  GstSourceGroup *result;
+
+  if (!(result = playbin->curr_group))
+    result = playbin->next_group;
+
+  return result;
+}
+
+static gint
+get_n_pads (GstSourceSelect * select)
+{
+  gint res;
+
+  if (select->selector == NULL)
+    return 0;
+
+  g_object_get (select->selector, "n-pads", &res, NULL);
+
+  return res;
+}
+
 static void
 gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
@@ -763,36 +781,58 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_URI:
+    {
+      GstSourceGroup *group;
+
       GST_OBJECT_LOCK (playbin);
-      /* get the currently playing group first, then the queued one, just in
-       * case we did not yet start playback. */
-      if (playbin->curr_group)
-        g_value_set_string (value, playbin->curr_group->uri);
-      else
-        g_value_set_string (value, playbin->next_group->uri);
+      group = get_group (playbin);
+      g_value_set_string (value, group->uri);
       GST_OBJECT_UNLOCK (playbin);
       break;
+    }
     case PROP_SUBURI:
+    {
+      GstSourceGroup *group;
+
       GST_OBJECT_LOCK (playbin);
-      /* get the currently playing group first, then the queued one */
-      if (playbin->curr_group)
-        g_value_set_string (value, playbin->curr_group->suburi);
-      else
-        g_value_set_string (value, playbin->next_group->suburi);
+      group = get_group (playbin);
+      g_value_set_string (value, group->suburi);
       GST_OBJECT_UNLOCK (playbin);
       break;
-    case PROP_STREAMINFO:
-      break;
+    }
     case PROP_SOURCE:
       break;
     case PROP_FLAGS:
       g_value_set_flags (value, gst_play_sink_get_flags (playbin->playsink));
       break;
     case PROP_N_VIDEO:
+    {
+      GstSourceGroup *group;
+      gint n_rawvideo, n_video;
+
+      GST_OBJECT_LOCK (playbin);
+      group = get_group (playbin);
+      n_rawvideo = get_n_pads (&group->selector[2]);
+      n_video = get_n_pads (&group->selector[3]);
+      g_value_set_int (value, n_rawvideo + n_video);
+      GST_OBJECT_UNLOCK (playbin);
       break;
+    }
     case PROP_CURRENT_VIDEO:
       break;
     case PROP_N_AUDIO:
+    {
+      GstSourceGroup *group;
+      gint n_rawaudio, n_audio;
+
+      GST_OBJECT_LOCK (playbin);
+      group = get_group (playbin);
+      n_rawaudio = get_n_pads (&group->selector[0]);
+      n_audio = get_n_pads (&group->selector[1]);
+      g_value_set_int (value, n_rawaudio + n_audio);
+      GST_OBJECT_UNLOCK (playbin);
+      break;
+    }
       break;
     case PROP_CURRENT_AUDIO:
       break;
@@ -878,7 +918,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       GST_DEBUG_PAD_NAME (pad), caps, group);
 
   /* major type of the pad, this determines the selector to use */
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
     if (g_str_has_prefix (name, group->selector[i].media)) {
       select = &group->selector[i];
       break;
@@ -1011,7 +1051,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 
   GST_DEBUG_OBJECT (playbin, "no more pads in group %p", group);
 
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
     GstSourceSelect *select = &group->selector[i];
 
     if (select->selector) {
@@ -1035,7 +1075,7 @@ perform_eos (GstPlayBin * playbin, GstSourceGroup * group)
   GST_DEBUG_OBJECT (playbin, "doing EOS in group %p", group);
 
   event = gst_event_new_eos ();
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
     GstSourceSelect *select = &group->selector[i];
 
     if (select->selector) {
@@ -1231,7 +1271,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
 
   GST_DEBUG_OBJECT (playbin, "unlinking group %p", group);
 
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
     GstSourceSelect *select = &group->selector[i];
 
     if (!select->selector)

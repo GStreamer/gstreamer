@@ -86,6 +86,9 @@ static guint update_id = 0;
 static guint seek_timeout_id = 0;
 static gulong changed_id;
 
+static GtkWidget *video_combo, *audio_combo, *text_combo;
+static GtkWidget *vis_checkbox, *video_checkbox, *audio_checkbox;
+static GtkWidget *text_checkbox;
 
 /* pipeline construction */
 
@@ -1047,6 +1050,7 @@ static gboolean start_seek (GtkWidget * widget, GdkEventButton * event,
     gpointer user_data);
 static gboolean stop_seek (GtkWidget * widget, GdkEventButton * event,
     gpointer user_data);
+static void seek_cb (GtkWidget * widget);
 
 static void
 set_scale (gdouble value)
@@ -1055,10 +1059,13 @@ set_scale (gdouble value)
       (void *) pipeline);
   g_signal_handlers_block_by_func (hscale, (void *) stop_seek,
       (void *) pipeline);
+  g_signal_handlers_block_by_func (hscale, (void *) seek_cb, (void *) pipeline);
   gtk_adjustment_set_value (adjustment, value);
   g_signal_handlers_unblock_by_func (hscale, (void *) start_seek,
       (void *) pipeline);
   g_signal_handlers_unblock_by_func (hscale, (void *) stop_seek,
+      (void *) pipeline);
+  g_signal_handlers_unblock_by_func (hscale, (void *) seek_cb,
       (void *) pipeline);
   gtk_widget_queue_draw (hscale);
 }
@@ -1455,6 +1462,57 @@ rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
 }
 
 static void
+update_flag (GstPipeline * pipeline, gint num, gboolean state)
+{
+  gint flags;
+
+  g_object_get (pipeline, "flags", &flags, NULL);
+  if (state)
+    flags |= (1 << num);
+  else
+    flags &= ~(1 << num);
+  g_object_set (pipeline, "flags", flags, NULL);
+}
+
+static void
+vis_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  update_flag (pipeline, 3, gtk_toggle_button_get_active (button));
+}
+
+static void
+audio_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  update_flag (pipeline, 1, gtk_toggle_button_get_active (button));
+}
+
+static void
+video_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  update_flag (pipeline, 0, gtk_toggle_button_get_active (button));
+}
+
+static void
+text_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  update_flag (pipeline, 2, gtk_toggle_button_get_active (button));
+}
+
+static void
+update_streams (GstPipeline * pipeline)
+{
+  gint n_video, n_audio, n_text;
+
+  /* here we get and update the different streams detected by playbin2 */
+  g_object_get (pipeline, "n-video", &n_video, NULL);
+  g_object_get (pipeline, "n-audio", &n_audio, NULL);
+  g_object_get (pipeline, "n-text", &n_text, NULL);
+
+  g_print ("video %d, audio %d, text %d\n", n_video, n_audio, n_text);
+
+}
+
+static void
 message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   const GstStructure *s;
@@ -1475,6 +1533,18 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 }
 
 static void
+msg_async_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+{
+  GST_DEBUG ("async done");
+  /* when we get ASYNC_DONE we can query position, duration and other
+   * properties */
+  update_scale (pipeline);
+
+  /* update the available streams */
+  update_streams (pipeline);
+}
+
+static void
 msg_state_changed (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   const GstStructure *s;
@@ -1487,7 +1557,7 @@ msg_state_changed (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 
     gst_message_parse_state_changed (message, &old, &new, &pending);
 
-    /* When state of the pipeline changes to playing we start updating scale */
+    /* When state of the pipeline changes to paused or playing we start updating scale */
     if (new == GST_STATE_PLAYING) {
       set_update_scale (TRUE);
     } else {
@@ -1542,7 +1612,7 @@ print_usage (int argc, char **argv)
 int
 main (int argc, char **argv)
 {
-  GtkWidget *window, *hbox, *vbox, *flagtable;
+  GtkWidget *window, *hbox, *vbox, *panel, *boxes, *flagtable;
   GtkWidget *play_button, *pause_button, *stop_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GtkWidget *scrub_checkbox, *play_scrub_checkbox, *rate_spinbutton;
@@ -1655,6 +1725,40 @@ main (int argc, char **argv)
   gtk_signal_connect (GTK_OBJECT (hscale),
       "format_value", G_CALLBACK (format_value), pipeline);
 
+  if (pipeline_type == 16) {
+    /* the playbin2 panel controls for the video/audio/subtitle tracks */
+    panel = gtk_hbox_new (FALSE, 0);
+    boxes = gtk_hbox_new (FALSE, 0);
+    video_combo = gtk_combo_box_new_text ();
+    audio_combo = gtk_combo_box_new_text ();
+    text_combo = gtk_combo_box_new_text ();
+    gtk_box_pack_start (GTK_BOX (panel), video_combo, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (panel), audio_combo, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (panel), text_combo, TRUE, TRUE, 2);
+    vis_checkbox = gtk_check_button_new_with_label ("Vis");
+    video_checkbox = gtk_check_button_new_with_label ("Video");
+    audio_checkbox = gtk_check_button_new_with_label ("Audio");
+    text_checkbox = gtk_check_button_new_with_label ("Text");
+    gtk_box_pack_start (GTK_BOX (boxes), vis_checkbox, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (boxes), audio_checkbox, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (boxes), video_checkbox, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (boxes), text_checkbox, TRUE, TRUE, 2);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (vis_checkbox), TRUE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (audio_checkbox), TRUE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (video_checkbox), TRUE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (text_checkbox), TRUE);
+    g_signal_connect (G_OBJECT (vis_checkbox), "toggled",
+        G_CALLBACK (vis_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (audio_checkbox), "toggled",
+        G_CALLBACK (audio_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (video_checkbox), "toggled",
+        G_CALLBACK (video_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (text_checkbox), "toggled",
+        G_CALLBACK (text_toggle_cb), pipeline);
+  } else {
+    panel = boxes = NULL;
+  }
+
   /* do the packing stuff ... */
   gtk_window_set_default_size (GTK_WINDOW (window), 250, 96);
   gtk_container_add (GTK_CONTAINER (window), vbox);
@@ -1674,6 +1778,10 @@ main (int argc, char **argv)
   gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_label, 3, 4, 0, 1);
   gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_spinbutton, 3, 4, 1,
       2);
+  if (panel && boxes) {
+    gtk_box_pack_start (GTK_BOX (vbox), panel, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (vbox), boxes, TRUE, TRUE, 2);
+  }
   gtk_box_pack_start (GTK_BOX (vbox), hscale, TRUE, TRUE, 2);
 
   /* connect things ... */
@@ -1717,6 +1825,8 @@ main (int argc, char **argv)
         (GCallback) msg_state_changed, pipeline);
     g_signal_connect (bus, "message::segment-done",
         (GCallback) msg_segment_done, pipeline);
+    g_signal_connect (bus, "message::async-done",
+        (GCallback) msg_async_done, pipeline);
 
     g_signal_connect (bus, "message::new-clock", (GCallback) message_received,
         pipeline);
