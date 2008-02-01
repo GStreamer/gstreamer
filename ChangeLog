@@ -1,3 +1,8 @@
+2008-02-01  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/gstutils.c:
+	Check if caps are not NULL (fix bug #510194)
+
 2008-02-01  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_loop),
