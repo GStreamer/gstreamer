@@ -25,6 +25,7 @@
     <xi:include href="xml/element-autovideosink.xml" />
     <xi:include href="xml/element-avidemux.xml" />
     <xi:include href="xml/element-avimux.xml" />
+    <xi:include href="xml/element-avisubtitle.xml" />
     <xi:include href="xml/element-cairotimeoverlay.xml" />
     <xi:include href="xml/element-cdiocddasrc.xml" />
     <xi:include href="xml/element-cmmldec.xml" />

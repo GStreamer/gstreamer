@@ -210,6 +210,20 @@ gst_avi_mux_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-avisubtitle</FILE>
+<TITLE>avisubtitle</TITLE>
+GstAviSubtitle
+<SUBSECTION Standard>
+GstAviSubtitleClass
+GST_TYPE_AVI_SUBTITLE
+GST_AVI_SUBTITLE
+GST_AVI_SUBTITLE_CLASS
+GST_IS_AVI_SUBTITLE
+GST_IS_AVI_SUBTITLE_CLASS
+gst_avi_subtitle_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-cairotimeoverlay</FILE>
 <TITLE>cairotimeoverlay</TITLE>
 GstCairoTimeOverlay

@@ -18,7 +18,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* FIXME: documentation */
+/**
+ * SECTION:element-avisubtitle
+ *
+ * <refsect2>
+ * <para>
+ * Parses the subtitle stream from an avi file.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=subtitle.avi ! avidemux name=demux ! queue ! avisubtitle ! subparse ! textoverlay name=overlay ! ffmpegcolorspace ! autovideosink demux. ! queue ! decodebin ! overlay.
+ * </programlisting>
+ * This plays an avi file with a video and subtitle stream.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2008-02-01
+ */
 
 /* example of a subtitle chunk in an avi file
  * 00000000: 47 41 42 32 00 02 00 10 00 00 00 45 00 6e 00 67  GAB2.......E.n.g
@@ -298,8 +315,8 @@ gst_avi_subtitle_base_init (gpointer klass)
       gst_static_pad_template_get (&src_template));
 
   gst_element_class_set_details_simple (element_class,
-      "Avi subtitle parser", "Codec/Demuxer", "Parse avi subtitle stream",
-      "Thijs Vermeir <thijsvermeir@gmail.com>");
+      "Avi subtitle parser", "Codec/Parser/Subtitle",
+      "Parse avi subtitle stream", "Thijs Vermeir <thijsvermeir@gmail.com>");
 }
 
 static void
