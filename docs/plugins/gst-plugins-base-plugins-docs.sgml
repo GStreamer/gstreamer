@@ -28,6 +28,7 @@
     <xi:include href="xml/element-gnomevfssrc.xml" />
     <xi:include href="xml/element-multifdsink.xml" />
     <xi:include href="xml/element-oggdemux.xml" />
+    <xi:include href="xml/element-oggmux.xml" />
     <xi:include href="xml/element-playbin.xml" />
     <xi:include href="xml/element-decodebin2.xml" />
     <xi:include href="xml/element-tcpserversink.xml" />

@@ -82,6 +82,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.h \
 	$(top_srcdir)/ext/gnomevfs/gstgnomevfssrc.h \
 	$(top_srcdir)/ext/ogg/gstoggdemux.h \
+	$(top_srcdir)/ext/ogg/gstoggmux.h \
 	$(top_srcdir)/ext/pango/gstclockoverlay.h \
 	$(top_srcdir)/ext/pango/gsttextoverlay.h \
 	$(top_srcdir)/ext/pango/gsttextrender.h \

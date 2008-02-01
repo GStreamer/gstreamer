@@ -6,12 +6,15 @@ GstAdder
 GST_ADDER
 GST_IS_ADDER
 GST_TYPE_ADDER
-gst_adder_factory_init
-gst_adder_get_type
 GST_ADDER_CLASS
 GST_IS_ADDER_CLASS
+GST_ADDER_GET_CLASS
+gst_adder_factory_init
+gst_adder_get_type
 GstAdderClass
 GstAdderFormat
+GstAdderFunction
+GstAdderInputChannel
 </SECTION>
 
 <SECTION>
@@ -36,14 +39,14 @@ GstAlsaSink
 GstAlsaSinkClass
 GST_ALSA_SINK
 GST_ALSA_SINK_CAST
-GST_ALSA_GET_LOCK
-GST_ALSA_LOCK
-GST_ALSA_UNLOCK
 GST_IS_ALSA_SINK
 GST_TYPE_ALSA_SINK
-gst_alsasink_get_type
 GST_ALSA_SINK_CLASS
 GST_IS_ALSA_SINK_CLASS
+GST_ALSA_SINK_GET_LOCK
+GST_ALSA_SINK_LOCK
+GST_ALSA_SINK_UNLOCK
+gst_alsasink_get_type
 </SECTION>
 
 <SECTION>
@@ -55,9 +58,13 @@ GstAlsaSrcClass
 GST_ALSA_SRC
 GST_IS_ALSA_SRC
 GST_TYPE_ALSA_SRC
-gst_alsasrc_get_type
 GST_ALSA_SRC_CLASS
 GST_IS_ALSA_SRC_CLASS
+GST_ALSA_SRC_CAST
+GST_ALSA_SRC_GET_LOCK
+GST_ALSA_SRC_LOCK
+GST_ALSA_SRC_UNLOCK
+gst_alsasrc_get_type
 </SECTION>
 
 <SECTION>
@@ -99,6 +106,7 @@ GST_IS_AUDIO_TEST_SRC
 GST_IS_AUDIO_TEST_SRC_CLASS
 GST_TYPE_AUDIO_TEST_SRC
 GstAudioTestSrcClass
+GstAudioTestSrcFormat
 gst_audio_test_src_factory_init
 gst_audio_test_src_get_type
 GstPinkNoise
@@ -113,6 +121,13 @@ PINK_RANDOM_SHIFT
 GstCdParanoiaSrc
 <SUBSECTION Standard>
 GstCdParanoiaSrcClass
+GST_CD_PARANOIA_SRC
+GST_CD_PARANOIA_SRC_CLASS
+GST_CD_PARANOIA_SRC_GET_CLASS
+GST_IS_CD_PARANOIA_SRC
+GST_IS_CD_PARANOIA_SRC_CLASS
+GST_TYPE_CD_PARANOIA_SRC
+gst_cd_paranoia_src_get_type
 </SECTION>
 
 <SECTION>
@@ -154,6 +169,13 @@ GstGDPDepay
 <TITLE>gdpdepay</TITLE>
 <SUBSECTION Standard>
 GstGDPDepayClass
+GstGDPDepayState
+GST_GDP_DEPAY
+GST_GDP_DEPAY_CLASS
+GST_IS_GDP_DEPAY
+GST_IS_GDP_DEPAY_CLASS
+GST_TYPE_GDP_DEPAY
+gst_gdp_depay_plugin_init
 </SECTION>
 
 <SECTION>
@@ -162,8 +184,13 @@ GstGDPPay
 <TITLE>gdppay</TITLE>
 <SUBSECTION Standard>
 GstGDPPayClass
+GST_GDP_PAY
+GST_GDP_PAY_CLASS
+GST_IS_GDP_PAY
+GST_IS_GDP_PAY_CLASS
+GST_TYPE_GDP_PAY
+gst_gdp_pay_plugin_init
 </SECTION>
-
 
 <SECTION>
 <FILE>element-multifdsink</FILE>
@@ -188,10 +215,12 @@ GstUnitType
 GstMultiFdSinkFlags
 GstMultiFdSinkClass
 gst_multi_fd_sink_add
+gst_multi_fd_sink_add_full
 gst_multi_fd_sink_clear
 gst_multi_fd_sink_get_stats
 gst_multi_fd_sink_get_type
 gst_multi_fd_sink_remove
+gst_multi_fd_sink_remove_flush
 </SECTION>
 
 <SECTION>
@@ -229,7 +258,19 @@ GstOggDemux
 <SUBSECTION Standard>
 GST_OGG_DEMUX
 GST_OGG_DEMUX_CLASS
+GST_TYPE_OGG_DEMUX
 GstOggDemuxClass
+</SECTION>
+
+<SECTION>
+<FILE>element-oggmux</FILE>
+<TITLE>oggmux</TITLE>
+GstOggMux
+<SUBSECTION Standard>
+GST_OGG_MUX
+GST_OGG_MUX_CLASS
+GST_TYPE_OGG_MUX
+GstOggMuxClass
 </SECTION>
 
 <SECTION>
@@ -413,13 +454,13 @@ GST_IS_VORBIS_DEC_CLASS
 GstVorbisEnc
 <SUBSECTION Standard>
 GstVorbisEncClass
-vorbisenc_get_type
 GST_IS_VORBISENC
 GST_VORBISENC_CLASS
 GST_VORBISENC
 GST_TCP_SERVER_SINK_CLASS
 GST_TYPE_VORBISENC
 GST_IS_VORBISENC_CLASS
+gst_vorbis_enc_get_type
 </SECTION>
 
 <SECTION>

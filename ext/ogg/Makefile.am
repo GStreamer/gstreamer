@@ -9,7 +9,7 @@ libgstogg_la_SOURCES = \
 	gstoggparse.c
 
 noinst_HEADERS = \
-	gstoggdemux.h
+	gstoggdemux.h gstoggmux.h
 
 libgstogg_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(OGG_CFLAGS) 
 libgstogg_la_LIBADD = \
