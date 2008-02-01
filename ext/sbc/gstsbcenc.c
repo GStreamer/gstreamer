@@ -34,10 +34,15 @@
 #define SBC_ENC_DEFAULT_MODE BT_A2DP_CHANNEL_MODE_AUTO
 #define SBC_ENC_DEFAULT_BLOCKS 0
 #define SBC_ENC_DEFAULT_SUB_BANDS 0
-#define SBC_ENC_DEFAULT_BITPOOL 0
 #define SBC_ENC_DEFAULT_ALLOCATION BT_A2DP_ALLOCATION_AUTO
 #define SBC_ENC_DEFAULT_RATE 0
 #define SBC_ENC_DEFAULT_CHANNELS 0
+
+#define SBC_ENC_BITPOOL_AUTO 1
+#define SBC_ENC_BITPOOL_MIN 2
+#define SBC_ENC_BITPOOL_MIN_STR "2"
+#define SBC_ENC_BITPOOL_MAX 64
+#define SBC_ENC_BITPOOL_MAX_STR "64"
 
 GST_DEBUG_CATEGORY_STATIC (sbc_enc_debug);
 #define GST_CAT_DEFAULT sbc_enc_debug
@@ -83,13 +88,54 @@ gst_sbc_allocation_get_type (void)
   return sbc_allocation_type;
 }
 
+#define GST_TYPE_SBC_BLOCKS (gst_sbc_blocks_get_type())
+
+static GType
+gst_sbc_blocks_get_type (void)
+{
+  static GType sbc_blocks_type = 0;
+  static GEnumValue sbc_blocks[] = {
+    {0, "Auto", "auto"},
+    {4, "4", "4"},
+    {8, "8", "8"},
+    {12, "12", "12"},
+    {16, "16", "16"},
+    {-1, NULL, NULL}
+  };
+
+  if (!sbc_blocks_type)
+    sbc_blocks_type = g_enum_register_static ("GstSbcBlocks", sbc_blocks);
+
+  return sbc_blocks_type;
+}
+
+#define GST_TYPE_SBC_SUBBANDS (gst_sbc_subbands_get_type())
+
+static GType
+gst_sbc_subbands_get_type (void)
+{
+  static GType sbc_subbands_type = 0;
+  static GEnumValue sbc_subbands[] = {
+    {0, "Auto", "auto"},
+    {4, "4 subbands", "4"},
+    {8, "8 subbands", "8"},
+    {-1, NULL, NULL}
+  };
+
+  if (!sbc_subbands_type)
+    sbc_subbands_type = g_enum_register_static ("GstSbcSubbands", sbc_subbands);
+
+  return sbc_subbands_type;
+}
+
 enum
 {
   PROP_0,
   PROP_MODE,
   PROP_ALLOCATION,
   PROP_BLOCKS,
-  PROP_SUBBANDS
+  PROP_SUBBANDS,
+  PROP_BITPOOL
 };
 
 GST_BOILERPLATE (GstSbcEnc, gst_sbc_enc, GstElement, GST_TYPE_ELEMENT);
@@ -117,7 +163,8 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         "blocks = (int) { 4, 8, 12, 16 }, "
         "subbands = (int) { 4, 8 }, "
         "allocation = (string) { snr, loudness },"
-        "bitpool = (int) [ 2, 64 ]"));
+        "bitpool = (int) [ " SBC_ENC_BITPOOL_MIN_STR
+        ", " SBC_ENC_BITPOOL_MAX_STR " ]"));
 
 gboolean gst_sbc_enc_fill_sbc_params (GstSbcEnc * enc, GstCaps * caps);
 
@@ -150,6 +197,10 @@ sbc_enc_generate_srcpad_caps (GstSbcEnc * enc)
   if (enc->blocks != 0)
     gst_sbc_util_set_structure_int_param (structure, "blocks",
         enc->blocks, value);
+
+  if (enc->bitpool != SBC_ENC_BITPOOL_AUTO)
+    gst_sbc_util_set_structure_int_param (structure, "bitpool",
+        enc->bitpool, value);
 
   if (enc->mode != BT_A2DP_CHANNEL_MODE_AUTO) {
     enum_class = g_type_class_ref (GST_TYPE_SBC_MODE);
@@ -205,7 +256,7 @@ sbc_enc_src_caps_fixate (GstSbcEnc * enc, GstCaps * caps)
   result = gst_sbc_util_caps_fixate (caps, &error_message);
 
   if (!result) {
-    GST_ERROR_OBJECT (enc, "Invalid input caps caused parsing "
+    GST_WARNING_OBJECT (enc, "Invalid input caps caused parsing "
         "error: %s", error_message);
     g_free (error_message);
     return NULL;
@@ -217,18 +268,13 @@ sbc_enc_src_caps_fixate (GstSbcEnc * enc, GstCaps * caps)
 static GstCaps *
 sbc_enc_get_fixed_srcpad_caps (GstSbcEnc * enc)
 {
-  GstCaps *peer_caps;
-  GstCaps *src_caps;
   GstCaps *caps;
   gboolean res = TRUE;
   GstCaps *result_caps = NULL;
 
-  peer_caps = gst_pad_peer_get_caps (enc->srcpad);
-  if (!peer_caps)
-    return NULL;
-
-  src_caps = sbc_enc_generate_srcpad_caps (enc);
-  caps = gst_caps_intersect (src_caps, peer_caps);
+  caps = gst_pad_get_allowed_caps (enc->srcpad);
+  if (caps == NULL)
+    caps = sbc_enc_src_getcaps (enc->srcpad);
 
   if (caps == GST_CAPS_NONE || gst_caps_is_empty (caps)) {
     res = FALSE;
@@ -238,9 +284,6 @@ sbc_enc_get_fixed_srcpad_caps (GstSbcEnc * enc)
   result_caps = sbc_enc_src_caps_fixate (enc, caps);
 
 done:
-
-  gst_caps_unref (src_caps);
-  gst_caps_unref (peer_caps);
   gst_caps_unref (caps);
 
   if (!res)
@@ -262,46 +305,70 @@ sbc_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_int (structure, "rate", &rate))
-    goto error;
+    return FALSE;
   if (!gst_structure_get_int (structure, "channels", &channels))
-    goto error;
+    return FALSE;
 
   enc->rate = rate;
   enc->channels = channels;
 
   src_caps = sbc_enc_get_fixed_srcpad_caps (enc);
   if (!src_caps)
-    goto error;
+    return FALSE;
   res = gst_pad_set_caps (enc->srcpad, src_caps);
   gst_caps_unref (src_caps);
 
   return res;
-
-error:
-  GST_ERROR_OBJECT (enc, "invalid input caps");
-  return FALSE;
 }
 
 gboolean
 gst_sbc_enc_fill_sbc_params (GstSbcEnc * enc, GstCaps * caps)
 {
+  gint mode;
+
+  if (!gst_caps_is_fixed (caps)) {
+    GST_DEBUG_OBJECT (enc, "didn't receive fixed caps, " "returning false");
+    return FALSE;
+  }
 
   if (!gst_sbc_util_fill_sbc_params (&enc->sbc, caps))
     return FALSE;
 
-  enc->rate = enc->sbc.rate;
-  enc->channels = enc->sbc.channels;
-  enc->blocks = enc->sbc.blocks;
-  enc->subbands = enc->sbc.subbands;
-  enc->mode = enc->sbc.joint;
-  enc->allocation = enc->sbc.allocation;
+  if (enc->rate != 0 && enc->sbc.rate != enc->rate)
+    goto fail;
+
+  if (enc->channels != 0 && enc->sbc.channels != enc->channels)
+    goto fail;
+
+  if (enc->blocks != 0 && enc->sbc.blocks != enc->blocks)
+    goto fail;
+
+  if (enc->subbands != 0 && enc->sbc.subbands != enc->subbands)
+    goto fail;
+
+  mode = gst_sbc_get_mode_int_from_sbc_t (&enc->sbc);
+  if (enc->mode != BT_A2DP_CHANNEL_MODE_AUTO && mode != enc->mode)
+    goto fail;
+
+  if (enc->allocation != BT_A2DP_ALLOCATION_AUTO &&
+      enc->sbc.allocation != enc->allocation)
+    goto fail;
+
+  if (enc->bitpool != SBC_ENC_BITPOOL_AUTO && enc->sbc.bitpool != enc->bitpool)
+    goto fail;
+
   enc->codesize = sbc_get_codesize (&enc->sbc);
   enc->frame_length = sbc_get_frame_length (&enc->sbc);
   enc->frame_duration = sbc_get_frame_duration (&enc->sbc);
+
   GST_DEBUG ("codesize: %d, frame_length: %d, frame_duration: %d",
       enc->codesize, enc->frame_length, enc->frame_duration);
 
   return TRUE;
+
+fail:
+  memset (&enc->sbc, 0, sizeof (sbc_t));
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -398,24 +465,6 @@ gst_sbc_enc_base_init (gpointer g_class)
   gst_element_class_set_details (element_class, &sbc_enc_details);
 }
 
-static gboolean
-sbc_enc_set_blocks (GstSbcEnc * enc, gint value)
-{
-  if (value != 4 && value != 8 && value != 12 && value != 16 && value != 0)
-    return FALSE;
-  enc->blocks = value;
-  return TRUE;
-}
-
-static gboolean
-sbc_enc_set_subbands (GstSbcEnc * enc, gint value)
-{
-  if (value != 4 && value != 8 && value != 0)
-    return FALSE;
-  enc->subbands = value;
-  return TRUE;
-}
-
 static void
 gst_sbc_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -433,14 +482,13 @@ gst_sbc_enc_set_property (GObject * object, guint prop_id,
       enc->allocation = g_value_get_enum (value);
       break;
     case PROP_BLOCKS:
-      if (!sbc_enc_set_blocks (enc, g_value_get_int (value)))
-        GST_WARNING_OBJECT (enc, "invalid value %d for "
-            "blocks property", g_value_get_int (value));
+      enc->blocks = g_value_get_enum (value);
       break;
     case PROP_SUBBANDS:
-      if (!sbc_enc_set_subbands (enc, g_value_get_int (value)))
-        GST_WARNING_OBJECT (enc, "invalid value %d for "
-            "subbands property", g_value_get_int (value));
+      enc->subbands = g_value_get_enum (value);
+      break;
+    case PROP_BITPOOL:
+      enc->bitpool = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -462,10 +510,13 @@ gst_sbc_enc_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, enc->allocation);
       break;
     case PROP_BLOCKS:
-      g_value_set_int (value, enc->blocks);
+      g_value_set_enum (value, enc->blocks);
       break;
     case PROP_SUBBANDS:
-      g_value_set_int (value, enc->subbands);
+      g_value_set_enum (value, enc->subbands);
+      break;
+    case PROP_BITPOOL:
+      g_value_set_int (value, enc->bitpool);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -494,17 +545,24 @@ gst_sbc_enc_class_init (GstSbcEncClass * klass)
 
   g_object_class_install_property (object_class, PROP_ALLOCATION,
       g_param_spec_enum ("allocation", "Allocation",
-          "Allocation mode", GST_TYPE_SBC_ALLOCATION,
+          "Allocation method", GST_TYPE_SBC_ALLOCATION,
           SBC_ENC_DEFAULT_ALLOCATION, G_PARAM_READWRITE));
 
   g_object_class_install_property (object_class, PROP_BLOCKS,
-      g_param_spec_int ("blocks", "Blocks",
-          "Blocks", 0, G_MAXINT, SBC_ENC_DEFAULT_BLOCKS, G_PARAM_READWRITE));
+      g_param_spec_enum ("blocks", "Blocks",
+          "Blocks", GST_TYPE_SBC_BLOCKS,
+          SBC_ENC_DEFAULT_BLOCKS, G_PARAM_READWRITE));
 
   g_object_class_install_property (object_class, PROP_SUBBANDS,
-      g_param_spec_int ("subbands", "Sub Bands",
-          "Sub Bands", 0, G_MAXINT,
+      g_param_spec_enum ("subbands", "Sub bands",
+          "Number of sub bands", GST_TYPE_SBC_SUBBANDS,
           SBC_ENC_DEFAULT_SUB_BANDS, G_PARAM_READWRITE));
+
+  g_object_class_install_property (object_class, PROP_BITPOOL,
+      g_param_spec_int ("bitpool", "Bitpool",
+          "Bitpool (use 1 for automatic selection)",
+          SBC_ENC_BITPOOL_AUTO, SBC_ENC_BITPOOL_MAX,
+          SBC_ENC_BITPOOL_AUTO, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (sbc_enc_debug, "sbcenc", 0, "SBC encoding element");
 }
@@ -533,6 +591,7 @@ gst_sbc_enc_init (GstSbcEnc * self, GstSbcEncClass * klass)
   self->allocation = SBC_ENC_DEFAULT_ALLOCATION;
   self->rate = SBC_ENC_DEFAULT_RATE;
   self->channels = SBC_ENC_DEFAULT_CHANNELS;
+  self->bitpool = SBC_ENC_BITPOOL_AUTO;
 
   self->frame_length = 0;
   self->frame_duration = 0;

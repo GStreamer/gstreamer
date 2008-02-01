@@ -42,8 +42,9 @@ const gchar *gst_sbc_get_allocation_from_list(const GValue *value);
 gint gst_sbc_get_allocation_mode_int(const gchar *allocation);
 const gchar *gst_sbc_get_allocation_string(int alloc);
 
-const gchar *gst_sbc_get_mode_from_list(const GValue *value);
+const gchar *gst_sbc_get_mode_from_list(const GValue *value, gint channels);
 gint gst_sbc_get_mode_int(const gchar *mode);
+gint gst_sbc_get_mode_int_from_sbc_t(const sbc_t *sbc);
 const gchar *gst_sbc_get_mode_string(int joint);
 
 GstCaps* gst_sbc_caps_from_sbc(sbc_capabilities_t *sbc, gint channels);

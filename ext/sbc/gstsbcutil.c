@@ -97,21 +97,39 @@ gst_sbc_get_allocation_from_list (const GValue * value)
  * Selects one mode from the ones on the list
  */
 const gchar *
-gst_sbc_get_mode_from_list (const GValue * list)
+gst_sbc_get_mode_from_list (const GValue * list, gint channels)
 {
   int i;
   const GValue *value;
   const gchar *aux;
+  gboolean joint, stereo, dual, mono;
 
+  joint = stereo = dual = mono = FALSE;
   guint size = gst_value_list_get_size (list);
+
   for (i = 0; i < size; i++) {
     value = gst_value_list_get_value (list, i);
     aux = g_value_get_string (value);
-    if (strcmp ("joint", aux) == 0) {
-      return "joint";
-    }
+    if (strcmp ("joint", aux) == 0)
+      joint = TRUE;
+    else if (strcmp ("stereo", aux) == 0)
+      stereo = TRUE;
+    else if (strcmp ("dual", aux) == 0)
+      dual = TRUE;
+    else if (strcmp ("mono", aux) == 0)
+      mono = TRUE;
   }
-  return g_value_get_string (gst_value_list_get_value (list, size - 1));
+
+  if (channels == 1 && mono)
+    return "mono";
+  else if (channels == 2) {
+    if (joint)
+      return "joint";
+    else if (stereo)
+      return "stereo";
+  }
+
+  return NULL;
 }
 
 gint
@@ -158,8 +176,22 @@ gst_sbc_get_mode_int_for_sbc_t (const gchar * mode)
     return -1;
 }
 
+gint
+gst_sbc_get_mode_int_from_sbc_t (const sbc_t * sbc)
+{
+  /* TODO define constants */
+  if (sbc->channels == 2 && sbc->joint == 1)
+    return 4;
+  else if (sbc->channels == 2 && sbc->joint == 0)
+    return 3;
+  else if (sbc->channels == 1)
+    return 1;
+  else
+    return -1;
+}
+
 const gchar *
-gst_sbc_get_mode_string (int joint)
+gst_sbc_get_mode_string (gint joint)
 {
   switch (joint) {
     case BT_A2DP_CHANNEL_MODE_MONO:
@@ -178,7 +210,7 @@ gst_sbc_get_mode_string (int joint)
 }
 
 const gchar *
-gst_sbc_get_allocation_string (int alloc)
+gst_sbc_get_allocation_string (gint alloc)
 {
   switch (alloc) {
     case BT_A2DP_ALLOCATION_LOUDNESS:
@@ -203,7 +235,7 @@ gst_sbc_get_allocation_string (int alloc)
 #define SBC_AM_SNR              0x01
 
 const gchar *
-gst_sbc_get_mode_string_from_sbc_t (int channels, int joint)
+gst_sbc_get_mode_string_from_sbc_t (gint channels, gint joint)
 {
   if (channels == 2 && joint == 1)
     return "joint";
@@ -216,7 +248,7 @@ gst_sbc_get_mode_string_from_sbc_t (int channels, int joint)
 }
 
 const gchar *
-gst_sbc_get_allocation_string_from_sbc_t (int alloc)
+gst_sbc_get_allocation_string_from_sbc_t (gint alloc)
 {
   switch (alloc) {
     case SBC_AM_LOUDNESS:
@@ -378,12 +410,20 @@ gst_sbc_util_caps_fixate (GstCaps * caps, gchar ** error_message)
   } else {
     value = gst_structure_get_value (structure, "mode");
     if (GST_VALUE_HOLDS_LIST (value)) {
-      if (channels == 1)
-        mode = "mono";
-      else
-        mode = gst_sbc_get_mode_from_list (value);
+      mode = gst_sbc_get_mode_from_list (value, channels);
     } else
       mode = g_value_get_string (value);
+  }
+
+  /* perform validation
+   * if channels is 1, we must have channel mode = mono
+   * if channels is 2, we can't have channel mode = mono, dual */
+  if ((channels == 1 && (strcmp (mode, "mono") != 0)) ||
+      (channels == 2 && (strcmp (mode, "mono") == 0 ||
+              strcmp (mode, "dual") == 0))) {
+    *error_message = g_strdup_printf ("Invalid combination of "
+        "channels (%d) and channel mode (%s)", channels, mode);
+    error = TRUE;
   }
 
 error:
