@@ -1,5 +1,13 @@
 2008-02-01  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/README:
+	  Some more details about how the plugin docs works.
+
+	* docs/plugins/gstreamer-plugins-sections.txt:
+	  Whitespace cleanup.
+
+2008-02-01  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/parse/grammar.tab.pre.c:
 	* gst/parse/grammar.tab.pre.h:
 	* gst/parse/grammar.y:

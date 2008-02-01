@@ -17,7 +17,6 @@ GST_IS_FAKE_SRC_CLASS
 gst_fake_src_get_type
 </SECTION>
 
-
 <SECTION>
 <FILE>element-fakesink</FILE>
 <TITLE>fakesink</TITLE>
@@ -79,7 +78,6 @@ GST_IS_FILE_SRC_CLASS
 <SUBSECTION Private>
 gst_file_src_get_type
 </SECTION>
-
 
 <SECTION>
 <FILE>element-filesink</FILE>

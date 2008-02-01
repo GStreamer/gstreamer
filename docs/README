@@ -243,12 +243,29 @@ in the various plugin packages.
       cvs add inspect
       cvs add inspect/*.xml
 
+- to add a plugin to be documented:
+  - make sure inspect/ has generated a inspect/plugin-xxx.xml file for it.
+    - if it has not, make sure you have pygst installed and run 'make update'.
+      and add it to CVS.
+  - add an xi:include in -docs.sgml in the Plugins chapter for that plugin
+
 - to add an element to be documented:
-  - add an include href in the Elements chapter for the element
-    in the main .sgml
+  - add an xi:include in the Elements chapter for the element
+    in the main -docs.sgml
   - add a section for it in -sections.txt with
+      <SECTION>
       <FILE>element-(element)</FILE>
       <TITLE>(element)</TITLE>
+      GstXxx
+      <SUBSECTION Standard>
+      GstXxxClass
+      GST_XXX
+      GST_XXX_CLASS
+      GST_IS_XXX
+      GST_IS_XXX_CLASS
+      GST_TYPE_XXX
+      gst_xxx_get_type
+      </SECTION>
   - add a gtk-doc section to the source code like:
 /**
  * SECTION:element-multifdsink
@@ -272,8 +289,7 @@ in the various plugin packages.
      make sure the xinclude is in the source itself instead ?)
   - to rebuild the docs, do:
     make clean
-    make scanobj-update
-    make inspect-update
+    make update
     make
   - examples will only show up using gtk-doc 1.4 or later - it relies on
     merging stuff from .sgml with inline docs.  We might want to change
@@ -282,15 +298,27 @@ in the various plugin packages.
     - changes to *.signals and *.args
     - new files for your plugin created in inspect/
 
-- to add a plugin to be documented:
-  - make sure inspect/ has generated a .xml file for it. If it has not, make
-    sure you have pygst installed and run 'make update-inspect'.
-  - add it to CVS
-  - add an include in -docs.sgml in the Plugins list for that plugin
+- the plugin-doc-list on the gstreamer homepage is updated along with other
+  web site updates.
+
+- maintainer tricks:
+  - find files that have docs
+    for file in `find . -name "*.c" -exec grep -l " * SECTION:element-" {} \; | sort`; do if [ -e ${file/.c/.h} ]; then echo ${file/.c/.h}; else echo "no header for $file"; fi; done
+    for file in `find . -name "*.cc" -exec grep -l " * SECTION:element-" {} \; | sort`; do if [ -e ${file/.cc/.h} ]; then echo ${file/.cc/.h}; else echo "no header for $file"; fi; done
+    - add those .h files to EXTRA_HFILES in Makefile.am
+  - update gst-plugins-xxx-docs.sgml
+    cd docs/plugins
+    ls -1 xml/plugin-*.xml | sort | sed -e "s/\(.*\)/    \<xi:include href=\"\1\" \/\>/"
+    ls -1 xml/element-*.xml | grep -v -- "-details.xml" | sort | sed -e "s/\(.*\)/    \<xi:include href=\"\1\" \/\>/"
+    - maybe we can generate these lists after "make update" and just xi:include
+      them in gst-plugins-xxx-docs.sgml. They should be committed to the vcs.
 
 - possible errors:
-  "multiple constraints for linkend ID": check if each section in
-  -sections.txt actually starts and ends with <SECTION> and </SECTION>
+  - "multiple constraints for linkend ID":
+    check if each section in -sections.txt actually starts and ends with
+    <SECTION> and </SECTION>
+  - if a plugin does not show up:
+    - check inspect/plugin-xxx.xml and inspect/elements-
 
 RANDOM THINGS I'VE LEARNED
 ==========================
@@ -344,7 +372,7 @@ Check http://www.imendio.com/projects/devhelp/
 It's a really nice development app allowing you to look up API stuff
 from various gtk-doc'd libraries.  GStreamer is one of these ;)
 
-gtk-doc generates both html API docs and the matching .devhelp files
+gtk-doc generates both html API docs and the matching .devhelp(2) books.
 
 IMAGES
 ------
