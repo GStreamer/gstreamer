@@ -2653,6 +2653,7 @@ paused:
     gst_pad_pause_task (pad);
     /* fatal errors and NOT_LINKED cause EOS */
     if (GST_FLOW_IS_FATAL (result) || result == GST_FLOW_NOT_LINKED) {
+      /* FIXME, we shouldn't post EOS when we are operating in segment mode */
       gst_base_sink_event (pad, gst_event_new_eos ());
       /* EOS does not cause an ERROR message */
       if (result != GST_FLOW_UNEXPECTED) {
@@ -2995,17 +2996,35 @@ static gboolean
 gst_base_sink_get_position_paused (GstBaseSink * basesink, gint64 * cur)
 {
   gboolean res;
+  gint64 time;
+  GstSegment *segment;
 
   *cur = basesink->priv->current_sstart;
+  segment = basesink->abidata.ABI.clip_segment;
 
-  if (*cur != -1)
-    *cur = MAX (*cur, basesink->abidata.ABI.clip_segment->time);
-  else
-    *cur = basesink->abidata.ABI.clip_segment->time;
+  time = segment->time;
 
+  if (*cur != -1) {
+    *cur = MAX (*cur, time);
+    GST_DEBUG_OBJECT (basesink, "POSITION as max: %" GST_TIME_FORMAT
+        ", time %" GST_TIME_FORMAT, GST_TIME_ARGS (*cur), GST_TIME_ARGS (time));
+  } else {
+    /* we have no buffer, use the segment times. */
+    if (segment->rate >= 0.0) {
+      /* forward, next position is always the time of the segment */
+      *cur = time;
+      GST_DEBUG_OBJECT (basesink, "POSITION as time: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (*cur));
+    } else {
+      /* reverse, next expected timestamp is segment->stop. We use the function
+       * to get things right for negative applied_rates. */
+      *cur =
+          gst_segment_to_stream_time (segment, GST_FORMAT_TIME, segment->stop);
+      GST_DEBUG_OBJECT (basesink, "reverse POSITION: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (*cur));
+    }
+  }
   res = (*cur != -1);
-  GST_DEBUG_OBJECT (basesink, "POSITION: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (*cur));
 
   return res;
 }
