@@ -200,9 +200,8 @@ change_tag_list (GstTagList ** list, const gchar * tag, const gchar * value)
       }
         break;
       default:
-        fprintf (stderr,
-            "This app still doesn't handle type (%s)(%" G_GSIZE_FORMAT ")\n",
-            g_type_name (type), type);
+        g_printerr ("Tags of type '%s' are not supported yet.\n",
+            g_type_name (type));
         break;
     }
   }

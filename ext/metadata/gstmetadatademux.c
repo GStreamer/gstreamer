@@ -570,5 +570,5 @@ gst_metadata_demux_plugin_init (GstPlugin * plugin)
       "Metadata demuxer");
 
   return gst_element_register (plugin, "metadatademux",
-      GST_RANK_PRIMARY + 1, GST_TYPE_METADATA_DEMUX);
+      GST_RANK_NONE, GST_TYPE_METADATA_DEMUX);
 }

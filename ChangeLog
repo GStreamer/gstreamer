@@ -1,3 +1,13 @@
+2008-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/metadata/gstmetadatademux.c:
+	  Demote metadatademux to GST_RANK_NONE for the release, it's not
+	  ready to be autoplugged yet.
+
+	* tests/icles/metadata_editor.c:
+	  Fix printf format warning for GType on ppc32 by removing it,
+	  since it doesn't make sense to print the GType value anyway.
+
 2008-02-02  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/TODO:
