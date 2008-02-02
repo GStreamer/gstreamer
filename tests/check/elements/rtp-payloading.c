@@ -1,8 +1,6 @@
-/* GStreamer
+/* GStreamer RTP payloader unit tests
  * Copyright (C) 2008 Nokia Corporation and its subsidary(-ies)
  *               contact: <stefan.kost@nokia.com>
- *
- * rtp-full.c: Unit test for dataflow in rtppayloaders
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -47,7 +45,7 @@ typedef struct
 /*
  * RTP bus callback.
  */
-gboolean
+static gboolean
 rtp_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
   GMainLoop *mainloop = (GMainLoop *) data;
@@ -57,12 +55,16 @@ rtp_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     {
       GError *err;
       gchar *debug;
+      gchar *element_name;
 
+      element_name = (message->src) ? gst_object_get_name (message->src) : NULL;
       gst_message_parse_error (message, &err, &debug);
-      /* FIXME: should we fail the test here */
-      g_print ("Error: %s\n", err->message);
+      /* FIXME: should we fail the test here? */
+      g_print ("\nError from element %s: %s\n%s\n\n",
+          GST_STR_NULL (element_name), err->message, (debug) ? debug : "");
       g_error_free (err);
       g_free (debug);
+      g_free (element_name);
 
       g_main_loop_quit (mainloop);
     }
@@ -96,10 +98,12 @@ rtp_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
  * Returns pointer to the RTP pipeline.
  * The user must free the RTP pipeline when it's not used anymore.
  */
-rtp_pipeline *
+static rtp_pipeline *
 rtp_pipeline_create (const char *frame_data, int frame_data_size,
     int frame_count, const char *filtercaps, const char *pay, const char *depay)
 {
+  gchar *pipeline_name;
+
   /* Check parameters. */
   if (!frame_data || !pay || !depay) {
     return NULL;
@@ -113,7 +117,9 @@ rtp_pipeline_create (const char *frame_data, int frame_data_size,
   p->frame_count = frame_count;
 
   /* Create elements. */
-  p->pipeline = gst_pipeline_new ("rtp_pipeline");
+  pipeline_name = g_strdup_printf ("%s-%s-pipeline", pay, depay);
+  p->pipeline = gst_pipeline_new (pipeline_name);
+  g_free (pipeline_name);
   p->fdsrc = gst_element_factory_make ("fdsrc", NULL);
   p->capsfilter = gst_element_factory_make ("capsfilter", NULL);
   p->rtppay = gst_element_factory_make (pay, NULL);
@@ -178,7 +184,7 @@ rtp_pipeline_create (const char *frame_data, int frame_data_size,
  * Destroys the RTP pipeline.
  * @param p Pointer to the RTP pipeline.
  */
-void
+static void
 rtp_pipeline_destroy (rtp_pipeline * p)
 {
   /* Check parameters. */
@@ -206,7 +212,7 @@ rtp_pipeline_destroy (rtp_pipeline * p)
  * Runs the RTP pipeline.
  * @param p Pointer to the RTP pipeline.
  */
-void
+static void
 rtp_pipeline_run (rtp_pipeline * p)
 {
   GMainLoop *mainloop = NULL;
@@ -266,7 +272,7 @@ rtp_pipeline_run (rtp_pipeline * p)
  * @param pay Payloader name.
  * @param depay Depayloader name.
  */
-void
+static void
 rtp_pipeline_test (const char *frame_data, int frame_data_size, int frame_count,
     const char *filtercaps, const char *pay, const char *depay)
 {
@@ -274,6 +280,7 @@ rtp_pipeline_test (const char *frame_data, int frame_data_size, int frame_count,
   rtp_pipeline *p =
       rtp_pipeline_create (frame_data, frame_data_size, frame_count, filtercaps,
       pay, depay);
+
   if (p == NULL) {
     return;
   }
@@ -287,220 +294,235 @@ rtp_pipeline_test (const char *frame_data, int frame_data_size, int frame_count,
 
 static char rtp_ilbc_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_ilbc_frame_data_size = 20;
 static int rtp_ilbc_frame_count = 1;
 
 GST_START_TEST (rtp_ilbc)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_ilbc_frame_data, rtp_ilbc_frame_data_size,
       rtp_ilbc_frame_count, "audio/x-iLBC,mode=20", "rtpilbcpay",
       "rtpilbcdepay");
 }
-GST_END_TEST
-    static char rtp_gsm_frame_data[] =
+
+GST_END_TEST;
+static char rtp_gsm_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_gsm_frame_data_size = 20;
 static int rtp_gsm_frame_count = 1;
 
 GST_START_TEST (rtp_gsm)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_gsm_frame_data, rtp_gsm_frame_data_size,
       rtp_gsm_frame_count, "audio/x-gsm,rate=8000,channels=1", "rtpgsmpay",
       "rtpgsmdepay");
 }
-GST_END_TEST
-    static char rtp_amr_frame_data[] =
+
+GST_END_TEST;
+static char rtp_amr_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_amr_frame_data_size = 20;
 static int rtp_amr_frame_count = 1;
 
 GST_START_TEST (rtp_amr)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_amr_frame_data, rtp_amr_frame_data_size,
       rtp_amr_frame_count, "audio/AMR,channels=1,rate=8000", "rtpamrpay",
       "rtpamrdepay");
 }
-GST_END_TEST
-    static char rtp_pcma_frame_data[] =
+
+GST_END_TEST;
+static char rtp_pcma_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_pcma_frame_data_size = 20;
 static int rtp_pcma_frame_count = 1;
 
 GST_START_TEST (rtp_pcma)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_pcma_frame_data, rtp_pcma_frame_data_size,
       rtp_pcma_frame_count, "audio/x-alaw,channels=1,rate=8000", "rtppcmapay",
       "rtppcmadepay");
 }
-GST_END_TEST
-    static char rtp_pcmu_frame_data[] =
+
+GST_END_TEST;
+static char rtp_pcmu_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_pcmu_frame_data_size = 20;
 static int rtp_pcmu_frame_count = 1;
 
 GST_START_TEST (rtp_pcmu)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_pcmu_frame_data, rtp_pcmu_frame_data_size,
       rtp_pcmu_frame_count, "audio/x-mulaw,channels=1,rate=8000", "rtppcmupay",
       "rtppcmudepay");
 }
-GST_END_TEST
-    static char rtp_mpa_frame_data[] =
+
+GST_END_TEST;
+static char rtp_mpa_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_mpa_frame_data_size = 20;
 static int rtp_mpa_frame_count = 1;
 
 GST_START_TEST (rtp_mpa)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_mpa_frame_data, rtp_mpa_frame_data_size,
       rtp_mpa_frame_count, "audio/mpeg", "rtpmpapay", "rtpmpadepay");
 }
-GST_END_TEST
-    static char rtp_h263_frame_data[] =
+
+GST_END_TEST;
+static char rtp_h263_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_h263_frame_data_size = 20;
 static int rtp_h263_frame_count = 1;
 
 GST_START_TEST (rtp_h263)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_h263_frame_data, rtp_h263_frame_data_size,
       rtp_h263_frame_count, "video/x-h263,variant=itu,h263version=h263",
       "rtph263pay", "rtph263depay");
 }
-GST_END_TEST
-    static char rtp_h263p_frame_data[] =
+
+GST_END_TEST;
+static char rtp_h263p_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_h263p_frame_data_size = 20;
 static int rtp_h263p_frame_count = 1;
 
 GST_START_TEST (rtp_h263p)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_h263p_frame_data, rtp_h263p_frame_data_size,
       rtp_h263p_frame_count, "video/x-h263,variant=itu", "rtph263ppay",
       "rtph263pdepay");
 }
-GST_END_TEST
-    static char rtp_h264_frame_data[] =
+
+GST_END_TEST;
+static char rtp_h264_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_h264_frame_data_size = 20;
 static int rtp_h264_frame_count = 1;
 
 GST_START_TEST (rtp_h264)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_h264_frame_data, rtp_h264_frame_data_size,
       rtp_h264_frame_count, "video/x-h264", "rtph264pay", "rtph264depay");
 }
-GST_END_TEST
-    static char rtp_L16_frame_data[] =
+
+GST_END_TEST;
+static char rtp_L16_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_L16_frame_data_size = 20;
 static int rtp_L16_frame_count = 1;
 
 GST_START_TEST (rtp_L16)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_L16_frame_data, rtp_L16_frame_data_size,
       rtp_L16_frame_count,
       "audio/x-raw-int,endianess=4321,signed=true,width=16,depth=16,rate=1,channels=1",
       "rtpL16pay", "rtpL16depay");
 }
-GST_END_TEST
-    static char rtp_mp2t_frame_data[] =
+
+GST_END_TEST;
+static char rtp_mp2t_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_mp2t_frame_data_size = 20;
 static int rtp_mp2t_frame_count = 1;
 
 GST_START_TEST (rtp_mp2t)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_mp2t_frame_data, rtp_mp2t_frame_data_size,
       rtp_mp2t_frame_count, "video/mpegts,packetsize=188,systemstream=true",
       "rtpmp2tpay", "rtpmp2tdepay");
 }
-GST_END_TEST
-    static char rtp_mp4v_frame_data[] =
+
+GST_END_TEST;
+static char rtp_mp4v_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_mp4v_frame_data_size = 20;
 static int rtp_mp4v_frame_count = 1;
 
 GST_START_TEST (rtp_mp4v)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_mp4v_frame_data, rtp_mp4v_frame_data_size,
       rtp_mp4v_frame_count, "video/mpeg,mpegversion=4,systemstream=false",
       "rtpmp4vpay", "rtpmp4vdepay");
 }
-GST_END_TEST
-    static char rtp_mp4g_frame_data[] =
+
+GST_END_TEST;
+static char rtp_mp4g_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_mp4g_frame_data_size = 20;
 static int rtp_mp4g_frame_count = 1;
 
 GST_START_TEST (rtp_mp4g)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_mp4g_frame_data, rtp_mp4g_frame_data_size,
       rtp_mp4g_frame_count, "video/mpeg,mpegversion=4", "rtpmp4gpay",
       "rtpmp4gdepay");
 }
-GST_END_TEST
-    static char rtp_theora_frame_data[] =
+
+GST_END_TEST;
+static char rtp_theora_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_theora_frame_data_size = 20;
 static int rtp_theora_frame_count = 1;
 
 GST_START_TEST (rtp_theora)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_theora_frame_data, rtp_theora_frame_data_size,
       rtp_theora_frame_count, "video/x-theora", "rtptheorapay",
       "rtptheoradepay");
 }
-GST_END_TEST
-    static char rtp_vorbis_frame_data[] =
+
+GST_END_TEST;
+static char rtp_vorbis_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static int rtp_vorbis_frame_data_size = 20;
 static int rtp_vorbis_frame_count = 1;
 
 GST_START_TEST (rtp_vorbis)
 {
-  g_print (" %s\n", __func__);
   rtp_pipeline_test (rtp_vorbis_frame_data, rtp_vorbis_frame_data_size,
       rtp_vorbis_frame_count, "audio/x-vorbis", "rtpvorbispay",
       "rtpvorbisdepay");
 }
 
-GST_END_TEST
+GST_END_TEST;
 /*
  * Creates the test suite.
  *
  * Returns: pointer to the test suite.
  */
-    Suite * rtp_create_suite ()
+static Suite *
+rtp_payloading_suite ()
 {
   Suite *s = suite_create ("rtp_data_test");
   TCase *tc_chain = tcase_create ("linear");
@@ -527,22 +549,4 @@ GST_END_TEST
   return s;
 }
 
-/*
- * Main function.
- */
-int
-main (int argc, char *argv[])
-{
-  int nf;
-
-  Suite *s = rtp_create_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (rtp_payloading)

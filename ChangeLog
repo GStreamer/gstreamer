@@ -1,3 +1,14 @@
+2008-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	  Add rtp-payloading test to VALGRIND_TO_FIX.
+
+	* tests/check/elements/rtp-payloading.c:
+	  Add semicolons after GST_TEST_END so gst-indent gets the
+	  formatting right; make test less verbose in general, but
+	  more verbose in the error case (which should probably
+	  make the test fail anyway).
+
 2008-02-01  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* docs/plugins/Makefile.am:

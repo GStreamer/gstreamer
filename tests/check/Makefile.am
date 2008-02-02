@@ -73,7 +73,8 @@ check_PROGRAMS = \
 	$(check_taglib) \
 	$(check_wavpack)
 
-VALGRIND_TO_FIX = 
+VALGRIND_TO_FIX = \
+	elements/rtp-payloading
 
 TESTS = $(check_PROGRAMS)
 
