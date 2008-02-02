@@ -1,5 +1,14 @@
 2008-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: John Millikin <jmillikin at gmail dot com>
+
+	* ext/flac/gstflacdec.c: (gst_flac_dec_scan_for_last_block),
+	  (gst_flac_extract_picture_buffer), (gst_flac_dec_metadata_callback):
+	  Fix extraction of picture blocks with newer libflac versions again:
+	  FLAC__METADATA_TYPE_PICTURE is an enum, not a define (#513628).
+
+2008-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/Makefile.am:
 	  Add rtp-payloading test to VALGRIND_TO_FIX.
 
