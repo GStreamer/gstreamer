@@ -1,3 +1,10 @@
+2008-02-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tools/gst-inspect.c: (print_interfaces),
+	(print_element_properties_info), (print_pad_info),
+	(print_signal_info), (print_element_info):
+	Fix a few memory leaks.
+
 2008-02-01  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* docs/libs/gstreamer-libs-sections.txt:
