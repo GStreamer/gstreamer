@@ -368,10 +368,12 @@ add_date_header (GstRTSPMessage * message)
 {
   GTimeVal tv;
   gchar date_string[100];
+  time_t t;
 
   g_get_current_time (&tv);
+  t = (time_t) tv.tv_sec;
   strftime (date_string, sizeof (date_string), "%a, %d %b %Y %H:%M:%S GMT",
-      gmtime (&tv.tv_sec));
+      gmtime (&t));
 
   gst_rtsp_message_add_header (message, GST_RTSP_HDR_DATE, date_string);
 }
