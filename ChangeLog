@@ -1,6 +1,14 @@
 2008-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:
+	  Revert previous change of the test environment's GST_PLUGIN_PATH.
+	  The problem is not with the plugins, but with element factories
+	  and only occurs if elements are split out from existing plugins
+	  or if plugins change name (see #512740).
+
+2008-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
 	  Fix the tests environment's GST_PLUGIN_PATH: we want the directory
 	  with the core's plugins first and our local build directories last,
 	  since we might be building against an installed core, and that
