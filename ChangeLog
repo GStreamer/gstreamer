@@ -1,3 +1,15 @@
+2008-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	  Fix the tests environment's GST_PLUGIN_PATH: we want the directory
+	  with the core's plugins first and our local build directories last,
+	  since we might be building against an installed core, and that
+	  core's plugin directory may contain older or other versions of
+	  our own -base plugins, but we really do want to test our local
+	  ones (if there are multiple plugins or element factories with the
+	  same name, those inspected last will trump those read in earlier).
+	  Fixes #512740 for the most part.
+
 2008-02-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

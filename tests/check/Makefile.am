@@ -10,7 +10,7 @@ TESTS_ENVIRONMENT = \
         STATE_IGNORE_ELEMENTS="$(STATE_IGNORE_ELEMENTS)"	\
 	$(REGISTRY_ENVIRONMENT)					\
 	GST_PLUGIN_SYSTEM_PATH=					\
-	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(GST_PLUGINS_DIR)
+	GST_PLUGIN_PATH=$(GST_PLUGINS_DIR):$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext
 
 # ths core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.xml
