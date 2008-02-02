@@ -239,7 +239,7 @@ dnl also, Windows does not have long long
 AX_CREATE_STDINT_H
 
 dnl *** checks for functions ***
-AC_CHECK_FUNCS([localtime_r])
+AC_CHECK_FUNCS([localtime_r gmtime_r])
 
 dnl *** checks for types/defines ***
 

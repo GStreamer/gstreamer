@@ -1,5 +1,12 @@
 2008-02-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* configure.ac:
+	* gst-libs/gst/rtsp/gstrtspconnection.c: (add_date_header):
+	Use gmtime_r if available as gmtime is not MT-safe.
+	Fixes bug #511810.
+
+2008-02-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst-libs/gst/rtsp/gstrtspconnection.c: (add_date_header):
 	Cast glong to time_t as time_t might have a different type on
 	other platforms, like FreeBSD, and we get a compiler warning
