@@ -11,8 +11,7 @@ TODO:
 2- Get properties like 'width' and 'height' from caps
 3- Review the code (in order to move to gst-plugins-good)
 4- Document how the plugin works (atchitecture and interaction beteween modules)
-5- Create a HTML with the mapping (and conversion) beteween GST tags and EXIF, IPTC and XMP tags
-6- Improve the test application (to save also in png and to make it possible to set the metadata elements properties)
+5- Improve the test application (to save also in png and to make it possible to set the metadata elements properties)
 
 OPEN ISSUES:
 
@@ -38,5 +37,12 @@ http://bugzilla.gnome.org/show_bug.cgi?id=486659
 http://bugzilla.gnome.org/show_bug.cgi?id=503616
 
 KNOWN BUGS
+
+bugs in libexif:
+
+https://sourceforge.net/tracker/?func=detail&atid=112272&aid=1884609&group_id=12272
+
+1- EXIF_TAG_ISO_SPEED_RATINGS should be in EXIF_IFD_EXIF
+2- EXIF_TAG_ISO_SPEED_RATINGS is not inserted anyway
 
 

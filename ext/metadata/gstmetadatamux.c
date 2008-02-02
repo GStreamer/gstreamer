@@ -508,9 +508,11 @@ gst_metadata_mux_sink_event (GstPad * pad, GstEvent * event)
     {
       GstTagList *taglist = NULL;
       GstTagSetter *setter = GST_TAG_SETTER (filter);
+      const GstTagMergeMode mode = gst_tag_setter_get_tag_merge_mode (setter);
 
       gst_event_parse_tag (event, &taglist);
-      gst_tag_setter_merge_tags (setter, taglist, GST_TAG_MERGE_REPLACE);
+      gst_tag_setter_merge_tags (setter, taglist, mode);
+
 
     }
       break;

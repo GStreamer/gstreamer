@@ -140,34 +140,44 @@ typedef struct _tag_MapIntStr
 /* *INDENT-OFF* */
 /* When changing this table, update 'metadata_mapping.htm' file too. */
 static MapIntStr mappedTags[] = {
-  {EXIF_TAG_MAKE,               /*ASCII,*/     EXIF_IFD_0,
-   GST_TAG_DEVICE_MAKE,              /*STRING*/},
-  {EXIF_TAG_MODEL,              /*ASCII,*/     EXIF_IFD_0,
-   GST_TAG_DEVICE_MODEL,             /*STRING*/},
-  {EXIF_TAG_SOFTWARE,           /*ASCII,*/     EXIF_IFD_0,
-   GST_TAG_CREATOR_TOOL,             /*STRING*/},
-  {EXIF_TAG_X_RESOLUTION,       /*RATIONAL,*/  EXIF_IFD_0,
-   GST_TAG_IMAGE_XRESOLUTION,        /*FRACTION*/},   /* inches */
-  {EXIF_TAG_Y_RESOLUTION,       /*RATIONAL,*/  EXIF_IFD_0,
-   GST_TAG_IMAGE_YRESOLUTION,        /*FRACTION*/},   /* inches */
-  {EXIF_TAG_EXPOSURE_TIME,      /*RATIONAL,*/  EXIF_IFD_EXIF,
-   GST_TAG_CAPTURE_EXPOSURE_TIME,    /*FRACTION*/},
-  {EXIF_TAG_FNUMBER,            /*RATIONAL,*/  EXIF_IFD_EXIF,
-   GST_TAG_CAPTURE_FNUMBER,          /*FRACTION*/},
-  {EXIF_TAG_EXPOSURE_PROGRAM,   /*SHORT,*/     EXIF_IFD_EXIF,
-   GST_TAG_CAPTURE_EXPOSURE_PROGRAM, /*UINT*/},
-  {EXIF_TAG_BRIGHTNESS_VALUE,   /*SRATIONAL,*/ EXIF_IFD_0,
-   GST_TAG_CAPTURE_BRIGHTNESS,       /*FRACTION*/},
-  {EXIF_TAG_WHITE_BALANCE,      /*SHORT,*/     EXIF_IFD_0,
-   GST_TAG_CAPTURE_WHITE_BALANCE,    /*UINT*/},
-  {EXIF_TAG_DIGITAL_ZOOM_RATIO, /*RATIONAL,*/  EXIF_IFD_0,
-   GST_TAG_CAPTURE_DIGITAL_ZOOM,     /*FRACTION*/},
-  {EXIF_TAG_GAIN_CONTROL,       /*SHORT,*/     EXIF_IFD_0,
-   GST_TAG_CAPTURE_GAIN,             /*UINT*/},
-  {EXIF_TAG_CONTRAST,           /*SHORT,*/     EXIF_IFD_0,
-   GST_TAG_CAPTURE_CONTRAST,         /*INT*/},
-  {EXIF_TAG_SATURATION,         /*SHORT,*/     EXIF_IFD_0,
-   GST_TAG_CAPTURE_SATURATION,       /*INT*/},
+  {EXIF_TAG_BRIGHTNESS_VALUE,            /*SRATIONAL,*/ EXIF_IFD_0,
+   GST_TAG_CAPTURE_BRIGHTNESS            /*GST_TYPE_FRACTION*/},
+  {EXIF_TAG_CONTRAST,                    /*SHORT,*/     EXIF_IFD_0,
+   GST_TAG_CAPTURE_CONTRAST              /*G_TYPE_INT*/},
+  {EXIF_TAG_DIGITAL_ZOOM_RATIO,          /*RATIONAL,*/  EXIF_IFD_0,
+   GST_TAG_CAPTURE_DIGITAL_ZOOM          /*GST_TYPE_FRACTION*/},
+  {EXIF_TAG_EXPOSURE_PROGRAM,            /*SHORT,*/     EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_EXPOSURE_PROGRAM      /*G_TYPE_UINT*/},
+  {EXIF_TAG_EXPOSURE_TIME,               /*RATIONAL,*/  EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_EXPOSURE_TIME         /*GST_TYPE_FRACTION*/},
+  {EXIF_TAG_FLASH,                       /*SHORT*/      EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_FLASH                 /*G_TYPE_UINT*/},
+  {EXIF_TAG_FNUMBER,                     /*RATIONAL,*/  EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_FNUMBER               /*GST_TYPE_FRACTION*/},
+  {EXIF_TAG_FOCAL_LENGTH,                /*SRATIONAL*/  EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_FOCAL_LEN             /*GST_TYPE_FRACTION*/},
+  {EXIF_TAG_GAIN_CONTROL,                /*SHORT,*/     EXIF_IFD_0,
+   GST_TAG_CAPTURE_GAIN                  /*G_TYPE_UINT*/},
+  {EXIF_TAG_ISO_SPEED_RATINGS,           /*SHORT,*/     EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_ISO_SPEED_RATINGS     /*G_TYPE_INT*/},
+  {EXIF_TAG_LIGHT_SOURCE     ,           /*SHORT,*/     EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_LIGHT_SOURCE          /*G_TYPE_UINT*/},
+  {EXIF_TAG_ORIENTATION     ,           /*SHORT,*/     EXIF_IFD_0,
+   GST_TAG_CAPTURE_ORIENTATION           /*G_TYPE_UINT*/},
+  {EXIF_TAG_SATURATION,                  /*SHORT,*/     EXIF_IFD_0,
+   GST_TAG_CAPTURE_SATURATION            /*G_TYPE_INT*/},
+  {EXIF_TAG_WHITE_BALANCE,               /*SHORT,*/     EXIF_IFD_0,
+   GST_TAG_CAPTURE_WHITE_BALANCE         /*G_TYPE_UINT*/},
+  {EXIF_TAG_SOFTWARE,                    /*ASCII,*/     EXIF_IFD_0,
+   GST_TAG_CREATOR_TOOL                  /*G_TYPE_STRING*/},
+  {EXIF_TAG_MAKE,                        /*ASCII,*/     EXIF_IFD_0,
+   GST_TAG_DEVICE_MAKE                   /*G_TYPE_STRING*/},
+  {EXIF_TAG_MODEL,                       /*ASCII,*/     EXIF_IFD_0,
+   GST_TAG_DEVICE_MODEL                  /*G_TYPE_STRING*/},
+  {EXIF_TAG_X_RESOLUTION,                /*RATIONAL,*/  EXIF_IFD_0,
+   GST_TAG_IMAGE_XRESOLUTION             /*GST_TYPE_FRACTION*/},   /* inches */
+  {EXIF_TAG_Y_RESOLUTION,                /*RATIONAL,*/  EXIF_IFD_0,
+   GST_TAG_IMAGE_YRESOLUTION             /*GST_TYPE_FRACTION*/},   /* inches */
   {0, EXIF_IFD_COUNT, NULL}
 };
 /* *INDENT-ON* */
@@ -404,10 +414,13 @@ metadataparse_exif_data_foreach_content_func (ExifContent * content,
 {
   ExifIfd ifd = exif_content_get_ifd (content);
 
-  GST_LOG ("\n  Content %p: %s (ifd=%d)", content, exif_ifd_get_name (ifd),
-      ifd);
-  exif_content_foreach_entry (content,
-      metadataparse_exif_content_foreach_entry_func, user_data);
+  if (ifd == EXIF_IFD_0 || ifd == EXIF_IFD_EXIF) {
+
+    GST_LOG ("\n  Content %p: %s (ifd=%d)", content, exif_ifd_get_name (ifd),
+        ifd);
+    exif_content_foreach_entry (content,
+        metadataparse_exif_content_foreach_entry_func, user_data);
+  }
 }
 
 /*

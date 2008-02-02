@@ -162,9 +162,70 @@ metadata_tags_exif_register (void)
   gst_tag_register (GST_TAG_CAPTURE_EXPOSURE_TIME, GST_TAG_FLAG_META,
       GST_TYPE_FRACTION, GST_TAG_CAPTURE_EXPOSURE_TIME,
       "Exposure time in seconds", NULL);
+
+  /*
+   * bits (76543210) indicating the flash status:
+   * 0- Flash firing
+   *   0- Flash did not fire
+   *   1- Flash fired
+   * 1,2- Flash return
+   *   00- No strobe return detection function
+   *   01- reserved
+   *   10- Strobe return light not detected
+   *   11- Strobe return light detected.
+   * 3,4- Flash mode
+   *   00- unknown
+   *   01- Compulsory flash firing
+   *   10- Compulsory flash suppression
+   *   11- Auto mode
+   * 5- if flash function is present
+   *   0- Flash function present
+   *   1- No flash function
+   * 6- Red-eye mode
+   *   0- No red-eye reduction mode or unknown
+   *   1- Red-eye reduction supported
+   * So, we have the following possible values:
+   *
+   * 0000.H = Flash did not fire.
+   * 0001.H = Flash fired.
+   * 0005.H = Strobe return light not detected.
+   * 0007.H = Strobe return light detected.
+   * 0009.H = Flash fired, compulsory flash mode
+   * 000D.H = Flash fired, compulsory flash mode, return light not detected
+   * 000F.H = Flash fired, compulsory flash mode, return light detected
+   * 0010.H = Flash did not fire, compulsory flash mode
+   * 0018.H = Flash did not fire, auto mode
+   * 0019.H = Flash fired, auto mode
+   * 001D.H = Flash fired, auto mode, return light not detected
+   * 001F.H = Flash fired, auto mode, return light detected
+   * 0020.H = No flash function
+   * 0041.H = Flash fired, red-eye reduction mode
+   * 0045.H = Flash fired, red-eye reduction mode, return light not detected
+   * 0047.H = Flash fired, red-eye reduction mode, return light detected
+   * 0049.H = Flash fired, compulsory flash mode, red-eye reduction mode
+   * 004D.H = Flash fired, compulsory flash mode, red-eye reduction mode,
+   *          return light not detected
+   * 004F.H = Flash fired, compulsory flash mode, red-eye reduction mode,
+   *          return light detected
+   * 0059.H = Flash fired, auto mode, red-eye reduction mode
+   * 005D.H = Flash fired, auto mode, return light not detected,
+   *          red-eye reduction mode
+   * 005F.H = Flash fired, auto mode, return light detected,
+   *          red-eye reduction mode
+   * Other  = reserved
+   */
+
+
+  gst_tag_register (GST_TAG_CAPTURE_FLASH, GST_TAG_FLAG_META,
+      G_TYPE_UINT, GST_TAG_CAPTURE_FLASH, "Flash status", NULL);
+
   gst_tag_register (GST_TAG_CAPTURE_FNUMBER, GST_TAG_FLAG_META,
       GST_TYPE_FRACTION, GST_TAG_CAPTURE_FNUMBER, "F number (focal ratio)",
       NULL);
+
+  gst_tag_register (GST_TAG_CAPTURE_FOCAL_LEN, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_CAPTURE_FOCAL_LEN,
+      "Focal length of lens used to take image. Unit is millimeter", NULL);
 
   /*
      0- None
@@ -175,6 +236,56 @@ metadata_tags_exif_register (void)
    */
   gst_tag_register (GST_TAG_CAPTURE_GAIN, GST_TAG_FLAG_META, G_TYPE_UINT,
       GST_TAG_CAPTURE_GAIN, "", NULL);
+
+  gst_tag_register (GST_TAG_CAPTURE_ISO_SPEED_RATINGS, GST_TAG_FLAG_META,
+      G_TYPE_INT, GST_TAG_CAPTURE_ISO_SPEED_RATINGS,
+      "ISO Speed and ISO Latitude as specified in ISO 12232", NULL);
+
+
+  /*
+     0-   unknown (default)
+     1-   Daylight
+     2-   Fluorescent
+     3-   Tungsten (incandescent light)
+     4-   Flash
+     9-   Fine weather
+     10-  Cloudy weather
+     11-  Shade
+     12-  Daylight fluorescent (D 5700 %G–%@ 7100K)
+     13-  Day white fluorescent (N 4600 %G–%@ 5400K)
+     14-  Cool white fluorescent (W 3900 %G–%@ 4500K)
+     15-  White fluorescent (WW 3200 %G–%@ 3700K)
+     17-  Standard light A
+     18-  Standard light B
+     19-  Standard light C
+     20-  D55
+     21-  D65
+     22-  D75
+     23-  D50
+     24-  ISO studio tungsten
+     255- other light source
+     Other = reserved
+   */
+
+  gst_tag_register (GST_TAG_CAPTURE_LIGHT_SOURCE, GST_TAG_FLAG_META,
+      G_TYPE_UINT, GST_TAG_CAPTURE_LIGHT_SOURCE,
+      "The kind of light source.", NULL);
+
+  /*
+   * The relation of the '0th row' and '0th column' to visual position:
+   * 1- top-left
+   * 2- top-right
+   * 3- bottom-right
+   * 4- bottom-left
+   * 5- left-top
+   * 6- right-top
+   * 7- right-bottom
+   * 8- left-bottom
+   */
+
+  gst_tag_register (GST_TAG_CAPTURE_ORIENTATION, GST_TAG_FLAG_META,
+      G_TYPE_UINT, GST_TAG_CAPTURE_ORIENTATION,
+      "The kind of light source.", NULL);
 
   /*
      from -100 to 100

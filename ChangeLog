@@ -1,3 +1,13 @@
+2008-02-02  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/TODO:
+	* ext/metadata/gstmetadatamux.c:
+	* ext/metadata/metadata_mapping.htm:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/metadatatags.h:
+	  Map more Exif tags.
+
 2008-02-01  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/selector/gstinputselector.c: (gst_selector_pad_event):
