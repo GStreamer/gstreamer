@@ -61,21 +61,45 @@ GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams & strm)
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   gint width, height;
   const GValue *fps_val;
+  const GValue *par_val;
   y4m_ratio_t fps;
+  y4m_ratio_t par;
 
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "height", &height);
+  if (!gst_structure_get_int (structure, "width", &width))
+    width = -1;
+
+  if (!gst_structure_get_int (structure, "height", &height))
+    height = -1;
+
   fps_val = gst_structure_get_value (structure, "framerate");
-  fps.n = gst_value_get_fraction_numerator (fps_val);
-  fps.d = gst_value_get_fraction_denominator (fps_val);
+  if (fps_val != NULL) {
+    fps.n = gst_value_get_fraction_numerator (fps_val);
+    fps.d = gst_value_get_fraction_denominator (fps_val);
+
+    strm.frame_rate_code = mpeg_framerate_code (fps);
+  } else
+    strm.frame_rate_code = 0;
+
+  par_val = gst_structure_get_value (structure, "pixel-aspect-ratio");
+  if (par_val != NULL) {
+    par.n = gst_value_get_fraction_numerator (par_val);
+    par.d = gst_value_get_fraction_denominator (par_val);
+  } else {
+    /* By default, assume square pixels */
+    par.n = 1;
+    par.d = 1;
+  }
 
   strm.horizontal_size = width;
   strm.vertical_size = height;
-  strm.frame_rate_code = mpeg_framerate_code (fps);
+
   strm.interlacing_code = Y4M_ILACE_NONE;
-  /* FIXME perhaps involve pixel-aspect-ratio for 'better' sar */
-  strm.aspect_ratio_code = mpeg_guess_mpeg_aspect_code (2, y4m_sar_SQUARE,
+
+  strm.aspect_ratio_code = mpeg_guess_mpeg_aspect_code (2, par,
       strm.horizontal_size, strm.vertical_size);
+  GST_DEBUG_OBJECT (element, "Guessing aspect ratio code for PAR %d/%d "
+      "MPEG version %d yielded: %d", par.n, par.d, mpeg_version,
+      strm.aspect_ratio_code);
 }
 
 /*

@@ -1,3 +1,12 @@
+2008-02-03  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
+	Use the incoming pixel-aspect-ratio if provided to infer a 
+	default aspect ratio, which can be overridden using the 'aspect'
+	property.
+
+	Fixes: #499008
+
 2008-02-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Andrzej Mendel <andrzej dot mendel at gmail dot com>
