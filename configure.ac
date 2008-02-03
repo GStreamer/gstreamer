@@ -299,11 +299,11 @@ dnl OpenGL
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENGL, true)
 AG_GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
   PKG_CHECK_MODULES(GL, gl >= 7.1.0, [
-    HAVE_GL="yes"
+    HAVE_OPENGL="yes"
     AC_SUBST(GL_CFLAGS)
     AC_SUBST(GL_LIBS)
   ],[
-    HAVE_GL=no
+    HAVE_OPENGL=no
     AC_MSG_RESULT(no)
   ])
 ])

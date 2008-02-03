@@ -1,3 +1,11 @@
+2008-02-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Andrzej Mendel <andrzej dot mendel at gmail dot com>
+
+	* configure.ac:
+	Fix variable naming to make it possible to build the glimagesink
+	plugin. Fixes bug #514093.
+
 2008-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/metadata/gstmetadatademux.c:
