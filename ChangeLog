@@ -1,3 +1,27 @@
+2008-02-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstelement.c: (gst_element_base_class_init),
+	(gst_element_class_add_pad_template):
+	* gst/gstpadtemplate.c:
+	Make it possible (and recommended) to set element details and add
+	pad templates in the class_init functions by copying the details/pad
+	templates in GstElement's base_init.
+
+	Also make it possible to replace existing pad templates by adding
+	a new one with the same name. This was done in a hackish fashion
+	in same elements before already.
+
+	Don't reference pad templates that are added a second time. A
+	new pad template has a refcount of one and is not floating anymore
+	and to be owned by the element's class. Make this more explicit by
+	mentioning it in the docs of gst_element_class_add_pad_template().
+
+	These changes are backwards compatible. Fixes bug #491501.
+
+	* tests/check/gst/gstelement.c:
+	Add unit test for setting element details, adding pad templates and
+	replacing them in a subclass.
+
 2008-02-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tools/gst-inspect.c: (print_interfaces),
