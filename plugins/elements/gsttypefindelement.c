@@ -161,17 +161,6 @@ gst_type_find_element_have_type (GstTypeFindElement * typefind,
 static void
 gst_type_find_element_base_init (gpointer g_class)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "TypeFind",
-      "Generic",
-      "Finds the media type of a stream",
-      "Benjamin Otte <in7y118@public.uni-hamburg.de>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&type_find_element_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&type_find_element_sink_template));
 }
 
 static void
@@ -215,6 +204,16 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
       G_STRUCT_OFFSET (GstTypeFindElementClass, have_type), NULL, NULL,
       gst_marshal_VOID__UINT_BOXED, G_TYPE_NONE, 2,
       G_TYPE_UINT, GST_TYPE_CAPS | G_SIGNAL_TYPE_STATIC_SCOPE);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "TypeFind",
+      "Generic",
+      "Finds the media type of a stream",
+      "Benjamin Otte <in7y118@public.uni-hamburg.de>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&type_find_element_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&type_find_element_sink_template));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_type_find_element_change_state);

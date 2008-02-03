@@ -136,7 +136,7 @@ inet_aton (const char *c, struct in_addr *paddr)
 static void
 gst_net_time_provider_base_init (gpointer g_class)
 {
-  g_assert (sizeof (GstClockTime) == 8);
+  /* Do nothing here */
 }
 
 static void
@@ -145,6 +145,8 @@ gst_net_time_provider_class_init (GstNetTimeProviderClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+
+  g_assert (sizeof (GstClockTime) == 8);
 
   gobject_class->finalize = gst_net_time_provider_finalize;
   gobject_class->set_property = gst_net_time_provider_set_property;

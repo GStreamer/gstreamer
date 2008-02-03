@@ -180,15 +180,6 @@ GST_BOILERPLATE_FULL (GstFileSrc, gst_file_src, GstBaseSrc, GST_TYPE_BASE_SRC,
 static void
 gst_file_src_base_init (gpointer g_class)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "File Source",
-      "Source/File",
-      "Read from arbitrary point in a file",
-      "Erik Walthinsen <omega@cse.ogi.edu>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
 }
 
 static void
@@ -249,6 +240,14 @@ gst_file_src_class_init (GstFileSrcClass * klass)
           DEFAULT_SEQUENTIAL, G_PARAM_READWRITE));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_file_src_finalize);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "File Source",
+      "Source/File",
+      "Read from arbitrary point in a file",
+      "Erik Walthinsen <omega@cse.ogi.edu>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_file_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_file_src_stop);

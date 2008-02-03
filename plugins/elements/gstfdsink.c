@@ -140,20 +140,13 @@ static gboolean gst_fd_sink_unlock_stop (GstBaseSink * basesink);
 static void
 gst_fd_sink_base_init (gpointer g_class)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Filedescriptor Sink",
-      "Sink/File",
-      "Write data to a file descriptor", "Erik Walthinsen <omega@cse.ogi.edu>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
 }
 
 static void
 gst_fd_sink_class_init (GstFdSinkClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstBaseSinkClass *gstbasesink_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
@@ -162,6 +155,13 @@ gst_fd_sink_class_init (GstFdSinkClass * klass)
   gobject_class->set_property = gst_fd_sink_set_property;
   gobject_class->get_property = gst_fd_sink_get_property;
   gobject_class->dispose = gst_fd_sink_dispose;
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Filedescriptor Sink",
+      "Sink/File",
+      "Write data to a file descriptor", "Erik Walthinsen <omega@cse.ogi.edu>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
 
   gstbasesink_class->get_times = NULL;
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_fd_sink_render);

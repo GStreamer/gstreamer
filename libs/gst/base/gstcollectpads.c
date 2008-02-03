@@ -92,14 +92,16 @@ static void unref_data (GstCollectData * data);
 static void
 gst_collect_pads_base_init (gpointer g_class)
 {
-  GST_DEBUG_CATEGORY_INIT (collect_pads_debug, "collectpads", 0,
-      "GstCollectPads");
+  /* Do nothing here */
 }
 
 static void
 gst_collect_pads_class_init (GstCollectPadsClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (collect_pads_debug, "collectpads", 0,
+      "GstCollectPads");
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_collect_pads_finalize);
 }

@@ -36,12 +36,12 @@
  *
  * #GstBaseSink provides support for exactly one sink pad, which should be
  * named "sink". A sink implementation (subclass of #GstBaseSink) should
- * install a pad template in its base_init function, like so:
+ * install a pad template in its class_init function, like so:
  * <programlisting>
  * static void
- * my_element_base_init (gpointer g_class)
+ * my_element_class_init (GstMyElementClass *klass)
  * {
- *   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+ *   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
  *   
  *   // sinktemplate should be a #GstStaticPadTemplate with direction
  *   // #GST_PAD_SINK and name "sink"
@@ -251,7 +251,6 @@ enum
 
 static GstElementClass *parent_class = NULL;
 
-static void gst_base_sink_base_init (gpointer g_class);
 static void gst_base_sink_class_init (GstBaseSinkClass * klass);
 static void gst_base_sink_init (GstBaseSink * trans, gpointer g_class);
 static void gst_base_sink_finalize (GObject * object);
@@ -264,7 +263,7 @@ gst_base_sink_get_type (void)
   if (G_UNLIKELY (base_sink_type == 0)) {
     static const GTypeInfo base_sink_info = {
       sizeof (GstBaseSinkClass),
-      (GBaseInitFunc) gst_base_sink_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_base_sink_class_init,
       NULL,
@@ -317,13 +316,6 @@ static gboolean gst_base_sink_is_too_late (GstBaseSink * basesink,
     GstClockReturn status, GstClockTimeDiff jitter);
 
 static void
-gst_base_sink_base_init (gpointer g_class)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_base_sink_debug, "basesink", 0,
-      "basesink element");
-}
-
-static void
 gst_base_sink_class_init (GstBaseSinkClass * klass)
 {
   GObjectClass *gobject_class;
@@ -331,6 +323,9 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (gst_base_sink_debug, "basesink", 0,
+      "basesink element");
 
   g_type_class_add_private (klass, sizeof (GstBaseSinkPrivate));
 

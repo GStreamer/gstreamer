@@ -125,14 +125,14 @@
  * <para>
  * There is only support in #GstBaseSrc for exactly one source pad, which 
  * should be named "src". A source implementation (subclass of #GstBaseSrc) 
- * should install a pad template in its base_init function, like so:
+ * should install a pad template in its class_init function, like so:
  * </para>
  * <para>
  * <programlisting>
  * static void
- * my_element_base_init (gpointer g_class)
+ * my_element_class_init (GstMyElementClass *klass)
  * {
- *   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+ *   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
  *   // srctemplate should be a #GstStaticPadTemplate with direction
  *   // #GST_PAD_SRC and name "src"
  *   gst_element_class_add_pad_template (gstelement_class,
@@ -250,7 +250,6 @@ struct _GstBaseSrcPrivate
 
 static GstElementClass *parent_class = NULL;
 
-static void gst_base_src_base_init (gpointer g_class);
 static void gst_base_src_class_init (GstBaseSrcClass * klass);
 static void gst_base_src_init (GstBaseSrc * src, gpointer g_class);
 static void gst_base_src_finalize (GObject * object);
@@ -264,7 +263,7 @@ gst_base_src_get_type (void)
   if (G_UNLIKELY (base_src_type == 0)) {
     static const GTypeInfo base_src_info = {
       sizeof (GstBaseSrcClass),
-      (GBaseInitFunc) gst_base_src_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_base_src_class_init,
       NULL,
@@ -320,12 +319,6 @@ static GstFlowReturn gst_base_src_get_range (GstBaseSrc * src, guint64 offset,
     guint length, GstBuffer ** buf);
 
 static void
-gst_base_src_base_init (gpointer g_class)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_base_src_debug, "basesrc", 0, "basesrc element");
-}
-
-static void
 gst_base_src_class_init (GstBaseSrcClass * klass)
 {
   GObjectClass *gobject_class;
@@ -333,6 +326,8 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (gst_base_src_debug, "basesrc", 0, "basesrc element");
 
   g_type_class_add_private (klass, sizeof (GstBaseSrcPrivate));
 

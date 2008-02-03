@@ -87,7 +87,6 @@ enum
                q->cur_level.time,                                       \
                q->queue->length)
 
-static void gst_data_queue_base_init (GstDataQueueClass * klass);
 static void gst_data_queue_class_init (GstDataQueueClass * klass);
 static void gst_data_queue_init (GstDataQueue * queue);
 static void gst_data_queue_finalize (GObject * object);
@@ -108,7 +107,7 @@ gst_data_queue_get_type (void)
   if (!queue_type) {
     static const GTypeInfo queue_info = {
       sizeof (GstDataQueueClass),
-      (GBaseInitFunc) gst_data_queue_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_data_queue_class_init,
       NULL,
@@ -128,13 +127,6 @@ gst_data_queue_get_type (void)
   }
 
   return queue_type;
-}
-
-static void
-gst_data_queue_base_init (GstDataQueueClass * klass)
-{
-  /* Do we need anything here ?? */
-  return;
 }
 
 static void

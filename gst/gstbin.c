@@ -268,7 +268,6 @@ enum
       /* FILL ME */
 };
 
-static void gst_bin_base_init (gpointer g_class);
 static void gst_bin_class_init (GstBinClass * klass);
 static void gst_bin_init (GstBin * bin);
 static void gst_bin_child_proxy_init (gpointer g_iface, gpointer iface_data);
@@ -290,7 +289,7 @@ gst_bin_get_type (void)
   if (G_UNLIKELY (gst_bin_type == 0)) {
     static const GTypeInfo bin_info = {
       sizeof (GstBinClass),
-      gst_bin_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_bin_class_init,
       NULL,
@@ -325,14 +324,6 @@ gst_bin_get_type (void)
     }
   }
   return gst_bin_type;
-}
-
-static void
-gst_bin_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details (gstelement_class, &gst_bin_details);
 }
 
 static GstObject *
@@ -437,6 +428,8 @@ gst_bin_class_init (GstBinClass * klass)
   gstobject_class->restore_thyself =
       GST_DEBUG_FUNCPTR (gst_bin_restore_thyself);
 #endif
+
+  gst_element_class_set_details (gstelement_class, &gst_bin_details);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_bin_change_state_func);

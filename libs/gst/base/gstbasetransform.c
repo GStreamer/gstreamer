@@ -240,7 +240,6 @@ struct _GstBaseTransformPrivate
 
 static GstElementClass *parent_class = NULL;
 
-static void gst_base_transform_base_init (gpointer g_class);
 static void gst_base_transform_class_init (GstBaseTransformClass * klass);
 static void gst_base_transform_init (GstBaseTransform * trans,
     GstBaseTransformClass * klass);
@@ -255,7 +254,7 @@ gst_base_transform_get_type (void)
   if (!base_transform_type) {
     static const GTypeInfo base_transform_info = {
       sizeof (GstBaseTransformClass),
-      (GBaseInitFunc) gst_base_transform_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_base_transform_class_init,
       NULL,
@@ -304,13 +303,6 @@ static GstFlowReturn gst_base_transform_buffer_alloc (GstPad * pad,
 /* static guint gst_base_transform_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
-gst_base_transform_base_init (gpointer g_class)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_base_transform_debug, "basetransform", 0,
-      "basetransform element");
-}
-
-static void
 gst_base_transform_finalize (GObject * object)
 {
   GstBaseTransform *trans;
@@ -328,6 +320,9 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (gst_base_transform_debug, "basetransform", 0,
+      "basetransform element");
 
   g_type_class_add_private (klass, sizeof (GstBaseTransformPrivate));
 

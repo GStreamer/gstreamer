@@ -128,7 +128,6 @@ struct _GstPipelinePrivate
 };
 
 
-static void gst_pipeline_base_init (gpointer g_class);
 static void gst_pipeline_class_init (gpointer g_class, gpointer class_data);
 static void gst_pipeline_init (GTypeInstance * instance, gpointer g_class);
 
@@ -156,7 +155,7 @@ gst_pipeline_get_type (void)
   if (G_UNLIKELY (pipeline_type == 0)) {
     static const GTypeInfo pipeline_info = {
       sizeof (GstPipelineClass),
-      gst_pipeline_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_pipeline_class_init,
       NULL,
@@ -174,14 +173,6 @@ gst_pipeline_get_type (void)
         "debugging info for the 'pipeline' container element");
   }
   return pipeline_type;
-}
-
-static void
-gst_pipeline_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details (gstelement_class, &gst_pipeline_details);
 }
 
 static void
@@ -230,6 +221,8 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
           G_PARAM_READWRITE));
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
+
+  gst_element_class_set_details (gstelement_class, &gst_pipeline_details);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_pipeline_change_state);

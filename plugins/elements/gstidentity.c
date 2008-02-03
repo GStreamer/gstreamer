@@ -115,16 +115,6 @@ static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 static void
 gst_identity_base_init (gpointer g_class)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Identity",
-      "Generic",
-      "Pass data without modification", "Erik Walthinsen <omega@cse.ogi.edu>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
 }
 
 static void
@@ -258,6 +248,15 @@ gst_identity_class_init (GstIdentityClass * klass)
       marshal_VOID__MINIOBJECT, G_TYPE_NONE, 1, GST_TYPE_BUFFER);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_identity_finalize);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Identity",
+      "Generic",
+      "Pass data without modification", "Erik Walthinsen <omega@cse.ogi.edu>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
 
   gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_identity_event);
   gstbasetrans_class->transform_ip =
