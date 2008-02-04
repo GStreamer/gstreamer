@@ -1,3 +1,12 @@
+2008-02-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/examples/seek/seek.c: (do_seek),
+	(rate_spinbutton_changed_cb), (update_streams), (main):
+	Remove obsolete stream_time reset after flushing seek, core does that
+	automatically now.
+	Improve accuracy of speed spinbutton.
+	Only do playbin2 stuff when we actually use it.
+
 2008-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:

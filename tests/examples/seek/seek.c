@@ -21,7 +21,6 @@
  * Boston, MA 02111-1307, USA.
  */
 /* FIXME: remove #if 0 code
- * FIXME: is the flush_seek part after sending the seek still needed?
  *
  */
 #include <stdlib.h>
@@ -1199,7 +1198,6 @@ do_seek (GtkWidget * widget)
 
   if (res) {
     if (flush_seek) {
-      gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline), 0);
       gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, SEEK_TIMEOUT);
     } else {
       set_update_scale (TRUE);
@@ -1454,7 +1452,6 @@ rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
 
   if (res) {
     if (flush_seek) {
-      gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline), 0);
       gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, SEEK_TIMEOUT);
     }
   } else
@@ -1503,12 +1500,14 @@ update_streams (GstPipeline * pipeline)
 {
   gint n_video, n_audio, n_text;
 
-  /* here we get and update the different streams detected by playbin2 */
-  g_object_get (pipeline, "n-video", &n_video, NULL);
-  g_object_get (pipeline, "n-audio", &n_audio, NULL);
-  g_object_get (pipeline, "n-text", &n_text, NULL);
+  if (pipeline_type == 16) {
+    /* here we get and update the different streams detected by playbin2 */
+    g_object_get (pipeline, "n-video", &n_video, NULL);
+    g_object_get (pipeline, "n-audio", &n_audio, NULL);
+    g_object_get (pipeline, "n-text", &n_text, NULL);
 
-  g_print ("video %d, audio %d, text %d\n", n_video, n_audio, n_text);
+    g_print ("video %d, audio %d, text %d\n", n_video, n_audio, n_text);
+  }
 
 }
 
@@ -1684,6 +1683,7 @@ main (int argc, char **argv)
   scrub_checkbox = gtk_check_button_new_with_label ("Scrub");
   play_scrub_checkbox = gtk_check_button_new_with_label ("Play Scrub");
   rate_spinbutton = gtk_spin_button_new_with_range (-100, 100, 0.1);
+  gtk_spin_button_set_digits (GTK_SPIN_BUTTON (rate_spinbutton), 3);
   rate_label = gtk_label_new ("Rate");
 
   gtk_tooltips_set_tip (tips, accurate_checkbox,
@@ -1806,7 +1806,7 @@ main (int argc, char **argv)
   g_signal_connect (G_OBJECT (rate_spinbutton), "value_changed",
       G_CALLBACK (rate_spinbutton_changed_cb), pipeline);
 
-  g_signal_connect (G_OBJECT (window), "destroy", gtk_main_quit, NULL);
+  g_signal_connect (G_OBJECT (window), "delete-event", gtk_main_quit, NULL);
 
   /* show the gui. */
   gtk_widget_show_all (window);
