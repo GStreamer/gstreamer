@@ -92,7 +92,6 @@ gst_signal_processor_class_add_pad_template (GstSignalProcessorClass * klass,
   GST_SIGNAL_PROCESSOR_PAD_TEMPLATE (new)->index = index;
 
   gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass), new);
-  gst_object_unref (new);
 }
 
 

@@ -1,3 +1,10 @@
+2008-02-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/ladspa/gstsignalprocessor.c:
+	(gst_signal_processor_class_add_pad_template):
+	Don't unref the pad template after adding it.
+	gst_element_class_add_pad_template takes ownership of it.
+
 2008-02-03  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
