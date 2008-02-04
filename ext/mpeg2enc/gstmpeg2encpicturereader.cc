@@ -97,9 +97,15 @@ GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams & strm)
 
   strm.aspect_ratio_code = mpeg_guess_mpeg_aspect_code (2, par,
       strm.horizontal_size, strm.vertical_size);
+
+#ifdef GST_MJPEGTOOLS_19x
   GST_DEBUG_OBJECT (element, "Guessing aspect ratio code for PAR %d/%d "
       "MPEG version %d yielded: %d", par.n, par.d, mpeg_version,
       strm.aspect_ratio_code);
+#else
+  GST_DEBUG_OBJECT (element, "Guessing aspect ratio code for PAR %d/%d "
+      "yielded: %d", par.n, par.d, strm.aspect_ratio_code);
+#endif
 }
 
 /*

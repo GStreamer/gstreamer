@@ -1,3 +1,9 @@
+2008-02-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
+	  (GstMpeg2EncPictureReader.StreamPictureParams):
+	  Fix compilation with libmjpegtools 1.8.x.
+
 2008-02-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ladspa/gstsignalprocessor.c:
