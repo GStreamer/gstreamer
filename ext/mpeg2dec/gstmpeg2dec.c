@@ -612,6 +612,12 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
+  if (info->sequence->frame_period == 0) {
+    GST_WARNING_OBJECT (mpeg2dec, "Frame period is 0!");
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
   mpeg2dec->width = info->sequence->picture_width;
   mpeg2dec->height = info->sequence->picture_height;
   mpeg2dec->pixel_width = info->sequence->pixel_width;
@@ -1093,6 +1099,25 @@ gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf)
     switch (state) {
       case STATE_SEQUENCE:
         ret = handle_sequence (mpeg2dec, info);
+        /* if there is an error handling the sequence
+         * reset the decoder, maybe something more elegant
+         * could be done.
+         */
+        if (ret == GST_FLOW_ERROR) {
+          mpeg2dec->error_count++;
+          GST_WARNING_OBJECT (mpeg2dec, "Decoding error #%d",
+              mpeg2dec->error_count);
+          if (mpeg2dec->error_count >= WARN_THRESHOLD && WARN_THRESHOLD > 0) {
+            GST_ELEMENT_WARNING (mpeg2dec, STREAM, DECODE,
+                ("%d consecutive decoding errors", mpeg2dec->error_count),
+                (NULL));
+          }
+          mpeg2_reset (mpeg2dec->decoder, 0);
+          mpeg2_skip (mpeg2dec->decoder, 1);
+          mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
+
+          goto exit;
+        }
         break;
       case STATE_SEQUENCE_REPEATED:
         GST_DEBUG_OBJECT (mpeg2dec, "sequence repeated");

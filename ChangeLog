@@ -1,3 +1,10 @@
+2008-02-04  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	Reset decoder when handling sequence where libmpeg2 has set
+	frame period to 0, probably due to a corrupt packet.
+	Fixes bug #514297
+
 2008-01-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (mp3_caps_create),
