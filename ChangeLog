@@ -1,3 +1,9 @@
+2008-02-04  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
+	Really fix the build.
+	TODO : Apply spankOmatic2000 on thaytan's rear end.
+
 2008-02-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
