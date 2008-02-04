@@ -37,8 +37,7 @@
 #define LADSPA_VERSION "1.0"
 #endif
 
-GST_BOILERPLATE (GstLADSPA, gst_ladspa, GstSignalProcessor,
-    GST_TYPE_SIGNAL_PROCESSOR);
+#define GST_LADSPA_DESCRIPTOR_QDATA g_quark_from_static_string("ladspa-descriptor")
 
 static void gst_ladspa_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -52,10 +51,9 @@ static void gst_ladspa_stop (GstSignalProcessor * sigproc);
 static void gst_ladspa_cleanup (GstSignalProcessor * sigproc);
 static void gst_ladspa_process (GstSignalProcessor * sigproc, guint nframes);
 
+static GstSignalProcessorClass *parent_class;
 
 static GstPlugin *ladspa_plugin;
-static GHashTable *ladspa_descriptors;
-
 
 GST_DEBUG_CATEGORY_STATIC (ladspa_debug);
 #define GST_CAT_DEFAULT ladspa_debug
@@ -73,13 +71,10 @@ gst_ladspa_base_init (gpointer g_class)
 
   GST_DEBUG ("base_init %p", g_class);
 
-  desc = g_hash_table_lookup (ladspa_descriptors,
-      GINT_TO_POINTER (G_TYPE_FROM_CLASS (klass)));
-  if (!desc)
-    desc = g_hash_table_lookup (ladspa_descriptors, GINT_TO_POINTER (0));
+  desc = (LADSPA_Descriptor *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
+      GST_LADSPA_DESCRIPTOR_QDATA);
   g_assert (desc);
   klass->descriptor = desc;
-  g_assert (desc);
 
   /* pad templates */
   gsp_class->num_audio_in = 0;
@@ -320,7 +315,7 @@ gst_ladspa_class_get_param_spec (GstLADSPAClass * klass, gint portnum)
 }
 
 static void
-gst_ladspa_class_init (GstLADSPAClass * klass)
+gst_ladspa_class_init (GstLADSPAClass * klass, LADSPA_Descriptor * desc)
 {
   GObjectClass *gobject_class;
   GstSignalProcessorClass *gsp_class;
@@ -569,23 +564,24 @@ ladspa_describe_plugin (const char *pcFullFilename,
 {
   const LADSPA_Descriptor *desc;
   gint i;
-  GTypeInfo typeinfo = {
-    sizeof (GstLADSPAClass),
-    (GBaseInitFunc) gst_ladspa_base_init,
-    NULL,
-    (GClassInitFunc) gst_ladspa_class_init,
-    NULL,
-    NULL,
-    sizeof (GstLADSPA),
-    0,
-    (GInstanceInitFunc) gst_ladspa_init,
-  };
-  GType type;
+
 
   /* walk through all the plugins in this pluginlibrary */
   i = 0;
   while ((desc = pfDescriptorFunction (i++))) {
     gchar *type_name;
+    GTypeInfo typeinfo = {
+      sizeof (GstLADSPAClass),
+      (GBaseInitFunc) gst_ladspa_base_init,
+      NULL,
+      (GClassInitFunc) gst_ladspa_class_init,
+      NULL,
+      desc,
+      sizeof (GstLADSPA),
+      0,
+      (GInstanceInitFunc) gst_ladspa_init,
+    };
+    GType type;
 
     /* construct the type */
     type_name = g_strdup_printf ("ladspa-%s", desc->Label);
@@ -594,26 +590,20 @@ ladspa_describe_plugin (const char *pcFullFilename,
     if (g_type_from_name (type_name))
       goto next;
 
-    /* base-init temp alloc */
-    g_hash_table_insert (ladspa_descriptors,
-        GINT_TO_POINTER (0), (gpointer) desc);
-
     /* create the type now */
     type =
         g_type_register_static (GST_TYPE_SIGNAL_PROCESSOR, type_name, &typeinfo,
         0);
+    /* FIXME: not needed anymore when we can add pad templates, etc in class_init
+     * as class_data contains the LADSPA_Descriptor too */
+    g_type_set_qdata (type, GST_LADSPA_DESCRIPTOR_QDATA, (gpointer) desc);
+
     if (!gst_element_register (ladspa_plugin, type_name, GST_RANK_NONE, type))
       goto next;
-
-    /* add this plugin to the hash */
-    g_hash_table_insert (ladspa_descriptors,
-        GINT_TO_POINTER (type), (gpointer) desc);
 
   next:
     g_free (type_name);
   }
-
-  g_hash_table_remove (ladspa_descriptors, GINT_TO_POINTER (0));
 }
 
 static gboolean
@@ -622,8 +612,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (ladspa_debug, "ladspa",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_BLACK | GST_DEBUG_BOLD, "LADSPA");
 
-  ladspa_descriptors = g_hash_table_new (NULL, NULL);
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_SIGNAL_PROCESSOR);
 
   ladspa_plugin = plugin;
 

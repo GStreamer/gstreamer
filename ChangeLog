@@ -1,3 +1,16 @@
+2008-02-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/ladspa/gstladspa.c: (gst_ladspa_base_init),
+	(gst_ladspa_class_init), (ladspa_describe_plugin), (plugin_init):
+	Don't use GST_BOILERPLATE as the stuff generated from it is not used
+	anyway and can't be used.
+	Store the class struct of the correct type in parent_class.
+	Pass the LADSPA_Descriptor as class_data to the class_init function
+	as preparation for the time, when we can add pad templates and friends
+	in class_init and add a FIXME for that.
+	Don't use a custom hash table for passing the LADSPA_Descriptors to
+	base_init but use g_type_set_qdata and g_type_get_qdata.
+
 2008-02-04  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
