@@ -2059,6 +2059,11 @@ gst_pad_get_caps (GstPad * pad)
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get pad caps");
 
   result = gst_pad_get_caps_unlocked (pad);
+
+  /* be sure that we have a copy */
+  if (result)
+    result = gst_caps_make_writable (result);
+
   GST_OBJECT_UNLOCK (pad);
 
   return result;
