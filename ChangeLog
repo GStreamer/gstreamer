@@ -1,3 +1,9 @@
+2008-02-04  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_subindex):
+	If there's no entries in the subindex, don't try to do anything stupid,
+	just return.
+
 2008-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: John Millikin <jmillikin at gmail dot com>

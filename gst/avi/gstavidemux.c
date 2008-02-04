@@ -979,6 +979,10 @@ gst_avi_demux_parse_subindex (GstAviDemux * avi,
   num = GST_READ_UINT32_LE (&data[4]);
   baseoff = GST_READ_UINT64_LE (&data[12]);
 
+  /* If there's nothing, just return ! */
+  if (num == 0)
+    return TRUE;
+
   if (!(entries = g_try_new (gst_avi_index_entry, num)))
     goto out_of_mem;
 
