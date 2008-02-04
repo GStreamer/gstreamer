@@ -1483,8 +1483,10 @@ class LineView (object):
 
         line_index = path[0]
         line_model = view.props.model
-        parent_index = line_model.line_index_to_super (line_index)
-        path = (parent_index,)
+        log_model = self.log_view.props.model
+        top_index = line_model.line_index_to_top (line_index)
+        log_index = log_model.line_index_from_top (top_index)
+        path = (log_index,)
         self.log_view.scroll_to_cell (path, use_align = True, row_align = .5)
         sel = self.log_view.get_selection ()
         sel.select_path (path)
@@ -1494,7 +1496,7 @@ class LineView (object):
         log_model = view.props.model
         line_index = path[0]
 
-        super_line_index = log_model.line_index_to_super (line_index)
+        top_line_index = log_model.line_index_to_top (line_index)
         line_model = self.line_view.props.model
         if line_model is None:
             return
@@ -1506,14 +1508,14 @@ class LineView (object):
         else:
             position = 0
         if len (line_model) > 1:
-            other_index = line_model.line_index_to_super (position - 1)
+            other_index = line_model.line_index_to_top (position - 1)
         else:
             other_index = -1
-        if other_index == super_line_index and position != 1:
+        if other_index == top_line_index and position != 1:
             # Already have the line.
             pass
         else:
-            line_model.insert_line (position, super_line_index)
+            line_model.insert_line (position, top_line_index)
             self.clear_action.props.sensitive = True
 
     def handle_log_view_selection_changed (self, selection):
