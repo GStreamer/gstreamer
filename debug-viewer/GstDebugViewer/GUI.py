@@ -1530,7 +1530,7 @@ class LineView (object):
             return
 
         path = model.get_path (tree_iter)
-        line_index = model.line_index_to_super (path[0])
+        line_index = model.line_index_to_top (path[0])
 
         if len (line_model) == 0:
             line_model.insert_line (0, line_index)
