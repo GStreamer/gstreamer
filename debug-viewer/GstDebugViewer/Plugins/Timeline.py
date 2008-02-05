@@ -257,18 +257,20 @@ class VerticalTimelineWidget (gtk.DrawingArea):
 
     __gtype_name__ = "GstDebugViewerVerticalTimelineWidget"
 
-    def __init__ (self):
+    def __init__ (self, log_view):
 
         gtk.DrawingArea.__init__ (self)
 
         self.logger = logging.getLogger ("ui.vtimeline")
 
+        self.log_view = log_view
         self.theme = GUI.ThreadColorThemeTango ()
         self.params = None
         self.thread_colors = {}
         self.next_thread_color = 0
 
         self.connect ("expose-event", self.__handle_expose_event)
+        self.connect ("configure-event", self.__handle_configure_event)
         self.connect ("size-request", self.__handle_size_request)
 
         try:
@@ -282,6 +284,11 @@ class VerticalTimelineWidget (gtk.DrawingArea):
 
         self.__draw (self.window)
 
+    def __handle_configure_event (self, self_, event):
+
+        self.params = None
+        self.queue_draw ()
+
     def __draw (self, drawable):
 
         ctx = drawable.cairo_create ()
@@ -293,6 +300,9 @@ class VerticalTimelineWidget (gtk.DrawingArea):
         ctx.set_source_rgb (1., 1., 1.)
         ctx.fill ()
         ctx.new_path ()
+
+        if self.params is None:
+            self.__update_params ()
 
         if self.params is None:
             return
@@ -345,12 +355,54 @@ class VerticalTimelineWidget (gtk.DrawingArea):
         self.next_thread_color = 0
         self.queue_draw ()
 
-    def update (self, first_y, cell_height, data):
+    def __update_params (self):
 
         # FIXME: Ideally we should take the vertical position difference of the
         # view into account (which is 0 with the current UI layout).
 
+        view = self.log_view
+        model = view.props.model
+        visible_range = view.get_visible_range ()
+        if visible_range is None:
+            return
+        start_path, end_path = visible_range
+
+        if not start_path or not end_path:
+            return
+
+        column = view.get_column (0)
+        bg_rect = view.get_background_area (start_path, column)
+        cell_height = bg_rect.height
+        cell_rect = view.get_cell_area (start_path, column)
+        try:
+            first_y = view.convert_bin_window_to_widget_coords (cell_rect.x, cell_rect.y)[1]
+        except (AttributeError, SystemError,):
+            # AttributeError is with PyGTK before 2.12.  SystemError is raised
+            # with PyGTK 2.12.0, pygtk bug #479012.
+            first_y = cell_rect.y % cell_height
+
+            global _warn_tree_view_coords
+            try:
+                _warn_tree_view_coords
+            except NameError:
+                self.logger.warning ("tree view coordinate conversion method "
+                                     "not available, using aproximate offset")
+                # Only warn once:
+                _warn_tree_view_coords = True
+
+        data = []
+        tree_iter = model.get_iter (start_path)
+        if tree_iter is None:
+            return
+        while model.get_path (tree_iter) != end_path:
+            data.append (model.get (tree_iter, model.COL_TIME, model.COL_THREAD))
+            tree_iter = model.iter_next (tree_iter)
+
         self.params = (first_y, cell_height, data,)
+
+    def update (self):
+
+        self.params = None
         self.queue_draw ()
 
 class TimelineWidget (gtk.DrawingArea):
@@ -677,7 +729,7 @@ class AttachedWindow (object):
 
         box = window.get_side_attach_point ()
 
-        self.vtimeline = VerticalTimelineWidget ()
+        self.vtimeline = VerticalTimelineWidget (self.window.log_view)
         box.pack_start (self.vtimeline, False, False, 0)
         self.vtimeline.hide ()
 
@@ -726,7 +778,7 @@ class AttachedWindow (object):
         # warning in treeview.get_visible_range:
         def idle_update ():
             self.update_timeline_position ()
-            self.update_vtimeline ()
+            self.vtimeline.update ()
             return False
         gobject.idle_add (idle_update, priority = gobject.PRIORITY_LOW)
 
@@ -737,7 +789,7 @@ class AttachedWindow (object):
             return
 
         self.update_timeline_position ()
-        self.update_vtimeline ()
+        self.vtimeline.update ()
 
     def update_timeline_position (self):
 
@@ -755,46 +807,6 @@ class AttachedWindow (object):
                                model.COL_TIME)
         
         self.timeline.update_position (ts1, ts2)
-
-    def update_vtimeline (self):
-
-        view = self.window.log_view
-        model = view.props.model
-        visible_range = view.get_visible_range ()
-        if visible_range is None:
-            return
-        start_path, end_path = visible_range
-
-        if not start_path or not end_path:
-            return
-
-        column = view.get_column (0)
-        bg_rect = view.get_background_area (start_path, column)
-        cell_height = bg_rect.height
-        cell_rect = view.get_cell_area (start_path, column)
-        try:
-            first_y = view.convert_bin_window_to_widget_coords (cell_rect.x, cell_rect.y)[1]
-        except (AttributeError, SystemError,):
-            # AttributeError is with PyGTK before 2.12.  SystemError is raised
-            # with PyGTK 2.12.0, pygtk bug #479012.
-            first_y = cell_rect.y % cell_height
-
-            global _warn_tree_view_coords
-            try:
-                _warn_tree_view_coords
-            except NameError:
-                self.logger.warning ("tree view coordinate conversion method "
-                                     "not available, using aproximate offset")
-                # Only warn once:
-                _warn_tree_view_coords = True
-
-        data = []
-        tree_iter = model.get_iter (start_path)
-        while model.get_path (tree_iter) != end_path:
-            data.append (model.get (tree_iter, model.COL_TIME, model.COL_THREAD))
-            tree_iter = model.iter_next (tree_iter)
-
-        self.vtimeline.update (first_y, cell_height, data)
 
     def handle_show_action_toggled (self, action):
 
