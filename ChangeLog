@@ -1,3 +1,10 @@
+2008-02-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	Add flag to both sdt and nit structures to say
+	whether the table is for the actual network/ts
+	or not.
+
 2008-02-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Josep Torre Valles <josep@fluendo.com>

@@ -596,7 +596,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
       "network-id", G_TYPE_UINT, network_id,
       "version-number", G_TYPE_UINT, section->version_number,
       "current-next-indicator", G_TYPE_UINT, section->current_next_indicator,
-      NULL);
+      "actual-network", G_TYPE_BOOLEAN, section->table_id == 0x40, NULL);
 
   /* see if the buffer is large enough */
   if (descriptors_loop_length) {
@@ -1069,7 +1069,9 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
       "transport-stream-id", G_TYPE_UINT, transport_stream_id,
       "version-number", G_TYPE_UINT, section->version_number,
       "current-next-indicator", G_TYPE_UINT, section->current_next_indicator,
-      "original-network-id", G_TYPE_UINT, original_network_id, NULL);
+      "original-network-id", G_TYPE_UINT, original_network_id,
+      "actual-transport-stream", G_TYPE_BOOLEAN, section->table_id == 0x42,
+      NULL);
 
   sdt_info_length = section->section_length - 8;
   g_value_init (&services, GST_TYPE_LIST);
