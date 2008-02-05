@@ -1,3 +1,10 @@
+2008-02-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: orjan <orjanf at axis dot com>
+
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_collected):
+	Fix caps memory leak. Fixes #514573.
+
 2008-02-04  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_subindex):

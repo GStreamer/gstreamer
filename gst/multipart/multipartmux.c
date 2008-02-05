@@ -427,9 +427,12 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
     newcaps = gst_caps_new_simple ("multipart/x-mixed-replace",
         "boundary", G_TYPE_STRING, mux->boundary, NULL);
 
-    if (!gst_pad_set_caps (mux->srcpad, newcaps))
+    if (!gst_pad_set_caps (mux->srcpad, newcaps)) {
+      gst_caps_unref (newcaps);
       goto nego_error;
+    }
 
+    gst_caps_unref (newcaps);
     mux->negotiated = TRUE;
   }
 
