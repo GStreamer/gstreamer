@@ -1,3 +1,48 @@
+2008-02-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstbin.c: (gst_bin_get_type), (gst_bin_base_init),
+	(gst_bin_class_init):
+	* gst/gstelement.c: (gst_element_base_class_init),
+	(gst_element_class_add_pad_template):
+	* gst/gstpadtemplate.c: (gst_pad_template_init):
+	* gst/gstpipeline.c: (gst_pipeline_get_type),
+	(gst_pipeline_base_init), (gst_pipeline_class_init):
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_get_type),
+	(gst_base_src_base_init), (gst_base_src_class_init):
+	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_base_init),
+	(gst_capsfilter_class_init):
+	* plugins/elements/gstfakesink.c: (gst_fake_sink_base_init),
+	(gst_fake_sink_class_init):
+	* plugins/elements/gstfakesrc.c: (gst_fake_src_base_init),
+	(gst_fake_src_class_init):
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_base_init),
+	(gst_fd_sink_class_init):
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_base_init),
+	(gst_fd_src_class_init):
+	* plugins/elements/gstfilesink.c: (gst_file_sink_base_init),
+	(gst_file_sink_class_init):
+	* plugins/elements/gstfilesrc.c: (gst_file_src_base_init),
+	(gst_file_src_class_init):
+	* plugins/elements/gstidentity.c: (gst_identity_base_init),
+	(gst_identity_class_init):
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_base_init),
+	(gst_multi_queue_class_init):
+	* plugins/elements/gstqueue.c: (gst_queue_base_init),
+	(gst_queue_class_init):
+	* plugins/elements/gsttee.c: (gst_tee_base_init),
+	(gst_tee_class_init):
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_base_init),
+	(gst_type_find_element_class_init):
+	* tests/check/gst/gstelement.c: (gst_element_suite):
+	Revert previous changes to the behaviour of GstPadTemplates, etc
+	and the possiblity to call them in class_init as it breaks too
+	many elements. Reopens bug #491501.
+
+	Should be applied again for 0.11, thus added a few FIXME 0.11 at
+	several places.
+
 2008-02-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* tools/gst-launch.c:

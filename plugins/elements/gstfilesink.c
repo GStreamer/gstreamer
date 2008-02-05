@@ -137,13 +137,19 @@ GST_BOILERPLATE_FULL (GstFileSink, gst_file_sink, GstBaseSink,
 static void
 gst_file_sink_base_init (gpointer g_class)
 {
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "File Sink",
+      "Sink/File", "Write stream to a file", "Thomas <thomas@apestaart.org>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
 }
 
 static void
 gst_file_sink_class_init (GstFileSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
 
   gobject_class->dispose = gst_file_sink_dispose;
@@ -164,12 +170,6 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
       g_param_spec_uint ("buffer-size", "Buffering size",
           "Size of buffer in number of bytes for line or full buffer-mode", 0,
           G_MAXUINT, DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE));
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "File Sink",
-      "Sink/File", "Write stream to a file", "Thomas <thomas@apestaart.org>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
 
   gstbasesink_class->get_times = NULL;
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_file_sink_start);

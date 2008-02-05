@@ -62,6 +62,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_capsfilter_debug);
 GST_BOILERPLATE_FULL (GstCapsFilter, gst_capsfilter, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM, _do_init);
 
+
 static void gst_capsfilter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_capsfilter_get_property (GObject * object, guint prop_id,
@@ -80,6 +81,17 @@ static gboolean gst_capsfilter_transform_size (GstBaseTransform * trans,
 static void
 gst_capsfilter_base_init (gpointer g_class)
 {
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "CapsFilter",
+      "Generic",
+      "Pass data without modification, limiting formats",
+      "David Schleef <ds@schleef.org>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
 }
 
 static void
@@ -87,7 +99,6 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->set_property = gst_capsfilter_set_property;
@@ -99,17 +110,6 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
           _("Restrict the possible allowed capabilities (NULL means ANY). "
               "Setting this property takes a reference to the supplied GstCaps "
               "object."), GST_TYPE_CAPS, G_PARAM_READWRITE));
-
-  gstelement_class = GST_ELEMENT_CLASS (klass);
-  gst_element_class_set_details_simple (gstelement_class,
-      "CapsFilter",
-      "Generic",
-      "Pass data without modification, limiting formats",
-      "David Schleef <ds@schleef.org>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
 
   trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   trans_class->transform_caps = gst_capsfilter_transform_caps;

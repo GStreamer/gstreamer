@@ -90,12 +90,6 @@
 GST_DEBUG_CATEGORY_STATIC (pipeline_debug);
 #define GST_CAT_DEFAULT pipeline_debug
 
-static const GstElementDetails gst_pipeline_details =
-GST_ELEMENT_DETAILS ("Pipeline object",
-    "Generic/Bin",
-    "Complete pipeline object",
-    "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");
-
 /* Pipeline signals and args */
 enum
 {
@@ -128,6 +122,7 @@ struct _GstPipelinePrivate
 };
 
 
+static void gst_pipeline_base_init (gpointer g_class);
 static void gst_pipeline_class_init (gpointer g_class, gpointer class_data);
 static void gst_pipeline_init (GTypeInstance * instance, gpointer g_class);
 
@@ -155,7 +150,7 @@ gst_pipeline_get_type (void)
   if (G_UNLIKELY (pipeline_type == 0)) {
     static const GTypeInfo pipeline_info = {
       sizeof (GstPipelineClass),
-      NULL,
+      gst_pipeline_base_init,
       NULL,
       (GClassInitFunc) gst_pipeline_class_init,
       NULL,
@@ -173,6 +168,17 @@ gst_pipeline_get_type (void)
         "debugging info for the 'pipeline' container element");
   }
   return pipeline_type;
+}
+
+static void
+gst_pipeline_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details_simple (gstelement_class, "Pipeline object",
+      "Generic/Bin",
+      "Complete pipeline object",
+      "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");
 }
 
 static void
@@ -221,8 +227,6 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
           G_PARAM_READWRITE));
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
-
-  gst_element_class_set_details (gstelement_class, &gst_pipeline_details);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_pipeline_change_state);

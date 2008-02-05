@@ -123,6 +123,14 @@ static GstFlowReturn gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf);
 static void
 gst_fd_src_base_init (gpointer g_class)
 {
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Filedescriptor Source",
+      "Source/File",
+      "Read from a file descriptor", "Erik Walthinsen <omega@cse.ogi.edu>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
 }
 
 static void
@@ -147,13 +155,6 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Filedescriptor Source",
-      "Source/File",
-      "Read from a file descriptor", "Erik Walthinsen <omega@cse.ogi.edu>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_fd_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_fd_src_stop);

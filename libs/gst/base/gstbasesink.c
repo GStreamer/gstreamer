@@ -36,12 +36,12 @@
  *
  * #GstBaseSink provides support for exactly one sink pad, which should be
  * named "sink". A sink implementation (subclass of #GstBaseSink) should
- * install a pad template in its class_init function, like so:
+ * install a pad template in its base_init function, like so:
  * <programlisting>
  * static void
- * my_element_class_init (GstMyElementClass *klass)
+ * my_element_base_init (gpointer g_class)
  * {
- *   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+ *   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
  *   
  *   // sinktemplate should be a #GstStaticPadTemplate with direction
  *   // #GST_PAD_SINK and name "sink"

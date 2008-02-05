@@ -249,6 +249,15 @@ static guint gst_multi_queue_signals[LAST_SIGNAL] = { 0 };
 static void
 gst_multi_queue_base_init (gpointer g_class)
 {
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "MultiQueue",
+      "Generic", "Multiple data queue", "Edward Hervey <edward@fluendo.com>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
 }
 
 static void
@@ -302,14 +311,6 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
           0, G_MAXUINT64, DEFAULT_EXTRA_SIZE_TIME, G_PARAM_READWRITE));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_multi_queue_finalize);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "MultiQueue",
-      "Generic", "Multiple data queue", "Edward Hervey <edward@fluendo.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_multi_queue_request_new_pad);

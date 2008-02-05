@@ -123,6 +123,19 @@ static GstFlowReturn gst_tee_src_get_range (GstPad * pad, guint64 offset,
 static void
 gst_tee_base_init (gpointer g_class)
 {
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Tee pipe fitting",
+      "Generic",
+      "1-to-N pipe fitting",
+      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&tee_src_template));
+
+  push_data = g_quark_from_static_string ("tee-push-data");
 }
 
 static void
@@ -174,18 +187,6 @@ gst_tee_class_init (GstTeeClass * klass)
       g_param_spec_enum ("pull-mode", "Pull mode",
           "Behavior of tee in pull mode", GST_TYPE_TEE_PULL_MODE,
           DEFAULT_PULL_MODE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Tee pipe fitting",
-      "Generic",
-      "1-to-N pipe fitting",
-      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&tee_src_template));
-
-  push_data = g_quark_from_static_string ("tee-push-data");
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_tee_request_new_pad);

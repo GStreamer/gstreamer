@@ -78,13 +78,13 @@
  * </example>
  *
  * The following example shows you how to add the padtemplate to an
- * element class, this is usually done in the class_init of the class:
+ * element class, this is usually done in the base_init of the class:
  * <informalexample>
  *   <programlisting>
  *   static void
- *   my_element_class_init (GstMyElementClass *klass)
+ *   my_element_base_init (gpointer g_class)
  *   {
- *     GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+ *     GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
  *    
  *     gst_element_class_add_pad_template (gstelement_class,
  *         gst_static_pad_template_get (&amp;my_template));
@@ -175,6 +175,10 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
 static void
 gst_pad_template_init (GstPadTemplate * templ, GstPadTemplateClass * klass)
 {
+  /* FIXME 0.11: Does anybody remember why this is here? If not, let's
+   * change it for 0.11 and let gst_element_class_add_pad_template() for
+   * example ref/sink the pad templates.
+   */
   /* We ensure that the pad template we're creating has a sunken reference.
    * Inconsistencies in pad templates being floating or sunken has caused
    * problems in the past with leaks, etc.

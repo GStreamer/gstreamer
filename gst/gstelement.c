@@ -238,34 +238,18 @@ static void
 gst_element_base_class_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GList *node, *padtemplates;
 
-  /* Copy the element details here so elements can inherit the
-   * details from their base class and classes only need to set
-   * the details in class_init instead of base_init */
-  /* FIXME: We probably need something like for copying
-   * the details at a central place */
-  element_class->details.longname = g_strdup (element_class->details.longname);
-  element_class->details.klass = g_strdup (element_class->details.klass);
-  element_class->details.description =
-      g_strdup (element_class->details.description);
-  element_class->details.author = g_strdup (element_class->details.author);
-
-  /* Copy the pad templates so elements inherit them
-   * from their base class but elements can add pad templates in class_init
-   * instead of base_init.
+  /* FIXME 0.11: Copy the element details and instead of clearing the
+   * pad template list copy the list and increase the refcount of
+   * the pad templates by one.
+   *
+   * This will make it possible to add pad templates and set element
+   * details in the class_init functions and is the real GObject way
+   * of doing things.
+   * See http://bugzilla.gnome.org/show_bug.cgi?id=491501
    */
-  /* FIXME: Do we consider GstPadTemplates as immutable? If so we can
-   * simply ref them instead of copying.
-   */
-  padtemplates = g_list_copy (element_class->padtemplates);
-  for (node = padtemplates; node != NULL; node = node->next) {
-    GstPadTemplate *tmpl = (GstPadTemplate *) node->data;
-
-    node->data = gst_pad_template_new (tmpl->name_template,
-        tmpl->direction, tmpl->presence, gst_caps_copy (tmpl->caps));
-  }
-  element_class->padtemplates = padtemplates;
+  memset (&element_class->details, 0, sizeof (GstElementDetails));
+  element_class->padtemplates = NULL;
 }
 
 static void
@@ -1127,38 +1111,28 @@ gst_element_iterate_sink_pads (GstElement * element)
  * @klass: the #GstElementClass to add the pad template to.
  * @templ: a #GstPadTemplate to add to the element class.
  *
- * Adds a padtemplate to an element class. This is mainly used in the
- * _class_init functions of classes. If a pad template with the same
- * name as an already existing one is added the old one is replaced
- * by the new one.
- *
- * This function takes the ownership of the #GstPadTemplate.
+ * Adds a padtemplate to an element class. This is mainly used in the _base_init
+ * functions of classes.
  */
 void
 gst_element_class_add_pad_template (GstElementClass * klass,
     GstPadTemplate * templ)
 {
-  GList *template_list = klass->padtemplates;
-
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
   g_return_if_fail (GST_IS_PAD_TEMPLATE (templ));
 
-  /* If we already have a pad template with the same name replace the
-   * old one. */
-  while (template_list) {
-    GstPadTemplate *padtempl = (GstPadTemplate *) template_list->data;
+  /* FIXME 0.11: allow replacing the pad templates by
+   * calling this with the same name as an already existing pad
+   * template. For this we _must_ _not_ ref the added pad template
+   * a second time and _must_ document that this function takes
+   * ownership of the pad template. Otherwise we will leak pad templates
+   * or the caller unref's the pad template and it disappears */
+  /* avoid registering pad templates with the same name */
+  g_return_if_fail (gst_element_class_get_pad_template (klass,
+          templ->name_template) == NULL);
 
-    /* Found pad with the same name, replace and return */
-    if (strcmp (templ->name_template, padtempl->name_template) == 0) {
-      gst_object_unref (padtempl);
-      template_list->data = templ;
-      return;
-    }
-    template_list = g_list_next (template_list);
-  }
-
-  /* Not found a pad with the same name so add it to the list */
-  klass->padtemplates = g_list_append (klass->padtemplates, templ);
+  klass->padtemplates = g_list_append (klass->padtemplates,
+      gst_object_ref (templ));
   klass->numpadtemplates++;
 }
 
@@ -1168,7 +1142,7 @@ gst_element_class_add_pad_template (GstElementClass * klass,
  * @details: details to set
  *
  * Sets the detailed information for a #GstElementClass.
- * <note>This function is for use in _class_init functions only.</note>
+ * <note>This function is for use in _base_init functions only.</note>
  *
  * The @details are copied.
  */
@@ -1196,7 +1170,7 @@ gst_element_class_set_details (GstElementClass * klass,
  *
  * Sets the detailed information for a #GstElementClass. Simpler version of 
  * gst_element_class_set_details() that generates less linker overhead.
- * <note>This function is for use in _class_init functions only.</note>
+ * <note>This function is for use in _base_init functions only.</note>
  *
  * The detail parameter strings are copied into the #GstElementDetails for
  * the element class.

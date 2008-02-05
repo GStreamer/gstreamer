@@ -235,6 +235,15 @@ static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
 static void
 gst_queue_base_init (gpointer g_class)
 {
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Queue",
+      "Generic", "Simple data queue", "Erik Walthinsen <omega@cse.ogi.edu>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
 }
 
 static void
@@ -344,14 +353,6 @@ gst_queue_class_init (GstQueueClass * klass)
 
   /* set several parent class virtual functions */
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_queue_finalize);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Queue",
-      "Generic", "Simple data queue", "Erik Walthinsen <omega@cse.ogi.edu>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_queue_change_state);
 }

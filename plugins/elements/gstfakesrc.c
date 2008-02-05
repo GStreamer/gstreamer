@@ -229,6 +229,15 @@ static guint gst_fake_src_signals[LAST_SIGNAL] = { 0 };
 static void
 gst_fake_src_base_init (gpointer g_class)
 {
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Fake Source",
+      "Source",
+      "Push empty (no data) buffers around",
+      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
 }
 
 static void
@@ -327,14 +336,6 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
       G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
       gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2, GST_TYPE_BUFFER,
       GST_TYPE_PAD);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Fake Source",
-      "Source",
-      "Push empty (no data) buffers around",
-      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
 
   gstbase_src_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fake_src_is_seekable);
   gstbase_src_class->start = GST_DEBUG_FUNCPTR (gst_fake_src_start);
