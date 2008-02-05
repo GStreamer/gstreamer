@@ -1,3 +1,8 @@
+2008-02-05  David Schleef  <ds@schleef.org>
+
+	* gst/gst.c: Add a separate gst_deinitialized that prevents
+	  gst_init() from being called after gst_deinit().  Fixes #509559
+
 2008-02-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstbin.c: (gst_bin_get_type), (gst_bin_base_init),

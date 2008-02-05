@@ -128,6 +128,7 @@
 #define GST_PLUGIN_SEPARATOR ","
 
 static gboolean gst_initialized = FALSE;
+static gboolean gst_deinitialized = FALSE;
 
 #ifndef GST_DISABLE_REGISTRY
 static GList *plugin_paths = NULL;      /* for delayed processing in post_init */
@@ -1209,7 +1210,7 @@ gst_deinit (void)
 
   GST_INFO ("deinitializing GStreamer");
 
-  if (!gst_initialized) {
+  if (gst_deinitialized) {
     GST_DEBUG ("already deinitialized");
     return;
   }
@@ -1241,7 +1242,7 @@ gst_deinit (void)
 #endif /* GST_DISABLE_INDEX */
   g_type_class_unref (g_type_class_peek (gst_param_spec_fraction_get_type ()));
 
-  gst_initialized = FALSE;
+  gst_deinitialized = TRUE;
   GST_INFO ("deinitialized GStreamer");
 }
 
