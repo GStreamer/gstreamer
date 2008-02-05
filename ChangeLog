@@ -1,3 +1,11 @@
+2008-02-05  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/metadata_mapping.htm:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/metadatatags.h:
+	  Add more tags mapping.
+
 2008-02-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/mpegtsparse.c:

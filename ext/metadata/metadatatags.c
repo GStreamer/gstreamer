@@ -114,6 +114,10 @@ metadata_tags_exif_register (void)
 
   /* capture tags */
 
+  gst_tag_register (GST_TAG_CAPTURE_APERTURE, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_CAPTURE_APERTURE,
+      "Aperture (in APEX units)", NULL);
+
   /* The unit is the APEX value.
      Ordinarily it is given in the range of -99.99 to 99.99.
      if numerator is 0xFFFFFFFF means unknown      
@@ -131,6 +135,15 @@ metadata_tags_exif_register (void)
    */
   gst_tag_register (GST_TAG_CAPTURE_CONTRAST, GST_TAG_FLAG_META, G_TYPE_INT,
       GST_TAG_CAPTURE_CONTRAST, "", NULL);
+
+  /*
+   * 0- Normal process
+   * 1- Custom process
+   */
+
+  gst_tag_register (GST_TAG_CAPTURE_CUSTOM_RENDERED, GST_TAG_FLAG_META,
+      G_TYPE_UINT, GST_TAG_CAPTURE_CUSTOM_RENDERED,
+      "Indicates the use of special processing on image data", NULL);
 
   /* if Zero ZOOM not used
    */
@@ -295,7 +308,11 @@ metadata_tags_exif_register (void)
      *** exif is just 0, 1, 2 (normal, low and high)
    */
   gst_tag_register (GST_TAG_CAPTURE_SATURATION, GST_TAG_FLAG_META, G_TYPE_INT,
-      GST_TAG_CAPTURE_SATURATION, "", NULL);
+      GST_TAG_CAPTURE_SATURATION, "The saturation", NULL);
+
+  gst_tag_register (GST_TAG_CAPTURE_SHUTTER_SPEED, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_CAPTURE_SHUTTER_SPEED, "Shutter speed (APEX)",
+      NULL);
 
   /*
      0- Auto
@@ -330,6 +347,11 @@ metadata_tags_exif_register (void)
       NULL);
 
   /* image tags */
+
+  gst_tag_register (GST_TAG_IMAGE_HEIGHT, GST_TAG_FLAG_META,
+      G_TYPE_UINT, GST_TAG_IMAGE_HEIGHT, "Image height in pixels", NULL);
+  gst_tag_register (GST_TAG_IMAGE_WIDTH, GST_TAG_FLAG_META,
+      G_TYPE_UINT, GST_TAG_IMAGE_WIDTH, "Image width in pixels", NULL);
 
   gst_tag_register (GST_TAG_IMAGE_XRESOLUTION, GST_TAG_FLAG_META,
       GST_TYPE_FRACTION, GST_TAG_IMAGE_XRESOLUTION,

@@ -79,8 +79,10 @@ typedef enum {
 
 /* individual tags */
 
+#define GST_TAG_CAPTURE_APERTURE           "capture-aperture"
 #define GST_TAG_CAPTURE_BRIGHTNESS         "capture-brightness"
 #define GST_TAG_CAPTURE_CONTRAST           "capture-contrast"
+#define GST_TAG_CAPTURE_CUSTOM_RENDERED    "capture-custom-rendered"
 #define GST_TAG_CAPTURE_DIGITAL_ZOOM       "capture-digital-zoom"
 #define GST_TAG_CAPTURE_EXPOSURE_PROGRAM   "capture-exposure-program"
 #define GST_TAG_CAPTURE_EXPOSURE_TIME      "capture-exposure-time"
@@ -89,9 +91,10 @@ typedef enum {
 #define GST_TAG_CAPTURE_FOCAL_LEN          "capture-focal-len"
 #define GST_TAG_CAPTURE_GAIN               "capture-gain"
 #define GST_TAG_CAPTURE_ISO_SPEED_RATINGS  "capture-iso-speed-ratings"
-#define GST_TAG_CAPTURE_LIGHT_SOURCE       "capture-light_source"
+#define GST_TAG_CAPTURE_LIGHT_SOURCE       "capture-light-source"
 #define GST_TAG_CAPTURE_ORIENTATION        "capture-orientation"
 #define GST_TAG_CAPTURE_SATURATION         "capture-saturation"
+#define GST_TAG_CAPTURE_SHUTTER_SPEED      "capture-shutter-speed"
 #define GST_TAG_CAPTURE_WHITE_BALANCE      "capture-white-balance"
 
 #define GST_TAG_CREATOR_TOOL               "creator-tool"
@@ -99,6 +102,8 @@ typedef enum {
 #define GST_TAG_DEVICE_MAKE                "device-make"
 #define GST_TAG_DEVICE_MODEL               "device-model"
 
+#define GST_TAG_IMAGE_HEIGHT               "image-height"
+#define GST_TAG_IMAGE_WIDTH                "image-width"
 #define GST_TAG_IMAGE_XRESOLUTION          "image-xresolution"
 #define GST_TAG_IMAGE_YRESOLUTION          "image-yresolution"
 

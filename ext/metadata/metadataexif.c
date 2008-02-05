@@ -140,44 +140,78 @@ typedef struct _tag_MapIntStr
 /* *INDENT-OFF* */
 /* When changing this table, update 'metadata_mapping.htm' file too. */
 static MapIntStr mappedTags[] = {
-  {EXIF_TAG_BRIGHTNESS_VALUE,            /*SRATIONAL,*/ EXIF_IFD_0,
+  {EXIF_TAG_APERTURE_VALUE,              /*RATIONAL,*/ EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_APERTURE              /*GST_TYPE_FRACTION*/},
+
+  {EXIF_TAG_BRIGHTNESS_VALUE,            /*SRATIONAL,*/ EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_BRIGHTNESS            /*GST_TYPE_FRACTION*/},
-  {EXIF_TAG_CONTRAST,                    /*SHORT,*/     EXIF_IFD_0,
+
+  {EXIF_TAG_CONTRAST,                    /*SHORT,*/     EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_CONTRAST              /*G_TYPE_INT*/},
-  {EXIF_TAG_DIGITAL_ZOOM_RATIO,          /*RATIONAL,*/  EXIF_IFD_0,
+
+  {EXIF_TAG_CUSTOM_RENDERED,             /*SHORT,*/     EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_CUSTOM_RENDERED       /*G_TYPE_UINT*/},
+
+  {EXIF_TAG_DIGITAL_ZOOM_RATIO,          /*RATIONAL,*/  EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_DIGITAL_ZOOM          /*GST_TYPE_FRACTION*/},
+
   {EXIF_TAG_EXPOSURE_PROGRAM,            /*SHORT,*/     EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_EXPOSURE_PROGRAM      /*G_TYPE_UINT*/},
+
   {EXIF_TAG_EXPOSURE_TIME,               /*RATIONAL,*/  EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_EXPOSURE_TIME         /*GST_TYPE_FRACTION*/},
+
   {EXIF_TAG_FLASH,                       /*SHORT*/      EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_FLASH                 /*G_TYPE_UINT*/},
+
   {EXIF_TAG_FNUMBER,                     /*RATIONAL,*/  EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_FNUMBER               /*GST_TYPE_FRACTION*/},
+
   {EXIF_TAG_FOCAL_LENGTH,                /*SRATIONAL*/  EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_FOCAL_LEN             /*GST_TYPE_FRACTION*/},
-  {EXIF_TAG_GAIN_CONTROL,                /*SHORT,*/     EXIF_IFD_0,
+
+  {EXIF_TAG_GAIN_CONTROL,                /*SHORT,*/     EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_GAIN                  /*G_TYPE_UINT*/},
+
   {EXIF_TAG_ISO_SPEED_RATINGS,           /*SHORT,*/     EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_ISO_SPEED_RATINGS     /*G_TYPE_INT*/},
-  {EXIF_TAG_LIGHT_SOURCE     ,           /*SHORT,*/     EXIF_IFD_EXIF,
+
+  {EXIF_TAG_LIGHT_SOURCE,                /*SHORT,*/     EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_LIGHT_SOURCE          /*G_TYPE_UINT*/},
-  {EXIF_TAG_ORIENTATION     ,           /*SHORT,*/     EXIF_IFD_0,
+
+  {EXIF_TAG_ORIENTATION,                 /*SHORT,*/     EXIF_IFD_0,
    GST_TAG_CAPTURE_ORIENTATION           /*G_TYPE_UINT*/},
-  {EXIF_TAG_SATURATION,                  /*SHORT,*/     EXIF_IFD_0,
+
+  {EXIF_TAG_SATURATION,                  /*SHORT,*/     EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_SATURATION            /*G_TYPE_INT*/},
-  {EXIF_TAG_WHITE_BALANCE,               /*SHORT,*/     EXIF_IFD_0,
+
+  {EXIF_TAG_SHUTTER_SPEED_VALUE,         /*SRATIONAL,*/ EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_SHUTTER_SPEED         /*GST_TYPE_FRACTION*/},
+
+  {EXIF_TAG_WHITE_BALANCE,               /*SHORT,*/     EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_WHITE_BALANCE         /*G_TYPE_UINT*/},
+
   {EXIF_TAG_SOFTWARE,                    /*ASCII,*/     EXIF_IFD_0,
    GST_TAG_CREATOR_TOOL                  /*G_TYPE_STRING*/},
+
   {EXIF_TAG_MAKE,                        /*ASCII,*/     EXIF_IFD_0,
    GST_TAG_DEVICE_MAKE                   /*G_TYPE_STRING*/},
+
   {EXIF_TAG_MODEL,                       /*ASCII,*/     EXIF_IFD_0,
    GST_TAG_DEVICE_MODEL                  /*G_TYPE_STRING*/},
+
+  {EXIF_TAG_PIXEL_Y_DIMENSION,           /*LONG,*/      EXIF_IFD_EXIF,
+   GST_TAG_IMAGE_HEIGHT                  /*G_TYPE_INT*/},          /* inches */
+
+  {EXIF_TAG_PIXEL_X_DIMENSION,           /*LONG,*/      EXIF_IFD_EXIF,
+   GST_TAG_IMAGE_WIDTH                   /*G_TYPE_INT*/},          /* inches */
+
   {EXIF_TAG_X_RESOLUTION,                /*RATIONAL,*/  EXIF_IFD_0,
    GST_TAG_IMAGE_XRESOLUTION             /*GST_TYPE_FRACTION*/},   /* inches */
+
   {EXIF_TAG_Y_RESOLUTION,                /*RATIONAL,*/  EXIF_IFD_0,
    GST_TAG_IMAGE_YRESOLUTION             /*GST_TYPE_FRACTION*/},   /* inches */
+
   {0, EXIF_IFD_COUNT, NULL}
 };
 /* *INDENT-ON* */
@@ -532,6 +566,9 @@ metadataparse_exif_content_foreach_entry_func (ExifEntry * entry,
           case EXIF_FORMAT_SHORT:
             value = exif_get_short (entry->data, byte_order);
             break;
+          case EXIF_FORMAT_LONG:
+            value = exif_get_long (entry->data, byte_order);
+            break;
           default:
             GST_ERROR ("Unexpected Exif Tag Type (%s - %s)",
                 tag, exif_format_get_name (entry->format));
@@ -685,17 +722,28 @@ metadatamux_exif_for_each_tag_in_list (const GstTagList * list,
         } else {
           gst_tag_list_get_int (list, tag, &value);
         }
-        if (entry->tag == EXIF_TAG_CONTRAST
-            || entry->tag == EXIF_TAG_SATURATION) {
-          if (value < -33)
-            value = 1;          /* low */
-          else if (value < 34)
-            value = 0;          /* normal */
-          else
-            value = 2;          /* high */
+
+        switch (entry->format) {
+          case EXIF_FORMAT_SHORT:
+            if (entry->tag == EXIF_TAG_CONTRAST
+                || entry->tag == EXIF_TAG_SATURATION) {
+              if (value < -33)
+                value = 1;      /* low */
+              else if (value < 34)
+                value = 0;      /* normal */
+              else
+                value = 2;      /* high */
+            }
+            v_short = value;
+            exif_set_short (entry->data, byte_order, v_short);
+            break;
+          case EXIF_FORMAT_LONG:
+            exif_set_long (entry->data, byte_order, value);
+            break;
+          default:
+            break;
         }
-        v_short = value;
-        exif_set_short (entry->data, byte_order, v_short);
+
       }
         break;
       default:
