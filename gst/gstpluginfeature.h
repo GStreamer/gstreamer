@@ -59,9 +59,9 @@ typedef struct _GstPluginFeatureClass GstPluginFeatureClass;
  * similar rank-picking mechanisms) will choose this element over an alternative
  * one with the same function.
  *
- * The rank is a unsigned integer ranging from 0 (GST_RANK_NONE) to 256
- * (GST_RANK_PRIMARY). These constants serve as a rough guidiance for defining
- * the rank of a #GstPlugin using gst_plugin_feature_set_rank().
+ * These constants serve as a rough guidiance for defining the rank of a
+ * #GstPlugin using gst_plugin_feature_set_rank() - any value including those
+ * bigger than @GST_RANK_PRIMARY are valid.
  */
 typedef enum {
   GST_RANK_NONE                 = 0,
