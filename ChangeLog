@@ -1,3 +1,9 @@
+2008-02-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* tools/gst-launch.c:
+	Dump one graph per pipeline state-change and state change name
+	(if GST_DEBUG_DUMP_DOT_DIR is set).
+
 2008-02-04  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/gstpad.c:

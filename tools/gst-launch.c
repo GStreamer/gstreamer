@@ -485,23 +485,19 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
         gst_message_parse_state_changed (message, &old, &new, &pending);
 
-        /* debug each state change
-           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "gst-launch");
-         */
-
         /* we only care about pipeline state change messages */
         if (GST_MESSAGE_SRC (message) != GST_OBJECT_CAST (pipeline))
           break;
 
-        /* debug only overall state changes
-           {
-           gchar *dump_name;
-
-           dump_name = g_strdup_printf ("gst-launch.%s",gst_element_state_get_name (new);
-           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline), GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
-           g_free (dump_name);
-           }
-         */
+        /* dump graph for pipeline state changes */
+        {
+          gchar *dump_name = g_strdup_printf ("gst-launch.%s_%s",
+              gst_element_state_get_name (old),
+              gst_element_state_get_name (new));
+          GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+              GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
+          g_free (dump_name);
+        }
 
         /* ignore when we are buffering since then we mess with the states
          * ourselves. */
