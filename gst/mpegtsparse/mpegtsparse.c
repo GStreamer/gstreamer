@@ -29,6 +29,9 @@
 
 #include "mpegtsparse.h"
 
+/* latency in mseconds */
+#define TS_LATENCY 700
+
 GST_DEBUG_CATEGORY_STATIC (mpegts_parse_debug);
 #define GST_CAT_DEFAULT mpegts_parse_debug
 
@@ -125,6 +128,7 @@ static GstFlowReturn mpegts_parse_chain (GstPad * pad, GstBuffer * buf);
 static gboolean mpegts_parse_sink_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn mpegts_parse_change_state (GstElement * element,
     GstStateChange transition);
+static gboolean mpegts_parse_src_pad_query (GstPad * pad, GstQuery * query);
 
 GST_BOILERPLATE (MpegTSParse, mpegts_parse, GstElement, GST_TYPE_ELEMENT);
 
@@ -553,6 +557,8 @@ mpegts_parse_create_tspad (MpegTSParse * parse, const gchar * pad_name)
   MpegTSParsePad *tspad;
 
   pad = gst_pad_new_from_static_template (&program_template, pad_name);
+  gst_pad_set_query_function (pad,
+      GST_DEBUG_FUNCPTR (mpegts_parse_src_pad_query));
 
   /* create our wrapper */
   tspad = g_new0 (MpegTSParsePad, 1);
@@ -1154,6 +1160,38 @@ mpegts_parse_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+}
+
+static gboolean
+mpegts_parse_src_pad_query (GstPad * pad, GstQuery * query)
+{
+  MpegTSParse *parse = GST_MPEGTS_PARSE (gst_pad_get_parent (pad));
+  gboolean res;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      if ((res = gst_pad_peer_query (parse->sinkpad, query))) {
+        gboolean is_live;
+        GstClockTime min_latency, max_latency;
+
+        gst_query_parse_latency (query, &is_live, &min_latency, &max_latency);
+        if (is_live) {
+          min_latency += TS_LATENCY * GST_MSECOND;
+          if (max_latency != GST_CLOCK_TIME_NONE)
+            max_latency += TS_LATENCY * GST_MSECOND;
+        }
+
+        gst_query_set_latency (query, is_live, min_latency, max_latency);
+      }
+
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+  }
+
+  return res;
 }
 
 static gboolean

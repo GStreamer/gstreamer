@@ -1,5 +1,10 @@
 2008-02-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* gst/mpegtsparse/mpegtsparse.c:
+	Handle latency queries in src pads.
+
+2008-02-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* gst/mpegtsparse/mpegtspacketizer.c:
 	Add flag to both sdt and nit structures to say
 	whether the table is for the actual network/ts
