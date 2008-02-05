@@ -1,3 +1,10 @@
+2008-02-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Josep Torre Valles <josep@fluendo.com>
+
+	* gst/mpegvideoparse/mpegvideoparse.c: (gst_mpegvideoparse_flush):
+	Flush packetizer too.
+
 2008-02-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ladspa/gstladspa.c: (gst_ladspa_base_init),

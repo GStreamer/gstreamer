@@ -303,6 +303,7 @@ gst_mpegvideoparse_flush (MpegVideoParse * mpegvideoparse)
   g_list_foreach (mpegvideoparse->decode, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (mpegvideoparse->decode);
   mpegvideoparse->decode = NULL;
+  mpeg_packetiser_flush (&mpegvideoparse->packer);
 }
 
 static GstFlowReturn
