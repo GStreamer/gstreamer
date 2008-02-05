@@ -95,7 +95,7 @@ typedef enum {
  *                               this to define custom success codes.
  *                               Since 0.10.7.
  * @GST_FLOW_RESEND:		 Resend buffer, possibly with new caps (not
- *                                 send yet).
+ *                                 sent yet) (unused/unimplemented).
  * @GST_FLOW_OK:		 Data passing was ok.
  * @GST_FLOW_NOT_LINKED:	 Pad is not linked.
  * @GST_FLOW_WRONG_STATE:	 Pad is in wrong state.

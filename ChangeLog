@@ -1,3 +1,11 @@
+2008-02-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstpad.h: (GST_PAD_LINK_SUCCESSFUL):
+	* gst/gstpluginfeature.h: (GstPluginFeatureClass):
+	  Some minor docs fixes: fix typo, mention that GST_FLOW_RESEND is
+	  unused and unimplemented; finally, it is plugin features, not
+	  plugins, that have ranks.
+	  
 2008-02-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstpluginfeature.h:

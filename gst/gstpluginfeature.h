@@ -56,12 +56,12 @@ typedef struct _GstPluginFeatureClass GstPluginFeatureClass;
  * @GST_RANK_PRIMARY: will be chosen first
  *
  * Element priority ranks. Defines the order in which the autoplugger (or
- * similar rank-picking mechanisms) will choose this element over an alternative
- * one with the same function.
+ * similar rank-picking mechanisms, such as e.g. gst_element_make_from_uri())
+ * will choose this element over an alternative one with the same function.
  *
- * These constants serve as a rough guidiance for defining the rank of a
- * #GstPlugin using gst_plugin_feature_set_rank() - any value including those
- * bigger than @GST_RANK_PRIMARY are valid.
+ * These constants serve as a rough guidance for defining the rank of a
+ * #GstPluginFeature. Any value is valid, including values bigger than
+ * @GST_RANK_PRIMARY.
  */
 typedef enum {
   GST_RANK_NONE                 = 0,
