@@ -49,7 +49,7 @@ GST_STATIC_PAD_TEMPLATE (
         "bpp = (int) 24, "
         "depth = (int) 24, "
         "endianness = (int) 4321, "
-        "framerate = (double) [1.0, 30.0], "
+        "framerate = (fraction) [1/1, 30/1], "
         "red_mask = (int) 16711680, "
         "green_mask = (int) 65280, "
         "blue_mask = (int) 255, "
@@ -273,7 +273,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
               "bpp", G_TYPE_INT, 24,
               "depth", G_TYPE_INT, 24,
               "endianness", G_TYPE_INT, 4321,
-              "framerate", G_TYPE_DOUBLE, 30.0,
+              "framerate", GST_TYPE_FRACTION, 15, 1,
               "red_mask", G_TYPE_INT, 16711680,
               "green_mask", G_TYPE_INT, 65280,
               "blue_mask", G_TYPE_INT, 255,
