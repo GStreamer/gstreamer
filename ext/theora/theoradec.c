@@ -230,7 +230,7 @@ _theora_granule_frame (GstTheoraDec * dec, gint64 granulepos)
   framenum = granulepos >> ilog;
   framenum += granulepos - (framenum << ilog);
 
-  /* This is 1-based for current libtheora, 0 based for old. Fix up. */
+  /* This is 0-based for old bitstreams, 1-based for new. Fix up. */
   if (!dec->is_old_bitstream)
     framenum -= 1;
 
@@ -266,7 +266,8 @@ _inc_granulepos (GstTheoraDec * dec, gint64 granulepos)
 
   framecount = _theora_granule_frame (dec, granulepos);
 
-  return (framecount + 1) << dec->granule_shift;
+  return (framecount + 1 +
+      (dec->is_old_bitstream ? 0 : 1)) << dec->granule_shift;
 }
 
 #if 0

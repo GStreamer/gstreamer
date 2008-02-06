@@ -1,3 +1,10 @@
+2008-02-06  Michael Smith <msmith@fluendo.com>
+
+	* ext/theora/theoradec.c: (_theora_granule_frame),
+	(_inc_granulepos):
+	  Increment granulepos for new-bitstream versions appropriately.
+	  Fixes #514623.
+
 2008-02-04  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/examples/seek/seek.c: (do_seek),
