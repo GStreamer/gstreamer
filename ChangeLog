@@ -1,3 +1,11 @@
+2008-02-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Wouter Cloetens <wouter at mind dot be>
+
+	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_got_chunk_cb),
+	(gst_soup_http_src_create):
+	Fix memory leak and improve debugging a bit.
+
 2008-02-05  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/metadata_mapping.htm:
