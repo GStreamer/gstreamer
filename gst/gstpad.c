@@ -1529,8 +1529,8 @@ gst_pad_set_bufferalloc_function (GstPad * pad,
  * @srcpad: the source #GstPad to unlink.
  * @sinkpad: the sink #GstPad to unlink.
  *
- * Unlinks the source pad from the sink pad. Will emit the "unlinked" signal on
- * both pads.
+ * Unlinks the source pad from the sink pad. Will emit the #GstPad::unlinked
+ * signal on both pads.
  *
  * Returns: TRUE if the pads were unlinked. This function returns FALSE if
  * the pads were not linked together.

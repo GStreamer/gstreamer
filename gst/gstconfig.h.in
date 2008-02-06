@@ -37,7 +37,7 @@
  *
  * If a subsystem is disabled in GStreamer, a value is defined in
  * &lt;gst/gst.h&gt;. You can check this if you do subsystem-specific stuff.
- * <example>
+ * <example id="example-gstconfig">
  * <title>Doing subsystem specific things</title>
  * <programlisting>
  * &hash;ifndef GST_DISABLE_GST_DEBUG

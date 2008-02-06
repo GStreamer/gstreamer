@@ -27,9 +27,9 @@
  *
  * Write data to a unix file descriptor.
  *
- * This element will sycnhronize on the clock before writing the data on the
+ * This element will synchronize on the clock before writing the data on the
  * socket. For file descriptors where this does not make sense (files, ...) the
- * ::sync property can be used to disable synchronisation.
+ * #GstBaseSink:sync property can be used to disable synchronisation.
  *
  * Last reviewed on 2006-04-28 (0.10.6)
  */

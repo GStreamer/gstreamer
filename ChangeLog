@@ -1,3 +1,13 @@
+2008-02-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstconfig.h.in:
+	  Add 'id' for example.
+
+	* gst/gstpad.c:
+	* gst/gstutils.c:
+	* plugins/elements/gstfdsink.c:
+	  Link to signals. Doc and comment fixes.
+
 2008-02-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstpad.h: (GST_PAD_LINK_SUCCESSFUL):

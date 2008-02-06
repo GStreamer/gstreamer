@@ -2437,7 +2437,7 @@ gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)
 {
   gst_buffer_copy_metadata (dest, src, GST_BUFFER_COPY_TIMESTAMPS);
 }
-#endif
+#endif /* GST_REMOVE_DEPRECATED */
 
 static gboolean
 intersect_caps_func (GstPad * pad, GValue * ret, GstPad * orig)
@@ -2848,7 +2848,7 @@ gst_atomic_int_set (gint * atomic_int, gint value)
  * Adds a "data probe" to a pad. This function will be called whenever data
  * passes through a pad. In this case data means both events and buffers. The
  * probe will be called with the data as an argument, meaning @handler should
- * have the same callback signature as the 'have-data' signal of #GstPad.
+ * have the same callback signature as the #GstPad::have-data signal.
  * Note that the data will have a reference count greater than 1, so it will
  * be immutable -- you must not change it.
  *
@@ -2892,7 +2892,7 @@ gst_pad_add_data_probe (GstPad * pad, GCallback handler, gpointer data)
 /**
  * gst_pad_add_event_probe:
  * @pad: pad to add the event probe handler to
- * @handler: function to call when data is passed over pad
+ * @handler: function to call when events are passed over pad
  * @data: data to pass along with the handler
  *
  * Adds a probe that will be called for all events passing through a pad. See
@@ -2921,7 +2921,7 @@ gst_pad_add_event_probe (GstPad * pad, GCallback handler, gpointer data)
 /**
  * gst_pad_add_buffer_probe:
  * @pad: pad to add the buffer probe handler to
- * @handler: function to call when data is passed over pad
+ * @handler: function to call when buffers are passed over pad
  * @data: data to pass along with the handler
  *
  * Adds a probe that will be called for all buffers passing through a pad. See
