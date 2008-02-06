@@ -319,7 +319,7 @@ gst_mimenc_create_tcp_header (GstMimEnc *mimenc, gint payload_size)
     *((guint32 *) (p + 8)) = GUINT32_TO_LE(payload_size); 
     *((guint32 *) (p + 12)) = GUINT32_TO_LE(GST_MAKE_FOURCC ('M', 'L', '2', '0')); 
     *((guint32 *) (p + 16)) = 0; 
-    *((guint32 *) (p + 20)) = 0; 
+    *((guint32 *) (p + 20)) = 0; /* FIXME: must be timestamp */
 
     return buf_header;
 }

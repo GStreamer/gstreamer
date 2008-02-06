@@ -55,6 +55,9 @@ struct _GstMimDec
   gint buffer_size;
   gboolean have_header;
   guint32 payload_size;
+  guint32 last_ts;
+  guint32 current_ts;
+  GstClockTime gst_timestamp;
 };
 
 struct _GstMimDecClass 

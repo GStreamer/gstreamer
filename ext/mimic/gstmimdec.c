@@ -149,7 +149,7 @@ gst_mimdec_init (GstMimDec *mimdec)
 
   mimdec->srcpad = gst_pad_new_from_template (
           gst_static_pad_template_get (&src_factory), "src");
-  gst_pad_set_getcaps_function (mimdec->srcpad, gst_mimdec_src_getcaps); 
+  gst_pad_set_getcaps_function (mimdec->srcpad, gst_mimdec_src_getcaps);
   gst_element_add_pad (GST_ELEMENT (mimdec), mimdec->srcpad);
 
   mimdec->adapter = gst_adapter_new ();
@@ -158,6 +158,9 @@ gst_mimdec_init (GstMimDec *mimdec)
   mimdec->buffer_size = -1;
   mimdec->have_header = FALSE;
   mimdec->payload_size = -1;
+  mimdec->last_ts = -1;
+  mimdec->current_ts = -1;
+  mimdec->gst_timestamp = -1;
 }
 
 static void
@@ -190,6 +193,21 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
   buf = GST_BUFFER (in);
   gst_adapter_push (mimdec->adapter, buf);
 
+
+  if (mimdec->gst_timestamp == -1) {
+    GstClock *clock;
+    GstClockTime base_time;
+
+    base_time = gst_element_get_base_time (GST_ELEMENT (mimdec));
+
+    clock = gst_element_get_clock (GST_ELEMENT (mimdec));
+    if (clock != NULL) {
+      mimdec->gst_timestamp = gst_clock_get_time (clock) - base_time;
+      gst_object_unref (clock);
+    }
+  }
+
+
   // do we have enough bytes to read a header
   while (gst_adapter_available (mimdec->adapter) >= (mimdec->have_header ? mimdec->payload_size : 24)) {
       if (!mimdec->have_header) {
@@ -209,6 +227,9 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
           }
 
           mimdec->payload_size = GUINT32_FROM_LE (*((guint32 *) (header + 8)));
+
+          mimdec->current_ts = GUINT32_FROM_LE (*((guint32 *) (header + 20)));
+
           GST_DEBUG ("Got packet, payload size %d", mimdec->payload_size);
 
           gst_adapter_flush (mimdec->adapter, 24);
@@ -255,7 +276,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       }
 
       out_buf = gst_buffer_new_and_alloc (mimdec->buffer_size);
-      GST_BUFFER_TIMESTAMP(out_buf) = GST_BUFFER_TIMESTAMP(buf);
+
       if (!mimic_decode_frame (mimdec->dec, frame_body, GST_BUFFER_DATA (out_buf))) {
           GST_WARNING ("mimic_decode_frame error\n");
 
@@ -265,7 +286,14 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
           gst_buffer_unref (out_buf);
           return GST_FLOW_ERROR;
       }
-      
+
+      if (mimdec->last_ts != -1) {
+        mimdec->gst_timestamp += (mimdec->current_ts - mimdec->last_ts) * GST_MSECOND;
+      }
+      GST_BUFFER_TIMESTAMP(out_buf) = mimdec->gst_timestamp;
+      mimdec->last_ts = mimdec->current_ts;
+
+
       mimic_get_property(mimdec->dec, "width", &width);
       mimic_get_property(mimdec->dec, "height", &height);
       GST_DEBUG ("got WxH %d x %d payload size %d buffer_size %d", width, height, mimdec->payload_size, mimdec->buffer_size);
@@ -317,9 +345,11 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
         mimdec->buffer_size = -1;
         mimdec->have_header = FALSE;
         mimdec->payload_size = -1;
+        mimdec->gst_timestamp = -1;
+        mimdec->current_ts = -1;
+        mimdec->last_ts = -1;
       }
       break;
-
     default:
       break;
   }
