@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_AUDIO_CHEBYSHEV_FREQ_BAND_H__
-#define __GST_AUDIO_CHEBYSHEV_FREQ_BAND_H__
+#ifndef __GST_AUDIO_CHEB_BAND_H__
+#define __GST_AUDIO_CHEB_BAND_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
@@ -27,16 +27,16 @@
 #include <gst/audio/gstaudiofilter.h>
 
 G_BEGIN_DECLS
-#define GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND            (gst_audio_chebyshev_freq_band_get_type())
-#define GST_AUDIO_CHEBYSHEV_FREQ_BAND(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND,GstAudioChebyshevFreqBand))
-#define GST_IS_AUDIO_CHEBYSHEV_FREQ_BAND(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND))
-#define GST_AUDIO_CHEBYSHEV_FREQ_BAND_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND,GstAudioChebyshevFreqBandClass))
-#define GST_IS_AUDIO_CHEBYSHEV_FREQ_BAND_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND))
-#define GST_AUDIO_CHEBYSHEV_FREQ_BAND_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND,GstAudioChebyshevFreqBandClass))
-typedef struct _GstAudioChebyshevFreqBand GstAudioChebyshevFreqBand;
-typedef struct _GstAudioChebyshevFreqBandClass GstAudioChebyshevFreqBandClass;
+#define GST_TYPE_AUDIO_CHEB_BAND            (gst_audio_cheb_band_get_type())
+#define GST_AUDIO_CHEB_BAND(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_CHEB_BAND,GstAudioChebBand))
+#define GST_IS_AUDIO_CHEB_BAND(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_CHEB_BAND))
+#define GST_AUDIO_CHEB_BAND_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_AUDIO_CHEB_BAND,GstAudioChebBandClass))
+#define GST_IS_AUDIO_CHEB_BAND_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_AUDIO_CHEB_BAND))
+#define GST_AUDIO_CHEB_BAND_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AUDIO_CHEB_BAND,GstAudioChebBandClass))
+typedef struct _GstAudioChebBand GstAudioChebBand;
+typedef struct _GstAudioChebBandClass GstAudioChebBandClass;
 
-typedef void (*GstAudioChebyshevFreqBandProcessFunc) (GstAudioChebyshevFreqBand *, guint8 *, guint);
+typedef void (*GstAudioChebBandProcessFunc) (GstAudioChebBand *, guint8 *, guint);
 
 typedef struct
 {
@@ -44,9 +44,9 @@ typedef struct
   gint x_pos;
   gdouble *y;
   gint y_pos;
-} GstAudioChebyshevFreqBandChannelCtx;
+} GstAudioChebBandChannelCtx;
 
-struct _GstAudioChebyshevFreqBand
+struct _GstAudioChebBand
 {
   GstAudioFilter audiofilter;
 
@@ -58,22 +58,22 @@ struct _GstAudioChebyshevFreqBand
   gfloat ripple;
 
   /* < private > */
-  GstAudioChebyshevFreqBandProcessFunc process;
+  GstAudioChebBandProcessFunc process;
 
   gboolean have_coeffs;
   gdouble *a;
   gint num_a;
   gdouble *b;
   gint num_b;
-  GstAudioChebyshevFreqBandChannelCtx *channels;
+  GstAudioChebBandChannelCtx *channels;
 };
 
-struct _GstAudioChebyshevFreqBandClass
+struct _GstAudioChebBandClass
 {
   GstAudioFilterClass parent;
 };
 
-GType gst_audio_chebyshev_freq_band_get_type (void);
+GType gst_audio_cheb_band_get_type (void);
 
 G_END_DECLS
-#endif /* __GST_AUDIO_CHEBYSHEV_FREQ_BAND_H__ */
+#endif /* __GST_AUDIO_CHEB_BAND_H__ */

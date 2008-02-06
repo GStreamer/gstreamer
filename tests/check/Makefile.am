@@ -55,8 +55,8 @@ check_PROGRAMS = \
 	elements/alphacolor \
 	elements/audiopanorama \
 	elements/audioinvert \
-	elements/audiochebyshevfreqband \
-	elements/audiochebyshevfreqlimit \
+	elements/audiochebband \
+	elements/audiocheblimit \
 	elements/audioamplify \
 	elements/audiodynamic \
 	elements/avimux \

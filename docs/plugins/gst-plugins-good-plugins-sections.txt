@@ -58,35 +58,35 @@ gst_audio_amplify_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-audiochebyshevfreqband</FILE>
-<TITLE>audiochebyshevfreqband</TITLE>
-GstAudioChebyshevFreqBand
+<FILE>element-audiochebband</FILE>
+<TITLE>audiochebband</TITLE>
+GstAudioChebBand
 <SUBSECTION Standard>
-GstAudioChebyshevFreqBandClass
-GstAudioChebyshevFreqBandProcessFunc
-GST_AUDIO_CHEBYSHEV_FREQ_BAND
-GST_AUDIO_CHEBYSHEV_FREQ_BAND_CLASS
-GST_AUDIO_CHEBYSHEV_FREQ_BAND_GET_CLASS
-GST_IS_AUDIO_CHEBYSHEV_FREQ_BAND
-GST_IS_AUDIO_CHEBYSHEV_FREQ_BAND_CLASS
-GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND
-gst_audio_chebyshev_freq_band_get_type
+GstAudioChebBandClass
+GstAudioChebBandProcessFunc
+GST_AUDIO_CHEB_BAND
+GST_AUDIO_CHEB_BAND_CLASS
+GST_AUDIO_CHEB_BAND_GET_CLASS
+GST_IS_AUDIO_CHEB_BAND
+GST_IS_AUDIO_CHEB_BAND_CLASS
+GST_TYPE_AUDIO_CHEB_BAND
+gst_audio_cheb_band_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-audiochebyshevfreqlimit</FILE>
-<TITLE>audiochebyshevfreqlimit</TITLE>
-GstAudioChebyshevFreqLimit
+<FILE>element-audiocheblimit</FILE>
+<TITLE>audiocheblimit</TITLE>
+GstAudioChebLimit
 <SUBSECTION Standard>
-GstAudioChebyshevFreqLimitClass
-GstAudioChebyshevFreqLimitProcessFunc
-GST_AUDIO_CHEBYSHEV_FREQ_LIMIT
-GST_AUDIO_CHEBYSHEV_FREQ_LIMIT_CLASS
-GST_AUDIO_CHEBYSHEV_FREQ_LIMIT_GET_CLASS
-GST_IS_AUDIO_CHEBYSHEV_FREQ_LIMIT
-GST_IS_AUDIO_CHEBYSHEV_FREQ_LIMIT_CLASS
-GST_TYPE_AUDIO_CHEBYSHEV_FREQ_LIMIT
-gst_audio_chebyshev_freq_limit_get_type
+GstAudioChebLimitClass
+GstAudioChebLimitProcessFunc
+GST_AUDIO_CHEB_LIMIT
+GST_AUDIO_CHEB_LIMIT_CLASS
+GST_AUDIO_CHEB_LIMIT_GET_CLASS
+GST_IS_AUDIO_CHEB_LIMIT
+GST_IS_AUDIO_CHEB_LIMIT_CLASS
+GST_TYPE_AUDIO_CHEB_LIMIT
+gst_audio_cheb_limit_get_type
 </SECTION>
 
 <SECTION>

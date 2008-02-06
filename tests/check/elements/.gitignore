@@ -2,8 +2,8 @@
 alphacolor
 apev2mux
 audioamplify
-audiochebyshevfreqband
-audiochebyshevfreqlimit
+audiochebband
+audiocheblimit
 audiodynamic
 audioinvert
 audiopanorama

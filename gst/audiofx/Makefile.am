@@ -8,8 +8,8 @@ libgstaudiofx_la_SOURCES = audiofx.c\
 	audioinvert.c \
 	audioamplify.c \
 	audiodynamic.c \
-	audiochebyshevfreqlimit.c \
-	audiochebyshevfreqband.c
+	audiocheblimit.c \
+	audiochebband.c
 
 # flags used to compile this plugin
 libgstaudiofx_la_CFLAGS = $(GST_CFLAGS) \
@@ -29,6 +29,6 @@ noinst_HEADERS = audiopanorama.h \
 	audioinvert.h \
 	audioamplify.h \
 	audiodynamic.h \
-	audiochebyshevfreqlimit.h \
-	audiochebyshevfreqband.h
+	audiocheblimit.h \
+	audiochebband.h
 

@@ -29,7 +29,7 @@
  */
 
 /**
- * SECTION:element-audiochebyshevfreqlimit
+ * SECTION:element-audiocheblimit
  * @short_description: Chebyshev low pass and high pass filter
  *
  * <refsect2>
@@ -61,9 +61,9 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch audiotestsrc freq=1500 ! audioconvert ! audiochebyshevfreqlimit mode=low-pass cutoff=1000 poles=4 ! audioconvert ! alsasink
- * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiochebyshevfreqlimit mode=high-pass cutoff=400 ripple=0.2 ! audioconvert ! alsasink
- * gst-launch audiotestsrc wave=white-noise ! audioconvert ! audiochebyshevfreqlimit mode=low-pass cutoff=800 type=2 ! audioconvert ! alsasink
+ * gst-launch audiotestsrc freq=1500 ! audioconvert ! audiocheblimit mode=low-pass cutoff=1000 poles=4 ! audioconvert ! alsasink
+ * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiocheblimit mode=high-pass cutoff=400 ripple=0.2 ! audioconvert ! alsasink
+ * gst-launch audiotestsrc wave=white-noise ! audioconvert ! audiocheblimit mode=low-pass cutoff=800 type=2 ! audioconvert ! alsasink
  * </programlisting>
  * </para>
  * </refsect2>
@@ -81,13 +81,13 @@
 
 #include <math.h>
 
-#include "audiochebyshevfreqlimit.h"
+#include "audiocheblimit.h"
 
-#define GST_CAT_DEFAULT gst_audio_chebyshev_freq_limit_debug
+#define GST_CAT_DEFAULT gst_audio_cheb_limit_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("AudioChebyshevFreqLimit",
+GST_ELEMENT_DETAILS ("AudioChebLimit",
     "Filter/Effect/Audio",
     "Chebyshev low pass and high pass filter",
     "Sebastian Dröge <slomo@circular-chaos.org>");
@@ -117,27 +117,25 @@ enum
     " channels = (int) [ 1, MAX ]"
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_chebyshev_freq_limit_debug, "audiochebyshevfreqlimit", 0, "audiochebyshevfreqlimit element");
+  GST_DEBUG_CATEGORY_INIT (gst_audio_cheb_limit_debug, "audiocheblimit", 0, "audiocheblimit element");
 
-GST_BOILERPLATE_FULL (GstAudioChebyshevFreqLimit,
-    gst_audio_chebyshev_freq_limit, GstAudioFilter, GST_TYPE_AUDIO_FILTER,
-    DEBUG_INIT);
+GST_BOILERPLATE_FULL (GstAudioChebLimit,
+    gst_audio_cheb_limit, GstAudioFilter, GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
 
-static void gst_audio_chebyshev_freq_limit_set_property (GObject * object,
+static void gst_audio_cheb_limit_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_audio_chebyshev_freq_limit_get_property (GObject * object,
+static void gst_audio_cheb_limit_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_audio_chebyshev_freq_limit_setup (GstAudioFilter * filter,
+static gboolean gst_audio_cheb_limit_setup (GstAudioFilter * filter,
     GstRingBufferSpec * format);
 static GstFlowReturn
-gst_audio_chebyshev_freq_limit_transform_ip (GstBaseTransform * base,
-    GstBuffer * buf);
-static gboolean gst_audio_chebyshev_freq_limit_start (GstBaseTransform * base);
+gst_audio_cheb_limit_transform_ip (GstBaseTransform * base, GstBuffer * buf);
+static gboolean gst_audio_cheb_limit_start (GstBaseTransform * base);
 
-static void process_64 (GstAudioChebyshevFreqLimit * filter,
+static void process_64 (GstAudioChebLimit * filter,
     gdouble * data, guint num_samples);
-static void process_32 (GstAudioChebyshevFreqLimit * filter,
+static void process_32 (GstAudioChebLimit * filter,
     gfloat * data, guint num_samples);
 
 enum
@@ -146,9 +144,9 @@ enum
   MODE_HIGH_PASS
 };
 
-#define GST_TYPE_AUDIO_CHEBYSHEV_FREQ_LIMIT_MODE (gst_audio_chebyshev_freq_limit_mode_get_type ())
+#define GST_TYPE_AUDIO_CHEBYSHEV_FREQ_LIMIT_MODE (gst_audio_cheb_limit_mode_get_type ())
 static GType
-gst_audio_chebyshev_freq_limit_mode_get_type (void)
+gst_audio_cheb_limit_mode_get_type (void)
 {
   static GType gtype = 0;
 
@@ -161,7 +159,7 @@ gst_audio_chebyshev_freq_limit_mode_get_type (void)
       {0, NULL, NULL}
     };
 
-    gtype = g_enum_register_static ("GstAudioChebyshevFreqLimitMode", values);
+    gtype = g_enum_register_static ("GstAudioChebLimitMode", values);
   }
   return gtype;
 }
@@ -169,7 +167,7 @@ gst_audio_chebyshev_freq_limit_mode_get_type (void)
 /* GObject vmethod implementations */
 
 static void
-gst_audio_chebyshev_freq_limit_base_init (gpointer klass)
+gst_audio_cheb_limit_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCaps *caps;
@@ -183,9 +181,9 @@ gst_audio_chebyshev_freq_limit_base_init (gpointer klass)
 }
 
 static void
-gst_audio_chebyshev_freq_limit_dispose (GObject * object)
+gst_audio_cheb_limit_dispose (GObject * object)
 {
-  GstAudioChebyshevFreqLimit *filter = GST_AUDIO_CHEBYSHEV_FREQ_LIMIT (object);
+  GstAudioChebLimit *filter = GST_AUDIO_CHEB_LIMIT (object);
 
   if (filter->a) {
     g_free (filter->a);
@@ -198,7 +196,7 @@ gst_audio_chebyshev_freq_limit_dispose (GObject * object)
   }
 
   if (filter->channels) {
-    GstAudioChebyshevFreqLimitChannelCtx *ctx;
+    GstAudioChebLimitChannelCtx *ctx;
     gint i, channels = GST_AUDIO_FILTER (filter)->format.channels;
 
     for (i = 0; i < channels; i++) {
@@ -215,8 +213,7 @@ gst_audio_chebyshev_freq_limit_dispose (GObject * object)
 }
 
 static void
-gst_audio_chebyshev_freq_limit_class_init (GstAudioChebyshevFreqLimitClass *
-    klass)
+gst_audio_cheb_limit_class_init (GstAudioChebLimitClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
@@ -226,9 +223,9 @@ gst_audio_chebyshev_freq_limit_class_init (GstAudioChebyshevFreqLimitClass *
   trans_class = (GstBaseTransformClass *) klass;
   filter_class = (GstAudioFilterClass *) klass;
 
-  gobject_class->set_property = gst_audio_chebyshev_freq_limit_set_property;
-  gobject_class->get_property = gst_audio_chebyshev_freq_limit_get_property;
-  gobject_class->dispose = gst_audio_chebyshev_freq_limit_dispose;
+  gobject_class->set_property = gst_audio_cheb_limit_set_property;
+  gobject_class->get_property = gst_audio_cheb_limit_get_property;
+  gobject_class->dispose = gst_audio_cheb_limit_dispose;
 
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
@@ -256,16 +253,15 @@ gst_audio_chebyshev_freq_limit_class_init (GstAudioChebyshevFreqLimitClass *
           "Number of poles to use, will be rounded up to the next even number",
           2, 32, 4, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
-  filter_class->setup =
-      GST_DEBUG_FUNCPTR (gst_audio_chebyshev_freq_limit_setup);
+  filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_cheb_limit_setup);
   trans_class->transform_ip =
-      GST_DEBUG_FUNCPTR (gst_audio_chebyshev_freq_limit_transform_ip);
-  trans_class->start = GST_DEBUG_FUNCPTR (gst_audio_chebyshev_freq_limit_start);
+      GST_DEBUG_FUNCPTR (gst_audio_cheb_limit_transform_ip);
+  trans_class->start = GST_DEBUG_FUNCPTR (gst_audio_cheb_limit_start);
 }
 
 static void
-gst_audio_chebyshev_freq_limit_init (GstAudioChebyshevFreqLimit * filter,
-    GstAudioChebyshevFreqLimitClass * klass)
+gst_audio_cheb_limit_init (GstAudioChebLimit * filter,
+    GstAudioChebLimitClass * klass)
 {
   filter->cutoff = 0.0;
   filter->mode = MODE_LOW_PASS;
@@ -281,7 +277,7 @@ gst_audio_chebyshev_freq_limit_init (GstAudioChebyshevFreqLimit * filter,
 }
 
 static void
-generate_biquad_coefficients (GstAudioChebyshevFreqLimit * filter,
+generate_biquad_coefficients (GstAudioChebLimit * filter,
     gint p, gdouble * a0, gdouble * a1, gdouble * a2,
     gdouble * b1, gdouble * b2)
 {
@@ -471,7 +467,7 @@ calculate_gain (gdouble * a, gdouble * b, gint num_a, gint num_b, gdouble zr,
 }
 
 static void
-generate_coefficients (GstAudioChebyshevFreqLimit * filter)
+generate_coefficients (GstAudioChebLimit * filter)
 {
   gint channels = GST_AUDIO_FILTER (filter)->format.channels;
 
@@ -486,7 +482,7 @@ generate_coefficients (GstAudioChebyshevFreqLimit * filter)
   }
 
   if (filter->channels) {
-    GstAudioChebyshevFreqLimitChannelCtx *ctx;
+    GstAudioChebLimitChannelCtx *ctx;
     gint i;
 
     for (i = 0; i < channels; i++) {
@@ -504,7 +500,7 @@ generate_coefficients (GstAudioChebyshevFreqLimit * filter)
     filter->a = g_new0 (gdouble, 1);
     filter->a[0] = 1.0;
     filter->num_b = 0;
-    filter->channels = g_new0 (GstAudioChebyshevFreqLimitChannelCtx, channels);
+    filter->channels = g_new0 (GstAudioChebLimitChannelCtx, channels);
     GST_LOG_OBJECT (filter, "rate was not set yet");
     return;
   }
@@ -516,7 +512,7 @@ generate_coefficients (GstAudioChebyshevFreqLimit * filter)
     filter->a = g_new0 (gdouble, 1);
     filter->a[0] = (filter->mode == MODE_LOW_PASS) ? 1.0 : 0.0;
     filter->num_b = 0;
-    filter->channels = g_new0 (GstAudioChebyshevFreqLimitChannelCtx, channels);
+    filter->channels = g_new0 (GstAudioChebLimitChannelCtx, channels);
     GST_LOG_OBJECT (filter, "cutoff was higher than nyquist frequency");
     return;
   } else if (filter->cutoff <= 0.0) {
@@ -524,7 +520,7 @@ generate_coefficients (GstAudioChebyshevFreqLimit * filter)
     filter->a = g_new0 (gdouble, 1);
     filter->a[0] = (filter->mode == MODE_LOW_PASS) ? 0.0 : 1.0;
     filter->num_b = 0;
-    filter->channels = g_new0 (GstAudioChebyshevFreqLimitChannelCtx, channels);
+    filter->channels = g_new0 (GstAudioChebLimitChannelCtx, channels);
     GST_LOG_OBJECT (filter, "cutoff is lower than zero");
     return;
   }
@@ -540,9 +536,9 @@ generate_coefficients (GstAudioChebyshevFreqLimit * filter)
     filter->num_b = np + 1;
     filter->b = b = g_new0 (gdouble, np + 3);
 
-    filter->channels = g_new0 (GstAudioChebyshevFreqLimitChannelCtx, channels);
+    filter->channels = g_new0 (GstAudioChebLimitChannelCtx, channels);
     for (i = 0; i < channels; i++) {
-      GstAudioChebyshevFreqLimitChannelCtx *ctx = &filter->channels[i];
+      GstAudioChebLimitChannelCtx *ctx = &filter->channels[i];
 
       ctx->x = g_new0 (gdouble, np + 1);
       ctx->y = g_new0 (gdouble, np + 1);
@@ -623,10 +619,10 @@ generate_coefficients (GstAudioChebyshevFreqLimit * filter)
 }
 
 static void
-gst_audio_chebyshev_freq_limit_set_property (GObject * object, guint prop_id,
+gst_audio_cheb_limit_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAudioChebyshevFreqLimit *filter = GST_AUDIO_CHEBYSHEV_FREQ_LIMIT (object);
+  GstAudioChebLimit *filter = GST_AUDIO_CHEB_LIMIT (object);
 
   switch (prop_id) {
     case PROP_MODE:
@@ -666,10 +662,10 @@ gst_audio_chebyshev_freq_limit_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_audio_chebyshev_freq_limit_get_property (GObject * object, guint prop_id,
+gst_audio_cheb_limit_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstAudioChebyshevFreqLimit *filter = GST_AUDIO_CHEBYSHEV_FREQ_LIMIT (object);
+  GstAudioChebLimit *filter = GST_AUDIO_CHEB_LIMIT (object);
 
   switch (prop_id) {
     case PROP_MODE:
@@ -696,17 +692,16 @@ gst_audio_chebyshev_freq_limit_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_chebyshev_freq_limit_setup (GstAudioFilter * base,
-    GstRingBufferSpec * format)
+gst_audio_cheb_limit_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
-  GstAudioChebyshevFreqLimit *filter = GST_AUDIO_CHEBYSHEV_FREQ_LIMIT (base);
+  GstAudioChebLimit *filter = GST_AUDIO_CHEB_LIMIT (base);
   gboolean ret = TRUE;
 
   if (format->width == 32)
-    filter->process = (GstAudioChebyshevFreqLimitProcessFunc)
+    filter->process = (GstAudioChebLimitProcessFunc)
         process_32;
   else if (format->width == 64)
-    filter->process = (GstAudioChebyshevFreqLimitProcessFunc)
+    filter->process = (GstAudioChebLimitProcessFunc)
         process_64;
   else
     ret = FALSE;
@@ -717,8 +712,8 @@ gst_audio_chebyshev_freq_limit_setup (GstAudioFilter * base,
 }
 
 static inline gdouble
-process (GstAudioChebyshevFreqLimit * filter,
-    GstAudioChebyshevFreqLimitChannelCtx * ctx, gdouble x0)
+process (GstAudioChebLimit * filter,
+    GstAudioChebLimitChannelCtx * ctx, gdouble x0)
 {
   gdouble val = filter->a[0] * x0;
   gint i, j;
@@ -757,7 +752,7 @@ process (GstAudioChebyshevFreqLimit * filter,
 
 #define DEFINE_PROCESS_FUNC(width,ctype) \
 static void \
-process_##width (GstAudioChebyshevFreqLimit * filter, \
+process_##width (GstAudioChebLimit * filter, \
     g##ctype * data, guint num_samples) \
 { \
   gint i, j, channels = GST_AUDIO_FILTER (filter)->format.channels; \
@@ -778,10 +773,9 @@ DEFINE_PROCESS_FUNC (64, double);
 
 /* GstBaseTransform vmethod implementations */
 static GstFlowReturn
-gst_audio_chebyshev_freq_limit_transform_ip (GstBaseTransform * base,
-    GstBuffer * buf)
+gst_audio_cheb_limit_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
-  GstAudioChebyshevFreqLimit *filter = GST_AUDIO_CHEBYSHEV_FREQ_LIMIT (base);
+  GstAudioChebLimit *filter = GST_AUDIO_CHEB_LIMIT (base);
   guint num_samples =
       GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
 
@@ -801,11 +795,11 @@ gst_audio_chebyshev_freq_limit_transform_ip (GstBaseTransform * base,
 
 
 static gboolean
-gst_audio_chebyshev_freq_limit_start (GstBaseTransform * base)
+gst_audio_cheb_limit_start (GstBaseTransform * base)
 {
-  GstAudioChebyshevFreqLimit *filter = GST_AUDIO_CHEBYSHEV_FREQ_LIMIT (base);
+  GstAudioChebLimit *filter = GST_AUDIO_CHEB_LIMIT (base);
   gint channels = GST_AUDIO_FILTER (filter)->format.channels;
-  GstAudioChebyshevFreqLimitChannelCtx *ctx;
+  GstAudioChebLimitChannelCtx *ctx;
   gint i;
 
   /* Reset the history of input and output values if

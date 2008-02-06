@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
  *
- * audiochebyshevfreqband.c: Unit test for the audiochebyshevfreqband element
+ * audiochebband.c: Unit test for the audiochebband element
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -63,26 +63,24 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 GstElement *
-setup_audiochebyshevfreqband ()
+setup_audiochebband ()
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
 
-  GST_DEBUG ("setup_audiochebyshevfreqband");
-  audiochebyshevfreqband = gst_check_setup_element ("audiochebyshevfreqband");
-  mysrcpad =
-      gst_check_setup_src_pad (audiochebyshevfreqband, &srctemplate, NULL);
-  mysinkpad =
-      gst_check_setup_sink_pad (audiochebyshevfreqband, &sinktemplate, NULL);
+  GST_DEBUG ("setup_audiochebband");
+  audiochebband = gst_check_setup_element ("audiochebband");
+  mysrcpad = gst_check_setup_src_pad (audiochebband, &srctemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (audiochebband, &sinktemplate, NULL);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  return audiochebyshevfreqband;
+  return audiochebband;
 }
 
 void
-cleanup_audiochebyshevfreqband (GstElement * audiochebyshevfreqband)
+cleanup_audiochebband (GstElement * audiochebband)
 {
-  GST_DEBUG ("cleanup_audiochebyshevfreqband");
+  GST_DEBUG ("cleanup_audiochebband");
 
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
@@ -90,9 +88,9 @@ cleanup_audiochebyshevfreqband (GstElement * audiochebyshevfreqband)
 
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
-  gst_check_teardown_src_pad (audiochebyshevfreqband);
-  gst_check_teardown_sink_pad (audiochebyshevfreqband);
-  gst_check_teardown_element (audiochebyshevfreqband);
+  gst_check_teardown_src_pad (audiochebband);
+  gst_check_teardown_sink_pad (audiochebband);
+  gst_check_teardown_element (audiochebband);
 }
 
 /* Test if data containing only one frequency component
@@ -100,26 +98,26 @@ cleanup_audiochebyshevfreqband (GstElement * audiochebyshevfreqband)
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type1_32_bp_0hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 0, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 0.25, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 0.25, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
@@ -146,7 +144,7 @@ GST_START_TEST (test_type1_32_bp_0hz)
   fail_unless (rms <= 0.1);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -156,26 +154,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type1_32_bp_11025hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 0, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 0.25, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 0.25, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
@@ -206,7 +204,7 @@ GST_START_TEST (test_type1_32_bp_11025hz)
   fail_unless (rms >= 0.6);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -216,26 +214,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type1_32_bp_22050hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 0, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 0.25, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 0.25, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
@@ -264,7 +262,7 @@ GST_START_TEST (test_type1_32_bp_22050hz)
   fail_unless (rms <= 0.1);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -274,26 +272,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type1_32_br_0hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 0.25, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 0.25, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
@@ -320,7 +318,7 @@ GST_START_TEST (test_type1_32_br_0hz)
   fail_unless (rms >= 0.9);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -330,26 +328,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type1_32_br_11025hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 0.25, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 0.25, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
@@ -380,7 +378,7 @@ GST_START_TEST (test_type1_32_br_11025hz)
   fail_unless (rms <= 0.1);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -390,26 +388,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type1_32_br_22050hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 0.25, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 0.25, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
@@ -438,7 +436,7 @@ GST_START_TEST (test_type1_32_br_22050hz)
   fail_unless (rms >= 0.9);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -448,26 +446,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type1_64_bp_0hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 0, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 0.25, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 0.25, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
@@ -494,7 +492,7 @@ GST_START_TEST (test_type1_64_bp_0hz)
   fail_unless (rms <= 0.1);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -504,26 +502,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type1_64_bp_11025hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 0, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 0.25, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 0.25, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
@@ -554,7 +552,7 @@ GST_START_TEST (test_type1_64_bp_11025hz)
   fail_unless (rms >= 0.6);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -564,26 +562,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type1_64_bp_22050hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 0, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 0.25, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 0.25, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
@@ -612,7 +610,7 @@ GST_START_TEST (test_type1_64_bp_22050hz)
   fail_unless (rms <= 0.1);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -622,26 +620,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type1_64_br_0hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 0.25, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 0.25, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
@@ -668,7 +666,7 @@ GST_START_TEST (test_type1_64_br_0hz)
   fail_unless (rms >= 0.9);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -678,26 +676,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type1_64_br_11025hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 0.25, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 0.25, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
@@ -728,7 +726,7 @@ GST_START_TEST (test_type1_64_br_11025hz)
   fail_unless (rms <= 0.1);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -738,26 +736,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type1_64_br_22050hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 0.25, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 0.25, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
@@ -786,7 +784,7 @@ GST_START_TEST (test_type1_64_br_22050hz)
   fail_unless (rms >= 0.9);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -796,26 +794,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type2_32_bp_0hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 0, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 2, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 40.0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 2, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 40.0, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
@@ -842,7 +840,7 @@ GST_START_TEST (test_type2_32_bp_0hz)
   fail_unless (rms <= 0.1);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -852,26 +850,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type2_32_bp_11025hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 0, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 2, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 40.0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 2, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 40.0, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
@@ -902,7 +900,7 @@ GST_START_TEST (test_type2_32_bp_11025hz)
   fail_unless (rms >= 0.6);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -912,26 +910,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type2_32_bp_22050hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 0, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 2, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 40.0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 2, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 40.0, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
@@ -960,7 +958,7 @@ GST_START_TEST (test_type2_32_bp_22050hz)
   fail_unless (rms <= 0.1);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -970,26 +968,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type2_32_br_0hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 2, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 40.0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 2, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 40.0, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
@@ -1016,7 +1014,7 @@ GST_START_TEST (test_type2_32_br_0hz)
   fail_unless (rms >= 0.9);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -1026,26 +1024,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type2_32_br_11025hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 2, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 40.0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 2, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 40.0, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
@@ -1076,7 +1074,7 @@ GST_START_TEST (test_type2_32_br_11025hz)
   fail_unless (rms <= 0.1);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -1086,26 +1084,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type2_32_br_22050hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 2, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 40.0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 2, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 40.0, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
@@ -1134,7 +1132,7 @@ GST_START_TEST (test_type2_32_br_22050hz)
   fail_unless (rms >= 0.9);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -1144,26 +1142,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type2_64_bp_0hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 0, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 2, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 40.0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 2, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 40.0, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
@@ -1190,7 +1188,7 @@ GST_START_TEST (test_type2_64_bp_0hz)
   fail_unless (rms <= 0.1);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -1200,26 +1198,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type2_64_bp_11025hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 0, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 2, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 40.0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 2, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 40.0, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
@@ -1250,7 +1248,7 @@ GST_START_TEST (test_type2_64_bp_11025hz)
   fail_unless (rms >= 0.6);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -1260,26 +1258,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type2_64_bp_22050hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 0, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 2, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 40.0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 2, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 40.0, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
@@ -1308,7 +1306,7 @@ GST_START_TEST (test_type2_64_bp_22050hz)
   fail_unless (rms <= 0.1);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -1318,26 +1316,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type2_64_br_0hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 2, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 40.0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 2, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 40.0, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
@@ -1364,7 +1362,7 @@ GST_START_TEST (test_type2_64_br_0hz)
   fail_unless (rms >= 0.9);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -1374,26 +1372,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type2_64_br_11025hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 2, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 40.0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 2, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 40.0, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
@@ -1424,7 +1422,7 @@ GST_START_TEST (test_type2_64_br_11025hz)
   fail_unless (rms <= 0.1);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
@@ -1434,26 +1432,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_type2_64_br_22050hz)
 {
-  GstElement *audiochebyshevfreqband;
+  GstElement *audiochebband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
 
-  audiochebyshevfreqband = setup_audiochebyshevfreqband ();
+  audiochebband = setup_audiochebband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "mode", 1, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "poles", 8, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "type", 2, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "ripple", 40.0, NULL);
+  g_object_set (G_OBJECT (audiochebband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiochebband), "poles", 8, NULL);
+  g_object_set (G_OBJECT (audiochebband), "type", 2, NULL);
+  g_object_set (G_OBJECT (audiochebband), "ripple", 40.0, NULL);
 
-  fail_unless (gst_element_set_state (audiochebyshevfreqband,
+  fail_unless (gst_element_set_state (audiochebband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "lower-frequency",
+  g_object_set (G_OBJECT (audiochebband), "lower-frequency",
       44100 / 4.0 - 1000, NULL);
-  g_object_set (G_OBJECT (audiochebyshevfreqband), "upper-frequency",
+  g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
@@ -1482,15 +1480,15 @@ GST_START_TEST (test_type2_64_br_22050hz)
   fail_unless (rms >= 0.9);
 
   /* cleanup */
-  cleanup_audiochebyshevfreqband (audiochebyshevfreqband);
+  cleanup_audiochebband (audiochebband);
 }
 
 GST_END_TEST;
 
 Suite *
-audiochebyshevfreqband_suite (void)
+audiochebband_suite (void)
 {
-  Suite *s = suite_create ("audiochebyshevfreqband");
+  Suite *s = suite_create ("audiochebband");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
@@ -1527,7 +1525,7 @@ main (int argc, char **argv)
 {
   int nf;
 
-  Suite *s = audiochebyshevfreqband_suite ();
+  Suite *s = audiochebband_suite ();
   SRunner *sr = srunner_create (s);
 
   gst_check_init (&argc, &argv);

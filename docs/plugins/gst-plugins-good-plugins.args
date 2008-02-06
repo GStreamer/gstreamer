@@ -17399,7 +17399,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstAudioChebyshevFreqBand::lower-frequency</NAME>
+<NAME>GstAudioChebBand::lower-frequency</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,100000]</RANGE>
 <FLAGS>rw</FLAGS>
@@ -17409,8 +17409,8 @@
 </ARG>
 
 <ARG>
-<NAME>GstAudioChebyshevFreqBand::mode</NAME>
-<TYPE>GstAudioChebyshevFreqBandMode</TYPE>
+<NAME>GstAudioChebBand::mode</NAME>
+<TYPE>GstAudioChebBandMode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Mode</NICK>
@@ -17419,7 +17419,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstAudioChebyshevFreqBand::poles</NAME>
+<NAME>GstAudioChebBand::poles</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[4,32]</RANGE>
 <FLAGS>rw</FLAGS>
@@ -17429,7 +17429,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstAudioChebyshevFreqBand::ripple</NAME>
+<NAME>GstAudioChebBand::ripple</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,200]</RANGE>
 <FLAGS>rw</FLAGS>
@@ -17439,7 +17439,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstAudioChebyshevFreqBand::type</NAME>
+<NAME>GstAudioChebBand::type</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[1,2]</RANGE>
 <FLAGS>rw</FLAGS>
@@ -17449,7 +17449,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstAudioChebyshevFreqBand::upper-frequency</NAME>
+<NAME>GstAudioChebBand::upper-frequency</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,100000]</RANGE>
 <FLAGS>rw</FLAGS>
@@ -17459,7 +17459,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstAudioChebyshevFreqLimit::cutoff</NAME>
+<NAME>GstAudioChebLimit::cutoff</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,100000]</RANGE>
 <FLAGS>rw</FLAGS>
@@ -17469,8 +17469,8 @@
 </ARG>
 
 <ARG>
-<NAME>GstAudioChebyshevFreqLimit::mode</NAME>
-<TYPE>GstAudioChebyshevFreqLimitMode</TYPE>
+<NAME>GstAudioChebLimit::mode</NAME>
+<TYPE>GstAudioChebLimitMode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Mode</NICK>
@@ -17479,7 +17479,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstAudioChebyshevFreqLimit::poles</NAME>
+<NAME>GstAudioChebLimit::poles</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[2,32]</RANGE>
 <FLAGS>rw</FLAGS>
@@ -17489,7 +17489,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstAudioChebyshevFreqLimit::ripple</NAME>
+<NAME>GstAudioChebLimit::ripple</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,200]</RANGE>
 <FLAGS>rw</FLAGS>
@@ -17499,7 +17499,7 @@
 </ARG>
 
 <ARG>
-<NAME>GstAudioChebyshevFreqLimit::type</NAME>
+<NAME>GstAudioChebLimit::type</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[1,2]</RANGE>
 <FLAGS>rw</FLAGS>

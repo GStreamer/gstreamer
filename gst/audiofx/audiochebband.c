@@ -33,7 +33,7 @@
  */
 
 /**
- * SECTION:element-audiochebyshevfreqband
+ * SECTION:element-audiochebband
  * @short_description: Chebyshev band pass and band reject filter
  *
  * <refsect2>
@@ -65,9 +65,9 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch audiotestsrc freq=1500 ! audioconvert ! audiochebyshevfreqband mode=band-pass lower-frequency=1000 upper-frequenc=6000 poles=4 ! audioconvert ! alsasink
- * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiochebyshevfreqband mode=band-reject lower-frequency=1000 upper-frequency=4000 ripple=0.2 ! audioconvert ! alsasink
- * gst-launch audiotestsrc wave=white-noise ! audioconvert ! audiochebyshevfreqband mode=band-pass lower-frequency=1000 upper-frequency=4000 type=2 ! audioconvert ! alsasink
+ * gst-launch audiotestsrc freq=1500 ! audioconvert ! audiochebband mode=band-pass lower-frequency=1000 upper-frequenc=6000 poles=4 ! audioconvert ! alsasink
+ * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiochebband mode=band-reject lower-frequency=1000 upper-frequency=4000 ripple=0.2 ! audioconvert ! alsasink
+ * gst-launch audiotestsrc wave=white-noise ! audioconvert ! audiochebband mode=band-pass lower-frequency=1000 upper-frequency=4000 type=2 ! audioconvert ! alsasink
  * </programlisting>
  * </para>
  * </refsect2>
@@ -85,13 +85,13 @@
 
 #include <math.h>
 
-#include "audiochebyshevfreqband.h"
+#include "audiochebband.h"
 
-#define GST_CAT_DEFAULT gst_audio_chebyshev_freq_band_debug
+#define GST_CAT_DEFAULT gst_audio_cheb_band_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("AudioChebyshevFreqBand",
+GST_ELEMENT_DETAILS ("AudioChebBand",
     "Filter/Effect/Audio",
     "Chebyshev band pass and band reject filter",
     "Sebastian Dröge <slomo@circular-chaos.org>");
@@ -122,26 +122,25 @@ enum
     " channels = (int) [ 1, MAX ]"
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_chebyshev_freq_band_debug, "audiochebyshevfreqband", 0, "audiochebyshevfreqband element");
+  GST_DEBUG_CATEGORY_INIT (gst_audio_cheb_band_debug, "audiochebband", 0, "audiochebband element");
 
-GST_BOILERPLATE_FULL (GstAudioChebyshevFreqBand, gst_audio_chebyshev_freq_band,
+GST_BOILERPLATE_FULL (GstAudioChebBand, gst_audio_cheb_band,
     GstAudioFilter, GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
 
-static void gst_audio_chebyshev_freq_band_set_property (GObject * object,
+static void gst_audio_cheb_band_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_audio_chebyshev_freq_band_get_property (GObject * object,
+static void gst_audio_cheb_band_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_audio_chebyshev_freq_band_setup (GstAudioFilter * filter,
+static gboolean gst_audio_cheb_band_setup (GstAudioFilter * filter,
     GstRingBufferSpec * format);
 static GstFlowReturn
-gst_audio_chebyshev_freq_band_transform_ip (GstBaseTransform * base,
-    GstBuffer * buf);
-static gboolean gst_audio_chebyshev_freq_band_start (GstBaseTransform * base);
+gst_audio_cheb_band_transform_ip (GstBaseTransform * base, GstBuffer * buf);
+static gboolean gst_audio_cheb_band_start (GstBaseTransform * base);
 
-static void process_64 (GstAudioChebyshevFreqBand * filter,
+static void process_64 (GstAudioChebBand * filter,
     gdouble * data, guint num_samples);
-static void process_32 (GstAudioChebyshevFreqBand * filter,
+static void process_32 (GstAudioChebBand * filter,
     gfloat * data, guint num_samples);
 
 enum
@@ -150,9 +149,9 @@ enum
   MODE_BAND_REJECT
 };
 
-#define GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND_MODE (gst_audio_chebyshev_freq_band_mode_get_type ())
+#define GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND_MODE (gst_audio_cheb_band_mode_get_type ())
 static GType
-gst_audio_chebyshev_freq_band_mode_get_type (void)
+gst_audio_cheb_band_mode_get_type (void)
 {
   static GType gtype = 0;
 
@@ -165,7 +164,7 @@ gst_audio_chebyshev_freq_band_mode_get_type (void)
       {0, NULL, NULL}
     };
 
-    gtype = g_enum_register_static ("GstAudioChebyshevFreqBandMode", values);
+    gtype = g_enum_register_static ("GstAudioChebBandMode", values);
   }
   return gtype;
 }
@@ -173,7 +172,7 @@ gst_audio_chebyshev_freq_band_mode_get_type (void)
 /* GObject vmethod implementations */
 
 static void
-gst_audio_chebyshev_freq_band_base_init (gpointer klass)
+gst_audio_cheb_band_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCaps *caps;
@@ -187,9 +186,9 @@ gst_audio_chebyshev_freq_band_base_init (gpointer klass)
 }
 
 static void
-gst_audio_chebyshev_freq_band_dispose (GObject * object)
+gst_audio_cheb_band_dispose (GObject * object)
 {
-  GstAudioChebyshevFreqBand *filter = GST_AUDIO_CHEBYSHEV_FREQ_BAND (object);
+  GstAudioChebBand *filter = GST_AUDIO_CHEB_BAND (object);
 
   if (filter->a) {
     g_free (filter->a);
@@ -202,7 +201,7 @@ gst_audio_chebyshev_freq_band_dispose (GObject * object)
   }
 
   if (filter->channels) {
-    GstAudioChebyshevFreqBandChannelCtx *ctx;
+    GstAudioChebBandChannelCtx *ctx;
     gint i, channels = GST_AUDIO_FILTER (filter)->format.channels;
 
     for (i = 0; i < channels; i++) {
@@ -219,8 +218,7 @@ gst_audio_chebyshev_freq_band_dispose (GObject * object)
 }
 
 static void
-gst_audio_chebyshev_freq_band_class_init (GstAudioChebyshevFreqBandClass *
-    klass)
+gst_audio_cheb_band_class_init (GstAudioChebBandClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
@@ -230,9 +228,9 @@ gst_audio_chebyshev_freq_band_class_init (GstAudioChebyshevFreqBandClass *
   trans_class = (GstBaseTransformClass *) klass;
   filter_class = (GstAudioFilterClass *) klass;
 
-  gobject_class->set_property = gst_audio_chebyshev_freq_band_set_property;
-  gobject_class->get_property = gst_audio_chebyshev_freq_band_get_property;
-  gobject_class->dispose = gst_audio_chebyshev_freq_band_dispose;
+  gobject_class->set_property = gst_audio_cheb_band_set_property;
+  gobject_class->get_property = gst_audio_cheb_band_get_property;
+  gobject_class->dispose = gst_audio_cheb_band_dispose;
 
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
@@ -265,15 +263,15 @@ gst_audio_chebyshev_freq_band_class_init (GstAudioChebyshevFreqBandClass *
           "Number of poles to use, will be rounded up to the next multiply of four",
           4, 32, 4, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
-  filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_chebyshev_freq_band_setup);
+  filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_cheb_band_setup);
   trans_class->transform_ip =
-      GST_DEBUG_FUNCPTR (gst_audio_chebyshev_freq_band_transform_ip);
-  trans_class->start = GST_DEBUG_FUNCPTR (gst_audio_chebyshev_freq_band_start);
+      GST_DEBUG_FUNCPTR (gst_audio_cheb_band_transform_ip);
+  trans_class->start = GST_DEBUG_FUNCPTR (gst_audio_cheb_band_start);
 }
 
 static void
-gst_audio_chebyshev_freq_band_init (GstAudioChebyshevFreqBand * filter,
-    GstAudioChebyshevFreqBandClass * klass)
+gst_audio_cheb_band_init (GstAudioChebBand * filter,
+    GstAudioChebBandClass * klass)
 {
   filter->lower_frequency = filter->upper_frequency = 0.0;
   filter->mode = MODE_BAND_PASS;
@@ -289,7 +287,7 @@ gst_audio_chebyshev_freq_band_init (GstAudioChebyshevFreqBand * filter,
 }
 
 static void
-generate_biquad_coefficients (GstAudioChebyshevFreqBand * filter,
+generate_biquad_coefficients (GstAudioChebBand * filter,
     gint p, gdouble * a0, gdouble * a1, gdouble * a2, gdouble * a3,
     gdouble * a4, gdouble * b1, gdouble * b2, gdouble * b3, gdouble * b4)
 {
@@ -520,7 +518,7 @@ calculate_gain (gdouble * a, gdouble * b, gint num_a, gint num_b, gdouble zr,
 }
 
 static void
-generate_coefficients (GstAudioChebyshevFreqBand * filter)
+generate_coefficients (GstAudioChebBand * filter)
 {
   gint channels = GST_AUDIO_FILTER (filter)->format.channels;
 
@@ -535,7 +533,7 @@ generate_coefficients (GstAudioChebyshevFreqBand * filter)
   }
 
   if (filter->channels) {
-    GstAudioChebyshevFreqBandChannelCtx *ctx;
+    GstAudioChebBandChannelCtx *ctx;
     gint i;
 
     for (i = 0; i < channels; i++) {
@@ -553,7 +551,7 @@ generate_coefficients (GstAudioChebyshevFreqBand * filter)
     filter->a = g_new0 (gdouble, 1);
     filter->a[0] = 1.0;
     filter->num_b = 0;
-    filter->channels = g_new0 (GstAudioChebyshevFreqBandChannelCtx, channels);
+    filter->channels = g_new0 (GstAudioChebBandChannelCtx, channels);
     GST_LOG_OBJECT (filter, "rate was not set yet");
     return;
   }
@@ -565,7 +563,7 @@ generate_coefficients (GstAudioChebyshevFreqBand * filter)
     filter->a = g_new0 (gdouble, 1);
     filter->a[0] = (filter->mode == MODE_BAND_PASS) ? 0.0 : 1.0;
     filter->num_b = 0;
-    filter->channels = g_new0 (GstAudioChebyshevFreqBandChannelCtx, channels);
+    filter->channels = g_new0 (GstAudioChebBandChannelCtx, channels);
     GST_LOG_OBJECT (filter, "frequency band had no or negative dimension");
     return;
   }
@@ -591,9 +589,9 @@ generate_coefficients (GstAudioChebyshevFreqBand * filter)
     filter->num_b = np + 1;
     filter->b = b = g_new0 (gdouble, np + 5);
 
-    filter->channels = g_new0 (GstAudioChebyshevFreqBandChannelCtx, channels);
+    filter->channels = g_new0 (GstAudioChebBandChannelCtx, channels);
     for (i = 0; i < channels; i++) {
-      GstAudioChebyshevFreqBandChannelCtx *ctx = &filter->channels[i];
+      GstAudioChebBandChannelCtx *ctx = &filter->channels[i];
 
       ctx->x = g_new0 (gdouble, np + 1);
       ctx->y = g_new0 (gdouble, np + 1);
@@ -714,10 +712,10 @@ generate_coefficients (GstAudioChebyshevFreqBand * filter)
 }
 
 static void
-gst_audio_chebyshev_freq_band_set_property (GObject * object, guint prop_id,
+gst_audio_cheb_band_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAudioChebyshevFreqBand *filter = GST_AUDIO_CHEBYSHEV_FREQ_BAND (object);
+  GstAudioChebBand *filter = GST_AUDIO_CHEB_BAND (object);
 
   switch (prop_id) {
     case PROP_MODE:
@@ -763,10 +761,10 @@ gst_audio_chebyshev_freq_band_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_audio_chebyshev_freq_band_get_property (GObject * object, guint prop_id,
+gst_audio_cheb_band_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstAudioChebyshevFreqBand *filter = GST_AUDIO_CHEBYSHEV_FREQ_BAND (object);
+  GstAudioChebBand *filter = GST_AUDIO_CHEB_BAND (object);
 
   switch (prop_id) {
     case PROP_MODE:
@@ -796,17 +794,16 @@ gst_audio_chebyshev_freq_band_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_chebyshev_freq_band_setup (GstAudioFilter * base,
-    GstRingBufferSpec * format)
+gst_audio_cheb_band_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
-  GstAudioChebyshevFreqBand *filter = GST_AUDIO_CHEBYSHEV_FREQ_BAND (base);
+  GstAudioChebBand *filter = GST_AUDIO_CHEB_BAND (base);
   gboolean ret = TRUE;
 
   if (format->width == 32)
-    filter->process = (GstAudioChebyshevFreqBandProcessFunc)
+    filter->process = (GstAudioChebBandProcessFunc)
         process_32;
   else if (format->width == 64)
-    filter->process = (GstAudioChebyshevFreqBandProcessFunc)
+    filter->process = (GstAudioChebBandProcessFunc)
         process_64;
   else
     ret = FALSE;
@@ -817,8 +814,8 @@ gst_audio_chebyshev_freq_band_setup (GstAudioFilter * base,
 }
 
 static inline gdouble
-process (GstAudioChebyshevFreqBand * filter,
-    GstAudioChebyshevFreqBandChannelCtx * ctx, gdouble x0)
+process (GstAudioChebBand * filter,
+    GstAudioChebBandChannelCtx * ctx, gdouble x0)
 {
   gdouble val = filter->a[0] * x0;
   gint i, j;
@@ -857,7 +854,7 @@ process (GstAudioChebyshevFreqBand * filter,
 
 #define DEFINE_PROCESS_FUNC(width,ctype) \
 static void \
-process_##width (GstAudioChebyshevFreqBand * filter, \
+process_##width (GstAudioChebBand * filter, \
     g##ctype * data, guint num_samples) \
 { \
   gint i, j, channels = GST_AUDIO_FILTER (filter)->format.channels; \
@@ -878,10 +875,9 @@ DEFINE_PROCESS_FUNC (64, double);
 
 /* GstBaseTransform vmethod implementations */
 static GstFlowReturn
-gst_audio_chebyshev_freq_band_transform_ip (GstBaseTransform * base,
-    GstBuffer * buf)
+gst_audio_cheb_band_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
-  GstAudioChebyshevFreqBand *filter = GST_AUDIO_CHEBYSHEV_FREQ_BAND (base);
+  GstAudioChebBand *filter = GST_AUDIO_CHEB_BAND (base);
   guint num_samples =
       GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
 
@@ -900,11 +896,11 @@ gst_audio_chebyshev_freq_band_transform_ip (GstBaseTransform * base,
 }
 
 static gboolean
-gst_audio_chebyshev_freq_band_start (GstBaseTransform * base)
+gst_audio_cheb_band_start (GstBaseTransform * base)
 {
-  GstAudioChebyshevFreqBand *filter = GST_AUDIO_CHEBYSHEV_FREQ_BAND (base);
+  GstAudioChebBand *filter = GST_AUDIO_CHEB_BAND (base);
   gint channels = GST_AUDIO_FILTER (filter)->format.channels;
-  GstAudioChebyshevFreqBandChannelCtx *ctx;
+  GstAudioChebBandChannelCtx *ctx;
   gint i;
 
   /* Reset the history of input and output values if
