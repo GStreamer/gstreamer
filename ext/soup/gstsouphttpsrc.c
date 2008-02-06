@@ -677,7 +677,7 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
   basesrc = GST_BASE_SRC_CAST (src);
   data = chunk->data;
   length = chunk->length;
-  GST_DEBUG_OBJECT (src, "got chunk of %d bytes", length);
+  GST_DEBUG_OBJECT (src, "got chunk of %" G_GSIZE_FORMAT " bytes", length);
 
   /* Create the buffer. */
   src->ret = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (basesrc),
@@ -807,7 +807,7 @@ gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     g_signal_connect (src->msg, "got_chunk",
         G_CALLBACK (gst_soup_http_src_got_chunk_cb), src);
     soup_message_set_flags (src->msg, SOUP_MESSAGE_OVERWRITE_CHUNKS |
-        src->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT);
+        (src->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT));
     gst_soup_http_src_add_range_header (src, src->request_position);
   }
 
