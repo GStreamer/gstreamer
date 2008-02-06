@@ -301,7 +301,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
               "bpp", G_TYPE_INT, 24,
               "depth", G_TYPE_INT, 24,
               "endianness", G_TYPE_INT, 4321,
-              "framerate", GST_TYPE_FRACTION, 15, 1,
+              "framerate", GST_TYPE_FRACTION, 30, 1,
               "red_mask", G_TYPE_INT, 16711680,
               "green_mask", G_TYPE_INT, 65280,
               "blue_mask", G_TYPE_INT, 255,
