@@ -1,3 +1,9 @@
+2008-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  ximagesrc has moved to -good, so no need to check for
+	  the required X libs here any more.
+
 2008-02-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Wouter Cloetens <wouter at mind dot be>
