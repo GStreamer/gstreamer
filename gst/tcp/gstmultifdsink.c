@@ -472,9 +472,10 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * Hand the given open file descriptor to multifdsink to write to.
    */
   gst_multi_fd_sink_signals[SIGNAL_ADD] =
-      g_signal_new ("add", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstMultiFdSinkClass, add),
-      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      g_signal_new ("add", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstMultiFdSinkClass,
+          add), NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1,
+      G_TYPE_INT);
   /**
    * GstMultiFdSink::add-full:
    * @gstmultifdsink: the multifdsink element to emit this signal on
@@ -491,11 +492,12 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * specify the burst parameters for the new connection.
    */
   gst_multi_fd_sink_signals[SIGNAL_ADD_BURST] =
-      g_signal_new ("add-full", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstMultiFdSinkClass, add_full),
-      NULL, NULL, gst_tcp_marshal_VOID__INT_BOOLEAN_INT_UINT64_INT_UINT64,
-      G_TYPE_NONE, 6, G_TYPE_INT, G_TYPE_BOOLEAN, GST_TYPE_UNIT_TYPE,
-      G_TYPE_UINT64, GST_TYPE_UNIT_TYPE, G_TYPE_UINT64);
+      g_signal_new ("add-full", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstMultiFdSinkClass,
+          add_full), NULL, NULL,
+      gst_tcp_marshal_VOID__INT_BOOLEAN_INT_UINT64_INT_UINT64, G_TYPE_NONE, 6,
+      G_TYPE_INT, G_TYPE_BOOLEAN, GST_TYPE_UNIT_TYPE, G_TYPE_UINT64,
+      GST_TYPE_UNIT_TYPE, G_TYPE_UINT64);
   /**
    * GstMultiFdSink::remove:
    * @gstmultifdsink: the multifdsink element to emit this signal on
@@ -504,9 +506,10 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * Remove the given open file descriptor from multifdsink.
    */
   gst_multi_fd_sink_signals[SIGNAL_REMOVE] =
-      g_signal_new ("remove", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstMultiFdSinkClass, remove),
-      NULL, NULL, gst_tcp_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      g_signal_new ("remove", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstMultiFdSinkClass,
+          remove), NULL, NULL, gst_tcp_marshal_VOID__INT, G_TYPE_NONE, 1,
+      G_TYPE_INT);
   /**
    * GstMultiFdSink::remove_flush:
    * @gstmultifdsink: the multifdsink element to emit this signal on
@@ -517,8 +520,9 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    */
   gst_multi_fd_sink_signals[SIGNAL_REMOVE_FLUSH] =
       g_signal_new ("remove-flush", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiFdSinkClass, remove_flush),
-      NULL, NULL, gst_tcp_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstMultiFdSinkClass,
+          remove_flush), NULL, NULL, gst_tcp_marshal_VOID__INT, G_TYPE_NONE, 1,
+      G_TYPE_INT);
   /**
    * GstMultiFdSink::clear:
    * @gstmultifdsink: the multifdsink element to emit this signal on
@@ -528,9 +532,9 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * should do so by connecting to the client-fd-removed callback.
    */
   gst_multi_fd_sink_signals[SIGNAL_CLEAR] =
-      g_signal_new ("clear", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstMultiFdSinkClass, clear),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      g_signal_new ("clear", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstMultiFdSinkClass,
+          clear), NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   /**
    * GstMultiFdSink::get-stats:
@@ -549,10 +553,10 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    *     The array can be 0-length if the client was not found.
    */
   gst_multi_fd_sink_signals[SIGNAL_GET_STATS] =
-      g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstMultiFdSinkClass, get_stats),
-      NULL, NULL, gst_tcp_marshal_BOXED__INT, G_TYPE_VALUE_ARRAY, 1,
-      G_TYPE_INT);
+      g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstMultiFdSinkClass,
+          get_stats), NULL, NULL, gst_tcp_marshal_BOXED__INT,
+      G_TYPE_VALUE_ARRAY, 1, G_TYPE_INT);
 
   /**
    * GstMultiFdSink::client-added:

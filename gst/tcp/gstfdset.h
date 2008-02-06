@@ -32,7 +32,6 @@ typedef struct _GstFDSet GstFDSet;
 typedef struct {
   int fd;
   gint idx;
-  gpointer data;
 } GstFD;
 
 typedef enum {

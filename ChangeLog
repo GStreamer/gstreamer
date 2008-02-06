@@ -1,3 +1,11 @@
+2008-02-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/tcp/gstfdset.h:
+	Remove unused field to same some memory.
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init):
+	Mark action signals as such.
+
 2008-02-06  Michael Smith <msmith@fluendo.com>
 
 	* ext/theora/theoradec.c: (_theora_granule_frame),
