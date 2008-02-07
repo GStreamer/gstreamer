@@ -1,5 +1,11 @@
 2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* docs/plugins/Makefile.am:
+	Add the headers which need scanning for the GIO plugin. The rest of
+	the docs still need migrating.
+
+2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* ext/Makefile.am:
 	* tests/check/Makefile.am:
 	* tests/check/pipelines/.cvsignore:

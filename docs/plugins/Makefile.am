@@ -79,6 +79,10 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/alsa/gstalsasink.h \
 	$(top_srcdir)/ext/alsa/gstalsasrc.h \
 	$(top_srcdir)/ext/cdparanoia/gstcdparanoiasrc.h \
+	$(top_srcdir)/ext/gio/gstgiosink.h \
+	$(top_srcdir)/ext/gio/gstgiosrc.h \
+	$(top_srcdir)/ext/gio/gstgiostreamsink.h \
+	$(top_srcdir)/ext/gio/gstgiostreamsrc.h \
 	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.h \
 	$(top_srcdir)/ext/gnomevfs/gstgnomevfssrc.h \
 	$(top_srcdir)/ext/ogg/gstoggdemux.h \
