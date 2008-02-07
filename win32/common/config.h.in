@@ -274,3 +274,8 @@
 
 /* Define to 1 if the X Window System is missing or not being used. */
 /* #undef X_DISPLAY_MISSING */
+
+/* Define socklen_t as it seems to be not defined in default VS setup */
+#ifndef socklen_t
+typedef int socklen_t;
+#endif

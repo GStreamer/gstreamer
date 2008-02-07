@@ -1,3 +1,19 @@
+2008-02-07  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/rtsp/gstrtspsrc.c:
+	Include unistd.h only if HAVE_UNISTD_H is defined
+	* win32/common/config.h.in:
+	* win32/common/config.h:
+	Define socklen_t as it seems it's not defined in default 
+	Visual Studio headers.
+	* win32/vs6/libgstalpha.dsp:
+	* win32/vs6/libgstapetag.dsp:
+	* win32/vs6/libgstavi.dsp:
+	* win32/vs6/libgstrtp.dsp:
+	* win32/vs6/libgstrtsp.dsp:
+	* win32/vs6/libgstvideomixer.dsp:
+	Update project file dependencies and add new source files	
+
 2008-02-07  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Bjarne Rosengren <bjarne at axis dot com>
