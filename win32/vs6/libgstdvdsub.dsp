@@ -106,6 +106,10 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\lib\gstreamer-0.10
 
 SOURCE=..\..\gst\dvdsub\gstdvdsubdec.c
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\dvdsub\gstdvdsubparse.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 

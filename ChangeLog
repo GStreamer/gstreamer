@@ -1,3 +1,12 @@
+2008-02-07  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:(mp3parse_time_to_bytepos):
+	Use gst_guint64_to_gdouble for conversion
+	* win32/vs6/libgstasfdemux.dsp:
+	* win32/vs6/libgstdvdsub.dsp:
+	* win32/vs6/libgstrealmedia.dsp:
+	Update project dependencies and add new source files
+
 2008-02-04  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/mpeg2dec/gstmpeg2dec.c:

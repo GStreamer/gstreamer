@@ -1393,7 +1393,7 @@ mp3parse_time_to_bytepos (GstMPEGAudioParse * mp3parse, GstClockTime ts,
       fb = total_bytes;
     }
 
-    *bytepos = fa + ((fb - fa) / (b - a)) * (ts - a);
+    *bytepos = fa + ((fb - fa) / (b - a)) * (gst_guint64_to_gdouble (ts) - a);
 
     return TRUE;
   }
