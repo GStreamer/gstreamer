@@ -1,3 +1,8 @@
+2008-02-07  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/spectrum/gstspectrum.c:
+	  Improve the docs.
+
 2008-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
