@@ -77,6 +77,7 @@ endif
 check_PROGRAMS = \
 	$(check_alsa) \
 	$(check_gnomevfs) \
+	$(check_gio) \
 	$(check_ogg) \
 	$(check_pango) \
 	$(check_vorbis) \
@@ -281,6 +282,9 @@ libs_video_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
+
+pipelines_gio_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
+pipelines_gio_LDADD = $(GIO_LIBS) $(LDADD)
 
 pipelines_vorbisenc_CFLAGS = \
         $(GST_PLUGINS_BASE_CFLAGS) \

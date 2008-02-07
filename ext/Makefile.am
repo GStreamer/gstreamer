@@ -66,6 +66,7 @@ SUBDIRS = \
 DIST_SUBDIRS = \
   alsa \
   cdparanoia \
+  gio \
   gnomevfs \
   libvisual \
   ogg \

@@ -1,5 +1,12 @@
 2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* ext/Makefile.am:
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/.cvsignore:
+	Add gio in a few more places.
+
+2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* tests/check/Makefile.am:
