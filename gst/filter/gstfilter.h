@@ -29,7 +29,5 @@
 
 #include <gst/gst.h>
 GType gst_iir_get_type (void);
-GType gst_lpwsinc_get_type (void);
-GType gst_bpwsinc_get_type (void);
 
 #endif /* __GST_FILTER_H__ */

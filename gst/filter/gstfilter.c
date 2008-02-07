@@ -38,8 +38,6 @@ struct _elements_entry
 
 static struct _elements_entry _elements[] = {
   {"iir", gst_iir_get_type},
-  {"lpwsinc", gst_lpwsinc_get_type},
-  {"bpwsinc", gst_bpwsinc_get_type},
   {NULL, 0},
 };
 
@@ -65,5 +63,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "filter",
-    "IIR, lpwsinc and bpwsinc audio filter elements",
+    "IIR audio filter element",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

@@ -1,3 +1,26 @@
+2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* gst/filter/Makefile.am:
+	* gst/filter/filter.vcproj:
+	* gst/filter/gstbpwsinc.c:
+	* gst/filter/gstbpwsinc.h:
+	* gst/filter/gstfilter.c:
+	* gst/filter/gstfilter.h:
+	* gst/filter/gstlpwsinc.c:
+	* gst/filter/gstlpwsinc.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/bpwsinc.c:
+	* tests/check/elements/lpwsinc.c:
+
+	Remove lpwsinc and bpwsinc elements - they've become
+	audiowsinclimit and audiowsincband respectively, in the
+	gst-plugins-good audiofx plugin.
+
 2008-02-07  Sebastien Moutte  <sebastien@moutte.net>
 
 	* ext\neon\gstneonhttpsrc.c:

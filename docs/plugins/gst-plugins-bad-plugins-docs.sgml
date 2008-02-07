@@ -16,7 +16,6 @@
     <xi:include href="xml/element-amrwbenc.xml" />
     <xi:include href="xml/element-amrwbparse.xml" />
     <xi:include href="xml/element-audioparse.xml" />
-    <xi:include href="xml/element-bpwsinc.xml" />
     <xi:include href="xml/element-dfb-example.xml" />
     <xi:include href="xml/element-dfbvideosink.xml" />
     <xi:include href="xml/element-dvbsrc.xml" />
@@ -38,7 +37,6 @@
     <xi:include href="xml/element-input-selector.xml" />
     <xi:include href="xml/element-ivorbisdec.xml" />
     <xi:include href="xml/element-jackaudiosink.xml" />
-    <xi:include href="xml/element-lpwsinc.xml" />
     <xi:include href="xml/element-metadatademux.xml" />
     <xi:include href="xml/element-metadatamux.xml" />
     <xi:include href="xml/element-modplug.xml" />

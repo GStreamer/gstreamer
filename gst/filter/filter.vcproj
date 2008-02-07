@@ -134,12 +134,6 @@
 			<File
 				RelativePath=".\iir.c">
 			</File>
-			<File
-				RelativePath=".\gstlpwsinc.c">
-			</File>
-			<File
-				RelativePath=".\gstbpwsinc.c">
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

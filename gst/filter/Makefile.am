@@ -1,7 +1,7 @@
 
 plugin_LTLIBRARIES = libgstfilter.la
 
-libgstfilter_la_SOURCES = gstfilter.c gstlpwsinc.c gstbpwsinc.c gstiir.c iir.c
+libgstfilter_la_SOURCES = gstfilter.c gstiir.c iir.c
 libgstfilter_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GST_CONTROLLER_CFLAGS)
 libgstfilter_la_LIBADD = \
 	$(GST_BASE_LIBS) \
@@ -13,4 +13,4 @@ libgstfilter_la_LIBADD = \
 
 libgstfilter_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstfilter.h gstlpwsinc.h gstbpwsinc.h gstiir.h iir.h
+noinst_HEADERS = gstfilter.h gstiir.h iir.h

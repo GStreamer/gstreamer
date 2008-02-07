@@ -58,8 +58,6 @@ GObject
             GstIirEqualizer3Bands
             GstIirEqualizer10Bands
           GstStereo
-          GstLPWSinc
-          GstBPWSinc
         GstGLUpload
         GstGLDownload
         GstGLFilter
