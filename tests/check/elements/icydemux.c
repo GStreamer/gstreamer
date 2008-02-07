@@ -117,7 +117,8 @@ cleanup_icydemux (void)
   bus = NULL;
 
   gst_check_teardown_src_pad (icydemux);
-  gst_check_teardown_sink_pad (icydemux);
+  if (sinkpad)
+    gst_check_teardown_sink_pad (icydemux);
   gst_check_teardown_element (icydemux);
 
   srcpad = NULL;
@@ -229,6 +230,23 @@ GST_START_TEST (test_first_buf_offset_when_merged_for_typefinding)
 
 GST_END_TEST;
 
+GST_START_TEST (test_not_negotiated)
+{
+  GstBuffer *buf;
+
+  create_icydemux ();
+
+  buf = gst_buffer_new_and_alloc (0);
+  GST_BUFFER_OFFSET (buf) = 0;
+
+  fail_unless_equals_int (gst_pad_push (srcpad, buf), GST_FLOW_NOT_NEGOTIATED);
+  buf = NULL;
+
+  cleanup_icydemux ();
+}
+
+GST_END_TEST;
+
 static Suite *
 icydemux_suite (void)
 {
@@ -238,6 +256,7 @@ icydemux_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_demux);
   tcase_add_test (tc_chain, test_first_buf_offset_when_merged_for_typefinding);
+  tcase_add_test (tc_chain, test_not_negotiated);
 
   return s;
 }

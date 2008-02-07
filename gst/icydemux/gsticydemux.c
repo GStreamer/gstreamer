@@ -497,8 +497,9 @@ gst_icydemux_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
 
   icydemux = GST_ICYDEMUX (GST_PAD_PARENT (pad));
-  g_return_val_if_fail (GST_IS_ICYDEMUX (icydemux), GST_FLOW_ERROR);
-  g_return_val_if_fail (icydemux->meta_interval >= 0, GST_FLOW_ERROR);
+
+  if (G_UNLIKELY (icydemux->meta_interval < 0))
+    goto not_negotiated;
 
   if (icydemux->meta_interval == 0) {
     ret = gst_icydemux_typefind_or_forward (icydemux, buf);
@@ -558,6 +559,15 @@ done:
   gst_buffer_unref (buf);
 
   return ret;
+
+/* ERRORS */
+not_negotiated:
+  {
+    GST_WARNING_OBJECT (icydemux, "meta_interval not set, buffer probably had "
+        "no caps set. Try enabling iradio-mode on the http source element");
+    gst_buffer_unref (buf);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static GstStateChangeReturn

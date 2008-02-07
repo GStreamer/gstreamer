@@ -1,3 +1,10 @@
+2008-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/icydemux/gsticydemux.c: (gst_icydemux_chain):
+	* tests/check/elements/icydemux.c:
+	  Return GST_FLOW_NOT_NEGOTIATED if we get a buffer without
+	  caps, and add a somewhat useful debug message. Plus test.
+
 2008-02-07  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/rtsp/gstrtspsrc.c:
