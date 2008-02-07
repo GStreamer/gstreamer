@@ -1355,7 +1355,7 @@ GstTagDemuxResult
 
 <SECTION>
 <FILE>gstpbutils</FILE>
-<INCLUDE>gst/pbutils/base-utils.h</INCLUDE>
+<INCLUDE>gst/pbutils/pbutils.h</INCLUDE>
 <SUBSECTION>
 gst_pb_utils_init
 </SECTION>

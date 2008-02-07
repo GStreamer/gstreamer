@@ -1,3 +1,8 @@
+2008-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	  Fix pbutils header.
+
 2008-02-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/rtsp/gstrtspmessage.c: (gst_rtsp_message_unset):
