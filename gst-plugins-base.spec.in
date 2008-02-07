@@ -103,7 +103,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiotestsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgdp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstqueue2.so
-%{_libdir}/gstreamer-%{majorminor}/libgsturidecodebin.so
 
 # Here are packages not in the base plugins package but not dependant
 # on an external lib
@@ -193,6 +192,7 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/sdp/gstsdpmessage.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstrtppayloads.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/gsttagdemux.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pbutils/pbutils-enumtypes.h
 %{_libdir}/libgstfft-%{majorminor}.so
 %{_libdir}/libgstrtsp-%{majorminor}.so
 %{_libdir}/libgstsdp-%{majorminor}.so
@@ -208,6 +208,19 @@ GStreamer Plugins Base library development and header files.
 
 # pkg-config files
 %{_libdir}/pkgconfig/gstreamer-plugins-base-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-audio-0.10.pc
+%{_libdir}/pkgconfig/gstreamer-cdda-0.10.pc
+%{_libdir}/pkgconfig/gstreamer-fft-0.10.pc
+%{_libdir}/pkgconfig/gstreamer-floatcast-0.10.pc
+%{_libdir}/pkgconfig/gstreamer-interfaces-0.10.pc
+%{_libdir}/pkgconfig/gstreamer-netbuffer-0.10.pc
+%{_libdir}/pkgconfig/gstreamer-pbutils-0.10.pc
+%{_libdir}/pkgconfig/gstreamer-riff-0.10.pc
+%{_libdir}/pkgconfig/gstreamer-rtp-0.10.pc
+%{_libdir}/pkgconfig/gstreamer-rtsp-0.10.pc
+%{_libdir}/pkgconfig/gstreamer-sdp-0.10.pc
+%{_libdir}/pkgconfig/gstreamer-tag-0.10.pc
+%{_libdir}/pkgconfig/gstreamer-video-0.10.pc
 
 # gtk-doc documentation
 %doc %{_datadir}/gtk-doc/html/gst-plugins-base-libs-%{majorminor}
