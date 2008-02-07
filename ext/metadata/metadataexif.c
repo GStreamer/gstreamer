@@ -146,6 +146,9 @@ static MapIntStr mappedTags[] = {
   {EXIF_TAG_BRIGHTNESS_VALUE,            /*SRATIONAL,*/ EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_BRIGHTNESS            /*GST_TYPE_FRACTION*/},
 
+  {EXIF_TAG_COLOR_SPACE,                 /*SHORT,*/     EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_COLOR_SPACE           /*G_TYPE_UINT*/},
+
   {EXIF_TAG_CONTRAST,                    /*SHORT,*/     EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_CONTRAST              /*G_TYPE_INT*/},
 
@@ -157,6 +160,9 @@ static MapIntStr mappedTags[] = {
 
   {EXIF_TAG_EXPOSURE_PROGRAM,            /*SHORT,*/     EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_EXPOSURE_PROGRAM      /*G_TYPE_UINT*/},
+
+  {EXIF_TAG_EXPOSURE_MODE,               /*SHORT,*/  EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_EXPOSURE_MODE         /*G_TYPE_UINT*/},
 
   {EXIF_TAG_EXPOSURE_TIME,               /*RATIONAL,*/  EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_EXPOSURE_TIME         /*GST_TYPE_FRACTION*/},
@@ -184,6 +190,9 @@ static MapIntStr mappedTags[] = {
 
   {EXIF_TAG_SATURATION,                  /*SHORT,*/     EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_SATURATION            /*G_TYPE_INT*/},
+
+  {EXIF_TAG_SCENE_CAPTURE_TYPE,          /*SHORT,*/     EXIF_IFD_EXIF,
+   GST_TAG_CAPTURE_SCENE_CAPTURE_TYPE    /*G_TYPE_UINT*/},
 
   {EXIF_TAG_SHUTTER_SPEED_VALUE,         /*SRATIONAL,*/ EXIF_IFD_EXIF,
    GST_TAG_CAPTURE_SHUTTER_SPEED         /*GST_TYPE_FRACTION*/},

@@ -81,9 +81,11 @@ typedef enum {
 
 #define GST_TAG_CAPTURE_APERTURE           "capture-aperture"
 #define GST_TAG_CAPTURE_BRIGHTNESS         "capture-brightness"
+#define GST_TAG_CAPTURE_COLOR_SPACE        "capture-color-space"
 #define GST_TAG_CAPTURE_CONTRAST           "capture-contrast"
 #define GST_TAG_CAPTURE_CUSTOM_RENDERED    "capture-custom-rendered"
 #define GST_TAG_CAPTURE_DIGITAL_ZOOM       "capture-digital-zoom"
+#define GST_TAG_CAPTURE_EXPOSURE_MODE      "capture-exposure-mode"
 #define GST_TAG_CAPTURE_EXPOSURE_PROGRAM   "capture-exposure-program"
 #define GST_TAG_CAPTURE_EXPOSURE_TIME      "capture-exposure-time"
 #define GST_TAG_CAPTURE_FLASH              "capture-flash"
@@ -94,6 +96,7 @@ typedef enum {
 #define GST_TAG_CAPTURE_LIGHT_SOURCE       "capture-light-source"
 #define GST_TAG_CAPTURE_ORIENTATION        "capture-orientation"
 #define GST_TAG_CAPTURE_SATURATION         "capture-saturation"
+#define GST_TAG_CAPTURE_SCENE_CAPTURE_TYPE "capture-scene-capture-type"
 #define GST_TAG_CAPTURE_SHUTTER_SPEED      "capture-shutter-speed"
 #define GST_TAG_CAPTURE_WHITE_BALANCE      "capture-white-balance"
 

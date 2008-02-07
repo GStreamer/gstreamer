@@ -127,6 +127,14 @@ metadata_tags_exif_register (void)
       "Brightness (APEX from -99.99 to 99.99)", NULL);
 
   /*
+   * 1- sRGB
+   * 0xFFFF - Uncalibrated
+   */
+
+  gst_tag_register (GST_TAG_CAPTURE_COLOR_SPACE, GST_TAG_FLAG_META,
+      G_TYPE_UINT, GST_TAG_CAPTURE_COLOR_SPACE, "Color Space", NULL);
+
+  /*
      from -100 to 100
      [-100, -34] - soft
      [-33, 33] - normal
@@ -134,7 +142,7 @@ metadata_tags_exif_register (void)
      *** exif is just 0, 1, 2 (normal, soft and hard)
    */
   gst_tag_register (GST_TAG_CAPTURE_CONTRAST, GST_TAG_FLAG_META, G_TYPE_INT,
-      GST_TAG_CAPTURE_CONTRAST, "", NULL);
+      GST_TAG_CAPTURE_CONTRAST, "Contrast", NULL);
 
   /*
    * 0- Normal process
@@ -150,6 +158,16 @@ metadata_tags_exif_register (void)
   gst_tag_register (GST_TAG_CAPTURE_DIGITAL_ZOOM, GST_TAG_FLAG_META,
       GST_TYPE_FRACTION, GST_TAG_CAPTURE_DIGITAL_ZOOM, "Digital zoom ratio",
       NULL);
+
+  /*
+   * 0 - Auto exposure
+   * 1 - Manual exposure
+   * 2 - Auto bracket (the camera shoots a series of frames of the same scene
+   *     at different exposure settings)
+   */
+
+  gst_tag_register (GST_TAG_CAPTURE_EXPOSURE_MODE, GST_TAG_FLAG_META,
+      G_TYPE_UINT, GST_TAG_CAPTURE_EXPOSURE_MODE, "Exposure Mode", NULL);
 
   /*
      0 - not defined
@@ -309,6 +327,15 @@ metadata_tags_exif_register (void)
    */
   gst_tag_register (GST_TAG_CAPTURE_SATURATION, GST_TAG_FLAG_META, G_TYPE_INT,
       GST_TAG_CAPTURE_SATURATION, "The saturation", NULL);
+
+  /*
+   * 0 - Standard
+   * 1 - Landscape
+   * 2 - Portrait
+   * 3 - Night scene
+   */
+  gst_tag_register (GST_TAG_CAPTURE_SCENE_CAPTURE_TYPE, GST_TAG_FLAG_META,
+      G_TYPE_UINT, GST_TAG_CAPTURE_SCENE_CAPTURE_TYPE, "Scene Type", NULL);
 
   gst_tag_register (GST_TAG_CAPTURE_SHUTTER_SPEED, GST_TAG_FLAG_META,
       GST_TYPE_FRACTION, GST_TAG_CAPTURE_SHUTTER_SPEED, "Shutter speed (APEX)",

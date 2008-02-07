@@ -1,3 +1,13 @@
+2008-02-07  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/metadata_mapping.htm:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/metadatatags.h:
+	* tests/icles/metadata_editor.c:
+	* tests/icles/metadata_editor.glade:
+	  Add more tags. Improve test app.
+
 2008-02-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/multifile/gstmultifilesink.c:

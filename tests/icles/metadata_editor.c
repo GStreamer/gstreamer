@@ -62,11 +62,22 @@ enum
   COL_VALUE,
   NUM_COLS
 };
+/* *INDENT-OFF* */
+typedef enum _AppOptions {
+  APP_OPT_DEMUX_EXIF = (1 << 0),
+  APP_OPT_DEMUX_IPTC = (1 << 1),
+  APP_OPT_DEMUX_XMP  = (1 << 2),
+  APP_OPT_MUX_EXIF   = (1 << 3),
+  APP_OPT_MUX_IPTC   = (1 << 4),
+  APP_OPT_MUX_XMP    = (1 << 5),
+  APP_OPT_ALL        = (1 << 6) - 1,
+} AppOptions;
 
-#define ENC_ERROR (-1)
-#define ENC_DONE (0)
+#define ENC_ERROR   (-1)
+#define ENC_DONE    (0)
 #define ENC_UNKNOWN (1)
 
+/* *INDENT-OFF* */
 
 /*
  * functions prototypes
@@ -79,7 +90,7 @@ static int
 me_gst_setup_view_pipeline (const gchar * filename, GdkWindow * window);
 static int
 me_gst_setup_capture_pipeline (const gchar * src_file, const gchar * dest_file,
-    gint * encode_status);
+    gint * encode_status, gboolean use_v4l2);
 static int
 me_gst_setup_encode_pipeline (const gchar * src_file, const gchar * dest_file,
     gint * encode_status);
@@ -87,6 +98,7 @@ me_gst_setup_encode_pipeline (const gchar * src_file, const gchar * dest_file,
 /* ui related functions */
 
 static void ui_refresh ();
+static void process_file();
 
 /*
  * Global Vars 
@@ -103,6 +115,8 @@ GstElement *gst_video_sink = NULL;
 GstElement *gst_file_sink = NULL;
 GstElement *gst_pipeline = NULL;
 
+AppOptions app_options = APP_OPT_ALL;
+
 GstTagList *tag_list = NULL;
 
 GladeXML *ui_glade_xml = NULL;
@@ -113,7 +127,8 @@ GtkWidget *ui_tree = NULL;
 GtkEntry *ui_entry_insert_tag = NULL;
 GtkEntry *ui_entry_insert_value = NULL;
 
-GtkToggleButton *ui_chk_bnt_capture = NULL;
+GtkToggleButton *ui_chk_bnt_capture_v4l2 = NULL;
+GtkToggleButton *ui_chk_bnt_capture_test = NULL;
 
 GString *filename = NULL;
 
@@ -264,6 +279,10 @@ on_buttonInsert_clicked (GtkButton * button, gpointer user_data)
   const gchar *tag = gtk_entry_get_text (ui_entry_insert_tag);
   const gchar *value = gtk_entry_get_text (ui_entry_insert_value);
 
+  if ( tag_list == NULL ) {
+    tag_list = gst_tag_list_new ();
+  }
+
   if (tag && value && tag[0] != '\0') {
 
     /* insert just new tags (the ones already in list should be modified) */
@@ -314,16 +333,20 @@ on_buttonSaveFile_clicked (GtkButton * button, gpointer user_data)
 
   GString *src_file = NULL;
   gint enc_status = ENC_UNKNOWN;
+  const gboolean use_v4l2 =
+    gtk_toggle_button_get_active (ui_chk_bnt_capture_v4l2);
+  const gboolean use_test =
+    gtk_toggle_button_get_active (ui_chk_bnt_capture_test);
 
   gst_element_set_state (gst_pipeline, GST_STATE_NULL);
   gst_element_get_state (gst_pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
 
   src_file = g_string_new (filename->str);
 
-  if (gtk_toggle_button_get_active (ui_chk_bnt_capture)) {
+  if (use_v4l2 || use_test) {
     setup_new_filename (filename, ".jpg");
     if (me_gst_setup_capture_pipeline (src_file->str, filename->str,
-            &enc_status)) {
+        &enc_status, use_v4l2)) {
       goto done;
     }
   } else {
@@ -381,12 +404,129 @@ done:
 }
 
 void
-on_checkbuttonCapture_toggled (GtkToggleButton * togglebutton,
+on_checkbuttonCaptureV4l2_toggled (GtkToggleButton * togglebutton,
     gpointer user_data)
 {
-  if (gtk_toggle_button_get_active (togglebutton)) {
-  }
+  if (gtk_toggle_button_get_active (togglebutton))
+    gtk_toggle_button_set_active(ui_chk_bnt_capture_test, FALSE);
 }
+
+void
+on_checkbuttonCaptureTest_toggled (GtkToggleButton * togglebutton,
+    gpointer user_data)
+{
+  if (gtk_toggle_button_get_active (togglebutton))
+    gtk_toggle_button_set_active(ui_chk_bnt_capture_v4l2, FALSE);
+}
+
+void
+on_checkbuttonOptionsDemuxExif_toggled (GtkToggleButton * togglebutton,
+    gpointer user_data)
+{
+  if (gtk_toggle_button_get_active (togglebutton))
+    app_options |= APP_OPT_DEMUX_EXIF;
+  else
+    app_options &= ~APP_OPT_DEMUX_EXIF;
+}
+
+void
+on_checkbuttonOptionsDemuxIptc_toggled (GtkToggleButton * togglebutton,
+    gpointer user_data)
+{
+  if (gtk_toggle_button_get_active (togglebutton))
+    app_options |= APP_OPT_DEMUX_IPTC;
+  else
+    app_options &= ~APP_OPT_DEMUX_IPTC;
+}
+
+void
+on_checkbuttonOptionsDemuxXmp_toggled (GtkToggleButton * togglebutton,
+    gpointer user_data)
+{
+  if (gtk_toggle_button_get_active (togglebutton))
+    app_options |= APP_OPT_DEMUX_XMP;
+  else
+    app_options &= ~APP_OPT_DEMUX_XMP;
+}
+
+void
+on_checkbuttonOptionsMuxExif_toggled (GtkToggleButton * togglebutton,
+    gpointer user_data)
+{
+  if (gtk_toggle_button_get_active (togglebutton))
+    app_options |= APP_OPT_MUX_EXIF;
+  else
+    app_options &= ~APP_OPT_MUX_EXIF;
+}
+
+void
+on_checkbuttonOptionsMuxIptc_toggled (GtkToggleButton * togglebutton,
+    gpointer user_data)
+{
+  if (gtk_toggle_button_get_active (togglebutton))
+    app_options |= APP_OPT_MUX_IPTC;
+  else
+    app_options &= ~APP_OPT_MUX_IPTC;
+}
+
+void
+on_checkbuttonOptionsMuxXmp_toggled (GtkToggleButton * togglebutton,
+    gpointer user_data)
+{
+  if (gtk_toggle_button_get_active (togglebutton))
+    app_options |= APP_OPT_MUX_XMP;
+  else
+    app_options &= ~APP_OPT_MUX_XMP;
+}
+
+void
+on_buttonOpenFile_clicked (GtkButton * button, gpointer user_data)
+{
+  GtkWidget *dialog;
+  gboolean open = FALSE;
+
+  dialog = gtk_file_chooser_dialog_new ("Open File",
+                                        GTK_WINDOW(ui_main_window),
+                                        GTK_FILE_CHOOSER_ACTION_OPEN,
+                                        GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                        GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                        NULL);
+
+  if (filename) {
+    const char *p = filename->str;
+    char *q = filename->str + filename->len - 1;
+    for (;p != q; --q) {
+      if ( *q == '/' )
+        break;
+    }
+    if ( p != q )
+      *q = '\0';
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER (dialog),
+        filename->str);
+    if ( p != q )
+      *q = '/';
+  }
+
+  open = gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT;
+
+  if (open) {
+    char *str;
+
+    str = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+    if (filename)
+      g_string_free (filename, TRUE);
+    filename = g_string_new(str);
+    g_free (str);
+  }
+
+  gtk_widget_destroy (dialog);
+
+  if (open) {
+    process_file();
+  }
+
+}
+
 
 /*
  * UI handling functions
@@ -520,6 +660,62 @@ ui_refresh ()
 }
 
 static int
+ui_connect_signals()
+{
+
+  glade_xml_signal_connect(ui_glade_xml, "on_checkbuttonCaptureV4l2_toggled",
+      (GCallback)on_checkbuttonCaptureV4l2_toggled);
+
+  glade_xml_signal_connect(ui_glade_xml, "on_checkbuttonCaptureTest_toggled",
+      (GCallback)on_checkbuttonCaptureTest_toggled);
+
+  glade_xml_signal_connect(ui_glade_xml,
+      "on_checkbuttonOptionsDemuxExif_toggled",
+      (GCallback) on_checkbuttonOptionsDemuxExif_toggled);
+
+  glade_xml_signal_connect(ui_glade_xml,
+      "on_checkbuttonOptionsDemuxIptc_toggled",
+      (GCallback) on_checkbuttonOptionsDemuxIptc_toggled);
+
+  glade_xml_signal_connect(ui_glade_xml,
+      "on_checkbuttonOptionsDemuxXmp_toggled",
+      (GCallback) on_checkbuttonOptionsDemuxXmp_toggled);
+
+  glade_xml_signal_connect(ui_glade_xml,
+      "on_checkbuttonOptionsMuxExif_toggled",
+      (GCallback) on_checkbuttonOptionsMuxExif_toggled);
+
+  glade_xml_signal_connect(ui_glade_xml,
+      "on_checkbuttonOptionsMuxIptc_toggled",
+      (GCallback) on_checkbuttonOptionsMuxIptc_toggled);
+
+  glade_xml_signal_connect(ui_glade_xml,
+      "on_checkbuttonOptionsMuxXmp_toggled",
+      (GCallback) on_checkbuttonOptionsMuxXmp_toggled);
+
+  glade_xml_signal_connect(ui_glade_xml, "on_buttonSaveFile_clicked",
+      (GCallback)on_buttonSaveFile_clicked);
+
+  glade_xml_signal_connect(ui_glade_xml, "on_windowMain_delete_event",
+      (GCallback)on_windowMain_delete_event);
+
+  glade_xml_signal_connect(ui_glade_xml, "on_drawingMain_expose_event",
+      (GCallback)on_drawingMain_expose_event);
+
+  glade_xml_signal_connect(ui_glade_xml, "on_windowMain_configure_event",
+      (GCallback)on_windowMain_configure_event);
+
+  glade_xml_signal_connect(ui_glade_xml, "on_buttonInsert_clicked",
+      (GCallback)on_buttonInsert_clicked);
+
+  glade_xml_signal_connect(ui_glade_xml, "on_buttonOpenFile_clicked",
+      (GCallback)on_buttonOpenFile_clicked);
+
+  return 0;
+
+}
+
+static int
 ui_create ()
 {
   int ret = 0;
@@ -544,18 +740,23 @@ ui_create ()
   ui_entry_insert_value =
       GTK_ENTRY (glade_xml_get_widget (ui_glade_xml, "entryValue"));
 
-  ui_chk_bnt_capture =
+  ui_chk_bnt_capture_v4l2 =
       GTK_TOGGLE_BUTTON (glade_xml_get_widget (ui_glade_xml,
-          "checkbuttonCapture"));
+          "checkbuttonCaptureV4l2"));
 
-  if (!(ui_main_window && ui_drawing && ui_tree && ui_entry_insert_tag
-          && ui_entry_insert_value && ui_chk_bnt_capture)) {
+  ui_chk_bnt_capture_test =
+      GTK_TOGGLE_BUTTON (glade_xml_get_widget (ui_glade_xml,
+          "checkbuttonCaptureTest"));
+
+  if (!(ui_main_window && ui_drawing && ui_tree
+          && ui_entry_insert_tag && ui_entry_insert_value
+          && ui_chk_bnt_capture_v4l2 && ui_chk_bnt_capture_test)) {
     fprintf (stderr, "Some widgets couldn't be created\n");
     ret = -105;
     goto done;
   }
 
-  glade_xml_signal_autoconnect (ui_glade_xml);
+  ui_connect_signals();
 
   ui_setup_tree_view (GTK_TREE_VIEW (ui_tree));
 
@@ -752,7 +953,7 @@ done:
 
 static int
 me_gst_setup_capture_pipeline (const gchar * src_file, const gchar * dest_file,
-    gint * encode_status)
+    gint * encode_status, gboolean use_v4l2)
 {
   int ret = 0;
   GstBus *bus = NULL;
@@ -763,7 +964,10 @@ me_gst_setup_capture_pipeline (const gchar * src_file, const gchar * dest_file,
   me_gst_cleanup_elements ();
 
   /* create elements */
-  gst_source = gst_element_factory_make ("v4l2src", NULL);
+  if ( use_v4l2 )
+    gst_source = gst_element_factory_make ("v4l2src", NULL);
+  else
+    gst_source = gst_element_factory_make ("videotestsrc", NULL);
   gst_video_convert = gst_element_factory_make ("ffmpegcolorspace", NULL);
   gst_image_enc = gst_element_factory_make ("jpegenc", NULL);
   gst_metadata_mux = gst_element_factory_make ("metadatamux", NULL);
@@ -788,6 +992,20 @@ me_gst_setup_capture_pipeline (const gchar * src_file, const gchar * dest_file,
   /* set elements's properties */
   g_object_set (gst_source, "num-buffers", 1, NULL);
   g_object_set (gst_file_sink, "location", dest_file, NULL);
+  if ( app_options & APP_OPT_MUX_EXIF )
+    g_object_set (gst_metadata_mux, "exif", TRUE, NULL);
+  else
+    g_object_set (gst_metadata_mux, "exif", FALSE, NULL);
+
+  if ( app_options & APP_OPT_MUX_IPTC )
+    g_object_set (gst_metadata_mux, "iptc", TRUE, NULL);
+  else
+    g_object_set (gst_metadata_mux, "iptc", FALSE, NULL);
+
+  if ( app_options & APP_OPT_MUX_XMP )
+    g_object_set (gst_metadata_mux, "xmp", TRUE, NULL);
+  else
+    g_object_set (gst_metadata_mux, "xmp", FALSE, NULL);
 
   /* adding and linking elements */
   gst_bin_add_many (GST_BIN (gst_pipeline), gst_source, gst_video_convert,
@@ -858,6 +1076,36 @@ me_gst_setup_encode_pipeline (const gchar * src_file, const gchar * dest_file,
   /* set elements's properties */
   g_object_set (gst_source, "location", src_file, NULL);
   g_object_set (gst_file_sink, "location", dest_file, NULL);
+
+  if ( app_options & APP_OPT_DEMUX_EXIF )
+    g_object_set (gst_metadata_demux, "exif", TRUE, NULL);
+  else
+    g_object_set (gst_metadata_demux, "exif", FALSE, NULL);
+
+  if ( app_options & APP_OPT_DEMUX_IPTC )
+    g_object_set (gst_metadata_demux, "iptc", TRUE, NULL);
+  else
+    g_object_set (gst_metadata_demux, "iptc", FALSE, NULL);
+
+  if ( app_options & APP_OPT_DEMUX_XMP )
+    g_object_set (gst_metadata_demux, "xmp", TRUE, NULL);
+  else
+    g_object_set (gst_metadata_demux, "xmp", FALSE, NULL);
+
+  if ( app_options & APP_OPT_MUX_EXIF )
+    g_object_set (gst_metadata_mux, "exif", TRUE, NULL);
+  else
+    g_object_set (gst_metadata_mux, "exif", FALSE, NULL);
+
+  if ( app_options & APP_OPT_MUX_IPTC )
+    g_object_set (gst_metadata_mux, "iptc", TRUE, NULL);
+  else
+    g_object_set (gst_metadata_mux, "iptc", FALSE, NULL);
+
+  if ( app_options & APP_OPT_MUX_XMP )
+    g_object_set (gst_metadata_mux, "xmp", TRUE, NULL);
+  else
+    g_object_set (gst_metadata_mux, "xmp", FALSE, NULL);
 
   /* adding and linking elements */
   gst_bin_add_many (GST_BIN (gst_pipeline), gst_source, gst_metadata_demux,
@@ -967,34 +1215,47 @@ done:
 
 }
 
+static void
+process_file() {
+  /* filename for future usage (title and file name to be created) */
+  me_gst_cleanup_elements ();
+
+  if (tag_list) {
+    gst_tag_list_free (tag_list);
+    tag_list = NULL;
+  }
+
+  /* create pipeline */
+  me_gst_setup_view_pipeline (filename->str, ui_drawing->window);
+
+  gst_element_set_state (gst_pipeline, GST_STATE_PLAYING);
+
+  ui_refresh ();
+
+}
+
 int
 main (int argc, char *argv[])
 {
   int ret = 0;
 
-  if (argc != 2) {
-    fprintf (stderr, "Give the name of a jpeg file as argument\n");
-    ret = -5;
-    goto done;
+  if (argc >= 2) {
+    if (filename)
+      g_string_free (filename, TRUE);
+    filename = g_string_new (argv[1]);
   }
 
   gst_init (&argc, &argv);
   gtk_init (&argc, &argv);
-
-  /* filename for future usage (title and file name to be created) */
-  if (filename)
-    g_string_free (filename, TRUE);
-  filename = g_string_new (argv[1]);
 
   /* create UI */
   if ((ret = ui_create ())) {
     goto done;
   }
 
-  /* create pipeline */
-  me_gst_setup_view_pipeline (argv[1], ui_drawing->window);
-
-  gst_element_set_state (gst_pipeline, GST_STATE_PLAYING);
+  if (argc >= 2) {
+    process_file();
+  }
 
   gtk_main ();
 
