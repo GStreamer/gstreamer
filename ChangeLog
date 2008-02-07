@@ -1,5 +1,10 @@
 2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* docs/plugins/Makefile.am:
+	Remove mention of non-existent headers to fix the build.
+
+2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/gio/Makefile.am:
