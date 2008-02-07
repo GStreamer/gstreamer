@@ -93,8 +93,8 @@ main (gint argc, gchar * argv[])
   g_object_set (G_OBJECT (src), "is-live", TRUE, NULL);
   g_object_set (G_OBJECT (src), "do-timestamp", TRUE, NULL);
   g_object_set (G_OBJECT (src), "num-buffers", 500, NULL);
-  g_object_set (G_OBJECT (sink1), "sync", FALSE, NULL);
-  g_object_set (G_OBJECT (sink2), "sync", FALSE, NULL);
+  g_object_set (G_OBJECT (sink1), "sync", FALSE, "async", FALSE, NULL);
+  g_object_set (G_OBJECT (sink2), "sync", FALSE, "async", FALSE, NULL);
   g_object_set (G_OBJECT (osel), "resend-latest", TRUE, NULL);
 
   /* link src ! timeoverlay ! osel */

@@ -25,13 +25,6 @@
  * Direct input stream to one out of N output pads.
  */
 
-/* FIXME: By default basesinks require some prerolled data before changing
-   to playing state. Also pipeline with output-selector connected to multiple 
-   sink elements won't change to playing until all sink elements have received
-   the preroll data. Currently this can be worked around using live source element
-   and and exporting GST_COMPAT="no-live-preroll".
-*/
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -212,7 +205,12 @@ gst_output_selector_set_property (GObject * object, guint prop_id,
       GstPad *next_pad =
           gst_element_get_static_pad (GST_ELEMENT (sel),
           g_value_get_string (value));
-      if (next_pad && (next_pad != sel->active_srcpad)) {
+      if (!next_pad) {
+        GST_WARNING ("pad %s not found, activation failed",
+            g_value_get_string (value));
+        break;
+      }
+      if (next_pad != sel->active_srcpad) {
         /* switch to new srcpad in next chain run */
         if (sel->pending_srcpad != NULL) {
           GST_INFO ("replacing pending switch");
@@ -220,7 +218,8 @@ gst_output_selector_set_property (GObject * object, guint prop_id,
         }
         sel->pending_srcpad = next_pad;
       } else {
-        GST_WARNING ("setting active pad failed");
+        GST_INFO ("pad already active");
+        gst_object_unref (next_pad);
       }
       break;
     }
