@@ -35,7 +35,7 @@
 
 /**
  * SECTION:element-lpwsinc
- * @short_description: Windows Sinc low pass and high pass filter
+ * @short_description: Windowed Sinc low pass and high pass filter
  *
  * <refsect2>
  * <para>

@@ -1,3 +1,8 @@
+2008-02-07  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/filter/gstlpwsinc.c:
+	Fix typo in the long description of the element.
+
 2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/xingheader/Makefile.am:
