@@ -21,7 +21,9 @@
 #include "gstneonhttpsrc.h"
 #include <stdlib.h>
 #include <string.h>
+#ifdef _HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* _HAVE_UNISTD_H */
 
 #include <ne_redirect.h>
 

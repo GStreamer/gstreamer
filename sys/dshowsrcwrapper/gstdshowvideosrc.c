@@ -246,7 +246,7 @@ gst_dshowvideosrc_dispose (GObject * gobject)
 
   CoUninitialize ();
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->dispose (gobject);
 }
 
 static gboolean
@@ -473,7 +473,11 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
     }
   }
 
-  if (src->video_cap_filter && !src->caps) {
+  if (!src->caps) {
+    src->caps = gst_caps_new_empty ();
+  }
+
+  if (src->video_cap_filter && gst_caps_is_empty (src->caps)) {
     /* get the capture pins supported types */
     IPin *capture_pin = NULL;
     IEnumPins *enumpins = NULL;
@@ -504,13 +508,13 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
 
             if (SUCCEEDED (IPin_QueryInterface (capture_pin,
                         &IID_IAMStreamConfig, (void **) &streamcaps))) {
-              src->caps =
+              GstCaps *caps =
                   gst_dshowvideosrc_getcaps_from_streamcaps (src, capture_pin,
                   streamcaps);
+              if (caps) {
+                gst_caps_append (src->caps, caps);
+              }
               IAMStreamConfig_Release (streamcaps);
-
-              GST_CAT_LOG (dshowvideosrc_debug,
-                  "get_cap returned %" GST_PTR_FORMAT, src->caps);
             }
           }
 
@@ -528,6 +532,8 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
   }
 
   if (src->caps) {
+    GST_CAT_LOG (dshowvideosrc_debug, "getcaps returned %s",
+        gst_caps_to_string (src->caps));
     return gst_caps_ref (src->caps);
   }
 

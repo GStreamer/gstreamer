@@ -453,7 +453,7 @@ scan_keyframe (MpegVideoParse * mpegvideoparse)
    * the picture header bits we are interested in. We init to 0xff so that when
    * we have a valid picture start without the header bits, we will be able to
    * detect this because it will generate an invalid picture type. */
-  scanword = ~0LL;
+  scanword = ~G_GUINT64_CONSTANT (0);
 
   GST_LOG_OBJECT (mpegvideoparse, "scan keyframe");
 
@@ -500,7 +500,8 @@ scan_keyframe (MpegVideoParse * mpegvideoparse)
         scanword);
 
     /* check picture start and picture type */
-    if ((scanword & 0xffffffff00380000LL) == 0x0000010000080000LL)
+    if ((scanword & G_GUINT64_CONSTANT (0xffffffff00380000)) ==
+        G_GUINT64_CONSTANT (0x0000010000080000))
       break;
 
     size--;

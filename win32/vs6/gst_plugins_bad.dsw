@@ -27,7 +27,31 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libgstdshowdecwrapper"=".\libgstdshowdecwrapper.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "libgstdshowsrcwrapper"=".\libdshowsrcwrapper.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libgstflv"=".\libgstflv.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

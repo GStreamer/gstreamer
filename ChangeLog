@@ -1,3 +1,26 @@
+2008-02-07  Sebastien Moutte  <sebastien@moutte.net>
+
+	* ext\neon\gstneonhttpsrc.c:
+	Include unistd.h only if _HAVE_UNISTD_H is defined
+	* gst\mpegvideoparse\mpegvideoparse.c:
+	Use G_GUINT64_CONSTANT GLIB macro for constant
+	* sys\dshowsrcwrapper\gstdshowaudiosrc.c:
+	* sys\dshowsrcwrapper\gstdshowvideosrc.c:
+	* sys\dshowdecwrapper\gstdshowaudiodec.c:
+	* sys\dshowdecwrapper\gstdshowaudiodec.h:
+	* sys\dshowdecwrapper\gstdshowdecwrapper.c:
+	* sys\dshowdecwrapper\gstdshowdecwrapper.h:
+	* sys\dshowdecwrapper\gstdshowvideodec.c
+	* sys\dshowdecwrapper\gstdshowvideodec.h:
+	Add a DirectShow decoder wrapper.
+	* win32\MANIFEST:
+	Add new win32 files to MANIFEST
+	* win32\vs6\gst_plugins_bad.dsw:
+	* win32\vs6\libgstdshow.dsp:
+	* win32\vs6\libgstdshowdecwrapper.dsp:
+	* win32\vs6\libgstflv.dsp:
+	Add new projects to bad workspace
+
 2008-02-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/mpegtspacketizer.c:
