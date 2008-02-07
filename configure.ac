@@ -125,8 +125,6 @@ AG_GST_ARG_ENABLE_EXTERNAL
 
 AG_GST_ARG_ENABLE_EXPERIMENTAL
 
-USE_GIO=$BUILD_EXPERIMENTAL
-
 dnl *** checks for platform ***
 
 dnl * hardware/architecture *
@@ -570,17 +568,6 @@ AG_GST_CHECK_FEATURE(FBDEV, [linux framebuffer], fbdevsink, [
   fi
 ])
 
-dnl *** libgio ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
-AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
-  PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.15.2, HAVE_GIO="yes", [
-    HAVE_GIO="no"
-    AC_MSG_RESULT(no)
-  ])
-  AC_SUBST(GIO_CFLAGS)
-  AC_SUBST(GIO_LIBS)
-])
-
 dnl *** gsm ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GSM, true)
 AG_GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
@@ -973,7 +960,6 @@ AM_CONDITIONAL(USE_DIVX, false)
 AM_CONDITIONAL(USE_FAAC, false)
 AM_CONDITIONAL(USE_FAAD, false)
 AM_CONDITIONAL(USE_FBDEV, false)
-AM_CONDITIONAL(USE_GIO, false)
 AM_CONDITIONAL(USE_GSM, false)
 AM_CONDITIONAL(USE_IVORBIS, false)
 AM_CONDITIONAL(USE_JACK, false)
@@ -1115,7 +1101,6 @@ ext/dts/Makefile
 ext/metadata/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
-ext/gio/Makefile
 ext/gsm/Makefile
 ext/ivorbis/Makefile
 ext/jack/Makefile
