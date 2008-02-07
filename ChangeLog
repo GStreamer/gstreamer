@@ -1,5 +1,10 @@
 2008-02-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/rtsp/gstrtspmessage.c: (gst_rtsp_message_unset):
+	Fix compiler warning.
+
+2008-02-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Peter Kjellerstedt  <pkj at axis com>
 
 	* gst-libs/gst/sdp/gstsdpmessage.c: (is_multicast_address):

@@ -452,7 +452,7 @@ gst_rtsp_message_unset (GstRTSPMessage * msg)
   }
 
   if (msg->hdr_fields != NULL) {
-    gint i;
+    guint i;
 
     for (i = 0; i < msg->hdr_fields->len; i++) {
       RTSPKeyValue *keyval = &g_array_index (msg->hdr_fields, RTSPKeyValue, i);
