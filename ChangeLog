@@ -1,3 +1,11 @@
+2008-02-07  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Bjarne Rosengren <bjarne at axis dot com>
+
+	* gst/matroska/ebml-write.c: (gst_ebml_write_element_push):
+	Don't leak buffers when we don't push them downstream.
+	Fixes bug #514965.
+
 2008-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
