@@ -17508,6 +17508,106 @@
 <DEFAULT>1</DEFAULT>
 </ARG>
 
+ARG>
+<NAME>GstAudioWSincBand::length</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[3,50000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Length</NICK>
+<BLURB>Filter kernel length, will be rounded to the next odd number.</BLURB>
+<DEFAULT>101</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioWSincBand::lower-frequency</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Lower Frequency</NICK>
+<BLURB>Cut-off lower frequency (Hz).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioWSincBand::upper-frequency</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Upper Frequency</NICK>
+<BLURB>Cut-off upper frequency (Hz).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioWSincBand::mode</NAME>
+<TYPE>GstAudioWSincBandMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Band pass or band reject mode.</BLURB>
+<DEFAULT>Band pass (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioWSincBand::window</NAME>
+<TYPE>GstAudioWSincBandWindow</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Window</NICK>
+<BLURB>Window function to use.</BLURB>
+<DEFAULT>Hamming window (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioWSincLimit::frequency</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frequency</NICK>
+<BLURB>Cut-off Frequency (Hz).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioWSincLimit::length</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[3,50000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Length</NICK>
+<BLURB>Filter kernel length, will be rounded to the next odd number.</BLURB>
+<DEFAULT>101</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioWSincLimit::mode</NAME>
+<TYPE>GstAudioWSincLimitMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Low pass or high pass mode.</BLURB>
+<DEFAULT>Low pass (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioWSincLimit::window</NAME>
+<TYPE>GstAudioWSincLimitWindow</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Window</NICK>
+<BLURB>Window function to use.</BLURB>
+<DEFAULT>Hamming window (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioWSincLimit::cutoff</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Cutoff</NICK>
+<BLURB>Cut-off Frequency (Hz).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
 <ARG>
 <NAME>GstRndBufferSize::max</NAME>
 <TYPE>glong</TYPE>

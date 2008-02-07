@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
  *
- * lpwsinc.c: Unit test for the lpwsinc element
+ * audiowsinclimit.c: Unit test for the audiowsinclimit element
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -31,14 +31,14 @@
  * get_peer, and then remove references in every test function */
 GstPad *mysrcpad, *mysinkpad;
 
-#define LPWSINC_CAPS_STRING_32           \
+#define AUDIO_WSINC_LIMIT_CAPS_STRING_32           \
     "audio/x-raw-float, "               \
     "channels = (int) 1, "              \
     "rate = (int) 44100, "              \
     "endianness = (int) BYTE_ORDER, "   \
     "width = (int) 32"                  \
 
-#define LPWSINC_CAPS_STRING_64           \
+#define AUDIO_WSINC_LIMIT_CAPS_STRING_64           \
     "audio/x-raw-float, "               \
     "channels = (int) 1, "              \
     "rate = (int) 44100, "              \
@@ -63,24 +63,24 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 GstElement *
-setup_lpwsinc ()
+setup_audiowsinclimit ()
 {
-  GstElement *lpwsinc;
+  GstElement *audiowsinclimit;
 
-  GST_DEBUG ("setup_lpwsinc");
-  lpwsinc = gst_check_setup_element ("lpwsinc");
-  mysrcpad = gst_check_setup_src_pad (lpwsinc, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (lpwsinc, &sinktemplate, NULL);
+  GST_DEBUG ("setup_audiowsinclimit");
+  audiowsinclimit = gst_check_setup_element ("audiowsinclimit");
+  mysrcpad = gst_check_setup_src_pad (audiowsinclimit, &srctemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (audiowsinclimit, &sinktemplate, NULL);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  return lpwsinc;
+  return audiowsinclimit;
 }
 
 void
-cleanup_lpwsinc (GstElement * lpwsinc)
+cleanup_audiowsinclimit (GstElement * audiowsinclimit)
 {
-  GST_DEBUG ("cleanup_lpwsinc");
+  GST_DEBUG ("cleanup_audiowsinclimit");
 
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
@@ -88,9 +88,9 @@ cleanup_lpwsinc (GstElement * lpwsinc)
 
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
-  gst_check_teardown_src_pad (lpwsinc);
-  gst_check_teardown_sink_pad (lpwsinc);
-  gst_check_teardown_element (lpwsinc);
+  gst_check_teardown_src_pad (audiowsinclimit);
+  gst_check_teardown_sink_pad (audiowsinclimit);
+  gst_check_teardown_element (audiowsinclimit);
 }
 
 /* Test if data containing only one frequency component
@@ -98,30 +98,30 @@ cleanup_lpwsinc (GstElement * lpwsinc)
  * at rate/4 */
 GST_START_TEST (test_32_lp_0hz)
 {
-  GstElement *lpwsinc;
+  GstElement *audiowsinclimit;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
   GList *node;
 
-  lpwsinc = setup_lpwsinc ();
+  audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
-  g_object_set (G_OBJECT (lpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (lpwsinc), "length", 21, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "length", 21, NULL);
 
-  fail_unless (gst_element_set_state (lpwsinc,
+  fail_unless (gst_element_set_state (audiowsinclimit,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
   /* cutoff = sampling rate / 4, data = 0 */
-  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_32);
+  caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -147,7 +147,7 @@ GST_START_TEST (test_32_lp_0hz)
   }
 
   /* cleanup */
-  cleanup_lpwsinc (lpwsinc);
+  cleanup_audiowsinclimit (audiowsinclimit);
 }
 
 GST_END_TEST;
@@ -157,23 +157,23 @@ GST_END_TEST;
  * at rate/4 */
 GST_START_TEST (test_32_lp_22050hz)
 {
-  GstElement *lpwsinc;
+  GstElement *audiowsinclimit;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
   GList *node;
 
-  lpwsinc = setup_lpwsinc ();
+  audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
-  g_object_set (G_OBJECT (lpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (lpwsinc), "length", 21, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "length", 21, NULL);
 
-  fail_unless (gst_element_set_state (lpwsinc,
+  fail_unless (gst_element_set_state (audiowsinclimit,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i += 2) {
@@ -181,7 +181,7 @@ GST_START_TEST (test_32_lp_22050hz)
     in[i + 1] = -1.0;
   }
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_32);
+  caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -207,7 +207,7 @@ GST_START_TEST (test_32_lp_22050hz)
   }
 
   /* cleanup */
-  cleanup_lpwsinc (lpwsinc);
+  cleanup_audiowsinclimit (audiowsinclimit);
 }
 
 GST_END_TEST;
@@ -217,29 +217,29 @@ GST_END_TEST;
  * at rate/4 */
 GST_START_TEST (test_32_hp_0hz)
 {
-  GstElement *lpwsinc;
+  GstElement *audiowsinclimit;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
   GList *node;
 
-  lpwsinc = setup_lpwsinc ();
+  audiowsinclimit = setup_audiowsinclimit ();
   /* Set to highpass */
-  g_object_set (G_OBJECT (lpwsinc), "mode", 1, NULL);
-  g_object_set (G_OBJECT (lpwsinc), "length", 21, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "length", 21, NULL);
 
-  fail_unless (gst_element_set_state (lpwsinc,
+  fail_unless (gst_element_set_state (audiowsinclimit,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_32);
+  caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -265,7 +265,7 @@ GST_START_TEST (test_32_hp_0hz)
   }
 
   /* cleanup */
-  cleanup_lpwsinc (lpwsinc);
+  cleanup_audiowsinclimit (audiowsinclimit);
 }
 
 GST_END_TEST;
@@ -275,23 +275,23 @@ GST_END_TEST;
  * at rate/4 */
 GST_START_TEST (test_32_hp_22050hz)
 {
-  GstElement *lpwsinc;
+  GstElement *audiowsinclimit;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
   GList *node;
 
-  lpwsinc = setup_lpwsinc ();
+  audiowsinclimit = setup_audiowsinclimit ();
   /* Set to highpass */
-  g_object_set (G_OBJECT (lpwsinc), "mode", 1, NULL);
-  g_object_set (G_OBJECT (lpwsinc), "length", 21, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "length", 21, NULL);
 
-  fail_unless (gst_element_set_state (lpwsinc,
+  fail_unless (gst_element_set_state (audiowsinclimit,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i += 2) {
@@ -299,7 +299,7 @@ GST_START_TEST (test_32_hp_22050hz)
     in[i + 1] = -1.0;
   }
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_32);
+  caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -326,7 +326,7 @@ GST_START_TEST (test_32_hp_22050hz)
   }
 
   /* cleanup */
-  cleanup_lpwsinc (lpwsinc);
+  cleanup_audiowsinclimit (audiowsinclimit);
 }
 
 GST_END_TEST;
@@ -335,29 +335,28 @@ GST_END_TEST;
  * correctly without accessing wrong memory areas */
 GST_START_TEST (test_32_small_buffer)
 {
-  GstElement *lpwsinc;
+  GstElement *audiowsinclimit;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in;
-  gfloat *res;
   gint i;
 
-  lpwsinc = setup_lpwsinc ();
+  audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
-  g_object_set (G_OBJECT (lpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (lpwsinc), "length", 101, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "length", 101, NULL);
 
-  fail_unless (gst_element_set_state (lpwsinc,
+  fail_unless (gst_element_set_state (audiowsinclimit,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_32);
+  caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -370,7 +369,7 @@ GST_START_TEST (test_32_small_buffer)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
   /* cleanup */
-  cleanup_lpwsinc (lpwsinc);
+  cleanup_audiowsinclimit (audiowsinclimit);
 }
 
 GST_END_TEST;
@@ -380,30 +379,30 @@ GST_END_TEST;
  * at rate/4 */
 GST_START_TEST (test_64_lp_0hz)
 {
-  GstElement *lpwsinc;
+  GstElement *audiowsinclimit;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
   GList *node;
 
-  lpwsinc = setup_lpwsinc ();
+  audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
-  g_object_set (G_OBJECT (lpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (lpwsinc), "length", 21, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "length", 21, NULL);
 
-  fail_unless (gst_element_set_state (lpwsinc,
+  fail_unless (gst_element_set_state (audiowsinclimit,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
   /* cutoff = sampling rate / 4, data = 0 */
-  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_64);
+  caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -429,7 +428,7 @@ GST_START_TEST (test_64_lp_0hz)
   }
 
   /* cleanup */
-  cleanup_lpwsinc (lpwsinc);
+  cleanup_audiowsinclimit (audiowsinclimit);
 }
 
 GST_END_TEST;
@@ -439,23 +438,23 @@ GST_END_TEST;
  * at rate/4 */
 GST_START_TEST (test_64_lp_22050hz)
 {
-  GstElement *lpwsinc;
+  GstElement *audiowsinclimit;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
   GList *node;
 
-  lpwsinc = setup_lpwsinc ();
+  audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
-  g_object_set (G_OBJECT (lpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (lpwsinc), "length", 21, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "length", 21, NULL);
 
-  fail_unless (gst_element_set_state (lpwsinc,
+  fail_unless (gst_element_set_state (audiowsinclimit,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i += 2) {
@@ -463,7 +462,7 @@ GST_START_TEST (test_64_lp_22050hz)
     in[i + 1] = -1.0;
   }
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_64);
+  caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -489,7 +488,7 @@ GST_START_TEST (test_64_lp_22050hz)
   }
 
   /* cleanup */
-  cleanup_lpwsinc (lpwsinc);
+  cleanup_audiowsinclimit (audiowsinclimit);
 }
 
 GST_END_TEST;
@@ -499,29 +498,29 @@ GST_END_TEST;
  * at rate/4 */
 GST_START_TEST (test_64_hp_0hz)
 {
-  GstElement *lpwsinc;
+  GstElement *audiowsinclimit;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
   GList *node;
 
-  lpwsinc = setup_lpwsinc ();
+  audiowsinclimit = setup_audiowsinclimit ();
   /* Set to highpass */
-  g_object_set (G_OBJECT (lpwsinc), "mode", 1, NULL);
-  g_object_set (G_OBJECT (lpwsinc), "length", 21, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "length", 21, NULL);
 
-  fail_unless (gst_element_set_state (lpwsinc,
+  fail_unless (gst_element_set_state (audiowsinclimit,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_64);
+  caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -547,7 +546,7 @@ GST_START_TEST (test_64_hp_0hz)
   }
 
   /* cleanup */
-  cleanup_lpwsinc (lpwsinc);
+  cleanup_audiowsinclimit (audiowsinclimit);
 }
 
 GST_END_TEST;
@@ -557,23 +556,23 @@ GST_END_TEST;
  * at rate/4 */
 GST_START_TEST (test_64_hp_22050hz)
 {
-  GstElement *lpwsinc;
+  GstElement *audiowsinclimit;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
   GList *node;
 
-  lpwsinc = setup_lpwsinc ();
+  audiowsinclimit = setup_audiowsinclimit ();
   /* Set to highpass */
-  g_object_set (G_OBJECT (lpwsinc), "mode", 1, NULL);
-  g_object_set (G_OBJECT (lpwsinc), "length", 21, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "length", 21, NULL);
 
-  fail_unless (gst_element_set_state (lpwsinc,
+  fail_unless (gst_element_set_state (audiowsinclimit,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i += 2) {
@@ -581,7 +580,7 @@ GST_START_TEST (test_64_hp_22050hz)
     in[i + 1] = -1.0;
   }
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_64);
+  caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -608,7 +607,7 @@ GST_START_TEST (test_64_hp_22050hz)
   }
 
   /* cleanup */
-  cleanup_lpwsinc (lpwsinc);
+  cleanup_audiowsinclimit (audiowsinclimit);
 }
 
 GST_END_TEST;
@@ -617,29 +616,28 @@ GST_END_TEST;
  * correctly without accessing wrong memory areas */
 GST_START_TEST (test_64_small_buffer)
 {
-  GstElement *lpwsinc;
+  GstElement *audiowsinclimit;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in;
-  gdouble *res;
   gint i;
 
-  lpwsinc = setup_lpwsinc ();
+  audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
-  g_object_set (G_OBJECT (lpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (lpwsinc), "length", 101, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "length", 101, NULL);
 
-  fail_unless (gst_element_set_state (lpwsinc,
+  fail_unless (gst_element_set_state (audiowsinclimit,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_64);
+  caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -652,15 +650,15 @@ GST_START_TEST (test_64_small_buffer)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
   /* cleanup */
-  cleanup_lpwsinc (lpwsinc);
+  cleanup_audiowsinclimit (audiowsinclimit);
 }
 
 GST_END_TEST;
 
 Suite *
-lpwsinc_suite (void)
+audiowsinclimit_suite (void)
 {
-  Suite *s = suite_create ("lpwsinc");
+  Suite *s = suite_create ("audiowsinclimit");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
@@ -683,7 +681,7 @@ main (int argc, char **argv)
 {
   int nf;
 
-  Suite *s = lpwsinc_suite ();
+  Suite *s = audiowsinclimit_suite ();
   SRunner *sr = srunner_create (s);
 
   gst_check_init (&argc, &argv);

@@ -27,41 +27,40 @@
  *
  */
 
-#ifndef __GST_BPWSINC_H__
-#define __GST_BPWSINC_H__
+#ifndef __GST_AUDIO_WSINC_BAND_H__
+#define __GST_AUDIO_WSINC_BAND_H__
 
-#include "gstfilter.h"
 #include <gst/gst.h>
 #include <gst/audio/gstaudiofilter.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BPWSINC \
-  (gst_bpwsinc_get_type())
-#define GST_BPWSINC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BPWSINC,GstBPWSinc))
-#define GST_BPWSINC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BPWSINC,GstBPWSincClass))
-#define GST_IS_BPWSINC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BPWSINC))
-#define GST_IS_BPWSINC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BPWSINC))
+#define GST_TYPE_AUDIO_WSINC_BAND \
+  (audio_wsincband_get_type())
+#define GST_AUDIO_WSINC_BAND(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_WSINC_BAND,GstAudioWSincBand))
+#define GST_AUDIO_WSINC_BAND_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_WSINC_BAND,GstAudioWSincBandClass))
+#define GST_IS_AUDIO_WSINC_BAND(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_WSINC_BAND))
+#define GST_IS_AUDIO_WSINC_BAND_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_WSINC_BAND))
 
-typedef struct _GstBPWSinc GstBPWSinc;
-typedef struct _GstBPWSincClass GstBPWSincClass;
+typedef struct _GstAudioWSincBand GstAudioWSincBand;
+typedef struct _GstAudioWSincBandClass GstAudioWSincBandClass;
 
-typedef void (*GstBPWSincProcessFunc) (GstBPWSinc *, guint8 *, guint8 *, guint);
+typedef void (*GstAudioWSincBandProcessFunc) (GstAudioWSincBand *, guint8 *, guint8 *, guint);
 
 /**
- * GstBPWSinc:
+ * GstAudioWSincBand:
  *
  * Opaque data structure.
  */
-struct _GstBPWSinc {
+struct _GstAudioWSincBand {
   GstAudioFilter element;
 
   /* < private > */
-  GstBPWSincProcessFunc process;
+  GstAudioWSincBandProcessFunc process;
 
   gint mode;
   gint window;
@@ -77,12 +76,12 @@ struct _GstBPWSinc {
   guint64 next_off;
 };
 
-struct _GstBPWSincClass {
+struct _GstAudioWSincBandClass {
   GstAudioFilterClass parent_class;
 };
 
-GType gst_bpwsinc_get_type (void);
+GType audio_wsincband_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_BPWSINC_H__ */
+#endif /* __GST_AUDIO_WSINC_BAND_H__ */

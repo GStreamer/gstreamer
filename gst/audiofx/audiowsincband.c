@@ -36,7 +36,7 @@
  */
 
 /**
- * SECTION:element-bpwsinc
+ * SECTION:element-audiowsincband
  * @short_description: Windowed Sinc band pass and band reject filter
  *
  * <refsect2>
@@ -54,9 +54,9 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch audiotestsrc freq=1500 ! audioconvert ! bpwsinc mode=band-pass lower-frequency=3000 upper-frequency=10000 length=501 window=blackman ! audioconvert ! alsasink
- * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! bpwsinc mode=band-reject lower-frequency=59 upper-frequency=61 length=10001 window=hamming ! audioconvert ! alsasink
- * gst-launch audiotestsrc wave=white-noise ! audioconvert ! bpwsinc mode=band-pass lower-frequency=1000 upper-frequency=2000 length=31 ! audioconvert ! alsasink
+ * gst-launch audiotestsrc freq=1500 ! audioconvert ! audiosincband mode=band-pass lower-frequency=3000 upper-frequency=10000 length=501 window=blackman ! audioconvert ! alsasink
+ * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiowsincband mode=band-reject lower-frequency=59 upper-frequency=61 length=10001 window=hamming ! audioconvert ! alsasink
+ * gst-launch audiotestsrc wave=white-noise ! audioconvert ! audiowsincband mode=band-pass lower-frequency=1000 upper-frequency=2000 length=31 ! audioconvert ! alsasink
  * </programlisting>
  * </para>
  * </refsect2>
@@ -72,12 +72,12 @@
 #include <gst/audio/gstaudiofilter.h>
 #include <gst/controller/gstcontroller.h>
 
-#include "gstbpwsinc.h"
+#include "audiowsincband.h"
 
-#define GST_CAT_DEFAULT gst_bpwsinc_debug
+#define GST_CAT_DEFAULT gst_audio_wsincband_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails bpwsinc_details =
+static const GstElementDetails audio_wsincband_details =
 GST_ELEMENT_DETAILS ("Band-pass and Band-reject Windowed sinc filter",
     "Filter/Effect/Audio",
     "Band-pass Windowed sinc filter",
@@ -109,9 +109,9 @@ enum
   MODE_BAND_REJECT
 };
 
-#define GST_TYPE_BPWSINC_MODE (gst_bpwsinc_mode_get_type ())
+#define GST_TYPE_AUDIO_WSINC_BAND_MODE (gst_audio_wsincband_mode_get_type ())
 static GType
-gst_bpwsinc_mode_get_type (void)
+gst_audio_wsincband_mode_get_type (void)
 {
   static GType gtype = 0;
 
@@ -124,7 +124,7 @@ gst_bpwsinc_mode_get_type (void)
       {0, NULL, NULL}
     };
 
-    gtype = g_enum_register_static ("GstBPWSincMode", values);
+    gtype = g_enum_register_static ("GstAudioWSincBandMode", values);
   }
   return gtype;
 }
@@ -135,9 +135,9 @@ enum
   WINDOW_BLACKMAN
 };
 
-#define GST_TYPE_BPWSINC_WINDOW (gst_bpwsinc_window_get_type ())
+#define GST_TYPE_AUDIO_WSINC_BAND_WINDOW (gst_audio_wsincband_window_get_type ())
 static GType
-gst_bpwsinc_window_get_type (void)
+gst_audio_wsincband_window_get_type (void)
 {
   static GType gtype = 0;
 
@@ -150,7 +150,7 @@ gst_bpwsinc_window_get_type (void)
       {0, NULL, NULL}
     };
 
-    gtype = g_enum_register_static ("GstBPWSincWindow", values);
+    gtype = g_enum_register_static ("GstAudioWSincBandWindow", values);
   }
   return gtype;
 }
@@ -163,33 +163,35 @@ gst_bpwsinc_window_get_type (void)
     " channels = (int) [ 1, MAX ] "
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_bpwsinc_debug, "bpwsinc", 0, "Band-pass and Band-reject Windowed sinc filter plugin");
+  GST_DEBUG_CATEGORY_INIT (gst_audio_wsincband_debug, "audiowsincband", 0, \
+      "Band-pass and Band-reject Windowed sinc filter plugin");
 
-GST_BOILERPLATE_FULL (GstBPWSinc, gst_bpwsinc, GstAudioFilter,
+GST_BOILERPLATE_FULL (GstAudioWSincBand, audio_wsincband, GstAudioFilter,
     GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
 
-static void bpwsinc_set_property (GObject * object, guint prop_id,
+static void audio_wsincband_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void bpwsinc_get_property (GObject * object, guint prop_id,
+static void audio_wsincband_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn bpwsinc_transform (GstBaseTransform * base,
+static GstFlowReturn audio_wsincband_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean bpwsinc_start (GstBaseTransform * base);
-static gboolean bpwsinc_event (GstBaseTransform * base, GstEvent * event);
+static gboolean audio_wsincband_start (GstBaseTransform * base);
+static gboolean audio_wsincband_event (GstBaseTransform * base,
+    GstEvent * event);
 
-static gboolean bpwsinc_setup (GstAudioFilter * base,
+static gboolean audio_wsincband_setup (GstAudioFilter * base,
     GstRingBufferSpec * format);
 
-static gboolean bpwsinc_query (GstPad * pad, GstQuery * query);
-static const GstQueryType *bpwsinc_query_type (GstPad * pad);
+static gboolean audio_wsincband_query (GstPad * pad, GstQuery * query);
+static const GstQueryType *audio_wsincband_query_type (GstPad * pad);
 
 /* Element class */
 
 static void
-gst_bpwsinc_dispose (GObject * object)
+audio_wsincband_dispose (GObject * object)
 {
-  GstBPWSinc *self = GST_BPWSINC (object);
+  GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (object);
 
   if (self->residue) {
     g_free (self->residue);
@@ -205,12 +207,12 @@ gst_bpwsinc_dispose (GObject * object)
 }
 
 static void
-gst_bpwsinc_base_init (gpointer g_class)
+audio_wsincband_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstCaps *caps;
 
-  gst_element_class_set_details (element_class, &bpwsinc_details);
+  gst_element_class_set_details (element_class, &audio_wsincband_details);
 
   caps = gst_caps_from_string (ALLOWED_CAPS);
   gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (g_class),
@@ -219,7 +221,7 @@ gst_bpwsinc_base_init (gpointer g_class)
 }
 
 static void
-gst_bpwsinc_class_init (GstBPWSincClass * klass)
+audio_wsincband_class_init (GstAudioWSincBandClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
@@ -229,9 +231,9 @@ gst_bpwsinc_class_init (GstBPWSincClass * klass)
   trans_class = (GstBaseTransformClass *) klass;
   filter_class = (GstAudioFilterClass *) klass;
 
-  gobject_class->set_property = bpwsinc_set_property;
-  gobject_class->get_property = bpwsinc_get_property;
-  gobject_class->dispose = gst_bpwsinc_dispose;
+  gobject_class->set_property = audio_wsincband_set_property;
+  gobject_class->get_property = audio_wsincband_get_property;
+  gobject_class->dispose = audio_wsincband_dispose;
 
   /* FIXME: Don't use the complete possible range but restrict the upper boundary
    * so automatically generated UIs can use a slider */
@@ -248,22 +250,23 @@ gst_bpwsinc_class_init (GstBPWSincClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
-          "Band pass or band reject mode", GST_TYPE_BPWSINC_MODE,
+          "Band pass or band reject mode", GST_TYPE_AUDIO_WSINC_BAND_MODE,
           MODE_BAND_PASS, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_WINDOW,
       g_param_spec_enum ("window", "Window",
-          "Window function to use", GST_TYPE_BPWSINC_WINDOW,
+          "Window function to use", GST_TYPE_AUDIO_WSINC_BAND_WINDOW,
           WINDOW_HAMMING, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
-  trans_class->transform = GST_DEBUG_FUNCPTR (bpwsinc_transform);
-  trans_class->start = GST_DEBUG_FUNCPTR (bpwsinc_start);
-  trans_class->event = GST_DEBUG_FUNCPTR (bpwsinc_event);
-  filter_class->setup = GST_DEBUG_FUNCPTR (bpwsinc_setup);
+  trans_class->transform = GST_DEBUG_FUNCPTR (audio_wsincband_transform);
+  trans_class->start = GST_DEBUG_FUNCPTR (audio_wsincband_start);
+  trans_class->event = GST_DEBUG_FUNCPTR (audio_wsincband_event);
+  filter_class->setup = GST_DEBUG_FUNCPTR (audio_wsincband_setup);
 }
 
 static void
-gst_bpwsinc_init (GstBPWSinc * self, GstBPWSincClass * g_class)
+audio_wsincband_init (GstAudioWSincBand * self,
+    GstAudioWSincBandClass * g_class)
 {
   self->kernel_length = 101;
   self->latency = 50;
@@ -279,14 +282,15 @@ gst_bpwsinc_init (GstBPWSinc * self, GstBPWSincClass * g_class)
   self->next_ts = GST_CLOCK_TIME_NONE;
   self->next_off = GST_BUFFER_OFFSET_NONE;
 
-  gst_pad_set_query_function (GST_BASE_TRANSFORM (self)->srcpad, bpwsinc_query);
+  gst_pad_set_query_function (GST_BASE_TRANSFORM (self)->srcpad,
+      audio_wsincband_query);
   gst_pad_set_query_type_function (GST_BASE_TRANSFORM (self)->srcpad,
-      bpwsinc_query_type);
+      audio_wsincband_query_type);
 }
 
 #define DEFINE_PROCESS_FUNC(width,ctype) \
 static void \
-process_##width (GstBPWSinc * self, g##ctype * src, g##ctype * dst, guint input_samples) \
+process_##width (GstAudioWSincBand * self, g##ctype * src, g##ctype * dst, guint input_samples) \
 { \
   gint kernel_length = self->kernel_length; \
   gint i, j, k, l; \
@@ -331,7 +335,7 @@ DEFINE_PROCESS_FUNC (64, double);
 #undef DEFINE_PROCESS_FUNC
 
 static void
-bpwsinc_build_kernel (GstBPWSinc * self)
+audio_wsincband_build_kernel (GstAudioWSincBand * self)
 {
   gint i = 0;
   gdouble sum = 0.0;
@@ -365,7 +369,7 @@ bpwsinc_build_kernel (GstBPWSinc * self)
     self->upper_frequency = tmp;
   }
 
-  GST_DEBUG ("bpwsinc: initializing filter kernel of length %d "
+  GST_DEBUG ("audio_wsincband: initializing filter kernel of length %d "
       "with lower frequency %.2lf Hz "
       ", upper frequency %.2lf Hz for mode %s",
       len, self->lower_frequency, self->upper_frequency,
@@ -457,7 +461,7 @@ bpwsinc_build_kernel (GstBPWSinc * self)
 }
 
 static void
-bpwsinc_push_residue (GstBPWSinc * self)
+audio_wsincband_push_residue (GstAudioWSincBand * self)
 {
   GstBuffer *outbuf;
   GstFlowReturn res;
@@ -536,16 +540,16 @@ bpwsinc_push_residue (GstBPWSinc * self)
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-bpwsinc_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+audio_wsincband_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
-  GstBPWSinc *self = GST_BPWSINC (base);
+  GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (base);
 
   gboolean ret = TRUE;
 
   if (format->width == 32)
-    self->process = (GstBPWSincProcessFunc) process_32;
+    self->process = (GstAudioWSincBandProcessFunc) process_32;
   else if (format->width == 64)
-    self->process = (GstBPWSincProcessFunc) process_64;
+    self->process = (GstAudioWSincBandProcessFunc) process_64;
   else
     ret = FALSE;
 
@@ -557,10 +561,10 @@ bpwsinc_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 /* GstBaseTransform vmethod implementations */
 
 static GstFlowReturn
-bpwsinc_transform (GstBaseTransform * base, GstBuffer * inbuf,
+audio_wsincband_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  GstBPWSinc *self = GST_BPWSINC (base);
+  GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (base);
   GstClockTime timestamp;
   gint channels = GST_AUDIO_FILTER (self)->format.channels;
   gint rate = GST_AUDIO_FILTER (self)->format.rate;
@@ -575,7 +579,7 @@ bpwsinc_transform (GstBaseTransform * base, GstBuffer * inbuf,
     gst_object_sync_values (G_OBJECT (self), timestamp);
 
   if (!self->have_kernel)
-    bpwsinc_build_kernel (self);
+    audio_wsincband_build_kernel (self);
 
   /* Reset the residue if already existing on discont buffers */
   if (GST_BUFFER_IS_DISCONT (inbuf)) {
@@ -675,9 +679,9 @@ bpwsinc_transform (GstBaseTransform * base, GstBuffer * inbuf,
 }
 
 static gboolean
-bpwsinc_start (GstBaseTransform * base)
+audio_wsincband_start (GstBaseTransform * base)
 {
-  GstBPWSinc *self = GST_BPWSINC (base);
+  GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (base);
   gint channels = GST_AUDIO_FILTER (self)->format.channels;
 
   /* Reset the residue if already existing */
@@ -693,9 +697,9 @@ bpwsinc_start (GstBaseTransform * base)
 }
 
 static gboolean
-bpwsinc_query (GstPad * pad, GstQuery * query)
+audio_wsincband_query (GstPad * pad, GstQuery * query)
 {
-  GstBPWSinc *self = GST_BPWSINC (gst_pad_get_parent (pad));
+  GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (gst_pad_get_parent (pad));
   gboolean res = TRUE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -746,7 +750,7 @@ bpwsinc_query (GstPad * pad, GstQuery * query)
 }
 
 static const GstQueryType *
-bpwsinc_query_type (GstPad * pad)
+audio_wsincband_query_type (GstPad * pad)
 {
   static const GstQueryType types[] = {
     GST_QUERY_LATENCY,
@@ -757,13 +761,13 @@ bpwsinc_query_type (GstPad * pad)
 }
 
 static gboolean
-bpwsinc_event (GstBaseTransform * base, GstEvent * event)
+audio_wsincband_event (GstBaseTransform * base, GstEvent * event)
 {
-  GstBPWSinc *self = GST_BPWSINC (base);
+  GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (base);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      bpwsinc_push_residue (self);
+      audio_wsincband_push_residue (self);
       break;
     default:
       break;
@@ -773,12 +777,12 @@ bpwsinc_event (GstBaseTransform * base, GstEvent * event)
 }
 
 static void
-bpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
-    GParamSpec * pspec)
+audio_wsincband_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
-  GstBPWSinc *self = GST_BPWSINC (object);
+  GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (object);
 
-  g_return_if_fail (GST_IS_BPWSINC (self));
+  g_return_if_fail (GST_IS_AUDIO_WSINC_BAND (self));
 
   switch (prop_id) {
     case PROP_LENGTH:{
@@ -791,13 +795,13 @@ bpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
 
       if (val != self->kernel_length) {
         if (self->residue) {
-          bpwsinc_push_residue (self);
+          audio_wsincband_push_residue (self);
           g_free (self->residue);
           self->residue = NULL;
         }
         self->kernel_length = val;
         self->latency = val / 2;
-        bpwsinc_build_kernel (self);
+        audio_wsincband_build_kernel (self);
         gst_element_post_message (GST_ELEMENT (self),
             gst_message_new_latency (GST_OBJECT (self)));
       }
@@ -807,25 +811,25 @@ bpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_LOWER_FREQUENCY:
       GST_BASE_TRANSFORM_LOCK (self);
       self->lower_frequency = g_value_get_float (value);
-      bpwsinc_build_kernel (self);
+      audio_wsincband_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     case PROP_UPPER_FREQUENCY:
       GST_BASE_TRANSFORM_LOCK (self);
       self->upper_frequency = g_value_get_float (value);
-      bpwsinc_build_kernel (self);
+      audio_wsincband_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     case PROP_MODE:
       GST_BASE_TRANSFORM_LOCK (self);
       self->mode = g_value_get_enum (value);
-      bpwsinc_build_kernel (self);
+      audio_wsincband_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     case PROP_WINDOW:
       GST_BASE_TRANSFORM_LOCK (self);
       self->window = g_value_get_enum (value);
-      bpwsinc_build_kernel (self);
+      audio_wsincband_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     default:
@@ -835,10 +839,10 @@ bpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
 }
 
 static void
-bpwsinc_get_property (GObject * object, guint prop_id, GValue * value,
+audio_wsincband_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstBPWSinc *self = GST_BPWSINC (object);
+  GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (object);
 
   switch (prop_id) {
     case PROP_LENGTH:

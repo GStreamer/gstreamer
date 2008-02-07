@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
  *
- * bpwsinc.c: Unit test for the bpwsinc element
+ * audiowsincband.c: Unit test for the audiowsincband element
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -31,14 +31,14 @@
  * get_peer, and then remove references in every test function */
 GstPad *mysrcpad, *mysinkpad;
 
-#define BPWSINC_CAPS_STRING_32          \
+#define AUDIO_WSINC_BAND_CAPS_STRING_32          \
     "audio/x-raw-float, "               \
     "channels = (int) 1, "              \
     "rate = (int) 44100, "              \
     "endianness = (int) BYTE_ORDER, "   \
     "width = (int) 32"                  \
 
-#define BPWSINC_CAPS_STRING_64          \
+#define AUDIO_WSINC_BAND_CAPS_STRING_64          \
     "audio/x-raw-float, "               \
     "channels = (int) 1, "              \
     "rate = (int) 44100, "              \
@@ -63,24 +63,24 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 GstElement *
-setup_bpwsinc ()
+setup_audiowsincband ()
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
 
-  GST_DEBUG ("setup_bpwsinc");
-  bpwsinc = gst_check_setup_element ("bpwsinc");
-  mysrcpad = gst_check_setup_src_pad (bpwsinc, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (bpwsinc, &sinktemplate, NULL);
+  GST_DEBUG ("setup_audiowsincband");
+  audiowsincband = gst_check_setup_element ("audiowsincband");
+  mysrcpad = gst_check_setup_src_pad (audiowsincband, &srctemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (audiowsincband, &sinktemplate, NULL);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  return bpwsinc;
+  return audiowsincband;
 }
 
 void
-cleanup_bpwsinc (GstElement * bpwsinc)
+cleanup_audiowsincband (GstElement * audiowsincband)
 {
-  GST_DEBUG ("cleanup_bpwsinc");
+  GST_DEBUG ("cleanup_audiowsincband");
 
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
@@ -88,9 +88,9 @@ cleanup_bpwsinc (GstElement * bpwsinc)
 
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
-  gst_check_teardown_src_pad (bpwsinc);
-  gst_check_teardown_sink_pad (bpwsinc);
-  gst_check_teardown_element (bpwsinc);
+  gst_check_teardown_src_pad (audiowsincband);
+  gst_check_teardown_sink_pad (audiowsincband);
+  gst_check_teardown_element (audiowsincband);
 }
 
 /* Test if data containing only one frequency component
@@ -98,32 +98,32 @@ cleanup_bpwsinc (GstElement * bpwsinc)
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_32_bp_0hz)
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
   GList *node;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 31, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
-      NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
-      NULL);
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
+      44100 / 4.0 - 1000, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
+      44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 1024; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -149,7 +149,7 @@ GST_START_TEST (test_32_bp_0hz)
   }
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -159,26 +159,26 @@ GST_END_TEST;
  * and a 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_32_bp_11025hz)
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
   GList *node;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 31, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
-      NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
-      NULL);
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
+      44100 / 4.0 - 1000, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
+      44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 1024; i += 4) {
@@ -188,7 +188,7 @@ GST_START_TEST (test_32_bp_11025hz)
     in[i + 3] = -1.0;
   }
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -214,7 +214,7 @@ GST_START_TEST (test_32_bp_11025hz)
   }
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -225,26 +225,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_32_bp_22050hz)
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
   GList *node;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 31, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
-      NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
-      NULL);
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
+      44100 / 4.0 - 1000, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
+      44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 1024; i += 2) {
@@ -252,7 +252,7 @@ GST_START_TEST (test_32_bp_22050hz)
     in[i + 1] = -1.0;
   }
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -278,7 +278,7 @@ GST_START_TEST (test_32_bp_22050hz)
   }
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -288,32 +288,32 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_32_br_0hz)
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
   GList *node;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 1, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 31, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
-      NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
-      NULL);
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
+      44100 / 4.0 - 1000, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
+      44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 1024; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -339,7 +339,7 @@ GST_START_TEST (test_32_br_0hz)
   }
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -349,26 +349,26 @@ GST_END_TEST;
  * and a 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_32_br_11025hz)
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
   GList *node;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 1, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 31, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
-      NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
-      NULL);
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
+      44100 / 4.0 - 1000, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
+      44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
 
@@ -379,7 +379,7 @@ GST_START_TEST (test_32_br_11025hz)
     in[i + 3] = -1.0;
   }
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -405,7 +405,7 @@ GST_START_TEST (test_32_br_11025hz)
   }
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -416,26 +416,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_32_br_22050hz)
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
   GList *node;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 1, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 31, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
-      NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
-      NULL);
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
+      44100 / 4.0 - 1000, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
+      44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 1024; i += 2) {
@@ -443,7 +443,7 @@ GST_START_TEST (test_32_br_22050hz)
     in[i + 1] = -1.0;
   }
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -469,7 +469,7 @@ GST_START_TEST (test_32_br_22050hz)
   }
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -478,32 +478,31 @@ GST_END_TEST;
  * correctly without accessing wrong memory areas */
 GST_START_TEST (test_32_small_buffer)
 {
-  GstElement *bpwsinc;
-  GstBuffer *inbuffer, *outbuffer;
+  GstElement *audiowsincband;
+  GstBuffer *inbuffer;
   GstCaps *caps;
   gfloat *in;
-  gfloat *res;
   gint i;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 101, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 101, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency",
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
       44100 / 4.0 - 44100 / 16.0, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency",
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
       44100 / 4.0 + 44100 / 16.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gfloat));
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -515,7 +514,7 @@ GST_START_TEST (test_32_small_buffer)
   fail_unless (g_list_length (buffers) >= 1);
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -533,32 +532,32 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_64_bp_0hz)
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
   GList *node;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 31, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
-      NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
-      NULL);
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
+      44100 / 4.0 - 1000, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
+      44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 1024; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -584,7 +583,7 @@ GST_START_TEST (test_64_bp_0hz)
   }
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -594,26 +593,26 @@ GST_END_TEST;
  * and a 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_64_bp_11025hz)
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
   GList *node;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 31, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
-      NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
-      NULL);
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
+      44100 / 4.0 - 1000, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
+      44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 1024; i += 4) {
@@ -623,7 +622,7 @@ GST_START_TEST (test_64_bp_11025hz)
     in[i + 3] = -1.0;
   }
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -649,7 +648,7 @@ GST_START_TEST (test_64_bp_11025hz)
   }
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -660,26 +659,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_64_bp_22050hz)
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
   GList *node;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 31, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
-      NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
-      NULL);
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
+      44100 / 4.0 - 1000, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
+      44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 1024; i += 2) {
@@ -687,7 +686,7 @@ GST_START_TEST (test_64_bp_22050hz)
     in[i + 1] = -1.0;
   }
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -713,7 +712,7 @@ GST_START_TEST (test_64_bp_22050hz)
   }
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -723,32 +722,32 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_64_br_0hz)
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
   GList *node;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 1, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 31, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
-      NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
-      NULL);
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
+      44100 / 4.0 - 1000, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
+      44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 1024; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -774,7 +773,7 @@ GST_START_TEST (test_64_br_0hz)
   }
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -784,26 +783,26 @@ GST_END_TEST;
  * and a 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_64_br_11025hz)
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
   GList *node;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 1, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 31, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
-      NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
-      NULL);
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
+      44100 / 4.0 - 1000, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
+      44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
 
@@ -814,7 +813,7 @@ GST_START_TEST (test_64_br_11025hz)
     in[i + 3] = -1.0;
   }
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -840,7 +839,7 @@ GST_START_TEST (test_64_br_11025hz)
   }
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -851,26 +850,26 @@ GST_END_TEST;
  * 2000Hz frequency band around rate/4 */
 GST_START_TEST (test_64_br_22050hz)
 {
-  GstElement *bpwsinc;
+  GstElement *audiowsincband;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
   GList *node;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandreject */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 1, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 1, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 31, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
-      NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
-      NULL);
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
+      44100 / 4.0 - 1000, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
+      44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 1024; i += 2) {
@@ -878,7 +877,7 @@ GST_START_TEST (test_64_br_22050hz)
     in[i + 1] = -1.0;
   }
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -904,7 +903,7 @@ GST_START_TEST (test_64_br_22050hz)
   }
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
@@ -913,32 +912,31 @@ GST_END_TEST;
  * correctly without accessing wrong memory areas */
 GST_START_TEST (test_64_small_buffer)
 {
-  GstElement *bpwsinc;
-  GstBuffer *inbuffer, *outbuffer;
+  GstElement *audiowsincband;
+  GstBuffer *inbuffer;
   GstCaps *caps;
   gdouble *in;
-  gdouble *res;
   gint i;
 
-  bpwsinc = setup_bpwsinc ();
+  audiowsincband = setup_audiowsincband ();
   /* Set to bandpass */
-  g_object_set (G_OBJECT (bpwsinc), "mode", 0, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "length", 101, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "mode", 0, NULL);
+  g_object_set (G_OBJECT (audiowsincband), "length", 101, NULL);
 
-  fail_unless (gst_element_set_state (bpwsinc,
+  fail_unless (gst_element_set_state (audiowsincband,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (bpwsinc), "lower-frequency",
+  g_object_set (G_OBJECT (audiowsincband), "lower-frequency",
       44100 / 4.0 - 44100 / 16.0, NULL);
-  g_object_set (G_OBJECT (bpwsinc), "upper-frequency",
+  g_object_set (G_OBJECT (audiowsincband), "upper-frequency",
       44100 / 4.0 + 44100 / 16.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
+  caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -950,15 +948,15 @@ GST_START_TEST (test_64_small_buffer)
   fail_unless (g_list_length (buffers) >= 1);
 
   /* cleanup */
-  cleanup_bpwsinc (bpwsinc);
+  cleanup_audiowsincband (audiowsincband);
 }
 
 GST_END_TEST;
 
 Suite *
-bpwsinc_suite (void)
+audiowsincband_suite (void)
 {
-  Suite *s = suite_create ("bpwsinc");
+  Suite *s = suite_create ("audiowsincband");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
@@ -985,7 +983,7 @@ main (int argc, char **argv)
 {
   int nf;
 
-  Suite *s = bpwsinc_suite ();
+  Suite *s = audiowsincband_suite ();
   SRunner *sr = srunner_create (s);
 
   gst_check_init (&argc, &argv);

@@ -138,6 +138,36 @@ gst_audio_panorama_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-audiowsincband</FILE>
+<TITLE>audiowsincband</TITLE>
+GstAudioWSincBand
+<SUBSECTION Standard>
+GstAudioWSincBandClass
+GstAudioWSincBandProcessFunc
+GST_AUDIO_WSINC_BAND
+GST_AUDIO_WSINC_BAND_CLASS
+GST_IS_AUDIO_WSINC_BAND
+GST_IS_AUDIO_WSINC_BAND_CLASS
+GST_TYPE_AUDIO_WSINC_BAND
+audio_wsincband_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-audiowsinclimit</FILE>
+<TITLE>audiowsinclimit</TITLE>
+GstAudioWSincLimit
+<SUBSECTION Standard>
+GstAudioWSincLimitClass
+GstAudioWSincLimitProcessFunc
+GST_AUDIO_WSINC_LIMIT
+GST_AUDIO_WSINC_LIMIT_CLASS
+GST_IS_AUDIO_WSINC_LIMIT
+GST_IS_AUDIO_WSINC_LIMIT_CLASS
+GST_TYPE_AUDIO_WSINC_LIMIT
+audio_wsinclimit_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-autoaudiosink</FILE>
 <TITLE>autoaudiosink</TITLE>
 GstAutoAudioSink

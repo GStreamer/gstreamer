@@ -9,7 +9,9 @@ libgstaudiofx_la_SOURCES = audiofx.c\
 	audioamplify.c \
 	audiodynamic.c \
 	audiocheblimit.c \
-	audiochebband.c
+	audiochebband.c \
+	audiowsincband.c \
+	audiowsinclimit.c
 
 # flags used to compile this plugin
 libgstaudiofx_la_CFLAGS = $(GST_CFLAGS) \

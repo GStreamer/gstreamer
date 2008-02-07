@@ -59,6 +59,8 @@ check_PROGRAMS = \
 	elements/audiocheblimit \
 	elements/audioamplify \
 	elements/audiodynamic \
+	elements/audiowsincband \
+	elements/audiowsinclimit \
 	elements/avimux \
 	elements/avisubtitle \
 	elements/icydemux \

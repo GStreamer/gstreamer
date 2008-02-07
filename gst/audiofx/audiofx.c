@@ -31,6 +31,8 @@
 #include "audiodynamic.h"
 #include "audiocheblimit.h"
 #include "audiochebband.h"
+#include "audiowsincband.h"
+#include "audiowsinclimit.h"
 
 /* entry point to initialize the plug-in
  * initialize the plug-in itself
@@ -54,7 +56,11 @@ plugin_init (GstPlugin * plugin)
       gst_element_register (plugin, "audiocheblimit", GST_RANK_NONE,
           GST_TYPE_AUDIO_CHEB_LIMIT) &&
       gst_element_register (plugin, "audiochebband", GST_RANK_NONE,
-          GST_TYPE_AUDIO_CHEB_BAND));
+          GST_TYPE_AUDIO_CHEB_BAND) &&
+      gst_element_register (plugin, "audiowsinclimit", GST_RANK_NONE,
+          GST_TYPE_AUDIO_WSINC_LIMIT) &&
+      gst_element_register (plugin, "audiowsincband", GST_RANK_NONE,
+          GST_TYPE_AUDIO_WSINC_BAND));
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

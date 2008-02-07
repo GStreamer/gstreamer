@@ -27,41 +27,40 @@
  *
  */
 
-#ifndef __GST_LPWSINC_H__
-#define __GST_LPWSINC_H__
+#ifndef __GST_AUDIO_WSINC_LIMIT_H__
+#define __GST_AUDIO_WSINC_LIMIT_H__
 
-#include "gstfilter.h"
 #include <gst/gst.h>
 #include <gst/audio/gstaudiofilter.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_LPWSINC \
-  (gst_lpwsinc_get_type())
-#define GST_LPWSINC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_LPWSINC,GstLPWSinc))
-#define GST_LPWSINC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_LPWSINC,GstLPWSincClass))
-#define GST_IS_LPWSINC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_LPWSINC))
-#define GST_IS_LPWSINC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LPWSINC))
+#define GST_TYPE_AUDIO_WSINC_LIMIT \
+  (audio_wsinclimit_get_type())
+#define GST_AUDIO_WSINC_LIMIT(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_WSINC_LIMIT,GstAudioWSincLimit))
+#define GST_AUDIO_WSINC_LIMIT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_WSINC_LIMIT,GstAudioWSincLimitClass))
+#define GST_IS_AUDIO_WSINC_LIMIT(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_WSINC_LIMIT))
+#define GST_IS_AUDIO_WSINC_LIMIT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_WSINC_LIMIT))
 
-typedef struct _GstLPWSinc GstLPWSinc;
-typedef struct _GstLPWSincClass GstLPWSincClass;
+typedef struct _GstAudioWSincLimit GstAudioWSincLimit;
+typedef struct _GstAudioWSincLimitClass GstAudioWSincLimitClass;
 
-typedef void (*GstLPWSincProcessFunc) (GstLPWSinc *, guint8 *, guint8 *, guint);
+typedef void (*GstAudioWSincLimitProcessFunc) (GstAudioWSincLimit *, guint8 *, guint8 *, guint);
 
 /**
- * GstLPWSinc:
+ * GstAudioWSincLimit:
  *
  * Opaque data structure.
  */
-struct _GstLPWSinc {
+struct _GstAudioWSincLimit {
   GstAudioFilter element;
 
   /* < private > */
-  GstLPWSincProcessFunc process;
+  GstAudioWSincLimitProcessFunc process;
 
   gint mode;
   gint window;
@@ -77,12 +76,12 @@ struct _GstLPWSinc {
   guint64 next_off;
 };
 
-struct _GstLPWSincClass {
+struct _GstAudioWSincLimitClass {
   GstAudioFilterClass parent_class;
 };
 
-GType gst_lpwsinc_get_type (void);
+GType audio_wsinclimit_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_LPWSINC_H__ */
+#endif /* __GST_AUDIO_WSINC_LIMIT_H__ */

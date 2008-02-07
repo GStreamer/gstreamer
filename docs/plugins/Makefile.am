@@ -102,6 +102,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audiofx/audiopanorama.h \
 	$(top_srcdir)/gst/audiofx/audiocheblimit.h \
 	$(top_srcdir)/gst/audiofx/audiochebband.h \
+	$(top_srcdir)/gst/audiofx/audiowsincband.h \
+	$(top_srcdir)/gst/audiofx/audiowsinclimit.h \
 	$(top_srcdir)/gst/autodetect/gstautoaudiosink.h \
 	$(top_srcdir)/gst/autodetect/gstautovideosink.h \
 	$(top_srcdir)/gst/avi/gstavidemux.h \

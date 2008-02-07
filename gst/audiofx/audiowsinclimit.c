@@ -34,7 +34,7 @@
  */
 
 /**
- * SECTION:element-lpwsinc
+ * SECTION:element-audiowsinclimit
  * @short_description: Windowed Sinc low pass and high pass filter
  *
  * <refsect2>
@@ -52,9 +52,9 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch audiotestsrc freq=1500 ! audioconvert ! lpwsinc mode=low-pass frequency=1000 length=501 ! audioconvert ! alsasink
- * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! lpwsinc mode=high-pass frequency=15000 length=501 ! audioconvert ! alsasink
- * gst-launch audiotestsrc wave=white-noise ! audioconvert ! lpwsinc mode=low-pass frequency=1000 length=10001 window=blackman ! audioconvert ! alsasink
+ * gst-launch audiotestsrc freq=1500 ! audioconvert ! audiowsinclimit mode=low-pass frequency=1000 length=501 ! audioconvert ! alsasink
+ * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiowsinclimit mode=high-pass frequency=15000 length=501 ! audioconvert ! alsasink
+ * gst-launch audiotestsrc wave=white-noise ! audioconvert ! audiowsinclimit mode=low-pass frequency=1000 length=10001 window=blackman ! audioconvert ! alsasink
  * </programlisting>
  * </para>
  * </refsect2>
@@ -70,12 +70,13 @@
 #include <gst/audio/gstaudiofilter.h>
 #include <gst/controller/gstcontroller.h>
 
-#include "gstlpwsinc.h"
+#include "audiowsinclimit.h"
 
-#define GST_CAT_DEFAULT gst_lpwsinc_debug
+#define GST_CAT_DEFAULT audio_wsinclimit_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails lpwsinc_details = GST_ELEMENT_DETAILS ("LPWSinc",
+static const GstElementDetails audio_wsinclimit_details =
+GST_ELEMENT_DETAILS ("AudioWSincLimit",
     "Filter/Effect/Audio",
     "Low-pass and High-pass Windowed sinc filter",
     "Thomas <thomas@apestaart.org>, "
@@ -105,9 +106,9 @@ enum
   MODE_HIGH_PASS
 };
 
-#define GST_TYPE_LPWSINC_MODE (gst_lpwsinc_mode_get_type ())
+#define GST_TYPE_AUDIO_WSINC_LIMIT_MODE (audio_wsinclimit_mode_get_type ())
 static GType
-gst_lpwsinc_mode_get_type (void)
+audio_wsinclimit_mode_get_type (void)
 {
   static GType gtype = 0;
 
@@ -120,7 +121,7 @@ gst_lpwsinc_mode_get_type (void)
       {0, NULL, NULL}
     };
 
-    gtype = g_enum_register_static ("GstLPWSincMode", values);
+    gtype = g_enum_register_static ("GstAudioWSincLimitMode", values);
   }
   return gtype;
 }
@@ -131,9 +132,9 @@ enum
   WINDOW_BLACKMAN
 };
 
-#define GST_TYPE_LPWSINC_WINDOW (gst_lpwsinc_window_get_type ())
+#define GST_TYPE_AUDIO_WSINC_LIMIT_WINDOW (audio_wsinclimit_window_get_type ())
 static GType
-gst_lpwsinc_window_get_type (void)
+audio_wsinclimit_window_get_type (void)
 {
   static GType gtype = 0;
 
@@ -146,7 +147,7 @@ gst_lpwsinc_window_get_type (void)
       {0, NULL, NULL}
     };
 
-    gtype = g_enum_register_static ("GstLPWSincWindow", values);
+    gtype = g_enum_register_static ("GstAudioWSincLimitWindow", values);
   }
   return gtype;
 }
@@ -159,32 +160,34 @@ gst_lpwsinc_window_get_type (void)
     " channels = (int) [ 1, MAX ]"
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_lpwsinc_debug, "lpwsinc", 0, "Low-pass and High-pass Windowed sinc filter plugin");
+  GST_DEBUG_CATEGORY_INIT (audio_wsinclimit_debug, "audiowsinclimit", 0, \
+      "Low-pass and High-pass Windowed sinc filter plugin");
 
-GST_BOILERPLATE_FULL (GstLPWSinc, gst_lpwsinc, GstAudioFilter,
+GST_BOILERPLATE_FULL (GstAudioWSincLimit, audio_wsinclimit, GstAudioFilter,
     GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
 
-static void lpwsinc_set_property (GObject * object, guint prop_id,
+static void audio_wsinclimit_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void lpwsinc_get_property (GObject * object, guint prop_id,
+static void audio_wsinclimit_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn lpwsinc_transform (GstBaseTransform * base,
+static GstFlowReturn audio_wsinclimit_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean lpwsinc_start (GstBaseTransform * base);
-static gboolean lpwsinc_event (GstBaseTransform * base, GstEvent * event);
-static gboolean lpwsinc_setup (GstAudioFilter * base,
+static gboolean audio_wsinclimit_start (GstBaseTransform * base);
+static gboolean audio_wsinclimit_event (GstBaseTransform * base,
+    GstEvent * event);
+static gboolean audio_wsinclimit_setup (GstAudioFilter * base,
     GstRingBufferSpec * format);
 
-static gboolean lpwsinc_query (GstPad * pad, GstQuery * query);
-static const GstQueryType *lpwsinc_query_type (GstPad * pad);
+static gboolean audio_wsinclimit_query (GstPad * pad, GstQuery * query);
+static const GstQueryType *audio_wsinclimit_query_type (GstPad * pad);
 
 /* Element class */
 
 static void
-gst_lpwsinc_dispose (GObject * object)
+audio_wsinclimit_dispose (GObject * object)
 {
-  GstLPWSinc *self = GST_LPWSINC (object);
+  GstAudioWSincLimit *self = GST_AUDIO_WSINC_LIMIT (object);
 
   if (self->residue) {
     g_free (self->residue);
@@ -200,12 +203,12 @@ gst_lpwsinc_dispose (GObject * object)
 }
 
 static void
-gst_lpwsinc_base_init (gpointer g_class)
+audio_wsinclimit_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstCaps *caps;
 
-  gst_element_class_set_details (element_class, &lpwsinc_details);
+  gst_element_class_set_details (element_class, &audio_wsinclimit_details);
 
   caps = gst_caps_from_string (ALLOWED_CAPS);
   gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (g_class),
@@ -214,7 +217,7 @@ gst_lpwsinc_base_init (gpointer g_class)
 }
 
 static void
-gst_lpwsinc_class_init (GstLPWSincClass * klass)
+audio_wsinclimit_class_init (GstAudioWSincLimitClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
@@ -224,9 +227,9 @@ gst_lpwsinc_class_init (GstLPWSincClass * klass)
   trans_class = (GstBaseTransformClass *) klass;
   filter_class = (GstAudioFilterClass *) klass;
 
-  gobject_class->set_property = lpwsinc_set_property;
-  gobject_class->get_property = lpwsinc_get_property;
-  gobject_class->dispose = gst_lpwsinc_dispose;
+  gobject_class->set_property = audio_wsinclimit_set_property;
+  gobject_class->get_property = audio_wsinclimit_get_property;
+  gobject_class->dispose = audio_wsinclimit_dispose;
 
 
   /* FIXME: Don't use the complete possible range but restrict the upper boundary
@@ -242,22 +245,23 @@ gst_lpwsinc_class_init (GstLPWSincClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
-          "Low pass or high pass mode", GST_TYPE_LPWSINC_MODE,
+          "Low pass or high pass mode", GST_TYPE_AUDIO_WSINC_LIMIT_MODE,
           MODE_LOW_PASS, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_WINDOW,
       g_param_spec_enum ("window", "Window",
-          "Window function to use", GST_TYPE_LPWSINC_WINDOW,
+          "Window function to use", GST_TYPE_AUDIO_WSINC_LIMIT_WINDOW,
           WINDOW_HAMMING, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
-  trans_class->transform = GST_DEBUG_FUNCPTR (lpwsinc_transform);
-  trans_class->start = GST_DEBUG_FUNCPTR (lpwsinc_start);
-  trans_class->event = GST_DEBUG_FUNCPTR (lpwsinc_event);
-  filter_class->setup = GST_DEBUG_FUNCPTR (lpwsinc_setup);
+  trans_class->transform = GST_DEBUG_FUNCPTR (audio_wsinclimit_transform);
+  trans_class->start = GST_DEBUG_FUNCPTR (audio_wsinclimit_start);
+  trans_class->event = GST_DEBUG_FUNCPTR (audio_wsinclimit_event);
+  filter_class->setup = GST_DEBUG_FUNCPTR (audio_wsinclimit_setup);
 }
 
 static void
-gst_lpwsinc_init (GstLPWSinc * self, GstLPWSincClass * g_class)
+audio_wsinclimit_init (GstAudioWSincLimit * self,
+    GstAudioWSincLimitClass * g_class)
 {
   self->mode = MODE_LOW_PASS;
   self->window = WINDOW_HAMMING;
@@ -272,14 +276,15 @@ gst_lpwsinc_init (GstLPWSinc * self, GstLPWSincClass * g_class)
   self->next_ts = GST_CLOCK_TIME_NONE;
   self->next_off = GST_BUFFER_OFFSET_NONE;
 
-  gst_pad_set_query_function (GST_BASE_TRANSFORM (self)->srcpad, lpwsinc_query);
+  gst_pad_set_query_function (GST_BASE_TRANSFORM (self)->srcpad,
+      audio_wsinclimit_query);
   gst_pad_set_query_type_function (GST_BASE_TRANSFORM (self)->srcpad,
-      lpwsinc_query_type);
+      audio_wsinclimit_query_type);
 }
 
 #define DEFINE_PROCESS_FUNC(width,ctype) \
 static void \
-process_##width (GstLPWSinc * self, g##ctype * src, g##ctype * dst, guint input_samples) \
+process_##width (GstAudioWSincLimit * self, g##ctype * src, g##ctype * dst, guint input_samples) \
 { \
   gint kernel_length = self->kernel_length; \
   gint i, j, k, l; \
@@ -324,7 +329,7 @@ DEFINE_PROCESS_FUNC (64, double);
 #undef DEFINE_PROCESS_FUNC
 
 static void
-lpwsinc_build_kernel (GstLPWSinc * self)
+audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
 {
   gint i = 0;
   gdouble sum = 0.0;
@@ -347,7 +352,7 @@ lpwsinc_build_kernel (GstLPWSinc * self)
   self->cutoff =
       CLAMP (self->cutoff, 0.0, GST_AUDIO_FILTER (self)->format.rate / 2);
 
-  GST_DEBUG ("lpwsinc: initializing filter kernel of length %d "
+  GST_DEBUG ("audio_wsinclimit_: initializing filter kernel of length %d "
       "with cutoff %.2lf Hz "
       "for mode %s",
       len, self->cutoff,
@@ -398,7 +403,7 @@ lpwsinc_build_kernel (GstLPWSinc * self)
 }
 
 static void
-lpwsinc_push_residue (GstLPWSinc * self)
+audio_wsinclimit_push_residue (GstAudioWSincLimit * self)
 {
   GstBuffer *outbuf;
   GstFlowReturn res;
@@ -477,16 +482,16 @@ lpwsinc_push_residue (GstLPWSinc * self)
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-lpwsinc_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+audio_wsinclimit_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
-  GstLPWSinc *self = GST_LPWSINC (base);
+  GstAudioWSincLimit *self = GST_AUDIO_WSINC_LIMIT (base);
 
   gboolean ret = TRUE;
 
   if (format->width == 32)
-    self->process = (GstLPWSincProcessFunc) process_32;
+    self->process = (GstAudioWSincLimitProcessFunc) process_32;
   else if (format->width == 64)
-    self->process = (GstLPWSincProcessFunc) process_64;
+    self->process = (GstAudioWSincLimitProcessFunc) process_64;
   else
     ret = FALSE;
 
@@ -498,10 +503,10 @@ lpwsinc_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 /* GstBaseTransform vmethod implementations */
 
 static GstFlowReturn
-lpwsinc_transform (GstBaseTransform * base, GstBuffer * inbuf,
+audio_wsinclimit_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  GstLPWSinc *self = GST_LPWSINC (base);
+  GstAudioWSincLimit *self = GST_AUDIO_WSINC_LIMIT (base);
   GstClockTime timestamp;
   gint channels = GST_AUDIO_FILTER (self)->format.channels;
   gint rate = GST_AUDIO_FILTER (self)->format.rate;
@@ -516,7 +521,7 @@ lpwsinc_transform (GstBaseTransform * base, GstBuffer * inbuf,
     gst_object_sync_values (G_OBJECT (self), timestamp);
 
   if (!self->have_kernel)
-    lpwsinc_build_kernel (self);
+    audio_wsinclimit_build_kernel (self);
 
   /* Reset the residue if already existing on discont buffers */
   if (GST_BUFFER_IS_DISCONT (inbuf)) {
@@ -616,9 +621,9 @@ lpwsinc_transform (GstBaseTransform * base, GstBuffer * inbuf,
 }
 
 static gboolean
-lpwsinc_start (GstBaseTransform * base)
+audio_wsinclimit_start (GstBaseTransform * base)
 {
-  GstLPWSinc *self = GST_LPWSINC (base);
+  GstAudioWSincLimit *self = GST_AUDIO_WSINC_LIMIT (base);
   gint channels = GST_AUDIO_FILTER (self)->format.channels;
 
   /* Reset the residue if already existing */
@@ -634,9 +639,9 @@ lpwsinc_start (GstBaseTransform * base)
 }
 
 static gboolean
-lpwsinc_query (GstPad * pad, GstQuery * query)
+audio_wsinclimit_query (GstPad * pad, GstQuery * query)
 {
-  GstLPWSinc *self = GST_LPWSINC (gst_pad_get_parent (pad));
+  GstAudioWSincLimit *self = GST_AUDIO_WSINC_LIMIT (gst_pad_get_parent (pad));
   gboolean res = TRUE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -687,7 +692,7 @@ lpwsinc_query (GstPad * pad, GstQuery * query)
 }
 
 static const GstQueryType *
-lpwsinc_query_type (GstPad * pad)
+audio_wsinclimit_query_type (GstPad * pad)
 {
   static const GstQueryType types[] = {
     GST_QUERY_LATENCY,
@@ -698,13 +703,13 @@ lpwsinc_query_type (GstPad * pad)
 }
 
 static gboolean
-lpwsinc_event (GstBaseTransform * base, GstEvent * event)
+audio_wsinclimit_event (GstBaseTransform * base, GstEvent * event)
 {
-  GstLPWSinc *self = GST_LPWSINC (base);
+  GstAudioWSincLimit *self = GST_AUDIO_WSINC_LIMIT (base);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      lpwsinc_push_residue (self);
+      audio_wsinclimit_push_residue (self);
       break;
     default:
       break;
@@ -714,12 +719,12 @@ lpwsinc_event (GstBaseTransform * base, GstEvent * event)
 }
 
 static void
-lpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
-    GParamSpec * pspec)
+audio_wsinclimit_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
-  GstLPWSinc *self = GST_LPWSINC (object);
+  GstAudioWSincLimit *self = GST_AUDIO_WSINC_LIMIT (object);
 
-  g_return_if_fail (GST_IS_LPWSINC (self));
+  g_return_if_fail (GST_IS_AUDIO_WSINC_LIMIT (self));
 
   switch (prop_id) {
     case PROP_LENGTH:{
@@ -732,13 +737,13 @@ lpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
 
       if (val != self->kernel_length) {
         if (self->residue) {
-          lpwsinc_push_residue (self);
+          audio_wsinclimit_push_residue (self);
           g_free (self->residue);
           self->residue = NULL;
         }
         self->kernel_length = val;
         self->latency = val / 2;
-        lpwsinc_build_kernel (self);
+        audio_wsinclimit_build_kernel (self);
         gst_element_post_message (GST_ELEMENT (self),
             gst_message_new_latency (GST_OBJECT (self)));
       }
@@ -748,19 +753,19 @@ lpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_FREQUENCY:
       GST_BASE_TRANSFORM_LOCK (self);
       self->cutoff = g_value_get_float (value);
-      lpwsinc_build_kernel (self);
+      audio_wsinclimit_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     case PROP_MODE:
       GST_BASE_TRANSFORM_LOCK (self);
       self->mode = g_value_get_enum (value);
-      lpwsinc_build_kernel (self);
+      audio_wsinclimit_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     case PROP_WINDOW:
       GST_BASE_TRANSFORM_LOCK (self);
       self->window = g_value_get_enum (value);
-      lpwsinc_build_kernel (self);
+      audio_wsinclimit_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     default:
@@ -770,10 +775,10 @@ lpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
 }
 
 static void
-lpwsinc_get_property (GObject * object, guint prop_id, GValue * value,
+audio_wsinclimit_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstLPWSinc *self = GST_LPWSINC (object);
+  GstAudioWSincLimit *self = GST_AUDIO_WSINC_LIMIT (object);
 
   switch (prop_id) {
     case PROP_LENGTH:
