@@ -20,17 +20,18 @@
  */
 /**
  * SECTION:element-spectrum
+ * @short_description: audio spectrum analyzer
  *
  * <refsect2>
  * <para>
  * The Spectrum element analyzes the frequency spectrum of an audio signal.
- * If <link linkend="GstSpectrum--message">message property</link> is #TRUE it
- * sends analysis results as application message named
+ * If #GstSpectrum:message property is #TRUE it sends analysis results as
+ * application message named
  * <classname>&quot;spectrum&quot;</classname> after each interval of time given
- * by the <link linkend="GstSpectrum--interval">interval property</link>.
+ * by the #GstSpectrum:interval property.
  * </para>
  * <para>
- * The message's structure contains two fields:
+ * The message's structure contains three fields:
  * <itemizedlist>
  * <listitem>
  *   <para>
@@ -44,8 +45,7 @@
  *   #GstValueList of #gfloat
  *   <classname>&quot;magnitude&quot;</classname>:
  *   the level for each frequency band in dB. All values below the value of the
- *   <link linkend="GstSpectrum--threshold">threshold property</link> will
- *   be set to the threshold.
+ *   #GstSpectrum:threshold property will be set to the threshold.
  *   </para>
  * </listitem>
  * <listitem>
@@ -62,7 +62,7 @@
  * The included demo shows how to use it in an application.
  * </para>
  * <para>
- * Last reviewed on 2007-11-11 (0.10.6)
+ * Last reviewed on 2008-02-07 (0.10.6)
  * </para>
  * </refsect2>
  */
