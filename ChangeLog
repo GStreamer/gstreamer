@@ -1,3 +1,9 @@
+2008-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Bump requirements to (good) released versions to avoid
+	  confusion and make implicit core requirement explicit.
+
 2008-02-06  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/plugins/Makefile.am:
