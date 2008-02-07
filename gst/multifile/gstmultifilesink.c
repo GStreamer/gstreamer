@@ -151,6 +151,7 @@ gst_multi_file_sink_set_location (GstMultiFileSink * sink,
 {
   g_free (sink->filename);
   if (location != NULL) {
+    /* FIXME: validate location to have just one %d */
     sink->filename = g_strdup (location);
   } else {
     sink->filename = NULL;
