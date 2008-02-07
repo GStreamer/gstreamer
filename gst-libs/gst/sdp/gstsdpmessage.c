@@ -325,6 +325,7 @@ is_multicast_address (const gchar * host_name, guint * family)
   gboolean ret = FALSE;
   int err;
 
+  memset (&hints, 0, sizeof (hints));
   hints.ai_socktype = SOCK_DGRAM;
 
   g_return_val_if_fail (host_name, FALSE);

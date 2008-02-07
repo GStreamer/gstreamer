@@ -1,3 +1,10 @@
+2008-02-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c: (is_multicast_address):
+	Clear the addrinfo struct using memset. Fixes #514937.
+
 2008-02-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/tcp/gstfdset.h:
