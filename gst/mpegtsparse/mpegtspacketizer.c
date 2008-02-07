@@ -1340,6 +1340,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
         goto error;
       }
       guint8 *event_descriptor;
+      GArray *component_descriptors;
       GstMPEGDescriptor *mpegdescriptor =
           gst_mpeg_descriptor_parse (data, descriptors_loop_length);
       event_descriptor =
@@ -1375,7 +1376,203 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
           g_free (eventdescription_tmp);
         }
       }
+      component_descriptors = gst_mpeg_descriptor_find_all (mpegdescriptor,
+          DESC_DVB_COMPONENT);
+      if (component_descriptors) {
+        int i;
+        guint8 *comp_descriptor;
+        GValue components = { 0 };
+        g_value_init (&components, GST_TYPE_LIST);
+        /* FIXME: do the component descriptor parsing less verbosely
+         * and better...a task for 0.10.6 */
+        for (i = 0; i < component_descriptors->len; i++) {
+          GstStructure *component = NULL;
+          GValue component_value = { 0 };
+          gint widescreen = 0;  /* 0 for 4:3, 1 for 16:9, 2 for > 16:9 */
+          gint freq = 25;       /* 25 or 30 measured in Hertz */
+          gboolean highdef = FALSE;
+          gboolean panvectors = FALSE;
+          gchar *comptype = "";
 
+          comp_descriptor = g_array_index (component_descriptors, guint8 *, i);
+          switch (DESC_DVB_COMPONENT_stream_content (comp_descriptor)) {
+            case 0x01:
+              /* video */
+              switch (DESC_DVB_COMPONENT_type (comp_descriptor)) {
+                case 0x01:
+                  widescreen = 0;
+                  freq = 25;
+                  break;
+                case 0x02:
+                  widescreen = 1;
+                  panvectors = TRUE;
+                  freq = 25;
+                  break;
+                case 0x03:
+                  widescreen = 1;
+                  panvectors = FALSE;
+                  freq = 25;
+                  break;
+                case 0x04:
+                  widescreen = 2;
+                  freq = 25;
+                  break;
+                case 0x05:
+                  widescreen = 0;
+                  freq = 30;
+                  break;
+                case 0x06:
+                  widescreen = 1;
+                  panvectors = TRUE;
+                  freq = 30;
+                  break;
+                case 0x07:
+                  widescreen = 1;
+                  panvectors = FALSE;
+                  freq = 30;
+                  break;
+                case 0x08:
+                  widescreen = 2;
+                  freq = 30;
+                  break;
+                case 0x09:
+                  widescreen = 0;
+                  highdef = TRUE;
+                  freq = 25;
+                  break;
+                case 0x0A:
+                  widescreen = 1;
+                  highdef = TRUE;
+                  panvectors = TRUE;
+                  freq = 25;
+                  break;
+                case 0x0B:
+                  widescreen = 1;
+                  highdef = TRUE;
+                  panvectors = FALSE;
+                  freq = 25;
+                  break;
+                case 0x0C:
+                  widescreen = 2;
+                  highdef = TRUE;
+                  freq = 25;
+                  break;
+                case 0x0D:
+                  widescreen = 0;
+                  highdef = TRUE;
+                  freq = 30;
+                  break;
+                case 0x0E:
+                  widescreen = 1;
+                  highdef = TRUE;
+                  panvectors = TRUE;
+                  freq = 30;
+                  break;
+                case 0x0F:
+                  widescreen = 1;
+                  highdef = TRUE;
+                  panvectors = FALSE;
+                  freq = 30;
+                  break;
+                case 0x10:
+                  widescreen = 2;
+                  highdef = TRUE;
+                  freq = 30;
+                  break;
+              }
+              component = gst_structure_new ("video", "high-definition",
+                  G_TYPE_BOOLEAN, TRUE, "frequency", G_TYPE_INT, freq, NULL);
+              if (widescreen == 0) {
+                gst_structure_set (component, "aspect-ratio",
+                    G_TYPE_STRING, "4:3", NULL);
+              } else if (widescreen == 2) {
+                gst_structure_set (component, "aspect-ratio", G_TYPE_STRING,
+                    "> 16:9", NULL);
+              } else {
+                gst_structure_set (component, "aspect-ratio", G_TYPE_STRING,
+                    "16:9", "pan-vectors", G_TYPE_BOOLEAN, panvectors, NULL);
+              }
+              break;
+            case 0x02:         /* audio */
+              comptype = "undefined";
+              switch (DESC_DVB_COMPONENT_type (comp_descriptor)) {
+                case 0x01:
+                  comptype = "single channel mono";
+                  break;
+                case 0x02:
+                  comptype = "dual channel mono";
+                  break;
+                case 0x03:
+                  comptype = "stereo";
+                  break;
+                case 0x04:
+                  comptype = "multi-channel multi-lingual";
+                  break;
+                case 0x05:
+                  comptype = "surround";
+                  break;
+                case 0x40:
+                  comptype = "audio description for the visually impaired";
+                  break;
+                case 0x41:
+                  comptype = "audio for the hard of hearing";
+                  break;
+              }
+              component = gst_structure_new ("audio", "type", G_TYPE_STRING,
+                  comptype, NULL);
+              break;
+            case 0x03:         /* subtitles/teletext/vbi */
+              comptype = "reserved";
+              switch (DESC_DVB_COMPONENT_type (comp_descriptor)) {
+                case 0x01:
+                  comptype = "EBU Teletext subtitles";
+                  break;
+                case 0x02:
+                  comptype = "associated EBU Teletext";
+                  break;
+                case 0x03:
+                  comptype = "VBI data";
+                  break;
+                case 0x10:
+                  comptype = "Normal DVB subtitles";
+                  break;
+                case 0x11:
+                  comptype = "Normal DVB subtitles for 4:3";
+                  break;
+                case 0x12:
+                  comptype = "Normal DVB subtitles for 16:9";
+                  break;
+                case 0x13:
+                  comptype = "Normal DVB subtitles for 2.21:1";
+                  break;
+                case 0x20:
+                  comptype = "Hard of hearing DVB subtitles";
+                  break;
+                case 0x21:
+                  comptype = "Hard of hearing DVB subtitles for 4:3";
+                  break;
+                case 0x22:
+                  comptype = "Hard of hearing DVB subtitles for 16:9";
+                  break;
+                case 0x23:
+                  comptype = "Hard of hearing DVB subtitles for 2.21:1";
+                  break;
+              }
+              component = gst_structure_new ("teletext", "type", G_TYPE_STRING,
+                  comptype, NULL);
+              break;
+          }
+          if (component) {
+            g_value_init (&component_value, GST_TYPE_STRUCTURE);
+            g_value_take_boxed (&component_value, component);
+            gst_value_list_append_value (&components, &component_value);
+            g_value_unset (&component_value);
+            component = NULL;
+          }
+        }
+        gst_structure_set_value (event, "components", &components);
+        g_array_free (component_descriptors, TRUE);
+      }
       gst_mpeg_descriptor_free (mpegdescriptor);
 
       descriptors = g_value_array_new (0);

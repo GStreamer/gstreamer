@@ -1,3 +1,10 @@
+2008-02-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	Parse component descriptor.
+	* gst/mpegtsparse/mpegtsparse.c:
+	Add SI pids to every program (but hardcoded currently).
+
 2008-02-07  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/metadata_mapping.htm:

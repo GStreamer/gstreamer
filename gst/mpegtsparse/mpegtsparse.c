@@ -652,8 +652,9 @@ mpegts_parse_tspad_push (MpegTSParse * parse, MpegTSParsePad * tspad,
     }
   }
 
-  /* FIXME: send all the SI pids not only PAT and PMT */
+  /* FIXME: take the SI pids from a list not hardcoded here */
   if (pad_pids == NULL || pid == pcr_pid || pid == pmt_pid || pid == 0 ||
+      pid == 0x10 || pid == 0x11 || pid == 0x12 ||
       g_hash_table_lookup (pad_pids, GINT_TO_POINTER ((gint) pid)) != NULL) {
     /* push if there's no filter or if the pid is in the filter */
     ret = gst_pad_push (tspad->pad, buffer);
