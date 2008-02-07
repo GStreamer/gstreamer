@@ -42,6 +42,7 @@
 #include "gstdc1394.h"
 #include <sys/time.h>
 #include <time.h>
+#include <string.h>
 
 GST_DEBUG_CATEGORY (dc1394_debug);
 #define GST_CAT_DEFAULT dc1394_debug
@@ -1175,7 +1176,7 @@ gst_dc1394_change_camera_transmission (GstDc1394 * src, gboolean on)
 
     i = 0;
     while (status == DC1394_OFF && i++ < 5) {
-      usleep (50000);
+      g_usleep (50000);
       if (dc1394_video_get_transmission (src->camera,
               &status) != DC1394_SUCCESS) {
         if (status == DC1394_OFF) {

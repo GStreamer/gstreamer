@@ -1,3 +1,13 @@
+2008-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  The dc1394 plugin seems to use API that was removed or changed
+	  before the final 2.0.0 release, so only build it if 2.0.0-rc5
+	  is available. Someone needs to port it to the final API.
+
+	* ext/dc1394/gstdc1394.c: (gst_dc1394_change_camera_transmission):
+	  Include string.h for memcpy and use g_usleep instead of usleep.
+
 2008-02-07  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/filter/gstlpwsinc.c:
