@@ -1,5 +1,12 @@
 2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* configure.ac:
+	* ext/Makefile.am:
+	* tests/check/Makefile.am:
+	Move gio plugin from -bad and mark as experimental.
+
+2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* gst-libs/gst/interfaces/mixeroptions.c:
 	* gst-libs/gst/interfaces/mixertrack.c:
 	Comment out a couple of other things which break the build when

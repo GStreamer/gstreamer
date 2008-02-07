@@ -129,6 +129,7 @@ AC_SUBST(GST_PLUGINS_SELECTED)
 
 AG_GST_ARG_ENABLE_EXTERNAL
 
+AG_GST_ARG_ENABLE_EXPERIMENTAL
 dnl *** checks for platform ***
 
 dnl * hardware/architecture *
@@ -480,6 +481,18 @@ AG_GST_CHECK_FEATURE(GNOME_VFS, [GNOME VFS], gnomevfs, [
   AG_GST_PKG_CHECK_MODULES(GNOME_VFS, gnome-vfs-2.0)
 ])
 
+dnl *** libgio ***
+USE_GIO=$BUILD_EXPERIMENTAL
+translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
+AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
+  PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.15.2, HAVE_GIO="yes", [
+    HAVE_GIO="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(GIO_CFLAGS)
+  AC_SUBST(GIO_LIBS)
+])
+
 dnl *** libvisual ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBVISUAL, true)
 AG_GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization library], libvisual, [
@@ -554,6 +567,7 @@ dnl but we still need to set the conditionals
 AM_CONDITIONAL(USE_ALSA, false)
 AM_CONDITIONAL(USE_CDPARANOIA, false)
 AM_CONDITIONAL(USE_GNOME_VFS, false)
+AM_CONDITIONAL(USE_GIO, false)
 AM_CONDITIONAL(USE_LIBVISUAL, false)
 AM_CONDITIONAL(USE_OGG, false)
 AM_CONDITIONAL(USE_PANGO, false)
@@ -663,6 +677,7 @@ ext/Makefile
 ext/alsa/Makefile
 ext/cdparanoia/Makefile
 ext/gnomevfs/Makefile
+ext/gio/Makefile
 ext/libvisual/Makefile
 ext/ogg/Makefile
 ext/pango/Makefile

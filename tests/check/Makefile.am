@@ -37,6 +37,12 @@ else
 check_gnomevfs = 
 endif
 
+if USE_GIO
+check_gio = pipelines/gio
+else
+check_gio =
+endif
+
 if USE_LIBVISUAL
 check_libvisual = elements/libvisual
 else

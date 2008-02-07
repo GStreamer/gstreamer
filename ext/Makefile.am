@@ -10,6 +10,12 @@ else
 CDPARANOIA_DIR=
 endif
 
+if USE_GIO
+GIO_DIR=gio
+else
+GIO_DIR=
+endif
+
 if USE_GNOME_VFS
 GNOMEVFS_DIR=gnomevfs
 else
@@ -49,6 +55,7 @@ endif
 SUBDIRS = \
   $(ALSA_DIR) \
   $(CDPARANOIA_DIR) \
+  $(GIO_DIR) \
   $(GNOMEVFS_DIR) \
   $(LIBVISUAL_DIR) \
   $(OGG_DIR) \
