@@ -1,3 +1,10 @@
+2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst-libs/gst/interfaces/mixeroptions.c:
+	* gst-libs/gst/interfaces/mixertrack.c:
+	Comment out a couple of other things which break the build when
+	GST_DISABLE_DEPRECATED isn't on but -Werror is.
+
 2008-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:

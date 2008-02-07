@@ -24,7 +24,7 @@
 #endif
 
 #include "mixertrack.h"
-#ifndef GST_DISABLE_DEPRECATED
+#if 0
 enum
 {
   /* FILL ME */
