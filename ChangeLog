@@ -1,3 +1,16 @@
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* gst/mpegaudioparse/Makefile.am:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegaudioparse/gstxingmux.c:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	Move xingmux from -bad.
+
 2008-02-07  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:(mp3parse_time_to_bytepos):

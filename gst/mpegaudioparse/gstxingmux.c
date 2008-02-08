@@ -391,6 +391,9 @@ gst_xing_mux_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_xing_mux_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_xing_mux_sink_template));
+
+  GST_DEBUG_CATEGORY_INIT (xing_mux_debug, "xingmux", 0, "Xing Header Muxer");
+
   gst_element_class_set_details (element_class, &gst_xing_mux_details);
 }
 
@@ -668,22 +671,3 @@ gst_xing_mux_change_state (GstElement * element, GstStateChange transition)
 
   return result;
 }
-
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "xingmux", GST_RANK_NONE,
-          GST_TYPE_XING_MUX))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (xing_mux_debug, "xingmux", 0, "Xing Header Muxer");
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "xingheader",
-    "Add a xing header to mp3 encoded data",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

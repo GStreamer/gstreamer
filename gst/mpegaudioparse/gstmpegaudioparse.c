@@ -213,6 +213,9 @@ gst_mp3parse_base_init (gpointer klass)
       gst_static_pad_template_get (&mp3_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mp3_src_template));
+
+  GST_DEBUG_CATEGORY_INIT (mp3parse_debug, "mp3parse", 0, "MPEG Audio Parser");
+
   gst_element_class_set_details (element_class, &mp3parse_details);
 }
 
@@ -1723,18 +1726,3 @@ mp3parse_get_query_types (GstPad * pad ATTR_UNUSED)
 
   return query_types;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (mp3parse_debug, "mp3parse", 0, "MP3 Parser");
-
-  return gst_element_register (plugin, "mp3parse",
-      GST_RANK_PRIMARY + 1, GST_TYPE_MP3PARSE);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "mpegaudioparse",
-    "MPEG-1 layer 1/2/3 audio parser",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

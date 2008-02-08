@@ -19,6 +19,7 @@
     <xi:include href="xml/element-mad.xml" />
     <xi:include href="xml/element-siddec.xml" />
     <xi:include href="xml/element-synaesthesia.xml" />
+    <xi:include href="xml/element-xingmux.xml" />
   </chapter>
 
   <chapter>

@@ -40,10 +40,13 @@ check_PROGRAMS = \
 	generic/states \
 	$(AMRNB) \
 	$(LAME) \
-	$(MPEG2DEC)
+	$(MPEG2DEC) \
+	elements/xingmux
 
 # these tests don't even pass
 noinst_PROGRAMS =
+
+noinst_HEADERS = elements/xingmux_testdata.h
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
