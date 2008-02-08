@@ -103,6 +103,7 @@ GST_PLUGINS_ALL="\
 		rtp	\
 		rtsp	\
 		smpte	\
+		spectrum \
 		udp     \
 		videobox \
 		videocrop \
@@ -1026,6 +1027,7 @@ gst/qtdemux/Makefile
 gst/rtp/Makefile
 gst/rtsp/Makefile
 gst/smpte/Makefile
+gst/spectrum/Makefile
 gst/udp/Makefile
 gst/videobox/Makefile
 gst/videocrop/Makefile
@@ -1071,6 +1073,7 @@ tests/examples/Makefile
 tests/examples/equalizer/Makefile
 tests/examples/level/Makefile
 tests/examples/rtp/Makefile
+tests/examples/spectrum/Makefile
 tests/files/Makefile
 tests/icles/Makefile
 gconf/Makefile

@@ -54,6 +54,7 @@ GObject
             GstIirEqualizerNBands
             GstIirEqualizer3Bands
             GstIirEqualizer10Bands
+          GstSpectrum
         GstAudioPanorama
         GstCairoTimeOverlay
         GstVideoFilter

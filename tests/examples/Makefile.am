@@ -1,3 +1,3 @@
-SUBDIRS = level rtp equalizer
+SUBDIRS = equalizer level rtp spectrum
 
-DIST_SUBDIRS = level rtp equalizer
+DIST_SUBDIRS = equalizer level rtp spectrum

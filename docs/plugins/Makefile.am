@@ -124,6 +124,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/qtdemux/qtdemux.h \
 	$(top_srcdir)/gst/rtsp/gstrtpdec.h \
 	$(top_srcdir)/gst/rtsp/gstrtspsrc.h \
+	$(top_srcdir)/gst/spectrum/gstspectrum.h \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \
 	$(top_srcdir)/gst/udp/gstudpsrc.h \
 	$(top_srcdir)/gst/videocrop/gstvideocrop.h \

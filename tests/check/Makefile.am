@@ -69,6 +69,7 @@ check_PROGRAMS = \
 	elements/level \
 	elements/matroskamux \
 	elements/rtp-payloading \
+	elements/spectrum \
 	elements/videocrop \
 	elements/videofilter \
 	pipelines/simple-launch-lines \

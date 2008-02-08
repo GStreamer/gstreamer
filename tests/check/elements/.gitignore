@@ -21,6 +21,7 @@ id3v2mux
 level
 matroskamux
 rtp-payloading
+spectrum
 sunaudio
 videocrop
 videofilter

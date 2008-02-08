@@ -881,6 +881,22 @@ GST_IS_SMOKEENC_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-spectrum</FILE>
+<TITLE>spectrum</TITLE>
+GstSpectrum
+<SUBSECTION Standard>
+GstSpectrumClass
+GstSpectrumFFTFreeFunc
+GstSpectrumProcessFunc
+GST_SPECTRUM
+GST_SPECTRUM_CLASS
+GST_IS_SPECTRUM
+GST_IS_SPECTRUM_CLASS
+GST_TYPE_SPECTRUM
+gst_spectrum_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-taglibmux</FILE>
 <TITLE>taglibmux</TITLE>
 GstTagLibMux
