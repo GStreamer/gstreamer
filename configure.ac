@@ -113,7 +113,6 @@ GST_PLUGINS_ALL="\
   tta \
   videosignal \
   vmnc \
-  xingheader \
   y4m \
   "
 
@@ -1074,7 +1073,6 @@ gst/stereo/Makefile
 gst/tta/Makefile
 gst/videosignal/Makefile
 gst/vmnc/Makefile
-gst/xingheader/Makefile
 gst/real/Makefile
 gst/y4m/Makefile
 gst-libs/Makefile

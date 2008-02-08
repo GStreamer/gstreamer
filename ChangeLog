@@ -1,3 +1,19 @@
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-xingheader.xml:
+	* gst/xingheader/Makefile.am:
+	* gst/xingheader/gstxingmux.c:
+	* gst/xingheader/gstxingmux.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/xingmux.c:
+	* tests/check/elements/xingmux_testdata.h:
+	Remove the xingmux plugin, as the element has moved into
+	mpegaudioparse in -ugly.
+
 2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/plugins/Makefile.am:
