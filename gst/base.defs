@@ -82,7 +82,7 @@
   (c-name "gst_adapter_push")
   (return-type "none")
   (parameters
-    '("GstBuffer*" "buf")
+    '("GstBuffer*" "buf" (keep-refcount))
   )
 )
 
