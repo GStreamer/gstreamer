@@ -137,62 +137,6 @@ SPU_STATE_FLAGS_MASK
 </SECTION>
 
 <SECTION>
-<FILE>gstiirequalizer</FILE>
-<TITLE>GstIirEqualize</TITLE>
-GstIirEqualizer
-<SUBSECTION Standard>
-GstIirEqualizerClass
-GST_IIR_EQUALIZER
-GST_IIR_EQUALIZER_CLASS
-GST_IS_IIR_EQUALIZER
-GST_IS_IIR_EQUALIZER_CLASS
-GST_TYPE_IIR_EQUALIZER
-gst_iir_equalizer_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-equalizer-3bands</FILE>
-<TITLE>equalizer-3bands</TITLE>
-GstIirEqualizer3Bands
-<SUBSECTION Standard>
-GstIirEqualizer3BandsClass
-GST_IIR_EQUALIZER_3BANDS
-GST_IIR_EQUALIZER_3BANDS_CLASS
-GST_IS_IIR_EQUALIZER_3BANDS
-GST_IS_IIR_EQUALIZER_3BANDS_CLASS
-GST_TYPE_IIR_EQUALIZER_3BANDS
-gst_iir_equalizer_3bands_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-equalizer-10bands</FILE>
-<TITLE>equalizer-10bands</TITLE>
-GstIirEqualizer10Bands
-<SUBSECTION Standard>
-GstIirEqualizer10BandsClass
-GST_IIR_EQUALIZER_10BANDS
-GST_IIR_EQUALIZER_10BANDS_CLASS
-GST_IS_IIR_EQUALIZER_10BANDS
-GST_IS_IIR_EQUALIZER_10BANDS_CLASS
-GST_TYPE_IIR_EQUALIZER_10BANDS
-gst_iir_equalizer_10bands_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-equalizer-nbands</FILE>
-<TITLE>equalizer-nbands</TITLE>
-GstIirEqualizerNBands
-<SUBSECTION Standard>
-GstIirEqualizerNBandsClass
-GST_IIR_EQUALIZER_NBANDS
-GST_IIR_EQUALIZER_NBANDS_CLASS
-GST_IS_IIR_EQUALIZER_NBANDS
-GST_IS_IIR_EQUALIZER_NBANDS_CLASS
-GST_TYPE_IIR_EQUALIZER_NBANDS
-gst_iir_equalizer_nbands_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-festival</FILE>
 <TITLE>festival</TITLE>
 GstFestival

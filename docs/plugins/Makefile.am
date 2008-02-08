@@ -113,10 +113,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/timidity/gsttimidity.h \
 	$(top_srcdir)/ext/timidity/gstwildmidi.h \
 	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \
-	$(top_srcdir)/gst/equalizer/gstiirequalizer.h \
-	$(top_srcdir)/gst/equalizer/gstiirequalizer3bands.h \
-	$(top_srcdir)/gst/equalizer/gstiirequalizer10bands.h \
-	$(top_srcdir)/gst/equalizer/gstiirequalizernbands.h \
 	$(top_srcdir)/gst/festival/gstfestival.h \
 	$(top_srcdir)/gst/modplug/gstmodplug.h \
 	$(top_srcdir)/gst/multifile/gstmultifilesink.h \

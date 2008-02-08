@@ -44,7 +44,7 @@ dnl AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-dnl *** remove rtpmanager/equalizer stuff below when this is updated
+dnl *** remove rtpmanager stuff below when this is updated
 GST_REQ=0.10.17
 GSTPB_REQ=0.10.17
 
@@ -84,7 +84,6 @@ GST_PLUGINS_ALL="\
   cdxaparse \
   deinterlace \
   dvdspu \
-  equalizer \
   festival \
   filter \
   flv \
@@ -1045,7 +1044,6 @@ gst/bayer/Makefile
 gst/cdxaparse/Makefile
 gst/deinterlace/Makefile
 gst/dvdspu/Makefile
-gst/equalizer/Makefile
 gst/festival/Makefile
 gst/filter/Makefile
 gst/flv/Makefile

@@ -67,7 +67,6 @@ check_PROGRAMS = \
 	$(check_neon)      \
 	$(check_soup)      \
 	$(check_timidity)  \
-	elements/equalizer  \
 	elements/interleave \
 	elements/multifile \
 	elements/rganalysis \

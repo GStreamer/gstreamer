@@ -1,6 +1,30 @@
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* gst/equalizer/.cvsignore:
+	* gst/equalizer/Makefile.am:
+	* gst/equalizer/demo.c:
+	* gst/equalizer/gstiirequalizer.c:
+	* gst/equalizer/gstiirequalizer.h:
+	* gst/equalizer/gstiirequalizer10bands.c:
+	* gst/equalizer/gstiirequalizer10bands.h:
+	* gst/equalizer/gstiirequalizer3bands.c:
+	* gst/equalizer/gstiirequalizer3bands.h:
+	* gst/equalizer/gstiirequalizernbands.c:
+	* gst/equalizer/gstiirequalizernbands.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/equalizer.c:
+
+	Remove the equalizer plugin, which has moved to -good
+
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
 	Make DISABLE_DEPRECATED defined *only* during CVS, not during
 	pre-releases or releases.
 
