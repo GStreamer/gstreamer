@@ -1112,7 +1112,7 @@ update_scale (gpointer data)
 }
 
 static void do_seek (GtkWidget * widget);
-
+static void connect_bus_signals (GstElement * pipeline);
 static void set_update_scale (gboolean active);
 
 static gboolean
@@ -1372,6 +1372,7 @@ stop_cb (GtkButton * button, gpointer data)
       pipeline = pipelines[pipeline_type].func (pipeline_spec);
       g_assert (pipeline);
       gst_element_set_state (pipeline, GST_STATE_READY);
+      connect_bus_signals (pipeline);
     }
   }
   return;
@@ -1596,6 +1597,38 @@ msg_segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 }
 
 static void
+connect_bus_signals (GstElement * pipeline)
+{
+  GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  g_signal_connect (bus, "message::state-changed",
+      (GCallback) msg_state_changed, pipeline);
+  g_signal_connect (bus, "message::segment-done", (GCallback) msg_segment_done,
+      pipeline);
+  g_signal_connect (bus, "message::async-done", (GCallback) msg_async_done,
+      pipeline);
+
+  g_signal_connect (bus, "message::new-clock", (GCallback) message_received,
+      pipeline);
+  g_signal_connect (bus, "message::error", (GCallback) message_received,
+      pipeline);
+  g_signal_connect (bus, "message::warning", (GCallback) message_received,
+      pipeline);
+  g_signal_connect (bus, "message::eos", (GCallback) message_received,
+      pipeline);
+  g_signal_connect (bus, "message::tag", (GCallback) message_received,
+      pipeline);
+  g_signal_connect (bus, "message::element", (GCallback) message_received,
+      pipeline);
+  g_signal_connect (bus, "message::segment-done", (GCallback) message_received,
+      pipeline);
+
+  gst_object_unref (bus);
+}
+
+static void
 print_usage (int argc, char **argv)
 {
   gint i;
@@ -1815,34 +1848,8 @@ main (int argc, char **argv)
     g_signal_connect (pipeline, "deep_notify",
         G_CALLBACK (gst_object_default_deep_notify), NULL);
   }
-  {
-    GstBus *bus;
 
-    bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-    gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
-
-    g_signal_connect (bus, "message::state-changed",
-        (GCallback) msg_state_changed, pipeline);
-    g_signal_connect (bus, "message::segment-done",
-        (GCallback) msg_segment_done, pipeline);
-    g_signal_connect (bus, "message::async-done",
-        (GCallback) msg_async_done, pipeline);
-
-    g_signal_connect (bus, "message::new-clock", (GCallback) message_received,
-        pipeline);
-    g_signal_connect (bus, "message::error", (GCallback) message_received,
-        pipeline);
-    g_signal_connect (bus, "message::warning", (GCallback) message_received,
-        pipeline);
-    g_signal_connect (bus, "message::eos", (GCallback) message_received,
-        pipeline);
-    g_signal_connect (bus, "message::tag", (GCallback) message_received,
-        pipeline);
-    g_signal_connect (bus, "message::element", (GCallback) message_received,
-        pipeline);
-    g_signal_connect (bus, "message::segment-done",
-        (GCallback) message_received, pipeline);
-  }
+  connect_bus_signals (pipeline);
   gtk_main ();
 
   g_print ("NULL pipeline\n");

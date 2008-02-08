@@ -1,3 +1,11 @@
+2008-02-08  Julien Moutte  <julien@fluendo.com>
+
+	* tests/examples/seek/seek.c: (stop_cb), (connect_bus_signals),
+	(main): Make sure bus signals are reconnected when pressing STOP
+	and then PLAY again for a parse launch pipeline. Fix a ref leak
+	on the bus.
+	* win32/common/config.h: Updated.
+
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
