@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "dvbbasebin.h"
+#include "parsechannels.h"
 
 GST_DEBUG_CATEGORY_STATIC (dvb_base_bin_debug);
 #define GST_CAT_DEFAULT dvb_base_bin_debug
@@ -121,6 +122,21 @@ static GstPad *dvb_base_bin_request_new_pad (GstElement * element,
 static void dvb_base_bin_release_pad (GstElement * element, GstPad * pad);
 static void dvb_base_bin_rebuild_filter (DvbBaseBin * dvbbasebin);
 
+static void dvb_base_bin_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
+
+static void
+dvb_base_bin_setup_interfaces (GType type)
+{
+  static const GInterfaceInfo urihandler_info = {
+    dvb_base_bin_uri_handler_init,
+    NULL,
+    NULL,
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
+}
+
 static DvbBaseBinStream *
 dvb_base_bin_add_stream (DvbBaseBin * dvbbasebin, guint16 pid)
 {
@@ -174,7 +190,8 @@ dvb_base_bin_get_program (DvbBaseBin * dvbbasebin, gint program_number)
 static guint signals [LAST_SIGNAL] = { 0 };
 */
 
-GST_BOILERPLATE (DvbBaseBin, dvb_base_bin, GstBin, GST_TYPE_BIN);
+GST_BOILERPLATE_FULL (DvbBaseBin, dvb_base_bin, GstBin, GST_TYPE_BIN,
+    dvb_base_bin_setup_interfaces);
 
 static void
 dvb_base_bin_base_init (gpointer klass)
@@ -185,9 +202,9 @@ dvb_base_bin_base_init (gpointer klass)
   element_class->release_pad = dvb_base_bin_release_pad;
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&program_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
 
   gst_element_class_set_details (element_class, &dvb_base_bin_details);
 }
@@ -919,7 +936,6 @@ dvb_base_bin_pad_added_cb (GstElement * mpegtsparse,
   program->ghost = gst_ghost_pad_new (gst_pad_get_name (pad), pad);
   gst_pad_set_active (program->ghost, TRUE);
   gst_element_add_pad (GST_ELEMENT (dvbbasebin), program->ghost);
-
   /* if the program has a pmt, activate it now, otherwise it will get activated
    * when there's a PMT */
   if (!program->active && program->pmt_pid != G_MAXUINT16)
@@ -942,6 +958,59 @@ dvb_base_bin_pad_removed_cb (GstElement * mpegtsparse,
   dvb_base_bin_deactivate_program (dvbbasebin, program);
   gst_element_remove_pad (GST_ELEMENT (dvbbasebin), program->ghost);
   program->ghost = NULL;
+}
+
+static guint
+dvb_base_bin_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+
+static gchar **
+dvb_base_bin_uri_get_protocols (void)
+{
+  static gchar *protocols[] = { "dvb", NULL };
+
+  return protocols;
+}
+
+static const gchar *
+dvb_base_bin_uri_get_uri (GstURIHandler * handler)
+{
+  return "dvb://";
+}
+
+static gboolean
+dvb_base_bin_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  gboolean ret;
+  gchar *protocol;
+  DvbBaseBin *dvbbasebin = GST_DVB_BASE_BIN (handler);
+
+  protocol = gst_uri_get_protocol (uri);
+
+  if (strcmp (protocol, "dvb") != 0) {
+    ret = FALSE;
+  } else {
+    ret = set_properties_for_channel (G_OBJECT (dvbbasebin),
+        gst_uri_get_location (uri));
+  }
+
+  /* here is where we parse channels.conf */
+  g_free (protocol);
+
+  return ret;
+}
+
+static void
+dvb_base_bin_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = dvb_base_bin_uri_get_type;
+  iface->get_protocols = dvb_base_bin_uri_get_protocols;
+  iface->get_uri = dvb_base_bin_uri_get_uri;
+  iface->set_uri = dvb_base_bin_uri_set_uri;
 }
 
 gboolean

@@ -14,7 +14,8 @@ libgstdvb_la_SOURCES = \
 	camapplication.c \
 	camresourcemanager.c \
 	camapplicationinfo.c \
-	camconditionalaccess.c	
+	camconditionalaccess.c \
+	parsechannels.c
 
 libgstdvb_la_CFLAGS = $(GST_CFLAGS)
 libgstdvb_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS)
@@ -32,5 +33,6 @@ noinst_HEADERS = \
 	camapplication.h \
 	camresourcemanager.h \
 	camapplicationinfo.h \
-	camconditionalaccess.h
+	camconditionalaccess.h \
+	parsechannels.h
 	

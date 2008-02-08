@@ -1,3 +1,13 @@
+2008-02-08  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/Makefile.am:
+	* sys/dvb/dvbbasebin.c:
+	Add URI Handler for dvb.
+	Re-order pad templates to workaround a bug in playbasebin.
+	* sys/dvb/parsechannels.c:
+	* sys/dvb/parsechannels.h:
+	Add code to parse channels from zap-style channels.conf files.
+
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
