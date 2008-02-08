@@ -1,6 +1,12 @@
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
+	Make DISABLE_DEPRECATED defined *only* during CVS, not during
+	pre-releases or releases.
+
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
 	* ext/gio/Makefile.am:
 	Subst GIO_LDFLAGS to avoid undefined Makefile var error Zaheer is
 	reporting
