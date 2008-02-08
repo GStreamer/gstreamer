@@ -11,6 +11,8 @@
 	* tests/check/elements/.cvsignore:
 	Move xingmux from -bad.
 
+	Fixes: #511497
+
 2008-02-07  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:(mp3parse_time_to_bytepos):
