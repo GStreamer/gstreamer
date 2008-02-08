@@ -1,5 +1,11 @@
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* configure.ac:
+	Make DISABLE_DEPRECATED defined *only* during CVS, not during
+	pre-releases or releases.
+
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
