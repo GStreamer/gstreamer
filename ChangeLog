@@ -19,6 +19,8 @@
 	* tests/check/elements/equalizer.c:
 	Fix compiler warnings
 
+	Fixes: #415627
+
 2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
