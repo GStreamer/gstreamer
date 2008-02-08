@@ -1,5 +1,11 @@
 2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* configure.ac:
+	Only build with DISABLE_DEPRECATED during the CVS cycle. Pre-releases
+	are treated like releases and build without it.
+
+2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
