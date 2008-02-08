@@ -33,7 +33,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_sink_debug);
 #define GST_CAT_DEFAULT gst_play_sink_debug
 
 #define VOLUME_MAX_DOUBLE 10.0
-#define CONNECTION_SPEED_DEFAULT 0
 
 /* holds the common data fields for the audio and video pipelines. We keep them
  * in a structure to more easily have all the info available. */
@@ -519,6 +518,39 @@ gst_play_sink_set_vis_plugin (GstPlaySink * playsink,
   }
 }
 
+void
+gst_play_sink_set_volume (GstPlaySink * playsink, gdouble volume)
+{
+  GstPlayAudioChain *chain;
+
+  GST_PLAY_SINK_LOCK (playsink);
+  playsink->volume = volume;
+  chain = (GstPlayAudioChain *) playsink->audiochain;
+  if (chain && chain->volume) {
+    g_object_set (chain->volume, "volume", volume, NULL);
+  }
+  GST_PLAY_SINK_UNLOCK (playsink);
+}
+
+gdouble
+gst_play_sink_get_volume (GstPlaySink * playsink)
+{
+  gdouble result;
+  GstPlayAudioChain *chain;
+
+  GST_PLAY_SINK_LOCK (playsink);
+  chain = (GstPlayAudioChain *) playsink->audiochain;
+  if (chain && chain->volume) {
+    g_object_get (chain->volume, "volume", &result, NULL);
+    playsink->volume = result;
+  } else {
+    result = playsink->volume;
+  }
+  GST_PLAY_SINK_UNLOCK (playsink);
+
+  return result;
+}
+
 static void
 gst_play_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -538,9 +570,7 @@ gst_play_sink_set_property (GObject * object, guint prop_id,
       gst_play_sink_set_vis_plugin (playsink, g_value_get_object (value));
       break;
     case PROP_VOLUME:
-      GST_OBJECT_LOCK (playsink);
-      playsink->volume = g_value_get_double (value);
-      GST_OBJECT_UNLOCK (playsink);
+      gst_play_sink_set_volume (playsink, g_value_get_double (value));
       break;
     case PROP_FONT_DESC:
       GST_OBJECT_LOCK (playsink);
@@ -583,9 +613,7 @@ gst_play_sink_get_property (GObject * object, guint prop_id, GValue * value,
       GST_OBJECT_UNLOCK (playsink);
       break;
     case PROP_VOLUME:
-      GST_OBJECT_LOCK (playsink);
-      g_value_set_double (value, playsink->volume);
-      GST_OBJECT_UNLOCK (playsink);
+      g_value_set_double (value, gst_play_sink_get_volume (playsink));
       break;
     case PROP_FRAME:
     {
@@ -914,8 +942,11 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
 
     res = gst_element_link_pads (chain->conv, "src", chain->resample, "sink");
 
+    /* FIXME check if the sink has the volume property */
+
     if (playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME) {
       chain->volume = gst_element_factory_make ("volume", "volume");
+      /* configure with the latest volume */
       g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
       gst_bin_add (bin, chain->volume);
 

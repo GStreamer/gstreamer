@@ -69,6 +69,9 @@ void             gst_play_sink_set_video_sink (GstPlaySink * playsink, GstElemen
 void             gst_play_sink_set_audio_sink (GstPlaySink * playsink, GstElement * sink);
 void             gst_play_sink_set_vis_plugin (GstPlaySink * playsink, GstElement * vis);
 
+void             gst_play_sink_set_volume     (GstPlaySink *playsink, gdouble volume);
+gdouble          gst_play_sink_get_volume     (GstPlaySink *playsink);
+
 gboolean         gst_play_sink_set_flags      (GstPlaySink * playsink, GstPlayFlags flags);
 GstPlayFlags     gst_play_sink_get_flags      (GstPlaySink * playsink);
 

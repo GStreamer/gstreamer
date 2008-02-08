@@ -2443,8 +2443,7 @@ set_active_source (GstPlayBaseBin * play_base_bin,
                 "pb_sel_pad"));
 
         if (sel && sel_pad != NULL) {
-          g_object_set (G_OBJECT (sel), "active-pad", GST_PAD_NAME (sel_pad),
-              NULL);
+          g_object_set (G_OBJECT (sel), "active-pad", sel_pad, NULL);
         }
 
         have_active = TRUE;
@@ -2463,7 +2462,7 @@ set_active_source (GstPlayBaseBin * play_base_bin,
 
   if (!have_active) {
     GST_LOG ("Muting group type: %d", type);
-    g_object_set (sel, "active-pad", "", NULL);
+    g_object_set (sel, "active-pad", NULL, NULL);
   } else {
     GST_LOG ("Unmuting group type: %d", type);
   }

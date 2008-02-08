@@ -1,3 +1,49 @@
+2008-02-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplay-marshal.list:
+	Added marshal for streamselector Tags.
+
+	* gst/playback/gstplaybasebin.c: (set_active_source):
+	Streamselector now selects pads based on the pad object instead of its
+	name.
+
+	* gst/playback/gstplaybin2.c: (gst_play_bin_class_init),
+	(init_group), (gst_play_bin_init), (get_group), (get_tags),
+	(gst_play_bin_get_video_tags), (gst_play_bin_get_audio_tags),
+	(gst_play_bin_get_text_tags),
+	(gst_play_bin_set_current_video_stream),
+	(gst_play_bin_set_current_audio_stream),
+	(gst_play_bin_set_current_text_stream),
+	(gst_play_bin_set_property), (gst_play_bin_get_property),
+	(pad_added_cb), (pad_removed_cb), (autoplug_select_cb):
+	Remove option to mute streams with the current-a/v/t property, we have
+	this functionality in the flags.
+	Add signals to notify when the number of A/V/T channels changed.
+	Add action signals to get tags for the A/V/T streams.
+	Implement setting the current A/V/T stream.
+	Rearrange some things to simplify stream selection.
+	Implement volume.
+
+	* gst/playback/gstplaysink.c: (gst_play_sink_set_volume),
+	(gst_play_sink_get_volume), (gst_play_sink_set_property),
+	(gst_play_sink_get_property), (gen_video_chain), (gen_audio_chain),
+	(activate_vis), (gst_play_sink_reconfigure):
+	* gst/playback/gstplaysink.h:
+	Add and implement volume setting methods.
+
+	* gst/playback/gststreamselector.c: (gst_selector_pad_class_init),
+	(gst_selector_pad_finalize), (gst_selector_pad_get_property),
+	(gst_selector_pad_event), (gst_stream_selector_class_init),
+	(gst_stream_selector_init), (gst_stream_selector_finalize),
+	(gst_stream_selector_set_property),
+	(gst_stream_selector_get_property),
+	(gst_stream_selector_get_linked_pad),
+	(gst_stream_selector_request_new_pad):
+	* gst/playback/gststreamselector.h:
+	Add pad properties for tags and status of pads.
+	Keep tags on pads.
+	Make active pad selection based on pad object instead of name.
+
 2008-02-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
