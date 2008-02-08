@@ -1,3 +1,10 @@
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* ext/gio/Makefile.am:
+	Subst GIO_LDFLAGS to avoid undefined Makefile var error Zaheer is
+	reporting
+
 2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/plugins/Makefile.am:

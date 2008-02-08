@@ -491,6 +491,7 @@ AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
   ])
   AC_SUBST(GIO_CFLAGS)
   AC_SUBST(GIO_LIBS)
+  AC_SUBST(GIO_LDFLAGS)
 ])
 
 dnl *** libvisual ***
