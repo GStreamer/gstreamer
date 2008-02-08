@@ -1,3 +1,7 @@
+2008-02-08 Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* gst/audiofix/Makefile.am: add missing header files 
+
 2008-02-08  Julien Moutte  <julien@fluendo.com>
 
 	* gst/matroska/matroska-demux.c:

@@ -32,5 +32,7 @@ noinst_HEADERS = audiopanorama.h \
 	audioamplify.h \
 	audiodynamic.h \
 	audiocheblimit.h \
-	audiochebband.h
+	audiochebband.h \
+	audiowsincband.h \
+        audiowsinclimit.h
 
