@@ -1,5 +1,27 @@
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* gst/spectrum/.cvsignore:
+	* gst/spectrum/Makefile.am:
+	* gst/spectrum/README:
+	* gst/spectrum/demo-audiotest.c:
+	* gst/spectrum/demo-osssrc.c:
+	* gst/spectrum/gstspectrum.c:
+	* gst/spectrum/gstspectrum.h:
+	* gst/spectrum/spectrum.vcproj:
+	* tests/check/Makefile.am:
+	* tests/check/elements/spectrum.c:
+
+	Remove spectrum plugin, which has moved to -good
+
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* docs/plugins/gst-plugins-bad-plugins.args:
 	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
 	* docs/plugins/gst-plugins-bad-plugins.interfaces:

@@ -1339,66 +1339,6 @@
 </ARG>
 
 <ARG>
-<NAME>GstSpectrum::bands</NAME>
-<TYPE>guint</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Bands</NICK>
-<BLURB>number of frequency bands.</BLURB>
-<DEFAULT>128</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstSpectrum::interval</NAME>
-<TYPE>guint64</TYPE>
-<RANGE>>= 1</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Interval</NICK>
-<BLURB>Interval of time between message posts (in nanoseconds).</BLURB>
-<DEFAULT>100000000</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstSpectrum::message</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Message</NICK>
-<BLURB>Post a level message for each passed interval.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstSpectrum::threshold</NAME>
-<TYPE>gint</TYPE>
-<RANGE><= 0</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Threshold</NICK>
-<BLURB>dB threshold for result. All lower values will be set to this.</BLURB>
-<DEFAULT>-60</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstSpectrum::message-magnitude</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Magnitude</NICK>
-<BLURB>Post the magnitude of the spectrum.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstSpectrum::message-phase</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Phase</NICK>
-<BLURB>Post the phase of the spectrum.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>GstModPlug::megabass</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>

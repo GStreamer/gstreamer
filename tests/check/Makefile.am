@@ -72,8 +72,7 @@ check_PROGRAMS = \
 	elements/rganalysis \
 	elements/rglimiter \
 	elements/rgvolume \
-	elements/y4menc \
-	elements/spectrum 
+	elements/y4menc
 
 noinst_HEADERS = 
 

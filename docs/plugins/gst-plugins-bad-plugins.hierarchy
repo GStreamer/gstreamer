@@ -52,7 +52,6 @@ GObject
       GstBaseTransform
         GstAudioFilter
           GstBPMDetect
-          GstSpectrum
           GstStereo
         GstGLUpload
         GstGLDownload

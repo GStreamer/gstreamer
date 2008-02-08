@@ -49,7 +49,6 @@
     <xi:include href="xml/element-sdlvideosink.xml" />
     <xi:include href="xml/element-sdpdemux.xml" />
     <xi:include href="xml/element-souphttpsrc.xml" />
-    <xi:include href="xml/element-spectrum.xml" />
     <xi:include href="xml/element-speed.xml" />
     <xi:include href="xml/element-speexresample.xml" />
     <!--xi:include href="xml/element-theoradecexp.xml" /-->
@@ -119,7 +118,6 @@
     <xi:include href="xml/plugin-soundtouch.xml" />
     <xi:include href="xml/plugin-soup.xml" />
     <xi:include href="xml/plugin-spcdec.xml" />
-    <xi:include href="xml/plugin-spectrum.xml" />
     <xi:include href="xml/plugin-speed.xml" />
     <xi:include href="xml/plugin-speexresample.xml" />
     <xi:include href="xml/plugin-stereo.xml" />

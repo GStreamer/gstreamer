@@ -105,7 +105,6 @@ GST_PLUGINS_ALL="\
   rtpmanager \
   sdp \
   selector \
-  spectrum \
   speexresample \
   speed \
   stereo \
@@ -1065,7 +1064,6 @@ gst/replaygain/Makefile
 gst/rtpmanager/Makefile
 gst/sdp/Makefile
 gst/selector/Makefile
-gst/spectrum/Makefile
 gst/speed/Makefile
 gst/speexresample/Makefile
 gst/stereo/Makefile
