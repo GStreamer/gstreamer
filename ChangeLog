@@ -1,5 +1,12 @@
 2008-02-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* tests/examples/seek/seek.c: (stop_cb), (clear_streams),
+	(update_streams), (video_combo_cb), (audio_combo_cb),
+	(text_combo_cb), (volume_spinbutton_changed_cb), (main):
+	Add some stream switching and volume gui for playbin2.
+
+2008-02-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstplay-marshal.list:
 	Added marshal for streamselector Tags.
 

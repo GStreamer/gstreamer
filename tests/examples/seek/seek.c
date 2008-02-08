@@ -85,9 +85,12 @@ static guint update_id = 0;
 static guint seek_timeout_id = 0;
 static gulong changed_id;
 
+static gint n_video = 0, n_audio = 0, n_text = 0;
 static GtkWidget *video_combo, *audio_combo, *text_combo;
 static GtkWidget *vis_checkbox, *video_checkbox, *audio_checkbox;
-static GtkWidget *text_checkbox;
+static GtkWidget *text_checkbox, *volume_spinbutton;
+
+static void clear_streams (GstElement * pipeline);
 
 /* pipeline construction */
 
@@ -1361,6 +1364,8 @@ stop_cb (GtkButton * button, gpointer data)
 
     set_update_scale (FALSE);
     set_scale (0.0);
+    if (pipeline_type == 16)
+      clear_streams (pipeline);
 
     /* if one uses parse_launch, play, stop and play again it fails as all the
      * pads after the demuxer can't be reconnected
@@ -1497,19 +1502,108 @@ text_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 }
 
 static void
+clear_streams (GstElement * pipeline)
+{
+  gint i;
+
+  /* remove previous info */
+  for (i = 0; i < n_video; i++)
+    gtk_combo_box_remove_text (GTK_COMBO_BOX (video_combo), 0);
+  for (i = 0; i < n_audio; i++)
+    gtk_combo_box_remove_text (GTK_COMBO_BOX (audio_combo), 0);
+  for (i = 0; i < n_text; i++)
+    gtk_combo_box_remove_text (GTK_COMBO_BOX (text_combo), 0);
+
+  n_audio = n_video = n_text = 0;
+  gtk_widget_set_sensitive (video_combo, FALSE);
+  gtk_widget_set_sensitive (audio_combo, FALSE);
+  gtk_widget_set_sensitive (text_combo, FALSE);
+}
+
+static void
 update_streams (GstPipeline * pipeline)
 {
-  gint n_video, n_audio, n_text;
+  gint i;
 
   if (pipeline_type == 16) {
+    GstTagList *tags;
+    gchar *name;
+    gint active_idx;
+
+    /* remove previous info */
+    clear_streams (GST_ELEMENT_CAST (pipeline));
+
     /* here we get and update the different streams detected by playbin2 */
     g_object_get (pipeline, "n-video", &n_video, NULL);
     g_object_get (pipeline, "n-audio", &n_audio, NULL);
     g_object_get (pipeline, "n-text", &n_text, NULL);
 
     g_print ("video %d, audio %d, text %d\n", n_video, n_audio, n_text);
-  }
 
+    active_idx = 0;
+    for (i = 0; i < n_video; i++) {
+      g_signal_emit_by_name (pipeline, "get-video-tags", i, &tags);
+      /* find good name for the label */
+      name = g_strdup_printf ("video %d", i + 1);
+      gtk_combo_box_append_text (GTK_COMBO_BOX (video_combo), name);
+      g_free (name);
+    }
+    gtk_widget_set_sensitive (video_combo, n_video > 0);
+    gtk_combo_box_set_active (GTK_COMBO_BOX (video_combo), active_idx);
+
+    active_idx = 0;
+    for (i = 0; i < n_audio; i++) {
+      g_signal_emit_by_name (pipeline, "get-audio-tags", i, &tags);
+      /* find good name for the label */
+      name = g_strdup_printf ("audio %d", i + 1);
+      gtk_combo_box_append_text (GTK_COMBO_BOX (audio_combo), name);
+      g_free (name);
+    }
+    gtk_widget_set_sensitive (audio_combo, n_audio > 0);
+    gtk_combo_box_set_active (GTK_COMBO_BOX (audio_combo), active_idx);
+
+    active_idx = 0;
+    for (i = 0; i < n_text; i++) {
+      g_signal_emit_by_name (pipeline, "get-text-tags", i, &tags);
+      /* find good name for the label */
+      name = g_strdup_printf ("text %d", i + 1);
+      gtk_combo_box_append_text (GTK_COMBO_BOX (text_combo), name);
+      g_free (name);
+    }
+    gtk_widget_set_sensitive (text_combo, n_text > 0);
+    gtk_combo_box_set_active (GTK_COMBO_BOX (text_combo), active_idx);
+  }
+}
+
+static void
+video_combo_cb (GtkComboBox * combo, GstPipeline * pipeline)
+{
+  g_object_set (pipeline, "current-video", gtk_combo_box_get_active (combo),
+      NULL);
+}
+
+static void
+audio_combo_cb (GtkComboBox * combo, GstPipeline * pipeline)
+{
+  g_object_set (pipeline, "current-audio", gtk_combo_box_get_active (combo),
+      NULL);
+}
+
+static void
+text_combo_cb (GtkComboBox * combo, GstPipeline * pipeline)
+{
+  g_object_set (pipeline, "current-text", gtk_combo_box_get_active (combo),
+      NULL);
+}
+
+static void
+volume_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
+{
+  gdouble volume;
+
+  volume = gtk_spin_button_get_value (button);
+
+  g_object_set (pipeline, "volume", volume, NULL);
 }
 
 static void
@@ -1765,17 +1859,29 @@ main (int argc, char **argv)
     video_combo = gtk_combo_box_new_text ();
     audio_combo = gtk_combo_box_new_text ();
     text_combo = gtk_combo_box_new_text ();
+    gtk_widget_set_sensitive (video_combo, FALSE);
+    gtk_widget_set_sensitive (audio_combo, FALSE);
+    gtk_widget_set_sensitive (text_combo, FALSE);
     gtk_box_pack_start (GTK_BOX (panel), video_combo, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (panel), audio_combo, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (panel), text_combo, TRUE, TRUE, 2);
+    g_signal_connect (G_OBJECT (video_combo), "changed",
+        G_CALLBACK (video_combo_cb), pipeline);
+    g_signal_connect (G_OBJECT (audio_combo), "changed",
+        G_CALLBACK (audio_combo_cb), pipeline);
+    g_signal_connect (G_OBJECT (text_combo), "changed",
+        G_CALLBACK (text_combo_cb), pipeline);
     vis_checkbox = gtk_check_button_new_with_label ("Vis");
     video_checkbox = gtk_check_button_new_with_label ("Video");
     audio_checkbox = gtk_check_button_new_with_label ("Audio");
     text_checkbox = gtk_check_button_new_with_label ("Text");
+    volume_spinbutton = gtk_spin_button_new_with_range (0, 2.0, 0.1);
+    gtk_spin_button_set_value (GTK_SPIN_BUTTON (volume_spinbutton), 1.0);
     gtk_box_pack_start (GTK_BOX (boxes), vis_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), audio_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), video_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), text_checkbox, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (boxes), volume_spinbutton, TRUE, TRUE, 2);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (vis_checkbox), TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (audio_checkbox), TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (video_checkbox), TRUE);
@@ -1788,6 +1894,8 @@ main (int argc, char **argv)
         G_CALLBACK (video_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (text_checkbox), "toggled",
         G_CALLBACK (text_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (volume_spinbutton), "value_changed",
+        G_CALLBACK (volume_spinbutton_changed_cb), pipeline);
   } else {
     panel = boxes = NULL;
   }
