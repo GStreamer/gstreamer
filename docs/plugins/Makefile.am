@@ -142,7 +142,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/videosignal/gstvideoanalyse.h \
 	$(top_srcdir)/gst/videosignal/gstvideodetect.h \
 	$(top_srcdir)/gst/videosignal/gstvideomark.h \
-	$(top_srcdir)/gst/xingheader/gstxingmux.h \
 	$(top_srcdir)/sys/dvb/gstdvbsrc.h \
 	$(top_srcdir)/sys/glsink/gstgltestsrc.h
 

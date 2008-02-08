@@ -1,5 +1,10 @@
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* docs/plugins/Makefile.am:
+	Don't scan deleted xingmux header.
+
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* configure.ac:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
