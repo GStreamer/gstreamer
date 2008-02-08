@@ -1,3 +1,13 @@
+2008-02-07  David Schleef  <ds@schleef.org>
+
+	* gst/multifile/gstmultifilesink.c:
+	* gst/multifile/gstmultifilesrc.c:
+	  Use g_file_[sg]et_contents() instead of using stdio functions.
+	  Should be less error prone.
+	* tests/check/elements/multifile.c:
+	  Create a temporary directory using standard functions instead of
+	  creating a directory in the current dir.
+
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

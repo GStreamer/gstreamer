@@ -77,7 +77,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_multi_file_src_debug);
 static const GstElementDetails gst_multi_file_src_details =
 GST_ELEMENT_DETAILS ("Multi-File Source",
     "Source/File",
-    "Read stream from files",
+    "Read a sequentially named set of files into buffers",
     "David Schleef <ds@schleef.org>");
 
 enum
@@ -267,10 +267,11 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 {
   GstMultiFileSrc *multifilesrc;
   guint size;
+  gchar *data;
   gchar *filename;
-  FILE *file;
   GstBuffer *buf;
-  int ret;
+  gboolean ret;
+  GError *error = NULL;
 
   multifilesrc = GST_MULTI_FILE_SRC (src);
 
@@ -278,8 +279,8 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 
   GST_DEBUG_OBJECT (multifilesrc, "reading from file \"%s\".", filename);
 
-  file = fopen (filename, "rb");
-  if (!file) {
+  ret = g_file_get_contents (filename, &data, &size, &error);
+  if (!ret) {
     if (multifilesrc->successful_read) {
       /* If we've read at least one buffer successfully, not finding the
        * next file is EOS. */
@@ -290,20 +291,11 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
     }
   }
 
-  fseek (file, 0, SEEK_END);
-  size = ftell (file);
-  fseek (file, 0, SEEK_SET);
-
-  buf = gst_buffer_new_and_alloc (size);
-
-  ret = fread (GST_BUFFER_DATA (buf), size, 1, file);
-  if (ret < 1) {
-    goto handle_error;
-  }
-
   multifilesrc->successful_read = TRUE;
   multifilesrc->index++;
 
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = (unsigned char *) data;
   GST_BUFFER_SIZE (buf) = size;
   GST_BUFFER_OFFSET (buf) = multifilesrc->offset;
   GST_BUFFER_OFFSET_END (buf) = multifilesrc->offset + size;
@@ -312,7 +304,6 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 
   GST_DEBUG_OBJECT (multifilesrc, "read file \"%s\".", filename);
 
-  fclose (file);
   g_free (filename);
   *buffer = buf;
   return GST_FLOW_OK;
