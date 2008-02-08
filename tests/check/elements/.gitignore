@@ -4,8 +4,8 @@ apev2mux
 audioamplify
 audiochebband
 audiocheblimit
-audiosincwband
-audiosincwlimit
+audiowsincband
+audiowsinclimit
 audiodynamic
 audioinvert
 audiopanorama

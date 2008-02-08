@@ -1,3 +1,8 @@
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* tests/check/elements/.cvsignore:
+	Spell the new tests correctly in .cvsignore
+
 2008-02-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/multifile/gstmultifilesrc.c: (gst_multi_file_src_create):
