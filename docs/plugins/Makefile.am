@@ -119,6 +119,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/id3demux/gstid3demux.h \
 	$(top_srcdir)/gst/level/gstlevel.h \
 	$(top_srcdir)/gst/monoscope/gstmonoscope.h \
+	$(top_srcdir)/gst/multifile/gstmultifilesink.h \
+	$(top_srcdir)/gst/multifile/gstmultifilesrc.h \
 	$(top_srcdir)/gst/multipart/multipartdemux.h \
 	$(top_srcdir)/gst/multipart/multipartmux.h \
 	$(top_srcdir)/gst/qtdemux/qtdemux.h \

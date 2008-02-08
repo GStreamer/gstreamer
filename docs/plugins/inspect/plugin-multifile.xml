@@ -1,0 +1,43 @@
+<plugin>
+  <name>multifile</name>
+  <description>Writes buffers to sequentially named files</description>
+  <filename>../../gst/multifile/.libs/libgstmultifile.so</filename>
+  <basename>libgstmultifile.so</basename>
+  <version>0.10.6.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>multifilesink</name>
+      <longname>Multi-File Sink</longname>
+      <class>Sink/File</class>
+      <description>Write buffers to a sequentially named set of files</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>multifilesrc</name>
+      <longname>Multi-File Source</longname>
+      <class>Source/File</class>
+      <description>Read a sequentially named set of files into buffers</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

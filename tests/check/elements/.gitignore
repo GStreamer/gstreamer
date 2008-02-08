@@ -20,6 +20,7 @@ id3demux
 id3v2mux
 level
 matroskamux
+multifile
 rtp-payloading
 spectrum
 sunaudio

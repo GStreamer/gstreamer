@@ -623,6 +623,34 @@ GST_IS_MONOSCOPE_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-multifilesrc</FILE>
+<TITLE>multifilesrc</TITLE>
+GstMultiFileSrc
+<SUBSECTION Standard>
+GstMultiFileSrcClass
+GST_MULTI_FILE_SRC
+GST_MULTI_FILE_SRC_CLASS
+GST_IS_MULTI_FILE_SRC
+GST_IS_MULTI_FILE_SRC_CLASS
+GST_TYPE_MULTI_FILE_SRC
+gst_multi_file_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-multifilesink</FILE>
+<TITLE>multifilesink</TITLE>
+GstMultiFileSink
+<SUBSECTION Standard>
+GstMultiFileSinkClass
+GST_MULTI_FILE_SINK
+GST_MULTI_FILE_SINK_CLASS
+GST_IS_MULTI_FILE_SINK
+GST_IS_MULTI_FILE_SINK_CLASS
+GST_TYPE_MULTI_FILE_SINK
+gst_multi_file_sink_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-multipartmux</FILE>
 <TITLE>multipartmux</TITLE>
 GstMultipartMux

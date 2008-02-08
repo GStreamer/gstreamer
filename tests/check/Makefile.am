@@ -68,6 +68,7 @@ check_PROGRAMS = \
 	elements/id3demux \
 	elements/level \
 	elements/matroskamux \
+	elements/multifile \
 	elements/rtp-payloading \
 	elements/spectrum \
 	elements/videocrop \

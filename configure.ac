@@ -98,6 +98,7 @@ GST_PLUGINS_ALL="\
 		level \
 		matroska \
 		monoscope \
+		multifile \
 		multipart \
                 qtdemux \
 		rtp	\
@@ -1022,6 +1023,7 @@ gst/law/Makefile
 gst/level/Makefile
 gst/matroska/Makefile
 gst/monoscope/Makefile
+gst/multifile/Makefile
 gst/multipart/Makefile
 gst/qtdemux/Makefile
 gst/rtp/Makefile

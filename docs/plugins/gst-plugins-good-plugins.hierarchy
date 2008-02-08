@@ -18,13 +18,14 @@ GObject
       GstSpeexDec
       GstBaseSink
         GstShout2send
-        GstCACASink
         GstBaseAudioSink
           GstAudioSink
             GstEsdSink
             GstOssSink
             GstOsxAudioSink
         GstAASink
+        GstCACASink
+        GstMultiFileSink
         GstMultiUDPSink
           GstUDPSink
         GstDynUDPSink
@@ -36,6 +37,7 @@ GObject
             GstAudioSrc
               GstOssSrc
               GstOsxAudioSrc
+          GstMultiFileSrc
           GstUDPSrc
       GstPngDec
       GstPngEnc
