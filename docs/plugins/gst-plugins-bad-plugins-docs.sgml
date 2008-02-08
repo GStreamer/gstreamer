@@ -37,8 +37,6 @@
     <xi:include href="xml/element-metadatademux.xml" />
     <xi:include href="xml/element-metadatamux.xml" />
     <xi:include href="xml/element-modplug.xml" />
-    <xi:include href="xml/element-multifilesink.xml" />
-    <xi:include href="xml/element-multifilesrc.xml" />
     <!--xi:include href="xml/element-mythtvsrc.xml" /-->
     <xi:include href="xml/element-nuvdemux.xml" />
     <xi:include href="xml/element-output-selector.xml" />
@@ -99,7 +97,6 @@
     <xi:include href="xml/plugin-mpeg4videoparse.xml" />
     <xi:include href="xml/plugin-mpegtsparse.xml" />
     <xi:include href="xml/plugin-mpegvideoparse.xml" />
-    <xi:include href="xml/plugin-multifile.xml" />
     <xi:include href="xml/plugin-musepack.xml" />
     <xi:include href="xml/plugin-musicbrainz.xml" />
     <xi:include href="xml/plugin-mve.xml" />

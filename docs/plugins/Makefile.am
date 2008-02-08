@@ -115,8 +115,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \
 	$(top_srcdir)/gst/festival/gstfestival.h \
 	$(top_srcdir)/gst/modplug/gstmodplug.h \
-	$(top_srcdir)/gst/multifile/gstmultifilesink.h \
-	$(top_srcdir)/gst/multifile/gstmultifilesrc.h \
 	$(top_srcdir)/gst/nuvdemux/gstnuvdemux.h \
 	$(top_srcdir)/gst/rawparse/gstaudioparse.h \
 	$(top_srcdir)/gst/rawparse/gstvideoparse.h \

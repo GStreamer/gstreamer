@@ -1,3 +1,24 @@
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* gst/multifile/Makefile.am:
+	* gst/multifile/gstmultifile.c:
+	* gst/multifile/gstmultifilesink.c:
+	* gst/multifile/gstmultifilesink.h:
+	* gst/multifile/gstmultifilesrc.c:
+	* gst/multifile/gstmultifilesrc.h:
+	* gst/multifile/multifile.vproj:
+	* tests/check/Makefile.am:
+	* tests/check/elements/multifile.c:
+
+	Remove multifile plugin, which has moved to -good
+
 2008-02-07  David Schleef  <ds@schleef.org>
 
 	* gst/multifile/gstmultifilesink.c:

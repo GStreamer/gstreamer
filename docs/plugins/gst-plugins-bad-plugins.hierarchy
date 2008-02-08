@@ -25,7 +25,6 @@ GObject
           GstVCDSrc
           GstRfbSrc
           GstAppSrc
-          GstMultiFileSrc
         GstSFSrc
         GstGioBaseSrc
           GstGioSrc
@@ -47,7 +46,6 @@ GObject
           GstGioStreamSink
         GstFBDEVSink
         GstAppSink
-        GstMultiFileSink
       GstPitch
       GstBaseTransform
         GstAudioFilter

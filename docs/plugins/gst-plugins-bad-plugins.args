@@ -1739,56 +1739,6 @@
 </ARG>
 
 <ARG>
-<NAME>GstMultiFileSink::location</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>File Location</NICK>
-<BLURB>Location of the file to write.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstMultiFileSink::index</NAME>
-<TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Index</NICK>
-<BLURB>Index to use with location property to create file names.  The index is incremented by one for each buffer read.</BLURB>
-<DEFAULT>0</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstMultiFileSrc::caps</NAME>
-<TYPE>GstCaps*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Caps</NICK>
-<BLURB>Caps describing the format of the data.</BLURB>
-<DEFAULT></DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstMultiFileSrc::index</NAME>
-<TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>File Index</NICK>
-<BLURB>Index to use with location property to create file names.  The index is incremented by one for each buffer read.</BLURB>
-<DEFAULT>0</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstMultiFileSrc::location</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>File Location</NICK>
-<BLURB>Pattern to create file names of input files.  File names are created by calling sprintf() with the pattern and the current index.</BLURB>
-<DEFAULT>"%05d"</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>GstRfbSrc::host</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>

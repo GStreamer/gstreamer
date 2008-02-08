@@ -68,7 +68,6 @@ check_PROGRAMS = \
 	$(check_soup)      \
 	$(check_timidity)  \
 	elements/interleave \
-	elements/multifile \
 	elements/rganalysis \
 	elements/rglimiter \
 	elements/rgvolume \

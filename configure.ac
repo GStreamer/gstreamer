@@ -95,7 +95,6 @@ GST_PLUGINS_ALL="\
   mpegtsparse \
   mpeg4videoparse \
   mpegvideoparse \
-  multifile \
   mve \
   nsf \
   nuvdemux \
@@ -1055,7 +1054,6 @@ gst/modplug/libmodplug/Makefile
 gst/mpegtsparse/Makefile
 gst/mpeg4videoparse/Makefile
 gst/mpegvideoparse/Makefile
-gst/multifile/Makefile
 gst/mve/Makefile
 gst/nsf/Makefile
 gst/nuvdemux/Makefile
