@@ -93,7 +93,7 @@ RELEASE PROCEDURE:
     + Edit src/htdocs/news/news.xml and add a new item at the bottom.
   - commit additions to website
   - add versions and milestones in bugzilla
-  - upload new tarballs to gnome ftp
+  - upload new core or base tarballs to gnome ftp
     + e.g:
        scp gstreamer-0.10.42.tar.gz master.gnome.org:
        ssh master.gnome.org

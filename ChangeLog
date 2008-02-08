@@ -1,3 +1,15 @@
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	Make DISABLE_DEPRECATED defined *only* during CVS, not during
+	pre-releases or releases.
+
+	* docs/faq/gst-uninstalled:
+	Add gst-plugins-gl
+
+	* docs/random/release:
+	Change one of the steps - we only upload core & base to Gnome FTP
+
 2008-02-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstconfig.h.in:
