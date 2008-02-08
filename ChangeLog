@@ -1,3 +1,14 @@
+2008-02-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/multifile/gstmultifilesrc.c: (gst_multi_file_src_create):
+	  Need to use gsize here for the size, fixes compiler warning.
+
+	* tests/examples/equalizer/.cvsignore:
+	* tests/examples/equalizer/Makefile.am:
+	* tests/examples/spectrum/.cvsignore:
+	* tests/examples/spectrum/Makefile.am:
+	  Add missing files to fix the build.
+
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

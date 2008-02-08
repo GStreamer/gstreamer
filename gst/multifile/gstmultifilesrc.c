@@ -266,7 +266,7 @@ static GstFlowReturn
 gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 {
   GstMultiFileSrc *multifilesrc;
-  guint size;
+  gsize size;
   gchar *data;
   gchar *filename;
   GstBuffer *buf;
