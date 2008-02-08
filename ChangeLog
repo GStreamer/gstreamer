@@ -1,3 +1,8 @@
+2008-02-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Revert last change as we now check in gtk-doc.m4 for sed.
+
 2008-02-08  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* configure.ac:

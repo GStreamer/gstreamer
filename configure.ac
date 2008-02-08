@@ -158,12 +158,6 @@ GTK_DOC_CHECK([1.3])
 AS_PATH_PYTHON([2.1])
 AG_GST_PLUGIN_DOCS([1.3],[2.1])
 
-dnl We need SED if building the docs
-if test "x$ENABLE_PLUGIN_DOCS" = "xyes"; then
-  AC_PROG_SED
-  AC_SUBST(SED)
-fi
-
 dnl *** checks for libraries ***
 
 dnl For interactive UNIX (a Sun thing)
