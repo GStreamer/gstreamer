@@ -1,3 +1,24 @@
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* gst/equalizer/Makefile.am:
+	* tests/check/Makefile.am:
+	* tests/examples/Makefile.am:
+	Move the equalizer plugin across from -bad
+
+	* tests/check/elements/.cvsignore:
+	Add equalizer, audiosincwband and audiosincwlimit
+
+	* tests/check/elements/equalizer.c:
+	Fix compiler warnings
+
 2008-02-07  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

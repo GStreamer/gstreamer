@@ -49,6 +49,11 @@ GObject
       GstDVDec
       GstCairoTextOverlay
       GstBaseTransform
+        GstAudioFilter
+          GstIirEqualizer
+            GstIirEqualizerNBands
+            GstIirEqualizer3Bands
+            GstIirEqualizer10Bands
         GstAudioPanorama
         GstCairoTimeOverlay
         GstVideoFilter

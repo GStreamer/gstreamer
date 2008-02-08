@@ -9,6 +9,10 @@ GstGConfAudioSink GstChildProxy
 GstDecodeBin GstChildProxy
 GstID3Mux GstTagSetter
 GstID3Tag GstTagSetter
+GstIirEqualizer GstChildProxy
+GstIirEqualizerNBands GstChildProxy
+GstIirEqualizer3Bands GstChildProxy
+GstIirEqualizer10Bands GstChildProxy
 GstLame GstTagSetter
 GstOssMixerElement GstImplementsInterface GstMixer
 GstOssSrc GstImplementsInterface GstMixer

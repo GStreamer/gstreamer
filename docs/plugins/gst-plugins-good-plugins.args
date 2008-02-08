@@ -1,4 +1,144 @@
 <ARG>
+<NAME>GstIirEqualizer10Bands::band0</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>29 Hz</NICK>
+<BLURB>gain for the frequency band 29 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band1</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>59 Hz</NICK>
+<BLURB>gain for the frequency band 59 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band2</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>119 Hz</NICK>
+<BLURB>gain for the frequency band 119 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band3</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>227 Hz</NICK>
+<BLURB>gain for the frequency band 227 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band4</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>474 Hz</NICK>
+<BLURB>gain for the frequency band 474 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band5</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>947 Hz</NICK>
+<BLURB>gain for the frequency band 947 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band6</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>1889 Hz</NICK>
+<BLURB>gain for the frequency band 1889 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band7</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>3770 Hz</NICK>
+<BLURB>gain for the frequency band 3770 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band8</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>7523 Hz</NICK>
+<BLURB>gain for the frequency band 7523 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band9</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>15011 Hz</NICK>
+<BLURB>gain for the frequency band 15011 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer3Bands::band0</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>110 Hz</NICK>
+<BLURB>gain for the frequency band 100 Hz, ranging from -24.0 to +12.0.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer3Bands::band1</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>1100 Hz</NICK>
+<BLURB>gain for the frequency band 1100 Hz, ranging from -24.0 to +12.0.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer3Bands::band2</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>11 kHz</NICK>
+<BLURB>gain for the frequency band 11 kHz, ranging from -24.0 to +12.0.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizerNBands::num-bands</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,64]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>num-bands</NICK>
+<BLURB>number of different bands to use.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstOssSrc::device</NAME>
 <TYPE>gchararray</TYPE>
 <RANGE></RANGE>

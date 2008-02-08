@@ -89,7 +89,7 @@ cleanup_equalizer (GstElement * equalizer)
 GST_START_TEST (test_equalizer_5bands_passthrough)
 {
   GstElement *equalizer;
-  GstBuffer *inbuffer, *outbuffer;
+  GstBuffer *inbuffer;
   GstCaps *caps;
   gdouble *in, *res;
   gint i;
@@ -134,7 +134,7 @@ GST_END_TEST;
 GST_START_TEST (test_equalizer_5bands_minus_24)
 {
   GstElement *equalizer;
-  GstBuffer *inbuffer, *outbuffer;
+  GstBuffer *inbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms_in, rms_out;
   gint i;
@@ -150,7 +150,7 @@ GST_START_TEST (test_equalizer_5bands_minus_24)
         gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (equalizer), i);
     fail_unless (band != NULL);
 
-    g_object_set (G_OBJECT (band), "gain", -24.0, 0);
+    g_object_set (G_OBJECT (band), "gain", -24.0, NULL);
     g_object_unref (G_OBJECT (band));
   }
 
@@ -197,7 +197,7 @@ GST_END_TEST;
 GST_START_TEST (test_equalizer_5bands_plus_12)
 {
   GstElement *equalizer;
-  GstBuffer *inbuffer, *outbuffer;
+  GstBuffer *inbuffer;
   GstCaps *caps;
   gdouble *in, *res, rms_in, rms_out;
   gint i;
@@ -213,7 +213,7 @@ GST_START_TEST (test_equalizer_5bands_plus_12)
         gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (equalizer), i);
     fail_unless (band != NULL);
 
-    g_object_set (G_OBJECT (band), "gain", 12.0, 0);
+    g_object_set (G_OBJECT (band), "gain", 12.0, NULL);
     g_object_unref (G_OBJECT (band));
   }
 
@@ -260,9 +260,6 @@ GST_END_TEST;
 GST_START_TEST (test_equalizer_band_number_changing)
 {
   GstElement *equalizer;
-  GstBuffer *inbuffer, *outbuffer;
-  GstCaps *caps;
-  gdouble *in, *res;
   gint i;
 
   equalizer = setup_equalizer ();
@@ -273,7 +270,6 @@ GST_START_TEST (test_equalizer_band_number_changing)
 
   for (i = 0; i < 5; i++) {
     GstObject *band;
-    gdouble freq;
 
     band = gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (equalizer), i);
     fail_unless (band != NULL);

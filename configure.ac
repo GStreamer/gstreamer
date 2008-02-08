@@ -89,6 +89,7 @@ GST_PLUGINS_ALL="\
 		cutter \
 		debug \
 		effectv \
+		equalizer \
 		id3demux \
 		icydemux \
 		flx \
@@ -1012,6 +1013,7 @@ gst/avi/Makefile
 gst/cutter/Makefile
 gst/debug/Makefile
 gst/effectv/Makefile
+gst/equalizer/Makefile
 gst/id3demux/Makefile
 gst/icydemux/Makefile
 gst/goom/Makefile
@@ -1066,6 +1068,7 @@ po/Makefile.in
 tests/Makefile
 tests/check/Makefile
 tests/examples/Makefile
+tests/examples/equalizer/Makefile
 tests/examples/level/Makefile
 tests/examples/rtp/Makefile
 tests/files/Makefile

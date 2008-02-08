@@ -81,6 +81,10 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/cdio/gstcdiocddasrc.h \
 	$(top_srcdir)/ext/dv/gstdvdec.h \
 	$(top_srcdir)/ext/dv/gstdvdemux.h \
+	$(top_srcdir)/gst/equalizer/gstiirequalizer.h \
+	$(top_srcdir)/gst/equalizer/gstiirequalizer3bands.h \
+	$(top_srcdir)/gst/equalizer/gstiirequalizer10bands.h \
+	$(top_srcdir)/gst/equalizer/gstiirequalizernbands.h \
 	$(top_srcdir)/ext/esd/esdsink.h \
 	$(top_srcdir)/ext/flac/gstflacdec.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosink.h \

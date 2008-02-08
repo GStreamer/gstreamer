@@ -1,3 +1,3 @@
-SUBDIRS = level rtp
+SUBDIRS = level rtp equalizer
 
-DIST_SUBDIRS = level rtp
+DIST_SUBDIRS = level rtp equalizer

@@ -4,12 +4,15 @@ apev2mux
 audioamplify
 audiochebband
 audiocheblimit
+audiosincwband
+audiosincwlimit
 audiodynamic
 audioinvert
 audiopanorama
 autodetect
 avimux
 avisubtitle
+equalizer
 cmmldec
 cmmlenc
 icydemux

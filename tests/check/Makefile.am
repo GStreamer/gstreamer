@@ -63,6 +63,7 @@ check_PROGRAMS = \
 	elements/audiowsinclimit \
 	elements/avimux \
 	elements/avisubtitle \
+	elements/equalizer \
 	elements/icydemux \
 	elements/id3demux \
 	elements/level \
