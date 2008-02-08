@@ -1,3 +1,10 @@
+2008-02-08  Julien Moutte  <julien@fluendo.com>
+
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock): Flag
+	keyframe and delta units correctly when dealign with a BlockGroup.
+	Fixes: #514397
+
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* tests/check/elements/.cvsignore:
