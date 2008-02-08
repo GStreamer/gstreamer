@@ -49,7 +49,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_multi_file_sink_debug);
 static const GstElementDetails gst_multi_file_sink_details =
 GST_ELEMENT_DETAILS ("Multi-File Sink",
     "Sink/File",
-    "Write stream to a file",
+    "Write buffers to a sequentially named set of files",
     "David Schleef <ds@schleef.org>");
 
 enum
@@ -113,11 +113,6 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
 
   gstbasesink_class->get_times = NULL;
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_multi_file_sink_render);
-
-  if (sizeof (off_t) < 8) {
-    GST_LOG ("No large file support, sizeof (off_t) = %" G_GSIZE_FORMAT,
-        sizeof (off_t));
-  }
 }
 
 static void
@@ -197,12 +192,6 @@ gst_multi_file_sink_get_property (GObject * object, guint prop_id,
   }
 }
 
-#ifdef G_OS_UNIX
-# define __GST_STDIO_SEEK_FUNCTION "lseek"
-#else
-# define __GST_STDIO_SEEK_FUNCTION "fseek"
-#endif
-
 static gchar *
 gst_multi_file_sink_get_filename (GstMultiFileSink * multifilesink)
 {
@@ -219,7 +208,8 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   GstMultiFileSink *multifilesink;
   guint size;
   gchar *filename;
-  FILE *file;
+  gboolean ret;
+  GError *error = NULL;
 
   size = GST_BUFFER_SIZE (buffer);
 
@@ -227,38 +217,28 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   filename = gst_multi_file_sink_get_filename (multifilesink);
 
-  file = fopen (filename, "wb");
-  if (!file) {
-    goto handle_error;
+  ret = g_file_set_contents (filename, (char *) GST_BUFFER_DATA (buffer),
+      size, &error);
+  if (ret) {
+    multifilesink->index++;
+    g_free (filename);
+    return GST_FLOW_OK;
   }
 
+  switch (error->code) {
+    case G_FILE_ERROR_NOSPC:{
+      GST_ELEMENT_ERROR (multifilesink, RESOURCE, NO_SPACE_LEFT, (NULL),
+          (NULL));
+      break;
+    }
+    default:{
+      GST_ELEMENT_ERROR (multifilesink, RESOURCE, WRITE,
+          ("Error while writing to file \"%s\".", filename),
+          ("%s", g_strerror (errno)));
+    }
+  }
+  g_error_free (error);
   g_free (filename);
 
-  if (size > 0 && GST_BUFFER_DATA (buffer) != NULL) {
-    if (fwrite (GST_BUFFER_DATA (buffer), size, 1, file) != 1)
-      goto handle_error;
-  }
-
-  multifilesink->index++;
-
-  fclose (file);
-
-  return GST_FLOW_OK;
-
-handle_error:
-  {
-    switch (errno) {
-      case ENOSPC:{
-        GST_ELEMENT_ERROR (multifilesink, RESOURCE, NO_SPACE_LEFT, (NULL),
-            (NULL));
-        break;
-      }
-      default:{
-        GST_ELEMENT_ERROR (multifilesink, RESOURCE, WRITE,
-            ("Error while writing to file \"%s\".", multifilesink->filename),
-            ("%s", g_strerror (errno)));
-      }
-    }
-    return GST_FLOW_ERROR;
-  }
+  return GST_FLOW_ERROR;
 }
