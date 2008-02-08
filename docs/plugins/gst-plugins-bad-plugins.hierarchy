@@ -53,10 +53,6 @@ GObject
         GstAudioFilter
           GstBPMDetect
           GstSpectrum
-          GstIirEqualizer
-            GstIirEqualizerNBands
-            GstIirEqualizer3Bands
-            GstIirEqualizer10Bands
           GstStereo
         GstGLUpload
         GstGLDownload

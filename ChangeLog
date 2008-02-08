@@ -1,5 +1,22 @@
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	Remove equalizer plugin docs
+
+	* tests/check/Makefile.am:
+	Add GST_OPTION_CFLAGS, to get -Werror -Wall into the tests as for
+	other modules.
+
+	* tests/check/elements/multifile.c:
+	* tests/check/elements/rganalysis.c:
+	* tests/check/elements/rglimiter.c:
+
+	Fix compiler warnings from -Wall -Werror
+
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* configure.ac:
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:

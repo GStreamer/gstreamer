@@ -14,10 +14,6 @@ GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
 GstSDLVideoSink GstImplementsInterface GstNavigation GstXOverlay
 GstGLImageSink GstImplementsInterface GstXOverlay
 GstGioSink GstURIHandler
-GstIirEqualizer GstChildProxy
-GstIirEqualizerNBands GstChildProxy
-GstIirEqualizer3Bands GstChildProxy
-GstIirEqualizer10Bands GstChildProxy
 GstCDAudio GstURIHandler
 GTypeModule GTypePlugin
 GIOModule GTypePlugin
