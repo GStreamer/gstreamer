@@ -1,5 +1,10 @@
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* gst/mpegaudioparse/plugin.c:
+	Commit new file I forgot to add.
+
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* configure.ac:
 	Make DISABLE_DEPRECATED defined *only* during CVS, not during
 	pre-releases or releases.
