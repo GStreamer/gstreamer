@@ -1160,7 +1160,7 @@ gst_ffmpegdemux_loop (GstPad * pad)
   GstPad *srcpad;
   GstFFStream *stream;
   AVStream *avstream;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf = NULL;
   GstClockTime timestamp, duration;
   gint outsize;
   gboolean rawvideo;
@@ -1238,6 +1238,10 @@ gst_ffmpegdemux_loop (GstPad * pad)
 
   if ((ret = gst_ffmpegdemux_aggregated_flow (demux)) != GST_FLOW_OK)
     goto no_buffer;
+
+  /* If the buffer allocation failed, don't try sending it ! */
+  if (stream->last_flow != GST_FLOW_OK)
+    goto done;
 
   /* copy the data from packet into the target buffer
    * and do conversions for raw video packets */
