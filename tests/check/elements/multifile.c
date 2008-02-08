@@ -18,6 +18,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
+#include <glib/gstdio.h>
 #include <gst/check/gstcheck.h>
 
 static void

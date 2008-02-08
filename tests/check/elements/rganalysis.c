@@ -94,15 +94,15 @@ struct rate_test
 };
 
 static const struct rate_test supported_rates[] = {
-  8000, -0.91,
-  11025, -2.80,
-  12000, -3.13,
-  16000, -4.26,
-  22050, -5.64,
-  24000, -5.87,
-  32000, -6.03,
-  44100, -6.20,
-  48000, -6.14
+  {8000, -0.91},
+  {11025, -2.80},
+  {12000, -3.13},
+  {16000, -4.26},
+  {22050, -5.64},
+  {24000, -5.87},
+  {32000, -6.03},
+  {44100, -6.20},
+  {48000, -6.14}
 };
 
 /* Lookup the correct gain adjustment result in above array. */
@@ -1057,7 +1057,6 @@ GST_START_TEST (test_peak_track_album)
 {
   GstElement *element = setup_rganalysis ();
   GstTagList *tag_list;
-  guint num;
 
   set_playing_state (element);
 
@@ -1091,7 +1090,6 @@ GST_START_TEST (test_peak_album_abort_to_track)
 {
   GstElement *element = setup_rganalysis ();
   GstTagList *tag_list;
-  guint num;
 
   g_object_set (element, "num-tracks", 2, NULL);
   set_playing_state (element);

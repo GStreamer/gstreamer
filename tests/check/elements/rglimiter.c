@@ -53,7 +53,6 @@ GstElement *
 setup_rglimiter ()
 {
   GstElement *element;
-  GstBus *bus;
 
   GST_DEBUG ("setup_rglimiter");
   element = gst_check_setup_element ("rglimiter");
