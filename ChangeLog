@@ -1,3 +1,8 @@
+2008-02-08  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* configure.ac:
+	Find and subst SED when building the docs.
+
 2008-02-08  Julien Moutte  <julien@fluendo.com>
 
 	* tests/examples/seek/seek.c: (stop_cb), (connect_bus_signals),
