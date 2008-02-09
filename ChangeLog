@@ -1,5 +1,16 @@
 2008-02-09  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* gst/selector/Makefile.am:
+
+	Listing the marshal.h in the nodist_HEADERS breaks distcheck, so
+	let's not do that
+
+	* tests/check/Makefile.am:
+	Disable the crashing cdaudio plugin from the states test so I can make
+	pre-releases.
+
+2008-02-09  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* win32/vs6/libgstdshowdecwrapper.dsp:
 	* win32/vs6/libgstflv.dsp:
 	Convert to DOS line endings, and set -kb
