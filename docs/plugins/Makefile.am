@@ -154,7 +154,8 @@ EXTRA_HFILES = \
 
 # example code that needs to be converted to xml and placed in xml/
 EXAMPLE_CFILES = \
-	$(top_srcdir)/tests/examples/level/level-example.c
+	$(top_srcdir)/tests/examples/level/level-example.c \
+	$(top_srcdir)/tests/examples/spectrum/spectrum-example.c
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

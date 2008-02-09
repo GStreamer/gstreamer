@@ -1,3 +1,16 @@
+2008-02-09  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* docs/plugins/Makefile.am:
+	* gst/spectrum/gstspectrum.c:
+	* tests/examples/spectrum/.cvsignore:
+	* tests/examples/spectrum/Makefile.am:
+	* tests/examples/spectrum/spectrum-example.c:
+
+	Add a simple example application for the spectrum element, include it
+	in the docs, and fix some documentation ambiguities.
+
+	Fixes: #348085
+
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/equalizer/Makefile.am:

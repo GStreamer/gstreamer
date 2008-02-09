@@ -25,19 +25,19 @@
  * <refsect2>
  * <para>
  * The Spectrum element analyzes the frequency spectrum of an audio signal.
- * If #GstSpectrum:message property is #TRUE it sends analysis results as
- * application message named
+ * If the #GstSpectrum:message property is #TRUE, it sends analysis results as
+ * application messages named
  * <classname>&quot;spectrum&quot;</classname> after each interval of time given
  * by the #GstSpectrum:interval property.
  * </para>
  * <para>
- * The message's structure contains three fields:
+ * The message's structure contains some combination of these fields:
  * <itemizedlist>
  * <listitem>
  *   <para>
  *   #GstClockTime
  *   <classname>&quot;endtime&quot;</classname>:
- *   the end time of the buffer that triggered the message
+ *   the end time of the buffer that triggered the message. Always present.
  *   </para>
  * </listitem>
  * <listitem>
@@ -45,24 +45,30 @@
  *   #GstValueList of #gfloat
  *   <classname>&quot;magnitude&quot;</classname>:
  *   the level for each frequency band in dB. All values below the value of the
- *   #GstSpectrum:threshold property will be set to the threshold.
+ *   #GstSpectrum:threshold property will be set to the threshold. Only present
+ *   if the message-magnitude property is true.
  *   </para>
  * </listitem>
  * <listitem>
  *   <para>
  *   #GstValueList of #gfloat
  *   <classname>&quot;phase&quot;</classname>:
- *   the phase for each frequency band. The value is between -pi and pi.
+ *   The phase for each frequency band. The value is between -pi and pi. Only
+ *   present if the message-phase property is true.
  *   </para>
  * </listitem>
  * </itemizedlist>
  * </para>
  * <para>
  * This element cannot be used with the gst-launch command in a sensible way.
- * The included demo shows how to use it in an application.
+ * This sample code demonstrates how to use it in an application.
+ * </para>
+ * <title>Example application</title>
+ * <para>
+ * <include xmlns="http://www.w3.org/2003/XInclude" href="element-spectrum-example.xml" />
  * </para>
  * <para>
- * Last reviewed on 2008-02-07 (0.10.6)
+ * Last reviewed on 2008-02-09 (0.10.6)
  * </para>
  * </refsect2>
  */
