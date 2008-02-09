@@ -1907,9 +1907,13 @@ analyse_source (GstPlayBaseBin * play_base_bin, gboolean * is_raw,
 
       templ = (GstPadTemplate *) walk->data;
       if (GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) {
-        if (GST_PAD_TEMPLATE_PRESENCE (templ) == GST_PAD_SOMETIMES)
+        if (GST_PAD_TEMPLATE_PRESENCE (templ) == GST_PAD_SOMETIMES) {
           *is_dynamic = TRUE;
-        break;
+          break;                /* only break out if we found a sometimes src pad 
+                                   continue walking through if say a request src pad is found
+                                   elements such as mpegtsparse and dvbbasebin have request
+                                   and sometimes src pads */
+        }
       }
       walk = g_list_next (walk);
     }

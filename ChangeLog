@@ -1,3 +1,10 @@
+2008-02-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/playback/gstplaybasebin.c:
+	Set is_dynamic as True if there are elements with both request
+	and sometimes src pad templates instead of breaking out when it
+	finds the first pad template that is a src.
+
 2008-02-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/examples/seek/seek.c: (stop_cb), (clear_streams),
