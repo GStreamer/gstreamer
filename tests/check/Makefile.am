@@ -11,7 +11,7 @@ TESTS_ENVIRONMENT = \
 	GST_PLUGIN_SYSTEM_PATH=					\
 	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/sys:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)			\
 	GST_TEST_FILES_PATH=$(TEST_FILES_DIRECTORY) \
-	STATE_IGNORE_ELEMENTS="aasink autovideosink cacasink cairotextoverlay gconfvideosrc"
+	STATE_IGNORE_ELEMENTS="aasink autovideosink cacasink cairotextoverlay gconfvideosrc v4l2src"
 
 # ths core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.*

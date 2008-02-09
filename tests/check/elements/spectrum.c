@@ -124,6 +124,10 @@ cleanup_spectrum (GstElement * spectrum)
   gst_check_teardown_src_pad (spectrum);
   gst_check_teardown_sink_pad (spectrum);
   gst_check_teardown_element (spectrum);
+
+  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
 }
 
 
@@ -222,7 +226,6 @@ GST_START_TEST (test_int16)
   gst_element_set_bus (spectrum, NULL);
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
   gst_object_unref (bus);
-  gst_buffer_unref (outbuffer);
   fail_unless (gst_element_set_state (spectrum,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
   ASSERT_OBJECT_REFCOUNT (spectrum, "spectrum", 1);
@@ -324,7 +327,6 @@ GST_START_TEST (test_int32)
   gst_element_set_bus (spectrum, NULL);
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
   gst_object_unref (bus);
-  gst_buffer_unref (outbuffer);
   fail_unless (gst_element_set_state (spectrum,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
   ASSERT_OBJECT_REFCOUNT (spectrum, "spectrum", 1);
@@ -426,7 +428,6 @@ GST_START_TEST (test_float32)
   gst_element_set_bus (spectrum, NULL);
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
   gst_object_unref (bus);
-  gst_buffer_unref (outbuffer);
   fail_unless (gst_element_set_state (spectrum,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
   ASSERT_OBJECT_REFCOUNT (spectrum, "spectrum", 1);
@@ -528,7 +529,6 @@ GST_START_TEST (test_float64)
   gst_element_set_bus (spectrum, NULL);
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
   gst_object_unref (bus);
-  gst_buffer_unref (outbuffer);
   fail_unless (gst_element_set_state (spectrum,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
   ASSERT_OBJECT_REFCOUNT (spectrum, "spectrum", 1);

@@ -1,3 +1,15 @@
+2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/equalizer/Makefile.am:
+	* gst/spectrum/Makefile.am:
+	Fix includes order
+
+	* tests/check/Makefile.am:
+	Exclude v4l2src from the states test - it takes too long to start.
+
+	* tests/check/elements/spectrum.c:
+	Make the test run properly with CK_FORK=no
+
 2008-02-08 Christian Schaller <christian.schaller@collabora.co.uk>
 
 	* gst/audiofix/Makefile.am: add missing header files 
