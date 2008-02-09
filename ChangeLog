@@ -1,3 +1,9 @@
+2008-02-09  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* win32/vs6/libgstdshowdecwrapper.dsp:
+	* win32/vs6/libgstflv.dsp:
+	Convert to DOS line endings, and set -kb
+
 2008-02-08  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/Makefile.am:
