@@ -516,5 +516,38 @@ class PadRefCountTest(TestCase):
             self.assertEquals(self.gccollect(), 1) # collected the pad
         gst.debug('going into teardown')
 
+class PadBlockRefcountTest(TestCase):
+    def testCallbackRefcount(self):
+        def blocked_cb(pad, blocked):
+            self.assertTrue(pad.set_blocked_async(False, unblocked_cb))
+
+        def unblocked_cb(pad, blocked):
+            pass
+
+        cb_refcount = sys.getrefcount(blocked_cb)
+        # sys.getrefcount() returns refcount + 1
+        self.assertEquals(cb_refcount, 2)
+
+        fakesrc = gst.element_factory_make('fakesrc')
+        fakesrc.props.num_buffers = 2
+        fakesink = gst.element_factory_make('fakesink')
+
+        pipeline = gst.Pipeline()
+        pipeline.add(fakesrc, fakesink)
+
+        fakesrc.link(fakesink)
+
+        pad = fakesrc.get_pad('src')
+        pad.set_blocked_async(True, blocked_cb)
+
+        pipeline.set_state(gst.STATE_PLAYING)
+        pipeline.get_bus().poll(gst.MESSAGE_EOS, -1)
+        pipeline.set_state(gst.STATE_NULL)
+
+        # check that we don't leak a ref to the callback
+        cb_refcount_after = sys.getrefcount(blocked_cb)
+        self.assertEquals(cb_refcount_after, cb_refcount)
+
+
 if __name__ == "__main__":
     unittest.main()

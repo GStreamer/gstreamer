@@ -1,3 +1,11 @@
+2008-02-10  Alessandro Decina  <alessandro@nnva.org>
+
+	reviewed by: Edward Hervey  <edward.hervey@collabora.co.uk>
+	* gst/gstpad.override:
+	* testsuite/test_pad.py:
+	Fix memleak in gst.Pad.set_blocked_async()
+	Fixes #514717
+	
 2008-02-10  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/gstpad.override:

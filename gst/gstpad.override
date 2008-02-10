@@ -1343,6 +1343,7 @@ pad_block_callback_marshal(GstPad *pad, gboolean blocked, gpointer user_data)
 
     ret = PyObject_CallObject(callback, args);
     Py_DECREF(args);
+    Py_DECREF(py_user_data);
 
     if (!ret)
         PyErr_Print();
