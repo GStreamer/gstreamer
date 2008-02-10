@@ -53,7 +53,7 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("AudioAmplify",
+GST_ELEMENT_DETAILS ("Audio amplifier",
     "Filter/Effect/Audio",
     "Amplifies an audio stream by a given factor",
     "Sebastian Dröge <slomo@circular-chaos.org>");

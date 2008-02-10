@@ -91,7 +91,7 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("AudioChebBand",
+GST_ELEMENT_DETAILS ("Band pass & band reject filter",
     "Filter/Effect/Audio",
     "Chebyshev band pass and band reject filter",
     "Sebastian Dröge <slomo@circular-chaos.org>");

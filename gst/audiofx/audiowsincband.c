@@ -78,9 +78,9 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails audio_wsincband_details =
-GST_ELEMENT_DETAILS ("Band-pass and Band-reject Windowed sinc filter",
+GST_ELEMENT_DETAILS ("Band pass & band reject filter",
     "Filter/Effect/Audio",
-    "Band-pass Windowed sinc filter",
+    "Band pass and band reject windowed sinc filter",
     "Thomas <thomas@apestaart.org>, "
     "Steven W. Smith, "
     "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, "

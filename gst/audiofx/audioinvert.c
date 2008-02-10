@@ -54,7 +54,7 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("AudioInvert",
+GST_ELEMENT_DETAILS ("Audio inversion",
     "Filter/Effect/Audio",
     "Swaps upper and lower half of audio samples",
     "Sebastian Dröge <slomo@circular-chaos.org>");

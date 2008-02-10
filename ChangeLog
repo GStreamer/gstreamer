@@ -1,3 +1,15 @@
+2008-02-10  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/audiofx/audioamplify.c:
+	* gst/audiofx/audiochebband.c:
+	* gst/audiofx/audiocheblimit.c:
+	* gst/audiofx/audiodynamic.c:
+	* gst/audiofx/audioinvert.c:
+	* gst/audiofx/audiopanorama.c:
+	* gst/audiofx/audiowsincband.c:
+	* gst/audiofx/audiowsinclimit.c:
+	Fix long description of audiofx elements. Fixes bug #515457.
+
 2008-02-09  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/plugins/Makefile.am:

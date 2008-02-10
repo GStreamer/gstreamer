@@ -56,7 +56,7 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("AudioDynamic",
+GST_ELEMENT_DETAILS ("Dynamic range controller",
     "Filter/Effect/Audio",
     "Compressor and Expander",
     "Sebastian Dröge <slomo@circular-chaos.org>");

@@ -76,9 +76,9 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails audio_wsinclimit_details =
-GST_ELEMENT_DETAILS ("AudioWSincLimit",
+GST_ELEMENT_DETAILS ("Low pass & high pass filter",
     "Filter/Effect/Audio",
-    "Low-pass and High-pass Windowed sinc filter",
+    "Low pass and high pass windowed sinc filter",
     "Thomas <thomas@apestaart.org>, "
     "Steven W. Smith, "
     "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, "
