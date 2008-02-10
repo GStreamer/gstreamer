@@ -1,6 +1,12 @@
 2008-02-10  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/TODO:
+	* ext/metadata/metadataexif.c:
+	  Convert from EXIF to XMP DataTime as local time.
+
+2008-02-10  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/TODO:
 	* ext/metadata/metadata_mapping.htm:
 	* ext/metadata/metadataexif.c:
 	* ext/metadata/metadatatags.c:

@@ -613,8 +613,8 @@ metadataparse_exif_content_foreach_entry_func (ExifEntry * entry,
         if (entry->tag == EXIF_TAG_DATE_TIME_DIGITIZED
             || entry->tag == EXIF_TAG_DATE_TIME
             || entry->tag == EXIF_TAG_DATE_TIME_ORIGINAL) {
-          value = g_string_new_len (str, 21);
-          /* 21 is enough memory to hold "YYYY-MM-DDTHH:MM:SSZ" */
+          value = g_string_new_len (str, 20);
+          /* 20 is enough memory to hold "YYYY-MM-DDTHH:MM:SS" */
 
           if (metadataparse_exif_convert_to_datetime (value)) {
             str = value->str;
@@ -1092,14 +1092,17 @@ metadataparse_exif_convert_to_datetime (GString * dt)
   /* "YYYY:MM:DD HH:MM:SS" */
   /*  012345678901234567890 */
 
-  if (dt->allocated_len < 21)
+  if (dt->allocated_len < 20)
     return FALSE;
+
+  /* Fix me: Ideally would be good to get the time zone from othe Exif tag
+   * for the time being, just use local time as explained in XMP specification
+   * (converting from EXIF to XMP date and time) */
 
   dt->str[4] = '-';
   dt->str[7] = '-';
   dt->str[10] = 'T';
-  dt->str[19] = 'Z';
-  dt->str[20] = '\0';
+  dt->str[19] = '\0';
 
   return TRUE;
 
@@ -1228,8 +1231,8 @@ metadatamux_exif_convert_from_datetime (GString * dt)
   if (*p == ':') {
     p++;
   } else if (*p == 'Z' || *p == '+' || *p == '-') {
-    /* FIXME: in case of '+' or '-', would it be better to calculate the
-     * UTC 'Z' date and time? */
+    /* FIXME: in case of '+' or '-', it would be better to also fill another
+     * EXIF tag in order to save, somehow the time zone info */
     sprintf (p, ":00");
     goto done;
   } else

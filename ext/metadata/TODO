@@ -15,6 +15,7 @@ TODO:
 5- Improve the test application (to save also in png and to make it possible to set the metadata elements properties)
 6- Implement GDateTime support in GLib to be used by GStreamer (http://bugzilla.gnome.org/show_bug.cgi?id=50076)
 7- Use a standard GStreamer Data-Time type to map our Data-time tags
+8- Make the correct merge mode for multiple value tags (bag and seq) like dc:creator, ...
 
 OPEN ISSUES:
 
