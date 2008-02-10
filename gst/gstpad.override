@@ -1525,4 +1525,85 @@ _wrap_gst_static_pad_template__get_static_caps(PyObject *self, void *closure)
     templ = pyg_pointer_get(self, GstStaticPadTemplate);
     return pyg_pointer_new(GST_TYPE_STATIC_CAPS, &(templ->static_caps));
 }
+%%
+override gst_pad_start_task args
+static void
+pad_task_handler(void *data) {
+    PyGILState_STATE state;
+    PyObject *callback, *args = NULL;
+    PyObject *py_user_data;
 
+    if (data == NULL)
+	return;
+
+    state = pyg_gil_state_ensure();
+    py_user_data = (PyObject*) data;
+
+    callback = PyTuple_GetItem(py_user_data, 0);
+    if (!(PyCallable_Check(callback))) {
+	PyErr_Print();
+	goto beach;
+    }
+    if (!(args = PyTuple_GetSlice(py_user_data, 1, PyTuple_Size(py_user_data)))) {
+	PyErr_Print();
+	goto beach;
+    }
+
+    if (!(PyTuple_Check(args))) {
+	PyErr_Print();
+	goto beach;
+    }
+
+    PyObject_CallObject(callback, args);
+
+    if(PyErr_Occurred())
+	PyErr_Print();
+
+    Py_DECREF(args);
+
+ beach:
+    pyg_gil_state_release(state);
+}
+
+static PyObject *
+_wrap_gst_pad_start_task(PyGObject *self, PyObject *args)
+{
+    PyObject *callback, *data, *cbargs, *py_ret;
+    gboolean ret;
+
+    /* 1st argument must be a callable */
+    if (PyTuple_Size(args) < 1) {
+	PyErr_SetString(PyExc_TypeError, "gst.Pad.start_task() requires at least 1 argument");
+	return NULL;
+    }
+
+    callback = PySequence_GetItem(args, 0);
+    if (!PyCallable_Check(callback)) {
+	PyErr_SetString(PyExc_TypeError, "callback must be a function or method");
+	Py_DECREF(callback);
+	return NULL;
+    }
+    
+    if (!(cbargs = PySequence_GetSlice(args, 1, PyTuple_Size(args)))) {
+	Py_DECREF(callback);
+	return NULL;
+    }
+
+    if (!(data = Py_BuildValue("(ON)", callback, cbargs))) {
+	Py_DECREF(callback);
+	Py_DECREF(cbargs);
+	return NULL;
+    }
+    
+    pyg_begin_allow_threads;
+    ret = gst_pad_start_task(GST_PAD(self->obj), (GstTaskFunction) pad_task_handler, data);
+    pyg_end_allow_threads;
+
+    if (ret == TRUE)
+	py_ret = Py_True;
+    else
+	py_ret = Py_False;
+
+    Py_INCREF(py_ret);
+    return py_ret;
+}

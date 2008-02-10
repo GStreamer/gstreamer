@@ -1,3 +1,8 @@
+2008-02-10  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gstpad.override:
+	Wrap gst.Pad.start_task().
+
 2008-02-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/base.defs:
