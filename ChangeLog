@@ -1,3 +1,10 @@
+2008-02-10  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/ivorbis/vorbisfile.c:
+	Trivial fix for build warning.
+	Patch by: Josep Torre Valles <josep@fluendo.com>
+	Fixes: #515588
+
 2008-02-10  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/TODO:

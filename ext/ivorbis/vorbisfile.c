@@ -386,7 +386,7 @@ gst_ivorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 }
 
 static int
-gst_ivorbisfile_seek (void *datasource, int64_t offset, int whence)
+gst_ivorbisfile_seek (void *datasource, ogg_int64_t offset, int whence)
 {
   Ivorbisfile *ivorbisfile = GST_IVORBISFILE (datasource);
   guint64 pending_offset = ivorbisfile->offset;
