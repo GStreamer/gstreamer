@@ -7203,7 +7203,7 @@
 
 2006-10-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
-	Patch by: Josep Torre Valles <josep@fluendo.com>
+	Patch by: Josep Torra Valles <josep@fluendo.com>
 
 	* gst/Makefile.am:
 	Cast values when making gstenumtypes.h.  This pacifies Forte
@@ -7276,7 +7276,7 @@
 
 2006-10-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
-	Patch by: Josep Torre Valles <josep@fluendo.com>
+	Patch by: Josep Torra Valles <josep@fluendo.com>
 
 	* common/m4/gst-error.m4:
 	Disable warning of statement not reached on Forte.
@@ -7323,7 +7323,7 @@
 
 2006-10-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
-	Patch by: Josep Torre Valles <josep@fluendo.com>
+	Patch by: Josep Torra Valles <josep@fluendo.com>
 
 	* gst/gst.c: (gst_init_get_option_group):
 	Fix empty declaration and type mismatch.
@@ -7350,7 +7350,7 @@
 
 2006-10-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
-	Patch by: Josep Torre Valles <josep@fluendo.com>
+	Patch by: Josep Torra Valles <josep@fluendo.com>
 
 	* common/m4/gst-error.m4:
 	Fixed bug #360151.
@@ -7374,7 +7374,7 @@
 
 2006-10-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
-	Patch by: Josep Torre Valles <josep@fluendo.com>
+	Patch by: Josep Torra Valles <josep@fluendo.com>
 
 	* common/m4/gst-error.m4:
 	* configure.ac:
