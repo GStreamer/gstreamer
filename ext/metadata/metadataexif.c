@@ -114,7 +114,6 @@ metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <stdio.h>
 
 /*
  * enum and types
@@ -125,9 +124,6 @@ typedef struct _tag_MEUserData
   GstTagList *taglist;
   GstTagMergeMode mode;
   ExifShort resolution_unit;    /* 2- inches (default), 3- cm */
-  int altitude_ref;             /* -1- not specified, 0- above sea, 1- bellow sea */
-  gchar latitude_ref;           /* k- not specified, 'N'- north, 'S'- south */
-  gchar longitude_ref;          /* k- not specified, 'E'- north, 'W'- south */
 } MEUserData;
 
 typedef struct _tag_MapIntStr
@@ -207,29 +203,17 @@ static MapIntStr mappedTags[] = {
   {EXIF_TAG_SOFTWARE,                    /*ASCII,*/     EXIF_IFD_0,
    GST_TAG_CREATOR_TOOL                  /*G_TYPE_STRING*/},
 
-  {EXIF_TAG_DATE_TIME_DIGITIZED,         /*ASCII,*/     EXIF_IFD_EXIF,
-   GST_TAG_DATE_TIME_DIGITIZED           /*G_TYPE_STRING*/},
-
-  {EXIF_TAG_DATE_TIME,                   /*ASCII,*/     EXIF_IFD_0,
-   GST_TAG_DATE_TIME_MODIFIED            /*G_TYPE_STRING*/},
-
-  {EXIF_TAG_DATE_TIME_ORIGINAL,          /*ASCII,*/     EXIF_IFD_EXIF,
-   GST_TAG_DATE_TIME_ORIGINAL            /*G_TYPE_STRING*/},
-
   {EXIF_TAG_MAKE,                        /*ASCII,*/     EXIF_IFD_0,
    GST_TAG_DEVICE_MAKE                   /*G_TYPE_STRING*/},
 
   {EXIF_TAG_MODEL,                       /*ASCII,*/     EXIF_IFD_0,
    GST_TAG_DEVICE_MODEL                  /*G_TYPE_STRING*/},
 
-  {EXIF_TAG_MAKER_NOTE,                  /*UNDEFINED(size any)*/ EXIF_IFD_EXIF,
-   GST_TAG_EXIF_MAKER_NOTE               /*GST_TYPE_BUFFER*/},
-
   {EXIF_TAG_PIXEL_Y_DIMENSION,           /*LONG,*/      EXIF_IFD_EXIF,
-   GST_TAG_IMAGE_HEIGHT                  /*G_TYPE_INT*/},
+   GST_TAG_IMAGE_HEIGHT                  /*G_TYPE_INT*/},          /* inches */
 
   {EXIF_TAG_PIXEL_X_DIMENSION,           /*LONG,*/      EXIF_IFD_EXIF,
-   GST_TAG_IMAGE_WIDTH                   /*G_TYPE_INT*/},
+   GST_TAG_IMAGE_WIDTH                   /*G_TYPE_INT*/},          /* inches */
 
   {EXIF_TAG_X_RESOLUTION,                /*RATIONAL,*/  EXIF_IFD_0,
    GST_TAG_IMAGE_XRESOLUTION             /*GST_TYPE_FRACTION*/},   /* inches */
@@ -237,23 +221,9 @@ static MapIntStr mappedTags[] = {
   {EXIF_TAG_Y_RESOLUTION,                /*RATIONAL,*/  EXIF_IFD_0,
    GST_TAG_IMAGE_YRESOLUTION             /*GST_TYPE_FRACTION*/},   /* inches */
 
-  {EXIF_TAG_GPS_ALTITUDE,                /*RATIONAL,*/  EXIF_IFD_GPS,
-   GST_TAG_GPS_ALTITUDE                  /*GST_TYPE_FRACTION*/},
-
-  {EXIF_TAG_GPS_LATITUDE,                /*RATIONAL(3),*/  EXIF_IFD_GPS,
-   GST_TAG_GPS_LATITUDE                  /*G_TYPE_STRING*/},
-
-  {EXIF_TAG_GPS_LONGITUDE,               /*RATIONAL(3),*/  EXIF_IFD_GPS,
-   GST_TAG_GPS_LONGITUDE                 /*G_TYPE_STRING*/},
-
   {0, EXIF_IFD_COUNT, NULL}
 };
 /* *INDENT-ON* */
-
-#define IS_NUMBER(n) ('0' <= (n) && (n) <= '9')
-#define IS_FRACT_POSITIVE(n,d) \
-  ( ! ( ((n) >> (sizeof(n)*8-1)) ^ ((d) >> (sizeof(d)*8-1)) ) )
-#define CHAR_TO_INT(c) ((c) - '0')
 
 /*
  * static helper functions declaration
@@ -274,24 +244,9 @@ static void
 metadataparse_exif_content_foreach_entry_func (ExifEntry * entry,
     void *user_data);
 
-static gboolean
-metadataparse_handle_unit_tags (ExifEntry * entry, MEUserData * meudata,
-    const ExifByteOrder byte_order);
-
 static void
 metadatamux_exif_for_each_tag_in_list (const GstTagList * list,
     const gchar * tag, gpointer user_data);
-
-static gboolean metadataparse_exif_convert_to_datetime (GString * dt);
-
-static gboolean metadatamux_exif_convert_from_datetime (GString * dt);
-
-static gboolean
-metadatamux_exif_convert_from_gps (guint8 * data, const char *lt, char *ref);
-
-static gboolean
-metadataparse_exif_convert_to_gps (const guint8 * data, GString * lt,
-    const int exif_tag, const MEUserData * meudata);
 
 /*
  * extern functions implementations
@@ -319,7 +274,7 @@ metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
   const guint8 *buf;
   guint32 size;
   ExifData *exif = NULL;
-  MEUserData user_data = { taglist, mode, 2, -1, 'k', 'k' };
+  MEUserData user_data = { taglist, mode, 2 };
 
   if (adapter == NULL || (size = gst_adapter_available (adapter)) == 0) {
     goto done;
@@ -502,7 +457,7 @@ metadataparse_exif_data_foreach_content_func (ExifContent * content,
 {
   ExifIfd ifd = exif_content_get_ifd (content);
 
-  if (ifd == EXIF_IFD_0 || ifd == EXIF_IFD_EXIF || ifd == EXIF_IFD_GPS) {
+  if (ifd == EXIF_IFD_0 || ifd == EXIF_IFD_EXIF) {
 
     GST_LOG ("\n  Content %p: %s (ifd=%d)", content, exif_ifd_get_name (ifd),
         ifd);
@@ -539,8 +494,23 @@ metadataparse_exif_content_foreach_entry_func (ExifEntry * entry,
     return;
   byte_order = exif_data_get_byte_order (entry->parent->parent);
 
-  if (metadataparse_handle_unit_tags (entry, meudata, byte_order))
+  if (entry->tag == EXIF_TAG_RESOLUTION_UNIT) {
+    meudata->resolution_unit = exif_get_short (entry->data, byte_order);
+    if (meudata->resolution_unit == 3) {
+      /* if [xy]resolution has alredy been add in cm, replace it in inches */
+      gfloat value;
+
+      if (gst_tag_list_get_float (meudata->taglist, GST_TAG_IMAGE_XRESOLUTION,
+              &value))
+        gst_tag_list_add (meudata->taglist, GST_TAG_MERGE_REPLACE,
+            GST_TAG_IMAGE_XRESOLUTION, value * 0.4f, NULL);
+      if (gst_tag_list_get_float (meudata->taglist, GST_TAG_IMAGE_YRESOLUTION,
+              &value))
+        gst_tag_list_add (meudata->taglist, GST_TAG_MERGE_REPLACE,
+            GST_TAG_IMAGE_YRESOLUTION, value * 0.4f, NULL);
+    }
     goto done;
+  }
 
   if (!tag)
     goto done;
@@ -570,14 +540,6 @@ metadataparse_exif_content_foreach_entry_func (ExifEntry * entry,
           numerator = (gint) v_rat.numerator;
           denominator = (gint) v_rat.denominator;
         }
-        if (meudata->altitude_ref == 1) {
-          if (entry->tag == EXIF_TAG_GPS_ALTITUDE) {
-            if (numerator > 0)
-              numerator = -numerator;
-            if (denominator < 0)
-              denominator = -denominator;
-          }
-        }
         if (meudata->resolution_unit == 3) {
           /* converts from cm to inches */
           if (entry->tag == EXIF_TAG_X_RESOLUTION
@@ -596,50 +558,12 @@ metadataparse_exif_content_foreach_entry_func (ExifEntry * entry,
     gst_tag_list_add (meudata->taglist, meudata->mode, tag, numerator,
         denominator, NULL);
 
-  } else if (type == GST_TYPE_BUFFER) {
-    GstBuffer *buf = gst_buffer_new_and_alloc (entry->components);
-
-    memcpy (GST_BUFFER_DATA (buf), entry->data, entry->components);
-    gst_tag_list_add (meudata->taglist, meudata->mode, tag, buf, NULL);
-    gst_buffer_unref (buf);
   } else {
 
     switch (type) {
       case G_TYPE_STRING:
-      {
-        const gchar *str = exif_entry_get_value (entry, buf, sizeof (buf));
-        GString *value = NULL;
-
-        if (entry->tag == EXIF_TAG_DATE_TIME_DIGITIZED
-            || entry->tag == EXIF_TAG_DATE_TIME
-            || entry->tag == EXIF_TAG_DATE_TIME_ORIGINAL) {
-          value = g_string_new_len (str, 20);
-          /* 20 is enough memory to hold "YYYY-MM-DDTHH:MM:SS" */
-
-          if (metadataparse_exif_convert_to_datetime (value)) {
-            str = value->str;
-          } else {
-            GST_ERROR ("Unexpected date & time format for %s", tag);
-            str = NULL;
-          }
-
-        } else if (entry->tag == EXIF_TAG_GPS_LATITUDE
-            || entry->tag == EXIF_TAG_GPS_LONGITUDE) {
-          value = g_string_new_len (str, 11);
-          /* 21 is enough memory to hold "DDD:MM:SSk" */
-          if (metadataparse_exif_convert_to_gps (entry->data, value,
-                  entry->tag, meudata)) {
-            str = value->str;
-          } else {
-            GST_ERROR ("Unexpected date & time format for %s", tag);
-            str = NULL;
-          }
-        }
-        if (str)
-          gst_tag_list_add (meudata->taglist, meudata->mode, tag, str, NULL);
-        if (value)
-          g_string_free (value, TRUE);
-      }
+        gst_tag_list_add (meudata->taglist, meudata->mode, tag,
+            exif_entry_get_value (entry, buf, sizeof (buf)), NULL);
         break;
       case G_TYPE_INT:
         /* fall through */
@@ -706,122 +630,6 @@ done:
 }
 
 /*
- * metadataparse_handle_unit_tags:
- * @entry: The exif entry that is supposed to have a tag that makes reference
- * to other tag
- * @meudata: contains references that can be used afterwards and the tag list
- * @byte_order: used to read Exif values
- *
- * This function tries to parse Exif tags that are not mapped to Gst tags
- * but makes reference to another Exif-Gst mapped tag. For example,
- * 'resolution-unit' that says the units of 'image-xresolution', so proper
- * conversion is done or a hint to the conversion is stored to @meudata
- * to be used afterwards.
- *
- * Returns:
- * <itemizedlist>
- * <listitem><para>%TRUE if the @entry->tag was handled
- * </para></listitem>
- * <listitem><para>%FALSE if this function does'n handle @entry->tag
- * </para></listitem>
- * </itemizedlist>
- */
-
-static gboolean
-metadataparse_handle_unit_tags (ExifEntry * entry, MEUserData * meudata,
-    const ExifByteOrder byte_order)
-{
-  gboolean ret = TRUE;
-
-  switch (entry->tag) {
-    case EXIF_TAG_RESOLUTION_UNIT:
-      meudata->resolution_unit = exif_get_short (entry->data, byte_order);
-      if (meudata->resolution_unit == 3) {
-        /* if [xy]resolution has alredy been add in cm, replace it in inches */
-        gfloat value;
-
-        if (gst_tag_list_get_float (meudata->taglist,
-                GST_TAG_IMAGE_XRESOLUTION, &value)) {
-          gst_tag_list_add (meudata->taglist, GST_TAG_MERGE_REPLACE,
-              GST_TAG_IMAGE_XRESOLUTION, value * 0.4f, NULL);
-        }
-        if (gst_tag_list_get_float (meudata->taglist,
-                GST_TAG_IMAGE_YRESOLUTION, &value)) {
-          gst_tag_list_add (meudata->taglist, GST_TAG_MERGE_REPLACE,
-              GST_TAG_IMAGE_YRESOLUTION, value * 0.4f, NULL);
-        }
-      }
-
-      break;
-    case EXIF_TAG_GPS_ALTITUDE_REF:
-      meudata->altitude_ref = entry->data[0];
-
-      const GValue *value = gst_tag_list_get_value_index (meudata->taglist,
-          GST_TAG_GPS_ALTITUDE, 0);
-
-      if (value) {
-        gint n, d;
-
-        n = gst_value_get_fraction_numerator (value);
-        d = gst_value_get_fraction_denominator (value);
-        if (meudata->altitude_ref == 1) {       /* bellow sea */
-          if (IS_FRACT_POSITIVE (n, d)) {       /* if n * d > 0 */
-            gst_tag_list_add (meudata->taglist, GST_TAG_MERGE_REPLACE,
-                GST_TAG_GPS_ALTITUDE, -n, d, NULL);
-          }
-        }
-      }
-
-      break;
-    case EXIF_TAG_GPS_LATITUDE_REF:
-    {
-
-      gchar *value = NULL;
-
-      meudata->latitude_ref = entry->data[0];
-      if (gst_tag_list_get_string (meudata->taglist, GST_TAG_GPS_LATITUDE,
-              &value)) {
-        GString *str = g_string_new (value);
-
-        if (str->len == 10) {
-          str->str[9] = meudata->latitude_ref;
-          gst_tag_list_add (meudata->taglist, GST_TAG_MERGE_REPLACE,
-              GST_TAG_GPS_LATITUDE, str->str, NULL);
-        }
-        g_string_free (str, TRUE);
-      }
-
-    }
-      break;
-    case EXIF_TAG_GPS_LONGITUDE_REF:
-    {
-      gchar *value = NULL;
-
-      meudata->longitude_ref = entry->data[0];
-      if (gst_tag_list_get_string (meudata->taglist, GST_TAG_GPS_LONGITUDE,
-              &value)) {
-        GString *str = g_string_new (value);
-
-        if (str->len == 10) {
-          str->str[9] = meudata->longitude_ref;
-          gst_tag_list_add (meudata->taglist, GST_TAG_MERGE_REPLACE,
-              GST_TAG_GPS_LONGITUDE, str->str, NULL);
-        }
-        g_string_free (str, TRUE);
-      }
-    }
-      break;
-    default:
-      ret = FALSE;
-      break;
-  }
-
-  return ret;
-
-}
-
-
-/*
  * metadatamux_exif_for_each_tag_in_list:
  * @list: GStreamer tag list from which @tag belongs to
  * @tag: GStreamer tag to be added to the EXIF chunk
@@ -861,21 +669,6 @@ metadatamux_exif_for_each_tag_in_list (const GstTagList * list,
     exif_entry_initialize (entry, exif_tag);
   }
 
-  if (entry->data == NULL) {
-    if (entry->tag == EXIF_TAG_GPS_ALTITUDE) {
-      entry->format = EXIF_FORMAT_RATIONAL;
-      entry->components = 1;
-      entry->size = exif_format_get_size (entry->format) * entry->components;
-      entry->data = g_malloc (entry->size);
-    } else if (entry->tag == EXIF_TAG_GPS_LATITUDE
-        || entry->tag == EXIF_TAG_GPS_LONGITUDE) {
-      entry->format = EXIF_FORMAT_RATIONAL;
-      entry->components = 3;
-      entry->size = exif_format_get_size (entry->format) * entry->components;
-      entry->data = g_malloc (entry->size);
-    }
-  }
-
   if (type == GST_TYPE_FRACTION) {
     const GValue *gvalue = gst_tag_list_get_value_index (list, tag, 0);
     gint numerator = gst_value_get_fraction_numerator (gvalue);
@@ -891,35 +684,9 @@ metadatamux_exif_for_each_tag_in_list (const GstTagList * list,
         break;
       case EXIF_FORMAT_RATIONAL:
       {
-        ExifRational r;
+        ExifRational r = { numerator, denominator };
 
-        if (entry->tag == EXIF_TAG_GPS_ALTITUDE) {
-
-          ExifEntry *ref_entry = NULL;
-
-          ref_entry = exif_data_get_entry (ed, EXIF_TAG_GPS_ALTITUDE_REF);
-          if (ref_entry) {
-            exif_entry_ref (ref_entry);
-          } else {
-            ref_entry = exif_entry_new ();
-            exif_content_add_entry (ed->ifd[EXIF_IFD_GPS], ref_entry);
-            exif_entry_initialize (ref_entry, EXIF_TAG_GPS_ALTITUDE_REF);
-          }
-          if (ref_entry->data == NULL) {
-            ref_entry->format = EXIF_FORMAT_BYTE;
-            ref_entry->components = 1;
-            ref_entry->size = 1;
-            ref_entry->data = g_malloc (1);
-          }
-          /* if n * d > 0 */
-          if (IS_FRACT_POSITIVE (numerator, denominator)) {
-            ref_entry->data[0] = 0;
-          } else {
-            ref_entry->data[0] = 1;
-          }
-          exif_entry_unref (ref_entry);
-
-        }
+        exif_set_rational (entry->data, byte_order, r);
         if (entry->tag == EXIF_TAG_X_RESOLUTION ||
             entry->tag == EXIF_TAG_Y_RESOLUTION) {
           ExifEntry *unit_entry = NULL;
@@ -933,28 +700,11 @@ metadatamux_exif_for_each_tag_in_list (const GstTagList * list,
               exif_set_short (unit_entry->data, byte_order, 2);
           }
         }
-        r.numerator = numerator;
-        r.denominator = denominator;
-        if (numerator < 0)
-          r.numerator = -numerator;
-        if (denominator < 0)
-          r.denominator = -denominator;
-        exif_set_rational (entry->data, byte_order, r);
       }
         break;
       default:
         break;
     }
-  } else if (type == GST_TYPE_BUFFER) {
-    const GValue *val = NULL;
-    GstBuffer *buf;
-
-    val = gst_tag_list_get_value_index (list, tag, 0);
-    buf = gst_value_get_buffer (val);
-    entry->components = GST_BUFFER_SIZE (buf);
-    entry->size = GST_BUFFER_SIZE (buf);
-    entry->data = g_malloc (entry->size);
-    memcpy (entry->data, GST_BUFFER_DATA (buf), entry->size);
   } else {
 
     switch (type) {
@@ -963,59 +713,10 @@ metadatamux_exif_for_each_tag_in_list (const GstTagList * list,
         gchar *value = NULL;
 
         if (gst_tag_list_get_string (list, tag, &value)) {
-
-          if (entry->tag == EXIF_TAG_DATE_TIME_DIGITIZED
-              || entry->tag == EXIF_TAG_DATE_TIME
-              || entry->tag == EXIF_TAG_DATE_TIME_ORIGINAL) {
-            GString *datetime = g_string_new_len (value,
-                20);            /* enough memory to hold "YYYY:MM:DD HH:MM:SS" */
-
-            if (metadatamux_exif_convert_from_datetime (datetime)) {
-            } else {
-              GST_ERROR ("Unexpected date & time format for %s", tag);
-            }
-            g_free (value);
-            value = datetime->str;
-            g_string_free (datetime, FALSE);
-          } else if (entry->tag == EXIF_TAG_GPS_LATITUDE
-              || entry->tag == EXIF_TAG_GPS_LONGITUDE) {
-            char ref;
-
-            if (metadatamux_exif_convert_from_gps (entry->data, value, &ref)) {
-              ExifEntry *ref_entry = NULL;
-              const ExifTag ref_tag = entry->tag == EXIF_TAG_GPS_LATITUDE ?
-                  EXIF_TAG_GPS_LATITUDE_REF : EXIF_TAG_GPS_LONGITUDE_REF;
-
-              ref_entry = exif_data_get_entry (ed, ref_tag);
-              if (ref_entry) {
-                exif_entry_ref (ref_entry);
-              } else {
-                ref_entry = exif_entry_new ();
-                exif_content_add_entry (ed->ifd[EXIF_IFD_GPS], ref_entry);
-                exif_entry_initialize (ref_entry, ref_tag);
-              }
-              if (ref_entry->data == NULL) {
-                ref_entry->format = EXIF_FORMAT_ASCII;
-                ref_entry->components = 2;
-                ref_entry->size = 2;
-                ref_entry->data = g_malloc (2);
-              }
-              ref_entry->data[0] = ref;
-              ref_entry->data[1] = 0;
-              exif_entry_unref (ref_entry);
-            }
-            /* has already been add and it is not an Exif ASCII type */
-            g_free (value);
-            value = NULL;
-          }
-          if (value) {
-            entry->components = strlen (value) + 1;
-            entry->size =
-                exif_format_get_size (entry->format) * entry->components;
-            entry->data = (guint8 *) value;
-            value = NULL;
-          }
-
+          entry->components = strlen (value) + 1;
+          entry->size =
+              exif_format_get_size (entry->format) * entry->components;
+          entry->data = (guint8 *) value;
         }
       }
         break;
@@ -1066,373 +767,5 @@ done:
 
 }
 
-/*
- * metadataparse_exif_convert_to_datetime:
- * @dt: string containing date_time in format "YYYY:MM:DD HH:MM:SS"
- *
- * This function converts a exif date_and_time string @dt into the format
- * specified by http://www.w3.org/TR/1998/NOTE-datetime-19980827, in which a 
- * subset of ISO RFC 8601 used by XMP.
- * @dt->allocated_len must be not less than 21 to hold enough memory
- * hold "YYYY:MM:DD HH:MM:SS" without additional allocation
- *
- * Returns:
- * <itemizedlist>
- * <listitem><para>#TRUE if succeded
- * </para></listitem>
- * <listitem><para>#FALSE if failed
- * </para></listitem>
- * </itemizedlist>
- */
-
-static gboolean
-metadataparse_exif_convert_to_datetime (GString * dt)
-{
-
-  /* "YYYY:MM:DD HH:MM:SS" */
-  /*  012345678901234567890 */
-
-  if (dt->allocated_len < 20)
-    return FALSE;
-
-  /* Fix me: Ideally would be good to get the time zone from othe Exif tag
-   * for the time being, just use local time as explained in XMP specification
-   * (converting from EXIF to XMP date and time) */
-
-  dt->str[4] = '-';
-  dt->str[7] = '-';
-  dt->str[10] = 'T';
-  dt->str[19] = '\0';
-
-  return TRUE;
-
-}
-
-
-/*
- * metadatamux_exif_convert_from_datetime:
- * @dt: string containing date_time in format specified by
- * http://www.w3.org/TR/1998/NOTE-datetime-19980827
- *
- * This function converts a date_and_time string @dt as specified by
- * http://www.w3.org/TR/1998/NOTE-datetime-19980827, in which a 
- * subset of ISO RFC 8601 used by XMP, into Exif date_time format.
- * @dt->allocated_len must be not less than 20 to hold enough memory
- * hold "YYYY:MM:DD HH:MM:SS" without additional allocation
- *
- * Returns:
- * <itemizedlist>
- * <listitem><para>#TRUE if succeded
- * </para></listitem>
- * <listitem><para>#FALSE if failed
- * </para></listitem>
- * </itemizedlist>
- */
-
-static gboolean
-metadatamux_exif_convert_from_datetime (GString * dt)
-{
-  gboolean ret = TRUE;
-  char *p = dt->str;
-
-  if (dt->allocated_len < 20)
-    goto error;
-
-  /* check YYYY */
-
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-
-  if (*p == '\0') {
-    sprintf (p, ":01:01 00:00:00");
-    goto done;
-  } else if (*p == '-') {
-    *p++ = ':';
-  } else
-    goto error;
-
-  /* check MM */
-
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-
-  if (*p == '\0') {
-    sprintf (p, ":01 00:00:00");
-    goto done;
-  } else if (*p == '-') {
-    *p++ = ':';
-  } else
-    goto error;
-
-  /* check DD */
-
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-
-  if (*p == '\0') {
-    sprintf (p, " 00:00:00");
-    goto done;
-  } else if (*p == 'T') {
-    *p++ = ' ';
-  } else
-    goto error;
-
-  /* check hh */
-
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-
-  if (*p++ != ':')
-    goto error;
-
-  /* check mm */
-
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-
-  if (*p == ':') {
-    p++;
-  } else if (*p == 'Z' || *p == '+' || *p == '-') {
-    /* FIXME: in case of '+' or '-', it would be better to also fill another
-     * EXIF tag in order to save, somehow the time zone info */
-    sprintf (p, ":00");
-    goto done;
-  } else
-    goto error;
-
-  /* check ss */
-
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-  if (IS_NUMBER (*p))
-    p++;
-  else
-    goto error;
-
-  *p = '\0';
-
-  /* if here, everything is ok */
-  goto done;
-error:
-
-  ret = FALSE;
-
-done:
-
-  /* FIXME: do we need to check if the date is valid ? */
-
-  if (ret)
-    dt->len = 19;
-  return ret;
-
-}
-
-/*
- * metadatamux_exif_convert_from_gps:
- * @data: pointer to an array of 3 ExifRational in which gps will be stored
- * @lt: a string containing the gps coordinate formated as "DDD,MM,SSk"
- * or "DDD,MM.mmk" (this is the same as specified in XMP).
- * @ref: at the end will store the reference ('N', 'S', 'E', 'W')
- *
- * This function converts from the format "DDD,MM,SSk" or "DDD,MM.mmk"
- * (the same as specified in XMP) into Exif coordinates.
- * D- degrees, M- minutes, S- seconds, k- 'N', 'S', 'E', 'W'
- * (North, South, East, West)
- *
- * Returns:
- * <itemizedlist>
- * <listitem><para>%TRUE if converted sucessfull
- * </para></listitem>
- * <listitem><para>%FALSE if @lt is bad formated
- * </para></listitem>
- * </itemizedlist>
- */
-
-static gboolean
-metadatamux_exif_convert_from_gps (guint8 * data, const char *lt, char *ref)
-{
-  /* "DDD,MM,SSk" or "DDD,MM.mmk" */
-  /*  0123456789      0123456789 */
-  gboolean ret = TRUE;
-  char *p = (char *) lt;
-  ExifRational *rt = (ExifRational *) data;
-
-  if (strlen (lt) != 10)
-    goto error;
-
-  if (lt[6] == ',' || lt[6] == '.') {
-    if (IS_NUMBER (*p) && IS_NUMBER (*(p + 1)) && IS_NUMBER (*(p + 2))) {
-      rt->numerator = CHAR_TO_INT (*p) * 100;
-      p++;
-      rt->numerator += CHAR_TO_INT (*p) * 10;
-      p++;
-      rt->numerator += CHAR_TO_INT (*p);
-      p++;
-      rt->denominator = 1;
-    } else {
-      goto error;
-    }
-    p++;
-    rt++;
-    if (IS_NUMBER (*p) && IS_NUMBER (*(p + 1))) {
-      rt->numerator = CHAR_TO_INT (*p) * 10;
-      p++;
-      rt->numerator += CHAR_TO_INT (*p);
-      p++;
-      rt->denominator = 1;
-    } else {
-      goto error;
-    }
-    p++;
-    rt++;
-    if (IS_NUMBER (*p) && IS_NUMBER (*(p + 1))) {
-      rt->numerator = CHAR_TO_INT (*p) * 10;
-      p++;
-      rt->numerator += CHAR_TO_INT (*p);
-      p++;
-      rt->denominator = 1;
-    } else {
-      goto error;
-    }
-  } else {
-    goto error;
-  }
-
-  if (lt[9] != 'N' && lt[9] != 'S' && lt[9] != 'E' && lt[9] != 'W')
-    goto error;
-
-  *ref = lt[9];
-
-  goto done;
-error:
-
-  ret = FALSE;
-
-done:
-
-  return ret;
-
-}
-
-/*
- * metadatamux_exif_convert_from_gps:
- * @data: pointer to an array of 3 ExifRational from which gps will be read
- * @lt: at the end this will have the gps coordinate formated as "DDD,MM,SSk"
- * or "DDD,MM.mmk" (this is the same as specified in XMP).
- * @exif_tag: EXIF_TAG_GPS_LATITUDE or EXIF_TAG_GPS_LONGITUDE
- * @meudata: at the end will store the reference ('N', 'S', 'E', 'W')
- * in @meudata->latitude_ref or meudata->longitude_ref depending on @exif_tag
- *
- * This function converts from Exif coordinates to the format "DDD,MM,SSk"
- * or "DDD,MM.mmk" (the same as specified in XMP).
- * D- degrees, M- minutes, S- seconds, k- 'N', 'S', 'E', 'W'
- * (North, South, East, West)
- * Precondition: @lt->allocated_len must be at least 11.
- *
- * Returns:
- * <itemizedlist>
- * <listitem><para>%TRUE if converted sucessfull
- * </para></listitem>
- * <listitem><para>%FALSE if error
- * </para></listitem>
- * </itemizedlist>
- */
-
-static gboolean
-metadataparse_exif_convert_to_gps (const guint8 * data, GString * lt,
-    const int exif_tag, const MEUserData * meudata)
-{
-  ExifRational *rt = (ExifRational *) data;
-  char *str = lt->str;
-  gboolean ret = TRUE;
-  char ref;
-
-  if (lt->allocated_len < 11)
-    goto error;
-
-  if (exif_tag == EXIF_TAG_GPS_LATITUDE)
-    ref = meudata->latitude_ref;
-  else if (exif_tag == EXIF_TAG_GPS_LONGITUDE)
-    ref = meudata->longitude_ref;
-  else
-    goto error;
-
-  /* DDD - degrees */
-
-  sprintf (str, "%03u,", rt->numerator / rt->denominator);
-  rt++;
-  str += 4;
-
-  /* MM - minutes and SS - seconds */
-
-  if (rt->numerator % rt->denominator) {
-    sprintf (str, "%05.02f", (float) rt->numerator / (float) rt->denominator);
-    str += 5;
-    *str++ = ref;
-    *str = '\0';
-  } else {
-    sprintf (str, "%02u,", rt->numerator / rt->denominator);
-    str += 3;
-    rt++;
-    sprintf (str, "%02u", rt->numerator / rt->denominator);
-    str += 2;
-    *str++ = ref;
-    *str = '\0';
-  }
-
-  /* if here, everything is ok */
-  goto done;
-error:
-
-  ret = FALSE;
-
-done:
-
-  /* FIXME: do we need to check if the date is valid ? */
-
-  if (ret)
-    lt->len = 10;
-  return ret;
-}
 
 #endif /* else (ifndef HAVE_EXIF) */

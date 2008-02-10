@@ -137,30 +137,6 @@ GString *filename = NULL;
  */
 
 static void
-dump_tag_buffer(const char *tag, guint8 * buf, guint32 size)
-{
-  guint32 i;
-  printf("\nDumping %s (size = %u)\n\n", tag, size);
-
-  for(i=0; i<size; ++i) {
-
-    if (i % 16 == 0)
-      printf("%04x:%04x | ", i >> 16, i & 0xFFFF);
-
-    printf("%02x", buf[i]);
-
-    if (i % 16 != 15)
-      printf(" ");
-    else
-      printf("\n");
-
-  }
-
-  printf("\n\n");
-
-}
-
-static void
 insert_tag_on_tree (const GstTagList * list, const gchar * tag,
     gpointer user_data)
 {
@@ -174,13 +150,6 @@ insert_tag_on_tree (const GstTagList * list, const gchar * tag,
   if (gst_tag_get_type (tag) == G_TYPE_STRING) {
     if (!gst_tag_list_get_string_index (list, tag, 0, &str))
       g_assert_not_reached ();
-  } else if ( gst_tag_get_type (tag) == GST_TYPE_BUFFER ) {
-    const GValue *val = NULL;
-    GstBuffer *buf;
-    val = gst_tag_list_get_value_index (list, tag, 0);
-    buf = gst_value_get_buffer (val);
-    dump_tag_buffer(tag, GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf));
-    str = g_strdup("It has been printed to stdout");
   } else {
     str = g_strdup_value_contents (gst_tag_list_get_value_index (list, tag, 0));
   }
@@ -246,8 +215,7 @@ change_tag_list (GstTagList ** list, const gchar * tag, const gchar * value)
       }
         break;
       default:
-        g_printerr ("Tags of type '%s' are not supported yet for editing"
-                    " by this application.\n",
+        g_printerr ("Tags of type '%s' are not supported yet.\n",
             g_type_name (type));
         break;
     }

@@ -1,3 +1,13 @@
+2008-02-10  Edgard Lima,,,,  <edgard.lima@indt.org.br>
+
+	* ext/metadata/TODO:
+	* ext/metadata/metadata_mapping.htm:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/metadatatags.h:
+	* tests/icles/metadata_editor.c:
+	  Revert changes to 2008-02-09 due to frozen.
+
 2008-02-10  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/ivorbis/vorbisfile.c:

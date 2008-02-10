@@ -364,97 +364,28 @@ metadata_tags_exif_register (void)
       "The name of the first known tool used to create the resource."
       " Or firmware or driver version of device", NULL);
 
-  /* date and time tags */
-  /* formated as subset of ISO RFC 8601 as described in
-   * http://www.w3.org/TR/1998/NOTE-datetime-19980827
-   * which is:
-   * YYYY
-   * YYYY-MM
-   * YYYY-MM-DD
-   * YYYY-MM-DDThh:mmTZD
-   * YYYY-MM-DDThh:mm:ssTZD
-   * YYYY-MM-DDThh:mm:ss.sTZD
-   * where:
-   * YYYY = four-digit year
-   * MM = two-digit month (01=January)
-   * DD = two-digit day of month (01 through 31)
-   * hh = two digits of hour (00 through 23)
-   * mm = two digits of minute (00 through 59)
-   * ss = two digits of second (00 through 59)
-   * s = one or more digits representing a decimal fraction of a second
-   * TZD = time zone designator (Z or +hh:mm or -hh:mm)
-   */
-
-  gst_tag_register (GST_TAG_DATE_TIME_DIGITIZED, GST_TAG_FLAG_META,
-      G_TYPE_STRING, GST_TAG_DATE_TIME_DIGITIZED,
-      "Date/Time of image digitized", NULL);
-
-  gst_tag_register (GST_TAG_DATE_TIME_MODIFIED, GST_TAG_FLAG_META,
-      G_TYPE_STRING, GST_TAG_DATE_TIME_MODIFIED,
-      "Date/Time of image was last modified", NULL);
-
-  gst_tag_register (GST_TAG_DATE_TIME_ORIGINAL, GST_TAG_FLAG_META,
-      G_TYPE_STRING, GST_TAG_DATE_TIME_ORIGINAL,
-      "Date/Time of original image taken", NULL);
-
   /* devices tags */
 
   gst_tag_register (GST_TAG_DEVICE_MAKE, GST_TAG_FLAG_META,
       G_TYPE_STRING, GST_TAG_DEVICE_MAKE,
       "The manufacturer of the recording equipment", NULL);
-
   gst_tag_register (GST_TAG_DEVICE_MODEL, GST_TAG_FLAG_META, G_TYPE_STRING,
       GST_TAG_DEVICE_MODEL, "The model name or model number of the equipment",
       NULL);
-
-  /* exif specific tags */
-
-  gst_tag_register (GST_TAG_EXIF_MAKER_NOTE, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, GST_TAG_EXIF_MAKER_NOTE, "Camera private data", NULL);
 
   /* image tags */
 
   gst_tag_register (GST_TAG_IMAGE_HEIGHT, GST_TAG_FLAG_META,
       G_TYPE_UINT, GST_TAG_IMAGE_HEIGHT, "Image height in pixels", NULL);
-
   gst_tag_register (GST_TAG_IMAGE_WIDTH, GST_TAG_FLAG_META,
       G_TYPE_UINT, GST_TAG_IMAGE_WIDTH, "Image width in pixels", NULL);
 
   gst_tag_register (GST_TAG_IMAGE_XRESOLUTION, GST_TAG_FLAG_META,
       GST_TYPE_FRACTION, GST_TAG_IMAGE_XRESOLUTION,
       "Horizontal resolution in pixels per inch", NULL);
-
   gst_tag_register (GST_TAG_IMAGE_YRESOLUTION, GST_TAG_FLAG_META,
       GST_TYPE_FRACTION, GST_TAG_IMAGE_YRESOLUTION,
       "Vertical resolution in pixels per inch", NULL);
-
-  /* GPS tags */
-
-  /* Altitude:
-   * positive values means above the sea level
-   * negative values means under the sea level
-   */
-
-  gst_tag_register (GST_TAG_GPS_ALTITUDE, GST_TAG_FLAG_META,
-      GST_TYPE_FRACTION, GST_TAG_GPS_ALTITUDE, "Altitude", NULL);
-
-  /* Latitude:
-   * "DDD,MM,SSk" or "DDD,MM.mmk" fixed size string where:
-   * D- degrees, M- minutes, S-seconds,
-   * mm- fraction of minutes, k- N (north) or S (south)
-   */
-
-  gst_tag_register (GST_TAG_GPS_LATITUDE, GST_TAG_FLAG_META,
-      G_TYPE_STRING, GST_TAG_GPS_LATITUDE, "Latitude", NULL);
-
-  /* Longitude:
-   * "DDD,MM,SSk" or "DDD,MM.mmk" fixed size string where:
-   * D- degrees, M- minutes, S-seconds,
-   * mm- fraction of minutes, k- N (north) or S (south)
-   */
-
-  gst_tag_register (GST_TAG_GPS_LONGITUDE, GST_TAG_FLAG_META,
-      G_TYPE_STRING, GST_TAG_GPS_LONGITUDE, "Longitude", NULL);
 
 }
 
