@@ -1,3 +1,14 @@
+2008-02-10  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/TODO:
+	* ext/metadata/metadata_mapping.htm:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/metadatatags.h:
+	* tests/icles/metadata_editor.c:
+	  Map Date-Time and GPS tags.
+	  
+
 2008-02-09  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/selector/Makefile.am:
