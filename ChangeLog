@@ -2,7 +2,7 @@
 
 	* ext/ivorbis/vorbisfile.c:
 	Trivial fix for build warning.
-	Patch by: Josep Torre Valles <josep@fluendo.com>
+	Patch by: Josep Torra Valles <josep@fluendo.com>
 	Fixes: #515588
 
 2008-02-10  Edgard Lima  <edgard.lima@indt.org.br>
@@ -335,7 +335,7 @@
 
 2008-02-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
-	Patch by: Josep Torre Valles <josep@fluendo.com>
+	Patch by: Josep Torra Valles <josep@fluendo.com>
 
 	* gst/mpegvideoparse/mpegvideoparse.c: (gst_mpegvideoparse_flush):
 	Flush packetizer too.
@@ -5430,7 +5430,7 @@
 
 2007-08-08  Wim Taymans  <wim.taymans@gmail.com>
 
-	Patch by: Josep Torre Valles <josep@fluendo.com>
+	Patch by: Josep Torra Valles <josep@fluendo.com>
 
 	* docs/plugins/gst-plugins-bad-plugins.args:
 	* ext/libmms/gstmms.c: (gst_mms_class_init), (gst_mms_init),
