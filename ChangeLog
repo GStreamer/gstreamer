@@ -1,3 +1,10 @@
+2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/lame/gstlame.c: (gst_lame_setup):
+	Don't leak the allowed caps.
+	* tests/check/pipelines/lame.c: (GST_START_TEST):
+	Stop leaking all buffers. Fixes bug #515575.
+
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/mpegaudioparse/plugin.c:

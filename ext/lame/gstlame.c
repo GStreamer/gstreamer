@@ -1200,6 +1200,8 @@ gst_lame_setup (GstLame * lame)
       GST_DEBUG_OBJECT (lame, "Letting lame choose sample rate");
       lame_set_out_samplerate (lame->lgf, 0);
     }
+    gst_caps_unref (allowed_caps);
+    allowed_caps = NULL;
   } else {
     GST_DEBUG_OBJECT (lame, "No peer yet, letting lame choose sample rate");
     lame_set_out_samplerate (lame->lgf, 0);
