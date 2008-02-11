@@ -288,7 +288,11 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       }
 
       if (mimdec->last_ts != -1) {
-        mimdec->gst_timestamp += (mimdec->current_ts - mimdec->last_ts) * GST_MSECOND;
+        int diff = mimdec->current_ts - mimdec->last_ts;
+        if (diff < 0 || diff > 5000) {
+          diff = 1000;
+        }
+        mimdec->gst_timestamp += diff * GST_MSECOND;
       }
       GST_BUFFER_TIMESTAMP(out_buf) = mimdec->gst_timestamp;
       mimdec->last_ts = mimdec->current_ts;
