@@ -395,7 +395,6 @@ gst_xvimage_buffer_get_type (void)
 
 /* X11 stuff */
 
-#ifdef HAVE_XSHM
 static gboolean error_caught = FALSE;
 
 static int
@@ -409,6 +408,7 @@ gst_xvimagesink_handle_xerror (Display * display, XErrorEvent * xevent)
   return 0;
 }
 
+#ifdef HAVE_XSHM
 /* This function checks that it is actually really possible to create an image
    using XShm */
 static gboolean

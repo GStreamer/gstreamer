@@ -1,3 +1,11 @@
+2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Branko Čibej <brane at xbc dot nu>
+
+	* sys/xvimage/xvimagesink.c:
+	Fix build of xvimagesink if we don't have XShm, e.g. on Mac OS X.
+	Fixes bug #515654.
+
 2008-02-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/playback/gstplaybasebin.c:
