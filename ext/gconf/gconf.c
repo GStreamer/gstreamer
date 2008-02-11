@@ -180,6 +180,14 @@ gst_gconf_render_bin_with_default (const gchar * bin,
     ret = gst_parse_bin_from_description (bin, TRUE, &err);
 
   if (ret == NULL || err != NULL) {
+    if (err) {
+      GST_DEBUG ("Could not create audio sink from GConf settings: %s",
+          err->message);
+      g_error_free (err);
+    } else {
+      GST_DEBUG ("Could not create audio sink from GConf settings");
+    }
+
     ret = gst_element_factory_make (default_sink, NULL);
 
     if (!ret)

@@ -1,3 +1,9 @@
+2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/gconf/gconf.c: (gst_gconf_render_bin_with_default):
+	Use and unset the GError when pipeline creation fails instead of
+	simply leaking it. Fixes bug #515704.
+
 2008-02-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/audiofx/audioamplify.c:
