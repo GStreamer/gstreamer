@@ -946,6 +946,8 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
 
     if (playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME) {
       chain->volume = gst_element_factory_make ("volume", "volume");
+      if (chain->volume == NULL)
+        goto no_volume;
       /* configure with the latest volume */
       g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
       gst_bin_add (bin, chain->volume);
@@ -987,13 +989,21 @@ no_audioconvert:
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }
-
 no_audioresample:
   {
     post_missing_element_message (playsink, "audioresample");
     GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "audioresample"), ("possibly a liboil version mismatch?"));
+    free_chain ((GstPlayChain *) chain);
+    return NULL;
+  }
+no_volume:
+  {
+    post_missing_element_message (playsink, "volume");
+    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "volume"), ("possibly a liboil version mismatch?"));
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }

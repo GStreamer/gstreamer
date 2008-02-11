@@ -1,5 +1,12 @@
 2008-02-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstplaybin.c: (gen_audio_element):
+	* gst/playback/gstplaysink.c: (gen_audio_chain):
+	  Handle case where we can't create the volume element a bit
+	  better (#514307).
+
+2008-02-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_check_get_range):
 	* ext/gnomevfs/gstgnomevfsuri.c: (gst_gnomevfs_get_supported_uris):
 	  Add support for https protocol. Fixes #510229.

@@ -1052,6 +1052,8 @@ gen_audio_element (GstPlayBin * play_bin)
   gst_bin_add (GST_BIN_CAST (element), scale);
 
   volume = gst_element_factory_make ("volume", "volume");
+  if (volume == NULL)
+    goto no_volume;
   g_object_set (G_OBJECT (volume), "volume", play_bin->volume, NULL);
   play_bin->volume_element = volume;
   gst_bin_add (GST_BIN_CAST (element), volume);
@@ -1092,13 +1094,21 @@ no_audioconvert:
     gst_object_unref (element);
     return NULL;
   }
-
 no_audioresample:
   {
     post_missing_element_message (play_bin, "audioresample");
     GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "audioresample"), ("possibly a liboil version mismatch?"));
+    gst_object_unref (element);
+    return NULL;
+  }
+no_volume:
+  {
+    post_missing_element_message (play_bin, "volume");
+    GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "volume"), ("possibly a liboil version mismatch?"));
     gst_object_unref (element);
     return NULL;
   }
