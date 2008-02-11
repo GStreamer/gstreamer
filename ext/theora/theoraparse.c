@@ -76,7 +76,7 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static GstElementDetails theora_parse_details = {
-  "TheoraParse",
+  "Theora video parser",
   "Codec/Parser/Video",
   "parse raw theora streams",
   "Andy Wingo <wingo@pobox.com>"

@@ -1,5 +1,11 @@
 2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/theora/theoraparse.c:
+	Fix long description of the theora parser to be more verbose than just
+	the type name.
+
+2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Branko Čibej <brane at xbc dot nu>
 
 	* sys/xvimage/xvimagesink.c:
