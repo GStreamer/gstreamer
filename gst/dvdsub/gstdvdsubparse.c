@@ -108,7 +108,7 @@ gst_dvd_sub_parse_init (GstDvdSubParse * parse, GstDvdSubParseClass * klass)
   parse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_use_fixed_caps (parse->srcpad);
   gst_pad_set_caps (parse->srcpad,
-      gst_pad_template_get_caps (gst_static_pad_template_get (&src_template)));
+      gst_static_pad_template_get_caps (&src_template));
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 
   /* remainder */

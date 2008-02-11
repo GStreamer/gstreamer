@@ -1,5 +1,10 @@
 2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/dvdsub/gstdvdsubparse.c: (gst_dvd_sub_parse_init):
+	Stop leaking src pad templates. Fixes bug #515708.
+
+2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/mpegaudioparse/gstxingmux.c: (generate_xing_header):
 	Correctly write the size in bytes on big endian systems.
 	Fixes bug #515725.
