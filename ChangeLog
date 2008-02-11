@@ -1,5 +1,11 @@
 2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/mpegaudioparse/gstxingmux.c: (generate_xing_header):
+	Correctly write the size in bytes on big endian systems.
+	Fixes bug #515725.
+
+2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/lame/gstlame.c: (gst_lame_setup):
 	Don't leak the allowed caps.
 	* tests/check/pipelines/lame.c: (GST_START_TEST):

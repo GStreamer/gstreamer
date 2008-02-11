@@ -330,12 +330,19 @@ generate_xing_header (GstXingMux * xing)
   }
 
   if (byte_count != 0) {
-    GST_DEBUG ("Setting number of bytes to %u", byte_count);
-    byte_count = GUINT32_TO_BE (byte_count);
-    memcpy (data, &byte_count, 4);
-    *xing_flags |= GST_XING_BYTES_FIELD;
-    data += 4;
-    byte_count = GUINT32_FROM_BE (byte_count);
+    guint32 nbytes;
+
+    if (byte_count > G_MAXUINT32) {
+      GST_DEBUG ("Too large stream: %" G_GINT64_FORMAT " > %" G_GINT64_FORMAT
+          " bytes", byte_count, G_MAXUINT32);
+    } else {
+      nbytes = byte_count;
+      GST_DEBUG ("Setting number of bytes to %u", nbytes);
+      nbytes = GUINT32_TO_BE (nbytes);
+      memcpy (data, &nbytes, 4);
+      *xing_flags |= GST_XING_BYTES_FIELD;
+      data += 4;
+    }
   }
 
   if (xing->seek_table != NULL && byte_count != 0
