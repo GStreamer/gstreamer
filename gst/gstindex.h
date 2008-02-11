@@ -340,8 +340,11 @@ struct _GstIndex {
   GHashTable		*writers;
   gint			 last_id;
 
+  /* ABI added since 0.10.18 */
+  GDestroyNotify	 resolver_user_data_destroy;
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstIndexClass {
@@ -386,6 +389,9 @@ void			gst_index_set_filter_full	(GstIndex *index,
                                                          GDestroyNotify user_data_destroy);
 void			gst_index_set_resolver		(GstIndex *index,
 		                                         GstIndexResolver resolver, gpointer user_data);
+void			gst_index_set_resolver_full	(GstIndex *index, GstIndexResolver resolver,
+                                                         gpointer user_data,
+                                                         GDestroyNotify user_data_destroy);
 
 gboolean 		gst_index_get_writer_id 	(GstIndex *index, GstObject *writer, gint *id);
 

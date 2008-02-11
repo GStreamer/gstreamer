@@ -227,6 +227,12 @@ gst_index_finalize (GObject * object)
     index->writers = NULL;
   }
 
+  if (index->filter_user_data && index->filter_user_data_destroy)
+    index->filter_user_data_destroy (index->filter_user_data);
+
+  if (index->resolver_user_data && index->resolver_user_data_destroy)
+    index->resolver_user_data_destroy (index->resolver_user_data);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -472,10 +478,33 @@ void
 gst_index_set_resolver (GstIndex * index,
     GstIndexResolver resolver, gpointer user_data)
 {
+  gst_index_set_resolver_full (index, resolver, user_data, NULL);
+}
+
+/**
+ * gst_index_set_resolver_full:
+ * @index: the index to register the resolver on
+ * @resolver: the resolver to register
+ * @user_data: data passed to the resolver function
+ * @user_data_destroy: destroy function for @user_data
+ *
+ * Lets the app register a custom function to map index
+ * ids to writer descriptions.
+ *
+ * Since: 0.10.18
+ */
+void
+gst_index_set_resolver_full (GstIndex * index, GstIndexResolver resolver,
+    gpointer user_data, GDestroyNotify user_data_destroy)
+{
   g_return_if_fail (GST_IS_INDEX (index));
+
+  if (index->resolver_user_data && index->resolver_user_data_destroy)
+    index->resolver_user_data_destroy (index->resolver_user_data);
 
   index->resolver = resolver;
   index->resolver_user_data = user_data;
+  index->resolver_user_data_destroy = user_data_destroy;
   index->method = GST_INDEX_RESOLVER_CUSTOM;
 }
 
