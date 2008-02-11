@@ -523,8 +523,13 @@ set_swparams (GstAlsaSink * alsa)
   /* allow the transfer when at least period_size samples can be processed */
   CHECK (snd_pcm_sw_params_set_avail_min (alsa->handle, params,
           alsa->period_size), set_avail);
+
+#if GST_CHECK_ALSA_VERSION(1,0,16)
+  /* snd_pcm_sw_params_set_xfer_align() is deprecated, alignment is always 1 */
+#else
   /* align all transfers to 1 sample */
   CHECK (snd_pcm_sw_params_set_xfer_align (alsa->handle, params, 1), set_align);
+#endif
 
   /* write the parameters to the playback device */
   CHECK (snd_pcm_sw_params (alsa->handle, params), set_sw_params);
@@ -556,6 +561,7 @@ set_avail:
     snd_pcm_sw_params_free (params);
     return err;
   }
+#if !GST_CHECK_ALSA_VERSION(1,0,16)
 set_align:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
@@ -563,6 +569,7 @@ set_align:
     snd_pcm_sw_params_free (params);
     return err;
   }
+#endif
 set_sw_params:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),

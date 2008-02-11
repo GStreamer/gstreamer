@@ -32,6 +32,12 @@
 #include <alsa/error.h>
 #include <gst/gst.h>
 
+#define GST_CHECK_ALSA_VERSION(major,minor,micro) \
+    (SND_LIB_MAJOR > (major) || \
+     (SND_LIB_MAJOR == (major) && SND_LIB_MINOR > (minor)) || \
+     (SND_LIB_MAJOR == (major) && SND_LIB_MINOR == (minor) && \
+      SND_LIB_SUBMINOR >= (micro)))
+
 GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
 #define GST_CAT_DEFAULT alsa_debug
 

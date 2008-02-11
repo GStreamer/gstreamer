@@ -1,5 +1,14 @@
 2008-02-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/alsa/gstalsa.h: (GST_CHECK_ALSA_VERSION):
+	* ext/alsa/gstalsasink.c: (set_swparams):
+	* ext/alsa/gstalsasrc.c: (set_swparams), (gst_alsasrc_open):
+	  Don't use snd_pcm_sw_params_set_xfer_align() if we're compiling
+	  against libasound >= 1.0.16, since it's been deprecated in
+	  0.10.16, and alignment is always 1 then, apparently. (#512899)
+
+2008-02-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gstplaybin.c: (gen_audio_element):
 	* gst/playback/gstplaysink.c: (gen_audio_chain):
 	  Handle case where we can't create the volume element a bit
