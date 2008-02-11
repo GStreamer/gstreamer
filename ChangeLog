@@ -1,3 +1,10 @@
+2008-02-11  Julien Moutte  <julien@fluendo.com>
+	
+	Patch by: Alan Peevers <peeves@pacbell.net>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_delay): Take appropriate
+	lock when calling alsa methods.
+
 2008-02-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/typefind/gsttypefindfunctions.c:

@@ -849,7 +849,9 @@ gst_alsasink_delay (GstAudioSink * asink)
 
   alsa = GST_ALSA_SINK (asink);
 
+  GST_ALSA_SINK_LOCK (asink);
   res = snd_pcm_delay (alsa->handle, &delay);
+  GST_ALSA_SINK_UNLOCK (asink);
   if (G_UNLIKELY (res < 0)) {
     GST_DEBUG_OBJECT (alsa, "snd_pcm_delay returned %d", res);
     delay = 0;
