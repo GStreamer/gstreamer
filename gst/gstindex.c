@@ -226,6 +226,8 @@ gst_index_finalize (GObject * object)
     g_hash_table_destroy (index->writers);
     index->writers = NULL;
   }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

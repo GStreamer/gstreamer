@@ -1,3 +1,9 @@
+2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstindex.c: (gst_index_finalize):
+	Chain up finalize to the parent class. Fixes leaking the GstObject
+	name and other things.
+
 2008-02-08  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
