@@ -89,6 +89,7 @@ struct _GstFFMpegDec
   gint lowres;
   gboolean direct_rendering;
   gboolean do_padding;
+  gboolean debug_mv;
 
   /* QoS stuff *//* with LOCK */
   gdouble proportion;
@@ -136,6 +137,7 @@ struct _GstFFMpegDecClassParams
 #define DEFAULT_SKIPFRAME		0
 #define DEFAULT_DIRECT_RENDERING	FALSE
 #define DEFAULT_DO_PADDING		TRUE
+#define DEFAULT_DEBUG_MV		FALSE
 
 enum
 {
@@ -143,7 +145,9 @@ enum
   PROP_LOWRES,
   PROP_SKIPFRAME,
   PROP_DIRECT_RENDERING,
-  PROP_DO_PADDING
+  PROP_DO_PADDING,
+  PROP_DEBUG_MV,
+  PROP_LAST
 };
 
 /* A number of function prototypes are given so we can refer to them later. */
@@ -294,6 +298,10 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
         g_param_spec_boolean ("do-padding", "Do Padding",
             "Add 0 padding before decoding data",
             DEFAULT_DO_PADDING, G_PARAM_READWRITE));
+    g_object_class_install_property (gobject_class, PROP_DEBUG_MV,
+        g_param_spec_boolean ("debug-mv", "Debug motion vectors",
+            "Whether ffmpeg should print motion vectors on top of the image",
+	    DEFAULT_DEBUG_MV, G_PARAM_READWRITE));
   }
 
   gstelement_class->change_state = gst_ffmpegdec_change_state;
@@ -335,6 +343,7 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->hurry_up = ffmpegdec->lowres = 0;
   ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
   ffmpegdec->do_padding = DEFAULT_DO_PADDING;
+  ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
 
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
@@ -678,6 +687,10 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   /* for slow cpus */
   ffmpegdec->context->lowres = ffmpegdec->lowres;
   ffmpegdec->context->hurry_up = ffmpegdec->hurry_up;
+
+  /* ffmpeg can draw motion vectors on top of the image (not every decoder
+   * supports it) */
+  ffmpegdec->context->debug_mv = ffmpegdec->debug_mv;
 
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
@@ -2284,6 +2297,10 @@ gst_ffmpegdec_set_property (GObject * object,
     case PROP_DO_PADDING:
       ffmpegdec->do_padding = g_value_get_boolean (value);
       break;
+    case PROP_DEBUG_MV:
+      ffmpegdec->debug_mv = ffmpegdec->context->debug_mv = 
+          g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2308,6 +2325,9 @@ gst_ffmpegdec_get_property (GObject * object,
       break;
     case PROP_DO_PADDING:
       g_value_set_boolean (value, ffmpegdec->do_padding);
+      break;
+    case PROP_DEBUG_MV:
+      g_value_set_boolean (value, ffmpegdec->context->debug_mv);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
