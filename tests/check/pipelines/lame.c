@@ -58,6 +58,7 @@ GST_START_TEST (test_format)
 
   gst_buffer_straw_stop_pipeline (bin, pad);
 
+  gst_buffer_unref (buffer);
   gst_object_unref (pad);
   gst_object_unref (bin);
 }
