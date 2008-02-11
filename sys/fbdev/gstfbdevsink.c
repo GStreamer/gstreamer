@@ -64,6 +64,7 @@ static GstFlowReturn gst_fbdevsink_render (GstBaseSink * bsink,
 static gboolean gst_fbdevsink_start (GstBaseSink * bsink);
 static gboolean gst_fbdevsink_stop (GstBaseSink * bsink);
 
+static void gst_fbdevsink_finalize (GObject * object);
 static void gst_fbdevsink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_fbdevsink_get_property (GObject * object,
@@ -391,6 +392,7 @@ gst_fbdevsink_class_init (GstFBDEVSinkClass * klass)
 
   gobject_class->set_property = gst_fbdevsink_set_property;
   gobject_class->get_property = gst_fbdevsink_get_property;
+  gobject_class->finalize = gst_fbdevsink_finalize;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_fbdevsink_change_state);
@@ -407,6 +409,16 @@ gst_fbdevsink_class_init (GstFBDEVSinkClass * klass)
   gstvs_class->start = GST_DEBUG_FUNCPTR (gst_fbdevsink_start);
   gstvs_class->stop = GST_DEBUG_FUNCPTR (gst_fbdevsink_stop);
 
+}
+
+static void
+gst_fbdevsink_finalize (GObject * object)
+{
+  GstFBDEVSink *fbdevsink = GST_FBDEVSINK (object);
+
+  g_free (fbdevsink->device);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 GType

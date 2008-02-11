@@ -1,5 +1,11 @@
 2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* sys/fbdev/gstfbdevsink.c: (gst_fbdevsink_class_init),
+	(gst_fbdevsink_finalize):
+	Free the device string in finalize. Fixes bug #515722.
+
+2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/xvid/gstxvidenc.c: (gst_xvidenc_init):
 	Unset GValues after using them. Fixes bug #515720.
 
