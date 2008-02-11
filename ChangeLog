@@ -1,3 +1,11 @@
+2008-02-11  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/avi/gstavidemux.c:
+	Revert patch which sends timestamps only on keyframes, as it
+	breaks playback with current gst-ffmpeg.
+
+	Fixes: #515562
+
 2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/multifile/gstmultifilesrc.c: (gst_multi_file_src_create):
