@@ -1,3 +1,8 @@
+2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/Makefile.am:
+	Disable the dvb plugin for the states test. Fixes bug #515567.
+
 2008-02-10  Edgard Lima,,,,  <edgard.lima@indt.org.br>
 
 	* ext/metadata/TODO:
