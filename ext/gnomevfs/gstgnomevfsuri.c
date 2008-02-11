@@ -35,9 +35,10 @@
 gchar **
 gst_gnomevfs_get_supported_uris (void)
 {
-  GnomeVFSURI *uri;
+  /* no dav/davs in the list, because they don't appear to be reliable enough */
   const gchar *uris[] = {
     "http://localhost/bla",
+    "https://localhost/bla",
     "file:///bla",
     "smb://localhost/bla",
     "ftp://localhost/bla",
@@ -46,6 +47,7 @@ gst_gnomevfs_get_supported_uris (void)
     "ssh://localhost/bla",
     "burn://"
   };
+  GnomeVFSURI *uri;
   gchar **result;
   gint n, r = 0;
 

@@ -1,3 +1,9 @@
+2008-02-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_check_get_range):
+	* ext/gnomevfs/gstgnomevfsuri.c: (gst_gnomevfs_get_supported_uris):
+	  Add support for https protocol. Fixes #510229.
+
 2008-02-11  Julien Moutte  <julien@fluendo.com>
 	
 	Patch by: Alan Peevers <peeves@pacbell.net>

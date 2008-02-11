@@ -725,7 +725,7 @@ gst_gnome_vfs_src_check_get_range (GstBaseSrc * basesrc)
   if (protocol == NULL)
     goto undecided;
 
-  if (strcmp (protocol, "http") == 0) {
+  if (strcmp (protocol, "http") == 0 || strcmp (protocol, "https") == 0) {
     GST_LOG_OBJECT (src, "blacklisted protocol '%s', no random access possible"
         " (URI=%s)", protocol, GST_STR_NULL (src->uri_name));
     return FALSE;
