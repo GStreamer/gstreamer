@@ -285,6 +285,8 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
       /* If we've read at least one buffer successfully, not finding the
        * next file is EOS. */
       g_free (filename);
+      if (error != NULL)
+        g_error_free (error);
       return GST_FLOW_UNEXPECTED;
     } else {
       goto handle_error;
@@ -296,6 +298,7 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 
   buf = gst_buffer_new ();
   GST_BUFFER_DATA (buf) = (unsigned char *) data;
+  GST_BUFFER_MALLOCDATA (buf) = GST_BUFFER_DATA (buf);
   GST_BUFFER_SIZE (buf) = size;
   GST_BUFFER_OFFSET (buf) = multifilesrc->offset;
   GST_BUFFER_OFFSET_END (buf) = multifilesrc->offset + size;
@@ -310,12 +313,15 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 
 handle_error:
   {
-    switch (errno) {
-      default:{
-        GST_ELEMENT_ERROR (multifilesrc, RESOURCE, READ,
-            ("Error while reading from file \"%s\".", filename),
-            ("%s", g_strerror (errno)));
-      }
+    if (error != NULL) {
+      GST_ELEMENT_ERROR (multifilesrc, RESOURCE, READ,
+          ("Error while reading from file \"%s\".", filename),
+          ("%s", error->message));
+      g_error_free (error);
+    } else {
+      GST_ELEMENT_ERROR (multifilesrc, RESOURCE, READ,
+          ("Error while reading from file \"%s\".", filename),
+          ("%s", g_strerror (errno)));
     }
     g_free (filename);
     return GST_FLOW_ERROR;

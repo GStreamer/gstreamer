@@ -74,6 +74,7 @@ GST_START_TEST (test_multifilesink)
   fail_if (mfs == NULL);
   mfs_pattern = g_build_filename (my_tmpdir, "%05d", NULL);
   g_object_set (G_OBJECT (mfs), "location", mfs_pattern, NULL);
+  g_object_unref (mfs);
   run_pipeline (pipeline);
   gst_object_unref (pipeline);
 
@@ -117,6 +118,8 @@ GST_START_TEST (test_multifilesrc)
   fail_if (mfs == NULL);
   mfs_pattern = g_build_filename (my_tmpdir, "%05d", NULL);
   g_object_set (G_OBJECT (mfs), "location", mfs_pattern, NULL);
+  g_free (mfs_pattern);
+  g_object_unref (mfs);
   run_pipeline (pipeline);
   gst_object_unref (pipeline);
 
@@ -129,6 +132,7 @@ GST_START_TEST (test_multifilesrc)
   fail_if (mfs == NULL);
   mfs_pattern = g_build_filename (my_tmpdir, "%05d", NULL);
   g_object_set (G_OBJECT (mfs), "location", mfs_pattern, NULL);
+  g_object_unref (mfs);
   run_pipeline (pipeline);
   gst_object_unref (pipeline);
 

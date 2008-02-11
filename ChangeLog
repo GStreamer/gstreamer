@@ -1,5 +1,11 @@
 2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/multifile/gstmultifilesrc.c: (gst_multi_file_src_create):
+	* tests/check/elements/multifile.c: (GST_START_TEST):
+	Close some memory leaks spotted by the unit test. Fixes bug #515697.
+
+2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/gconf/gconf.c: (gst_gconf_render_bin_with_default):
 	Use and unset the GError when pipeline creation fails instead of
 	simply leaking it. Fixes bug #515704.
