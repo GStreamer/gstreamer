@@ -1,3 +1,11 @@
+2008-02-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  Bump rank of jpeg and png typefinders, which will return maximum
+	  probability in the most common cases (thus short-circuiting more
+	  expensive typefinders like the mp3 one for these two quite common
+	  image types).
+
 2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/theora/theoraparse.c:
