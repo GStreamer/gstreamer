@@ -1,5 +1,10 @@
 2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/xvid/gstxvidenc.c: (gst_xvidenc_init):
+	Unset GValues after using them. Fixes bug #515720.
+
+2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/Makefile.am:
 	Disable the dvb plugin for the states test. Fixes bug #515567.
 

@@ -496,6 +496,7 @@ gst_xvidenc_init (GstXvidEnc * xvidenc)
     g_param_value_set_default (pspec, &val);
     g_object_set_property (G_OBJECT (xvidenc), g_param_spec_get_name (pspec),
         &val);
+    g_value_unset (&val);
   }
 
   g_free (pspecs);
