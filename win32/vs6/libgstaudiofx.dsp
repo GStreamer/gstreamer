@@ -108,11 +108,11 @@ SOURCE=..\..\gst\audiofx\audioamplify.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\audiofx\audiochebyshevfreqband.c
+SOURCE=..\..\gst\audiofx\audiochebband.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\audiofx\audiochebyshevfreqlimit.c
+SOURCE=..\..\gst\audiofx\audiocheblimit.c
 # End Source File
 # Begin Source File
 
@@ -129,6 +129,14 @@ SOURCE=..\..\gst\audiofx\audioinvert.c
 # Begin Source File
 
 SOURCE=..\..\gst\audiofx\audiopanorama.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\audiofx\audiowsincband.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\audiofx\audiowsinclimit.c
 # End Source File
 # End Group
 # Begin Group "Header Files"

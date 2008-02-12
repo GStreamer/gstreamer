@@ -29,6 +29,7 @@ win32/vs6/libgstmedian.dsp
 win32/vs6/libgstmonoscope.dsp
 win32/vs6/libgstmulaw.dsp
 win32/vs6/libgstmultipart.dsp
+win32/vs6/libgstpng.dsp
 win32/vs6/libgstqtdemux.dsp
 win32/vs6/libgstrtp.dsp
 win32/vs6/libgstrtsp.dsp

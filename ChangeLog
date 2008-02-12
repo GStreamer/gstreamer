@@ -1,3 +1,10 @@
+2008-02-12  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/MANIFEST:
+	Add libgstpng.dsp to MANIFEST.
+	* win32/vs6/libgstaudiofx.dsp:
+	Add new source files to VS project file.
+
 2008-02-12  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* sys/ximage/gstximagesrc.c:
