@@ -206,6 +206,9 @@ gst_ximage_src_start (GstBaseSrc * basesrc)
   s->last_frame_no = -1;
 #ifdef HAVE_XDAMAGE
   s->last_ximage = NULL;
+  s->damage = None;
+  s->damage_copy_gc = None;
+  s->damage_region = None;
 #endif
   return gst_ximage_src_open_display (s, s->display_name);
 }
@@ -219,6 +222,22 @@ gst_ximage_src_stop (GstBaseSrc * basesrc)
 
   if (src->xcontext) {
     g_mutex_lock (src->x_lock);
+
+#ifdef HAVE_XDAMAGE
+    if (src->damage_copy_gc != None) {
+      XFreeGC (src->xcontext->disp, src->damage_copy_gc);
+      src->damage_copy_gc = None;
+    }
+    if (src->damage_region != None) {
+      XFixesDestroyRegion (src->xcontext->disp, src->damage_region);
+      src->damage_region = None;
+    }
+    if (src->damage != None) {
+      XDamageDestroy (src->xcontext->disp, src->damage);
+      src->damage = None;
+    }
+#endif
+
     ximageutil_xcontext_clear (src->xcontext);
     src->xcontext = NULL;
     g_mutex_unlock (src->x_lock);
