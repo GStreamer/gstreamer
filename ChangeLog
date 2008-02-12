@@ -1,3 +1,13 @@
+2008-02-12  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst-libs/gst/dshow/Makefile.am:
+	* sys/dshowdecwrapper/Makefile.am:
+	* sys/dshowsrcwrapper/Makefile.am:
+	Add Makefiles to win32 plugins and lib.
+	They will need to be tested and probably fixed by developers
+	working with mingw. This is a first step to include source files 
+	with releases.
+	
 2008-02-12  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/dvbbasebin.c:
