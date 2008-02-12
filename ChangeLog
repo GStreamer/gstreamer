@@ -1,10 +1,17 @@
+2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-gio.xml:
+	Remove documentation for the GIO plugin as it was moved to
+	gst-plugins-base. Fixes bug #515964.
+
 2008-02-12  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/xvid/gstxvidenc.c:
 	* gst/vmnc/vmncdec.c:
 	* sys/glsink/glimagesink.c:
 	* sys/glsink/gstgldisplay.c:
-
 	Fix some finalize leaks by chaining up to the parent method.
 
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
