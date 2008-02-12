@@ -214,6 +214,7 @@ gst_directdraw_sink_init_interfaces (GType type)
 
 /* Subclass of GstBuffer which manages buffer_pool surfaces lifetime    */
 static void gst_ddrawsurface_finalize (GstMiniObject * mini_object);
+static GstBufferClass *ddrawsurface_parent_class = NULL;
 
 static void
 gst_ddrawsurface_init (GstDDrawSurface * surface, gpointer g_class)
@@ -231,6 +232,8 @@ static void
 gst_ddrawsurface_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  ddrawsurface_parent_class = g_type_class_peek_parent (g_class);
 
   mini_object_class->finalize = GST_DEBUG_FUNCPTR (gst_ddrawsurface_finalize);
 }
@@ -283,7 +286,7 @@ gst_ddrawsurface_finalize (GstMiniObject * mini_object)
         surface->width, surface->height, ddrawsink->video_width,
         ddrawsink->video_height);
     gst_directdraw_sink_surface_destroy (ddrawsink, surface);
-
+    GST_MINI_OBJECT_CLASS (ddrawsurface_parent_class)->finalize (mini_object);
   } else {
     /* In that case we can reuse the image and add it to our image pool. */
     GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
@@ -296,10 +299,12 @@ gst_ddrawsurface_finalize (GstMiniObject * mini_object)
     ddrawsink->buffer_pool = g_slist_prepend (ddrawsink->buffer_pool, surface);
     g_mutex_unlock (ddrawsink->pool_lock);
   }
+
   return;
 
 no_sink:
   GST_CAT_WARNING (directdrawsink_debug, "no sink found");
+  GST_MINI_OBJECT_CLASS (ddrawsurface_parent_class)->finalize (mini_object);
   return;
 }
 
@@ -407,6 +412,8 @@ gst_directdraw_sink_finalize (GObject * object)
   if (ddrawsink->setup) {
     gst_directdraw_sink_cleanup (ddrawsink);
   }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
