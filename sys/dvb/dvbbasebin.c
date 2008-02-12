@@ -992,8 +992,13 @@ dvb_base_bin_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   if (strcmp (protocol, "dvb") != 0) {
     ret = FALSE;
   } else {
-    ret = set_properties_for_channel (G_OBJECT (dvbbasebin),
-        gst_uri_get_location (uri));
+    gchar *location = gst_uri_get_location (uri);
+
+    if (location != NULL) {
+      ret = set_properties_for_channel (G_OBJECT (dvbbasebin), location);
+      g_free (location);
+    } else
+      ret = FALSE;
   }
 
   /* here is where we parse channels.conf */

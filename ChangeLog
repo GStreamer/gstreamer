@@ -1,3 +1,9 @@
+2008-02-12  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/dvbbasebin.c:
+	Fix leak of location string returned from gst_uri_get_location.
+	Fixes bug #516114
+
 2008-02-12  David Schleef  <ds@schleef.org>
 
 	* configure.ac:
