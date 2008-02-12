@@ -1,3 +1,10 @@
+2008-02-12  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/metadata/Makefile.am:
+	Don't install a header file. We will have to merge these
+	tags into libgsttag after the release and use them from there.
+	Fixes: #515860
+
 2008-02-12  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst-libs/gst/dshow/Makefile.am:
