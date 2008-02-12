@@ -45,7 +45,8 @@ struct _GstRtpMP4GPay
   GstBaseRTPPayload    payload;
 
   GstAdapter   *adapter;
-  GstClockTime  first_ts;
+  GstClockTime  first_timestamp;
+  GstClockTime  first_duration;
   GstClockTime  duration;
 
   gint          rate;

@@ -223,11 +223,9 @@ gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       GstBuffer *buffer;
 
       buffer = gst_value_get_buffer (&v);
-      gst_buffer_ref (buffer);
-      g_value_unset (&v);
-
       gst_caps_set_simple (srccaps,
           "codec_data", GST_TYPE_BUFFER, buffer, NULL);
+      g_value_unset (&v);
     } else {
       g_warning ("cannot convert config to buffer");
     }

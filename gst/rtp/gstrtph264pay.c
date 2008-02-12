@@ -383,6 +383,7 @@ gst_rtp_h264_pay_parse_sps_pps (GstBaseRTPPayload * basepayload,
     GST_DEBUG ("outcaps udpate: profile=%s, sps=%s, pps=%s\n",
         profile, sps, pps);
 
+    g_free (sprops);
     g_free (profile);
     g_free (sps);
     g_free (pps);
@@ -431,6 +432,7 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   if (idxdata < 5) {
     GST_DEBUG_OBJECT (basepayload,
         "Returning GST_FLOW_OK without creating RTP packet");
+    gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
 

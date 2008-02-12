@@ -1,3 +1,28 @@
+2008-02-12  Jan Schmidt  <jan.schmidt@sun.com>
+
+	patch by:  Wim Taymans  <wim.taymans@collabora.co.uk>
+	fixes: #514889
+
+	* gst/rtp/gstrtph264pay.c:
+	* gst/rtp/gstrtpmp4gdepay.c:
+	* gst/rtp/gstrtpmp4gpay.c:
+	* gst/rtp/gstrtpmp4gpay.h:
+	* gst/rtp/gstrtptheorapay.c:
+	* gst/rtp/gstrtpvorbispay.c:
+
+	Fix various leaks shown up in valgrind
+	- free sprops and buffer in error cases in H264 payloader
+	- fix leak in mp4g depayloader when construction the caps
+	- don't leak config string in the mp4g payloader
+	- don't leak buffers and headers in theora and vorbis payloaders
+
+	* tests/check/elements/rtp-payloading.c:
+
+	Fix the RTP data test
+	- Actually send valid amr data to the payloader instead of 20
+	zero-bytes
+	- The mp4g payloader expects codec_data on the caps
+
 2008-02-12  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/MANIFEST:

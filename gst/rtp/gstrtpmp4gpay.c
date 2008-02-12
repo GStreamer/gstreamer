@@ -85,6 +85,8 @@ static void gst_rtp_mp4g_pay_finalize (GObject * object);
 
 static gboolean gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
+static GstStateChangeReturn gst_rtp_mp4g_pay_change_state (GstElement * element,
+    GstStateChange transition);
 static GstFlowReturn gst_rtp_mp4g_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
@@ -143,6 +145,8 @@ gst_rtp_mp4g_pay_class_init (GstRtpMP4GPayClass * klass)
 
   gobject_class->finalize = gst_rtp_mp4g_pay_finalize;
 
+  gstelement_class->change_state = gst_rtp_mp4g_pay_change_state;
+
   gstbasertppayload_class->set_caps = gst_rtp_mp4g_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_mp4g_pay_handle_buffer;
 
@@ -170,6 +174,10 @@ gst_rtp_mp4g_pay_finalize (GObject * object)
   rtpmp4gpay->adapter = NULL;
   g_free (rtpmp4gpay->params);
   rtpmp4gpay->params = NULL;
+
+  if (rtpmp4gpay->config)
+    gst_buffer_unref (rtpmp4gpay->config);
+  rtpmp4gpay->config = NULL;
 
   g_free (rtpmp4gpay->profile);
   rtpmp4gpay->profile = NULL;
@@ -504,7 +512,8 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
     /* marker only if the packet is complete */
     gst_rtp_buffer_set_marker (outbuf, avail <= payload_len);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4gpay->first_ts;
+    GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4gpay->first_timestamp;
+    GST_BUFFER_DURATION (outbuf) = rtpmp4gpay->first_duration;
 
     ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmp4gpay), outbuf);
 
@@ -528,7 +537,8 @@ gst_rtp_mp4g_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   rtpmp4gpay = GST_RTP_MP4G_PAY (basepayload);
 
-  rtpmp4gpay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+  rtpmp4gpay->first_timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  rtpmp4gpay->first_duration = GST_BUFFER_DURATION (buffer);
 
   /* we always encode and flush a full AU */
   gst_adapter_push (rtpmp4gpay->adapter, buffer);
@@ -536,6 +546,29 @@ gst_rtp_mp4g_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   return ret;
 }
+
+static GstStateChangeReturn
+gst_rtp_mp4g_pay_change_state (GstElement * element, GstStateChange transition)
+{
+  GstRtpMP4GPay *rtpmp4gpay;
+  GstStateChangeReturn ret;
+
+  rtpmp4gpay = GST_RTP_MP4G_PAY (element);
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    default:
+      break;
+  }
+  return ret;
+}
+
 
 gboolean
 gst_rtp_mp4g_pay_plugin_init (GstPlugin * plugin)

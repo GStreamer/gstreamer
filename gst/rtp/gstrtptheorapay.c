@@ -79,6 +79,8 @@ GST_BOILERPLATE (GstRtpTheoraPay, gst_rtp_theora_pay, GstBaseRTPPayload,
 
 static gboolean gst_rtp_theora_pay_setcaps (GstBaseRTPPayload * basepayload,
     GstCaps * caps);
+static GstStateChangeReturn gst_rtp_theora_pay_change_state (GstElement *
+    element, GstStateChange transition);
 static GstFlowReturn gst_rtp_theora_pay_handle_buffer (GstBaseRTPPayload * pad,
     GstBuffer * buffer);
 
@@ -108,6 +110,8 @@ gst_rtp_theora_pay_class_init (GstRtpTheoraPayClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gstelement_class->change_state = gst_rtp_theora_pay_change_state;
+
   gstbasertppayload_class->set_caps = gst_rtp_theora_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_theora_pay_handle_buffer;
 
@@ -120,6 +124,18 @@ gst_rtp_theora_pay_init (GstRtpTheoraPay * rtptheorapay,
     GstRtpTheoraPayClass * klass)
 {
   /* needed because of GST_BOILERPLATE */
+}
+
+static void
+gst_rtp_theora_pay_cleanup (GstRtpTheoraPay * rtptheorapay)
+{
+  g_list_foreach (rtptheorapay->headers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (rtptheorapay->headers);
+  rtptheorapay->headers = NULL;
+
+  if (rtptheorapay->packet)
+    gst_buffer_unref (rtptheorapay->packet);
+  rtptheorapay->packet = NULL;
 }
 
 static gboolean
@@ -624,6 +640,8 @@ gst_rtp_theora_pay_handle_buffer (GstBaseRTPPayload * basepayload,
         rtptheorapay->payload_duration += duration;
     }
   }
+  gst_buffer_unref (buffer);
+
 done:
   return ret;
 
@@ -632,24 +650,54 @@ wrong_size:
   {
     GST_ELEMENT_WARNING (rtptheorapay, STREAM, DECODE,
         ("Invalid packet size (1 < %d <= 0xffff)", size), (NULL));
+    gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
 parse_id_failed:
   {
+    gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
 unknown_header:
   {
     GST_ELEMENT_WARNING (rtptheorapay, STREAM, DECODE,
         (NULL), ("Ignoring unknown header received"));
+    gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
 header_error:
   {
     GST_ELEMENT_WARNING (rtptheorapay, STREAM, DECODE,
         (NULL), ("Error initializing header config"));
+    gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
+}
+
+static GstStateChangeReturn
+gst_rtp_theora_pay_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstRtpTheoraPay *rtptheorapay;
+  GstStateChangeReturn ret;
+
+  rtptheorapay = GST_RTP_THEORA_PAY (element);
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_rtp_theora_pay_cleanup (rtptheorapay);
+      break;
+    default:
+      break;
+  }
+  return ret;
 }
 
 gboolean
