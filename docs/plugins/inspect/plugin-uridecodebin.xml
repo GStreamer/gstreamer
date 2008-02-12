@@ -1,8 +1,8 @@
 <plugin>
-  <name>decodebin</name>
-  <description>decoder bin</description>
-  <filename>../../gst/playback/.libs/libgstdecodebin.so</filename>
-  <basename>libgstdecodebin.so</basename>
+  <name>uridecodebin</name>
+  <description>URI Decoder bin</description>
+  <filename>../../gst/playback/.libs/libgstdecodebin2.so</filename>
+  <basename>libgstdecodebin2.so</basename>
   <version>0.10.17.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
@@ -10,11 +10,11 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>decodebin</name>
+      <name>decodebin2</name>
       <longname>Decoder Bin</longname>
       <class>Generic/Bin/Decoder</class>
       <description>Autoplug and decode to raw media</description>
-      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <author>Edward Hervey &lt;edward@fluendo.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -22,6 +22,21 @@
           <presence>always</presence>
           <details>ANY</details>
         </caps>
+        <caps>
+          <name>src%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>uridecodebin</name>
+      <longname>URI Decoder</longname>
+      <class>Generic/Bin/Decoder</class>
+      <description>Autoplug and decode an URI to raw media</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
         <caps>
           <name>src%d</name>
           <direction>source</direction>

@@ -193,6 +193,62 @@ gst_gdp_pay_plugin_init
 </SECTION>
 
 <SECTION>
+<FILE>element-giosink</FILE>
+GstGioSink
+<TITLE>giosink</TITLE>
+<SUBSECTION Standard>
+GstGioSinkClass
+GST_GIO_SINK
+GST_GIO_SINK_CLASS
+GST_IS_GIO_SINK
+GST_IS_GIO_SINK_CLASS
+GST_TYPE_GIO_SINK
+gst_gio_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-giosrc</FILE>
+GstGioSrc
+<TITLE>giosrc</TITLE>
+<SUBSECTION Standard>
+GstGioSrcClass
+GST_GIO_SRC
+GST_GIO_SRC_CLASS
+GST_IS_GIO_SRC
+GST_IS_GIO_SRC_CLASS
+GST_TYPE_GIO_SRC
+gst_gio_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-giostreamsink</FILE>
+GstGioStreamSink
+<TITLE>giostreamsink</TITLE>
+<SUBSECTION Standard>
+GstGioStreamSinkClass
+GST_GIO_STREAM_SINK
+GST_GIO_STREAM_SINK_CLASS
+GST_IS_GIO_STREAM_SINK
+GST_IS_GIO_STREAM_SINK_CLASS
+GST_TYPE_GIO_STREAM_SINK
+gst_gio_stream_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-giostreamsrc</FILE>
+GstGioStreamSrc
+<TITLE>giostreamsrc</TITLE>
+<SUBSECTION Standard>
+GstGioStreamSrcClass
+GST_GIO_STREAM_SRC
+GST_GIO_STREAM_SRC_CLASS
+GST_IS_GIO_STREAM_SRC
+GST_IS_GIO_STREAM_SRC_CLASS
+GST_TYPE_GIO_STREAM_SRC
+gst_gio_stream_src_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-multifdsink</FILE>
 <TITLE>multifdsink</TITLE>
 GstMultiFdSink

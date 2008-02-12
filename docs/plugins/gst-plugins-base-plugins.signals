@@ -1,7 +1,7 @@
 <SIGNAL>
 <NAME>GstMultiFdSink::add</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
+<FLAGS>la</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
 </SIGNAL>
@@ -9,7 +9,7 @@ gint  arg1
 <SIGNAL>
 <NAME>GstMultiFdSink::clear</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
+<FLAGS>la</FLAGS>
 GstMultiFdSink *gstmultifdsink
 </SIGNAL>
 
@@ -33,7 +33,7 @@ GstClientStatus  arg2
 <SIGNAL>
 <NAME>GstMultiFdSink::get-stats</NAME>
 <RETURNS>GValueArray*</RETURNS>
-<FLAGS>l</FLAGS>
+<FLAGS>la</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
 </SIGNAL>
@@ -41,7 +41,7 @@ gint  arg1
 <SIGNAL>
 <NAME>GstMultiFdSink::remove</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
+<FLAGS>la</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
 </SIGNAL>
@@ -57,7 +57,7 @@ gint  arg1
 <SIGNAL>
 <NAME>GstMultiFdSink::add-full</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
+<FLAGS>la</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
 gboolean  arg2
@@ -70,7 +70,7 @@ guint64  arg6
 <SIGNAL>
 <NAME>GstMultiFdSink::remove-flush</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
+<FLAGS>la</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
 </SIGNAL>
@@ -263,6 +263,51 @@ GstURIDecodeBin *gsturidecodebin
 
 <SIGNAL>
 <NAME>GstPlayBin2::about-to-finish</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin2 *gstplaybin2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin2::audio-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin2 *gstplaybin2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin2::get-audio-tags</NAME>
+<RETURNS>GstTagList*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin2 *gstplaybin2
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin2::get-text-tags</NAME>
+<RETURNS>GstTagList*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin2 *gstplaybin2
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin2::get-video-tags</NAME>
+<RETURNS>GstTagList*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin2 *gstplaybin2
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin2::text-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin2 *gstplaybin2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin2::video-changed</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
 GstPlayBin2 *gstplaybin2

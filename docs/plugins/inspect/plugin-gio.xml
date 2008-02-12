@@ -1,0 +1,73 @@
+<plugin>
+  <name>gio</name>
+  <description>GIO elements</description>
+  <filename>../../ext/gio/.libs/libgstgio.so</filename>
+  <basename>libgstgio.so</basename>
+  <version>0.10.17.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>giosink</name>
+      <longname>GIO sink</longname>
+      <class>Sink/File</class>
+      <description>Write to any GIO-supported location</description>
+      <author>René Stadler &lt;mail@renestadler.de&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>giosrc</name>
+      <longname>GIO source</longname>
+      <class>Source/File</class>
+      <description>Read from any GIO-supported location</description>
+      <author>René Stadler &lt;mail@renestadler.de&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>giostreamsink</name>
+      <longname>GIO stream sink</longname>
+      <class>Sink</class>
+      <description>Write to any GIO stream</description>
+      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>giostreamsrc</name>
+      <longname>GIO stream source</longname>
+      <class>Source</class>
+      <description>Read from any GIO stream</description>
+      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

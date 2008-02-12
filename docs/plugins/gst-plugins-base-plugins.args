@@ -1921,30 +1921,30 @@
 <ARG>
 <NAME>GstPlayBin2::current-audio</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -2</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Current audio</NICK>
-<BLURB>Currently playing audio stream (-1 = none, -2 = none).</BLURB>
+<BLURB>Currently playing audio stream (-1 = auto).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstPlayBin2::current-text</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -2</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Current Text</NICK>
-<BLURB>Currently playing text stream (-1 = none, -2 = none).</BLURB>
+<BLURB>Currently playing text stream (-1 = auto).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstPlayBin2::current-video</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -2</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Current Video</NICK>
-<BLURB>Currently playing video stream (-1 = auto, -2 = none).</BLURB>
+<BLURB>Currently playing video stream (-1 = auto).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
@@ -2086,5 +2086,45 @@
 <NICK>volume</NICK>
 <BLURB>volume.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGioSink::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>URI location to write to.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGioSrc::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>URI location to read from.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGioStreamSink::stream</NAME>
+<TYPE>GOutputStream*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stream</NICK>
+<BLURB>Stream to write to.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGioStreamSrc::stream</NAME>
+<TYPE>GInputStream*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stream</NICK>
+<BLURB>Stream to read from.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
