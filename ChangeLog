@@ -1,3 +1,8 @@
+2008-02-12  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/vs6/libgstmpegaudioparse.dsp:
+	Add xing files to VS project file.
+
 2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/dvdsub/gstdvdsubparse.c: (gst_dvd_sub_parse_init):

@@ -106,6 +106,14 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\lib\gstreamer-0.10
 
 SOURCE=..\..\gst\mpegaudioparse\gstmpegaudioparse.c
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\mpegaudioparse\gstxingmux.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\mpegaudioparse\plugin.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
