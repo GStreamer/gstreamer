@@ -1,3 +1,9 @@
+2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/debug/efence.c: (gst_fenced_buffer_finalize),
+	(gst_fenced_buffer_class_init):
+	Properly chain up finalize method. Fixes bug #515979.
+
 2008-02-12  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* sys/ximage/gstximagesrc.c:

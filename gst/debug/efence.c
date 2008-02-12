@@ -376,9 +376,13 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "access to data in the buffer is more likely to cause segmentation "
     "faults.  This allocation method is very similar to the debugging tool "
     "\"Electric Fence\".",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
-     static void gst_fenced_buffer_finalize (GstFencedBuffer * buffer)
+
+static GstBufferClass *fenced_buffer_parent_class = NULL;
+
+static void
+gst_fenced_buffer_finalize (GstFencedBuffer * buffer)
 {
   GstFencedBuffer *fenced_buffer;
 
@@ -392,6 +396,9 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
         fenced_buffer->length);
     munmap (fenced_buffer->region, fenced_buffer->length);
   }
+
+  GST_MINI_OBJECT_CLASS (fenced_buffer_parent_class)->
+      finalize (GST_MINI_OBJECT (buffer));
 }
 
 static GstFencedBuffer *
@@ -497,6 +504,8 @@ static void
 gst_fenced_buffer_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  fenced_buffer_parent_class = g_type_class_peek_parent (g_class);
 
   mini_object_class->finalize =
       (GstMiniObjectFinalizeFunction) gst_fenced_buffer_finalize;
