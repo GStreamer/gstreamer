@@ -289,19 +289,6 @@ AC_SUBST(GST_PLUGINS_SELECTED)
 
 dnl *** sys plug-ins ***
 
-dnl OpenGL
-translit(dnm, m, l) AM_CONDITIONAL(USE_OPENGL, true)
-AG_GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
-  PKG_CHECK_MODULES(GL, gl >= 7.1.0, [
-    HAVE_OPENGL="yes"
-    AC_SUBST(GL_CFLAGS)
-    AC_SUBST(GL_LIBS)
-  ],[
-    HAVE_OPENGL=no
-    AC_MSG_RESULT(no)
-  ])
-])
-
 dnl check for QuickTime
 translit(dnm, m, l) AM_CONDITIONAL(USE_QUICKTIME, true)
 AG_GST_CHECK_FEATURE(QUICKTIME, [QuickTime wrapper], qtwrapper, [
@@ -943,7 +930,6 @@ else
 dnl not building plugins with external dependencies,
 dnl but we still need to set the conditionals
 
-AM_CONDITIONAL(USE_OPENGL, false)
 AM_CONDITIONAL(USE_QUICKTIME, false)
 AM_CONDITIONAL(USE_VCD, false)
 AM_CONDITIONAL(USE_ALSA, false)
@@ -1075,7 +1061,6 @@ gst-libs/gst/Makefile
 gst-libs/gst/app/Makefile
 sys/Makefile
 sys/fbdev/Makefile
-sys/glsink/Makefile
 sys/dvb/Makefile
 sys/qtwrapper/Makefile
 sys/vcd/Makefile

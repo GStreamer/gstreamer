@@ -1,3 +1,35 @@
+2008-02-12  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/inspect/plugin-glimagesink.xml:
+	* sys/Makefile.am:
+	* sys/glsink/BUGS:
+	* sys/glsink/Makefile.am:
+	* sys/glsink/color_matrix.c:
+	* sys/glsink/glextensions.c:
+	* sys/glsink/glextensions.h:
+	* sys/glsink/glimagesink.c:
+	* sys/glsink/glimagesink.h:
+	* sys/glsink/gltestsrc.c:
+	* sys/glsink/gltestsrc.h:
+	* sys/glsink/gstglbuffer.c:
+	* sys/glsink/gstglbuffer.h:
+	* sys/glsink/gstglconvert.c:
+	* sys/glsink/gstgldisplay.c:
+	* sys/glsink/gstgldisplay.h:
+	* sys/glsink/gstgldownload.c:
+	* sys/glsink/gstglfilter.c:
+	* sys/glsink/gstglfilter.h:
+	* sys/glsink/gstglfilterexample.c:
+	* sys/glsink/gstgltestsrc.c:
+	* sys/glsink/gstgltestsrc.h:
+	* sys/glsink/gstglupload.c:
+	* sys/glsink/gstopengl.c:
+	  Remove glimagesink, as it's been moved to gst-plugins-gl.
+	  Fixes #516094.
+
 2008-02-12  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Josep Torra Valles <josep@fluendo.com>

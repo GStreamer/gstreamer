@@ -77,7 +77,6 @@
     <xi:include href="xml/plugin-flvdemux.xml" />
     <xi:include href="xml/plugin-freeze.xml" />
     <xi:include href="xml/plugin-gdp.xml" />
-    <xi:include href="xml/plugin-glimagesink.xml" />
     <xi:include href="xml/plugin-gsm.xml" />
     <xi:include href="xml/plugin-gstinterlace.xml" />
     <xi:include href="xml/plugin-gstrtpmanager.xml" />

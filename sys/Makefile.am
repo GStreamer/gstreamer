@@ -28,12 +28,6 @@ else
 FBDEV_DIR=
 endif
 
-if USE_OPENGL
-GL_DIR=glsink
-else
-GL_DIR=
-endif
-
 if USE_DVB
 DVB_DIR=dvb
 else
@@ -46,6 +40,6 @@ else
 QT_DIR=
 endif
 
-SUBDIRS = $(FBDEV_DIR) $(GL_DIR) $(DVB_DIR) $(VCD_DIR) $(QT_DIR)
+SUBDIRS = $(FBDEV_DIR) $(DVB_DIR) $(VCD_DIR) $(QT_DIR)
 
-DIST_SUBDIRS = fbdev glsink dvb vcd qtwrapper
+DIST_SUBDIRS = fbdev dvb vcd qtwrapper
