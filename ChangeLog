@@ -1,5 +1,10 @@
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/elements/souphttpsrc.c:
+	Include glib/gprintf.h for g_vasprintf(). Fixes bug #515564.
+
+2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/librfb/gstrfbsrc.c: (gst_rfb_src_dispose):
 	Free the rfb decoder on finalize. Fixes bug #515721.
 

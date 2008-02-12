@@ -24,6 +24,7 @@
 #endif
 
 #include <glib.h>
+#include <glib/gprintf.h>
 #include <libsoup/soup-address.h>
 #include <libsoup/soup-message.h>
 #include <libsoup/soup-server.h>
