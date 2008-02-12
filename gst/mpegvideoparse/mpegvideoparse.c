@@ -231,8 +231,11 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
         "codec_data", GST_TYPE_BUFFER, seq_buf, NULL);
 
     GST_DEBUG ("New mpegvideoparse caps: %" GST_PTR_FORMAT, caps);
-    if (!gst_pad_set_caps (mpegvideoparse->srcpad, caps))
+    if (!gst_pad_set_caps (mpegvideoparse->srcpad, caps)) {
+      gst_caps_unref (caps);
       return FALSE;
+    }
+    gst_caps_unref (caps);
 
     /* And update the new_hdr into our stored version */
     mpegvideoparse->seq_hdr = new_hdr;
@@ -372,12 +375,15 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
         mpegvideoparse->need_discont = FALSE;
       }
       res = gst_pad_push (mpegvideoparse->srcpad, buf);
+      buf = NULL;
     }
 
     /* Advance to the next data block */
     mpeg_packetiser_next_block (&mpegvideoparse->packer);
     cur = mpeg_packetiser_get_block (&mpegvideoparse->packer, &buf);
-  };
+  }
+  if (buf != NULL)
+    gst_buffer_unref (buf);
 
   return res;
 }
@@ -824,6 +830,7 @@ gst_mpegvideoparse_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       mpv_parse_reset (mpegvideoparse);
+      gst_mpegvideoparse_flush (mpegvideoparse);
       break;
     default:
       break;
