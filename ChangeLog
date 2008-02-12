@@ -1,5 +1,12 @@
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* sys/directdraw/gstdirectdrawsink.c:
+	(gst_ddrawsurface_class_init), (gst_ddrawsurface_finalize),
+	(gst_directdraw_sink_finalize):
+	Properly chain up finalize functions. Fixes bug #515980.
+
+2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* sys/v4l2/v4l2src_calls.c: (gst_v4l2_buffer_finalize),
 	(gst_v4l2_buffer_class_init), (gst_v4l2_buffer_pool_finalize),
 	(gst_v4l2_buffer_pool_class_init):
