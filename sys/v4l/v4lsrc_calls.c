@@ -632,6 +632,8 @@ static void gst_v4lsrc_buffer_class_init (gpointer g_class,
 static void gst_v4lsrc_buffer_init (GTypeInstance * instance, gpointer g_class);
 static void gst_v4lsrc_buffer_finalize (GstV4lSrcBuffer * v4lsrc_buffer);
 
+static GstBufferClass *v4lbuffer_parent_class = NULL;
+
 GType
 gst_v4lsrc_buffer_get_type (void)
 {
@@ -661,6 +663,8 @@ gst_v4lsrc_buffer_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
 
+  v4lbuffer_parent_class = g_type_class_peek_parent (g_class);
+
   mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
       gst_v4lsrc_buffer_finalize;
 }
@@ -689,6 +693,9 @@ gst_v4lsrc_buffer_finalize (GstV4lSrcBuffer * v4lsrc_buffer)
   }
 
   gst_object_unref (v4lsrc);
+
+  GST_MINI_OBJECT_CLASS (v4lbuffer_parent_class)->
+      finalize (GST_MINI_OBJECT (v4lsrc_buffer));
 }
 
 /* Create a V4lSrc buffer from our mmap'd data area */

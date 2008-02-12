@@ -1,5 +1,11 @@
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_buffer_class_init),
+	(gst_v4lsrc_buffer_finalize):
+	Correctly chain up the finalize method.
+
+2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/gio/gstgiostreamsink.c:
 	* ext/gio/gstgiostreamsrc.c:
 	Add documentation and example code for giostreamsink/giostreamsrc.
