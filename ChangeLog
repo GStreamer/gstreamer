@@ -1,3 +1,8 @@
+2008-02-12  Julien Moutte  <julien@fluendo.com>
+
+	* tests/examples/seek/seek.c: (rate_spinbutton_changed_cb): Add
+	some seek flags when changing rate.
+
 2008-02-12  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:

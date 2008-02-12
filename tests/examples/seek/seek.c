@@ -1441,6 +1441,10 @@ rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
     flags |= GST_SEEK_FLAG_FLUSH;
   if (loop_seek)
     flags |= GST_SEEK_FLAG_SEGMENT;
+  if (accurate_seek)
+    flags |= GST_SEEK_FLAG_ACCURATE;
+  if (keyframe_seek)
+    flags |= GST_SEEK_FLAG_KEY_UNIT;
 
   if (rate >= 0) {
     s_event = gst_event_new_seek (rate,
