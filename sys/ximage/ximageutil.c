@@ -296,6 +296,8 @@ ximageutil_calculate_pixel_aspect_ratio (GstXContext * xcontext)
       gst_value_get_fraction_denominator (xcontext->par));
 }
 
+static GstBufferClass *ximagesrc_buffer_parent_class = NULL;
+
 static void
 gst_ximagesrc_buffer_finalize (GstXImageSrcBuffer * ximage)
 {
@@ -313,6 +315,10 @@ gst_ximagesrc_buffer_finalize (GstXImageSrcBuffer * ximage)
     ximage->return_func (parent, ximage);
 
 beach:
+
+  GST_MINI_OBJECT_CLASS (ximagesrc_buffer_parent_class)->
+      finalize (GST_MINI_OBJECT (ximage));
+
   return;
 }
 
@@ -338,6 +344,8 @@ static void
 gst_ximagesrc_buffer_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  ximagesrc_buffer_parent_class = g_type_class_peek_parent (g_class);
 
   mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
       gst_ximagesrc_buffer_finalize;

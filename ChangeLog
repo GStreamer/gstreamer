@@ -1,3 +1,11 @@
+2008-02-12  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* sys/ximage/ximageutil.c:
+	Chain up in the finalize function for our custom
+	buffer sub-class.
+	Patch by: Sebastian Dröge  <slomo@circular-chaos.org>
+	Fixes: #515706
+
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/debug/efence.c: (gst_fenced_buffer_finalize),
@@ -8,7 +16,7 @@
 
 	* sys/ximage/gstximagesrc.c:
 	Free allocated Damage memory before closing our connection to the
-	X server. Fixes: #515706
+	X server. Partially fixes: #515706
 
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
