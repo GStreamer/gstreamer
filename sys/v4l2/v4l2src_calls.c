@@ -66,6 +66,7 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
 #define GST_IS_V4L2_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_BUFFER))
 #define GST_V4L2_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_BUFFER, GstV4l2Buffer))
 
+static GstBufferClass *v4l2buffer_parent_class = NULL;
 
 /* Local functions */
 static gboolean
@@ -110,6 +111,9 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
     GST_LOG ("buffer %p not recovered, unmapping", buffer);
     gst_mini_object_unref (GST_MINI_OBJECT (pool));
     munmap ((void *) GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
+
+    GST_MINI_OBJECT_CLASS (v4l2buffer_parent_class)->
+        finalize (GST_MINI_OBJECT (buffer));
   }
 }
 
@@ -123,6 +127,8 @@ static void
 gst_v4l2_buffer_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  v4l2buffer_parent_class = g_type_class_peek_parent (g_class);
 
   mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
       gst_v4l2_buffer_finalize;
@@ -225,6 +231,8 @@ mmap_failed:
 #define GST_IS_V4L2_BUFFER_POOL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_BUFFER_POOL))
 #define GST_V4L2_BUFFER_POOL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_BUFFER_POOL, GstV4l2BufferPool))
 
+static GstMiniObjectClass *buffer_pool_parent_class = NULL;
+
 static void
 gst_v4l2_buffer_pool_finalize (GstV4l2BufferPool * pool)
 {
@@ -237,6 +245,8 @@ gst_v4l2_buffer_pool_finalize (GstV4l2BufferPool * pool)
   if (pool->buffers)
     g_free (pool->buffers);
   pool->buffers = NULL;
+  GST_MINI_OBJECT_CLASS (buffer_pool_parent_class)->
+      finalize (GST_MINI_OBJECT (pool));
 }
 
 static void
@@ -251,6 +261,8 @@ static void
 gst_v4l2_buffer_pool_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  buffer_pool_parent_class = g_type_class_peek_parent (g_class);
 
   mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
       gst_v4l2_buffer_pool_finalize;
