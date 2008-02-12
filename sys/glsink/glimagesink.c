@@ -207,6 +207,8 @@ gst_glimage_sink_finalize (GObject * object)
     gst_caps_unref (glimage_sink->caps);
   }
   g_free (glimage_sink->display_name);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

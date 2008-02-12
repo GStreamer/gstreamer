@@ -75,6 +75,8 @@ gst_gl_display_finalize (GObject * object)
   if (display->lock) {
     g_mutex_free (display->lock);
   }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean gst_gl_display_check_features (GstGLDisplay * display);

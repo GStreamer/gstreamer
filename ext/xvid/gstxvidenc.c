@@ -519,6 +519,8 @@ gst_xvidenc_finalize (GObject * object)
   GstXvidEnc *xvidenc = GST_XVIDENC (object);
 
   g_free (xvidenc->filename);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean

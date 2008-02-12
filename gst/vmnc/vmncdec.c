@@ -219,6 +219,8 @@ vmnc_dec_finalize (GObject * object)
   GstVMncDec *dec = GST_VMNC_DEC (object);
 
   g_object_unref (dec->adapter);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
