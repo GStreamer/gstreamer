@@ -1059,7 +1059,10 @@ gst/y4m/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/app/Makefile
+gst-libs/gst/dshow/Makefile
 sys/Makefile
+sys/dshowdecwrapper/Makefile
+sys/dshowsrcwrapper/Makefile
 sys/fbdev/Makefile
 sys/dvb/Makefile
 sys/qtwrapper/Makefile
