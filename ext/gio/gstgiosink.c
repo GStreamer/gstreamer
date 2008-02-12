@@ -21,13 +21,39 @@
 
 /**
  * SECTION:element-giosink
+ * @short_description: Write a stream to any GIO-supported location
+ * @see_also: #GstFileSink, #GstGnomeVFSSink, #GstGioSrc
  *
  * <refsect2>
- * <title>Example launch line</title>
  * <para>
+ * This plugin writes incoming data to a local or remote location specified
+ * by an URI. This location can be specified using any protocol supported by
+ * the GIO library or it's VFS backends. Common protocols are 'file', 'ftp',
+ * or 'smb'.
+ * </para>
+ * <para>
+ * Example pipeline:
  * <programlisting>
- * gst-launch audiotestsrc num-buffers=100 ! flacenc ! giosink location=file:///home/foo/bar.flac
+ * gst-launch -v filesrc location=input.xyz ! giosink location=file:///home/joe/out.xyz
  * </programlisting>
+ * The above pipeline will simply copy a local file. Instead of giosink,
+ * we could just as well have used the filesink element here.
+ * </para>
+ * <para>
+ * Another example pipeline:
+ * <programlisting>
+ * gst-launch -v filesrc location=foo.mp3 ! mad ! flacenc ! giosink location=smb://othercomputer/foo.flac
+ * </programlisting>
+ * The above pipeline will re-encode an mp3 file into FLAC format and store
+ * it on a remote host using the Samba protocol.
+ * </para>
+ * <para>
+ * Another example pipeline:
+ * <programlisting>
+ * gst-launch -v audiotestsrc num-buffers=100 ! vorbisenc ! oggmux ! giosink location=file:///home/foo/bar.ogg
+ * </programlisting>
+ * The above pipeline will encode a 440Hz sine wave to Ogg Vorbis and stores
+ * it in the home directory of user foo.
  * </para>
  * </refsect2>
  */

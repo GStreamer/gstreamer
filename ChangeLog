@@ -1,5 +1,12 @@
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/gio/gstgiosink.c:
+	* ext/gio/gstgiosrc.c:
+	Make the documentation of giosink/giosrc complete, large parts
+	are based on the gnomevfssink/gnomevfssrc docs.
+
+2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-base-plugins-sections.txt:
 	* docs/plugins/gst-plugins-base-plugins.args:
