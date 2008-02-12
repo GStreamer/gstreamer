@@ -129,6 +129,8 @@ static GType gst_subbuffer_get_type (void);
 static GType _gst_subbuffer_type = 0;
 static GType _gst_buffer_type = 0;
 
+static GstMiniObjectClass *parent_class = NULL;
+
 void
 _gst_buffer_initialize (void)
 {
@@ -167,6 +169,8 @@ gst_buffer_class_init (gpointer g_class, gpointer class_data)
 {
   GstBufferClass *buffer_class = GST_BUFFER_CLASS (g_class);
 
+  parent_class = g_type_class_peek_parent (g_class);
+
   buffer_class->mini_object_class.copy =
       (GstMiniObjectCopyFunction) _gst_buffer_copy;
   buffer_class->mini_object_class.finalize =
@@ -185,6 +189,8 @@ gst_buffer_finalize (GstBuffer * buffer)
   g_free (buffer->malloc_data);
 
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
+
+  GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (buffer));
 }
 
 /**

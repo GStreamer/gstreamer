@@ -89,6 +89,8 @@ static void gst_event_class_init (gpointer g_class, gpointer class_data);
 static void gst_event_finalize (GstEvent * event);
 static GstEvent *_gst_event_copy (GstEvent * event);
 
+static GstMiniObjectClass *parent_class = NULL;
+
 void
 _gst_event_initialize (void)
 {
@@ -219,6 +221,8 @@ gst_event_class_init (gpointer g_class, gpointer class_data)
 {
   GstEventClass *event_class = GST_EVENT_CLASS (g_class);
 
+  parent_class = g_type_class_peek_parent (g_class);
+
   event_class->mini_object_class.copy =
       (GstMiniObjectCopyFunction) _gst_event_copy;
   event_class->mini_object_class.finalize =
@@ -252,6 +256,8 @@ gst_event_finalize (GstEvent * event)
     gst_structure_set_parent_refcount (event->structure, NULL);
     gst_structure_free (event->structure);
   }
+
+  GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (event));
 }
 
 static GstEvent *

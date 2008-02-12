@@ -64,6 +64,8 @@ static void gst_message_class_init (gpointer g_class, gpointer class_data);
 static void gst_message_finalize (GstMessage * message);
 static GstMessage *_gst_message_copy (GstMessage * message);
 
+static GstMiniObjectClass *parent_class = NULL;
+
 void
 _gst_message_initialize (void)
 {
@@ -185,6 +187,8 @@ gst_message_class_init (gpointer g_class, gpointer class_data)
 {
   GstMessageClass *message_class = GST_MESSAGE_CLASS (g_class);
 
+  parent_class = g_type_class_peek_parent (g_class);
+
   message_class->mini_object_class.copy =
       (GstMiniObjectCopyFunction) _gst_message_copy;
   message_class->mini_object_class.finalize =
@@ -222,6 +226,8 @@ gst_message_finalize (GstMessage * message)
     gst_structure_set_parent_refcount (message->structure, NULL);
     gst_structure_free (message->structure);
   }
+
+  GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (message));
 }
 
 static GstMessage *

@@ -442,6 +442,7 @@ struct _GstMmapBufferClass
 static void gst_mmap_buffer_init (GTypeInstance * instance, gpointer g_class);
 static void gst_mmap_buffer_class_init (gpointer g_class, gpointer class_data);
 static void gst_mmap_buffer_finalize (GstMmapBuffer * mmap_buffer);
+static GstBufferClass *mmap_buffer_parent_class = NULL;
 
 static GType
 gst_mmap_buffer_get_type (void)
@@ -472,6 +473,8 @@ static void
 gst_mmap_buffer_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  mmap_buffer_parent_class = g_type_class_peek_parent (g_class);
 
   mini_object_class->finalize =
       (GstMiniObjectFinalizeFunction) gst_mmap_buffer_finalize;
@@ -521,6 +524,9 @@ gst_mmap_buffer_finalize (GstMmapBuffer * mmap_buffer)
    * guint64 as hex */
   GST_LOG ("unmapped region %08lx+%08lx at %p",
       (gulong) offset, (gulong) size, data);
+
+  GST_MINI_OBJECT_CLASS (mmap_buffer_parent_class)->
+      finalize (GST_MINI_OBJECT (mmap_buffer));
 }
 
 static GstBuffer *

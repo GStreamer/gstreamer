@@ -79,6 +79,8 @@ static GHashTable *_nick_to_query = NULL;
 static GHashTable *_query_type_to_nick = NULL;
 static guint32 _n_values = 1;   /* we start from 1 because 0 reserved for NONE */
 
+static GstMiniObjectClass *parent_class = NULL;
+
 static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_POSITION, "position", "Current position", 0},
   {GST_QUERY_DURATION, "duration", "Total duration", 0},
@@ -188,6 +190,8 @@ gst_query_class_init (gpointer g_class, gpointer class_data)
 {
   GstQueryClass *query_class = GST_QUERY_CLASS (g_class);
 
+  parent_class = g_type_class_peek_parent (g_class);
+
   query_class->mini_object_class.copy =
       (GstMiniObjectCopyFunction) _gst_query_copy;
   query_class->mini_object_class.finalize =
@@ -204,6 +208,8 @@ gst_query_finalize (GstQuery * query)
     gst_structure_set_parent_refcount (query->structure, NULL);
     gst_structure_free (query->structure);
   }
+
+  GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (query));
 }
 
 static GstQuery *
