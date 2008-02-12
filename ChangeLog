@@ -1,3 +1,13 @@
+2008-02-12  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	(gst_base_rtp_audio_payload_handle_frame_based_buffer),
+	(gst_base_rtp_audio_payload_handle_sample_based_buffer):
+	Fix potential leaks.
+
+	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_chain):
+	Fix leak when there is no function configured.
+
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_buffer_class_init),

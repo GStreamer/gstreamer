@@ -412,9 +412,8 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
       buf = gst_buffer_create_sub (buffer,
           GST_BUFFER_SIZE (buffer) - available, available);
       gst_adapter_push (basertpaudiopayload->priv->adapter, buf);
-    } else {
-      gst_buffer_unref (buffer);
     }
+    gst_buffer_unref (buffer);
   }
 
   return ret;
@@ -542,9 +541,8 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
       buf = gst_buffer_create_sub (buffer,
           GST_BUFFER_SIZE (buffer) - available, available);
       gst_adapter_push (basertpaudiopayload->priv->adapter, buf);
-    } else {
-      gst_buffer_unref (buffer);
     }
+    gst_buffer_unref (buffer);
   }
 
   return ret;

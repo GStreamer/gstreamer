@@ -406,6 +406,7 @@ no_function:
     GST_ELEMENT_ERROR (basertppayload, STREAM, NOT_IMPLEMENTED, (NULL),
         ("subclass did not implement handle_buffer function"));
     gst_object_unref (basertppayload);
+    gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
 }
