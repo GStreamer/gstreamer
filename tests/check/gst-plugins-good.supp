@@ -1,0 +1,127 @@
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jpeg_finish_decompress
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jpeg_consume_input
+   fun:jpeg_read_header
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   fun:jpeg_fill_bit_buffer
+   fun:jpeg_huff_decode
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jpeg_read_raw_data
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   fun:jpeg_fill_bit_buffer
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jpeg_read_raw_data
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jpeg_consume_input
+   fun:jpeg_read_header
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   obj:/usr/lib/libjpeg.so.*
+   fun:jpeg_finish_compress
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jpeg_finish_compress
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jpeg_finish_compress
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jpeg_write_raw_data
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jpeg_write_raw_data
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jpeg_write_raw_data
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jpeg_write_raw_data
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jinit_compress_master
+   fun:jpeg_start_compress
+}
+
+{
+   <several valgrind warnings as found with libjpeg 6b on Debian>
+   Memcheck:Cond
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   obj:/usr/lib/libjpeg.so.*
+   fun:jinit_compress_master
+   fun:jpeg_start_compress
+}

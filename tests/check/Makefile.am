@@ -97,7 +97,7 @@ VALGRIND_TESTS_DISABLE = \
 	elements/videocrop \
 	$(VALGRIND_TO_FIX)
 
-SUPPRESSIONS = $(top_srcdir)/common/gst.supp
+SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-good.supp
 
 elements_audiopanorama_LDADD = \
 	$(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) \

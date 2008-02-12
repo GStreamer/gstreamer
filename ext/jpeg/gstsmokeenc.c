@@ -320,7 +320,7 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
     smokeenc->need_header = FALSE;
   }
 
-  outsize = smokeenc->width * smokeenc->height * 3;
+  encsize = outsize = smokeenc->width * smokeenc->height * 3;
   outbuf = gst_buffer_new_and_alloc (outsize);
   outdata = GST_BUFFER_DATA (outbuf);
 

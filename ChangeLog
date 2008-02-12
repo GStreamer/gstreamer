@@ -1,3 +1,11 @@
+2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_chain):
+	* tests/check/Makefile.am:
+	* tests/check/gst-plugins-good.supp:
+	Add a few libjpeg suppressions and initialize a variable to
+	make smokeenc valgrind clean. Fixes bug #515701.
+
 2008-02-11  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/avi/gstavidemux.c:
