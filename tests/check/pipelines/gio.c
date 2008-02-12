@@ -86,6 +86,7 @@ GST_START_TEST (test_memory_stream)
 
   output = G_MEMORY_OUTPUT_STREAM (g_memory_output_stream_new (out_data, 512,
           (GReallocFunc) g_realloc, (GDestroyNotify) g_free));
+  out_data = NULL;
 
   loop = g_main_loop_new (NULL, FALSE);
 
@@ -120,6 +121,8 @@ GST_START_TEST (test_memory_stream)
   gst_object_unref (bin);
 
   fail_unless (got_eos);
+
+  out_data = g_memory_output_stream_get_data (G_MEMORY_OUTPUT_STREAM (output));
 
   for (i = 0; i < 512; i++)
     fail_unless_equals_int (in_data[i], out_data[i]);

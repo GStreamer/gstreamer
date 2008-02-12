@@ -21,12 +21,45 @@
 
 /**
  * SECTION:element-giostreamsrc
+ * @short_description: Reads data from a GIO GInputStream
  *
  * <refsect2>
- * <title>Example launch line</title>
  * <para>
+ * This plugin reads data from a custom GIO #GInputStream.
+ * </para>
+ * <para>
+ * It can, for example, be used to read data from memory with a
+ * #GMemoryInputStream or to read from a file with a
+ * #GFileInputStream.
+ * </para>
+ * <title>Example code</title>
+ * <para>
+ * The following example reads data from a #GMemoryOutputStream.
  * <programlisting>
- * gst-launch giosrc location=file:///home/foo/bar.ext ! fakesink
+
+#include &lt;gst/gst.h&gt;
+#include &lt;gio/gio.h&gt;
+
+...
+
+GstElement *src;
+GMemoryInputStream *stream;
+// in_data will contain the data to send
+guint8 *in_data;
+gint i;
+
+...
+in_data = g_new (guint8, 512);
+for (i = 0; i < 512; i++)
+  in_data[i] = i % 256;
+
+stream = G_MEMORY_INPUT_STREAM (g_memory_input_stream_new_from_data (in_data, 512,
+          (GDestroyNotify) g_free));
+src = gst_element_factory_make ("giostreamsrc", "src");
+g_object_set (G_OBJECT (src), "stream", stream, NULL);
+
+...
+
  * </programlisting>
  * </para>
  * </refsect2>

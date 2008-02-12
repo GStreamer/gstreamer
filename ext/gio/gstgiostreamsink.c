@@ -21,12 +21,45 @@
 
 /**
  * SECTION:element-giostreamsink
+ * @short_description: Write to a GIO GOutputStream
  *
  * <refsect2>
- * <title>Example launch line</title>
  * <para>
+ * This plugin writes incoming data to a custom GIO #GOutputStream.
+ * </para>
+ * <para>
+ * It can, for example, be used to write a stream to memory with a
+ * #GMemoryOuputStream or to write to a file with a #GFileOuputStream.
+ * </para>
+ * <title>Example code</title>
+ * <para>
+ * The following example writes the received data to a #GMemoryOutputStream.
  * <programlisting>
- * gst-launch audiotestsrc num-buffers=100 ! flacenc ! giosink location=file:///home/foo/bar.flac
+
+#include &lt;gst/gst.h&gt;
+#include &lt;gio/gio.h&gt;
+
+...
+
+GstElement *sink;
+GMemoryOuputStream *stream;
+// out_data will contain the received data
+guint8 *out_data;
+
+...
+
+stream = G_MEMORY_OUTPUT_STREAM (g_memory_output_stream_new (NULL, 0,
+          (GReallocFunc) g_realloc, (GDestroyNotify) g_free));
+sink = gst_element_factory_make ("giostreamsink", "sink");
+g_object_set (G_OBJECT (sink), "stream", stream, NULL);
+
+...
+
+// after processing get the written data
+out_data = g_memory_ouput_stream_get_data (G_MEMORY_OUTPUT_STREAM (stream));
+
+...
+
  * </programlisting>
  * </para>
  * </refsect2>

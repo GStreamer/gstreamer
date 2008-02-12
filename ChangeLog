@@ -1,5 +1,15 @@
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/gio/gstgiostreamsink.c:
+	* ext/gio/gstgiostreamsrc.c:
+	Add documentation and example code for giostreamsink/giostreamsrc.
+
+	* tests/check/pipelines/gio.c: (GST_START_TEST):
+	Ask the GMemoryOutputStream for the data instead of assuming that
+	the pointer to the data stayed the same. It could've been realloc'ed.
+
+2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/gio/gstgiosink.c:
 	* ext/gio/gstgiosrc.c:
 	Make the documentation of giosink/giosrc complete, large parts
