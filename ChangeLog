@@ -1,3 +1,8 @@
+2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/librfb/gstrfbsrc.c: (gst_rfb_src_dispose):
+	Free the rfb decoder on finalize. Fixes bug #515721.
+
 2008-02-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* sys/fbdev/gstfbdevsink.c: (gst_fbdevsink_class_init),
