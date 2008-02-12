@@ -349,6 +349,8 @@ gst_dshowvideodec_dispose (GObject * object)
   }
 
   CoUninitialize ();
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static GstStateChangeReturn
