@@ -683,6 +683,7 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
     GstBuffer * buffer)
 {
   GstFlowReturn res = GST_FLOW_OK;
+  GstBuffer *gbuf = NULL;
 
   /* if we have a discont, move buffers to the decode list */
   if (G_UNLIKELY (discont)) {
@@ -700,7 +701,6 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
     h264parse->prev = NULL;
 
     while (h264parse->gather) {
-      GstBuffer *gbuf;
       guint8 *data;
 
       /* get new buffer and init the start code search to the end position */
@@ -761,6 +761,7 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
                 last);
             prev = gst_buffer_create_sub (gbuf, 0, last);
             gst_buffer_unref (gbuf);
+            gbuf = NULL;
             break;
           }
         }
@@ -777,6 +778,12 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
         GST_BUFFER_SIZE (buffer));
     h264parse->gather = g_list_prepend (h264parse->gather, buffer);
   }
+
+  if (gbuf) {
+    gst_buffer_unref (gbuf);
+    gbuf = NULL;
+  }
+
   return res;
 }
 

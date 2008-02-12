@@ -1,3 +1,10 @@
+2008-02-12  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Josep Torra Valles <josep@fluendo.com>
+
+	* gst/h264parse/gsth264parse.c: (gst_h264_parse_chain_reverse):
+	Fix potential buffer leak in reverse mode. Fixes #516061.
+
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* sys/dshowdecwrapper/gstdshowaudiodec.c:
