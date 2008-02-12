@@ -161,6 +161,11 @@ gst_ximage_src_open_display (GstXImageSrc * s, const gchar * name)
     int error_base;
     long evmask = NoEventMask;
 
+    s->have_xdamage = FALSE;
+    s->damage = None;
+    s->damage_copy_gc = None;
+    s->damage_region = None;
+
     if (XDamageQueryExtension (s->xcontext->disp, &s->damage_event_base,
             &error_base)) {
       s->damage =
@@ -206,9 +211,6 @@ gst_ximage_src_start (GstBaseSrc * basesrc)
   s->last_frame_no = -1;
 #ifdef HAVE_XDAMAGE
   s->last_ximage = NULL;
-  s->damage = None;
-  s->damage_copy_gc = None;
-  s->damage_region = None;
 #endif
   return gst_ximage_src_open_display (s, s->display_name);
 }

@@ -1,3 +1,11 @@
+2008-02-12  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* sys/ximage/gstximagesrc.c:
+	Initialise variables when opening the X display rather
+	than in _start(), as the display can be opened before that.
+
+	Fixes: #515985
+
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* sys/directdraw/gstdirectdrawsink.c:
