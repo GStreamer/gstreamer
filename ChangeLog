@@ -1,3 +1,9 @@
+2008-02-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_delay):
+	  Revert patch that makes the sink hold the object lock when
+	  calling snd_pcm_delay(), since it breaks playback for me.
+
 2008-02-12  Julien Moutte  <julien@fluendo.com>
 
 	* tests/examples/seek/seek.c: (rate_spinbutton_changed_cb): Add
