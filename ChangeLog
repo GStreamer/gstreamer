@@ -1,3 +1,11 @@
+2008-02-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
+
+	* ext/alsa/gstalsasink.c: (set_hwparams), (gst_alsasink_delay):
+	Add some more debug info.
+	Make sure we never return a negative delay. Fixes #516246.
+
 2008-02-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/alsa/gstalsasink.c: (gst_alsasink_delay):

@@ -397,6 +397,7 @@ retry:
       buffer_time = -1;
       goto retry;
     }
+    GST_DEBUG_OBJECT (alsa, "buffer time %u", buffer_time);
   }
   if (period_time != -1) {
     /* set the period time */
@@ -409,6 +410,7 @@ retry:
       period_time = -1;
       goto retry;
     }
+    GST_DEBUG_OBJECT (alsa, "period time %u", period_time);
   }
 
   /* write the parameters to device */
@@ -858,7 +860,13 @@ gst_alsasink_delay (GstAudioSink * asink)
 
   res = snd_pcm_delay (alsa->handle, &delay);
   if (G_UNLIKELY (res < 0)) {
+    /* on errors, report 0 delay */
     GST_DEBUG_OBJECT (alsa, "snd_pcm_delay returned %d", res);
+    delay = 0;
+  }
+  if (G_UNLIKELY (delay < 0)) {
+    /* make sure we never return a negative delay */
+    GST_WARNING_OBJECT (alsa, "snd_pcm_delay returned negative delay");
     delay = 0;
   }
 
