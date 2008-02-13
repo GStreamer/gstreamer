@@ -721,7 +721,7 @@ AG_GST_CHECK_FEATURE(MUSICBRAINZ, [musicbrainz tag generation], musicbrainz, [
 dnl *** MythTV ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MYTHTV, true)
 AG_GST_CHECK_FEATURE(MYTHTV, [MythTV client plugins], mythtvsrc, [
-  PKG_CHECK_MODULES(GMYTH, gmyth >= 0.4 gmyth <= 0.4.99, HAVE_MYTHTV="yes", [
+  PKG_CHECK_MODULES(GMYTH, gmyth >= 0.4 gmyth <= 0.7.99, HAVE_MYTHTV="yes", [
     HAVE_MYTHTV="no"
     AC_MSG_RESULT(no)
   ])

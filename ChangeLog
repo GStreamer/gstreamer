@@ -1,3 +1,9 @@
+2008-02-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	Allow gmyth versions from 0.4 up to 0.7.99, the API didn't change
+	until 0.7 fortunately.
+
 2008-02-12  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
