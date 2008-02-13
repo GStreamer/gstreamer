@@ -1,3 +1,12 @@
+2008-02-13  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/dvdread/dvdreadsrc.c:
+	Fix regression in DVD seeking - when a pack we
+	expect to be a NAV block turns out not to be, scan forwards
+	for up to 2MB (at most ~1sec) until we find one.
+
+	Fixes: #516278
+
 2008-02-12  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/vs6/libgstmpegaudioparse.dsp:

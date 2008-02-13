@@ -628,7 +628,7 @@ gst_dvd_read_src_get_next_cell (GstDvdReadSrc * src, pgc_t * pgc, gint cell)
 
 /* Returns true if the pack is a NAV pack */
 static gboolean
-gst_dvd_read_src_is_nav_pack (const guint8 * data)
+gst_dvd_read_src_is_nav_pack (const guint8 * data, gint lbn, dsi_t * dsi_pack)
 {
   if (GST_READ_UINT32_BE (data + 0x26) != 0x000001BF)
     return FALSE;
@@ -649,6 +649,11 @@ gst_dvd_read_src_is_nav_pack (const guint8 * data)
     return FALSE;
 
   if (GST_READ_UINT16_BE (data + 0x404) != 0x03fa)
+    return FALSE;
+
+  /* Read the DSI packet into the provided struct and check it */
+  navRead_DSI (dsi_pack, (unsigned char *) data + DSI_START_BYTE);
+  if (lbn != dsi_pack->dsi_gi.nv_pck_lbn)
     return FALSE;
 
   return TRUE;
@@ -723,6 +728,7 @@ gst_dvd_read_src_read (GstDvdReadSrc * src, gint angle, gint new_seek,
   dsi_t dsi_pack;
   guint next_vobu, next_ilvu_start, cur_output_size;
   gint len;
+  gint retries;
 
   /* playback by cell in this pgc, starting at the cell for our chapter */
   if (new_seek)
@@ -777,20 +783,25 @@ again:
   }
 
   /* read NAV packet */
+  retries = 0;
+nav_retry:
+  retries++;
+
   len = DVDReadBlocks (src->dvd_title, src->cur_pack, 1, oneblock);
   if (len != 1)
     goto read_error;
 
-  if (!gst_dvd_read_src_is_nav_pack (oneblock)) {
-    GST_LOG_OBJECT (src, "Expected nav packet @ pack %d", src->cur_pack);
-    goto read_error;
-  }
+  if (!gst_dvd_read_src_is_nav_pack (oneblock, src->cur_pack, &dsi_pack)) {
+    GST_LOG_OBJECT (src, "Skipping nav packet @ pack %d", src->cur_pack);
+    src->cur_pack++;
 
-  /* parse the contained dsi packet */
-  navRead_DSI (&dsi_pack, &oneblock[DSI_START_BYTE]);
-  if (src->cur_pack != dsi_pack.dsi_gi.nv_pck_lbn) {
-    GST_ERROR ("src->cur_pack = %d, dsi_pack.dsi_gi.nv_pck_lbn = %d",
-        src->cur_pack, dsi_pack.dsi_gi.nv_pck_lbn);
+    if (retries < 2000) {
+      goto nav_retry;
+    } else {
+      GST_LOG_OBJECT (src, "No nav packet @ pack %d after 2000 blocks",
+          src->cur_pack);
+      goto read_error;
+    }
   }
 
   /* determine where we go next. These values are the ones we
