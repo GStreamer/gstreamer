@@ -1,3 +1,9 @@
+2008-02-13  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst-libs/gst/Makefile.am:
+	* sys/Makefile.am:
+	Also add dshow pieces to the disted subdirs to fix distcheck.
+
 2008-02-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Josep Torra Valles <josep@fluendo.com>

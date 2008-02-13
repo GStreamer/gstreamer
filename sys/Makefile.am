@@ -42,4 +42,5 @@ endif
 
 SUBDIRS = $(FBDEV_DIR) $(DVB_DIR) $(VCD_DIR) $(QT_DIR)
 
-DIST_SUBDIRS = fbdev dvb vcd qtwrapper
+DIST_SUBDIRS = dvb fbdev vcd qtwrapper dshowdecwrapper dshowsrcwrapper
+
