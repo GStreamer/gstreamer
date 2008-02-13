@@ -704,6 +704,8 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
       guint8 *data;
 
       /* get new buffer and init the start code search to the end position */
+      if (gbuf != NULL)
+        gst_buffer_unref (gbuf);
       gbuf = GST_BUFFER_CAST (h264parse->gather->data);
 
       /* remove from the gather list, they are in reverse order */
