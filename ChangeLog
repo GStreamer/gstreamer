@@ -1,3 +1,11 @@
+2008-02-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_emit_frame):
+	Return GST_FLOW_UNEXPECTED if we get data that is after our
+	configured segment. This makes upstream go EOS immediately instead
+	of sending us the complete stream. Also improve debugging a bit.
+
 2008-02-13  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/dvdread/dvdreadsrc.c:
