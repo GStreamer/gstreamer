@@ -778,7 +778,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     for (walk = client->streams; walk; walk = g_slist_next (walk)) {
       GstRtpBinStream *ostream = (GstRtpBinStream *) walk->data;
 
-      if (ostream->unix_delta < min)
+      if (ostream->unix_delta && ostream->unix_delta < min)
         min = ostream->unix_delta;
     }
 
@@ -788,6 +788,9 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     /* calculate offsets for each stream */
     for (walk = client->streams; walk; walk = g_slist_next (walk)) {
       GstRtpBinStream *ostream = (GstRtpBinStream *) walk->data;
+
+      if (ostream->unix_delta == 0)
+        continue;
 
       ostream->ts_offset = ostream->unix_delta - min;
 

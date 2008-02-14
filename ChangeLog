@@ -1,3 +1,11 @@
+2008-02-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Olivier Crete <tester@tester.ca>
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_associate):
+	Ignore streams that did not receive an SR packet when doing
+	synchronisation. Fixes #516160.
+
 2008-02-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/dvdspu/gstdvdspu.c: (gst_dvd_spu_handle_new_spu_buf):
