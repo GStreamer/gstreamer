@@ -52,7 +52,8 @@ typedef struct
   GstPad *teesrc;
   GstElement *conv;
   GstElement *resample;
-  GstElement *volume;
+  GstElement *volume;           /* element with the volume property */
+  GstElement *mute;             /* element with the mute property */
   GstElement *sink;
 } GstPlayAudioChain;
 
@@ -103,6 +104,7 @@ struct _GstPlaySink
   GstElement *video_sink;
   GstElement *visualisation;
   gfloat volume;
+  gboolean mute;
   gchar *font_desc;             /* font description */
   guint connection_speed;       /* connection speed in bits/sec (0 = unknown) */
 
@@ -551,6 +553,39 @@ gst_play_sink_get_volume (GstPlaySink * playsink)
   return result;
 }
 
+void
+gst_play_sink_set_mute (GstPlaySink * playsink, gboolean mute)
+{
+  GstPlayAudioChain *chain;
+
+  GST_PLAY_SINK_LOCK (playsink);
+  playsink->mute = mute;
+  chain = (GstPlayAudioChain *) playsink->audiochain;
+  if (chain && chain->mute) {
+    g_object_set (chain->mute, "mute", mute, NULL);
+  }
+  GST_PLAY_SINK_UNLOCK (playsink);
+}
+
+gboolean
+gst_play_sink_get_mute (GstPlaySink * playsink)
+{
+  gboolean result;
+  GstPlayAudioChain *chain;
+
+  GST_PLAY_SINK_LOCK (playsink);
+  chain = (GstPlayAudioChain *) playsink->audiochain;
+  if (chain && chain->mute) {
+    g_object_get (chain->mute, "mute", &result, NULL);
+    playsink->mute = result;
+  } else {
+    result = playsink->mute;
+  }
+  GST_PLAY_SINK_UNLOCK (playsink);
+
+  return result;
+}
+
 static void
 gst_play_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -948,6 +983,10 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
       chain->volume = gst_element_factory_make ("volume", "volume");
       if (chain->volume == NULL)
         goto no_volume;
+
+      /* volume also has the mute property */
+      chain->mute = gst_object_ref (chain->volume);
+
       /* configure with the latest volume */
       g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
       gst_bin_add (bin, chain->volume);

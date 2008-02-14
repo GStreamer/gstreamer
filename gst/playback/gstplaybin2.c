@@ -366,6 +366,7 @@ struct _GstPlayBinClass
 #define DEFAULT_VIDEO_SINK        NULL
 #define DEFAULT_VIS_PLUGIN        NULL
 #define DEFAULT_VOLUME            1.0
+#define DEFAULT_MUTE              FALSE
 #define DEFAULT_FRAME             NULL
 #define DEFAULT_FONT_DESC         NULL
 #define DEFAULT_CONNECTION_SPEED  0
@@ -388,6 +389,7 @@ enum
   PROP_VIDEO_SINK,
   PROP_VIS_PLUGIN,
   PROP_VOLUME,
+  PROP_MUTE,
   PROP_FRAME,
   PROP_FONT_DESC,
   PROP_CONNECTION_SPEED
@@ -587,8 +589,13 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_klass, PROP_VOLUME,
-      g_param_spec_double ("volume", "volume", "volume",
+      g_param_spec_double ("volume", "Volume", "The audio volume",
           0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, PROP_MUTE,
+      g_param_spec_boolean ("mute", "Mute",
+          "Mute the audio channel without changing the volume", FALSE,
+          G_PARAM_READWRITE));
+
   g_object_class_install_property (gobject_klass, PROP_FRAME,
       gst_param_spec_mini_object ("frame", "Frame",
           "The last frame (NULL = no video available)",
@@ -1060,6 +1067,9 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
     case PROP_VOLUME:
       gst_play_sink_set_volume (playbin->playsink, g_value_get_double (value));
       break;
+    case PROP_MUTE:
+      gst_play_sink_set_mute (playbin->playsink, g_value_get_boolean (value));
+      break;
     case PROP_FONT_DESC:
       break;
     case PROP_CONNECTION_SPEED:
@@ -1169,6 +1179,9 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_VOLUME:
       g_value_set_double (value, gst_play_sink_get_volume (playbin->playsink));
       break;
+    case PROP_MUTE:
+      g_value_set_boolean (value, gst_play_sink_get_mute (playbin->playsink));
+      break;
     case PROP_FRAME:
       break;
     case PROP_FONT_DESC:
@@ -1248,9 +1261,6 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   if (select == NULL)
     goto unknown_type;
 
-  /* store the selector for the pad */
-  g_object_set_data (G_OBJECT (pad), "playbin2.select", select);
-
   if (select->selector == NULL) {
     /* no selector, create one */
     GST_DEBUG_OBJECT (playbin, "creating new selector");
@@ -1270,6 +1280,9 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   if ((sinkpad = gst_element_get_request_pad (select->selector, "sink%d"))) {
     GST_DEBUG_OBJECT (playbin, "got pad %s:%s from selector",
         GST_DEBUG_PAD_NAME (sinkpad));
+
+    /* store the selector for the pad */
+    g_object_set_data (G_OBJECT (sinkpad), "playbin2.select", select);
 
     /* store the pad in the array */
     g_ptr_array_add (select->channels, sinkpad);
@@ -1326,6 +1339,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   if ((select = g_object_get_data (G_OBJECT (pad), "playbin2.select"))) {
     /* remove the pad from the array */
     g_ptr_array_remove (select->channels, pad);
+    GST_DEBUG_OBJECT (playbin, "pad removed from array");
   }
 
   /* get the selector sinkpad */
@@ -1389,7 +1403,8 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
       select->sinkpad =
           gst_play_sink_request_pad (playbin->playsink, select->type);
       res = gst_pad_link (select->srcpad, select->sinkpad);
-      GST_DEBUG_OBJECT (playbin, "linked type %s: %d", select->media, res);
+      GST_DEBUG_OBJECT (playbin, "linked type %s, result: %d", select->media,
+          res);
     }
   }
   /* configure the modes now */

@@ -88,7 +88,7 @@ static gulong changed_id;
 static gint n_video = 0, n_audio = 0, n_text = 0;
 static GtkWidget *video_combo, *audio_combo, *text_combo;
 static GtkWidget *vis_checkbox, *video_checkbox, *audio_checkbox;
-static GtkWidget *text_checkbox, *volume_spinbutton;
+static GtkWidget *text_checkbox, *mute_checkbox, *volume_spinbutton;
 
 static void clear_streams (GstElement * pipeline);
 
@@ -1364,6 +1364,7 @@ stop_cb (GtkButton * button, gpointer data)
 
     set_update_scale (FALSE);
     set_scale (0.0);
+
     if (pipeline_type == 16)
       clear_streams (pipeline);
 
@@ -1503,6 +1504,15 @@ static void
 text_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 {
   update_flag (pipeline, 2, gtk_toggle_button_get_active (button));
+}
+
+static void
+mute_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  gboolean mute;
+
+  mute = gtk_toggle_button_get_active (button);
+  g_object_set (pipeline, "mute", mute, NULL);
 }
 
 static void
@@ -1879,17 +1889,20 @@ main (int argc, char **argv)
     video_checkbox = gtk_check_button_new_with_label ("Video");
     audio_checkbox = gtk_check_button_new_with_label ("Audio");
     text_checkbox = gtk_check_button_new_with_label ("Text");
+    mute_checkbox = gtk_check_button_new_with_label ("Mute");
     volume_spinbutton = gtk_spin_button_new_with_range (0, 2.0, 0.1);
     gtk_spin_button_set_value (GTK_SPIN_BUTTON (volume_spinbutton), 1.0);
     gtk_box_pack_start (GTK_BOX (boxes), vis_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), audio_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), video_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), text_checkbox, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (boxes), mute_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), volume_spinbutton, TRUE, TRUE, 2);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (vis_checkbox), TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (audio_checkbox), TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (video_checkbox), TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (text_checkbox), TRUE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (mute_checkbox), FALSE);
     g_signal_connect (G_OBJECT (vis_checkbox), "toggled",
         G_CALLBACK (vis_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (audio_checkbox), "toggled",
@@ -1898,6 +1911,8 @@ main (int argc, char **argv)
         G_CALLBACK (video_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (text_checkbox), "toggled",
         G_CALLBACK (text_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (mute_checkbox), "toggled",
+        G_CALLBACK (mute_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (volume_spinbutton), "value_changed",
         G_CALLBACK (volume_spinbutton_changed_cb), pipeline);
   } else {

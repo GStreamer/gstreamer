@@ -274,7 +274,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
-      GST_DEBUG_OBJECT (sel,
+      GST_DEBUG_OBJECT (selpad,
           "configured NEWSEGMENT update %d, rate %lf, applied rate %lf, "
           "format %d, "
           "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
@@ -282,10 +282,10 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
 
       gst_segment_set_newsegment_full (&selpad->segment, update,
           rate, arate, format, start, stop, time);
-      /* if we are not going to forward the segment, mark the segment as
-       * pending */
+      /* mark pending segment if we are not forwarding, we assume all pads share
+       * the same segment so we only forward once. */
       if (!forward)
-        selpad->segment_pending = TRUE;
+        sel->segment_pending = TRUE;
       break;
     }
     case GST_EVENT_TAG:
@@ -407,12 +407,12 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
     goto ignore;
 
   /* if we have a pending segment, push it out now */
-  if (selpad->segment_pending) {
+  if (sel->segment_pending) {
     gst_pad_push_event (sel->srcpad, gst_event_new_new_segment_full (FALSE,
             seg->rate, seg->applied_rate, seg->format, seg->start, seg->stop,
             seg->time));
 
-    selpad->segment_pending = FALSE;
+    sel->segment_pending = FALSE;
   }
 
   /* forward */
