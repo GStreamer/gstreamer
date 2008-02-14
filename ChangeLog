@@ -1,3 +1,9 @@
+2008-02-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/examples/spectrum/spectrum-example.c:
+	Add missing include to fix compilation when libxml usage is disabled.
+	Fixes: #516371
+
 2008-02-12  Jan Schmidt  <jan.schmidt@sun.com>
 
 	patch by:  Wim Taymans  <wim.taymans@collabora.co.uk>

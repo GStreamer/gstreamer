@@ -19,6 +19,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 #include <gst/gst.h>
 
 static guint spect_bands = 20;
