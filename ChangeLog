@@ -1,3 +1,10 @@
+2008-02-14  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/camutils.c:
+	Do not assume "descriptors" property in the pmt structure
+	is present.
+	Fixes #516499.
+
 2008-02-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Olivier Crete <tester@tester.ca>
