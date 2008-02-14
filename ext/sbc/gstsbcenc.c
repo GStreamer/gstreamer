@@ -31,10 +31,10 @@
 #include "gstsbcenc.h"
 #include "gstsbcutil.h"
 
-#define SBC_ENC_DEFAULT_MODE BT_A2DP_CHANNEL_MODE_AUTO
+#define SBC_ENC_DEFAULT_MODE BT_A2DP_CHANNEL_MODE_JOINT_STEREO
 #define SBC_ENC_DEFAULT_BLOCKS 0
 #define SBC_ENC_DEFAULT_SUB_BANDS 0
-#define SBC_ENC_DEFAULT_ALLOCATION BT_A2DP_ALLOCATION_AUTO
+#define SBC_ENC_DEFAULT_ALLOCATION BT_A2DP_ALLOCATION_LOUDNESS
 #define SBC_ENC_DEFAULT_RATE 0
 #define SBC_ENC_DEFAULT_CHANNELS 0
 
@@ -75,7 +75,6 @@ gst_sbc_allocation_get_type (void)
 {
   static GType sbc_allocation_type = 0;
   static GEnumValue sbc_allocations[] = {
-    {BT_A2DP_ALLOCATION_AUTO, "Auto", "auto"},
     {BT_A2DP_ALLOCATION_LOUDNESS, "Loudness", "loudness"},
     {BT_A2DP_ALLOCATION_SNR, "SNR", "snr"},
     {-1, NULL, NULL}
@@ -202,7 +201,7 @@ sbc_enc_generate_srcpad_caps (GstSbcEnc * enc)
     gst_sbc_util_set_structure_int_param (structure, "bitpool",
         enc->bitpool, value);
 
-  if (enc->mode != BT_A2DP_CHANNEL_MODE_AUTO) {
+  if (enc->mode != SBC_ENC_DEFAULT_MODE) {
     enum_class = g_type_class_ref (GST_TYPE_SBC_MODE);
     enum_value = g_enum_get_value (enum_class, enc->mode);
     gst_sbc_util_set_structure_string_param (structure, "mode",
@@ -210,7 +209,7 @@ sbc_enc_generate_srcpad_caps (GstSbcEnc * enc)
     g_type_class_unref (enum_class);
   }
 
-  if (enc->allocation != BT_A2DP_ALLOCATION_AUTO) {
+  if (enc->allocation != SBC_ENC_DEFAULT_ALLOCATION) {
     enum_class = g_type_class_ref (GST_TYPE_SBC_ALLOCATION);
     enum_value = g_enum_get_value (enum_class, enc->allocation);
     gst_sbc_util_set_structure_string_param (structure, "allocation",
@@ -347,10 +346,10 @@ gst_sbc_enc_fill_sbc_params (GstSbcEnc * enc, GstCaps * caps)
     goto fail;
 
   mode = gst_sbc_get_mode_int_from_sbc_t (&enc->sbc);
-  if (enc->mode != BT_A2DP_CHANNEL_MODE_AUTO && mode != enc->mode)
+  if (enc->mode != SBC_ENC_DEFAULT_MODE && mode != enc->mode)
     goto fail;
 
-  if (enc->allocation != BT_A2DP_ALLOCATION_AUTO &&
+  if (enc->allocation != SBC_ENC_DEFAULT_ALLOCATION &&
       enc->sbc.allocation != enc->allocation)
     goto fail;
 
