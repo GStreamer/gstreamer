@@ -900,6 +900,7 @@ gst_dvd_spu_handle_new_spu_buf (GstDVDSpu * dvdspu, SpuPacket * packet)
   state->cur_cmd_blk = GST_READ_UINT16_BE (start + 2);
   gst_dvd_spu_setup_cmd_blk (dvdspu, state->cur_cmd_blk, start, end);
   /* Clear existing chg-colcon info */
+  state->n_line_ctrl_i = 0;
   if (state->line_ctrl_i != NULL) {
     g_free (state->line_ctrl_i);
     state->line_ctrl_i = NULL;

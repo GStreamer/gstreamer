@@ -1,3 +1,9 @@
+2008-02-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/dvdspu/gstdvdspu.c: (gst_dvd_spu_handle_new_spu_buf):
+	Set n_line_ctrl_i to 0 whenever we free line_ctrl_i. Patch based
+	on an idea by Jan Schmidt, fixes bug #516436.
+
 2008-02-14  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/gstmpegdesc.c:
