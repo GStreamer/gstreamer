@@ -280,9 +280,7 @@ gst_avdtp_sink_init_sbc_pkt_conf (GstAvdtpSink * sink,
 
   value = gst_structure_get_value (structure, "mode");
   pref = g_value_get_string (value);
-  if (strcmp (pref, "auto") == 0)
-    cfg->channel_mode = BT_A2DP_CHANNEL_MODE_AUTO;
-  else if (strcmp (pref, "mono") == 0)
+  if (strcmp (pref, "mono") == 0)
     cfg->channel_mode = BT_A2DP_CHANNEL_MODE_MONO;
   else if (strcmp (pref, "dual") == 0)
     cfg->channel_mode = BT_A2DP_CHANNEL_MODE_DUAL_CHANNEL;
@@ -297,9 +295,7 @@ gst_avdtp_sink_init_sbc_pkt_conf (GstAvdtpSink * sink,
 
   value = gst_structure_get_value (structure, "allocation");
   pref = g_value_get_string (value);
-  if (strcmp (pref, "auto") == 0)
-    cfg->allocation_method = BT_A2DP_ALLOCATION_AUTO;
-  else if (strcmp (pref, "loudness") == 0)
+  if (strcmp (pref, "loudness") == 0)
     cfg->allocation_method = BT_A2DP_ALLOCATION_LOUDNESS;
   else if (strcmp (pref, "snr") == 0)
     cfg->allocation_method = BT_A2DP_ALLOCATION_SNR;
@@ -434,32 +430,21 @@ gst_avdtp_sink_parse_sbc_caps (GstAvdtpSink * self, sbc_capabilities_t * sbc)
 
   /* mode */
   list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
-  if (sbc->channel_mode == BT_A2DP_CHANNEL_MODE_AUTO) {
-    g_value_set_static_string (value, "joint");
-    gst_value_list_prepend_value (list, value);
-    g_value_set_static_string (value, "stereo");
-    gst_value_list_prepend_value (list, value);
+  if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_MONO) {
     g_value_set_static_string (value, "mono");
     gst_value_list_prepend_value (list, value);
+  }
+  if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_STEREO) {
+    g_value_set_static_string (value, "stereo");
+    gst_value_list_prepend_value (list, value);
+  }
+  if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_DUAL_CHANNEL) {
     g_value_set_static_string (value, "dual");
     gst_value_list_prepend_value (list, value);
-  } else {
-    if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_MONO) {
-      g_value_set_static_string (value, "mono");
-      gst_value_list_prepend_value (list, value);
-    }
-    if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_STEREO) {
-      g_value_set_static_string (value, "stereo");
-      gst_value_list_prepend_value (list, value);
-    }
-    if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_DUAL_CHANNEL) {
-      g_value_set_static_string (value, "dual");
-      gst_value_list_prepend_value (list, value);
-    }
-    if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_JOINT_STEREO) {
-      g_value_set_static_string (value, "joint");
-      gst_value_list_prepend_value (list, value);
-    }
+  }
+  if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_JOINT_STEREO) {
+    g_value_set_static_string (value, "joint");
+    gst_value_list_prepend_value (list, value);
   }
   g_value_unset (value);
   if (list) {
@@ -515,20 +500,13 @@ gst_avdtp_sink_parse_sbc_caps (GstAvdtpSink * self, sbc_capabilities_t * sbc)
   /* allocation */
   g_value_init (value, G_TYPE_STRING);
   list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
-  if (sbc->allocation_method == BT_A2DP_ALLOCATION_AUTO) {
+  if (sbc->allocation_method & BT_A2DP_ALLOCATION_LOUDNESS) {
     g_value_set_static_string (value, "loudness");
     gst_value_list_prepend_value (list, value);
+  }
+  if (sbc->allocation_method & BT_A2DP_ALLOCATION_SNR) {
     g_value_set_static_string (value, "snr");
     gst_value_list_prepend_value (list, value);
-  } else {
-    if (sbc->allocation_method & BT_A2DP_ALLOCATION_LOUDNESS) {
-      g_value_set_static_string (value, "loudness");
-      gst_value_list_prepend_value (list, value);
-    }
-    if (sbc->allocation_method & BT_A2DP_ALLOCATION_SNR) {
-      g_value_set_static_string (value, "snr");
-      gst_value_list_prepend_value (list, value);
-    }
   }
   g_value_unset (value);
   if (list) {
@@ -572,35 +550,31 @@ gst_avdtp_sink_parse_sbc_caps (GstAvdtpSink * self, sbc_capabilities_t * sbc)
   g_value_unset (value);
 
   /* channels */
-  if (sbc->channel_mode == BT_A2DP_CHANNEL_MODE_AUTO) {
+  mono = FALSE;
+  stereo = FALSE;
+  if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_MONO)
+    mono = TRUE;
+  if ((sbc->channel_mode & BT_A2DP_CHANNEL_MODE_STEREO) ||
+      (sbc->channel_mode &
+          BT_A2DP_CHANNEL_MODE_DUAL_CHANNEL) ||
+      (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_JOINT_STEREO))
+    stereo = TRUE;
+
+  if (mono && stereo) {
     g_value_init (value, GST_TYPE_INT_RANGE);
     gst_value_set_int_range (value, 1, 2);
   } else {
-    mono = FALSE;
-    stereo = FALSE;
-    if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_MONO)
-      mono = TRUE;
-    if ((sbc->channel_mode & BT_A2DP_CHANNEL_MODE_STEREO) ||
-        (sbc->channel_mode &
-            BT_A2DP_CHANNEL_MODE_DUAL_CHANNEL) ||
-        (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_JOINT_STEREO))
-      stereo = TRUE;
-
-    if (mono && stereo) {
-      g_value_init (value, GST_TYPE_INT_RANGE);
-      gst_value_set_int_range (value, 1, 2);
-    } else {
-      g_value_init (value, G_TYPE_INT);
-      if (mono)
-        g_value_set_int (value, 1);
-      else if (stereo)
-        g_value_set_int (value, 2);
-      else {
-        GST_ERROR_OBJECT (self, "Unexpected number of channels");
-        g_value_set_int (value, 0);
-      }
+    g_value_init (value, G_TYPE_INT);
+    if (mono)
+      g_value_set_int (value, 1);
+    else if (stereo)
+      g_value_set_int (value, 2);
+    else {
+      GST_ERROR_OBJECT (self, "Unexpected number of channels");
+      g_value_set_int (value, 0);
     }
   }
+
   gst_structure_set_value (structure, "channels", value);
   g_free (value);
 
