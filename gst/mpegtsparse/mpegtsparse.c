@@ -28,6 +28,7 @@
 #include <stdlib.h>
 
 #include "mpegtsparse.h"
+#include "gstmpegdesc.h"
 
 /* latency in mseconds */
 #define TS_LATENCY 700
@@ -1202,6 +1203,7 @@ plugin_init (GstPlugin * plugin)
       "MPEG transport stream parser");
 
   mpegts_packetizer_init_debug ();
+  gst_mpegtsdesc_init_debug ();
 
   return gst_element_register (plugin, "mpegtsparse",
       GST_RANK_NONE, GST_TYPE_MPEGTS_PARSE);

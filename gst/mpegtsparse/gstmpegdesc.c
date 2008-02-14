@@ -35,8 +35,8 @@
 
 #include "gstmpegdesc.h"
 
-GST_DEBUG_CATEGORY (gstflumpegdesc_debug);
-#define GST_CAT_DEFAULT (gstflumpegdesc_debug)
+GST_DEBUG_CATEGORY (gstmpegtsdesc_debug);
+#define GST_CAT_DEFAULT (gstmpegtsdesc_debug)
 
 void
 gst_mpeg_descriptor_free (GstMPEGDescriptor * desc)
@@ -195,4 +195,11 @@ gst_mpeg_descriptor_nth (GstMPEGDescriptor * desc, guint i)
 
   }
   return NULL;
+}
+
+void
+gst_mpegtsdesc_init_debug ()
+{
+  GST_DEBUG_CATEGORY_INIT (gstmpegtsdesc_debug, "mpegtsdesc", 0,
+      "MPEG transport stream parser (descriptor)");
 }

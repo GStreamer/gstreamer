@@ -1,3 +1,13 @@
+2008-02-14  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/gstmpegdesc.c:
+	* gst/mpegtsparse/gstmpegdesc.h:
+	* gst/mpegtsparse/mpegtsparse.c:
+	Make sure the gstmpegdesc debug lines do not critical
+	when GST_DEBUG is enabled and also actually output.
+	Thanks to Alessandro Decina for spotting.
+	Fixes #516448
+
 2008-02-13  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst-libs/gst/Makefile.am:
