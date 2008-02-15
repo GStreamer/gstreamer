@@ -180,6 +180,10 @@ GstBuffer*	gst_collect_pads_pop		(GstCollectPads *pads, GstCollectData *data);
 guint 		gst_collect_pads_available 	(GstCollectPads *pads);
 guint		gst_collect_pads_read		(GstCollectPads *pads, GstCollectData *data,
 						 guint8 **bytes, guint size);
+GstBuffer *      gst_collect_pads_read_buffer      (GstCollectPads * pads, GstCollectData * data,
+						 guint size);
+GstBuffer *      gst_collect_pads_take_buffer      (GstCollectPads * pads, GstCollectData * data,
+						 guint size);
 guint 		gst_collect_pads_flush 		(GstCollectPads *pads, GstCollectData *data,
 						 guint size);
 

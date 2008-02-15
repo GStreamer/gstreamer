@@ -352,6 +352,8 @@ gst_collect_pads_peek
 gst_collect_pads_pop
 gst_collect_pads_available
 gst_collect_pads_read
+gst_collect_pads_read_buffer
+gst_collect_pads_take_buffer
 gst_collect_pads_flush
 <SUBSECTION Standard>
 GstCollectPadsClass

@@ -806,7 +806,7 @@ not_filled:
  * @size: the number of bytes to read
  *
  * Get a pointer in @bytes where @size bytes can be read from the
- * given pad data.
+ * given pad @data.
  *
  * This function should be called with @pads LOCK held, such as
  * in the callback.
@@ -841,6 +841,75 @@ gst_collect_pads_read (GstCollectPads * pads, GstCollectData * data,
 }
 
 /**
+ * gst_collect_pads_read_buffer:
+ * @pads: the collectspads to query
+ * @data: the data to use
+ * @size: the number of bytes to read
+ *
+ * Get a subbuffer of @size bytes from the given pad @data.
+ *
+ * This function should be called with @pads LOCK held, such as in the callback.
+ *
+ * Since: 0.10.18
+ *
+ * Returns: A sub buffer. The size of the buffer can be less that requested.
+ * A return of NULL signals that the pad is end-of-stream.
+ * Unref the buffer after use.
+ *
+ * MT safe.
+ */
+GstBuffer *
+gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
+    guint size)
+{
+  guint readsize;
+  GstBuffer *buffer;
+
+  g_return_val_if_fail (pads != NULL, 0);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), 0);
+  g_return_val_if_fail (data != NULL, 0);
+
+  /* no buffer, must be EOS */
+  if ((buffer = data->buffer) == NULL)
+    return NULL;
+
+  readsize = MIN (size, GST_BUFFER_SIZE (buffer) - data->pos);
+
+  return gst_buffer_create_sub (buffer, data->pos, readsize);
+}
+
+/**
+ * gst_collect_pads_take_buffer:
+ * @pads: the collectspads to query
+ * @data: the data to use
+ * @size: the number of bytes to read
+ *
+ * Get a subbuffer of @size bytes from the given pad @data. Flushes the amount
+ * of read bytes.
+ *
+ * This function should be called with @pads LOCK held, such as in the callback.
+ *
+ * Since: 0.10.18
+ *
+ * Returns: A sub buffer. The size of the buffer can be less that requested.
+ * A return of NULL signals that the pad is end-of-stream.
+ * Unref the buffer after use.
+ *
+ * MT safe.
+ */
+GstBuffer *
+gst_collect_pads_take_buffer (GstCollectPads * pads, GstCollectData * data,
+    guint size)
+{
+  GstBuffer *buffer = gst_collect_pads_read_buffer (pads, data, size);
+
+  if (buffer) {
+    gst_collect_pads_flush (pads, data, GST_BUFFER_SIZE (buffer));
+  }
+  return buffer;
+}
+
+/**
  * gst_collect_pads_flush:
  * @pads: the collectspads to query
  * @data: the data to use
@@ -851,7 +920,7 @@ gst_collect_pads_read (GstCollectPads * pads, GstCollectData * data,
  * This function should be called with @pads LOCK held, such as
  * in the callback.
  *
- * Returns: The number of bytes flushed This can be less than @size and
+ * Returns: The number of bytes flushed. This can be less than @size and
  * is 0 if the pad was end-of-stream.
  *
  * MT safe.

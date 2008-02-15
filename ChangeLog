@@ -1,5 +1,13 @@
 2008-02-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstcollectpads.c:
+	* libs/gst/base/gstcollectpads.h:
+	  Add sub-buffer functions to collectpads. Fixes #516187.
+	  API: gst_collect_pads_take_buffer(), gst_collect_pads_read_buffer()
+
+2008-02-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstbuffer.c:
 	  Copy selected buffer-flags when creating subbuffers.
 	  Fixes #516395.
