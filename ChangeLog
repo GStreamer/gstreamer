@@ -1,3 +1,9 @@
+2008-02-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstbuffer.c:
+	  Copy selected buffer-flags when creating subbuffers.
+	  Fixes #516395.
+
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstbuffer.c: (gst_buffer_class_init), (gst_buffer_finalize):
