@@ -1,3 +1,16 @@
+2008-02-15  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c: (gst_play_sink_set_mute),
+	(gst_play_sink_get_mute), (gen_video_chain), (gen_audio_chain),
+	(gen_vis_chain), (gst_play_sink_reconfigure),
+	(gst_play_sink_request_pad):
+	Move tee in front of the audio and vis pipelines.
+	Add queue for audio for now.
+	Add visualisation support.
+
+	* tests/examples/seek/seek.c: (main):
+	Visualisation is by default disabled.
+
 2008-02-15  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/gio/gstgiobasesink.c: (close_stream_cb):

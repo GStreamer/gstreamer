@@ -1898,7 +1898,7 @@ main (int argc, char **argv)
     gtk_box_pack_start (GTK_BOX (boxes), text_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), mute_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), volume_spinbutton, TRUE, TRUE, 2);
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (vis_checkbox), TRUE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (vis_checkbox), FALSE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (audio_checkbox), TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (video_checkbox), TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (text_checkbox), TRUE);
