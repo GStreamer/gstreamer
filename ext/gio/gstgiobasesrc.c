@@ -139,12 +139,15 @@ close_stream_cb (GObject * object, GAsyncResult * res, gpointer user_data)
 
   if (!success
       && !gst_gio_error (src, "g_input_stream_close_async", &err, NULL)) {
-    GST_ELEMENT_ERROR (src, RESOURCE, CLOSE, (NULL),
+    GST_ELEMENT_WARNING (src, RESOURCE, CLOSE, (NULL),
         ("g_input_stream_close_async failed: %s", err->message));
     g_clear_error (&err);
+  } else if (!success) {
+    GST_ELEMENT_WARNING (src, RESOURCE, CLOSE, (NULL),
+        ("g_input_stream_close_async failed"));
+  } else {
+    GST_DEBUG_OBJECT (src, "g_input_stream_close_async succeeded");
   }
-
-  GST_DEBUG_OBJECT (src, "closed stream");
 
   g_object_unref (src);
 }

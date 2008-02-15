@@ -178,6 +178,34 @@ gst_gio_src_get_property (GObject * object, guint prop_id,
   }
 }
 
+static void
+mount_cb (GObject * source, GAsyncResult * res, gpointer user_data)
+{
+  gboolean success;
+  GError *err = NULL;
+  GstGioSrc *src = GST_GIO_SRC (user_data);
+
+  success = g_file_mount_enclosing_volume_finish (G_FILE (source), res, &err);
+
+  if (!success
+      && !gst_gio_error (src, "g_file_mount_enclosing_volume", &err, NULL)) {
+    GST_ELEMENT_ERROR (src, RESOURCE, CLOSE, (NULL),
+        ("g_file_mount_enclosing_volume failed: %s", err->message));
+    g_clear_error (&err);
+  } else if (!success) {
+    GST_ELEMENT_WARNING (src, RESOURCE, CLOSE, (NULL),
+        ("g_file_mount_enclosing_volume failed"));
+  } else {
+    GST_DEBUG ("g_file_mount_enclosing_volume failed succeeded");
+  }
+
+  src->mount_successful = success;
+
+  g_main_loop_quit (src->loop);
+
+  g_object_unref (src);
+}
+
 static gboolean
 gst_gio_src_start (GstBaseSrc * base_src)
 {
@@ -202,23 +230,56 @@ gst_gio_src_start (GstBaseSrc * base_src)
 
   stream = G_INPUT_STREAM (g_file_read (file, cancel, &err));
 
+  if (stream == NULL && !gst_gio_error (src, "g_file_read", &err, NULL) &&
+      GST_GIO_ERROR_MATCHES (err, NOT_MOUNTED)) {
+
+
+    GST_DEBUG ("Trying to mount enclosing volume for %s\n", src->location);
+    g_clear_error (&err);
+    err = NULL;
+
+    src->loop = g_main_loop_new (NULL, TRUE);
+    if (!src->loop) {
+      GST_ELEMENT_ERROR (src, LIBRARY, INIT,
+          (NULL), ("Failed to start GMainLoop"));
+    } else {
+      src->mount_successful = FALSE;
+      /* TODO: authentication: a GMountOperation property that apps can set
+       * and properties for user/password/etc that can be used more easily
+       */
+      g_file_mount_enclosing_volume (file, G_MOUNT_MOUNT_NONE, NULL, cancel,
+          mount_cb, g_object_ref (src));
+      g_main_loop_run (src->loop);
+
+      g_main_loop_unref (src->loop);
+      src->loop = NULL;
+
+      if (!src->mount_successful) {
+        GST_ERROR ("Mounting the enclosing volume failed for some reason");
+      } else {
+        stream = G_INPUT_STREAM (g_file_read (file, cancel, &err));
+      }
+    }
+  }
+
+  src->mount_successful = FALSE;
+
   g_object_unref (file);
 
   if (stream == NULL && !gst_gio_error (src, "g_file_read", &err, NULL)) {
 
-    if (GST_GIO_ERROR_MATCHES (err, NOT_FOUND))
+    if (GST_GIO_ERROR_MATCHES (err, NOT_FOUND)) {
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
           ("Could not open location %s for reading: %s",
               src->location, err->message));
-    else
+    } else {
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
           ("Could not open location %s for reading: %s",
               src->location, err->message));
+    }
 
     g_clear_error (&err);
-
     return FALSE;
-
   } else if (stream == NULL) {
     return FALSE;
   }

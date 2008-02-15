@@ -54,6 +54,9 @@ struct _GstGioSink
 
   /*< private >*/
   gchar *location;
+
+  GMainLoop *loop;
+  gboolean mount_successful;
 };
 
 struct _GstGioSinkClass 

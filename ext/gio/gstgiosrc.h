@@ -54,6 +54,9 @@ struct _GstGioSrc
   
   /*< private >*/
   gchar *location;
+
+  GMainLoop *loop;
+  gboolean mount_successful;
 };
 
 struct _GstGioSrcClass 

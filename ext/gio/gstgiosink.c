@@ -183,6 +183,34 @@ gst_gio_sink_get_property (GObject * object, guint prop_id,
   }
 }
 
+static void
+mount_cb (GObject * source, GAsyncResult * res, gpointer user_data)
+{
+  gboolean success;
+  GError *err = NULL;
+  GstGioSink *sink = GST_GIO_SINK (user_data);
+
+  success = g_file_mount_enclosing_volume_finish (G_FILE (source), res, &err);
+
+  if (!success
+      && !gst_gio_error (sink, "g_file_mount_enclosing_volume", &err, NULL)) {
+    GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
+        ("g_file_mount_enclosing_volume failed: %s", err->message));
+    g_clear_error (&err);
+  } else if (!success) {
+    GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
+        ("g_file_mount_enclosing_volume failed"));
+  } else {
+    GST_DEBUG ("g_file_mount_enclosing_volume failed succeeded");
+  }
+
+  sink->mount_successful = success;
+
+  g_main_loop_quit (sink->loop);
+
+  g_object_unref (sink);
+}
+
 static gboolean
 gst_gio_sink_start (GstBaseSink * base_sink)
 {
@@ -209,6 +237,40 @@ gst_gio_sink_start (GstBaseSink * base_sink)
 
   stream =
       G_OUTPUT_STREAM (g_file_create (file, G_FILE_CREATE_NONE, cancel, &err));
+
+  if (stream == NULL && !gst_gio_error (sink, "g_file_read", &err, NULL) &&
+      GST_GIO_ERROR_MATCHES (err, NOT_MOUNTED)) {
+
+    GST_DEBUG ("Trying to mount enclosing volume for %s\n", sink->location);
+    g_clear_error (&err);
+    err = NULL;
+
+    sink->loop = g_main_loop_new (NULL, TRUE);
+    if (!sink->loop) {
+      GST_ELEMENT_ERROR (sink, LIBRARY, INIT,
+          (NULL), ("Failed to start GMainLoop"));
+    } else {
+      sink->mount_successful = FALSE;
+      /* TODO: authentication: a GMountOperation property that apps can set
+       * and properties for user/password/etc that can be used more easily
+       */
+      g_file_mount_enclosing_volume (file, G_MOUNT_MOUNT_NONE, NULL, cancel,
+          mount_cb, g_object_ref (sink));
+      g_main_loop_run (sink->loop);
+
+      g_main_loop_unref (sink->loop);
+      sink->loop = NULL;
+
+      if (!sink->mount_successful) {
+        GST_DEBUG ("Mounting the enclosing volume failed for some reason");
+      } else {
+        stream =
+            G_OUTPUT_STREAM (g_file_create (file, G_FILE_CREATE_NONE, cancel,
+                &err));
+      }
+    }
+  }
+
   success = (stream != NULL);
 
   g_object_unref (file);
