@@ -1,3 +1,15 @@
+2008-02-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/gio/gstgiobasesink.c: (gst_gio_base_sink_stop),
+	(gst_gio_base_sink_set_stream):
+	* ext/gio/gstgiobasesrc.c: (gst_gio_base_src_stop),
+	(gst_gio_base_src_set_stream):
+	* ext/gio/gstgiosink.c: (gst_gio_sink_start):
+	* ext/gio/gstgiosrc.c: (gst_gio_src_start):
+	Don't use async operations as they require a running main loop.
+	This makes us block again when closing streams and unable
+	to mount the enclosing volume of an URI if it isn't yet.
+
 2008-02-15  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstplaysink.c: (gst_play_sink_set_mute),

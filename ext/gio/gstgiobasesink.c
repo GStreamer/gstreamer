@@ -128,39 +128,31 @@ gst_gio_base_sink_start (GstBaseSink * base_sink)
   return TRUE;
 }
 
-static void
-close_stream_cb (GObject * object, GAsyncResult * res, gpointer user_data)
-{
-  GstGioBaseSink *sink = GST_GIO_BASE_SINK (user_data);
-  gboolean success;
-  GError *err = NULL;
-
-  success = g_output_stream_close_finish (G_OUTPUT_STREAM (object), res, &err);
-
-  if (!success
-      && !gst_gio_error (sink, "g_output_stream_close_async", &err, NULL)) {
-    GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
-        ("g_output_stream_close_async failed: %s", err->message));
-    g_clear_error (&err);
-  } else if (!success) {
-    GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
-        ("g_output_stream_close_async failed"));
-  } else {
-    GST_DEBUG_OBJECT (sink, "g_output_stream_close_async succeeded");
-  }
-
-  g_object_unref (sink);
-}
-
 static gboolean
 gst_gio_base_sink_stop (GstBaseSink * base_sink)
 {
   GstGioBaseSink *sink = GST_GIO_BASE_SINK (base_sink);
+  gboolean success;
+  GError *err = NULL;
 
   if (G_IS_OUTPUT_STREAM (sink->stream)) {
     GST_DEBUG_OBJECT (sink, "closing stream");
-    g_output_stream_close_async (sink->stream, 0, sink->cancel, close_stream_cb,
-        g_object_ref (sink));
+
+    /* FIXME: can block but unfortunately we can't use async operations
+     * here because they require a running main loop */
+    success = g_output_stream_close (sink->stream, sink->cancel, &err);
+
+    if (!success && !gst_gio_error (sink, "g_output_stream_close", &err, NULL)) {
+      GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
+          ("g_ooutput_stream_close failed: %s", err->message));
+      g_clear_error (&err);
+    } else if (!success) {
+      GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
+          ("g_output_stream_close failed"));
+    } else {
+      GST_DEBUG_OBJECT (sink, "g_outut_stream_close succeeded");
+    }
+
     g_object_unref (sink->stream);
     sink->stream = NULL;
   }
@@ -329,9 +321,26 @@ gst_gio_base_sink_set_stream (GstGioBaseSink * sink, GOutputStream * stream)
           GST_STATE (sink) != GST_STATE_PAUSED));
 
   if (G_IS_OUTPUT_STREAM (sink->stream)) {
+    gboolean success;
+    GError *err = NULL;
+
     GST_DEBUG_OBJECT (sink, "closing old stream");
-    g_output_stream_close_async (sink->stream, 0, sink->cancel, close_stream_cb,
-        g_object_ref (sink));
+
+    /* FIXME: can block but unfortunately we can't use async operations
+     * here because they require a running main loop */
+    success = g_output_stream_close (sink->stream, sink->cancel, &err);
+
+    if (!success && !gst_gio_error (sink, "g_output_stream_close", &err, NULL)) {
+      GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
+          ("g_output_stream_close failed: %s", err->message));
+      g_clear_error (&err);
+    } else if (!success) {
+      GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
+          ("g_output_stream_close failed"));
+    } else {
+      GST_DEBUG_OBJECT (sink, "g_output_stream_close succeeded");
+    }
+
     g_object_unref (sink->stream);
     sink->stream = NULL;
   }
