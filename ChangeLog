@@ -1,3 +1,10 @@
+2008-02-17  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+
+	Revert previous commit to mp3parse, as it breaks playback
+	of AVI files.
+
 2008-02-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
