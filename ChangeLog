@@ -1,3 +1,9 @@
+2008-02-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_create_stream):
+	Init values to -1 instead of the default 0 value.
+	Fixes #516524.
+
 2008-02-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/examples/spectrum/spectrum-example.c:

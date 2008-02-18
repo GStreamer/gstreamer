@@ -611,6 +611,8 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
   stream->id = src->numstreams++;
   stream->eos = FALSE;
   stream->discont = TRUE;
+  stream->seqbase = -1;
+  stream->timebase = -1;
 
   /* collect bandwidth information for this steam */
   gst_rtspsrc_collect_bandwidth (src, sdp, media, stream);
