@@ -887,7 +887,7 @@ gst_dvd_read_src_create (GstPushSrc * pushsrc, GstBuffer ** p_buf)
   if (src->need_newsegment) {
     gst_pad_push_event (srcpad,
         gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-            src->cur_pack * DVD_VIDEO_LB_LEN, -1, 0));
+            (gint64) src->cur_pack * DVD_VIDEO_LB_LEN, -1, 0));
     src->need_newsegment = FALSE;
   }
 
@@ -1187,7 +1187,7 @@ gst_dvd_read_src_do_seek (GstBaseSrc * basesrc, GstSegment * s)
     } else {
       /* byte format */
       src->cur_pack = s->last_stop / DVD_VIDEO_LB_LEN;
-      if ((src->cur_pack * DVD_VIDEO_LB_LEN) != s->last_stop) {
+      if (((gint64) src->cur_pack * DVD_VIDEO_LB_LEN) != s->last_stop) {
         GST_LOG_OBJECT (src, "rounded down offset %" G_GINT64_FORMAT " => %"
             G_GINT64_FORMAT, s->last_stop,
             (gint64) src->cur_pack * DVD_VIDEO_LB_LEN);
@@ -1345,7 +1345,7 @@ gst_dvd_read_src_do_position_query (GstDvdReadSrc * src, GstQuery * query)
 
   switch (format) {
     case GST_FORMAT_BYTES:{
-      val = src->cur_pack * DVD_VIDEO_LB_LEN;
+      val = (gint64) src->cur_pack * DVD_VIDEO_LB_LEN;
       break;
     }
     default:{
