@@ -1,3 +1,8 @@
+2008-02-18  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* tests/check/Makefile.am:
+	Exclude dvdreadsrc from the states test too.
+
 2008-02-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
