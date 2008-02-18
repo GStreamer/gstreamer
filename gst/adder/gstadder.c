@@ -701,6 +701,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   GstBuffer *outbuf;
   GstFlowReturn ret;
   gpointer outbytes;
+  gboolean empty = TRUE;
 
   adder = GST_ADDER (user_data);
 
@@ -724,17 +725,21 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     GstCollectData *data;
     guint8 *bytes;
     guint len;
+    GstBuffer *inbuf;
 
     data = (GstCollectData *) collected->data;
 
-    /* get pointer to copy size bytes */
-    len = gst_collect_pads_read (pads, data, &bytes, size);
-    /* length 0 means EOS or an empty buffer so we still need to flush in
+    /* get a subbuffer of size bytes */
+    inbuf = gst_collect_pads_take_buffer (pads, data, size);
+    /* NULL means EOS or an empty buffer so we still need to flush in
      * case of an empty buffer. */
-    if (len == 0) {
+    if (inbuf == NULL) {
       GST_LOG_OBJECT (adder, "channel %p: no bytes available", data);
       goto next;
     }
+
+    bytes = GST_BUFFER_DATA (inbuf);
+    len = GST_BUFFER_SIZE (inbuf);
 
     if (outbuf == NULL) {
       GST_LOG_OBJECT (adder, "channel %p: making output buffer of %d bytes",
@@ -746,23 +751,37 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
       outbytes = GST_BUFFER_DATA (outbuf);
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (adder->srcpad));
 
-      /* clear if we are only going to fill a partial buffer */
-      if (G_UNLIKELY (size > len))
+      if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
+        /* clear if we are only going to fill a partial buffer */
+        if (G_UNLIKELY (size > len))
+          memset (outbytes, 0, size);
+
+        GST_LOG_OBJECT (adder, "channel %p: copying %d bytes from data %p",
+            data, len, bytes);
+
+        /* and copy the data into it */
+        memcpy (outbytes, bytes, len);
+        empty = FALSE;
+      } else {
+        GST_LOG_OBJECT (adder, "channel %p: zeroing %d bytes from data %p",
+            data, len, bytes);
         memset (outbytes, 0, size);
-
-      GST_LOG_OBJECT (adder, "channel %p: copying %d bytes from data %p",
-          data, len, bytes);
-
-      /* and copy the data into it */
-      memcpy (outbytes, bytes, len);
+      }
     } else {
-      GST_LOG_OBJECT (adder, "channel %p: mixing %d bytes from data %p",
-          data, len, bytes);
-      /* other buffers, need to add them */
-      adder->func ((gpointer) outbytes, (gpointer) bytes, len);
+      if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
+        GST_LOG_OBJECT (adder, "channel %p: mixing %d bytes from data %p",
+            data, len, bytes);
+        /* other buffers, need to add them */
+        adder->func ((gpointer) outbytes, (gpointer) bytes, len);
+        empty = FALSE;
+      } else {
+        GST_LOG_OBJECT (adder, "channel %p: skipping %d bytes from data %p",
+            data, len, bytes);
+      }
     }
   next:
-    gst_collect_pads_flush (pads, data, len);
+    if (inbuf)
+      gst_buffer_unref (inbuf);
   }
 
   /* can only happen when no pads to collect or all EOS */
@@ -809,6 +828,10 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   /* now we can set the duration of the buffer */
   GST_BUFFER_DURATION (outbuf) = adder->timestamp -
       GST_BUFFER_TIMESTAMP (outbuf);
+
+  /* if we only processed silence, mark output again as silence */
+  if (empty)
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
 
   /* send it out */
   GST_LOG_OBJECT (adder, "pushing outbuf, timestamp %" GST_TIME_FORMAT,

@@ -1,3 +1,11 @@
+2008-02-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Require CVS of core for new API in collectpads.
+
+	* gst/adder/gstadder.c:
+	  Use new API to make adder sparse stream aware.
+
 2008-02-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstplaybin2.c: (pad_added_cb), (pad_removed_cb),
