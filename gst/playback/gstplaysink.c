@@ -59,10 +59,11 @@ typedef struct
 typedef struct
 {
   GstPlayChain chain;
-  GstElement *conv;
   GstElement *queue;
+  GstElement *conv;
   GstElement *scale;
   GstElement *sink;
+  gboolean async;
 } GstPlayVideoChain;
 
 typedef struct
@@ -717,14 +718,14 @@ activate_chain (GstPlayChain * chain, gboolean activate)
 /* make the element (bin) that contains the elements needed to perform
  * video display. 
  *
- *  +------------------------------------------------+
- *  | vbin                                           |
- *  |      +----------+   +----------+   +---------+ |
- *  |      |colorspace|   |videoscale|   |videosink| |
- *  |   +-sink       src-sink       src-sink       | |
- *  |   |  +----------+   +----------+   +---------+ |
- * sink-+                                            |
- *  +------------------------------------------------+
+ *  +------------------------------------------------------------+
+ *  | vbin                                                       |
+ *  |      +-------+   +----------+   +----------+   +---------+ |
+ *  |      | queue |   |colorspace|   |videoscale|   |videosink| |
+ *  |   +-sink    src-sink       src-sink       src-sink       | |
+ *  |   |  +-------+   +----------+   +----------+   +---------+ |
+ * sink-+                                                        |
+ *  +------------------------------------------------------------+
  *           
  */
 static GstPlayChain *
@@ -748,8 +749,13 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
       goto no_sinks;
   }
 
-  /* FIXME, proxy property in sinks */
-  /* g_object_set (chain->sink, "async", async, NULL); */
+  /* if we can disable async behaviour of the sink, we can avoid adding a
+   * queue for the audio chain. */
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (chain->sink), "async")) {
+    g_object_set (chain->sink, "async", async, NULL);
+    chain->async = async;
+  } else
+    chain->async = TRUE;
 
   /* create a bin to hold objects, as we create them we add them to this bin so
    * that when something goes wrong we only need to unref the bin */
@@ -927,17 +933,17 @@ no_overlay:
  * We add a tee as the first element so that we can link the visualisation chain
  * to it when requested.
  *
- *  +-----------------------------------------------------------------------+
- *  | abin                                                                  |
- *  |      +-----+   +---------+   +----------+   +---------+   +---------+ |
- *  |      | tee |   |audioconv|   |audioscale|   | volume  |   |audiosink| |
- *  |   +-sink  src-sink      src-sink       src-sink      src-sink       | |
- *  |   |  +-----+   +---------+   +----------+   +---------+   +---------+ |
- * sink-+                                                                   |
- *  +-----------------------------------------------------------------------+
+ *  +-------------------------------------------------------------+
+ *  | abin                                                        |
+ *  |      +---------+   +----------+   +---------+   +---------+ |
+ *  |      |audioconv|   |audioscale|   | volume  |   |audiosink| |
+ *  |   +-srck      src-sink       src-sink      src-sink       | |
+ *  |   |  +---------+   +----------+   +---------+   +---------+ |
+ * sink-+                                                         |
+ *  +-------------------------------------------------------------+
  */
 static GstPlayChain *
-gen_audio_chain (GstPlaySink * playsink, gboolean raw)
+gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 {
   GstPlayAudioChain *chain;
   GstBin *bin;
@@ -963,10 +969,15 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
   gst_object_sink (bin);
   gst_bin_add (bin, chain->sink);
 
-  if (raw) {
+  if (queue) {
+    /* we have to add a queue when we need to decouple for the video sink in
+     * visualisations */
+    GST_DEBUG_OBJECT (playsink, "adding audio queue");
     chain->queue = gst_element_factory_make ("queue", "aqueue");
     gst_bin_add (bin, chain->queue);
+  }
 
+  if (raw) {
     chain->conv = gst_element_factory_make ("audioconvert", "aconv");
     if (chain->conv == NULL)
       goto no_audioconvert;
@@ -977,9 +988,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
       goto no_audioresample;
     gst_bin_add (bin, chain->resample);
 
-    /* FIXME, remove queue */
-    res = gst_element_link_pads (chain->queue, "src", chain->conv, "sink");
-    res &= gst_element_link_pads (chain->conv, "src", chain->resample, "sink");
+    res = gst_element_link_pads (chain->conv, "src", chain->resample, "sink");
 
     /* FIXME check if the sink has the volume property */
 
@@ -1004,9 +1013,19 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
     if (!res)
       goto link_failed;
 
-    pad = gst_element_get_pad (chain->queue, "sink");
+    if (queue) {
+      res = gst_element_link_pads (chain->queue, "src", chain->conv, "sink");
+      pad = gst_element_get_pad (chain->queue, "sink");
+    } else {
+      pad = gst_element_get_pad (chain->conv, "sink");
+    }
   } else {
-    pad = gst_element_get_pad (chain->sink, "sink");
+    if (queue) {
+      res = gst_element_link_pads (chain->queue, "src", chain->sink, "sink");
+      pad = gst_element_get_pad (chain->queue, "sink");
+    } else {
+      pad = gst_element_get_pad (chain->sink, "sink");
+    }
   }
   chain->chain.sinkpad = gst_ghost_pad_new ("sink", pad);
   gst_object_unref (pad);
@@ -1086,6 +1105,8 @@ gen_vis_chain (GstPlaySink * playsink)
   gst_object_ref (bin);
   gst_object_sink (bin);
 
+  /* we're queuing raw audio here, we can remove this queue when we can disable
+   * async behaviour in the video sink. */
   chain->queue = gst_element_factory_make ("queue", "visqueue");
   gst_bin_add (bin, chain->queue);
 
@@ -1227,10 +1248,17 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   if (need_video) {
     GST_DEBUG_OBJECT (playsink, "adding video, raw %d",
         playsink->video_pad_raw);
-    if (!playsink->videochain)
-      playsink->videochain =
-          gen_video_chain (playsink, need_vis ? TRUE : playsink->video_pad_raw,
-          !need_vis);
+    if (!playsink->videochain) {
+      gboolean raw, async;
+
+      /* we need a raw sink when we do vis or when we have a raw pad */
+      raw = need_vis ? TRUE : playsink->video_pad_raw;
+      /* we try to set the sink async=FALSE when we need vis, this way we can
+       * avoid a queue in the audio chain. */
+      async = !need_vis;
+
+      playsink->videochain = gen_video_chain (playsink, raw, async);
+    }
     add_chain (playsink->videochain, TRUE);
     activate_chain (playsink->videochain, TRUE);
     if (!need_vis)
@@ -1247,9 +1275,25 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
   if (need_audio) {
     GST_DEBUG_OBJECT (playsink, "adding audio");
-    if (!playsink->audiochain)
-      playsink->audiochain =
-          gen_audio_chain (playsink, playsink->audio_pad_raw);
+    if (!playsink->audiochain) {
+      gboolean raw, queue;
+
+      /* get a raw sink if we are asked for a raw pad */
+      raw = playsink->audio_pad_raw;
+      if (need_vis) {
+        /* If we are dealing with visualisations, we need to add a queue to
+         * decouple the audio from the video part. We only have to do this when
+         * the video part is async=true */
+        queue = ((GstPlayVideoChain *) playsink->videochain)->async;
+        GST_DEBUG_OBJECT (playsink, "need audio queue for vis");
+      } else {
+        /* no vis, we can avoid a queue */
+        GST_DEBUG_OBJECT (playsink, "don't need audio queue");
+        queue = FALSE;
+      }
+
+      playsink->audiochain = gen_audio_chain (playsink, raw, queue);
+    }
     add_chain (playsink->audiochain, TRUE);
     gst_pad_link (playsink->audio_tee_asrc, playsink->audiochain->sinkpad);
     activate_chain (playsink->audiochain, TRUE);
@@ -1334,9 +1378,9 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
         playsink->audio_tee_sink =
             gst_element_get_pad (playsink->audio_tee, "sink");
         /* get two request pads */
-        playsink->audio_tee_asrc =
-            gst_element_get_request_pad (playsink->audio_tee, "src%d");
         playsink->audio_tee_vissrc =
+            gst_element_get_request_pad (playsink->audio_tee, "src%d");
+        playsink->audio_tee_asrc =
             gst_element_get_request_pad (playsink->audio_tee, "src%d");
         gst_bin_add (GST_BIN_CAST (playsink), playsink->audio_tee);
         gst_element_set_state (playsink->audio_tee, GST_STATE_PAUSED);

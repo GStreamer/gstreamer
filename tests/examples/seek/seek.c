@@ -86,6 +86,7 @@ static guint seek_timeout_id = 0;
 static gulong changed_id;
 
 static gint n_video = 0, n_audio = 0, n_text = 0;
+static gboolean need_streams = TRUE;
 static GtkWidget *video_combo, *audio_combo, *text_combo;
 static GtkWidget *vis_checkbox, *video_checkbox, *audio_checkbox;
 static GtkWidget *text_checkbox, *mute_checkbox, *volume_spinbutton;
@@ -1532,6 +1533,8 @@ clear_streams (GstElement * pipeline)
   gtk_widget_set_sensitive (video_combo, FALSE);
   gtk_widget_set_sensitive (audio_combo, FALSE);
   gtk_widget_set_sensitive (text_combo, FALSE);
+
+  need_streams = TRUE;
 }
 
 static void
@@ -1539,7 +1542,7 @@ update_streams (GstPipeline * pipeline)
 {
   gint i;
 
-  if (pipeline_type == 16) {
+  if (pipeline_type == 16 && need_streams) {
     GstTagList *tags;
     gchar *name;
     gint active_idx;
@@ -1586,6 +1589,8 @@ update_streams (GstPipeline * pipeline)
     }
     gtk_widget_set_sensitive (text_combo, n_text > 0);
     gtk_combo_box_set_active (GTK_COMBO_BOX (text_combo), active_idx);
+
+    need_streams = FALSE;
   }
 }
 
@@ -1890,7 +1895,7 @@ main (int argc, char **argv)
     audio_checkbox = gtk_check_button_new_with_label ("Audio");
     text_checkbox = gtk_check_button_new_with_label ("Text");
     mute_checkbox = gtk_check_button_new_with_label ("Mute");
-    volume_spinbutton = gtk_spin_button_new_with_range (0, 2.0, 0.1);
+    volume_spinbutton = gtk_spin_button_new_with_range (0, 5.0, 0.1);
     gtk_spin_button_set_value (GTK_SPIN_BUTTON (volume_spinbutton), 1.0);
     gtk_box_pack_start (GTK_BOX (boxes), vis_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), audio_checkbox, TRUE, TRUE, 2);

@@ -1,3 +1,23 @@
+2008-02-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c: (pad_added_cb), (pad_removed_cb),
+	(no_more_pads_cb):
+	Get the object data correct so that we can remove our channels
+	correctly.
+
+	* gst/playback/gstplaysink.c: (gen_video_chain), (gen_audio_chain),
+	(gen_vis_chain), (gst_play_sink_reconfigure),
+	(gst_play_sink_request_pad):
+	Add option to disable async behaviour in the sinks when possible. This
+	makes it possible to avoid an audio queue when dealing with
+	visualisations.
+	Add option to add a queue for the audio path.
+
+	* tests/examples/seek/seek.c: (clear_streams), (update_streams),
+	(main):
+	Disable the vis checkbox to match the defaults of playbin2.
+	Only get the stream info when we need to.
+
 2008-02-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/gio/gstgiobasesink.c: (gst_gio_base_sink_stop),

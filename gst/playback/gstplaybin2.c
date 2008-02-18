@@ -1285,6 +1285,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     g_object_set_data (G_OBJECT (sinkpad), "playbin2.select", select);
 
     /* store the pad in the array */
+    GST_DEBUG_OBJECT (playbin, "pad %p added to array", sinkpad);
     g_ptr_array_add (select->channels, sinkpad);
 
     res = gst_pad_link (pad, sinkpad);
@@ -1336,15 +1337,15 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   GST_DEBUG_OBJECT (playbin,
       "pad %s:%s removed from group %p", GST_DEBUG_PAD_NAME (pad), group);
 
-  if ((select = g_object_get_data (G_OBJECT (pad), "playbin2.select"))) {
-    /* remove the pad from the array */
-    g_ptr_array_remove (select->channels, pad);
-    GST_DEBUG_OBJECT (playbin, "pad removed from array");
-  }
-
   /* get the selector sinkpad */
   if (!(peer = g_object_get_data (G_OBJECT (pad), "playbin2.sinkpad")))
     goto not_linked;
+
+  if ((select = g_object_get_data (G_OBJECT (peer), "playbin2.select"))) {
+    /* remove the pad from the array */
+    g_ptr_array_remove (select->channels, peer);
+    GST_DEBUG_OBJECT (playbin, "pad %p removed from array", peer);
+  }
 
   /* unlink the pad now (can fail, the pad is unlinked before it's removed) */
   gst_pad_unlink (pad, peer);
