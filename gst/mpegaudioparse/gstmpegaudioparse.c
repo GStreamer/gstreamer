@@ -563,7 +563,9 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
   if (GST_BUFFER_TIMESTAMP (outbuf) == 0)
     mp3parse->exact_position = TRUE;
 
-  if (mp3parse->exact_position && (!mp3parse->seek_table ||
+  if (mp3parse->exact_position && GST_BUFFER_TIMESTAMP_IS_VALID (outbuf) &&
+      mp3parse->cur_offset != GST_BUFFER_OFFSET_NONE &&
+      (!mp3parse->seek_table ||
           (mp3parse_seek_table_last_entry (mp3parse))->byte <
           GST_BUFFER_OFFSET (outbuf))) {
     MPEGAudioSeekEntry *entry = g_new0 (MPEGAudioSeekEntry, 1);
@@ -582,8 +584,10 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
   }
   mp3parse->tracked_offset += size;
 
-  mp3parse->next_ts =
-      GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf);
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (outbuf)
+      && GST_BUFFER_DURATION_IS_VALID (outbuf))
+    mp3parse->next_ts =
+        GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf);
 
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mp3parse->srcpad));
 
@@ -623,6 +627,8 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
   }
 
   if (G_UNLIKELY ((GST_CLOCK_TIME_IS_VALID (push_start) &&
+              GST_BUFFER_TIMESTAMP_IS_VALID (outbuf) &&
+              GST_BUFFER_DURATION_IS_VALID (outbuf) &&
               GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf)
               < push_start)
           || (GST_CLOCK_TIME_IS_VALID (mp3parse->segment.stop)

@@ -1,5 +1,13 @@
 2008-02-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_emit_frame):
+	Handler buffers without valid timestamp more correctly: Don't drop
+	them and don't use the invalid timestamp to calculate the next
+	timestamp. Fixes bug #516811.
+
+2008-02-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Tal Shalif <tshalif at nargila dot org>
 
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_create),
