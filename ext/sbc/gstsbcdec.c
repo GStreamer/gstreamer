@@ -96,8 +96,10 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
     /* we will reuse the same caps object */
     if (dec->outcaps == NULL) {
       caps = gst_caps_new_simple ("audio/x-raw-int",
-          "rate", G_TYPE_INT, dec->sbc.rate,
-          "channels", G_TYPE_INT, dec->sbc.channels, NULL);
+          "rate", G_TYPE_INT,
+          gst_sbc_parse_rate_from_sbc (dec->sbc.frequency),
+          "channels", G_TYPE_INT,
+          gst_sbc_get_channel_number (dec->sbc.mode), NULL);
 
       template = gst_static_pad_template_get (&sbc_dec_src_factory);
 

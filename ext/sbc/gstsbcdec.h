@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 
 #include "sbc.h"
+#include "gstsbcutil.h"
 
 G_BEGIN_DECLS
 

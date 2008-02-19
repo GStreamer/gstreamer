@@ -25,7 +25,6 @@
 #include <config.h>
 #endif
 
-#include "ipc.h"
 #include <math.h>
 #include "gstsbcutil.h"
 
@@ -127,129 +126,181 @@ gst_sbc_get_mode_from_list (const GValue * list, gint channels)
       return "joint";
     else if (stereo)
       return "stereo";
+    else if (dual)
+      return "dual";
   }
 
   return NULL;
 }
 
 gint
-gst_sbc_get_allocation_mode_int (const gchar * allocation)
+gst_sbc_parse_rate_from_sbc (gint frequency)
 {
-  if (g_ascii_strcasecmp (allocation, "loudness") == 0)
-    return BT_A2DP_ALLOCATION_LOUDNESS;
-  else if (g_ascii_strcasecmp (allocation, "snr") == 0)
-    return BT_A2DP_ALLOCATION_SNR;
-  else
-    return -1;
+  switch (frequency) {
+    case SBC_FREQ_16000:
+      return 16000;
+    case SBC_FREQ_32000:
+      return 32000;
+    case SBC_FREQ_44100:
+      return 44100;
+    case SBC_FREQ_48000:
+      return 48000;
+    default:
+      return 0;
+  }
 }
 
 gint
-gst_sbc_get_mode_int (const gchar * mode)
+gst_sbc_parse_rate_to_sbc (gint rate)
 {
-  if (g_ascii_strcasecmp (mode, "joint") == 0)
-    return BT_A2DP_CHANNEL_MODE_JOINT_STEREO;
-  else if (g_ascii_strcasecmp (mode, "stereo") == 0)
-    return BT_A2DP_CHANNEL_MODE_STEREO;
-  else if (g_ascii_strcasecmp (mode, "dual") == 0)
-    return BT_A2DP_CHANNEL_MODE_DUAL_CHANNEL;
-  else if (g_ascii_strcasecmp (mode, "mono") == 0)
-    return BT_A2DP_CHANNEL_MODE_MONO;
-  else
-    return -1;
-}
-
-/* FIXME add dual when sbc_t supports it */
-gboolean
-gst_sbc_get_mode_int_for_sbc_t (const gchar * mode)
-{
-  if (g_ascii_strcasecmp (mode, "joint") == 0)
-    return TRUE;
-  else if (g_ascii_strcasecmp (mode, "stereo") == 0)
-    return FALSE;
-  else if (g_ascii_strcasecmp (mode, "mono") == 0)
-    return FALSE;
-  else
-    return -1;
+  switch (rate) {
+    case 16000:
+      return SBC_FREQ_16000;
+    case 32000:
+      return SBC_FREQ_32000;
+    case 44100:
+      return SBC_FREQ_44100;
+    case 48000:
+      return SBC_FREQ_48000;
+    default:
+      return -1;
+  }
 }
 
 gint
-gst_sbc_get_mode_int_from_sbc_t (const sbc_t * sbc)
+gst_sbc_get_channel_number (gint mode)
 {
-  /* TODO define constants */
-  if (sbc->channels == 2 && sbc->joint == 1)
-    return 4;
-  else if (sbc->channels == 2 && sbc->joint == 0)
-    return 3;
-  else if (sbc->channels == 1)
-    return 1;
-  else
-    return -1;
+  switch (mode) {
+    case SBC_MODE_JOINT_STEREO:
+    case SBC_MODE_STEREO:
+    case SBC_MODE_DUAL_CHANNEL:
+      return 2;
+    case SBC_MODE_MONO:
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+gint
+gst_sbc_parse_subbands_from_sbc (gint subbands)
+{
+  switch (subbands) {
+    case SBC_SB_4:
+      return 4;
+    case SBC_SB_8:
+      return 8;
+    default:
+      return 0;
+  }
+}
+
+gint
+gst_sbc_parse_subbands_to_sbc (gint subbands)
+{
+  switch (subbands) {
+    case 4:
+      return SBC_SB_4;
+    case 8:
+      return SBC_SB_8;
+    default:
+      return -1;
+  }
+}
+
+gint
+gst_sbc_parse_blocks_from_sbc (gint blocks)
+{
+  switch (blocks) {
+    case SBC_BLK_4:
+      return 4;
+    case SBC_BLK_8:
+      return 8;
+    case SBC_BLK_12:
+      return 12;
+    case SBC_BLK_16:
+      return 16;
+    default:
+      return 0;
+  }
+}
+
+gint
+gst_sbc_parse_blocks_to_sbc (gint blocks)
+{
+  switch (blocks) {
+    case 4:
+      return SBC_BLK_4;
+    case 8:
+      return SBC_BLK_8;
+    case 12:
+      return SBC_BLK_12;
+    case 16:
+      return SBC_BLK_16;
+    default:
+      return -1;
+  }
 }
 
 const gchar *
-gst_sbc_get_mode_string (gint joint)
+gst_sbc_parse_mode_from_sbc (gint mode)
 {
-  switch (joint) {
-    case BT_A2DP_CHANNEL_MODE_MONO:
+  switch (mode) {
+    case SBC_MODE_MONO:
       return "mono";
-    case BT_A2DP_CHANNEL_MODE_DUAL_CHANNEL:
+    case SBC_MODE_DUAL_CHANNEL:
       return "dual";
-    case BT_A2DP_CHANNEL_MODE_STEREO:
+    case SBC_MODE_STEREO:
       return "stereo";
-    case BT_A2DP_CHANNEL_MODE_JOINT_STEREO:
+    case SBC_MODE_JOINT_STEREO:
+    case SBC_MODE_AUTO:
       return "joint";
     default:
       return NULL;
   }
 }
 
-const gchar *
-gst_sbc_get_allocation_string (gint alloc)
+gint
+gst_sbc_parse_mode_to_sbc (const gchar * mode)
 {
-  switch (alloc) {
-    case BT_A2DP_ALLOCATION_LOUDNESS:
-      return "loudness";
-    case BT_A2DP_ALLOCATION_SNR:
-      return "snr";
-    default:
-      return NULL;
-  }
-}
-
-/* channel mode */
-#define SBC_CM_MONO             0x00
-#define SBC_CM_DUAL_CHANNEL     0x01
-#define SBC_CM_STEREO           0x02
-#define SBC_CM_JOINT_STEREO     0x03
-
-/* allocation mode */
-#define SBC_AM_LOUDNESS         0x00
-#define SBC_AM_SNR              0x01
-
-const gchar *
-gst_sbc_get_mode_string_from_sbc_t (gint channels, gint joint)
-{
-  if (channels == 2 && joint == 1)
-    return "joint";
-  else if (channels == 2 && joint == 0)
-    return "stereo";
-  else if (channels == 1 && joint == 0)
-    return "mono";
+  if (g_ascii_strcasecmp (mode, "joint") == 0)
+    return SBC_MODE_JOINT_STEREO;
+  else if (g_ascii_strcasecmp (mode, "stereo") == 0)
+    return SBC_MODE_STEREO;
+  else if (g_ascii_strcasecmp (mode, "dual") == 0)
+    return SBC_MODE_DUAL_CHANNEL;
+  else if (g_ascii_strcasecmp (mode, "mono") == 0)
+    return SBC_MODE_MONO;
+  else if (g_ascii_strcasecmp (mode, "auto") == 0)
+    return SBC_MODE_JOINT_STEREO;
   else
-    return NULL;
+    return -1;
 }
 
 const gchar *
-gst_sbc_get_allocation_string_from_sbc_t (gint alloc)
+gst_sbc_parse_allocation_from_sbc (gint alloc)
 {
   switch (alloc) {
     case SBC_AM_LOUDNESS:
       return "loudness";
     case SBC_AM_SNR:
       return "snr";
+    case SBC_AM_AUTO:
+      return "loudness";
     default:
       return NULL;
   }
+}
+
+gint
+gst_sbc_parse_allocation_to_sbc (const gchar * allocation)
+{
+  if (g_ascii_strcasecmp (allocation, "loudness") == 0)
+    return SBC_AM_LOUDNESS;
+  else if (g_ascii_strcasecmp (allocation, "snr") == 0)
+    return SBC_AM_SNR;
+  else
+    return SBC_AM_LOUDNESS;
 }
 
 GstCaps *
@@ -259,38 +310,20 @@ gst_sbc_parse_caps_from_sbc (sbc_t * sbc)
   const gchar *mode_str;
   const gchar *allocation_str;
 
-  mode_str = gst_sbc_get_mode_string_from_sbc_t (sbc->channels, sbc->joint);
-  allocation_str = gst_sbc_get_allocation_string_from_sbc_t (sbc->allocation);
+  mode_str = gst_sbc_parse_mode_from_sbc (sbc->mode);
+  allocation_str = gst_sbc_parse_allocation_from_sbc (sbc->allocation);
   caps = gst_caps_new_simple ("audio/x-sbc",
-      "rate", G_TYPE_INT, sbc->rate,
-      "channels", G_TYPE_INT, sbc->channels,
+      "rate", G_TYPE_INT,
+      gst_sbc_parse_rate_from_sbc (sbc->frequency),
+      "channels", G_TYPE_INT,
+      gst_sbc_get_channel_number (sbc->mode),
       "mode", G_TYPE_STRING, mode_str,
-      "subbands", G_TYPE_INT, sbc->subbands,
-      "blocks", G_TYPE_INT, sbc->blocks,
+      "subbands", G_TYPE_INT,
+      gst_sbc_parse_subbands_from_sbc (sbc->subbands),
+      "blocks", G_TYPE_INT,
+      gst_sbc_parse_blocks_from_sbc (sbc->blocks),
       "allocation", G_TYPE_STRING, allocation_str,
       "bitpool", G_TYPE_INT, sbc->bitpool, NULL);
-
-  return caps;
-}
-
-GstCaps *
-gst_sbc_caps_from_sbc (sbc_capabilities_t * sbc, gint channels)
-{
-  GstCaps *caps;
-  const gchar *mode_str;
-  const gchar *allocation_str;
-
-  mode_str = gst_sbc_get_mode_string (sbc->channel_mode);
-  allocation_str = gst_sbc_get_allocation_string (sbc->allocation_method);
-
-  caps = gst_caps_new_simple ("audio/x-sbc",
-      "rate", G_TYPE_INT, sbc->frequency,
-      "channels", G_TYPE_INT, channels,
-      "mode", G_TYPE_STRING, mode_str,
-      "subbands", G_TYPE_INT, sbc->subbands,
-      "blocks", G_TYPE_INT, sbc->block_length,
-      "allocation", G_TYPE_STRING, allocation_str,
-      "bitpool", G_TYPE_INT, sbc->max_bitpool, NULL);
 
   return caps;
 }
@@ -409,10 +442,9 @@ gst_sbc_util_caps_fixate (GstCaps * caps, gchar ** error_message)
 
   /* perform validation
    * if channels is 1, we must have channel mode = mono
-   * if channels is 2, we can't have channel mode = mono, dual */
+   * if channels is 2, we can't have channel mode = mono */
   if ((channels == 1 && (strcmp (mode, "mono") != 0)) ||
-      (channels == 2 && (strcmp (mode, "mono") == 0 ||
-              strcmp (mode, "dual") == 0))) {
+      (channels == 2 && (strcmp (mode, "mono") == 0))) {
     *error_message = g_strdup_printf ("Invalid combination of "
         "channels (%d) and channel mode (%s)", channels, mode);
     error = TRUE;
@@ -492,46 +524,15 @@ gst_sbc_util_fill_sbc_params (sbc_t * sbc, GstCaps * caps)
   if (!(allocation = gst_structure_get_string (structure, "allocation")))
     return FALSE;
 
-  sbc->rate = rate;
-  sbc->channels = channels;
-  sbc->blocks = blocks;
-  sbc->subbands = subbands;
+  if (channels == 1 && strcmp (mode, "mono") != 0)
+    return FALSE;
+
+  sbc->frequency = gst_sbc_parse_rate_to_sbc (rate);
+  sbc->blocks = gst_sbc_parse_blocks_to_sbc (blocks);
+  sbc->subbands = gst_sbc_parse_subbands_to_sbc (subbands);
   sbc->bitpool = bitpool;
-  sbc->joint = gst_sbc_get_mode_int_for_sbc_t (mode);
-  sbc->allocation = gst_sbc_get_allocation_mode_int (allocation);
+  sbc->mode = gst_sbc_parse_mode_to_sbc (mode);
+  sbc->allocation = gst_sbc_parse_allocation_to_sbc (allocation);
 
   return TRUE;
-}
-
-gint
-gst_sbc_util_calc_frame_len (gint subbands, gint channels,
-    gint blocks, gint bitpool, gint channel_mode)
-{
-  gint len;
-  gint join;
-  len = 4 + (4 * subbands * channels) / 8;
-
-  if (channel_mode == BT_A2DP_CHANNEL_MODE_MONO ||
-      channel_mode == BT_A2DP_CHANNEL_MODE_DUAL_CHANNEL)
-    len += ((blocks * channels * bitpool) + 7) / 8;
-  else {
-    join = channel_mode == BT_A2DP_CHANNEL_MODE_JOINT_STEREO ? 1 : 0;
-    len += ((join * subbands + blocks * bitpool) + 7) / 8;
-  }
-
-  return len;
-}
-
-gint
-gst_sbc_util_calc_bitrate (gint frame_len, gint rate, gint subbands,
-    gint blocks)
-{
-  return (((frame_len * 8 * rate / subbands) / blocks) / 1000);
-}
-
-gint64
-gst_sbc_util_calc_frame_duration (gint rate, gint blocks, gint subbands)
-{
-  gint64 res = 1000000;
-  return res * blocks * subbands / rate;
 }
