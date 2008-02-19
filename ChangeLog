@@ -1,3 +1,12 @@
+2008-02-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Josep Torra Valles <josep at fluendo dot com>
+
+	* gst/typefind/gsttypefindfunctions.c: (h264_video_type_find),
+	(plugin_init):
+	Add typefinding support for h264 elementary streams.
+	Fixes bug #517420.
+
 2008-02-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

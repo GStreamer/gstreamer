@@ -1527,6 +1527,76 @@ mpeg4_video_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** video/x-h264 H264 elementary video stream ***/
+
+static GstStaticCaps h264_video_caps = GST_STATIC_CAPS ("video/x-h264");
+
+#define H264_VIDEO_CAPS gst_static_caps_get(&h264_video_caps)
+
+#define H264_MAX_PROBE_LENGTH (128 * 1024)      /* 128kB for HD should be enough. */
+
+static void
+h264_video_type_find (GstTypeFind * tf, gpointer unused)
+{
+  /* Stream consists of: a series of sync codes (00 00 00 01) followed 
+   * by NALs
+   */
+  guint8 *data = NULL;
+  int offset = 0;
+  int stat_slice = 0;
+  int stat_dpa = 0;
+  int stat_dpb = 0;
+  int stat_dpc = 0;
+  int stat_idr = 0;
+  int stat_sps = 0;
+  int stat_pps = 0;
+  int nut, ref;
+
+  while (offset < H264_MAX_PROBE_LENGTH) {
+    data = gst_type_find_peek (tf, offset, 4);
+    if (data && IS_MPEG_HEADER (data)) {
+      nut = data[3] & 0x9f;     /* forbiden_zero_bit | nal_unit_type */
+      ref = data[3] & 0x60;     /* nal_ref_idc */
+
+      /* if forbiden bit is different to 0 won't be h264 */
+      if (nut > 0x1f)
+        goto done;
+
+      /* collect statistics about the NAL types */
+      if (nut == 1)
+        stat_slice++;
+      else if (nut == 2)
+        stat_dpa++;
+      else if (nut == 3)
+        stat_dpb++;
+      else if (nut == 4)
+        stat_dpc++;
+      else if ((nut == 5) && (ref != 0))
+        stat_idr++;
+      else if ((nut == 7) && (ref != 0))
+        stat_sps++;
+      else if ((nut == 8) && (ref != 0))
+        stat_pps++;
+
+      offset += 4;
+    }
+    offset += 1;
+
+    if ((stat_slice > 4 || (stat_dpa > 4 && stat_dpb > 4 && stat_dpc > 4)) &&
+        stat_idr >= 1 && stat_sps >= 1 && stat_pps >= 1) {
+      GstCaps *caps = gst_caps_copy (H264_VIDEO_CAPS);
+
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
+      gst_caps_unref (caps);
+
+      goto done;
+    }
+  }
+
+done:
+  return;
+}
+
 /*** video/mpeg video stream ***/
 
 static GstStaticCaps mpeg_video_caps = GST_STATIC_CAPS ("video/mpeg, "
@@ -2871,6 +2941,7 @@ plugin_init (GstPlugin * plugin)
   };
   static gchar *flv_exts[] = { "flv", NULL };
   static gchar *m4v_exts[] = { "m4v", NULL };
+  static gchar *h264_exts[] = { "h264", "x264", "264", NULL };
   static gchar *nuv_exts[] = { "nuv", NULL };
   static gchar *vivo_exts[] = { "viv", NULL };
   static gchar *nsf_exts[] = { "nsf", NULL };
@@ -2925,6 +2996,8 @@ plugin_init (GstPlugin * plugin)
       NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg4", GST_RANK_PRIMARY,
       mpeg4_video_type_find, m4v_exts, MPEG_VIDEO_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/x-h264", GST_RANK_PRIMARY,
+      h264_video_type_find, h264_exts, MPEG_VIDEO_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-nuv", GST_RANK_SECONDARY,
       nuv_type_find, nuv_exts, NUV_CAPS, NULL, NULL);
 
