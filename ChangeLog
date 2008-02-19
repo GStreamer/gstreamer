@@ -1,3 +1,10 @@
+2008-02-19  Julien Moutte  <julien@fluendo.com>
+
+	Patch by: Josep Torra Valles <josep@fluendo.com>
+
+	* gst/typefind/gsttypefindfunctions.c: Increase the MPEG PS
+	typefind lookup to fix typefinding on HD clips.
+
 2008-02-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstscreenshot.c:

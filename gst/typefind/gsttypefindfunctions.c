@@ -1141,9 +1141,8 @@ static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
 #define IS_MPEG_PES_HEADER(data)        (IS_MPEG_HEADER (data) &&            \
                                          IS_MPEG_PES_CODE (((guint8 *)(data))[3]))
 
-#define MPEG2_MAX_PROBE_LENGTH (32 * 1024)      /* 32kB should be 16 packs of the 
-                                                 * most common 2kB pack size, but HD
-                                                 * streams might be bigger. */
+#define MPEG2_MAX_PROBE_LENGTH (128 * 1024)     /* 128kB should be 64 packs of the 
+                                                 * most common 2kB pack size. */
 
 #define MPEG2_MIN_SYS_HEADERS 2
 #define MPEG2_MAX_SYS_HEADERS 5
