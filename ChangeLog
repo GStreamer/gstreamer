@@ -1,3 +1,10 @@
+2008-02-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstminiobject.c:
+	  Add FIXME for 0.11 to make GstMiniObjectClass::copy() a bit more
+	  friendly to subclasses and not require them to know all internals
+	  of their parent class.
+
 2008-02-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/libs/gstreamer-libs-sections.txt:

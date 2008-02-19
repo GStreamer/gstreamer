@@ -187,6 +187,20 @@ gst_mini_object_new (GType type)
   return mini_object;
 }
 
+/* FIXME 0.11: Current way of doing the copy makes it impossible
+ * to currectly chain to the parent classes and do a copy in a
+ * subclass without knowing all internals of the parent classes.
+ *
+ * For 0.11 we should do something like the following:
+ *  - The GstMiniObjectClass::copy() implementation of GstMiniObject
+ *    should call g_type_create_instance() with the type of the source
+ *    object.
+ *  - All GstMiniObjectClass::copy() implementations should as first
+ *    thing chain up to the parent class and then do whatever they need
+ *    to do to copy their type specific data. Note that this way the
+ *    instance_init() functions are called!
+ */
+
 /**
  * gst_mini_object_copy:
  * @mini_object: the mini-object to copy
