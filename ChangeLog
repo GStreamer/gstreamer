@@ -1,6 +1,14 @@
 2008-02-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/multichannel.c:
+	  (gst_audio_check_channel_positions), (add_list_to_struct):
+	  Give more useful warning messages if one of the channel
+	  layout enums passed to us is invalid and if the "channels"
+	  field in the caps has a GType we don't expect.
+
+2008-02-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/multichannel.c:
 	  Fix typo in docs blurb.
 
 2008-02-19  Julien Moutte  <julien@fluendo.com>

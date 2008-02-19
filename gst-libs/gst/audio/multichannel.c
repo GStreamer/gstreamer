@@ -71,7 +71,7 @@ gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
   for (n = 0; n < channels; n++) {
     if (pos[n] <= GST_AUDIO_CHANNEL_POSITION_INVALID ||
         pos[n] >= GST_AUDIO_CHANNEL_POSITION_NUM) {
-      g_warning ("Channel position %d is invalid, not allowed", n);
+      g_warning ("Channel position %d for channel %d is invalid", pos[n], n);
       return FALSE;
     }
   }
@@ -440,7 +440,8 @@ add_list_to_struct (GstStructure * str,
       gst_caps_append_structure (caps, str);
     }
   } else {
-    g_warning ("Unknown value type for channels property");
+    g_warning ("Unexpected value type '%s' for channels property",
+        GST_STR_NULL (g_type_name (G_VALUE_TYPE (chan_val))));
   }
 
   return caps;
