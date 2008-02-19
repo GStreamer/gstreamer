@@ -1,5 +1,5 @@
 /* Small helper element for format conversion
- * (c) 2004 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2005 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

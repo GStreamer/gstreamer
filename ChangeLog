@@ -1,3 +1,10 @@
+2008-02-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstscreenshot.c:
+	* gst/playback/gstscreenshot.h:
+	  Fix up copyright (I rewrote the GStreamer-0.10 code for
+	  this from scratch back in the days).
+
 2008-02-19  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/Makefile.am:
