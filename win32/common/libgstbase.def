@@ -55,11 +55,13 @@ EXPORTS
 	gst_collect_pads_peek
 	gst_collect_pads_pop
 	gst_collect_pads_read
+	gst_collect_pads_read_buffer
 	gst_collect_pads_remove_pad
 	gst_collect_pads_set_flushing
 	gst_collect_pads_set_function
 	gst_collect_pads_start
 	gst_collect_pads_stop
+	gst_collect_pads_take_buffer
 	gst_data_queue_drop_head
 	gst_data_queue_flush
 	gst_data_queue_get_level

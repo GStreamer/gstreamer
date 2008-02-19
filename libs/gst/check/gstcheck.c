@@ -274,8 +274,10 @@ gst_check_teardown_sink_pad (GstElement * element)
 /**
  * gst_check_drop_buffers:
  *
- * unref all buffers created by the check element that are in the @buffers GList
+ * Unref and remove all buffers that are in the global @buffers GList,
+ * emptying the list.
  *
+ * Since: 0.10.18
  */
 void
 gst_check_drop_buffers ()
@@ -284,8 +286,8 @@ gst_check_drop_buffers ()
 
   while (g_list_length (buffers)) {
     temp_buffer = GST_BUFFER (buffers->data);
-    buffers = g_list_remove (buffers, temp_buffer);
     gst_buffer_unref (temp_buffer);
+    buffers = g_list_delete_link (buffers, buffers);
   }
 }
 
@@ -295,9 +297,10 @@ gst_check_drop_buffers ()
  * @caps1: first caps to compare
  * @caps2: second caps to compare
  *
- * Check if the caps are equal, just a wrapper
- * around gst_caps_is_equal with some more logging
+ * Compare two caps with gst_caps_is_equal and fail unless they are
+ * equal.
  *
+ * Since: 0.10.18
  */
 void
 gst_check_caps_equal (GstCaps * caps1, GstCaps * caps2)
@@ -319,13 +322,15 @@ gst_check_caps_equal (GstCaps * caps1, GstCaps * caps2)
  * @last_flow_return: the last buffer push needs to give this GstFlowReturn
  *
  * Create an @element with the factory with the name and push the buffers in
- * @buffer_in to this element. The element should create the buffers equal to the
- * buffers in @buffer_out. We only check the caps, size and the data of the buffers.
- * This function unrefs the buffers in the GList's.
- * with @last_failing you can create a test that the last buffer should not be accepted.
- * This can be handy if you need to setup the element with some previous buffers and than
- * check for failing.
- *
+ * @buffer_in to this element. The element should create the buffers equal to
+ * the buffers in @buffer_out. We only check the caps, size and the data of the
+ * buffers. This function unrefs the buffers in the two lists.
+ * The last_flow_return parameter indicates the expected flow return value from
+ * pushing the final buffer in the list.
+ * This can be used to set up a test which pushes some buffers and then an
+ * invalid buffer, when the final buffer is expected to fail, for example.
+ * 
+ * Since: 0.10.18
  */
 void
 gst_check_element_push_buffer_list (const gchar * element_name,
@@ -397,7 +402,7 @@ gst_check_element_push_buffer_list (const gchar * element_name,
     buffer_in = g_list_remove (buffer_in, next_buffer);
     if (g_list_length (buffer_in) == 0) {
       fail_unless (gst_pad_push (src_pad, next_buffer) == last_flow_return,
-          "we expext something else from the last buffer");
+          "we expect something else from the last buffer");
     } else {
       fail_unless (gst_pad_push (src_pad, next_buffer) == GST_FLOW_OK,
           "Failed to push buffer in");
@@ -442,6 +447,8 @@ gst_check_element_push_buffer_list (const gchar * element_name,
  * @buffer_in to this element. The element should create one buffer
  * and this will be compared with @buffer_out. We only check the caps
  * and the data of the buffers. This function unrefs the buffers.
+ * 
+ * Since: 0.10.18
  */
 void
 gst_check_element_push_buffer (const gchar * element_name,

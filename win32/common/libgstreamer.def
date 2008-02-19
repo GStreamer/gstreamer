@@ -399,6 +399,7 @@ EXPORTS
 	gst_index_set_filter_full
 	gst_index_set_group
 	gst_index_set_resolver
+	gst_index_set_resolver_full
 	gst_init
 	gst_init_check
 	gst_init_get_option_group

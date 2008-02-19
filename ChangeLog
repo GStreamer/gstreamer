@@ -1,3 +1,27 @@
+2008-02-19  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* libs/gst/check/gstcheck.c: (gst_check_drop_buffers),
+	(gst_check_element_push_buffer_list):
+	* libs/gst/check/gstcheck.h:
+	Make the declaration in the header for
+	gst_check_element_push_buffer_list match the implementation.
+
+	Fix up spelling, grammar and wording of the documentation in a few
+	places, and add the Since keyword to new API functions.
+	Use g_list_delete_link instead of g_list_remove in
+	gst_check_drop_buffers, since it's immeasurably more efficient.
+
+	* tests/check/elements/fakesrc.c: (GST_START_TEST):
+	Use new gst_check_drop_buffers function where appropriate.
+
+	* win32/common/libgstbase.def:
+	* win32/common/libgstreamer.def:
+	Add new symbols gst_collect_pads_take_buffer, 
+	gst_collect_pads_read_buffer, gst_index_set_resolver_full to the
+	exports
+
+	Changelog surgery to add API keyword to new gst_check API.
+
 2008-02-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/parse/lex._gst_parse_yy.pre.c: (yy_get_next_buffer),
@@ -243,6 +267,10 @@
 	Add more functions for unit testing: gst_check_drop_buffers,
 	gst_check_caps_equal, gst_check_element_push_buffer_list,
 	gst_check_element_push_buffer
+	API: gst_check_drop_buffers
+	API: gst_check_caps_equal
+	API: gst_check_element_push_buffer_list
+	API: gst_check_element_push_buffer
 
 2008-02-01  Julien Moutte  <julien@fluendo.com>
 

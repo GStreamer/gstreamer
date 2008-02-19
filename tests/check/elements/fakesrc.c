@@ -82,8 +82,7 @@ GST_START_TEST (test_num_buffers)
   }
 
   fail_unless (g_list_length (buffers) == 3);
-  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (buffers);
+  gst_check_drop_buffers ();
 
   fail_unless (gst_element_set_state (src,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
@@ -120,8 +119,7 @@ GST_START_TEST (test_sizetype_empty)
     fail_unless (GST_BUFFER_SIZE (buf) == 0);
     l = l->next;
   }
-  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (buffers);
+  gst_check_drop_buffers ();
 
   fail_unless (gst_element_set_state (src,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
@@ -159,8 +157,7 @@ GST_START_TEST (test_sizetype_fixed)
     fail_unless (GST_BUFFER_SIZE (buf) == 8192);
     l = l->next;
   }
-  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (buffers);
+  gst_check_drop_buffers ();
 
   fail_unless (gst_element_set_state (src,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
@@ -200,8 +197,7 @@ GST_START_TEST (test_sizetype_random)
     fail_if (GST_BUFFER_SIZE (buf) < 4096);
     l = l->next;
   }
-  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (buffers);
+  gst_check_drop_buffers ();
 
   fail_unless (gst_element_set_state (src,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
