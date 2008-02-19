@@ -1,3 +1,9 @@
+2008-02-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	Don't set GST_CACHE_DIR and allow to set it by a configure parameter.
+	We're not in 0.8 times anymore.
+
 2008-02-19  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* libs/gst/check/gstcheck.c: (gst_check_drop_buffers),

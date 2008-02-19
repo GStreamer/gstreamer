@@ -132,25 +132,6 @@ AG_GST_ARG_WITH_PKG_CONFIG_PATH
 AG_GST_ARG_WITH_PACKAGE_NAME
 AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
-dnl use a cache dir for storing element registry info.
-GST_CACHE_DIR=${localstatedir}/cache/gstreamer-$GST_MAJORMINOR
-
-AC_ARG_WITH(cachedir,
-  AC_HELP_STRING([--with-cachedir],
-    [specify path to use for plugin and command completion registries]),
-  [
-    case "${withval}" in
-      yes) AC_MSG_ERROR(bad value ${withval} for --with-cachedir) ;;
-      no)  AC_MSG_ERROR(bad value ${withval} for --with-cachedir) ;;
-      *)   GST_CACHE_DIR="${withval}" ;;
-    esac
-  ],
-  [:]) dnl Default value
-
-AS_AC_EXPAND(GST_CACHE_DIR, $GST_CACHE_DIR)
-AC_DEFINE_UNQUOTED(GST_CACHE_DIR, "$GST_CACHE_DIR", [Location of registry])
-AC_MSG_NOTICE(Using $GST_CACHE_DIR as registry cache dir)
-
 dnl building of tests
 AC_ARG_ENABLE(tests,
   AC_HELP_STRING([--disable-tests], [disable building test apps]),
