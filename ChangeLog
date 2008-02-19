@@ -1,3 +1,8 @@
+2008-02-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/alpha/Makefile.am:
+	Link alpha plugin with libgstbase. Fixes bug #517386.
+
 2008-02-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_create_stream):
