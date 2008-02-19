@@ -23,7 +23,7 @@
 
 #include "multichannel.h"
 
-#define GST_AUDIO_CHANNEL_POSITIONS_PROPERTY_NAME "channel-positions"
+#define GST_AUDIO_CHANNEL_POSITIONS_FIELD_NAME "channel-positions"
 
 /*
  * This function checks if basic assumptions apply:
@@ -243,10 +243,10 @@ gst_audio_get_channel_positions (GstStructure * str)
   g_return_val_if_fail (res, NULL);
   g_return_val_if_fail (channels > 0, NULL);
   pos_val_arr = gst_structure_get_value (str,
-      GST_AUDIO_CHANNEL_POSITIONS_PROPERTY_NAME);
+      GST_AUDIO_CHANNEL_POSITIONS_FIELD_NAME);
 
   /* The following checks are here to retain compatibility for plugins not
-   * implementing this property. They expect that channels=1 implies mono
+   * implementing this field. They expect that channels=1 implies mono
    * and channels=2 implies stereo, so we follow that. */
   if (pos_val_arr == NULL) {
     /* channel layouts for 1 and 2 channels are implicit, don't warn */
@@ -294,9 +294,9 @@ gst_audio_get_channel_positions (GstStructure * str)
  * @str: A #GstStructure to set channel positions on.
  * @pos: an array of channel positions. The number of members
  *       in this array should be equal to the (fixed!) number
- *       of the "channels" property in the given #GstStructure.
+ *       of the "channels" field in the given #GstStructure.
  *
- * Adds a "channel-positions" property to the given #GstStructure,
+ * Adds a "channel-positions" field to the given #GstStructure,
  * which will represent the channel positions as given in the
  * provided #GstAudioChannelPosition array.
  */
@@ -330,7 +330,7 @@ gst_audio_set_channel_positions (GstStructure * str,
 
   /* add to structure */
   gst_structure_set_value (str,
-      GST_AUDIO_CHANNEL_POSITIONS_PROPERTY_NAME, &pos_val_arr);
+      GST_AUDIO_CHANNEL_POSITIONS_FIELD_NAME, &pos_val_arr);
   g_value_unset (&pos_val_arr);
 }
 
@@ -346,9 +346,9 @@ gst_audio_set_channel_positions (GstStructure * str,
  * Sets a (possibly non-fixed) list of possible audio channel
  * positions (given in pos) on the given structure. The
  * structure, after this function has been called, will contain
- * a "channel-positions" property with an array of the size of
- * the "channels" property value in the given structure (note
- * that this means that the channels property in the provided
+ * a "channel-positions" field with an array of the size of
+ * the "channels" field value in the given structure (note
+ * that this means that the channels field in the provided
  * structure should be fixed!). Each value in the array will
  * contain each of the values given in the pos array.
  */
@@ -389,7 +389,7 @@ gst_audio_set_structure_channel_positions_list (GstStructure * str,
     g_value_unset (&pos_val_list);
   }
   g_value_unset (&pos_val_entry);
-  gst_structure_set_value (str, GST_AUDIO_CHANNEL_POSITIONS_PROPERTY_NAME,
+  gst_structure_set_value (str, GST_AUDIO_CHANNEL_POSITIONS_FIELD_NAME,
       &pos_val_arr);
   g_value_unset (&pos_val_arr);
 }
@@ -440,7 +440,7 @@ add_list_to_struct (GstStructure * str,
       gst_caps_append_structure (caps, str);
     }
   } else {
-    g_warning ("Unexpected value type '%s' for channels property",
+    g_warning ("Unexpected value type '%s' for channels field",
         GST_STR_NULL (g_type_name (G_VALUE_TYPE (chan_val))));
   }
 
@@ -458,11 +458,11 @@ add_list_to_struct (GstStructure * str,
  * Sets a (possibly non-fixed) list of possible audio channel
  * positions (given in pos) on the given caps. Each of the
  * structures of the caps, after this function has been called,
- * will contain a "channel-positions" property with an array.
+ * will contain a "channel-positions" field with an array.
  * Each value in the array will contain each of the values given
  * in the pos array. Note that the size of the caps might be
  * increased by this, since each structure with a "channel-
- * positions" property needs to have a fixed "channels" property.
+ * positions" field needs to have a fixed "channels" field.
  * The input caps is not required to have this.
  */
 
@@ -487,7 +487,7 @@ gst_audio_set_caps_channel_positions_list (GstCaps * caps,
 /**
  * gst_audio_fixate_channel_positions:
  * @str: a #GstStructure containing a (possibly unfixed)
- *       "channel-positions" property.
+ *       "channel-positions" field.
  *
  * Custom fixate function. Elements that implement some sort of
  * channel conversion algorithm should use this function for
@@ -561,7 +561,7 @@ gst_audio_fixate_channel_positions (GstStructure * str)
 
   /* 0.8.x mono/stereo checks */
   pos_val_arr = gst_structure_get_value (str,
-      GST_AUDIO_CHANNEL_POSITIONS_PROPERTY_NAME);
+      GST_AUDIO_CHANNEL_POSITIONS_FIELD_NAME);
   if (!pos_val_arr && (channels == 1 || channels == 2)) {
     pos = g_new (GstAudioChannelPosition, channels);
     if (channels == 1) {
