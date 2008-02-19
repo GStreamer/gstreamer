@@ -1,3 +1,8 @@
+2008-02-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/tta/Makefile.am:
+	Link tta plugin with libm. Fixes bug #517391.
+
 2008-02-14  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/camutils.c:

@@ -8,5 +8,5 @@ noinst_HEADERS = gstttaparse.h gstttadec.h \
 								 ttadec.h crc32.h filters.h
 
 libgsttta_la_CFLAGS = $(GST_CFLAGS)
-libgsttta_la_LIBADD = $(GST_LIBS)
+libgsttta_la_LIBADD = $(GST_LIBS) $(LIBM)
 libgsttta_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
