@@ -28,7 +28,6 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "gstsbcutil.h"
 #include "gsta2dpsink.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_a2dp_sink_debug);

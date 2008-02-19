@@ -39,7 +39,6 @@
 
 #include "ipc.h"
 #include "rtp.h"
-#include "gstsbcutil.h"
 
 #include "gstavdtpsink.h"
 
