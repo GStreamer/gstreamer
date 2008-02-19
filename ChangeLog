@@ -1,3 +1,8 @@
+2008-02-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/multichannel.c:
+	  Fix typo in docs blurb.
+
 2008-02-19  Julien Moutte  <julien@fluendo.com>
 
 	Patch by: Josep Torra Valles <josep@fluendo.com>

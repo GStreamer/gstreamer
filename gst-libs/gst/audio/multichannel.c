@@ -489,7 +489,7 @@ gst_audio_set_caps_channel_positions_list (GstCaps * caps,
  *       "channel-positions" property.
  *
  * Custom fixate function. Elements that implement some sort of
- * channel conversion algorhithm should use this function for
+ * channel conversion algorithm should use this function for
  * fixating on GstAudioChannelPosition properties. It will take
  * care of equal channel positioning (left/right). Caller g_free()s
  * the return value. The input properties may be (and are supposed
