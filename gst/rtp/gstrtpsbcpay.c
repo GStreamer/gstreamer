@@ -217,9 +217,10 @@ gst_rtp_sbc_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
   /* FIXME check for negotiation */
 
   sbcpay = GST_RTP_SBC_PAY (payload);
+  sbcpay->timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
   gst_adapter_push (sbcpay->adapter, gst_buffer_copy (buffer));
 
-  sbcpay->timestamp = GST_BUFFER_TIMESTAMP (buffer);
   available = gst_adapter_available (sbcpay->adapter);
   if (available + RTP_SBC_HEADER_TOTAL >=
       GST_BASE_RTP_PAYLOAD_MTU (sbcpay) ||
