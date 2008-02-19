@@ -37,7 +37,7 @@ BuildRequires:  gcc-c++
 # @USE_LIBFAME_TRUE@Provides:       gstreamer-libfame = %{version}-%{release}
 @USE_LIBMMS_TRUE@Requires: libmms >= 0.1
 @USE_OPENGL_TRUE@Requires: mesa-libGL
-@USE_MYTHTV_TRUE@Requires: gmyth-0.1
+@USE_MYTHTV_TRUE@Requires: gmyth
 @USE_X264_TRUE@Requires: x264
 
 %description
@@ -102,7 +102,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstequalizer.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegvideoparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtpmanager.so
-%{_libdir}/gstreamer-%{majorminor}/libgstswitch.so
 %{_libdir}/gstreamer-%{majorminor}/libgstbayer.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdspu.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
@@ -116,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg4videoparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfbdevsink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmetadata.so
+%{_libdir}/gstreamer-%{majorminor}/libgstselector.so
+%{_includedir}/gstreamer-%{majorminor}/metadata/metadatatags.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsrc.h
