@@ -1626,6 +1626,68 @@ volume_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
 }
 
 static void
+shot_cb (GtkButton * button, gpointer data)
+{
+  GstBuffer *buffer;
+  GstCaps *caps;
+
+  /* convert to our desired format (RGB24) */
+  caps = gst_caps_new_simple ("video/x-raw-rgb",
+      "bpp", G_TYPE_INT, 24, "depth", G_TYPE_INT, 24,
+      /* Note: we don't ask for a specific width/height here, so that
+       * videoscale can adjust dimensions from a non-1/1 pixel aspect
+       * ratio to a 1/1 pixel-aspect-ratio */
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+      "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+      "red_mask", G_TYPE_INT, 0xff0000,
+      "green_mask", G_TYPE_INT, 0x00ff00,
+      "blue_mask", G_TYPE_INT, 0x0000ff, NULL);
+
+  g_signal_emit_by_name (pipeline, "convert-frame", caps, &buffer);
+  gst_caps_unref (caps);
+
+  if (buffer) {
+    GstCaps *caps;
+    GstStructure *s;
+    gboolean res;
+    gint width, height;
+    GdkPixbuf *pixbuf;
+    GError *error = NULL;
+
+    /* get the snapshot buffer format now. We set the caps on the appsink so
+     * that it can only be an rgb buffer. The only thing we have not specified
+     * on the caps is the height, which is dependant on the pixel-aspect-ratio
+     * of the source material */
+    caps = GST_BUFFER_CAPS (buffer);
+    if (!caps) {
+      g_warning ("could not get snapshot format\n");
+      goto done;
+    }
+    s = gst_caps_get_structure (caps, 0);
+
+    /* we need to get the final caps on the buffer to get the size */
+    res = gst_structure_get_int (s, "width", &width);
+    res |= gst_structure_get_int (s, "height", &height);
+    if (!res) {
+      g_warning ("could not get snapshot dimension\n");
+      goto done;
+    }
+
+    /* create pixmap from buffer and save, gstreamer video buffers have a stride
+     * that is rounded up to the nearest multiple of 4 */
+    pixbuf = gdk_pixbuf_new_from_data (GST_BUFFER_DATA (buffer),
+        GDK_COLORSPACE_RGB, FALSE, 8, width, height,
+        GST_ROUND_UP_4 (width * 3), NULL, NULL);
+
+    /* save the pixbuf */
+    gdk_pixbuf_save (pixbuf, "snapshot.png", "png", &error, NULL);
+
+  done:
+    gst_buffer_unref (buffer);
+  }
+}
+
+static void
 message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   const GstStructure *s;
@@ -1757,8 +1819,8 @@ print_usage (int argc, char **argv)
 int
 main (int argc, char **argv)
 {
-  GtkWidget *window, *hbox, *vbox, *panel, *boxes, *flagtable;
-  GtkWidget *play_button, *pause_button, *stop_button;
+  GtkWidget *window, *hbox, *vbox, *panel, *boxes, *flagtable, *boxes2;
+  GtkWidget *play_button, *pause_button, *stop_button, *shot_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GtkWidget *scrub_checkbox, *play_scrub_checkbox, *rate_spinbutton;
   GtkWidget *rate_label;
@@ -1874,7 +1936,6 @@ main (int argc, char **argv)
   if (pipeline_type == 16) {
     /* the playbin2 panel controls for the video/audio/subtitle tracks */
     panel = gtk_hbox_new (FALSE, 0);
-    boxes = gtk_hbox_new (FALSE, 0);
     video_combo = gtk_combo_box_new_text ();
     audio_combo = gtk_combo_box_new_text ();
     text_combo = gtk_combo_box_new_text ();
@@ -1890,12 +1951,14 @@ main (int argc, char **argv)
         G_CALLBACK (audio_combo_cb), pipeline);
     g_signal_connect (G_OBJECT (text_combo), "changed",
         G_CALLBACK (text_combo_cb), pipeline);
+    /* playbin2 panel for flag checkboxes and volume/mute */
+    boxes = gtk_hbox_new (FALSE, 0);
     vis_checkbox = gtk_check_button_new_with_label ("Vis");
     video_checkbox = gtk_check_button_new_with_label ("Video");
     audio_checkbox = gtk_check_button_new_with_label ("Audio");
     text_checkbox = gtk_check_button_new_with_label ("Text");
     mute_checkbox = gtk_check_button_new_with_label ("Mute");
-    volume_spinbutton = gtk_spin_button_new_with_range (0, 5.0, 0.1);
+    volume_spinbutton = gtk_spin_button_new_with_range (0, 10.0, 0.1);
     gtk_spin_button_set_value (GTK_SPIN_BUTTON (volume_spinbutton), 1.0);
     gtk_box_pack_start (GTK_BOX (boxes), vis_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), audio_checkbox, TRUE, TRUE, 2);
@@ -1920,8 +1983,17 @@ main (int argc, char **argv)
         G_CALLBACK (mute_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (volume_spinbutton), "value_changed",
         G_CALLBACK (volume_spinbutton_changed_cb), pipeline);
+    /* playbin2 panel for snapshot */
+    boxes2 = gtk_hbox_new (FALSE, 0);
+    shot_button = gtk_button_new_from_stock (GTK_STOCK_SAVE);
+    gtk_tooltips_set_tip (tips, shot_button,
+        "save a screenshot .png in the current directory", NULL);
+    gtk_box_pack_start (GTK_BOX (boxes2), shot_button, TRUE, TRUE, 2);
+    g_signal_connect (G_OBJECT (shot_button), "clicked", G_CALLBACK (shot_cb),
+        pipeline);
+
   } else {
-    panel = boxes = NULL;
+    panel = boxes = boxes2 = NULL;
   }
 
   /* do the packing stuff ... */
@@ -1943,9 +2015,10 @@ main (int argc, char **argv)
   gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_label, 3, 4, 0, 1);
   gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_spinbutton, 3, 4, 1,
       2);
-  if (panel && boxes) {
+  if (panel && boxes && boxes2) {
     gtk_box_pack_start (GTK_BOX (vbox), panel, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (vbox), boxes, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (vbox), boxes2, TRUE, TRUE, 2);
   }
   gtk_box_pack_start (GTK_BOX (vbox), hscale, TRUE, TRUE, 2);
 

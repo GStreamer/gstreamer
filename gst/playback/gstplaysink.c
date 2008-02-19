@@ -232,7 +232,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
           0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_klass, PROP_FRAME,
       gst_param_spec_mini_object ("frame", "Frame",
-          "The last frame (NULL = no video available)",
+          "The last video frame (NULL = no video available)",
           GST_TYPE_BUFFER, G_PARAM_READABLE));
   g_object_class_install_property (gobject_klass, PROP_FONT_DESC,
       g_param_spec_string ("subtitle-font-desc",
@@ -1358,6 +1358,32 @@ gst_play_sink_get_flags (GstPlaySink * playsink)
   return res;
 }
 
+GstBuffer *
+gst_play_sink_get_last_frame (GstPlaySink * playsink)
+{
+  GstBuffer *result = NULL;
+  GstPlayVideoChain *chain;
+
+  GST_PLAY_SINK_LOCK (playsink);
+  GST_DEBUG_OBJECT (playsink, "taking last frame");
+  /* get the video chain if we can */
+  if ((chain = (GstPlayVideoChain *) playsink->videochain)) {
+    GST_DEBUG_OBJECT (playsink, "found video chain");
+    /* see if the chain is active */
+    if (chain->chain.activated && chain->sink) {
+      GST_DEBUG_OBJECT (playsink, "video chain active and has a sink");
+      /* get the frame property if we can */
+      if (g_object_class_find_property (G_OBJECT_GET_CLASS (chain->sink),
+              "last-buffer")) {
+        GST_DEBUG_OBJECT (playsink, "getting last-buffer property");
+        g_object_get (chain->sink, "last-buffer", &result, NULL);
+      }
+    }
+  }
+  GST_PLAY_SINK_UNLOCK (playsink);
+
+  return result;
+}
 
 GstPad *
 gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)

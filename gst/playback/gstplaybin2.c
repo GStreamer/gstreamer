@@ -252,6 +252,7 @@
 #include "gstplay-marshal.h"
 #include "gstplaysink.h"
 #include "gstfactorylists.h"
+#include "gstscreenshot.h"
 #include "gststreaminfo.h"
 #include "gststreamselector.h"
 
@@ -338,15 +339,22 @@ struct _GstPlayBinClass
 {
   GstPipelineClass parent_class;
 
+  /* notify app that the current uri finished decoding and it is possible to
+   * queue a new one for gapless playback */
   void (*about_to_finish) (GstPlayBin * playbin);
 
+  /* notify app that number of audio/video/text streams changed */
   void (*video_changed) (GstPlayBin * playbin);
   void (*audio_changed) (GstPlayBin * playbin);
   void (*text_changed) (GstPlayBin * playbin);
 
+  /* get audio/video/text tags for a stream */
   GstTagList *(*get_video_tags) (GstPlayBin * playbin, gint stream);
   GstTagList *(*get_audio_tags) (GstPlayBin * playbin, gint stream);
   GstTagList *(*get_text_tags) (GstPlayBin * playbin, gint stream);
+
+  /* get the last video frame and convert it to the given caps */
+  GstBuffer *(*convert_frame) (GstPlayBin * playbin, GstCaps * caps);
 };
 
 /* props */
@@ -429,6 +437,9 @@ static GstStructure *gst_play_bin_get_audio_tags (GstPlayBin * playbin,
 static GstStructure *gst_play_bin_get_text_tags (GstPlayBin * playbin,
     gint stream);
 
+static GstBuffer *gst_play_bin_convert_frame (GstPlayBin * playbin,
+    GstCaps * caps);
+
 static gboolean setup_next_source (GstPlayBin * playbin);
 
 static GstElementClass *parent_class;
@@ -440,6 +451,38 @@ GST_ELEMENT_DETAILS ("Player Bin 2",
     "Generic/Bin/Player",
     "Autoplug and play media from an uri",
     "Wim Taymans <wim.taymans@gmail.com>");
+
+static void
+gst_play_marshal_BUFFER__BOXED (GClosure * closure,
+    GValue * return_value G_GNUC_UNUSED,
+    guint n_param_values,
+    const GValue * param_values,
+    gpointer invocation_hint G_GNUC_UNUSED, gpointer marshal_data)
+{
+  typedef GstBuffer *(*GMarshalFunc_OBJECT__BOXED) (gpointer data1,
+      gpointer arg_1, gpointer data2);
+  register GMarshalFunc_OBJECT__BOXED callback;
+  register GCClosure *cc = (GCClosure *) closure;
+  register gpointer data1, data2;
+  GstBuffer *v_return;
+
+  g_return_if_fail (return_value != NULL);
+  g_return_if_fail (n_param_values == 2);
+
+  if (G_CCLOSURE_SWAP_DATA (closure)) {
+    data1 = closure->data;
+    data2 = g_value_peek_pointer (param_values + 0);
+  } else {
+    data1 = g_value_peek_pointer (param_values + 0);
+    data2 = closure->data;
+  }
+  callback =
+      (GMarshalFunc_OBJECT__BOXED) (marshal_data ? marshal_data : cc->callback);
+
+  v_return = callback (data1, g_value_get_boxed (param_values + 1), data2);
+
+  gst_value_take_buffer (return_value, v_return);
+}
 
 static GType
 gst_play_bin_get_type (void)
@@ -509,6 +552,12 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_param_spec_object ("source", "Source", "Source element",
           GST_TYPE_ELEMENT, G_PARAM_READABLE));
 
+
+  /**
+   * GstPlayBin:flags
+   *
+   * Control the behaviour of playbin.
+   */
   g_object_class_install_property (gobject_klass, PROP_FLAGS,
       g_param_spec_flags ("flags", "Flags", "Flags to control behaviour",
           GST_TYPE_PLAY_FLAGS, DEFAULT_FLAGS, G_PARAM_READWRITE));
@@ -596,6 +645,13 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Mute the audio channel without changing the volume", FALSE,
           G_PARAM_READWRITE));
 
+  /**
+   * GstPlayBin::frame
+   * @playbin: a #GstPlayBin
+   *
+   * Get the currently rendered or prerolled frame in the sink.
+   * The #GstCaps on the buffer will describe the format of the buffer.
+   */
   g_object_class_install_property (gobject_klass, PROP_FRAME,
       gst_param_spec_mini_object ("frame", "Frame",
           "The last frame (NULL = no video available)",
@@ -711,10 +767,32 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstPlayBinClass, get_text_tags), NULL, NULL,
       gst_play_marshal_BOXED__INT, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
+  /**
+   * GstPlayBin::convert-frame
+   * @playbin: a #GstPlayBin
+   * @caps: the target format of the frame
+   *
+   * Action signal to retrieve the currently playing video frame in the format
+   * specified by @caps.
+   * If @caps is %NULL, no conversion will be performed and this function is
+   * equivalent to the #GstPlayBin::frame property.
+   *
+   * Returns: a #GstBuffer of the current video frame converted to #caps. 
+   * The caps on the buffer will describe the final layout of the buffer data.
+   * %NULL is returned when no current buffer can be retrieved or when the
+   * conversion failed.
+   */
+  gst_play_bin_signals[SIGNAL_GET_TEXT_TAGS] =
+      g_signal_new ("convert-frame", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstPlayBinClass, convert_frame), NULL, NULL,
+      gst_play_marshal_BUFFER__BOXED, GST_TYPE_BUFFER, 1, GST_TYPE_CAPS);
 
   klass->get_video_tags = gst_play_bin_get_video_tags;
   klass->get_audio_tags = gst_play_bin_get_audio_tags;
   klass->get_text_tags = gst_play_bin_get_text_tags;
+
+  klass->convert_frame = gst_play_bin_convert_frame;
 
   gst_element_class_set_details (gstelement_klass, &gst_play_bin_details);
 
@@ -900,6 +978,22 @@ gst_play_bin_get_text_tags (GstPlayBin * playbin, gint stream)
   result = get_tags (playbin, group->text_channels, stream);
   GST_OBJECT_UNLOCK (playbin);
 
+  return result;
+}
+
+static GstBuffer *
+gst_play_bin_convert_frame (GstPlayBin * playbin, GstCaps * caps)
+{
+  GstBuffer *result;
+
+  result = gst_play_sink_get_last_frame (playbin->playsink);
+  if (result != NULL && caps != NULL) {
+    GstBuffer *temp;
+
+    temp = gst_play_frame_conv_convert (result, caps);
+    gst_buffer_unref (result);
+    result = temp;
+  }
   return result;
 }
 
@@ -1183,6 +1277,7 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, gst_play_sink_get_mute (playbin->playsink));
       break;
     case PROP_FRAME:
+      gst_value_take_buffer (value, gst_play_bin_convert_frame (playbin, NULL));
       break;
     case PROP_FONT_DESC:
       break;
@@ -1568,6 +1663,9 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   if (!uridecodebin)
     goto no_decodebin;
 
+  /* configure connection speed */
+  g_object_set (uridecodebin, "connection-speed", playbin->connection_speed,
+      NULL);
   /* configure uri */
   g_object_set (uridecodebin, "uri", group->uri, NULL);
 

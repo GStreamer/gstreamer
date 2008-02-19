@@ -1,3 +1,30 @@
+2008-02-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/Makefile.am:
+	* gst/playback/gstscreenshot.c: (feed_fakesrc), (save_result),
+	(create_element), (gst_play_frame_conv_convert):
+	* gst/playback/gstscreenshot.h:
+	Add screenshot conversion code from totem.
+
+	* gst/playback/gstplay-marshal.list:
+	* gst/playback/gstplaybin2.c: (gst_play_marshal_BUFFER__BOXED),
+	(gst_play_bin_class_init), (gst_play_bin_convert_frame),
+	(gst_play_bin_get_property), (no_more_pads_cb), (activate_group):
+	Implement frame property to get a color-unconverted snapshot.
+	Implement convert-frame action signal to get a converted snapshot image.
+	Configure connection speed in uridecodebin.
+	Document some more properties.
+
+	* gst/playback/gstplaysink.c: (gst_play_sink_class_init),
+	(gen_video_chain), (gen_audio_chain), (gst_play_sink_reconfigure),
+	(gst_play_sink_get_last_frame):
+	* gst/playback/gstplaysink.h:
+	Use last-buffer property of the video sink to get a video snapshot.
+
+	* tests/examples/seek/seek.c: (shot_cb), (main):
+	Add snapshot button for playbin2 and use the frame property to save the
+	frame as a png in the current directory.
+
 2008-02-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Josep Torra Valles <josep at fluendo dot com>

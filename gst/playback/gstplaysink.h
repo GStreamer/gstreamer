@@ -78,6 +78,8 @@ gboolean         gst_play_sink_get_mute       (GstPlaySink *playsink);
 gboolean         gst_play_sink_set_flags      (GstPlaySink * playsink, GstPlayFlags flags);
 GstPlayFlags     gst_play_sink_get_flags      (GstPlaySink * playsink);
 
+GstBuffer *      gst_play_sink_get_last_frame (GstPlaySink * playsink);
+
 gboolean         gst_play_sink_reconfigure    (GstPlaySink * playsink);
 
 G_END_DECLS
