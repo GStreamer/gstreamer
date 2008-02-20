@@ -1,8 +1,3 @@
-# FIXME:
-# need to get gstbufferstore.[ch] into its own lib, preferably
-# libs/gst/bufferstore
-# This requires building libs/gst before this dir, which we currently don't
-# do.
 
 plugin_LTLIBRARIES = libgstcoreelements.la
 
@@ -16,7 +11,6 @@ endif
 
 libgstcoreelements_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
 libgstcoreelements_la_SOURCES =	\
-	gstbufferstore.c	\
 	gstcapsfilter.c		\
 	gstelements.c		\
 	gstfakesrc.c		\
@@ -38,7 +32,6 @@ libgstcoreelements_la_LIBADD = \
 libgstcoreelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS =		\
-	gstbufferstore.h	\
 	gstcapsfilter.h		\
 	gstfakesink.h		\
 	gstfakesrc.h		\

@@ -578,8 +578,8 @@ mmap_failed:
   {
     if (!testonly) {
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
-          ("mmap (0x%08lx, %d, 0x%llx) failed: %s",
-              (gulong) size, src->fd, offset, g_strerror (errno)));
+          ("mmap (0x%08lx, %d, 0x%" G_GINT64_MODIFIER "x) failed: %s",
+              (gulong) size, src->fd, (guint64) offset, g_strerror (errno)));
     }
     return NULL;
   }
@@ -689,14 +689,14 @@ gst_file_src_create_mmap (GstFileSrc * src, guint64 offset, guint length,
   /* then deal with the case where the read buffer is totally outside */
   if (buf == NULL) {
     /* first check to see if there's a map that covers the right region already */
-    GST_LOG_OBJECT (src, "searching for mapbuf to cover %llu+%d",
-        offset, (int) readsize);
+    GST_LOG_OBJECT (src, "searching for mapbuf to cover %" G_GUINT64_FORMAT
+        "+%d", offset, (int) readsize);
 
     /* if the read buffer crosses a mmap region boundary, create a one-off region */
     if ((offset / src->mapsize) != (readend / src->mapsize)) {
-      GST_LOG_OBJECT (src,
-          "read buf %llu+%d crosses a %d-byte boundary, creating a one-off",
-          offset, (int) readsize, (int) src->mapsize);
+      GST_LOG_OBJECT (src, "read buf %" G_GUINT64_FORMAT "+%d crosses a "
+          "%d-byte boundary, creating a one-off", offset, (int) readsize,
+          (int) src->mapsize);
       buf = gst_file_src_map_small_region (src, offset, readsize);
       if (buf == NULL)
         goto could_not_mmap;

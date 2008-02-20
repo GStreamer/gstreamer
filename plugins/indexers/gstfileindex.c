@@ -801,7 +801,7 @@ gst_file_index_add_association (GstIndex * index, GstIndexEntry * entry)
   if (exact) {
     /* maybe overwrite instead? */
     GST_DEBUG_OBJECT (index,
-        "Ignoring duplicate index association at %lld",
+        "Ignoring duplicate index association at %" G_GINT64_FORMAT,
         GST_INDEX_ASSOC_VALUE (entry, 0));
     return;
   }
@@ -844,7 +844,7 @@ show_entry (GstIndexEntry *entry)
 
       g_print ("%d: %08x ", entry->id, GST_INDEX_ASSOC_FLAGS (entry));
       for (i = 0; i < GST_INDEX_NASSOCS (entry); i++) {
-        g_print ("%d %lld ", GST_INDEX_ASSOC_FORMAT (entry, i),
+        g_print ("%d %" G_GINT64_FORMAT, GST_INDEX_ASSOC_FORMAT (entry, i),
                              GST_INDEX_ASSOC_VALUE (entry, i));
       }
       g_print ("\n");

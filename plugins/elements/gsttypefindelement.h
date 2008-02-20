@@ -25,7 +25,6 @@
 
 #include <gst/gstinfo.h>
 #include <gst/gstelement.h>
-#include "gstbufferstore.h"
 
 G_BEGIN_DECLS
 

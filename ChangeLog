@@ -1,3 +1,17 @@
+2008-02-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/Makefile.am:
+	* plugins/elements/gstbufferstore.c:
+	* plugins/elements/gstbufferstore.h:
+	* plugins/elements/gsttypefindelement.h:
+	  Remove GstBufferStore, no idea why we were still building it.
+	  It's not used anywhere and superseded by GstAdapter.
+
+	* plugins/elements/gstfilesrc.c: (gst_file_src_map_region),
+	  (gst_file_src_create_mmap):
+	* plugins/indexers/gstfileindex.c: (gst_file_index_add_association):
+	  Printf format fixes for 64-bit integers.
+
 2008-02-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
@@ -55,6 +69,7 @@
 	  Copy selected buffer-flags when creating subbuffers.
 	  Fixes #516395.
 
+>>>>>>> 1.3670
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstbuffer.c: (gst_buffer_class_init), (gst_buffer_finalize):
