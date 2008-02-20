@@ -1,19 +1,36 @@
-# Italian translation for gst-plugins package of GStreamer project.
-# Copyright (C) 2004 GStreamer core team
+# Italian translation for gst-plugins-ugly package of GStreamer project.
+# Copyright (C) 2004-2008 GStreamer core team
 # This file is distributed under the same license as the gstreamer package.
-# Luca Ferretti <elle.uca@infinito.it>, 2007
+# Luca Ferretti <elle.uca@infinito.it>, 2007-2008
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.6\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:52+0200\n"
-"PO-Revision-Date: 2007-06-23 17:25+0200\n"
+"POT-Creation-Date: 2008-02-10 15:06+0000\n"
+"PO-Revision-Date: 2008-02-09 22:16+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: ext/dvdnav/dvdnavsrc.c:1428
+msgid "Invalid title information on DVD."
+msgstr "Informazioni titolo non valide sul DVD."
+
+#: ext/dvdnav/dvdnavsrc.c:1598
+msgid "Could not read title information for DVD."
+msgstr "Impossibile leggere le informazioni sul titolo per il DVD."
+
+#: ext/dvdnav/dvdnavsrc.c:1604
+#, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "Apertura del device DVD «%s» fallita."
+
+#: ext/dvdnav/dvdnavsrc.c:1610
+msgid "Failed to set PGC based seeking."
+msgstr "Impostazione del posizionamento basato su PGC fallita."
 
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
@@ -33,24 +50,34 @@ msgstr "Fallita l'apertura del capitolo %d del titolo %d del DVD"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "Impossibile aprire il titolo %d del DVD. I titoli interattivi non sono supportati da questo elemento"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Impossibile aprire il titolo %d del DVD. I titoli interattivi non sono "
+"supportati da questo elemento"
 
-#: ext/lame/gstlame.c:560
+#: ext/lame/gstlame.c:581
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "Fallita la configurazione dell'encoder LAME. Verificare i propri parametri di codifica."
+msgstr ""
+"Fallita la configurazione dell'encoder LAME. Verificare i propri parametri "
+"di codifica."
 
 # NEW
-#: ext/lame/gstlame.c:691
+#: ext/lame/gstlame.c:715
 #, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Il bitrate richiesto (%d kbit/s) per la proprietà \"%s\" non è consentito. Il bitrate è stato cambiato a %d kbit/s."
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"Il bitrate richiesto (%d kbit/s) per la proprietà \"%s\" non è consentito. "
+"Il bitrate è stato cambiato a %d kbit/s."
 
 # NEW
-#: gst/asfdemux/gstasfdemux.c:322
+#: gst/asfdemux/gstasfdemux.c:328
 msgid "This stream contains no data."
 msgstr "Questo stream non contiene alcun dato."
 
-#: gst/asfdemux/gstasfdemux.c:2936
+#: gst/asfdemux/gstasfdemux.c:3066
 msgid "This file is encrypted and cannot be played."
 msgstr "Questo file è cifrato e non può essere riprodotto."

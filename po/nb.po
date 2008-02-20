@@ -1,33 +1,50 @@
-# Norwegian bokmaal translation of gst-utils.
+# Norwegian bokmaal translation of gst-plugins-ugly.
 # This file is put in the public domain.
-# Kjartan Maraas <kmaraas@broadpark.no>, 2004.
+# Kjartan Maraas <kmaraas@gnome.org>, 2004-2007.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins 0.8.3\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:52+0200\n"
-"PO-Revision-Date: 2004-10-04 15:54+0200\n"
-"Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
+"POT-Creation-Date: 2008-02-10 15:06+0000\n"
+"PO-Revision-Date: 2007-11-02 14:39+0100\n"
+"Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#: ext/dvdnav/dvdnavsrc.c:1428
+msgid "Invalid title information on DVD."
+msgstr "Ugyldig tittelinformasjon på DVD."
+
+#: ext/dvdnav/dvdnavsrc.c:1598
+msgid "Could not read title information for DVD."
+msgstr "Kunne ikke lese tittelinformasjon for DVD."
+
+#: ext/dvdnav/dvdnavsrc.c:1604
+#, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "Kunne ikke åpne DVD-enhet «%s»."
+
+#: ext/dvdnav/dvdnavsrc.c:1610
+msgid "Failed to set PGC based seeking."
+msgstr "Kunne ikke sette PGC-basert søking."
+
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
-msgstr ""
+msgstr "Kunne ikke åpne DVD"
 
 #: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
 #: ext/dvdread/dvdreadsrc.c:601
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open DVD title %d"
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Kunne ikke åpne DVD-tittel %d."
 
 #: ext/dvdread/dvdreadsrc.c:248
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
-msgstr ""
+msgstr "Klarte ikke å gå til kapittel %d på DVD tittel %d"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
@@ -35,146 +52,26 @@ msgid ""
 "Could not open DVD title %d. Interactive titles are not supported by this "
 "element"
 msgstr ""
+"Kunne ikke åpne DVD-tittel %d. Interaktive titler er ikke støttet av dette "
+"elementet"
 
-#: ext/lame/gstlame.c:560
+#: ext/lame/gstlame.c:581
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr ""
+msgstr "Kunne ikke konfigurere LAME-koder. Sjekk parameterene for kodingen."
 
-#: ext/lame/gstlame.c:691
+#: ext/lame/gstlame.c:715
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Forespurt bitrate %d kbit/s for egenskap «%s» er ikke tillatt. Bitraten ble "
+"endret til %d kbit/s."
 
-#: gst/asfdemux/gstasfdemux.c:322
+#: gst/asfdemux/gstasfdemux.c:328
 msgid "This stream contains no data."
-msgstr ""
+msgstr "Denne strømmen inneholde ikke data."
 
-#: gst/asfdemux/gstasfdemux.c:2936
+#: gst/asfdemux/gstasfdemux.c:3066
 msgid "This file is encrypted and cannot be played."
-msgstr ""
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Kunne ikke åpne filen «%s» for skriving."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Feil under lukking av fil «%s»."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Kunne ikke åpne filen «%s» for lesing."
-
-#~ msgid "No filename specified."
-#~ msgstr "Ingen filnavn oppgitt."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Kunne ikke skrive til fil «%s»."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "Kunne ikke konfigurere lydenhet «%s»."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Enhet «%s» eksisterer ikke."
-
-#~ msgid "Volume"
-#~ msgstr "Volum"
-
-#~ msgid "Bass"
-#~ msgstr "Bass"
-
-#~ msgid "Treble"
-#~ msgstr "Diskant"
-
-#~ msgid "Synth"
-#~ msgstr "Synth"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Speaker"
-#~ msgstr "Høyttaler"
-
-#~ msgid "Line-in"
-#~ msgstr "Linje inn"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofon"
-
-#~ msgid "CD"
-#~ msgstr "CD"
-
-#~ msgid "Mixer"
-#~ msgstr "Mikser"
-
-#~ msgid "PCM-2"
-#~ msgstr "PCM-2"
-
-#~ msgid "Record"
-#~ msgstr "Opptak"
-
-#~ msgid "Line-1"
-#~ msgstr "Linje 1"
-
-#~ msgid "Line-2"
-#~ msgstr "Linje 2"
-
-#~ msgid "Line-3"
-#~ msgstr "Linje 3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Digital 1"
-
-#~ msgid "Digital-2"
-#~ msgstr "Digital 2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Digital 3"
-
-#~ msgid "Phone-in"
-#~ msgstr "Telefon inn"
-
-#~ msgid "Phone-out"
-#~ msgstr "Telefon ut"
-
-#~ msgid "Video"
-#~ msgstr "Video"
-
-#~ msgid "Radio"
-#~ msgstr "Radio"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
-
-#, fuzzy
-#~ msgid "PC Speaker"
-#~ msgstr "Høyttaler"
-
-#~ msgid "Could not open CD device for reading."
-#~ msgstr "Kunne ikke åpne CD-enheten for lesing."
-
-#~ msgid "Could not open vfs file \"%s\" for reading."
-#~ msgstr "Kunne ikke åpne VFS-fil «%s» for lesing."
-
-#~ msgid "No filename given."
-#~ msgstr "Ingen filnavn oppgitt."
-
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "Kunne ikke åpne VFS-fil «%s» for skriving: %s."
-
-#~ msgid "No filename given"
-#~ msgstr "Ingen filnavn oppgitt"
-
-#~ msgid "No device specified."
-#~ msgstr "Ingen enhet oppgitt."
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
-
-#~ msgid "Device is not open."
-#~ msgstr "Enheten er ikke åpen."
-
-#~ msgid "Device is open."
-#~ msgstr "Enheten er åpen."
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Enhet «%s» kan ikke fange data."
+msgstr "Denne filen er kryptert og kan ikke spilles av."

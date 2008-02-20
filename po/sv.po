@@ -1,18 +1,35 @@
 # Swedish translation for gst-plugins-ugly.
 # This file is put in the public domain.
-# Daniel Nylander <po@danielnylander.se>, 2007.
+# Daniel Nylander <po@danielnylander.se>, 2007, 2008.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.6\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:52+0200\n"
-"PO-Revision-Date: 2007-06-24 15:48+0200\n"
+"POT-Creation-Date: 2008-02-10 15:06+0000\n"
+"PO-Revision-Date: 2008-02-09 20:42+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: ext/dvdnav/dvdnavsrc.c:1428
+msgid "Invalid title information on DVD."
+msgstr "Ogiltig titelinformation på dvd."
+
+#: ext/dvdnav/dvdnavsrc.c:1598
+msgid "Could not read title information for DVD."
+msgstr "Kunde inte läsa titelinformation för dvd."
+
+#: ext/dvdnav/dvdnavsrc.c:1604
+#, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "Misslyckades med att öppna dvd-enheten \"%s\"."
+
+#: ext/dvdnav/dvdnavsrc.c:1610
+msgid "Failed to set PGC based seeking."
+msgstr "Misslyckades med att ställa in PGC-baserad spolning."
 
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
@@ -31,22 +48,32 @@ msgstr "Misslyckades med att gå till kapitel %d för dvd-titel %d"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "Kunde inte öppna dvd-titel %d. Interaktiva titlar stöds inte av det här elementet"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Kunde inte öppna dvd-titel %d. Interaktiva titlar stöds inte av det här "
+"elementet"
 
-#: ext/lame/gstlame.c:560
+#: ext/lame/gstlame.c:581
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "Misslyckades med att konfigurera LAME-kodaren. Kontrollera dina kodningsparametrar."
+msgstr ""
+"Misslyckades med att konfigurera LAME-kodaren. Kontrollera dina "
+"kodningsparametrar."
 
-#: ext/lame/gstlame.c:691
+#: ext/lame/gstlame.c:715
 #, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. Bitfrekvensen ändrades till %d kbit/s."
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. "
+"Bitfrekvensen ändrades till %d kbit/s."
 
-#: gst/asfdemux/gstasfdemux.c:322
+#: gst/asfdemux/gstasfdemux.c:328
 msgid "This stream contains no data."
-msgstr "Den här strömmen innehållet inget data."
+msgstr "Den här strömmen innehåller inget data."
 
-#: gst/asfdemux/gstasfdemux.c:2936
+#: gst/asfdemux/gstasfdemux.c:3066
 msgid "This file is encrypted and cannot be played."
 msgstr "Den här filen är krypterad och kan inte spelas upp."

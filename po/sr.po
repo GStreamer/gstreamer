@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:52+0200\n"
+"POT-Creation-Date: 2008-02-10 15:06+0000\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -15,6 +15,24 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: ext/dvdnav/dvdnavsrc.c:1428
+msgid "Invalid title information on DVD."
+msgstr ""
+
+#: ext/dvdnav/dvdnavsrc.c:1598
+#, fuzzy
+msgid "Could not read title information for DVD."
+msgstr "Не могу да пишем у датотеку „%s“."
+
+#: ext/dvdnav/dvdnavsrc.c:1604
+#, fuzzy, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "Не могу да затворим ВСД датотеку „%s“."
+
+#: ext/dvdnav/dvdnavsrc.c:1610
+msgid "Failed to set PGC based seeking."
+msgstr ""
 
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
@@ -38,22 +56,22 @@ msgid ""
 "element"
 msgstr ""
 
-#: ext/lame/gstlame.c:560
+#: ext/lame/gstlame.c:581
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
 
-#: ext/lame/gstlame.c:691
+#: ext/lame/gstlame.c:715
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:322
+#: gst/asfdemux/gstasfdemux.c:328
 msgid "This stream contains no data."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:2936
+#: gst/asfdemux/gstasfdemux.c:3066
 msgid "This file is encrypted and cannot be played."
 msgstr ""
 
@@ -68,9 +86,6 @@ msgstr ""
 
 #~ msgid "No filename specified."
 #~ msgstr "Име датотеке није задато."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Не могу да пишем у датотеку „%s“."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."

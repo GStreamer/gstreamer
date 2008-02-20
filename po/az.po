@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:52+0200\n"
+"POT-Creation-Date: 2008-02-10 15:06+0000\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -15,6 +15,24 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.0.2\n"
+
+#: ext/dvdnav/dvdnavsrc.c:1428
+msgid "Invalid title information on DVD."
+msgstr ""
+
+#: ext/dvdnav/dvdnavsrc.c:1598
+#, fuzzy
+msgid "Could not read title information for DVD."
+msgstr "\"%s\" faylına yazıla bilmədi."
+
+#: ext/dvdnav/dvdnavsrc.c:1604
+#, fuzzy, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "\"%s\" vfs faylı bağlana bilmədi."
+
+#: ext/dvdnav/dvdnavsrc.c:1610
+msgid "Failed to set PGC based seeking."
+msgstr ""
 
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
@@ -38,22 +56,22 @@ msgid ""
 "element"
 msgstr ""
 
-#: ext/lame/gstlame.c:560
+#: ext/lame/gstlame.c:581
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
 
-#: ext/lame/gstlame.c:691
+#: ext/lame/gstlame.c:715
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:322
+#: gst/asfdemux/gstasfdemux.c:328
 msgid "This stream contains no data."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:2936
+#: gst/asfdemux/gstasfdemux.c:3066
 msgid "This file is encrypted and cannot be played."
 msgstr ""
 
@@ -68,9 +86,6 @@ msgstr ""
 
 #~ msgid "No filename specified."
 #~ msgstr "Fayl adı verilməyib."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "\"%s\" faylına yazıla bilmədi."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Səhv ya da olmayan audio girişi, AVI yayımı pozulacaqdır."
