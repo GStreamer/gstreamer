@@ -1,3 +1,11 @@
+2008-02-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/gnomevfs/gstgnomevfssink.c:
+	(gst_gnome_vfs_sink_handle_event):
+	Return FALSE when seeking for a new segment fails instead
+	of silently ignoring the failure and appending every buffer
+	that comes for the new segment.
+
 2008-02-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstplaysink.c: (find_property),

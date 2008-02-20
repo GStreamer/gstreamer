@@ -448,6 +448,7 @@ static gboolean
 gst_gnome_vfs_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
 {
   GstGnomeVFSSink *sink;
+  gboolean ret = TRUE;
 
   sink = GST_GNOME_VFS_SINK (basesink);
 
@@ -474,6 +475,7 @@ gst_gnome_vfs_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
       if (res != GNOME_VFS_OK) {
         GST_ERROR_OBJECT (sink, "Failed to seek to offset %"
             G_GINT64_FORMAT ": %s", offset, gnome_vfs_result_to_string (res));
+        ret = FALSE;
       } else {
         sink->current_pos = offset;
       }
@@ -483,14 +485,14 @@ gst_gnome_vfs_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
 
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_EOS:{
-      /* how does Gnome-VFS flush? Do we need to flush? */
+      /* No need to flush with GnomeVfs */
       break;
     }
     default:
       break;
   }
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean
