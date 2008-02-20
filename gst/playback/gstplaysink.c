@@ -715,6 +715,44 @@ activate_chain (GstPlayChain * chain, gboolean activate)
   return TRUE;
 }
 
+static gint
+find_property (GstElement * element, const gchar * name)
+{
+  gint res;
+
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (element), name)) {
+    res = 0;
+    GST_DEBUG_OBJECT (element, "found %s property", name);
+  } else {
+    GST_DEBUG_OBJECT (element, "did not find %s property", name);
+    res = 1;
+    gst_object_unref (element);
+  }
+  return res;
+}
+
+/* find an object in the hierarchy with a property named @name */
+static GstElement *
+gst_play_sink_find_property (GstPlaySink * playsink, GstElement * obj,
+    const gchar * name)
+{
+  GstElement *result = NULL;
+  GstIterator *it;
+
+  if (GST_IS_BIN (obj)) {
+    it = gst_bin_iterate_recurse (GST_BIN_CAST (obj));
+    result = gst_iterator_find_custom (it,
+        (GCompareFunc) find_property, (gpointer) name);
+    gst_iterator_free (it);
+  } else {
+    if (g_object_class_find_property (G_OBJECT_GET_CLASS (obj), name)) {
+      result = obj;
+      gst_object_ref (obj);
+    }
+  }
+  return result;
+}
+
 /* make the element (bin) that contains the elements needed to perform
  * video display. 
  *
@@ -750,8 +788,11 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   }
 
   /* if we can disable async behaviour of the sink, we can avoid adding a
-   * queue for the audio chain. */
+   * queue for the audio chain. We can't use the deep property here because the
+   * sink might change it's internal sink element later. */
   if (g_object_class_find_property (G_OBJECT_GET_CLASS (chain->sink), "async")) {
+    GST_DEBUG_OBJECT (playsink, "setting async property to %d on video sink",
+        async);
     g_object_set (chain->sink, "async", async, NULL);
     chain->async = async;
   } else
@@ -1285,7 +1326,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
          * decouple the audio from the video part. We only have to do this when
          * the video part is async=true */
         queue = ((GstPlayVideoChain *) playsink->videochain)->async;
-        GST_DEBUG_OBJECT (playsink, "need audio queue for vis");
+        GST_DEBUG_OBJECT (playsink, "need audio queue for vis: %d", queue);
       } else {
         /* no vis, we can avoid a queue */
         GST_DEBUG_OBJECT (playsink, "don't need audio queue");
@@ -1371,12 +1412,17 @@ gst_play_sink_get_last_frame (GstPlaySink * playsink)
     GST_DEBUG_OBJECT (playsink, "found video chain");
     /* see if the chain is active */
     if (chain->chain.activated && chain->sink) {
+      GstElement *elem;
+
       GST_DEBUG_OBJECT (playsink, "video chain active and has a sink");
-      /* get the frame property if we can */
-      if (g_object_class_find_property (G_OBJECT_GET_CLASS (chain->sink),
-              "last-buffer")) {
+
+      /* find and get the last-buffer property now */
+      if ((elem =
+              gst_play_sink_find_property (playsink, chain->sink,
+                  "last-buffer"))) {
         GST_DEBUG_OBJECT (playsink, "getting last-buffer property");
-        g_object_get (chain->sink, "last-buffer", &result, NULL);
+        g_object_get (elem, "last-buffer", &result, NULL);
+        gst_object_unref (elem);
       }
     }
   }

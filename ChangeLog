@@ -1,3 +1,12 @@
+2008-02-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c: (find_property),
+	(gst_play_sink_find_property), (gen_video_chain),
+	(gst_play_sink_reconfigure), (gst_play_sink_get_last_frame):
+	Recursively search the sink element for a last-frame property so that we
+	can also find the property in autovideosink and friends that don't
+	always proxy the internal sink properties.
+
 2008-02-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/multichannel.c:
