@@ -1,5 +1,10 @@
 2008-02-20  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* plugins/elements/gstfilesrc.c: (gst_file_src_map_region):
+	  Also, if mmap() fails that would be a READ error, not OPEN_READ.
+
+2008-02-20  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* plugins/elements/Makefile.am:
 	* plugins/elements/gstbufferstore.c:
 	* plugins/elements/gstbufferstore.h:
@@ -69,7 +74,6 @@
 	  Copy selected buffer-flags when creating subbuffers.
 	  Fixes #516395.
 
->>>>>>> 1.3670
 2008-02-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstbuffer.c: (gst_buffer_class_init), (gst_buffer_finalize):

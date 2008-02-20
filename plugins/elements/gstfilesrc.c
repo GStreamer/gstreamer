@@ -577,7 +577,7 @@ gst_file_src_map_region (GstFileSrc * src, off_t offset, size_t size,
 mmap_failed:
   {
     if (!testonly) {
-      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+      GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
           ("mmap (0x%08lx, %d, 0x%" G_GINT64_MODIFIER "x) failed: %s",
               (gulong) size, src->fd, (guint64) offset, g_strerror (errno)));
     }
