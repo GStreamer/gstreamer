@@ -398,6 +398,7 @@ gst_queue_init (GstQueue * queue, GstQueueClass * g_class)
   GST_QUEUE_CLEAR_LEVEL (queue->orig_min_threshold);
   gst_segment_init (&queue->sink_segment, GST_FORMAT_TIME);
   gst_segment_init (&queue->src_segment, GST_FORMAT_TIME);
+  queue->head_needs_discont = queue->tail_needs_discont = FALSE;
 
   queue->leaky = GST_QUEUE_NO_LEAK;
   queue->srcresult = GST_FLOW_WRONG_STATE;
@@ -601,6 +602,7 @@ gst_queue_locked_flush (GstQueue * queue)
   queue->min_threshold.time = queue->orig_min_threshold.time;
   gst_segment_init (&queue->sink_segment, GST_FORMAT_TIME);
   gst_segment_init (&queue->src_segment, GST_FORMAT_TIME);
+  queue->head_needs_discont = queue->tail_needs_discont = FALSE;
 
   /* we deleted a lot of something */
   GST_QUEUE_SIGNAL_DEL (queue);
@@ -865,6 +867,8 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
     /* how are we going to make space for this buffer? */
     switch (queue->leaky) {
       case GST_QUEUE_LEAK_UPSTREAM:
+        /* next buffer needs to get a DISCONT flag */
+        queue->tail_needs_discont = TRUE;
         /* leak current buffer */
         GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
             "queue is full, leaking buffer on upstream end");
@@ -886,6 +890,8 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
               "queue is full, leaking item %p on downstream end", leak);
           gst_buffer_unref (leak);
         } while (gst_queue_is_filled (queue));
+        /* last buffer needs to get a DISCONT flag */
+        queue->head_needs_discont = TRUE;
         break;
       }
       default:
@@ -910,6 +916,11 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
         break;
       }
     }
+  }
+
+  if (queue->tail_needs_discont) {
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+    queue->tail_needs_discont = FALSE;
   }
 
   /* put buffer in queue now */
@@ -978,6 +989,11 @@ next:
 
     buffer = GST_BUFFER_CAST (data);
     caps = GST_BUFFER_CAPS (buffer);
+
+    if (queue->head_needs_discont) {
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+      queue->head_needs_discont = FALSE;
+    }
 
     GST_QUEUE_MUTEX_UNLOCK (queue);
     /* set the right caps on the pad now. We do this before pushing the buffer

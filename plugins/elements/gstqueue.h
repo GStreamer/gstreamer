@@ -105,6 +105,8 @@ struct _GstQueue {
   GMutex *qlock;	/* lock for queue (vs object lock) */
   GCond *item_add;	/* signals buffers now available for reading */
   GCond *item_del;	/* signals space now available for writing */
+  
+  gboolean head_needs_discont, tail_needs_discont;
 };
 
 struct _GstQueueClass {
