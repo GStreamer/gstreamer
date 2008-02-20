@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-12-17 20:31+0100\n"
+"POT-Creation-Date: 2008-02-14 00:20+0000\n"
 "PO-Revision-Date: 2007-03-27 23:54+0200\n"
 "Last-Translator: Mogens Jaeger <mogens@jaeger.tf>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -15,212 +15,426 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.2\n"
 
-#: ext/libpng/gstpngdec.c:330 ext/libpng/gstpngdec.c:513
-#: gst/wavparse/gstwavparse.c:1615 gst/wavparse/gstwavparse.c:1670
-msgid "Internal data stream error."
-msgstr "Intern datastrømsfejl."
+#: ext/cdio/gstcdiocddasrc.c:205
+msgid "Could not read from CD."
+msgstr ""
 
-#: ext/esd/esdsink.c:261 ext/esd/esdsink.c:366
+#: ext/cdio/gstcdiocddasrc.c:283
+#, fuzzy
+msgid "Could not open CD device for reading."
+msgstr "Kunne ikke tilgå enhed '%s'."
+
+#: ext/cdio/gstcdiocddasrc.c:290
+msgid "Disc is not an Audio CD."
+msgstr ""
+
+#: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
 msgstr "Kunne ikke skabe kontakt til lyd-serveren"
 
-#: ext/esd/esdsink.c:268
+#: ext/esd/esdsink.c:269
 msgid "Failed to query sound server capabilities"
 msgstr "Listning af lydservers egenskaber fejlede"
 
-#: ext/shout2/gstshout2.c:518
+#: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
+#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1111
+#: gst/avi/gstavidemux.c:3778 gst/avi/gstavidemux.c:3786
+msgid "Internal data stream error."
+msgstr "Intern datastrømsfejl."
+
+#: ext/jpeg/gstjpegdec.c:1042
+msgid "Failed to decode JPEG image"
+msgstr ""
+
+#: ext/shout2/gstshout2.c:558
 msgid "Could not connect to server"
 msgstr "Kunne ikke forbinde til server"
 
-#: gst/avi/gstavimux.c:1357
+#: gst/avi/gstavimux.c:1474
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Ingen eller defekt inddata audio, AVI sekvens vil blive ødelagt."
 
-#: sys/ximage/gstximagesrc.c:641
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Ændring af opløsning under kørsel er endnu ikke understøttet."
+#: gst/qtdemux/qtdemux.c:1029
+msgid "This file is incomplete and cannot be played."
+msgstr ""
 
-#: sys/v4l2/gstv4l2src.c:911
+#: gst/qtdemux/qtdemux.c:1810
+msgid "This file contains no playable streams."
+msgstr ""
+
+#: gst/qtdemux/qtdemux.c:2647
+msgid "The video in this file might not play correctly."
+msgstr ""
+
+#: gst/qtdemux/qtdemux.c:2722
+#, c-format
+msgid "This file contains too many streams. Only playing first %d"
+msgstr ""
+
+#: gst/qtdemux/qtdemux.c:2984 gst/qtdemux/qtdemux.c:3581
+msgid "This file is corrupt and cannot be played."
+msgstr ""
+
+#: gst/qtdemux/qtdemux.c:3588
+msgid "This file is encrypted and cannot be played."
+msgstr ""
+
+#: gst/wavparse/gstwavparse.c:1777
+#, fuzzy
+msgid "Internal data flow error."
+msgstr "Intern datastrømsfejl."
+
+#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:64
+msgid "Volume"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:99
+msgid "Bass"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:100
+msgid "Treble"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:101
+msgid "Synth"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:102
+msgid "PCM"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:103
+msgid "Speaker"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:104
+msgid "Line-in"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:105
+msgid "Microphone"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:106
+msgid "CD"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:107
+msgid "Mixer"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:108
+msgid "PCM-2"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:109
+msgid "Record"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:110
+msgid "In-gain"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:111
+msgid "Out-gain"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:112
+msgid "Line-1"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:113
+msgid "Line-2"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:114
+msgid "Line-3"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:115
+msgid "Digital-1"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:116
+msgid "Digital-2"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:117
+msgid "Digital-3"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:118
+msgid "Phone-in"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:119
+msgid "Phone-out"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:120
+msgid "Video"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:121
+msgid "Radio"
+msgstr ""
+
+#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:64
+msgid "Monitor"
+msgstr ""
+
+#: sys/sunaudio/gstsunaudiomixertrack.c:64
+msgid "Gain"
+msgstr ""
+
+#: sys/v4l2/gstv4l2src.c:1048 sys/v4l2/gstv4l2src.c:1094
 #, c-format
 msgid "Error read()ing %d bytes on device '%s'."
 msgstr "Fejl ved læs()ning af %d byte på enhed '%s'."
 
-#: sys/v4l2/gstv4l2src.c:919
+#: sys/v4l2/gstv4l2src.c:1076
 #, c-format
-msgid "Error reading from device '%s'"
-msgstr "Fejl ved læsning fra enhed '%s'"
+msgid "Got unexpected frame size of %u instead of %u."
+msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:68
+#: sys/v4l2/v4l2_calls.c:83
 #, c-format
-msgid "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if it is a v4l1 driver."
-msgstr "Fejl ved hentning af egenskaber for enhed '%s': Det er ikke en v412 driver. Kontroller om det er en v411 driver."
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
+msgstr ""
+"Fejl ved hentning af egenskaber for enhed '%s': Det er ikke en v412 driver. "
+"Kontroller om det er en v411 driver."
 
-#: sys/v4l2/v4l2_calls.c:102
+#: sys/v4l2/v4l2_calls.c:120
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
 msgstr "Listning af inddata-attributter for %d i enhed %s fejlede"
 
-#: sys/v4l2/v4l2_calls.c:126
-#, c-format
-msgid "Failed to get setting of tuner &d on device '%s'."
+#: sys/v4l2/v4l2_calls.c:150
+#, fuzzy, c-format
+msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr "Hentning af indstillinger for tuner &d på enhed '%s' fejlede."
 
-#: sys/v4l2/v4l2_calls.c:166
+#: sys/v4l2/v4l2_calls.c:192
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr "Listning af standard på enhed '%s' fejlede."
 
-#: sys/v4l2/v4l2_calls.c:214 sys/v4l2/v4l2_calls.c:285
-#, c-format
-msgid "Failed getting controls attributes on device '%s."
+#: sys/v4l2/v4l2_calls.c:240
+#, fuzzy, c-format
+msgid "Failed getting controls attributes on device '%s.'"
 msgstr "Hentning af kontrol-attributter for enhed '%s' fejlede."
 
-#: sys/v4l2/v4l2_calls.c:403
+#: sys/v4l2/v4l2_calls.c:310
+#, fuzzy, c-format
+msgid "Failed getting controls attributes on device '%s'."
+msgstr "Hentning af kontrol-attributter for enhed '%s' fejlede."
+
+#: sys/v4l2/v4l2_calls.c:428
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Kan ikke identificere enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:410
+#: sys/v4l2/v4l2_calls.c:435
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "Dette er ikke en enheds '%s'."
 
-#: sys/v4l2/v4l2_calls.c:417
+#: sys/v4l2/v4l2_calls.c:442
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Kunne ikke tilgå enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:424
+#: sys/v4l2/v4l2_calls.c:449
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "Enhed '%s' er ikke en optageenhed."
 
-#: sys/v4l2/v4l2_calls.c:519
+#: sys/v4l2/v4l2_calls.c:544
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Indstilling af standard for enhed '%s' fejlede."
 
-#: sys/v4l2/v4l2_calls.c:556
+#: sys/v4l2/v4l2_calls.c:581
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr "Kunne ikke hente nuværende tuner-frekvens for enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:597
+#: sys/v4l2/v4l2_calls.c:622
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr "Kunne ikke sætte nuværende tuner-frekvens for enhed '%s' til %lu Hz."
 
-#: sys/v4l2/v4l2_calls.c:631
+#: sys/v4l2/v4l2_calls.c:656
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "Kunne ikke hente signalstyrke for enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:667
+#: sys/v4l2/v4l2_calls.c:692
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Kunne ikke hente værdi af kontrol %d for enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:702
+#: sys/v4l2/v4l2_calls.c:727
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Kunne ikke sætte værdi %d på kontrol %d for enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:729
-#, c-format
-msgid "Failed to get current input on device '%s'."
+#: sys/v4l2/v4l2_calls.c:756
+#, fuzzy, c-format
+msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr "Kunne ikke hente nuværende inddata for enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:752
+#: sys/v4l2/v4l2_calls.c:778
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Kunne ikke sætte inddata %d for enhed %s."
 
-#: sys/v4l2/v4l2src_calls.c:95
+#: sys/v4l2/v4l2src_calls.c:369
+#, fuzzy, c-format
+msgid "Could not enqueue buffers in device '%s'."
+msgstr "Kunne ikke hente buffere fra enhed '%s'."
+
+#: sys/v4l2/v4l2src_calls.c:548
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr "Kunne ikke liste mulige videoformater, som '%s' enheden kan arbejde med"
+msgstr ""
+"Kunne ikke liste mulige videoformater, som '%s' enheden kan arbejde med"
 
-#: sys/v4l2/v4l2src_calls.c:137 sys/v4l2/v4l2src_calls.c:239
-#, c-format
-msgid "Could not exchange data with device '%s'."
-msgstr "Kunne ikke udveksle data med enheden '%s'."
-
-#: sys/v4l2/v4l2src_calls.c:213 sys/v4l2/v4l2src_calls.c:230
+#: sys/v4l2/v4l2src_calls.c:1064 sys/v4l2/v4l2src_calls.c:1081
+#: sys/v4l2/v4l2src_calls.c:1090
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Forsøg på at hente videorammer fra enhed '%s' mislykkedes."
 
-#: sys/v4l2/v4l2src_calls.c:215
+#: sys/v4l2/v4l2src_calls.c:1066
 #, c-format
-msgid "The buffer type is not supported, or the index is out of bounds, or no buffers have been allocated yet, or the userptr or length are invalid. device %s"
-msgstr "Buffertypen er ikke understøttet, eller indeks er udenfor grænser, eller der er ikke blevet tildelt buffere endnu, eller userptr eller længde er defekt. enhed %s"
+msgid ""
+"The buffer type is not supported, or the index is out of bounds, or no "
+"buffers have been allocated yet, or the userptr or length are invalid. "
+"device %s"
+msgstr ""
+"Buffertypen er ikke understøttet, eller indeks er udenfor grænser, eller der "
+"er ikke blevet tildelt buffere endnu, eller userptr eller længde er defekt. "
+"enhed %s"
 
-#: sys/v4l2/v4l2src_calls.c:224
+#: sys/v4l2/v4l2src_calls.c:1075
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr "Forsøg på at hente videorammer fra enhed '%s' mislykkedes. Ikke tilstrækkeligt hukommelse."
+msgstr ""
+"Forsøg på at hente videorammer fra enhed '%s' mislykkedes. Ikke "
+"tilstrækkeligt hukommelse."
 
-#: sys/v4l2/v4l2src_calls.c:224
+#: sys/v4l2/v4l2src_calls.c:1075
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-msgstr "ikke tilstrækkeligt med hukommelse til at indrangere en brugerviserbuffer. enhed %s."
+msgstr ""
+"ikke tilstrækkeligt med hukommelse til at indrangere en brugerviserbuffer. "
+"enhed %s."
 
-#: sys/v4l2/v4l2src_calls.c:232
+#: sys/v4l2/v4l2src_calls.c:1083
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Fejlede efter %d forsøg. enhed %s. systemfejl: %s"
 
-#: sys/v4l2/v4l2src_calls.c:272
+#: sys/v4l2/v4l2src_calls.c:1092
 #, c-format
-msgid "Failed querying in which video format device '%s' is working with"
-msgstr "Kunne ikke liste i hvilke formater, enhed '%s' kan arbejde med"
+msgid "No free buffers found in the pool at index %d."
+msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:316
-#, c-format
-msgid "The closest size from %dx%d is %dx%d, for video format %s on device '%s'"
-msgstr "Den nærmeste størrelse fra %dx%d er %dx%d, for videoformat %s for enhed '%s'"
+#: sys/v4l2/v4l2src_calls.c:1155
+#, fuzzy, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Kunne ikke hente buffere fra enhed '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:330
-#, c-format
-msgid "The closest framerate from %u/%u is %u/%u, on device '%s'"
-msgstr "Den nærmeste framerate fra %u/%u er %u/%u, på enhed '%s'"
+#: sys/v4l2/v4l2src_calls.c:1164
+#, fuzzy, c-format
+msgid "Could not set parameters on device '%s'"
+msgstr "Kunne ikke hente buffere fra enhed '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:357 sys/v4l2/v4l2src_calls.c:367
-#, c-format
-msgid "Failed setting the video format for device '%s'"
-msgstr "Kunne ikke indstille videoformat for enhed '%s'"
+#: sys/v4l2/v4l2src_calls.c:1183
+#, fuzzy, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Enhed '%s' er ikke en optageenhed."
 
-#: sys/v4l2/v4l2src_calls.c:487
+#: sys/v4l2/v4l2src_calls.c:1191 sys/v4l2/v4l2src_calls.c:1200
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Enhed '%s' er ikke en optageenhed."
+
+#: sys/v4l2/v4l2src_calls.c:1209
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Enhed '%s' er ikke en optageenhed."
+
+#: sys/v4l2/v4l2src_calls.c:1220
+#, fuzzy, c-format
+msgid "Device '%s' cannot capture at %d/%d frames per second"
+msgstr "Enhed '%s' er ikke en optageenhed."
+
+#: sys/v4l2/v4l2src_calls.c:1297
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Kunne ikke hente buffere fra enhed '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:496
-#, c-format
-msgid "The driver of device '%s' is broken."
-msgstr "Driveren til enhed '%s' ir defekt."
-
-#: sys/v4l2/v4l2src_calls.c:505
+#: sys/v4l2/v4l2src_calls.c:1306
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Kunne ikke hente tilstrækkeligt med buffere fra enhed '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:516
-#, c-format
-msgid "Could not get properties of data comming from device '%s'"
-msgstr "Kunne ikke få egenskaberne for de data der kommer fra enhed '%s'"
+#: sys/v4l2/v4l2src_calls.c:1315
+#, fuzzy, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Kunne ikke hente buffere fra enhed '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:526
-#, c-format
-msgid "Could not map memory in device '%s'."
-msgstr "Kunne ikke afbilde hukommelse i enhed '%s'."
+#: sys/v4l2/v4l2src_calls.c:1323
+#, fuzzy, c-format
+msgid "The driver of device '%s' does not support any known capture method."
+msgstr "Driveren til enhed '%s' ir defekt."
 
-#: sys/v4l2/v4l2src_calls.c:569
+#: sys/v4l2/v4l2src_calls.c:1368
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Kunne ikke starte strømningsoptagelse fra enhed '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:613
+#: sys/v4l2/v4l2src_calls.c:1412
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Kunne ikke stoppe strømningsoptagelse fra enhed '%s'."
+
+#: sys/ximage/gstximagesrc.c:711
+msgid "Changing resolution at runtime is not yet supported."
+msgstr "Ændring af opløsning under kørsel er endnu ikke understøttet."
+
+#: sys/ximage/gstximagesrc.c:725
+msgid "Cannot operate without a clock"
+msgstr ""
+
+#~ msgid "Error reading from device '%s'"
+#~ msgstr "Fejl ved læsning fra enhed '%s'"
+
+#~ msgid "Could not exchange data with device '%s'."
+#~ msgstr "Kunne ikke udveksle data med enheden '%s'."
+
+#~ msgid "Failed querying in which video format device '%s' is working with"
+#~ msgstr "Kunne ikke liste i hvilke formater, enhed '%s' kan arbejde med"
+
+#~ msgid ""
+#~ "The closest size from %dx%d is %dx%d, for video format %s on device '%s'"
+#~ msgstr ""
+#~ "Den nærmeste størrelse fra %dx%d er %dx%d, for videoformat %s for enhed '%"
+#~ "s'"
+
+#~ msgid "The closest framerate from %u/%u is %u/%u, on device '%s'"
+#~ msgstr "Den nærmeste framerate fra %u/%u er %u/%u, på enhed '%s'"
+
+#~ msgid "Failed setting the video format for device '%s'"
+#~ msgstr "Kunne ikke indstille videoformat for enhed '%s'"
+
+#~ msgid "Could not get properties of data comming from device '%s'"
+#~ msgstr "Kunne ikke få egenskaberne for de data der kommer fra enhed '%s'"
+
+#~ msgid "Could not map memory in device '%s'."
+#~ msgstr "Kunne ikke afbilde hukommelse i enhed '%s'."

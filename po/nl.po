@@ -1,37 +1,32 @@
-# translation of gst-plugins-good-0.10.6.po to Dutch
+# translation of gst-plugins-good-0.10.6.2.po to Dutch
 # This file is put in the public domain.
 #
-# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007.
+# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.6\n"
+"Project-Id-Version: gst-plugins-good-0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-15 11:41+0200\n"
-"PO-Revision-Date: 2007-08-14 12:31+0200\n"
+"POT-Creation-Date: 2008-02-14 00:20+0000\n"
+"PO-Revision-Date: 2008-02-09 21:22+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.2\n"
+"X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
-#: ext/cdio/gstcdiocddasrc.c:204
+#: ext/cdio/gstcdiocddasrc.c:205
 msgid "Could not read from CD."
 msgstr "Kan niet van CD lezen."
 
-#: ext/cdio/gstcdiocddasrc.c:282
+#: ext/cdio/gstcdiocddasrc.c:283
 msgid "Could not open CD device for reading."
 msgstr "Kan het CD-apparaat niet openen voor lezen."
 
-#: ext/cdio/gstcdiocddasrc.c:289
+#: ext/cdio/gstcdiocddasrc.c:290
 msgid "Disc is not an Audio CD."
 msgstr "Schijf is geen geluidsCD"
-
-#: ext/libpng/gstpngdec.c:331 ext/libpng/gstpngdec.c:514
-#: gst/avi/gstavidemux.c:3741 gst/avi/gstavidemux.c:3749
-msgid "Internal data stream error."
-msgstr "Interne fout in gegevensstroom."
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
@@ -41,7 +36,13 @@ msgstr "Kan geen verbinding maken met de geluidsserver"
 msgid "Failed to query sound server capabilities"
 msgstr "Kan de eigenschappen van de geluidsserver niet opvragen"
 
-#: ext/jpeg/gstjpegdec.c:1037
+#: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
+#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1111
+#: gst/avi/gstavidemux.c:3778 gst/avi/gstavidemux.c:3786
+msgid "Internal data stream error."
+msgstr "Interne fout in gegevensstroom."
+
+#: ext/jpeg/gstjpegdec.c:1042
 msgid "Failed to decode JPEG image"
 msgstr "Kan de JPEG-afbeelding niet decoderen"
 
@@ -49,40 +50,41 @@ msgstr "Kan de JPEG-afbeelding niet decoderen"
 msgid "Could not connect to server"
 msgstr "Kan geen verbinding maken met server"
 
-#: gst/avi/gstavimux.c:1424
+#: gst/avi/gstavimux.c:1474
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
 
-#: gst/qtdemux/qtdemux.c:987
+#: gst/qtdemux/qtdemux.c:1029
 msgid "This file is incomplete and cannot be played."
 msgstr "Dit bestand is niet compleet en kan niet gespeeld worden."
 
-#: gst/qtdemux/qtdemux.c:1443
+#: gst/qtdemux/qtdemux.c:1810
 msgid "This file contains no playable streams."
 msgstr "Dit bestand bevat geen speelbare stromen."
 
-#: gst/qtdemux/qtdemux.c:2186
+#: gst/qtdemux/qtdemux.c:2647
 msgid "The video in this file might not play correctly."
 msgstr "De vido in dit bestand kan mogelijk niet correct afgespeeld worden."
 
-#: gst/qtdemux/qtdemux.c:2261
+#: gst/qtdemux/qtdemux.c:2722
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr "Dit bestand bevat te veel stromen. Alleen de eerste %d wordt afgespeeld"
+msgstr ""
+"Dit bestand bevat te veel stromen. Alleen de eerste %d wordt afgespeeld"
 
-#: gst/qtdemux/qtdemux.c:2521 gst/qtdemux/qtdemux.c:3096
+#: gst/qtdemux/qtdemux.c:2984 gst/qtdemux/qtdemux.c:3581
 msgid "This file is corrupt and cannot be played."
 msgstr "Dit bestand is corrupt en kan niet afgespeeld worden."
 
-#: gst/qtdemux/qtdemux.c:3103
+#: gst/qtdemux/qtdemux.c:3588
 msgid "This file is encrypted and cannot be played."
 msgstr "Dit bestand is versleuteld en kan niet afgespeeld worden."
 
-#: gst/wavparse/gstwavparse.c:1718
+#: gst/wavparse/gstwavparse.c:1777
 msgid "Internal data flow error."
 msgstr "Interne fout met de gegevens doorvoer."
 
-#: sys/oss/gstossmixertrack.c:97 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:64
 msgid "Volume"
 msgstr "Volume"
 
@@ -90,95 +92,95 @@ msgstr "Volume"
 msgid "Bass"
 msgstr "Lage tonen"
 
-#: sys/oss/gstossmixertrack.c:101
+#: sys/oss/gstossmixertrack.c:100
 msgid "Treble"
 msgstr "Hoge tonen"
 
-#: sys/oss/gstossmixertrack.c:103
+#: sys/oss/gstossmixertrack.c:101
 msgid "Synth"
 msgstr "Synth"
 
-#: sys/oss/gstossmixertrack.c:105
+#: sys/oss/gstossmixertrack.c:102
 msgid "PCM"
 msgstr "PCM"
 
-#: sys/oss/gstossmixertrack.c:107
+#: sys/oss/gstossmixertrack.c:103
 msgid "Speaker"
 msgstr "Luidspreker"
 
-#: sys/oss/gstossmixertrack.c:109
+#: sys/oss/gstossmixertrack.c:104
 msgid "Line-in"
 msgstr "Lijn-in"
 
-#: sys/oss/gstossmixertrack.c:111
+#: sys/oss/gstossmixertrack.c:105
 msgid "Microphone"
 msgstr "Microfoon"
 
-#: sys/oss/gstossmixertrack.c:113
+#: sys/oss/gstossmixertrack.c:106
 msgid "CD"
 msgstr "CD"
 
-#: sys/oss/gstossmixertrack.c:115
+#: sys/oss/gstossmixertrack.c:107
 msgid "Mixer"
 msgstr "Mixer"
 
-#: sys/oss/gstossmixertrack.c:117
+#: sys/oss/gstossmixertrack.c:108
 msgid "PCM-2"
 msgstr "PCM-2"
 
-#: sys/oss/gstossmixertrack.c:119
+#: sys/oss/gstossmixertrack.c:109
 msgid "Record"
 msgstr "Opname"
 
-#: sys/oss/gstossmixertrack.c:121
+#: sys/oss/gstossmixertrack.c:110
 msgid "In-gain"
 msgstr "Ingangsverserking"
 
-#: sys/oss/gstossmixertrack.c:123
+#: sys/oss/gstossmixertrack.c:111
 msgid "Out-gain"
 msgstr "Uitgandsversterking"
 
-#: sys/oss/gstossmixertrack.c:125
+#: sys/oss/gstossmixertrack.c:112
 msgid "Line-1"
 msgstr "Lijn-1"
 
-#: sys/oss/gstossmixertrack.c:127
+#: sys/oss/gstossmixertrack.c:113
 msgid "Line-2"
 msgstr "Lijn-2"
 
-#: sys/oss/gstossmixertrack.c:129
+#: sys/oss/gstossmixertrack.c:114
 msgid "Line-3"
 msgstr "Lijn-3"
 
-#: sys/oss/gstossmixertrack.c:131
+#: sys/oss/gstossmixertrack.c:115
 msgid "Digital-1"
 msgstr "Digitaal-1"
 
-#: sys/oss/gstossmixertrack.c:133
+#: sys/oss/gstossmixertrack.c:116
 msgid "Digital-2"
 msgstr "Digitaal-2"
 
-#: sys/oss/gstossmixertrack.c:135
+#: sys/oss/gstossmixertrack.c:117
 msgid "Digital-3"
 msgstr "Digitaal-3"
 
-#: sys/oss/gstossmixertrack.c:137
+#: sys/oss/gstossmixertrack.c:118
 msgid "Phone-in"
 msgstr "Inbellen"
 
-#: sys/oss/gstossmixertrack.c:139
+#: sys/oss/gstossmixertrack.c:119
 msgid "Phone-out"
 msgstr "Uitbellen"
 
-#: sys/oss/gstossmixertrack.c:141
+#: sys/oss/gstossmixertrack.c:120
 msgid "Video"
 msgstr "Video"
 
-#: sys/oss/gstossmixertrack.c:143
+#: sys/oss/gstossmixertrack.c:121
 msgid "Radio"
 msgstr "Radio"
 
-#: sys/oss/gstossmixertrack.c:145 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:64
 msgid "Monitor"
 msgstr "Monitor"
 
@@ -186,205 +188,226 @@ msgstr "Monitor"
 msgid "Gain"
 msgstr "Versterking"
 
-#: sys/v4l2/gstv4l2src.c:929
+#: sys/v4l2/gstv4l2src.c:1048 sys/v4l2/gstv4l2src.c:1094
 #, c-format
 msgid "Error read()ing %d bytes on device '%s'."
 msgstr "Fout bij het lezen van %d bytes van apparaat '%s'."
 
-#: sys/v4l2/v4l2_calls.c:68
+#: sys/v4l2/gstv4l2src.c:1076
 #, c-format
-msgid "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if it is a v4l1 driver."
-msgstr "Fout bij het verkrijgen van de eigenschappen van apparaat '%s': Het is geen v4l2-driver. Controleer of het een v4l1-driver is."
+msgid "Got unexpected frame size of %u instead of %u."
+msgstr "Onverwachte grootte van een frame van %u in plaats van %u."
 
-#: sys/v4l2/v4l2_calls.c:102
+#: sys/v4l2/v4l2_calls.c:83
+#, c-format
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
+msgstr ""
+"Fout bij het verkrijgen van de eigenschappen van apparaat '%s': Het is geen "
+"v4l2-driver. Controleer of het een v4l1-driver is."
+
+#: sys/v4l2/v4l2_calls.c:120
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
 msgstr "Kan attributen van invoer van %d in apparaat %s niet opvragen"
 
-#: sys/v4l2/v4l2_calls.c:126
+#: sys/v4l2/v4l2_calls.c:150
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr "Kan de instelling van de tuner %d op apparaat '%s' niet opvragen."
 
-#: sys/v4l2/v4l2_calls.c:166
+#: sys/v4l2/v4l2_calls.c:192
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr "Kan norm op apparaat '%s' niet verkrijgen."
 
-#: sys/v4l2/v4l2_calls.c:214
+#: sys/v4l2/v4l2_calls.c:240
 #, c-format
 msgid "Failed getting controls attributes on device '%s.'"
 msgstr "Kan de attributen van de knoppen op apparaat '%s' niet verkrijgen."
 
-#: sys/v4l2/v4l2_calls.c:285
+#: sys/v4l2/v4l2_calls.c:310
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Kan de attributen van de knoppen op apparaat '%s' niet verkrijgen."
 
-#: sys/v4l2/v4l2_calls.c:403
+#: sys/v4l2/v4l2_calls.c:428
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Kan het apparaat '%s' niet identificeren."
 
-#: sys/v4l2/v4l2_calls.c:410
+#: sys/v4l2/v4l2_calls.c:435
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "Dit is geen apparaat '%s'."
 
-#: sys/v4l2/v4l2_calls.c:417
+#: sys/v4l2/v4l2_calls.c:442
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Kan apparaat '%s' niet openen voor lezen en schrijven."
 
-#: sys/v4l2/v4l2_calls.c:424
+#: sys/v4l2/v4l2_calls.c:449
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "Apparaat '%s' is geen opnameapparaat."
 
-#: sys/v4l2/v4l2_calls.c:519
+#: sys/v4l2/v4l2_calls.c:544
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Kan norm niet instellen voor apparaat '%s'."
 
-#: sys/v4l2/v4l2_calls.c:556
+#: sys/v4l2/v4l2_calls.c:581
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr "Kan de tunerfrequentie van apparaat '%s' niet verkrijgen."
 
-#: sys/v4l2/v4l2_calls.c:597
+#: sys/v4l2/v4l2_calls.c:622
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
-msgstr "Kan de huidige tunerfrequentie voor apparaat '%s' niet instellen op %lu Hz."
+msgstr ""
+"Kan de huidige tunerfrequentie voor apparaat '%s' niet instellen op %lu Hz."
 
-#: sys/v4l2/v4l2_calls.c:631
+#: sys/v4l2/v4l2_calls.c:656
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "Kan de signaalsterkte van apparaat '%s' niet verkrijgen."
 
-#: sys/v4l2/v4l2_calls.c:667
+#: sys/v4l2/v4l2_calls.c:692
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Kan de waarde voor knop %d op apparaat '%s' niet verkrijgen."
 
-#: sys/v4l2/v4l2_calls.c:702
+#: sys/v4l2/v4l2_calls.c:727
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Kan de waarde %d voor knop %d op apparaat '%s' niet instellen."
 
-#: sys/v4l2/v4l2_calls.c:729
+#: sys/v4l2/v4l2_calls.c:756
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
-msgstr "Kan de huidige instellingen van apparaat '%s' niet verkrijgen. Het is mogelijk een radio"
+msgstr ""
+"Kan de huidige instellingen van apparaat '%s' niet verkrijgen. Het is "
+"mogelijk een radio"
 
-#: sys/v4l2/v4l2_calls.c:751
+#: sys/v4l2/v4l2_calls.c:778
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Kan de invoer %d op apparaat '%s' niet instellen."
 
-#: sys/v4l2/v4l2src_calls.c:314
+#: sys/v4l2/v4l2src_calls.c:369
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "Kan geen buffers toekennen in apparaat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:388
+#: sys/v4l2/v4l2src_calls.c:548
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr "Kan de mogelijke videoformaten waarmee apparaat '%s' kan werken niet opnoemen"
+msgstr ""
+"Kan de mogelijke videoformaten waarmee apparaat '%s' kan werken niet opnoemen"
 
-#: sys/v4l2/v4l2src_calls.c:800 sys/v4l2/v4l2src_calls.c:817
+#: sys/v4l2/v4l2src_calls.c:1064 sys/v4l2/v4l2src_calls.c:1081
+#: sys/v4l2/v4l2src_calls.c:1090
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Kan geen videoframes verkrijgen van apparaat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:802
+#: sys/v4l2/v4l2src_calls.c:1066
 #, c-format
-msgid "The buffer type is not supported, or the index is out of bounds, or no buffers have been allocated yet, or the userptr or length are invalid. device %s"
-msgstr "Het type buffer wordt niet ondersteund of de index is buiten zijn grenzen of er zijn nog geen buffers toegewezen of de pointer of lengte van de buffer zijn ongeldig. Apparaat %s"
+msgid ""
+"The buffer type is not supported, or the index is out of bounds, or no "
+"buffers have been allocated yet, or the userptr or length are invalid. "
+"device %s"
+msgstr ""
+"Het type buffer wordt niet ondersteund of de index is buiten zijn grenzen of "
+"er zijn nog geen buffers toegewezen of de pointer of lengte van de buffer "
+"zijn ongeldig. Apparaat %s"
 
-#: sys/v4l2/v4l2src_calls.c:811
+#: sys/v4l2/v4l2src_calls.c:1075
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr "Kan geen videoframes verkrijgen van apparaat '%s'. Niet genoeg geheugen."
+msgstr ""
+"Kan geen videoframes verkrijgen van apparaat '%s'. Niet genoeg geheugen."
 
-#: sys/v4l2/v4l2src_calls.c:811
+#: sys/v4l2/v4l2src_calls.c:1075
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr "Onvoldoende geheugen voor het toewijzen van een buffer. Apparaat %s."
 
-#: sys/v4l2/v4l2src_calls.c:819
+#: sys/v4l2/v4l2src_calls.c:1083
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Fout na %d pogingen. Apparaat %s. Systeemfout: %s"
 
-#: sys/v4l2/v4l2src_calls.c:826
+#: sys/v4l2/v4l2src_calls.c:1092
 #, c-format
-msgid "Could not exchange data with device '%s'."
-msgstr "Kan geen gegevens uitwisselen met apparaat '%s'."
+msgid "No free buffers found in the pool at index %d."
+msgstr "Geen vrije buffers meer in de pool bij index %d."
 
-#: sys/v4l2/v4l2src_calls.c:900
-#, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Het apparaat '%s' ondersteunt het opnemen van video niet"
-
-#: sys/v4l2/v4l2src_calls.c:908 sys/v4l2/v4l2src_calls.c:917
-#, c-format
-msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Apparaat '%s' kan niet opnemen met %dx%d"
-
-#: sys/v4l2/v4l2src_calls.c:926
-#, c-format
-msgid "Device '%s' cannot capture in the specified format"
-msgstr "Apparaat '%s' kan niet opnemen in het gespecificeerde formaat"
-
-#: sys/v4l2/v4l2src_calls.c:937
+#: sys/v4l2/v4l2src_calls.c:1155
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Kan de parameters op apparaat '%s' niet verkrijgen"
 
-#: sys/v4l2/v4l2src_calls.c:944
+#: sys/v4l2/v4l2src_calls.c:1164
 #, c-format
 msgid "Could not set parameters on device '%s'"
 msgstr "Kan de parameters op apparaat '%s' niet instellen"
 
-#: sys/v4l2/v4l2src_calls.c:951
+#: sys/v4l2/v4l2src_calls.c:1183
+#, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Het apparaat '%s' ondersteunt het opnemen van video niet"
+
+#: sys/v4l2/v4l2src_calls.c:1191 sys/v4l2/v4l2src_calls.c:1200
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Apparaat '%s' kan niet opnemen met %dx%d"
+
+#: sys/v4l2/v4l2src_calls.c:1209
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Apparaat '%s' kan niet opnemen in het gespecificeerde formaat"
+
+#: sys/v4l2/v4l2src_calls.c:1220
 #, c-format
 msgid "Device '%s' cannot capture at %d/%d frames per second"
 msgstr "Apparaat '%s' kan niet opnemen met %d/%d frames per seconde"
 
-#: sys/v4l2/v4l2src_calls.c:1022
+#: sys/v4l2/v4l2src_calls.c:1297
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Kan geen buffers verkrijgen van apparaat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1031
+#: sys/v4l2/v4l2src_calls.c:1306
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Kan onvoldoende buffers verkrijgen van apparaat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1040
+#: sys/v4l2/v4l2src_calls.c:1315
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Kan de buffers van apparaat '%s' niet vinden"
 
-#: sys/v4l2/v4l2src_calls.c:1048
+#: sys/v4l2/v4l2src_calls.c:1323
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr "De driver van apparaat '%s' ondersteunt geen  bekende opnamemethode."
 
-#: sys/v4l2/v4l2src_calls.c:1093
+#: sys/v4l2/v4l2src_calls.c:1368
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Fout bij het starten van een opnamestroom met apparaat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1137
+#: sys/v4l2/v4l2src_calls.c:1412
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Fout bij het stoppen van een opnamestroom met apparaat '%s'."
 
-#: sys/ximage/gstximagesrc.c:690
+#: sys/ximage/gstximagesrc.c:711
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Tijdens het draaien kan de resolutie nog niet gewijzigd worden."
 
-#: sys/ximage/gstximagesrc.c:704
+#: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Kan niet werken zonder een klok."

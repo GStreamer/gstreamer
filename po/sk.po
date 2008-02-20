@@ -1,230 +1,202 @@
-# Japanese translation for gst-plugins-good.
+# Slovak translations for gst-plugins-good.
+# This file is put in the public domain.
 #
-# Takao Fujiwara <takao.fujiwara@sun.com>, 2006.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good HEAD\n"
+"Project-Id-Version: gst-plugins-good 0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-02-14 00:20+0000\n"
-"PO-Revision-Date: 2006-08-08 19:05+0200\n"
-"Last-Translator: Takao Fujiwara <takao.fujiwara@sun.com>\n"
-"Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
+"PO-Revision-Date: 2008-02-19 07:17+0100\n"
+"Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
+"Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\\n\n"
+"X-Generator: KBabel 1.11.4\n"
+"X-Poedit-Country: SLOVAKIA\n"
 
-# SUN REVIEWED
 #: ext/cdio/gstcdiocddasrc.c:205
-#, fuzzy
 msgid "Could not read from CD."
-msgstr "ファイル \"%s\" に書き込むことができません。"
+msgstr "Nepodarilo sa čítať z CD."
 
-# SUN REVIEWED
 #: ext/cdio/gstcdiocddasrc.c:283
 msgid "Could not open CD device for reading."
-msgstr "CD デバイスを読み取り用に開くことができません。"
+msgstr "Nepodarilo sa otvoriť zariadenie CD pre čítanie."
 
-# SUN REVIEWED
 #: ext/cdio/gstcdiocddasrc.c:290
-#, fuzzy
 msgid "Disc is not an Audio CD."
-msgstr "デバイスが開いていません。"
+msgstr "Tento disk nie je zvukové CD."
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
-msgstr ""
+msgstr "Nepodarilo sa nadviazať spojenie so zvukovým serverom"
 
 #: ext/esd/esdsink.c:269
 msgid "Failed to query sound server capabilities"
-msgstr ""
+msgstr "Nepodarilo sa zistiť schopnosti zvukového servera"
 
 #: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
 #: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1111
 #: gst/avi/gstavidemux.c:3778 gst/avi/gstavidemux.c:3786
 msgid "Internal data stream error."
-msgstr ""
+msgstr "Vnútorná chyba prúdu údajov."
 
 #: ext/jpeg/gstjpegdec.c:1042
 msgid "Failed to decode JPEG image"
-msgstr ""
+msgstr "Nepodarilo sa dekódovať obrázok JPEG"
 
 #: ext/shout2/gstshout2.c:558
 msgid "Could not connect to server"
-msgstr ""
+msgstr "Nepodarilo sa pripojiť k serveru"
 
-# SUN REVIEWED
 #: gst/avi/gstavimux.c:1474
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "入力オーディオが存在しないか無効であるため、AVI ストリームは壊れます。"
+msgstr "Žiadny alebo chybný vstup zvuku, prúd údajov AVI bude poškodený."
 
 #: gst/qtdemux/qtdemux.c:1029
 msgid "This file is incomplete and cannot be played."
-msgstr ""
+msgstr "Tento súbor je neúplný a nedá sa prehrať."
 
 #: gst/qtdemux/qtdemux.c:1810
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Tento súbor neobsahuje žiadne prehrateľné prúdy údajov."
 
 #: gst/qtdemux/qtdemux.c:2647
 msgid "The video in this file might not play correctly."
-msgstr ""
+msgstr "Video v tomto súbore možno nebude hrať korektne."
 
 #: gst/qtdemux/qtdemux.c:2722
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr ""
+msgstr "Tento súbor obsahuje príliš mnoho prúdov údajov. Prehrávam iba prvý %d"
 
 #: gst/qtdemux/qtdemux.c:2984 gst/qtdemux/qtdemux.c:3581
 msgid "This file is corrupt and cannot be played."
-msgstr ""
+msgstr "Tento súbor je poškodený a nedá sa prehrať."
 
 #: gst/qtdemux/qtdemux.c:3588
 msgid "This file is encrypted and cannot be played."
-msgstr ""
+msgstr "Tento súbor je zašifrovaný a nedá sa prehrať."
 
 #: gst/wavparse/gstwavparse.c:1777
 msgid "Internal data flow error."
-msgstr ""
+msgstr "Vnútorná chyba toku údajov."
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:64
 msgid "Volume"
-msgstr "音量"
+msgstr "Hlasitosť"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:99
 msgid "Bass"
-msgstr "低音"
+msgstr "Basy"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:100
 msgid "Treble"
-msgstr "高音"
+msgstr "Výšky"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:101
 msgid "Synth"
-msgstr "シンセ"
+msgstr "Syntetizér"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:102
 msgid "PCM"
 msgstr "PCM"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:103
 msgid "Speaker"
-msgstr "スピーカ"
+msgstr "Reproduktor"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:104
 msgid "Line-in"
-msgstr "ラインイン"
+msgstr "Linkový vstup"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:105
 msgid "Microphone"
-msgstr "マイクロフォン"
+msgstr "Mikrofón"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:106
 msgid "CD"
 msgstr "CD"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:107
 msgid "Mixer"
-msgstr "ミキサー"
+msgstr "Mixér"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:108
 msgid "PCM-2"
 msgstr "PCM-2"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:109
 msgid "Record"
-msgstr "録音"
+msgstr "Nahrávanie"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:110
 msgid "In-gain"
-msgstr "入力ゲイン"
+msgstr "Vstupný zisk"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:111
 msgid "Out-gain"
-msgstr "出力ゲイン"
+msgstr "Výstupný zisk"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:112
 msgid "Line-1"
-msgstr "ライン 1"
+msgstr "Linka-1"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:113
 msgid "Line-2"
-msgstr "ライン 2"
+msgstr "Linka-2"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:114
 msgid "Line-3"
-msgstr "ライン 3"
+msgstr "Linka-3"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:115
 msgid "Digital-1"
-msgstr "デジタル 1"
+msgstr "Digitál-1"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:116
 msgid "Digital-2"
-msgstr "デジタル 2"
+msgstr "Digitál-2"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:117
 msgid "Digital-3"
-msgstr "デジタル 3"
+msgstr "Digitál-3"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:118
 msgid "Phone-in"
-msgstr "フォン入力"
+msgstr "Telefón-vstup"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:119
 msgid "Phone-out"
-msgstr "フォン出力"
+msgstr "Telefón-výstup"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:120
 msgid "Video"
-msgstr "ビデオ"
+msgstr "Video"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:121
 msgid "Radio"
-msgstr "ラジオ"
+msgstr "Rádio"
 
-# SUN REVIEWED
 #: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:64
 msgid "Monitor"
-msgstr "モニター"
+msgstr "Monitor"
 
-# SUN REVIEWED
 #: sys/sunaudio/gstsunaudiomixertrack.c:64
 msgid "Gain"
-msgstr "ゲイン"
+msgstr "Zisk"
 
 #: sys/v4l2/gstv4l2src.c:1048 sys/v4l2/gstv4l2src.c:1094
 #, c-format
 msgid "Error read()ing %d bytes on device '%s'."
-msgstr ""
+msgstr "Chyba pri čítaní %d bajtov na zariadení '%s'."
 
 #: sys/v4l2/gstv4l2src.c:1076
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
-msgstr ""
+msgstr "Nastala neočakávaná veľkosť snímky %u namiesto %u."
 
 #: sys/v4l2/v4l2_calls.c:83
 #, c-format
@@ -232,108 +204,116 @@ msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
+"Chyba pri zisťovaní schopností zariadenia '%s': Toto nie je ovládač v4l2. "
+"Skontrolujte, či je to ovládač v4l1."
 
 #: sys/v4l2/v4l2_calls.c:120
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr ""
+msgstr "Nepodarilo sa získať atribúty vstupu %d zariadenia %s"
 
 #: sys/v4l2/v4l2_calls.c:150
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr ""
+msgstr "Nepodarilo sa získať nastavenie prijímača %d od zariadenia '%s'."
 
 #: sys/v4l2/v4l2_calls.c:192
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr ""
+msgstr "Zlyhala požiadavka norm na zariadení '%s'."
 
 #: sys/v4l2/v4l2_calls.c:240
 #, c-format
 msgid "Failed getting controls attributes on device '%s.'"
-msgstr ""
+msgstr "Nepodarilo sa získať atribúty ovládacích prvkov na zariadení '%s.'"
 
 #: sys/v4l2/v4l2_calls.c:310
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr ""
+msgstr "Nepodarilo sa získať atribúty ovládacích prvkov na zariadení '%s'."
 
 #: sys/v4l2/v4l2_calls.c:428
 #, c-format
 msgid "Cannot identify device '%s'."
-msgstr ""
+msgstr "Neviem identifikovať zariadenie '%s'."
 
 #: sys/v4l2/v4l2_calls.c:435
 #, c-format
 msgid "This isn't a device '%s'."
-msgstr ""
+msgstr "Toto nie je zariadenie '%s'."
 
-# SUN REVIEWED
 #: sys/v4l2/v4l2_calls.c:442
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr "CD デバイスを読み取り用に開くことができません。"
+msgstr "Nepodarilo sa otvoriť zariadenie '%s' pre čítanie a zápis."
 
 #: sys/v4l2/v4l2_calls.c:449
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr ""
+msgstr "Zariadenie '%s' nie je určené pre zachytávanie."
 
 #: sys/v4l2/v4l2_calls.c:544
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr ""
+msgstr "Zlyhalo nastavenie norm na zariadení '%s'."
 
 #: sys/v4l2/v4l2_calls.c:581
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr ""
+msgstr "Nepodarilo sa zistiť súčasnú frekvenciu prijímača pre zariadenie '%s'."
 
 #: sys/v4l2/v4l2_calls.c:622
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
+"Nepodarilo sa nastaviť súčasnú frekvenciu prijímača pre zariadenie '%s' na %"
+"lu Hz."
 
 #: sys/v4l2/v4l2_calls.c:656
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr ""
+msgstr "Nepodarilo sa zistiť silu signálu pre zariadenie '%s'."
 
 #: sys/v4l2/v4l2_calls.c:692
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr ""
+"Nepodarilo sa zistiť hodnotu pre ovládací prvok %d pre zariadenie '%s'."
 
 #: sys/v4l2/v4l2_calls.c:727
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
+"Nepodarilo sa nastaviť hodnotu %d pre ovládací prvok %d na zariadení '%s'."
 
 #: sys/v4l2/v4l2_calls.c:756
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
+"Nepodarilo sa zistiť súčasný vstup na zariadení '%s'. Možno je to rádio."
 
 #: sys/v4l2/v4l2_calls.c:778
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr ""
+msgstr "Nepodarilo sa nastaviť vstup %d na zariadení %s."
 
 #: sys/v4l2/v4l2src_calls.c:369
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
-msgstr ""
+msgstr "Nepodarilo sa zaradiť vyrovnávaciu pamäť na zariadení '%s'."
 
 #: sys/v4l2/v4l2src_calls.c:548
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
+"Nepodarilo sa zistiť možné video formáty, '%s' s ktorými vie zariadenie "
+"pracovať"
 
 #: sys/v4l2/v4l2src_calls.c:1064 sys/v4l2/v4l2src_calls.c:1081
 #: sys/v4l2/v4l2src_calls.c:1090
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
-msgstr ""
+msgstr "Nepodarilo sa získať videosnímky zo zariadenia '%s'."
 
 #: sys/v4l2/v4l2src_calls.c:1066
 #, c-format
@@ -342,177 +322,195 @@ msgid ""
 "buffers have been allocated yet, or the userptr or length are invalid. "
 "device %s"
 msgstr ""
+"Tento typ vyrovnávacej pamäte nie je podporovaný, alebo je tento index mimo "
+"medzí, alebo zatiaľ nebola alokovaná žiadna vyrovnávacia pamäť, alebo "
+"userptr alebo dĺžka sú chybné. Zariadenie %s"
 
 #: sys/v4l2/v4l2src_calls.c:1075
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
 msgstr ""
+"Nepodarilo sa získať videosnímky zo zariadenia '%s'. Nedostatok pamäte."
 
 #: sys/v4l2/v4l2src_calls.c:1075
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr ""
+"nedostatok pamäte pre zaradenie požiadavky na používateľskú vyrovnávaciu "
+"pamäť ukazovateľa. zariadenie %s."
 
 #: sys/v4l2/v4l2src_calls.c:1083
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
-msgstr ""
+msgstr "Nepodarilo sa po %d pokusoch. Zariadenie %s. Systémová chyba: %s"
 
 #: sys/v4l2/v4l2src_calls.c:1092
 #, c-format
 msgid "No free buffers found in the pool at index %d."
 msgstr ""
+"Nenašli sa žiadne voľné oblasti vyrovnávacei pamäte v bloku na indexe %d."
 
-# SUN REVIEWED
 #: sys/v4l2/v4l2src_calls.c:1155
-#, fuzzy, c-format
+#, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr "CD デバイスを読み取り用に開くことができません。"
+msgstr "Nepodarilo sa získať parametre zariadenia '%s'"
 
-# SUN REVIEWED
 #: sys/v4l2/v4l2src_calls.c:1164
-#, fuzzy, c-format
+#, c-format
 msgid "Could not set parameters on device '%s'"
-msgstr "CD デバイスを読み取り用に開くことができません。"
+msgstr "Nepodarilo sa nastaviť parametre zariadeniu '%s'"
 
 #: sys/v4l2/v4l2src_calls.c:1183
 #, c-format
 msgid "Device '%s' does not support video capture"
-msgstr ""
+msgstr "Zariadenie '%s' nie je určené pre zachytávanie videa"
 
 #: sys/v4l2/v4l2src_calls.c:1191 sys/v4l2/v4l2src_calls.c:1200
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr ""
+msgstr "Zariadenie '%s' nevie zachytávať na %dx%d"
 
 #: sys/v4l2/v4l2src_calls.c:1209
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr ""
+msgstr "Zariadenie '%s' nedokáže zachytávať v uvedenom formáte"
 
 #: sys/v4l2/v4l2src_calls.c:1220
 #, c-format
 msgid "Device '%s' cannot capture at %d/%d frames per second"
-msgstr ""
+msgstr "Zariadenie '%s' nedokáže zachytávať pri %d/%d snímkach za sekundu"
 
 #: sys/v4l2/v4l2src_calls.c:1297
 #, c-format
 msgid "Could not get buffers from device '%s'."
-msgstr ""
+msgstr "Nepodarilo sa získať vyrovnávaciu pamäť od zariadenia '%s'."
 
 #: sys/v4l2/v4l2src_calls.c:1306
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
-msgstr ""
+msgstr "Nepodarilo sa získať dostatok vyrovnávacej pamäte od zariadenia '%s'."
 
-# SUN REVIEWED
 #: sys/v4l2/v4l2src_calls.c:1315
-#, fuzzy, c-format
+#, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "CD デバイスを読み取り用に開くことができません。"
+msgstr "Nepodarilo sa namapovať vyrovnávaciu pamäť zariadenia '%s'"
 
 #: sys/v4l2/v4l2src_calls.c:1323
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
+"Tento ovládač zariadenia '%s' nepodporuje žiadnu známu metódu nahrávania."
 
 #: sys/v4l2/v4l2src_calls.c:1368
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
-msgstr ""
+msgstr "Chyba pri štartovaní zachytávania prúdu údajov zo zariadenia '%s'."
 
 #: sys/v4l2/v4l2src_calls.c:1412
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
-msgstr ""
+msgstr "Chyba pri zastavovaní zachytávania prúdu údajov zo zariadenia '%s'."
 
 #: sys/ximage/gstximagesrc.c:711
 msgid "Changing resolution at runtime is not yet supported."
-msgstr ""
+msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
-msgstr ""
+msgstr "Nemôžem fungovať bez hodín"
 
-# SUN REVIEWED
+#~ msgid "Could not exchange data with device '%s'."
+#~ msgstr "Nepodarila sa výmena údajov so zariadením '%s'."
+
+#~ msgid "Describes the selected input element."
+#~ msgstr "Opisuje vybraný vstupný prvok."
+
+#~ msgid "Describes the selected output element for Audio/Video Conferencing."
+#~ msgstr "Opisuje vybraný výstupný prvok pre hlasové/video konferencie."
+
+#~ msgid "Describes the selected output element for Music and Movies."
+#~ msgstr "Opisuje vybraný výstupný prvok pre hudbu a filmy."
+
+#~ msgid "Describes the selected output element."
+#~ msgstr "Opisuje vybraný výstupný prvok."
+
+#~ msgid "GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "GStreamer audiosink pre hlasové/video konferencie"
+
+#~ msgid "GStreamer audiosink for Music and Movies"
+#~ msgstr "GStreamer audiosink pre hudbu a filmy"
+
 #~ msgid ""
 #~ "GStreamer can play audio using any number of output elements. Some "
 #~ "possible choices are osssink, esdsink and alsasink. The audiosink can be "
 #~ "a partial pipeline instead of just one element."
 #~ msgstr ""
-#~ "オーディオを再生するとき、GStreamer は任意の数の出力要素を使用できます。使"
-#~ "用できる出力要素は、osssink、esdsink、および alsasink です。audiosink は単"
-#~ "なる 1 つの要素ではなく、パイプラインの一部になることができます。"
+#~ "GStreamer dokáže prehrávať zvuk pomocou ľubovoľného počtu výstupných "
+#~ "prvkov. Možnosťami sú napríklad osssink, esdsink a alsasink. Audiosink "
+#~ "môže byť čiastočne rúrou, nielen jediným prvkom."
 
-# SUN REVIEWED
-#, fuzzy
 #~ msgid ""
 #~ "GStreamer can play video using any number of output elements. Some "
 #~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
 #~ "The videosink can be a partial pipeline instead of just one element."
 #~ msgstr ""
-#~ "ビデオを再生するとき、GStreamer は任意の数の出力要素を使用できます。使用で"
-#~ "きる出力要素は、xvideosink、sdlvideosink、および aasink です。videosink は"
-#~ "単なる 1 つの要素ではなく、パイプラインの一部になることができます。"
+#~ "GStreamer dokáže prehrávať video pomocou ľubovoľného počtu výstupných "
+#~ "prvkov. Možnosťami sú napríklad xvimagesink, ximagesink, sdlvideosink a "
+#~ "aasink. Videosink môže byť čiastočne rúrou, nielen jediným prvkom."
 
-# SUN REVIEWED
 #~ msgid ""
 #~ "GStreamer can put visualization plugins in a pipeline to transform audio "
 #~ "stream in video frames. Default is goom but more visualization plugins "
 #~ "will be ported soon. The visualization plugin can be a partial pipeline "
 #~ "instead of just one element."
 #~ msgstr ""
-#~ "GStreamer は視覚化プラグインをパイプラインに設定して、オーディオストリーム"
-#~ "をビデオフレームに変換できます。デフォルトは goom ですが、より多くの視覚化"
-#~ "プラグインがすぐに移植される予定です。視覚化プラグインは単なる 1 つの要素"
-#~ "ではなく、パイプラインの一部になることができます。"
+#~ "GStreamer dokáže vsunúť vizualizačné zásuvné moduly do rúry a "
+#~ "transformovať zvukový prúd údajov na videosnímky. Predvolený je goom, ale "
+#~ "čoskoro bude dostupných viacero vizualizačných zásuvných modulov. "
+#~ "Vizualizačný zásuvný modul môže byť čiastočne rúrou, nielen jediným "
+#~ "prvkom."
 
-# SUN REVIEWED
 #~ msgid ""
 #~ "GStreamer can record audio using any number of input elements. Some "
 #~ "possible choices are osssrc, esdsrc and alsasrc. The audio source can be "
 #~ "a partial pipeline instead of just one element."
 #~ msgstr ""
-#~ "オーディオを記録するとき、GStreamer は任意の数の入力要素を使用できます。使"
-#~ "用できる入力要素は、osssrc、esdsrc、および alsasrc です。オーディオソース"
-#~ "は単なる 1 つの要素ではなく、パイプラインの一部になることができます。"
+#~ "GStreamer dokáže nahrávať zvuk pomocou ľubovoľného počtu vstupných "
+#~ "prvkov. Možnosťami sú napríklad osssrc, esdsrc, alsasrc. Zvukový zdroj "
+#~ "môže byť čiastočne rúrou, nielen jediným prvkom."
 
-# SUN REVIEWED
 #~ msgid ""
 #~ "GStreamer can record video from any number of input elements. Some "
 #~ "possible choices are v4lsrc and videotestsrc. The video source can be a "
 #~ "partial pipeline instead of just one element."
 #~ msgstr ""
-#~ "ビデオを記録するとき、GStreamer は任意の数の入力要素を使用できます。使用で"
-#~ "きる入力要素は、v4lsrc および videotestsrc です。ビデオソースは単なる 1 つ"
-#~ "の要素ではなく、パイプラインの一部になることができます。"
+#~ "GStreamer dokáže nahrať video pomocou ľubovoľného počtu vstupných prvkov. "
+#~ "Možnosťami sú napríklad v4lsrc a videotestsrc. Video zdroj môže byť "
+#~ "čiastočne rúrou, nielen jediným prvkom."
 
-# SUN REVIEWED
 #~ msgid "default GStreamer audio source"
-#~ msgstr "デフォルトの GStreamer オーディオソース"
+#~ msgstr "predvolený zdroj zvuku pre GStreamer"
 
-# SUN REVIEWED
 #~ msgid "default GStreamer audiosink"
-#~ msgstr "デフォルトの GStreamer audiosink"
+#~ msgstr "predvolený audiosink pre GStreamer"
 
-# SUN REVIEWED
 #~ msgid "default GStreamer video source"
-#~ msgstr "デフォルトの GStreamer ビデオソース"
+#~ msgstr "predvolený zdroj videa pre GStreamer"
 
-# SUN REVIEWED
 #~ msgid "default GStreamer videosink"
-#~ msgstr "デフォルトの GStreamer videosink"
+#~ msgstr "predvolený videosink pre GStreamer"
 
-# SUN REVIEWED
 #~ msgid "default GStreamer visualization plugin"
-#~ msgstr "デフォルトの GStreamer 視覚化プラグイン"
+#~ msgstr "predvolený vizualizačný zásuvný modul pre GStreamer"
 
-# SUN REVIEWED
-#, fuzzy
+#~ msgid "description for GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "popis pre audiosink pre GStreamer pre hlasové/video konferencie"
+
+#~ msgid "description for GStreamer audiosink for Music and Movies"
+#~ msgstr "popis pre audiosink pre GStreamer pre hudbu a filmy"
+
 #~ msgid "description for default GStreamer audiosink"
-#~ msgstr "デフォルトの GStreamer audiosink"
+#~ msgstr "popis pre predvolený audiosink pre GStreamer"
 
-# SUN REVIEWED
-#, fuzzy
 #~ msgid "description for default GStreamer audiosrc"
-#~ msgstr "デフォルトの GStreamer オーディオソース"
+#~ msgstr "popis pre predvolený audiosrc pre GStreamer"
