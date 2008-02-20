@@ -1748,6 +1748,8 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
       stream->clock_base = val;
     else
       stream->clock_base = -1;
+
+    gst_caps_unref (caps);
   }
 
   /* get pad and link */
