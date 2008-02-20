@@ -50,10 +50,10 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-sbc, "
         "rate = (int) { 16000, 32000, 44100, 48000 }, "
         "channels = (int) [ 1, 2 ], "
-        "mode = (string) { mono, dual, stereo, joint }, "
+        "mode = (string) { \"mono\", \"dual\", \"stereo\", \"joint\" }, "
         "blocks = (int) { 4, 8, 12, 16 }, "
         "subbands = (int) { 4, 8 }, "
-        "allocation = (string) { snr, loudness },"
+        "allocation = (string) { \"snr\", \"loudness\" },"
         "bitpool = (int) [ 2, 64 ]," "parsed = (boolean) true"));
 
 static GstFlowReturn
