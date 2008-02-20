@@ -1,9 +1,16 @@
+2008-02-20  Bastien Nocera  <hadess@hadess.net>
+
+	* ext/mythtv/gstmythtvsrc.c: (gst_mythtv_src_do_seek),
+	(gst_mythtv_src_start): Using the wrong GstFormat for the filesize,
+	and fail seek properly on anything but _BYTES format
+	Fixes bug #517684
+
 2008-02-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Olivier Crete <tester at tester dot ca>
 
 	* gst/rtpmanager/gstrtpbin.c: (new_ssrc_pad_found):
-	Fix small memory leak, leaking caps. Fixes #bug 517571.
+	Fix small memory leak, leaking caps. Fixes bug #517571.
 
 2008-02-19  Sebastian Dröge  <slomo@circular-chaos.org>
 

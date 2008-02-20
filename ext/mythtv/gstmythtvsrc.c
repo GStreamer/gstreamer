@@ -475,7 +475,8 @@ gst_mythtv_src_do_seek (GstBaseSrc * base, GstSegment * segment)
 
   GST_LOG_OBJECT (src, "seek, segment: %" GST_SEGMENT_FORMAT, segment);
 
-  if (segment->format == GST_FORMAT_TIME) {
+  if (segment->format != GST_FORMAT_BYTES) {
+    ret = FALSE;
     goto done;
   }
   GST_LOG_OBJECT (src,
@@ -490,7 +491,7 @@ gst_mythtv_src_do_seek (GstBaseSrc * base, GstSegment * segment)
           segment->start, G_SEEK_SET);
     else if (IS_GMYTH_FILE_TRANSFER (src->file))
       new_offset = gmyth_file_transfer_seek (GMYTH_FILE_TRANSFER (src->file),
-          segment->start, SEEK_SET);
+          segment->start, G_SEEK_SET);
     if (G_UNLIKELY (new_offset < 0)) {
       ret = FALSE;
       if (!src->live_tv)
@@ -632,7 +633,7 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
 
   gst_pad_push_event (GST_BASE_SRC_PAD (GST_BASE_SRC (src)),
       gst_event_new_new_segment (TRUE, 1.0,
-          GST_FORMAT_TIME, 0, src->content_size, 0));
+          GST_FORMAT_BYTES, 0, src->content_size, 0));
 done:
   if (gmyth_uri != NULL) {
     g_object_unref (gmyth_uri);
