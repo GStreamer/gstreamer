@@ -1,42 +1,54 @@
-# Italian translation for gst-plugins package of GStreamer project.
-# Copyright (C) 2004 GStreamer core team
+# Italian translation for gst-plugins-bad package of GStreamer project.
+# Copyright (C) 2004-2008 GStreamer core team
 # This file is distributed under the same license as the gstreamer package.
-# Luca Ferretti <elle.uca@infinito.it>, 2007.
+# Luca Ferretti <elle.uca@infinito.it>, 2007-2008.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.4\n"
+"Project-Id-Version: gst-plugins-bad 0.10.5.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:47+0200\n"
-"PO-Revision-Date: 2007-03-08 19:25+0100\n"
+"POT-Creation-Date: 2008-02-10 18:36+0000\n"
+"PO-Revision-Date: 2008-02-09 22:08+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
+msgid "No file name specified for writing."
+msgstr "Nessun nome di file specificato per la scrittura."
+
+#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Impossibile aprire il file «%s» in scrittura."
+
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:739
+msgid "Internal data stream error."
+msgstr "Errore interno nello stream di dati."
+
+#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
+#, c-format
+msgid "Could not write to file \"%s\"."
+msgstr "Impossibile scrivere sul file «%s»."
+
+#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Il device «%s» non esiste."
 
-#: sys/dvb/gstdvbsrc.c:662
+#: sys/dvb/gstdvbsrc.c:707
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Impossibile aprire il device frontend «%s»."
 
-#: sys/dvb/gstdvbsrc.c:674
+#: sys/dvb/gstdvbsrc.c:719
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Impossibile ottenere le impostazioni dal device frontend «%s»."
 
-#: sys/dvb/gstdvbsrc.c:717
+#: sys/dvb/gstdvbsrc.c:788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impossibile aprire il file «%s» in lettura."
-
-#~ msgid "This file is corrupt and cannot be played."
-#~ msgstr "Questo file è corrotto e non può essere riprodotto."
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Questo file è cifrato e non può essere riprodotto."

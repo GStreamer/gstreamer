@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:47+0200\n"
+"POT-Creation-Date: 2008-02-10 18:36+0000\n"
 "PO-Revision-Date: 2007-03-11 03:49+0100\n"
 "Last-Translator: Mogens Jaeger <mogens@jaeger.tf>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -15,22 +15,40 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.2\n"
 
-#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
+msgid "No file name specified for writing."
+msgstr ""
+
+#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
+#, fuzzy, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Kunne ikke åbne filen \"%s\" for læsning."
+
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:739
+msgid "Internal data stream error."
+msgstr ""
+
+#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
+#, fuzzy, c-format
+msgid "Could not write to file \"%s\"."
+msgstr "Kunne ikke åbne forende-enheden \"%s\"."
+
+#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Enheden \"%s\" eksisterer ikke."
 
-#: sys/dvb/gstdvbsrc.c:662
+#: sys/dvb/gstdvbsrc.c:707
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Kunne ikke åbne forende-enheden \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:674
+#: sys/dvb/gstdvbsrc.c:719
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kunne ikke hente indstillinger fra forende-enheden \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:717
+#: sys/dvb/gstdvbsrc.c:788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åbne filen \"%s\" for læsning."

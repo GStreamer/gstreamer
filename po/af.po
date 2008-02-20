@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:47+0200\n"
+"POT-Creation-Date: 2008-02-10 18:36+0000\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -15,22 +15,41 @@ msgstr ""
 "Content-Type: text/plain; charset=iso-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
+#, fuzzy
+msgid "No file name specified for writing."
+msgstr "Geen lêernaam gespesifiseer."
+
+#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
+
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:739
+msgid "Internal data stream error."
+msgstr ""
+
+#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
+#, c-format
+msgid "Could not write to file \"%s\"."
+msgstr "Kon nie skryf na lêer \"%s\" nie."
+
+#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Toestel \"%s\" bestaan nie."
 
-#: sys/dvb/gstdvbsrc.c:662
+#: sys/dvb/gstdvbsrc.c:707
 #, fuzzy, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
 
-#: sys/dvb/gstdvbsrc.c:674
+#: sys/dvb/gstdvbsrc.c:719
 #, fuzzy, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kon nie genoeg buffers vanaf toestel \"%s\" kry nie."
 
-#: sys/dvb/gstdvbsrc.c:717
+#: sys/dvb/gstdvbsrc.c:788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."
@@ -46,15 +65,6 @@ msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."
 
 #~ msgid "Could not get buffers from device \"%s\"."
 #~ msgstr "Kon nie buffers vanaf toestel \"%s\" verkry nie."
-
-#~ msgid "No filename specified."
-#~ msgstr "Geen lêernaam gespesifiseer."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Kon nie skryf na lêer \"%s\" nie."
 
 #~ msgid "Could not open audio device \"%s\" for writing."
 #~ msgstr "Kon nie oudio-toestel \"%s\" oopmaak vir skryf nie."

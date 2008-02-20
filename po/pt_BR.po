@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:47+0200\n"
+"POT-Creation-Date: 2008-02-10 18:36+0000\n"
 "PO-Revision-Date: 2007-08-05 11:18-0300\n"
 "Last-Translator: Raphael Higino <phhigino@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -15,34 +15,41 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
+msgid "No file name specified for writing."
+msgstr "Nenhum nome de arquivo especificado para gravação."
+
+#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Não foi possível abrir o arquivo \"%s\" para gravação."
+
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:739
+msgid "Internal data stream error."
+msgstr "Erro interno de fluxo de dados."
+
+#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
+#, c-format
+msgid "Could not write to file \"%s\"."
+msgstr "Não foi possível gravar no arquivo \"%s\". "
+
+#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "O dispositivo \"%s\" não existe."
 
-#: sys/dvb/gstdvbsrc.c:662
+#: sys/dvb/gstdvbsrc.c:707
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Não foi possível abrir o dispositivo de interface \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:674
+#: sys/dvb/gstdvbsrc.c:719
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Não foi possível obter as configurações do dispositivo de interface \"%s\"."
+msgstr ""
+"Não foi possível obter as configurações do dispositivo de interface \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:717
+#: sys/dvb/gstdvbsrc.c:788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."
-
-#~ msgid "No file name specified for writing."
-#~ msgstr "Nenhum nome de arquivo especificado para gravação."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Não foi possível abrir o arquivo \"%s\" para gravação."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Erro interno de fluxo de dados."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Não foi possível gravar no arquivo \"%s\". "

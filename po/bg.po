@@ -1,14 +1,14 @@
 # Bulgarian translation of gst-plugins-bad.
-# Copyright (C) 2007 Free Software Fondation, Inc.
+# Copyright (C) 2007, 2008 Free Software Fondation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Alexander Shopov <ash@contact.bg>, 2007.
+# Alexander Shopov <ash@contact.bg>, 2007, 2008.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.4\n"
+"Project-Id-Version: gst-plugins-bad 0.10.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-12-19 16:56+0100\n"
-"PO-Revision-Date: 2007-03-10 12:19+0200\n"
+"POT-Creation-Date: 2008-02-10 18:36+0000\n"
+"PO-Revision-Date: 2008-01-18 21:50+0200\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "MIME-Version: 1.0\n"
@@ -16,42 +16,40 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: gst/qtdemux/qtdemux.c:3977
-msgid "This file is corrupt and cannot be played."
-msgstr "Файлът е повреден и не може да бъде пуснат."
+#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
+msgid "No file name specified for writing."
+msgstr ""
 
-#: gst/qtdemux/qtdemux.c:3983
-msgid "This file is encrypted and cannot be played."
-msgstr "Файлът е шифриран и не може да бъде пуснат."
+#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
+#, fuzzy, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Файлът „%s“ не може да бъде отворен за четене."
 
-#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:739
+msgid "Internal data stream error."
+msgstr ""
+
+#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
+#, fuzzy, c-format
+msgid "Could not write to file \"%s\"."
+msgstr "Устройството „%s“ не може да бъде отворено."
+
+#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Устройството „%s“ не съществува."
 
-#: sys/dvb/gstdvbsrc.c:662
+#: sys/dvb/gstdvbsrc.c:707
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Устройството „%s“ не може да бъде отворено."
 
-#: sys/dvb/gstdvbsrc.c:674
+#: sys/dvb/gstdvbsrc.c:719
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Не могат да бъдат получени настройките от устройството „%s“."
 
-#: sys/dvb/gstdvbsrc.c:717
+#: sys/dvb/gstdvbsrc.c:788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Файлът „%s“ не може да бъде отворен за четене."
-
-#~ msgid "This file is incomplete and cannot be played."
-#~ msgstr "Файлът не е цял и не може да бъде пуснат."
-
-#~ msgid "This file contains no playable streams."
-#~ msgstr "Този файл не съдържа потоци, които могат да бъдат пуснати."
-
-#~ msgid "The video in this file might not play correctly."
-#~ msgstr "Видеото в този файл може да не се пусне правилно."
-
-#~ msgid "This file contains too many streams. Only playing first %d"
-#~ msgstr "Този файл съдържа прекалено много потоци. Пускат се само първите %d"

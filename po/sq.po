@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:47+0200\n"
+"POT-Creation-Date: 2008-02-10 18:36+0000\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -14,22 +14,41 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
+#, fuzzy
+msgid "No file name specified for writing."
+msgstr "Nuk është përcaktuar emri i file."
+
+#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "E pamundur hapja e file \"%s\" në shkrim."
+
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:739
+msgid "Internal data stream error."
+msgstr ""
+
+#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
+#, c-format
+msgid "Could not write to file \"%s\"."
+msgstr "I pamundur shkrimi tek file \"%s\"."
+
+#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Dispozitivi \"%s\" nuk ekziston."
 
-#: sys/dvb/gstdvbsrc.c:662
+#: sys/dvb/gstdvbsrc.c:707
 #, fuzzy, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "E pamundur mbyllja e dispozitivit të kontrollit \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:674
+#: sys/dvb/gstdvbsrc.c:719
 #, fuzzy, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "E pamundur marrja e buffers të mjaftueshëm nga dispozitivi \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:717
+#: sys/dvb/gstdvbsrc.c:788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "E pamundur hapja e file \"%s\" për lexim."
@@ -45,15 +64,6 @@ msgstr "E pamundur hapja e file \"%s\" për lexim."
 
 #~ msgid "Could not get buffers from device \"%s\"."
 #~ msgstr "E pamundur marrja e buffers nga dispozitivi \"%s\"."
-
-#~ msgid "No filename specified."
-#~ msgstr "Nuk është përcaktuar emri i file."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "E pamundur hapja e file \"%s\" në shkrim."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "I pamundur shkrimi tek file \"%s\"."
 
 #~ msgid "Could not open audio device \"%s\" for writing."
 #~ msgstr "E pamundur hapja e dispozitivit të zërit \"%s\" për shkrim."

@@ -1,43 +1,56 @@
+# translation of gst-plugins-bad-0.10.5.2.po to Dutch
 # translation of gst-plugins-bad to Dutch
-# Copyright (C) 2004, 2007 Free Software Foundation, Inc.
+# Copyright (C) 2004, 2007, 2008 Free Software Foundation, Inc.
 #
-# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007.
+# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.4\n"
+"Project-Id-Version: gst-plugins-bad-0.10.5.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:47+0200\n"
-"PO-Revision-Date: 2007-03-19 17:39+0100\n"
+"POT-Creation-Date: 2008-02-10 18:36+0000\n"
+"PO-Revision-Date: 2008-02-09 21:19+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.2\n"
+"X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
-#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
+msgid "No file name specified for writing."
+msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
+
+#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Kan bestand \"%s\" niet openen voor uitvoer."
+
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:739
+msgid "Internal data stream error."
+msgstr "Interne fout in gegevensstroom."
+
+#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
+#, c-format
+msgid "Could not write to file \"%s\"."
+msgstr "Kan niet in bestand \"%s\" schrijven."
+
+#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Apparaat \"%s\" bestaat niet."
 
-#: sys/dvb/gstdvbsrc.c:662
+#: sys/dvb/gstdvbsrc.c:707
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Kan het frontend-apparaat \"%s\" niet openen."
 
-#: sys/dvb/gstdvbsrc.c:674
+#: sys/dvb/gstdvbsrc.c:719
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kan de instellingen van het frontend-apparaat \"%s\" niet verkrijgen."
 
-#: sys/dvb/gstdvbsrc.c:717
+#: sys/dvb/gstdvbsrc.c:788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kan bestand \"%s\" niet openen om te lezen."
-
-#~ msgid "This file is corrupt and cannot be played."
-#~ msgstr "Dit bestand is corrupt en kan niet afgespeeld worden."
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Dit bestand is geëncrypt en kan niet afgespeeld worden."

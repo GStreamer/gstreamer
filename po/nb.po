@@ -1,153 +1,53 @@
 # Norwegian bokmaal translation of gst-utils.
 # This file is put in the public domain.
-# Kjartan Maraas <kmaraas@broadpark.no>, 2004.
+# Kjartan Maraas <kmaraas@gnome.org>, 2004-2007.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins 0.8.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:47+0200\n"
-"PO-Revision-Date: 2004-10-04 15:54+0200\n"
-"Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
+"POT-Creation-Date: 2008-02-10 18:36+0000\n"
+"PO-Revision-Date: 2007-11-03 14:46+0100\n"
+"Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
+msgid "No file name specified for writing."
+msgstr "Ingen filnavn oppgitt for skriving."
+
+#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Kunne ikke åpne filen «%s» for skriving."
+
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:739
+msgid "Internal data stream error."
+msgstr "Intern feil i datastrøm."
+
+#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
+#, c-format
+msgid "Could not write to file \"%s\"."
+msgstr "Kunne ikke skrive til fil «%s»."
+
+#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Enhet «%s» eksisterer ikke."
 
-#: sys/dvb/gstdvbsrc.c:662
-#, fuzzy, c-format
+#: sys/dvb/gstdvbsrc.c:707
+#, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Kunne ikke konfigurere lydenhet «%s»."
+msgstr "Kunne ikke åpne frontenhet «%s»."
 
-#: sys/dvb/gstdvbsrc.c:674
-#, fuzzy, c-format
+#: sys/dvb/gstdvbsrc.c:719
+#, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Kunne ikke konfigurere lydenhet «%s»."
+msgstr "Kunne ikke hente innstillinger fra frontenhet «%s»."
 
-#: sys/dvb/gstdvbsrc.c:717
+#: sys/dvb/gstdvbsrc.c:788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åpne filen «%s» for lesing."
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Enhet «%s» kan ikke fange data."
-
-#~ msgid "No filename specified."
-#~ msgstr "Ingen filnavn oppgitt."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Kunne ikke åpne filen «%s» for skriving."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Kunne ikke skrive til fil «%s»."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Feil under lukking av fil «%s»."
-
-#~ msgid "Volume"
-#~ msgstr "Volum"
-
-#~ msgid "Bass"
-#~ msgstr "Bass"
-
-#~ msgid "Treble"
-#~ msgstr "Diskant"
-
-#~ msgid "Synth"
-#~ msgstr "Synth"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Speaker"
-#~ msgstr "Høyttaler"
-
-#~ msgid "Line-in"
-#~ msgstr "Linje inn"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofon"
-
-#~ msgid "CD"
-#~ msgstr "CD"
-
-#~ msgid "Mixer"
-#~ msgstr "Mikser"
-
-#~ msgid "PCM-2"
-#~ msgstr "PCM-2"
-
-#~ msgid "Record"
-#~ msgstr "Opptak"
-
-#~ msgid "Line-1"
-#~ msgstr "Linje 1"
-
-#~ msgid "Line-2"
-#~ msgstr "Linje 2"
-
-#~ msgid "Line-3"
-#~ msgstr "Linje 3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Digital 1"
-
-#~ msgid "Digital-2"
-#~ msgstr "Digital 2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Digital 3"
-
-#~ msgid "Phone-in"
-#~ msgstr "Telefon inn"
-
-#~ msgid "Phone-out"
-#~ msgstr "Telefon ut"
-
-#~ msgid "Video"
-#~ msgstr "Video"
-
-#~ msgid "Radio"
-#~ msgstr "Radio"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
-
-#, fuzzy
-#~ msgid "PC Speaker"
-#~ msgstr "Høyttaler"
-
-#~ msgid "Could not open CD device for reading."
-#~ msgstr "Kunne ikke åpne CD-enheten for lesing."
-
-#~ msgid "Could not open vfs file \"%s\" for reading."
-#~ msgstr "Kunne ikke åpne VFS-fil «%s» for lesing."
-
-#~ msgid "No filename given."
-#~ msgstr "Ingen filnavn oppgitt."
-
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "Kunne ikke åpne VFS-fil «%s» for skriving: %s."
-
-#~ msgid "No filename given"
-#~ msgstr "Ingen filnavn oppgitt"
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Kunne ikke lukke VFS-fil «%s»."
-
-#~ msgid "No device specified."
-#~ msgstr "Ingen enhet oppgitt."
-
-#~ msgid "Device is not open."
-#~ msgstr "Enheten er ikke åpen."
-
-#~ msgid "Device is open."
-#~ msgstr "Enheten er åpen."

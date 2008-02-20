@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-13 12:47+0200\n"
+"POT-Creation-Date: 2008-02-10 18:36+0000\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,22 +16,41 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
+#, fuzzy
+msgid "No file name specified for writing."
+msgstr "Име датотеке није задато."
+
+#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Не могу да отворим датотеку „%s“ ради уписа."
+
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:739
+msgid "Internal data stream error."
+msgstr ""
+
+#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
+#, c-format
+msgid "Could not write to file \"%s\"."
+msgstr "Не могу да пишем у датотеку „%s“."
+
+#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Не постоји уређај „%s“."
 
-#: sys/dvb/gstdvbsrc.c:662
+#: sys/dvb/gstdvbsrc.c:707
 #, fuzzy, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Не могу да затворим управљачки уређај „%s“."
 
-#: sys/dvb/gstdvbsrc.c:674
+#: sys/dvb/gstdvbsrc.c:719
 #, fuzzy, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Не могу да примим довољно бафера са уређаја „%s“."
 
-#: sys/dvb/gstdvbsrc.c:717
+#: sys/dvb/gstdvbsrc.c:788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не могу да отворим датотеку „%s“ ради читања."
@@ -47,15 +66,6 @@ msgstr "Не могу да отворим датотеку „%s“ ради ч�
 
 #~ msgid "Could not get buffers from device \"%s\"."
 #~ msgstr "Не могу да примим бафере са уређаја „%s“."
-
-#~ msgid "No filename specified."
-#~ msgstr "Име датотеке није задато."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Не могу да отворим датотеку „%s“ ради уписа."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Не могу да пишем у датотеку „%s“."
 
 #~ msgid "Could not open audio device \"%s\" for writing."
 #~ msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
