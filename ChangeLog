@@ -1,3 +1,8 @@
+2008-02-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	  Mark buffers as GAP,if volume is 0.0 and fix the previous logic.
+
 2008-02-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/gnomevfs/gstgnomevfssink.c:

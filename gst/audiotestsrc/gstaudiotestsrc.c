@@ -875,7 +875,8 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   src->process (src, GST_BUFFER_DATA (buf));
 
-  if (src->wave == G_UNLIKELY (GST_AUDIO_TEST_SRC_WAVE_SILENCE)) {
+  if (G_UNLIKELY ((src->wave == GST_AUDIO_TEST_SRC_WAVE_SILENCE)
+          || (src->volume == 0.0))) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_GAP);
   }
 
