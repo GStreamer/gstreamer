@@ -1,12 +1,12 @@
 <plugin>
   <name>mpegaudioparse</name>
-  <description>MPEG-1 layer 1/2/3 audio parser</description>
+  <description>MPEG-1 layer 1/2/3 audio stream elements</description>
   <filename>../../gst/mpegaudioparse/.libs/libgstmpegaudioparse.so</filename>
   <basename>libgstmpegaudioparse.so</basename>
-  <version>0.10.6.1</version>
+  <version>0.10.7</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <package>GStreamer Ugly Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

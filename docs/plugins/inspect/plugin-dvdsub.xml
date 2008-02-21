@@ -3,10 +3,10 @@
   <description>DVD subtitle parser and decoder</description>
   <filename>../../gst/dvdsub/.libs/libgstdvdsub.so</filename>
   <basename>libgstdvdsub.so</basename>
-  <version>0.10.6.1</version>
+  <version>0.10.7</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <package>GStreamer Ugly Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,16 +17,16 @@
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-dvd-subpicture</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw-yuv, format=(fourcc)AYUV, width=(int)720, height=(int)576, framerate=(fraction)0/1</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-dvd-subpicture</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Mark Nauwelaerts &lt;mnauw@users.sourceforge.net&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-dvd-subpicture</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-dvd-subpicture, parsed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-dvd-subpicture</details>
         </caps>
       </pads>
     </element>

@@ -1,6 +1,7 @@
 GObject
   GstObject
     GstPad
+    GstPadTemplate
     GstPluginFeature
       GstElementFactory
       GstTypeFindFactory
@@ -8,24 +9,37 @@ GObject
     GstElement
       GstBin
         GstPipeline
-      GstQueue
-      AC3IEC
-      GstDvdLpcmDec
-      GstRMDemux
-      GstMPEGAudioParse
-      GstSidDec
+      GstMpeg2dec
+      GstA52Dec
       GstMad
       GstID3TagBase
-        GstID3Demux
-        GstID3Mux
         GstID3Tag
-      GstMpeg2dec
+      GstSidDec
+      GstBaseSrc
+        GstPushSrc
+          GstDvdReadSrc
       GstLame
+      GstRMDemux
+      GstRealAudioDemux
+      GstRDTDepay
+      GstRDTManager
+      GstRTSPReal
+      GstDvdLpcmDec
+      GstDvdSubDec
+      GstDvdSubParse
+      AC3IEC
+      GstMPEGParse
+        GstMPEGDemux
+          GstDVDDemux
+      GstXingMux
+      GstMPEGAudioParse
+      GstASFDemux
+      GstRTSPWMS
     GstPlugin
     GstRegistry
-    GstPadTemplate
   GstSignalObject
 GInterface
   GstChildProxy
   GstURIHandler
   GstTagSetter
+  GstRTSPExtension

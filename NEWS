@@ -1,4 +1,48 @@
-This is GStreamer Ugly Plug-ins 0.10.6 "The Sacrifice"
+This is GStreamer Ugly Plug-ins 0.10.7 "I Cheated Time"
+
+Changes since 0.10.6:
+    
+      * Many bug fixes and improvements
+      * Accurate seeking support in mp3
+      * xingmux moved from -bad
+      * RealMedia and WMS RTSP support
+      * LAME mp3 encoder fixes
+      * Support non-square pixels in ASF
+      * rmdemux fixes
+      * amrnb fixes
+      * dvdreadsrc seeking fix
+      * Initial MPEG-2 reverse playback support
+      * New element: dvdsubdec
+
+Bugs fixed since 0.10.6:
+     
+      * 358891 : [dvdreadsrc] aborts due to src- > cur_pack == dsi_pack.dsi_...
+      * 337681 : Seeking problem with MP3s in banshee and rhythmbox
+      * 414988 : Stream encoded by lame has gap after decoding
+      * 427309 : [rmdemux] trouble playing RV10 video
+      * 439390 : [lame] fix up so we can control sample rate conversion
+      * 450879 : Missing files in po/POTFILES.in
+      * 452025 : ./configure breaks when cross-compiling LAME
+      * 454311 : missing xml/{element-synaesthesia-details.xml,plugin-syna...
+      * 466442 : amrnbenc has not properties to add header and select band...
+      * 495885 : [mpegdemux] unknown stream id 0xbe
+      * 500467 : [rmdemux] totem crashed with SIGSEGV
+      * 500808 : gstmpeg2dec compile problem in MSVC 6.0
+      * 507821 : Skip over broken seektable in Xing headers
+      * 511497 : [PLUGIN-MOVE] Move xingheader to gst-plugins-ugly
+      * 514297 : mpeg2dec with corrupted packets causes fps denominator so...
+      * 515575 : [lame] unit test shows memory leak
+      * 515708 : [dvdsubparse] Leaks a pad template
+      * 515725 : [xingmux] Fails on big endian systems
+      * 516278 : [dvdreadsrc] FORMAT_BYTES based seek stopped working sinc...
+      * 516811 : [mp3parse] immediate EOS when playing back AVIs
+      * 516989 : [dvdreadsrc] wrong (negative) stream position returned du...
+      * 308312 : Make mp3parse plugin implement GST_SEEK_FLAG_ACCURATE
+      * 508595 : [lame] wrong output caps in mono encoding mode
+      * 140136 : [mpeg] plays choppy in gst-player/totem
+      * 448782 : add finalize() to amrnbdec element
+      * 491305 : [playbin?] intro-leopard.mov sometimes EOSes immediately,...
+      * 504671 : [rtspsrc] spews warnings on setup and shutdown
 
 Changes since 0.10.5:
 

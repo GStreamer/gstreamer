@@ -3,10 +3,10 @@
   <description>Encode MP3s with LAME</description>
   <filename>../../ext/lame/.libs/libgstlame.so</filename>
   <basename>libgstlame.so</basename>
-  <version>0.10.6.1</version>
+  <version>0.10.7</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <package>GStreamer Ugly Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,16 +17,16 @@
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/mpeg, mpegversion=(int)1, layer=(int)3, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
         </caps>
       </pads>
     </element>

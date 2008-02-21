@@ -470,7 +470,7 @@
 
 <ARG>
 <NAME>GstSidDec::metadata</NAME>
-<TYPE>GstCaps</TYPE>
+<TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Metadata</NICK>
@@ -640,7 +640,7 @@
 
 <ARG>
 <NAME>GstDvdReadSrc::device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Device</NICK>
@@ -656,5 +656,15 @@
 <NICK>title</NICK>
 <BLURB>title.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRDTManager::latency</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer latency in ms</NICK>
+<BLURB>Amount of ms to buffer.</BLURB>
+<DEFAULT>200</DEFAULT>
 </ARG>
 
