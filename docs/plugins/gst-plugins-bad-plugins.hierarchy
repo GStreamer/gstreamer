@@ -2,6 +2,7 @@ GObject
   GstObject
     GstPad
     GstPadTemplate
+      GstSignalProcessorPadTemplate
     GstPluginFeature
       GstElementFactory
       GstTypeFindFactory
@@ -11,113 +12,108 @@ GObject
         GstPipeline
         DvbBaseBin
         GstRgVolume
-        GstSDPDemux
         GstRtpBin
         GstRtpClient
-      GstMusepackDec
+        GstSDPDemux
+      GstBz2enc
+      GstBz2dec
       GstBaseSrc
         GstPushSrc
           GstNeonhttpSrc
           GstMMS
-          GstSoupHTTPSrc
-          GstGLTestSrc
-          GstDvbSrc
           GstVCDSrc
-          GstRfbSrc
+          GstDvbSrc
           GstAppSrc
+          GstRfbSrc
         GstSFSrc
-        GstGioBaseSrc
-          GstGioSrc
-          GstGioStreamSrc
+      GstCDAudio
       GstBaseSink
-        GstBaseAudioSink
-          GstJackAudioSink
-          GstAudioSink
-            GstSDLAudioSink
-            GstNasSink
         GstVideoSink
           GstDfbVideoSink
           GstSDLVideoSink
-          GstGLImageSink
+        GstBaseAudioSink
+          GstAudioSink
+            GstSDLAudioSink
+          GstJackAudioSink
         GstSFSink
         AlsaSPDIFSink
-        GstGioBaseSink
-          GstGioSink
-          GstGioStreamSink
         GstFBDEVSink
         GstAppSink
+      GstFaad
+      GstSpcDec
+      GstSignalProcessor
+        ladspa-noise-white
+        ladspa-delay-5s
+        ladspa-amp-mono
+        ladspa-amp-stereo
+        ladspa-sine-faaa
+        ladspa-sine-faac
+        ladspa-sine-fcaa
+        ladspa-sine-fcac
+        ladspa-lpf
+        ladspa-hpf
+      GstXvidEnc
+      GstXvidDec
       GstPitch
       GstBaseTransform
         GstAudioFilter
           GstBPMDetect
           GstStereo
-        GstGLUpload
-        GstGLDownload
-        GstGLFilter
-          GstGLFilterExample
-          GstGLConvert
-        GstVideoCrop
+        GstBayer2RGB
+        GstRgAnalysis
+        GstRgLimiter
+        GstSpeexResample
+        GstDeinterlace
         GstVideoFilter
           GstVideoAnalyse
           GstVideoDetect
           GstVideoMark
-        GstRgAnalysis
-        GstRgLimiter
-        GstDeinterlace
-        GstBayer2RGB
-        GstSpeexResample
         GstIIR
-      GstFaad
-      GstDtsDec
-      GstAmrwbDec
-      GstAmrwbParse
-      GstAmrwbEnc
+      GstMusepackDec
+      Ivorbisfile
+      GstIVorbisDec
+      GstMpeg2enc
       GstGSMEnc
       GstGSMDec
       GstFaac
-      GstX264Enc
-      GstCDAudio
-      GstSpcDec
-      GstXvidEnc
-      GstXvidDec
-      GstBz2enc
-      GstBz2dec
+      GstDtsDec
       GstTRM
-      GstDVDSpu
-      MpegTSParse
-      GstTtaParse
-      GstTtaDec
-      GstMpeg4VParse
-      MpegVideoParse
-      GstH264Parse
-      GstVMncDec
-      GstSpeed
-      GstFLVDemux
-      GstSwitch
-      GstCDXAParse
+      GstX264Enc
+      GstBaseMetadata
+        GstMetadataDemux
+        GstMetadataMux
+      GstFestival
       GstModPlug
+      GstMveDemux
+      GstMveMux
+      GstMpeg4VParse
+      GstCDXAParse
+      GstNsfDec
+      MpegTSParse
+      GstRealVideoDec
+      GstRealAudioDec
       GstRawParse
         GstVideoParse
         GstAudioParse
-      GstY4mEncode
-      GstFestival
-      GstNsfDec
-      GstInterleave
-      GstDeinterleave
-      GstXingMux
-      GstMveDemux
-      GstMveMux
       GstRtpJitterBuffer
       GstRtpPtDemux
       GstRtpSession
       GstRtpSsrcDemux
-      GstNuvDemux
+      GstInputSelector
+      GstOutputSelector
+      GstVMncDec
+      MpegVideoParse
+      GstH264Parse
+      GstY4mEncode
+      GstSpeed
+      GstInterleave
+      GstDeinterleave
       GstFreeze
-      GstRealVideoDec
-      GstRealAudioDec
-      GstQTDemux
-      GstBaseRTPDepayload
-        GstRtpXQTDepay
+      GstDVDSpu
+      GstTtaParse
+      GstTtaDec
+      GstNuvDemux
+      GstFLVDemux
     GstPlugin
     GstRegistry
     GstClock
@@ -126,34 +122,6 @@ GObject
     GstRingBuffer
   GstSignalObject
   GstColorBalanceChannel
-  GFileMonitor
-    GLocalDirectoryMonitor
-      GFamDirectoryMonitor
-      GInotifyDirectoryMonitor
-    GLocalFileMonitor
-      GFamFileMonitor
-      GInotifyFileMonitor
-  GVolumeMonitor
-    GNativeVolumeMonitor
-      GHalVolumeMonitor
-      GUnixVolumeMonitor
-    GDaemonVolumeMonitor
-  GVfs
-    GDaemonVfs
-    GLocalVfs
-  GTypeModule
-    GIOModule
-  GVfsUriMapper
-    GVfsUriMapperSmb
-    GVfsUriMapperSftp
-    GVfsUriMapperHttp
-  HalDevice
-  HalPool
-  GHalDrive
-  GHalMount
-  GHalVolume
-  GOutputStream
-  GInputStream
 GInterface
   GstChildProxy
   GstURIHandler
@@ -161,7 +129,4 @@ GInterface
   GstNavigation
   GstColorBalance
   GstXOverlay
-  GTypePlugin
-  GDrive
-  GMount
-  GVolume
+  GstTagSetter

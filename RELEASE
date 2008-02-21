@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plug-ins 0.10.5 "Expedition to Lake Pahoe"
+Release notes for GStreamer Bad Plug-ins 0.10.6 "A Big Deep Breath"
         
 
 
@@ -60,79 +60,128 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * New plugin - realdec for decoding Real streams using binary libs
-      * New plugin - MythTV source
-      * New plugin - appsrc (for application data insertion)
-      * New plugin - VMnc VMware capture decoder
-      * New plugin - JACK audio output
-      * New plugin - interleave/deinterleave
-      * New plugin - RTP manager
-      * New plugin - Bayer to RGB converter
-      * New plugin - ReplayGain support
-      * New plugin - DirectShow win32 input support
-      * New plugin - videosignal/videoanalyse
-      * LADSPA plugin improvements
-      * IIR equaliser ported to 0.10 (iirequalizer)
-      * libsndfile output ported to 0.10
-      * mpegvideoparse ported to 0.10 and improved
-      * switch element ported to 0.10
-      * AMR-WB support fixes
-      * MIDI renderer plugin based on timidity
-      * Windows and OS/X output plugins moved to the Good module
-      * qtdemux, wavpack and videocrop plugins moved to the Good module
-      * Many other bug fixes and improvements
-      * Parallel installability with 0.8.x series
-      * Threadsafe design and API
+      * DVB support added
+      * dc1394 support
+      * RTP-manager improvements
+      * Support for native QT codecs on OS/X and DirectShow codecs on Windows, courtesy of Songbird and Fluendo
+      * New elements: flvdemux, flvparse, mpegtsparse, dvbsrc, dvdspu
+      * More new elements: mpeg4videoparse, metadatademux/mux, souphttpsrc, speexresample, qtwrapper
+      * Even more new elements: rawaudioparse, fbdevsink
+      * Renamed elements/plugins: switch (now selector), pitch (now soundtouch)
+      * Elements graduated to good: multifilesrc/sink, spectrum, equalizer, bpwsinc, lpwsinc
+      * Elements graduated to ugly: xingmux (now part of mpegaudioparse)
+      * OpenGL support moved to new module: gst-plugins-gl
+      * appsrc/appsink improvements
+      * Fixes in neonhttpsrc
+      * Fixes in amrwbparse
+      * Deinterlacer improvements
+      * Fixes in dtsdec
+      * Fixes in the Real codec wrappers
 
 Bugs fixed in this release
      
-      * 152403 : [mpeg/DVB] Integrating externaly developped DVB source el...
-      * 333307 : AmrWB Plugin
-      * 345633 : [nassink] port to 0.10
-      * 354174 : [PATCH] add REAL support by using the proprietary drivers
-      * 354451 : [mythtvsrc] Plugin for MythTV source
-      * 357055 : Tremor (ivorbis) plug-in is unable to decode vorbis strea...
-      * 374773 : [qtdemux] [PLUGIN-MOVE] Move from -bad to good
-      * 375264 : [neonhttpsrc] add seek support
-      * 376591 : configure.ac looks for wrong symbols for FAAD support
-      * 382184 : Port interleave and deinterleave to 0.10 for audio channe...
-      * 388050 : [neonhttpsrc] code simplifications
-      * 392112 : [rfbsrc] doesn't build with MinGW
-      * 393622 : Not building real plugin, only works on 32bit x86 platforms.
-      * 395536 : [wavpackenc] Trivial cleanup
-      * 395597 : Deinterleave fails to negotiate with alsasrc when using D...
-      * 400555 : dts-in-wav: only 2 channel recognised
-      * 402470 : [osxvideosink] video sink for MacOSX
-      * 412077 : [speed] can't initially set speed > 1
-      * 412710 : [replaygain] Add playback elements
-      * 413818 : [neonhttpsrc] errors out on redirects
-      * 421110 : New x264enc plugin
-      * 421598 : [wavpack] Add support for non-8*n depths and don't play a...
-      * 423283 : [qtdemux] timestamps of outgoing h264 packets are wrong
-      * 423741 : [amrwb] use external shared libamrwb
-      * 430594 : Unable to compile gst-plugins-bad CVS
-      * 430598 : [realvideodec] dll functions not available on MinGW
-      * 430664 : name conflict for " rtpbin " element
-      * 437260 : CFLAGS are poinsoned by the OpenGL test
-      * 437403 : gst-plugins-bad uses #ifdef G_OS_WIN32 instead of #ifdef ...
-      * 437539 : Compilation of DirectDraw and DirectSound plugins using m...
-      * 439405 : YUV not working in GL image sink.
-      * 439910 : [switch] Warning in a debug function (Mingw)
-      * 439911 : [qtdemux] Warning in a debug function (MinGW)
-      * 439914 : [directdraw] Warnings when using MinGW
-      * 440466 : [PLUGIN-MOVE] osxvideo
-      * 440774 : [sdl] sdlvideosink has ill-formatted element details
-      * 442689 : [neon] Property-related cleanups of neonhttpsrc
-      * 445189 : PLUGIN-MOVE - Move Windows sinks to -good
-      * 348973 : New plugins: MVE muxer/demuxer
-      * 391971 : Fix build with gcc-2.x
-      * 392313 : [directdrawsink] dist and add to gst-plugins-bad
-      * 392638 : [directsoundsink] dist and add to gst-plugins-bad
-      * 392856 : [qtdemux] plugin must link against zlib (error with MinGW)
-      * 403572 : Port equaliser element to 0.10
-      * 352605 : [PLUGIN-MOVE] move wavpack to -good
-      * 426972 : Specific set of H.264 files cannot be played
-      * 434101 : [gsm] doesn't link against libgstbase-0.10
+      * 321240 : [PLUGIN-MOVE] dfbvideosink should be moved from -bad to -...
+      * 508029 : [speexresample] pops/glitches in some cases
+      * 508294 : [realaudiodec] crash in set_caps dereferencing NULL funcs...
+      * 387251 : New Plugin! : dc1394 Adds Support for firewire (1394) IID...
+      * 393461 : [Real] Location of .so varies on each distribution
+      * 395424 : neonhttpsrc lacks support for proxy servers
+      * 397759 : Xingmux may not write a proper Xing/VBR header
+      * 403992 : [new plugin] timidity based midi decoder
+      * 409974 : Code for improved GStreamer resampler (based on speex res...
+      * 426657 : Add support for SDP multicast description files
+      * 433373 : [win32] autogenerated win32/common/config.h needed
+      * 444499 : build of fresh CVS is failing in ext/sdl
+      * 450175 : gcc-2.9x build fixes
+      * 450605 : Missing files in po/POTFILES.in
+      * 452009 : ./configure breaks when cross-compiling FAAD2
+      * 452258 : [mpeg2enc] make work with mjpegtools 1.9
+      * 453636 : dvbsrc needs more flexible adapter selection
+      * 454078 : [ivorbis] header files missing in release tarball
+      * 454313 : missing xml files to build docs/plugins
+      * 456901 : PATCH: add several missing supported mime-types to the mo...
+      * 456912 : PATCH: make wildmidi plugin check for /etc/timidity.cfg
+      * 461068 : Seeking not properly implemented by the pitch plugin
+      * 461373 : HP-UX 11.11 build with native compiler
+      * 461377 : [festival] port to GStreamer-0.10
+      * 461601 : Some files missing from POTFILES.in
+      * 462737 : compilation breaks with g++-4.2 and gcc-4.2
+      * 464678 : Add connection-speed property to mmssrc element
+      * 468039 : [mythtvsrc] missing examples for live tv in gst-inspect
+      * 471554 : real media videos do not work
+      * 473562 : [rtpmanager] cvs build problem due to compiler warning
+      * 474969 : [neonhttpsrc] fails to play radio streams with neon > =0.26
+      * 476128 : Printf format fixes
+      * 476148 : Add mpeg4 video parser
+      * 476159 : memleak patch to rtpmanager
+      * 476370 : [faad] shouldn't set channel-positions for mono and stereo
+      * 477306 : amrwbenc has not property to select band mode
+      * 478566 : Add notification of active SSRCs to the RTP manager
+      * 481200 : gstneonhttpsrc discards GET parameters from URL
+      * 481276 : [mpegtsparse] " not linked (-1) " error
+      * 481279 : [mpegtsparse] partial corruption of the output stream
+      * 483400 : mpegtsparse: PAT with version 0 incorrectly skipped by pa...
+      * 484990 : memleak - missing g_free() rtpmanager/gstrtpbin.c
+      * 485462 : alsaspdifsink uses wrong sample rate
+      * 487496 : [dvdspu] fails to link on Mac OS
+      * 487892 : [mpegtsparse] getting pat-info property before PAT is ava...
+      * 487901 : [mpegtsparse] stale PAT info when switching from PLAYING ...
+      * 490060 : [faac] a few minor issues: bitrate, enum nick for low com...
+      * 490682 : [interleave] can't create more than one request sink pad
+      * 492406 : Crasher in libgstdshow on Windows/MSVC
+      * 492798 : [rtpmanager] build issues on Windows/MSVC
+      * 496221 : Streaming FLV's over HTTP doesn't work, for totem and the...
+      * 498430 : incomplete CVS commit
+      * 498667 : gstreamer segfaults in faac
+      * 498755 : FLV files incorrectly report framerate of 1000fps
+      * 499008 : mpeg2enc ignores the incoming stream aspect property
+      * 500099 : Fixes and improvements to souphttpsrc
+      * 500142 : switch element in switch plugin should be renamed
+      * 501579 : rtpmanager should emit a signal when it can associate a s...
+      * 502335 : [souphttpsrc] some enhancements
+      * 502879 : videoparse segmentation fault
+      * 503308 : Changing tempo using pitch plugin doesn't update length info
+      * 507020 : [rtpjitterbuffer] unreffing peeked buffer and not popping...
+      * 507584 : gio: gstgiobasesrc.c does not compile with CVS version of...
+      * 507940 : rtpsession:rtp_send_src shouldnt not have fixed caps
+      * 508515 : [rtpbin] allow request_new_pad with name NULL
+      * 508587 : Improvement to rtpsession
+      * 508979 : Enhancement for xingmux
+      * 510708 : [souphttpsrc] support for libsoup-2.4
+      * 511001 : enhanced deinterlace plugin
+      * 511146 : rtpjitterbuffer should not return an error on no-caps
+      * 511530 : DTS library API change?
+      * 511683 : gstrtpbin fails to associate streams together for lipsync
+      * 511686 : make gstrtpjitterbuffer respect different clock rates for...
+      * 511920 : rtpsource queue full tries to treat GstBuffer as GstObject
+      * 512654 : [h264parse] does not build in cvs head (unused variable i...
+      * 512774 : [rtpjitterbuffer] does not accept clock rate from caps
+      * 512826 : switch / selector event leak
+      * 514093 : bug in configure.ac prevents glimagesink plugin from bein...
+      * 515564 : souphttpsrc unit test fails to build
+      * 515567 : [states] States unit test should exclude the dvb plugin
+      * 515588 : Warning building tremor plugin
+      * 515720 : [xvid] Memory leak caused by not unsetting GValue
+      * 515721 : [rfb] rfbsrc leaking the rfb decoder
+      * 515722 : [fbdev] Leaking the device property string
+      * 515815 : [mpegvideoparse] fix a few new memory leaks
+      * 515860 : plugins should not install headers - fix metadata
+      * 515919 : Fix a bunch of finalize leaks
+      * 515964 : [docs] Still contains docs for the GIO plugin although it...
+      * 515970 : [dshowdecwrapper] Doesn't chain up dispose function properly
+      * 516061 : [h264parse] fix a few new memory leaks
+      * 516094 : Remove glimagesink from -bad
+      * 516114 : dvbbasebin leaks the location string when the uri handler...
+      * 516160 : gstrtpbin did not ignore streams with no SR when doing as...
+      * 516436 : [dvdsub] segfault on display of 1st subpicture in 2nd cha...
+      * 516448 : criticals due to missing debug category init in mpegtsparse
+      * 516499 : critical caused by assuming optional property " descriptor...
+      * 517391 : [tta] Doesn't link with libm
+      * 517571 : small memory leak in gstrtpbin
+      * 517684 : [mythtvsrc] Small bug fixes
+      * 478159 : Could not decode realvideo buffer
+      * 497020 : Add fully async HTTP source based on libsoup.
+      * 501562 : [switch] bogus locking order
 
 Download
 
@@ -162,37 +211,54 @@ Applications
   
 Contributors to this release
     
-      * 
-      * Ali Sabil
-      * Andre Moreira Magalhaes
+      * Alessandro Decina
+      * Alexander Shopov
+      * Andrzej Mendel
       * Andy Wingo
-      * Chris Lord
+      * Armando Taffarel Neto
+      * Bastien Nocera
       * Christian Schaller
+      * Daniel Charles
       * David Schleef
       * Edgard Lima
       * Edward Hervey
-      * James "Doc" Livingston
+      * Gabriel Bouvigne
+      * Gautier Portet
+      * Hans de Goede
+      * Ian Munro
+      * Ilkka Tuohela
+      * Jakub Bogusz
       * Jan Schmidt
       * Jens Granseuer
-      * Josef Zlomek
+      * Johan Dahlin
+      * Jonathan Matthew
+      * Jorge González González
+      * Josep Torra Valles
       * Julien Moutte
-      * Lutz Mueller
+      * Laurent Glayal
+      * Michael Kötter
       * Michael Smith
-      * Michal Benes
-      * Mogens Jaeger
-      * Nguyen Thai Ngoc Duy
-      * Paul Davis
+      * Ole André Vadla Ravnås
+      * Olivier Crete
+      * Peter Kjellerstedt
+      * Raphael Higino
+      * Renato Filho
       * René Stadler
-      * Rosfran Borges
+      * Richard Hult
+      * Sean D'Epagnier
       * Sebastian Dröge
-      * Sébastien Moutte
-      * Stanislav Brabec
+      * Sebastien Moutte
       * Stefan Kost
+      * Thijs Vermeir
+      * Thomas Green
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Vincent Torri
+      * Wai-Ming Ho
+      * Wenzheng Hu
       * Wim Taymans
+      * Wouter Cloetens
       * Wouter Paesen
-      * Young-Ho Cha
+      * Youness Alaoui
       * Zaheer Abbas Merali
+      * mutex at runbox dot com
  

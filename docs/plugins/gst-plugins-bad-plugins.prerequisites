@@ -1,7 +1,5 @@
 GstChildProxy GstObject
-GstImplementsInterface GstElement
-GstColorBalance GstImplementsInterface GstElement
-GstXOverlay GstImplementsInterface GstElement
-GDrive GObject
-GMount GObject
-GVolume GObject
+GstImplementsInterface GstObject GstElement
+GstColorBalance GstObject GstImplementsInterface GstElement
+GstXOverlay GstObject GstImplementsInterface GstElement
+GstTagSetter GstObject GstElement

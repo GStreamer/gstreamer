@@ -3,10 +3,10 @@
   <description>Decodes DTS audio streams</description>
   <filename>../../ext/dts/.libs/libgstdtsdec.so</filename>
   <basename>libgstdtsdec.so</basename>
-  <version>0.10.5.1</version>
+  <version>0.10.6</version>
   <license>GPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,16 +17,16 @@
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, rate=(int)[ 4000, 96000 ], channels=(int)[ 1, 6 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-dts; audio/x-private1-dts</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, rate=(int)[ 4000, 96000 ], channels=(int)[ 1, 6 ]</details>
         </caps>
       </pads>
     </element>

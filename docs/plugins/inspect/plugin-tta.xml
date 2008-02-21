@@ -3,7 +3,7 @@
   <description>TTA lossless audio format handling</description>
   <filename>../../gst/tta/.libs/libgsttta.so</filename>
   <basename>libgsttta.so</basename>
-  <version>0.10.5.1</version>
+  <version>0.10.6</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>gst-tta</package>
@@ -17,16 +17,16 @@
       <author>Arwed v. Merkatz &lt;v.merkatz@gmx.net&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-tta, width=(int){ 8, 16, 24 }, channels=(int){ 1, 2 }, rate=(int)[ 8000, 96000 ]</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, width=(int){ 8, 16, 24 }, depth=(int){ 8, 16, 24 }, channels=(int){ 1, 2 }, rate=(int)[ 8000, 96000 ], endianness=(int)1234, signed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-tta, width=(int){ 8, 16, 24 }, channels=(int){ 1, 2 }, rate=(int)[ 8000, 96000 ]</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Arwed v. Merkatz &lt;v.merkatz@gmx.net&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-ttafile</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-tta, width=(int){ 8, 16, 24 }, channels=(int){ 1, 2 }, rate=(int)[ 8000, 96000 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-ttafile</details>
         </caps>
       </pads>
     </element>

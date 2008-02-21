@@ -3,7 +3,7 @@
   <description>Demuxes and muxes audio and video</description>
   <filename>../../gst/nuvdemux/.libs/libgstnuvdemux.so</filename>
   <basename>libgstnuvdemux.so</basename>
-  <version>0.10.5.1</version>
+  <version>0.10.6</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>NuvDemux</package>
@@ -17,10 +17,10 @@
       <author>Renato Araujo Oliveira Filho &lt;renato.filho@indt.org.br&gt;,Rosfran Borges &lt;rosfran.borges@indt.org.br&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-nuv</details>
+          <name>audio_src</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
         </caps>
         <caps>
           <name>video_src</name>
@@ -29,10 +29,10 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>audio_src</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-nuv</details>
         </caps>
       </pads>
     </element>

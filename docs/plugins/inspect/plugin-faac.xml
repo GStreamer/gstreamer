@@ -3,10 +3,10 @@
   <description>Free AAC Encoder (FAAC)</description>
   <filename>../../ext/faac/.libs/libgstfaac.so</filename>
   <basename>libgstfaac.so</basename>
-  <version>0.10.5.1</version>
+  <version>0.10.6</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,16 +17,16 @@
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 8000, 96000 ], channels=(int)[ 1, 6 ]</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/mpeg, mpegversion=(int){ 4, 2 }, channels=(int)[ 1, 6 ], rate=(int)[ 8000, 96000 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 8000, 96000 ], channels=(int)[ 1, 6 ]</details>
         </caps>
       </pads>
     </element>

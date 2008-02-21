@@ -1,3 +1,10 @@
+=== release 0.10.6 ===
+
+2008-02-20  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.6, "A Big Deep Breath"
+
 2008-02-20  Bastien Nocera  <hadess@hadess.net>
 
 	* ext/mythtv/gstmythtvsrc.c: (gst_mythtv_src_do_seek),

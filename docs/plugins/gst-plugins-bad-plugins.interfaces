@@ -1,22 +1,14 @@
 GstBin GstChildProxy
 GstPipeline GstChildProxy
-DvbBaseBin GstChildProxy
+DvbBaseBin GstURIHandler GstChildProxy
 GstRgVolume GstChildProxy
-GstSDPDemux GstChildProxy
 GstRtpBin GstChildProxy
 GstRtpClient GstChildProxy
+GstSDPDemux GstChildProxy
 GstNeonhttpSrc GstURIHandler
 GstMMS GstURIHandler
-GstSoupHTTPSrc GstURIHandler
 GstVCDSrc GstURIHandler
-GstGioSrc GstURIHandler
+GstCDAudio GstURIHandler
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
 GstSDLVideoSink GstImplementsInterface GstNavigation GstXOverlay
-GstGLImageSink GstImplementsInterface GstXOverlay
-GstGioSink GstURIHandler
-GstCDAudio GstURIHandler
-GTypeModule GTypePlugin
-GIOModule GTypePlugin
-GHalDrive GDrive
-GHalMount GMount
-GHalVolume GVolume
+GstMetadataMux GstTagSetter
