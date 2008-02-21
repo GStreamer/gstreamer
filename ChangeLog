@@ -1,3 +1,9 @@
+2008-02-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* plugins/elements/gstqueue.c:
+	  Ensure that buffer metadata is writeable, before modifying. Spotted by
+	  Mike.
+
 2008-02-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* plugins/elements/gstqueue.c:

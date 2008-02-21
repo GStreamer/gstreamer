@@ -919,7 +919,14 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   if (queue->tail_needs_discont) {
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+    GstBuffer *subbuffer = gst_buffer_make_metadata_writable (buffer);
+
+    if (subbuffer) {
+      buffer = subbuffer;
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+    } else {
+      GST_DEBUG_OBJECT (queue, "Could not mark buffer as DISCONT");
+    }
     queue->tail_needs_discont = FALSE;
   }
 
@@ -991,7 +998,14 @@ next:
     caps = GST_BUFFER_CAPS (buffer);
 
     if (queue->head_needs_discont) {
-      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+      GstBuffer *subbuffer = gst_buffer_make_metadata_writable (buffer);
+
+      if (subbuffer) {
+        buffer = subbuffer;
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+      } else {
+        GST_DEBUG_OBJECT (queue, "Could not mark buffer as DISCONT");
+      }
       queue->head_needs_discont = FALSE;
     }
 
