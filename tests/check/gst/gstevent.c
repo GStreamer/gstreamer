@@ -22,7 +22,7 @@
 
 #include <gst/check/gstcheck.h>
 
-GST_START_TEST (create_custom_events)
+GST_START_TEST (create_events)
 {
   GstEvent *event, *event2;
   GstStructure *structure;
@@ -136,7 +136,25 @@ GST_START_TEST (create_custom_events)
     gst_event_unref (event);
   }
 
-  /* FIXME: Add tests for QOS when it is implemented. */
+  /* QOS */
+  {
+    gdouble p1 = 1.0, p2;
+    GstClockTimeDiff ctd1 = G_GINT64_CONSTANT (10), ctd2;
+    GstClockTime ct1 = G_GUINT64_CONSTANT (20), ct2;
+
+    event = gst_event_new_qos (p1, ctd1, ct1);
+    fail_if (event == NULL);
+    fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_QOS);
+    fail_unless (GST_EVENT_IS_UPSTREAM (event));
+    fail_if (GST_EVENT_IS_DOWNSTREAM (event));
+    fail_if (GST_EVENT_IS_SERIALIZED (event));
+
+    gst_event_parse_qos (event, &p2, &ctd2, &ct2);
+    fail_unless (p1 == p2);
+    fail_unless (ctd1 == ctd2);
+    fail_unless (ct1 == ct2);
+    gst_event_unref (event);
+  }
 
   /* SEEK */
   {
@@ -396,6 +414,7 @@ GST_START_TEST (send_custom_events)
       (guint64) GST_SECOND, "max-size-bytes", 0, NULL);
   g_object_set (G_OBJECT (fakesink), "silent", TRUE, "sync", TRUE, NULL);
 
+  /* add pad-probes to faksrc.src and fakesink.sink */
   fail_if ((srcpad = gst_element_get_pad (fakesrc, "src")) == NULL);
   gst_pad_add_event_probe (srcpad, (GCallback) event_probe,
       GINT_TO_POINTER (TRUE));
@@ -463,12 +482,12 @@ Suite *
 gst_event_suite (void)
 {
   Suite *s = suite_create ("GstEvent");
-  TCase *tc_chain = tcase_create ("customevents");
+  TCase *tc_chain = tcase_create ("events");
 
   tcase_set_timeout (tc_chain, 20);
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, create_custom_events);
+  tcase_add_test (tc_chain, create_events);
   tcase_add_test (tc_chain, send_custom_events);
   return s;
 }

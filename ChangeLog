@@ -1,5 +1,11 @@
 2008-02-21  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/gst/gstevent.c:
+	  Add qos to the event test. Rename tcase/tsuite; is not only about
+	  custom events.
+
+2008-02-21  Stefan Kost  <ensonic@users.sf.net>
+
 	* plugins/elements/gstqueue.c:
 	  Ensure that buffer metadata is writeable, before modifying. Spotted by
 	  Mike.
