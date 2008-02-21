@@ -3,7 +3,7 @@
   <description>Audio effects plugin</description>
   <filename>../../gst/audiofx/.libs/libgstaudiofx.so</filename>
   <basename>libgstaudiofx.so</basename>
-  <version>0.10.6.1</version>
+  <version>0.10.7</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer</package>
@@ -11,7 +11,7 @@
   <elements>
     <element>
       <name>audioamplify</name>
-      <longname>AudioAmplify</longname>
+      <longname>Audio amplifier</longname>
       <class>Filter/Effect/Audio</class>
       <description>Amplifies an audio stream by a given factor</description>
       <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
@@ -32,7 +32,7 @@
     </element>
     <element>
       <name>audiochebband</name>
-      <longname>AudioChebBand</longname>
+      <longname>Band pass &amp; band reject filter</longname>
       <class>Filter/Effect/Audio</class>
       <description>Chebyshev band pass and band reject filter</description>
       <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
@@ -53,7 +53,7 @@
     </element>
     <element>
       <name>audiocheblimit</name>
-      <longname>AudioChebLimit</longname>
+      <longname>Low pass &amp; high pass filter</longname>
       <class>Filter/Effect/Audio</class>
       <description>Chebyshev low pass and high pass filter</description>
       <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
@@ -74,7 +74,7 @@
     </element>
     <element>
       <name>audiodynamic</name>
-      <longname>AudioDynamic</longname>
+      <longname>Dynamic range controller</longname>
       <class>Filter/Effect/Audio</class>
       <description>Compressor and Expander</description>
       <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
@@ -95,7 +95,7 @@
     </element>
     <element>
       <name>audioinvert</name>
-      <longname>AudioInvert</longname>
+      <longname>Audio inversion</longname>
       <class>Filter/Effect/Audio</class>
       <description>Swaps upper and lower half of audio samples</description>
       <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
@@ -116,7 +116,7 @@
     </element>
     <element>
       <name>audiopanorama</name>
-      <longname>AudioPanorama</longname>
+      <longname>Stereo positioning</longname>
       <class>Filter/Effect/Audio</class>
       <description>Positions audio streams in the stereo panorama</description>
       <author>Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
@@ -137,9 +137,9 @@
     </element>
     <element>
       <name>audiowsincband</name>
-      <longname>Band-pass and Band-reject Windowed sinc filter</longname>
+      <longname>Band pass &amp; band reject filter</longname>
       <class>Filter/Effect/Audio</class>
-      <description>Band-pass Windowed sinc filter</description>
+      <description>Band pass and band reject windowed sinc filter</description>
       <author>Thomas &lt;thomas@apestaart.org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
@@ -158,9 +158,9 @@
     </element>
     <element>
       <name>audiowsinclimit</name>
-      <longname>AudioWSincLimit</longname>
+      <longname>Low pass &amp; high pass filter</longname>
       <class>Filter/Effect/Audio</class>
-      <description>Low-pass and High-pass Windowed sinc filter</description>
+      <description>Low pass and high pass windowed sinc filter</description>
       <author>Thomas &lt;thomas@apestaart.org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>

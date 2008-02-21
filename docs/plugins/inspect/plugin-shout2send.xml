@@ -3,7 +3,7 @@
   <description>Sends data to an icecast server using libshout2</description>
   <filename>../../ext/shout2/.libs/libgstshout2.so</filename>
   <basename>libgstshout2.so</basename>
-  <version>0.10.6.1</version>
+  <version>0.10.7</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>libshout2</package>
@@ -14,7 +14,9 @@
       <longname>Icecast network sink</longname>
       <class>Sink/Network</class>
       <description>Sends data to an icecast server</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;012Pedro Corte-Real &lt;typo@netcabo.pt&gt;012Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;
+    Pedro Corte-Real &lt;typo@netcabo.pt&gt;
+    Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

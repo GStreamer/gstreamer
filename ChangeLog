@@ -1,3 +1,10 @@
+=== release 0.10.7 ===
+
+2008-02-20  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.7, "Red Door Black"
+
 2008-02-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/alpha/Makefile.am:
@@ -334,7 +341,7 @@
 
 2008-02-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
-	Patch by: orjan <orjanf at axis dot com>
+	Patch by: Orjan Friberg <orjanf at axis dot com>
 
 	* gst/multipart/multipartmux.c: (gst_multipart_mux_collected):
 	Fix caps memory leak. Fixes #514573.
@@ -1874,7 +1881,7 @@
 
 2007-09-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
-	Patch by: <j at bootlab dot org>
+	Patch by: Jan Gerber <j at bootlab dot org>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):
 	Add fourccs for MPEG2 HDV streams. Fixes #479960.
@@ -2868,7 +2875,7 @@
 	* docs/plugins/Makefile.am:
 	  Simplify --extra-dir as gtkdoc scans recursively.
 
-2007-07-03  Wim Taymans,,,  <set EMAIL_ADDRESS environment variable>
+2007-07-03  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Tommi Myöhänen  <ext-tommi dot myohanen at nokia dot com>
 

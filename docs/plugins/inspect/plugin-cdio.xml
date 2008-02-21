@@ -3,10 +3,10 @@
   <description>Read audio from audio CDs</description>
   <filename>../../ext/cdio/.libs/libgstcdio.so</filename>
   <basename>libgstcdio.so</basename>
-  <version>0.10.6.1</version>
+  <version>0.10.7</version>
   <license>GPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,7 +14,7 @@
       <longname>CD audio source (CDDA)</longname>
       <class>Source/File</class>
       <description>Read audio from CD using libcdio</description>
-      <author>Tim-Philipp M303274ller &lt;tim centricular net&gt;</author>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
       <pads>
         <caps>
           <name>src</name>

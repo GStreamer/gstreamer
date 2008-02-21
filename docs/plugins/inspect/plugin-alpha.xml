@@ -1,32 +1,34 @@
 <plugin>
   <name>alpha</name>
-  <description>adds an alpha channel to video</description>
+  <description>adds an alpha channel to video - constant or via chroma-keying</description>
   <filename>../../gst/alpha/.libs/libgstalpha.so</filename>
   <basename>libgstalpha.so</basename>
-  <version>0.10.6.1</version>
+  <version>0.10.7</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>alpha</name>
       <longname>Alpha filter</longname>
       <class>Filter/Effect/Video</class>
-      <description>Adds an alpha channel to video</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <description>Adds an alpha channel to video - uniform or via chroma-keying</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;
+    Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;
+    Jan Schmidt &lt;thaytan@noraisin.net&gt;</author>
       <pads>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-raw-yuv, format=(fourcc)AYUV, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
-        </caps>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-yuv, format=(fourcc)AYUV, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)AYUV, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

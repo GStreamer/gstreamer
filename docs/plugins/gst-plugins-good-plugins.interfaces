@@ -1,34 +1,34 @@
 GstBin GstChildProxy
 GstPipeline GstChildProxy
-GstPlayBaseBin GstChildProxy
-GstPlayBin GstChildProxy
+GstHalAudioSink GstChildProxy
+GstHalAudioSrc GstChildProxy
+GstGConfVideoSink GstChildProxy
+GstGConfVideoSrc GstChildProxy
+GstSwitchSink GstChildProxy
+GstGConfAudioSink GstChildProxy
+GstGConfAudioSrc GstChildProxy
 GstAutoVideoSink GstChildProxy
 GstAutoAudioSink GstChildProxy
-GstGConfVideoSink GstChildProxy
-GstGConfAudioSink GstChildProxy
-GstDecodeBin GstChildProxy
-GstID3Mux GstTagSetter
-GstID3Tag GstTagSetter
+GstRTSPSrc GstURIHandler GstChildProxy
+GstShout2send GstTagSetter
+GstUDPSink GstURIHandler
+GstFlacEnc GstTagSetter
+GstCddaBaseSrc GstURIHandler
+GstCdioCddaSrc GstURIHandler
+GstDV1394Src GstURIHandler GstPropertyProbe
+GstOssSrc GstImplementsInterface GstMixer
+GstV4l2Src GstPropertyProbe GstImplementsInterface GstTuner GstColorBalance GstVideoOrientation
+GstUDPSrc GstURIHandler
+GstTagLibMux GstTagSetter
+GstId3v2Mux GstTagSetter
+GstApev2Mux GstTagSetter
+GstVideoBalance GstImplementsInterface GstColorBalance
 GstIirEqualizer GstChildProxy
 GstIirEqualizerNBands GstChildProxy
 GstIirEqualizer3Bands GstChildProxy
 GstIirEqualizer10Bands GstChildProxy
-GstLame GstTagSetter
+GstSpeexEnc GstTagSetter
 GstOssMixerElement GstImplementsInterface GstMixer
-GstOssSrc GstImplementsInterface GstMixer
-GstAlsaSrc GstImplementsInterface GstMixer
-GstUDPSrc GstURIHandler
-DV1394Src GstURIHandler
-GstV4lElement GstImplementsInterface GstXOverlay GstColorBalance GstTuner GstPropertyProbe
-GstV4lSrc GstImplementsInterface GstXOverlay GstColorBalance GstTuner GstPropertyProbe
-GstGnomeVFSSrc GstURIHandler
-GstFileSrc GstURIHandler
-GstUDPSink GstURIHandler
-GstShout2send GstTagSetter
-GstXvImageSink GstImplementsInterface GstNavigation GstXOverlay GstColorBalance
-GstXImageSink GstImplementsInterface GstNavigation GstXOverlay
-GstFileSink GstURIHandler
-GstVolume GstImplementsInterface GstMixer
-GstVorbisTag GstTagSetter
-GstVorbisEnc GstTagSetter
-GstAlsaMixerElement GstImplementsInterface GstMixer
+GstVideoMixer GstChildProxy
+GstMatroskaMux GstTagSetter
+GstAviMux GstTagSetter

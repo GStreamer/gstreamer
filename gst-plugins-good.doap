@@ -35,6 +35,17 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
 
  <release>
   <Version>
+   <revision>0.10.7</revision>
+   <branch>0.10</branch>
+   <name>Red Door Black</name>
+   <created>2008-01-20</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.7.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.7.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.6</revision>
    <branch>0.10</branch>
    <name>Wobble Board</name>

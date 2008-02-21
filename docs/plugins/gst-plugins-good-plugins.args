@@ -190,7 +190,7 @@
 
 <ARG>
 <NAME>GstOssSrc::device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Device</NICK>
@@ -200,7 +200,7 @@
 
 <ARG>
 <NAME>GstOssSrc::device-name</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Device name</NICK>
@@ -350,7 +350,7 @@
 
 <ARG>
 <NAME>GstUDPSink::host</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>host</NICK>
@@ -370,7 +370,7 @@
 
 <ARG>
 <NAME>GstUDPSrc::caps</NAME>
-<TYPE>GstCaps</TYPE>
+<TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Caps</NICK>
@@ -380,7 +380,7 @@
 
 <ARG>
 <NAME>GstUDPSrc::multicast-group</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Multicast Group</NICK>
@@ -400,7 +400,7 @@
 
 <ARG>
 <NAME>GstUDPSrc::uri</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>URI</NICK>
@@ -530,7 +530,7 @@
 
 <ARG>
 <NAME>GstRTSPSrc::location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>RTSP Location</NICK>
@@ -671,21 +671,21 @@
 <ARG>
 <NAME>GstVertigoTV::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,01,100]</RANGE>
+<RANGE>[0.01,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Speed</NICK>
 <BLURB>Control the speed of movement.</BLURB>
-<DEFAULT>0,02</DEFAULT>
+<DEFAULT>0.02</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstVertigoTV::zoom-speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[1,01,1,1]</RANGE>
+<RANGE>[1.01,1.1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Zoom Speed</NICK>
 <BLURB>Control the rate of zooming.</BLURB>
-<DEFAULT>1,01</DEFAULT>
+<DEFAULT>1.01</DEFAULT>
 </ARG>
 
 <ARG>
@@ -810,7 +810,7 @@
 
 <ARG>
 <NAME>GstShout2send::description</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>description</NICK>
@@ -820,7 +820,7 @@
 
 <ARG>
 <NAME>GstShout2send::genre</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>genre</NICK>
@@ -830,7 +830,7 @@
 
 <ARG>
 <NAME>GstShout2send::ip</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>ip</NICK>
@@ -840,7 +840,7 @@
 
 <ARG>
 <NAME>GstShout2send::mount</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>mount</NICK>
@@ -850,7 +850,7 @@
 
 <ARG>
 <NAME>GstShout2send::password</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>password</NICK>
@@ -880,7 +880,7 @@
 
 <ARG>
 <NAME>GstShout2send::streamname</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>streamname</NICK>
@@ -900,7 +900,7 @@
 
 <ARG>
 <NAME>GstShout2send::url</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>url</NICK>
@@ -910,7 +910,7 @@
 
 <ARG>
 <NAME>GstShout2send::username</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>username</NICK>
@@ -1110,7 +1110,7 @@
 
 <ARG>
 <NAME>GstEsdSink::host</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Host</NICK>
@@ -1320,7 +1320,7 @@
 
 <ARG>
 <NAME>GstSpeexEnc::last-message</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>last-message</NICK>
@@ -1436,6 +1436,16 @@
 <NICK>Use AV/C</NICK>
 <BLURB>Use AV/C VTR control.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDV1394Src::device-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>device name</NICK>
+<BLURB>user-friendly name of the device.</BLURB>
+<DEFAULT>"Default"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1570,7 +1580,7 @@
 
 <ARG>
 <NAME>GstOssSink::device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Device</NICK>
@@ -1590,7 +1600,7 @@
 
 <ARG>
 <NAME>GstMatroskaMux::writing-app</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Writing application.</NICK>
@@ -1650,7 +1660,7 @@
 
 <ARG>
 <NAME>GstTest::expected-md5</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>expected md5</NICK>
@@ -1670,7 +1680,7 @@
 
 <ARG>
 <NAME>GstTest::md5</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>md5</NICK>
@@ -1710,7 +1720,7 @@
 
 <ARG>
 <NAME>GstProgressReport::format</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>format</NICK>
@@ -1940,7 +1950,7 @@
 
 <ARG>
 <NAME>GstMultipartMux::boundary</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Boundary</NICK>
@@ -1970,7 +1980,7 @@
 
 <ARG>
 <NAME>GstCairoTextOverlay::font-desc</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
 <NICK>font description</NICK>
@@ -1980,7 +1990,7 @@
 
 <ARG>
 <NAME>GstCairoTextOverlay::halign</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
 <NICK>horizontal alignment</NICK>
@@ -2000,7 +2010,7 @@
 
 <ARG>
 <NAME>GstCairoTextOverlay::text</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
 <NICK>text</NICK>
@@ -2010,7 +2020,7 @@
 
 <ARG>
 <NAME>GstCairoTextOverlay::valign</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
 <NICK>vertical alignment</NICK>
@@ -2040,7 +2050,7 @@
 
 <ARG>
 <NAME>GstOssMixerElement::device-name</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Device name</NICK>
@@ -2050,7 +2060,7 @@
 
 <ARG>
 <NAME>GstOssMixerElement::device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Device</NICK>
@@ -2120,7 +2130,7 @@
 
 <ARG>
 <NAME>GstMultiUDPSink::clients</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Clients</NICK>
@@ -2156,6 +2166,16 @@
 <NICK>Socket Handle</NICK>
 <BLURB>Socket to use for UDP sending. (-1 == allocate).</BLURB>
 <DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::auto-multicast</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Automatically join/leave multicast groups</NICK>
+<BLURB>Automatically join/leave the multicast groups, FALSE means user has to do it himself.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2200,7 +2220,7 @@
 
 <ARG>
 <NAME>GstHalAudioSrc::udi</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>UDI</NICK>
@@ -2210,7 +2230,7 @@
 
 <ARG>
 <NAME>GstHalAudioSink::udi</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>UDI</NICK>
@@ -14030,7 +14050,7 @@
 
 <ARG>
 <NAME>GstXImageSrc::display-name</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Display</NICK>
@@ -14160,7 +14180,7 @@
 
 <ARG>
 <NAME>GstMultipartDemux::boundary</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Boundary</NICK>
@@ -17551,7 +17571,7 @@
 <ARG>
 <NAME>GstGamma::gamma</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,01,10]</RANGE>
+<RANGE>[0.01,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Gamma</NICK>
 <BLURB>gamma.</BLURB>
@@ -17600,7 +17620,7 @@
 
 <ARG>
 <NAME>GstV4l2Src::device</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Device</NICK>
@@ -17610,7 +17630,7 @@
 
 <ARG>
 <NAME>GstV4l2Src::device-name</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Device name</NICK>
@@ -17685,7 +17705,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Ripple</NICK>
 <BLURB>Amount of ripple (dB).</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17745,7 +17765,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Ripple</NICK>
 <BLURB>Amount of ripple (dB).</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17756,16 +17776,6 @@
 <NICK>Type</NICK>
 <BLURB>Type of the chebychev filter.</BLURB>
 <DEFAULT>1</DEFAULT>
-</ARG>
-
-ARG>
-<NAME>GstAudioWSincBand::length</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[3,50000]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Length</NICK>
-<BLURB>Filter kernel length, will be rounded to the next odd number.</BLURB>
-<DEFAULT>101</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17806,6 +17816,16 @@ ARG>
 <NICK>Window</NICK>
 <BLURB>Window function to use.</BLURB>
 <DEFAULT>Hamming window (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioWSincBand::length</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[3,50000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Length</NICK>
+<BLURB>Filter kernel length, will be rounded to the next odd number.</BLURB>
+<DEFAULT>101</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17890,7 +17910,7 @@ ARG>
 
 <ARG>
 <NAME>GstAutoAudioSink::filter-caps</NAME>
-<TYPE>GstCaps</TYPE>
+<TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Filter caps</NICK>
@@ -17900,7 +17920,7 @@ ARG>
 
 <ARG>
 <NAME>GstAutoVideoSink::filter-caps</NAME>
-<TYPE>GstCaps</TYPE>
+<TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Filter caps</NICK>
