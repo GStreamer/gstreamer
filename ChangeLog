@@ -1,5 +1,11 @@
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/Makefile.am:
+	Ignore some more elements for the states unit test, like
+	dfbvideosink which produces a segfault. Fixes bug #517854.
+
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Jens Granseuer <jensgr at gmx dot net>
 
 	* gst/librfb/gstrfbsrc.c: (gst_rfb_property_set_version):
