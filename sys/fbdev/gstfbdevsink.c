@@ -136,22 +136,25 @@ static GstCaps *
 gst_fbdevsink_getcaps (GstBaseSink * bsink)
 {
   GstFBDEVSink *fbdevsink;
+  GstCaps *caps;
+  uint32_t rmask;
+  uint32_t gmask;
+  uint32_t bmask;
+  int endianness;
 
   fbdevsink = GST_FBDEVSINK (bsink);
 
   if (!fbdevsink->framebuffer)
     return gst_caps_from_string (GST_FBDEV_TEMPLATE_CAPS);
 
-  GstCaps *caps;
-
-  uint32_t rmask = ((1 << fbdevsink->varinfo.red.length) - 1)
+  rmask = ((1 << fbdevsink->varinfo.red.length) - 1)
       << fbdevsink->varinfo.red.offset;
-  uint32_t gmask = ((1 << fbdevsink->varinfo.green.length) - 1)
+  gmask = ((1 << fbdevsink->varinfo.green.length) - 1)
       << fbdevsink->varinfo.green.offset;
-  uint32_t bmask = ((1 << fbdevsink->varinfo.blue.length) - 1)
+  bmask = ((1 << fbdevsink->varinfo.blue.length) - 1)
       << fbdevsink->varinfo.blue.offset;
 
-  int endianness = 0;
+  endianness = 0;
 
   switch (fbdevsink->varinfo.bits_per_pixel) {
     case 32:
@@ -199,12 +202,11 @@ gst_fbdevsink_setcaps (GstBaseSink * bsink, GstCaps * vscapslist)
 {
   GstFBDEVSink *fbdevsink;
   GstStructure *structure;
+  const GValue *fps;
 
   fbdevsink = GST_FBDEVSINK (bsink);
 
   structure = gst_caps_get_structure (vscapslist, 0);
-
-  const GValue *fps;
 
   fps = gst_structure_get_value (structure, "framerate");
   fbdevsink->fps_n = gst_value_get_fraction_numerator (fps);
@@ -241,13 +243,13 @@ gst_fbdevsink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
 
   GstFBDEVSink *fbdevsink;
+  int i;
 
   fbdevsink = GST_FBDEVSINK (bsink);
 
   /* optimization could remove this memcpy by allocating the buffer
      in framebuffer memory, but would only work when xres matches
      the video width */
-  int i;
 
   for (i = 0; i < fbdevsink->lines; i++)
     memcpy (fbdevsink->framebuffer

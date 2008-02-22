@@ -192,11 +192,14 @@ gst_rfb_src_dispose (GObject * object)
 static void
 gst_rfb_property_set_version (GstRfbSrc * src, gchar * value)
 {
+  gchar *major;
+  gchar *minor;
+
   g_return_if_fail (src != NULL);
   g_return_if_fail (value != NULL);
 
-  gchar *major = g_strdup (value);
-  gchar *minor = g_strrstr (value, ".");
+  major = g_strdup (value);
+  minor = g_strrstr (value, ".");
 
   g_return_if_fail (minor != NULL);
 

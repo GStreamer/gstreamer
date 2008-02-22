@@ -600,15 +600,16 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
 
   /* see if the buffer is large enough */
   if (descriptors_loop_length) {
+    guint8 *networkname_descriptor;
+    GstMPEGDescriptor *mpegdescriptor;
+
     if (data + descriptors_loop_length > end - 4) {
       GST_WARNING ("PID %d invalid NIT descriptors loop length %d",
           section->pid, descriptors_loop_length);
       gst_structure_free (nit);
       goto error;
     }
-    guint8 *networkname_descriptor;
-    GstMPEGDescriptor *mpegdescriptor =
-        gst_mpeg_descriptor_parse (data, descriptors_loop_length);
+    mpegdescriptor = gst_mpeg_descriptor_parse (data, descriptors_loop_length);
     networkname_descriptor =
         gst_mpeg_descriptor_find (mpegdescriptor, DESC_DVB_NETWORK_NAME);
     if (networkname_descriptor != NULL) {
@@ -676,15 +677,17 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
     g_free (transport_name);
 
     if (descriptors_loop_length) {
+      GstMPEGDescriptor *mpegdescriptor;
+      guint8 *delivery;
+
       if (data + descriptors_loop_length > end - 4) {
         GST_WARNING ("PID %d invalid NIT entry %d descriptors loop length %d",
             section->pid, transport_stream_id, descriptors_loop_length);
         gst_structure_free (transport);
         goto error;
       }
-      GstMPEGDescriptor *mpegdescriptor =
+      mpegdescriptor =
           gst_mpeg_descriptor_parse (data, descriptors_loop_length);
-      guint8 *delivery;
 
       if ((delivery =
               gst_mpeg_descriptor_find (mpegdescriptor,
@@ -944,10 +947,10 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
           GstStructure *channel;
           GValue channel_value = { 0 };
           guint16 service_id = GST_READ_UINT16_BE (current_pos);
+          guint16 logical_channel_number;
 
           current_pos += 2;
-          guint16 logical_channel_number =
-              GST_READ_UINT16_BE (current_pos) & 0x03ff;
+          logical_channel_number = GST_READ_UINT16_BE (current_pos) & 0x03ff;
           channel =
               gst_structure_new ("channels", "service-id", G_TYPE_UINT,
               service_id, "logical-channel-number", G_TYPE_UINT,
@@ -1109,14 +1112,16 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
     g_free (service_name);
 
     if (descriptors_loop_length) {
+      guint8 *service_descriptor;
+      GstMPEGDescriptor *mpegdescriptor;
+
       if (data + descriptors_loop_length > end - 4) {
         GST_WARNING ("PID %d invalid SDT entry %d descriptors loop length %d",
             section->pid, service_id, descriptors_loop_length);
         gst_structure_free (service);
         goto error;
       }
-      guint8 *service_descriptor;
-      GstMPEGDescriptor *mpegdescriptor =
+      mpegdescriptor =
           gst_mpeg_descriptor_parse (data, descriptors_loop_length);
       service_descriptor =
           gst_mpeg_descriptor_find (mpegdescriptor, DESC_DVB_SERVICE);
@@ -1333,15 +1338,17 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
     g_free (event_name);
 
     if (descriptors_loop_length) {
+      guint8 *event_descriptor;
+      GArray *component_descriptors;
+      GstMPEGDescriptor *mpegdescriptor;
+
       if (data + descriptors_loop_length > end - 4) {
         GST_WARNING ("PID %d invalid EIT descriptors loop length %d",
             section->pid, descriptors_loop_length);
         gst_structure_free (event);
         goto error;
       }
-      guint8 *event_descriptor;
-      GArray *component_descriptors;
-      GstMPEGDescriptor *mpegdescriptor =
+      mpegdescriptor =
           gst_mpeg_descriptor_parse (data, descriptors_loop_length);
       event_descriptor =
           gst_mpeg_descriptor_find (mpegdescriptor, DESC_DVB_SHORT_EVENT);

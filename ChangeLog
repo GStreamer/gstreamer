@@ -1,3 +1,18 @@
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Jens Granseuer <jensgr at gmx dot net>
+
+	* gst/librfb/gstrfbsrc.c: (gst_rfb_property_set_version):
+	* gst/librfb/rfbdecoder.c: (rfb_decoder_message_set_encodings),
+	(rfb_decoder_state_set_encodings):
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	(mpegts_packetizer_parse_nit), (mpegts_packetizer_parse_sdt),
+	(mpegts_packetizer_parse_eit):
+	* sys/fbdev/gstfbdevsink.c: (gst_fbdevsink_getcaps),
+	(gst_fbdevsink_setcaps), (gst_fbdevsink_render):
+	Some C89 fixes, moving variable declarations to the beginning
+	of a block. Fixes bug #517937.
+
 2008-02-21  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
