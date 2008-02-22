@@ -1,5 +1,11 @@
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/gst-plugins-base.supp:
+	Add a suppression for a cached value in GIO that wasn't moved
+	while moving gio from -bad to -base.
+
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Brian Cameron <brian dot cameron at sun dot com>
 
 	* configure.ac:
