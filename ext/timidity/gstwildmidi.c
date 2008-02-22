@@ -58,6 +58,10 @@
 
 #include "gstwildmidi.h"
 
+#ifndef WILDMIDI_CFG
+#define WILDMIDI_CFG "/etc/timidity.cfg"
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_wildmidi_debug);
 #define GST_CAT_DEFAULT gst_wildmidi_debug
 
@@ -159,7 +163,7 @@ wildmidi_open_config ()
   }
 
   if (path == NULL) {
-    path = g_strdup (TIMIDITY_CFG);
+    path = g_strdup (WILDMIDI_CFG);
     GST_DEBUG ("trying %s", path);
     if (path && (g_access (path, R_OK) == -1)) {
       g_free (path);
@@ -179,7 +183,7 @@ wildmidi_open_config ()
   if (path == NULL) {
     /* I've created a symlink to get it playing
      * ln -s /usr/share/timidity/timidity.cfg /etc/wildmidi.cfg
-     * we could make it use : TIMIDITY_CFG
+     * we could make it use : WILDMIDI_CFG
      * but unfortunately it fails to create a proper filename if the config
      * has a redirect   
      * http://sourceforge.net/tracker/index.php?func=detail&aid=1657358&group_id=42635&atid=433744

@@ -1,5 +1,11 @@
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/timidity/gstwildmidi.c:
+	If WILDMIDI_CFG is not defined, define it to the default
+	timidity configure file.
+
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Based on a patch by:
 	  Hans de Goede <j dot w dot r dot degoede at hhs dot nl>
 
