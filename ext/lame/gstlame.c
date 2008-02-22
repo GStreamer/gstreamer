@@ -578,7 +578,7 @@ zero_output_rate:
 setup_failed:
   {
     GST_ELEMENT_ERROR (lame, LIBRARY, SETTINGS,
-        (_("Failed to configure LAME encoder. Check your encoding parameters.")), NULL);
+        (_("Failed to configure LAME encoder. Check your encoding parameters.")), (NULL));
     return FALSE;
   }
 }
