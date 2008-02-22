@@ -1,3 +1,9 @@
+2008-02-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_setup_streams):
+	Post the server response code in an error message instead of a generic
+	'error' message. Fixes #517237.
+
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/Makefile.am:

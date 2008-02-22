@@ -3571,6 +3571,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   GstRTSPMessage response = { 0 };
   GstRTSPStream *stream = NULL;
   GstRTSPLowerTrans protocols;
+  GstRTSPStatusCode code;
 
   /* we initially allow all configured lower transports. based on the URL
    * transports and the replies from the server we narrow them down. */
@@ -3586,7 +3587,6 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     gchar *transports;
-    GstRTSPStatusCode code;
 
     stream = (GstRTSPStream *) walk->data;
 
@@ -3663,7 +3663,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
         gst_rtspsrc_stream_free_udp (stream);
         continue;
       default:
-        goto send_error;
+        goto response_error;
     }
 
     /* parse response transport */
@@ -3762,6 +3762,14 @@ setup_transport_failed:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("Could not setup transport."));
+    goto cleanup_error;
+  }
+response_error:
+  {
+    const gchar *str = gst_rtsp_status_as_text (code);
+
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+        ("Error (%d): %s", code, GST_STR_NULL (str)));
     goto cleanup_error;
   }
 send_error:
