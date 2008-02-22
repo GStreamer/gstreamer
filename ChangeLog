@@ -1,3 +1,11 @@
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Jens Granseuer <jensgr at gmx dot net>
+
+	* tests/examples/equalizer/demo.c: (main):
+	C89 fix, moving variable declarations to the beginning of
+	the block. Fixes bug #517933.
+
 2008-02-21  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
