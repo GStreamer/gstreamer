@@ -9,43 +9,29 @@
 }
 
 {
-   <suppression for a singleton in GIO that can't be cleaned up>
-   Memcheck:Leak
-   fun:realloc
-   obj:*
-   obj:*
-   obj:*
-   obj:*
-   obj:*
-   obj:*
-   obj:*
-   obj:*
-   obj:*
-   fun:g_type_create_instance
-   fun:g_object_constructor
-   fun:g_object_newv
-   fun:g_object_new_valist
-   fun:g_object_new
-   fun:get_default_vfs
-   fun:g_once_impl
-   fun:g_vfs_get_default
+   <Soundtouch valgrind warning>
+   Memcheck:Cond
+   fun:_ZN10soundtouch9TDStretch8setTempoEf
+   fun:_ZN10soundtouch9TDStretch13setParametersEjjjj
+   fun:_ZN10soundtouch9TDStretchC1Ev
+   fun:_ZN10soundtouch9TDStretch11newInstanceEv
+   fun:_ZN10soundtouch10SoundTouchC1Ev
 }
 
 {
-   <suppression for a singleton in GIO that can't be cleaned up>
-   Memcheck:Leak
-   fun:malloc
-   obj:*
-   obj:*
-   obj:*
-   obj:*
-   fun:g_type_create_instance
-   fun:g_object_constructor
-   fun:g_object_newv
-   fun:g_object_new_valist
-   fun:g_object_new
-   fun:get_default_vfs
-   fun:g_once_impl
-   fun:g_vfs_get_default
+   <Soundtouch valgrind warning>
+   Memcheck:Cond
+   fun:_ZN10soundtouch9TDStretch8setTempoEf
+   fun:_ZN10soundtouch9TDStretch13setParametersEjjjj
+   fun:_ZN10soundtouch9TDStretchC1Ev
+   fun:_ZN10soundtouch9TDStretch11newInstanceEv
+   fun:_ZN10soundtouch10SoundTouchC1Ev
+}
+
+{
+   <the LADSPA sine plugin produces this on every exit() it seems >
+   Memcheck:Free
+   fun:_ZdaPv
+   obj:/usr/lib/ladspa/sine.so
 }
 
