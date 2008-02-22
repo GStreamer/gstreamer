@@ -183,7 +183,7 @@ AM_CONDITIONAL(HAVE_REGEX_H, test "x$HAVE_REGEX_H" = "xyes")
 
 if test "x$HAVE_REGEX_H" = "xyes"; then
   ac_cppflags_save="$CPPFLAGS"
-  CPPFLAGS="-Wall -Werror `$PKG_CONFIG --cflags libxml-2.0`"
+  CPPFLAGS="`$PKG_CONFIG --cflags libxml-2.0`"
   AC_COMPILE_IFELSE(
     AC_LANG_PROGRAM([
 #include <libxml/HTMLparser.h>
@@ -543,9 +543,6 @@ AG_GST_CHECK_FEATURE(VORBIS, [Xiph Vorbis audio codec], vorbis, [
 
 if test "x$HAVE_VORBIS" = "xyes"; then
   ac_cflags_save="$CFLAGS"
-  dnl FIXME: does this work on non-gcc? -- Company
-  dnl FIXME: no, it doesn't.  Why is this here in the first place ? -- thomasvs
-  CFLAGS="-Wall -Werror"
   AC_COMPILE_IFELSE(
     AC_LANG_PROGRAM([
 #include <vorbis/codec.h>
