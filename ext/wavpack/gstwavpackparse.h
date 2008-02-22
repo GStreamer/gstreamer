@@ -57,7 +57,7 @@ struct _GstWavpackParse
 
   guint samplerate;
   guint channels;
-  guint total_samples;
+  gint64 total_samples;
 
   gboolean need_newsegment;
   gboolean discont;

@@ -1,5 +1,15 @@
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_src_query),
+	(gst_wavpack_parse_create_src_pad):
+	* ext/wavpack/gstwavpackparse.h:
+	Always report the duration if we know it in push mode and don't
+	return 0 just to make totem believe we can't seek in push mode.
+	Newer totem version use the SEEKING query which properly reports
+	if we can seek or not.
+
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Jens Granseuer <jensgr at gmx dot net>
 
 	* tests/examples/equalizer/demo.c: (main):

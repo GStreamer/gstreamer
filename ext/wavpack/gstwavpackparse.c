@@ -275,16 +275,15 @@ gst_wavpack_parse_src_query (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:{
-      gint64 cur, len;
+      gint64 cur;
       guint rate;
 
       GST_OBJECT_LOCK (parse);
       cur = parse->segment.last_stop;
-      len = parse->total_samples;
       rate = parse->samplerate;
       GST_OBJECT_UNLOCK (parse);
 
-      if (len < 0 || rate == 0) {
+      if (rate == 0) {
         GST_DEBUG_OBJECT (parse, "haven't read header yet");
         break;
       }
@@ -315,12 +314,10 @@ gst_wavpack_parse_src_query (GstPad * pad, GstQuery * query)
 
       GST_OBJECT_LOCK (parse);
       rate = parse->samplerate;
-      /* FIXME: return 0 if we work in push based mode to let totem
-       * recognize that we can't seek */
-      len = (parse->adapter) ? 0 : parse->total_samples;
+      len = parse->total_samples;
       GST_OBJECT_UNLOCK (parse);
 
-      if (len < 0 || rate == 0) {
+      if (rate == 0) {
         GST_DEBUG_OBJECT (parse, "haven't read header yet");
         break;
       }
@@ -329,7 +326,8 @@ gst_wavpack_parse_src_query (GstPad * pad, GstQuery * query)
 
       switch (format) {
         case GST_FORMAT_TIME:
-          len = gst_util_uint64_scale_int (len, GST_SECOND, rate);
+          if (len != -1)
+            len = gst_util_uint64_scale_int (len, GST_SECOND, rate);
           gst_query_set_duration (query, GST_FORMAT_TIME, len);
           ret = TRUE;
           break;
@@ -827,9 +825,8 @@ gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
 
         wvparse->samplerate = WavpackGetSampleRate (wpc);
         wvparse->channels = WavpackGetNumChannels (wpc);
-        wvparse->total_samples = header->total_samples;
-        if (wvparse->total_samples == (int32_t) - 1)
-          wvparse->total_samples = 0;
+        wvparse->total_samples = (header->total_samples == (int32_t) - 1) ?
+            -1 : header->total_samples;
 
         caps = gst_caps_new_simple ("audio/x-wavpack",
             "width", G_TYPE_INT, WavpackGetBitsPerSample (wpc),
