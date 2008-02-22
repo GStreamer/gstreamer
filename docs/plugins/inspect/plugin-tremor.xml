@@ -3,7 +3,7 @@
   <description>OGG Vorbis Tremor plugins element</description>
   <filename>../../ext/ivorbis/.libs/libgstivorbis.so</filename>
   <basename>libgstivorbis.so</basename>
-  <version>0.10.6</version>
+  <version>0.10.6.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
