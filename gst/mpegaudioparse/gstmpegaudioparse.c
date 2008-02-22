@@ -553,7 +553,8 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
 
     /* No timestamp yet, convert our offset to a timestamp if we can, or
      * start at 0 */
-    if (mp3parse_bytepos_to_time (mp3parse, mp3parse->cur_offset, &ts))
+    if (mp3parse_bytepos_to_time (mp3parse, mp3parse->cur_offset, &ts) &&
+        GST_CLOCK_TIME_IS_VALID (ts))
       GST_BUFFER_TIMESTAMP (outbuf) = ts;
     else {
       GST_BUFFER_TIMESTAMP (outbuf) = 0;
@@ -614,11 +615,11 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
    * 9 (29) frames are the theoretical maximum of frames that contain
    * data for the current frame (bit reservoir).
    */
-
   if (mp3parse->segment.start == 0) {
     push_start = 0;
   } else if (GST_CLOCK_TIME_IS_VALID (mp3parse->max_bitreservoir)) {
-    if (mp3parse->segment.start > mp3parse->max_bitreservoir)
+    if (GST_CLOCK_TIME_IS_VALID (mp3parse->segment.start) &&
+        mp3parse->segment.start > mp3parse->max_bitreservoir)
       push_start = mp3parse->segment.start - mp3parse->max_bitreservoir;
     else
       push_start = 0;
@@ -630,18 +631,34 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
               GST_BUFFER_TIMESTAMP_IS_VALID (outbuf) &&
               GST_BUFFER_DURATION_IS_VALID (outbuf) &&
               GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf)
-              < push_start)
-          || (GST_CLOCK_TIME_IS_VALID (mp3parse->segment.stop)
-              && GST_BUFFER_TIMESTAMP (outbuf) >= mp3parse->segment.stop))) {
+              < push_start))) {
     GST_DEBUG_OBJECT (mp3parse,
-        "Buffer outside of configured segment range %" GST_TIME_FORMAT
+        "Buffer before configured segment range %" GST_TIME_FORMAT
         " to %" GST_TIME_FORMAT ", dropping, timestamp %"
-        GST_TIME_FORMAT ", offset 0x%08" G_GINT64_MODIFIER "x",
-        GST_TIME_ARGS (push_start), GST_TIME_ARGS (mp3parse->segment.stop),
+        GST_TIME_FORMAT " duration %" GST_TIME_FORMAT
+        ", offset 0x%08" G_GINT64_MODIFIER "x", GST_TIME_ARGS (push_start),
+        GST_TIME_ARGS (mp3parse->segment.stop),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
         GST_BUFFER_OFFSET (outbuf));
+
     gst_buffer_unref (outbuf);
     ret = GST_FLOW_OK;
+  } else if (G_UNLIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (outbuf) &&
+          GST_CLOCK_TIME_IS_VALID (mp3parse->segment.stop) &&
+          GST_BUFFER_TIMESTAMP (outbuf) >= mp3parse->segment.stop)) {
+    GST_DEBUG_OBJECT (mp3parse,
+        "Buffer after configured segment range %" GST_TIME_FORMAT
+        " to %" GST_TIME_FORMAT ", returning GST_FLOW_UNEXPECTED, timestamp %"
+        GST_TIME_FORMAT " duration %" GST_TIME_FORMAT ", offset 0x%08"
+        G_GINT64_MODIFIER "x", GST_TIME_ARGS (push_start),
+        GST_TIME_ARGS (mp3parse->segment.stop),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
+        GST_BUFFER_OFFSET (outbuf));
+
+    gst_buffer_unref (outbuf);
+    ret = GST_FLOW_UNEXPECTED;
   } else {
     GST_DEBUG_OBJECT (mp3parse,
         "pushing buffer of %d bytes, timestamp %" GST_TIME_FORMAT
@@ -1011,6 +1028,14 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 
     mp3parse->pending_ts = timestamp;
     mp3parse->pending_offset = mp3parse->tracked_offset + avail;
+
+    /* If we have no data pending and the next timestamp is
+     * invalid we can use the upstream timestamp for the next frame.
+     *
+     * This will give us a timestamp if we're resyncing and upstream
+     * gave us -1 as offset. */
+    if (avail == 0 && !GST_CLOCK_TIME_IS_VALID (mp3parse->next_ts))
+      mp3parse->next_ts = timestamp;
 
     GST_LOG_OBJECT (mp3parse, "Have pending ts %" GST_TIME_FORMAT
         " to apply in %lld bytes (@ off %lld)\n",
