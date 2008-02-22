@@ -302,6 +302,8 @@ gst_dvd_nav_src_finalize (GObject * object)
 
   if (src->vts_attrs)
     g_array_free (src->vts_attrs, TRUE);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean

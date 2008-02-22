@@ -1,5 +1,10 @@
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/dvdnav/dvdnavsrc.c: (gst_dvd_nav_src_finalize):
+	Correctly chain up to the parent's finalize function.
+
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
 	(gst_mp3parse_emit_frame), (gst_mp3parse_chain):
 	Try a bit harder to get valid timestamps, especially if upstream
