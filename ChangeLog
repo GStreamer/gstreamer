@@ -1,5 +1,21 @@
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Wouter Cloetens <wouter at mind dot be>
+
+	* configure.ac:
+	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_cancel_message),
+	(gst_soup_http_src_finished_cb), (gst_soup_http_src_chunk_free),
+	(gst_soup_http_src_chunk_allocator),
+	(gst_soup_http_src_got_chunk_cb), (gst_soup_http_src_create),
+	(gst_soup_http_src_start), (gst_soup_http_src_set_proxy):
+	* ext/soup/gstsouphttpsrc.h:
+	Implement zero-copy and make the buffer size configurable.
+	Prefix proxy URIs with "http://" if they don't start with it
+	already and catch errors earlier, fixes hanging in some situations.
+	Fixes bug #514948.
+
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/gst-plugins-bad.supp:
 	Add suppressions for SoundTouch valgrind warnings and
 	a valgrind warning caused by the LADSPA sine plugin and

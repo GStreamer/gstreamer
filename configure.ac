@@ -764,7 +764,7 @@ AG_GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
 dnl *** soup ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SOUP, true)
 AG_GST_CHECK_FEATURE(SOUP, [soup http client plugin (2.4)], souphttpsrc, [
-  PKG_CHECK_MODULES(SOUP, libsoup-2.4, HAVE_SOUP="yes", [
+  PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.3.2, HAVE_SOUP="yes", [
     HAVE_SOUP="no"
     AC_MSG_RESULT(no)
   ])
