@@ -1,3 +1,9 @@
+2008-02-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/lame/gstlame.c: (gst_lame_sink_setcaps):
+	  Fix broken GST_ELEMENT_ERROR macro, fixes compile with the Sun
+	  Workshop 12 compiler, but probably also crashes (#517985).
+
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Thiago Sousa Santos <thiagoss at lcc dot ufcg dot edu dot br>
