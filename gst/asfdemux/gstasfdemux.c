@@ -498,19 +498,35 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   /* FIXME: should check the KEY_UNIT flag; need to adjust last_stop to
    * real start of data and segment_start to indexed time for key unit seek*/
   if (!gst_asf_demux_seek_index_lookup (demux, &packet, seek_time, &idx_time)) {
-    /* Hackety hack, this sucks. We just seek to an earlier position
-     *  and let the sinks throw away the stuff before the segment start */
-    if (flush && (accurate || keyunit_sync)) {
-      seek_time -= 5 * GST_SECOND;
-      if (seek_time < 0)
-        seek_time = 0;
+    /* First try to query our source to see if it can convert for us. This is
+       the case when our source is an mms stream, notice that in this case
+       gstmms will do a time based seek to get the byte offset, this is not a
+       problem as the seek to this offset needs to happen anway. */
+    gint64 offset;
+    GstFormat dest_format = GST_FORMAT_BYTES;
+
+    if (gst_pad_query_peer_convert (demux->sinkpad, GST_FORMAT_TIME, seek_time,
+            &dest_format, &offset) && dest_format == GST_FORMAT_BYTES) {
+      packet = (offset - demux->data_offset) / demux->packet_size;
+      GST_LOG_OBJECT (demux, "convert %" GST_TIME_FORMAT
+          " to bytes query result: %lld, data_ofset: %llu, packet_size: %u,"
+          " resulting packet: %u\n", GST_TIME_ARGS (seek_time), offset,
+          demux->data_offset, demux->packet_size, packet);
+    } else {
+      /* Hackety hack, this sucks. We just seek to an earlier position
+       *  and let the sinks throw away the stuff before the segment start */
+      if (flush && (accurate || keyunit_sync)) {
+        seek_time -= 5 * GST_SECOND;
+        if (seek_time < 0)
+          seek_time = 0;
+      }
+
+      packet = (guint) gst_util_uint64_scale (demux->num_packets,
+          seek_time, demux->play_time);
+
+      if (packet > demux->num_packets)
+        packet = demux->num_packets;
     }
-
-    packet = (guint) gst_util_uint64_scale (demux->num_packets,
-        seek_time, demux->play_time);
-
-    if (packet > demux->num_packets)
-      packet = demux->num_packets;
   } else {
     if (keyunit_sync) {
       GST_DEBUG_OBJECT (demux, "key unit seek, adjust seek_time = %"

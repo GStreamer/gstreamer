@@ -1,3 +1,15 @@
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by:
+	  Hans de Goede <j dot w dot r dot degoede at hhs dot nl>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_handle_seek_event):
+	If we don't have the position to seek to in our index first try
+	to convert from TIME to BYTES upstream and only if that fails
+	too use the old hack to simply seek to an earlier position
+	and let the sink drop everything before segment start.
+	Partially fixes bug #469930.
+
 2008-02-21  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
