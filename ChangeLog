@@ -1,5 +1,12 @@
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/mythtv/gstmythtvsrc.c: (gst_mythtv_src_create):
+	Don't allocate and copy the data to a new place but instead
+	put the data from gmyth (which we own) into the buffers that
+	are passed downstream.
+
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/timidity/gstwildmidi.c:
 	If WILDMIDI_CFG is not defined, define it to the default
 	timidity configure file.

@@ -405,10 +405,8 @@ gst_mythtv_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   *outbuf = gst_buffer_new ();
   GST_BUFFER_SIZE (*outbuf) = buffer->len;
-  GST_BUFFER_MALLOCDATA (*outbuf) = g_malloc0 (GST_BUFFER_SIZE (*outbuf));
+  GST_BUFFER_MALLOCDATA (*outbuf) = buffer->data;
   GST_BUFFER_DATA (*outbuf) = GST_BUFFER_MALLOCDATA (*outbuf);
-  g_memmove (GST_BUFFER_DATA ((*outbuf)), buffer->data,
-      GST_BUFFER_SIZE (*outbuf));
   GST_BUFFER_OFFSET (*outbuf) = src->read_offset;
   GST_BUFFER_OFFSET_END (*outbuf) =
       src->read_offset + GST_BUFFER_SIZE (*outbuf);
@@ -416,7 +414,7 @@ gst_mythtv_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   src->read_offset += GST_BUFFER_SIZE (*outbuf);
   src->bytes_read += GST_BUFFER_SIZE (*outbuf);
 
-  g_byte_array_free (buffer, TRUE);
+  g_byte_array_free (buffer, FALSE);
 
   if (result == GMYTH_FILE_READ_NEXT_PROG_CHAIN) {
     GstPad *peer;
