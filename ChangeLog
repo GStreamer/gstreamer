@@ -1,3 +1,13 @@
+2008-02-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-quicktime.xml:
+	* docs/plugins/inspect/plugin-switch.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	  Remove docs for elements that have moved to other modules
+	  or been renamed.
+
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Wouter Cloetens <wouter at mind dot be>
