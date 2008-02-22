@@ -733,6 +733,7 @@ dnl *** nas ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NAS, true)
 AG_GST_CHECK_FEATURE(NAS, [nas plug-in], nassink, [
   HAVE_NAS="no"
+  AG_GST_CHECK_X
   if test "x$HAVE_X" = "xyes"; then
     save_cppflags=$CFLAGS
     CPPFLAGS="$CPPFLAGS $X_CFLAGS"

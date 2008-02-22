@@ -1,5 +1,11 @@
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* configure.ac:
+	Check for X for the nas plugin to make it possible to build it
+	again. Fixes bug #517895.
+
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/Makefile.am:
 	Ignore some more elements for the states unit test, like
 	dfbvideosink which produces a segfault. Fixes bug #517854.
