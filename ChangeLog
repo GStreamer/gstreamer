@@ -1,5 +1,12 @@
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/Makefile.am:
+	Ignore gconfaudiosrc for the states unit test too. It will fallback
+	to alsasrc if the gconf settings can't be read and not everybody has
+	alsa.
+
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_src_query),
 	(gst_wavpack_parse_create_src_pad):
 	* ext/wavpack/gstwavpackparse.h:
