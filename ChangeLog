@@ -1,5 +1,17 @@
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Based on a patch by:
+	  Hans de Goede <j dot w dot r dot degoede at hhs dot nl>
+
+	* configure.ac:
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	Remove hack to work with mjpegtools 1.9.0rc3 and above and instead
+	use mjpeg_loglev_t() for getting the log levels. Check for this
+	function in configure.ac as the pkg-config file doesn't tell us
+	which release candidate we have. Fixes bug #517896.
+
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	Check for X for the nas plugin to make it possible to build it
 	again. Fixes bug #517895.

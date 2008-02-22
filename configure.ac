@@ -678,6 +678,11 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
 	    mpeg2enc_headers_ok=yes
           fi
 
+	  if test "x$have_mpjegtools_19x" = "xyes"; then
+	    AG_GST_CHECK_LIBHEADER(MJPEGTOOLS_19rc3, mpeg2encpp, mjpeg_loglev_t, $MPEG2ENC_LIBS, mjpeg_logging.h,
+	      AC_DEFINE(GST_MJPEGTOOLS_19rc3, 1, [mjpegtools >= 1.9.3rc3 is used]))
+	  fi
+
           if test "x$mpeg2enc_headers_ok" = "xyes"; then
             HAVE_MPEG2ENC="yes"
           fi
