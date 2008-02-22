@@ -1,5 +1,17 @@
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Thiago Sousa Santos <thiagoss at lcc dot ufcg dot edu dot br>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3_channel_mode_get_type),
+	(mp3_type_frame_length_from_header), (gst_mp3parse_class_init),
+	(gst_mp3parse_reset), (gst_mp3parse_emit_frame),
+	(gst_mp3parse_chain):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	Post channel mode and CRC as tags. Fixes bug #504493.
+
+2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/dvdnav/dvdnavsrc.c: (gst_dvd_nav_src_finalize):
 	Correctly chain up to the parent's finalize function.
 

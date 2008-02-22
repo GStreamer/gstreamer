@@ -90,6 +90,8 @@ struct _GstMPEGAudioParse {
   guint64 bitrate_sum;
   guint   frame_count;
   guint   last_posted_bitrate;
+  gint    last_posted_crc;
+  guint   last_posted_channel_mode;
 
   /* Xing info */
   guint32 xing_flags;

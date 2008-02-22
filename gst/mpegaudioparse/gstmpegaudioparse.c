@@ -29,6 +29,16 @@
 GST_DEBUG_CATEGORY_STATIC (mp3parse_debug);
 #define GST_CAT_DEFAULT mp3parse_debug
 
+#define MP3_CHANNEL_MODE_UNKNOWN -1
+#define MP3_CHANNEL_MODE_STEREO 0
+#define MP3_CHANNEL_MODE_JOINT_STEREO 1
+#define MP3_CHANNEL_MODE_DUAL_CHANNEL 2
+#define MP3_CHANNEL_MODE_MONO 3
+
+#define CRC_UNKNOWN -1
+#define CRC_PROTECTED 0
+#define CRC_NOT_PROTECTED 1
+
 #define GST_READ_UINT24_BE(p) (p[2] | (p[1] << 8) | (p[0] << 16))
 
 /* elementfactory information */
@@ -100,9 +110,30 @@ mp3parse_total_bytes (GstMPEGAudioParse * mp3parse, gint64 * total);
 static gboolean
 mp3parse_total_time (GstMPEGAudioParse * mp3parse, GstClockTime * total);
 
-/*static guint gst_mp3parse_signals[LAST_SIGNAL] = { 0 }; */
+/* static guint gst_mp3parse_signals[LAST_SIGNAL] = { 0 }; */
 
 GST_BOILERPLATE (GstMPEGAudioParse, gst_mp3parse, GstElement, GST_TYPE_ELEMENT);
+
+#define GST_TYPE_MP3_CHANNEL_MODE (gst_mp3_channel_mode_get_type())
+G_GNUC_UNUSED static GType
+gst_mp3_channel_mode_get_type (void)
+{
+  static GType mp3_channel_mode_type = 0;
+  static GEnumValue mp3_channel_mode[] = {
+    {MP3_CHANNEL_MODE_UNKNOWN, "Unknown", "unknown"},
+    {MP3_CHANNEL_MODE_MONO, "Mono", "mono"},
+    {MP3_CHANNEL_MODE_DUAL_CHANNEL, "Dual Channel", "dual-channel"},
+    {MP3_CHANNEL_MODE_JOINT_STEREO, "Joint Stereo", "joint-stereo"},
+    {MP3_CHANNEL_MODE_STEREO, "Stereo", "stereo"},
+    {0, NULL, NULL},
+  };
+
+  if (!mp3_channel_mode_type) {
+    mp3_channel_mode_type =
+        g_enum_register_static ("GstMp3ChannelMode", mp3_channel_mode);
+  }
+  return mp3_channel_mode_type;
+}
 
 static const guint mp3types_bitrates[2][3][16] = {
   {
@@ -125,11 +156,13 @@ static const guint mp3types_freqs[3][3] = { {44100, 48000, 32000},
 static inline guint
 mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
     guint * put_version, guint * put_layer, guint * put_channels,
-    guint * put_bitrate, guint * put_samplerate)
+    guint * put_bitrate, guint * put_samplerate, guint * put_mode,
+    guint * put_crc)
 {
   guint length;
-  gulong mode, samplerate, bitrate, layer, channels, padding;
+  gulong mode, samplerate, bitrate, layer, channels, padding, crc;
   gint lsf, mpg25;
+  GEnumValue *mode_enum;
 
   if (header & (1 << 20)) {
     lsf = (header & (1 << 19)) ? 0 : 1;
@@ -140,6 +173,8 @@ mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
   }
 
   layer = 4 - ((header >> 17) & 0x3);
+
+  crc = (header >> 16) & 0x1;
 
   bitrate = (header >> 12) & 0xF;
   bitrate = mp3types_bitrates[lsf][layer - 1][bitrate] * 1000;
@@ -167,10 +202,14 @@ mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
       break;
   }
 
+  mode_enum =
+      g_enum_get_value (g_type_class_ref (GST_TYPE_MP3_CHANNEL_MODE), mode);
+
   GST_DEBUG_OBJECT (mp3parse, "Calculated mp3 frame length of %u bytes",
       length);
   GST_DEBUG_OBJECT (mp3parse, "samplerate = %lu, bitrate = %lu, layer = %lu, "
-      "channels = %lu", samplerate, bitrate, layer, channels);
+      "channels = %lu, mode = %s", samplerate, bitrate, layer, channels,
+      mode_enum->value_nick);
 
   if (put_version)
     *put_version = lsf ? 2 : 1;
@@ -182,6 +221,10 @@ mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
     *put_bitrate = bitrate;
   if (put_samplerate)
     *put_samplerate = samplerate;
+  if (put_mode)
+    *put_mode = mode;
+  if (put_crc)
+    *put_crc = crc;
 
   return length;
 }
@@ -242,6 +285,15 @@ gst_mp3parse_class_init (GstMPEGAudioParseClass * klass)
           G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
 
   gstelement_class->change_state = gst_mp3parse_change_state;
+
+/* register tags */
+#define GST_TAG_CRC    "has-crc"
+#define GST_TAG_MODE     "channel-mode"
+
+  gst_tag_register (GST_TAG_CRC, GST_TAG_FLAG_META, G_TYPE_BOOLEAN,
+      "has crc", "Using CRC", NULL);
+  gst_tag_register (GST_TAG_MODE, GST_TAG_FLAG_ENCODED, G_TYPE_STRING,
+      "channel mode", "MPEG audio channel mode", NULL);
 }
 
 static void
@@ -267,6 +319,9 @@ gst_mp3parse_reset (GstMPEGAudioParse * mp3parse)
   mp3parse->last_posted_bitrate = 0;
   mp3parse->frame_count = 0;
   mp3parse->sent_codec_tag = FALSE;
+
+  mp3parse->last_posted_crc = CRC_UNKNOWN;
+  mp3parse->last_posted_channel_mode = MP3_CHANNEL_MODE_UNKNOWN;
 
   mp3parse->xing_flags = 0;
   mp3parse->xing_bitrate = 0;
@@ -503,12 +558,14 @@ mp3parse_seek_table_last_entry (GstMPEGAudioParse * mp3parse)
 
 /* Prepare a buffer of the indicated size, timestamp it and output */
 static GstFlowReturn
-gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
+gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
+    guint mode, guint crc)
 {
   GstBuffer *outbuf;
   guint bitrate;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime push_start;
+  GstTagList *taglist;
 
   outbuf = gst_adapter_take_buffer (mp3parse->adapter, size);
 
@@ -600,12 +657,49 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
   else
     bitrate = mp3parse->avg_bitrate;
 
+  /* we will create a taglist (if any of the parameters has changed)
+   * to add the tags that changed */
+  taglist = NULL;
   if ((mp3parse->last_posted_bitrate / 10000) != (bitrate / 10000)) {
-    GstTagList *taglist = gst_tag_list_new ();
-
+    taglist = gst_tag_list_new ();
     mp3parse->last_posted_bitrate = bitrate;
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
         mp3parse->last_posted_bitrate, NULL);
+  }
+
+  if (mp3parse->last_posted_crc != crc) {
+    gboolean using_crc;
+
+    if (!taglist) {
+      taglist = gst_tag_list_new ();
+    }
+    mp3parse->last_posted_crc = crc;
+    if (mp3parse->last_posted_crc == CRC_PROTECTED) {
+      using_crc = TRUE;
+    } else {
+      using_crc = FALSE;
+    }
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_CRC,
+        using_crc, NULL);
+  }
+
+  if (mp3parse->last_posted_channel_mode != mode) {
+    GEnumValue *mode_enum;
+
+    if (!taglist) {
+      taglist = gst_tag_list_new ();
+    }
+    mp3parse->last_posted_channel_mode = mode;
+
+    mode_enum = g_enum_get_value (g_type_class_ref (GST_TYPE_MP3_CHANNEL_MODE),
+        mp3parse->last_posted_channel_mode);
+
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_MODE,
+        mode_enum->value_nick, NULL);
+  }
+
+  /* if the taglist exists, we need to send it */
+  if (taglist) {
     gst_element_found_tags_for_pad (GST_ELEMENT (mp3parse),
         mp3parse->srcpad, taglist);
   }
@@ -1070,10 +1164,11 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
     header = GST_READ_UINT32_BE (data);
     /* if it's a valid header, go ahead and send off the frame */
     if (head_check (mp3parse, header)) {
-      guint bitrate = 0, layer = 0, rate = 0, channels = 0, version = 0;
+      guint bitrate = 0, layer = 0, rate = 0, channels = 0, version = 0, mode =
+          0, crc = 0;
 
       if (!(bpf = mp3_type_frame_length_from_header (mp3parse, header,
-                  &version, &layer, &channels, &bitrate, &rate)))
+                  &version, &layer, &channels, &bitrate, &rate, &mode, &crc)))
         goto header_error;
 
       /*************************************************************************
@@ -1179,7 +1274,7 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 
       if (!mp3parse->skip) {
         mp3parse->resyncing = FALSE;
-        flow = gst_mp3parse_emit_frame (mp3parse, bpf);
+        flow = gst_mp3parse_emit_frame (mp3parse, bpf, mode, crc);
       } else {
         GST_DEBUG_OBJECT (mp3parse, "skipping buffer of %d bytes", bpf);
         gst_adapter_flush (mp3parse->adapter, bpf);
