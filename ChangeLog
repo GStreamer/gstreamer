@@ -1,5 +1,12 @@
 2008-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	* ext/taglib/Makefile.am:
+	  Check for and define ERROR_CXXFLAGS and use them when building
+	  C++ code (#516509).
+
+2008-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/goom/gstgoom.c: (goom_debug), (plugin_init):
 	* gst/goom/plugin_info.c: (goom_debug), (GST_CAT_DEFAULT),
 	  (setOptimizedMethods):
