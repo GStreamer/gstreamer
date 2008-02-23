@@ -413,6 +413,9 @@ gst_gl_buffer_format_from_video_format (GstVideoFormat format)
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
       return GST_GL_BUFFER_FORMAT_PLANAR420;
+    default:
+      GST_WARNING ("GstVideoFormat %d not implemented", format);
+      /* fall through */
     case GST_VIDEO_FORMAT_UNKNOWN:
       return GST_GL_BUFFER_FORMAT_UNKNOWN;
   }
