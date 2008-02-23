@@ -423,6 +423,22 @@ GST_START_TEST (test_tmplayer_style4_with_bogus_lines)
 
 GST_END_TEST;
 
+GST_START_TEST (test_microdvd_with_italics)
+{
+  static SubParseInputChunk microdvd_italics[] = {
+    {
+          "{1}{1}25.000 movie info: XVID  608x256 25.0fps 699.0 MB|"
+          "/SubEdit b.4060(http://subedit.com.pl)/\n"
+          "{100}{200}/italics/|not italics\n",
+          4 * GST_SECOND, 8 * GST_SECOND,
+        "<span style=\"italic\">italics</span>\n" "<span>not italics</span>"}
+  };
+
+  test_microdvd_do_test (microdvd_italics, G_N_ELEMENTS (microdvd_italics));
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_microdvd_with_fps)
 {
   static SubParseInputChunk microdvd_input[] = {
@@ -558,6 +574,7 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_tmplayer_style4);
   tcase_add_test (tc_chain, test_tmplayer_style4_with_bogus_lines);
   tcase_add_test (tc_chain, test_microdvd_with_fps);
+  tcase_add_test (tc_chain, test_microdvd_with_italics);
   tcase_add_test (tc_chain, test_mpl2);
   tcase_add_test (tc_chain, test_subviewer);
   tcase_add_test (tc_chain, test_subviewer2);

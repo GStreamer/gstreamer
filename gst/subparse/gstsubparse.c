@@ -455,10 +455,22 @@ parse_mdvdsub (ParserState * state, const gchar * line)
     if (sscanf (line, "{s:%u}", &fontsize) == 1) {
       line = strchr (line, '}') + 1;
     }
+    /* forward slashes at beginning/end signify italics too */
+    if (g_str_has_prefix (line, "/")) {
+      italic = TRUE;
+      ++line;
+    }
     if ((line_split = strchr (line, '|')))
       line_chunk = g_markup_escape_text (line, line_split - line);
     else
       line_chunk = g_markup_escape_text (line, strlen (line));
+
+    /* Remove italics markers at end of line/stanza (CHECKME: are end slashes
+     * always at the end of a line or can they span multiple lines?) */
+    if (g_str_has_suffix (line_chunk, "/")) {
+      line_chunk[strlen (line_chunk) - 1] = '\0';
+    }
+
     markup = g_string_append (markup, "<span");
     if (italic)
       g_string_append (markup, " style=\"italic\"");

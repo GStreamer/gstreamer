@@ -1,3 +1,13 @@
+2008-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Based on patch by: Tomasz Sałaciński <tsalacinski gmail com>
+
+	* gst/subparse/gstsubparse.c: (parse_mdvdsub):
+	* tests/check/elements/subparse.c: (test_microdvd_with_italics),
+	  (subparse_suite):
+	  Forward slashes at the beginning and end of a line also signify
+	  italics (Fixes: #518162).
+
 2008-02-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/gst-plugins-base.supp:
