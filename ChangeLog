@@ -1,5 +1,14 @@
 2008-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/goom/gstgoom.c: (goom_debug), (plugin_init):
+	* gst/goom/plugin_info.c: (goom_debug), (GST_CAT_DEFAULT),
+	  (setOptimizedMethods):
+	  Call oil_init(), otherwise oil_get_cpu_flags() won't return
+	  anything useful. Export goom debug category so we can get
+	  rid of the VERBOSE define and the printfs.
+
+2008-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/goom/goomsl_heap.c: (align_it):
 	* gst/goom/plugin_info.c: (setOptimizedMethods):
 	  Compile fixes for x86-64.

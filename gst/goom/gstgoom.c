@@ -46,7 +46,9 @@
 #include <gst/video/video.h>
 #include "goom.h"
 
-GST_DEBUG_CATEGORY_STATIC (goom_debug);
+#include <liboil/liboil.h>
+
+GST_DEBUG_CATEGORY (goom_debug);
 #define GST_CAT_DEFAULT goom_debug
 
 /* elementfactory information */
@@ -153,8 +155,6 @@ gst_goom_class_init (GstGoomClass * klass)
   gobject_class->finalize = gst_goom_finalize;
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_goom_change_state);
-
-  GST_DEBUG_CATEGORY_INIT (goom_debug, "goom", 0, "goom visualisation element");
 }
 
 static void
@@ -593,6 +593,10 @@ gst_goom_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (goom_debug, "goom", 0, "goom visualisation element");
+
+  oil_init ();
+
   return gst_element_register (plugin, "goom", GST_RANK_NONE, GST_TYPE_GOOM);
 }
 

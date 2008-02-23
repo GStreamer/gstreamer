@@ -1,5 +1,7 @@
 #include "config.h"
 
+#include <gst/gst.h>
+
 #include "goom_plugin_info.h"
 #include "goom_fx.h"
 #include "default_scripts.h"
@@ -23,7 +25,9 @@
 #include <liboil/liboil.h>
 #include <liboil/liboilfunction.h>
 #include <liboil/liboilcpu.h>
-/* #define VERBOSE 1 */
+
+GST_DEBUG_CATEGORY_EXTERN (goom_debug);
+#define GST_CAT_DEFAULT goom_debug
 
 static void
 setOptimizedMethods (PluginInfo * p)
@@ -36,26 +40,22 @@ setOptimizedMethods (PluginInfo * p)
   p->methods.zoom_filter = zoom_filter_c;
 /*    p->methods.create_output_with_brightness = create_output_with_brightness;*/
 
+  GST_INFO ("liboil cpu flags: 0x%08x", cpuFlavour);
+
 /* FIXME: what about HAVE_CPU_X86_64 ? */
 #ifdef HAVE_CPU_I386
-  printf ("have an x86\n");
+  GST_INFO ("have an x86");
   if (cpuFlavour & OIL_IMPL_FLAG_MMXEXT) {
-#ifdef VERBOSE
-    printf ("Extended MMX detected. Using the fastest methods !\n");
-#endif
+    GST_INFO ("Extended MMX detected. Using the fastest methods!");
     p->methods.draw_line = draw_line_mmx;
     p->methods.zoom_filter = zoom_filter_xmmx;
   } else if (cpuFlavour & OIL_IMPL_FLAG_MMX) {
-#ifdef VERBOSE
-    printf ("MMX detected. Using fast methods !\n");
-#endif
+    GST_INFO ("MMX detected. Using fast methods!");
     p->methods.draw_line = draw_line_mmx;
     p->methods.zoom_filter = zoom_filter_mmx;
+  } else {
+    GST_INFO ("Too bad ! No SIMD optimization available for your CPU.");
   }
-#ifdef VERBOSE
-  else
-    printf ("Too bad ! No SIMD optimization available for your CPU.\n");
-#endif
 #endif /* HAVE_CPU_I386 */
 
 #ifdef HAVE_CPU_PPC64
