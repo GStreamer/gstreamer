@@ -51,7 +51,7 @@ GST_DEBUG_CATEGORY_STATIC (goom_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_goom_details =
-GST_ELEMENT_DETAILS ("GOOM: what a GOOM! 2k1",
+GST_ELEMENT_DETAILS ("GOOM: what a GOOM! 2k1 edition",
     "Visualization",
     "Takes frames of data and outputs video frames using the GOOM 2k1 filter",
     "Wim Taymans <wim@fluendo.com>");
@@ -122,7 +122,7 @@ gst_goom_get_type (void)
       (GInstanceInitFunc) gst_goom_init,
     };
 
-    type = g_type_register_static (GST_TYPE_ELEMENT, "GstGoom", &info, 0);
+    type = g_type_register_static (GST_TYPE_ELEMENT, "GstGoom2k1", &info, 0);
   }
   return type;
 }
