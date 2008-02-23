@@ -7,8 +7,10 @@ libgstmpeg2enc_la_SOURCES = \
 	gstmpeg2encstreamwriter.cc \
 	gstmpeg2encpicturereader.cc
 
-libgstmpeg2enc_la_CXXFLAGS = $(MPEG2ENC_CFLAGS) $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) -Wno-non-virtual-dtor
-libgstmpeg2enc_la_LIBADD = $(MPEG2ENC_LIBS) $(GST_PLUGINS_BASE_LIBS) $(GST_LIBS)
+libgstmpeg2enc_la_CXXFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CXXFLAGS) $(MPEG2ENC_CFLAGS)
+libgstmpeg2enc_la_LIBADD = \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_LIBS) $(MPEG2ENC_LIBS)
 libgstmpeg2enc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \

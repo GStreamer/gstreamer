@@ -1,3 +1,12 @@
+2008-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* ext/mpeg2enc/Makefile.am:
+	* ext/soundtouch/Makefile.am:
+	* gst/modplug/Makefile.am:
+          Check for and define ERROR_CXXFLAGS and GST_CXXFLAGS and use them
+          when building C++ code.
+
 2008-02-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c:
