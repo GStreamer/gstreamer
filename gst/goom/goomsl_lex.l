@@ -35,7 +35,7 @@ ID       [a-zA-Z_@&][a-zA-Z0-9_\.]*
 <C_COMMENT,LINE_COMMENT>.      { /* eat up comment */ }
 
 <INITIAL>"#RST_LINE#"             { currentGoomSL->num_lines = 0; }
-<INITIAL>"#FILE ".*"#"            { currentGoomSL->num_lines = 0; printf("%s\n", yytext); }
+<INITIAL>"#FILE ".*"#"            { currentGoomSL->num_lines = 0; /* printf("%s\n", yytext); */ }
 <INITIAL>"#"[^\n]*                { /* ignore preprocessor lines */ }
 
 <INITIAL>"/*"                { BEGIN C_COMMENT; }

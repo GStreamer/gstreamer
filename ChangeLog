@@ -1,5 +1,19 @@
 2008-02-23  Bastien Nocera  <hadess@hadess.net>
 
+	* gst/goom/Makefile.am: Don't compile lex or yacc outputs
+	with warnings, but add other CFLAGS
+
+	* gst/goom/goomsl.c (gsl_instr_set_namespace),
+	(gsl_instr_add_param), (iflow_execute), (gsl_enternamespace),
+	(calculate_labels), (gsl_read_file):
+	* gst/goom/goomsl_lex.l:
+	* gst/goom/goomsl_yacc.y:
+	* gst/goom/plugin_info.c: Remove a few live printf, and
+	fprintf, replace exit() calls with g_assert_not_reached()
+	if it not optimal for a library
+
+2008-02-23  Bastien Nocera  <hadess@hadess.net>
+
 	* gst/goom/Makefile.am: Remove the warnings being disabled,
 	fix linkage on x86, spotted by Sebastian Dröge
 	<slomo@circular-chaos.org>

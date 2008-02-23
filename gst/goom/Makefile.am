@@ -68,9 +68,11 @@ noinst_LTLIBRARIES = libgstgoomconfigparse.la
 # uncomment these lines to dist the generated sources
 #BUILT_SOURCES = goomsl_yacc.h goomsl_yacc.c goomsl_lex.c
 #libgstgoomconfigparse_la_SOURCES = goomsl_lex.c goomsl_yacc.c goomsl_yacc.h
+#libgstgoomconfigparse_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GOOM_FILTER_CFLAGS) $(LIBOIL_CFLAGS) $(ARCH_CFLAGS)
 
 # uncomment these lines to _NOT_ dist the generated sources
 nodist_libgstgoomconfigparse_la_SOURCES = goomsl_lex.c goomsl_yacc.c
+libgstgoomconfigparse_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GOOM_FILTER_CFLAGS) $(LIBOIL_CFLAGS) $(ARCH_CFLAGS)
 CLEANFILES=goomsl_yacc.c goomsl_lex.c goomsl_yacc.h
 
 EXTRA_DIST += goomsl_yacc.y goomsl_lex.l

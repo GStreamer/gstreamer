@@ -7,6 +7,7 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
+    #include <glib.h>
     #include "goomsl.h"
     #include "goomsl_private.h"
 
@@ -232,9 +233,12 @@
     {
       GSL_StructField *field = gsl_new_struct_field(name, gsl_get_struct_id(type));
       if (field->type < 0) {
+        g_assert_not_reached ();
+#if 0
         fprintf(stderr, "ERROR: Line %d, Unknown structure: '%s'\n",
                 currentGoomSL->num_lines, type);
         exit(1);
+#endif
       }
       return field;
     }
@@ -279,9 +283,11 @@
               space = goom_heap_malloc_with_alignment(currentGoomSL->data_heap,
                   sizeof(int), sizeof(int));
             break;
+#if 0
             case -1:
               fprintf(stderr, "What the fuck!\n");
               exit(1);
+#endif
             default: /* On a un struct_id */
               space = goom_heap_malloc_with_alignment_prefixed(currentGoomSL->data_heap,
                   currentGoomSL->gsl_struct[type]->size, STRUCT_ALIGNMENT, sizeof(int));
@@ -498,9 +504,12 @@
                     gsl_int_decl_global(stmp);
                 }
                 else if (type == -1) {
+                    g_assert_not_reached ();
+#if 0
                     fprintf(stderr, "ERROR: Line %d, Could not find variable '%s'\n",
                             expr->line_number, expr->unode.opr.op[0]->str);
                     exit(1);
+#endif
                 }
                 else { /* type is a struct_id */
                     sprintf(stmp,"_s_tmp_%i",allocateTemp());
@@ -576,30 +585,42 @@
         else if (expr->type == CONST_FLOAT_NODE)
           zeroConst = new_constFloat("0.0", currentGoomSL->num_lines);
         else if (expr->type == CONST_PTR_NODE) {
+          g_assert_not_reached ();
+#if 0
           fprintf(stderr, "ERROR: Line %d, Could not negate const pointer.\n",
             currentGoomSL->num_lines);
           exit(1);
+#endif
         }
         else {
             int type = gsl_type_of_var(expr->vnamespace, expr->str);
             if (type == INSTR_FLOAT)
               zeroConst = new_constFloat("0.0", currentGoomSL->num_lines);
             else if (type == INSTR_PTR) {
+              g_assert_not_reached ();
+#if 0
               fprintf(stderr, "ERROR: Line %d, Could not negate pointer.\n",
                 currentGoomSL->num_lines);
               exit(1);
+#endif
             }
             else if (type == INSTR_INT)
               zeroConst = new_constInt("0", currentGoomSL->num_lines);
             else if (type == -1) {
+                g_assert_not_reached ();
+#if 0
                 fprintf(stderr, "ERROR: Line %d, Could not find variable '%s'\n",
                         expr->line_number, expr->unode.opr.op[0]->str);
                 exit(1);
+#endif
             }
             else { /* type is a struct_id */
+                g_assert_not_reached ();
+#if 0
                 fprintf(stderr, "ERROR: Line %d, Could not negate struct '%s'\n",
                         expr->line_number, expr->str);
                 exit(1);
+#endif
             }
         }
         return new_expr2("sub", OPR_SUB, zeroConst, expr);
@@ -628,7 +649,7 @@
         NodeType *node = new_expr1(name, OPR_CALL_EXPR, call);
         node->vnamespace = gsl_find_namespace(name);
         if (node->vnamespace == NULL)
-          fprintf(stderr, "ERROR: Line %d, No return type for: '%s'\n", currentGoomSL->num_lines, name);
+          /* fprintf(stderr, "ERROR: Line %d, No return type for: '%s'\n", currentGoomSL->num_lines, name); */
         return node;
     }
     static void precommit_call_expr(NodeType *call) {
@@ -648,9 +669,12 @@
           gsl_int_decl_global(stmp);
         }
         else if (type == -1) {
+          g_assert_not_reached ();
+#if 0
           fprintf(stderr, "ERROR: Line %d, Could not find variable '%s'\n",
                   call->line_number, call->str);
           exit(1);
+#endif
         }
         else { /* type is a struct_id */
           sprintf(stmp,"_s_tmp_%i",allocateTemp());
@@ -936,9 +960,12 @@
             fval = goom_hash_get(currentGoomSL->functions, name);
         }
         if (!fval) {
+            g_assert_not_reached ();
+#if 0
             fprintf(stderr, "ERROR: Line %d, Could not find function %s\n", currentGoomSL->num_lines, name);
             exit(1);
             return NULL;
+#endif
         }
         else {
             ExternalFunctionStruct *gef = (ExternalFunctionStruct*)fval->ptr;
@@ -1158,8 +1185,11 @@
         NodeType *node = nodeNew(str, VAR_NODE, line_number); /* {{{ */
         node->vnamespace = gsl_find_namespace(str);
         if (node->vnamespace == 0) {
+            g_assert_not_reached ();
+#if 0
             fprintf(stderr, "ERROR: Line %d, Variable not found: '%s'\n", line_number, str);
             exit(1);
+#endif
         }
         return node;
     } /* }}} */
@@ -1398,8 +1428,11 @@ opt_nl: '\n' | ;
 
 void yyerror(char *str)
 { /* {{{ */
+    g_assert_not_reached ();
+#if 0
     fprintf(stderr, "ERROR: Line %d, %s\n", currentGoomSL->num_lines, str);
     currentGoomSL->compilationOK = 0;
     exit(1);
+#endif
 } /* }}} */
 
