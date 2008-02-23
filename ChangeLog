@@ -1,3 +1,10 @@
+2008-02-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/gstdvbsrc.c:
+	Add initial support for multiproto driver (not yet merged into
+	v4l-dvb mainline yet).
+	Only works for DVB-S not DVB-S2, DVB-T, DVB-C or other.
+
 2008-02-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/inspect/plugin-alsaspdif.xml:
