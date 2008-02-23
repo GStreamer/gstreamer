@@ -15,117 +15,49 @@
 
 .data
 
-chaine:
-	.string	"pos = %d\n\0"
-	.long 0x0
-		
 thezero:
 	.long 0x00000000
 	.long 0x00000000
 
+
 .text
 
 .globl mmx_zoom		;// name of the function to call by C program
-/* .extern coeffs		;// the transformation buffer */
+.extern coeffs		;// the transformation buffer
 .extern expix1,expix2 ;// the source and destination buffer
 .extern mmx_zoom_size, zoom_width ;// size of the buffers
-
-.extern brutS,brutD,buffratio,precalCoef,prevX,prevY
-
-#define PERTEMASK 15
-/* faire : a / sqrtperte <=> a >> PERTEDEC*/
-#define PERTEDEC 4
 
 .align 16
 mmx_zoom:
 
-		pushl %ebp
-		movl %esp,%ebp
-		subl $12,%esp
-
-		movl prevX,%eax
-		decl %eax
-		sarl $4,%eax
-		movl %eax,-4(%ebp)
-
-		movl prevY,%eax
-		decl %eax
-		sarl $4,%eax
-		movl %eax,-8(%ebp)
+push %ebp
+push %esp
 
 ;// initialisation du mm7 à zero
-		movq (thezero), %mm7
+movq (thezero), %mm7
 
+movl zoom_width, %eax
+movl $4, %ebx
+mull %ebx
+movl %eax, %ebp
+
+movl (coeffs), %eax
+movl (expix1), %edx
+movl (expix2), %ebx
+movl $10, %edi
 movl mmx_zoom_size, %ecx
-decl %ecx
 
 .while:
 	;// esi <- nouvelle position
-	movl brutS, %eax
-	leal (%eax, %ecx, 8),%eax
-
-	movl (%eax),%edx /* = brutS.px (brutSmypos) */
-	movl 4(%eax),%eax /* = brutS.py */
-
-	movl brutD,%ebx
-	leal (%ebx, %ecx, 8),%ebx
-	movl (%ebx),%esi
-	subl %edx, %esi
-	imull buffratio,%esi
-	sarl $16,%esi
-	addl %edx,%esi /* esi = px */
-
-	/* eax contient deja brutS.py = le nouveau brutSmypos*/
-	/* ebx pointe sur brutD[myPos] */
-	movl 4(%ebx),%edi
-	subl %eax,%edi
-	imull buffratio,%edi
-	sarl $16,%edi
-	addl %eax,%edi /* edi = py */
-
-/*		pushl %eax
-		pushl %ebx*/
-/*		popl %ebx
-		popl %eax*/
-		
-	movl %esi,%eax
-	andl $15,%eax /* eax = coefh */
-	movl %edi,%ebx
-	andl $15,%ebx /* ebx = coefv */
-
-	leal 0(,%ebx,4),%ebx
-	sall $6,%eax
-	addl %ebx,%eax
-	movl $precalCoef,%ebx
-/*	movd (%eax,%ebx),%mm6*/ /* mm6 = coeffs */
-
-	cmpl -8(%ebp),%edi
-	jge .then1
-	cmpl -4(%ebp),%esi
-	jge .then1
-
-	sarl $4,%esi
-	sarl $4,%edi
-	imull zoom_width,%edi
-	leal (%esi,%edi),%esi
-	jmp .finsi1
-
-.then1:
-	movl $0,%esi
-.finsi1:
-
-	/** apres ce calcul, %esi = pos, %mm6 = coeffs **/
-/*	pushl %esi
-	pushl $chaine
-	call printf
-	addl $8,%esp*/
-
-	movl expix1,%eax
+	movl (%eax), %esi
+	leal (%edx, %esi), %esi
 
 	;// recuperation des deux premiers pixels dans mm0 et mm1
-/*	movq (%eax,%esi,4), %mm0		/* b1-v1-r1-a1-b2-v2-r2-a2 */
-	movq %mm0, %mm1				/* b1-v1-r1-a1-b2-v2-r2-a2 */
+	movq (%esi), %mm0		/* b1-v1-r1-a1-b2-v2-r2-a2 */
+	movq %mm0, %mm1			/* b1-v1-r1-a1-b2-v2-r2-a2 */
 
+	;// recuperation des 4 coefficients
+	movd 4(%eax), %mm6		/* ??-??-??-??-c4-c3-c2-c1 */
 	;// depackage du premier pixel
 	punpcklbw %mm7, %mm0	/* 00-b2-00-v2-00-r2-00-a2 */
 
@@ -155,11 +87,8 @@ decl %ecx
 	punpcklbw %mm7, %mm4	/* 00-c3-00-c3-00-c3-00-c3 */
 	punpckhbw %mm7, %mm5	/* 00-c4-00-c4-00-c4-00-c4 */
 
-	/* ajouter la longueur de ligne a esi */
-	addl prevX,%esi
-		
 	;// recuperation des 2 derniers pixels
-/*	movq (%eax,%esi,4), %mm1*/
+	movq (%esi,%ebp), %mm1
 	movq %mm1, %mm2
 	
 	;// depackage des pixels
@@ -179,22 +108,23 @@ decl %ecx
 	packuswb %mm7, %mm0
 	
 	;// passage au suivant
-
-	;// enregistrement du resultat
-	movl expix2,%eax
-/*	movd %mm0,(%eax,%ecx,4)*/
+	leal 8(%eax), %eax
 
 	decl %ecx
+	;// enregistrement du resultat
+	movd %mm0, (%ebx)
+	leal 4(%ebx), %ebx
+
 	;// test de fin du tantque
 	cmpl $0, %ecx				;// 400x300
 
-	jz .fin_while
-	jmp .while
+jz .fin_while
+jmp .while
 
 .fin_while:
-	emms
+emms
 
-	movl %ebp,%esp
-	popl %ebp
+pop %esp
+pop %ebp
 
-	ret                  ;//The End
+ret                  ;//The End

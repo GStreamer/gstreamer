@@ -30,7 +30,7 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch -v audiotestsrc ! goom ! ffmpegcolorspace ! xvimagesink
+ * gst-launch -v audiotestsrc ! goom2k1 ! ffmpegcolorspace ! xvimagesink
  * </programlisting>
  * </para>
  * </refsect2>
@@ -44,16 +44,16 @@
 #include <gst/gst.h>
 #include "gstgoom.h"
 #include <gst/video/video.h>
-#include "goom.h"
+#include "goom_core.h"
 
 GST_DEBUG_CATEGORY_STATIC (goom_debug);
 #define GST_CAT_DEFAULT goom_debug
 
 /* elementfactory information */
 static const GstElementDetails gst_goom_details =
-GST_ELEMENT_DETAILS ("GOOM: what a GOOM!",
+GST_ELEMENT_DETAILS ("GOOM: what a GOOM! 2k1",
     "Visualization",
-    "Takes frames of data and outputs video frames using the GOOM filter",
+    "Takes frames of data and outputs video frames using the GOOM 2k1 filter",
     "Wim Taymans <wim@fluendo.com>");
 
 /* signals and args */
@@ -187,7 +187,7 @@ gst_goom_init (GstGoom * goom)
   goom->rate = 0;
   goom->duration = 0;
 
-  goom->plugin = goom_init (goom->width, goom->height);
+  goom_init (&(goom->goomdata), goom->width, goom->height);
 }
 
 static void
@@ -195,7 +195,7 @@ gst_goom_finalize (GObject * object)
 {
   GstGoom *goom = GST_GOOM (object);
 
-  goom_close (goom->plugin);
+  goom_close (&(goom->goomdata));
 
   g_object_unref (goom->adapter);
 
@@ -250,7 +250,7 @@ gst_goom_src_setcaps (GstPad * pad, GstCaps * caps)
           &goom->fps_d))
     return FALSE;
 
-  goom_set_resolution (goom->plugin, goom->width, goom->height);
+  goom_set_resolution (&(goom->goomdata), goom->width, goom->height);
 
   /* size of the output buffer in bytes, depth is always 4 bytes */
   goom->outsize = goom->width * goom->height * 4;
@@ -523,8 +523,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
     GST_BUFFER_DURATION (outbuf) = goom->duration;
     GST_BUFFER_SIZE (outbuf) = goom->outsize;
 
-    out_frame = (guchar *) goom_update (goom->plugin, goom->datain, 0, 0,
-        NULL, NULL);
+    out_frame = (guchar *) goom_update (&(goom->goomdata), goom->datain);
     memcpy (GST_BUFFER_DATA (outbuf), out_frame, goom->outsize);
 
     GST_DEBUG ("Pushing frame with time=%" GST_TIME_FORMAT ", duration=%"
@@ -593,11 +592,11 @@ gst_goom_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "goom", GST_RANK_NONE, GST_TYPE_GOOM);
+  return gst_element_register (plugin, "goom2k1", GST_RANK_NONE, GST_TYPE_GOOM);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "goom",
-    "GOOM visualization filter",
+    "goom2k1",
+    "GOOM 2k1 visualization filter",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

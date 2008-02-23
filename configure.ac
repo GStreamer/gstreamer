@@ -94,6 +94,7 @@ GST_PLUGINS_ALL="\
 		icydemux \
 		flx \
 		goom \
+		goom2k1 \
 		law \
 		level \
 		matroska \
@@ -328,6 +329,11 @@ AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 
 dnl used in examples
 AG_GST_DEFAULT_ELEMENTS
+
+dnl Check for Yacc and Lex for the goom plugin
+AG_GST_BISON_CHECK
+AG_GST_FLEX_CHECK
+AM_PROG_AS
 
 dnl *** sys plug-ins ***
 
@@ -1019,6 +1025,7 @@ gst/equalizer/Makefile
 gst/id3demux/Makefile
 gst/icydemux/Makefile
 gst/goom/Makefile
+gst/goom2k1/Makefile
 gst/law/Makefile
 gst/level/Makefile
 gst/matroska/Makefile

@@ -1,3 +1,15 @@
+2008-02-23  Bastien Nocera  <hadess@hadess.net>
+
+	* configure.ac: Add checks for Flex/Yacc/Bison and other
+	furry animals, for the new goom 2k4 based plugin
+
+	* gst/goom/*: Update to use goom 2k4, uses liboil to detect
+	CPU optimisations (not working yet), move the old plugin to...
+
+	* gst/goom2k1/*: ... here, in case somebody is sick enough
+
+	Fixes #515073
+
 2008-02-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_setup_streams):
