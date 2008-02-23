@@ -1,3 +1,8 @@
+2008-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/README:
+	  Add a few lines about the new 'check-inspected-versions' target.
+
 2008-02-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/gst/gstevent.c:
