@@ -115,6 +115,8 @@ tentacle_fx_create (void)
   fx.init = tentacle_fx_init;
   fx.apply = tentacle_fx_apply;
   fx.free = tentacle_fx_free;
+  fx.fx_data = NULL;
+  fx.params = NULL;
   return fx;
 }
 
@@ -312,6 +314,7 @@ tentacle_update (PluginInfo * goomInfo, Pixel * buf, Pixel * back, int W, int H,
         float val =
             (float) (ShiftRight (data[0][goom_irand (goomInfo->gRandom, 511)],
                 10)) * rapport;
+
         fx_data->vals[tmp2] = val;
       }
 

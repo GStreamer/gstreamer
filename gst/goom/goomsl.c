@@ -1020,6 +1020,7 @@ calculate_labels (InstructionFlow * iflow)
   }
 }                               /* }}} */
 
+#ifdef USE_JITC_X86
 static int
 powerOfTwo (int i)
 {
@@ -1030,6 +1031,7 @@ powerOfTwo (int i)
       return b;
   return 0;
 }
+#endif
 
 /* Cree un flow d'instruction optimise */
 static void

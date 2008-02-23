@@ -810,6 +810,8 @@ zoomFilterVisualFXWrapper_create (void)
   fx.init = zoomFilterVisualFXWrapper_init;
   fx.free = zoomFilterVisualFXWrapper_free;
   fx.apply = zoomFilterVisualFXWrapper_apply;
+  fx.params = NULL;
+  fx.fx_data = NULL;
   return fx;
 }
 

@@ -11,6 +11,7 @@ ARCH_FILES = $(PPC_FILES)
 endif
 if HAVE_CPU_I386
 ARCH_FILES = $(MMX_FILES)
+ARCH_CFLAGS = -DHAVE_MMX
 endif
 
 libgstgoom_la_SOURCES =						\
@@ -35,8 +36,7 @@ libgstgoom_la_SOURCES =						\
 	goom_tools.h goom_tools.h goom_config.h			\
 	$(ARCH_FILES)
 
-ERROR_CFLAGS=
-libgstgoom_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GOOM_FILTER_CFLAGS) $(LIBOIL_CFLAGS)
+libgstgoom_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GOOM_FILTER_CFLAGS) $(LIBOIL_CFLAGS) $(ARCH_CFLAGS)
 libgstgoom_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) $(LIBOIL_LIBS) libgstgoomconfigparse.la
 libgstgoom_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 

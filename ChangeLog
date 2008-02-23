@@ -1,5 +1,22 @@
 2008-02-23  Bastien Nocera  <hadess@hadess.net>
 
+	* gst/goom/Makefile.am: Remove the warnings being disabled,
+	fix linkage on x86, spotted by Sebastian Dröge
+	<slomo@circular-chaos.org>
+
+	* gst/goom/convolve_fx.c (convolve_init),
+	(create_output_with_brightness), (convolve_apply):
+	* gst/goom/filters.c (zoomFilterVisualFXWrapper_create):
+	* gst/goom/goomsl.c:
+	* gst/goom/ifs.c (ifs_update), (ifs_visualfx_create):
+	* gst/goom/plugin_info.c:
+	* gst/goom/tentacle3d.c (tentacle_fx_create):
+	Fix warnings, and disable the motifs in the convolve_fx
+	plugin (they were causing warnings, and they were just
+	"Goom" in funny letterring)
+
+2008-02-23  Bastien Nocera  <hadess@hadess.net>
+
 	* configure.ac: Add checks for Flex/Yacc/Bison and other
 	furry animals, for the new goom 2k4 based plugin
 

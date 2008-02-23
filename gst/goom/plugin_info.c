@@ -22,6 +22,7 @@
 
 #include <liboil/liboil.h>
 #include <liboil/liboilfunction.h>
+#include <liboil/liboilcpu.h>
 #define VERBOSE 1
 
 static void

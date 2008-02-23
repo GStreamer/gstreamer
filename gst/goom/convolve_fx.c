@@ -15,8 +15,10 @@
 
 typedef char Motif[CONV_MOTIF_W][CONV_MOTIF_W];
 
+#if 0
 #include "motif_goom1.h"
 #include "motif_goom2.h"
+#endif
 
 #define NB_THETA 512
 
@@ -67,6 +69,7 @@ compute_tables (VisualFX * _this, PluginInfo * info)
   }
 }
 
+#if 0
 static void
 set_motif (ConvData * data, Motif motif)
 {
@@ -77,7 +80,7 @@ set_motif (ConvData * data, Motif motif)
       data->conv_motif[i][j] =
           motif[CONV_MOTIF_W - i - 1][CONV_MOTIF_W - j - 1];
 }
-
+#endif
 static void
 convolve_init (VisualFX * _this, PluginInfo * info)
 {
@@ -110,7 +113,9 @@ convolve_init (VisualFX * _this, PluginInfo * info)
   data->theta = 0;
   data->ftheta = 0.0;
   data->visibility = 1.0;
+#if 0
   set_motif (data, CONV_MOTIF2);
+#endif
   data->inverse_motif = 0;
 
   _this->params = &data->params;
@@ -209,11 +214,12 @@ create_output_with_brightness (VisualFX * _this, Pixel * src, Pixel * dest,
       xtex += c;
       ytex -= s;
 
-      iff2 =
-          ifftab[data->
+      iff2 = 0;
+#if 0
+      ifftab[data->
           conv_motif[(ytex >> 16) & CONV_MOTIF_WMASK][(xtex >> 16) &
               CONV_MOTIF_WMASK]];
-
+#endif
 #define sat(a) ((a)>0xFF?0xFF:(a))
       f0 = src[i].val;
       f1 = ((f0 >> R_OFFSET) & 0xFF) * iff2 >> 8;
@@ -293,6 +299,7 @@ convolve_apply (VisualFX * _this, Pixel * src, Pixel * dest, PluginInfo * info)
     data->factor_p.change_listener (&data->factor_p);
   }
 
+#if 0
   if (data->visibility < 0.01) {
     switch (goom_irand (info->gRandom, 300)) {
       case 1:
@@ -305,7 +312,7 @@ convolve_apply (VisualFX * _this, Pixel * src, Pixel * dest, PluginInfo * info)
         break;
     }
   }
-
+#endif
   if ((ff > 0.98f) && (ff < 1.02f))
     memcpy (dest, src, info->screen.size * sizeof (Pixel));
   else

@@ -482,7 +482,7 @@ ifs_update (PluginInfo * goomInfo, Pixel * data, Pixel * back, int increment,
   static int cycle = 0;
   int cycle10;
 
-  int nbpt;
+  int nbpt = 0;
   IFSPoint *points;
   int i;
 
@@ -772,5 +772,7 @@ ifs_visualfx_create (void)
   vfx.init = ifs_vfx_init;
   vfx.free = ifs_vfx_free;
   vfx.apply = ifs_vfx_apply;
+  vfx.fx_data = NULL;
+  vfx.params = NULL;
   return vfx;
 }
