@@ -1,3 +1,9 @@
+2008-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/goom/goomsl_heap.c: (align_it):
+	* gst/goom/plugin_info.c: (setOptimizedMethods):
+	  Compile fixes for x86-64.
+
 2008-02-23  Bastien Nocera  <hadess@hadess.net>
 
 	* gst/goom/Makefile.am: Don't compile lex or yacc outputs

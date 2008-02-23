@@ -36,11 +36,12 @@ setOptimizedMethods (PluginInfo * p)
   p->methods.zoom_filter = zoom_filter_c;
 /*    p->methods.create_output_with_brightness = create_output_with_brightness;*/
 
+/* FIXME: what about HAVE_CPU_X86_64 ? */
 #ifdef HAVE_CPU_I386
   printf ("have an x86\n");
   if (cpuFlavour & OIL_IMPL_FLAG_MMXEXT) {
 #ifdef VERBOSE
-    printf ("Extented MMX detected. Using the fastest methods !\n");
+    printf ("Extended MMX detected. Using the fastest methods !\n");
 #endif
     p->methods.draw_line = draw_line_mmx;
     p->methods.zoom_filter = zoom_filter_xmmx;
@@ -74,6 +75,7 @@ setOptimizedMethods (PluginInfo * p)
   }
 #endif /* HAVE_CPU_PPC */
 
+  cpuFlavour = 0;               /* trick compiler into thinking variable is used */
 }
 
 void
