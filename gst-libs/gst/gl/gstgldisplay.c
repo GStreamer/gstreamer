@@ -737,7 +737,8 @@ gst_gl_display_draw_image (GstGLDisplay * display, GstVideoFormat type,
 
     ret = glXGetSyncValuesOML (display->display, display->window,
         &ust, &mst, &sbc);
-    GST_ERROR ("sync values %d %lld %lld %lld", ret, ust, mst, sbc);
+    GST_ERROR ("sync values %d %" G_GINT64_FORMAT " %" G_GINT64_FORMAT
+        " %" G_GINT64_FORMAT, ret, ust, mst, sbc);
   }
 #endif
 
@@ -816,7 +817,8 @@ gst_gl_display_draw_texture (GstGLDisplay * display, GLuint texture,
 
     ret = glXGetSyncValuesOML (display->display, display->window,
         &ust, &mst, &sbc);
-    GST_ERROR ("sync values %d %lld %lld %lld", ret, ust, mst, sbc);
+    GST_ERROR ("sync values %d %" G_GINT64_FORMAT " %" G_GINT64_FORMAT
+        " %" G_GINT64_FORMAT, ret, ust, mst, sbc);
   }
 #endif
 
