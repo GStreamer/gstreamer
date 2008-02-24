@@ -1,5 +1,11 @@
 2008-02-24  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/Makefile.am:
+	Only disable the ext/timidity directory if both, wildmidi
+	_and_ timidity are not available.
+
+2008-02-24  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Emilio Pozuelo Monfort <pochu at ubuntu dot com>
 
 	* ext/Makefile.am:

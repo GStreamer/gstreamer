@@ -198,14 +198,16 @@ endif
 
 if USE_TIMIDITY
 TIMIDITY_DIR=timidity
-else
-TIMIDITY_DIR=
 endif
 
 if USE_WILDMIDI
 TIMIDITY_DIR=timidity
-else
+endif
+
+if !USE_WILDMIDI
+if !USE_TIMIDITY
 TIMIDITY_DIR=
+endif
 endif
 
 # if USE_POLYP
