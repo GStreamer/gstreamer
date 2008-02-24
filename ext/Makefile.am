@@ -202,6 +202,12 @@ else
 TIMIDITY_DIR=
 endif
 
+if USE_WILDMIDI
+TIMIDITY_DIR=timidity
+else
+TIMIDITY_DIR=
+endif
+
 # if USE_POLYP
 # POLYP_DIR=polyp
 # else
