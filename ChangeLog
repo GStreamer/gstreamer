@@ -1,3 +1,10 @@
+2008-02-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* ext/timidity/gsttimidity.c: (plugin_init):
+	* ext/timidity/gstwildmidi.c: (plugin_init):
+	Remove midi typefinders and require base CVS as they moved there.
+
 2008-02-24  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/Makefile.am:

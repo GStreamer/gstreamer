@@ -799,38 +799,11 @@ gst_timidity_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-/*
- * http://jedi.ks.uiuc.edu/~johns/links/music/midifile.html
- */
-static void
-gst_timidity_typefind (GstTypeFind * tf, gpointer _data)
-{
-  guint8 *data = gst_type_find_peek (tf, 0, 4);
-
-  if (data && data[0] == 'M' && data[1] == 'T' && data[2] == 'h'
-      && data[3] == 'd') {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
-        gst_caps_new_simple ("audio/midi", NULL));
-  }
-}
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  static gchar *exts[] = { "mid", "midi", NULL };
-  GstCaps *caps;
-
   GST_DEBUG_CATEGORY_INIT (gst_timidity_debug, "timidity",
       0, "Timidity plugin");
-
-  caps = gst_caps_new_simple ("audio/midi", NULL);
-  if (!gst_type_find_register (plugin, "audio/midi", GST_RANK_PRIMARY,
-          gst_timidity_typefind, exts, caps, NULL, NULL)) {
-    GST_WARNING ("can't register typefind");
-    gst_caps_unref (caps);
-    return FALSE;
-  }
-  gst_caps_unref (caps);
 
   return gst_element_register (plugin, "timidity",
       GST_RANK_PRIMARY, GST_TYPE_TIMIDITY);
