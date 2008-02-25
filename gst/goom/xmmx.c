@@ -170,8 +170,8 @@ zoom_filter_xmmx (int prevX, int prevY,
     movq_r2r (mm3, mm5);        /* c2-c2-c2-c2-c1-c1-c1-c1 */
 
     /*^en parrallele^ *//* depackage du 2ieme pixel */
-                                        /*^ */ punpckhbw_r2r (mm7, mm1);
-                                        /* 00-b1-00-v1-00-r1-00-a1 */
+    /*^ */ punpckhbw_r2r (mm7, mm1);
+    /* 00-b1-00-v1-00-r1-00-a1 */
 
     punpcklbw_r2r (mm7, mm5);   /* 00-c1-00-c1-00-c1-00-c1 */
     punpckhbw_r2r (mm7, mm3);   /* 00-c2-00-c2-00-c2-00-c2 */
@@ -197,7 +197,7 @@ zoom_filter_xmmx (int prevX, int prevY,
     pmullw_r2r (mm4, mm1);
     pmullw_r2r (mm5, mm2);
 
-    /* ajout des valeurs obtenues à la valeur finale */
+    /* ajout des valeurs obtenues ï¿½ la valeur finale */
     paddw_r2r (mm1, mm0);
     paddw_r2r (mm2, mm0);
 
@@ -209,7 +209,8 @@ zoom_filter_xmmx (int prevX, int prevY,
 
     ++loop;
   }
-  __asm__ __volatile__ ("femms\n");
+  /* this was femms, which is AMD 3dnow */
+  __asm__ __volatile__ ("emms\n");
 }
 
 #define DRAWMETHOD_PLUS_XMMX(_out,_backbuf,_col) \
@@ -358,7 +359,8 @@ draw_line_xmmx (Pixel * data, int x1, int y1, int x2, int y2, int col,
     }
   }
 end_of_line:
-  __asm__ __volatile__ ("femms\n");
+  /* this was femms, which is AMD 3dnow */
+  __asm__ __volatile__ ("emms\n");
 }
 
 #endif
