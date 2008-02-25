@@ -1,6 +1,13 @@
 2008-02-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	Comment smoke typefinder for now. The smokedec plugin needs one
+	frame per buffer but we have no parser yet, thus it simply crashes
+	in most situations.
+
+2008-02-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
 	Add typefinder for the smoke video codec. Copied from the jpeg plugin.
 
 2008-02-25  Sebastian Dröge  <slomo@circular-chaos.org>
