@@ -1,5 +1,10 @@
 2008-02-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	Add typefinder for the smoke video codec. Copied from the jpeg plugin.
+
+2008-02-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/typefind/gsttypefindfunctions.c: (mid_type_find),
 	(plugin_init):
 	Add midi typefinder, copied from the timidity plugin.
