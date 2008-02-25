@@ -1,3 +1,8 @@
+2008-02-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstfilter.c:
+	  Improve documentation of gst_filter_run(). Fixes #518627.
+
 2008-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/README:

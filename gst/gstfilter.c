@@ -51,7 +51,14 @@
  * prepended to the list of results returned.  If @first is true,
  * the search is halted after the first result is found.
  *
- * Returns: the list of results
+ * Since gst_filter_run() knows nothing about the type of @data, no
+ * reference will be taken (if @data refers to an object) and no copy of
+ * @data wil be made in any other way when prepending @data to the list of
+ * results.
+ *
+ * Returns: the list of results. Free with g_list_free() when no longer needed
+ * (the data contained in the list is a flat copy and does need to be
+ * unreferenced or freed).
  */
 GList *
 gst_filter_run (const GList * list, GstFilterFunc func, gboolean first,
