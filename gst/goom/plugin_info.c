@@ -47,7 +47,7 @@ setOptimizedMethods (PluginInfo * p)
   GST_INFO ("have an x86");
   if (cpuFlavour & OIL_IMPL_FLAG_MMXEXT) {
     GST_INFO ("Extended MMX detected. Using the fastest methods!");
-    p->methods.draw_line = draw_line_mmx;
+    p->methods.draw_line = draw_line_xmmx;
     p->methods.zoom_filter = zoom_filter_xmmx;
   } else if (cpuFlavour & OIL_IMPL_FLAG_MMX) {
     GST_INFO ("MMX detected. Using fast methods!");

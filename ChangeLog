@@ -1,5 +1,11 @@
 2008-02-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/goom/plugin_info.c: (setOptimizedMethods):
+	Use extended MMX for draw_line() too if available, not only
+	normal MMX.
+
+2008-02-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/jpeg/gstjpeg.c: (plugin_init):
 	Remove (commented out) smoke typefinder. This is in base now.
 
