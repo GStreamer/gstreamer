@@ -1,3 +1,9 @@
+2008-02-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/typefind/gsttypefindfunctions.c: (mid_type_find),
+	(plugin_init):
+	Add midi typefinder, copied from the timidity plugin.
+
 2008-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Based on patch by: Tomasz Sałaciński <tsalacinski gmail com>

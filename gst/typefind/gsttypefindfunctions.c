@@ -336,6 +336,22 @@ html_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** audio/midi ***/
+
+static GstStaticCaps mid_caps = GST_STATIC_CAPS ("audio/midi");
+
+#define MID_CAPS gst_static_caps_get(&mid_caps)
+static void
+mid_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 4);
+
+  /* http://jedi.ks.uiuc.edu/~johns/links/music/midifile.html */
+  if (data && data[0] == 'M' && data[1] == 'T' && data[2] == 'h'
+      && data[3] == 'd')
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MID_CAPS);
+}
+
 /*** video/x-fli ***/
 
 static GstStaticCaps flx_caps = GST_STATIC_CAPS ("video/x-fli");
@@ -2944,6 +2960,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *nuv_exts[] = { "nuv", NULL };
   static gchar *vivo_exts[] = { "viv", NULL };
   static gchar *nsf_exts[] = { "nsf", NULL };
+  static gchar *mid_exts[] = { "mid", "midi", NULL };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
@@ -2966,6 +2983,8 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-vcd", GST_RANK_PRIMARY,
       cdxa_exts, "\000\377\377\377\377\377\377\377\377\377\377\000", 12,
       GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER (plugin, "audio/midi", GST_RANK_PRIMARY, mid_type_find,
+      mid_exts, MID_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-fli", GST_RANK_MARGINAL, flx_type_find,
       flx_exts, FLX_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-id3v2", GST_RANK_PRIMARY + 103,
