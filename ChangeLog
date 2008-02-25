@@ -1,3 +1,17 @@
+2008-02-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/selector/gstinputselector.c:
+	* gst/selector/gstinputselector.h:
+	  Added "select-all" property to make it work like aggregator in 0.8.
+
+	* gst/selector/gstoutputselector.c:
+	  Fix resend-latest behavoiur.
+	  
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/selector.c:
+	  Add unit tests for selector.
+
 2008-02-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

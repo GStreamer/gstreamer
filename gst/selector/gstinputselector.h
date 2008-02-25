@@ -54,6 +54,9 @@ struct _GstInputSelector {
   gboolean blocked;
   gboolean pending_stop;
   GstSegment pending_stop_segment;
+
+  /* select all mode, send data from all input pads forward */
+  gboolean select_all;
 };
 
 struct _GstInputSelectorClass {
