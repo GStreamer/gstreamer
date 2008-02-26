@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <glib.h>
 #include "goomsl.h"
 #include "goomsl_private.h"
 #include "goomsl_yacc.h"
@@ -465,7 +466,6 @@ gsl_instr_validate (Instruction * _this)
     default:
       return VALIDATE_TODO;
   }
-  return VALIDATE_ERROR;
 }                               /* }}} */
 
   /*************/

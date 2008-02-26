@@ -26,3 +26,7 @@
 #define gint16 signed short int
 #define gint32 signed int
 #endif
+
+#if defined (BUILD_MMX) && defined (HAVE_GCC_ASM)
+#define HAVE_MMX
+#endif

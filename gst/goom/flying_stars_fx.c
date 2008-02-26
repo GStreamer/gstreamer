@@ -200,8 +200,7 @@ fs_sound_event_occured (VisualFX * _this, PluginInfo * info)
   FSData *data = (FSData *) _this->fx_data;
   int i;
 
-  int max =
-      (int) ((1.0f + info->sound.goomPower) * goom_irand (info->gRandom,
+  int max = (int) ((1.0f + info->sound.goomPower) * goom_irand (info->gRandom,
           150)) + 100;
   float radius =
       (1.0f + info->sound.goomPower) * (float) (goom_irand (info->gRandom,
@@ -332,10 +331,10 @@ VisualFX
 flying_star_create (void)
 {
   VisualFX vfx = {
-  init:fs_init,
-  free:fs_free,
-  apply:fs_apply,
-  fx_data:0
+    fs_init,
+    fs_free,
+    fs_apply,
+    NULL
   };
   return vfx;
 }

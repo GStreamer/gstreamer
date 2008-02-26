@@ -470,7 +470,7 @@ static void
 ifs_update (PluginInfo * goomInfo, Pixel * data, Pixel * back, int increment,
     IfsData * fx_data)
 {
-  static int couleur = 0xc0c0c0c0;
+  static unsigned int couleur = 0xc0c0c0c0;
   static int v[4] = { 2, 4, 3, 2 };
   static int col[4] = { 2, 4, 3, 2 };
 
@@ -486,7 +486,7 @@ ifs_update (PluginInfo * goomInfo, Pixel * data, Pixel * back, int increment,
   IFSPoint *points;
   int i;
 
-  int couleursl = couleur;
+  unsigned int couleursl = couleur;
   int width = goomInfo->screen.width;
   int height = goomInfo->screen.height;
 

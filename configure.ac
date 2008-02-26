@@ -337,6 +337,13 @@ dnl Check for Yacc and Lex for the goom plugin
 AG_GST_BISON_CHECK
 AG_GST_FLEX_CHECK
 AM_PROG_AS
+dnl Check if we have GCC inline-asm
+AS_GCC_INLINE_ASSEMBLY([HAVE_GCC_ASM=yes], [HAVE_GCC_ASM=no])
+if test x$HAVE_GCC_ASM = xyes ; then
+  AC_DEFINE(HAVE_GCC_ASM, 1,
+    [Define if compiler supports gcc inline assembly])
+fi
+AM_CONDITIONAL(HAVE_GCC_ASM, test "x$HAVE_GCC_ASM" = "xyes")
 
 dnl *** sys plug-ins ***
 

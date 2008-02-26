@@ -1,3 +1,8 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "goom_config.h"
 
 #ifdef HAVE_MMX
 
@@ -362,5 +367,10 @@ end_of_line:
   /* this was femms, which is AMD 3dnow */
   __asm__ __volatile__ ("emms\n");
 }
-
+#else
+int
+xmmx_supported (void)
+{
+  return (0);
+}
 #endif

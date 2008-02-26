@@ -1,3 +1,24 @@
+2008-02-26  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	Detect and indicate if GCC inline assembly syntax is
+	available.
+
+	* gst/goom/Makefile.am:
+	* gst/goom/convolve_fx.c:
+	* gst/goom/flying_stars_fx.c:
+	* gst/goom/goom_config.h:
+	* gst/goom/goom_core.c:
+	* gst/goom/goomsl.c:
+	* gst/goom/ifs.c:
+	* gst/goom/mmx.c:
+	* gst/goom/plugin_info.c:
+	* gst/goom/xmmx.c:
+	Fix various GCC-isms, and only build the inline assembly
+	with compilers that support GCC inline assembly.
+
+	Fix a couple of other warnings shown with Forte.
+
 2008-02-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/goom/xmmx.c:

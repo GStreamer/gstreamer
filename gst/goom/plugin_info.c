@@ -1,6 +1,10 @@
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <gst/gst.h>
+
+#include "goom_config.h"
 
 #include "goom_plugin_info.h"
 #include "goom_fx.h"
@@ -18,9 +22,9 @@
 #endif /* HAVE_CPU_PPC64 || HAVE_CPU_PPC */
 
 
-#ifdef HAVE_CPU_I386
+#ifdef HAVE_MMX
 #include "mmx.h"
-#endif /* HAVE_CPU_I386 */
+#endif /* HAVE_MMX */
 
 #include <liboil/liboil.h>
 #include <liboil/liboilfunction.h>
@@ -44,6 +48,7 @@ setOptimizedMethods (PluginInfo * p)
 
 /* FIXME: what about HAVE_CPU_X86_64 ? */
 #ifdef HAVE_CPU_I386
+#ifdef HAVE_MMX
   GST_INFO ("have an x86");
   if (cpuFlavour & OIL_IMPL_FLAG_MMXEXT) {
     GST_INFO ("Extended MMX detected. Using the fastest methods!");
@@ -56,6 +61,7 @@ setOptimizedMethods (PluginInfo * p)
   } else {
     GST_INFO ("Too bad ! No SIMD optimization available for your CPU.");
   }
+#endif
 #endif /* HAVE_CPU_I386 */
 
 #ifdef HAVE_CPU_PPC64

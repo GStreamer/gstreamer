@@ -11,7 +11,7 @@ ARCH_FILES = $(PPC_FILES)
 endif
 if HAVE_CPU_I386
 ARCH_FILES = $(MMX_FILES)
-ARCH_CFLAGS = -DHAVE_MMX
+ARCH_CFLAGS = -DBUILD_MMX
 endif
 
 libgstgoom_la_SOURCES =						\

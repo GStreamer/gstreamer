@@ -1,6 +1,10 @@
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
-#if defined (HAVE_CPU_I386) || defined (HAVE_CPU_X86_64)
+#include "goom_config.h"
+
+#ifdef HAVE_MMX
 
 #define BUFFPOINTNB 16
 #define BUFFPOINTMASK 0xffff
@@ -252,5 +256,10 @@ end_of_line:
   emms ();
   /* __asm__ __volatile__ ("emms"); */
 }
-
-#endif /* HAVE_CPU_I386 || HAVE_CPU_X86_64 */
+#else
+int
+mmx_supported (void)
+{
+  return (0);
+}
+#endif /* HAVE_MMX */

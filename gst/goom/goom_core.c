@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <inttypes.h>
 
 #include "goom.h"
@@ -721,8 +722,7 @@ goom_update (PluginInfo * goomInfo, gint16 data[2][512],
     goomInfo->update.lineMode--;
     if (goomInfo->update.lineMode == -1)
       goomInfo->update.lineMode = 0;
-  } else
-      if ((goomInfo->cycle % 80 == 0)
+  } else if ((goomInfo->cycle % 80 == 0)
       && (goom_irand (goomInfo->gRandom, 5) == 0) && goomInfo->update.lineMode)
     goomInfo->update.lineMode--;
 

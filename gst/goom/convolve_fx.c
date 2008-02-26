@@ -340,10 +340,10 @@ VisualFX
 convolve_create (void)
 {
   VisualFX vfx = {
-  init:convolve_init,
-  free:convolve_free,
-  apply:convolve_apply,
-  fx_data:0
+    convolve_init,
+    convolve_free,
+    convolve_apply,
+    NULL
   };
   return vfx;
 }
