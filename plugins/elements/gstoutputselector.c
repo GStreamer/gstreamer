@@ -210,6 +210,7 @@ gst_output_selector_set_property (GObject * object, guint prop_id,
             g_value_get_string (value));
         break;
       }
+      GST_LOG ("Activating pad %s", g_value_get_string (value));
       if (next_pad != sel->active_srcpad) {
         /* switch to new srcpad in next chain run */
         if (sel->pending_srcpad != NULL) {
@@ -219,6 +220,10 @@ gst_output_selector_set_property (GObject * object, guint prop_id,
         sel->pending_srcpad = next_pad;
       } else {
         GST_INFO ("pad already active");
+        if (sel->pending_srcpad != NULL) {
+          gst_object_unref (sel->pending_srcpad);
+          sel->pending_srcpad = NULL;
+        }
         gst_object_unref (next_pad);
       }
       break;
