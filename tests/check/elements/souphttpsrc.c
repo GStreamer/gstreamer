@@ -32,6 +32,7 @@
 
 static int http_port = 0, https_port = 0;
 gboolean redirect = TRUE;
+static const char **cookies = NULL;
 
 static int run_server (int *http_port, int *https_port);
 
@@ -80,6 +81,8 @@ run_test (const char *format, ...)
   g_free (url);
 
   g_object_set (src, "automatic-redirect", redirect, NULL);
+  if (cookies != NULL)
+    g_object_set (src, "cookies", cookies, NULL);
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
   g_signal_connect (sink, "preroll-handoff", G_CALLBACK (handoff_cb), &buf);
 
@@ -185,6 +188,19 @@ GST_START_TEST (test_https)
 
 GST_END_TEST;
 
+GST_START_TEST (test_cookies)
+{
+  static const char *biscotti[] = { "delacre=yummie", "koekje=lu", NULL };
+  int rc;
+
+  cookies = biscotti;
+  rc = run_test ("http://127.0.0.1:%d/", http_port);
+  cookies = NULL;
+  fail_unless (rc == 0);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_icy_stream)
 {
   GstElement *pipe, *src, *sink;
@@ -276,6 +292,7 @@ souphttpsrc_suite (void)
   tcase_add_test (tc_chain, test_redirect_no);
   tcase_add_test (tc_chain, test_not_found);
   tcase_add_test (tc_chain, test_forbidden);
+  tcase_add_test (tc_chain, test_cookies);
   tcase_add_test (tc_chain, test_icy_stream);
 
   return s;
