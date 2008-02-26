@@ -1,3 +1,8 @@
+2008-02-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/selector/gstoutputselector.c:
+	  Fix changing to same pad twice before a chain call.	  
+
 2008-02-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Daniel Fischer <dan at f3c dot com>
