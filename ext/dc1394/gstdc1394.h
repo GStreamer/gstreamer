@@ -63,6 +63,7 @@ struct _GstDc1394 {
   gint camnum; 
   gint bufsize; 
 
+  dc1394_t * dc1394;
   dc1394camera_t * camera; 
 
   GstCaps *caps;

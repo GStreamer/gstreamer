@@ -1,5 +1,16 @@
 2008-02-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Daniel Fischer <dan at f3c dot com>
+
+	* configure.ac:
+	* ext/dc1394/gstdc1394.c: (gst_dc1394_change_state),
+	(gst_dc1394_get_cam_caps), (gst_dc1394_open_cam_with_best_caps):
+	* ext/dc1394/gstdc1394.h:
+	Add support for libdc1394 2.0.0 and above and require this version
+	now. Fixes bug #514964.
+
+2008-02-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Wouter Cloetens <wouter at mind dot be>
 
 	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_class_init),

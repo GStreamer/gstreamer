@@ -421,6 +421,7 @@ gst_dc1394_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       GST_LOG_OBJECT (src, "State change null to ready");
+      src->dc1394 = dc1394_new ();
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LOG_OBJECT (src, "State ready to paused");
@@ -468,7 +469,7 @@ gst_dc1394_change_state (GstElement * element, GstStateChange transition)
       if (src->camera && !gst_dc1394_change_camera_transmission (src, FALSE)) {
 
         if (src->camera) {
-          dc1394_free_camera (src->camera);
+          dc1394_camera_free (src->camera);
         }
         src->camera = NULL;
 
@@ -484,9 +485,14 @@ gst_dc1394_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_LOG_OBJECT (src, "State change ready to null");
       if (src->camera) {
-        dc1394_free_camera (src->camera);
+        dc1394_camera_free (src->camera);
       }
       src->camera = NULL;
+
+      if (src->dc1394) {
+        dc1394_free (src->dc1394);
+      }
+      src->dc1394 = NULL;
 
       if (src->caps) {
         gst_caps_unref (src->caps);
@@ -838,9 +844,8 @@ gst_dc1394_get_cam_caps (GstDc1394 * src)
 {
 
   dc1394camera_t *camera = NULL;
-  dc1394camera_t **cameras = NULL;
+  dc1394camera_list_t *cameras = NULL;
   dc1394error_t camerr;
-  guint numCameras;
   gint i, j;
   dc1394video_modes_t modes;
   dc1394framerates_t framerates;
@@ -848,42 +853,33 @@ gst_dc1394_get_cam_caps (GstDc1394 * src)
 
   gcaps = gst_caps_new_empty ();
 
-  camerr = dc1394_find_cameras (&cameras, &numCameras);
+  camerr = dc1394_camera_enumerate (src->dc1394, &cameras);
 
-  if (camerr != DC1394_SUCCESS) {
-    if (camerr == DC1394_NO_CAMERA) {
-      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("There were no cameras"),
-          ("There were no cameras"));
-    } else {
-      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-          ("Can't find cameras error : %d", camerr),
-          ("Can't find cameras error : %d", camerr));
-    }
+  if (camerr != DC1394_SUCCESS || cameras == NULL) {
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+        ("Can't find cameras error : %d", camerr),
+        ("Can't find cameras error : %d", camerr));
     goto error;
   }
 
-  if (src->camnum > (numCameras - 1)) {
+  if (cameras->num == 0) {
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("There were no cameras"),
+        ("There were no cameras"));
+    goto error;
+  }
+
+  if (src->camnum > (cameras->num - 1)) {
     GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Invalid camera number"),
         ("Invalid camera number %d", src->camnum));
-
-    for (i = 0; i < numCameras; i++) {
-      if (i != src->camnum) {
-        dc1394_free_camera (cameras[i]);
-      }
-    }
     goto error;
   }
 
-  camera = cameras[src->camnum];
+  camera =
+      dc1394_camera_new_unit (src->dc1394, cameras->ids[src->camnum].guid,
+      cameras->ids[src->camnum].unit);
 
-  // free the other cameras
-  for (i = 0; i < numCameras; i++) {
-    if (i != src->camnum) {
-      dc1394_free_camera (cameras[i]);
-    }
-  }
-
-  free (cameras);
+  dc1394_camera_free_list (cameras);
+  cameras = NULL;
 
   camerr = dc1394_video_get_supported_modes (camera, &modes);
   if (camerr != DC1394_SUCCESS) {
@@ -897,7 +893,7 @@ gst_dc1394_get_cam_caps (GstDc1394 * src)
 
     if (m < DC1394_VIDEO_MODE_EXIF) {
 
-      GstStructure *gs = gst_structure_empty_new ("");
+      GstStructure *gs = gst_structure_empty_new ("video");
 
       gst_structure_set (gs, "vmode", G_TYPE_INT, m, NULL);
 
@@ -916,7 +912,7 @@ gst_dc1394_get_cam_caps (GstDc1394 * src)
     } else {
       // FORMAT 7
       guint maxx, maxy;
-      GstStructure *gs = gst_structure_empty_new ("");
+      GstStructure *gs = gst_structure_empty_new ("video");
       dc1394color_codings_t colormodes;
       guint xunit, yunit;
 
@@ -972,7 +968,7 @@ gst_dc1394_get_cam_caps (GstDc1394 * src)
   }
 
   if (camera) {
-    dc1394_free_camera (camera);
+    dc1394_camera_free (camera);
   }
 
   return gcaps;
@@ -983,8 +979,13 @@ error:
     gst_caps_unref (gcaps);
   }
 
+  if (cameras) {
+    dc1394_camera_free_list (cameras);
+    cameras = NULL;
+  }
+
   if (camera) {
-    dc1394_free_camera (camera);
+    dc1394_camera_free (camera);
     camera = NULL;
   }
 
@@ -1023,24 +1024,22 @@ gst_dc1394_framerate_frac_to_const (gint num, gint denom)
 static gboolean
 gst_dc1394_open_cam_with_best_caps (GstDc1394 * src)
 {
-  dc1394camera_t **cameras = NULL;
-  guint numCameras;
-  gint i;
+  dc1394camera_list_t *cameras = NULL;
   gint err;
   int framerateconst;
 
   GST_LOG_OBJECT (src, "Opening the camera!!!");
 
 
-  if (dc1394_find_cameras (&cameras, &numCameras) != DC1394_SUCCESS) {
+  if (dc1394_camera_enumerate (src->dc1394, &cameras) != DC1394_SUCCESS) {
     GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Can't find cameras"),
         ("Can't find cameras"));
     goto error;
   }
 
-  GST_LOG_OBJECT (src, "Found  %d  cameras", numCameras);
+  GST_LOG_OBJECT (src, "Found  %d  cameras", cameras->num);
 
-  if (src->camnum > (numCameras - 1)) {
+  if (src->camnum > (cameras->num - 1)) {
     GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Invalid camera number"),
         ("Invalid camera number"));
     goto error;
@@ -1048,15 +1047,12 @@ gst_dc1394_open_cam_with_best_caps (GstDc1394 * src)
 
   GST_LOG_OBJECT (src, "Opening camera : %d", src->camnum);
 
-  src->camera = cameras[src->camnum];
+  src->camera =
+      dc1394_camera_new_unit (src->dc1394, cameras->ids[src->camnum].guid,
+      cameras->ids[src->camnum].unit);
 
-  // free the other cameras
-  for (i = 0; i < numCameras; i++) {
-    if (i != src->camnum)
-      dc1394_free_camera (cameras[i]);
-  }
-
-  free (cameras);
+  dc1394_camera_free_list (cameras);
+  cameras = NULL;
 
   // figure out mode
   framerateconst = gst_dc1394_framerate_frac_to_const (src->rate_numerator,
@@ -1121,7 +1117,7 @@ gst_dc1394_open_cam_with_best_caps (GstDc1394 * src)
           "Trying to cleanup the iso_channels_and_bandwidth and retrying");
 
       // try to cleanup the bandwidth and retry 
-      err = dc1394_cleanup_iso_channels_and_bandwidth (src->camera);
+      err = dc1394_iso_release_all (src->camera);
       if (err != DC1394_SUCCESS) {
         GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
             ("Could not cleanup bandwidth"), ("Could not cleanup bandwidth"));
@@ -1152,7 +1148,7 @@ gst_dc1394_open_cam_with_best_caps (GstDc1394 * src)
 error:
 
   if (src->camera) {
-    dc1394_free_camera (src->camera);
+    dc1394_camera_free (src->camera);
     src->camera = NULL;
   }
 
