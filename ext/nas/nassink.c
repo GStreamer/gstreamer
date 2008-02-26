@@ -287,9 +287,9 @@ gst_nas_sink_set_property (GObject * object, guint prop_id,
       g_free (nassink->host);
       nassink->host = g_value_dup_string (value);
       if (nassink->host == NULL)
-        nassink->host = g_strdup (getenv ("AUDIOSERVER"));
+        nassink->host = g_strdup (g_getenv ("AUDIOSERVER"));
       if (nassink->host == NULL)
-        nassink->host = g_strdup (getenv ("DISPLAY"));
+        nassink->host = g_strdup (g_getenv ("DISPLAY"));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
