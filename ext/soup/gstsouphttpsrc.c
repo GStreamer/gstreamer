@@ -117,6 +117,7 @@ enum
   PROP_USER_AGENT,
   PROP_AUTOMATIC_REDIRECT,
   PROP_PROXY,
+  PROP_COOKIES,
   PROP_IRADIO_MODE,
   PROP_IRADIO_NAME,
   PROP_IRADIO_GENRE,
@@ -240,6 +241,9 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
       PROP_PROXY,
       g_param_spec_string ("proxy", "Proxy",
           "HTTP proxy server URI", "", G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class,
+      PROP_COOKIES, g_param_spec_boxed ("cookies", "Cookies",
+          "HTTP request cookies", G_TYPE_STRV, G_PARAM_READWRITE));
 
   /* icecast stuff */
   g_object_class_install_property (gobject_class,
@@ -291,6 +295,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src, GstSoupHTTPSrcClass * g_class)
   src->location = NULL;
   src->automatic_redirect = TRUE;
   src->user_agent = g_strdup (DEFAULT_USER_AGENT);
+  src->cookies = NULL;
   src->icy_caps = NULL;
   src->iradio_mode = FALSE;
   src->iradio_name = NULL;
@@ -328,6 +333,7 @@ gst_soup_http_src_dispose (GObject * gobject)
     soup_uri_free (src->proxy);
     src->proxy = NULL;
   }
+  g_strfreev (src->cookies);
   g_free (src->iradio_name);
   src->iradio_name = NULL;
   g_free (src->iradio_genre);
@@ -397,6 +403,10 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_COOKIES:
+      g_strfreev (src->cookies);
+      src->cookies = g_strdupv (g_value_get_boxed (value));
+      break;
   }
 done:
   return;
@@ -427,6 +437,9 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
         g_value_set_string (value, proxy);
         free (proxy);
       }
+      break;
+    case PROP_COOKIES:
+      g_value_set_boxed (value, g_strdupv (src->cookies));
       break;
     case PROP_IRADIO_MODE:
       g_value_set_boolean (value, src->iradio_mode);
@@ -859,6 +872,14 @@ gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     if (src->iradio_mode) {
       soup_message_headers_append (src->msg->request_headers, "icy-metadata",
           "1");
+    }
+    if (src->cookies) {
+      gchar **cookie;
+
+      for (cookie = src->cookies; *cookie != NULL; cookie++) {
+        soup_message_headers_append (src->msg->request_headers, "Cookie",
+            *cookie);
+      }
     }
 
     g_signal_connect (src->msg, "got_headers",

@@ -1,3 +1,17 @@
+2008-02-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Wouter Cloetens <wouter at mind dot be>
+
+	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_class_init),
+	(gst_soup_http_src_init), (gst_soup_http_src_dispose),
+	(gst_soup_http_src_set_property), (gst_soup_http_src_get_property),
+	(gst_soup_http_src_create):
+	* ext/soup/gstsouphttpsrc.h:
+	* tests/check/elements/souphttpsrc.c: (run_test), (GST_START_TEST),
+	(souphttpsrc_suite):
+	Add support for specifying a list of cookies to be passed in
+	the HTTP request. Fixes bug #518722.
+
 2008-02-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/selector/gstinputselector.c:
