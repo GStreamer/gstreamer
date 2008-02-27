@@ -59,6 +59,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstNetClientClock GstNetClientClock;
 typedef struct _GstNetClientClockClass GstNetClientClockClass;
+typedef struct _GstNetClientClockPrivate GstNetClientClockPrivate;
 
 /**
  * GstNetClientClock:
@@ -74,11 +75,8 @@ struct _GstNetClientClock {
   gint port;
 
   /*< private >*/
-  /* the size of _gst_reserved1 and sock must equal three ints since this used
-   * to be int sock and int control_sock[2] */
-  int _gst_reserved1;
-  GstPollFD sock;
-  GstPoll *fdset;
+  int sock;
+  int control_sock[2];
 
   GstClockTime current_timeout;
 
@@ -87,6 +85,8 @@ struct _GstNetClientClock {
   GThread *thread;
 
   /*< private >*/
+  GstNetClientClockPrivate *priv;
+
   gpointer _gst_reserved[GST_PADDING - 1];
 };
 

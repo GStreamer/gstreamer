@@ -85,6 +85,15 @@ enum
       /* FILL ME */
 };
 
+#define GST_NET_TIME_PROVIDER_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_NET_TIME_PROVIDER, GstNetTimeProviderPrivate))
+
+struct _GstNetTimeProviderPrivate
+{
+  GstPollFD sock;
+  GstPoll *fdset;
+};
+
 static gboolean gst_net_time_provider_start (GstNetTimeProvider * bself);
 static void gst_net_time_provider_stop (GstNetTimeProvider * bself);
 
@@ -129,6 +138,8 @@ gst_net_time_provider_class_init (GstNetTimeProviderClass * klass)
 
   g_assert (sizeof (GstClockTime) == 8);
 
+  g_type_class_add_private (klass, sizeof (GstNetTimeProviderPrivate));
+
   gobject_class->finalize = gst_net_time_provider_finalize;
   gobject_class->set_property = gst_net_time_provider_set_property;
   gobject_class->get_property = gst_net_time_provider_get_property;
@@ -166,9 +177,10 @@ gst_net_time_provider_init (GstNetTimeProvider * self,
     WSACleanup ();
   }
 #endif
+  self->priv = GST_NET_TIME_PROVIDER_GET_PRIVATE (self);
 
   self->port = DEFAULT_PORT;
-  self->sock.fd = -1;
+  self->priv->sock.fd = -1;
   self->address = g_strdup (DEFAULT_ADDRESS);
   self->thread = NULL;
   self->active.active = TRUE;
@@ -184,9 +196,9 @@ gst_net_time_provider_finalize (GObject * object)
     g_assert (self->thread == NULL);
   }
 
-  if (self->fdset) {
-    gst_poll_free (self->fdset);
-    self->fdset = NULL;
+  if (self->priv->fdset) {
+    gst_poll_free (self->priv->fdset);
+    self->priv->fdset = NULL;
   }
 
   g_free (self->address);
@@ -214,7 +226,7 @@ gst_net_time_provider_thread (gpointer data)
 
   while (TRUE) {
     GST_LOG_OBJECT (self, "doing select");
-    ret = gst_poll_wait (self->fdset, GST_CLOCK_TIME_NONE);
+    ret = gst_poll_wait (self->priv->fdset, GST_CLOCK_TIME_NONE);
     GST_LOG_OBJECT (self, "select returned %d", ret);
 
     if (ret <= 0) {
@@ -229,7 +241,7 @@ gst_net_time_provider_thread (gpointer data)
       /* got data in */
       len = sizeof (struct sockaddr);
 
-      packet = gst_net_time_packet_receive (self->sock.fd,
+      packet = gst_net_time_packet_receive (self->priv->sock.fd,
           (struct sockaddr *) &tmpaddr, &len);
 
       if (!packet)
@@ -240,7 +252,7 @@ gst_net_time_provider_thread (gpointer data)
         packet->remote_time = gst_clock_get_time (self->clock);
 
         /* ignore errors */
-        gst_net_time_packet_send (packet, self->sock.fd,
+        gst_net_time_packet_send (packet, self->priv->sock.fd,
             (struct sockaddr *) &tmpaddr, len);
       }
 
@@ -348,10 +360,12 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
   if ((ret = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
     goto no_socket;
 
-  self->sock.fd = ret;
+  self->priv->sock.fd = ret;
 
   ru = 1;
-  ret = setsockopt (self->sock.fd, SOL_SOCKET, SO_REUSEADDR, &ru, sizeof (ru));
+  ret =
+      setsockopt (self->priv->sock.fd, SOL_SOCKET, SO_REUSEADDR, &ru,
+      sizeof (ru));
   if (ret < 0)
     goto setsockopt_error;
 
@@ -363,12 +377,14 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
     inet_aton (self->address, &my_addr.sin_addr);
 
   GST_DEBUG_OBJECT (self, "binding on port %d", self->port);
-  ret = bind (self->sock.fd, (struct sockaddr *) &my_addr, sizeof (my_addr));
+  ret =
+      bind (self->priv->sock.fd, (struct sockaddr *) &my_addr,
+      sizeof (my_addr));
   if (ret < 0)
     goto bind_error;
 
   len = sizeof (my_addr);
-  ret = getsockname (self->sock.fd, (struct sockaddr *) &my_addr, &len);
+  ret = getsockname (self->priv->sock.fd, (struct sockaddr *) &my_addr, &len);
   if (ret < 0)
     goto getsockname_error;
 
@@ -381,8 +397,8 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
     g_object_notify (G_OBJECT (self), "port");
   }
 
-  gst_poll_add_fd (self->fdset, &self->sock);
-  gst_poll_fd_ctl_read (self->fdset, &self->sock, TRUE);
+  gst_poll_add_fd (self->priv->fdset, &self->priv->sock);
+  gst_poll_fd_ctl_read (self->priv->fdset, &self->priv->sock, TRUE);
 
   self->thread = g_thread_create (gst_net_time_provider_thread, self, TRUE,
       &error);
@@ -400,33 +416,33 @@ no_socket:
   }
 setsockopt_error:
   {
-    close (self->sock.fd);
-    self->sock.fd = -1;
+    close (self->priv->sock.fd);
+    self->priv->sock.fd = -1;
     GST_ERROR_OBJECT (self, "setsockopt failed %d: %s (%d)", ret,
         g_strerror (errno), errno);
     return FALSE;
   }
 bind_error:
   {
-    close (self->sock.fd);
-    self->sock.fd = -1;
+    close (self->priv->sock.fd);
+    self->priv->sock.fd = -1;
     GST_ERROR_OBJECT (self, "bind failed %d: %s (%d)", ret,
         g_strerror (errno), errno);
     return FALSE;
   }
 getsockname_error:
   {
-    close (self->sock.fd);
-    self->sock.fd = -1;
+    close (self->priv->sock.fd);
+    self->priv->sock.fd = -1;
     GST_ERROR_OBJECT (self, "getsockname failed %d: %s (%d)", ret,
         g_strerror (errno), errno);
     return FALSE;
   }
 no_thread:
   {
-    gst_poll_remove_fd (self->fdset, &self->sock);
-    close (self->sock.fd);
-    self->sock.fd = -1;
+    gst_poll_remove_fd (self->priv->fdset, &self->priv->sock);
+    close (self->priv->sock.fd);
+    self->priv->sock.fd = -1;
     GST_ERROR_OBJECT (self, "could not create thread: %s", error->message);
     g_error_free (error);
     return FALSE;
@@ -436,14 +452,14 @@ no_thread:
 static void
 gst_net_time_provider_stop (GstNetTimeProvider * self)
 {
-  gst_poll_set_flushing (self->fdset, TRUE);
+  gst_poll_set_flushing (self->priv->fdset, TRUE);
   g_thread_join (self->thread);
   self->thread = NULL;
 
-  if (self->sock.fd != -1) {
-    gst_poll_remove_fd (self->fdset, &self->sock);
-    close (self->sock.fd);
-    self->sock.fd = -1;
+  if (self->priv->sock.fd != -1) {
+    gst_poll_remove_fd (self->priv->fdset, &self->priv->sock);
+    close (self->priv->sock.fd);
+    self->priv->sock.fd = -1;
   }
 }
 
@@ -469,7 +485,7 @@ gst_net_time_provider_new (GstClock * clock, const gchar * address, gint port)
   ret = g_object_new (GST_TYPE_NET_TIME_PROVIDER, "clock", clock, "address",
       address, "port", port, NULL);
 
-  if ((ret->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
+  if ((ret->priv->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
     goto no_fdset;
 
   if (!gst_net_time_provider_start (ret))

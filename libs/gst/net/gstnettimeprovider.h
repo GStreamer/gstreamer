@@ -57,6 +57,8 @@ G_BEGIN_DECLS
 
 typedef struct _GstNetTimeProvider GstNetTimeProvider;
 typedef struct _GstNetTimeProviderClass GstNetTimeProviderClass;
+typedef struct _GstNetTimeProviderPrivate GstNetTimeProviderPrivate;
+
 
 /**
  * GstNetTimeProvider:
@@ -71,12 +73,8 @@ struct _GstNetTimeProvider {
   gchar *address;
   int port;
 
-  /* the size of _gst_reserved2 and sock must equal three ints since this used
-   * to be int sock and int control_sock[2]. This relies on the fact that
-   * GstPollFD happens to be two ints */
-  int _gst_reserved2;
-  GstPollFD sock;
-  GstPoll *fdset;
+  int sock;
+  int control_sock[2];
 
   GThread *thread;
 
@@ -89,6 +87,8 @@ struct _GstNetTimeProvider {
   } active;
 
   /*< private >*/
+  GstNetTimeProviderPrivate *priv;
+
   gpointer _gst_reserved[GST_PADDING - 2];
 };
 
