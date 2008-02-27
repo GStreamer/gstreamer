@@ -81,6 +81,7 @@ check_PROGRAMS =				\
 	gst/gstobject				\
 	gst/gstpad				\
 	gst/gstparamspecs			\
+	gst/gstpoll     			\
 	gst/gstsegment				\
 	gst/gstsystemclock			\
 	gst/gststructure			\

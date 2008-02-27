@@ -341,6 +341,11 @@ AC_CHECK_FUNCS([ftello])
 AC_CHECK_FUNCS([fgetpos])
 AC_CHECK_FUNCS([fsetpos])
 
+dnl check for poll(), ppoll() and pselect()
+AC_CHECK_FUNCS([poll])
+AC_CHECK_FUNCS([ppoll])
+AC_CHECK_FUNCS([pselect])
+
 dnl check for mmap()
 AC_FUNC_MMAP
 AM_CONDITIONAL(HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" = "xyes")
