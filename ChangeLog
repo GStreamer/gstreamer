@@ -1,5 +1,22 @@
 2008-02-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Peter Kjellerstedt <pkj at axis dot com>
+
+	* libs/gst/net/gstnetclientclock.c: (gst_net_client_clock_init),
+	(gst_net_client_clock_finalize), (gst_net_client_clock_do_select),
+	(gst_net_client_clock_thread), (gst_net_client_clock_start),
+	(gst_net_client_clock_stop), (gst_net_client_clock_new):
+	* libs/gst/net/gstnetclientclock.h:
+	* libs/gst/net/gstnettimeprovider.c: (gst_net_time_provider_init),
+	(gst_net_time_provider_finalize), (gst_net_time_provider_thread),
+	(gst_net_time_provider_start), (gst_net_time_provider_stop),
+	(gst_net_time_provider_new):
+	* libs/gst/net/gstnettimeprovider.h:
+	Massive code removal and cleanups because of GstPoll.
+	Fixes #505417.
+
+2008-02-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* configure.ac:
 	Add checks for poll, ppoll and pselect.
 

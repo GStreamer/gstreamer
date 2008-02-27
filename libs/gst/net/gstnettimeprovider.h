@@ -71,8 +71,12 @@ struct _GstNetTimeProvider {
   gchar *address;
   int port;
 
-  int sock;
-  int control_sock[2];
+  /* the size of _gst_reserved2 and sock must equal three ints since this used
+   * to be int sock and int control_sock[2]. This relies on the fact that
+   * GstPollFD happens to be two ints */
+  int _gst_reserved2;
+  GstPollFD sock;
+  GstPoll *fdset;
 
   GThread *thread;
 
@@ -83,9 +87,9 @@ struct _GstNetTimeProvider {
     /* has to be a gint, we use atomic ops here */
     gint active;
   } active;
-  
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING - 2];
 };
 
 struct _GstNetTimeProviderClass {

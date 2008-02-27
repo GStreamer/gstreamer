@@ -72,10 +72,13 @@ struct _GstNetClientClock {
   /*< protected >*/
   gchar *address;
   gint port;
-  
+
   /*< private >*/
-  int sock;
-  int control_sock[2];
+  /* the size of _gst_reserved1 and sock must equal three ints since this used
+   * to be int sock and int control_sock[2] */
+  int _gst_reserved1;
+  GstPollFD sock;
+  GstPoll *fdset;
 
   GstClockTime current_timeout;
 
@@ -84,7 +87,7 @@ struct _GstNetClientClock {
   GThread *thread;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstNetClientClockClass {
