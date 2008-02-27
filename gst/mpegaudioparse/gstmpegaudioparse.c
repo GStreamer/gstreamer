@@ -541,11 +541,11 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
       break;
     default:
       GST_PAD_STREAM_LOCK (pad);
-      if (mp3parse->pending_segment) {
-        /* Cache all events except EOS if we have a pending segment */
-        if (GST_EVENT_TYPE (event) != GST_EVENT_EOS)
-          mp3parse->pending_events =
-              g_list_append (mp3parse->pending_events, event);
+      /* Cache all events except EOS and the ones above if we have
+       * a pending segment */
+      if (mp3parse->pending_segment && GST_EVENT_TYPE (event) != GST_EVENT_EOS) {
+        mp3parse->pending_events =
+            g_list_append (mp3parse->pending_events, event);
       } else {
         res = gst_pad_push_event (mp3parse->srcpad, event);
       }

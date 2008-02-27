@@ -1,5 +1,13 @@
 2008-02-27  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/mad/gstmad.c: (gst_mad_sink_event):
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_sink_event):
+	Push EOS, FLUSH_STOP and NEWSEGMENT immediately instead
+	of dropping and leaking them.
+
+2008-02-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/mad/gstmad.c: (gst_mad_dispose), (gst_mad_sink_event),
 	(gst_mad_chain):
 	* ext/mad/gstmad.h:

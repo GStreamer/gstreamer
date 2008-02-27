@@ -993,9 +993,8 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
       break;
     default:
       if (mad->restart) {
-        /* Cache all events except EOS if we still have to send a NEWSEGMENT */
-        if (GST_EVENT_TYPE (event) != GST_EVENT_EOS)
-          mad->pending_events = g_list_append (mad->pending_events, event);
+        /* Cache all other events if we still have to send a NEWSEGMENT */
+        mad->pending_events = g_list_append (mad->pending_events, event);
         result = TRUE;
       } else {
         result = gst_pad_event_default (pad, event);
