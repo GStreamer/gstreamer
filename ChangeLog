@@ -1,3 +1,8 @@
+2008-02-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/check/libs/rtp.c: (GST_START_TEST):
+	Add check for RTP buffer defaults, padding and marker bit API.
+
 2008-02-27  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/cdda/sha1.c: (sha_transform):

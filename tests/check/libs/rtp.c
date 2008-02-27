@@ -40,13 +40,38 @@ GST_START_TEST (test_rtp_buffer)
   fail_unless_equals_int (GST_BUFFER_SIZE (buf), RTP_HEADER_LEN + 16 + 4);
   data = GST_BUFFER_DATA (buf);
 
+  /* check defaults */
+  fail_unless_equals_int (gst_rtp_buffer_get_version (buf), 2);
+  fail_unless (gst_rtp_buffer_get_padding (buf) == FALSE);
+  fail_unless (gst_rtp_buffer_get_extension (buf) == FALSE);
+  fail_unless_equals_int (gst_rtp_buffer_get_csrc_count (buf), 0);
+  fail_unless (gst_rtp_buffer_get_marker (buf) == FALSE);
+  fail_unless (gst_rtp_buffer_get_payload_type (buf) == 0);
+  fail_unless_equals_int (GST_READ_UINT16_BE (data), 0x8000);
+
   /* check version in bitfield */
   gst_rtp_buffer_set_version (buf, 3);
   fail_unless_equals_int (gst_rtp_buffer_get_version (buf), 3);
   fail_unless_equals_int ((data[0] & 0xC0) >> 6, 3);
-  gst_rtp_buffer_set_version (buf, 0);
-  fail_unless_equals_int (gst_rtp_buffer_get_version (buf), 0);
-  fail_unless_equals_int ((data[0] & 0xC0) >> 6, 0);
+  gst_rtp_buffer_set_version (buf, 2);
+  fail_unless_equals_int (gst_rtp_buffer_get_version (buf), 2);
+  fail_unless_equals_int ((data[0] & 0xC0) >> 6, 2);
+
+  /* check padding bit */
+  gst_rtp_buffer_set_padding (buf, TRUE);
+  fail_unless (gst_rtp_buffer_get_padding (buf) == TRUE);
+  fail_unless_equals_int ((data[0] & 0x20) >> 5, 1);
+  gst_rtp_buffer_set_padding (buf, FALSE);
+  fail_unless (gst_rtp_buffer_get_padding (buf) == FALSE);
+  fail_unless_equals_int ((data[0] & 0x20) >> 5, 0);
+
+  /* check marker bit */
+  gst_rtp_buffer_set_marker (buf, TRUE);
+  fail_unless (gst_rtp_buffer_get_marker (buf) == TRUE);
+  fail_unless_equals_int ((data[1] & 0x80) >> 7, 1);
+  gst_rtp_buffer_set_marker (buf, FALSE);
+  fail_unless (gst_rtp_buffer_get_marker (buf) == FALSE);
+  fail_unless_equals_int ((data[1] & 0x80) >> 7, 0);
 
   /* check sequence offset */
   gst_rtp_buffer_set_seq (buf, 0xF2C9);
