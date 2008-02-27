@@ -99,7 +99,7 @@ nether regions of the anatomy...
 #if (SHA_BYTE_ORDER == 1234)
 #define SWAP_DONE
   for (i = 0; i < 16; ++i) {
-    T = *((SHA_LONG *) dp);
+    memcpy (&T, dp, sizeof (SHA_LONG));
     dp += 4;
     W[i] = ((T << 24) & 0xff000000) | ((T << 8) & 0x00ff0000) |
         ((T >> 8) & 0x0000ff00) | ((T >> 24) & 0x000000ff);
@@ -109,7 +109,7 @@ nether regions of the anatomy...
 #if (SHA_BYTE_ORDER == 4321)
 #define SWAP_DONE
   for (i = 0; i < 16; ++i) {
-    T = *((SHA_LONG *) dp);
+    memcpy (&T, dp, sizeof (SHA_LONG));
     dp += 4;
     W[i] = T32 (T);
   }
@@ -118,7 +118,7 @@ nether regions of the anatomy...
 #if (SHA_BYTE_ORDER == 12345678)
 #define SWAP_DONE
   for (i = 0; i < 16; i += 2) {
-    T = *((SHA_LONG *) dp);
+    memcpy (&T, dp, sizeof (SHA_LONG));
     dp += 8;
     W[i] = ((T << 24) & 0xff000000) | ((T << 8) & 0x00ff0000) |
         ((T >> 8) & 0x0000ff00) | ((T >> 24) & 0x000000ff);
@@ -131,7 +131,7 @@ nether regions of the anatomy...
 #if (SHA_BYTE_ORDER == 87654321)
 #define SWAP_DONE
   for (i = 0; i < 16; i += 2) {
-    T = *((SHA_LONG *) dp);
+    memcpy (&T, dp, sizeof (SHA_LONG));
     dp += 8;
     W[i] = T32 (T >> 32);
     W[i + 1] = T32 (T);

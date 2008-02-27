@@ -1,3 +1,11 @@
+2008-02-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst-libs/gst/cdda/sha1.c: (sha_transform):
+	Use memcpy() instead of upcasting a byte array to long *. This
+	fixes an unaligned memory access, resulting in SIGBUS on IA64.
+	This should be ported to GCheckSum once we can use GLib 2.16.
+	Partially fixes bug #500833.
+
 2008-02-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gsttagdemux.c: (gst_tag_demux_chain):
