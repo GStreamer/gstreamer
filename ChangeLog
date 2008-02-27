@@ -1,5 +1,18 @@
 2008-02-27  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/mad/gstmad.c: (gst_mad_dispose), (gst_mad_sink_event),
+	(gst_mad_chain):
+	* ext/mad/gstmad.h:
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_dispose),
+	(gst_mp3parse_sink_event), (gst_mp3parse_emit_frame):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	Cache all events except EOS if we still have to send a NEWSEGMENT
+	event. This will let TAG events be forwarded until after decodebin
+	to an encoder for example as decodebin only links the pads
+	after NEWSEGMENT. Fixes bug #518933.
+
+2008-02-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/mpegaudioparse/gstxingmux.c: (get_xing_offset):
 	Write Xing header at the correct position in the MP3 frame for
 	stereo files. Fixes bug #518676.

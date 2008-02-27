@@ -92,6 +92,8 @@ struct _GstMad
   gboolean xing_found;
 
   gboolean framed;              /* whether there is a demuxer in front of us */
+
+  GList *pending_events;
 };
 
 struct _GstMadClass

@@ -284,6 +284,10 @@ gst_mad_dispose (GObject * object)
   g_free (mad->tempbuffer);
   mad->tempbuffer = NULL;
 
+  g_list_foreach (mad->pending_events, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (mad->pending_events);
+  mad->pending_events = NULL;
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -988,7 +992,14 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
 
       break;
     default:
-      result = gst_pad_event_default (pad, event);
+      if (mad->restart) {
+        /* Cache all events except EOS if we still have to send a NEWSEGMENT */
+        if (GST_EVENT_TYPE (event) != GST_EVENT_EOS)
+          mad->pending_events = g_list_append (mad->pending_events, event);
+        result = TRUE;
+      } else {
+        result = gst_pad_event_default (pad, event);
+      }
       break;
   }
   return result;
@@ -1409,7 +1420,12 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
               } else {
                 mad->tags = gst_tag_list_copy (list);
               }
-              gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
+              if (mad->need_newsegment)
+                mad->pending_events =
+                    g_list_append (mad->pending_events,
+                    gst_event_new_tag (list));
+              else
+                gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
             }
           }
         }
@@ -1449,7 +1465,12 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
               GST_TAG_BITRATE, bitrate, NULL);
           gst_element_post_message (GST_ELEMENT (mad),
               gst_message_new_tag (GST_OBJECT (mad), gst_tag_list_copy (list)));
-          gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
+
+          if (mad->need_newsegment)
+            mad->pending_events =
+                g_list_append (mad->pending_events, gst_event_new_tag (list));
+          else
+            gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
 
           goto next_no_samples;
         }
@@ -1540,6 +1561,16 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
               gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
                   start, GST_CLOCK_TIME_NONE, start));
           mad->need_newsegment = FALSE;
+        }
+
+        if (mad->pending_events) {
+          GList *l;
+
+          for (l = mad->pending_events; l != NULL; l = l->next) {
+            gst_pad_push_event (mad->srcpad, GST_EVENT (l->data));
+          }
+          g_list_free (mad->pending_events);
+          mad->pending_events = NULL;
         }
 
         /* will attach the caps to the buffer */

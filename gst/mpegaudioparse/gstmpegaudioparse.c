@@ -401,13 +401,18 @@ gst_mp3parse_dispose (GObject * object)
   g_mutex_free (mp3parse->pending_accurate_seeks_lock);
   mp3parse->pending_accurate_seeks_lock = NULL;
 
+  g_list_foreach (mp3parse->pending_events, (GFunc) gst_mini_object_unref,
+      NULL);
+  g_list_free (mp3parse->pending_events);
+  mp3parse->pending_events = NULL;
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean
 gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
 {
-  gboolean res;
+  gboolean res = TRUE;
   GstMPEGAudioParse *mp3parse;
   GstEvent **eventp;
 
@@ -535,7 +540,16 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (mp3parse->srcpad, event);
       break;
     default:
-      res = gst_pad_push_event (mp3parse->srcpad, event);
+      GST_PAD_STREAM_LOCK (pad);
+      if (mp3parse->pending_segment) {
+        /* Cache all events except EOS if we have a pending segment */
+        if (GST_EVENT_TYPE (event) != GST_EVENT_EOS)
+          mp3parse->pending_events =
+              g_list_append (mp3parse->pending_events, event);
+      } else {
+        res = gst_pad_push_event (mp3parse->srcpad, event);
+      }
+      GST_PAD_STREAM_UNLOCK (pad);
       break;
   }
 
@@ -764,6 +778,15 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
     if (mp3parse->pending_segment) {
       gst_pad_push_event (mp3parse->srcpad, mp3parse->pending_segment);
       mp3parse->pending_segment = NULL;
+    }
+    if (mp3parse->pending_events) {
+      GList *l;
+
+      for (l = mp3parse->pending_events; l != NULL; l = l->next) {
+        gst_pad_push_event (mp3parse->srcpad, GST_EVENT (l->data));
+      }
+      g_list_free (mp3parse->pending_events);
+      mp3parse->pending_events = NULL;
     }
     ret = gst_pad_push (mp3parse->srcpad, outbuf);
   }

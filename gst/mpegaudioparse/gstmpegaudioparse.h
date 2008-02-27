@@ -121,6 +121,8 @@ struct _GstMPEGAudioParse {
 
   /* pending segment */
   GstEvent *pending_segment;
+  /* pending events */
+  GList *pending_events;
 };
 
 struct _GstMPEGAudioParseClass {
