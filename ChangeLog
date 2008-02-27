@@ -1,5 +1,13 @@
 2008-02-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* tests/examples/seek/seek.c: (vis_toggle_cb), (filter_features),
+	(init_visualization_features), (vis_combo_cb), (shot_cb), (main):
+	Add combo box for visualisations, populate it with a factory list
+	of all visualisation plugins, configure vis plugin instance in
+	playbin2. 
+
+2008-02-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* tests/check/libs/rtp.c: (GST_START_TEST):
 	Add check for RTP buffer defaults, padding and marker bit API.
 

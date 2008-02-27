@@ -87,9 +87,18 @@ static gulong changed_id;
 
 static gint n_video = 0, n_audio = 0, n_text = 0;
 static gboolean need_streams = TRUE;
-static GtkWidget *video_combo, *audio_combo, *text_combo;
+static GtkWidget *video_combo, *audio_combo, *text_combo, *vis_combo;
 static GtkWidget *vis_checkbox, *video_checkbox, *audio_checkbox;
 static GtkWidget *text_checkbox, *mute_checkbox, *volume_spinbutton;
+
+/* we keep an array of the visualisation entries so that we can easily switch
+ * with the combo box index. */
+typedef struct
+{
+  GstElementFactory *factory;
+} VisEntry;
+
+static GArray *vis_entries;
 
 static void clear_streams (GstElement * pipeline);
 
@@ -1486,7 +1495,11 @@ update_flag (GstPipeline * pipeline, gint num, gboolean state)
 static void
 vis_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 {
-  update_flag (pipeline, 3, gtk_toggle_button_get_active (button));
+  gboolean state;
+
+  state = gtk_toggle_button_get_active (button);
+  update_flag (pipeline, 3, state);
+  gtk_widget_set_sensitive (vis_combo, state);
 }
 
 static void
@@ -1615,6 +1628,62 @@ text_combo_cb (GtkComboBox * combo, GstPipeline * pipeline)
       NULL);
 }
 
+static gboolean
+filter_features (GstPluginFeature * feature, gpointer data)
+{
+  GstElementFactory *f;
+
+  if (!GST_IS_ELEMENT_FACTORY (feature))
+    return FALSE;
+  f = GST_ELEMENT_FACTORY (feature);
+  if (!g_strrstr (gst_element_factory_get_klass (f), "Visualization"))
+    return FALSE;
+
+  return TRUE;
+}
+
+static void
+init_visualization_features (void)
+{
+  GList *list, *walk;
+
+  vis_entries = g_array_new (FALSE, FALSE, sizeof (VisEntry));
+
+  list = gst_registry_feature_filter (gst_registry_get_default (),
+      filter_features, FALSE, NULL);
+
+  for (walk = list; walk; walk = g_list_next (walk)) {
+    VisEntry entry;
+    const gchar *name;
+
+    entry.factory = GST_ELEMENT_FACTORY (walk->data);
+    name = gst_element_factory_get_longname (entry.factory);
+
+    g_array_append_val (vis_entries, entry);
+    gtk_combo_box_append_text (GTK_COMBO_BOX (vis_combo), name);
+  }
+  gtk_combo_box_set_active (GTK_COMBO_BOX (vis_combo), 0);
+}
+
+static void
+vis_combo_cb (GtkComboBox * combo, GstPipeline * pipeline)
+{
+  guint index;
+  VisEntry *entry;
+  GstElement *element;
+
+  /* get the selected index and get the factory for this index */
+  index = gtk_combo_box_get_active (GTK_COMBO_BOX (vis_combo));
+  entry = &g_array_index (vis_entries, VisEntry, index);
+  /* create an instance of the element from the factory */
+  element = gst_element_factory_create (entry->factory, NULL);
+  if (!element)
+    return;
+
+  /* set vis plugin for playbin2 */
+  g_object_set (pipeline, "vis-plugin", element, NULL);
+}
+
 static void
 volume_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
 {
@@ -1643,6 +1712,7 @@ shot_cb (GtkButton * button, gpointer data)
       "green_mask", G_TYPE_INT, 0x00ff00,
       "blue_mask", G_TYPE_INT, 0x0000ff, NULL);
 
+  /* convert the latest frame to the requested format */
   g_signal_emit_by_name (pipeline, "convert-frame", caps, &buffer);
   gst_caps_unref (caps);
 
@@ -1988,10 +2058,17 @@ main (int argc, char **argv)
     shot_button = gtk_button_new_from_stock (GTK_STOCK_SAVE);
     gtk_tooltips_set_tip (tips, shot_button,
         "save a screenshot .png in the current directory", NULL);
-    gtk_box_pack_start (GTK_BOX (boxes2), shot_button, TRUE, TRUE, 2);
     g_signal_connect (G_OBJECT (shot_button), "clicked", G_CALLBACK (shot_cb),
         pipeline);
+    vis_combo = gtk_combo_box_new_text ();
+    g_signal_connect (G_OBJECT (vis_combo), "changed",
+        G_CALLBACK (vis_combo_cb), pipeline);
+    gtk_widget_set_sensitive (vis_combo, FALSE);
+    gtk_box_pack_start (GTK_BOX (boxes2), shot_button, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (boxes2), vis_combo, TRUE, TRUE, 2);
 
+    /* fill the vis combo box and the array of factories */
+    init_visualization_features ();
   } else {
     panel = boxes = boxes2 = NULL;
   }
