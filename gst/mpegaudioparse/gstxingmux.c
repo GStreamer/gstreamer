@@ -209,17 +209,17 @@ parse_header (guint32 header, guint * ret_size, guint * ret_spf,
 static guint
 get_xing_offset (guint32 header)
 {
-  guint mpeg_version = (header >> 19) & 3;
+  guint mpeg_version = (header >> 19) & 0x3;
   guint channel_mode = (header >> 6) & 0x3;
 
-  if (mpeg_version == 0x11) {
-    if (channel_mode == 0x11) {
+  if (mpeg_version == 0x3) {
+    if (channel_mode == 0x3) {
       return 0x11;
     } else {
       return 0x20;
     }
   } else {
-    if (channel_mode == 0x11) {
+    if (channel_mode == 0x3) {
       return 0x09;
     } else {
       return 0x11;

@@ -1,3 +1,9 @@
+2008-02-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstxingmux.c: (get_xing_offset):
+	Write Xing header at the correct position in the MP3 frame for
+	stereo files. Fixes bug #518676.
+
 2008-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
