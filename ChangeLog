@@ -1,3 +1,8 @@
+2008-02-27  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* win32/common/libgstreamer.def:
+	Add new gst_poll_ symbols to win32 defs.
+
 2008-02-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/libs/gstreamer-libs-sections.txt:
