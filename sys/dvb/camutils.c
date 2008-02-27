@@ -232,14 +232,12 @@ cam_build_ca_pmt (GstStructure * pmt, guint8 list_management, guint8 cmd_id,
   streams = gst_structure_get_value (pmt, "streams");
   value = gst_structure_get_value (pmt, "descriptors");
   if (value != NULL) {
-    if (G_VALUE_HOLDS_BOXED (value)) {
-      program_descriptors = g_value_get_boxed (value);
-      /* get the length of program level CA_descriptor()s */
-      len = get_ca_descriptors_length (program_descriptors);
-      if (len > 0)
-        /* add one byte for the program level cmd_id */
-        len += 1;
-    }
+    program_descriptors = g_value_get_boxed (value);
+    /* get the length of program level CA_descriptor()s */
+    len = get_ca_descriptors_length (program_descriptors);
+    if (len > 0)
+      /* add one byte for the program level cmd_id */
+      len += 1;
   }
   lengths = g_list_append (lengths, GINT_TO_POINTER (len));
   body_size += 6 + len;
@@ -252,14 +250,12 @@ cam_build_ca_pmt (GstStructure * pmt, guint8 list_management, guint8 cmd_id,
 
       value = gst_structure_get_value (stream, "descriptors");
       if (value != NULL) {
-        if (G_VALUE_HOLDS_BOXED (value)) {
-          stream_descriptors = g_value_get_boxed (value);
+        stream_descriptors = g_value_get_boxed (value);
 
-          len = get_ca_descriptors_length (stream_descriptors);
-          if (len > 0)
-            /* one byte for the stream level cmd_id */
-            len += 1;
-        }
+        len = get_ca_descriptors_length (stream_descriptors);
+        if (len > 0)
+          /* one byte for the stream level cmd_id */
+          len += 1;
       }
 
       lengths = g_list_append (lengths, GINT_TO_POINTER (len));
@@ -267,7 +263,6 @@ cam_build_ca_pmt (GstStructure * pmt, guint8 list_management, guint8 cmd_id,
 
     }
   }
-
   buffer = g_malloc0 (body_size);
   body = buffer;
 

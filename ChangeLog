@@ -1,8 +1,14 @@
 2008-02-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/camutils.c:
+	Remove the G_VALUE_HOLDS_BOXED checks. They were
+	only added to help debug the data corruption.
+
+2008-02-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/camutils.c:
 	Don't free the program descriptors, this structure
-	containing them is stills tored after.
+	containing them is still stored after.
 	Fixes data corruption.
 
 2008-02-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
