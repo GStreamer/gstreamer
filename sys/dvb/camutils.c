@@ -289,9 +289,6 @@ cam_build_ca_pmt (GstStructure * pmt, guint8 list_management, guint8 cmd_id,
     body = write_ca_descriptors (body, program_descriptors);
   }
 
-  if (program_descriptors)
-    g_value_array_free (program_descriptors);
-
   for (i = 0; i < gst_value_list_get_size (streams); ++i) {
     guint stream_type;
     guint stream_pid;

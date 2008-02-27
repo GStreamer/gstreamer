@@ -1,6 +1,13 @@
 2008-02-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/camutils.c:
+	Don't free the program descriptors, this structure
+	containing them is stills tored after.
+	Fixes data corruption.
+
+2008-02-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/camutils.c:
 	Extra checks to prevent data corruption/segfaults.
 
 2008-02-26  Stefan Kost  <ensonic@users.sf.net>
