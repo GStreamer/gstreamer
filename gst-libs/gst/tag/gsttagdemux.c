@@ -640,11 +640,6 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
     case GST_TAG_DEMUX_STREAMING:{
       GstBuffer *outbuf = NULL;
 
-      if (demux->priv->send_tag_event) {
-        gst_tag_demux_send_tag_event (demux);
-        demux->priv->send_tag_event = FALSE;
-      }
-
       /* Trim the buffer and adjust offset */
       if (demux->priv->collect) {
         outbuf = demux->priv->collect;
@@ -658,14 +653,6 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
           return GST_FLOW_ERROR;
         }
 
-        GST_DEBUG_OBJECT (demux, "Pushing buffer %p", outbuf);
-        /* gst_util_dump_mem (GST_BUFFER_DATA (outbuf),
-           GST_BUFFER_SIZE (outbuf)); */
-
-        /* Ensure the caps are set correctly */
-        outbuf = gst_buffer_make_metadata_writable (outbuf);
-        gst_buffer_set_caps (outbuf, GST_PAD_CAPS (demux->priv->srcpad));
-
         /* Might need a new segment before the buffer */
         if (demux->priv->need_newseg) {
           if (!gst_tag_demux_send_new_segment (demux)) {
@@ -674,6 +661,18 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
           }
           demux->priv->need_newseg = FALSE;
         }
+
+        /* Send pending tag event */
+        if (demux->priv->send_tag_event) {
+          gst_tag_demux_send_tag_event (demux);
+          demux->priv->send_tag_event = FALSE;
+        }
+
+        /* Ensure the caps are set correctly */
+        outbuf = gst_buffer_make_metadata_writable (outbuf);
+        gst_buffer_set_caps (outbuf, GST_PAD_CAPS (demux->priv->srcpad));
+
+        GST_LOG_OBJECT (demux, "Pushing buffer %p", outbuf);
 
         return gst_pad_push (demux->priv->srcpad, outbuf);
       }

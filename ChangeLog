@@ -1,3 +1,10 @@
+2008-02-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/gsttagdemux.c: (gst_tag_demux_chain):
+	  Push tag event after the newsegment event. Log the pointer of
+	  the buffer we're actually going to push rather than the buffer
+	  we're feeding to _make_metadata_writable().
+
 2008-02-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
