@@ -1,3 +1,10 @@
+2008-02-28  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/law/mulaw-decode.c: (gst_mulawdec_chain):
+	Return GST_FLOW_NOT_NEGOTIATED when the caps are not set
+	yet on the srcpad. We need rate and channels before we
+	can do any processing. Fixes bug #519088.
+
 2008-02-26  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

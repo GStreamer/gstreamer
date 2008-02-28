@@ -153,7 +153,12 @@ gst_mulawdec_chain (GstPad * pad, GstBuffer * buffer)
   GstBuffer *outbuf;
   GstFlowReturn ret;
 
-  mulawdec = GST_MULAWDEC (gst_pad_get_parent (pad));
+  mulawdec = GST_MULAWDEC (GST_PAD_PARENT (pad));
+
+  if (G_UNLIKELY (mulawdec->srccaps == NULL)) {
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 
   mulaw_data = (guint8 *) GST_BUFFER_DATA (buffer);
   mulaw_size = GST_BUFFER_SIZE (buffer);
@@ -178,8 +183,6 @@ gst_mulawdec_chain (GstPad * pad, GstBuffer * buffer)
   gst_buffer_unref (buffer);
 
   ret = gst_pad_push (mulawdec->srcpad, outbuf);
-
-  gst_object_unref (mulawdec);
 
   return ret;
 }
