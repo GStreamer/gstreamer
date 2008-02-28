@@ -34,8 +34,8 @@ static void
 test_poll_wait (GstPollMode mode)
 {
   GstPoll *set;
-  GstPollFD rfd;
-  GstPollFD wfd;
+  GstPollFD rfd = { 0, };
+  GstPollFD wfd = { 0, };
   gint socks[2];
   guchar c = 'A';
 
@@ -100,7 +100,9 @@ test_poll_wait (GstPollMode mode)
 GST_START_TEST (test_poll_basic)
 {
   GstPoll *set;
-  GstPollFD fd = {.fd = 1 };
+  GstPollFD fd = { 0, };
+
+  fd.fd = 1;
 
   set = gst_poll_new (GST_POLL_MODE_AUTO, FALSE);
   fail_if (set == NULL, "Failed to create a GstPoll");
@@ -178,7 +180,9 @@ static gpointer
 delayed_restart (gpointer data)
 {
   GstPoll *set = data;
-  GstPollFD fd = {.fd = 1 };
+  GstPollFD fd = { 0, };
+
+  fd.fd = 1;
 
   THREAD_START ();
 
@@ -194,7 +198,9 @@ delayed_restart (gpointer data)
 GST_START_TEST (test_poll_wait_restart)
 {
   GstPoll *set;
-  GstPollFD fd = {.fd = 1 };
+  GstPollFD fd = { 0, };
+
+  fd.fd = 1;
 
   set = gst_poll_new (GST_POLL_MODE_AUTO, TRUE);
   fail_if (set == NULL, "Failed to create a GstPoll");
@@ -262,7 +268,9 @@ static gpointer
 delayed_control (gpointer data)
 {
   GstPoll *set = data;
-  GstPollFD fd = {.fd = 1 };
+  GstPollFD fd = { 0, };
+
+  fd.fd = 1;
 
   THREAD_START ();
 
@@ -286,7 +294,9 @@ delayed_control (gpointer data)
 GST_START_TEST (test_poll_controllable)
 {
   GstPoll *set;
-  GstPollFD fd = {.fd = 1 };
+  GstPollFD fd = { 0, };
+
+  fd.fd = 1;
 
   set = gst_poll_new (GST_POLL_MODE_AUTO, FALSE);
   fail_if (set == NULL, "Failed to create a GstPoll");

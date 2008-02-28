@@ -349,7 +349,7 @@ static gboolean
 gst_fd_sink_start (GstBaseSink * basesink)
 {
   GstFdSink *fdsink;
-  GstPollFD fd;
+  GstPollFD fd = { 0, };
 
   fdsink = GST_FD_SINK (basesink);
   if (!gst_fd_sink_check_fd (fdsink, fdsink->fd))
@@ -428,6 +428,9 @@ gst_fd_sink_update_fd (GstFdSink * fdsink, int new_fd)
 
     fd.fd = fdsink->fd;
     gst_poll_remove_fd (fdsink->fdset, &fd);
+
+    /* Reset the GstPollFD */
+    memset (&fd, 0, sizeof (GstPollFD));
 
     fd.fd = new_fd;
     gst_poll_add_fd (fdsink->fdset, &fd);

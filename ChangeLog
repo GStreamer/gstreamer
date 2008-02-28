@@ -1,3 +1,12 @@
+2008-02-28  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_start),
+	(gst_fd_sink_update_fd):
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_update_fd):
+	* tests/check/gst/gstpoll.c: (test_poll_wait), (GST_START_TEST),
+	(delayed_restart), (delayed_control):
+	Initialize some uninitialized variables as spotted by valgrind.
+
 2008-02-28  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/benchmarks/Makefile.am:

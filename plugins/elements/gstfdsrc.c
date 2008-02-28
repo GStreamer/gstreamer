@@ -178,12 +178,15 @@ gst_fd_src_update_fd (GstFdSrc * src)
   /* we need to always update the fdset since it may not have existed when
    * gst_fd_src_update_fd() was called earlier */
   if (src->fdset != NULL) {
-    GstPollFD fd;
+    GstPollFD fd = { 0, };
 
     if (src->fd >= 0) {
       fd.fd = src->fd;
       gst_poll_remove_fd (src->fdset, &fd);
     }
+
+    /* Reset the GstPollFD */
+    memset (&fd, 0, sizeof (GstPollFD));
 
     fd.fd = src->new_fd;
     gst_poll_add_fd (src->fdset, &fd);
