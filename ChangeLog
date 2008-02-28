@@ -1,3 +1,7 @@
+2008-02-28  David Schleef  <ds@schleef.org>
+
+	* gst/avi/gstavimux.c: Add Dirac encoding
+
 2008-02-28  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Peter Kjellerstedt <pkj at axis com>
