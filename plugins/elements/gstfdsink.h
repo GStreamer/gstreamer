@@ -54,7 +54,7 @@ struct _GstFdSink {
 
   gchar *uri;
 
-  gint control_sock[2];
+  GstPoll *fdset;
 
   int fd;
   guint64 bytes_written;

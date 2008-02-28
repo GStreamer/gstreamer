@@ -1,3 +1,18 @@
+2008-02-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Peter Kjellerstedt <pkj at axis dot com>
+
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_render),
+	(gst_fd_sink_start), (gst_fd_sink_stop), (gst_fd_sink_unlock),
+	(gst_fd_sink_unlock_stop), (gst_fd_sink_update_fd):
+	* plugins/elements/gstfdsink.h:
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_update_fd),
+	(gst_fd_src_start), (gst_fd_src_stop), (gst_fd_src_unlock),
+	(gst_fd_src_unlock_stop), (gst_fd_src_create),
+	(gst_fd_src_uri_set_uri):
+	* plugins/elements/gstfdsrc.h:
+	Port to GstPoll. See #505417.
+
 2008-02-27  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* win32/common/libgstreamer.def:

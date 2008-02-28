@@ -56,30 +56,6 @@
 
 #include "gstfdsink.h"
 
-/* We add a control socket as in fdsrc to make it shutdown quickly when it's blocking on the fd.
- * Select is used to determine when the fd is ready for use. When the element state is changed,
- * it happens from another thread while fdsink is select'ing on the fd. The state-change thread 
- * sends a control message, so fdsink wakes up and changes state immediately otherwise
- * it would stay blocked until it receives some data. */
-
-/* the select call is also performed on the control sockets, that way
- * we can send special commands to unblock the select call */
-#define CONTROL_STOP            'S'     /* stop the select call */
-#define CONTROL_SOCKETS(sink)   sink->control_sock
-#define WRITE_SOCKET(sink)      sink->control_sock[1]
-#define READ_SOCKET(sink)       sink->control_sock[0]
-
-#define SEND_COMMAND(sink, command)          \
-G_STMT_START {                              \
-  unsigned char c; c = command;             \
-  write (WRITE_SOCKET(sink), &c, 1);         \
-} G_STMT_END
-
-#define READ_COMMAND(sink, command, res)        \
-G_STMT_START {                                 \
-  res = read(READ_SOCKET(sink), &command, 1);   \
-} G_STMT_END
-
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -236,15 +212,13 @@ static GstFlowReturn
 gst_fd_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstFdSink *fdsink;
-
-#ifndef HAVE_WIN32
-  fd_set readfds;
-  fd_set writefds;
-  gint retval;
-#endif
   guint8 *data;
   guint size;
   gint written;
+
+#ifndef HAVE_WIN32
+  gint retval;
+#endif
 
   fdsink = GST_FD_SINK (sink);
 
@@ -255,24 +229,18 @@ gst_fd_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
 again:
 #ifndef HAVE_WIN32
-
-  FD_ZERO (&readfds);
-  FD_SET (READ_SOCKET (fdsink), &readfds);
-
-  FD_ZERO (&writefds);
-  FD_SET (fdsink->fd, &writefds);
-
   do {
     GST_DEBUG_OBJECT (fdsink, "going into select, have %d bytes to write",
         size);
-    retval = select (FD_SETSIZE, &readfds, &writefds, NULL, NULL);
-  } while ((retval == -1 && errno == EINTR));
+    retval = gst_poll_wait (fdsink->fdset, GST_CLOCK_TIME_NONE);
+  } while (retval == -1 && errno == EINTR);
 
-  if (retval == -1)
-    goto select_error;
-
-  if (FD_ISSET (READ_SOCKET (fdsink), &readfds))
-    goto stopped;
+  if (retval == -1) {
+    if (errno == EBUSY)
+      goto stopped;
+    else
+      goto select_error;
+  }
 #endif
 
   GST_DEBUG_OBJECT (fdsink, "writing %d bytes to file descriptor %d", size,
@@ -381,20 +349,18 @@ static gboolean
 gst_fd_sink_start (GstBaseSink * basesink)
 {
   GstFdSink *fdsink;
-  gint control_sock[2];
+  GstPollFD fd;
 
   fdsink = GST_FD_SINK (basesink);
   if (!gst_fd_sink_check_fd (fdsink, fdsink->fd))
     return FALSE;
 
-  if (socketpair (PF_UNIX, SOCK_STREAM, 0, control_sock) < 0)
+  if ((fdsink->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
     goto socket_pair;
 
-  READ_SOCKET (fdsink) = control_sock[0];
-  WRITE_SOCKET (fdsink) = control_sock[1];
-
-  fcntl (READ_SOCKET (fdsink), F_SETFL, O_NONBLOCK);
-  fcntl (WRITE_SOCKET (fdsink), F_SETFL, O_NONBLOCK);
+  fd.fd = fdsink->fd;
+  gst_poll_add_fd (fdsink->fdset, &fd);
+  gst_poll_fd_ctl_write (fdsink->fdset, &fd, TRUE);
 
   return TRUE;
 
@@ -412,8 +378,10 @@ gst_fd_sink_stop (GstBaseSink * basesink)
 {
   GstFdSink *fdsink = GST_FD_SINK (basesink);
 
-  close (READ_SOCKET (fdsink));
-  close (WRITE_SOCKET (fdsink));
+  if (fdsink->fdset) {
+    gst_poll_free (fdsink->fdset);
+    fdsink->fdset = NULL;
+  }
 
   return TRUE;
 }
@@ -423,8 +391,10 @@ gst_fd_sink_unlock (GstBaseSink * basesink)
 {
   GstFdSink *fdsink = GST_FD_SINK (basesink);
 
-  GST_LOG_OBJECT (fdsink, "Sending unlock command to queue");
-  SEND_COMMAND (fdsink, CONTROL_STOP);
+  GST_LOG_OBJECT (fdsink, "Flushing");
+  GST_OBJECT_LOCK (fdsink);
+  gst_poll_set_flushing (fdsink->fdset, TRUE);
+  GST_OBJECT_UNLOCK (fdsink);
 
   return TRUE;
 }
@@ -434,20 +404,10 @@ gst_fd_sink_unlock_stop (GstBaseSink * basesink)
 {
   GstFdSink *fdsink = GST_FD_SINK (basesink);
 
-  /* read all stop commands */
-  GST_LOG_OBJECT (fdsink, "Clearing unlock command queue");
-
-  while (TRUE) {
-    gchar command;
-    int res;
-
-    READ_COMMAND (fdsink, command, res);
-    if (res < 0) {
-      GST_LOG_OBJECT (fdsink, "no more commands");
-      /* no more commands */
-      break;
-    }
-  }
+  GST_LOG_OBJECT (fdsink, "No longer flushing");
+  GST_OBJECT_LOCK (fdsink);
+  gst_poll_set_flushing (fdsink->fdset, FALSE);
+  GST_OBJECT_UNLOCK (fdsink);
 
   return TRUE;
 }
@@ -463,9 +423,20 @@ gst_fd_sink_update_fd (GstFdSink * fdsink, int new_fd)
 
   /* assign the fd */
   GST_OBJECT_LOCK (fdsink);
+  if (fdsink->fdset) {
+    GstPollFD fd = { 0 };
+
+    fd.fd = fdsink->fd;
+    gst_poll_remove_fd (fdsink->fdset, &fd);
+
+    fd.fd = new_fd;
+    gst_poll_add_fd (fdsink->fdset, &fd);
+    gst_poll_fd_ctl_write (fdsink->fdset, &fd, TRUE);
+  }
   fdsink->fd = new_fd;
   g_free (fdsink->uri);
   fdsink->uri = g_strdup_printf ("fd://%d", fdsink->fd);
+
   GST_OBJECT_UNLOCK (fdsink);
 
   return TRUE;

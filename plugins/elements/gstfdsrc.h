@@ -64,7 +64,7 @@ struct _GstFdSrc {
 
   gchar *uri;
 
-  gint control_sock[2];
+  GstPoll *fdset;
 
   gulong curoffset; /* current offset in file */
 };

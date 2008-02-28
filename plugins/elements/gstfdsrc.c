@@ -50,24 +50,6 @@
 
 #include "gstfdsrc.h"
 
-/* the select call is also performed on the control sockets, that way
- * we can send special commands to unblock the select call */
-#define CONTROL_STOP            'S'     /* stop the select call */
-#define CONTROL_SOCKETS(src)   src->control_sock
-#define WRITE_SOCKET(src)      src->control_sock[1]
-#define READ_SOCKET(src)       src->control_sock[0]
-
-#define SEND_COMMAND(src, command)          \
-G_STMT_START {                              \
-  unsigned char c; c = command;             \
-  write (WRITE_SOCKET(src), &c, 1);         \
-} G_STMT_END
-
-#define READ_COMMAND(src, command, res)        \
-G_STMT_START {                                 \
-  res = read(READ_SOCKET(src), &command, 1);   \
-} G_STMT_END
-
 #define DEFAULT_BLOCKSIZE       4096
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
@@ -193,6 +175,21 @@ gst_fd_src_update_fd (GstFdSrc * src)
 {
   struct stat stat_results;
 
+  /* we need to always update the fdset since it may not have existed when
+   * gst_fd_src_update_fd() was called earlier */
+  if (src->fdset != NULL) {
+    GstPollFD fd;
+
+    if (src->fd >= 0) {
+      fd.fd = src->fd;
+      gst_poll_remove_fd (src->fdset, &fd);
+    }
+
+    fd.fd = src->new_fd;
+    gst_poll_add_fd (src->fdset, &fd);
+    gst_poll_fd_ctl_read (src->fdset, &fd, TRUE);
+  }
+
   if (src->fd != src->new_fd) {
     GST_INFO_OBJECT (src, "Updating to fd %d", src->new_fd);
 
@@ -227,20 +224,13 @@ static gboolean
 gst_fd_src_start (GstBaseSrc * bsrc)
 {
   GstFdSrc *src = GST_FD_SRC (bsrc);
-  gint control_sock[2];
 
   src->curoffset = 0;
 
-  gst_fd_src_update_fd (src);
-
-  if (socketpair (PF_UNIX, SOCK_STREAM, 0, control_sock) < 0)
+  if ((src->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
     goto socket_pair;
 
-  READ_SOCKET (src) = control_sock[0];
-  WRITE_SOCKET (src) = control_sock[1];
-
-  fcntl (READ_SOCKET (src), F_SETFL, O_NONBLOCK);
-  fcntl (WRITE_SOCKET (src), F_SETFL, O_NONBLOCK);
+  gst_fd_src_update_fd (src);
 
   return TRUE;
 
@@ -258,8 +248,10 @@ gst_fd_src_stop (GstBaseSrc * bsrc)
 {
   GstFdSrc *src = GST_FD_SRC (bsrc);
 
-  close (READ_SOCKET (src));
-  close (WRITE_SOCKET (src));
+  if (src->fdset) {
+    gst_poll_free (src->fdset);
+    src->fdset = NULL;
+  }
 
   return TRUE;
 }
@@ -269,8 +261,10 @@ gst_fd_src_unlock (GstBaseSrc * bsrc)
 {
   GstFdSrc *src = GST_FD_SRC (bsrc);
 
-  GST_LOG_OBJECT (src, "sending unlock command");
-  SEND_COMMAND (src, CONTROL_STOP);
+  GST_LOG_OBJECT (src, "Flushing");
+  GST_OBJECT_LOCK (src);
+  gst_poll_set_flushing (src->fdset, TRUE);
+  GST_OBJECT_UNLOCK (src);
 
   return TRUE;
 }
@@ -280,22 +274,10 @@ gst_fd_src_unlock_stop (GstBaseSrc * bsrc)
 {
   GstFdSrc *src = GST_FD_SRC (bsrc);
 
-  GST_LOG_OBJECT (src, "clearing unlock command queue");
-
-  /* read all stop commands */
-  while (TRUE) {
-    gchar command;
-    int res;
-
-    GST_LOG_OBJECT (src, "reading command");
-
-    READ_COMMAND (src, command, res);
-    if (res < 0) {
-      GST_LOG_OBJECT (src, "no more commands");
-      /* no more commands */
-      break;
-    }
-  }
+  GST_LOG_OBJECT (src, "No longer flushing");
+  GST_OBJECT_LOCK (src);
+  gst_poll_set_flushing (src->fdset, FALSE);
+  GST_OBJECT_UNLOCK (src);
 
   return TRUE;
 }
@@ -352,26 +334,22 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   guint blocksize;
 
 #ifndef HAVE_WIN32
-  fd_set readfds;
   gint retval;
 #endif
 
   src = GST_FD_SRC (psrc);
 
 #ifndef HAVE_WIN32
-  FD_ZERO (&readfds);
-  FD_SET (src->fd, &readfds);
-  FD_SET (READ_SOCKET (src), &readfds);
-
   do {
-    retval = select (FD_SETSIZE, &readfds, NULL, NULL, NULL);
-  } while ((retval == -1 && errno == EINTR));
+    retval = gst_poll_wait (src->fdset, GST_CLOCK_TIME_NONE);
+  } while (retval == -1 && errno == EINTR);
 
-  if (retval == -1)
-    goto select_error;
-
-  if (FD_ISSET (READ_SOCKET (src), &readfds))
-    goto stopped;
+  if (retval == -1) {
+    if (errno == EBUSY)
+      goto stopped;
+    else
+      goto select_error;
+  }
 #endif
 
   blocksize = GST_BASE_SRC (src)->blocksize;
@@ -530,7 +508,7 @@ gst_fd_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   }
   g_free (protocol);
 
-  if (sscanf (uri, "fd://%d", &fd) != 1)
+  if (sscanf (uri, "fd://%d", &fd) != 1 || fd < 0)
     return FALSE;
 
   src->new_fd = fd;
