@@ -187,6 +187,8 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
   max_payload = MIN (max_payload, available);
   frame_count = max_payload / sbcpay->frame_length;
   payload_length = frame_count * sbcpay->frame_length;
+  if (payload_length == 0)      /* Nothing to send */
+    return GST_FLOW_OK;
 
   outbuf = gst_rtp_buffer_new_allocate (payload_length +
       RTP_SBC_PAYLOAD_HEADER_SIZE, 0, 0);
@@ -219,7 +221,7 @@ gst_rtp_sbc_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
   sbcpay = GST_RTP_SBC_PAY (payload);
   sbcpay->timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
-  gst_adapter_push (sbcpay->adapter, gst_buffer_copy (buffer));
+  gst_adapter_push (sbcpay->adapter, buffer);
 
   available = gst_adapter_available (sbcpay->adapter);
   if (available + RTP_SBC_HEADER_TOTAL >=
