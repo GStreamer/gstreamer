@@ -32,24 +32,6 @@
 #include <fcntl.h>
 
 
-/* control stuff stolen from fdsrc */
-#define CONTROL_STOP            'S'     /* stop the select call */
-#define CONTROL_SOCKETS(o)      o->control_fds
-#define WRITE_SOCKET(o)         o->control_fds[1]
-#define READ_SOCKET(o)          o->control_fds[0]
-
-#define SEND_COMMAND(o, command)          \
-G_STMT_START {                              \
-  unsigned char c; c = command;             \
-  write (WRITE_SOCKET(o), &c, 1);         \
-} G_STMT_END
-
-#define READ_COMMAND(o, command, res)        \
-G_STMT_START {                                 \
-  res = read(READ_SOCKET(o), &command, 1);   \
-} G_STMT_END
-
-
 GST_DEBUG_CATEGORY_STATIC (tcpserversrc_debug);
 #define GST_CAT_DEFAULT tcpserversrc_debug
 
@@ -147,12 +129,9 @@ gst_tcp_server_src_init (GstTCPServerSrc * src, GstTCPServerSrcClass * g_class)
 {
   src->server_port = TCP_DEFAULT_PORT;
   src->host = g_strdup (TCP_DEFAULT_HOST);
-  src->server_sock_fd = -1;
-  src->client_sock_fd = -1;
+  src->server_sock_fd.fd = -1;
+  src->client_sock_fd.fd = -1;
   src->protocol = GST_TCP_PROTOCOL_NONE;
-
-  READ_SOCKET (src) = -1;
-  WRITE_SOCKET (src) = -1;
 
   GST_OBJECT_FLAG_UNSET (src, GST_TCP_SERVER_SRC_OPEN);
 }
@@ -172,8 +151,6 @@ gst_tcp_server_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstTCPServerSrc *src;
   GstFlowReturn ret = GST_FLOW_OK;
-  fd_set testfds;
-  int maxfdp1;
 
   src = GST_TCP_SERVER_SRC (psrc);
 
@@ -181,36 +158,33 @@ gst_tcp_server_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     goto wrong_state;
 
 restart:
-  /* do a blocking select on the socket */
-  FD_ZERO (&testfds);
-
-  /* always select on cancel socket */
-  FD_SET (READ_SOCKET (src), &testfds);
-
-  if (src->client_sock_fd >= 0) {
+  if (src->client_sock_fd.fd >= 0) {
     /* if we have a client, wait for read */
-    FD_SET (src->client_sock_fd, &testfds);
-    maxfdp1 = MAX (src->client_sock_fd, READ_SOCKET (src)) + 1;
+    gst_poll_fd_ctl_read (src->fdset, &src->server_sock_fd, FALSE);
+    gst_poll_fd_ctl_read (src->fdset, &src->client_sock_fd, TRUE);
   } else {
     /* else wait on server socket for connections */
-    FD_SET (src->server_sock_fd, &testfds);
-    maxfdp1 = MAX (src->server_sock_fd, READ_SOCKET (src)) + 1;
+    gst_poll_fd_ctl_read (src->fdset, &src->server_sock_fd, TRUE);
   }
 
   /* no action (0) is an error too in our case */
-  if (select (maxfdp1, &testfds, NULL, NULL, 0) <= 0)
-    goto select_error;
-
-  if (FD_ISSET (READ_SOCKET (src), &testfds))
-    goto select_cancelled;
+  if ((ret = gst_poll_wait (src->fdset, GST_CLOCK_TIME_NONE)) <= 0) {
+    if (ret == -1 && errno == EBUSY)
+      goto select_cancelled;
+    else
+      goto select_error;
+  }
 
   /* if we have no client socket we can accept one now */
-  if (src->client_sock_fd < 0) {
-    if (FD_ISSET (src->server_sock_fd, &testfds)) {
-      if ((src->client_sock_fd =
-              accept (src->server_sock_fd, (struct sockaddr *) &src->client_sin,
+  if (src->client_sock_fd.fd < 0) {
+    if (gst_poll_fd_can_read (src->fdset, &src->server_sock_fd)) {
+      if ((src->client_sock_fd.fd =
+              accept (src->server_sock_fd.fd,
+                  (struct sockaddr *) &src->client_sin,
                   &src->client_sin_len)) == -1)
         goto accept_error;
+
+      gst_poll_add_fd (src->fdset, &src->client_sock_fd);
     }
     /* and restart now to poll the socket. */
     goto restart;
@@ -220,8 +194,8 @@ restart:
 
   switch (src->protocol) {
     case GST_TCP_PROTOCOL_NONE:
-      ret = gst_tcp_read_buffer (GST_ELEMENT (src), src->client_sock_fd,
-          READ_SOCKET (src), outbuf);
+      ret = gst_tcp_read_buffer (GST_ELEMENT (src), src->client_sock_fd.fd,
+          src->fdset, outbuf);
       break;
 
     case GST_TCP_PROTOCOL_GDP:
@@ -229,8 +203,8 @@ restart:
         GstCaps *caps;
         gchar *string;
 
-        ret = gst_tcp_gdp_read_caps (GST_ELEMENT (src), src->client_sock_fd,
-            READ_SOCKET (src), &caps);
+        ret = gst_tcp_gdp_read_caps (GST_ELEMENT (src), src->client_sock_fd.fd,
+            src->fdset, &caps);
 
         if (ret == GST_FLOW_WRONG_STATE)
           goto gdp_cancelled;
@@ -246,8 +220,8 @@ restart:
         gst_pad_set_caps (GST_BASE_SRC_PAD (psrc), caps);
       }
 
-      ret = gst_tcp_gdp_read_buffer (GST_ELEMENT (src), src->client_sock_fd,
-          READ_SOCKET (src), outbuf);
+      ret = gst_tcp_gdp_read_buffer (GST_ELEMENT (src), src->client_sock_fd.fd,
+          src->fdset, outbuf);
 
       if (ret == GST_FLOW_OK)
         gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
@@ -369,26 +343,19 @@ gst_tcp_server_src_start (GstBaseSrc * bsrc)
   int ret;
   GstTCPServerSrc *src = GST_TCP_SERVER_SRC (bsrc);
 
-  /* create the control sockets before anything */
-  if (socketpair (PF_UNIX, SOCK_STREAM, 0, CONTROL_SOCKETS (src)) < 0)
-    goto socket_pair;
-
-  fcntl (READ_SOCKET (src), F_SETFL, O_NONBLOCK);
-  fcntl (WRITE_SOCKET (src), F_SETFL, O_NONBLOCK);
-
   /* reset caps_received flag */
   src->caps_received = FALSE;
 
   /* create the server listener socket */
-  if ((src->server_sock_fd = socket (AF_INET, SOCK_STREAM, 0)) == -1)
+  if ((src->server_sock_fd.fd = socket (AF_INET, SOCK_STREAM, 0)) == -1)
     goto socket_error;
 
   GST_DEBUG_OBJECT (src, "opened receiving server socket with fd %d",
-      src->server_sock_fd);
+      src->server_sock_fd.fd);
 
   /* make address reusable */
   ret = 1;
-  if (setsockopt (src->server_sock_fd, SOL_SOCKET, SO_REUSEADDR, &ret,
+  if (setsockopt (src->server_sock_fd.fd, SOL_SOCKET, SO_REUSEADDR, &ret,
           sizeof (int)) < 0)
     goto sock_opt;
 
@@ -408,15 +375,21 @@ gst_tcp_server_src_start (GstBaseSrc * bsrc)
 
   /* bind it */
   GST_DEBUG_OBJECT (src, "binding server socket to address");
-  if ((ret = bind (src->server_sock_fd, (struct sockaddr *) &src->server_sin,
+  if ((ret = bind (src->server_sock_fd.fd, (struct sockaddr *) &src->server_sin,
               sizeof (src->server_sin))) < 0)
     goto bind_error;
 
   GST_DEBUG_OBJECT (src, "listening on server socket %d with queue of %d",
-      src->server_sock_fd, TCP_BACKLOG);
+      src->server_sock_fd.fd, TCP_BACKLOG);
 
-  if (listen (src->server_sock_fd, TCP_BACKLOG) == -1)
+  if (listen (src->server_sock_fd.fd, TCP_BACKLOG) == -1)
     goto listen_error;
+
+  /* create an fdset to keep track of our file descriptors */
+  if ((src->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
+    goto socket_pair;
+
+  gst_poll_add_fd (src->fdset, &src->server_sock_fd);
 
   GST_DEBUG_OBJECT (src, "received client");
 
@@ -425,12 +398,6 @@ gst_tcp_server_src_start (GstBaseSrc * bsrc)
   return TRUE;
 
   /* ERRORS */
-socket_pair:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
-        GST_ERROR_SYSTEM);
-    return FALSE;
-  }
 socket_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL), GST_ERROR_SYSTEM);
@@ -440,6 +407,7 @@ sock_opt:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("Could not setsockopt: %s", g_strerror (errno)));
+    gst_tcp_socket_close (&src->server_sock_fd);
     return FALSE;
   }
 host_error:
@@ -465,6 +433,13 @@ listen_error:
         ("Could not listen on server socket: %s", g_strerror (errno)));
     return FALSE;
   }
+socket_pair:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
+        GST_ERROR_SYSTEM);
+    gst_tcp_socket_close (&src->server_sock_fd);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -472,20 +447,13 @@ gst_tcp_server_src_stop (GstBaseSrc * bsrc)
 {
   GstTCPServerSrc *src = GST_TCP_SERVER_SRC (bsrc);
 
-  if (src->server_sock_fd != -1) {
-    close (src->server_sock_fd);
-    src->server_sock_fd = -1;
-  }
-  if (src->client_sock_fd != -1) {
-    close (src->client_sock_fd);
-    src->client_sock_fd = -1;
-  }
-  GST_OBJECT_FLAG_UNSET (src, GST_TCP_SERVER_SRC_OPEN);
+  gst_poll_free (src->fdset);
+  src->fdset = NULL;
 
-  close (READ_SOCKET (src));
-  close (WRITE_SOCKET (src));
-  READ_SOCKET (src) = -1;
-  WRITE_SOCKET (src) = -1;
+  gst_tcp_socket_close (&src->server_sock_fd);
+  gst_tcp_socket_close (&src->client_sock_fd);
+
+  GST_OBJECT_FLAG_UNSET (src, GST_TCP_SERVER_SRC_OPEN);
 
   return TRUE;
 }
@@ -496,7 +464,7 @@ gst_tcp_server_src_unlock (GstBaseSrc * bsrc)
 {
   GstTCPServerSrc *src = GST_TCP_SERVER_SRC (bsrc);
 
-  SEND_COMMAND (src, CONTROL_STOP);
+  gst_poll_set_flushing (src->fdset, TRUE);
 
   return TRUE;
 }

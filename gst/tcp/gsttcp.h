@@ -44,14 +44,14 @@ gchar * gst_tcp_host_to_ip (GstElement *element, const gchar *host);
 
 gint gst_tcp_socket_write (int socket, const void *buf, size_t count);
 
-void gst_tcp_socket_close (int *socket);
+void gst_tcp_socket_close (GstPollFD *socket);
 
-GstFlowReturn gst_tcp_read_buffer (GstElement * this, int socket, int cancel_fd, GstBuffer **buf);
+GstFlowReturn gst_tcp_read_buffer (GstElement * this, int socket, GstPoll * fdset, GstBuffer **buf);
 
-GstFlowReturn gst_tcp_gdp_read_buffer (GstElement * this, int socket, int cancel_fd, GstBuffer **buf);
-GstFlowReturn gst_tcp_gdp_read_caps (GstElement * this, int socket, int cancel_fd, GstCaps **caps);
+GstFlowReturn gst_tcp_gdp_read_buffer (GstElement * this, int socket, GstPoll * fdset, GstBuffer **buf);
+GstFlowReturn gst_tcp_gdp_read_caps (GstElement * this, int socket, GstPoll * fdset, GstCaps **caps);
 
-GstEvent * gst_tcp_gdp_read_event (GstElement *elem, int socket, int cancel_fd);
+GstEvent * gst_tcp_gdp_read_event (GstElement *elem, int socket, GstPoll * fdset);
 
 gboolean gst_tcp_gdp_write_buffer (GstElement *elem, int socket, GstBuffer *buffer, gboolean fatal, const gchar *host, int port);
 gboolean gst_tcp_gdp_write_event (GstElement *elem, int socket, GstEvent *event, gboolean fatal, const gchar *host, int port);

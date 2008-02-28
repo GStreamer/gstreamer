@@ -63,7 +63,7 @@ enum
 static void gst_tcp_server_sink_finalize (GObject * gobject);
 
 static gboolean gst_tcp_server_sink_handle_wait (GstMultiFdSink * sink,
-    GstFDSet * set);
+    GstPoll * set);
 static gboolean gst_tcp_server_sink_init_send (GstMultiFdSink * this);
 static gboolean gst_tcp_server_sink_close (GstMultiFdSink * this);
 static void gst_tcp_server_sink_removed (GstMultiFdSink * sink, int fd);
@@ -184,11 +184,11 @@ gst_tcp_server_sink_removed (GstMultiFdSink * sink, int fd)
 }
 
 static gboolean
-gst_tcp_server_sink_handle_wait (GstMultiFdSink * sink, GstFDSet * set)
+gst_tcp_server_sink_handle_wait (GstMultiFdSink * sink, GstPoll * set)
 {
   GstTCPServerSink *this = GST_TCP_SERVER_SINK (sink);
 
-  if (gst_fdset_fd_can_read (set, &this->server_sock)) {
+  if (gst_poll_fd_can_read (set, &this->server_sock)) {
     /* handle new client connection on server socket */
     if (!gst_tcp_server_sink_handle_server_read (this)) {
       GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
@@ -270,7 +270,7 @@ gst_tcp_server_sink_init_send (GstMultiFdSink * parent)
   ret = 1;
   if (setsockopt (this->server_sock.fd, SOL_SOCKET, SO_REUSEADDR,
           (void *) &ret, sizeof (ret)) < 0) {
-    gst_tcp_socket_close (&this->server_sock.fd);
+    gst_tcp_socket_close (&this->server_sock);
     GST_ELEMENT_ERROR (this, RESOURCE, SETTINGS, (NULL),
         ("Could not setsockopt: %s", g_strerror (errno)));
     return FALSE;
@@ -279,7 +279,7 @@ gst_tcp_server_sink_init_send (GstMultiFdSink * parent)
   ret = 1;
   if (setsockopt (this->server_sock.fd, SOL_SOCKET, SO_KEEPALIVE,
           (void *) &ret, sizeof (ret)) < 0) {
-    gst_tcp_socket_close (&this->server_sock.fd);
+    gst_tcp_socket_close (&this->server_sock);
     GST_ELEMENT_ERROR (this, RESOURCE, SETTINGS, (NULL),
         ("Could not setsockopt: %s", g_strerror (errno)));
     return FALSE;
@@ -297,7 +297,7 @@ gst_tcp_server_sink_init_send (GstMultiFdSink * parent)
       sizeof (this->server_sin));
 
   if (ret) {
-    gst_tcp_socket_close (&this->server_sock.fd);
+    gst_tcp_socket_close (&this->server_sock);
     switch (errno) {
       default:
         GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
@@ -314,7 +314,7 @@ gst_tcp_server_sink_init_send (GstMultiFdSink * parent)
   GST_DEBUG_OBJECT (this, "listening on server socket %d with queue of %d",
       this->server_sock.fd, TCP_BACKLOG);
   if (listen (this->server_sock.fd, TCP_BACKLOG) == -1) {
-    gst_tcp_socket_close (&this->server_sock.fd);
+    gst_tcp_socket_close (&this->server_sock);
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
         ("Could not listen on server socket: %s", g_strerror (errno)));
     return FALSE;
@@ -323,8 +323,8 @@ gst_tcp_server_sink_init_send (GstMultiFdSink * parent)
       "listened on server socket %d, returning from connection setup",
       this->server_sock.fd);
 
-  gst_fdset_add_fd (parent->fdset, &this->server_sock);
-  gst_fdset_fd_ctl_read (parent->fdset, &this->server_sock, TRUE);
+  gst_poll_add_fd (parent->fdset, &this->server_sock);
+  gst_poll_fd_ctl_read (parent->fdset, &this->server_sock, TRUE);
 
   return TRUE;
 }
@@ -335,7 +335,7 @@ gst_tcp_server_sink_close (GstMultiFdSink * parent)
   GstTCPServerSink *this = GST_TCP_SERVER_SINK (parent);
 
   if (this->server_sock.fd != -1) {
-    gst_fdset_remove_fd (parent->fdset, &this->server_sock);
+    gst_poll_remove_fd (parent->fdset, &this->server_sock);
 
     close (this->server_sock.fd);
     this->server_sock.fd = -1;

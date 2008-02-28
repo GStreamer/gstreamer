@@ -64,8 +64,8 @@ struct _GstTCPClientSrc {
   struct sockaddr_in server_sin;
 
   /* socket */
-  int sock_fd;
-  int control_fds[2];
+  GstPollFD sock_fd;
+  GstPoll *fdset;
 
   GstTCPProtocol protocol; /* protocol used for reading data */
   gboolean caps_received;      /* if we have received caps yet */

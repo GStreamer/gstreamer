@@ -28,7 +28,6 @@
 G_BEGIN_DECLS
 
 #include "gsttcp.h"
-#include "gstfdset.h"
 
 #define GST_TYPE_MULTI_FD_SINK \
   (gst_multi_fd_sink_get_type())
@@ -140,7 +139,7 @@ typedef enum
 /* structure for a client
  */
 typedef struct {
-  GstFD fd;
+  GstPollFD fd;
 
   gint bufpos;                  /* position of this client in the global queue */
   gint flushcount;              /* the remaining number of buffers to flush out or -1 if the 
@@ -201,10 +200,8 @@ struct _GstMultiFdSink {
   GHashTable *fd_hash;  /* index on fd to client */
   guint clients_cookie; /* Cookie to detect changes to the clients list */
 
-  GstFDSetMode mode;
-  GstFDSet *fdset;
-
-  GstFD control_sock[2];/* sockets for controlling the select call */
+  GstPollMode mode;
+  GstPoll *fdset;
 
   GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
   gboolean previous_buffer_in_caps;
@@ -259,7 +256,7 @@ struct _GstMultiFdSinkClass {
 
   /* vtable */
   gboolean (*init)   (GstMultiFdSink *sink);
-  gboolean (*wait)   (GstMultiFdSink *sink, GstFDSet *set);
+  gboolean (*wait)   (GstMultiFdSink *sink, GstPoll *set);
   gboolean (*close)  (GstMultiFdSink *sink);
   void (*removed) (GstMultiFdSink *sink, int fd);
 

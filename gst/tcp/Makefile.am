@@ -15,7 +15,6 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 libgsttcp_la_SOURCES = \
 	gsttcpplugin.c \
 	gsttcp.c \
-	gstfdset.c \
 	gstmultifdsink.c  \
 	gsttcpclientsrc.c gsttcpclientsink.c \
 	gsttcpserversrc.c gsttcpserversink.c
@@ -31,7 +30,6 @@ libgsttcp_la_LIBADD = $(GST_BASE_LIBS) $(GST_GDP_LIBS) $(GST_LIBS)
 noinst_HEADERS = \
   gsttcpplugin.h \
   gsttcp.h \
-  gstfdset.h \
   gstmultifdsink.h  \
   gsttcpclientsrc.h gsttcpclientsink.h \
   gsttcpserversrc.h gsttcpserversink.h
@@ -39,9 +37,3 @@ noinst_HEADERS = \
 CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = gsttcp-marshal.list
-
-noinst_PROGRAMS = fdsetstress
-
-fdsetstress_SOURCES = fdsetstress.c gstfdset.c 
-fdsetstress_CFLAGS = $(GST_CFLAGS)
-fdsetstress_LDFLAGS = $(GST_LIBS)

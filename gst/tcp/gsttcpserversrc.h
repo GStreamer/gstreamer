@@ -65,14 +65,14 @@ struct _GstTCPServerSrc {
   int server_port;
   gchar *host;
   struct sockaddr_in server_sin;
-  int server_sock_fd;
+  GstPollFD server_sock_fd;
 
   /* client information */
   struct sockaddr_in client_sin;
   socklen_t client_sin_len;
-  int client_sock_fd;
+  GstPollFD client_sock_fd;
 
-  int control_fds[2];
+  GstPoll *fdset;
 
   GstTCPProtocol protocol; /* protocol used for reading data */
   gboolean caps_received;      /* if we have received caps yet */

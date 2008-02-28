@@ -73,7 +73,7 @@ struct _GstTCPClientSink {
   struct sockaddr_in server_sin;
 
   /* socket */
-  int sock_fd;
+  GstPollFD sock_fd;
 
   size_t data_written; /* how much bytes have we written ? */
   GstTCPProtocol protocol; /* used with the protocol enum */

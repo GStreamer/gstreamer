@@ -29,7 +29,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <string.h>             /* memset, in FD_ZERO macro */
 #include <unistd.h>
 #include <sys/ioctl.h>
 
@@ -128,30 +127,24 @@ gst_tcp_socket_write (int socket, const void *buf, size_t count)
  */
 static GstFlowReturn
 gst_tcp_socket_read (GstElement * this, int socket, void *buf, size_t count,
-    int cancel_fd)
+    GstPoll * fdset)
 {
-  fd_set testfds;
-  int maxfdp1;
   ssize_t n;
   size_t bytes_read;
   int num_to_read;
+  int ret;
 
   bytes_read = 0;
 
   while (bytes_read < count) {
     /* do a blocking select on the socket */
-    FD_ZERO (&testfds);
-    FD_SET (socket, &testfds);
-    if (cancel_fd >= 0)
-      FD_SET (cancel_fd, &testfds);
-    maxfdp1 = MAX (socket, cancel_fd) + 1;
-
     /* no action (0) is an error too in our case */
-    if (select (maxfdp1, &testfds, NULL, NULL, 0) <= 0)
-      goto select_error;
-
-    if (cancel_fd >= 0 && FD_ISSET (cancel_fd, &testfds))
-      goto cancelled;
+    if ((ret = gst_poll_wait (fdset, GST_CLOCK_TIME_NONE)) <= 0) {
+      if (ret == -1 && errno == EBUSY)
+        goto cancelled;
+      else
+        goto select_error;
+    }
 
     /* ask how much is available for reading on the socket */
     if (ioctl (socket, FIONREAD, &num_to_read) < 0)
@@ -216,10 +209,12 @@ short_read:
 
 /* close the socket and reset the fd.  Used to clean up after errors. */
 void
-gst_tcp_socket_close (int *socket)
+gst_tcp_socket_close (GstPollFD * socket)
 {
-  close (*socket);
-  *socket = -1;
+  if (socket->fd >= 0) {
+    close (socket->fd);
+    socket->fd = -1;
+  }
 }
 
 /* read a buffer from the given socket
@@ -229,30 +224,23 @@ gst_tcp_socket_close (int *socket)
  *         EOS
  */
 GstFlowReturn
-gst_tcp_read_buffer (GstElement * this, int socket, int cancel_fd,
+gst_tcp_read_buffer (GstElement * this, int socket, GstPoll * fdset,
     GstBuffer ** buf)
 {
-  fd_set testfds;
   int ret;
-  int maxfdp1;
   ssize_t bytes_read;
   int readsize;
 
   *buf = NULL;
 
   /* do a blocking select on the socket */
-  FD_ZERO (&testfds);
-  FD_SET (socket, &testfds);
-  if (cancel_fd >= 0)
-    FD_SET (cancel_fd, &testfds);
-  maxfdp1 = MAX (socket, cancel_fd) + 1;
-
   /* no action (0) is an error too in our case */
-  if ((ret = select (maxfdp1, &testfds, NULL, NULL, 0)) <= 0)
-    goto select_error;
-
-  if (cancel_fd >= 0 && FD_ISSET (cancel_fd, &testfds))
-    goto cancelled;
+  if ((ret = gst_poll_wait (fdset, GST_CLOCK_TIME_NONE)) <= 0) {
+    if (ret == -1 && errno == EBUSY)
+      goto cancelled;
+    else
+      goto select_error;
+  }
 
   /* ask how much is available for reading on the socket */
   if ((ret = ioctl (socket, FIONREAD, &readsize)) < 0)
@@ -326,7 +314,7 @@ short_read:
  *         EOS
  */
 GstFlowReturn
-gst_tcp_gdp_read_buffer (GstElement * this, int socket, int cancel_fd,
+gst_tcp_gdp_read_buffer (GstElement * this, int socket, GstPoll * fdset,
     GstBuffer ** buf)
 {
   GstFlowReturn ret;
@@ -338,8 +326,7 @@ gst_tcp_gdp_read_buffer (GstElement * this, int socket, int cancel_fd,
   *buf = NULL;
   header = g_malloc (GST_DP_HEADER_LENGTH);
 
-  ret = gst_tcp_socket_read (this, socket, header, GST_DP_HEADER_LENGTH,
-      cancel_fd);
+  ret = gst_tcp_socket_read (this, socket, header, GST_DP_HEADER_LENGTH, fdset);
 
   if (ret != GST_FLOW_OK)
     goto header_read_error;
@@ -357,7 +344,7 @@ gst_tcp_gdp_read_buffer (GstElement * this, int socket, int cancel_fd,
   g_free (header);
 
   ret = gst_tcp_socket_read (this, socket, GST_BUFFER_DATA (*buf),
-      GST_BUFFER_SIZE (*buf), cancel_fd);
+      GST_BUFFER_SIZE (*buf), fdset);
 
   if (ret != GST_FLOW_OK)
     goto data_read_error;
@@ -394,7 +381,7 @@ data_read_error:
 }
 
 GstFlowReturn
-gst_tcp_gdp_read_caps (GstElement * this, int socket, int cancel_fd,
+gst_tcp_gdp_read_caps (GstElement * this, int socket, GstPoll * fdset,
     GstCaps ** caps)
 {
   GstFlowReturn ret;
@@ -408,8 +395,7 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket, int cancel_fd,
   *caps = NULL;
   header = g_malloc (GST_DP_HEADER_LENGTH);
 
-  ret = gst_tcp_socket_read (this, socket, header, GST_DP_HEADER_LENGTH,
-      cancel_fd);
+  ret = gst_tcp_socket_read (this, socket, header, GST_DP_HEADER_LENGTH, fdset);
 
   if (ret != GST_FLOW_OK)
     goto header_read_error;
@@ -429,7 +415,7 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket, int cancel_fd,
       "Reading %" G_GSIZE_FORMAT " bytes for caps packet payload",
       payload_length);
 
-  ret = gst_tcp_socket_read (this, socket, payload, payload_length, cancel_fd);
+  ret = gst_tcp_socket_read (this, socket, payload, payload_length, fdset);
 
   if (ret != GST_FLOW_OK)
     goto payload_read_error;
