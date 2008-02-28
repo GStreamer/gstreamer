@@ -1,3 +1,14 @@
+2008-02-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_create), (gst_rtsp_connection_connect),
+	(gst_rtsp_connection_write), (gst_rtsp_connection_read_internal),
+	(gst_rtsp_connection_receive), (gst_rtsp_connection_close),
+	(gst_rtsp_connection_free), (gst_rtsp_connection_poll),
+	(gst_rtsp_connection_flush):
+	* gst-libs/gst/rtsp/gstrtspconnection.h:
+	Use GstPoll for the rtsp connection.
+
 2008-02-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/examples/seek/seek.c: (vis_toggle_cb), (filter_features),

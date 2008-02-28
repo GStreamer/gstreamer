@@ -65,9 +65,9 @@ struct _GstRTSPConnection
   GstRTSPUrl *url;
 
   /* connection state */
-  gint   fd;
-  gint   control_sock[2];
-  gchar *ip;
+  GstPollFD   fd;
+  GstPoll    *fdset;
+  gchar      *ip;
 
   /* Session state */
   gint          cseq;                   /* sequence number */
