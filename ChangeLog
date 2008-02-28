@@ -1,5 +1,12 @@
 2008-02-28  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* tests/benchmarks/Makefile.am:
+	* tests/benchmarks/gstpollstress.c: (mess_some_more), (run_test),
+	(main):
+	Add poll stress test.
+
+2008-02-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Peter Kjellerstedt <pkj at axis dot com>
 
 	* plugins/elements/gstfdsink.c: (gst_fd_sink_render),
