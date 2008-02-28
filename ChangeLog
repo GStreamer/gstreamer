@@ -1,3 +1,13 @@
+2008-02-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Peter Kjellerstedt <pkj at axis com>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_init), (gst_udpsrc_create),
+	(gst_udpsrc_get_property), (gst_udpsrc_start), (gst_udpsrc_unlock),
+	(gst_udpsrc_unlock_stop), (gst_udpsrc_stop):
+	* gst/udp/gstudpsrc.h:
+	Port to GstPoll. See #505417.
+
 2008-02-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/law/mulaw-decode.c: (gst_mulawdec_chain):

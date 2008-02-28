@@ -52,21 +52,21 @@ struct _GstUDPSrc {
   GstPushSrc parent;
 
   /* properties */
-  gchar   *uri;
-  int      port;
-  gchar   *multi_group;
-  gint     ttl;
-  GstCaps *caps;
-  gint     buffer_size;
-  guint64  timeout;
-  gint     skip_first_bytes;
-  int      sockfd;
-  gboolean closefd;
+  gchar     *uri;
+  int        port;
+  gchar     *multi_group;
+  gint       ttl;
+  GstCaps   *caps;
+  gint       buffer_size;
+  guint64    timeout;
+  gint       skip_first_bytes;
+  int        sockfd;
+  gboolean   closefd;
 
   /* our sockets */
-  int      sock;
-  int      control_sock[2];
-  gboolean externalfd;
+  GstPollFD  sock;
+  GstPoll   *fdset;
+  gboolean   externalfd;
 
   struct   sockaddr_in myaddr;
   struct   ip_mreq multi_addr;
