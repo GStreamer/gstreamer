@@ -1,5 +1,7 @@
 2008-02-28  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
 	* gst-libs/gst/rtsp/gstrtspconnection.c:
 	(gst_rtsp_connection_create), (gst_rtsp_connection_connect),
 	(gst_rtsp_connection_write), (gst_rtsp_connection_read_internal),
@@ -7,7 +9,7 @@
 	(gst_rtsp_connection_free), (gst_rtsp_connection_poll),
 	(gst_rtsp_connection_flush):
 	* gst-libs/gst/rtsp/gstrtspconnection.h:
-	Use GstPoll for the rtsp connection.
+	Use GstPoll for the rtsp connection. See #505417.
 
 2008-02-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
