@@ -631,19 +631,52 @@ mpegts_parse_release_pad (GstElement * element, GstPad * pad)
 }
 
 static GstFlowReturn
+mpegts_parse_tspad_push_section (MpegTSParse * parse, MpegTSParsePad * tspad,
+    MpegTSPacketizerSection * section, GstBuffer * buffer)
+{
+  GstFlowReturn ret = GST_FLOW_NOT_LINKED;
+  gboolean to_push = TRUE;
+
+  if (tspad->program_number != -1) {
+    if (tspad->program) {
+      /* we push all sections to all pads except PMTs which we
+       * only push to pads meant to receive that program number */
+      if (section->table_id == 0x02) {
+        /* PMT */
+        if (section->subtable_extension != tspad->program_number)
+          to_push = FALSE;
+      }
+    } else {
+      /* there's a program filter on the pad but the PMT for the program has not
+       * been parsed yet, ignore the pad until we get a PMT */
+      to_push = FALSE;
+      ret = GST_FLOW_OK;
+    }
+  }
+  GST_DEBUG_OBJECT (parse,
+      "pushing section: %d program number: %d table_id: %d", to_push,
+      tspad->program_number, section->table_id);
+  if (to_push) {
+    ret = gst_pad_push (tspad->pad, buffer);
+  } else {
+    gst_buffer_unref (buffer);
+    if (gst_pad_is_linked (tspad->pad))
+      ret = GST_FLOW_OK;
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
 mpegts_parse_tspad_push (MpegTSParse * parse, MpegTSParsePad * tspad,
     guint16 pid, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_NOT_LINKED;
   GHashTable *pad_pids = NULL;
-  guint16 pmt_pid = G_MAXUINT16;
-  guint16 pcr_pid = G_MAXUINT16;
 
   if (tspad->program_number != -1) {
     if (tspad->program) {
       pad_pids = tspad->program->streams;
-      pmt_pid = tspad->program->pmt_pid;
-      pcr_pid = tspad->program->pcr_pid;
     } else {
       /* there's a program filter on the pad but the PMT for the program has not
        * been parsed yet, ignore the pad until we get a PMT */
@@ -653,9 +686,7 @@ mpegts_parse_tspad_push (MpegTSParse * parse, MpegTSParsePad * tspad,
     }
   }
 
-  /* FIXME: take the SI pids from a list not hardcoded here */
-  if (pad_pids == NULL || pid == pcr_pid || pid == pmt_pid || pid == 0 ||
-      pid == 0x10 || pid == 0x11 || pid == 0x12 ||
+  if (pad_pids == NULL ||
       g_hash_table_lookup (pad_pids, GINT_TO_POINTER ((gint) pid)) != NULL) {
     /* push if there's no filter or if the pid is in the filter */
     ret = gst_pad_push (tspad->pad, buffer);
@@ -679,7 +710,8 @@ pad_clear_for_push (GstPad * pad, MpegTSParse * parse)
 }
 
 static GstFlowReturn
-mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
+mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet,
+    MpegTSPacketizerSection * section)
 {
   GstIterator *iterator;
   gboolean done = FALSE;
@@ -716,8 +748,13 @@ mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
           /* ref the buffer as gst_pad_push takes a ref but we want to reuse the
            * same buffer for next pushes */
           gst_buffer_ref (buffer);
-          tspad->flow_return =
-              mpegts_parse_tspad_push (parse, tspad, pid, buffer);
+          if (section) {
+            tspad->flow_return =
+                mpegts_parse_tspad_push_section (parse, tspad, section, buffer);
+          } else {
+            tspad->flow_return =
+                mpegts_parse_tspad_push (parse, tspad, pid, buffer);
+          }
           tspad->pushed = TRUE;
 
           if (GST_FLOW_IS_FATAL (tspad->flow_return)) {
@@ -904,7 +941,8 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
         gst_structure_get_uint (stream, "stream-type", &stream_type);
         mpegts_parse_program_remove_stream (parse, program, (guint16) pid);
       }
-
+      /* remove pcr stream */
+      mpegts_parse_program_remove_stream (parse, program, program->pcr_pid);
       gst_structure_free (program->pmt_info);
     }
   } else {
@@ -917,7 +955,6 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
   /* activate new pmt */
   program->pmt_info = pmt_info;
   program->pmt_pid = pmt_pid;
-  /* FIXME: check if the pcr pid is changed */
   program->pcr_pid = pcr_pid;
   mpegts_parse_program_add_stream (parse, program, (guint16) pcr_pid, -1);
 
@@ -1127,14 +1164,18 @@ mpegts_parse_chain (GstPad * pad, GstBuffer * buf)
         /* section complete */
         parsed = mpegts_parse_handle_psi (parse, &section);
         gst_buffer_unref (section.buffer);
+
         if (!parsed)
           /* bad PSI table */
           goto next;
       }
-    }
+      /* we need to push section packet downstream */
+      res = mpegts_parse_push (parse, &packet, &section);
 
-    /* push the packet downstream */
-    res = mpegts_parse_push (parse, &packet);
+    } else {
+      /* push the packet downstream */
+      res = mpegts_parse_push (parse, &packet, NULL);
+    }
 
   next:
     mpegts_packetizer_clear_packet (parse->packetizer, &packet);

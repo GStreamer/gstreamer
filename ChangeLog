@@ -1,3 +1,11 @@
+2008-02-28  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/mpegtsparse.c:
+	Only send PMTs to program pads that the PMT is for even if
+	on same pid.
+	As a by-product, we now no longer hardcode any psi pid numbers.
+	Also remove pcr stream from old pmt when we apply a new pmt.
+
 2008-02-28  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/TODO:
