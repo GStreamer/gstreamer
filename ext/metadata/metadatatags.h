@@ -102,13 +102,32 @@ typedef enum {
 
 #define GST_TAG_CREATOR_TOOL               "creator-tool"
 
+#define GST_TAG_DATE_TIME_DIGITIZED        "date-time-digitized"
+#define GST_TAG_DATE_TIME_MODIFIED         "date-time-modified"
+#define GST_TAG_DATE_TIME_ORIGINAL         "date-time-original"
+
 #define GST_TAG_DEVICE_MAKE                "device-make"
 #define GST_TAG_DEVICE_MODEL               "device-model"
+
+#define GST_TAG_EXIF_MAKER_NOTE            "exif-maker-note"
 
 #define GST_TAG_IMAGE_HEIGHT               "image-height"
 #define GST_TAG_IMAGE_WIDTH                "image-width"
 #define GST_TAG_IMAGE_XRESOLUTION          "image-xresolution"
 #define GST_TAG_IMAGE_YRESOLUTION          "image-yresolution"
+
+#define GST_TAG_GPS_ALTITUDE               "gps-altitude"
+#define GST_TAG_GPS_AREA_INFORMATION       ""
+#define GST_TAG_GPS_DIFFERENTIAL           ""
+#define GST_TAG_GPS_DOP                    ""
+#define GST_TAG_GPS_IMAGE_DIRECTION        ""
+#define GST_TAG_GPS_LATITUDE               "gps-latitude"
+#define GST_TAG_GPS_LONGITUDE              "gps-longitude"
+#define GST_TAG_GPS_MEASURE_MODE           ""
+#define GST_TAG_GPS_PROCESSING_METHOD      ""
+#define GST_TAG_GPS_SATELLITES             ""
+#define GST_TAG_GPS_SPEED                  "" 
+#define GST_TAG_GPS_TRACK                  ""
 
 /* *INDENT-ON* */
 

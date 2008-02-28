@@ -3,7 +3,8 @@ This file contains a list of things to be done as well some open issues (questio
 
 INFO:
 
-1- to see what tags are mapped so far run 'grep -n GST_TAG *.[ch]' into this folder.
+1- To see the list of tags current mapped:
+  http://webcvs.freedesktop.org/gstreamer/gst-plugins-bad/ext/metadata/metadata_mapping.htm?view=co 
 
 TODO:
 
@@ -12,6 +13,9 @@ TODO:
 3- Review the code (in order to move to gst-plugins-good)
 4- Document how the plugin works (atchitecture and interaction beteween modules)
 5- Improve the test application (to save also in png and to make it possible to set the metadata elements properties)
+6- Implement GDateTime support in GLib to be used by GStreamer (http://bugzilla.gnome.org/show_bug.cgi?id=50076)
+7- Use a standard GStreamer Data-Time type to map our Data-time tags
+8- Make the correct merge mode for multiple value tags (bag and seq) like dc:creator, ...
 
 OPEN ISSUES:
 
@@ -23,26 +27,32 @@ OPEN ISSUES:
 4- Add GST_TYPE_FRACTION support for GStreamer TAGS
 5- currently, in JPEG files, if there is a Photoshop segment, everything inside it but IPTC will be lost. From the point of view of implementation it is easy, but I still don't now how to solve from the point of view of "designing". Anyway I think it is not so important.
 6- language is not considered in XMP (How to do it with GStreamer?)
-7- Add a helper function that convert from value to string. For example, aperture-size is 2.7 and the app wants to show "f/2.7", 'contrast' is a range and the app wants to show as "Normal", "Soft", "Hard". For the time being it is up to the APP to make this conversion.
+7- Add a helper function that convert from value to string. For example,
+aperture-size is 2.7 and the app wants to show "f/2.7", 'contrast' is a range
+and the app wants to show as "Normal", "Soft", "Hard". For the time being it is
+up to the APP to make this conversion.
 
 LINKS IN BUGZILA
 
 1- to move to good
-http://bugzilla.gnome.org/show_bug.cgi?id=513182
+  http://bugzilla.gnome.org/show_bug.cgi?id=513182
 2- Proposal of new tags
-http://bugzilla.gnome.org/show_bug.cgi?id=482947
+  http://bugzilla.gnome.org/show_bug.cgi?id=482947
+  http://bugzilla.gnome.org/show_bug.cgi?id=481169
 3- Discussion about the architecture 
-http://bugzilla.gnome.org/show_bug.cgi?id=486659
+  http://bugzilla.gnome.org/show_bug.cgi?id=486659
 4- Also extraction image width and height and set caps properly 
-http://bugzilla.gnome.org/show_bug.cgi?id=503616
+  http://bugzilla.gnome.org/show_bug.cgi?id=503616
 
 KNOWN BUGS
 
 bugs in libexif:
 
-https://sourceforge.net/tracker/?func=detail&atid=112272&aid=1884609&group_id=12272
+1- https://sourceforge.net/tracker/?func=detail&atid=112272&aid=1884609&group_id=12272
 
-1- EXIF_TAG_ISO_SPEED_RATINGS should be in EXIF_IFD_EXIF
-2- EXIF_TAG_ISO_SPEED_RATINGS is not inserted anyway
+  a- EXIF_TAG_ISO_SPEED_RATINGS should be in EXIF_IFD_EXIF
+  b- EXIF_TAG_ISO_SPEED_RATINGS is not inserted anyway
 
+2- EXIF_TAG_FLASH can't be written from the scratch
 
+3- GST_TAG_CAPTURE_COLOR_SPACE can't be written from the scratch

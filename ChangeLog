@@ -1,3 +1,15 @@
+2008-02-28  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/TODO:
+	* ext/metadata/metadata_mapping.htm:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/metadatatags.h:
+	* tests/icles/metadata_editor.c:
+	Map Date-Time and GPS tags and Convert from EXIF to XMP Datatime as
+	local time (those changes has been done in previous comit but had to
+	be revert in 2008-02-10 due to frozen)
+
 2008-02-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/camutils.c:
