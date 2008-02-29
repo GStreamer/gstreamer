@@ -1463,7 +1463,8 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('c', 'v', 'i', 'd'),
     GST_MAKE_FOURCC ('h', '2', '6', '4'),
     GST_MAKE_FOURCC ('m', 's', 'v', 'c'),
-    GST_MAKE_FOURCC ('x', '2', '6', '3')
+    GST_MAKE_FOURCC ('x', '2', '6', '3'),
+    GST_MAKE_FOURCC ('d', 'r', 'a', 'c')
         /* FILL ME */
   };
   guint i;
