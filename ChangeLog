@@ -1,5 +1,14 @@
 2008-02-28  David Schleef  <ds@schleef.org>
 
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-mux.c:
+	  Fix Dirac mapping.  I had previously added a VfW-type
+	  mapping, but it looks like Dirac will get a native Matroska
+	  mapping, and this is the most likely method.
+
+2008-02-28  David Schleef  <ds@schleef.org>
+
 	* gst/avi/gstavimux.c: Add Dirac encoding
 
 2008-02-28  Wim Taymans  <wim.taymans@collabora.co.uk>

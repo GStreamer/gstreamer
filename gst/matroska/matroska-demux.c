@@ -3652,6 +3652,9 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_THEORA)) {
     caps = gst_caps_new_simple ("video/x-theora", NULL);
     context->send_xiph_headers = TRUE;
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_DIRAC)) {
+    caps = gst_caps_new_simple ("video/x-dirac", NULL);
+    context->send_xiph_headers = FALSE;
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps", codec_id);
     return NULL;

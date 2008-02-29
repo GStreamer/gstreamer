@@ -592,8 +592,7 @@ skip_details:
       ||!strcmp (mimetype, "video/x-huffyuv")
       || !strcmp (mimetype, "video/x-divx")
       || !strcmp (mimetype, "video/x-dv")
-      || !strcmp (mimetype, "video/x-h263")
-      || !strcmp (mimetype, "video/x-dirac")) {
+      || !strcmp (mimetype, "video/x-h263")) {
     BITMAPINFOHEADER *bih;
     const GValue *codec_data;
     gint size = sizeof (BITMAPINFOHEADER);
@@ -630,8 +629,6 @@ skip_details:
           GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DX50"));
           break;
       }
-    } else if (!strcmp (mimetype, "video/x-dirac")) {
-      GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("drac"));
     }
 
     /* process codec private/initialization data, if any */
@@ -700,6 +697,10 @@ skip_details:
           ("theora stream headers missing or malformed"));
       return FALSE;
     }
+    return TRUE;
+  } else if (!strcmp (mimetype, "video/x-dirac")) {
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_DIRAC);
+
     return TRUE;
   } else if (!strcmp (mimetype, "video/mpeg")) {
     gint mpegversion;
