@@ -67,6 +67,8 @@ GST_ELEMENT_DETAILS ("Audio sink (ALSA)",
 
 #define DEFAULT_DEVICE		"default"
 #define DEFAULT_DEVICE_NAME	""
+#define SPDIF_PERIOD_SIZE 1536
+#define SPDIF_BUFFER_SIZE 15360
 
 enum
 {
@@ -141,7 +143,8 @@ static GstStaticPadTemplate alsasink_sink_factory =
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 8, "
         "depth = (int) 8, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ];"
+        "audio/x-iec958")
     );
 
 static void
@@ -335,8 +338,9 @@ set_hwparams (GstAlsaSink * alsa)
 
   snd_pcm_hw_params_malloc (&params);
 
-  GST_DEBUG_OBJECT (alsa, "Negotiating to %d channels @ %d Hz (format = %s)",
-      alsa->channels, alsa->rate, snd_pcm_format_name (alsa->format));
+  GST_DEBUG_OBJECT (alsa, "Negotiating to %d channels @ %d Hz (format = %s) "
+      "SPDIF (%d)", alsa->channels, alsa->rate,
+      snd_pcm_format_name (alsa->format), alsa->iec958);
 
   /* start with requested values, if we cannot configure alsa for those values,
    * we set these values to -1, which will leave the default alsa values */
@@ -350,6 +354,16 @@ retry:
   CHECK (snd_pcm_hw_params_set_access (alsa->handle, params, alsa->access),
       wrong_access);
   /* set the sample format */
+  if (alsa->iec958) {
+    /* Try to use big endian first else fallback to le and swap bytes */
+    if (snd_pcm_hw_params_set_format (alsa->handle, params, alsa->format) < 0) {
+      alsa->format = SND_PCM_FORMAT_S16_LE;
+      alsa->need_swap = TRUE;
+      GST_DEBUG_OBJECT (alsa, "falling back to little endian with swapping");
+    } else {
+      alsa->need_swap = FALSE;
+    }
+  }
   CHECK (snd_pcm_hw_params_set_format (alsa->handle, params, alsa->format),
       no_sample_format);
   /* set the count of channels */
@@ -386,7 +400,7 @@ retry:
 
   /* now try to configure the buffer time and period time, if one
    * of those fail, we fall back to the defaults and emit a warning. */
-  if (buffer_time != -1) {
+  if (buffer_time != -1 && !alsa->iec958) {
     /* set the buffer time */
     if ((err = snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
                 &buffer_time, &dir)) < 0) {
@@ -399,7 +413,7 @@ retry:
     }
     GST_DEBUG_OBJECT (alsa, "buffer time %u", buffer_time);
   }
-  if (period_time != -1) {
+  if (period_time != -1 && !alsa->iec958) {
     /* set the period time */
     if ((err = snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
                 &period_time, &dir)) < 0) {
@@ -411,6 +425,17 @@ retry:
       goto retry;
     }
     GST_DEBUG_OBJECT (alsa, "period time %u", period_time);
+  }
+
+  /* Set buffer size and period size manually for SPDIF */
+  if (G_UNLIKELY (alsa->iec958)) {
+    snd_pcm_uframes_t buffer_size = SPDIF_BUFFER_SIZE;
+    snd_pcm_uframes_t period_size = SPDIF_PERIOD_SIZE;
+
+    CHECK (snd_pcm_hw_params_set_buffer_size_near (alsa->handle, params,
+            &buffer_size), buffer_size);
+    CHECK (snd_pcm_hw_params_set_period_size_near (alsa->handle, params,
+            &period_size, NULL), period_size);
   }
 
   /* write the parameters to device */
@@ -584,6 +609,9 @@ set_sw_params:
 static gboolean
 alsasink_parse_spec (GstAlsaSink * alsa, GstRingBufferSpec * spec)
 {
+  /* Initialize our boolean */
+  alsa->iec958 = FALSE;
+
   switch (spec->type) {
     case GST_BUFTYPE_LINEAR:
       GST_DEBUG_OBJECT (alsa,
@@ -616,6 +644,13 @@ alsasink_parse_spec (GstAlsaSink * alsa, GstRingBufferSpec * spec)
       break;
     case GST_BUFTYPE_MU_LAW:
       alsa->format = SND_PCM_FORMAT_MU_LAW;
+      break;
+    case GST_BUFTYPE_NONLINEAR:
+      alsa->format = SND_PCM_FORMAT_S16_BE;
+      if (G_LIKELY (spec->format == GST_IEC958))
+        alsa->iec958 = TRUE;
+      else
+        goto error;
       break;
     default:
       goto error;
@@ -676,6 +711,14 @@ gst_alsasink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   alsa = GST_ALSA_SINK (asink);
 
+  if (spec->format == GST_IEC958) {
+    snd_pcm_close (alsa->handle);
+    alsa->handle = gst_alsa_open_iec958_pcm (GST_OBJECT (alsa));
+    if (G_UNLIKELY (!alsa->handle)) {
+      goto no_iec958;
+    }
+  }
+
   if (!alsasink_parse_spec (alsa, spec))
     goto spec_parse;
 
@@ -688,9 +731,31 @@ gst_alsasink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   spec->segsize = alsa->period_size * spec->bytes_per_sample;
   spec->segtotal = alsa->buffer_size / alsa->period_size;
 
+  {
+    snd_output_t *out_buf = NULL;
+    char *msg = NULL;
+
+    snd_output_buffer_open (&out_buf);
+    snd_pcm_dump_hw_setup (alsa->handle, out_buf);
+    snd_output_buffer_string (out_buf, &msg);
+    GST_DEBUG_OBJECT (alsa, "Hardware setup: \n%s", msg);
+    snd_output_close (out_buf);
+    snd_output_buffer_open (&out_buf);
+    snd_pcm_dump_sw_setup (alsa->handle, out_buf);
+    snd_output_buffer_string (out_buf, &msg);
+    GST_DEBUG_OBJECT (alsa, "Software setup: \n%s", msg);
+    snd_output_close (out_buf);
+  }
+
   return TRUE;
 
   /* ERRORS */
+no_iec958:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_WRITE, (NULL),
+        ("Could not open IEC958 (SPDIF) device for playback"));
+    return FALSE;
+  }
 spec_parse:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
@@ -760,8 +825,10 @@ gst_alsasink_close (GstAudioSink * asink)
   GstAlsaSink *alsa = GST_ALSA_SINK (asink);
   gint err;
 
-  CHECK (snd_pcm_close (alsa->handle), close_error);
-  alsa->handle = NULL;
+  if (alsa->handle) {
+    CHECK (snd_pcm_close (alsa->handle), close_error);
+    alsa->handle = NULL;
+  }
   gst_caps_replace (&alsa->cached_caps, NULL);
 
   return TRUE;
@@ -813,18 +880,28 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
   GstAlsaSink *alsa;
   gint err;
   gint cptr;
-  gint16 *ptr;
+  gint16 *ptr = data;
 
   alsa = GST_ALSA_SINK (asink);
 
+  if (alsa->iec958 && alsa->need_swap) {
+    guint i;
+
+    GST_DEBUG_OBJECT (asink, "swapping bytes");
+    for (i = 0; i < length; i += 2) {
+      ptr[i / 2] = GUINT16_SWAP_LE_BE (ptr[i / 2]);
+    }
+  }
+
+  GST_LOG_OBJECT (asink, "received audio samples buffer of %u bytes", length);
+
   cptr = length / alsa->bytes_per_sample;
-  ptr = data;
 
   GST_ALSA_SINK_LOCK (asink);
   while (cptr > 0) {
     err = snd_pcm_writei (alsa->handle, ptr, cptr);
 
-    GST_DEBUG_OBJECT (asink, "written %d result %d", cptr, err);
+    GST_DEBUG_OBJECT (asink, "written %d frames out of %d", err, cptr);
     if (err < 0) {
       GST_DEBUG_OBJECT (asink, "Write error: %s", snd_strerror (err));
       if (err == -EAGAIN) {
@@ -835,12 +912,12 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
       continue;
     }
 
-    ptr += err * alsa->channels;
+    ptr += snd_pcm_frames_to_bytes (alsa->handle, err);
     cptr -= err;
   }
   GST_ALSA_SINK_UNLOCK (asink);
 
-  return length - cptr;
+  return length - (cptr * alsa->bytes_per_sample);
 
 write_error:
   {

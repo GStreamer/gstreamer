@@ -1,3 +1,16 @@
+2008-02-29  Julien Moutte  <julien@fluendo.com>
+
+        * ext/alsa/gstalsa.c: (gst_alsa_open_iec958_pcm),
+        (gst_alsa_probe_supported_formats): Probe for IEC958 pcm to detect
+        if we can do SPDIF output.
+        * ext/alsa/gstalsa.h:
+        * ext/alsa/gstalsasink.c: (set_hwparams), (alsasink_parse_spec),
+        (gst_alsasink_prepare), (gst_alsasink_close), (gst_alsasink_write):
+        * ext/alsa/gstalsasink.h: Initial support for SPDIF.
+        * gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_parse_caps):
+        * gst-libs/gst/audio/gstringbuffer.h: Add non linear buffer types
+        to support AC3, EC3 and IEC958 buffers.
+
 2008-02-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/interfaces/mixer.c: (GST_MIXER_MESSAGE_HAS_TYPE),

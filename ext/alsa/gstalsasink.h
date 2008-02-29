@@ -62,6 +62,8 @@ struct _GstAlsaSink {
   guint rate;
   guint channels;
   gint bytes_per_sample;
+  gboolean iec958;
+  gboolean need_swap;
 
   guint buffer_time;
   guint period_time;

@@ -360,6 +360,45 @@ max_chan_error:
   }
 }
 
+snd_pcm_t *
+gst_alsa_open_iec958_pcm (GstObject * obj)
+{
+  char *iec958_pcm_name = NULL;
+  snd_pcm_t *pcm = NULL;
+  int res;
+  char devstr[256];             /* Storage for local 'default' device string */
+
+  /*
+   * Try and open our default iec958 device. Fall back to searching on card x
+   * if this fails, which should only happen on older alsa setups
+   */
+
+  /* The string will be one of these:
+   * SPDIF_CON: Non-audio flag not set:
+   *    spdif:{AES0 0x0 AES1 0x82 AES2 0x0 AES3 0x2}
+   * SPDIF_CON: Non-audio flag set:
+   *    spdif:{AES0 0x2 AES1 0x82 AES2 0x0 AES3 0x2}
+   */
+  sprintf (devstr,
+      "iec958:{AES0 0x%02x AES1 0x%02x AES2 0x%02x AES3 0x%02x}",
+      IEC958_AES0_CON_EMPHASIS_NONE | IEC958_AES0_NONAUDIO,
+      IEC958_AES1_CON_ORIGINAL | IEC958_AES1_CON_PCM_CODER,
+      0, IEC958_AES3_CON_FS_48000);
+
+  GST_DEBUG_OBJECT (obj, "Generated device string \"%s\"", devstr);
+  iec958_pcm_name = devstr;
+
+  res = snd_pcm_open (&pcm, iec958_pcm_name, SND_PCM_STREAM_PLAYBACK, 0);
+  if (G_UNLIKELY (res < 0)) {
+    GST_DEBUG_OBJECT (obj, "failed opening IEC958 device: %s",
+        snd_strerror (res));
+    pcm = NULL;
+  }
+
+  return pcm;
+}
+
+
 /*
  * gst_alsa_probe_supported_formats:
  *
@@ -373,12 +412,15 @@ gst_alsa_probe_supported_formats (GstObject * obj, snd_pcm_t * handle,
     const GstCaps * template_caps)
 {
   snd_pcm_hw_params_t *hw_params;
+  snd_pcm_stream_t stream_type;
   GstCaps *caps;
   gint err;
 
   snd_pcm_hw_params_malloc (&hw_params);
   if ((err = snd_pcm_hw_params_any (handle, hw_params)) < 0)
     goto error;
+
+  stream_type = snd_pcm_stream (handle);
 
   caps = gst_caps_copy (template_caps);
 
@@ -390,6 +432,17 @@ gst_alsa_probe_supported_formats (GstObject * obj, snd_pcm_t * handle,
 
   if (!(caps = gst_alsa_detect_channels (obj, hw_params, caps)))
     goto subroutine_error;
+
+  /* Try opening IEC958 device to see if we can support that format (playback
+   * only for now but we could add SPDIF capture later) */
+  if (stream_type == SND_PCM_STREAM_PLAYBACK) {
+    snd_pcm_t *pcm = gst_alsa_open_iec958_pcm (obj);
+
+    if (G_LIKELY (pcm)) {
+      gst_caps_append (caps, gst_caps_new_simple ("audio/x-iec958", NULL));
+      snd_pcm_close (pcm);
+    }
+  }
 
   snd_pcm_hw_params_free (hw_params);
   return caps;

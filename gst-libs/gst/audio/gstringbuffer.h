@@ -90,6 +90,7 @@ typedef enum {
  * @GST_BUFTYPE_IMA_ADPCM: samples in ima adpcm
  * @GST_BUFTYPE_MPEG: samples in mpeg audio format
  * @GST_BUFTYPE_GSM: samples in gsm format
+ * @GST_BUFTYPE_NONLINEAR: samples in non linear format (ac3, ec3, dts, ...)
  *
  * The format of the samples in the ringbuffer.
  */
@@ -101,7 +102,8 @@ typedef enum
   GST_BUFTYPE_A_LAW,
   GST_BUFTYPE_IMA_ADPCM,
   GST_BUFTYPE_MPEG,
-  GST_BUFTYPE_GSM
+  GST_BUFTYPE_GSM,
+  GST_BUFTYPE_NONLINEAR
 } GstBufferFormatType;
 
 typedef enum
@@ -149,7 +151,11 @@ typedef enum
   GST_A_LAW,
   GST_IMA_ADPCM,
   GST_MPEG,
-  GST_GSM
+  GST_GSM,
+  GST_IEC958,
+  GST_AC3,
+  GST_EC3,
+  GST_DTS
 } GstBufferFormat;
 
 /**
