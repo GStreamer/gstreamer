@@ -1,3 +1,8 @@
+2008-02-29  Michael Smith <msmith@fluendo.com>
+
+	* gst/videomixer/videomixer.c: (gst_videomixer_blend_buffers):
+	  Don't call gst_object_sync_values() unless we have a valid timestamp.
+
 2008-02-28  David Schleef  <ds@schleef.org>
 
 	* gst/matroska/matroska-demux.c:
