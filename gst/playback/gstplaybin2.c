@@ -1157,6 +1157,8 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
     case PROP_AUDIO_SINK:
       break;
     case PROP_VIS_PLUGIN:
+      gst_play_sink_set_vis_plugin (playbin->playsink,
+          g_value_get_object (value));
       break;
     case PROP_VOLUME:
       gst_play_sink_set_volume (playbin->playsink, g_value_get_double (value));

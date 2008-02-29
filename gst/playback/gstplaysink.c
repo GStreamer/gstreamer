@@ -72,8 +72,12 @@ typedef struct
   GstElement *queue;
   GstElement *conv;
   GstElement *resample;
+  GstPad *blockpad;             /* srcpad of resample, used for switching the vis */
+  GstPad *vissinkpad;           /* visualisation sinkpad, */
   GstElement *vis;
-  GstPad *srcpad;
+  GstPad *vissrcpad;            /* visualisation srcpad, */
+  GstPad *srcpad;               /* outgoing srcpad, used to connect to the next
+                                 * chain */
 } GstPlayVisChain;
 
 #define GST_PLAY_SINK_GET_LOCK(playsink) (((GstPlaySink *)playsink)->lock)
@@ -115,9 +119,6 @@ struct _GstPlaySink
 
   /* internal elements */
   GstElement *textoverlay_element;
-
-  GstElement *pending_visualisation;
-  GstElement *fakesink;
 };
 
 struct _GstPlaySinkClass
@@ -256,7 +257,6 @@ gst_play_sink_init (GstPlaySink * playsink)
   playsink->video_sink = NULL;
   playsink->audio_sink = NULL;
   playsink->visualisation = NULL;
-  playsink->pending_visualisation = NULL;
   playsink->textoverlay_element = NULL;
   playsink->volume = 1.0;
   playsink->font_desc = NULL;
@@ -287,11 +287,6 @@ gst_play_sink_dispose (GObject * object)
     gst_object_unref (playsink->visualisation);
     playsink->visualisation = NULL;
   }
-  if (playsink->pending_visualisation != NULL) {
-    gst_element_set_state (playsink->pending_visualisation, GST_STATE_NULL);
-    gst_object_unref (playsink->pending_visualisation);
-    playsink->pending_visualisation = NULL;
-  }
   if (playsink->textoverlay_element != NULL) {
     gst_object_unref (playsink->textoverlay_element);
     playsink->textoverlay_element = NULL;
@@ -312,125 +307,6 @@ gst_play_sink_finalize (GObject * object)
   g_mutex_free (playsink->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-gst_play_sink_vis_unblocked (GstPad * tee_pad, gboolean blocked,
-    gpointer user_data)
-{
-  GstPlaySink *playsink = GST_PLAY_SINK (user_data);
-
-  if (playsink->pending_visualisation)
-    gst_pad_set_blocked_async (tee_pad, FALSE, gst_play_sink_vis_unblocked,
-        playsink);
-}
-
-static void
-gst_play_sink_vis_blocked (GstPad * tee_pad, gboolean blocked,
-    gpointer user_data)
-{
-  GstPlaySink *playsink = GST_PLAY_SINK (user_data);
-  GstBin *vis_bin = NULL;
-  GstPad *vis_sink_pad = NULL, *vis_src_pad = NULL, *vqueue_pad = NULL;
-  GstState bin_state;
-  GstElement *pending_visualisation;
-
-  GST_OBJECT_LOCK (playsink);
-  pending_visualisation = playsink->pending_visualisation;
-  playsink->pending_visualisation = NULL;
-  GST_OBJECT_UNLOCK (playsink);
-
-  /* We want to disable visualisation */
-  if (!GST_IS_ELEMENT (pending_visualisation)) {
-    /* Set visualisation element to READY */
-    gst_element_set_state (playsink->visualisation, GST_STATE_READY);
-    goto beach;
-  }
-
-  vis_bin =
-      GST_BIN_CAST (gst_object_get_parent (GST_OBJECT_CAST (playsink->
-              visualisation)));
-
-  if (!GST_IS_BIN (vis_bin) || !GST_IS_PAD (tee_pad)) {
-    goto beach;
-  }
-
-  vis_src_pad = gst_element_get_pad (playsink->visualisation, "src");
-  vis_sink_pad = gst_pad_get_peer (tee_pad);
-
-  /* Can be fakesink */
-  if (GST_IS_PAD (vis_src_pad)) {
-    vqueue_pad = gst_pad_get_peer (vis_src_pad);
-  }
-
-  if (!GST_IS_PAD (vis_sink_pad)) {
-    goto beach;
-  }
-
-  /* Check the bin's state */
-  GST_OBJECT_LOCK (vis_bin);
-  bin_state = GST_STATE (vis_bin);
-  GST_OBJECT_UNLOCK (vis_bin);
-
-  /* Unlink */
-  gst_pad_unlink (tee_pad, vis_sink_pad);
-  gst_object_unref (vis_sink_pad);
-  vis_sink_pad = NULL;
-
-  if (GST_IS_PAD (vqueue_pad)) {
-    gst_pad_unlink (vis_src_pad, vqueue_pad);
-    gst_object_unref (vis_src_pad);
-    vis_src_pad = NULL;
-  }
-
-  /* Remove from vis_bin */
-  gst_bin_remove (vis_bin, playsink->visualisation);
-  /* Set state to NULL */
-  gst_element_set_state (playsink->visualisation, GST_STATE_NULL);
-  /* And loose our ref */
-  gst_object_unref (playsink->visualisation);
-
-  if (pending_visualisation) {
-    /* Ref this new visualisation element before adding to the bin */
-    gst_object_ref (pending_visualisation);
-    /* Add the new one */
-    gst_bin_add (vis_bin, pending_visualisation);
-    /* Synchronizing state */
-    gst_element_set_state (pending_visualisation, bin_state);
-
-    vis_sink_pad = gst_element_get_pad (pending_visualisation, "sink");
-    vis_src_pad = gst_element_get_pad (pending_visualisation, "src");
-
-    if (!GST_IS_PAD (vis_sink_pad) || !GST_IS_PAD (vis_src_pad)) {
-      goto beach;
-    }
-
-    /* Link */
-    gst_pad_link (tee_pad, vis_sink_pad);
-    gst_pad_link (vis_src_pad, vqueue_pad);
-  }
-
-  /* We are done */
-  gst_object_unref (playsink->visualisation);
-  playsink->visualisation = pending_visualisation;
-
-beach:
-  if (vis_sink_pad) {
-    gst_object_unref (vis_sink_pad);
-  }
-  if (vis_src_pad) {
-    gst_object_unref (vis_src_pad);
-  }
-  if (vqueue_pad) {
-    gst_object_unref (vqueue_pad);
-  }
-  if (vis_bin) {
-    gst_object_unref (vis_bin);
-  }
-
-  /* Unblock the pad */
-  gst_pad_set_blocked_async (tee_pad, FALSE, gst_play_sink_vis_unblocked,
-      playsink);
 }
 
 void
@@ -463,66 +339,89 @@ gst_play_sink_set_audio_sink (GstPlaySink * playsink, GstElement * sink)
   GST_OBJECT_UNLOCK (playsink);
 }
 
-void
-gst_play_sink_set_vis_plugin (GstPlaySink * playsink,
-    GstElement * pending_visualisation)
+static void
+gst_play_sink_vis_unblocked (GstPad * tee_pad, gboolean blocked,
+    gpointer user_data)
 {
-  /* Take ownership */
-  if (pending_visualisation) {
-    gst_object_ref (pending_visualisation);
-    gst_object_sink (pending_visualisation);
-  }
+  GstPlaySink *playsink;
 
-  /* Do we already have a visualisation change pending? If yes, change the
-   * pending vis with the new one. */
-  GST_OBJECT_LOCK (playsink);
-  if (playsink->pending_visualisation) {
-    gst_object_unref (playsink->pending_visualisation);
-    playsink->pending_visualisation = pending_visualisation;
-    GST_OBJECT_UNLOCK (playsink);
-  } else {
-    GST_OBJECT_UNLOCK (playsink);
-    /* Was there a visualisation already set ? */
-    if (playsink->visualisation != NULL) {
-      GstBin *vis_bin = NULL;
+  playsink = GST_PLAY_SINK (user_data);
+  /* nothing to do here, we need a dummy callback here to make the async call
+   * non-blocking. */
+  GST_DEBUG_OBJECT (playsink, "vis pad unblocked");
+}
 
-      vis_bin =
-          GST_BIN_CAST (gst_object_get_parent (GST_OBJECT_CAST (playsink->
-                  visualisation)));
+static void
+gst_play_sink_vis_blocked (GstPad * tee_pad, gboolean blocked,
+    gpointer user_data)
+{
+  GstPlaySink *playsink;
+  GstPlayVisChain *chain;
 
-      /* Check if the visualisation is already in a bin */
-      if (GST_IS_BIN (vis_bin)) {
-        GstPad *vis_sink_pad = NULL, *tee_pad = NULL;
+  playsink = GST_PLAY_SINK (user_data);
 
-        /* Now get tee pad and block it async */
-        vis_sink_pad = gst_element_get_pad (playsink->visualisation, "sink");
-        if (!GST_IS_PAD (vis_sink_pad)) {
-          goto beach;
-        }
-        tee_pad = gst_pad_get_peer (vis_sink_pad);
-        if (!GST_IS_PAD (tee_pad)) {
-          goto beach;
-        }
+  GST_PLAY_SINK_LOCK (playsink);
+  GST_DEBUG_OBJECT (playsink, "vis pad blocked");
+  /* now try to change the plugin in the running vis chain */
+  if (!(chain = (GstPlayVisChain *) playsink->vischain))
+    goto done;
 
-        playsink->pending_visualisation = pending_visualisation;
-        /* Block with callback */
-        gst_pad_set_blocked_async (tee_pad, TRUE, gst_play_sink_vis_blocked,
-            playsink);
-      beach:
-        if (vis_sink_pad) {
-          gst_object_unref (vis_sink_pad);
-        }
-        if (tee_pad) {
-          gst_object_unref (tee_pad);
-        }
-        gst_object_unref (vis_bin);
-      } else {
-        playsink->visualisation = pending_visualisation;
-      }
-    } else {
-      playsink->visualisation = pending_visualisation;
-    }
-  }
+  /* unlink the old plugin and unghost the pad */
+  gst_pad_unlink (chain->blockpad, chain->vissinkpad);
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (chain->srcpad), NULL);
+
+  /* set the old plugin to NULL and remove */
+  gst_element_set_state (chain->vis, GST_STATE_NULL);
+  gst_bin_remove (GST_BIN_CAST (chain->chain.bin), chain->vis);
+
+  /* add new plugin and set state to playing */
+  chain->vis = gst_object_ref (playsink->visualisation);
+  gst_bin_add (GST_BIN_CAST (chain->chain.bin), chain->vis);
+  gst_element_set_state (chain->vis, GST_STATE_PLAYING);
+
+  /* get pads */
+  chain->vissinkpad = gst_element_get_pad (chain->vis, "sink");
+  chain->vissrcpad = gst_element_get_pad (chain->vis, "src");
+
+  /* link pads */
+  gst_pad_link (chain->blockpad, chain->vissinkpad);
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (chain->srcpad),
+      chain->vissrcpad);
+
+done:
+  /* Unblock the pad */
+  gst_pad_set_blocked_async (tee_pad, FALSE, gst_play_sink_vis_unblocked,
+      playsink);
+  GST_PLAY_SINK_UNLOCK (playsink);
+}
+
+void
+gst_play_sink_set_vis_plugin (GstPlaySink * playsink, GstElement * vis)
+{
+  GstPlayVisChain *chain;
+
+  GST_PLAY_SINK_LOCK (playsink);
+  /* first store the new vis */
+  if (playsink->visualisation)
+    gst_object_unref (playsink->visualisation);
+  playsink->visualisation = gst_object_ref (vis);
+
+  /* now try to change the plugin in the running vis chain, if we have no chain,
+   * we don't bother, any future vis chain will be created with the new vis
+   * plugin. */
+  if (!(chain = (GstPlayVisChain *) playsink->vischain))
+    goto done;
+
+  /* block the pad, the next time the callback is called we can change the
+   * visualisation. It's possible that this never happens or that the pad was
+   * already blocked. */
+  GST_DEBUG_OBJECT (playsink, "blocking vis pad");
+  gst_pad_set_blocked_async (chain->blockpad, TRUE, gst_play_sink_vis_blocked,
+      playsink);
+done:
+  GST_PLAY_SINK_UNLOCK (playsink);
+
+  return;
 }
 
 void
@@ -1120,14 +1019,14 @@ link_failed:
 }
 
 /*
- *  +----------------------------------------------------+
- *  | visbin                                             |
- *  |      +----------+   +------------+   +-------+     |
- *  |      | visqueue |   | audioconv  |   |  vis  |     |
- *  |   +-sink       src-sink + samp  src-sink    src-+  |
- *  |   |  +----------+   +------------+   +-------+  |  |
- * sink-+                                             +-src
- *  +----------------------------------------------------+
+ *  +-------------------------------------------------------------------+
+ *  | visbin                                                            |
+ *  |      +----------+   +------------+   +----------+   +-------+     |
+ *  |      | visqueue |   | audioconv  |   | audiores |   |  vis  |     |
+ *  |   +-sink       src-sink + samp  src-sink       src-sink    src-+  |
+ *  |   |  +----------+   +------------+   +----------+   +-------+  |  |
+ * sink-+                                                            +-src
+ *  +-------------------------------------------------------------------+
  *           
  */
 static GstPlayChain *
@@ -1161,8 +1060,12 @@ gen_vis_chain (GstPlaySink * playsink)
     goto no_audioresample;
   gst_bin_add (bin, chain->resample);
 
+  /* this pad will be used for blocking the dataflow and switching the vis
+   * plugin */
+  chain->blockpad = gst_element_get_pad (chain->resample, "src");
+
   if (playsink->visualisation) {
-    chain->vis = playsink->visualisation;
+    chain->vis = gst_object_ref (playsink->visualisation);
   } else {
     chain->vis = gst_element_factory_make ("goom", "vis");
     if (!chain->vis)
@@ -1176,14 +1079,15 @@ gen_vis_chain (GstPlaySink * playsink)
   if (!res)
     goto link_failed;
 
+  chain->vissinkpad = gst_element_get_pad (chain->vis, "sink");
+  chain->vissrcpad = gst_element_get_pad (chain->vis, "src");
+
   pad = gst_element_get_pad (chain->queue, "sink");
   chain->chain.sinkpad = gst_ghost_pad_new ("sink", pad);
   gst_object_unref (pad);
   gst_element_add_pad (chain->chain.bin, chain->chain.sinkpad);
 
-  pad = gst_element_get_pad (chain->vis, "src");
-  chain->srcpad = gst_ghost_pad_new ("src", pad);
-  gst_object_unref (pad);
+  chain->srcpad = gst_ghost_pad_new ("src", chain->vissrcpad);
   gst_element_add_pad (chain->chain.bin, chain->srcpad);
 
   return (GstPlayChain *) chain;
