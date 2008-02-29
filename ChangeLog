@@ -1,3 +1,13 @@
+2008-02-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/interfaces/mixer.c: (GST_MIXER_MESSAGE_HAS_TYPE),
+	  (gst_mixer_message_parse_mute_toggled),
+	  (gst_mixer_message_parse_record_toggled),
+	  (gst_mixer_message_parse_volume_changed),
+	  (gst_mixer_message_parse_option_changed):
+	  De-cruft and fix message type assertions (NULL is not a really
+	  valid mixer message type string).
+
 2008-02-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/libvisual/visual.c: (gst_vis_src_negotiate):

@@ -549,6 +549,9 @@ gst_mixer_message_get_type (GstMessage * message)
   return GST_MIXER_MESSAGE_INVALID;
 }
 
+#define GST_MIXER_MESSAGE_HAS_TYPE(msg,msg_type) \
+(gst_mixer_message_get_type (msg) == GST_MIXER_MESSAGE_ ## msg_type)
+
 /**
  * gst_mixer_message_parse_mute_toggled:
  * @message: A mute-toggled change notification message.
@@ -568,13 +571,11 @@ gst_mixer_message_parse_mute_toggled (GstMessage * message,
     GstMixerTrack ** track, gboolean * mute)
 {
   const GstStructure *s;
-  const gchar *m_type;
 
   g_return_if_fail (gst_mixer_message_is_mixer_message (message));
-  s = gst_message_get_structure (message);
+  g_return_if_fail (GST_MIXER_MESSAGE_HAS_TYPE (message, MUTE_TOGGLED));
 
-  m_type = gst_structure_get_string (s, "type");
-  g_return_if_fail (m_type == NULL || g_str_equal (m_type, "mute-toggled"));
+  s = gst_message_get_structure (message);
 
   if (track) {
     const GValue *v = gst_structure_get_value (s, "track");
@@ -607,13 +608,11 @@ gst_mixer_message_parse_record_toggled (GstMessage * message,
     GstMixerTrack ** track, gboolean * record)
 {
   const GstStructure *s;
-  const gchar *m_type;
 
   g_return_if_fail (gst_mixer_message_is_mixer_message (message));
-  s = gst_message_get_structure (message);
+  g_return_if_fail (GST_MIXER_MESSAGE_HAS_TYPE (message, RECORD_TOGGLED));
 
-  m_type = gst_structure_get_string (s, "type");
-  g_return_if_fail (m_type == NULL || g_str_equal (m_type, "record-toggled"));
+  s = gst_message_get_structure (message);
 
   if (track) {
     const GValue *v = gst_structure_get_value (s, "track");
@@ -649,13 +648,11 @@ gst_mixer_message_parse_volume_changed (GstMessage * message,
     GstMixerTrack ** track, gint ** volumes, gint * num_channels)
 {
   const GstStructure *s;
-  const gchar *m_type;
 
   g_return_if_fail (gst_mixer_message_is_mixer_message (message));
-  s = gst_message_get_structure (message);
+  g_return_if_fail (GST_MIXER_MESSAGE_HAS_TYPE (message, VOLUME_CHANGED));
 
-  m_type = gst_structure_get_string (s, "type");
-  g_return_if_fail (m_type == NULL || g_str_equal (m_type, "volume-changed"));
+  s = gst_message_get_structure (message);
 
   if (track) {
     const GValue *v = gst_structure_get_value (s, "track");
@@ -706,13 +703,11 @@ gst_mixer_message_parse_option_changed (GstMessage * message,
     GstMixerOptions ** options, const gchar ** value)
 {
   const GstStructure *s;
-  const gchar *m_type;
 
   g_return_if_fail (gst_mixer_message_is_mixer_message (message));
-  s = gst_message_get_structure (message);
+  g_return_if_fail (GST_MIXER_MESSAGE_HAS_TYPE (message, OPTION_CHANGED));
 
-  m_type = gst_structure_get_string (s, "type");
-  g_return_if_fail (m_type == NULL || g_str_equal (m_type, "option-changed"));
+  s = gst_message_get_structure (message);
 
   if (options) {
     const GValue *v = gst_structure_get_value (s, "options");
