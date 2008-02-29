@@ -1,3 +1,9 @@
+2008-02-29  Rene Stadler  <mail@renestadler.de>
+
+	* gst/gsturi.c: (gst_uri_handler_get_protocols):
+	Use the get_protocols_full vfunc if get_protocols is NULL.  Fixes
+	URIHandlers implemented using language bindings.
+
 2008-02-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstelementfactory.h:
