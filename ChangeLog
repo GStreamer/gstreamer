@@ -1,3 +1,8 @@
+2008-02-29  Rene Stadler  <mail@renestadler.de>
+
+	* sys/v4l/gstv4lelement.c:
+	Add missing semicolon to fix indentation.
+
 2008-02-29  Julien Moutte  <julien@fluendo.com>
 
         * ext/alsa/gstalsa.c: (gst_alsa_open_iec958_pcm),

@@ -52,21 +52,20 @@ enum
 static void gst_v4lelement_init_interfaces (GType type);
 
 GST_BOILERPLATE_FULL (GstV4lElement, gst_v4lelement, GstPushSrc,
-    GST_TYPE_PUSH_SRC, gst_v4lelement_init_interfaces)
+    GST_TYPE_PUSH_SRC, gst_v4lelement_init_interfaces);
 
 
-     static void gst_v4lelement_dispose (GObject * object);
-     static void gst_v4lelement_set_property (GObject * object,
+static void gst_v4lelement_dispose (GObject * object);
+static void gst_v4lelement_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-     static void gst_v4lelement_get_property (GObject * object,
+static void gst_v4lelement_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-     static gboolean gst_v4lelement_start (GstBaseSrc * src);
-     static gboolean gst_v4lelement_stop (GstBaseSrc * src);
+static gboolean gst_v4lelement_start (GstBaseSrc * src);
+static gboolean gst_v4lelement_stop (GstBaseSrc * src);
 
 
-     static gboolean
-         gst_v4l_iface_supported (GstImplementsInterface * iface,
-    GType iface_type)
+static gboolean
+gst_v4l_iface_supported (GstImplementsInterface * iface, GType iface_type)
 {
   GstV4lElement *v4lelement = GST_V4LELEMENT (iface);
 
