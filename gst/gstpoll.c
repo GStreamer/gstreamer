@@ -371,6 +371,8 @@ gst_poll_get_mode (const GstPoll * set)
  *
  * Initializes @fd. Alternatively you can initialize it with
  * #GST_POLL_FD_INIT.
+ *
+ * Since: 0.10.18
  */
 void
 gst_poll_fd_init (GstPollFD * fd)

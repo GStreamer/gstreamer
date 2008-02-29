@@ -58,8 +58,10 @@ typedef struct {
  * used. This macro can used be to initialize a variable, but it cannot
  * be assigned to a variable. In that case you have to use
  * gst_poll_fd_init().
+ *
+ * Since: 0.10.18
  */
-#define GST_POLL_FD_INIT { -1, -1 }
+#define GST_POLL_FD_INIT  { -1, -1 }
 
 /**
  * GstPollMode:

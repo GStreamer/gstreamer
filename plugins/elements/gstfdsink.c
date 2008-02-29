@@ -424,13 +424,13 @@ gst_fd_sink_update_fd (GstFdSink * fdsink, int new_fd)
   /* assign the fd */
   GST_OBJECT_LOCK (fdsink);
   if (fdsink->fdset) {
-    GstPollFD fd = { 0 };
+    GstPollFD fd = GST_POLL_FD_INIT;
 
     fd.fd = fdsink->fd;
     gst_poll_remove_fd (fdsink->fdset, &fd);
 
     /* Reset the GstPollFD */
-    memset (&fd, 0, sizeof (GstPollFD));
+    gst_poll_fd_init (&fd);
 
     fd.fd = new_fd;
     gst_poll_add_fd (fdsink->fdset, &fd);

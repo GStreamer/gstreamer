@@ -1,5 +1,14 @@
 2008-02-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstpoll.c: (gst_poll_fd_init):
+	* gst/gstpoll.h:
+	Added Since tags.
+
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_update_fd):
+	Use some more init macros.
+
+2008-02-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* plugins/elements/gstfdsink.c: (gst_fd_sink_start):
 	* plugins/elements/gstfdsrc.c: (gst_fd_src_update_fd):
 	Use init macros and functions.
