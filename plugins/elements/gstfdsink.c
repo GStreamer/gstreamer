@@ -349,7 +349,7 @@ static gboolean
 gst_fd_sink_start (GstBaseSink * basesink)
 {
   GstFdSink *fdsink;
-  GstPollFD fd = { 0, };
+  GstPollFD fd = GST_POLL_FD_INIT;
 
   fdsink = GST_FD_SINK (basesink);
   if (!gst_fd_sink_check_fd (fdsink, fdsink->fd))
