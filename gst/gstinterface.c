@@ -102,6 +102,8 @@ gst_implements_interface_supported_default (GstImplementsInterface * interface,
 gboolean
 gst_element_implements_interface (GstElement * element, GType iface_type)
 {
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
   if (G_TYPE_CHECK_INSTANCE_TYPE (G_OBJECT (element), iface_type)) {
     GstImplementsInterface *iface;
     GstImplementsInterfaceClass *ifclass;
@@ -109,6 +111,11 @@ gst_element_implements_interface (GstElement * element, GType iface_type)
     iface = G_TYPE_CHECK_INSTANCE_CAST (G_OBJECT (element),
         iface_type, GstImplementsInterface);
     ifclass = GST_IMPLEMENTS_INTERFACE_GET_CLASS (iface);
+
+    /* element implements iface_type but not GstImplementsInterface, so
+     * just assume the other interface is implemented unconditionally */
+    if (ifclass == NULL)
+      return TRUE;
 
     if (ifclass->supported != NULL &&
         ifclass->supported (iface, iface_type) == TRUE) {

@@ -1,3 +1,14 @@
+2008-02-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstinterface.c: (gst_element_implements_interface):
+	  Don't crash if the element supports the interface queried, but does
+	  not implement GstImplementsInterface. Fixes #519584.
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/.cvsignore:
+	* tests/check/gst/gstinterface.c:
+	  Add unit test for the above.
+
 2008-02-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init):
