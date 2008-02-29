@@ -52,6 +52,16 @@ typedef struct {
 } GstPollFD;
 
 /**
+ * GST_POLL_FD_INIT:
+ *
+ * A #GstPollFD must be initialized with this macro, before it can be
+ * used. This macro can used be to initialize a variable, but it cannot
+ * be assigned to a variable. In that case you have to use
+ * gst_poll_fd_init().
+ */
+#define GST_POLL_FD_INIT { -1, -1 }
+
+/**
  * GstPollMode:
  * @GST_POLL_MODE_AUTO: choose method automatically
  * @GST_POLL_MODE_SELECT: use select() when waiting
@@ -74,6 +84,8 @@ void            gst_poll_free             (GstPoll *set);
 
 void            gst_poll_set_mode         (GstPoll *set, GstPollMode mode);
 GstPollMode     gst_poll_get_mode         (const GstPoll *set);
+
+void            gst_poll_fd_init          (GstPollFD *fd);
 
 gboolean        gst_poll_add_fd           (GstPoll *set, GstPollFD *fd);
 gboolean        gst_poll_remove_fd        (GstPoll *set, GstPollFD *fd);

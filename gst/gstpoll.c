@@ -365,6 +365,22 @@ gst_poll_get_mode (const GstPoll * set)
   return mode;
 }
 
+/**
+ * gst_poll_fd_init:
+ * @fd: a #GstPollFD
+ *
+ * Initializes @fd. Alternatively you can initialize it with
+ * #GST_POLL_FD_INIT.
+ */
+void
+gst_poll_fd_init (GstPollFD * fd)
+{
+  g_return_if_fail (fd != NULL);
+
+  fd->fd = -1;
+  fd->idx = -1;
+}
+
 static gboolean
 gst_poll_add_fd_unlocked (GstPoll * set, GstPollFD * fd)
 {

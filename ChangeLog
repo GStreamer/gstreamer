@@ -1,3 +1,10 @@
+2008-02-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpoll.c: (gst_poll_fd_init):
+	* gst/gstpoll.h:
+	Add INIT macro and _init method for initializing the GstPollFD.
+
 2008-02-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* plugins/elements/gstfdsink.c: (gst_fd_sink_start),
