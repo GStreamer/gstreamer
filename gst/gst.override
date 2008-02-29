@@ -1286,7 +1286,6 @@ _wrap_GstURIHandler__proxy_do_get_protocols_full (GType type)
     if (!py_retval) {
       if (PyErr_Occurred())
           PyErr_Print();
-      Py_DECREF (py_retval);
       pyg_gil_state_release(__py_state);
       return NULL;
     }

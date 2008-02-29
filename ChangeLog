@@ -1,3 +1,10 @@
+2008-02-29  Rene Stadler  <mail@renestadler.de>
+
+	* gst/gst.override:
+	(_wrap_GstURIHandler__proxy_do_get_protocols_full):
+	Don't crash by unreffing NULL when calling the
+	do_get_protocols_full method raises an exception.
+
 2008-02-10  Alessandro Decina  <alessandro@nnva.org>
 
 	reviewed by: Edward Hervey  <edward.hervey@collabora.co.uk>
