@@ -362,6 +362,9 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
   segment->applied_rate = 1.0;
   segment->flags = flags;
   segment->start = start;
+  segment->stop = stop;
+  segment->time = start;
+
   last_stop = segment->last_stop;
   if (update_start && rate > 0.0) {
     last_stop = start;
@@ -382,9 +385,6 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
 
   /* update new position */
   segment->last_stop = last_stop;
-
-  segment->time = start;
-  segment->stop = stop;
 }
 
 /**
@@ -574,7 +574,9 @@ gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
     /* correct for segment time */
     result += time;
   } else {
-    /* correct for segment time, clamp at 0 */
+    /* correct for segment time, clamp at 0. Streams with a negative
+     * applied_rate have timestamps between start and stop, as usual, but have
+     * the time member starting high and going backwards.  */
     if (time > result)
       result = time - result;
     else
