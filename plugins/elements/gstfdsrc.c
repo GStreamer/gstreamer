@@ -411,7 +411,7 @@ read_error:
   }
 }
 
-gboolean
+static gboolean
 gst_fd_src_is_seekable (GstBaseSrc * bsrc)
 {
   GstFdSrc *src = GST_FD_SRC (bsrc);
@@ -419,7 +419,7 @@ gst_fd_src_is_seekable (GstBaseSrc * bsrc)
   return src->seekable_fd;
 }
 
-gboolean
+static gboolean
 gst_fd_src_get_size (GstBaseSrc * bsrc, guint64 * size)
 {
   GstFdSrc *src = GST_FD_SRC (bsrc);
@@ -445,7 +445,7 @@ could_not_stat:
   }
 }
 
-gboolean
+static gboolean
 gst_fd_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
 {
   gint res;

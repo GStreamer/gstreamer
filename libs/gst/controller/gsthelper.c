@@ -64,7 +64,7 @@ gst_object_control_properties (GObject * object, ...)
   GstController *ctrl;
   va_list var_args;
 
-  g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (G_IS_OBJECT (object), NULL);
 
   va_start (var_args, object);
   ctrl = gst_controller_new_valist (object, var_args);
@@ -115,7 +115,7 @@ gst_object_uncontrol_properties (GObject * object, ...)
 GstController *
 gst_object_get_controller (GObject * object)
 {
-  g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (G_IS_OBJECT (object), NULL);
 
   return (g_object_get_qdata (object, priv_gst_controller_key));
 }
@@ -238,12 +238,12 @@ gst_object_get_control_source (GObject * object, gchar * property_name)
 {
   GstController *ctrl = NULL;
 
-  g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (G_IS_OBJECT (object), NULL);
 
   if ((ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
     return gst_controller_get_control_source (ctrl, property_name);
   }
-  return FALSE;
+  return NULL;
 }
 
 /**

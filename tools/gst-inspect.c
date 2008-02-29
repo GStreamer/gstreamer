@@ -38,7 +38,7 @@ static char *_name = NULL;
 static int print_element_info (GstElementFactory * factory,
     gboolean print_names);
 
-void
+static void
 n_print (const char *format, ...)
 {
   va_list args;

@@ -62,8 +62,8 @@ static GstPad *srcpad1, *srcpad2;
 static GstPad *sinkpad1, *sinkpad2;
 static TestData *data1, *data2;
 
-GMutex *lock;
-GCond *cond;
+static GMutex *lock;
+static GCond *cond;
 
 static GstFlowReturn
 collected_cb (GstCollectPads * pads, gpointer user_data)
@@ -98,7 +98,7 @@ push_event (gpointer user_data)
 }
 
 static void
-setup ()
+setup (void)
 {
   collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (collect, collected_cb, NULL);
@@ -118,7 +118,7 @@ setup ()
 }
 
 static void
-teardown ()
+teardown (void)
 {
   gst_object_unref (sinkpad1);
   gst_object_unref (sinkpad2);
@@ -328,7 +328,7 @@ GST_START_TEST (test_collect_twice)
 GST_END_TEST;
 
 static Suite *
-gst_collect_pads_suite ()
+gst_collect_pads_suite (void)
 {
   Suite *suite;
   TCase *general;

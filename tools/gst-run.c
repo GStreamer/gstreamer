@@ -147,7 +147,7 @@ unmangle_libtool (gchar ** dir, gchar ** base)
  *
  * The returned string is newly allocated.
  */
-gchar *
+static gchar *
 get_dir_of_binary (const gchar * binary)
 {
   gchar *base, *dir;
@@ -192,7 +192,7 @@ get_dir_of_binary (const gchar * binary)
 /* Search the given directory for candidate binaries matching the base binary.
  * Return a GHashTable of major/minor -> directory pairs
  */
-GHashTable *
+static GHashTable *
 get_candidates (const gchar * dir, const gchar * base)
 {
   GDir *gdir;

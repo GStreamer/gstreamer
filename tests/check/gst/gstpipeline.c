@@ -127,9 +127,9 @@ GST_START_TEST (test_get_bus)
 
 GST_END_TEST;
 
-GMainLoop *loop = NULL;
+static GMainLoop *loop = NULL;
 
-gboolean
+static gboolean
 message_received (GstBus * bus, GstMessage * message, gpointer data)
 {
   GstElement *pipeline = GST_ELEMENT (data);
@@ -487,7 +487,7 @@ GST_START_TEST (test_base_time)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_pipeline_suite (void)
 {
   Suite *s = suite_create ("GstPipeline");

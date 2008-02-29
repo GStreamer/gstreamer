@@ -110,7 +110,7 @@ gst_interpolation_control_source_reset (GstInterpolationControlSource * self)
  * Returns: a new, unbound #GstInterpolationControlSource.
  */
 GstInterpolationControlSource *
-gst_interpolation_control_source_new ()
+gst_interpolation_control_source_new (void)
 {
   return g_object_new (GST_TYPE_INTERPOLATION_CONTROL_SOURCE, NULL);
 }

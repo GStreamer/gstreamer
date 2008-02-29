@@ -25,13 +25,13 @@
 #include <gst/check/gstcheck.h>
 
 GList *buffers = NULL;
-gint overrun_count = 0;
-gint underrun_count = 0;
+static gint overrun_count = 0;
+static gint underrun_count = 0;
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
-GstPad *mysrcpad, *mysinkpad;
+static GstPad *mysrcpad, *mysinkpad;
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -59,8 +59,8 @@ queue_underrun (GstElement * queue, gpointer user_data)
   g_mutex_unlock (check_mutex);
 }
 
-GstElement *
-setup_queue ()
+static GstElement *
+setup_queue (void)
 {
   GstElement *queue;
 
@@ -76,7 +76,7 @@ setup_queue ()
   return queue;
 }
 
-void
+static void
 cleanup_queue (GstElement * queue)
 {
   GST_DEBUG ("cleanup_queue");
@@ -431,7 +431,7 @@ GST_START_TEST (test_time_level)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 queue_suite (void)
 {
   Suite *s = suite_create ("queue");

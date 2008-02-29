@@ -438,7 +438,7 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 }
 
-GList *
+static GList *
 gst_multi_queue_get_internal_links (GstPad * pad)
 {
   GList *res = NULL;

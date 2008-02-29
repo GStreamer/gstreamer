@@ -1,8 +1,6 @@
 #include <stdlib.h>
 #include <gst/gst.h>
 
-gboolean playing;
-
 static void
 object_saved (GstObject * object, xmlNodePtr parent, gpointer data)
 {

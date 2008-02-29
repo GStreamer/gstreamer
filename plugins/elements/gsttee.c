@@ -81,7 +81,7 @@ enum
   PROP_PULL_MODE,
 };
 
-GstStaticPadTemplate tee_src_template = GST_STATIC_PAD_TEMPLATE ("src%d",
+static GstStaticPadTemplate tee_src_template = GST_STATIC_PAD_TEMPLATE ("src%d",
     GST_PAD_SRC,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);

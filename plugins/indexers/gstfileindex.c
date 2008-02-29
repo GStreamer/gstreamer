@@ -144,7 +144,7 @@ static GstIndexEntry *gst_file_index_get_assoc_entry (GstIndex * index, gint id,
 
 static GstIndex *parent_class = NULL;
 
-GType
+static GType
 gst_file_index_get_type (void)
 {
   static GType file_index_type = 0;
@@ -261,7 +261,7 @@ struct fi_find_writer_context
   GstFileIndexId *ii;
 };
 
-void
+static void
 _fi_find_writer (gpointer key, gpointer val, gpointer data)
 {
   struct fi_find_writer_context *cx = data;
@@ -495,7 +495,7 @@ static void
 _file_index_id_save_xml (gpointer _key, GstFileIndexId * ii, xmlNodePtr writers)
 {
   const gint bufsize = 16;
-  gchar buf[bufsize];
+  gchar buf[16];
   xmlNodePtr writer;
   xmlNodePtr formats;
   gint xx;
@@ -807,7 +807,7 @@ gst_file_index_add_association (GstIndex * index, GstIndexEntry * entry)
   }
 
   {
-    gchar row_data[ARRAY_ROW_SIZE (id_index)];
+    gchar *row_data = (gchar *) g_malloc (ARRAY_ROW_SIZE (id_index));
     gint fx;
 
     gint32 flags_host = GST_INDEX_ASSOC_FLAGS (entry);
@@ -821,6 +821,8 @@ gst_file_index_add_association (GstIndex * index, GstIndexEntry * entry)
     }
 
     g_array_insert_vals (id_index->array, mx, row_data, 1);
+
+    g_free (row_data);
   }
 }
 

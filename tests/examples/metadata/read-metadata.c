@@ -32,9 +32,9 @@
 #include <locale.h>
 #include <gst/gst.h>
 
-char *filename = NULL;
-GstElement *pipeline = NULL;
-GstElement *source = NULL;
+static char *filename = NULL;
+static GstElement *pipeline = NULL;
+static GstElement *source = NULL;
 
 #define NEW_PIPE_PER_FILE
 
@@ -82,7 +82,7 @@ message_loop (GstElement * element, GstTagList ** tags)
 }
 
 static void
-make_pipeline ()
+make_pipeline (void)
 {
   GstElement *decodebin;
 

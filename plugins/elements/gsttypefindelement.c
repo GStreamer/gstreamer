@@ -64,13 +64,13 @@ GST_DEBUG_CATEGORY_STATIC (gst_type_find_element_debug);
 #define GST_CAT_DEFAULT gst_type_find_element_debug
 
 /* generic templates */
-GstStaticPadTemplate type_find_element_sink_template =
+static GstStaticPadTemplate type_find_element_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GstStaticPadTemplate type_find_element_src_template =
+static GstStaticPadTemplate type_find_element_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,

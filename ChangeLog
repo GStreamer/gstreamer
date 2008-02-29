@@ -1,5 +1,46 @@
 2008-02-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/gstconfig.h.in:
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_read_buffer):
+	* libs/gst/check/gstcheck.c: (gst_check_log_message_func),
+	(gst_check_log_critical_func), (gst_check_drop_buffers),
+	(gst_check_element_push_buffer_list):
+	* libs/gst/controller/gstcontroller.c: (gst_controller_get),
+	(gst_controller_get_type):
+	* libs/gst/controller/gsthelper.c: (gst_object_control_properties),
+	(gst_object_get_controller), (gst_object_get_control_source):
+	* libs/gst/controller/gstinterpolationcontrolsource.c:
+	(gst_interpolation_control_source_new):
+	* libs/gst/controller/gstlfocontrolsource.c:
+	(gst_lfo_control_source_new):
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_event_from_packet_0_2):
+	* plugins/elements/gstfdsrc.c:
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gsttee.c:
+	* plugins/elements/gsttypefindelement.c:
+	* plugins/indexers/gstfileindex.c: (_file_index_id_save_xml),
+	(gst_file_index_add_association):
+	* plugins/indexers/gstmemindex.c:
+	* tests/benchmarks/gstpollstress.c: (mess_some_more):
+	* tests/check/elements/queue.c: (setup_queue):
+	* tests/check/gst/gstpipeline.c:
+	* tests/check/libs/collectpads.c: (setup), (teardown),
+	(gst_collect_pads_suite):
+	* tests/examples/adapter/adapter_test.c:
+	* tests/examples/metadata/read-metadata.c: (make_pipeline):
+	* tests/examples/xml/createxml.c:
+	* tests/examples/xml/runxml.c:
+	* tools/gst-inspect.c:
+	* tools/gst-run.c:
+	Correct all relevant warnings found by the sparse semantic code
+	analyzer. This include marking several symbols static, using
+	NULL instead of 0 for pointers, not using variable sized arrays
+	on the stack, moving variable declarations to the beginning of
+	a block and using "foo (void)" instead of "foo ()" for declarations.
+
+2008-02-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* plugins/elements/gstfdsink.c: (gst_fd_sink_update_fd):
 	* plugins/elements/gstfdsrc.c: (gst_fd_src_update_fd):
 	Don't reset GstPollFDs, this is not necessary at all.

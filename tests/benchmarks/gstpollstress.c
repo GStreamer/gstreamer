@@ -29,7 +29,7 @@ static GTimer *timer;
 #define MAX_THREADS  100
 
 static void
-mess_some_more ()
+mess_some_more (void)
 {
   GList *walk;
   gint random;
@@ -107,7 +107,7 @@ mess_some_more ()
   g_mutex_unlock (fdlock);
 }
 
-void *
+static void *
 run_test (void *threadid)
 {
   gint id = GPOINTER_TO_INT (threadid);

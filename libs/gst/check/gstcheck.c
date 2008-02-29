@@ -48,12 +48,13 @@ GList *buffers = NULL;
 GMutex *check_mutex = NULL;
 GCond *check_cond = NULL;
 
+/* FIXME 0.11: shouldn't _gst_check_debug be static? Not used anywhere */
 gboolean _gst_check_debug = FALSE;
 gboolean _gst_check_raised_critical = FALSE;
 gboolean _gst_check_raised_warning = FALSE;
 gboolean _gst_check_expecting_log = FALSE;
 
-void gst_check_log_message_func
+static void gst_check_log_message_func
     (const gchar * log_domain, GLogLevelFlags log_level,
     const gchar * message, gpointer user_data)
 {
@@ -62,7 +63,7 @@ void gst_check_log_message_func
   }
 }
 
-void gst_check_log_critical_func
+static void gst_check_log_critical_func
     (const gchar * log_domain, GLogLevelFlags log_level,
     const gchar * message, gpointer user_data)
 {
@@ -280,7 +281,7 @@ gst_check_teardown_sink_pad (GstElement * element)
  * Since: 0.10.18
  */
 void
-gst_check_drop_buffers ()
+gst_check_drop_buffers (void)
 {
   GstBuffer *temp_buffer;
 
@@ -342,6 +343,7 @@ gst_check_element_push_buffer_list (const gchar * element_name,
   GstPad *pad_peer;
   GstPad *sink_pad = NULL;
   GstPad *src_pad;
+  GstBuffer *buffer;
 
   /* check that there are no buffers waiting */
   gst_check_drop_buffers ();
@@ -350,7 +352,7 @@ gst_check_element_push_buffer_list (const gchar * element_name,
   fail_if (element == NULL, "failed to create the element '%s'", element_name);
   fail_unless (GST_IS_ELEMENT (element), "the element is no element");
   /* create the src pad */
-  GstBuffer *buffer = GST_BUFFER (buffer_in->data);
+  buffer = GST_BUFFER (buffer_in->data);
 
   fail_unless (GST_IS_BUFFER (buffer), "There should be a buffer in buffer_in");
   src_caps = GST_BUFFER_CAPS (buffer);
@@ -366,11 +368,13 @@ gst_check_element_push_buffer_list (const gchar * element_name,
   GST_DEBUG ("src pad activated");
   /* don't create the sink_pad if there is no buffer_out list */
   if (buffer_out != NULL) {
+    gchar *temp;
+
     GST_DEBUG ("buffer out detected, creating the sink pad");
     /* get the sink caps */
     sink_caps = GST_BUFFER_CAPS (GST_BUFFER (buffer_out->data));
     fail_unless (GST_IS_CAPS (sink_caps), "buffer out don't have caps");
-    gchar *temp = gst_caps_to_string (sink_caps);
+    temp = gst_caps_to_string (sink_caps);
 
     GST_DEBUG ("sink caps requested by buffer out: '%s'", temp);
     g_free (temp);

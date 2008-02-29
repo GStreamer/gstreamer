@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <gst/gst.h>
 
-gboolean playing;
-
 G_GNUC_UNUSED static void
 xml_loaded (GstXML * xml, GstObject * object, xmlNodePtr self, gpointer data)
 {

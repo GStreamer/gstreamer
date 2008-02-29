@@ -17,7 +17,7 @@ struct TestParams
  * them out in 'read size' sized pieces, using take and then take_buffer, 
  * and prints the timings */
 
-struct TestParams param_sets[] = {
+static struct TestParams param_sets[] = {
 /* These values put ~256MB in 1MB chunks in an adapter, then reads them out
  * in 250kb blocks */
   {256000000, 250000, 1000000},
@@ -28,9 +28,9 @@ struct TestParams param_sets[] = {
  * in 1000 byte blocks */
   {25600000, 1000, 200}
 };
-const gint n_tests = sizeof (param_sets) / sizeof (struct TestParams);
+static const gint n_tests = sizeof (param_sets) / sizeof (struct TestParams);
 
-gint ticks_per_sec;
+static gint ticks_per_sec;
 
 static void
 run_test_take (struct TestParams *params)
@@ -88,7 +88,7 @@ run_test_take_buffer (struct TestParams *params)
   g_object_unref (adapter);
 }
 
-void
+static void
 run_tests (struct TestParams *params)
 {
   struct tms time_data;

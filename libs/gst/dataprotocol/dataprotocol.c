@@ -654,7 +654,7 @@ gst_dp_event_from_packet_0_2 (guint header_length, const guint8 * header,
   switch (type) {
     case GST_EVENT_UNKNOWN:
       GST_WARNING ("Unknown event, ignoring");
-      return FALSE;
+      return NULL;
     case GST_EVENT_EOS:
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_FLUSH_STOP:
@@ -690,10 +690,10 @@ gst_dp_event_from_packet_0_2 (guint header_length, const guint8 * header,
     case GST_EVENT_NAVIGATION:
     case GST_EVENT_TAG:
       GST_WARNING ("Unhandled event type %d, ignoring", type);
-      return FALSE;
+      return NULL;
     default:
       GST_WARNING ("Unknown event type %d, ignoring", type);
-      return FALSE;
+      return NULL;
   }
 
   return event;

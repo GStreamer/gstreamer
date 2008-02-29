@@ -865,9 +865,9 @@ gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
   guint readsize;
   GstBuffer *buffer;
 
-  g_return_val_if_fail (pads != NULL, 0);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), 0);
-  g_return_val_if_fail (data != NULL, 0);
+  g_return_val_if_fail (pads != NULL, NULL);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), NULL);
+  g_return_val_if_fail (data != NULL, NULL);
 
   /* no buffer, must be EOS */
   if ((buffer = data->buffer) == NULL)

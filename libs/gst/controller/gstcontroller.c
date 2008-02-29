@@ -604,7 +604,7 @@ gst_controller_get (GstController * self, gchar * property_name,
       res = gst_control_source_get_value (prop->csource, timestamp, val);
       if (!res) {
         g_free (val);
-        val = FALSE;
+        val = NULL;
       }
     } else {
       g_object_get_property (self->object, prop->name, val);
@@ -924,7 +924,7 @@ _gst_controller_class_init (GstControllerClass * klass)
 }
 
 GType
-gst_controller_get_type ()
+gst_controller_get_type (void)
 {
   static GType type = 0;
 

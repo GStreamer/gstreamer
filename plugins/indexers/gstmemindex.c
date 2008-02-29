@@ -120,7 +120,7 @@ static GstIndex *parent_class = NULL;
 
 /*static guint gst_mem_index_signals[LAST_SIGNAL] = { 0 }; */
 
-GType
+static GType
 gst_mem_index_get_type (void)
 {
   static GType mem_index_type = 0;
