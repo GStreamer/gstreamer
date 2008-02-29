@@ -387,15 +387,16 @@ gst_vis_src_negotiate (GstVisual * visual)
 {
   GstCaps *othercaps, *target, *intersect;
   GstStructure *structure;
-  const GstCaps *templ;
+  GstCaps *caps;
 
-  templ = gst_pad_get_pad_template_caps (visual->srcpad);
+  caps = gst_pad_get_caps (visual->srcpad);
 
   /* see what the peer can do */
   othercaps = gst_pad_peer_get_caps (visual->srcpad);
   if (othercaps) {
-    intersect = gst_caps_intersect (othercaps, templ);
+    intersect = gst_caps_intersect (othercaps, caps);
     gst_caps_unref (othercaps);
+    gst_caps_unref (caps);
 
     if (gst_caps_is_empty (intersect))
       goto no_format;
@@ -404,7 +405,8 @@ gst_vis_src_negotiate (GstVisual * visual)
     gst_caps_unref (intersect);
   } else {
     /* need a copy, we'll be modifying it when fixating */
-    target = gst_caps_copy (templ);
+    target = gst_caps_copy (caps);
+    gst_caps_unref (caps);
   }
 
   /* fixate in case something is not fixed. This does nothing if the value is

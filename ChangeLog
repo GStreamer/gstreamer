@@ -1,5 +1,11 @@
 2008-02-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/libvisual/visual.c: (gst_vis_src_negotiate):
+	When negotiating, actually start from a format that we can support
+	instead of from the too generic template.
+
+2008-02-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstplaybin2.c: (gst_play_bin_set_property):
 	Enable vis setting.
 
