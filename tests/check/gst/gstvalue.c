@@ -1618,7 +1618,7 @@ GST_START_TEST (test_serialize_deserialize_format_enum)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_value_suite (void)
 {
   Suite *s = suite_create ("GstValue");

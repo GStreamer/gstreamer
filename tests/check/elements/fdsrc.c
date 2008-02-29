@@ -27,16 +27,16 @@
 
 #include <gst/check/gstcheck.h>
 
-gboolean have_eos = FALSE;
+static gboolean have_eos = FALSE;
 
-GstPad *mysinkpad;
+static GstPad *mysinkpad;
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-gboolean
+static gboolean
 event_func (GstPad * pad, GstEvent * event)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
@@ -49,8 +49,8 @@ event_func (GstPad * pad, GstEvent * event)
   return FALSE;
 }
 
-GstElement *
-setup_fdsrc ()
+static GstElement *
+setup_fdsrc (void)
 {
   GstElement *fdsrc;
 
@@ -62,7 +62,7 @@ setup_fdsrc ()
   return fdsrc;
 }
 
-void
+static void
 cleanup_fdsrc (GstElement * fdsrc)
 {
   gst_pad_set_active (mysinkpad, FALSE);
@@ -180,7 +180,7 @@ GST_START_TEST (test_seeking)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 fdsrc_suite (void)
 {
   Suite *s = suite_create ("fdsrc");

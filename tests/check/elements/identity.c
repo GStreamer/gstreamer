@@ -24,12 +24,12 @@
 
 #include <gst/check/gstcheck.h>
 
-gboolean have_eos = FALSE;
+static gboolean have_eos = FALSE;
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
-GstPad *mysrcpad, *mysinkpad;
+static GstPad *mysrcpad, *mysinkpad;
 
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -41,7 +41,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-gboolean
+static gboolean
 event_func (GstPad * pad, GstEvent * event)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
@@ -54,8 +54,8 @@ event_func (GstPad * pad, GstEvent * event)
   return FALSE;
 }
 
-GstElement *
-setup_identity ()
+static GstElement *
+setup_identity (void)
 {
   GstElement *identity;
 
@@ -71,7 +71,7 @@ setup_identity ()
   return identity;
 }
 
-void
+static void
 cleanup_identity (GstElement * identity)
 {
   GST_DEBUG ("cleanup_identity");
@@ -112,7 +112,7 @@ GST_START_TEST (test_one_buffer)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 identity_suite (void)
 {
   Suite *s = suite_create ("identity");

@@ -36,7 +36,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-gboolean
+static gboolean
 event_func (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
@@ -54,7 +54,7 @@ event_func (GstPad * pad, GstEvent * event)
   return res;
 }
 
-void
+static void
 wait_eos (void)
 {
   g_mutex_lock (event_mutex);
@@ -66,8 +66,8 @@ wait_eos (void)
   g_mutex_unlock (event_mutex);
 }
 
-GstElement *
-setup_filesrc ()
+static GstElement *
+setup_filesrc (void)
 {
   GstElement *filesrc;
 
@@ -83,7 +83,7 @@ setup_filesrc ()
   return filesrc;
 }
 
-void
+static void
 cleanup_filesrc (GstElement * filesrc)
 {
   gst_pad_set_active (mysinkpad, FALSE);
@@ -376,7 +376,7 @@ GST_START_TEST (test_uri_interface)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 filesrc_suite (void)
 {
   Suite *s = suite_create ("filesrc");

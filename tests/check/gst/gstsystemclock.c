@@ -40,7 +40,8 @@ GST_START_TEST (test_range)
   fail_unless (time2 == GST_TIME_AS_MSECONDS (time));
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_signedness)
 {
   GstClockTime time[] = { 0, 1, G_MAXUINT64 / GST_SECOND };
@@ -56,9 +57,10 @@ GST_START_TEST (test_signedness)
   }
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 #define TIME_UNIT (GST_SECOND / 5)
-    static void
+static void
 gst_clock_debug (GstClock * clock)
 {
   GstClockTime time;
@@ -174,7 +176,8 @@ GST_START_TEST (test_single_shot)
   g_usleep (TIME_UNIT / (2 * 1000));
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_periodic_shot)
 {
   GstClock *clock;
@@ -236,7 +239,8 @@ GST_START_TEST (test_periodic_shot)
   gst_clock_id_unref (id);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_async_order)
 {
   GstClock *clock;
@@ -273,7 +277,8 @@ GST_START_TEST (test_async_order)
   g_list_free (cb_list);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_periodic_multi)
 {
   GstClock *clock;
@@ -316,7 +321,8 @@ GST_START_TEST (test_periodic_multi)
   fail_unless (gst_clock_get_time (clock) < base + 4 * TIME_UNIT);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_diff)
 {
   GstClockTime time1[] = { 0, (GstClockTime) - 1, 0, 1, 2 * GST_SECOND,
@@ -332,10 +338,11 @@ GST_START_TEST (test_diff)
   }
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 /* test if a blocking wait, unblocked by an async entry continues to be
  * scheduled */
-    typedef struct
+typedef struct
 {
   GstClock *clock;
   GstClockID id;
@@ -400,7 +407,9 @@ GST_START_TEST (test_mixed)
   gst_object_unref (info.clock);
 }
 
-GST_END_TEST Suite *
+GST_END_TEST;
+
+static Suite *
 gst_systemclock_suite (void)
 {
   Suite *s = suite_create ("GstSystemClock");

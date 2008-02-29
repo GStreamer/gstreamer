@@ -164,7 +164,7 @@ GST_START_TEST (test_stress)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 tee_suite (void)
 {
   Suite *s = suite_create ("tee");

@@ -356,7 +356,7 @@ GST_START_TEST (test_version_checks)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_plugin_suite (void)
 {
   Suite *s = suite_create ("GstPlugin");

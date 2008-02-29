@@ -167,7 +167,7 @@ GST_START_TEST (test_fold)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_iterator_suite (void)
 {
   Suite *s = suite_create ("GstIterator");

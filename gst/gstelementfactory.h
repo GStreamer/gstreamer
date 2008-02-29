@@ -81,7 +81,7 @@ struct _GstElementDetails
  * Macro to initialize #GstElementDetails.
  */
 #define GST_ELEMENT_DETAILS(longname,klass,description,author)		\
-  { longname, klass, description, author, {0} }
+  { longname, klass, description, author, {NULL} }
 
 /**
  * GST_IS_ELEMENT_DETAILS:

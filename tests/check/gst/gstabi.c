@@ -58,7 +58,7 @@ GST_START_TEST (test_ABI)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gstabi_suite (void)
 {
   Suite *s = suite_create ("GstABI");

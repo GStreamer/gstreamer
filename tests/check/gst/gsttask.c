@@ -184,7 +184,7 @@ GST_START_TEST (test_create)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 gst_task_suite (void)
 {
   Suite *s = suite_create ("GstTask");

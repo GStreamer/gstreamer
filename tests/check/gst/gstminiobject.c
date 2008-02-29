@@ -95,11 +95,11 @@ GST_START_TEST (test_make_writable)
 
 GST_END_TEST;
 
-gint num_threads = 10;
-gint refs_per_thread = 10000;
+static gint num_threads = 10;
+static gint refs_per_thread = 10000;
 
 /* test thread-safe refcounting of GstMiniObject */
-void
+static void
 thread_ref (GstMiniObject * mobj)
 {
   int j;
@@ -135,7 +135,7 @@ GST_START_TEST (test_ref_threaded)
 
 GST_END_TEST;
 
-void
+static void
 thread_unref (GstMiniObject * mobj)
 {
   int j;
@@ -191,9 +191,10 @@ enum
   PROP_BUFFER = 1
 };
 
-G_DEFINE_TYPE (MyFoo, my_foo, G_TYPE_OBJECT)
+G_DEFINE_TYPE (MyFoo, my_foo, G_TYPE_OBJECT);
 
-     static void my_foo_init (MyFoo * foo)
+static void
+my_foo_init (MyFoo * foo)
 {
 }
 
@@ -270,7 +271,7 @@ GST_START_TEST (test_value_collection)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 gst_mini_object_suite (void)
 {
   Suite *s = suite_create ("GstMiniObject");

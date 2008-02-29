@@ -972,7 +972,7 @@ GST_START_TEST (controller_interpolation_linear_value_array)
   GstElement *elem;
   gboolean res;
   GValue val_ulong = { 0, };
-  GstValueArray values = { 0, };
+  GstValueArray values = { NULL, };
 
   gst_controller_init (NULL, NULL);
 

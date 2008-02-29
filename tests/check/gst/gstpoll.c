@@ -357,7 +357,7 @@ GST_START_TEST (test_poll_wait_select)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_poll_suite (void)
 {
   Suite *s = suite_create ("GstPoll");

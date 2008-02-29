@@ -1244,7 +1244,7 @@ GST_START_TEST (test_async_done_eos)
 GST_END_TEST;
 
 /* test: try changing state of sinks */
-Suite *
+static Suite *
 gst_sinks_suite (void)
 {
   Suite *s = suite_create ("Sinks");

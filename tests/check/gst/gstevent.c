@@ -268,9 +268,9 @@ GST_START_TEST (create_events)
 
 GST_END_TEST;
 
-GTimeVal sent_event_time;
-GstEvent *got_event_before_q, *got_event_after_q;
-GTimeVal got_event_time;
+static GTimeVal sent_event_time;
+static GstEvent *got_event_before_q, *got_event_after_q;
+static GTimeVal got_event_time;
 
 static gboolean
 event_probe (GstPad * pad, GstMiniObject ** data, gpointer user_data)
@@ -478,7 +478,7 @@ GST_START_TEST (send_custom_events)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_event_suite (void)
 {
   Suite *s = suite_create ("GstEvent");

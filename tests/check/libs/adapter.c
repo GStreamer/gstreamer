@@ -172,7 +172,7 @@ GST_START_TEST (test_take3)
 GST_END_TEST;
 
 static GstAdapter *
-create_and_fill_adapter ()
+create_and_fill_adapter (void)
 {
   GstAdapter *adapter;
   gint i, j;
@@ -244,7 +244,7 @@ GST_START_TEST (test_take_buf_order)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_adapter_suite (void)
 {
   Suite *s = suite_create ("adapter");

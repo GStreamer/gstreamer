@@ -319,7 +319,7 @@ GST_START_TEST (test_stop_from_app)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");

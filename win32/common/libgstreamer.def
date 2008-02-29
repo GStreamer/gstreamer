@@ -655,6 +655,7 @@ EXPORTS
 	gst_poll_fd_ctl_write
 	gst_poll_fd_has_closed
 	gst_poll_fd_has_error
+	gst_poll_fd_init
 	gst_poll_free
 	gst_poll_get_mode
 	gst_poll_mode_get_type

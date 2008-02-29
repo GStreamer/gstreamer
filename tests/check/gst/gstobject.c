@@ -38,12 +38,12 @@ struct _GstFakeObjectClass
   GstObjectClass parent_class;
 };
 
-GType _gst_fake_object_type = 0;
+static GType _gst_fake_object_type = 0;
 
 //static GstObjectClass *parent_class = NULL;
 //static guint gst_fake_object_signals[LAST_SIGNAL] = { 0 };
 
-GType
+static GType
 gst_fake_object_get_type (void)
 {
   if (!_gst_fake_object_type) {
@@ -75,7 +75,8 @@ GST_START_TEST (test_fail_abstract_new)
   fail_unless (object == NULL, "Created an instance of abstract GstObject");
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 /* g_object_new on GstFakeObject should succeed */
 GST_START_TEST (test_fake_object_new)
 {
@@ -88,7 +89,8 @@ GST_START_TEST (test_fake_object_new)
   gst_object_unref (object);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 /* GstFakeObject name tests */
 GST_START_TEST (test_fake_object_name)
 {
@@ -129,9 +131,11 @@ GST_START_TEST (test_fake_object_name)
   gst_object_unref (object);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 /* thread function for threaded name change test */
-    gpointer thread_name_object (GstObject * object)
+static gpointer
+thread_name_object (GstObject * object)
 {
   gchar *thread_id = g_strdup_printf ("%p", g_thread_self ());
 
@@ -227,18 +231,19 @@ GST_START_TEST (test_fake_object_name_threaded_right)
   gst_object_unref (object);
 }
 
-GST_END_TEST
+GST_END_TEST;
 /*
  * main thread creates lots of objects
  * child threads sets default names on objects
  * then main thread checks uniqueness of object names
  */
-    GList * object_list = NULL;
-gint num_objects = 1000;
-gint num_threads = 5;
+
+static GList *object_list = NULL;
+static gint num_objects = 1000;
+static gint num_threads = 5;
 
 /* thread function for threaded default name change test */
-gpointer
+static gpointer
 thread_name_object_default (int *i)
 {
   int j;
@@ -333,7 +338,8 @@ GST_START_TEST (test_fake_object_name_threaded_unique)
   g_list_foreach (object_list, (GFunc) g_object_unref, NULL);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 /* parentage test on GstFakeObject */
 GST_START_TEST (test_fake_object_parentage)
 {
@@ -409,7 +415,8 @@ GST_START_TEST (test_fake_object_parentage)
   gst_object_unref (object2);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 /* parentage test dispose on GstFakeObject, since our testcase
  * does not handle the parent relation completely, the parent does
  * not hold a ref to the child, we cannot dispose the parent to
@@ -438,9 +445,12 @@ GST_START_TEST (test_fake_object_parentage_dispose)
   gst_object_unref (object2);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 /* test: try renaming a parented object, make sure it fails */
-    Suite * gst_object_suite (void)
+
+static Suite *
+gst_object_suite (void)
 {
   Suite *s = suite_create ("GstObject");
   TCase *tc_chain = tcase_create ("general");

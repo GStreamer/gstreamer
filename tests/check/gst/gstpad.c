@@ -63,9 +63,9 @@ GST_END_TEST;
 
 /* threaded link/unlink */
 /* use globals */
-GstPad *src, *sink;
+static GstPad *src, *sink;
 
-void
+static void
 thread_link_unlink (gpointer data)
 {
   THREAD_START ();
@@ -603,7 +603,7 @@ GST_START_TEST (test_get_caps_must_be_copy)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_pad_suite (void)
 {
   Suite *s = suite_create ("GstPad");

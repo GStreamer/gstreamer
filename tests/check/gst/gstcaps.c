@@ -580,7 +580,7 @@ GST_START_TEST (test_intersect)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_caps_suite (void)
 {
   Suite *s = suite_create ("GstCaps");

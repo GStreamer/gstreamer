@@ -523,7 +523,7 @@ GST_START_TEST (test_eos2)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 fakesink_suite (void)
 {
   Suite *s = suite_create ("fakesink");

@@ -590,7 +590,7 @@ GST_START_TEST (test_set_value_from_string)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_utils_suite (void)
 {
   Suite *s = suite_create ("GstUtils");

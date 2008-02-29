@@ -71,7 +71,7 @@ GST_START_TEST (test_ABI)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 libsabi_suite (void)
 {
   Suite *s = suite_create ("LibsABI");

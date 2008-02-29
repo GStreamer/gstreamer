@@ -205,7 +205,7 @@ GST_START_TEST (test_class)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_element_suite (void)
 {
   Suite *s = suite_create ("GstElement");

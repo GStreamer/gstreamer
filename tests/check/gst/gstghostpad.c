@@ -602,7 +602,7 @@ GST_START_TEST (test_ghost_pads_new_no_target_from_template)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_ghost_pad_suite (void)
 {
   Suite *s = suite_create ("GstGhostPad");

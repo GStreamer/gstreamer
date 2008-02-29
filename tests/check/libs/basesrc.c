@@ -482,7 +482,7 @@ GST_START_TEST (basesrc_eos_events_pull_live_eos)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_basesrc_suite (void)
 {
   Suite *s = suite_create ("GstBaseSrc");

@@ -891,7 +891,7 @@ GST_START_TEST (test_iterate_sorted)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_bin_suite (void)
 {
   Suite *s = suite_create ("GstBin");

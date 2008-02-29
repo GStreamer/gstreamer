@@ -1,4 +1,4 @@
-GstCheckABIStruct list[] = {
+static GstCheckABIStruct list[] = {
   {"GstAdapter", sizeof (GstAdapter), 88}
   ,
   {"GstAdapterClass", sizeof (GstAdapterClass), 168}

@@ -1624,7 +1624,7 @@ GST_START_TEST (segment_newsegment_accum2)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_segment_suite (void)
 {
   Suite *s = suite_create ("GstSegment");

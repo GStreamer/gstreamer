@@ -45,7 +45,7 @@ pound_bus_with_messages (gpointer data)
 }
 
 static void
-pull_messages ()
+pull_messages (void)
 {
   GstMessage *m;
   const GstStructure *s;
@@ -428,7 +428,7 @@ GST_START_TEST (test_timed_pop_thread)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_bus_suite (void)
 {
   Suite *s = suite_create ("GstBus");

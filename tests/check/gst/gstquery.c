@@ -249,7 +249,7 @@ GST_START_TEST (test_queries)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_query_suite (void)
 {
   Suite *s = suite_create ("GstQuery");

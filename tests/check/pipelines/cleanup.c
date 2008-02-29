@@ -102,7 +102,7 @@ GST_START_TEST (test_pipeline_unref)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 cleanup_suite (void)
 {
   Suite *s = suite_create ("Pipeline cleanup");

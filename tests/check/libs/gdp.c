@@ -409,7 +409,7 @@ GST_END_TEST;
 
 #endif
 
-Suite *
+static Suite *
 gst_dp_suite (void)
 {
   Suite *s = suite_create ("data protocol");

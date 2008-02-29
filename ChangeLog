@@ -1,5 +1,65 @@
 2008-02-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/gstelementfactory.h:
+	* tests/check/elements/fakesink.c:
+	* tests/check/elements/fakesrc.c: (setup_fakesrc):
+	* tests/check/elements/fdsrc.c: (setup_fdsrc):
+	* tests/check/elements/filesink.c: (setup_filesink):
+	* tests/check/elements/filesrc.c: (setup_filesrc):
+	* tests/check/elements/identity.c: (setup_identity):
+	* tests/check/elements/tee.c:
+	* tests/check/generic/sinks.c:
+	* tests/check/generic/states.c: (setup), (teardown):
+	* tests/check/gst/gst.c:
+	* tests/check/gst/gstabi.c:
+	* tests/check/gst/gstbin.c:
+	* tests/check/gst/gstbus.c: (pull_messages):
+	* tests/check/gst/gstcaps.c:
+	* tests/check/gst/gstelement.c:
+	* tests/check/gst/gstevent.c:
+	* tests/check/gst/gstghostpad.c:
+	* tests/check/gst/gstiterator.c:
+	* tests/check/gst/gstmessage.c:
+	* tests/check/gst/gstminiobject.c: (my_foo_init):
+	* tests/check/gst/gstobject.c: (thread_name_object),
+	(gst_object_suite):
+	* tests/check/gst/gstpad.c:
+	* tests/check/gst/gstplugin.c:
+	* tests/check/gst/gstpoll.c:
+	* tests/check/gst/gstquery.c:
+	* tests/check/gst/gstsegment.c:
+	* tests/check/gst/gststructure.c:
+	* tests/check/gst/gstsystemclock.c:
+	* tests/check/gst/gsttask.c:
+	* tests/check/gst/gstutils.c:
+	* tests/check/gst/gstvalue.c:
+	* tests/check/gst/struct_hppa.h:
+	* tests/check/gst/struct_i386.h:
+	* tests/check/gst/struct_ppc32.h:
+	* tests/check/gst/struct_ppc64.h:
+	* tests/check/gst/struct_x86_64.h:
+	* tests/check/libs/adapter.c: (create_and_fill_adapter):
+	* tests/check/libs/basesrc.c:
+	* tests/check/libs/controller.c: (GST_START_TEST):
+	* tests/check/libs/gdp.c:
+	* tests/check/libs/gstnetclientclock.c:
+	* tests/check/libs/gstnettimeprovider.c:
+	* tests/check/libs/libsabi.c:
+	* tests/check/libs/struct_hppa.h:
+	* tests/check/libs/struct_i386.h:
+	* tests/check/libs/struct_ppc32.h:
+	* tests/check/libs/struct_ppc64.h:
+	* tests/check/libs/struct_x86_64.h:
+	* tests/check/pipelines/cleanup.c:
+	* tests/check/pipelines/simple-launch-lines.c:
+	* tests/check/pipelines/stress.c:
+	And correct even more valid sparse warnings.
+
+	* win32/common/libgstreamer.def:
+	Add gst_poll_fd_init to the list of symbols.
+
+2008-02-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/gstconfig.h.in:
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_read_buffer):
 	* libs/gst/check/gstcheck.c: (gst_check_log_message_func),

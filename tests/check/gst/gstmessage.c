@@ -192,7 +192,7 @@ GST_START_TEST (test_parsing)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gst_message_suite (void)
 {
   Suite *s = suite_create ("GstMessage");
