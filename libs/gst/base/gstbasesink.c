@@ -387,7 +387,8 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * GstBaseSink:last-buffer
    *
    * The last buffer that arrived in the sink and was used for preroll or for
-   * rendering. This property can be used to generate thumbnails.
+   * rendering. This property can be used to generate thumbnails. This property
+   * can be NULL when the sink has not yet received a bufer.
    *
    * Since: 0.10.15
    */

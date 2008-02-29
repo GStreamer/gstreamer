@@ -1,5 +1,10 @@
 2008-02-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init):
+	Small doc update.
+
+2008-02-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstsegment.c: (gst_segment_set_seek),
 	(gst_segment_to_stream_time):
 	Improve some comment.
