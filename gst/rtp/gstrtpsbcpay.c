@@ -168,7 +168,6 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
   guint max_payload;
   GstBuffer *outbuf;
   guint8 *payload_data;
-  guint8 *data;
   guint frame_count;
   guint payload_length;
   struct rtp_payload *payload;
@@ -200,9 +199,9 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
   memset (payload, 0, sizeof (struct rtp_payload));
   payload->frame_count = frame_count;
 
-  data = gst_adapter_take (sbcpay->adapter, payload_length);
-  memcpy (payload_data + RTP_SBC_PAYLOAD_HEADER_SIZE, data, payload_length);
-  g_free (data);
+  gst_adapter_copy (sbcpay->adapter, payload_data +
+      RTP_SBC_PAYLOAD_HEADER_SIZE, 0, payload_length);
+  gst_adapter_flush (sbcpay->adapter, payload_length);
 
   GST_BUFFER_TIMESTAMP (outbuf) = sbcpay->timestamp;
   GST_DEBUG_OBJECT (sbcpay, "Pushing %d bytes", payload_length);
