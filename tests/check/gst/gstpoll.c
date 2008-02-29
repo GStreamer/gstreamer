@@ -34,8 +34,8 @@ static void
 test_poll_wait (GstPollMode mode)
 {
   GstPoll *set;
-  GstPollFD rfd = { 0, };
-  GstPollFD wfd = { 0, };
+  GstPollFD rfd = GST_POLL_FD_INIT;
+  GstPollFD wfd = GST_POLL_FD_INIT;
   gint socks[2];
   guchar c = 'A';
 
@@ -100,7 +100,7 @@ test_poll_wait (GstPollMode mode)
 GST_START_TEST (test_poll_basic)
 {
   GstPoll *set;
-  GstPollFD fd = { 0, };
+  GstPollFD fd = GST_POLL_FD_INIT;
 
   fd.fd = 1;
 
@@ -180,7 +180,7 @@ static gpointer
 delayed_restart (gpointer data)
 {
   GstPoll *set = data;
-  GstPollFD fd = { 0, };
+  GstPollFD fd = GST_POLL_FD_INIT;
 
   fd.fd = 1;
 
@@ -198,7 +198,7 @@ delayed_restart (gpointer data)
 GST_START_TEST (test_poll_wait_restart)
 {
   GstPoll *set;
-  GstPollFD fd = { 0, };
+  GstPollFD fd = GST_POLL_FD_INIT;
 
   fd.fd = 1;
 
@@ -268,7 +268,7 @@ static gpointer
 delayed_control (gpointer data)
 {
   GstPoll *set = data;
-  GstPollFD fd = { 0, };
+  GstPollFD fd = GST_POLL_FD_INIT;
 
   fd.fd = 1;
 
@@ -294,7 +294,7 @@ delayed_control (gpointer data)
 GST_START_TEST (test_poll_controllable)
 {
   GstPoll *set;
-  GstPollFD fd = { 0, };
+  GstPollFD fd = GST_POLL_FD_INIT;
 
   fd.fd = 1;
 

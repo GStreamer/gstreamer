@@ -185,9 +185,6 @@ gst_fd_src_update_fd (GstFdSrc * src)
       gst_poll_remove_fd (src->fdset, &fd);
     }
 
-    /* Reset the GstPollFD */
-    gst_poll_fd_init (&fd);
-
     fd.fd = src->new_fd;
     gst_poll_add_fd (src->fdset, &fd);
     gst_poll_fd_ctl_read (src->fdset, &fd, TRUE);

@@ -429,9 +429,6 @@ gst_fd_sink_update_fd (GstFdSink * fdsink, int new_fd)
     fd.fd = fdsink->fd;
     gst_poll_remove_fd (fdsink->fdset, &fd);
 
-    /* Reset the GstPollFD */
-    gst_poll_fd_init (&fd);
-
     fd.fd = new_fd;
     gst_poll_add_fd (fdsink->fdset, &fd);
     gst_poll_fd_ctl_write (fdsink->fdset, &fd, TRUE);

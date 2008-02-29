@@ -1,3 +1,13 @@
+2008-02-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_update_fd):
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_update_fd):
+	Don't reset GstPollFDs, this is not necessary at all.
+
+	* tests/check/gst/gstpoll.c: (test_poll_wait), (GST_START_TEST),
+	(delayed_restart), (delayed_control):
+	Use GST_POLL_FD_INIT.
+
 2008-02-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstpoll.c: (gst_poll_fd_init):
