@@ -1,3 +1,11 @@
+2008-03-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Fabrizio Gennari <fabrizio.ge at tiscali it>
+
+	* gst/gstregistryxml.c: (read_string), (load_feature):
+	  Strings allocated by libxml2 should be freed with xmlFree(), not
+	  with g_free(). Fixes issues on windows in certain contexts (#519698).
+
 2008-02-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstinterface.c: (gst_element_implements_interface):

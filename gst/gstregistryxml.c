@@ -123,9 +123,15 @@ read_string (xmlTextReaderPtr reader, gchar ** write_to, gboolean allow_blank)
       return found;
     }
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_TEXT) {
+      xmlChar *value;
+
       if (found)
         return FALSE;
-      *write_to = (gchar *) xmlTextReaderValue (reader);
+
+      value = xmlTextReaderValue (reader);
+      *write_to = g_strdup ((gchar *) value);
+      xmlFree (value);
+
       found = TRUE;
     }
   }
@@ -255,21 +261,20 @@ load_feature (xmlTextReaderPtr reader)
 {
   int ret;
   int depth;
-  gchar *feature_name;
+  xmlChar *feature_name;
   GstPluginFeature *feature;
   GType type;
 
   depth = xmlTextReaderDepth (reader);
-  feature_name =
-      (gchar *) xmlTextReaderGetAttribute (reader, BAD_CAST "typename");
+  feature_name = xmlTextReaderGetAttribute (reader, BAD_CAST "typename");
 
-  GST_LOG ("loading feature");
+  GST_LOG ("loading feature '%s'", GST_STR_NULL ((const char *) feature_name));
 
   if (!feature_name)
     return NULL;
 
-  type = g_type_from_name (feature_name);
-  g_free (feature_name);
+  type = g_type_from_name ((const char *) feature_name);
+  xmlFree (feature_name);
   feature_name = NULL;
 
   if (!type) {
