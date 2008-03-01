@@ -42,6 +42,9 @@ parse_channels_conf_from_file (const gchar * filename)
   gchar *satellite[] = { "polarity", "diseqc-source",
     "symbol-rate"
   };
+  gchar *cable[] = { "inversion", "symbol-rate", "code-rate-hp",
+    "modulation"
+  };
   int i;
   GHashTable *res = NULL;
 
@@ -81,6 +84,18 @@ parse_channels_conf_from_file (const gchar * filename)
               g_strdup ("terrestrial"));
           for (j = 2; j <= 9; j++) {
             g_hash_table_insert (params, g_strdup (terrestrial[j - 2]),
+                g_strdup (fields[j]));
+          }
+          g_hash_table_insert (params, g_strdup ("frequency"),
+              g_strdup (fields[1]));
+          parsed = TRUE;
+        } else if (numfields == 9) {
+          /* cable */
+          int j;
+
+          g_hash_table_insert (params, g_strdup ("type"), g_strdup ("cable"));
+          for (j = 2; j <= 5; j++) {
+            g_hash_table_insert (params, g_strdup (cable[j - 2]),
                 g_strdup (fields[j]));
           }
           g_hash_table_insert (params, g_strdup ("frequency"),
@@ -287,8 +302,57 @@ set_properties_for_channel (GObject * dvbbasebin, const gchar * channel_name)
           g_object_set (dvbbasebin, "symbol-rate", atoi (val), NULL);
         else
           ret = FALSE;
-      }
+      } else if (strcmp (type, "cable") == 0) {
+        gchar *val;
 
+        ret = TRUE;
+        val = g_hash_table_lookup (params, "symbol-rate");
+        if (val)
+          g_object_set (dvbbasebin, "symbol-rate", atoi (val) / 1000, NULL);
+        val = g_hash_table_lookup (params, "modulation");
+        if (strcmp (val, "QPSK") == 0)
+          g_object_set (dvbbasebin, "modulation", 0, NULL);
+        else if (strcmp (val, "QAM_16") == 0)
+          g_object_set (dvbbasebin, "modulation", 1, NULL);
+        else if (strcmp (val, "QAM_32") == 0)
+          g_object_set (dvbbasebin, "modulation", 2, NULL);
+        else if (strcmp (val, "QAM_64") == 0)
+          g_object_set (dvbbasebin, "modulation", 3, NULL);
+        else if (strcmp (val, "QAM_128") == 0)
+          g_object_set (dvbbasebin, "modulation", 4, NULL);
+        else if (strcmp (val, "QAM_256") == 0)
+          g_object_set (dvbbasebin, "modulation", 5, NULL);
+        else
+          g_object_set (dvbbasebin, "modulation", 6, NULL);
+        val = g_hash_table_lookup (params, "code-rate-hp");
+        if (strcmp (val, "FEC_NONE") == 0)
+          g_object_set (dvbbasebin, "code-rate-hp", 0, NULL);
+        else if (strcmp (val, "FEC_1_2") == 0)
+          g_object_set (dvbbasebin, "code-rate-hp", 1, NULL);
+        else if (strcmp (val, "FEC_2_3") == 0)
+          g_object_set (dvbbasebin, "code-rate-hp", 2, NULL);
+        else if (strcmp (val, "FEC_3_4") == 0)
+          g_object_set (dvbbasebin, "code-rate-hp", 3, NULL);
+        else if (strcmp (val, "FEC_4_5") == 0)
+          g_object_set (dvbbasebin, "code-rate-hp", 4, NULL);
+        else if (strcmp (val, "FEC_5_6") == 0)
+          g_object_set (dvbbasebin, "code-rate-hp", 5, NULL);
+        else if (strcmp (val, "FEC_6_7") == 0)
+          g_object_set (dvbbasebin, "code-rate-hp", 6, NULL);
+        else if (strcmp (val, "FEC_7_8") == 0)
+          g_object_set (dvbbasebin, "code-rate-hp", 7, NULL);
+        else if (strcmp (val, "FEC_8_9") == 0)
+          g_object_set (dvbbasebin, "code-rate-hp", 8, NULL);
+        else
+          g_object_set (dvbbasebin, "code-rate-hp", 9, NULL);
+        val = g_hash_table_lookup (params, "inversion");
+        if (strcmp (val, "INVERSION_OFF") == 0)
+          g_object_set (dvbbasebin, "inversion", 0, NULL);
+        else if (strcmp (val, "INVERSION_ON") == 0)
+          g_object_set (dvbbasebin, "inversion", 1, NULL);
+        else
+          g_object_set (dvbbasebin, "inversion", 2, NULL);
+      }
     }
     destroy_channels_hash (channels);
   }

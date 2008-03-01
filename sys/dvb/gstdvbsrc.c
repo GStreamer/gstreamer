@@ -396,7 +396,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_HP,
       g_param_spec_enum ("code-rate-hp",
           "code-rate-hp",
-          "High Priority Code Rate (DVB-T and DVB-S)",
+          "High Priority Code Rate (DVB-T, DVB-S and DVB-C)",
           GST_TYPE_DVBSRC_CODE_RATE, FEC_AUTO, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_LP,
@@ -414,7 +414,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_DVBSRC_MODULATION,
       g_param_spec_enum ("modulation",
           "modulation",
-          "Modulation (DVB-T)",
+          "Modulation (DVB-T and DVB-C)",
           GST_TYPE_DVBSRC_MODULATION, 1, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
@@ -432,7 +432,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_DVBSRC_INVERSION,
       g_param_spec_enum ("inversion",
           "inversion",
-          "Inversion Information (DVB-T)",
+          "Inversion Information (DVB-T and DVB-C)",
           GST_TYPE_DVBSRC_INVERSION, 1, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
@@ -1134,7 +1134,6 @@ diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
     GST_ERROR ("Sending diseqc command failed");
     return;
   }
-
   //usleep (cmd->wait * 1000);
   usleep (15 * 1000);
 
@@ -1278,10 +1277,10 @@ gst_dvbsrc_tune (GstDvbSrc * object)
     case FE_QAM:
       GST_INFO_OBJECT (object, "Tuning DVB-C to %d, srate=%d", freq, sym_rate);
       feparams.frequency = freq;
-      feparams.inversion = INVERSION_OFF;
-      /*feparams.u.qam.fec_inner = FEC_AUTO;
-         feparams.u.qam.modulation = object->modulation;
-         feparams.u.qam.symbol_rate = sym_rate; */
+      feparams.inversion = object->inversion;
+      feparams.u.qam.fec_inner = object->code_rate_hp;
+      feparams.u.qam.modulation = object->modulation;
+      feparams.u.qam.symbol_rate = sym_rate;
       break;
     default:
       g_error ("Unknown frontend type: %d", object->adapter_type);
