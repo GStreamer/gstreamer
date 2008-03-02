@@ -1,5 +1,15 @@
 2008-03-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: José Alburquerque <jaalburqu svn gnome org>
+
+	* gst/playback/gstplaybin2.c:
+	  Make the function signature of the _get_*_tags() functions match
+	  the signature of the vfuncs they implement, ie. return a
+	  GstTagList rather than a GstStructure, which is more correct,
+	  even if one is typedef'ed to the other (#518940).
+
+2008-03-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/rtsp/gstrtspconnection.c:
 	  Don't include unix headers unconditionally (fixes #518037).
 

@@ -430,11 +430,11 @@ static GstStateChangeReturn gst_play_bin_change_state (GstElement * element,
 
 static void gst_play_bin_handle_message (GstBin * bin, GstMessage * message);
 
-static GstStructure *gst_play_bin_get_video_tags (GstPlayBin * playbin,
+static GstTagList *gst_play_bin_get_video_tags (GstPlayBin * playbin,
     gint stream);
-static GstStructure *gst_play_bin_get_audio_tags (GstPlayBin * playbin,
+static GstTagList *gst_play_bin_get_audio_tags (GstPlayBin * playbin,
     gint stream);
-static GstStructure *gst_play_bin_get_text_tags (GstPlayBin * playbin,
+static GstTagList *gst_play_bin_get_text_tags (GstPlayBin * playbin,
     gint stream);
 
 static GstBuffer *gst_play_bin_convert_frame (GstPlayBin * playbin,
