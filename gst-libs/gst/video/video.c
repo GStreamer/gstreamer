@@ -904,19 +904,27 @@ gst_video_format_get_component_offset (GstVideoFormat format, int component,
 {
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-      if (component == 0) {
+      if (component == 0)
         return 0;
-      } else {
-        int offset;
-
-        offset = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
-        if (component == 2) {
-          offset += GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
-              (GST_ROUND_UP_2 (height) / 2);
-        }
-        return offset;
+      if (component == 1)
+        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+      if (component == 2) {
+        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) +
+            GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
+            (GST_ROUND_UP_2 (height) / 2);
       }
+      return 0;
+    case GST_VIDEO_FORMAT_YV12:        /* same as I420, but components 1+2 swapped */
+      if (component == 0)
+        return 0;
+      if (component == 2)
+        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+      if (component == 1) {
+        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) +
+            GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
+            (GST_ROUND_UP_2 (height) / 2);
+      }
+      return 0;
     case GST_VIDEO_FORMAT_YUY2:
       if (component == 0)
         return 0;

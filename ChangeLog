@@ -1,3 +1,10 @@
+2008-03-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/video/video.c: (gst_video_format_get_component_offset):
+	  YV12 is I420 with swapped components 1 and 2, so the offset of
+	  component 1 for I420 should be the offset for component 2 for YV12
+	  and vice versa.
+
 2008-02-29  Rene Stadler  <mail@renestadler.de>
 
 	* sys/v4l/gstv4lelement.c:
