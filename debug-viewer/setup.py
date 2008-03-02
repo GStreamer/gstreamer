@@ -324,7 +324,9 @@ cmdclass = {"build" : build_custom,
 
 setup (cmdclass = cmdclass,
 
-       packages = ["GstDebugViewer"],
+       packages = ["GstDebugViewer",
+                   "GstDebugViewer.Common",
+                   "GstDebugViewer.Plugins"],
        scripts = ["gst-debug-viewer"],
        data_files = [("share/gst-debug-viewer", ["data/gst-debug-viewer.glade",
                                               "data/gst-debug-viewer.ui"],),
