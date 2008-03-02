@@ -1,5 +1,18 @@
 2008-03-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/libs/video.c: (paintinfo), (paintinfo_struct),
+	  (fourcc_list_struct), (fourcc_list), (fourcc_get_size),
+	  (paint_setup_I420), (paint_setup_YV12), (paint_setup_AYUV),
+	  (paint_setup_YUY2), (paint_setup_UYVY), (paint_setup_YVYU),
+	  (paint_setup_IYU2), (paint_setup_Y41B), (paint_setup_Y42B),
+	  (paint_setup_Y800), (paint_setup_YVU9), (paint_setup_YUV9),
+	  (gst_video_format_is_packed), (video_format_is_packed):
+	  Add unit test that makes sure that the strides, offsets and
+	  sizes returned for the various YUV formats by the new video API
+	  match the old reference implementation in videotestsrc.
+
+2008-03-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/video/video.c: (gst_video_calculate_display_ratio),
 	  (gst_video_format_from_fourcc), (gst_video_format_to_fourcc),
 	  (gst_video_format_is_rgb), (gst_video_format_is_yuv),
