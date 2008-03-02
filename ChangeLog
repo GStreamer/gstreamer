@@ -1,5 +1,10 @@
 2008-03-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  Don't include unix headers unconditionally (fixes #518037).
+
+2008-03-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/libs/video.c: (paintinfo), (paintinfo_struct),
 	  (fourcc_list_struct), (fourcc_list), (fourcc_get_size),
 	  (paint_setup_I420), (paint_setup_YV12), (paint_setup_AYUV),

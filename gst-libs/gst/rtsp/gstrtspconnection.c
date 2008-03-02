@@ -61,11 +61,13 @@
 
 #include <stdio.h>
 #include <errno.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
 #include <time.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 
 /* we include this here to get the G_OS_* defines */
@@ -81,6 +83,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 #endif
 
 #ifdef HAVE_FIONREAD_IN_SYS_FILIO
