@@ -1,7 +1,7 @@
 /* GStreamer demultiplexer plugin for Interplay MVE movie files
  *
- * Copyright (C) 2006 Jens Granseuer <jensgr@gmx.net>
- * 
+ * Copyright (C) 2006-2008 Jens Granseuer <jensgr@gmx.net>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -759,7 +759,7 @@ gst_mve_audio_data (GstMveDemux * mve, guint8 type, const guint8 * data,
     guint16 n_samples = size / s->n_channels / (s->sample_size / 8);
     GstClockTime duration = (GST_SECOND / s->sample_rate) * n_samples;
 
-    if (type == 8) {
+    if (type == MVE_OC_AUDIO_DATA) {
       guint16 required = (s->compression ? size / 2 + s->n_channels : size);
 
       if (len < required)
@@ -776,29 +776,25 @@ gst_mve_audio_data (GstMveDemux * mve, guint8 type, const guint8 * data,
       else
         memcpy (GST_BUFFER_DATA (buf), data, size);
 
-      GST_BUFFER_DURATION (buf) = duration;
-      GST_BUFFER_OFFSET_END (buf) = s->offset + n_samples;
-
       GST_DEBUG_OBJECT (mve, "created audio buffer, size:%u, stream_mask:%x",
           size, stream_mask);
-
-      *output = buf;
     } else {
-      /* silence -
-         don't return a buffer but notify downstream there won't be
-         any data in this chunk */
-      if (mve->audio_stream->pad)
-        gst_pad_push_event (mve->audio_stream->pad,
-            gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME,
-                s->last_ts + duration, GST_CLOCK_TIME_NONE, 0));
+      /* silence - create a minimal buffer with no sound */
+      size = s->n_channels * (s->sample_size / 8);
+      ret = gst_mve_buffer_alloc_for_pad (s, size, &buf);
+      memset (GST_BUFFER_DATA (buf), 0, size);
     }
+
+    GST_BUFFER_DURATION (buf) = duration;
+    GST_BUFFER_OFFSET_END (buf) = s->offset + n_samples;
+    *output = buf;
 
     s->offset += n_samples;
     s->last_ts += duration;
   } else {
     /* alternate audio streams not supported.
        are there any movies which use them? */
-    if (type == 8)
+    if (type == MVE_OC_AUDIO_DATA)
       GST_WARNING_OBJECT (mve, "found non-empty alternate audio stream");
   }
 
@@ -1141,7 +1137,7 @@ gst_mve_demux_get_type (void)
   static GType plugin_type = 0;
 
   if (!plugin_type) {
-    static const GTypeInfo plugin_info = {
+    const GTypeInfo plugin_info = {
       sizeof (GstMveDemuxClass),
       (GBaseInitFunc) gst_mve_demux_base_init,
       NULL,

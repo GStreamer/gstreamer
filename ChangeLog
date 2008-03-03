@@ -1,3 +1,12 @@
+2008-03-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Jens Granseuer <jensgr at gmx dot net>
+
+	* gst/mve/gstmvedemux.c: (gst_mve_audio_data),
+	(gst_mve_demux_get_type):
+	Fix audio discontinuity that happens when silent chunks are
+	followed by real data again. Fixes bug #519905.
+
 2008-03-01  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c:
