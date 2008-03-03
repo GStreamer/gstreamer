@@ -25,12 +25,10 @@
 #include <gst/check/gstcheck.h>
 #include <gst/dataprotocol/dataprotocol.h>
 
-gboolean have_eos = FALSE;
-
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
-GstPad *mysrcpad, *mysinkpad, *myshsinkpad;
+static GstPad *mysrcpad, *mysinkpad, *myshsinkpad;
 
 #define AUDIO_CAPS_TEMPLATE_STRING \
   "audio/x-raw-int, " \
@@ -63,8 +61,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 /* takes over reference for outcaps */
-GstElement *
-setup_gdpdepay ()
+static GstElement *
+setup_gdpdepay (void)
 {
   GstElement *gdpdepay;
 
@@ -78,7 +76,7 @@ setup_gdpdepay ()
   return gdpdepay;
 }
 
-void
+static void
 cleanup_gdpdepay (GstElement * gdpdepay)
 {
   GST_DEBUG ("cleanup_gdpdepay");
@@ -266,8 +264,8 @@ static GstStaticPadTemplate shsinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-gst-test-streamheader")
     );
 
-GstElement *
-setup_gdpdepay_streamheader ()
+static GstElement *
+setup_gdpdepay_streamheader (void)
 {
   GstElement *gdpdepay;
 
@@ -402,7 +400,7 @@ GST_END_TEST;
 
 #endif /* ifndef HAVE_CPU_PPC64 */
 
-Suite *
+static Suite *
 gdpdepay_suite (void)
 {
   Suite *s = suite_create ("gdpdepay");
