@@ -1,3 +1,20 @@
+2008-03-03  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/matroska/ebml-read.c:
+	Use GINT64 formatting constants from GLIB.
+
+	* gst/matroska/matroska-demux.c:
+	Add some guards to avoid a possible division by 0 and crashing
+	with NULL events on some systems.
+	Use gst_gdouble_to_guint64 somewhere instead of an implicit
+	conversion. 
+
+	* gst/matroska/matroska-mux.c:
+	Check for invalid timestamps in a bunch of places to avoid
+	writing bogus durations into the output file.
+	Fix some double<->gint64 conversions that weren't using
+	gst_guint64_to_gdouble
+
 2008-03-03  Peter Kjellerstedt  <pkj@axis.com>
 
 	* configure.ac:

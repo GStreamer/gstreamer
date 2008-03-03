@@ -266,8 +266,8 @@ gst_ebml_read_element_id (GstEbmlRead * ebml, guint32 * id, guint * level_up)
     guint64 pos = ebml->offset;
 
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
-        ("Invalid EBML ID size tag (0x%x) at position %llu (0x%llx)",
-            (guint) b, pos, pos));
+        ("Invalid EBML ID size tag (0x%x) at position %" G_GUINT64_FORMAT
+            " (0x%" G_GINT64_MODIFIER "x)", (guint) b, pos, pos));
     return FALSE;
   }
 
@@ -318,8 +318,8 @@ gst_ebml_read_element_length (GstEbmlRead * ebml, guint64 * length)
     guint64 pos = ebml->offset;
 
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
-        ("Invalid EBML length size tag (0x%x) at position %llu (0x%llx)",
-            (guint) b, pos, pos));
+        ("Invalid EBML length size tag (0x%x) at position %" G_GUINT64_FORMAT
+            " (0x%" G_GINT64_MODIFIER "x)", (guint) b, pos, pos));
     return -1;
   }
 
@@ -498,7 +498,8 @@ gst_ebml_read_uint (GstEbmlRead * ebml, guint32 * id, guint64 * num)
 
   if (size < 1 || size > 8) {
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
-        ("Invalid integer element size %d at position %llu (0x%llu)",
+        ("Invalid integer element size %d at position %" G_GUINT64_FORMAT
+            " (0x%" G_GINT64_MODIFIER "x)",
             size, ebml->offset - size, ebml->offset - size));
     return FALSE;
   }
@@ -528,8 +529,9 @@ gst_ebml_read_sint (GstEbmlRead * ebml, guint32 * id, gint64 * num)
 
   if (size < 1 || size > 8) {
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
-        ("Invalid integer element size %d at position %llu (0x%llx)",
-            size, ebml->offset - size, ebml->offset - size));
+        ("Invalid integer element size %d at position %" G_GUINT64_FORMAT
+            " (0x%" G_GINT64_MODIFIER "x)", size, ebml->offset - size,
+            ebml->offset - size));
     return FALSE;
   }
 
@@ -570,8 +572,9 @@ gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
 
   if (size != 4 && size != 8 && size != 10) {
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
-        ("Invalid float element size %d at position %llu (0x%llx)",
-            size, ebml->offset - size, ebml->offset - size));
+        ("Invalid float element size %d at position %" G_GUINT64_FORMAT
+            " (0x%" G_GINT64_MODIFIER "x)", size, ebml->offset - size,
+            ebml->offset - size));
     return FALSE;
   }
 

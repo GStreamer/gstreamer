@@ -660,9 +660,11 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
                 res = FALSE;
                 break;
               }
-              context->default_duration =
-                  gst_gdouble_to_guint64 ((gdouble) GST_SECOND * (1.0 / num));
-              videocontext->default_fps = num;
+              if (num != 0.0) {
+                context->default_duration =
+                    gst_gdouble_to_guint64 ((gdouble) GST_SECOND / num);
+                videocontext->default_fps = num;
+              }
               break;
             }
 
@@ -1298,6 +1300,8 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
   gboolean ret = TRUE;
   gint i;
 
+  g_return_val_if_fail (event != NULL, FALSE);
+
   GST_DEBUG_OBJECT (demux, "Sending event of type %s to all source pads",
       GST_EVENT_TYPE_NAME (event));
 
@@ -1323,6 +1327,8 @@ gst_matroska_demux_element_send_event (GstElement * element, GstEvent * event)
 {
   GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
   gboolean res;
+
+  g_return_val_if_fail (event != NULL, FALSE);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
     res = gst_matroska_demux_handle_seek_event (demux, event);
@@ -1879,12 +1885,17 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
 
       case GST_MATROSKA_ID_DURATION:{
         gdouble num;
+        GstClockTime dur;
 
         if (!gst_ebml_read_float (ebml, &id, &num)) {
           res = FALSE;
           break;
         }
-        demux->duration = num * gst_guint64_to_gdouble (demux->time_scale);
+
+        dur = gst_gdouble_to_guint64 (num *
+            gst_guint64_to_gdouble (demux->time_scale));
+        if (GST_CLOCK_TIME_IS_VALID (dur) && dur <= G_MAXINT64)
+          demux->duration = dur;
         break;
       }
 
@@ -3712,7 +3723,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
 
         g_value_init (&fps_double, G_TYPE_DOUBLE);
         g_value_init (&fps_fraction, GST_TYPE_FRACTION);
-        g_value_set_double (&fps_double, (gdouble) GST_SECOND * 1.0 /
+        g_value_set_double (&fps_double, (gdouble) GST_SECOND /
             gst_guint64_to_gdouble (context->default_duration));
         g_value_transform (&fps_double, &fps_fraction);
 

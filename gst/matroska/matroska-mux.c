@@ -1185,13 +1185,17 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
     if (cdata->pad == pad) {
       GstClockTime min_dur;     /* observed minimum duration */
 
-      /* no need to check if start_ts and end_ts are set, in the worst case
-       * they're both -1 and we'll end up with a duration of 0 again */
-      min_dur = GST_CLOCK_DIFF (collect_pad->start_ts, collect_pad->end_ts);
-      if (collect_pad->duration < min_dur)
-        collect_pad->duration = min_dur;
-      if (collect_pad->duration > mux->duration)
+      if (GST_CLOCK_TIME_IS_VALID (collect_pad->start_ts) &&
+          GST_CLOCK_TIME_IS_VALID (collect_pad->end_ts)) {
+        min_dur = GST_CLOCK_DIFF (collect_pad->start_ts, collect_pad->end_ts);
+        if (collect_pad->duration < min_dur)
+          collect_pad->duration = min_dur;
+      }
+
+      if (GST_CLOCK_TIME_IS_VALID (collect_pad->duration) &&
+          mux->duration < collect_pad->duration)
         mux->duration = collect_pad->duration;
+
       gst_matroska_pad_free (collect_pad);
       gst_collect_pads_remove_pad (mux->collect, pad);
       gst_element_remove_pad (element, pad);
@@ -1321,7 +1325,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   GSList *collected;
   int i;
   guint tracknum = 1;
-  gdouble duration = 0;
+  GstClockTime duration = 0;
   guint32 *segment_uid = (guint32 *) g_malloc (16);
   GRand *rand = g_rand_new ();
   GTimeVal time = { 0, 0 };
@@ -1376,14 +1380,15 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     if (gst_pad_query_peer_duration (thepad, &format, &trackduration)) {
       GST_DEBUG_OBJECT (thepad, "duration: %" GST_TIME_FORMAT,
           GST_TIME_ARGS (trackduration));
-      if (trackduration != GST_CLOCK_TIME_NONE &&
-          (gdouble) trackduration > duration) {
-        duration = (gdouble) trackduration;
+      if (trackduration != GST_CLOCK_TIME_NONE && trackduration > duration) {
+        duration = (GstClockTime) trackduration;
       }
     }
   }
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION,
-      duration / gst_guint64_to_gdouble (mux->time_scale));
+      gst_guint64_to_gdouble (duration) /
+      gst_guint64_to_gdouble (mux->time_scale));
+
   gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_MUXINGAPP,
       "GStreamer plugin version " PACKAGE_VERSION);
   if (mux->writing_app && mux->writing_app[0]) {
@@ -1617,14 +1622,23 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
 
     collect_pad = (GstMatroskaPad *) collected->data;
 
-    /* no need to check if start_ts and end_ts are set, in the worst case
-     * they're both -1 and we'll end up with a duration of 0 again */
-    min_duration = GST_CLOCK_DIFF (collect_pad->start_ts, collect_pad->end_ts);
-    if (collect_pad->duration < min_duration)
-      collect_pad->duration = min_duration;
-    GST_DEBUG_OBJECT (collect_pad, "final track duration: %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (collect_pad->duration));
-    if (collect_pad->duration > duration)
+    GST_DEBUG_OBJECT (mux, "Pad %" GST_PTR_FORMAT " start ts %" GST_TIME_FORMAT
+        " end ts %" GST_TIME_FORMAT, collect_pad,
+        GST_TIME_ARGS (collect_pad->start_ts),
+        GST_TIME_ARGS (collect_pad->end_ts));
+
+    if (GST_CLOCK_TIME_IS_VALID (collect_pad->start_ts) &&
+        GST_CLOCK_TIME_IS_VALID (collect_pad->end_ts)) {
+      min_duration =
+          GST_CLOCK_DIFF (collect_pad->start_ts, collect_pad->end_ts);
+      if (collect_pad->duration < min_duration)
+        collect_pad->duration = min_duration;
+      GST_DEBUG_OBJECT (collect_pad, "final track duration: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (collect_pad->duration));
+    }
+
+    if (GST_CLOCK_TIME_IS_VALID (collect_pad->duration) &&
+        duration < collect_pad->duration)
       duration = collect_pad->duration;
   }
   if (duration != 0) {
@@ -1633,7 +1647,8 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     pos = mux->ebml_write->pos;
     gst_ebml_write_seek (ebml, mux->duration_pos);
     gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION,
-        gst_guint64_to_gdouble (duration / mux->time_scale));
+        gst_guint64_to_gdouble (duration) /
+        gst_guint64_to_gdouble (mux->time_scale));
     gst_ebml_write_seek (ebml, pos);
   }
 
@@ -1941,18 +1956,28 @@ gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data)
       ret = GST_FLOW_UNEXPECTED;
       break;
     }
-    GST_DEBUG_OBJECT (best->collect.pad, "best pad");
+    GST_DEBUG_OBJECT (best->collect.pad, "best pad - buffer ts %"
+        GST_TIME_FORMAT " dur %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (best->buffer)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (best->buffer)));
 
     /* make note of first and last encountered timestamps, so we can calculate
      * the actual duration later when we send an updated header on eos */
-    best->end_ts = GST_BUFFER_TIMESTAMP (best->buffer);
-    if (GST_BUFFER_DURATION_IS_VALID (best->buffer))
-      best->end_ts += GST_BUFFER_DURATION (best->buffer);
-    else if (best->track->default_duration)
-      best->end_ts += best->track->default_duration;
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (best->buffer)) {
+      GstClockTime start_ts = GST_BUFFER_TIMESTAMP (best->buffer);
+      GstClockTime end_ts = start_ts;
 
-    if (G_UNLIKELY (best->start_ts == GST_CLOCK_TIME_NONE)) {
-      best->start_ts = GST_BUFFER_TIMESTAMP (best->buffer);
+      if (GST_BUFFER_DURATION_IS_VALID (best->buffer))
+        end_ts += GST_BUFFER_DURATION (best->buffer);
+      else if (best->track->default_duration)
+        end_ts += best->track->default_duration;
+
+      if (end_ts > best->end_ts)
+        best->end_ts = end_ts;
+
+      if (G_UNLIKELY (best->start_ts == GST_CLOCK_TIME_NONE ||
+              start_ts < best->start_ts))
+        best->start_ts = start_ts;
     }
 
     /* write one buffer */
