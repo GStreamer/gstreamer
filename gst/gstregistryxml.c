@@ -59,7 +59,7 @@ static gboolean
 gst_registry_save (GstRegistry * registry, gchar * format, ...)
 {
   va_list var_args;
-  size_t written, len;
+  gsize written, len;
   gboolean ret;
   char *str;
 

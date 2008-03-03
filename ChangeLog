@@ -1,5 +1,17 @@
 2008-03-03  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst/gstregistrybinary.c: (gst_registry_binary_write),
+	(gst_registry_binary_read_cache):
+	* gst/gstregistryxml.c: (gst_registry_save):
+	* gst/gsturi.c: (unescape_string), (gst_uri_has_protocol):
+	* plugins/elements/gstfilesink.c: (gst_file_sink_open_file):
+	* plugins/elements/gstfilesrc.c: (gst_file_src_map_region),
+	(gst_file_src_map_small_region), (gst_file_src_create_mmap):
+	Switch to using portabl gsize/gssize instead of size_t/ssize_t
+	Fixes #520152
+
+2008-03-03  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/gstminiobject.c:
 	Import gst_private.h before any other header that might include other
 	glib headers. This fixes the build on windows using native compilers.

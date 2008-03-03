@@ -85,7 +85,7 @@
   _inptr += strlen(_outptr) + 1
 
 #if !GST_HAVE_UNALIGNED_ACCESS
-#  define alignment32(_address)  (size_t)_address%4
+#  define alignment32(_address)  (gsize)_address%4
 #  define align32(_ptr)          _ptr += (( alignment32(_ptr) == 0) ? 0 : 4-alignment32(_ptr))
 #else
 #  define alignment32(_address)  0
@@ -104,7 +104,7 @@
  */
 inline static gboolean
 gst_registry_binary_write (GstRegistry * registry, const void *mem,
-    const ssize_t size, unsigned long *file_position, gboolean align)
+    const gssize size, unsigned long *file_position, gboolean align)
 {
 #if !GST_HAVE_UNALIGNED_ACCESS
   gchar padder[] = { 0, 0, 0, 0 };
@@ -942,17 +942,17 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
 
   /* check if there are plugins in the file */
 
-  if (!(((size_t) in + sizeof (GstBinaryPluginElement)) <
-          (size_t) contents + size)) {
+  if (!(((gsize) in + sizeof (GstBinaryPluginElement)) <
+          (gsize) contents + size)) {
     GST_INFO ("No binary plugins structure to read");
     /* empty file, this is not an error */
   } else {
     for (;
-        ((size_t) in + sizeof (GstBinaryPluginElement)) <
-        (size_t) contents + size;) {
+        ((gsize) in + sizeof (GstBinaryPluginElement)) <
+        (gsize) contents + size;) {
       GST_DEBUG ("reading binary registry %" G_GSIZE_FORMAT "(%x)/%"
-          G_GSIZE_FORMAT, (size_t) in - (size_t) contents,
-          (guint) ((size_t) in - (size_t) contents), size);
+          G_GSIZE_FORMAT, (gsize) in - (gsize) contents,
+          (guint) ((gsize) in - (gsize) contents), size);
       if (!gst_registry_binary_load_plugin (registry, &in)) {
         GST_ERROR ("Problem while reading binary registry");
         goto Error;

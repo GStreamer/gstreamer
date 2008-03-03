@@ -302,7 +302,7 @@ gst_file_sink_open_file (GstFileSink * sink)
 
   /* see if we are asked to perform a specific kind of buffering */
   if ((mode = sink->buffer_mode) != -1) {
-    size_t buffer_size;
+    gsize buffer_size;
 
     /* free previous buffer if any */
     g_free (sink->buffer);

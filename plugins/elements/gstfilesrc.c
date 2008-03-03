@@ -530,7 +530,7 @@ gst_mmap_buffer_finalize (GstMmapBuffer * mmap_buffer)
 }
 
 static GstBuffer *
-gst_file_src_map_region (GstFileSrc * src, off_t offset, size_t size,
+gst_file_src_map_region (GstFileSrc * src, off_t offset, gsize size,
     gboolean testonly)
 {
   GstBuffer *buf;
@@ -586,7 +586,7 @@ mmap_failed:
 }
 
 static GstBuffer *
-gst_file_src_map_small_region (GstFileSrc * src, off_t offset, size_t size)
+gst_file_src_map_small_region (GstFileSrc * src, off_t offset, gsize size)
 {
   GstBuffer *ret;
   off_t mod;
@@ -602,7 +602,7 @@ gst_file_src_map_small_region (GstFileSrc * src, off_t offset, size_t size)
 
   /* if the offset starts at a non-page boundary, we have to special case */
   if (mod != 0) {
-    size_t mapsize;
+    gsize mapsize;
     off_t mapbase;
     GstBuffer *map;
 
@@ -633,7 +633,7 @@ gst_file_src_create_mmap (GstFileSrc * src, guint64 offset, guint length,
     GstBuffer ** buffer)
 {
   GstBuffer *buf = NULL;
-  size_t readsize, mapsize;
+  gsize readsize, mapsize;
   off_t readend, mapstart, mapend;
   int i;
 
@@ -703,7 +703,7 @@ gst_file_src_create_mmap (GstFileSrc * src, guint64 offset, guint length,
 
       /* otherwise we will create a new mmap region and set it to the default */
     } else {
-      size_t mapsize;
+      gsize mapsize;
 
       off_t nextmap = offset - (offset % src->mapsize);
 

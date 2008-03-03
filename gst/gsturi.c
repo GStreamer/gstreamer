@@ -285,7 +285,7 @@ unescape_string (const gchar * escaped_string, const gchar * illegal_characters)
   }
 
   *out = '\0';
-  g_assert ((size_t) (out - result) <= strlen (escaped_string));
+  g_assert ((gsize) (out - result) <= strlen (escaped_string));
   return result;
 
 }
@@ -397,7 +397,7 @@ gst_uri_has_protocol (const gchar * uri, const gchar * protocol)
   if (colon == NULL)
     return FALSE;
 
-  return (strncmp (uri, protocol, (size_t) (colon - uri)) == 0);
+  return (strncmp (uri, protocol, (gsize) (colon - uri)) == 0);
 }
 
 /**
