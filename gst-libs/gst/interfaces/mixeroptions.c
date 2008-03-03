@@ -98,16 +98,27 @@ gst_mixer_options_init (GstMixerOptions * mixer_options)
  *
  * Get the values for the mixer option.
  *
- * Returns: A list of all the possible values for the mixer option.
+ * Returns: A list of strings with all the possible values for the mixer
+ *     option. You must not free or modify the list or its contents, it belongs
+ *     to the @mixer_options object.
  */
-
 GList *
 gst_mixer_options_get_values (GstMixerOptions * mixer_options)
 {
-  if (!mixer_options->values)
-    return NULL;
+  GstMixerOptionsClass *klass;
+  GList *ret = NULL;
 
-  return (GList *) mixer_options->values;
+  g_return_val_if_fail (GST_IS_MIXER_OPTIONS (mixer_options), NULL);
+
+  klass = GST_MIXER_OPTIONS_GET_CLASS (mixer_options);
+
+  if (klass->get_values != NULL) {
+    ret = klass->get_values (mixer_options);
+  } else {
+    ret = mixer_options->values;
+  }
+
+  return ret;
 }
 
 

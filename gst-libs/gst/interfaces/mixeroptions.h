@@ -34,6 +34,8 @@ G_BEGIN_DECLS
 #define GST_MIXER_OPTIONS(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MIXER_OPTIONS, \
                                GstMixerOptions))
+#define GST_MIXER_OPTIONS_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MIXER_OPTIONS, GstMixerOptionsClass))
 #define GST_MIXER_OPTIONS_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MIXER_OPTIONS, \
                             GstMixerOptionsClass))
@@ -45,30 +47,44 @@ G_BEGIN_DECLS
 typedef struct _GstMixerOptions GstMixerOptions;
 typedef struct _GstMixerOptionsClass GstMixerOptionsClass;
 
+/**
+ * GstMixerOptions:
+ * @parent: Parent object
+ * @values: List of option strings. Do not access this member directly,
+ *     always use gst_mixer_options_get_values() instead.
+ */
 struct _GstMixerOptions {
   GstMixerTrack parent;
 
-  /* list of strings */
+  /* list of strings (do not access directly) (FIXME 0.11: make private) */
   GList        *values;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstMixerOptionsClass:
+ * @parent: Parent class
+ * @get_values: Optional implementation of gst_mixer_options_get_values().
+ *    (Since: 0.10.18)
+ */
 struct _GstMixerOptionsClass {
   GstMixerTrackClass parent;
 
 #ifdef GST_MIXER_NEED_DEPRECATED
   /* signals */
-  void (* option_changed) (GstMixerOptions *opts,
-                           gchar           *value);
+  void    (* option_changed) (GstMixerOptions *opts,
+                              gchar           *value);
 #endif /* GST_MIXER_NEED_DEPRECATED */
 
-  gpointer _gst_reserved[GST_PADDING];
+  GList * (* get_values)     (GstMixerOptions *opts);
+
+  gpointer _gst_reserved[GST_PADDING-1];
 };
 
-GType           gst_mixer_options_get_type      (void);
+GType           gst_mixer_options_get_type (void);
 
-GList * gst_mixer_options_get_values (GstMixerOptions *mixer_options);
+GList         * gst_mixer_options_get_values (GstMixerOptions *mixer_options);
 
 G_END_DECLS
 
