@@ -1,5 +1,20 @@
 2008-03-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/interfaces/mixer.c: (gst_mixer_option_changed),
+	  (gst_mixer_options_list_changed), (gst_mixer_mixer_changed),
+	  (gst_mixer_message_get_type),
+	  (gst_mixer_message_parse_option_changed),
+	  (gst_mixer_message_parse_options_list_changed):
+	* gst-libs/gst/interfaces/mixer.h: (GstMixerType),
+	  (GST_MIXER_MESSAGE_OPTION_CHANGED),
+	  (GST_MIXER_MESSAGE_OPTIONS_LIST_CHANGED),
+	  (GST_MIXER_MESSAGE_MIXER_CHANGED):
+	  API: add gst_mixer_options_list_changed(), gst_mixer_mixer_changed()
+	  and gst_mixer_message_parse_options_list_changed(). Fixes #519916.
+
+2008-03-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/interfaces/mixeroptions.c: (gst_mixer_options_init),
 	  (gst_mixer_options_get_values):
 	* gst-libs/gst/interfaces/mixeroptions.h:

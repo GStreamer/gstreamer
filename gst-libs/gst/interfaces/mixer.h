@@ -60,6 +60,12 @@ typedef enum
  * @GST_MIXER_MESSAGE_RECORD_TOGGLED: A record-toggled GstMixer message
  * @GST_MIXER_MESSAGE_VOLUME_CHANGED: A volume-changed GstMixer message
  * @GST_MIXER_MESSAGE_OPTION_CHANGED: An option-changed GstMixer message
+ * @GST_MIXER_MESSAGE_OPTIONS_LIST_CHANGED: An options-list-changed
+ *     GstMixer message, posted when the list of available options for a
+ *     GstMixerOptions object has changed (Since: 0.10.18)
+ * @GST_MIXER_MESSAGE_MIXER_CHANGED: A mixer-changed GstMixer message, posted
+ *     when the list of available mixer tracks has changed. The application
+ *     should re-build its interface in this case (Since: 0.10.18)
  * 
  * An enumeration for the type of a GstMixer message received on the bus
  *
@@ -71,7 +77,9 @@ typedef enum
   GST_MIXER_MESSAGE_MUTE_TOGGLED,
   GST_MIXER_MESSAGE_RECORD_TOGGLED,
   GST_MIXER_MESSAGE_VOLUME_CHANGED,
-  GST_MIXER_MESSAGE_OPTION_CHANGED
+  GST_MIXER_MESSAGE_OPTION_CHANGED,
+  GST_MIXER_MESSAGE_OPTIONS_LIST_CHANGED,
+  GST_MIXER_MESSAGE_MIXER_CHANGED
 } GstMixerMessageType;
 
 /**
@@ -183,6 +191,12 @@ void            gst_mixer_option_changed (GstMixer      *mixer,
                                           GstMixerOptions *opts,
                                           gchar         *value);
 
+void            gst_mixer_mixer_changed   (GstMixer        *mixer);
+
+void            gst_mixer_options_list_changed (GstMixer        *mixer,
+                                                GstMixerOptions *opts);
+
+
 GstMixerFlags   gst_mixer_get_mixer_flags (GstMixer *mixer);
 
 /* Functions for recognising and parsing GstMixerMessages on the bus */
@@ -200,6 +214,8 @@ void            gst_mixer_message_parse_volume_changed (GstMessage *message,
 void            gst_mixer_message_parse_option_changed (GstMessage *message,
                                                         GstMixerOptions **options,
                                                         const gchar **value);
+void            gst_mixer_message_parse_options_list_changed (GstMessage *message,
+                                                              GstMixerOptions **options);
 
 G_END_DECLS
 
