@@ -75,46 +75,6 @@ AG_GST_ARG_WITH_PKG_CONFIG_PATH
 AG_GST_ARG_WITH_PACKAGE_NAME
 AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
-AG_GST_ARG_EXAMPLES
-
-dnl these are all the gst plug-ins, compilable without additional libs
-GST_PLUGINS_ALL="\
-  app \
-  bayer \
-  cdxaparse \
-  deinterlace \
-  dvdspu \
-  festival \
-  filter \
-  flv \
-  freeze \
-  h264parse \
-  interleave \
-  librfb \
-  modplug \
-  mpegtsparse \
-  mpeg4videoparse \
-  mpegvideoparse \
-  mve \
-  nsf \
-  nuvdemux \
-  rawparse \
-  real \
-  replaygain \
-  rtpmanager \
-  sdp \
-  selector \
-  speexresample \
-  speed \
-  stereo \
-  tta \
-  videosignal \
-  vmnc \
-  y4m \
-  "
-
-AC_SUBST(GST_PLUGINS_ALL)
-
 AG_GST_ARG_WITH_PLUGINS
 
 AG_GST_ARG_ENABLE_EXTERNAL
@@ -188,7 +148,7 @@ AG_GST_GLIB_CHECK([2.6])
 
 dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.8, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
-if test "x${HAVE_LIBOIL}" != xyes ; then
+if test "x$HAVE_LIBOIL" != "xyes"; then
   AC_ERROR([liboil-0.3.8 or later is required])
 fi
 
@@ -264,18 +224,54 @@ AG_GST_SET_ERROR_CXXFLAGS($GST_CVS)
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 
+dnl *** plug-ins to include ***
+
+dnl these are all the gst plug-ins, compilable without additional libs
+AG_GST_CHECK_PLUGIN(app)
+AG_GST_CHECK_PLUGIN(bayer)
+AG_GST_CHECK_PLUGIN(cdxaparse)
+AG_GST_CHECK_PLUGIN(deinterlace)
+AG_GST_CHECK_PLUGIN(dvdspu)
+AG_GST_CHECK_PLUGIN(festival)
+AG_GST_CHECK_PLUGIN(filter)
+AG_GST_CHECK_PLUGIN(flv)
+AG_GST_CHECK_PLUGIN(freeze)
+AG_GST_CHECK_PLUGIN(h264parse)
+AG_GST_CHECK_PLUGIN(interleave)
+AG_GST_CHECK_PLUGIN(librfb)
+AG_GST_CHECK_PLUGIN(modplug)
+AG_GST_CHECK_PLUGIN(mpegtsparse)
+AG_GST_CHECK_PLUGIN(mpeg4videoparse)
+AG_GST_CHECK_PLUGIN(mpegvideoparse)
+AG_GST_CHECK_PLUGIN(mve)
+AG_GST_CHECK_PLUGIN(nsf)
+AG_GST_CHECK_PLUGIN(nuvdemux)
+AG_GST_CHECK_PLUGIN(rawparse)
+AG_GST_CHECK_PLUGIN(real)
+AG_GST_CHECK_PLUGIN(replaygain)
+AG_GST_CHECK_PLUGIN(rtpmanager)
+AG_GST_CHECK_PLUGIN(sdp)
+AG_GST_CHECK_PLUGIN(selector)
+AG_GST_CHECK_PLUGIN(speed)
+AG_GST_CHECK_PLUGIN(speexresample)
+AG_GST_CHECK_PLUGIN(stereo)
+AG_GST_CHECK_PLUGIN(tta)
+AG_GST_CHECK_PLUGIN(videosignal)
+AG_GST_CHECK_PLUGIN(vmnc)
+AG_GST_CHECK_PLUGIN(y4m)
+
 dnl *** plug-ins to exclude ***
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" != "xyes"; then
   AC_MSG_WARN([Not compiling plug-ins requiring C++ compiler])
-  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | sed 's/modplug//g'`
+  AG_GST_DISABLE_PLUGIN(modplug)
 fi
 
 dnl real plugin only works on i386 and x86_64 for the time being.
 if test "x$HAVE_CPU_I386" != "xyes" && test "x$HAVE_CPU_X86_64" != "xyes"; then
   AC_MSG_WARN([Not building real plugin, only works on 32bit and 64bit x86 platforms])
-  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | sed 's/real//g'`
+  AG_GST_DISABLE_PLUGIN(real)
 fi
 
 dnl disable gst plugins we might not be able to build on this
@@ -285,10 +281,8 @@ AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
 AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
 
 if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
-  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/librfb//`
+  AG_GST_DISABLE_PLUGIN(librfb)
 fi
-
-AC_SUBST(GST_PLUGINS_SELECTED)
 
 dnl *** sys plug-ins ***
 
