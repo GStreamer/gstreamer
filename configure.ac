@@ -193,11 +193,18 @@ AC_ARG_ENABLE(binary-registry,
     esac
   ],
   [USE_BINARY_REGISTRY=no]) dnl Default value
+
 if test "x$USE_BINARY_REGISTRY" = xyes; then
+  dnl for gstconfig.h:
+  GST_USING_BINARY_REGISTRY_DEFINE="#define GST_USING_BINARY_REGISTRY"
+  dnl for config.h:
   AC_DEFINE(USE_BINARY_REGISTRY, 1,
     [Define if we should use binary registry instead xml registry])
+else
+  GST_USING_BINARY_REGISTRY_DEFINE="#undef GST_USING_BINARY_REGISTRY"
 fi
 AM_CONDITIONAL(USE_BINARY_REGISTRY, test "x$USE_BINARY_REGISTRY" = "xyes")
+AC_SUBST(GST_USING_BINARY_REGISTRY_DEFINE)
 
 dnl *** checks for platform ***
 

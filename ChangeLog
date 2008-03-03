@@ -1,3 +1,13 @@
+2008-03-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst/gstconfig.h.in:
+	* gst/gstregistry.h:
+	  Fix broken use of config.h-defined preprocessor directive in a public
+	  header file. Add a corresponding define to gstconfig.h, since we can't
+	  really remove those function declarations from the header file now
+	  (or can we? and why are they there in the first place?).
+
 2008-03-03  Andy Wingo  <wingo@pobox.com>
 
 	* tests/check/gst/gststructure.c (GST_START_TEST): Add a check for

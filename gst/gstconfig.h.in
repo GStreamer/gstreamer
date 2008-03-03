@@ -120,9 +120,11 @@
  *
  * Configures the use of the plugin registry.
  * If one disables this, required plugins need to be loaded and registered
- * manualy
+ * manually
  */
 @GST_DISABLE_REGISTRY_DEFINE@
+
+@GST_USING_BINARY_REGISTRY_DEFINE@
 
 /**
  * GST_DISABLE_XML:
