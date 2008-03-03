@@ -126,6 +126,13 @@ GST_START_TEST (test_from_string)
   s = "***foo***, abc=(boolean)false";
   structure = gst_structure_from_string (s, NULL);
   fail_unless (structure == NULL);
+
+  /* assert that we get a warning if the structure wasn't entirely consumed, but
+   * we didn't provide an end pointer */
+  s = "foo/bar; other random data";
+  ASSERT_WARNING (structure = gst_structure_from_string (s, NULL));
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  gst_structure_free (structure);
 }
 
 GST_END_TEST;

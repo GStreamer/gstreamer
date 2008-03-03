@@ -1966,6 +1966,9 @@ gst_structure_from_string (const gchar * string, gchar ** end)
 
   if (end)
     *end = (char *) string + (r - copy);
+  else if (*r)
+    g_warning ("gst_structure_from_string did not consume whole string,"
+        " but caller did not provide end pointer (\"%s\")", string);
 
   g_free (copy);
   return structure;

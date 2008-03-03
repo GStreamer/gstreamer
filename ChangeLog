@@ -1,3 +1,12 @@
+2008-03-03  Andy Wingo  <wingo@pobox.com>
+
+	* tests/check/gst/gststructure.c (GST_START_TEST): Add a check for
+	the new warning.
+
+	* gst/gststructure.c (gst_structure_from_string): Warn if
+	structure_from_string didn't consume the whole string, but the
+	caller did not provide an end pointer.
+
 2008-03-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Fabrizio Gennari <fabrizio.ge at tiscali it>
