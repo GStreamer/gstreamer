@@ -15,13 +15,16 @@ EXPORTS
 	gst_mixer_message_get_type
 	gst_mixer_message_parse_mute_toggled
 	gst_mixer_message_parse_option_changed
+	gst_mixer_message_parse_options_list_changed
 	gst_mixer_message_parse_record_toggled
 	gst_mixer_message_parse_volume_changed
 	gst_mixer_message_type_get_type
+	gst_mixer_mixer_changed
 	gst_mixer_mute_toggled
 	gst_mixer_option_changed
 	gst_mixer_options_get_type
 	gst_mixer_options_get_values
+	gst_mixer_options_list_changed
 	gst_mixer_record_toggled
 	gst_mixer_set_mute
 	gst_mixer_set_option

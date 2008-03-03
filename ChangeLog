@@ -1,3 +1,13 @@
+2008-03-03  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/Makefile.am:
+	GST_PLUGINS_ALL correctly lists subparse and tcp now, don't distclean
+	them twice
+
+	* win32/common/libgstinterfaces.def:
+	* win32/common/libgstrtp.def:
+	Add new API to the defs
+
 2008-03-03  Peter Kjellerstedt  <pkj@axis.com>
 
 	Patch by: Mersad Jelacic  <mersad at axis dot com>
