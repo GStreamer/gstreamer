@@ -24,12 +24,10 @@
 #include <gst/check/gstcheck.h>
 #include <gst/dataprotocol/dataprotocol.h>
 
-gboolean have_eos = FALSE;
-
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
-GstPad *mysrcpad, *myshsrcpad, *mysinkpad;
+static GstPad *mysrcpad, *myshsrcpad, *mysinkpad;
 
 #define AUDIO_CAPS_TEMPLATE_STRING \
   "audio/x-raw-int, " \
@@ -62,8 +60,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 /* takes over reference for outcaps */
-GstElement *
-setup_gdppay ()
+static GstElement *
+setup_gdppay (void)
 {
   GstElement *gdppay;
 
@@ -77,7 +75,7 @@ setup_gdppay ()
   return gdppay;
 }
 
-void
+static void
 cleanup_gdppay (GstElement * gdppay)
 {
   GST_DEBUG ("cleanup_gdppay");
@@ -204,7 +202,7 @@ GST_START_TEST (test_audio)
   g_list_free (buffers);
   buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdppay, "gdppay", 1);
-  gst_object_unref (gdppay);
+  cleanup_gdppay (gdppay);
 }
 
 GST_END_TEST;
@@ -216,8 +214,8 @@ static GstStaticPadTemplate shsrctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
-GstElement *
-setup_gdppay_streamheader ()
+static GstElement *
+setup_gdppay_streamheader (void)
 {
   GstElement *gdppay;
 
@@ -378,7 +376,7 @@ GST_START_TEST (test_streamheader)
   g_list_free (buffers);
   buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdppay, "gdppay", 1);
-  gst_object_unref (gdppay);
+  cleanup_gdppay (gdppay);
 }
 
 GST_END_TEST;
@@ -411,7 +409,7 @@ GST_START_TEST (test_first_no_caps)
   g_list_free (buffers);
   buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdppay, "gdppay", 1);
-  gst_object_unref (gdppay);
+  cleanup_gdppay (gdppay);
 }
 
 GST_END_TEST;
@@ -434,6 +432,7 @@ GST_START_TEST (test_first_no_new_segment)
   inbuffer = gst_buffer_new_and_alloc (4);
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
   gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
 
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -452,7 +451,7 @@ GST_START_TEST (test_first_no_new_segment)
   g_list_free (buffers);
   buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdppay, "gdppay", 1);
-  gst_object_unref (gdppay);
+  cleanup_gdppay (gdppay);
 }
 
 GST_END_TEST;
@@ -542,13 +541,13 @@ GST_START_TEST (test_crc)
   g_list_free (buffers);
   buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdppay, "gdppay", 1);
-  gst_object_unref (gdppay);
+  cleanup_gdppay (gdppay);
 }
 
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 gdppay_suite (void)
 {
   Suite *s = suite_create ("gdppay");

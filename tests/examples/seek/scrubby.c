@@ -34,12 +34,12 @@ static guint schanged_id = 0;
 #define SEGMENT_LEN 100
 #define UPDATE_INTERVAL 500
 
-gdouble prev_range = -1.0;
-GstClockTime prev_time = GST_CLOCK_TIME_NONE;
-gdouble cur_range;
-GstClockTime cur_time;
-GstClockTimeDiff diff;
-gdouble cur_speed = 1.0;
+static gdouble prev_range = -1.0;
+static GstClockTime prev_time = GST_CLOCK_TIME_NONE;
+static gdouble cur_range;
+static GstClockTime cur_time;
+static GstClockTimeDiff diff;
+static gdouble cur_speed = 1.0;
 
 typedef struct
 {

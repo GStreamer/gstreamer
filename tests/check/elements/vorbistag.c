@@ -30,7 +30,7 @@
 #include <gst/check/gstcheck.h>
 
 /* a valid first header packet */
-guchar identification_header[30] = {
+static guchar identification_header[30] = {
   1,                            /* packet_type */
   'v', 'o', 'r', 'b', 'i', 's',
   0, 0, 0, 0,                   /* vorbis_version */
@@ -43,7 +43,7 @@ guchar identification_header[30] = {
   0x01                          /* framing_flag */
 };
 
-guchar artist_comment_header[] = {
+static guchar artist_comment_header[] = {
   3,                            /* packet_type */
   'v', 'o', 'r', 'b', 'i', 's',
   2, 0, 0, 0,                   /* vendor_length */
@@ -54,7 +54,7 @@ guchar artist_comment_header[] = {
   0x01,                         /* framing bit */
 };
 
-guchar title_comment_header[] = {
+static guchar title_comment_header[] = {
   3,                            /* packet_type */
   'v', 'o', 'r', 'b', 'i', 's',
   2, 0, 0, 0,                   /* vendor_length */
@@ -65,7 +65,7 @@ guchar title_comment_header[] = {
   0x01,                         /* framing bit */
 };
 
-guchar empty_comment_header[] = {
+static guchar empty_comment_header[] = {
   3,                            /* packet_type */
   'v', 'o', 'r', 'b', 'i', 's',
   2, 0, 0, 0,                   /* vendor_length */
@@ -84,8 +84,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GstPad *mysrcpad, *mysinkpad;
-GAsyncQueue *pending_buffers;
+static GstPad *mysrcpad, *mysinkpad;
+static GAsyncQueue *pending_buffers;
 static gulong id;
 
 
@@ -160,10 +160,10 @@ stop_pipeline (GstElement * element)
   pending_buffers = NULL;
 }
 
-vorbis_comment vc;
-vorbis_dsp_state vd;
-vorbis_info vi;
-vorbis_block vb;
+static vorbis_comment vc;
+static vorbis_dsp_state vd;
+static vorbis_info vi;
+static vorbis_block vb;
 
 static GstBuffer *
 _create_codebook_header_buffer (void)

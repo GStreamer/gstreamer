@@ -26,12 +26,10 @@
 #include <gst/check/gstcheck.h>
 #include <gst/audio/multichannel.h>
 
-gboolean have_eos = FALSE;
-
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
-GstPad *mysrcpad, *mysinkpad;
+static GstPad *mysrcpad, *mysinkpad;
 
 #define CONVERT_CAPS_TEMPLATE_STRING    \
   "audio/x-raw-float, " \
@@ -80,7 +78,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 /* takes over reference for outcaps */
-GstElement *
+static GstElement *
 setup_audioconvert (GstCaps * outcaps)
 {
   GstElement *audioconvert;
@@ -106,7 +104,7 @@ setup_audioconvert (GstCaps * outcaps)
   return audioconvert;
 }
 
-void
+static void
 cleanup_audioconvert (GstElement * audioconvert)
 {
   GST_DEBUG ("cleanup_audioconvert");
@@ -850,7 +848,7 @@ GST_START_TEST (test_caps_negotiation)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 audioconvert_suite (void)
 {
   Suite *s = suite_create ("audioconvert");

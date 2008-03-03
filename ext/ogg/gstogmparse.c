@@ -231,7 +231,7 @@ gst_ogm_audio_parse_get_type (void)
   return ogm_audio_parse_type;
 }
 
-GType
+static GType
 gst_ogm_video_parse_get_type (void)
 {
   static GType ogm_video_parse_type = 0;
@@ -257,7 +257,7 @@ gst_ogm_video_parse_get_type (void)
   return ogm_video_parse_type;
 }
 
-GType
+static GType
 gst_ogm_text_parse_get_type (void)
 {
   static GType ogm_text_parse_type = 0;

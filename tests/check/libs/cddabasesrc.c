@@ -154,7 +154,7 @@ struct _test_disc
 
 /* FIXME: now we just need to find out how to treat
  * data tracks for the cddb id calculation .... */
-struct _test_disc test_discs[NUM_TEST_DISCS] = {
+static struct _test_disc test_discs[NUM_TEST_DISCS] = {
   {nh_cd2_tracks, G_N_ELEMENTS (nh_cd2_tracks), 0xae11900e,
       NULL},
   {mb_sample_tracks, G_N_ELEMENTS (mb_sample_tracks), 0x00000000,

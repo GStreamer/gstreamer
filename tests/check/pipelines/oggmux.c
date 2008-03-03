@@ -46,8 +46,8 @@ typedef struct
   ChainCodec codec;
 } ChainState;
 
-ogg_sync_state oggsync;
-GHashTable *eos_chain_states;
+static ogg_sync_state oggsync;
+static GHashTable *eos_chain_states;
 static gulong probe_id;
 
 

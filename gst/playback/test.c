@@ -27,7 +27,7 @@
 static GMainLoop *loop;
 
 static GstElement *
-gen_video_element ()
+gen_video_element (void)
 {
   GstElement *element;
   GstElement *conv;
@@ -50,7 +50,7 @@ gen_video_element ()
 }
 
 static GstElement *
-gen_audio_element ()
+gen_audio_element (void)
 {
   GstElement *element;
   GstElement *conv;

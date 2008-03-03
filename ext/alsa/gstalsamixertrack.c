@@ -47,7 +47,7 @@ gst_alsa_mixer_track_get_type (void)
       sizeof (GstAlsaMixerTrack),
       0,
       (GInstanceInitFunc) gst_alsa_mixer_track_init,
-      0
+      NULL
     };
 
     track_type =

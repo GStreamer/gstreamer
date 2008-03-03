@@ -369,7 +369,7 @@ gst_xvimage_buffer_class_init (gpointer g_class, gpointer class_data)
       gst_xvimage_buffer_finalize;
 }
 
-GType
+static GType
 gst_xvimage_buffer_get_type (void)
 {
   static GType _gst_xvimage_buffer_type;
@@ -453,18 +453,18 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
     goto beach;
   }
 
-  SHMInfo.shmaddr = shmat (SHMInfo.shmid, 0, 0);
+  SHMInfo.shmaddr = shmat (SHMInfo.shmid, NULL, 0);
   if (SHMInfo.shmaddr == ((void *) -1)) {
     GST_WARNING ("Failed to shmat: %s", g_strerror (errno));
     /* Clean up the shared memory segment */
-    shmctl (SHMInfo.shmid, IPC_RMID, 0);
+    shmctl (SHMInfo.shmid, IPC_RMID, NULL);
     goto beach;
   }
 
   /* Delete the shared memory segment as soon as we manage to attach.
    * This way, it will be deleted as soon as we detach later, and not
    * leaked if we crash. */
-  shmctl (SHMInfo.shmid, IPC_RMID, 0);
+  shmctl (SHMInfo.shmid, IPC_RMID, NULL);
 
   xvimage->data = SHMInfo.shmaddr;
   SHMInfo.readOnly = FALSE;
@@ -623,7 +623,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
       goto beach_unlocked;
     }
 
-    xvimage->SHMInfo.shmaddr = shmat (xvimage->SHMInfo.shmid, 0, 0);
+    xvimage->SHMInfo.shmaddr = shmat (xvimage->SHMInfo.shmid, NULL, 0);
     if (xvimage->SHMInfo.shmaddr == ((void *) -1)) {
       g_mutex_unlock (xvimagesink->x_lock);
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
@@ -631,14 +631,14 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
               xvimage->width, xvimage->height),
           ("Failed to shmat: %s", g_strerror (errno)));
       /* Clean up the shared memory segment */
-      shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
+      shmctl (xvimage->SHMInfo.shmid, IPC_RMID, NULL);
       goto beach_unlocked;
     }
 
     /* Delete the shared memory segment as soon as we manage to attach.
      * This way, it will be deleted as soon as we detach later, and not
      * leaked if we crash. */
-    shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
+    shmctl (xvimage->SHMInfo.shmid, IPC_RMID, NULL);
 
     xvimage->xvimage->data = xvimage->SHMInfo.shmaddr;
     xvimage->SHMInfo.readOnly = FALSE;

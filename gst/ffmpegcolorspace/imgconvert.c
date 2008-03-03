@@ -439,7 +439,8 @@ avcodec_get_pix_fmt (const char *name)
   return pix_fmt_info[i].format;
 }
 
-int
+#if 0
+static int
 avpicture_layout (const AVPicture * src, int pix_fmt, int width, int height,
     unsigned char *dest, int dest_size)
 {
@@ -490,6 +491,7 @@ avpicture_layout (const AVPicture * src, int pix_fmt, int width, int height,
 
   return size;
 }
+#endif
 
 int
 avpicture_get_size (int pix_fmt, int width, int height)
@@ -670,7 +672,7 @@ img_copy_plane (uint8_t * dst, int dst_wrap,
 /**
  * Copy image 'src' to 'dst'.
  */
-void
+static void
 img_copy (AVPicture * dst, const AVPicture * src,
     int pix_fmt, int width, int height)
 {
@@ -2198,7 +2200,7 @@ get_convert_table_entry (int src_pix_fmt, int dst_pix_fmt)
   return NULL;
 }
 
-int
+static int
 avpicture_alloc (AVPicture * picture, int pix_fmt, int width, int height)
 {
   unsigned int size;
@@ -2215,7 +2217,7 @@ fail:
   return -1;
 }
 
-void
+static void
 avpicture_free (AVPicture * picture)
 {
   av_free (picture->data[0]);
@@ -2593,6 +2595,7 @@ img_get_alpha_info (const AVPicture * src, int pix_fmt, int width, int height)
 #endif
 
 /* filter parameters: [-1 4 2 4 -1] // 8 */
+#if 0
 static void
 deinterlace_line (uint8_t * dst,
     const uint8_t * lum_m4, const uint8_t * lum_m3,
@@ -2684,10 +2687,12 @@ deinterlace_line_inplace (uint8_t * lum_m4, uint8_t * lum_m3, uint8_t * lum_m2,
   }
 #endif
 }
+#endif
 
 /* deinterlacing : 2 temporal taps, 3 spatial taps linear filter. The
    top field is copied as is, but the bottom field is deinterlaced
    against the top field. */
+#if 0
 static void
 deinterlace_bottom_field (uint8_t * dst, int dst_wrap,
     const uint8_t * src1, int src_wrap, int width, int height)
@@ -2743,10 +2748,11 @@ deinterlace_bottom_field_inplace (uint8_t * src1, int src_wrap,
   deinterlace_line_inplace (buf, src_m1, src_0, src_0, src_0, width);
   av_free (buf);
 }
-
+#endif
 
 /* deinterlace - if not supported return -1 */
-int
+#if 0
+static int
 avpicture_deinterlace (AVPicture * dst, const AVPicture * src,
     int pix_fmt, int width, int height)
 {
@@ -2789,5 +2795,6 @@ avpicture_deinterlace (AVPicture * dst, const AVPicture * src,
 #endif
   return 0;
 }
+#endif
 
 #undef FIX

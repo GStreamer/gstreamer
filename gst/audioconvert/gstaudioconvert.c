@@ -723,7 +723,7 @@ static const GstAudioChannelPosition default_positions[8][8] = {
       }
 };
 
-const GValue *
+static const GValue *
 find_suitable_channel_layout (const GValue * val, guint chans)
 {
   /* if output layout is fixed already and looks sane, we're done */

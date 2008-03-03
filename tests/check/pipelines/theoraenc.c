@@ -426,7 +426,7 @@ GST_END_TEST;
 
 #endif /* #ifndef GST_DISABLE_PARSE */
 
-Suite *
+static Suite *
 theoraenc_suite (void)
 {
   Suite *s = suite_create ("theoraenc");

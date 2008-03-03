@@ -49,7 +49,7 @@ GST_DEBUG_CATEGORY_EXTERN (v4l_debug);
 
 #ifndef GST_DISABLE_GST_DEBUG
 /* palette names */
-const char *v4l_palette_name[] = {
+static const char *v4l_palette_name[] = {
   "",                           /* 0 */
   "grayscale",                  /* VIDEO_PALETTE_GREY */
   "Hi-420",                     /* VIDEO_PALETTE_HI420 */
@@ -197,7 +197,7 @@ gst_v4lsrc_capture_init (GstV4lSrc * v4lsrc)
   v4lsrc->cond_queue_state = g_cond_new ();
 
   /* Map the buffers */
-  GST_V4LELEMENT (v4lsrc)->buffer = mmap (0, v4lsrc->mbuf.size,
+  GST_V4LELEMENT (v4lsrc)->buffer = mmap (NULL, v4lsrc->mbuf.size,
       PROT_READ | PROT_WRITE, MAP_SHARED, GST_V4LELEMENT (v4lsrc)->video_fd, 0);
   if (GST_V4LELEMENT (v4lsrc)->buffer == MAP_FAILED) {
     GST_ELEMENT_ERROR (v4lsrc, RESOURCE, OPEN_READ_WRITE, (NULL),
@@ -461,7 +461,7 @@ gst_v4lsrc_try_capture (GstV4lSrc * v4lsrc, gint width, gint height,
     return FALSE;
   }
   /* Map the buffers */
-  buffer = mmap (0, vmbuf.size, PROT_READ | PROT_WRITE,
+  buffer = mmap (NULL, vmbuf.size, PROT_READ | PROT_WRITE,
       MAP_SHARED, GST_V4LELEMENT (v4lsrc)->video_fd, 0);
   if (buffer == MAP_FAILED) {
     GST_ELEMENT_ERROR (v4lsrc, RESOURCE, OPEN_READ_WRITE, (NULL),
@@ -634,7 +634,7 @@ static void gst_v4lsrc_buffer_finalize (GstV4lSrcBuffer * v4lsrc_buffer);
 
 static GstBufferClass *v4lbuffer_parent_class = NULL;
 
-GType
+static GType
 gst_v4lsrc_buffer_get_type (void)
 {
   static GType _gst_v4lsrc_buffer_type;

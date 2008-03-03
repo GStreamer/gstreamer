@@ -129,7 +129,8 @@ GST_START_TEST (test_element_negotiation)
 #endif
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_basetransform_based)
 {
   /* Each of these tests is to check whether various basetransform based 
@@ -201,9 +202,11 @@ GST_START_TEST (test_basetransform_based)
       GST_MESSAGE_UNKNOWN);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 #endif /* #ifndef GST_DISABLE_PARSE */
-    Suite * simple_launch_lines_suite (void)
+static Suite *
+simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
   TCase *tc_chain = tcase_create ("linear");

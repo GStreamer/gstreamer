@@ -994,7 +994,7 @@ query_rates (void)
 }
 
 G_GNUC_UNUSED static void
-query_positions_elems ()
+query_positions_elems (void)
 {
   GList *walk = seekable_elements;
 
@@ -1026,7 +1026,7 @@ query_positions_elems ()
 }
 
 G_GNUC_UNUSED static void
-query_positions_pads ()
+query_positions_pads (void)
 {
   GList *walk = seekable_pads;
 

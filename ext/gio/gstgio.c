@@ -127,7 +127,7 @@ gst_gio_uri_handler_get_uri (GstURIHandler * handler)
   GstElement *element = GST_ELEMENT (handler);
   const gchar *uri;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
   g_object_get (G_OBJECT (element), "location", &uri, NULL);
 

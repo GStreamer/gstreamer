@@ -39,7 +39,7 @@ static gint width = 320, height = 240, x = 0, y = 0;
 static gint disp_width, disp_height;
 
 static inline long
-myclock ()
+myclock (void)
 {
   struct timeval tv;
 

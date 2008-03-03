@@ -349,7 +349,7 @@ gst_v4lsrc_palette_to_caps (int palette)
 }
 
 static GstCaps *
-gst_v4lsrc_get_any_caps ()
+gst_v4lsrc_get_any_caps (void)
 {
   gint i;
   GstCaps *caps = gst_caps_new_empty (), *one;

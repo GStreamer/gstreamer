@@ -277,7 +277,7 @@ gst_v4l_close (GstV4lElement * v4lelement)
  * return value: the number of video input channels
  ******************************************************/
 
-gint
+static gint
 gst_v4l_get_num_chans (GstV4lElement * v4lelement)
 {
   GST_DEBUG_OBJECT (v4lelement, "getting number of channels");

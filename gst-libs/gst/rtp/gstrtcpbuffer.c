@@ -1533,7 +1533,7 @@ gst_rtcp_packet_bye_get_reason (GstRTCPPacket * packet)
   guint8 len;
 
   g_return_val_if_fail (packet != NULL, NULL);
-  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_BYE, 0);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_BYE, NULL);
   g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), NULL);
 
   roffset = get_reason_offset (packet);

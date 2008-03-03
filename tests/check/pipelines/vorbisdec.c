@@ -25,10 +25,10 @@
 
 #ifndef GST_DISABLE_PARSE
 
-GMainLoop *loop;
-gint messages = 0;
+static GMainLoop *loop;
+static gint messages = 0;
 
-void
+static void
 element_message_cb (GstBus * bus, GstMessage * message, gpointer user_data)
 {
   gchar *s;
@@ -40,7 +40,7 @@ element_message_cb (GstBus * bus, GstMessage * message, gpointer user_data)
   messages++;
 }
 
-void
+static void
 eos_message_cb (GstBus * bus, GstMessage * message, gpointer user_data)
 {
   GST_DEBUG ("Received eos");
@@ -93,7 +93,7 @@ GST_START_TEST (test_timestamps)
 GST_END_TEST;
 #endif /* #ifndef GST_DISABLE_PARSE */
 
-Suite *
+static Suite *
 vorbisenc_suite (void)
 {
   Suite *s = suite_create ("vorbisenc");

@@ -34,7 +34,7 @@
 
 void vs_4tap_init (void);
 void vs_scanline_resample_4tap_Y (uint8_t *dest, uint8_t *src,
-    int n, int *xacc, int increment);
+    int n, int src_width, int *xacc, int increment);
 void vs_scanline_merge_4tap_Y (uint8_t *dest, uint8_t *src1, uint8_t *src2,
     uint8_t *src3, uint8_t *src4, int n, int acc);
 void vs_image_scale_4tap_Y (const VSImage * dest, const VSImage * src,

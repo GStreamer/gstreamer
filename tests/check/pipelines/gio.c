@@ -135,7 +135,7 @@ GST_START_TEST (test_memory_stream)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 gio_testsuite (void)
 {
   Suite *s = suite_create ("gio");

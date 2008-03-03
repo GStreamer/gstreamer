@@ -87,6 +87,7 @@ EXPORTS
 	gst_rtp_buffer_pad_to
 	gst_rtp_buffer_set_csrc
 	gst_rtp_buffer_set_extension
+	gst_rtp_buffer_set_extension_data
 	gst_rtp_buffer_set_marker
 	gst_rtp_buffer_set_packet_len
 	gst_rtp_buffer_set_padding

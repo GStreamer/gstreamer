@@ -245,7 +245,7 @@ gst_v4l_property_probe_interface_init (GstPropertyProbeInterface * iface)
 }
 
 #define GST_TYPE_V4L_DEVICE_FLAGS (gst_v4l_device_get_type ())
-GType
+static GType
 gst_v4l_device_get_type (void)
 {
   static GType v4l_device_type = 0;

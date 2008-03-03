@@ -122,6 +122,8 @@ struct _GstOggMuxClass
   GstElementClass parent_class;
 };
 
+GType gst_ogg_mux_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_OGG_MUX_H__ */

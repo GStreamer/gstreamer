@@ -438,7 +438,7 @@ gst_basertppayload_set_options (GstBaseRTPPayload * payload,
   payload->clock_rate = clock_rate;
 }
 
-gboolean
+static gboolean
 copy_fixed (GQuark field_id, const GValue * value, GstStructure * dest)
 {
   if (gst_value_is_fixed (value)) {

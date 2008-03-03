@@ -42,7 +42,7 @@ GST_START_TEST (test_add)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 volume_suite (void)
 {
   Suite *s = suite_create ("clocks");

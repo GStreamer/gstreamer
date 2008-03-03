@@ -25,12 +25,10 @@
 
 #include <gst/check/gstcheck.h>
 
-gboolean have_eos = FALSE;
-
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
-GstPad *mysrcpad, *mysinkpad;
+static GstPad *mysrcpad, *mysinkpad;
 
 
 #define RESAMPLE_CAPS_TEMPLATE_STRING   \
@@ -53,7 +51,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (RESAMPLE_CAPS_TEMPLATE_STRING)
     );
 
-GstElement *
+static GstElement *
 setup_audioresample (int channels, int inrate, int outrate)
 {
   GstElement *audioresample;
@@ -100,7 +98,7 @@ setup_audioresample (int channels, int inrate, int outrate)
   return audioresample;
 }
 
-void
+static void
 cleanup_audioresample (GstElement * audioresample)
 {
   GST_DEBUG ("cleanup_audioresample");
@@ -116,7 +114,7 @@ cleanup_audioresample (GstElement * audioresample)
 }
 
 static void
-fail_unless_perfect_stream ()
+fail_unless_perfect_stream (void)
 {
   guint64 timestamp = 0L, duration = 0L;
   guint64 offset = 0L, offset_end = 0L;

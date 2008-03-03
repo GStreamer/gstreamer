@@ -25,7 +25,8 @@
 #include <gst/check/gstcheck.h>
 #include <unistd.h>
 
-const gchar dummytext[] = "Quick Brown Fox Jumps over a Lazy Frog Quick Brown "
+static const gchar dummytext[] =
+    "Quick Brown Fox Jumps over a Lazy Frog Quick Brown "
     "Fox Jumps over a Lazy Frog Quick Brown Fox Jumps over a Lazy Frog Quick "
     "Brown Fox Jumps over a Lazy Frog Quick Brown Fox Jumps over a Lazy Frog "
     "Quick Brown Fox Jumps over a Lazy Frog Quick Brown Fox Jumps over a Lazy "

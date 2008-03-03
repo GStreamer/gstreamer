@@ -30,10 +30,10 @@
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
-GstPad *mysrcpad, *mysinkpad;
+static GstPad *mysrcpad, *mysinkpad;
 
 /* a valid first header packet */
-guchar identification_header[30] = {
+static guchar identification_header[30] = {
   1,                            /* packet_type */
   'v', 'o', 'r', 'b', 'i', 's',
   0, 0, 0, 0,                   /* vorbis_version */
@@ -46,7 +46,7 @@ guchar identification_header[30] = {
   0x01,                         /* framing_flag */
 };
 
-guchar comment_header[] = {
+static guchar comment_header[] = {
   3,                            /* packet_type */
   'v', 'o', 'r', 'b', 'i', 's',
   2, 0, 0, 0,                   /* vendor_length */
@@ -66,8 +66,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GstElement *
-setup_vorbisdec ()
+static GstElement *
+setup_vorbisdec (void)
 {
   GstElement *vorbisdec;
 
@@ -81,7 +81,7 @@ setup_vorbisdec ()
   return vorbisdec;
 }
 
-void
+static void
 cleanup_vorbisdec (GstElement * vorbisdec)
 {
   GST_DEBUG ("cleanup_vorbisdec");
@@ -233,10 +233,10 @@ GST_START_TEST (test_identification_header)
 
 GST_END_TEST;
 
-vorbis_comment vc;
-vorbis_dsp_state vd;
-vorbis_info vi;
-vorbis_block vb;
+static vorbis_comment vc;
+static vorbis_dsp_state vd;
+static vorbis_info vi;
+static vorbis_block vb;
 
 static GstBuffer *
 _create_codebook_header_buffer (void)

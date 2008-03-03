@@ -1,3 +1,78 @@
+2008-03-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/alsa/gstalsamixertrack.c: (gst_alsa_mixer_track_get_type):
+	* ext/alsa/gstalsasink.c: (set_hwparams):
+	* ext/alsa/gstalsasrc.c: (set_hwparams):
+	* ext/gio/gstgio.c: (gst_gio_uri_handler_get_uri):
+	* ext/ogg/gstoggmux.h:
+	* ext/ogg/gstogmparse.c:
+	* gst-libs/gst/audio/audio.c:
+	* gst-libs/gst/fft/kiss_fft_f64.c: (kiss_fft_f64_alloc):
+	* gst-libs/gst/pbutils/missing-plugins.c:
+	(gst_missing_uri_sink_message_new),
+	(gst_missing_element_message_new),
+	(gst_missing_decoder_message_new),
+	(gst_missing_encoder_message_new):
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	* gst-libs/gst/rtp/gstrtcpbuffer.c:
+	(gst_rtcp_packet_bye_get_reason):
+	* gst/audioconvert/gstaudioconvert.c:
+	* gst/audioresample/gstaudioresample.c:
+	* gst/ffmpegcolorspace/imgconvert.c:
+	* gst/playback/test.c: (gen_video_element), (gen_audio_element):
+	* gst/typefind/gsttypefindfunctions.c:
+	* gst/videoscale/vs_4tap.c:
+	* gst/videoscale/vs_4tap.h:
+	* sys/v4l/gstv4lelement.c:
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_get_any_caps):
+	* sys/v4l/v4l_calls.c:
+	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_capture_init),
+	(gst_v4lsrc_try_capture):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_check_xshm_calls),
+	(gst_ximagesink_ximage_new):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls),
+	(gst_xvimagesink_xvimage_new):
+	* tests/check/elements/audioconvert.c:
+	* tests/check/elements/audioresample.c:
+	(fail_unless_perfect_stream):
+	* tests/check/elements/audiotestsrc.c: (setup_audiotestsrc):
+	* tests/check/elements/decodebin.c:
+	* tests/check/elements/gdpdepay.c: (setup_gdpdepay),
+	(setup_gdpdepay_streamheader):
+	* tests/check/elements/gdppay.c: (setup_gdppay), (GST_START_TEST),
+	(setup_gdppay_streamheader):
+	* tests/check/elements/gnomevfssink.c: (setup_gnomevfssink):
+	* tests/check/elements/multifdsink.c: (setup_multifdsink):
+	* tests/check/elements/textoverlay.c:
+	* tests/check/elements/videorate.c: (setup_videorate):
+	* tests/check/elements/videotestsrc.c: (setup_videotestsrc):
+	* tests/check/elements/volume.c: (setup_volume):
+	* tests/check/elements/vorbisdec.c: (setup_vorbisdec):
+	* tests/check/elements/vorbistag.c:
+	* tests/check/generic/clock-selection.c:
+	* tests/check/generic/states.c: (setup), (teardown):
+	* tests/check/libs/cddabasesrc.c:
+	* tests/check/libs/video.c:
+	* tests/check/pipelines/gio.c:
+	* tests/check/pipelines/oggmux.c:
+	* tests/check/pipelines/simple-launch-lines.c:
+	(simple_launch_lines_suite):
+	* tests/check/pipelines/streamheader.c:
+	* tests/check/pipelines/theoraenc.c:
+	* tests/check/pipelines/vorbisdec.c:
+	* tests/check/pipelines/vorbisenc.c:
+	* tests/examples/seek/scrubby.c:
+	* tests/examples/seek/seek.c: (query_positions_elems),
+	(query_positions_pads):
+	* tests/icles/stress-xoverlay.c: (myclock):
+	Correct all relevant warnings found by the sparse semantic code
+	analyzer. This include marking several symbols static, using
+	NULL instead of 0 for pointers and using "foo (void)" instead
+	of "foo ()" for declarations.
+
+	* win32/common/libgstrtp.def:
+	Add gst_rtp_buffer_set_extension_data to the symbol definition file.
+
 2008-03-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: José Alburquerque <jaalburqu svn gnome org>

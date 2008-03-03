@@ -376,7 +376,7 @@ GST_END_TEST;
 
 #endif /* #ifndef GST_DISABLE_PARSE */
 
-Suite *
+static Suite *
 vorbisenc_suite (void)
 {
   Suite *s = suite_create ("vorbisenc");

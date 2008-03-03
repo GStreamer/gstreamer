@@ -371,7 +371,7 @@ retry:
       no_channels);
   /* set the stream rate */
   rrate = alsa->rate;
-  CHECK (snd_pcm_hw_params_set_rate_near (alsa->handle, params, &rrate, 0),
+  CHECK (snd_pcm_hw_params_set_rate_near (alsa->handle, params, &rrate, NULL),
       no_rate);
   if (rrate != alsa->rate)
     goto rate_match;

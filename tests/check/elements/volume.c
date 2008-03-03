@@ -26,12 +26,10 @@
 #include <gst/check/gstcheck.h>
 #include <gst/controller/gstcontroller.h>
 
-gboolean have_eos = FALSE;
-
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
-GstPad *mysrcpad, *mysinkpad;
+static GstPad *mysrcpad, *mysinkpad;
 
 
 #define VOLUME_CAPS_TEMPLATE_STRING     \
@@ -119,8 +117,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (VOLUME_CAPS_TEMPLATE_STRING)
     );
 
-GstElement *
-setup_volume ()
+static GstElement *
+setup_volume (void)
 {
   GstElement *volume;
 
@@ -134,7 +132,7 @@ setup_volume ()
   return volume;
 }
 
-void
+static void
 cleanup_volume (GstElement * volume)
 {
   GST_DEBUG ("cleanup_volume");

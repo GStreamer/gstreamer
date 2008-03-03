@@ -1421,7 +1421,7 @@ static GstStaticCaps mpegts_caps = GST_STATIC_CAPS ("video/mpegts, "
 
 /* Helper function to search ahead at intervals of packet_size for mpegts
  * headers */
-gint
+static gint
 mpeg_ts_probe_headers (GstTypeFind * tf, guint64 offset, gint packet_size)
 {
   /* We always enter this function having found at least one header already */

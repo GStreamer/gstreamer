@@ -28,6 +28,8 @@
 #include "vs_image.h"
 #include "vs_scanline.h"
 
+#include "vs_4tap.h"
+
 #include <liboil/liboil.h>
 #include <math.h>
 
@@ -45,9 +47,9 @@
 #define rint(x) (floor((x)+0.5))
 #endif
 
-int16_t vs_4tap_taps[256][4];
+static int16_t vs_4tap_taps[256][4];
 
-double
+static double
 vs_4tap_func (double x)
 {
 #if 0

@@ -26,7 +26,7 @@
 
 #include <gst/check/gstcheck.h>
 
-GstPad *mysrcpad;
+static GstPad *mysrcpad;
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -34,8 +34,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-gst-check")
     );
 
-GstElement *
-setup_multifdsink ()
+static GstElement *
+setup_multifdsink (void)
 {
   GstElement *multifdsink;
 
@@ -46,7 +46,7 @@ setup_multifdsink ()
   return multifdsink;
 }
 
-void
+static void
 cleanup_multifdsink (GstElement * multifdsink)
 {
   GST_DEBUG ("cleanup_multifdsink");
@@ -844,7 +844,7 @@ GST_END_TEST;
  * an old client still needs to read from before the new streamheaders
  * a new client gets the new streamheaders
  */
-Suite *
+static Suite *
 multifdsink_suite (void)
 {
   Suite *s = suite_create ("multifdsink");

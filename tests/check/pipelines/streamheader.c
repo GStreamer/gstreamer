@@ -36,7 +36,7 @@
 
 static int n_tags = 0;
 
-gboolean
+static gboolean
 tag_event_probe_cb (GstPad * pad, GstEvent * event, GMainLoop * loop)
 {
   switch (GST_EVENT_TYPE (event)) {
@@ -113,7 +113,7 @@ GST_END_TEST;
 
 static int n_in_caps = 0;
 
-gboolean
+static gboolean
 buffer_probe_cb (GstPad * pad, GstBuffer * buffer)
 {
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS)) {
@@ -208,7 +208,7 @@ GST_END_TEST;
 
 #endif /* #ifndef GST_DISABLE_PARSE */
 
-Suite *
+static Suite *
 streamheader_suite (void)
 {
   Suite *s = suite_create ("streamheader");

@@ -344,6 +344,8 @@ kiss_fft_f64_cfg
 kiss_fft_f64_alloc (int nfft, int inverse_fft, void *mem, size_t * lenmem)
 {
   kiss_fft_f64_cfg st = NULL;
+  const double pi =
+      3.141592653589793238462643383279502884197169399375105820974944;
   size_t memneeded = sizeof (struct kiss_fft_f64_state)
       + sizeof (kiss_fft_f64_cpx) * (nfft - 1); /* twiddle factors */
 
@@ -361,8 +363,6 @@ kiss_fft_f64_alloc (int nfft, int inverse_fft, void *mem, size_t * lenmem)
     st->inverse = inverse_fft;
 
     for (i = 0; i < nfft; ++i) {
-      const double pi =
-          3.141592653589793238462643383279502884197169399375105820974944;
       double phase = -2 * pi * i / nfft;
 
       if (st->inverse)

@@ -24,12 +24,10 @@
 
 #include <gst/check/gstcheck.h>
 
-gboolean have_eos = FALSE;
-
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
-GstPad *mysrcpad, *mysinkpad;
+static GstPad *mysrcpad, *mysinkpad;
 
 
 #define VIDEO_CAPS_TEMPLATE_STRING     \
@@ -66,7 +64,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (VIDEO_CAPS_TEMPLATE_STRING)
     );
 
-void
+static void
 assert_videorate_stats (GstElement * videorate, gchar * reason,
     guint64 xin, guint64 xout, guint64 xdropped, guint64 xduplicated)
 {
@@ -90,8 +88,8 @@ G_STMT_START {                                                          \
   _assert_equals_uint64 (duplicated, xduplicated);
 }
 
-GstElement *
-setup_videorate ()
+static GstElement *
+setup_videorate (void)
 {
   GstElement *videorate;
 
@@ -105,7 +103,7 @@ setup_videorate ()
   return videorate;
 }
 
-void
+static void
 cleanup_videorate (GstElement * videorate)
 {
   GST_DEBUG ("cleanup_videorate");
