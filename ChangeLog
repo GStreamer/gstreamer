@@ -1,6 +1,12 @@
 2008-03-03  Peter Kjellerstedt  <pkj@axis.com>
 
 	* configure.ac:
+	Move the checks for bison, flex and as to the program section and the
+	check for gcc inline asm to the compiler characteristics section.
+
+2008-03-03  Peter Kjellerstedt  <pkj@axis.com>
+
+	* configure.ac:
 	Use AG_GST_CHECK_PLUGIN and AG_GST_DISABLE_PLUGIN to simplify which
 	plug-ins are included/excluded. (#498222)
 

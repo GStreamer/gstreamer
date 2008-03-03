@@ -112,6 +112,13 @@ AS_PROG_OBJC
 dnl check if the compiler supports '-c' and '-o' options
 AM_PROG_CC_C_O
 
+dnl find an assembler
+AM_PROG_AS
+
+dnl we require flex and bison for building the goom plugin
+AG_GST_BISON_CHECK
+AG_GST_FLEX_CHECK
+
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
@@ -155,6 +162,14 @@ GST_CHECK_FIONREAD
 dnl *** checks for structures ***
 
 dnl *** checks for compiler characteristics ***
+
+dnl check if we have GCC inline-asm
+AS_GCC_INLINE_ASSEMBLY([HAVE_GCC_ASM=yes], [HAVE_GCC_ASM=no])
+if test x$HAVE_GCC_ASM = xyes ; then
+  AC_DEFINE(HAVE_GCC_ASM, 1,
+    [Define if compiler supports gcc inline assembly])
+fi
+AM_CONDITIONAL(HAVE_GCC_ASM, test "x$HAVE_GCC_ASM" = "xyes")
 
 dnl FIXME: check if this is used; was used for floatcast.h in base
 dnl Check for fast float to int casting as defined in C99
@@ -270,18 +285,6 @@ AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 
 dnl used in examples
 AG_GST_DEFAULT_ELEMENTS
-
-dnl Check for Yacc and Lex for the goom plugin
-AG_GST_BISON_CHECK
-AG_GST_FLEX_CHECK
-AM_PROG_AS
-dnl Check if we have GCC inline-asm
-AS_GCC_INLINE_ASSEMBLY([HAVE_GCC_ASM=yes], [HAVE_GCC_ASM=no])
-if test x$HAVE_GCC_ASM = xyes ; then
-  AC_DEFINE(HAVE_GCC_ASM, 1,
-    [Define if compiler supports gcc inline assembly])
-fi
-AM_CONDITIONAL(HAVE_GCC_ASM, test "x$HAVE_GCC_ASM" = "xyes")
 
 dnl *** plug-ins to include ***
 
