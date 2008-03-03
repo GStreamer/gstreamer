@@ -1,5 +1,10 @@
 2008-03-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* win32/common/gstconfig.h:
+	  Add here too, just for completeness.
+
+2008-03-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	* gst/gstconfig.h.in:
 	* gst/gstregistry.h:

@@ -94,6 +94,8 @@
 /* DOES NOT WORK */
 /* #undef GST_DISABLE_REGISTRY */
 
+/* #undef GST_USING_BINARY_REGISTRY */
+
 /* DOES NOT WORK */
 /* #undef GST_DISABLE_ENUMTYPES */
 
