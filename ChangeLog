@@ -1,5 +1,10 @@
 2008-03-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/libs/mixer.c:
+	  Add a few simple checks for the new message types.
+
+2008-03-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* gst-libs/gst/interfaces/mixer.c: (gst_mixer_option_changed),
 	  (gst_mixer_options_list_changed), (gst_mixer_mixer_changed),

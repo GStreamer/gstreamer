@@ -173,7 +173,7 @@ GST_START_TEST (test_messages)
   gst_message_unref (message);
   g_free (vols_out);
 
-  /* Test options-changed */
+  /* Test option-changed */
   gst_mixer_option_changed (GST_MIXER (test_element), mopts, "TESTING");
   message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, GST_CLOCK_TIME_NONE);
   fail_if (message == NULL);
@@ -183,6 +183,24 @@ GST_START_TEST (test_messages)
   gst_mixer_message_parse_option_changed (message, &o, &val);
   fail_unless (o == mopts);
   fail_unless (g_str_equal (val, "TESTING"));
+  gst_message_unref (message);
+
+  /* Test options-list-changed */
+  gst_mixer_options_list_changed (GST_MIXER (test_element), mopts);
+  message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, GST_CLOCK_TIME_NONE);
+  fail_if (message == NULL);
+  fail_unless (gst_mixer_message_get_type (message) ==
+      GST_MIXER_MESSAGE_OPTIONS_LIST_CHANGED);
+  gst_mixer_message_parse_options_list_changed (message, &o);
+  fail_unless (o == mopts);
+  gst_message_unref (message);
+
+  /* Test mixer-changed */
+  gst_mixer_mixer_changed (GST_MIXER (test_element));
+  message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, GST_CLOCK_TIME_NONE);
+  fail_if (message == NULL);
+  fail_unless (gst_mixer_message_get_type (message) ==
+      GST_MIXER_MESSAGE_MIXER_CHANGED);
   gst_message_unref (message);
 
   gst_object_unref (mtrack);
