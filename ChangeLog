@@ -1,5 +1,11 @@
 2008-03-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	Add typefinder for IMelody files, using audio/x-imelody.
+	See bug #519516.
+
+2008-03-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/alsa/gstalsamixertrack.c: (gst_alsa_mixer_track_get_type):
 	* ext/alsa/gstalsasink.c: (set_hwparams):
 	* ext/alsa/gstalsasrc.c: (set_hwparams):
