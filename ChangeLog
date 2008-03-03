@@ -1,3 +1,9 @@
+2008-03-03  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gstminiobject.c:
+	Import gst_private.h before any other header that might include other
+	glib headers. This fixes the build on windows using native compilers.
+
 2008-03-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* win32/common/gstconfig.h:

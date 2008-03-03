@@ -33,9 +33,9 @@
 #include "config.h"
 #endif
 
+#include "gst/gst_private.h"
 #include "gst/gstminiobject.h"
 #include "gst/gstinfo.h"
-#include "gst/gst_private.h"
 #include <gobject/gvaluecollector.h>
 
 #ifndef GST_DISABLE_TRACE
