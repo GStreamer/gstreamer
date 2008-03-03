@@ -1,3 +1,12 @@
+2008-03-03  Peter Kjellerstedt  <pkj@axis.com>
+
+	Patch by: Mersad Jelacic  <mersad at axis dot com>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.h:
+	API: add gst_base_rtp_audio_payload_set_samplebits_options() to make it
+	possible to specify the sample size in bits. (#509637)
+
 2008-03-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/libs/mixer.c:

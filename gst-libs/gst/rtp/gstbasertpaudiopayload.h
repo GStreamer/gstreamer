@@ -84,6 +84,10 @@ void
 gst_base_rtp_audio_payload_set_sample_options (GstBaseRTPAudioPayload
     *basertpaudiopayload, gint sample_size);
 
+void
+gst_base_rtp_audio_payload_set_samplebits_options (GstBaseRTPAudioPayload
+    *basertpaudiopayload, gint sample_size);
+
 GstFlowReturn
 gst_base_rtp_audio_payload_push (GstBaseRTPAudioPayload * baseaudiopayload, 
     const guint8 * data, guint payload_len, GstClockTime timestamp);

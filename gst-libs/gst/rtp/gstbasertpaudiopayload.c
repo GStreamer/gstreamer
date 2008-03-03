@@ -45,12 +45,13 @@
  * gst_base_rtp_audio_payload_set_frame_based() or
  * gst_base_rtp_audio_payload_set_sample_based(). This is usually done in the
  * element's _init() function. Then, the child element must call either
- * gst_base_rtp_audio_payload_set_frame_options() or
- * gst_base_rtp_audio_payload_set_sample_options(). Since GstBaseRTPAudioPayload
- * derives from GstBaseRTPPayload, the child element must set any variables or
- * call/override any functions required by that base class. The child element
- * does not need to override any other functions specific to
- * GstBaseRTPAudioPayload.
+ * gst_base_rtp_audio_payload_set_frame_options(),
+ * gst_base_rtp_audio_payload_set_sample_options() or
+ * gst_base_rtp_audio_payload_set_samplebits_options. Since
+ * GstBaseRTPAudioPayload derives from GstBaseRTPPayload, the child element
+ * must set any variables or call/override any functions required by that base
+ * class. The child element does not need to override any other functions
+ * specific to GstBaseRTPAudioPayload.
  * </para>
  * </refsect2>
  */
@@ -251,6 +252,29 @@ gst_base_rtp_audio_payload_set_sample_options (GstBaseRTPAudioPayload
 {
   g_return_if_fail (basertpaudiopayload != NULL);
 
+  /* sample_size is in bits internally */
+  basertpaudiopayload->sample_size = sample_size * 8;
+
+  if (basertpaudiopayload->priv->adapter) {
+    gst_adapter_clear (basertpaudiopayload->priv->adapter);
+  }
+}
+
+/**
+ * gst_base_rtp_audio_payload_set_samplebits_options:
+ * @basertpaudiopayload: a pointer to the element.
+ * @sample_size: Size per sample in bits.
+ *
+ * Sets the options for sample based audio codecs.
+ *
+ * Since: 0.10.18
+ */
+void
+gst_base_rtp_audio_payload_set_samplebits_options (GstBaseRTPAudioPayload
+    * basertpaudiopayload, gint sample_size)
+{
+  g_return_if_fail (basertpaudiopayload != NULL);
+
   basertpaudiopayload->sample_size = sample_size;
 
   if (basertpaudiopayload->priv->adapter) {
@@ -435,7 +459,7 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
   guint max_payload_len;
   gboolean use_adapter = FALSE;
 
-  guint sample_size;
+  guint fragment_size;
 
   ret = GST_FLOW_OK;
 
@@ -446,12 +470,17 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
-  sample_size = basertpaudiopayload->sample_size;
+
+  /* sample_size is in bits and is converted into multiple bytes */
+  fragment_size = basertpaudiopayload->sample_size;
+  while ((fragment_size % 8) != 0)
+    fragment_size += fragment_size;
+  fragment_size /= 8;
 
   /* max number of bytes based on given ptime */
   if (basepayload->max_ptime != -1) {
-    maxptime_octets = basepayload->max_ptime * basepayload->clock_rate /
-        (sample_size * GST_SECOND);
+    maxptime_octets = 8 * basepayload->max_ptime * basepayload->clock_rate /
+        (basertpaudiopayload->sample_size * GST_SECOND);
   }
 
   max_payload_len = MIN (
@@ -463,10 +492,10 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
 
   /* min number of bytes based on a given ptime, has to be a multiple
      of sample rate */
-  minptime_octets = basepayload->min_ptime * basepayload->clock_rate /
-      (sample_size * GST_SECOND);
+  minptime_octets = 8 * basepayload->min_ptime * basepayload->clock_rate /
+      (basertpaudiopayload->sample_size * GST_SECOND);
 
-  min_payload_len = MAX (minptime_octets, sample_size);
+  min_payload_len = MAX (minptime_octets, fragment_size);
 
   if (min_payload_len > max_payload_len) {
     min_payload_len = max_payload_len;
@@ -506,7 +535,7 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
     gfloat num, datarate;
 
     payload_len =
-        MIN (max_payload_len, (available / sample_size) * sample_size);
+        MIN (max_payload_len, (available / fragment_size) * fragment_size);
 
     if (use_adapter) {
       data = gst_adapter_peek (basertpaudiopayload->priv->adapter, payload_len);
@@ -516,11 +545,11 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
         gst_base_rtp_audio_payload_push (basertpaudiopayload, data, payload_len,
         basertpaudiopayload->base_ts);
 
-    num = payload_len;
-    datarate = (sample_size * basepayload->clock_rate);
+    num = payload_len * 8;
+    datarate = (basertpaudiopayload->sample_size * basepayload->clock_rate);
 
     basertpaudiopayload->base_ts +=
-        /* payload_len (bytes) * nsecs/sec / datarate (bytes*sec) */
+        /* payload_len (bits) * nsecs/sec / datarate (bits*sec) */
         gst_gdouble_to_guint64 (num / datarate * GST_SECOND);
     GST_DEBUG_OBJECT (basertpaudiopayload, "New ts is %" GST_TIME_FORMAT,
         GST_TIME_ARGS (basertpaudiopayload->base_ts));
