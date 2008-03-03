@@ -76,73 +76,11 @@ AG_GST_ARG_WITH_PKG_CONFIG_PATH
 AG_GST_ARG_WITH_PACKAGE_NAME
 AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
-dnl these are all the gst plug-ins, compilable without additional libs
-dnl videofilter is at the top because others depend on it
-GST_PLUGINS_ALL="\
-		videofilter \
-		alpha \
-		apetag \
-		audiofx \
-		auparse \
-		autodetect \
-		avi \
-		cutter \
-		debug \
-		effectv \
-		equalizer \
-		id3demux \
-		icydemux \
-		flx \
-		goom \
-		goom2k1 \
-		law \
-		level \
-		matroska \
-		monoscope \
-		multifile \
-		multipart \
-                qtdemux \
-		rtp	\
-		rtsp	\
-		smpte	\
-		spectrum \
-		udp     \
-		videobox \
-		videocrop \
-		videomixer \
-		wavenc \
-		wavparse \
-                "
-AC_SUBST(GST_PLUGINS_ALL)
-
-GST_PLUGINS_SELECTED=""
 AG_GST_ARG_WITH_PLUGINS
-
-dnl disable gst plugins we might not be able to build on this
-dnl platform: udp and rtsp (ugly but minimally invasive)
-dnl FIXME: maybe move to sys
-AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
-AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
-
-if test "x$HAVE_SYS_SOCKET_H" != "xyes" -a "x$HAVE_WINSOCK2_H" != "xyes"; then
-  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/udp//`
-  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/rtsp//`
-fi
-
-if test "x$HAVE_WINSOCK2_H" = "xyes"; then
-  WIN32_LIBS="-lws2_32"
-  AC_SUBST(WIN32_LIBS)
-fi
 
 AG_GST_ARG_ENABLE_EXTERNAL
 
 AG_GST_ARG_ENABLE_EXPERIMENTAL
-USE_GST_V4L2=$BUILD_EXPERIMENTAL
-if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
-	GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/monoscope//`
-fi
-
-AC_SUBST(GST_PLUGINS_SELECTED)
 
 dnl *** checks for platform ***
 
@@ -241,7 +179,7 @@ AG_GST_GLIB_CHECK([2.6])
 
 dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.8, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
-if test "x${HAVE_LIBOIL}" != xyes ; then
+if test "x$HAVE_LIBOIL" != "xyes"; then
   AC_ERROR([liboil-0.3.8 or later is required])
 fi
 
@@ -344,6 +282,65 @@ if test x$HAVE_GCC_ASM = xyes ; then
     [Define if compiler supports gcc inline assembly])
 fi
 AM_CONDITIONAL(HAVE_GCC_ASM, test "x$HAVE_GCC_ASM" = "xyes")
+
+dnl *** plug-ins to include ***
+
+dnl these are all the gst plug-ins, compilable without additional libs
+dnl videofilter is at the top because others depend on it
+AG_GST_CHECK_PLUGIN(videofilter)
+AG_GST_CHECK_PLUGIN(alpha)
+AG_GST_CHECK_PLUGIN(apetag)
+AG_GST_CHECK_PLUGIN(audiofx)
+AG_GST_CHECK_PLUGIN(auparse)
+AG_GST_CHECK_PLUGIN(autodetect)
+AG_GST_CHECK_PLUGIN(avi)
+AG_GST_CHECK_PLUGIN(cutter)
+AG_GST_CHECK_PLUGIN(debug)
+AG_GST_CHECK_PLUGIN(effectv)
+AG_GST_CHECK_PLUGIN(equalizer)
+AG_GST_CHECK_PLUGIN(id3demux)
+AG_GST_CHECK_PLUGIN(icydemux)
+AG_GST_CHECK_PLUGIN(flx)
+AG_GST_CHECK_PLUGIN(goom)
+AG_GST_CHECK_PLUGIN(goom2k1)
+AG_GST_CHECK_PLUGIN(law)
+AG_GST_CHECK_PLUGIN(level)
+AG_GST_CHECK_PLUGIN(matroska)
+AG_GST_CHECK_PLUGIN(monoscope)
+AG_GST_CHECK_PLUGIN(multifile)
+AG_GST_CHECK_PLUGIN(multipart)
+AG_GST_CHECK_PLUGIN(qtdemux)
+AG_GST_CHECK_PLUGIN(rtp)
+AG_GST_CHECK_PLUGIN(rtsp)
+AG_GST_CHECK_PLUGIN(smpte)
+AG_GST_CHECK_PLUGIN(spectrum)
+AG_GST_CHECK_PLUGIN(udp)
+AG_GST_CHECK_PLUGIN(videobox)
+AG_GST_CHECK_PLUGIN(videocrop)
+AG_GST_CHECK_PLUGIN(videomixer)
+AG_GST_CHECK_PLUGIN(wavenc)
+AG_GST_CHECK_PLUGIN(wavparse)
+
+dnl disable gst plugins we might not be able to build on this
+dnl platform: udp and rtsp (ugly but minimally invasive)
+dnl FIXME: maybe move to sys
+AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
+AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
+
+if test "x$HAVE_SYS_SOCKET_H" != "xyes" -a "x$HAVE_WINSOCK2_H" != "xyes"; then
+  AG_GST_DISABLE_PLUGIN(udp)
+  AG_GST_DISABLE_PLUGIN(rtsp)
+fi
+
+if test "x$HAVE_WINSOCK2_H" = "xyes"; then
+  WIN32_LIBS="-lws2_32"
+  AC_SUBST(WIN32_LIBS)
+fi
+
+dnl disable experimental plug-ins
+if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
+  AG_GST_DISABLE_PLUGIN(monoscope)
+fi
 
 dnl *** sys plug-ins ***
 
@@ -487,6 +484,7 @@ esac
 dnl *** Video 4 Linux 2 ***
 dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
 dnl renamed to GST_V4L2 because of some conflict with kernel headers
+USE_GST_V4L2=$BUILD_EXPERIMENTAL
 translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L2, true)
 AG_GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
   AC_MSG_CHECKING([Checking for up to date v4l2 installation])
