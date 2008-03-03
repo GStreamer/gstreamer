@@ -76,32 +76,11 @@ AG_GST_ARG_WITH_PKG_CONFIG_PATH
 AG_GST_ARG_WITH_PACKAGE_NAME
 AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
-dnl these are all the gst plug-ins, compilable without additional libs
-GST_PLUGINS_ALL="\
-	asfdemux \
-	dvdlpcmdec \
-	dvdsub \
-	iec958 \
-	mpegaudioparse \
-	mpegstream \
-	realmedia \
-	synaesthesia \
-	"
-
-AC_SUBST(GST_PLUGINS_ALL)
-
-GST_PLUGINS_SELECTED=""
 AG_GST_ARG_WITH_PLUGINS
 
 AG_GST_ARG_ENABLE_EXTERNAL
 
 AG_GST_ARG_ENABLE_EXPERIMENTAL
-
-if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
-  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/synaesthesia//`
-fi
-
-AC_SUBST(GST_PLUGINS_SELECTED)
 
 dnl *** checks for platform ***
 
@@ -167,8 +146,7 @@ AG_GST_GLIB_CHECK([2.6])
 
 dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.8, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
-if test "x$HAVE_LIBOIL" != "xyes"
-then
+if test "x$HAVE_LIBOIL" != "xyes"; then
   AC_ERROR([liboil-0.3.8 or later is required])
 fi
 
@@ -209,6 +187,23 @@ AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 
 dnl used in examples
 AG_GST_DEFAULT_ELEMENTS
+
+dnl *** plug-ins to include ***
+
+dnl these are all the gst plug-ins, compilable without additional libs
+AG_GST_CHECK_PLUGIN(asfdemux)
+AG_GST_CHECK_PLUGIN(dvdlpcmdec)
+AG_GST_CHECK_PLUGIN(dvdsub)
+AG_GST_CHECK_PLUGIN(iec958)
+AG_GST_CHECK_PLUGIN(mpegaudioparse)
+AG_GST_CHECK_PLUGIN(mpegstream)
+AG_GST_CHECK_PLUGIN(realmedia)
+AG_GST_CHECK_PLUGIN(synaesthesia)
+
+dnl disable experimental plug-ins
+if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
+  AG_GST_DISABLE_PLUGIN(synaesthesia)
+fi
 
 dnl *** ext plug-ins ***
 dnl keep this list sorted alphabetically !
