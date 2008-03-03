@@ -104,32 +104,12 @@ AC_DEFINE_UNQUOTED(GST_INSTALL_PLUGINS_HELPER, "$GST_INSTALL_PLUGINS_HELPER",
     [plugin install helper script])
 AC_SUBST(GST_INSTALL_PLUGINS_HELPER)
 
-
-dnl these are all the gst plug-ins, compilable without additional libs
-GST_PLUGINS_ALL="\
-	adder \
-	audioconvert \
-	audiorate \
-	audioresample \
-	audiotestsrc \
-	ffmpegcolorspace \
-	gdp \
-	playback \
-	typefind \
-	videotestsrc \
-	videorate \
-	videoscale \
-	volume \
-	"
-AC_SUBST(GST_PLUGINS_ALL)
-
-GST_PLUGINS_SELECTED=""
 AG_GST_ARG_WITH_PLUGINS
-AC_SUBST(GST_PLUGINS_SELECTED)
 
 AG_GST_ARG_ENABLE_EXTERNAL
 
 AG_GST_ARG_ENABLE_EXPERIMENTAL
+
 dnl *** checks for platform ***
 
 dnl * hardware/architecture *
@@ -193,14 +173,7 @@ if test "x$HAVE_REGEX_H" = "xyes"; then
 #endif /* LIBXML_HTML_ENABLED */
                      ]), HAVE_LIBXML_HTML="yes", HAVE_LIBXML_HTML="no")
   CPPFLAGS="$ac_cppflags_save"
-  
-  if test "x$HAVE_LIBXML_HTML" = "xyes"; then
-    GST_PLUGINS_SELECTED="$GST_PLUGINS_SELECTED subparse"
-  else
-    GST_PLUGINS_NO="\t[subparse]\n$GST_PLUGINS_NO"
-  fi
 else
-  GST_PLUGINS_NO="\t[subparse]\n$GST_PLUGINS_NO"
   HAVE_LIBXML_HTML="no"
 fi
 AM_CONDITIONAL(HAVE_LIBXML_HTML, test "x$HAVE_LIBXML_HTML" = "xyes")
@@ -209,11 +182,6 @@ dnl used in gst/tcp
 AC_CHECK_HEADERS([sys/socket.h], 
   HAVE_SYS_SOCKET_H="yes", HAVE_SYS_SOCKET_H="no")
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
-if test "x$HAVE_SYS_SOCKET_H" = "xyes"; then
-  GST_PLUGINS_SELECTED="$GST_PLUGINS_SELECTED tcp"
-else
-  GST_PLUGINS_NO="\t[tcp]\n$GST_PLUGINS_NO"
-fi
 
 dnl used in gst-libs/gst/rtsp
 AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
@@ -275,8 +243,7 @@ AG_GST_GLIB_CHECK([2.6])
 
 dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.8, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
-if test "x$HAVE_LIBOIL" != "xyes"
-then
+if test "x$HAVE_LIBOIL" != "xyes"; then
   AC_ERROR([liboil-0.3.8 or later is required])
 fi
 
@@ -335,6 +302,35 @@ AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 
 dnl used in examples
 AG_GST_DEFAULT_ELEMENTS
+
+dnl *** plug-ins to include ***
+
+dnl these are all the gst plug-ins, compilable without additional libs
+AG_GST_CHECK_PLUGIN(adder)
+AG_GST_CHECK_PLUGIN(audioconvert)
+AG_GST_CHECK_PLUGIN(audiorate)
+AG_GST_CHECK_PLUGIN(audioresample)
+AG_GST_CHECK_PLUGIN(audiotestsrc)
+AG_GST_CHECK_PLUGIN(ffmpegcolorspace)
+AG_GST_CHECK_PLUGIN(gdp)
+AG_GST_CHECK_PLUGIN(playback)
+AG_GST_CHECK_PLUGIN(subparse)
+AG_GST_CHECK_PLUGIN(tcp)
+AG_GST_CHECK_PLUGIN(typefind)
+AG_GST_CHECK_PLUGIN(videotestsrc)
+AG_GST_CHECK_PLUGIN(videorate)
+AG_GST_CHECK_PLUGIN(videoscale)
+AG_GST_CHECK_PLUGIN(volume)
+
+dnl disable plug-ins that require libxml2's HTML support if it is not available
+if test "x$HAVE_LIBXML_HTML" != "xyes"; then
+  AG_GST_DISABLE_PLUGIN(subparse)
+fi
+
+dnl disable plug-ins that require sys/socket.h if it is not available
+if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
+  AG_GST_DISABLE_PLUGIN(tcp)
+fi
 
 dnl *** sys plug-ins ***
 
