@@ -1,3 +1,8 @@
+2008-03-04  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.10.2 pre-release
+
 2008-02-29  Rene Stadler  <mail@renestadler.de>
 
 	* gst/gst.override:
