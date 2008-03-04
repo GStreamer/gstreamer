@@ -286,6 +286,13 @@
 #define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_transmission_mode(desc)	(desc[8] & 0x06)
 #define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_other_frequency(desc)	((desc[8] & 0x01) == 0x01)
 
+/* DVB Cable Delivery System Descriptor */
+#define DESC_DVB_CABLE_DELIVERY_SYSTEM_frequency(desc)		(desc + 2)
+#define DESC_DVB_CABLE_DELIVERY_SYSTEM_fec_outer(desc)		(desc[7] & 0x0F)
+#define DESC_DVB_CABLE_DELIVERY_SYSTEM_modulation(desc)		(desc[8])
+#define DESC_DVB_CABLE_DELIVERY_SYSTEM_symbol_rate(desc)	(desc + 9)
+#define DESC_DVB_CABLE_DELIVERY_SYSTEM_fec_inner(desc)		(desc[12] & 0x0F)
+
 typedef struct {
   guint    n_desc;
   guint8   data_length;

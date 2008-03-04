@@ -1,3 +1,9 @@
+2008-03-04  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/gstmpegdesc.h:
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	Add parsing of cable delivery system descriptor.
+
 2008-03-03  Peter Kjellerstedt  <pkj@axis.com>
 
 	* configure.ac:

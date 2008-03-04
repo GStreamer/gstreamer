@@ -935,6 +935,93 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
             "other-frequency", G_TYPE_BOOLEAN, other_frequency, NULL);
         gst_structure_set (transport, "delivery", GST_TYPE_STRUCTURE,
             delivery_structure, NULL);
+      } else if ((delivery =
+              gst_mpeg_descriptor_find (mpegdescriptor,
+                  DESC_DVB_CABLE_DELIVERY_SYSTEM))) {
+
+        guint8 *frequency_bcd =
+            DESC_DVB_CABLE_DELIVERY_SYSTEM_frequency (delivery);
+        guint32 frequency =
+            10 * ((frequency_bcd[3] & 0x0F) +
+            10 * ((frequency_bcd[3] & 0xF0) >> 4) +
+            100 * (frequency_bcd[2] & 0x0F) +
+            1000 * ((frequency_bcd[2] & 0xF0) >> 4) +
+            10000 * (frequency_bcd[1] & 0x0F) +
+            100000 * ((frequency_bcd[1] & 0xF0) >> 4) +
+            1000000 * (frequency_bcd[0] & 0x0F) +
+            10000000 * ((frequency_bcd[0] & 0xF0) >> 4));
+        guint8 modulation =
+            DESC_DVB_CABLE_DELIVERY_SYSTEM_modulation (delivery);
+        gchar *modulation_str;
+        guint8 *symbol_rate_bcd =
+            DESC_DVB_CABLE_DELIVERY_SYSTEM_symbol_rate (delivery);
+        guint32 symbol_rate =
+            (symbol_rate_bcd[2] & 0x0F) +
+            10 * ((symbol_rate_bcd[2] & 0xF0) >> 4) +
+            100 * (symbol_rate_bcd[1] & 0x0F) +
+            1000 * ((symbol_rate_bcd[1] & 0xF0) >> 4) +
+            10000 * (symbol_rate_bcd[0] & 0x0F) +
+            100000 * ((symbol_rate_bcd[0] & 0xF0) >> 4);
+        guint8 fec_inner = DESC_DVB_CABLE_DELIVERY_SYSTEM_fec_inner (delivery);
+        gchar *fec_inner_str;
+
+        switch (fec_inner) {
+          case 0:
+            fec_inner_str = "undefined";
+            break;
+          case 1:
+            fec_inner_str = "1/2";
+            break;
+          case 2:
+            fec_inner_str = "2/3";
+            break;
+          case 3:
+            fec_inner_str = "3/4";
+            break;
+          case 4:
+            fec_inner_str = "5/6";
+            break;
+          case 5:
+            fec_inner_str = "7/8";
+            break;
+          case 6:
+            fec_inner_str = "8/9";
+            break;
+          case 0xF:
+            fec_inner_str = "none";
+            break;
+          default:
+            fec_inner_str = "reserved";
+        }
+        switch (modulation) {
+          case 0x00:
+            modulation_str = "undefined";
+            break;
+          case 0x01:
+            modulation_str = "QAM16";
+            break;
+          case 0x02:
+            modulation_str = "QAM32";
+            break;
+          case 0x03:
+            modulation_str = "QAM64";
+            break;
+          case 0x04:
+            modulation_str = "QAM128";
+            break;
+          case 0x05:
+            modulation_str = "QAM256";
+            break;
+          default:
+            modulation_str = "reserved";
+        }
+        delivery_structure = gst_structure_new ("cable",
+            "modulation", G_TYPE_STRING, modulation_str,
+            "frequency", G_TYPE_UINT, frequency,
+            "symbol-rate", G_TYPE_UINT, symbol_rate,
+            "inner-fec", G_TYPE_STRING, fec_inner_str, NULL);
+        gst_structure_set (transport, "delivery", GST_TYPE_STRUCTURE,
+            delivery_structure, NULL);
       }
       if ((delivery =
               gst_mpeg_descriptor_find (mpegdescriptor,
