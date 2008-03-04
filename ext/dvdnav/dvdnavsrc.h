@@ -66,10 +66,12 @@ struct _GstDvdNavSrc
   gchar                   *last_uri;
 
   gint64                   pending_offset;  /* Next newsegment event offset */
-  gboolean                 did_seek;
   gboolean                 new_seek;
   gboolean                 seek_pending;
   gboolean                 need_flush;
+  gboolean                 first_seek;
+  gboolean                 use_tmaps;
+  gboolean                 still_frame;
 
   /* Timing */
 #if 0
@@ -123,6 +125,15 @@ struct _GstDvdNavSrc
   GArray                   *vts_attrs;       /* Array of vts_attributes_t    *
                                               * structures  cached from      *
                                               * the VMG ifo                  */
+  guint32                   sector_length;
+
+  dvd_reader_t              *dvd;
+  ifo_handle_t              *vmg_file;
+  tt_srpt_t                 *tt_srpt;
+  vts_ptt_srpt_t            *vts_ptt_srpt;
+  ifo_handle_t              *vts_file;
+  vts_tmapt_t               *vts_tmapt;
+  vts_tmap_t                *title_tmap;
 };
 
 struct _GstDvdNavSrcClass

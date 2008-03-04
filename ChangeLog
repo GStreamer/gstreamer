@@ -1,3 +1,17 @@
+2008-03-04  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/dvdnav/dvdnavsrc.c:
+	* ext/dvdnav/dvdnavsrc.h:
+	Apply patch that adds some seeking support to dvdnav, and fixes it
+	in various other ways. This doesn't make dvdnavsrc fully functional,
+	but moves it forward.
+
+	Fixes: #476149
+	Patch By: Simone Gotti <simone.gotti@email.it>
+
+	* ext/dvdnav/gst-dvd:
+	Update the simple dvdnavsrc gst-launch example to work for 0.10
+
 2008-03-03  Peter Kjellerstedt  <pkj@axis.com>
 
 	* configure.ac:
