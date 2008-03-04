@@ -1,3 +1,9 @@
+2008-03-04  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* win32/common/config.h:
+	0.10.17.2 prelease
+
 2008-03-03  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_write),
