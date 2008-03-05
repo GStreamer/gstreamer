@@ -25,6 +25,10 @@
 #include <gst/gst.h>
 
 #include <picturereader.hh>
+#if GST_MJPEGTOOLS_API >= 10900
+#include <imageplanes.hh>
+#endif
+
 
 class GstMpeg2EncPictureReader : public PictureReader {
 public:
@@ -37,7 +41,7 @@ public:
 
 protected:
   /* read a frame */
-#ifdef GST_MJPEGTOOLS_19x
+#if GST_MJPEGTOOLS_API >= 10900
   bool LoadFrame (ImagePlanes &image);
 #else
   bool LoadFrame ();

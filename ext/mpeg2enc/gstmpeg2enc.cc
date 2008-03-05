@@ -90,6 +90,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "mpegversion = (int) { 1, 2 }, " COMMON_VIDEO_CAPS)
     );
 
+
 static void gst_mpeg2enc_finalize (GObject * object);
 static void gst_mpeg2enc_reset (GstMpeg2enc * enc);
 static gboolean gst_mpeg2enc_setcaps (GstPad * pad, GstCaps * caps);
@@ -158,6 +159,7 @@ gst_mpeg2enc_finalize (GObject * object)
 
   g_mutex_free (enc->tlock);
   g_cond_free (enc->cond);
+  g_queue_free (enc->time);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -195,6 +197,7 @@ gst_mpeg2enc_init (GstMpeg2enc * enc, GstMpeg2encClass * g_class)
   enc->buffer = NULL;
   enc->tlock = g_mutex_new ();
   enc->cond = g_cond_new ();
+  enc->time = g_queue_new ();
 
   gst_mpeg2enc_reset (enc);
 }
@@ -202,6 +205,8 @@ gst_mpeg2enc_init (GstMpeg2enc * enc, GstMpeg2encClass * g_class)
 static void
 gst_mpeg2enc_reset (GstMpeg2enc * enc)
 {
+  GstBuffer *buf;
+
   enc->eos = FALSE;
   enc->srcresult = GST_FLOW_OK;
 
@@ -209,6 +214,8 @@ gst_mpeg2enc_reset (GstMpeg2enc * enc)
   if (enc->buffer)
     gst_buffer_unref (enc->buffer);
   enc->buffer = NULL;
+  while ((buf = (GstBuffer *) g_queue_pop_head (enc->time)))
+    gst_buffer_unref (buf);
 
   if (enc->encoder) {
     delete enc->encoder;
@@ -548,6 +555,7 @@ gst_mpeg2enc_chain (GstPad * pad, GstBuffer * buffer)
   while (enc->buffer)
     GST_MPEG2ENC_WAIT (enc);
   enc->buffer = buffer;
+  g_queue_push_tail (enc->time, gst_buffer_ref (buffer));
   GST_MPEG2ENC_SIGNAL (enc);
   GST_MPEG2ENC_MUTEX_UNLOCK (enc);
 
@@ -573,13 +581,15 @@ eos:
   }
 ignore:
   {
+    GstFlowReturn ret = enc->srcresult;
+
     GST_DEBUG_OBJECT (enc,
         "ignoring buffer because encoding task encountered %s",
         gst_flow_get_name (enc->srcresult));
     GST_MPEG2ENC_MUTEX_UNLOCK (enc);
 
     gst_buffer_unref (buffer);
-    return enc->srcresult;
+    return ret;
   }
 }
 
@@ -649,44 +659,37 @@ done:
 static mjpeg_log_handler_t old_handler = NULL;
 
 /* note that this will affect all mjpegtools elements/threads */
-
 static void
 gst_mpeg2enc_log_callback (log_level_t level, const char *message)
 {
   GstDebugLevel gst_level;
 
-#ifndef GST_MJPEGTOOLS_19rc3
-  switch (level) {
-    case LOG_NONE:
-      gst_level = GST_LEVEL_NONE;
-      break;
-    case LOG_ERROR:
-      gst_level = GST_LEVEL_ERROR;
-      break;
-    case LOG_INFO:
-      gst_level = GST_LEVEL_INFO;
-      break;
-    case LOG_DEBUG:
-      gst_level = GST_LEVEL_DEBUG;
-      break;
-    default:
-      gst_level = GST_LEVEL_INFO;
-      break;
-  }
+#if GST_MJPEGTOOLS_API >= 10903
+  static const gint mjpeg_log_error = mjpeg_loglev_t ("error");
+  static const gint mjpeg_log_warn = mjpeg_loglev_t ("warn");
+  static const gint mjpeg_log_info = mjpeg_loglev_t ("info");
+  static const gint mjpeg_log_debug = mjpeg_loglev_t ("debug");
 #else
-  if (level == mjpeg_loglev_t ("debug"))
-    gst_level = GST_LEVEL_DEBUG;
-  else if (level == mjpeg_loglev_t ("info"))
-    gst_level = GST_LEVEL_INFO;
-  else if (level == mjpeg_loglev_t ("warn"))
-    gst_level = GST_LEVEL_WARNING;
-  else if (level == mjpeg_loglev_t ("error"))
-    gst_level = GST_LEVEL_ERROR;
-  else
-    gst_level = GST_LEVEL_INFO;
+  static const gint mjpeg_log_error = LOG_ERROR;
+  static const gint mjpeg_log_warn = LOG_WARN;
+  static const gint mjpeg_log_info = LOG_INFO;
+  static const gint mjpeg_log_debug = LOG_DEBUG;
 #endif
 
-  gst_debug_log (mpeg2enc_debug, gst_level, "", "", 0, NULL, message);
+  if (level == mjpeg_log_error) {
+    gst_level = GST_LEVEL_ERROR;
+  } else if (level == mjpeg_log_warn) {
+    gst_level = GST_LEVEL_WARNING;
+  } else if (level == mjpeg_log_info) {
+    gst_level = GST_LEVEL_INFO;
+  } else if (level == mjpeg_log_debug) {
+    gst_level = GST_LEVEL_DEBUG;
+  } else {
+    gst_level = GST_LEVEL_INFO;
+  }
+
+  /* message could have a % in it, do not segfault in such case */
+  gst_debug_log (mpeg2enc_debug, gst_level, "", "", 0, NULL, "%s", message);
 
   /* chain up to the old handler;
    * this could actually be a handler from another mjpegtools based

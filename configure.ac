@@ -608,18 +608,34 @@ AC_SUBST(LIBMMS_LIBS)
 dnl *** mjpegtools version info ***
 dnl some may prefer older version (given quirks above)
 dnl hm, no version info seems available within mjpegtools headers
-
-PKG_CHECK_EXISTS(mjpegtools >= 1.9.0 mjpegtools < 1.10.0, [
-  AC_DEFINE(GST_MJPEGTOOLS_19x, 1, [mjpegtools >= 1.9.0 is used])
-  have_mpjegtools_19x=yes
+dnl and API really moves along
+echo
+PKG_CHECK_EXISTS(mjpegtools >= 1.6.1.93 mjpegtools < 1.8.0, [
+  mjpegtools_api=10601
+], [
+  PKG_CHECK_EXISTS(mjpegtools >= 1.8.0 mjpegtools < 1.9.0, [
+    mjpegtools_api=10800
   ], [
-  have_mpjegtools_19x=no])
-
-PKG_CHECK_EXISTS(mjpegtools >= 1.8.0, [
-  AC_DEFINE(GST_MJPEGTOOLS_18x, 1, [mjpegtools >= 1.8.0 is used])
-  have_mpjegtools_18x=yes
-  ], [
-  have_mpjegtools_18x=no])
+    PKG_CHECK_MODULES(MJPEG, mjpegtools >= 1.9.0, [
+      dnl logging API changed in release candidates
+      OLD_CFLAGS="$CFLAGS"
+      OLD_LIBS="$LIBS"
+      CFLAGS="$MJPEG_CFLAGS"
+      LIBS="$LIBS $MJPEG_LIBS -lmjpegutils -lm -lpthread"
+      AC_CHECK_FUNC(mjpeg_loglev_t, [
+        mjpegtools_api=10903
+        ], [
+        mjpegtools_api=10900
+        ])
+      CFLAGS="$OLD_CFLAGS"
+      LIBS="$OLD_LIBS"
+    ], [
+      mjpegtools_api=0
+    ])
+  ])
+])
+AC_DEFINE_UNQUOTED(GST_MJPEGTOOLS_API, $mjpegtools_api,
+  [mjpegtools API evolution])
 
 dnl *** mpeg2enc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2ENC, true)
@@ -665,21 +681,15 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
           dnl mpeg2syntaxcodes.h header by default, and a new release
           dnl is not in sight, so check for this oversight in case
           dnl distros or folks have fixed this themselves
-          if test "x$have_mpjegtools_18x" = "xyes"; then
+          if test "$mjpegtools_api" -ge "10800"; then
             AC_CHECK_HEADER([mpeg2syntaxcodes.h], [
                 mpeg2enc_headers_ok=yes
               ], [
                 mpeg2enc_headers_ok=no
               ])
-	  else
-	    mpeg2enc_headers_ok=yes
+          else
+            mpeg2enc_headers_ok=yes
           fi
-
-	  if test "x$have_mpjegtools_19x" = "xyes"; then
-	    AG_GST_CHECK_LIBHEADER(MJPEGTOOLS_19rc3, mpeg2encpp, mjpeg_loglev_t, $MPEG2ENC_LIBS, mjpeg_logging.h,
-	      AC_DEFINE(GST_MJPEGTOOLS_19rc3, 1, [mjpegtools >= 1.9.3rc3 is used]))
-	  fi
-
           if test "x$mpeg2enc_headers_ok" = "xyes"; then
             HAVE_MPEG2ENC="yes"
           fi

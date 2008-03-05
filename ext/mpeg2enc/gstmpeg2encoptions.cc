@@ -88,16 +88,16 @@ gst_mpeg2enc_format_get_type (void)
 
   if (!mpeg2enc_format_type) {
     static const GEnumValue mpeg2enc_formats[] = {
-      {0, "0", "Generic MPEG-1"},
-      {1, "1", "Standard VCD"},
-      {2, "2", "User VCD"},
-      {3, "3", "Generic MPEG-2"},
-      {4, "4", "Standard SVCD"},
-      {5, "5", "User SVCD"},
-      {6, "6", "VCD Stills sequences"},
-      {7, "7", "SVCD Stills sequences"},
-      {8, "8", "DVD MPEG-2 for dvdauthor"},
-      {9, "9", "DVD MPEG-2"},
+      {0, "Generic MPEG-1", "0"},
+      {1, "Standard VCD", "1"},
+      {2, "User VCD", "2"},
+      {3, "Generic MPEG-2", "3"},
+      {4, "Standard SVCD", "4"},
+      {5, "User SVCD", "5"},
+      {6, "VCD Stills sequences", "6"},
+      {7, "SVCD Stills sequences", "7"},
+      {8, "DVD MPEG-2 for dvdauthor", "8"},
+      {9, "DVD MPEG-2", "9"},
       {0, NULL, NULL},
     };
 
@@ -118,15 +118,15 @@ gst_mpeg2enc_framerate_get_type (void)
 
   if (!mpeg2enc_framerate_type) {
     static const GEnumValue mpeg2enc_framerates[] = {
-      {0, "0", "Same as input"},
-      {1, "1", "24/1.001 (NTSC 3:2 pulldown converted film)"},
-      {2, "2", "24 (native film)"},
-      {3, "3", "25 (PAL/SECAM video)"},
-      {4, "4", "30/1.001 (NTSC video)"},
-      {5, "5", "30"},
-      {6, "6", "50 (PAL/SECAM fields)"},
-      {7, "7", "60/1.001 (NTSC fields)"},
-      {8, "8", "60"},
+      {0, "Same as input", "0"},
+      {1, "24/1.001 (NTSC 3:2 pulldown converted film)", "1"},
+      {2, "24 (native film)", "2"},
+      {3, "25 (PAL/SECAM video)", "3"},
+      {4, "30/1.001 (NTSC video)", "4"},
+      {5, "30", "5"},
+      {6, "50 (PAL/SECAM fields)", "6"},
+      {7, "60/1.001 (NTSC fields)", "7"},
+      {8, "60", "8"},
       {0, NULL, NULL},
     };
 
@@ -147,11 +147,11 @@ gst_mpeg2enc_aspect_get_type (void)
 
   if (!mpeg2enc_aspect_type) {
     static const GEnumValue mpeg2enc_aspects[] = {
-      {0, "0", "Deduce from input"},
-      {1, "1", "1:1"},
-      {2, "2", "4:3"},
-      {3, "3", "16:9"},
-      {4, "4", "2.21:1"},
+      {0, "Deduce from input", "0"},
+      {1, "1:1", "1"},
+      {2, "4:3", "2"},
+      {3, "16:9", "3"},
+      {4, "2.21:1", "4"},
       {0, NULL, NULL},
     };
 
@@ -172,10 +172,10 @@ gst_mpeg2enc_interlace_mode_get_type (void)
 
   if (!mpeg2enc_interlace_mode_type) {
     static const GEnumValue mpeg2enc_interlace_modes[] = {
-      {-1, "-1", "Format default mode"},
-      {0, "0", "Progressive"},
-      {1, "1", "Interlaced, per-frame encoding"},
-      {2, "2", "Interlaced, per-field-encoding"},
+      {-1, "Format default mode", "-1"},
+      {0, "Progressive", "0"},
+      {1, "Interlaced, per-frame encoding", "1"},
+      {2, "Interlaced, per-field-encoding", "2"},
       {0, NULL, NULL},
     };
 
@@ -203,13 +203,13 @@ gst_mpeg2enc_quantisation_matrix_get_type (void)
   if (!mpeg2enc_quantisation_matrix_type) {
     static const GEnumValue mpeg2enc_quantisation_matrixes[] = {
       {GST_MPEG2ENC_QUANTISATION_MATRIX_DEFAULT,
-          "0", "Default"},
+          "Default", "9"},
       {GST_MPEG2ENC_QUANTISATION_MATRIX_HI_RES,
-          "1", "High resolution"},
+          "High resolution", "1"},
       {GST_MPEG2ENC_QUANTISATION_MATRIX_KVCD,
-          "2", "KVCD"},
+          "KVCD", "2"},
       {GST_MPEG2ENC_QUANTISATION_MATRIX_TMPGENC,
-          "3", "TMPGEnc"},
+          "TMPGEnc", "3"},
       {0, NULL, NULL},
     };
 
@@ -231,10 +231,10 @@ gst_mpeg2enc_video_norm_get_type (void)
 
   if (!mpeg2enc_video_norm_type) {
     static const GEnumValue mpeg2enc_video_norms[] = {
-      {0, "0", "Unspecified"},
-      {'p', "p", "PAL"},
-      {'n', "n", "NTSC"},
-      {'s', "s", "SECAM"},
+      {0, "Unspecified", "0"},
+      {'p', "PAL", "p"},
+      {'n', "NTSC", "n"},
+      {'s', "SECAM", "s"},
       {0, NULL, NULL},
     };
 
@@ -255,9 +255,9 @@ gst_mpeg2enc_playback_field_order_get_type (void)
 
   if (!mpeg2enc_playback_field_order_type) {
     static const GEnumValue mpeg2enc_playback_field_orders[] = {
-      {Y4M_UNKNOWN, "0", "Unspecified"},
-      {Y4M_ILACE_TOP_FIRST, "1", "Top-field first"},
-      {Y4M_ILACE_BOTTOM_FIRST, "2", "Bottom-field first"},
+      {Y4M_UNKNOWN, "Unspecified", "0"},
+      {Y4M_ILACE_TOP_FIRST, "Top-field first", "1"},
+      {Y4M_ILACE_BOTTOM_FIRST, "Bottom-field first", "2"},
       {0, NULL, NULL},
     };
 
@@ -322,8 +322,8 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
           0, 10 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_QUANTISATION,
       g_param_spec_int ("quantisation", "Quantisation",
-          "Quantisation factor (0=default, 1=best, 31=worst)",
-          0, 31, 0, (GParamFlags) G_PARAM_READWRITE));
+          "Quantisation factor (-1=cbr, 0=default, 1=best, 31=worst)",
+          -1, 31, 0, (GParamFlags) G_PARAM_READWRITE));
 
   /* stills options */
   g_object_class_install_property (klass, ARG_VCD_STILL_SIZE,
@@ -449,7 +449,7 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
       g_param_spec_boolean ("constraints", "Constraints",
           "Use strict video resolution and bitrate checks",
           TRUE, (GParamFlags) G_PARAM_READWRITE));
-#ifdef GST_MJPEGTOOLS_18x
+#if GST_MJPEGTOOLS_API >= 10800
   g_object_class_install_property (klass, ARG_DUALPRIME_MPEG2,
       g_param_spec_boolean ("dualprime", "Dual Prime Motion Estimation",
           "Dual Prime Motion Estimation Mode for MPEG-2 I/P-frame only "
@@ -485,7 +485,7 @@ GstMpeg2EncOptions::getProperty (guint prop_id, GValue * value)
       g_value_set_int (value, nonvid_bitrate / 1024);
       break;
     case ARG_QUANTISATION:
-      g_value_set_int (value, quant);
+      g_value_set_int (value, force_cbr ? -1 : quant);
       break;
     case ARG_VCD_STILL_SIZE:
       g_value_set_int (value, still_size / 1024);
@@ -578,7 +578,7 @@ GstMpeg2EncOptions::getProperty (guint prop_id, GValue * value)
     case ARG_CONSTRAINTS:
       g_value_set_boolean (value, !ignore_constraints);
       break;
-#ifdef GST_MJPEGTOOLS_18x
+#if GST_MJPEGTOOLS_API >= 10800
     case ARG_DUALPRIME_MPEG2:
       g_value_set_boolean (value, hack_dualprime);
       break;
@@ -612,6 +612,10 @@ GstMpeg2EncOptions::setProperty (guint prop_id, const GValue * value)
       break;
     case ARG_QUANTISATION:
       quant = g_value_get_int (value);
+      if (quant < 0) {
+        force_cbr = 1;
+        quant = 0;
+      }
       break;
     case ARG_VCD_STILL_SIZE:
       still_size = g_value_get_int (value) * 1024;
@@ -707,7 +711,7 @@ GstMpeg2EncOptions::setProperty (guint prop_id, const GValue * value)
     case ARG_CONSTRAINTS:
       ignore_constraints = !g_value_get_boolean (value);
       break;
-#ifdef GST_MJPEGTOOLS_18x
+#if GST_MJPEGTOOLS_API >= 10800
     case ARG_DUALPRIME_MPEG2:
       hack_dualprime = g_value_get_boolean (value);
       break;

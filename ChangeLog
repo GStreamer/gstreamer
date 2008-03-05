@@ -1,3 +1,23 @@
+2008-03-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
+
+	* configure.ac:
+	Clean up detection of different mjpegtoolsAPI versions.
+
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	* ext/mpeg2enc/gstmpeg2enc.hh:
+	* ext/mpeg2enc/gstmpeg2encoder.cc:
+	* ext/mpeg2enc/gstmpeg2encoptions.cc:
+	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
+	* ext/mpeg2enc/gstmpeg2encpicturereader.hh:
+	* ext/mpeg2enc/gstmpeg2encstreamwriter.cc:
+	* ext/mpeg2enc/gstmpeg2encstreamwriter.hh:
+	Streamline conditional code for evolving mjpegtools API,
+	optimize and fix/prevent crash in log handling, use
+	names/nicks for enums in the usual way andm inor updates
+	in code and properties/settings. Partially fixes bug #520329.
+
 2008-03-04  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/gstmpegdesc.h:

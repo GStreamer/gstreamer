@@ -26,8 +26,10 @@
 
 #include <mpegconsts.h>
 #include <quantize.hh>
-#ifdef GST_MJPEGTOOLS_19x
+#if GST_MJPEGTOOLS_API >= 10900
 #include <ontheflyratectl.hh>
+#include <pass1ratectl.hh>
+#include <pass2ratectl.hh>
 #else
 #include <ratectl.hh>
 #endif
@@ -57,18 +59,19 @@ GstMpeg2Encoder::~GstMpeg2Encoder ()
   gst_object_unref (element);
 }
 
-gboolean
-GstMpeg2Encoder::setup ()
+gboolean GstMpeg2Encoder::setup ()
 {
-  MPEG2EncInVidParams strm;
-  GstMpeg2enc *enc;
+  MPEG2EncInVidParams
+      strm;
+  GstMpeg2enc *
+      enc;
 
   enc = GST_MPEG2ENC (element);
 
   /* I/O */
   reader = new GstMpeg2EncPictureReader (element, caps, &parms);
   reader->StreamPictureParams (strm);
-#if defined(GST_MJPEGTOOLS_18x) && !defined(GST_MJPEGTOOLS_19x)
+#if GST_MJPEGTOOLS_API == 10800
   /* chain thread caters for reading, do not need another thread for this */
   options.allow_parallel_read = FALSE;
 #endif
@@ -79,22 +82,20 @@ GstMpeg2Encoder::setup ()
 
   /* encoding internals */
   quantizer = new Quantizer (parms);
-#ifdef GST_MJPEGTOOLS_19x
+#if GST_MJPEGTOOLS_API < 10900
+  bitrate_controller = new OnTheFlyRateCtl (parms);
+#else
   pass1ratectl = new OnTheFlyPass1 (parms);
   pass2ratectl = new OnTheFlyPass2 (parms);
-#else
-  bitrate_controller = new OnTheFlyRateCtl (parms);
 #endif
-
-#ifdef GST_MJPEGTOOLS_18x
+#if GST_MJPEGTOOLS_API >= 10900
   /* sequencer */
-#  ifdef GST_MJPEGTOOLS_19x
   seqencoder = new SeqEncoder (parms, *reader, *quantizer,
       *writer, *pass1ratectl, *pass2ratectl);
-#  else
+#elif GST_MJPEGTOOLS_API >= 10800
+  /* sequencer */
   seqencoder = new SeqEncoder (parms, *reader, *quantizer,
       *writer, *bitrate_controller);
-#  endif
 #else
   coder = new MPEG2Coder (parms, *writer);
   /* sequencer */
@@ -112,7 +113,7 @@ GstMpeg2Encoder::init ()
     parms.Init (options);
     reader->Init ();
     quantizer->Init ();
-#ifdef GST_MJPEGTOOLS_18x
+#if GST_MJPEGTOOLS_API >= 10800
     seqencoder->Init ();
 #endif
     init_done = TRUE;
@@ -127,7 +128,7 @@ void
 GstMpeg2Encoder::encode ()
 {
   /* hm, this is all... eek! */
-#ifdef GST_MJPEGTOOLS_18x
+#if GST_MJPEGTOOLS_API >= 10800
   seqencoder->EncodeStream ();
 #else
   seqencoder->Encode ();

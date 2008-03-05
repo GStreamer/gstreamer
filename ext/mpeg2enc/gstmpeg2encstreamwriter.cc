@@ -28,7 +28,7 @@
 #include "gstmpeg2encstreamwriter.hh"
 #include <string.h>
 
-#ifdef GST_MJPEGTOOLS_18x
+#if GST_MJPEGTOOLS_API >= 10800
 
 /*
  * Class init stuff.
@@ -51,7 +51,7 @@ void
 GstMpeg2EncStreamWriter::WriteOutBufferUpto (const guint8 * buffer,
     const guint32 flush_upto)
 {
-  GstBuffer *buf;
+  GstBuffer *buf, *inbuf;
   GstMpeg2enc *enc = GST_MPEG2ENC (GST_PAD_PARENT (pad));
 
   buf = gst_buffer_new_and_alloc (flush_upto);
@@ -62,12 +62,21 @@ GstMpeg2EncStreamWriter::WriteOutBufferUpto (const guint8 * buffer,
   /* this should not block anything else (e.g. chain), but if it does,
    * it's ok as mpeg2enc is not really a loop-based element, but push-based */
   GST_MPEG2ENC_MUTEX_LOCK (enc);
+  /* best effort at giving output some meaningful time metadata
+   * no mpeg2enc specs on this though, but it might help getting the output
+   * into container formats that really do like timestamps (unlike mplex) */
+  if ((inbuf = (GstBuffer *) g_queue_pop_head (enc->time))) {
+    GST_BUFFER_TIMESTAMP (buf) = GST_BUFFER_TIMESTAMP (inbuf);
+    GST_BUFFER_DURATION (buf) = GST_BUFFER_DURATION (inbuf);
+    gst_buffer_unref (inbuf);
+  }
   gst_buffer_set_caps (buf, GST_PAD_CAPS (pad));
   enc->srcresult = gst_pad_push (pad, buf);
   GST_MPEG2ENC_MUTEX_UNLOCK (enc);
 }
 
-guint64 GstMpeg2EncStreamWriter::BitCount ()
+guint64
+GstMpeg2EncStreamWriter::BitCount ()
 {
   return flushed * 8ll;
 }
@@ -157,4 +166,4 @@ void
 GstMpeg2EncStreamWriter::FrameDiscard ()
 {
 }
-#endif /* GST_MJPEGTOOLS_18x */
+#endif /* GST_MJPEGTOOLS_API >= 10800 */

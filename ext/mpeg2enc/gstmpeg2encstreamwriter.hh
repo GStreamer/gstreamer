@@ -27,7 +27,7 @@
 
 #include <elemstrmwriter.hh>
 
-#ifdef GST_MJPEGTOOLS_18x
+#if GST_MJPEGTOOLS_API >= 10800
 
 class GstMpeg2EncStreamWriter : public ElemStrmWriter {
   public:
@@ -61,6 +61,6 @@ private:
   GstPad *pad;
   GstBuffer *buf;
 };
-#endif /* GST_MJPEGTOOLS_18x */
+#endif /* GST_MJPEGTOOLS_API >= 10800 */
 
 #endif /* __GST_MPEG2ENCSTREAMWRITER_H__ */

@@ -88,6 +88,8 @@ typedef struct _GstMpeg2enc {
   GstFlowReturn srcresult;
   /* buffer for encoding task */
   GstBuffer *buffer;
+  /* timestamps for output */
+  GQueue *time;
 
 } GstMpeg2enc;
 
