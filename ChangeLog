@@ -1,3 +1,13 @@
+2008-03-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_class_init),
+	(gst_ffmpegdec_setcaps), (check_keyframe),
+	(gst_ffmpegdec_video_frame), (gst_ffmpegdec_sink_event),
+	(gst_ffmpegdec_set_property):
+	Detect DTS or PTS as timestamps. This is done by tracking frame
+	reordering on the output and making sure that timestamps don't go
+	backwards. Fixes #482660.
+
 2008-02-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>

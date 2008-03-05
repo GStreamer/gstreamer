@@ -73,6 +73,9 @@ struct _GstFFMpegDec
   gboolean discont;
   guint64 next_ts;
   guint64 in_ts;
+  GstClockTime last_out;
+  gboolean ts_is_dts;
+  gboolean has_b_frames;
 
   /* parsing */
   AVCodecParserContext *pctx;
@@ -301,7 +304,7 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
     g_object_class_install_property (gobject_class, PROP_DEBUG_MV,
         g_param_spec_boolean ("debug-mv", "Debug motion vectors",
             "Whether ffmpeg should print motion vectors on top of the image",
-	    DEFAULT_DEBUG_MV, G_PARAM_READWRITE));
+            DEFAULT_DEBUG_MV, G_PARAM_READWRITE));
   }
 
   gstelement_class->change_state = gst_ffmpegdec_change_state;
@@ -619,6 +622,11 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   ffmpegdec->context->release_buffer = gst_ffmpegdec_release_buffer;
   ffmpegdec->context->draw_horiz_band = NULL;
 
+  /* assume PTS as input, we will adapt when we detect timestamp reordering
+   * in the output frames. */
+  ffmpegdec->ts_is_dts = FALSE;
+  ffmpegdec->has_b_frames = FALSE;
+
   /* get size and so */
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
       oclass->in_plugin->type, caps, ffmpegdec->context);
@@ -703,6 +711,11 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
       &ffmpegdec->format.video.clip_width);
   gst_structure_get_int (structure, "height",
       &ffmpegdec->format.video.clip_height);
+
+
+  /* take into account the lowres property */
+  ffmpegdec->format.video.clip_width >>= ffmpegdec->lowres;
+  ffmpegdec->format.video.clip_height >>= ffmpegdec->lowres;
 
 done:
   GST_OBJECT_UNLOCK (ffmpegdec);
@@ -1260,6 +1273,13 @@ check_keyframe (GstFFMpegDec * ffmpegdec)
   /* figure out if we are dealing with a keyframe */
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
+  /* remember that we have B frames, we need this for the DTS -> PTS conversion
+   * code */
+  if (!ffmpegdec->has_b_frames && ffmpegdec->picture->pict_type == FF_B_TYPE) {
+    GST_DEBUG_OBJECT (ffmpegdec, "we have B frames");
+    ffmpegdec->has_b_frames = TRUE;
+  }
+
   is_itype = (ffmpegdec->picture->pict_type == FF_I_TYPE);
   is_reference = (ffmpegdec->picture->reference == 1);
 
@@ -1387,7 +1407,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   gboolean mode_switch;
   gboolean decode;
   gint hurry_up = 0;
-  GstClockTime out_timestamp, out_duration;
+  GstClockTime out_timestamp, out_duration, out_pts;
 
   *ret = GST_FLOW_OK;
   *outbuf = NULL;
@@ -1434,7 +1454,6 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   if (!decode)
     ffmpegdec->context->hurry_up = hurry_up;
 
-
   GST_DEBUG_OBJECT (ffmpegdec, "after decode: len %d, have_data %d",
       len, have_data);
 
@@ -1447,17 +1466,48 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   if (len < 0 || have_data <= 0)
     goto beach;
 
-  GST_DEBUG_OBJECT (ffmpegdec, "picture: pts %" G_GUINT64_FORMAT,
-      ffmpegdec->picture->pts);
+  /* get pts */
+  out_pts = ffmpegdec->picture->pts;
+
+  GST_DEBUG_OBJECT (ffmpegdec, "picture: pts %" G_GUINT64_FORMAT, out_pts);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: num %d",
       ffmpegdec->picture->coded_picture_number);
+  GST_DEBUG_OBJECT (ffmpegdec, "picture: ref %d",
+      ffmpegdec->picture->reference);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: display %d",
       ffmpegdec->picture->display_picture_number);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: opaque %p",
       ffmpegdec->picture->opaque);
 
-  /* check if we are dealing with a keyframe here */
+  /* check if we are dealing with a keyframe here, this will also check if we
+   * are dealing with B frames. */
   iskeyframe = check_keyframe (ffmpegdec);
+
+  /* check that the timestamps go upwards */
+  if (ffmpegdec->last_out != -1) {
+    if (ffmpegdec->last_out > out_pts) {
+      /* timestamps go backwards, this means frames were reordered and we must
+       * be dealing with DTS as the buffer timestamps */
+      ffmpegdec->ts_is_dts = TRUE;
+      GST_DEBUG_OBJECT (ffmpegdec,
+          "timestamp discont, we have DTS as timestamps");
+    }
+  }
+  ffmpegdec->last_out = out_pts;
+
+  if (ffmpegdec->ts_is_dts) {
+    /* we are dealing with DTS as the timestamps, only copy the DTS on the picture
+     * to the PTS of the output frame if we are dealing with a non-reference
+     * frame, else we leave the timestamp as -1, which will interpollate from the
+     * last outputted value. */
+    if (ffmpegdec->context->has_b_frames && ffmpegdec->has_b_frames &&
+        ffmpegdec->picture->reference && ffmpegdec->next_ts != -1) {
+      /* we have b frames and this picture is a reference picture, don't use the
+       * DTS as the PTS */
+      GST_DEBUG_OBJECT (ffmpegdec, "DTS as timestamps, interpollate");
+      out_pts = -1;
+    }
+  }
 
   /* when we're waiting for a keyframe, see if we have one or drop the current
    * non-keyframe */
@@ -1482,9 +1532,9 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
    *  3) else copy input timestamp
    */
   out_timestamp = -1;
-  if (ffmpegdec->picture->pts != -1) {
+  if (out_pts != -1) {
     /* Get (interpolated) timestamp from FFMPEG */
-    out_timestamp = (GstClockTime) ffmpegdec->picture->pts;
+    out_timestamp = (GstClockTime) out_pts;
     GST_LOG_OBJECT (ffmpegdec, "using timestamp %" GST_TIME_FORMAT
         " returned by ffmpeg", GST_TIME_ARGS (out_timestamp));
   }
@@ -1923,6 +1973,7 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       if (ffmpegdec->opened) {
         avcodec_flush_buffers (ffmpegdec->context);
       }
+      ffmpegdec->last_out = GST_CLOCK_TIME_NONE;
       ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
       gst_ffmpegdec_reset_qos (ffmpegdec);
       gst_ffmpegdec_flush_pcache (ffmpegdec);
@@ -2298,7 +2349,7 @@ gst_ffmpegdec_set_property (GObject * object,
       ffmpegdec->do_padding = g_value_get_boolean (value);
       break;
     case PROP_DEBUG_MV:
-      ffmpegdec->debug_mv = ffmpegdec->context->debug_mv = 
+      ffmpegdec->debug_mv = ffmpegdec->context->debug_mv =
           g_value_get_boolean (value);
       break;
     default:
