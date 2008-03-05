@@ -710,6 +710,67 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
   fi
 ])
 
+dnl *** mplex ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MPLEX, true)
+AG_GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [
+  HAVE_MPLEX="no"
+  dnl we require a c++ compiler for this one
+  if [ test x$HAVE_CXX = xyes ]; then
+    dnl libmplex was first included in mjpegtools-1.6.2-rc4 (1.6.1.93)
+    dnl since many distros include mjpegtools specifically without mplex
+    dnl and mpeg2enc, we check for mplex on its own, too.
+    dnl libmplex < 1.9rc? has fuzzy ABI, valgrind and other problems
+    PKG_CHECK_MODULES(MPLEX, mjpegtools >= 1.9.0, [
+      dnl switch over to c++ to test things
+      AC_LANG_CPLUSPLUS
+      OLD_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $MPLEX_CFLAGS"
+      AC_CHECK_HEADER(interact.hpp, [
+        MPLEX_LIBS="$MPLEX_LIBS -lmplex2 -lm"
+        OLD_LIBS="$LIBS"
+        LIBS="$LIBS $MPLEX_LIBS"
+        dnl older libmplex uses off_t SegmentSize (), which leads to fuzzy ABI;
+        dnl don't want this here
+        AC_MSG_CHECKING([for valid mplex objects])
+        AC_TRY_RUN([
+
+#include <interact.hpp>
+#include <outputstrm.hpp>
+#include <multiplexor.hpp>
+int
+main (int   argc,
+      char *argv[])
+{
+  class TestOutputStream : public OutputStream {
+  public:
+    TestOutputStream () : OutputStream () { }
+    void Write (uint8_t *a, unsigned int b) { }
+    void NextSegment () { }
+    uint64_t SegmentSize () { }
+    void Close () { }
+    int Open () { }
+};
+  MultiplexJob *job = new MultiplexJob ();
+  vector<IBitStream *> inputs;
+  job->SetupInputStreams (inputs);
+  TestOutputStream *out = new TestOutputStream ();
+  Multiplexor *mux = new Multiplexor(*job, *out, NULL);
+  return 0;
+}
+        ],[
+          HAVE_MPLEX="yes"
+          AC_SUBST(MPLEX_CFLAGS)
+          AC_SUBST(MPLEX_LIBS)
+          AC_MSG_RESULT(yes)
+        ], AC_MSG_RESULT(no))
+        LIBS="$OLD_LIBS"
+      ])
+      CPPFLAGS="$OLD_CPPFLAGS"
+      AC_LANG_C
+    ], HAVE_MPLEX="no")
+  fi
+])
+
 dnl *** musepack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MUSEPACK, true)
 AG_GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
@@ -961,6 +1022,7 @@ AM_CONDITIONAL(USE_JACK, false)
 AM_CONDITIONAL(USE_LADSPA, false)
 AM_CONDITIONAL(USE_LIBMMS, false)
 AM_CONDITIONAL(USE_MPEG2ENC, false)
+AM_CONDITIONAL(USE_MPLEX, false)
 AM_CONDITIONAL(USE_MUSEPACK, false)
 AM_CONDITIONAL(USE_MUSICBRAINZ, false)
 AM_CONDITIONAL(USE_MYTHTV, false)
@@ -1108,6 +1170,7 @@ ext/libmms/Makefile
 ext/Makefile
 ext/nas/Makefile
 ext/mpeg2enc/Makefile
+ext/mplex/Makefile
 ext/musepack/Makefile
 ext/musicbrainz/Makefile
 ext/mythtv/Makefile

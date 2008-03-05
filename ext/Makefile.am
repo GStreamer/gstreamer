@@ -154,11 +154,11 @@ else
 METADATA_DIR=
 endif
 
-# if USE_MPLEX
-# MPLEX_DIR=mplex
-# else
+if USE_MPLEX
+MPLEX_DIR=mplex
+else
 MPLEX_DIR=
-# endif
+endif
 
 if USE_MUSEPACK
 MUSEPACK_DIR=musepack
@@ -355,6 +355,7 @@ DIST_SUBDIRS = \
 	divx \
 	metadata \
 	mpeg2enc \
+	mplex \
 	musepack \
 	musicbrainz \
 	mythtv \

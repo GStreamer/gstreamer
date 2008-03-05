@@ -1,5 +1,6 @@
 /* GStreamer mplex (mjpegtools) wrapper
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2008 Mark Nauwelaerts <mnauw@users.sourceforge.net>
  *
  * gstmplexibitstream.hh: gstreamer/mplex input bitstream wrapper
  *
@@ -25,41 +26,23 @@
 
 #include <string.h>
 
+#include "gstmplex.hh"
 #include "gstmplexibitstream.hh"
 
 /*
  * Class init/exit functions.
  */
 
-GstMplexIBitStream::GstMplexIBitStream (GstPad * _pad, guint buf_size):
+GstMplexIBitStream::GstMplexIBitStream (GstMplexPad * _data, guint buf_size):
 IBitStream ()
 {
-  guint8 *data;
-
-  pad = _pad;
-  bs = gst_bytestream_new (pad);
+  mpad = _data;
+  mplex = GST_MPLEX (GST_PAD_PARENT (mpad->pad));
   eos = FALSE;
-
-  streamname = g_strdup (gst_pad_get_name (_pad));
 
   SetBufSize (buf_size);
   eobs = false;
   byteidx = 0;
-
-  /* we peek 1 byte (not even caring about the return value) so we
-   * are sure that we have data and thus capsnego must be completed
-   * when we return. */
-  gst_bytestream_peek_bytes (bs, &data, 1);
-
-  if (!ReadIntoBuffer () && buffered == 0) {
-    GST_ELEMENT_ERROR (gst_pad_get_parent (_pad), RESOURCE, READ, (NULL),
-        ("Failed to read from input pad %s", gst_pad_get_name (pad)));
-  }
-}
-
-GstMplexIBitStream::~GstMplexIBitStream (void)
-{
-  gst_bytestream_destroy (bs);
 }
 
 /*
@@ -67,47 +50,45 @@ GstMplexIBitStream::~GstMplexIBitStream (void)
  */
 
 size_t
-GstMplexIBitStream::ReadStreamBytes (uint8_t * buf, size_t size)
+    GstMplexIBitStream::ReadStreamBytes (uint8_t * buf, size_t size =
+    BUFFER_SIZE)
 {
   guint8 *data;
 
-  guint read = 0;
+  GST_MPLEX_MUTEX_LOCK (mplex);
 
-  if (eos)
-    return 0;
+  GST_DEBUG_OBJECT (mplex, "needing %d bytes", (guint) size);
 
-  while (!eos && (read = gst_bytestream_peek_bytes (bs, &data, size)) != size) {
-    GstEvent *event;
-
-    guint pending;
-
-    gst_bytestream_get_status (bs, &pending, &event);
-    if (event) {
-      switch (GST_EVENT_TYPE (event)) {
-        case GST_EVENT_EOS:
-          eos = TRUE;
-          break;
-        default:
-          break;
-      }
-      gst_event_unref (event);
-    }
+  while (gst_adapter_available (mpad->adapter) < size
+      && !mplex->eos && !mpad->eos) {
+    mpad->needed = size;
+    GST_MPLEX_SIGNAL (mplex, mpad);
+    GST_MPLEX_WAIT (mplex, mpad);
   }
 
-  if (read > 0) {
-    memcpy (buf, data, read);
-    gst_bytestream_flush_fast (bs, read);
+  mpad->needed = 0;
+  size = MIN (size, gst_adapter_available (mpad->adapter));
+  if (size) {
+    data = gst_adapter_take (mpad->adapter, size);
+    memcpy (buf, data, size);
+    g_free (data);
   }
 
-  return read;
+  GST_MPLEX_MUTEX_UNLOCK (mplex);
+
+  return size;
 }
 
 /*
  * Are we at EOS?
  */
 
-bool
-GstMplexIBitStream::EndOfStream (void)
+bool GstMplexIBitStream::EndOfStream (void)
 {
   return eos;
+}
+
+bool GstMplexIBitStream::ReadBuffer ()
+{
+  return ReadIntoBuffer (BUFFER_SIZE);
 }

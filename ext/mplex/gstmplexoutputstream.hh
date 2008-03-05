@@ -1,5 +1,6 @@
 /* GStreamer mplex (mjpegtools) wrapper
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2008 Mark Nauwelaerts <mnauw@users.sourceforge.net>
  *
  * gstmplexoutputstream.hh: gstreamer/mplex output stream wrapper
  *
@@ -26,27 +27,31 @@
 #include <mjpeg_types.h>
 #include <outputstrm.hpp>
 
+#include "gstmplex.hh"
+
 class GstMplexOutputStream : public OutputStream {
 public:
-  GstMplexOutputStream (GstElement *element,
-			GstPad     *pad);
+  GstMplexOutputStream (GstMplex *element, GstPad *pad);
 
   /* open/close. Basically 'no-op's (close() sets EOS). */
   int  Open  (void);
   void Close (void);
 
   /* get size of current segment */
+#if GST_MJPEGTOOLS_API >= 10900
+  uint64_t SegmentSize (void);
+#else
   off_t SegmentSize (void);
+#endif
 
   /* next segment */
   void NextSegment (void);
 
   /* write data */
-  void Write (guint8 *data,
-	      guint   len);
+  void Write (guint8 *data, guint len);
 
 private:
-  GstElement *element;
+  GstMplex *mplex;
   GstPad *pad;
   guint64 size;
 };

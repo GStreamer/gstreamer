@@ -37,6 +37,8 @@ public:
 		    GValue       *value);
   void setProperty (guint         prop_id,
 		    const GValue *value);
+
+  int bufsize;
 };
 
 #endif /* __GST_MPLEXJOB_H__ */

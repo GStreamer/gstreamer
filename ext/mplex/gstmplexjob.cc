@@ -36,7 +36,8 @@ enum
   ARG_SPLIT_SEQUENCE,
   ARG_SEGMENT_SIZE,
   ARG_PACKETS_PER_PACK,
-  ARG_SECTOR_SIZE
+  ARG_SECTOR_SIZE,
+  ARG_BUFSIZE
       /* FILL ME */
 };
 
@@ -54,16 +55,16 @@ gst_mplex_format_get_type (void)
 
   if (!mplex_format_type) {
     static const GEnumValue mplex_formats[] = {
-      {0, "0", "Generic MPEG-1"},
-      {1, "1", "Standard VCD"},
-      {2, "2", "User VCD"},
-      {3, "3", "Generic MPEG-2"},
-      {4, "4", "Standard SVCD"},
-      {5, "5", "User SVCD"},
-      {6, "6", "VCD Stills sequences"},
-      {7, "7", "SVCD Stills sequences"},
-      {8, "8", "DVD MPEG-2 for dvdauthor"},
-      {9, "9", "DVD MPEG-2"},
+      {0, "Generic MPEG-1", "0"},
+      {1, "Standard VCD", "1"},
+      {2, "User VCD", "2"},
+      {3, "Generic MPEG-2", "3"},
+      {4, "Standard SVCD", "4"},
+      {5, "User SVCD", "5"},
+      {6, "VCD Stills sequences", "6"},
+      {7, "SVCD Stills sequences", "7"},
+      {8, "DVD MPEG-2 for dvdauthor", "8"},
+      {9, "DVD MPEG-2", "9"},
       {0, NULL, NULL},
     };
 
@@ -82,6 +83,7 @@ GstMplexJob::GstMplexJob (void):
 MultiplexJob ()
 {
   /* blabla */
+  bufsize = 0;
 }
 
 /*
@@ -104,13 +106,15 @@ GstMplexJob::initProperties (GObjectClass * klass)
           "Bitrate of output stream in kbps (0 = autodetect)",
           0, 15 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
 
-#if 0
-  {
-  "video-buffer", 1, 0, 'b'}
-  ,
-#endif
-      /* some boolean stuff for headers */
-      g_object_class_install_property (klass, ARG_VBR,
+  /* override decode buffer size otherwise determined by format */
+  g_object_class_install_property (klass, ARG_BUFSIZE,
+      g_param_spec_int ("bufsize", "Decoder buf. size",
+          "Target decoders video buffer size (kB) "
+          "[default determined by format if not explicitly set]",
+          20, 4000, 46, (GParamFlags) G_PARAM_READWRITE));
+
+  /* some boolean stuff for headers */
+  g_object_class_install_property (klass, ARG_VBR,
       g_param_spec_boolean ("vbr", "VBR",
           "Whether the input video stream is variable bitrate",
           FALSE, (GParamFlags) G_PARAM_READWRITE));
@@ -118,17 +122,19 @@ GstMplexJob::initProperties (GObjectClass * klass)
       g_param_spec_boolean ("system-headers", "System headers",
           "Create system header in every pack for generic formats",
           FALSE, (GParamFlags) G_PARAM_READWRITE));
+#if 0                           /* not supported */
   g_object_class_install_property (klass, ARG_SPLIT_SEQUENCE,
       g_param_spec_boolean ("split-sequence", "Split sequence",
           "Simply split a sequence across files "
           "(rather than building run-out/run-in)",
           FALSE, (GParamFlags) G_PARAM_READWRITE));
 
-  /* size of a segment (followed by EOS) */
+  /* size of a segment */
   g_object_class_install_property (klass, ARG_SEGMENT_SIZE,
       g_param_spec_int ("max-segment-size", "Max. segment size",
           "Max. size per segment/file in MB (0 = unlimited)",
           0, 10 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
+#endif
 
   /* packets per pack (generic formats) */
   g_object_class_install_property (klass, ARG_PACKETS_PER_PACK,
@@ -155,7 +161,8 @@ GstMplexJob::getProperty (guint prop_id, GValue * value)
       g_value_set_enum (value, mux_format);
       break;
     case ARG_MUX_BITRATE:
-      g_value_set_int (value, data_rate / 1000);
+      /* convert from bytes back to bits */
+      g_value_set_int (value, (data_rate * 8) / 1000);
       break;
     case ARG_VBR:
       g_value_set_boolean (value, VBR);
@@ -174,6 +181,9 @@ GstMplexJob::getProperty (guint prop_id, GValue * value)
       break;
     case ARG_SECTOR_SIZE:
       g_value_set_int (value, sector_size);
+      break;
+    case ARG_BUFSIZE:
+      g_value_set_int (value, bufsize);
       break;
     default:
       break;
@@ -210,6 +220,9 @@ GstMplexJob::setProperty (guint prop_id, const GValue * value)
       break;
     case ARG_SECTOR_SIZE:
       sector_size = g_value_get_int (value);
+      break;
+    case ARG_BUFSIZE:
+      bufsize = g_value_get_int (value);
       break;
     default:
       break;

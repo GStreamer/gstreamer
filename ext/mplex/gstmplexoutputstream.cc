@@ -1,5 +1,6 @@
 /* GStreamer mplex (mjpegtools) wrapper
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2008 Mark Nauwelaerts <mnauw@users.sourceforge.net>
  *
  * gstmplexoutputstream.hh: gstreamer/mplex output stream wrapper
  *
@@ -25,16 +26,17 @@
 
 #include <string.h>
 
+#include "gstmplex.hh"
 #include "gstmplexoutputstream.hh"
 
 /*
  * Class init functions.
  */
 
-GstMplexOutputStream::GstMplexOutputStream (GstElement * _element, GstPad * _pad):
+GstMplexOutputStream::GstMplexOutputStream (GstMplex * _element, GstPad * _pad):
 OutputStream ()
 {
-  element = _element;
+  mplex = _element;
   pad = _pad;
   size = 0;
 }
@@ -54,21 +56,32 @@ GstMplexOutputStream::Open (void)
 void
 GstMplexOutputStream::Close (void)
 {
-  gst_pad_push (pad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
-  gst_element_set_eos (element);
+  GST_MPLEX_MUTEX_LOCK (mplex);
+  GST_DEBUG_OBJECT (mplex, "closing stream and sending eos");
+  gst_pad_push_event (pad, gst_event_new_eos ());
+  /* notify chain there is no more need to supply buffers */
+  mplex->eos = TRUE;
+  GST_MPLEX_SIGNAL_ALL (mplex);
+  GST_MPLEX_MUTEX_UNLOCK (mplex);
 }
 
 /*
  * Get size of current segment.
  */
 
-off_t GstMplexOutputStream::SegmentSize (void)
+#if GST_MJPEGTOOLS_API >= 10900
+uint64_t
+GstMplexOutputStream::SegmentSize (void)
+#else
+off_t
+GstMplexOutputStream::SegmentSize (void)
+#endif
 {
   return size;
 }
 
 /*
- * Next segment.
+ * Next segment; not really supported.
  */
 
 void
@@ -76,9 +89,8 @@ GstMplexOutputStream::NextSegment (void)
 {
   size = 0;
 
-  /* send EOS. The filesink (or whatever) handles that
-   * and opens a new file. */
-  gst_pad_push (pad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
+  GST_WARNING_OBJECT (mplex, "multiple file output is not supported");
+  /* FIXME: no such filesink behaviour to be expected */
 }
 
 /*
@@ -94,5 +106,8 @@ GstMplexOutputStream::Write (guint8 * data, guint len)
   memcpy (GST_BUFFER_DATA (buf), data, len);
 
   size += len;
-  gst_pad_push (pad, GST_DATA (buf));
+  GST_MPLEX_MUTEX_LOCK (mplex);
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (pad));
+  mplex->srcresult = gst_pad_push (pad, buf);
+  GST_MPLEX_MUTEX_UNLOCK (mplex);
 }

@@ -6,8 +6,10 @@ libgstmplex_la_SOURCES = \
 	gstmplexjob.cc \
 	gstmplexoutputstream.cc
 
-libgstmplex_la_CXXFLAGS = $(GST_CFLAGS) $(MPLEX_CFLAGS)
-libgstmplex_la_LIBADD = $(MPLEX_LIBS)
+libgstmplex_la_CXXFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CXXFLAGS) $(MPLEX_CFLAGS)
+libgstmplex_la_LIBADD = \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(MPLEX_LIBS)
 libgstmplex_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \

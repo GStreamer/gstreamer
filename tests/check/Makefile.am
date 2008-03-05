@@ -35,6 +35,12 @@ else
 check_mpeg2enc =
 endif
 
+if USE_MPLEX
+check_mplex = elements/mplex
+else
+check_mplex =
+endif
+
 if USE_NEON
 check_neon = elements/neonhttpsrc
 else
@@ -55,7 +61,8 @@ endif
 
 
 VALGRIND_TO_FIX = \
-	elements/mpeg2enc
+	elements/mpeg2enc \
+	elements/mplex
 
 # valgrind testing
 VALGRIND_TESTS_DISABLE = \
@@ -64,6 +71,7 @@ VALGRIND_TESTS_DISABLE = \
 check_PROGRAMS = \
 	generic/states \
 	$(check_mpeg2enc)  \
+	$(check_mplex)     \ 
 	$(check_neon)      \
 	$(check_soup)      \
 	$(check_timidity)  \

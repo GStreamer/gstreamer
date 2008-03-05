@@ -23,7 +23,9 @@
 #define __GST_MPLEX_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 #include <multiplexor.hpp>
+#include "gstmplexibitstream.hh"
 #include "gstmplexjob.hh"
 
 G_BEGIN_DECLS
@@ -39,18 +41,74 @@ G_BEGIN_DECLS
 #define GST_IS_MPLEX_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPLEX))
 
+GST_DEBUG_CATEGORY_EXTERN (mplex_debug);
+#define GST_CAT_DEFAULT mplex_debug
+
+#define GST_MPLEX_MUTEX_LOCK(m) G_STMT_START {                          \
+  GST_LOG_OBJECT (m, "locking tlock from thread %p", g_thread_self ()); \
+  g_mutex_lock ((m)->tlock);                                            \
+  GST_LOG_OBJECT (m, "locked tlock from thread %p", g_thread_self ());  \
+} G_STMT_END
+
+#define GST_MPLEX_MUTEX_UNLOCK(m) G_STMT_START {                          \
+  GST_LOG_OBJECT (m, "unlocking tlock from thread %p", g_thread_self ()); \
+  g_mutex_unlock ((m)->tlock);                                            \
+} G_STMT_END
+
+#define GST_MPLEX_WAIT(m, p) G_STMT_START {                          \
+  GST_LOG_OBJECT (m, "thread %p waiting", g_thread_self ());         \
+  g_cond_wait ((p)->cond, (m)->tlock);                               \
+} G_STMT_END
+
+#define GST_MPLEX_SIGNAL(m, p) G_STMT_START {                           \
+  GST_LOG_OBJECT (m, "signalling from thread %p", g_thread_self ());    \
+  g_cond_signal ((p)->cond);                                            \
+} G_STMT_END
+
+#define GST_MPLEX_SIGNAL_ALL(m) G_STMT_START {                        \
+  GST_LOG_OBJECT (m, "signalling all from thread %p", g_thread_self ());    \
+  GSList *walk = m->pads;                                                   \
+  while (walk) {                                                            \
+  	GST_MPLEX_SIGNAL (m, (GstMplexPad *) walk->data);                          \
+  	walk = walk->next;                                                      \
+  }                                                                         \
+} G_STMT_END
+
+typedef struct _GstMplexPad
+{
+  /* associated pad */
+  GstPad *pad;
+  /* with mplex TLOCK */
+  /* adapter collecting buffers for this pad */
+  GstAdapter *adapter;
+  /* no more to expect on this pad */
+  gboolean eos;
+  /* signals counterpart thread to have a look */
+  GCond *cond;
+  /* amount needed by mplex on this stream */
+  guint needed;
+  /* bitstream for this pad */
+  GstMplexIBitStream *bs;
+} GstMplexPad;
+
 typedef struct _GstMplex {
   GstElement parent;
 
   /* pads */
-  GstPad *sinkpad, *srcpad;
+  GSList *pads;
+  GstPad *srcpad;
   guint num_apads, num_vpads;
 
   /* options wrapper */
   GstMplexJob *job;
 
-  /* general muxing object (contains rest) */
-  Multiplexor *mux;
+  /* lock for syncing */
+  GMutex *tlock;
+  /* with TLOCK */
+  /* muxer writer generated eos */
+  gboolean eos;
+  /* flowreturn obtained by muxer task */
+  GstFlowReturn srcresult;
 } GstMplex;
 
 typedef struct _GstMplexClass {

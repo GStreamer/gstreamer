@@ -3,6 +3,29 @@
 	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
 
 	* configure.ac:
+	* ext/Makefile.am:
+	* ext/mplex/Makefile.am:
+	* ext/mplex/gstmplex.cc:
+	* ext/mplex/gstmplex.hh:
+	* ext/mplex/gstmplexibitstream.cc:
+	* ext/mplex/gstmplexibitstream.hh:
+	* ext/mplex/gstmplexjob.cc:
+	* ext/mplex/gstmplexjob.hh:
+	* ext/mplex/gstmplexoutputstream.cc:
+	* ext/mplex/gstmplexoutputstream.hh:
+	Port mplex element to 0.10. Fixes bug #520329.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/mplex.c: (test_sink_event), (setup_src_pad),
+	(teardown_src_pad), (setup_mplex), (cleanup_mplex),
+	(GST_START_TEST), (mplex_suite), (main):
+	Add unit test for the mplex element.
+
+2008-03-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
+
+	* configure.ac:
 	Clean up detection of different mjpegtoolsAPI versions.
 
 	* ext/mpeg2enc/gstmpeg2enc.cc:

@@ -1,5 +1,6 @@
 /* GStreamer mplex (mjpegtools) wrapper
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2008 Mark Nauwelaerts <mnauw@users.sourceforge.net>
  *
  * gstmplexibitstream.hh: gstreamer/mplex input bitstream wrapper
  *
@@ -23,27 +24,30 @@
 #define __GST_MPLEXIBITSTREAM_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
 #include <mjpeg_types.h>
 #include <bits.hpp>
 
+#include "gstmplex.hh"
+
+/* forward declaration; break circular referencing */
+typedef struct _GstMplex GstMplex;
+typedef struct _GstMplexPad GstMplexPad;
+
 class GstMplexIBitStream : public IBitStream {
 public:
-  GstMplexIBitStream (GstPad *pad, 
-		      guint   buf_size = BUFFER_SIZE);
-  ~GstMplexIBitStream (void);
+  GstMplexIBitStream (GstMplexPad *pad, guint buf_size = BUFFER_SIZE);
+  bool ReadBuffer ();
 
 protected:
   /* read data */
-  size_t ReadStreamBytes (uint8_t *buf,
-			  size_t   number);
+  size_t ReadStreamBytes (uint8_t *buf, size_t number);
 
   /* are we at EOS? */
   bool EndOfStream (void);
 
 private:
-  GstPad *pad;
-  GstByteStream *bs;
+  GstMplex *mplex;
+  GstMplexPad *mpad;
   gboolean eos;
 };
 
