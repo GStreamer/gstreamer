@@ -373,6 +373,15 @@ AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
   ])
 ])
 
+dnl **** Dirac ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_DIRAC, true)
+AG_GST_CHECK_FEATURE(DIRAC, [dirac], dirac, [
+  PKG_CHECK_MODULES(DIRAC, dirac >= 0.9, HAVE_DIRAC="yes", [
+    HAVE_DIRAC="no"
+    AC_MSG_RESULT(no)
+  ])
+])
+
 dnl *** DTS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DTS, true)
 AG_GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
@@ -1156,6 +1165,7 @@ ext/alsaspdif/Makefile
 ext/bz2/Makefile
 ext/cdaudio/Makefile
 ext/dc1394/Makefile
+ext/dirac/Makefile
 ext/directfb/Makefile
 ext/divx/Makefile
 ext/dts/Makefile

@@ -23,22 +23,27 @@
 
 #include <gst/gst.h>
 
-#include "gstdiracdec.h"
+GType gst_dirac_dec_get_type (void);
+GType gst_dirac_enc_get_type (void);
+
+GST_DEBUG_CATEGORY (dirac_debug);
+#define GST_CAT_DEFAULT dirac_debug
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-#if 0
+  GST_DEBUG_CATEGORY_INIT (dirac_debug, "dirac", 0, "Dirac elements");
+
   if (!gst_element_register (plugin, "diracenc", GST_RANK_NONE,
-          gst_diracenc_get_type ())) {
+          gst_dirac_enc_get_type ())) {
+    return FALSE;
+  }
+#if 0
+  if (!gst_element_register (plugin, "diracdec", GST_RANK_MARGINAL,
+          gst_dirac_dec_get_type ())) {
     return FALSE;
   }
 #endif
-
-  if (!gst_element_register (plugin, "diracdec", GST_RANK_PRIMARY,
-          GST_TYPE_DIRACDEC)) {
-    return FALSE;
-  }
 
   return TRUE;
 }
@@ -46,4 +51,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "dirac",
-    "Dirac plugin", plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    "Dirac plugin", plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME,
+    GST_PACKAGE_ORIGIN)

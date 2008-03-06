@@ -1,3 +1,13 @@
+2008-03-05  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/dirac/Makefile.am:
+	* ext/dirac/gstdirac.cc:
+	* ext/dirac/gstdiracenc.cc:
+	  Rewrite Dirac encoder plugin based on Schroedinger gstreamer
+	  elements.
+
 2008-03-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Mark Nauwelaerts <manauw at skynet dot be>

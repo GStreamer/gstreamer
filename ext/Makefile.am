@@ -52,11 +52,11 @@ else
 DC1394_DIR=
 endif
 
-# if USE_DIRAC
-# DIRAC_DIR=dirac
-# else
+if USE_DIRAC
+DIRAC_DIR=dirac
+else
 DIRAC_DIR=
-# endif
+endif
 
 if USE_DIRECTFB
 DIRECTFB_DIR=directfb
@@ -343,6 +343,7 @@ DIST_SUBDIRS = \
 	bz2 \
 	cdaudio \
 	dc1394 \
+	dirac \
 	directfb \
 	faac \
 	faad \
