@@ -1,3 +1,10 @@
+2008-03-06  Michael Smith <msmith@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_pixfmt_to_caps):
+	  Fix masks for RGBA32 caps. Fixes colours when decoding using
+	  ffdec_qtrle. Follows an identical fix in the ffmpegcolorspace copy of
+	  this code (revision 1.29).
+
 2008-03-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_class_init),
