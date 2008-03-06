@@ -242,6 +242,42 @@ gst_matroska_track_free (GstMatroskaTrackContext * track)
   g_free (track);
 }
 
+/*
+ * Returns the aggregated GstFlowReturn.
+ */
+static GstFlowReturn
+gst_matroska_demux_combine_flows (GstMatroskaDemux * demux,
+    GstMatroskaTrackContext * track, GstFlowReturn ret)
+{
+  guint i;
+
+  /* store the value */
+  track->last_flow = ret;
+
+  /* any other error that is not-linked can be returned right away */
+  if (ret != GST_FLOW_NOT_LINKED)
+    goto done;
+
+  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
+  for (i = 0; i < GST_MATROSKA_DEMUX_MAX_STREAMS; i++) {
+    GstMatroskaTrackContext *ostream = demux->src[i];
+
+    if (ostream == NULL)
+      continue;
+
+    ret = ostream->last_flow;
+    /* some other return value (must be SUCCESS but we can return
+     * other values as well) */
+    if (ret != GST_FLOW_NOT_LINKED)
+      goto done;
+  }
+  /* if we get here, all other pads were unlinked and we return
+   * NOT_LINKED then */
+done:
+  GST_LOG_OBJECT (demux, "combined return %s", gst_flow_get_name (ret));
+  return ret;
+}
+
 static void
 gst_matroska_demux_reset (GstElement * element)
 {
@@ -281,18 +317,12 @@ gst_matroska_demux_reset (GstElement * element)
   /* reset timers */
   demux->clock = NULL;
   demux->time_scale = 1000000;
-  demux->duration = 0;
-  demux->pos = 0;
   demux->created = G_MININT64;
 
   demux->metadata_parsed = FALSE;
   demux->index_parsed = FALSE;
 
-  demux->segment_rate = 1.0;
-  demux->segment_start = GST_CLOCK_TIME_NONE;
-  demux->segment_stop = GST_CLOCK_TIME_NONE;
-  demux->segment_play = FALSE;
-  demux->seek_pending = FALSE;
+  gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 }
 
 static gint
@@ -325,22 +355,21 @@ gst_matroska_demux_encoding_cmp (gconstpointer a, gconstpointer b)
   return (gint) enc_b->order - (gint) enc_a->order;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
     GstMatroskaDemux * demux, GstMatroskaTrackContext * context)
 {
-  gboolean res = TRUE;
+  GstFlowReturn ret;
   guint32 id;
 
-  if (!gst_ebml_read_master (ebml, &id))
-    return FALSE;
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+    return ret;
 
   context->encodings =
       g_array_sized_new (FALSE, FALSE, sizeof (GstMatroskaTrackEncoding), 1);
 
-  while (res) {
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
-      res = FALSE;
+  while (ret == GST_FLOW_OK) {
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK) {
       break;
     } else if (demux->level_up > 0) {
       demux->level_up--;
@@ -351,14 +380,14 @@ gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
       case GST_MATROSKA_ID_CONTENTENCODING:{
         GstMatroskaTrackEncoding enc = { 0, };
 
-        if (!gst_ebml_read_master (ebml, &id)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
           break;
         }
 
-        while (res) {
-          if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
-            res = FALSE;
+        while (ret == GST_FLOW_OK) {
+          if ((ret =
+                  gst_ebml_peek_id (ebml, &demux->level_up,
+                      &id)) != GST_FLOW_OK) {
             break;
           } else if (demux->level_up > 0) {
             demux->level_up--;
@@ -369,8 +398,7 @@ gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
             case GST_MATROSKA_ID_CONTENTENCODINGORDER:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               enc.order = num;
@@ -379,8 +407,7 @@ gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
             case GST_MATROSKA_ID_CONTENTENCODINGSCOPE:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               if (num > 7)
@@ -392,8 +419,7 @@ gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
             case GST_MATROSKA_ID_CONTENTENCODINGTYPE:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               if (num > 1)
@@ -404,15 +430,15 @@ gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
             }
             case GST_MATROSKA_ID_CONTENTCOMPRESSION:{
 
-              if (!gst_ebml_read_master (ebml, &id)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
                 break;
               }
 
-              while (res) {
+              while (ret == GST_FLOW_OK) {
 
-                if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
-                  res = FALSE;
+                if ((ret =
+                        gst_ebml_peek_id (ebml, &demux->level_up,
+                            &id)) != GST_FLOW_OK) {
                   break;
                 } else if (demux->level_up > 0) {
                   demux->level_up--;
@@ -423,8 +449,9 @@ gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
                   case GST_MATROSKA_ID_CONTENTCOMPALGO:{
                     guint64 num;
 
-                    if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                      res = FALSE;
+                    if ((ret =
+                            gst_ebml_read_uint (ebml, &id,
+                                &num)) != GST_FLOW_OK) {
                       break;
                     }
                     if (num > 3)
@@ -438,8 +465,9 @@ gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
                     guint64 size;
 
 
-                    if (!gst_ebml_read_binary (ebml, &id, &data, &size)) {
-                      res = FALSE;
+                    if ((ret =
+                            gst_ebml_read_binary (ebml, &id, &data,
+                                &size)) != GST_FLOW_OK) {
                       break;
                     }
                     enc.comp_settings = data;
@@ -449,8 +477,7 @@ gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
                   default:
                     GST_WARNING ("Unknown track compression header entry 0x%x"
                         " - ignoring", id);
-                    if (!gst_ebml_read_skip (ebml))
-                      res = FALSE;
+                    ret = gst_ebml_read_skip (ebml);
                     break;
                 }
 
@@ -468,8 +495,7 @@ gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
             default:
               GST_WARNING
                   ("Unknown track encoding header entry 0x%x - ignoring", id);
-              if (!gst_ebml_read_skip (ebml))
-                res = FALSE;
+              ret = gst_ebml_read_skip (ebml);
               break;
           }
 
@@ -486,8 +512,7 @@ gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
       default:
         GST_WARNING ("Unknown track encodings header entry 0x%x - ignoring",
             id);
-        if (!gst_ebml_read_skip (ebml))
-          res = FALSE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -500,10 +525,10 @@ gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
   /* Sort encodings according to their order */
   g_array_sort (context->encodings, gst_matroska_demux_encoding_cmp);
 
-  return res;
+  return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (demux);
@@ -512,7 +537,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   GstPadTemplate *templ = NULL;
   GstCaps *caps = NULL;
   gchar *padname = NULL;
-  gboolean res = TRUE;
+  GstFlowReturn ret;
   guint32 id;
   GstTagList *list = NULL;
   gchar *codec = NULL;
@@ -532,16 +557,16 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   context->default_duration = 0;
   context->pos = 0;
   context->set_discont = TRUE;
+  context->last_flow = GST_FLOW_OK;
   demux->num_streams++;
 
   /* start with the master */
-  if (!gst_ebml_read_master (ebml, &id))
-    return FALSE;
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+    return ret;
 
   /* try reading the trackentry headers */
-  while (res) {
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
-      res = FALSE;
+  while (ret == GST_FLOW_OK) {
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK) {
       break;
     } else if (demux->level_up > 0) {
       demux->level_up--;
@@ -553,20 +578,17 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_TRACKNUMBER:{
         guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
           break;
         }
         context->num = num;
         break;
       }
-
         /* track UID (unique identifier) */
       case GST_MATROSKA_ID_TRACKUID:{
         guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
           break;
         }
         context->uid = num;
@@ -577,8 +599,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_TRACKTYPE:{
         guint64 track_type;
 
-        if (!gst_ebml_read_uint (ebml, &id, &track_type)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_uint (ebml, &id, &track_type)) != GST_FLOW_OK) {
           break;
         }
 
@@ -621,18 +642,18 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
         if (!gst_matroska_track_init_video_context (&context)) {
           GST_WARNING
               ("trackvideo EBML entry in non-video track - ignoring track");
-          res = FALSE;
+          ret = GST_FLOW_ERROR;
           break;
-        } else if (!gst_ebml_read_master (ebml, &id)) {
-          res = FALSE;
+        } else if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
           break;
         }
         videocontext = (GstMatroskaTrackVideoContext *) context;
         demux->src[demux->num_streams - 1] = context;
 
-        while (res) {
-          if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
-            res = FALSE;
+        while (ret == GST_FLOW_OK) {
+          if ((ret =
+                  gst_ebml_peek_id (ebml, &demux->level_up,
+                      &id)) != GST_FLOW_OK) {
             break;
           } else if (demux->level_up > 0) {
             demux->level_up--;
@@ -644,8 +665,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_TRACKDEFAULTDURATION:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               context->default_duration = num;
@@ -656,8 +676,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_VIDEOFRAMERATE:{
               gdouble num;
 
-              if (!gst_ebml_read_float (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_float (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               if (num != 0.0) {
@@ -672,8 +691,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_VIDEODISPLAYWIDTH:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               videocontext->display_width = num;
@@ -685,8 +703,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_VIDEODISPLAYHEIGHT:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               videocontext->display_height = num;
@@ -698,8 +715,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_VIDEOPIXELWIDTH:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               videocontext->pixel_width = num;
@@ -711,8 +727,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_VIDEOPIXELHEIGHT:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               videocontext->pixel_height = num;
@@ -724,8 +739,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_VIDEOFLAGINTERLACED:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               if (num)
@@ -741,8 +755,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_VIDEOSTEREOMODE:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               if (num != GST_MATROSKA_EYE_MODE_MONO &&
@@ -760,8 +773,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_VIDEOASPECTRATIO:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               if (num != GST_MATROSKA_ASPECT_RATIO_MODE_FREE &&
@@ -779,8 +791,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_VIDEOCOLOURSPACE:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               videocontext->fourcc = num;
@@ -793,8 +804,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
               /* pass-through */
 
             case GST_EBML_ID_VOID:
-              if (!gst_ebml_read_skip (ebml))
-                res = FALSE;
+              ret = gst_ebml_read_skip (ebml);
               break;
           }
 
@@ -813,18 +823,18 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
         if (!gst_matroska_track_init_audio_context (&context)) {
           GST_WARNING
               ("trackaudio EBML entry in non-audio track - ignoring track");
-          res = FALSE;
+          ret = GST_FLOW_ERROR;
           break;
-        } else if (!gst_ebml_read_master (ebml, &id)) {
-          res = FALSE;
+        } else if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
           break;
         }
         audiocontext = (GstMatroskaTrackAudioContext *) context;
         demux->src[demux->num_streams - 1] = context;
 
-        while (res) {
-          if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
-            res = FALSE;
+        while (ret == GST_FLOW_OK) {
+          if ((ret =
+                  gst_ebml_peek_id (ebml, &demux->level_up,
+                      &id)) != GST_FLOW_OK) {
             break;
           } else if (demux->level_up > 0) {
             demux->level_up--;
@@ -836,8 +846,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_AUDIOSAMPLINGFREQ:{
               gdouble num;
 
-              if (!gst_ebml_read_float (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_float (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               audiocontext->samplerate = num;
@@ -848,8 +857,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_AUDIOBITDEPTH:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               audiocontext->bitdepth = num;
@@ -860,8 +868,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             case GST_MATROSKA_ID_AUDIOCHANNELS:{
               guint64 num;
 
-              if (!gst_ebml_read_uint (ebml, &id, &num)) {
-                res = FALSE;
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
                 break;
               }
               audiocontext->channels = num;
@@ -874,8 +881,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
               /* pass-through */
 
             case GST_EBML_ID_VOID:
-              if (!gst_ebml_read_skip (ebml))
-                res = FALSE;
+              ret = gst_ebml_read_skip (ebml);
               break;
           }
 
@@ -891,8 +897,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_CODECID:{
         gchar *text;
 
-        if (!gst_ebml_read_ascii (ebml, &id, &text)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_ascii (ebml, &id, &text)) != GST_FLOW_OK) {
           break;
         }
         context->codec_id = text;
@@ -904,8 +909,9 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
         guint8 *data;
         guint64 size;
 
-        if (!gst_ebml_read_binary (ebml, &id, &data, &size)) {
-          res = FALSE;
+        if ((ret =
+                gst_ebml_read_binary (ebml, &id, &data,
+                    &size)) != GST_FLOW_OK) {
           break;
         }
         context->codec_priv = data;
@@ -918,8 +924,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_CODECNAME:{
         gchar *text;
 
-        if (!gst_ebml_read_utf8 (ebml, &id, &text)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK) {
           break;
         }
         context->codec_name = text;
@@ -930,8 +935,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_TRACKNAME:{
         gchar *text;
 
-        if (!gst_ebml_read_utf8 (ebml, &id, &text)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK) {
           break;
         }
         context->name = text;
@@ -943,8 +947,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_TRACKLANGUAGE:{
         gchar *text;
 
-        if (!gst_ebml_read_utf8 (ebml, &id, &text)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK) {
           break;
         }
 
@@ -961,8 +964,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_TRACKFLAGENABLED:{
         guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
           break;
         }
         if (num)
@@ -976,8 +978,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_TRACKFLAGDEFAULT:{
         guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
           break;
         }
         if (num)
@@ -992,8 +993,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_TRACKFLAGLACING:{
         guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
           break;
         }
         if (num)
@@ -1007,8 +1007,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_TRACKDEFAULTDURATION:{
         guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
           break;
         }
         context->default_duration = num;
@@ -1016,9 +1015,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       }
 
       case GST_MATROSKA_ID_CONTENTENCODINGS:{
-        if (!gst_matroska_demux_read_track_encodings (ebml, demux, context)) {
-          res = FALSE;
-        }
+        ret = gst_matroska_demux_read_track_encodings (ebml, demux, context);
         break;
       }
 
@@ -1032,8 +1029,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_TRACKMINCACHE:
       case GST_MATROSKA_ID_TRACKMAXCACHE:
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
-          res = FALSE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -1043,8 +1039,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
     }
   }
 
-  if (context->type == 0 || context->codec_id == NULL || !res) {
-    if (res)
+  if (context->type == 0 || context->codec_id == NULL || ret != GST_FLOW_OK) {
+    if (ret == GST_FLOW_OK)
       GST_WARNING ("Unknown stream/codec in track entry header");
 
     demux->num_streams--;
@@ -1053,7 +1049,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       gst_matroska_track_free (context);
     }
 
-    return res;
+    return ret;
   }
 
   /* now create the GStreamer connectivity */
@@ -1179,7 +1175,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   g_free (padname);
 
   /* tadaah! */
-  return TRUE;
+  return ret;
 }
 
 static const GstQueryType *
@@ -1215,7 +1211,7 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
       }
 
       GST_OBJECT_LOCK (demux);
-      gst_query_set_position (query, GST_FORMAT_TIME, demux->pos);
+      gst_query_set_position (query, GST_FORMAT_TIME, demux->segment.last_stop);
       GST_OBJECT_UNLOCK (demux);
 
       res = TRUE;
@@ -1233,7 +1229,7 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
       }
 
       GST_OBJECT_LOCK (demux);
-      gst_query_set_duration (query, GST_FORMAT_TIME, demux->duration);
+      gst_query_set_duration (query, GST_FORMAT_TIME, demux->segment.duration);
       GST_OBJECT_UNLOCK (demux);
 
       res = TRUE;
@@ -1404,24 +1400,24 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   if (cur == GST_CLOCK_TIME_NONE)
     cur = 0;
   if (stop == GST_CLOCK_TIME_NONE)
-    stop = demux->duration;
+    stop = demux->segment.duration;
 
   if (cur_type == GST_SEEK_TYPE_SET)
     segment_start = cur;
   else if (cur_type == GST_SEEK_TYPE_CUR)
-    segment_start = demux->segment_start + cur;
+    segment_start = demux->segment.start + cur;
   else
-    segment_start = demux->segment_start;
+    segment_start = demux->segment.start;
 
   if (stop_type == GST_SEEK_TYPE_SET)
     segment_stop = stop;
   else if (stop_type == GST_SEEK_TYPE_CUR)
-    segment_stop = demux->segment_stop + stop;
+    segment_stop = demux->segment.stop + stop;
   else
-    segment_stop = demux->segment_stop;
+    segment_stop = demux->segment.stop;
 
-  segment_start = CLAMP (segment_start, 0, demux->duration);
-  segment_stop = CLAMP (segment_stop, 0, demux->duration);
+  segment_start = CLAMP (segment_start, 0, demux->segment.duration);
+  segment_stop = CLAMP (segment_stop, 0, demux->segment.duration);
 
   GST_DEBUG ("New segment positions: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
       GST_TIME_ARGS (segment_start), GST_TIME_ARGS (segment_stop));
@@ -1453,42 +1449,48 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
 
   GST_DEBUG ("Committing new seek segment");
 
-  demux->segment_rate = rate;
-  demux->segment_play = !!(flags & GST_SEEK_FLAG_SEGMENT);
+  demux->segment.rate = rate;
+  demux->segment.flags = flags;
 
-  demux->segment_start = segment_start;
-  demux->segment_stop = segment_stop;
+  demux->segment.start = segment_start;
+  demux->segment.stop = segment_stop;
 
   GST_OBJECT_UNLOCK (demux);
 
   /* notify start of new segment */
-  if (demux->segment_play) {
+  if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
     GstMessage *msg;
 
     msg = gst_message_new_segment_start (GST_OBJECT (demux),
-        GST_FORMAT_TIME, demux->segment_start);
+        GST_FORMAT_TIME, demux->segment.start);
     gst_element_post_message (GST_ELEMENT (demux), msg);
   }
 
   newsegment_event = gst_event_new_new_segment (FALSE, rate,
       GST_FORMAT_TIME, segment_start, segment_stop, segment_start);
 
-  GST_DEBUG ("Stopping flush");
   if (flush) {
+    GST_DEBUG ("Stopping flush");
+    gst_pad_push_event (demux->sinkpad, gst_event_new_flush_stop ());
     gst_matroska_demux_send_event (demux, gst_event_new_flush_stop ());
+  } else if (demux->segment_running) {
+    /* FIXME, the current segment was still running when we performed the
+     * seek, we need to close the current segment */
+    GST_DEBUG ("Closing currently running segment");
   }
-  gst_pad_push_event (demux->sinkpad, gst_event_new_flush_stop ());
 
   /* send newsegment event to all source pads and update the time */
   gst_matroska_demux_send_event (demux, newsegment_event);
   for (i = 0; i < demux->num_streams; i++) {
     demux->src[i]->pos = entry->time;
     demux->src[i]->set_discont = TRUE;
+    demux->src[i]->last_flow = GST_FLOW_OK;
   }
-  demux->pos = entry->time;
+  demux->segment.last_stop = entry->time;
 
   /* restart our task since it might have been stopped when we did the
    * flush. */
+  demux->segment_running = TRUE;
   gst_pad_start_task (demux->sinkpad, (GstTaskFunction) gst_matroska_demux_loop,
       demux->sinkpad);
 
@@ -1498,14 +1500,14 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   return TRUE;
 
 seek_error:
-
-  /* FIXME: shouldn't we either make it a real error or start the task
-   * function again so that things can continue from where they left off? */
-  GST_DEBUG ("Got a seek error");
-  GST_OBJECT_UNLOCK (demux);
-  GST_PAD_STREAM_UNLOCK (demux->sinkpad);
-
-  return FALSE;
+  {
+    /* FIXME: shouldn't we either make it a real error or start the task
+     * function again so that things can continue from where they left off? */
+    GST_DEBUG ("Got a seek error");
+    GST_OBJECT_UNLOCK (demux);
+    GST_PAD_STREAM_UNLOCK (demux->sinkpad);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -1537,38 +1539,39 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_init_stream (GstMatroskaDemux * demux)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
   guint32 id;
   gchar *doctype;
   guint version;
+  GstFlowReturn ret;
 
-  if (!gst_ebml_read_header (ebml, &doctype, &version))
-    return FALSE;
+  if ((ret = gst_ebml_read_header (ebml, &doctype, &version)) != GST_FLOW_OK)
+    return ret;
 
   if (!doctype || strcmp (doctype, "matroska") != 0) {
     GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
         ("Input is not a matroska stream (doctype=%s)",
             doctype ? doctype : "none"));
     g_free (doctype);
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
   g_free (doctype);
   if (version > 2) {
     GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
         ("Demuxer version (2) is too old to read stream version %d", version));
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   /* find segment, must be the next element */
   while (1) {
     guint last_level;
 
-    if (!gst_ebml_peek_id (ebml, &last_level, &id)) {
+    if ((ret = gst_ebml_peek_id (ebml, &last_level, &id)) != GST_FLOW_OK) {
       GST_DEBUG_OBJECT (demux, "gst_ebml_peek_id() failed!");
-      return FALSE;
+      return ret;
     }
 
     if (id == GST_MATROSKA_ID_SEGMENT)
@@ -1578,33 +1581,32 @@ gst_matroska_demux_init_stream (GstMatroskaDemux * demux)
     GST_WARNING ("Expected a Segment ID (0x%x), but received 0x%x!",
         GST_MATROSKA_ID_SEGMENT, id);
 
-    if (!gst_ebml_read_skip (ebml))
-      return FALSE;
+    if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+      return ret;
   }
 
   /* we now have a EBML segment */
-  if (!gst_ebml_read_master (ebml, &id)) {
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (demux, "gst_ebml_read_master() failed!");
-    return FALSE;
+    return ret;
   }
 
   /* seeks are from the beginning of the segment,
    * after the segment ID/length */
   demux->ebml_segment_start = ebml->offset;
 
-  return TRUE;
+  return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_parse_tracks (GstMatroskaDemux * demux)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
-  gboolean res = TRUE;
+  GstFlowReturn ret = GST_FLOW_OK;
   guint32 id;
 
-  while (res) {
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
-      res = FALSE;
+  while (ret == GST_FLOW_OK) {
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK) {
       break;
     } else if (demux->level_up) {
       demux->level_up--;
@@ -1614,8 +1616,7 @@ gst_matroska_demux_parse_tracks (GstMatroskaDemux * demux)
     switch (id) {
         /* one track within the "all-tracks" header */
       case GST_MATROSKA_ID_TRACKENTRY:
-        if (!gst_matroska_demux_add_stream (demux))
-          res = FALSE;
+        ret = gst_matroska_demux_add_stream (demux);
         break;
 
       default:
@@ -1623,8 +1624,7 @@ gst_matroska_demux_parse_tracks (GstMatroskaDemux * demux)
         /* fall-through */
 
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
-          res = FALSE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -1634,26 +1634,26 @@ gst_matroska_demux_parse_tracks (GstMatroskaDemux * demux)
     }
   }
 
-  return res;
+  return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_parse_index_cuetrack (GstMatroskaDemux * demux,
     gboolean prevent_eos, GstMatroskaIndex * idx, guint64 length)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
-  gboolean got_error = FALSE;
   guint32 id;
+  GstFlowReturn ret;
 
-  if (!gst_ebml_read_master (ebml, &id))
-    return FALSE;
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+    return ret;
 
-  while (!got_error) {
+  while (TRUE) {
     if (prevent_eos && length == ebml->offset)
       break;
 
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-      return FALSE;
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
 
     if (demux->level_up) {
       demux->level_up--;
@@ -1666,7 +1666,7 @@ gst_matroska_demux_parse_index_cuetrack (GstMatroskaDemux * demux,
       {
         guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num))
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
           goto error;
 
         idx->track = num;
@@ -1678,7 +1678,7 @@ gst_matroska_demux_parse_index_cuetrack (GstMatroskaDemux * demux,
       {
         guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num))
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
           goto error;
 
         idx->pos = num;
@@ -1690,7 +1690,7 @@ gst_matroska_demux_parse_index_cuetrack (GstMatroskaDemux * demux,
         /* fall-through */
 
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
+        if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
           goto error;
         break;
     }
@@ -1701,26 +1701,26 @@ gst_matroska_demux_parse_index_cuetrack (GstMatroskaDemux * demux,
     }
   }
 
-  return TRUE;
+  return ret;
 
 error:
   if (demux->level_up)
     demux->level_up--;
 
-  return FALSE;
+  return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_parse_index_pointentry (GstMatroskaDemux * demux,
     gboolean prevent_eos, guint64 length)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
   GstMatroskaIndex idx;
-  gboolean got_error = FALSE;
   guint32 id;
+  GstFlowReturn ret;
 
-  if (!gst_ebml_read_master (ebml, &id))
-    return FALSE;
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+    return ret;
 
   /* in the end, we hope to fill one entry with a
    * timestamp, a file position and a tracknum */
@@ -1728,12 +1728,12 @@ gst_matroska_demux_parse_index_pointentry (GstMatroskaDemux * demux,
   idx.time = (guint64) - 1;
   idx.track = (guint16) - 1;
 
-  while (!got_error) {
+  while (ret == GST_FLOW_OK) {
     if (prevent_eos && length == ebml->offset)
       break;
 
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-      return FALSE;
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
 
     if (demux->level_up) {
       demux->level_up--;
@@ -1746,9 +1746,7 @@ gst_matroska_demux_parse_index_pointentry (GstMatroskaDemux * demux,
       {
         guint64 time;
 
-        if (!gst_ebml_read_uint (ebml, &id, &time)) {
-          got_error = TRUE;
-        } else {
+        if ((ret = gst_ebml_read_uint (ebml, &id, &time)) == GST_FLOW_OK) {
           idx.time = time * demux->time_scale;
         }
         break;
@@ -1757,10 +1755,8 @@ gst_matroska_demux_parse_index_pointentry (GstMatroskaDemux * demux,
         /* position in the file + track to which it belongs */
       case GST_MATROSKA_ID_CUETRACKPOSITION:
       {
-        if (!gst_matroska_demux_parse_index_cuetrack (demux, prevent_eos, &idx,
-                length)) {
-          got_error = TRUE;
-        }
+        ret = gst_matroska_demux_parse_index_cuetrack (demux, prevent_eos, &idx,
+            length);
         break;
       }
 
@@ -1769,8 +1765,7 @@ gst_matroska_demux_parse_index_pointentry (GstMatroskaDemux * demux,
         /* fall-through */
 
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
-          got_error = TRUE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -1797,30 +1792,30 @@ gst_matroska_demux_parse_index_pointentry (GstMatroskaDemux * demux,
     demux->num_indexes++;
   }
 
-  return (!got_error);
+  return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_parse_index (GstMatroskaDemux * demux, gboolean prevent_eos)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
-  gboolean got_error = FALSE;
   guint32 id;
   guint64 length = 0;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (prevent_eos) {
     length = gst_ebml_read_get_length (ebml);
   }
 
-  while (!got_error) {
+  while (ret == GST_FLOW_OK) {
     /* We're an element that can be seeked to. If we are, then
      * we want to prevent EOS, since that'll kill us. So we cache
      * file size and seek until there, and don't call EOS upon os. */
     if (prevent_eos && length == ebml->offset)
       break;
 
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-      return FALSE;
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
 
     if (demux->level_up) {
       demux->level_up--;
@@ -1830,9 +1825,8 @@ gst_matroska_demux_parse_index (GstMatroskaDemux * demux, gboolean prevent_eos)
     switch (id) {
         /* one single index entry ('point') */
       case GST_MATROSKA_ID_POINTENTRY:
-        if (!gst_matroska_demux_parse_index_pointentry (demux, prevent_eos,
-                length))
-          got_error = TRUE;
+        ret = gst_matroska_demux_parse_index_pointentry (demux, prevent_eos,
+            length);
         break;
 
       default:
@@ -1840,8 +1834,7 @@ gst_matroska_demux_parse_index (GstMatroskaDemux * demux, gboolean prevent_eos)
         /* fall-through */
 
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
-          got_error = TRUE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -1851,19 +1844,18 @@ gst_matroska_demux_parse_index (GstMatroskaDemux * demux, gboolean prevent_eos)
     }
   }
 
-  return (!got_error);
+  return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
-  gboolean res = TRUE;
+  GstFlowReturn ret = GST_FLOW_OK;
   guint32 id;
 
-  while (res) {
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
-      res = FALSE;
+  while (ret == GST_FLOW_OK) {
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK) {
       break;
     } else if (demux->level_up) {
       demux->level_up--;
@@ -1875,8 +1867,7 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_TIMECODESCALE:{
         guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK) {
           break;
         }
         demux->time_scale = num;
@@ -1887,23 +1878,20 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
         gdouble num;
         GstClockTime dur;
 
-        if (!gst_ebml_read_float (ebml, &id, &num)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_float (ebml, &id, &num)) != GST_FLOW_OK) {
           break;
         }
-
         dur = gst_gdouble_to_guint64 (num *
             gst_guint64_to_gdouble (demux->time_scale));
         if (GST_CLOCK_TIME_IS_VALID (dur) && dur <= G_MAXINT64)
-          demux->duration = dur;
+          demux->segment.duration = dur;
         break;
       }
 
       case GST_MATROSKA_ID_WRITINGAPP:{
         gchar *text;
 
-        if (!gst_ebml_read_utf8 (ebml, &id, &text)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK) {
           break;
         }
         demux->writing_app = text;
@@ -1913,8 +1901,7 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_MUXINGAPP:{
         gchar *text;
 
-        if (!gst_ebml_read_utf8 (ebml, &id, &text)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK) {
           break;
         }
         demux->muxing_app = text;
@@ -1924,8 +1911,7 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_DATEUTC:{
         gint64 time;
 
-        if (!gst_ebml_read_date (ebml, &id, &time)) {
-          res = FALSE;
+        if ((ret = gst_ebml_read_date (ebml, &id, &time)) != GST_FLOW_OK) {
           break;
         }
         demux->created = time;
@@ -1934,8 +1920,7 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
 
       case GST_MATROSKA_ID_SEGMENTUID:{
         /* TODO not yet implemented. */
-        if (!gst_ebml_read_skip (ebml))
-          res = FALSE;
+        ret = gst_ebml_read_skip (ebml);
         break;
       }
 
@@ -1944,8 +1929,7 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
         /* fall-through */
 
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
-          res = FALSE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -1955,10 +1939,10 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
     }
   }
 
-  return res;
+  return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
     gboolean prevent_eos, guint64 length, GstTagList ** p_taglist)
 {
@@ -1980,21 +1964,21 @@ gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
     GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}
   };
   GstEbmlRead *ebml = GST_EBML_READ (demux);
-  gboolean got_error = FALSE;
+  GstFlowReturn ret;
   guint32 id;
   gchar *value = NULL;
   gchar *tag = NULL;
 
-  if (!gst_ebml_read_master (ebml, &id))
-    return FALSE;
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+    return ret;
 
-  while (!got_error) {
+  while (ret == GST_FLOW_OK) {
     /* read all sub-entries */
     if (prevent_eos && length == ebml->offset)
       break;
 
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-      return FALSE;
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
 
     if (demux->level_up) {
       demux->level_up--;
@@ -2004,14 +1988,14 @@ gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
     switch (id) {
       case GST_MATROSKA_ID_TAGNAME:
         g_free (tag);
-        if (!gst_ebml_read_ascii (ebml, &id, &tag))
-          got_error = TRUE;
+        tag = NULL;
+        ret = gst_ebml_read_ascii (ebml, &id, &tag);
         break;
 
       case GST_MATROSKA_ID_TAGSTRING:
         g_free (value);
-        if (!gst_ebml_read_utf8 (ebml, &id, &value))
-          got_error = TRUE;
+        value = NULL;
+        ret = gst_ebml_read_utf8 (ebml, &id, &value);
         break;
 
       default:
@@ -2019,8 +2003,7 @@ gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
         /* fall-through */
 
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
-          got_error = TRUE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -2058,27 +2041,27 @@ gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
   g_free (tag);
   g_free (value);
 
-  return (!got_error);
+  return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_parse_metadata_id_tag (GstMatroskaDemux * demux,
     gboolean prevent_eos, guint64 length, GstTagList ** p_taglist)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
-  gboolean got_error = FALSE;
   guint32 id;
+  GstFlowReturn ret;
 
-  if (!gst_ebml_read_master (ebml, &id))
-    return FALSE;
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+    return ret;
 
-  while (!got_error) {
+  while (ret == GST_FLOW_OK) {
     /* read all sub-entries */
     if (prevent_eos && length == ebml->offset)
       break;
 
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-      return FALSE;
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
 
     if (demux->level_up) {
       demux->level_up--;
@@ -2087,10 +2070,8 @@ gst_matroska_demux_parse_metadata_id_tag (GstMatroskaDemux * demux,
 
     switch (id) {
       case GST_MATROSKA_ID_SIMPLETAG:
-        if (!gst_matroska_demux_parse_metadata_id_simple_tag (demux,
-                prevent_eos, length, p_taglist)) {
-          got_error = TRUE;
-        }
+        ret = gst_matroska_demux_parse_metadata_id_simple_tag (demux,
+            prevent_eos, length, p_taglist);
         break;
 
       default:
@@ -2098,8 +2079,7 @@ gst_matroska_demux_parse_metadata_id_tag (GstMatroskaDemux * demux,
         /* fall-through */
 
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
-          got_error = TRUE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -2109,16 +2089,16 @@ gst_matroska_demux_parse_metadata_id_tag (GstMatroskaDemux * demux,
     }
   }
 
-  return (!got_error);
+  return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
     gboolean prevent_eos)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
   GstTagList *taglist = gst_tag_list_new ();
-  gboolean got_error = FALSE;
+  GstFlowReturn ret = GST_FLOW_OK;
   guint64 length = 0;
   guint32 id;
 
@@ -2126,15 +2106,15 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
     length = gst_ebml_read_get_length (ebml);
   }
 
-  while (!got_error) {
+  while (ret == GST_FLOW_OK) {
     /* We're an element that can be seeked to. If we are, then
      * we want to prevent EOS, since that'll kill us. So we cache
      * file size and seek until there, and don't call EOS upon os. */
     if (prevent_eos && length == ebml->offset)
       break;
 
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-      return FALSE;
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
 
     if (demux->level_up) {
       demux->level_up--;
@@ -2143,10 +2123,8 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
 
     switch (id) {
       case GST_MATROSKA_ID_TAG:
-        if (!gst_matroska_demux_parse_metadata_id_tag (demux, prevent_eos,
-                length, &taglist)) {
-          got_error = TRUE;
-        }
+        ret = gst_matroska_demux_parse_metadata_id_tag (demux, prevent_eos,
+            length, &taglist);
         break;
 
       default:
@@ -2154,8 +2132,7 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
         /* fall-through */
 
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
-          got_error = TRUE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -2171,7 +2148,7 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
     gst_tag_list_free (taglist);
   }
 
-  return (!got_error);
+  return ret;
 }
 
 /*
@@ -2245,7 +2222,8 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
 {
   gint stream_nr;
 
-  GST_LOG ("Sync to %" GST_TIME_FORMAT, GST_TIME_ARGS (demux->pos));
+  GST_LOG ("Sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (demux->segment.last_stop));
 
   for (stream_nr = 0; stream_nr < demux->num_streams; stream_nr++) {
     GstMatroskaTrackContext *context;
@@ -2258,52 +2236,67 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
         stream_nr, GST_TIME_ARGS (context->pos));
 
     /* does it lag? 0.5 seconds is a random treshold... */
-    if (context->pos + (GST_SECOND / 2) < demux->pos) {
+    if (context->pos + (GST_SECOND / 2) < demux->segment.last_stop) {
       GST_DEBUG ("Synchronizing stream %d with others by advancing time "
           "from %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT, stream_nr,
-          GST_TIME_ARGS (context->pos), GST_TIME_ARGS (demux->pos));
+          GST_TIME_ARGS (context->pos),
+          GST_TIME_ARGS (demux->segment.last_stop));
 
-      context->pos = demux->pos;
+      context->pos = demux->segment.last_stop;
 
       /* advance stream time */
       gst_pad_push_event (context->pad,
-          gst_event_new_new_segment (TRUE, demux->segment_rate,
-              GST_FORMAT_TIME, demux->pos, -1, demux->pos));
+          gst_event_new_new_segment (TRUE, demux->segment.rate,
+              GST_FORMAT_TIME, demux->segment.last_stop, -1,
+              demux->segment.last_stop));
     }
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_push_hdr_buf (GstMatroskaDemux * demux,
     GstMatroskaTrackContext * stream, guint8 * data, guint len)
 {
-  GstFlowReturn flow;
+  GstFlowReturn ret, cret;
   GstBuffer *header_buf = NULL;
 
-  flow = gst_pad_alloc_buffer_and_set_caps (stream->pad,
+  ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
       GST_BUFFER_OFFSET_NONE, len, stream->caps, &header_buf);
 
-  if (flow == GST_FLOW_OK) {
-    memcpy (GST_BUFFER_DATA (header_buf), data, len);
+  /* we combine but don't use the combined value to check if we have a buffer
+   * or not. The combined value is what we return. */
+  cret = gst_matroska_demux_combine_flows (demux, stream, ret);
+  if (ret != GST_FLOW_OK)
+    goto no_buffer;
 
-    if (stream->set_discont) {
-      GST_BUFFER_FLAG_SET (header_buf, GST_BUFFER_FLAG_DISCONT);
-      stream->set_discont = FALSE;
-    }
+  memcpy (GST_BUFFER_DATA (header_buf), data, len);
 
-    flow = gst_pad_push (stream->pad, header_buf);
+  if (stream->set_discont) {
+    GST_BUFFER_FLAG_SET (header_buf, GST_BUFFER_FLAG_DISCONT);
+    stream->set_discont = FALSE;
   }
 
-  if (flow != GST_FLOW_OK && flow != GST_FLOW_NOT_LINKED)
-    return FALSE;
+  ret = gst_pad_push (stream->pad, header_buf);
 
-  return TRUE;
+  /* combine flows */
+  cret = gst_matroska_demux_combine_flows (demux, stream, ret);
+
+  return cret;
+
+  /* ERRORS */
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (demux, "could not alloc buffer: %s, combined %s",
+        gst_flow_get_name (ret), gst_flow_get_name (cret));
+    return cret;
+  }
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_push_flac_codec_priv_data (GstMatroskaDemux * demux,
     GstMatroskaTrackContext * stream)
 {
+  GstFlowReturn ret;
   guint8 *pdata;
   guint off, len;
 
@@ -2314,16 +2307,17 @@ gst_matroska_demux_push_flac_codec_priv_data (GstMatroskaDemux * demux,
   /* need at least 'fLaC' marker + STREAMINFO metadata block */
   if (stream->codec_priv_size < ((4) + (4 + 34))) {
     GST_WARNING_OBJECT (demux, "not enough codec priv data for flac headers");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   if (memcmp (pdata, "fLaC", 4) != 0) {
     GST_WARNING_OBJECT (demux, "no flac marker at start of stream headers");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
-  if (!gst_matroska_demux_push_hdr_buf (demux, stream, pdata, 4))
-    return FALSE;
+  ret = gst_matroska_demux_push_hdr_buf (demux, stream, pdata, 4);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   off = 4;                      /* skip fLaC marker */
   while (off < stream->codec_priv_size) {
@@ -2334,19 +2328,20 @@ gst_matroska_demux_push_flac_codec_priv_data (GstMatroskaDemux * demux,
     GST_DEBUG_OBJECT (demux, "header packet: len=%u bytes, flags=0x%02x",
         len, (guint) pdata[off]);
 
-    if (!gst_matroska_demux_push_hdr_buf (demux, stream, pdata + off, len))
-      return FALSE;
+    ret = gst_matroska_demux_push_hdr_buf (demux, stream, pdata + off, len);
+    if (ret != GST_FLOW_OK)
+      return ret;
 
     off += 4 + len;
   }
-
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_push_xiph_codec_priv_data (GstMatroskaDemux * demux,
     GstMatroskaTrackContext * stream)
 {
+  GstFlowReturn ret;
   guint8 *p = (guint8 *) stream->codec_priv;
   gint i, offset, length, num_packets;
 
@@ -2363,20 +2358,22 @@ gst_matroska_demux_push_xiph_codec_priv_data (GstMatroskaDemux * demux,
 
     GST_DEBUG_OBJECT (demux, "buffer %d: length=%u bytes", i, (guint) length);
     if (offset + length > stream->codec_priv_size)
-      return FALSE;
+      return GST_FLOW_ERROR;
 
-    if (!gst_matroska_demux_push_hdr_buf (demux, stream, p + offset, length))
-      return FALSE;
+    ret = gst_matroska_demux_push_hdr_buf (demux, stream, p + offset, length);
+    if (ret != GST_FLOW_OK)
+      return ret;
 
     offset += length;
   }
 
   length = stream->codec_priv_size - offset;
   GST_DEBUG_OBJECT (demux, "buffer %d: length=%u bytes", i, (guint) length);
-  if (!gst_matroska_demux_push_hdr_buf (demux, stream, p + offset, length))
-    return FALSE;
+  ret = gst_matroska_demux_push_hdr_buf (demux, stream, p + offset, length);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static void
@@ -2445,13 +2442,14 @@ gst_matroska_demux_stream_is_wavpack (GstMatroskaTrackContext * stream)
   return FALSE;
 }
 
-static gboolean
-gst_matroska_demux_add_wvpk_header (GstMatroskaTrackContext * stream,
-    gint block_length, GstBuffer ** buf)
+static GstFlowReturn
+gst_matroska_demux_add_wvpk_header (GstMatroskaDemux * demux,
+    GstMatroskaTrackContext * stream, gint block_length, GstBuffer ** buf)
 {
   GstBuffer *newbuf;
   guint8 *data;
   guint newlen;
+  GstFlowReturn ret, cret;
 
   /* we need to reconstruct the header of the wavpack block */
   Wavpack4Header wvh;
@@ -2472,9 +2470,13 @@ gst_matroska_demux_add_wvpk_header (GstMatroskaTrackContext * stream,
 
   /* block_samples, flags and crc are already in the buffer */
   newlen = block_length + sizeof (Wavpack4Header) - 12;
-  if (gst_pad_alloc_buffer_and_set_caps (stream->pad, GST_BUFFER_OFFSET_NONE,
-          newlen, stream->caps, &newbuf) != GST_FLOW_OK) {
-    return TRUE;                /* not an error, pad might not be linked */
+  ret = gst_pad_alloc_buffer_and_set_caps (stream->pad, GST_BUFFER_OFFSET_NONE,
+      newlen, stream->caps, &newbuf);
+  cret = gst_matroska_demux_combine_flows (demux, stream, ret);
+  if (ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (demux, "pad_alloc failed %s, combined %s",
+        gst_flow_get_name (ret), gst_flow_get_name (cret));
+    return cret;
   }
 
   data = GST_BUFFER_DATA (newbuf);
@@ -2492,7 +2494,8 @@ gst_matroska_demux_add_wvpk_header (GstMatroskaTrackContext * stream,
   gst_buffer_copy_metadata (newbuf, *buf, GST_BUFFER_COPY_TIMESTAMPS);
   gst_buffer_unref (*buf);
   *buf = newbuf;
-  return TRUE;
+
+  return cret;
 }
 
 static GstBuffer *
@@ -2559,8 +2562,8 @@ gst_matroska_demux_check_subtitle_buffer (GstMatroskaDemux * demux,
   GST_BUFFER_DATA (newbuf) = (guint8 *) utf8;
   GST_BUFFER_SIZE (newbuf) = strlen (utf8);
   gst_buffer_copy_metadata (newbuf, buf, GST_BUFFER_COPY_TIMESTAMPS);
-
   gst_buffer_unref (buf);
+
   return newbuf;
 }
 
@@ -2654,13 +2657,13 @@ gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
   return buf;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     guint64 cluster_time, gboolean is_simpleblock)
 {
   GstMatroskaTrackContext *stream = NULL;
   GstEbmlRead *ebml = GST_EBML_READ (demux);
-  gboolean got_error = FALSE;
+  GstFlowReturn ret = GST_FLOW_OK;
   gboolean readblock = FALSE;
   guint32 id;
   guint64 block_duration = 0;
@@ -2673,10 +2676,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
   gint flags = 0;
   gint64 referenceblock = 0;
 
-  while (!got_error) {
+  while (ret == GST_FLOW_OK) {
     if (!is_simpleblock) {
-      if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-        goto error;
+      if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+        goto done;
 
       if (demux->level_up) {
         demux->level_up--;
@@ -2696,10 +2699,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         guint64 num;
         guint8 *data;
 
-        if (!gst_ebml_read_buffer (ebml, &id, &buf)) {
-          got_error = TRUE;
+        if ((ret = gst_ebml_read_buffer (ebml, &id, &buf)) != GST_FLOW_OK)
           break;
-        }
 
         data = GST_BUFFER_DATA (buf);
         size = GST_BUFFER_SIZE (buf);
@@ -2708,7 +2709,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         if ((n = gst_matroska_ebmlnum_uint (data, size, &num)) < 0) {
           GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL), ("Data error"));
           gst_buffer_unref (buf);
-          got_error = TRUE;
+          buf = NULL;
+          ret = GST_FLOW_ERROR;
           break;
         }
         data += n;
@@ -2718,6 +2720,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         stream_num = gst_matroska_demux_stream_from_num (demux, num);
         if (size <= 3 || stream_num < 0 || stream_num >= demux->num_streams) {
           gst_buffer_unref (buf);
+          buf = NULL;
           GST_WARNING ("Invalid stream %d or size %u", stream_num, size);
           break;
         }
@@ -2743,7 +2746,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           case 0x2:            /* fixed-size lacing */
           case 0x3:            /* EBML lacing */
             if (size == 0) {
-              got_error = TRUE;
+              GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
+                  ("Invalid lacing size"));
+              ret = GST_FLOW_ERROR;
               break;
             }
             laces = GST_READ_UINT8 (data) + 1;
@@ -2755,10 +2760,12 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
               case 0x1:        /* xiph lacing */  {
                 guint temp, total = 0;
 
-                for (n = 0; !got_error && n < laces - 1; n++) {
+                for (n = 0; ret == GST_FLOW_OK && n < laces - 1; n++) {
                   while (1) {
                     if (size == 0) {
-                      got_error = TRUE;
+                      GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
+                          ("Invalid lacing size"));
+                      ret = GST_FLOW_ERROR;
                       break;
                     }
                     temp = GST_READ_UINT8 (data);
@@ -2785,20 +2792,20 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
                 if ((n = gst_matroska_ebmlnum_uint (data, size, &num)) < 0) {
                   GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
                       ("Data error"));
-                  got_error = TRUE;
+                  ret = GST_FLOW_ERROR;
                   break;
                 }
                 data += n;
                 size -= n;
                 total = lace_size[0] = num;
-                for (n = 1; !got_error && n < laces - 1; n++) {
+                for (n = 1; ret == GST_FLOW_OK && n < laces - 1; n++) {
                   gint64 snum;
                   gint r;
 
                   if ((r = gst_matroska_ebmlnum_sint (data, size, &snum)) < 0) {
                     GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
                         ("Data error"));
-                    got_error = TRUE;
+                    ret = GST_FLOW_ERROR;
                     break;
                   }
                   data += r;
@@ -2815,16 +2822,12 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         }
 
         if (stream->send_xiph_headers) {
-          if (!gst_matroska_demux_push_xiph_codec_priv_data (demux, stream)) {
-            got_error = TRUE;
-          }
+          ret = gst_matroska_demux_push_xiph_codec_priv_data (demux, stream);
           stream->send_xiph_headers = FALSE;
         }
 
         if (stream->send_flac_headers) {
-          if (!gst_matroska_demux_push_flac_codec_priv_data (demux, stream)) {
-            got_error = TRUE;
-          }
+          ret = gst_matroska_demux_push_flac_codec_priv_data (demux, stream);
           stream->send_flac_headers = FALSE;
         }
 
@@ -2834,7 +2837,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           stream->send_dvd_event = FALSE;
         }
 
-        if (got_error)
+        if (ret != GST_FLOW_OK)
           break;
 
         readblock = TRUE;
@@ -2842,14 +2845,12 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       }
 
       case GST_MATROSKA_ID_BLOCKDURATION:{
-        if (!gst_ebml_read_uint (ebml, &id, &block_duration))
-          got_error = TRUE;
+        ret = gst_ebml_read_uint (ebml, &id, &block_duration);
         break;
       }
 
       case GST_MATROSKA_ID_REFERENCEBLOCK:{
-        if (!gst_ebml_read_sint (ebml, &id, &referenceblock))
-          got_error = TRUE;
+        ret = gst_ebml_read_sint (ebml, &id, &referenceblock);
         break;
       }
 
@@ -2858,8 +2859,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         /* fall-through */
 
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
-          got_error = TRUE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -2881,17 +2881,18 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     lace_time = GST_CLOCK_TIME_NONE;
   }
 
-  if (referenceblock && readblock && demux->src[stream_num]->set_discont) {
+  stream = demux->src[stream_num];
+
+  if (referenceblock && readblock && stream->set_discont) {
     /* When doing seeks or such, we need to restart on key frames or
        decoders might choke. */
     readblock = FALSE;
     gst_buffer_unref (buf);
+    buf = NULL;
   }
 
-  if (!got_error && readblock) {
+  if (ret == GST_FLOW_OK && readblock) {
     guint64 duration = 0;
-
-    stream = demux->src[stream_num];
 
     if (block_duration) {
       duration = block_duration * demux->time_scale;
@@ -2900,7 +2901,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     }
 
     for (n = 0; n < laces; n++) {
-      GstFlowReturn ret;
       GstBuffer *sub;
 
       if (lace_size[n] == 0)
@@ -2914,15 +2914,15 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       GST_BUFFER_TIMESTAMP (sub) = lace_time;
       if (lace_time != GST_CLOCK_TIME_NONE)
-        demux->pos = lace_time;
+        demux->segment.last_stop = lace_time;
 
-      stream->pos = demux->pos;
+      stream->pos = demux->segment.last_stop;
       gst_matroska_demux_sync_streams (demux);
 
       if (gst_matroska_demux_stream_is_wavpack (stream)) {
-        if (!gst_matroska_demux_add_wvpk_header (stream, lace_size[n], &sub)) {
-          got_error = TRUE;
-        }
+        ret =
+            gst_matroska_demux_add_wvpk_header (demux, stream, lace_size[n],
+            &sub);
       }
 
       /* FIXME: do all laces have the same lenght? */
@@ -2949,8 +2949,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         stream->set_discont = FALSE;
       }
 
-      GST_DEBUG ("Pushing data of size %d for stream %d, time=%"
-          GST_TIME_FORMAT " and duration=%" GST_TIME_FORMAT,
+      GST_DEBUG ("Pushing lace %d, data of size %d for stream %d, time=%"
+          GST_TIME_FORMAT " and duration=%" GST_TIME_FORMAT, n,
           GST_BUFFER_SIZE (sub), stream_num,
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (sub)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (sub)));
@@ -2963,8 +2963,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       }
 
       ret = gst_pad_push (stream->pad, sub);
-      if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
-        got_error = TRUE;
+      /* combine flows */
+      ret = gst_matroska_demux_combine_flows (demux, stream, ret);
 
       size -= lace_size[n];
       if (lace_time != GST_CLOCK_TIME_NONE)
@@ -2972,29 +2972,25 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     }
   }
 
-  if (0) {
-  error:
-    got_error = TRUE;
-  }
-
+done:
   if (readblock)
     gst_buffer_unref (buf);
   g_free (lace_size);
 
-  return (!got_error);
+  return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
-  gboolean got_error = FALSE;
+  GstFlowReturn ret = GST_FLOW_OK;
   guint64 cluster_time = GST_CLOCK_TIME_NONE;
   guint32 id;
 
-  while (!got_error) {
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-      return FALSE;
+  while (ret == GST_FLOW_OK) {
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
 
     if (demux->level_up) {
       demux->level_up--;
@@ -3007,9 +3003,7 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
       {
         guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num)) {
-          got_error = TRUE;
-        } else {
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) == GST_FLOW_OK) {
           cluster_time = num * demux->time_scale;
         }
         break;
@@ -3017,20 +3011,16 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
 
         /* a group of blocks inside a cluster */
       case GST_MATROSKA_ID_BLOCKGROUP:
-        if (!gst_ebml_read_master (ebml, &id)) {
-          got_error = TRUE;
-        } else {
-          if (!gst_matroska_demux_parse_blockgroup_or_simpleblock (demux,
-                  cluster_time, FALSE))
-            got_error = TRUE;
+        if ((ret = gst_ebml_read_master (ebml, &id)) == GST_FLOW_OK) {
+          ret = gst_matroska_demux_parse_blockgroup_or_simpleblock (demux,
+              cluster_time, FALSE);
         }
         break;
 
       case GST_MATROSKA_ID_SIMPLEBLOCK:
       {
-        if (!gst_matroska_demux_parse_blockgroup_or_simpleblock (demux,
-                cluster_time, TRUE))
-          got_error = TRUE;
+        ret = gst_matroska_demux_parse_blockgroup_or_simpleblock (demux,
+            cluster_time, TRUE);
         break;
       }
 
@@ -3039,8 +3029,7 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
         /* fall-through */
 
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
-          got_error = TRUE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -3050,25 +3039,25 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
     }
   }
 
-  return (!got_error);
+  return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
     gboolean * p_run_loop)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
-  gboolean got_error = FALSE;
+  GstFlowReturn ret;
   guint64 seek_pos = (guint64) - 1;
   guint32 seek_id = 0;
   guint32 id;
 
-  if (!gst_ebml_read_master (ebml, &id))
-    return FALSE;
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+    return ret;
 
-  while (!got_error) {
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-      return FALSE;
+  while (ret == GST_FLOW_OK) {
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
 
     if (demux->level_up) {
       demux->level_up--;
@@ -3080,9 +3069,7 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
       {
         guint64 t;
 
-        if (!gst_ebml_read_uint (ebml, &id, &t)) {
-          got_error = TRUE;
-        } else {
+        if ((ret = gst_ebml_read_uint (ebml, &id, &t)) == GST_FLOW_OK) {
           seek_id = t;
         }
         break;
@@ -3092,9 +3079,7 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
       {
         guint64 t;
 
-        if (!gst_ebml_read_uint (ebml, &id, &t)) {
-          got_error = TRUE;
-        } else {
+        if ((ret = gst_ebml_read_uint (ebml, &id, &t)) == GST_FLOW_OK) {
           seek_pos = t;
         }
         break;
@@ -3105,8 +3090,7 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
         /* fall-through */
 
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
-          got_error = TRUE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -3116,13 +3100,13 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
     }
   }
 
-  if (got_error)
-    return FALSE;
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   if (!seek_id || seek_pos == (guint64) - 1) {
     GST_WARNING ("Incomplete seekhead entry (0x%x/%"
         G_GUINT64_FORMAT ")", seek_id, seek_pos);
-    return TRUE;
+    return GST_FLOW_OK;
   }
 
   switch (seek_id) {
@@ -3148,7 +3132,7 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
 
       /* seek */
       if (!gst_ebml_read_seek (ebml, seek_pos + demux->ebml_segment_start))
-        return FALSE;
+        return GST_FLOW_ERROR;
 
       /* we don't want to lose our seekhead level, so we add
        * a dummy. This is a crude hack. */
@@ -3158,8 +3142,8 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
       ebml->level = g_list_append (ebml->level, level);
 
       /* check ID */
-      if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-        return FALSE;
+      if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+        return ret;
 
       if (id != seek_id) {
         g_warning ("We looked for ID=0x%x but got ID=0x%x (pos=%"
@@ -3171,20 +3155,23 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
       /* read master + parse */
       switch (id) {
         case GST_MATROSKA_ID_CUES:
-          if (!gst_ebml_read_master (ebml, &id))
-            return FALSE;
-          if (!gst_matroska_demux_parse_index (demux, TRUE))
-            return FALSE;
+          if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+            return ret;
+          if ((ret =
+                  gst_matroska_demux_parse_index (demux, TRUE)) != GST_FLOW_OK)
+            return ret;
           if (gst_ebml_read_get_length (ebml) == ebml->offset)
             *p_run_loop = FALSE;
           else
             demux->index_parsed = TRUE;
           break;
         case GST_MATROSKA_ID_TAGS:
-          if (!gst_ebml_read_master (ebml, &id))
-            return FALSE;
-          if (!gst_matroska_demux_parse_metadata (demux, TRUE))
-            return FALSE;
+          if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+            return ret;
+          if ((ret =
+                  gst_matroska_demux_parse_metadata (demux,
+                      TRUE)) != GST_FLOW_OK)
+            return ret;
           if (gst_ebml_read_get_length (ebml) == ebml->offset)
             *p_run_loop = FALSE;
           else
@@ -3219,20 +3206,20 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
       break;
   }
 
-  return (!got_error);
+  return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_parse_contents (GstMatroskaDemux * demux,
     gboolean * p_run_loop)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
-  gboolean got_error = FALSE;
+  GstFlowReturn ret = GST_FLOW_OK;
   guint32 id;
 
-  while (!got_error) {
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-      return FALSE;
+  while (ret == GST_FLOW_OK) {
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
 
     if (demux->level_up) {
       demux->level_up--;
@@ -3242,8 +3229,7 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux,
     switch (id) {
       case GST_MATROSKA_ID_SEEKENTRY:
       {
-        if (!gst_matroska_demux_parse_contents_seekentry (demux, p_run_loop))
-          got_error = TRUE;
+        ret = gst_matroska_demux_parse_contents_seekentry (demux, p_run_loop);
         break;
       }
 
@@ -3252,8 +3238,7 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux,
         /* fall-through */
 
       case GST_EBML_ID_VOID:
-        if (!gst_ebml_read_skip (ebml))
-          got_error = TRUE;
+        ret = gst_ebml_read_skip (ebml);
         break;
     }
 
@@ -3263,32 +3248,33 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux,
     }
   }
 
-  return (!got_error);
+  return ret;
 }
 
 /* returns FALSE on error, otherwise TRUE */
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
     guint32 id, gboolean * p_run_loop)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
+  GstFlowReturn ret;
 
   switch (id) {
       /* stream info */
     case GST_MATROSKA_ID_INFO:
-      if (!gst_ebml_read_master (ebml, &id))
-        return FALSE;
-      if (!gst_matroska_demux_parse_info (demux))
-        return FALSE;
+      if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+        return ret;
+      if ((ret = gst_matroska_demux_parse_info (demux)) != GST_FLOW_OK)
+        return ret;
       break;
 
       /* track info headers */
     case GST_MATROSKA_ID_TRACKS:
     {
-      if (!gst_ebml_read_master (ebml, &id))
-        return FALSE;
-      if (!gst_matroska_demux_parse_tracks (demux))
-        return FALSE;
+      if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+        return ret;
+      if ((ret = gst_matroska_demux_parse_tracks (demux)) != GST_FLOW_OK)
+        return ret;
       break;
     }
 
@@ -3296,13 +3282,14 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
     case GST_MATROSKA_ID_CUES:
     {
       if (!demux->index_parsed) {
-        if (!gst_ebml_read_master (ebml, &id))
-          return FALSE;
-        if (!gst_matroska_demux_parse_index (demux, FALSE))
-          return FALSE;
+        if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+          return ret;
+        if ((ret =
+                gst_matroska_demux_parse_index (demux, FALSE)) != GST_FLOW_OK)
+          return ret;
       } else {
-        if (!gst_ebml_read_skip (ebml))
-          return FALSE;
+        if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+          return ret;
       }
       break;
     }
@@ -3311,13 +3298,15 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
     case GST_MATROSKA_ID_TAGS:
     {
       if (!demux->index_parsed) {
-        if (!gst_ebml_read_master (ebml, &id))
-          return FALSE;
-        if (!gst_matroska_demux_parse_metadata (demux, FALSE))
-          return FALSE;
+        if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+          return ret;
+        if ((ret =
+                gst_matroska_demux_parse_metadata (demux,
+                    FALSE)) != GST_FLOW_OK)
+          return ret;
       } else {
-        if (!gst_ebml_read_skip (ebml))
-          return FALSE;
+        if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+          return ret;
       }
       break;
     }
@@ -3325,10 +3314,12 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
       /* file index (if seekable, seek to Cues/Tags to parse it) */
     case GST_MATROSKA_ID_SEEKHEAD:
     {
-      if (!gst_ebml_read_master (ebml, &id))
-        return FALSE;
-      if (!gst_matroska_demux_parse_contents (demux, p_run_loop))
-        return FALSE;
+      if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+        return ret;
+      if ((ret =
+              gst_matroska_demux_parse_contents (demux,
+                  p_run_loop)) != GST_FLOW_OK)
+        return ret;
       break;
     }
 
@@ -3341,12 +3332,13 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
         gst_matroska_demux_send_event (demux,
             gst_event_new_new_segment (FALSE, 1.0,
                 GST_FORMAT_TIME, 0,
-                (demux->duration > 0) ? demux->duration : -1, 0));
+                (demux->segment.duration > 0) ? demux->segment.duration : -1,
+                0));
         GST_DEBUG_OBJECT (demux, "signaling no more pads");
         gst_element_no_more_pads (GST_ELEMENT (demux));
       } else {
-        if (!gst_ebml_read_master (ebml, &id))
-          return FALSE;
+        if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+          return ret;
 
         /* The idea is that we parse one cluster per loop and
          * then break out of the loop here. In the next call
@@ -3355,8 +3347,8 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
          * actually push a buffer, but we still want to break
          * out of the loop to handle a possible error. We'll
          * get back here if it's recoverable. */
-        if (!gst_matroska_demux_parse_cluster (demux))
-          return FALSE;
+        if ((ret = gst_matroska_demux_parse_cluster (demux)) != GST_FLOW_OK)
+          return ret;
         *p_run_loop = FALSE;
       }
       break;
@@ -3369,43 +3361,40 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
 
     case GST_EBML_ID_VOID:
     {
-      if (!gst_ebml_read_skip (ebml))
-        return FALSE;
+      if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+        return ret;
       break;
     }
   }
-
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_matroska_demux_loop_stream (GstMatroskaDemux * demux)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
-  gboolean got_error = FALSE;
+  GstFlowReturn ret = GST_FLOW_OK;
   gboolean run_loop = TRUE;
   guint32 id;
 
   /* we've found our segment, start reading the different contents in here */
-  while (run_loop && !got_error) {
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-      return FALSE;
+  while (run_loop && ret == GST_FLOW_OK) {
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
 
     if (demux->level_up) {
       demux->level_up--;
       break;
     }
 
-    if (!gst_matroska_demux_loop_stream_parse_id (demux, id, &run_loop))
-      got_error = TRUE;
+    ret = gst_matroska_demux_loop_stream_parse_id (demux, id, &run_loop);
 
     if (demux->level_up) {
       demux->level_up--;
       break;
     }
   }
-
-  return (!got_error);
+  return ret;
 }
 
 static void
@@ -3413,69 +3402,85 @@ gst_matroska_demux_loop (GstPad * pad)
 {
   GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (gst_pad_get_parent (pad));
   GstEbmlRead *ebml = GST_EBML_READ (demux);
-  gboolean ret;
+  GstFlowReturn ret;
 
   /* first, if we're to start, let's actually get starting */
   if (demux->state == GST_MATROSKA_DEMUX_STATE_START) {
-    if (!gst_matroska_demux_init_stream (demux)) {
+    ret = gst_matroska_demux_init_stream (demux);
+    if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (demux, "init stream failed!");
-      goto eos_and_pause;
+      goto pause;
     }
     demux->state = GST_MATROSKA_DEMUX_STATE_HEADER;
   }
 
   ret = gst_matroska_demux_loop_stream (demux);
+  if (ret != GST_FLOW_OK)
+    goto pause;
 
   /* check if we're at the end of a configured segment */
-  if (GST_CLOCK_TIME_IS_VALID (demux->segment_stop)) {
+  if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop)) {
     guint i;
 
     for (i = 0; i < demux->num_streams; i++) {
-      if (demux->src[i]->pos >= demux->segment_stop) {
+      if (demux->src[i]->pos >= demux->segment.stop) {
         GST_INFO_OBJECT (demux, "Reached end of segment (%" G_GUINT64_FORMAT
-            "-%" G_GUINT64_FORMAT ") on pad %s:%s", demux->segment_start,
-            demux->segment_stop, GST_DEBUG_PAD_NAME (demux->src[i]->pad));
-
-        if (!demux->segment_play)
-          goto eos_and_pause;
-
-        gst_element_post_message (GST_ELEMENT (demux),
-            gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
-                demux->segment_stop));
+            "-%" G_GUINT64_FORMAT ") on pad %s:%s", demux->segment.start,
+            demux->segment.stop, GST_DEBUG_PAD_NAME (demux->src[i]->pad));
+        ret = GST_FLOW_UNEXPECTED;
         goto pause;
       }
     }
   }
 
   if (ebml->offset == gst_ebml_read_get_length (ebml)) {
-    if (demux->segment_play) {
-      GST_LOG ("Reached end of stream and segment, posting message");
-      gst_element_post_message (GST_ELEMENT (demux),
-          gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
-              demux->duration));
-      goto pause;
-    }
-
     GST_LOG ("Reached end of stream, sending EOS");
-    goto eos_and_pause;
-  }
-
-  if (ret == FALSE) {
-    GST_LOG ("Error processing stream, sending EOS");
-    goto eos_and_pause;
+    ret = GST_FLOW_UNEXPECTED;
+    goto pause;
   }
 
   /* all is fine */
   gst_object_unref (demux);
   return;
 
-eos_and_pause:
-  gst_matroska_demux_send_event (demux, gst_event_new_eos ());
-  /* fallthrough */
+  /* ERRORS */
 pause:
-  GST_LOG_OBJECT (demux, "pausing task");
-  gst_pad_pause_task (demux->sinkpad);
-  gst_object_unref (demux);
+  {
+    const gchar *reason = gst_flow_get_name (ret);
+
+    GST_LOG_OBJECT (demux, "pausing task, reason %s", reason);
+    demux->segment_running = FALSE;
+    gst_pad_pause_task (demux->sinkpad);
+
+    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+      if (ret == GST_FLOW_UNEXPECTED) {
+        /* perform EOS logic */
+        if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+          gint64 stop;
+
+          /* for segment playback we need to post when (in stream time)
+           * we stopped, this is either stop (when set) or the duration. */
+          if ((stop = demux->segment.stop) == -1)
+            stop = demux->segment.duration;
+
+          GST_LOG_OBJECT (demux, "Sending segment done, at end of segment");
+          gst_element_post_message (GST_ELEMENT (demux),
+              gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
+                  stop));
+        } else {
+          /* normal playback, send EOS to all linked pads */
+          GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
+          gst_matroska_demux_send_event (demux, gst_event_new_eos ());
+        }
+      } else {
+        GST_ELEMENT_ERROR (demux, STREAM, FAILED, NULL,
+            ("stream stopped, reason %s", reason));
+        gst_matroska_demux_send_event (demux, gst_event_new_eos ());
+      }
+    }
+    gst_object_unref (demux);
+    return;
+  }
 }
 
 static gboolean
@@ -3490,11 +3495,15 @@ gst_matroska_demux_sink_activate (GstPad * sinkpad)
 static gboolean
 gst_matroska_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 {
+  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (GST_PAD_PARENT (sinkpad));
+
   if (active) {
     /* if we have a scheduler we can start the task */
+    demux->segment_running = TRUE;
     gst_pad_start_task (sinkpad, (GstTaskFunction) gst_matroska_demux_loop,
         sinkpad);
   } else {
+    demux->segment_running = FALSE;
     gst_pad_stop_task (sinkpad);
   }
 

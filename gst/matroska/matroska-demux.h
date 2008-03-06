@@ -89,17 +89,9 @@ typedef struct _GstMatroskaDemux {
   /* timescale in the file */
   guint64                  time_scale;
 
-  /* length, position (time, ns) */
-  guint64                  pos;
-  guint64                  duration;
-
-  /* a possible pending seek */
-  gboolean                 seek_pending;
-
-  gdouble                  segment_rate;
-  gint64                   segment_start;
-  gint64                   segment_stop;
-  gboolean                 segment_play;
+  /* keeping track of playback position */
+  GstSegment               segment;
+  gboolean                 segment_running;
 } GstMatroskaDemux;
 
 typedef struct _GstMatroskaDemuxClass {

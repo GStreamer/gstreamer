@@ -59,58 +59,58 @@ typedef struct _GstEbmlReadClass {
   GstElementClass parent;
 } GstEbmlReadClass;
 
-GType    gst_ebml_read_get_type     (void);
+GType    gst_ebml_read_get_type          (void);
 
-gboolean gst_ebml_peek_id           (GstEbmlRead *ebml,
-                                     guint       *level_up,
-                                     guint32     *id);
+GstFlowReturn gst_ebml_peek_id           (GstEbmlRead *ebml,
+                                          guint       *level_up,
+                                          guint32     *id);
 
-gboolean gst_ebml_read_seek         (GstEbmlRead *ebml,
-                                     guint64      offset);
+GstFlowReturn gst_ebml_read_seek         (GstEbmlRead *ebml,
+                                          guint64      offset);
 
-gint64   gst_ebml_read_get_length   (GstEbmlRead *ebml);
+gint64        gst_ebml_read_get_length   (GstEbmlRead *ebml);
 
-gboolean gst_ebml_read_skip         (GstEbmlRead *ebml);
+GstFlowReturn gst_ebml_read_skip         (GstEbmlRead *ebml);
 
-gboolean gst_ebml_read_buffer       (GstEbmlRead *ebml,
-                                     guint32     *id,
-                                     GstBuffer  **buf);
+GstFlowReturn gst_ebml_read_buffer       (GstEbmlRead *ebml,
+                                          guint32     *id,
+                                          GstBuffer  **buf);
 
-gboolean gst_ebml_read_uint         (GstEbmlRead *ebml,
-                                     guint32     *id,
-                                     guint64     *num);
+GstFlowReturn gst_ebml_read_uint         (GstEbmlRead *ebml,
+                                          guint32     *id,
+                                          guint64     *num);
 
-gboolean gst_ebml_read_sint         (GstEbmlRead *ebml,
-                                     guint32     *id,
-                                     gint64      *num);
+GstFlowReturn gst_ebml_read_sint         (GstEbmlRead *ebml,
+                                          guint32     *id,
+                                          gint64      *num);
 
-gboolean gst_ebml_read_float        (GstEbmlRead *ebml,
-                                     guint32     *id,
-                                     gdouble     *num);
+GstFlowReturn gst_ebml_read_float        (GstEbmlRead *ebml,
+                                          guint32     *id,
+                                          gdouble     *num);
 
-gboolean gst_ebml_read_ascii        (GstEbmlRead *ebml,
-                                     guint32     *id,
-                                     gchar      **str);
+GstFlowReturn gst_ebml_read_ascii        (GstEbmlRead *ebml,
+                                          guint32     *id,
+                                          gchar      **str);
 
-gboolean gst_ebml_read_utf8         (GstEbmlRead *ebml,
-                                     guint32     *id,
-                                     gchar      **str);
+GstFlowReturn gst_ebml_read_utf8         (GstEbmlRead *ebml,
+                                          guint32     *id,
+                                          gchar      **str);
 
-gboolean gst_ebml_read_date         (GstEbmlRead *ebml,
-                                     guint32     *id,
-                                     gint64      *date);
+GstFlowReturn gst_ebml_read_date         (GstEbmlRead *ebml,
+                                          guint32     *id,
+                                          gint64      *date);
 
-gboolean gst_ebml_read_master       (GstEbmlRead *ebml,
-                                     guint32     *id);
+GstFlowReturn gst_ebml_read_master       (GstEbmlRead *ebml,
+                                          guint32     *id);
 
-gboolean gst_ebml_read_binary       (GstEbmlRead *ebml,
-                                     guint32     *id,
-                                     guint8     **binary,
-                                     guint64     *length);
+GstFlowReturn gst_ebml_read_binary       (GstEbmlRead *ebml,
+                                          guint32     *id,
+                                          guint8     **binary,
+                                          guint64     *length);
 
-gboolean gst_ebml_read_header       (GstEbmlRead *read,
-                                     gchar      **doctype,
-                                     guint       *version);
+GstFlowReturn gst_ebml_read_header       (GstEbmlRead *read,
+                                          gchar      **doctype,
+                                          guint       *version);
 
 G_END_DECLS
 

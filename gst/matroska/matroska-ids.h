@@ -255,6 +255,7 @@ typedef struct _GstMatroskaTrackContext {
   GstPad       *pad;
   GstCaps      *caps;
   guint         index;
+  GstFlowReturn last_flow;
 
   /* some often-used info */
   gchar        *codec_id, *codec_name, *name, *language;
