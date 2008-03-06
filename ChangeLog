@@ -1,5 +1,10 @@
 2008-03-05  David Schleef  <ds@schleef.org>
 
+	* ext/dirac/gstdiracenc.cc: Add a bunch of properties cribbed
+	  from the encoder program in dirac.
+
+2008-03-05  David Schleef  <ds@schleef.org>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/dirac/Makefile.am:

@@ -94,7 +94,25 @@ enum
 
 enum
 {
-  ARG_0
+  PROP_0,
+  PROP_L1_SEP,
+  PROP_NUM_L1,
+  PROP_XBLEN,
+  PROP_YBLEN,
+  PROP_XBSEP,
+  PROP_YBSEP,
+  PROP_CPD,
+  PROP_QF,
+  PROP_TARGETRATE,
+  PROP_LOSSLESS,
+  PROP_IWLT_FILTER,
+  PROP_RWLT_FILTER,
+  PROP_WLT_DEPTH,
+  PROP_MULTI_QUANTS,
+  PROP_MV_PREC,
+  PROP_NO_SPARTITION,
+  PROP_DENOISE,
+  PROP_USE_VLC
 };
 
 static void gst_dirac_enc_finalize (GObject * object);
@@ -162,41 +180,60 @@ gst_dirac_enc_class_init (GstDiracEncClass * klass)
   gobject_class->get_property = gst_dirac_enc_get_property;
   gobject_class->finalize = gst_dirac_enc_finalize;
 
-#if 0
-  for (i = 0; i < dirac_encoder_get_n_settings (); i++) {
-    const DiracEncoderSetting *setting;
-
-    setting = dirac_encoder_get_setting_info (i);
-
-    switch (setting->type) {
-      case DIRAC_ENCODER_SETTING_TYPE_BOOLEAN:
-        g_object_class_install_property (gobject_class, i + 1,
-            g_param_spec_boolean (setting->name, setting->name, setting->name,
-                setting->default_value, G_PARAM_READWRITE));
-        break;
-      case DIRAC_ENCODER_SETTING_TYPE_INT:
-        g_object_class_install_property (gobject_class, i + 1,
-            g_param_spec_int (setting->name, setting->name, setting->name,
-                setting->min, setting->max, setting->default_value,
-                G_PARAM_READWRITE));
-        break;
-      case DIRAC_ENCODER_SETTING_TYPE_ENUM:
-        g_object_class_install_property (gobject_class, i + 1,
-            g_param_spec_int (setting->name, setting->name, setting->name,
-                setting->min, setting->max, setting->default_value,
-                G_PARAM_READWRITE));
-        break;
-      case DIRAC_ENCODER_SETTING_TYPE_DOUBLE:
-        g_object_class_install_property (gobject_class, i + 1,
-            g_param_spec_double (setting->name, setting->name, setting->name,
-                setting->min, setting->max, setting->default_value,
-                G_PARAM_READWRITE));
-        break;
-      default:
-        break;
-    }
-  }
-#endif
+  g_object_class_install_property (gobject_class, PROP_L1_SEP,
+      g_param_spec_int ("l1_sep", "l1_sep", "l1_sep",
+          1, 1000, 24, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_NUM_L1,
+      g_param_spec_int ("num_l1", "num_l1", "num_l1",
+          0, 1000, 1, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_XBLEN,
+      g_param_spec_int ("xblen", "xblen", "xblen",
+          4, 64, 8, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_YBLEN,
+      g_param_spec_int ("yblen", "yblen", "yblen",
+          4, 64, 8, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_XBSEP,
+      g_param_spec_int ("xbsep", "xbsep", "xbsep",
+          4, 64, 12, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_YBSEP,
+      g_param_spec_int ("ybsep", "ybsep", "ybsep",
+          4, 64, 12, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_CPD,
+      g_param_spec_int ("cpd", "cpd", "cpd",
+          1, 100, 60, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_QF,
+      g_param_spec_double ("qf", "qf", "qf",
+          0.0, 10.0, 7.0, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_TARGETRATE,
+      g_param_spec_int ("targetrate", "targetrate", "targetrate",
+          0, 10000, 1000, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_LOSSLESS,
+      g_param_spec_boolean ("lossless", "lossless", "lossless",
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_IWLT_FILTER,
+      g_param_spec_int ("iwlt_filter", "iwlt_filter", "iwlt_filter",
+          0, 7, 0, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_RWLT_FILTER,
+      g_param_spec_int ("rwlt_filter", "rwlt_filter", "rwlt_filter",
+          0, 7, 1, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_WLT_DEPTH,
+      g_param_spec_int ("wlt_depth", "wlt_depth", "wlt_depth",
+          1, 4, 3, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_MULTI_QUANTS,
+      g_param_spec_boolean ("multi_quants", "multi_quants", "multi_quants",
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_MV_PREC,
+      g_param_spec_int ("mv_prec", "mv_prec", "mv_prec",
+          0, 3, 1, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_NO_SPARTITION,
+      g_param_spec_boolean ("no_spartition", "no_spartition", "no_spartition",
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_DENOISE,
+      g_param_spec_boolean ("denoise", "denoise", "denoise",
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_USE_VLC,
+      g_param_spec_boolean ("use_vlc", "use_vlc", "use_vlc",
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_dirac_enc_change_state;
 }
@@ -222,6 +259,8 @@ gst_dirac_enc_init (GstDiracEnc * dirac_enc, GstDiracEncClass * klass)
       gst_dirac_enc_get_query_types);
   gst_pad_set_query_function (dirac_enc->srcpad, gst_dirac_enc_src_query);
   gst_element_add_pad (GST_ELEMENT (dirac_enc), dirac_enc->srcpad);
+
+  dirac_encoder_context_init (&dirac_enc->enc_ctx, VIDEO_FORMAT_CUSTOM);
 }
 
 static gboolean
@@ -242,7 +281,10 @@ gst_dirac_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_fraction (structure, "pixel-aspect-ratio",
       &dirac_enc->par_n, &dirac_enc->par_d);
 
-  dirac_encoder_context_init (&dirac_enc->enc_ctx, VIDEO_FORMAT_CUSTOM);
+  if (dirac_enc->fourcc != GST_MAKE_FOURCC ('I', '4', '2', '0')) {
+    GST_ERROR
+        ("Dirac encoder element is known to be buggy for video formats other that I420");
+  }
 
   switch (dirac_enc->fourcc) {
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
@@ -317,34 +359,73 @@ static void
 gst_dirac_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstDiracEnc *src;
+  GstDiracEnc *encoder;
 
   g_return_if_fail (GST_IS_DIRAC_ENC (object));
-  src = GST_DIRAC_ENC (object);
+  encoder = GST_DIRAC_ENC (object);
 
   GST_DEBUG ("gst_dirac_enc_set_property");
 
-#if 0
-  if (prop_id >= 1) {
-    const DiracEncoderSetting *setting;
-
-    setting = dirac_encoder_get_setting_info (prop_id - 1);
-    switch (G_VALUE_TYPE (value)) {
-      case G_TYPE_DOUBLE:
-        dirac_encoder_setting_set_double (src->encoder, setting->name,
-            g_value_get_double (value));
-        break;
-      case G_TYPE_INT:
-        dirac_encoder_setting_set_double (src->encoder, setting->name,
-            g_value_get_int (value));
-        break;
-      case G_TYPE_BOOLEAN:
-        dirac_encoder_setting_set_double (src->encoder, setting->name,
-            g_value_get_boolean (value));
-        break;
-    }
+  switch (prop_id) {
+    case PROP_L1_SEP:
+      encoder->enc_ctx.enc_params.L1_sep = g_value_get_int (value);
+      break;
+    case PROP_NUM_L1:
+      encoder->enc_ctx.enc_params.num_L1 = g_value_get_int (value);
+      break;
+    case PROP_XBLEN:
+      encoder->enc_ctx.enc_params.xblen = g_value_get_int (value);
+      break;
+    case PROP_YBLEN:
+      encoder->enc_ctx.enc_params.yblen = g_value_get_int (value);
+      break;
+    case PROP_XBSEP:
+      encoder->enc_ctx.enc_params.xbsep = g_value_get_int (value);
+      break;
+    case PROP_YBSEP:
+      encoder->enc_ctx.enc_params.ybsep = g_value_get_int (value);
+      break;
+    case PROP_CPD:
+      encoder->enc_ctx.enc_params.cpd = g_value_get_int (value);
+      break;
+    case PROP_QF:
+      encoder->enc_ctx.enc_params.qf = g_value_get_double (value);
+      break;
+    case PROP_TARGETRATE:
+      encoder->enc_ctx.enc_params.trate = g_value_get_int (value);
+      break;
+    case PROP_LOSSLESS:
+      encoder->enc_ctx.enc_params.lossless = g_value_get_boolean (value);
+      break;
+    case PROP_IWLT_FILTER:
+      encoder->enc_ctx.enc_params.intra_wlt_filter =
+          (dirac_wlt_filter_t) g_value_get_int (value);
+      break;
+    case PROP_RWLT_FILTER:
+      encoder->enc_ctx.enc_params.inter_wlt_filter =
+          (dirac_wlt_filter_t) g_value_get_int (value);
+      break;
+    case PROP_WLT_DEPTH:
+      encoder->enc_ctx.enc_params.wlt_depth = g_value_get_int (value);
+      break;
+    case PROP_MULTI_QUANTS:
+      encoder->enc_ctx.enc_params.multi_quants = g_value_get_boolean (value);
+      break;
+    case PROP_MV_PREC:
+      encoder->enc_ctx.enc_params.mv_precision =
+          (dirac_mvprecision_t) g_value_get_int (value);
+      break;
+    case PROP_NO_SPARTITION:
+      encoder->enc_ctx.enc_params.spatial_partition =
+          !g_value_get_boolean (value);
+      break;
+    case PROP_DENOISE:
+      encoder->enc_ctx.enc_params.denoise = g_value_get_boolean (value);
+      break;
+    case PROP_USE_VLC:
+      encoder->enc_ctx.enc_params.using_ac = !g_value_get_boolean (value);
+      break;
   }
-#endif
 }
 
 static void
