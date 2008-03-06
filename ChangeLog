@@ -1,3 +1,10 @@
+2008-03-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
+	(get_output_buffer), (gst_ffmpegdec_video_frame),
+	(gst_ffmpegdec_chain):
+	Work around an ffmpeg bug where it always returns 0 timestamps.
+
 2008-03-06  Michael Smith <msmith@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_pixfmt_to_caps):

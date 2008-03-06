@@ -577,6 +577,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
       break;
   }
 
+  ffmpegdec->last_out = GST_CLOCK_TIME_NONE;
   ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
   /* FIXME, reset_qos holds the LOCK */
   ffmpegdec->proportion = 0.0;
@@ -1343,6 +1344,8 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
         (AVPicture *) ffmpegdec->picture,
         ffmpegdec->context->pix_fmt, width, height);
   }
+  ffmpegdec->picture->pts = -1;
+
   return ret;
 
   /* special cases */
@@ -1493,7 +1496,17 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
           "timestamp discont, we have DTS as timestamps");
     }
   }
-  ffmpegdec->last_out = out_pts;
+
+  if (out_pts == 0 && out_pts == ffmpegdec->last_out) {
+    GST_LOG_OBJECT (ffmpegdec, "ffmpeg returns 0 timestamps, ignoring");
+    /* some codecs only output 0 timestamps, when that happens, make us select an
+     * output timestamp based on the input timestamp. We do this by making the
+     * ffmpeg timestamp and the interpollated next timestamp invalid. */
+    out_pts = -1;
+    ffmpegdec->next_ts = -1;
+  }
+  else 
+    ffmpegdec->last_out = out_pts;
 
   if (ffmpegdec->ts_is_dts) {
     /* we are dealing with DTS as the timestamps, only copy the DTS on the picture
@@ -1538,7 +1551,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
     GST_LOG_OBJECT (ffmpegdec, "using timestamp %" GST_TIME_FORMAT
         " returned by ffmpeg", GST_TIME_ARGS (out_timestamp));
   }
-  if (!GST_CLOCK_TIME_IS_VALID (out_timestamp)) {
+  if (!GST_CLOCK_TIME_IS_VALID (out_timestamp) && ffmpegdec->next_ts != -1) {
     out_timestamp = ffmpegdec->next_ts;
     GST_LOG_OBJECT (ffmpegdec, "using next timestamp %" GST_TIME_FORMAT,
         GST_TIME_ARGS (out_timestamp));
@@ -2099,6 +2112,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     avcodec_flush_buffers (ffmpegdec->context);
     ffmpegdec->waiting_for_key = TRUE;
     ffmpegdec->discont = TRUE;
+    ffmpegdec->last_out = GST_CLOCK_TIME_NONE;
     ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
   }
 
