@@ -1,3 +1,9 @@
+2008-03-07  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	Really check for libdc1394 >= 2.0.0, pkg-config thinks that
+	2.0.0-rcX is newer than 2.0.0 so we check for this too.
+
 2008-03-05  David Schleef  <ds@schleef.org>
 
 	* ext/dirac/gstdiracenc.cc: Add a bunch of properties cribbed

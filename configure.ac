@@ -355,7 +355,14 @@ AG_GST_CHECK_FEATURE(CDAUDIO, [cdaudio], cdaudio, [
 dnl *** dc1394  ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DC1394, true)
 AG_GST_CHECK_FEATURE(DC1394, [libdc1394], dc1394, [
-   PKG_CHECK_MODULES(LIBDC1394, libdc1394-2 >= 2.0.0, HAVE_DC1394="yes", [
+   PKG_CHECK_MODULES(LIBDC1394, libdc1394-2 >= 2.0.0, [
+   	if test -z "`pkg-config --modversion libdc1394-2 | grep 2.0.0-rc`"; then
+		HAVE_DC1394="yes"
+	else
+		HAVE_DC1394="no"
+		AC_MSG_RESULT(no)
+	fi
+   ], [
         HAVE_DC1394="no"
 	AC_MSG_RESULT(no)
    ])
