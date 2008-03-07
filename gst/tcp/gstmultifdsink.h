@@ -200,7 +200,7 @@ struct _GstMultiFdSink {
   GHashTable *fd_hash;  /* index on fd to client */
   guint clients_cookie; /* Cookie to detect changes to the clients list */
 
-  GstPollMode mode;
+  gint mode;
   GstPoll *fdset;
 
   GSList *streamheader; /* GSList of GstBuffers to use as streamheader */

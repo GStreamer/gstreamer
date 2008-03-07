@@ -139,7 +139,7 @@ gst_rtsp_connection_create (GstRTSPUrl * url, GstRTSPConnection ** conn)
 
   newconn = g_new0 (GstRTSPConnection, 1);
 
-  if ((newconn->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
+  if ((newconn->fdset = gst_poll_new (TRUE)) == NULL)
     goto no_fdset;
 
   newconn->url = url;

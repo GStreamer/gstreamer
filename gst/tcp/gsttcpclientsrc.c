@@ -302,7 +302,7 @@ gst_tcp_client_src_start (GstBaseSrc * bsrc)
   gchar *ip;
   GstTCPClientSrc *src = GST_TCP_CLIENT_SRC (bsrc);
 
-  if ((src->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
+  if ((src->fdset = gst_poll_new (TRUE)) == NULL)
     goto socket_pair;
 
   /* create receiving client socket */

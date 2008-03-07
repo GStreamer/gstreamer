@@ -386,7 +386,7 @@ gst_tcp_server_src_start (GstBaseSrc * bsrc)
     goto listen_error;
 
   /* create an fdset to keep track of our file descriptors */
-  if ((src->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
+  if ((src->fdset = gst_poll_new (TRUE)) == NULL)
     goto socket_pair;
 
   gst_poll_add_fd (src->fdset, &src->server_sock_fd);

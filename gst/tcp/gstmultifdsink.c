@@ -167,9 +167,10 @@ enum
   LAST_SIGNAL
 };
 
+
 /* this is really arbitrarily chosen */
 #define DEFAULT_PROTOCOL                GST_TCP_PROTOCOL_NONE
-#define DEFAULT_MODE                    GST_POLL_MODE_AUTO
+#define DEFAULT_MODE                    1
 #define DEFAULT_BUFFERS_MAX             -1
 #define DEFAULT_BUFFERS_SOFT_MAX        -1
 #define DEFAULT_TIME_MIN                -1
@@ -214,6 +215,26 @@ enum
   PROP_BURST_UNIT,
   PROP_BURST_VALUE,
 };
+
+/* For backward compat, we can't really select the poll mode anymore with
+ * GstPoll. */
+#define GST_TYPE_FDSET_MODE (gst_fdset_mode_get_type())
+static GType
+gst_fdset_mode_get_type (void)
+{
+  static GType fdset_mode_type = 0;
+  static const GEnumValue fdset_mode[] = {
+    {0, "Select", "select"},
+    {1, "Poll", "poll"},
+    {2, "EPoll", "epoll"},
+    {0, NULL, NULL},
+  };
+
+  if (!fdset_mode_type) {
+    fdset_mode_type = g_enum_register_static ("GstFDSetMode", fdset_mode);
+  }
+  return fdset_mode_type;
+}
 
 #define GST_TYPE_RECOVER_POLICY (gst_recover_policy_get_type())
 static GType
@@ -361,7 +382,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
           GST_TYPE_TCP_PROTOCOL, DEFAULT_PROTOCOL, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
-          "The mode for selecting activity on the fds", GST_TYPE_POLL_MODE,
+          "The mode for selecting activity on the fds", GST_TYPE_FDSET_MODE,
           DEFAULT_MODE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_BUFFERS_MAX,
@@ -2630,7 +2651,7 @@ gst_multi_fd_sink_start (GstBaseSink * bsink)
   fclass = GST_MULTI_FD_SINK_GET_CLASS (this);
 
   GST_INFO_OBJECT (this, "starting in mode %d", this->mode);
-  if ((this->fdset = gst_poll_new (this->mode, TRUE)) == NULL)
+  if ((this->fdset = gst_poll_new (TRUE)) == NULL)
     goto socket_pair;
 
   this->streamheader = NULL;

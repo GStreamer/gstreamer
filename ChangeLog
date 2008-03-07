@@ -1,3 +1,14 @@
+2008-03-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_create):
+	* gst/tcp/gstmultifdsink.c: (gst_fdset_mode_get_type),
+	(gst_multi_fd_sink_class_init), (gst_multi_fd_sink_start):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcp_client_src_start):
+	* gst/tcp/gsttcpserversrc.c: (gst_tcp_server_src_start):
+	Remove GstPollMode from gstpoll constructor.
+
 2008-03-04  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
