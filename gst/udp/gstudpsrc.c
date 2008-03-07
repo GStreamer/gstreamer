@@ -326,6 +326,8 @@ gst_udpsrc_finalize (GObject * object)
   g_free (udpsrc->multi_group);
   g_free (udpsrc->uri);
 
+  WSA_CLEANUP (src);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -759,13 +761,8 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
   src->myaddr.sin_port = htons (src->port + 1);
 
-#ifdef G_OS_WIN32
-  if ((src->fdset = gst_poll_new (GST_POLL_MODE_AUTO, FALSE)) == NULL)
-    goto no_fdset;
-#else
   if ((src->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
     goto no_fdset;
-#endif
 
   gst_poll_add_fd (src->fdset, &src->sock);
   gst_poll_fd_ctl_read (src->fdset, &src->sock, TRUE);
@@ -876,8 +873,6 @@ gst_udpsrc_stop (GstBaseSrc * bsrc)
     gst_poll_free (src->fdset);
     src->fdset = NULL;
   }
-
-  WSA_CLEANUP (src);
 
   return TRUE;
 }

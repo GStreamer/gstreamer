@@ -1,3 +1,12 @@
+2008-03-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_finalize), (gst_udpsrc_start),
+	(gst_udpsrc_stop):
+	Properly balance WSA_Cleanup with WSA_Startup.
+	Also make the poll controllable on windows. Fixes #520888.
+
 2008-03-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/matroska/ebml-read.c: (gst_ebml_read_peek_bytes),
