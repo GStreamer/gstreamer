@@ -6,7 +6,7 @@
  * gstregistrybinary.c: GstRegistryBinary object, support routines
  *
  * This library is free software; you can redistribute it and/or
- * modify it ulnder the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
  *
@@ -50,6 +50,10 @@
 
 #include <errno.h>
 #include <stdio.h>
+
+#if defined (_MSC_VER) && _MSC_VER >= 1400
+#include <io.h>
+#endif
 
 #include <gst/gst_private.h>
 #include <gst/gstconfig.h>

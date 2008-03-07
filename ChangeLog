@@ -1,3 +1,12 @@
+2008-03-07  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Ole André Vadla Ravnås
+	    <ole dot andre dot ravnas at tandberg dot com>
+
+	* gst/gstregistrybinary.c:
+	Include io.h for write() and close() when building with MSVC. Fixes
+	bug #520877.
+
 2008-03-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
