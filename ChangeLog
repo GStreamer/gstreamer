@@ -1,5 +1,10 @@
 2008-03-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init):
+	Update mode property docs, it's deprecated now.
+
+2008-03-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/rtsp/gstrtspconnection.c:
 	(gst_rtsp_connection_create):
 	* gst/tcp/gstmultifdsink.c: (gst_fdset_mode_get_type),

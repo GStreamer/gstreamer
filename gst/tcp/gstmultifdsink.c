@@ -380,10 +380,19 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
           GST_TYPE_TCP_PROTOCOL, DEFAULT_PROTOCOL, G_PARAM_READWRITE));
+
+  /**
+   * GstMultiFdSink::mode
+   *
+   * The mode for selecting activity on the fds. 
+   *
+   * This property is deprecated since 0.10.18, if will now automatically
+   * select and use the most optimal method.
+   */
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
-          "The mode for selecting activity on the fds", GST_TYPE_FDSET_MODE,
-          DEFAULT_MODE, G_PARAM_READWRITE));
+          "The mode for selecting activity on the fds (deprecated)",
+          GST_TYPE_FDSET_MODE, DEFAULT_MODE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_BUFFERS_MAX,
       g_param_spec_int ("buffers-max", "Buffers max",
