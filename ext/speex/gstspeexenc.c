@@ -883,7 +883,6 @@ done:
   /* ERRORS */
 not_setup:
   {
-    gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (enc, CORE, NEGOTIATION, (NULL),
         ("encoder not initialized (input is not audio?)"));
     ret = GST_FLOW_NOT_NEGOTIATED;

@@ -1,3 +1,11 @@
+2008-03-07  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* ext/speex/gstspeexenc.c: (gst_speex_enc_chain):
+	Unref the buffers only once when handling not-negotiated errors.
+	Fixes bug #520764.
+
 2008-03-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
