@@ -355,7 +355,7 @@ gst_fd_sink_start (GstBaseSink * basesink)
   if (!gst_fd_sink_check_fd (fdsink, fdsink->fd))
     return FALSE;
 
-  if ((fdsink->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
+  if ((fdsink->fdset = gst_poll_new (TRUE)) == NULL)
     goto socket_pair;
 
   fd.fd = fdsink->fd;

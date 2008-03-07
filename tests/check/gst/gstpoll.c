@@ -30,8 +30,7 @@
 #include <sys/socket.h>
 #endif
 
-static void
-test_poll_wait (GstPollMode mode)
+GST_START_TEST (test_poll_wait)
 {
   GstPoll *set;
   GstPollFD rfd = GST_POLL_FD_INIT;
@@ -39,7 +38,7 @@ test_poll_wait (GstPollMode mode)
   gint socks[2];
   guchar c = 'A';
 
-  set = gst_poll_new (mode, FALSE);
+  set = gst_poll_new (FALSE);
   fail_if (set == NULL, "Failed to create a GstPoll");
 
 #ifdef G_OS_WIN32
@@ -97,6 +96,8 @@ test_poll_wait (GstPollMode mode)
   close (socks[1]);
 }
 
+GST_END_TEST;
+
 GST_START_TEST (test_poll_basic)
 {
   GstPoll *set;
@@ -104,14 +105,8 @@ GST_START_TEST (test_poll_basic)
 
   fd.fd = 1;
 
-  set = gst_poll_new (GST_POLL_MODE_AUTO, FALSE);
+  set = gst_poll_new (FALSE);
   fail_if (set == NULL, "Failed to create a GstPoll");
-  fail_unless (gst_poll_get_mode (set) == GST_POLL_MODE_AUTO,
-      "Mode should have been GST_POLL_MODE_AUTO");
-
-  gst_poll_set_mode (set, GST_POLL_MODE_SELECT);
-  fail_unless (gst_poll_get_mode (set) == GST_POLL_MODE_SELECT,
-      "Mode should have been GST_POLL_MODE_SELECT");
 
   fail_unless (gst_poll_add_fd (set, &fd), "Could not add descriptor");
   fail_unless (gst_poll_fd_ctl_write (set, &fd, TRUE),
@@ -136,7 +131,7 @@ GST_START_TEST (test_poll_basic)
 
   gst_poll_free (set);
 
-  set = gst_poll_new (GST_POLL_MODE_AUTO, TRUE);
+  set = gst_poll_new (TRUE);
   fail_if (set == NULL, "Failed to create a GstPoll");
   gst_poll_set_flushing (set, TRUE);
   gst_poll_free (set);
@@ -162,7 +157,7 @@ GST_START_TEST (test_poll_wait_stop)
 {
   GstPoll *set;
 
-  set = gst_poll_new (GST_POLL_MODE_AUTO, TRUE);
+  set = gst_poll_new (TRUE);
   fail_if (set == NULL, "Failed to create a GstPoll");
 
   MAIN_START_THREADS (1, delayed_stop, set);
@@ -202,7 +197,7 @@ GST_START_TEST (test_poll_wait_restart)
 
   fd.fd = 1;
 
-  set = gst_poll_new (GST_POLL_MODE_AUTO, TRUE);
+  set = gst_poll_new (TRUE);
   fail_if (set == NULL, "Failed to create a GstPoll");
 
   MAIN_START_THREADS (1, delayed_restart, set);
@@ -235,7 +230,7 @@ GST_START_TEST (test_poll_wait_flush)
 {
   GstPoll *set;
 
-  set = gst_poll_new (GST_POLL_MODE_AUTO, TRUE);
+  set = gst_poll_new (TRUE);
   fail_if (set == NULL, "Failed to create a GstPoll");
 
   gst_poll_set_flushing (set, TRUE);
@@ -298,7 +293,7 @@ GST_START_TEST (test_poll_controllable)
 
   fd.fd = 1;
 
-  set = gst_poll_new (GST_POLL_MODE_AUTO, FALSE);
+  set = gst_poll_new (FALSE);
   fail_if (set == NULL, "Failed to create a GstPoll");
 
   MAIN_START_THREADS (1, delayed_control, set);
@@ -322,41 +317,6 @@ GST_START_TEST (test_poll_controllable)
 
 GST_END_TEST;
 
-GST_START_TEST (test_poll_wait_auto)
-{
-  test_poll_wait (GST_POLL_MODE_AUTO);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_poll_wait_ppoll)
-{
-  test_poll_wait (GST_POLL_MODE_PPOLL);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_poll_wait_poll)
-{
-  test_poll_wait (GST_POLL_MODE_POLL);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_poll_wait_pselect)
-{
-  test_poll_wait (GST_POLL_MODE_PSELECT);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_poll_wait_select)
-{
-  test_poll_wait (GST_POLL_MODE_SELECT);
-}
-
-GST_END_TEST;
-
 static Suite *
 gst_poll_suite (void)
 {
@@ -368,11 +328,7 @@ gst_poll_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_poll_basic);
-  tcase_add_test (tc_chain, test_poll_wait_auto);
-  tcase_add_test (tc_chain, test_poll_wait_ppoll);
-  tcase_add_test (tc_chain, test_poll_wait_poll);
-  tcase_add_test (tc_chain, test_poll_wait_pselect);
-  tcase_add_test (tc_chain, test_poll_wait_select);
+  tcase_add_test (tc_chain, test_poll_wait);
   tcase_add_test (tc_chain, test_poll_wait_stop);
   tcase_add_test (tc_chain, test_poll_wait_restart);
   tcase_add_test (tc_chain, test_poll_wait_flush);

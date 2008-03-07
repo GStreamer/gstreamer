@@ -485,7 +485,7 @@ gst_net_time_provider_new (GstClock * clock, const gchar * address, gint port)
   ret = g_object_new (GST_TYPE_NET_TIME_PROVIDER, "clock", clock, "address",
       address, "port", port, NULL);
 
-  if ((ret->priv->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
+  if ((ret->priv->fdset = gst_poll_new (TRUE)) == NULL)
     goto no_fdset;
 
   if (!gst_net_time_provider_start (ret))

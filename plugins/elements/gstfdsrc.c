@@ -227,7 +227,7 @@ gst_fd_src_start (GstBaseSrc * bsrc)
 
   src->curoffset = 0;
 
-  if ((src->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
+  if ((src->fdset = gst_poll_new (TRUE)) == NULL)
     goto socket_pair;
 
   gst_fd_src_update_fd (src);

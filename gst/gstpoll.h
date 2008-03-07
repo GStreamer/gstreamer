@@ -34,7 +34,7 @@ G_BEGIN_DECLS
 /**
  * GstPoll:
  *
- * A set of file descriptors.
+ * A set of file/network descriptors.
  */
 typedef struct _GstPoll GstPoll;
 
@@ -63,29 +63,8 @@ typedef struct {
  */
 #define GST_POLL_FD_INIT  { -1, -1 }
 
-/**
- * GstPollMode:
- * @GST_POLL_MODE_AUTO: choose method automatically
- * @GST_POLL_MODE_SELECT: use select() when waiting
- * @GST_POLL_MODE_PSELECT: use pselect() when waiting
- * @GST_POLL_MODE_POLL: use poll() when waiting
- * @GST_POLL_MODE_PPOLL: use ppoll() when waiting
- *
- * Which method to use when waiting for a set of file descriptors.
- */
-typedef enum {
-  GST_POLL_MODE_AUTO,
-  GST_POLL_MODE_SELECT,
-  GST_POLL_MODE_PSELECT,
-  GST_POLL_MODE_POLL,
-  GST_POLL_MODE_PPOLL
-} GstPollMode;
-
-GstPoll*        gst_poll_new              (GstPollMode mode, gboolean controllable);
+GstPoll*        gst_poll_new              (gboolean controllable);
 void            gst_poll_free             (GstPoll *set);
-
-void            gst_poll_set_mode         (GstPoll *set, GstPollMode mode);
-GstPollMode     gst_poll_get_mode         (const GstPoll *set);
 
 void            gst_poll_fd_init          (GstPollFD *fd);
 

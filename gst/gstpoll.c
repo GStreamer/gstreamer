@@ -2,6 +2,7 @@
  * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) 2004 Wim Taymans <wim.taymans@gmail.com>
  * Copyright (C) 2007 Peter Kjellerstedt <pkj@axis.com>
+ * Copyright (C) 2008 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
  *
  * gstpoll.c: File descriptor set
  *
@@ -55,13 +56,22 @@
 #include "config.h"
 #endif
 
+#ifndef _MSC_VER
 #define _GNU_SOURCE 1
 #include <sys/poll.h>
 #include <sys/time.h>
+#endif
+
 #include <sys/types.h>
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
 #include <errno.h>
 #include <fcntl.h>
+
+#include <glib.h>
 
 #ifdef G_OS_WIN32
 #include <winsock2.h>
@@ -77,6 +87,7 @@
 
 #include "gstpoll.h"
 
+#ifndef G_OS_WIN32
 /* the poll/select call is also performed on a control socket, that way
  * we can send special commands to control it
  */
@@ -93,11 +104,26 @@ G_STMT_START {                                       \
 
 #define GST_POLL_CMD_WAKEUP  'W'        /* restart the poll/select call */
 
-#ifdef G_OS_WIN32
-#define CLOSE_SOCKET(sock) closesocket (sock)
-#else
-#define CLOSE_SOCKET(sock) close (sock)
+#else /* G_OS_WIN32 */
+typedef struct _WinsockFd WinsockFd;
+
+struct _WinsockFd
+{
+  gint fd;
+  glong event_mask;
+  WSANETWORKEVENTS events;
+};
 #endif
+
+typedef enum
+{
+  GST_POLL_MODE_AUTO,
+  GST_POLL_MODE_SELECT,
+  GST_POLL_MODE_PSELECT,
+  GST_POLL_MODE_POLL,
+  GST_POLL_MODE_PPOLL,
+  GST_POLL_MODE_WINDOWS
+} GstPollMode;
 
 struct _GstPoll
 {
@@ -107,35 +133,54 @@ struct _GstPoll
 
   GArray *fds;
   GArray *active_fds;
+#ifndef G_OS_WIN32
+  GstPollFD control_read_fd;
+  GstPollFD control_write_fd;
+#else
+  GArray *events;
+  GArray *active_events;
+
+  HANDLE wakeup_event;
+#endif
+
   gboolean controllable;
   gboolean new_controllable;
   gboolean waiting;
   gboolean flushing;
-
-  GstPollFD control_read_fd;
-  GstPollFD control_write_fd;
 };
 
 static gint
 find_index (GArray * array, GstPollFD * fd)
 {
-  struct pollfd *pfd;
+#ifndef G_OS_WIN32
+  struct pollfd *ifd;
+#else
+  WinsockFd *ifd;
+#endif
   guint i;
 
   /* start by assuming the index found in the fd is still valid */
   if (fd->idx >= 0 && fd->idx < array->len) {
-    pfd = &g_array_index (array, struct pollfd, fd->idx);
+#ifndef G_OS_WIN32
+    ifd = &g_array_index (array, struct pollfd, fd->idx);
+#else
+    ifd = &g_array_index (array, WinsockFd, fd->idx);
+#endif
 
-    if (pfd->fd == fd->fd) {
+    if (ifd->fd == fd->fd) {
       return fd->idx;
     }
   }
 
   /* the pollfd array has changed and we need to lookup the fd again */
   for (i = 0; i < array->len; i++) {
-    pfd = &g_array_index (array, struct pollfd, i);
+#ifndef G_OS_WIN32
+    ifd = &g_array_index (array, struct pollfd, i);
+#else
+    ifd = &g_array_index (array, WinsockFd, i);
+#endif
 
-    if (pfd->fd == fd->fd) {
+    if (ifd->fd == fd->fd) {
       fd->idx = (gint) i;
       return fd->idx;
     }
@@ -208,6 +253,7 @@ choose_mode (const GstPoll * set, GstClockTime timeout)
   return mode;
 }
 
+#ifndef G_OS_WIN32
 static gint
 pollfd_to_fd_set (GstPoll * set, fd_set * readfds, fd_set * writefds)
 {
@@ -257,13 +303,49 @@ fd_set_to_pollfd (GstPoll * set, fd_set * readfds, fd_set * writefds)
 
   g_mutex_unlock (set->lock);
 }
+#else /* G_OS_WIN32 */
+static void
+gst_poll_free_winsock_event (GstPoll * set, gint idx)
+{
+  WinsockFd *wfd = &g_array_index (set->fds, WinsockFd, idx);
+  HANDLE event = g_array_index (set->events, HANDLE, idx);
+
+  WSAEventSelect (wfd->fd, event, 0);
+  CloseHandle (event);
+}
+
+static gboolean
+gst_poll_update_winsock_event_mask (GstPoll * set, gint idx, glong flags,
+    gboolean active)
+{
+  WinsockFd *wfd;
+  HANDLE event;
+  glong new_mask;
+  gint ret;
+
+  wfd = &g_array_index (set->fds, WinsockFd, idx);
+  event = g_array_index (set->events, HANDLE, idx);
+
+  if (active)
+    new_mask = wfd->event_mask | flags;
+  else
+    new_mask = wfd->event_mask & ~flags;
+
+  ret = WSAEventSelect (wfd->fd, event, new_mask);
+  if (G_LIKELY (ret == 0))
+    wfd->event_mask = new_mask;
+  else
+    GST_ERROR ("WSAEventSelect failed: 0x%08x", GetLastError ());
+
+  return ret == 0;
+}
+#endif
 
 /**
  * gst_poll_new:
- * @mode: the mode of the file descriptor set.
  * @controllable: whether it should be possible to control a wait.
  *
- * Create a new file descriptor set with the given @mode. If @controllable, it
+ * Create a new file descriptor set. If @controllable, it
  * is possible to restart or flush a call to gst_poll_wait() with
  * gst_poll_restart() and gst_poll_set_flushing() respectively.
  *
@@ -273,17 +355,27 @@ fd_set_to_pollfd (GstPoll * set, fd_set * readfds, fd_set * writefds)
  * Since: 0.10.18
  */
 GstPoll *
-gst_poll_new (GstPollMode mode, gboolean controllable)
+gst_poll_new (gboolean controllable)
 {
   GstPoll *nset;
 
   nset = g_new0 (GstPoll, 1);
-  nset->mode = mode;
   nset->lock = g_mutex_new ();
+#ifndef G_OS_WIN32
+  nset->mode = GST_POLL_MODE_AUTO;
   nset->fds = g_array_new (FALSE, FALSE, sizeof (struct pollfd));
   nset->active_fds = g_array_new (FALSE, FALSE, sizeof (struct pollfd));
   nset->control_read_fd.fd = -1;
   nset->control_write_fd.fd = -1;
+#else
+  nset->mode = GST_POLL_MODE_WINDOWS;
+  nset->fds = g_array_new (FALSE, FALSE, sizeof (WinsockFd));
+  nset->active_fds = g_array_new (FALSE, FALSE, sizeof (WinsockFd));
+  nset->events = g_array_new (FALSE, FALSE, sizeof (HANDLE));
+  nset->active_events = g_array_new (FALSE, FALSE, sizeof (HANDLE));
+
+  nset->wakeup_event = CreateEvent (NULL, TRUE, FALSE, NULL);
+#endif
 
   if (!gst_poll_set_controllable (nset, controllable))
     goto not_controllable;
@@ -311,58 +403,29 @@ gst_poll_free (GstPoll * set)
 {
   g_return_if_fail (set != NULL);
 
+#ifndef G_OS_WIN32
   if (set->control_write_fd.fd >= 0)
-    CLOSE_SOCKET (set->control_write_fd.fd);
+    close (set->control_write_fd.fd);
   if (set->control_read_fd.fd >= 0)
-    CLOSE_SOCKET (set->control_read_fd.fd);
+    close (set->control_read_fd.fd);
+#else
+  CloseHandle (set->wakeup_event);
+
+  {
+    guint i;
+
+    for (i = 0; i < set->events->len; i++)
+      gst_poll_free_winsock_event (set, i);
+  }
+
+  g_array_free (set->active_events, TRUE);
+  g_array_free (set->events, TRUE);
+#endif
 
   g_array_free (set->active_fds, TRUE);
   g_array_free (set->fds, TRUE);
   g_mutex_free (set->lock);
   g_free (set);
-}
-
-/**
- * gst_poll_set_mode:
- * @set: a file descriptor set.
- * @mode: the mode of the file descriptor set.
- *
- * Set the mode to use to determine how to wait for the file descriptor set.
- *
- * Since: 0.10.18
- */
-void
-gst_poll_set_mode (GstPoll * set, GstPollMode mode)
-{
-  g_return_if_fail (set != NULL);
-
-  g_mutex_lock (set->lock);
-  set->mode = mode;
-  g_mutex_unlock (set->lock);
-}
-
-/**
- * gst_poll_get_mode:
- * @set: a file descriptor set.
- *
- * Get the mode used to determine how to wait for the file descriptor set.
- *
- * Returns: the currently used mode.
- *
- * Since: 0.10.18
- */
-GstPollMode
-gst_poll_get_mode (const GstPoll * set)
-{
-  GstPollMode mode;
-
-  g_return_val_if_fail (set != NULL, GST_POLL_MODE_AUTO);
-
-  g_mutex_lock (set->lock);
-  mode = set->mode;
-  g_mutex_unlock (set->lock);
-
-  return mode;
 }
 
 /**
@@ -390,6 +453,7 @@ gst_poll_add_fd_unlocked (GstPoll * set, GstPollFD * fd)
 
   idx = find_index (set->fds, fd);
   if (idx < 0) {
+#ifndef G_OS_WIN32
     struct pollfd nfd;
 
     nfd.fd = fd->fd;
@@ -397,7 +461,24 @@ gst_poll_add_fd_unlocked (GstPoll * set, GstPollFD * fd)
     nfd.revents = 0;
 
     g_array_append_val (set->fds, nfd);
+
     fd->idx = set->fds->len - 1;
+#else
+    WinsockFd wfd;
+    HANDLE event;
+
+    wfd.fd = fd->fd;
+    wfd.event_mask = 0;
+    memset (&wfd.events, 0, sizeof (wfd.events));
+    event = WSACreateEvent ();
+
+    g_array_append_val (set->fds, wfd);
+    g_array_append_val (set->events, event);
+
+    fd->idx = set->fds->len - 1;
+
+    gst_poll_update_winsock_event_mask (set, fd->idx, FD_CLOSE, TRUE);
+#endif
   }
 
   return TRUE;
@@ -457,6 +538,11 @@ gst_poll_remove_fd (GstPoll * set, GstPollFD * fd)
   /* get the index, -1 is an fd that is not added */
   idx = find_index (set->fds, fd);
   if (idx >= 0) {
+#ifdef G_OS_WIN32
+    gst_poll_free_winsock_event (set, idx);
+    g_array_remove_index_fast (set->events, idx);
+#endif
+
     /* remove the fd at index, we use _remove_index_fast, which copies the last
      * element of the array to the freed index */
     g_array_remove_index_fast (set->fds, idx);
@@ -496,12 +582,17 @@ gst_poll_fd_ctl_write (GstPoll * set, GstPollFD * fd, gboolean active)
 
   idx = find_index (set->fds, fd);
   if (idx >= 0) {
+#ifndef G_OS_WIN32
     struct pollfd *pfd = &g_array_index (set->fds, struct pollfd, idx);
 
     if (active)
       pfd->events |= POLLOUT;
     else
       pfd->events &= ~POLLOUT;
+#else
+    if (!gst_poll_update_winsock_event_mask (set, idx, FD_WRITE, active))
+      idx = -1;
+#endif
   }
 
   g_mutex_unlock (set->lock);
@@ -515,13 +606,19 @@ gst_poll_fd_ctl_read_unlocked (GstPoll * set, GstPollFD * fd, gboolean active)
   gint idx;
 
   idx = find_index (set->fds, fd);
+
   if (idx >= 0) {
+#ifndef G_OS_WIN32
     struct pollfd *pfd = &g_array_index (set->fds, struct pollfd, idx);
 
     if (active)
       pfd->events |= (POLLIN | POLLPRI);
     else
       pfd->events &= ~(POLLIN | POLLPRI);
+#else
+    if (!gst_poll_update_winsock_event_mask (set, idx, FD_READ, active))
+      idx = -1;
+#endif
   }
 
   return idx >= 0;
@@ -583,9 +680,15 @@ gst_poll_fd_has_closed (const GstPoll * set, GstPollFD * fd)
 
   idx = find_index (set->active_fds, fd);
   if (idx >= 0) {
+#ifndef G_OS_WIN32
     struct pollfd *pfd = &g_array_index (set->active_fds, struct pollfd, idx);
 
     res = (pfd->revents & POLLHUP) != 0;
+#else
+    WinsockFd *wfd = &g_array_index (set->active_fds, WinsockFd, idx);
+
+    res = (wfd->events.lNetworkEvents & FD_CLOSE) != 0;
+#endif
   }
 
   g_mutex_unlock (set->lock);
@@ -618,9 +721,17 @@ gst_poll_fd_has_error (const GstPoll * set, GstPollFD * fd)
 
   idx = find_index (set->active_fds, fd);
   if (idx >= 0) {
+#ifndef G_OS_WIN32
     struct pollfd *pfd = &g_array_index (set->active_fds, struct pollfd, idx);
 
     res = (pfd->revents & (POLLERR | POLLNVAL)) != 0;
+#else
+    WinsockFd *wfd = &g_array_index (set->active_fds, WinsockFd, idx);
+
+    res = (wfd->events.iErrorCode[FD_CLOSE_BIT] != 0) ||
+        (wfd->events.iErrorCode[FD_READ_BIT] != 0) ||
+        (wfd->events.iErrorCode[FD_WRITE_BIT] != 0);
+#endif
   }
 
   g_mutex_unlock (set->lock);
@@ -636,9 +747,15 @@ gst_poll_fd_can_read_unlocked (const GstPoll * set, GstPollFD * fd)
 
   idx = find_index (set->active_fds, fd);
   if (idx >= 0) {
+#ifndef G_OS_WIN32
     struct pollfd *pfd = &g_array_index (set->active_fds, struct pollfd, idx);
 
     res = (pfd->revents & (POLLIN | POLLPRI)) != 0;
+#else
+    WinsockFd *wfd = &g_array_index (set->active_fds, WinsockFd, idx);
+
+    res = (wfd->events.lNetworkEvents & FD_READ) != 0;
+#endif
   }
 
   return res;
@@ -698,9 +815,15 @@ gst_poll_fd_can_write (const GstPoll * set, GstPollFD * fd)
 
   idx = find_index (set->active_fds, fd);
   if (idx >= 0) {
+#ifndef G_OS_WIN32
     struct pollfd *pfd = &g_array_index (set->active_fds, struct pollfd, idx);
 
     res = (pfd->revents & POLLOUT) != 0;
+#else
+    WinsockFd *wfd = &g_array_index (set->active_fds, WinsockFd, idx);
+
+    res = (wfd->events.lNetworkEvents & FD_WRITE) != 0;
+#endif
   }
 
   g_mutex_unlock (set->lock);
@@ -754,8 +877,18 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
     mode = choose_mode (set, timeout);
 
     g_array_set_size (set->active_fds, set->fds->len);
+#ifndef G_OS_WIN32
     memcpy (set->active_fds->data, set->fds->data,
         set->fds->len * sizeof (struct pollfd));
+#else
+    memcpy (set->active_fds->data, set->fds->data,
+        set->fds->len * sizeof (WinsockFd));
+
+    g_array_set_size (set->active_events, set->events->len + 1);
+    *((HANDLE *) set->active_events->data) = set->wakeup_event;
+    memcpy (set->active_events->data + sizeof (HANDLE), set->events->data,
+        set->events->len * sizeof (HANDLE));
+#endif
     g_mutex_unlock (set->lock);
 
     switch (mode) {
@@ -814,6 +947,7 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
 #endif
       case GST_POLL_MODE_SELECT:
       {
+#ifndef G_OS_WIN32
         fd_set readfds;
         fd_set writefds;
         gint max_fd;
@@ -851,15 +985,79 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
         if (res > 0) {
           fd_set_to_pollfd (set, &readfds, &writefds);
         }
+#else /* G_OS_WIN32 */
+        g_assert_not_reached ();
+        errno = ENOSYS;
+#endif
+        break;
+      }
+      case GST_POLL_MODE_WINDOWS:
+      {
+#ifdef G_OS_WIN32
+        DWORD t, wait_ret;
 
+        if (timeout != GST_CLOCK_TIME_NONE)
+          t = GST_TIME_AS_MSECONDS (timeout);
+        else
+          t = INFINITE;
+
+        wait_ret = WSAWaitForMultipleEvents (set->active_events->len,
+            (HANDLE *) set->active_events->data, FALSE, t, FALSE);
+
+        if (wait_ret == WSA_WAIT_TIMEOUT)
+          res = 0;
+        else if (wait_ret == WSA_WAIT_FAILED)
+          res = -1;
+        else {
+          /* the first entry is the wakeup event */
+          if (wait_ret - WSA_WAIT_EVENT_0 >= 1) {
+            gint i, enum_ret;
+
+            /*
+             * We need to check which events are signaled, and call
+             * WSAEnumNetworkEvents for those that are, which resets
+             * the event and clears the internal network event records.
+             */
+            res = 0;
+            for (i = 0; i < set->active_fds->len; i++) {
+              WinsockFd *wfd = &g_array_index (set->active_fds, WinsockFd, i);
+              HANDLE event = g_array_index (set->active_events, HANDLE, i + 1);
+
+              wait_ret = WaitForSingleObject (event, 0);
+              if (wait_ret == WAIT_OBJECT_0) {
+                enum_ret = WSAEnumNetworkEvents (wfd->fd, event, &wfd->events);
+
+                if (G_UNLIKELY (enum_ret != 0)) {
+                  res = -1;
+                  break;
+                }
+
+                res++;
+              } else {
+                /* clear any previously stored result */
+                memset (&wfd->events, 0, sizeof (wfd->events));
+              }
+            }
+
+            g_assert (res > 0);
+          } else {
+            res = 1;            /* wakeup event */
+          }
+        }
+#else
+        g_assert_not_reached ();
+        errno = ENOSYS;
+#endif
         break;
       }
     }
 
     g_mutex_lock (set->lock);
 
-    /* check if the poll/select was aborted due to a command */
+    /* check if the poll/select was aborted due to a command, FIXME, If we have an
+     * ERROR, we might not clear the control socket. */
     if (res > 0 && set->controllable) {
+#ifndef G_OS_WIN32
       while (TRUE) {
         guchar cmd;
         gint result;
@@ -881,6 +1079,12 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
             gst_poll_fd_can_read_unlocked (set, &set->control_read_fd))
           restarting = TRUE;
       }
+#else
+      if (WaitForSingleObject (set->wakeup_event, 0) == WAIT_OBJECT_0) {
+        ResetEvent (set->wakeup_event);
+        restarting = TRUE;
+      }
+#endif
     }
 
     /* update the controllable state if needed */
@@ -935,24 +1139,16 @@ gst_poll_set_controllable (GstPoll * set, gboolean controllable)
 
   g_mutex_lock (set->lock);
 
+#ifndef G_OS_WIN32
   if (controllable && set->control_read_fd.fd < 0) {
     gint control_sock[2];
 
-#ifdef G_OS_WIN32
-    gulong flags = 1;
-
-    if (_pipe (control_sock, 4096, _O_BINARY) < 0)
-      goto no_socket_pair;
-
-    ioctlsocket (control_sock[0], FIONBIO, &flags);
-    ioctlsocket (control_sock[1], FIONBIO, &flags);
-#else
     if (socketpair (PF_UNIX, SOCK_STREAM, 0, control_sock) < 0)
       goto no_socket_pair;
 
     fcntl (control_sock[0], F_SETFL, O_NONBLOCK);
     fcntl (control_sock[1], F_SETFL, O_NONBLOCK);
-#endif
+
     set->control_read_fd.fd = control_sock[0];
     set->control_write_fd.fd = control_sock[1];
 
@@ -961,6 +1157,7 @@ gst_poll_set_controllable (GstPoll * set, gboolean controllable)
 
   if (set->control_read_fd.fd >= 0)
     gst_poll_fd_ctl_read_unlocked (set, &set->control_read_fd, controllable);
+#endif
 
   /* delay the change of the controllable state if we are waiting */
   set->new_controllable = controllable;
@@ -972,11 +1169,13 @@ gst_poll_set_controllable (GstPoll * set, gboolean controllable)
   return TRUE;
 
   /* ERRORS */
+#ifndef G_OS_WIN32
 no_socket_pair:
   {
     g_mutex_unlock (set->lock);
     return FALSE;
   }
+#endif
 }
 
 /**
@@ -998,9 +1197,13 @@ gst_poll_restart (GstPoll * set)
   g_mutex_lock (set->lock);
 
   if (set->controllable && set->waiting) {
+#ifndef G_OS_WIN32
     /* if we are waiting, we can send the command, else we do not have to
      * bother, future calls will automatically pick up the new fdset */
     SEND_COMMAND (set, GST_POLL_CMD_WAKEUP);
+#else
+    SetEvent (set->wakeup_event);
+#endif
   }
 
   g_mutex_unlock (set->lock);
@@ -1029,8 +1232,14 @@ gst_poll_set_flushing (GstPoll * set, gboolean flushing)
   set->flushing = flushing;
 
   if (flushing && set->controllable && set->waiting) {
-    /* we are flushing, controllable and waiting, wake up the waiter */
+    /* we are flushing, controllable and waiting, wake up the waiter. When we
+     * stop the flushing operation we don't clear the wakeup fd here, this will
+     * happen in the _wait() thread. */
+#ifndef G_OS_WIN32
     SEND_COMMAND (set, GST_POLL_CMD_WAKEUP);
+#else
+    SetEvent (set->wakeup_event);
+#endif
   }
 
   g_mutex_unlock (set->lock);

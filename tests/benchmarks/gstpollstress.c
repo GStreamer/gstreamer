@@ -154,7 +154,7 @@ main (gint argc, gchar * argv[])
 
   num_threads = atoi (argv[1]);
 
-  set = gst_poll_new (GST_POLL_MODE_POLL, TRUE);
+  set = gst_poll_new (TRUE);
 
   for (t = 0; t < num_threads; t++) {
     GError *error = NULL;

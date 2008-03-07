@@ -560,7 +560,7 @@ gst_net_client_clock_new (gchar * name, const gchar * remote_address,
       g_warning ("unable to set the base time, expect sync problems!");
   }
 
-  if ((ret->priv->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
+  if ((ret->priv->fdset = gst_poll_new (TRUE)) == NULL)
     goto no_fdset;
 
   if (!gst_net_client_clock_start (ret))
