@@ -977,3 +977,18 @@ Error:
   }
   return res;
 }
+
+
+/* FIXME 0.11: these are here for backwards compatibility */
+
+gboolean
+gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
+{
+  return FALSE;
+}
+
+gboolean
+gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
+{
+  return FALSE;
+}

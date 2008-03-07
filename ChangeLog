@@ -1,3 +1,16 @@
+2008-03-07  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* gst/gst_private.h:
+	* gst/gstconfig.h.in:
+	* gst/gstregistry.h:
+	* gst/gstregistrybinary.c:
+	* win32/common/gstconfig.h:
+	  Move registry backend API to private headers where we can. Add
+	  fixme-0.11 comments for the others. Add stubs for the xml backend when
+	  using the binary to ensure they functions exists (they should not be
+	  used though). Fixes #520756.
+
 2008-03-04  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
