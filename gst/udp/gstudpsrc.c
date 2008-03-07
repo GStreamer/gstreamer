@@ -761,7 +761,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
   src->myaddr.sin_port = htons (src->port + 1);
 
-  if ((src->fdset = gst_poll_new (GST_POLL_MODE_AUTO, TRUE)) == NULL)
+  if ((src->fdset = gst_poll_new (TRUE)) == NULL)
     goto no_fdset;
 
   gst_poll_add_fd (src->fdset, &src->sock);
