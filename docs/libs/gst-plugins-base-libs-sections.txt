@@ -595,6 +595,7 @@ gst_netaddress_get_ip6_address
 gst_netaddress_get_net_type
 gst_netaddress_set_ip4_address
 gst_netaddress_set_ip6_address
+gst_netaddress_equal
 <SUBSECTION Standard>
 GstNetBufferClass
 GST_TYPE_NETBUFFER

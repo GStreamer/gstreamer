@@ -1,5 +1,15 @@
 2008-03-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Olivier Crete  <tester at tester ca>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/netbuffer/gstnetbuffer.c: (gst_netaddress_equal):
+	* gst-libs/gst/netbuffer/gstnetbuffer.h:
+	Add trivial function to compare GstNetAddress. See #520626.
+	API: GstNetBuffer::gst_netaddress_equal
+
+2008-03-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init):
 	Update mode property docs, it's deprecated now.
 

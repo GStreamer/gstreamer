@@ -237,3 +237,43 @@ gst_netaddress_get_ip6_address (GstNetAddress * naddr, guint8 address[16],
 
   return TRUE;
 }
+
+/**
+ * gst_netaddress_equal:
+ * @naddr1: The first #GstNetAddress
+ * @naddr2: The second #GstNetAddress
+ *
+ * Compare two #GstNetAddress structures
+ *
+ * Returns: TRUE if they are identical, FALSE otherwise
+ *
+ * Since: 0.10.18
+ */
+gboolean
+gst_netaddress_equal (const GstNetAddress * naddr1,
+    const GstNetAddress * naddr2)
+{
+  g_return_val_if_fail (naddr1 != NULL, FALSE);
+  g_return_val_if_fail (naddr2 != NULL, FALSE);
+
+  if (naddr1->type != naddr2->type)
+    return FALSE;
+
+  if (naddr1->port != naddr2->port)
+    return FALSE;
+
+  switch (naddr1->type) {
+    case GST_NET_TYPE_IP4:
+      if (naddr1->address.ip4 != naddr2->address.ip4)
+        return FALSE;
+      break;
+    case GST_NET_TYPE_IP6:
+      if (memcmp (naddr1->address.ip6, naddr2->address.ip6,
+              sizeof (naddr1->address.ip6)))
+        return FALSE;
+      break;
+    default:
+      break;
+  }
+  return TRUE;
+}

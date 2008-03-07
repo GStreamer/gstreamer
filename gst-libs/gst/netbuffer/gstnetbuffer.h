@@ -105,6 +105,9 @@ GstNetType      gst_netaddress_get_net_type     (GstNetAddress *naddr);
 gboolean        gst_netaddress_get_ip4_address  (GstNetAddress *naddr, guint32 *address, guint16 *port);
 gboolean        gst_netaddress_get_ip6_address  (GstNetAddress *naddr, guint8 address[16], guint16 *port);
 
+gboolean        gst_netaddress_equal            (const GstNetAddress *naddr1,
+                                                 const GstNetAddress *naddr2);
+
 G_END_DECLS
 
 #endif /* __GST_NETBUFFER_H__ */
