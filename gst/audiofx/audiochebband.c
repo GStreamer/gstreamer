@@ -85,6 +85,8 @@
 
 #include <math.h>
 
+#include "math_compat.h"
+
 #include "audiochebband.h"
 
 #define GST_CAT_DEFAULT gst_audio_cheb_band_debug

@@ -34,5 +34,6 @@ noinst_HEADERS = audiopanorama.h \
 	audiocheblimit.h \
 	audiochebband.h \
 	audiowsincband.h \
-        audiowsinclimit.h
+        audiowsinclimit.h \
+	math_compat.h
 

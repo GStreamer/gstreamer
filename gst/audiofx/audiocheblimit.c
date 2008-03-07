@@ -81,6 +81,8 @@
 
 #include <math.h>
 
+#include "math_compat.h"
+
 #include "audiocheblimit.h"
 
 #define GST_CAT_DEFAULT gst_audio_cheb_limit_debug
