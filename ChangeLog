@@ -1,3 +1,8 @@
+2008-03-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/icles/Makefile.am:
+	  Move the -lgstfoo where it belongs.
+
 2008-03-08  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/matroska/ebml-ids.h:
