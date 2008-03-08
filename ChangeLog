@@ -214,8 +214,8 @@
 
 	* configure.ac:
 	* ext/taglib/Makefile.am:
-	  Check for and define ERROR_CXXFLAGS and use them when building
-	  C++ code (#516509).
+	  Check for and define ERROR_CXXFLAGS and GST_CXXFLAGS and use them
+	  when building C++ code (#516509).
 
 2008-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
