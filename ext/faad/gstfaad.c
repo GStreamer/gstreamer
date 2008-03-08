@@ -1141,22 +1141,19 @@ gst_faad_sync (GstBuffer * buf, guint * off)
 static gboolean
 looks_like_valid_header (guint8 * input_data, guint input_size)
 {
-  guint32 rate;
-  guint32 channels;
-
-  if (input_size < 2)
+  if (input_size < 4)
     return FALSE;
 
-  rate = ((input_data[0] & 0x7) << 1) | ((input_data[1] & 0x80) >> 7);
-  channels = (input_data[1] & 0x78) >> 3;
+  if (input_data[0] == 'A'
+      && input_data[1] == 'D' && input_data[2] == 'I' && input_data[3] == 'F')
+    /* ADIF type header */
+    return TRUE;
 
-  if (rate == 0xd || rate == 0xe)       /* Reserved values */
-    return FALSE;
+  if (input_data[0] == 0xff && (input_data[1] >> 4) == 0xf)
+    /* ADTS type header */
+    return TRUE;
 
-  if (channels == 0)            /* Extended specifier: never seen one of these */
-    return FALSE;
-
-  return TRUE;
+  return FALSE;
 }
 
 static GstFlowReturn
