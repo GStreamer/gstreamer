@@ -1,5 +1,21 @@
 2008-03-08  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/matroska/ebml-ids.h:
+	Add ID for EBML CRC32 elements.
+
+	* gst/matroska/Makefile.am:
+	* gst/matroska/ebml-read.c: (gst_ebml_finalize),
+	(gst_ebml_read_class_init), (gst_ebml_read_peek_bytes),
+	(gst_ebml_read_get_length), (_ext2dbl), (gst_ebml_read_float),
+	(gst_ebml_read_header):
+	Support reading 80bit floats, add finalize method to clean up
+	in any case, support reading length/id elements with any length
+	as long as it's smaller than our supported maximum, don't leak
+	buffers if reading as much data as we wanted failed and some
+	smaller cleanup.
+
+2008-03-08  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Olivier Crete <tester at tester dot ca>
 
 	* gst/rtp/gstrtph263pdepay.c: (gst_rtp_h263p_depay_process):

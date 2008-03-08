@@ -28,6 +28,8 @@
 #include "ebml-read.h"
 #include "ebml-ids.h"
 
+#include <math.h>
+
 GST_DEBUG_CATEGORY_STATIC (ebmlread_debug);
 #define GST_CAT_DEFAULT ebmlread_debug
 
@@ -72,14 +74,33 @@ gst_ebml_read_get_type (void)
 }
 
 static void
+gst_ebml_finalize (GObject * obj)
+{
+  GstEbmlRead *ebml = GST_EBML_READ (obj);
+
+  g_list_foreach (ebml->level, (GFunc) g_free, NULL);
+  g_list_free (ebml->level);
+  ebml->level = NULL;
+  if (ebml->cached_buffer) {
+    gst_buffer_unref (ebml->cached_buffer);
+    ebml->cached_buffer = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
+}
+
+static void
 gst_ebml_read_class_init (GstEbmlReadClass * klass)
 {
   GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
   GST_DEBUG_CATEGORY_INIT (ebmlread_debug, "ebmlread",
       0, "EBML stream helper class");
+
+  gobject_class->finalize = gst_ebml_finalize;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_ebml_read_change_state);
@@ -205,27 +226,39 @@ gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf,
     return GST_FLOW_OK;
   }
 
-  /* FIXME, seems silly to require this */
-  if (!p_buf)
-    return GST_FLOW_ERROR;
+  /* Not possible to get enough data, try a last time with
+   * requesting exactly the size we need */
+  gst_buffer_unref (ebml->cached_buffer);
+  ebml->cached_buffer = NULL;
 
-  ret = gst_pad_pull_range (ebml->sinkpad, ebml->offset, size, p_buf);
+  ret =
+      gst_pad_pull_range (ebml->sinkpad, ebml->offset, size,
+      &ebml->cached_buffer);
   if (ret != GST_FLOW_OK) {
     GST_DEBUG ("pull_range returned %d", ret);
+    if (p_buf)
+      *p_buf = NULL;
+    if (bytes)
+      *bytes = NULL;
     return ret;
   }
 
-  if (GST_BUFFER_SIZE (*p_buf) < size) {
+  if (GST_BUFFER_SIZE (ebml->cached_buffer) < size) {
     GST_WARNING_OBJECT (ebml, "Dropping short buffer at offset %"
         G_GUINT64_FORMAT ": wanted %u bytes, got %u bytes", ebml->offset,
-        size, GST_BUFFER_SIZE (*p_buf));
-    gst_buffer_unref (*p_buf);
-    *p_buf = NULL;
+        size, GST_BUFFER_SIZE (ebml->cached_buffer));
+
+    gst_buffer_unref (ebml->cached_buffer);
+    ebml->cached_buffer = NULL;
+    if (p_buf)
+      *p_buf = NULL;
     if (bytes)
       *bytes = NULL;
     return GST_FLOW_ERROR;
   }
 
+  if (p_buf)
+    *p_buf = gst_buffer_create_sub (ebml->cached_buffer, 0, size);
   if (bytes)
     *bytes = GST_BUFFER_DATA (*p_buf);
 
@@ -402,11 +435,10 @@ gst_ebml_read_get_length (GstEbmlRead * ebml)
   GstFormat fmt = GST_FORMAT_BYTES;
   gint64 end;
 
-  if (!gst_pad_query_duration (GST_PAD_PEER (ebml->sinkpad), &fmt, &end))
-    g_return_val_if_reached (0);        ///// FIXME /////////
-
-  if (fmt != GST_FORMAT_BYTES || end < 0)
-    g_return_val_if_reached (0);        ///// FIXME /////////
+  /* FIXME: what to do if we don't get the upstream length */
+  if (!gst_pad_query_peer_duration (ebml->sinkpad, &fmt, &end) ||
+      fmt != GST_FORMAT_BYTES || end < 0)
+    g_return_val_if_reached (0);
 
   return end;
 }
@@ -592,6 +624,36 @@ gst_ebml_read_sint (GstEbmlRead * ebml, guint32 * id, gint64 * num)
   return ret;
 }
 
+/* Convert 80 bit extended precision float in big endian format to double.
+ * Code taken from libavutil/intfloat_readwrite.c from ffmpeg,
+ * licensed under LGPL */
+
+struct _ext_float
+{
+  guint8 exponent[2];
+  guint8 mantissa[8];
+};
+
+static gdouble
+_ext2dbl (guint8 * data)
+{
+  struct _ext_float *ext = (struct _ext_float *) data;
+  guint64 m = 0;
+  gint e, i;
+
+  for (i = 0; i < 8; i++)
+    m = (m << 8) + ext->mantissa[i];
+  e = (((gint) ext->exponent[0] & 0x7f) << 8) | ext->exponent[1];
+  if (e == 0x7fff && m)
+    return 0.0 / 0.0;
+  e -= 16383 + 63;              /* In IEEE 80 bits, the whole (i.e. 1.xxxx)
+                                 * mantissa bit is written as opposed to the
+                                 * single and double precision formats */
+  if (ext->exponent[0] & 0x80)
+    m = -m;
+  return ldexp (m, e);
+}
+
 /*
  * Read the next element as a float.
  */
@@ -615,12 +677,6 @@ gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
     return GST_FLOW_ERROR;
   }
 
-  if (size == 10) {
-    GST_ELEMENT_ERROR (ebml, CORE, NOT_IMPLEMENTED, (NULL),
-        ("FIXME! 10-byte floats unimplemented"));
-    return GST_FLOW_NOT_SUPPORTED;
-  }
-
   if (size == 4) {
     gfloat f;
 
@@ -634,7 +690,7 @@ gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
 #endif
 
     *num = f;
-  } else {
+  } else if (size == 8) {
     gdouble d;
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
@@ -647,6 +703,8 @@ gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
 #endif
 
     *num = d;
+  } else {
+    *num = _ext2dbl (data);
   }
 
   return ret;
@@ -835,7 +893,7 @@ gst_ebml_read_header (GstEbmlRead * ebml, gchar ** doctype, guint * version)
         if (ret != GST_FLOW_OK)
           return ret;
         g_assert (id == GST_EBML_ID_EBMLMAXSIZELENGTH);
-        if (num != sizeof (guint64)) {
+        if (num > sizeof (guint64)) {
           GST_ELEMENT_ERROR (ebml, STREAM, WRONG_TYPE, (NULL), (NULL));
           return GST_FLOW_ERROR;
         }
@@ -850,7 +908,7 @@ gst_ebml_read_header (GstEbmlRead * ebml, gchar ** doctype, guint * version)
         if (ret != GST_FLOW_OK)
           return ret;
         g_assert (id == GST_EBML_ID_EBMLMAXIDLENGTH);
-        if (num != sizeof (guint32)) {
+        if (num > sizeof (guint32)) {
           GST_ELEMENT_ERROR (ebml, STREAM, WRONG_TYPE, (NULL), (NULL));
           return GST_FLOW_ERROR;
         }
@@ -865,8 +923,7 @@ gst_ebml_read_header (GstEbmlRead * ebml, gchar ** doctype, guint * version)
           return ret;
         g_assert (id == GST_EBML_ID_DOCTYPE);
         if (doctype) {
-          if (doctype)
-            g_free (*doctype);
+          g_free (*doctype);
           *doctype = text;
         } else
           g_free (text);
