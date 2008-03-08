@@ -265,6 +265,9 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     header_len = 2;
 
+    if (payload_len < header_len)
+      goto bad_packet;
+
     M = gst_rtp_buffer_get_marker (buf);
 
     /*  0                   1
@@ -284,6 +287,9 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     if (PLEN) {
       header_len += PLEN;
     }
+
+    if ((!P && payload_len < header_len) || (P && payload_len < header_len - 2))
+      goto bad_packet;
 
     if (P) {
       rtph263pdepay->wait_start = FALSE;

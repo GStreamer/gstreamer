@@ -1,3 +1,11 @@
+2008-03-08  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtp/gstrtph263pdepay.c: (gst_rtp_h263p_depay_process):
+	Check that a buffer is large enough before reading from it.
+	Fixes bug #521102.
+	
 2008-03-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_start):
