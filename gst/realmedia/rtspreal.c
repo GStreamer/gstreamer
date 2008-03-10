@@ -331,13 +331,14 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   READ_BUFFER (sdp, "Comment", comment, comment_len);
   READ_BUFFER (sdp, "Copyright", copyright, copyright_len);
 
-  size = 20 + title_len + author_len + comment_len + copyright_len;
+  size = 22 + title_len + author_len + comment_len + copyright_len;
   ENSURE_SIZE (offset + size);
   datap = data + offset;
 
   memcpy (datap, "CONT", 4);
   GST_WRITE_UINT32_BE (datap + 4, size);
-  datap += 8;
+  GST_WRITE_UINT16_BE (datap + 8, 0);   /* Version */
+  datap += 10;
   WRITE_STRING2 (datap, title, title_len);
   WRITE_STRING2 (datap, author, author_len);
   WRITE_STRING2 (datap, copyright, copyright_len);

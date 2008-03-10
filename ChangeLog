@@ -1,5 +1,14 @@
 2008-03-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Pizpot Gargravarr <pgargravarr at siriuscybernetics dot org>
+
+	* gst/realmedia/rtspreal.c: (rtsp_ext_real_parse_sdp):
+	Add the version field when creating the CONT chunk resulting in 
+	the Author, Comment and Copyright tags not being parsed correctly.
+	Fixes #521459.
+
+2008-03-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
 	(gst_mp3parse_sink_event), (gst_mp3parse_chain):
 	Remove trailing newlines from debug statements.
