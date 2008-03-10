@@ -462,7 +462,7 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
 
           GST_DEBUG_OBJECT (mp3parse,
               "Pushing accurate newseg rate %g, applied rate %g, "
-              "format %d, start %lld, stop %lld, pos %lld\n", rate,
+              "format %d, start %lld, stop %lld, pos %lld", rate,
               applied_rate, format, start, stop, pos);
 
           g_free (seek);
@@ -518,7 +518,7 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &pos);
       GST_DEBUG_OBJECT (mp3parse, "Pushing newseg rate %g, applied rate %g, "
-          "format %d, start %lld, stop %lld, pos %lld\n",
+          "format %d, start %lld, stop %lld, pos %lld",
           rate, applied_rate, format, start, stop, pos);
 
       gst_segment_set_newsegment_full (&mp3parse->segment, update, rate,
@@ -1155,7 +1155,7 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
       mp3parse->next_ts = timestamp;
 
     GST_LOG_OBJECT (mp3parse, "Have pending ts %" GST_TIME_FORMAT
-        " to apply in %lld bytes (@ off %lld)\n",
+        " to apply in %lld bytes (@ off %lld)",
         GST_TIME_ARGS (mp3parse->pending_ts), avail, mp3parse->pending_offset);
   }
 
