@@ -598,7 +598,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   GstRingBuffer *ringbuffer;
   GstRingBufferSpec *spec;
   guint read;
-  GstClockTime timestamp;
+  GstClockTime timestamp, duration;
   GstClock *clock;
 
   ringbuffer = src->ringbuffer;
@@ -669,18 +669,21 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
+  src->next_sample = sample + samples;
+
+  /* get the normal timestamp to get the duration. */
+  timestamp = gst_util_uint64_scale_int (sample, GST_SECOND, spec->rate);
+  duration = gst_util_uint64_scale_int (src->next_sample, GST_SECOND,
+      spec->rate) - timestamp;
+
   GST_OBJECT_LOCK (src);
   clock = GST_ELEMENT_CLOCK (src);
-  if (clock == NULL || clock == src->clock) {
-    /* timestamp against our own clock. We do this also when no external clock
-     * was provided to us. */
-    timestamp = gst_util_uint64_scale_int (sample, GST_SECOND, spec->rate);
-  } else {
+  if (clock != NULL && clock != src->clock) {
     GstClockTime base_time, latency;
 
     /* We are slaved to another clock, take running time of the clock and just
      * timestamp against it. Somebody else in the pipeline should figure out the
-     * clock drift, for now. */
+     * clock drift, for now. We keep the duration we calculated above. */
     timestamp = gst_clock_get_time (clock);
     base_time = GST_ELEMENT_CAST (src)->base_time;
 
@@ -699,9 +702,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   GST_OBJECT_UNLOCK (src);
 
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
-  src->next_sample = sample + samples;
-  GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (src->next_sample,
-      GST_SECOND, spec->rate) - GST_BUFFER_TIMESTAMP (buf);
+  GST_BUFFER_DURATION (buf) = duration;
   GST_BUFFER_OFFSET (buf) = sample;
   GST_BUFFER_OFFSET_END (buf) = sample + samples;
 

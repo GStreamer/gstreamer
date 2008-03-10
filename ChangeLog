@@ -1,3 +1,9 @@
+2008-03-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_create):
+	Fix duration when no clock was provided. Fixes #520300.
+
 2008-03-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Olivier Crete  <tester at tester ca>
