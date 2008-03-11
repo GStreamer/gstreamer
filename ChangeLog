@@ -1,3 +1,9 @@
+2008-03-11  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* win32/common/config.h:
+	0.10.17.3 pre-release
+
 2008-03-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c:
