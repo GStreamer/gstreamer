@@ -208,7 +208,7 @@ again:
       GST_TIME_ARGS (gstrtptime), GST_TIME_ARGS (jbuf->base_rtptime),
       GST_TIME_ARGS (send_diff));
 
-  if (jbuf->prev_send_diff != -1) {
+  if (jbuf->prev_send_diff != -1 && time != -1) {
     gint64 delta_diff;
 
     if (send_diff > jbuf->prev_send_diff)

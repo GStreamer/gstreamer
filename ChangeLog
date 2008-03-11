@@ -1,3 +1,11 @@
+2008-03-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Stefan Kost <ensonic@users.sf.net>
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (calculate_skew):
+	Don't try to reset the clock skew when we have no timestamps.
+	Fixes #519005.
+
 2008-03-08  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>
