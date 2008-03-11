@@ -262,6 +262,7 @@ struct _GstRtpSessionPrivate
   GstClockID id;
   gboolean stop_thread;
   GThread *thread;
+  gboolean thread_stopped;
 
   /* caps mapping */
   GHashTable *ptmap;
@@ -693,6 +694,8 @@ gst_rtp_session_init (GstRtpSession * rtpsession, GstRtpSessionClass * klass)
 
   gst_segment_init (&rtpsession->recv_rtp_seg, GST_FORMAT_UNDEFINED);
   gst_segment_init (&rtpsession->send_rtp_seg, GST_FORMAT_UNDEFINED);
+
+  rtpsession->priv->thread_stopped = TRUE;
 }
 
 static void
@@ -923,6 +926,8 @@ rtcp_thread (GstRtpSession * rtpsession)
     rtp_session_on_timeout (rtpsession->priv->session, current_time, ntpnstime);
     GST_RTP_SESSION_LOCK (rtpsession);
   }
+  /* mark the thread as stopped now */
+  rtpsession->priv->thread_stopped = TRUE;
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
   gst_object_unref (sysclock);
@@ -949,8 +954,13 @@ start_rtcp_thread (GstRtpSession * rtpsession)
 
   GST_RTP_SESSION_LOCK (rtpsession);
   rtpsession->priv->stop_thread = FALSE;
-  rtpsession->priv->thread =
-      g_thread_create ((GThreadFunc) rtcp_thread, rtpsession, TRUE, &error);
+  if (rtpsession->priv->thread_stopped) {
+    /* only create a new thread if the old one was stopped. Otherwise we can
+     * just reuse the currently running one. */
+    rtpsession->priv->thread =
+        g_thread_create ((GThreadFunc) rtcp_thread, rtpsession, TRUE, &error);
+    rtpsession->priv->thread_stopped = FALSE;
+  }
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
   if (error != NULL) {
@@ -973,9 +983,25 @@ stop_rtcp_thread (GstRtpSession * rtpsession)
   if (rtpsession->priv->id)
     gst_clock_id_unschedule (rtpsession->priv->id);
   GST_RTP_SESSION_UNLOCK (rtpsession);
+}
 
-  /* FIXME, can deadlock because the thread might be blocked in a push */
-  g_thread_join (rtpsession->priv->thread);
+static void
+join_rtcp_thread (GstRtpSession * rtpsession)
+{
+  GST_RTP_SESSION_LOCK (rtpsession);
+  /* don't try to join when we have no thread */
+  if (rtpsession->priv->thread != NULL) {
+    GST_DEBUG_OBJECT (rtpsession, "joining RTCP thread");
+    GST_RTP_SESSION_UNLOCK (rtpsession);
+
+    g_thread_join (rtpsession->priv->thread);
+
+    GST_RTP_SESSION_LOCK (rtpsession);
+    /* after the join, take the lock and clear the thread structure. The caller
+     * is supposed to not concurrently call start and join. */
+    rtpsession->priv->thread = NULL;
+  }
+  GST_RTP_SESSION_UNLOCK (rtpsession);
 }
 
 static GstStateChangeReturn
@@ -996,6 +1022,10 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* no need to join yet, we might want to continue later. Also, the
+       * dataflow could block downstream so that a join could just block
+       * forever. */
       stop_rtcp_thread (rtpsession);
       break;
     default:
@@ -1012,6 +1042,8 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* downstream is now releasing the dataflow and we can join. */
+      join_rtcp_thread (rtpsession);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

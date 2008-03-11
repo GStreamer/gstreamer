@@ -1,5 +1,16 @@
 2008-03-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Based on patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_init),
+	(rtcp_thread), (start_rtcp_thread), (stop_rtcp_thread),
+	(join_rtcp_thread), (gst_rtp_session_change_state):
+	Avoid a deadlock when joining the RTCP thread in PAUSED because it might
+	be blocked downstream. Also avoid spawning multiple rtcp threads.
+	Fixes #520894.
+
+2008-03-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Stefan Kost <ensonic@users.sf.net>
 
 	* gst/rtpmanager/rtpjitterbuffer.c: (calculate_skew):
