@@ -1,3 +1,8 @@
+2008-03-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* win32/common/libgstnetbuffer.def:
+	Add new symbol gst_netaddress_equal. Fixes bug #521743.
+
 2008-03-11  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
