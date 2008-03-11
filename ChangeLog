@@ -1,3 +1,10 @@
+2008-03-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_sink_event):
+	When we receive a newsegment event, we must drain any pending frames
+	because they belong to the previous segment. This fixes some cases of
+	very large timestamps when doing segment seeks.
+
 2008-03-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
