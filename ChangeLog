@@ -1,5 +1,25 @@
 2008-03-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtpmanager/rtpsession.c: (find_add_conflicting_addresses),
+	(check_collision), (obtain_source), (rtp_session_create_new_ssrc),
+	(rtp_session_create_source), (rtp_session_process_rtp),
+	(rtp_session_process_sr), (rtp_session_process_rr),
+	(rtp_session_process_sdes), (rtp_session_process_bye),
+	(rtp_session_send_bye_locked), (rtp_session_send_bye),
+	(rtp_session_on_timeout):
+	* gst/rtpmanager/rtpsession.h:
+	Implement collision and loop detection in rtpmanager.
+	Fixes #520626.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_reset),
+	(rtp_source_init):
+	* gst/rtpmanager/rtpsource.h:
+	Add method to reset stats.
+
+2008-03-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Based on patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
 	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_init),

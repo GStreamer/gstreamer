@@ -140,6 +140,20 @@ typedef struct {
 } RTPSessionCallbacks;
 
 /**
+ * RTPConflictingAddress:
+ * @address: #GstNetAddress which conflicted
+ * @last_conflict_time: time when the last conflict was seen
+ *
+ * This structure is used to account for addresses that have conflicted to find
+ * loops.
+ */
+
+typedef struct {
+  GstNetAddress address;
+  GstClockTime time;
+} RTPConflictingAddress;
+
+/**
  * RTPSession:
  * @lock: lock to protect the session
  * @source: the source of this session
@@ -149,6 +163,8 @@ typedef struct {
  * @activecount: the number of active sources
  * @callbacks: callbacks
  * @user_data: user data passed in callbacks
+ * @stats: session statistics
+ * @conflicting_addresses: GList of conflicting addresses
  *
  * The RTP session manager object
  */
@@ -186,6 +202,9 @@ struct _RTPSession {
   gpointer              reconsider_user_data;
 
   RTPSessionStats stats;
+
+  GList         *conflicting_addresses;
+  gboolean      change_ssrc;
 
   /* for mapping clock time to NTP time */
   GstClockTime  base_time;
