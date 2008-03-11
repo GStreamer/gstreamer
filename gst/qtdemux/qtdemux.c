@@ -699,7 +699,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment)
     QtDemuxStream *stream = qtdemux->streams[n];
 
     stream->time_position = desired_offset;
-    stream->sample_index = 0;
+    stream->sample_index = -1;
     stream->segment_index = -1;
     stream->last_ret = GST_FLOW_OK;
   }
@@ -1267,8 +1267,10 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   }
 
   /* we're at the right spot */
-  if (index == stream->sample_index)
+  if (index == stream->sample_index) {
+    GST_DEBUG_OBJECT (qtdemux, "we are at the right index");
     return TRUE;
+  }
 
   /* find keyframe of the target index */
   kf_index = gst_qtdemux_find_keyframe (qtdemux, stream, index);
@@ -1342,6 +1344,7 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
     GstBuffer *buffer = (GstBuffer *) stream->buffers->data;
 
     if (stream->discont) {
+      GST_LOG_OBJECT (qtdemux, "marking discont buffer");
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
       stream->discont = FALSE;
     }
@@ -1700,6 +1703,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
       goto next;
 
     if (stream->discont) {
+      GST_LOG_OBJECT (qtdemux, "marking discont buffer");
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       stream->discont = FALSE;
     }
@@ -3112,7 +3116,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   stream->need_clip = FALSE;
   stream->segment_index = -1;
   stream->time_position = 0;
-  stream->sample_index = 0;
+  stream->sample_index = -1;
   stream->last_ret = GST_FLOW_OK;
 
   if (!(tkhd = qtdemux_tree_get_child_by_type (trak, FOURCC_tkhd)))

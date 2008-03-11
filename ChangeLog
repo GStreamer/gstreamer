@@ -1,3 +1,12 @@
+2008-03-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_perform_seek),
+	(gst_qtdemux_activate_segment),
+	(gst_qtdemux_prepare_current_sample),
+	(gst_qtdemux_loop_state_movie), (qtdemux_parse_trak):
+	Make sure we always send a DISCONT after a seek by setting the sample
+	index to an undefined value after a seek.
+
 2008-03-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/avi/gstavisubtitle.h: (GST_IS_AVI_SUBTITLE),
