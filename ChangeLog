@@ -1,3 +1,13 @@
+2008-03-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mark Nauwelaerts <manauw skynet be>
+
+	* sys/oss/gstosssrc.c: (gst_oss_src_init), (gst_oss_src_getcaps),
+	  (gst_oss_src_close):
+	* sys/oss/gstosssrc.h:
+	  Cache probed caps, so _get_caps() during recording doesn't cause
+	  ioctl calls which may disrupt the recording (fixes #521875).
+
 2008-03-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_perform_seek),

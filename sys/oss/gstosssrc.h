@@ -51,6 +51,8 @@ struct _GstOssSrc {
   gchar *device;
   gchar *device_name;
 
+  GstCaps       *probed_caps;
+
   GstOssMixer *mixer;
 };
 
