@@ -142,6 +142,24 @@ rtp_source_class_init (RTPSourceClass * klass)
   GST_DEBUG_CATEGORY_INIT (rtp_source_debug, "rtpsource", 0, "RTP Source");
 }
 
+/**
+ * rtp_source_reset:
+ * @src: an #RTPSource
+ *
+ * Reset the stats of @src.
+ */
+void
+rtp_source_reset (RTPSource * src)
+{
+  src->received_bye = FALSE;
+
+  src->stats.cycles = -1;
+  src->stats.jitter = 0;
+  src->stats.transit = -1;
+  src->stats.curr_sr = 0;
+  src->stats.curr_rr = 0;
+}
+
 static void
 rtp_source_init (RTPSource * src)
 {
@@ -157,11 +175,7 @@ rtp_source_init (RTPSource * src)
   src->seqnum_base = -1;
   src->last_rtptime = -1;
 
-  src->stats.cycles = -1;
-  src->stats.jitter = 0;
-  src->stats.transit = -1;
-  src->stats.curr_sr = 0;
-  src->stats.curr_rr = 0;
+  rtp_source_reset (src);
 }
 
 static void

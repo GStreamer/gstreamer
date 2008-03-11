@@ -215,4 +215,6 @@ gboolean        rtp_source_get_last_rb         (RTPSource *src, guint8 *fraction
                                                 guint32 *exthighestseq, guint32 *jitter,
                                                 guint32 *lsr, guint32 *dlsr);
 
+void            rtp_source_reset               (RTPSource * src);
+
 #endif /* __RTP_SOURCE_H__ */
