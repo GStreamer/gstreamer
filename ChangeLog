@@ -1,3 +1,9 @@
+2008-03-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/avi/gstavisubtitle.h: (GST_IS_AVI_SUBTITLE),
+	  (GST_IS_AVI_SUBTITLE_CLASS):
+	  Fix up IS_FOO macros, which makes gtk-doc much happier.
+
 2008-03-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/icles/Makefile.am:
