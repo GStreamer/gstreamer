@@ -1,3 +1,11 @@
+2008-03-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_sink_event):
+	Don't take the stream lock when caching events. This is not necessary
+	and results in a deadlock when seeking with rhythmbox (but not with
+	totem or banshee for some reason).
+
 2008-03-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Pizpot Gargravarr <pgargravarr at siriuscybernetics dot org>
