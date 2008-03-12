@@ -867,8 +867,8 @@ gst_xvidenc_chain (GstPad * pad, GstBuffer * buf)
       xframe.par = XVID_PAR_11_VGA;
     else {
       xframe.par = XVID_PAR_EXT;
-      xframe.par_width = xvidenc->par_height;
-      xframe.par_height = xvidenc->par_width;
+      xframe.par_width = xvidenc->par_width;
+      xframe.par_height = xvidenc->par_height;
     }
 
     /* handle options */
