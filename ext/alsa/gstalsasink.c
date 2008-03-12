@@ -645,12 +645,9 @@ alsasink_parse_spec (GstAlsaSink * alsa, GstRingBufferSpec * spec)
     case GST_BUFTYPE_MU_LAW:
       alsa->format = SND_PCM_FORMAT_MU_LAW;
       break;
-    case GST_BUFTYPE_NONLINEAR:
+    case GST_BUFTYPE_IEC958:
       alsa->format = SND_PCM_FORMAT_S16_BE;
-      if (G_LIKELY (spec->format == GST_IEC958))
-        alsa->iec958 = TRUE;
-      else
-        goto error;
+      alsa->iec958 = TRUE;
       break;
     default:
       goto error;
@@ -888,8 +885,8 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
     guint i;
 
     GST_DEBUG_OBJECT (asink, "swapping bytes");
-    for (i = 0; i < length; i += 2) {
-      ptr[i / 2] = GUINT16_SWAP_LE_BE (ptr[i / 2]);
+    for (i = 0; i < length / 2; i++) {
+      ptr[i] = GUINT16_SWAP_LE_BE (ptr[i]);
     }
   }
 

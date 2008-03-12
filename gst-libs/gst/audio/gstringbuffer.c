@@ -380,7 +380,7 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
     if (!(gst_structure_get_int (structure, "rate", &spec->rate)))
       goto parse_error;
 
-    spec->type = GST_BUFTYPE_NONLINEAR;
+    spec->type = GST_BUFTYPE_IEC958;
     spec->format = GST_IEC958;
     spec->width = 16;
     spec->depth = 16;
@@ -390,7 +390,7 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
     if (!(gst_structure_get_int (structure, "rate", &spec->rate)))
       goto parse_error;
 
-    spec->type = GST_BUFTYPE_NONLINEAR;
+    spec->type = GST_BUFTYPE_AC3;
     spec->format = GST_AC3;
     spec->width = 16;
     spec->depth = 16;

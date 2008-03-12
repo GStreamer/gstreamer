@@ -1,3 +1,13 @@
+2008-03-12  Michael Smith <msmith@fluendo.com>
+
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_parse_caps):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	  Rename recently added buffer types to make more sense.
+	* ext/alsa/gstalsasink.c: (alsasink_parse_spec),
+	(gst_alsasink_write):
+	  Adapt for above API changes.
+	  Fixes bug #520523.
+
 2008-03-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* win32/common/libgstnetbuffer.def:
