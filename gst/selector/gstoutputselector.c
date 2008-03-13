@@ -56,8 +56,10 @@ GST_STATIC_PAD_TEMPLATE ("src%d",
 
 enum
 {
-  PROP_ACTIVE_PAD = 1,
-  PROP_RESEND_LATEST
+  PROP_0,
+  PROP_ACTIVE_PAD,
+  PROP_RESEND_LATEST,
+  PROP_LAST
 };
 
 static void gst_output_selector_dispose (GObject * object);
@@ -126,24 +128,29 @@ gst_output_selector_class_init (GstOutputSelectorClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class->dispose = gst_output_selector_dispose;
+
   gobject_class->set_property =
       GST_DEBUG_FUNCPTR (gst_output_selector_set_property);
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_output_selector_get_property);
+
   g_object_class_install_property (gobject_class, PROP_ACTIVE_PAD,
-      g_param_spec_string ("active-pad", "Active pad",
-          "Name of the currently active src pad", NULL, G_PARAM_READWRITE));
+      g_param_spec_object ("active-pad", "Active pad",
+          "Name of the currently active src pad", GST_TYPE_PAD,
+          G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_RESEND_LATEST,
       g_param_spec_boolean ("resend-latest", "Resend latest buffer",
           "Resend latest buffer after a switch to a new pad", FALSE,
           G_PARAM_READWRITE));
-  gobject_class->dispose = gst_output_selector_dispose;
+
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_output_selector_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_output_selector_release_pad);
-  gstelement_class->change_state = gst_output_selector_change_state;
 
+  gstelement_class->change_state = gst_output_selector_change_state;
 }
 
 static void
@@ -201,22 +208,23 @@ gst_output_selector_set_property (GObject * object, guint prop_id,
   GstOutputSelector *sel = GST_OUTPUT_SELECTOR (object);
 
   switch (prop_id) {
-    case PROP_ACTIVE_PAD:{
-      GstPad *next_pad =
-          gst_element_get_static_pad (GST_ELEMENT (sel),
-          g_value_get_string (value));
-      if (!next_pad) {
-        GST_WARNING ("pad %s not found, activation failed",
-            g_value_get_string (value));
-        break;
-      }
-      GST_LOG ("Activating pad %s", g_value_get_string (value));
+    case PROP_ACTIVE_PAD:
+    {
+      GstPad *next_pad;
+
+      next_pad = g_value_get_object (value);
+
+      GST_LOG ("Activating pad %s:%s", GST_DEBUG_PAD_NAME (next_pad));
+
+      GST_OBJECT_LOCK (object);
       if (next_pad != sel->active_srcpad) {
         /* switch to new srcpad in next chain run */
         if (sel->pending_srcpad != NULL) {
           GST_INFO ("replacing pending switch");
           gst_object_unref (sel->pending_srcpad);
         }
+        if (next_pad)
+          gst_object_ref (next_pad);
         sel->pending_srcpad = next_pad;
       } else {
         GST_INFO ("pad already active");
@@ -224,8 +232,8 @@ gst_output_selector_set_property (GObject * object, guint prop_id,
           gst_object_unref (sel->pending_srcpad);
           sel->pending_srcpad = NULL;
         }
-        gst_object_unref (next_pad);
       }
+      GST_OBJECT_UNLOCK (object);
       break;
     }
     case PROP_RESEND_LATEST:{
@@ -245,16 +253,11 @@ gst_output_selector_get_property (GObject * object, guint prop_id,
   GstOutputSelector *sel = GST_OUTPUT_SELECTOR (object);
 
   switch (prop_id) {
-    case PROP_ACTIVE_PAD:{
+    case PROP_ACTIVE_PAD:
       GST_OBJECT_LOCK (object);
-      if (sel->active_srcpad != NULL) {
-        g_value_take_string (value, gst_pad_get_name (sel->active_srcpad));
-      } else {
-        g_value_set_string (value, "");
-      }
+      g_value_set_object (value, sel->active_srcpad);
       GST_OBJECT_UNLOCK (object);
       break;
-    }
     case PROP_RESEND_LATEST:{
       GST_OBJECT_LOCK (object);
       g_value_set_boolean (value, sel->resend_latest);

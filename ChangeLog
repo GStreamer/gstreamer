@@ -1,3 +1,35 @@
+2008-03-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/selector/gstinputselector.c: (gst_selector_pad_class_init),
+	(gst_selector_pad_finalize), (gst_selector_pad_get_property),
+	(gst_selector_pad_event), (gst_input_selector_class_init),
+	(gst_input_selector_init), (gst_input_selector_set_active_pad),
+	(gst_input_selector_set_property),
+	(gst_input_selector_get_property),
+	(gst_input_selector_request_new_pad),
+	(gst_input_selector_release_pad),
+	(gst_input_selector_push_pending_stop),
+	(gst_input_selector_switch):
+	* gst/selector/gstinputselector.h:
+	Various cleanups.
+	Added tags to the pads.
+	Select active pad based on the pad object instead of its name.
+	Fix refcount in set_active_pad.
+	Add property to get the number of pads.
+
+	* gst/selector/gstoutputselector.c:
+	(gst_output_selector_class_init),
+	(gst_output_selector_set_property),
+	(gst_output_selector_get_property):
+	Various cleanups.
+	Select the active pad based on the pad object instead of its name.
+	Fix locking when setting the active pad.
+
+	* gst/selector/gstselector-marshal.list:
+	* tests/check/elements/selector.c: (cleanup_pad),
+	(selector_set_active_pad), (run_input_selector_buffer_count):
+	Fixes for pad instead of padname for pad selection.
+
 2008-03-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/alsaspdif/alsaspdifsink.c:

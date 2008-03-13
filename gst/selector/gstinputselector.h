@@ -46,7 +46,8 @@ struct _GstInputSelector {
   GstPad *srcpad;
 
   GstPad *active_sinkpad;
-  guint nb_sinkpads;
+  guint n_pads;
+  guint padcount;
 
   GstSegment segment;
 
@@ -63,7 +64,7 @@ struct _GstInputSelectorClass {
   GstElementClass parent_class;
 
   gint64 (*block)	(GstInputSelector *self);
-  void (*switch_)	(GstInputSelector *self, const gchar *pad_name,
+  void (*switch_)	(GstInputSelector *self, GstPad *pad,
                          gint64 stop_time, gint64 start_time);
 };
 
