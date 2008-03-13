@@ -129,8 +129,8 @@ cleanup_pad (GstPad * pad, GstElement * element)
   gst_object_unref (pad);
 
   /* cleanup selector pad, reffed by this function (_get_peer) and creator */
-  gst_object_unref (selpad);
   gst_element_release_request_pad (element, selpad);
+  gst_object_unref (selpad);
 }
 
 /* Duplicate and push given buffer many times to all input_pads */
@@ -190,7 +190,7 @@ selector_set_active_pad (GstElement * elem, GstPad * selpad)
     padname = gst_pad_get_name (selpad);
   }
 
-  g_object_set (G_OBJECT (elem), "active-pad", padname, NULL);
+  g_object_set (G_OBJECT (elem), "active-pad", selpad, NULL);
   GST_DEBUG_OBJECT (elem, "activated selector pad: %s", padname);
   if (selpad) {
     g_free (padname);
@@ -333,6 +333,7 @@ run_input_selector_buffer_count (gint num_input_pads,
   gst_pad_remove_data_probe (output_pad, probe_id);
   gst_pad_set_active (output_pad, FALSE);
   gst_check_teardown_sink_pad (sel);
+  GST_DEBUG ("setting selector pad to NULL");
   selector_set_active_pad (sel, NULL);  // unref input-selector active pad
   g_list_foreach (input_pads, (GFunc) cleanup_pad, sel);
   g_list_free (input_pads);
