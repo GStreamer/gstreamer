@@ -155,6 +155,7 @@ static gboolean gst_soup_http_src_set_proxy (GstSoupHTTPSrc * src,
 
 static char *gst_soup_http_src_unicodify (const char *str);
 
+static gboolean gst_soup_http_src_build_message (GstSoupHTTPSrc * src);
 static void gst_soup_http_src_cancel_message (GstSoupHTTPSrc * src);
 static void gst_soup_http_src_queue_message (GstSoupHTTPSrc * src);
 static gboolean gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src,
@@ -307,6 +308,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src, GstSoupHTTPSrcClass * g_class)
   src->session = NULL;
   src->msg = NULL;
   src->interrupted = FALSE;
+  src->retry = FALSE;
   src->have_size = FALSE;
   src->seekable = TRUE;
   src->read_position = 0;
@@ -663,13 +665,19 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     return;
   }
   GST_DEBUG_OBJECT (src, "finished");
-  if (G_UNLIKELY (src->session_io_status !=
+  src->ret = GST_FLOW_UNEXPECTED;
+  if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING &&
+      src->read_position > 0) {
+    /* The server disconnected while streaming. Reconnect and seeking to the
+     * last location. */
+    src->retry = TRUE;
+    src->ret = GST_FLOW_CUSTOM_ERROR;
+  } else if (G_UNLIKELY (src->session_io_status !=
           GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
         ("%s", msg->reason_phrase),
         ("libsoup status code %d", msg->status_code));
   }
-  src->ret = GST_FLOW_UNEXPECTED;
   if (src->loop)
     g_main_loop_quit (src->loop);
 }
@@ -791,7 +799,13 @@ gst_soup_http_src_response_cb (SoupSession * session, SoupMessage * msg,
   }
   GST_DEBUG_OBJECT (src, "got response %d: %s", msg->status_code,
       msg->reason_phrase);
-  gst_soup_http_src_parse_status (msg, src);
+  if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING &&
+      src->read_position > 0) {
+    /* The server disconnected while streaming. Reconnect and seeking to the
+     * last location. */
+    src->retry = TRUE;
+  } else
+    gst_soup_http_src_parse_status (msg, src);
   g_main_loop_quit (src->loop);
 }
 
@@ -842,6 +856,48 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
   }
 }
 
+static gboolean
+gst_soup_http_src_build_message (GstSoupHTTPSrc * src)
+{
+  src->msg = soup_message_new (SOUP_METHOD_GET, src->location);
+  if (!src->msg) {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (NULL), ("Error parsing URL \"%s\"", src->location));
+    return FALSE;
+  }
+  src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE;
+  soup_message_headers_append (src->msg->request_headers, "Connection",
+      "close");
+  if (src->iradio_mode) {
+    soup_message_headers_append (src->msg->request_headers, "icy-metadata",
+        "1");
+  }
+  if (src->cookies) {
+    gchar **cookie;
+
+    for (cookie = src->cookies; *cookie != NULL; cookie++) {
+      soup_message_headers_append (src->msg->request_headers, "Cookie",
+          *cookie);
+    }
+  }
+
+  g_signal_connect (src->msg, "got_headers",
+      G_CALLBACK (gst_soup_http_src_got_headers_cb), src);
+  g_signal_connect (src->msg, "got_body",
+      G_CALLBACK (gst_soup_http_src_got_body_cb), src);
+  g_signal_connect (src->msg, "finished",
+      G_CALLBACK (gst_soup_http_src_finished_cb), src);
+  g_signal_connect (src->msg, "got_chunk",
+      G_CALLBACK (gst_soup_http_src_got_chunk_cb), src);
+  soup_message_set_flags (src->msg, SOUP_MESSAGE_OVERWRITE_CHUNKS |
+      (src->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT));
+  soup_message_set_chunk_allocator (src->msg,
+      gst_soup_http_src_chunk_allocator, src, NULL);
+  gst_soup_http_src_add_range_header (src, src->request_position);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
@@ -859,43 +915,9 @@ gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
       gst_soup_http_src_cancel_message (src);
     }
   }
-  if (!src->msg) {
-    src->msg = soup_message_new (SOUP_METHOD_GET, src->location);
-    if (!src->msg) {
-      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-          (NULL), ("Error parsing URL \"%s\"", src->location));
+  if (!src->msg)
+    if (!gst_soup_http_src_build_message (src))
       return GST_FLOW_ERROR;
-    }
-    src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE;
-    soup_message_headers_append (src->msg->request_headers, "Connection",
-        "close");
-    if (src->iradio_mode) {
-      soup_message_headers_append (src->msg->request_headers, "icy-metadata",
-          "1");
-    }
-    if (src->cookies) {
-      gchar **cookie;
-
-      for (cookie = src->cookies; *cookie != NULL; cookie++) {
-        soup_message_headers_append (src->msg->request_headers, "Cookie",
-            *cookie);
-      }
-    }
-
-    g_signal_connect (src->msg, "got_headers",
-        G_CALLBACK (gst_soup_http_src_got_headers_cb), src);
-    g_signal_connect (src->msg, "got_body",
-        G_CALLBACK (gst_soup_http_src_got_body_cb), src);
-    g_signal_connect (src->msg, "finished",
-        G_CALLBACK (gst_soup_http_src_finished_cb), src);
-    g_signal_connect (src->msg, "got_chunk",
-        G_CALLBACK (gst_soup_http_src_got_chunk_cb), src);
-    soup_message_set_flags (src->msg, SOUP_MESSAGE_OVERWRITE_CHUNKS |
-        (src->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT));
-    soup_message_set_chunk_allocator (src->msg,
-        gst_soup_http_src_chunk_allocator, src, NULL);
-    gst_soup_http_src_add_range_header (src, src->request_position);
-  }
 
   src->ret = GST_FLOW_CUSTOM_ERROR;
   src->outbuf = outbuf;
@@ -903,6 +925,13 @@ gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     if (src->interrupted) {
       gst_soup_http_src_cancel_message (src);
       break;
+    }
+    if (src->retry) {
+      GST_DEBUG_OBJECT (src, "Reconnecting");
+      if (!gst_soup_http_src_build_message (src))
+        return GST_FLOW_ERROR;
+      src->retry = FALSE;
+      continue;
     }
     if (!src->msg) {
       GST_DEBUG_OBJECT (src, "EOS reached");

@@ -1,3 +1,13 @@
+2008-03-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Wouter Cloetens <wouter at mind dot be>
+
+	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_init),
+	(gst_soup_http_src_finished_cb), (gst_soup_http_src_response_cb),
+	(gst_soup_http_src_build_message), (gst_soup_http_src_create):
+	* ext/soup/gstsouphttpsrc.h:
+	Try to resume on server disconnect. Fixes bug #522134.
+
 2008-03-12  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/xvid/gstxvidenc.c: (gst_xvidenc_chain):

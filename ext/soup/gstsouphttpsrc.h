@@ -61,6 +61,7 @@ struct _GstSoupHTTPSrc {
   GstFlowReturn ret;           /* Return code from callback. */
   GstBuffer **outbuf;          /* Return buffer allocated by callback. */
   gboolean interrupted;        /* Signal unlock(). */
+  gboolean retry;              /* Should attempt to reconnect. */
 
   gboolean have_size;          /* Received and parsed Content-Length
                                   header. */
