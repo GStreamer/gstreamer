@@ -1,5 +1,20 @@
 2008-03-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/alsaspdif/alsaspdifsink.c:
+	* ext/gsm/gstgsm.c:
+	* ext/jack/gstjack.c:
+	* ext/libmms/gstmms.c:
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/shout/gstshout.c:
+	* ext/timidity/gsttimidity.c:
+	* ext/timidity/gstwildmidi.c:
+	* gst/nuvdemux/gstnuvdemux.c:
+	* gst/tta/gsttta.c:
+	Use GST_LICENSE, GST_PACKAGE_NAME and GST_PACKAGE_ORIGIN instead
+	of hardcoding values where possible. Fixes bug #522212.
+
+2008-03-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Wouter Cloetens <wouter at mind dot be>
 
 	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_init),

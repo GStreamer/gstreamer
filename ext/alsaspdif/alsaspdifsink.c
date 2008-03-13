@@ -841,5 +841,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "alsaspdif",
     "Alsa plugin for S/PDIF output",
-    plugin_init,
-    VERSION, GST_LICENSE_UNKNOWN, PACKAGE, "http://www.fluendo.com");
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

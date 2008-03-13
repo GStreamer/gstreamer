@@ -813,4 +813,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "timidity",
     "Timidity Plugin",
-    plugin_init, VERSION, "GPL", "GStreamer", "http://gstreamer.net/")
+    plugin_init, VERSION, "GPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

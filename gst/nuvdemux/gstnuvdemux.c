@@ -944,4 +944,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "nuvdemux",
     "Demuxes and muxes audio and video",
-    plugin_init, VERSION, "LGPL", "NuvDemux", "")
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
