@@ -1,3 +1,9 @@
+2008-03-14  David Schleef  <ds@schleef.org>
+
+	Patch by: William M. Brack
+
+	* gst/videotestsrc/videotestsrc.c: Fix Bayer pattern generation.
+
 2008-03-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gststreamselector.c: (gst_selector_pad_event),
