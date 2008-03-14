@@ -1,3 +1,9 @@
+2008-03-14  David Schleef  <ds@schleef.org>
+
+	Patch by: William M. Brack
+
+	* gst/bayer/gstbayer2rgb.c: Significant improvements.  Fixes #521392.
+
 2008-03-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/selector/gstinputselector.c: (gst_selector_pad_event),
