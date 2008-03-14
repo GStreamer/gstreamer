@@ -1,3 +1,11 @@
+2008-03-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gststreamselector.c: (gst_selector_pad_event),
+	(gst_selector_pad_chain):
+	* gst/playback/gststreamselector.h:
+	Revert change that caused regression until a real fix is found.
+	Fixes #522203.
+
 2008-03-12  Michael Smith <msmith@fluendo.com>
 
 	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_parse_caps):

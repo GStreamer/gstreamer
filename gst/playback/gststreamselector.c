@@ -282,10 +282,10 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
 
       gst_segment_set_newsegment_full (&selpad->segment, update,
           rate, arate, format, start, stop, time);
-      /* mark pending segment if we are not forwarding, we assume all pads share
-       * the same segment so we only forward once. */
+      /* if we are not going to forward the segment, mark the segment as
+       * pending */
       if (!forward)
-        sel->segment_pending = TRUE;
+        selpad->segment_pending = TRUE;
       break;
     }
     case GST_EVENT_TAG:
@@ -407,12 +407,12 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
     goto ignore;
 
   /* if we have a pending segment, push it out now */
-  if (sel->segment_pending) {
+  if (selpad->segment_pending) {
     gst_pad_push_event (sel->srcpad, gst_event_new_new_segment_full (FALSE,
             seg->rate, seg->applied_rate, seg->format, seg->start, seg->stop,
             seg->time));
 
-    sel->segment_pending = FALSE;
+    selpad->segment_pending = FALSE;
   }
 
   /* forward */
@@ -431,7 +431,6 @@ ignore:
     res = GST_FLOW_NOT_LINKED;
     goto done;
   }
-
 }
 
 static void gst_stream_selector_dispose (GObject * object);

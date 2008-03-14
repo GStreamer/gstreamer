@@ -49,7 +49,6 @@ struct _GstStreamSelector {
   guint padcount;
 
   GstSegment segment;
-  gboolean segment_pending;
 };
 
 struct _GstStreamSelectorClass {
