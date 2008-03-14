@@ -1,3 +1,9 @@
+2008-03-14  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/dshow/Makefile.am:
+	Make sure the dshow helper library headers get distributed in the next
+	release.
+
 2008-03-14  David Schleef  <ds@schleef.org>
 
 	Patch by: William M. Brack

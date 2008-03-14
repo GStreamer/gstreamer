@@ -7,4 +7,4 @@ libgstdshow_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS)
 libgstdshow_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_ALL_LDFLAGS)
 
 libgstdshow_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/app
-libgstdshow_@GST_MAJORMINOR@include_HEADERS = 
+libgstdshow_@GST_MAJORMINOR@include_HEADERS = gstdshow.h gstdshowfakesink.h gstdshowfakesrc.h gstdshowinterface.h
