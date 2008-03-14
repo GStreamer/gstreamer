@@ -331,7 +331,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
-      GST_DEBUG_OBJECT (sel,
+      GST_DEBUG_OBJECT (pad,
           "configured NEWSEGMENT update %d, rate %lf, applied rate %lf, "
           "format %d, "
           "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
@@ -356,12 +356,13 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
       if (tags)
         tags = gst_tag_list_copy (tags);
       selpad->tags = tags;
-      GST_DEBUG_OBJECT (sel, "received tags %" GST_PTR_FORMAT, selpad->tags);
+      GST_DEBUG_OBJECT (pad, "received tags %" GST_PTR_FORMAT, selpad->tags);
       GST_OBJECT_UNLOCK (selpad);
       break;
     }
     case GST_EVENT_EOS:
       selpad->eos = TRUE;
+      GST_DEBUG_OBJECT (pad, "received EOS");
       /* don't forward eos in select_all mode until all sink pads have eos */
       if (sel->select_all && !gst_input_selector_check_eos (GST_ELEMENT (sel))) {
         forward = FALSE;
@@ -370,9 +371,10 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
     default:
       break;
   }
-  if (forward)
+  if (forward) {
+    GST_DEBUG_OBJECT (pad, "forwarding event");
     res = gst_pad_push_event (sel->srcpad, event);
-  else
+  } else
     gst_event_unref (event);
 
   gst_object_unref (sel);
@@ -407,6 +409,8 @@ gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
   GstPad *active_sinkpad;
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (pad, "received alloc");
 
   active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
 
@@ -476,6 +480,8 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   if (gst_input_selector_wait (sel, pad))
     goto ignore;
 
+  GST_DEBUG_OBJECT (pad, "chain, getting active pad");
+
   active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
 
   end_time = GST_BUFFER_TIMESTAMP (buf);
@@ -483,7 +489,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
     duration = GST_BUFFER_DURATION (buf);
     if (GST_CLOCK_TIME_IS_VALID (duration))
       end_time += duration;
-    GST_DEBUG_OBJECT (sel, "received end time %" GST_TIME_FORMAT,
+    GST_DEBUG_OBJECT (pad, "received end time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (end_time));
     gst_segment_set_last_stop (seg, seg->format, end_time);
   }
@@ -496,6 +502,14 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
 
   /* if we have a pending segment, push it out now */
   if (selpad->segment_pending) {
+
+    GST_DEBUG_OBJECT (pad,
+        "pushing NEWSEGMENT update %d, rate %lf, applied rate %lf, "
+        "format %d, "
+        "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
+        G_GINT64_FORMAT, FALSE, seg->rate, seg->applied_rate, seg->format,
+        seg->start, seg->stop, seg->time);
+
     gst_pad_push_event (sel->srcpad, gst_event_new_new_segment_full (FALSE,
             seg->rate, seg->applied_rate, seg->format, seg->start, seg->stop,
             seg->time));
@@ -504,7 +518,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   }
 
   /* forward */
-  GST_DEBUG_OBJECT (sel, "Forwarding buffer %p from pad %s:%s", buf,
+  GST_DEBUG_OBJECT (pad, "Forwarding buffer %p from pad %s:%s", buf,
       GST_DEBUG_PAD_NAME (pad));
   res = gst_pad_push (sel->srcpad, buf);
 done:
@@ -513,8 +527,7 @@ done:
   /* dropped buffers */
 ignore:
   {
-    GST_DEBUG_OBJECT (sel, "Ignoring buffer %p from pad %s:%s",
-        buf, GST_DEBUG_PAD_NAME (pad));
+    GST_DEBUG_OBJECT (pad, "Ignoring buffer %p", buf);
     gst_buffer_unref (buf);
     res = GST_FLOW_OK;
     goto done;
@@ -672,6 +685,7 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
   gstelement_class->change_state = gst_input_selector_change_state;
 
   klass->block = GST_DEBUG_FUNCPTR (gst_input_selector_block);
+  /* note the underscore because switch is a keyword otherwise */
   klass->switch_ = GST_DEBUG_FUNCPTR (gst_input_selector_switch);
 }
 
@@ -756,11 +770,15 @@ gst_input_selector_set_active_pad (GstInputSelector * self,
        segment has been pushed before. */
     memcpy (&self->pending_stop_segment, &old->segment,
         sizeof (self->pending_stop_segment));
+    GST_DEBUG_OBJECT (self, "setting stop_time to %" G_GINT64_FORMAT,
+        stop_time);
     gst_segment_set_stop (&self->pending_stop_segment, stop_time);
     self->pending_stop = TRUE;
   }
 
   if (new && new->active && start_time >= 0) {
+    GST_DEBUG_OBJECT (self, "setting start_time to %" G_GINT64_FORMAT,
+        start_time);
     /* schedule a new segment push */
     gst_segment_set_start (&new->segment, start_time);
     new->segment_pending = TRUE;
@@ -783,9 +801,15 @@ gst_input_selector_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_ACTIVE_PAD:
-      gst_input_selector_set_active_pad (sel,
-          g_value_get_object (value), GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE);
+    {
+      GstPad *pad;
+
+      pad = g_value_get_object (value);
+
+      gst_input_selector_set_active_pad (sel, pad,
+          GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE);
       break;
+    }
     case PROP_SELECT_ALL:
       sel->select_all = g_value_get_boolean (value);
       break;
@@ -1035,10 +1059,15 @@ gst_input_selector_push_pending_stop (GstInputSelector * self)
   if (G_UNLIKELY (self->pending_stop)) {
     GstSegment *seg = &self->pending_stop_segment;
 
-    GST_DEBUG_OBJECT (self, "pushing pending stop");
+    GST_DEBUG_OBJECT (self,
+        "pushing NEWSEGMENT update %d, rate %lf, applied rate %lf, "
+        "format %d, "
+        "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
+        G_GINT64_FORMAT, TRUE, seg->rate, seg->applied_rate, seg->format,
+        seg->start, seg->stop, seg->time);
 
     event = gst_event_new_new_segment_full (TRUE, seg->rate,
-        seg->applied_rate, seg->format, seg->start, seg->stop, seg->stop);
+        seg->applied_rate, seg->format, seg->start, seg->stop, seg->time);
 
     self->pending_stop = FALSE;
   }

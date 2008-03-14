@@ -1,3 +1,14 @@
+2008-03-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/selector/gstinputselector.c: (gst_selector_pad_event),
+	(gst_selector_pad_bufferalloc), (gst_selector_pad_chain),
+	(gst_input_selector_class_init),
+	(gst_input_selector_set_active_pad),
+	(gst_input_selector_set_property),
+	(gst_input_selector_push_pending_stop):
+	Add lots of debugging. 
+	Fix time member in the newsegment event.
+
 2008-03-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/selector/gstinputselector.c: (gst_selector_pad_class_init),
