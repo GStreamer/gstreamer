@@ -1,5 +1,10 @@
 2008-03-14  David Schleef  <ds@schleef.org>
 
+	* gst/videotestsrc/videotestsrc.c:  Oops, revert last change
+	  because -base is in freeze.
+
+2008-03-14  David Schleef  <ds@schleef.org>
+
 	Patch by: William M. Brack
 
 	* gst/videotestsrc/videotestsrc.c: Fix Bayer pattern generation.

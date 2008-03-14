@@ -304,10 +304,7 @@ static void paint_hline_str3 (paintinfo * p, int x, int y, int w);
 static void paint_hline_RGB565 (paintinfo * p, int x, int y, int w);
 static void paint_hline_xRGB1555 (paintinfo * p, int x, int y, int w);
 
-#if 0
-static void paint_hline_bayer_GRBG (paintinfo * p, int x, int y, int w);
-#endif
-static void paint_hline_bayer_BGGR (paintinfo * p, int x, int y, int w);
+static void paint_hline_bayer (paintinfo * p, int x, int y, int w);
 
 struct fourcc_list_struct fourcc_list[] = {
 /* packed */
@@ -393,11 +390,7 @@ struct fourcc_list_struct fourcc_list[] = {
         15,
       0x00007c00, 0x000003e0, 0x0000001f},
 
-  /* Need to know if this is correct */
-#if 0
-  {VTS_BAYER, "BAY8", "BayerRGGB", 8, paint_setup_bayer, paint_hline_bayer_GRBG}
-#endif
-  {VTS_BAYER, "BA81", "BayerBGGR", 8, paint_setup_bayer, paint_hline_bayer_BGGR}
+  {VTS_BAYER, "BAY8", "Bayer", 8, paint_setup_bayer, paint_hline_bayer}
 };
 int n_fourccs = G_N_ELEMENTS (fourcc_list);
 
@@ -1474,17 +1467,16 @@ paint_setup_bayer (paintinfo * p, unsigned char *dest)
   p->endptr = p->dest + p->ystride * p->height;
 }
 
-#if 0
 static void
-paint_hline_bayer_GRBG (paintinfo * p, int x, int y, int w)
+paint_hline_bayer (paintinfo * p, int x, int y, int w)
 {
   int offset = y * p->ystride;
   uint8_t *dest = p->yp + offset;
   int i;
 
-  if ((y & 1) == 0) {
+  if (y & 1) {
     for (i = x; i < x + w; i++) {
-      if ((i & 1) == 0) {
+      if (i & 1) {
         dest[i] = p->color->G;
       } else {
         dest[i] = p->color->B;
@@ -1492,37 +1484,10 @@ paint_hline_bayer_GRBG (paintinfo * p, int x, int y, int w)
     }
   } else {
     for (i = x; i < x + w; i++) {
-      if ((i & 1) == 0) {
+      if (i & 1) {
         dest[i] = p->color->R;
       } else {
         dest[i] = p->color->G;
-      }
-    }
-  }
-}
-#endif
-
-static void
-paint_hline_bayer_BGGR (paintinfo * p, int x, int y, int w)
-{
-  int offset = y * p->ystride;
-  uint8_t *dest = p->yp + offset;
-  int i;
-
-  if ((y & 1) == 0) {
-    for (i = x; i < x + w; i++) {
-      if ((i & 1) == 0) {
-        dest[i] = p->color->B;
-      } else {
-        dest[i] = p->color->G;
-      }
-    }
-  } else {
-    for (i = x; i < x + w; i++) {
-      if ((i & 1) == 0) {
-        dest[i] = p->color->G;
-      } else {
-        dest[i] = p->color->R;
       }
     }
   }
