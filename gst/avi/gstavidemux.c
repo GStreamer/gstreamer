@@ -1720,7 +1720,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
   guint64 offset = avi->offset;
   GstBuffer *buf;
   guint32 tag;
-  guint size;
+  guint32 size;
   gint i;
 
   GST_DEBUG ("demux stream index at offset %" G_GUINT64_FORMAT, offset);
@@ -1739,7 +1739,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
   tag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
   size = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 4);
   if (tag == GST_RIFF_TAG_LIST) {
-    GST_WARNING_OBJECT (avi, "skip LIST chunk, size %d",
+    GST_WARNING_OBJECT (avi, "skip LIST chunk, size %lu",
         (8 + ((size + 1) & ~1)));
     offset += 8 + ((size + 1) & ~1);
     gst_buffer_unref (buf);
@@ -1766,7 +1766,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
           avi->sinkpad, &offset, &tag, &buf) != GST_FLOW_OK)
     return;
 
-  GST_INFO ("will parse index chunk size %d for tag %" GST_FOURCC_FORMAT,
+  GST_INFO ("will parse index chunk size %lu for tag %" GST_FOURCC_FORMAT,
       GST_BUFFER_SIZE (buf), GST_FOURCC_ARGS (tag));
 
   gst_avi_demux_parse_index (avi, buf, index);
