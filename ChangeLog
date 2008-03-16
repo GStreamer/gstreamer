@@ -1,6 +1,12 @@
 2008-03-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavidemux.c:
+	  Fix up my last commit. Use G_GUINT32_FORMAT for the guint32 debug log.
+	  Also downgrade a GST_WARNING to GST_DEBUG and add a comment.
+
+2008-03-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c:
 	  Chunksize is uint32. Fix format specifier.
 
 2008-03-14  Christian Schaller <christian.schaller@collabora.co.uk>
