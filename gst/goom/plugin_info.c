@@ -64,12 +64,15 @@ setOptimizedMethods (PluginInfo * p)
 #endif
 #endif /* HAVE_CPU_I386 */
 
+/* disable until someone finds out what to use here instead of CPU_OPTION_64_BITS */
+#if 0
 #ifdef HAVE_CPU_PPC64
   if ((cpuFlavour & CPU_OPTION_64_BITS) != 0) {
 /*            p->methods.create_output_with_brightness = ppc_brightness_G5;        */
     p->methods.zoom_filter = ppc_zoom_generic;
   }
 #endif /* HAVE_CPU_PPC64 */
+#endif
 
 #ifdef HAVE_CPU_PPC
   if ((cpuFlavour & OIL_IMPL_FLAG_ALTIVEC) != 0) {
