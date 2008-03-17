@@ -259,8 +259,7 @@ else
   dnl libgstffmpeg.la: libs to statically link to        
   FFMPEG_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libavformat/libavformat.a \
                \$(top_builddir)/gst-libs/ext/ffmpeg/libavcodec/libavcodec.a \
-               \$(top_builddir)/gst-libs/ext/ffmpeg/libavutil/libavutil.a \
-              -lz"
+               \$(top_builddir)/gst-libs/ext/ffmpeg/libavutil/libavutil.a"
   dnl
   POSTPROC_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libpostproc	\
                    -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil 	\
@@ -274,7 +273,21 @@ else
   FFMPEG_SUBDIRS=gst-libs
   AC_DEFINE(HAVE_AVI_H)
   AC_DEFINE([FFMPEG_SOURCE], ["local snapshot"], [Describes where the FFmpeg libraries come from.])
-  ac_configure_args="$ac_configure_args --disable-vhook --disable-ffserver --disable-ffplay --enable-pp --enable-gpl --enable-static --disable-shared --disable-encoder=flac --disable-decoder=cavs --extra-cflags=-fPIC"
+  ac_configure_args="$ac_configure_args --disable-vhook --disable-ffserver --disable-ffplay --enable-pp --enable-gpl --enable-static --disable-encoder=flac --disable-decoder=cavs --extra-cflags=-fPIC"
+  case $host_os in
+    # Unfortunately, in Mac OS 10.5 the current rev of ffmpeg builds
+    # some non-PIC code into the .a file. See
+    # http://trac.macosforge.org/projects/macports/ticket/13725 for more
+    # info.
+    darwin*) 
+      ac_configure_args="$ac_configure_args --disable-mmx --disable-altivec"
+      ;;
+    *)
+      # --disable-shared on macos turns on -mdynamic-no-pic, which we
+      # can't have
+      ac_configure_args="$ac_configure_args --disable-shared"
+      ;;
+  esac
   AC_SUBST(FFMPEG_CO_DIR)
   AC_SUBST(FFMPEG_SVN)
   AC_SUBST(FFMPEG_REVISION)

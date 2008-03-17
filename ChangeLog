@@ -1,3 +1,13 @@
+2008-03-17  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ffmpeg/Makefile.am (libgstffmpeg_la_LIBADD): Re-add -lz
+	explicitly here.
+
+	* configure.ac: Remove -lz from FFMPEG_LIBS, because FFMPEG_LIBS
+	are used in the Makefile.am as a DEPENDENCIES target, and -lz is
+	not a target. Also in a blahriffic turn of events, MMX and Altivec
+	code on MacOS 10.5 produces non-PIC code. Turn them off on macos.
+
 2008-03-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_sink_event):
