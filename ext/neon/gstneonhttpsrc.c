@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (neonhttpsrc_debug);
 
 #define MAX_READ_SIZE (4 * 1024)
 
-/* max number of HTTP redirects, when iterating over a sequence of HTTP 302 status code */
+/* max number of HTTP redirects, when iterating over a sequence of HTTP 302/303 status code */
 #define MAX_HTTP_REDIRECTS_NUMBER 5
 
 static const GstElementDetails gst_neonhttp_src_details =
@@ -197,7 +197,7 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
   g_object_class_install_property
       (gobject_class, PROP_AUTOMATIC_REDIRECT,
       g_param_spec_boolean ("automatic-redirect", "automatic-redirect",
-          "Automatically follow HTTP redirects (HTTP Status Code 302)",
+          "Automatically follow HTTP redirects (HTTP Status Code 302/303)",
           TRUE, G_PARAM_READWRITE));
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -781,7 +781,7 @@ error:
 }
 
 /* Try to send the HTTP request to the Icecast server, and if possible deals with
- * all the probable redirections (HTTP status code == 302)
+ * all the probable redirections (HTTP status code == 302/303)
  */
 static gint
 gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
@@ -826,10 +826,10 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
     res = ne_begin_request (request);
 
     if (res == NE_OK) {
-      /* When the HTTP status code is 302, it is not the SHOUTcast streaming content yet;
+      /* When the HTTP status code is 302/303, it is not the SHOUTcast streaming content yet;
        * Reload the HTTP request with a new URI value */
       http_status = ne_get_status (request)->code;
-      if (http_status == 302 && do_redir) {
+      if ((http_status == 302 || http_status == 303) && do_redir) {
         const gchar *redir;
 
         /* the new URI value to go when redirecting can be found on the 'Location' HTTP header */
@@ -849,19 +849,21 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
 
     if ((res != NE_OK) ||
         (offset == 0 && http_status != 200) ||
-        (offset > 0 && http_status != 206 && http_status != 302)) {
+        (offset > 0 && http_status != 206 && http_status != 302
+            && http_status != 303)) {
       ne_request_destroy (request);
       request = NULL;
       ne_close_connection (session);
       ne_session_destroy (session);
       session = NULL;
-      if (offset > 0 && http_status != 206 && http_status != 302) {
+      if (offset > 0 && http_status != 206 && http_status != 302
+          && http_status != 303) {
         src->seekable = FALSE;
       }
     }
 
     /* if - NE_OK */
-    if (http_status == 302 && do_redir) {
+    if ((http_status == 302 || http_status == 303) && do_redir) {
       ++request_count;
       GST_WARNING_OBJECT (src, "%s %s.",
           (request_count < MAX_HTTP_REDIRECTS_NUMBER)
@@ -877,7 +879,7 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
     }
     /* do the redirect, go back to send another HTTP request now using the 'Location' */
   } while (do_redir && (request_count < MAX_HTTP_REDIRECTS_NUMBER)
-      && http_status == 302);
+      && (http_status == 302 || http_status == 303));
 
   if (session) {
     *ses = session;
