@@ -573,14 +573,11 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
     guint32 pixelformat,
     guint32 width, guint32 height, const GstStructure * template)
 {
-  GstCaps *ret;
   gint fd = v4l2src->v4l2object->video_fd;
   struct v4l2_frmivalenum ival;
   guint32 num, denom;
   GstStructure *s;
   GValue rates = { 0, };
-
-  ret = gst_caps_new_empty ();
 
   memset (&ival, 0, sizeof (struct v4l2_frmivalenum));
   ival.index = 0;
@@ -787,6 +784,9 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
 
       tmp = gst_v4l2src_probe_caps_for_format_and_size (v4l2src, pixelformat,
           w, h, template);
+
+      /* we get low res to high res, but want high res to low res in caps, so
+       * prepend structs to results list, we'll reverse the order later then */
       if (tmp)
         results = g_list_prepend (results, tmp);
 
@@ -801,8 +801,11 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
 
       tmp = gst_v4l2src_probe_caps_for_format_and_size (v4l2src, pixelformat,
           w, h, template);
+
+      /* we get low res to high res, but want high res to low res in caps, so
+       * prepend structs to results list, we'll reverse the order later then */
       if (tmp)
-        gst_caps_append_structure (ret, tmp);
+        results = g_list_prepend (results, tmp);
     }
   } else if (size.type == V4L2_FRMSIZE_TYPE_CONTINUOUS) {
     guint32 maxw, maxh;
@@ -818,6 +821,8 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
       gst_structure_set (tmp, "width", GST_TYPE_INT_RANGE, (gint) w,
           (gint) maxw, "height", GST_TYPE_INT_RANGE, (gint) h, (gint) maxh,
           NULL);
+
+      /* no point using the results list here, since there's only one struct */
       gst_caps_append_structure (ret, tmp);
     }
   } else {
