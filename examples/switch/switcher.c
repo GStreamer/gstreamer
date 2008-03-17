@@ -68,20 +68,22 @@ static gboolean
 switch_timer (GstElement * video_switch)
 {
   gint nb_sources;
-  gchar *active_pad;
+  GstPad *active_pad;
 
   g_message ("switching");
-  g_object_get (G_OBJECT (video_switch), "num-sources", &nb_sources, NULL);
+  g_object_get (G_OBJECT (video_switch), "n-pads", &nb_sources, NULL);
   g_object_get (G_OBJECT (video_switch), "active-pad", &active_pad, NULL);
 
-  if (strcmp (active_pad, "sink0") == 0) {
+  if (strcmp (gst_pad_get_name (active_pad), "sink0") == 0) {
 
-    g_object_set (G_OBJECT (video_switch), "active-pad", "sink1", NULL);
+    g_object_set (G_OBJECT (video_switch), "active-pad",
+        gst_element_get_pad (video_switch, "sink1"), NULL);
   } else {
-    g_object_set (G_OBJECT (video_switch), "active-pad", "sink0", NULL);
+    g_object_set (G_OBJECT (video_switch), "active-pad",
+        gst_element_get_pad (video_switch, "sink0"), NULL);
   }
   g_message ("current number of sources : %d, active source %s",
-      nb_sources, active_pad);
+      nb_sources, gst_pad_get_name (active_pad));
 
   return (GST_STATE (GST_ELEMENT (video_switch)) == GST_STATE_PLAYING);
 }
@@ -100,7 +102,7 @@ int
 main (int argc, char *argv[])
 {
   GstElement *pipeline, *src1, *src2, *video_switch, *video_sink, *segment;
-  GstElement *sink1_sync, *sink2_sync, *capsfilter, *scaler;
+  GstElement *sink1_sync, *sink2_sync, *capsfilter;
   GstBus *bus;
 
   /* Initing GStreamer library */
@@ -116,26 +118,25 @@ main (int argc, char *argv[])
   capsfilter = gst_element_factory_make ("capsfilter", "caps0");
   g_object_set (G_OBJECT (capsfilter), "caps",
       gst_caps_from_string ("video/x-raw-rgb,width=640,height=480"), NULL);
-  video_switch = gst_element_factory_make ("switch", "video_switch");
+  video_switch = gst_element_factory_make ("input-selector", "video_switch");
   segment = gst_element_factory_make ("identity", "identity-segment");
   g_object_set (G_OBJECT (segment), "silent", TRUE, NULL);
   g_signal_connect (G_OBJECT (segment), "notify::last-message",
       G_CALLBACK (last_message_received), segment);
   g_object_set (G_OBJECT (segment), "single-segment", TRUE, NULL);
-  scaler = gst_element_factory_make ("videoscale", "videoscale0");
-  video_sink = gst_element_factory_make ("fakesink", "video_sink");
-  //g_object_set (G_OBJECT (video_sink), "sync", FALSE, NULL);
+  video_sink = gst_element_factory_make ("ximagesink", "video_sink");
+  g_object_set (G_OBJECT (video_sink), "sync", FALSE, NULL);
   sink1_sync = gst_element_factory_make ("identity", "sink0_sync");
   g_object_set (G_OBJECT (sink1_sync), "sync", TRUE, NULL);
   sink2_sync = gst_element_factory_make ("identity", "sink1_sync");
   g_object_set (G_OBJECT (sink2_sync), "sync", TRUE, NULL);
   gst_bin_add_many (GST_BIN (pipeline), src1, src2, segment, video_switch,
-      video_sink, sink1_sync, sink2_sync, scaler, capsfilter, NULL);
-  gst_element_link (src1,       /*sink1_sync);
-                                   gst_element_link (sink1_sync, */ video_switch);
+      video_sink, sink1_sync, sink2_sync, capsfilter, NULL);
+  gst_element_link (src1, sink1_sync);
+  gst_element_link (sink1_sync, video_switch);
   gst_element_link (src2, capsfilter);
-  gst_element_link (capsfilter, /*sink2_sync);
-                                   gst_element_link (sink2_sync, */ video_switch);
+  gst_element_link (capsfilter, sink2_sync);
+  gst_element_link (sink2_sync, video_switch);
   gst_element_link (video_switch, segment);
   gst_element_link (segment,    /*scaler);
                                    gst_element_link (scaler, */ video_sink);
