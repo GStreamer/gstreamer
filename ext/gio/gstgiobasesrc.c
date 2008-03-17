@@ -309,7 +309,8 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
 
     if (ret == GST_FLOW_OK)
       src->position = offset;
-    return ret;
+    else
+      return ret;
   }
 
   buf = gst_buffer_new_and_alloc (size);

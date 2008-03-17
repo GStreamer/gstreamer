@@ -1,3 +1,12 @@
+2008-03-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Milosz Derezynski <internalerror at gmail dot com>
+
+	* ext/gio/gstgiobasesrc.c: (gst_gio_base_src_create):
+	  If seeking to a new position succeeds don't simply return from
+	  create() without creating a buffer. Do this only in the case
+	  seeking to the new position fails. Fixes bug #523054.
+
 2008-03-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/video/video.c: (gst_video_format_parse_caps),
