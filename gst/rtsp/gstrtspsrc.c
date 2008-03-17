@@ -104,6 +104,10 @@
 
 #include "gstrtspsrc.h"
 
+#ifdef G_OS_WIN32
+#include <winsock2.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
 #define GST_CAT_DEFAULT (rtspsrc_debug)
 
@@ -321,6 +325,14 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
 static void
 gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
 {
+#ifdef G_OS_WIN32
+  WSADATA wsa_data;
+
+  if (WSAStartup (MAKEWORD (2, 2), &wsa_data) != 0) {
+    GST_ERROR_OBJECT (src, "WSAStartup failed: 0x%08x", WSAGetLastError ());
+  }
+#endif
+
   src->location = g_strdup (DEFAULT_LOCATION);
   src->url = NULL;
 
@@ -367,6 +379,10 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->state_rec_lock);
   g_static_rec_mutex_free (rtspsrc->conn_rec_lock);
   g_free (rtspsrc->conn_rec_lock);
+
+#ifdef G_OS_WIN32
+  WSACleanup ();
+#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
