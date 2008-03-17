@@ -1,3 +1,16 @@
+2008-03-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstindex.c: (gst_index_entry_free):
+	* gst/gstindex.h:
+	  Don't free key strings which we don't own. Fixes crash in
+	  gst_index_entry_free() (#522741).
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/.cvsignore:
+	* tests/check/gst/gstindex.c: (test_index_entries),
+	  (gst_index_suite), (gst_index):
+	  Add unit test for the above.
+
 2008-03-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* win32/common/libgstreamer.def:

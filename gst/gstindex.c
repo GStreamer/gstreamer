@@ -545,16 +545,8 @@ gst_index_entry_free (GstIndexEntry * entry)
       }
       break;
     case GST_INDEX_ENTRY_OBJECT:
-      if (entry->data.object.key) {
-        g_free (entry->data.object.key);
-        entry->data.object.key = NULL;
-      }
       break;
     case GST_INDEX_ENTRY_FORMAT:
-      if (entry->data.format.key) {
-        g_free (entry->data.format.key);
-        entry->data.format.key = NULL;
-      }
       break;
   }
 

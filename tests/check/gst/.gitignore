@@ -10,6 +10,7 @@ gstelement
 gstevent
 gstghostpad
 gstiterator
+gstindex
 gstinterface
 gstmessage
 gstminiobject

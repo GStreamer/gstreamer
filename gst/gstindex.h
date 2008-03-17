@@ -214,7 +214,7 @@ struct _GstIndexEntry {
     } object;
     struct {
       GstFormat		 format;
-      gchar		*key;
+      const gchar	*key;
     } format;
   } data;
 };
