@@ -256,7 +256,7 @@ gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
         if (*format == GST_VIDEO_FORMAT_UNKNOWN) {
           ok = FALSE;
         }
-      } else if (depth == 24 && bpp == 32 && endianness == G_BIG_ENDIAN &&
+      } else if (depth == 32 && bpp == 32 && endianness == G_BIG_ENDIAN &&
           have_alpha) {
         *format = gst_video_format_from_rgba32_masks (red_mask, green_mask,
             blue_mask, alpha_mask);
@@ -574,11 +574,11 @@ gst_video_format_from_rgba32_masks (int red_mask, int green_mask, int blue_mask,
     return GST_VIDEO_FORMAT_BGRA;
   }
   if (red_mask == 0x00ff0000 && green_mask == 0x0000ff00 &&
-      blue_mask == 0x0000ff00 && alpha_mask == 0xff000000) {
+      blue_mask == 0x000000ff && alpha_mask == 0xff000000) {
     return GST_VIDEO_FORMAT_ARGB;
   }
   if (red_mask == 0x000000ff && green_mask == 0x0000ff00 &&
-      blue_mask == 0xff000000 && alpha_mask == 0xff000000) {
+      blue_mask == 0x00ff0000 && alpha_mask == 0xff000000) {
     return GST_VIDEO_FORMAT_ABGR;
   }
 

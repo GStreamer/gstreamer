@@ -1,3 +1,15 @@
+2008-03-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/video/video.c: (gst_video_format_parse_caps),
+	  (gst_video_format_from_rgba32_masks):
+	  Fix gst_video_format_parse_caps() for RGB caps with alpha channel
+	  (#522635).
+
+	* tests/check/libs/video.c: (test_parse_caps_rgb), (video_suite):
+	  Add unit test for the RGB caps parsing and creation, checking for
+	  internal consistency of the new API and consistency of the API with
+	  the old GST_VIDEO_CAPS_* defines.
+
 2008-03-14  David Schleef  <ds@schleef.org>
 
 	* gst/videotestsrc/videotestsrc.c:  Oops, revert last change

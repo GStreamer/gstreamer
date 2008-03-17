@@ -448,6 +448,62 @@ GST_START_TEST (test_dar_calc)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_caps_rgb)
+{
+  struct
+  {
+    const gchar *tmpl_caps_string;
+    GstVideoFormat fmt;
+  } formats[] = {
+    /* 24 bit */
+    {
+    GST_VIDEO_CAPS_RGB, GST_VIDEO_FORMAT_RGB}, {
+    GST_VIDEO_CAPS_BGR, GST_VIDEO_FORMAT_BGR},
+        /* 32 bit (no alpha) */
+    {
+    GST_VIDEO_CAPS_RGBx, GST_VIDEO_FORMAT_RGBx}, {
+    GST_VIDEO_CAPS_xRGB, GST_VIDEO_FORMAT_xRGB}, {
+    GST_VIDEO_CAPS_BGRx, GST_VIDEO_FORMAT_BGRx}, {
+    GST_VIDEO_CAPS_xBGR, GST_VIDEO_FORMAT_xBGR},
+        /* 32 bit (with alpha) */
+    {
+    GST_VIDEO_CAPS_RGBA, GST_VIDEO_FORMAT_RGBA}, {
+    GST_VIDEO_CAPS_ARGB, GST_VIDEO_FORMAT_ARGB}, {
+    GST_VIDEO_CAPS_BGRA, GST_VIDEO_FORMAT_BGRA}, {
+    GST_VIDEO_CAPS_ABGR, GST_VIDEO_FORMAT_ABGR}
+  };
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (formats); ++i) {
+    GstVideoFormat fmt = GST_VIDEO_FORMAT_UNKNOWN;
+    GstCaps *caps, *caps2;
+    int w = -1, h = -1;
+
+    caps = gst_caps_from_string (formats[i].tmpl_caps_string);
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, 2 * i, "height",
+        G_TYPE_INT, i, "framerate", GST_TYPE_FRACTION, 15, 1,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
+    g_assert (gst_caps_is_fixed (caps));
+
+    GST_DEBUG ("testing caps: %" GST_PTR_FORMAT, caps);
+
+    fail_unless (gst_video_format_parse_caps (caps, &fmt, &w, &h));
+    fail_unless_equals_int (fmt, formats[i].fmt);
+    fail_unless_equals_int (w, 2 * i);
+    fail_unless_equals_int (h, i);
+
+    /* make sure they're serialised back correctly */
+    caps2 = gst_video_format_new_caps (fmt, w, h, 15, 1, 1, 1);
+    fail_unless (caps != NULL);
+    fail_unless (gst_caps_is_equal (caps, caps2));
+
+    gst_caps_unref (caps);
+    gst_caps_unref (caps2);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -457,6 +513,7 @@ video_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_video_formats);
   tcase_add_test (tc_chain, test_dar_calc);
+  tcase_add_test (tc_chain, test_parse_caps_rgb);
 
   return s;
 }
