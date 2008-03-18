@@ -1,3 +1,11 @@
+2008-03-18  Andy Wingo  <wingo@pobox.com>
+
+	* ext/faad/gstfaad.c (gst_faad_chain): Fix a bad format argument,
+	and a potential int overflow.
+
+	* ext/faad/gstfaad.h: Include <neaacdec.h> if faad is neaac.
+	Avoids a #warning about an ignored #pragma.
+
 2008-03-17  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* examples/switch/switcher.c:

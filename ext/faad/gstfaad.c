@@ -1337,12 +1337,20 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
         }
       }
 
+      if (info.samples > G_MAXUINT / faad->bps) {
+        /* C's lovely propensity for int overflow.. */
+        GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
+            ("Output buffer too large"));
+        ret = GST_FLOW_ERROR;
+        goto out;
+      }
+
       /* play decoded data */
       if (info.samples > 0) {
         guint bufsize = info.samples * faad->bps;
         guint num_samples = info.samples / faad->channels;
 
-        GST_DEBUG_OBJECT (faad, "decoded %d samples", info.samples);
+        GST_DEBUG_OBJECT (faad, "decoded %d samples", (guint) info.samples);
 
         /* note: info.samples is total samples, not per channel */
         ret =

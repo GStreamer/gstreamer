@@ -21,7 +21,11 @@
 #define __GST_FAAD_H__
 
 #include <gst/gst.h>
+#ifdef FAAD_IS_NEAAC
+#include <neaacdec.h>
+#else
 #include <faad.h>
+#endif
 
 G_BEGIN_DECLS
 
