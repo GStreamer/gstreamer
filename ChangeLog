@@ -1,3 +1,23 @@
+2008-03-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Ole André Vadla Ravnås
+	    <ole dot andre dot ravnas at tandberg dot com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpoll.c: (gst_poll_winsock_error_to_errno),
+	(gst_poll_update_winsock_event_mask),
+	(gst_poll_prepare_winsock_active_sets),
+	(gst_poll_collect_winsock_events), (gst_poll_new), (gst_poll_free),
+	(gst_poll_add_fd_unlocked), (gst_poll_fd_ctl_write),
+	(gst_poll_fd_ctl_read_unlocked), (gst_poll_fd_ignored),
+	(gst_poll_fd_has_error), (gst_poll_fd_can_read_unlocked),
+	(gst_poll_check_ctrl_commands), (gst_poll_wait):
+	* gst/gstpoll.h:
+	* win32/common/libgstreamer.def:
+	Add new function gst_poll_fd_ignored() for improved Windows
+	compatibility.
+	Various minor fixes and cleanups. See #520808.
+
 2008-03-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstindex.c: (gst_index_entry_free):
