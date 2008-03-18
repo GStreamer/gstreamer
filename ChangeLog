@@ -1,3 +1,21 @@
+2008-03-18  Andy Wingo  <wingo@pobox.com>
+
+	* sys/osxvideo/osxvideosink.m
+	(gst_osx_video_sink_osxwindow_destroy)
+	(gst_osx_video_sink_osxwindow_new): Actually set a lock on the
+	task, whoopdee.
+	(cocoa_event_loop): Pacify the taymans by upping the usleepage to
+	2 ms.
+
+2008-03-18  Andy Wingo  <wingo@pobox.com>
+
+	* sys/osxvideo/osxvideosink.m
+	(gst_osx_video_sink_osxwindow_destroy)
+	(gst_osx_video_sink_osxwindow_new): Actually set a lock on the
+	task, whoopdee.
+	(cocoa_event_loop): Pacify the taymans by upping the usleepage to
+	2 ms.
+	
 2008-03-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: William M. Brack <wbrack at mmm com hk>

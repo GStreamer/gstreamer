@@ -125,7 +125,7 @@ cocoa_event_loop (GstOSXVideoSink * vsink)
       			    untilDate:[NSDate distantPast]
 			    inMode:NSDefaultRunLoopMode dequeue:YES ];
     if ( event == nil ) {
-      g_usleep (100);
+      g_usleep (2000);
       break;
     } else {
       switch ([event type]) {
@@ -280,8 +280,10 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
     [NSApp setDelegate:[[GstAppDelegate alloc] init]];
 
     [NSApp setRunning];
+    g_static_rec_mutex_init (&osxvideosink->event_task_lock);
     osxvideosink->event_task = gst_task_create ((GstTaskFunction)cocoa_event_loop,
                                                 osxvideosink);
+    gst_task_set_lock (osxvideosink->event_task, &osxvideosink->event_task_lock);
     gst_task_start (osxvideosink->event_task);
   } else {
     GstStructure *s;
@@ -327,6 +329,7 @@ gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink,
     gst_task_join (osxvideosink->event_task);
     gst_object_unref (osxvideosink->event_task);
     osxvideosink->event_task = NULL;
+    g_static_rec_mutex_free (&osxvideosink->event_task_lock);
   }
 
   g_free (osxwindow);

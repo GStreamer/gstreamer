@@ -77,6 +77,7 @@ struct _GstOSXVideoSink {
   gint fps_d;
   
   GstTask *event_task;
+  GStaticRecMutex event_task_lock;
 
   /* Unused */
   gint pixel_width, pixel_height;
