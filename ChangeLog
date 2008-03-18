@@ -1,3 +1,9 @@
+2008-03-18  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* win32/common/config.h:
+	0.10.17.4 pre-release
+
 2008-03-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/sdp/gstsdpmessage.c: (gst_sdp_message_dump):
