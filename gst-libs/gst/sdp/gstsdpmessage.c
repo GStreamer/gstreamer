@@ -66,6 +66,7 @@
 #endif
 
 #include <glib.h>               /* for G_OS_WIN32 */
+#include <gst/gstinfo.h>        /* For GST_STR_NULL */
 
 #ifdef G_OS_WIN32
 #ifdef _MSC_VER
@@ -1913,17 +1914,17 @@ gst_sdp_message_dump (const GstSDPMessage * msg)
   g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
 
   g_print ("sdp packet %p:\n", msg);
-  g_print (" version:       '%s'\n", msg->version);
+  g_print (" version:       '%s'\n", GST_STR_NULL (msg->version));
   g_print (" origin:\n");
-  g_print ("  username:     '%s'\n", msg->origin.username);
-  g_print ("  sess_id:      '%s'\n", msg->origin.sess_id);
-  g_print ("  sess_version: '%s'\n", msg->origin.sess_version);
-  g_print ("  nettype:      '%s'\n", msg->origin.nettype);
-  g_print ("  addrtype:     '%s'\n", msg->origin.addrtype);
-  g_print ("  addr:         '%s'\n", msg->origin.addr);
-  g_print (" session_name:  '%s'\n", msg->session_name);
-  g_print (" information:   '%s'\n", msg->information);
-  g_print (" uri:           '%s'\n", msg->uri);
+  g_print ("  username:     '%s'\n", GST_STR_NULL (msg->origin.username));
+  g_print ("  sess_id:      '%s'\n", GST_STR_NULL (msg->origin.sess_id));
+  g_print ("  sess_version: '%s'\n", GST_STR_NULL (msg->origin.sess_version));
+  g_print ("  nettype:      '%s'\n", GST_STR_NULL (msg->origin.nettype));
+  g_print ("  addrtype:     '%s'\n", GST_STR_NULL (msg->origin.addrtype));
+  g_print ("  addr:         '%s'\n", GST_STR_NULL (msg->origin.addr));
+  g_print (" session_name:  '%s'\n", GST_STR_NULL (msg->session_name));
+  g_print (" information:   '%s'\n", GST_STR_NULL (msg->information));
+  g_print (" uri:           '%s'\n", GST_STR_NULL (msg->uri));
 
   if (msg->emails->len > 0) {
     guint i;
@@ -1942,14 +1943,14 @@ gst_sdp_message_dump (const GstSDPMessage * msg)
     }
   }
   g_print (" connection:\n");
-  g_print ("  nettype:      '%s'\n", msg->connection.nettype);
-  g_print ("  addrtype:     '%s'\n", msg->connection.addrtype);
-  g_print ("  address:      '%s'\n", msg->connection.address);
+  g_print ("  nettype:      '%s'\n", GST_STR_NULL (msg->connection.nettype));
+  g_print ("  addrtype:     '%s'\n", GST_STR_NULL (msg->connection.addrtype));
+  g_print ("  address:      '%s'\n", GST_STR_NULL (msg->connection.address));
   g_print ("  ttl:          '%u'\n", msg->connection.ttl);
   g_print ("  addr_number:  '%u'\n", msg->connection.addr_number);
   g_print (" key:\n");
-  g_print ("  type:         '%s'\n", msg->key.type);
-  g_print ("  data:         '%s'\n", msg->key.data);
+  g_print ("  type:         '%s'\n", GST_STR_NULL (msg->key.type));
+  g_print ("  data:         '%s'\n", GST_STR_NULL (msg->key.data));
   if (msg->attributes->len > 0) {
     guint i;
 

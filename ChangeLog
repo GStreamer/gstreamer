@@ -1,5 +1,11 @@
 2008-03-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/sdp/gstsdpmessage.c: (gst_sdp_message_dump):
+	Use GST_STR_NULL when trying to print strings that could be NULL because
+	this might crash on some platforms. See #520808.
+
+2008-03-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
 	* gst-libs/gst/rtsp/gstrtspconnection.c:
