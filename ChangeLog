@@ -1,3 +1,13 @@
+2008-03-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_connect), (gst_rtsp_connection_write),
+	(read_line), (gst_rtsp_connection_read_internal):
+	Generic Windows fixes that makes libgstrtsp work on Windows when
+	coupled with the new GstPoll API. See #520808.
+
 2008-03-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Milosz Derezynski <internalerror at gmail dot com>

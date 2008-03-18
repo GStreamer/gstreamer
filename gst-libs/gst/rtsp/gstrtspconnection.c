@@ -96,11 +96,23 @@
 #ifdef G_OS_WIN32
 #define FIONREAD_TYPE gulong
 #define IOCTL_SOCKET ioctlsocket
-#define CLOSE_SOCKET(sock) closesocket(sock);
+#define READ_SOCKET(fd, buf, len) recv (fd, buf, len, 0)
+#define WRITE_SOCKET(fd, buf, len) send (fd, buf, len, 0)
+#define CLOSE_SOCKET(sock) closesocket (sock)
+#define ERRNO_IS_NOT_EAGAIN (WSAGetLastError () != WSAEWOULDBLOCK)
+#define ERRNO_IS_NOT_EINTR (WSAGetLastError () != WSAEINTR)
+/* According to Microsoft's connect() documentation this one returns
+ * WSAEWOULDBLOCK and not WSAEINPROGRESS. */
+#define ERRNO_IS_NOT_EINPROGRESS (WSAGetLastError () != WSAEWOULDBLOCK)
 #else
 #define FIONREAD_TYPE gint
 #define IOCTL_SOCKET ioctl
-#define CLOSE_SOCKET(sock) close(sock);
+#define READ_SOCKET(fd, buf, len) read (fd, buf, len)
+#define WRITE_SOCKET(fd, buf, len) write (fd, buf, len)
+#define CLOSE_SOCKET(sock) close (sock)
+#define ERRNO_IS_NOT_EAGAIN (errno != EAGAIN)
+#define ERRNO_IS_NOT_EINTR (errno != EINTR)
+#define ERRNO_IS_NOT_EINPROGRESS (errno != EINPROGRESS)
 #endif
 
 #ifdef G_OS_WIN32
@@ -191,7 +203,7 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
   gint retval;
 
 #ifdef G_OS_WIN32
-  unsigned long flags;
+  unsigned long flags = 1;
   struct in_addr *addrp;
 #else
   char **addrs;
@@ -252,7 +264,7 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
   ret = connect (fd, (struct sockaddr *) &sa_in, sizeof (sa_in));
   if (ret == 0)
     goto done;
-  if (errno != EINPROGRESS)
+  if (ERRNO_IS_NOT_EINPROGRESS)
     goto sys_error;
 
   /* wait for connect to complete up to the specified timeout or until we got
@@ -269,6 +281,8 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
     goto timeout;
   else if (retval == -1)
     goto sys_error;
+
+  gst_poll_fd_ignored (conn->fdset, &conn->fd);
 
 done:
   conn->ip = g_strdup (ip);
@@ -407,9 +421,9 @@ gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
     }
 
     /* now we can write */
-    written = write (conn->fd.fd, data, towrite);
+    written = WRITE_SOCKET (conn->fd.fd, data, towrite);
     if (written < 0) {
-      if (errno != EAGAIN && errno != EINTR)
+      if (ERRNO_IS_NOT_EAGAIN && ERRNO_IS_NOT_EINTR)
         goto write_error;
     } else {
       towrite -= written;
@@ -580,11 +594,11 @@ read_line (gint fd, gchar * buffer, guint size)
 
   idx = 0;
   while (TRUE) {
-    r = read (fd, &c, 1);
+    r = READ_SOCKET (fd, &c, 1);
     if (r == 0) {
       goto eof;
     } else if (r < 0) {
-      if (errno != EAGAIN && errno != EINTR)
+      if (ERRNO_IS_NOT_EAGAIN && ERRNO_IS_NOT_EINTR)
         goto read_error;
     } else {
       if (c == '\n')            /* end on \n */
@@ -821,12 +835,11 @@ gst_rtsp_connection_read_internal (GstRTSPConnection * conn, guint8 * data,
   do_read:
     /* if we get here there is activity on the real fd since the select
      * completed and the control socket was not readable. */
-    bytes = read (conn->fd.fd, data, toread);
-
+    bytes = READ_SOCKET (conn->fd.fd, data, toread);
     if (bytes == 0) {
       goto eof;
     } else if (bytes < 0) {
-      if (errno != EAGAIN && errno != EINTR)
+      if (ERRNO_IS_NOT_EAGAIN && ERRNO_IS_NOT_EINTR)
         goto read_error;
     } else {
       toread -= bytes;
