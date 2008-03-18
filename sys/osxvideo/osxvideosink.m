@@ -111,34 +111,33 @@ static GstVideoSinkClass *parent_class = NULL;
 
 
 /* cocoa event loop - needed if not run in own app */
-gint
+static void
 cocoa_event_loop (GstOSXVideoSink * vsink)
 {
   NSAutoreleasePool *pool;
-  gboolean ret = TRUE;
 
   GST_DEBUG_OBJECT (vsink, "Entering event loop");
   
   pool = [[NSAutoreleasePool alloc] init];
 
-  if ([NSApp isRunning]) {
+  while ([NSApp isRunning]) {
     NSEvent *event = [NSApp nextEventMatchingMask:NSAnyEventMask
       			    untilDate:[NSDate distantPast]
 			    inMode:NSDefaultRunLoopMode dequeue:YES ];
-    if ( event != nil ) {
+    if ( event == nil ) {
+      g_usleep (100);
+      break;
+    } else {
       switch ([event type]) {
       default: //XXX Feed me please
         [NSApp sendEvent:event];
-      break;
+        break;
       }
+      /* loop */
     }
   }
 
   [pool release];
-
-  GST_DEBUG_OBJECT (vsink, "Leaving event loop with ret : %d", ret);
-  
-  return ret;
 }
 
 static NSString *
@@ -281,8 +280,9 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
     [NSApp setDelegate:[[GstAppDelegate alloc] init]];
 
     [NSApp setRunning];
-    // insert event dispatch in the glib main loop
-    g_idle_add ((GSourceFunc) cocoa_event_loop, osxvideosink);
+    osxvideosink->event_task = gst_task_create ((GstTaskFunction)cocoa_event_loop,
+                                                osxvideosink);
+    gst_task_start (osxvideosink->event_task);
   } else {
     GstStructure *s;
     GstMessage *msg;
@@ -322,6 +322,12 @@ gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink,
   g_return_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink));
 
   [osxwindow->pool release];
+
+  if (osxvideosink->event_task) {
+    gst_task_join (osxvideosink->event_task);
+    gst_object_unref (osxvideosink->event_task);
+    osxvideosink->event_task = NULL;
+  }
 
   g_free (osxwindow);
 }
