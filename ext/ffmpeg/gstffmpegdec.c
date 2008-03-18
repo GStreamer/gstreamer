@@ -2048,7 +2048,8 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
 
       /* drain pending frames before trying to use the new segment, queued
        * buffers belonged to the previous segment. */
-      gst_ffmpegdec_drain (ffmpegdec);
+      if (ffmpegdec->context->codec)
+        gst_ffmpegdec_drain (ffmpegdec);
 
       GST_DEBUG_OBJECT (ffmpegdec,
           "NEWSEGMENT in time start %" GST_TIME_FORMAT " -- stop %"

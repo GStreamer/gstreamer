@@ -1,3 +1,8 @@
+2008-03-18  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ffmpeg/gstffmpegdec.c (gst_ffmpegdec_sink_event): Only drain
+	if we've already set up a codec.
+
 2008-03-17  Andy Wingo  <wingo@pobox.com>
 
 	* ext/ffmpeg/Makefile.am (libgstffmpeg_la_LIBADD): Re-add -lz
