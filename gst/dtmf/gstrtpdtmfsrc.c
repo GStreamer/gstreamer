@@ -194,7 +194,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "payload = (int) [ 96, 127 ], "
         "clock-rate = (int) [ 0, MAX ], "
         "ssrc = (int) [ 0, MAX ], "
-        "encoding-name = (string) \"telephone-event\"")
+        "encoding-name = (string) \"TELEPHONE-EVENT\"")
     /*  "events = (string) \"1-16\" */
 
     );
@@ -857,7 +857,7 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
   srccaps = gst_caps_new_simple ("application/x-rtp",
       "media", G_TYPE_STRING, "audio",
       "clock-rate", G_TYPE_INT, dtmfsrc->clock_rate,
-      "encoding-name", G_TYPE_STRING, "telephone-event", NULL);
+      "encoding-name", G_TYPE_STRING, "TELEPHONE-EVENT", NULL);
 
   /* the peer caps can override some of the defaults */
   peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
