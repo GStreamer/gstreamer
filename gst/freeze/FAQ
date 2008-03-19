@@ -1,4 +1,0 @@
-example usage
-
-gst-launch-0.10 --gst-debug=*freeze*:5 -mvt filesrc location=gnome-home.png blocksize=4135 !  pngdec ! freeze ! ffmpegcolorspace ! xvimagesink
-
