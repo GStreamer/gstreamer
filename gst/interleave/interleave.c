@@ -22,6 +22,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-interleave
+ *
+ * <refsect2>
+ * <para>
+ * Merges separate mono inputs into one interleaved stream.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch-0.10 filesrc location=song.ogg ! decodebin ! audioconvert ! ladspa-gverb name=g ! interleave name=i ! audioconvert ! autoaudiosink g. ! i.
+ * </programlisting>
+ * Apply ladspa gverb to the music and merge separate left/right outputs into a
+ * stereo stream for playback.
+ * </para>
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
