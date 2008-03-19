@@ -845,6 +845,17 @@ AG_GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
   AC_SUBST(NEON_LIBS)
 ])
 
+dnl *** ofa ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OFA, true)
+AG_GST_CHECK_FEATURE(OFA, [ofa plugins], ofa, [
+  PKG_CHECK_MODULES(OFA, libofa >= 0.9.3, HAVE_OFA="yes", [
+    HAVE_OFA="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(OFA_CFLAGS)
+  AC_SUBST(OFA_LIBS)
+])
+
 dnl *** soup ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SOUP, true)
 AG_GST_CHECK_FEATURE(SOUP, [soup http client plugin (2.4)], souphttpsrc, [
@@ -1044,6 +1055,7 @@ AM_CONDITIONAL(USE_MUSICBRAINZ, false)
 AM_CONDITIONAL(USE_MYTHTV, false)
 AM_CONDITIONAL(USE_NAS, false)
 AM_CONDITIONAL(USE_NEON, false)
+AM_CONDITIONAL(USE_OFA, false)
 AM_CONDITIONAL(USE_SOUP, false)
 AM_CONDITIONAL(USE_SDL, false)
 AM_CONDITIONAL(USE_SNDFILE, false)
@@ -1192,6 +1204,7 @@ ext/musepack/Makefile
 ext/musicbrainz/Makefile
 ext/mythtv/Makefile
 ext/neon/Makefile
+ext/ofa/Makefile
 ext/soup/Makefile
 ext/sdl/Makefile
 ext/sndfile/Makefile

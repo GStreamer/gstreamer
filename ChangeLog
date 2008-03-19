@@ -1,3 +1,17 @@
+2008-03-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Based on a patch by: Eric Buehl <eric dot buehl at gmail dot com>
+
+	* configure.ac:
+	* ext/ofa/Makefile.am:
+	* ext/ofa/gstofa.c: (gst_ofa_base_init), (gst_ofa_finalize),
+	(gst_ofa_class_init), (create_fingerprint), (gst_ofa_event),
+	(gst_ofa_init), (gst_ofa_transform_ip), (gst_ofa_get_property),
+	(plugin_init):
+	* ext/ofa/gstofa.h:
+	Add an OFA element, the successor of MusicBrainz TRM fingerprinting.
+	Fixes bug #351309.
+
 2008-03-18  Andy Wingo  <wingo@pobox.com>
 
 	* ext/faad/gstfaad.c (gst_faad_chain): Fix a bad format argument,
