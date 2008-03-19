@@ -64,7 +64,7 @@
  * <entry>0-1</entry>
  * <entry>The application uses this field to specify which of the two methods
  * specified in RFC 2833 to use. The value should be 0 for tones and 1 for
- * named events. This element is only capable of generating tones.
+ * named events. This element is only capable of generating named events.
  * </entry>
  * </row>
  * <row>
@@ -91,9 +91,9 @@
  * <row>
  * <entry>method</entry>
  * <entry>G_TYPE_INT</entry>
- * <entry>1</entry>
- * <entry>The method used for sending event, this element will react if this field
- * is absent or 2.
+ * <entry>2</entry>
+ * <entry>The method used for sending event, this element will react if this
+ * field is absent or 2.
  * </entry>
  * </row>
  * </tbody>
@@ -109,7 +109,7 @@
  * <para>
  * <programlisting>
  * structure = gst_structure_new ("dtmf-event",
- *                    "type", G_TYPE_INT, 0,
+ *                    "type", G_TYPE_INT, 1,
  *                    "number", G_TYPE_INT, 1,
  *                    "volume", G_TYPE_INT, 25,
  *                    "start", G_TYPE_BOOLEAN, TRUE, NULL);
@@ -139,7 +139,7 @@
 
 #include "gstdtmfsrc.h"
 
-#define GST_TONE_DTMF_TYPE_EVENT 0
+#define GST_TONE_DTMF_TYPE_EVENT 1
 #define DEFAULT_PACKET_INTERVAL  50 /* ms */
 #define MIN_PACKET_INTERVAL      10 /* ms */
 #define MAX_PACKET_INTERVAL      50 /* ms */
