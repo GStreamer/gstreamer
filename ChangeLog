@@ -1,5 +1,12 @@
 2008-03-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/ofa/gstofa.c: (create_fingerprint), (gst_ofa_event),
+	(gst_ofa_transform_ip), (plugin_init):
+	Improve debugging, clean up a bit and really generate the fingerprint
+	after 135 seconds.
+
+2008-03-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/ofa/gstofa.c:
 	Use GPL as license, the plugin itself is LGPL but libofa is GPL.
 

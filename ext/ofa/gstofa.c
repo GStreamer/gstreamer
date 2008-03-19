@@ -49,11 +49,7 @@ enum
 };
 
 
-#define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_ofa_debug, "ofa", 0, "ofa element");
-
-GST_BOILERPLATE_FULL (GstOFA, gst_ofa, GstAudioFilter,
-    GST_TYPE_AUDIO_FILTER, _do_init);
+GST_BOILERPLATE (GstOFA, gst_ofa, GstAudioFilter, GST_TYPE_AUDIO_FILTER);
 
 static void gst_ofa_finalize (GObject * object);
 static void gst_ofa_get_property (GObject * object, guint prop_id,
@@ -120,19 +116,22 @@ create_fingerprint (GstOFA * ofa)
   GstBuffer *buf;
   gint rate = GST_AUDIO_FILTER (ofa)->format.rate;
   gint channels = GST_AUDIO_FILTER (ofa)->format.channels;
-  gint width = GST_AUDIO_FILTER (ofa)->format.width / 8;
   gint endianness =
       (GST_AUDIO_FILTER (ofa)->format.
       bigend) ? OFA_BIG_ENDIAN : OFA_LITTLE_ENDIAN;
   GstTagList *tags;
+
+  GST_DEBUG ("Generating fingerprint");
 
   buf =
       gst_adapter_take_buffer (ofa->adapter,
       gst_adapter_available (ofa->adapter));
 
   ofa->fingerprint = g_strdup (ofa_create_print (GST_BUFFER_DATA (buf),
-          endianness,
-          GST_BUFFER_SIZE (buf) / width, rate, (channels == 2) ? 1 : 0));
+          endianness, GST_BUFFER_SIZE (buf) / 2, rate,
+          (channels == 2) ? 1 : 0));
+
+  GST_DEBUG ("Generated fingerprint");
 
   gst_buffer_unref (buf);
 
@@ -152,6 +151,7 @@ gst_ofa_event (GstBaseTransform * trans, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
     case GST_EVENT_NEWSEGMENT:
+      GST_DEBUG ("Got %s event, clearing buffer", GST_EVENT_TYPE_NAME (event));
       gst_adapter_clear (ofa->adapter);
       ofa->record = TRUE;
       g_free (ofa->fingerprint);
@@ -190,19 +190,16 @@ gst_ofa_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GstClockTime duration;
   gint rate = GST_AUDIO_FILTER (ofa)->format.rate;
   gint channels = GST_AUDIO_FILTER (ofa)->format.channels;
-  gint width = GST_AUDIO_FILTER (ofa)->format.width / 8;
 
-  g_return_val_if_fail (rate > 0 && channels > 0
-      && width > 0, GST_FLOW_NOT_NEGOTIATED);
+  g_return_val_if_fail (rate > 0 && channels > 0, GST_FLOW_NOT_NEGOTIATED);
 
-  if (ofa->record)
-    gst_adapter_push (ofa->adapter, gst_buffer_copy (buf));
+  if (!ofa->record)
+    return GST_FLOW_OK;
 
-  nframes =
-      gst_util_uint64_scale (gst_adapter_available (ofa->adapter), 1,
-      channels * width);
-  duration =
-      GST_FRAMES_TO_CLOCK_TIME (gst_adapter_available (ofa->adapter), rate);
+  gst_adapter_push (ofa->adapter, gst_buffer_copy (buf));
+
+  nframes = gst_adapter_available (ofa->adapter) / (channels * 2);
+  duration = GST_FRAMES_TO_CLOCK_TIME (nframes, rate);
 
   if (duration >= 135 * GST_SECOND && ofa->fingerprint == NULL)
     create_fingerprint (ofa);
@@ -231,6 +228,14 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
+
+  int major, minor, rev;
+
+  GST_DEBUG_CATEGORY_INIT (gst_ofa_debug, "ofa", 0, "ofa element");
+
+  ofa_get_version (&major, &minor, &rev);
+
+  GST_DEBUG ("libofa %d.%d.%d", major, minor, rev);
 
   ret = gst_element_register (plugin, "ofa", GST_RANK_NONE, GST_TYPE_OFA);
 
