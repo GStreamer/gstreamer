@@ -1,3 +1,10 @@
+2008-03-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/asmrules.c: (gst_asm_scan_string), (main):
+	make ) also a delimiter for rules.
+	Skip \\ when scanning strings.
+	Add new testcase for these problems.
+
 2008-03-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
