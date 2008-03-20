@@ -330,13 +330,13 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       dtmf_message = gst_message_new_element (GST_OBJECT (depayload), structure);
       if (dtmf_message) {
         if (!gst_element_post_message (GST_ELEMENT (depayload), dtmf_message)) {
-          GST_DEBUG_OBJECT (depayload, "Unable to send dtmf-event message to bus");
+          GST_ERROR_OBJECT (depayload, "Unable to send dtmf-event message to bus");
         }
       } else {
-        GST_DEBUG_OBJECT (depayload, "Unable to create dtmf-event message");
+        GST_ERROR_OBJECT (depayload, "Unable to create dtmf-event message");
       }
     } else {
-      GST_DEBUG_OBJECT (depayload, "Unable to create dtmf-event structure");
+      GST_ERROR_OBJECT (depayload, "Unable to create dtmf-event structure");
     }
   } else {
     guint16 duration = dtmf_payload.duration;
