@@ -1,3 +1,32 @@
+2008-03-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/selector/gstinputselector.c:
+	(gst_selector_pad_get_running_time), (gst_selector_pad_reset),
+	(gst_selector_pad_event), (gst_selector_pad_bufferalloc),
+	(gst_input_selector_wait), (gst_selector_pad_chain),
+	(gst_input_selector_class_init), (gst_input_selector_init),
+	(gst_input_selector_dispose), (gst_segment_set_start),
+	(gst_input_selector_set_active_pad),
+	(gst_input_selector_set_property),
+	(gst_input_selector_get_property),
+	(gst_input_selector_get_linked_pad),
+	(gst_input_selector_is_active_sinkpad),
+	(gst_input_selector_activate_sinkpad),
+	(gst_input_selector_request_new_pad),
+	(gst_input_selector_release_pad),
+	(gst_input_selector_change_state), (gst_input_selector_block),
+	(gst_input_selector_switch):
+	* gst/selector/gstinputselector.h:
+	Figure out the locking a bit more.
+	Mark buffers with discont after switching.
+	Fix initial segment forwarding, make sure to only forward one segment
+	regardless of what the sequence of buffers/segments is. See #522203.
+	Improve flushing when blocked.
+	Return NOT_LINKED when a stream is not selected.
+	Not API change for the switch signal in the docs.
+	Fix start/time/accum values of the new segment.
+	Correctly unlock and flush a blocking selector when going to READY.
+
 2008-03-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/ladspa/gstladspa.c:
