@@ -40,6 +40,14 @@ G_BEGIN_DECLS
 typedef struct _GstInputSelector GstInputSelector;
 typedef struct _GstInputSelectorClass GstInputSelectorClass;
 
+#define GST_INPUT_SELECTOR_GET_LOCK(sel) (((GstInputSelector*)(sel))->lock)
+#define GST_INPUT_SELECTOR_GET_COND(sel) (((GstInputSelector*)(sel))->cond)
+#define GST_INPUT_SELECTOR_LOCK(sel) (g_mutex_lock (GST_INPUT_SELECTOR_GET_LOCK(sel)))
+#define GST_INPUT_SELECTOR_UNLOCK(sel) (g_mutex_unlock (GST_INPUT_SELECTOR_GET_LOCK(sel)))
+#define GST_INPUT_SELECTOR_WAIT(sel) (g_cond_wait (GST_INPUT_SELECTOR_GET_COND(sel), \
+			GST_INPUT_SELECTOR_GET_LOCK(sel)))
+#define GST_INPUT_SELECTOR_BROADCAST(sel) (g_cond_broadcast (GST_INPUT_SELECTOR_GET_COND(sel)))
+
 struct _GstInputSelector {
   GstElement element;
 
@@ -49,12 +57,13 @@ struct _GstInputSelector {
   guint n_pads;
   guint padcount;
 
-  GstSegment segment;
+  GstSegment segment;      /* the output segment */
+  gboolean pending_close;  /* if we should push a close first */
 
-  GCond *blocked_cond;
+  GMutex *lock;
+  GCond *cond;
   gboolean blocked;
-  gboolean pending_stop;
-  GstSegment pending_stop_segment;
+  gboolean flushing;
 
   /* select all mode, send data from all input pads forward */
   gboolean select_all;
