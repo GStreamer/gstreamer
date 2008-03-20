@@ -1,6 +1,7 @@
-/* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+/* GstRtpDtmfDepay
+ *
  * Copyright (C) <2008> Collabora.
+ * Copyright (C) <2008> Nokia.
  *   Contact: Youness Alaoui <youness.alaoui@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or

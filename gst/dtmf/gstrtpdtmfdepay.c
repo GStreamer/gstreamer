@@ -1,10 +1,8 @@
-/* GStreamer
+/* GstRtpDtmfDepay
  *
- * Copyright 2007 Nokia Corporation
- * Copyright 2007 Collabora Ltd,
- *  @author: Philippe Kalaf <philippe.kalaf@collabora.co.uk>
- *
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2008> Collabora.
+ * Copyright (C) <2008> Nokia.
+ *   Contact: Youness Alaoui <youness.alaoui@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
