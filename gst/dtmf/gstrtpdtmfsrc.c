@@ -698,7 +698,7 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
         case RTP_DTMF_EVENT_TYPE_START:
           dtmfsrc->first_packet = TRUE;
           dtmfsrc->last_packet = FALSE;
-          /* Set the redundanc on the first packet */
+          /* Set the redundancy on the first packet */
           dtmfsrc->redundancy_count = dtmfsrc->packet_redundancy;
           gst_rtp_dtmf_prepare_timestamps (dtmfsrc);
 
@@ -742,7 +742,7 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
           case RTP_DTMF_EVENT_TYPE_STOP:
             dtmfsrc->first_packet = FALSE;
             dtmfsrc->last_packet = TRUE;
-            /* Set the redundanc on the last packet */
+            /* Set the redundancy on the last packet */
             dtmfsrc->redundancy_count = dtmfsrc->packet_redundancy;
             break;
 
