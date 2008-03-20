@@ -1,5 +1,15 @@
 2008-03-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/selector/gstinputselector.c: (gst_selector_pad_class_init),
+	(gst_selector_pad_init), (gst_selector_pad_set_property),
+	(gst_selector_pad_get_property), (gst_selector_pad_event),
+	(gst_selector_pad_bufferalloc), (gst_selector_pad_chain),
+	(gst_input_selector_set_active_pad):
+	Add pad property to configure behaviour of the unselected pad, it can
+	return OK or NOT_LINKED, based on the use case.
+
+2008-03-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/selector/gstinputselector.c:
 	(gst_selector_pad_get_running_time), (gst_selector_pad_reset),
 	(gst_selector_pad_event), (gst_selector_pad_bufferalloc),
