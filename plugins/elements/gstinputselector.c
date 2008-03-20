@@ -877,8 +877,9 @@ gst_segment_set_start (GstSegment * segment, gint64 running_time)
   segment->start += duration;
 }
 
-/* this function must be called with the SELECTOR_LOCK. */
-static void
+/* this function must be called with the SELECTOR_LOCK. It returns TRUE when the
+ * active pad changed. */
+static gboolean
 gst_input_selector_set_active_pad (GstInputSelector * self,
     GstPad * pad, gint64 stop_time, gint64 start_time)
 {
@@ -886,7 +887,7 @@ gst_input_selector_set_active_pad (GstInputSelector * self,
   GstPad **active_pad_p;
 
   if (pad == self->active_sinkpad)
-    return;
+    return FALSE;
 
   old = GST_SELECTOR_PAD_CAST (self->active_sinkpad);
   new = GST_SELECTOR_PAD_CAST (pad);
@@ -925,7 +926,7 @@ gst_input_selector_set_active_pad (GstInputSelector * self,
   GST_DEBUG_OBJECT (self, "New active pad is %" GST_PTR_FORMAT,
       self->active_sinkpad);
 
-  g_object_notify (G_OBJECT (self), "active-pad");
+  return TRUE;
 }
 
 static void
@@ -1213,14 +1214,20 @@ static void
 gst_input_selector_switch (GstInputSelector * self, GstPad * pad,
     gint64 stop_time, gint64 start_time)
 {
+  gboolean changed;
+
   g_return_if_fail (self->blocked == TRUE);
 
   GST_INPUT_SELECTOR_LOCK (self);
-  gst_input_selector_set_active_pad (self, pad, stop_time, start_time);
+  changed =
+      gst_input_selector_set_active_pad (self, pad, stop_time, start_time);
 
   self->blocked = FALSE;
   GST_INPUT_SELECTOR_BROADCAST (self);
   GST_INPUT_SELECTOR_UNLOCK (self);
+
+  if (changed)
+    g_object_notify (G_OBJECT (self), "active-pad");
 }
 
 static gboolean
