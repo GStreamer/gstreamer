@@ -5,6 +5,7 @@
 
 #include "gstdtmfsrc.h"
 #include "gstrtpdtmfsrc.h"
+#include "gstrtpdtmfdepay.h"
 
 
 static gboolean
@@ -16,6 +17,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_rtp_dtmf_src_plugin_init (plugin))
     return FALSE;
 
+
+  if (!gst_rtp_dtmf_depay_plugin_init (plugin))
+    return FALSE;
 
   return TRUE;
 }

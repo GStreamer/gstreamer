@@ -29,6 +29,8 @@
 #include <gst/base/gstbasesrc.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
+#include "gstrtpdtmfcommon.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_RTP_DTMF_SRC		(gst_rtp_dtmf_src_get_type())
@@ -39,21 +41,6 @@ G_BEGIN_DECLS
 #define GST_IS_RTP_DTMF_SRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_DTMF_SRC))
 #define GST_RTP_DTMF_SRC_CAST(obj)		((GstRTPDTMFSrc *)(obj))
 
-typedef struct {
-  unsigned  event:8;         /* Current DTMF event */
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  unsigned  volume:6;        /* power level of the tone, in dBm0 */
-  unsigned  r:1;             /* Reserved-bit */
-  unsigned  e:1;             /* End-bit */
-#elif G_BYTE_ORDER == G_BIG_ENDIAN
-  unsigned  e:1;             /* End-bit */
-  unsigned  r:1;             /* Reserved-bit */
-  unsigned  volume:6;        /* power level of the tone, in dBm0 */
-#else
-#error "G_BYTE_ORDER should be big or little endian."
-#endif
-  unsigned  duration:16;     /* Duration of digit, in timestamp units */
-} GstRTPDTMFPayload;
 
 typedef struct _GstRTPDTMFSrc GstRTPDTMFSrc;
 typedef struct _GstRTPDTMFSrcClass GstRTPDTMFSrcClass;
