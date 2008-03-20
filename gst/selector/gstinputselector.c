@@ -480,6 +480,8 @@ done:
   /* ERRORS */
 not_active:
   {
+    GST_INPUT_SELECTOR_UNLOCK (sel);
+
     /* unselected pad, perform fallback alloc or return unlinked when
      * asked */
     GST_OBJECT_LOCK (selpad);
