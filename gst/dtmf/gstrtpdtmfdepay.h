@@ -1,7 +1,7 @@
 /* GstRtpDtmfDepay
  *
- * Copyright (C) <2008> Collabora.
- * Copyright (C) <2008> Nokia.
+ * Copyright (C) 2008 Collabora Limited
+ * Copyright (C) 2008 Nokia Corporation
  *   Contact: Youness Alaoui <youness.alaoui@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
