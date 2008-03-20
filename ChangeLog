@@ -1,5 +1,13 @@
 2008-03-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/selector/gstinputselector.c:
+	(gst_input_selector_set_active_pad), (gst_input_selector_switch):
+	Do g_object_notify() only when not holding the lock to get the property
+	because otherwise we run into a deadlock with the deep-notify handlers
+	that are possibly installed.
+
+2008-03-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/selector/gstinputselector.c: (gst_selector_pad_class_init),
 	(gst_selector_pad_event), (gst_selector_pad_bufferalloc),
 	(gst_selector_pad_chain), (gst_input_selector_set_active_pad):
