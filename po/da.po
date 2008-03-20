@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.12\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-01-17 22:38+0000\n"
+"POT-Creation-Date: 2008-03-03 22:36+0000\n"
 "PO-Revision-Date: 2007-03-28 00:09+0200\n"
 "Last-Translator: Mogens Jaeger <mogens@jaeger.tf>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 "X-Generator: KBabel 1.11.2\n"
 
-#: gst/gst.c:302
+#: gst/gst.c:303
 msgid "Print the GStreamer version"
 msgstr "Udskriv Gstreamer versionsnummer"
 
-#: gst/gst.c:304
+#: gst/gst.c:305
 msgid "Make all warnings fatal"
 msgstr "Gør alle advarsler fatale"
 
-#: gst/gst.c:308
+#: gst/gst.c:309
 msgid "Print available debug categories and exit"
 msgstr "Udskriv tilgængelige fejlsøgningskategorier og afslut"
 
-#: gst/gst.c:312
+#: gst/gst.c:313
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Standard fejlsøgningsniveau fra 1 (kun fejl) til 5 (alt) eller 0 for ingen "
 "uddata"
 
-#: gst/gst.c:314
+#: gst/gst.c:315
 msgid "LEVEL"
 msgstr "NIVEAU"
 
-#: gst/gst.c:316
+#: gst/gst.c:317
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,31 +48,31 @@ msgstr ""
 "niveauer for de individuelle kategorier. Eksempel: GST_AUTOPLUG:5,"
 "GST_ELEMENT_*:3"
 
-#: gst/gst.c:319
+#: gst/gst.c:320
 msgid "LIST"
 msgstr "LISTE"
 
-#: gst/gst.c:321
+#: gst/gst.c:322
 msgid "Disable colored debugging output"
 msgstr "Déaktiver brug af farver ved fejlsøgnings uddata"
 
-#: gst/gst.c:324
+#: gst/gst.c:325
 msgid "Disable debugging"
 msgstr "Déaktiver fejlsøgning"
 
-#: gst/gst.c:328
+#: gst/gst.c:329
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Aktivér udførlig diagnostik ved indlæsning af moduler"
 
-#: gst/gst.c:332
+#: gst/gst.c:333
 msgid "Colon-separated paths containing plugins"
 msgstr "Kolon-separerede stier der indeholder moduler"
 
-#: gst/gst.c:332
+#: gst/gst.c:333
 msgid "PATHS"
 msgstr "SØGESTIER"
 
-#: gst/gst.c:335
+#: gst/gst.c:336
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -80,51 +80,51 @@ msgstr ""
 "Kommasepareret liste af moduler der skal indlæses på forhånd ud over dem der "
 "er gemt i listen med miljøvariabler GST_PLUGIN_PATH"
 
-#: gst/gst.c:337
+#: gst/gst.c:338
 msgid "PLUGINS"
 msgstr "MODULER"
 
-#: gst/gst.c:340
+#: gst/gst.c:341
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Déaktiver indfangning af segmentfejl under indlæsning af moduler"
 
-#: gst/gst.c:345
+#: gst/gst.c:346
 msgid "Disable the use of fork() while scanning the registry"
 msgstr "Déaktiver brug af forgrener() under skanning af registratur"
 
-#: gst/gst.c:366
+#: gst/gst.c:367
 msgid "GStreamer Options"
 msgstr "GStreamer indstillinger"
 
-#: gst/gst.c:367
+#: gst/gst.c:368
 msgid "Show GStreamer Options"
 msgstr "Vis Gstreamer indstillinger"
 
-#: gst/gst.c:736
+#: gst/gst.c:737
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Kunne ikke skrive registraturcache til %s: %s"
 
-#: gst/gst.c:778 gst/gst.c:794 gst/gst.c:839
+#: gst/gst.c:779 gst/gst.c:795 gst/gst.c:840
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr "Kunne ikke genskanne registratur %s: %s"
 
-#: gst/gst.c:854
+#: gst/gst.c:855
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr "Kunne ikke genskanne registratur %s"
 
-#: gst/gst.c:1143
+#: gst/gst.c:1144
 msgid "Unknown option"
 msgstr "Ukendt indstilling"
 
-#: gst/gstelement.c:290 gst/gstutils.c:2181
+#: gst/gstelement.c:299 gst/gstutils.c:2184
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FEJL: fra element %s: %s\n"
 
-#: gst/gstelement.c:292 gst/gstutils.c:2183 tools/gst-launch.c:460
+#: gst/gstelement.c:301 gst/gstutils.c:2186 tools/gst-launch.c:460
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -315,7 +315,7 @@ msgstr "Ingen fejlmeddelelse for domæne %s."
 msgid "No standard error message for domain %s and code %d."
 msgstr "Ingen standard fejlmeddelelse for domæne %s og kode %d."
 
-#: gst/gstpipeline.c:530
+#: gst/gstpipeline.c:527
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Valgt tid kan ikke bruges i rørledningen."
 
@@ -696,71 +696,71 @@ msgstr "antal slag pr. minut ved audio"
 msgid ", "
 msgstr ", "
 
-#: gst/parse/grammar.y:216
+#: gst/parse/grammar.y:223
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "specificeret tomt lager \"%s\", er ikke tilladt"
 
-#: gst/parse/grammar.y:225
+#: gst/parse/grammar.y:232
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "intet lager \"%s\", sprunget over"
 
-#: gst/parse/grammar.y:306
+#: gst/parse/grammar.y:354
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "ingen egenskab \"%s\" for element \"%s\""
 
-#: gst/parse/grammar.y:319
+#: gst/parse/grammar.y:369
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kunne ikke sætte egenskab \"%s\" for element \"%s\" til \"%s\""
 
-#: gst/parse/grammar.y:461
+#: gst/parse/grammar.y:511
 #, c-format
 msgid "could not link %s to %s"
 msgstr "kunne ikke lænke %s til %s"
 
-#: gst/parse/grammar.y:508
+#: gst/parse/grammar.y:558
 #, c-format
 msgid "no element \"%s\""
 msgstr "intet element \"%s\""
 
-#: gst/parse/grammar.y:555
+#: gst/parse/grammar.y:605
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "kunne ikke tolke kapabiliteten \"%s\""
 
-#: gst/parse/grammar.y:577 gst/parse/grammar.y:625 gst/parse/grammar.y:641
-#: gst/parse/grammar.y:704
+#: gst/parse/grammar.y:627 gst/parse/grammar.y:675 gst/parse/grammar.y:691
+#: gst/parse/grammar.y:754
 msgid "link without source element"
 msgstr "lænke uden kilde-element"
 
-#: gst/parse/grammar.y:583 gst/parse/grammar.y:622 gst/parse/grammar.y:713
+#: gst/parse/grammar.y:633 gst/parse/grammar.y:672 gst/parse/grammar.y:763
 msgid "link without sink element"
 msgstr "lænke uden udgangselement"
 
-#: gst/parse/grammar.y:659
+#: gst/parse/grammar.y:709
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "intet kildeelement for URI \"%s\""
 
-#: gst/parse/grammar.y:669
+#: gst/parse/grammar.y:719
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "intet element at lænke URI \"%s\" til"
 
-#: gst/parse/grammar.y:677
+#: gst/parse/grammar.y:727
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "intet udgangselement for URI \"%s\""
 
-#: gst/parse/grammar.y:684
+#: gst/parse/grammar.y:734
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "kunne ikke lænke udgangselement for URI \"%s\""
 
-#: gst/parse/grammar.y:698
+#: gst/parse/grammar.y:748
 msgid "empty pipeline not allowed"
 msgstr "tom rørledning ikke tilladt"
 
@@ -773,11 +773,11 @@ msgstr "Intern datastrømsfejl."
 msgid "Internal data flow error."
 msgstr "Intern datastrømsfejl."
 
-#: libs/gst/base/gstbasesink.c:2522
+#: libs/gst/base/gstbasesink.c:2518
 msgid "Internal data flow problem."
 msgstr "Intern datastrømsproblem."
 
-#: libs/gst/base/gstbasesink.c:2660
+#: libs/gst/base/gstbasesink.c:2657
 msgid "Internal data stream error."
 msgstr "Intern datastrømsfejl."
 
@@ -792,12 +792,12 @@ msgid ""
 "property takes a reference to the supplied GstCaps object."
 msgstr "Begræns den mulige tilladte kapabilitet (NUL betyder ALT)"
 
-#: plugins/elements/gstfdsink.c:329
+#: plugins/elements/gstfdsink.c:297
 #, c-format
 msgid "Error while writing to file descriptor \"%d\"."
 msgstr "Fejl under skrivning til filbeskriver \"%d\"."
 
-#: plugins/elements/gstfdsink.c:369
+#: plugins/elements/gstfdsink.c:337
 #, c-format
 msgid "File descriptor \"%d\" is not valid."
 msgstr "Filbeskriver \"%d\" er ugyldig."
@@ -826,26 +826,26 @@ msgstr "Fejl under søgning i filen \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fejl under skrivning til filen \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:963
+#: plugins/elements/gstfilesrc.c:969
 msgid "No file name specified for reading."
 msgstr "Intet filnavn specificeret for læsning."
 
-#: plugins/elements/gstfilesrc.c:975
+#: plugins/elements/gstfilesrc.c:981
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åbne filen \"%s\" for læsning."
 
-#: plugins/elements/gstfilesrc.c:984
+#: plugins/elements/gstfilesrc.c:990
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Kunne ikke hente info til \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:991
+#: plugins/elements/gstfilesrc.c:997
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" er et katalog."
 
-#: plugins/elements/gstfilesrc.c:998
+#: plugins/elements/gstfilesrc.c:1004
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Filen \"%s\" er en sokkel."
@@ -892,29 +892,29 @@ msgstr "som kan skrives"
 msgid "controllable"
 msgstr "kontrollerbar"
 
-#: tools/gst-inspect.c:979
+#: tools/gst-inspect.c:990
 msgid "Total count: "
 msgstr "Total optælling: "
 
-#: tools/gst-inspect.c:980
+#: tools/gst-inspect.c:991
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d plugin"
 msgstr[1] "%d plugin"
 
-#: tools/gst-inspect.c:982
+#: tools/gst-inspect.c:993
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d egenskab"
 msgstr[1] "%d egenskaber"
 
-#: tools/gst-inspect.c:1292
+#: tools/gst-inspect.c:1304
 msgid "Print all elements"
 msgstr "Udskriv alle elementer"
 
-#: tools/gst-inspect.c:1294
+#: tools/gst-inspect.c:1306
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
@@ -925,12 +925,12 @@ msgstr ""
 "                                        Bruges i forbindelse med ekstern "
 "automatisk installations-mekanismer"
 
-#: tools/gst-inspect.c:1374
+#: tools/gst-inspect.c:1386
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Kunne ikke indlæse pluginfilen: %s\n"
 
-#: tools/gst-inspect.c:1379
+#: tools/gst-inspect.c:1391
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Et sådant element eller plugin findes ikke '%s'\n"
@@ -991,142 +991,142 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ADVARSEL: fra element %s: %s\n"
 
-#: tools/gst-launch.c:510
+#: tools/gst-launch.c:506
 #, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
-#: tools/gst-launch.c:525
+#: tools/gst-launch.c:521
 #, c-format
 msgid "buffering... %d  \r"
 msgstr ""
 
-#: tools/gst-launch.c:537
+#: tools/gst-launch.c:533
 #, fuzzy, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Rørledning sættes til AFSPIL ...\n"
 
-#: tools/gst-launch.c:545
+#: tools/gst-launch.c:541
 #, fuzzy, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "PAUSERER rørledning ...\n"
 
-#: tools/gst-launch.c:560
+#: tools/gst-launch.c:556
 #, fuzzy, c-format
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Afbryde: Sætter rørledning på PAUSE...\n"
 
-#: tools/gst-launch.c:595
+#: tools/gst-launch.c:591
 msgid "Output tags (also known as metadata)"
 msgstr "Uddatamærkater (også kendt som metadata)"
 
-#: tools/gst-launch.c:597
+#: tools/gst-launch.c:593
 msgid "Output status information and property notifications"
 msgstr "Uddata statusinformation og egenskabsmeddelelser"
 
-#: tools/gst-launch.c:599
+#: tools/gst-launch.c:595
 msgid "Output messages"
 msgstr "Uddatameddelelser"
 
-#: tools/gst-launch.c:601
+#: tools/gst-launch.c:597
 msgid "Do not output status information of TYPE"
 msgstr "Send ikke statusinformation af TYPE ud"
 
-#: tools/gst-launch.c:601
+#: tools/gst-launch.c:597
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
-#: tools/gst-launch.c:604
+#: tools/gst-launch.c:600
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Gem XML-repræsentation af rørledning til FIL og afslut"
 
-#: tools/gst-launch.c:604
+#: tools/gst-launch.c:600
 msgid "FILE"
 msgstr "FIL"
 
-#: tools/gst-launch.c:607
+#: tools/gst-launch.c:603
 msgid "Do not install a fault handler"
 msgstr "Installer ikke en fejlhåndterer"
 
-#: tools/gst-launch.c:609
+#: tools/gst-launch.c:605
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Udskriv allokeringsspor (hvis tilladt på oversættelsestidspunktet)"
 
-#: tools/gst-launch.c:677
+#: tools/gst-launch.c:673
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEJL: rørledningen kunne ikke dannes: %s.\n"
 
-#: tools/gst-launch.c:681
+#: tools/gst-launch.c:677
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEJL: rørledningen kunne ikke dannes.\n"
 
-#: tools/gst-launch.c:685
+#: tools/gst-launch.c:681
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ADVARSEL: forkert rørledning: %s\n"
 
-#: tools/gst-launch.c:712
+#: tools/gst-launch.c:708
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEJL: elementet 'rørledning' blev ikke fundet.\n"
 
-#: tools/gst-launch.c:718 tools/gst-launch.c:788
+#: tools/gst-launch.c:714 tools/gst-launch.c:784
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "PAUSERER rørledning ...\n"
 
-#: tools/gst-launch.c:723
+#: tools/gst-launch.c:719
 #, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "FEJL: rørledning ønsker ikke at pausere.\n"
 
-#: tools/gst-launch.c:728
+#: tools/gst-launch.c:724
 #, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Rørledningen kører, og behøver ikke at blive PREROLL'ed ...\n"
 
-#: tools/gst-launch.c:732
+#: tools/gst-launch.c:728
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Rørledningen PREROLL'er ...\n"
 
-#: tools/gst-launch.c:735 tools/gst-launch.c:748
+#: tools/gst-launch.c:731 tools/gst-launch.c:744
 #, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "FEJL: rørledning ønsker ikke at preroll.\n"
 
-#: tools/gst-launch.c:741
+#: tools/gst-launch.c:737
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Rørledningen er PREROLL'ed ...\n"
 
-#: tools/gst-launch.c:753
+#: tools/gst-launch.c:749
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Rørledning sættes til AFSPIL ...\n"
 
-#: tools/gst-launch.c:759
+#: tools/gst-launch.c:755
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEJL: rørledning ønsker ikke at spille.\n"
 
-#: tools/gst-launch.c:782
+#: tools/gst-launch.c:778
 msgid "Execution ended after %"
 msgstr "Udførsel afsluttet efter %"
 
-#: tools/gst-launch.c:792
+#: tools/gst-launch.c:788
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Rørledning sættes til KLAR ...\n"
 
-#: tools/gst-launch.c:797
+#: tools/gst-launch.c:793
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Rørledning sættes til NUL ...\n"
 
-#: tools/gst-launch.c:802
+#: tools/gst-launch.c:798
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "Rørledning renses ...\n"

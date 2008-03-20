@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-01-17 22:38+0000\n"
+"POT-Creation-Date: 2008-03-03 22:36+0000\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -15,30 +15,30 @@ msgstr ""
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:302
+#: gst/gst.c:303
 msgid "Print the GStreamer version"
 msgstr "Vertoon die GStreamer weergawe"
 
-#: gst/gst.c:304
+#: gst/gst.c:305
 msgid "Make all warnings fatal"
 msgstr "Maak alle waarskuwings fataal"
 
-#: gst/gst.c:308
+#: gst/gst.c:309
 msgid "Print available debug categories and exit"
 msgstr "Vertoon beskikbare ontfoutkategorië en stop"
 
-#: gst/gst.c:312
+#: gst/gst.c:313
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Verstek ontfoutvlak vanaf 1 (slegs fout) tot 5 (enigiets) of 0 vir geen "
 "afvoer"
 
-#: gst/gst.c:314
+#: gst/gst.c:315
 msgid "LEVEL"
 msgstr "VLAK"
 
-#: gst/gst.c:316
+#: gst/gst.c:317
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -46,31 +46,31 @@ msgstr ""
 "Komma-geskeide lys van kategorie_naam:vlak pare om die individuele "
 "kategorieë op te stel. Byvoorbeeld: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:319
+#: gst/gst.c:320
 msgid "LIST"
 msgstr "LYS"
 
-#: gst/gst.c:321
+#: gst/gst.c:322
 msgid "Disable colored debugging output"
 msgstr "Skakel gekleurde ontfout-afvoer af"
 
-#: gst/gst.c:324
+#: gst/gst.c:325
 msgid "Disable debugging"
 msgstr "Skakel ontfouting af"
 
-#: gst/gst.c:328
+#: gst/gst.c:329
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Aktiveer volledige diagnostiese boodskappe vir inproplaaiing"
 
-#: gst/gst.c:332
+#: gst/gst.c:333
 msgid "Colon-separated paths containing plugins"
 msgstr "Dubbelpunt-geskeide paaie wat inproppe bevat"
 
-#: gst/gst.c:332
+#: gst/gst.c:333
 msgid "PATHS"
 msgstr "PAAIE"
 
-#: gst/gst.c:335
+#: gst/gst.c:336
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -78,51 +78,51 @@ msgstr ""
 "Komma-geskeide lys van inproppe om vooraf te laai by die lys gestoor in die "
 "omgewingsveranderlike GST_PLUGIN_PATH"
 
-#: gst/gst.c:337
+#: gst/gst.c:338
 msgid "PLUGINS"
 msgstr "INPROPPE"
 
-#: gst/gst.c:340
+#: gst/gst.c:341
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Moenie segmenteringsfoute tydens inproplaaiing ondervang nie"
 
-#: gst/gst.c:345
+#: gst/gst.c:346
 msgid "Disable the use of fork() while scanning the registry"
 msgstr ""
 
-#: gst/gst.c:366
+#: gst/gst.c:367
 msgid "GStreamer Options"
 msgstr "GStreamer Opsies"
 
-#: gst/gst.c:367
+#: gst/gst.c:368
 msgid "Show GStreamer Options"
 msgstr "Wys GStreamer opsies"
 
-#: gst/gst.c:736
+#: gst/gst.c:737
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr ""
 
-#: gst/gst.c:778 gst/gst.c:794 gst/gst.c:839
+#: gst/gst.c:779 gst/gst.c:795 gst/gst.c:840
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr ""
 
-#: gst/gst.c:854
+#: gst/gst.c:855
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr ""
 
-#: gst/gst.c:1143
+#: gst/gst.c:1144
 msgid "Unknown option"
 msgstr "Onbekende opsie"
 
-#: gst/gstelement.c:290 gst/gstutils.c:2181
+#: gst/gstelement.c:299 gst/gstutils.c:2184
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FOUT: vanaf element %s: %s\n"
 
-#: gst/gstelement.c:292 gst/gstutils.c:2183 tools/gst-launch.c:460
+#: gst/gstelement.c:301 gst/gstutils.c:2186 tools/gst-launch.c:460
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -317,7 +317,7 @@ msgstr "Geen foutboodskap vir domein %s."
 msgid "No standard error message for domain %s and code %d."
 msgstr "Geen standaard foutboodskap vir domein %s en kode %d."
 
-#: gst/gstpipeline.c:530
+#: gst/gstpipeline.c:527
 msgid "Selected clock cannot be used in pipeline."
 msgstr ""
 
@@ -701,71 +701,71 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/parse/grammar.y:216
+#: gst/parse/grammar.y:223
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "gespesifiseerde leë houer \"%s\" is ontoelaatbaar"
 
-#: gst/parse/grammar.y:225
+#: gst/parse/grammar.y:232
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "geen houer \"%s\", dit word oorgeslaan"
 
-#: gst/parse/grammar.y:306
+#: gst/parse/grammar.y:354
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "Geen eienskap \"%s\" in element \"%s\""
 
-#: gst/parse/grammar.y:319
+#: gst/parse/grammar.y:369
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kon nie eienskap \"%s\" in element \"%s\" stel na \"%s\" nie"
 
-#: gst/parse/grammar.y:461
+#: gst/parse/grammar.y:511
 #, c-format
 msgid "could not link %s to %s"
 msgstr "Kon nie %s aan %s verbind nie"
 
-#: gst/parse/grammar.y:508
+#: gst/parse/grammar.y:558
 #, c-format
 msgid "no element \"%s\""
 msgstr "geen element \"%s\""
 
-#: gst/parse/grammar.y:555
+#: gst/parse/grammar.y:605
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "kon nie caps \"%s\" ontleed nie"
 
-#: gst/parse/grammar.y:577 gst/parse/grammar.y:625 gst/parse/grammar.y:641
-#: gst/parse/grammar.y:704
+#: gst/parse/grammar.y:627 gst/parse/grammar.y:675 gst/parse/grammar.y:691
+#: gst/parse/grammar.y:754
 msgid "link without source element"
 msgstr "verbinding sonder bron-element"
 
-#: gst/parse/grammar.y:583 gst/parse/grammar.y:622 gst/parse/grammar.y:713
+#: gst/parse/grammar.y:633 gst/parse/grammar.y:672 gst/parse/grammar.y:763
 msgid "link without sink element"
 msgstr "verbinding sonder bestemming-element"
 
-#: gst/parse/grammar.y:659
+#: gst/parse/grammar.y:709
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "geen bronelement vir URI \"%s\""
 
-#: gst/parse/grammar.y:669
+#: gst/parse/grammar.y:719
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "geen element vir URI \"%s\" om heen te skakel nie"
 
-#: gst/parse/grammar.y:677
+#: gst/parse/grammar.y:727
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "geen bestemming-element vir URI \"%s\""
 
-#: gst/parse/grammar.y:684
+#: gst/parse/grammar.y:734
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "kon nie aan bestemming-element vir  URI \"%s\" verbind nie"
 
-#: gst/parse/grammar.y:698
+#: gst/parse/grammar.y:748
 msgid "empty pipeline not allowed"
 msgstr "leë pyplyn word nie toegelaat nie"
 
@@ -778,11 +778,11 @@ msgstr "Interne datavloeifout."
 msgid "Internal data flow error."
 msgstr "Interne datavloeifout."
 
-#: libs/gst/base/gstbasesink.c:2522
+#: libs/gst/base/gstbasesink.c:2518
 msgid "Internal data flow problem."
 msgstr "Interne datavloeiprobleem."
 
-#: libs/gst/base/gstbasesink.c:2660
+#: libs/gst/base/gstbasesink.c:2657
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "Interne datavloeifout."
@@ -797,12 +797,12 @@ msgid ""
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
 
-#: plugins/elements/gstfdsink.c:329
+#: plugins/elements/gstfdsink.c:297
 #, fuzzy, c-format
 msgid "Error while writing to file descriptor \"%d\"."
 msgstr "Fout tydens skryf na lêer \"%s\"."
 
-#: plugins/elements/gstfdsink.c:369
+#: plugins/elements/gstfdsink.c:337
 #, c-format
 msgid "File descriptor \"%d\" is not valid."
 msgstr ""
@@ -831,26 +831,26 @@ msgstr "Fout tydens skryf na lêer \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fout tydens skryf na lêer \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:963
+#: plugins/elements/gstfilesrc.c:969
 msgid "No file name specified for reading."
 msgstr "Geen lêernaam om uit te lees nie."
 
-#: plugins/elements/gstfilesrc.c:975
+#: plugins/elements/gstfilesrc.c:981
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie. %s."
 
-#: plugins/elements/gstfilesrc.c:984
+#: plugins/elements/gstfilesrc.c:990
 #, fuzzy, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "kon nie inligting oor \"%s\" kry nie."
 
-#: plugins/elements/gstfilesrc.c:991
+#: plugins/elements/gstfilesrc.c:997
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" is 'n gids."
 
-#: plugins/elements/gstfilesrc.c:998
+#: plugins/elements/gstfilesrc.c:1004
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Lêer \"%s\" is 'n sok."
@@ -898,42 +898,42 @@ msgstr "titel"
 msgid "controllable"
 msgstr ""
 
-#: tools/gst-inspect.c:979
+#: tools/gst-inspect.c:990
 #, fuzzy
 msgid "Total count: "
 msgstr "aantal snitte"
 
-#: tools/gst-inspect.c:980
+#: tools/gst-inspect.c:991
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-inspect.c:982
+#: tools/gst-inspect.c:993
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-inspect.c:1292
+#: tools/gst-inspect.c:1304
 msgid "Print all elements"
 msgstr "Druk alle elemente"
 
-#: tools/gst-inspect.c:1294
+#: tools/gst-inspect.c:1306
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
 
-#: tools/gst-inspect.c:1374
+#: tools/gst-inspect.c:1386
 #, fuzzy, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
 
-#: tools/gst-inspect.c:1379
+#: tools/gst-inspect.c:1391
 #, fuzzy, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "geen bronelement vir URI \"%s\""
@@ -994,142 +994,142 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "FOUT: vanaf element %s: %s\n"
 
-#: tools/gst-launch.c:510
+#: tools/gst-launch.c:506
 #, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
-#: tools/gst-launch.c:525
+#: tools/gst-launch.c:521
 #, c-format
 msgid "buffering... %d  \r"
 msgstr ""
 
-#: tools/gst-launch.c:537
+#: tools/gst-launch.c:533
 #, fuzzy, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Pyplyn word gestel na SPEEL ...\n"
 
-#: tools/gst-launch.c:545
+#: tools/gst-launch.c:541
 #, fuzzy, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Stel pyplyn na POUSEER ...\n"
 
-#: tools/gst-launch.c:560
+#: tools/gst-launch.c:556
 #, fuzzy, c-format
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
 
-#: tools/gst-launch.c:595
+#: tools/gst-launch.c:591
 msgid "Output tags (also known as metadata)"
 msgstr "Wys etikette (ook bekend as metadata)"
 
-#: tools/gst-launch.c:597
+#: tools/gst-launch.c:593
 msgid "Output status information and property notifications"
 msgstr "Wys statusinligting en kennisgewings van eienskappe"
 
-#: tools/gst-launch.c:599
+#: tools/gst-launch.c:595
 msgid "Output messages"
 msgstr "Afvoerboodskappe"
 
-#: tools/gst-launch.c:601
+#: tools/gst-launch.c:597
 msgid "Do not output status information of TYPE"
 msgstr "Moenie statusinligting van TIPE wys nie"
 
-#: tools/gst-launch.c:601
+#: tools/gst-launch.c:597
 msgid "TYPE1,TYPE2,..."
 msgstr "TIPE1, TIPE2,..."
 
-#: tools/gst-launch.c:604
+#: tools/gst-launch.c:600
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Stoor xml-voorstelling van pyplyn na LÊER en stop"
 
-#: tools/gst-launch.c:604
+#: tools/gst-launch.c:600
 msgid "FILE"
 msgstr "LÊER"
 
-#: tools/gst-launch.c:607
+#: tools/gst-launch.c:603
 msgid "Do not install a fault handler"
 msgstr "Moenie 'n fouthanteerder installeer nie"
 
-#: tools/gst-launch.c:609
+#: tools/gst-launch.c:605
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Druk \"alloc trace\" (indien aangeskakel tydens kompilering)"
 
-#: tools/gst-launch.c:677
+#: tools/gst-launch.c:673
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FOUT: pyplyn kon nie opgestel word nie: %s.\n"
 
-#: tools/gst-launch.c:681
+#: tools/gst-launch.c:677
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FOUT: pyplyn kon nie opgestel word nie.\n"
 
-#: tools/gst-launch.c:685
+#: tools/gst-launch.c:681
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WAARSKUWING: foutiewe pyplyn: %s\n"
 
-#: tools/gst-launch.c:712
+#: tools/gst-launch.c:708
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FOUT: die pyplynelement kon nie gevind word nie.\n"
 
-#: tools/gst-launch.c:718 tools/gst-launch.c:788
+#: tools/gst-launch.c:714 tools/gst-launch.c:784
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Stel pyplyn na POUSEER ...\n"
 
-#: tools/gst-launch.c:723
+#: tools/gst-launch.c:719
 #, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "FOUT: pyplyn wil nie pouseer nie.\n"
 
-#: tools/gst-launch.c:728
+#: tools/gst-launch.c:724
 #, fuzzy, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Pyplyn is VOORGEROL ...\n"
 
-#: tools/gst-launch.c:732
+#: tools/gst-launch.c:728
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Pyplyn doen VOORROLLING ...\n"
 
-#: tools/gst-launch.c:735 tools/gst-launch.c:748
+#: tools/gst-launch.c:731 tools/gst-launch.c:744
 #, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "FOUT: pyplyn wil nie voorrol nie.\n"
 
-#: tools/gst-launch.c:741
+#: tools/gst-launch.c:737
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Pyplyn is VOORGEROL ...\n"
 
-#: tools/gst-launch.c:753
+#: tools/gst-launch.c:749
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Pyplyn word gestel na SPEEL ...\n"
 
-#: tools/gst-launch.c:759
+#: tools/gst-launch.c:755
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pyplyn wil nie speel nie.\n"
 
-#: tools/gst-launch.c:782
+#: tools/gst-launch.c:778
 msgid "Execution ended after %"
 msgstr "Uitvoering het geëindig na %"
 
-#: tools/gst-launch.c:792
+#: tools/gst-launch.c:788
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Pyplyn word gestel na GEREED ...\n"
 
-#: tools/gst-launch.c:797
+#: tools/gst-launch.c:793
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
 
-#: tools/gst-launch.c:802
+#: tools/gst-launch.c:798
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "pyplyn word VRYGEMAAK ...\n"
