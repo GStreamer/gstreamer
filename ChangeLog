@@ -1,5 +1,11 @@
 2008-03-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/ladspa/gstladspa.c:
+	* ext/ladspa/gstsignalprocessor.c:
+	  Add some thoughts and FIXME's.
+
+2008-03-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/bayer/gstbayer2rgb.c:
 	  Include stdlib.h for abs.
 

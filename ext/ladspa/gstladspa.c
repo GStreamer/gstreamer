@@ -89,7 +89,16 @@ gst_ladspa_base_init (gpointer g_class)
     if (LADSPA_IS_PORT_AUDIO (p)) {
       gchar *name = g_strdup ((gchar *) desc->PortNames[j]);
 
+      /* FIXME: group stereo pairs into a stereo pad
+       * ladspa-fx have "XXX (Left)" and "XXX (Right)"
+       * where XXX={In,Input,Out,Output}
+       */
+
       GST_DEBUG ("LADSPA port name: \"%s\"", name);
+      /* replaces all spaces with underscores, and then remaining special chars
+       * with '-'
+       * FIXME: why, pads can have any name
+       */
       g_strdelimit (name, " ", '_');
       g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "_-><=", '-');
       GST_DEBUG ("GStreamer pad name: \"%s\"", name);

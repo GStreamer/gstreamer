@@ -35,7 +35,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_signal_processor_debug);
 #define GST_CAT_DEFAULT gst_signal_processor_debug
 
-
+/* FIXME: this is mono only */
 static GstStaticCaps template_caps =
 GST_STATIC_CAPS (GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS);
 
@@ -71,6 +71,8 @@ gst_signal_processor_pad_template_get_type (void)
   return type;
 }
 
+/* FIXME: better allow the caller to pass on the template, right now this can
+ * only create mono pads */
 void
 gst_signal_processor_class_add_pad_template (GstSignalProcessorClass * klass,
     const gchar * name, GstPadDirection direction, guint index)
