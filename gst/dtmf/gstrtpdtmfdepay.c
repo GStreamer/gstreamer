@@ -35,7 +35,6 @@
 #endif
 
 
-#define GST_TONE_DTMF_TYPE_EVENT 0
 #define DEFAULT_PACKET_INTERVAL  50 /* ms */
 #define MIN_PACKET_INTERVAL      10 /* ms */
 #define MAX_PACKET_INTERVAL      50 /* ms */
@@ -152,11 +151,6 @@ static GstBuffer *gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload,
 gboolean gst_rtp_dtmf_depay_setcaps (GstBaseRTPDepayload * filter,
     GstCaps * caps);
 
-/*static void
-gst_rtp_dtmf_depay_set_gst_timestamp (GstBaseRTPDepayload * filter,
-    guint32 rtptime, GstBuffer * buf);
-*/
-
 static void
 gst_rtp_dtmf_depay_base_init (gpointer klass)
 {
@@ -188,7 +182,6 @@ gst_rtp_dtmf_depay_class_init (GstRtpDTMFDepayClass * klass)
 
   gstbasertpdepayload_class->process = gst_rtp_dtmf_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_dtmf_depay_setcaps;
-  //  gstbasertpdepayload_class->set_gst_timestamp = gst_rtp_dtmf_depay_set_gst_timestamp;
 
 }
 
@@ -222,51 +215,6 @@ gst_rtp_dtmf_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 
   return TRUE;
 }
-
-void
-gst_rtp_dtmf_depay_set_gst_timestamp (GstBaseRTPDepayload * filter,
-    guint32 rtptime, GstBuffer * buf)
-{
-  GstClockTime timestamp, duration;
-
-
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
-  duration = GST_BUFFER_DURATION (buf);
-
-  /* if this is the first buffer send a NEWSEGMENT */
-  if (filter->need_newsegment) {
-    GstEvent *event;
-    GstClockTime stop, position;
-
-    stop = -1;
-
-    position = 0;
-
-    event =
-        gst_event_new_new_segment_full (FALSE, 1.0,
-        1.0, GST_FORMAT_TIME, 0, stop, position);
-
-    gst_pad_push_event (filter->srcpad, event);
-
-    filter->need_newsegment = FALSE;
-    GST_DEBUG_OBJECT (filter, "Pushed newsegment event on this first buffer");
-  }
-}
-
-#if 0
-static void
-gst_dtmf_src_generate_silence(GstBuffer * buffer, float duration)
-{
-  gint buf_size;
-
-  /* Create a buffer with data set to 0 */
-  buf_size = ((duration/1000)*SAMPLE_RATE*SAMPLE_SIZE*CHANNELS)/8;
-  GST_BUFFER_SIZE (buffer) = buf_size;
-  GST_BUFFER_MALLOCDATA (buffer) = g_malloc0(buf_size);
-  GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
-
-}
-#endif
 
 static void
 gst_dtmf_src_generate_tone(GstRtpDTMFDepay *rtpdtmfdepay,
