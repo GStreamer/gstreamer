@@ -72,12 +72,15 @@ enum
   PROP_LAST
 };
 
+#define DEFAULT_PAD_ALWAYS_OK	TRUE
+
 enum
 {
   PROP_PAD_0,
   PROP_PAD_RUNNING_TIME,
   PROP_PAD_TAGS,
   PROP_PAD_ACTIVE,
+  PROP_PAD_ALWAYS_OK,
   PROP_PAD_LAST
 };
 
@@ -121,6 +124,7 @@ struct _GstSelectorPad
   gboolean active;              /* when buffer have passed the pad */
   gboolean eos;                 /* when EOS has been received */
   gboolean discont;             /* after switching we create a discont */
+  gboolean always_ok;
   GstSegment segment;           /* the current segment on the pad */
   GstTagList *tags;             /* last tags received on the pad */
 
@@ -137,6 +141,8 @@ static void gst_selector_pad_init (GstSelectorPad * pad);
 static void gst_selector_pad_finalize (GObject * object);
 static void gst_selector_pad_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
+static void gst_selector_pad_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
 
 static GstPadClass *selector_pad_parent_class = NULL;
 
@@ -187,6 +193,8 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
 
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_selector_pad_get_property);
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_selector_pad_set_property);
 
   g_object_class_install_property (gobject_class, PROP_PAD_RUNNING_TIME,
       g_param_spec_int64 ("running-time", "Running time",
@@ -198,11 +206,16 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
   g_object_class_install_property (gobject_class, PROP_PAD_ACTIVE,
       g_param_spec_boolean ("active", "Active",
           "If the pad is currently active", FALSE, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, PROP_PAD_ALWAYS_OK,
+      g_param_spec_boolean ("always-ok", "Always OK",
+          "Make an inactive pad return OK instead of NOT_LINKED",
+          DEFAULT_PAD_ALWAYS_OK, G_PARAM_READWRITE));
 }
 
 static void
 gst_selector_pad_init (GstSelectorPad * pad)
 {
+  pad->always_ok = DEFAULT_PAD_ALWAYS_OK;
   gst_selector_pad_reset (pad);
 }
 
@@ -217,6 +230,24 @@ gst_selector_pad_finalize (GObject * object)
     gst_tag_list_free (pad->tags);
 
   G_OBJECT_CLASS (selector_pad_parent_class)->finalize (object);
+}
+
+static void
+gst_selector_pad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstSelectorPad *spad = GST_SELECTOR_PAD_CAST (object);
+
+  switch (prop_id) {
+    case PROP_PAD_ALWAYS_OK:
+      GST_OBJECT_LOCK (object);
+      spad->always_ok = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (object);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -244,6 +275,11 @@ gst_selector_pad_get_property (GObject * object, guint prop_id,
       gst_object_unref (sel);
       break;
     }
+    case PROP_PAD_ALWAYS_OK:
+      GST_OBJECT_LOCK (object);
+      g_value_set_boolean (value, spad->always_ok);
+      GST_OBJECT_UNLOCK (object);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -419,43 +455,46 @@ gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
   GstInputSelector *sel;
   GstFlowReturn result;
   GstPad *active_sinkpad;
+  GstSelectorPad *selpad;
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+  selpad = GST_SELECTOR_PAD_CAST (pad);
 
   GST_DEBUG_OBJECT (pad, "received alloc");
 
   GST_INPUT_SELECTOR_LOCK (sel);
   active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
+
+  if (pad != active_sinkpad && !sel->select_all)
+    goto not_active;
+
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
-  /* Fallback allocation for buffers from pads except the selected one */
-  if (pad != active_sinkpad && !sel->select_all) {
-    GST_DEBUG_OBJECT (sel,
-        "Pad %s:%s is not selected. Performing fallback allocation",
-        GST_DEBUG_PAD_NAME (pad));
+  result = gst_pad_alloc_buffer (sel->srcpad, offset, size, caps, buf);
 
-    *buf = NULL;
-    result = GST_FLOW_OK;
-  } else {
-    result = gst_pad_alloc_buffer (sel->srcpad, offset, size, caps, buf);
-
-    /* FIXME: HACK. If buffer alloc returns not-linked, perform a fallback
-     * allocation.  This should NOT be necessary, because playbin should
-     * properly block the source pad from running until it's finished hooking 
-     * everything up, but playbin needs refactoring first. */
-    if (result == GST_FLOW_NOT_LINKED) {
-      GST_DEBUG_OBJECT (sel,
-          "No peer pad yet - performing fallback allocation for pad %s:%s",
-          GST_DEBUG_PAD_NAME (pad));
-
-      *buf = NULL;
-      result = GST_FLOW_OK;
-    }
-  }
-
+done:
   gst_object_unref (sel);
 
   return result;
+
+  /* ERRORS */
+not_active:
+  {
+    /* unselected pad, perform fallback alloc or return unlinked when
+     * asked */
+    GST_OBJECT_LOCK (selpad);
+    if (selpad->always_ok) {
+      GST_DEBUG_OBJECT (pad, "Not selected, performing fallback allocation");
+      *buf = NULL;
+      result = GST_FLOW_OK;
+    } else {
+      GST_DEBUG_OBJECT (pad, "Not selected, return NOT_LINKED");
+      result = GST_FLOW_NOT_LINKED;
+    }
+    GST_OBJECT_UNLOCK (selpad);
+
+    goto done;
+  }
 }
 
 /* must be called with the SELECTOR_LOCK, will block while the pad is blocked 
@@ -577,7 +616,15 @@ ignore:
     selpad->discont = TRUE;
     GST_INPUT_SELECTOR_UNLOCK (sel);
     gst_buffer_unref (buf);
-    res = GST_FLOW_NOT_LINKED;
+
+    /* figure out what to return upstream */
+    GST_OBJECT_LOCK (selpad);
+    if (selpad->always_ok)
+      res = GST_FLOW_OK;
+    else
+      res = GST_FLOW_NOT_LINKED;
+    GST_OBJECT_UNLOCK (selpad);
+
     goto done;
   }
 flushing:
