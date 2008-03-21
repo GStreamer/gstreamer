@@ -1,5 +1,11 @@
 2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/volume/gstvolume.c: (volume_process_double):
+	Use oil_scalarmultiply_f64_ns() for double processing when it's
+	available at compile time.
+
+2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	Fix lrint/lrintf checks to actually work. These functions are
 	in libm on Linux at least so try to link to it.
