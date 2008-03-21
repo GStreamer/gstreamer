@@ -171,11 +171,6 @@ if test x$HAVE_GCC_ASM = xyes ; then
 fi
 AM_CONDITIONAL(HAVE_GCC_ASM, test "x$HAVE_GCC_ASM" = "xyes")
 
-dnl FIXME: check if this is used; was used for floatcast.h in base
-dnl Check for fast float to int casting as defined in C99
-AC_C99_FUNC_LRINT
-AC_C99_FUNC_LRINTF
-
 dnl *** checks for library functions ***
 
 LIBS_SAVE=$LIBS
