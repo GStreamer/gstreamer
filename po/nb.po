@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.14\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-01-14 21:53+0000\n"
+"POT-Creation-Date: 2008-03-18 11:58+0000\n"
 "PO-Revision-Date: 2007-11-03 14:50+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -59,29 +59,29 @@ msgstr "Spill av"
 msgid "Capture"
 msgstr ""
 
-#: ext/alsa/gstalsasink.c:457
+#: ext/alsa/gstalsasink.c:484
 #, fuzzy
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#: ext/alsa/gstalsasink.c:459
+#: ext/alsa/gstalsasink.c:486
 #, fuzzy
 msgid "Could not open device for playback in stereo mode."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#: ext/alsa/gstalsasink.c:463
+#: ext/alsa/gstalsasink.c:490
 #, fuzzy, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#: ext/alsa/gstalsasink.c:649
+#: ext/alsa/gstalsasink.c:690
 #, fuzzy
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#: ext/alsa/gstalsasink.c:654
+#: ext/alsa/gstalsasink.c:695
 #, fuzzy
 msgid "Could not open audio device for playback."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
@@ -101,14 +101,14 @@ msgstr "Kunne ikke åpne CD-enheten for lesing."
 msgid "Could not open device for recording in %d-channel mode"
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#: ext/alsa/gstalsasrc.c:626
+#: ext/alsa/gstalsasrc.c:633
 #, fuzzy
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#: ext/alsa/gstalsasrc.c:631
+#: ext/alsa/gstalsasrc.c:638
 #, fuzzy
 msgid "Could not open audio device for recording."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
@@ -140,7 +140,7 @@ msgstr "Ingen filnavn oppgitt"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunne ikke lukke VFS-fil «%s»."
 
-#: ext/gnomevfs/gstgnomevfssink.c:572
+#: ext/gnomevfs/gstgnomevfssink.c:574
 #, fuzzy, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Feil under lukking av fil «%s»."
@@ -177,32 +177,32 @@ msgstr "Ugyldig URI «%s»."
 msgid "RTSP streams cannot be played yet."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1979
+#: gst/playback/gstplaybasebin.c:1983
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:2197 gst/playback/gsturidecodebin.c:1158
+#: gst/playback/gstplaybasebin.c:2201 gst/playback/gsturidecodebin.c:1158
 msgid "Source element is invalid."
 msgstr "Kildeelement er ugyldig."
 
-#: gst/playback/gstplaybasebin.c:2274
+#: gst/playback/gstplaybasebin.c:2278
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:2279
+#: gst/playback/gstplaybasebin.c:2283
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:2283
+#: gst/playback/gstplaybasebin.c:2287
 #, fuzzy
 msgid "This is not a media file"
 msgstr "Enhet «%s» kan ikke fange data."
 
-#: gst/playback/gstplaybasebin.c:2288
+#: gst/playback/gstplaybasebin.c:2292
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 
@@ -211,14 +211,14 @@ msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
 #: gst/playback/gstplaybin.c:895 gst/playback/gstplaybin.c:905
-#: gst/playback/gstplaybin.c:1090 gst/playback/gstplaybin.c:1100
-#: gst/playback/gstplaybin.c:1231 gst/playback/gstplaybin.c:1240
-#: gst/playback/gstplaybin.c:1249
+#: gst/playback/gstplaybin.c:1092 gst/playback/gstplaybin.c:1101
+#: gst/playback/gstplaybin.c:1110 gst/playback/gstplaybin.c:1241
+#: gst/playback/gstplaybin.c:1250 gst/playback/gstplaybin.c:1259
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:1083
+#: gst/playback/gstplaybin.c:1085
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
@@ -254,22 +254,22 @@ msgstr ""
 msgid "Could not create \"queue2\" element."
 msgstr ""
 
-#: gst/tcp/gsttcp.c:519 gst/tcp/gsttcpclientsink.c:270
+#: gst/tcp/gsttcp.c:505 gst/tcp/gsttcpclientsink.c:270
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr ""
 
-#: gst/tcp/gsttcp.c:571
+#: gst/tcp/gsttcp.c:557
 #, c-format
 msgid "Error while sending gdp header data to \"%s:%d\"."
 msgstr ""
 
-#: gst/tcp/gsttcp.c:580
+#: gst/tcp/gsttcp.c:566
 #, c-format
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr ""
 
-#: gst/tcp/gsttcpclientsink.c:382 gst/tcp/gsttcpclientsrc.c:366
+#: gst/tcp/gsttcpclientsink.c:382 gst/tcp/gsttcpclientsrc.c:341
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr ""
