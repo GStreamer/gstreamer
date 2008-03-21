@@ -1,3 +1,9 @@
+2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	Fix lrint/lrintf checks to actually work. These functions are
+	in libm on Linux at least so try to link to it.
+
 2008-03-21  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

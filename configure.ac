@@ -230,8 +230,11 @@ AC_FUNC_FSEEKO
 
 dnl Check for fast float to int casting as defined in C99
 dnl used in gst-libs/gst/floatcast/floatcast.h
+save_libs=$LIBS
+LIBS="$LIBS $LIBM"
 AC_C99_FUNC_LRINT
 AC_C99_FUNC_LRINTF
+LIBS=$save_libs
 
 dnl Check for a way to display the function name in debug output
 AG_GST_CHECK_FUNCTION
