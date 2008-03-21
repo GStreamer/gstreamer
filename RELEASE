@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.17 "Peanut Butter and Jelly"
+Release notes for GStreamer Base Plug-ins 0.10.18 "I will follow"
         
 
 
@@ -54,15 +54,49 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Work-around ABI breakage due to unfortunate use of the GST_DISABLE_DEPRECATED macro
-      * Export 2 missing functions needed for bindings in the win32 build
-      * Initialise the GstRingBuffer GType from a thread-safe context
+      * Experimental GIO plugin
+      * Continued playbin2 development
+      * RTP fixes
+      * Better network element support on Windows
+      * Various other bug-fixes and improvements
 
 Bugs fixed in this release
      
+      * 509637 : [API] [basertpaudiopayload] add _set_samplebits_options()
+      * 510229 : [gnomevfssrc] HTTPS support
+      * 511478 : [rtpbuffer] add gst_rtp_buffer_set_extension_data function
+      * 511810 : [RTSP] Uses MT-unsafe gmtime() function
+      * 512899 : [alsa] gstalsasink.c:527: warning: 'snd_pcm_sw_params_set...
+      * 513167 : Fix compiler warning due to disabled signals in mixertrac...
+      * 514307 : [playbin] warning in nautilus, volume element can't be cr...
+      * 514623 : Ogg Theora video slow
+      * 514937 : Correct initialization of hints in is_multicast_address()
+      * 515654 : xvimagesink doesn't build with --disable-xshm
+      * 516246 : [alsasink] handle negative delay from snd_pcm_delay
+      * 517420 : typefind: add h264 elementary stream discovery
+      * 517991 : problems with configure file depending on GCC compiler
+      * 518039 : libgstrtsp MSVC 6.0 compile error
+      * 518162 : [subparse] handle italic text starting with " / " with Micr...
+      * 518940 : [playbin2] make _get_*_tags() match vfuncs prototype in c...
+      * 519906 : [API] add GstMixerOptions::get_values vfunc
+      * 519916 : [API] add mixer-changed and options-list-changed messages
+      * 520523 : [API] Unreviewed changes to ringbuffer API
+      * 521743 : libgstnetbuffer.def exports not up to date
+      * 522625 : [video] gst_video_format_parse_caps() broken for RGBA for...
+      * 523054 : gstbasesrc crashes when called from typefind helpers
       * 511825 : [RTSP] compiler warning on FreeBSD
-      * 513018 : crash in Volume Control: I typed my password at t...
-      * 512334 : g_critical() when using GstAudioFilter & GST_DEBUG
+      * 520300 : [alsasrc] provide-clock=false messes up buffer durations
+
+API changed in this release
+     
+- API additions:
+    
+* GstRTPBuffer:gst_rtp_buffer_set_extension_data()
+* add GST_VIDEO_FORMAT_Y41B and GST_VIDEO_FORMAT_Y42B.
+* add GstMixerOptions::get_values vfunc (#519906)
+* add gst_mixer_options_list_changed(), gst_mixer_mixer_changed() and gst_mixer_message_parse_options_list_changed(). Fixes #519916.
+* gst_base_rtp_audio_payload_set_samplebits_options()
+* GstNetBuffer::gst_netaddress_equal
 
 Download
 
@@ -92,7 +126,28 @@ Applications
   
 Contributors to this release
     
+      * Alan Peevers
+      * Branko Čibej
+      * Brian Cameron
+      * David Schleef
       * Jan Schmidt
+      * Josep Torra Valles
+      * José Alburquerque
+      * Julien Moutte
+      * Mersad Jelacic
+      * Michael Smith
+      * Milosz Derezynski
+      * Ole André Vadla Ravnås
+      * Olivier Crete
+      * Peter Kjellerstedt
+      * Rene Stadler
       * Sebastian Dröge
+      * Stefan Kost
+      * Thijs Vermeir
       * Tim-Philipp Müller
+      * Tomasz Sałaciński
+      * Tommi Myöhänen
+      * William M. Brack
+      * Wim Taymans
+      * Zaheer Abbas Merali
  

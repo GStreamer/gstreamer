@@ -3,10 +3,10 @@
   <description>Queue newer version</description>
   <filename>../../gst/playback/.libs/libgstqueue2.so</filename>
   <basename>libgstqueue2.so</basename>
-  <version>0.10.17.1</version>
+  <version>0.10.18</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins CVS/prerelease</package>
+  <package>GStreamer Base Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

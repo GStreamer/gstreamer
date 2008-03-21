@@ -313,3 +313,11 @@ GstPlayBin2 *gstplaybin2
 GstPlayBin2 *gstplaybin2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstPlayBin2::convert-frame</NAME>
+<RETURNS>GstBuffer*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin2 *gstplaybin2
+GstCaps *arg1
+</SIGNAL>
+

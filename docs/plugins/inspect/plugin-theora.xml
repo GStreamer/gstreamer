@@ -3,10 +3,10 @@
   <description>Theora plugin library</description>
   <filename>../../ext/theora/.libs/libgsttheora.so</filename>
   <basename>libgsttheora.so</basename>
-  <version>0.10.17.1</version>
+  <version>0.10.18</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins CVS/prerelease</package>
+  <package>GStreamer Base Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -53,7 +53,7 @@
     </element>
     <element>
       <name>theoraparse</name>
-      <longname>TheoraParse</longname>
+      <longname>Theora video parser</longname>
       <class>Codec/Parser/Video</class>
       <description>parse raw theora streams</description>
       <author>Andy Wingo &lt;wingo@pobox.com&gt;</author>

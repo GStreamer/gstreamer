@@ -1,33 +1,56 @@
-This is GStreamer Base Plug-ins 0.10.17, "Peanut Butter and Jelly"
+This is GStreamer Base Plug-ins 0.10.18, "I will follow"
 
 IMPORTANT NOTES
-
-This release is identical to 0.10.16, with several small but significant bug
-fixes. The most important one fixes crashes in gnome-volume-control and other
-consumers of the GstMixer API, due to an unfortunate ABI break. Everyone
-should use 0.10.17 instead of 0.10.16 in all cases.
 
 1) Please note that decodebin2 and playbin2 API included in this release is
 still considered unstable and WILL change in future releases. At this stage,
 only developers or early adopters should consider using decodebin2 or playbin2
 API embodied in their signals and properties.
 
-2) On some systems, the current release of gst-plugins-good (0.10.6) may fail to
-build against this release of gst-plugins-base with an error like:
+Changes since 0.10.17:
 
-gstid3v2mux.cc:547: error: 'GST_TAG_MUSICBRAINZ_SORTNAME' was not declared in this scope
+      * Experimental GIO plugin
+      * Continued playbin2 development
+      * RTP fixes
+      * Better network element support on Windows
+      * Various other bug-fixes and improvements
 
-In this case, you should either patch the configure file of gst-plugins-good to
-remove -DGST_DISABLE_DEPRECATED from DEPRECATED_CFLAGS=, or else compile
-with make DEPRECATED_CFLAGS=''
+Bugs fixed since 0.10.17:
 
-3) Some users may experience problems using the 'mp3parse' element from the
-previous gst-plugins-ugly release (0.10.6). This is due to a bug in mp3parse
-exposed by changes in decodebin in gst-plugins-base. It will be fixed in the
-upcoming release of gst-plugins-ugly next month. In the meantime as a
-workaround, you can set the rank of mp3parse to GST_RANK_NONE in 
-gst-plugins-ugly/gst/mpegaudioparse/gstmpegaudioparse.c when compiling, or
-or remove the /usr/lib/gstreamer-0.10/libgstmpegaudioparse.so file entirely.
+      * 509637 : [API] [basertpaudiopayload] add _set_samplebits_options()
+      * 510229 : [gnomevfssrc] HTTPS support
+      * 511478 : [rtpbuffer] add gst_rtp_buffer_set_extension_data function
+      * 511810 : [RTSP] Uses MT-unsafe gmtime() function
+      * 512899 : [alsa] gstalsasink.c:527: warning: 'snd_pcm_sw_params_set...
+      * 513167 : Fix compiler warning due to disabled signals in mixertrac...
+      * 514307 : [playbin] warning in nautilus, volume element can't be cr...
+      * 514623 : Ogg Theora video slow
+      * 514937 : Correct initialization of hints in is_multicast_address()
+      * 515654 : xvimagesink doesn't build with --disable-xshm
+      * 516246 : [alsasink] handle negative delay from snd_pcm_delay
+      * 517420 : typefind: add h264 elementary stream discovery
+      * 517991 : problems with configure file depending on GCC compiler
+      * 518039 : libgstrtsp MSVC 6.0 compile error
+      * 518162 : [subparse] handle italic text starting with " / " with Micr...
+      * 518940 : [playbin2] make _get_*_tags() match vfuncs prototype in c...
+      * 519906 : [API] add GstMixerOptions::get_values vfunc
+      * 519916 : [API] add mixer-changed and options-list-changed messages
+      * 520523 : [API] Unreviewed changes to ringbuffer API
+      * 521743 : libgstnetbuffer.def exports not up to date
+      * 522625 : [video] gst_video_format_parse_caps() broken for RGBA for...
+      * 523054 : gstbasesrc crashes when called from typefind helpers
+      * 511825 : [RTSP] compiler warning on FreeBSD
+      * 520300 : [alsasrc] provide-clock=false messes up buffer durations
+
+API added since 0.10.17:
+
+      * GstRTPBuffer:gst_rtp_buffer_set_extension_data()
+      * add GST_VIDEO_FORMAT_Y41B and GST_VIDEO_FORMAT_Y42B.
+      * add GstMixerOptions::get_values vfunc (#519906)
+      * add gst_mixer_options_list_changed(), gst_mixer_mixer_changed() and
+        gst_mixer_message_parse_options_list_changed(). Fixes #519916.
+      * gst_base_rtp_audio_payload_set_samplebits_options()
+      * GstNetBuffer::gst_netaddress_equal
 
 Changes since 0.10.16:
         

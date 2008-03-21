@@ -524,7 +524,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Mode</NICK>
-<BLURB>The mode for selecting activity on the fds.</BLURB>
+<BLURB>The mode for selecting activity on the fds (deprecated).</BLURB>
 <DEFAULT>Poll</DEFAULT>
 </ARG>
 
@@ -2083,9 +2083,19 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,10]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>volume</NICK>
-<BLURB>volume.</BLURB>
+<NICK>Volume</NICK>
+<BLURB>The audio volume.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::mute</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mute</NICK>
+<BLURB>Mute the audio channel without changing the volume.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
