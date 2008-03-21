@@ -293,6 +293,8 @@ gst_audio_convert_init (GstAudioConvert * this, GstAudioConvertClass * g_class)
   this->dither = DITHER_TPDF;
   this->ns = NOISE_SHAPING_NONE;
   memset (&this->ctx, 0, sizeof (AudioConvertCtx));
+
+  gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (this), TRUE);
 }
 
 static void
@@ -946,6 +948,79 @@ gst_audio_convert_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   return GST_FLOW_OK;
 }
 
+static void
+gst_audio_convert_create_silence_buffer (GstAudioConvert * this, gpointer dst,
+    gint size)
+{
+  if (this->ctx.out.is_int && !this->ctx.out.sign) {
+    gint i;
+
+    switch (this->ctx.out.width) {
+      case 8:{
+        guint8 zero = 0x80 >> (8 - this->ctx.out.depth);
+
+        memset (dst, zero, size);
+        break;
+      }
+      case 16:{
+        guint16 *data = (guint16 *) dst;
+        guint16 zero = 0x8000 >> (16 - this->ctx.out.depth);
+
+        if (this->ctx.out.endianness == G_LITTLE_ENDIAN)
+          zero = GUINT16_TO_LE (zero);
+        else
+          zero = GUINT16_TO_BE (zero);
+
+        size /= 2;
+
+        for (i = 0; i < size; i++)
+          data[i] = zero;
+        break;
+      }
+      case 24:{
+        guint32 zero = 0x800000 >> (24 - this->ctx.out.depth);
+        guint8 *data = (guint8 *) dst;
+
+        if (this->ctx.out.endianness == G_LITTLE_ENDIAN) {
+          for (i = 0; i < size; i += 3) {
+            data[i] = zero & 0xff;
+            data[i + 1] = (zero >> 8) & 0xff;
+            data[i + 2] = (zero >> 16) & 0xff;
+          }
+        } else {
+          for (i = 0; i < size; i += 3) {
+            data[i + 2] = zero & 0xff;
+            data[i + 1] = (zero >> 8) & 0xff;
+            data[i] = (zero >> 16) & 0xff;
+          }
+        }
+        break;
+      }
+      case 32:{
+        guint32 *data = (guint32 *) dst;
+        guint32 zero = (0x80000000 >> (32 - this->ctx.out.depth));
+
+        if (this->ctx.out.endianness == G_LITTLE_ENDIAN)
+          zero = GUINT32_TO_LE (zero);
+        else
+          zero = GUINT32_TO_BE (zero);
+
+        size /= 4;
+
+        for (i = 0; i < size; i++)
+          data[i] = zero;
+        break;
+      }
+      default:
+        memset (dst, 0, size);
+        g_return_if_reached ();
+        break;
+    }
+  } else {
+    memset (dst, 0, size);
+  }
+}
+
 static GstFlowReturn
 gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -978,9 +1053,14 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   dst = GST_BUFFER_DATA (outbuf);
 
   /* and convert the samples */
-  if (!(res = audio_convert_convert (&this->ctx, src, dst,
-              samples, gst_buffer_is_writable (inbuf))))
-    goto convert_error;
+  if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
+    if (!(res = audio_convert_convert (&this->ctx, src, dst,
+                samples, gst_buffer_is_writable (inbuf))))
+      goto convert_error;
+  } else {
+    /* Create silence buffer */
+    gst_audio_convert_create_silence_buffer (this, dst, outsize);
+  }
 
   GST_BUFFER_SIZE (outbuf) = outsize;
 

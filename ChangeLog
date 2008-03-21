@@ -1,5 +1,14 @@
 2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_init),
+	(gst_audio_convert_create_silence_buffer),
+	(gst_audio_convert_transform):
+	Make audioconvert GAP-aware by outputting silence buffers when the
+	input has the GAP flag set. This is up to 8x faster.
+	Based on a patch by Stefan Kost. Fixes bug #517813.
+
+2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/volume/gstvolume.c: (volume_process_double):
 	Use oil_scalarmultiply_f64_ns() for double processing when it's
 	available at compile time.
