@@ -1,4 +1,15 @@
-This is GStreamer Python Bindings 0.10.10, "Destination Overtime"
+This is GStreamer Python Bindings 0.10.11, "What I got"
+
+Changes since 0.10.10:
+        
+      * Wrap gst.Pad.start_task 
+      * New videomixer example
+      * Various other fixes
+
+Bugs fixed since 0.10.10:
+        
+      * 512916 : python_do_pending_calls timer is apparently redundant
+      * 514717 : memleak in Pad.set_blocked_async()
 
 Changes since 0.10.9:
 
