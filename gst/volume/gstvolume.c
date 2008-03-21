@@ -84,11 +84,6 @@
 #define GST_CAT_DEFAULT gst_volume_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails volume_details = GST_ELEMENT_DETAILS ("Volume",
-    "Filter/Effect/Audio",
-    "Set volume on audio/raw streams",
-    "Andy Wingo <wingo@pobox.com>");
-
 /* Filter signals and args */
 enum
 {
@@ -293,7 +288,7 @@ volume_update_real_volume (GstVolume * this)
 static gboolean
 gst_volume_interface_supported (GstImplementsInterface * iface, GType type)
 {
-  g_assert (type == GST_TYPE_MIXER);
+  g_return_val_if_fail (type == GST_TYPE_MIXER, FALSE);
   return TRUE;
 }
 
@@ -391,7 +386,9 @@ gst_volume_base_init (gpointer g_class)
   GstAudioFilterClass *filter_class = GST_AUDIO_FILTER_CLASS (g_class);
   GstCaps *caps;
 
-  gst_element_class_set_details (element_class, &volume_details);
+  gst_element_class_set_details_simple (element_class, "Volume",
+      "Filter/Effect/Audio",
+      "Set volume on audio/raw streams", "Andy Wingo <wingo@pobox.com>");
 
   caps = gst_caps_from_string (ALLOWED_CAPS);
   gst_audio_filter_class_add_pad_templates (filter_class, caps);
@@ -421,8 +418,6 @@ gst_volume_class_init (GstVolumeClass * klass)
       g_param_spec_double ("volume", "Volume", "volume factor",
           0.0, VOLUME_MAX_DOUBLE, 1.0,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-
-  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "volume", 0, "Volume gain");
 
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (volume_transform_ip);
   filter_class->setup = GST_DEBUG_FUNCPTR (volume_setup);
@@ -455,11 +450,6 @@ gst_volume_init (GstVolume * this, GstVolumeClass * g_class)
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (this), TRUE);
 }
 
-/* NOTE: although it might be tempting to have volume_process_mute() which uses
- *       memset(bytes, 0, nbytes) for the vol=0 case, this has the downside that
- *       unmuting would only take place after processing a buffer.
- */
-
 static void
 volume_process_double (GstVolume * this, gpointer bytes, guint n_bytes)
 {
@@ -471,6 +461,8 @@ volume_process_double (GstVolume * this, gpointer bytes, guint n_bytes)
 
   oil_scalarmultiply_f64_ns (data, data, &vol, num_samples);
 #else
+  gint i;
+
   for (i = 0; i < num_samples; i++) {
     *data++ *= this->real_vol_f;
   }
@@ -483,15 +475,16 @@ volume_process_float (GstVolume * this, gpointer bytes, guint n_bytes)
   gfloat *data = (gfloat *) bytes;
   guint num_samples = n_bytes / sizeof (gfloat);
 
-  /*
-     guint i;
-     for (i = 0; i < num_samples; i++) {
-     *data++ *= this->real_vol_f;
-     }
+#if 0
+  guint i;
+
+  for (i = 0; i < num_samples; i++) {
+    *data++ *= this->real_vol_f;
+  }
+  /* time "gst-launch 2>/dev/null audiotestsrc wave=7 num-buffers=10000 ! audio/x-raw-float !
+   * volume volume=1.5 ! fakesink" goes from 0m0.850s -> 0m0.717s with liboil
    */
-  /* time gst-launch 2>/dev/null audiotestsrc wave=7 num-buffers=10000 ! audio/x-raw-float ! volume volume=1.5 ! fakesink
-   * goes from 0m0.850s -> 0m0.717s with liboil
-   */
+#endif
   oil_scalarmultiply_f32_ns (data, data, &this->real_vol_f, num_samples);
 }
 
@@ -530,10 +523,22 @@ volume_process_int32_clamp (GstVolume * this, gpointer bytes, guint n_bytes)
 
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
 #define get_unaligned_i24(_x) ( (((guint8*)_x)[0]) | ((((guint8*)_x)[1]) << 8) | ((((gint8*)_x)[2]) << 16) )
-#define write_unaligned_u24(_x,samp) do { *(_x)++ = samp & 0xFF; *(_x)++ = (samp >> 8) & 0xFF; *(_x)++ = (samp >> 16) & 0xFF; } while (0)
+
+#define write_unaligned_u24(_x,samp) \
+G_STMT_START { \
+  *(_x)++ = samp & 0xFF; \
+  *(_x)++ = (samp >> 8) & 0xFF; \
+  *(_x)++ = (samp >> 16) & 0xFF; \
+} G_STMT_END
+
 #else /* BIG ENDIAN */
 #define get_unaligned_i24(_x) ( (((guint8*)_x)[2]) | ((((guint8*)_x)[1]) << 8) | ((((gint8*)_x)[0]) << 16) )
-#define write_unaligned_u24(_x,samp) do { *(_x)++ = (samp >> 16) & 0xFF; *(_x)++ = (samp >> 8) & 0xFF; *(_x)++ = samp & 0xFF; } while (0)
+#define write_unaligned_u24(_x,samp) \
+G_STMT_START { \
+  *(_x)++ = (samp >> 16) & 0xFF; \
+  *(_x)++ = (samp >> 8) & 0xFF; \
+  *(_x)++ = samp & 0xFF; \
+} G_STMT_END
 #endif
 
 static void
@@ -709,10 +714,12 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
       GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
-  if (this->real_vol_f == 0.0)
+  if (this->real_vol_f == 0.0) {
     this->silent_buffer = TRUE;
-
-  this->process (this, GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
+    memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
+  } else if (this->real_vol_f != 1.0) {
+    this->process (this, GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
+  }
 
   if (this->silent_buffer)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
@@ -798,6 +805,8 @@ plugin_init (GstPlugin * plugin)
 
   /* initialize gst controller library */
   gst_controller_init (NULL, NULL);
+
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "volume", 0, "Volume gain");
 
   return gst_element_register (plugin, "volume", GST_RANK_NONE,
       GST_TYPE_VOLUME);

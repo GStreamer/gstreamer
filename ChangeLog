@@ -1,5 +1,16 @@
 2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/volume/gstvolume.c: (gst_volume_interface_supported),
+	(gst_volume_base_init), (gst_volume_class_init),
+	(volume_process_double), (volume_process_float),
+	(volume_transform_ip), (plugin_init):
+	memset buffers to zero if we get a GAP buffer. We usually see a
+	buffer as one unit so let's handle it as one and don't care about
+	volume changes while processing one buffer.
+	Also clean up some stuff a bit.
+
+2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_init),
 	(gst_audio_convert_create_silence_buffer),
 	(gst_audio_convert_transform):
