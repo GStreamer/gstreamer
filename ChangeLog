@@ -1,3 +1,10 @@
+=== release 0.10.18 ===
+
+2008-03-20  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.18, "So far away"
+
 2008-03-18  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

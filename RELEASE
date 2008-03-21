@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.17 "Due Negligence"
+Release notes for GStreamer 0.10.18 "So far away"
         
 
 
@@ -37,11 +37,30 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Fix compilation on environments that have POSIX timers but not monotonic clocks
+      * New GstPoll abstraction simplifies operations on multiple fd's/sockets
+      * Various bug fixes and corrections
 
 Bugs fixed in this release
      
-      * 512715 : gst/gstutils.c and HAVE_MONOTONIC_CLOCK
+      * 516187 : adding gst_collect_pads_read_buffer () collectpads
+      * 516395 : gst_buffer_create_sub does not copy flags
+      * 520756 : different registry backend configurations cause build errors
+      * 498222 : configure improvements
+      * 499127 : [multiqueue] has no documentation
+      * 505417 : Add GstPoll to core
+      * 509559 : [gstinfo]_gst_debug_init() memory leak
+      * 510194 : segmentation fault when trying to link elements.
+      * 511783 : [API] [check] add gst_check_element_push_buffer_list() etc.
+      * 513964 : [GstPad] gst_pad_get_caps don't return a copy of the caps
+      * 515469 : patch to add gst_index_set_resolver_full
+      * 519584 : gst_element_implements_interface() segfaults with 'filesr...
+      * 519698 : g_free/xmlFree mismatches in gstregistryxml
+      * 520152 : Core uses non-portable size_t and ssize_t
+      * 520671 : GstPoll needs to be ported to Windows
+      * 520808 : GstPoll's API could need some changes for Windows
+      * 520877 : registrybinary.c doesn't build cleanly on Windows/MSVC
+      * 521740 : libgstreamer.def exports not up to date
+      * 522741 : regression: gst_index_entry_free() frees string it does n...
 
 Download
 
@@ -76,7 +95,19 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
+      * Andy Wingo
+      * David Schleef
+      * Edward Hervey
+      * Fabrizio Gennari
       * Jan Schmidt
-      * Cygwin Ports Maintainer
+      * Julien Moutte
+      * Ole André Vadla Ravnås
+      * Peter Kjellerstedt
+      * Rene Stadler
       * Sebastian Dröge
+      * Siavash Safi
+      * Stefan Kost
+      * Thijs Vermeir
+      * Tim-Philipp Müller
+      * Wim Taymans
  
