@@ -71,7 +71,7 @@ VALGRIND_TESTS_DISABLE = \
 check_PROGRAMS = \
 	generic/states \
 	$(check_mpeg2enc)  \
-	$(check_mplex)     \ 
+	$(check_mplex)     \
 	$(check_neon)      \
 	$(check_soup)      \
 	$(check_timidity)  \

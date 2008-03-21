@@ -1,3 +1,18 @@
+2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	Check if the compiler supports do { } while (0) macros. This fixes
+	a warning when compiling with g++ 4.3, resulting in a build failure
+	because of -Werror.
+
+	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
+	* ext/mplex/gstmplex.cc:
+	Include <string.h> for memcpy and friends to fix the build with
+	gcc 4.3.
+
+	* tests/check/Makefile.am:
+	Remove trailing backslash.
+
 2008-03-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/selector/gstinputselector.c:

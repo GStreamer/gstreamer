@@ -55,6 +55,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "gstmplex.hh"
 #include "gstmplexoutputstream.hh"
 #include "gstmplexibitstream.hh"

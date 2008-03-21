@@ -24,6 +24,7 @@
 #endif
 
 #include <encoderparams.hh>
+#include <string.h>
 
 #include "gstmpeg2enc.hh"
 #include "gstmpeg2encpicturereader.hh"
