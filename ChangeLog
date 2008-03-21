@@ -1,3 +1,10 @@
+2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	Check if the compiler supports do { } while (0) macros. This fixes
+	a warning when compiling with g++ 4.3, resulting in a build failure
+	because of -Werror.
+
 2008-03-19  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/realmedia/asmrules.c: (gst_asm_scan_string), (main):
