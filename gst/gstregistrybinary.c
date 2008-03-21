@@ -145,7 +145,8 @@ gst_registry_binary_initialize_magic (GstBinaryRegistryMagic * m)
 {
   if (!strncpy (m->magic, GST_MAGIC_BINARY_REGISTRY_STR,
           GST_MAGIC_BINARY_REGISTRY_LEN)
-      || !strncpy (m->version, GST_MAJORMINOR, GST_MAGIC_BINARY_VERSION_LEN)) {
+      || !strncpy (m->version, GST_MAGIC_BINARY_VERSION_STRING,
+          GST_MAGIC_BINARY_VERSION_LEN)) {
     GST_ERROR ("Failed to write magic to the registry magic structure");
     return FALSE;
   }
@@ -596,9 +597,11 @@ rename_failed:
  * gst_registry_binary_check_magic:
  *
  * Check GstBinaryRegistryMagic validity.
- * Return FALSE if something is wrong
+ * Return < 0 if something is wrong, -2 means
+ * that just the version of the registry is out of
+ * date, -1 is a general failure.
  */
-static gboolean
+static gint
 gst_registry_binary_check_magic (gchar ** in)
 {
   GstBinaryRegistryMagic *m;
@@ -609,7 +612,7 @@ gst_registry_binary_check_magic (gchar ** in)
 
   if (m == NULL || m->magic == NULL || m->version == NULL) {
     GST_WARNING ("Binary registry magic structure is broken");
-    return FALSE;
+    return -1;
   }
   if (strncmp (m->magic, GST_MAGIC_BINARY_REGISTRY_STR,
           GST_MAGIC_BINARY_REGISTRY_LEN) != 0) {
@@ -620,14 +623,15 @@ gst_registry_binary_check_magic (gchar ** in)
         GST_MAGIC_BINARY_REGISTRY_STR[2] & 0xff,
         GST_MAGIC_BINARY_REGISTRY_STR[3] & 0xff, m->magic[0] & 0xff,
         m->magic[1] & 0xff, m->magic[2] & 0xff, m->magic[3] & 0xff);
-    return FALSE;
+    return -1;
   }
-  if (strncmp (m->version, GST_MAJORMINOR, GST_MAGIC_BINARY_VERSION_LEN)) {
+  if (strncmp (m->version, GST_MAGIC_BINARY_VERSION_STRING,
+          GST_MAGIC_BINARY_VERSION_LEN)) {
     GST_WARNING ("Binary registry magic version is different : %s != %s",
-        GST_MAJORMINOR, m->version);
-    return FALSE;
+        GST_MAGIC_BINARY_VERSION_STRING, m->version);
+    return -2;
   }
-  return TRUE;
+  return 0;
 }
 
 
@@ -898,6 +902,7 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   gsize size;
   GError *err = NULL;
   gboolean res = FALSE;
+  gint check_magic_result;
 
   /* make sure these types exist */
   GST_TYPE_ELEMENT_FACTORY;
@@ -937,10 +942,12 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
     goto Error;
   }
   /* check if header is valid */
-  if (!gst_registry_binary_check_magic (&in)) {
-    GST_ERROR
-        ("Binary registry type not recognized (invalid magic) for file at %s",
-        location);
+  if ((check_magic_result = gst_registry_binary_check_magic (&in)) < 0) {
+
+    if (check_magic_result == -1)
+      GST_ERROR
+          ("Binary registry type not recognized (invalid magic) for file at %s",
+          location);
     goto Error;
   }
 

@@ -1,3 +1,15 @@
+2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_initialize_magic),
+	(gst_registry_binary_check_magic),
+	(gst_registry_binary_read_cache):
+	* gst/gstregistrybinary.h:
+	Don't use GST_MAJORMINOR for the binary registry version. Instead
+	hardcode a value that must be changed whenever the format changes
+	in an incompatible way.
+	Also don't GST_ERROR when there is a version mismatch, just
+	regenerate the registry silently.
+
 2008-03-21  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
