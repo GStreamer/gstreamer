@@ -145,7 +145,7 @@ gst_registry_binary_initialize_magic (GstBinaryRegistryMagic * m)
 {
   if (!strncpy (m->magic, GST_MAGIC_BINARY_REGISTRY_STR,
           GST_MAGIC_BINARY_REGISTRY_LEN)
-      || !strncpy (m->version, GST_MAGIC_BINARY_VERSION_STRING,
+      || !strncpy (m->version, GST_MAGIC_BINARY_VERSION_STR,
           GST_MAGIC_BINARY_VERSION_LEN)) {
     GST_ERROR ("Failed to write magic to the registry magic structure");
     return FALSE;
@@ -625,10 +625,10 @@ gst_registry_binary_check_magic (gchar ** in)
         m->magic[1] & 0xff, m->magic[2] & 0xff, m->magic[3] & 0xff);
     return -1;
   }
-  if (strncmp (m->version, GST_MAGIC_BINARY_VERSION_STRING,
+  if (strncmp (m->version, GST_MAGIC_BINARY_VERSION_STR,
           GST_MAGIC_BINARY_VERSION_LEN)) {
     GST_WARNING ("Binary registry magic version is different : %s != %s",
-        GST_MAGIC_BINARY_VERSION_STRING, m->version);
+        GST_MAGIC_BINARY_VERSION_STR, m->version);
     return -2;
   }
   return 0;

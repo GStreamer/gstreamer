@@ -51,13 +51,13 @@
 #define GST_MAGIC_BINARY_REGISTRY_LEN (4)
 
 /*
- * GST_MAGIC_BINARY_VERSION_STRING:
+ * GST_MAGIC_BINARY_VERSION_STR:
  *
  * The current version of the binary registry format.
  * This _must_ be updated whenever the registry format changes,
  * we currently use the core version where this change happened.
  */
-#define GST_MAGIC_BINARY_VERSION_STRING ("0.10.18")
+#define GST_MAGIC_BINARY_VERSION_STR ("0.10.18")
 
 /*
  * GST_MAGIC_BINARY_VERSION_LEN:

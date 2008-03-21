@@ -1,5 +1,14 @@
 2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstregistrybinary.c: (gst_registry_binary_initialize_magic),
+	(gst_registry_binary_check_magic):
+	* gst/gstregistrybinary.h:
+	Call the version GST_MAGIC_BINARY_VERSION_STR to be more consistent
+	and add it to the (private part) of the docs to fix the build.
+
+2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/gstregistrybinary.c: (gst_registry_binary_initialize_magic),
 	(gst_registry_binary_check_magic),
 	(gst_registry_binary_read_cache):
