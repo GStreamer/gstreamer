@@ -20,7 +20,7 @@
  * <refsect2>
  * <para>
  * This plugin reads data from a remote location specified by a URI.
- * Supported protocols are 'http', 'https', 'dav', or 'davs'.
+ * Supported protocols are 'http', 'https'.
  * </para>
  * <para>
  * An HTTP proxy must be specified by its URL.
@@ -577,9 +577,13 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     gint icy_metaint = atoi (value);
 
     GST_DEBUG_OBJECT (src, "icy-metaint: %s (parsed: %d)", value, icy_metaint);
-    if (icy_metaint > 0)
+    if (icy_metaint > 0) {
+      if (src->icy_caps)
+        gst_caps_unref (src->icy_caps);
+
       src->icy_caps = gst_caps_new_simple ("application/x-icy",
           "metadata-interval", G_TYPE_INT, icy_metaint, NULL);
+    }
   }
 
   if ((value =
@@ -729,6 +733,7 @@ gst_soup_http_src_chunk_allocator (SoupMessage * msg, gsize max_len,
   GST_DEBUG_OBJECT (src, "alloc %" G_GSIZE_FORMAT " bytes <= %" G_GSIZE_FORMAT,
       length, max_len);
 
+
   rc = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (basesrc),
       GST_BUFFER_OFFSET_NONE, length,
       src->icy_caps ? src->icy_caps :
@@ -772,7 +777,10 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
   gst_buffer_ref (*src->outbuf);
   GST_BUFFER_SIZE (*src->outbuf) = chunk->length;
   GST_BUFFER_OFFSET (*src->outbuf) = basesrc->segment.last_stop;
-  gst_buffer_set_caps (*src->outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)));
+
+  gst_buffer_set_caps (*src->outbuf,
+      (src->icy_caps) ? src->
+      icy_caps : GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)));
 
   new_position = src->read_position + chunk->length;
   if (G_LIKELY (src->request_position == src->read_position))
@@ -1130,7 +1138,7 @@ gst_soup_http_src_uri_get_type (void)
 static gchar **
 gst_soup_http_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "http", "https", "dav", "davs", NULL };
+  static gchar *protocols[] = { "http", "https", NULL };
   return protocols;
 }
 
