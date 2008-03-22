@@ -130,15 +130,16 @@ gst_gdp_pay_class_init (GstGDPPayClass * klass)
   g_object_class_install_property (gobject_class, PROP_CRC_HEADER,
       g_param_spec_boolean ("crc-header", "CRC Header",
           "Calculate and store a CRC checksum on the header",
-          DEFAULT_CRC_HEADER, G_PARAM_READWRITE));
+          DEFAULT_CRC_HEADER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CRC_PAYLOAD,
       g_param_spec_boolean ("crc-payload", "CRC Payload",
           "Calculate and store a CRC checksum on the payload",
-          DEFAULT_CRC_PAYLOAD, G_PARAM_READWRITE));
+          DEFAULT_CRC_PAYLOAD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_VERSION,
       g_param_spec_enum ("version", "Version",
           "Version of the GStreamer Data Protocol",
-          GST_TYPE_DP_VERSION, DEFAULT_VERSION, G_PARAM_READWRITE));
+          GST_TYPE_DP_VERSION, DEFAULT_VERSION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_gdp_pay_change_state);
 }
