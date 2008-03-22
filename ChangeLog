@@ -1,3 +1,9 @@
+2008-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_chunk_allocator):
+	Actually set the icy caps on our src pad if we have icecast data.
+	Fixes bug #523854.
+
 2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

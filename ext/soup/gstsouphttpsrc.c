@@ -731,6 +731,7 @@ gst_soup_http_src_chunk_allocator (SoupMessage * msg, gsize max_len,
 
   rc = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (basesrc),
       GST_BUFFER_OFFSET_NONE, length,
+      src->icy_caps ? src->icy_caps :
       GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)), &gstbuf);
   if (G_UNLIKELY (rc != GST_FLOW_OK)) {
     /* Failed to allocate buffer. Stall SoupSession and return error code
