@@ -29,6 +29,8 @@
 #include "gstgiostreamsink.h"
 #include "gstgiostreamsrc.h"
 
+#include <string.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_gio_debug);
 #define GST_CAT_DEFAULT gst_gio_debug
 
@@ -94,8 +96,27 @@ gst_gio_seek (gpointer element, GSeekable * stream, guint64 offset,
 static gchar **
 gst_gio_get_supported_protocols (void)
 {
-  return g_strdupv ((gchar **)
-      g_vfs_get_supported_uri_schemes (g_vfs_get_default ()));
+  const gchar *const *schemes;
+  gchar **our_schemes;
+  guint num;
+  gint i;
+
+  schemes = g_vfs_get_supported_uri_schemes (g_vfs_get_default ());
+  num = g_strv_length ((gchar **) schemes);
+
+  our_schemes = g_new0 (gchar *, num + 1);
+
+  /* Filter http/https as we can't support the icy stuff with GIO.
+   * Use souphttpsrc if you need that!
+   */
+  for (i = 0; i < num; i++) {
+    if (strcmp (schemes[i], "http") == 0 || strcmp (schemes[i], "https") == 0)
+      continue;
+
+    our_schemes[i] = g_strdup (schemes[i]);
+  }
+
+  return our_schemes;
 }
 
 static GstURIType

@@ -189,7 +189,9 @@ gst_gio_base_src_get_size (GstBaseSrc * base_src, guint64 * size)
 
       g_clear_error (&err);
     }
-  } else if (GST_GIO_STREAM_IS_SEEKABLE (src->stream)) {
+  }
+
+  if (GST_GIO_STREAM_IS_SEEKABLE (src->stream)) {
     goffset old;
     goffset stream_size;
     gboolean ret;

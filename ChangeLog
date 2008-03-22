@@ -1,3 +1,14 @@
+2008-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/gio/gstgio.c: (gst_gio_get_supported_protocols):
+	Filter http and https protocols. GIO/GVfs handles them but it's
+	impossible to implement iradio/icecast with it. Better use
+	souphttpsrc or something else for this.
+
+	* ext/gio/gstgiobasesrc.c: (gst_gio_base_src_get_size):
+	If getting the file informations by a query fails try it with the
+	seek-to-end trick too.
+
 2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/volume/gstvolume.c: (gst_volume_interface_supported),
