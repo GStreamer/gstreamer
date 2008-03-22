@@ -201,6 +201,23 @@ GST_START_TEST (test_cookies)
 
 GST_END_TEST;
 
+static gboolean icy_caps = FALSE;
+
+static void
+got_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
+    gpointer user_data)
+{
+  GstStructure *s;
+
+  /* Caps can be anything if we don't except icy caps */
+  if (!icy_caps)
+    return;
+
+  /* Otherwise they _must_ be "application/x-icy" */
+  s = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+  assert_equals_string (gst_structure_get_name (s), "application/x-icy");
+}
+
 GST_START_TEST (test_icy_stream)
 {
   GstElement *pipe, *src, *sink;
@@ -210,9 +227,12 @@ GST_START_TEST (test_icy_stream)
 
   src = gst_element_factory_make ("souphttpsrc", NULL);
   fail_unless (src != NULL);
+  g_object_set (src, "iradio-mode", TRUE, NULL);
 
   sink = gst_element_factory_make ("fakesink", NULL);
   fail_unless (sink != NULL);
+  g_object_set (sink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (sink, "handoff", G_CALLBACK (got_buffer), NULL);
 
   gst_bin_add (GST_BIN (pipe), src);
   gst_bin_add (GST_BIN (pipe), sink);
@@ -224,6 +244,7 @@ GST_START_TEST (test_icy_stream)
 
   g_object_set (src, "location", "http://ogg2.smgradio.com/vr32.ogg", NULL);
   g_object_set (src, "num-buffers", 1, NULL);
+  icy_caps = FALSE;
   gst_element_set_state (pipe, GST_STATE_PLAYING);
 
   msg = gst_bus_poll (GST_ELEMENT_BUS (pipe),
@@ -247,7 +268,7 @@ GST_START_TEST (test_icy_stream)
 
   /* EOS after the first buffer */
   g_object_set (src, "num-buffers", 1, NULL);
-
+  icy_caps = TRUE;
   gst_element_set_state (pipe, GST_STATE_PLAYING);
   msg = gst_bus_poll (GST_ELEMENT_BUS (pipe),
       GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
@@ -268,6 +289,7 @@ GST_START_TEST (test_icy_stream)
   }
 
 done:
+  icy_caps = FALSE;
 
   gst_element_set_state (pipe, GST_STATE_NULL);
   gst_object_unref (pipe);

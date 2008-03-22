@@ -1,5 +1,25 @@
 2008-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_got_headers_cb),
+	(gst_soup_http_src_chunk_allocator),
+	(gst_soup_http_src_got_chunk_cb),
+	(gst_soup_http_src_uri_get_protocols):
+	Don't autoplug souphttpsrc for dav/davs. This is better handled by
+	GIO and GnomeVFS as they provide authentication.
+
+	Don't leak the icy caps if we already set them and get a new
+	icy-metaint header.
+
+	Try harder to set the icy caps on the output buffer to have correct
+	caps for the first buffer already.
+
+	* tests/check/elements/souphttpsrc.c: (got_buffer),
+	(GST_START_TEST):
+	Check that we get a buffer with application/x-icy caps if iradio-mode
+	is enabled and we have an icecast URL.
+
+2008-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_chunk_allocator):
 	Actually set the icy caps on our src pad if we have icecast data.
 	Fixes bug #523854.
