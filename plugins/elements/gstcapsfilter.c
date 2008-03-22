@@ -109,7 +109,8 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
       g_param_spec_boxed ("caps", _("Filter caps"),
           _("Restrict the possible allowed capabilities (NULL means ANY). "
               "Setting this property takes a reference to the supplied GstCaps "
-              "object."), GST_TYPE_CAPS, G_PARAM_READWRITE));
+              "object."), GST_TYPE_CAPS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   trans_class->transform_caps = gst_capsfilter_transform_caps;

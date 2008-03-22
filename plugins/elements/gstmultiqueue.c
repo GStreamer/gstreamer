@@ -287,28 +287,33 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
   g_object_class_install_property (gobject_class, ARG_MAX_SIZE_BYTES,
       g_param_spec_uint ("max-size-bytes", "Max. size (kB)",
           "Max. amount of data in the queue (bytes, 0=disable)",
-          0, G_MAXUINT, DEFAULT_MAX_SIZE_BYTES, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_MAX_SIZE_BYTES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MAX_SIZE_BUFFERS,
       g_param_spec_uint ("max-size-buffers", "Max. size (buffers)",
-          "Max. number of buffers in the queue (0=disable)",
-          0, G_MAXUINT, DEFAULT_MAX_SIZE_BUFFERS, G_PARAM_READWRITE));
+          "Max. number of buffers in the queue (0=disable)", 0, G_MAXUINT,
+          DEFAULT_MAX_SIZE_BUFFERS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MAX_SIZE_TIME,
       g_param_spec_uint64 ("max-size-time", "Max. size (ns)",
-          "Max. amount of data in the queue (in ns, 0=disable)",
-          0, G_MAXUINT64, DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE));
+          "Max. amount of data in the queue (in ns, 0=disable)", 0, G_MAXUINT64,
+          DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_EXTRA_SIZE_BYTES,
       g_param_spec_uint ("extra-size-bytes", "Extra Size (kB)",
           "Amount of data the queues can grow if one of them is empty (bytes, 0=disable)",
-          0, G_MAXUINT, DEFAULT_EXTRA_SIZE_BYTES, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_EXTRA_SIZE_BYTES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_EXTRA_SIZE_BUFFERS,
       g_param_spec_uint ("extra-size-buffers", "Extra Size (buffers)",
           "Amount of buffers the queues can grow if one of them is empty (0=disable)",
-          0, G_MAXUINT, DEFAULT_EXTRA_SIZE_BUFFERS, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_EXTRA_SIZE_BUFFERS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_EXTRA_SIZE_TIME,
       g_param_spec_uint64 ("extra-size-time", "Extra Size (ns)",
           "Amount of time the queues can grow if one of them is empty (in ns, 0=disable)",
-          0, G_MAXUINT64, DEFAULT_EXTRA_SIZE_TIME, G_PARAM_READWRITE));
+          0, G_MAXUINT64, DEFAULT_EXTRA_SIZE_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_multi_queue_finalize);
 

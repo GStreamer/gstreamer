@@ -147,19 +147,19 @@ gst_net_time_provider_class_init (GstNetTimeProviderClass * klass)
   g_object_class_install_property (gobject_class, PROP_PORT,
       g_param_spec_int ("port", "port",
           "The port to receive the packets from, 0=allocate", 0, G_MAXUINT16,
-          DEFAULT_PORT, G_PARAM_READWRITE));
+          DEFAULT_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ADDRESS,
       g_param_spec_string ("address", "address",
           "The address to bind on, as a dotted quad (x.x.x.x)",
-          DEFAULT_ADDRESS, G_PARAM_READWRITE));
+          DEFAULT_ADDRESS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CLOCK,
       g_param_spec_object ("clock", "Clock",
           "The clock to export over the network", GST_TYPE_CLOCK,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ACTIVE,
       g_param_spec_boolean ("active", "Active",
           "TRUE if the clock will respond to queries over the network", TRUE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

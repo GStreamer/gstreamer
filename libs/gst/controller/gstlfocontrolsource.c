@@ -1026,7 +1026,8 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
    **/
   g_object_class_install_property (gobject_class, PROP_WAVEFORM,
       g_param_spec_enum ("waveform", "Waveform", "Waveform",
-          GST_TYPE_LFO_WAVEFORM, GST_LFO_WAVEFORM_SINE, G_PARAM_READWRITE));
+          GST_TYPE_LFO_WAVEFORM, GST_LFO_WAVEFORM_SINE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstLFOControlSource:frequency
@@ -1039,7 +1040,7 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
   g_object_class_install_property (gobject_class, PROP_FREQUENCY,
       g_param_spec_double ("frequency", "Frequency",
           "Frequency of the waveform", 0.0, G_MAXDOUBLE, 1.0,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstLFOControlSource:timeshift
@@ -1054,7 +1055,7 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
   g_object_class_install_property (gobject_class, PROP_TIMESHIFT,
       g_param_spec_uint64 ("timeshift", "Timeshift",
           "Timeshift of the waveform to the right", 0, G_MAXUINT64, 0,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstLFOControlSource:amplitude
@@ -1066,7 +1067,7 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
    **/
   g_object_class_install_property (gobject_class, PROP_AMPLITUDE,
       g_param_spec_boxed ("amplitude", "Amplitude", "Amplitude of the waveform",
-          G_TYPE_VALUE, G_PARAM_READWRITE));
+          G_TYPE_VALUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstLFOControlSource:offset
@@ -1078,5 +1079,5 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
    **/
   g_object_class_install_property (gobject_class, PROP_OFFSET,
       g_param_spec_boxed ("offset", "Offset", "Offset of the waveform",
-          G_TYPE_VALUE, G_PARAM_READWRITE));
+          G_TYPE_VALUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }

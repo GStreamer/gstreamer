@@ -157,38 +157,38 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fake_sink_get_property);
 
   g_object_class_install_property (gobject_class, PROP_STATE_ERROR,
-      g_param_spec_enum ("state_error", "State Error",
+      g_param_spec_enum ("state-error", "State Error",
           "Generate a state change error", GST_TYPE_FAKE_SINK_STATE_ERROR,
-          DEFAULT_STATE_ERROR, G_PARAM_READWRITE));
+          DEFAULT_STATE_ERROR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_LAST_MESSAGE,
-      g_param_spec_string ("last_message", "Last Message",
+      g_param_spec_string ("last-message", "Last Message",
           "The message describing current status", DEFAULT_LAST_MESSAGE,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SIGNAL_HANDOFFS,
       g_param_spec_boolean ("signal-handoffs", "Signal handoffs",
           "Send a signal before unreffing the buffer", DEFAULT_SIGNAL_HANDOFFS,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent",
           "Don't produce last_message events", DEFAULT_SILENT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump buffer contents to stdout",
-          DEFAULT_DUMP, G_PARAM_READWRITE));
+          DEFAULT_DUMP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_CAN_ACTIVATE_PUSH,
       g_param_spec_boolean ("can-activate-push", "Can activate push",
           "Can activate in push mode", DEFAULT_CAN_ACTIVATE_PUSH,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_CAN_ACTIVATE_PULL,
       g_param_spec_boolean ("can-activate-pull", "Can activate pull",
           "Can activate in pull mode", DEFAULT_CAN_ACTIVATE_PULL,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_NUM_BUFFERS,
       g_param_spec_int ("num-buffers", "num-buffers",
           "Number of buffers to accept going EOS", -1, G_MAXINT,
-          DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE));
+          DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstFakeSink::handoff:

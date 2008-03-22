@@ -166,27 +166,29 @@ gst_tee_class_init (GstTeeClass * klass)
   g_object_class_install_property (gobject_class, PROP_NUM_SRC_PADS,
       g_param_spec_int ("num-src-pads", "Num Src Pads",
           "The number of source pads", 0, G_MAXINT, DEFAULT_PROP_NUM_SRC_PADS,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HAS_SINK_LOOP,
       g_param_spec_boolean ("has-sink-loop", "Has Sink Loop",
           "If the element should spawn a thread (unimplemented and deprecated)",
-          DEFAULT_PROP_HAS_SINK_LOOP, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+          DEFAULT_PROP_HAS_SINK_LOOP,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HAS_CHAIN,
       g_param_spec_boolean ("has-chain", "Has Chain",
-          "If the element can operate in push mode",
-          DEFAULT_PROP_HAS_CHAIN, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+          "If the element can operate in push mode", DEFAULT_PROP_HAS_CHAIN,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent",
           "Don't produce last_message events", DEFAULT_PROP_SILENT,
-          G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_LAST_MESSAGE,
-      g_param_spec_string ("last_message", "Last Message",
+      g_param_spec_string ("last-message", "Last Message",
           "The message describing current status", DEFAULT_PROP_LAST_MESSAGE,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PULL_MODE,
       g_param_spec_enum ("pull-mode", "Pull mode",
           "Behavior of tee in pull mode", GST_TYPE_TEE_PULL_MODE,
-          DEFAULT_PULL_MODE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+          DEFAULT_PULL_MODE,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_tee_request_new_pad);

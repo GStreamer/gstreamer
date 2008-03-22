@@ -600,19 +600,21 @@ gst_clock_class_init (GstClockClass * klass)
   g_object_class_install_property (gobject_class, PROP_STATS,
       g_param_spec_boolean ("stats", "Stats",
           "Enable clock stats (unimplemented)", DEFAULT_STATS,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_WINDOW_SIZE,
       g_param_spec_int ("window-size", "Window size",
           "The size of the window used to calculate rate and offset", 2, 1024,
-          DEFAULT_WINDOW_SIZE, G_PARAM_READWRITE));
+          DEFAULT_WINDOW_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_WINDOW_THRESHOLD,
       g_param_spec_int ("window-threshold", "Window threshold",
           "The threshold to start calculating rate and offset", 2, 1024,
-          DEFAULT_WINDOW_THRESHOLD, G_PARAM_READWRITE));
+          DEFAULT_WINDOW_THRESHOLD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
           "The amount of time, in nanoseconds, to sample master and slave clocks",
-          0, G_MAXUINT64, DEFAULT_TIMEOUT, G_PARAM_READWRITE));
+          0, G_MAXUINT64, DEFAULT_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

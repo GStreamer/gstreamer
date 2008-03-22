@@ -192,7 +192,8 @@ gst_file_index_class_init (GstFileIndexClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_LOCATION,
       g_param_spec_string ("location", "File Location",
-          "Location of the index file", NULL, G_PARAM_READWRITE));
+          "Location of the index file", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

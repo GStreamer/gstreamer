@@ -32,6 +32,11 @@
 
 G_BEGIN_DECLS
 
+/* FIXME: Remove this once we depend on GLib >= 2.13.0 */
+#ifndef G_PARAM_STATIC_STRINGS
+#define G_PARAM_STATIC_STRINGS (G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_GLIB_COMPAT_H__ */

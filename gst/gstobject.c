@@ -205,7 +205,8 @@ gst_object_class_init (GstObjectClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_NAME,
       g_param_spec_string ("name", "Name", "The name of the object",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstObject::parent-set:

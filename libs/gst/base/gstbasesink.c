@@ -340,22 +340,23 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_PREROLL_QUEUE_LEN,
       g_param_spec_uint ("preroll-queue-len", "Preroll queue length",
           "Number of buffers to queue during preroll", 0, G_MAXUINT,
-          DEFAULT_PREROLL_QUEUE_LEN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_PREROLL_QUEUE_LEN,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MAX_LATENESS,
       g_param_spec_int64 ("max-lateness", "Max Lateness",
           "Maximum number of nanoseconds that a buffer can be late before it "
           "is dropped (-1 unlimited)", -1, G_MAXINT64, DEFAULT_MAX_LATENESS,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_QOS,
       g_param_spec_boolean ("qos", "Qos",
           "Generate Quality-of-Service events upstream", DEFAULT_QOS,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstBaseSink:async
    *
@@ -368,7 +369,8 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_ASYNC,
       g_param_spec_boolean ("async", "Async",
-          "Go asynchronously to PAUSED", DEFAULT_ASYNC, G_PARAM_READWRITE));
+          "Go asynchronously to PAUSED", DEFAULT_ASYNC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstBaseSink:ts-offset
    *
@@ -381,7 +383,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
       g_param_spec_int64 ("ts-offset", "TS Offset",
           "Timestamp offset in nanoseconds", G_MININT64, G_MAXINT64,
-          DEFAULT_TS_OFFSET, G_PARAM_READWRITE));
+          DEFAULT_TS_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstBaseSink:last-buffer
@@ -395,7 +397,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_LAST_BUFFER,
       gst_param_spec_mini_object ("last-buffer", "Last Buffer",
           "The last buffer received in the sink", GST_TYPE_BUFFER,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);

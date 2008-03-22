@@ -345,19 +345,19 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
       g_param_spec_ulong ("blocksize", "Block size",
           "Size in bytes to read per buffer (0 = default)", 0, G_MAXULONG,
-          DEFAULT_BLOCKSIZE, G_PARAM_READWRITE));
+          DEFAULT_BLOCKSIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_NUM_BUFFERS,
       g_param_spec_int ("num-buffers", "num-buffers",
           "Number of buffers to output before sending EOS", -1, G_MAXINT,
-          DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE));
+          DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TYPEFIND,
       g_param_spec_boolean ("typefind", "Typefind",
           "Run typefind before negotiating", DEFAULT_TYPEFIND,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DO_TIMESTAMP,
       g_param_spec_boolean ("do-timestamp", "Do timestamp",
           "Apply current stream time to buffers", DEFAULT_DO_TIMESTAMP,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_src_change_state);

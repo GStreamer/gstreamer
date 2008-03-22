@@ -191,16 +191,17 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
   g_object_class_install_property (gobject_class, ARG_CAPS,
       g_param_spec_boxed ("caps", _("caps"),
           _("detected capabilities in stream"), gst_caps_get_type (),
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MINIMUM,
       g_param_spec_uint ("minimum", _("minimum"),
           "minimum probability required to accept caps", GST_TYPE_FIND_MINIMUM,
-          GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MINIMUM, G_PARAM_READWRITE));
+          GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MINIMUM,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MAXIMUM,
       g_param_spec_uint ("maximum", _("maximum"),
           "probability to stop typefinding (deprecated; non-functional)",
           GST_TYPE_FIND_MINIMUM, GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MAXIMUM,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstTypeFindElement::have-type:
    * @typefind: the typefind instance

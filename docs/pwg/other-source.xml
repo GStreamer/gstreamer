@@ -357,7 +357,8 @@ gst_my_source_class_init (GstMySourceClass *klass)
 [..]
   g_object_class_install_property (object_class, ARG_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Synchronize to clock",
-                            FALSE, G_PARAM_READWRITE));
+                            FALSE, G_PARAM_READWRITE |
+                                G_PARAM_STATIC_STRINGS));
 [..]
 }
 

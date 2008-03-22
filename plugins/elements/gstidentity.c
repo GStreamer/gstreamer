@@ -184,52 +184,57 @@ gst_identity_class_init (GstIdentityClass * klass)
   g_object_class_install_property (gobject_class, PROP_SLEEP_TIME,
       g_param_spec_uint ("sleep-time", "Sleep time",
           "Microseconds to sleep between processing", 0, G_MAXUINT,
-          DEFAULT_SLEEP_TIME, G_PARAM_READWRITE));
+          DEFAULT_SLEEP_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ERROR_AFTER,
-      g_param_spec_int ("error_after", "Error After", "Error after N buffers",
-          G_MININT, G_MAXINT, DEFAULT_ERROR_AFTER, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class,
-      PROP_DROP_PROBABILITY, g_param_spec_float ("drop_probability",
-          "Drop Probability",
+      g_param_spec_int ("error-after", "Error After", "Error after N buffers",
+          G_MININT, G_MAXINT, DEFAULT_ERROR_AFTER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DROP_PROBABILITY,
+      g_param_spec_float ("drop-probability", "Drop Probability",
           "The Probability a buffer is dropped", 0.0, 1.0,
-          DEFAULT_DROP_PROBABILITY, G_PARAM_READWRITE));
+          DEFAULT_DROP_PROBABILITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DATARATE,
       g_param_spec_int ("datarate", "Datarate",
           "(Re)timestamps buffers with number of bytes per second (0 = inactive)",
-          0, G_MAXINT, DEFAULT_DATARATE, G_PARAM_READWRITE));
+          0, G_MAXINT, DEFAULT_DATARATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "silent", "silent", DEFAULT_SILENT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SINGLE_SEGMENT,
       g_param_spec_boolean ("single-segment", "Single Segment",
           "Timestamp buffers and eat newsegments so as to appear as one segment",
-          DEFAULT_SINGLE_SEGMENT, G_PARAM_READWRITE));
+          DEFAULT_SINGLE_SEGMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_LAST_MESSAGE,
       g_param_spec_string ("last-message", "last-message", "last-message", NULL,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump buffer contents to stdout",
-          DEFAULT_DUMP, G_PARAM_READWRITE));
+          DEFAULT_DUMP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SYNC,
       g_param_spec_boolean ("sync", "Synchronize",
-          "Synchronize to pipeline clock", DEFAULT_SYNC, G_PARAM_READWRITE));
+          "Synchronize to pipeline clock", DEFAULT_SYNC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CHECK_PERFECT,
       g_param_spec_boolean ("check-perfect", "Check For Perfect Stream",
           "Verify that the stream is time- and data-contiguous. "
           "This only logs in the debug log.  This will be deprecated in favor "
           "of the check-imperfect-timestamp/offset properties.",
-          DEFAULT_CHECK_PERFECT, G_PARAM_READWRITE));
+          DEFAULT_CHECK_PERFECT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_CHECK_IMPERFECT_TIMESTAMP,
       g_param_spec_boolean ("check-imperfect-timestamp",
           "Check for discontiguous timestamps",
           "Send element messages if timestamps and durations do not match up",
-          DEFAULT_CHECK_IMPERFECT_TIMESTAMP, G_PARAM_READWRITE));
+          DEFAULT_CHECK_IMPERFECT_TIMESTAMP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CHECK_IMPERFECT_OFFSET,
       g_param_spec_boolean ("check-imperfect-offset",
           "Check for discontiguous offset",
           "Send element messages if offset and offset_end do not match up",
-          DEFAULT_CHECK_IMPERFECT_OFFSET, G_PARAM_READWRITE));
+          DEFAULT_CHECK_IMPERFECT_OFFSET,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstIdentity:signal-handoffs
@@ -242,7 +247,7 @@ gst_identity_class_init (GstIdentityClass * klass)
   g_object_class_install_property (gobject_class, PROP_SIGNAL_HANDOFFS,
       g_param_spec_boolean ("signal-handoffs",
           "Signal handoffs", "Send a signal before pushing the buffer",
-          DEFAULT_SIGNAL_HANDOFFS, G_PARAM_READWRITE));
+          DEFAULT_SIGNAL_HANDOFFS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstIdentity::handoff:

@@ -308,16 +308,16 @@ gst_pad_class_init (GstPadClass * klass)
 
   g_object_class_install_property (gobject_class, PAD_PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps", "The capabilities of the pad",
-          GST_TYPE_CAPS, G_PARAM_READABLE));
+          GST_TYPE_CAPS, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PAD_PROP_DIRECTION,
       g_param_spec_enum ("direction", "Direction", "The direction of the pad",
           GST_TYPE_PAD_DIRECTION, GST_PAD_UNKNOWN,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
   /* FIXME, Make G_PARAM_CONSTRUCT_ONLY when we fix ghostpads. */
   g_object_class_install_property (gobject_class, PAD_PROP_TEMPLATE,
       g_param_spec_object ("template", "Template",
           "The GstPadTemplate of this pad", GST_TYPE_PAD_TEMPLATE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_pad_save_thyself);

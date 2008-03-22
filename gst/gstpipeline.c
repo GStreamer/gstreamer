@@ -209,7 +209,7 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
       g_param_spec_uint64 ("delay", "Delay",
           "Expected delay needed for elements "
           "to spin up to PLAYING in nanoseconds", 0, G_MAXUINT64, DEFAULT_DELAY,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstPipeline:auto-flush-bus:
@@ -224,7 +224,7 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
       g_param_spec_boolean ("auto-flush-bus", "Auto Flush Bus",
           "Whether to automatically flush the pipeline's bus when going "
           "from READY into NULL state", DEFAULT_AUTO_FLUSH_BUS,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
 

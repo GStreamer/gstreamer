@@ -159,17 +159,19 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "File Location",
-          "Location of the file to write", NULL, G_PARAM_READWRITE));
+          "Location of the file to write", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BUFFER_MODE,
       g_param_spec_enum ("buffer-mode", "Buffering mode",
           "The buffering mode to use", GST_TYPE_BUFFER_MODE,
-          DEFAULT_BUFFER_MODE, G_PARAM_READWRITE));
+          DEFAULT_BUFFER_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BUFFER_SIZE,
       g_param_spec_uint ("buffer-size", "Buffering size",
           "Size of buffer in number of bytes for line or full buffer-mode", 0,
-          G_MAXUINT, DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE));
+          G_MAXUINT, DEFAULT_BUFFER_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesink_class->get_times = NULL;
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_file_sink_start);

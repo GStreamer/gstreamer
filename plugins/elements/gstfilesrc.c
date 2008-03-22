@@ -208,18 +208,19 @@ gst_file_src_class_init (GstFileSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_FD,
       g_param_spec_int ("fd", "File-descriptor",
           "File-descriptor for the file being mmap()d", 0, G_MAXINT, 0,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_LOCATION,
       g_param_spec_string ("location", "File Location",
-          "Location of the file to read", NULL, G_PARAM_READWRITE));
+          "Location of the file to read", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MMAPSIZE,
       g_param_spec_ulong ("mmapsize", "mmap() Block Size",
           "Size in bytes of mmap()d regions", 0, G_MAXULONG, DEFAULT_MMAPSIZE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_TOUCH,
       g_param_spec_boolean ("touch", "Touch mapped region read data",
           "Touch mmapped data regions to force them to be read from disk",
-          DEFAULT_TOUCH, G_PARAM_READWRITE));
+          DEFAULT_TOUCH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstFileSrc:use-mmap
    *
@@ -241,12 +242,12 @@ gst_file_src_class_init (GstFileSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_USEMMAP,
       g_param_spec_boolean ("use-mmap", "Use mmap to read data",
           "Whether to use mmap() instead of read()",
-          DEFAULT_USEMMAP, G_PARAM_READWRITE));
+          DEFAULT_USEMMAP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_SEQUENTIAL,
       g_param_spec_boolean ("sequential", "Optimise for sequential mmap access",
           "Whether to use madvise to hint to the kernel that access to "
           "mmap pages will be sequential",
-          DEFAULT_SEQUENTIAL, G_PARAM_READWRITE));
+          DEFAULT_SEQUENTIAL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_file_src_finalize);
 

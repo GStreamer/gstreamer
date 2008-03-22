@@ -917,7 +917,8 @@ _gst_controller_class_init (GstControllerClass * klass)
       g_param_spec_uint64 ("control-rate",
           "control rate",
           "Controlled properties will be updated at least every control-rate nanoseconds",
-          1, G_MAXUINT, 100 * GST_MSECOND, G_PARAM_READWRITE));
+          1, G_MAXUINT, 100 * GST_MSECOND,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* register signals */
   /* set defaults for overridable methods */

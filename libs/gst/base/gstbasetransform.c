@@ -335,7 +335,7 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_QOS,
       g_param_spec_boolean ("qos", "QoS", "Handle Quality-of-Service events",
-          DEFAULT_PROP_QOS, G_PARAM_READWRITE));
+          DEFAULT_PROP_QOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_transform_finalize);
 

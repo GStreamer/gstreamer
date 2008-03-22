@@ -51,7 +51,7 @@
   g_object_class_install_property (gobject_class, PROP_FREQ,
       g_param_spec_double ("freq", "Frequency", "Frequency of test signal",
           0.0, 20000.0, 440.0,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   </programlisting>
 
 </sect1>

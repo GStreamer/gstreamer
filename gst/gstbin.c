@@ -402,7 +402,7 @@ gst_bin_class_init (GstBinClass * klass)
   g_object_class_install_property (gobject_class, PROP_ASYNC_HANDLING,
       g_param_spec_boolean ("async-handling", "Async Handling",
           "The bin will handle Asynchronous state changes",
-          DEFAULT_ASYNC_HANDLING, G_PARAM_READWRITE));
+          DEFAULT_ASYNC_HANDLING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstBin::element-added:

@@ -50,7 +50,7 @@ gst_my_filter_class_init (GstMyFilterClass *klass)
   g_object_class_install_property (object_class, ARG_SILENT,
     g_param_spec_boolean ("silent", "Silent",
 			  "Whether to be very verbose or not",
-			  FALSE, G_PARAM_READWRITE));
+			  FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* define virtual function pointers */
   object_class->set_property = gst_my_filter_set_property;
@@ -153,7 +153,8 @@ gst_videotestsrc_class_init (GstvideotestsrcClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE,
     g_param_spec_enum ("pattern", "Pattern",
 		       "Type of test pattern to generate",
-		       GST_TYPE_VIDEOTESTSRC_PATTERN, 1, G_PARAM_READWRITE));
+		       GST_TYPE_VIDEOTESTSRC_PATTERN, 1, G_PARAM_READWRITE |
+                           G_PARAM_STATIC_STRINGS));
 [..]
 }
   </programlisting>

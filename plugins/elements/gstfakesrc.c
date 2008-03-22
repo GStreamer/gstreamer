@@ -265,63 +265,66 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
 */
   g_object_class_install_property (gobject_class, PROP_DATA,
       g_param_spec_enum ("data", "data", "Data allocation method",
-          GST_TYPE_FAKE_SRC_DATA, DEFAULT_DATA, G_PARAM_READWRITE));
+          GST_TYPE_FAKE_SRC_DATA, DEFAULT_DATA,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIZETYPE,
       g_param_spec_enum ("sizetype", "sizetype",
           "How to determine buffer sizes", GST_TYPE_FAKE_SRC_SIZETYPE,
-          DEFAULT_SIZETYPE, G_PARAM_READWRITE));
+          DEFAULT_SIZETYPE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SIZEMIN,
       g_param_spec_int ("sizemin", "sizemin", "Minimum buffer size", 0,
-          G_MAXINT, DEFAULT_SIZEMIN, G_PARAM_READWRITE));
+          G_MAXINT, DEFAULT_SIZEMIN,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SIZEMAX,
       g_param_spec_int ("sizemax", "sizemax", "Maximum buffer size", 0,
-          G_MAXINT, DEFAULT_SIZEMAX, G_PARAM_READWRITE));
+          G_MAXINT, DEFAULT_SIZEMAX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PARENTSIZE,
       g_param_spec_int ("parentsize", "parentsize",
           "Size of parent buffer for sub-buffered allocation", 0, G_MAXINT,
-          DEFAULT_PARENTSIZE, G_PARAM_READWRITE));
+          DEFAULT_PARENTSIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FILLTYPE,
       g_param_spec_enum ("filltype", "filltype",
           "How to fill the buffer, if at all", GST_TYPE_FAKE_SRC_FILLTYPE,
-          DEFAULT_FILLTYPE, G_PARAM_READWRITE));
+          DEFAULT_FILLTYPE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DATARATE,
       g_param_spec_int ("datarate", "Datarate",
           "Timestamps buffers with number of bytes per second (0 = none)", 0,
-          G_MAXINT, DEFAULT_DATARATE, G_PARAM_READWRITE));
+          G_MAXINT, DEFAULT_DATARATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Sync to the clock to the datarate",
-          DEFAULT_SYNC, G_PARAM_READWRITE));
+          DEFAULT_SYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PATTERN,
       g_param_spec_string ("pattern", "pattern", "pattern", DEFAULT_PATTERN,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_LAST_MESSAGE,
       g_param_spec_string ("last-message", "last-message",
-          "The last status message", NULL, G_PARAM_READABLE));
+          "The last status message", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent",
           "Don't produce last_message events", DEFAULT_SILENT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SIGNAL_HANDOFFS,
       g_param_spec_boolean ("signal-handoffs", "Signal handoffs",
           "Send a signal before pushing the buffer", DEFAULT_SIGNAL_HANDOFFS,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump buffer contents to stdout",
-          DEFAULT_DUMP, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class,
-      PROP_CAN_ACTIVATE_PUSH,
+          DEFAULT_DUMP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CAN_ACTIVATE_PUSH,
       g_param_spec_boolean ("can-activate-push", "Can activate push",
           "Can activate in push mode", DEFAULT_CAN_ACTIVATE_PUSH,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (gobject_class,
-      PROP_CAN_ACTIVATE_PULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CAN_ACTIVATE_PULL,
       g_param_spec_boolean ("can-activate-pull", "Can activate pull",
           "Can activate in pull mode", DEFAULT_CAN_ACTIVATE_PULL,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_IS_LIVE,
       g_param_spec_boolean ("is-live", "Is this a live source",
           "True if the element cannot produce data in PAUSED", FALSE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstFakeSrc::handoff:

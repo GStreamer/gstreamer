@@ -149,7 +149,7 @@ gst_fd_sink_class_init (GstFdSinkClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to write to",
-          0, G_MAXINT, 1, G_PARAM_READWRITE));
+          0, G_MAXINT, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

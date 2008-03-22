@@ -177,7 +177,8 @@ gst_index_class_init (GstIndexClass * klass)
   g_object_class_install_property (gobject_class, ARG_RESOLVER,
       g_param_spec_enum ("resolver", "Resolver",
           "Select a predefined object to string mapper",
-          GST_TYPE_INDEX_RESOLVER, GST_INDEX_RESOLVER_PATH, G_PARAM_READWRITE));
+          GST_TYPE_INDEX_RESOLVER, GST_INDEX_RESOLVER_PATH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

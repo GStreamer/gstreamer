@@ -136,7 +136,7 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_fd_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_fd_src_stop);

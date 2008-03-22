@@ -1,5 +1,52 @@
 2008-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* docs/pwg/advanced-dparams.xml:
+	* docs/pwg/building-props.xml:
+	* docs/pwg/other-source.xml:
+	* gst/glib-compat.h:
+	* gst/gstbin.c: (gst_bin_class_init):
+	* gst/gstclock.c: (gst_clock_class_init):
+	* gst/gstindex.c: (gst_index_class_init):
+	* gst/gstobject.c: (gst_object_class_init):
+	* gst/gstpad.c: (gst_pad_class_init):
+	* gst/gstpipeline.c: (gst_pipeline_class_init):
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init):
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init):
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_class_init):
+	* libs/gst/base/gstdataqueue.c: (gst_data_queue_class_init):
+	* libs/gst/check/gstcheck.c: (_gst_check_fault_handler_restore),
+	(_gst_check_fault_handler_sighandler),
+	(_gst_check_fault_handler_setup), (gst_check_init):
+	* libs/gst/controller/gstcontroller.c:
+	(_gst_controller_class_init):
+	* libs/gst/controller/gstlfocontrolsource.c:
+	(gst_lfo_control_source_class_init):
+	* libs/gst/net/gstnetclientclock.c:
+	(gst_net_client_clock_class_init):
+	* libs/gst/net/gstnettimeprovider.c:
+	(gst_net_time_provider_class_init):
+	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_class_init):
+	* plugins/elements/gstfakesink.c: (gst_fake_sink_class_init):
+	* plugins/elements/gstfakesrc.c: (gst_fake_src_class_init):
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_class_init):
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_class_init):
+	* plugins/elements/gstfilesink.c: (gst_file_sink_class_init):
+	* plugins/elements/gstfilesrc.c: (gst_file_src_class_init):
+	* plugins/elements/gstidentity.c: (gst_identity_class_init):
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_class_init):
+	* plugins/elements/gstqueue.c: (gst_queue_class_init):
+	* plugins/elements/gsttee.c: (gst_tee_class_init):
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_class_init):
+	* plugins/indexers/gstfileindex.c: (gst_file_index_class_init):
+	Define G_PARAM_STATIC_STRINGS if it's undefined (GLib < 2.13.0) and
+	use it everywhere for GParamSpecs that use static strings (i.e. all).
+	This gives us less memory usage, fewer allocations and thus less
+	memory defragmentation. Fixes bug #523806.
+
+2008-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/gstminiobject.c: (gst_value_dup_mini_object),
 	(gst_param_spec_mini_object):
 	* gst/gstminiobject.h:
