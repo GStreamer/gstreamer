@@ -559,6 +559,9 @@ print_element_properties_info (GstElement * element)
                 gst_value_get_fraction_numerator (&value),
                 gst_value_get_fraction_denominator (&value));
 
+        } else if (GST_IS_PARAM_SPEC_MINI_OBJECT (param)) {
+          n_print ("%-23.23s MiniObject of type \"%s\"", "",
+              g_type_name (param->value_type));
         } else {
           n_print ("%-23.23s Unknown type %ld \"%s\"", "", param->value_type,
               g_type_name (param->value_type));

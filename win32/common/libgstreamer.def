@@ -600,6 +600,7 @@ EXPORTS
 	gst_param_spec_fraction
 	gst_param_spec_fraction_get_type
 	gst_param_spec_mini_object
+	gst_param_spec_mini_object_get_type
 	gst_parse_bin_from_description
 	gst_parse_error_get_type
 	gst_parse_error_quark
@@ -926,6 +927,7 @@ EXPORTS
 	gst_value_can_union
 	gst_value_compare
 	gst_value_deserialize
+	gst_value_dup_mini_object
 	gst_value_fraction_multiply
 	gst_value_fraction_subtract
 	gst_value_get_caps

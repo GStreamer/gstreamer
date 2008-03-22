@@ -1,3 +1,25 @@
+2008-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstminiobject.c: (gst_value_dup_mini_object),
+	(gst_param_spec_mini_object):
+	* gst/gstminiobject.h:
+	* win32/common/libgstreamer.def:
+	* docs/gst/gstreamer-sections.txt:
+	API: Add GST_IS_PARAM_SPEC_MINI_OBJECT, GST_PARAM_SPEC_MINI_OBJECT
+	GST_TYPE_PARAM_MINI_OBJECT and gst_value_dup_mini_object. Also move
+	GstParamSpecMiniObject into a public header for this.
+
+	This make GstMiniObject a bit more consistent with GObject and makes
+	it possible to extend the param specs.
+
+	gst_value_dup_mini_object is mainly useful for set_property methods.
+
+	Fixes bug #523798.
+
+	* tools/gst-inspect.c: (print_element_properties_info):
+	Print something useful for GstMiniObject properties and not just
+	"unknown type".
+
 2008-03-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/gst/gstreamer-sections.txt:

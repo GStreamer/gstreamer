@@ -172,14 +172,41 @@ void 		gst_mini_object_unref 		(GstMiniObject *mini_object);
 void 		gst_mini_object_replace 	(GstMiniObject **olddata, GstMiniObject *newdata);
 
 /* GParamSpec */
+
+#define	GST_TYPE_PARAM_MINI_OBJECT	        (gst_param_spec_mini_object_get_type())
+#define GST_IS_PARAM_SPEC_MINI_OBJECT(pspec)    (G_TYPE_CHECK_INSTANCE_TYPE ((pspec), \
+                                                 GST_TYPE_PARAM_MINI_OBJECT))
+#define GST_PARAM_SPEC_MINI_OBJECT(pspec)       (G_TYPE_CHECK_INSTANCE_CAST ((pspec), \
+                                                 GST_TYPE_PARAM_MINI_OBJECT, \
+						 GstParamSpecMiniObject))
+
+typedef struct _GstParamSpecMiniObject GstParamSpecMiniObject;
+
+/**
+ * GstParamSpecMiniObject:
+ * @parent_instance: private %GParamSpec portion
+ * 
+ * A %GParamSpec derived structure that contains the meta data
+ * for %GstMiniObject properties.
+ */
+struct _GstParamSpecMiniObject
+{
+  GParamSpec parent_instance;
+};
+
+
+GType gst_param_spec_mini_object_get_type (void);
+
 GParamSpec* 	gst_param_spec_mini_object 	(const char *name, const char *nick,
     						 const char *blurb, GType object_type, 
 						 GParamFlags flags);
 
 /* GValue stuff */
+
 void 		gst_value_set_mini_object 	(GValue *value, GstMiniObject *mini_object);
 void 		gst_value_take_mini_object 	(GValue *value, GstMiniObject *mini_object);
 GstMiniObject* 	gst_value_get_mini_object 	(const GValue *value);
+GstMiniObject*  gst_value_dup_mini_object       (const GValue *value);
 
 
 G_END_DECLS
