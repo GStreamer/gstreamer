@@ -121,7 +121,7 @@ gst_text_render_class_init (GstTextRenderClass * klass)
           "to be used for rendering. "
           "See documentation of "
           "pango_font_description_from_string"
-          " for syntax.", "", G_PARAM_WRITABLE));
+          " for syntax.", "", G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 }
 
 

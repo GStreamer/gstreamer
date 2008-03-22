@@ -270,7 +270,8 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method", "method", "method",
-          GST_TYPE_VIDEO_SCALE_METHOD, DEFAULT_PROP_METHOD, G_PARAM_READWRITE));
+          GST_TYPE_VIDEO_SCALE_METHOD, DEFAULT_PROP_METHOD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_scale_transform_caps);

@@ -136,7 +136,7 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
   g_object_class_install_property (gobject_class, ARG_CROP,
       g_param_spec_boolean ("crop", "Crop",
           "Crop the image to the visible region", THEORA_DEF_CROP,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = theora_dec_change_state;
 

@@ -335,13 +335,14 @@ gst_v4lelement_class_init (GstV4lElementClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DEVICE,
       g_param_spec_string ("device", "Device", "Device location",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DEVICE_NAME,
-      g_param_spec_string ("device_name", "Device name", "Name of the device",
-          NULL, G_PARAM_READABLE));
+      g_param_spec_string ("device-name", "Device name", "Name of the device",
+          NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FLAGS,
       g_param_spec_flags ("flags", "Flags", "Device type flags",
-          GST_TYPE_V4L_DEVICE_FLAGS, 0, G_PARAM_READABLE));
+          GST_TYPE_V4L_DEVICE_FLAGS, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   basesrc_class->start = gst_v4lelement_start;
   basesrc_class->stop = gst_v4lelement_stop;

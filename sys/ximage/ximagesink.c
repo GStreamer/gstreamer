@@ -2227,26 +2227,29 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DISPLAY,
       g_param_spec_string ("display", "Display", "X Display name",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SYNCHRONOUS,
       g_param_spec_boolean ("synchronous", "Synchronous", "When enabled, runs "
           "the X display in synchronous mode. (used only for debugging)", FALSE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio", "Force aspect ratio",
           "When enabled, reverse caps negotiation (scaling) will respect "
-          "original aspect ratio", FALSE, G_PARAM_READWRITE));
+          "original aspect ratio", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PIXEL_ASPECT_RATIO,
       g_param_spec_string ("pixel-aspect-ratio", "Pixel Aspect Ratio",
-          "The pixel aspect ratio of the device", "1/1", G_PARAM_READWRITE));
+          "The pixel aspect ratio of the device", "1/1",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HANDLE_EVENTS,
       g_param_spec_boolean ("handle-events", "Handle XEvents",
           "When enabled, XEvents will be selected and handled", TRUE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HANDLE_EXPOSE,
-      g_param_spec_boolean ("handle-expose", "Handle expose", "When enabled, "
+      g_param_spec_boolean ("handle-expose", "Handle expose",
+          "When enabled, "
           "the current frame will always be drawn in response to X Expose "
-          "events", TRUE, G_PARAM_READWRITE));
+          "events", TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_ximagesink_change_state;
 

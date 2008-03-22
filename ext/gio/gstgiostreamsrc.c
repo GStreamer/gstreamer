@@ -123,7 +123,7 @@ gst_gio_stream_src_class_init (GstGioStreamSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_STREAM,
       g_param_spec_object ("stream", "Stream", "Stream to read from",
-          G_TYPE_INPUT_STREAM, G_PARAM_READWRITE));
+          G_TYPE_INPUT_STREAM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

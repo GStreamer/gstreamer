@@ -3099,48 +3099,55 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_CONTRAST,
       g_param_spec_int ("contrast", "Contrast", "The contrast of the video",
-          -1000, 1000, 0, G_PARAM_READWRITE));
+          -1000, 1000, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_BRIGHTNESS,
       g_param_spec_int ("brightness", "Brightness",
-          "The brightness of the video", -1000, 1000, 0, G_PARAM_READWRITE));
+          "The brightness of the video", -1000, 1000, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_HUE,
       g_param_spec_int ("hue", "Hue", "The hue of the video", -1000, 1000, 0,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_SATURATION,
       g_param_spec_int ("saturation", "Saturation",
-          "The saturation of the video", -1000, 1000, 0, G_PARAM_READWRITE));
+          "The saturation of the video", -1000, 1000, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_DISPLAY,
       g_param_spec_string ("display", "Display", "X Display name", NULL,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_SYNCHRONOUS,
       g_param_spec_boolean ("synchronous", "Synchronous",
           "When enabled, runs "
           "the X display in synchronous mode. (used only for debugging)", FALSE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_PIXEL_ASPECT_RATIO,
       g_param_spec_string ("pixel-aspect-ratio", "Pixel Aspect Ratio",
-          "The pixel aspect ratio of the device", "1/1", G_PARAM_READWRITE));
+          "The pixel aspect ratio of the device", "1/1",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio", "Force aspect ratio",
           "When enabled, scaling will respect original aspect ratio", FALSE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_HANDLE_EVENTS,
       g_param_spec_boolean ("handle-events", "Handle XEvents",
           "When enabled, XEvents will be selected and handled", TRUE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_DEVICE,
       g_param_spec_string ("device", "Adaptor number",
-          "The number of the video adaptor", "0", G_PARAM_READWRITE));
+          "The number of the video adaptor", "0",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_DEVICE_NAME,
       g_param_spec_string ("device-name", "Adaptor name",
-          "The name of the video adaptor", NULL, G_PARAM_READABLE));
+          "The name of the video adaptor", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_HANDLE_EXPOSE,
-      g_param_spec_boolean ("handle-expose", "Handle expose", "When enabled, "
+      g_param_spec_boolean ("handle-expose", "Handle expose",
+          "When enabled, "
           "the current frame will always be drawn in response to X Expose "
-          "events", TRUE, G_PARAM_READWRITE));
+          "events", TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_DOUBLE_BUFFER,
       g_param_spec_boolean ("double-buffer", "Double-buffer",
-          "Whether to double-buffer the output", TRUE, G_PARAM_READWRITE));
+          "Whether to double-buffer the output", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_xvimagesink_finalize;
 

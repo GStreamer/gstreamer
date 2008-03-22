@@ -188,20 +188,21 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
 
   g_object_class_install_property (object_class, ARG_IN,
       g_param_spec_uint64 ("in", "In",
-          "Number of input samples", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+          "Number of input samples", 0, G_MAXUINT64, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, ARG_OUT,
-      g_param_spec_uint64 ("out", "Out",
-          "Number of output samples", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+      g_param_spec_uint64 ("out", "Out", "Number of output samples", 0,
+          G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, ARG_ADD,
-      g_param_spec_uint64 ("add", "Add",
-          "Number of added samples", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+      g_param_spec_uint64 ("add", "Add", "Number of added samples", 0,
+          G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, ARG_DROP,
-      g_param_spec_uint64 ("drop", "Drop",
-          "Number of dropped samples", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+      g_param_spec_uint64 ("drop", "Drop", "Number of dropped samples", 0,
+          G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, ARG_SILENT,
       g_param_spec_boolean ("silent", "silent",
-          "Don't emit notify for dropped and duplicated frames",
-          DEFAULT_SILENT, G_PARAM_READWRITE));
+          "Don't emit notify for dropped and duplicated frames", DEFAULT_SILENT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = gst_audio_rate_change_state;
 }

@@ -98,7 +98,7 @@ gst_mixer_track_class_init (GstMixerTrackClass * klass)
   g_object_class_install_property (object_klass, ARG_LABEL,
       g_param_spec_string ("label", "Track label",
           "The label assigned to the track (may be translated)", NULL,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstMixerTrack:untranslated-label
@@ -114,27 +114,28 @@ gst_mixer_track_class_init (GstMixerTrackClass * klass)
   g_object_class_install_property (object_klass, ARG_UNTRANSLATED_LABEL,
       g_param_spec_string ("untranslated-label", "Untranslated track label",
           "The untranslated label assigned to the track (since 0.10.13)",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+          NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_klass, ARG_MIN_VOLUME,
-      g_param_spec_int ("min_volume", "Minimum volume level",
+      g_param_spec_int ("min-volume", "Minimum volume level",
           "The minimum possible volume level", G_MININT, G_MAXINT,
-          0, G_PARAM_READABLE));
+          0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_klass, ARG_MAX_VOLUME,
-      g_param_spec_int ("max_volume", "Maximum volume level",
+      g_param_spec_int ("max-volume", "Maximum volume level",
           "The maximum possible volume level", G_MININT, G_MAXINT,
-          0, G_PARAM_READABLE));
+          0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_klass, ARG_FLAGS,
       g_param_spec_uint ("flags", "Flags",
           "Flags indicating the type of mixer track",
-          0, G_MAXUINT, 0, G_PARAM_READABLE));
+          0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_klass, ARG_NUM_CHANNELS,
-      g_param_spec_int ("num_channels", "Number of channels",
+      g_param_spec_int ("num-channels", "Number of channels",
           "The number of channels contained within the track",
-          0, G_MAXINT, 0, G_PARAM_READABLE));
+          0, G_MAXINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
 #if 0
   signals[SIGNAL_RECORD_TOGGLED] =

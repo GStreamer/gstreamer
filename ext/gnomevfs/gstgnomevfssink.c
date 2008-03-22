@@ -181,14 +181,15 @@ gst_gnome_vfs_sink_class_init (GstGnomeVFSSinkClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_LOCATION,
       g_param_spec_string ("location", "File Location",
-          "Location of the file to write", NULL, G_PARAM_READWRITE));
+          "Location of the file to write", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_URI,
       g_param_spec_boxed ("uri", "GnomeVFSURI", "URI for GnomeVFS",
-          GST_TYPE_GNOME_VFS_URI, G_PARAM_READWRITE));
+          GST_TYPE_GNOME_VFS_URI, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_HANDLE,
-      g_param_spec_boxed ("handle",
-          "GnomeVFSHandle", "Handle for GnomeVFS",
-          GST_TYPE_GNOME_VFS_HANDLE, G_PARAM_READWRITE));
+      g_param_spec_boxed ("handle", "GnomeVFSHandle", "Handle for GnomeVFS",
+          GST_TYPE_GNOME_VFS_HANDLE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstGnomeVFSSink::allow-overwrite

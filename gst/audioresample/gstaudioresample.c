@@ -160,9 +160,9 @@ gst_audioresample_class_init (GstAudioresampleClass * klass)
   gobject_class->get_property = gst_audioresample_get_property;
 
   g_object_class_install_property (gobject_class, PROP_FILTERLEN,
-      g_param_spec_int ("filter_length", "filter_length", "filter_length",
-          0, G_MAXINT, DEFAULT_FILTERLEN,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+      g_param_spec_int ("filter-length", "filter length",
+          "Length of the resample filter", 0, G_MAXINT, DEFAULT_FILTERLEN,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   GST_BASE_TRANSFORM_CLASS (klass)->start =
       GST_DEBUG_FUNCPTR (audioresample_start);

@@ -164,35 +164,36 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass * klass)
 
 #if 0
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_X_OFFSET,
-      g_param_spec_int ("x_offset", "x_offset", "x_offset",
-          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
+      g_param_spec_int ("x-offset", "x_offset", "x_offset",
+          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_Y_OFFSET,
-      g_param_spec_int ("y_offset", "y_offset", "y_offset",
-          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
+      g_param_spec_int ("y-offset", "y_offset", "y_offset",
+          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_F_WIDTH,
-      g_param_spec_int ("frame_width", "frame_width", "frame_width",
-          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
+      g_param_spec_int ("frame-width", "frame_width", "frame_width",
+          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_F_HEIGHT,
-      g_param_spec_int ("frame_height", "frame_height", "frame_height",
-          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
+      g_param_spec_int ("frame-height", "frame_height", "frame_height",
+          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 #endif
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_int ("quality", "Quality", "JPEG frame quality",
-          1, 100, 50, G_PARAM_READWRITE));
+          1, 100, 50, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUMBUFS,
-      g_param_spec_int ("num_buffers", "Num Buffers", "Number of Buffers",
-          1, 256, 64, G_PARAM_READWRITE));
+      g_param_spec_int ("num-buffers", "Num Buffers", "Number of Buffers",
+          1, 256, 64, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
-      g_param_spec_int ("buffer_size", "Buffer Size", "Size of buffers",
-          0, 512 * 1024, 128 * 1024, G_PARAM_READABLE));
+      g_param_spec_int ("buffer-size", "Buffer Size", "Size of buffers",
+          0, 512 * 1024, 128 * 1024,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_USE_FIXED_FPS,
-      g_param_spec_boolean ("use_fixed_fps", "Use Fixed FPS",
+      g_param_spec_boolean ("use-fixed-fps", "Use Fixed FPS",
           "Drop/Insert frames to reach a certain FPS (TRUE) "
           "or adapt FPS to suit the number of grabbed frames",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* signals */
   gst_v4lmjpegsrc_signals[SIGNAL_FRAME_CAPTURE] =

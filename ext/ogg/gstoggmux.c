@@ -174,11 +174,13 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
   g_object_class_install_property (gobject_class, ARG_MAX_DELAY,
       g_param_spec_uint64 ("max-delay", "Max delay",
           "Maximum delay in multiplexing streams", 0, G_MAXUINT64,
-          DEFAULT_MAX_DELAY, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_MAX_DELAY,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MAX_PAGE_DELAY,
       g_param_spec_uint64 ("max-page-delay", "Max page delay",
           "Maximum delay for sending out a page", 0, G_MAXUINT64,
-          DEFAULT_MAX_PAGE_DELAY, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_MAX_PAGE_DELAY,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_ogg_mux_change_state;
 

@@ -536,7 +536,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    */
   g_object_class_install_property (gobject_klass, PROP_URI,
       g_param_spec_string ("uri", "URI", "URI of the media to play",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstPlayBin:suburi
@@ -546,11 +546,11 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    */
   g_object_class_install_property (gobject_klass, PROP_SUBURI,
       g_param_spec_string ("suburi", ".sub-URI", "Optional URI of a subtitle",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_SOURCE,
       g_param_spec_object ("source", "Source", "Source element",
-          GST_TYPE_ELEMENT, G_PARAM_READABLE));
+          GST_TYPE_ELEMENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
 
   /**
@@ -560,7 +560,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    */
   g_object_class_install_property (gobject_klass, PROP_FLAGS,
       g_param_spec_flags ("flags", "Flags", "Flags to control behaviour",
-          GST_TYPE_PLAY_FLAGS, DEFAULT_FLAGS, G_PARAM_READWRITE));
+          GST_TYPE_PLAY_FLAGS, DEFAULT_FLAGS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstPlayBin:n-video
@@ -569,7 +570,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    */
   g_object_class_install_property (gobject_klass, PROP_N_VIDEO,
       g_param_spec_int ("n-video", "Number Video",
-          "Total number of video streams", 0, G_MAXINT, 0, G_PARAM_READABLE));
+          "Total number of video streams", 0, G_MAXINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstPlayBin:current-video
    *
@@ -579,7 +581,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_CURRENT_VIDEO,
       g_param_spec_int ("current-video", "Current Video",
           "Currently playing video stream (-1 = auto)",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE));
+          -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstPlayBin:n-audio
    *
@@ -587,7 +589,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    */
   g_object_class_install_property (gobject_klass, PROP_N_AUDIO,
       g_param_spec_int ("n-audio", "Number Audio",
-          "Total number of audio streams", 0, G_MAXINT, 0, G_PARAM_READABLE));
+          "Total number of audio streams", 0, G_MAXINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstPlayBin:current-audio
    *
@@ -597,7 +600,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_CURRENT_AUDIO,
       g_param_spec_int ("current-audio", "Current audio",
           "Currently playing audio stream (-1 = auto)",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE));
+          -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstPlayBin:n-text
    *
@@ -605,7 +608,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    */
   g_object_class_install_property (gobject_klass, PROP_N_TEXT,
       g_param_spec_int ("n-text", "Number Text",
-          "Total number of text streams", 0, G_MAXINT, 0, G_PARAM_READABLE));
+          "Total number of text streams", 0, G_MAXINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstPlayBin:current-text
    *
@@ -615,35 +619,37 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_CURRENT_TEXT,
       g_param_spec_int ("current-text", "Current Text",
           "Currently playing text stream (-1 = auto)",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE));
+          -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_SUBTITLE_ENCODING,
       g_param_spec_string ("subtitle-encoding", "subtitle encoding",
           "Encoding to assume if input subtitles are not in UTF-8 encoding. "
           "If not set, the GST_SUBTITLE_ENCODING environment variable will "
           "be checked for an encoding to use. If that is not set either, "
-          "ISO-8859-15 will be assumed.", NULL, G_PARAM_READWRITE));
+          "ISO-8859-15 will be assumed.", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_VIDEO_SINK,
       g_param_spec_object ("video-sink", "Video Sink",
           "the video output element to use (NULL = default sink)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_AUDIO_SINK,
       g_param_spec_object ("audio-sink", "Audio Sink",
           "the audio output element to use (NULL = default sink)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_VIS_PLUGIN,
       g_param_spec_object ("vis-plugin", "Vis plugin",
           "the visualization element to use (NULL = none)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_VOLUME,
       g_param_spec_double ("volume", "Volume", "The audio volume",
-          0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
+          0.0, VOLUME_MAX_DOUBLE, 1.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_MUTE,
       g_param_spec_boolean ("mute", "Mute",
           "Mute the audio channel without changing the volume", FALSE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstPlayBin::frame
@@ -655,17 +661,19 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_FRAME,
       gst_param_spec_mini_object ("frame", "Frame",
           "The last frame (NULL = no video available)",
-          GST_TYPE_BUFFER, G_PARAM_READABLE));
+          GST_TYPE_BUFFER, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_FONT_DESC,
       g_param_spec_string ("subtitle-font-desc",
           "Subtitle font description",
           "Pango font description of font "
-          "to be used for subtitle rendering", NULL, G_PARAM_WRITABLE));
+          "to be used for subtitle rendering", NULL,
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_CONNECTION_SPEED,
       g_param_spec_uint ("connection-speed", "Connection Speed",
           "Network connection speed in kbps (0 = unknown)",
-          0, G_MAXUINT, DEFAULT_CONNECTION_SPEED, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_CONNECTION_SPEED,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstPlayBin::about-to-finish:
    * @playbin: a #GstPlayBin

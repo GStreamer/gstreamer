@@ -263,13 +263,14 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
   g_object_class_install_property (gobject_class, ARG_DITHERING,
       g_param_spec_enum ("dithering", "Dithering",
           "Selects between different dithering methods.",
-          GST_TYPE_AUDIO_CONVERT_DITHERING, DITHER_TPDF, G_PARAM_READWRITE));
+          GST_TYPE_AUDIO_CONVERT_DITHERING, DITHER_TPDF,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_NOISE_SHAPING,
       g_param_spec_enum ("noise-shaping", "Noise shaping",
           "Selects between different noise shaping methods.",
           GST_TYPE_AUDIO_CONVERT_NOISE_SHAPING, NOISE_SHAPING_NONE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   basetransform_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_convert_get_unit_size);

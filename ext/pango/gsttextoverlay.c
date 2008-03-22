@@ -332,54 +332,56 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT,
       g_param_spec_string ("text", "text",
-          "Text to be display.", DEFAULT_PROP_TEXT, G_PARAM_READWRITE));
+          "Text to be display.", DEFAULT_PROP_TEXT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SHADING,
       g_param_spec_boolean ("shaded-background", "shaded background",
           "Whether to shade the background under the text area",
-          DEFAULT_PROP_SHADING, G_PARAM_READWRITE));
+          DEFAULT_PROP_SHADING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VALIGNMENT,
       g_param_spec_enum ("valignment", "vertical alignment",
-          "Vertical alignment of the text",
-          GST_TYPE_TEXT_OVERLAY_VALIGN, DEFAULT_PROP_VALIGNMENT,
-          G_PARAM_READWRITE));
+          "Vertical alignment of the text", GST_TYPE_TEXT_OVERLAY_VALIGN,
+          DEFAULT_PROP_VALIGNMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HALIGNMENT,
       g_param_spec_enum ("halignment", "horizontal alignment",
           "Horizontal alignment of the text", GST_TYPE_TEXT_OVERLAY_HALIGN,
-          DEFAULT_PROP_HALIGNMENT, G_PARAM_READWRITE));
+          DEFAULT_PROP_HALIGNMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VALIGN,
       g_param_spec_string ("valign", "vertical alignment",
           "Vertical alignment of the text (deprecated; use valignment)",
-          DEFAULT_PROP_VALIGN, G_PARAM_WRITABLE));
+          DEFAULT_PROP_VALIGN, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HALIGN,
       g_param_spec_string ("halign", "horizontal alignment",
           "Horizontal alignment of the text (deprecated; use halignment)",
-          DEFAULT_PROP_HALIGN, G_PARAM_WRITABLE));
+          DEFAULT_PROP_HALIGN, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_XPAD,
       g_param_spec_int ("xpad", "horizontal paddding",
           "Horizontal paddding when using left/right alignment", 0, G_MAXINT,
-          DEFAULT_PROP_XPAD, G_PARAM_READWRITE));
+          DEFAULT_PROP_XPAD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_YPAD,
       g_param_spec_int ("ypad", "vertical padding",
           "Vertical padding when using top/bottom alignment", 0, G_MAXINT,
-          DEFAULT_PROP_YPAD, G_PARAM_READWRITE));
+          DEFAULT_PROP_YPAD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DELTAX,
       g_param_spec_int ("deltax", "X position modifier",
           "Shift X position to the left or to the right. Unit is pixels.",
-          G_MININT, G_MAXINT, DEFAULT_PROP_DELTAX, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, DEFAULT_PROP_DELTAX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DELTAY,
       g_param_spec_int ("deltay", "Y position modifier",
           "Shift Y position up or down. Unit is pixels.", G_MININT, G_MAXINT,
-          DEFAULT_PROP_DELTAY, G_PARAM_READWRITE));
+          DEFAULT_PROP_DELTAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WRAP_MODE,
       g_param_spec_enum ("wrap-mode", "wrap mode",
           "Whether to wrap the text and if so how.",
           GST_TYPE_TEXT_OVERLAY_WRAP_MODE, DEFAULT_PROP_WRAP_MODE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FONT_DESC,
       g_param_spec_string ("font-desc", "font description",
           "Pango font description of font to be used for rendering. "
           "See documentation of pango_font_description_from_string "
-          "for syntax.", DEFAULT_PROP_FONT_DESC, G_PARAM_WRITABLE));
+          "for syntax.", DEFAULT_PROP_FONT_DESC,
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstTextOverlay:line-alignment
    *
@@ -391,7 +393,7 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
       g_param_spec_enum ("line-alignment", "line alignment",
           "Alignment of text lines relative to each other.",
           GST_TYPE_TEXT_OVERLAY_LINE_ALIGN, DEFAULT_PROP_LINE_ALIGNMENT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstTextOverlay:silent
    *
@@ -404,7 +406,7 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SILENT,
       g_param_spec_boolean ("silent", "silent",
           "Whether to render the text string",
-          DEFAULT_PROP_SILENT, G_PARAM_READWRITE));
+          DEFAULT_PROP_SILENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

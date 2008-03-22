@@ -228,7 +228,8 @@ gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass)
       ARG_HANDLE,
       g_param_spec_boxed ("handle",
           "GnomeVFSHandle", "Handle for GnomeVFS",
-          GST_TYPE_GNOME_VFS_HANDLE, G_PARAM_READWRITE));
+          GST_TYPE_GNOME_VFS_HANDLE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* icecast stuff */
   g_object_class_install_property (gobject_class,
@@ -236,25 +237,24 @@ gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass)
       g_param_spec_boolean ("iradio-mode",
           "iradio-mode",
           "Enable internet radio mode (extraction of shoutcast/icecast metadata)",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       ARG_IRADIO_NAME,
       g_param_spec_string ("iradio-name",
-          "iradio-name", "Name of the stream", NULL, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class,
-      ARG_IRADIO_GENRE,
-      g_param_spec_string ("iradio-genre",
-          "iradio-genre", "Genre of the stream", NULL, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class,
-      ARG_IRADIO_URL,
-      g_param_spec_string ("iradio-url",
-          "iradio-url",
-          "Homepage URL for radio stream", NULL, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class,
-      ARG_IRADIO_TITLE,
-      g_param_spec_string ("iradio-title",
-          "iradio-title",
-          "Name of currently playing song", NULL, G_PARAM_READABLE));
+          "iradio-name", "Name of the stream", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_IRADIO_GENRE,
+      g_param_spec_string ("iradio-genre", "iradio-genre",
+          "Genre of the stream", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_IRADIO_URL,
+      g_param_spec_string ("iradio-url", "iradio-url",
+          "Homepage URL for radio stream", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_IRADIO_TITLE,
+      g_param_spec_string ("iradio-title", "iradio-title",
+          "Name of currently playing song", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_stop);

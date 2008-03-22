@@ -129,7 +129,7 @@ gst_audio_filter_template_class_init (GstAudioFilterTemplateClass * klass)
   g_object_class_install_property (gobject_class, ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
           GST_TYPE_AUDIOTEMPLATE_METHOD, GST_AUDIOTEMPLATE_METHOD_1,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
   gobject_class->set_property = gst_audio_filter_template_set_property;

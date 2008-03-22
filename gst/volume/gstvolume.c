@@ -412,12 +412,13 @@ gst_volume_class_init (GstVolumeClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_MUTE,
       g_param_spec_boolean ("mute", "Mute", "mute channel",
-          FALSE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          FALSE,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_VOLUME,
       g_param_spec_double ("volume", "Volume", "volume factor",
           0.0, VOLUME_MAX_DOUBLE, 1.0,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (volume_transform_ip);
   filter_class->setup = GST_DEBUG_FUNCPTR (volume_setup);

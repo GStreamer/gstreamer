@@ -221,14 +221,15 @@ gst_cdda_base_src_class_init (GstCddaBaseSrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE,
       g_param_spec_string ("device", "Device", "CD device location",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODE,
       g_param_spec_enum ("mode", "Mode", "Mode", GST_TYPE_CDDA_BASE_SRC_MODE,
-          GST_CDDA_BASE_SRC_MODE_NORMAL, G_PARAM_READWRITE));
+          GST_CDDA_BASE_SRC_MODE_NORMAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TRACK,
       g_param_spec_uint ("track", "Track", "Track", 1, 99, 1,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #if 0
   /* Do we really need this toc adjustment stuff as properties? does the user
@@ -239,12 +240,13 @@ gst_cdda_base_src_class_init (GstCddaBaseSrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TOC_OFFSET,
       g_param_spec_int ("toc-offset", "Table of contents offset",
           "Add <n> sectors to the values reported", G_MININT, G_MAXINT, 0,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TOC_BIAS,
       g_param_spec_boolean ("toc-bias", "Table of contents bias",
           "Assume that the beginning offset of track 1 as reported in the TOC "
           "will be addressed as LBA 0.  Necessary for some Toshiba drives to "
-          "get track boundaries", FALSE, G_PARAM_READWRITE));
+          "get track boundaries", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
   element_class->set_index = GST_DEBUG_FUNCPTR (gst_cdda_base_src_set_index);

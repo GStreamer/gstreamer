@@ -145,57 +145,61 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
 
   g_object_class_install_property (gobject_klass, ARG_URI,
       g_param_spec_string ("uri", "URI", "URI of the media to play",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, ARG_SUBURI,
       g_param_spec_string ("suburi", ".sub-URI", "Optional URI of a subtitle",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, ARG_QUEUE_SIZE,
       g_param_spec_uint64 ("queue-size", "Queue size",
           "Size of internal queues in nanoseconds", 0, G_MAXINT64,
-          DEFAULT_QUEUE_SIZE, G_PARAM_READWRITE));
+          DEFAULT_QUEUE_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, ARG_QUEUE_THRESHOLD,
       g_param_spec_uint64 ("queue-threshold", "Queue threshold",
           "Buffering threshold of internal queues in nanoseconds", 0,
-          G_MAXINT64, DEFAULT_QUEUE_THRESHOLD, G_PARAM_READWRITE));
+          G_MAXINT64, DEFAULT_QUEUE_THRESHOLD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, ARG_QUEUE_MIN_THRESHOLD,
       g_param_spec_uint64 ("queue-min-threshold", "Queue min threshold",
           "Buffering low threshold of internal queues in nanoseconds", 0,
-          G_MAXINT64, DEFAULT_QUEUE_MIN_THRESHOLD, G_PARAM_READWRITE));
+          G_MAXINT64, DEFAULT_QUEUE_MIN_THRESHOLD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, ARG_NSTREAMS,
       g_param_spec_int ("nstreams", "NStreams", "number of streams",
-          0, G_MAXINT, 0, G_PARAM_READABLE));
+          0, G_MAXINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, ARG_STREAMINFO,
       g_param_spec_pointer ("stream-info", "Stream info", "List of streaminfo",
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, ARG_STREAMINFO_VALUES,
       g_param_spec_value_array ("stream-info-value-array",
           "StreamInfo GValueArray", "value array of streaminfo",
           g_param_spec_object ("streaminfo", "StreamInfo", "Streaminfo object",
-              GST_TYPE_STREAM_INFO, G_PARAM_READABLE), G_PARAM_READABLE));
+              GST_TYPE_STREAM_INFO, G_PARAM_READABLE),
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, ARG_SOURCE,
       g_param_spec_object ("source", "Source", "Source element",
-          GST_TYPE_ELEMENT, G_PARAM_READABLE));
+          GST_TYPE_ELEMENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, ARG_VIDEO,
       g_param_spec_int ("current-video", "Current video",
           "Currently playing video stream (-1 = none)",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE));
+          -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, ARG_AUDIO,
       g_param_spec_int ("current-audio", "Current audio",
           "Currently playing audio stream (-1 = none)",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE));
+          -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, ARG_TEXT,
       g_param_spec_int ("current-text", "Current text",
           "Currently playing text stream (-1 = none)",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE));
+          -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, ARG_SUBTITLE_ENCODING,
       g_param_spec_string ("subtitle-encoding", "subtitle encoding",
           "Encoding to assume if input subtitles are not in UTF-8 encoding. "
           "If not set, the GST_SUBTITLE_ENCODING environment variable will "
           "be checked for an encoding to use. If that is not set either, "
-          "ISO-8859-15 will be assumed.", NULL, G_PARAM_READWRITE));
+          "ISO-8859-15 will be assumed.", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstPlayBin::connection-speed
    *
@@ -206,7 +210,8 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   g_object_class_install_property (gobject_klass, ARG_CONNECTION_SPEED,
       g_param_spec_uint ("connection-speed", "Connection Speed",
           "Network connection speed in kbps (0 = unknown)",
-          0, G_MAXUINT, DEFAULT_CONNECTION_SPEED, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_CONNECTION_SPEED,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gst_play_base_bin_debug, "playbasebin", 0,
       "playbasebin");
@@ -1241,7 +1246,7 @@ preroll_unlinked (GstPad * pad, GstPad * peerpad,
 
   /* make a fakesrc that will just emit one EOS */
   fakesrc = gst_element_factory_make ("fakesrc", NULL);
-  g_object_set (G_OBJECT (fakesrc), "num_buffers", 0, NULL);
+  g_object_set (G_OBJECT (fakesrc), "num-buffers", 0, NULL);
 
   GST_DEBUG ("patching unlinked pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 

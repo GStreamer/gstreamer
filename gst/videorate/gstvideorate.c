@@ -173,24 +173,26 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
 
   g_object_class_install_property (object_class, ARG_IN,
       g_param_spec_uint64 ("in", "In",
-          "Number of input frames", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+          "Number of input frames", 0, G_MAXUINT64, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, ARG_OUT,
-      g_param_spec_uint64 ("out", "Out",
-          "Number of output frames", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+      g_param_spec_uint64 ("out", "Out", "Number of output frames", 0,
+          G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, ARG_DUP,
       g_param_spec_uint64 ("duplicate", "Duplicate",
-          "Number of duplicated frames", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+          "Number of duplicated frames", 0, G_MAXUINT64, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, ARG_DROP,
-      g_param_spec_uint64 ("drop", "Drop",
-          "Number of dropped frames", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+      g_param_spec_uint64 ("drop", "Drop", "Number of dropped frames", 0,
+          G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, ARG_SILENT,
       g_param_spec_boolean ("silent", "silent",
-          "Don't emit notify for dropped and duplicated frames",
-          DEFAULT_SILENT, G_PARAM_READWRITE));
+          "Don't emit notify for dropped and duplicated frames", DEFAULT_SILENT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, ARG_NEW_PREF,
-      g_param_spec_double ("new_pref", "New Pref",
-          "Value indicating how much to prefer new frames (unused)",
-          0.0, 1.0, DEFAULT_NEW_PREF, G_PARAM_READWRITE));
+      g_param_spec_double ("new-pref", "New Pref",
+          "Value indicating how much to prefer new frames (unused)", 0.0, 1.0,
+          DEFAULT_NEW_PREF, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = gst_video_rate_change_state;
 }

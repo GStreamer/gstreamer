@@ -128,7 +128,7 @@ gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
   g_object_class_install_property (gobject_class, PROP_QUEUE_DELAY,
       g_param_spec_uint ("queue-delay", "Queue Delay",
           "Amount of ms to queue/buffer, deprecated", 0, G_MAXUINT,
-          DEFAULT_QUEUE_DELAY, G_PARAM_READWRITE));
+          DEFAULT_QUEUE_DELAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
   gstelement_class->change_state = gst_base_rtp_depayload_change_state;

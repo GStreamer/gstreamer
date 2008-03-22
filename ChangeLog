@@ -1,5 +1,82 @@
 2008-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* configure.ac:
+	* ext/alsa/gstalsamixerelement.c:
+	(gst_alsa_mixer_element_class_init):
+	* ext/alsa/gstalsasink.c: (gst_alsasink_class_init):
+	* ext/alsa/gstalsasrc.c: (gst_alsasrc_class_init):
+	* ext/cdparanoia/gstcdparanoiasrc.c:
+	(gst_cd_paranoia_src_class_init):
+	* ext/gio/gstgiosink.c: (gst_gio_sink_class_init):
+	* ext/gio/gstgiosrc.c: (gst_gio_src_class_init):
+	* ext/gio/gstgiostreamsink.c: (gst_gio_stream_sink_class_init):
+	* ext/gio/gstgiostreamsrc.c: (gst_gio_stream_src_class_init):
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnome_vfs_sink_class_init):
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_class_init):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_class_init):
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_class_init):
+	* ext/pango/gsttextrender.c: (gst_text_render_class_init):
+	* ext/theora/theoradec.c: (gst_theora_dec_class_init):
+	* ext/theora/theoraenc.c: (gst_theora_enc_class_init):
+	* ext/theora/theoraparse.c: (gst_theora_parse_class_init):
+	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_class_init):
+	* gst-libs/gst/audio/gstaudiofiltertemplate.c:
+	(gst_audio_filter_template_class_init):
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_class_init):
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_class_init):
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	(gst_cdda_base_src_class_init):
+	* gst-libs/gst/interfaces/mixertrack.c:
+	(gst_mixer_track_class_init):
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_class_init):
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_class_init):
+	* gst/audioconvert/gstaudioconvert.c:
+	(gst_audio_convert_class_init):
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_class_init):
+	* gst/audioresample/gstaudioresample.c:
+	(gst_audioresample_class_init):
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	(gst_audio_test_src_class_init):
+	* gst/gdp/gstgdppay.c: (gst_gdp_pay_class_init):
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_class_init):
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),
+	(preroll_unlinked):
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init):
+	* gst/playback/gstplaybin2.c: (gst_play_bin_class_init):
+	* gst/playback/gstplaysink.c: (gst_play_sink_class_init):
+	* gst/playback/gstqueue2.c: (gst_queue_class_init):
+	* gst/playback/gststreaminfo.c: (gst_stream_info_class_init):
+	* gst/playback/gststreamselector.c: (gst_selector_pad_class_init),
+	(gst_stream_selector_class_init):
+	* gst/playback/gsturidecodebin.c: (gst_uri_decode_bin_class_init):
+	* gst/subparse/gstsubparse.c: (gst_sub_parse_class_init):
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init):
+	* gst/tcp/gsttcpclientsink.c: (gst_tcp_client_sink_class_init):
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcp_client_src_class_init):
+	* gst/tcp/gsttcpserversink.c: (gst_tcp_server_sink_class_init):
+	* gst/tcp/gsttcpserversrc.c: (gst_tcp_server_src_class_init):
+	* gst/videorate/gstvideorate.c: (gst_video_rate_class_init):
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_class_init):
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_video_test_src_class_init):
+	* gst/volume/gstvolume.c: (gst_volume_class_init):
+	* sys/v4l/gstv4lelement.c: (gst_v4lelement_class_init):
+	* sys/v4l/gstv4lmjpegsink.c: (gst_v4lmjpegsink_class_init):
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_class_init):
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_class_init):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_class_init):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_class_init):
+	Use G_PARAM_STATIC_STRINGS everywhere for GParamSpecs that use
+	static strings (i.e. all). This gives us less memory usage,
+	fewer allocations and thus less memory defragmentation. Depend
+	on core CVS for this. Fixes bug #523806.
+
+2008-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/gio/gstgio.c: (gst_gio_get_supported_protocols):
 	Filter http and https protocols. GIO/GVfs handles them but it's
 	impossible to implement iradio/icecast with it. Better use

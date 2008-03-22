@@ -135,24 +135,25 @@ gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUMBUFS,
       g_param_spec_int ("num-buffers", "num-buffers", "num-buffers",
-          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
       g_param_spec_int ("buffer-size", "buffer-size", "buffer-size",
-          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_X_OFFSET,
       g_param_spec_int ("x-offset", "x-offset", "x-offset",
-          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
+          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_Y_OFFSET,
       g_param_spec_int ("y-offset", "y-offset", "y-offset",
-          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
+          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAMES_DISPLAYED,
       g_param_spec_int ("frames-displayed", "frames-displayed",
-          "frames-displayed", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+          "frames-displayed", G_MININT, G_MAXINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME_TIME,
       g_param_spec_int ("frame-time", "frame-time", "frame-time", G_MININT,
-          G_MAXINT, 0, G_PARAM_READABLE));
+          G_MAXINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (v4lmjpegsink_debug, "v4lmjpegsink", 0,
       "V4L MJPEG sink element");

@@ -234,12 +234,12 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
           "ALSA device, as defined in an asound configuration file",
-          DEFAULT_PROP_DEVICE, G_PARAM_READWRITE));
+          DEFAULT_PROP_DEVICE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the sound device",
-          DEFAULT_PROP_DEVICE_NAME, G_PARAM_READABLE));
+          DEFAULT_PROP_DEVICE_NAME, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

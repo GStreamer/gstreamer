@@ -170,7 +170,8 @@ gst_sub_parse_class_init (GstSubParseClass * klass)
           "Encoding to assume if input subtitles are not in UTF-8 encoding. "
           "If not set, the GST_SUBTITLE_ENCODING environment variable will "
           "be checked for an encoding to use. If that is not set either, "
-          "ISO-8859-15 will be assumed.", DEFAULT_ENCODING, G_PARAM_READWRITE));
+          "ISO-8859-15 will be assumed.", DEFAULT_ENCODING,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

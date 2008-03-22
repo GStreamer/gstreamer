@@ -175,22 +175,25 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_BUFFER_TIME,
       g_param_spec_int64 ("buffer-time", "Buffer Time",
           "Size of audio buffer in microseconds", 1,
-          G_MAXINT64, DEFAULT_BUFFER_TIME, G_PARAM_READWRITE));
+          G_MAXINT64, DEFAULT_BUFFER_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_LATENCY_TIME,
       g_param_spec_int64 ("latency-time", "Latency Time",
           "Audio latency in microseconds", 1,
-          G_MAXINT64, DEFAULT_LATENCY_TIME, G_PARAM_READWRITE));
+          G_MAXINT64, DEFAULT_LATENCY_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PROVIDE_CLOCK,
       g_param_spec_boolean ("provide-clock", "Provide Clock",
           "Provide a clock to be used as the global pipeline clock",
-          DEFAULT_PROVIDE_CLOCK, G_PARAM_READWRITE));
+          DEFAULT_PROVIDE_CLOCK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SLAVE_METHOD,
       g_param_spec_enum ("slave-method", "Slave Method",
           "Algorithm to use to match the rate of the masterclock",
-          GST_TYPE_SLAVE_METHOD, DEFAULT_SLAVE_METHOD, G_PARAM_READWRITE));
+          GST_TYPE_SLAVE_METHOD, DEFAULT_SLAVE_METHOD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_change_state);

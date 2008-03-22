@@ -153,7 +153,8 @@ gst_theora_parse_class_init (GstTheoraParseClass * klass)
           "An array of (granuletime, buffertime) pairs",
           g_param_spec_uint64 ("time", "Time",
               "Time (either granuletime or buffertime)", 0, G_MAXUINT64, 0,
-              G_PARAM_READWRITE), (GParamFlags) G_PARAM_READWRITE));
+              G_PARAM_READWRITE),
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = theora_parse_change_state;
 

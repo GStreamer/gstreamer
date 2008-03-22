@@ -165,11 +165,12 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
   g_object_class_install_property (gobject_class, PROP_PAD_TAGS,
       g_param_spec_boxed ("tags", "Tags",
           "The currently active tags on the pad", GST_TYPE_TAG_LIST,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PAD_ACTIVE,
       g_param_spec_boolean ("active", "Active",
-          "If the pad is currently active", FALSE, G_PARAM_READABLE));
+          "If the pad is currently active", FALSE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -511,10 +512,12 @@ gst_stream_selector_class_init (GstStreamSelectorClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_N_PADS,
       g_param_spec_uint ("n-pads", "Number of Pads",
-          "The number of sink pads", 0, G_MAXUINT, 0, G_PARAM_READABLE));
+          "The number of sink pads", 0, G_MAXUINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ACTIVE_PAD,
       g_param_spec_object ("active-pad", "Active Pad",
-          "The currently active sink pad", GST_TYPE_PAD, G_PARAM_READWRITE));
+          "The currently active sink pad", GST_TYPE_PAD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad = gst_stream_selector_request_new_pad;
   gstelement_class->release_pad = gst_stream_selector_release_pad;

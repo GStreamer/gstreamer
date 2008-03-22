@@ -220,50 +220,54 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
   g_object_class_install_property (gobject_class, ARG_CENTER,
       g_param_spec_boolean ("center", "Center",
           "Center image when sizes not multiple of 16", THEORA_DEF_CENTER,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_BORDER,
       g_param_spec_enum ("border", "Border",
           "Border color to add when sizes not multiple of 16",
           GST_TYPE_BORDER_MODE, THEORA_DEF_BORDER,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* general encoding stream options */
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Compressed video bitrate (kbps)",
-          0, 2000, THEORA_DEF_BITRATE, (GParamFlags) G_PARAM_READWRITE));
+          0, 2000, THEORA_DEF_BITRATE,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_QUALITY,
-      g_param_spec_int ("quality", "Quality", "Video quality",
-          0, 63, THEORA_DEF_QUALITY, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("quality", "Quality", "Video quality", 0, 63,
+          THEORA_DEF_QUALITY,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_QUICK,
       g_param_spec_boolean ("quick", "Quick", "Quick encoding",
-          THEORA_DEF_QUICK, (GParamFlags) G_PARAM_READWRITE));
+          THEORA_DEF_QUICK,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_KEYFRAME_AUTO,
       g_param_spec_boolean ("keyframe-auto", "Keyframe Auto",
           "Automatic keyframe detection", THEORA_DEF_KEYFRAME_AUTO,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_KEYFRAME_FREQ,
       g_param_spec_int ("keyframe-freq", "Keyframe frequency",
           "Keyframe frequency", 1, 32768, THEORA_DEF_KEYFRAME_FREQ,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_KEYFRAME_FREQ_FORCE,
       g_param_spec_int ("keyframe-force", "Keyframe force",
           "Force keyframe every N frames", 1, 32768,
-          THEORA_DEF_KEYFRAME_FREQ_FORCE, (GParamFlags) G_PARAM_READWRITE));
+          THEORA_DEF_KEYFRAME_FREQ_FORCE,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_KEYFRAME_THRESHOLD,
       g_param_spec_int ("keyframe-threshold", "Keyframe threshold",
           "Keyframe threshold", 0, 32768, THEORA_DEF_KEYFRAME_THRESHOLD,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_KEYFRAME_MINDISTANCE,
       g_param_spec_int ("keyframe-mindistance", "Keyframe mindistance",
           "Keyframe mindistance", 1, 32768, THEORA_DEF_KEYFRAME_MINDISTANCE,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_NOISE_SENSITIVITY,
       g_param_spec_int ("noise-sensitivity", "Noise sensitivity",
           "Noise sensitivity", 0, 32768, THEORA_DEF_NOISE_SENSITIVITY,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_SHARPNESS,
-      g_param_spec_int ("sharpness", "Sharpness",
-          "Sharpness", 0, 2, THEORA_DEF_SHARPNESS,
-          (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("sharpness", "Sharpness", "Sharpness", 0, 2,
+          THEORA_DEF_SHARPNESS,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = theora_enc_change_state;
   GST_DEBUG_CATEGORY_INIT (theoraenc_debug, "theoraenc", 0, "Theora encoder");

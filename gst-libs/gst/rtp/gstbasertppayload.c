@@ -159,28 +159,31 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MTU,
       g_param_spec_uint ("mtu", "MTU",
           "Maximum size of one packet",
-          28, G_MAXUINT, DEFAULT_MTU, G_PARAM_READWRITE));
+          28, G_MAXUINT, DEFAULT_MTU,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PT,
       g_param_spec_uint ("pt", "payload type",
-          "The payload type of the packets",
-          0, 0x80, DEFAULT_PT, G_PARAM_READWRITE));
+          "The payload type of the packets", 0, 0x80, DEFAULT_PT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SSRC,
       g_param_spec_uint ("ssrc", "SSRC",
-          "The SSRC of the packets (default == random)",
-          0, G_MAXUINT32, DEFAULT_SSRC, G_PARAM_READWRITE));
+          "The SSRC of the packets (default == random)", 0, G_MAXUINT32,
+          DEFAULT_SSRC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_TIMESTAMP_OFFSET, g_param_spec_uint ("timestamp-offset",
           "Timestamp Offset",
           "Offset to add to all outgoing timestamps (default = random)", 0,
-          G_MAXUINT32, DEFAULT_TIMESTAMP_OFFSET, G_PARAM_READWRITE));
+          G_MAXUINT32, DEFAULT_TIMESTAMP_OFFSET,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM_OFFSET,
       g_param_spec_int ("seqnum-offset", "Sequence number Offset",
           "Offset to add to all outgoing seqnum (-1 = random)", -1, G_MAXUINT16,
-          DEFAULT_SEQNUM_OFFSET, G_PARAM_READWRITE));
+          DEFAULT_SEQNUM_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_PTIME,
       g_param_spec_int64 ("max-ptime", "Max packet time",
           "Maximum duration of the packet data in ns (-1 = unlimited up to MTU)",
-          -1, G_MAXINT64, DEFAULT_MAX_PTIME, G_PARAM_READWRITE));
+          -1, G_MAXINT64, DEFAULT_MAX_PTIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstBaseRTPAudioPayload:min-ptime:
    *
@@ -191,16 +194,17 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MIN_PTIME,
       g_param_spec_int64 ("min-ptime", "Min packet time",
           "Minimum duration of the packet data in ns (can't go above MTU)",
-          0, G_MAXINT64, DEFAULT_MIN_PTIME, G_PARAM_READWRITE));
+          0, G_MAXINT64, DEFAULT_MIN_PTIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMESTAMP,
       g_param_spec_uint ("timestamp", "Timestamp",
           "The RTP timestamp of the last processed packet",
-          0, G_MAXUINT32, 0, G_PARAM_READABLE));
+          0, G_MAXUINT32, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM,
       g_param_spec_uint ("seqnum", "Sequence number",
           "The RTP sequence number of the last processed packet",
-          0, G_MAXUINT16, 0, G_PARAM_READABLE));
+          0, G_MAXUINT16, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_basertppayload_change_state;
 

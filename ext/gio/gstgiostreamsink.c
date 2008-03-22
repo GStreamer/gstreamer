@@ -129,7 +129,7 @@ gst_gio_stream_sink_class_init (GstGioStreamSinkClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_STREAM,
       g_param_spec_object ("stream", "Stream", "Stream to write to",
-          G_TYPE_OUTPUT_STREAM, G_PARAM_READWRITE));
+          G_TYPE_OUTPUT_STREAM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
