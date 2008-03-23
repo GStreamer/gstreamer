@@ -279,8 +279,6 @@ setup_gdpdepay_streamheader (void)
   return gdpdepay;
 }
 
-#ifndef HAVE_CPU_PPC64          /* Test known to fail on PPC64. See #348114 */
-
 /* this tests deserialization of a GDP stream where the serialized caps
  * have a streamheader set */
 GST_START_TEST (test_streamheader)
@@ -398,8 +396,6 @@ GST_START_TEST (test_streamheader)
 
 GST_END_TEST;
 
-#endif /* ifndef HAVE_CPU_PPC64 */
-
 static Suite *
 gdpdepay_suite (void)
 {
@@ -409,9 +405,14 @@ gdpdepay_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_audio_per_byte);
   tcase_add_test (tc_chain, test_audio_in_one_buffer);
-#ifndef HAVE_CPU_PPC64          /* Test known to fail on PPC64. See #348114 */
-  tcase_add_test (tc_chain, test_streamheader);
+
+#ifdef HAVE_CPU_PPC64           /* Test known to fail on PPC64. See #348114 */
+  g_print ("\n\n***** skipping test test_streamheader.  May fail "
+      "on PPC due to a compiler bug. See bug #348114 for details\n\n\n");
+  if (0)                        /* this avoids the 'function not used' warning */
 #endif
+    tcase_add_test (tc_chain, test_streamheader);
+
   return s;
 }
 
