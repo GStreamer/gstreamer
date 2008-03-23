@@ -1,5 +1,11 @@
 2008-03-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/goom/Makefile.am:
+	  Remove ppc assembler optimisations from the build until they
+	  actually build (they also seem to have GPL headers).
+
+2008-03-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* m4/Makefile.am:
 	  Better not dist files that don't exist any longer (lrint*m4).
 

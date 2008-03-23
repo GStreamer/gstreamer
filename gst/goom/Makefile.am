@@ -4,10 +4,14 @@ PPC_FILES=ppc_zoom_ultimate.s ppc_drawings.s ppc_drawings.h ppc_zoom_ultimate.h
 MMX_FILES=mmx.c xmmx.c mmx.h xmmx.h
 
 if HAVE_CPU_PPC
-ARCH_FILES = $(PPC_FILES)
+# disable until someone figures out how to build these correctly on ppc
+#ARCH_FILES = $(PPC_FILES)
+ARCH_FILES =
 endif
 if HAVE_CPU_PPC64
-ARCH_FILES = $(PPC_FILES)
+# disable until someone figures out how to build these correctly on ppc
+#ARCH_FILES = $(PPC_FILES)
+ARCH_FILES =
 endif
 if HAVE_CPU_I386
 ARCH_FILES = $(MMX_FILES)
