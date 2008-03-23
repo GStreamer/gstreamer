@@ -1,3 +1,8 @@
+2008-03-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* ChangeLog:
+	  ChangeLog surgery to add bugnumber to commit.
+
 2008-03-23  Rene Stadler  <mail@renestadler.de>
 
 	* libs/gst/base/gstbasetransform.c:
@@ -911,7 +916,7 @@
 	* gst/parse/grammar.y:
 	* gst/parse/lex._gst_parse_yy.pre.c:
 	  Add delayed set-property. This allows to set properties on dynamicaly
-	  created objects (pads in videomxer).
+	  created objects (pads in videomxer). Fixes #509391.
 
 2008-02-01  Thijs Vermeir  <thijsvermeir@gmail.com>
 
