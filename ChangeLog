@@ -1,3 +1,8 @@
+2008-03-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/elements/gdpdepay.c:
+	  Make test compile without unused function/variable warnings on PPC.
+ 
 2008-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
