@@ -1956,12 +1956,13 @@ gst_base_transform_is_qos_enabled (GstBaseTransform * trans)
  * @trans: a #GstBaseTransform
  * @gap_aware: New state
  *
- * If @gap_aware is %FALSE (as it is by default) subclasses will never get
- * output buffers with the %GST_BUFFER_FLAG_GAP flag set.
+ * If @gap_aware is %FALSE (the default), output buffers will have the
+ * %GST_BUFFER_FLAG_GAP flag unset.
  *
- * If set to %TRUE elements must handle output buffers with this flag set
- * correctly, i.e. they can assume that the buffer contains neutral data
- * but must unset the flag if the output is no neutral data.
+ * If set to %TRUE, the element must handle output buffers with this flag set
+ * correctly, i.e. it can assume that the buffer contains neutral data but must
+ * unset the flag if the output is no neutral data.
+ *
  * Since: 0.10.16
  *
  * MT safe.
