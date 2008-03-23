@@ -34,8 +34,6 @@ EXTRA_DIST = \
 	lib-link.m4 \
 	libmikmod.m4 \
 	lib-prefix.m4 \
-	lrintf.m4 \
-	lrint.m4 \
 	ogg.m4 \
 	progtest.m4 \
 	stdint_h.m4 \
