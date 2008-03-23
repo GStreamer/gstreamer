@@ -99,7 +99,7 @@ gst_gio_get_supported_protocols (void)
   const gchar *const *schemes;
   gchar **our_schemes;
   guint num;
-  gint i;
+  gint i, j;
 
   schemes = g_vfs_get_supported_uri_schemes (g_vfs_get_default ());
   num = g_strv_length ((gchar **) schemes);
@@ -109,11 +109,12 @@ gst_gio_get_supported_protocols (void)
   /* Filter http/https as we can't support the icy stuff with GIO.
    * Use souphttpsrc if you need that!
    */
-  for (i = 0; i < num; i++) {
+  for (i = 0, j = 0; i < num; i++) {
     if (strcmp (schemes[i], "http") == 0 || strcmp (schemes[i], "https") == 0)
       continue;
 
-    our_schemes[i] = g_strdup (schemes[i]);
+    our_schemes[j] = g_strdup (schemes[i]);
+    j++;
   }
 
   return our_schemes;
