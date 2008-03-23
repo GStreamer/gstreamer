@@ -57,7 +57,7 @@
  * This _must_ be updated whenever the registry format changes,
  * we currently use the core version where this change happened.
  */
-#define GST_MAGIC_BINARY_VERSION_STR ("0.10.18")
+#define GST_MAGIC_BINARY_VERSION_STR ("0.10.18.1")
 
 /*
  * GST_MAGIC_BINARY_VERSION_LEN:

@@ -1,3 +1,18 @@
+2008-03-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_write),
+	(gst_registry_binary_check_magic),
+	(gst_registry_binary_load_pad_template),
+	(gst_registry_binary_load_feature),
+	(gst_registry_binary_load_plugin):
+	Align memory to the pointer size instead of always 32 bit. Fixes
+	unaligned memory accesses on ia64 and friends.
+
+	* gst/gstregistrybinary.h:
+	Bump binary registry format version for this as it changes the
+	format on those architectures that don't have unaligned access
+	and 64 bit pointers.
+
 2008-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/pwg/advanced-dparams.xml:

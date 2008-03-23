@@ -77,7 +77,7 @@
 /* macros */
 
 #define unpack_element(_inptr, _outptr, _element)  \
-  _outptr = (_element *)_inptr; \
+  _outptr = (_element *) _inptr; \
   _inptr += sizeof (_element)
 
 #define unpack_const_string(_inptr, _outptr) \
@@ -89,11 +89,13 @@
   _inptr += strlen(_outptr) + 1
 
 #if !GST_HAVE_UNALIGNED_ACCESS
-#  define alignment32(_address)  (gsize)_address%4
-#  define align32(_ptr)          _ptr += (( alignment32(_ptr) == 0) ? 0 : 4-alignment32(_ptr))
+#  define ALIGNMENT             (sizeof (void *))
+#  define alignment(_address)  (gsize)_address%ALIGNMENT
+#  define align(_ptr)          _ptr += (( alignment(_ptr) == 0) ? 0 : ALIGNMENT-alignment(_ptr))
 #else
-#  define alignment32(_address)  0
-#  define align32(_ptr)          do {} while(0)
+#  define ALIGNMENT            0
+#  define alignment(_address)  0
+#  define align(_ptr)          do {} while(0)
 #endif
 
 
@@ -111,12 +113,12 @@ gst_registry_binary_write (GstRegistry * registry, const void *mem,
     const gssize size, unsigned long *file_position, gboolean align)
 {
 #if !GST_HAVE_UNALIGNED_ACCESS
-  gchar padder[] = { 0, 0, 0, 0 };
+  gchar padder[ALIGN] = { 0, };
   int padsize = 0;
 
   /* Padding to insert the struct that requiere word alignment */
-  if ((align) && (alignment32 (*file_position) != 0)) {
-    padsize = 4 - alignment32 (*file_position);
+  if ((align) && (alignment (*file_position) != 0)) {
+    padsize = ALIGNMENT - alignment (*file_position);
     if (write (registry->cache_file, padder, padsize) != padsize) {
       GST_ERROR ("Failed to write binary registry padder");
       return FALSE;
@@ -606,7 +608,7 @@ gst_registry_binary_check_magic (gchar ** in)
 {
   GstBinaryRegistryMagic *m;
 
-  align32 (*in);
+  align (*in);
   GST_DEBUG ("Reading/casting for GstBinaryRegistryMagic at address %p", *in);
   unpack_element (*in, m, GstBinaryRegistryMagic);
 
@@ -648,7 +650,7 @@ gst_registry_binary_load_pad_template (GstElementFactory * factory, gchar ** in)
   GstBinaryPadTemplate *pt;
   GstStaticPadTemplate *template;
 
-  align32 (*in);
+  align (*in);
   GST_DEBUG ("Reading/casting for GstBinaryPadTemplate at address %p", *in);
   unpack_element (*in, pt, GstBinaryPadTemplate);
 
@@ -714,7 +716,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
     GstBinaryElementFactory *ef;
     GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
 
-    align32 (*in);
+    align (*in);
     GST_LOG ("Reading/casting for GstBinaryElementFactory at address %p", *in);
     unpack_element (*in, ef, GstBinaryElementFactory);
     pf = (GstBinaryPluginFeature *) ef;
@@ -739,7 +741,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
     if (ef->nuriprotocols) {
       GST_DEBUG ("Reading %d UriTypes at address %p", ef->nuriprotocols, *in);
 
-      align32 (*in);
+      align (*in);
       factory->uri_type = *((guint *) * in);
       *in += sizeof (factory->uri_type);
       //unpack_element(*in, &factory->uri_type, factory->uri_type);
@@ -761,7 +763,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
     GstBinaryTypeFindFactory *tff;
     GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
 
-    align32 (*in);
+    align (*in);
     GST_DEBUG ("Reading/casting for GstBinaryPluginFeature at address %p", *in);
     unpack_element (*in, tff, GstBinaryTypeFindFactory);
     pf = (GstBinaryPluginFeature *) tff;
@@ -785,7 +787,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
   else if (GST_IS_INDEX_FACTORY (feature)) {
     GstIndexFactory *factory = GST_INDEX_FACTORY (feature);
 
-    align32 (*in);
+    align (*in);
     GST_DEBUG ("Reading/casting for GstBinaryPluginFeature at address %p", *in);
     unpack_element (*in, pf, GstBinaryPluginFeature);
 
@@ -830,7 +832,7 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
   GstPlugin *plugin = NULL;
   guint i;
 
-  align32 (*in);
+  align (*in);
   GST_LOG ("Reading/casting for GstBinaryPluginElement at address %p", *in);
   unpack_element (*in, pe, GstBinaryPluginElement);
 
