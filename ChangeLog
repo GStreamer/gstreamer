@@ -1,5 +1,12 @@
 2008-03-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/gstregistrybinary.c: (gst_registry_binary_write):
+	Align memory to the pointer size even if the architecture allows
+	unaligned memory access. Unaligned memory access usually comes with
+	performance penality.
+
+2008-03-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/gstregistrybinary.c: (gst_registry_binary_write),
 	(gst_registry_binary_check_magic),
 	(gst_registry_binary_load_pad_template),

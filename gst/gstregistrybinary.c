@@ -88,15 +88,9 @@
   _outptr = g_strdup ((gchar *)_inptr); \
   _inptr += strlen(_outptr) + 1
 
-#if !GST_HAVE_UNALIGNED_ACCESS
-#  define ALIGNMENT             (sizeof (void *))
-#  define alignment(_address)  (gsize)_address%ALIGNMENT
-#  define align(_ptr)          _ptr += (( alignment(_ptr) == 0) ? 0 : ALIGNMENT-alignment(_ptr))
-#else
-#  define ALIGNMENT            0
-#  define alignment(_address)  0
-#  define align(_ptr)          do {} while(0)
-#endif
+#define ALIGNMENT            (sizeof (void *))
+#define alignment(_address)  (gsize)_address%ALIGNMENT
+#define align(_ptr)          _ptr += (( alignment(_ptr) == 0) ? 0 : ALIGNMENT-alignment(_ptr))
 
 
 /* Registry saving */
@@ -112,7 +106,6 @@ inline static gboolean
 gst_registry_binary_write (GstRegistry * registry, const void *mem,
     const gssize size, unsigned long *file_position, gboolean align)
 {
-#if !GST_HAVE_UNALIGNED_ACCESS
   gchar padder[ALIGN] = { 0, };
   int padsize = 0;
 
@@ -125,7 +118,6 @@ gst_registry_binary_write (GstRegistry * registry, const void *mem,
     }
     *file_position = *file_position + padsize;
   }
-#endif
 
   if (write (registry->cache_file, mem, size) != size) {
     GST_ERROR ("Failed to write binary registry element");
