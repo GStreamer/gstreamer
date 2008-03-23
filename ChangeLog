@@ -1,6 +1,11 @@
 2008-03-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_write):
+	Rename constant everywhere and don't forget one occurence.
+
+2008-03-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_write):
 	Align memory to the pointer size even if the architecture allows
 	unaligned memory access. Unaligned memory access usually comes with
 	performance penality.

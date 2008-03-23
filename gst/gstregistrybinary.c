@@ -106,7 +106,7 @@ inline static gboolean
 gst_registry_binary_write (GstRegistry * registry, const void *mem,
     const gssize size, unsigned long *file_position, gboolean align)
 {
-  gchar padder[ALIGN] = { 0, };
+  gchar padder[ALIGNMENT] = { 0, };
   int padsize = 0;
 
   /* Padding to insert the struct that requiere word alignment */
