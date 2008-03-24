@@ -2,6 +2,18 @@
 
 	Patch by: Mark Nauwelaerts <manauw at skynet be>
 
+	* plugins/elements/gstidentity.c: (gst_identity_class_init),
+	(gst_identity_init), (gst_identity_prepare_output_buffer):
+	Identity is not always a passthrough element, it can modify the buffer
+	timestamps when it has a datarate and operates in single-segment mode.
+	We therefore make it an in_place filter with a custom buffer prepare
+	function that conditionally makes the input buffer metadata writable
+	when needed.  Fixes #523985.
+
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
 	* gst/gstclock.h:
 	* libs/gst/base/gstbasesrc.h:
 	* libs/gst/base/gstbasetransform.c:

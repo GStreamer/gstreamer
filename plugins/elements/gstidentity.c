@@ -107,6 +107,9 @@ static void gst_identity_get_property (GObject * object, guint prop_id,
 static gboolean gst_identity_event (GstBaseTransform * trans, GstEvent * event);
 static GstFlowReturn gst_identity_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
+static GstFlowReturn gst_identity_prepare_output_buffer (GstBaseTransform
+    * trans, GstBuffer * in_buf, gint out_size, GstCaps * out_caps,
+    GstBuffer ** out_buf);
 static gboolean gst_identity_start (GstBaseTransform * trans);
 static gboolean gst_identity_stop (GstBaseTransform * trans);
 
@@ -267,6 +270,8 @@ gst_identity_class_init (GstIdentityClass * klass)
   gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_identity_event);
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_identity_transform_ip);
+  gstbasetrans_class->prepare_output_buffer =
+      GST_DEBUG_FUNCPTR (gst_identity_prepare_output_buffer);
   gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_identity_start);
   gstbasetrans_class->stop = GST_DEBUG_FUNCPTR (gst_identity_stop);
 }
@@ -274,8 +279,6 @@ gst_identity_class_init (GstIdentityClass * klass)
 static void
 gst_identity_init (GstIdentity * identity, GstIdentityClass * g_class)
 {
-  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (identity), TRUE);
-
   identity->sleep_time = DEFAULT_SLEEP_TIME;
   identity->error_after = DEFAULT_ERROR_AFTER;
   identity->drop_probability = DEFAULT_DROP_PROBABILITY;
@@ -347,6 +350,28 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
   }
 
   return ret;
+}
+
+static GstFlowReturn
+gst_identity_prepare_output_buffer (GstBaseTransform * trans,
+    GstBuffer * in_buf, gint out_size, GstCaps * out_caps, GstBuffer ** out_buf)
+{
+  GstIdentity *identity = GST_IDENTITY (trans);
+
+  /* only bother if we may have to alter metadata */
+  if (identity->datarate > 0 || identity->single_segment) {
+    if (gst_buffer_is_metadata_writable (in_buf))
+      *out_buf = gst_buffer_ref (in_buf);
+    else {
+      /* make even less writable */
+      gst_buffer_ref (in_buf);
+      /* extra ref is dropped going through the official process */
+      *out_buf = gst_buffer_make_metadata_writable (in_buf);
+    }
+  } else
+    *out_buf = gst_buffer_ref (in_buf);
+
+  return GST_FLOW_OK;
 }
 
 static void
