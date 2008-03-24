@@ -533,7 +533,7 @@ gst_check_element_push_buffer_list (const gchar * element_name,
 
 /**
  * gst_check_element_push_buffer:
- * @element: name of the element that needs to be created
+ * @element_name: name of the element that needs to be created
  * @buffer_in: push this buffer to the element
  * @buffer_out: compare the result with this buffer
  *

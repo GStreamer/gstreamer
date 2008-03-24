@@ -118,6 +118,7 @@ typedef gpointer GstClockID;
 #define GST_TIME_AS_SECONDS(time)  ((time) / GST_SECOND)
 /**
  * GST_TIME_AS_MSECONDS:
+ * @time: the time
  *
  * Convert a #GstClockTime to milliseconds (1/1000 of a second).
  *
@@ -126,6 +127,7 @@ typedef gpointer GstClockID;
 #define GST_TIME_AS_MSECONDS(time) ((time) / G_GINT64_CONSTANT (1000000))
 /**
  * GST_TIME_TO_USECONDS:
+ * @time: the time
  *
  * Convert a #GstClockTime to microseconds (1/1000000 of a second).
  *
@@ -134,6 +136,7 @@ typedef gpointer GstClockID;
 #define GST_TIME_AS_USECONDS(time) ((time) / G_GINT64_CONSTANT (1000))
 /**
  * GST_TIME_TO_NSECONDS:
+ * @time: the time
  *
  * Convert a #GstClockTime to nanoseconds (1/1000000000 of a second).
  *

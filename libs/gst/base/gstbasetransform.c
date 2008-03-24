@@ -1817,7 +1817,7 @@ gst_base_transform_is_passthrough (GstBaseTransform * trans)
  * to the transform_ip function.
  * <itemizedlist>
  *   <listitem>Always TRUE if no transform function is implemented.</listitem>
- *   <listitem>Always FALSE if ONLY transform_ip function is implemented.</listitem>
+ *   <listitem>Always FALSE if ONLY transform function is implemented.</listitem>
  * </itemizedlist>
  *
  * MT safe.
