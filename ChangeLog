@@ -1,5 +1,12 @@
 2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_connect), (gst_rtsp_connection_write),
+	(gst_rtsp_connection_read_internal), (gst_rtsp_connection_poll):
+	Don't error when poll_wait returns EAGAIN.
+
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstqueue2.c: (gst_queue_is_filled):
 	The queue is never filled when there are no buffers in the queue at all.
 	Fixes #523993.
