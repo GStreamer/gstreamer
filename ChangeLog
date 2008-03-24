@@ -1,3 +1,16 @@
+2008-03-24  Rene Stadler  <mail@renestadler.de>
+
+	* gst/replaygain/gstrganalysis.c (gst_rg_analysis_init),
+	  (gst_rg_analysis_transform_ip):
+	* gst/replaygain/gstrglimiter.c (gst_rg_limiter_init),
+	  (gst_rg_limiter_transform_ip):
+	Make rganalysis and rglimiter elements GAP-flag aware.
+
+	* tests/check/elements/rganalysis.c: (test_gap_buffers),
+	  (rganalysis_suite):
+	* tests/check/elements/rglimiter.c (test_gap), (rglimiter_suite):
+	Add tests to verify gap-awareness.
+
 2008-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_got_headers_cb),

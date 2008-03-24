@@ -129,8 +129,12 @@ gst_rg_limiter_class_init (GstRgLimiterClass * klass)
 static void
 gst_rg_limiter_init (GstRgLimiter * filter, GstRgLimiterClass * gclass)
 {
+  GstBaseTransform *base = GST_BASE_TRANSFORM (filter);
+
+  gst_base_transform_set_passthrough (base, FALSE);
+  gst_base_transform_set_gap_aware (base, TRUE);
+
   filter->enabled = TRUE;
-  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), FALSE);
 }
 
 static void
@@ -180,6 +184,9 @@ gst_rg_limiter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   guint i;
 
   if (!filter->enabled)
+    return GST_FLOW_OK;
+
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
   input = (gfloat *) GST_BUFFER_DATA (buf);
