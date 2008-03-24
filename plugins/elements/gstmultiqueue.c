@@ -1267,7 +1267,7 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
     if (gst_data_queue_is_empty (ssq->queue)) {
       GST_LOG_OBJECT (mq, "Queue %d is empty", ssq->id);
       if (IS_FILLED (visible, size.visible)) {
-        sq->max_size.visible++;
+        sq->max_size.visible = size.visible + 1;
         GST_DEBUG_OBJECT (mq,
             "Another queue is empty, bumping single queue %d max visible to %d",
             sq->id, sq->max_size.visible);
@@ -1321,7 +1321,7 @@ single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
 
       gst_data_queue_get_level (sq->queue, &size);
       if (IS_FILLED (visible, size.visible)) {
-        sq->max_size.visible++;
+        sq->max_size.visible = size.visible + 1;
         GST_DEBUG_OBJECT (mq,
             "queue %d is filled, bumping its max visible to %d", sq->id,
             sq->max_size.visible);

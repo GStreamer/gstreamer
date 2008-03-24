@@ -1,5 +1,14 @@
 2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* plugins/elements/gstmultiqueue.c: (single_queue_overrun_cb),
+	(single_queue_underrun_cb):
+	When trying to make room in the queue, bump the max allowed buffers
+	bigger than the current amount of buffers in the queue. this fixes some
+	nasty deadlocks in multiqueue when dynamically changing the limits of
+	the queue.
+
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by:  José Alburquerque <jaalburqu at svn dot gnome dot org>
 
 	* gst/gstcaps.c: (gst_caps_set_simple),
