@@ -863,7 +863,7 @@ gst_caps_truncate (GstCaps * caps)
  * manner as gst_structure_set(), and be NULL-terminated.
  */
 void
-gst_caps_set_simple (GstCaps * caps, char *field, ...)
+gst_caps_set_simple (GstCaps * caps, const char *field, ...)
 {
   GstStructure *structure;
   va_list var_args;
@@ -890,7 +890,7 @@ gst_caps_set_simple (GstCaps * caps, char *field, ...)
  * manner as gst_structure_set(), and be NULL-terminated.
  */
 void
-gst_caps_set_simple_valist (GstCaps * caps, char *field, va_list varargs)
+gst_caps_set_simple_valist (GstCaps * caps, const char *field, va_list varargs)
 {
   GstStructure *structure;
 

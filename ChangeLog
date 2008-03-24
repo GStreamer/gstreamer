@@ -1,5 +1,15 @@
 2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by:  José Alburquerque <jaalburqu at svn dot gnome dot org>
+
+	* gst/gstcaps.c: (gst_caps_set_simple),
+	(gst_caps_set_simple_valist), (gst_caps_intersect):
+	* gst/gstcaps.h:
+	Constify the field gchar * params in set_simple and friends.
+	Fixes #522326.
+
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstvalue.c: (gst_value_transform_object_string):
 	Transform a GstObject to a more meaningfull string that includes the
 	object type in addition to its name.

@@ -208,9 +208,9 @@ GstStructure *    gst_caps_get_structure           (const GstCaps *caps,
 GstCaps *         gst_caps_copy_nth                (const GstCaps *caps, guint nth);
 void              gst_caps_truncate                (GstCaps       *caps);
 void              gst_caps_set_simple              (GstCaps       *caps,
-                                                    char          *field, ...) G_GNUC_NULL_TERMINATED;
+                                                    const char    *field, ...) G_GNUC_NULL_TERMINATED;
 void              gst_caps_set_simple_valist       (GstCaps       *caps,
-                                                    char          *field,
+                                                    const char    *field,
                                                     va_list        varargs);
 
 /* tests */
