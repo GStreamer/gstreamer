@@ -1160,7 +1160,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   /* positive playback rate, first sample is render_start, negative rate, first
    * sample is render_stop */
-  if (bsink->segment.rate >= 1.0)
+  if (bsink->segment.rate >= 0.0)
     sample_offset = render_start;
   else
     sample_offset = render_stop;
@@ -1211,7 +1211,7 @@ no_align:
 
 no_sync:
   /* we render the first or last sample first, depending on the rate */
-  if (bsink->segment.rate >= 1.0)
+  if (bsink->segment.rate >= 0.0)
     sample_offset = render_start;
   else
     sample_offset = render_stop;

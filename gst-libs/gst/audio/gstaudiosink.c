@@ -422,6 +422,8 @@ gst_audioringbuffer_release (GstRingBuffer * buf)
   if (!result)
     goto could_not_unprepare;
 
+  GST_DEBUG_OBJECT (sink, "unprepared");
+
   return result;
 
 could_not_unprepare:

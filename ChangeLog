@@ -1,3 +1,15 @@
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiosink.c: (gst_audioringbuffer_release):
+	Small debug improvement.
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_render):
+	Fix bug in determining the sample start/stop position, we want to base
+	this decision on the fact that we are going forwards or backwards, not
+	slower or faster. This fixes some ugly resync warnings when playing at
+	very slow speeds.
+
 2008-03-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/gio/gstgio.c: (gst_gio_get_supported_protocols):
