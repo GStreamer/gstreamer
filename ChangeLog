@@ -1,3 +1,9 @@
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstvalue.c: (gst_value_transform_object_string):
+	Transform a GstObject to a more meaningfull string that includes the
+	object type in addition to its name.
+
 2008-03-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* ChangeLog:

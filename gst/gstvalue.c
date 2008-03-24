@@ -3888,9 +3888,15 @@ gst_value_transform_object_string (const GValue * src_value,
   gchar *str;
 
   obj = g_value_get_object (src_value);
-  str = obj ? GST_OBJECT_NAME (obj) : "NULL";
+  if (obj) {
+    str =
+        g_strdup_printf ("(%s) %s", G_OBJECT_TYPE_NAME (obj),
+        GST_OBJECT_NAME (obj));
+  } else {
+    str = g_strdup ("NULL");
+  }
 
-  dest_value->data[0].v_pointer = g_strdup (str);
+  dest_value->data[0].v_pointer = str;
 }
 
 static GTypeInfo _info = {
