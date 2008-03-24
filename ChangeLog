@@ -1,5 +1,14 @@
 2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* tests/examples/seek/seek.c: (audio_toggle_cb), (video_toggle_cb),
+	(text_toggle_cb), (update_streams), (main):
+	Rearrange some buttons in playbin2 and make some other boxes insensitive
+	when needed.
+	Add language codes to subtitle selection boxes when we gind the right
+	tags for the streams.
+
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstdecodebin2.c: (gst_decode_bin_dispose),
 	(gst_decode_bin_set_caps), (gst_decode_bin_get_caps),
 	(gst_decode_bin_set_subs_encoding),

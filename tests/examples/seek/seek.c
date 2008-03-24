@@ -1505,19 +1505,31 @@ vis_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 static void
 audio_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 {
-  update_flag (pipeline, 1, gtk_toggle_button_get_active (button));
+  gboolean state;
+
+  state = gtk_toggle_button_get_active (button);
+  update_flag (pipeline, 1, state);
+  gtk_widget_set_sensitive (audio_combo, state);
 }
 
 static void
 video_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 {
-  update_flag (pipeline, 0, gtk_toggle_button_get_active (button));
+  gboolean state;
+
+  state = gtk_toggle_button_get_active (button);
+  update_flag (pipeline, 0, state);
+  gtk_widget_set_sensitive (video_combo, state);
 }
 
 static void
 text_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 {
-  update_flag (pipeline, 2, gtk_toggle_button_get_active (button));
+  gboolean state;
+
+  state = gtk_toggle_button_get_active (button);
+  update_flag (pipeline, 2, state);
+  gtk_widget_set_sensitive (text_combo, state);
 }
 
 static void
@@ -1559,6 +1571,7 @@ update_streams (GstPipeline * pipeline)
     GstTagList *tags;
     gchar *name;
     gint active_idx;
+    gboolean state;
 
     /* remove previous info */
     clear_streams (GST_ELEMENT_CAST (pipeline));
@@ -1578,7 +1591,8 @@ update_streams (GstPipeline * pipeline)
       gtk_combo_box_append_text (GTK_COMBO_BOX (video_combo), name);
       g_free (name);
     }
-    gtk_widget_set_sensitive (video_combo, n_video > 0);
+    state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (video_checkbox));
+    gtk_widget_set_sensitive (video_combo, state && n_video > 0);
     gtk_combo_box_set_active (GTK_COMBO_BOX (video_combo), active_idx);
 
     active_idx = 0;
@@ -1589,18 +1603,32 @@ update_streams (GstPipeline * pipeline)
       gtk_combo_box_append_text (GTK_COMBO_BOX (audio_combo), name);
       g_free (name);
     }
-    gtk_widget_set_sensitive (audio_combo, n_audio > 0);
+    state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (audio_checkbox));
+    gtk_widget_set_sensitive (audio_combo, state && n_audio > 0);
     gtk_combo_box_set_active (GTK_COMBO_BOX (audio_combo), active_idx);
 
     active_idx = 0;
     for (i = 0; i < n_text; i++) {
       g_signal_emit_by_name (pipeline, "get-text-tags", i, &tags);
-      /* find good name for the label */
-      name = g_strdup_printf ("text %d", i + 1);
+      name = NULL;
+      if (tags) {
+        const GValue *value;
+
+        /* get the language code if we can */
+        value = gst_tag_list_get_value_index (tags, GST_TAG_LANGUAGE_CODE, 0);
+        if (value && G_VALUE_HOLDS_STRING (value)) {
+          name = g_strdup_printf ("text %s", g_value_get_string (value));
+        }
+      }
+      /* find good name for the label if we didn't use a tag */
+      if (name == NULL)
+        name = g_strdup_printf ("text %d", i + 1);
+
       gtk_combo_box_append_text (GTK_COMBO_BOX (text_combo), name);
       g_free (name);
     }
-    gtk_widget_set_sensitive (text_combo, n_text > 0);
+    state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (text_checkbox));
+    gtk_widget_set_sensitive (text_combo, state && n_text > 0);
     gtk_combo_box_set_active (GTK_COMBO_BOX (text_combo), active_idx);
 
     need_streams = FALSE;
@@ -2030,10 +2058,10 @@ main (int argc, char **argv)
     mute_checkbox = gtk_check_button_new_with_label ("Mute");
     volume_spinbutton = gtk_spin_button_new_with_range (0, 10.0, 0.1);
     gtk_spin_button_set_value (GTK_SPIN_BUTTON (volume_spinbutton), 1.0);
-    gtk_box_pack_start (GTK_BOX (boxes), vis_checkbox, TRUE, TRUE, 2);
-    gtk_box_pack_start (GTK_BOX (boxes), audio_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), video_checkbox, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (boxes), audio_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), text_checkbox, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (boxes), vis_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), mute_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), volume_spinbutton, TRUE, TRUE, 2);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (vis_checkbox), FALSE);
