@@ -1288,6 +1288,10 @@ gst_queue_is_filled (GstQueue * queue)
   if (QUEUE_IS_USING_TEMP_FILE (queue))
     return FALSE;
 
+  /* we are never filled when we have no buffers at all */
+  if (queue->cur_level.buffers == 0)
+    return FALSE;
+
 #define CHECK_FILLED(format) ((queue->max_level.format) > 0 && \
 		(queue->cur_level.format) >= (queue->max_level.format))
 

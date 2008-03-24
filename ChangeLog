@@ -1,5 +1,11 @@
 2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstqueue2.c: (gst_queue_is_filled):
+	The queue is never filled when there are no buffers in the queue at all.
+	Fixes #523993.
+
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstplaybin2.c: (gst_play_bin_class_init),
 	(init_group), (free_group), (gst_play_bin_init),
 	(gst_play_bin_finalize), (gst_play_bin_set_uri),
