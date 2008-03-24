@@ -100,6 +100,7 @@ struct _GstDecodeBin
   gint nbpads;                  /* unique identifier for source pads */
 
   GValueArray *factories;       /* factories we can use for selecting elements */
+  GList *subtitles;             /* List of elements with subtitle-encoding */
 
   gboolean have_type;           /* if we received the have_type signal */
   guint have_type_id;           /* signal id for have-type from typefind */
@@ -654,6 +655,9 @@ gst_decode_bin_dispose (GObject * object)
 
   remove_fakesink (decode_bin);
 
+  g_list_free (decode_bin->subtitles);
+  decode_bin->subtitles = NULL;
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -685,13 +689,13 @@ gst_decode_bin_set_caps (GstDecodeBin * dbin, GstCaps * caps)
 {
   GST_DEBUG_OBJECT (dbin, "Setting new caps: %" GST_PTR_FORMAT, caps);
 
-  DECODE_BIN_LOCK (dbin);
+  GST_OBJECT_LOCK (dbin);
   if (dbin->caps)
     gst_caps_unref (dbin->caps);
   if (caps)
     gst_caps_ref (caps);
   dbin->caps = caps;
-  DECODE_BIN_UNLOCK (dbin);
+  GST_OBJECT_UNLOCK (dbin);
 }
 
 /* _get_caps
@@ -708,11 +712,11 @@ gst_decode_bin_get_caps (GstDecodeBin * dbin)
 
   GST_DEBUG_OBJECT (dbin, "Getting currently set caps");
 
-  DECODE_BIN_LOCK (dbin);
+  GST_OBJECT_LOCK (dbin);
   caps = dbin->caps;
   if (caps)
     gst_caps_ref (caps);
-  DECODE_BIN_UNLOCK (dbin);
+  GST_OBJECT_UNLOCK (dbin);
 
   return caps;
 }
@@ -720,11 +724,21 @@ gst_decode_bin_get_caps (GstDecodeBin * dbin)
 static void
 gst_decode_bin_set_subs_encoding (GstDecodeBin * dbin, const gchar * encoding)
 {
+  GList *walk;
+
   GST_DEBUG_OBJECT (dbin, "Setting new encoding: %s", GST_STR_NULL (encoding));
 
   DECODE_BIN_LOCK (dbin);
+  GST_OBJECT_LOCK (dbin);
   g_free (dbin->encoding);
   dbin->encoding = g_strdup (encoding);
+  GST_OBJECT_UNLOCK (dbin);
+
+  /* set the subtitle encoding on all added elements */
+  for (walk = dbin->subtitles; walk; walk = g_list_next (walk)) {
+    g_object_set (G_OBJECT (walk->data), "subtitle-encoding", dbin->encoding,
+        NULL);
+  }
   DECODE_BIN_UNLOCK (dbin);
 }
 
@@ -735,9 +749,9 @@ gst_decode_bin_get_subs_encoding (GstDecodeBin * dbin)
 
   GST_DEBUG_OBJECT (dbin, "Getting currently set encoding");
 
-  DECODE_BIN_LOCK (dbin);
+  GST_OBJECT_LOCK (dbin);
   encoding = g_strdup (dbin->encoding);
-  DECODE_BIN_UNLOCK (dbin);
+  GST_OBJECT_UNLOCK (dbin);
 
   return encoding;
 }
@@ -784,9 +798,6 @@ gst_decode_bin_get_property (GObject * object, guint prop_id,
 }
 
 
-static GValueArray *find_compatibles (GstDecodeBin * decode_bin,
-    GstPad * pad, const GstCaps * caps);
-
 /*****
  * Default autoplug signal handlers
  *****/
@@ -806,8 +817,11 @@ gst_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
 {
   GValueArray *result;
 
+  GST_DEBUG_OBJECT (element, "finding factories");
+
   /* return all compatible factories for caps */
-  result = find_compatibles (GST_DECODE_BIN (element), pad, caps);
+  result =
+      gst_factory_list_filter (GST_DECODE_BIN_CAST (element)->factories, caps);
 
   GST_DEBUG_OBJECT (element, "autoplug-factories returns %p", result);
 
@@ -1047,6 +1061,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     GstElementFactory *factory;
     GstElement *element;
     GstPad *sinkpad;
+    gboolean subtitle;
 
     /* take first factory */
     factory = g_value_get_object (g_value_array_get_nth (factories, 0));
@@ -1126,6 +1141,17 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     /* link this element further */
     connect_element (dbin, element, group);
 
+    /* try to configure the subtitle encoding property when we can */
+    if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+            "subtitle-encoding")) {
+      GST_DEBUG_OBJECT (dbin,
+          "setting subtitle-encoding=%s to element", dbin->encoding);
+      g_object_set (G_OBJECT (element), "subtitle-encoding", dbin->encoding,
+          NULL);
+      subtitle = TRUE;
+    } else
+      subtitle = FALSE;
+
     /* Bring the element to the state of the parent */
     if ((gst_element_set_state (element,
                 GST_STATE_PAUSED)) == GST_STATE_CHANGE_FAILURE) {
@@ -1134,6 +1160,13 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       gst_element_set_state (element, GST_STATE_NULL);
       gst_bin_remove (GST_BIN (dbin), element);
       continue;
+    }
+    if (subtitle) {
+      DECODE_BIN_LOCK (dbin);
+      /* we added the element now, add it to the list of subtitle-encoding
+       * elements when we can set the property */
+      dbin->subtitles = g_list_prepend (dbin->subtitles, element);
+      DECODE_BIN_UNLOCK (dbin);
     }
 
     res = TRUE;
@@ -1453,21 +1486,6 @@ caps_notify_group_cb (GstPad * pad, GParamSpec * unused, GstDecodeGroup * group)
   gst_object_unref (element);
 }
 
-/* this function runs through the element factories and returns a value array of
- * all elements that are able to sink the given caps
- */
-static GValueArray *
-find_compatibles (GstDecodeBin * decode_bin, GstPad * pad, const GstCaps * caps)
-{
-  GValueArray *result;
-
-  GST_DEBUG_OBJECT (decode_bin, "finding factories");
-
-  result = gst_factory_list_filter (decode_bin->factories, caps);
-
-  return result;
-}
-
 /* Decide whether an element is a demuxer based on the 
  * klass and number/type of src pad templates it has */
 static gboolean
@@ -1531,7 +1549,10 @@ are_raw_caps (GstDecodeBin * dbin, GstCaps * caps)
 
   GST_LOG_OBJECT (dbin, "Checking with caps %" GST_PTR_FORMAT, caps);
 
+  /* lock for getting the caps */
+  GST_OBJECT_LOCK (dbin);
   intersection = gst_caps_intersect (dbin->caps, caps);
+  GST_OBJECT_UNLOCK (dbin);
 
   res = (!(gst_caps_is_empty (intersection)));
 
@@ -2059,6 +2080,9 @@ deactivate_free_recursive (GstDecodeGroup * group, GstElement * element)
   GstIterator *it;
   GstIteratorResult res;
   gpointer point;
+  GstDecodeBin *dbin;
+
+  dbin = group->dbin;
 
   GST_LOG ("element:%s", GST_ELEMENT_NAME (element));
 
@@ -2106,7 +2130,11 @@ restart:
 
 done:
   gst_element_set_state (element, GST_STATE_NULL);
-  gst_bin_remove (GST_BIN (group->dbin), element);
+  DECODE_BIN_LOCK (dbin);
+  /* remove possible subtitle element */
+  dbin->subtitles = g_list_remove (dbin->subtitles, element);
+  DECODE_BIN_UNLOCK (dbin);
+  gst_bin_remove (GST_BIN (dbin), element);
 
 beach:
   gst_iterator_free (it);

@@ -1,5 +1,19 @@
 2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_dispose),
+	(gst_decode_bin_set_caps), (gst_decode_bin_get_caps),
+	(gst_decode_bin_set_subs_encoding),
+	(gst_decode_bin_get_subs_encoding),
+	(gst_decode_bin_autoplug_factories), (connect_pad), (are_raw_caps),
+	(deactivate_free_recursive):
+	Protect caps property with the object lock.
+	Protect encoding property with the object lock.
+	Keep list of elements we added that have the subtitle-encoding property.
+	Distribute the subtitle-encoding to all of the elements when it
+	changes.
+
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/audio/gstaudiosink.c: (gst_audioringbuffer_release):
 	Small debug improvement.
 
