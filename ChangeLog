@@ -1,3 +1,8 @@
+2008-03-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_class_init):
+	  Fix Since: version for new property.
+
 2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/rtsp/gstrtspconnection.c:
