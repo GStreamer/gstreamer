@@ -116,6 +116,7 @@ GST_ELEMENT_DETAILS ("Text overlay",
 #define DEFAULT_PROP_FONT_DESC	""
 #define DEFAULT_PROP_SILENT	FALSE
 #define DEFAULT_PROP_LINE_ALIGNMENT GST_TEXT_OVERLAY_LINE_ALIGN_CENTER
+#define DEFAULT_PROP_WAIT_TEXT	TRUE
 
 /* make a property of me */
 #define DEFAULT_SHADING_VALUE    -80
@@ -136,7 +137,9 @@ enum
   PROP_WRAP_MODE,
   PROP_FONT_DESC,
   PROP_SILENT,
-  PROP_LINE_ALIGNMENT
+  PROP_LINE_ALIGNMENT,
+  PROP_WAIT_TEXT,
+  PROP_LAST
 };
 
 
@@ -407,6 +410,19 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
       g_param_spec_boolean ("silent", "silent",
           "Whether to render the text string",
           DEFAULT_PROP_SILENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstTextOverlay:wait-text
+   *
+   * If set, the video will block until a subtitle is received on the text pad.
+   * If video and subtitles are sent in sync, like from the same demuxer, this
+   * property should be set.
+   *
+   * Since: 0.10.18
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WAIT_TEXT,
+      g_param_spec_boolean ("wait-text", "Wait Text",
+          "Whether to wait for subtitles",
+          DEFAULT_PROP_WAIT_TEXT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -515,9 +531,6 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
 
   overlay->text_buffer = NULL;
   overlay->text_linked = FALSE;
-  overlay->video_flushing = FALSE;
-  overlay->text_flushing = FALSE;
-  overlay->text_eos = FALSE;
   overlay->cond = g_cond_new ();
   overlay->segment = gst_segment_new ();
   if (overlay->segment) {
@@ -692,6 +705,9 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       pango_layout_set_alignment (overlay->layout,
           (PangoAlignment) overlay->line_align);
       break;
+    case PROP_WAIT_TEXT:
+      overlay->wait_text = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -742,6 +758,9 @@ gst_text_overlay_get_property (GObject * object, guint prop_id,
     case PROP_LINE_ALIGNMENT:
       g_value_set_enum (value, overlay->line_align);
       break;
+    case PROP_WAIT_TEXT:
+      g_value_set_boolean (value, overlay->wait_text);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -763,6 +782,7 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEEK:
       /* We don't handle seek if we have not text pad */
       if (!overlay->text_linked) {
+        GST_DEBUG_OBJECT (overlay, "seek received, pushing upstream");
         ret = gst_pad_push_event (overlay->video_sinkpad, event);
         goto beach;
       }
@@ -1177,7 +1197,9 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_FLUSH_STOP:
       GST_OBJECT_LOCK (overlay);
+      GST_INFO_OBJECT (overlay, "text flush stop");
       overlay->text_flushing = FALSE;
+      overlay->text_eos = FALSE;
       gst_text_overlay_pop_text (overlay);
       GST_OBJECT_UNLOCK (overlay);
       gst_event_unref (event);
@@ -1185,6 +1207,7 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_START:
       GST_OBJECT_LOCK (overlay);
+      GST_INFO_OBJECT (overlay, "text flush start");
       overlay->text_flushing = TRUE;
       GST_TEXT_OVERLAY_BROADCAST (overlay);
       GST_OBJECT_UNLOCK (overlay);
@@ -1193,9 +1216,8 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_EOS:
       GST_OBJECT_LOCK (overlay);
-      overlay->text_flushing = TRUE;
       overlay->text_eos = TRUE;
-      GST_INFO_OBJECT (overlay, "EOS");
+      GST_INFO_OBJECT (overlay, "text EOS");
       /* wake up the video chain, it might be waiting for a text buffer or
        * a text segment update */
       GST_TEXT_OVERLAY_BROADCAST (overlay);
@@ -1252,14 +1274,14 @@ gst_text_overlay_video_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_EOS:
       GST_OBJECT_LOCK (overlay);
-      overlay->video_flushing = TRUE;
-      overlay->text_flushing = TRUE;
-      gst_text_overlay_pop_text (overlay);
+      GST_INFO_OBJECT (overlay, "video EOS");
+      overlay->video_eos = TRUE;
       GST_OBJECT_UNLOCK (overlay);
       ret = gst_pad_event_default (pad, event);
       break;
     case GST_EVENT_FLUSH_START:
       GST_OBJECT_LOCK (overlay);
+      GST_INFO_OBJECT (overlay, "video flush start");
       overlay->video_flushing = TRUE;
       GST_TEXT_OVERLAY_BROADCAST (overlay);
       GST_OBJECT_UNLOCK (overlay);
@@ -1267,7 +1289,9 @@ gst_text_overlay_video_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_OBJECT_LOCK (overlay);
+      GST_INFO_OBJECT (overlay, "video flush stop");
       overlay->video_flushing = FALSE;
+      overlay->video_eos = FALSE;
       GST_OBJECT_UNLOCK (overlay);
       ret = gst_pad_event_default (pad, event);
       break;
@@ -1323,17 +1347,17 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_OBJECT_LOCK (overlay);
 
-  if (overlay->text_eos) {
-    GST_OBJECT_UNLOCK (overlay);
-    ret = GST_FLOW_UNEXPECTED;
-    GST_LOG_OBJECT (overlay, "text EOS");
-    goto beach;
-  }
-
   if (overlay->text_flushing) {
     GST_OBJECT_UNLOCK (overlay);
     ret = GST_FLOW_WRONG_STATE;
     GST_LOG_OBJECT (overlay, "text flushing");
+    goto beach;
+  }
+
+  if (overlay->text_eos) {
+    GST_OBJECT_UNLOCK (overlay);
+    ret = GST_FLOW_UNEXPECTED;
+    GST_LOG_OBJECT (overlay, "text EOS");
     goto beach;
   }
 
@@ -1452,6 +1476,9 @@ wait_for_text_buf:
 
   if (overlay->video_flushing)
     goto flushing;
+
+  if (overlay->video_eos)
+    goto have_eos;
 
   if (overlay->silent) {
     GST_OBJECT_UNLOCK (overlay);
@@ -1584,6 +1611,9 @@ wait_for_text_buf:
       if (overlay->text_eos)
         wait_for_text_buf = FALSE;
 
+      if (!overlay->wait_text)
+        wait_for_text_buf = FALSE;
+
       /* Text pad linked, but no text buffer available - what now? */
       if (overlay->text_segment.format == GST_FORMAT_TIME) {
         if (GST_BUFFER_TIMESTAMP (buffer) < overlay->text_segment.start ||
@@ -1627,7 +1657,13 @@ flushing:
     gst_buffer_unref (buffer);
     return GST_FLOW_WRONG_STATE;
   }
-
+have_eos:
+  {
+    GST_OBJECT_UNLOCK (overlay);
+    GST_DEBUG_OBJECT (overlay, "eos, discarding buffer");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_UNEXPECTED;
+  }
 out_of_segment:
   {
     GST_DEBUG_OBJECT (overlay, "buffer out of segment, discarding");
@@ -1665,6 +1701,8 @@ gst_text_overlay_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_LOCK (overlay);
       overlay->text_flushing = FALSE;
       overlay->video_flushing = FALSE;
+      overlay->video_eos = FALSE;
+      overlay->text_eos = FALSE;
       GST_OBJECT_UNLOCK (overlay);
       break;
     default:

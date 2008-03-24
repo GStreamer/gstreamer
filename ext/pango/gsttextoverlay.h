@@ -96,6 +96,7 @@ struct _GstTextOverlay {
     GstBuffer               *text_buffer;
     gboolean                text_linked;
     gboolean                video_flushing;
+    gboolean                video_eos;
     gboolean                text_flushing;
     gboolean                text_eos;
 
@@ -121,6 +122,7 @@ struct _GstTextOverlay {
     gchar                   *default_text;
     gboolean                 want_shading;
     gboolean                 silent;
+    gboolean                 wait_text;
 
     PangoLayout             *layout;
     FT_Bitmap                bitmap;

@@ -1,5 +1,21 @@
 2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_class_init),
+	(gst_text_overlay_init), (gst_text_overlay_set_property),
+	(gst_text_overlay_get_property), (gst_text_overlay_src_event),
+	(gst_text_overlay_text_event), (gst_text_overlay_video_event),
+	(gst_text_overlay_text_chain), (gst_text_overlay_video_chain),
+	(gst_text_overlay_change_state):
+	* ext/pango/gsttextoverlay.h:
+	Add property to configure waiting for text on the textpad or not, with
+	the default behaviour being the old one (always wait for text before
+	rendering the video). This default behaviour is usually not the best one
+	because the text stream can very sparse and could require queueing a lot
+	of video.
+	Fix the flushing and EOS handing so that we don't mix up their meaning.
+
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gsturidecodebin.c:
 	(gst_uri_decode_bin_autoplug_factories),
 	(gst_uri_decode_bin_class_init), (gst_uri_decode_bin_init),
