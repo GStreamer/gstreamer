@@ -288,6 +288,10 @@ gst_rg_analysis_class_init (GstRgAnalysisClass * klass)
 static void
 gst_rg_analysis_init (GstRgAnalysis * filter, GstRgAnalysisClass * gclass)
 {
+  GstBaseTransform *base = GST_BASE_TRANSFORM (filter);
+
+  gst_base_transform_set_gap_aware (base, TRUE);
+
   filter->num_tracks = 0;
   filter->forced = FORCED_DEFAULT;
   filter->reference_level = RG_REFERENCE_LEVEL;
@@ -450,6 +454,10 @@ gst_rg_analysis_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   g_return_val_if_fail (filter->analyze != NULL, GST_FLOW_NOT_NEGOTIATED);
 
   if (filter->skip)
+    return GST_FLOW_OK;
+
+  /* Buffers made up of silence have no influence on the analysis: */
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
   GST_LOG_OBJECT (filter, "processing buffer of size %u",

@@ -204,6 +204,36 @@ GST_START_TEST (test_limiting)
 
 GST_END_TEST;
 
+GST_START_TEST (test_gap)
+{
+  GstElement *element = setup_rglimiter ();
+  GstBuffer *buf, *out_buf;
+
+  set_playing_state (element);
+
+  buf = create_test_buffer ();
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_GAP);
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  fail_unless (g_list_length (buffers) == 1);
+  out_buf = buffers->data;
+  fail_if (out_buf == NULL);
+  ASSERT_BUFFER_REFCOUNT (out_buf, "out_buf", 1);
+
+  /* Verify that the baseclass does not lift the GAP flag: */
+  fail_unless (GST_BUFFER_FLAG_IS_SET (out_buf, GST_BUFFER_FLAG_GAP));
+
+  g_assert (GST_BUFFER_SIZE (out_buf) == GST_BUFFER_SIZE (buf));
+  /* We cheated by passing an input buffer with non-silence that has the GAP
+   * flag set.  The element cannot know that however and must have skipped
+   * adjusting the buffer because of the flag, which we can easily verify: */
+  fail_if (memcmp (GST_BUFFER_DATA (out_buf),
+          GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (out_buf)) != 0);
+
+  cleanup_rglimiter (element);
+}
+
+GST_END_TEST;
+
 Suite *
 rglimiter_suite (void)
 {
@@ -215,6 +245,7 @@ rglimiter_suite (void)
   tcase_add_test (tc_chain, test_no_buffer);
   tcase_add_test (tc_chain, test_disabled);
   tcase_add_test (tc_chain, test_limiting);
+  tcase_add_test (tc_chain, test_gap);
 
   return s;
 }
