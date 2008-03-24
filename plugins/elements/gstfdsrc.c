@@ -342,7 +342,7 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 #ifndef HAVE_WIN32
   do {
     retval = gst_poll_wait (src->fdset, GST_CLOCK_TIME_NONE);
-  } while (retval == -1 && errno == EINTR);
+  } while (retval == -1 && (errno == EINTR || errno == EAGAIN));        /* retry if interrupted */
 
   if (retval == -1) {
     if (errno == EBUSY)

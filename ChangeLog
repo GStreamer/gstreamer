@@ -1,5 +1,11 @@
 2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_render):
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_create):
+	Also retry our poll_wait when we get EAGAIN. Fixes #524041.
+
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* plugins/elements/gstmultiqueue.c: (single_queue_overrun_cb),
 	(single_queue_underrun_cb):
 	When trying to make room in the queue, bump the max allowed buffers
