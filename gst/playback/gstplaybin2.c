@@ -36,10 +36,11 @@
  * visualisations for audio files
  * </listitem>
  * <listitem>
- * subtitle support for video files
+ * subtitle support for video files. Subtitles can be store in external
+ * files.
  * </listitem>
  * <listitem>
- * stream selection between different audio/subtitles streams
+ * stream selection between different video/audio/subtitles streams
  * </listitem>
  * <listitem>
  * meta info (tag) extraction
@@ -51,7 +52,7 @@
  * buffering when playing streams over a network
  * </listitem>
  * <listitem>
- * volume control
+ * volume control with mute option
  * </listitem>
  * </itemizedlist>
  * </para>
@@ -284,11 +285,23 @@ struct _GstSourceSelect
   GstPad *sinkpad;              /* the sinkpad of the sink when the selector is linked */
 };
 
+#define GST_SOURCE_GROUP_GET_LOCK(group) (((GstSourceGroup*)(group))->lock)
+#define GST_SOURCE_GROUP_GET_COND(group) (((GstSourceGroup*)(group))->cond)
+#define GST_SOURCE_GROUP_LOCK(group) (g_mutex_lock (GST_SOURCE_GROUP_GET_LOCK(group)))
+#define GST_SOURCE_GROUP_UNLOCK(group) (g_mutex_unlock (GST_SOURCE_GROUP_GET_LOCK(group)))
+#define GST_SOURCE_GROUP_WAIT(group) (g_cond_wait \
+		(GST_SOURCE_GROUP_GET_COND (group),GST_SOURCE_GROUP_GET_LOCK(group)))
+#define GST_SOURCE_GROUP_BROADCAST(group) (g_cond_broadcast \
+		(GST_SOURCE_GROUP_GET_COND (group)))
+
 /* a structure to hold the objects for decoding a uri and the subtitle uri
  */
 struct _GstSourceGroup
 {
   GstPlayBin *playbin;
+
+  GMutex *lock;
+  GCond *cond;
 
   gboolean valid;               /* the group has valid info to start playback */
   gboolean active;              /* the group is active */
@@ -298,7 +311,6 @@ struct _GstSourceGroup
   gchar *suburi;
   GValueArray *streaminfo;
   GstElement *source;
-  gchar *subencoding;           /* encoding to propagate to the subtitle elements */
 
   GPtrArray *video_channels;    /* links to selector pads */
   GPtrArray *audio_channels;    /* links to selector pads */
@@ -307,14 +319,21 @@ struct _GstSourceGroup
   /* uridecodebins for uri and subtitle uri */
   GstElement *uridecodebin;
   GstElement *suburidecodebin;
+  gint pending;
 
   /* selectors for different streams */
   GstSourceSelect selector[GST_PLAY_SINK_TYPE_LAST];
 };
 
+#define GST_PLAY_BIN_GET_LOCK(bin) (((GstPlayBin*)(bin))->lock)
+#define GST_PLAY_BIN_LOCK(bin) (g_mutex_lock (GST_PLAY_BIN_GET_LOCK(bin)))
+#define GST_PLAY_BIN_UNLOCK(bin) (g_mutex_unlock (GST_PLAY_BIN_GET_LOCK(bin)))
+
 struct _GstPlayBin
 {
   GstPipeline parent;
+
+  GMutex *lock;                 /* to protect group switching */
 
   /* the groups, we use a double buffer to switch between current and next */
   GstSourceGroup groups[2];     /* array with group info */
@@ -328,6 +347,7 @@ struct _GstPlayBin
   gint current_video;           /* the currently selected stream */
   gint current_audio;           /* the currently selected stream */
   gint current_text;            /* the currently selected stream */
+  gchar *encoding;              /* subtitle encoding */
 
   /* our play sink */
   GstPlaySink *playsink;
@@ -552,7 +572,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_param_spec_object ("source", "Source", "Source element",
           GST_TYPE_ELEMENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-
   /**
    * GstPlayBin:flags
    *
@@ -639,7 +658,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_VIS_PLUGIN,
       g_param_spec_object ("vis-plugin", "Vis plugin",
-          "the visualization element to use (NULL = none)",
+          "the visualization element to use (NULL = default)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_VOLUME,
@@ -818,6 +837,8 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->video_channels = g_ptr_array_new ();
   group->audio_channels = g_ptr_array_new ();
   group->text_channels = g_ptr_array_new ();
+  group->lock = g_mutex_new ();
+  group->cond = g_cond_new ();
   /* init selectors */
   group->playbin = playbin;
   group->selector[0].media = "audio/x-raw-";
@@ -838,9 +859,21 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
 }
 
 static void
+free_group (GstPlayBin * playbin, GstSourceGroup * group)
+{
+  g_ptr_array_free (group->video_channels, TRUE);
+  g_ptr_array_free (group->audio_channels, TRUE);
+  g_ptr_array_free (group->text_channels, TRUE);
+  g_mutex_free (group->lock);
+  g_cond_free (group->cond);
+}
+
+static void
 gst_play_bin_init (GstPlayBin * playbin)
 {
   GstFactoryListType type;
+
+  playbin->lock = g_mutex_new ();
 
   /* init groups */
   playbin->curr_group = &playbin->groups[0];
@@ -861,6 +894,7 @@ gst_play_bin_init (GstPlayBin * playbin)
   playbin->current_video = DEFAULT_CURRENT_VIDEO;
   playbin->current_audio = DEFAULT_CURRENT_AUDIO;
   playbin->current_text = DEFAULT_CURRENT_TEXT;
+  playbin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
 }
 
 static void
@@ -870,7 +904,12 @@ gst_play_bin_finalize (GObject * object)
 
   playbin = GST_PLAY_BIN (object);
 
+  free_group (playbin, &playbin->groups[0]);
+  free_group (playbin, &playbin->groups[1]);
+
   g_value_array_free (playbin->elements);
+  g_free (playbin->encoding);
+  g_mutex_free (playbin->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -885,17 +924,19 @@ gst_play_bin_set_uri (GstPlayBin * playbin, const gchar * uri)
     return;
   }
 
-  GST_OBJECT_LOCK (playbin);
+  GST_PLAY_BIN_LOCK (playbin);
   group = playbin->next_group;
 
+  GST_SOURCE_GROUP_LOCK (group);
   /* if we have no previous uri, or the new uri is different from the
    * old one, replug */
   g_free (group->uri);
   group->uri = g_strdup (uri);
   group->valid = TRUE;
+  GST_SOURCE_GROUP_UNLOCK (group);
 
   GST_DEBUG ("setting new uri to %s", uri);
-  GST_OBJECT_UNLOCK (playbin);
+  GST_PLAY_BIN_UNLOCK (playbin);
 }
 
 static void
@@ -903,9 +944,10 @@ gst_play_bin_set_suburi (GstPlayBin * playbin, const gchar * suburi)
 {
   GstSourceGroup *group;
 
-  GST_OBJECT_LOCK (playbin);
+  GST_PLAY_BIN_LOCK (playbin);
   group = playbin->next_group;
 
+  GST_SOURCE_GROUP_LOCK (group);
   if ((!suburi && !group->suburi) ||
       (suburi && group->suburi && !strcmp (group->suburi, suburi)))
     goto done;
@@ -916,11 +958,12 @@ gst_play_bin_set_suburi (GstPlayBin * playbin, const gchar * suburi)
   GST_DEBUG ("setting new .sub uri to %s", suburi);
 
 done:
-  GST_OBJECT_UNLOCK (playbin);
+  GST_SOURCE_GROUP_UNLOCK (group);
+  GST_PLAY_BIN_UNLOCK (playbin);
 }
 
 /* get the currently playing group or if nothing is playing, the next
- * group. Must be called with the LOCK. */
+ * group. Must be called with the PLAY_BIN_LOCK. */
 static GstSourceGroup *
 get_group (GstPlayBin * playbin)
 {
@@ -953,10 +996,10 @@ gst_play_bin_get_video_tags (GstPlayBin * playbin, gint stream)
   GstTagList *result;
   GstSourceGroup *group;
 
-  GST_OBJECT_LOCK (playbin);
+  GST_PLAY_BIN_LOCK (playbin);
   group = get_group (playbin);
   result = get_tags (playbin, group->video_channels, stream);
-  GST_OBJECT_UNLOCK (playbin);
+  GST_PLAY_BIN_UNLOCK (playbin);
 
   return result;
 }
@@ -967,10 +1010,10 @@ gst_play_bin_get_audio_tags (GstPlayBin * playbin, gint stream)
   GstTagList *result;
   GstSourceGroup *group;
 
-  GST_OBJECT_LOCK (playbin);
+  GST_PLAY_BIN_LOCK (playbin);
   group = get_group (playbin);
   result = get_tags (playbin, group->audio_channels, stream);
-  GST_OBJECT_UNLOCK (playbin);
+  GST_PLAY_BIN_UNLOCK (playbin);
 
   return result;
 }
@@ -981,10 +1024,10 @@ gst_play_bin_get_text_tags (GstPlayBin * playbin, gint stream)
   GstTagList *result;
   GstSourceGroup *group;
 
-  GST_OBJECT_LOCK (playbin);
+  GST_PLAY_BIN_LOCK (playbin);
   group = get_group (playbin);
   result = get_tags (playbin, group->text_channels, stream);
-  GST_OBJECT_UNLOCK (playbin);
+  GST_PLAY_BIN_UNLOCK (playbin);
 
   return result;
 }
@@ -1012,7 +1055,7 @@ gst_play_bin_set_current_video_stream (GstPlayBin * playbin, gint stream)
   GPtrArray *channels;
   GstPad *sinkpad;
 
-  GST_OBJECT_LOCK (playbin);
+  GST_PLAY_BIN_LOCK (playbin);
   group = get_group (playbin);
   if (!(channels = group->video_channels))
     goto no_channels;
@@ -1026,7 +1069,7 @@ gst_play_bin_set_current_video_stream (GstPlayBin * playbin, gint stream)
 
   if (sinkpad)
     gst_object_ref (sinkpad);
-  GST_OBJECT_UNLOCK (playbin);
+  GST_PLAY_BIN_UNLOCK (playbin);
 
   if (sinkpad) {
     GstObject *selector;
@@ -1042,7 +1085,7 @@ gst_play_bin_set_current_video_stream (GstPlayBin * playbin, gint stream)
 
 no_channels:
   {
-    GST_OBJECT_UNLOCK (playbin);
+    GST_PLAY_BIN_UNLOCK (playbin);
     return FALSE;
   }
 }
@@ -1054,7 +1097,7 @@ gst_play_bin_set_current_audio_stream (GstPlayBin * playbin, gint stream)
   GPtrArray *channels;
   GstPad *sinkpad;
 
-  GST_OBJECT_LOCK (playbin);
+  GST_PLAY_BIN_LOCK (playbin);
   group = get_group (playbin);
   if (!(channels = group->audio_channels))
     goto no_channels;
@@ -1068,7 +1111,7 @@ gst_play_bin_set_current_audio_stream (GstPlayBin * playbin, gint stream)
 
   if (sinkpad)
     gst_object_ref (sinkpad);
-  GST_OBJECT_UNLOCK (playbin);
+  GST_PLAY_BIN_UNLOCK (playbin);
 
   if (sinkpad) {
     GstObject *selector;
@@ -1084,7 +1127,7 @@ gst_play_bin_set_current_audio_stream (GstPlayBin * playbin, gint stream)
 
 no_channels:
   {
-    GST_OBJECT_UNLOCK (playbin);
+    GST_PLAY_BIN_UNLOCK (playbin);
     return FALSE;
   }
 }
@@ -1096,7 +1139,7 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
   GPtrArray *channels;
   GstPad *sinkpad;
 
-  GST_OBJECT_LOCK (playbin);
+  GST_PLAY_BIN_LOCK (playbin);
   group = get_group (playbin);
   if (!(channels = group->text_channels))
     goto no_channels;
@@ -1110,7 +1153,7 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
 
   if (sinkpad)
     gst_object_ref (sinkpad);
-  GST_OBJECT_UNLOCK (playbin);
+  GST_PLAY_BIN_UNLOCK (playbin);
 
   if (sinkpad) {
     GstObject *selector;
@@ -1126,9 +1169,30 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
 
 no_channels:
   {
-    GST_OBJECT_UNLOCK (playbin);
+    GST_PLAY_BIN_UNLOCK (playbin);
     return FALSE;
   }
+}
+
+static void
+gst_play_bin_set_encoding (GstPlayBin * playbin, const gchar * encoding)
+{
+  GstElement *elem;
+
+  GST_PLAY_BIN_LOCK (playbin);
+  g_free (playbin->encoding);
+  playbin->encoding = g_strdup (encoding);
+
+  /* set subtitles on all current and next decodebins. */
+  if ((elem = playbin->groups[0].uridecodebin))
+    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
+  if ((elem = playbin->groups[0].suburidecodebin))
+    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
+  if ((elem = playbin->groups[1].uridecodebin))
+    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
+  if ((elem = playbin->groups[1].suburidecodebin))
+    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
+  GST_PLAY_BIN_UNLOCK (playbin);
 }
 
 static void
@@ -1148,6 +1212,7 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_FLAGS:
       gst_play_sink_set_flags (playbin->playsink, g_value_get_flags (value));
+      gst_play_sink_reconfigure (playbin->playsink);
       break;
     case PROP_CURRENT_VIDEO:
       gst_play_bin_set_current_video_stream (playbin, g_value_get_int (value));
@@ -1159,10 +1224,15 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       gst_play_bin_set_current_text_stream (playbin, g_value_get_int (value));
       break;
     case PROP_SUBTITLE_ENCODING:
+      gst_play_bin_set_encoding (playbin, g_value_get_string (value));
       break;
     case PROP_VIDEO_SINK:
+      gst_play_sink_set_video_sink (playbin->playsink,
+          g_value_get_object (value));
       break;
     case PROP_AUDIO_SINK:
+      gst_play_sink_set_audio_sink (playbin->playsink,
+          g_value_get_object (value));
       break;
     case PROP_VIS_PLUGIN:
       gst_play_sink_set_vis_plugin (playbin->playsink,
@@ -1175,11 +1245,13 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       gst_play_sink_set_mute (playbin->playsink, g_value_get_boolean (value));
       break;
     case PROP_FONT_DESC:
+      gst_play_sink_set_font_desc (playbin->playsink,
+          g_value_get_string (value));
       break;
     case PROP_CONNECTION_SPEED:
-      GST_OBJECT_LOCK (playbin);
+      GST_PLAY_BIN_LOCK (playbin);
       playbin->connection_speed = g_value_get_uint (value) * 1000;
-      GST_OBJECT_UNLOCK (playbin);
+      GST_PLAY_BIN_UNLOCK (playbin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1200,20 +1272,20 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     {
       GstSourceGroup *group;
 
-      GST_OBJECT_LOCK (playbin);
+      GST_PLAY_BIN_LOCK (playbin);
       group = get_group (playbin);
       g_value_set_string (value, group->uri);
-      GST_OBJECT_UNLOCK (playbin);
+      GST_PLAY_BIN_UNLOCK (playbin);
       break;
     }
     case PROP_SUBURI:
     {
       GstSourceGroup *group;
 
-      GST_OBJECT_LOCK (playbin);
+      GST_PLAY_BIN_LOCK (playbin);
       group = get_group (playbin);
       g_value_set_string (value, group->suburi);
-      GST_OBJECT_UNLOCK (playbin);
+      GST_PLAY_BIN_UNLOCK (playbin);
       break;
     }
     case PROP_SOURCE:
@@ -1226,59 +1298,68 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       GstSourceGroup *group;
       gint n_video;
 
-      GST_OBJECT_LOCK (playbin);
+      GST_PLAY_BIN_LOCK (playbin);
       group = get_group (playbin);
       n_video = (group->video_channels ? group->video_channels->len : 0);
       g_value_set_int (value, n_video);
-      GST_OBJECT_UNLOCK (playbin);
+      GST_PLAY_BIN_UNLOCK (playbin);
       break;
     }
     case PROP_CURRENT_VIDEO:
-      GST_OBJECT_LOCK (playbin);
+      GST_PLAY_BIN_LOCK (playbin);
       g_value_set_int (value, playbin->current_video);
-      GST_OBJECT_UNLOCK (playbin);
+      GST_PLAY_BIN_UNLOCK (playbin);
       break;
     case PROP_N_AUDIO:
     {
       GstSourceGroup *group;
       gint n_audio;
 
-      GST_OBJECT_LOCK (playbin);
+      GST_PLAY_BIN_LOCK (playbin);
       group = get_group (playbin);
       n_audio = (group->audio_channels ? group->audio_channels->len : 0);
       g_value_set_int (value, n_audio);
-      GST_OBJECT_UNLOCK (playbin);
+      GST_PLAY_BIN_UNLOCK (playbin);
       break;
     }
     case PROP_CURRENT_AUDIO:
-      GST_OBJECT_LOCK (playbin);
+      GST_PLAY_BIN_LOCK (playbin);
       g_value_set_int (value, playbin->current_audio);
-      GST_OBJECT_UNLOCK (playbin);
+      GST_PLAY_BIN_UNLOCK (playbin);
       break;
     case PROP_N_TEXT:
     {
       GstSourceGroup *group;
       gint n_text;
 
-      GST_OBJECT_LOCK (playbin);
+      GST_PLAY_BIN_LOCK (playbin);
       group = get_group (playbin);
       n_text = (group->text_channels ? group->text_channels->len : 0);
       g_value_set_int (value, n_text);
-      GST_OBJECT_UNLOCK (playbin);
+      GST_PLAY_BIN_UNLOCK (playbin);
       break;
     }
     case PROP_CURRENT_TEXT:
-      GST_OBJECT_LOCK (playbin);
+      GST_PLAY_BIN_LOCK (playbin);
       g_value_set_int (value, playbin->current_text);
-      GST_OBJECT_UNLOCK (playbin);
+      GST_PLAY_BIN_UNLOCK (playbin);
       break;
     case PROP_SUBTITLE_ENCODING:
+      GST_PLAY_BIN_LOCK (playbin);
+      g_value_set_string (value, playbin->encoding);
+      GST_PLAY_BIN_UNLOCK (playbin);
       break;
     case PROP_VIDEO_SINK:
+      g_value_set_object (value,
+          gst_play_sink_get_video_sink (playbin->playsink));
       break;
     case PROP_AUDIO_SINK:
+      g_value_set_object (value,
+          gst_play_sink_get_audio_sink (playbin->playsink));
       break;
     case PROP_VIS_PLUGIN:
+      g_value_set_object (value,
+          gst_play_sink_get_vis_plugin (playbin->playsink));
       break;
     case PROP_VOLUME:
       g_value_set_double (value, gst_play_sink_get_volume (playbin->playsink));
@@ -1290,11 +1371,13 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       gst_value_take_buffer (value, gst_play_bin_convert_frame (playbin, NULL));
       break;
     case PROP_FONT_DESC:
+      g_value_take_string (value,
+          gst_play_sink_get_font_desc (playbin->playsink));
       break;
     case PROP_CONNECTION_SPEED:
-      GST_OBJECT_LOCK (playbin);
+      GST_PLAY_BIN_LOCK (playbin);
       g_value_set_uint (value, playbin->connection_speed / 1000);
-      GST_OBJECT_UNLOCK (playbin);
+      GST_PLAY_BIN_UNLOCK (playbin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1366,10 +1449,11 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   if (select == NULL)
     goto unknown_type;
 
+  GST_SOURCE_GROUP_LOCK (group);
   if (select->selector == NULL) {
     /* no selector, create one */
     GST_DEBUG_OBJECT (playbin, "creating new selector");
-    select->selector = g_object_new (GST_TYPE_STREAM_SELECTOR, NULL);
+    select->selector = gst_element_factory_make ("input-selector", NULL);
     if (select->selector == NULL)
       goto no_selector;
 
@@ -1402,6 +1486,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   }
   GST_DEBUG_OBJECT (playbin, "linked pad %s:%s to selector %p",
       GST_DEBUG_PAD_NAME (pad), select->selector);
+  GST_SOURCE_GROUP_UNLOCK (group);
 
   return;
 
@@ -1416,6 +1501,7 @@ no_selector:
   {
     GST_ERROR_OBJECT (playbin, "could not create selector for pad %s:%s",
         GST_DEBUG_PAD_NAME (pad));
+    GST_SOURCE_GROUP_UNLOCK (group);
     return;
   }
 link_failed:
@@ -1423,6 +1509,7 @@ link_failed:
     GST_ERROR_OBJECT (playbin,
         "failed to link pad %s:%s to selector, reason %d",
         GST_DEBUG_PAD_NAME (pad), res);
+    GST_SOURCE_GROUP_UNLOCK (group);
     return;
   }
 }
@@ -1442,6 +1529,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   GST_DEBUG_OBJECT (playbin,
       "pad %s:%s removed from group %p", GST_DEBUG_PAD_NAME (pad), group);
 
+  GST_SOURCE_GROUP_LOCK (group);
   /* get the selector sinkpad */
   if (!(peer = g_object_get_data (G_OBJECT (pad), "playbin2.sinkpad")))
     goto not_linked;
@@ -1466,6 +1554,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   gst_element_release_request_pad (selector, peer);
 
   gst_object_unref (selector);
+  GST_SOURCE_GROUP_UNLOCK (group);
 
   return;
 
@@ -1473,11 +1562,13 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 not_linked:
   {
     GST_DEBUG_OBJECT (playbin, "pad not linked");
+    GST_SOURCE_GROUP_UNLOCK (group);
     return;
   }
 no_selector:
   {
     GST_DEBUG_OBJECT (playbin, "selector not found");
+    GST_SOURCE_GROUP_UNLOCK (group);
     return;
   }
 }
@@ -1497,15 +1588,21 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
   GstPlayBin *playbin;
   GstPadLinkReturn res;
   gint i;
+  gboolean configure;
 
   playbin = group->playbin;
 
   GST_DEBUG_OBJECT (playbin, "no more pads in group %p", group);
 
+  GST_SOURCE_GROUP_LOCK (group);
   for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
     GstSourceSelect *select = &group->selector[i];
 
-    if (select->selector) {
+    /* check if the specific media type was detected and thus has a selector
+     * created for it. If there is the media type, get a sinkpad from the sink
+     * and link it. We only do this if we have not yet requested the sinkpad
+     * before. */
+    if (select->selector && select->sinkpad == NULL) {
       select->sinkpad =
           gst_play_sink_request_pad (playbin->playsink, select->type);
       res = gst_pad_link (select->srcpad, select->sinkpad);
@@ -1513,8 +1610,33 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
           res);
     }
   }
-  /* configure the modes now */
-  gst_play_sink_reconfigure (playbin->playsink);
+  group->pending--;
+  if (group->pending == 0) {
+    /* we are the last group to complete, we will configure the output and then
+     * signal the other waiters. */
+    configure = TRUE;
+  } else {
+    configure = FALSE;
+    /* check if there are more decodebins to wait for */
+    while (group->pending) {
+      GST_DEBUG_OBJECT (playbin, "%d pending in group %p, waiting",
+          group->pending, group);
+      /* FIXME, unlock when shutting down */
+      GST_SOURCE_GROUP_WAIT (group);
+    }
+  }
+  GST_SOURCE_GROUP_UNLOCK (group);
+
+  if (configure) {
+    /* we configure the modes if we were the last decodebin to complete. */
+    gst_play_sink_reconfigure (playbin->playsink);
+
+    /* signal the other decodebins that they can continue now. */
+    GST_SOURCE_GROUP_LOCK (group);
+    GST_DEBUG_OBJECT (playbin, "signal other decodebins");
+    GST_SOURCE_GROUP_BROADCAST (group);
+    GST_SOURCE_GROUP_UNLOCK (group);
+  }
 }
 
 /* send an EOS event to all of the selectors */
@@ -1527,6 +1649,8 @@ perform_eos (GstPlayBin * playbin, GstSourceGroup * group)
   GST_DEBUG_OBJECT (playbin, "doing EOS in group %p", group);
 
   event = gst_event_new_eos ();
+
+  GST_SOURCE_GROUP_LOCK (group);
   for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
     GstSourceSelect *select = &group->selector[i];
 
@@ -1536,6 +1660,8 @@ perform_eos (GstPlayBin * playbin, GstSourceGroup * group)
       gst_pad_push_event (select->srcpad, event);
     }
   }
+  GST_SOURCE_GROUP_UNLOCK (group);
+
   gst_event_unref (event);
 }
 
@@ -1592,8 +1718,8 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
 
 /* We are asked to select an element. See if the next element to check
  * is a sink. If this is the case, we see if the sink works by setting it to
- * READY. If the sink works, we return -2 to make decodebin expose the raw pad
- * so that we can setup the mixers. */
+ * READY. If the sink works, we return SELECT_EXPOSE to make decodebin
+ * expose the raw pad so that we can setup the mixers. */
 static GstAutoplugSelectResult
 autoplug_select_cb (GstElement * decodebin, GstPad * pad,
     GstCaps * caps, GstElementFactory * factory, GstSourceGroup * group)
@@ -1617,6 +1743,17 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   /* it's a sink, see if an instance of it actually works */
   GST_DEBUG_OBJECT (playbin, "we found a sink");
 
+  klass = gst_element_factory_get_klass (factory);
+
+  /* if we are asked to do visualisations and it's an audio sink, skip the
+   * element. We can only do visualisations with raw sinks */
+  if (gst_play_sink_get_flags (playbin->playsink) & GST_PLAY_FLAG_VIS) {
+    if (strstr (klass, "Audio")) {
+      GST_DEBUG_OBJECT (playbin, "skip audio sink because of vis");
+      return GST_AUTOPLUG_SELECT_SKIP;
+    }
+  }
+
   if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
     GST_WARNING_OBJECT (playbin, "Could not create an element from %s",
         gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
@@ -1634,16 +1771,15 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
     return GST_AUTOPLUG_SELECT_SKIP;
   }
 
-  /* at this point, we have the sink working, configure it in playsink */
-  klass = gst_element_factory_get_klass (factory);
-
   /* get klass to figure out if it's audio or video */
   if (strstr (klass, "Audio")) {
     GST_DEBUG_OBJECT (playbin, "configure audio sink");
     gst_play_sink_set_audio_sink (playbin->playsink, element);
+    g_object_notify (G_OBJECT (playbin), "audio-sink");
   } else if (strstr (klass, "Video")) {
     GST_DEBUG_OBJECT (playbin, "configure video sink");
     gst_play_sink_set_video_sink (playbin->playsink, element);
+    g_object_notify (G_OBJECT (playbin), "video-sink");
   } else {
     GST_WARNING_OBJECT (playbin, "unknown sink klass %s found", klass);
   }
@@ -1655,14 +1791,17 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   return GST_AUTOPLUG_SELECT_EXPOSE;
 }
 
+/* must be called with PLAY_BIN_LOCK */
 static gboolean
 activate_group (GstPlayBin * playbin, GstSourceGroup * group)
 {
   GstElement *uridecodebin;
+  GstElement *suburidecodebin;
 
   g_return_val_if_fail (group->valid, FALSE);
   g_return_val_if_fail (!group->active, FALSE);
 
+  GST_SOURCE_GROUP_LOCK (group);
   if (group->uridecodebin) {
     gst_element_set_state (group->uridecodebin, GST_STATE_NULL);
     gst_bin_remove (GST_BIN_CAST (playbin), group->uridecodebin);
@@ -1676,6 +1815,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   /* configure connection speed */
   g_object_set (uridecodebin, "connection-speed", playbin->connection_speed,
       NULL);
+  /* configure subtitle encoding */
+  g_object_set (uridecodebin, "subtitle-encoding", playbin->encoding, NULL);
   /* configure uri */
   g_object_set (uridecodebin, "uri", group->uri, NULL);
 
@@ -1686,6 +1827,9 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
       group);
   g_signal_connect (uridecodebin, "no-more-pads", G_CALLBACK (no_more_pads_cb),
       group);
+  /* we have 1 pending no-more-pads */
+  group->pending = 1;
+
   /* is called when the uridecodebin is out of data and we can switch to the
    * next uri */
   g_signal_connect (uridecodebin, "drained", G_CALLBACK (drained_cb), group);
@@ -1702,20 +1846,60 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   gst_bin_add (GST_BIN_CAST (playbin), uridecodebin);
   group->uridecodebin = uridecodebin;
 
+  if (group->suburi) {
+    /* subtitles */
+    if (group->suburidecodebin) {
+      gst_element_set_state (group->suburidecodebin, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (playbin), group->suburidecodebin);
+      group->suburidecodebin = NULL;
+    }
+
+    suburidecodebin = gst_element_factory_make ("uridecodebin", NULL);
+    if (!suburidecodebin)
+      goto no_decodebin;
+
+    /* configure connection speed */
+    g_object_set (suburidecodebin, "connection-speed",
+        playbin->connection_speed, NULL);
+    /* configure subtitle encoding */
+    g_object_set (suburidecodebin, "subtitle-encoding", playbin->encoding,
+        NULL);
+    /* configure uri */
+    g_object_set (suburidecodebin, "uri", group->suburi, NULL);
+
+    /*  */
+    gst_bin_add (GST_BIN_CAST (playbin), suburidecodebin);
+    group->suburidecodebin = suburidecodebin;
+
+    /* connect pads and other things */
+    g_signal_connect (suburidecodebin, "pad-added", G_CALLBACK (pad_added_cb),
+        group);
+    g_signal_connect (suburidecodebin, "pad-removed",
+        G_CALLBACK (pad_removed_cb), group);
+    g_signal_connect (suburidecodebin, "no-more-pads",
+        G_CALLBACK (no_more_pads_cb), group);
+    /* we have 2 pending no-more-pads */
+    group->pending = 2;
+
+    gst_element_set_state (suburidecodebin, GST_STATE_PAUSED);
+  }
   gst_element_set_state (uridecodebin, GST_STATE_PAUSED);
 
   group->active = TRUE;
+  GST_SOURCE_GROUP_UNLOCK (group);
 
   return TRUE;
 
   /* ERRORS */
 no_decodebin:
   {
+    GST_SOURCE_GROUP_UNLOCK (group);
     return FALSE;
   }
 }
 
-/* unlink a group of uridecodebins from the sink */
+/* unlink a group of uridecodebins from the sink.
+ * must be called with PLAY_BIN_LOCK */
 static gboolean
 deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
 {
@@ -1726,6 +1910,8 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
 
   GST_DEBUG_OBJECT (playbin, "unlinking group %p", group);
 
+  GST_SOURCE_GROUP_LOCK (group);
+  group->active = FALSE;
   for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
     GstSourceSelect *select = &group->selector[i];
 
@@ -1746,7 +1932,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
     gst_bin_remove (GST_BIN_CAST (playbin), select->selector);
     select->selector = NULL;
   }
-  group->active = FALSE;
+  GST_SOURCE_GROUP_UNLOCK (group);
 
   return TRUE;
 }
@@ -1762,6 +1948,7 @@ setup_next_source (GstPlayBin * playbin)
   GST_DEBUG_OBJECT (playbin, "setup sources");
 
   /* see if there is a next group */
+  GST_PLAY_BIN_LOCK (playbin);
   new_group = playbin->next_group;
   if (!new_group || !new_group->valid)
     goto no_next_group;
@@ -1781,6 +1968,7 @@ setup_next_source (GstPlayBin * playbin)
   /* swap old and new */
   playbin->curr_group = new_group;
   playbin->next_group = old_group;
+  GST_PLAY_BIN_UNLOCK (playbin);
 
   return TRUE;
 
@@ -1788,11 +1976,13 @@ setup_next_source (GstPlayBin * playbin)
 no_next_group:
   {
     GST_DEBUG_OBJECT (playbin, "no next group");
+    GST_PLAY_BIN_UNLOCK (playbin);
     return FALSE;
   }
 activate_failed:
   {
     GST_DEBUG_OBJECT (playbin, "activate failed");
+    GST_PLAY_BIN_UNLOCK (playbin);
     return FALSE;
   }
 }
@@ -1808,6 +1998,7 @@ save_current_group (GstPlayBin * playbin)
   GST_DEBUG_OBJECT (playbin, "save current group");
 
   /* see if there is a current group */
+  GST_PLAY_BIN_LOCK (playbin);
   curr_group = playbin->curr_group;
   if (curr_group && curr_group->valid) {
     /* unlink our pads with the sink */
@@ -1816,6 +2007,7 @@ save_current_group (GstPlayBin * playbin)
   /* swap old and new */
   playbin->curr_group = playbin->next_group;
   playbin->next_group = curr_group;
+  GST_PLAY_BIN_UNLOCK (playbin);
 
   return TRUE;
 }
@@ -1832,6 +2024,9 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!setup_next_source (playbin))
         goto source_failed;
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* FIXME unlock our waiting groups */
       break;
     default:
       break;
