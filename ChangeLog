@@ -1,5 +1,31 @@
 2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstplaysink.c: (gst_play_sink_class_init),
+	(gst_play_sink_init), (gst_play_sink_dispose),
+	(gst_play_sink_set_video_sink), (gst_play_sink_get_video_sink),
+	(gst_play_sink_set_audio_sink), (gst_play_sink_get_audio_sink),
+	(gst_play_sink_vis_unblocked), (gst_play_sink_vis_blocked),
+	(gst_play_sink_set_vis_plugin), (gst_play_sink_get_vis_plugin),
+	(gst_play_sink_set_volume), (gst_play_sink_get_volume),
+	(gst_play_sink_set_mute), (gen_video_chain), (gen_text_chain),
+	(gen_audio_chain), (gen_vis_chain), (gst_play_sink_reconfigure),
+	(gst_play_sink_set_font_desc), (gst_play_sink_get_font_desc),
+	(gst_play_sink_send_event_to_sink), (gst_play_sink_change_state):
+	* gst/playback/gstplaysink.h:
+	Add methods to get audio/video/vis elements.
+	Add methods to set the font description for the overlay.
+	Remove properties, we're using this element with its methods only.
+	Add support for subtitles.
+	Rearrange the locking a bit to not use the object lock for protecting
+	the pipeline construction.
+	Try to use the volume and mute property on the sink when its available.
+	Implement the mute option with volume when the sink does not have a mute
+	property.
+	Only add volume element when the sink has no volume property.
+	Only do visualisations with raw audio pads.
+
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_class_init),
 	(gst_text_overlay_init), (gst_text_overlay_set_property),
 	(gst_text_overlay_get_property), (gst_text_overlay_src_event),

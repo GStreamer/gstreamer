@@ -66,8 +66,13 @@ GstPad *         gst_play_sink_request_pad    (GstPlaySink *playsink, GstPlaySin
 void             gst_play_sink_release_pad    (GstPlaySink *playsink, GstPad *pad);
 
 void             gst_play_sink_set_video_sink (GstPlaySink * playsink, GstElement * sink);
+GstElement *     gst_play_sink_get_video_sink (GstPlaySink * playsink);
+
 void             gst_play_sink_set_audio_sink (GstPlaySink * playsink, GstElement * sink);
+GstElement *     gst_play_sink_get_audio_sink (GstPlaySink * playsink);
+
 void             gst_play_sink_set_vis_plugin (GstPlaySink * playsink, GstElement * vis);
+GstElement *     gst_play_sink_get_vis_plugin (GstPlaySink * playsink);
 
 void             gst_play_sink_set_volume     (GstPlaySink *playsink, gdouble volume);
 gdouble          gst_play_sink_get_volume     (GstPlaySink *playsink);
@@ -77,6 +82,9 @@ gboolean         gst_play_sink_get_mute       (GstPlaySink *playsink);
 
 gboolean         gst_play_sink_set_flags      (GstPlaySink * playsink, GstPlayFlags flags);
 GstPlayFlags     gst_play_sink_get_flags      (GstPlaySink * playsink);
+
+void             gst_play_sink_set_font_desc  (GstPlaySink *playsink, const gchar * desc);
+gchar *          gst_play_sink_get_font_desc  (GstPlaySink *playsink);
 
 GstBuffer *      gst_play_sink_get_last_frame (GstPlaySink * playsink);
 
