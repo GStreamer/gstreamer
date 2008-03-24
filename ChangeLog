@@ -1,5 +1,22 @@
 2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gsturidecodebin.c:
+	(gst_uri_decode_bin_autoplug_factories),
+	(gst_uri_decode_bin_class_init), (gst_uri_decode_bin_init),
+	(gst_uri_decode_bin_finalize), (gst_uri_decode_bin_set_encoding),
+	(gst_uri_decode_bin_set_property),
+	(gst_uri_decode_bin_get_property), (no_more_pads_full),
+	(new_decoded_pad_cb), (gen_source_element), (remove_decoders),
+	(proxy_autoplug_factories_signal), (make_decoder),
+	(source_new_pad), (setup_source):
+	Add a readonly source property and notify.
+	Add new lock for protecting the construction of the pipeline.
+	Keep track of the decodebins we plugged.
+	Correctly proxy the autoplug signal so that it actually continues.
+	Proxy subtitle-encoding to the decodebins.
+
+2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* tests/examples/seek/seek.c: (audio_toggle_cb), (video_toggle_cb),
 	(text_toggle_cb), (update_streams), (main):
 	Rearrange some buttons in playbin2 and make some other boxes insensitive

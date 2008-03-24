@@ -33,6 +33,7 @@
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
 
+#include "gstfactorylists.h"
 #include "gstplay-marshal.h"
 #include "gstplay-enum.h"
 
@@ -46,13 +47,22 @@
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_URI_DECODE_BIN))
 #define GST_IS_URI_DECODE_BIN_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_URI_DECODE_BIN))
+#define GST_URI_DECODE_BIN_CAST(obj) ((GstURIDecodeBin *) (obj))
 
 typedef struct _GstURIDecodeBin GstURIDecodeBin;
 typedef struct _GstURIDecodeBinClass GstURIDecodeBinClass;
 
+#define GST_URI_DECODE_BIN_GET_LOCK(dec) (((GstURIDecodeBin*)(dec))->lock)
+#define GST_URI_DECODE_BIN_LOCK(dec) (g_mutex_lock(GST_URI_DECODE_BIN_GET_LOCK(dec)))
+#define GST_URI_DECODE_BIN_UNLOCK(dec) (g_mutex_unlock(GST_URI_DECODE_BIN_GET_LOCK(dec)))
+
 struct _GstURIDecodeBin
 {
   GstBin parent_instance;
+
+  GMutex *lock;                 /* lock for constructing */
+
+  GValueArray *factories;       /* factories we can use for selecting elements */
 
   gchar *uri;
   guint connection_speed;
@@ -63,6 +73,7 @@ struct _GstURIDecodeBin
   GstElement *source;
   GstElement *queue;
   GSList *decoders;
+  GSList *decodebins;
   GSList *srcpads;
   gint numpads;
 
@@ -120,6 +131,7 @@ enum
 
 /* properties */
 #define DEFAULT_PROP_URI	    NULL
+#define DEFAULT_PROP_SOURCE	    NULL
 #define DEFAULT_CONNECTION_SPEED    0
 #define DEFAULT_CAPS                NULL
 #define DEFAULT_SUBTITLE_ENCODING   NULL
@@ -128,6 +140,7 @@ enum
 {
   PROP_0,
   PROP_URI,
+  PROP_SOURCE,
   PROP_CONNECTION_SPEED,
   PROP_CAPS,
   PROP_SUBTITLE_ENCODING,
@@ -209,6 +222,25 @@ gst_uri_decode_bin_autoplug_continue (GstElement * element, GstPad * pad,
   return TRUE;
 }
 
+static GValueArray *
+gst_uri_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
+    GstCaps * caps)
+{
+  GValueArray *result;
+
+  GST_DEBUG_OBJECT (element, "finding factories");
+
+  /* return all compatible factories for caps */
+  result =
+      gst_factory_list_filter (GST_URI_DECODE_BIN_CAST (element)->factories,
+      caps);
+
+  GST_DEBUG_OBJECT (element, "autoplug-factories returns %p", result);
+
+  return result;
+}
+
+
 static void
 gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 {
@@ -227,6 +259,10 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
   g_object_class_install_property (gobject_class, PROP_URI,
       g_param_spec_string ("uri", "URI", "URI to decode",
           DEFAULT_PROP_URI, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_SOURCE,
+      g_param_spec_object ("source", "Source", "Source object used",
+          GST_TYPE_ELEMENT, G_PARAM_READABLE));
 
   g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
       g_param_spec_uint ("connection-speed", "Connection Speed",
@@ -342,11 +378,18 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   klass->autoplug_continue =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_continue);
+  klass->autoplug_factories =
+      GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_factories);
 }
 
 static void
 gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
 {
+  /* first filter out the interesting element factories */
+  dec->factories = gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
+
+  dec->lock = g_mutex_new ();
+
   dec->uri = g_strdup (DEFAULT_PROP_URI);
   dec->connection_speed = DEFAULT_CONNECTION_SPEED;
   dec->caps = DEFAULT_CAPS;
@@ -358,10 +401,33 @@ gst_uri_decode_bin_finalize (GObject * obj)
 {
   GstURIDecodeBin *dec = GST_URI_DECODE_BIN (obj);
 
+  g_mutex_free (dec->lock);
   g_free (dec->uri);
   g_free (dec->encoding);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
+}
+
+static void
+gst_uri_decode_bin_set_encoding (GstURIDecodeBin * dec, const gchar * encoding)
+{
+  GSList *walk;
+
+  GST_URI_DECODE_BIN_LOCK (dec);
+
+  /* set property first */
+  GST_OBJECT_LOCK (dec);
+  g_free (dec->encoding);
+  dec->encoding = g_strdup (encoding);
+  GST_OBJECT_UNLOCK (dec);
+
+  /* set the property on all decodebins now */
+  for (walk = dec->decodebins; walk; walk = g_slist_next (walk)) {
+    GObject *decodebin = G_OBJECT (walk->data);
+
+    g_object_set (decodebin, "subtitle-encoding", encoding, NULL);
+  }
+  GST_URI_DECODE_BIN_UNLOCK (dec);
 }
 
 static void
@@ -390,10 +456,7 @@ gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (dec);
       break;
     case PROP_SUBTITLE_ENCODING:
-      GST_OBJECT_LOCK (dec);
-      g_free (dec->encoding);
-      dec->encoding = g_value_dup_string (value);
-      GST_OBJECT_UNLOCK (dec);
+      gst_uri_decode_bin_set_encoding (dec, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -411,6 +474,11 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
     case PROP_URI:
       GST_OBJECT_LOCK (dec);
       g_value_set_string (value, dec->uri);
+      GST_OBJECT_UNLOCK (dec);
+      break;
+    case PROP_SOURCE:
+      GST_OBJECT_LOCK (dec);
+      g_value_set_object (value, dec->source);
       GST_OBJECT_UNLOCK (dec);
       break;
     case PROP_CONNECTION_SPEED:
@@ -473,7 +541,7 @@ no_more_pads_full (GstElement * element, gboolean subs,
   /* setup phase */
   GST_DEBUG_OBJECT (element, "no more pads, %d pending", decoder->pending);
 
-  GST_OBJECT_LOCK (decoder);
+  GST_URI_DECODE_BIN_LOCK (decoder);
   final = (decoder->pending == 0);
 
   /* nothing pending, we can exit */
@@ -489,7 +557,7 @@ no_more_pads_full (GstElement * element, gboolean subs,
   final = (decoder->pending == 0);
 
 done:
-  GST_OBJECT_UNLOCK (decoder);
+  GST_URI_DECODE_BIN_UNLOCK (decoder);
 
   if (final)
     gst_element_no_more_pads (GST_ELEMENT_CAST (decoder));
@@ -530,10 +598,10 @@ new_decoded_pad_cb (GstElement * element, GstPad * pad, gboolean last,
   GST_DEBUG_OBJECT (element, "new decoded pad, name: <%s>. Last: %d",
       GST_PAD_NAME (pad), last);
 
-  GST_OBJECT_LOCK (decoder);
+  GST_URI_DECODE_BIN_LOCK (decoder);
   padname = g_strdup_printf ("src%d", decoder->numpads);
   decoder->numpads++;
-  GST_OBJECT_UNLOCK (decoder);
+  GST_URI_DECODE_BIN_UNLOCK (decoder);
 
   newpad = gst_ghost_pad_new (padname, pad);
   g_free (padname);
@@ -652,7 +720,13 @@ gen_source_element (GstURIDecodeBin * decoder)
     g_object_set (source, "connection-speed",
         decoder->connection_speed / 1000, NULL);
   }
-
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (source),
+          "subtitle-encoding")) {
+    GST_DEBUG_OBJECT (decoder,
+        "setting subtitle-encoding=%s to source element", decoder->encoding);
+    g_object_set (G_OBJECT (source), "subtitle-encoding", decoder->encoding,
+        NULL);
+  }
   return source;
 
   /* ERRORS */
@@ -842,7 +916,9 @@ remove_decoders (GstURIDecodeBin * bin)
     gst_bin_remove (GST_BIN_CAST (bin), decoder);
   }
   g_slist_free (bin->decoders);
+  g_slist_free (bin->decodebins);
   bin->decoders = NULL;
+  bin->decodebins = NULL;
 }
 
 static void
@@ -890,7 +966,7 @@ static GValueArray *
 proxy_autoplug_factories_signal (GstElement * element, GstPad * pad,
     GstCaps * caps, GstURIDecodeBin * dec)
 {
-  GValueArray *result = NULL;
+  GValueArray *result;
 
   g_signal_emit (G_OBJECT (dec),
       gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_FACTORIES], 0, pad, caps,
@@ -986,11 +1062,14 @@ make_decoder (GstURIDecodeBin * decoder, gboolean use_queue)
   g_signal_connect (G_OBJECT (decodebin),
       "unknown-type", G_CALLBACK (unknown_type_cb), decoder);
   g_object_set_data (G_OBJECT (decodebin), "pending", "1");
+  g_object_set (G_OBJECT (decodebin), "subtitle-encoding", decoder->encoding,
+      NULL);
   decoder->pending++;
 
   gst_bin_add (GST_BIN_CAST (decoder), result);
 
   decoder->decoders = g_slist_prepend (decoder->decoders, result);
+  decoder->decodebins = g_slist_prepend (decoder->decodebins, decodebin);
 
   return result;
 
@@ -1038,12 +1117,14 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
   GstElement *decoder;
   gboolean is_raw;
 
+  GST_URI_DECODE_BIN_LOCK (bin);
   GST_DEBUG_OBJECT (bin, "Found new pad %s.%s in source element %s",
       GST_DEBUG_PAD_NAME (pad), GST_ELEMENT_NAME (element));
 
   /* if this is a pad with all raw caps, we can expose it */
   if (has_all_raw_caps (pad, &is_raw) && is_raw) {
     /* it's all raw, create output pads. */
+    GST_URI_DECODE_BIN_UNLOCK (bin);
     new_decoded_pad_cb (element, pad, FALSE, bin);
     return;
   }
@@ -1060,6 +1141,7 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
   GST_DEBUG_OBJECT (bin, "linked decoder to new pad");
 
   gst_element_set_state (decoder, GST_STATE_PLAYING);
+  GST_URI_DECODE_BIN_UNLOCK (bin);
 
   return;
 
@@ -1067,12 +1149,14 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
 no_decodebin:
   {
     /* error was posted */
+    GST_URI_DECODE_BIN_UNLOCK (bin);
     return;
   }
 could_not_link:
   {
     GST_ELEMENT_ERROR (bin, CORE, NEGOTIATION,
         (NULL), ("Can't link source to decoder element"));
+    GST_URI_DECODE_BIN_UNLOCK (bin);
     return;
   }
 }
@@ -1097,6 +1181,9 @@ setup_source (GstURIDecodeBin * decoder)
   /* state will be merged later - if file is not found, error will be
    * handled by the application right after. */
   gst_bin_add (GST_BIN_CAST (decoder), decoder->source);
+
+  /* notify of the new source used */
+  g_object_notify (G_OBJECT (decoder), "source");
 
   /* remove the old decoders now, if any */
   remove_decoders (decoder);
