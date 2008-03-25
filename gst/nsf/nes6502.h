@@ -23,6 +23,9 @@
 ** $Id$
 */
 
+/* straitm */
+#include "types.h"
+
 /* NOTE: 16-bit addresses avoided like the plague: use 32-bit values
 **       wherever humanly possible
 */
@@ -47,6 +50,17 @@
 
 #define  NES6502_BANKMASK  ((0x10000 / NES6502_NUMBANKS) - 1)
 
+/* Add memory access control flags. This is a ram shadow memory that holds
+ * for each memory bytes access flags for read, write and execute access.
+ * The nes6502_mem_access holds all new access (all mode all location). It is 
+ * used to determine if the player has loop in playing time calculation.
+ */
+#ifdef NES6502_MEM_ACCESS_CTRL
+extern uint8 nes6502_mem_access;
+# define NES6502_READ_ACCESS 1
+# define NES6502_WRITE_ACCESS 2
+# define NES6502_EXE_ACCESS 4
+#endif /* #ifdef NES6502_MEM_ACCESS_CTRL */
 
 /* P (flag) register bitmasks */
 #define  N_FLAG         0x80
@@ -87,7 +101,10 @@ typedef struct
 
 typedef struct
 {
-   uint8 *mem_page[NES6502_NUMBANKS];  /* memory page pointers */
+   uint8 * mem_page[NES6502_NUMBANKS];  /* memory page pointers */
+#ifdef NES6502_MEM_ACCESS_CTRL
+  uint8 * acc_mem_page[NES6502_NUMBANKS]; /* memory access page pointer */
+#endif
    nes6502_memread *read_handler;
    nes6502_memwrite *write_handler;
    int dma_cycles;
@@ -110,6 +127,12 @@ extern uint8 nes6502_getbyte(uint32 address);
 extern uint32 nes6502_getcycles(boolean reset_flag);
 extern void nes6502_setdma(int cycles);
 
+#ifdef NES6502_MEM_ACCESS_CTRL
+extern void nes6502_chk_mem_access(uint8 * access, int flags);
+#else
+#define nes6502_chk_mem_access(access,flags)
+#endif
+
 /* Context get/set */
 extern void nes6502_setcontext(nes6502_context *cpu);
 extern void nes6502_getcontext(nes6502_context *cpu);
@@ -122,10 +145,8 @@ extern void nes6502_getcontext(nes6502_context *cpu);
 
 /*
 ** $Log$
-** Revision 1.1  2006/07/13 15:07:28  wtay
-** Based on patches by: Johan Dahlin <johan at gnome dot org>
-** Ronald Bultje <rbultje at ronald dot bitfreak dot net>
-** * configure.ac:
+** Revision 1.2  2008/03/25 15:56:12  slomo
+** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:
 ** * gst/nsf/fds_snd.c:
@@ -133,7 +154,6 @@ extern void nes6502_getcontext(nes6502_context *cpu);
 ** * gst/nsf/fmopl.c:
 ** * gst/nsf/fmopl.h:
 ** * gst/nsf/gstnsf.c:
-** * gst/nsf/gstnsf.h:
 ** * gst/nsf/log.c:
 ** * gst/nsf/log.h:
 ** * gst/nsf/memguard.c:
@@ -152,7 +172,16 @@ extern void nes6502_getcontext(nes6502_context *cpu);
 ** * gst/nsf/vrc7_snd.h:
 ** * gst/nsf/vrcvisnd.c:
 ** * gst/nsf/vrcvisnd.h:
-** Added NSF decoder plugin. Fixes 151192.
+** Update our internal nosefart to nosefart-2.7-mls to fix segfaults
+** on some files. Fixes bug #498237.
+** Remove some // comments, fix some compiler warnings and use pow()
+** instead of a slow, selfmade implementation.
+**
+** Revision 1.2  2003/05/01 22:34:19  benjihan
+** New NSF plugin
+**
+** Revision 1.1  2003/04/08 20:53:00  ben
+** Adding more files...
 **
 ** Revision 1.4  2000/06/09 15:12:25  matt
 ** initial revision

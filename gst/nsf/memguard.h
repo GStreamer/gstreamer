@@ -17,25 +17,44 @@
 ** must bear this legend.
 **
 **
-** fds_snd.h
+** memguard.h
 **
-** Famicom Disk System sound emulation
+** memory allocation wrapper routines
 ** $Id$
 */
 
-#ifndef _FDS_SND_H_
-#define _FDS_SND_H_
+#ifndef  _MEMGUARD_H_
+#define  _MEMGUARD_H_
 
-#include "nes_apu.h"
+#ifdef NOFRENDO_DEBUG
 
-extern apuext_t fds_ext;
+#define  malloc(s)   _my_malloc((s), __FILE__, __LINE__)
+#define  free(d)     _my_free((void **) &(d), __FILE__, __LINE__)
+
+extern void *_my_malloc(int size, char *file, int line);
+extern void _my_free(void **data, char *file, int line);
+
+#else /* Non-debugging versions of calls */
+
+#define  malloc(s)   _my_malloc((s))
+#define  free(d)     _my_free((void **) &(d))
+
+extern void *_my_malloc(int size);
+extern void _my_free(void **data);
+
+#endif /* NOFRENDO_DEBUG */
 
 
-#endif /* _VRCVISND_H_ */
+extern void mem_checkblocks(void);
+extern void mem_checkleaks(void);
+
+extern boolean mem_debug;
+
+#endif   /* _MEMGUARD_H_ */
 
 /*
 ** $Log$
-** Revision 1.2  2008/03/25 15:56:10  slomo
+** Revision 1.3  2008/03/25 15:56:11  slomo
 ** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:
@@ -67,13 +86,13 @@ extern apuext_t fds_ext;
 ** Remove some // comments, fix some compiler warnings and use pow()
 ** instead of a slow, selfmade implementation.
 **
-** Revision 1.1  2003/04/08 20:53:00  ben
-** Adding more files...
+** Revision 1.1  2003/04/08 20:46:46  ben
+** add new input for NES music file.
 **
-** Revision 1.2  2000/06/20 04:06:16  matt
-** migrated external sound definition to apu module
+** Revision 1.5  2000/06/26 04:54:48  matt
+** simplified and made more robust
 **
-** Revision 1.1  2000/06/20 00:06:47  matt
+** Revision 1.4  2000/06/09 15:12:25  matt
 ** initial revision
 **
 */

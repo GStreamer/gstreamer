@@ -132,7 +132,7 @@ typedef struct triangle_s
    /* quasi-hack */
    int write_latency;
 
-  /* boolean countmode; */
+/*   boolean countmode; */
 
    int vbl_length;
    int linear_length;
@@ -249,7 +249,7 @@ typedef struct apu_s
    void *buffer; /* pointer to output buffer */
    int num_samples;
 
-   boolean mix_enable[6];
+  int mix_enable; /* $$$ben : should improve emulation */
    int filter_type;
 
    int32 cycle_rate;
@@ -259,6 +259,9 @@ typedef struct apu_s
    int refresh_rate;
 
    void (*process)(void *buffer, int num_samples);
+
+  /* $$$ ben : last error string */
+  const char * errstr;
 
    /* external sound chip */
    apuext_t *ext;
@@ -272,11 +275,11 @@ extern "C" {
 /* Function prototypes */
 extern apu_t *apu_create(int sample_rate, int refresh_rate, int sample_bits, boolean stereo);
 extern void apu_destroy(apu_t *apu);
-extern void apu_setext(apu_t *apu, apuext_t *ext);
-extern void apu_setfilter(int filter_type);
+extern int apu_setext(apu_t *apu, apuext_t *ext);
+extern int apu_setfilter(int filter_type);
 extern void apu_process(void *buffer, int num_samples);
 extern void apu_reset(void);
-extern void apu_setchan(int chan, boolean enabled);
+extern int apu_setchan(int chan, boolean enabled);
 extern int32 apu_getcyclerate(void);
 extern apu_t *apu_getcontext(void);
 
@@ -285,6 +288,9 @@ extern void apu_write(uint32 address, uint8 value);
 
 /* for visualization */
 extern void apu_getpcmdata(void **data, int *num_samples, int *sample_bits);
+
+/* FIXME: added while importing for GStreamer */
+void apu_setcontext(apu_t *src_apu);
 
 
 #ifdef __cplusplus
@@ -295,10 +301,8 @@ extern void apu_getpcmdata(void **data, int *num_samples, int *sample_bits);
 
 /*
 ** $Log$
-** Revision 1.1  2006/07/13 15:07:28  wtay
-** Based on patches by: Johan Dahlin <johan at gnome dot org>
-** Ronald Bultje <rbultje at ronald dot bitfreak dot net>
-** * configure.ac:
+** Revision 1.2  2008/03/25 15:56:12  slomo
+** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:
 ** * gst/nsf/fds_snd.c:
@@ -306,7 +310,6 @@ extern void apu_getpcmdata(void **data, int *num_samples, int *sample_bits);
 ** * gst/nsf/fmopl.c:
 ** * gst/nsf/fmopl.h:
 ** * gst/nsf/gstnsf.c:
-** * gst/nsf/gstnsf.h:
 ** * gst/nsf/log.c:
 ** * gst/nsf/log.h:
 ** * gst/nsf/memguard.c:
@@ -325,7 +328,16 @@ extern void apu_getpcmdata(void **data, int *num_samples, int *sample_bits);
 ** * gst/nsf/vrc7_snd.h:
 ** * gst/nsf/vrcvisnd.c:
 ** * gst/nsf/vrcvisnd.h:
-** Added NSF decoder plugin. Fixes 151192.
+** Update our internal nosefart to nosefart-2.7-mls to fix segfaults
+** on some files. Fixes bug #498237.
+** Remove some // comments, fix some compiler warnings and use pow()
+** instead of a slow, selfmade implementation.
+**
+** Revision 1.2  2003/04/09 14:50:32  ben
+** Clean NSF api.
+**
+** Revision 1.1  2003/04/08 20:53:01  ben
+** Adding more files...
 **
 ** Revision 1.12  2000/07/04 04:54:48  matt
 ** minor changes that helped with MAME

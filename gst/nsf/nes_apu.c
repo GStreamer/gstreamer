@@ -57,6 +57,11 @@ static int8 noise_long_lut[APU_NOISE_32K];
 static int8 noise_short_lut[APU_NOISE_93];
 #endif /* !REALTIME_NOISE */
 
+/* $$$ ben : last error */
+#define SET_APU_ERROR(APU,X) \
+if (APU) (APU)->errstr = "apu: " X; else
+
+#define APU_MIX_ENABLE(BIT) (apu->mix_enable&(1<<(BIT)))
 
 /* vblank length table used for rectangles, triangle, noise */
 static const uint8 vbl_length[32] = {
@@ -103,15 +108,16 @@ void
 apu_setcontext (apu_t * src_apu)
 {
   apu = src_apu;
+  /* $$$ ben reset eoor string here. */
+  SET_APU_ERROR (apu, "no error");
 }
-
 
 /*
 ** Simple queue routines
 */
 #define  APU_QEMPTY()   (apu->q_head == apu->q_tail)
 
-static void
+static int
 apu_enqueue (apudata_t * d)
 {
   ASSERT (apu);
@@ -119,8 +125,12 @@ apu_enqueue (apudata_t * d)
 
   apu->q_head = (apu->q_head + 1) & APUQUEUE_MASK;
 
-  if (APU_QEMPTY ())
+  if (APU_QEMPTY ()) {
     log_printf ("apu: queue overflow\n");
+    SET_APU_ERROR (apu, "queue overflow");
+    return -1;
+  }
+  return 0;
 }
 
 static apudata_t *
@@ -130,20 +140,33 @@ apu_dequeue (void)
 
   ASSERT (apu);
 
-  if (APU_QEMPTY ())
+  if (APU_QEMPTY ()) {
     log_printf ("apu: queue empty\n");
-
+    SET_APU_ERROR (apu, "queue empty");
+    /* $$$ ben : should return 0 ??? */
+  }
   loc = apu->q_tail;
   apu->q_tail = (apu->q_tail + 1) & APUQUEUE_MASK;
 
   return &apu->queue[loc];
 }
 
-void
+int
 apu_setchan (int chan, boolean enabled)
 {
+  const unsigned int max = 6;
+  int old;
+
   ASSERT (apu);
-  apu->mix_enable[chan] = enabled;
+  if ((unsigned int) chan >= max) {
+    SET_APU_ERROR (apu, "channel out of range");
+    return -1;
+  }
+  old = (apu->mix_enable >> chan) & 1;
+  if (enabled != (boolean) - 1) {
+    apu->mix_enable = (apu->mix_enable & ~(1 << chan)) | ((!!enabled) << chan);
+  }
+  return old;
 }
 
 /* emulation of the 15-bit shift register the
@@ -599,7 +622,7 @@ apu_regwrite (uint32 address, uint8 value)
     case APU_WRB2:
       chan = (address & 4) ? 1 : 0;
       apu->rectangle[chan].regs[2] = value;
-//      if (apu->rectangle[chan].enabled)
+/*      if (apu->rectangle[chan].enabled) */
       apu->rectangle[chan].freq =
           APU_TO_FIXED ((((apu->rectangle[chan].regs[3] & 7) << 8) + value) +
           1);
@@ -610,7 +633,7 @@ apu_regwrite (uint32 address, uint8 value)
       chan = (address & 4) ? 1 : 0;
       apu->rectangle[chan].regs[3] = value;
 
-//      if (apu->rectangle[chan].enabled)
+/*      if (apu->rectangle[chan].enabled) */
       {
         apu->rectangle[chan].vbl_length = vbl_lut[value >> 3];
         apu->rectangle[chan].env_vol = 0;
@@ -640,7 +663,7 @@ apu_regwrite (uint32 address, uint8 value)
       apu->triangle.holdnote = (value & 0x80) ? TRUE : FALSE;
 
 
-//      if (apu->triangle.enabled)
+/*      if (apu->triangle.enabled) */
       {
         if (FALSE == apu->triangle.counter_started && apu->triangle.vbl_length)
           apu->triangle.linear_length = trilength_lut[value & 0x7F];
@@ -652,7 +675,7 @@ apu_regwrite (uint32 address, uint8 value)
 
       apu->triangle.regs[1] = value;
 
-//      if (apu->triangle.enabled)
+/*      if (apu->triangle.enabled) */
       apu->triangle.freq =
           APU_TO_FIXED ((((apu->triangle.regs[2] & 7) << 8) + value) + 1);
       break;
@@ -683,7 +706,7 @@ apu_regwrite (uint32 address, uint8 value)
       else
          apu->triangle.countmode = COUNTMODE_LOAD;
 */
-//      if (apu->triangle.enabled)
+/*      if (apu->triangle.enabled) */
       {
         apu->triangle.freq =
             APU_TO_FIXED ((((value & 7) << 8) + apu->triangle.regs[1]) + 1);
@@ -724,7 +747,7 @@ apu_regwrite (uint32 address, uint8 value)
     case APU_WRD3:
       apu->noise.regs[2] = value;
 
-//      if (apu->noise.enabled)
+/*      if (apu->noise.enabled) */
       {
         apu->noise.vbl_length = vbl_lut[value >> 3];
         apu->noise.env_vol = 0; /* reset envelope */
@@ -843,7 +866,7 @@ apu_read (uint32 address)
       if (apu->noise.enabled && apu->noise.vbl_length)
         value |= 0x08;
 
-      //if (apu->dmc.dma_length)
+      /* if (apu->dmc.dma_length) */
       /* bodge for timestamp queue */
       if (apu->dmc.enabled)
         value |= 0x10;
@@ -859,8 +882,7 @@ apu_read (uint32 address)
       break;
 
     case APU_JOY1:
-      value =
-          input_get (INP_ZAPPER | INP_JOYPAD1
+      value = input_get (INP_ZAPPER | INP_JOYPAD1
           /*| INP_ARKANOID *//*| INP_POWERPAD */ );
       break;
 #endif /* !NSF_PLAYER */
@@ -975,18 +997,18 @@ apu_process (void *buffer, int num_samples)
     elapsed_cycles += APU_FROM_FIXED (apu->cycle_rate);
 
     accum = 0;
-    if (apu->mix_enable[0])
+    if (APU_MIX_ENABLE (0))
       accum += apu_rectangle (&apu->rectangle[0]);
-    if (apu->mix_enable[1])
+    if (APU_MIX_ENABLE (1))
       accum += apu_rectangle (&apu->rectangle[1]);
-    if (apu->mix_enable[2])
+    if (APU_MIX_ENABLE (2))
       accum += apu_triangle (&apu->triangle);
-    if (apu->mix_enable[3])
+    if (APU_MIX_ENABLE (3))
       accum += apu_noise (&apu->noise);
-    if (apu->mix_enable[4])
+    if (APU_MIX_ENABLE (4))
       accum += apu_dmc (&apu->dmc);
 
-    if (apu->ext && apu->mix_enable[5])
+    if (apu->ext && APU_MIX_ENABLE (5))
       accum += apu->ext->process ();
 
     /* do any filtering */
@@ -1013,15 +1035,11 @@ apu_process (void *buffer, int num_samples)
 
     /* signed 16-bit output, unsigned 8-bit */
     if (16 == apu->sample_bits) {
-      int16 *t = buffer;
-
-      *t++ = (int16) accum;
-      buffer = t;
+      *(int16 *) (buffer) = (int16) accum;
+      buffer += sizeof (int16);
     } else {
-      uint8 *t = buffer;
-
-      *t++ = (accum >> 8) ^ 0x80;
-      buffer = t;
+      *(uint8 *) (buffer) = (accum >> 8) ^ 0x80;
+      buffer += sizeof (uint8);
     }
   }
 
@@ -1030,11 +1048,20 @@ apu_process (void *buffer, int num_samples)
 }
 
 /* set the filter type */
-void
+/* $$$ ben :
+ * Add a get feature (filter_type == -1) and returns old filter type
+ */
+int
 apu_setfilter (int filter_type)
 {
+  int old;
+
   ASSERT (apu);
-  apu->filter_type = filter_type;
+  old = apu->filter_type;
+  if (filter_type != -1) {
+    apu->filter_type = filter_type;
+  }
+  return old;
 }
 
 void
@@ -1100,12 +1127,16 @@ apu_t *
 apu_create (int sample_rate, int refresh_rate, int sample_bits, boolean stereo)
 {
   apu_t *temp_apu;
-  int channel;
+
+/*    int channel; */
 
   temp_apu = malloc (sizeof (apu_t));
   if (NULL == temp_apu)
     return NULL;
+  /* $$$ ben : safety net, in case we forgot to init something */
+  memset (temp_apu, 0, sizeof (apu_t));
 
+  SET_APU_ERROR (temp_apu, "no error");
   temp_apu->sample_rate = sample_rate;
   temp_apu->refresh_rate = refresh_rate;
   temp_apu->sample_bits = sample_bits;
@@ -1124,8 +1155,9 @@ apu_create (int sample_rate, int refresh_rate, int sample_bits, boolean stereo)
   apu_setactive (temp_apu);
   apu_reset ();
 
-  for (channel = 0; channel < 6; channel++)
-    apu_setchan (channel, TRUE);
+  temp_apu->mix_enable = 0x3F;
+/*    for (channel = 0; channel < 6; channel++) */
+/*       apu_setchan(channel, TRUE); */
 
   apu_setfilter (APU_FILTER_LOWPASS);
 
@@ -1142,24 +1174,30 @@ void
 apu_destroy (apu_t * src_apu)
 {
   if (src_apu) {
-    void *t = src_apu;
-
     if (src_apu->ext)
       src_apu->ext->shutdown ();
-    free (t);
+    free (src_apu);
   }
 }
 
-void
+int
 apu_setext (apu_t * src_apu, apuext_t * ext)
 {
   ASSERT (src_apu);
+
+  /* $$$ ben : seem cleaner like this */
+  if (src_apu->ext) {
+    src_apu->ext->shutdown ();
+  }
 
   src_apu->ext = ext;
 
   /* initialize it */
   if (src_apu->ext)
     src_apu->ext->init ();
+
+  /* $$$ ben : May be one day extension int () will return error code */
+  return 0;
 }
 
 /* this exists for external mixing routines */
@@ -1172,10 +1210,8 @@ apu_getcyclerate (void)
 
 /*
 ** $Log$
-** Revision 1.1  2006/07/13 15:07:28  wtay
-** Based on patches by: Johan Dahlin <johan at gnome dot org>
-** Ronald Bultje <rbultje at ronald dot bitfreak dot net>
-** * configure.ac:
+** Revision 1.2  2008/03/25 15:56:12  slomo
+** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:
 ** * gst/nsf/fds_snd.c:
@@ -1183,7 +1219,6 @@ apu_getcyclerate (void)
 ** * gst/nsf/fmopl.c:
 ** * gst/nsf/fmopl.h:
 ** * gst/nsf/gstnsf.c:
-** * gst/nsf/gstnsf.h:
 ** * gst/nsf/log.c:
 ** * gst/nsf/log.h:
 ** * gst/nsf/memguard.c:
@@ -1202,7 +1237,16 @@ apu_getcyclerate (void)
 ** * gst/nsf/vrc7_snd.h:
 ** * gst/nsf/vrcvisnd.c:
 ** * gst/nsf/vrcvisnd.h:
-** Added NSF decoder plugin. Fixes 151192.
+** Update our internal nosefart to nosefart-2.7-mls to fix segfaults
+** on some files. Fixes bug #498237.
+** Remove some // comments, fix some compiler warnings and use pow()
+** instead of a slow, selfmade implementation.
+**
+** Revision 1.2  2003/04/09 14:50:32  ben
+** Clean NSF api.
+**
+** Revision 1.1  2003/04/08 20:53:01  ben
+** Adding more files...
 **
 ** Revision 1.19  2000/07/04 04:53:26  matt
 ** minor changes, sound amplification

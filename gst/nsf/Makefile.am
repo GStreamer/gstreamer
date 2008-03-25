@@ -9,7 +9,8 @@ NOSEFART_SOURCES=fmopl.c \
 	fds_snd.c \
 	nes6502.c \
 	nsf.c \
-	vrcvisnd.c
+	vrcvisnd.c \
+	memguard.c
 
 NOSEFART_INCLUDES=fmopl.h \
 	log.h \
@@ -22,7 +23,8 @@ NOSEFART_INCLUDES=fmopl.h \
 	nes6502.h \
 	nsf.h \
 	types.h \
-	vrcvisnd.h
+	vrcvisnd.h \
+	memguard.h
 
 libgstnsf_la_SOURCES = gstnsf.c $(NOSEFART_SOURCES)
 

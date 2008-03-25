@@ -138,11 +138,9 @@ vrc7_init (void)
 static void
 vrc7_shutdown (void)
 {
-  void *t = buffer;
-
   vrc7_reset ();
   OPLDestroy (vrc7.ym3812);
-  free (t);
+  free (buffer);
 }
 
 /* channel (0-9), instrument (0-F), volume (0-3F, YM3812 format) */
@@ -312,7 +310,7 @@ vrc7_process (void)
 static apu_memwrite vrc7_memwrite[] = {
   {0x9010, 0x9010, vrc7_write},
   {0x9030, 0x9030, vrc7_write},
-  {(uint32) - 1, (uint32) - 1, NULL}
+  {-1, -1, NULL}
 };
 
 apuext_t vrc7_ext = {
@@ -326,19 +324,8 @@ apuext_t vrc7_ext = {
 
 /*
 ** $Log$
-** Revision 1.2  2006/10/17 11:04:14  tpm
-** Patch by: Josep Torra Valles  <josep at fluendo com>
-** * gst/nsf/fds_snd.c:
-** * gst/nsf/mmc5_snd.c:
-** * gst/nsf/nsf.c:
-** * gst/nsf/vrc7_snd.c:
-** * gst/nsf/vrcvisnd.c:
-** Fix some things the Forte compiler warns about (#362626).
-**
-** Revision 1.1  2006/07/13 15:07:28  wtay
-** Based on patches by: Johan Dahlin <johan at gnome dot org>
-** Ronald Bultje <rbultje at ronald dot bitfreak dot net>
-** * configure.ac:
+** Revision 1.3  2008/03/25 15:56:12  slomo
+** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:
 ** * gst/nsf/fds_snd.c:
@@ -346,7 +333,6 @@ apuext_t vrc7_ext = {
 ** * gst/nsf/fmopl.c:
 ** * gst/nsf/fmopl.h:
 ** * gst/nsf/gstnsf.c:
-** * gst/nsf/gstnsf.h:
 ** * gst/nsf/log.c:
 ** * gst/nsf/log.h:
 ** * gst/nsf/memguard.c:
@@ -365,7 +351,13 @@ apuext_t vrc7_ext = {
 ** * gst/nsf/vrc7_snd.h:
 ** * gst/nsf/vrcvisnd.c:
 ** * gst/nsf/vrcvisnd.h:
-** Added NSF decoder plugin. Fixes 151192.
+** Update our internal nosefart to nosefart-2.7-mls to fix segfaults
+** on some files. Fixes bug #498237.
+** Remove some // comments, fix some compiler warnings and use pow()
+** instead of a slow, selfmade implementation.
+**
+** Revision 1.1  2003/04/08 20:53:01  ben
+** Adding more files...
 **
 ** Revision 1.5  2000/07/04 04:51:02  matt
 ** made data types stricter

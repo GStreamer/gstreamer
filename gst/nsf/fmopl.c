@@ -18,9 +18,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <math.h>
-                                        /* #include "driver.h" *//* use M.A.M.E. */
+                                                          /*#include "driver.h" *//* use M.A.M.E. */
 #include "fmopl.h"
+#include <math.h>
 
 /* MPC - hacks */
 #include "types.h"
@@ -156,33 +156,16 @@ static const INT32 SL_TABLE[16] = {
 
 #define TL_MAX (EG_ENT*2)       /* limit(tl + ksr + envelope) + sinwave */
 /* TotalLevel : 48 24 12  6  3 1.5 0.75 (dB) */
-/* TL.TABLE[ 0      to TL_MAX          ] : plus  section */
-/* TL.TABLE[ TL_MAX to TL_MAX+TL_MAX-1 ] : minus section */
-static union
-{
-  INT32 *TABLE;
-  void *TABLE_PTR;
-} TL;
+/* TL_TABLE[ 0      to TL_MAX          ] : plus  section */
+/* TL_TABLE[ TL_MAX to TL_MAX+TL_MAX-1 ] : minus section */
+static INT32 *TL_TABLE;
 
-/* pointers to TL.TABLE with sinwave output offset */
-static union
-{
-  INT32 **TABLE;
-  void *TABLE_PTR;
-} SIN;
+/* pointers to TL_TABLE with sinwave output offset */
+static INT32 **SIN_TABLE;
 
 /* LFO table */
-static union
-{
-  INT32 *TABLE;
-  void *TABLE_PTR;
-} AMS;
-
-static union
-{
-  INT32 *TABLE;
-  void *TABLE_PTR;
-} VIB;
+static INT32 *AMS_TABLE;
+static INT32 *VIB_TABLE;
 
 /* envelope output curve table */
 /* attack + decay + OFF */
@@ -193,9 +176,9 @@ static INT32 ENV_CURVE[2 * EG_ENT + 1];
 static const UINT32 MUL_TABLE[16] = {
 /* 1/2, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15 */
   ML (0.50), ML (1.00), ML (2.00), ML (3.00), ML (4.00), ML (5.00), ML (6.00),
-      ML (7.00),
+  ML (7.00),
   ML (8.00), ML (9.00), ML (10.00), ML (10.00), ML (12.00), ML (12.00),
-      ML (15.00), ML (15.00)
+  ML (15.00), ML (15.00)
 };
 
 #undef ML
@@ -549,12 +532,10 @@ OPL_CALC_RH (OPL_CH * CH)
     /* connectoion */
     outd[0] += OP_OUT (SLOT, env_out, feedback2) * 2;
   }
-
   /* SD  (17) = mul14[fnum7] + white noise
-   * TAM (15) = mul15[fnum8]
-   * TOP (18) = fnum6(mul18[fnum8]+whitenoise)
-   * HH  (14) = fnum7(mul18[fnum8]+whitenoise) + white noise
-   */
+     TAM (15) = mul15[fnum8]
+     TOP (18) = fnum6(mul18[fnum8]+whitenoise)
+     HH  (14) = fnum7(mul18[fnum8]+whitenoise) + white noise */
   env_sd = OPL_CALC_SLOT (SLOT7_2) + whitenoise;
   env_tam = OPL_CALC_SLOT (SLOT8_1);
   env_top = OPL_CALC_SLOT (SLOT8_2);
@@ -638,62 +619,62 @@ OPLOpenTable (void)
   double pom;
 
   /* allocate dynamic tables */
-  if ((TL.TABLE = malloc (TL_MAX * 2 * sizeof (INT32))) == NULL)
+  if ((TL_TABLE = malloc (TL_MAX * 2 * sizeof (INT32))) == NULL)
     return 0;
-  if ((SIN.TABLE = malloc (SIN_ENT * 4 * sizeof (INT32 *))) == NULL) {
-    free (TL.TABLE_PTR);
-    return 0;
-  }
-  if ((AMS.TABLE = malloc (AMS_ENT * 2 * sizeof (INT32))) == NULL) {
-    free (TL.TABLE_PTR);
-    free (SIN.TABLE_PTR);
+  if ((SIN_TABLE = malloc (SIN_ENT * 4 * sizeof (INT32 *))) == NULL) {
+    free (TL_TABLE);
     return 0;
   }
-  if ((VIB.TABLE = malloc (VIB_ENT * 2 * sizeof (INT32))) == NULL) {
-    free (TL.TABLE_PTR);
-    free (SIN.TABLE_PTR);
-    free (AMS.TABLE_PTR);
+  if ((AMS_TABLE = malloc (AMS_ENT * 2 * sizeof (INT32))) == NULL) {
+    free (TL_TABLE);
+    free (SIN_TABLE);
+    return 0;
+  }
+  if ((VIB_TABLE = malloc (VIB_ENT * 2 * sizeof (INT32))) == NULL) {
+    free (TL_TABLE);
+    free (SIN_TABLE);
+    free (AMS_TABLE);
     return 0;
   }
   /* make total level table */
   for (t = 0; t < EG_ENT - 1; t++) {
     rate = ((1 << TL_BITS) - 1) / pow (10, EG_STEP * t / 20);   /* dB -> voltage */
-    TL.TABLE[t] = (int) rate;
-    TL.TABLE[TL_MAX + t] = -TL.TABLE[t];
-/*		LOG(LOG_INF,("TotalLevel(%3d) = %x\n",t,TL.TABLE[t]));*/
+    TL_TABLE[t] = (int) rate;
+    TL_TABLE[TL_MAX + t] = -TL_TABLE[t];
+/*		LOG(LOG_INF,("TotalLevel(%3d) = %x\n",t,TL_TABLE[t]));*/
   }
   /* fill volume off area */
   for (t = EG_ENT - 1; t < TL_MAX; t++) {
-    TL.TABLE[t] = TL.TABLE[TL_MAX + t] = 0;
+    TL_TABLE[t] = TL_TABLE[TL_MAX + t] = 0;
   }
 
   /* make sinwave table (total level offet) */
   /* degree 0 = degree 180                   = off */
-  SIN.TABLE[0] = SIN.TABLE[SIN_ENT / 2] = &TL.TABLE[EG_ENT - 1];
+  SIN_TABLE[0] = SIN_TABLE[SIN_ENT / 2] = &TL_TABLE[EG_ENT - 1];
   for (s = 1; s <= SIN_ENT / 4; s++) {
     pom = sin (2 * PI * s / SIN_ENT);   /* sin     */
     pom = 20 * log10 (1 / pom); /* decibel */
-    j = (int) (pom / EG_STEP);  /* TL.TABLE steps */
+    j = (int) (pom / EG_STEP);  /* TL_TABLE steps */
 
     /* degree 0   -  90    , degree 180 -  90 : plus section */
-    SIN.TABLE[s] = SIN.TABLE[SIN_ENT / 2 - s] = &TL.TABLE[j];
+    SIN_TABLE[s] = SIN_TABLE[SIN_ENT / 2 - s] = &TL_TABLE[j];
     /* degree 180 - 270    , degree 360 - 270 : minus section */
-    SIN.TABLE[SIN_ENT / 2 + s] = SIN.TABLE[SIN_ENT - s] = &TL.TABLE[TL_MAX + j];
+    SIN_TABLE[SIN_ENT / 2 + s] = SIN_TABLE[SIN_ENT - s] = &TL_TABLE[TL_MAX + j];
 /*		LOG(LOG_INF,("sin(%3d) = %f:%f db\n",s,pom,(double)j * EG_STEP));*/
   }
   for (s = 0; s < SIN_ENT; s++) {
-    SIN.TABLE[SIN_ENT * 1 + s] =
-        s < (SIN_ENT / 2) ? SIN.TABLE[s] : &TL.TABLE[EG_ENT];
-    SIN.TABLE[SIN_ENT * 2 + s] = SIN.TABLE[s % (SIN_ENT / 2)];
-    SIN.TABLE[SIN_ENT * 3 + s] =
-        (s / (SIN_ENT / 4)) & 1 ? &TL.TABLE[EG_ENT] : SIN.TABLE[SIN_ENT * 2 +
+    SIN_TABLE[SIN_ENT * 1 + s] =
+        s < (SIN_ENT / 2) ? SIN_TABLE[s] : &TL_TABLE[EG_ENT];
+    SIN_TABLE[SIN_ENT * 2 + s] = SIN_TABLE[s % (SIN_ENT / 2)];
+    SIN_TABLE[SIN_ENT * 3 + s] =
+        (s / (SIN_ENT / 4)) & 1 ? &TL_TABLE[EG_ENT] : SIN_TABLE[SIN_ENT * 2 +
         s];
   }
 
   /* envelope counter -> envelope output table */
   for (i = 0; i < EG_ENT; i++) {
     /* ATTACK curve */
-    pom = pow (((double) (EG_ENT - 1 - i) / EG_ENT), 8) * EG_ENT;
+    pom = (float) pow (((double) (EG_ENT - 1 - i) / EG_ENT), 8) * EG_ENT;
     /* if( pom >= EG_ENT ) pom = EG_ENT-1; */
     ENV_CURVE[i] = (int) pom;
     /* DECAY ,RELEASE curve */
@@ -704,17 +685,17 @@ OPLOpenTable (void)
   /* make LFO ams table */
   for (i = 0; i < AMS_ENT; i++) {
     pom = (1.0 + sin (2 * PI * i / AMS_ENT)) / 2;       /* sin */
-    AMS.TABLE[i] = (INT32) ((1.0 / EG_STEP) * pom);     /* 1dB   */
-    AMS.TABLE[AMS_ENT + i] = (INT32) ((4.8 / EG_STEP) * pom);   /* 4.8dB */
+    AMS_TABLE[i] = (INT32) ((1.0 / EG_STEP) * pom);     /* 1dB   */
+    AMS_TABLE[AMS_ENT + i] = (INT32) ((4.8 / EG_STEP) * pom);   /* 4.8dB */
   }
   /* make LFO vibrate table */
   for (i = 0; i < VIB_ENT; i++) {
     /* 100cent = 1seminote = 6% ?? */
     pom = (double) VIB_RATE *0.06 * sin (2 * PI * i / VIB_ENT); /* +-100sect step */
 
-    VIB.TABLE[i] = VIB_RATE + (INT32) (pom * 0.07);     /* +- 7cent */
-    VIB.TABLE[VIB_ENT + i] = VIB_RATE + (INT32) (pom * 0.14);   /* +-14cent */
-    /* LOG(LOG_INF,("vib %d=%d\n",i,VIB.TABLE[VIB_ENT+i])); */
+    VIB_TABLE[i] = VIB_RATE + (INT32) (pom * 0.07);     /* +- 7cent */
+    VIB_TABLE[VIB_ENT + i] = VIB_RATE + (INT32) (pom * 0.14);   /* +-14cent */
+    /* LOG(LOG_INF,("vib %d=%d\n",i,VIB_TABLE[VIB_ENT+i])); */
   }
   return 1;
 }
@@ -723,10 +704,10 @@ OPLOpenTable (void)
 static void
 OPLCloseTable (void)
 {
-  free (TL.TABLE_PTR);
-  free (SIN.TABLE_PTR);
-  free (AMS.TABLE_PTR);
-  free (VIB.TABLE_PTR);
+  free (TL_TABLE);
+  free (SIN_TABLE);
+  free (AMS_TABLE);
+  free (VIB_TABLE);
 }
 
 /* CSM Key Controll */
@@ -794,8 +775,8 @@ OPLWriteReg (FM_OPL * OPL, int r, int v)
               int c;
 
               for (c = 0; c < OPL->max_ch; c++) {
-                OPL->P_CH[c].SLOT[SLOT1].wavetable = &SIN.TABLE[0];
-                OPL->P_CH[c].SLOT[SLOT2].wavetable = &SIN.TABLE[0];
+                OPL->P_CH[c].SLOT[SLOT1].wavetable = &SIN_TABLE[0];
+                OPL->P_CH[c].SLOT[SLOT2].wavetable = &SIN_TABLE[0];
               }
             }
           }
@@ -916,8 +897,8 @@ OPLWriteReg (FM_OPL * OPL, int r, int v)
         {
           UINT8 rkey = OPL->rythm ^ v;
 
-          OPL->ams_table = &AMS.TABLE[v & 0x80 ? AMS_ENT : 0];
-          OPL->vib_table = &VIB.TABLE[v & 0x40 ? VIB_ENT : 0];
+          OPL->ams_table = &AMS_TABLE[v & 0x80 ? AMS_ENT : 0];
+          OPL->vib_table = &VIB_TABLE[v & 0x40 ? VIB_ENT : 0];
           OPL->rythm = v & 0x3f;
           if (OPL->rythm & 0x20) {
 #if 0
@@ -1022,7 +1003,7 @@ OPLWriteReg (FM_OPL * OPL, int r, int v)
       CH = &OPL->P_CH[slot / 2];
       if (OPL->wavesel) {
         /* LOG(LOG_INF,("OPL SLOT %d wave select %d\n",slot,v&3)); */
-        CH->SLOT[slot & 1].wavetable = &SIN.TABLE[(v & 0x03) * SIN_ENT];
+        CH->SLOT[slot & 1].wavetable = &SIN_TABLE[(v & 0x03) * SIN_ENT];
       }
       return;
   }
@@ -1200,7 +1181,7 @@ OPLResetChip (FM_OPL * OPL)
     /* OPL->P_CH[c].PAN = OPN_CENTER; */
     for (s = 0; s < 2; s++) {
       /* wave table */
-      CH->SLOT[s].wavetable = &SIN.TABLE[0];
+      CH->SLOT[s].wavetable = &SIN_TABLE[0];
       /* CH->SLOT[s].evm = ENV_MOD_RR; */
       CH->SLOT[s].evc = EG_OFF;
       CH->SLOT[s].eve = EG_OFF + 1;
@@ -1270,10 +1251,8 @@ OPLCreate (int type, int clock, int rate)
 void
 OPLDestroy (FM_OPL * OPL)
 {
-  void *t = OPL;
-
   OPL_UnLockTable ();
-  free (t);
+  free (OPL);
 }
 
 /* ----------  Option handlers ----------       */

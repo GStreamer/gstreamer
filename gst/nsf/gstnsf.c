@@ -108,7 +108,7 @@ static void gst_nsfdec_set_property (GObject * object, guint prop_id,
 
 static GstElementClass *parent_class = NULL;
 
-//static guint gst_nsfdec_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_nsfdec_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_nsfdec_get_type (void)

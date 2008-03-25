@@ -23,7 +23,6 @@
 ** $Id$
 */
 
-#include <stdio.h>
 #include "types.h"
 #include "vrcvisnd.h"
 #include "nes_apu.h"
@@ -175,7 +174,7 @@ static apu_memwrite vrcvi_memwrite[] = {
   {0x9000, 0x9002, vrcvi_write},        /* vrc6 */
   {0xA000, 0xA002, vrcvi_write},
   {0xB000, 0xB002, vrcvi_write},
-  {(uint32) - 1, (uint32) - 1, NULL}
+  {-1, -1, NULL}
 };
 
 apuext_t vrcvi_ext = {
@@ -189,19 +188,8 @@ apuext_t vrcvi_ext = {
 
 /*
 ** $Log$
-** Revision 1.2  2006/10/17 11:04:14  tpm
-** Patch by: Josep Torra Valles  <josep at fluendo com>
-** * gst/nsf/fds_snd.c:
-** * gst/nsf/mmc5_snd.c:
-** * gst/nsf/nsf.c:
-** * gst/nsf/vrc7_snd.c:
-** * gst/nsf/vrcvisnd.c:
-** Fix some things the Forte compiler warns about (#362626).
-**
-** Revision 1.1  2006/07/13 15:07:28  wtay
-** Based on patches by: Johan Dahlin <johan at gnome dot org>
-** Ronald Bultje <rbultje at ronald dot bitfreak dot net>
-** * configure.ac:
+** Revision 1.3  2008/03/25 15:56:13  slomo
+** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:
 ** * gst/nsf/fds_snd.c:
@@ -209,7 +197,6 @@ apuext_t vrcvi_ext = {
 ** * gst/nsf/fmopl.c:
 ** * gst/nsf/fmopl.h:
 ** * gst/nsf/gstnsf.c:
-** * gst/nsf/gstnsf.h:
 ** * gst/nsf/log.c:
 ** * gst/nsf/log.h:
 ** * gst/nsf/memguard.c:
@@ -228,7 +215,13 @@ apuext_t vrcvi_ext = {
 ** * gst/nsf/vrc7_snd.h:
 ** * gst/nsf/vrcvisnd.c:
 ** * gst/nsf/vrcvisnd.h:
-** Added NSF decoder plugin. Fixes 151192.
+** Update our internal nosefart to nosefart-2.7-mls to fix segfaults
+** on some files. Fixes bug #498237.
+** Remove some // comments, fix some compiler warnings and use pow()
+** instead of a slow, selfmade implementation.
+**
+** Revision 1.1  2003/04/08 20:53:01  ben
+** Adding more files...
 **
 ** Revision 1.9  2000/07/04 04:51:41  matt
 ** cleanups

@@ -162,3 +162,4 @@ void YM3812UpdateOne(FM_OPL *OPL, INT16 *buffer, int length);
 void Y8950UpdateOne(FM_OPL *OPL, INT16 *buffer, int length);
 
 #endif
+
