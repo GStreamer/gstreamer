@@ -1,3 +1,13 @@
+2008-03-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Based on patch by: William M. Brack <wbrack at mmm com hk>
+
+	* sys/v4l2/v4l2src_calls.c: (fractions_are_equal),
+	  (gst_v4l2src_set_capture):
+	  Check whether the device supports setting the framerate before
+	  trying to set it and then posting a warning or error if it doesn't
+	  work (#516649, #520092). Also compare fractions more correctly.
+
 2008-03-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/goom/Makefile.am:
