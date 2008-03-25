@@ -1,3 +1,10 @@
+2008-03-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Ed Catmur <ed at catmur dot co dot uk>
+
+	* configure.ac:
+	Add support for neon 0.28, which didn't change API. Fixes bug #524035.
+
 2008-03-24  Rene Stadler  <mail@renestadler.de>
 
 	* gst/replaygain/gstrganalysis.c (gst_rg_analysis_init),
