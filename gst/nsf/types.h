@@ -90,7 +90,7 @@ typedef  uint8    boolean;
                              exit(1);\
                            }
 #else /* Not debugging */
-#include "memguard.h"
+#include <stdlib.h>
 #define  ASSERT(expr)
 #define  ASSERT_MSG(msg)
 #endif
@@ -99,7 +99,13 @@ typedef  uint8    boolean;
 
 /*
 ** $Log$
-** Revision 1.4  2008/03/25 15:56:12  slomo
+** Revision 1.5  2008/03/25 16:58:53  wtay
+** * gst/nsf/memguard.c: (_my_free):
+** * gst/nsf/types.h:
+** Unbreak compilation by disabling memguard and doing some dirty hack
+** fixes to make it compile on 64bits.
+**
+** Revision 1.4  2008-03-25 15:56:12  slomo
 ** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:

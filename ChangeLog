@@ -1,3 +1,10 @@
+2008-03-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/nsf/memguard.c: (_my_free):
+	* gst/nsf/types.h:
+	Unbreak compilation by disabling memguard and doing some dirty hack
+	fixes to make it compile on 64bits.
+
 2008-03-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Andreas Henriksson <andreas at fatal dot set>

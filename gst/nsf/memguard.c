@@ -270,7 +270,8 @@ _my_free (void **data)
   char fail[256];
 
   if (NULL == data || NULL == *data
-      || 0xFFFFFFFF == (uint32) * data || 0xFFFFFFFF == (uint32) data) {
+      || (void *) 0xFFFFFFFF == (void *) *data
+      || (void *) 0xFFFFFFFF == (void *) data) {
 #ifdef NOFRENDO_DEBUG
     sprintf (fail, "free: attempted to free NULL pointer at line %d of %s\n",
         line, file);
@@ -354,7 +355,13 @@ mem_checkblocks (void)
 
 /*
 ** $Log$
-** Revision 1.3  2008/03/25 15:56:11  slomo
+** Revision 1.4  2008/03/25 16:58:53  wtay
+** * gst/nsf/memguard.c: (_my_free):
+** * gst/nsf/types.h:
+** Unbreak compilation by disabling memguard and doing some dirty hack
+** fixes to make it compile on 64bits.
+**
+** Revision 1.3  2008-03-25 15:56:11  slomo
 ** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:
