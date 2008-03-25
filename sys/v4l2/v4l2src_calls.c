@@ -51,11 +51,6 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
 #define GST_V4L2_SET_ACTIVE(element) (element)->buffer = GINT_TO_POINTER (-1)
 #define GST_V4L2_SET_INACTIVE(element) (element)->buffer = NULL
 
-#define DEBUG(format, args...) \
-	GST_CAT_DEBUG_OBJECT (\
-		v4l2src_debug, v4l2src, \
-		"V4L2SRC: " format, ##args)
-
 /* On some systems MAP_FAILED seems to be missing */
 #ifndef MAP_FAILED
 #define MAP_FAILED ((caddr_t) -1)
@@ -1138,8 +1133,8 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
   struct v4l2_format format;
   struct v4l2_streamparm stream;
 
-  DEBUG ("Setting capture format to %dx%d, format %" GST_FOURCC_FORMAT,
-      width, height, GST_FOURCC_ARGS (pixelformat));
+  GST_DEBUG_OBJECT (v4l2src, "Setting capture format to %dx%d, format "
+      "%" GST_FOURCC_FORMAT, width, height, GST_FOURCC_ARGS (pixelformat));
 
   GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2src->v4l2object);
