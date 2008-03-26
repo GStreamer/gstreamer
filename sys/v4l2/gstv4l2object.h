@@ -114,6 +114,7 @@ GType gst_v4l2_object_get_type (void);
 #define V4L2_STD_OBJECT_PROPS		\
     PROP_DEVICE,			\
     PROP_DEVICE_NAME,			\
+    PROP_DEVICE_FD,			\
     PROP_FLAGS
 
 /* create/destroy */

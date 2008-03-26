@@ -1,3 +1,9 @@
+2008-03-26  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	Add device-fd property to make it possible to apps to call ioctl's.
+
 2008-03-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/qtdemux/qtdemux.c: (next_entry_size):
