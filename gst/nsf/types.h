@@ -23,13 +23,16 @@
 ** $Id$
 */
 
-#ifndef _TYPES_H_
-#define _TYPES_H_
+#ifndef _NSF_TYPES_H_
+#define _NSF_TYPES_H_
 
+#include <glib.h> /* for types, endianness */
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 /* Define this if running on little-endian (x86) systems */
-
-#ifndef DCPLAYA
-# define  HOST_LITTLE_ENDIAN
+#define HOST_LITTLE_ENDIAN
+#else
+#undef HOST_LITTLE_ENDIAN
 #endif
 
 #ifdef __GNUC__
@@ -42,26 +45,14 @@
 
 /* These should be changed depending on the platform */
 
+typedef  gint8     int8;
+typedef  gint16    int16;
+typedef  gint32      int32;
 
-
-#ifdef __BEOS__		/* added by Eli Dayan (for compiling under BeOS) */
-	
-	/* use types in the BeOS Support Kit instead */
-	#include <be/support/SupportDefs.h>
-#elif defined (DCPLAYA) /* $$$ added by ben (for compiling with dcplaya) */
-# include <arch/types.h>
-#else	
-	typedef  char     int8;
-	typedef  short    int16;
-	typedef  int      int32;
-
-	typedef  unsigned char  uint8;
-	typedef  unsigned short uint16;
-	typedef  unsigned int   uint32;
-
-#endif
-
-typedef  uint8    boolean;
+typedef  guint8  uint8;
+typedef  guint16 uint16;
+typedef  guint32 uint32;
+typedef  guint8  boolean;
 
 #ifndef  TRUE
 #define  TRUE     1
@@ -76,7 +67,7 @@ typedef  uint8    boolean;
 
 #ifdef NOFRENDO_DEBUG
 #include <stdlib.h>
-#include "memguard.h"
+/* #include "memguard.h" */
 #include "log.h"
 #define  ASSERT(expr)      if (FALSE == (expr))\
                            {\
@@ -95,11 +86,24 @@ typedef  uint8    boolean;
 #define  ASSERT_MSG(msg)
 #endif
 
-#endif /* _TYPES_H_ */
+#endif /* _NSF_TYPES_H_ */
 
 /*
 ** $Log$
-** Revision 1.5  2008/03/25 16:58:53  wtay
+** Revision 1.6  2008/03/26 07:40:55  slomo
+** * gst/nsf/Makefile.am:
+** * gst/nsf/fds_snd.c:
+** * gst/nsf/mmc5_snd.c:
+** * gst/nsf/nsf.c:
+** * gst/nsf/types.h:
+** * gst/nsf/vrc7_snd.c:
+** * gst/nsf/vrcvisnd.c:
+** * gst/nsf/memguard.c:
+** * gst/nsf/memguard.h:
+** Remove memguard again and apply hopefully all previously dropped
+** local patches. Should be really better than the old version now.
+**
+** Revision 1.5  2008-03-25 16:58:53  wtay
 ** * gst/nsf/memguard.c: (_my_free):
 ** * gst/nsf/types.h:
 ** Unbreak compilation by disabling memguard and doing some dirty hack

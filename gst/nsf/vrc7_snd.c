@@ -310,7 +310,7 @@ vrc7_process (void)
 static apu_memwrite vrc7_memwrite[] = {
   {0x9010, 0x9010, vrc7_write},
   {0x9030, 0x9030, vrc7_write},
-  {-1, -1, NULL}
+  {(uint32) - 1, (uint32) - 1, NULL}
 };
 
 apuext_t vrc7_ext = {
@@ -324,7 +324,20 @@ apuext_t vrc7_ext = {
 
 /*
 ** $Log$
-** Revision 1.3  2008/03/25 15:56:12  slomo
+** Revision 1.4  2008/03/26 07:40:56  slomo
+** * gst/nsf/Makefile.am:
+** * gst/nsf/fds_snd.c:
+** * gst/nsf/mmc5_snd.c:
+** * gst/nsf/nsf.c:
+** * gst/nsf/types.h:
+** * gst/nsf/vrc7_snd.c:
+** * gst/nsf/vrcvisnd.c:
+** * gst/nsf/memguard.c:
+** * gst/nsf/memguard.h:
+** Remove memguard again and apply hopefully all previously dropped
+** local patches. Should be really better than the old version now.
+**
+** Revision 1.3  2008-03-25 15:56:12  slomo
 ** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:

@@ -89,14 +89,14 @@ nsf_bankswitch (uint32 address, uint8 value)
 static nes6502_memread default_readhandler[] = {
   {0x0800, 0x1FFF, read_mirrored_ram},
   {0x4000, 0x4017, apu_read},
-  {-1, -1, NULL}
+  {(uint32) - 1, (uint32) - 1, NULL}
 };
 
 static nes6502_memwrite default_writehandler[] = {
   {0x0800, 0x1FFF, write_mirrored_ram},
   {0x4000, 0x4017, apu_write},
   {0x5FF6, 0x5FFF, nsf_bankswitch},
-  {-1, -1, NULL}
+  {(uint32) - 1, (uint32) - 1, NULL}
 };
 
 static uint8
@@ -1031,7 +1031,20 @@ nsf_setfilter (nsf_t * nsf, int filter_type)
 
 /*
 ** $Log$
-** Revision 1.5  2008/03/25 15:56:12  slomo
+** Revision 1.6  2008/03/26 07:40:55  slomo
+** * gst/nsf/Makefile.am:
+** * gst/nsf/fds_snd.c:
+** * gst/nsf/mmc5_snd.c:
+** * gst/nsf/nsf.c:
+** * gst/nsf/types.h:
+** * gst/nsf/vrc7_snd.c:
+** * gst/nsf/vrcvisnd.c:
+** * gst/nsf/memguard.c:
+** * gst/nsf/memguard.h:
+** Remove memguard again and apply hopefully all previously dropped
+** local patches. Should be really better than the old version now.
+**
+** Revision 1.5  2008-03-25 15:56:12  slomo
 ** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:

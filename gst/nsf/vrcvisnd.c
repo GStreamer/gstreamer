@@ -23,6 +23,7 @@
 ** $Id$
 */
 
+#include <stdio.h>
 #include "types.h"
 #include "vrcvisnd.h"
 #include "nes_apu.h"
@@ -174,7 +175,7 @@ static apu_memwrite vrcvi_memwrite[] = {
   {0x9000, 0x9002, vrcvi_write},        /* vrc6 */
   {0xA000, 0xA002, vrcvi_write},
   {0xB000, 0xB002, vrcvi_write},
-  {-1, -1, NULL}
+  {(uint32) - 1, (uint32) - 1, NULL}
 };
 
 apuext_t vrcvi_ext = {
@@ -188,7 +189,20 @@ apuext_t vrcvi_ext = {
 
 /*
 ** $Log$
-** Revision 1.3  2008/03/25 15:56:13  slomo
+** Revision 1.4  2008/03/26 07:40:56  slomo
+** * gst/nsf/Makefile.am:
+** * gst/nsf/fds_snd.c:
+** * gst/nsf/mmc5_snd.c:
+** * gst/nsf/nsf.c:
+** * gst/nsf/types.h:
+** * gst/nsf/vrc7_snd.c:
+** * gst/nsf/vrcvisnd.c:
+** * gst/nsf/memguard.c:
+** * gst/nsf/memguard.h:
+** Remove memguard again and apply hopefully all previously dropped
+** local patches. Should be really better than the old version now.
+**
+** Revision 1.3  2008-03-25 15:56:13  slomo
 ** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:

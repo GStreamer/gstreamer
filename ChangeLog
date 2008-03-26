@@ -1,3 +1,17 @@
+2008-03-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/nsf/Makefile.am:
+	* gst/nsf/fds_snd.c:
+	* gst/nsf/mmc5_snd.c:
+	* gst/nsf/nsf.c:
+	* gst/nsf/types.h:
+	* gst/nsf/vrc7_snd.c:
+	* gst/nsf/vrcvisnd.c:
+	* gst/nsf/memguard.c:
+	* gst/nsf/memguard.h:
+	Remove memguard again and apply hopefully all previously dropped
+	local patches. Should be really better than the old version now.
+
 2008-03-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/nsf/memguard.c: (_my_free):
