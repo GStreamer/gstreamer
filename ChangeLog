@@ -1,5 +1,10 @@
 2008-03-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* ext/Makefile.am:
+	Dist ofa correctly! Fixes non-uninstalled build.
+
+2008-03-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* sys/dvb/gstdvbsrc.c:
 	Make diseqc work more reliably.
 

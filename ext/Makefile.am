@@ -190,6 +190,12 @@ else
 NEON_DIR=
 endif
 
+if USE_OFA
+OFA_DIR=ofa
+else
+OFA_DIR=
+endif
+
 if USE_SOUP
 SOUP_DIR=soup
 else
@@ -321,6 +327,7 @@ SUBDIRS=\
 	$(MYTHTV_DIR) \
 	$(NAS_DIR) \
 	$(NEON_DIR) \
+	$(OFA_DIR) \
 	$(SOUP_DIR) \
 	$(POLYP_DIR) \
 	$(SDL_DIR) \
@@ -362,6 +369,7 @@ DIST_SUBDIRS = \
 	mythtv \
 	nas \
 	neon \
+	ofa \
 	soup \
 	sdl \
 	sndfile \
