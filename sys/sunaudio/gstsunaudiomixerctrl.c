@@ -39,8 +39,6 @@
 GST_DEBUG_CATEGORY_EXTERN (sunaudio_debug);
 #define GST_CAT_DEFAULT sunaudio_debug
 
-#define SCALE_FACTOR 2.55       /* 255/100 */
-
 static gboolean
 gst_sunaudiomixer_ctrl_open (GstSunAudioMixerCtrl * mixer)
 {
@@ -187,16 +185,15 @@ gst_sunaudiomixer_ctrl_get_volume (GstSunAudioMixerCtrl * mixer,
 
   switch (sunaudiotrack->track_num) {
     case GST_SUNAUDIO_TRACK_OUTPUT:
-      gain = (int) ((float) audioinfo.play.gain / (float) SCALE_FACTOR + 0.5);
+      gain = (int) audioinfo.play.gain;
       balance = audioinfo.play.balance;
       break;
     case GST_SUNAUDIO_TRACK_LINE_IN:
-      gain = (int) ((float) audioinfo.record.gain / (float) SCALE_FACTOR + 0.5);
+      gain = (int) audioinfo.record.gain;
       balance = audioinfo.record.balance;
       break;
     case GST_SUNAUDIO_TRACK_MONITOR:
-      gain =
-          (int) ((float) audioinfo.monitor_gain / (float) SCALE_FACTOR + 0.5);
+      gain = (int) audioinfo.monitor_gain;
       balance = audioinfo.record.balance;
       break;
   }
@@ -272,15 +269,15 @@ gst_sunaudiomixer_ctrl_set_volume (GstSunAudioMixerCtrl * mixer,
   r_real_gain = volumes[1];
 
   if (l_real_gain == r_real_gain) {
-    gain = (int) ((float) l_real_gain * (float) SCALE_FACTOR + 0.5);
+    gain = l_real_gain;
     balance = AUDIO_MID_BALANCE;
   } else if (l_real_gain < r_real_gain) {
-    gain = (int) ((float) r_real_gain * (float) SCALE_FACTOR + 0.5);
+    gain = r_real_gain;
     ratio = (float) l_real_gain / (float) r_real_gain;
     balance =
         AUDIO_RIGHT_BALANCE - (int) (ratio * (float) AUDIO_MID_BALANCE + 0.5);
   } else {
-    gain = (int) ((float) l_real_gain * (float) SCALE_FACTOR + 0.5);
+    gain = l_real_gain;
     ratio = (float) r_real_gain / (float) l_real_gain;
     balance =
         AUDIO_LEFT_BALANCE + (int) (ratio * (float) AUDIO_MID_BALANCE + 0.5);

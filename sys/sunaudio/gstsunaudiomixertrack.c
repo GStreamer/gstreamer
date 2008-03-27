@@ -89,7 +89,7 @@ gst_sunaudiomixer_track_new (GstSunAudioTrackType track_num,
   track->num_channels = max_chans;
   track->flags = flags;
   track->min_volume = 0;
-  track->max_volume = 100;
+  track->max_volume = 255;
   sunaudiotrack->track_num = track_num;
   sunaudiotrack->gain = (0 & 0xff);
   sunaudiotrack->balance = AUDIO_MID_BALANCE;

@@ -1,3 +1,15 @@
+2008-03-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Brian Cameron <brian.cameron at sun dot com>
+
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	  (gst_sunaudiomixer_ctrl_get_volume),
+	  (gst_sunaudiomixer_ctrl_set_volume):
+	* sys/sunaudio/gstsunaudiomixertrack.c: (gst_sunaudiomixer_track_new):
+	  Fix up the mixer tracks to use a volume range of 0-255, which is what
+	  the sun audio API uses. This simplifies the code and avoids rounding
+	  errors. Fixes #524593.
+
 2008-03-26  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2object.c:
