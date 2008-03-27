@@ -1,3 +1,10 @@
+2008-03-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	  Expose macro to docs and fix link to it.
+
 2008-03-27  Michael Smith <msmith@fluendo.com>
 
 	* libs/gst/dataprotocol/dataprotocol.c:

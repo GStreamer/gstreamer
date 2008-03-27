@@ -647,6 +647,12 @@ struct _GstPadClass {
 #define GST_PAD_LINKFUNC(pad)		(GST_PAD_CAST(pad)->linkfunc)
 #define GST_PAD_UNLINKFUNC(pad)		(GST_PAD_CAST(pad)->unlinkfunc)
 
+/**
+ * GST_PAD_CAPS:
+ * @pad: a #GstPad.
+ *
+ * The caps for this pad.
+ */
 #define GST_PAD_CAPS(pad)		(GST_PAD_CAST(pad)->caps)
 #define GST_PAD_GETCAPSFUNC(pad)	(GST_PAD_CAST(pad)->getcapsfunc)
 #define GST_PAD_SETCAPSFUNC(pad)	(GST_PAD_CAST(pad)->setcapsfunc)
