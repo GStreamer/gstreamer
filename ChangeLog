@@ -1,3 +1,8 @@
+2008-03-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/gstdvbsrc.c:
+	Make diseqc work more reliably.
+
 2008-03-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/nsf/Makefile.am:
