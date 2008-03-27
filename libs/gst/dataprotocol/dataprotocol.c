@@ -558,7 +558,7 @@ gst_dp_packet_from_event_1_0 (const GstEvent * event, GstDPHeaderFlag flags,
   /* timestamp */
   GST_WRITE_UINT64_BE (h + 10, GST_EVENT_TIMESTAMP (event));
 
-  GST_DP_SET_CRC (h, flags, *payload, pl_length);
+  GST_DP_SET_CRC (h, flags, string, pl_length);
 
   GST_LOG ("created header from event:");
   gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);

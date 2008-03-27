@@ -1,3 +1,10 @@
+2008-03-27  Michael Smith <msmith@fluendo.com>
+
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_packet_from_event_1_0):
+	  When calculating GDP body CRC, use the correct pointer. 
+	  Fixes part of #522401.
+
 2008-03-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Mark Nauwelaerts <manauw at skynet be>
