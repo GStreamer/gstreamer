@@ -287,6 +287,12 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
         } else {
           goto wrong_type;
         }
+
+        if (!gst_dp_validate_payload (GST_DP_HEADER_LENGTH, this->header,
+                gst_adapter_peek (this->adapter, this->payload_length))) {
+          goto payload_validate_error;
+        }
+
         break;
       }
       case GST_GDP_DEPAY_STATE_BUFFER:
@@ -389,6 +395,13 @@ header_validate_error:
   {
     GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
         ("GDP packet header does not validate"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+payload_validate_error:
+  {
+    GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
+        ("GDP packet payload does not validate"));
     ret = GST_FLOW_ERROR;
     goto done;
   }

@@ -1,3 +1,9 @@
+2008-03-27  Michael Smith <msmith@fluendo.com>
+
+	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_chain):
+	  Check the body CRC (if set) when depayloading.
+	  Fixes #522401.
+
 2008-03-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_class_init):
