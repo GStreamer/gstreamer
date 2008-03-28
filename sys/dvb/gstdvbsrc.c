@@ -1166,7 +1166,10 @@ diseqc (int secfd, int sat_no, int voltage, int tone)
   cmd.cmd.msg[3] =
       0xf0 | (((sat_no * 4) & 0x0f) | (tone == SEC_TONE_ON ? 1 : 0) |
       (voltage == SEC_VOLTAGE_13 ? 0 : 2));
-
+  /* send twice because some diseqc switches do not respond correctly the
+   * first time */
+  diseqc_send_msg (secfd, voltage, &cmd, tone,
+      sat_no % 2 ? SEC_MINI_B : SEC_MINI_A);
   diseqc_send_msg (secfd, voltage, &cmd, tone,
       sat_no % 2 ? SEC_MINI_B : SEC_MINI_A);
 
