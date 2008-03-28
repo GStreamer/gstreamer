@@ -1,3 +1,8 @@
+2008-03-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	MP4S is generic MPEG-4, not a microsoft variant.
+
 2008-03-27  Michael Smith <msmith@fluendo.com>
 
 	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_chain):
