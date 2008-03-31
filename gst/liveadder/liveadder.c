@@ -547,6 +547,9 @@ gst_live_adder_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       ret = gst_pad_push_event (adder->srcpad, event);
       ret = gst_live_adder_src_activate_push (adder->srcpad, TRUE);
+      GST_OBJECT_LOCK (adder);
+      adder->segment_pending = TRUE;
+      GST_OBJECT_UNLOCK (adder);
       break;
     case GST_EVENT_EOS:
     {
@@ -927,6 +930,7 @@ gst_live_adder_loop (gpointer data)
   GstClockReturn ret;
   GstBuffer *buffer = NULL;
   GstFlowReturn result;
+  GstEvent *newseg_event = NULL;
 
   GST_OBJECT_LOCK (adder);
 
@@ -1016,7 +1020,26 @@ gst_live_adder_loop (gpointer data)
   adder->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
       GST_BUFFER_DURATION (buffer);
 
+  if (adder->segment_pending)
+  {
+    /*
+     * We should probably loop through all of the sinks that have a segment
+     * and take the min of the starts and the max of the stops
+     * and convert them to running times and use these are start/stop.
+     * And so something smart about the positions with seeks that I dont
+     * understand yet.
+     */
+     newseg_event = gst_event_new_new_segment_full (FALSE, 1.0,
+        1.0, GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer), -1,
+        0);
+
+    adder->segment_pending = FALSE;
+  }
+
   GST_OBJECT_UNLOCK (adder);
+
+  if (newseg_event)
+    gst_pad_push_event (adder->srcpad, newseg_event);
 
   result = gst_pad_push (adder->srcpad, buffer);
   if (result != GST_FLOW_OK)
@@ -1188,6 +1211,7 @@ gst_live_adder_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       {
         GST_OBJECT_LOCK (adder);
+        adder->segment_pending = TRUE;
         adder->peer_latency = 0;
         adder->next_timestamp = GST_CLOCK_TIME_NONE;
         g_list_foreach (adder->sinkpads, reset_pad_private, adder);

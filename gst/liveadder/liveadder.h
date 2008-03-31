@@ -90,6 +90,8 @@ struct _GstLiveAdder {
 
   GstClockTime    latency_ms;
   GstClockTime    peer_latency;
+
+  gboolean        segment_pending;
 };
 
 struct _GstLiveAdderClass {
