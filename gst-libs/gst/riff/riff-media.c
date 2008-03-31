@@ -1029,6 +1029,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
     case GST_RIFF_WAVE_FORMAT_GSM610:
     case GST_RIFF_WAVE_FORMAT_MSN:
+      rate_min = 1;
       caps = gst_caps_new_simple ("audio/ms-gsm", NULL);
       if (codec_name)
         *codec_name = g_strdup ("MS GSM audio");
