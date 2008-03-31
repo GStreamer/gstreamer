@@ -913,7 +913,8 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     if (ret != GST_FLOW_OK)
       goto done;
 
-    /* decrease refcount again if vmethod returned refcounted in_buf. This
+    /* FIXME 0.11:
+     * decrease refcount again if vmethod returned refcounted in_buf. This
      * is because we need to make sure that the buffer is writable for the
      * in_place transform. The docs of the vmethod say that you should return
      * a reffed inbuf, which is exactly what we don't want :), oh well.. */
@@ -925,17 +926,27 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   if (*out_buf == NULL && GST_BUFFER_SIZE (in_buf) == out_size
       && bclass->transform_ip) {
     if (gst_buffer_is_writable (in_buf)) {
-      if (trans->have_same_caps) {
-        /* Input buffer is already writable and caps are the same, return input as
-         * output buffer. We don't take an additional ref since that would make the
-         * output buffer not writable anymore. Caller should be prepared to deal
-         * with proper refcounting of input/output buffers. */
+      if (trans->have_same_caps &&
+          (trans->priv->gap_aware
+              || !GST_BUFFER_FLAG_IS_SET (in_buf, GST_BUFFER_FLAG_GAP))) {
+        /* Input buffer is already writable, caps are the same and it's not necessary
+         * to change the GAP flag, return input as output buffer.
+         * We don't take an additional ref since that would make the output buffer
+         * not writable anymore. Caller should be prepared to deal with proper
+         * refcounting of input/output buffers. */
         *out_buf = in_buf;
         GST_LOG_OBJECT (trans, "reuse input buffer");
       } else {
-        /* Writable buffer, but need to change caps => subbuffer */
+        /* Writable buffer, but need to change caps or flags => subbuffer */
         *out_buf = gst_buffer_create_sub (in_buf, 0, GST_BUFFER_SIZE (in_buf));
         gst_caps_replace (&GST_BUFFER_CAPS (*out_buf), out_caps);
+
+        /* Unset the GAP flag if the element is _not_ GAP aware. Otherwise
+         * it might create an output buffer that does not contain neutral data
+         * but still has the GAP flag on it! */
+        if (!trans->priv->gap_aware)
+          GST_BUFFER_FLAG_UNSET (*out_buf, GST_BUFFER_FLAG_GAP);
+
         GST_LOG_OBJECT (trans, "created sub-buffer of input buffer");
       }
       /* we are done now */

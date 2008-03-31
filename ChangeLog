@@ -1,3 +1,12 @@
+2008-03-31  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buffer):
+	Also unset the GAP flag on buffers if we're working inplace but
+	the element is not GAP-aware.
+
+	Mark a comment as FIXME 0.11.
+
 2008-03-31  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gst.c:
