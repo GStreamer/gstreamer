@@ -1,5 +1,14 @@
 2008-03-31  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gst.c:
+	  Fix type in log message and add one to ease seeing how long registry
+	  cache verification takes.
+
+	* gst/gstregistry.c:
+	  Only test plugin filenames against G_MODULE_SUFFIX.
+
+2008-03-31  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstdebugutils.c:
 	  Improve handling ghost/proxy pads.
 

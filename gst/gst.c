@@ -656,6 +656,8 @@ scan_and_update_registry (GstRegistry * default_registry,
   gboolean changed = FALSE;
   GList *l;
 
+  GST_INFO ("Validating registry cache");
+
   /* scan paths specified via --gst-plugin-path */
   GST_DEBUG ("scanning paths added via --gst-plugin-path");
   for (l = plugin_paths; l != NULL; l = l->next) {
@@ -723,7 +725,7 @@ scan_and_update_registry (GstRegistry * default_registry,
   }
 
   if (!write_changes) {
-    GST_INFO ("Registry cached changed, but writing is disabled. Not writing.");
+    GST_INFO ("Registry cache changed, but writing is disabled. Not writing.");
     return REGISTRY_SCAN_AND_UPDATE_FAILURE;
   }
 

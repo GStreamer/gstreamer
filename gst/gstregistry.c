@@ -828,10 +828,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
       g_free (filename);
       continue;
     }
-    if (!g_str_has_suffix (filename, ".so") &&
-        !g_str_has_suffix (filename, ".sl") &&
-        !g_str_has_suffix (filename, ".dll") &&
-        !g_str_has_suffix (filename, ".dynlib")) {
+    if (!g_str_has_suffix (filename, G_MODULE_SUFFIX)) {
       GST_LOG_OBJECT (registry,
           "extension is not recognized as module file, ignoring");
       g_free (filename);
