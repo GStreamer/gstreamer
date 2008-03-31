@@ -1,3 +1,8 @@
+2008-03-31  David Schleef  <ds@schleef.org>
+
+	* gst/goom/xmmx.c: Fix constraints on asm code so that it
+	  compiles consistently.  Fixes #522278.
+
 2008-03-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Brian Cameron <brian.cameron at sun dot com>
