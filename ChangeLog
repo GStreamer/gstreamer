@@ -1,3 +1,13 @@
+2008-03-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: kapil <kapil at fluendo dot com>
+
+	* ext/gsm/gstgsmdec.c: (gst_gsmdec_sink_setcaps),
+	(gst_gsmdec_chain):
+	* ext/gsm/gstgsmdec.h:
+	Increase the allowed samplerates for the ms-gsm format.
+	Fixes #481354.
+
 2008-03-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Jan de Groot <jan at jgc homeip net>

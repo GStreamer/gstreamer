@@ -87,12 +87,14 @@ gst_gsmdec_get_type (void)
   return gsmdec_type;
 }
 
+#define ENCODED_SAMPLES	160
+
 static GstStaticPadTemplate gsmdec_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-gsm, rate = (int) 8000, channels = (int) 1; "
-        "audio/ms-gsm, rate = (int) 8000, channels = (int) 1")
+        "audio/ms-gsm, rate = (int) [1, MAX], channels = (int) 1")
     );
 
 static GstStaticPadTemplate gsmdec_src_template =
@@ -103,7 +105,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) true, "
         "width = (int) 16, "
-        "depth = (int) 16, " "rate = (int) 8000, " "channels = (int) 1")
+        "depth = (int) 16, " "rate = (int) [1, MAX], " "channels = (int) 1")
     );
 
 static void
@@ -175,6 +177,7 @@ gst_gsmdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstGSMDec *gsmdec;
   GstCaps *srccaps;
   GstStructure *s;
+  gboolean ret = FALSE;
 
   gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
 
@@ -190,25 +193,41 @@ gst_gsmdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   else
     goto wrong_caps;
 
+  if (!gst_structure_get_int (s, "rate", &gsmdec->rate)) {
+    GST_WARNING_OBJECT (gsmdec, "missing sample rate parameter from sink caps");
+    goto beach;
+  }
+
   /* MSGSM needs different framing */
   gsm_option (gsmdec->state, GSM_OPT_WAV49, &gsmdec->use_wav49);
 
-  /* we only have one possible source caps, which is the same as our template. */
-  srccaps = gst_static_pad_template_get_caps (&gsmdec_src_template);
+  gsmdec->duration = gst_util_uint64_scale (ENCODED_SAMPLES,
+      GST_SECOND, gsmdec->rate);
 
-  gst_pad_set_caps (gsmdec->srcpad, srccaps);
+  /* Setting up src caps based on the input sample rate. */
+  srccaps = gst_caps_new_simple ("audio/x-raw-int",
+      "endianness", G_TYPE_INT, BYTE_ORDER,
+      "signed", G_TYPE_BOOLEAN, TRUE,
+      "width", G_TYPE_INT, 16,
+      "depth", G_TYPE_INT, 16,
+      "rate", G_TYPE_INT, gsmdec->rate, "channels", G_TYPE_INT, 1, NULL);
 
+  ret = gst_pad_set_caps (gsmdec->srcpad, srccaps);
+
+  gst_caps_unref (srccaps);
   gst_object_unref (gsmdec);
 
-  return TRUE;
+  return ret;
 
   /* ERRORS */
 wrong_caps:
-  {
-    GST_ERROR_OBJECT (gsmdec, "invalid caps received");
-    gst_object_unref (gsmdec);
-    return FALSE;
-  }
+
+  GST_ERROR_OBJECT (gsmdec, "invalid caps received");
+
+beach:
+  gst_object_unref (gsmdec);
+
+  return ret;
 }
 
 static gboolean
@@ -283,7 +302,7 @@ gst_gsmdec_chain (GstPad * pad, GstBuffer * buf)
     GstBuffer *outbuf;
 
     /* always the same amount of output samples */
-    outbuf = gst_buffer_new_and_alloc (160 * sizeof (gsm_signal));
+    outbuf = gst_buffer_new_and_alloc (ENCODED_SAMPLES * sizeof (gsm_signal));
 
     /* If we are not given any timestamp, interpolate from last seen
      * timestamp (if any). */
@@ -294,13 +313,13 @@ gst_gsmdec_chain (GstPad * pad, GstBuffer * buf)
 
     /* interpolate in the next run */
     if (timestamp != GST_CLOCK_TIME_NONE)
-      gsmdec->next_ts = timestamp + (20 * GST_MSECOND);
+      gsmdec->next_ts = timestamp + gsmdec->duration;
     timestamp = GST_CLOCK_TIME_NONE;
 
-    GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
+    GST_BUFFER_DURATION (outbuf) = gsmdec->duration;
     GST_BUFFER_OFFSET (outbuf) = gsmdec->next_of;
     if (gsmdec->next_of != -1)
-      gsmdec->next_of += 160;
+      gsmdec->next_of += ENCODED_SAMPLES;
     GST_BUFFER_OFFSET_END (outbuf) = gsmdec->next_of;
 
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (gsmdec->srcpad));

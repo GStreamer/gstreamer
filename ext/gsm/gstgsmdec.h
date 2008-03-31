@@ -60,6 +60,10 @@ struct _GstGSMDec
   GstAdapter *adapter;
 
   GstSegment segment;
+
+  gint rate;
+
+  GstClockTime duration;
 };
 
 struct _GstGSMDecClass
