@@ -1,3 +1,8 @@
+2008-03-31  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstdebugutils.c:
+	  Improve handling ghost/proxy pads.
+
 2008-03-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:

@@ -134,7 +134,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
   GstIterator *element_iter, *pad_iter;
   gboolean elements_done, pads_done;
   GstElement *element, *peer_element, *target_element;
-  GstPad *pad, *peer_pad, *target_pad;
+  GstPad *pad, *peer_pad, *target_pad, *tmp_pad;
   GstPadDirection dir;
   GstCaps *caps;
   GstStructure *structure;
@@ -317,58 +317,64 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
                     }
 
                     if (GST_IS_GHOST_PAD (pad)) {
-                      if ((target_pad =
+                      if ((tmp_pad =
                               gst_ghost_pad_get_target (GST_GHOST_PAD (pad)))) {
-                        target_pad_name =
-                            debug_dump_make_object_name (GST_OBJECT
-                            (target_pad));
-                        if ((target_element =
-                                gst_pad_get_parent_element (target_pad))) {
-                          target_element_name =
+                        if ((target_pad = gst_pad_get_peer (tmp_pad))) {
+                          target_pad_name =
                               debug_dump_make_object_name (GST_OBJECT
-                              (target_element));
-                        } else {
-                          target_element_name = "";
-                        }
-                        /* src ghostpad relationship */
-                        fprintf (out, "%s%s_%s -> %s_%s [style=dashed]\n", spc,
-                            target_element_name, target_pad_name, element_name,
-                            pad_name);
+                              (target_pad));
+                          if ((target_element =
+                                  gst_pad_get_parent_element (target_pad))) {
+                            target_element_name =
+                                debug_dump_make_object_name (GST_OBJECT
+                                (target_element));
+                          } else {
+                            target_element_name = "";
+                          }
+                          /* src ghostpad relationship */
+                          fprintf (out, "%s%s_%s -> %s_%s [style=dashed]\n",
+                              spc, target_element_name, target_pad_name,
+                              element_name, pad_name);
 
-                        g_free (target_pad_name);
-                        if (target_element) {
-                          g_free (target_element_name);
-                          gst_object_unref (target_element);
+                          g_free (target_pad_name);
+                          if (target_element) {
+                            g_free (target_element_name);
+                            gst_object_unref (target_element);
+                          }
+                          gst_object_unref (target_pad);
                         }
-                        gst_object_unref (target_pad);
+                        gst_object_unref (tmp_pad);
                       }
                     }
                     if (GST_IS_GHOST_PAD (peer_pad)) {
-                      if ((target_pad =
+                      if ((tmp_pad =
                               gst_ghost_pad_get_target (GST_GHOST_PAD
                                   (peer_pad)))) {
-                        target_pad_name =
-                            debug_dump_make_object_name (GST_OBJECT
-                            (target_pad));
-                        if ((target_element =
-                                gst_pad_get_parent_element (target_pad))) {
-                          target_element_name =
+                        if ((target_pad = gst_pad_get_peer (tmp_pad))) {
+                          target_pad_name =
                               debug_dump_make_object_name (GST_OBJECT
-                              (target_element));
-                        } else {
-                          target_element_name = "";
-                        }
-                        /* sink ghostpad relationship */
-                        fprintf (out, "%s%s_%s -> %s_%s [style=dashed]\n", spc,
-                            peer_element_name, peer_pad_name,
-                            target_element_name, target_pad_name);
+                              (target_pad));
+                          if ((target_element =
+                                  gst_pad_get_parent_element (target_pad))) {
+                            target_element_name =
+                                debug_dump_make_object_name (GST_OBJECT
+                                (target_element));
+                          } else {
+                            target_element_name = "";
+                          }
+                          /* sink ghostpad relationship */
+                          fprintf (out, "%s%s_%s -> %s_%s [style=dashed]\n",
+                              spc, peer_element_name, peer_pad_name,
+                              target_element_name, target_pad_name);
 
-                        g_free (target_pad_name);
-                        if (target_element) {
-                          g_free (target_element_name);
-                          gst_object_unref (target_element);
+                          g_free (target_pad_name);
+                          if (target_element) {
+                            g_free (target_element_name);
+                            gst_object_unref (target_element);
+                          }
+                          gst_object_unref (target_pad);
                         }
-                        gst_object_unref (target_pad);
+                        gst_object_unref (tmp_pad);
                       }
                     }
 
