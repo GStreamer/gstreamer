@@ -321,7 +321,6 @@ gst_live_adder_sink_getcaps (GstPad * pad)
 
   adder = GST_LIVE_ADDER (GST_PAD_PARENT (pad));
 
-  GST_OBJECT_LOCK (adder);
   /* get the downstream possible caps */
   peercaps = gst_pad_peer_get_caps (adder->srcpad);
   /* get the allowed caps on this sinkpad, we use the fixed caps function so
@@ -339,7 +338,6 @@ gst_live_adder_sink_getcaps (GstPad * pad)
     GST_DEBUG_OBJECT (adder, "no peer caps, using sinkcaps");
     result = sinkcaps;
   }
-  GST_OBJECT_UNLOCK (adder);
 
   return result;
 }
@@ -367,10 +365,8 @@ gst_live_adder_setcaps (GstPad * pad, GstCaps * caps)
   while (pads) {
     GstPad *otherpad = GST_PAD (pads->data);
 
-    if (otherpad != pad) {
+    if (otherpad != pad)
       gst_caps_replace (&GST_PAD_CAPS (otherpad), caps);
-    }
-    gst_pad_use_fixed_caps (pad);
 
     pads = g_list_next (pads);
   }
@@ -443,10 +439,11 @@ not_supported:
 static void
 gst_live_adder_flush_start (GstLiveAdder * adder)
 {
+  GST_DEBUG_OBJECT (adder, "Disabling pop on queue");
+
   GST_OBJECT_LOCK (adder);
   /* mark ourselves as flushing */
   adder->srcresult = GST_FLOW_WRONG_STATE;
-  GST_DEBUG_OBJECT (adder, "Disabling pop on queue");
   /* unlock clock, we just unschedule, the entry will be released by the
    * locking streaming thread. */
   if (adder->clock_id)
@@ -457,9 +454,10 @@ gst_live_adder_flush_start (GstLiveAdder * adder)
 static void
 gst_live_adder_flush_stop (GstLiveAdder * adder)
 {
-  GST_OBJECT_LOCK (adder);
   GST_DEBUG_OBJECT (adder, "Enabling pop on queue");
+
   /* Mark as non flushing */
+  GST_OBJECT_LOCK (adder);
   adder->srcresult = GST_FLOW_OK;
   GST_OBJECT_UNLOCK (adder);
 }
@@ -937,6 +935,8 @@ gst_live_adder_loop (gpointer data)
       break;
     if (check_eos_locked (adder))
       goto eos;
+    if (adder->srcresult != GST_FLOW_OK)
+      goto flushing;
     g_cond_wait (adder->not_empty_cond, GST_OBJECT_GET_LOCK(adder));
   }
 
@@ -1031,11 +1031,11 @@ gst_live_adder_loop (gpointer data)
 
  clock_error:
  {
+   gst_pad_pause_task (adder->srcpad);
+   GST_OBJECT_UNLOCK (adder);
    GST_ELEMENT_ERROR (adder, STREAM, MUX, ("Error with the clock"),
        ("Error with the clock: %d", ret));
    GST_ERROR_OBJECT (adder, "Error with the clock: %d", ret);
-   gst_pad_pause_task (adder->srcpad);
-   GST_OBJECT_UNLOCK (adder);
    return;
  }
 
