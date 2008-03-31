@@ -656,13 +656,17 @@ scan_and_update_registry (GstRegistry * default_registry,
   gboolean changed = FALSE;
   GList *l;
 
-  GST_INFO ("Validating registry cache");
+  GST_INFO ("Validating registry cache: %s", registry_file);
+  /* It sounds tempting to just compare the mtime of directories with the mtime
+   * of the registry cache, but it does not work. It would not catch updated
+   * plugins, which might bring more or less features.
+   */
 
   /* scan paths specified via --gst-plugin-path */
   GST_DEBUG ("scanning paths added via --gst-plugin-path");
   for (l = plugin_paths; l != NULL; l = l->next) {
     GST_INFO ("Scanning plugin path: \"%s\"", (gchar *) l->data);
-    /* CHECKME: add changed |= here as well? */
+    /* FIXME: add changed |= here as well? */
     gst_registry_scan_path (default_registry, (gchar *) l->data);
   }
   /* keep plugin_paths around in case a re-scan is forced later on */

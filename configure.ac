@@ -223,6 +223,15 @@ else
 fi
 AC_SUBST(GST_HAVE_UNALIGNED_ACCESS_DEFINE)
 
+dnl check for extra platform specific plugin suffixes
+case $host_os in
+     darwin* | rhapsody*)
+	AC_DEFINE_UNQUOTED(GST_EXTRA_MODULE_SUFFIX, [.dylib], [Extra platform specific plugin suffix])
+	;;
+     *)
+	;;
+esac
+
 dnl * software *
 
 dnl check for large file support

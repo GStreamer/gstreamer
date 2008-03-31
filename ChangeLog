@@ -1,3 +1,14 @@
+2008-03-31  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* gst/gstregistry.c:
+	  MacOS has plugins under .so or under .dylib. Add detection for MacOS
+	  and handle this case.
+
+	* gst/gst.c:
+	  Add a comment here describing, why we stat each plugin and not try to
+	  be smart.
+
 2008-03-31  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* libs/gst/base/gstbasetransform.c:
