@@ -1,3 +1,18 @@
+2008-04-01  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Based on patch by: mersad <mersad at axis dot com>
+
+	* gst/law/alaw-decode.c: (gst_alaw_dec_sink_setcaps),
+	(gst_alaw_dec_chain), (gst_alaw_dec_change_state):
+	* gst/law/alaw-decode.h:
+	* gst/law/alaw-encode.c: (gst_alaw_enc_chain):
+	* gst/law/mulaw-decode.c: (mulawdec_sink_setcaps),
+	(gst_mulawdec_chain), (gst_mulawdec_change_state):
+	* gst/law/mulaw-decode.h:
+	* gst/law/mulaw-encode.c: (gst_mulawenc_chain):
+	Make negotiation a bit modern.
+	Use pad_alloc. Fixes #525359.
+
 2008-03-31  David Schleef  <ds@schleef.org>
 
 	* gst/goom/xmmx.c: Fix constraints on asm code so that it

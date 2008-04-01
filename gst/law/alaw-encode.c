@@ -462,7 +462,13 @@ gst_alaw_enc_chain (GstPad * pad, GstBuffer * buffer)
         GST_SECOND, alawenc->rate * alawenc->channels);
   }
 
-  outbuf = gst_buffer_new_and_alloc (alaw_size);
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (alawenc->srcpad,
+      GST_BUFFER_OFFSET_NONE, alaw_size, GST_PAD_CAPS (alawenc->srcpad),
+      &outbuf);
+  if (ret != GST_FLOW_OK)
+    goto done;
+
   alaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
 
   /* copy discont flag */

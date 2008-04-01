@@ -42,7 +42,6 @@ struct _GstMuLawDec {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
-  GstCaps *srccaps;
 
   gint rate;
   gint channels;

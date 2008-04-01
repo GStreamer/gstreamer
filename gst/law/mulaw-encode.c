@@ -230,7 +230,13 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
         GST_SECOND, mulawenc->rate * mulawenc->channels);
   }
 
-  outbuf = gst_buffer_new_and_alloc (mulaw_size);
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (mulawenc->srcpad,
+      GST_BUFFER_OFFSET_NONE, mulaw_size, GST_PAD_CAPS (mulawenc->srcpad),
+      &outbuf);
+  if (ret != GST_FLOW_OK)
+    goto alloc_failed;
+
   mulaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
 
   /* copy discont flag */
@@ -255,7 +261,15 @@ done:
 
 not_negotiated:
   {
+    GST_DEBUG_OBJECT (mulawenc, "no format negotiated");
     ret = GST_FLOW_NOT_NEGOTIATED;
+    gst_buffer_unref (buffer);
+    goto done;
+  }
+alloc_failed:
+  {
+    GST_DEBUG_OBJECT (mulawenc, "pad alloc failed");
+    gst_buffer_unref (buffer);
     goto done;
   }
 }

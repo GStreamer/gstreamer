@@ -55,6 +55,7 @@ mulawdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   int rate, channels;
   gboolean ret;
+  GstCaps *outcaps;
 
   mulawdec = GST_MULAWDEC (GST_PAD_PARENT (pad));
 
@@ -64,19 +65,21 @@ mulawdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (!ret)
     return FALSE;
 
-  if (mulawdec->srccaps)
-    gst_caps_unref (mulawdec->srccaps);
-  mulawdec->srccaps = gst_caps_new_simple ("audio/x-raw-int",
+  outcaps = gst_caps_new_simple ("audio/x-raw-int",
       "width", G_TYPE_INT, 16,
       "depth", G_TYPE_INT, 16,
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "signed", G_TYPE_BOOLEAN, TRUE,
       "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
+  ret = gst_pad_set_caps (mulawdec->srcpad, outcaps);
+  gst_caps_unref (outcaps);
 
-  mulawdec->rate = rate;
-  mulawdec->channels = channels;
-
-  return TRUE;
+  if (ret) {
+    GST_DEBUG_OBJECT (mulawdec, "rate=%d, channels=%d", rate, channels);
+    mulawdec->rate = rate;
+    mulawdec->channels = channels;
+  }
+  return ret;
 }
 
 GType
@@ -155,15 +158,19 @@ gst_mulawdec_chain (GstPad * pad, GstBuffer * buffer)
 
   mulawdec = GST_MULAWDEC (GST_PAD_PARENT (pad));
 
-  if (G_UNLIKELY (mulawdec->srccaps == NULL)) {
-    gst_buffer_unref (buffer);
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
+  if (G_UNLIKELY (mulawdec->rate == 0))
+    goto not_negotiated;
 
   mulaw_data = (guint8 *) GST_BUFFER_DATA (buffer);
   mulaw_size = GST_BUFFER_SIZE (buffer);
 
-  outbuf = gst_buffer_new_and_alloc (mulaw_size * 2);
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (mulawdec->srcpad,
+      GST_BUFFER_OFFSET_NONE, mulaw_size * 2, GST_PAD_CAPS (mulawdec->srcpad),
+      &outbuf);
+  if (ret != GST_FLOW_OK)
+    goto alloc_failed;
+
   linear_data = (gint16 *) GST_BUFFER_DATA (outbuf);
 
   /* copy discont flag */
@@ -176,7 +183,7 @@ gst_mulawdec_chain (GstPad * pad, GstBuffer * buffer)
         mulaw_size * 2, 2 * mulawdec->rate * mulawdec->channels);
   else
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
-  gst_buffer_set_caps (outbuf, mulawdec->srccaps);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mulawdec->srcpad));
 
   mulaw_decode (mulaw_data, linear_data, mulaw_size);
 
@@ -185,6 +192,20 @@ gst_mulawdec_chain (GstPad * pad, GstBuffer * buffer)
   ret = gst_pad_push (mulawdec->srcpad, outbuf);
 
   return ret;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ERROR_OBJECT (mulawdec, "no format negotiated");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+alloc_failed:
+  {
+    GST_ERROR_OBJECT (mulawdec, "pad alloc failed");
+    gst_buffer_unref (buffer);
+    return ret;
+  }
 }
 
 static GstStateChangeReturn
@@ -204,10 +225,8 @@ gst_mulawdec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (dec->srccaps) {
-        gst_caps_unref (dec->srccaps);
-        dec->srccaps = NULL;
-      }
+      dec->rate = 0;
+      dec->channels = 0;
       break;
     default:
       break;

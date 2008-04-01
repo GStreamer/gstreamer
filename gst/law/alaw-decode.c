@@ -111,27 +111,33 @@ gst_alaw_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   int rate, channels;
   gboolean ret;
+  GstCaps *outcaps;
 
   alawdec = GST_ALAW_DEC (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
+
   ret = gst_structure_get_int (structure, "rate", &rate);
-  ret = ret && gst_structure_get_int (structure, "channels", &channels);
+  ret &= gst_structure_get_int (structure, "channels", &channels);
   if (!ret)
     return FALSE;
 
-  if (alawdec->srccaps)
-    gst_caps_unref (alawdec->srccaps);
-  alawdec->srccaps = gst_caps_new_simple ("audio/x-raw-int",
+  outcaps = gst_caps_new_simple ("audio/x-raw-int",
       "width", G_TYPE_INT, 16,
       "depth", G_TYPE_INT, 16,
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "signed", G_TYPE_BOOLEAN, TRUE,
       "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
 
-  GST_DEBUG_OBJECT (alawdec, "rate=%d, channels=%d", rate, channels);
+  ret = gst_pad_set_caps (alawdec->srcpad, outcaps);
+  gst_caps_unref (outcaps);
 
-  return TRUE;
+  if (ret) {
+    GST_DEBUG_OBJECT (alawdec, "rate=%d, channels=%d", rate, channels);
+    alawdec->rate = rate;
+    alawdec->channels = channels;
+  }
+  return ret;
 }
 
 static void
@@ -185,7 +191,7 @@ gst_alaw_dec_chain (GstPad * pad, GstBuffer * buffer)
 
   alawdec = GST_ALAW_DEC (GST_PAD_PARENT (pad));
 
-  if (G_UNLIKELY (alawdec->srccaps == NULL))
+  if (G_UNLIKELY (alawdec->rate == 0))
     goto not_negotiated;
 
   GST_LOG_OBJECT (alawdec, "buffer with ts=%" GST_TIME_FORMAT,
@@ -194,7 +200,13 @@ gst_alaw_dec_chain (GstPad * pad, GstBuffer * buffer)
   alaw_data = GST_BUFFER_DATA (buffer);
   alaw_size = GST_BUFFER_SIZE (buffer);
 
-  outbuf = gst_buffer_new_and_alloc (alaw_size * 2);
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (alawdec->srcpad,
+      GST_BUFFER_OFFSET_NONE, alaw_size * 2, GST_PAD_CAPS (alawdec->srcpad),
+      &outbuf);
+  if (ret != GST_FLOW_OK)
+    goto alloc_failed;
+
   linear_data = (gint16 *) GST_BUFFER_DATA (outbuf);
 
   /* copy discont flag */
@@ -203,24 +215,29 @@ gst_alaw_dec_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
-  gst_buffer_set_caps (outbuf, alawdec->srccaps);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (alawdec->srcpad));
 
   for (i = 0; i < alaw_size; i++) {
     linear_data[i] = alaw_to_s16 (alaw_data[i]);
   }
+  gst_buffer_unref (buffer);
 
   ret = gst_pad_push (alawdec->srcpad, outbuf);
-
-done:
-
-  gst_buffer_unref (buffer);
 
   return ret;
 
 not_negotiated:
   {
+    gst_buffer_unref (buffer);
+    GST_ERROR_OBJECT (alawdec, "no format negotiated");
     ret = GST_FLOW_NOT_NEGOTIATED;
-    goto done;
+    return ret;
+  }
+alloc_failed:
+  {
+    gst_buffer_unref (buffer);
+    GST_ERROR_OBJECT (alawdec, "pad alloc failed");
+    return ret;
   }
 }
 
@@ -241,10 +258,8 @@ gst_alaw_dec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (dec->srccaps) {
-        gst_caps_unref (dec->srccaps);
-        dec->srccaps = NULL;
-      }
+      dec->rate = 0;
+      dec->channels = 0;
       break;
     default:
       break;
