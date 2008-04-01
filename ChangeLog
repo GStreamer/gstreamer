@@ -2,6 +2,12 @@
 
 	* gst/asfdemux/gstasfdemux.c:
 	(gst_asf_demux_process_ext_stream_props):
+	Remove some debug code.
+
+2008-04-01  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	(gst_asf_demux_process_ext_stream_props):
 	Guard against division by 0 and fall back to 25/1 framerate.
 
 2008-04-01  Wim Taymans  <wim.taymans@collabora.co.uk>
