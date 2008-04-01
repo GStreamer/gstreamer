@@ -257,7 +257,7 @@ AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(selector)
 AG_GST_CHECK_PLUGIN(speed)
 AG_GST_CHECK_PLUGIN(speexresample)
-AG_GST_CHECK_PLUGIN(srtenc)
+AG_GST_CHECK_PLUGIN(subenc)
 AG_GST_CHECK_PLUGIN(stereo)
 AG_GST_CHECK_PLUGIN(tta)
 AG_GST_CHECK_PLUGIN(videosignal)
@@ -1165,7 +1165,7 @@ gst/sdp/Makefile
 gst/selector/Makefile
 gst/speed/Makefile
 gst/speexresample/Makefile
-gst/srtenc/Makefile
+gst/subenc/Makefile
 gst/stereo/Makefile
 gst/tta/Makefile
 gst/videosignal/Makefile

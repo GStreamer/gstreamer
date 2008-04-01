@@ -112,7 +112,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmetadata.so
 %{_libdir}/gstreamer-%{majorminor}/libgstselector.so
-%{_libdir}/gstreamer-%{majorminor}/libgstsrtenc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsubenc.so
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsrc.h
@@ -148,13 +148,16 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Tue Apr 1 2008 Christian Schaller <christian at collabora dot co uk>
+* Tue Apr 1 2008 Tim-Philipp Müller <tim.muller at collabora dot co uk>
+- Update spec file for srtenc plugin rename to subenc
+
+* Tue Apr 1 2008 Christian Schaller <christian.schaller at collabora dot co uk>
 - Update spec with libgstsrtenc plugin
 
-* Wed Jan 23 2008 Christian Schaller <christian at collabora dot co uk>
+* Wed Jan 23 2008 Christian Schaller <christian.schaller at collabora dot co uk>
 - Update spec with fbdev sink and rawparse, remove videoparse
 
-* Fri Dec 14 2007 Christian Schaller <christian at collabora dot co uk>
+* Fri Dec 14 2007 Christian Schaller <christian.schaller at collabora dot co uk>
 - Update spec file with timidity, libgstdvb, libgstsdpelem, libgstspeexresample, libgstmpeg4videoparse
 
 * Tue Jun 12 2007 Jan Schmidt <jan at fluendo dot com>

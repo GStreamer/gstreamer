@@ -1,3 +1,14 @@
+2008-04-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst-plugins-bad.spec.in:
+	* gst/srtenc/Makefile.am:
+	* gst/srtenc/gstsrtenc.c:
+	* gst/srtenc/gstsrtenc.h:
+	* gst/subenc/Makefile.am:
+	* gst/subenc/gstsrtenc.c: (plugin_init):
+	  Rename new srtenc plugin to subenc.
+
 2008-04-01  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/mpegtspacketizer.c:
