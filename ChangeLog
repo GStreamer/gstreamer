@@ -1,3 +1,11 @@
+2008-04-01  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* configure.ac:
+	* gst/srtenc/Makefile.am:
+	* gst/srtenc/gstsrtenc.c:
+	* gst/srtenc/gstsrtenc.h:
+	Add srt subtitle encoder
+
 2008-03-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: kapil <kapil at fluendo dot com>
