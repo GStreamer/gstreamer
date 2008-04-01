@@ -1748,6 +1748,9 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
       gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
           ax, ay, NULL);
     }
+    /* remove the framerate we will guess and add it later */
+    s = gst_caps_get_structure (caps, 0);
+    gst_structure_remove_field (s, "framerate");
   }
 
   /* add fourcc format to caps, some proprietary decoders seem to need it */
@@ -1765,8 +1768,6 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
 
   GST_INFO ("Adding video stream %u codec %" GST_FOURCC_FORMAT " (0x%08x)",
       demux->num_video_streams, GST_FOURCC_ARGS (video->tag), video->tag);
-
-  gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, 25, 1, NULL);
 
   ++demux->num_video_streams;
 
@@ -2715,7 +2716,7 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint8 * data,
   esp.flags = gst_asf_demux_get_uint32 (&data, &size);
   stream_num = gst_asf_demux_get_uint16 (&data, &size);
   esp.lang_idx = gst_asf_demux_get_uint16 (&data, &size);
-  esp.avg_time_per_frame = gst_asf_demux_get_uint64 (&data, &size) * 100;
+  esp.avg_time_per_frame = gst_asf_demux_get_uint64 (&data, &size);
   stream_name_count = gst_asf_demux_get_uint16 (&data, &size);
   num_payload_ext = gst_asf_demux_get_uint16 (&data, &size);
 
@@ -2725,7 +2726,7 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint8 * data,
       GST_TIME_ARGS (esp.end_time));
   GST_INFO ("flags                  = %08x", esp.flags);
   GST_INFO ("average time per frame = %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (esp.avg_time_per_frame));
+      GST_TIME_ARGS (esp.avg_time_per_frame * 100));
   GST_INFO ("stream number          = %u", stream_num);
   GST_INFO ("stream language ID idx = %u (%s)", esp.lang_idx,
       (esp.lang_idx < demux->num_languages) ?
@@ -2811,6 +2812,27 @@ done:
 
   if (stream) {
     stream->ext_props = esp;
+
+    /* try to set the framerate */
+    if (stream->is_video && stream->caps) {
+      GValue framerate = { 0 };
+      GstStructure *s;
+      gint num, denom;
+
+      g_value_init (&framerate, GST_TYPE_FRACTION);
+
+      num = GST_SECOND / 100;
+      denom = esp.avg_time_per_frame;
+
+      gst_value_set_fraction (&framerate, num, denom);
+
+      stream->caps = gst_caps_make_writable (stream->caps);
+      s = gst_caps_get_structure (stream->caps, 0);
+      gst_structure_set_value (s, "framerate", &framerate);
+      g_value_unset (&framerate);
+      GST_DEBUG_OBJECT (demux, "setting framerate of %d/%d = %f",
+          num, denom, ((gdouble) num) / denom);
+    }
 
     /* add language info now if we have it */
     if (stream->ext_props.lang_idx < demux->num_languages) {
