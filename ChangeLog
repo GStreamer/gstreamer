@@ -1,3 +1,11 @@
+2008-04-01  Julien Moutte  <julien@fluendo.com>
+
+	patch by: Jason Zhao <E3423C@motorola.com>
+
+	* configure.ac: Add a configure switch to disable option parsing
+	in gst_init.
+	Fixes #522882.
+
 2008-03-31  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

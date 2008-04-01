@@ -88,6 +88,12 @@ if test "x$GST_DISABLE_PARSE" = xyes; then
   AC_DEFINE(GST_DISABLE_PARSE, 1,
     [Define if pipeline parsing code is disabled])
 fi
+AG_GST_CHECK_SUBSYSTEM_DISABLE(OPTION_PARSING,[option parsing when gst_init])
+AM_CONDITIONAL(GST_DISABLE_OPTION_PARSING, test "x$GST_DISABLE_OPTION_PARSING" = "xyes")
+if test "x$GST_DISABLE_OPTION_PARSING" = xyes; then
+  AC_DEFINE(GST_DISABLE_OPTION_PARSING, 1,
+    [Define if option parsing is disabled])
+fi
 AG_GST_CHECK_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
 AM_CONDITIONAL(GST_DISABLE_TRACE, test "x$GST_DISABLE_TRACE" = "xyes")
 AG_GST_CHECK_SUBSYSTEM_DISABLE(ALLOC_TRACE,[allocation tracing])
