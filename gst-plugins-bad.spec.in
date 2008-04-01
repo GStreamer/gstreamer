@@ -112,6 +112,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmetadata.so
 %{_libdir}/gstreamer-%{majorminor}/libgstselector.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsrtenc.so
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsrc.h
@@ -147,6 +148,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Apr 1 2008 Christian Schaller <christian at collabora dot co uk>
+- Update spec with libgstsrtenc plugin
+
 * Wed Jan 23 2008 Christian Schaller <christian at collabora dot co uk>
 - Update spec with fbdev sink and rawparse, remove videoparse
 
