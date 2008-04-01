@@ -457,17 +457,9 @@ volume_process_double (GstVolume * this, gpointer bytes, guint n_bytes)
   gdouble *data = (gdouble *) bytes;
   guint num_samples = n_bytes / sizeof (gdouble);
 
-#ifdef oil_scalarmultiply_f64_ns
   gdouble vol = this->real_vol_f;
 
   oil_scalarmultiply_f64_ns (data, data, &vol, num_samples);
-#else
-  gint i;
-
-  for (i = 0; i < num_samples; i++) {
-    *data++ *= this->real_vol_f;
-  }
-#endif
 }
 
 static void
