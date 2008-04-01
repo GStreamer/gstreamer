@@ -2822,7 +2822,11 @@ done:
       g_value_init (&framerate, GST_TYPE_FRACTION);
 
       num = GST_SECOND / 100;
-      denom = esp.avg_time_per_frame;
+      denom = esp.avg_time_per_frame = 0;
+      if (denom == 0) {
+        /* avoid division by 0, assume 25/1 framerate */
+        denom = GST_SECOND / 2500;
+      }
 
       gst_value_set_fraction (&framerate, num, denom);
 
