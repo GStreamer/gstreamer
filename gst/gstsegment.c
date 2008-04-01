@@ -121,7 +121,7 @@ gst_segment_new (void)
 {
   GstSegment *result;
 
-  result = g_new0 (GstSegment, 1);
+  result = g_slice_new0 (GstSegment);
   gst_segment_init (result, GST_FORMAT_UNDEFINED);
 
   return result;
@@ -136,7 +136,7 @@ gst_segment_new (void)
 void
 gst_segment_free (GstSegment * segment)
 {
-  g_free (segment);
+  g_slice_free (GstSegment, segment);
 }
 
 /**

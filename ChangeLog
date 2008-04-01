@@ -1,5 +1,21 @@
 2008-04-01  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* configure.ac:
+	Require GLib 2.12.
+
+	* gst/glib-compat-private.h:
+	* gst/gstcaps.c: (gst_caps_new_empty), (_gst_caps_free):
+	* gst/gstclock.c: (gst_clock_entry_new), (_gst_clock_id_free):
+	Unconditionally use GSlice for allocation.
+
+	* gst/gstpoll.c: (gst_poll_new), (gst_poll_free):
+	* gst/gstsegment.c: (gst_segment_new), (gst_segment_free):
+	* gst/gststructure.c: (gst_structure_id_empty_new_with_size),
+	(gst_structure_free):
+	Use GSlice for allocation.
+
+2008-04-01  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/parse/Makefile.am:
 	* gst/parse/grammar.tab.pre.c:
 	* gst/parse/grammar.tab.pre.h:

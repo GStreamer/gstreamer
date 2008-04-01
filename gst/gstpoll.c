@@ -462,7 +462,7 @@ gst_poll_new (gboolean controllable)
 {
   GstPoll *nset;
 
-  nset = g_new0 (GstPoll, 1);
+  nset = g_slice_new0 (GstPoll);
   nset->lock = g_mutex_new ();
 #ifndef G_OS_WIN32
   nset->mode = GST_POLL_MODE_AUTO;
@@ -530,7 +530,7 @@ gst_poll_free (GstPoll * set)
   g_array_free (set->active_fds, TRUE);
   g_array_free (set->fds, TRUE);
   g_mutex_free (set->lock);
-  g_free (set);
+  g_slice_free (GstPoll, set);
 }
 
 /**

@@ -91,14 +91,6 @@
 #define IS_WRITABLE(caps) \
   (g_atomic_int_get (&(caps)->refcount) == 1)
 
-#if GLIB_CHECK_VERSION (2, 10, 0)
-#define ALLOC_CAPS()    g_slice_new (GstCaps)
-#define FREE_CAPS(caps) g_slice_free (GstCaps, caps)
-#else
-#define ALLOC_CAPS()    g_new (GstCaps, 1)
-#define FREE_CAPS(caps) g_free (caps)
-#endif
-
 /* lock to protect multiple invocations of static caps to caps conversion */
 G_LOCK_DEFINE_STATIC (static_caps_lock);
 
@@ -139,7 +131,7 @@ gst_caps_get_type (void)
 GstCaps *
 gst_caps_new_empty (void)
 {
-  GstCaps *caps = ALLOC_CAPS ();
+  GstCaps *caps = g_slice_new (GstCaps);
 
   caps->type = GST_TYPE_CAPS;
   caps->refcount = 1;
@@ -309,7 +301,7 @@ _gst_caps_free (GstCaps * caps)
 #ifdef DEBUG_REFCOUNT
   GST_CAT_LOG (GST_CAT_CAPS, "freeing caps %p", caps);
 #endif
-  FREE_CAPS (caps);
+  g_slice_free (GstCaps, caps);
 }
 
 /**

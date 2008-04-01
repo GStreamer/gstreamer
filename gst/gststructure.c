@@ -113,7 +113,7 @@ gst_structure_id_empty_new_with_size (GQuark quark, guint prealloc)
 {
   GstStructure *structure;
 
-  structure = g_new0 (GstStructure, 1);
+  structure = g_slice_new0 (GstStructure);
   structure->type = gst_structure_get_type ();
   structure->name = quark;
   structure->fields =
@@ -330,7 +330,7 @@ gst_structure_free (GstStructure * structure)
 #ifdef USE_POISONING
   memset (structure, 0xff, sizeof (GstStructure));
 #endif
-  g_free (structure);
+  g_slice_free (GstStructure, structure);
 }
 
 /**

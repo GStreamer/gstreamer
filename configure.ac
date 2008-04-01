@@ -471,8 +471,9 @@ LIBS="$save_libs"
 dnl *** checks for dependency libraries ***
 
 dnl GLib
+GLIB_REQ=2.12
 
-AG_GST_GLIB_CHECK([2.8])
+AG_GST_GLIB_CHECK([$GLIB_REQ])
 
 dnl FIXME: 0.11: Guess we need to keep this around until 0.11
 GST_HAVE_GLIB_2_8_DEFINE="#define GST_HAVE_GLIB_2_8 1"
