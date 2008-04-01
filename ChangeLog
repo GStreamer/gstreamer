@@ -1,3 +1,9 @@
+2008-04-01  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	Cable delivery subsystem descriptors' frequency's bcd
+	is measured in 100Hz units so adjust multiplier accordingly.
+
 2008-04-01  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* configure.ac:

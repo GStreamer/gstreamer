@@ -941,8 +941,11 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
 
         guint8 *frequency_bcd =
             DESC_DVB_CABLE_DELIVERY_SYSTEM_frequency (delivery);
-        guint32 frequency =
-            10 * ((frequency_bcd[3] & 0x0F) +
+        /* see en 300 468 section 6.2.13.1 least significant bcd digit
+         * is measured in 100Hz units so multiplier needs to be 100 to get
+         * into Hz */
+        guint32 frequency = 100 *
+            ((frequency_bcd[3] & 0x0F) +
             10 * ((frequency_bcd[3] & 0xF0) >> 4) +
             100 * (frequency_bcd[2] & 0x0F) +
             1000 * ((frequency_bcd[2] & 0xF0) >> 4) +
