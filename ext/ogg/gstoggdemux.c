@@ -1768,35 +1768,35 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     return TRUE;
   }
 
+  /* FIXME, should not be called with NULL */
+  if (chain != NULL) {
+    GST_DEBUG_OBJECT (ogg, "activating chain %p", chain);
+
+    /* first add the pads */
+    for (i = 0; i < chain->streams->len; i++) {
+      GstOggPad *pad;
+
+      pad = g_array_index (chain->streams, GstOggPad *, i);
+      GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
+
+      /* mark discont */
+      pad->discont = TRUE;
+      pad->last_ret = GST_FLOW_OK;
+
+      /* activate first */
+      gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
+
+      gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
+    }
+  }
+
+  /* after adding the new pads, remove the old pads */
   gst_ogg_demux_deactivate_current_chain (ogg);
 
-  /* FIXME, should not be called with NULL */
-  if (chain == NULL) {
-    ogg->current_chain = chain;
-    return TRUE;
-  }
-
-  GST_DEBUG_OBJECT (ogg, "activating chain %p", chain);
-
-  /* first add the pads */
-  for (i = 0; i < chain->streams->len; i++) {
-    GstOggPad *pad;
-
-    pad = g_array_index (chain->streams, GstOggPad *, i);
-    GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
-
-    /* mark discont */
-    pad->discont = TRUE;
-    pad->last_ret = GST_FLOW_OK;
-
-    /* activate first */
-    gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
-
-    gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
-  }
-
-  gst_element_no_more_pads (GST_ELEMENT (ogg));
   ogg->current_chain = chain;
+
+  /* we are finished now */
+  gst_element_no_more_pads (GST_ELEMENT (ogg));
 
   /* FIXME, must be sent from the streaming thread */
   if (event)
@@ -2762,7 +2762,8 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
           GST_TIME_ARGS (chain->segment_stop),
           GST_TIME_ARGS (chain->begin_time));
 
-      /* activate it as it means we have a non-header */
+      /* activate it as it means we have a non-header, this will also deactivate
+       * the currently running chain. */
       gst_ogg_demux_activate_chain (ogg, chain, event);
       pad = gst_ogg_demux_find_pad (ogg, serialno);
     } else {
@@ -2777,10 +2778,6 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
       current_chain = ogg->current_chain;
       current_time = ogg->segment.last_stop;
 
-      if (current_chain) {
-        /* remove existing pads */
-        gst_ogg_demux_deactivate_current_chain (ogg);
-      }
       /* time of new chain is current time */
       chain_time = current_time;
 
