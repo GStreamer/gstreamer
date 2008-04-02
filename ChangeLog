@@ -1,5 +1,14 @@
 2008-04-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Victor STINNER <victor dot stinner at haypocalc dot com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_activate_chain),
+	(gst_ogg_demux_read_chain):
+	When we fail to find a BOS page and we and up with no chain, error out
+	properly instead of segfaulting. Fixes #525665.
+
+2008-04-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_activate_chain),
 	(gst_ogg_demux_read_chain), (gst_ogg_demux_handle_page):
 	The new-pad-group sequence is add-pads, no-more-pads, add-pads,
