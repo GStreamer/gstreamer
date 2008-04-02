@@ -1,7 +1,8 @@
 /*
  * GStreamer - SunAudio sink
  * Copyright (C) 2004 David A. Schleef <ds@schleef.org>
- * Copyright (C) 2005,2006 Brian Cameron <brian.cameron@sun.com>
+ * Copyright (C) 2005,2006 Sun Microsystems, Inc.,
+ *               Brian Cameron <brian.cameron@sun.com>
  * Copyright (C) 2006 Jan Schmidt <thaytan@mad.scientist.com>
  *
  * This library is free software; you can redistribute it and/or

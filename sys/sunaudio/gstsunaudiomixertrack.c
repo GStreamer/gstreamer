@@ -1,6 +1,7 @@
 /*
  * GStreamer
- * Copyright (C) 2005 Brian Cameron <brian.cameron@sun.com>
+ * Copyright (C) 2005,2008 Sun Microsystems, Inc.,
+ *               Brian Cameron <brian.cameron@sun.com>
  *
  * gstsunaudiomixer.c: mixer interface implementation for OSS
  *

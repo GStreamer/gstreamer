@@ -1,5 +1,22 @@
 2008-04-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Brian Cameron <brian.cameron at sun dot com>
+
+	* sys/sunaudio/gstsunaudio.c:
+	* sys/sunaudio/gstsunaudiomixer.c:
+	* sys/sunaudio/gstsunaudiomixer.h:
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	* sys/sunaudio/gstsunaudiomixerctrl.h:
+	* sys/sunaudio/gstsunaudiomixertrack.c:
+	* sys/sunaudio/gstsunaudiomixertrack.h:
+	* sys/sunaudio/gstsunaudiosink.c:
+	* sys/sunaudio/gstsunaudiosink.h:
+	* sys/sunaudio/gstsunaudiosrc.c:
+	* sys/sunaudio/gstsunaudiosrc.h:
+	  Fix up copyrights (#525860).
+
+2008-04-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/goom/goomsl.c: (gsl_read_file):
 	  Check return value of fread() to avoid compiler warnings.
 

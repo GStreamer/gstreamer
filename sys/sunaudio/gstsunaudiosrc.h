@@ -1,5 +1,6 @@
 /* GStreamer - SunAudio source
- * Copyright (C) 2005,2006 Brian Cameron <brian.cameron@sun.com>
+ * Copyright (C) 2005,2006 Sun Microsystems, Inc.,
+ *               Brian Cameron <brian.cameron@sun.com>
  *
  * gstsunaudiosrc.h:
  *

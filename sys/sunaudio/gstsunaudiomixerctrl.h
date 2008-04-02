@@ -1,6 +1,7 @@
 /*
  * GStreamer - SunAudio mixer interface element.
- * Copyright (C) 2005,2006 Brian Cameron <brian.cameron@sun.com>
+ * Copyright (C) 2005,2006 Sun Microsystems, Inc.,
+ *               Brian Cameron <brian.cameron@sun.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
