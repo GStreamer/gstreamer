@@ -1,3 +1,18 @@
+2008-04-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_class_init),
+	(gst_type_find_element_set_property),
+	(gst_type_find_element_get_property),
+	(gst_type_find_element_activate):
+	* plugins/elements/gsttypefindelement.h:
+	Cleanup properties.
+	Fix pad leak when peer query fails.
+	We can still typefind when the peer returns -1.
+	Add property to force caps and bypass typefinding. This will be used in
+	uridecodebin.
+	API::force-caps
+
 2008-04-01  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
