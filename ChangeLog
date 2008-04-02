@@ -1,3 +1,10 @@
+2008-04-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* libs/gst/controller/gstinterpolationcontrolsource.c:
+	(gst_control_point_free),
+	(gst_interpolation_control_source_set_internal):
+	Use GSlice for allocating the control points.
+
 2008-04-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* plugins/elements/gsttypefindelement.c:

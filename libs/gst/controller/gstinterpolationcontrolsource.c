@@ -71,7 +71,7 @@ gst_control_point_free (GstControlPoint * cp)
   g_return_if_fail (cp);
 
   g_value_unset (&cp->value);
-  g_free (cp);
+  g_slice_free (GstControlPoint, cp);
 }
 
 static void
@@ -432,7 +432,7 @@ gst_interpolation_control_source_set_internal (GstInterpolationControlSource *
     g_value_copy (value, &cp->value);
   } else {
     /* create a new GstControlPoint */
-    cp = g_new0 (GstControlPoint, 1);
+    cp = g_slice_new0 (GstControlPoint);
     cp->timestamp = timestamp;
     g_value_init (&cp->value, self->priv->type);
     g_value_copy (value, &cp->value);
