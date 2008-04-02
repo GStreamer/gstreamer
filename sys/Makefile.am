@@ -34,13 +34,19 @@ else
 DVB_DIR=
 endif
 
+if USE_OSS4
+OSS4_DIR=oss4
+else
+OSS4_DIR=
+endif
+
 if USE_QUICKTIME
 QT_DIR=qtwrapper
 else
 QT_DIR=
 endif
 
-SUBDIRS = $(FBDEV_DIR) $(DVB_DIR) $(VCD_DIR) $(QT_DIR)
+SUBDIRS = $(FBDEV_DIR) $(DVB_DIR) $(VCD_DIR) $(QT_DIR) $(OSS4_DIR)
 
-DIST_SUBDIRS = dvb fbdev vcd qtwrapper dshowdecwrapper dshowsrcwrapper
+DIST_SUBDIRS = dvb fbdev dshowdecwrapper dshowsrcwrapper oss4 qtwrapper vcd
 

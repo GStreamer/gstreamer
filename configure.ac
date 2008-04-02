@@ -1030,6 +1030,14 @@ AG_GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
   AC_CHECK_HEADER(linux/dvb/frontend.h, [HAVE_DVB="yes"], [HAVE_DVB="no"])
 ])
 
+dnl *** oss4 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OSS4, true)
+AG_GST_CHECK_FEATURE(OSS4, [Open Sound System 4], oss4, [
+  AC_MSG_CHECKING([Checking if we can build the OSS4 elements])
+  AC_CHECK_HEADERS([fcntl.h sys/ioctl.h sys/stat.h sys/types.h],
+      [HAVE_OSS4="yes"], [HAVE_OSS4="no"])
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -1046,6 +1054,7 @@ AM_CONDITIONAL(USE_DIRECTFB, false)
 AM_CONDITIONAL(USE_DTS, false)
 AM_CONDITIONAL(USE_DIRAC, false)
 AM_CONDITIONAL(USE_DIVX, false)
+AM_CONDITIONAL(USE_DVB, false)
 AM_CONDITIONAL(USE_FAAC, false)
 AM_CONDITIONAL(USE_FAAD, false)
 AM_CONDITIONAL(USE_FBDEV, false)
@@ -1063,6 +1072,7 @@ AM_CONDITIONAL(USE_MYTHTV, false)
 AM_CONDITIONAL(USE_NAS, false)
 AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_OFA, false)
+AM_CONDITIONAL(USE_OSS4, false)
 AM_CONDITIONAL(USE_SOUP, false)
 AM_CONDITIONAL(USE_SDL, false)
 AM_CONDITIONAL(USE_SNDFILE, false)
@@ -1074,7 +1084,6 @@ AM_CONDITIONAL(USE_TIMIDITY, false)
 AM_CONDITIONAL(USE_X264, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
-AM_CONDITIONAL(USE_DVB, false)
 
 fi dnl of EXT plugins
 
@@ -1179,8 +1188,9 @@ gst-libs/gst/dshow/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
 sys/dshowsrcwrapper/Makefile
-sys/fbdev/Makefile
 sys/dvb/Makefile
+sys/fbdev/Makefile
+sys/oss4/Makefile
 sys/qtwrapper/Makefile
 sys/vcd/Makefile
 examples/Makefile

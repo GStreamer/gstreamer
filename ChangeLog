@@ -1,3 +1,28 @@
+2008-04-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/oss4/Makefile.am:
+	* sys/oss4/oss4-audio.c:
+	* sys/oss4/oss4-audio.h:
+	* sys/oss4/oss4-mixer-enum.c:
+	* sys/oss4/oss4-mixer-enum.h:
+	* sys/oss4/oss4-mixer-slider.c:
+	* sys/oss4/oss4-mixer-slider.h:
+	* sys/oss4/oss4-mixer-switch.c:
+	* sys/oss4/oss4-mixer-switch.h:
+	* sys/oss4/oss4-mixer.c:
+	* sys/oss4/oss4-mixer.h:
+	* sys/oss4/oss4-property-probe.c:
+	* sys/oss4/oss4-property-probe.h:
+	* sys/oss4/oss4-sink.c:
+	* sys/oss4/oss4-sink.h:
+	* sys/oss4/oss4-soundcard.h:
+	* sys/oss4/oss4-source.c:
+	* sys/oss4/oss4-source.h:
+	  Add initial support for OSSv4. Mixer still needs a bit more love,
+	  but even magic has its limits.
+
 2008-04-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
