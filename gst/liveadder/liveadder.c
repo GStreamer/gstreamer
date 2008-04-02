@@ -115,6 +115,8 @@ static GstCaps *
 gst_live_adder_sink_getcaps (GstPad * pad);
 static gboolean
 gst_live_adder_src_activate_push (GstPad * pad, gboolean active);
+static gboolean
+gst_live_adder_src_event (GstPad * pad, GstEvent * event);
 
 static void
 gst_live_adder_loop (gpointer data);
@@ -222,6 +224,8 @@ gst_live_adder_init (GstLiveAdder * adder, GstLiveAdderClass *klass)
       GST_DEBUG_FUNCPTR (gst_live_adder_setcaps));
   gst_pad_set_query_function (adder->srcpad,
       GST_DEBUG_FUNCPTR (gst_live_adder_query));
+  gst_pad_set_event_function (adder->srcpad,
+      GST_DEBUG_FUNCPTR (gst_live_adder_src_event));
   gst_pad_set_activatepush_function (adder->srcpad,
       GST_DEBUG_FUNCPTR (gst_live_adder_src_activate_push));
   gst_element_add_pad (GST_ELEMENT (adder), adder->srcpad);
@@ -678,6 +682,87 @@ gst_live_adder_query (GstPad * pad, GstQuery * query)
   gst_object_unref (adder);
 
   return res;
+}
+
+static gboolean
+forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
+{
+  gst_event_ref (event);
+  GST_LOG_OBJECT (pad, "About to send event %s", GST_EVENT_TYPE_NAME (event));
+  if (!gst_pad_push_event (pad, event)) {
+    g_value_set_boolean (ret, FALSE);
+    GST_WARNING_OBJECT (pad, "Sending event  %p (%s) failed.",
+        event, GST_EVENT_TYPE_NAME (event));
+  } else {
+    GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
+        event, GST_EVENT_TYPE_NAME (event));
+  }
+  gst_object_unref (pad);
+  return TRUE;
+}
+
+/* forwards the event to all sinkpads, takes ownership of the
+ * event
+ *
+ * Returns: TRUE if the event could be forwarded on all
+ * sinkpads.
+ */
+static gboolean
+forward_event (GstLiveAdder * adder, GstEvent * event)
+{
+  gboolean ret;
+  GstIterator *it;
+  GValue vret = { 0 };
+
+  GST_LOG_OBJECT (adder, "Forwarding event %p (%s)", event,
+      GST_EVENT_TYPE_NAME (event));
+
+  ret = TRUE;
+
+  g_value_init (&vret, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&vret, TRUE);
+  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (adder));
+  gst_iterator_fold (it, (GstIteratorFoldFunction) forward_event_func, &vret,
+      event);
+  gst_iterator_free (it);
+  gst_event_unref (event);
+
+  ret = g_value_get_boolean (&vret);
+
+  return ret;
+}
+
+
+static gboolean
+gst_live_adder_src_event (GstPad * pad, GstEvent * event)
+{
+  GstLiveAdder *adder;
+  gboolean result;
+
+  adder = GST_LIVE_ADDER (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:
+      /* QoS might be tricky */
+      result = FALSE;
+      break;
+    case GST_EVENT_SEEK:
+      /* I'm not certain how to handle seeks yet */
+      result = FALSE;
+      break;
+    case GST_EVENT_NAVIGATION:
+      /* navigation is rather pointless. */
+      result = FALSE;
+      break;
+    default:
+      /* just forward the rest for now */
+      result = forward_event (adder, event);
+      break;
+
+  }
+  gst_object_unref (adder);
+
+  return result;
 }
 
 static guint
