@@ -1,3 +1,15 @@
+2008-04-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstqueue2.c: (update_out_rates),
+	(gst_queue_open_temp_location_file),
+	(gst_queue_close_temp_location_file), (gst_queue_handle_src_event),
+	(gst_queue_handle_src_query), (gst_queue_set_property):
+	Update the estimated input data when we push out a buffer.
+	Add some debug info about the temp file.
+	Only forward src events when we are not using a temp file.
+	Don't block the duration query, we need to find something better.
+	Don't leak the temp filename.
+
 2008-04-01  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
