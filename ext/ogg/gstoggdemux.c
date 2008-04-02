@@ -2357,7 +2357,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
   }
 
   if (ret != GST_FLOW_OK || chain == NULL) {
-    if (chain == NULL) {
+    if (ret == GST_FLOW_OK) {
       GST_WARNING_OBJECT (ogg, "no chain was found");
       ret = GST_FLOW_ERROR;
     } else if (ret != GST_FLOW_UNEXPECTED) {

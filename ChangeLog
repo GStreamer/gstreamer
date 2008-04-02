@@ -1,5 +1,12 @@
 2008-04-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_activate_chain),
+	(gst_ogg_demux_read_chain):
+	Refix oggdemux, we only have a problem if we failed to find a chain and
+	we are not EOF.
+
+2008-04-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Victor STINNER <victor dot stinner at haypocalc dot com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_activate_chain),
