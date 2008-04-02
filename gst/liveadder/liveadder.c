@@ -1102,6 +1102,9 @@ gst_live_adder_loop (gpointer data)
     GST_BUFFER_FLAG_UNSET(buffer, GST_BUFFER_FLAG_DISCONT);
   }
 
+  GST_BUFFER_OFFSET(buffer) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET_END(buffer) = GST_BUFFER_OFFSET_NONE;
+
   adder->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
       GST_BUFFER_DURATION (buffer);
 
