@@ -1,3 +1,8 @@
+2008-04-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/goom/goomsl.c: (gsl_read_file):
+	  Check return value of fread() to avoid compiler warnings.
+
 2008-04-01  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Based on patch by: mersad <mersad at axis dot com>
