@@ -800,6 +800,10 @@ update_out_rates (GstQueue * queue)
     queue->last_out_elapsed = elapsed;
     queue->bytes_out = 0;
   }
+  if (queue->byte_in_rate > 0.0) {
+    queue->cur_level.rate_time =
+        queue->cur_level.bytes / queue->byte_in_rate * GST_SECOND;
+  }
   GST_DEBUG_OBJECT (queue, "rates: out %f, time %" GST_TIME_FORMAT,
       queue->byte_out_rate, GST_TIME_ARGS (queue->cur_level.rate_time));
 }
@@ -955,6 +959,8 @@ gst_queue_open_temp_location_file (GstQueue * queue)
   if (queue->temp_location == NULL)
     goto no_filename;
 
+  GST_DEBUG_OBJECT (queue, "opening temp file %s", queue->temp_location);
+
   /* open the file for update/writing */
   queue->temp_file = g_fopen (queue->temp_location, "wb+");
   /* error creating file */
@@ -988,6 +994,7 @@ gst_queue_close_temp_location_file (GstQueue * queue)
   /* nothing to do */
   if (queue->temp_file == NULL)
     return;
+  GST_DEBUG_OBJECT (queue, "closing temp file");
 
   /* we don't remove the file so that the application can use it as a cache
    * later on */
@@ -1552,8 +1559,14 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
       event, GST_EVENT_TYPE_NAME (event));
 #endif
 
-  /* just forward upstream */
-  res = gst_pad_push_event (queue->sinkpad, event);
+  if (!QUEUE_IS_USING_TEMP_FILE (queue)) {
+    /* just forward upstream */
+    res = gst_pad_push_event (queue->sinkpad, event);
+  } else {
+    /* when using a temp file, we unblock the pending read */
+    res = TRUE;
+    gst_event_unref (event);
+  }
 
   return res;
 }
@@ -1609,15 +1622,7 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_DURATION:
     {
-      GST_DEBUG_OBJECT (queue, "waiting for preroll in duration query");
-
-      GST_QUEUE_MUTEX_LOCK (queue);
-      /* we have to wait until the upstream element is at least paused, which
-       * happened when we received a first item. */
-      while (gst_queue_is_empty (queue)) {
-        GST_QUEUE_WAIT_ADD_CHECK (queue, flushing);
-      }
-      GST_QUEUE_MUTEX_UNLOCK (queue);
+      GST_DEBUG_OBJECT (queue, "doing peer query");
 
       if (!gst_queue_peer_query (queue, queue->sinkpad, query))
         goto peer_failed;
@@ -1638,12 +1643,6 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
 peer_failed:
   {
     GST_DEBUG_OBJECT (queue, "failed peer query");
-    return FALSE;
-  }
-flushing:
-  {
-    GST_DEBUG_OBJECT (queue, "flushing while waiting for query");
-    GST_QUEUE_MUTEX_UNLOCK (queue);
     return FALSE;
   }
 }
@@ -1928,7 +1927,7 @@ gst_queue_set_property (GObject * object,
       queue->high_percent = g_value_get_int (value);
       break;
     case PROP_TEMP_LOCATION:
-      gst_queue_set_temp_location (queue, g_value_dup_string (value));
+      gst_queue_set_temp_location (queue, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
