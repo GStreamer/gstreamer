@@ -71,8 +71,8 @@ struct _GstURIDecodeBin
 
   gboolean is_stream;
   GstElement *source;
-  GstElement *queue;
-  GSList *decoders;
+  GstElement *typefind;
+  guint have_type_id;           /* have-type signal id from typefind */
   GSList *decodebins;
   GSList *srcpads;
   gint numpads;
@@ -908,16 +908,14 @@ remove_decoders (GstURIDecodeBin * bin)
 {
   GSList *walk;
 
-  for (walk = bin->decoders; walk; walk = g_slist_next (walk)) {
+  for (walk = bin->decodebins; walk; walk = g_slist_next (walk)) {
     GstElement *decoder = GST_ELEMENT_CAST (walk->data);
 
     GST_DEBUG_OBJECT (bin, "removing old decoder element");
     gst_element_set_state (decoder, GST_STATE_NULL);
     gst_bin_remove (GST_BIN_CAST (bin), decoder);
   }
-  g_slist_free (bin->decoders);
   g_slist_free (bin->decodebins);
-  bin->decoders = NULL;
   bin->decodebins = NULL;
 }
 
@@ -1001,10 +999,11 @@ proxy_drained_signal (GstElement * element, GstURIDecodeBin * dec)
       gst_uri_decode_bin_signals[SIGNAL_DRAINED], 0, NULL);
 }
 
+/* make a decodebin and connect to all the signals */
 static GstElement *
-make_decoder (GstURIDecodeBin * decoder, gboolean use_queue)
+make_decoder (GstURIDecodeBin * decoder)
 {
-  GstElement *result, *decodebin;
+  GstElement *decodebin;
 
   /* now create the decoder element */
   decodebin = gst_element_factory_make ("decodebin2", NULL);
@@ -1023,34 +1022,6 @@ make_decoder (GstURIDecodeBin * decoder, gboolean use_queue)
   g_signal_connect (G_OBJECT (decodebin), "drained",
       G_CALLBACK (proxy_drained_signal), decoder);
 
-  if (use_queue) {
-    GstElement *queue;
-    GstPad *gpad, *pad;
-
-    queue = gst_element_factory_make ("queue2", NULL);
-    if (!queue)
-      goto no_queue2;
-
-    /* configure the queue as a buffering element */
-    g_object_set (G_OBJECT (queue), "use-buffering", TRUE, NULL);
-
-    result = gst_bin_new ("source-bin");
-
-    gst_bin_add (GST_BIN_CAST (result), queue);
-    gst_bin_add (GST_BIN_CAST (result), decodebin);
-
-    gst_element_link (queue, decodebin);
-
-    pad = gst_element_get_pad (queue, "sink");
-    gpad = gst_ghost_pad_new (GST_PAD_NAME (pad), pad);
-    gst_object_unref (pad);
-
-    gst_pad_set_active (gpad, TRUE);
-    gst_element_add_pad (GST_ELEMENT_CAST (result), gpad);
-  } else {
-    result = decodebin;
-  }
-
   /* set up callbacks to create the links between decoded data
    * and video/audio/subtitle rendering/output. */
   g_signal_connect (G_OBJECT (decodebin),
@@ -1066,12 +1037,11 @@ make_decoder (GstURIDecodeBin * decoder, gboolean use_queue)
       NULL);
   decoder->pending++;
 
-  gst_bin_add (GST_BIN_CAST (decoder), result);
+  gst_bin_add (GST_BIN_CAST (decoder), decodebin);
 
-  decoder->decoders = g_slist_prepend (decoder->decoders, result);
   decoder->decodebins = g_slist_prepend (decoder->decodebins, decodebin);
 
-  return result;
+  return decodebin;
 
   /* ERRORS */
 no_decodebin:
@@ -1080,11 +1050,104 @@ no_decodebin:
         (_("Could not create \"decodebin2\" element.")), (NULL));
     return NULL;
   }
+}
+
+static void
+type_found (GstElement * typefind, guint probability,
+    GstCaps * caps, GstURIDecodeBin * decoder)
+{
+  GstElement *dec_elem, *queue;
+
+  GST_DEBUG_OBJECT (decoder, "typefind found caps %" GST_PTR_FORMAT, caps);
+
+  dec_elem = g_object_get_data (G_OBJECT (typefind), "decodebin2");
+  if (!dec_elem)
+    goto no_decodebin;
+
+  queue = gst_element_factory_make ("queue2", NULL);
+  if (!queue)
+    goto no_queue2;
+
+  g_object_set (G_OBJECT (queue), "use-buffering", TRUE, NULL);
+  //g_object_set (G_OBJECT (queue), "temp-location", "temp", NULL);
+
+  gst_bin_add (GST_BIN_CAST (decoder), queue);
+
+  if (!gst_element_link (typefind, queue))
+    goto could_not_link;
+
+  g_object_set (G_OBJECT (dec_elem), "sink-caps", caps, NULL);
+
+  if (!gst_element_link (queue, dec_elem))
+    goto could_not_link;
+
+  gst_element_set_state (queue, GST_STATE_PLAYING);
+  gst_element_set_state (dec_elem, GST_STATE_PLAYING);
+
+  return;
+
+  /* ERRORS */
+no_decodebin:
+  {
+    /* error was posted */
+    return;
+  }
+could_not_link:
+  {
+    GST_ELEMENT_ERROR (decoder, CORE, NEGOTIATION,
+        (NULL), ("Can't link typefind to decodebin2 element"));
+    return;
+  }
 no_queue2:
   {
     GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
         (_("Could not create \"queue2\" element.")), (NULL));
-    return NULL;
+    return;
+  }
+}
+
+/* setup a streaming source. This will first plug a typefind element to the
+ * source. After we find the type, we decide to plug a queue2 and continue to
+ * plug a decodebin2 starting from the found caps */
+static gboolean
+setup_streaming (GstURIDecodeBin * decoder, GstElement * dec_elem)
+{
+  GstElement *typefind;
+
+  /* now create the decoder element */
+  typefind = gst_element_factory_make ("typefind", NULL);
+  if (!typefind)
+    goto no_typefind;
+
+  gst_bin_add (GST_BIN_CAST (decoder), typefind);
+
+  if (!gst_element_link (decoder->source, typefind))
+    goto could_not_link;
+
+  decoder->typefind = typefind;
+
+  /* connect a signal to find out when the typefind element found
+   * a type */
+  decoder->have_type_id =
+      g_signal_connect (G_OBJECT (decoder->typefind), "have-type",
+      G_CALLBACK (type_found), decoder);
+
+  g_object_set_data (G_OBJECT (typefind), "decodebin2", dec_elem);
+
+  return TRUE;
+
+  /* ERRORS */
+no_typefind:
+  {
+    GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
+        (_("Could not create \"typefind\" element.")), (NULL));
+    return FALSE;
+  }
+could_not_link:
+  {
+    GST_ELEMENT_ERROR (decoder, CORE, NEGOTIATION,
+        (NULL), ("Can't link source to typefind element"));
+    return FALSE;
   }
 }
 
@@ -1130,7 +1193,7 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
   }
 
   /* not raw, create decoder */
-  decoder = make_decoder (bin, FALSE);
+  decoder = make_decoder (bin);
   if (!decoder)
     goto no_decodebin;
 
@@ -1223,15 +1286,22 @@ setup_source (GstURIDecodeBin * decoder)
   } else {
     GstElement *dec_elem;
 
-    GST_DEBUG_OBJECT (decoder, "Pluggin decodebin to source");
-
-    /* no dynamic source, we can link now */
-    dec_elem = make_decoder (decoder, decoder->is_stream);
+    dec_elem = make_decoder (decoder);
     if (!dec_elem)
       goto no_decoder;
 
-    if (!gst_element_link (decoder->source, dec_elem))
-      goto could_not_link;
+    if (decoder->is_stream) {
+      GST_DEBUG_OBJECT (decoder, "Setting up streaming");
+      /* do the stream things here */
+      if (!setup_streaming (decoder, dec_elem))
+        goto streaming_failed;
+    } else {
+      /* no streaming source, we can link now */
+      GST_DEBUG_OBJECT (decoder, "Plugging decodebin to source");
+
+      if (!gst_element_link (decoder->source, dec_elem))
+        goto could_not_link;
+    }
   }
   return TRUE;
 
@@ -1248,6 +1318,11 @@ invalid_source:
     return FALSE;
   }
 no_decoder:
+  {
+    /* message was posted */
+    return FALSE;
+  }
+streaming_failed:
   {
     /* message was posted */
     return FALSE;

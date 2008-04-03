@@ -1,5 +1,32 @@
 2008-04-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_class_init),
+	(gst_decode_bin_init), (gst_decode_bin_dispose),
+	(gst_decode_bin_set_sink_caps), (gst_decode_bin_get_sink_caps),
+	(gst_decode_bin_set_property), (gst_decode_bin_get_property),
+	(analyze_new_pad), (connect_pad), (expose_pad),
+	(gst_decode_group_new), (gst_decode_group_control_demuxer_pad),
+	(gst_decode_group_expose), (gst_decode_group_free),
+	(do_async_start), (do_async_done), (gst_decode_bin_change_state):
+	Remove fakesink hack, we can now implement this more elegantly.
+	Added property to bypass typefinding.
+	Removed underrun callback and demuxer pad probe, we now use the srcpad
+	probe to expose groups.
+	API::sink-caps property
+
+	* gst/playback/gstplaybin2.c: (no_more_pads_cb):
+	Guard against multiple emissions of the no_more_pads signal, which
+	happens when we are dealing with chained oggs.
+
+	* gst/playback/gsturidecodebin.c: (remove_decoders),
+	(make_decoder), (type_found), (setup_streaming), (source_new_pad),
+	(setup_source):
+	For streams, use our own typefind element and plug our queue after it.
+	We will need this to determine the type of buffering to use for the
+	queue soon.
+
+2008-04-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
 	(gst_base_audio_sink_skew_slaving), (gst_base_audio_sink_render):
 	Guard against over and underflows because of clock slaving.

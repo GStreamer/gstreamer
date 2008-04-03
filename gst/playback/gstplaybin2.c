@@ -1610,7 +1610,12 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
           res);
     }
   }
-  group->pending--;
+  GST_DEBUG_OBJECT (playbin, "pending %d > %d", group->pending,
+      group->pending - 1);
+
+  if (group->pending > 0)
+    group->pending--;
+
   if (group->pending == 0) {
     /* we are the last group to complete, we will configure the output and then
      * signal the other waiters. */
