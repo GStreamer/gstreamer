@@ -1,5 +1,13 @@
 2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/pipelines/.cvignore:
+	Remove useless file.
+
+	* tests/check/pipelines/.cvsignore:
+	Add new test to .cvsignore.
+
+2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/Makefile.am:
 	* tests/check/pipelines/wavpack.c: (bus_handler),
 	(identity_handoff), (fakesink_handoff), (GST_START_TEST),
