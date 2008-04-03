@@ -1,5 +1,13 @@
 2008-04-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/theora/theoradec.c: (theora_handle_type_packet),
+	(theora_dec_chain):
+	Don't try to do anything fancy with the return code from pushing an
+	event, it does not have enough information to turn it into a
+	GST_FLOW_ERROR.
+
+2008-04-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_reset),
 	(gst_ogg_demux_chain_elem_pad):
 	Add small debug line.

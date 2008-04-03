@@ -866,8 +866,6 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
         dec->segment.format, dec->segment.start, dec->segment.stop,
         dec->segment.time);
     eret = gst_pad_push_event (dec->srcpad, event);
-    if (!eret)
-      ret = GST_FLOW_ERROR;
     dec->sent_newsegment = TRUE;
   }
 
@@ -1451,7 +1449,7 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
   dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
 
   /* peel of DISCONT flag */
-  discont = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT);
+  discont = GST_BUFFER_IS_DISCONT (buf);
 
   /* resync on DISCONT */
   if (G_UNLIKELY (discont)) {
