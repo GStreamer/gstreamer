@@ -200,6 +200,9 @@ wavpack_suite (void)
   Suite *s = suite_create ("Wavpack");
   TCase *tc_chain = tcase_create ("linear");
 
+  /* time out after 60s, not the default 3 */
+  tcase_set_timeout (tc_chain, 60);
+
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_encode_decode);
 

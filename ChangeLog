@@ -1,5 +1,10 @@
 2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/pipelines/wavpack.c: (wavpack_suite):
+	Bump timeout from 3 to 60 seconds.
+
+2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/pipelines/.cvignore:
 	Remove useless file.
 
