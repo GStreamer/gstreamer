@@ -233,7 +233,7 @@ again:
     GST_DEBUG_OBJECT (fdsink, "going into select, have %d bytes to write",
         size);
     retval = gst_poll_wait (fdsink->fdset, GST_CLOCK_TIME_NONE);
-  } while (retval == -1 && errno == EINTR);
+  } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
 
   if (retval == -1) {
     if (errno == EBUSY)

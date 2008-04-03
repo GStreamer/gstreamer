@@ -1,3 +1,9 @@
+2008-04-03  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* plugins/elements/gstfdsink.c:
+	* plugins/elements/gstfdsrc.c:
+	Pull in patch from head to handle EAGAIN. Fixes: #524041
+
 === release 0.10.18 ===
 
 2008-03-20  Jan Schmidt <jan.schmidt@sun.com>
