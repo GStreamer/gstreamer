@@ -819,7 +819,7 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
   if (GST_CLOCK_TIME_IS_VALID (padprivate->expected_timestamp) &&
       !GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DISCONT) &&
       GST_BUFFER_TIMESTAMP(buffer) != padprivate->expected_timestamp)
-    GST_ERROR_OBJECT (adder,
+    GST_LOG_OBJECT (adder,
         "Timestamp discontinuity without the DISCONT flag set"
         " (expected %" GST_TIME_FORMAT ", got %" GST_TIME_FORMAT")",
         GST_TIME_ARGS (padprivate->expected_timestamp),
