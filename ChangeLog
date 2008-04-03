@@ -1,3 +1,10 @@
+2008-04-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/examples/seek/seek.c: (play_cb), (pause_cb), (stop_cb),
+	(msg_buffering), (connect_bus_signals), (main):
+	Add statusbar.
+	Add buffering support with feedback in the statusbar.
+
 2008-04-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ogg/gstoggmux.c:

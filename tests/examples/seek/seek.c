@@ -75,11 +75,14 @@ static const gchar *pipeline_spec;
 static gint64 position = -1;
 static gint64 duration = -1;
 static GtkAdjustment *adjustment;
-static GtkWidget *hscale;
+static GtkWidget *hscale, *statusbar;
+static guint status_id = 0;
 static gboolean stats = FALSE;
 static gboolean elem_seek = FALSE;
 static gboolean verbose = FALSE;
 
+static gboolean is_live = FALSE;
+static gboolean buffering = FALSE;
 static GstState state = GST_STATE_NULL;
 static guint update_id = 0;
 static guint seek_timeout_id = 0;
@@ -1323,18 +1326,27 @@ play_cb (GtkButton * button, gpointer data)
 
   if (state != GST_STATE_PLAYING) {
     g_print ("PLAY pipeline\n");
-    ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    if (ret == GST_STATE_CHANGE_FAILURE)
-      goto failed;
-    //do_seek(hscale);
+    gtk_statusbar_pop (GTK_STATUSBAR (statusbar), status_id);
 
+    ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    switch (ret) {
+      case GST_STATE_CHANGE_FAILURE:
+        goto failed;
+      case GST_STATE_CHANGE_NO_PREROLL:
+        is_live = TRUE;
+        break;
+      default:
+        break;
+    }
     state = GST_STATE_PLAYING;
+    gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Playing");
   }
   return;
 
 failed:
   {
     g_print ("PLAY failed\n");
+    gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Play failed");
   }
 }
 
@@ -1344,18 +1356,28 @@ pause_cb (GtkButton * button, gpointer data)
   if (state != GST_STATE_PAUSED) {
     GstStateChangeReturn ret;
 
+    gtk_statusbar_pop (GTK_STATUSBAR (statusbar), status_id);
     g_print ("PAUSE pipeline\n");
     ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    if (ret == GST_STATE_CHANGE_FAILURE)
-      goto failed;
+    switch (ret) {
+      case GST_STATE_CHANGE_FAILURE:
+        goto failed;
+      case GST_STATE_CHANGE_NO_PREROLL:
+        is_live = TRUE;
+        break;
+      default:
+        break;
+    }
 
     state = GST_STATE_PAUSED;
+    gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Paused");
   }
   return;
 
 failed:
   {
     g_print ("PAUSE failed\n");
+    gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Pause failed");
   }
 }
 
@@ -1366,12 +1388,17 @@ stop_cb (GtkButton * button, gpointer data)
     GstStateChangeReturn ret;
 
     g_print ("READY pipeline\n");
+    gtk_statusbar_pop (GTK_STATUSBAR (statusbar), status_id);
+
     ret = gst_element_set_state (pipeline, GST_STATE_READY);
     if (ret == GST_STATE_CHANGE_FAILURE)
       goto failed;
 
     state = GST_STATE_READY;
+    gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Stopped");
 
+    is_live = FALSE;
+    buffering = FALSE;
     set_update_scale (FALSE);
     set_scale (0.0);
 
@@ -1396,6 +1423,7 @@ stop_cb (GtkButton * button, gpointer data)
 failed:
   {
     g_print ("STOP failed\n");
+    gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Stop failed");
   }
 }
 
@@ -1870,6 +1898,44 @@ msg_segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 }
 
 static void
+msg_buffering (GstBus * bus, GstMessage * message, GstPipeline * data)
+{
+  gint percent;
+  gchar *bufstr;
+
+  gst_message_parse_buffering (message, &percent);
+
+  gtk_statusbar_pop (GTK_STATUSBAR (statusbar), status_id);
+  bufstr = g_strdup_printf ("Buffering...%d", percent);
+  gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, bufstr);
+  g_free (bufstr);
+
+  /* no state management needed for live pipelines */
+  if (is_live)
+    return;
+
+  if (percent == 100) {
+    /* a 100% message means buffering is done */
+    buffering = FALSE;
+    /* if the desired state is playing, go back */
+    if (state == GST_STATE_PLAYING) {
+      fprintf (stderr, "Done buffering, setting pipeline to PLAYING ...\n");
+      gst_element_set_state (pipeline, GST_STATE_PLAYING);
+      gtk_statusbar_pop (GTK_STATUSBAR (statusbar), status_id);
+      gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Playing");
+    }
+  } else {
+    /* buffering busy */
+    if (buffering == FALSE && state == GST_STATE_PLAYING) {
+      /* we were not buffering but PLAYING, PAUSE  the pipeline. */
+      fprintf (stderr, "Buffering, setting pipeline to PAUSED ...\n");
+      gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    }
+    buffering = TRUE;
+  }
+}
+
+static void
 connect_bus_signals (GstElement * pipeline)
 {
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
@@ -1896,6 +1962,8 @@ connect_bus_signals (GstElement * pipeline)
   g_signal_connect (bus, "message::element", (GCallback) message_received,
       pipeline);
   g_signal_connect (bus, "message::segment-done", (GCallback) message_received,
+      pipeline);
+  g_signal_connect (bus, "message::buffering", (GCallback) msg_buffering,
       pipeline);
 
   gst_object_unref (bus);
@@ -1971,6 +2039,9 @@ main (int argc, char **argv)
   /* initialize gui elements ... */
   tips = gtk_tooltips_new ();
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  statusbar = gtk_statusbar_new ();
+  status_id = gtk_statusbar_get_context_id (GTK_STATUSBAR (statusbar), "seek");
+  gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Stopped");
   hbox = gtk_hbox_new (FALSE, 0);
   vbox = gtk_vbox_new (FALSE, 0);
   flagtable = gtk_table_new (4, 2, FALSE);
@@ -2126,6 +2197,7 @@ main (int argc, char **argv)
     gtk_box_pack_start (GTK_BOX (vbox), boxes2, TRUE, TRUE, 2);
   }
   gtk_box_pack_start (GTK_BOX (vbox), hscale, TRUE, TRUE, 2);
+  gtk_box_pack_start (GTK_BOX (vbox), statusbar, TRUE, TRUE, 2);
 
   /* connect things ... */
   g_signal_connect (G_OBJECT (play_button), "clicked", G_CALLBACK (play_cb),
