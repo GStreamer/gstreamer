@@ -3,10 +3,10 @@
   <description>elements to read from and write to  Gnome-VFS uri's</description>
   <filename>../../ext/gnomevfs/.libs/libgstgnomevfs.so</filename>
   <basename>libgstgnomevfs.so</basename>
-  <version>0.10.18</version>
+  <version>0.10.18.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins source release</package>
+  <package>GStreamer Base Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -29,8 +29,7 @@
       <longname>GnomeVFS Source</longname>
       <class>Source/File</class>
       <description>Read from any GnomeVFS-supported file</description>
-      <author>Bastien Nocera &lt;hadess@hadess.net&gt;
-    Ronald S. Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <author>Bastien Nocera &lt;hadess@hadess.net&gt;012Ronald S. Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
         <caps>
           <name>src</name>

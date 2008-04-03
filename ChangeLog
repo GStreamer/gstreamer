@@ -1,3 +1,53 @@
+2008-04-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-overrides.txt:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	  Add playbin, playbin2, decodebin, decodebin2, uridecodebin and oggmux
+
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/gst-plugins-base-plugins.interfaces:
+	* docs/plugins/gst-plugins-base-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-decodebin.xml:
+	* docs/plugins/inspect/plugin-ffmpegcolorspace.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-gnomevfs.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-queue2.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-uridecodebin.xml:
+	* docs/plugins/inspect/plugin-video4linux.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	  Update introspection data.
+
+	* ext/ogg/gstoggmux.c:
+	  Document oggmux.
+
+	* gst/playback/gstdecodebin2.c:
+	  Don't use gtk-doc style comment start for private stuff, but make it
+	  formatted like this for consistency.
+
 2008-04-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstdecodebin2.c: (gst_decode_bin_class_init),
@@ -875,6 +925,14 @@
 	* configure.ac:
 	Don't hardcode -Wall and -Werror for configure checks, this fails
 	with non-GCC compilers. Fixes bug #517991.
+
+2008-02-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audioconvert/gstaudioconvert.c:
+	* gst/audioconvert/gstaudioquantize.c:
+	* gst/audioconvert/gstaudioquantize.h:
+	  Make audioconvert gap aware. If noiseshaping is used, wait for
+	  noiseshaping to converge before marking as GAP. Fixes #517813.
 
 2008-02-21  Stefan Kost  <ensonic@users.sf.net>
 

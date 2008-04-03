@@ -145,9 +145,17 @@ gst_clock_overlay_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-decodebin</FILE>
+<TITLE>decodebin</TITLE>
+GstDecodeBin
+<SUBSECTION Standard>
+</SECTION>
+
+<SECTION>
 <FILE>element-decodebin2</FILE>
 <TITLE>decodebin2</TITLE>
 GstDecodeBin2
+<SUBSECTION Standard>
 </SECTION>
 
 <SECTION>
@@ -314,6 +322,8 @@ GstOggDemux
 <SUBSECTION Standard>
 GST_OGG_DEMUX
 GST_OGG_DEMUX_CLASS
+GST_IS_OGG_DEMUX
+GST_IS_OGG_DEMUX_CLASS
 GST_TYPE_OGG_DEMUX
 GstOggDemuxClass
 </SECTION>
@@ -325,6 +335,8 @@ GstOggMux
 <SUBSECTION Standard>
 GST_OGG_MUX
 GST_OGG_MUX_CLASS
+GST_IS_OGG_MUX
+GST_IS_OGG_MUX_CLASS
 GST_TYPE_OGG_MUX
 GstOggMuxClass
 </SECTION>
@@ -334,13 +346,13 @@ GstOggMuxClass
 <TITLE>playbin</TITLE>
 GstPlayBin
 <SUBSECTION Standard>
-GST_PLAY_BIN
-GST_PLAY_BIN_CLASS
-GST_IS_GST_PLAY_BIN
-GST_IS_GST_PLAY_BIN_CLASS
-GST_TYPE_GST_PLAY_BIN
-GstPlayBinClass
-gst_play_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-playbin2</FILE>
+<TITLE>playbin2</TITLE>
+GstPlayBin2
+<SUBSECTION Standard>
 </SECTION>
 
 <SECTION>
@@ -373,6 +385,7 @@ GST_IS_TEXT_OVERLAY_CLASS
 GST_TYPE_TEXT_OVERLAY
 GstTextOverlayClass
 gst_text_overlay_get_type
+GstTextOverlayLineAlign
 </SECTION>
 
 <SECTION>
@@ -429,6 +442,13 @@ GST_IS_TIME_OVERLAY_CLASS
 GST_TYPE_TIME_OVERLAY
 GstTimeOverlayClass
 gst_time_overlay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-uridecodebin</FILE>
+<TITLE>uridecodebin</TITLE>
+GstUriDecodeBin
+<SUBSECTION Standard>
 </SECTION>
 
 <SECTION>
@@ -559,6 +579,9 @@ GST_IS_XIMAGESINK_CLASS
 GST_TYPE_XIMAGESINK
 GstXImagesSinkClass
 gst_ximagesink_get_type
+GstXImageBuffer
+GstXImageBufferClass
+GstXImageSinkClass
 </SECTION>
 
 <SECTION>
@@ -573,4 +596,8 @@ GST_IS_XVIMAGESINK_CLASS
 GST_TYPE_XVIMAGESINK
 GstXvImagesSinkClass
 gst_xvimagesink_get_type
+GstXvImageBuffer
+GstXvImageBufferClass
+GstXvImageFormat
+GstXvImageSinkClass
 </SECTION>

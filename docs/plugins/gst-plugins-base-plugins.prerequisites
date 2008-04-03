@@ -2,6 +2,6 @@ GstChildProxy GstObject
 GstTagSetter GstObject GstElement
 GstImplementsInterface GstObject GstElement
 GstMixer GstObject GstImplementsInterface GstElement
-GstTuner GstObject GstImplementsInterface GstElement
 GstXOverlay GstObject GstImplementsInterface GstElement
 GstColorBalance GstObject GstImplementsInterface GstElement
+GstTuner GstObject GstImplementsInterface GstElement

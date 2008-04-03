@@ -104,7 +104,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/ffmpegcolorspace/gstffmpegcolorspace.h \
 	$(top_srcdir)/gst/gdp/gstgdpdepay.h \
 	$(top_srcdir)/gst/gdp/gstgdppay.h \
-	$(top_srcdir)/gst/playback/gstdecodebin2.c \
 	$(top_srcdir)/gst/tcp/gstmultifdsink.h \
 	$(top_srcdir)/gst/tcp/gsttcpserversink.h \
 	$(top_srcdir)/gst/videorate/gstvideorate.h \

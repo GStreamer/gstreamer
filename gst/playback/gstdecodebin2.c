@@ -1609,7 +1609,7 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
   DECODE_BIN_UNLOCK (group->dbin);
 }
 
-/* gst_decode_group_new
+/* gst_decode_group_new:
  *
  * Creates a new GstDecodeGroup. It is up to the caller to add it to the list
  * of groups.
@@ -1663,11 +1663,11 @@ gst_decode_group_new (GstDecodeBin * dbin, gboolean use_queue)
   return group;
 }
 
-/** get_current_group:
+/* get_current_group:
  *
  * Returns the current non-completed group.
  *
- * Returns NULL if no groups are available, or all groups are completed.
+ * Returns: %NULL if no groups are available, or all groups are completed.
  */
 static GstDecodeGroup *
 get_current_group (GstDecodeBin * dbin)

@@ -3,10 +3,10 @@
   <description>Subtitle parsing</description>
   <filename>../../gst/subparse/.libs/libgstsubparse.so</filename>
   <basename>libgstsubparse.so</basename>
-  <version>0.10.18</version>
+  <version>0.10.18.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins source release</package>
+  <package>GStreamer Base Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,19 +14,19 @@
       <longname>SSA Subtitle Parser</longname>
       <class>Codec/Parser/Subtitle</class>
       <description>Parses SSA subtitle streams</description>
-      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+      <author>Tim-Philipp M303274ller &lt;tim centricular net&gt;</author>
       <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-ssa; application/x-ass</details>
-        </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>text/x-pango-markup</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-ssa; application/x-ass</details>
         </caps>
       </pads>
     </element>
@@ -35,20 +35,19 @@
       <longname>Subtitle parser</longname>
       <class>Codec/Parser/Subtitle</class>
       <description>Parses subtitle (.sub) files into text streams</description>
-      <author>Gustavo J. A. M. Carneiro &lt;gjc@inescporto.pt&gt;
-    Ronald S. Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <author>Gustavo J. A. M. Carneiro &lt;gjc@inescporto.pt&gt;012Ronald S. Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-subtitle; application/x-subtitle-sami; application/x-subtitle-tmplayer; application/x-subtitle-mpl2</details>
-        </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>text/plain; text/x-pango-markup</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-subtitle</details>
         </caps>
       </pads>
     </element>

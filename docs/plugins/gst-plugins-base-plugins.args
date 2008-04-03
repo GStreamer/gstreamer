@@ -233,8 +233,8 @@
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rwx</FLAGS>
-<NICK>filter_length</NICK>
-<BLURB>filter_length.</BLURB>
+<NICK>filter length</NICK>
+<BLURB>Length of the resample filter.</BLURB>
 <DEFAULT>16</DEFAULT>
 </ARG>
 
@@ -1449,6 +1449,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstTextOverlay::wait-text</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Wait Text</NICK>
+<BLURB>Whether to wait for subtitles.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>CDParanoia::abort-on-skip</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -1769,6 +1779,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstURIDecodeBin::source</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Source</NICK>
+<BLURB>Source object used.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQueue2::current-level-buffers</NAME>
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
@@ -2074,7 +2094,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Vis plugin</NICK>
-<BLURB>the visualization element to use (NULL = none).</BLURB>
+<BLURB>the visualization element to use (NULL = default).</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 

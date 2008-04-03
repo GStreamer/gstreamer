@@ -3,10 +3,10 @@
   <description>decoder bin</description>
   <filename>../../gst/playback/.libs/libgstdecodebin.so</filename>
   <basename>libgstdecodebin.so</basename>
-  <version>0.10.18</version>
+  <version>0.10.18.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins source release</package>
+  <package>GStreamer Base Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,15 +17,15 @@
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>src%d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
           <details>ANY</details>
         </caps>
       </pads>
