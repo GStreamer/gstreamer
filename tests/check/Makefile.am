@@ -44,7 +44,8 @@ if USE_WAVPACK
 check_wavpack = \
        elements/wavpackparse \
        elements/wavpackdec \
-       elements/wavpackenc
+       elements/wavpackenc \
+       pipelines/wavpack
 else
 check_wavpack =
 endif
@@ -121,4 +122,7 @@ elements_sunaudio_LDADD = \
 
 elements_videocrop_LDADD = $(LDADD) $(GST_BASE_LIBS)
 elements_videocrop_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+
+pipelines_wavpack_LDADD = $(LDADD) $(GST_BASE_LIBS)
+pipelines_wavpack_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 

@@ -1,5 +1,14 @@
 2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/wavpack.c: (bus_handler),
+	(identity_handoff), (fakesink_handoff), (GST_START_TEST),
+	(wavpack_suite), (main):
+	Add unit test that encodes and decodes some data, checks that it
+	is still the same and that all timestamps/offsets are perfect.
+
+2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_base_init):
 	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_base_init):
 	* ext/wavpack/gstwavpackparse.c:
