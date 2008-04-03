@@ -1,3 +1,8 @@
+2008-04-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Add qoutes to the define. Fixes # 525961.
+
 2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* plugins/indexers/gstfileindex.c: (_file_index_id_free),

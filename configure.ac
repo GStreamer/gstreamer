@@ -232,7 +232,7 @@ AC_SUBST(GST_HAVE_UNALIGNED_ACCESS_DEFINE)
 dnl check for extra platform specific plugin suffixes
 case $host_os in
      darwin* | rhapsody*)
-	AC_DEFINE_UNQUOTED(GST_EXTRA_MODULE_SUFFIX, [.dylib], [Extra platform specific plugin suffix])
+	AC_DEFINE_UNQUOTED(GST_EXTRA_MODULE_SUFFIX, [".dylib"], [Extra platform specific plugin suffix])
 	;;
      *)
 	;;
@@ -524,9 +524,11 @@ GST_LICENSE="LGPL"
 AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
 AC_SUBST(GST_LICENSE)
 
-dnl define LIBDIR so we can inform people where we live
+dnl define LIBDIR, DATADIR so we can inform people where we live
 AS_AC_EXPAND(LIBDIR, $libdir)
 AC_DEFINE_UNQUOTED(LIBDIR, "$LIBDIR", [library dir])
+AS_AC_EXPAND(DATADIR, $datadir)
+AC_DEFINE_UNQUOTED(DATADIR, "$DATADIR", [data dir])
 
 dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
