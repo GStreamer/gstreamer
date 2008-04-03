@@ -1084,7 +1084,6 @@ cddb_sum (gint n)
   return ret;
 }
 
-#include "base64.h"
 #include "sha1.h"
 
 static void
@@ -1092,7 +1091,8 @@ gst_cddabasesrc_calculate_musicbrainz_discid (GstCddaBaseSrc * src)
 {
   GString *s;
   SHA_INFO sha;
-  guchar digest[20], *ptr;
+  guchar digest[20];
+  gchar *ptr;
   gchar tmp[9];
   gulong i;
   guint leadout_sector;
@@ -1129,12 +1129,25 @@ gst_cddabasesrc_calculate_musicbrainz_discid (GstCddaBaseSrc * src)
   sha_final (digest, &sha);
 
   /* re-encode to base64 */
-  ptr = rfc822_binary (digest, 20, &i);
+  ptr = g_base64_encode (digest, 20);
+  i = strlen (ptr);
 
   g_assert (i < sizeof (src->mb_discid) + 1);
   memcpy (src->mb_discid, ptr, i);
   src->mb_discid[i] = '\0';
   free (ptr);
+
+  /* Replace '/', '+' and '=' by '_', '.' and '-' as specified on
+   * http://musicbrainz.org/doc/DiscIDCalculation
+   */
+  for (ptr = src->mb_discid; *ptr != '\0'; ptr++) {
+    if (*ptr == '/')
+      *ptr = '_';
+    else if (*ptr == '+')
+      *ptr = '.';
+    else if (*ptr == '=')
+      *ptr = '-';
+  }
 
   GST_DEBUG_OBJECT (src, "musicbrainz-discid      = %s", src->mb_discid);
   GST_DEBUG_OBJECT (src, "musicbrainz-discid-full = %s", s->str);

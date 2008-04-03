@@ -2,8 +2,6 @@ lib_LTLIBRARIES = libgstcdda-@GST_MAJORMINOR@.la
 
 libgstcdda_@GST_MAJORMINOR@_la_SOURCES = \
 	gstcddabasesrc.c \
-	base64.c \
-	base64.h \
 	sha1.c \
 	sha1.h
 

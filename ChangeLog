@@ -1,3 +1,12 @@
+2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst-libs/gst/cdda/Makefile.am:
+	* gst-libs/gst/cdda/base64.c:
+	* gst-libs/gst/cdda/base64.h:
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	(gst_cddabasesrc_calculate_musicbrainz_discid):
+	Use GLib's base64 implementation instead of our own.
+
 2008-04-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_activate_chain),
