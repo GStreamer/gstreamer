@@ -1118,14 +1118,10 @@ gst_live_adder_loop (gpointer data)
   if (adder->segment_pending)
   {
     /*
-     * We should probably loop through all of the sinks that have a segment
-     * and take the min of the starts and the max of the stops
-     * and convert them to running times and use these as start/stop.
-     * And so something smart about the positions with seeks that I dont
-     * understand yet.
+     * We set the start at 0, because we re-timestamps to the running time
      */
     newseg_event = gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
-        GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer), -1, 0);
+        GST_FORMAT_TIME, 0, -1, 0);
 
     adder->segment_pending = FALSE;
   }
