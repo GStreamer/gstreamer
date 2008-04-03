@@ -98,7 +98,9 @@ with different major/minor versions of GStreamer.
 %configure \
   --with-package-name='CVS gstreamer package' \
   --with-package-origin='http://gstreamer.freedesktop.org' \
-  --enable-debug
+  --enable-debug \
+  --enable-gtk-doc \
+  --enable-docbook
 
 #make %{?_smp_mflags}
 # FIXME: docs building doesn't work with smp yet
@@ -153,6 +155,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_mandir}/man1/gst-typefind-%{majorminor}.*
 %doc %{_mandir}/man1/gst-xmlinspect-%{majorminor}.*
 %doc %{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
+%doc %{_datadir}/doc/gstreamer-%{majorminor}/manual
+%doc %{_datadir}/doc/gstreamer-%{majorminor}/pwg
+%doc %{_datadir}/doc/gstreamer-%{majorminor}/faq/
 
 %files -n gstreamer-tools
 %defattr(-, root, root, -)
@@ -195,6 +200,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_datadir}/gtk-doc/html/gstreamer-plugins-%{majorminor}/*
 
 %changelog
+* Thu Apr 3 2008 Christian Schaller <christian.schaller at collabora co uk>
+- Update spec file to make inclusion of all docs explicit
+
 * Tue Dec 11 2007 Christian Schaller <christian.schaller@collabora.co.uk> 
 - Import from Fedora package
 
