@@ -1,3 +1,10 @@
+2008-04-03  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ffmpegrev: Bump upstream ffmpeg revision to todays
+	* configure.ac: Fix configure for build modification in upstream
+	* ext/libpostproc/gstpostproc.c: (gst_post_proc_transform_ip):
+	Fix build for modifications in upstream
+
 2008-03-18  Andy Wingo  <wingo@pobox.com>
 
 	* ext/ffmpeg/gstffmpegdec.c (gst_ffmpegdec_sink_event): Only drain

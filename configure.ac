@@ -254,6 +254,7 @@ else
   FFMPEG_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec \
+		 -I \$(top_srcdir)/gst-libs/ext/ffmpeg \
                  -Wno-deprecated-declarations"
 
   dnl libgstffmpeg.la: libs to statically link to        
@@ -264,6 +265,7 @@ else
   POSTPROC_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libpostproc	\
                    -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil 	\
                    -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec 	\
+                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg 	\
                    -Wno-deprecated-declarations"
 
   dnl libgstpostproc.la: libs to statically link to
@@ -273,7 +275,7 @@ else
   FFMPEG_SUBDIRS=gst-libs
   AC_DEFINE(HAVE_AVI_H)
   AC_DEFINE([FFMPEG_SOURCE], ["local snapshot"], [Describes where the FFmpeg libraries come from.])
-  ac_configure_args="$ac_configure_args --disable-vhook --disable-ffserver --disable-ffplay --enable-pp --enable-gpl --enable-static --disable-encoder=flac --disable-decoder=cavs --extra-cflags=-fPIC"
+  ac_configure_args="$ac_configure_args --disable-vhook --disable-ffserver --disable-ffplay --enable-postproc --enable-gpl --enable-static --disable-encoder=flac --disable-decoder=cavs --extra-cflags=-fPIC"
   case $host_os in
     # Unfortunately, in Mac OS 10.5 the current rev of ffmpeg builds
     # some non-PIC code into the .a file. See
