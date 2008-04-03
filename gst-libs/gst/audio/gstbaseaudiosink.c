@@ -870,8 +870,9 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
   etime = gst_clock_get_time (GST_ELEMENT_CLOCK (sink));
   itime = gst_clock_get_internal_time (sink->provided_clock);
 
-  etime -= cexternal;
-  itime -= cinternal;
+  /* make sure we never go below 0 */
+  etime = etime > cexternal ? etime - cexternal : 0;
+  itime = itime > cinternal ? itime - cinternal : 0;
 
   skew = GST_CLOCK_DIFF (etime, itime);
   if (sink->priv->avg_skew == -1) {
@@ -896,7 +897,7 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
     GST_WARNING_OBJECT (sink,
         "correct clock skew %" G_GINT64_FORMAT " > %" G_GINT64_FORMAT,
         sink->priv->avg_skew, segtime2);
-    cinternal += segtime;
+    cexternal = cexternal > segtime ? cexternal - segtime : 0;
     sink->priv->avg_skew -= segtime;
 
     segsamples =
@@ -1137,6 +1138,11 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   if ((slaved = clock != sink->provided_clock)) {
     /* handle clock slaving */
     gst_base_audio_sink_handle_slaving (sink, render_start, render_stop,
+        &render_start, &render_stop);
+  } else {
+    /* no slaving needed but we need to adapt to the clock calibration
+     * parameters */
+    gst_base_audio_sink_none_slaving (sink, render_start, render_stop,
         &render_start, &render_stop);
   }
 

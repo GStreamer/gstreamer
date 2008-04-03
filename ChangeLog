@@ -1,5 +1,13 @@
 2008-04-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_skew_slaving), (gst_base_audio_sink_render):
+	Guard against over and underflows because of clock slaving.
+	When we are using our own clock, still compensate for any calibrations
+	that we might have done to our clock.
+
+2008-04-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/theora/theoradec.c: (theora_handle_type_packet),
 	(theora_dec_chain):
 	Don't try to do anything fancy with the return code from pushing an
