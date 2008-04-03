@@ -1,3 +1,13 @@
+2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* plugins/indexers/gstfileindex.c: (_file_index_id_free),
+	(gst_file_index_load), (gst_file_index_add_id),
+	(gst_file_index_get_assoc_entry):
+	* plugins/indexers/gstmemindex.c: (gst_mem_index_free_format),
+	(gst_mem_index_free_id), (gst_mem_index_add_id),
+	(gst_mem_index_index_format):
+	Use GSlice when possible.
+
 2008-04-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* libs/gst/controller/gstinterpolationcontrolsource.c:

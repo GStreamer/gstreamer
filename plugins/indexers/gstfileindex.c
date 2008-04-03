@@ -216,7 +216,7 @@ _file_index_id_free (GstFileIndexId * index_id, gboolean is_mmapped)
       munmap (index_id->array->data, ARRAY_TOTAL_SIZE (index_id));
     g_array_free (index_id->array, !is_mmapped);
   }
-  g_free (index_id);
+  g_slice_free (GstFileIndexId, index_id);
 }
 
 static gboolean
@@ -400,7 +400,7 @@ gst_file_index_load (GstFileIndex * index)
           continue;
         }
 
-        id_index = g_new0 (GstFileIndexId, 1);
+        id_index = g_slice_new0 (GstFileIndexId);
         id_index->id_desc = (char *) xmlGetProp (writer, (xmlChar *) "id");
 
         for (wpart = writer->children; wpart; wpart = wpart->next) {
@@ -656,7 +656,7 @@ gst_file_index_add_id (GstIndex * index, GstIndexEntry * entry)
   id_index = g_hash_table_lookup (fileindex->id_index, &entry->id);
 
   if (!id_index) {
-    id_index = g_new0 (GstFileIndexId, 1);
+    id_index = g_slice_new0 (GstFileIndexId);
 
     id_index->id = entry->id;
     id_index->id_desc = g_strdup (entry->data.id.description);
@@ -960,7 +960,7 @@ gst_file_index_get_assoc_entry (GstIndex * index,
 
   /* entry memory management needs improvement FIXME */
   if (!fileindex->ret_entry)
-    fileindex->ret_entry = g_new0 (GstIndexEntry, 1);
+    fileindex->ret_entry = g_slice_new0 (GstIndexEntry);
   entry = fileindex->ret_entry;
   if (entry->data.assoc.assocs) {
     g_free (entry->data.assoc.assocs);
