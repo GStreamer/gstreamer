@@ -1,3 +1,20 @@
+2008-04-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gdk_pixbuf/Makefile.am:
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (plugin_init):
+	* ext/gdk_pixbuf/gstgdkpixbufsink.c:
+	  (gst_gdk_pixbuf_sink_base_init),
+	  (gst_gdk_pixbuf_sink_class_init), (gst_gdk_pixbuf_sink_init),
+	  (gst_gdk_pixbuf_sink_start), (gst_gdk_pixbuf_sink_stop),
+	  (gst_gdk_pixbuf_sink_set_caps),
+	  (gst_gdk_pixbuf_sink_pixbuf_destroy_notify),
+	  (gst_gdk_pixbuf_sink_get_pixbuf_from_buffer),
+	  (gst_gdk_pixbuf_sink_handle_buffer), (gst_gdk_pixbuf_sink_preroll),
+	  (gst_gdk_pixbuf_sink_render), (gst_gdk_pixbuf_sink_set_property),
+	  (gst_gdk_pixbuf_sink_get_property):
+	* ext/gdk_pixbuf/gstgdkpixbufsink.h:
+	  Add gdkpixbufsink element for easy snapshotting (#525946).
+
 2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/pipelines/wavpack.c: (wavpack_suite):

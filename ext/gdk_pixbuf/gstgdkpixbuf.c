@@ -22,11 +22,12 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gst/video/video.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <string.h>
 
 #include "gstgdkpixbuf.h"
+#include "gstgdkpixbufsink.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gdk_pixbuf_debug);
 #define GST_CAT_DEFAULT gst_gdk_pixbuf_debug
@@ -548,6 +549,10 @@ plugin_init (GstPlugin * plugin)
       gst_gdk_pixbuf_type_find, NULL, GST_CAPS_ANY, NULL);
 #endif
 
+  if (!gst_element_register (plugin, "gdkpixbufsink", GST_RANK_NONE,
+          GST_TYPE_GDK_PIXBUF_SINK))
+    return FALSE;
+
   if (!pixbufscale_init (plugin))
     return FALSE;
 
@@ -561,5 +566,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "gdkpixbuf",
-    "GDK Pixbuf decoder & scaler",
+    "GdkPixbuf-based image decoder, scaler and sink",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
