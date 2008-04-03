@@ -1234,6 +1234,10 @@ gst_live_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   gst_pad_set_chain_function (newpad, gst_live_live_adder_chain);
 
+
+  if (!gst_pad_set_active (newpad, TRUE))
+    goto could_not_activate;
+
   /* takes ownership of the pad */
   if (!gst_element_add_pad (GST_ELEMENT (adder), newpad))
     goto could_not_add;
@@ -1253,6 +1257,14 @@ not_sink:
 could_not_add:
   {
     GST_DEBUG_OBJECT (adder, "could not add pad");
+    g_free (padprivate);
+    gst_object_unref (newpad);
+    return NULL;
+  }
+could_not_activate:
+  {
+    GST_DEBUG_OBJECT (adder, "could not activate new pad");
+    g_free (padprivate);
     gst_object_unref (newpad);
     return NULL;
   }
