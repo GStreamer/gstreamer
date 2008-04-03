@@ -608,7 +608,7 @@ gst_live_adder_query (GstPad * pad, GstQuery * query)
     {
       /* We need to send the query upstream and add the returned latency to our
        * own */
-      GstClockTime min_latency = G_MAXUINT64, max_latency = 0;
+      GstClockTime min_latency = 0, max_latency = G_MAXUINT64;
       gpointer item;
       GstIterator *iter = NULL;
       gboolean done = FALSE;
@@ -641,8 +641,8 @@ gst_live_adder_query (GstPad * pad, GstQuery * query)
             }
             break;
           case GST_ITERATOR_RESYNC:
-            min_latency = G_MAXUINT64;
-            max_latency = 0;
+            min_latency = 0;
+            max_latency = G_MAXUINT64;
 
             gst_iterator_resync (iter);
             break;
@@ -658,11 +658,6 @@ gst_live_adder_query (GstPad * pad, GstQuery * query)
       gst_iterator_free (iter);
 
       if (res) {
-        if (min_latency == G_MAXUINT64)
-          min_latency = 0;
-
-        if (max_latency < min_latency)
-          max_latency = min_latency;
 
         GST_OBJECT_LOCK (adder);
         adder->peer_latency = min_latency;
