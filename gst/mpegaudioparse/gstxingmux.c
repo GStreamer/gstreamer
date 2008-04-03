@@ -69,6 +69,33 @@ typedef struct _GstXingSeekEntry
   gint byte;
 } GstXingSeekEntry;
 
+/* FIXME: unconditionally use GSlice after we depend on GLib >= 2.10 */
+#if GLIB_CHECK_VERSION (2, 10, 0)
+static inline GstXingSeekEntry *
+gst_xing_seek_entry_new ()
+{
+  return g_slice_new (GstXingSeekEntry);
+}
+
+static inline void
+gst_xing_seek_entry_free (GstXingSeekEntry * entry)
+{
+  g_slice_free (GstXingSeekEntry, entry);
+}
+#else
+static inline GstXingSeekEntry *
+gst_xing_seek_entry_new ()
+{
+  return g_new (GstXingSeekEntry, 1);
+}
+
+static inline void
+gst_xing_seek_entry_free (GstXingSeekEntry * entry)
+{
+  g_free (entry);
+}
+#endif
+
 static void gst_xing_mux_finalize (GObject * obj);
 static GstStateChangeReturn
 gst_xing_mux_change_state (GstElement * element, GstStateChange transition);
@@ -429,7 +456,7 @@ gst_xing_mux_finalize (GObject * obj)
   }
 
   if (xing->seek_table) {
-    g_list_foreach (xing->seek_table, (GFunc) g_free, NULL);
+    g_list_foreach (xing->seek_table, (GFunc) gst_xing_seek_entry_free, NULL);
     g_list_free (xing->seek_table);
     xing->seek_table = NULL;
   }
@@ -446,7 +473,7 @@ xing_reset (GstXingMux * xing)
   gst_adapter_clear (xing->adapter);
 
   if (xing->seek_table) {
-    g_list_foreach (xing->seek_table, (GFunc) g_free, NULL);
+    g_list_foreach (xing->seek_table, (GFunc) gst_xing_seek_entry_free, NULL);
     g_list_free (xing->seek_table);
     xing->seek_table = NULL;
   }
@@ -548,7 +575,7 @@ gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer)
       }
     }
 
-    seek_entry = g_new (GstXingSeekEntry, 1);
+    seek_entry = gst_xing_seek_entry_new ();
     seek_entry->timestamp =
         (xing->duration == GST_CLOCK_TIME_NONE) ? 0 : xing->duration;
     /* Workaround for parsers checking that the first seek table entry is 0 */

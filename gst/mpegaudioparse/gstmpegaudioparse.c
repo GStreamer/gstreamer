@@ -41,6 +41,33 @@ GST_DEBUG_CATEGORY_STATIC (mp3parse_debug);
 
 #define GST_READ_UINT24_BE(p) (p[2] | (p[1] << 8) | (p[0] << 16))
 
+/* FIXME: unconditionally use GSlice after we depend on GLib >= 2.10 */
+#if GLIB_CHECK_VERSION (2, 10, 0)
+static inline MPEGAudioSeekEntry *
+mpeg_audio_seek_entry_new ()
+{
+  return g_slice_new (MPEGAudioSeekEntry);
+}
+
+static inline void
+mpeg_audio_seek_entry_free (MPEGAudioSeekEntry * entry)
+{
+  g_slice_free (MPEGAudioSeekEntry, entry);
+}
+#else
+static inline MPEGAudioSeekEntry *
+mpeg_audio_seek_entry_new ()
+{
+  return g_new (MPEGAudioSeekEntry, 1);
+}
+
+static inline void
+mpeg_audio_seek_entry_free (MPEGAudioSeekEntry * entry)
+{
+  g_free (entry);
+}
+#endif
+
 /* elementfactory information */
 static GstElementDetails mp3parse_details = {
   "MPEG1 Audio Parser",
@@ -341,7 +368,8 @@ gst_mp3parse_reset (GstMPEGAudioParse * mp3parse)
   mp3parse->vbri_seek_table = NULL;
 
   if (mp3parse->seek_table) {
-    g_list_foreach (mp3parse->seek_table, (GFunc) g_free, NULL);
+    g_list_foreach (mp3parse->seek_table, (GFunc) mpeg_audio_seek_entry_free,
+        NULL);
     g_list_free (mp3parse->seek_table);
     mp3parse->seek_table = NULL;
   }
@@ -638,7 +666,7 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
       (!mp3parse->seek_table ||
           (mp3parse_seek_table_last_entry (mp3parse))->byte <
           GST_BUFFER_OFFSET (outbuf))) {
-    MPEGAudioSeekEntry *entry = g_new0 (MPEGAudioSeekEntry, 1);
+    MPEGAudioSeekEntry *entry = mpeg_audio_seek_entry_new ();
 
     entry->byte = mp3parse->cur_offset;
     entry->timestamp = GST_BUFFER_TIMESTAMP (outbuf);

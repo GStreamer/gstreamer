@@ -1,3 +1,14 @@
+2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(mpeg_audio_seek_entry_new), (mpeg_audio_seek_entry_free),
+	(gst_mp3parse_reset), (gst_mp3parse_emit_frame):
+	* gst/mpegaudioparse/gstxingmux.c: (gst_xing_seek_entry_new),
+	(gst_xing_seek_entry_free), (gst_xing_mux_finalize), (xing_reset),
+	(gst_xing_mux_chain):
+	Use GSlice for allocating the seek table entries if we compile with
+	GLib 2.10 or newer.
+
 2008-04-01  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/asfdemux/gstasfdemux.c:
