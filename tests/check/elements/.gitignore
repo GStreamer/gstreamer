@@ -12,9 +12,10 @@ audiopanorama
 autodetect
 avimux
 avisubtitle
-equalizer
 cmmldec
 cmmlenc
+equalizer
+gdkpixbufsink
 icydemux
 id3demux
 id3v2mux

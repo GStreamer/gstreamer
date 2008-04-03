@@ -26,6 +26,12 @@ else
 check_annodex = 
 endif
 
+if USE_GDK_PIXBUF
+check_gdkpixbuf = elements/gdkpixbufsink
+else
+check_gdkpixbuf = 
+endif
+
 if USE_SUNAUDIO
 check_sunaudio = elements/sunaudio
 else
@@ -75,6 +81,7 @@ check_PROGRAMS = \
 	elements/videocrop \
 	elements/videofilter \
 	pipelines/simple-launch-lines \
+	$(check_gdkpixbuf) \
 	$(check_sunaudio) \
 	$(check_taglib) \
 	$(check_wavpack)
@@ -123,6 +130,15 @@ elements_sunaudio_LDADD = \
 elements_videocrop_LDADD = $(LDADD) $(GST_BASE_LIBS)
 elements_videocrop_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
+# FIXME: configure should check for gdk-pixbuf not gtk
+# only need video.h header, not the lib
+elements_gdkpixbufsink_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS) $(GTK_CFLAGS)
+elements_gdkpixbufsink_LDADD = \
+	$(LDADD) $(GTK_LIBS)
+
+
 pipelines_wavpack_LDADD = $(LDADD) $(GST_BASE_LIBS)
 pipelines_wavpack_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+
 

@@ -1,5 +1,12 @@
 2008-04-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/gdkpixbufsink.c:
+	  Add unit test for gdkpixbufsink element.
+
+2008-04-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/gdk_pixbuf/Makefile.am:
 	* ext/gdk_pixbuf/gstgdkpixbuf.c: (plugin_init):
 	* ext/gdk_pixbuf/gstgdkpixbufsink.c:
