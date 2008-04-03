@@ -1,3 +1,8 @@
+2008-04-03  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	Pull patch from HEAD to handle EAGAIN when poll_wait'ing.
+
 === release 0.10.18 ===
 
 2008-03-20  Jan Schmidt <jan.schmidt@sun.com>

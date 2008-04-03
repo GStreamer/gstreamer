@@ -275,7 +275,7 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 
   do {
     retval = gst_poll_wait (conn->fdset, to);
-  } while (retval == -1 && errno == EINTR);
+  } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
 
   if (retval == 0)
     goto timeout;
@@ -408,7 +408,7 @@ gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
 
     do {
       retval = gst_poll_wait (conn->fdset, to);
-    } while (retval == -1 && errno == EINTR);
+    } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
 
     if (retval == 0)
       goto timeout;
@@ -819,7 +819,7 @@ gst_rtsp_connection_read_internal (GstRTSPConnection * conn, guint8 * data,
 
     do {
       retval = gst_poll_wait (conn->fdset, to);
-    } while (retval == -1 && errno == EINTR);
+    } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
 
     if (retval == -1) {
       if (errno == EBUSY)
@@ -1191,7 +1191,7 @@ gst_rtsp_connection_poll (GstRTSPConnection * conn, GstRTSPEvent events,
 
   do {
     retval = gst_poll_wait (conn->fdset, to);
-  } while (retval == -1 && errno == EINTR);
+  } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
 
   if (retval == 0)
     goto select_timeout;
