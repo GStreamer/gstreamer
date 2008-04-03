@@ -634,8 +634,8 @@ gst_live_adder_query (GstPad * pad, GstQuery * query)
                     GST_PAD_NAME (sinkpad),
                     GST_TIME_ARGS (pad_min_latency), GST_TIME_ARGS (pad_max_latency));
 
-                min_latency = MIN (pad_min_latency, min_latency);
-                max_latency = MAX (pad_max_latency, max_latency);
+                min_latency = MAX (pad_min_latency, min_latency);
+                max_latency = MIN (pad_max_latency, max_latency);
               }
               gst_object_unref (item);
             }
@@ -660,6 +660,9 @@ gst_live_adder_query (GstPad * pad, GstQuery * query)
       if (res) {
         if (min_latency == G_MAXUINT64)
           min_latency = 0;
+
+        if (max_latency < min_latency)
+          max_latency = min_latency;
 
         GST_OBJECT_LOCK (adder);
         adder->peer_latency = min_latency;
@@ -1122,7 +1125,7 @@ gst_live_adder_loop (gpointer data)
     /*
      * We should probably loop through all of the sinks that have a segment
      * and take the min of the starts and the max of the stops
-     * and convert them to running times and use these are start/stop.
+     * and convert them to running times and use these as start/stop.
      * And so something smart about the positions with seeks that I dont
      * understand yet.
      */
