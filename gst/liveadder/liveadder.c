@@ -84,7 +84,7 @@ typedef struct _GstLiveAdderPadPrivate
   GstSegment segment;
   gboolean eos;
 
-  GstClockTime next_timestamp;
+  GstClockTime expected_timestamp;
 
 } GstLiveAdderPadPrivate;
 
@@ -818,22 +818,27 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
   }
 
   /* Just see if we receive invalid timestamp/durations */
-  if (GST_CLOCK_TIME_IS_VALID (padprivate->next_timestamp) &&
+  if (GST_CLOCK_TIME_IS_VALID (padprivate->expected_timestamp) &&
       !GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DISCONT) &&
-      GST_BUFFER_TIMESTAMP(buffer) != padprivate->next_timestamp)
+      GST_BUFFER_TIMESTAMP(buffer) != padprivate->expected_timestamp)
     GST_ERROR_OBJECT (adder,
         "Timestamp discontinuity without the DISCONT flag set"
         " (expected %" GST_TIME_FORMAT ", got %" GST_TIME_FORMAT")",
-        GST_TIME_ARGS (padprivate->next_timestamp),
+        GST_TIME_ARGS (padprivate->expected_timestamp),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
-  if ( GST_BUFFER_DURATION_IS_VALID(buffer))
-    padprivate->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
-        GST_BUFFER_DURATION (buffer);
-  else
-    padprivate->next_timestamp = GST_CLOCK_TIME_NONE;
-
   buffer = gst_buffer_make_metadata_writable (buffer);
+
+  /* If there is no duration, lets set one */
+  if (!GST_BUFFER_DURATION_IS_VALID (buffer)) {
+    GST_BUFFER_DURATION (buffer) =
+        gst_audio_duration_from_pad_buffer (pad, buffer);
+    padprivate->expected_timestamp = GST_CLOCK_TIME_NONE;
+  } else {
+    padprivate->expected_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
+        GST_BUFFER_DURATION (buffer);
+  }
+
 
   /*
    * Lets clip the buffer to the segment (so we don't have to worry about
@@ -1220,7 +1225,7 @@ gst_live_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   gst_segment_init (&padprivate->segment, GST_FORMAT_UNDEFINED);
   padprivate->eos = FALSE;
-  padprivate->next_timestamp = GST_CLOCK_TIME_NONE;
+  padprivate->expected_timestamp = GST_CLOCK_TIME_NONE;
 
   gst_pad_set_element_private (newpad, padprivate);
 
@@ -1285,7 +1290,7 @@ reset_pad_private (gpointer data, gpointer user_data)
 
   gst_segment_init (&padprivate->segment, GST_FORMAT_UNDEFINED);
 
-  padprivate->next_timestamp = GST_CLOCK_TIME_NONE;
+  padprivate->expected_timestamp = GST_CLOCK_TIME_NONE;
   padprivate->eos = FALSE;
 }
 
