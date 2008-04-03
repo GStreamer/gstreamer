@@ -827,8 +827,11 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
         GST_TIME_ARGS (padprivate->next_timestamp),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
-  padprivate->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
-      GST_BUFFER_DURATION (buffer);
+  if ( GST_BUFFER_DURATION_IS_VALID(buffer))
+    padprivate->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
+        GST_BUFFER_DURATION (buffer);
+  else
+    padprivate->next_timestamp = GST_CLOCK_TIME_NONE;
 
   buffer = gst_buffer_make_metadata_writable (buffer);
 
@@ -1083,8 +1086,7 @@ gst_live_adder_loop (gpointer data)
     goto again;
 
   if (GST_CLOCK_TIME_IS_VALID (adder->next_timestamp) &&
-      GST_BUFFER_TIMESTAMP (buffer) != adder->next_timestamp)
-  {
+      GST_BUFFER_TIMESTAMP (buffer) != adder->next_timestamp) {
     if (llabs (GST_BUFFER_TIMESTAMP (buffer) - adder->next_timestamp) <
         GST_SECOND / adder->rate) {
       GST_BUFFER_TIMESTAMP (buffer) = adder->next_timestamp;
@@ -1098,15 +1100,17 @@ gst_live_adder_loop (gpointer data)
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
     }
   } else {
-    GST_DEBUG_OBJECT (adder, "Continuous buffer");
     GST_BUFFER_FLAG_UNSET(buffer, GST_BUFFER_FLAG_DISCONT);
   }
 
   GST_BUFFER_OFFSET(buffer) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_OFFSET_END(buffer) = GST_BUFFER_OFFSET_NONE;
 
-  adder->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
-      GST_BUFFER_DURATION (buffer);
+  if (GST_BUFFER_DURATION_IS_VALID (buffer))
+    adder->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
+        GST_BUFFER_DURATION (buffer);
+  else
+    adder->next_timestamp = GST_CLOCK_TIME_NONE;
 
   if (adder->segment_pending)
   {
