@@ -96,19 +96,17 @@ GST_BOILERPLATE (GstWavpackDec, gst_wavpack_dec, GstElement, GST_TYPE_ELEMENT);
 static void
 gst_wavpack_dec_base_init (gpointer klass)
 {
-  static const GstElementDetails plugin_details =
-      GST_ELEMENT_DETAILS ("Wavpack audio decoder",
-      "Codec/Decoder/Audio",
-      "Decodes Wavpack audio data",
-      "Arwed v. Merkatz <v.merkatz@gmx.net>, "
-      "Sebastian Dröge <slomo@circular-chaos.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details_simple (element_class, "Wavpack audio decoder",
+      "Codec/Decoder/Audio",
+      "Decodes Wavpack audio data",
+      "Arwed v. Merkatz <v.merkatz@gmx.net>, "
+      "Sebastian Dröge <slomo@circular-chaos.org>");
 }
 
 static void

@@ -210,12 +210,6 @@ GST_BOILERPLATE (GstWavpackEnc, gst_wavpack_enc, GstElement, GST_TYPE_ELEMENT);
 static void
 gst_wavpack_enc_base_init (gpointer klass)
 {
-  static const GstElementDetails element_details = {
-    "Wavpack audio encoder",
-    "Codec/Encoder/Audio",
-    "Encodes audio with the Wavpack lossless/lossy audio codec",
-    "Sebastian Dröge <slomo@circular-chaos.org>"
-  };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   /* add pad templates */
@@ -227,7 +221,10 @@ gst_wavpack_enc_base_init (gpointer klass)
       gst_static_pad_template_get (&wvcsrc_factory));
 
   /* set element details */
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "Wavpack audio encoder",
+      "Codec/Encoder/Audio",
+      "Encodes audio with the Wavpack lossless/lossy audio codec",
+      "Sebastian Dröge <slomo@circular-chaos.org>");
 }
 
 

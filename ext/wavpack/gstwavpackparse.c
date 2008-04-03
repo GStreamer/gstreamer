@@ -57,6 +57,33 @@
 GST_DEBUG_CATEGORY_STATIC (gst_wavpack_parse_debug);
 #define GST_CAT_DEFAULT gst_wavpack_parse_debug
 
+/* FIXME: unconditionally use GSlice after we depend on GLib >= 2.10 */
+#if GLIB_CHECK_VERSION (2, 10, 0)
+static inline GstWavpackParseIndexEntry *
+gst_wavpack_parse_index_entry_new ()
+{
+  return g_slice_new (GstWavpackParseIndexEntry);
+}
+
+static inline void
+gst_wavpack_parse_index_entry_free (GstWavpackParseIndexEntry * entry)
+{
+  g_slice_free (GstWavpackParseIndexEntry, entry);
+}
+#else
+static inline GstWavpackParseIndexEntry *
+gst_wavpack_parse_index_entry_new ()
+{
+  return g_new (GstWavpackParseIndexEntry, 1);
+}
+
+static inline void
+gst_wavpack_parse_index_entry_free (GstWavpackParseIndexEntry * entry)
+{
+  g_free (entry);
+}
+#endif
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -99,12 +126,6 @@ GST_BOILERPLATE (GstWavpackParse, gst_wavpack_parse, GstElement,
 static void
 gst_wavpack_parse_base_init (gpointer klass)
 {
-  static const GstElementDetails plugin_details =
-      GST_ELEMENT_DETAILS ("Wavpack parser",
-      "Codec/Demuxer/Audio",
-      "Parses Wavpack files",
-      "Arwed v. Merkatz <v.merkatz@gmx.net>, "
-      "Sebastian Dröge <slomo@circular-chaos.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
@@ -113,7 +134,12 @@ gst_wavpack_parse_base_init (gpointer klass)
       gst_static_pad_template_get (&wvc_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &plugin_details);
+
+  gst_element_class_set_details_simple (element_class, "Wavpack parser",
+      "Codec/Demuxer/Audio",
+      "Parses Wavpack files",
+      "Arwed v. Merkatz <v.merkatz@gmx.net>, "
+      "Sebastian Dröge <slomo@circular-chaos.org>");
 }
 
 static void
@@ -199,7 +225,7 @@ gst_wavpack_parse_index_append_entry (GstWavpackParse * wvparse,
       GST_TIME_ARGS (gst_util_uint64_scale_int (sample_offset,
               GST_SECOND, wvparse->samplerate)), byte_offset);
 
-  entry = g_new0 (GstWavpackParseIndexEntry, 1);
+  entry = gst_wavpack_parse_index_entry_new ();
   entry->byte_offset = byte_offset;
   entry->sample_offset = sample_offset;
   entry->sample_offset_end = sample_offset + num_samples;
@@ -222,7 +248,8 @@ gst_wavpack_parse_reset (GstWavpackParse * parse)
   parse->upstream_length = -1;
 
   if (parse->entries) {
-    g_slist_foreach (parse->entries, (GFunc) g_free, NULL);
+    g_slist_foreach (parse->entries, (GFunc) gst_wavpack_parse_index_entry_free,
+        NULL);
     g_slist_free (parse->entries);
     parse->entries = NULL;
   }

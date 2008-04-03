@@ -1,3 +1,15 @@
+2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_base_init):
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_base_init):
+	* ext/wavpack/gstwavpackparse.c:
+	(gst_wavpack_parse_index_entry_new),
+	(gst_wavpack_parse_index_entry_free),
+	(gst_wavpack_parse_base_init),
+	(gst_wavpack_parse_index_append_entry), (gst_wavpack_parse_reset):
+	Use GSlice for allocating index entries and use
+	gst_element_class_set_details_simple().
+
 2008-04-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Brian Cameron <brian.cameron at sun dot com>
