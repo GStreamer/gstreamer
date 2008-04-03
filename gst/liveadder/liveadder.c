@@ -1129,9 +1129,8 @@ gst_live_adder_loop (gpointer data)
      * And so something smart about the positions with seeks that I dont
      * understand yet.
      */
-     newseg_event = gst_event_new_new_segment_full (FALSE, 1.0,
-        1.0, GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer), -1,
-        0);
+    newseg_event = gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
+        GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer), -1, 0);
 
     adder->segment_pending = FALSE;
   }
