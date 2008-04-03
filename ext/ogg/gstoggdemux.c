@@ -431,6 +431,8 @@ gst_ogg_pad_reset (GstOggPad * pad)
 {
   ogg_stream_reset (&pad->stream);
 
+  GST_DEBUG_OBJECT (pad, "doing reset");
+
   /* clear continued pages */
   g_list_foreach (pad->continued, (GFunc) gst_ogg_page_free, NULL);
   g_list_free (pad->continued);
@@ -834,7 +836,7 @@ no_decoder:
 decoder_error:
   {
     GST_WARNING_OBJECT (ogg, "internal decoder error");
-    return GST_FLOW_ERROR;
+    return ret;
   }
 }
 

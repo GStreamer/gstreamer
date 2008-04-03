@@ -1,3 +1,11 @@
+2008-04-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_reset),
+	(gst_ogg_demux_chain_elem_pad):
+	Add small debug line.
+	Pass return code from the internal decoder instead of the too generic
+	GST_FLOW_ERROR.
+
 2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/cdda/Makefile.am:
