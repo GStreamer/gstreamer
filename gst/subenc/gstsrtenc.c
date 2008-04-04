@@ -45,23 +45,23 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("text/plain; text/x-pango-markup"));
 
-static GstFlowReturn gst_srtenc_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_srt_enc_chain (GstPad * pad, GstBuffer * buf);
 static gboolean plugin_init (GstPlugin * plugin);
-static gchar *gst_srtenc_timeconvertion (GstSrtenc * srtenc, GstBuffer * buf);
-static gchar *gst_srtenc_timestamp_to_string (GstClockTime timestamp);
-static void gst_srtenc_base_init (gpointer klass);
-static void gst_srtenc_class_init (GstSrtencClass * klass);
-static void gst_srtenc_get_property (GObject * object, guint prop_id,
+static gchar *gst_srt_enc_timeconvertion (GstSrtEnc * srtenc, GstBuffer * buf);
+static gchar *gst_srt_enc_timestamp_to_string (GstClockTime timestamp);
+static void gst_srt_enc_base_init (gpointer klass);
+static void gst_srt_enc_class_init (GstSrtEncClass * klass);
+static void gst_srt_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_srtenc_init (GstSrtenc * src, GstSrtencClass * klass);
-static void gst_srtenc_reset (GstSrtenc * srtenc);
-static void gst_srtenc_set_property (GObject * object, guint prop_id,
+static void gst_srt_enc_init (GstSrtEnc * src, GstSrtEncClass * klass);
+static void gst_srt_enc_reset (GstSrtEnc * srtenc);
+static void gst_srt_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstSrtenc, gst_srtenc, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (GstSrtEnc, gst_srt_enc, GstElement, GST_TYPE_ELEMENT);
 
 static gchar *
-gst_srtenc_timestamp_to_string (GstClockTime timestamp)
+gst_srt_enc_timestamp_to_string (GstClockTime timestamp)
 {
   guint h = timestamp / (3600 * GST_SECOND);
 
@@ -78,13 +78,13 @@ gst_srtenc_timestamp_to_string (GstClockTime timestamp)
 }
 
 static gchar *
-gst_srtenc_timeconvertion (GstSrtenc * srtenc, GstBuffer * buf)
+gst_srt_enc_timeconvertion (GstSrtEnc * srtenc, GstBuffer * buf)
 {
   gchar *start_time =
-      gst_srtenc_timestamp_to_string (GST_BUFFER_TIMESTAMP (buf) +
+      gst_srt_enc_timestamp_to_string (GST_BUFFER_TIMESTAMP (buf) +
       srtenc->timestamp);
   gchar *stop_time =
-      gst_srtenc_timestamp_to_string (GST_BUFFER_TIMESTAMP (buf) +
+      gst_srt_enc_timestamp_to_string (GST_BUFFER_TIMESTAMP (buf) +
       srtenc->timestamp + GST_BUFFER_DURATION (buf) + srtenc->duration);
   gchar *string = g_strdup_printf ("%s --> %s\n", start_time, stop_time);
 
@@ -94,16 +94,16 @@ gst_srtenc_timeconvertion (GstSrtenc * srtenc, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_srtenc_chain (GstPad * pad, GstBuffer * buf)
+gst_srt_enc_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstSrtenc *srtenc;
+  GstSrtEnc *srtenc;
   GstBuffer *new_buffer;
   gchar *timing;
   gchar *string;
 
-  srtenc = GST_SRTENC (gst_pad_get_parent_element (pad));
+  srtenc = GST_SRT_ENC (gst_pad_get_parent_element (pad));
   gst_object_sync_values (G_OBJECT (srtenc), GST_BUFFER_TIMESTAMP (buf));
-  timing = gst_srtenc_timeconvertion (srtenc, buf);
+  timing = gst_srt_enc_timeconvertion (srtenc, buf);
   string = g_strdup_printf ("%d\n%s", srtenc->counter++, timing);
   g_free (timing);
   new_buffer =
@@ -121,7 +121,7 @@ gst_srtenc_chain (GstPad * pad, GstBuffer * buf)
 }
 
 static void
-gst_srtenc_base_init (gpointer klass)
+gst_srt_enc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -136,16 +136,16 @@ gst_srtenc_base_init (gpointer klass)
 }
 
 static void
-gst_srtenc_reset (GstSrtenc * srtenc)
+gst_srt_enc_reset (GstSrtEnc * srtenc)
 {
   srtenc->counter = 1;
 }
 
 static GstStateChangeReturn
-gst_srtenc_change_state (GstElement * element, GstStateChange transition)
+gst_srt_enc_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  GstSrtenc *srtenc = GST_SRTENC (element);
+  GstSrtEnc *srtenc = GST_SRT_ENC (element);
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
@@ -153,7 +153,7 @@ gst_srtenc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_srtenc_reset (srtenc);
+      gst_srt_enc_reset (srtenc);
       break;
     default:
       break;
@@ -163,12 +163,12 @@ gst_srtenc_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
-gst_srtenc_get_property (GObject * object,
+gst_srt_enc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstSrtenc *srtenc;
+  GstSrtEnc *srtenc;
 
-  srtenc = GST_SRTENC (object);
+  srtenc = GST_SRT_ENC (object);
 
   switch (prop_id) {
     case ARG_TIMESTAMP:
@@ -184,13 +184,13 @@ gst_srtenc_get_property (GObject * object,
 }
 
 static void
-gst_srtenc_set_property (GObject * object,
+gst_srt_enc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
 
-  GstSrtenc *srtenc;
+  GstSrtEnc *srtenc;
 
-  srtenc = GST_SRTENC (object);
+  srtenc = GST_SRT_ENC (object);
 
   switch (prop_id) {
     case ARG_TIMESTAMP:
@@ -206,15 +206,15 @@ gst_srtenc_set_property (GObject * object,
 }
 
 static void
-gst_srtenc_class_init (GstSrtencClass * klass)
+gst_srt_enc_class_init (GstSrtEncClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_srtenc_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_srtenc_get_property);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_srt_enc_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_srt_enc_get_property);
 
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_srtenc_change_state);
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_srt_enc_change_state);
 
   g_object_class_install_property (gobject_class, ARG_TIMESTAMP,
       g_param_spec_int64 ("timestamp", "Offset for the starttime",
@@ -225,26 +225,27 @@ gst_srtenc_class_init (GstSrtencClass * klass)
           "Offset for the duration of the subtitles", G_MININT64, G_MAXINT64,
           0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
-  GST_DEBUG_CATEGORY_INIT (srtenc_debug, "srtenc", 0, "srt subtitle encoder");
+  GST_DEBUG_CATEGORY_INIT (srtenc_debug, "srtenc", 0,
+      "SubRip subtitle encoder");
 }
 
 static void
-gst_srtenc_init (GstSrtenc * srtenc, GstSrtencClass * klass)
+gst_srt_enc_init (GstSrtEnc * srtenc, GstSrtEncClass * klass)
 {
-  gst_srtenc_reset (srtenc);
+  gst_srt_enc_reset (srtenc);
 
   srtenc->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_element_add_pad (GST_ELEMENT (srtenc), srtenc->srcpad);
   srtenc->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (srtenc), srtenc->sinkpad);
-  gst_pad_set_chain_function (srtenc->sinkpad, gst_srtenc_chain);
+  gst_pad_set_chain_function (srtenc->sinkpad, gst_srt_enc_chain);
 }
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "srtenc", GST_RANK_NONE,
-      GST_TYPE_SRTENC);
+      GST_TYPE_SRT_ENC);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

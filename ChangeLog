@@ -1,3 +1,9 @@
+2008-04-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/subenc/gstsrtenc.c:
+	* gst/subenc/gstsrtenc.h:
+	  GstSrtenc => GstSrtEnc and gst_srtenc_ => gst_srt_enc_.
+
 2008-04-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/Makefile.am:

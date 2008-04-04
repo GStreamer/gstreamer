@@ -17,32 +17,32 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_SRTENC_H__
-#define __GST_SRTENC_H__
+#ifndef __GST_SRT_ENC_H__
+#define __GST_SRT_ENC_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-#define GST_TYPE_SRTENC \
-  (gst_srtenc_get_type())
-#define GST_SRTENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SRTENC,GstSrtenc))
-#define GST_SRTENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SRTENC,GstSrtenc))
-#define GST_IS_SRTENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SRTENC))
-#define GST_IS_SRTENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SRTENC))
+#define GST_TYPE_SRT_ENC \
+  (gst_srt_enc_get_type())
+#define GST_SRT_ENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SRT_ENC,GstSrtEnc))
+#define GST_SRT_ENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SRT_ENC,GstSrtEnc))
+#define GST_IS_SRT_ENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SRT_ENC))
+#define GST_IS_SRT_ENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SRT_ENC))
 
-typedef struct _GstSrtenc GstSrtenc;
-typedef struct _GstSrtencClass GstSrtencClass;
+typedef struct _GstSrtEnc GstSrtEnc;
+typedef struct _GstSrtEncClass GstSrtEncClass;
 
-struct _GstSrtencClass
+struct _GstSrtEncClass
 {
   GstElementClass parent_class;
 };
 
-struct _GstSrtenc
+struct _GstSrtEnc
 {
   GstElement element;
 
@@ -57,7 +57,7 @@ struct _GstSrtenc
   guint counter;
 };
 
-GType gst_srtenc_get_type (void);
+GType gst_srt_enc_get_type (void);
 
 G_END_DECLS
 #endif
