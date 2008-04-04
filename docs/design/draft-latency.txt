@@ -293,7 +293,7 @@ A flush in a pipeline can happen in the following cases:
 
 When a playing sink is flushed by a FLUSH_START event, an ASYNC_START  message is
 posted by the element. As part of the message, the fact that the element got
-flushes is included. The element also goes to a pending PAUSED state and has to
+flushed is included. The element also goes to a pending PAUSED state and has to
 be set to the PLAYING state again later.
 
 The ASYNC_START message is kept by the parent bin. When the element prerolls,

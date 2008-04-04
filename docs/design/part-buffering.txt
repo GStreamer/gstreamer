@@ -6,26 +6,109 @@ core that can be used by plugins and applications.
 
 The purpose of buffering is to accumulate enough data in a pipeline so that
 playback can occur smoothly and without interruptions. It is typically done
-when reading from a (slow) and non-live network source.
+when reading from a (slow) and non-live network source but can also be used for
+live sources.
+
+We want to be able to implement the following features:
+
+ - buffering up to a specifc amount of data, in memory, before starting playback
+   so that network fluctuations are minimized.
+ - download of the network file to a local disk with fast seeking in the
+   downloaded data. This is similar to the quicktime/youtube players.
+ - caching of semi-live streams to a local, on disk, ringbuffer with seeking in
+   the cached area. This is similar to tivo-like timeshifting.
+ - progress report about the buffering operations
+ - easy (backward compatible) application notification of buffering
+ - the possibility for the application to do more complex buffering
 
  Some use cases:
 
-   +---------+     +--------+     +-------+
-   | httpsrc |     | buffer |     | demux |
-   |        src - sink     src - sink     ....
-   +---------+     +--------+     +-------+
+ * Stream buffering:
+
+   +---------+     +---------+     +-------+
+   | httpsrc |     | buffer  |     | demux |
+   |        src - sink      src - sink     ....
+   +---------+     +---------+     +-------+
 
   In this case we are reading from a slow network source into a buffer element
-  (such as queue). 
+  (such as queue2). 
   
   The buffer element has a low and high watermark expressed in bytes. The
   buffer uses the watermarks as follows:
   
-   - The buffer element will not produce data on the src pad until the high
-     watermark is hit. While accumulating data in the buffer, progress is
-     reported by posting BUFFERING messages.
-   - The source will stop to produce data on the src pad when the low watermark
-     is hit.
+   - The buffer element will post BUFFERING messages until the high watermark
+     is hit. This instructs the application to keep the pipeline PAUSED, which
+     will eventually block the srcpad from pushing while data is prerolled in
+     the sinks.
+   - When the high watermark is hit, a BUFFERING message with 100% will be
+     posted, which instructs the application to continue playback.
+   - When during playback, the low watermark is hit, the queue will start posting
+     BUFFERING messages again, making the application PAUSE the pipeline again
+     until the high watermark is hit again.
+   - during playback, the queue level will fluctuate between the high and the
+     low watermark as a way to compensate for network irregularities.
+
+  This buffering method is usable when the demuxer operates in push mode.
+  Seeking in the stream requires the seek to happen in the network source.
+  It is mostly desirable when the total duration of the file is not know, such
+  as in live streaming or when efficient seeking is not possible/required.
+
+ * Incremental download
+
+   +---------+     +---------+     +-------+
+   | httpsrc |     | buffer  |     | demux |
+   |        src - sink      src - sink     ....
+   +---------+     +----|----+     +-------+
+                        V
+                       file
+  
+  In this case, we know the server is streaming a fixed length file to the
+  client. The application can choose to download the file on disk. The buffer
+  element will provide a push or pull based srcpad to the demuxer to navigate in
+  the downloaded file.
+
+  This mode is only suitable when the client can determine the length of the
+  file on the server.
+
+  In this case, buffering messages will be emited as usual when the requested
+  range is not within the downloaded area + buffersize. The buffering message
+  will also contain an indication that incremental download is being performed.
+  This flag can be used to let the application control the buffering in a more
+  intelligent way, using the BUFFERING query, for example.
+
+  The application can use the BUFFERING query to get the estimated download time
+  and match this time to the current/remaining playback time to control when
+  playback should start to have a non-interupted playback experience.
+
+
+ * Timeshifting
+
+   +---------+     +---------+     +-------+
+   | httpsrc |     | buffer  |     | demux |
+   |        src - sink      src - sink     ....
+   +---------+     +----|----+     +-------+
+                        V
+                    file-ringbuffer
+
+  In this mode, a fixed size ringbuffer is kept to download the server content.
+  This allows for seeking in the buffered data. Depending on the size of the
+  buffer one can seek further back in time.
+
+  This mode is suitable for all live streams.
+
+  As with the incremental download mode, buffering messages are emited along
+  with an indication that timeshifting download is in progress. 
+
+
+ * Live buffering
+
+  In live pipelines we usually introduce some latency between the capture and
+  the playback elements. This latency can be introduced by a queue (such as a
+  jitterbuffer) or by other means (in the audiosink).
+
+  Buffering messages can be emited in those live pipelines as well and serve as
+  an indication to the user of the latency buffering. The application usually
+  does not react to these buffering messages with a state change.
 
 
 Messages
@@ -37,6 +120,46 @@ BUFFERING message is 100, buffering is done. Values less than 100 mean that
 buffering is in progress. 
 
 The BUFFERING message should be intercepted and acted upon by the application.
+The message contains at least one field that is sufficient for basic
+functionality:
+
+  "buffer-percent", G_TYPE_INT, between 0 and 100
+
+Several more clever ways of dealing with the buffering messages can be used when
+in incremental or timeshifting download mode. For this purpose additional fields
+are added to the buffering message:
+
+  "buffering-mode", GST_TYPE_BUFFERING_MODE, 
+                   enum { "none", "stream", "download", "timeshift", "live" }
+      - gives the buffering mode in use. See above for an explanation of the
+        different modes of buffering.
+
+  "avg-in-rate", G_TYPE_INT
+      - gives the average input buffering speed in bytes/second. -1 is unknown.
+
+        This is the average number of bytes per second that is received on the
+	buffering element input (sink) pads. If is a measurement of the network
+	speed in most cases.
+
+  "avg-out-rate", G_TYPE_INT
+      - gives the average consumption speed in bytes/second. -1 is unknown.
+
+        This is the average number of bytes per second that is consumed by the
+	downstream element of the buffering element. 
+
+  "buffering-left", G_TYPE_INT
+      - gives the estimated time that bufferring will take in milliseconds.
+        -1 unknown.
+
+      This is measured based on the avg-in-rate and the filled level of the
+      queue. The application can use this hint to update the gui while buffering.
+
+  "estimated-time", G_TYPE_INT
+      - gives the estimated download time in milliseconds. -1 unknown.
+
+      When the size of the downloaded file is known, this value will contain
+      the latest estimate of the remaining download time. This value is usualy
+      only filled for the "download" buffering mode.
 
 
 Application
@@ -51,29 +174,72 @@ application should not set the pipeline to PLAYING before a BUFFERING message
 with 100 percent value is received, which might only happen after the pipeline
 prerolled.
 
+An exception is made for live pipelines. The application may not change
+the state of a live pipeline when a buffering message is received. Usually these
+buffering messages contain the "buffering-mode" = "live".
+
+The buffering message can also instruct the application to switch to a periodical
+BUFFERING query instead to more precisely control the buffering process. The
+application can, for example, choose to not act on the BUFFERING message with
+100 percent fill level to resume playback but instead use the estimated download
+time to resume playback to get uninterrupted playback.
+
 
 Buffering Query
 ---------------
 
-It is possible to query the amount of buffering performed in the pipeline, which
-is defined as the amount of data made available at the source. This amount is
-expressed in some GstFormat and is usually compared to the duration or position 
-of the media stream in the same GstFormat.
+In addition to the BUFFERING messages posted by the buffering elements we want
+to be able to query the same information from the application. We also want to
+be able to present the user with information about the downloaded range in the
+file so that the GUI can react on it.
 
-The buffering query should return the following information:
+In addition to all the fields present in the buffering message, the BUFFERING
+query contains the following field, which indicate the available downloaded
+range in a specific format:
 
- - format
- - position
- - duration
+  "format", GST_TYPE_FORMAT
+    - the format of the "start" and "stop" values below  
+   
+  "start", G_TYPE_INT64, -1 unknown
+    - the start position of the available data
 
-The format is of lesser importance, the ratio of position versus duration can be
-used to calculate the percentage of available media. It should also be possible
-for the application to calculate the expected time when the complete file will
-be buffered. 
+  "stop", G_TYPE_INT64, -1 unknown
+    - the stop position of the available data
+
+For the "download" and "timeshift" buffering-modes, the start and stop positions
+specify the ranges where efficient seeking in the downloaded media is possible.
+Seeking outside of these ranges might be slow or not at all possible.
+
+For the "stream" and "live" mode the start and stop values describe the oldest
+and newest item (expressed in "format") in the buffer. 
 
 
+Defaults
+--------
 
-Incremental download
---------------------
+Some defaults for common elements:
 
+A GstBaseSrc with random access replies to the BUFFERING query with:
+
+  "buffer-percent" = 100
+  "buffering-mode" = "none"
+  "avg-in-rate" = -1
+  "avg-out-rate" = -1
+  "buffering-left" = 0
+  "estimated-time" = 0
+  "format" = GST_FORMAT_BYTES
+  "start" = 0
+  "stop" = the total filesize
+
+A GstBaseSrc in push mode replies to the BUFFERING query with:
+
+  "buffer-percent" = 100
+  "buffering-mode" = "none"
+  "avg-in-rate" = -1
+  "avg-out-rate" = -1
+  "buffering-left" = 0
+  "estimated-time" = 0
+  "format" = a valid GST_TYPE_FORMAT
+  "start" = current position
+  "stop" = current position
 
