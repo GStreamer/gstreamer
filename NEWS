@@ -1,4 +1,4 @@
-This is GStreamer Base Plug-ins 0.10.18, "I will follow"
+This is GStreamer Base Plug-ins 0.10.19, "Good Times"
 
 IMPORTANT NOTES
 
@@ -6,6 +6,10 @@ IMPORTANT NOTES
 still considered unstable and WILL change in future releases. At this stage,
 only developers or early adopters should consider using decodebin2 or playbin2
 API embodied in their signals and properties.
+
+Changes since 0.10.18:
+
+      * Handle EAGAIN when polling sockets in rtspconnection
 
 Changes since 0.10.17:
 
