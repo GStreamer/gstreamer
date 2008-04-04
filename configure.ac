@@ -46,8 +46,8 @@ dnl AS_LIBTOOL_TAGS
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.17
-GSTPB_REQ=0.10.17
+GST_REQ=0.10.18
+GSTPB_REQ=0.10.18
 
 dnl *** autotools stuff ****
 
@@ -185,7 +185,7 @@ AM_CONDITIONAL(GST_HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" == "xyes")
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-AG_GST_GLIB_CHECK([2.6])
+AG_GST_GLIB_CHECK([2.12])
 
 dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.8, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
