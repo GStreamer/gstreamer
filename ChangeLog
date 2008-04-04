@@ -1,3 +1,9 @@
+2008-04-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackparse.c:
+	(gst_wavpack_parse_index_entry_free):
+	Always use GSlice as we actually depend on GLib 2.12 already.
+
 2008-04-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

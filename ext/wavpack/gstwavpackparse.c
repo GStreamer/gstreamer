@@ -57,8 +57,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_wavpack_parse_debug);
 #define GST_CAT_DEFAULT gst_wavpack_parse_debug
 
-/* FIXME: unconditionally use GSlice after we depend on GLib >= 2.10 */
-#if GLIB_CHECK_VERSION (2, 10, 0)
 static inline GstWavpackParseIndexEntry *
 gst_wavpack_parse_index_entry_new ()
 {
@@ -70,19 +68,6 @@ gst_wavpack_parse_index_entry_free (GstWavpackParseIndexEntry * entry)
 {
   g_slice_free (GstWavpackParseIndexEntry, entry);
 }
-#else
-static inline GstWavpackParseIndexEntry *
-gst_wavpack_parse_index_entry_new ()
-{
-  return g_new (GstWavpackParseIndexEntry, 1);
-}
-
-static inline void
-gst_wavpack_parse_index_entry_free (GstWavpackParseIndexEntry * entry)
-{
-  g_free (entry);
-}
-#endif
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
