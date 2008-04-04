@@ -47,6 +47,12 @@ else
 check_neon = 
 endif
 
+if USE_OFA
+check_ofa = elements/ofa
+else
+check_ofa = 
+endif
+
 if USE_SOUP
 check_soup = elements/souphttpsrc
 else
@@ -73,6 +79,7 @@ check_PROGRAMS = \
 	$(check_mpeg2enc)  \
 	$(check_mplex)     \
 	$(check_neon)      \
+	$(check_ofa)        \
 	$(check_soup)      \
 	$(check_timidity)  \
 	elements/interleave \
