@@ -41,8 +41,6 @@ GST_DEBUG_CATEGORY_STATIC (mp3parse_debug);
 
 #define GST_READ_UINT24_BE(p) (p[2] | (p[1] << 8) | (p[0] << 16))
 
-/* FIXME: unconditionally use GSlice after we depend on GLib >= 2.10 */
-#if GLIB_CHECK_VERSION (2, 10, 0)
 static inline MPEGAudioSeekEntry *
 mpeg_audio_seek_entry_new ()
 {
@@ -54,19 +52,6 @@ mpeg_audio_seek_entry_free (MPEGAudioSeekEntry * entry)
 {
   g_slice_free (MPEGAudioSeekEntry, entry);
 }
-#else
-static inline MPEGAudioSeekEntry *
-mpeg_audio_seek_entry_new ()
-{
-  return g_new (MPEGAudioSeekEntry, 1);
-}
-
-static inline void
-mpeg_audio_seek_entry_free (MPEGAudioSeekEntry * entry)
-{
-  g_free (entry);
-}
-#endif
 
 /* elementfactory information */
 static GstElementDetails mp3parse_details = {

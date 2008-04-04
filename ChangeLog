@@ -1,3 +1,12 @@
+2008-04-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(mpeg_audio_seek_entry_free):
+	* gst/mpegaudioparse/gstxingmux.c: (gst_xing_seek_entry_free):
+	Depend on GLib 2.12 and use it unconditionally as we do in other
+	modules too already.
+
 2008-04-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:

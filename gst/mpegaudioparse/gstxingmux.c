@@ -69,8 +69,6 @@ typedef struct _GstXingSeekEntry
   gint byte;
 } GstXingSeekEntry;
 
-/* FIXME: unconditionally use GSlice after we depend on GLib >= 2.10 */
-#if GLIB_CHECK_VERSION (2, 10, 0)
 static inline GstXingSeekEntry *
 gst_xing_seek_entry_new ()
 {
@@ -82,19 +80,6 @@ gst_xing_seek_entry_free (GstXingSeekEntry * entry)
 {
   g_slice_free (GstXingSeekEntry, entry);
 }
-#else
-static inline GstXingSeekEntry *
-gst_xing_seek_entry_new ()
-{
-  return g_new (GstXingSeekEntry, 1);
-}
-
-static inline void
-gst_xing_seek_entry_free (GstXingSeekEntry * entry)
-{
-  g_free (entry);
-}
-#endif
 
 static void gst_xing_mux_finalize (GObject * obj);
 static GstStateChangeReturn
