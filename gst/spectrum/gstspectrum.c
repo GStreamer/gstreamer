@@ -123,10 +123,10 @@ GST_ELEMENT_DETAILS ("Spectrum analyzer",
     " channels = (int) [ 1, MAX ]"
 
 /* Spectrum properties */
-#define DEFAULT_SIGNAL_SPECTRUM		TRUE
-#define DEFAULT_SIGNAL_MAGNITUDE	TRUE
-#define DEFAULT_SIGNAL_PHASE		FALSE
-#define DEFAULT_SIGNAL_INTERVAL		(GST_SECOND / 10)
+#define DEFAULT_MESSAGE			TRUE
+#define DEFAULT_MESSAGE_MAGNITUDE	TRUE
+#define DEFAULT_MESSAGE_PHASE		FALSE
+#define DEFAULT_INTERVAL		(GST_SECOND / 10)
 #define DEFAULT_BANDS			128
 #define DEFAULT_THRESHOLD		-60
 
@@ -136,10 +136,10 @@ GST_ELEMENT_DETAILS ("Spectrum analyzer",
 enum
 {
   PROP_0,
-  PROP_SIGNAL_SPECTRUM,
-  PROP_SIGNAL_MAGNITUDE,
-  PROP_SIGNAL_PHASE,
-  PROP_SIGNAL_INTERVAL,
+  PROP_MESSAGE,
+  PROP_MESSAGE_MAGNITUDE,
+  PROP_MESSAGE_PHASE,
+  PROP_INTERVAL,
   PROP_BANDS,
   PROP_THRESHOLD
 };
@@ -200,28 +200,30 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_spectrum_setup);
 
-  g_object_class_install_property (gobject_class, PROP_SIGNAL_SPECTRUM,
+  g_object_class_install_property (gobject_class, PROP_MESSAGE,
       g_param_spec_boolean ("message", "Message",
-          "Post a level message for each passed interval",
-          DEFAULT_SIGNAL_SPECTRUM, G_PARAM_READWRITE));
+          "Whether to post a 'spectrum' element message on the bus for each "
+          "passed interval", DEFAULT_MESSAGE, G_PARAM_READWRITE));
 
-  g_object_class_install_property (gobject_class, PROP_SIGNAL_MAGNITUDE,
+  g_object_class_install_property (gobject_class, PROP_MESSAGE_MAGNITUDE,
       g_param_spec_boolean ("message-magnitude", "Magnitude",
-          "Post the magnitude of the spectrum",
-          DEFAULT_SIGNAL_MAGNITUDE, G_PARAM_READWRITE));
+          "Whether to add a 'magnitude' field to the structure of any "
+          "'spectrum' element messages posted on the bus",
+          DEFAULT_MESSAGE_MAGNITUDE, G_PARAM_READWRITE));
 
-  g_object_class_install_property (gobject_class, PROP_SIGNAL_PHASE,
+  g_object_class_install_property (gobject_class, PROP_MESSAGE_PHASE,
       g_param_spec_boolean ("message-phase", "Phase",
-          "Post the phase of the spectrum",
-          DEFAULT_SIGNAL_PHASE, G_PARAM_READWRITE));
+          "Whether to add a 'phase' field to the structure of any "
+          "'spectrum' element messages posted on the bus",
+          DEFAULT_MESSAGE_PHASE, G_PARAM_READWRITE));
 
-  g_object_class_install_property (gobject_class, PROP_SIGNAL_INTERVAL,
+  g_object_class_install_property (gobject_class, PROP_INTERVAL,
       g_param_spec_uint64 ("interval", "Interval",
           "Interval of time between message posts (in nanoseconds)",
-          1, G_MAXUINT64, DEFAULT_SIGNAL_INTERVAL, G_PARAM_READWRITE));
+          1, G_MAXUINT64, DEFAULT_INTERVAL, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_BANDS,
-      g_param_spec_uint ("bands", "Bands", "number of frequency bands",
+      g_param_spec_uint ("bands", "Bands", "Number of frequency bands",
           0, G_MAXUINT, DEFAULT_BANDS, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD,
@@ -238,10 +240,10 @@ gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
 {
   spectrum->adapter = gst_adapter_new ();
 
-  spectrum->message = DEFAULT_SIGNAL_SPECTRUM;
-  spectrum->message_magnitude = DEFAULT_SIGNAL_MAGNITUDE;
-  spectrum->message_phase = DEFAULT_SIGNAL_PHASE;
-  spectrum->interval = DEFAULT_SIGNAL_INTERVAL;
+  spectrum->message = DEFAULT_MESSAGE;
+  spectrum->message_magnitude = DEFAULT_MESSAGE_MAGNITUDE;
+  spectrum->message_phase = DEFAULT_MESSAGE_PHASE;
+  spectrum->interval = DEFAULT_INTERVAL;
   spectrum->bands = DEFAULT_BANDS;
   spectrum->threshold = DEFAULT_THRESHOLD;
 
@@ -292,16 +294,16 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
   GstSpectrum *filter = GST_SPECTRUM (object);
 
   switch (prop_id) {
-    case PROP_SIGNAL_SPECTRUM:
+    case PROP_MESSAGE:
       filter->message = g_value_get_boolean (value);
       break;
-    case PROP_SIGNAL_MAGNITUDE:
+    case PROP_MESSAGE_MAGNITUDE:
       filter->message_magnitude = g_value_get_boolean (value);
       break;
-    case PROP_SIGNAL_PHASE:
+    case PROP_MESSAGE_PHASE:
       filter->message_phase = g_value_get_boolean (value);
       break;
-    case PROP_SIGNAL_INTERVAL:
+    case PROP_INTERVAL:
       filter->interval = g_value_get_uint64 (value);
       break;
     case PROP_BANDS:
@@ -345,16 +347,16 @@ gst_spectrum_get_property (GObject * object, guint prop_id,
   GstSpectrum *filter = GST_SPECTRUM (object);
 
   switch (prop_id) {
-    case PROP_SIGNAL_SPECTRUM:
+    case PROP_MESSAGE:
       g_value_set_boolean (value, filter->message);
       break;
-    case PROP_SIGNAL_MAGNITUDE:
+    case PROP_MESSAGE_MAGNITUDE:
       g_value_set_boolean (value, filter->message_magnitude);
       break;
-    case PROP_SIGNAL_PHASE:
+    case PROP_MESSAGE_PHASE:
       g_value_set_boolean (value, filter->message_phase);
       break;
-    case PROP_SIGNAL_INTERVAL:
+    case PROP_INTERVAL:
       g_value_set_uint64 (value, filter->interval);
       break;
     case PROP_BANDS:
@@ -463,6 +465,7 @@ gst_spectrum_message_new (GstSpectrum * spectrum, GstClockTime endtime)
       endtime, NULL);
 
   if (spectrum->message_magnitude) {
+    /* FIXME 0.11: this should be an array, not a list */
     g_value_init (&v, GST_TYPE_LIST);
     /* will copy-by-value */
     gst_structure_set_value (s, "magnitude", &v);
@@ -478,6 +481,7 @@ gst_spectrum_message_new (GstSpectrum * spectrum, GstClockTime endtime)
   }
 
   if (spectrum->message_phase) {
+    /* FIXME 0.11: this should be an array, not a list */
     g_value_init (&v, GST_TYPE_LIST);
     /* will copy-by-value */
     gst_structure_set_value (s, "phase", &v);

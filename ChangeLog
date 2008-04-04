@@ -1,3 +1,12 @@
+2008-04-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_class_init),
+	  (gst_spectrum_init), (gst_spectrum_set_property),
+	  (gst_spectrum_get_property), (gst_spectrum_message_new):
+	  Rename property enums and default defines for the properties to match
+	  the property names and rephrase property descriptions to make them a
+	  bit clearer (hopefully). See #518188.
+
 2008-04-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:
