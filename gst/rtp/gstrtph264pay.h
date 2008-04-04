@@ -46,6 +46,9 @@ struct _GstRtpH264Pay
   guint profile;
   guint8 *sps, *pps;
   guint sps_len, pps_len;
+
+  gboolean packetized;
+  guint nal_length_size;
 };
 
 struct _GstRtpH264PayClass

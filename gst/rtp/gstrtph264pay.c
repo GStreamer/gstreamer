@@ -135,18 +135,174 @@ gst_rtp_h264_pay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gchar *
+encode_base64 (const guint8 * in, guint size, guint * len)
+{
+  gchar *ret, *d;
+  static const gchar *v =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+  *len = ((size + 2) / 3) * 4;
+  d = ret = (gchar *) g_malloc (*len + 1);
+  for (; size; in += 3) {       /* process tuplets */
+    *d++ = v[in[0] >> 2];       /* byte 1: high 6 bits (1) */
+    /* byte 2: low 2 bits (1), high 4 bits (2) */
+    *d++ = v[((in[0] << 4) + (--size ? (in[1] >> 4) : 0)) & 0x3f];
+    /* byte 3: low 4 bits (2), high 2 bits (3) */
+    *d++ = size ? v[((in[1] << 2) + (--size ? (in[2] >> 6) : 0)) & 0x3f] : '=';
+    /* byte 4: low 6 bits (3) */
+    *d++ = size ? v[in[2] & 0x3f] : '=';
+    if (size)
+      size--;                   /* count third character if processed */
+  }
+  *d = '\0';                    /* tie off string */
+
+  return ret;                   /* return the resulting string */
+}
+
 static gboolean
 gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 {
   GstRtpH264Pay *rtph264pay;
+  GstStructure *str;
+  const GValue *value;
+  guint8 *data;
+  guint size;
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
+
+  str = gst_caps_get_structure (caps, 0);
 
   /* we can only set the output caps when we found the sprops and profile
    * NALs */
   gst_basertppayload_set_options (basepayload, "video", TRUE, "H264", 90000);
 
+  /* packetized AVC video has a codec_data */
+  if ((value = gst_structure_get_value (str, "codec_data"))) {
+    GstBuffer *buffer;
+    GString *sprops;
+    guint num_sps, num_pps;
+    gint i, count, nal_size;
+    gint profile;
+    gchar *profile_str;
+
+    GST_DEBUG_OBJECT (rtph264pay, "have packetized h264");
+    rtph264pay->packetized = TRUE;
+
+    buffer = gst_value_get_buffer (value);
+    data = GST_BUFFER_DATA (buffer);
+    size = GST_BUFFER_SIZE (buffer);
+
+    /* parse the avcC data */
+    if (size < 7)
+      goto avcc_too_small;
+    /* parse the version, this must be 1 */
+    if (data[0] != 1)
+      goto wrong_version;
+
+    /* AVCProfileIndication */
+    /* profile_compat */
+    /* AVCLevelIndication */
+    profile = (data[1] << 16) | (data[2] << 8) | data[3];
+    GST_DEBUG_OBJECT (rtph264pay, "profile %06x", profile);
+
+    /* 6 bits reserved | 2 bits lengthSizeMinusOne */
+    rtph264pay->nal_length_size = (data[4] & 0x03) + 1;
+    GST_DEBUG_OBJECT (rtph264pay, "nal length %u", rtph264pay->nal_length_size);
+    /* 3 bits reserved | 5 bits numOfSequenceParameterSets */
+    num_sps = data[5] & 0x1f;
+    GST_DEBUG_OBJECT (rtph264pay, "num SPS %u", num_sps);
+
+    data += 6;
+    size -= 6;
+
+    /* create the sprop-parameter-sets */
+    sprops = g_string_new ("");
+    count = 0;
+
+    for (i = 0; i < num_sps; i++) {
+      gchar *set;
+      guint len;
+
+      if (size < 2)
+        goto avcc_error;
+
+      nal_size = (data[0] << 8) | data[1];
+      data += 2;
+      size -= 2;
+
+      if (size < nal_size)
+        goto avcc_error;
+
+      set = encode_base64 (data, nal_size, &len);
+      g_string_append_printf (sprops, "%s%s", count ? "," : "", set);
+      count++;
+      g_free (set);
+
+      data += nal_size;
+      size -= nal_size;
+    }
+    if (size < 1)
+      goto avcc_error;
+
+    num_pps = data[0];
+    data += 1;
+    size -= 1;
+
+    GST_DEBUG_OBJECT (rtph264pay, "num PPS %u", num_pps);
+    for (i = 0; i < num_pps; i++) {
+      gchar *set;
+      guint len;
+
+      if (size < 2)
+        goto avcc_error;
+
+      nal_size = (data[0] << 8) | data[1];
+      data += 2;
+      size -= 2;
+
+      if (size < nal_size)
+        goto avcc_error;
+
+      set = encode_base64 (data, nal_size, &len);
+      g_string_append_printf (sprops, "%s%s", count ? "," : "", set);
+      count++;
+      g_free (set);
+
+      data += nal_size;
+      size -= nal_size;
+    }
+    GST_DEBUG_OBJECT (rtph264pay, "sprops %s", sprops->str);
+
+    profile_str = g_strdup_printf ("%06x", profile);
+    gst_basertppayload_set_outcaps (basepayload, "profile-level-id",
+        G_TYPE_STRING, profile_str,
+        "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
+    g_free (profile_str);
+
+    g_string_free (sprops, TRUE);
+  } else {
+    GST_DEBUG_OBJECT (rtph264pay, "have bytestream h264");
+    rtph264pay->packetized = FALSE;
+  }
+
   return TRUE;
+
+avcc_too_small:
+  {
+    GST_ERROR_OBJECT (rtph264pay, "avcC size %u < 7", size);
+    return FALSE;
+  }
+wrong_version:
+  {
+    GST_ERROR_OBJECT (rtph264pay, "wrong avcC version", size);
+    return FALSE;
+  }
+avcc_error:
+  {
+    GST_ERROR_OBJECT (rtph264pay, "avcC too small ");
+    return FALSE;
+  }
 }
 
 static guint
@@ -320,31 +476,6 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
   }
 }
 
-static gchar *
-encode_base64 (const guint8 * in, guint size, guint * len)
-{
-  gchar *ret, *d;
-  static const gchar *v =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-  *len = ((size + 2) / 3) * 4;
-  d = ret = (gchar *) g_malloc (*len + 1);
-  for (; size; in += 3) {       /* process tuplets */
-    *d++ = v[in[0] >> 2];       /* byte 1: high 6 bits (1) */
-    /* byte 2: low 2 bits (1), high 4 bits (2) */
-    *d++ = v[((in[0] << 4) + (--size ? (in[1] >> 4) : 0)) & 0x3f];
-    /* byte 3: low 4 bits (2), high 2 bits (3) */
-    *d++ = size ? v[((in[1] << 2) + (--size ? (in[2] >> 6) : 0)) & 0x3f] : '=';
-    /* byte 4: low 6 bits (3) */
-    *d++ = size ? v[in[2] & 0x3f] : '=';
-    if (size)
-      size--;                   /* count third character if processed */
-  }
-  *d = '\0';                    /* tie off string */
-
-  return ret;                   /* return the resulting string */
-}
-
 static void
 gst_rtp_h264_pay_parse_sps_pps (GstBaseRTPPayload * basepayload,
     guint8 * data, guint size)
@@ -411,6 +542,10 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   GST_DEBUG_OBJECT (basepayload, "got %d bytes", size);
+
+  /* we don't support AVC input yet */
+  if (rtph264pay->packetized)
+    goto not_supported;
 
   /* H264 stream analysis */
   pdata = data;
@@ -525,11 +660,20 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     return ret;
   }
 
+  /* ERRORS */
   GST_ELEMENT_ERROR (basepayload, STREAM, FORMAT,
       (NULL), ("Should not be there !!"));
   gst_buffer_unref (buffer);
 
   return GST_FLOW_ERROR;
+
+not_supported:
+  {
+    GST_ELEMENT_ERROR (basepayload, STREAM, FORMAT,
+        (NULL), ("AVC H264 is not supported yet"));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_SUPPORTED;
+  }
 }
 
 static GstStateChangeReturn

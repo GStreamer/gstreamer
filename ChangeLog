@@ -1,3 +1,11 @@
+2008-04-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtph264pay.c: (encode_base64),
+	(gst_rtp_h264_pay_setcaps), (gst_rtp_h264_pay_handle_buffer):
+	* gst/rtp/gstrtph264pay.h:
+	Parse codec_data for future AVC compatibility.
+	Fail when we encounter AVC data for now.
+
 2008-04-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/spectrum/gstspectrum.c: (gst_spectrum_class_init),
