@@ -88,6 +88,9 @@ GST_START_TEST (test_ofa_le_1ch)
 
   GstCaps *caps;
 
+  gint64 position;
+  GstFormat fmt = GST_FORMAT_TIME;
+
   pipeline = gst_pipeline_new ("pipeline");
   fail_unless (pipeline != NULL);
 
@@ -134,6 +137,10 @@ GST_START_TEST (test_ofa_le_1ch)
   big_endian = FALSE;
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   g_main_loop_run (loop);
+
+  fail_unless (gst_element_query_position (audiotestsrc, &fmt, &position));
+  fail_unless (position >= 135 * GST_SECOND);
+
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   fail_unless (found_fingerprint == TRUE);
@@ -154,6 +161,9 @@ GST_START_TEST (test_ofa_be_1ch)
 
   GstCaps *caps;
 
+  gint64 position;
+  GstFormat fmt = GST_FORMAT_TIME;
+
   pipeline = gst_pipeline_new ("pipeline");
   fail_unless (pipeline != NULL);
 
@@ -200,6 +210,10 @@ GST_START_TEST (test_ofa_be_1ch)
   big_endian = TRUE;
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   g_main_loop_run (loop);
+
+  fail_unless (gst_element_query_position (audiotestsrc, &fmt, &position));
+  fail_unless (position >= 135 * GST_SECOND);
+
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   fail_unless (found_fingerprint == TRUE);
@@ -218,6 +232,9 @@ GST_START_TEST (test_ofa_le_2ch)
   GMainLoop *loop;
 
   GstCaps *caps;
+
+  gint64 position;
+  GstFormat fmt = GST_FORMAT_TIME;
 
   pipeline = gst_pipeline_new ("pipeline");
   fail_unless (pipeline != NULL);
@@ -265,6 +282,10 @@ GST_START_TEST (test_ofa_le_2ch)
   big_endian = FALSE;
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   g_main_loop_run (loop);
+
+  fail_unless (gst_element_query_position (audiotestsrc, &fmt, &position));
+  fail_unless (position >= 135 * GST_SECOND);
+
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   fail_unless (found_fingerprint == TRUE);
@@ -284,6 +305,9 @@ GST_START_TEST (test_ofa_be_2ch)
   GMainLoop *loop;
 
   GstCaps *caps;
+
+  gint64 position;
+  GstFormat fmt = GST_FORMAT_TIME;
 
   pipeline = gst_pipeline_new ("pipeline");
   fail_unless (pipeline != NULL);
@@ -331,6 +355,10 @@ GST_START_TEST (test_ofa_be_2ch)
   big_endian = TRUE;
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   g_main_loop_run (loop);
+
+  fail_unless (gst_element_query_position (audiotestsrc, &fmt, &position));
+  fail_unless (position >= 135 * GST_SECOND);
+
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   fail_unless (found_fingerprint == TRUE);

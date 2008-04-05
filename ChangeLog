@@ -1,3 +1,9 @@
+2008-04-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/elements/ofa.c: (GST_START_TEST):
+	Also check that we have processed at least 135 seconds of audio
+	until we stop and calculated a fingerprint.
+
 2008-04-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/subenc/gstsrtenc.c:
