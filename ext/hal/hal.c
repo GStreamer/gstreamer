@@ -115,7 +115,9 @@ gst_hal_get_alsa_element (LibHalContext * ctx, const gchar * udi,
       return NULL;
     }
 
-    if (device == 0) {
+    /* This is a bit dodgy, since it makes lots of assumptions about the way
+     * alsa is set up. In any case, only munge the device string for playback */
+    if (strcmp (element, "alsasink") == 0 && device == 0) {
       /* handle default device specially to use
        * dmix, dsnoop, and softvol if appropriate */
       string = g_strdup_printf ("%s device=default:%d", element, card);
@@ -302,6 +304,8 @@ ctx_free:
 
   if (string == NULL) {
     GST_WARNING ("Problem finding a HAL audio device for udi %s", udi);
+  } else {
+    GST_INFO ("Using %s", string);
   }
 
   return string;

@@ -1,3 +1,9 @@
+2008-04-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/hal/hal.c: (gst_hal_get_alsa_element):
+	  Don't munge device string to 'default:x' for capture devices.
+	  Fixes #525833.
+
 2008-04-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackparse.c:
