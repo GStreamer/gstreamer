@@ -56,12 +56,6 @@
 #include "config.h"
 #endif
 
-#ifndef _MSC_VER
-#define _GNU_SOURCE 1
-#include <sys/poll.h>
-#include <sys/time.h>
-#endif
-
 #include <sys/types.h>
 
 #ifdef HAVE_UNISTD_H
@@ -77,6 +71,9 @@
 #include <winsock2.h>
 #define EINPROGRESS WSAEINPROGRESS
 #else
+#define _GNU_SOURCE 1
+#include <sys/poll.h>
+#include <sys/time.h>
 #include <sys/socket.h>
 #endif
 
