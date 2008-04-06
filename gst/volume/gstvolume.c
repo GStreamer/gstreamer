@@ -801,6 +801,10 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "volume", 0, "Volume gain");
 
+  /* ref class from a thread-safe context to work around missing bit of
+   * thread-safety in GObject */
+  g_type_class_ref (GST_TYPE_MIXER_TRACK);
+
   return gst_element_register (plugin, "volume", GST_RANK_NONE,
       GST_TYPE_VOLUME);
 }

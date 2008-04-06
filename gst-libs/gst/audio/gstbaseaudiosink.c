@@ -216,6 +216,7 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
   /* ref class from a thread-safe context to work around missing bit of
    * thread-safety in GObject */
   g_type_class_ref (GST_TYPE_AUDIO_CLOCK);
+  g_type_class_ref (GST_TYPE_RING_BUFFER);
 }
 
 static void

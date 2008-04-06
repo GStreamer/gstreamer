@@ -1,5 +1,17 @@
 2008-04-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	  (gst_base_audio_sink_class_init):
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	  (gst_base_audio_src_class_init):
+	* gst/playback/gstplayback.c: (plugin_init):
+	* gst/volume/gstvolume.c: (plugin_init):
+	  Work around missing bits of thread-safety on older GLibs some
+	  more to avoid assertions when starting up multiple playbin
+	  objects concurrently (see #512382).
+
+2008-04-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/pbutils/missing-plugins.c: (copy_and_clean_caps):
 	  Remove some more fields.
 

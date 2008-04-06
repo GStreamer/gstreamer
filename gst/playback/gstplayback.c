@@ -27,6 +27,9 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
 
+#include "gststreamselector.h"
+#include "gststreaminfo.h"
+
 gboolean gst_play_bin_plugin_init (GstPlugin * plugin);
 gboolean gst_play_bin2_plugin_init (GstPlugin * plugin);
 
@@ -42,6 +45,11 @@ plugin_init (GstPlugin * plugin)
       LOCALEDIR);
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 #endif /* ENABLE_NLS */
+
+  /* ref class from a thread-safe context to work around missing bit of
+   * thread-safety in GObject */
+  g_type_class_ref (GST_TYPE_STREAM_INFO);
+  g_type_class_ref (GST_TYPE_STREAM_SELECTOR);
 
   res = gst_play_bin_plugin_init (plugin);
   res &= gst_play_bin2_plugin_init (plugin);
