@@ -802,8 +802,9 @@ gst_soup_http_src_response_cb (SoupSession * session, SoupMessage * msg,
     return;
   }
   if (G_UNLIKELY (src->session_io_status !=
-          GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
-    /* Probably a redirect. */
+          GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)
+      && SOUP_STATUS_IS_REDIRECTION (msg->status_code)) {
+    /* Ignore redirections. */
     return;
   }
   GST_DEBUG_OBJECT (src, "got response %d: %s", msg->status_code,
