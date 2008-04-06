@@ -1,5 +1,13 @@
 2008-04-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_response_cb):
+	Only ignore actual redirects not all responses when in state
+	GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING. Fixes bug #526337.
+
+2008-04-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
         Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
 
         * configure.ac:
