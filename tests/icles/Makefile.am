@@ -1,3 +1,13 @@
+if HAVE_GTK
+GTK_TESTS = gdkpixbufsink-test
+gdkpixbufsink_test_SOURCES = gdkpixbufsink-test.c
+gdkpixbufsink_test_CFLAGS  = $(GTK_CFLAGS) $(GST_CFLAGS)
+gdkpixbufsink_test_LDADD   = $(GTK_LIBS) $(GST_LIBS)
+gdkpixbufsink_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+else
+GTK_TESTS =
+endif
+
 if USE_GST_V4L2
 V4L2_TESTS = v4l2src-test
 
@@ -25,5 +35,5 @@ videocrop_test_CFLAGS  = $(GST_CFLAGS)
 videocrop_test_LDADD   = $(GST_LIBS)
 videocrop_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_PROGRAMS = $(V4L2_TESTS) $(X_TESTS) videocrop-test
+noinst_PROGRAMS = $(GTK_TESTS) $(V4L2_TESTS) $(X_TESTS) videocrop-test
 
