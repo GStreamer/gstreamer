@@ -773,6 +773,10 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
   gstbaseaudiosink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_jack_audio_sink_create_ringbuffer);
 
+  /* ref class from a thread-safe context to work around missing bit of
+   * thread-safety in GObject */
+  g_type_class_ref (GST_TYPE_JACK_RING_BUFFER);
+
   gst_jack_audio_client_init ();
 }
 
