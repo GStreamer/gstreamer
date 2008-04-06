@@ -51,6 +51,7 @@ dnl the generated libtool script has no support for the listed tags.
 dnl So this needs to be fixed first if we want to use this
 dnl AS_LIBTOOL_TAGS
 
+AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
