@@ -1,3 +1,8 @@
+2008-04-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/pbutils/missing-plugins.c: (copy_and_clean_caps):
+	  Remove some more fields.
+
 2008-04-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>

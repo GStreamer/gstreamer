@@ -130,6 +130,8 @@ copy_and_clean_caps (const GstCaps * caps)
   gst_structure_remove_field (s, "framerate");
   gst_structure_remove_field (s, "leaf_size");
   gst_structure_remove_field (s, "packet_size");
+  gst_structure_remove_field (s, "block_align");
+  gst_structure_remove_field (s, "metadata-interval");  /* icy caps */
   /* decoders/encoders almost always handle the usual width/height/channel/rate
    * range (and if we don't remove this then the app will have a much harder
    * time blacklisting formats it has unsuccessfully tried to install before) */
@@ -147,6 +149,7 @@ copy_and_clean_caps (const GstCaps * caps)
   gst_structure_remove_field (s, "npt-stop");
   gst_structure_remove_field (s, "play-speed");
   gst_structure_remove_field (s, "play-scale");
+  gst_structure_remove_field (s, "dynamic_range");
 
   return ret;
 }
