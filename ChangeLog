@@ -1,3 +1,11 @@
+2008-04-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+        Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
+
+        * configure.ac:
+        Actually build dlls when cross-compiling with mingw32.
+        Fixes bug #526247.
+
 2008-04-03  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ffmpegrev: Bump upstream ffmpeg revision to todays
