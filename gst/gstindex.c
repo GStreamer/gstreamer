@@ -94,12 +94,9 @@ gst_index_resolver_get_type (void)
 {
   static GType index_resolver_type = 0;
   static const GEnumValue index_resolver[] = {
-    {GST_INDEX_RESOLVER_CUSTOM, "GST_INDEX_RESOLVER_CUSTOM",
-        "Use a custom resolver"},
-    {GST_INDEX_RESOLVER_GTYPE, "GST_INDEX_RESOLVER_GTYPE",
-        "Resolve an object to its GType[.padname]"},
-    {GST_INDEX_RESOLVER_PATH, "GST_INDEX_RESOLVER_PATH",
-        "Resolve an object to its path in the pipeline"},
+    {GST_INDEX_RESOLVER_CUSTOM, "GST_INDEX_RESOLVER_CUSTOM", "custom"},
+    {GST_INDEX_RESOLVER_GTYPE, "GST_INDEX_RESOLVER_GTYPE", "gtype"},
+    {GST_INDEX_RESOLVER_PATH, "GST_INDEX_RESOLVER_PATH", "path"},
     {0, NULL, NULL},
   };
 

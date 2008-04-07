@@ -1,5 +1,12 @@
 2008-04-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstindex.c: (gst_index_resolver_get_type):
+	  Don't put descriptions into the nick field of a GEnumValue: it's not
+	  meant for that and some language bindings rely on the nick field to
+	  construct constants and the like. Fixes #526705.
+
+2008-04-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* NEWS:
 	* RELEASE:
 	* gstreamer.doap:
