@@ -295,7 +295,7 @@ avcc_too_small:
   }
 wrong_version:
   {
-    GST_ERROR_OBJECT (rtph264pay, "wrong avcC version", size);
+    GST_ERROR_OBJECT (rtph264pay, "wrong avcC version");
     return FALSE;
   }
 avcc_error:
