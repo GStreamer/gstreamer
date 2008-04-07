@@ -1,3 +1,11 @@
+2008-04-07  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* sys/xvimage/xvimagesink.c (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_buffer_alloc):
+	Fix calculation of 'expected size' for YV12 buffers.
+	Be a little more verbose in the debug output for buffer-alloc'ed
+	buffers which turn out to have the wrong size.
+
 2008-04-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* NEWS:
