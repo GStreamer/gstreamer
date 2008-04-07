@@ -1,3 +1,10 @@
+2008-04-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-base.doap:
+	  Merge other changes from 0.10.19 release branch.
+
 2008-04-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
