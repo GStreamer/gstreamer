@@ -1,4 +1,12 @@
-This is GStreamer 0.10.18 "So far away"
+This is GStreamer 0.10.19 "Me Again"
+
+Changes since 0.10.18:
+
+      * Fix a regression in raw fd handling
+
+Bugs fixed since 0.10.18:
+     
+      * 524041 : gstfdsrc broken in 0.10.18
 
 Changes since 0.10.17:
         

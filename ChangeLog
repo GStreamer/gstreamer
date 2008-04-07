@@ -1,3 +1,10 @@
+2008-04-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* NEWS:
+	* RELEASE:
+	* gstreamer.doap:
+	  Merge other changes from 0.10.19 release branch.
+
 2008-04-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>

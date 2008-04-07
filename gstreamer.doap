@@ -41,7 +41,17 @@ hierarchy, and a set of media-agnostic core elements.
 
  <release>
   <Version>
-   <revision>0.10.18</revision>
+   <revision>0.10.19</revision>
+   <branch>0.10</branch>
+   <name>Me Again</name>
+   <created>2008-04-04</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.19.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.19.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>   <revision>0.10.18</revision>
    <branch>0.10</branch>
    <name>So far away</name>
    <created>2008-03-21</created>
