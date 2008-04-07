@@ -579,6 +579,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
      * number we get from X. */
     switch (xvimage->im_format) {
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+      case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
         expected_size =
             GST_ROUND_UP_2 (xvimage->height) * GST_ROUND_UP_4 (xvimage->width);
         expected_size +=
@@ -586,7 +587,6 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
             2;
         break;
       case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-      case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
       case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
         expected_size = xvimage->height * GST_ROUND_UP_4 (xvimage->width * 2);
         break;
@@ -2266,9 +2266,9 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     goto reuse_last_caps;
   }
 
-  GST_DEBUG_OBJECT (xvimagesink, "buffer alloc requested with caps %"
-      GST_PTR_FORMAT ", intersecting with our caps %" GST_PTR_FORMAT, caps,
-      xvimagesink->xcontext->caps);
+  GST_DEBUG_OBJECT (xvimagesink, "buffer alloc requested size %d with caps %"
+      GST_PTR_FORMAT ", intersecting with our caps %" GST_PTR_FORMAT, size,
+      caps, xvimagesink->xcontext->caps);
 
   /* Check the caps against our xcontext */
   intersection = gst_caps_intersect (xvimagesink->xcontext->caps, caps);
@@ -2387,6 +2387,8 @@ reuse_last_caps:
     xvimage = gst_xvimagesink_xvimage_new (xvimagesink, intersection);
     if (xvimage && xvimage->size < size) {
       /* This image is unusable. Destroying... */
+      GST_LOG_OBJECT (xvimagesink, "Discarding allocated buffer as unsuitable. "
+          "Falling back to normal buffer");
       gst_xvimage_buffer_free (xvimage);
       xvimage = NULL;
     }
