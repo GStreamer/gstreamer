@@ -352,14 +352,20 @@ gst_oss_helper_rate_check_rate (GstOssProbe * probe, int irate)
   GST_LOG ("checking format %d, channels %d, rate %d",
       format, n_channels, rate);
   ret = ioctl (probe->fd, SNDCTL_DSP_SETFMT, &format);
-  if (ret < 0 || format != probe->format)
+  if (ret < 0 || format != probe->format) {
+    GST_DEBUG ("unsupported format: %d (%d)", probe->format, format);
     return -1;
+  }
   ret = ioctl (probe->fd, SNDCTL_DSP_CHANNELS, &n_channels);
-  if (ret < 0)
+  if (ret < 0 || n_channels != probe->n_channels) {
+    GST_DEBUG ("unsupported channels: %d (%d)", probe->n_channels, n_channels);
     return -1;
+  }
   ret = ioctl (probe->fd, SNDCTL_DSP_SPEED, &rate);
-  if (ret < 0)
+  if (ret < 0) {
+    GST_DEBUG ("unsupported rate: %d (%d)", irate, rate);
     return -1;
+  }
 
   GST_DEBUG ("rate %d -> %d", irate, rate);
 

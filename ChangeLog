@@ -1,3 +1,10 @@
+2008-04-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/oss/gstosshelper.c: (gst_oss_helper_rate_check_rate):
+	* sys/oss/gstosssink.c: (gst_oss_sink_reset):
+	* sys/oss/gstosssrc.c: (gst_oss_src_reset):
+	  More logging when probing (see #518474), some comments in _reset().
+
 2008-04-07  Julien Moutte  <julien@fluendo.com>
 
 	* gst/rtp/gstrtph264pay.c: (gst_rtp_h264_pay_setcaps): Fix build

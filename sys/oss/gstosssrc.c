@@ -542,12 +542,7 @@ gst_oss_src_delay (GstAudioSrc * asrc)
 static void
 gst_oss_src_reset (GstAudioSrc * asrc)
 {
-  GstOssSrc *oss;
-
-  //gint ret;
-
-  oss = GST_OSS_SRC (asrc);
-
-  /* deadlocks on my machine... */
-  //ret = ioctl (oss->fd, SNDCTL_DSP_RESET, 0);
+  /* There's nothing we can do here really: OSS can't handle access to the
+   * same device/fd from multiple threads and might deadlock or blow up in
+   * other ways if we try an ioctl SNDCTL_DSP_RESET or similar */
 }
