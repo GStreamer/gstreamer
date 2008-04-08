@@ -1245,7 +1245,7 @@ gst_query_parse_buffering_stats (GstQuery * query,
 
 
 /**
- * gst_query_set_buffering_avail:
+ * gst_query_set_buffering_range:
  * @query: a #GstQuery
  * @format: the format to set for the @start and @stop values
  * @start: the start to set
@@ -1257,7 +1257,7 @@ gst_query_parse_buffering_stats (GstQuery * query,
  * Since: 0.10.20
  */
 void
-gst_query_set_buffering_avail (GstQuery * query, GstFormat format,
+gst_query_set_buffering_range (GstQuery * query, GstFormat format,
     gint64 start, gint64 stop, gint64 estimated_total)
 {
   GstStructure *structure;
@@ -1273,7 +1273,7 @@ gst_query_set_buffering_avail (GstQuery * query, GstFormat format,
 }
 
 /**
- * gst_query_parse_buffering_avail:
+ * gst_query_parse_buffering_range:
  * @query: a GST_QUERY_SEEKING type query #GstQuery
  * @format: the format to set for the @segment_start and @segment_end values
  * @start: the start to set
@@ -1287,7 +1287,7 @@ gst_query_set_buffering_avail (GstQuery * query, GstFormat format,
  * Since: 0.10.20
  */
 void
-gst_query_parse_buffering_avail (GstQuery * query, GstFormat * format,
+gst_query_parse_buffering_range (GstQuery * query, GstFormat * format,
     gint64 * start, gint64 * stop, gint64 * estimated_total)
 {
   GstStructure *structure;

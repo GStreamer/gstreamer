@@ -1,5 +1,17 @@
 2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstquery.c: (gst_query_parse_latency),
+	(gst_query_set_buffering_percent),
+	(gst_query_parse_buffering_percent),
+	(gst_query_set_buffering_range), (gst_query_parse_buffering_range):
+	* gst/gstquery.h:
+	Rename _avail -> _range
+	API: gst_query_set_buffering_range
+	API: gst_query_parse_buffering_range
+
+2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/design/part-buffering.txt:
 	* gst/gstquark.c:
 	* gst/gstquark.h:
@@ -36,8 +48,6 @@
 	API: gst_query_parse_buffering_percent
 	API: gst_query_set_buffering_stats
 	API: gst_query_parse_buffering_stats
-	API: gst_query_set_buffering_avail
-	API: gst_query_parse_buffering_avail
 
 2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 

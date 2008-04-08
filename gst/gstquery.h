@@ -276,10 +276,10 @@ void            gst_query_parse_buffering_stats    (GstQuery *query, GstBufferin
                                                    gint *avg_in, gint *avg_out, 
 						   gint64 *buffering_left); 
 
-void            gst_query_set_buffering_avail     (GstQuery *query, GstFormat format,
+void            gst_query_set_buffering_range     (GstQuery *query, GstFormat format,
                                                    gint64 start, gint64 stop,
 						   gint64 extimated_total);
-void            gst_query_parse_buffering_avail   (GstQuery *query, GstFormat *format,
+void            gst_query_parse_buffering_range   (GstQuery *query, GstFormat *format,
                                                    gint64 *start, gint64 *stop,
 						   gint64 *estimated_total);
 
