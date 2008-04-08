@@ -1,5 +1,23 @@
 2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstmessage.c: (gst_message_new_error),
+	(gst_message_new_warning), (gst_message_new_info),
+	(gst_message_new_buffering), (gst_message_new_state_changed),
+	(gst_message_new_clock_provide), (gst_message_new_clock_lost),
+	(gst_message_new_new_clock), (gst_message_new_segment_start),
+	(gst_message_new_segment_done), (gst_message_new_duration),
+	(gst_message_new_async_start), (gst_message_parse_buffering),
+	(gst_message_parse_state_changed),
+	(gst_message_parse_clock_provide), (gst_message_parse_clock_lost),
+	(gst_message_parse_new_clock), (gst_message_parse_error),
+	(gst_message_parse_warning), (gst_message_parse_info),
+	(gst_message_parse_segment_start),
+	(gst_message_parse_segment_done), (gst_message_parse_duration),
+	(gst_message_parse_async_start):
+	Use GstQuark for messages.
+
+2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstquark.c: (_priv_gst_quarks_initialize):
 	* gst/gstquark.h:
 	Add some more quarks needed for messages and queries.
