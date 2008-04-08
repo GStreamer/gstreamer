@@ -1,5 +1,11 @@
 2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstquark.c: (_priv_gst_quarks_initialize):
+	* gst/gstquark.h:
+	Add some more quarks needed for messages and queries.
+
+2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/design/part-buffering.txt:
 	Remove the "none" buffering mode, STREAM is a good default.
 	Move estimated-time to the avail query, that's when it will be needed.

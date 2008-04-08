@@ -29,7 +29,12 @@ static const gchar *_quark_strings[] = {
   "format", "current", "duration", "rate",
   "seekable", "segment-start", "segment-end",
   "src_format", "src_value", "dest_format", "dest_value",
-  "start_format", "start_value", "stop_format", "stop_value"
+  "start_format", "start_value", "stop_format", "stop_value",
+  "gerror", "debug", "buffer-percent", "buffering-mode",
+  "avg-in-rate", "avg-out-rate", "buffering-left",
+  "estimated-total", "old-state", "new-state", "pending-state",
+  "clock", "ready", "position", "new-base-time", "live", "min-latency",
+  "max-latency"
 };
 
 GQuark _priv_gst_quark_table[GST_QUARK_MAX];
