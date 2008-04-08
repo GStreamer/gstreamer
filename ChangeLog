@@ -1,5 +1,17 @@
 2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* docs/design/part-buffering.txt:
+	* gst/gstquark.c:
+	* gst/gstquark.h:
+	* gst/gstquery.c: (gst_query_parse_latency),
+	(gst_query_new_buffering), (gst_query_set_buffering_percent),
+	(gst_query_parse_buffering_percent):
+	* gst/gstquery.h:
+	Add busy field and quark for the buffering query so that the app can
+	only use the query to see if buffering is in progress.
+
+2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstmessage.c: (gst_message_set_buffering_stats),
 	(gst_message_parse_buffering_stats):

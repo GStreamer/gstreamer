@@ -266,8 +266,8 @@ void            gst_query_parse_formats_nth     (GstQuery *query, guint nth, Gst
 
 /* buffering query */
 GstQuery*       gst_query_new_buffering           (GstFormat format);
-void            gst_query_set_buffering_percent   (GstQuery *query, gint percent);
-void            gst_query_parse_buffering_percent (GstQuery *query, gint *percent);
+void            gst_query_set_buffering_percent   (GstQuery *query, gboolean busy, gint percent);
+void            gst_query_parse_buffering_percent (GstQuery *query, gboolean *busy, gint *percent);
 
 void            gst_query_set_buffering_stats     (GstQuery *query, GstBufferingMode mode,
                                                    gint avg_in, gint avg_out, 

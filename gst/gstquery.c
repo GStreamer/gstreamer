@@ -1118,8 +1118,11 @@ gst_query_new_buffering (GstFormat format)
   GstStructure *structure;
 
   structure = gst_structure_empty_new ("GstQueryBuffering");
+  /* by default, we configure the answer as no buffering with a 100% buffering
+   * progress */
   gst_structure_id_set (structure,
-      GST_QUARK (BUFFER_PERCENT), G_TYPE_INT, -1,
+      GST_QUARK (BUSY), G_TYPE_BOOLEAN, FALSE,
+      GST_QUARK (BUFFER_PERCENT), G_TYPE_INT, 100,
       GST_QUARK (BUFFERING_MODE), GST_TYPE_BUFFERING_MODE, GST_BUFFERING_STREAM,
       GST_QUARK (AVG_IN_RATE), G_TYPE_INT, -1,
       GST_QUARK (AVG_OUT_RATE), G_TYPE_INT, -1,
@@ -1137,36 +1140,45 @@ gst_query_new_buffering (GstFormat format)
 /**
  * gst_query_set_buffering_percent
  * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
+ * @busy: if buffering is busy
  * @percent: a buffering percent
  *
  * Set the percentage of buffered data. This is a value between 0 and 100.
+ * The @busy indicator is %TRUE when the buffering is in progress.
  *
  * Since: 0.10.20
  */
 void
-gst_query_set_buffering_percent (GstQuery * query, gint percent)
+gst_query_set_buffering_percent (GstQuery * query, gboolean busy, gint percent)
 {
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
   g_return_if_fail (percent >= 0 && percent <= 100);
 
   gst_structure_id_set (query->structure,
+      GST_QUARK (BUSY), G_TYPE_BOOLEAN, busy,
       GST_QUARK (BUFFER_PERCENT), G_TYPE_INT, percent, NULL);
 }
 
 /**
  * gst_query_parse_buffering_percent
  * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
+ * @busy: if buffering is busy
  * @percent: a buffering percent
  *
  * Get the percentage of buffered data. This is a value between 0 and 100.
+ * The @busy indicator is %TRUE when the buffering is in progress.
  *
  * Since: 0.10.20
  */
 void
-gst_query_parse_buffering_percent (GstQuery * query, gint * percent)
+gst_query_parse_buffering_percent (GstQuery * query, gboolean * busy,
+    gint * percent)
 {
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
 
+  if (busy)
+    *busy = g_value_get_boolean (gst_structure_id_get_value (query->structure,
+            GST_QUARK (BUSY)));
   if (percent)
     *percent = g_value_get_int (gst_structure_id_get_value (query->structure,
             GST_QUARK (BUFFER_PERCENT)));

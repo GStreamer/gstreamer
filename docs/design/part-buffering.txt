@@ -191,6 +191,10 @@ In addition to all the fields present in the buffering message, the BUFFERING
 query contains the following field, which indicate the available downloaded
 range in a specific format and the estimated time to complete:
 
+  "busy", G_TYPE_BOOLEAN
+    - if buffering was busy. This flag allows the application to pause the
+      pipeline by using the query only.
+
   "format", GST_TYPE_FORMAT
     - the format of the "start" and "stop" values below  
    
