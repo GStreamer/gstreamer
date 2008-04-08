@@ -91,6 +91,7 @@ static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_SEGMENT, "segment", "currently configured segment", 0},
   {GST_QUERY_CONVERT, "convert", "Converting between formats", 0},
   {GST_QUERY_FORMATS, "formats", "Supported formats for conversion", 0},
+  {GST_QUERY_BUFFERING, "buffering", "Buffering status", 0},
   {0, NULL, NULL, 0}
 };
 
@@ -554,10 +555,10 @@ gst_query_new_latency (void)
   GstStructure *structure;
 
   structure = gst_structure_empty_new ("GstQueryLatency");
-  gst_structure_set (structure,
-      "live", G_TYPE_BOOLEAN, FALSE,
-      "min-latency", G_TYPE_UINT64, (gint64) 0,
-      "max-latency", G_TYPE_UINT64, (gint64) - 1, NULL);
+  gst_structure_id_set (structure,
+      GST_QUARK (LIVE), G_TYPE_BOOLEAN, FALSE,
+      GST_QUARK (MIN_LATENCY), G_TYPE_UINT64, (gint64) 0,
+      GST_QUARK (MAX_LATENCY), G_TYPE_UINT64, (gint64) - 1, NULL);
 
   query = gst_query_new (GST_QUERY_LATENCY, structure);
 
@@ -584,10 +585,10 @@ gst_query_set_latency (GstQuery * query, gboolean live,
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_LATENCY);
 
   structure = gst_query_get_structure (query);
-  gst_structure_set (structure,
-      "live", G_TYPE_BOOLEAN, live,
-      "min-latency", G_TYPE_UINT64, min_latency,
-      "max-latency", G_TYPE_UINT64, max_latency, NULL);
+  gst_structure_id_set (structure,
+      GST_QUARK (LIVE), G_TYPE_BOOLEAN, live,
+      GST_QUARK (MIN_LATENCY), G_TYPE_UINT64, min_latency,
+      GST_QUARK (MAX_LATENCY), G_TYPE_UINT64, max_latency, NULL);
 }
 
 /**
@@ -611,13 +612,15 @@ gst_query_parse_latency (GstQuery * query, gboolean * live,
 
   structure = gst_query_get_structure (query);
   if (live)
-    *live = g_value_get_boolean (gst_structure_get_value (structure, "live"));
+    *live =
+        g_value_get_boolean (gst_structure_id_get_value (structure,
+            GST_QUARK (LIVE)));
   if (min_latency)
-    *min_latency = g_value_get_uint64 (gst_structure_get_value (structure,
-            "min-latency"));
+    *min_latency = g_value_get_uint64 (gst_structure_id_get_value (structure,
+            GST_QUARK (MIN_LATENCY)));
   if (max_latency)
-    *max_latency = g_value_get_uint64 (gst_structure_get_value (structure,
-            "max-latency"));
+    *max_latency = g_value_get_uint64 (gst_structure_id_get_value (structure,
+            GST_QUARK (MAX_LATENCY)));
 }
 
 /**
@@ -1095,4 +1098,202 @@ gst_query_parse_formats_nth (GstQuery * query, guint nth, GstFormat * format)
         *format = GST_FORMAT_UNDEFINED;
     }
   }
+}
+
+/**
+ * gst_query_new_buffering
+ * @format: the default #GstFormat for the new query
+ *
+ * Constructs a new query object for querying the buffering status of
+ * a stream.
+ *
+ * Returns: A #GstQuery
+ *
+ * Since: 0.10.20
+ */
+GstQuery *
+gst_query_new_buffering (GstFormat format)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_empty_new ("GstQueryBuffering");
+  gst_structure_id_set (structure,
+      GST_QUARK (BUFFER_PERCENT), G_TYPE_INT, -1,
+      GST_QUARK (BUFFERING_MODE), GST_TYPE_BUFFERING_MODE, GST_BUFFERING_STREAM,
+      GST_QUARK (AVG_IN_RATE), G_TYPE_INT, -1,
+      GST_QUARK (AVG_OUT_RATE), G_TYPE_INT, -1,
+      GST_QUARK (BUFFERING_LEFT), G_TYPE_INT64, -1,
+      GST_QUARK (ESTIMATED_TOTAL), G_TYPE_INT64, -1,
+      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
+      GST_QUARK (START_VALUE), G_TYPE_INT64, (gint64) - 1,
+      GST_QUARK (STOP_VALUE), G_TYPE_INT64, (gint64) - 1, NULL);
+
+  query = gst_query_new (GST_QUERY_BUFFERING, structure);
+
+  return query;
+}
+
+/**
+ * gst_query_set_buffering_percent
+ * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
+ * @percent: a buffering percent
+ *
+ * Set the percentage of buffered data. This is a value between 0 and 100.
+ *
+ * Since: 0.10.20
+ */
+void
+gst_query_set_buffering_percent (GstQuery * query, gint percent)
+{
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
+  g_return_if_fail (percent >= 0 && percent <= 100);
+
+  gst_structure_id_set (query->structure,
+      GST_QUARK (BUFFER_PERCENT), G_TYPE_INT, percent, NULL);
+}
+
+/**
+ * gst_query_parse_buffering_percent
+ * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
+ * @percent: a buffering percent
+ *
+ * Get the percentage of buffered data. This is a value between 0 and 100.
+ *
+ * Since: 0.10.20
+ */
+void
+gst_query_parse_buffering_percent (GstQuery * query, gint * percent)
+{
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
+
+  if (percent)
+    *percent = g_value_get_int (gst_structure_id_get_value (query->structure,
+            GST_QUARK (BUFFER_PERCENT)));
+}
+
+/**
+ * gst_query_set_buffering_stats:
+ * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
+ * @mode: a buffering mode 
+ * @avg_in: the average input rate
+ * @avg_out: the average output rate
+ * @buffering_left: amount of buffering time left
+ *
+ * Configures the buffering stats values in @query.
+ *
+ * Since: 0.10.20
+ */
+void
+gst_query_set_buffering_stats (GstQuery * query, GstBufferingMode mode,
+    gint avg_in, gint avg_out, gint64 buffering_left)
+{
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
+
+  gst_structure_id_set (query->structure,
+      GST_QUARK (BUFFERING_MODE), GST_TYPE_BUFFERING_MODE, mode,
+      GST_QUARK (AVG_IN_RATE), G_TYPE_INT, avg_in,
+      GST_QUARK (AVG_OUT_RATE), G_TYPE_INT, avg_out,
+      GST_QUARK (BUFFERING_LEFT), G_TYPE_INT64, buffering_left, NULL);
+}
+
+/**
+ * gst_query_parse_buffering_stats:
+ * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
+ * @mode: a buffering mode 
+ * @avg_in: the average input rate
+ * @avg_out: the average output rate
+ * @buffering_left: amount of buffering time left
+ *
+ * Extracts the buffering stats values from @query.
+ *
+ * Since: 0.10.20
+ */
+void
+gst_query_parse_buffering_stats (GstQuery * query,
+    GstBufferingMode * mode, gint * avg_in, gint * avg_out,
+    gint64 * buffering_left)
+{
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
+
+  if (mode)
+    *mode = g_value_get_enum (gst_structure_id_get_value (query->structure,
+            GST_QUARK (BUFFERING_MODE)));
+  if (avg_in)
+    *avg_in = g_value_get_int (gst_structure_id_get_value (query->structure,
+            GST_QUARK (AVG_IN_RATE)));
+  if (avg_out)
+    *avg_out = g_value_get_int (gst_structure_id_get_value (query->structure,
+            GST_QUARK (AVG_OUT_RATE)));
+  if (buffering_left)
+    *buffering_left =
+        g_value_get_int64 (gst_structure_id_get_value (query->structure,
+            GST_QUARK (BUFFERING_LEFT)));
+}
+
+
+/**
+ * gst_query_set_buffering_avail:
+ * @query: a #GstQuery
+ * @format: the format to set for the @start and @stop values
+ * @start: the start to set
+ * @stop: the stop to set
+ * @estimated_total: estimated total amount of download time
+ *
+ * Set the available query result fields in @query. 
+ *
+ * Since: 0.10.20
+ */
+void
+gst_query_set_buffering_avail (GstQuery * query, GstFormat format,
+    gint64 start, gint64 stop, gint64 estimated_total)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
+
+  structure = gst_query_get_structure (query);
+  gst_structure_id_set (structure,
+      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
+      GST_QUARK (START_VALUE), G_TYPE_INT64, start,
+      GST_QUARK (STOP_VALUE), G_TYPE_INT64, stop,
+      GST_QUARK (ESTIMATED_TOTAL), G_TYPE_INT64, estimated_total, NULL);
+}
+
+/**
+ * gst_query_parse_buffering_avail:
+ * @query: a GST_QUERY_SEEKING type query #GstQuery
+ * @format: the format to set for the @segment_start and @segment_end values
+ * @start: the start to set
+ * @stop: the stop to set
+ * @estimated_total: estimated total amount of download time
+ *
+ * Parse an available query, writing the format into @format, and 
+ * other results into the passed parameters, if the respective parameters
+ * are non-NULL
+ *
+ * Since: 0.10.20
+ */
+void
+gst_query_parse_buffering_avail (GstQuery * query, GstFormat * format,
+    gint64 * start, gint64 * stop, gint64 * estimated_total)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
+
+  structure = gst_query_get_structure (query);
+  if (format)
+    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+            GST_QUARK (FORMAT)));
+  if (start)
+    *start = g_value_get_int64 (gst_structure_id_get_value (structure,
+            GST_QUARK (START_VALUE)));
+  if (stop)
+    *stop = g_value_get_int64 (gst_structure_id_get_value (structure,
+            GST_QUARK (STOP_VALUE)));
+  if (estimated_total)
+    *estimated_total =
+        g_value_get_int64 (gst_structure_id_get_value (structure,
+            GST_QUARK (ESTIMATED_TOTAL)));
 }

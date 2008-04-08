@@ -1,5 +1,34 @@
 2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstmessage.c: (gst_message_set_buffering_stats),
+	(gst_message_parse_buffering_stats):
+	* gst/gstmessage.h:
+	* gst/gstquery.c: (gst_query_new_latency), (gst_query_set_latency),
+	(gst_query_parse_latency), (gst_query_new_buffering),
+	(gst_query_set_buffering_percent),
+	(gst_query_parse_buffering_percent),
+	(gst_query_set_buffering_stats), (gst_query_parse_buffering_stats),
+	(gst_query_set_buffering_avail), (gst_query_parse_buffering_avail):
+	* gst/gstquery.h:
+	Reorder the message docs and headers for clarity.
+	Add aditional buffering stats API for messages.
+	Add buffering query.
+	Convert some leftover queries to use GstQuark.
+	API: gst_message_set_buffering_stats
+	API: gst_message_parse_buffering_stats
+	API: GST_QUERY_BUFFERING
+	API: GstBufferingMode
+	API: gst_query_new_buffering
+	API: gst_query_set_buffering_percent
+	API: gst_query_parse_buffering_percent
+	API: gst_query_set_buffering_stats
+	API: gst_query_parse_buffering_stats
+	API: gst_query_set_buffering_avail
+	API: gst_query_parse_buffering_avail
+
+2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstmessage.c: (gst_message_new_error),
 	(gst_message_new_warning), (gst_message_new_info),
 	(gst_message_new_buffering), (gst_message_new_state_changed),

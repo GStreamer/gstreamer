@@ -46,6 +46,8 @@ G_BEGIN_DECLS
  * @GST_QUERY_SEGMENT: segment start/stop positions
  * @GST_QUERY_CONVERT: convert values between formats
  * @GST_QUERY_FORMATS: query supported formats for convert
+ * @GST_QUERY_BUFFERING: query available media for efficient seeking. Since
+ * 0.10.20.
  *
  * Standard predefined Query types
  */
@@ -61,8 +63,25 @@ typedef enum {
   GST_QUERY_SEEKING,
   GST_QUERY_SEGMENT,
   GST_QUERY_CONVERT,
-  GST_QUERY_FORMATS
+  GST_QUERY_FORMATS,
+  GST_QUERY_BUFFERING
 } GstQueryType;
+
+/**
+ * GstBufferingMode:
+ * @GST_BUFFERING_STREAM: a small amount of data is buffered
+ * @GST_BUFFERING_DOWNLOAD: the stream is being downloaded
+ * @GST_BUFFERING_TIMESHIFT: the stream is being downloaded in a ringbuffer
+ * @GST_BUFFERING_LIVE: the stream is a live stream
+ *
+ * The different types of buffering methods.
+ */
+typedef enum {
+  GST_BUFFERING_STREAM,
+  GST_BUFFERING_DOWNLOAD,
+  GST_BUFFERING_TIMESHIFT,
+  GST_BUFFERING_LIVE
+} GstBufferingMode;
 
 typedef struct _GstQueryTypeDefinition GstQueryTypeDefinition;
 typedef struct _GstQuery GstQuery;
@@ -244,6 +263,25 @@ void            gst_query_set_formats           (GstQuery *query, gint n_formats
 void            gst_query_set_formatsv          (GstQuery *query, gint n_formats, GstFormat *formats);
 void            gst_query_parse_formats_length  (GstQuery *query, guint *n_formats);
 void            gst_query_parse_formats_nth     (GstQuery *query, guint nth, GstFormat *format);
+
+/* buffering query */
+GstQuery*       gst_query_new_buffering           (GstFormat format);
+void            gst_query_set_buffering_percent   (GstQuery *query, gint percent);
+void            gst_query_parse_buffering_percent (GstQuery *query, gint *percent);
+
+void            gst_query_set_buffering_stats     (GstQuery *query, GstBufferingMode mode,
+                                                   gint avg_in, gint avg_out, 
+						   gint64 buffering_left); 
+void            gst_query_parse_buffering_stats    (GstQuery *query, GstBufferingMode *mode,
+                                                   gint *avg_in, gint *avg_out, 
+						   gint64 *buffering_left); 
+
+void            gst_query_set_buffering_avail     (GstQuery *query, GstFormat format,
+                                                   gint64 start, gint64 stop,
+						   gint64 extimated_total);
+void            gst_query_parse_buffering_avail   (GstQuery *query, GstFormat *format,
+                                                   gint64 *start, gint64 *stop,
+						   gint64 *estimated_total);
 
 G_END_DECLS
 

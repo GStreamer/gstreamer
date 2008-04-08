@@ -895,6 +895,65 @@ gst_message_parse_buffering (GstMessage * message, gint * percent)
 }
 
 /**
+ * gst_message_set_buffering_stats:
+ * @message: A valid #GstMessage of type GST_MESSAGE_BUFFERING.
+ * @mode: a buffering mode 
+ * @avg_in: the average input rate
+ * @avg_out: the average output rate
+ * @buffering_left: amount of buffering time left in milliseconds
+ *
+ * Configures the buffering stats values in @message.
+ *
+ * Since: 0.10.20
+ */
+void
+gst_message_set_buffering_stats (GstMessage * message, GstBufferingMode mode,
+    gint avg_in, gint avg_out, gint64 buffering_left)
+{
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_BUFFERING);
+
+  gst_structure_id_set (message->structure,
+      GST_QUARK (BUFFERING_MODE), GST_TYPE_BUFFERING_MODE, mode,
+      GST_QUARK (AVG_IN_RATE), G_TYPE_INT, avg_in,
+      GST_QUARK (AVG_OUT_RATE), G_TYPE_INT, avg_out,
+      GST_QUARK (BUFFERING_LEFT), G_TYPE_INT64, buffering_left, NULL);
+}
+
+/**
+ * gst_message_parse_buffering_stats:
+ * @message: A valid #GstMessage of type GST_MESSAGE_BUFFERING.
+ * @mode: a buffering mode 
+ * @avg_in: the average input rate
+ * @avg_out: the average output rate
+ * @buffering_left: amount of buffering time left in milliseconds.
+ *
+ * Extracts the buffering stats values from @message.
+ *
+ * Since: 0.10.20
+ */
+void
+gst_message_parse_buffering_stats (GstMessage * message,
+    GstBufferingMode * mode, gint * avg_in, gint * avg_out,
+    gint64 * buffering_left)
+{
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_BUFFERING);
+
+  if (mode)
+    *mode = g_value_get_enum (gst_structure_id_get_value (message->structure,
+            GST_QUARK (BUFFERING_MODE)));
+  if (avg_in)
+    *avg_in = g_value_get_int (gst_structure_id_get_value (message->structure,
+            GST_QUARK (AVG_IN_RATE)));
+  if (avg_out)
+    *avg_out = g_value_get_int (gst_structure_id_get_value (message->structure,
+            GST_QUARK (AVG_OUT_RATE)));
+  if (buffering_left)
+    *buffering_left =
+        g_value_get_int64 (gst_structure_id_get_value (message->structure,
+            GST_QUARK (BUFFERING_LEFT)));
+}
+
+/**
  * gst_message_parse_state_changed:
  * @message: a valid #GstMessage of type GST_MESSAGE_STATE_CHANGED
  * @oldstate: the previous state, or NULL

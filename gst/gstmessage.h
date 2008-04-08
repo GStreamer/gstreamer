@@ -270,45 +270,93 @@ gst_message_ref (GstMessage * msg)
  */
 #define         gst_message_make_writable(msg)	GST_MESSAGE (gst_mini_object_make_writable (GST_MINI_OBJECT (msg)))
 
+/* EOS */
 GstMessage *	gst_message_new_eos		(GstObject * src);
+
+/* ERROR */
+
 GstMessage *	gst_message_new_error		(GstObject * src, GError * error, gchar * debug);
+void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
+
+/* WARNING */
 GstMessage *	gst_message_new_warning		(GstObject * src, GError * error, gchar * debug);
+void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
+
+/* INFO */
 GstMessage *	gst_message_new_info		(GstObject * src, GError * error, gchar * debug);
+void		gst_message_parse_info 		(GstMessage *message, GError **gerror, gchar **debug);
+
+/* TAG */
 GstMessage *	gst_message_new_tag		(GstObject * src, GstTagList * tag_list);
+void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
+
+/* BUFFERING */
 GstMessage *	gst_message_new_buffering	(GstObject * src, gint percent);
+void 		gst_message_parse_buffering	(GstMessage *message, gint *percent);
+void            gst_message_set_buffering_stats (GstMessage *message, GstBufferingMode mode,
+		                                 gint avg_in, gint avg_out,
+						 gint64 buffering_left);
+void            gst_message_parse_buffering_stats (GstMessage *message, GstBufferingMode *mode,
+                                                   gint *avg_in, gint *avg_out,
+                                                   gint64 *buffering_left);
+
+/* STATE_CHANGED */
 GstMessage *	gst_message_new_state_changed	(GstObject * src, GstState oldstate,
                                                  GstState newstate, GstState pending);
+void		gst_message_parse_state_changed	(GstMessage *message, GstState *oldstate,
+                                                 GstState *newstate, GstState *pending);
+
+/* STATE_DIRTY */
 GstMessage *	gst_message_new_state_dirty	(GstObject * src);
+
+/* CLOCK_PROVIDE */
 GstMessage *	gst_message_new_clock_provide	(GstObject * src, GstClock *clock, gboolean ready);
+void		gst_message_parse_clock_provide (GstMessage *message, GstClock **clock,
+                                                 gboolean *ready);
+
+/* CLOCK_LOST */
 GstMessage *	gst_message_new_clock_lost	(GstObject * src, GstClock *clock);
+void		gst_message_parse_clock_lost	(GstMessage *message, GstClock **clock);
+
+/* NEW_CLOCK */
 GstMessage *	gst_message_new_new_clock	(GstObject * src, GstClock *clock);
+void		gst_message_parse_new_clock	(GstMessage *message, GstClock **clock);
+
+/* APPLICATION */
 GstMessage *	gst_message_new_application	(GstObject * src, GstStructure * structure);
+
+/* ELEMENT */
 GstMessage *	gst_message_new_element		(GstObject * src, GstStructure * structure);
+
+/* SEGMENT_START */
 GstMessage *	gst_message_new_segment_start	(GstObject * src, GstFormat format, gint64 position);
+void		gst_message_parse_segment_start (GstMessage *message, GstFormat *format,
+                                                 gint64 *position);
+
+/* SEGMENT_DONE */
 GstMessage *	gst_message_new_segment_done	(GstObject * src, GstFormat format, gint64 position);
+void		gst_message_parse_segment_done	(GstMessage *message, GstFormat *format,
+                                                 gint64 *position);
+
+/* DURATION */
 GstMessage *	gst_message_new_duration	(GstObject * src, GstFormat format, gint64 duration);
-GstMessage *	gst_message_new_async_start	(GstObject * src, gboolean new_base_time);
-GstMessage *	gst_message_new_async_done	(GstObject * src);
+void		gst_message_parse_duration	(GstMessage *message, GstFormat *format,
+                                                 gint64 *duration);
+
+/* LATENCY */
 GstMessage *	gst_message_new_latency         (GstObject * src);
+
+/* ASYNC_START */
+GstMessage *	gst_message_new_async_start	(GstObject * src, gboolean new_base_time);
+void		gst_message_parse_async_start	(GstMessage *message, gboolean *new_base_time);
+
+/* ASYNC_DONE */
+GstMessage *	gst_message_new_async_done	(GstObject * src);
+
+/* custom messages */
 GstMessage *	gst_message_new_custom		(GstMessageType type,
 						 GstObject    * src,
 						 GstStructure * structure);
-
-void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
-void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
-void		gst_message_parse_info 		(GstMessage *message, GError **gerror, gchar **debug);
-void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
-void 		gst_message_parse_buffering	(GstMessage *message, gint *percent);
-void		gst_message_parse_state_changed	(GstMessage *message, GstState *oldstate,
-                                                 GstState *newstate, GstState *pending);
-void		gst_message_parse_clock_provide (GstMessage *message, GstClock **clock, gboolean *ready);
-void		gst_message_parse_clock_lost	(GstMessage *message, GstClock **clock);
-void		gst_message_parse_new_clock	(GstMessage *message, GstClock **clock);
-void		gst_message_parse_segment_start (GstMessage *message, GstFormat *format, gint64 *position);
-void		gst_message_parse_segment_done	(GstMessage *message, GstFormat *format, gint64 *position);
-void		gst_message_parse_duration	(GstMessage *message, GstFormat *format, gint64 *duration);
-void		gst_message_parse_async_start	(GstMessage *message, gboolean *new_base_time);
-
 const GstStructure *  gst_message_get_structure	(GstMessage *message);
 
 G_END_DECLS
