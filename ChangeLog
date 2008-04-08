@@ -1,3 +1,10 @@
+2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-buffering.txt:
+	Remove the "none" buffering mode, STREAM is a good default.
+	Move estimated-time to the avail query, that's when it will be needed.
+	Other small typo fixes and updates.
+
 2008-04-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstindex.c: (gst_index_resolver_get_type):

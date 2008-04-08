@@ -130,15 +130,16 @@ in incremental or timeshifting download mode. For this purpose additional fields
 are added to the buffering message:
 
   "buffering-mode", GST_TYPE_BUFFERING_MODE, 
-                   enum { "none", "stream", "download", "timeshift", "live" }
+                   enum { "stream", "download", "timeshift", "live" }
       - gives the buffering mode in use. See above for an explanation of the
-        different modes of buffering.
+        different modes of buffering. This field can be used to let the
+	application have more control over the buffering process.
 
   "avg-in-rate", G_TYPE_INT
       - gives the average input buffering speed in bytes/second. -1 is unknown.
 
         This is the average number of bytes per second that is received on the
-	buffering element input (sink) pads. If is a measurement of the network
+	buffering element input (sink) pads. It is a measurement of the network
 	speed in most cases.
 
   "avg-out-rate", G_TYPE_INT
@@ -147,20 +148,13 @@ are added to the buffering message:
         This is the average number of bytes per second that is consumed by the
 	downstream element of the buffering element. 
 
-  "buffering-left", G_TYPE_INT
+  "buffering-left", G_TYPE_INT64
       - gives the estimated time that bufferring will take in milliseconds.
         -1 unknown.
 
       This is measured based on the avg-in-rate and the filled level of the
-      queue. The application can use this hint to update the gui while buffering.
-
-  "estimated-time", G_TYPE_INT
-      - gives the estimated download time in milliseconds. -1 unknown.
-
-      When the size of the downloaded file is known, this value will contain
-      the latest estimate of the remaining download time. This value is usualy
-      only filled for the "download" buffering mode.
-
+      queue. The application can use this hint to update the GUI about the
+      estimated remaining time that buffering will take.
 
 Application
 -----------
@@ -195,7 +189,7 @@ file so that the GUI can react on it.
 
 In addition to all the fields present in the buffering message, the BUFFERING
 query contains the following field, which indicate the available downloaded
-range in a specific format:
+range in a specific format and the estimated time to complete:
 
   "format", GST_TYPE_FORMAT
     - the format of the "start" and "stop" values below  
@@ -205,6 +199,15 @@ range in a specific format:
 
   "stop", G_TYPE_INT64, -1 unknown
     - the stop position of the available data
+
+  "estimated-total", G_TYPE_INT64
+    - gives the estimated download time in milliseconds. -1 unknown.
+
+    When the size of the downloaded file is known, this value will contain
+    the latest estimate of the remaining download time. This value is usualy
+    only filled for the "download" buffering mode. The application can use
+    this information to estimate the amount of remaining time to download the
+    complete file.
 
 For the "download" and "timeshift" buffering-modes, the start and stop positions
 specify the ranges where efficient seeking in the downloaded media is possible.
@@ -222,24 +225,24 @@ Some defaults for common elements:
 A GstBaseSrc with random access replies to the BUFFERING query with:
 
   "buffer-percent" = 100
-  "buffering-mode" = "none"
+  "buffering-mode" = "stream"
   "avg-in-rate" = -1
   "avg-out-rate" = -1
   "buffering-left" = 0
-  "estimated-time" = 0
   "format" = GST_FORMAT_BYTES
   "start" = 0
   "stop" = the total filesize
+  "estimated-time" = 0
 
 A GstBaseSrc in push mode replies to the BUFFERING query with:
 
   "buffer-percent" = 100
-  "buffering-mode" = "none"
+  "buffering-mode" = "stream"
   "avg-in-rate" = -1
   "avg-out-rate" = -1
   "buffering-left" = 0
-  "estimated-time" = 0
   "format" = a valid GST_TYPE_FORMAT
   "start" = current position
   "stop" = current position
+  "estimated-time" = 0
 
