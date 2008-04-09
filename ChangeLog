@@ -1,3 +1,10 @@
+2008-04-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/goom/ppc_drawings.s:
+	* gst/goom/ppc_zoom_ultimate.s:
+	  Change license of these files to LGPL, as permitted by the
+	  author, Guillaume Borios. See #515073.
+
 2008-04-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/goom/convolve_fx.c:
