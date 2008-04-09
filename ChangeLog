@@ -1,3 +1,14 @@
+2008-04-09  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-buffering.txt:
+	Fix some typos and set the estimated total for push mode to -1.
+
+	* gst/gstquery.c: (gst_query_new_buffering):
+	Set buffering-left to 0 as we're not buffering by default.
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_default_query):
+	Implement BUFFERING query.
+
 2008-04-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Based on patch by: Milosz Derezynski <internalerror gmail com>

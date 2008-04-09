@@ -756,6 +756,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
 
       GST_DEBUG_OBJECT (src, "duration query in format %s",
           gst_format_get_name (format));
+
       switch (format) {
         case GST_FORMAT_PERCENT:
           gst_query_set_duration (query, GST_FORMAT_PERCENT,
@@ -858,6 +859,47 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
     }
     case GST_QUERY_JITTER:
     case GST_QUERY_RATE:
+      res = FALSE;
+      break;
+    case GST_QUERY_BUFFERING:
+    {
+      res = FALSE;
+      GstFormat format;
+      gint64 start, stop, estimated;
+
+      gst_query_parse_buffering_range (query, &format, NULL, NULL, NULL);
+
+      GST_DEBUG_OBJECT (src, "buffering query in format %s",
+          gst_format_get_name (format));
+
+      if (src->random_access) {
+        estimated = 0;
+        start = 0;
+        if (format == GST_FORMAT_PERCENT)
+          stop = GST_FORMAT_PERCENT_MAX;
+        else
+          stop = src->segment.duration;
+      } else {
+        estimated = -1;
+        start = -1;
+        stop = -1;
+      }
+      /* convert to required format. When the conversion fails, we can't answer
+       * the query. When the value is unknown, we can don't perform conversion
+       * but report TRUE. */
+      if (format != GST_FORMAT_PERCENT && stop != -1) {
+        res = gst_pad_query_convert (src->srcpad, src->segment.format,
+            stop, &format, &stop);
+      } else {
+        res = TRUE;
+      }
+      if (res && format != GST_FORMAT_PERCENT && start != -1)
+        res = gst_pad_query_convert (src->srcpad, src->segment.format,
+            start, &format, &start);
+
+      gst_query_set_buffering_range (query, format, start, stop, estimated);
+      break;
+    }
     default:
       res = FALSE;
       break;

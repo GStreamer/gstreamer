@@ -236,7 +236,7 @@ A GstBaseSrc with random access replies to the BUFFERING query with:
   "format" = GST_FORMAT_BYTES
   "start" = 0
   "stop" = the total filesize
-  "estimated-time" = 0
+  "estimated-total" = 0
 
 A GstBaseSrc in push mode replies to the BUFFERING query with:
 
@@ -248,5 +248,5 @@ A GstBaseSrc in push mode replies to the BUFFERING query with:
   "format" = a valid GST_TYPE_FORMAT
   "start" = current position
   "stop" = current position
-  "estimated-time" = 0
+  "estimated-total" = -1
 
