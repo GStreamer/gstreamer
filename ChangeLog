@@ -1,3 +1,18 @@
+2008-04-09  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstqueue2.c: (update_buffering),
+	(gst_queue_close_temp_location_file), (gst_queue_handle_src_query),
+	(gst_queue_src_checkgetrange_function):
+	Include extra buffering stats in the buffering message.
+	Implement BUFFERING query.
+
+	* gst/playback/gsturidecodebin.c: (do_async_start),
+	(do_async_done), (type_found), (setup_streaming), (setup_source),
+	(gst_uri_decode_bin_change_state):
+	Only add decodebin2 when the type is found in streaming mode.
+	Make uridecodebin async to PAUSED even when we don't have decodebin2
+	added yet.
+
 2008-04-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/gio/gstgio.c: (gst_gio_get_supported_protocols):

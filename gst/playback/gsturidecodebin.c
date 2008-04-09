@@ -81,6 +81,8 @@ struct _GstURIDecodeBin
   guint src_np_sig_id;          /* new-pad signal id */
   guint src_nmp_sig_id;         /* no-more-pads signal id */
   gint pending;
+
+  gboolean async_pending;       /* async-start has been emited */
 };
 
 struct _GstURIDecodeBinClass
@@ -499,6 +501,30 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
+  }
+}
+
+static void
+do_async_start (GstURIDecodeBin * dbin)
+{
+  GstMessage *message;
+
+  dbin->async_pending = TRUE;
+
+  message = gst_message_new_async_start (GST_OBJECT_CAST (dbin), FALSE);
+  parent_class->handle_message (GST_BIN_CAST (dbin), message);
+}
+
+static void
+do_async_done (GstURIDecodeBin * dbin)
+{
+  GstMessage *message;
+
+  if (dbin->async_pending) {
+    message = gst_message_new_async_done (GST_OBJECT_CAST (dbin));
+    parent_class->handle_message (GST_BIN_CAST (dbin), message);
+
+    dbin->async_pending = FALSE;
   }
 }
 
@@ -1060,7 +1086,7 @@ type_found (GstElement * typefind, guint probability,
 
   GST_DEBUG_OBJECT (decoder, "typefind found caps %" GST_PTR_FORMAT, caps);
 
-  dec_elem = g_object_get_data (G_OBJECT (typefind), "decodebin2");
+  dec_elem = make_decoder (decoder);
   if (!dec_elem)
     goto no_decodebin;
 
@@ -1081,8 +1107,10 @@ type_found (GstElement * typefind, guint probability,
   if (!gst_element_link (queue, dec_elem))
     goto could_not_link;
 
-  gst_element_set_state (queue, GST_STATE_PLAYING);
   gst_element_set_state (dec_elem, GST_STATE_PLAYING);
+  gst_element_set_state (queue, GST_STATE_PLAYING);
+
+  do_async_done (decoder);
 
   return;
 
@@ -1110,7 +1138,7 @@ no_queue2:
  * source. After we find the type, we decide to plug a queue2 and continue to
  * plug a decodebin2 starting from the found caps */
 static gboolean
-setup_streaming (GstURIDecodeBin * decoder, GstElement * dec_elem)
+setup_streaming (GstURIDecodeBin * decoder)
 {
   GstElement *typefind;
 
@@ -1132,7 +1160,7 @@ setup_streaming (GstURIDecodeBin * decoder, GstElement * dec_elem)
       g_signal_connect (G_OBJECT (decoder->typefind), "have-type",
       G_CALLBACK (type_found), decoder);
 
-  g_object_set_data (G_OBJECT (typefind), "decodebin2", dec_elem);
+  do_async_start (decoder);
 
   return TRUE;
 
@@ -1284,20 +1312,20 @@ setup_source (GstURIDecodeBin * decoder)
     g_object_set_data (G_OBJECT (decoder->source), "pending", "1");
     decoder->pending++;
   } else {
-    GstElement *dec_elem;
-
-    dec_elem = make_decoder (decoder);
-    if (!dec_elem)
-      goto no_decoder;
-
     if (decoder->is_stream) {
       GST_DEBUG_OBJECT (decoder, "Setting up streaming");
       /* do the stream things here */
-      if (!setup_streaming (decoder, dec_elem))
+      if (!setup_streaming (decoder))
         goto streaming_failed;
     } else {
+      GstElement *dec_elem;
+
       /* no streaming source, we can link now */
       GST_DEBUG_OBJECT (decoder, "Plugging decodebin to source");
+
+      dec_elem = make_decoder (decoder);
+      if (!dec_elem)
+        goto no_decoder;
 
       if (!gst_element_link (decoder->source, dec_elem))
         goto could_not_link;
@@ -1732,6 +1760,7 @@ gst_uri_decode_bin_change_state (GstElement * element,
       remove_decoders (decoder);
       remove_pads (decoder);
       remove_source (decoder);
+      do_async_done (decoder);
       break;
     default:
       break;
