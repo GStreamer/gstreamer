@@ -72,7 +72,6 @@ static void gst_valve_set_property (GObject *object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_valve_get_property (GObject *object,
     guint prop_id, GValue *value, GParamSpec *pspec);
-static void gst_valve_dispose (GObject *object);
 
 static GstFlowReturn gst_valve_transform_ip (GstBaseTransform *trans,
     GstBuffer *buf);
@@ -115,8 +114,6 @@ gst_valve_class_init (GstValveClass *klass)
   gobject_class = (GObjectClass *) klass;
   gstbasetransform_class = (GstBaseTransformClass *) klass;
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_valve_dispose);
-
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_valve_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_valve_get_property);
 
@@ -157,15 +154,6 @@ gst_valve_init (GstValve *valve, GstValveClass *klass)
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (valve), FALSE);
 #endif
 
-}
-
-static void
-gst_valve_dispose (GObject *object)
-{
-  GstValve *valve = NULL;
-  valve = GST_VALVE (valve);
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 
