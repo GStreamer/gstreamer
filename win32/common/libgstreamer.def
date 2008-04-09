@@ -89,6 +89,7 @@ EXPORTS
 	gst_buffer_span
 	gst_buffer_stamp
 	gst_buffer_try_new_and_alloc
+	gst_buffering_mode_get_type
 	gst_bus_add_signal_watch
 	gst_bus_add_signal_watch_full
 	gst_bus_add_watch
@@ -459,6 +460,7 @@ EXPORTS
 	gst_message_new_warning
 	gst_message_parse_async_start
 	gst_message_parse_buffering
+	gst_message_parse_buffering_stats
 	gst_message_parse_clock_lost
 	gst_message_parse_clock_provide
 	gst_message_parse_duration
@@ -470,6 +472,7 @@ EXPORTS
 	gst_message_parse_state_changed
 	gst_message_parse_tag
 	gst_message_parse_warning
+	gst_message_set_buffering_stats
 	gst_message_type_get_name
 	gst_message_type_get_type
 	gst_message_type_to_quark
@@ -670,6 +673,7 @@ EXPORTS
 	gst_query_get_structure
 	gst_query_get_type
 	gst_query_new_application
+	gst_query_new_buffering
 	gst_query_new_convert
 	gst_query_new_duration
 	gst_query_new_formats
@@ -677,6 +681,9 @@ EXPORTS
 	gst_query_new_position
 	gst_query_new_seeking
 	gst_query_new_segment
+	gst_query_parse_buffering_percent
+	gst_query_parse_buffering_range
+	gst_query_parse_buffering_stats
 	gst_query_parse_convert
 	gst_query_parse_duration
 	gst_query_parse_formats_length
@@ -685,6 +692,9 @@ EXPORTS
 	gst_query_parse_position
 	gst_query_parse_seeking
 	gst_query_parse_segment
+	gst_query_set_buffering_percent
+	gst_query_set_buffering_range
+	gst_query_set_buffering_stats
 	gst_query_set_convert
 	gst_query_set_duration
 	gst_query_set_formats

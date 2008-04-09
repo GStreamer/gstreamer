@@ -278,7 +278,7 @@ void            gst_query_parse_buffering_stats    (GstQuery *query, GstBufferin
 
 void            gst_query_set_buffering_range     (GstQuery *query, GstFormat format,
                                                    gint64 start, gint64 stop,
-						   gint64 extimated_total);
+						   gint64 estimated_total);
 void            gst_query_parse_buffering_range   (GstQuery *query, GstFormat *format,
                                                    gint64 *start, gint64 *stop,
 						   gint64 *estimated_total);
