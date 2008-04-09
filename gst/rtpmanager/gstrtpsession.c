@@ -705,6 +705,15 @@ gst_rtp_session_finalize (GObject * object)
 
   rtpsession = GST_RTP_SESSION (object);
 
+  if (rtpsession->recv_rtp_sink != NULL)
+    gst_object_unref (rtpsession->recv_rtp_sink);
+  if (rtpsession->recv_rtcp_sink != NULL)
+    gst_object_unref (rtpsession->recv_rtcp_sink);
+  if (rtpsession->send_rtp_sink != NULL)
+    gst_object_unref (rtpsession->send_rtp_sink);
+  if (rtpsession->send_rtcp_src != NULL)
+    gst_object_unref (rtpsession->send_rtcp_src);
+
   g_hash_table_destroy (rtpsession->priv->ptmap);
   g_mutex_free (rtpsession->priv->lock);
   g_object_unref (rtpsession->priv->session);
