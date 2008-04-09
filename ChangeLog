@@ -1,5 +1,15 @@
 2008-04-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Based on patch by: Milosz Derezynski <internalerror gmail com>
+
+	* gst/gsterror.c: (_gst_stream_errors_init):
+	* gst/gsterror.h:
+	  Add two new error codes for encrypted content. Fixes #524659.
+	  API: GST_STREAM_ERROR_DECRYPT
+	  API: GST_STREAM_ERROR_DECRYPT_NOKEY
+
+2008-04-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstquery.h:
 	  Fix typo.
 
