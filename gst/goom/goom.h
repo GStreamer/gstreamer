@@ -14,13 +14,8 @@ void goom_set_resolution (PluginInfo *goomInfo, guint32 resx, guint32 resy);
  * forceMode == 0 : do nothing
  * forceMode == -1 : lock the FX
  * forceMode == 1..NB_FX : force a switch to FX n# forceMode
- *
- * songTitle = pointer to the title of the song...
- *      - NULL if it is not the start of the song
- *      - only have a value at the start of the song
  */
-guint32 *goom_update (PluginInfo *goomInfo, gint16 data[2][512], int forceMode, float fps,
-                      char *songTitle, char *message);
+guint32 *goom_update (PluginInfo *goomInfo, gint16 data[2][512], int forceMode, float fps);
 
 /* returns 0 if the buffer wasn't accepted */
 int goom_set_screenbuffer(PluginInfo *goomInfo, void *buffer);

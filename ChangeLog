@@ -1,5 +1,19 @@
 2008-04-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/goom/Makefile.am:
+	* gst/goom/gfontlib.c:
+	* gst/goom/gfontlib.h:
+	* gst/goom/gfontrle.c:
+	* gst/goom/gfontrle.h:
+	* gst/goom/goom.h:
+	* gst/goom/goom_core.c: (goom_update):
+	* gst/goom/goom_plugin_info.h:
+	* gst/goom/gstgoom.c: (gst_goom_chain):
+	* gst/goom/plugin_info.c:
+	  Remove a bunch of font/text related code that we don't need.
+
+2008-04-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/goom/ppc_drawings.s:
 	* gst/goom/ppc_zoom_ultimate.s:
 	  Change license of these files to LGPL, as permitted by the

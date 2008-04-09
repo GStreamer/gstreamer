@@ -144,17 +144,8 @@ struct _PLUGIN_INFO {
 		int stateSelectionRnd;
 		int stateSelectionBlocker;
 		int previousZoomSpeed;
-		int timeOfTitleDisplay;
-                char titleText[1024];
 		ZoomFilterData zoomFilterData;                
 	} update;
-
-	struct {
-		int numberOfLinesInMessage;
-		char message[0x800];
-		int affiche;
-		int longueur;
-	} update_message;
 
 	struct {
 		void (*draw_line) (Pixel *data, int x1, int y1, int x2, int y2, int col, int screenx, int screeny);

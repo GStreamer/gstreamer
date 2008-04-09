@@ -28,7 +28,6 @@ libgstgoom_la_SOURCES =						\
 	goomsl.c goomsl_private.h				\
 	lines.c lines.h ifs.c ifs.h surf3d.c surf3d.h		\
 	tentacle3d.c tentacle3d.h v3d.c v3d.h			\
-	gfontrle.c gfontrle.h gfontlib.c gfontlib.h		\
 	convolve_fx.c flying_stars_fx.c				\
 	goom_fx.h goom_visual_fx.h				\
 	motif_goom1.h motif_goom2.h				\

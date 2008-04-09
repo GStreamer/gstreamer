@@ -523,8 +523,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
     GST_BUFFER_DURATION (outbuf) = goom->duration;
     GST_BUFFER_SIZE (outbuf) = goom->outsize;
 
-    out_frame = (guchar *) goom_update (goom->plugin, goom->datain, 0, 0,
-        NULL, NULL);
+    out_frame = (guchar *) goom_update (goom->plugin, goom->datain, 0, 0);
     memcpy (GST_BUFFER_DATA (outbuf), out_frame, goom->outsize);
 
     GST_DEBUG ("Pushing frame with time=%" GST_TIME_FORMAT ", duration=%"

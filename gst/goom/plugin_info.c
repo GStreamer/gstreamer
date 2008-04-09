@@ -183,9 +183,6 @@ plugin_info_init (PluginInfo * pp, int nbVisuals)
   pp->update.stateSelectionRnd = 0;
   pp->update.stateSelectionBlocker = 0;
   pp->update.previousZoomSpeed = 128;
-  pp->update.timeOfTitleDisplay = 0;
-
-  pp->update_message.affiche = 0;
 
   {
     ZoomFilterData zfd = {
