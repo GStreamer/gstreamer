@@ -341,6 +341,13 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
     }
   }
 
+  /* Reset previous timestamp, duration and offsets on NEWSEGMENT
+   * to prevent false warnings when checking for perfect streams */
+  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
+    identity->prev_timestamp = identity->prev_duration = GST_CLOCK_TIME_NONE;
+    identity->prev_offset = identity->prev_offset_end = GST_BUFFER_OFFSET_NONE;
+  }
+
   GST_BASE_TRANSFORM_CLASS (parent_class)->event (trans, event);
 
   if (identity->single_segment
@@ -762,8 +769,8 @@ gst_identity_start (GstBaseTransform * trans)
   identity->offset = 0;
   identity->prev_timestamp = GST_CLOCK_TIME_NONE;
   identity->prev_duration = GST_CLOCK_TIME_NONE;
-  identity->prev_offset_end = -1;
-  identity->prev_offset = -1;
+  identity->prev_offset_end = GST_BUFFER_OFFSET_NONE;
+  identity->prev_offset = GST_BUFFER_OFFSET_NONE;
 
   return TRUE;
 }

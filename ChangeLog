@@ -1,3 +1,10 @@
+2008-04-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* plugins/elements/gstidentity.c: (gst_identity_event),
+	(gst_identity_start):
+	Fix imperfect timestamp/offset checks when we get another NEWSEGMENT
+	event after processing some data. Fixes bug #526042.
+
 2008-04-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/gst/gstreamer-sections.txt:
