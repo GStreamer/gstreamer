@@ -39,9 +39,9 @@ static GstStateChangeReturn gst_ebml_read_change_state (GstElement * element,
     GstStateChange transition);
 
 /* convenience functions */
-static gboolean gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size,
+static GstFlowReturn gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size,
     GstBuffer ** p_buf, guint8 ** bytes);
-static gboolean gst_ebml_read_pull_bytes (GstEbmlRead * ebml, guint size,
+static GstFlowReturn gst_ebml_read_pull_bytes (GstEbmlRead * ebml, guint size,
     GstBuffer ** p_buf, guint8 ** bytes);
 
 
@@ -447,15 +447,15 @@ gst_ebml_read_get_length (GstEbmlRead * ebml)
  * Seek to a given offset.
  */
 
-gboolean
+GstFlowReturn
 gst_ebml_read_seek (GstEbmlRead * ebml, guint64 offset)
 {
   if (offset >= gst_ebml_read_get_length (ebml))
-    return FALSE;
+    return GST_FLOW_UNEXPECTED;
 
   ebml->offset = offset;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 /*

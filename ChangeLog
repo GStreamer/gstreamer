@@ -1,3 +1,13 @@
+2008-04-09  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/matroska/ebml-read.c: (gst_ebml_read_seek):
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_handle_seek_event),
+	(gst_matroska_demux_parse_contents_seekentry),
+	(gst_matroska_demux_loop):
+	Fix the Forte build by making function declaration signatures
+	match the implementations.
+
 2008-04-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/oss/gstosshelper.c: (gst_oss_helper_rate_check_rate):

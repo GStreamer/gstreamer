@@ -1431,8 +1431,8 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   }
 
   /* seek (relative to matroska segment) */
-  if (!gst_ebml_read_seek (GST_EBML_READ (demux),
-          entry->pos + demux->ebml_segment_start)) {
+  if (gst_ebml_read_seek (GST_EBML_READ (demux),
+          entry->pos + demux->ebml_segment_start) != GST_FLOW_OK) {
     GST_DEBUG ("Failed to seek to offset %" G_GUINT64_FORMAT,
         entry->pos + demux->ebml_segment_start);
     goto seek_error;
@@ -3131,7 +3131,8 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
       }
 
       /* seek */
-      if (!gst_ebml_read_seek (ebml, seek_pos + demux->ebml_segment_start))
+      if (gst_ebml_read_seek (ebml, seek_pos + demux->ebml_segment_start) !=
+          GST_FLOW_OK)
         return GST_FLOW_ERROR;
 
       /* we don't want to lose our seekhead level, so we add
@@ -3473,7 +3474,7 @@ pause:
           gst_matroska_demux_send_event (demux, gst_event_new_eos ());
         }
       } else {
-        GST_ELEMENT_ERROR (demux, STREAM, FAILED, NULL,
+        GST_ELEMENT_ERROR (demux, STREAM, FAILED, (NULL),
             ("stream stopped, reason %s", reason));
         gst_matroska_demux_send_event (demux, gst_event_new_eos ());
       }
