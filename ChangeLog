@@ -1,3 +1,11 @@
+2008-04-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/goom/convolve_fx.c:
+	* gst/goom/motif_goom1.h:
+	* gst/goom/motif_goom2.h:
+	  As hinted in Bug #518213, revert one change and fix warnings properly.
+	  This fixes both #518213 and #520073 for me.	  
+
 2008-04-09  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst/matroska/ebml-read.c: (gst_ebml_read_seek):
