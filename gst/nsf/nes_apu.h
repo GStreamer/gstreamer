@@ -258,7 +258,7 @@ typedef struct apu_s
    int sample_bits;
    int refresh_rate;
 
-   void (*process)(void *buffer, int num_samples);
+   void (*process)(uint8 *buffer, int num_samples);
 
   /* $$$ ben : last error string */
   const char * errstr;
@@ -277,7 +277,7 @@ extern apu_t *apu_create(int sample_rate, int refresh_rate, int sample_bits, boo
 extern void apu_destroy(apu_t *apu);
 extern int apu_setext(apu_t *apu, apuext_t *ext);
 extern int apu_setfilter(int filter_type);
-extern void apu_process(void *buffer, int num_samples);
+extern void apu_process(uint8 *buffer, int num_samples);
 extern void apu_reset(void);
 extern int apu_setchan(int chan, boolean enabled);
 extern int32 apu_getcyclerate(void);
@@ -301,7 +301,12 @@ void apu_setcontext(apu_t *src_apu);
 
 /*
 ** $Log$
-** Revision 1.2  2008/03/25 15:56:12  slomo
+** Revision 1.3  2008/04/09 13:43:51  thaytan
+** * gst/nsf/nes_apu.c: (apu_process):
+** * gst/nsf/nes_apu.h:
+** Don't do void pointer arithmetic - it's a gcc extension.
+**
+** Revision 1.2  2008-03-25 15:56:12  slomo
 ** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:

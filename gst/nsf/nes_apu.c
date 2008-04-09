@@ -972,7 +972,7 @@ apu_getpcmdata (void **data, int *num_samples, int *sample_bits)
 
 
 void
-apu_process (void *buffer, int num_samples)
+apu_process (uint8 * buffer, int num_samples)
 {
   apudata_t *d;
   uint32 elapsed_cycles;
@@ -1210,7 +1210,12 @@ apu_getcyclerate (void)
 
 /*
 ** $Log$
-** Revision 1.2  2008/03/25 15:56:12  slomo
+** Revision 1.3  2008/04/09 13:43:50  thaytan
+** * gst/nsf/nes_apu.c: (apu_process):
+** * gst/nsf/nes_apu.h:
+** Don't do void pointer arithmetic - it's a gcc extension.
+**
+** Revision 1.2  2008-03-25 15:56:12  slomo
 ** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:

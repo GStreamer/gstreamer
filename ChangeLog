@@ -1,3 +1,9 @@
+2008-04-09  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/nsf/nes_apu.c: (apu_process):
+	* gst/nsf/nes_apu.h:
+	Don't do void pointer arithmetic - it's a gcc extension.
+
 2008-04-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/jack/gstjackaudiosink.c: (gst_jack_audio_sink_class_init):
