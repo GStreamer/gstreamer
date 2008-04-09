@@ -46,6 +46,7 @@ GST_DEBUG_CATEGORY_STATIC (seek_debug);
 //#define VSINK "aasink"
 //#define VSINK "cacasink"
 
+#define FILL_INTERVAL 100
 //#define UPDATE_INTERVAL 500
 //#define UPDATE_INTERVAL 100
 #define UPDATE_INTERVAL 10
@@ -87,6 +88,7 @@ static GstState state = GST_STATE_NULL;
 static guint update_id = 0;
 static guint seek_timeout_id = 0;
 static gulong changed_id;
+static guint fill_id = 0;
 
 static gint n_video = 0, n_audio = 0, n_text = 0;
 static gboolean need_streams = TRUE;
@@ -1086,6 +1088,38 @@ set_scale (gdouble value)
 }
 
 static gboolean
+update_fill (gpointer data)
+{
+  if (elem_seek) {
+    if (seekable_elements) {
+      GstElement *element = GST_ELEMENT (seekable_elements->data);
+      GstQuery *query;
+
+      query = gst_query_new_buffering (GST_FORMAT_PERCENT);
+      if (gst_element_query (element, query)) {
+        gint64 start, stop;
+        GstFormat format;
+        gdouble fill;
+
+        gst_query_parse_buffering_range (query, &format, &start, &stop, NULL);
+
+        GST_DEBUG ("start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT,
+            start, stop);
+
+        if (stop != -1)
+          fill = 100.0 * stop / GST_FORMAT_PERCENT_MAX;
+        else
+          fill = 100.0;
+
+        gtk_range_set_fill_level (GTK_RANGE (hscale), fill);
+      }
+      gst_query_unref (query);
+    }
+  }
+  return TRUE;
+}
+
+static gboolean
 update_scale (gpointer data)
 {
   GstFormat format = GST_FORMAT_TIME;
@@ -1130,6 +1164,7 @@ update_scale (gpointer data)
 static void do_seek (GtkWidget * widget);
 static void connect_bus_signals (GstElement * pipeline);
 static void set_update_scale (gboolean active);
+static void set_update_fill (gboolean active);
 
 static gboolean
 end_scrub (GtkWidget * widget)
@@ -1243,6 +1278,24 @@ seek_cb (GtkWidget * widget)
     if (seek_timeout_id == 0) {
       seek_timeout_id =
           g_timeout_add (SCRUB_TIME, (GSourceFunc) end_scrub, widget);
+    }
+  }
+}
+
+static void
+set_update_fill (gboolean active)
+{
+  GST_DEBUG ("fill scale is %d", active);
+
+  if (active) {
+    if (fill_id == 0) {
+      fill_id =
+          g_timeout_add (FILL_INTERVAL, (GtkFunction) update_fill, pipeline);
+    }
+  } else {
+    if (fill_id) {
+      g_source_remove (fill_id);
+      fill_id = 0;
     }
   }
 }
@@ -1401,6 +1454,7 @@ stop_cb (GtkButton * button, gpointer data)
     buffering = FALSE;
     set_update_scale (FALSE);
     set_scale (0.0);
+    set_update_fill (FALSE);
 
     if (pipeline_type == 16)
       clear_streams (pipeline);
@@ -1861,6 +1915,7 @@ msg_state_changed (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
     /* When state of the pipeline changes to paused or playing we start updating scale */
     if (new == GST_STATE_PLAYING) {
       set_update_scale (TRUE);
+      set_update_fill (TRUE);
     } else {
       set_update_scale (FALSE);
     }

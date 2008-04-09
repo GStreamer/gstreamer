@@ -1,5 +1,12 @@
 2008-04-09  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* tests/examples/seek/seek.c: (update_fill), (set_update_fill),
+	(play_cb), (pause_cb), (stop_cb), (msg_state_changed),
+	(msg_buffering), (main):
+	Add basic download reports to seek using the new buffering API.
+
+2008-04-09  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstqueue2.c: (update_buffering),
 	(gst_queue_close_temp_location_file), (gst_queue_handle_src_query),
 	(gst_queue_src_checkgetrange_function):
