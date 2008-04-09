@@ -524,6 +524,21 @@ free_session (GstRtpBinSession * sess)
   gst_element_set_state (sess->session, GST_STATE_NULL);
   gst_element_set_state (sess->demux, GST_STATE_NULL);
 
+  if (sess->recv_rtp_sink != NULL)
+    gst_element_release_request_pad (sess->session, sess->recv_rtp_sink);
+  if (sess->recv_rtp_src != NULL)
+    gst_object_unref (sess->recv_rtp_src);
+  if (sess->recv_rtcp_sink != NULL)
+    gst_element_release_request_pad (sess->session, sess->recv_rtcp_sink);
+  if (sess->sync_src != NULL)
+    gst_object_unref (sess->sync_src);
+  if (sess->send_rtp_sink != NULL)
+    gst_element_release_request_pad (sess->session, sess->send_rtp_sink);
+  if (sess->send_rtp_src != NULL)
+    gst_object_unref (sess->send_rtp_src);
+  if (sess->send_rtcp_src != NULL)
+    gst_element_release_request_pad (sess->session, sess->send_rtcp_src);
+
   gst_bin_remove (GST_BIN_CAST (bin), sess->session);
   gst_bin_remove (GST_BIN_CAST (bin), sess->demux);
 
