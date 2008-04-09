@@ -1,5 +1,17 @@
 2008-04-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by:  José Alburquerque <jaalburqu at svn dot gnome dot org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstsegment.c:
+	* gst/gstsegment.h:
+	* win32/common/libgstreamer.def:
+	  Expose gst_segment_copy() to make things easier for the c++ bindings.
+	  Fixes #518932.
+	  API: gst_segment_copy()
+
+2008-04-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gst.c: (gst_init_get_option_group), (init_post):
 	  Fix const position; ref GType classes for enum types to work
 	  around thread-safety issues in GLib versions < 2.16.

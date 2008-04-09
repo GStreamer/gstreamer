@@ -83,7 +83,15 @@
  * Last reviewed on 2007-05-17 (0.10.13)
  */
 
-static GstSegment *
+/**
+ * gst_segment_copy:
+ * @segment: a #GstSegment
+ *
+ * Returns: a copy of @segment, free with gst_segment_free().
+ *
+ * Since: 0.10.20
+ */
+GstSegment *
 gst_segment_copy (GstSegment * segment)
 {
   GstSegment *result = NULL;

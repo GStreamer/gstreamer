@@ -739,6 +739,7 @@ EXPORTS
 	gst_seek_flags_get_type
 	gst_seek_type_get_type
 	gst_segment_clip
+	gst_segment_copy
 	gst_segment_free
 	gst_segment_get_type
 	gst_segment_init

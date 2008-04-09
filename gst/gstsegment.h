@@ -74,6 +74,7 @@ struct _GstSegment {
 GType        gst_segment_get_type            (void);
 
 GstSegment * gst_segment_new                 (void);
+GstSegment * gst_segment_copy                (GstSegment *segment);
 void         gst_segment_free                (GstSegment *segment);
 
 void         gst_segment_init                (GstSegment *segment, GstFormat format);

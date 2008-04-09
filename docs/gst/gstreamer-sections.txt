@@ -1780,6 +1780,7 @@ GstSegment
 gst_segment_clip
 gst_segment_init
 gst_segment_new
+gst_segment_copy
 gst_segment_free
 gst_segment_set_duration
 gst_segment_set_last_stop
