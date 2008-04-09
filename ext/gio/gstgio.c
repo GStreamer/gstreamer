@@ -106,11 +106,15 @@ gst_gio_get_supported_protocols (void)
 
   our_schemes = g_new0 (gchar *, num + 1);
 
-  /* Filter http/https as we can't support the icy stuff with GIO.
-   * Use souphttpsrc if you need that!
+  /* - Filter http/https as we can't support the icy stuff with GIO.
+   *   Use souphttpsrc if you need that.
+   * - Filter cdda as it doesn't support musicbrainz stuff and everything
+   *   else one expects from a cdda source. Use cdparanoiasrc or cdiosrc
+   *   for cdda.
    */
   for (i = 0, j = 0; i < num; i++) {
-    if (strcmp (schemes[i], "http") == 0 || strcmp (schemes[i], "https") == 0)
+    if (strcmp (schemes[i], "http") == 0 || strcmp (schemes[i], "https") == 0
+        || strcmp (schemes[i], "cdda") == 0)
       continue;
 
     our_schemes[j] = g_strdup (schemes[i]);
