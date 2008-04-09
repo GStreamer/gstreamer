@@ -689,6 +689,8 @@ update_buffering (GstQueue * queue)
     }
   }
   if (post) {
+    GstMessage *message;
+
     /* scale to high percent so that it becomes the 100% mark */
     percent = percent * 100 / queue->high_percent;
     /* clip */
@@ -696,8 +698,12 @@ update_buffering (GstQueue * queue)
       percent = 100;
 
     GST_DEBUG_OBJECT (queue, "buffering %d percent", percent);
-    gst_element_post_message (GST_ELEMENT_CAST (queue),
-        gst_message_new_buffering (GST_OBJECT_CAST (queue), percent));
+    message = gst_message_new_buffering (GST_OBJECT_CAST (queue), percent);
+    gst_message_set_buffering_stats (message, GST_BUFFERING_STREAM,
+        queue->byte_in_rate, queue->byte_out_rate, -1);
+
+    gst_element_post_message (GST_ELEMENT_CAST (queue), message);
+
   } else {
     GST_DEBUG_OBJECT (queue, "filled %d percent", percent);
   }
@@ -994,6 +1000,7 @@ gst_queue_close_temp_location_file (GstQueue * queue)
   /* nothing to do */
   if (queue->temp_file == NULL)
     return;
+
   GST_DEBUG_OBJECT (queue, "closing temp file");
 
   /* we don't remove the file so that the application can use it as a cache
@@ -1630,6 +1637,58 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
       GST_DEBUG_OBJECT (queue, "peer query success");
       break;
     }
+    case GST_QUERY_BUFFERING:
+    {
+      GstFormat format;
+
+      GST_DEBUG_OBJECT (queue, "query buffering");
+
+      if (!QUEUE_IS_USING_TEMP_FILE (queue)) {
+        /* no temp file, just forward to the peer */
+        if (!gst_queue_peer_query (queue, queue->sinkpad, query))
+          goto peer_failed;
+        GST_DEBUG_OBJECT (queue, "buffering forwarded to peer");
+      } else {
+        gint64 start, stop;
+
+        gst_query_parse_buffering_range (query, &format, NULL, NULL, NULL);
+
+        switch (format) {
+          case GST_FORMAT_PERCENT:
+          {
+            gint64 duration;
+            GstFormat peer_fmt;
+
+            peer_fmt = GST_FORMAT_BYTES;
+
+            if (!gst_pad_query_peer_duration (queue->sinkpad, &peer_fmt,
+                    &duration))
+              goto peer_failed;
+
+            GST_DEBUG_OBJECT (queue, "duration %" G_GINT64_FORMAT ", writing %"
+                G_GINT64_FORMAT, duration, queue->writing_pos);
+
+            start = 0;
+            /* get our available data relative to the duration */
+            if (duration != -1)
+              stop = GST_FORMAT_PERCENT_MAX * queue->writing_pos / duration;
+            else
+              stop = -1;
+            break;
+          }
+          case GST_FORMAT_BYTES:
+            start = 0;
+            stop = queue->writing_pos;
+            break;
+          default:
+            start = -1;
+            stop = -1;
+            break;
+        }
+        gst_query_set_buffering_range (query, format, start, stop, -1);
+      }
+      break;
+    }
     default:
       /* peer handled other queries */
       if (!gst_queue_peer_query (queue, queue->sinkpad, query))
@@ -1684,8 +1743,10 @@ gst_queue_src_checkgetrange_function (GstPad * pad)
   gboolean ret;
 
   queue = GST_QUEUE (gst_pad_get_parent (pad));
+
   /* we can operate in pull mode when we are using a tempfile */
   ret = QUEUE_IS_USING_TEMP_FILE (queue);
+
   gst_object_unref (GST_OBJECT (queue));
 
   return ret;
