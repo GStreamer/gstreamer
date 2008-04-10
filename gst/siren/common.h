@@ -124,7 +124,7 @@ extern int GetSirenCodecInfo(int flag, int sample_rate, int *number_of_coefs, in
           (((unsigned short)val % 256) & 0xff) << 8 |           \
           ((((unsigned short)val / POW_2_8) % 256) & 0xff) ))
 
-#define ME_TO_LE16(val) ( (unsigned int) (                              \
+#define ME_TO_LE32(val) ( (unsigned int) (                              \
           ((((unsigned int) val           ) % 256)  & 0xff) << 24 |     \
           ((((unsigned int) val / POW_2_8 ) % 256) & 0xff) << 16|       \
           ((((unsigned int) val / POW_2_16) % 256) & 0xff) << 8 |       \
