@@ -509,8 +509,11 @@ EXPORTS
 	gst_pad_activate_pull
 	gst_pad_activate_push
 	gst_pad_add_buffer_probe
+	gst_pad_add_buffer_probe_full
 	gst_pad_add_data_probe
+	gst_pad_add_data_probe_full
 	gst_pad_add_event_probe
+	gst_pad_add_event_probe_full
 	gst_pad_alloc_buffer
 	gst_pad_alloc_buffer_and_set_caps
 	gst_pad_can_link

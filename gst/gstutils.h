@@ -664,17 +664,37 @@ void			gst_buffer_stamp		(GstBuffer * dest, const GstBuffer * src);
 void                    gst_atomic_int_set              (gint * atomic_int, gint value);
 
 /* probes */
-gulong			gst_pad_add_data_probe		(GstPad * pad,
-							 GCallback handler,
-							 gpointer data);
+gulong			gst_pad_add_data_probe		(GstPad   * pad,
+							 GCallback  handler,
+							 gpointer   data);
+
+gulong			gst_pad_add_data_probe_full	(GstPad       * pad,
+							 GCallback      handler,
+							 gpointer       data,
+							 GDestroyNotify notify);
+
 void			gst_pad_remove_data_probe	(GstPad * pad, guint handler_id);
-gulong			gst_pad_add_event_probe		(GstPad * pad,
-							 GCallback handler,
-							 gpointer data);
+
+gulong			gst_pad_add_event_probe		(GstPad   * pad,
+							 GCallback  handler,
+							 gpointer   data);
+
+gulong			gst_pad_add_event_probe_full	(GstPad       * pad,
+							 GCallback      handler,
+							 gpointer       data,
+							 GDestroyNotify notify);
+
 void			gst_pad_remove_event_probe	(GstPad * pad, guint handler_id);
-gulong			gst_pad_add_buffer_probe	(GstPad * pad,
-							 GCallback handler,
-							 gpointer data);
+
+gulong			gst_pad_add_buffer_probe	(GstPad   * pad,
+							 GCallback  handler,
+							 gpointer   data);
+
+gulong			gst_pad_add_buffer_probe_full	(GstPad       * pad,
+							 GCallback      handler,
+							 gpointer       data,
+							 GDestroyNotify notify);
+
 void			gst_pad_remove_buffer_probe	(GstPad * pad, guint handler_id);
 
 /* tag emission utility functions */

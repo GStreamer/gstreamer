@@ -2872,13 +2872,60 @@ gst_atomic_int_set (gint * atomic_int, gint value)
 gulong
 gst_pad_add_data_probe (GstPad * pad, GCallback handler, gpointer data)
 {
+  return gst_pad_add_data_probe_full (pad, handler, data, NULL);
+}
+
+/**
+ * gst_pad_add_data_probe_full:
+ * @pad: pad to add the data probe handler to
+ * @handler: function to call when data is passed over pad
+ * @data: data to pass along with the handler
+ * @notify: function to call when the probe is disconnected, or NULL
+ *
+ * Adds a "data probe" to a pad. This function will be called whenever data
+ * passes through a pad. In this case data means both events and buffers. The
+ * probe will be called with the data as an argument, meaning @handler should
+ * have the same callback signature as the #GstPad::have-data signal.
+ * Note that the data will have a reference count greater than 1, so it will
+ * be immutable -- you must not change it.
+ *
+ * For source pads, the probe will be called after the blocking function, if any
+ * (see gst_pad_set_blocked_async()), but before looking up the peer to chain
+ * to. For sink pads, the probe function will be called before configuring the
+ * sink with new caps, if any, and before calling the pad's chain function.
+ *
+ * Your data probe should return TRUE to let the data continue to flow, or FALSE
+ * to drop it. Dropping data is rarely useful, but occasionally comes in handy
+ * with events.
+ *
+ * Although probes are implemented internally by connecting @handler to the
+ * have-data signal on the pad, if you want to remove a probe it is insufficient
+ * to only call g_signal_handler_disconnect on the returned handler id. To
+ * remove a probe, use the appropriate function, such as
+ * gst_pad_remove_data_probe().
+ *
+ * The @notify function is called when the probe is disconnected and usually
+ * used to free @data.
+ *
+ * Returns: The handler id.
+ *
+ * Since: 0.10.20
+ */
+gulong
+gst_pad_add_data_probe_full (GstPad * pad, GCallback handler,
+    gpointer data, GDestroyNotify notify)
+{
   gulong sigid;
 
   g_return_val_if_fail (GST_IS_PAD (pad), 0);
   g_return_val_if_fail (handler != NULL, 0);
 
   GST_OBJECT_LOCK (pad);
-  sigid = g_signal_connect (pad, "have-data", handler, data);
+
+  /* we only expose a GDestroyNotify in our API because that's less confusing */
+  sigid = g_signal_connect_data (pad, "have-data", handler, data,
+      (GClosureNotify) notify, 0);
+
   GST_PAD_DO_EVENT_SIGNALS (pad)++;
   GST_PAD_DO_BUFFER_SIGNALS (pad)++;
   GST_DEBUG ("adding data probe to pad %s:%s, now %d data, %d event probes",
@@ -2903,13 +2950,41 @@ gst_pad_add_data_probe (GstPad * pad, GCallback handler, gpointer data)
 gulong
 gst_pad_add_event_probe (GstPad * pad, GCallback handler, gpointer data)
 {
+  return gst_pad_add_event_probe_full (pad, handler, data, NULL);
+}
+
+/**
+ * gst_pad_add_event_probe_full:
+ * @pad: pad to add the event probe handler to
+ * @handler: function to call when events are passed over pad
+ * @data: data to pass along with the handler, or NULL
+ * @notify: function to call when probe is disconnected, or NULL
+ *
+ * Adds a probe that will be called for all events passing through a pad. See
+ * gst_pad_add_data_probe() for more information.
+ *
+ * The @notify function is called when the probe is disconnected and usually
+ * used to free @data.
+ *
+ * Returns: The handler id
+ *
+ * Since: 0.10.20
+ */
+gulong
+gst_pad_add_event_probe_full (GstPad * pad, GCallback handler,
+    gpointer data, GDestroyNotify notify)
+{
   gulong sigid;
 
   g_return_val_if_fail (GST_IS_PAD (pad), 0);
   g_return_val_if_fail (handler != NULL, 0);
 
   GST_OBJECT_LOCK (pad);
-  sigid = g_signal_connect (pad, "have-data::event", handler, data);
+
+  /* we only expose a GDestroyNotify in our API because that's less confusing */
+  sigid = g_signal_connect_data (pad, "have-data::event", handler, data,
+      (GClosureNotify) notify, 0);
+
   GST_PAD_DO_EVENT_SIGNALS (pad)++;
   GST_DEBUG ("adding event probe to pad %s:%s, now %d probes",
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
@@ -2932,13 +3007,41 @@ gst_pad_add_event_probe (GstPad * pad, GCallback handler, gpointer data)
 gulong
 gst_pad_add_buffer_probe (GstPad * pad, GCallback handler, gpointer data)
 {
+  return gst_pad_add_buffer_probe_full (pad, handler, data, NULL);
+}
+
+/**
+ * gst_pad_add_buffer_probe_full:
+ * @pad: pad to add the buffer probe handler to
+ * @handler: function to call when buffer are passed over pad
+ * @data: data to pass along with the handler
+ * @notify: function to call when the probe is disconnected, or NULL
+ *
+ * Adds a probe that will be called for all buffers passing through a pad. See
+ * gst_pad_add_data_probe() for more information.
+ *
+ * The @notify function is called when the probe is disconnected and usually
+ * used to free @data.
+ *
+ * Returns: The handler id
+ *
+ * Since: 0.10.20
+ */
+gulong
+gst_pad_add_buffer_probe_full (GstPad * pad, GCallback handler,
+    gpointer data, GDestroyNotify notify)
+{
   gulong sigid;
 
   g_return_val_if_fail (GST_IS_PAD (pad), 0);
   g_return_val_if_fail (handler != NULL, 0);
 
   GST_OBJECT_LOCK (pad);
-  sigid = g_signal_connect (pad, "have-data::buffer", handler, data);
+
+  /* we only expose a GDestroyNotify in our API because that's less confusing */
+  sigid = g_signal_connect_data (pad, "have-data::buffer", handler, data,
+      (GClosureNotify) notify, 0);
+
   GST_PAD_DO_BUFFER_SIGNALS (pad)++;
   GST_DEBUG ("adding buffer probe to pad %s:%s, now %d probes",
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_BUFFER_SIGNALS (pad));

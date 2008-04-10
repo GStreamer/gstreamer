@@ -1236,8 +1236,11 @@ gst_pad_is_blocked
 gst_pad_is_blocking
 
 gst_pad_add_data_probe
+gst_pad_add_data_probe_full
 gst_pad_add_buffer_probe
+gst_pad_add_buffer_probe_full
 gst_pad_add_event_probe
+gst_pad_add_event_probe_full
 gst_pad_remove_data_probe
 gst_pad_remove_buffer_probe
 gst_pad_remove_event_probe

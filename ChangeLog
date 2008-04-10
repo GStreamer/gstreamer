@@ -1,5 +1,30 @@
 2008-04-10  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Based on patch by: José Alburquerque <jaalburqu at svn dot gnome dot org>
+
+	* gst/gstutils.c: (gst_pad_add_data_probe),
+	  (gst_pad_add_data_probe_full), (gst_pad_add_event_probe),
+	  (gst_pad_add_event_probe_full), (gst_pad_add_buffer_probe),
+	  (gst_pad_add_buffer_probe_full):
+	* gst/gstutils.h:
+	* docs/gst/gstreamer-sections.txt:
+	* win32/common/libgstreamer.def:
+	  Add gst_pad_add_*_probe_full() functions with a notify callback that
+	  lets the caller free the data it passes to the probe functions. This
+	  is useful for bindings such as gst-python or gstreamermm (#526814).
+	  API: gst_pad_add_data_probe_full
+	  API: gst_pad_add_buffer_probe_full
+	  API: gst_pad_add_event_probe_full
+
+	* tests/check/gst/gstutils.c:
+	  Add minimal unit test to make sure freeing the data actually works
+	  as expected.
+
+	* tests/benchmarks/.cvsignore:
+	  Random cvsignore addendum.
+
+2008-04-10  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstdebugutils.h: (GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS),
 	  (GST_DEBUG_BIN_TO_DOT_FILE):
 	  Mention GstDebugGraphDetails enum type in doc blurb so we get a link

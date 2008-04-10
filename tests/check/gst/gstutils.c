@@ -29,6 +29,12 @@ static int n_buffer_probes = 0;
 static int n_event_probes = 0;
 
 static gboolean
+probe_do_nothing (GstPad * pad, GstMiniObject * obj, gpointer data)
+{
+  return TRUE;
+}
+
+static gboolean
 data_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
 {
   n_data_probes++;
@@ -75,10 +81,22 @@ GST_START_TEST (test_buffer_probe_n_times)
   gst_element_link (fakesrc, fakesink);
 
   pad = gst_element_get_pad (fakesink, "sink");
+
+  /* add the probes we need for the test */
   gst_pad_add_data_probe (pad, G_CALLBACK (data_probe), SPECIAL_POINTER (0));
   gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe),
       SPECIAL_POINTER (1));
   gst_pad_add_event_probe (pad, G_CALLBACK (event_probe), SPECIAL_POINTER (2));
+
+  /* add some probes just to test that _full works and the data is free'd
+   * properly as it should be */
+  gst_pad_add_data_probe_full (pad, G_CALLBACK (probe_do_nothing),
+      g_strdup ("data probe string"), (GDestroyNotify) g_free);
+  gst_pad_add_buffer_probe_full (pad, G_CALLBACK (probe_do_nothing),
+      g_strdup ("buffer probe string"), (GDestroyNotify) g_free);
+  gst_pad_add_event_probe_full (pad, G_CALLBACK (probe_do_nothing),
+      g_strdup ("event probe string"), (GDestroyNotify) g_free);
+
   gst_object_unref (pad);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
