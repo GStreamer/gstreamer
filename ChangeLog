@@ -1,3 +1,11 @@
+2008-04-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstdebugutils.h: (GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS),
+	  (GST_DEBUG_BIN_TO_DOT_FILE):
+	  Mention GstDebugGraphDetails enum type in doc blurb so we get a link
+	  to it in the docs (since these are macros the types of the arguments
+	  won't be shown in the docs otherwise).
+
 2008-04-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstpad.c:

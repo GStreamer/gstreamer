@@ -59,7 +59,8 @@ void _gst_debug_bin_to_dot_file_with_ts (GstBin *bin, GstDebugGraphDetails detai
 /**
  * GST_DEBUG_BIN_TO_DOT_FILE:
  * @bin: the top-level pipeline that should be analyzed
- * @details: graph-details to show
+ * @details: details to show in the graph, e.g. #GST_DEBUG_GRAPH_SHOW_ALL or
+ *    one or more other #GstDebugGraphDetails flags.
  * @file_name: output base filename (e.g. "myplayer")
  *
  * To aid debugging applications one can use this method to write out the whole
@@ -78,7 +79,8 @@ void _gst_debug_bin_to_dot_file_with_ts (GstBin *bin, GstDebugGraphDetails detai
 /**
  * GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS:
  * @bin: the top-level pipeline that should be analyzed
- * @details: graph-details to show
+ * @details: details to show in the graph, e.g. #GST_DEBUG_GRAPH_SHOW_ALL or
+ *    one or more other #GstDebugGraphDetails flags.
  * @file_name: output base filename (e.g. "myplayer")
  *
  * This works like _gst_debug_bin_to_dot_file(), but adds the current timestamp
