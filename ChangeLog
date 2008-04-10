@@ -1,5 +1,10 @@
 2008-04-10  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstpad.c:
+	  Do not abort on out of memory for pad_alloc_buffer.
+
+2008-04-10  Stefan Kost  <ensonic@users.sf.net>
+
 	* libs/gst/check/gstcheck.c:
 	  Remove blank line between symbol name ad parameters to fix gtkdoc
 	  warning.
