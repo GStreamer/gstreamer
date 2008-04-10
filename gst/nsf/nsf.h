@@ -104,7 +104,7 @@ typedef struct nsf_s
    apu_t *apu;
 
    /* our main processing routine, calls all external mixing routines */
-   void (*process)(void *buffer, int num_samples);
+   void (*process)(uint8 *buffer, int num_samples);
 } nsf_t;
 
 /* $$$ ben : Generic loader struct */
@@ -148,7 +148,12 @@ extern int nsf_setfilter(nsf_t *nsf, int filter_type);
 
 /*
 ** $Log$
-** Revision 1.2  2008/03/25 15:56:12  slomo
+** Revision 1.3  2008/04/10 10:01:48  tpm
+** 	* gst/nsf/nsf.h:
+** 	  Change prototype of process function here too to avoid
+** 	  'incompatible assignment' warnings.
+**
+** Revision 1.2  2008-03-25 15:56:12  slomo
 ** Patch by: Andreas Henriksson <andreas at fatal dot set>
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/dis6502.h:

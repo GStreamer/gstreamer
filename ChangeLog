@@ -1,3 +1,9 @@
+2008-04-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/nsf/nsf.h:
+	  Change prototype of process function here too to avoid
+	  'incompatible assignment' warnings.
+
 2008-04-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/elements/souphttpsrc.c: (got_buffer),
