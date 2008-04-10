@@ -1039,6 +1039,14 @@ AG_GST_CHECK_FEATURE(OSS4, [Open Sound System 4], oss4, [
       [HAVE_OSS4="yes"], [HAVE_OSS4="no"])
 ])
 
+dnl *** wininet ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_WININET, true)
+AG_GST_CHECK_FEATURE(WININET, [Windows internet library], wininet, [
+  AC_MSG_CHECKING([Checking for windows internet support])
+  AC_CHECK_HEADERS([windows.h wininet.h],
+      [HAVE_WININET="yes"], [HAVE_WININET="no"])
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -1085,6 +1093,7 @@ AM_CONDITIONAL(USE_TIMIDITY, false)
 AM_CONDITIONAL(USE_X264, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
+AM_CONDITIONAL(USE_WININET, false)
 
 fi dnl of EXT plugins
 
@@ -1194,6 +1203,7 @@ sys/fbdev/Makefile
 sys/oss4/Makefile
 sys/qtwrapper/Makefile
 sys/vcd/Makefile
+sys/wininet/Makefile
 examples/Makefile
 examples/app/Makefile
 examples/directfb/Makefile

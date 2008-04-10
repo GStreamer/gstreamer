@@ -1,5 +1,16 @@
 2008-04-10  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/wininet/Makefile.am:
+	* sys/wininet/gstwininetsrc.c:
+	* sys/wininet/gstwininetsrc.h:
+	  Add wininetsrc for basic http/ftp support on windows (#520897).
+
+2008-04-10  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/nsf/nsf.h:
 	  Change prototype of process function here too to avoid
 	  'incompatible assignment' warnings.
