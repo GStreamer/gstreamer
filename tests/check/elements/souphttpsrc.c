@@ -214,8 +214,9 @@ got_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
     return;
 
   /* Otherwise they _must_ be "application/x-icy" */
+  fail_unless (GST_BUFFER_CAPS (buf) != NULL);
   s = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
-  assert_equals_string (gst_structure_get_name (s), "application/x-icy");
+  fail_unless_equals_string (gst_structure_get_name (s), "application/x-icy");
 }
 
 GST_START_TEST (test_icy_stream)
@@ -305,6 +306,7 @@ souphttpsrc_suite (void)
 
   Suite *s = suite_create ("souphttpsrc");
   TCase *tc_chain = tcase_create ("general");
+  TCase *tc_internet = tcase_create ("internet");
 
   suite_add_tcase (s, tc_chain);
   run_server (&http_port, &https_port);
@@ -315,7 +317,10 @@ souphttpsrc_suite (void)
   tcase_add_test (tc_chain, test_not_found);
   tcase_add_test (tc_chain, test_forbidden);
   tcase_add_test (tc_chain, test_cookies);
-  tcase_add_test (tc_chain, test_icy_stream);
+
+  suite_add_tcase (s, tc_internet);
+  tcase_set_timeout (tc_internet, 250);
+  tcase_add_test (tc_internet, test_icy_stream);
 
   return s;
 }

@@ -1,3 +1,13 @@
+2008-04-10  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/elements/souphttpsrc.c: (got_buffer),
+	(souphttpsrc_suite):
+	Increase the timeout for the internet tests to 250 seconds
+	and check for NULL caps instead of just crashing.
+	The real fix would be to implement an shoutcast server for the unit test
+	instead of relying on a working internet connection.
+	Fixes bug #521749.
+
 2008-04-10  Peter Kjellerstedt  <pkj@axis.com>
 
 	* gst/rtpmanager/gstrtpbin.c: (free_session):
