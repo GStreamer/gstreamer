@@ -1,3 +1,9 @@
+2008-04-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/check/gstcheck.c:
+	  Remove blank line between symbol name ad parameters to fix gtkdoc
+	  warning.
+
 2008-04-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by:  José Alburquerque <jaalburqu at svn dot gnome dot org>

@@ -384,7 +384,6 @@ gst_check_drop_buffers (void)
 
 /**
  * gst_check_caps_equal:
- *
  * @caps1: first caps to compare
  * @caps2: second caps to compare
  *
