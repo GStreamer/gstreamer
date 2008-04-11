@@ -1,5 +1,17 @@
 2008-04-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/icles/metadata_editor.c: (ENC_UNKNOWN), (last_pixbuf),
+	  (draw_pixbuf), (change_tag_list), (update_draw_pixbuf),
+	  (ui_drawing_size_allocate_cb), (on_drawingMain_expose_event),
+	  (on_buttonSaveFile_clicked), (ui_create), (me_gst_bus_callback_view),
+	  (me_gst_setup_view_pipeline), (process_file):
+	* tests/icles/metadata_editor.glade:
+	  Remove GstXOverlay stuff and use gdkpixbufsink plus some rather crude
+	  drawing/scaling logic to make this compile and work on all platforms.
+	  Fixes #518227.
+
+2008-04-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Bump core/base requirements to released versions to avoid
 	  confusion.

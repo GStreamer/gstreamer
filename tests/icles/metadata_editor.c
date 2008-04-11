@@ -49,8 +49,6 @@
 #include <gst/gst.h>
 #include <glade/glade-xml.h>
 #include <gtk/gtk.h>
-#include <gst/interfaces/xoverlay.h>
-#include <gdk/gdkx.h>
 
 /*
  * Global constants
@@ -86,8 +84,7 @@ typedef enum _AppOptions {
 /* gstreamer related functions */
 
 static void me_gst_cleanup_elements ();
-static int
-me_gst_setup_view_pipeline (const gchar * filename, GdkWindow * window);
+static int me_gst_setup_view_pipeline (const gchar * filename);
 static int
 me_gst_setup_capture_pipeline (const gchar * src_file, const gchar * dest_file,
     gint * encode_status, gboolean use_v4l2);
@@ -114,6 +111,9 @@ GstElement *gst_video_convert = NULL;
 GstElement *gst_video_sink = NULL;
 GstElement *gst_file_sink = NULL;
 GstElement *gst_pipeline = NULL;
+
+GdkPixbuf *last_pixbuf = NULL;  /* image as pixbuf at original size */
+GdkPixbuf *draw_pixbuf = NULL;  /* pixbuf resized for drawing       */
 
 AppOptions app_options = APP_OPT_ALL;
 
@@ -259,39 +259,88 @@ done:
 
 }
 
+static void
+update_draw_pixbuf (guint max_width, guint max_height)
+{
+  gdouble wratio, hratio;
+  gint w = 0, h = 0;
+
+  if (last_pixbuf) {
+    w = gdk_pixbuf_get_width (last_pixbuf);
+    h = gdk_pixbuf_get_height (last_pixbuf);
+  }
+
+  g_print ("Allocation: %dx%d, pixbuf: %dx%d\n", max_width, max_height, w, h);
+
+  if (last_pixbuf == NULL)
+    return;
+
+  g_return_if_fail (max_width > 0 && max_height > 0);
+  wratio = w * 1.0 / max_width * 1.0;
+  hratio = h * 1.0 / max_height;
+  g_print ("ratios = %.2f / %.2f\n", wratio, hratio);
+
+  if (hratio > wratio) {
+    w = (gint) (w * 1.0 / hratio);
+    h = (gint) (h * 1.0 / hratio);
+  } else {
+    w = (gint) (w * 1.0 / wratio);
+    h = (gint) (h * 1.0 / wratio);
+  }
+
+  if (draw_pixbuf != NULL && gdk_pixbuf_get_width (draw_pixbuf) == w &&
+      gdk_pixbuf_get_height (last_pixbuf) == h) {
+    return; /* nothing to do */
+  }
+
+  g_print ("drawing pixbuf at %dx%d\n", w, h);
+
+  if (draw_pixbuf)
+    g_object_unref (draw_pixbuf);
+
+  draw_pixbuf =
+      gdk_pixbuf_scale_simple (last_pixbuf, w, h, GDK_INTERP_BILINEAR);
+  
+}
+
+static void
+ui_drawing_size_allocate_cb (GtkWidget * drawing_area,
+    GtkAllocation * allocation, gpointer data)
+{
+  update_draw_pixbuf (allocation->width, allocation->height);
+}
 
 /*
  * UI handling functions (mapped by glade)
  */
 
 gboolean
-on_windowMain_configure_event (GtkWidget * widget, GdkEventConfigure * event,
-    gpointer user_data)
-{
-  GstXOverlay *xoverlay;
-
-  if (gst_video_sink) {
-
-    xoverlay = GST_X_OVERLAY (gst_video_sink);
-
-    if (xoverlay != NULL && GST_IS_X_OVERLAY (xoverlay)) {
-      gst_x_overlay_expose (xoverlay);
-    }
-
-  }
-
-  return FALSE;
-}
-
-gboolean
 on_drawingMain_expose_event (GtkWidget * widget, GdkEventExpose * event,
     gpointer data)
 {
-  if (gst_video_sink) {
-    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (gst_video_sink),
-        GDK_WINDOW_XWINDOW (widget->window));
-  }
-  return FALSE;
+  GtkAllocation a = widget->allocation;
+  gint w, h, x, y;
+
+  if (draw_pixbuf == NULL)
+    return FALSE;
+
+  w = gdk_pixbuf_get_width (draw_pixbuf);
+  h = gdk_pixbuf_get_height (draw_pixbuf);
+
+  /* center image */
+  x = (a.width - w) / 2;
+  y = (a.height - h) / 2;
+
+  /* sanity check, shouldn't happen */
+  if (x < 0)
+    x = 0;
+  if (y < 0)
+    y = 0;
+
+  gdk_draw_pixbuf (GDK_DRAWABLE (widget->window), widget->style->black_gc,
+      draw_pixbuf, 0, 0, x, y, w, h, GDK_RGB_DITHER_NONE, 0, 0);
+
+  return TRUE; /* handled expose event */
 }
 
 void
@@ -421,7 +470,7 @@ on_buttonSaveFile_clicked (GtkButton * button, gpointer user_data)
       tag_list = NULL;
     }
 
-    me_gst_setup_view_pipeline (filename->str, ui_drawing->window);
+    me_gst_setup_view_pipeline (filename->str);
 
     gst_element_set_state (gst_pipeline, GST_STATE_PLAYING);
     gst_element_get_state (gst_pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
@@ -734,9 +783,6 @@ ui_connect_signals()
   glade_xml_signal_connect(ui_glade_xml, "on_drawingMain_expose_event",
       (GCallback)on_drawingMain_expose_event);
 
-  glade_xml_signal_connect(ui_glade_xml, "on_windowMain_configure_event",
-      (GCallback)on_windowMain_configure_event);
-
   glade_xml_signal_connect(ui_glade_xml, "on_buttonInsert_clicked",
       (GCallback)on_buttonInsert_clicked);
 
@@ -787,6 +833,9 @@ ui_create ()
     ret = -105;
     goto done;
   }
+
+  g_signal_connect_after (ui_drawing, "size-allocate",
+      G_CALLBACK (ui_drawing_size_allocate_cb), NULL);
 
   ui_connect_signals();
 
@@ -898,6 +947,37 @@ me_gst_bus_callback_view (GstBus * bus, GstMessage * message, gpointer data)
         gst_tag_list_foreach (tag_list, insert_tag_on_tree, ui_tree);
       }
       break;
+    case GST_MESSAGE_ELEMENT: {
+      const GValue *val;
+
+      /* only interested in element messages from our gdkpixbufsink */
+      if (message->src != GST_OBJECT_CAST (gst_video_sink))
+        break;
+
+      /* only interested in the first image (not any smaller previews) */
+      if (gst_structure_has_name (message->structure, "pixbuf"))
+        break;
+
+      if (!gst_structure_has_name (message->structure, "preroll-pixbuf"))
+        break;
+
+      val = gst_structure_get_value (message->structure, "pixbuf");
+      g_return_val_if_fail (val != NULL, TRUE);
+
+      if (last_pixbuf)
+        g_object_unref (last_pixbuf);
+
+      last_pixbuf = g_value_dup_object (val);
+
+      g_print ("Got image pixbuf: %dx%d\n", gdk_pixbuf_get_width (last_pixbuf),
+          gdk_pixbuf_get_height (last_pixbuf));
+
+      update_draw_pixbuf (GTK_WIDGET (ui_drawing)->allocation.width,
+          GTK_WIDGET (ui_drawing)->allocation.height);
+
+      gtk_widget_queue_draw (ui_drawing);
+      break;
+    }
     default:
       /* unhandled message */
       break;
@@ -1171,7 +1251,7 @@ done:
 }
 
 static int
-me_gst_setup_view_pipeline (const gchar * filename, GdkWindow * window)
+me_gst_setup_view_pipeline (const gchar * filename)
 {
   int ret = 0;
   GstBus *bus = NULL;
@@ -1189,8 +1269,18 @@ me_gst_setup_view_pipeline (const gchar * filename, GdkWindow * window)
     gst_image_dec = gst_element_factory_make ("jpegdec", NULL);
   gst_video_scale = gst_element_factory_make ("videoscale", NULL);
   gst_video_convert = gst_element_factory_make ("ffmpegcolorspace", NULL);
-  gst_video_sink = gst_element_factory_make ("ximagesink", NULL);
+  gst_video_sink = gst_element_factory_make ("gdkpixbufsink", NULL);
 
+  if (gst_video_sink == NULL) {
+    if (!gst_default_registry_check_feature_version ("gdkpixbufdec", 0, 10, 0))
+      g_warning ("Could not create 'gdkpixbufsink' element");
+    else {
+      g_warning ("Could not create 'gdkpixbufsink' element. "
+          "(May be your gst-plugins-good is too old?)");
+    ret = -400;
+    }
+    goto done;
+  }
   if (!(gst_source && gst_metadata_demux && gst_image_dec && gst_video_scale
           && gst_video_convert && gst_video_sink)) {
     fprintf (stderr, "An element couldn't be created for viewing\n");
@@ -1210,7 +1300,6 @@ me_gst_setup_view_pipeline (const gchar * filename, GdkWindow * window)
   /* set elements's properties */
   g_object_set (gst_source, "location", filename, NULL);
   g_object_set (gst_metadata_demux, "parse-only", TRUE, NULL);
-  g_object_set (gst_video_sink, "force-aspect-ratio", TRUE, NULL);
 
 
   /* adding and linking elements */
@@ -1225,9 +1314,10 @@ me_gst_setup_view_pipeline (const gchar * filename, GdkWindow * window)
       gst_video_convert = NULL;
   gst_object_ref (gst_video_sink);
 
-  if (window)
-    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (gst_video_sink),
-        GDK_WINDOW_XWINDOW (window));
+  if (last_pixbuf) {
+    g_object_unref (last_pixbuf);
+    last_pixbuf = NULL;
+  }
 
   if (!linked) {
     fprintf (stderr, "Elements couldn't be linked\n");
@@ -1258,7 +1348,7 @@ process_file() {
   }
 
   /* create pipeline */
-  me_gst_setup_view_pipeline (filename->str, ui_drawing->window);
+  me_gst_setup_view_pipeline (filename->str);
 
   gst_element_set_state (gst_pipeline, GST_STATE_PLAYING);
 

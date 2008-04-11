@@ -7,7 +7,6 @@
     <property name="height_request">600</property>
     <property name="events">GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <property name="title" translatable="yes">Metadata Editor</property>
-    <signal name="configure_event" handler="on_windowMain_configure_event"/>
     <signal name="delete_event" handler="on_windowMain_delete_event"/>
     <child>
       <widget class="GtkVPaned" id="vpanedMain">
