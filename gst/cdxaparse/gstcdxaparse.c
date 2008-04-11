@@ -25,9 +25,12 @@
 #include <string.h>
 
 #include "gstcdxaparse.h"
-/* #include "gstcdxastrip.h" */
+#include "gstvcdparse.h"
+
 #include <gst/riff/riff-ids.h>
 #include <gst/riff/riff-read.h>
+
+GST_DEBUG_CATEGORY (vcdparse_debug);
 
 GST_DEBUG_CATEGORY_STATIC (cdxaparse_debug);
 #define GST_CAT_DEFAULT cdxaparse_debug
@@ -552,13 +555,15 @@ gst_cdxa_parse_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "cdxaparse", GST_RANK_PRIMARY, GST_TYPE_CDXA_PARSE)        /* ||
-                                                                                                   !gst_element_register (plugin, "cdxastrip", GST_RANK_PRIMARY,
-                                                                                                   GST_TYPE_CDXASTRIP) */ ) {
-    return FALSE;
-  }
-
   GST_DEBUG_CATEGORY_INIT (cdxaparse_debug, "cdxaparse", 0, "CDXA Parser");
+  GST_DEBUG_CATEGORY_INIT (vcdparse_debug, "vcdparse", 0, "VCD Parser");
+
+  if (!gst_element_register (plugin, "cdxaparse", GST_RANK_PRIMARY,
+          GST_TYPE_CDXA_PARSE))
+    return FALSE;
+  if (!gst_element_register (plugin, "vcdparse", GST_RANK_PRIMARY,
+          GST_TYPE_VCD_PARSE))
+    return FALSE;
 
   return TRUE;
 }

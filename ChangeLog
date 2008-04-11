@@ -1,3 +1,14 @@
+2008-04-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/cdxaparse/Makefile.am:
+	* gst/cdxaparse/gstcdxaparse.c:
+	* gst/cdxaparse/gstcdxastrip.c:
+	* gst/cdxaparse/gstcdxastrip.h:
+	* gst/cdxaparse/gstvcdparse.c:
+	* gst/cdxaparse/gstvcdparse.h:
+	  Port VCD parser (formerly cdxastrip) from 0.8 to 0.10. Doesn't do
+	  anything the 0.8 version didn't do though.
+
 2008-04-11  Julien Moutte  <julien@fluendo.com>
 
 	* sys/oss4/oss4-mixer-enum.c:

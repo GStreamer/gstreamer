@@ -1,5 +1,6 @@
-/* GStreamer CDXA sync strippper
+/* GStreamer CDXA sync strippper / VCD parser
  * Copyright (C) 2004 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2008 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,51 +18,47 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_CDXASTRIP_H__
-#define __GST_CDXASTRIP_H__
+#ifndef __GST_VCD_PARSE_H__
+#define __GST_VCD_PARSE_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CDXASTRIP \
-  (gst_cdxastrip_get_type())
-#define GST_CDXASTRIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CDXASTRIP,GstCDXAStrip))
-#define GST_CDXASTRIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CDXASTRIP,GstCDXAStripClass))
-#define GST_IS_CDXASTRIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CDXASTRIP))
-#define GST_IS_CDXASTRIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDXASTRIP))
+#define GST_TYPE_VCD_PARSE \
+  (gst_vcd_parse_get_type())
+#define GST_VCD_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VCD_PARSE,GstVcdParse))
+#define GST_VCD_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VCD_PARSE,GstVcdParseClass))
+#define GST_IS_VCD_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VCD_PARSE))
+#define GST_IS_VCD_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VCD_PARSE))
 
 #define GST_CDXA_SECTOR_SIZE    2352
 #define GST_CDXA_DATA_SIZE      2324
 #define GST_CDXA_HEADER_SIZE    24
 
-typedef struct _GstCDXAStrip GstCDXAStrip;
-typedef struct _GstCDXAStripClass GstCDXAStripClass;
+typedef struct _GstVcdParse GstVcdParse;
+typedef struct _GstVcdParseClass GstVcdParseClass;
 
-struct _GstCDXAStrip {
-  GstElement parent;
+struct _GstVcdParse {
+  GstElement element;
 
-  /* pads */
-  GstPad *sinkpad, *srcpad;
-  GstBuffer *cache;
+  GstPad     *sinkpad;
+  GstPad     *srcpad;
+  GstAdapter *adapter;
 };
 
-struct _GstCDXAStripClass {
-  GstElementClass parent_class;
+struct _GstVcdParseClass {
+  GstElementClass element_class;
 };
 
-GType           gst_cdxastrip_get_type  (void);
-
-/*
- * Also useful for CDXAparse.
- */
-GstBuffer *     gst_cdxastrip_strip     (GstBuffer * buf);
-gint            gst_cdxastrip_sync      (GstBuffer * buf);
+GType           gst_vcd_parse_get_type  (void);
 
 G_END_DECLS
 
-#endif /* __GST_CDXASTRIP_H__ */
+#endif /* __GST_VCD_PARSE_H__ */
+

@@ -1,21 +1,22 @@
 plugin_LTLIBRARIES = libgstcdxaparse.la
 
-#	gstcdxastrip.c
-#	gstcdxastrip.h
-
 libgstcdxaparse_la_SOURCES = \
-	gstcdxaparse.c
+	gstcdxaparse.c \
+	gstvcdparse.c
 
 
 noinst_HEADERS = \
-	gstcdxaparse.h
+	gstcdxaparse.h \
+	gstvcdparse.h
 
 libgstcdxaparse_la_CFLAGS = \
 	$(GST_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS)
 
 libgstcdxaparse_la_LIBADD = \
 	$(GST_LIBS) \
+	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstriff-@GST_MAJORMINOR@
 

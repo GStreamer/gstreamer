@@ -1,5 +1,6 @@
-/* GStreamer CDXA sync strippper
+/* GStreamer CDXA sync strippper / VCD parser
  * Copyright (C) 2004 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2008 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,389 +23,389 @@
 #endif
 
 #include <string.h>
-#include <gst/gst.h>
-#include "gstcdxastrip.h"
 
-static void gst_cdxastrip_base_init (GstCDXAStripClass * klass);
-static void gst_cdxastrip_class_init (GstCDXAStripClass * klass);
-static void gst_cdxastrip_init (GstCDXAStrip * cdxastrip);
+#include "gstvcdparse.h"
 
-static const GstEventMask *gst_cdxastrip_get_event_mask (GstPad * pad);
-static gboolean gst_cdxastrip_handle_src_event (GstPad * pad, GstEvent * event);
-static const GstFormat *gst_cdxastrip_get_src_formats (GstPad * pad);
-static const GstQueryType *gst_cdxastrip_get_src_query_types (GstPad * pad);
-static gboolean gst_cdxastrip_handle_src_query (GstPad * pad,
-    GstQueryType type, GstFormat * format, gint64 * value);
+GST_DEBUG_CATEGORY_EXTERN (vcdparse_debug);
+#define GST_CAT_DEFAULT vcdparse_debug
 
-static void gst_cdxastrip_chain (GstPad * pad, GstData * data);
-static GstStateChangeReturn gst_cdxastrip_change_state (GstElement * element,
+static gboolean gst_vcd_parse_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_vcd_parse_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_vcd_parse_src_query (GstPad * pad, GstQuery * query);
+static GstFlowReturn gst_vcd_parse_chain (GstPad * pad, GstBuffer * buf);
+static GstStateChangeReturn gst_vcd_parse_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstStaticPadTemplate sink_template_factory =
-GST_STATIC_PAD_TEMPLATE ("sink",
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-vcd")
     );
 
-static GstStaticPadTemplate src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/mpeg, " "systemstream = (boolean) TRUE")
+    GST_STATIC_CAPS ("video/mpeg, systemstream = (boolean) TRUE")
     );
 
-static GstElementClass *parent_class = NULL;
+GST_BOILERPLATE (GstVcdParse, gst_vcd_parse, GstElement, GST_TYPE_ELEMENT);
 
-GType
-gst_cdxastrip_get_type (void)
+static void
+gst_vcd_parse_base_init (gpointer klass)
 {
-  static GType cdxastrip_type = 0;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  if (!cdxastrip_type) {
-    static const GTypeInfo cdxastrip_info = {
-      sizeof (GstCDXAStripClass),
-      (GBaseInitFunc) gst_cdxastrip_base_init,
-      NULL,
-      (GClassInitFunc) gst_cdxastrip_class_init,
-      NULL,
-      NULL,
-      sizeof (GstCDXAStrip),
-      0,
-      (GInstanceInitFunc) gst_cdxastrip_init,
-    };
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
 
-    cdxastrip_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstCDXAStrip",
-        &cdxastrip_info, 0);
+  gst_element_class_set_details_simple (element_class, "(S)VCD stream parser",
+      "Codec/Parser", "Strip (S)VCD stream from its sync headers",
+      "Tim-Philipp Müller <tim centricular net>, "
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+}
+
+static void
+gst_vcd_parse_class_init (GstVcdParseClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_vcd_parse_change_state);
+}
+
+static void
+gst_vcd_parse_init (GstVcdParse * vcd, GstVcdParseClass * klass)
+{
+  vcd->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
+  gst_pad_set_chain_function (vcd->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_vcd_parse_chain));
+  gst_pad_set_event_function (vcd->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_vcd_parse_sink_event));
+  gst_element_add_pad (GST_ELEMENT (vcd), vcd->sinkpad);
+
+  vcd->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
+  gst_pad_set_event_function (vcd->srcpad,
+      GST_DEBUG_FUNCPTR (gst_vcd_parse_src_event));
+  gst_pad_set_query_function (vcd->srcpad,
+      GST_DEBUG_FUNCPTR (gst_vcd_parse_src_query));
+  gst_pad_use_fixed_caps (vcd->srcpad);
+  gst_pad_set_caps (vcd->srcpad,
+      gst_static_pad_template_get_caps (&src_factory));
+  gst_element_add_pad (GST_ELEMENT (vcd), vcd->srcpad);
+}
+
+/* These conversion functions assume there's no junk between sectors */
+
+static gint64
+gst_vcd_parse_get_out_offset (gint64 in_offset)
+{
+  gint64 out_offset, chunknum, rest;
+
+  if (in_offset == -1)
+    return -1;
+
+  if (G_UNLIKELY (in_offset < -1)) {
+    GST_WARNING ("unexpected/invalid in_offset %" G_GINT64_FORMAT, in_offset);
+    return in_offset;
   }
 
-  return cdxastrip_type;
+  chunknum = in_offset / GST_CDXA_SECTOR_SIZE;
+  rest = in_offset % GST_CDXA_SECTOR_SIZE;
+
+  out_offset = chunknum * GST_CDXA_DATA_SIZE;
+  if (rest > GST_CDXA_HEADER_SIZE) {
+    if (rest >= GST_CDXA_HEADER_SIZE + GST_CDXA_DATA_SIZE)
+      out_offset += GST_CDXA_DATA_SIZE;
+    else
+      out_offset += rest - GST_CDXA_HEADER_SIZE;
+  }
+
+  GST_LOG ("transformed in_offset %" G_GINT64_FORMAT " to out_offset %"
+      G_GINT64_FORMAT, in_offset, out_offset);
+
+  return out_offset;
 }
 
-static void
-gst_cdxastrip_base_init (GstCDXAStripClass * klass)
+static gint64
+gst_vcd_parse_get_in_offset (gint64 out_offset)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  static const GstElementDetails gst_cdxastrip_details =
-      GST_ELEMENT_DETAILS ("(S)VCD stream parser",
-      "Codec/Parser",
-      "Strip (S)VCD stream from its syncheaders",
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+  gint64 in_offset, chunknum, rest;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template_factory));
+  if (out_offset == -1)
+    return -1;
 
-  gst_element_class_set_details (element_class, &gst_cdxastrip_details);
-}
+  if (G_UNLIKELY (out_offset < -1)) {
+    GST_WARNING ("unexpected/invalid out_offset %" G_GINT64_FORMAT, out_offset);
+    return out_offset;
+  }
 
-static void
-gst_cdxastrip_class_init (GstCDXAStripClass * klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  chunknum = out_offset / GST_CDXA_DATA_SIZE;
+  rest = out_offset % GST_CDXA_DATA_SIZE;
 
-  parent_class = g_type_class_peek_parent (klass);
+  in_offset = chunknum * GST_CDXA_SECTOR_SIZE;
+  if (rest > 0)
+    in_offset += GST_CDXA_HEADER_SIZE + rest;
 
-  element_class->change_state = gst_cdxastrip_change_state;
-}
+  GST_LOG ("transformed out_offset %" G_GINT64_FORMAT " to in_offset %"
+      G_GINT64_FORMAT, out_offset, in_offset);
 
-static void
-gst_cdxastrip_init (GstCDXAStrip * cdxastrip)
-{
-  GST_OBJECT_FLAG_SET (cdxastrip, GST_ELEMENT_EVENT_AWARE);
-
-  cdxastrip->sinkpad =
-      gst_pad_new_from_static_template (&sink_template_factory, "sink");
-  gst_pad_set_chain_function (cdxastrip->sinkpad, gst_cdxastrip_chain);
-  gst_element_add_pad (GST_ELEMENT (cdxastrip), cdxastrip->sinkpad);
-
-  cdxastrip->srcpad =
-      gst_pad_new_from_static_template (&src_template_factory, "src");
-  gst_pad_set_formats_function (cdxastrip->srcpad,
-      gst_cdxastrip_get_src_formats);
-  gst_pad_set_event_mask_function (cdxastrip->srcpad,
-      gst_cdxastrip_get_event_mask);
-  gst_pad_set_event_function (cdxastrip->srcpad,
-      gst_cdxastrip_handle_src_event);
-  gst_pad_set_query_type_function (cdxastrip->srcpad,
-      gst_cdxastrip_get_src_query_types);
-  gst_pad_set_query_function (cdxastrip->srcpad,
-      gst_cdxastrip_handle_src_query);
-  gst_element_add_pad (GST_ELEMENT (cdxastrip), cdxastrip->srcpad);
-}
-
-/*
- * Stuff.
- */
-
-static const GstFormat *
-gst_cdxastrip_get_src_formats (GstPad * pad)
-{
-  static const GstFormat formats[] = {
-    GST_FORMAT_BYTES,
-    0
-  };
-
-  return formats;
-}
-
-static const GstQueryType *
-gst_cdxastrip_get_src_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_TOTAL,
-    GST_QUERY_POSITION,
-    0
-  };
-
-  return types;
+  return in_offset;
 }
 
 static gboolean
-gst_cdxastrip_handle_src_query (GstPad * pad,
-    GstQueryType type, GstFormat * format, gint64 * value)
+gst_vcd_parse_src_query (GstPad * pad, GstQuery * query)
 {
-  GstCDXAStrip *cdxa = GST_CDXASTRIP (gst_pad_get_parent (pad));
+  GstVcdParse *vcd = GST_VCD_PARSE (gst_pad_get_parent (pad));
+  gboolean res = FALSE;
 
-  if (!gst_pad_query (GST_PAD_PEER (cdxa->sinkpad), type, format, value))
-    return FALSE;
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_DURATION:{
+      GstFormat format;
+      gint64 dur;
 
-  if (*format != GST_FORMAT_BYTES)
-    return TRUE;
+      /* first try upstream */
+      if (!gst_pad_query_default (pad, query))
+        break;
 
-  switch (type) {
-    case GST_QUERY_TOTAL:
+      /* we can only handle BYTES */
+      gst_query_parse_duration (query, &format, &dur);
+      if (format != GST_FORMAT_BYTES)
+        break;
+
+      gst_query_set_duration (query, GST_FORMAT_BYTES,
+          gst_vcd_parse_get_out_offset (dur));
+
+      res = TRUE;
+      break;
+    }
     case GST_QUERY_POSITION:{
-      gint num, rest;
+      GstFormat format;
+      gint64 pos;
 
-      num = *value / GST_CDXA_SECTOR_SIZE;
-      rest = *value % GST_CDXA_SECTOR_SIZE;
+      /* first try upstream */
+      if (!gst_pad_query_default (pad, query))
+        break;
 
-      *value = num * GST_CDXA_DATA_SIZE;
-      if (rest > GST_CDXA_HEADER_SIZE) {
-        if (rest >= GST_CDXA_HEADER_SIZE + GST_CDXA_DATA_SIZE)
-          *value += GST_CDXA_DATA_SIZE;
-        else
-          *value += rest - GST_CDXA_HEADER_SIZE;
-      }
+      /* we can only handle BYTES */
+      gst_query_parse_position (query, &format, &pos);
+      if (format != GST_FORMAT_BYTES)
+        break;
+
+      gst_query_set_position (query, GST_FORMAT_BYTES,
+          gst_vcd_parse_get_out_offset (pos));
+
+      res = TRUE;
       break;
     }
     default:
+      res = gst_pad_query_default (pad, query);
       break;
   }
 
-  return TRUE;
-}
-
-static const GstEventMask *
-gst_cdxastrip_get_event_mask (GstPad * pad)
-{
-  static const GstEventMask masks[] = {
-    {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_KEY_UNIT},
-    {0,}
-  };
-
-  return masks;
+  gst_object_unref (vcd);
+  return res;
 }
 
 static gboolean
-gst_cdxastrip_handle_src_event (GstPad * pad, GstEvent * event)
+gst_vcd_parse_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstCDXAStrip *cdxa = GST_CDXASTRIP (gst_pad_get_parent (pad));
+  GstVcdParse *vcd = GST_VCD_PARSE (gst_pad_get_parent (pad));
+  gboolean res;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
-      switch (GST_EVENT_SEEK_FORMAT (event)) {
-        case GST_FORMAT_BYTES:{
-          GstEvent *new;
-          gint64 off;
-          gint num, rest;
+    case GST_EVENT_NEWSEGMENT:{
+      GstFormat format;
+      gboolean update;
+      gdouble rate, applied_rate;
+      gint64 start, stop, position;
 
-          off = GST_EVENT_SEEK_OFFSET (event);
-          num = off / GST_CDXA_DATA_SIZE;
-          rest = off % GST_CDXA_DATA_SIZE;
-          off = num * GST_CDXA_SECTOR_SIZE;
-          if (rest > 0)
-            off += rest + GST_CDXA_HEADER_SIZE;
-          new = gst_event_new_seek (GST_EVENT_SEEK_TYPE (event), off);
-          gst_event_unref (event);
-          event = new;
-        }
-        default:
-          break;
+      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+          &format, &start, &stop, &position);
+
+      if (format == GST_FORMAT_BYTES) {
+        gst_event_unref (event);
+        event = gst_event_new_new_segment_full (update, rate, applied_rate,
+            GST_FORMAT_BYTES, gst_vcd_parse_get_out_offset (start),
+            gst_vcd_parse_get_out_offset (stop), position);
+      } else {
+        GST_WARNING_OBJECT (vcd, "newsegment event in non-byte format");
       }
+      res = gst_pad_event_default (pad, event);
       break;
+    }
+    case GST_EVENT_FLUSH_START:
+      gst_adapter_clear (vcd->adapter);
+      /* fall through */
     default:
+      res = gst_pad_event_default (pad, event);
       break;
   }
 
-  return gst_pad_send_event (GST_PAD_PEER (cdxa->sinkpad), event);
+  gst_object_unref (vcd);
+  return res;
 }
 
-/*
- * A sector is 2352 bytes long and is composed of:
- * 
- * !  sync    !  header ! subheader ! data ...   ! edc     !
- * ! 12 bytes ! 4 bytes ! 8 bytes   ! 2324 bytes ! 4 bytes !
- * !-------------------------------------------------------!
- * 
- * We strip the data out of it and send it to the srcpad.
- * 
- * sync : 00 FF FF FF FF FF FF FF FF FF FF 00
- * header : hour minute second mode
- * sub-header : track channel sub_mode coding repeat (4 bytes)
- * edc : checksum
- */
-
-GstBuffer *
-gst_cdxastrip_strip (GstBuffer * buf)
+static gboolean
+gst_vcd_parse_src_event (GstPad * pad, GstEvent * event)
 {
-  GstBuffer *sub;
+  GstVcdParse *vcd = GST_VCD_PARSE (gst_pad_get_parent (pad));
+  gboolean res;
 
-  g_assert (GST_BUFFER_SIZE (buf) >= GST_CDXA_SECTOR_SIZE);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:{
+      GstSeekType start_type, stop_type;
+      GstSeekFlags flags;
+      GstFormat format;
+      gdouble rate;
+      gint64 start, stop;
 
-  /* Skip CDXA headers, only keep data.
-   * FIXME: check sync, resync, ... */
-  sub = gst_buffer_create_sub (buf, GST_CDXA_HEADER_SIZE, GST_CDXA_DATA_SIZE);
-  gst_buffer_unref (buf);
+      gst_event_parse_seek (event, &rate, &format, &flags, &start_type,
+          &start, &stop_type, &stop);
 
-  return sub;
-}
-
-/*
- * -1 = no sync (discard buffer),
- * otherwise offset indicates syncpoint in buffer.
- */
-
-gint
-gst_cdxastrip_sync (GstBuffer * buf)
-{
-  guint size, off = 0;
-  guint8 *data;
-
-  for (size = GST_BUFFER_SIZE (buf), data = GST_BUFFER_DATA (buf);
-      size >= 12; size--, data++, off++) {
-    /* we could do a checksum check as well, but who cares... */
-    if (!memcmp (data, "\000\377\377\377\377\377\377\377\377\377\377\000", 12))
-      return off;
+      if (format == GST_FORMAT_BYTES) {
+        gst_event_unref (event);
+        if (start_type != GST_SEEK_TYPE_NONE)
+          start = gst_vcd_parse_get_in_offset (start);
+        if (stop_type != GST_SEEK_TYPE_NONE)
+          stop = gst_vcd_parse_get_in_offset (stop);
+        event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, start_type,
+            start, stop_type, stop);
+      } else {
+        GST_WARNING_OBJECT (vcd, "seek event in non-byte format");
+      }
+      res = gst_pad_event_default (pad, event);
+      break;
+    }
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
   }
 
+  gst_object_unref (vcd);
+  return res;
+}
+
+/* -1 = no sync (discard buffer),
+ * otherwise offset indicates sync point in buffer */
+static gint
+gst_vcd_parse_sync (const guint8 * data, guint size)
+{
+  const guint8 sync_marker[12] = { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00
+  };
+  guint off = 0;
+
+  while (size >= 12) {
+    if (memcmp (data, sync_marker, 12) == 0)
+      return off;
+
+    --size;
+    ++data;
+    ++off;
+  }
   return -1;
 }
 
-/*
- * Do stuff.
- */
-
-static void
-gst_cdxastrip_handle_event (GstCDXAStrip * cdxa, GstEvent * event)
+static GstFlowReturn
+gst_vcd_parse_chain (GstPad * pad, GstBuffer * buf)
 {
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_DISCONTINUOUS:{
-      gint64 new_off, off;
+  GstVcdParse *vcd = GST_VCD_PARSE (GST_PAD_PARENT (pad));
+  GstFlowReturn flow = GST_FLOW_OK;
 
-      if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &new_off)) {
-        GstEvent *new;
-        gint chunknum, rest;
+  gst_adapter_push (vcd->adapter, buf);
+  buf = NULL;
 
-        chunknum = new_off / GST_CDXA_SECTOR_SIZE;
-        rest = new_off % GST_CDXA_SECTOR_SIZE;
-        off = chunknum * GST_CDXA_DATA_SIZE;
-        if (rest > GST_CDXA_HEADER_SIZE) {
-          if (rest >= GST_CDXA_HEADER_SIZE + GST_CDXA_DATA_SIZE)
-            off += GST_CDXA_DATA_SIZE;
-          else
-            off += rest - GST_CDXA_HEADER_SIZE;
-        }
-        new = gst_event_new_discontinuous (GST_EVENT_DISCONT_NEW_MEDIA (event),
-            GST_FORMAT_BYTES, new_off, GST_FORMAT_UNDEFINED);
-        gst_event_unref (event);
-        event = new;
-      }
-      gst_pad_event_default (cdxa->sinkpad, event);
+  while (gst_adapter_available (vcd->adapter) >= GST_CDXA_SECTOR_SIZE) {
+    const guint8 *data;
+    guint8 header[4 + 8];
+    gint sync_offset;
+
+    /* find sync (we could peek any size though really) */
+    data = gst_adapter_peek (vcd->adapter, GST_CDXA_SECTOR_SIZE);
+    sync_offset = gst_vcd_parse_sync (data, GST_CDXA_SECTOR_SIZE);
+    GST_LOG_OBJECT (vcd, "sync offset = %d", sync_offset);
+
+    if (sync_offset < 0) {
+      gst_adapter_flush (vcd->adapter, GST_CDXA_SECTOR_SIZE - 12);
+      continue;                 /* try again */
+    }
+
+    gst_adapter_flush (vcd->adapter, sync_offset);
+
+    if (gst_adapter_available (vcd->adapter) < GST_CDXA_SECTOR_SIZE) {
+      GST_LOG_OBJECT (vcd, "not enough data in adapter, waiting for more");
       break;
     }
-    case GST_EVENT_FLUSH:
-      if (cdxa->cache) {
-        gst_buffer_unref (cdxa->cache);
-        cdxa->cache = NULL;
-      }
-      /* fall-through */
-    default:
-      gst_pad_event_default (cdxa->sinkpad, event);
+
+    GST_LOG_OBJECT (vcd, "have full sector");
+
+    /* have one sector: a sector is 2352 bytes long and is composed of:
+     *
+     * +-------------------------------------------------------+
+     * !  sync    !  header ! subheader ! data ...   ! edc     !
+     * ! 12 bytes ! 4 bytes ! 8 bytes   ! 2324 bytes ! 4 bytes !
+     * +-------------------------------------------------------+
+     * 
+     * We strip the data out of it and send it to the srcpad.
+     * 
+     * sync       : 00 FF FF FF FF FF FF FF FF FF FF 00
+     * header     : hour minute second mode
+     * sub-header : track channel sub_mode coding repeat (4 bytes)
+     * edc        : checksum
+     */
+
+    /* Skip CDXA header and edc footer, only keep data in the middle */
+    gst_adapter_copy (vcd->adapter, header, 12, sizeof (header));
+    gst_adapter_flush (vcd->adapter, GST_CDXA_HEADER_SIZE);
+    buf = gst_adapter_take_buffer (vcd->adapter, GST_CDXA_DATA_SIZE);
+    gst_adapter_flush (vcd->adapter, 4);
+
+    /* we could probably do something clever to keep track of buffer offsets */
+    buf = gst_buffer_make_metadata_writable (buf);
+    GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+    gst_buffer_set_caps (buf, GST_PAD_CAPS (vcd->srcpad));
+
+    flow = gst_pad_push (vcd->srcpad, buf);
+    buf = NULL;
+
+    if (G_UNLIKELY (flow != GST_FLOW_OK)) {
+      GST_DEBUG_OBJECT (vcd, "flow: %s", gst_flow_get_name (flow));
       break;
-  }
-}
-
-static void
-gst_cdxastrip_chain (GstPad * pad, GstData * data)
-{
-  GstCDXAStrip *cdxa = GST_CDXASTRIP (gst_pad_get_parent (pad));
-  GstBuffer *buf, *sub;
-  gint sync;
-
-  if (GST_IS_EVENT (data)) {
-    gst_cdxastrip_handle_event (cdxa, GST_EVENT (data));
-    return;
-  }
-
-  buf = GST_BUFFER (data);
-  if (cdxa->cache) {
-    buf = gst_buffer_join (cdxa->cache, buf);
-  }
-  cdxa->cache = NULL;
-
-  while (buf && GST_BUFFER_SIZE (buf) >= GST_CDXA_SECTOR_SIZE) {
-    /* sync */
-    sync = gst_cdxastrip_sync (buf);
-    if (sync < 0) {
-      gst_buffer_unref (buf);
-      return;
     }
-    sub = gst_buffer_create_sub (buf, sync, GST_BUFFER_SIZE (buf) - sync);
-    gst_buffer_unref (buf);
-    buf = sub;
-    if (GST_BUFFER_SIZE (buf) < GST_CDXA_SECTOR_SIZE)
-      break;
-
-    /* one chunk */
-    sub = gst_cdxastrip_strip (gst_buffer_ref (buf));
-    gst_pad_push (cdxa->srcpad, GST_DATA (sub));
-
-    /* cache */
-    if (GST_BUFFER_SIZE (buf) != GST_CDXA_SECTOR_SIZE) {
-      sub = gst_buffer_create_sub (buf, GST_CDXA_SECTOR_SIZE,
-          GST_BUFFER_SIZE (buf) - GST_CDXA_SECTOR_SIZE);
-    } else {
-      sub = NULL;
-    }
-    gst_buffer_unref (buf);
-    buf = sub;
   }
 
-  cdxa->cache = buf;
+  return flow;
 }
 
 static GstStateChangeReturn
-gst_cdxastrip_change_state (GstElement * element, GstStateChange transition)
+gst_vcd_parse_change_state (GstElement * element, GstStateChange transition)
 {
-  GstCDXAStrip *cdxa = GST_CDXASTRIP (element);
+  GstStateChangeReturn res = GST_STATE_CHANGE_SUCCESS;
+  GstVcdParse *vcd = GST_VCD_PARSE (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      vcd->adapter = gst_adapter_new ();
+      break;
+    default:
+      break;
+  }
+
+  res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (cdxa->cache) {
-        gst_buffer_unref (cdxa->cache);
-        cdxa->cache = NULL;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (vcd->adapter) {
+        g_object_unref (vcd->adapter);
+        vcd->adapter = NULL;
       }
       break;
     default:
       break;
   }
 
-  if (parent_class->change_state)
-    return parent_class->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return res;
 }
