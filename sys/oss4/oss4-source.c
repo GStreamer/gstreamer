@@ -548,7 +548,8 @@ gst_oss4_source_delay (GstAudioSrc * asrc)
   }
 
   delay = (info.fragstotal * info.fragsize) - info.bytes;
-  GST_LOG_OBJECT (oss, "fragstotal:%d, fragsize:%d, bytes:%d, delay:%d");
+  GST_LOG_OBJECT (oss, "fragstotal:%d, fragsize:%d, bytes:%d, delay:%d",
+      info.fragstotal, info.fragsize, info.bytes, delay);
   return delay;
 }
 

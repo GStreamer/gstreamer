@@ -1,3 +1,10 @@
+2008-04-11  Julien Moutte  <julien@fluendo.com>
+
+	* sys/oss4/oss4-mixer-enum.c:
+	(gst_oss4_mixer_enum_get_values_locked):
+	* sys/oss4/oss4-source.c: (gst_oss4_source_delay): Fix arguments
+	format in debug statements.
+
 2008-04-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
