@@ -139,7 +139,7 @@ extern const gchar *priv_gst_dump_dot_dir;
 #endif
 
 /* defaults */
-#ifdef HAVE_FORK
+#if defined(HAVE_FORK) && !defined(GST_HAVE_UNSAFE_FORK)
 #define DEFAULT_FORK TRUE
 #else
 #define DEFAULT_FORK FALSE

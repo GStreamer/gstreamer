@@ -52,11 +52,21 @@ PATH=$GST/gstreamer/tools:$GST/gst-plugins/tools:$GST/gst-player/src:$GST/gst-ed
 LD_LIBRARY_PATH=$GST/prefix/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 DYLD_LIBRARY_PATH=$GST/prefix/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}
 
+# GStreamer plugins bad libraries
+for path in app
+do
+  LD_LIBRARY_PATH=$GST/gst-plugins-bad/gst-libs/gst/$path/.libs:$LD_LIBRARY_PATH
+  DYLD_LIBRARY_PATH=$GST/gst-plugins-bad/gst-libs/gst/$path/.libs:$DYLD_LIBRARY_PATH
+done
+
+# GStreamer plugins base libraries
 for path in audio cdda fft interfaces pbutils netbuffer riff rtp rtsp sdp tag utils video 
 do
   LD_LIBRARY_PATH=$GST/gst-plugins-base/gst-libs/gst/$path/.libs:$LD_LIBRARY_PATH
   DYLD_LIBRARY_PATH=$GST/gst-plugins-base/gst-libs/gst/$path/.libs:$DYLD_LIBRARY_PATH
 done
+
+# GStreamer core libraries
 for path in base net check controller dataprotocol
 do
   LD_LIBRARY_PATH=$GST/gstreamer/libs/gst/$path/.libs:$LD_LIBRARY_PATH

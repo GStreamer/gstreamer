@@ -230,11 +230,19 @@ else
 fi
 AC_SUBST(GST_HAVE_UNALIGNED_ACCESS_DEFINE)
 
-dnl check for extra platform specific plugin suffixes
+dnl check for platform specific settings
 case $host_os in
-     darwin* | rhapsody*)
+     rhapsody*)
 	AC_DEFINE_UNQUOTED(GST_EXTRA_MODULE_SUFFIX, [".dylib"], [Extra platform specific plugin suffix])
+        ;;
+     darwin*)
+	AC_DEFINE_UNQUOTED(GST_EXTRA_MODULE_SUFFIX, [".dylib"], [Extra platform specific plugin suffix])
+        AC_DEFINE_UNQUOTED(GST_HAVE_UNSAFE_FORK, 1, [Defined when registry scanning through fork is unsafe])
 	;;
+     cygwin* | mingw* | msvc* | mks*)
+        dnl HAVE_WIN32 currently means "disable POSIXisms".
+        AC_DEFINE_UNQUOTED(HAVE_WIN32, 1, [Defined if compiling for Windows])
+        ;;
      *)
 	;;
 esac
@@ -244,15 +252,6 @@ dnl * software *
 dnl check for large file support
 dnl affected plugins must include config.h
 AC_SYS_LARGEFILE
-
-dnl HAVE_WIN32 currently means "disable POSIXisms".
-case "$host" in
-  *-*-mingw*)
-    AC_DEFINE_UNQUOTED(HAVE_WIN32, 1, [Defined if compiling for Windows])
-    ;;
-  *)
-    ;;
-esac
 
 dnl *** checks for programs ***
 

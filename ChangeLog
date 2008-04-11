@@ -1,3 +1,17 @@
+2008-04-11  Julien Moutte  <julien@fluendo.com>
+
+        Mac OS X love...
+	* configure.ac: Merge platform specific defines, introduce a new
+	define on OS X to remember that forking when updating registry is
+	unsafe.
+	* docs/faq/gst-uninstalled: Updated to include gst-libs in the bad
+	module.
+	* gst/gst.c: Don't fork when updating registry if GST_HAVE_UNSAFE_FORK
+	is defined.
+	* gst/gstregistry.c: (gst_registry_scan_path_level): Fixed a bogus
+	condition that leads to absolutely no plugins being registered on
+	OS X.
+
 2008-04-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Based on patch by: José Alburquerque <jaalburqu at svn dot gnome dot org>

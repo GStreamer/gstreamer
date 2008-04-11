@@ -830,7 +830,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
     }
     if (!g_str_has_suffix (filename, G_MODULE_SUFFIX)
 #ifdef GST_EXTRA_MODULE_SUFFIX
-        || !g_str_has_suffix (filename, GST_EXTRA_MODULE_SUFFIX)
+        && !g_str_has_suffix (filename, GST_EXTRA_MODULE_SUFFIX)
 #endif
         ) {
       GST_LOG_OBJECT (registry,
