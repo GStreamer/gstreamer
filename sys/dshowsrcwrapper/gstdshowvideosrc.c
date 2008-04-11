@@ -100,6 +100,8 @@ static GstStateChangeReturn gst_dshowvideosrc_change_state (GstElement *
 
 static gboolean gst_dshowvideosrc_start (GstBaseSrc * bsrc);
 static gboolean gst_dshowvideosrc_stop (GstBaseSrc * bsrc);
+static gboolean gst_dshowvideosrc_unlock (GstBaseSrc * bsrc);
+static gboolean gst_dshowvideosrc_unlock_stop (GstBaseSrc * bsrc);
 static gboolean gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps);
 static GstCaps *gst_dshowvideosrc_get_caps (GstBaseSrc * bsrc);
 static GstFlowReturn gst_dshowvideosrc_create (GstPushSrc * psrc,
@@ -170,6 +172,9 @@ gst_dshowvideosrc_class_init (GstDshowVideoSrcClass * klass)
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_set_caps);
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_stop);
+  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_unlock);
+  gstbasesrc_class->unlock_stop =
+      GST_DEBUG_FUNCPTR (gst_dshowvideosrc_unlock_stop);
 
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_create);
 
@@ -201,7 +206,10 @@ gst_dshowvideosrc_init (GstDshowVideoSrc * src, GstDshowVideoSrcClass * klass)
   src->pins_mediatypes = NULL;
   src->is_rgb = FALSE;
 
-  src->async_queue = g_async_queue_new ();
+  src->buffer_cond = g_cond_new ();
+  src->buffer_mutex = g_mutex_new ();
+  src->buffer = NULL;
+  src->stop_requested = FALSE;
 
   CoInitializeEx (NULL, COINIT_MULTITHREADED);
 
@@ -239,9 +247,19 @@ gst_dshowvideosrc_dispose (GObject * gobject)
     src->video_cap_filter = NULL;
   }
 
-  if (src->async_queue) {
-    g_async_queue_unref (src->async_queue);
-    src->async_queue = NULL;
+  if (src->buffer_mutex) {
+    g_mutex_free (src->buffer_mutex);
+    src->buffer_mutex = NULL;
+  }
+
+  if (src->buffer_cond) {
+    g_cond_free (src->buffer_cond);
+    src->buffer_cond = NULL;
+  }
+
+  if (src->buffer) {
+    gst_buffer_unref (src->buffer);
+    src->buffer = NULL;
   }
 
   CoUninitialize ();
@@ -511,6 +529,7 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
               GstCaps *caps =
                   gst_dshowvideosrc_getcaps_from_streamcaps (src, capture_pin,
                   streamcaps);
+
               if (caps) {
                 gst_caps_append (src->caps, caps);
               }
@@ -791,12 +810,48 @@ gst_dshowvideosrc_stop (GstBaseSrc * bsrc)
   return TRUE;
 }
 
+static gboolean
+gst_dshowvideosrc_unlock (GstBaseSrc * bsrc)
+{
+  GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (bsrc);
+
+  g_mutex_lock (src->buffer_mutex);
+  src->stop_requested = TRUE;
+  g_cond_signal (src->buffer_cond);
+  g_mutex_unlock (src->buffer_mutex);
+
+  return TRUE;
+}
+
+static gboolean
+gst_dshowvideosrc_unlock_stop (GstBaseSrc * bsrc)
+{
+  GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (bsrc);
+
+  src->stop_requested = FALSE;
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_dshowvideosrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (psrc);
 
-  *buf = g_async_queue_pop (src->async_queue);
+  g_mutex_lock (src->buffer_mutex);
+  while (src->buffer == NULL && !src->stop_requested)
+    g_cond_wait (src->buffer_cond, src->buffer_mutex);
+  *buf = src->buffer;
+  src->buffer = NULL;
+  g_mutex_unlock (src->buffer_mutex);
+
+  if (src->stop_requested) {
+    if (*buf != NULL) {
+      gst_buffer_unref (*buf);
+      *buf = NULL;
+    }
+    return GST_FLOW_WRONG_STATE;
+  }
 
   GST_CAT_DEBUG (dshowvideosrc_debug,
       "dshowvideosrc_create => pts %" GST_TIME_FORMAT " duration %"
@@ -998,7 +1053,12 @@ gst_dshowvideosrc_push_buffer (byte * buffer, long size, byte * src_object,
   /* the negotiate() method already set caps on the source pad */
   gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
 
-  g_async_queue_push (src->async_queue, buf);
+  g_mutex_lock (src->buffer_mutex);
+  if (src->buffer != NULL)
+    gst_buffer_unref (src->buffer);
+  src->buffer = buf;
+  g_cond_signal (src->buffer_cond);
+  g_mutex_unlock (src->buffer_mutex);
 
   return TRUE;
 }

@@ -66,8 +66,11 @@ struct _GstDshowVideoSrc
   IMediaFilter *media_filter;
   IFilterGraph *filter_graph;
 
-  /* async queue which will contain incoming buffers from directshow */
-  GAsyncQueue *async_queue;
+  /* the last buffer from DirectShow */
+  GCond * buffer_cond;
+  GMutex * buffer_mutex;
+  GstBuffer * buffer;
+  gboolean stop_requested;
 
   gboolean is_rgb;
   gint width;

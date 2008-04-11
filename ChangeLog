@@ -1,5 +1,21 @@
 2008-04-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
+	* sys/dshowsrcwrapper/gstdshowvideosrc.c: (PROP_DEVICE_NAME),
+	  (gst_dshowvideosrc_class_init), (gst_dshowvideosrc_init),
+	  (gst_dshowvideosrc_dispose), (gst_dshowvideosrc_stop),
+	  (gst_dshowvideosrc_unlock), (gst_dshowvideosrc_unlock_stop),
+	  (gst_dshowvideosrc_create), (gst_dshowvideosrc_push_buffer):
+	* sys/dshowsrcwrapper/gstdshowvideosrc.h:
+	  Don't increase latency by queuing buffers in an async queue when
+	  the streaming thread can't keep up or isn't scheduled often
+	  enough for some other reason, but just drop the previous buffer
+	  in that case. Also implement GstBaseSrc::unlock for faster
+	  unlocking when shutting down. (#520892).
+
+2008-04-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/icles/metadata_editor.c: (ENC_UNKNOWN), (last_pixbuf),
 	  (draw_pixbuf), (change_tag_list), (update_draw_pixbuf),
 	  (ui_drawing_size_allocate_cb), (on_drawingMain_expose_event),
