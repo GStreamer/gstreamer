@@ -345,8 +345,8 @@ generate_xing_header (GstXingMux * xing)
     guint32 nbytes;
 
     if (byte_count > G_MAXUINT32) {
-      GST_DEBUG ("Too large stream: %" G_GINT64_FORMAT " > %" G_GINT64_FORMAT
-          " bytes", byte_count, G_MAXUINT32);
+      GST_DEBUG ("Too large stream: %" G_GINT64_FORMAT " > %u bytes",
+          byte_count, G_MAXUINT32);
     } else {
       nbytes = byte_count;
       GST_DEBUG ("Setting number of bytes to %u", nbytes);
@@ -371,7 +371,7 @@ generate_xing_header (GstXingMux * xing)
 
       while ((entry->timestamp * 100) / duration >= percent) {
         byte = (entry->byte * 256) / byte_count;
-        GST_DEBUG ("  %d %% -- %d 1/256", percent, byte);
+        GST_DEBUG ("  %d %% -- %" G_GINT64_FORMAT " 1/256", percent, byte);
         *data = byte;
         data++;
         percent++;

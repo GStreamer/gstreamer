@@ -1,3 +1,8 @@
+2008-04-11  Julien Moutte  <julien@fluendo.com>
+
+	* gst/mpegaudioparse/gstxingmux.c: (generate_xing_header): Fix
+	argument formats.
+
 2008-04-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
         Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
