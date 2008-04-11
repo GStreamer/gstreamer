@@ -373,6 +373,9 @@ GstCaps *
 gst_video_format_new_caps (GstVideoFormat format, int width, int height,
     int framerate_n, int framerate_d, int par_n, int par_d)
 {
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
+  g_return_val_if_fail (width > 0 && height > 0, NULL);
+
   if (gst_video_format_is_yuv (format)) {
     return gst_caps_new_simple ("video/x-raw-yuv",
         "format", GST_TYPE_FOURCC, gst_video_format_to_fourcc (format),
@@ -505,6 +508,8 @@ gst_video_format_from_fourcc (guint32 fourcc)
 guint32
 gst_video_format_to_fourcc (GstVideoFormat format)
 {
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
       return GST_MAKE_FOURCC ('I', '4', '2', '0');
@@ -729,6 +734,10 @@ int
 gst_video_format_get_row_stride (GstVideoFormat format, int component,
     int width)
 {
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+  g_return_val_if_fail (component >= 0 && component <= 3, 0);
+  g_return_val_if_fail (width > 0, 0);
+
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
@@ -787,6 +796,9 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
 int
 gst_video_format_get_pixel_stride (GstVideoFormat format, int component)
 {
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+  g_return_val_if_fail (component >= 0 && component <= 3, 0);
+
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
@@ -836,6 +848,10 @@ int
 gst_video_format_get_component_width (GstVideoFormat format, int component,
     int width)
 {
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+  g_return_val_if_fail (component >= 0 && component <= 3, 0);
+  g_return_val_if_fail (width > 0, 0);
+
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
@@ -893,6 +909,10 @@ int
 gst_video_format_get_component_height (GstVideoFormat format, int component,
     int height)
 {
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+  g_return_val_if_fail (component >= 0 && component <= 3, 0);
+  g_return_val_if_fail (height > 0, 0);
+
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
@@ -944,6 +964,10 @@ int
 gst_video_format_get_component_offset (GstVideoFormat format, int component,
     int width, int height)
 {
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+  g_return_val_if_fail (component >= 0 && component <= 3, 0);
+  g_return_val_if_fail (width > 0 && height > 0, 0);
+
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
       if (component == 0)
@@ -1092,6 +1116,9 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
 {
   int size;
 
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+  g_return_val_if_fail (width > 0 && height > 0, 0);
+
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
@@ -1155,6 +1182,9 @@ gst_video_format_convert (GstVideoFormat format, int width, int height,
 {
   gboolean ret = FALSE;
   int size;
+
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
+  g_return_val_if_fail (width > 0 && height > 0, 0);
 
   size = gst_video_format_get_size (format, width, height);
 

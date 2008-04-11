@@ -1,3 +1,17 @@
+2008-04-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/video/video.c: (gst_video_format_new_caps),
+	  (gst_video_format_to_fourcc), (gst_video_format_get_row_stride),
+	  (gst_video_format_get_pixel_stride),
+	  (gst_video_format_get_component_width),
+	  (gst_video_format_get_component_height),
+	  (gst_video_format_get_component_offset), (gst_video_format_get_size),
+	  (gst_video_format_convert):
+	  Add guards to these functions to ensure sane input values.
+
+	* tests/check/libs/video.c:
+	  Fix unit test not to create caps with width=0 and height=0.
+
 2008-04-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/design/draft-keyframe-force.txt:

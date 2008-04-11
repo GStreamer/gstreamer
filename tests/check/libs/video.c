@@ -480,8 +480,8 @@ GST_START_TEST (test_parse_caps_rgb)
     int w = -1, h = -1;
 
     caps = gst_caps_from_string (formats[i].tmpl_caps_string);
-    gst_caps_set_simple (caps, "width", G_TYPE_INT, 2 * i, "height",
-        G_TYPE_INT, i, "framerate", GST_TYPE_FRACTION, 15, 1,
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, 2 * (i + 1), "height",
+        G_TYPE_INT, i + 1, "framerate", GST_TYPE_FRACTION, 15, 1,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
     g_assert (gst_caps_is_fixed (caps));
 
@@ -489,8 +489,8 @@ GST_START_TEST (test_parse_caps_rgb)
 
     fail_unless (gst_video_format_parse_caps (caps, &fmt, &w, &h));
     fail_unless_equals_int (fmt, formats[i].fmt);
-    fail_unless_equals_int (w, 2 * i);
-    fail_unless_equals_int (h, i);
+    fail_unless_equals_int (w, 2 * (i + 1));
+    fail_unless_equals_int (h, i + 1);
 
     /* make sure they're serialised back correctly */
     caps2 = gst_video_format_new_caps (fmt, w, h, 15, 1, 1, 1);
