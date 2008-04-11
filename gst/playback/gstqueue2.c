@@ -690,6 +690,7 @@ update_buffering (GstQueue * queue)
   }
   if (post) {
     GstMessage *message;
+    GstBufferingMode mode;
 
     /* scale to high percent so that it becomes the 100% mark */
     percent = percent * 100 / queue->high_percent;
@@ -697,9 +698,14 @@ update_buffering (GstQueue * queue)
     if (percent > 100)
       percent = 100;
 
+    if (QUEUE_IS_USING_TEMP_FILE (queue))
+      mode = GST_BUFFERING_DOWNLOAD;
+    else
+      mode = GST_BUFFERING_STREAM;
+
     GST_DEBUG_OBJECT (queue, "buffering %d percent", percent);
     message = gst_message_new_buffering (GST_OBJECT_CAST (queue), percent);
-    gst_message_set_buffering_stats (message, GST_BUFFERING_STREAM,
+    gst_message_set_buffering_stats (message, mode,
         queue->byte_in_rate, queue->byte_out_rate, -1);
 
     gst_element_post_message (GST_ELEMENT_CAST (queue), message);
@@ -1685,6 +1691,7 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
             stop = -1;
             break;
         }
+        gst_query_set_buffering_percent (query, queue->is_buffering, 100);
         gst_query_set_buffering_range (query, format, start, stop, -1);
       }
       break;
