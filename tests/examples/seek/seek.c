@@ -20,9 +20,6 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-/* FIXME: remove #if 0 code
- *
- */
 #include <stdlib.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -84,6 +81,8 @@ static gboolean verbose = FALSE;
 
 static gboolean is_live = FALSE;
 static gboolean buffering = FALSE;
+static GstBufferingMode mode;
+static gint64 buffering_left;
 static GstState state = GST_STATE_NULL;
 static guint update_id = 0;
 static guint seek_timeout_id = 0;
@@ -1100,6 +1099,23 @@ update_fill (gpointer data)
         gint64 start, stop;
         GstFormat format;
         gdouble fill;
+        gboolean busy;
+        gint percent;
+
+        gst_query_parse_buffering_percent (query, &busy, &percent);
+
+        if (buffering && !busy) {
+          /* if we were buffering but not anymore, start playing */
+          if (state == GST_STATE_PLAYING && !is_live) {
+            fprintf (stderr, "setting pipeline to PLAYING ...\n");
+            gst_element_set_state (pipeline, GST_STATE_PLAYING);
+            gtk_statusbar_pop (GTK_STATUSBAR (statusbar), status_id);
+            gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id,
+                "Playing");
+          }
+          state = GST_STATE_PAUSED;
+          buffering = FALSE;
+        }
 
         gst_query_parse_buffering_range (query, &format, &start, &stop, NULL);
 
@@ -1915,7 +1931,6 @@ msg_state_changed (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
     /* When state of the pipeline changes to paused or playing we start updating scale */
     if (new == GST_STATE_PLAYING) {
       set_update_scale (TRUE);
-      set_update_fill (TRUE);
     } else {
       set_update_scale (FALSE);
     }
@@ -1952,30 +1967,28 @@ msg_segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
     g_print ("segment seek failed\n");
 }
 
+/* in stream buffering mode we PAUSE the pipeline until we receive a 100%
+ * message */
 static void
-msg_buffering (GstBus * bus, GstMessage * message, GstPipeline * data)
+do_stream_buffering (gint percent)
 {
-  gint percent;
   gchar *bufstr;
-
-  gst_message_parse_buffering (message, &percent);
 
   gtk_statusbar_pop (GTK_STATUSBAR (statusbar), status_id);
   bufstr = g_strdup_printf ("Buffering...%d", percent);
   gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, bufstr);
   g_free (bufstr);
 
-  /* no state management needed for live pipelines */
-  if (is_live)
-    return;
-
   if (percent == 100) {
     /* a 100% message means buffering is done */
     buffering = FALSE;
     /* if the desired state is playing, go back */
     if (state == GST_STATE_PLAYING) {
-      fprintf (stderr, "Done buffering, setting pipeline to PLAYING ...\n");
-      gst_element_set_state (pipeline, GST_STATE_PLAYING);
+      /* no state management needed for live pipelines */
+      if (!is_live) {
+        fprintf (stderr, "Done buffering, setting pipeline to PLAYING ...\n");
+        gst_element_set_state (pipeline, GST_STATE_PLAYING);
+      }
       gtk_statusbar_pop (GTK_STATUSBAR (statusbar), status_id);
       gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Playing");
     }
@@ -1983,10 +1996,57 @@ msg_buffering (GstBus * bus, GstMessage * message, GstPipeline * data)
     /* buffering busy */
     if (buffering == FALSE && state == GST_STATE_PLAYING) {
       /* we were not buffering but PLAYING, PAUSE  the pipeline. */
-      fprintf (stderr, "Buffering, setting pipeline to PAUSED ...\n");
-      gst_element_set_state (pipeline, GST_STATE_PAUSED);
+      if (!is_live) {
+        fprintf (stderr, "Buffering, setting pipeline to PAUSED ...\n");
+        gst_element_set_state (pipeline, GST_STATE_PAUSED);
+      }
     }
     buffering = TRUE;
+  }
+}
+
+static void
+do_download_buffering (gint percent)
+{
+  if (!buffering && percent < 100) {
+    gchar *bufstr;
+
+    buffering = TRUE;
+
+    bufstr = g_strdup_printf ("Downloading...");
+    gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, bufstr);
+    g_free (bufstr);
+
+    /* once we get a buffering message, we'll do the fill update */
+    set_update_fill (TRUE);
+
+    if (state == GST_STATE_PLAYING && !is_live) {
+      fprintf (stderr, "Downloading, setting pipeline to PAUSED ...\n");
+      gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    }
+  }
+}
+
+static void
+msg_buffering (GstBus * bus, GstMessage * message, GstPipeline * data)
+{
+  gint percent;
+
+  gst_message_parse_buffering (message, &percent);
+
+  /* get more stats */
+  gst_message_parse_buffering_stats (message, &mode, NULL, NULL,
+      &buffering_left);
+
+  switch (mode) {
+    case GST_BUFFERING_DOWNLOAD:
+      do_download_buffering (percent);
+      break;
+    case GST_BUFFERING_LIVE:
+    case GST_BUFFERING_TIMESHIFT:
+    case GST_BUFFERING_STREAM:
+      do_stream_buffering (percent);
+      break;
   }
 }
 

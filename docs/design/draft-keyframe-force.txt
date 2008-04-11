@@ -4,7 +4,7 @@ Forcing keyframes
 Consider the following use case:
 
   We have a pipeline that performs video and audio capture from a live source,
-  compesses and muxes the streams and writes the resulting data into a file.
+  compresses and muxes the streams and writes the resulting data into a file.
 
   Inside the uncompressed video data we have a specific pattern inserted at
   specific moments that should trigger a switch to a new file, meaning, we close

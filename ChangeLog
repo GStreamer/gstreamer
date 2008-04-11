@@ -1,3 +1,17 @@
+2008-04-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/design/draft-keyframe-force.txt:
+	Fix typo.
+
+	* gst/playback/gstqueue2.c: (update_buffering),
+	(gst_queue_handle_src_query):
+	Set buffering mode in the messages.
+	Set buffering percent in the query.
+
+	* tests/examples/seek/seek.c: (update_fill), (msg_state_changed),
+	(do_stream_buffering), (do_download_buffering), (msg_buffering):
+	Do some more fancy things based on the buffering method in use.
+
 2008-04-09  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/examples/seek/seek.c: (update_fill), (set_update_fill),
