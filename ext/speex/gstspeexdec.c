@@ -507,7 +507,7 @@ speex_dec_chain_parse_header (GstSpeexDec * dec, GstBuffer * buf)
   if (!dec->header)
     goto no_header;
 
-  if (dec->header->mode >= SPEEX_NB_MODES)
+  if (dec->header->mode >= SPEEX_NB_MODES || dec->header->mode < 0)
     goto mode_too_old;
 
   dec->mode = (SpeexMode *) speex_mode_list[dec->header->mode];
