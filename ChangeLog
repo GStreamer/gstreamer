@@ -1,5 +1,18 @@
 2008-04-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	  Bump core/base requirements to released versions to avoid
+	  confusion.
+
+	* gst/deinterlace/gstdeinterlace.c: (deinterlace_debug),
+	  (GST_CAT_DEFAULT), (gst_deinterlace_base_init),
+	  (gst_deinterlace_set_caps), (plugin_init):
+	  Add debug category, use _set_element_details_simple and
+	  remove special code path for Y42B to calculate offsets and
+	  strides; libgstvideo knows how to handle this format now.
+
+2008-04-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/cdxaparse/Makefile.am:
 	* gst/cdxaparse/gstcdxaparse.c:
 	* gst/cdxaparse/gstcdxastrip.c:

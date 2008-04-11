@@ -1,6 +1,6 @@
 /* GStreamer simple deinterlacing plugin
  * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2006-2008 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -28,13 +28,8 @@
 #include "gstdeinterlace.h"
 #include <gst/video/video.h>
 
-
-/* elementfactory information */
-static const GstElementDetails deinterlace_details =
-GST_ELEMENT_DETAILS ("Deinterlace",
-    "Filter/Effect/Video",
-    "Deinterlace video",
-    "Wim Taymans <wim@fluendo.com>");
+GST_DEBUG_CATEGORY_STATIC (deinterlace_debug);
+#define GST_CAT_DEFAULT deinterlace_debug
 
 #define DEFAULT_DI_AREA_ONLY  FALSE
 #define DEFAULT_NI_AREA_ONLY  FALSE
@@ -91,7 +86,9 @@ gst_deinterlace_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details (element_class, &deinterlace_details);
+  gst_element_class_set_details_simple (element_class, "Deinterlace",
+      "Filter/Effect/Video", "Deinterlace video",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void
@@ -203,34 +200,17 @@ gst_deinterlace_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 
   fmt = gst_video_format_from_fourcc (fourcc);
 
-  if (fmt == GST_VIDEO_FORMAT_UNKNOWN) {
-    /* this is Y42B (4:2:2 planar) which -base <= 0.10.17 doesn't know about */
-    /* FIXME: remove this once we can depend on -base >= 0.10.17.1 */
-    g_assert (fourcc == GST_MAKE_FOURCC ('Y', '4', '2', 'B'));
+  filter->y_stride = gst_video_format_get_row_stride (fmt, 0, w);
+  filter->u_stride = gst_video_format_get_row_stride (fmt, 1, w);
+  filter->v_stride = gst_video_format_get_row_stride (fmt, 2, w);
 
-    filter->uv_height = filter->height;
-    filter->y_stride = GST_ROUND_UP_4 (filter->width);
-    filter->u_stride = GST_ROUND_UP_8 (filter->width) / 2;
-    filter->v_stride = GST_ROUND_UP_8 (filter->width) / 2;
+  filter->uv_height = gst_video_format_get_component_height (fmt, 1, h);
 
-    filter->y_off = 0;
-    filter->u_off = 0 + filter->y_stride * filter->height;
-    filter->v_off = filter->u_off + filter->u_stride * filter->height;
+  filter->y_off = gst_video_format_get_component_offset (fmt, 0, w, h);
+  filter->u_off = gst_video_format_get_component_offset (fmt, 1, w, h);
+  filter->v_off = gst_video_format_get_component_offset (fmt, 2, w, h);
 
-    picsize = filter->v_off + (filter->v_stride * filter->height);
-  } else {
-    filter->y_stride = gst_video_format_get_row_stride (fmt, 0, w);
-    filter->u_stride = gst_video_format_get_row_stride (fmt, 1, w);
-    filter->v_stride = gst_video_format_get_row_stride (fmt, 2, w);
-
-    filter->uv_height = gst_video_format_get_component_height (fmt, 1, h);
-
-    filter->y_off = gst_video_format_get_component_offset (fmt, 0, w, h);
-    filter->u_off = gst_video_format_get_component_offset (fmt, 1, w, h);
-    filter->v_off = gst_video_format_get_component_offset (fmt, 2, w, h);
-
-    picsize = gst_video_format_get_size (fmt, w, h);
-  }
+  picsize = gst_video_format_get_size (fmt, w, h);
 
   if (filter->picsize != picsize) {
     filter->picsize = picsize;
@@ -453,6 +433,9 @@ gst_deinterlace_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (deinterlace_debug, "deinterlace", 0,
+      "deinterlace element");
+
   if (!gst_element_register (plugin, "deinterlace", GST_RANK_NONE,
           gst_deinterlace_get_type ()))
     return FALSE;

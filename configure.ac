@@ -46,8 +46,8 @@ AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
 dnl *** remove rtpmanager stuff below when this is updated
-GST_REQ=0.10.17
-GSTPB_REQ=0.10.17.1
+GST_REQ=0.10.19
+GSTPB_REQ=0.10.19
 
 dnl *** autotools stuff ****
 
