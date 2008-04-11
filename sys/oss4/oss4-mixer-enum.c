@@ -84,14 +84,14 @@ gst_oss4_mixer_enum_get_values_locked (GstMixerOptions * options)
   GST_LOG_OBJECT (e, "updating available values for %s", e->mc->mixext.extname);
 
   for (i = 0; i < e->mc->mixext.maxvalue; ++i) {
-    if (MIXEXT_ENUM_IS_AVAILABLE (e->mc->mixext, i)) {
-      const gchar *s;
+    const gchar *s;
 
-      s = g_quark_to_string (e->mc->enum_vals[i]);
+    s = g_quark_to_string (e->mc->enum_vals[i]);
+    if (MIXEXT_ENUM_IS_AVAILABLE (e->mc->mixext, i)) {
       GST_LOG_OBJECT (e, "option '%s' is available", s);
       list = g_list_prepend (list, (gpointer) s);
     } else {
-      GST_LOG_OBJECT (e, "option '%s' is currently not available");
+      GST_LOG_OBJECT (e, "option '%s' is currently not available", s);
     }
   }
 
