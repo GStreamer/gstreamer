@@ -178,6 +178,9 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
 
       value = FLV_GET_STRING (data + offset, data_size - offset);
 
+      if (value == NULL)
+        break;
+
       offset += strlen (value) + 2;
 
       GST_DEBUG_OBJECT (demux, "%s => (string) %s", tag_name, value);
@@ -329,12 +332,14 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, const guint8 * data,
   GST_LOG_OBJECT (demux, "parsing a script tag");
 
   if (GST_READ_UINT8 (data + offset++) == 2) {
+    gchar *function_name;
     guint i;
-    gchar *function_name = FLV_GET_STRING (data + offset, data_size - offset);
 
-    GST_LOG_OBJECT (demux, "function name is %s", function_name);
+    function_name = FLV_GET_STRING (data + offset, data_size - offset);
 
-    if (!strcmp (function_name, "onMetaData")) {
+    GST_LOG_OBJECT (demux, "function name is %s", GST_STR_NULL (function_name));
+
+    if (function_name != NULL && strcmp (function_name, "onMetaData") == 0) {
       guint32 nb_elems = 0;
       gboolean end_marker = FALSE;
 

@@ -1,3 +1,10 @@
+2008-04-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/flv/gstflvparse.c: (gst_flv_parse_metadata_item),
+	  (gst_flv_parse_tag_script):
+	  Handle NULL returns from FLV_GET_STRING() more gracefully. Fixes
+	  crash caused by a strlen on a NULL string (#527622).
+
 2008-04-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
