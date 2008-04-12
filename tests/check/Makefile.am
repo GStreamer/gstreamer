@@ -53,12 +53,6 @@ else
 check_ofa = 
 endif
 
-if USE_SOUP
-check_soup = elements/souphttpsrc
-else
-check_soup = 
-endif
-
 if USE_TIMIDITY
 check_timidity=elements/timidity
 else
@@ -80,7 +74,6 @@ check_PROGRAMS = \
 	$(check_mplex)     \
 	$(check_neon)      \
 	$(check_ofa)        \
-	$(check_soup)      \
 	$(check_timidity)  \
 	elements/interleave \
 	elements/rganalysis \
@@ -99,5 +92,3 @@ LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
-elements_souphttpsrc_CFLAGS = $(SOUP_CFLAGS) $(AM_CFLAGS)
-elements_souphttpsrc_LDADD = $(SOUP_LIBS) $(LDADD)

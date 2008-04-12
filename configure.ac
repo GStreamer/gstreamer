@@ -861,17 +861,6 @@ AG_GST_CHECK_FEATURE(OFA, [ofa plugins], ofa, [
   AC_SUBST(OFA_LIBS)
 ])
 
-dnl *** soup ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SOUP, true)
-AG_GST_CHECK_FEATURE(SOUP, [soup http client plugin (2.4)], souphttpsrc, [
-  PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.3.2, HAVE_SOUP="yes", [
-    HAVE_SOUP="no"
-    AC_MSG_RESULT(no)
-  ])
-  AC_SUBST(SOUP_CFLAGS)
-  AC_SUBST(SOUP_LIBS)
-])
-
 dnl *** timidity ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_TIMIDITY, true)
 AG_GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
@@ -1082,7 +1071,6 @@ AM_CONDITIONAL(USE_NAS, false)
 AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_OFA, false)
 AM_CONDITIONAL(USE_OSS4, false)
-AM_CONDITIONAL(USE_SOUP, false)
 AM_CONDITIONAL(USE_SDL, false)
 AM_CONDITIONAL(USE_SNDFILE, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
@@ -1234,7 +1222,6 @@ ext/musicbrainz/Makefile
 ext/mythtv/Makefile
 ext/neon/Makefile
 ext/ofa/Makefile
-ext/soup/Makefile
 ext/sdl/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile

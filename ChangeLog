@@ -1,3 +1,22 @@
+2008-04-13  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* ext/Makefile.am:
+	* ext/soup/Makefile.am:
+	* ext/soup/gstsouphttpsrc.c:
+	* ext/soup/gstsouphttpsrc.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/souphttpsrc.c:
+	* tests/check/test-cert.pem:
+	* tests/check/test-key.pem:
+
+	Remove soup plugin that's moved to -good (#523124)
+
 2008-04-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/flv/gstflvparse.c: (gst_flv_parse_metadata_item),

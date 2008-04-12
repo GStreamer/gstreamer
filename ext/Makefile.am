@@ -196,12 +196,6 @@ else
 OFA_DIR=
 endif
 
-if USE_SOUP
-SOUP_DIR=soup
-else
-SOUP_DIR=
-endif
-
 if USE_TIMIDITY
 TIMIDITY_DIR=timidity
 endif
@@ -328,7 +322,6 @@ SUBDIRS=\
 	$(NAS_DIR) \
 	$(NEON_DIR) \
 	$(OFA_DIR) \
-	$(SOUP_DIR) \
 	$(POLYP_DIR) \
 	$(SDL_DIR) \
 	$(SHOUT_DIR) \
@@ -370,7 +363,6 @@ DIST_SUBDIRS = \
 	nas \
 	neon \
 	ofa \
-	soup \
 	sdl \
 	sndfile \
 	soundtouch \

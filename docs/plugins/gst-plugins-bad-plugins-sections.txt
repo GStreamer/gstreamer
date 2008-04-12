@@ -154,21 +154,6 @@ FESTIVAL_DEFAULT_SERVER_PORT
 FESTIVAL_DEFAULT_TEXT_MODE
 </SECTION>
 
-<SECTION>
-<FILE>element-souphttpsrc</FILE>
-<TITLE>souphttpsrc</TITLE>
-GstSoupHTTPSrc
-<SUBSECTION Standard>
-GstSoupHTTPSrcClass
-GST_SOUP_HTTP_SRC
-GST_SOUP_HTTP_SRC_CLASS
-GST_IS_SOUP_HTTP_SRC
-GST_IS_SOUP_HTTP_SRC_CLASS
-GST_TYPE_SOUP_HTTP_SRC
-gst_soup_http_src_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-input-selector</FILE>
 <TITLE>input-selector</TITLE>
 GstInputSelector
