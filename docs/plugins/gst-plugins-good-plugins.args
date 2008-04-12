@@ -214,7 +214,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bands</NICK>
-<BLURB>number of frequency bands.</BLURB>
+<BLURB>Number of frequency bands.</BLURB>
 <DEFAULT>128</DEFAULT>
 </ARG>
 
@@ -234,7 +234,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Message</NICK>
-<BLURB>Post a level message for each passed interval.</BLURB>
+<BLURB>Whether to post a 'spectrum' element message on the bus for each passed interval.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -254,7 +254,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Magnitude</NICK>
-<BLURB>Post the magnitude of the spectrum.</BLURB>
+<BLURB>Whether to add a 'magnitude' field to the structure of any 'spectrum' element messages posted on the bus.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -264,7 +264,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Phase</NICK>
-<BLURB>Post the phase of the spectrum.</BLURB>
+<BLURB>Whether to add a 'phase' field to the structure of any 'spectrum' element messages posted on the bus.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -1195,7 +1195,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>driver</NICK>
 <BLURB>driver.</BLURB>
-<DEFAULT>X11 driver 1.1</DEFAULT>
+<DEFAULT>Curses driver 1.0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17926,5 +17926,165 @@
 <NICK>Filter caps</NICK>
 <BLURB>Filter sink candidates using these caps.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOsxAudioSink::device</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device ID</NICK>
+<BLURB>Device ID of output device.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOsxAudioSrc::device</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device ID</NICK>
+<BLURB>Device ID of input device.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOSXVideoSink::embed</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>embed</NICK>
+<BLURB>When enabled, it  can be embedded.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOSXVideoSink::fullscreen</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>fullscreen</NICK>
+<BLURB>When enabled, the view  is fullscreen.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufSink::last-pixbuf</NAME>
+<TYPE>GdkPixbuf*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Last Pixbuf</NICK>
+<BLURB>Last GdkPixbuf object rendered.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufSink::send-messages</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Send Messages</NICK>
+<BLURB>Whether to post messages containing pixbufs on the bus.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::automatic-redirect</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>automatic-redirect</NICK>
+<BLURB>Automatically follow HTTP redirects (HTTP Status Code 3xx).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::cookies</NAME>
+<TYPE>GStrv*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Cookies</NICK>
+<BLURB>HTTP request cookies.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::iradio-genre</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-genre</NICK>
+<BLURB>Genre of the stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::iradio-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>iradio-mode</NICK>
+<BLURB>Enable internet radio mode (extraction of shoutcast/icecast metadata).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::iradio-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-name</NICK>
+<BLURB>Name of the stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::iradio-title</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-title</NICK>
+<BLURB>Name of currently playing song.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::iradio-url</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-url</NICK>
+<BLURB>Homepage URL for radio stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>Location to read from.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::proxy</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxy</NICK>
+<BLURB>HTTP proxy server URI.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::user-agent</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>User-Agent</NICK>
+<BLURB>Value of the User-Agent HTTP request header field.</BLURB>
+<DEFAULT>"GStreamer souphttpsrc "</DEFAULT>
 </ARG>
 

@@ -848,6 +848,17 @@ AG_GST_CHECK_FEATURE(SHOUT2, [Shoutcast/Icecast client library], shout2, [
   fi
 ])
 
+dnl *** soup ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SOUP, true)
+AG_GST_CHECK_FEATURE(SOUP, [soup http client plugin (2.4)], souphttpsrc, [
+  PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.3.2, HAVE_SOUP="yes", [
+    HAVE_SOUP="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(SOUP_CFLAGS)
+  AC_SUBST(SOUP_LIBS)
+])
+
 dnl *** speex >= 1.0.4 or >= 1.1.5 ***
 dnl   1.1.4 and earlier were not API/ABI compatible with 1.0
 dnl   1.1.6 is the first to use a .pc/pkg-config file ***
@@ -957,6 +968,7 @@ AM_CONDITIONAL(USE_LIBDV, false)
 AM_CONDITIONAL(USE_LIBPNG, false)
 AM_CONDITIONAL(USE_DV1394, false)
 AM_CONDITIONAL(USE_SHOUT2, false)
+AM_CONDITIONAL(USE_SOUP, false)
 AM_CONDITIONAL(USE_SPEEX, false)
 AM_CONDITIONAL(USE_TAGLIB, false)
 AM_CONDITIONAL(USE_WAVPACK, false)
@@ -1074,6 +1086,7 @@ ext/libcaca/Makefile
 ext/libpng/Makefile
 ext/raw1394/Makefile
 ext/shout2/Makefile
+ext/soup/Makefile
 ext/speex/Makefile
 ext/taglib/Makefile
 ext/wavpack/Makefile

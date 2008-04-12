@@ -71,6 +71,7 @@
     <xi:include href="xml/element-rtspsrc.xml" />
     <xi:include href="xml/element-smokedec.xml" />
     <xi:include href="xml/element-smokeenc.xml" />
+    <xi:include href="xml/element-souphttpsrc.xml" />
     <xi:include href="xml/element-spectrum.xml" />
     <xi:include href="xml/element-udpsrc.xml" />
     <xi:include href="xml/element-v4l2src.xml" />
@@ -138,6 +139,7 @@
     <xi:include href="xml/plugin-rtsp.xml" />
     <xi:include href="xml/plugin-shout2send.xml" />
     <xi:include href="xml/plugin-smpte.xml" />
+    <xi:include href="xml/plugin-soup.xml" />
     <xi:include href="xml/plugin-spectrum.xml" />
     <xi:include href="xml/plugin-speex.xml" />
     <xi:include href="xml/plugin-taglib.xml" />

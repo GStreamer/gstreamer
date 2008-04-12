@@ -32,6 +32,12 @@ else
 check_gdkpixbuf = 
 endif
 
+if USE_SOUP
+check_soup = elements/souphttpsrc
+else
+check_soup =
+endif
+
 if USE_SUNAUDIO
 check_sunaudio = elements/sunaudio
 else
@@ -82,6 +88,7 @@ check_PROGRAMS = \
 	elements/videofilter \
 	pipelines/simple-launch-lines \
 	$(check_gdkpixbuf) \
+	$(check_soup) \
 	$(check_sunaudio) \
 	$(check_taglib) \
 	$(check_wavpack)
@@ -119,6 +126,9 @@ elements_cmmldec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_cmmlenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 elements_alphacolor_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+
+elements_souphttpsrc_CFLAGS = $(SOUP_CFLAGS) $(AM_CFLAGS)
+elements_souphttpsrc_LDADD = $(SOUP_LIBS) $(LDADD)
 
 elements_sunaudio_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) \

@@ -1,3 +1,15 @@
+2008-04-13  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* ext/Makefile.am:
+	* tests/check/Makefile.am:
+	Move soup plugin from -bad (Fixes: #523124)
+
 2008-04-11  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* ext/speex/gstspeexdec.c: (speex_dec_chain_parse_header):

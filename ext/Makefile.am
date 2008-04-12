@@ -106,6 +106,12 @@ else
 SHOUT2_DIR =
 endif
 
+if USE_SOUP
+SOUP_DIR=soup
+else
+SOUP_DIR=
+endif
+
 if USE_SPEEX
 SPEEX_DIR = speex
 else
@@ -143,6 +149,7 @@ SUBDIRS = \
 	$(LIBPNG_DIR) \
 	$(MIKMOD_DIR) \
 	$(SHOUT2_DIR) \
+	$(SOUP_DIR) \
 	$(SPEEX_DIR) \
 	$(TAGLIB_DIR) \
 	$(WAVPACK_DIR)
@@ -164,6 +171,7 @@ DIST_SUBDIRS = \
 	libpng \
 	raw1394 \
 	shout2 \
+	soup \
 	speex \
 	taglib \
 	wavpack
