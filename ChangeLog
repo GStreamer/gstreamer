@@ -1,3 +1,14 @@
+2008-04-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/gst-xmlinspect.c: (print_element_info), (main):
+	  De-cruft a bit. If no argument is specified, print all elements in
+	  XML syntax rather than a freestyle list of elements like gst-inspect.
+	  Also, don't print XML header chunk unless we actually have something
+	  to print (ie. don't print it before an error message); print error
+	  message to stderr not stdout. Remove support for printing plugin
+	  info (it would just output something freestyle along the lines of
+	  gst-inspect so far), which fixes #514507. Also add license header.
+
 2008-04-11  Julien Moutte  <julien@fluendo.com>
 
         Mac OS X love...

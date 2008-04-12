@@ -1,3 +1,23 @@
+/* GStreamer gst-xmlinspect
+ * Copyright (C) 2003 Wim Taymans <wtay@chello.be>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+/* FIXME 0.11: remove gst-xmlinspect and gst-feedback etc. */
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -608,166 +628,11 @@ print_element_info (GstElementFactory * factory)
   return 0;
 }
 
-static void
-print_element_list (void)
-{
-  GList *plugins;
-
-  plugins = gst_default_registry_get_plugin_list ();
-  while (plugins) {
-    GList *features;
-    GstPlugin *plugin;
-
-    plugin = (GstPlugin *) (plugins->data);
-    plugins = g_list_next (plugins);
-
-    features =
-        gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
-        plugin->desc.name);
-    while (features) {
-      GstPluginFeature *feature;
-
-      feature = GST_PLUGIN_FEATURE (features->data);
-
-      if (GST_IS_ELEMENT_FACTORY (feature)) {
-        GstElementFactory *factory;
-
-        factory = GST_ELEMENT_FACTORY (feature);
-        g_print ("%s:  %s: %s\n", plugin->desc.name,
-            GST_PLUGIN_FEATURE_NAME (factory),
-            gst_element_factory_get_longname (factory));
-      }
-#ifndef GST_DISABLE_INDEX
-      else if (GST_IS_INDEX_FACTORY (feature)) {
-        GstIndexFactory *factory;
-
-        factory = GST_INDEX_FACTORY (feature);
-        g_print ("%s:  %s: %s\n", plugin->desc.name,
-            GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
-      }
-#endif
-      else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
-        GstTypeFindFactory *factory;
-
-        factory = GST_TYPE_FIND_FACTORY (feature);
-        if (factory->extensions) {
-          guint i = 0;
-
-          g_print ("%s type: ", plugin->desc.name);
-          while (factory->extensions[i]) {
-            g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
-            i++;
-          }
-        } else
-          g_print ("%s type: N/A\n", plugin->desc.name);
-      } else {
-        g_print ("%s:  %s (%s)\n", plugin->desc.name,
-            GST_PLUGIN_FEATURE_NAME (feature),
-            g_type_name (G_OBJECT_TYPE (feature)));
-      }
-
-      features = g_list_next (features);
-    }
-  }
-}
-
-static void
-print_plugin_info (GstPlugin * plugin)
-{
-  GList *features;
-  gint num_features = 0;
-  gint num_elements = 0;
-  gint num_autoplug = 0;
-  gint num_types = 0;
-  gint num_indexes = 0;
-  gint num_other = 0;
-
-  g_print ("Plugin Details:\n");
-  g_print ("  Name:\t\t%s\n", plugin->desc.name);
-  g_print ("  Description:\t%s\n", plugin->desc.description);
-  g_print ("  Filename:\t%s\n", plugin->filename);
-  g_print ("  Version:\t%s\n", plugin->desc.version);
-  g_print ("  License:\t%s\n", plugin->desc.license);
-  g_print ("  Package:\t%s\n", plugin->desc.package);
-  g_print ("  Origin URL:\t%s\n", plugin->desc.origin);
-  g_print ("\n");
-
-  features =
-      gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
-      plugin->desc.name);
-
-  while (features) {
-    GstPluginFeature *feature;
-
-    feature = GST_PLUGIN_FEATURE (features->data);
-
-    if (GST_IS_ELEMENT_FACTORY (feature)) {
-      GstElementFactory *factory;
-
-      factory = GST_ELEMENT_FACTORY (feature);
-      g_print ("  %s: %s\n", GST_OBJECT_NAME (factory),
-          gst_element_factory_get_longname (factory));
-      num_elements++;
-    }
-#ifndef GST_DISABLE_INDEX
-    else if (GST_IS_INDEX_FACTORY (feature)) {
-      GstIndexFactory *factory;
-
-      factory = GST_INDEX_FACTORY (feature);
-      g_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
-      num_indexes++;
-    }
-#endif
-    else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
-      GstTypeFindFactory *factory;
-
-      factory = GST_TYPE_FIND_FACTORY (feature);
-      if (factory->extensions) {
-        guint i = 0;
-
-        g_print ("%s type: ", plugin->desc.name);
-        while (factory->extensions[i]) {
-          g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
-          i++;
-        }
-      } else
-        g_print ("%s type: N/A\n", plugin->desc.name);
-      num_types++;
-    } else {
-      g_print ("  %s (%s)\n", GST_OBJECT_NAME (feature),
-          g_type_name (G_OBJECT_TYPE (feature)));
-      num_other++;
-    }
-    num_features++;
-    features = g_list_next (features);
-  }
-  g_print ("\n  %d features:\n", num_features);
-  if (num_elements > 0)
-    g_print ("  +-- %d elements\n", num_elements);
-  if (num_autoplug > 0)
-    g_print ("  +-- %d autopluggers\n", num_autoplug);
-  if (num_types > 0)
-    g_print ("  +-- %d types\n", num_types);
-  if (num_indexes > 0)
-    g_print ("  +-- %d indexes\n", num_indexes);
-  if (num_other > 0)
-    g_print ("  +-- %d other objects\n", num_other);
-
-  g_print ("\n");
-}
-
-
 int
 main (int argc, char *argv[])
 {
   GstElementFactory *factory;
-  GstPlugin *plugin;
-  gchar *so;
   GOptionEntry options[] = {
-    {"gst-inspect-plugin", 'p', 0, G_OPTION_ARG_STRING,
-        "Show plugin details", NULL},
-    {"gst-inspect-scheduler", 's', 0, G_OPTION_ARG_STRING,
-        "Show scheduler details", NULL},
     GST_TOOLS_GOPTION_VERSION,
     {NULL}
   };
@@ -779,7 +644,7 @@ main (int argc, char *argv[])
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
-  ctx = g_option_context_new ("[ELEMENT-NAME | PLUGIN-NAME]");
+  ctx = g_option_context_new ("[ELEMENT-NAME]");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
@@ -790,67 +655,32 @@ main (int argc, char *argv[])
 
   gst_tools_print_version ("gst-xmlinspect");
 
-  PUT_STRING (0, "<?xml version=\"1.0\"?>");
-
-  /* if no arguments, print out list of elements */
+  /* if no arguments, print out all elements */
   if (argc == 1) {
-    print_element_list ();
+    GList *features, *f;
 
-    /* else we try to get a factory */
-  } else {
-    /* first check for help */
-    if (strstr (argv[1], "-help")) {
-      g_print ("Usage: %s\t\t\tList all registered elements\n", argv[0]);
-      g_print ("       %s element-name\tShow element details\n", argv[0]);
-      g_print ("       %s plugin-name[.so]\tShow information about plugin\n",
-          argv[0]);
-      return 0;
-    }
+    features = gst_registry_get_feature_list (gst_registry_get_default (),
+        GST_TYPE_ELEMENT_FACTORY);
 
-    /* only search for a factory if there's not a '.so' */
-    if (!strstr (argv[1], ".so")) {
-      factory = gst_element_factory_find (argv[1]);
+    PUT_STRING (0, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
 
-      /* if there's a factory, print out the info */
-      if (factory)
-        return print_element_info (factory);
-      else {
-        GstPluginFeature *feature;
+    for (f = features; f != NULL; f = f->next)
+      print_element_info (GST_ELEMENT_FACTORY (f->data));
 
-        /* FIXME implement other pretty print function for these */
-#ifndef GST_DISABLE_INDEX
-        feature = gst_default_registry_find_feature (argv[1],
-            GST_TYPE_INDEX_FACTORY);
-        if (feature) {
-          g_print ("%s: an index\n", argv[1]);
-          return 0;
-        }
-#endif
-        feature = gst_default_registry_find_feature (argv[1],
-            GST_TYPE_TYPE_FIND_FACTORY);
-        if (feature) {
-          g_print ("%s: a type find function\n", argv[1]);
-          return 0;
-        }
-      }
-    } else {
-      /* strip the .so */
-      so = strstr (argv[1], ".so");
-      so[0] = '\0';
-    }
-
-    /* otherwise assume it's a plugin */
-    plugin = gst_default_registry_find_plugin (argv[1]);
-
-    /* if there is such a plugin, print out info */
-
-    if (plugin) {
-      print_plugin_info (plugin);
-    } else {
-      g_print ("no such element or plugin '%s'\n", argv[1]);
-      return -1;
-    }
+    gst_plugin_feature_list_free (features);
+    return 0;
   }
 
-  return 0;
+  /* else we try to get a factory */
+  factory = gst_element_factory_find (argv[1]);
+
+  /* if there's a factory, print out the info */
+  if (factory) {
+    PUT_STRING (0, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
+    return print_element_info (factory);
+  }
+
+  /* otherwise, error out */
+  g_printerr ("no such element '%s'\n", argv[1]);
+  return -1;
 }
