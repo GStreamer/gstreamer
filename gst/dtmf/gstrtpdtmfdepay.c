@@ -125,7 +125,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "width = (int) 16, "
         "depth = (int) 16, "
-        "endianness = (int) 1234, "
+        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
         "signed = (boolean) true, "
         "rate = (int) [0, MAX], "
         "channels = (int) 1")
@@ -206,7 +206,7 @@ gst_rtp_dtmf_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
   srccaps = gst_caps_new_simple ("audio/x-raw-int",
       "width", G_TYPE_INT, 16,
       "depth", G_TYPE_INT, 16,
-      "endianness", G_TYPE_INT, 1234,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "signed", G_TYPE_BOOLEAN, TRUE,
       "channels", G_TYPE_INT, 1,
       "rate", G_TYPE_INT, clock_rate, NULL);
