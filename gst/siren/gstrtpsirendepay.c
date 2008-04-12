@@ -121,14 +121,6 @@ gst_rtp_siren_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstBuffer *outbuf;
 
-  g_print ("process : got %d bytes, mark %d ts %u seqn %d, header len %d, payload len %d\n",
-      GST_BUFFER_SIZE (buf),
-      gst_rtp_buffer_get_marker (buf),
-      gst_rtp_buffer_get_timestamp (buf),
-      gst_rtp_buffer_get_seq (buf),
-      gst_rtp_buffer_get_header_len (buf),
-      gst_rtp_buffer_get_payload_len (buf));
-
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
 
   return outbuf;
