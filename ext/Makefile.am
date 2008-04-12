@@ -58,12 +58,6 @@ else
 JPEG_DIR =
 endif
 
-#if USE_LADSPA
-#LADSPA_DIR = ladspa
-#else
-LADSPA_DIR =
-#endif
-
 if USE_LIBCACA
 LIBCACA_DIR = libcaca
 else

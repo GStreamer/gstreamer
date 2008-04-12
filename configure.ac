@@ -753,12 +753,6 @@ AG_GST_CHECK_FEATURE(JPEG, [jpeg library], jpeg, [
   AC_SUBST(JPEG_LIBS)
 ])
 
-dnl *** ladspa ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
-AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
-  AC_CHECK_HEADER(ladspa.h, HAVE_LADSPA="yes", HAVE_LADSPA="no")
-], disabled)
-
 dnl *** libcaca ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
 AG_GST_CHECK_FEATURE(LIBCACA, [libcaca coloured ASCII art], cacasink, [
@@ -962,7 +956,6 @@ AM_CONDITIONAL(USE_GCONF, false)
 AM_CONDITIONAL(USE_GDK_PIXBUF, false)
 AM_CONDITIONAL(USE_HAL, false)
 AM_CONDITIONAL(USE_JPEG, false)
-AM_CONDITIONAL(USE_LADSPA, false)
 AM_CONDITIONAL(USE_LIBCACA, false)
 AM_CONDITIONAL(USE_LIBDV, false)
 AM_CONDITIONAL(USE_LIBPNG, false)
