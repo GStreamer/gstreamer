@@ -1,5 +1,12 @@
 2008-04-13  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Rene Stadler <mail at renestadler de>
+
+	* gst/gsttaglist.h:
+	  Fix description to match the order in the table (#512577).
+  
+2008-04-13  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Kwang Yul Seo  <kwangyul.seo gmail com>
 
 	* libs/gst/net/gstnettimepacket.h:
