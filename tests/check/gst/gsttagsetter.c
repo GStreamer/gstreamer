@@ -70,8 +70,23 @@ tag_setter_list_length (GstTagSetter * setter)
 {
   guint len = 0;
 
+  if (gst_tag_setter_get_tag_list (setter) == NULL)
+    return 0;
+
   gst_tag_list_foreach (gst_tag_setter_get_tag_list (setter),
       (GstTagForeachFunc) tag_list_foreach, &len);
+  return len;
+}
+
+static guint
+tag_list_length (const GstTagList * tag_list)
+{
+  guint len = 0;
+
+  if (tag_list == NULL)
+    return 0;
+
+  gst_tag_list_foreach (tag_list, (GstTagForeachFunc) tag_list_foreach, &len);
   return len;
 }
 
@@ -117,6 +132,95 @@ GST_START_TEST (test_merge)
   g_object_unref (enc);
 }
 
+GST_END_TEST
+GST_START_TEST (test_merge_modes)
+{
+  GstTagMergeMode mode;
+
+  for (mode = GST_TAG_MERGE_REPLACE_ALL; mode < GST_TAG_MERGE_COUNT; mode++) {
+    gint i;
+
+    for (i = 0; i < 4; i++) {
+      GstElement *enc;
+      GstTagSetter *setter;
+      GstTagList *list1, *list2, *merged;
+
+      enc = g_object_new (GST_TYPE_DUMMY_ENC, NULL);
+      fail_unless (enc != NULL);
+
+      setter = GST_TAG_SETTER (enc);
+      list1 = gst_tag_list_new ();
+      list2 = gst_tag_list_new ();
+
+      /* i = 0: -     -
+       * i = 1: list1 -
+       * i = 2: -     list2
+       * i = 3: list1 list2 */
+
+      if (i % 2 == 1) {
+        gst_tag_list_add (list1, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST,
+            "artist1", NULL);
+      }
+      if (i > 1) {
+        gst_tag_list_add (list2, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST,
+            "artist2", NULL);
+      }
+
+      gst_tag_setter_merge_tags (setter, list1, GST_TAG_MERGE_APPEND);
+      gst_tag_setter_merge_tags (setter, list2, mode);
+
+      merged = gst_tag_list_merge (list1, list2, mode);
+
+      fail_unless_equals_int (tag_list_length (gst_tag_setter_get_tag_list
+              (setter)), tag_list_length (merged));
+
+      gst_tag_list_free (list1);
+      gst_tag_list_free (list2);
+      gst_tag_list_free (merged);
+      gst_object_unref (enc);
+    }
+  }
+}
+
+GST_END_TEST
+GST_START_TEST (test_merge_modes_skip_empty)
+{
+  GstTagMergeMode mode;
+
+  for (mode = GST_TAG_MERGE_REPLACE_ALL; mode < GST_TAG_MERGE_COUNT; mode++) {
+    gint i;
+
+    for (i = 0; i < 2; i++) {
+      GstElement *enc;
+      GstTagSetter *setter;
+      GstTagList *list1, *list2, *merged;
+
+      enc = g_object_new (GST_TYPE_DUMMY_ENC, NULL);
+      fail_unless (enc != NULL);
+
+      setter = GST_TAG_SETTER (enc);
+      list1 = gst_tag_list_new ();
+      list2 = gst_tag_list_new ();
+
+      if (i == 1) {
+        gst_tag_list_add (list2, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST,
+            "artist2", NULL);
+      }
+
+      gst_tag_setter_merge_tags (setter, list2, mode);
+
+      merged = gst_tag_list_merge (list1, list2, mode);
+
+      fail_unless_equals_int (tag_list_length (gst_tag_setter_get_tag_list
+              (setter)), tag_list_length (merged));
+
+      gst_tag_list_free (list1);
+      gst_tag_list_free (list2);
+      gst_tag_list_free (merged);
+      gst_object_unref (enc);
+    }
+  }
+}
 GST_END_TEST static Suite *
 gst_tag_setter_suite (void)
 {
@@ -125,6 +229,8 @@ gst_tag_setter_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_merge);
+  tcase_add_test (tc_chain, test_merge_modes);
+  tcase_add_test (tc_chain, test_merge_modes_skip_empty);
 
   return s;
 }

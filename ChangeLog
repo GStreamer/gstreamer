@@ -2,6 +2,17 @@
 
 	Patch by: Rene Stadler <mail at renestadler de>
 
+	* gst/gsttagsetter.c: (gst_tag_setter_merge_tags):
+	  Merging an empty list with another list in KEEP_ALL mode should
+	  yield an empty list as result and not the second list (#512578).
+
+	* tests/check/gst/gsttagsetter.c:
+	  Add unit test for tag merge modes and the aforementioned bug.
+
+2008-04-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Rene Stadler <mail at renestadler de>
+
 	* gst/gsttaglist.h:
 	  Fix description to match the order in the table (#512577).
   
