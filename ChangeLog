@@ -1,3 +1,9 @@
+2008-04-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_load_plugin):
+	If gst_registry_add_plugin() fails our reference to the plugin is
+	invalid so don't try to use it anymore and instead error out.
+
 2008-04-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-xmlinspect.c: (print_element_info), (main):

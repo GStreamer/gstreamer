@@ -857,7 +857,10 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
   GST_LOG ("read strings for '%s'", plugin->desc.name);
 
   plugin->basename = g_path_get_basename (plugin->filename);
-  gst_registry_add_plugin (registry, plugin);
+
+  if (!gst_registry_add_plugin (registry, plugin))
+    return FALSE;
+
   GST_INFO ("Added plugin '%s' plugin with %d features from binary registry",
       plugin->desc.name, pe->nfeatures);
   for (i = 0; i < pe->nfeatures; i++) {
