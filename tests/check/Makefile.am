@@ -15,8 +15,6 @@ TESTS_ENVIRONMENT = \
         GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR) \
         STATE_IGNORE_ELEMENTS="cdaudio festival vcdsrc nassink glimagesink dvbsrc dvbbasebin sdlaudiosink sdlvideosink alsaspdifsink dfbvideosink"
 
-EXTRA_DIST = test-cert.pem test-key.pem
-
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 # override to _not_ install the test plugins
