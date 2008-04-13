@@ -13,6 +13,8 @@ TESTS_ENVIRONMENT = \
 	GST_TEST_FILES_PATH=$(TEST_FILES_DIRECTORY) \
 	STATE_IGNORE_ELEMENTS="aasink autovideosink cacasink cairotextoverlay gconfaudiosrc gconfvideosrc v4l2src"
 
+EXTRA_DIST = test-cert.pem test-key.pem
+
 # ths core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.*
 

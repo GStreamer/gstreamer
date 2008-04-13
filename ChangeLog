@@ -1,3 +1,8 @@
+2008-04-14  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* tests/check/Makefile.am:
+	Add soup test certificates to the dist.
+
 2008-04-13  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/Makefile.am:
