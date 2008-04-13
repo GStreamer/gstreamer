@@ -1,3 +1,13 @@
+2008-04-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Kwang Yul Seo  <kwangyul.seo gmail com>
+
+	* libs/gst/net/gstnettimepacket.h:
+	* docs/libs/gstreamer-libs-sections.txt:
+	  Define socklen_t as int if it's not defined yet. Fixes compilation
+	  with MSVC6 and other versions where socklen_t is not defined in
+	  the windows headers (#518022).
+
 2008-04-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_load_plugin):

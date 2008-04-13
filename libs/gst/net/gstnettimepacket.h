@@ -32,6 +32,9 @@ G_BEGIN_DECLS
 #ifdef G_OS_WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#ifndef socklen_t
+#define socklen_t int
+#endif
 #else
 #include <netdb.h>
 #include <sys/socket.h>

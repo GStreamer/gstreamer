@@ -465,6 +465,7 @@ gst_net_time_packet_send
 gst_net_time_packet_serialize
 <SUBSECTION Standard>
 <SUBSECTION Private>
+socklen_t
 </SECTION>
 
 
