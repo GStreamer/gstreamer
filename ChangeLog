@@ -1,5 +1,13 @@
 2008-04-13  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* ext/dirac/gstdiracenc.cc:
+	Fix compilation by casting string constants.
+
+	* sys/Makefile.am:
+	Fix WININET_DIR variable reference.
+
+2008-04-13  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* configure.ac:
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:

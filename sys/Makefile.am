@@ -52,7 +52,7 @@ else
 WININET_DIR=
 endif
 
-SUBDIRS = $(DVB_DIR) $(FBDEV_DIR) $(OSS4_DIR) $(QT_DIR) $(VCD_DIR) $(WININET)
+SUBDIRS = $(DVB_DIR) $(FBDEV_DIR) $(OSS4_DIR) $(QT_DIR) $(VCD_DIR) $(WININET_DIR)
 
 DIST_SUBDIRS = dvb fbdev dshowdecwrapper dshowsrcwrapper oss4 qtwrapper vcd wininet
 

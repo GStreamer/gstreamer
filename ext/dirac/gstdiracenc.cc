@@ -151,10 +151,10 @@ static void
 gst_dirac_enc_base_init (gpointer g_class)
 {
   static GstElementDetails dirac_enc_details =
-      GST_ELEMENT_DETAILS ("Dirac Encoder",
-      "Codec/Encoder/Video",
-      "Encode raw YUV video into Dirac stream",
-      "David Schleef <ds@schleef.org>");
+      GST_ELEMENT_DETAILS ((gchar *) "Dirac Encoder",
+      (gchar *) "Codec/Encoder/Video",
+      (gchar *) "Encode raw YUV video into Dirac stream",
+      (gchar *) "David Schleef <ds@schleef.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
