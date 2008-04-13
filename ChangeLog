@@ -1,3 +1,8 @@
+2008-04-13  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/Makefile.am:
+	Remove LADSPA reference I missed.
+
 2008-04-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/soup/gstsouphttpsrc.c: (plugin_init):

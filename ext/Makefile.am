@@ -136,7 +136,6 @@ SUBDIRS = \
 	$(GDK_PIXBUF_DIR) \
 	$(HAL_DIR) \
 	$(JPEG_DIR) \
-	$(LADSPA_DIR) \
 	$(LIBCACA_DIR) \
 	$(LIBDV_DIR) \
 	$(LIBMNG_DIR) \
