@@ -1,3 +1,11 @@
+2008-04-14  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_handle_seek_event):
+	Fix open-ended seeks in matroskademux
+	Patch by: Mark Nauwelaerts <manauw skynet be>
+	Fixes: #526557
+
 2008-04-14  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* tests/check/Makefile.am:

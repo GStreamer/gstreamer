@@ -1397,24 +1397,27 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   GST_OBJECT_LOCK (demux);
 
   /* if nothing configured, play complete file */
-  if (cur == GST_CLOCK_TIME_NONE)
+  if (!GST_CLOCK_TIME_IS_VALID (cur))
     cur = 0;
-  if (stop == GST_CLOCK_TIME_NONE)
+  if (!GST_CLOCK_TIME_IS_VALID (stop))
     stop = demux->segment.duration;
+  /* prevent some calculations and comparisons involving INVALID */
+  segment_start = demux->segment.start;
+  segment_stop = demux->segment.stop;
+  if (!GST_CLOCK_TIME_IS_VALID (segment_start))
+    segment_start = 0;
+  if (!GST_CLOCK_TIME_IS_VALID (segment_stop))
+    segment_stop = demux->segment.duration;
 
   if (cur_type == GST_SEEK_TYPE_SET)
     segment_start = cur;
   else if (cur_type == GST_SEEK_TYPE_CUR)
-    segment_start = demux->segment.start + cur;
-  else
-    segment_start = demux->segment.start;
+    segment_start += cur;
 
   if (stop_type == GST_SEEK_TYPE_SET)
     segment_stop = stop;
   else if (stop_type == GST_SEEK_TYPE_CUR)
-    segment_stop = demux->segment.stop + stop;
-  else
-    segment_stop = demux->segment.stop;
+    segment_stop += stop;
 
   segment_start = CLAMP (segment_start, 0, demux->segment.duration);
   segment_stop = CLAMP (segment_stop, 0, demux->segment.duration);
