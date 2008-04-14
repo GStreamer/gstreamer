@@ -1,3 +1,11 @@
+2008-04-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_load_feature),
+	(gst_registry_binary_load_plugin):
+	Fix a typo in a debug message and revert change from yesterday as
+	gst_registry_add_plugin() will only fail if something is really wrong
+	already and we can't survive it anyway.
+
 2008-04-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (init_post), (gst_deinit):

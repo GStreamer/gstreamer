@@ -697,7 +697,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
   }
 
   if (!GST_IS_PLUGIN_FEATURE (feature)) {
-    GST_ERROR ("typename : '%s' is not a plgin feature", type_name);
+    GST_ERROR ("typename : '%s' is not a plugin feature", type_name);
     goto fail;
   }
 
@@ -858,9 +858,7 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
 
   plugin->basename = g_path_get_basename (plugin->filename);
 
-  if (!gst_registry_add_plugin (registry, plugin))
-    return FALSE;
-
+  gst_registry_add_plugin (registry, plugin);
   GST_INFO ("Added plugin '%s' plugin with %d features from binary registry",
       plugin->desc.name, pe->nfeatures);
   for (i = 0; i < pe->nfeatures; i++) {
