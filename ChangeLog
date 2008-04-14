@@ -1,3 +1,8 @@
+2008-04-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-plugins-bad.spec.in:
+	  Remove souphttpsrc plugin from spec files, it's moved to -good.
+
 2008-04-14  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* tests/check/Makefile.am:
