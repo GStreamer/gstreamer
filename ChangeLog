@@ -1,3 +1,11 @@
+2008-04-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_class_init),
+	  (gst_text_overlay_init):
+	  Fix textoverlay unit test again by making the supposed default
+	  value for the wait-text property the actual default value.
+	  Also fix Since: tag for new property.
+
 2008-04-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/video/video.c: (gst_video_format_new_caps),

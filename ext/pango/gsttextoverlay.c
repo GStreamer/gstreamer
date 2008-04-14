@@ -417,7 +417,7 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
    * If video and subtitles are sent in sync, like from the same demuxer, this
    * property should be set.
    *
-   * Since: 0.10.19
+   * Since: 0.10.20
    **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WAIT_TEXT,
       g_param_spec_boolean ("wait-text", "Wait Text",
@@ -522,6 +522,7 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
   overlay->want_shading = DEFAULT_PROP_SHADING;
   overlay->shading_value = DEFAULT_SHADING_VALUE;
   overlay->silent = DEFAULT_PROP_SILENT;
+  overlay->wait_text = DEFAULT_PROP_WAIT_TEXT;
 
   overlay->default_text = g_strdup (DEFAULT_PROP_TEXT);
   overlay->need_render = TRUE;
