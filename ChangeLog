@@ -1,3 +1,12 @@
+2008-04-14  Andy Wingo  <wingo@pobox.com>
+
+	* autogen.sh:
+	* ffmpegrev (FFMPEG_EXTERNALS_UPDATE): Because ffmpeg checks out
+	libswscale via an svn:externals, checking out an old ffmpeg does
+	not check out a corresponding libswscale. Keep the swscale
+	checkout manually synchronized, then. Update this when you update
+	FFMPEG_REVISION.
+
 2008-04-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
         Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>

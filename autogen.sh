@@ -22,10 +22,14 @@ then
 	rm -rf $FFMPEG_CO_DIR
 	echo "+ getting ffmpeg from svn"
 	svn -r $FFMPEG_REVISION co $FFMPEG_SVN $FFMPEG_CO_DIR
+	echo "+ updating externals"
+        sh -c "$FFMPEG_EXTERNALS_UPDATE"
 else
     # update ffmpeg from its repository
     echo "+ updating ffmpeg checkout"
     svn -r $FFMPEG_REVISION up $FFMPEG_CO_DIR
+    echo "+ updating externals"
+    sh -c "$FFMPEG_EXTERNALS_UPDATE"
 fi
 
 
