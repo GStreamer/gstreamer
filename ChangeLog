@@ -1,3 +1,8 @@
+2008-04-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-plugins-good.spec.in:
+	  Update for souphttpsrc plugin which has moved to -good.
+
 2008-04-14  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst/matroska/matroska-demux.c:
