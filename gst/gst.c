@@ -1044,6 +1044,8 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   _gst_plugin_initialize ();
 
+  gst_g_error_get_type ();
+
   /* register core plugins */
   gst_plugin_register_static (GST_VERSION_MAJOR, GST_VERSION_MINOR,
       "staticelements", "core elements linked into the GStreamer library",
@@ -1305,6 +1307,66 @@ gst_deinit (void)
 #ifndef GST_DISABLE_INDEX
   g_type_class_unref (g_type_class_peek (gst_index_factory_get_type ()));
 #endif /* GST_DISABLE_INDEX */
+#ifndef GST_DISABLE_ENUMTYPES
+  g_type_class_unref (g_type_class_peek (gst_object_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_bin_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_buffer_flag_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_buffer_copy_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_bus_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_bus_sync_reply_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_caps_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_clock_return_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_clock_entry_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_clock_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_debug_graph_details_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_state_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_state_change_return_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_state_change_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_element_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_core_error_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_library_error_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_resource_error_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_stream_error_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_event_type_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_event_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_seek_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_seek_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_format_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_index_certainty_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_index_entry_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_index_lookup_method_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_assoc_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_index_resolver_method_get_type
+          ()));
+  g_type_class_unref (g_type_class_peek (gst_index_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_debug_level_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_debug_color_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_iterator_result_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_iterator_item_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_message_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_mini_object_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_pad_link_return_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_flow_return_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_activate_mode_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_pad_direction_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_pad_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_pad_presence_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_pad_template_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_pipeline_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_plugin_error_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_plugin_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_rank_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_query_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_buffering_mode_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_tag_merge_mode_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_tag_flag_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_task_state_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_alloc_trace_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_type_find_probability_get_type
+          ()));
+  g_type_class_unref (g_type_class_peek (gst_uri_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_parse_error_get_type ()));
+#endif
   g_type_class_unref (g_type_class_peek (gst_param_spec_fraction_get_type ()));
 
   gst_deinitialized = TRUE;

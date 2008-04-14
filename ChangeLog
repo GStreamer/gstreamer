@@ -1,3 +1,9 @@
+2008-04-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.c: (init_post), (gst_deinit):
+	  Pre-register GstGError GType from a thread-safe context
+	  (fixes #527967); unref enum type classes in deinit.
+
 2008-04-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Rene Stadler <mail at renestadler de>
