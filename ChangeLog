@@ -1,6 +1,12 @@
 2008-04-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-docs.sgml:
+	  Remove commented out plugins (they have their own docs). Update
+	  comments.
+
+2008-04-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-docs.sgml:
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstparamspecs.c:
 	* gst/gstparamspecs.h:
