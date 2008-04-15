@@ -64,7 +64,8 @@ setOptimizedMethods (PluginInfo * p)
 #endif
 #endif /* HAVE_CPU_I386 */
 
-/* disable until someone finds out what to use here instead of CPU_OPTION_64_BITS */
+/* disable all PPC stuff until someone finds out what to use here instead of
+ * CPU_OPTION_64_BITS, and until someone fixes the assembly build for ppc */
 #if 0
 #ifdef HAVE_CPU_PPC64
   if ((cpuFlavour & CPU_OPTION_64_BITS) != 0) {
@@ -72,7 +73,6 @@ setOptimizedMethods (PluginInfo * p)
     p->methods.zoom_filter = ppc_zoom_generic;
   }
 #endif /* HAVE_CPU_PPC64 */
-#endif
 
 #ifdef HAVE_CPU_PPC
   if ((cpuFlavour & OIL_IMPL_FLAG_ALTIVEC) != 0) {
@@ -83,6 +83,7 @@ setOptimizedMethods (PluginInfo * p)
     p->methods.zoom_filter = ppc_zoom_generic;
   }
 #endif /* HAVE_CPU_PPC */
+#endif
 
   cpuFlavour = 0;               /* trick compiler into thinking variable is used */
 }

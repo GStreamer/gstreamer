@@ -1,3 +1,9 @@
+2008-04-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/goom/plugin_info.c: (setOptimizedMethods):
+	  Disable altivec optimisations for 32-bit PPC as well to make
+	  things build properly on all PPC systems. Fixes #528143
+
 2008-04-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-plugins-good.spec.in:
