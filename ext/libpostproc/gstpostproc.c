@@ -564,7 +564,7 @@ gst_post_proc_transform_ip (GstBaseTransform * btrans, GstBuffer * in)
   GST_DEBUG_OBJECT (postproc, "calling pp_postprocess, width:%d, height:%d",
       postproc->width, postproc->height);
 
-  pp_postprocess ((const guint8**) inplane, (const int*) stride, outplane, stride,
+  pp_postprocess (inplane, stride, outplane, stride,
       postproc->width, postproc->height, (int8_t*) "", 0,
       postproc->mode, postproc->context, 0);
 

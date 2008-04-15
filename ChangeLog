@@ -1,3 +1,8 @@
+2008-04-15  Andy Wingo  <wingo@pobox.com>
+
+	* ext/libpostproc/gstpostproc.c (gst_post_proc_transform_ip): Fix
+	some mistyping when calling pp_postprocess.
+
 2008-04-14  Andy Wingo  <wingo@pobox.com>
 
 	* autogen.sh:
