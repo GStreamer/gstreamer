@@ -287,6 +287,8 @@ in the various plugin packages.
     (FIXME: are we sure we can both do the xinclude from the tmpl/ sgml,
      as well as an override from the source itself ? maybe we should just
      make sure the xinclude is in the source itself instead ?)
+  - if the plugin has no public header, don't add the c-file, add entries to the
+    -overrides.txt file (see playbin docs in plugins-base).
   - to rebuild the docs, do:
     make clean
     make update
@@ -326,7 +328,7 @@ in the various plugin packages.
     check if each section in -sections.txt actually starts and ends with
     <SECTION> and </SECTION>
   - if a plugin does not show up:
-    - check inspect/plugin-xxx.xml and inspect/elements-
+    - check inspect/plugin-xxx.xml and tmpl/elements-
 
 RANDOM THINGS I'VE LEARNED
 ==========================

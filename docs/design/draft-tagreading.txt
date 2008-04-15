@@ -16,7 +16,7 @@ then plugs the right tagread element(s). If will only look at elements that
 implement the interface. It can plug serval if possible.
 
 For optimal performance typefind and tagread could share the list of already
-peeked buffers (but no idea how we could implement that).
+peeked buffers (a queue element after sink, but that would change pull to push).
 
 
 Design
@@ -26,7 +26,7 @@ The plan is that applications can do the following:
   pipeline = "filesrc ! tagbin"
   for (file_path in list_of_files) {
     filesrc.location=file_path
-    pipeline.set_state(PLAYING)
+    pipeline.set_state(PAUSED)
     // wait for TAGS & EOS
     pipeline.set_state(READY)
   }
@@ -71,6 +71,13 @@ Additional Thoughts
 
     GstTagList *gst_tag_cache_load_tag_data (GstTagCache *self, const gchar *uri);
     gst_tag_cache_store_tag_data (GstTagCache *self, const gchar *uri, GstTagList *tags);
+
+Tests
+-----
+* write a generic test for parsers/demuxers to ensure they send tags until they
+  reached PAUSED (elements need to parse file for prerolling anyway):
+  set pipeline to paused, check for tags, set to playing, error out if tags come
+  after paused
 
 Code Locations
 --------------
