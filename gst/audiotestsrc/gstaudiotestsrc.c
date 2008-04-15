@@ -580,7 +580,6 @@ gst_audio_test_src_generate_pink_noise_value (GstPinkNoise * pink)
      * values together. Only one changes each time.
      */
     pink->running_sum -= pink->rows[num_zeros];
-    //new_random = ((glong)GenerateRandomNumber()) >> PINK_RANDOM_SHIFT;
     new_random = 32768.0 - (65536.0 * (gulong) rand () / (RAND_MAX + 1.0));
     pink->running_sum += new_random;
     pink->rows[num_zeros] = new_random;

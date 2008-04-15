@@ -1,5 +1,10 @@
 2008-04-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	  Remove cpp style commented old code.
+
+2008-04-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/playback/gstdecodebin2.c:
 	  Fix signal docs.
 
