@@ -2,6 +2,7 @@
 
 	* ext/libpostproc/gstpostproc.c (gst_post_proc_transform_ip): Fix
 	some mistyping when calling pp_postprocess.
+	(gst_post_proc_transform_ip): Revert my patch, it was the badness.
 
 2008-04-14  Andy Wingo  <wingo@pobox.com>
 
