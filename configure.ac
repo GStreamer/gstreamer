@@ -276,7 +276,8 @@ else
   FFMPEG_SUBDIRS=gst-libs
   AC_DEFINE(HAVE_AVI_H)
   AC_DEFINE([FFMPEG_SOURCE], ["local snapshot"], [Describes where the FFmpeg libraries come from.])
-  ac_configure_args="$ac_configure_args --disable-vhook --disable-ffserver --disable-ffplay --enable-postproc --enable-gpl --enable-static --disable-encoder=flac --disable-decoder=cavs --extra-cflags=-fPIC"
+  # Enable shared and static so that we get .a files, but with PIC code.
+  ac_configure_args="$ac_configure_args --disable-vhook --disable-ffserver --disable-ffplay --enable-postproc --enable-gpl --enable-static --enable-shared --disable-encoder=flac --disable-decoder=cavs"
   case $host_os in
     # Unfortunately, in Mac OS 10.5 the current rev of ffmpeg builds
     # some non-PIC code into the .a file. See
@@ -286,9 +287,6 @@ else
       ac_configure_args="$ac_configure_args --disable-mmx --disable-altivec"
       ;;
     *)
-      # --disable-shared on macos turns on -mdynamic-no-pic, which we
-      # can't have
-      ac_configure_args="$ac_configure_args --disable-shared"
       ;;
   esac
   AC_SUBST(FFMPEG_CO_DIR)
