@@ -393,7 +393,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::new-decoded-pad:
-   * @pad: the newly created pad
+   * @bin: The decodebin
+   * @pad: The newly created pad
    * @islast: #TRUE if this is the last pad to be added. Deprecated.
    *
    * This signal gets emitted as soon as a new pad of the same type as one of
@@ -408,7 +409,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::removed-decoded-pad:
-   * @pad: the pad that was removed
+   * @bin: The decodebin
+   * @pad: The pad that was removed
    *
    * This signal is emitted when a 'final' caps pad has been removed.
    */
@@ -420,8 +422,9 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::unknown-type:
-   * @pad: the new pad containing caps that cannot be resolved to a 'final' stream type.
-   * @caps: the #GstCaps of the pad that cannot be resolved.
+   * @bin: The decodebin
+   * @pad: The new pad containing caps that cannot be resolved to a 'final' stream type.
+   * @caps: The #GstCaps of the pad that cannot be resolved.
    *
    * This signal is emitted when a pad for which there is no further possible
    * decoding is added to the decodebin.
@@ -434,6 +437,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-continue:
+   * @bin: The decodebin
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
@@ -453,6 +457,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-factories:
+   * @bin: The decodebin
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
@@ -478,6 +483,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-sort:
+   * @bin: The decodebin
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
    * @factories: A #GValueArray of possible #GstElementFactory to use.
@@ -499,6 +505,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-select:
+   * @bin: The decodebin
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
    * @factories: A #GValueArray of possible #GstElementFactory to use, sorted by
@@ -522,6 +529,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::drained
+   * @bin: The decodebin
    *
    * This signal is emitted once decodebin2 has finished decoding all the data.
    *

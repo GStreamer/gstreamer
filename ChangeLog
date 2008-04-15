@@ -1,3 +1,8 @@
+2008-04-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/playback/gstdecodebin2.c:
+	  Fix signal docs.
+
 2008-04-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_class_init),
