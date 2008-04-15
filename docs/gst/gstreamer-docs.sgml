@@ -31,6 +31,7 @@
 <!ENTITY GstObject SYSTEM "xml/gstobject.xml">
 <!ENTITY GstPad SYSTEM "xml/gstpad.xml">
 <!ENTITY GstPadTemplate SYSTEM "xml/gstpadtemplate.xml">
+<!ENTITY GstParamSpec SYSTEM "xml/gstparamspec.xml">
 <!ENTITY GstParse SYSTEM "xml/gstparse.xml">
 <!ENTITY GstPipeline SYSTEM "xml/gstpipeline.xml">
 <!ENTITY GstPlugin SYSTEM "xml/gstplugin.xml">
@@ -135,6 +136,7 @@ Windows.  It is released under the GNU Library General Public License
     &GstObject;
     &GstPad;
     &GstPadTemplate;
+    &GstParamSpec;
     &GstParse;
     &GstPipeline;
     &GstPlugin;

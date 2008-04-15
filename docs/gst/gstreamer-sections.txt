@@ -1479,6 +1479,26 @@ gst_static_caps_get_type
 
 
 <SECTION>
+<FILE>gstparamspec</FILE>
+<TITLE>GstParamSpec</TITLE>
+
+GST_PARAM_CONTROLLABLE
+GST_PARAM_USER_SHIFT
+
+<SUBSECTION paramspecfraction>
+GstParamSpecFraction
+gst_param_spec_fraction
+
+<SUBSECTION Standard>
+GST_IS_PARAM_SPEC_FRACTION
+GST_PARAM_SPEC_FRACTION
+GST_TYPE_PARAM_FRACTION
+gst_param_spec_fraction_get_type
+
+</SECTION>
+
+
+<SECTION>
 <FILE>gstparse</FILE>
 <TITLE>GstParse</TITLE>
 gst_parse_error_quark
@@ -2276,10 +2296,6 @@ gst_value_get_fraction_denominator
 gst_value_fraction_multiply
 gst_value_fraction_subtract
 
-<SUBSECTION paramspecfraction>
-GstParamSpecFraction
-gst_param_spec_fraction
-
 <SUBSECTION fractionrange>
 GST_VALUE_HOLDS_FRACTION_RANGE
 GST_TYPE_FRACTION_RANGE
@@ -2347,11 +2363,6 @@ gst_value_array_get_size
 gst_value_array_get_value
 gst_value_array_prepend_value
 
-<SUBSECTION Standard>
-GST_IS_PARAM_SPEC_FRACTION
-GST_PARAM_SPEC_FRACTION
-GST_TYPE_PARAM_FRACTION
-gst_param_spec_fraction_get_type
 
 <SUBSECTION Private>
 gst_date_get_type

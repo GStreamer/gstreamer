@@ -1,5 +1,21 @@
 2008-04-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstparamspecs.c:
+	* gst/gstparamspecs.h:
+	  Add GST_PARAM_CONTROLLABLE and GST_PARAM_USER_SHIFT. Move paramspec
+	  docs to own section.
+
+	* gst/gstvalue.c:
+	  This now only documents GValue.
+	  
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/controller/gstcontroller.h:
+	  Remove GST_PARAM_CONTROLLABLE.
+
+2008-04-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/README:
 	  Correct file path. Tell about how to use -overrides.txt.
 	* docs/design/draft-tagreading.txt:

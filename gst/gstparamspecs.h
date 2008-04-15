@@ -24,6 +24,24 @@
 
 G_BEGIN_DECLS
 
+/* --- paramspec flags */
+
+/**
+ * GST_PARAM_CONTROLLABLE:
+ *
+ * Use this flag on GObject properties to signal they can make sense to be.
+ * controlled over time. This hint is used by the GstController.
+ */
+#define	GST_PARAM_CONTROLLABLE	(1 << (G_PARAM_USER_SHIFT + 1))
+
+/**
+ * GST_PARAM_USER_SHIFT:
+ *
+ * Bits based on GST_PARAM_USER_SHIFT can be used by 3rd party applications.
+ */
+#define	GST_PARAM_USER_SHIFT	(1 << (G_PARAM_USER_SHIFT + 8))
+
+
 /* --- type macros --- */
 
 #define GST_TYPE_PARAM_FRACTION           (gst_param_spec_fraction_get_type ())

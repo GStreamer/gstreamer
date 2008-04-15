@@ -81,7 +81,6 @@ gst_controller_unset
 gst_controller_unset_all
 gst_controller_get_all
 gst_controller_set_interpolation_mode
-GST_PARAM_CONTROLLABLE
 <SUBSECTION Standard>
 GstControllerClass
 GstControllerPrivate

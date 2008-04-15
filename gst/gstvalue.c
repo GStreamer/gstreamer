@@ -19,15 +19,15 @@
 
 /**
  * SECTION:gstvalue
- * @short_description: GValue and GParamSpec implementations specific
+ * @short_description: GValue implementations specific
  * to GStreamer
  *
- * GValue and GParamSpec implementations specific to GStreamer.
+ * GValue implementations specific to GStreamer.
  *
  * Note that operations on the same GstValue (or GValue) from multiple
  * threads may lead to undefined behaviour. 
  *
- * Last reviewed on 2006-03-07 (0.10.4)
+ * Last reviewed on 2008-03-11 (0.10.18)
  */
 
 #ifdef HAVE_CONFIG_H

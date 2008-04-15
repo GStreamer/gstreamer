@@ -16,6 +16,15 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstparamspec
+ * @short_description: GParamSpec implementations specific
+ * to GStreamer
+ *
+ * GParamSpec implementations specific to GStreamer.
+ *
+ * Last reviewed on 2008-03-11 (0.10.18)
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
