@@ -1,5 +1,11 @@
 2008-04-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/Makefile.am:
+	Don't inlcude dc1394src in the generic/states test as it requires
+	special hardware. Fixes bug #528011.
+
+2008-04-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/elements/ofa.c: (bus_handler), (GST_START_TEST):
 	Only check if the generated fingerprints are valid Base64. The
 	fingerprints are different when running on different architectures
