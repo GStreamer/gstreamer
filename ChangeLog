@@ -1,3 +1,23 @@
+2008-04-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst/goom/Makefile.am:
+	* gst/goom/convolve_fx.c:
+	* gst/goom/default_scripts.h:
+	* gst/goom/goom.h:
+	* gst/goom/goom_core.c: (choose_a_goom_line):
+	* gst/goom/goom_plugin_info.h:
+	* gst/goom/goomsl.c:
+	* gst/goom/goomsl.h:
+	* gst/goom/goomsl_hash.c:
+	* gst/goom/goomsl_hash.h:
+	* gst/goom/goomsl_heap.c:
+	* gst/goom/goomsl_heap.h:
+	* gst/goom/goomsl_private.h:
+	* gst/goom/plugin_info.c:
+	  Strip out the config/script parsing stuff, we don't need it.
+	  Fixes #527999.
+
 2008-04-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/goom/plugin_info.c: (setOptimizedMethods):

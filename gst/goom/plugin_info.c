@@ -8,7 +8,6 @@
 
 #include "goom_plugin_info.h"
 #include "goom_fx.h"
-#include "default_scripts.h"
 #include "drawmethods.h"
 #include <math.h>
 #include <stdio.h>
@@ -195,10 +194,6 @@ plugin_info_init (PluginInfo * pp, int nbVisuals)
   }
 
   setOptimizedMethods (pp);
-
-  pp->scanner = gsl_new ();
-  pp->main_scanner = gsl_new ();
-  pp->main_script_str = GOOM_MAIN_SCRIPT;
 
   for (i = 0; i < 0xffff; i++) {
     pp->sintable[i] =

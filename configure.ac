@@ -116,10 +116,6 @@ AM_PROG_CC_C_O
 dnl find an assembler
 AM_PROG_AS
 
-dnl we require flex and bison for building the goom plugin
-AG_GST_BISON_CHECK
-AG_GST_FLEX_CHECK
-
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 

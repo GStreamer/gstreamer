@@ -24,7 +24,6 @@
 #include "sound_tester.h"
 #include "goom_plugin_info.h"
 #include "goom_fx.h"
-#include "goomsl.h"
 
 /* #define VERBOSE */
 
