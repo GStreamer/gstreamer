@@ -632,13 +632,14 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
 /**
  * GST_TAG_LANGUAGE_CODE:
  *
- * Language code (ISO-639-1) (string)
+ * Language code (ISO-639-1) (string) of the content
  */
 #define GST_TAG_LANGUAGE_CODE          "language-code"
 /**
  * GST_TAG_IMAGE:
  *
- * image (buffer) (buffer caps should specify the content type)
+ * image (buffer) (buffer caps should specify the content type and preferably
+ * also set "image-type" field as #GstTagImageType)
  *
  * Since: 0.10.6
  */
@@ -646,8 +647,8 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
 /**
  * GST_TAG_PREVIEW_IMAGE:
  *
- * image that is meant for preview purposes (buffer)
- * (buffer caps should specify the content type)
+ * image that is meant for preview purposes, e.g. small icon-sized version
+ * (buffer) (buffer caps should specify the content type)
  *
  * Since: 0.10.7
  */
