@@ -2,6 +2,7 @@
  * Copyright (C) 2006 Josep Torra <josep@fluendo.com>
  *               2006 Mathieu Garcia <matthieu@fluendo.com>
  *               2006,2007 Stefan Kost <ensonic@users.sf.net>
+ *               2008 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * gstregistrybinary.c: GstRegistryBinary object, support routines
  *
@@ -260,6 +261,8 @@ gst_registry_binary_write (GstRegistry * registry, const void *mem,
 inline static gboolean
 gst_registry_binary_initialize_magic (GstBinaryRegistryMagic * m)
 {
+  memset (m, 0, sizeof (GstBinaryRegistryMagic));
+
   if (!strncpy (m->magic, GST_MAGIC_BINARY_REGISTRY_STR,
           GST_MAGIC_BINARY_REGISTRY_LEN)
       || !strncpy (m->version, GST_MAGIC_BINARY_VERSION_STR,

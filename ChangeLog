@@ -1,5 +1,10 @@
 2008-04-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/gstregistrybinary.c: (gst_registry_binary_initialize_magic):
+	Initialize the registry magic with zeroes.
+
+2008-04-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/gstregistrybinary.c: (_gst_crc32),
 	(gst_registry_binary_write),
 	(gst_registry_binary_initialize_magic),
