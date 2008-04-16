@@ -1,3 +1,18 @@
+2008-04-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_save_feature),
+	(gst_registry_binary_load_feature),
+	(gst_registry_binary_load_plugin):
+	If an element supports the Uri interface, returns a valid pointer
+	to the supported URI protocols but this pointer contains nothing
+	don't try to save that as it will corrupt the registry.
+
+	Don't unref the plugin if we added it to the registry already but
+	fail to load a feature as gst_registry_add_plugin() takes ownership
+	of the plugin.
+
+	Improve debugging a bit.
+
 2008-04-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gsttaglist.h:

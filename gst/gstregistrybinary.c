@@ -280,7 +280,7 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
     GST_DEBUG ("Saved %d Interfaces", ef->ninterfaces);
     /* save uritypes */
     if (GST_URI_TYPE_IS_VALID (factory->uri_type)) {
-      if (factory->uri_protocols) {
+      if (factory->uri_protocols && *factory->uri_protocols) {
         GstBinaryChunk *subchk;
         gchar **protocol;
 
@@ -681,8 +681,10 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
   /* unpack plugin feature strings */
   unpack_string (*in, type_name);
 
-  if (!type_name || !*(type_name))
+  if (!type_name || !*(type_name)) {
+    GST_ERROR ("No feature type name");
     return FALSE;
+  }
 
   GST_DEBUG ("Plugin '%s' feature typename : '%s'", plugin_name, type_name);
 
@@ -858,6 +860,7 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
 
   plugin->basename = g_path_get_basename (plugin->filename);
 
+  /* Takes ownership of plugin */
   gst_registry_add_plugin (registry, plugin);
   GST_INFO ("Added plugin '%s' plugin with %d features from binary registry",
       plugin->desc.name, pe->nfeatures);
@@ -872,7 +875,6 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
 
   /* Errors */
 fail:
-  gst_object_unref (plugin);
   return FALSE;
 }
 
