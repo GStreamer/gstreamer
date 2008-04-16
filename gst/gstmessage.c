@@ -473,8 +473,8 @@ gst_message_new_buffering (GstObject * src, gint percent)
       GST_QUARK (BUFFERING_MODE), GST_TYPE_BUFFERING_MODE, GST_BUFFERING_STREAM,
       GST_QUARK (AVG_IN_RATE), G_TYPE_INT, -1,
       GST_QUARK (AVG_OUT_RATE), G_TYPE_INT, -1,
-      GST_QUARK (BUFFERING_LEFT), G_TYPE_INT64, -1,
-      GST_QUARK (ESTIMATED_TOTAL), G_TYPE_INT64, -1, NULL);
+      GST_QUARK (BUFFERING_LEFT), G_TYPE_INT64, G_GINT64_CONSTANT (-1),
+      GST_QUARK (ESTIMATED_TOTAL), G_TYPE_INT64, G_GINT64_CONSTANT (-1), NULL);
   message = gst_message_new_custom (GST_MESSAGE_BUFFERING, src, structure);
 
   return message;

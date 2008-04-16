@@ -1,3 +1,8 @@
+2008-04-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstmessage.c:
+	  Use G_GINT64_CONSTANT in varargs function.
+
 2008-04-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_initialize_magic):
