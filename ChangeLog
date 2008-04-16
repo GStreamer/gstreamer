@@ -1,5 +1,19 @@
 2008-04-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/gstregistrybinary.c: (_gst_crc32),
+	(gst_registry_binary_write),
+	(gst_registry_binary_initialize_magic),
+	(gst_registry_binary_write_cache),
+	(gst_registry_binary_check_magic),
+	(gst_registry_binary_read_cache):
+	* gst/gstregistrybinary.h:
+	Add crc32 checksum to the binary registry file and check this before
+	accepting a registry file.
+
+	Also free the data list when writing to the registry file fails.
+
+2008-04-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/gstregistrybinary.c: (gst_registry_binary_save_feature),
 	(gst_registry_binary_load_feature),
 	(gst_registry_binary_load_plugin):
