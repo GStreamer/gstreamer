@@ -1,5 +1,10 @@
 2008-04-16  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstquery.c:
+	  Also use G_GINT64_CONSTANT for the queries.
+
+2008-04-16  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstmessage.c:
 	  Use G_GINT64_CONSTANT in varargs function.
 
