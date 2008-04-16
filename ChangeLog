@@ -1,3 +1,9 @@
+2008-04-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/timidity/Makefile.am:
+	Dist all source files, no matter if only timidity or wildmidi or
+	nothing is found by configure. Fixes bug #528000.
+
 2008-04-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-plugins-bad.spec.in:

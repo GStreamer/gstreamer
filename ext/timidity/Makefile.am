@@ -12,9 +12,6 @@ libgsttimidity_la_SOURCES = gsttimidity.c
 libgsttimidity_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(TIMIDITY_CFLAGS)
 libgsttimidity_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(TIMIDITY_LIBS)
 libgsttimidity_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-
-noinst_HEADERS = gsttimidity.h
-
 endif
 
 if USE_WILDMIDI
@@ -28,6 +25,7 @@ libgstwildmidi_la_SOURCES = gstwildmidi.c
 libgstwildmidi_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(WILDMIDI_CFLAGS)
 libgstwildmidi_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(WILDMIDI_LIBS)
 libgstwildmidi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-
-noinst_HEADERS = gstwildmidi.h
 endif
+
+noinst_HEADERS = gsttimidity.h gstwildmidi.h
+
