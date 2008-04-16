@@ -1,5 +1,13 @@
 2008-04-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/elements/ofa.c: (bus_handler), (GST_START_TEST):
+	Only check if the generated fingerprints are valid Base64. The
+	fingerprints are different when running on different architectures
+	which is a) no problem because the fingerprints are tolerant enough
+	and b) is caused by libofa. Fixes bug #528266.
+
+2008-04-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/timidity/Makefile.am:
 	Dist all source files, no matter if only timidity or wildmidi or
 	nothing is found by configure. Fixes bug #528000.
