@@ -771,7 +771,10 @@ gst_rtp_jitter_buffer_get_clock_rate (GstRtpJitterBuffer * jitterbuffer,
   g_signal_emitv (args, gst_rtp_jitter_buffer_signals[SIGNAL_REQUEST_PT_MAP], 0,
       &ret);
 
-  caps = (GstCaps *) g_value_get_boxed (&ret);
+  g_value_unset (&args[0]);
+  g_value_unset (&args[1]);
+  caps = (GstCaps *) g_value_dup_boxed (&ret);
+  g_value_unset (&ret);
   if (!caps)
     goto no_caps;
 

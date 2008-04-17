@@ -604,7 +604,11 @@ get_pt_map (GstRtpBinSession * session, guint pt)
 
   g_signal_emitv (args, gst_rtp_bin_signals[SIGNAL_REQUEST_PT_MAP], 0, &ret);
 
-  caps = (GstCaps *) g_value_get_boxed (&ret);
+  g_value_unset (&args[0]);
+  g_value_unset (&args[1]);
+  g_value_unset (&args[2]);
+  caps = (GstCaps *) g_value_dup_boxed (&ret);
+  g_value_unset (&ret);
   if (!caps)
     goto no_caps;
 
@@ -662,6 +666,7 @@ gst_rtp_bin_clear_pt_map (GstRtpBin * bin)
   GST_RTP_BIN_UNLOCK (bin);
 }
 
+/* get a client with the given SDES name. Must be called with RTP_BIN_LOCK */
 static GstRtpBinClient *
 get_client (GstRtpBin * bin, guint8 len, guint8 * data, gboolean * created)
 {
@@ -698,6 +703,7 @@ get_client (GstRtpBin * bin, guint8 len, guint8 * data, gboolean * created)
 static void
 free_client (GstRtpBinClient * client)
 {
+  g_slist_free (client->streams);
   g_free (client->cname);
   g_free (client);
 }
@@ -713,6 +719,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
   GSList *walk;
 
   /* first find or create the CNAME */
+  GST_RTP_BIN_LOCK (bin);
   client = get_client (bin, len, data, &created);
 
   /* find stream in the client */
@@ -830,16 +837,19 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
           ostream->ssrc, ostream->ts_offset);
     }
   }
+  GST_RTP_BIN_UNLOCK (bin);
   return;
 
 no_clock_base:
   {
     GST_WARNING_OBJECT (bin, "we have no clock-base");
+    GST_RTP_BIN_UNLOCK (bin);
     return;
   }
 no_clock_rate:
   {
     GST_WARNING_OBJECT (bin, "we have no clock-rate");
+    GST_RTP_BIN_UNLOCK (bin);
     return;
   }
 }
@@ -2165,8 +2175,12 @@ gst_rtp_bin_get_free_pad_name (GstElement * element, GstPadTemplate * templ)
     pad_it = gst_element_iterate_pads (GST_ELEMENT (element));
     name_found = TRUE;
     while (gst_iterator_next (pad_it, (gpointer) & pad) == GST_ITERATOR_OK) {
-      if (strcmp (gst_pad_get_name (pad), pad_name) == 0)
+      gchar *name;
+
+      name = gst_pad_get_name (pad);
+      if (strcmp (name, pad_name) == 0)
         name_found = FALSE;
+      g_free (name);
     }
     gst_iterator_free (pad_it);
   }
