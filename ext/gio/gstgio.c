@@ -104,6 +104,11 @@ gst_gio_get_supported_protocols (void)
   schemes = g_vfs_get_supported_uri_schemes (g_vfs_get_default ());
   num = g_strv_length ((gchar **) schemes);
 
+  if (num == 0) {
+    GST_WARNING ("No GIO supported URI schemes found");
+    return NULL;
+  }
+
   our_schemes = g_new0 (gchar *, num + 1);
 
   /* - Filter http/https as we can't support the icy stuff with GIO.

@@ -1,3 +1,9 @@
+2008-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/gio/gstgio.c: (gst_gio_get_supported_protocols):
+	Return NULL instead of a gchar * array with one NULL element if we
+	don't get any supported URI schemes from GIO.
+
 2008-04-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c:
