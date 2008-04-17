@@ -359,7 +359,7 @@ gst_cdio_cdda_src_set_property (GObject * object, guint prop_id,
       gint speed;
 
       speed = g_value_get_int (value);
-      gst_atomic_int_set (&src->read_speed, speed);
+      g_atomic_int_set (&src->read_speed, speed);
       break;
     }
     default:

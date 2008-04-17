@@ -1,3 +1,9 @@
+2008-04-17  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/dv/gstdvdemux.c: 
+	gst_atomic_int_set ==> g_atomic_int_set
+
 2008-04-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

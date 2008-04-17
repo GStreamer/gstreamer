@@ -280,7 +280,7 @@ gst_dvdemux_reset (GstDVDemux * dvdemux)
   dvdemux->audio_offset = 0;
   dvdemux->video_offset = 0;
   dvdemux->framecount = 0;
-  gst_atomic_int_set (&dvdemux->found_header, 0);
+  g_atomic_int_set (&dvdemux->found_header, 0);
   dvdemux->frame_len = -1;
   dvdemux->need_segment = FALSE;
   dvdemux->new_media = FALSE;
@@ -1449,7 +1449,7 @@ gst_dvdemux_flush (GstDVDemux * dvdemux)
       dvdemux->framerate_numerator = NTSC_FRAMERATE_NUMERATOR;
       dvdemux->framerate_denominator = NTSC_FRAMERATE_DENOMINATOR;
     }
-    gst_atomic_int_set (&dvdemux->found_header, 1);
+    g_atomic_int_set (&dvdemux->found_header, 1);
 
     /* let demux_video set the height, it needs to detect when things change so
      * it can reset caps */
@@ -1597,7 +1597,7 @@ gst_dvdemux_loop (GstPad * pad)
       /* setting header and prrforming the seek must be atomic */
       GST_OBJECT_LOCK (dvdemux);
       /* got header now */
-      gst_atomic_int_set (&dvdemux->found_header, 1);
+      g_atomic_int_set (&dvdemux->found_header, 1);
 
       /* now perform pending seek if any. */
       event = dvdemux->seek_event;
