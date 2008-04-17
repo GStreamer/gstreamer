@@ -1,4 +1,10 @@
 2008-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstutils.c: (gst_atomic_int_set):
+	Use g_atomic_int_set() here too instead of assignment +
+	g_atomic_int_get().
+
+2008-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
 	
 	* gst/gstutils.c:
 	* gst/gstutils.h:

@@ -2836,11 +2836,7 @@ gst_pad_query_peer_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
 void
 gst_atomic_int_set (gint * atomic_int, gint value)
 {
-  int ignore;
-
-  *atomic_int = value;
-  /* read acts as a memory barrier */
-  ignore = g_atomic_int_get (atomic_int);
+  g_atomic_int_set (atomic_int, value);
 }
 #endif
 
