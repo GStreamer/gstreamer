@@ -273,7 +273,10 @@ gst_rtp_pt_demux_get_caps (GstRtpPtDemux * rtpdemux, guint pt)
   g_signal_emitv (args, gst_rtp_pt_demux_signals[SIGNAL_REQUEST_PT_MAP], 0,
       &ret);
 
-  caps = g_value_get_boxed (&ret);
+  g_value_unset (&args[0]);
+  g_value_unset (&args[1]);
+  caps = g_value_dup_boxed (&ret);
+  g_value_unset (&ret);
   if (caps == NULL)
     caps = GST_PAD_CAPS (rtpdemux->sink);
 

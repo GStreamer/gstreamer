@@ -1,3 +1,16 @@
+2008-04-17  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c: (get_pt_map), (free_client),
+	(gst_rtp_bin_associate), (gst_rtp_bin_get_free_pad_name):
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_get_clock_rate):
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_get_caps):
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_clock_rate):
+	Unset GValues after g_signal_emitv so that we avoid a refcount leak.
+	Don't leak a padname.
+	Don't leak client streams list.
+	Lock rtpbin when associating streams. Fixes #528245.
+
 2008-04-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/Makefile.am:
