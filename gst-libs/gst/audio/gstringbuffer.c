@@ -1757,5 +1757,5 @@ gst_ring_buffer_may_start (GstRingBuffer * buf, gboolean allowed)
   g_return_if_fail (GST_IS_RING_BUFFER (buf));
 
   GST_LOG_OBJECT (buf, "may start: %d", allowed);
-  gst_atomic_int_set (&buf->abidata.ABI.may_start, allowed);
+  g_atomic_int_set (&buf->abidata.ABI.may_start, allowed);
 }

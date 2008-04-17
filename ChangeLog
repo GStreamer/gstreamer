@@ -1,5 +1,10 @@
 2008-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_may_start):
+	Use g_atomic_int_set() instead of gst_atomic_int_set().
+
+2008-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/gio/gstgio.c: (gst_gio_get_supported_protocols):
 	Return NULL instead of a gchar * array with one NULL element if we
 	don't get any supported URI schemes from GIO.
