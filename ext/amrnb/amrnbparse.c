@@ -488,12 +488,22 @@ gst_amrnbparse_loop (GstPad * pad)
 
   ret = gst_pad_push (amrnbparse->srcpad, buffer);
 
-  if (ret != GST_FLOW_OK) {
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     GST_DEBUG_OBJECT (amrnbparse, "Flow: %s", gst_flow_get_name (ret));
-    if (GST_FLOW_IS_FATAL (ret)) {
-      GST_ELEMENT_ERROR (amrnbparse, STREAM, FAILED, (NULL),    /* _("Internal data flow error.")), */
-          ("streaming task paused, reason: %s", gst_flow_get_name (ret)));
-      gst_pad_push_event (pad, gst_event_new_eos ());
+    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+      if (ret == GST_FLOW_UNEXPECTED) {
+        /* we don't do seeking yet, so no segment flag to check here either */
+        if (0) {
+          /* post segment_done message here one day when seeking works */
+        } else {
+          GST_LOG_OBJECT (amrnbparse, "Sending EOS at end of segment");
+          gst_pad_push_event (amrnbparse->srcpad, gst_event_new_eos ());
+        }
+      } else {
+        GST_ELEMENT_ERROR (amrnbparse, STREAM, FAILED, (NULL),
+            ("streaming stopped, reason: %s", gst_flow_get_name (ret)));
+        gst_pad_push_event (amrnbparse->srcpad, gst_event_new_eos ());
+      }
     }
     goto need_pause;
   }

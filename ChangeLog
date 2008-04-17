@@ -1,3 +1,9 @@
+2008-04-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_loop):
+	  We should also stop the streaming task when we get a NOT_LINKED
+	  flow return, which is not covered by FLOW_IS_FATAL.
+
 2008-04-11  Julien Moutte  <julien@fluendo.com>
 
 	* gst/mpegaudioparse/gstxingmux.c: (generate_xing_header): Fix
