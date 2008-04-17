@@ -161,7 +161,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
       "created entry %p, time %" GST_TIME_FORMAT, entry, GST_TIME_ARGS (time));
 
-  gst_atomic_int_set (&entry->refcount, 1);
+  g_atomic_int_set (&entry->refcount, 1);
   entry->clock = clock;
   entry->type = type;
   entry->time = time;

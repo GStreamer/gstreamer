@@ -661,7 +661,9 @@ void			gst_buffer_stamp		(GstBuffer * dest, const GstBuffer * src);
 #endif /* GST_DISABLE_DEPRECATED */
 
 /* atomic functions */
+#ifndef GST_DISABLE_DEPRECATED
 void                    gst_atomic_int_set              (gint * atomic_int, gint value);
+#endif
 
 /* probes */
 gulong			gst_pad_add_data_probe		(GstPad   * pad,

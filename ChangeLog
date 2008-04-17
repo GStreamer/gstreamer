@@ -1,3 +1,21 @@
+2008-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
+	
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	API: Deprecate gst_atomic_int_set(), g_atomic_int_set() should be used
+	now that we depend on new enough GLib.
+
+	* gst/gstcaps.c: (gst_static_caps_get):
+	* gst/gstclock.c: (gst_clock_entry_new):
+	* gst/gstinfo.c: (_gst_debug_init), (gst_debug_set_colored),
+	(gst_debug_set_default_threshold), (_gst_debug_category_new),
+	(gst_debug_category_set_threshold):
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_init),
+	(gst_base_sink_set_qos_enabled):
+	* libs/gst/net/gstnettimeprovider.c:
+	(gst_net_time_provider_set_property):
+	Use g_atomic_int_set() instead of gst_atomic_int_set().
+
 2008-04-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstquery.c:

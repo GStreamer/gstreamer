@@ -453,7 +453,7 @@ gst_static_caps_get (GstStaticCaps * static_caps)
 
     /* initialize the caps to a refcount of 1 so the caps can be writable for
      * the next statement */
-    gst_atomic_int_set (&temp.refcount, 1);
+    g_atomic_int_set (&temp.refcount, 1);
 
     /* convert to string */
     if (G_UNLIKELY (!gst_caps_from_string_inplace (&temp, string)))
@@ -464,7 +464,7 @@ gst_static_caps_get (GstStaticCaps * static_caps)
     caps->flags = temp.flags;
     caps->structs = temp.structs;
     /* and bump the refcount so other threads can now read */
-    gst_atomic_int_set (&caps->refcount, 1);
+    g_atomic_int_set (&caps->refcount, 1);
 
     GST_CAT_LOG (GST_CAT_CAPS, "created %p", static_caps);
   done:

@@ -2828,7 +2828,11 @@ gst_pad_query_peer_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
  * @value: value to set
  *
  * Unconditionally sets the atomic integer to @value.
+ * 
+ * Deprecated: Use g_atomic_int_set().
+ *
  */
+#ifndef GST_REMOVE_DEPRECATED
 void
 gst_atomic_int_set (gint * atomic_int, gint value)
 {
@@ -2838,6 +2842,7 @@ gst_atomic_int_set (gint * atomic_int, gint value)
   /* read acts as a memory barrier */
   ignore = g_atomic_int_get (atomic_int);
 }
+#endif
 
 /**
  * gst_pad_add_data_probe:

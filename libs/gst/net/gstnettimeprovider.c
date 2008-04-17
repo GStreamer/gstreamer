@@ -314,7 +314,7 @@ gst_net_time_provider_set_property (GObject * object, guint prop_id,
           (GstObject *) g_value_get_object (value));
       break;
     case PROP_ACTIVE:
-      gst_atomic_int_set (&self->active.active, g_value_get_boolean (value));
+      g_atomic_int_set (&self->active.active, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

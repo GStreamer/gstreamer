@@ -277,8 +277,8 @@ _priv_gst_in_valgrind (void)
 void
 _gst_debug_init (void)
 {
-  gst_atomic_int_set (&__default_level, GST_LEVEL_DEFAULT);
-  gst_atomic_int_set (&__use_color, 1);
+  g_atomic_int_set (&__default_level, GST_LEVEL_DEFAULT);
+  g_atomic_int_set (&__use_color, 1);
 
   /* get time we started for debugging messages */
   _priv_gst_info_start_time = gst_util_get_timestamp ();
@@ -847,7 +847,7 @@ gst_debug_remove_log_function_by_data (gpointer data)
 void
 gst_debug_set_colored (gboolean colored)
 {
-  gst_atomic_int_set (&__use_color, colored ? 1 : 0);
+  g_atomic_int_set (&__use_color, colored ? 1 : 0);
 }
 
 /**
@@ -906,7 +906,7 @@ gst_debug_is_active (void)
 void
 gst_debug_set_default_threshold (GstDebugLevel level)
 {
-  gst_atomic_int_set (&__default_level, level);
+  g_atomic_int_set (&__default_level, level);
   gst_debug_reset_all_thresholds ();
 }
 
@@ -1044,7 +1044,7 @@ _gst_debug_category_new (const gchar * name, guint color,
   } else {
     cat->description = g_strdup ("no description");
   }
-  gst_atomic_int_set (&cat->threshold, 0);
+  g_atomic_int_set (&cat->threshold, 0);
   gst_debug_reset_threshold (cat, NULL);
 
   /* add to category list */
@@ -1102,7 +1102,7 @@ gst_debug_category_set_threshold (GstDebugCategory * category,
     __gst_debug_min = level;
   }
 
-  gst_atomic_int_set (&category->threshold, level);
+  g_atomic_int_set (&category->threshold, level);
 }
 
 /**

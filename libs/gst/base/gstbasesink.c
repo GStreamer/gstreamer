@@ -548,7 +548,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
 
   basesink->sync = DEFAULT_SYNC;
   basesink->abidata.ABI.max_lateness = DEFAULT_MAX_LATENESS;
-  gst_atomic_int_set (&priv->qos_enabled, DEFAULT_QOS);
+  g_atomic_int_set (&priv->qos_enabled, DEFAULT_QOS);
   priv->async_enabled = DEFAULT_ASYNC;
   priv->ts_offset = DEFAULT_TS_OFFSET;
 
@@ -679,7 +679,7 @@ gst_base_sink_set_qos_enabled (GstBaseSink * sink, gboolean enabled)
 {
   g_return_if_fail (GST_IS_BASE_SINK (sink));
 
-  gst_atomic_int_set (&sink->priv->qos_enabled, enabled);
+  g_atomic_int_set (&sink->priv->qos_enabled, enabled);
 }
 
 /**
