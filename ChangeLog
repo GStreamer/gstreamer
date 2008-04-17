@@ -1,3 +1,8 @@
+2008-04-16  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.6.3 pre-release
+
 2008-04-17  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c:
