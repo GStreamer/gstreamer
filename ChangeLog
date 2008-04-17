@@ -1,3 +1,9 @@
+2008-04-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstcaps.c: (gst_static_caps_get):
+	* gst/gstclock.c: (gst_clock_entry_new):
+	  Don't use g_atomic_set_int where it's not needed.
+
 2008-04-17  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstvalue.c: (gst_value_deserialize_caps):
