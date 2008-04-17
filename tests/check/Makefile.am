@@ -11,7 +11,7 @@ TESTS_ENVIRONMENT = \
 	GST_PLUGIN_SYSTEM_PATH=					\
 	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/sys:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)			\
 	GST_TEST_FILES_PATH=$(TEST_FILES_DIRECTORY) \
-	STATE_IGNORE_ELEMENTS="aasink autovideosink cacasink cairotextoverlay gconfaudiosrc gconfvideosrc v4l2src"
+	STATE_IGNORE_ELEMENTS="aasink autovideosink cacasink cairotextoverlay gconfaudiosrc gconfvideosrc gconfaudiosink gconfvideosink halaudiosrc halaudiosink v4l2src"
 
 EXTRA_DIST = test-cert.pem test-key.pem
 
@@ -129,7 +129,7 @@ elements_cmmlenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 elements_alphacolor_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
-elements_souphttpsrc_CFLAGS = $(SOUP_CFLAGS) $(AM_CFLAGS)
+elements_souphttpsrc_CFLAGS = -DCHECKDATA_DIR="$(srcdir)" $(SOUP_CFLAGS) $(AM_CFLAGS)
 elements_souphttpsrc_LDADD = $(SOUP_LIBS) $(LDADD)
 
 elements_sunaudio_CFLAGS = \

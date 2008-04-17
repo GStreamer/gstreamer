@@ -415,7 +415,8 @@ run_server (int *http_port, int *https_port)
   SoupServer *server, *ssl_server;
   int port = SOUP_ADDRESS_ANY_PORT;
   int ssl_port = SOUP_ADDRESS_ANY_PORT;
-  const char *ssl_cert_file = "test-cert.pem", *ssl_key_file = "test-key.pem";
+  const char *ssl_cert_file = G_STRINGIFY (CHECKDATA_DIR) "/test-cert.pem";
+  const char *ssl_key_file = G_STRINGIFY (CHECKDATA_DIR) "/test-key.pem";
   static int server_running = 0;
 
   if (server_running)
