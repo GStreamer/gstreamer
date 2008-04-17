@@ -339,6 +339,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
     if (!gst_value_deserialize (&v, pos))
       goto error;
     g_object_set_property (G_OBJECT (target), pspec->name, &v);
+    g_value_unset (&v);
   } else { 
     /* do a delayed set */
     if (GST_IS_CHILD_PROXY (element)) {

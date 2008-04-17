@@ -1,3 +1,9 @@
+2008-04-17  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstvalue.c: (gst_value_deserialize_caps):
+	* gst/parse/grammar.y:
+	Fix 2 caps leaks.
+
 2008-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstutils.c: (gst_atomic_int_set):

@@ -1280,7 +1280,7 @@ gst_value_deserialize_caps (GValue * dest, const gchar * s)
   caps = gst_caps_from_string (s);
 
   if (caps) {
-    g_value_set_boxed (dest, caps);
+    g_value_take_boxed (dest, caps);
     return TRUE;
   }
   return FALSE;
