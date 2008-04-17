@@ -903,9 +903,6 @@ read_device (int fd, int adapter_number, int frontend_number, int size)
             ("Unable to read after %u attempts from device: /dev/dvb/adapter%d/dvr%d (%d)",
             attempts, adapter_number, frontend_number, errno);
       }
-      if (attempts % 100 == 0) {
-        return NULL;
-      }
     } else if (errno == -EINTR) {       // poll interrupted
       ;
     }

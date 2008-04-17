@@ -1,3 +1,9 @@
+2008-04-17  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/gstdvbsrc.c:
+	Revert patch that added a loop timeout.
+	Fixes #528614.
+
 2008-04-17  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpbin.c: (get_pt_map), (free_client),
