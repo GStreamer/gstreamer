@@ -1,3 +1,9 @@
+2008-04-17  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/goom/convolve_fx.c: (convolve_apply):
+	Don't ever draw the GOOM logo.
+	Fixes: #528615
+
 2008-04-17  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/cdio/gstcdiocddasrc.c:

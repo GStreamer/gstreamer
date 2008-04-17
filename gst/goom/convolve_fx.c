@@ -9,6 +9,9 @@
 //#define CONV_MOTIF_W 32
 //#define CONV_MOTIF_WMASK 0x1f
 
+/* Define if you like the wacky GOOM logo: */
+#undef DRAW_MOTIF
+
 #define CONV_MOTIF_W 128
 #define CONV_MOTIF_WMASK 0x7f
 
@@ -119,6 +122,7 @@ convolve_free (VisualFX * _this)
   free (_this->fx_data);
 }
 
+#ifdef DRAW_MOTIF
 static void
 create_output_with_brightness (VisualFX * _this, Pixel * src, Pixel * dest,
     PluginInfo * info, int iff)
@@ -240,7 +244,7 @@ create_output_with_brightness (VisualFX * _this, Pixel * src, Pixel * dest,
 
   compute_tables (_this, info);
 }
-
+#endif
 
 /*#include <stdint.h>
 
@@ -302,11 +306,15 @@ convolve_apply (VisualFX * _this, Pixel * src, Pixel * dest, PluginInfo * info)
         break;
     }
   }
-
+#ifdef DRAW_MOTIF
   if ((ff > 0.98f) && (ff < 1.02f))
     memcpy (dest, src, info->screen.size * sizeof (Pixel));
   else
     create_output_with_brightness (_this, src, dest, info, iff);
+#else
+  memcpy (dest, src, info->screen.size * sizeof (Pixel));
+#endif
+
 /*
 //   Benching suite...
    {
