@@ -1,3 +1,10 @@
+2008-04-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Bump Gtk+ requirement to 2.12.0 for gtk_range_set_fill_level
+	  (NB: this only affects compilation of some of the examples).
+	  Remove some configure.ac cruft that's not needed any longer.
+
 2008-04-18  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_chain):
