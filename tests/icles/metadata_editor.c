@@ -967,7 +967,7 @@ me_gst_bus_callback_view (GstBus * bus, GstMessage * message, gpointer data)
       if (last_pixbuf)
         g_object_unref (last_pixbuf);
 
-      last_pixbuf = g_value_dup_object (val);
+      last_pixbuf = GDK_PIXBUF (g_value_dup_object (val));
 
       g_print ("Got image pixbuf: %dx%d\n", gdk_pixbuf_get_width (last_pixbuf),
           gdk_pixbuf_get_height (last_pixbuf));
