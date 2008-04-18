@@ -1,3 +1,9 @@
+2008-04-18  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_chain):
+	Don't validate the payload if there isn't any.
+	Fixes #525915
+
 2008-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_may_start):
