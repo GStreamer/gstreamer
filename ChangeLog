@@ -1,3 +1,8 @@
+2008-04-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/icles/gdkpixbufsink-test.c:
+	  Add cast to placate gcc 4.1.2.
+
 2008-04-16  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

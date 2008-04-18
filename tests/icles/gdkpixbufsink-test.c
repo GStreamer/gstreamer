@@ -160,7 +160,7 @@ bus_message_cb (GstBus * bus, GstMessage * msg, AppInfo * info)
       val = gst_structure_get_value (msg->structure, "pixbuf");
       g_return_if_fail (val != NULL);
 
-      pixbuf = g_value_dup_object (val);
+      pixbuf = GDK_PIXBUF (g_value_dup_object (val));
       gtk_image_set_from_pixbuf (GTK_IMAGE (info->img), pixbuf);
       g_object_unref (pixbuf);
       break;
