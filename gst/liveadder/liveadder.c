@@ -524,6 +524,8 @@ gst_live_adder_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
+      gst_event_unref (event);
+
       /* we need time for now */
       if (format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
@@ -540,8 +542,6 @@ gst_live_adder_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_set_newsegment_full (&padprivate->segment, update,
           rate, arate, format, start, stop, time);
       GST_OBJECT_UNLOCK (adder);
-
-      gst_event_unref (event);
       break;
     }
     case GST_EVENT_FLUSH_START:
