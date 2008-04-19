@@ -1,3 +1,9 @@
+2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst-libs/gst/rtp/gstrtppayloads.c:
+	(gst_rtp_payload_info_for_name):
+	Use g_ascii_strcasecmp() instead of the deprecated g_strcasecmp().
+
 2008-04-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

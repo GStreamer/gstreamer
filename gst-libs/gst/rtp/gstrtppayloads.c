@@ -220,7 +220,7 @@ gst_rtp_payload_info_for_name (const gchar * media, const gchar * encoding_name)
 
   for (i = 0; info[i].media; i++) {
     if (strcmp (media, info[i].media) == 0
-        && g_strcasecmp (encoding_name, info[i].encoding_name) == 0) {
+        && g_ascii_strcasecmp (encoding_name, info[i].encoding_name) == 0) {
       result = &info[i];
       break;
     }
