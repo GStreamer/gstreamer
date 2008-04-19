@@ -1,5 +1,11 @@
 2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/gstregistrybinary.c: (_gst_crc32):
+	Return the old CRC instead of 0 if we give a NULL buffer
+	or a buffer with a length of 0.
+
+2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/gsturi.c: (gst_uri_protocol_check_internal),
 	(gst_uri_get_protocol), (gst_uri_has_protocol),
 	(gst_uri_construct), (gst_uri_handler_set_uri):

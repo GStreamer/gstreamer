@@ -122,6 +122,7 @@
 /* Changes for gstreamer:
  * - Changed to use GLib data types
  * - Change function name to _gst_crc32
+ * - Return the old CRC instead of 0 when len or buf are 0/NULL
  */
 
 /* ========================================================================
@@ -192,8 +193,9 @@ static const guint32 crc_table[256] = {
 static guint32
 _gst_crc32 (guint32 crc, const gchar * buf, guint len)
 {
-  if (buf == NULL)
-    return 0L;
+  if (buf == NULL || len == 0)
+    return crc;
+
   crc = crc ^ 0xffffffffL;
   while (len >= 8) {
     DO8 (buf);
