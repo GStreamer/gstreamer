@@ -1577,6 +1577,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "mmf") ||
         !strcmp (in_plugin->name, "mm") ||
         !strcmp (in_plugin->name, "ipmovie") ||
+        !strcmp (in_plugin->name, "ape") ||
         !strcmp (in_plugin->name, "RoQ") ||
         !strcmp (in_plugin->name, "idcin") ||
         !strcmp (in_plugin->name, "gxf") ||

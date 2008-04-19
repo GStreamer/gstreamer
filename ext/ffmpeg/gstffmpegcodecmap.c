@@ -317,6 +317,16 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-dts", NULL);
       break;
 
+    case CODEC_ID_APE:
+      caps =
+          gst_ff_aud_caps_new (context, codec_id, "audio/x-ffmpeg-parsed-ape",
+          NULL);
+      if (context) {
+        gst_caps_set_simple (caps,
+            "depth", G_TYPE_INT, context->bits_per_sample, NULL);
+      }
+      break;
+
       /* MJPEG is normal JPEG, Motion-JPEG and Quicktime MJPEG-A. MJPEGB
        * is Quicktime's MJPEG-B. LJPEG is lossless JPEG. I don't know what
        * sp5x is, but it's apparently something JPEG... We don't separate
@@ -1620,6 +1630,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     case CODEC_ID_MSRLE:
     case CODEC_ID_QTRLE:
     case CODEC_ID_TSCC:
+    case CODEC_ID_APE:
     {
       gint depth;
 
@@ -1739,6 +1750,8 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_new_simple ("video/x-msvideo", NULL);
   } else if (!strcmp (format_name, "wav")) {
     caps = gst_caps_new_simple ("audio/x-wav", NULL);
+  } else if (!strcmp (format_name, "ape")) {
+    caps = gst_caps_new_simple ("application/x-ape", NULL);
   } else if (!strcmp (format_name, "swf")) {
     caps = gst_caps_new_simple ("application/x-shockwave-flash", NULL);
   } else if (!strcmp (format_name, "au")) {
@@ -2135,6 +2148,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "audio/x-dts")) {
     id = CODEC_ID_DTS;
     audio = TRUE;
+  } else if (!strcmp (mimetype, "application/x-ape")) {
+    id = CODEC_ID_APE;
+    audio = TRUE;
   } else if (!strcmp (mimetype, "video/x-msmpeg")) {
     gint msmpegversion = 0;
 
@@ -2505,6 +2521,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_MP3:
       name = "MPEG-1 layer 3 audio";
+      break;
+    case CODEC_ID_APE:
+      name = "Monkey's Audio";
       break;
     case CODEC_ID_VORBIS:
       name = "Vorbis audio";
