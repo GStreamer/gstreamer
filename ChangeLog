@@ -1,5 +1,14 @@
 2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/typefind/gsttypefindfunctions.c: (musepack_type_find),
+	(plugin_init):
+	Add "mpp" and "mp+" as possible extensions for MusePack files.
+
+	Add typefinding for MusePack StreamVersion 8 files and include the
+	stream version in the caps.
+
+2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst-libs/gst/rtp/gstrtppayloads.c:
 	(gst_rtp_payload_info_for_name):
 	Use g_ascii_strcasecmp() instead of the deprecated g_strcasecmp().

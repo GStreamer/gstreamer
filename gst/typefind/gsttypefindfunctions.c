@@ -906,20 +906,39 @@ suggest:
 
 /*** audio/x-musepack ***/
 
-static GstStaticCaps musepack_caps = GST_STATIC_CAPS ("audio/x-musepack");
+static GstStaticCaps musepack_caps =
+GST_STATIC_CAPS ("audio/x-musepack, streamversion= (int) { 7, 8 }");
 
 #define MUSEPACK_CAPS (gst_static_caps_get(&musepack_caps))
 static void
 musepack_type_find (GstTypeFind * tf, gpointer unused)
 {
   guint8 *data = gst_type_find_peek (tf, 0, 4);
+  GstTypeFindProbability prop = GST_TYPE_FIND_MINIMUM;
+  gint streamversion = -1;
 
   if (data && memcmp (data, "MP+", 3) == 0) {
+    streamversion = 7;
     if ((data[3] & 0x7f) == 7) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MUSEPACK_CAPS);
+      prop = GST_TYPE_FIND_MAXIMUM;
     } else {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY + 10, MUSEPACK_CAPS);
+      prop = GST_TYPE_FIND_LIKELY + 10;
     }
+  } else if (data && memcmp (data, "MPCK", 4) == 0) {
+    streamversion = 8;
+    prop = GST_TYPE_FIND_MAXIMUM;
+  }
+
+  if (streamversion != -1) {
+    GstCaps *caps;
+
+    caps = gst_caps_make_writable (MUSEPACK_CAPS);
+    gst_structure_set (gst_caps_get_structure (caps, 0), "streamversion",
+        G_TYPE_INT, streamversion, NULL);
+
+    gst_type_find_suggest (tf, prop, caps);
+
+    gst_caps_unref (caps);
   }
 }
 
@@ -2896,7 +2915,7 @@ plugin_init (GstPlugin * plugin)
   };
   static gchar *mp3_exts[] = { "mp3", "mp2", "mp1", "mpga", NULL };
   static gchar *ac3_exts[] = { "ac3", NULL };
-  static gchar *musepack_exts[] = { "mpc", NULL };
+  static gchar *musepack_exts[] = { "mpc", "mpp", "mp+", NULL };
   static gchar *mpeg_sys_exts[] = { "mpe", "mpeg", "mpg", NULL };
   static gchar *mpeg_video_exts[] = { "mpv", "mpeg", "mpg", NULL };
   static gchar *mpeg_ts_exts[] = { "ts", NULL };
