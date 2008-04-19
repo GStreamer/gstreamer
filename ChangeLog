@@ -1,6 +1,15 @@
 2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_formatid_to_caps), (gst_ffmpeg_caps_to_codecid),
+	(gst_ffmpeg_get_codecid_longname):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	Add support for MusePack StreamVersion 7 and disable the StreamVersion
+	8 typefinder. Fixes bug #510745.
+
+2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
 	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_formatid_to_caps),
 	(gst_ffmpeg_caps_to_codecid), (gst_ffmpeg_get_codecid_longname):
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):

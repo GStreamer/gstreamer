@@ -304,6 +304,13 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       }
       break;
 
+    case CODEC_ID_MUSEPACK7:
+      caps =
+          gst_ff_aud_caps_new (context, codec_id,
+          "audio/x-ffmpeg-parsed-musepack", "streamversion", G_TYPE_INT, 7,
+          NULL);
+      break;
+
     case CODEC_ID_AC3:
       /* FIXME: bitrate */
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-ac3", NULL);
@@ -1797,6 +1804,8 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
   } else if (!strcmp (format_name, "yuv4mpegpipe")) {
     caps = gst_caps_new_simple ("application/x-yuv4mpeg",
         "y4mversion", G_TYPE_INT, 2, NULL);
+  } else if (!strcmp (format_name, "mpc")) {
+    caps = gst_caps_from_string ("audio/x-musepack, streamversion = (int) 7");
   } else {
     gchar *name;
 
@@ -2124,6 +2133,15 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     }
     if (id != CODEC_ID_NONE)
       audio = TRUE;
+  } else if (!strcmp (mimetype, "audio/x-musepack")) {
+    gint streamversion = -1;
+
+    if (gst_structure_get_int (structure, "streamversion", &streamversion)) {
+      if (streamversion == 7)
+        id = CODEC_ID_MUSEPACK7;
+    } else {
+      id = CODEC_ID_MUSEPACK7;
+    }
   } else if (!strcmp (mimetype, "audio/x-wma")) {
     gint wmaversion = 0;
 
@@ -2527,6 +2545,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_VORBIS:
       name = "Vorbis audio";
+      break;
+    case CODEC_ID_MUSEPACK7:
+      name = "MusePack audio";
       break;
     case CODEC_ID_QDM2:
       name = "QDesign Music 2";
