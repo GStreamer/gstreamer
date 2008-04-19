@@ -301,7 +301,8 @@ gst_uri_protocol_check_internal (const gchar * uri, gchar ** endptr)
 
   if (g_ascii_isalpha (*check)) {
     check++;
-    while (g_ascii_isalnum (*check))
+    while (g_ascii_isalnum (*check) || *check == '+'
+        || *check == '-' || *check == '.')
       check++;
   }
 
@@ -313,7 +314,8 @@ gst_uri_protocol_check_internal (const gchar * uri, gchar ** endptr)
  * @protocol: A string
  *
  * Tests if the given string is a valid protocol identifier. Protocols
- * must consist of alphanumeric characters and not start with a number.
+ * must consist of alphanumeric characters, '+', '-' and '.' and must
+ * start with a alphabetic character. See RFC 3986 Section 3.1.
  *
  * Returns: TRUE if the string is a valid protocol identifier, FALSE otherwise.
  */
@@ -369,7 +371,7 @@ gst_uri_get_protocol (const gchar * uri)
 
   colon = strstr (uri, "://");
 
-  return g_strdown (g_strndup (uri, colon - uri));
+  return g_ascii_strdown (g_strndup (uri, colon - uri), -1);
 }
 
 /**
@@ -397,7 +399,7 @@ gst_uri_has_protocol (const gchar * uri, const gchar * protocol)
   if (colon == NULL)
     return FALSE;
 
-  return (strncmp (uri, protocol, (gsize) (colon - uri)) == 0);
+  return (g_ascii_strncasecmp (uri, protocol, (gsize) (colon - uri)) == 0);
 }
 
 /**
@@ -457,15 +459,17 @@ gst_uri_get_location (const gchar * uri)
 gchar *
 gst_uri_construct (const gchar * protocol, const gchar * location)
 {
-  char *escaped;
+  char *escaped, *proto_lowercase;
   char *retval;
 
   g_return_val_if_fail (gst_uri_protocol_is_valid (protocol), NULL);
   g_return_val_if_fail (location != NULL, NULL);
 
+  proto_lowercase = g_ascii_strdown (protocol, -1);
   escaped = escape_string (location);
-  retval = g_strdup_printf ("%s://%s", protocol, escaped);
+  retval = g_strdup_printf ("%s://%s", proto_lowercase, escaped);
   g_free (escaped);
+  g_free (proto_lowercase);
 
   return retval;
 }
@@ -716,6 +720,8 @@ gboolean
 gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   GstURIHandlerInterface *iface;
+  gboolean ret;
+  gchar *new_uri, *protocol, *location;
 
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), FALSE);
   g_return_val_if_fail (gst_uri_is_valid (uri), FALSE);
@@ -723,7 +729,18 @@ gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri)
   iface = GST_URI_HANDLER_GET_INTERFACE (handler);
   g_return_val_if_fail (iface != NULL, FALSE);
   g_return_val_if_fail (iface->set_uri != NULL, FALSE);
-  return iface->set_uri (handler, uri);
+
+  protocol = gst_uri_get_protocol (uri);
+  location = gst_uri_get_location (uri);
+  new_uri = g_strdup_printf ("%s://%s", protocol, location);
+
+  ret = iface->set_uri (handler, uri);
+
+  g_free (new_uri);
+  g_free (location);
+  g_free (protocol);
+
+  return ret;
 }
 
 /**

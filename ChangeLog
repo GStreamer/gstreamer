@@ -1,3 +1,18 @@
+2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gsturi.c: (gst_uri_protocol_check_internal),
+	(gst_uri_get_protocol), (gst_uri_has_protocol),
+	(gst_uri_construct), (gst_uri_handler_set_uri):
+	A valid URI scheme can also include '+', '-' and '.' additional
+	to alphanumeric characters as per RFC 3986 Section 3.1.
+
+	Handle URI schemes case insensitive in all places and convert
+	to lower-case when constructing an URI or setting an URI with
+	the GstURIHandler interface. Fixes bug #528868.
+	All elements can still assume (as before) that they will
+	get passed URIs with a lower-case URI scheme by the GstURIHandler
+	interface.
+
 2008-04-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstcaps.c: (gst_static_caps_get):
