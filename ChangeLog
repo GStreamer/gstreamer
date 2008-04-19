@@ -1,5 +1,11 @@
 2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/gsttaglist.c: (gst_tag_merge_strings_with_comma):
+	Use g_value_take_string() instead of the deprecated
+	g_value_set_string_take_ownership().
+
+2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/gstregistrybinary.c: (_gst_crc32):
 	Return the old CRC instead of 0 if we give a NULL buffer
 	or a buffer with a length of 0.
