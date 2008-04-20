@@ -577,6 +577,7 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
     }
     case 'v':{
       guint32 fourcc;
+      gint time_unit;
 
       fourcc = GST_MAKE_FOURCC (ogm->hdr.subtype[0],
           ogm->hdr.subtype[1], ogm->hdr.subtype[2], ogm->hdr.subtype[3]);
@@ -601,10 +602,15 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
           ogm->hdr.samples_per_unit, ogm->hdr.default_len,
           ogm->hdr.buffersize, ogm->hdr.bits_per_sample, caps);
 
+      /* GST_TYPE_FRACTION contains gint */
+      if (ogm->hdr.time_unit > G_MAXINT || ogm->hdr.time_unit < G_MININT)
+        GST_WARNING_OBJECT (ogm, "timeunit is out of range");
+
+      time_unit = (gint) CLAMP (ogm->hdr.time_unit, G_MININT, G_MAXINT);
       gst_caps_set_simple (caps,
           "width", G_TYPE_INT, ogm->hdr.s.video.width,
           "height", G_TYPE_INT, ogm->hdr.s.video.height,
-          "framerate", GST_TYPE_FRACTION, 10000000, ogm->hdr.time_unit, NULL);
+          "framerate", GST_TYPE_FRACTION, 10000000, time_unit, NULL);
       break;
     }
     case 't':{

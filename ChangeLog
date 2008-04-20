@@ -1,5 +1,12 @@
 2008-04-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_stream_header):
+	GST_TYPE_FRACTION contains gints so correctly cast gint64 arguments to
+	vaargs functions to gint. Otherwise the fractions will get 0 set
+	instead of the correct value on big endian systems. Fixes bug #529018.
+
+2008-04-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/gnomevfs/gstgnomevfssink.c:
 	(gst_gnome_vfs_sink_uri_get_protocols):
 	* ext/gnomevfs/gstgnomevfssrc.c:
