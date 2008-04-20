@@ -32,8 +32,8 @@
 
 #include <gst/gst.h>
 
-gchar **
-gst_gnomevfs_get_supported_uris (void)
+static gpointer
+_internal_get_supported_uris (gpointer data)
 {
   /* no dav/davs in the list, because they don't appear to be reliable enough */
   const gchar *uris[] = {
@@ -75,4 +75,13 @@ gst_gnomevfs_get_supported_uris (void)
   result[r] = NULL;
 
   return result;
+}
+
+gchar **
+gst_gnomevfs_get_supported_uris (void)
+{
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, _internal_get_supported_uris, NULL);
+  return (gchar **) once.retval;
 }

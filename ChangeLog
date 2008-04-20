@@ -1,5 +1,16 @@
 2008-04-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/gnomevfs/gstgnomevfssink.c:
+	(gst_gnome_vfs_sink_uri_get_protocols):
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	(gst_gnome_vfs_src_uri_get_protocols):
+	* ext/gnomevfs/gstgnomevfsuri.c: (_internal_get_supported_uris),
+	(gst_gnomevfs_get_supported_uris):
+	Get the list of supported URI schemes in a threadsafe way and use the
+	same list for the source and sink.
+
+2008-04-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/gio/gstgio.c: (_internal_get_supported_protocols),
 	(gst_gio_get_supported_protocols):
 	Don't generate a new supported protocols list on each call but cache

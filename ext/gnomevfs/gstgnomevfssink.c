@@ -596,12 +596,7 @@ gst_gnome_vfs_sink_uri_get_type (void)
 static gchar **
 gst_gnome_vfs_sink_uri_get_protocols (void)
 {
-  static gchar **protocols = NULL;
-
-  if (!protocols)
-    protocols = gst_gnomevfs_get_supported_uris ();
-
-  return protocols;
+  return gst_gnomevfs_get_supported_uris ();
 }
 
 static const gchar *
