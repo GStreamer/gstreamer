@@ -84,7 +84,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_LOCATION
+  ARG_LOCATION,
+  ARG_FILE
 };
 
 GST_BOILERPLATE_FULL (GstGioSink, gst_gio_sink, GstGioBaseSink,
@@ -100,18 +101,15 @@ static gboolean gst_gio_sink_start (GstBaseSink * base_sink);
 static void
 gst_gio_sink_base_init (gpointer gclass)
 {
-  static GstElementDetails element_details = {
-    "GIO sink",
-    "Sink/File",
-    "Write to any GIO-supported location",
-    "Ren\xc3\xa9 Stadler <mail@renestadler.de>, "
-        "Sebastian Dröge <slomo@circular-chaos.org>"
-  };
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   GST_DEBUG_CATEGORY_INIT (gst_gio_sink_debug, "gio_sink", 0, "GIO sink");
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "GIO sink",
+      "Sink/File",
+      "Write to any GIO-supported location",
+      "Ren\xc3\xa9 Stadler <mail@renestadler.de>, "
+      "Sebastian Dröge <slomo@circular-chaos.org>");
 }
 
 static void
@@ -133,6 +131,17 @@ gst_gio_sink_class_init (GstGioSinkClass * klass)
       g_param_spec_string ("location", "Location", "URI location to write to",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstGioSink:file
+   *
+   * %GFile to write to.
+   * 
+   * Since: 0.10.20
+   **/
+  g_object_class_install_property (gobject_class, ARG_FILE,
+      g_param_spec_object ("file", "File", "GFile to write to",
+          G_TYPE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_gio_sink_start);
 }
 
@@ -146,9 +155,9 @@ gst_gio_sink_finalize (GObject * object)
 {
   GstGioSink *sink = GST_GIO_SINK (object);
 
-  if (sink->location) {
-    g_free (sink->location);
-    sink->location = NULL;
+  if (sink->file) {
+    g_object_unref (sink->file);
+    sink->file = NULL;
   }
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
@@ -161,13 +170,49 @@ gst_gio_sink_set_property (GObject * object, guint prop_id,
   GstGioSink *sink = GST_GIO_SINK (object);
 
   switch (prop_id) {
-    case ARG_LOCATION:
-      if (GST_STATE (sink) == GST_STATE_PLAYING ||
-          GST_STATE (sink) == GST_STATE_PAUSED)
-        break;
+    case ARG_LOCATION:{
+      const gchar *uri = NULL;
 
-      g_free (sink->location);
-      sink->location = g_strdup (g_value_get_string (value));
+      if (GST_STATE (sink) == GST_STATE_PLAYING ||
+          GST_STATE (sink) == GST_STATE_PAUSED) {
+        GST_WARNING
+            ("Setting a new location or GFile not supported in PLAYING or PAUSED state");
+        break;
+      }
+
+      GST_OBJECT_LOCK (GST_OBJECT (sink));
+      if (sink->file)
+        g_object_unref (sink->file);
+
+      uri = g_value_get_string (value);
+
+      if (uri) {
+        sink->file = g_file_new_for_uri (uri);
+
+        if (!sink->file) {
+          GST_ERROR ("Could not create GFile for URI '%s'", uri);
+        }
+      } else {
+        sink->file = NULL;
+      }
+      GST_OBJECT_UNLOCK (GST_OBJECT (sink));
+      break;
+    }
+    case ARG_FILE:
+      if (GST_STATE (sink) == GST_STATE_PLAYING ||
+          GST_STATE (sink) == GST_STATE_PAUSED) {
+        GST_WARNING
+            ("Setting a new location or GFile not supported in PLAYING or PAUSED state");
+        break;
+      }
+
+      GST_OBJECT_LOCK (GST_OBJECT (sink));
+      if (sink->file)
+        g_object_unref (sink->file);
+
+      sink->file = g_value_dup_object (value);
+
+      GST_OBJECT_UNLOCK (GST_OBJECT (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -182,8 +227,24 @@ gst_gio_sink_get_property (GObject * object, guint prop_id,
   GstGioSink *sink = GST_GIO_SINK (object);
 
   switch (prop_id) {
-    case ARG_LOCATION:
-      g_value_set_string (value, sink->location);
+    case ARG_LOCATION:{
+      gchar *uri;
+
+      GST_OBJECT_LOCK (GST_OBJECT (sink));
+      if (sink->file) {
+        uri = g_file_get_uri (sink->file);
+        g_value_set_string (value, uri);
+        g_free (uri);
+      } else {
+        g_value_set_string (value, NULL);
+      }
+      GST_OBJECT_UNLOCK (GST_OBJECT (sink));
+      break;
+    }
+    case ARG_FILE:
+      GST_OBJECT_LOCK (GST_OBJECT (sink));
+      g_value_set_object (value, sink->file);
+      GST_OBJECT_UNLOCK (GST_OBJECT (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -195,32 +256,27 @@ static gboolean
 gst_gio_sink_start (GstBaseSink * base_sink)
 {
   GstGioSink *sink = GST_GIO_SINK (base_sink);
-  GFile *file;
   GOutputStream *stream;
   GCancellable *cancel = GST_GIO_BASE_SINK (sink)->cancel;
   gboolean success;
   GError *err = NULL;
+  gchar *uri;
 
-  if (sink->location == NULL) {
+  if (sink->file == NULL) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
-        ("No location given"));
+        ("No location or GFile given"));
     return FALSE;
   }
 
-  file = g_file_new_for_uri (sink->location);
-
-  if (file == NULL) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
-        ("Malformed URI or protocol not supported (%s)", sink->location));
-    return FALSE;
-  }
+  uri = g_file_get_uri (sink->file);
+  if (!uri)
+    uri = g_strdup ("(null)");
 
   stream =
-      G_OUTPUT_STREAM (g_file_create (file, G_FILE_CREATE_NONE, cancel, &err));
+      G_OUTPUT_STREAM (g_file_create (sink->file, G_FILE_CREATE_NONE, cancel,
+          &err));
 
   success = (stream != NULL);
-
-  g_object_unref (file);
 
   if (!success && !gst_gio_error (sink, "g_file_create", &err, NULL)) {
 
@@ -229,20 +285,21 @@ gst_gio_sink_start (GstBaseSink * base_sink)
 
     if (GST_GIO_ERROR_MATCHES (err, NOT_FOUND))
       GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND, (NULL),
-          ("Could not open location %s for writing: %s",
-              sink->location, err->message));
+          ("Could not open location %s for writing: %s", uri, err->message));
     else
       GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_READ, (NULL),
-          ("Could not open location %s for writing: %s",
-              sink->location, err->message));
+          ("Could not open location %s for writing: %s", uri, err->message));
 
+    g_free (uri);
     g_clear_error (&err);
   }
 
   if (!success)
     return FALSE;
 
-  GST_DEBUG_OBJECT (sink, "opened location %s", sink->location);
+  GST_DEBUG_OBJECT (sink, "opened location %s", uri);
+
+  g_free (uri);
 
   gst_gio_base_sink_set_stream (GST_GIO_BASE_SINK (sink), stream);
 

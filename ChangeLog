@@ -1,3 +1,26 @@
+2008-04-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/gio/gstgio.c: (_internal_get_supported_protocols),
+	(gst_gio_get_supported_protocols):
+	Don't generate a new supported protocols list on each call but cache
+	it. It's supposed to be static anyway, this way we only leak it once
+	per process.
+
+	* ext/gio/gstgiosink.c: (gst_gio_sink_base_init),
+	(gst_gio_sink_class_init), (gst_gio_sink_finalize),
+	(gst_gio_sink_set_property), (gst_gio_sink_get_property),
+	(gst_gio_sink_start):
+	* ext/gio/gstgiosink.h:
+	* ext/gio/gstgiosrc.c: (gst_gio_src_base_init),
+	(gst_gio_src_class_init), (gst_gio_src_finalize),
+	(gst_gio_src_set_property), (gst_gio_src_get_property),
+	(gst_gio_src_start):
+	* ext/gio/gstgiosrc.h:
+	API: Add "file" properties where one can set a GFile as source/destination.
+
+	Add locking to the properties and use gst_element_class_set_details_simple()
+	instead of a static GstElementDetails struct.
+
 2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/typefind/gsttypefindfunctions.c: (musepack_type_find),

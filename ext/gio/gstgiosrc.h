@@ -53,10 +53,7 @@ struct _GstGioSrc
   GstGioBaseSrc src;
   
   /*< private >*/
-  gchar *location;
-
-  GMainLoop *loop;
-  gboolean mount_successful;
+  GFile *file;
 };
 
 struct _GstGioSrcClass 

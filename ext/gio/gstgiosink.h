@@ -53,10 +53,7 @@ struct _GstGioSink
   GstGioBaseSink sink;
 
   /*< private >*/
-  gchar *location;
-
-  GMainLoop *loop;
-  gboolean mount_successful;
+  GFile *file;
 };
 
 struct _GstGioSinkClass 

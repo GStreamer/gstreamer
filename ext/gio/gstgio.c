@@ -93,8 +93,8 @@ gst_gio_seek (gpointer element, GSeekable * stream, guint64 offset,
   return ret;
 }
 
-static gchar **
-gst_gio_get_supported_protocols (void)
+static gpointer
+_internal_get_supported_protocols (gpointer data)
 {
   const gchar *const *schemes;
   gchar **our_schemes;
@@ -127,6 +127,15 @@ gst_gio_get_supported_protocols (void)
   }
 
   return our_schemes;
+}
+
+static gchar **
+gst_gio_get_supported_protocols (void)
+{
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, _internal_get_supported_protocols, NULL);
+  return (gchar **) once.retval;
 }
 
 static GstURIType
