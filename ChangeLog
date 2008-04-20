@@ -1,3 +1,9 @@
+2008-04-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gsturi.c: (gst_uri_get_protocol):
+	  Fix leak: g_strdown operates on the string in place, while
+	  g_ascii_strdown() returns a newly-allocated string.
+
 2008-04-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tools/gst-inspect.c: (print_uri_handler_info),

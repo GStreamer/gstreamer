@@ -371,7 +371,7 @@ gst_uri_get_protocol (const gchar * uri)
 
   colon = strstr (uri, "://");
 
-  return g_ascii_strdown (g_strndup (uri, colon - uri), -1);
+  return g_ascii_strdown (uri, colon - uri);
 }
 
 /**
