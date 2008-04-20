@@ -718,6 +718,39 @@ print_index_info (GstElement * element)
 #endif
 
 static void
+print_uri_handler_info (GstElement * element)
+{
+  if (GST_IS_URI_HANDLER (element)) {
+    const gchar *uri_type;
+    gchar **uri_protocols;
+
+    if (gst_uri_handler_get_uri_type (GST_URI_HANDLER (element)) == GST_URI_SRC)
+      uri_type = "source";
+    else if (gst_uri_handler_get_uri_type (GST_URI_HANDLER (element)) ==
+        GST_URI_SINK)
+      uri_type = "sink";
+    else
+      uri_type = "unknown";
+
+    uri_protocols = gst_uri_handler_get_protocols (GST_URI_HANDLER (element));
+
+    n_print ("\n");
+    n_print ("URI handling capabilities:\n");
+    n_print ("  Element can act as %s.\n", uri_type);
+
+    if (uri_protocols && *uri_protocols) {
+      n_print ("  Supported URI protocols:\n");
+      for (; *uri_protocols != NULL; uri_protocols++)
+        n_print ("    %s\n", *uri_protocols);
+    } else {
+      n_print ("  No supported URI protocols\n");
+    }
+  } else {
+    n_print ("Element has no URI handling capabilities.\n");
+  }
+}
+
+static void
 print_pad_info (GstElement * element)
 {
   const GList *pads;
@@ -1159,6 +1192,7 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   print_implementation_info (element);
   print_clocking_info (element);
   print_index_info (element);
+  print_uri_handler_info (element);
   print_pad_info (element);
   print_element_properties_info (element);
   print_signal_info (element);

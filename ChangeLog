@@ -1,3 +1,9 @@
+2008-04-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tools/gst-inspect.c: (print_uri_handler_info),
+	(print_element_info):
+	Print the URI protocols and the URI type supported by the element.
+
 2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gsttaglist.c: (gst_tag_merge_strings_with_comma):
