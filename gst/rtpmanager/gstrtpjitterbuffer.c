@@ -780,6 +780,8 @@ gst_rtp_jitter_buffer_get_clock_rate (GstRtpJitterBuffer * jitterbuffer,
 
   res = gst_jitter_buffer_sink_parse_caps (jitterbuffer, caps);
 
+  gst_caps_unref (caps);
+
   return res;
 
   /* ERRORS */
@@ -1233,6 +1235,9 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
       res = gst_pad_query_default (pad, query);
       break;
   }
+
+  gst_object_unref (jitterbuffer);
+
   return res;
 }
 

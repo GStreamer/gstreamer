@@ -460,7 +460,8 @@ create_session (GstRtpBin * rtpbin, gint id)
   sess->bin = rtpbin;
   sess->session = session;
   sess->demux = demux;
-  sess->ptmap = g_hash_table_new (NULL, NULL);
+  sess->ptmap = g_hash_table_new_full (NULL, NULL, NULL,
+      (GDestroyNotify) gst_caps_unref);
   rtpbin->sessions = g_slist_prepend (rtpbin->sessions, sess);
 
   /* set NTP base or new session */
@@ -584,8 +585,10 @@ get_pt_map (GstRtpBinSession * session, guint pt)
 
   /* first look in the cache */
   caps = g_hash_table_lookup (session->ptmap, GINT_TO_POINTER (pt));
-  if (caps)
+  if (caps) {
+    gst_caps_ref (caps);
     goto done;
+  }
 
   bin = session->bin;
 
@@ -614,11 +617,11 @@ get_pt_map (GstRtpBinSession * session, guint pt)
 
   GST_DEBUG ("caching pt %d as %" GST_PTR_FORMAT, pt, caps);
 
-  /* store in cache */
-  g_hash_table_insert (session->ptmap, GINT_TO_POINTER (pt), caps);
+  /* store in cache, take additional ref */
+  g_hash_table_insert (session->ptmap, GINT_TO_POINTER (pt),
+      gst_caps_ref (caps));
 
 done:
-  gst_caps_ref (caps);
   GST_RTP_SESSION_UNLOCK (session);
 
   return caps;
@@ -1780,16 +1783,17 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
   /* get pad and link */
   GST_DEBUG_OBJECT (session->bin, "linking jitterbuffer");
   padname = g_strdup_printf ("src_%d", ssrc);
-  srcpad = gst_element_get_pad (element, padname);
+  srcpad = gst_element_get_static_pad (element, padname);
   g_free (padname);
   sinkpad = gst_element_get_static_pad (stream->buffer, "sink");
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
 
   /* get the RTCP sync pad */
   GST_DEBUG_OBJECT (session->bin, "linking sync pad");
   padname = g_strdup_printf ("rtcp_src_%d", ssrc);
-  srcpad = gst_element_get_pad (element, padname);
+  srcpad = gst_element_get_static_pad (element, padname);
   g_free (padname);
   gst_pad_link (srcpad, stream->sync_pad);
   gst_object_unref (srcpad);
