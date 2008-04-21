@@ -776,6 +776,8 @@ GST_START_TEST (test_gap_buffers)
   fail_unless_track_peak (tag_list, 0.0);
   fail_unless_track_gain (tag_list, SILENCE_GAIN);
 
+  gst_tag_list_free (tag_list);
+
   cleanup_rganalysis (element);
 }
 

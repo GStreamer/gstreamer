@@ -1,5 +1,10 @@
 2008-04-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/elements/rganalysis.c: (GST_START_TEST):
+	Don't leak a tag list. Fixes bug #529285.
+
+2008-04-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/elements/ofa.c: (bus_handler):
 	Don't leak the tags string and tag list. Fixes bug #529283.
 
