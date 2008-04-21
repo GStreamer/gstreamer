@@ -46,17 +46,21 @@ bus_handler (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_TAG:
     {
       GstTagList *tag_list;
-      gchar *fpr;
+      gchar *fpr, *p;
 
       gst_message_parse_tag (message, &tag_list);
 
       fail_unless (gst_tag_list_get_string (tag_list, "ofa-fingerprint", &fpr));
 
-      while (*fpr) {
-        fail_unless (g_ascii_isalnum (*fpr) || *fpr == '=' || *fpr == '+'
-            || *fpr == '/');
-        fpr++;
+      p = fpr;
+      while (*p) {
+        fail_unless (g_ascii_isalnum (*p) || *p == '=' || *p == '+'
+            || *p == '/');
+        p++;
       }
+
+      g_free (fpr);
+      gst_tag_list_free (tag_list);
 
       found_fingerprint = TRUE;
 

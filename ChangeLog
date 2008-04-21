@@ -1,3 +1,8 @@
+2008-04-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/elements/ofa.c: (bus_handler):
+	Don't leak the tags string and tag list. Fixes bug #529283.
+
 2008-04-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Olivier Crete <tester at tester dot ca>
