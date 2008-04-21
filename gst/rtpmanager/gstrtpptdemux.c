@@ -277,8 +277,11 @@ gst_rtp_pt_demux_get_caps (GstRtpPtDemux * rtpdemux, guint pt)
   g_value_unset (&args[1]);
   caps = g_value_dup_boxed (&ret);
   g_value_unset (&ret);
-  if (caps == NULL)
+  if (caps == NULL) {
     caps = GST_PAD_CAPS (rtpdemux->sink);
+    if (caps)
+      gst_caps_ref (caps);
+  }
 
   GST_DEBUG ("pt %d, got caps %" GST_PTR_FORMAT, pt, caps);
 
@@ -341,6 +344,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     caps = gst_caps_make_writable (caps);
     gst_caps_set_simple (caps, "payload", G_TYPE_INT, pt, NULL);
     gst_pad_set_caps (srcpad, caps);
+    gst_caps_unref (caps);
 
     GST_DEBUG ("Adding pt=%d to the list.", pt);
     rtpdemuxpad = g_new0 (GstRtpPtDemuxPad, 1);
@@ -380,6 +384,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     caps = gst_caps_make_writable (caps);
     gst_caps_set_simple (caps, "payload", G_TYPE_INT, pt, NULL);
     gst_pad_set_caps (srcpad, caps);
+    gst_caps_unref (caps);
     rtpdemuxpad->newcaps = FALSE;
   }
 

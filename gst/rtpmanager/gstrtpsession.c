@@ -391,6 +391,7 @@ source_get_sdes_structure (RTPSource * src)
     g_value_take_string (&val, str);
     gst_structure_set_value (result, "priv", &val);
   }
+  g_value_unset (&val);
 
   return result;
 }
@@ -690,7 +691,8 @@ gst_rtp_session_init (GstRtpSession * rtpsession, GstRtpSessionClass * klass)
       (GCallback) on_bye_timeout, rtpsession);
   g_signal_connect (rtpsession->priv->session, "on-timeout",
       (GCallback) on_timeout, rtpsession);
-  rtpsession->priv->ptmap = g_hash_table_new (NULL, NULL);
+  rtpsession->priv->ptmap = g_hash_table_new_full (NULL, NULL, NULL,
+      (GDestroyNotify) gst_caps_unref);
 
   gst_segment_init (&rtpsession->recv_rtp_seg, GST_FORMAT_UNDEFINED);
   gst_segment_init (&rtpsession->send_rtp_seg, GST_FORMAT_UNDEFINED);
@@ -1068,10 +1070,16 @@ failed_thread:
   }
 }
 
+static gboolean
+return_true (gpointer key, gpointer value, gpointer user_data)
+{
+  return TRUE;
+}
+
 static void
 gst_rtp_session_clear_pt_map (GstRtpSession * rtpsession)
 {
-  /* FIXME, do something */
+  g_hash_table_foreach_remove (rtpsession->priv->ptmap, return_true, NULL);
 }
 
 /* called when the session manager has an RTP packet ready for further
@@ -1203,11 +1211,11 @@ gst_rtp_session_cache_caps (GstRtpSession * rtpsession, GstCaps * caps)
   if (!gst_structure_get_int (s, "payload", &payload))
     return;
 
-  caps = g_hash_table_lookup (priv->ptmap, GINT_TO_POINTER (payload));
-  if (caps)
+  if (g_hash_table_lookup (priv->ptmap, GINT_TO_POINTER (payload)))
     return;
 
-  g_hash_table_insert (priv->ptmap, GINT_TO_POINTER (payload), caps);
+  g_hash_table_insert (priv->ptmap, GINT_TO_POINTER (payload),
+      gst_caps_ref (caps));
 }
 
 /* called when the session manager needs the clock rate */
@@ -1229,8 +1237,10 @@ gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
   GST_RTP_SESSION_LOCK (rtpsession);
   ipayload = payload;           /* make compiler happy */
   caps = g_hash_table_lookup (priv->ptmap, GINT_TO_POINTER (ipayload));
-  if (caps)
+  if (caps) {
+    gst_caps_ref (caps);
     goto found;
+  }
 
   /* not found in the cache, try to get it with a signal */
   g_value_init (&args[0], GST_TYPE_ELEMENT);
@@ -1258,6 +1268,8 @@ found:
   if (!gst_structure_get_int (s, "clock-rate", &result))
     goto no_clock_rate;
 
+  gst_caps_unref (caps);
+
   GST_DEBUG_OBJECT (rtpsession, "parsed clock-rate %d", result);
 
 done:
@@ -1273,6 +1285,7 @@ no_caps:
   }
 no_clock_rate:
   {
+    gst_caps_unref (caps);
     GST_DEBUG_OBJECT (rtpsession, "No clock-rate in caps!");
     goto done;
   }

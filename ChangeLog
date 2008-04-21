@@ -1,3 +1,29 @@
+2008-04-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtpmanager/gstrtpbin.c: (create_session), (get_pt_map),
+	(new_ssrc_pad_found):
+	Ref caps when inserting into the cache.
+	Don't leak pads.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_get_clock_rate),
+	(gst_rtp_jitter_buffer_query):
+	Avoid a caps leak.
+	Don't leak refcount in query.
+
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_get_caps),
+	(gst_rtp_pt_demux_chain):
+	Avoid caps leaks.
+
+	* gst/rtpmanager/gstrtpsession.c: (source_get_sdes_structure),
+	(gst_rtp_session_init), (return_true),
+	(gst_rtp_session_clear_pt_map), (gst_rtp_session_cache_caps),
+	(gst_rtp_session_clock_rate):
+	Ref caps when inserting into the cache.
+	Fix some more caps leaks. Fixes #528245.
+
 2008-04-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/icles/metadata_editor.c:
