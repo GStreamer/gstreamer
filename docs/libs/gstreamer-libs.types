@@ -1,23 +1,36 @@
 #include <gst/gst.h>
 
-#include <gst/controller/gstcontroller.h>
-gst_controller_get_type
-#include <gst/controller/gstcontrolsource.h>
-gst_control_source_get_type
-#include <gst/controller/gstinterpolationcontrolsource.h>
-gst_interpolation_control_source_get_type
-#include <gst/controller/gstlfocontrolsource.h>
-gst_lfo_control_source_get_type
+% base classes
+
 #include <gst/base/gstadapter.h>
-gst_adapter_get_type
 #include <gst/base/gstbasesrc.h>
-gst_base_src_get_type
 #include <gst/base/gstbasesink.h>
-gst_base_sink_get_type
 #include <gst/base/gstbasetransform.h>
-gst_base_transform_get_type
 #include <gst/base/gstcollectpads.h>
-gst_collect_pads_get_type
 #include <gst/base/gstpushsrc.h>
+
+gst_adapter_get_type
+gst_base_src_get_type
+gst_base_sink_get_type
+gst_base_transform_get_type
+gst_collect_pads_get_type
 gst_push_src_get_type
 
+% controller
+
+#include <gst/controller/gstcontroller.h>
+#include <gst/controller/gstcontrolsource.h>
+#include <gst/controller/gstinterpolationcontrolsource.h>
+#include <gst/controller/gstlfocontrolsource.h>
+
+gst_controller_get_type
+gst_control_source_get_type
+gst_interpolation_control_source_get_type
+gst_lfo_control_source_get_type
+
+% net
+
+#include <gst/net/gstnet.h>
+
+gst_net_client_clock_get_type
+gst_net_time_provider_get_type

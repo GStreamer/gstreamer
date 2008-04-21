@@ -23,6 +23,7 @@ gst_pad_get_type
 gst_pad_template_get_type
 gst_pipeline_get_type
 gst_plugin_feature_get_type
+gst_preset_get_type
 gst_registry_get_type
 gst_system_clock_get_type
 gst_tag_setter_get_type
@@ -31,31 +32,10 @@ gst_type_find_factory_get_type
 gst_uri_handler_get_type
 @GST_LOADSAVE_DOC_TYPES@gst_xml_get_type
 
-% these are not GObject derived types !
-% gst_buffer_get_type
-% gst_mini_object_get_type
-% gst_message_get_type
-% gst_query_get_type
+% these are not GObject derived types
+% this works with gtk-doc 1.10 at least
+%gst_buffer_get_type
+%gst_mini_object_get_type
+%gst_message_get_type
+%gst_query_get_type
 
-% base classes
-
-#include <gst/base/gstadapter.h>
-#include <gst/base/gstbasesrc.h>
-#include <gst/base/gstbasesink.h>
-#include <gst/base/gstbasetransform.h>
-#include <gst/base/gstcollectpads.h>
-#include <gst/base/gstpushsrc.h>
-
-gst_adapter_get_type
-gst_base_src_get_type
-gst_base_sink_get_type
-gst_base_transform_get_type
-gst_collect_pads_get_type
-gst_push_src_get_type
-
-% net
-
-#include <gst/net/gstnet.h>
-
-gst_net_client_clock_get_type
-gst_net_time_provider_get_type
