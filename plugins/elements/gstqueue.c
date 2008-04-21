@@ -1217,6 +1217,10 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
       else
         max = -1;
 
+      /* adjust for min-threshold */
+      if (queue->min_threshold.time > 0 && min != -1)
+        min += queue->min_threshold.time;
+
       gst_query_set_latency (query, live, min, max);
       break;
     }
