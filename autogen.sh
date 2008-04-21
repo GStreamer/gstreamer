@@ -4,7 +4,7 @@
 DIE=0
 package=gst-ffmpeg
 srcfile=configure.ac
-
+have_svn=`which svn`
 # FFMPEG specific properties
 . ./ffmpegrev
 
@@ -16,22 +16,27 @@ then
   cvs co common 
 fi
 
-if test ! -f $FFMPEG_CO_DIR/configure
+if test -x $have_svn && [ $have_svn ];
 then
+    if test ! -f $FFMPEG_CO_DIR/configure
+    then
 	# checkout ffmpeg from its repository
 	rm -rf $FFMPEG_CO_DIR
 	echo "+ getting ffmpeg from svn"
 	svn -r $FFMPEG_REVISION co $FFMPEG_SVN $FFMPEG_CO_DIR
 	echo "+ updating externals"
         sh -c "$FFMPEG_EXTERNALS_UPDATE"
+    else
+	# update ffmpeg from its repository
+	echo "+ updating ffmpeg checkout"
+	svn -r $FFMPEG_REVISION up $FFMPEG_CO_DIR
+	echo "+ updating externals"
+	sh -c "$FFMPEG_EXTERNALS_UPDATE"
+    fi
 else
-    # update ffmpeg from its repository
-    echo "+ updating ffmpeg checkout"
-    svn -r $FFMPEG_REVISION up $FFMPEG_CO_DIR
-    echo "+ updating externals"
-    sh -c "$FFMPEG_EXTERNALS_UPDATE"
+    echo "Subversion needed for ffmpeg checkout, please install and/or add to \$PATH"
+    exit 0
 fi
-
 
 # source helper functions
 if test ! -f common/gst-autogen.sh;
