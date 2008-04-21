@@ -1,3 +1,10 @@
+2008-04-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init), (request_pt_map),
+	(gst_rtspsrc_configure_caps):
+	Ref caps as the return value for the request_pt_map signal.
+	Remove some caps weirdness when configuring a stream. See #528245.
+
 2008-04-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/icles/gdkpixbufsink-test.c:

@@ -1650,6 +1650,8 @@ request_pt_map (GstElement * sess, guint session, guint pt, GstRTSPSrc * src)
     goto unknown_stream;
 
   caps = stream->caps;
+  if (caps)
+    gst_caps_ref (caps);
   GST_RTSP_STATE_UNLOCK (src);
 
   return caps;
@@ -2287,10 +2289,7 @@ gst_rtspsrc_configure_caps (GstRTSPSrc * src, GstSegment * segment)
       gst_caps_set_simple (caps, "play-speed", G_TYPE_DOUBLE, play_speed, NULL);
       gst_caps_set_simple (caps, "play-scale", G_TYPE_DOUBLE, play_scale, NULL);
 
-      if (stream->caps != caps) {
-        gst_caps_unref (stream->caps);
-        stream->caps = caps;
-      }
+      stream->caps = caps;
     }
     GST_DEBUG_OBJECT (src, "stream %p, caps %" GST_PTR_FORMAT, stream, caps);
   }
