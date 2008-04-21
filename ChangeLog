@@ -1,6 +1,11 @@
 2008-04-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer.types.in:
+	  Stupid editor, I removed that line as it should go in yet.
+
+2008-04-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer.types.in:
 	* docs/libs/gstreamer-libs.types:
 	  Remove library types fro core docs and have them in libs docs.
 	  Reformat and cleanup. Add comment for miniobject types.
