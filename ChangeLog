@@ -3,6 +3,7 @@
 	Patch by: Dejan Sakelšak <sakdean at gmail dot com>
 	* autogen.sh:
 	Check for Subversion presence.
+	Fixes #511011
 
 2008-04-19  Sebastian DrÃ¶ge  <slomo@circular-chaos.org>
 
