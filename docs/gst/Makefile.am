@@ -54,9 +54,7 @@ FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html
 HFILE_GLOB=$(DOC_SOURCE_DIR)/*.h
 CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
 
-SCANOBJ_DEPS = \
-	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
-	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la
+SCANOBJ_DEPS = 
 
 # Header files to ignore when scanning. Use base file name, no paths
 IGNORE_HFILES= \

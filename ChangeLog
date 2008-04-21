@@ -1,3 +1,8 @@
+2008-04-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/Makefile.am:
+	  And remove those libs here.
+
 2008-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/libs/Makefile.am:
