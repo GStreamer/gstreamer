@@ -32,6 +32,9 @@
 
 #include <gst/gst.h>
 
+/* FIXME: move this to source and sink and remove this file:
+ * e.g. sinks cannot save to http:// and src cannot read from burn://
+ */
 static gpointer
 _internal_get_supported_uris (gpointer data)
 {
