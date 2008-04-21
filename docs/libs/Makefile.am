@@ -59,8 +59,10 @@ HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.h
 CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.c
 
 # Dependencies for the intermediate scanobj tool
-SCANOBJ_DEPS = $(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
-	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la
+SCANOBJ_DEPS = \
+	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la
 
 # Extra options to pass to gtkdoc-scanobj or gtkdoc-scangobj.
 SCANOBJ_OPTIONS=--type-init-func="g_type_init();gst_init(&argc,&argv)"

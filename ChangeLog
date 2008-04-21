@@ -1,3 +1,8 @@
+2008-04-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/Makefile.am:
+	  Fix docs build again by adding libgstnet-0.10.so to SCANOBJ_DEPS.
+
 2008-04-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Olivier Crete <tester at tester dot ca>
