@@ -452,6 +452,8 @@ gst_live_adder_flush_start (GstLiveAdder * adder)
    * locking streaming thread. */
   if (adder->clock_id)
     gst_clock_id_unschedule (adder->clock_id);
+
+  g_cond_broadcast (adder->not_empty_cond);
   GST_OBJECT_UNLOCK (adder);
 }
 
@@ -1029,12 +1031,12 @@ gst_live_adder_loop (gpointer data)
 
   for (;;)
   {
+    if (adder->srcresult != GST_FLOW_OK)
+      goto flushing;
     if (!g_queue_is_empty (adder->buffers))
       break;
     if (check_eos_locked (adder))
       goto eos;
-    if (adder->srcresult != GST_FLOW_OK)
-      goto flushing;
     g_cond_wait (adder->not_empty_cond, GST_OBJECT_GET_LOCK(adder));
   }
 
