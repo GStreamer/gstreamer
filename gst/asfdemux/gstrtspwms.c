@@ -141,10 +141,11 @@ no_config:
 static gboolean
 gst_rtsp_wms_configure_stream (GstRTSPExtension * ext, GstCaps * caps)
 {
-  GstRTSPWMS *ctx = (GstRTSPWMS *) ext;
+  GstRTSPWMS *ctx;
   GstStructure *s;
   const gchar *encoding;
 
+  ctx = (GstRTSPWMS *) ext;
   s = gst_caps_get_structure (caps, 0);
   encoding = gst_structure_get_string (s, "encoding-name");
 

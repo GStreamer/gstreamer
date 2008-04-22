@@ -2696,9 +2696,12 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint8 * data,
   guint16 num_payload_ext;
   guint64 len;
   guint8 *stream_obj_data = NULL;
-  guint8 *data_start = data;
-  guint obj_size = (guint) size;
+  guint8 *data_start;
+  guint obj_size;
   guint i, stream_num;
+
+  data_start = data;
+  obj_size = (guint) size;
 
   if (size < 64)
     goto not_enough_data;

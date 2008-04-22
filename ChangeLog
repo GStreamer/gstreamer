@@ -1,3 +1,9 @@
+2008-04-22  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstrtspwms.c:
+	  Fix "unused var" compiler error when --disable-gst-debug is used.
+
 2008-04-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_loop):
