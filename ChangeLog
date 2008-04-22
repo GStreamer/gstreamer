@@ -1,5 +1,12 @@
 2008-04-21  David Schleef  <ds@schleef.org>
 
+	* ext/ogg/gstoggmux.c:
+	  Update Ogg/Dirac muxing.  Removes the weird "KW-DIRAC" bos
+	  packet.  Should conform to what we currently think is the
+	  final Ogg/Dirac muxing spec.
+
+2008-04-21  David Schleef  <ds@schleef.org>
+
 	* sys/xvimage/xvimagesink.c:
 	  Fix typo that causes the overlay keying color to bright green
 	  on a 16-bit display.  Dark grey good.  Bright green bad.

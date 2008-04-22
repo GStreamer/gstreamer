@@ -818,49 +818,37 @@ gst_ogg_mux_get_headers (GstOggPad * pad)
     const GValue *streamheader;
 
     structure = gst_caps_get_structure (caps, 0);
-    if (strcmp (gst_structure_get_name (structure), "video/x-dirac") == 0) {
-      GstBuffer *buf = gst_buffer_new_and_alloc (16);
-      int fps_n = 12;
-      int fps_d = 1;
+    streamheader = gst_structure_get_value (structure, "streamheader");
+    if (streamheader != NULL) {
+      GST_LOG_OBJECT (thepad, "got header");
+      if (G_VALUE_TYPE (streamheader) == GST_TYPE_ARRAY) {
+        GArray *bufarr = g_value_peek_pointer (streamheader);
+        gint i;
 
-      gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d);
+        GST_LOG_OBJECT (thepad, "got fixed list");
 
-      memcpy (GST_BUFFER_DATA (buf), "KW-DIRAC", 8);
-      GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + 8, fps_n);
-      GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + 12, fps_d);
+        for (i = 0; i < bufarr->len; i++) {
+          GValue *bufval = &g_array_index (bufarr, GValue, i);
 
-      res = g_list_append (res, buf);
+          GST_LOG_OBJECT (thepad, "item %d", i);
+          if (G_VALUE_TYPE (bufval) == GST_TYPE_BUFFER) {
+            GstBuffer *buf = g_value_peek_pointer (bufval);
 
-      //res = g_list_append (res, gst_buffer_ref(pad->buffer));
-    } else {
-      streamheader = gst_structure_get_value (structure, "streamheader");
-      if (streamheader != NULL) {
-        GST_LOG_OBJECT (thepad, "got header");
-        if (G_VALUE_TYPE (streamheader) == GST_TYPE_ARRAY) {
-          GArray *bufarr = g_value_peek_pointer (streamheader);
-          gint i;
+            GST_LOG_OBJECT (thepad, "adding item %d to header list", i);
 
-          GST_LOG_OBJECT (thepad, "got fixed list");
-
-          for (i = 0; i < bufarr->len; i++) {
-            GValue *bufval = &g_array_index (bufarr, GValue, i);
-
-            GST_LOG_OBJECT (thepad, "item %d", i);
-            if (G_VALUE_TYPE (bufval) == GST_TYPE_BUFFER) {
-              GstBuffer *buf = g_value_peek_pointer (bufval);
-
-              GST_LOG_OBJECT (thepad, "adding item %d to header list", i);
-
-              gst_buffer_ref (buf);
-              res = g_list_append (res, buf);
-            }
+            gst_buffer_ref (buf);
+            res = g_list_append (res, buf);
           }
-        } else {
-          GST_LOG_OBJECT (thepad, "streamheader is not fixed list");
         }
       } else {
-        GST_LOG_OBJECT (thepad, "caps don't have streamheader");
+        GST_LOG_OBJECT (thepad, "streamheader is not fixed list");
       }
+    } else if (gst_structure_has_name (structure, "video/x-dirac")) {
+      res = g_list_append (res, pad->buffer);
+      pad->buffer = pad->next_buffer;
+      pad->next_buffer = NULL;
+    } else {
+      GST_LOG_OBJECT (thepad, "caps don't have streamheader");
     }
     gst_caps_unref (caps);
   } else {
