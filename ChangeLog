@@ -1,5 +1,10 @@
 2008-04-22  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* configure.ac:
+	0.10.7.4 pre-release
+
+2008-04-22  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* gst/goom/config_param.c: (goom_plugin_parameters_free):
 	* gst/goom/convolve_fx.c: (convolve_init), (convolve_free):
 	* gst/goom/filters.c: (zoomFilterVisualFXWrapper_free):
