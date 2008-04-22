@@ -1,3 +1,9 @@
+2008-04-21  David Schleef  <ds@schleef.org>
+
+	* sys/xvimage/xvimagesink.c:
+	  Fix typo that causes the overlay keying color to bright green
+	  on a 16-bit display.  Dark grey good.  Bright green bad.
+
 2008-04-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/gnomevfs/gstgnomevfsuri.c:

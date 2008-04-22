@@ -1382,7 +1382,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
          * they're the only types of devices we've encountered. If we don't
          * recognise it, leave it alone  */
         if (bits == 16)
-          ckey = (1 << 10) | (2 << 5) | 3;
+          ckey = (1 << 11) | (2 << 5) | 3;
         else if (bits == 24 || bits == 32)
           ckey = (1 << 16) | (2 << 8) | 3;
         else
