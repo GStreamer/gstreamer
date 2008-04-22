@@ -766,6 +766,8 @@ request_pt_map (GstElement * sess, guint session, guint pt, GstSDPDemux * demux)
     goto unknown_stream;
 
   caps = stream->caps;
+  if (caps)
+    gst_caps_ref (caps);
   GST_SDP_STREAM_UNLOCK (demux);
 
   return caps;

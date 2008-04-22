@@ -1,3 +1,8 @@
+2008-04-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/sdp/gstsdpdemux.c: (request_pt_map):
+	Ref caps, see #528245.
+
 2008-04-22  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
