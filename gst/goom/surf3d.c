@@ -37,6 +37,17 @@ grid3d_new (int sizex, int defx, int sizez, int defz, v3d center)
 }
 
 void
+grid3d_free (grid3d * g)
+{
+  surf3d *s = &(g->surf);
+
+  free (s->vertex);
+  free (s->svertex);
+
+  free (g);
+}
+
+void
 grid3d_draw (PluginInfo * plug, grid3d * g, int color, int colorlow,
     int dist, Pixel * buf, Pixel * back, int W, int H)
 {

@@ -100,6 +100,7 @@ typedef struct _PARAMETERS {
 } PluginParameters;
 
 PluginParameters goom_plugin_parameters(const char *name, int nb);
+void goom_plugin_parameters_free(PluginParameters *p);
 
 #define secure_param goom_secure_param
 #define secure_f_param goom_secure_f_param

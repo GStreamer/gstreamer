@@ -199,6 +199,7 @@ goom_lines_init (PluginInfo * goomInfo, int rx, int ry,
 void
 goom_lines_free (GMLine ** l)
 {
+  free ((*l)->points2);
   free ((*l)->points);
   free (*l);
   l = NULL;

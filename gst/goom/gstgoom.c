@@ -196,6 +196,7 @@ gst_goom_finalize (GObject * object)
   GstGoom *goom = GST_GOOM (object);
 
   goom_close (goom->plugin);
+  goom->plugin = NULL;
 
   g_object_unref (goom->adapter);
 

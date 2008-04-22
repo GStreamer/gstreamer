@@ -1,3 +1,23 @@
+2008-04-22  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/goom/config_param.c: (goom_plugin_parameters_free):
+	* gst/goom/convolve_fx.c: (convolve_init), (convolve_free):
+	* gst/goom/filters.c: (zoomFilterVisualFXWrapper_free):
+	* gst/goom/flying_stars_fx.c: (fs_free):
+	* gst/goom/goom_config_param.h:
+	* gst/goom/goom_core.c: (goom_init), (goom_close):
+	* gst/goom/goom_plugin_info.h:
+	* gst/goom/gstgoom.c: (gst_goom_finalize):
+	* gst/goom/lines.c: (goom_lines_free):
+	* gst/goom/plugin_info.c: (plugin_info_init), (plugin_info_free):
+	* gst/goom/surf3d.c: (grid3d_free):
+	* gst/goom/surf3d.h:
+	* gst/goom/tentacle3d.c: (tentacle_free):
+	Free a bunch of stuff, and initialise things to fix leaks
+	and valgrind warnings in the testsuite.
+
+	Fixes: #529268
+
 2008-04-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init), (request_pt_map),

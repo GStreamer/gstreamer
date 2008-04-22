@@ -793,6 +793,19 @@ zoomFilterVisualFXWrapper_init (struct _VISUAL_FX *_this, PluginInfo * info)
 static void
 zoomFilterVisualFXWrapper_free (struct _VISUAL_FX *_this)
 {
+  ZoomFilterFXWrapperData *data = (ZoomFilterFXWrapperData *) _this->fx_data;
+
+  if (data->freebrutT)
+    free (data->freebrutT);
+  if (data->freebrutS)
+    free (data->freebrutS);
+  if (data->freebrutD)
+    free (data->freebrutD);
+  if (data->firedec)
+    free (data->firedec);
+
+  goom_plugin_parameters_free (_this->params);
+
   free (_this->fx_data);
 }
 

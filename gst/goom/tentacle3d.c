@@ -125,8 +125,14 @@ tentacle_fx_create (void)
 static void
 tentacle_free (TentacleFXData * data)
 {
-  /* TODO : un vrai FREE GRID!! */
+  int tmp;
+
+  /* FREE GRID */
+  for (tmp = 0; tmp < nbgrid; tmp++)
+    grid3d_free (data->grille[tmp]);
   free (data->vals);
+
+  goom_plugin_parameters_free (&data->params);
 }
 
 static void

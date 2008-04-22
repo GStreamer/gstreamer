@@ -155,6 +155,7 @@ struct _PLUGIN_INFO {
 };
 
 void plugin_info_init(PluginInfo *p, int nbVisual); 
+void plugin_info_free(PluginInfo *p);
 
 /* i = [0..p->nbVisual-1] */
 void plugin_info_add_visual(PluginInfo *p, int i, VisualFX *visual);

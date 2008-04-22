@@ -111,6 +111,12 @@ goom_plugin_parameters (const char *name, int nb)
   return p;
 }
 
+void
+goom_plugin_parameters_free (PluginParameters * p)
+{
+  free (p->params);
+}
+
 /*---------------------------------------------------------------------------*/
 
 void

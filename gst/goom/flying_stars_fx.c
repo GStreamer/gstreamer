@@ -136,6 +136,11 @@ fs_init (VisualFX * _this, PluginInfo * info)
 static void
 fs_free (VisualFX * _this)
 {
+  FSData *data = (FSData *) _this->fx_data;
+
+  goom_plugin_parameters_free (&data->params);
+
+  free (data->stars);
   free (_this->fx_data);
 }
 

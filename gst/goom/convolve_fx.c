@@ -105,6 +105,8 @@ convolve_init (VisualFX * _this, PluginInfo * info)
   data->params.params[3] = &data->factor_p;
   data->params.params[4] = 0;
 
+  data->h_height = 0;
+
   /* init rotozoom tables */
   compute_tables (_this, info);
   data->theta = 0;
@@ -119,6 +121,10 @@ convolve_init (VisualFX * _this, PluginInfo * info)
 static void
 convolve_free (VisualFX * _this)
 {
+  ConvData *data = (ConvData *) _this->fx_data;
+
+  goom_plugin_parameters_free (&data->params);
+
   free (_this->fx_data);
 }
 

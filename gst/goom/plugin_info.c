@@ -98,6 +98,9 @@ plugin_info_init (PluginInfo * pp, int nbVisuals)
   p.sound.prov_max = 0;
   p.sound.goom_limit = 1;
   p.sound.allTimesMax = 1;
+  p.sound.timeSinceLastGoom = 1;
+  p.sound.timeSinceLastBigGoom = 1;
+  p.sound.cycle = 0;
 
   p.sound.volume_p = secure_f_feedback ("Sound Volume");
   p.sound.accel_p = secure_f_feedback ("Sound Acceleration");
@@ -122,6 +125,7 @@ plugin_info_init (PluginInfo * pp, int nbVisuals)
   p.sound.params = plugin_parameters ("Sound", 11);
 
   p.nbParams = 0;
+  p.params = NULL;
   p.nbVisuals = nbVisuals;
   p.visuals = (VisualFX **) malloc (sizeof (VisualFX *) * nbVisuals);
 
@@ -224,4 +228,14 @@ plugin_info_add_visual (PluginInfo * p, int i, VisualFX * visual)
         p->params[p->nbParams++] = *(p->visuals[i]->params);
     }
   }
+}
+
+void
+plugin_info_free (PluginInfo * p)
+{
+  goom_plugin_parameters_free (&p->sound.params);
+
+  if (p->params)
+    free (p->params);
+  free (p->visuals);
 }
