@@ -1,3 +1,8 @@
+2008-04-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/faad/gstfaad.c:
+	  Don't leak GstAudioChannelPosition. Fixes #529378.
+
 2008-04-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/sdp/gstsdpdemux.c: (request_pt_map):

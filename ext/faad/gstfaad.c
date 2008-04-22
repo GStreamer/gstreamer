@@ -443,7 +443,7 @@ static GstAudioChannelPosition *
 gst_faad_chanpos_to_gst (GstFaad * faad, guchar * fpos, guint num,
     gboolean * channel_map_failed)
 {
-  GstAudioChannelPosition *pos = g_new (GstAudioChannelPosition, num);
+  GstAudioChannelPosition *pos;
   guint n;
   gboolean unknown_channel = FALSE;
 
@@ -459,6 +459,7 @@ gst_faad_chanpos_to_gst (GstFaad * faad, guchar * fpos, guint num,
     return NULL;
   }
 
+  pos = g_new (GstAudioChannelPosition, num);
   for (n = 0; n < num; n++) {
     GST_DEBUG_OBJECT (faad, "faad channel %d as %d", n, fpos[n]);
     switch (fpos[n]) {
