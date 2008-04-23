@@ -99,7 +99,7 @@ gst_segment_copy (GstSegment * segment)
   GstSegment *result = NULL;
 
   if (segment) {
-    result = g_slice_dup (GstSegment, segment);
+    result = (GstSegment *) g_slice_copy (sizeof (GstSegment), segment);
   }
   return result;
 }

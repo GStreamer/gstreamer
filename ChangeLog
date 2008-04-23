@@ -1,6 +1,12 @@
 2008-04-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstsegment.c:
+	  The glib macro seems to be borked. Use g_slice_copy directly and cast
+	  in the hope that this fixes the warning on 64bit.
+
+2008-04-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstsegment.c:
 	  Document the new function. Use g_slice_dup() (no need for
 	  gst_segment_init()).	  
 
