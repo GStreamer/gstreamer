@@ -1,6 +1,11 @@
 2008-04-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/ogg/gstoggdemux.c:
+	  Revert the event part, that should not go in.
+
+2008-04-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/ogg/gstoggdemux.c:
 	  Don't leak GstPluginFeatures when filtering.
 
 2008-04-23  Stefan Kost  <ensonic@users.sf.net>
