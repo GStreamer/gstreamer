@@ -269,11 +269,6 @@ static void gst_bin_child_proxy_init (gpointer g_iface, gpointer iface_data);
 static GstElementClass *parent_class = NULL;
 static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
 
-/**
- * gst_bin_get_type:
- *
- * Returns: the type of #GstBin
- */
 GType
 gst_bin_get_type (void)
 {

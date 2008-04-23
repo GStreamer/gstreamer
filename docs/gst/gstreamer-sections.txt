@@ -1102,9 +1102,6 @@ gst_mini_object_ref
 gst_mini_object_unref
 gst_mini_object_replace
 
-GST_IS_PARAM_SPEC_MINI_OBJECT
-GST_PARAM_SPEC_MINI_OBJECT
-GST_TYPE_PARAM_MINI_OBJECT
 GstParamSpecMiniObject
 gst_param_spec_mini_object
 
@@ -1123,6 +1120,10 @@ GST_MINI_OBJECT_GET_CLASS
 GST_TYPE_MINI_OBJECT
 GST_TYPE_MINI_OBJECT_FLAGS
 GST_MINI_OBJECT_CAST
+
+GST_IS_PARAM_SPEC_MINI_OBJECT
+GST_PARAM_SPEC_MINI_OBJECT
+GST_TYPE_PARAM_MINI_OBJECT
 <SUBSECTION Private>
 gst_mini_object_get_type
 gst_mini_object_flags_get_type

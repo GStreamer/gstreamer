@@ -1,3 +1,21 @@
+2008-04-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	  Move GParamSepc macros to standart section.
+  
+	* gst/gstbin.c:
+	  Dn't document _get_type - its in private section in docs anyway and
+	  this doc-blob was incomplete.
+
+	* gst/gstclock.h:
+	  Fix wrong symbol names in docs.
+
+	* gst/gstmacros.h:
+	  Add once doc sentence.
+
+	* tests/check/gst/.cvsignore:
+	  Ignore more.
+
 2008-04-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/Makefile.am:
