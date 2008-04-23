@@ -205,13 +205,33 @@ GstIndex *
 gst_index_factory_make (const gchar * name)
 {
   GstIndexFactory *factory;
+  GstIndex *index;
 
   g_return_val_if_fail (name != NULL, NULL);
 
   factory = gst_index_factory_find (name);
 
   if (factory == NULL)
-    return NULL;
+    goto no_factory;
 
-  return gst_index_factory_create (factory);
+  index = gst_index_factory_create (factory);
+
+  if (index == NULL)
+    goto create_failed;
+
+  gst_object_unref (factory);
+  return index;
+
+  /* ERRORS */
+no_factory:
+  {
+    GST_INFO ("no such index factory \"%s\"!", name);
+    return NULL;
+  }
+create_failed:
+  {
+    GST_INFO_OBJECT (factory, "couldn't create instance!");
+    gst_object_unref (factory);
+    return NULL;
+  }
 }

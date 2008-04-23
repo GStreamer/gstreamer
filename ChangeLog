@@ -1,3 +1,12 @@
+2008-04-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstelementfactory.c: (gst_element_factory_make):
+	Unref the factory after it was used the last time, not before.
+
+	* gst/gstindexfactory.c: (gst_index_factory_make):
+	Improve debugging a bit and don't leak a ref to the index factory with
+	each call.
+
 2008-04-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstregistry.c:
