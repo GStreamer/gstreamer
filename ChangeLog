@@ -1,5 +1,11 @@
 2008-04-23  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstsegment.c:
+	  Document the new function. Use g_slice_dup() (no need for
+	  gst_segment_init()).	  
+
+2008-04-23  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	  Move GParamSepc macros to standart section.
   

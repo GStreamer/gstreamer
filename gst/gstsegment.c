@@ -87,7 +87,9 @@
  * gst_segment_copy:
  * @segment: a #GstSegment
  *
- * Returns: a copy of @segment, free with gst_segment_free().
+ * Create a copy of given @segment.
+ *
+ * Returns: a new #GstSegment, free with gst_segment_free().
  *
  * Since: 0.10.20
  */
@@ -97,8 +99,7 @@ gst_segment_copy (GstSegment * segment)
   GstSegment *result = NULL;
 
   if (segment) {
-    result = gst_segment_new ();
-    memcpy (result, segment, sizeof (GstSegment));
+    result = g_slice_dup (GstSegment, segment);
   }
   return result;
 }
