@@ -1243,19 +1243,26 @@ gst_lookup_xv_port_from_adaptor (GstXContext * xcontext,
     XvAdaptorInfo * adaptors, int adaptor_no)
 {
   gint j;
+  gint res;
 
   /* Do we support XvImageMask ? */
-  if (!(adaptors[adaptor_no].type & XvImageMask))
+  if (!(adaptors[adaptor_no].type & XvImageMask)) {
+    GST_DEBUG ("XV Adaptor %s has no support for XvImageMask",
+        adaptors[adaptor_no].name);
     return;
+  }
 
   /* We found such an adaptor, looking for an available port */
   for (j = 0; j < adaptors[adaptor_no].num_ports && !xcontext->xv_port_id; j++) {
     /* We try to grab the port */
-    if (Success == XvGrabPort (xcontext->disp, adaptors[adaptor_no].base_id + j,
-            0)) {
+    res = XvGrabPort (xcontext->disp, adaptors[adaptor_no].base_id + j, 0);
+    if (Success == res) {
       xcontext->xv_port_id = adaptors[adaptor_no].base_id + j;
       GST_DEBUG ("XV Adaptor %s with %ld ports", adaptors[adaptor_no].name,
           adaptors[adaptor_no].num_ports);
+    } else {
+      GST_DEBUG ("GrabPort %d for XV Adaptor %s failed: %d", j,
+          adaptors[adaptor_no].name, res);
     }
   }
 }

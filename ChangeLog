@@ -1,3 +1,8 @@
+2008-04-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/xvimage/xvimagesink.c:
+	  Add some logging for cases when grabbing the xv failed.
+
 2008-04-21  David Schleef  <ds@schleef.org>
 
 	* ext/ogg/gstoggmux.c:
