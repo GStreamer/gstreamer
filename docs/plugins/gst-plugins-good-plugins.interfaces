@@ -7,17 +7,16 @@ GstGConfVideoSrc GstChildProxy
 GstSwitchSink GstChildProxy
 GstGConfAudioSink GstChildProxy
 GstGConfAudioSrc GstChildProxy
+GstRTSPSrc GstURIHandler GstChildProxy
 GstAutoVideoSink GstChildProxy
 GstAutoAudioSink GstChildProxy
-GstRTSPSrc GstURIHandler GstChildProxy
 GstShout2send GstTagSetter
 GstUDPSink GstURIHandler
-GstFlacEnc GstTagSetter
+GstDV1394Src GstURIHandler GstPropertyProbe
 GstCddaBaseSrc GstURIHandler
 GstCdioCddaSrc GstURIHandler
-GstDV1394Src GstURIHandler GstPropertyProbe
+GstSoupHTTPSrc GstURIHandler
 GstOssSrc GstImplementsInterface GstMixer
-GstV4l2Src GstPropertyProbe GstImplementsInterface GstTuner GstColorBalance GstVideoOrientation
 GstUDPSrc GstURIHandler
 GstTagLibMux GstTagSetter
 GstId3v2Mux GstTagSetter
@@ -28,6 +27,7 @@ GstIirEqualizerNBands GstChildProxy
 GstIirEqualizer3Bands GstChildProxy
 GstIirEqualizer10Bands GstChildProxy
 GstSpeexEnc GstTagSetter
+GstFlacEnc GstTagSetter
 GstOssMixerElement GstImplementsInterface GstMixer
 GstVideoMixer GstChildProxy
 GstMatroskaMux GstTagSetter

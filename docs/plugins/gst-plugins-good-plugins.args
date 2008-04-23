@@ -1195,7 +1195,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>driver</NICK>
 <BLURB>driver.</BLURB>
-<DEFAULT>Curses driver 1.0</DEFAULT>
+<DEFAULT>X11 driver 1.1</DEFAULT>
 </ARG>
 
 <ARG>

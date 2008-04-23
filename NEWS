@@ -1,4 +1,48 @@
-This is GStreamer Good Plug-ins 0.10.7, "Red Door Black"
+This is GStreamer Good Plug-ins 0.10.8, "One For The Money"
+
+Changes since 0.10.7:
+    
+      * The libsoup based http source now has primary rank
+      * GOOM visualisation plugin updated to Goom2k4
+      * Fixes in UDP, RTSP, matroska, QT/mov, AVI, v4l2, OS/X, SunAudio,
+        mulaw and wavpack
+      * New gdkpixbuf output for snapshotting
+      * Various other bug-fixes
+
+Bugs fixed since 0.10.7:
+     
+      * 516509 : gstid3v2mux.cc build failure on Solaris, CFLAGS not valid...
+      * 515978 : [ladspa] Should be removed from -good until it's ready to...
+      * 516649 : [v4l2src] tries to VIDIOC_S_PARM without checking capabil...
+      * 517237 : [rtspsrc] Better error when bandwidth is too small
+      * 517933 : [tests] trivial C89 fix
+      * 518188 : [spectrum] " message " property documentation unclear
+      * 518213 : [goom2k4] artefacts on x86-64
+      * 518564 : goom dies with illegal instruction
+      * 519088 : gst_mulawdec_chain() may call gst_util_uint64_scale_int()...
+      * 519417 : Unable to modify DEFAULT_VIDEOSRC in configure
+      * 520073 : [goom] (goom2k4) shows mostly black frames
+      * 520764 : double buffer unref in speexenc error handling
+      * 520880 : audiofx doesn't build on Windows/MSVC
+      * 520888 : udpsrc has some issues on Windows
+      * 521102 : h.263+ rtp depayloader crashes on short payloads
+      * 521875 : [osssrc] recording corrupts upon _get_caps
+      * 522278 : Problem with " movq " at file gst-plugins-good/gst/goom/xmmx.c
+      * 522767 : [goom] does not build on ppc
+      * 523124 : [PLUGIN-MOVE] move souphttpsrc from -bad to -good
+      * 523134 : osxvideosink does not stop when you control-C
+      * 524593 : [sunaudio] fix mixer track range
+      * 525359 : [alaw] [mulaw] Use gst_pad_alloc_buffer_and_set_caps to c...
+      * 525833 : [halaudiosrc] unable to get mic USB working with gnome-so...
+      * 525860 : [sunaudio] copyright fixes
+      * 525946 : [gdkpixbuf] add gdkpixbufsink element
+      * 526557 : [matroskademux] seeking regression in CVS
+      * 527848 : [souphttpsrc] Give souphttpsrc PRIMARY rank
+      * 527984 : Doesn't dist all m4 files needed by configure.ac
+      * 527999 : [goom] Doesn't dist goomsl.h
+      * 528143 : [goom] fails to build on 32-bit ppc
+      * 528615 : Hide goom2k4 logo
+      * 529268 : [goom] States unit test exposes some memory leaks
 
 Changes since 0.10.6:
     

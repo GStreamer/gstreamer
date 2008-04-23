@@ -1,16 +1,14 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.7 "Red Door Black"
+Release notes for GStreamer Good Plug-ins 0.10.8 "One For The Money"
         
 
 
 The GStreamer team is proud to announce a new release
-in the 0.10.x stable series of the
-GStreamer Good Plug-ins.
+in the 0.10.x stable series of the GStreamer Good Plug-ins.
 
 
-The 0.10.x series is a stable series targeted at end users.
-It is not API or ABI compatible with the stable 0.8.x series.
-It is, however, parallel installable with the 0.8.x series.
+The 0.10.x series is a stable series targeted at end users,
+parallel installable with the older 0.8.x series.
 
 
 
@@ -54,134 +52,46 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * 8 months of frenetic development
-      * Massive RTSP/RTP improvements
-      * Fixes in pngdec, gdkpixbufdec, wavpackparse, wavpackdec, smokeenc, mulawdec, alwdec, id3demux
-      * More Fixes in matroskademux, udpsrc, apedemux, flacenc, avimux, dv1394src
-      * V4L2 support improved
-      * Fixes for OS/X and Windows video/audio sources and sinks
-      * Support more formats in QT files
-      * Elements moved from gst-plugins-bad: equalizer, lpwsinc (now audiowsinclimit), bpwsinc (now audiowsincband), spectrum, multifilesrc/sink
-      * New audio effects: High/Low/Band-pass filters
-      * Many, many other fixes
+      * The libsoup based http source now has primary rank
+      * GOOM visualisation plugin updated to Goom2k4
+      * Fixes in UDP, RTSP, matroska, QT/mov, AVI, v4l2, OS/X, SunAudio, mulaw and wavpack
+      * New gdkpixbuf output for snapshotting
+      * Various other bug-fixes
 
 Bugs fixed in this release
      
-      * 415627 : [PLUGIN-MOVE] move equalizer to good
-      * 463624 : [PATCH] avimux: mismatch in ODML tag numbering
-      * 347848 : [id3v2mux] add support for DiscID tags
-      * 348085 : [PLUGIN-MOVE] move spectrum to good
-      * 351726 : [rtspsrc] Force to send on periodic time new rtsp play co...
-      * 358841 : [dv1394src] should have property probe
-      * 417420 : [autoaudiosink] add " caps " property to filter sinks by caps
-      * 427573 : [osxaudiosrc] segmentation fault
-      * 435435 : [alaw] use tables for ALAW (G.711) encoding and decoding
-      * 442034 : [avi] add support for subtitle streams (GAB2)
-      * 447000 : [id3demux] add support for reading license URL from WCOP tag
-      * 448278 : [v4l2src] several issues in cvs
-      * 449747 : Function parameter mismatch breaks build on Solaris.
-      * 450190 : [PATCH] v4l2src set_capture (parameters) fails
-      * 450878 : Missing files in po/POTFILES.in
-      * 451249 : Integer type mismatch in gstrtspsrc.c
-      * 451388 : [v4l2src] Could not negotiate format
-      * 453037 : rtpilbcpayloader encoding-name field mismatch
-      * 453417 : [matroskademux] support palette info for VobSub stream
-      * 453630 : Rtspsrc invokes GST_ELEMENT_ERROR in eos when streaming o...
-      * 455086 : [cairotextoverlay] ignores the size in font-desc property
-      * 455808 : rtspsrc deadlocks on pause
-      * 457097 : [faad] " setting caps on pad failed " with BMJ113 mov
-      * 461600 : Some files missing from POTFILES.in
-      * 464475 : the mode property if the caps of rtpilbc*pay should be of...
-      * 464800 : [audiofx] New elements: chebyshev low/highpass and bandpa...
-      * 465040 : [RTP] h263ppay should allow h263 caps on sink
-      * 465774 : qt video does not play, but can be seeked
-      * 467214 : Could not get buffers from device '/dev/video0'
-      * 467666 : [ELEMENT-MOVE] Move lpwsinc and bpwsinc to gst-plugins-good
-      * 470502 : Ricoh Webcam not working
-      * 471364 : [gconf] Internal GStreamer error: state change failed on ...
-      * 471823 : [v4l2src] Fails to negotiate capabilities with Macbook Pr...
-      * 473670 : [qtdemux] invalid utf8 in tags causes warnings
-      * 474616 : [rtph263pay] RTP headers are wrong for win32
-      * 475424 : [v4l2] uvcvideo Macbook iSight webcam not working (regres...
-      * 477199 : Linux-UVC webcams not working
-      * 477456 : [v4l2src] my webcam is not working anymore
-      * 479960 : qtdemux is missing fourcc for mpeg2 HDV streams (HDV2. HDV3)
-      * 480557 : [v4l2src] Nasty segfault (with broken driver?)
-      * 482495 : avimux does not accept audio/aac
-      * 484998 : [mulawdec] not-negotiated error playing a sun audio (au) ...
-      * 485828 : [v4l2src] Fixates to lowest resolution on new kernels
-      * 487488 : udpsrc errors
-      * 487563 : Payloader for H264 not marking packets
-      * 488112 : [id3demux] extract ID3v2 WOAF frame
-      * 488844 : Free GstBuffer with gst_buffer_unref() in gst_rtp_mp4v_pa...
-      * 488879 : [videomixer] implement GstChildProxy interface
-      * 489940 : [gdkpixbufdec] gst_value_set_fraction: assertion 'denomin...
-      * 490034 : [v4l2src] " could not get buffers from device " 
-      * 490283 : [multifilsrc] move to -good
-      * 491323 : Extend RTP MPEG-TS payloader to handle large RTP payload ...
-      * 492388 : Build issues on Windows/MSVC
-      * 496752 : [rtspsrc] leaks memory
-      * 496773 : [rtspsrc] leaks SDP messages
-      * 496983 : [PATCH] rtspsrc leaks pads
-      * 497007 : [PATCH] rtspsrc leaks RTSP messages in SETUP
-      * 497017 : [PATCH] H.264 RTP depayloader leaks memory in setcaps
-      * 497292 : gsttextoverlay compile problem in MSVC
-      * 497293 : gsttimeoverlay compile error in win32
-      * 498181 : Recent change to gst-plugins-base breaks gst-plugins-good
-      * 498297 : [v4l2src] put real supported resolutions in caps instead ...
-      * 498395 : [pngenc] leaks buffer data memory
-      * 498715 : GStreamer fails to decode MPEG1 Video RTP streams when gs...
-      * 499178 : unexpected not negotiated and other weird beharviours
-      * 499239 : gstrtpmp4adepay
-      * 499383 : [rtph263depay] Doesn't read I-frame information from rtp ...
-      * 500403 : [PATCH] videobox element doesn't init liboil
-      * 501775 : [wavparse] regression in CVS: seeking is broken
-      * 502655 : [avimux] creates corrupt avi files (wrong stream numbering)
-      * 502814 : Adds profile (hex string), sps and pps (base64 encoded) i...
-      * 502966 : GStreamer segfaults when videobox is introduced into a sp...
-      * 503023 : Let multipartdemux work in live mode.
-      * 504018 : flacdec emits newsegment before being able to respond to ...
-      * 504081 : [matroskamux] support for live sources (calculate duratio...
-      * 504895 : Build fails:  gst/check/gstcheck.h: No such file or direc...
-      * 505745 : [avidemux] warning: 'res' may be used uninitialized in th...
-      * 506025 : RTSPsrc doesn't handle redirects.
-      * 506715 : [PATCH] [flacdec] PICTURE blocks should be retrieved as m...
-      * 507642 : v4l2src Crash - Size 4156 is not a multiple of unit size ...
-      * 508644 : The clockrate for theora payloading should always be 90000
-      * 509298 : Compilation errors in gstavisubtitle.c and gstrtspsrc.c w...
-      * 509301 : [flacdec] CVS does not compile against flac-1.1.2
-      * 509531 : Make the auto-join/auto-leaving of a multicast group opti...
-      * 510505 : changes to make v4l plugin build on solaris
-      * 510592 : Race condition in WAVE parser
-      * 513628 : [flacdec] Decoding of PICTURE blocks is always disabled b...
-      * 514397 : matroskademux does not mark delta units
-      * 514573 : multipartmux memory leak
-      * 514889 : Bogus output from RTP data test
-      * 514965 : Possible buffer leaks if last_write_result != GST_FLOW_OK...
-      * 515457 : [audiofx] Element long descriptions are broken
-      * 515562 : [avidemux] Seeking broken in 0.10.6.2
-      * 515697 : [multifile] Several memory leaks exposed by unit test
-      * 515701 : [smoke] Several valgrind warnings exposed by unit test
-      * 515703 : [avisubtitle] Several valgrind warnings with unit test (g...
-      * 515704 : [gconf] Memory leak when creation of pipeline fails
-      * 515706 : [ximagesrc] Memory leak when XDamage support is available
-      * 515905 : gst-error.m4 needs no%E_MACRO_REDEFINED on Solaris
-      * 515979 : [efence] Doesn't chain up finalize properly
-      * 515980 : [directdraw] Does not chain up finalize functions properly
-      * 515984 : [v4l] Does not chain up finalize functions properly
-      * 515985 : [ximagesrc] regression when using damage
-      * 516371 : does not build without xml usage
-      * 516524 : uninitialized variables
-      * 517386 : [alpha] Doesn't link with libgstbase
-      * 508291 : [id3demux] must check if language code in id3v2 COMM fram...
-      * 491811 : Rename audiochebyshevfreq* to audiocheb*
-      * 447961 : [rtsp] do not store a reference to the result from inet_n...
-      * 475784 : rtspsrc has race condition between loop_interleaved() and...
-      * 478244 : rtpamrdepay make no playable stream
-      * 480707 : Memory leak : gstrtpmp4vpay :  config buffer is leaked
-      * 502187 : flacdec doesn't send newsegment from the streaming thread
-      * 509329 : [rtspsrc] use atoll when parsing rtptime
-      * 512544 : preallocate output buffer in pngenc
+      * 516509 : gstid3v2mux.cc build failure on Solaris, CFLAGS not valid...
+      * 515978 : [ladspa] Should be removed from -good until it's ready to...
+      * 516649 : [v4l2src] tries to VIDIOC_S_PARM without checking capabil...
+      * 517237 : [rtspsrc] Better error when bandwidth is too small
+      * 517933 : [tests] trivial C89 fix
+      * 518188 : [spectrum] " message " property documentation unclear
+      * 518213 : [goom2k4] artefacts on x86-64
+      * 518564 : goom dies with illegal instruction
+      * 519088 : gst_mulawdec_chain() may call gst_util_uint64_scale_int()...
+      * 519417 : Unable to modify DEFAULT_VIDEOSRC in configure
+      * 520073 : [goom] (goom2k4) shows mostly black frames
+      * 520764 : double buffer unref in speexenc error handling
+      * 520880 : audiofx doesn't build on Windows/MSVC
+      * 520888 : udpsrc has some issues on Windows
+      * 521102 : h.263+ rtp depayloader crashes on short payloads
+      * 521875 : [osssrc] recording corrupts upon _get_caps
+      * 522278 : Problem with " movq " at file gst-plugins-good/gst/goom/xmmx.c
+      * 522767 : [goom] does not build on ppc
+      * 523124 : [PLUGIN-MOVE] move souphttpsrc from -bad to -good
+      * 523134 : osxvideosink does not stop when you control-C
+      * 524593 : [sunaudio] fix mixer track range
+      * 525359 : [alaw] [mulaw] Use gst_pad_alloc_buffer_and_set_caps to c...
+      * 525833 : [halaudiosrc] unable to get mic USB working with gnome-so...
+      * 525860 : [sunaudio] copyright fixes
+      * 525946 : [gdkpixbuf] add gdkpixbufsink element
+      * 526557 : [matroskademux] seeking regression in CVS
+      * 527848 : [souphttpsrc] Give souphttpsrc PRIMARY rank
+      * 527984 : Doesn't dist all m4 files needed by configure.ac
+      * 527999 : [goom] Doesn't dist goomsl.h
+      * 528143 : [goom] fails to build on 32-bit ppc
+      * 528615 : Hide goom2k4 logo
+      * 529268 : [goom] States unit test exposes some memory leaks
 
 Download
 
@@ -211,58 +121,26 @@ Applications
   
 Contributors to this release
     
-      *  Wim Taymans
-      * Abel Cheung
-      * Alessandro Decina
-      * Alexander Eichner
-      * Alexander Shopov
-      * Anders Skargren
-      * Antoine Tremblay
-      * Arek Korbik
-      * Bjarne Rosengren
+      * Andy Wingo
+      * Bastien Nocera
       * Brian Cameron
       * Christian Schaller
-      * Damien Carbery
+      * Damien Lespiau
       * David Schleef
       * Edgard Lima
       * Edward Hervey
-      * Funda Wang
-      * Haakon Sporsheim
-      * Ilkka Tuohela
-      * Jakub Bogusz
-      * Jan Gerber
       * Jan Schmidt
-      * Jason Kivlighn
-      * Jayarama S. Santana
-      * John Millikin
-      * Jordi Jaen Pallares
-      * Jorge González González
-      * Julien MOUTTE
+      * Jens Granseuer
       * Julien Moutte
-      * Julien Puydt
-      * Kwang Yul Seo
-      * Laurent Glayal
       * Mark Nauwelaerts
+      * Mersad Jelacic
       * Michael Smith
-      * Mikel Olasagasti
-      * Mogens Jaeger
       * Ole André Vadla Ravnås
       * Olivier Crete
-      * Orjan Friberg
       * Peter Kjellerstedt
-      * René Stadler
-      * Sameer Naik
       * Sebastian Dröge
-      * Sebastien Moutte
       * Stefan Kost
-      * Thijs Vermeir
-      * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Timo Hotti
-      * Tommi Myöhänen
-      * Wai-Ming Ho
+      * William M. Brack
       * Wim Taymans
-      * Wouter Cloetens
-      * Yun Zheng Hu
-      * Zaheer Abbas Merali
  
