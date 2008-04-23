@@ -52,7 +52,7 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * The libsoup based http source now has primary rank
+      * The libsoup based http source moved from the -bad module and was raised to primary rank
       * GOOM visualisation plugin updated to Goom2k4
       * Fixes in UDP, RTSP, matroska, QT/mov, AVI, v4l2, OS/X, SunAudio, mulaw and wavpack
       * New gdkpixbuf output for snapshotting

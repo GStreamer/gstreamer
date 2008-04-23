@@ -2,7 +2,8 @@ This is GStreamer Good Plug-ins 0.10.8, "One For The Money"
 
 Changes since 0.10.7:
     
-      * The libsoup based http source now has primary rank
+      * The libsoup based http source moved from the -bad module and
+        was raised to primary rank
       * GOOM visualisation plugin updated to Goom2k4
       * Fixes in UDP, RTSP, matroska, QT/mov, AVI, v4l2, OS/X, SunAudio,
         mulaw and wavpack
