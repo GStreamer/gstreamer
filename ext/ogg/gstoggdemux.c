@@ -22,6 +22,7 @@
 /**
  * SECTION:element-oggdemux
  * @short_description: a demuxer for ogg files
+ * @see_also: <link linkend="gst-plugins-base-plugins-oggmux">oggmux</link>
  *
  * <refsect2>
  * <para>
@@ -407,6 +408,11 @@ gst_ogg_pad_event (GstPad * pad, GstEvent * event)
       res = gst_ogg_demux_perform_seek (ogg, event);
       gst_event_unref (event);
       break;
+    case GST_EVENT_QOS:
+    case GST_EVENT_NAVIGATION:
+      res = FALSE;
+      gst_event_unref (event);
+      break;
     default:
       res = gst_pad_event_default (pad, event);
       break;
@@ -788,7 +794,7 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
         }
       }
     }
-    g_list_free (factories);
+    gst_plugin_feature_list_free (factories);
   }
   pad->element = element;
 
