@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-14 00:20+0000\n"
+"POT-Creation-Date: 2008-04-13 19:09+0100\n"
 "PO-Revision-Date: 2008-02-09 22:17+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -39,8 +39,8 @@ msgid "Failed to query sound server capabilities"
 msgstr "Nezdařil se dotaz na schopnosti zvukového serveru"
 
 #: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
-#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1111
-#: gst/avi/gstavidemux.c:3778 gst/avi/gstavidemux.c:3786
+#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1120
+#: gst/avi/gstavidemux.c:3779 gst/avi/gstavidemux.c:3787
 msgid "Internal data stream error."
 msgstr "Vnitřní chyba datového proudu."
 
@@ -52,7 +52,7 @@ msgstr "Nezdařilo se dekódování obrázku JPEG"
 msgid "Could not connect to server"
 msgstr "Nezdařilo se spojení se serverem"
 
-#: gst/avi/gstavimux.c:1474
+#: gst/avi/gstavimux.c:1479
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Žádný nebo neplatný zvukový vstup, proud AVI bude poškozen."
 
@@ -60,24 +60,24 @@ msgstr "Žádný nebo neplatný zvukový vstup, proud AVI bude poškozen."
 msgid "This file is incomplete and cannot be played."
 msgstr "Tento soubor není úplný a nelze jej přehrát."
 
-#: gst/qtdemux/qtdemux.c:1810
+#: gst/qtdemux/qtdemux.c:1814
 msgid "This file contains no playable streams."
 msgstr "Tento soubor neobsahuje hratelné proudy."
 
-#: gst/qtdemux/qtdemux.c:2647
+#: gst/qtdemux/qtdemux.c:2654
 msgid "The video in this file might not play correctly."
 msgstr "Video v tomto souboru se nemusí přehrát správně."
 
-#: gst/qtdemux/qtdemux.c:2722
+#: gst/qtdemux/qtdemux.c:2729
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Tento soubor obsahuje příliš mnoho proudů. Přehrává se pouze první %d"
 
-#: gst/qtdemux/qtdemux.c:2984 gst/qtdemux/qtdemux.c:3581
+#: gst/qtdemux/qtdemux.c:2991 gst/qtdemux/qtdemux.c:3588
 msgid "This file is corrupt and cannot be played."
 msgstr "Tento soubor je poškozen a nelze jej přehrát."
 
-#: gst/qtdemux/qtdemux.c:3588
+#: gst/qtdemux/qtdemux.c:3595
 msgid "This file is encrypted and cannot be played."
 msgstr "Tento soubor je šifrován a nelze jej přehrát."
 
@@ -85,7 +85,7 @@ msgstr "Tento soubor je šifrován a nelze jej přehrát."
 msgid "Internal data flow error."
 msgstr "Vnitřní chyba datového toku."
 
-#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Volume"
 msgstr "Hlasitost"
 
@@ -181,11 +181,11 @@ msgstr "Video"
 msgid "Radio"
 msgstr "Rádio"
 
-#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
 msgstr "Zesílení"
 
@@ -299,12 +299,12 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Nezdařilo se nastavení vstupu \"%d\" na zařízení \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:369
+#: sys/v4l2/v4l2src_calls.c:364
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "Nezdařilo se zařazení vyrovnávací paměti na zařízení \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:548
+#: sys/v4l2/v4l2src_calls.c:543
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
@@ -351,63 +351,56 @@ msgstr "Selhání po %d pokusech. Zařízení %s. Systémová chyba: %s"
 msgid "No free buffers found in the pool at index %d."
 msgstr "Na indexu %d nenalezena žádná volná vyrovnávací paměť ve sdílení."
 
-#: sys/v4l2/v4l2src_calls.c:1155
+#: sys/v4l2/v4l2src_calls.c:1171
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Nezdařilo se zjištění parametrů na zařízení \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1164
-#, c-format
-msgid "Could not set parameters on device '%s'"
-msgstr "Nezdařilo se nastavení parametrů na zařízení \"%s\"."
+#: sys/v4l2/v4l2src_calls.c:1199
+msgid "Video input device did not accept new frame rate setting."
+msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1183
+#: sys/v4l2/v4l2src_calls.c:1216
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Zařízení \"%s\" nepodporuje záznam videa."
 
-#: sys/v4l2/v4l2src_calls.c:1191 sys/v4l2/v4l2src_calls.c:1200
+#: sys/v4l2/v4l2src_calls.c:1224 sys/v4l2/v4l2src_calls.c:1233
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Zařízení \"%s\" není schopno zachytávat na %dx%d"
 
-#: sys/v4l2/v4l2src_calls.c:1209
+#: sys/v4l2/v4l2src_calls.c:1242
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Zařízení \"%s\" není schopno zaznamenávat v určeném formátu"
 
-#: sys/v4l2/v4l2src_calls.c:1220
-#, c-format
-msgid "Device '%s' cannot capture at %d/%d frames per second"
-msgstr ""
-"Zařízení \"%s\" není schopno zaznamenávat při %d/%d snímcích za sekundu"
-
-#: sys/v4l2/v4l2src_calls.c:1297
+#: sys/v4l2/v4l2src_calls.c:1320
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Nezdařilo se získání vyrovnávací paměti ze zařízení \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1306
+#: sys/v4l2/v4l2src_calls.c:1329
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Nezdařilo se získání dostatečné vyrovnávací paměti ze zařízení \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1315
+#: sys/v4l2/v4l2src_calls.c:1338
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Nezdařilo se mapování vyrovnávací paměti ze zařízení \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1323
+#: sys/v4l2/v4l2src_calls.c:1346
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr "Ovladač zařízení \"%s\" nepodporuje žádnou známou záznamovou metodu."
 
-#: sys/v4l2/v4l2src_calls.c:1368
+#: sys/v4l2/v4l2src_calls.c:1391
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Chyba při spouštění proudového záznamu ze zařízení \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1412
+#: sys/v4l2/v4l2src_calls.c:1435
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Chyba při zastavování proudového záznamu ze zařízení \"%s\"."
@@ -419,3 +412,10 @@ msgstr "Změna rozlišení za běhu doposud není podporována."
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Není možné fungovat bez hodin"
+
+#~ msgid "Could not set parameters on device '%s'"
+#~ msgstr "Nezdařilo se nastavení parametrů na zařízení \"%s\"."
+
+#~ msgid "Device '%s' cannot capture at %d/%d frames per second"
+#~ msgstr ""
+#~ "Zařízení \"%s\" není schopno zaznamenávat při %d/%d snímcích za sekundu"

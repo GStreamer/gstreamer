@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-14 00:20+0000\n"
+"POT-Creation-Date: 2008-04-13 19:09+0100\n"
 "PO-Revision-Date: 2008-02-09 21:22+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -37,8 +37,8 @@ msgid "Failed to query sound server capabilities"
 msgstr "Kan de eigenschappen van de geluidsserver niet opvragen"
 
 #: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
-#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1111
-#: gst/avi/gstavidemux.c:3778 gst/avi/gstavidemux.c:3786
+#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1120
+#: gst/avi/gstavidemux.c:3779 gst/avi/gstavidemux.c:3787
 msgid "Internal data stream error."
 msgstr "Interne fout in gegevensstroom."
 
@@ -50,7 +50,7 @@ msgstr "Kan de JPEG-afbeelding niet decoderen"
 msgid "Could not connect to server"
 msgstr "Kan geen verbinding maken met server"
 
-#: gst/avi/gstavimux.c:1474
+#: gst/avi/gstavimux.c:1479
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
 
@@ -58,25 +58,25 @@ msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
 msgid "This file is incomplete and cannot be played."
 msgstr "Dit bestand is niet compleet en kan niet gespeeld worden."
 
-#: gst/qtdemux/qtdemux.c:1810
+#: gst/qtdemux/qtdemux.c:1814
 msgid "This file contains no playable streams."
 msgstr "Dit bestand bevat geen speelbare stromen."
 
-#: gst/qtdemux/qtdemux.c:2647
+#: gst/qtdemux/qtdemux.c:2654
 msgid "The video in this file might not play correctly."
 msgstr "De vido in dit bestand kan mogelijk niet correct afgespeeld worden."
 
-#: gst/qtdemux/qtdemux.c:2722
+#: gst/qtdemux/qtdemux.c:2729
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Dit bestand bevat te veel stromen. Alleen de eerste %d wordt afgespeeld"
 
-#: gst/qtdemux/qtdemux.c:2984 gst/qtdemux/qtdemux.c:3581
+#: gst/qtdemux/qtdemux.c:2991 gst/qtdemux/qtdemux.c:3588
 msgid "This file is corrupt and cannot be played."
 msgstr "Dit bestand is corrupt en kan niet afgespeeld worden."
 
-#: gst/qtdemux/qtdemux.c:3588
+#: gst/qtdemux/qtdemux.c:3595
 msgid "This file is encrypted and cannot be played."
 msgstr "Dit bestand is versleuteld en kan niet afgespeeld worden."
 
@@ -84,7 +84,7 @@ msgstr "Dit bestand is versleuteld en kan niet afgespeeld worden."
 msgid "Internal data flow error."
 msgstr "Interne fout met de gegevens doorvoer."
 
-#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Volume"
 msgstr "Volume"
 
@@ -180,11 +180,11 @@ msgstr "Video"
 msgid "Radio"
 msgstr "Radio"
 
-#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
 msgstr "Versterking"
 
@@ -295,12 +295,12 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Kan de invoer %d op apparaat '%s' niet instellen."
 
-#: sys/v4l2/v4l2src_calls.c:369
+#: sys/v4l2/v4l2src_calls.c:364
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "Kan geen buffers toekennen in apparaat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:548
+#: sys/v4l2/v4l2src_calls.c:543
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
@@ -344,62 +344,56 @@ msgstr "Fout na %d pogingen. Apparaat %s. Systeemfout: %s"
 msgid "No free buffers found in the pool at index %d."
 msgstr "Geen vrije buffers meer in de pool bij index %d."
 
-#: sys/v4l2/v4l2src_calls.c:1155
+#: sys/v4l2/v4l2src_calls.c:1171
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Kan de parameters op apparaat '%s' niet verkrijgen"
 
-#: sys/v4l2/v4l2src_calls.c:1164
-#, c-format
-msgid "Could not set parameters on device '%s'"
-msgstr "Kan de parameters op apparaat '%s' niet instellen"
+#: sys/v4l2/v4l2src_calls.c:1199
+msgid "Video input device did not accept new frame rate setting."
+msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1183
+#: sys/v4l2/v4l2src_calls.c:1216
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Het apparaat '%s' ondersteunt het opnemen van video niet"
 
-#: sys/v4l2/v4l2src_calls.c:1191 sys/v4l2/v4l2src_calls.c:1200
+#: sys/v4l2/v4l2src_calls.c:1224 sys/v4l2/v4l2src_calls.c:1233
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Apparaat '%s' kan niet opnemen met %dx%d"
 
-#: sys/v4l2/v4l2src_calls.c:1209
+#: sys/v4l2/v4l2src_calls.c:1242
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Apparaat '%s' kan niet opnemen in het gespecificeerde formaat"
 
-#: sys/v4l2/v4l2src_calls.c:1220
-#, c-format
-msgid "Device '%s' cannot capture at %d/%d frames per second"
-msgstr "Apparaat '%s' kan niet opnemen met %d/%d frames per seconde"
-
-#: sys/v4l2/v4l2src_calls.c:1297
+#: sys/v4l2/v4l2src_calls.c:1320
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Kan geen buffers verkrijgen van apparaat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1306
+#: sys/v4l2/v4l2src_calls.c:1329
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Kan onvoldoende buffers verkrijgen van apparaat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1315
+#: sys/v4l2/v4l2src_calls.c:1338
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Kan de buffers van apparaat '%s' niet vinden"
 
-#: sys/v4l2/v4l2src_calls.c:1323
+#: sys/v4l2/v4l2src_calls.c:1346
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr "De driver van apparaat '%s' ondersteunt geen  bekende opnamemethode."
 
-#: sys/v4l2/v4l2src_calls.c:1368
+#: sys/v4l2/v4l2src_calls.c:1391
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Fout bij het starten van een opnamestroom met apparaat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1412
+#: sys/v4l2/v4l2src_calls.c:1435
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Fout bij het stoppen van een opnamestroom met apparaat '%s'."
@@ -411,3 +405,9 @@ msgstr "Tijdens het draaien kan de resolutie nog niet gewijzigd worden."
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Kan niet werken zonder een klok."
+
+#~ msgid "Could not set parameters on device '%s'"
+#~ msgstr "Kan de parameters op apparaat '%s' niet instellen"
+
+#~ msgid "Device '%s' cannot capture at %d/%d frames per second"
+#~ msgstr "Apparaat '%s' kan niet opnemen met %d/%d frames per seconde"

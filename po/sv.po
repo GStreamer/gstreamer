@@ -1,14 +1,15 @@
 # Swedish messages for gst-plugins-good.
 # Copyright (C) 2007, 2008 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-good package.
 # Christian Rose <menthos@menthos.com>, 2004.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.6.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.7.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-14 00:20+0000\n"
-"PO-Revision-Date: 2008-02-09 20:39+0100\n"
+"POT-Creation-Date: 2008-04-13 19:09+0100\n"
+"PO-Revision-Date: 2008-04-21 23:46+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -36,8 +37,8 @@ msgid "Failed to query sound server capabilities"
 msgstr "Misslyckades med att fråga efter ljudserverförmågor"
 
 #: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
-#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1111
-#: gst/avi/gstavidemux.c:3778 gst/avi/gstavidemux.c:3786
+#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1120
+#: gst/avi/gstavidemux.c:3779 gst/avi/gstavidemux.c:3787
 msgid "Internal data stream error."
 msgstr "Internt fel i dataström."
 
@@ -49,7 +50,7 @@ msgstr "Misslyckades med att avkoda JPEG-bild"
 msgid "Could not connect to server"
 msgstr "Kunde inte ansluta till servern"
 
-#: gst/avi/gstavimux.c:1474
+#: gst/avi/gstavimux.c:1479
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."
 
@@ -57,25 +58,25 @@ msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."
 msgid "This file is incomplete and cannot be played."
 msgstr "Den här filen är inte fullständig och kan inte spelas upp."
 
-#: gst/qtdemux/qtdemux.c:1810
+#: gst/qtdemux/qtdemux.c:1814
 msgid "This file contains no playable streams."
 msgstr "Den här filen innehåller inga uppspelningsbara strömmar."
 
-#: gst/qtdemux/qtdemux.c:2647
+#: gst/qtdemux/qtdemux.c:2654
 msgid "The video in this file might not play correctly."
 msgstr "Videon i den här filen kanske inte kan spelas upp korrekt."
 
-#: gst/qtdemux/qtdemux.c:2722
+#: gst/qtdemux/qtdemux.c:2729
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Den här filen innehåller för många strömmar. Spelar endast upp de första %d"
 
-#: gst/qtdemux/qtdemux.c:2984 gst/qtdemux/qtdemux.c:3581
+#: gst/qtdemux/qtdemux.c:2991 gst/qtdemux/qtdemux.c:3588
 msgid "This file is corrupt and cannot be played."
 msgstr "Den här filen är skadad och kan inte spelas upp."
 
-#: gst/qtdemux/qtdemux.c:3588
+#: gst/qtdemux/qtdemux.c:3595
 msgid "This file is encrypted and cannot be played."
 msgstr "Den här filen är krypterad och kan inte spelas upp."
 
@@ -83,7 +84,7 @@ msgstr "Den här filen är krypterad och kan inte spelas upp."
 msgid "Internal data flow error."
 msgstr "Internt fel i dataflöde."
 
-#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Volume"
 msgstr "Volym"
 
@@ -179,11 +180,11 @@ msgstr "Video"
 msgid "Radio"
 msgstr "Radio"
 
-#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
 msgstr "Förstärk"
 
@@ -291,7 +292,7 @@ msgstr "Kunde inte ställa in värdet %d för kontrollen %d på enheten \"%s\"."
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Misslyckades med att få tag på aktuell ingång på enheten\"%s\". Kan vara en "
+"Misslyckades med att få tag på aktuell ingång på enheten \"%s\". Kan vara en "
 "radioenhet"
 
 #: sys/v4l2/v4l2_calls.c:778
@@ -299,12 +300,12 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Kunde inte ställa in ingång %d på enheten %s."
 
-#: sys/v4l2/v4l2src_calls.c:369
+#: sys/v4l2/v4l2src_calls.c:364
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "Kunde inte kölägga buffertar i enheten \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:548
+#: sys/v4l2/v4l2src_calls.c:543
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
@@ -349,62 +350,56 @@ msgstr "Misslyckades efter %d försök. enhet %s. systemfel: %s"
 msgid "No free buffers found in the pool at index %d."
 msgstr "Inga lediga buffertar hittades i poolen på index %d."
 
-#: sys/v4l2/v4l2src_calls.c:1155
+#: sys/v4l2/v4l2src_calls.c:1171
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Kunde inte få tag i parametrar på enheten \"%s\""
 
-#: sys/v4l2/v4l2src_calls.c:1164
-#, c-format
-msgid "Could not set parameters on device '%s'"
-msgstr "Kunde inte ställa in parametrar på enheten \"%s\""
+#: sys/v4l2/v4l2src_calls.c:1199
+msgid "Video input device did not accept new frame rate setting."
+msgstr "Videoingångsenheten accepterade inte ny inställning för bildfrekvens."
 
-#: sys/v4l2/v4l2src_calls.c:1183
+#: sys/v4l2/v4l2src_calls.c:1216
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Enheten \"%s\" saknar stöd för videofångst"
 
-#: sys/v4l2/v4l2src_calls.c:1191 sys/v4l2/v4l2src_calls.c:1200
+#: sys/v4l2/v4l2src_calls.c:1224 sys/v4l2/v4l2src_calls.c:1233
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Enheten \"%s\" kan inte fånga i %dx%d"
 
-#: sys/v4l2/v4l2src_calls.c:1209
+#: sys/v4l2/v4l2src_calls.c:1242
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Enheten \"%s\" kan inte fånga i det angivna formatet"
 
-#: sys/v4l2/v4l2src_calls.c:1220
-#, c-format
-msgid "Device '%s' cannot capture at %d/%d frames per second"
-msgstr "Enheten \"%s\" kan inte fånga i %d/%d bildrutor per sekund"
-
-#: sys/v4l2/v4l2src_calls.c:1297
+#: sys/v4l2/v4l2src_calls.c:1320
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Kunde inte få tag i buffertar från enheten \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1306
+#: sys/v4l2/v4l2src_calls.c:1329
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1315
+#: sys/v4l2/v4l2src_calls.c:1338
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Kunde inte mappa buffertar från enheten \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1323
+#: sys/v4l2/v4l2src_calls.c:1346
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr "Drivrutinen för enheten \"%s\" saknar stöd för någon känd fångstmetod."
 
-#: sys/v4l2/v4l2src_calls.c:1368
+#: sys/v4l2/v4l2src_calls.c:1391
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Fel vid start av strömfångst från enheten \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1412
+#: sys/v4l2/v4l2src_calls.c:1435
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Fel vid stopp av strömfångst från enheten \"%s\"."
@@ -416,6 +411,12 @@ msgstr "Ändring av upplösning vid körtid stöds inte än."
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Kan inte fungera utan en klocka"
+
+#~ msgid "Could not set parameters on device '%s'"
+#~ msgstr "Kunde inte ställa in parametrar på enheten \"%s\""
+
+#~ msgid "Device '%s' cannot capture at %d/%d frames per second"
+#~ msgstr "Enheten \"%s\" kan inte fånga i %d/%d bildrutor per sekund"
 
 #~ msgid "Could not exchange data with device '%s'."
 #~ msgstr "Kunde inte utväxla data med enheten \"%s\"."

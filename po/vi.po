@@ -1,14 +1,14 @@
 # Vietnamese Translation for GST Plugins Good.
 # Copyright © 2008 Free Software Foundation, Inc.
-# This file is distributed under the same license as the gst-plugins-good-0.10.6.2 package.
+# This file is distributed under the same license as the gst-plugins-good-0.10.7.3 package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2008.
-# 
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.6.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.7.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-14 00:20+0000\n"
-"PO-Revision-Date: 2008-02-10 18:06+1030\n"
+"POT-Creation-Date: 2008-04-13 19:09+0100\n"
+"PO-Revision-Date: 2008-04-22 17:52+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com> \n"
 "MIME-Version: 1.0\n"
@@ -38,8 +38,8 @@ msgid "Failed to query sound server capabilities"
 msgstr "Lỗi truy vấn khả năng của máy phục vụ âm thanh"
 
 #: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
-#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1111
-#: gst/avi/gstavidemux.c:3778 gst/avi/gstavidemux.c:3786
+#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1120
+#: gst/avi/gstavidemux.c:3779 gst/avi/gstavidemux.c:3787
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
@@ -51,7 +51,7 @@ msgstr "Lỗi giải mã ảnh JPEG"
 msgid "Could not connect to server"
 msgstr "Không thể kết nối tới máy phục vụ"
 
-#: gst/avi/gstavimux.c:1474
+#: gst/avi/gstavimux.c:1479
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Chưa có dữ liệu âm thanh nhập, hoặc dữ liệu âm thanh nhập không hợp lệ. Vì "
@@ -61,24 +61,24 @@ msgstr ""
 msgid "This file is incomplete and cannot be played."
 msgstr "Tập tin này chưa hoàn thành nên không thể được phát."
 
-#: gst/qtdemux/qtdemux.c:1810
+#: gst/qtdemux/qtdemux.c:1814
 msgid "This file contains no playable streams."
 msgstr "Tập tin này không chứa luồng có thể phát."
 
-#: gst/qtdemux/qtdemux.c:2647
+#: gst/qtdemux/qtdemux.c:2654
 msgid "The video in this file might not play correctly."
 msgstr "Ảnh động trong tập tin này có thể không phát đúng."
 
-#: gst/qtdemux/qtdemux.c:2722
+#: gst/qtdemux/qtdemux.c:2729
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Tập tin này chứa quá nhiều luồng nên chỉ phát %d đầu tiên"
 
-#: gst/qtdemux/qtdemux.c:2984 gst/qtdemux/qtdemux.c:3581
+#: gst/qtdemux/qtdemux.c:2991 gst/qtdemux/qtdemux.c:3588
 msgid "This file is corrupt and cannot be played."
 msgstr "Tập tin này bị hỏng nên không thể phát."
 
-#: gst/qtdemux/qtdemux.c:3588
+#: gst/qtdemux/qtdemux.c:3595
 msgid "This file is encrypted and cannot be played."
 msgstr "Tập tin này bị mật mã nên không thể phát."
 
@@ -86,7 +86,7 @@ msgstr "Tập tin này bị mật mã nên không thể phát."
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
-#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Volume"
 msgstr "Âm lượng"
 
@@ -182,11 +182,11 @@ msgstr "Ảnh động"
 msgid "Radio"
 msgstr "Thu thanh"
 
-#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Monitor"
 msgstr "Màn hình"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
 msgstr "Khuếch đại"
 
@@ -297,12 +297,12 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Lỗi đặt dữ liệu nhập %d vào thiết bị « %s »."
 
-#: sys/v4l2/v4l2src_calls.c:369
+#: sys/v4l2/v4l2src_calls.c:364
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "Không thể phụ thêm các bộ đệm vào hàng đợi trên thiết bị « %s »."
 
-#: sys/v4l2/v4l2src_calls.c:548
+#: sys/v4l2/v4l2src_calls.c:543
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr "Lỗi liệt kê những định dạng ảnh động có thể chạy trên thiết bị « %s »"
@@ -326,8 +326,7 @@ msgstr ""
 #: sys/v4l2/v4l2src_calls.c:1075
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr ""
-"Lỗi khi thử lấy các khung ảnh động từ thiết bị « %s ». Không đủ bộ nhớ."
+msgstr "Lỗi khi thử lấy các khung ảnh động từ thiết bị « %s ». Không đủ bộ nhớ."
 
 #: sys/v4l2/v4l2src_calls.c:1075
 #, c-format
@@ -346,64 +345,57 @@ msgstr "Lỗi sau %d lần thử. Thiết bị %s. Lỗi hệ thống: %s"
 msgid "No free buffers found in the pool at index %d."
 msgstr "Không tìm thấy bộ đệm còn rảnh trong vũng ở chỉ mục %d."
 
-#: sys/v4l2/v4l2src_calls.c:1155
+#: sys/v4l2/v4l2src_calls.c:1171
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Không thể lấy các tham số về thiết bị « %s »."
 
-#: sys/v4l2/v4l2src_calls.c:1164
-#, c-format
-msgid "Could not set parameters on device '%s'"
-msgstr "Không thể đặt các tham số về thiết bị « %s »."
+#: sys/v4l2/v4l2src_calls.c:1199
+msgid "Video input device did not accept new frame rate setting."
+msgstr "Thiết bị nhập ảnh động vào không chấp nhận thiết lập tốc độ khung mới."
 
-#: sys/v4l2/v4l2src_calls.c:1183
+#: sys/v4l2/v4l2src_calls.c:1216
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Thiết bị « %s » không hỗ trợ khả năng bắt ảnh động."
 
-#: sys/v4l2/v4l2src_calls.c:1191 sys/v4l2/v4l2src_calls.c:1200
+#: sys/v4l2/v4l2src_calls.c:1224 sys/v4l2/v4l2src_calls.c:1233
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Thiết bị « %s » không thể bắt theo %d×%d"
 
-#: sys/v4l2/v4l2src_calls.c:1209
+#: sys/v4l2/v4l2src_calls.c:1242
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Thiết bị « %s » không thể bắt theo định dạng đã ghi rõ."
 
-#: sys/v4l2/v4l2src_calls.c:1220
-#, c-format
-msgid "Device '%s' cannot capture at %d/%d frames per second"
-msgstr "Thiết bị « %s » không thể bắt theo %d/%d khung trên mỗi giây."
-
-#: sys/v4l2/v4l2src_calls.c:1297
+#: sys/v4l2/v4l2src_calls.c:1320
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Không thể lấy các bộ đệm từ thiết bị « %s »."
 
-#: sys/v4l2/v4l2src_calls.c:1306
+#: sys/v4l2/v4l2src_calls.c:1329
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Không thể lấy đủ bộ đệm từ thiết bị « %s »."
 
-#: sys/v4l2/v4l2src_calls.c:1315
+#: sys/v4l2/v4l2src_calls.c:1338
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Không thể ánh xạ các bộ đệm từ thiết bị « %s »."
 
-#: sys/v4l2/v4l2src_calls.c:1323
+#: sys/v4l2/v4l2src_calls.c:1346
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
-"Trình điều khiển của thiết bị « %s » không hỗ trợ phương pháp bắt đã biết "
-"nào."
+"Trình điều khiển của thiết bị « %s » không hỗ trợ phương pháp bắt đã biết nào."
 
-#: sys/v4l2/v4l2src_calls.c:1368
+#: sys/v4l2/v4l2src_calls.c:1391
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Lỗi bắt đầu việc bắt luồng từ thiết bị « %s »."
 
-#: sys/v4l2/v4l2src_calls.c:1412
+#: sys/v4l2/v4l2src_calls.c:1435
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Lỗi kết thúc việc bắt luồng từ thiết bị « %s »."

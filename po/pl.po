@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-good.
-# This file is distributed under the same license as the gst-plugins-bad package.
+# This file is distributed under the same license as the gst-plugins-good package.
 # Jakub Bogusz <qboosh@pld-linux.org>, 2007-2008.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.6.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.7.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-14 00:20+0000\n"
-"PO-Revision-Date: 2008-02-09 19:30+0100\n"
+"POT-Creation-Date: 2008-04-13 19:09+0100\n"
+"PO-Revision-Date: 2008-04-21 22:34+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -35,8 +35,8 @@ msgid "Failed to query sound server capabilities"
 msgstr "Nie udało się odpytać o możliwości serwera dźwięku"
 
 #: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
-#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1111
-#: gst/avi/gstavidemux.c:3778 gst/avi/gstavidemux.c:3786
+#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1120
+#: gst/avi/gstavidemux.c:3779 gst/avi/gstavidemux.c:3787
 msgid "Internal data stream error."
 msgstr "Błąd wewnętrzny strumienia danych."
 
@@ -48,7 +48,7 @@ msgstr "Nie udało się zdekodować obrazu JPEG"
 msgid "Could not connect to server"
 msgstr "Nie udało się połączyć z serwerem"
 
-#: gst/avi/gstavimux.c:1474
+#: gst/avi/gstavimux.c:1479
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Brak lub niepoprawne wejście dźwięku, strumień AVI będzie uszkodzony."
 
@@ -56,24 +56,24 @@ msgstr "Brak lub niepoprawne wejście dźwięku, strumień AVI będzie uszkodzon
 msgid "This file is incomplete and cannot be played."
 msgstr "Ten plik jest niekompletny i nie może być odtworzony."
 
-#: gst/qtdemux/qtdemux.c:1810
+#: gst/qtdemux/qtdemux.c:1814
 msgid "This file contains no playable streams."
 msgstr "Ten plik nie zawiera strumieni nadających się do odtworzenia."
 
-#: gst/qtdemux/qtdemux.c:2647
+#: gst/qtdemux/qtdemux.c:2654
 msgid "The video in this file might not play correctly."
 msgstr "Obraz w tym pliku może nie być odtwarzany prawidłowo."
 
-#: gst/qtdemux/qtdemux.c:2722
+#: gst/qtdemux/qtdemux.c:2729
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Ten plik zawiera zbyt dużo strumieni. Odtwarzanie tylko %d pierwszych"
 
-#: gst/qtdemux/qtdemux.c:2984 gst/qtdemux/qtdemux.c:3581
+#: gst/qtdemux/qtdemux.c:2991 gst/qtdemux/qtdemux.c:3588
 msgid "This file is corrupt and cannot be played."
 msgstr "Ten plik jest uszkodzony i nie może być odtworzony."
 
-#: gst/qtdemux/qtdemux.c:3588
+#: gst/qtdemux/qtdemux.c:3595
 msgid "This file is encrypted and cannot be played."
 msgstr "Ten plik jest zaszyfrowany i nie może być odtworzony."
 
@@ -81,7 +81,7 @@ msgstr "Ten plik jest zaszyfrowany i nie może być odtworzony."
 msgid "Internal data flow error."
 msgstr "Błąd wewnętrzny przepływu danych."
 
-#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Volume"
 msgstr "Głośność"
 
@@ -177,11 +177,11 @@ msgstr "Obraz"
 msgid "Radio"
 msgstr "Radio"
 
-#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
 msgstr "Wzmocnienie"
 
@@ -193,7 +193,7 @@ msgstr "Błąd odczytu %d bajtów z urządzenia '%s'."
 #: sys/v4l2/gstv4l2src.c:1076
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Otrzymano nieoczekiwany rozmiar ramki %u zamiast %u."
+msgstr "Otrzymano nieoczekiwany rozmiar klatki %u zamiast %u."
 
 #: sys/v4l2/v4l2_calls.c:83
 #, c-format
@@ -293,12 +293,12 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Nie udało się ustawić wejścia %d urządzenia %s."
 
-#: sys/v4l2/v4l2src_calls.c:369
+#: sys/v4l2/v4l2src_calls.c:364
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "Nie udało się skolejkować buforów urządzenia '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:548
+#: sys/v4l2/v4l2src_calls.c:543
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
@@ -325,7 +325,8 @@ msgstr ""
 #: sys/v4l2/v4l2src_calls.c:1075
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr "Nie udało się uzyskać ramek obrazu z urządzenia '%s'. Za mało pamięci."
+msgstr ""
+"Nie udało się uzyskać klatek obrazu z urządzenia '%s'. Za mało pamięci."
 
 #: sys/v4l2/v4l2src_calls.c:1075
 #, c-format
@@ -344,63 +345,59 @@ msgstr "Niepowodzenie po %d próbach. Urządzenie %s. Błąd systemowy: %s"
 msgid "No free buffers found in the pool at index %d."
 msgstr "Brak wolnych buforów w puli dla indeksu %d."
 
-#: sys/v4l2/v4l2src_calls.c:1155
+#: sys/v4l2/v4l2src_calls.c:1171
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Nie udało się uzyskać parametrów urządzenia '%s'"
 
-#: sys/v4l2/v4l2src_calls.c:1164
-#, c-format
-msgid "Could not set parameters on device '%s'"
-msgstr "Nie udało się ustawić parametrów urządzenia '%s'"
+#: sys/v4l2/v4l2src_calls.c:1199
+msgid "Video input device did not accept new frame rate setting."
+msgstr ""
+"Urządzenie wejściowe obrazu nie przyjęło nowego ustawienia częstotliwości "
+"klatek."
 
-#: sys/v4l2/v4l2src_calls.c:1183
+#: sys/v4l2/v4l2src_calls.c:1216
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Urządzenie '%s' nie obsługuje przechwytywania obrazu"
 
-#: sys/v4l2/v4l2src_calls.c:1191 sys/v4l2/v4l2src_calls.c:1200
+#: sys/v4l2/v4l2src_calls.c:1224 sys/v4l2/v4l2src_calls.c:1233
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Urządzenie '%s' nie może przechwytywać przy %dx%d"
 
-#: sys/v4l2/v4l2src_calls.c:1209
+#: sys/v4l2/v4l2src_calls.c:1242
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Urządzenie '%s' nie może przechwytywać w podanym formacie"
 
-#: sys/v4l2/v4l2src_calls.c:1220
-#, c-format
-msgid "Device '%s' cannot capture at %d/%d frames per second"
-msgstr "Urządzenie '%s' nie może przechwytywać przy %d/%d klatek na sekundę"
-
-#: sys/v4l2/v4l2src_calls.c:1297
+#: sys/v4l2/v4l2src_calls.c:1320
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Nie udało się uzyskać buforów z urządzenia '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1306
+#: sys/v4l2/v4l2src_calls.c:1329
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Nie udało się uzyskać wystarczającej liczby buforów z urządzenia '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1315
+#: sys/v4l2/v4l2src_calls.c:1338
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Nie udało się odwzorować buforów z urządzenia '%s'"
 
-#: sys/v4l2/v4l2src_calls.c:1323
+#: sys/v4l2/v4l2src_calls.c:1346
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
 "Sterownik urządzenia '%s' nie obsługuje żadnej znanej metody przechwytywania."
 
-#: sys/v4l2/v4l2src_calls.c:1368
+#: sys/v4l2/v4l2src_calls.c:1391
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Błąd uruchamiania przechwytywania strumienia z urządzenia '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1412
+#: sys/v4l2/v4l2src_calls.c:1435
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Błąd zatrzymywania przechwytywania strumienia z urządzenia '%s'."

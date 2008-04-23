@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-14 00:20+0000\n"
+"POT-Creation-Date: 2008-04-13 19:09+0100\n"
 "PO-Revision-Date: 2007-09-07 00:24+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -39,8 +39,8 @@ msgid "Failed to query sound server capabilities"
 msgstr "Äänipalvelimen ominaisuuksia ei voitu selvittää"
 
 #: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
-#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1111
-#: gst/avi/gstavidemux.c:3778 gst/avi/gstavidemux.c:3786
+#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1120
+#: gst/avi/gstavidemux.c:3779 gst/avi/gstavidemux.c:3787
 msgid "Internal data stream error."
 msgstr "Sisäisen tietovirran virhe."
 
@@ -52,7 +52,7 @@ msgstr "JPEG-kuvan purku epäonnistui"
 msgid "Could not connect to server"
 msgstr "Palvelimeen ei saatu yhteyttä"
 
-#: gst/avi/gstavimux.c:1474
+#: gst/avi/gstavimux.c:1479
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Ääntä ei ole tai äänilähde on viallinen, AVI-virta tulee olemaan "
@@ -62,24 +62,24 @@ msgstr ""
 msgid "This file is incomplete and cannot be played."
 msgstr "Tiedosto on vajaa eikä sitä voida esittää."
 
-#: gst/qtdemux/qtdemux.c:1810
+#: gst/qtdemux/qtdemux.c:1814
 msgid "This file contains no playable streams."
 msgstr "Tiedosto ei sisällä soitettavia virtoja."
 
-#: gst/qtdemux/qtdemux.c:2647
+#: gst/qtdemux/qtdemux.c:2654
 msgid "The video in this file might not play correctly."
 msgstr "Tiedostossa olevaa videota ei ehkä voida näyttää oikein."
 
-#: gst/qtdemux/qtdemux.c:2722
+#: gst/qtdemux/qtdemux.c:2729
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Tiedosto sisältää useita virtoja. Soitetaan vain ensimmäiset %d"
 
-#: gst/qtdemux/qtdemux.c:2984 gst/qtdemux/qtdemux.c:3581
+#: gst/qtdemux/qtdemux.c:2991 gst/qtdemux/qtdemux.c:3588
 msgid "This file is corrupt and cannot be played."
 msgstr "Tiedosto on vioittunut eikä sitä voida näyttää."
 
-#: gst/qtdemux/qtdemux.c:3588
+#: gst/qtdemux/qtdemux.c:3595
 msgid "This file is encrypted and cannot be played."
 msgstr "Tiedosto on salattu eikä sitä voida näyttää."
 
@@ -87,7 +87,7 @@ msgstr "Tiedosto on salattu eikä sitä voida näyttää."
 msgid "Internal data flow error."
 msgstr "Sisäisen tietovirran virhe."
 
-#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Volume"
 msgstr "Äänenvoimakkuus"
 
@@ -183,11 +183,11 @@ msgstr "Video"
 msgid "Radio"
 msgstr "Radio"
 
-#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Monitor"
 msgstr "Tarkkailu"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:64
+#: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
 msgstr "Herkkyys"
 
@@ -297,12 +297,12 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Sisääntuloa %d ei voitu asettaa laitteelle %s."
 
-#: sys/v4l2/v4l2src_calls.c:369
+#: sys/v4l2/v4l2src_calls.c:364
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "Puskureita ei voitu laittaa jonoon laitteella \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:548
+#: sys/v4l2/v4l2src_calls.c:543
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr "Laitteen \"%s\" osaamia videomuotoja ei voitu luetteloida"
@@ -345,62 +345,56 @@ msgstr "Epäonnistui %d yrityksen jälkeen: laite %s, järjestelmävirhe: %s"
 msgid "No free buffers found in the pool at index %d."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1155
+#: sys/v4l2/v4l2src_calls.c:1171
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Laitteelta \"%s\" ei voitu saada parametreja"
 
-#: sys/v4l2/v4l2src_calls.c:1164
-#, c-format
-msgid "Could not set parameters on device '%s'"
-msgstr "Laitteelle \"%s\" ei voitu asettaa parametreja"
+#: sys/v4l2/v4l2src_calls.c:1199
+msgid "Video input device did not accept new frame rate setting."
+msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1183
+#: sys/v4l2/v4l2src_calls.c:1216
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Laite \"%s\" ei tue videokuvan kaappausta"
 
-#: sys/v4l2/v4l2src_calls.c:1191 sys/v4l2/v4l2src_calls.c:1200
+#: sys/v4l2/v4l2src_calls.c:1224 sys/v4l2/v4l2src_calls.c:1233
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Laitteelta \"%s\" ei voi kaapata tarkkuudella %dx%d"
 
-#: sys/v4l2/v4l2src_calls.c:1209
+#: sys/v4l2/v4l2src_calls.c:1242
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Laitteelta \"%s\" ei voi kaapata annetussa muodossa"
 
-#: sys/v4l2/v4l2src_calls.c:1220
-#, c-format
-msgid "Device '%s' cannot capture at %d/%d frames per second"
-msgstr "Laitteelta \"%s\" ei voi kaapata nopeudella %d/%d ruutua sekunnissa"
-
-#: sys/v4l2/v4l2src_calls.c:1297
+#: sys/v4l2/v4l2src_calls.c:1320
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Laitteelta \"%s\" ei voitu hakea puskuritilaa."
 
-#: sys/v4l2/v4l2src_calls.c:1306
+#: sys/v4l2/v4l2src_calls.c:1329
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Laitteelta \"%s\" ei voitu hakea riittävästi puskuritilaa."
 
-#: sys/v4l2/v4l2src_calls.c:1315
+#: sys/v4l2/v4l2src_calls.c:1338
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Puskereita laitteelta \"%s\" ei voitu kartoittaa"
 
-#: sys/v4l2/v4l2src_calls.c:1323
+#: sys/v4l2/v4l2src_calls.c:1346
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr "Laitteen \"%s\" ajuri ei tue mitään tunnettua kaappaustapaa."
 
-#: sys/v4l2/v4l2src_calls.c:1368
+#: sys/v4l2/v4l2src_calls.c:1391
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Virhe aloitettaessa virran kaappaus laitteelta \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1412
+#: sys/v4l2/v4l2src_calls.c:1435
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Virhe keskeytettäessä virran kaappaus laitteelta \"%s\"."
@@ -416,6 +410,12 @@ msgstr "Ei voitu toimia ilman kelloa"
 #, fuzzy
 #~ msgid "Could not exchange data with device '%s'."
 #~ msgstr "Puskureita ei voitu laittaa jonoon laitteella \"%s\"."
+
+#~ msgid "Could not set parameters on device '%s'"
+#~ msgstr "Laitteelle \"%s\" ei voitu asettaa parametreja"
+
+#~ msgid "Device '%s' cannot capture at %d/%d frames per second"
+#~ msgstr "Laitteelta \"%s\" ei voi kaapata nopeudella %d/%d ruutua sekunnissa"
 
 #~ msgid "Describes the selected input element."
 #~ msgstr "Kuvaa valitun lähde-elementin."

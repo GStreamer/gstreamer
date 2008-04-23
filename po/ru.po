@@ -1,106 +1,104 @@
-# translation of gst-plugins-good-0.10.6.2.po to Español
-# spanish translation for gst-plugins-good
+# Translation for gst-plugins-good messages to Russian
 # This file is put in the public domain.
+# Артём Попов <artfwo@gmail.com>, 2008.
 #
-# Jorge González González <aloriel@gmail.com>, 2007, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-0.10.6.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-04-13 19:09+0100\n"
-"PO-Revision-Date: 2008-03-01 17:45+0100\n"
-"Last-Translator: Jorge González González <aloriel@gmail.com>\n"
-"Language-Team: Spanish <es@li.org>\n"
+"PO-Revision-Date: 2008-04-02 08:43+0000\n"
+"Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
+"Language-Team: Russian <gnu@mx.ru>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
-"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 #: ext/cdio/gstcdiocddasrc.c:205
 msgid "Could not read from CD."
-msgstr "No se pudo leer del CD."
+msgstr "Не удалось прочитать CD."
 
 #: ext/cdio/gstcdiocddasrc.c:283
 msgid "Could not open CD device for reading."
-msgstr "No se pudo abrir el dispositivo de CD para leer."
+msgstr "Не удалось открыть CD-устройство для чтения."
 
 #: ext/cdio/gstcdiocddasrc.c:290
 msgid "Disc is not an Audio CD."
-msgstr "El disco no es un CD de sonido."
+msgstr "Диск не является аудио-CD."
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
-msgstr "No se pudo establecer la conexión con el servidor de sonido"
+msgstr "Не удалось установить соединение с сервером звука"
 
 #: ext/esd/esdsink.c:269
 msgid "Failed to query sound server capabilities"
-msgstr "Falló al preguntar al servidor de sonido sus capacidades"
+msgstr "Ошибка при запросе возможностей сервера звука"
 
 #: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
 #: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1120
 #: gst/avi/gstavidemux.c:3779 gst/avi/gstavidemux.c:3787
 msgid "Internal data stream error."
-msgstr "Error interno de flujo de datos."
+msgstr "Внутренняя ошибка потока данных."
 
 #: ext/jpeg/gstjpegdec.c:1042
 msgid "Failed to decode JPEG image"
-msgstr "Falló al decodificar la imagen JPEG"
+msgstr "Не удалось декодировать JPEG-изображение"
 
 #: ext/shout2/gstshout2.c:558
 msgid "Could not connect to server"
-msgstr "No se pudo conectar con el servidor"
+msgstr "Не удалось соединиться с сервером"
 
 #: gst/avi/gstavimux.c:1479
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "El audio no existe o no es válido, el flujo AVI estará corrupto."
+msgstr ""
+"Входящие аудио-данные отсутствуют или недействительны, поток AVI будет "
+"повреждён."
 
 #: gst/qtdemux/qtdemux.c:1029
 msgid "This file is incomplete and cannot be played."
-msgstr "Este archivo está incompleto y no se puede reproducir."
+msgstr "Файл не полон и не может быть воспроизведён."
 
 #: gst/qtdemux/qtdemux.c:1814
 msgid "This file contains no playable streams."
-msgstr "Este archivo no contiene flujos reproducibles."
+msgstr "Файл не содержит воспроизводимых потоков."
 
 #: gst/qtdemux/qtdemux.c:2654
 msgid "The video in this file might not play correctly."
-msgstr ""
-"Puede que el vídeo en este archivo no se pueda reproducir correctamente."
+msgstr "Видео из этого файла может быть воспроизведено некорректно."
 
 #: gst/qtdemux/qtdemux.c:2729
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
-"Este archivo contiene demasiados flujos. Sólo se reproducirá el primer %d"
+"Файл содержит слишком много потоков. Будет воспроизведёно только первых %d"
 
 #: gst/qtdemux/qtdemux.c:2991 gst/qtdemux/qtdemux.c:3588
 msgid "This file is corrupt and cannot be played."
-msgstr "Este archivo está corrupto y no se puede reproducir."
+msgstr "Файл повреждён и не может быть воспроизведён."
 
 #: gst/qtdemux/qtdemux.c:3595
 msgid "This file is encrypted and cannot be played."
-msgstr "Este archivo está cifrado y no se puede reproducir."
+msgstr "Файл зашифрован и не может быть воспроизведён."
 
 #: gst/wavparse/gstwavparse.c:1777
 msgid "Internal data flow error."
-msgstr "Error en el flujo de datos interno."
+msgstr "Внутренняя ошибка потока данных."
 
 #: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Volume"
-msgstr "Volumen"
+msgstr "Уровень"
 
 #: sys/oss/gstossmixertrack.c:99
 msgid "Bass"
-msgstr "Bass"
+msgstr "Низкие"
 
 #: sys/oss/gstossmixertrack.c:100
 msgid "Treble"
-msgstr "Agudos"
+msgstr "Высокие"
 
 #: sys/oss/gstossmixertrack.c:101
 msgid "Synth"
-msgstr "Sintetizador"
+msgstr "Синтезатор"
 
 #: sys/oss/gstossmixertrack.c:102
 msgid "PCM"
@@ -108,15 +106,15 @@ msgstr "PCM"
 
 #: sys/oss/gstossmixertrack.c:103
 msgid "Speaker"
-msgstr "Altavoz"
+msgstr "Внутренний динамик"
 
 #: sys/oss/gstossmixertrack.c:104
 msgid "Line-in"
-msgstr "Línea de entrada"
+msgstr "Линейный вход"
 
 #: sys/oss/gstossmixertrack.c:105
 msgid "Microphone"
-msgstr "Micrófono"
+msgstr "Микрофон"
 
 #: sys/oss/gstossmixertrack.c:106
 msgid "CD"
@@ -124,7 +122,7 @@ msgstr "CD"
 
 #: sys/oss/gstossmixertrack.c:107
 msgid "Mixer"
-msgstr "Mezclador"
+msgstr "Микшер"
 
 #: sys/oss/gstossmixertrack.c:108
 msgid "PCM-2"
@@ -132,73 +130,73 @@ msgstr "PCM-2"
 
 #: sys/oss/gstossmixertrack.c:109
 msgid "Record"
-msgstr "Grabación"
+msgstr "Запись"
 
 #: sys/oss/gstossmixertrack.c:110
 msgid "In-gain"
-msgstr "Ganancia de entrada"
+msgstr "Усиление на входе"
 
 #: sys/oss/gstossmixertrack.c:111
 msgid "Out-gain"
-msgstr "Ganancia de salida"
+msgstr "Усиление на выходе"
 
 #: sys/oss/gstossmixertrack.c:112
 msgid "Line-1"
-msgstr "Línea-1"
+msgstr "Линейный-1"
 
 #: sys/oss/gstossmixertrack.c:113
 msgid "Line-2"
-msgstr "Línea-2"
+msgstr "Линейный-2"
 
 #: sys/oss/gstossmixertrack.c:114
 msgid "Line-3"
-msgstr "Línea-3"
+msgstr "Линейный-3"
 
 #: sys/oss/gstossmixertrack.c:115
 msgid "Digital-1"
-msgstr "Digital-1"
+msgstr "Цифровой-1"
 
 #: sys/oss/gstossmixertrack.c:116
 msgid "Digital-2"
-msgstr "Digital-2"
+msgstr "Цифровой-2"
 
 #: sys/oss/gstossmixertrack.c:117
 msgid "Digital-3"
-msgstr "Digital-3"
+msgstr "Цифровой-3"
 
 #: sys/oss/gstossmixertrack.c:118
 msgid "Phone-in"
-msgstr "Entrada de teléfono"
+msgstr "Тел. вход"
 
 #: sys/oss/gstossmixertrack.c:119
 msgid "Phone-out"
-msgstr "Salida de teléfono"
+msgstr "Тел. выход"
 
 #: sys/oss/gstossmixertrack.c:120
 msgid "Video"
-msgstr "Vídeo"
+msgstr "Видео"
 
 #: sys/oss/gstossmixertrack.c:121
 msgid "Radio"
-msgstr "Radio"
+msgstr "Радио"
 
 #: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Monitor"
-msgstr "Monitor"
+msgstr "Мониторинг"
 
 #: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
-msgstr "Ganancia"
+msgstr "Усиление"
 
 #: sys/v4l2/gstv4l2src.c:1048 sys/v4l2/gstv4l2src.c:1094
 #, c-format
 msgid "Error read()ing %d bytes on device '%s'."
-msgstr "Error al leer %d bytes del dispositivo «%s»"
+msgstr "Ошибка чтения (read) %d байт из устройства «%s»."
 
 #: sys/v4l2/gstv4l2src.c:1076
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Se obtuvo un tamaño de cuadro inesperado %u en lugar de %u."
+msgstr "Получен неожиданный размер кадра: %u вместо %u."
 
 #: sys/v4l2/v4l2_calls.c:83
 #, c-format
@@ -206,119 +204,114 @@ msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"Error al obtener las capacidades del dispositivo «%s»: No es un controlador "
-"para v4l2. Compruebe si es un controlador para v4l1."
+"Ошибка получения возможностей устройства «%s»: драйвер устройства несовместим "
+"с v4l2. Проверьте, не использует ли устройство драйвер v4l1."
 
 #: sys/v4l2/v4l2_calls.c:120
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr "Falló al consultar los atributos de la entrada %d en el dispositivo %s"
+msgstr "Ошибка запроса атрибутов входа %d устройства %s"
 
 #: sys/v4l2/v4l2_calls.c:150
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr ""
-"Falló al obtener la posición del sintonizador %d en el dispositivo «%s»."
+msgstr "Ошибка получения установок тюнера %d устройства «%s»."
 
 #: sys/v4l2/v4l2_calls.c:192
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr "Falló al consultar la norma para el dispositivo «%s»."
+msgstr "Ошибка запроса стандарта устройства «%s»."
 
 #: sys/v4l2/v4l2_calls.c:240
 #, c-format
 msgid "Failed getting controls attributes on device '%s.'"
-msgstr "Falló al obtener los atributos de control en el dispositivo «%s»."
+msgstr "Ошибка получения атрибутов управления устройства «%s»."
 
 #: sys/v4l2/v4l2_calls.c:310
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr "Falló al obtener los atributos de control en el dispositivo «%s»."
+msgstr "Ошибка получения атрибутов управления устройства «%s»."
 
 #: sys/v4l2/v4l2_calls.c:428
 #, c-format
 msgid "Cannot identify device '%s'."
-msgstr "No se puede identificar el dispositivo «%s»."
+msgstr "Не удаётся распознать устройство «%s»."
 
 #: sys/v4l2/v4l2_calls.c:435
 #, c-format
 msgid "This isn't a device '%s'."
-msgstr "Esto no es un dispositivo «%s»."
+msgstr "«%s» не является устройством."
 
 #: sys/v4l2/v4l2_calls.c:442
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr "No se pudo abrir el dispositivo «%s» para lectura y escritura."
+msgstr "Не удалось открыть устройство «%s» для чтения и записи."
 
 #: sys/v4l2/v4l2_calls.c:449
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "El dispositivo «%s» no es un dispositivo de captura."
+msgstr "Устройство «%s» не является устройством захвата."
 
 #: sys/v4l2/v4l2_calls.c:544
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr "Falló al establecer la norma para el dispositivo «%s»."
+msgstr "Ошибка установки стандарта устройства «%s»."
 
 #: sys/v4l2/v4l2_calls.c:581
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr ""
-"Falló al obtener la frecuencia actual del sintonizador para el dispositivo «%"
-"s»."
+msgstr "Ошибка получения текущей частоты тюнера устройства «%s»."
 
 #: sys/v4l2/v4l2_calls.c:622
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
-msgstr ""
-"Falló al establecer la frecuencia actual del sintonizador para el "
-"dispositivo «%s» a %lu Hz."
+msgstr "Ошибка установки текущей частоты тюнера устройства «%s» в %lu Гц."
 
 #: sys/v4l2/v4l2_calls.c:656
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr "Falló al obtener la potencia de la señal para el dispositivo «%s»."
+msgstr "Ошибка получения мощности сигнала для устройства «%s»."
 
 #: sys/v4l2/v4l2_calls.c:692
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Falló al obtener el valor para el control %d del dispositivo «%s»."
+msgstr "Ошибка получения значения управляющего параметра %d устройства «%s»."
 
 #: sys/v4l2/v4l2_calls.c:727
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
-"Falló al establecer el valor %ds para el control %d del dispositivo «%s»."
+"Ошибка установки значения %d для управляющего параметра %d устройства «%s»."
 
 #: sys/v4l2/v4l2_calls.c:756
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Falló al obtener la entrada actual en el dispositivo «%s». Quizá sea un "
-"dispositivo de radio."
+"Не удалось определить активный вход устройства «%s». Возможно, это радио-"
+"устройство"
 
 #: sys/v4l2/v4l2_calls.c:778
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr "Falló al establecer la entrada %d en el dispositivo %s."
+msgstr "Не удалось выбрать вход %d для устройства %s"
 
 #: sys/v4l2/v4l2src_calls.c:364
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
-msgstr "No se pueden encolar los búferes en el dispositivo «%s»."
+msgstr "Не удалось добавить в очередь буферы устройства «%s»"
 
 #: sys/v4l2/v4l2src_calls.c:543
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
-"Falló al enumerar los posibles formatos de vídeo con los que el dispositivo «%"
-"s» puede trabajar"
+"Не удалось создать список видео-форматов, с которыми может работать "
+"устройство «%s»"
 
 #: sys/v4l2/v4l2src_calls.c:1064 sys/v4l2/v4l2src_calls.c:1081
 #: sys/v4l2/v4l2src_calls.c:1090
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
-msgstr "Falló al intentar obtener cuadros de vídeo del dispositivo «%s»."
+msgstr "Ошибка при попытке получения кадров видео с устройства «%s»."
 
 #: sys/v4l2/v4l2src_calls.c:1066
 #, c-format
@@ -327,38 +320,37 @@ msgid ""
 "buffers have been allocated yet, or the userptr or length are invalid. "
 "device %s"
 msgstr ""
-"El tipo de búfer no está soportado o el índice está fuera de los límites o "
-"no se han registrado búferes todavía o la longitud o el userptr son "
-"inválidos. Dispositivo %s"
+"Неподдерживаемый тип буфера, либо индекс вне диапазона, либо буферы не были "
+"распределены, либо неверные значения длины или userptr (устройство %s)"
 
 #: sys/v4l2/v4l2src_calls.c:1075
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
 msgstr ""
-"Falló al intentar obtener cuadros de vídeo del dispositivo «%s». No hay "
-"memoria suficiente."
+"Ошибка при попытке получения кадров видео с устройства «%s». Не хватает "
+"памяти."
 
 #: sys/v4l2/v4l2src_calls.c:1075
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr ""
-"Memoria insuficiente para encolar un búfer puntero de usuario. Dispositivo %"
-"s."
+"не хватает памяти для постановки в очередь буфера пользовательского "
+"указателя (устройство %s)"
 
 #: sys/v4l2/v4l2src_calls.c:1083
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Falló después de %d intentos. Dispositivo %s. Error del sistema: %s"
+msgstr "Ошибка после %d попыток. Устройство: %s. Системная ошибка: %s"
 
 #: sys/v4l2/v4l2src_calls.c:1092
 #, c-format
 msgid "No free buffers found in the pool at index %d."
-msgstr "No se encontraron búferes libres en el índice %d del «pool»."
+msgstr "В пуле не найдено свободных буферов для индекса %d."
 
 #: sys/v4l2/v4l2src_calls.c:1171
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr "No se pudieron obtener los parámetros para el dispositivo «%s»"
+msgstr "Не удалось получить параметры устройства «%s»"
 
 #: sys/v4l2/v4l2src_calls.c:1199
 msgid "Video input device did not accept new frame rate setting."
@@ -367,60 +359,62 @@ msgstr ""
 #: sys/v4l2/v4l2src_calls.c:1216
 #, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "El dispositivo «%s» no soporta captura de vídeo"
+msgstr "Устройство «%s» не поддерживает видеозахват"
 
 #: sys/v4l2/v4l2src_calls.c:1224 sys/v4l2/v4l2src_calls.c:1233
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "El dispositivo «%s» no puede capturar a %dx%d"
+msgstr "Устройство «%s» не может осуществить захват при размерах %dx%d"
 
 #: sys/v4l2/v4l2src_calls.c:1242
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "El dispositivo «%s» no puede capturar en el formato especificado"
+msgstr "Устройство «%s» не может осуществить захват в указанном формате"
 
 #: sys/v4l2/v4l2src_calls.c:1320
 #, c-format
 msgid "Could not get buffers from device '%s'."
-msgstr "No se pudieron obtener búferes del dispositivo «%s»."
+msgstr "Не удалось получить буферы устройства «%s»"
 
 #: sys/v4l2/v4l2src_calls.c:1329
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
-msgstr "No se pudieron obtener búferes suficientes del dispositivo «%s»."
+msgstr "Не удалось получить необходимое количество буферов устройства «%s»"
 
 #: sys/v4l2/v4l2src_calls.c:1338
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "No se pudieron mapear los búferes del dispositivo «%s»"
+msgstr "Не удалось распределить буферы устройства «%s»"
 
 #: sys/v4l2/v4l2src_calls.c:1346
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
-"El controlador del dispositivo «%s» no soporta ningún método de captura "
-"conocido."
+"Драйвер устройства «%s» не поддерживает ни один из известных методов захвата."
 
 #: sys/v4l2/v4l2src_calls.c:1391
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
-msgstr "Error al iniciar el flujo de captura del dispositivo «%s»."
+msgstr "Ошибка при запуске потока захвата с устройства «%s»."
 
 #: sys/v4l2/v4l2src_calls.c:1435
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
-msgstr "Error al parar el flujo de captura del dispositivo «%s»."
+msgstr "Ошибка при остановке потока захвата с устройства «%s»."
 
 #: sys/ximage/gstximagesrc.c:711
 msgid "Changing resolution at runtime is not yet supported."
-msgstr "El cambio de resolución durante la reproducción aún no está soportado."
+msgstr ""
+"Изменение разрешения видео во время выполнения не поддерживается в настоящий "
+"момент."
 
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
-msgstr "No se puede operar sin reloj"
+msgstr "Операция невозможна без часов"
 
 #~ msgid "Could not set parameters on device '%s'"
-#~ msgstr "No se pudieron establecer los parámetros para el dispositivo «%s»"
+#~ msgstr "Не удалось установить параметры устройства «%s»"
 
 #~ msgid "Device '%s' cannot capture at %d/%d frames per second"
-#~ msgstr "El dispositivo «%s» no puede capturar %d/%d cuadros por segundo"
+#~ msgstr ""
+#~ "Устройство «%s» не может осуществить захват при %d/%d кадрах в секунду"

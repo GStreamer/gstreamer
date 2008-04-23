@@ -1,287 +1,398 @@
-# Messages fran�ais pour GNU gst-plugins.
-# Copyright � 2004 Free Software Foundation, Inc.
-# This file is put in the public domain.
-# Michel Robitaille <robitail@IRO.UMontreal.CA>, traducteur depuis/since 1996.
+# Translation of gst-plugins-good to French
+# Copyright (C) 2003-2008 GStreamer core team
+# This file is distributed under the same license as the gst-plugins-good package.
+#
+# Nicolas Velin <nicolas@velin.fr>, 2008.
+# Claude Paroz <claude@2xlibre.net>, 2008.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: GNU gst-plugins 0.8.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-02 13:00+0200\n"
-"PO-Revision-Date: 2004-08-03 12:00-0500\n"
-"Last-Translator: Michel Robitaille <robitail@IRO.UMontreal.CA>\n"
+"POT-Creation-Date: 2008-02-08 21:54+0000\n"
+"PO-Revision-Date: 2008-04-20 22:10+0200\n"
+"Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-1\n"
-"Content-Transfer-Encoding: 8-bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Ne peut ouvrir le fichier \"%s\" en �criture."
+#: ext/cdio/gstcdiocddasrc.c:205
+msgid "Could not read from CD."
+msgstr "Impossible de lire le CD."
 
-#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Erreur de fermeture du fichier \"%s\"."
-
-#: ext/audiofile/gstafsrc.c:320
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Ne peut ouvrir le fichier \"%s\" en lecture."
-
-#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
+#: ext/cdio/gstcdiocddasrc.c:283
 msgid "Could not open CD device for reading."
-msgstr "Ne peut ouvrir le p�riph�rique pour CD en lecture."
+msgstr "Impossible d'ouvrir le périphérique du lecteur CD en lecture."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
-#, c-format
-msgid "Could not open vfs file \"%s\" for reading."
-msgstr "Ne peut ouvrir le fichier VFS \"%s\" en lecture."
+#: ext/cdio/gstcdiocddasrc.c:290
+msgid "Disc is not an Audio CD."
+msgstr "Ce disque n'est pas un CD audio."
 
-#: ext/gnomevfs/gstgnomevfssink.c:344
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Ne peut ouvrir le fichier vfs \"%s\" en �criture: %s."
+#: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
+msgid "Could not establish connection to sound server"
+msgstr "Impossible d'établir une connexion vers le serveur de son"
 
-#: ext/gnomevfs/gstgnomevfssink.c:351
-msgid "No filename given"
-msgstr "Aucun nom de fichier fourni"
+#: ext/esd/esdsink.c:269
+msgid "Failed to query sound server capabilities"
+msgstr "Échec lors de l'interrogation du serveur de son au sujet de ses capacités"
 
-#: ext/gnomevfs/gstgnomevfssink.c:377
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "Ne peut fermer le fichier VFS \"%s\"."
+#: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
+#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1111
+#: gst/avi/gstavidemux.c:3788 gst/avi/gstavidemux.c:3796
+msgid "Internal data stream error."
+msgstr "Erreur interne de flux de données."
 
-#: ext/sndfile/gstsf.c:582
-msgid "No filename specified."
-msgstr "Aucun nom de fichier sp�cifi�."
+#: ext/jpeg/gstjpegdec.c:1042
+msgid "Failed to decode JPEG image"
+msgstr "Échec de décodage de l'image JPEG"
 
-#: ext/sndfile/gstsf.c:835
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Ne peut �crire au fichier \"%s\"."
+#: ext/shout2/gstshout2.c:558
+msgid "Could not connect to server"
+msgstr "Impossible de se connecter au serveur"
 
-#: gst/avi/gstavimux.c:1052
+#: gst/avi/gstavimux.c:1474
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Aucun signal audio ou signal audio invalide, Stream AVI sera corrompu."
+msgstr "Entrée audio absente ou non valide, le flux AVI sera corrompu."
 
-#: gst-libs/gst/play/play.c:110
+#: gst/qtdemux/qtdemux.c:1029
+msgid "This file is incomplete and cannot be played."
+msgstr "Ce fichier n'est pas complet et ne peut donc pas être lu."
+
+#: gst/qtdemux/qtdemux.c:1810
+msgid "This file contains no playable streams."
+msgstr "Ce fichier ne contient aucun flux exploitable."
+
+#: gst/qtdemux/qtdemux.c:2647
+msgid "The video in this file might not play correctly."
+msgstr "Il est possible que la vidéo de ce fichier ne puisse pas être lue correctement."
+
+#: gst/qtdemux/qtdemux.c:2722
 #, c-format
-msgid "The %s element could not be found. This element is essential for playback. Please install the right plug-in and verify that it works by running 'gst-inspect %s'"
-msgstr "L'�l�ment %s n'a pu �tre trouv�. Cet �l�ment est essentiel pour la r�-�coute. SVP installer le plugin ad�quat et v�rifier qu'il fonctionne en ex�cutant 'gst-inspect %s'"
+msgid "This file contains too many streams. Only playing first %d"
+msgstr "Ce fichier contient trop de flux. Seuls les %d premiers seront lus."
 
-#: gst-libs/gst/play/play.c:139
-msgid ""
-"No usable colorspace element could be found.\n"
-"Please install one and restart."
-msgstr ""
-"L'�l�ment de d'espace de couleurs n'a pu �tre retrouv�.\n"
-"SVP l'installer et re-d�marrer."
+#: gst/qtdemux/qtdemux.c:2984 gst/qtdemux/qtdemux.c:3581
+msgid "This file is corrupt and cannot be played."
+msgstr "Ce fichier est corrompu et ne peut pas être lu."
 
-#: sys/dxr3/dxr3audiosink.c:298
-#, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "Ne peut ouvrir le p�riph�rique audio \"%s\" en �criture."
+#: gst/qtdemux/qtdemux.c:3588
+msgid "This file is encrypted and cannot be played."
+msgstr "Ce fichier est chiffré et ne peut pas être lu."
 
-#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "Ne peut ouvrir le p�riph�rique de contr�le \"%s\" en �criture."
+#: gst/wavparse/gstwavparse.c:1777
+msgid "Internal data flow error."
+msgstr "Erreur interne de flux de données."
 
-#: sys/dxr3/dxr3audiosink.c:343
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "Ne peut configurer le p�riph�rique audio \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Ne peut initialiser le p�riph�rique audio \"%s\" � la fr�quence de %dHz."
-
-#: sys/dxr3/dxr3audiosink.c:422
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "Ne peut fermer le p�riph�rique audio \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "Ne peut fermer le p�riph�rique de contr�le \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:271
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "Ne peut ouvrir le p�riph�rique vid�o \"%s\" en �criture."
-
-#: sys/dxr3/dxr3videosink.c:301
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "Ne peut fermer le p�riph�rique vid�o \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "Ne peut �crire sur le p�riph�rique \"%s\"."
-
-#: sys/oss/gstosselement.c:725
-#, c-format
-msgid "OSS device \"%s\" is already in use by another program."
-msgstr "Le p�riph�rique OSS \"%s\" est d�j� utilis� par un autre programme."
-
-#: sys/oss/gstosselement.c:732 sys/oss/gstosselement.c:736
-#, c-format
-msgid "Could not access device \"%s\", check its permissions."
-msgstr "Ne peut acc�der au p�riph�rique \"%s\", v�rifer les permissions d'acc�s."
-
-#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "P�riph�rique \"%s\" n'existe pas."
-
-#: sys/oss/gstosselement.c:750
-#, c-format
-msgid "Could not open device \"%s\" for writing."
-msgstr "Ne peut ouvrir le p�riph�rique \"%s\" en �criture."
-
-#: sys/oss/gstosselement.c:754
-#, c-format
-msgid "Could not open device \"%s\" for reading."
-msgstr "Ne peut ouvrir le p�riph�rique \"%s\" en lecture."
-
-#: sys/oss/gstosselement.c:1131
-msgid "Your OSS device could not be probed correctly"
-msgstr "Votre p�riph�rique OSS n'a pu �tre scrut� correctement"
-
-#: sys/oss/gstossmixer.c:98
+#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:64
 msgid "Volume"
 msgstr "Volume"
 
-#: sys/oss/gstossmixer.c:100
+#: sys/oss/gstossmixertrack.c:99
 msgid "Bass"
-msgstr "Basse"
+msgstr "Basses"
 
-#: sys/oss/gstossmixer.c:102
+#: sys/oss/gstossmixertrack.c:100
 msgid "Treble"
-msgstr "Tremolo"
+msgstr "Aiguës"
 
-#: sys/oss/gstossmixer.c:104
+#: sys/oss/gstossmixertrack.c:101
 msgid "Synth"
 msgstr "Synth"
 
-#: sys/oss/gstossmixer.c:106
+#: sys/oss/gstossmixertrack.c:102
 msgid "PCM"
 msgstr "PCM"
 
-#: sys/oss/gstossmixer.c:108
+#: sys/oss/gstossmixertrack.c:103
 msgid "Speaker"
 msgstr "Haut-parleur"
 
-#: sys/oss/gstossmixer.c:110
+#: sys/oss/gstossmixertrack.c:104
 msgid "Line-in"
-msgstr "En-ligne"
+msgstr "Entrée ligne"
 
-#: sys/oss/gstossmixer.c:112
+#: sys/oss/gstossmixertrack.c:105
 msgid "Microphone"
-msgstr "Microphone"
+msgstr "Micro"
 
-#: sys/oss/gstossmixer.c:114
+#: sys/oss/gstossmixertrack.c:106
 msgid "CD"
 msgstr "CD"
 
-#: sys/oss/gstossmixer.c:116
+#: sys/oss/gstossmixertrack.c:107
 msgid "Mixer"
-msgstr "Mixeur"
+msgstr "Mélangeur"
 
-#: sys/oss/gstossmixer.c:118
+#: sys/oss/gstossmixertrack.c:108
 msgid "PCM-2"
 msgstr "PCM-2"
 
-#: sys/oss/gstossmixer.c:120
+#: sys/oss/gstossmixertrack.c:109
 msgid "Record"
-msgstr "Enregistrer"
+msgstr "Enregistrement"
 
-#: sys/oss/gstossmixer.c:122
+#: sys/oss/gstossmixertrack.c:110
 msgid "In-gain"
-msgstr "Gain � l'entr�e"
+msgstr "Gain d'entrée"
 
-#: sys/oss/gstossmixer.c:124
+#: sys/oss/gstossmixertrack.c:111
 msgid "Out-gain"
-msgstr "Gain � la sortie"
+msgstr "Gain de sortie"
 
-#: sys/oss/gstossmixer.c:126
+#: sys/oss/gstossmixertrack.c:112
 msgid "Line-1"
-msgstr "Ligne #1"
+msgstr "Ligne 1"
 
-#: sys/oss/gstossmixer.c:128
+#: sys/oss/gstossmixertrack.c:113
 msgid "Line-2"
-msgstr "Ligne #2"
+msgstr "Ligne 2"
 
-#: sys/oss/gstossmixer.c:130
+#: sys/oss/gstossmixertrack.c:114
 msgid "Line-3"
-msgstr "Ligne #3"
+msgstr "Ligne 3"
 
-#: sys/oss/gstossmixer.c:132
+#: sys/oss/gstossmixertrack.c:115
 msgid "Digital-1"
-msgstr "Digital #1"
+msgstr "Numérique 1"
 
-#: sys/oss/gstossmixer.c:134
+#: sys/oss/gstossmixertrack.c:116
 msgid "Digital-2"
-msgstr "Digital #2"
+msgstr "Numérique 2"
 
-#: sys/oss/gstossmixer.c:136
+#: sys/oss/gstossmixertrack.c:117
 msgid "Digital-3"
-msgstr "Digital #3"
+msgstr "Numérique 3"
 
-#: sys/oss/gstossmixer.c:138
+#: sys/oss/gstossmixertrack.c:118
 msgid "Phone-in"
-msgstr "Phone in"
+msgstr "Entrée casque"
 
-#: sys/oss/gstossmixer.c:140
+#: sys/oss/gstossmixertrack.c:119
 msgid "Phone-out"
-msgstr "Phone out"
+msgstr "Sortie casque"
 
-#: sys/oss/gstossmixer.c:142
+#: sys/oss/gstossmixertrack.c:120
 msgid "Video"
-msgstr "Vid�o"
+msgstr "Vidéo"
 
-#: sys/oss/gstossmixer.c:144
+#: sys/oss/gstossmixertrack.c:121
 msgid "Radio"
 msgstr "Radio"
 
-#: sys/oss/gstossmixer.c:146
+#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:64
 msgid "Monitor"
 msgstr "Moniteur"
 
-#: sys/v4l/v4l_calls.c:158
-msgid "No device specified."
-msgstr "Aucun p�riph�rique sp�cifi�."
+#: sys/sunaudio/gstsunaudiomixertrack.c:64
+msgid "Gain"
+msgstr "Gain"
 
-#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
+#: sys/v4l2/gstv4l2src.c:1048 sys/v4l2/gstv4l2src.c:1094
 #, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Ne peut ouvrire le p�riph�rique \"%s\" en lecture et en �criture."
+msgid "Error read()ing %d bytes on device '%s'."
+msgstr "Erreur de lecture de %d octets sur le périphérique « %s »."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Le p�riph�rique n'est pas ouvert."
-
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Le p�riph�rique est ouvert."
-
-#: sys/v4l2/v4l2_calls.c:411
+#: sys/v4l2/gstv4l2src.c:1076
 #, c-format
-msgid "Device \"%s\" is not a capture device."
-msgstr "Le p�riph�rique \"%s\" n'est pas un p�riph�rique de capture."
+msgid "Got unexpected frame size of %u instead of %u."
+msgstr "Taille de trame imprévue de %u à la place de %u."
 
-#: sys/v4l2/v4l2src_calls.c:255
+#: sys/v4l2/v4l2_calls.c:83
 #, c-format
-msgid "Could not get buffers from device \"%s\"."
-msgstr "Ne peut obtenir de tampons � partir du p�riph�rique \"%s\"."
+msgid "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if it is a v4l1 driver."
+msgstr "Erreur d'obtention des capacités pour le périphérique « %s » : ce n'est pas un pilote v4l2. Vérifiez si c'est un pilote v4l1."
 
-#: sys/v4l2/v4l2src_calls.c:264
+#: sys/v4l2/v4l2_calls.c:120
 #, c-format
-msgid "Could not get enough buffers from device \"%s\"."
-msgstr "Ne peut obtenir des tampons suffisants � partir du p�riph�rique \"%s\"."
+msgid "Failed to query attributes of input %d in device %s"
+msgstr "Impossible d'obtenir les attributs de l'entrée %d du périphérique %s"
+
+#: sys/v4l2/v4l2_calls.c:150
+#, c-format
+msgid "Failed to get setting of tuner %d on device '%s'."
+msgstr "Impossible d'obtenir les paramètres du syntoniseur %d du périphérique « %s »."
+
+#: sys/v4l2/v4l2_calls.c:192
+#, c-format
+msgid "Failed to query norm on device '%s'."
+msgstr "Impossible d'obtenir la norme du périphérique « %s »."
+
+#: sys/v4l2/v4l2_calls.c:240
+#, c-format
+msgid "Failed getting controls attributes on device '%s.'"
+msgstr "Impossible d'obtenir les attributs de contrôle du périphérique « %s »."
+
+#: sys/v4l2/v4l2_calls.c:310
+#, c-format
+msgid "Failed getting controls attributes on device '%s'."
+msgstr "Impossible d'obtenir les attributs de contrôle du périphérique « %s »."
+
+#: sys/v4l2/v4l2_calls.c:428
+#, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Impossible d'identifier le périphérique « %s »."
+
+#: sys/v4l2/v4l2_calls.c:435
+#, c-format
+msgid "This isn't a device '%s'."
+msgstr "Ceci n'est pas un périphérique « %s »."
+
+#: sys/v4l2/v4l2_calls.c:442
+#, c-format
+msgid "Could not open device '%s' for reading and writing."
+msgstr "Impossible d'ouvrir le périphérique « %s » en lecture et écriture."
+
+#: sys/v4l2/v4l2_calls.c:449
+#, c-format
+msgid "Device '%s' is not a capture device."
+msgstr "Le périphérique « %s » n'est pas un périphérique d'enregistrement."
+
+#: sys/v4l2/v4l2_calls.c:544
+#, c-format
+msgid "Failed to set norm for device '%s'."
+msgstr "La définition de la norme du périphérique « %s » a échoué."
+
+#: sys/v4l2/v4l2_calls.c:581
+#, c-format
+msgid "Failed to get current tuner frequency for device '%s'."
+msgstr "Impossible d'obtenir la fréquence actuelle de syntonisation du périphérique « %s »."
+
+#: sys/v4l2/v4l2_calls.c:622
+#, c-format
+msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
+msgstr "Impossible de définir la fréquence de syntonisation du périphérique « %s » à %lu Hz."
+
+#: sys/v4l2/v4l2_calls.c:656
+#, c-format
+msgid "Failed to get signal strength for device '%s'."
+msgstr "Impossible d'obtenir la force du signal du périphérique « %s »."
+
+#: sys/v4l2/v4l2_calls.c:692
+#, c-format
+msgid "Failed to get value for control %d on device '%s'."
+msgstr "Impossible d'obtenir la valeur du contrôle %d du périphérique « %s »."
+
+#: sys/v4l2/v4l2_calls.c:727
+#, c-format
+msgid "Failed to set value %d for control %d on device '%s'."
+msgstr "Impossible de définir la valeur %d du contrôle %d du périphérique « %s »."
+
+#: sys/v4l2/v4l2_calls.c:756
+#, c-format
+msgid "Failed to get current input on device '%s'. May be it is a radio device"
+msgstr "Impossible d'obtenir l'entrée actuelle du périphérique « %s ». C'est peut-être un périphérique radio"
+
+#: sys/v4l2/v4l2_calls.c:778
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Impossible de définir l'entrée %d du périphérique %s."
+
+#: sys/v4l2/v4l2src_calls.c:357
+#, c-format
+msgid "Could not enqueue buffers in device '%s'."
+msgstr "Impossible de mettre les tampons en file d'attente sur le périphérique « %s »."
+
+#: sys/v4l2/v4l2src_calls.c:536
+#, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr "Impossible d'énumérer les formats vidéo que le périphérique « %s » sait gérer"
+
+#: sys/v4l2/v4l2src_calls.c:1052 sys/v4l2/v4l2src_calls.c:1069
+#: sys/v4l2/v4l2src_calls.c:1078
+#, c-format
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "L'obtention de trames vidéo du périphérique « %s » a échoué."
+
+#: sys/v4l2/v4l2src_calls.c:1054
+#, c-format
+msgid "The buffer type is not supported, or the index is out of bounds, or no buffers have been allocated yet, or the userptr or length are invalid. device %s"
+msgstr "Le type de tampon n'est pas pris en charge ou l'index est hors limites, ou aucun tampon n'a été alloué, ou les paramètres userptr ou length ne sont pas valides. périphérique %s"
+
+#: sys/v4l2/v4l2src_calls.c:1063
+#, c-format
+msgid "Failed trying to get video frames from device '%s'. Not enough memory."
+msgstr "L'obtention de trames vidéo à partir du périphérique « %s » a échoué. Mémoire insuffisante."
+
+#: sys/v4l2/v4l2src_calls.c:1063
+#, c-format
+msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+msgstr "mémoire insuffisante pour mettre en file d'attente un tampon de pointeur utilisateur. périphérique %s."
+
+#: sys/v4l2/v4l2src_calls.c:1071
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Échec après %d tentatives. périphérique %s. erreur système : %s"
+
+#: sys/v4l2/v4l2src_calls.c:1080
+#, c-format
+msgid "No free buffers found in the pool at index %d."
+msgstr "Aucun tampon libre dans la réserve à l'index %d."
+
+#: sys/v4l2/v4l2src_calls.c:1143
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Impossible d'obtenir les paramètres du périphérique « %s »"
+
+#: sys/v4l2/v4l2src_calls.c:1152
+#, c-format
+msgid "Could not set parameters on device '%s'"
+msgstr "Impossible de définir les paramètres du périphérique « %s »"
+
+#: sys/v4l2/v4l2src_calls.c:1171
+#, c-format
+msgid "Device '%s' does not support video capture"
+msgstr "Le périphérique « %s » ne gère par l'enregistrement vidéo"
+
+#: sys/v4l2/v4l2src_calls.c:1179 sys/v4l2/v4l2src_calls.c:1188
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "Le périphérique « %s » ne peut pas enregistrer à %dx%d"
+
+#: sys/v4l2/v4l2src_calls.c:1197
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "Le périphérique « %s » ne peut pas enregistrer dans le format indiqué"
+
+#: sys/v4l2/v4l2src_calls.c:1208
+#, c-format
+msgid "Device '%s' cannot capture at %d/%d frames per second"
+msgstr "Le périphérique « %s » ne peut pas enregistrer à %d/%d trames par seconde"
+
+#: sys/v4l2/v4l2src_calls.c:1285
+#, c-format
+msgid "Could not get buffers from device '%s'."
+msgstr "Impossible d'accéder aux tampons du périphérique « %s »."
+
+#: sys/v4l2/v4l2src_calls.c:1294
+#, c-format
+msgid "Could not get enough buffers from device '%s'."
+msgstr "Impossible d'accéder à suffisamment de tampons du périphérique « %s »."
+
+#: sys/v4l2/v4l2src_calls.c:1303
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Impossible de mapper les tampons du périphérique « %s »."
+
+#: sys/v4l2/v4l2src_calls.c:1311
+#, c-format
+msgid "The driver of device '%s' does not support any known capture method."
+msgstr "Le pilote du périphérique « %s » ne prend en charge aucune méthode d'enregistrement connue."
+
+#: sys/v4l2/v4l2src_calls.c:1356
+#, c-format
+msgid "Error starting streaming capture from device '%s'."
+msgstr "Erreur lors du démarrage d'enregistrement de flux sur le périphérique « %s »."
+
+#: sys/v4l2/v4l2src_calls.c:1400
+#, c-format
+msgid "Error stopping streaming capture from device '%s'."
+msgstr "Erreur lors de l'arrêt d'enregistrement de flux sur le périphérique « %s »."
+
+#: sys/ximage/gstximagesrc.c:690
+msgid "Changing resolution at runtime is not yet supported."
+msgstr "La modification de résolution en cours d'exécution n'est pas encore prise en charge."
+
+#: sys/ximage/gstximagesrc.c:704
+msgid "Cannot operate without a clock"
+msgstr "Impossible de fonctionner sans horloge"
