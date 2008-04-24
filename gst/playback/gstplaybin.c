@@ -1490,7 +1490,6 @@ static gboolean
 setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
 {
   GstPlayBin *play_bin = GST_PLAY_BIN (play_base_bin);
-  GList *streaminfo = NULL, *s;
   gboolean need_vis = FALSE;
   gboolean need_text = FALSE;
   GstPad *textsrcpad = NULL, *pad = NULL, *origtextsrcpad = NULL;
@@ -1514,15 +1513,6 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
   }
 
   /* now actually connect everything */
-  g_object_get (G_OBJECT (play_base_bin), "stream-info", &streaminfo, NULL);
-  for (s = streaminfo; s; s = g_list_next (s)) {
-    GObject *obj = G_OBJECT (s->data);
-    gint type;
-    GstObject *object;
-
-    g_object_get (obj, "type", &type, NULL);
-    g_object_get (obj, "object", &object, NULL);
-  }
 
   /* link audio */
   if (group->type[GST_STREAM_TYPE_AUDIO - 1].npads > 0) {

@@ -1,3 +1,8 @@
+2008-04-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/playback/gstplaybin.c:
+	  Remove obsolete streaminfo code and fix a leak. Fixes #529546
+
 2008-04-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/ogg/gstoggdemux.c:
