@@ -151,6 +151,9 @@ static gboolean _gst_disable_segtrap = FALSE;
 /* control the behaviour of registry rebuild */
 static gboolean _gst_enable_registry_fork = DEFAULT_FORK;
 
+/*set to TRUE when registry needn't to be updated */
+static gboolean _gst_disable_registry_update = FALSE;
+
 static void load_plugin_func (gpointer data, gpointer user_data);
 static gboolean init_pre (GOptionContext * context, GOptionGroup * group,
     gpointer data, GError ** error);
@@ -190,6 +193,7 @@ enum
   ARG_PLUGIN_PATH,
   ARG_PLUGIN_LOAD,
   ARG_SEGTRAP_DISABLE,
+  ARG_REGISTRY_UPDATE_DISABLE,
   ARG_REGISTRY_FORK_DISABLE
 };
 
@@ -339,6 +343,11 @@ gst_init_get_option_group (void)
     {"gst-disable-segtrap", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
           (gpointer) parse_goption_arg,
           N_("Disable trapping of segmentation faults during plugin loading"),
+        NULL},
+    {"gst-disable-registry-update", 0, G_OPTION_FLAG_NO_ARG,
+          G_OPTION_ARG_CALLBACK,
+          (gpointer) parse_goption_arg,
+          N_("Disable updating the registry"),
         NULL},
     {"gst-disable-registry-fork", 0, G_OPTION_FLAG_NO_ARG,
           G_OPTION_ARG_CALLBACK,
@@ -754,12 +763,6 @@ ensure_current_registry_nonforking (GstRegistry * default_registry,
     const gchar * registry_file, GError ** error)
 {
   /* fork() not available */
-  GST_INFO ("reading registry cache: %s", registry_file);
-#ifdef USE_BINARY_REGISTRY
-  gst_registry_binary_read_cache (default_registry, registry_file);
-#else
-  gst_registry_xml_read_cache (default_registry, registry_file);
-#endif
   GST_DEBUG ("Updating registry cache in-process");
   scan_and_update_registry (default_registry, registry_file, TRUE, error);
   return TRUE;
@@ -786,13 +789,6 @@ ensure_current_registry_forking (GstRegistry * default_registry,
         ", could not create pipes. Error", g_strerror (errno));
     return FALSE;
   }
-
-  GST_INFO ("reading registry cache: %s", registry_file);
-#ifdef USE_BINARY_REGISTRY
-  gst_registry_binary_read_cache (default_registry, registry_file);
-#else
-  gst_registry_xml_read_cache (default_registry, registry_file);
-#endif
 
   pid = fork ();
   if (pid == -1) {
@@ -882,10 +878,11 @@ ensure_current_registry_forking (GstRegistry * default_registry,
 static gboolean
 ensure_current_registry (GError ** error)
 {
-  char *registry_file;
+  gchar *registry_file;
   GstRegistry *default_registry;
-  gboolean ret;
+  gboolean ret = TRUE;
   gboolean do_fork;
+  gboolean do_update;
 
   default_registry = gst_registry_get_default ();
   registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
@@ -899,30 +896,50 @@ ensure_current_registry (GError ** error)
 #endif
   }
 
-  /* first see if forking is enabled */
-  do_fork = _gst_enable_registry_fork;
-  if (do_fork) {
-    const gchar *fork_env;
+  GST_INFO ("reading registry cache: %s", registry_file);
+#ifdef USE_BINARY_REGISTRY
+  gst_registry_binary_read_cache (default_registry, registry_file);
+#else
+  gst_registry_xml_read_cache (default_registry, registry_file);
+#endif
 
-    /* forking enabled, see if it is disabled with an env var */
-    if ((fork_env = g_getenv ("GST_REGISTRY_FORK"))) {
-      /* fork enabled for any value different from "no" */
-      do_fork = strcmp (fork_env, "no") != 0;
+  do_update = !_gst_disable_registry_update;
+  if (do_update) {
+    const gchar *update_env;
+
+    if ((update_env = g_getenv ("GST_REGISTRY_UPDATE"))) {
+      /* do update for any value different from "no" */
+      do_update = (strcmp (update_env, "no") != 0);
     }
   }
 
-  /* now check registry with or without forking */
-  if (do_fork) {
-    GST_DEBUG ("forking for registry rebuild");
-    ret = ensure_current_registry_forking (default_registry, registry_file,
-        error);
-  } else {
-    GST_DEBUG ("requested not to fork for registry rebuild");
-    ret = ensure_current_registry_nonforking (default_registry, registry_file,
-        error);
+  if (do_update) {
+    /* first see if forking is enabled */
+    do_fork = _gst_enable_registry_fork;
+    if (do_fork) {
+      const gchar *fork_env;
+
+      /* forking enabled, see if it is disabled with an env var */
+      if ((fork_env = g_getenv ("GST_REGISTRY_FORK"))) {
+        /* fork enabled for any value different from "no" */
+        do_fork = strcmp (fork_env, "no") != 0;
+      }
+    }
+
+    /* now check registry with or without forking */
+    if (do_fork) {
+      GST_DEBUG ("forking for registry rebuild");
+      ret = ensure_current_registry_forking (default_registry, registry_file,
+          error);
+    } else {
+      GST_DEBUG ("requested not to fork for registry rebuild");
+      ret = ensure_current_registry_nonforking (default_registry, registry_file,
+          error);
+    }
   }
 
   g_free (registry_file);
+  GST_INFO ("registry reading and updating done, result = %d", ret);
 
   return ret;
 }
@@ -1203,6 +1220,9 @@ parse_one_option (gint opt, const gchar * arg, GError ** err)
     case ARG_SEGTRAP_DISABLE:
       _gst_disable_segtrap = TRUE;
       break;
+    case ARG_REGISTRY_UPDATE_DISABLE:
+      _gst_disable_registry_update = TRUE;
+      break;
     case ARG_REGISTRY_FORK_DISABLE:
       _gst_enable_registry_fork = FALSE;
       break;
@@ -1240,6 +1260,7 @@ parse_goption_arg (const gchar * opt,
     "--gst-plugin-path", ARG_PLUGIN_PATH}, {
     "--gst-plugin-load", ARG_PLUGIN_LOAD}, {
     "--gst-disable-segtrap", ARG_SEGTRAP_DISABLE}, {
+    "--gst-disable-registry-update", ARG_REGISTRY_UPDATE_DISABLE}, {
     "--gst-disable-registry-fork", ARG_REGISTRY_FORK_DISABLE}, {
     NULL}
   };

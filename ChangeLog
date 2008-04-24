@@ -1,7 +1,19 @@
 2008-04-24  Stefan Kost  <ensonic@users.sf.net>
 
+	patch by: Jason Zhao <e3423c@motorola.com>
+
+	* docs/gst/running.xml:
+	* gst/gst.c:
+	  Enable/disable scan_and_update_registry() based on commandline switch
+	  or environment variable. Fixes #520468.
+	  
+	* ChangeLog:
+	  Fix typo in my previous commit.
+
+2008-04-24  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstregistrybinary.c:
-	  Add a warning of we hit unhandled factories when saving.
+	  Add a warning if we hit unhandled factories when saving.
 	  More debug logging detail, but move to LOG category.
 
 2008-04-24  Stefan Kost  <ensonic@users.sf.net>

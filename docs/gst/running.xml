@@ -204,6 +204,17 @@ application.
 
 </formalpara>
 
+<formalpara id="GST_REGISTRY_UPDATE">
+  <title><envar>GST_REGISTRY_UPDATE</envar></title>
+
+  <para>
+Set this environment variable to "no" to prevent GStreamer from updating the
+plugin registry. This is useful for embedded device which is not updating the
+plugins frequently, it will save time when doing gst_init().
+  </para>
+
+</formalpara>
+
 </refsect2>
 
 </refsect1>
