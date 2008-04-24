@@ -1,3 +1,16 @@
+2008-04-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* ext/musepack/gstmusepackdec.c: (gst_musepackdec_base_init),
+	(gst_musepackdec_init), (gst_musepackdec_dispose),
+	(gst_musepackdec_handle_seek_event), (gst_musepack_stream_init),
+	(gst_musepackdec_loop), (plugin_init):
+	* ext/musepack/gstmusepackdec.h:
+	* ext/musepack/gstmusepackreader.c:
+	* ext/musepack/gstmusepackreader.h:
+	Add support for the new libmpcdec API which magically gets us support
+	for SV8 files. Also do some random cleanup. Fixes bug #526905.
+
 2008-04-24  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

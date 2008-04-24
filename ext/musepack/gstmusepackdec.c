@@ -1,6 +1,7 @@
 /* GStreamer Musepack decoder plugin
  * Copyright (C) 2004 Ronald Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2008 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -28,16 +29,14 @@
 GST_DEBUG_CATEGORY (musepackdec_debug);
 #define GST_CAT_DEFAULT musepackdec_debug
 
-static const GstElementDetails gst_musepackdec_details =
-GST_ELEMENT_DETAILS ("Musepack decoder",
-    "Codec/Decoder/Audio",
-    "Musepack decoder",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-musepack")
+#ifdef MPC_IS_OLD_API
+    GST_STATIC_CAPS ("audio/x-musepack, streamversion = (int) 7")
+#else
+    GST_STATIC_CAPS ("audio/x-musepack, streamversion = (int) { 7, 8 }")
+#endif
     );
 
 #ifdef MPC_FIXED_POINT
@@ -85,9 +84,9 @@ gst_musepackdec_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details (element_class, &gst_musepackdec_details);
-
-  GST_DEBUG_CATEGORY_INIT (musepackdec_debug, "musepackdec", 0, "mpc decoder");
+  gst_element_class_set_details_simple (element_class, "Musepack decoder",
+      "Codec/Decoder/Audio",
+      "Musepack decoder", "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 }
 
 static void
@@ -107,7 +106,9 @@ gst_musepackdec_init (GstMusepackDec * musepackdec, GstMusepackDecClass * klass)
   musepackdec->bps = 0;
 
   musepackdec->r = g_new (mpc_reader, 1);
+#ifdef MPC_IS_OLD_API
   musepackdec->d = g_new (mpc_decoder, 1);
+#endif
 
   musepackdec->sinkpad =
       gst_pad_new_from_static_template (&sink_template, "sink");
@@ -135,8 +136,16 @@ gst_musepackdec_dispose (GObject * obj)
 
   g_free (musepackdec->r);
   musepackdec->r = NULL;
+
+#ifdef MPC_IS_OLD_API
   g_free (musepackdec->d);
   musepackdec->d = NULL;
+#else
+  if (musepackdec->d) {
+    mpc_demux_exit (musepackdec->d);
+    musepackdec->d = NULL;
+  }
+#endif
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
@@ -221,9 +230,13 @@ gst_musepackdec_handle_seek_event (GstMusepackDec * dec, GstEvent * event)
     GST_WARNING_OBJECT (dec, "seek out of bounds");
     goto failed;
   }
-
+#ifdef MPC_IS_OLD_API
   if (!mpc_decoder_seek_sample (dec->d, segment.start))
     goto failed;
+#else
+  if (mpc_demux_seek_sample (dec->d, segment.start) != MPC_STATUS_OK)
+    goto failed;
+#endif
 
   if ((flags & GST_SEEK_FLAG_SEGMENT) == GST_SEEK_FLAG_SEGMENT) {
     GST_DEBUG_OBJECT (dec, "posting SEGMENT_START message");
@@ -365,6 +378,7 @@ gst_musepack_stream_init (GstMusepackDec * musepackdec)
   /* set up reading */
   gst_musepack_init_reader (musepackdec->r, musepackdec);
 
+#ifdef MPC_IS_OLD_API
   /* streaminfo */
   mpc_streaminfo_init (&i);
   if (mpc_streaminfo_read (&i, musepackdec->r) < 0) {
@@ -379,6 +393,15 @@ gst_musepack_stream_init (GstMusepackDec * musepackdec)
     GST_ELEMENT_ERROR (musepackdec, STREAM, WRONG_TYPE, (NULL), (NULL));
     return FALSE;
   }
+#else
+  musepackdec->d = mpc_demux_init (musepackdec->r);
+  if (!musepackdec->d) {
+    GST_ELEMENT_ERROR (musepackdec, STREAM, WRONG_TYPE, (NULL), (NULL));
+    return FALSE;
+  }
+
+  mpc_demux_get_info (musepackdec->d, &i);
+#endif
 
   /* capsnego */
   caps = gst_caps_from_string (BASE_CAPS);
@@ -392,8 +415,8 @@ gst_musepack_stream_init (GstMusepackDec * musepackdec)
     return FALSE;
   }
 
-  gst_atomic_int_set (&musepackdec->bps, 4 * i.channels);
-  gst_atomic_int_set (&musepackdec->rate, i.sample_freq);
+  g_atomic_int_set (&musepackdec->bps, 4 * i.channels);
+  g_atomic_int_set (&musepackdec->rate, i.sample_freq);
 
   gst_segment_set_last_stop (&musepackdec->segment, GST_FORMAT_DEFAULT, 0);
   gst_segment_set_duration (&musepackdec->segment, GST_FORMAT_DEFAULT,
@@ -467,7 +490,13 @@ gst_musepackdec_loop (GstPad * sinkpad)
   GstMusepackDec *musepackdec;
   GstFlowReturn flow;
   GstBuffer *out;
+
+#ifdef MPC_IS_OLD_API
   guint32 update_acc, update_bits;
+#else
+  mpc_frame_info frame;
+  mpc_status err;
+#endif
   gint num_samples, samplerate, bitspersample;
 
   musepackdec = GST_MUSEPACK_DEC (GST_PAD_PARENT (sinkpad));
@@ -491,7 +520,7 @@ gst_musepackdec_loop (GstPad * sinkpad)
     GST_DEBUG_OBJECT (musepackdec, "Flow: %s", gst_flow_get_name (flow));
     goto pause_task;
   }
-
+#ifdef MPC_IS_OLD_API
   num_samples = mpc_decoder_decode (musepackdec->d,
       (MPC_SAMPLE_FORMAT *) GST_BUFFER_DATA (out), &update_acc, &update_bits);
 
@@ -502,6 +531,20 @@ gst_musepackdec_loop (GstPad * sinkpad)
   } else if (num_samples == 0) {
     goto eos_and_pause;
   }
+#else
+  frame.buffer = (MPC_SAMPLE_FORMAT *) GST_BUFFER_DATA (out);
+  err = mpc_demux_decode (musepackdec->d, &frame);
+
+  if (err != MPC_STATUS_OK) {
+    GST_ERROR_OBJECT (musepackdec, "Failed to decode sample");
+    GST_ELEMENT_ERROR (musepackdec, STREAM, DECODE, (NULL), (NULL));
+    goto pause_task;
+  } else if (frame.bits == -1) {
+    goto eos_and_pause;
+  }
+
+  num_samples = frame.samples;
+#endif
 
   GST_BUFFER_SIZE (out) = num_samples * bitspersample;
 
@@ -598,6 +641,8 @@ gst_musepackdec_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (musepackdec_debug, "musepackdec", 0, "mpc decoder");
+
   return gst_element_register (plugin, "musepackdec",
       GST_RANK_PRIMARY, GST_TYPE_MUSEPACK_DEC);
 }

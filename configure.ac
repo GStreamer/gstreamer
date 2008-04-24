@@ -795,13 +795,16 @@ main (int   argc,
 dnl *** musepack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MUSEPACK, true)
 AG_GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
-  AC_LANG_CPLUSPLUS
-  AC_CHECK_HEADER([mpcdec/mpcdec.h], [
+  AC_CHECK_HEADER([mpc/mpcdec.h], [
     HAVE_MUSEPACK="yes"
     MUSEPACK_LIBS="-lmpcdec"
     AC_SUBST(MUSEPACK_LIBS)
-    ], [HAVE_MUSEPACK="no"])
-  AC_LANG_C
+    ], [AC_CHECK_HEADER([mpcdec/mpcdec.h], [
+      HAVE_MUSEPACK="yes"
+      MUSEPACK_LIBS="-lmpcdec"
+      AC_DEFINE(MPC_IS_OLD_API, 1, [Define if the old MusePack API is used])
+      AC_SUBST(MUSEPACK_LIBS)
+    ], [HAVE_MUSEPACK="no"])])
 ])
 
 dnl *** musicbrainz ***
