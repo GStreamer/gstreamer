@@ -545,8 +545,8 @@ gst_registry_plugin_filter (GstRegistry * registry,
  * If the first flag is set, only the first match is
  * returned (as a list with a single object).
  *
- * Returns: a #GList of #GstPluginFeature. Use gst_plugin_list_free() after
- * usage.
+ * Returns: a #GList of #GstPluginFeature. Use gst_plugin_feature_list_free()
+ * after usage.
  *
  * MT safe.
  */
