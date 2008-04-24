@@ -179,19 +179,19 @@ gst_rtp_h263p_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 
     F = gst_structure_get_string (structure, "f");
     if (F)
-      if (g_strcasecmp (F, "1") == 0)
+      if (g_ascii_strcasecmp (F, "1") == 0)
         is_h263p = TRUE;
     I = gst_structure_get_string (structure, "i");
     if (I)
-      if (g_strcasecmp (I, "1") == 0)
+      if (g_ascii_strcasecmp (I, "1") == 0)
         is_h263p = TRUE;
     J = gst_structure_get_string (structure, "j");
     if (J)
-      if (g_strcasecmp (J, "1") == 0)
+      if (g_ascii_strcasecmp (J, "1") == 0)
         is_h263p = TRUE;
     T = gst_structure_get_string (structure, "t");
     if (T)
-      if (g_strcasecmp (T, "1") == 0)
+      if (g_ascii_strcasecmp (T, "1") == 0)
         is_h263p = TRUE;
     K = gst_structure_get_string (structure, "k");
     if (K)

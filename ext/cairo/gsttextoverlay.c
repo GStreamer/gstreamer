@@ -339,11 +339,11 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
     case ARG_VALIGN:{
       const gchar *s = g_value_get_string (value);
 
-      if (g_strcasecmp (s, "baseline") == 0)
+      if (g_ascii_strcasecmp (s, "baseline") == 0)
         overlay->valign = GST_CAIRO_TEXT_OVERLAY_VALIGN_BASELINE;
-      else if (g_strcasecmp (s, "bottom") == 0)
+      else if (g_ascii_strcasecmp (s, "bottom") == 0)
         overlay->valign = GST_CAIRO_TEXT_OVERLAY_VALIGN_BOTTOM;
-      else if (g_strcasecmp (s, "top") == 0)
+      else if (g_ascii_strcasecmp (s, "top") == 0)
         overlay->valign = GST_CAIRO_TEXT_OVERLAY_VALIGN_TOP;
       else
         g_warning ("Invalid 'valign' property value: %s", s);
@@ -352,11 +352,11 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
     case ARG_HALIGN:{
       const gchar *s = g_value_get_string (value);
 
-      if (g_strcasecmp (s, "left") == 0)
+      if (g_ascii_strcasecmp (s, "left") == 0)
         overlay->halign = GST_CAIRO_TEXT_OVERLAY_HALIGN_LEFT;
-      else if (g_strcasecmp (s, "right") == 0)
+      else if (g_ascii_strcasecmp (s, "right") == 0)
         overlay->halign = GST_CAIRO_TEXT_OVERLAY_HALIGN_RIGHT;
-      else if (g_strcasecmp (s, "center") == 0)
+      else if (g_ascii_strcasecmp (s, "center") == 0)
         overlay->halign = GST_CAIRO_TEXT_OVERLAY_HALIGN_CENTER;
       else
         g_warning ("Invalid 'halign' property value: %s", s);

@@ -339,9 +339,9 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   if (delivery_method == NULL)
     goto no_delivery_method;
 
-  if (g_strcasecmp (delivery_method, "inline")) {
+  if (g_ascii_strcasecmp (delivery_method, "inline")) {
     /* configure string is in the caps */
-  } else if (g_strcasecmp (delivery_method, "in_band")) {
+  } else if (g_ascii_strcasecmp (delivery_method, "in_band")) {
     /* headers will (also) be transmitted in the RTP packets */
   } else if (g_str_has_prefix (delivery_method, "out_band/")) {
     /* some other method of header delivery. */

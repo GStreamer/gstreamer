@@ -546,7 +546,7 @@ md5_get_value (gpointer test, GValue * value)
 
     str[32] = 0;
     md5_read_ctx (ctx, str);
-    g_value_set_string_take_ownership (value, str);
+    g_value_take_string (value, str);
   } else {
     g_value_set_string (value, ctx->result);
   }

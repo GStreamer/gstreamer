@@ -131,7 +131,7 @@ gst_rtpilbcpay_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
     goto wrong_mode;
 
   payload_name = gst_structure_get_name (structure);
-  if (g_strcasecmp ("audio/x-iLBC", payload_name))
+  if (g_ascii_strcasecmp ("audio/x-iLBC", payload_name))
     goto wrong_caps;
 
   gst_basertppayload_set_options (basertppayload, "audio", TRUE, "ILBC", 8000);

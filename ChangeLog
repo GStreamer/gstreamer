@@ -1,3 +1,13 @@
+2008-04-24  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_set_property):
+	* gst/debug/tests.c: (md5_get_value):
+	* gst/rtp/gstrtph263pdepay.c: (gst_rtp_h263p_depay_setcaps):
+	* gst/rtp/gstrtpilbcpay.c: (gst_rtpilbcpay_setcaps):
+	* gst/rtp/gstrtptheoradepay.c: (gst_rtp_theora_depay_setcaps):
+	* gst/rtp/gstrtpvorbisdepay.c: (gst_rtp_vorbis_depay_setcaps):
+	Stop using deprecated GLib functions.
+
 2008-04-24  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
