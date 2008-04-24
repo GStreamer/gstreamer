@@ -67,7 +67,8 @@ gst_alsa_get_device_list (snd_pcm_stream_t stream)
 
   if (snd_card_next (&card) < 0 || card < 0) {
     /* no soundcard found */
-    return NULL;
+    GST_WARNING ("No soundcard found");
+    goto beach;
   }
 
   while (card >= 0) {
@@ -111,6 +112,7 @@ gst_alsa_get_device_list (snd_pcm_stream_t stream)
     }
   }
 
+beach:
   snd_ctl_card_info_free (info);
   snd_pcm_info_free (pcminfo);
 

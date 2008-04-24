@@ -1,3 +1,9 @@
+2008-04-24  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/alsa/gstalsadeviceprobe.c:
+	(gst_alsa_get_device_list): Don't return before freeing up
+	the allocated structures.
+
 2008-04-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/playback/gstplaybin.c:
