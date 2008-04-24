@@ -126,21 +126,6 @@ static gboolean
 gst_live_adder_sink_event (GstPad * pad, GstEvent * event);
 
 
-/* highest positive/lowest negative x-bit value we can use for clamping */
-#define MAX_INT_32  ((gint32) (0x7fffffff))
-#define MAX_INT_16  ((gint16) (0x7fff))
-#define MAX_INT_8   ((gint8)  (0x7f))
-#define MAX_UINT_32 ((guint32)(0xffffffff))
-#define MAX_UINT_16 ((guint16)(0xffff))
-#define MAX_UINT_8  ((guint8) (0xff))
-
-#define MIN_INT_32  ((gint32) (0x80000000))
-#define MIN_INT_16  ((gint16) (0x8000))
-#define MIN_INT_8   ((gint8)  (0x80))
-#define MIN_UINT_32 ((guint32)(0x00000000))
-#define MIN_UINT_16 ((guint16)(0x0000))
-#define MIN_UINT_8  ((guint8) (0x00))
-
 /* clipping versions */
 #define MAKE_FUNC(name,type,ttype,min,max)                      \
 static void name (type *out, type *in, gint bytes) {            \
@@ -158,12 +143,12 @@ static void name (type *out, type *in, gint bytes) {            \
 }
 
 /* *INDENT-OFF* */
-MAKE_FUNC (add_int32, gint32, gint64, MIN_INT_32, MAX_INT_32)
-MAKE_FUNC (add_int16, gint16, gint32, MIN_INT_16, MAX_INT_16)
-MAKE_FUNC (add_int8, gint8, gint16, MIN_INT_8, MAX_INT_8)
-MAKE_FUNC (add_uint32, guint32, guint64, MIN_UINT_32, MAX_UINT_32)
-MAKE_FUNC (add_uint16, guint16, guint32, MIN_UINT_16, MAX_UINT_16)
-MAKE_FUNC (add_uint8, guint8, guint16, MIN_UINT_8, MAX_UINT_8)
+MAKE_FUNC (add_int32, gint32, gint64, G_MININT32, G_MAXINT32)
+MAKE_FUNC (add_int16, gint16, gint32, G_MININT16, G_MAXINT16)
+MAKE_FUNC (add_int8, gint8, gint16, G_MININT8, G_MAXINT8)
+MAKE_FUNC (add_uint32, guint32, guint64, 0, G_MAXUINT32)
+MAKE_FUNC (add_uint16, guint16, guint32, 0, G_MAXUINT16)
+MAKE_FUNC (add_uint8, guint8, guint16, 0, G_MAXUINT8)
 MAKE_FUNC_NC (add_float64, gdouble, gdouble)
 MAKE_FUNC_NC (add_float32, gfloat, gfloat)
 /* *INDENT-ON* */
