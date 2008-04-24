@@ -1,5 +1,11 @@
 2008-04-24  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstregistrybinary.c:
+	  Add a warning of we hit unhandled factories when saving.
+	  More debug logging detail, but move to LOG category.
+
+2008-04-24  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstregistry.c:
 	  Tell the *truth* when improving the documentation.
 

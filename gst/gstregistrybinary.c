@@ -545,7 +545,7 @@ gst_registry_binary_save_plugin (GList ** list, GstRegistry * registry,
       goto fail;
     }
   }
-  GST_DEBUG ("Save plugin '%s' with %d features", plugin->desc.name,
+  GST_DEBUG ("Save plugin '%s' with %d feature(s)", plugin->desc.name,
       pe->nfeatures);
 
   gst_plugin_feature_list_free (plugin_features);
@@ -949,6 +949,10 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
     unpack_string (*in, factory->longdesc);
   }
 #endif
+  else {
+    GST_WARNING ("unhandled factory type : %s", G_OBJECT_TYPE_NAME (feature));
+    goto fail;
+  }
 
   feature->rank = pf->rank;
 
@@ -1016,13 +1020,20 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
   unpack_const_string (*in, plugin->desc.source);
   unpack_const_string (*in, plugin->desc.package);
   unpack_const_string (*in, plugin->desc.origin);
-  GST_LOG ("read strings for '%s'", plugin->desc.name);
+  GST_LOG ("read strings for name='%s'", plugin->desc.name);
+  GST_LOG ("  desc.description='%s'", plugin->desc.description);
+  GST_LOG ("  filename='%s'", plugin->filename);
+  GST_LOG ("  desc.version='%s'", plugin->desc.version);
+  GST_LOG ("  desc.license='%s'", plugin->desc.license);
+  GST_LOG ("  desc.source='%s'", plugin->desc.source);
+  GST_LOG ("  desc.package='%s'", plugin->desc.package);
+  GST_LOG ("  desc.origin='%s'", plugin->desc.origin);
 
   plugin->basename = g_path_get_basename (plugin->filename);
 
   /* Takes ownership of plugin */
   gst_registry_add_plugin (registry, plugin);
-  GST_INFO ("Added plugin '%s' plugin with %d features from binary registry",
+  GST_DEBUG ("Added plugin '%s' plugin with %d features from binary registry",
       plugin->desc.name, pe->nfeatures);
   for (i = 0; i < pe->nfeatures; i++) {
     if (!gst_registry_binary_load_feature (registry, in, plugin->desc.name)) {
