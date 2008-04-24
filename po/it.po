@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.5.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-10 18:36+0000\n"
+"POT-Creation-Date: 2008-04-13 21:50+0100\n"
 "PO-Revision-Date: 2008-02-09 22:08+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -33,22 +33,22 @@ msgstr "Errore interno nello stream di dati."
 msgid "Could not write to file \"%s\"."
 msgstr "Impossibile scrivere sul file «%s»."
 
-#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
+#: sys/dvb/gstdvbsrc.c:704 sys/dvb/gstdvbsrc.c:785
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Il device «%s» non esiste."
 
-#: sys/dvb/gstdvbsrc.c:707
+#: sys/dvb/gstdvbsrc.c:708
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Impossibile aprire il device frontend «%s»."
 
-#: sys/dvb/gstdvbsrc.c:719
+#: sys/dvb/gstdvbsrc.c:720
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Impossibile ottenere le impostazioni dal device frontend «%s»."
 
-#: sys/dvb/gstdvbsrc.c:788
+#: sys/dvb/gstdvbsrc.c:789
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impossibile aprire il file «%s» in lettura."

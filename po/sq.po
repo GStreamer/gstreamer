@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-10 18:36+0000\n"
+"POT-Creation-Date: 2008-04-13 21:50+0100\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -33,22 +33,22 @@ msgstr ""
 msgid "Could not write to file \"%s\"."
 msgstr "I pamundur shkrimi tek file \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
+#: sys/dvb/gstdvbsrc.c:704 sys/dvb/gstdvbsrc.c:785
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Dispozitivi \"%s\" nuk ekziston."
 
-#: sys/dvb/gstdvbsrc.c:707
+#: sys/dvb/gstdvbsrc.c:708
 #, fuzzy, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "E pamundur mbyllja e dispozitivit të kontrollit \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:719
+#: sys/dvb/gstdvbsrc.c:720
 #, fuzzy, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "E pamundur marrja e buffers të mjaftueshëm nga dispozitivi \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:788
+#: sys/dvb/gstdvbsrc.c:789
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "E pamundur hapja e file \"%s\" për lexim."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.5.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-10 18:36+0000\n"
+"POT-Creation-Date: 2008-04-13 21:50+0100\n"
 "PO-Revision-Date: 2008-02-19 14:02+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -38,22 +38,22 @@ msgstr "Vnútorná chyba prúdu údajov."
 msgid "Could not write to file \"%s\"."
 msgstr "Nepodarilo sa zapísať do súboru \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
+#: sys/dvb/gstdvbsrc.c:704 sys/dvb/gstdvbsrc.c:785
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Zariadenie \"%s\" neexistuje."
 
-#: sys/dvb/gstdvbsrc.c:707
+#: sys/dvb/gstdvbsrc.c:708
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nepodarilo sa otvoriť ovládacie zariadenie \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:719
+#: sys/dvb/gstdvbsrc.c:720
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nepodarilo sa získať nastavenia od zariadenia \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:788
+#: sys/dvb/gstdvbsrc.c:789
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nepodarilo sa otvoriť súbor \"%s\" na čítanie."

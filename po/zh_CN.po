@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.5.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-10 18:36+0000\n"
+"POT-Creation-Date: 2008-04-13 21:50+0100\n"
 "PO-Revision-Date: 2008-02-10 12:11+0800\n"
 "Last-Translator: LI Daobing <lidaobing@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
@@ -35,22 +35,22 @@ msgstr "内部数据流错误。"
 msgid "Could not write to file \"%s\"."
 msgstr "无法写入文件 \"%s\"。"
 
-#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
+#: sys/dvb/gstdvbsrc.c:704 sys/dvb/gstdvbsrc.c:785
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "不存在设备 \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:707
+#: sys/dvb/gstdvbsrc.c:708
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "无法打开前端设备 \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:719
+#: sys/dvb/gstdvbsrc.c:720
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "无法从前端设备 \"%s\" 获取设置."
 
-#: sys/dvb/gstdvbsrc.c:788
+#: sys/dvb/gstdvbsrc.c:789
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "无法打开并读取文件 \"%s\""

@@ -1,56 +1,53 @@
-# translation of gst-plugins-bad-0.10.5.2.po to Dutch
-# translation of gst-plugins-bad to Dutch
-# Copyright (C) 2004, 2007, 2008 Free Software Foundation, Inc.
+# Translation for gst-plugins-bad messages to Russian
+# This file is put in the public domain.
+# Артём Попов <artfwo@gmail.com>, 2008.
 #
-# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-0.10.5.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.5.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-04-13 21:50+0100\n"
-"PO-Revision-Date: 2008-02-09 21:19+0100\n"
-"Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
-"Language-Team: Dutch <vertaling@vrijschrift.org>\n"
+"PO-Revision-Date: 2008-04-03 10:10+0700\n"
+"Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
+"Language-Team: Russian <gnu@mx.ru>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
-"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 #: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 msgid "No file name specified for writing."
-msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
+msgstr "Не указано имя файла для записи."
 
 #: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Kan bestand \"%s\" niet openen voor uitvoer."
+msgstr "Не удалось открыть для записи файл «%s»."
 
 #: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:739
 msgid "Internal data stream error."
-msgstr "Interne fout in gegevensstroom."
+msgstr "Внутренняя ошибка потока данных."
 
 #: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
 #, c-format
 msgid "Could not write to file \"%s\"."
-msgstr "Kan niet in bestand \"%s\" schrijven."
+msgstr "Не удалось осуществить запись в файл «%s»."
 
 #: sys/dvb/gstdvbsrc.c:704 sys/dvb/gstdvbsrc.c:785
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Apparaat \"%s\" bestaat niet."
+msgstr "Устройство «%s» не существует."
 
 #: sys/dvb/gstdvbsrc.c:708
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Kan het frontend-apparaat \"%s\" niet openen."
+msgstr "Не удалось открыть DVB-декодер «%s»."
 
 #: sys/dvb/gstdvbsrc.c:720
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Kan de instellingen van het frontend-apparaat \"%s\" niet verkrijgen."
+msgstr "Не удалось получить параметры DVB-декодера «%s»."
 
 #: sys/dvb/gstdvbsrc.c:789
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Kan bestand \"%s\" niet openen om te lezen."
+msgstr "Не удалось открыть для чтения файл «%s»."

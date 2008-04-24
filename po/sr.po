@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-10 18:36+0000\n"
+"POT-Creation-Date: 2008-04-13 21:50+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -35,22 +35,22 @@ msgstr ""
 msgid "Could not write to file \"%s\"."
 msgstr "Не могу да пишем у датотеку „%s“."
 
-#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
+#: sys/dvb/gstdvbsrc.c:704 sys/dvb/gstdvbsrc.c:785
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Не постоји уређај „%s“."
 
-#: sys/dvb/gstdvbsrc.c:707
+#: sys/dvb/gstdvbsrc.c:708
 #, fuzzy, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Не могу да затворим управљачки уређај „%s“."
 
-#: sys/dvb/gstdvbsrc.c:719
+#: sys/dvb/gstdvbsrc.c:720
 #, fuzzy, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Не могу да примим довољно бафера са уређаја „%s“."
 
-#: sys/dvb/gstdvbsrc.c:788
+#: sys/dvb/gstdvbsrc.c:789
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не могу да отворим датотеку „%s“ ради читања."

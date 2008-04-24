@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.5.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-10 18:36+0000\n"
+"POT-Creation-Date: 2008-04-13 21:50+0100\n"
 "PO-Revision-Date: 2008-02-09 19:42+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -32,22 +32,22 @@ msgstr "Błąd wewnętrzny strumienia danych."
 msgid "Could not write to file \"%s\"."
 msgstr "Nie udało się zapisać danych do pliku \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:703 sys/dvb/gstdvbsrc.c:784
+#: sys/dvb/gstdvbsrc.c:704 sys/dvb/gstdvbsrc.c:785
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Urządzenei \"%s\" nie istnieje."
 
-#: sys/dvb/gstdvbsrc.c:707
+#: sys/dvb/gstdvbsrc.c:708
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nie udało się otworzyć urządzenia frontendu \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:719
+#: sys/dvb/gstdvbsrc.c:720
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nie udało się pobrać ustawień z urządzenia frontendu \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:788
+#: sys/dvb/gstdvbsrc.c:789
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
