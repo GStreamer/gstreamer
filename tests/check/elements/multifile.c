@@ -24,6 +24,8 @@
 
 #include <glib/gstdio.h>
 #include <gst/check/gstcheck.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 static void
 run_pipeline (GstElement * pipeline)

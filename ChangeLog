@@ -1,3 +1,9 @@
+2008-04-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/elements/multifile.c:
+	Include stdlib.h and unistd.h for mkdtemp. Some platforms have it
+	declared in the former, some have it declared in the latter.
+
 2008-04-24  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_set_property):
