@@ -1,3 +1,13 @@
+2008-04-24  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* examples/play.py:
+	* examples/remuxer.py:
+	* examples/switch.py:
+	* examples/synchronizer.py:
+	Sync with the X server before giving an XID to our sink with a different
+        display connection. This avoids spurious X servers where the sink's
+        display connection doesn't know the XID that the GDK thread's does.
+
 2008-04-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
         Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>

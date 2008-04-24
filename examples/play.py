@@ -32,6 +32,8 @@ class GstPlayer:
         if message.structure is None:
             return
         if message.structure.get_name() == 'prepare-xwindow-id':
+            # Sync with the X server before giving the X-id to the sink
+            gtk.gdk.display_get_default().sync()
             self.videowidget.set_sink(message.src)
             message.src.set_property('force-aspect-ratio', True)
             
