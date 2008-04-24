@@ -1,4 +1,66 @@
-This is GStreamer Bad Plug-ins 0.10.6, "A Big Deep Breath"
+This is GStreamer Bad Plug-ins 0.10.7, "House of Cards"
+
+Changes since 0.10.6:
+    
+      * OSS v4 support
+      * libdc1394 2.0.0 support
+      * AAC support fixes
+      * RTP support improved
+      * New OFA element
+      * SRT subtitle encoder added
+      * Windows Inet support for http/ftp
+      * Fixes in dc1394, MIDI, MPEG-2 encoding, MythTV input, NAS
+      * Fixes in Bayer decoder, replaygain analysis, GSM decoder
+      * DVB/MPEG-TS support improved
+      * NSF decoder updated
+      * 'metadata' plugin enhancements
+      * Dirac encoder ported to libschroedinger
+      * mplex element ported to 0.10
+      * VCD/CDXA parser ported to 0.10
+      * Directshow wrapper improvements
+      * 'selector' plugin enhancements
+      * souphttpsrc moved to the -good module
+      * Various other fixes and enhancements
+
+Bugs fixed since 0.10.6:
+     
+      * 498237 : nsfdec crash with SK8ORDIE.
+      * 529378 : faad leaks GstAudioChannelPosition
+      * 351309 : New Element: gst-puid
+      * 469979 : [faad] Could not map channel positions - setting caps on ...
+      * 494499 : replaygain analysis slowdown on low volume (denormals)
+      * 514948 : [souphttpsrc] configurable buffer size setting and zero-copy
+      * 514964 : [dc1394] port to new stable 2.0.x API
+      * 517937 : various C89 fixes
+      * 518227 : test/icles/metadata_editor.c does not compile on Windows
+      * 518722 : [souphttpsrc] append cookie headers to HTTP request
+      * 519905 : [mvedemux] fix audio discontinuity
+      * 520329 : [PATCH] mjpegtools: mplex ported to 0.10 and mpeg2enc upd...
+      * 520626 : Implement collision and loop detection in rtpmanager
+      * 520892 : [dshowvideosrc] latency and shutdown improvements
+      * 520894 : rtpmanager rtcp thread shutdown deadlock
+      * 520897 : new element: wininetsrc
+      * 521749 : [souphttpsrc] unit test fails on mandriva cooker
+      * 522134 : [souphttpsrc] Playback should continue seamlessly on serv...
+      * 522212 : wrong origin
+      * 522884 : gstneonhttpsrc does not handle the HTTP status 303 correc...
+      * 523854 : [souphttpsrc] Glitches and crackling when playing things ...
+      * 524035 : [neonhttpsrc] fails to compile with libneon 0.28.x
+      * 525271 : [new plugin] srtenc
+      * 526337 : souphttpsrc ignores connections error
+      * 527622 : [flvdemux] crash in FLV demuxer
+      * 528000 : [timidity] Doesn't dist all files correctly
+      * 528011 : [dc1394] Shouldn't be included in the states test
+      * 528245 : rtpbin element leaks
+      * 528266 : [ofa] Unit test fails because of different fingerprints
+      * 528614 : timeout introduced in poll loop for fd in dvbsrc causes b...
+      * 529283 : [ofa] Unit test leaks tag string
+      * 529285 : [rganalysis] Unit test leaks a GstTagList
+      * 517854 : DirectFB check fails
+      * 517895 : nas plugin no longer builds (configure.ac error)
+      * 517896 : PATCH: fix building of mpeg2enc plugin with even newer mj...
+      * 525100 : does not build with --disable-external
+      * 481354 : [wavparse] does not play 700Hz GSM 6.10 wav file
 
 Changes since 0.10.5:
     

@@ -284,7 +284,7 @@ gint  arg1
 <SIGNAL>
 <NAME>GstInputSelector::block</NAME>
 <RETURNS>gint64</RETURNS>
-<FLAGS>l</FLAGS>
+<FLAGS>la</FLAGS>
 GstInputSelector *gstinputselector
 </SIGNAL>
 
@@ -293,7 +293,7 @@ GstInputSelector *gstinputselector
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
 GstInputSelector *gstinputselector
-gchar *arg1
+GstPad *arg1
 gint64  arg2
 gint64  arg3
 </SIGNAL>

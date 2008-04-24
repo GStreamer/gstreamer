@@ -3,7 +3,7 @@
   <description>Deinterlace video</description>
   <filename>../../gst/deinterlace/.libs/libgstdeinterlace.so</filename>
   <basename>libgstdeinterlace.so</basename>
-  <version>0.10.6.1</version>
+  <version>0.10.7</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -14,7 +14,7 @@
       <longname>Deinterlace</longname>
       <class>Filter/Effect/Video</class>
       <description>Deinterlace video</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>src</name>

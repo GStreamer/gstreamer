@@ -3,11 +3,11 @@
   <description>Alsa plugin for S/PDIF output</description>
   <filename>../../ext/alsaspdif/.libs/libgstalsaspdif.so</filename>
   <basename>libgstalsaspdif.so</basename>
-  <version>0.10.6.1</version>
-  <license>unknown</license>
+  <version>0.10.7</version>
+  <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>gst-plugins-bad</package>
-  <origin>http://www.fluendo.com</origin>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>alsaspdifsink</name>

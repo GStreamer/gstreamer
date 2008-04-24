@@ -1,3 +1,10 @@
+=== release 0.10.7 ===
+
+2008-04-24  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.7, "House of Cards"
+
 2008-04-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/faad/gstfaad.c:
@@ -335,7 +342,7 @@
 
 2008-03-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
-	Patch by: kapil <kapil at fluendo dot com>
+	Patch by: Kapil Agrawal <kapil at fluendo dot com>
 
 	* ext/gsm/gstgsmdec.c: (gst_gsmdec_sink_setcaps),
 	(gst_gsmdec_chain):

@@ -3,11 +3,11 @@
   <description>GSM encoder/decoder</description>
   <filename>../../ext/gsm/.libs/libgstgsm.so</filename>
   <basename>libgstgsm.so</basename>
-  <version>0.10.6.1</version>
+  <version>0.10.7</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>Gstreamer</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>gsmdec</name>
@@ -20,13 +20,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-gsm, rate=(int)8000, channels=(int)1; audio/ms-gsm, rate=(int)8000, channels=(int)1</details>
+          <details>audio/x-gsm, rate=(int)8000, channels=(int)1; audio/ms-gsm, rate=(int)[ 1, 2147483647 ], channels=(int)1</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)8000, channels=(int)1</details>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)1</details>
         </caps>
       </pads>
     </element>

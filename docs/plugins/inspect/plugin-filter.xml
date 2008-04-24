@@ -3,7 +3,7 @@
   <description>IIR audio filter element</description>
   <filename>../../gst/filter/.libs/libgstfilter.so</filename>
   <basename>libgstfilter.so</basename>
-  <version>0.10.6.1</version>
+  <version>0.10.7</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

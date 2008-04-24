@@ -3,7 +3,7 @@
   <description>Parse a .dat file (VCD) into raw mpeg1</description>
   <filename>../../gst/cdxaparse/.libs/libgstcdxaparse.so</filename>
   <basename>libgstcdxaparse.so</basename>
-  <version>0.10.6.1</version>
+  <version>0.10.7</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -21,6 +21,27 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-cdxa</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpeg, systemstream=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>vcdparse</name>
+      <longname>(S)VCD stream parser</longname>
+      <class>Codec/Parser</class>
+      <description>Strip (S)VCD stream from its sync headers</description>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-vcd</details>
         </caps>
         <caps>
           <name>src</name>

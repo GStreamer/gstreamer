@@ -564,7 +564,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>automatic-redirect</NICK>
-<BLURB>Automatically follow HTTP redirects (HTTP Status Code 302).</BLURB>
+<BLURB>Automatically follow HTTP redirects (HTTP Status Code 302/303).</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -665,7 +665,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Aspect</NICK>
 <BLURB>Display aspect ratio.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Deduce from input</DEFAULT>
 </ARG>
 
 <ARG>
@@ -765,7 +765,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Format</NICK>
 <BLURB>Encoding profile format.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Generic MPEG-1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -775,7 +775,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Framerate</NICK>
 <BLURB>Output framerate.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Same as input</DEFAULT>
 </ARG>
 
 <ARG>
@@ -785,7 +785,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Interlace mode</NICK>
 <BLURB>MPEG-2 motion estimation and encoding modes.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Progressive</DEFAULT>
 </ARG>
 
 <ARG>
@@ -855,7 +855,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Norm</NICK>
 <BLURB>Tag output for specific video norm.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Unspecified</DEFAULT>
 </ARG>
 
 <ARG>
@@ -865,7 +865,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Playback field order</NICK>
 <BLURB>Force specific playback field order.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Unspecified</DEFAULT>
 </ARG>
 
 <ARG>
@@ -885,7 +885,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Quant. matrix</NICK>
 <BLURB>Quantisation matrix to use for encoding.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Default</DEFAULT>
 </ARG>
 
 <ARG>
@@ -901,10 +901,10 @@
 <ARG>
 <NAME>GstMpeg2enc::quantisation</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,31]</RANGE>
+<RANGE>[-1,31]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Quantisation</NICK>
-<BLURB>Quantisation factor (0=default, 1=best, 31=worst).</BLURB>
+<BLURB>Quantisation factor (-1=cbr, 0=default, 1=best, 31=worst).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1075,7 +1075,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Output format</NICK>
 <BLURB>Format of output frames.</BLURB>
-<DEFAULT>OUTPUTFORMAT_RAW</DEFAULT>
+<DEFAULT>OUTPUTFORMAT_ADTS</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1095,7 +1095,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Block type</NICK>
 <BLURB>Block type encorcing.</BLURB>
-<DEFAULT>SHORTCTL_NORMAL</DEFAULT>
+<DEFAULT>SHORTCTL_NOSHORT</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1534,7 +1534,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>code-rate-hp</NICK>
-<BLURB>High Priority Code Rate (DVB-T and DVB-S).</BLURB>
+<BLURB>High Priority Code Rate (DVB-T, DVB-S and DVB-C).</BLURB>
 <DEFAULT>AUTO</DEFAULT>
 </ARG>
 
@@ -1604,7 +1604,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>inversion</NICK>
-<BLURB>Inversion Information (DVB-T).</BLURB>
+<BLURB>Inversion Information (DVB-T and DVB-C).</BLURB>
 <DEFAULT>ON</DEFAULT>
 </ARG>
 
@@ -1614,7 +1614,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>modulation</NICK>
-<BLURB>Modulation (DVB-T).</BLURB>
+<BLURB>Modulation (DVB-T and DVB-C).</BLURB>
 <DEFAULT>QAM 16</DEFAULT>
 </ARG>
 
@@ -18244,7 +18244,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>code-rate-hp</NICK>
-<BLURB>High Priority Code Rate (DVB-T and DVB-S).</BLURB>
+<BLURB>High Priority Code Rate (DVB-T, DVB-S and DVB-C).</BLURB>
 <DEFAULT>AUTO</DEFAULT>
 </ARG>
 
@@ -18314,7 +18314,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>inversion</NICK>
-<BLURB>Inversion Information (DVB-T).</BLURB>
+<BLURB>Inversion Information (DVB-T and DVB-C).</BLURB>
 <DEFAULT>ON</DEFAULT>
 </ARG>
 
@@ -18324,7 +18324,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>modulation</NICK>
-<BLURB>Modulation (DVB-T).</BLURB>
+<BLURB>Modulation (DVB-T and DVB-C).</BLURB>
 <DEFAULT>QAM 16</DEFAULT>
 </ARG>
 
@@ -18730,7 +18730,7 @@
 
 <ARG>
 <NAME>GstMythtvSrc::location</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Location</NICK>
@@ -18745,7 +18745,7 @@
 
 <ARG>
 <NAME>GstMythtvSrc::mythtv-channel</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>mythtv-channel</NICK>
@@ -18775,7 +18775,7 @@
 
 <ARG>
 <NAME>GstMythtvSrc::mythtv-live-chainid</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>mythtv-live-chainid</NICK>
@@ -18805,22 +18805,42 @@
 
 <ARG>
 <NAME>GstInputSelector::active-pad</NAME>
-<TYPE>gchar*</TYPE>
+<TYPE>GstPad*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Active pad</NICK>
-<BLURB>Name of the currently active sink pad.</BLURB>
-<DEFAULT>NULL</DEFAULT>
+<BLURB>The currently active sink pad.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInputSelector::n-pads</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Number of Pads</NICK>
+<BLURB>The number of sink pads.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInputSelector::select-all</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Select all mode</NICK>
+<BLURB>Forwards data from all input pads.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstOutputSelector::active-pad</NAME>
-<TYPE>gchar*</TYPE>
+<TYPE>GstPad*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Active pad</NICK>
 <BLURB>Name of the currently active src pad.</BLURB>
-<DEFAULT>NULL</DEFAULT>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -18861,5 +18881,265 @@
 <NICK>Timestamp offset</NICK>
 <BLURB>An offset added to timestamps set on buffers (in ns).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSrtEnc::duration</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Offset for the duration</NICK>
+<BLURB>Offset for the duration of the subtitles.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSrtEnc::timestamp</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Offset for the starttime</NICK>
+<BLURB>Offset for the starttime for the subtitles.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOss4Sink::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>OSS4 device (e.g. /dev/oss/hdaudio0/pcm0 or /dev/dspN) (NULL = use first available playback device).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOss4Sink::device-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Human-readable name of the sound device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOss4Source::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>OSS4 device (e.g. /dev/oss/hdaudio0/pcm0 or /dev/dspN) (NULL = use first available device).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOss4Source::device-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Human-readable name of the sound device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOss4Mixer::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>OSS mixer device (e.g. /dev/oss/hdaudio0/mix0 or /dev/mixerN) (NULL = use first mixer device found).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOss4Mixer::device-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Human-readable name of the sound device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::cpd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>cpd</NICK>
+<BLURB>cpd.</BLURB>
+<DEFAULT>60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::denoise</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>denoise</NICK>
+<BLURB>denoise.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::iwlt-filter</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,7]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>iwlt_filter</NICK>
+<BLURB>iwlt_filter.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::l1-sep</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>l1_sep</NICK>
+<BLURB>l1_sep.</BLURB>
+<DEFAULT>24</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::lossless</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>lossless</NICK>
+<BLURB>lossless.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::multi-quants</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>multi_quants</NICK>
+<BLURB>multi_quants.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::mv-prec</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,3]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>mv_prec</NICK>
+<BLURB>mv_prec.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::no-spartition</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>no_spartition</NICK>
+<BLURB>no_spartition.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::num-l1</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>num_l1</NICK>
+<BLURB>num_l1.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::qf</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>qf</NICK>
+<BLURB>qf.</BLURB>
+<DEFAULT>7</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::rwlt-filter</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,7]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rwlt_filter</NICK>
+<BLURB>rwlt_filter.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::targetrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,10000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>targetrate</NICK>
+<BLURB>targetrate.</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::use-vlc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>use_vlc</NICK>
+<BLURB>use_vlc.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::wlt-depth</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,4]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>wlt_depth</NICK>
+<BLURB>wlt_depth.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::xblen</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[4,64]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>xblen</NICK>
+<BLURB>xblen.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::xbsep</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[4,64]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>xbsep</NICK>
+<BLURB>xbsep.</BLURB>
+<DEFAULT>12</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::yblen</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[4,64]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>yblen</NICK>
+<BLURB>yblen.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::ybsep</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[4,64]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ybsep</NICK>
+<BLURB>ybsep.</BLURB>
+<DEFAULT>12</DEFAULT>
 </ARG>
 
