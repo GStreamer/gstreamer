@@ -1,5 +1,12 @@
 2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpbin.c: (create_stream), (gst_rtp_bin_init),
+	(gst_rtp_bin_set_property), (gst_rtp_bin_get_property):
+	* gst/rtpmanager/gstrtpbin.h:
+	Expose new jitterbuffer property in rtpbin too.
+
+2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
 	(gst_rtp_jitter_buffer_class_init), (gst_rtp_jitter_buffer_init),
 	(gst_rtp_jitter_buffer_loop), (gst_rtp_jitter_buffer_set_property),
