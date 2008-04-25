@@ -979,6 +979,7 @@ gst_flv_demux_query (GstPad * pad, GstQuery * query)
       break;
     }
     case GST_QUERY_LATENCY:
+    default:
     {
       GstPad *peer;
 
@@ -992,9 +993,6 @@ gst_flv_demux_query (GstPad * pad, GstQuery * query)
       }
       break;
     }
-    default:
-      res = FALSE;
-      break;
   }
 
 beach:

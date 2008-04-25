@@ -1,3 +1,8 @@
+2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_query):
+	Forward unknown queries upstream instead of returning FALSE on them.
+
 2008-04-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
