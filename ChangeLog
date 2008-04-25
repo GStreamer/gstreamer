@@ -1,5 +1,15 @@
 2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpsession.c:
+	(gst_rtp_session_query_send_rtcp_src), (create_recv_rtcp_sink),
+	(create_send_rtcp_src):
+	Set up some internal links functions for the RTCP and sync pads because
+	the defaults are really not correct.
+	Implement a query handler for the RTCP src pad, mostly to correctly
+	report about the latency.
+
+2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_associate),
 	(gst_rtp_bin_sync_chain):
 	* gst/rtpmanager/rtpsession.c: (update_arrival_stats),

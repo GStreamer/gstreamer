@@ -1507,6 +1507,31 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstBuffer * buffer)
 }
 
 static gboolean
+gst_rtp_session_query_send_rtcp_src (GstPad * pad, GstQuery * query)
+{
+  GstRtpSession *rtpsession;
+  GstRtpSessionPrivate *priv;
+  gboolean ret = FALSE;
+
+  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+  priv = rtpsession->priv;
+
+  GST_DEBUG_OBJECT (rtpsession, "received QUERY");
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+      ret = TRUE;
+      /* use the defaults for the latency query. */
+      gst_query_set_latency (query, FALSE, 0, -1);
+      break;
+    default:
+      /* other queries simply fail for now */
+      break;
+  }
+  return ret;
+}
+
+static gboolean
 gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstEvent * event)
 {
   GstRtpSession *rtpsession;
@@ -1695,6 +1720,8 @@ create_recv_rtcp_sink (GstRtpSession * rtpsession)
       gst_rtp_session_chain_recv_rtcp);
   gst_pad_set_event_function (rtpsession->recv_rtcp_sink,
       (GstPadEventFunction) gst_rtp_session_event_recv_rtcp_sink);
+  gst_pad_set_internal_link_function (rtpsession->recv_rtcp_sink,
+      gst_rtp_session_internal_links);
   gst_pad_set_active (rtpsession->recv_rtcp_sink, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->recv_rtcp_sink);
@@ -1703,6 +1730,8 @@ create_recv_rtcp_sink (GstRtpSession * rtpsession)
   rtpsession->sync_src =
       gst_pad_new_from_static_template (&rtpsession_sync_src_template,
       "sync_src");
+  gst_pad_set_internal_link_function (rtpsession->sync_src,
+      gst_rtp_session_internal_links);
   gst_pad_use_fixed_caps (rtpsession->sync_src);
   gst_pad_set_active (rtpsession->sync_src, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession), rtpsession->sync_src);
@@ -1758,6 +1787,10 @@ create_send_rtcp_src (GstRtpSession * rtpsession)
       "send_rtcp_src");
   gst_pad_use_fixed_caps (rtpsession->send_rtcp_src);
   gst_pad_set_active (rtpsession->send_rtcp_src, TRUE);
+  gst_pad_set_internal_link_function (rtpsession->send_rtcp_src,
+      gst_rtp_session_internal_links);
+  gst_pad_set_query_function (rtpsession->send_rtcp_src,
+      gst_rtp_session_query_send_rtcp_src);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->send_rtcp_src);
 
