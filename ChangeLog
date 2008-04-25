@@ -1,3 +1,11 @@
+2008-04-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	* ext/soundtouch/gstbpmdetect.cc:
+	Cast NULL sentinels to void * as NULL is defined as an integer
+	constant in most environments when using C++ and it's size might
+	be different from a pointer.
+
 2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/app/gstappsink.c: (gst_app_sink_class_init),

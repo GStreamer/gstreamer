@@ -290,13 +290,14 @@ gst_mpeg2enc_structure_from_norm (GstMpeg2enc * enc, gint horiz,
       break;
     }
     case 'n':
-      gst_structure_set (structure, "height", G_TYPE_INT, ntsc_v, NULL);
+      gst_structure_set (structure, "height", G_TYPE_INT, ntsc_v,
+          (void *) NULL);
       break;
     default:
-      gst_structure_set (structure, "height", G_TYPE_INT, pal_v, NULL);
+      gst_structure_set (structure, "height", G_TYPE_INT, pal_v, (void *) NULL);
       break;
   }
-  gst_structure_set (structure, "width", G_TYPE_INT, horiz, NULL);
+  gst_structure_set (structure, "width", G_TYPE_INT, horiz, (void *) NULL);
   gst_mpeg2enc_add_fps (structure, gst_mpeg2enc_get_fps (enc));
 
   return structure;
