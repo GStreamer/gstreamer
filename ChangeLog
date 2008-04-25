@@ -1,3 +1,21 @@
+2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_combine_flows):
+	Fix typo in comments.
+
+	* tests/examples/rtp/client-H263p-PCMA.sdp:
+	* tests/examples/rtp/client-H263p-PCMA.sh:
+	* tests/examples/rtp/client-H264-PCMA.sdp:
+	* tests/examples/rtp/client-H264-PCMA.sh:
+	* tests/examples/rtp/client-H264.sdp:
+	* tests/examples/rtp/client-H264.sh:
+	* tests/examples/rtp/client-PCMA.sdp:
+	* tests/examples/rtp/client-PCMA.sh:
+	* tests/examples/rtp/server-alsasrc-PCMA.sh:
+	* tests/examples/rtp/server-v4l2-H263p-alsasrc-AMR.sh:
+	* tests/examples/rtp/server-v4l2-H264-alsasrc-PCMA.sh:
+	Add some more docs and fix examples.
+
 2008-04-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/elements/multifile.c:

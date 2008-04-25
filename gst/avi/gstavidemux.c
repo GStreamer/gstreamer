@@ -3361,7 +3361,7 @@ gst_avi_demux_combine_flows (GstAviDemux * avi, avi_stream_context * stream,
   /* if we get here, all other pads were unlinked and we return
    * NOT_LINKED then */
 done:
-  GST_LOG_OBJECT (avi, "cobined return %s", gst_flow_get_name (ret));
+  GST_LOG_OBJECT (avi, "combined return %s", gst_flow_get_name (ret));
   return ret;
 }
 
