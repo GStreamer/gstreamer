@@ -214,8 +214,8 @@ zoomVector (ZoomFilterFXWrapperData * data, float X, float Y)
 
   /* Noise */
   if (data->noisify) {
-    vx += (((float) random ()) / ((float) RAND_MAX) - 0.5f) / 50.0f;
-    vy += (((float) random ()) / ((float) RAND_MAX) - 0.5f) / 50.0f;
+    vx += (((float) rand ()) / ((float) RAND_MAX) - 0.5f) / 50.0f;
+    vy += (((float) rand ()) / ((float) RAND_MAX) - 0.5f) / 50.0f;
   }
 
   /* Hypercos */

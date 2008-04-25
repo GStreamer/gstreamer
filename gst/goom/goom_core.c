@@ -38,11 +38,11 @@ static void
 init_buffers (PluginInfo * goomInfo, int buffsize)
 {
   goomInfo->pixel = (guint32 *) malloc (buffsize * sizeof (guint32) + 128);
-  bzero (goomInfo->pixel, buffsize * sizeof (guint32) + 128);
+  memset (goomInfo->pixel, 0, buffsize * sizeof (guint32) + 128);
   goomInfo->back = (guint32 *) malloc (buffsize * sizeof (guint32) + 128);
-  bzero (goomInfo->back, buffsize * sizeof (guint32) + 128);
+  memset (goomInfo->back, 0, buffsize * sizeof (guint32) + 128);
   goomInfo->conv = (Pixel *) malloc (buffsize * sizeof (guint32) + 128);
-  bzero (goomInfo->conv, buffsize * sizeof (guint32) + 128);
+  memset (goomInfo->conv, 0, buffsize * sizeof (guint32) + 128);
 
   goomInfo->outputBuf = goomInfo->conv;
 
