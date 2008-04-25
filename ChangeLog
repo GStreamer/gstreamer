@@ -1,5 +1,17 @@
 2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_init), (gst_rtp_jitter_buffer_flush_stop),
+	(gst_rtp_jitter_buffer_src_event), (gst_rtp_jitter_buffer_chain),
+	(gst_rtp_jitter_buffer_loop):
+	Remove private version of a function that is in -base now.
+	Add src event handler.
+	Rework the jitterbuffer pushing loop so that it can quickly react to
+	lost packets and instruct the depayloader of them. This can then be used
+	to implement error concealment data.
+
+2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpsession.c:
 	(gst_rtp_session_query_send_rtcp_src), (create_recv_rtcp_sink),
 	(create_send_rtcp_src):
