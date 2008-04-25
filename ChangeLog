@@ -1,3 +1,18 @@
+2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsink.c: (gst_app_sink_class_init),
+	(gst_app_sink_init), (gst_app_sink_set_property),
+	(gst_app_sink_get_property), (gst_app_sink_event),
+	(gst_app_sink_preroll), (gst_app_sink_render),
+	(gst_app_sink_set_emit_signals), (gst_app_sink_get_emit_signals),
+	(gst_app_sink_set_max_buffers), (gst_app_sink_get_max_buffers),
+	(gst_app_sink_pull_buffer):
+	* gst-libs/gst/app/gstappsink.h:
+	Add more docs.
+	Add signals for when preroll and render buffers are available.
+	Add property to control signal emission.
+	Add property to control the max queue size.
+
 2008-04-25  Michael Smith <msmith@songbirdnest.com>
 
 	* gst-libs/gst/dshow/Makefile.am:
