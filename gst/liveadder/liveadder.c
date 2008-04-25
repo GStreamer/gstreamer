@@ -1274,7 +1274,7 @@ gst_live_adder_release_pad (GstElement * element, GstPad * pad)
 }
 
 static void
-reset_pad_private (gpointer data, gpointer user_data)
+reset_pad_private (gpointer data, gpointer unused)
 {
   GstPad *pad = data;
   GstLiveAdderPadPrivate *padprivate;
