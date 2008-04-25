@@ -87,6 +87,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/equalizer/gstiirequalizernbands.h \
 	$(top_srcdir)/ext/esd/esdsink.h \
 	$(top_srcdir)/ext/flac/gstflacdec.h \
+	$(top_srcdir)/ext/gdk_pixbuf/gstgdkpixbufsink.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosink.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosrc.h \
 	$(top_srcdir)/ext/jpeg/gstjpegdec.h \

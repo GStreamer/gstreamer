@@ -481,6 +481,20 @@ gst_gamma_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-gdkpixbufsink</FILE>
+<TITLE>gdkpixbufsink</TITLE>
+GstGdkPixbufSink
+<SUBSECTION Standard>
+GstGdkPixbufSinkClass
+GST_TYPE_GDK_PIXBUF_SINK
+GST_GDK_PIXBUF_SINK
+GST_GDK_PIXBUF_SINK_CLASS
+GST_IS_GDK_PIXBUF_SINK
+GST_IS_GDK_PIXBUF_SINK_CLASS
+gst_gdk_pixbuf_sink_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-goom</FILE>
 <TITLE>goom</TITLE>
 GstGoom
