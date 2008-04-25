@@ -45,6 +45,8 @@ struct _GstAppSink
 
   /*< private >*/
   GstCaps *caps;
+  gboolean emit_signals;
+  guint max_buffers;
 
   GCond *cond;
   GMutex *mutex;
@@ -72,13 +74,19 @@ GType gst_app_sink_get_type(void);
 
 GST_DEBUG_CATEGORY_EXTERN (app_sink_debug);
 
-void            gst_app_sink_set_caps       (GstAppSink *appsink, const GstCaps *caps);
-GstCaps *       gst_app_sink_get_caps       (GstAppSink *appsink);
+void            gst_app_sink_set_caps         (GstAppSink *appsink, const GstCaps *caps);
+GstCaps *       gst_app_sink_get_caps         (GstAppSink *appsink);
 
-gboolean        gst_app_sink_is_eos         (GstAppSink *appsink);
+gboolean        gst_app_sink_is_eos           (GstAppSink *appsink);
 
-GstBuffer *     gst_app_sink_pull_preroll   (GstAppSink *appsink);
-GstBuffer *     gst_app_sink_pull_buffer    (GstAppSink *appsink);
+void            gst_app_sink_set_emit_signals (GstAppSink *appsink, gboolean emit);
+gboolean        gst_app_sink_get_emit_signals (GstAppSink *appsink);
+
+void            gst_app_sink_set_max_buffers  (GstAppSink *appsink, guint max);
+guint           gst_app_sink_get_max_buffers  (GstAppSink *appsink);
+
+GstBuffer *     gst_app_sink_pull_preroll     (GstAppSink *appsink);
+GstBuffer *     gst_app_sink_pull_buffer      (GstAppSink *appsink);
 
 G_END_DECLS
 
