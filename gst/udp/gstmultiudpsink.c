@@ -626,7 +626,7 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
   memset (&client->theiraddr, 0, sizeof (client->theiraddr));
   memset (&client->multi_addr, 0, sizeof (client->multi_addr));
   client->theiraddr.sin_family = AF_INET;       /* host byte order */
-  client->theiraddr.sin_port = htons (port);    /* short, network byte order */
+  client->theiraddr.sin_port = g_htons (port);  /* short, network byte order */
 
   g_get_current_time (&now);
   client->connect_time = GST_TIMEVAL_TO_TIME (now);
@@ -634,7 +634,7 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
   /* if its an IP address */
   if (inet_aton (host, &addr)) {
     /* check if its a multicast address */
-    if ((ntohl (addr.s_addr) & 0xf0000000) == 0xe0000000) {
+    if ((g_ntohl (addr.s_addr) & 0xf0000000) == 0xe0000000) {
       GST_DEBUG_OBJECT (sink, "multicast address detected");
       client->multi_addr.imr_multiaddr.s_addr = addr.s_addr;
       client->multi_addr.imr_interface.s_addr = INADDR_ANY;

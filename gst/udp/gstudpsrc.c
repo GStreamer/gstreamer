@@ -691,7 +691,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
     memset (&src->myaddr, 0, sizeof (src->myaddr));
     src->myaddr.sin_family = AF_INET;   /* host byte order */
-    src->myaddr.sin_port = htons (src->port);   /* short, network byte order */
+    src->myaddr.sin_port = g_htons (src->port); /* short, network byte order */
 
     if (src->multi_addr.imr_multiaddr.s_addr)
       src->myaddr.sin_addr.s_addr = src->multi_addr.imr_multiaddr.s_addr;
@@ -751,7 +751,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
               sizeof (bc_val))) < 0)
     goto no_broadcast;
 
-  port = ntohs (my_addr.sin_port);
+  port = g_ntohs (my_addr.sin_port);
   GST_DEBUG_OBJECT (src, "bound, on port %d", port);
   if (port != src->port) {
     src->port = port;
@@ -759,7 +759,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     g_object_notify (G_OBJECT (src), "port");
   }
 
-  src->myaddr.sin_port = htons (src->port + 1);
+  src->myaddr.sin_port = g_htons (src->port + 1);
 
   if ((src->fdset = gst_poll_new (TRUE)) == NULL)
     goto no_fdset;

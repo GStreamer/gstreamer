@@ -204,8 +204,8 @@ gst_asteriskh263_chain (GstPad * pad, GstBuffer * buf)
     samples = timestamp - asteriskh263->lastts;
     asteriskh263->lastts = timestamp;
 
-    GST_ASTERISKH263_HEADER_TIMESTAMP (outbuf) = htonl (samples);
-    GST_ASTERISKH263_HEADER_LENGTH (outbuf) = htons (asterisk_len);
+    GST_ASTERISKH263_HEADER_TIMESTAMP (outbuf) = g_htonl (samples);
+    GST_ASTERISKH263_HEADER_LENGTH (outbuf) = g_htons (asterisk_len);
 
     /* copy the data into place */
     memcpy (GST_BUFFER_DATA (outbuf) + GST_ASTERISKH263_HEADER_LEN, payload,

@@ -1,5 +1,13 @@
 2008-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/rtp/gstasteriskh263.c: (gst_asteriskh263_chain):
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_add_internal):
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_start):
+	  Use GLib versions of htonl, htons, ntohl and ntohs in order
+	  to avoid problems on win32 (#529707).
+
+2008-04-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Jesús Corrius <jesus at softcatala org>
 
 	* gst/goom/filters.c: (zoomVector):
