@@ -1,3 +1,8 @@
+2008-04-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* tools/gst-launch.1.in:
+	  Forgot to also add the envvar docs here.
+
 2008-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (init_post), (gst_deinit):

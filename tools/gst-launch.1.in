@@ -389,6 +389,9 @@ GST_DEBUG=totem:4,typefind:5
 \fBGST_DEBUG_NO_COLOR\fR
 When this environment variable is set, coloured debug output is disabled.
 .TP
+\fBGST_DEBUG_DUMP_DOT_DIR\fR
+When set to a filesystem path, store dot files of pipeline graphs there.
+.TP
 \fBGST_REGISTRY\fR
 Path of the plugin registry file. Default is
 ~/.gstreamer-GST_MAJORMINOR/registry-CPU.xml where CPU is the machine/cpu type
