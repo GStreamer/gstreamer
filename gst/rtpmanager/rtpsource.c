@@ -171,6 +171,7 @@ rtp_source_init (RTPSource * src)
   src->payload = 0;
   src->clock_rate = -1;
   src->clock_base = -1;
+  src->clock_base_time = -1;
   src->packets = g_queue_new ();
   src->seqnum_base = -1;
   src->last_rtptime = -1;
@@ -772,6 +773,7 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
   if (src->clock_base == -1) {
     GST_DEBUG ("using clock-base of %" G_GUINT32_FORMAT, rtptime);
     src->clock_base = rtptime;
+    src->clock_base_time = arrival->timestamp;
   }
 
   /* convert arrival time to RTP timestamp units, truncate to 32 bits, we don't

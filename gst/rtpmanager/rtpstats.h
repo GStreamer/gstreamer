@@ -56,7 +56,8 @@ typedef struct {
 
 /**
  * RTPArrivalStats:
- * @time: arrival time of a packet
+ * @time: arrival time of a packet according to the system clock
+ * @timestamp: arrival time of a packet as buffer timestamp
  * @address: address of the sender of the packet
  * @bytes: bytes of the packet including lowlevel overhead
  * @payload_len: bytes of the RTP payload
@@ -65,6 +66,7 @@ typedef struct {
  */
 typedef struct {
   GstClockTime  time;
+  GstClockTime  timestamp;
   guint64       ntpnstime;
   gboolean      have_address;
   GstNetAddress address;

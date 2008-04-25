@@ -1,5 +1,21 @@
 2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_associate),
+	(gst_rtp_bin_sync_chain):
+	* gst/rtpmanager/rtpsession.c: (update_arrival_stats),
+	(rtp_session_process_sr), (rtp_session_on_timeout):
+	* gst/rtpmanager/rtpsource.c: (rtp_source_init),
+	(calculate_jitter):
+	* gst/rtpmanager/rtpsource.h:
+	* gst/rtpmanager/rtpstats.h:
+	Also keep track of the first buffer timestamp together with the first
+	RTP timestamp as they both are needed to construct the timing of
+	outgoing packets in the jitterbuffer and are therefore also needed to
+	manage lip-sync. This fixes lip-sync if the first RTP packets arrive
+	with a wildly different gap.
+
+2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_query):
 	Forward unknown queries upstream instead of returning FALSE on them.
 
