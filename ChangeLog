@@ -1,6 +1,17 @@
 2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_class_init), (gst_rtp_jitter_buffer_init),
+	(gst_rtp_jitter_buffer_loop), (gst_rtp_jitter_buffer_set_property),
+	(gst_rtp_jitter_buffer_get_property):
+	Disable sending out rtp packet lost events by default and make a
+	property to enabe it. We will likely enable it by default when the base
+	depayloaders have a default handler for them so that we don't send these
+	events all through the pipeline for now.
+
+2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
 	(gst_rtp_jitter_buffer_init), (gst_rtp_jitter_buffer_flush_stop),
 	(gst_rtp_jitter_buffer_src_event), (gst_rtp_jitter_buffer_chain),
 	(gst_rtp_jitter_buffer_loop):
