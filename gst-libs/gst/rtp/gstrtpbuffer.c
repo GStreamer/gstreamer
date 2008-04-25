@@ -1030,10 +1030,11 @@ gst_rtp_buffer_default_clock_rate (guint8 payload_type)
  * @seqnum1: a sequence number
  * @seqnum2: a sequence number
  *
- * Compare two sequence numbers, taking care of wraparounds.
+ * Compare two sequence numbers, taking care of wraparounds. This function
+ * returns the difference between @seqnum1 and @seqnum2.
  *
- * Returns: -1 if @seqnum1 is before @seqnum2, 0 if they are equal or 1 if
- * @seqnum1 is bigger than @segnum2.
+ * Returns: a negative value if @seqnum1 is before @seqnum2, 0 if they are equal
+ * or a positive value if  @seqnum1 is bigger than @segnum2.
  *
  * Since: 0.10.15
  */
