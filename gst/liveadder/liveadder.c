@@ -1300,8 +1300,6 @@ gst_live_adder_change_state (GstElement * element, GstStateChange transition)
   adder = GST_LIVE_ADDER (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       {
         GST_OBJECT_LOCK (adder);
@@ -1312,20 +1310,11 @@ gst_live_adder_change_state (GstElement * element, GstStateChange transition)
         GST_OBJECT_UNLOCK (adder);
         break;
       }
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      break;
     default:
       break;
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    default:
-      break;
-  }
 
   return ret;
 }
