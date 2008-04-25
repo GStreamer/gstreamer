@@ -37,13 +37,13 @@ G_BEGIN_DECLS
 /**
  * GST_BASE_TRANSFORM_SINK_NAME:
  *
- * the name of the templates for the sink pad
+ * The name of the templates for the sink pad.
  */
 #define GST_BASE_TRANSFORM_SINK_NAME	"sink"
 /**
  * GST_BASE_TRANSFORM_SRC_NAME:
  *
- * the name of the templates for the source pad
+ * The name of the templates for the source pad.
  */
 #define GST_BASE_TRANSFORM_SRC_NAME	"src"
 
@@ -144,12 +144,12 @@ struct _GstBaseTransform {
 
 /**
  * GstBaseTransformClass:
- * @transform_caps: Optional.  given the pad in this direction and the given
+ * @transform_caps: Optional.  Given the pad in this direction and the given
  *                  caps, what caps are allowed on the other pad in this
  *                  element ?
  * @fixate_caps:    Optional. Given the pad in this direction and the given
  *                  caps, fixate the caps on the other pad.
- * @transform_size: Optional. given the size of a buffer in the given direction
+ * @transform_size: Optional. Given the size of a buffer in the given direction
  *                  with the given caps, calculate the size in bytes of a buffer
  *                  on the other pad with the given other caps.
  *                  The default implementation uses get_unit_size and keeps

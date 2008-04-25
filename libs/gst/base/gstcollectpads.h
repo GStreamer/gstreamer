@@ -83,7 +83,7 @@ struct _GstCollectData
 
 /**
  * GstCollectPadsFunction:
- * @pads: the #GstCollectPads that trigered the callback
+ * @pads: the #GstCollectPads that triggered the callback
  * @user_data: user data passed to gst_collect_pads_set_function()
  *
  * A function that will be called when all pads have received data.

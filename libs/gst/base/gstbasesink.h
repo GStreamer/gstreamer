@@ -91,7 +91,7 @@ struct _GstBaseSink {
   /*< private >*/
   union {
     struct {
-      /* segment used for clipping incomming buffers */
+      /* segment used for clipping incoming buffers */
       GstSegment    *clip_segment;
       /* max amount of time a buffer can be late, -1 no limit. */
       gint64	     max_lateness;
