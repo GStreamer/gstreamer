@@ -1,3 +1,11 @@
+2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_init),
+	(gst_bin_dispose):
+	Use the GLib stuff to create a private structure.
+	Add some locking around some dispose methods to make them a little
+	safer, see #529723. Patch by: Antoine Tremblay <hexa00 at gmail dot com>
+
 2008-04-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstbasesink.h:

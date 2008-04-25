@@ -189,6 +189,9 @@ GST_DEBUG_CATEGORY_STATIC (bin_debug);
  * a toplevel bin */
 #define BIN_IS_TOPLEVEL(bin) ((GST_OBJECT_PARENT (bin) == NULL) || bin->priv->asynchandling)
 
+#define GST_BIN_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BIN, GstBinPrivate))
+
 struct _GstBinPrivate
 {
   gboolean asynchandling;
@@ -382,6 +385,8 @@ gst_bin_class_init (GstBinClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  g_type_class_add_private (klass, sizeof (GstBinPrivate));
+
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_bin_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_bin_get_property);
 
@@ -475,7 +480,7 @@ gst_bin_init (GstBin * bin)
       bus);
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bin_bus_handler, bin);
 
-  bin->priv = g_new0 (GstBinPrivate, 1);
+  bin->priv = GST_BIN_GET_PRIVATE (bin);
   bin->priv->asynchandling = DEFAULT_ASYNC_HANDLING;
 }
 
@@ -489,11 +494,12 @@ gst_bin_dispose (GObject * object)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
-  bin_remove_messages (bin, NULL, GST_MESSAGE_ANY);
-
+  GST_OBJECT_LOCK (object);
   gst_object_replace ((GstObject **) child_bus_p, NULL);
   gst_object_replace ((GstObject **) provided_clock_p, NULL);
   gst_object_replace ((GstObject **) clock_provider_p, NULL);
+  bin_remove_messages (bin, NULL, GST_MESSAGE_ANY);
+  GST_OBJECT_UNLOCK (object);
 
   while (bin->children) {
     gst_bin_remove (bin, GST_ELEMENT_CAST (bin->children->data));
@@ -501,11 +507,6 @@ gst_bin_dispose (GObject * object)
   if (G_UNLIKELY (bin->children != NULL)) {
     g_critical ("could not remove elements from bin %s",
         GST_STR_NULL (GST_OBJECT_NAME (object)));
-  }
-
-  if (bin->priv) {
-    g_free (bin->priv);
-    bin->priv = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
