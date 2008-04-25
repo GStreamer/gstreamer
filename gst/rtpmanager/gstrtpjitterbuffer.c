@@ -100,13 +100,16 @@ enum
 #define DEFAULT_LATENCY_MS      200
 #define DEFAULT_DROP_ON_LATENCY FALSE
 #define DEFAULT_TS_OFFSET       0
+#define DEFAULT_DO_LOST         FALSE
 
 enum
 {
   PROP_0,
   PROP_LATENCY,
   PROP_DROP_ON_LATENCY,
-  PROP_TS_OFFSET
+  PROP_TS_OFFSET,
+  PROP_DO_LOST,
+  PROP_LAST
 };
 
 #define JBUF_LOCK(priv)   (g_mutex_lock ((priv)->jbuf_lock))
@@ -136,11 +139,13 @@ struct _GstRtpJitterBufferPrivate
   GMutex *jbuf_lock;
   GCond *jbuf_cond;
   gboolean waiting;
+  gboolean discont;
 
   /* properties */
   guint latency_ms;
   gboolean drop_on_latency;
   gint64 ts_offset;
+  gboolean do_lost;
 
   /* the last seqnum we pushed out */
   guint32 last_popped_seqnum;
@@ -288,13 +293,25 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   /**
    * GstRtpJitterBuffer::ts-offset:
    * 
-   * Adjust RTP timestamps in the jitterbuffer with offset.
+   * Adjust GStreamer output buffer timestamps in the jitterbuffer with offset.
+   * This is mainly used to ensure interstream synchronisation.
    */
   g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
-      g_param_spec_int64 ("ts-offset",
-          "Timestamp Offset",
-          "Adjust buffer RTP timestamps with offset in nanoseconds", G_MININT64,
-          G_MAXINT64, DEFAULT_TS_OFFSET, G_PARAM_READWRITE));
+      g_param_spec_int64 ("ts-offset", "Timestamp Offset",
+          "Adjust buffer timestamps with offset in nanoseconds", G_MININT64,
+          G_MAXINT64, DEFAULT_TS_OFFSET,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpJitterBuffer::do-lost:
+   * 
+   * Send out a GstRTPPacketLost event downstream when a packet is considered
+   * lost.
+   */
+  g_object_class_install_property (gobject_class, PROP_DO_LOST,
+      g_param_spec_boolean ("do-lost", "Do Lost",
+          "Send an event downstream when a packet is lost", DEFAULT_DO_LOST,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
@@ -338,6 +355,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer,
 
   priv->latency_ms = DEFAULT_LATENCY_MS;
   priv->drop_on_latency = DEFAULT_DROP_ON_LATENCY;
+  priv->do_lost = DEFAULT_DO_LOST;
 
   priv->jbuf = rtp_jitter_buffer_new ();
   priv->jbuf_lock = g_mutex_new ();
@@ -1168,13 +1186,15 @@ again:
       priv->num_late++;
       discont = TRUE;
 
-      /* create paket lost event */
-      event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-          gst_structure_new ("GstRTPPacketLost",
-              "seqnum", G_TYPE_UINT, (guint) next_seqnum,
-              "timestamp", G_TYPE_UINT64, out_time,
-              "duration", G_TYPE_UINT64, duration, NULL));
-      gst_pad_push_event (priv->srcpad, event);
+      if (priv->do_lost) {
+        /* create paket lost event */
+        event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+            gst_structure_new ("GstRTPPacketLost",
+                "seqnum", G_TYPE_UINT, (guint) next_seqnum,
+                "timestamp", G_TYPE_UINT64, out_time,
+                "duration", G_TYPE_UINT64, duration, NULL));
+        gst_pad_push_event (priv->srcpad, event);
+      }
 
       /* update our expected next packet */
       priv->last_popped_seqnum = next_seqnum;
@@ -1195,10 +1215,11 @@ push_buffer:
   /* when we get here we are ready to pop and push the buffer */
   outbuf = rtp_jitter_buffer_pop (priv->jbuf);
 
-  if (discont) {
+  if (discont || priv->discont) {
     /* set DISCONT flag when we missed a packet. */
     outbuf = gst_buffer_make_metadata_writable (outbuf);
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    priv->discont = FALSE;
   }
 
   /* apply timestamp with offset to buffer now */
@@ -1347,11 +1368,21 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       break;
     }
     case PROP_DROP_ON_LATENCY:
+      JBUF_LOCK (priv);
       priv->drop_on_latency = g_value_get_boolean (value);
+      JBUF_UNLOCK (priv);
       break;
     case PROP_TS_OFFSET:
       JBUF_LOCK (priv);
       priv->ts_offset = g_value_get_int64 (value);
+      /* FIXME, we don't really have a method for signaling a timestamp
+       * DISCONT without also making this a data discont. */
+      /* priv->discont = TRUE; */
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_DO_LOST:
+      JBUF_LOCK (priv);
+      priv->do_lost = g_value_get_boolean (value);
       JBUF_UNLOCK (priv);
       break;
     default:
@@ -1377,11 +1408,18 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
       JBUF_UNLOCK (priv);
       break;
     case PROP_DROP_ON_LATENCY:
+      JBUF_LOCK (priv);
       g_value_set_boolean (value, priv->drop_on_latency);
+      JBUF_UNLOCK (priv);
       break;
     case PROP_TS_OFFSET:
       JBUF_LOCK (priv);
       g_value_set_int64 (value, priv->ts_offset);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_DO_LOST:
+      JBUF_LOCK (priv);
+      g_value_set_boolean (value, priv->do_lost);
       JBUF_UNLOCK (priv);
       break;
     default:
