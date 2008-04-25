@@ -1,3 +1,8 @@
+2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/examples/rtp/server-v4l2-H264-alsasrc-PCMA.sh:
+	Remove test sync-offset by default.
+
 2008-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/rtp/gstasteriskh263.c: (gst_asteriskh263_chain):

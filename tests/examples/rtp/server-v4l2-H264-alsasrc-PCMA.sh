@@ -42,8 +42,8 @@ DEST=127.0.0.1
 
 # tuning parameters to make the sender send the streams out of sync. Can be used
 # ot test the client RTCP synchronisation. 
-#VOFFSET=500000000
-VOFFSET=900000000
+#VOFFSET=900000000
+VOFFSET=0
 AOFFSET=0
 
 # H264 encode from the source
