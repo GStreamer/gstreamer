@@ -134,6 +134,7 @@ struct _RTPSource {
   gint          clock_rate;
   gint32        seqnum_base;
   gint64        clock_base;
+  guint64       clock_base_time;
 
   GstClockTime  bye_time;
   GstClockTime  last_activity;

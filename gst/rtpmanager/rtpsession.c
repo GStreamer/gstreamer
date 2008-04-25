@@ -1233,6 +1233,7 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
   /* get time of arrival */
   g_get_current_time (&current);
   arrival->time = GST_TIMEVAL_TO_TIME (current);
+  arrival->timestamp = GST_BUFFER_TIMESTAMP (buffer);
   arrival->ntpnstime = ntpnstime;
 
   /* get packet size including header overhead */
@@ -1434,6 +1435,7 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
     return;
 
   GST_BUFFER_OFFSET (packet->buffer) = source->clock_base;
+  GST_BUFFER_OFFSET_END (packet->buffer) = source->clock_base_time;
 
   prevsender = RTP_SOURCE_IS_SENDER (source);
 

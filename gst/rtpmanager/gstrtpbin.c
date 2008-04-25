@@ -306,6 +306,7 @@ struct _GstRtpBinStream
 
   /* for lip-sync */
   guint64 clock_base;
+  guint64 clock_base_time;
   gint clock_rate;
   gint64 ts_offset;
   gint64 prev_ts_offset;
@@ -785,6 +786,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
   stream->local_unix =
       gst_util_uint64_scale_int (stream->local_rtp, GST_SECOND,
       stream->clock_rate);
+  stream->local_unix += stream->clock_base_time;
   /* calculate delta between server and receiver */
   stream->unix_delta = stream->last_unix - stream->local_unix;
 
@@ -942,6 +944,7 @@ gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
 
             if (type == GST_RTCP_SDES_CNAME) {
               stream->clock_base = GST_BUFFER_OFFSET (buffer);
+              stream->clock_base_time = GST_BUFFER_OFFSET_END (buffer);
               /* associate the stream to CNAME */
               gst_rtp_bin_associate (bin, stream, len, data);
             }
