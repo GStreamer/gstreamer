@@ -1,3 +1,12 @@
+2008-04-25  Michael Smith <msmith@songbirdnest.com>
+
+	* gst-libs/gst/dshow/Makefile.am:
+	  Use CXXFLAGS rather than CFLAGS; these are C++ files.
+	  Define required constants appropriately.
+	* sys/dshowdecwrapper/Makefile.am:
+	  Add required include dir, libraries.
+	  Define required constants appropriately.
+
 2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpbin.c: (create_stream), (gst_rtp_bin_init),
