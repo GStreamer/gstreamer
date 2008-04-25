@@ -228,7 +228,7 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_LATENCY_MS	200
+#define DEFAULT_LATENCY_MS	     200
 #define DEFAULT_SDES_CNAME           NULL
 #define DEFAULT_SDES_NAME            NULL
 #define DEFAULT_SDES_EMAIL           NULL
@@ -236,6 +236,7 @@ enum
 #define DEFAULT_SDES_LOCATION        NULL
 #define DEFAULT_SDES_TOOL            NULL
 #define DEFAULT_SDES_NOTE            NULL
+#define DEFAULT_DO_LOST              FALSE
 
 enum
 {
@@ -248,6 +249,7 @@ enum
   PROP_SDES_LOCATION,
   PROP_SDES_TOOL,
   PROP_SDES_NOTE,
+  PROP_DO_LOST,
   PROP_LAST
 };
 
@@ -1018,8 +1020,9 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   g_signal_connect (buffer, "request-pt-map",
       (GCallback) pt_map_requested, session);
 
-  /* configure latency */
+  /* configure latency and packet lost */
   g_object_set (buffer, "latency", session->bin->latency, NULL);
+  g_object_set (buffer, "do-lost", session->bin->do_lost, NULL);
 
   gst_bin_add (GST_BIN_CAST (session->bin), buffer);
   gst_element_set_state (buffer, GST_STATE_PLAYING);
@@ -1321,7 +1324,9 @@ gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
   rtpbin->priv = GST_RTP_BIN_GET_PRIVATE (rtpbin);
   rtpbin->priv->bin_lock = g_mutex_new ();
   rtpbin->provided_clock = gst_system_clock_obtain ();
+
   rtpbin->latency = DEFAULT_LATENCY_MS;
+  rtpbin->do_lost = DEFAULT_DO_LOST;
 
   /* some default SDES entries */
   str = g_strdup_printf ("%s@%s", g_get_user_name (), g_get_host_name ());
@@ -1480,6 +1485,11 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       gst_rtp_bin_set_sdes_string (rtpbin, GST_RTCP_SDES_NOTE,
           g_value_get_string (value));
       break;
+    case PROP_DO_LOST:
+      GST_RTP_BIN_LOCK (rtpbin);
+      rtpbin->do_lost = g_value_get_boolean (value);
+      GST_RTP_BIN_UNLOCK (rtpbin);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1527,6 +1537,11 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
     case PROP_SDES_NOTE:
       g_value_take_string (value, gst_rtp_bin_get_sdes_string (rtpbin,
               GST_RTCP_SDES_NOTE));
+      break;
+    case PROP_DO_LOST:
+      GST_RTP_BIN_LOCK (rtpbin);
+      g_value_set_boolean (value, rtpbin->do_lost);
+      GST_RTP_BIN_UNLOCK (rtpbin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
