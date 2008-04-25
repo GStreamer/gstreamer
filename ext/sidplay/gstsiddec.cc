@@ -299,15 +299,15 @@ update_tags (GstSidDec * siddec)
 
     if (info.nameString) {
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-          GST_TAG_TITLE, info.nameString, NULL);
+          GST_TAG_TITLE, info.nameString, (void *) NULL);
     }
     if (info.authorString) {
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-          GST_TAG_ARTIST, info.authorString, NULL);
+          GST_TAG_ARTIST, info.authorString, (void *) NULL);
     }
     if (info.copyrightString) {
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-          GST_TAG_COPYRIGHT, info.copyrightString, NULL);
+          GST_TAG_COPYRIGHT, info.copyrightString, (void *) NULL);
     }
     gst_element_found_tags_for_pad (GST_ELEMENT_CAST (siddec),
         siddec->srcpad, list);
