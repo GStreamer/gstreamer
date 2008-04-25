@@ -1,3 +1,11 @@
+2008-04-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.c: (init_post), (gst_deinit):
+	* tests/check/gst/gstpipeline.c: (GST_START_TEST), (pipeline_thread),
+	  (test_concurrent_create), (gst_pipeline_suite):
+	  Ref some more classes in gst_init() to work around thread-safety
+	  issues in pre-2.16 GLibs, and add basic unit test.
+
 2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_query_latency),

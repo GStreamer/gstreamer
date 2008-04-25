@@ -18,8 +18,12 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/check/gstcheck.h>
+#include <gst/gst.h>
 
 #define WAIT_TIME (300 * GST_MSECOND)
 
@@ -487,6 +491,42 @@ GST_START_TEST (test_base_time)
 
 GST_END_TEST;
 
+static gpointer
+pipeline_thread (gpointer data)
+{
+  GstElement *pipeline, *src, *sink;
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  g_object_set (src, "num-buffers", 20, NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+  g_object_set (sink, "sync", TRUE, NULL);
+  pipeline = gst_pipeline_new (NULL);
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), sink);
+  gst_element_link (src, sink);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  g_usleep (G_USEC_PER_SEC / 10);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+  return NULL;
+}
+
+GST_START_TEST (test_concurrent_create)
+{
+  GThread *threads[30];
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (threads); ++i) {
+    threads[i] = g_thread_create (pipeline_thread, NULL, TRUE, NULL);
+  }
+  for (i = 0; i < G_N_ELEMENTS (threads); ++i) {
+    if (threads[i])
+      g_thread_join (threads[i]);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_pipeline_suite (void)
 {
@@ -502,6 +542,7 @@ gst_pipeline_suite (void)
   tcase_add_test (tc_chain, test_get_bus);
   tcase_add_test (tc_chain, test_bus);
   tcase_add_test (tc_chain, test_base_time);
+  tcase_add_test (tc_chain, test_concurrent_create);
 
   return s;
 }
