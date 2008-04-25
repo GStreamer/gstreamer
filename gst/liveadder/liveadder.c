@@ -1277,7 +1277,6 @@ static void
 reset_pad_private (gpointer data, gpointer user_data)
 {
   GstPad *pad = data;
-  //GstLiveAdder *adder = user_data;
   GstLiveAdderPadPrivate *padprivate;
 
   padprivate = gst_pad_get_element_private (pad);
@@ -1306,7 +1305,7 @@ gst_live_adder_change_state (GstElement * element, GstStateChange transition)
         adder->segment_pending = TRUE;
         adder->peer_latency = 0;
         adder->next_timestamp = GST_CLOCK_TIME_NONE;
-        g_list_foreach (adder->sinkpads, reset_pad_private, adder);
+        g_list_foreach (adder->sinkpads, reset_pad_private, NULL);
         GST_OBJECT_UNLOCK (adder);
         break;
       }
