@@ -912,19 +912,16 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
   max = -1;
   us_live = FALSE;
 
-  /* we are live */
-  if (l) {
-    if (have_latency) {
-      /* we are live and ready for a latency query */
-      query = gst_query_new_latency ();
+  if (have_latency) {
+    GST_DEBUG_OBJECT (sink, "we are ready for LATENCY query");
+    /* we are ready for a latency query this is when we preroll or when we are
+     * not async. */
+    query = gst_query_new_latency ();
 
-      /* ask the peer for the latency */
-      if (!(res = gst_base_sink_peer_query (sink, query)))
-        goto query_failed;
-
+    /* ask the peer for the latency */
+    if ((res = gst_base_sink_peer_query (sink, query))) {
       /* get upstream min and max latency */
       gst_query_parse_latency (query, &us_live, &us_min, &us_max);
-      gst_query_unref (query);
 
       if (us_live) {
         /* upstream live, use its latency, subclasses should use these
@@ -932,37 +929,38 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
         min = us_min;
         max = us_max;
       }
-    } else {
-      /* we are live but are not yet ready for a latency query */
-      res = FALSE;
     }
-  } else {
-    /* not live, result is always TRUE */
-    res = TRUE;
-  }
-
-  GST_DEBUG_OBJECT (sink, "latency query: live: %d, have_latency %d,"
-      " upstream: %d, min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT, l,
-      have_latency, us_live, GST_TIME_ARGS (min), GST_TIME_ARGS (max));
-
-  if (live)
-    *live = l;
-  if (upstream_live)
-    *upstream_live = us_live;
-  if (min_latency)
-    *min_latency = min;
-  if (max_latency)
-    *max_latency = max;
-
-  return res;
-
-  /* ERRORS */
-query_failed:
-  {
-    GST_DEBUG_OBJECT (sink, "latency query failed");
     gst_query_unref (query);
-    return FALSE;
+  } else {
+    GST_DEBUG_OBJECT (sink, "we are not yet ready for LATENCY query");
+    res = FALSE;
   }
+
+  /* not live, we tried to do the query, if it failed we return TRUE anyway */
+  if (!res) {
+    if (!l) {
+      res = TRUE;
+      GST_DEBUG_OBJECT (sink, "latency query failed but we are not live");
+    } else {
+      GST_DEBUG_OBJECT (sink, "latency query failed and we are live");
+    }
+  }
+
+  if (res) {
+    GST_DEBUG_OBJECT (sink, "latency query: live: %d, have_latency %d,"
+        " upstream: %d, min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT, l,
+        have_latency, us_live, GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+    if (live)
+      *live = l;
+    if (upstream_live)
+      *upstream_live = us_live;
+    if (min_latency)
+      *min_latency = min;
+    if (max_latency)
+      *max_latency = max;
+  }
+  return res;
 }
 
 static void
@@ -2932,13 +2930,20 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
 
       gst_event_parse_latency (event, &latency);
 
+      /* store the latency. We use this to adjust the running_time before syncing
+       * it to the clock. */
       GST_OBJECT_LOCK (element);
       basesink->priv->latency = latency;
       GST_OBJECT_UNLOCK (element);
       GST_DEBUG_OBJECT (basesink, "latency set to %" GST_TIME_FORMAT,
           GST_TIME_ARGS (latency));
 
-      /* don't forward, yet */
+      /* don't forward, yet. FIXME. The latency event should likely be forwarded
+       * to upstream element so that they can configure themselves. Each element
+       * would subtract the amount of LATENCY it can maximally compensate for. 
+       * It's currently not very useful; even if this sink cannot compensate for
+       * all the latency, upstream will block while this sink waits which will
+       * trigger implicit buffering and latency there. */
       forward = FALSE;
       break;
     }
