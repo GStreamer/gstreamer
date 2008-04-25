@@ -44,11 +44,11 @@ struct _GstRndBufferSize
 {
   GstElement parent;
 
+  /*< private > */
   GRand *rand;
   gulong seed;
   glong min, max;
 
-  /* < private > */
   GstPad *sinkpad, *srcpad;
   guint64 offset;
 };
@@ -65,14 +65,16 @@ enum
   ARG_MAXIMUM
 };
 
-GstStaticPadTemplate gst_rnd_buffer_size_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+#define DEFAULT_SEED 0
+#define DEFAULT_MIN  1
+#define DEFAULT_MAX  (8*1024)
+
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GstStaticPadTemplate gst_rnd_buffer_size_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
@@ -99,17 +101,15 @@ static void
 gst_rnd_buffer_size_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  const GstElementDetails details = GST_ELEMENT_DETAILS ("Random buffer size",
-      "Testing",
-      "pull random sized buffers",
-      "Nokia Corporation (contact <stefan.kost@nokia.com>)");
 
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rnd_buffer_size_sink_template));
+      gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rnd_buffer_size_src_template));
+      gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (gstelement_class, &details);
+  gst_element_class_set_details_simple (gstelement_class, "Random buffer size",
+      "Testing", "pull random sized buffers",
+      "Stefan Kost <stefan.kost@nokia.com>)");
 }
 
 
@@ -128,38 +128,34 @@ gst_rnd_buffer_size_class_init (GstRndBufferSizeClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_change_state);
 
+  /* FIXME 0.11: these should all be int instead of long, to avoid bugs
+   * when passing these as varargs with g_object_set(), and there was no
+   * reason to use long in the first place here */
   g_object_class_install_property (gobject_class, ARG_SEED,
       g_param_spec_ulong ("seed", "random number seed",
           "seed for randomness (initialized when going from READY to PAUSED)",
-          0, G_MAXULONG, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXUINT32, DEFAULT_SEED, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, ARG_MINIMUM,
       g_param_spec_long ("min", "mininum", "mininum buffer size",
-          0, G_MAXLONG, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXINT32, DEFAULT_MIN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, ARG_MAXIMUM,
       g_param_spec_long ("max", "maximum", "maximum buffer size",
-          0, G_MAXLONG, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
+          1, G_MAXINT32, DEFAULT_MAX, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
-
 
 static void
 gst_rnd_buffer_size_init (GstRndBufferSize * self,
     GstRndBufferSizeClass * g_class)
 {
-  self->sinkpad =
-      gst_pad_new_from_static_template (&gst_rnd_buffer_size_sink_template,
-      "sink");
-  gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
+  self->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_activate_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_activate));
   gst_pad_set_activatepull_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_activate_pull));
+  gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
-  self->srcpad =
-      gst_pad_new_from_static_template (&gst_rnd_buffer_size_src_template,
-      "src");
+  self->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
-
 }
 
 
@@ -229,8 +225,7 @@ gst_rnd_buffer_size_activate (GstPad * pad)
   if (gst_pad_check_pull_range (pad)) {
     return gst_pad_activate_pull (pad, TRUE);
   } else {
-    GST_INFO_OBJECT (GST_RND_BUFFER_SIZE (GST_OBJECT_PARENT (pad)),
-        "push mode not supported");
+    GST_INFO_OBJECT (pad, "push mode not supported");
     return FALSE;
   }
 }
@@ -257,28 +252,76 @@ gst_rnd_buffer_size_loop (GstRndBufferSize * self)
 {
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
-  gulong num_bytes = g_rand_int_range (self->rand, self->min, self->max);
+  guint num_bytes;
 
-  GST_INFO_OBJECT (self, "pull_range from %" G_GUINT64_FORMAT " of %lu bytes",
-      self->offset, num_bytes);
-  ret = gst_pad_pull_range (self->sinkpad, self->offset, num_bytes, &buf);
-  if (ret == GST_FLOW_OK) {
-    if (GST_BUFFER_SIZE (buf) < num_bytes) {
-      self->offset += GST_BUFFER_SIZE (buf);
-      GST_WARNING_OBJECT (self, "short buffer : %u < %lu",
-          GST_BUFFER_SIZE (buf), num_bytes);
-    } else {
-      self->offset += num_bytes;
-    }
+  if (G_UNLIKELY (self->min > self->max))
+    goto bogus_minmax;
 
-    gst_pad_push (self->srcpad, buf);
+  if (G_UNLIKELY (self->min != self->max)) {
+    num_bytes = g_rand_int_range (self->rand, self->min, self->max);
   } else {
-    GST_WARNING_OBJECT (self, "pull_range read failed: %s",
-        gst_flow_get_name (ret));
+    num_bytes = self->min;
+  }
+
+  GST_LOG_OBJECT (self, "pulling %u bytes at offset %" G_GUINT64_FORMAT,
+      num_bytes, self->offset);
+
+  ret = gst_pad_pull_range (self->sinkpad, self->offset, num_bytes, &buf);
+
+  if (ret != GST_FLOW_OK)
+    goto pull_failed;
+
+  if (GST_BUFFER_SIZE (buf) < num_bytes) {
+    GST_WARNING_OBJECT (self, "short buffer: %u bytes", GST_BUFFER_SIZE (buf));
+  }
+
+  self->offset += GST_BUFFER_SIZE (buf);
+
+  ret = gst_pad_push (self->srcpad, buf);
+
+  if (ret != GST_FLOW_OK)
+    goto push_failed;
+
+  return;
+
+pause_task:
+  {
+    GST_DEBUG_OBJECT (self, "pausing task");
     gst_pad_pause_task (self->sinkpad);
+    return;
+  }
+
+pull_failed:
+  {
     if (ret == GST_FLOW_UNEXPECTED) {
+      GST_DEBUG_OBJECT (self, "eos");
       gst_pad_push_event (self->srcpad, gst_event_new_eos ());
+    } else {
+      GST_WARNING_OBJECT (self, "pull_range flow: %s", gst_flow_get_name (ret));
     }
+    goto pause_task;
+  }
+
+push_failed:
+  {
+    GST_DEBUG_OBJECT (self, "push flow: %s", gst_flow_get_name (ret));
+    if (ret == GST_FLOW_UNEXPECTED) {
+      GST_DEBUG_OBJECT (self, "eos");
+      gst_pad_push_event (self->srcpad, gst_event_new_eos ());
+    } else if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+      GST_ELEMENT_ERROR (self, STREAM, FAILED,
+          ("Internal data stream error."),
+          ("streaming stopped, reason: %s", gst_flow_get_name (ret)));
+    }
+    goto pause_task;
+  }
+
+bogus_minmax:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS,
+        ("The minimum buffer size is smaller than the maximum buffer size."),
+        ("buffer sizes: max=%d, min=%d", self->min, self->max));
+    goto pause_task;
   }
 }
 
@@ -333,7 +376,7 @@ gst_rnd_buffer_size_plugin_init (GstPlugin * plugin)
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (gst_rnd_buffer_size_debug, "rndbuffersize", 0,
-      "debugging category for rndbuffersize element");
+      "rndbuffersize element");
 
   return TRUE;
 }

@@ -1,5 +1,19 @@
 2008-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/debug/rndbuffersize.c: (DEFAULT_SEED), (DEFAULT_MIN),
+	  (DEFAULT_MAX), (src_template), (sink_template),
+	  (gst_rnd_buffer_size_base_init), (gst_rnd_buffer_size_class_init),
+	  (gst_rnd_buffer_size_init), (gst_rnd_buffer_size_activate),
+	  (gst_rnd_buffer_size_loop), (gst_rnd_buffer_size_plugin_init):
+	  Bring rndbuffersize element into a state that doesn't require us
+	  to move it to -bad immediately. For one, fix up default min/max
+	  values so that the element actuall works using the default values.
+	  Also, don't ignore flow return values and do some kind of minimal
+	  eos logic. Allow min=max to pull fixed-sized buffers. Bunch of
+	  other gratuitious clean-ups.
+
+2008-04-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
