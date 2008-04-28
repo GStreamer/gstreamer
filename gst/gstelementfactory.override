@@ -33,7 +33,11 @@ _wrap_gst_element_factory_make(PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|z:element_factory_make", kwlist, &factoryname, &name))
         return NULL;
+
+    pyg_begin_allow_threads;
     ret = gst_element_factory_make(factoryname, name);
+    pyg_end_allow_threads;
+
     if (ret == NULL) {
         PyErr_SetString(PyGstExc_ElementNotFoundError, factoryname);
         return NULL;
@@ -52,7 +56,9 @@ _wrap_gst_element_factory_get_static_pad_templates(PyGObject *self)
   PyObject *py_list;
   int i = 0;
 
+  pyg_begin_allow_threads;
   list = gst_element_factory_get_static_pad_templates (GST_ELEMENT_FACTORY (self->obj));
+  pyg_end_allow_threads;
 
   py_list = PyList_New(g_list_length ((GList*) list));
 

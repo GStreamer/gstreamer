@@ -1,3 +1,10 @@
+2008-04-28  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	Patch by: Alessandro Decina <alessandro at nnva dot org>
+	* gst/gstelementfactory.override:
+	Release GIL in gst_element_factory_overrides.
+	Fixes #529731
+
 2008-04-24  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* examples/play.py:
