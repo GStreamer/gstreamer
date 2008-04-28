@@ -798,13 +798,8 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
     goto out;
   }
 
-  if (!GST_BUFFER_TIMESTAMP_IS_VALID(buffer)) {
-    GST_ELEMENT_ERROR (adder, STREAM, FAILED,
-        ("Buffer without a valid timestamp received"), (""));
-    ret = GST_FLOW_ERROR;
-    gst_buffer_unref (buffer);
-    goto out;
-  }
+  if (!GST_BUFFER_TIMESTAMP_IS_VALID(buffer))
+    goto invalid_timestamp;
 
   /* Just see if we receive invalid timestamp/durations */
   if (GST_CLOCK_TIME_IS_VALID (padprivate->expected_timestamp) &&
@@ -972,6 +967,16 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
   gst_object_unref (adder);
 
   return ret;
+
+ invalid_timestamp:
+
+  GST_OBJECT_UNLOCK (adder);
+  gst_buffer_unref (buffer);
+  GST_ELEMENT_ERROR (adder, STREAM, FAILED,
+      ("Buffer without a valid timestamp received"),
+      ("Invalid timestamp received on buffer"));
+
+  return GST_FLOW_ERROR;
 }
 
 /*
