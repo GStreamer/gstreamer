@@ -1142,6 +1142,140 @@ _wrap_gst_type_find_new (PyObject *self, PyObject *args, PyObject *kwargs)
 
     return pytypefind;
 }
+
+%%
+override gst_type_find_register args
+
+static void
+type_find_function (GstTypeFind *find, gpointer user_data)
+{
+    PyGILState_STATE state;
+    PyObject *data;
+    PyObject *callback, *args, *old_args;
+    PyObject *typefind;
+
+    state = pyg_gil_state_ensure ();
+
+    typefind = pyg_pointer_new(GST_TYPE_TYPE_FIND, find);
+
+    data = (PyObject *) user_data;
+    callback = PyTuple_GET_ITEM(data, 0);
+    args = Py_BuildValue("(O)", typefind);
+    if (PyTuple_GET_SIZE(data) > 1) {
+      old_args = args;
+      args = PySequence_Concat(args, PyTuple_GET_ITEM(data, 1));
+      Py_DECREF(old_args);
+    }
+
+    PyObject_CallObject(callback, args); 
+    
+    Py_DECREF(args);
+    Py_DECREF(typefind);
+
+    pyg_gil_state_release (state);
+    
+    return;
+}
+
+static void
+type_find_function_data_destroy_notify(gpointer data)
+{
+  Py_DECREF((PyObject *) data);
+}
+
+static PyObject *
+_wrap_gst_type_find_register (PyObject *self, PyObject *args)
+{
+    guint rank;
+    PyObject *required_args;
+    PyObject *function;
+    PyObject *function_args = NULL;
+    PyObject *py_extensions = NULL, *ext;
+    PyObject *py_possible_caps = NULL;
+    PyObject *py_res = NULL;
+    gchar *name;
+    gpointer *data = NULL;
+    GStrv extensions = NULL;
+    guint i, n_extensions;
+    GstCaps *possible_caps = NULL;
+    gboolean res = FALSE;
+    
+    if (PyTuple_GET_SIZE(args) > 5) {
+      required_args = PyTuple_GetSlice(args, 0, 5);
+      function_args = PyTuple_GetSlice(args, 5, PyTuple_GET_SIZE(args));
+    } else {
+      required_args = args;
+    }
+
+    if (!PyArg_ParseTuple(required_args, "siO|OO:type_find_register",
+             &name, &rank, &function, &py_extensions, &py_possible_caps)) {
+      goto out;
+    }
+
+    if (!PyCallable_Check(function)) {
+      PyErr_SetString (PyExc_TypeError, "function is not a callable");
+      goto out;
+    }
+
+    if (py_extensions) {
+      n_extensions = PySequence_Size(py_extensions);
+      if (n_extensions == -1) {
+        goto out;
+      }
+
+      if (n_extensions > 0) {
+        extensions = (char **) g_malloc(sizeof(char *) * n_extensions + 1);
+        for(i = 0; i < n_extensions; ++i) {
+          ext = PySequence_GetItem(py_extensions, i);
+          
+          if (!PyString_Check(ext)) {
+            PyErr_SetString(PyExc_TypeError, "extension is not a string");
+            goto out;
+          }
+
+          extensions[i] = g_strdup(PyString_AS_STRING(ext));
+        }
+
+        extensions[n_extensions] = NULL;
+      }
+    }
+    
+    if (py_possible_caps)
+      possible_caps = pygst_caps_from_pyobject(py_possible_caps, NULL);
+
+    if (function_args)
+      data = (gpointer) Py_BuildValue("(OO)", function, function_args);
+    else
+      data = (gpointer) Py_BuildValue("(O)", function);
+
+    pyg_begin_allow_threads;
+    res = gst_type_find_register(NULL, name, rank,
+        type_find_function, extensions, possible_caps,
+        data, type_find_function_data_destroy_notify);
+    pyg_end_allow_threads;
+
+    py_res = PyBool_FromLong(res);
+
+out:
+    if (required_args != args) {
+      Py_DECREF(required_args);
+    }
+
+    Py_XDECREF(function_args);
+
+    if (extensions)
+      g_strfreev(extensions);
+
+    if (possible_caps)
+      gst_caps_unref(possible_caps);
+
+    if (res == FALSE && data) {
+      Py_DECREF((PyObject *) data);
+    }
+
+    return py_res;
+}
+
 %%
 override gst_segment_set_seek kwargs
 static PyObject *

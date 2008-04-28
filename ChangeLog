@@ -1,6 +1,13 @@
 2008-04-28  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	Patch by: Alessandro Decina <alessandro at nnva dot org>
+	* gst/gst.override:
+	Add wrapping of gst_type_find_register.
+	Fixes #529728
+
+2008-04-28  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	Patch by: Alessandro Decina <alessandro at nnva dot org>
 	* gst/gstelementfactory.override:
 	Release GIL in gst_element_factory_overrides.
 	Fixes #529731
