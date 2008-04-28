@@ -1028,9 +1028,10 @@ gst_live_adder_loop (gpointer data)
   buffer_timestamp = GST_BUFFER_TIMESTAMP (g_queue_peek_head (adder->buffers));
 
   clock = GST_ELEMENT_CLOCK (adder);
-  if (!clock)
-    /* let's just push if there is no clock */
-    goto push_buffer;
+
+  if (!clock) {
+    goto no_clock;
+  }
 
   GST_DEBUG_OBJECT (adder, "sync to timestamp %" GST_TIME_FORMAT,
       GST_TIME_ARGS (buffer_timestamp));
@@ -1067,8 +1068,6 @@ gst_live_adder_loop (gpointer data)
 
   if (ret != GST_CLOCK_OK && ret != GST_CLOCK_EARLY)
     goto clock_error;
-
- push_buffer:
 
   buffer = g_queue_pop_head (adder->buffers);
 
@@ -1144,6 +1143,16 @@ gst_live_adder_loop (gpointer data)
    GST_ELEMENT_ERROR (adder, STREAM, MUX, ("Error with the clock"),
        ("Error with the clock: %d", ret));
    GST_ERROR_OBJECT (adder, "Error with the clock: %d", ret);
+   return;
+ }
+
+ no_clock:
+ {
+   gst_pad_pause_task (adder->srcpad);
+   GST_OBJECT_UNLOCK (adder);
+   GST_ELEMENT_ERROR (adder, STREAM, MUX, ("No available clock"),
+       ("No available clock"));
+   GST_ERROR_OBJECT (adder, "No available clock");
    return;
  }
 
