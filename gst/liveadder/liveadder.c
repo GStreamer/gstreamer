@@ -645,13 +645,17 @@ gst_live_adder_query (GstPad * pad, GstQuery * query)
       gst_iterator_free (iter);
 
       if (res) {
-
+        GstClockTime my_latency = adder->latency_ms * GST_MSECOND;
         GST_OBJECT_LOCK (adder);
         adder->peer_latency = min_latency;
-        min_latency += adder->latency_ms * GST_MSECOND;
+        min_latency += my_latency;
         GST_OBJECT_UNLOCK (adder);
 
-        max_latency = MAX (max_latency, min_latency);
+        /* Make sure we don't risk an overflow */
+        if (max_latency < G_MAXUINT64 - my_latency)
+          max_latency += my_latency;
+        else
+          max_latency = G_MAXUINT64
         gst_query_set_latency (query, TRUE, min_latency, max_latency);
         GST_DEBUG_OBJECT (adder, "Calculated total latency : min %"
             GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
