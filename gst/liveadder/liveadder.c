@@ -1075,6 +1075,11 @@ gst_live_adder_loop (gpointer data)
   if (!buffer)
     goto again;
 
+  /*
+   * We make sure the timestamps are exactly contiguous
+   * If its only small skew (due to rounding errors), we correct it
+   * silently. Otherwise we put the discont flag
+   */
   if (GST_CLOCK_TIME_IS_VALID (adder->next_timestamp) &&
       GST_BUFFER_TIMESTAMP (buffer) != adder->next_timestamp) {
     if (llabs (GST_BUFFER_TIMESTAMP (buffer) - adder->next_timestamp) <
