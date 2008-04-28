@@ -682,6 +682,10 @@ forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
     GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
         event, GST_EVENT_TYPE_NAME (event));
   }
+
+  /* unref the pad because of a FIXME in gst_iterator_unfold
+   * it does a gst_iterator_next which refs the pad, but it never unrefs it
+   */
   gst_object_unref (pad);
   return TRUE;
 }
