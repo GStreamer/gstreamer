@@ -727,15 +727,15 @@ gst_live_adder_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:
-      /* QoS might be tricky */
+      /* TODO : QoS might be tricky */
       result = FALSE;
       break;
     case GST_EVENT_SEEK:
-      /* I'm not certain how to handle seeks yet */
+      /* TODO : I'm not certain how to handle seeks yet */
       result = FALSE;
       break;
     case GST_EVENT_NAVIGATION:
-      /* navigation is rather pointless. */
+      /* TODO : navigation is rather pointless. */
       result = FALSE;
       break;
     default:
