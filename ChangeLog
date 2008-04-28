@@ -1,3 +1,9 @@
+2008-04-28  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/debug/gstnavigationtest.c:
+	  MSVC doesn't provide rint(), define an adequate replacement locally as
+	  elsewhere.
+
 2008-04-28  Julien Moutte  <julien@fluendo.com>
 
 	* gst/debug/rndbuffersize.c: (gst_rnd_buffer_size_loop): Fix printf

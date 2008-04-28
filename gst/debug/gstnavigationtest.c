@@ -28,6 +28,10 @@
 
 #include <gst/video/video.h>
 
+#ifdef _MSC_VER
+#define rint(x) (floor((x)+0.5))
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (navigationtest_debug);
 #define GST_CAT_DEFAULT navigationtest_debug
 
