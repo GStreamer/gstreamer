@@ -1,3 +1,9 @@
+2008-04-28  Michael Smith <msmith@songbirdnest.com>
+
+	* libs/gst/check/Makefile.am:
+	  Don't add an explicit link to libgstreamer-0.10.la; it's already
+	  included in GST_OBJ_LIBS.
+
 2008-04-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gst.c:
