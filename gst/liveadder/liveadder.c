@@ -710,7 +710,6 @@ forward_event (GstLiveAdder * adder, GstEvent * event)
   gst_iterator_fold (it, (GstIteratorFoldFunction) forward_event_func, &vret,
       event);
   gst_iterator_free (it);
-  gst_event_unref (event);
 
   ret = g_value_get_boolean (&vret);
 
@@ -743,8 +742,9 @@ gst_live_adder_src_event (GstPad * pad, GstEvent * event)
       /* just forward the rest for now */
       result = forward_event (adder, event);
       break;
-
   }
+
+  gst_event_unref (event);
   gst_object_unref (adder);
 
   return result;
