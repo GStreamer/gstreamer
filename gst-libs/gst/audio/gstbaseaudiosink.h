@@ -85,7 +85,8 @@ G_BEGIN_DECLS
  * drifts too much.
  * @GST_BASE_AUDIO_SINK_SLAVE_NONE: No adjustment is done. 
  *
- * Different possible clock slaving algorithms
+ * Different possible clock slaving algorithms used when the internal audio
+ * clock is not selected as the pipeline master clock.
  */
 typedef enum 
 {

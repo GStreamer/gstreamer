@@ -45,12 +45,36 @@
 GST_DEBUG_CATEGORY_STATIC (gst_base_audio_src_debug);
 #define GST_CAT_DEFAULT gst_base_audio_src_debug
 
+#define GST_TYPE_SLAVE_METHOD (slave_method_get_type ())
+
+static GType
+slave_method_get_type (void)
+{
+  static GType slave_method_type = 0;
+  static const GEnumValue slave_method[] = {
+    {GST_BASE_AUDIO_SRC_SLAVE_RESAMPLE, "Resampling slaving", "resample"},
+    {GST_BASE_AUDIO_SRC_SLAVE_RETIMESTAMP, "Re-timestamp", "re-timestamp"},
+    {GST_BASE_AUDIO_SRC_SLAVE_SKEW, "Skew", "skew"},
+    {GST_BASE_AUDIO_SRC_SLAVE_NONE, "No slaving", "none"},
+    {0, NULL, NULL},
+  };
+
+  if (!slave_method_type) {
+    slave_method_type =
+        g_enum_register_static ("GstBaseAudioSrcSlaveMethod", slave_method);
+  }
+  return slave_method_type;
+}
+
 #define GST_BASE_AUDIO_SRC_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BASE_AUDIO_SRC, GstBaseAudioSrcPrivate))
 
 struct _GstBaseAudioSrcPrivate
 {
   gboolean provide_clock;
+
+  /* the clock slaving algorithm in use */
+  GstBaseAudioSrcSlaveMethod slave_method;
 };
 
 /* BaseAudioSrc signals and args */
@@ -63,13 +87,16 @@ enum
 #define DEFAULT_BUFFER_TIME     ((200 * GST_MSECOND) / GST_USECOND)
 #define DEFAULT_LATENCY_TIME    ((10 * GST_MSECOND) / GST_USECOND)
 #define DEFAULT_PROVIDE_CLOCK   TRUE
+#define DEFAULT_SLAVE_METHOD    GST_BASE_AUDIO_SRC_SLAVE_RETIMESTAMP
 
 enum
 {
   PROP_0,
   PROP_BUFFER_TIME,
   PROP_LATENCY_TIME,
-  PROP_PROVIDE_CLOCK
+  PROP_PROVIDE_CLOCK,
+  PROP_SLAVE_METHOD,
+  PROP_LAST
 };
 
 static void
@@ -157,6 +184,12 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
           "Provide a clock to be used as the global pipeline clock",
           DEFAULT_PROVIDE_CLOCK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_SLAVE_METHOD,
+      g_param_spec_enum ("slave-method", "Slave Method",
+          "Algorithm to use to match the rate of the masterclock",
+          GST_TYPE_SLAVE_METHOD, DEFAULT_SLAVE_METHOD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_change_state);
   gstelement_class->provide_clock =
@@ -187,6 +220,7 @@ gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
   baseaudiosrc->buffer_time = DEFAULT_BUFFER_TIME;
   baseaudiosrc->latency_time = DEFAULT_LATENCY_TIME;
   baseaudiosrc->priv->provide_clock = DEFAULT_PROVIDE_CLOCK;
+  baseaudiosrc->priv->slave_method = DEFAULT_SLAVE_METHOD;
   /* reset blocksize we use latency time to calculate a more useful 
    * value based on negotiated format. */
   GST_BASE_SRC (baseaudiosrc)->blocksize = 0;
@@ -341,6 +375,50 @@ gst_base_audio_src_get_provide_clock (GstBaseAudioSrc * src)
   return result;
 }
 
+/**
+ * gst_base_audio_src_set_slave_method:
+ * @src: a #GstBaseAudioSrc
+ * @method: the new slave method
+ *
+ * Controls how clock slaving will be performed in @src. 
+ *
+ * Since: 0.10.20
+ */
+void
+gst_base_audio_src_set_slave_method (GstBaseAudioSrc * src,
+    GstBaseAudioSrcSlaveMethod method)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_SRC (src));
+
+  GST_OBJECT_LOCK (src);
+  src->priv->slave_method = method;
+  GST_OBJECT_UNLOCK (src);
+}
+
+/**
+ * gst_base_audio_src_get_slave_method:
+ * @src: a #GstBaseAudioSrc
+ *
+ * Get the current slave method used by @src.
+ *
+ * Returns: The current slave method used by @src.
+ *
+ * Since: 0.10.20
+ */
+GstBaseAudioSrcSlaveMethod
+gst_base_audio_src_get_slave_method (GstBaseAudioSrc * src)
+{
+  GstBaseAudioSrcSlaveMethod result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_SRC (src), -1);
+
+  GST_OBJECT_LOCK (src);
+  result = src->priv->slave_method;
+  GST_OBJECT_UNLOCK (src);
+
+  return result;
+}
+
 static void
 gst_base_audio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -358,6 +436,9 @@ gst_base_audio_src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PROVIDE_CLOCK:
       gst_base_audio_src_set_provide_clock (src, g_value_get_boolean (value));
+      break;
+    case PROP_SLAVE_METHOD:
+      gst_base_audio_src_set_slave_method (src, g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -382,6 +463,9 @@ gst_base_audio_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PROVIDE_CLOCK:
       g_value_set_boolean (value, gst_base_audio_src_get_provide_clock (src));
+      break;
+    case PROP_SLAVE_METHOD:
+      g_value_set_enum (value, gst_base_audio_src_get_slave_method (src));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -682,25 +766,40 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   GST_OBJECT_LOCK (src);
   clock = GST_ELEMENT_CLOCK (src);
   if (clock != NULL && clock != src->clock) {
-    GstClockTime base_time, latency;
+    switch (src->priv->slave_method) {
+      case GST_BASE_AUDIO_SRC_SLAVE_RESAMPLE:
+        /* not implemented, use retimestamp algorithm. This algorithm should
+         * work on the readout pointer and produces more or less samples based
+         * on the clock drift */
+      case GST_BASE_AUDIO_SRC_SLAVE_SKEW:
+        /* not implemented, use retimestamp algorithm. This algortihm should work
+         * on the readout pointer above and creates small jumps when needed. */
+      case GST_BASE_AUDIO_SRC_SLAVE_RETIMESTAMP:
+      {
+        GstClockTime base_time, latency;
 
-    /* We are slaved to another clock, take running time of the clock and just
-     * timestamp against it. Somebody else in the pipeline should figure out the
-     * clock drift, for now. We keep the duration we calculated above. */
-    timestamp = gst_clock_get_time (clock);
-    base_time = GST_ELEMENT_CAST (src)->base_time;
+        /* We are slaved to another clock, take running time of the pipeline clock and
+         * timestamp against it. Somebody else in the pipeline should figure out the
+         * clock drift. We keep the duration we calculated above. */
+        timestamp = gst_clock_get_time (clock);
+        base_time = GST_ELEMENT_CAST (src)->base_time;
 
-    if (timestamp > base_time)
-      timestamp -= base_time;
-    else
-      timestamp = 0;
+        if (timestamp > base_time)
+          timestamp -= base_time;
+        else
+          timestamp = 0;
 
-    /* subtract latency */
-    latency = gst_util_uint64_scale_int (total_samples, GST_SECOND, spec->rate);
-    if (timestamp > latency)
-      timestamp -= latency;
-    else
-      timestamp = 0;
+        /* subtract latency */
+        latency =
+            gst_util_uint64_scale_int (total_samples, GST_SECOND, spec->rate);
+        if (timestamp > latency)
+          timestamp -= latency;
+        else
+          timestamp = 0;
+      }
+      case GST_BASE_AUDIO_SRC_SLAVE_NONE:
+        break;
+    }
   }
   GST_OBJECT_UNLOCK (src);
 

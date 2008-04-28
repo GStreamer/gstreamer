@@ -1,3 +1,21 @@
+2008-04-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	Clarify some docs.
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c: (slave_method_get_type),
+	(gst_base_audio_src_class_init), (gst_base_audio_src_init),
+	(gst_base_audio_src_set_slave_method),
+	(gst_base_audio_src_get_slave_method),
+	(gst_base_audio_src_set_property),
+	(gst_base_audio_src_get_property), (gst_base_audio_src_create):
+	* gst-libs/gst/audio/gstbaseaudiosrc.h:
+	Add property and methods for selecting the clock slave method in the
+	source, like in the sink.
+	We only implement "none" and "re-timestamp" for now.
+	API: gst_base_audio_src_set_slave_method()
+	API: gst_base_audio_src_get_slave_method()
+
 2008-04-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/rtp/gstrtpbuffer.c:

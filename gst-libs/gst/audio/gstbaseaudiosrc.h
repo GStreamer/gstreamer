@@ -60,6 +60,26 @@ typedef struct _GstBaseAudioSrcClass GstBaseAudioSrcClass;
 typedef struct _GstBaseAudioSrcPrivate GstBaseAudioSrcPrivate;
 
 /**
+ * GstBaseAudioSrcSlaveMethod:
+ * @GST_BASE_AUDIO_SRC_SLAVE_RESAMPLE: Resample to match the master clock. 
+ * @GST_BASE_AUDIO_SRC_SLAVE_RETIMESTAMP: Retimestamp output buffers with master
+ * clock time.
+ * @GST_BASE_AUDIO_SRC_SLAVE_SKEW: Adjust capture pointer when master clock
+ * drifts too much.
+ * @GST_BASE_AUDIO_SRC_SLAVE_NONE: No adjustment is done. 
+ *
+ * Different possible clock slaving algorithms when the internal audio clock was
+ * not selected as the pipeline clock.
+ */
+typedef enum
+{
+  GST_BASE_AUDIO_SRC_SLAVE_RESAMPLE,
+  GST_BASE_AUDIO_SRC_SLAVE_RETIMESTAMP,
+  GST_BASE_AUDIO_SRC_SLAVE_SKEW,
+  GST_BASE_AUDIO_SRC_SLAVE_NONE
+} GstBaseAudioSrcSlaveMethod;
+
+/**
  * GstBaseAudioSrc:
  *
  * Opaque #GstBaseAudioSrc.
@@ -111,6 +131,12 @@ GstRingBuffer *gst_base_audio_src_create_ringbuffer (GstBaseAudioSrc *src);
 
 void       gst_base_audio_src_set_provide_clock        (GstBaseAudioSrc *src, gboolean provide);
 gboolean   gst_base_audio_src_get_provide_clock        (GstBaseAudioSrc *src);
+
+void       gst_base_audio_src_set_slave_method         (GstBaseAudioSrc *src,
+                                                        GstBaseAudioSrcSlaveMethod method);
+GstBaseAudioSrcSlaveMethod
+           gst_base_audio_src_get_slave_method         (GstBaseAudioSrc *src);
+
 
 G_END_DECLS
 
