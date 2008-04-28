@@ -359,7 +359,6 @@ gst_live_adder_setcaps (GstPad * pad, GstCaps * caps)
 
     pads = g_list_next (pads);
   }
-  GST_OBJECT_UNLOCK (adder);
 
   /* parse caps now */
   structure = gst_caps_get_structure (caps, 0);
@@ -415,11 +414,13 @@ gst_live_adder_setcaps (GstPad * pad, GstCaps * caps)
   /* precalc bps */
   adder->bps = (adder->width / 8) * adder->channels;
 
+  GST_OBJECT_UNLOCK (adder);
   return TRUE;
 
   /* ERRORS */
 not_supported:
   {
+    GST_OBJECT_UNLOCK (adder);
     GST_DEBUG_OBJECT (adder, "unsupported format set as caps");
     return FALSE;
   }
