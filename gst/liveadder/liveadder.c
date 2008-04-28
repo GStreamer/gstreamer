@@ -1029,6 +1029,7 @@ gst_live_adder_loop (gpointer data)
 
   clock = GST_ELEMENT_CLOCK (adder);
 
+  /* If we have no clock, then we can't do anything.. error */
   if (!clock) {
     goto no_clock;
   }
