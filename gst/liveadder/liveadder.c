@@ -550,7 +550,7 @@ gst_live_adder_sink_event (GstPad * pad, GstEvent * event)
       if (ret && !padprivate->eos) {
         GST_DEBUG_OBJECT (adder, "queuing EOS");
         padprivate->eos = TRUE;
-        g_cond_signal (adder->not_empty_cond);
+        g_cond_broadcast (adder->not_empty_cond);
       } else if (padprivate->eos) {
         GST_DEBUG_OBJECT (adder, "dropping EOS, we are already EOS");
       } else {
@@ -943,7 +943,7 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
     skip += mix_duration;
   }
 
-  g_cond_signal (adder->not_empty_cond);
+  g_cond_broadcast (adder->not_empty_cond);
 
   if (skip == GST_BUFFER_DURATION (buffer)) {
     gst_buffer_unref (buffer);
