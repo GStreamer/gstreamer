@@ -320,7 +320,7 @@ bogus_minmax:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS,
         ("The minimum buffer size is smaller than the maximum buffer size."),
-        ("buffer sizes: max=%d, min=%d", self->min, self->max));
+        ("buffer sizes: max=%ld, min=%ld", self->min, self->max));
     goto pause_task;
   }
 }

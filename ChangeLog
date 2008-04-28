@@ -1,3 +1,8 @@
+2008-04-28  Julien Moutte  <julien@fluendo.com>
+
+	* gst/debug/rndbuffersize.c: (gst_rnd_buffer_size_loop): Fix printf
+	format to pacify Mac OSX's gcc.
+
 2008-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/debug/rndbuffersize.c: (DEFAULT_SEED), (DEFAULT_MIN),
