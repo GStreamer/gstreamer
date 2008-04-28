@@ -991,10 +991,7 @@ check_eos_locked (GstLiveAdder *adder)
       return FALSE;
   }
 
-  if (item)
-    return TRUE;
-  else
-    return FALSE;
+  return TRUE;
 }
 
 static void
