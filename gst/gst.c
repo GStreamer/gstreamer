@@ -985,6 +985,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_bin_get_type ());
   g_type_class_ref (gst_bus_get_type ());
   g_type_class_ref (gst_task_get_type ());
+  g_type_class_ref (gst_clock_get_type ());
 
 #ifndef GST_DISABLE_INDEX
   g_type_class_ref (gst_index_factory_get_type ());
