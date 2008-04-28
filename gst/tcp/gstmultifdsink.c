@@ -117,7 +117,11 @@
 #include <gst/gst-i18n-plugin.h>
 
 #include <sys/ioctl.h>
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
