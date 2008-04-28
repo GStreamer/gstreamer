@@ -237,7 +237,7 @@ gst_live_adder_finalize (GObject * object)
   g_cond_free (adder->not_empty_cond);
 
   g_queue_foreach (adder->buffers, (GFunc) gst_mini_object_unref, NULL);
-  g_queue_clear (adder->buffers);
+  while (g_queue_pop_head (adder->buffers)) {}
   g_queue_free (adder->buffers);
 
   g_list_free (adder->sinkpads);
