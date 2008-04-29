@@ -1,3 +1,11 @@
+2008-04-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Jens Granseuer <jensgr at gmx dot net>
+
+	* gst/subenc/gstsrtenc.c: (gst_srt_enc_timestamp_to_string):
+	Declare variables at the beginning of blocks. Fixes compilation with
+	gcc 2.x and other compilers. Fixes bug #530611.
+
 2008-04-29  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/mpegtspacketizer.c:

@@ -63,16 +63,18 @@ GST_BOILERPLATE (GstSrtEnc, gst_srt_enc, GstElement, GST_TYPE_ELEMENT);
 static gchar *
 gst_srt_enc_timestamp_to_string (GstClockTime timestamp)
 {
-  guint h = timestamp / (3600 * GST_SECOND);
+  guint h, m, s, ms;
+
+  h = timestamp / (3600 * GST_SECOND);
 
   timestamp -= h * 3600 * GST_SECOND;
-  guint m = timestamp / (60 * GST_SECOND);
+  m = timestamp / (60 * GST_SECOND);
 
   timestamp -= m * 60 * GST_SECOND;
-  guint s = timestamp / GST_SECOND;
+  s = timestamp / GST_SECOND;
 
   timestamp -= s * GST_SECOND;
-  guint ms = timestamp / GST_MSECOND;
+  ms = timestamp / GST_MSECOND;
 
   return g_strdup_printf ("%.2d:%.2d:%.2d,%.3d", h, m, s, ms);
 }
