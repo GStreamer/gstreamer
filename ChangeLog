@@ -1,3 +1,10 @@
+2008-04-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/speex/gstspeexdec.c: (speex_dec_chain_parse_data),
+	(speex_dec_chain):
+	Try to preserve input timestamps when we can.
+	Do beginnings of error concealment.
+
 2008-04-28  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/debug/gstnavigationtest.c:
