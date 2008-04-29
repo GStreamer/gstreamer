@@ -924,11 +924,7 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
     old_skip = GST_BUFFER_TIMESTAMP (buffer) + skip -
         GST_BUFFER_TIMESTAMP (oldbuffer);
 
-    if (GST_BUFFER_TIMESTAMP (buffer) + skip >
-        GST_BUFFER_TIMESTAMP (oldbuffer) + old_skip)
-      mix_start = GST_BUFFER_TIMESTAMP (buffer) + skip;
-    else
-      mix_start = GST_BUFFER_TIMESTAMP (oldbuffer) + old_skip;
+    mix_start = GST_BUFFER_TIMESTAMP (oldbuffer) + old_skip;
 
     if (GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer) <
         GST_BUFFER_TIMESTAMP (oldbuffer) + GST_BUFFER_DURATION (oldbuffer))
