@@ -656,7 +656,7 @@ gst_live_adder_query (GstPad * pad, GstQuery * query)
         if (max_latency < G_MAXUINT64 - my_latency)
           max_latency += my_latency;
         else
-          max_latency = G_MAXUINT64
+          max_latency = G_MAXUINT64;
         gst_query_set_latency (query, TRUE, min_latency, max_latency);
         GST_DEBUG_OBJECT (adder, "Calculated total latency : min %"
             GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
