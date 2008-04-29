@@ -35,7 +35,7 @@
 #endif
 
 #include <stdlib.h>
-#include <stdint.h>
+#include "_stdint.h"
 #include <string.h>
 
 #include <gst/rtsp/gstrtspextension.h>

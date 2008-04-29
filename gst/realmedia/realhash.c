@@ -22,7 +22,7 @@
 #include "config.h"
 #endif
 
-#include <stdint.h>
+#include "_stdint.h"
 #include <string.h>
 
 #include <gst/gst.h>
