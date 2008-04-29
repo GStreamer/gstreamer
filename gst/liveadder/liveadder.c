@@ -839,6 +839,10 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
   buffer = gst_audio_buffer_clip (buffer, &padprivate->segment, adder->rate,
       adder->bps);
 
+  /* buffer can be NULL if it's completely outside of the segment */
+  if (!buffer)
+    goto out;
+
   /*
    * Make sure all incoming buffers share the same timestamping
    */
