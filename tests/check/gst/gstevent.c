@@ -214,6 +214,7 @@ GST_START_TEST (create_events)
     fail_if (GST_EVENT_IS_DOWNSTREAM (event));
     fail_if (GST_EVENT_IS_SERIALIZED (event));
     fail_unless (gst_event_get_structure (event) == structure);
+    fail_unless (gst_event_has_name (event, "application/x-custom"));
     gst_event_unref (event);
 
     /* Decided not to test the other custom enum types, as they
@@ -231,6 +232,7 @@ GST_START_TEST (create_events)
     event2 = gst_event_copy (event);
     fail_if (event2 == NULL);
     fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_TYPE (event2));
+    fail_unless (gst_event_has_name (event, "application/x-custom"));
 
     /* The structure should have been duplicated */
     fail_if (gst_event_get_structure (event) ==
@@ -251,6 +253,7 @@ GST_START_TEST (create_events)
     /* this should fail if the structure isn't writable */
     ASSERT_CRITICAL (gst_structure_remove_all_fields ((GstStructure *)
             gst_event_get_structure (event)));
+    fail_unless (gst_event_has_name (event, "application/x-custom"));
 
     /* now make writable */
     event2 =
@@ -259,6 +262,7 @@ GST_START_TEST (create_events)
     /* this fail if the structure isn't writable */
     gst_structure_remove_all_fields ((GstStructure *)
         gst_event_get_structure (event2));
+    fail_unless (gst_event_has_name (event2, "application/x-custom"));
 
     gst_event_unref (event);
     gst_event_unref (event);

@@ -355,6 +355,29 @@ gst_event_get_structure (GstEvent * event)
 }
 
 /**
+ * gst_event_has_name:
+ * @event: The #GstEvent.
+ * @name: name to check
+ *
+ * Checks if @event has the given @name. This function is usually used to
+ * check the name of a custom event.
+ *
+ * Returns: %TRUE if @name matches the name of the event structure.
+ *
+ * Since: 0.10.20
+ */
+gboolean
+gst_event_has_name (GstEvent * event, const gchar * name)
+{
+  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+
+  if (event->structure == NULL)
+    return FALSE;
+
+  return gst_structure_has_name (event->structure, name);
+}
+
+/**
  * gst_event_new_flush_start:
  *
  * Allocate a new flush start event. The flush start event can be sent

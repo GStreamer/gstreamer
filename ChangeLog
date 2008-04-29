@@ -1,3 +1,16 @@
+2008-04-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstevent.c: (gst_event_has_name):
+	* gst/gstevent.h:
+	* tests/check/gst/gstevent.c: (GST_START_TEST):
+	Add method to conveniently check the name of a custom event with
+	gst_event_has_name().
+	Reformat the event docs so that related methods are put together instead
+	of the default alphabetical sort.
+	Update unit test with new method.
+	API: GstEvent::gst_event_has_name()
+
 2008-04-28  Michael Smith <msmith@songbirdnest.com>
 
 	* libs/gst/check/Makefile.am:

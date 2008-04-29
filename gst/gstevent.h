@@ -364,6 +364,8 @@ GstEvent*	gst_event_new_custom		(GstEventType type, GstStructure *structure);
 const GstStructure *
 		gst_event_get_structure		(GstEvent *event);
 
+gboolean        gst_event_has_name              (GstEvent *event, const gchar *name);
+
 /* flush events */
 GstEvent *	gst_event_new_flush_start	(void);
 GstEvent *	gst_event_new_flush_stop	(void);
