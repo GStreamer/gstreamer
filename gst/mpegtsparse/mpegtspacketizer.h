@@ -85,6 +85,26 @@ typedef struct
   guint8 current_next_indicator;
 } MpegTSPacketizerSection; 
 
+typedef struct
+{
+  guint8 table_id;
+  /* the spec says sub_table_extension is the fourth and fifth byte of a 
+   * section when the section_syntax_indicator is set to a value of "1". If 
+   * section_syntax_indicator is 0, sub_table_extension will be set to 0 */
+  guint16 subtable_extension;
+  guint8 version_number;
+} MpegTSPacketizerStreamSubtable;
+
+typedef struct
+{
+  guint continuity_counter;
+  GstAdapter *section_adapter;
+  guint8 section_table_id;
+  guint section_length;
+  GSList *subtables;
+} MpegTSPacketizerStream;
+
+
 GType gst_mpegts_packetizer_get_type(void);
 
 void mpegts_packetizer_init_debug ();

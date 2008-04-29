@@ -33,6 +33,8 @@
 /* latency in mseconds */
 #define TS_LATENCY 700
 
+#define TABLE_ID_UNSET 0xFF
+
 GST_DEBUG_CATEGORY_STATIC (mpegts_parse_debug);
 #define GST_CAT_DEFAULT mpegts_parse_debug
 
@@ -246,18 +248,6 @@ mpegts_parse_reset (MpegTSParse * parse)
   /* PAT */
   g_hash_table_insert (parse->psi_pids,
       GINT_TO_POINTER (0), GINT_TO_POINTER (1));
-
-  /* NIT */
-  g_hash_table_insert (parse->psi_pids,
-      GINT_TO_POINTER (0x10), GINT_TO_POINTER (1));
-
-  /* SDT */
-  g_hash_table_insert (parse->psi_pids,
-      GINT_TO_POINTER (0x11), GINT_TO_POINTER (1));
-
-  /* EIT */
-  g_hash_table_insert (parse->psi_pids,
-      GINT_TO_POINTER (0x12), GINT_TO_POINTER (1));
 
   /* pmt pids will be added and removed dynamically */
 }
@@ -790,10 +780,53 @@ mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet,
 }
 
 static gboolean
-mpegts_parse_is_psi_pid (MpegTSParse * parse, guint16 pid)
+mpegts_parse_is_psi (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
 {
-  return g_hash_table_lookup (parse->psi_pids,
-      GINT_TO_POINTER ((gint) pid)) != NULL;
+  gboolean retval = FALSE;
+  guint8 table_id;
+  int i;
+  guint8 si_tables[] = { 0x00, 0x01, 0x02, 0x03, 0x40, 0x41, 0x42, 0x46, 0x4A,
+    0x4E, 0x4F, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59,
+    0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F, 0x60, 0x61, 0x62, 0x63, 0x64, 0x65,
+    0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70, 0x71,
+    0x72, 0x73, 0x7E, 0x7F, TABLE_ID_UNSET
+  };
+  if (g_hash_table_lookup (parse->psi_pids,
+          GINT_TO_POINTER ((gint) packet->pid)) != NULL)
+    retval = TRUE;
+  if (!retval) {
+    if (packet->payload_unit_start_indicator) {
+      table_id = *(packet->data);
+      i = 0;
+      while (si_tables[i] != TABLE_ID_UNSET) {
+        if (si_tables[i] == table_id) {
+          retval = TRUE;
+          break;
+        }
+        i++;
+      }
+    } else {
+      MpegTSPacketizerStream *stream = (MpegTSPacketizerStream *)
+          g_hash_table_lookup (parse->packetizer->streams,
+          GINT_TO_POINTER ((gint) packet->pid));
+
+      if (stream) {
+        i = 0;
+        GST_DEBUG_OBJECT (parse, "section table id: 0x%x",
+            stream->section_table_id);
+        while (si_tables[i] != TABLE_ID_UNSET) {
+          if (si_tables[i] == stream->section_table_id) {
+            retval = TRUE;
+            break;
+          }
+          i++;
+        }
+      }
+    }
+  }
+  GST_DEBUG_OBJECT (parse, "Packet of pid 0x%x is psi: %d", packet->pid,
+      retval);
+  return retval;
 }
 
 static void
@@ -1152,7 +1185,7 @@ mpegts_parse_chain (GstPad * pad, GstBuffer * buf)
       goto next;
 
     /* parse PSI data */
-    if (packet.payload != NULL && mpegts_parse_is_psi_pid (parse, packet.pid)) {
+    if (packet.payload != NULL && mpegts_parse_is_psi (parse, &packet)) {
       MpegTSPacketizerSection section;
 
       parsed = mpegts_packetizer_push_section (packetizer, &packet, &section);

@@ -1,3 +1,12 @@
+2008-04-29  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	* gst/mpegtsparse/mpegtspacketizer.h:
+	* gst/mpegtsparse/mpegtsparse.c:
+	Detect SI pids (NIT, SDT, EIT etc.) based on table id and not
+	by pid number. This allows for example the EPG data from UK's
+	freesat to be picked up.
+
 2008-04-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/mpeg2enc/gstmpeg2enc.cc:

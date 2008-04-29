@@ -34,25 +34,8 @@ static void mpegts_packetizer_finalize (GObject * object);
 
 #define CONTINUITY_UNSET 255
 #define MAX_CONTINUITY 15
-#define VERSION_NUMBER_NOTSET 255
-
-typedef struct
-{
-  guint8 table_id;
-  /* the spec says sub_table_extension is the fourth and fifth byte of a 
-   * section when the section_syntax_indicator is set to a value of "1". If 
-   * section_syntax_indicator is 0, sub_table_extension will be set to 0 */
-  guint16 subtable_extension;
-  guint8 version_number;
-} MpegTSPacketizerStreamSubtable;
-
-typedef struct
-{
-  guint continuity_counter;
-  GstAdapter *section_adapter;
-  guint section_length;
-  GSList *subtables;
-} MpegTSPacketizerStream;
+#define VERSION_NUMBER_UNSET 255
+#define TABLE_ID_UNSET 0xFF
 
 static gint
 mpegts_packetizer_stream_subtable_compare (gconstpointer a, gconstpointer b)
@@ -75,7 +58,7 @@ mpegts_packetizer_stream_subtable_new (guint8 table_id,
   MpegTSPacketizerStreamSubtable *subtable;
 
   subtable = g_new0 (MpegTSPacketizerStreamSubtable, 1);
-  subtable->version_number = VERSION_NUMBER_NOTSET;
+  subtable->version_number = VERSION_NUMBER_UNSET;
   subtable->table_id = table_id;
   subtable->subtable_extension = subtable_extension;
   return subtable;
@@ -90,6 +73,7 @@ mpegts_packetizer_stream_new ()
   stream->section_adapter = gst_adapter_new ();
   stream->continuity_counter = CONTINUITY_UNSET;
   stream->subtables = NULL;
+  stream->section_table_id = TABLE_ID_UNSET;
   return stream;
 }
 
@@ -110,6 +94,7 @@ mpegts_packetizer_clear_section (MpegTSPacketizer * packetizer,
   gst_adapter_clear (stream->section_adapter);
   stream->continuity_counter = CONTINUITY_UNSET;
   stream->section_length = 0;
+  stream->section_table_id = TABLE_ID_UNSET;
 }
 
 static void
@@ -282,6 +267,7 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer * packetizer,
   if (section->version_number == subtable->version_number)
     goto not_applicable;
   subtable->version_number = section->version_number;
+  stream->section_table_id = section->table_id;
 
   return TRUE;
 
@@ -1887,6 +1873,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
     }
     stream->continuity_counter = packet->continuity_counter;
     stream->section_length = section_length;
+    stream->section_table_id = table_id;
     gst_adapter_push (stream->section_adapter, sub_buf);
 
     res = TRUE;
