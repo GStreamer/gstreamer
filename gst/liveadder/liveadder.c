@@ -873,6 +873,7 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
    * we may not have to wait for as long
    */
   if (adder->clock_id &&
+      g_queue_peek_head (adder->buffers) != NULL &&
       GST_BUFFER_TIMESTAMP (buffer) + skip <
       GST_BUFFER_TIMESTAMP (g_queue_peek_head (adder->buffers)))
     gst_clock_id_unschedule (adder->clock_id);
