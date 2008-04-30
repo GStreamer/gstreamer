@@ -1,5 +1,11 @@
 2008-04-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* configure.ac:
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
+	  Use new error code for encrypted streams (which requires core CVS).
+
+2008-04-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_videosrc_template),
 	  (gst_qtdemux_audiosrc_template):
 	  Fix swapped pad template names, spotted by Thiago Sousa Santos.

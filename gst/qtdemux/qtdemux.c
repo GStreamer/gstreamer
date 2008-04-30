@@ -3591,8 +3591,7 @@ corrupt_file:
   }
 error_encrypted:
   {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
-        (_("This file is encrypted and cannot be played.")), (NULL));
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DECRYPT, (NULL), (NULL));
     g_free (stream);
     return FALSE;
   }
