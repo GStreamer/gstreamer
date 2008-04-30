@@ -1,3 +1,10 @@
+2008-04-30  Michael Smith <msmith@songbirdnest.com>
+
+	* ext/theora/theoradec.c:
+	  Cool kids don't divide by zero.
+	  Treat PAR of x:0 as 1:1.
+	  Fixes #530719.
+
 2008-04-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/typefind/gsttypefindfunctions.c: (MpegVideoStreamCtx),

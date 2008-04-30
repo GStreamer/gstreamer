@@ -789,10 +789,13 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
 
   /* calculate par
    * the info.aspect_* values reflect PAR;
-   * 0:0 is allowed and can be interpreted as 1:1, so correct for it */
+   * 0:0 is allowed and can be interpreted as 1:1, so correct for it.
+   * x:0 for other x isn't technically allowed, but it's seen in the wild and
+   * is reasonable to treat the same. 
+   */
   par_num = dec->info.aspect_numerator;
   par_den = dec->info.aspect_denominator;
-  if (par_num == 0 && par_den == 0) {
+  if (par_den == 0) {
     par_num = par_den = 1;
   }
   /* theora has:
