@@ -74,6 +74,8 @@ struct _GstRTSPReal {
   guint  max_packet_size;
   guint  avg_packet_size;
   guint  duration;
+
+  gchar *rules;
 };
 
 struct _GstRTSPRealClass {

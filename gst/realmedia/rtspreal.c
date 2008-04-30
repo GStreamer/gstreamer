@@ -56,6 +56,7 @@ GST_ELEMENT_DETAILS ("RealMedia RTSP Extension",
     "Wim Taymans <wim.taymans@gmail.com>");
 
 #define SERVER_PREFIX "RealServer"
+#define DEFAULT_BANDWIDTH	"10485800"
 
 static GstRTSPResult
 rtsp_ext_real_get_transports (GstRTSPExtension * ext,
@@ -121,7 +122,8 @@ rtsp_ext_real_before_send (GstRTSPExtension * ext, GstRTSPMessage * request)
     }
     case GST_RTSP_DESCRIBE:
     {
-      gst_rtsp_message_add_header (request, GST_RTSP_HDR_BANDWIDTH, "10485800");
+      gst_rtsp_message_add_header (request, GST_RTSP_HDR_BANDWIDTH,
+          DEFAULT_BANDWIDTH);
       gst_rtsp_message_add_header (request, GST_RTSP_HDR_GUID,
           "00000000-0000-0000-0000-000000000000");
       gst_rtsp_message_add_header (request, GST_RTSP_HDR_REGION_DATA, "0");
@@ -268,6 +270,8 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   GstBuffer *buf;
   gchar *opaque_data;
   gsize opaque_data_len, asm_rule_book_len;
+  GHashTable *vars;
+  GString *rules;
 
   /* don't bother for non-real formats */
   READ_INT (sdp, "IsRealDataType", ctx->isreal);
@@ -345,13 +349,19 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   WRITE_STRING2 (datap, comment, comment_len);
   offset += size;
 
+  /* fix the hashtale for the rule parser */
+  rules = g_string_new ("");
+  vars = g_hash_table_new (g_str_hash, g_str_equal);
+  g_hash_table_insert (vars, "Bandwidth", DEFAULT_BANDWIDTH);
+
   /* MDPR */
   for (i = 0; i < ctx->n_streams; i++) {
     const GstSDPMedia *media;
-    guint16 j, sel;
     guint32 len;
     GstRTSPRealStream *stream;
     gchar *str;
+    gint rulematches[MAX_RULEMATCHES];
+    gint sel, j, n;
 
     media = gst_sdp_message_get_media (sdp, i);
 
@@ -391,7 +401,14 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
      */
     READ_STRING (media, "ASMRuleBook", str, asm_rule_book_len);
     stream->rulebook = gst_asm_rule_book_new (str);
-    sel = 0;
+
+    n = gst_asm_rule_book_match (stream->rulebook, vars, rulematches);
+    for (j = 0; j < n; j++) {
+      g_string_append_printf (rules, "stream=%u;rule=%u,", i, rulematches[j]);
+    }
+
+    /* get the MLTI for the first matched rules */
+    sel = rulematches[0];
 
     READ_BUFFER_M (media, "OpaqueData", opaque_data, opaque_data_len);
 
@@ -527,6 +544,17 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     offset += size;
   }
 
+  /* destroy the rulebook hashtable now */
+  g_hash_table_destroy (vars);
+
+  /* strip final , if we added some stream rules */
+  if (rules->len > 0) {
+    rules = g_string_truncate (rules, rules->len - 1);
+  }
+
+  /* and store rules in the context */
+  ctx->rules = g_string_free (rules, FALSE);
+
   /* DATA */
   size = 18;
   ENSURE_SIZE (offset + size);
@@ -569,12 +597,11 @@ rtsp_ext_real_stream_select (GstRTSPExtension * ext, GstRTSPUrl * url)
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
   gchar *req_url;
-  GString *rules;
-  GList *walk;
-  gint i;
-  GHashTable *vars;
 
   if (!ctx->isreal)
+    return GST_RTSP_OK;
+
+  if (!ctx->rules)
     return GST_RTSP_OK;
 
   req_url = gst_rtsp_url_get_request_uri (url);
@@ -586,34 +613,7 @@ rtsp_ext_real_stream_select (GstRTSPExtension * ext, GstRTSPUrl * url)
 
   g_free (req_url);
 
-  rules = g_string_new ("");
-  vars = g_hash_table_new (g_str_hash, g_str_equal);
-  g_hash_table_insert (vars, "Bandwidth", "300000");
-
-  for (walk = ctx->streams, i = 0; walk; walk = g_list_next (walk), i++) {
-    GstRTSPRealStream *stream;
-    gint rulematches[MAX_RULEMATCHES];
-    gint j, n;
-
-    stream = (GstRTSPRealStream *) walk->data;
-
-    n = gst_asm_rule_book_match (stream->rulebook, vars, rulematches);
-    for (j = 0; j < n; j++) {
-      g_string_append_printf (rules, "stream=%u;rule=%u,", i, rulematches[j]);
-    }
-  }
-
-  g_hash_table_destroy (vars);
-
-  /* strip final , if we added some stream rules */
-  if (rules->len > 0) {
-    rules = g_string_truncate (rules, rules->len - 1);
-  }
-
-  /* do selection */
-  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SUBSCRIBE, rules->str);
-
-  g_string_free (rules, TRUE);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SUBSCRIBE, ctx->rules);
 
   /* send SET_PARAMETER */
   if ((res = gst_rtsp_extension_send (ext, &request, &response)) < 0)

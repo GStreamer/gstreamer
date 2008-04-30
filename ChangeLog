@@ -1,3 +1,13 @@
+2008-04-30  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rtspreal.c: (rtsp_ext_real_before_send),
+	(rtsp_ext_real_parse_sdp), (rtsp_ext_real_stream_select):
+	* gst/realmedia/rtspreal.h:
+	Move assembly rule parsing to the place where we parse the SDP as it's
+	also there that we create the MDPR and we need the currently selected
+	asmrule in order to select the right MTLI.
+	Fixes #529359.
+
 2008-04-29  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/realmedia/realhash.c:
