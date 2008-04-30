@@ -1,3 +1,12 @@
+2008-04-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/typefind/gsttypefindfunctions.c: (MpegVideoStreamCtx),
+	  (mpeg_video_stream_ctx_advance), (mpeg_video_stream_ctx_ensure_data),
+	  (mpeg_video_stream_type_find):
+	  Refactor a bit: use context structure to track parsing offset and size of
+	  available data and make the code a bit clearer. Fixes bad memory access
+	  in #356937.
+
 2008-04-28  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/playback/test4.c:

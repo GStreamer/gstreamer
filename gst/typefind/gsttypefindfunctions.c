@@ -1667,12 +1667,47 @@ mpeg_video_type_find (GstTypeFind * tf, gpointer unused)
 #define GST_MPEGVID_TYPEFIND_TRY_SYNC (100 * 1024)      /* 100 kB */
 #define GST_MPEGVID_TYPEFIND_SYNC_SIZE 2048
 
+typedef struct
+{
+  guint64 offset;
+  guint8 *data;
+  gint size;
+} MpegVideoStreamCtx;
+
+static inline void
+mpeg_video_stream_ctx_advance (GstTypeFind * tf, MpegVideoStreamCtx * c,
+    guint bytes_to_skip)
+{
+  c->offset += bytes_to_skip;
+  if (c->size > bytes_to_skip) {
+    c->size -= bytes_to_skip;
+    c->data += bytes_to_skip;
+  } else {
+    c->data += c->size;
+    c->size = 0;
+  }
+}
+
+static inline gboolean
+mpeg_video_stream_ctx_ensure_data (GstTypeFind * tf, MpegVideoStreamCtx * c,
+    gint min_len)
+{
+  if (c->size >= min_len)
+    return TRUE;
+
+  c->data = gst_type_find_peek (tf, c->offset, GST_MPEGVID_TYPEFIND_SYNC_SIZE);
+  if (c->data == NULL)
+    return FALSE;
+
+  c->size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
+  return TRUE;
+}
+
 static void
 mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
 {
-  gint size = 0, found = 0;
-  guint64 skipped = 0;
-  guint8 *data = NULL;
+  MpegVideoStreamCtx c = { 0, NULL, 0 };
+  gint found = 0;
 
   while (1) {
     if (found >= GST_MPEGVID_TYPEFIND_TRY_PICTURES) {
@@ -1685,65 +1720,51 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
       return;
     }
 
-    if (skipped > GST_MPEGVID_TYPEFIND_TRY_SYNC)
+    if (c.offset >= GST_MPEGVID_TYPEFIND_TRY_SYNC)
       break;
 
-    if (size < 5) {
-      data = gst_type_find_peek (tf, skipped, GST_MPEGVID_TYPEFIND_SYNC_SIZE);
-      if (!data)
-        break;
-      size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
-    }
+    if (!mpeg_video_stream_ctx_ensure_data (tf, &c, 5))
+      break;
 
-    if (IS_MPEG_HEADER (data)) {
+    if (IS_MPEG_HEADER (c.data)) {
       /* An MPEG PACK header indicates that this isn't an elementary stream */
-      if (IS_MPEG_PACK_CODE (data[3])) {
-        if (mpeg_sys_is_valid_pack (tf, data, size, NULL))
+      if (IS_MPEG_PACK_CODE (c.data[3])) {
+        if (mpeg_sys_is_valid_pack (tf, c.data, c.size, NULL))
           break;
       }
 
-      /* are we a sequence (0xB3) or GOP (0xB8) header? */
-      if (data[3] == 0xB3 || data[3] == 0xB8) {
-        size -= 8;
-        data += 8;
-        skipped += 8;
-        if (data[3] == 0xB3)
-          continue;
-        else if (size < 4) {
-          data =
-              gst_type_find_peek (tf, skipped, GST_MPEGVID_TYPEFIND_SYNC_SIZE);
-          size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
-          if (!data)
-            break;
-        }
-        /* else, we should now see an image */
-      }
-    }
-
-    /* image header (and, when found, slice header) */
-    if (IS_MPEG_HEADER (data) && data[4] == 0x0) {
-      size -= 8;
-      data += 8;
-      skipped += 8;
-      if (size < 5) {
-        data = gst_type_find_peek (tf, skipped, GST_MPEGVID_TYPEFIND_SYNC_SIZE);
-        size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
-        if (!data)
-          break;
-      }
-      if ((IS_MPEG_HEADER (data) && data[3] == 0x1) ||
-          (IS_MPEG_HEADER (data + 1) && data[4] == 0x1)) {
-        size -= 4;
-        data += 4;
-        skipped += 4;
-        found += 1;
+      /* are we a sequence (0xB3) header? */
+      if (c.data[3] == 0xB3) {
+        mpeg_video_stream_ctx_advance (tf, &c, 4 + 8);
         continue;
       }
+
+      /* ... or a GOP (0xB8) header? */
+      if (c.data[3] == 0xB8) {
+        mpeg_video_stream_ctx_advance (tf, &c, 8);
+        continue;
+      }
+
+      /* ... else, we should now see an image header ... */
+      /* is [4] really what we want here, not [3]? Won't [4] == 0 only work for
+       * the first image or the first few images? (tpm) */
+      if (c.data[4] == 0x00) {
+        mpeg_video_stream_ctx_advance (tf, &c, 8);
+
+        if (!mpeg_video_stream_ctx_ensure_data (tf, &c, 5))
+          break;
+
+        /* .. followed by a slice header */
+        if ((IS_MPEG_HEADER (c.data + 0) && c.data[3] == 0x01) ||
+            (IS_MPEG_HEADER (c.data + 1) && c.data[4] == 0x01)) {
+          mpeg_video_stream_ctx_advance (tf, &c, 4);
+          found += 1;
+          continue;
+        }
+      }
     }
 
-    size--;
-    data++;
-    skipped++;
+    mpeg_video_stream_ctx_advance (tf, &c, 1);
   }
 }
 
