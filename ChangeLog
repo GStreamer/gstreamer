@@ -1,3 +1,8 @@
+2008-04-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstdebugutils.c:
+	  Refactor code and fix handling of ghostpads and their proxypads.
+
 2008-04-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/gst/gstreamer-sections.txt:

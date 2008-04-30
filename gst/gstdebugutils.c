@@ -119,6 +119,225 @@ debug_dump_get_element_params (GstElement * element)
   return param_name;
 }
 
+static void
+debug_dump_element_pad (GstPad * pad, GstElement * element,
+    GstDebugGraphDetails details, FILE * out, const gint indent)
+{
+  GstElement *target_element;
+  GstPad *target_pad, *tmp_pad;
+  GstPadDirection dir;
+  guint src_pads, sink_pads;
+  gchar *pad_name, *element_name;
+  gchar *target_pad_name, *target_element_name;
+  gchar *color_name;
+  gchar *spc = NULL;
+
+  spc = g_malloc (1 + indent * 2);
+  memset (spc, 32, indent * 2);
+  spc[indent * 2] = '\0';
+
+  dir = gst_pad_get_direction (pad);
+  pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
+  element_name = debug_dump_make_object_name (GST_OBJECT (element));
+  if (GST_IS_GHOST_PAD (pad)) {
+    color_name =
+        (dir == GST_PAD_SRC) ? "#ffdddd" : ((dir ==
+            GST_PAD_SINK) ? "#ddddff" : "#ffffff");
+    /* output target-pad so that it belongs to this element */
+    if ((tmp_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad)))) {
+      if ((target_pad = gst_pad_get_peer (tmp_pad))) {
+        target_pad_name = debug_dump_make_object_name (GST_OBJECT (target_pad));
+        if ((target_element = gst_pad_get_parent_element (target_pad))) {
+          target_element_name =
+              debug_dump_make_object_name (GST_OBJECT (target_element));
+        } else {
+          target_element_name = "";
+        }
+        fprintf (out,
+            "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\"];\n",
+            spc, target_element_name, target_pad_name, color_name,
+            GST_OBJECT_NAME (target_pad));
+        g_free (target_pad_name);
+        if (target_element) {
+          g_free (target_element_name);
+          gst_object_unref (target_element);
+        }
+        gst_object_unref (target_pad);
+      }
+      gst_object_unref (tmp_pad);
+    }
+  } else {
+    color_name =
+        (dir == GST_PAD_SRC) ? "#ffaaaa" : ((dir ==
+            GST_PAD_SINK) ? "#aaaaff" : "#cccccc");
+  }
+  /* pads */
+  fprintf (out,
+      "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\"];\n",
+      spc, element_name, pad_name, color_name, GST_OBJECT_NAME (pad));
+
+  if (dir == GST_PAD_SRC)
+    src_pads++;
+  else if (dir == GST_PAD_SINK)
+    sink_pads++;
+  g_free (pad_name);
+  g_free (element_name);
+
+}
+
+static void
+debug_dump_element_pad_link (GstPad * pad, GstElement * element,
+    GstDebugGraphDetails details, FILE * out, const gint indent)
+{
+  GstElement *peer_element, *target_element;
+  GstPad *peer_pad, *target_pad, *tmp_pad;
+  GstCaps *caps;
+  GstStructure *structure;
+  gboolean free_caps, free_media;
+  gchar *media = NULL;
+  gchar *pad_name, *element_name;
+  gchar *peer_pad_name, *peer_element_name;
+  gchar *target_pad_name, *target_element_name;
+  gchar *spc = NULL;
+
+  spc = g_malloc (1 + indent * 2);
+  memset (spc, 32, indent * 2);
+  spc[indent * 2] = '\0';
+
+  if ((peer_pad = gst_pad_get_peer (pad))) {
+    free_media = FALSE;
+    if ((details & GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE) ||
+        (details & GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS)
+        ) {
+      if ((caps = gst_pad_get_negotiated_caps (pad))) {
+        free_caps = TRUE;
+      } else {
+        free_caps = FALSE;
+        if (!(caps = (GstCaps *)
+                gst_pad_get_pad_template_caps (pad))) {
+          /* this should not happen */
+          media = "?";
+        }
+      }
+      if (caps) {
+        if (details & GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS) {
+          gchar *tmp = g_strdelimit (gst_caps_to_string (caps), ",",
+              '\n');
+
+          media = g_strescape (tmp, NULL);
+          free_media = TRUE;
+          g_free (tmp);
+        } else {
+          if (GST_CAPS_IS_SIMPLE (caps)) {
+            structure = gst_caps_get_structure (caps, 0);
+            media = (gchar *) gst_structure_get_name (structure);
+          } else
+            media = "*";
+        }
+        if (free_caps) {
+          gst_caps_unref (caps);
+        }
+      }
+    }
+
+    pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
+    if (element) {
+      element_name = debug_dump_make_object_name (GST_OBJECT (element));
+    } else {
+      element_name = "";
+    }
+    peer_pad_name = debug_dump_make_object_name (GST_OBJECT (peer_pad));
+    if ((peer_element = gst_pad_get_parent_element (peer_pad))) {
+      peer_element_name =
+          debug_dump_make_object_name (GST_OBJECT (peer_element));
+    } else {
+      peer_element_name = "";
+    }
+
+    if (GST_IS_GHOST_PAD (pad)) {
+      if ((tmp_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad)))) {
+        if ((target_pad = gst_pad_get_peer (tmp_pad))) {
+          target_pad_name =
+              debug_dump_make_object_name (GST_OBJECT (target_pad));
+          if ((target_element = gst_pad_get_parent_element (target_pad))) {
+            target_element_name =
+                debug_dump_make_object_name (GST_OBJECT (target_element));
+          } else {
+            target_element_name = "";
+          }
+          /* src ghostpad relationship */
+          fprintf (out, "%s%s_%s -> %s_%s [style=dashed]\n", spc,
+              target_element_name, target_pad_name, element_name, pad_name);
+
+          g_free (target_pad_name);
+          if (target_element) {
+            g_free (target_element_name);
+            gst_object_unref (target_element);
+          }
+          gst_object_unref (target_pad);
+        }
+        gst_object_unref (tmp_pad);
+      }
+    }
+    if (GST_IS_GHOST_PAD (peer_pad)) {
+      if ((tmp_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (peer_pad)))) {
+        if ((target_pad = gst_pad_get_peer (tmp_pad))) {
+          target_pad_name =
+              debug_dump_make_object_name (GST_OBJECT (target_pad));
+          if ((target_element = gst_pad_get_parent_element (target_pad))) {
+            target_element_name =
+                debug_dump_make_object_name (GST_OBJECT (target_element));
+          } else {
+            target_element_name = "";
+          }
+          /* sink ghostpad relationship */
+          fprintf (out, "%s%s_%s -> %s_%s [style=dashed]\n", spc,
+              peer_element_name, peer_pad_name,
+              target_element_name, target_pad_name);
+          /* FIXME: we are missing links from the proxy pad
+           * theoretically we need to:
+           * pad=gst_object_ref(target_pad);
+           * goto line 280: if ((peer_pad = gst_pad_get_peer (pad)))
+           * as this would e ugly we need to refactor ...
+           */
+          debug_dump_element_pad_link (target_pad, target_element, details, out,
+              indent);
+          g_free (target_pad_name);
+          if (target_element) {
+            g_free (target_element_name);
+            gst_object_unref (target_element);
+          }
+          gst_object_unref (target_pad);
+        }
+        gst_object_unref (tmp_pad);
+      }
+    }
+
+    /* pad link */
+    if (media) {
+      fprintf (out, "%s%s_%s -> %s_%s [label=\"%s\"]\n", spc,
+          element_name, pad_name, peer_element_name, peer_pad_name, media);
+      if (free_media) {
+        g_free (media);
+      }
+    } else {
+      fprintf (out, "%s%s_%s -> %s_%s\n", spc,
+          element_name, pad_name, peer_element_name, peer_pad_name);
+    }
+
+    g_free (pad_name);
+    if (element) {
+      g_free (element_name);
+    }
+    g_free (peer_pad_name);
+    if (peer_element) {
+      g_free (peer_element_name);
+      gst_object_unref (peer_element);
+    }
+    gst_object_unref (peer_pad);
+  }
+}
+
 /*
  * debug_dump_element:
  * @bin: the bin that should be analyzed
@@ -133,18 +352,11 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
 {
   GstIterator *element_iter, *pad_iter;
   gboolean elements_done, pads_done;
-  GstElement *element, *peer_element, *target_element;
-  GstPad *pad, *peer_pad, *target_pad, *tmp_pad;
+  GstElement *element;
+  GstPad *pad;
   GstPadDirection dir;
-  GstCaps *caps;
-  GstStructure *structure;
-  gboolean free_caps, free_media;
   guint src_pads, sink_pads;
-  gchar *media = NULL;
-  gchar *pad_name, *element_name;
-  gchar *peer_pad_name, *peer_element_name;
-  gchar *target_pad_name, *target_element_name;
-  gchar *color_name;
+  gchar *element_name;
   gchar *state_name = NULL;
   gchar *param_name = NULL;
   gchar *spc = NULL;
@@ -192,31 +404,12 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
           while (!pads_done) {
             switch (gst_iterator_next (pad_iter, (gpointer) & pad)) {
               case GST_ITERATOR_OK:
+                debug_dump_element_pad (pad, element, details, out, indent);
                 dir = gst_pad_get_direction (pad);
-                pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
-                element_name =
-                    debug_dump_make_object_name (GST_OBJECT (element));
-                if (GST_IS_GHOST_PAD (pad)) {
-                  color_name =
-                      (dir == GST_PAD_SRC) ? "#ffdddd" : ((dir ==
-                          GST_PAD_SINK) ? "#ddddff" : "#ffffff");
-                } else {
-                  color_name =
-                      (dir == GST_PAD_SRC) ? "#ffaaaa" : ((dir ==
-                          GST_PAD_SINK) ? "#aaaaff" : "#cccccc");
-                }
-                /* pads */
-                fprintf (out,
-                    "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\"];\n",
-                    spc, element_name, pad_name, color_name,
-                    GST_OBJECT_NAME (pad));
-
                 if (dir == GST_PAD_SRC)
                   src_pads++;
                 else if (dir == GST_PAD_SINK)
                   sink_pads++;
-                g_free (pad_name);
-                g_free (element_name);
                 gst_object_unref (pad);
                 break;
               case GST_ITERATOR_RESYNC:
@@ -252,141 +445,8 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
               case GST_ITERATOR_OK:
                 if (gst_pad_is_linked (pad)
                     && gst_pad_get_direction (pad) == GST_PAD_SRC) {
-                  if ((peer_pad = gst_pad_get_peer (pad))) {
-                    free_media = FALSE;
-                    if ((details & GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE) ||
-                        (details & GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS)
-                        ) {
-                      if ((caps = gst_pad_get_negotiated_caps (pad))) {
-                        free_caps = TRUE;
-                      } else {
-                        free_caps = FALSE;
-                        if (!(caps = (GstCaps *)
-                                gst_pad_get_pad_template_caps (pad))) {
-                          /* this should not happen */
-                          media = "?";
-                        }
-                      }
-                      if (caps) {
-                        if (details & GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS) {
-                          gchar *tmp =
-                              g_strdelimit (gst_caps_to_string (caps), ",",
-                              '\n');
-
-                          media = g_strescape (tmp, NULL);
-                          free_media = TRUE;
-                          g_free (tmp);
-                        } else {
-                          if (GST_CAPS_IS_SIMPLE (caps)) {
-                            structure = gst_caps_get_structure (caps, 0);
-                            media =
-                                (gchar *) gst_structure_get_name (structure);
-                          } else
-                            media = "*";
-                        }
-                        if (free_caps) {
-                          gst_caps_unref (caps);
-                        }
-                      }
-                    }
-
-                    pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
-                    element_name =
-                        debug_dump_make_object_name (GST_OBJECT (element));
-                    peer_pad_name =
-                        debug_dump_make_object_name (GST_OBJECT (peer_pad));
-                    if ((peer_element = gst_pad_get_parent_element (peer_pad))) {
-                      peer_element_name =
-                          debug_dump_make_object_name (GST_OBJECT
-                          (peer_element));
-                    } else {
-                      peer_element_name = "";
-                    }
-                    /* pad link */
-                    if (media) {
-                      fprintf (out, "%s%s_%s -> %s_%s [label=\"%s\"]\n", spc,
-                          element_name, pad_name, peer_element_name,
-                          peer_pad_name, media);
-                      if (free_media) {
-                        g_free (media);
-                      }
-                    } else {
-                      fprintf (out, "%s%s_%s -> %s_%s\n", spc,
-                          element_name, pad_name, peer_element_name,
-                          peer_pad_name);
-                    }
-
-                    if (GST_IS_GHOST_PAD (pad)) {
-                      if ((tmp_pad =
-                              gst_ghost_pad_get_target (GST_GHOST_PAD (pad)))) {
-                        if ((target_pad = gst_pad_get_peer (tmp_pad))) {
-                          target_pad_name =
-                              debug_dump_make_object_name (GST_OBJECT
-                              (target_pad));
-                          if ((target_element =
-                                  gst_pad_get_parent_element (target_pad))) {
-                            target_element_name =
-                                debug_dump_make_object_name (GST_OBJECT
-                                (target_element));
-                          } else {
-                            target_element_name = "";
-                          }
-                          /* src ghostpad relationship */
-                          fprintf (out, "%s%s_%s -> %s_%s [style=dashed]\n",
-                              spc, target_element_name, target_pad_name,
-                              element_name, pad_name);
-
-                          g_free (target_pad_name);
-                          if (target_element) {
-                            g_free (target_element_name);
-                            gst_object_unref (target_element);
-                          }
-                          gst_object_unref (target_pad);
-                        }
-                        gst_object_unref (tmp_pad);
-                      }
-                    }
-                    if (GST_IS_GHOST_PAD (peer_pad)) {
-                      if ((tmp_pad =
-                              gst_ghost_pad_get_target (GST_GHOST_PAD
-                                  (peer_pad)))) {
-                        if ((target_pad = gst_pad_get_peer (tmp_pad))) {
-                          target_pad_name =
-                              debug_dump_make_object_name (GST_OBJECT
-                              (target_pad));
-                          if ((target_element =
-                                  gst_pad_get_parent_element (target_pad))) {
-                            target_element_name =
-                                debug_dump_make_object_name (GST_OBJECT
-                                (target_element));
-                          } else {
-                            target_element_name = "";
-                          }
-                          /* sink ghostpad relationship */
-                          fprintf (out, "%s%s_%s -> %s_%s [style=dashed]\n",
-                              spc, peer_element_name, peer_pad_name,
-                              target_element_name, target_pad_name);
-
-                          g_free (target_pad_name);
-                          if (target_element) {
-                            g_free (target_element_name);
-                            gst_object_unref (target_element);
-                          }
-                          gst_object_unref (target_pad);
-                        }
-                        gst_object_unref (tmp_pad);
-                      }
-                    }
-
-                    g_free (pad_name);
-                    g_free (element_name);
-                    g_free (peer_pad_name);
-                    if (peer_element) {
-                      g_free (peer_element_name);
-                      gst_object_unref (peer_element);
-                    }
-                    gst_object_unref (peer_pad);
-                  }
+                  debug_dump_element_pad_link (pad, element, details, out,
+                      indent);
                 }
                 gst_object_unref (pad);
                 break;
