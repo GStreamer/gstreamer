@@ -831,6 +831,26 @@ gst_queue_is_filled (GstQueue * queue)
               queue->cur_level.time >= queue->max_size.time)));
 }
 
+static void
+gst_queue_leak_downstream (GstQueue * queue)
+{
+  /* for as long as the queue is filled, dequeue an item and discard it */
+  do {
+    GstMiniObject *leak;
+
+    leak = gst_queue_locked_dequeue (queue);
+    /* there is nothing to dequeue and the queue is still filled.. This should
+     * not happen */
+    g_assert (leak != NULL);
+
+    GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
+        "queue is full, leaking item %p on downstream end", leak);
+    gst_buffer_unref (leak);
+  } while (gst_queue_is_filled (queue));
+  /* last buffer needs to get a DISCONT flag */
+  queue->head_needs_discont = TRUE;
+}
+
 static GstFlowReturn
 gst_queue_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -878,25 +898,8 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
         /* now we can clean up and exit right away */
         goto out_unref;
       case GST_QUEUE_LEAK_DOWNSTREAM:
-      {
-        /* for as long as the queue is filled, dequeue an item and discard 
-         * it. */
-        do {
-          GstMiniObject *leak;
-
-          leak = gst_queue_locked_dequeue (queue);
-          /* there is nothing to dequeue and the queue is still filled.. This
-           * should not happen. */
-          g_assert (leak != NULL);
-
-          GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
-              "queue is full, leaking item %p on downstream end", leak);
-          gst_buffer_unref (leak);
-        } while (gst_queue_is_filled (queue));
-        /* last buffer needs to get a DISCONT flag */
-        queue->head_needs_discont = TRUE;
+        gst_queue_leak_downstream (queue);
         break;
-      }
       default:
         g_warning ("Unknown leaky type, using default");
         /* fall-through */
@@ -1332,11 +1335,18 @@ gst_queue_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-/* changing the capacity of the queue must wake up
- * the _chain function, it might have more room now
- * to store the buffer/event in the queue */
-#define QUEUE_CAPACITY_CHANGE(q)\
-  GST_QUEUE_SIGNAL_DEL (q);
+static void
+queue_capacity_change (GstQueue * queue)
+{
+  if (queue->leaky == GST_QUEUE_LEAK_DOWNSTREAM) {
+    gst_queue_leak_downstream (queue);
+  }
+
+  /* changing the capacity of the queue must wake up
+   * the _chain function, it might have more room now
+   * to store the buffer/event in the queue */
+  GST_QUEUE_SIGNAL_DEL (queue);
+}
 
 /* Changing the minimum required fill level must
  * wake up the _loop function as it might now
@@ -1358,15 +1368,15 @@ gst_queue_set_property (GObject * object,
   switch (prop_id) {
     case ARG_MAX_SIZE_BYTES:
       queue->max_size.bytes = g_value_get_uint (value);
-      QUEUE_CAPACITY_CHANGE (queue);
+      queue_capacity_change (queue);
       break;
     case ARG_MAX_SIZE_BUFFERS:
       queue->max_size.buffers = g_value_get_uint (value);
-      QUEUE_CAPACITY_CHANGE (queue);
+      queue_capacity_change (queue);
       break;
     case ARG_MAX_SIZE_TIME:
       queue->max_size.time = g_value_get_uint64 (value);
-      QUEUE_CAPACITY_CHANGE (queue);
+      queue_capacity_change (queue);
       break;
     case ARG_MIN_THRESHOLD_BYTES:
       queue->min_threshold.bytes = g_value_get_uint (value);

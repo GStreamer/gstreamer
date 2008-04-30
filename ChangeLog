@@ -1,3 +1,13 @@
+2008-04-30  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Jonas Holmberg <jonas dot holmberg at axis dot com>
+
+	* plugins/elements/gstqueue.c: (gst_queue_leak_downstream),
+	(gst_queue_chain), (queue_capacity_change),
+	(gst_queue_set_property):
+	When changing thr max capacity of a leaky queue, immediatly drop buffers
+	instead of waiting for a push on the sinkpad. Fixes #530637.
+
 2008-04-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstdebugutils.c:
