@@ -1,3 +1,22 @@
+2008-04-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  (mpeg_video_stream_ctx_ensure_data), (mpeg_video_stream_type_find),
+	  (plugin_init):
+	  Rework mpeg video stream typefinding a bit more: make sure sequence,
+	  GOP, picture and slice headers appear in the order they should and
+	  that we've in fact at least had one of each; fix picture header
+	  detection; decouple picture and slice header check - don't assume
+	  they're at a fixed offset, there may be extra data in between. Also,
+	  announce varying degrees of probability depending on what we found
+	  exactly (multiple pictures, at least one picture, just sequence and
+	  GOP headers). Finally, in _ensure_data(), take into account that we
+	  might be typefinding smaller amounts of data, such as the first
+	  buffer of a stream, so fall back to the minimum size needed as long
+	  as that's available, instead of erroring out if there's less than
+	  2kB of data. Fixes #526173. Conveniently also doesn't recognise the
+	  fuzzed file from #399342 as valid.
+
 2008-04-30  Michael Smith <msmith@songbirdnest.com>
 
 	* ext/theora/theoradec.c:
@@ -10,9 +29,9 @@
 	* gst/typefind/gsttypefindfunctions.c: (MpegVideoStreamCtx),
 	  (mpeg_video_stream_ctx_advance), (mpeg_video_stream_ctx_ensure_data),
 	  (mpeg_video_stream_type_find):
-	  Refactor a bit: use context structure to track parsing offset and size of
-	  available data and make the code a bit clearer. Fixes bad memory access
-	  in #356937.
+	  Refactor a bit: use context structure to track parsing offset and
+	  size of available data and make the code a bit clearer. Fixes bad
+	  memory access in #356937.
 
 2008-04-28  Michael Smith <msmith@songbirdnest.com>
 

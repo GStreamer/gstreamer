@@ -1636,23 +1636,6 @@ done:
 static GstStaticCaps mpeg_video_caps = GST_STATIC_CAPS ("video/mpeg, "
     "systemstream = (boolean) false");
 #define MPEG_VIDEO_CAPS gst_static_caps_get(&mpeg_video_caps)
-static void
-mpeg_video_type_find (GstTypeFind * tf, gpointer unused)
-{
-  static const guint8 sequence_header[] = { 0x00, 0x00, 0x01, 0xb3 };
-  guint8 *data = NULL;
-
-  data = gst_type_find_peek (tf, 0, 8);
-
-  if (data && memcmp (data, sequence_header, 4) == 0) {
-    GstCaps *caps = gst_caps_copy (MPEG_VIDEO_CAPS);
-
-    gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-        G_TYPE_INT, 1, NULL);
-    gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, caps);
-    gst_caps_unref (caps);
-  }
-}
 
 /*
  * Idea is the same as MPEG system stream typefinding: We check each
@@ -1696,75 +1679,101 @@ mpeg_video_stream_ctx_ensure_data (GstTypeFind * tf, MpegVideoStreamCtx * c,
     return TRUE;
 
   c->data = gst_type_find_peek (tf, c->offset, GST_MPEGVID_TYPEFIND_SYNC_SIZE);
-  if (c->data == NULL)
-    return FALSE;
+  if (c->data != NULL) {
+    c->size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
+    return TRUE;
+  }
 
-  c->size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
-  return TRUE;
+  /* try min_size as fallback: we might be typefinding the first buffer of the
+   * stream and not have as much data available as we'd like */
+  c->data = gst_type_find_peek (tf, c->offset, min_len);
+  if (c->data != NULL) {
+    c->size = min_len;
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 static void
 mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
 {
   MpegVideoStreamCtx c = { 0, NULL, 0 };
+  gboolean seen_seq = FALSE;
+  gboolean seen_gop = FALSE;
+  guint num_pic_headers = 0;
   gint found = 0;
 
-  while (1) {
-    if (found >= GST_MPEGVID_TYPEFIND_TRY_PICTURES) {
-      GstCaps *caps = gst_caps_copy (MPEG_VIDEO_CAPS);
-
-      gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-          G_TYPE_INT, 1, NULL);
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 2, caps);
-      gst_caps_unref (caps);
-      return;
-    }
-
-    if (c.offset >= GST_MPEGVID_TYPEFIND_TRY_SYNC)
+  while (c.offset < GST_MPEGVID_TYPEFIND_TRY_SYNC) {
+    if (found >= GST_MPEGVID_TYPEFIND_TRY_PICTURES)
       break;
 
     if (!mpeg_video_stream_ctx_ensure_data (tf, &c, 5))
       break;
 
-    if (IS_MPEG_HEADER (c.data)) {
-      /* An MPEG PACK header indicates that this isn't an elementary stream */
-      if (IS_MPEG_PACK_CODE (c.data[3])) {
-        if (mpeg_sys_is_valid_pack (tf, c.data, c.size, NULL))
-          break;
-      }
+    if (!IS_MPEG_HEADER (c.data))
+      goto next;
 
-      /* are we a sequence (0xB3) header? */
-      if (c.data[3] == 0xB3) {
-        mpeg_video_stream_ctx_advance (tf, &c, 4 + 8);
-        continue;
-      }
+    /* a pack header indicates that this isn't an elementary stream */
+    if (c.data[3] == 0xBA && mpeg_sys_is_valid_pack (tf, c.data, c.size, NULL))
+      return;
 
-      /* ... or a GOP (0xB8) header? */
-      if (c.data[3] == 0xB8) {
-        mpeg_video_stream_ctx_advance (tf, &c, 8);
-        continue;
-      }
-
-      /* ... else, we should now see an image header ... */
-      /* is [4] really what we want here, not [3]? Won't [4] == 0 only work for
-       * the first image or the first few images? (tpm) */
-      if (c.data[4] == 0x00) {
-        mpeg_video_stream_ctx_advance (tf, &c, 8);
-
-        if (!mpeg_video_stream_ctx_ensure_data (tf, &c, 5))
-          break;
-
-        /* .. followed by a slice header */
-        if ((IS_MPEG_HEADER (c.data + 0) && c.data[3] == 0x01) ||
-            (IS_MPEG_HEADER (c.data + 1) && c.data[4] == 0x01)) {
-          mpeg_video_stream_ctx_advance (tf, &c, 4);
-          found += 1;
-          continue;
-        }
-      }
+    /* do we have a sequence header? */
+    if (c.data[3] == 0xB3) {
+      seen_seq = TRUE;
+      mpeg_video_stream_ctx_advance (tf, &c, 4 + 8);
+      continue;
     }
 
+    /* we really want to see a sequence header first */
+    if (!seen_seq)
+      goto next;
+
+    /* next, a GOP header would be nice */
+    if (c.data[3] == 0xB8) {
+      seen_gop = TRUE;
+      mpeg_video_stream_ctx_advance (tf, &c, 8);
+      continue;
+    }
+
+    /* we really want to see a sequence+GOP header before continuing */
+    if (!seen_gop)
+      goto next;
+
+    /* now that we've had a sequence+GOP, we'd like to see a picture header */
+    if (c.data[3] == 0x00) {
+      ++num_pic_headers;
+      mpeg_video_stream_ctx_advance (tf, &c, 8);
+      continue;
+    }
+
+    /* ... each followed by a slice header with slice_vertical_pos=1 */
+    if (c.data[3] == 0x01 && num_pic_headers > found) {
+      mpeg_video_stream_ctx_advance (tf, &c, 4);
+      found += 1;
+      continue;
+    }
+
+  next:
+
     mpeg_video_stream_ctx_advance (tf, &c, 1);
+  }
+
+  if (found > 0 || num_pic_headers > 0) {
+    GstTypeFindProbability probability;
+    GstCaps *caps;
+
+    if (found >= GST_MPEGVID_TYPEFIND_TRY_PICTURES)
+      probability = GST_TYPE_FIND_MAXIMUM - 2;
+    else if (found > 0)
+      probability = GST_TYPE_FIND_POSSIBLE + 1;
+    else
+      probability = GST_TYPE_FIND_POSSIBLE - 10;
+
+    caps = gst_caps_copy (MPEG_VIDEO_CAPS);
+    gst_caps_set_simple (caps, "mpegversion", G_TYPE_INT, 1, NULL);
+    gst_type_find_suggest (tf, probability, caps);
+    gst_caps_unref (caps);
   }
 }
 
@@ -3054,9 +3063,7 @@ plugin_init (GstPlugin * plugin)
       mpeg_ts_type_find, mpeg_ts_exts, MPEGTS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/ogg", GST_RANK_PRIMARY,
       ogganx_type_find, ogg_exts, OGGANX_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "video/mpeg,elementary", GST_RANK_SECONDARY,
-      mpeg_video_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "video/mpeg-stream", GST_RANK_MARGINAL,
+  TYPE_FIND_REGISTER (plugin, "video/mpeg-elementary", GST_RANK_MARGINAL,
       mpeg_video_stream_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL,
       NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg4", GST_RANK_PRIMARY,
