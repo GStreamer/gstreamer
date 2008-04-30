@@ -460,6 +460,18 @@ speex_dec_sink_event (GstPad * pad, GstEvent * event)
       if (rate <= 0.0)
         goto newseg_wrong_rate;
 
+      if (update) {
+        /* time progressed without data, see if we can fill the gap with
+         * some concealment data */
+        if (dec->segment.last_stop < start) {
+          GstClockTime duration;
+
+          duration = dec->segment.last_stop - start;
+          speex_dec_chain_parse_data (dec, NULL, dec->segment.last_stop,
+              duration);
+        }
+      }
+
       /* now configure the values */
       gst_segment_set_newsegment_full (&dec->segment, update,
           rate, arate, GST_FORMAT_TIME, start, stop, time);
@@ -654,6 +666,7 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
 
     /* copy timestamp */
   } else {
+    /* concealment data, pass NULL as the bits parameters */
     GST_DEBUG_OBJECT (dec, "creating concealment data");
     fpp = dec->header->frames_per_packet;
     bits = NULL;

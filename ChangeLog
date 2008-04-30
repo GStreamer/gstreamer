@@ -1,3 +1,9 @@
+2008-04-30  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/speex/gstspeexdec.c: (speex_dec_sink_event),
+	(speex_dec_chain_parse_data):
+	Produce concealment data when time progresses in a segment update.
+
 2008-04-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/speex/gstspeexdec.c: (speex_dec_chain_parse_data),
