@@ -835,7 +835,7 @@ static void
 gst_queue_leak_downstream (GstQueue * queue)
 {
   /* for as long as the queue is filled, dequeue an item and discard it */
-  do {
+  while (gst_queue_is_filled (queue)) {
     GstMiniObject *leak;
 
     leak = gst_queue_locked_dequeue (queue);
@@ -846,9 +846,10 @@ gst_queue_leak_downstream (GstQueue * queue)
     GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
         "queue is full, leaking item %p on downstream end", leak);
     gst_buffer_unref (leak);
-  } while (gst_queue_is_filled (queue));
-  /* last buffer needs to get a DISCONT flag */
-  queue->head_needs_discont = TRUE;
+
+    /* last buffer needs to get a DISCONT flag */
+    queue->head_needs_discont = TRUE;
+  }
 }
 
 static GstFlowReturn

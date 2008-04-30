@@ -1,3 +1,17 @@
+2008-04-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* plugins/elements/gstqueue.c: (gst_queue_leak_downstream):
+	  Since we're not called only from the chain function any longer,
+	  we can't assume that there's always data in the queue, so move
+	  the is_full check to the beginning of the loop (otherwise we'd
+	  hit the assert when changing the limit properties while the
+	  queue is empty or not running yet).
+	  Also, only set a discont if items were actually removed from
+	  the queue.
+
+	* tests/check/elements/queue.c: (test_leaky_downstream):
+	  Test case for the above.
+
 2008-04-30  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Jonas Holmberg <jonas dot holmberg at axis dot com>

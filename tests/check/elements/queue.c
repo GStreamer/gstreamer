@@ -267,7 +267,7 @@ GST_START_TEST (test_leaky_downstream)
   queue = setup_queue ();
   mysrcpad = gst_check_setup_src_pad (queue, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (queue, &sinktemplate, NULL);
-  g_object_set (G_OBJECT (queue), "max-size-buffers", 2, "leaky", 2, NULL);
+  g_object_set (G_OBJECT (queue), "leaky", 2, "max-size-buffers", 2, NULL);
   gst_pad_set_active (mysrcpad, TRUE);
 
   GST_DEBUG ("starting");
