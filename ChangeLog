@@ -1,3 +1,9 @@
+2008-04-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_videosrc_template),
+	  (gst_qtdemux_audiosrc_template):
+	  Fix swapped pad template names, spotted by Thiago Sousa Santos.
+
 2008-04-30  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/speex/gstspeexdec.c: (speex_dec_sink_event),
