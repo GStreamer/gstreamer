@@ -815,7 +815,7 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
         FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
   }
 
-  if (padprivate->segment.format == GST_FORMAT_TIME)
+  if (padprivate->segment.format != GST_FORMAT_TIME)
     goto invalid_segment;
 
   /* Just see if we receive invalid timestamp/durations */
