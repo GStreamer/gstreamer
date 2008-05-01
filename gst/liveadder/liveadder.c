@@ -1217,8 +1217,8 @@ gst_live_adder_loop (gpointer data)
     GST_DEBUG_OBJECT (adder, "We are EOS, pushing EOS downstream");
     adder->srcresult = GST_FLOW_UNEXPECTED;
     gst_pad_pause_task (adder->srcpad);
-    gst_pad_push_event (adder->srcpad, gst_event_new_eos ());
     GST_OBJECT_UNLOCK (adder);
+    gst_pad_push_event (adder->srcpad, gst_event_new_eos ());
     return;
   }
 }
