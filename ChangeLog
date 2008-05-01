@@ -1,3 +1,9 @@
+2008-05-01  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstregistry.c: (gst_registry_scan_path_level):
+	  Run g_str_has_suffix() only on the file name, not the
+	  entire file path.
+
 2008-04-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* plugins/elements/gstqueue.c: (gst_queue_leak_downstream):
