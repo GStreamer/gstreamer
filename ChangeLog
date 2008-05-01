@@ -1,3 +1,14 @@
+2008-05-01  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/playback/gstdecodebin.c: (free_pad_probe_for_element),
+	  (try_to_link_1):
+	  If we can't activate one of the decoders we plugged in (such as,
+	  say, musepackdec) for some reason (it might not support push mode,
+	  for example), remove any pad probes that close_pad_link() might
+	  have set up. This makes sure we later don't try to remove a probe
+	  for a pad that doesn't exist any longer, and avoids nast warnings
+	  and probably other things too.
+
 2008-04-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/typefind/gsttypefindfunctions.c:

@@ -569,6 +569,25 @@ free_pad_probes (GstDecodeBin * decode_bin)
   decode_bin->probes = NULL;
 }
 
+/* used when we need to remove a probe because the decoder we plugged failed
+ * to activate */
+static void
+free_pad_probe_for_element (GstDecodeBin * decode_bin, GstElement * element)
+{
+  GList *l;
+
+  for (l = decode_bin->probes; l != NULL; l = g_list_next (l)) {
+    PadProbeData *data = (PadProbeData *) l->data;
+
+    if (GST_ELEMENT_CAST (GST_PAD_PARENT (data->pad)) == element) {
+      gst_pad_remove_data_probe (data->pad, data->sigid);
+      decode_bin->probes = g_list_delete_link (decode_bin->probes, l);
+      g_free (data);
+      return;
+    }
+  }
+}
+
 static gboolean
 add_fakesink (GstDecodeBin * decode_bin)
 {
@@ -992,6 +1011,8 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
                   GST_STATE_PAUSED)) == GST_STATE_CHANGE_FAILURE) {
         GST_WARNING_OBJECT (decode_bin, "Couldn't set %s to PAUSED",
             GST_ELEMENT_NAME (element));
+        /* close_link -> close_pad_link -> might have set up a pad probe */
+        free_pad_probe_for_element (decode_bin, element);
         gst_element_set_state (element, GST_STATE_NULL);
         gst_bin_remove (GST_BIN (decode_bin), element);
         continue;
