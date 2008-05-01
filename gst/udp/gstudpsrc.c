@@ -434,8 +434,21 @@ no_select:
     ret = recvfrom (udpsrc->sock.fd, pktdata, pktsize,
         0, (struct sockaddr *) &tmpaddr, &len);
     if (ret < 0) {
+#ifdef G_OS_WIN32
+      /* WSAECONNRESET for a UDP socket means that a packet sent with udpsink
+       * generated a "port unreachable" ICMP response. We ignore that and try
+       * again. */
+      if (WSAGetLastError () == WSAECONNRESET) {
+        g_free (pktdata);
+        pktdata = NULL;
+        goto retry;
+      }
+      if (WSAGetLastError () != WSAEINTR)
+        goto receive_error;
+#else
       if (errno != EAGAIN && errno != EINTR)
         goto receive_error;
+#endif
     } else
       break;
   }
@@ -487,8 +500,13 @@ ioctl_failed:
 receive_error:
   {
     g_free (pktdata);
+#ifdef G_OS_WIN32
+    GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
+        ("receive error %d (WSA error: %d)", ret, WSAGetLastError ()));
+#else
     GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
         ("receive error %d: %s (%d)", ret, g_strerror (errno), errno));
+#endif
     return GST_FLOW_ERROR;
   }
 skip_error:

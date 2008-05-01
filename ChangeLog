@@ -1,3 +1,11 @@
+2008-05-01  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: Youness Alaoui <youness.alaoui at collabora co uk>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_create):
+	  Don't error out if we get an ICMP destination-unreachable
+	  message when trying to read packets on win32 (#529454).
+
 2008-04-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac:
