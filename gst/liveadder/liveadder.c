@@ -806,6 +806,18 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
   if (!GST_BUFFER_TIMESTAMP_IS_VALID(buffer))
     goto invalid_timestamp;
 
+  if (padprivate->segment.format == GST_FORMAT_UNDEFINED)
+  {
+    GST_WARNING_OBJECT (adder, "No new-segment received,"
+        " initializing segment with time 0..-1");
+    gst_segment_init (&padprivate->segment, GST_FORMAT_TIME);
+    gst_segment_set_newsegment (&padprivate->segment,
+        FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  }
+
+  if (padprivate->segment.format == GST_FORMAT_TIME)
+    goto invalid_segment;
+
   /* Just see if we receive invalid timestamp/durations */
   if (GST_CLOCK_TIME_IS_VALID (padprivate->expected_timestamp) &&
       !GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DISCONT) &&
@@ -983,6 +995,19 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
       ("Invalid timestamp received on buffer"));
 
   return GST_FLOW_ERROR;
+
+ invalid_segment:
+  {
+    const gchar *format = gst_format_get_name (padprivate->segment.format);
+    GST_OBJECT_UNLOCK (adder);
+    gst_buffer_unref (buffer);
+    GST_ELEMENT_ERROR (adder, STREAM, FAILED,
+        ("This element only supports TIME segments, received other type"),
+        ("Received a segment of type %s, only support time segment", format));
+
+    return GST_FLOW_ERROR;
+  }
+
 }
 
 /*
