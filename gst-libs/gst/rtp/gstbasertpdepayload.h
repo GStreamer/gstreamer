@@ -113,8 +113,13 @@ struct _GstBaseRTPDepayloadClass
    * this function is used by the child class before gst_pad_pushing */
   void (*set_gst_timestamp) (GstBaseRTPDepayload *filter, guint32 timestamp, GstBuffer *buf);
 
+  /* non-pure function used to to signal the depayloader about packet loss. the
+   * timestamp and duration are the estimated values of the lost packet.
+   * The default implementation of this message pushes a segment update. */
+  gboolean (*packet_lost) (GstBaseRTPDepayload *filter, GstEvent *event);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING-1];
 };
 
 GType gst_base_rtp_depayload_get_type (void);

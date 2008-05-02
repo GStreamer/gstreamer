@@ -70,7 +70,8 @@ enum
 enum
 {
   PROP_0,
-  PROP_QUEUE_DELAY
+  PROP_QUEUE_DELAY,
+  PROP_LAST
 };
 
 static void gst_base_rtp_depayload_finalize (GObject * object);
@@ -90,6 +91,8 @@ static GstStateChangeReturn gst_base_rtp_depayload_change_state (GstElement *
 
 static void gst_base_rtp_depayload_set_gst_timestamp
     (GstBaseRTPDepayload * filter, guint32 rtptime, GstBuffer * buf);
+static gboolean gst_base_rtp_depayload_packet_lost (GstBaseRTPDepayload *
+    filter, GstEvent * event);
 
 GST_BOILERPLATE (GstBaseRTPDepayload, gst_base_rtp_depayload, GstElement,
     GST_TYPE_ELEMENT);
@@ -134,6 +137,7 @@ gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
   gstelement_class->change_state = gst_base_rtp_depayload_change_state;
 
   klass->set_gst_timestamp = gst_base_rtp_depayload_set_gst_timestamp;
+  klass->packet_lost = gst_base_rtp_depayload_packet_lost;
 
   GST_DEBUG_CATEGORY_INIT (basertpdepayload_debug, "basertpdepayload", 0,
       "Base class for RTP Depayloaders");
@@ -316,6 +320,29 @@ gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       break;
     }
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    {
+      GstBaseRTPDepayloadClass *bclass;
+
+      bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
+
+      if (gst_event_has_name (event, "GstRTPPacketLost")) {
+        /* we get this event from the jitterbuffer when it considers a packet as
+         * being lost. We send it to our packet_lost vmethod. The default
+         * implementation will make time progress by pushing out a NEWSEGMENT
+         * update event. Subclasses can override and to one of the following:
+         *  - Adjust timestamp/duration to something more accurate before
+         *    calling the parent (default) packet_lost method.
+         *  - do some more advanced error concealing on the already received
+         *    (fragmented) packets.
+         *  - ignore the packet lost.
+         */
+        if (bclass->packet_lost)
+          res = bclass->packet_lost (filter, event);
+      }
+      gst_event_unref (event);
+      break;
+    }
     default:
       /* pass other events forward */
       res = gst_pad_push_event (filter->srcpad, event);
@@ -402,6 +429,60 @@ gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * out_buf)
   return gst_base_rtp_depayload_push_full (filter, FALSE, 0, out_buf);
 }
 
+static GstEvent *
+create_segment_event (GstBaseRTPDepayload * filter, gboolean update,
+    GstClockTime position)
+{
+  GstEvent *event;
+  GstClockTime stop;
+  GstBaseRTPDepayloadPrivate *priv;
+
+  priv = filter->priv;
+
+  if (priv->npt_stop != -1)
+    stop = priv->npt_stop - priv->npt_start;
+  else
+    stop = -1;
+
+  event = gst_event_new_new_segment_full (update, priv->play_speed,
+      priv->play_scale, GST_FORMAT_TIME, position, stop,
+      position + priv->npt_start);
+
+  return event;
+}
+
+/* convert the PacketLost event form a jitterbuffer to a segment update.
+ * subclasses can override this.  */
+static gboolean
+gst_base_rtp_depayload_packet_lost (GstBaseRTPDepayload * filter,
+    GstEvent * event)
+{
+  GstBaseRTPDepayloadPrivate *priv;
+  GstClockTime timestamp, duration, position;
+  GstEvent *sevent;
+  const GstStructure *s;
+
+  priv = filter->priv;
+
+  s = gst_event_get_structure (event);
+
+  /* first start by parsing the timestamp and duration */
+  timestamp = -1;
+  duration = -1;
+
+  gst_structure_get_clock_time (s, "timestamp", &timestamp);
+  gst_structure_get_clock_time (s, "duration", &duration);
+
+  position = timestamp;
+  if (duration != -1)
+    position += duration;
+
+  /* update the current segment with the elapsed time */
+  sevent = create_segment_event (filter, TRUE, position);
+
+  return gst_pad_push_event (filter->srcpad, sevent);
+}
+
 static void
 gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
     guint32 rtptime, GstBuffer * buf)
@@ -424,18 +505,8 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
   /* if this is the first buffer send a NEWSEGMENT */
   if (filter->need_newsegment) {
     GstEvent *event;
-    GstClockTime stop, position;
 
-    if (priv->npt_stop != -1)
-      stop = priv->npt_stop - priv->npt_start;
-    else
-      stop = -1;
-
-    position = priv->npt_start;
-
-    event =
-        gst_event_new_new_segment_full (FALSE, priv->play_speed,
-        priv->play_scale, GST_FORMAT_TIME, 0, stop, position);
+    event = create_segment_event (filter, FALSE, 0);
 
     gst_pad_push_event (filter->srcpad, event);
 

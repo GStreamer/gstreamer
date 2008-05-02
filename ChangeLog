@@ -1,3 +1,16 @@
+2008-05-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_class_init),
+	(gst_base_rtp_depayload_handle_sink_event), (create_segment_event),
+	(gst_base_rtp_depayload_packet_lost),
+	(gst_base_rtp_depayload_set_gst_timestamp):
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	Catch packet-lost events from the jitterbuffer and convert them into a
+	vmethod call (lost-packet) so that depayloaders can do something smart.
+	Also add a default packet-lost function that sends out a segment update
+	to the decoders.
+
 2008-05-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/playback/test4.c:
