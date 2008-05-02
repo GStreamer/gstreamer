@@ -1,3 +1,9 @@
+2008-05-02  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* gst/videotestsrc/videotestsrc.c (paint_setup_NV12),
+	(paint_setup_NV21), (paint_hline_NV12_NV21):
+	Add support for NV12 and NV21 in videotestsrc
+
 2008-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/videoscale/gstvideoscale.c:

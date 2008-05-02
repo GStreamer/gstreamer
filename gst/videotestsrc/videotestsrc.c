@@ -263,6 +263,8 @@ static void paint_setup_Y41B (paintinfo * p, unsigned char *dest);
 static void paint_setup_Y42B (paintinfo * p, unsigned char *dest);
 static void paint_setup_Y800 (paintinfo * p, unsigned char *dest);
 static void paint_setup_AYUV (paintinfo * p, unsigned char *dest);
+static void paint_setup_NV12 (paintinfo * p, unsigned char *dest);
+static void paint_setup_NV21 (paintinfo * p, unsigned char *dest);
 
 #if 0
 static void paint_setup_IMC1 (paintinfo * p, unsigned char *dest);
@@ -288,6 +290,7 @@ static void paint_setup_xRGB1555 (paintinfo * p, unsigned char *dest);
 static void paint_setup_bayer (paintinfo * p, unsigned char *dest);
 
 static void paint_hline_I420 (paintinfo * p, int x, int y, int w);
+static void paint_hline_NV12_NV21 (paintinfo * p, int x, int y, int w);
 static void paint_hline_YUY2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_IYU2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y41B (paintinfo * p, int x, int y, int w);
@@ -345,7 +348,9 @@ struct fourcc_list_struct fourcc_list[] = {
   /* I420 */
   {VTS_YUV, "I420", "I420", 12, paint_setup_I420, paint_hline_I420},
   /* NV12 */
+  {VTS_YUV, "NV12", "NV12", 12, paint_setup_NV12, paint_hline_NV12_NV21},
   /* NV21 */
+  {VTS_YUV, "NV21", "NV21", 12, paint_setup_NV21, paint_hline_NV12_NV21},
 #if 0
   /* IMC1 */
   {VTS_YUV, "IMC1", "IMC1", 16, paint_setup_IMC1, paint_hline_IMC1},
@@ -1026,6 +1031,30 @@ paint_setup_I420 (paintinfo * p, unsigned char *dest)
 }
 
 static void
+paint_setup_NV12 (paintinfo * p, unsigned char *dest)
+{
+  p->yp = dest;
+  p->ystride = GST_ROUND_UP_4 (p->width);
+  p->up = p->yp + p->ystride * GST_ROUND_UP_2 (p->height);
+  p->vp = p->up + 1;
+  p->ustride = p->ystride;
+  p->vstride = p->ystride;
+  p->endptr = p->up + (p->ystride * p->height) / 2;
+}
+
+static void
+paint_setup_NV21 (paintinfo * p, unsigned char *dest)
+{
+  p->yp = dest;
+  p->ystride = GST_ROUND_UP_4 (p->width);
+  p->vp = p->yp + p->ystride * GST_ROUND_UP_2 (p->height);
+  p->up = p->vp + 1;
+  p->ustride = p->ystride;
+  p->vstride = p->ystride;
+  p->endptr = p->vp + (p->ustride * p->height) / 2;
+}
+
+static void
 paint_hline_I420 (paintinfo * p, int x, int y, int w)
 {
   int x1 = x / 2;
@@ -1036,6 +1065,19 @@ paint_hline_I420 (paintinfo * p, int x, int y, int w)
   oil_splat_u8_ns (p->yp + offset + x, &p->color->Y, w);
   oil_splat_u8_ns (p->up + offset1 + x1, &p->color->U, x2 - x1);
   oil_splat_u8_ns (p->vp + offset1 + x1, &p->color->V, x2 - x1);
+}
+
+static void
+paint_hline_NV12_NV21 (paintinfo * p, int x, int y, int w)
+{
+  int x1 = x / 2;
+  int x2 = (x + w) / 2;
+  int offset = y * p->ystride;
+  int offsetuv = (y / 2) * p->ustride + x;
+
+  oil_splat_u8_ns (p->yp + offset + x, &p->color->Y, w);
+  oil_splat_u8 (p->up + offsetuv, 2, &p->color->U, x2 - x1);
+  oil_splat_u8 (p->vp + offsetuv, 2, &p->color->V, x2 - x1);
 }
 
 static void
