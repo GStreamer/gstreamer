@@ -126,7 +126,6 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
   GstElement *target_element;
   GstPad *target_pad, *tmp_pad;
   GstPadDirection dir;
-  guint src_pads, sink_pads;
   gchar *pad_name, *element_name;
   gchar *target_pad_name, *target_element_name;
   gchar *color_name;
@@ -176,10 +175,6 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
       "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\"];\n",
       spc, element_name, pad_name, color_name, GST_OBJECT_NAME (pad));
 
-  if (dir == GST_PAD_SRC)
-    src_pads++;
-  else if (dir == GST_PAD_SINK)
-    sink_pads++;
   g_free (pad_name);
   g_free (element_name);
 
