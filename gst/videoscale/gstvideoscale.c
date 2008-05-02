@@ -89,10 +89,6 @@ enum
       /* FILL ME */
 };
 
-/* can't handle width/height of 1 yet, since we divide a lot by (n-1) */
-#undef GST_VIDEO_SIZE_RANGE
-#define GST_VIDEO_SIZE_RANGE "(int) [ 2, MAX ]"
-
 static GstStaticCaps gst_video_scale_format_caps[] = {
   GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB),

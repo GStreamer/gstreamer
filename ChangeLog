@@ -1,3 +1,18 @@
+2008-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/videoscale/gstvideoscale.c:
+	* gst/videoscale/vs_4tap.c: (vs_image_scale_4tap_Y):
+	* gst/videoscale/vs_image.c: (vs_image_scale_nearest_RGBA),
+	(vs_image_scale_linear_RGBA), (vs_image_scale_nearest_RGB),
+	(vs_image_scale_linear_RGB), (vs_image_scale_nearest_YUYV),
+	(vs_image_scale_linear_YUYV), (vs_image_scale_nearest_UYVY),
+	(vs_image_scale_linear_UYVY), (vs_image_scale_nearest_Y),
+	(vs_image_scale_linear_Y), (vs_image_scale_nearest_RGB565),
+	(vs_image_scale_linear_RGB565), (vs_image_scale_nearest_RGB555),
+	(vs_image_scale_linear_RGB555):
+	Support 1x1 images as input and output as for example the BBC HQ new
+	streams have 1x1 GIFs in the playlists for some reason.
+
 2008-05-01  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/playback/gstdecodebin.c: (free_pad_probe_for_element),

@@ -163,8 +163,15 @@ vs_image_scale_4tap_Y (const VSImage * dest, const VSImage * src,
   int xacc;
   int k;
 
-  y_increment = ((src->height - 1) << 16) / (dest->height - 1);
-  x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+  if (dest->height == 1)
+    y_increment = 0;
+  else
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+
+  if (dest->width == 1)
+    x_increment = 0;
+  else
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
 
   k = 0;
   for (i = 0; i < 4; i++) {
