@@ -141,6 +141,7 @@ gst_rtp_pcmu_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstCaps *srccaps;
   GstBuffer *outbuf = NULL;
+  guint len;
 
   GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
       GST_BUFFER_SIZE (buf),
@@ -156,7 +157,11 @@ gst_rtp_pcmu_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     gst_caps_unref (srccaps);
   }
 
+  len = gst_rtp_buffer_get_payload_len (buf);
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+
+  GST_BUFFER_DURATION (outbuf) =
+      gst_util_uint64_scale_int (len, GST_SECOND, depayload->clock_rate);
 
   return outbuf;
 }
