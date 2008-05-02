@@ -782,6 +782,8 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
 
   if (ret != GST_FLOW_OK)
   {
+    GST_DEBUG_OBJECT (adder, "Passing non-ok result from src: %s",
+        gst_flow_get_name (ret));
     gst_buffer_unref (buffer);
     goto out;
   }
