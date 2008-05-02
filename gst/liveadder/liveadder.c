@@ -1020,6 +1020,10 @@ check_eos_locked (GstLiveAdder *adder)
 {
   GList *item;
 
+  /* We can't be EOS if we have no sinkpads */
+  if (adder->sinkpads == NULL)
+    return FALSE;
+
   for (item = adder->sinkpads;
        item;
        item = g_list_next (item))
