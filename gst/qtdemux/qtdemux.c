@@ -4298,9 +4298,18 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_from_string ("video/mpeg, "
           "systemstream = (boolean) false, " "mpegversion = (int) 1");
       break;
+    case GST_MAKE_FOURCC ('h', 'd', 'v', '1'): // HDV 720p30
     case GST_MAKE_FOURCC ('h', 'd', 'v', '2'): // HDV 1080i60
     case GST_MAKE_FOURCC ('h', 'd', 'v', '3'): // HDV 1080i50
-    case GST_MAKE_FOURCC ('m', 'x', '5', 'p'): // MPEG IMX 625/50 (50Mb/s)
+    case GST_MAKE_FOURCC ('h', 'd', 'v', '5'): // HDV 720p25
+    case GST_MAKE_FOURCC ('m', 'x', '5', 'n'): // MPEG2 IMX NTSC 525/60 50mb/s produced by FCP
+    case GST_MAKE_FOURCC ('m', 'x', '5', 'p'): // MPEG2 IMX PAL 625/60 50mb/s produced by FCP
+    case GST_MAKE_FOURCC ('m', 'x', '4', 'n'): // MPEG2 IMX NTSC 525/60 40mb/s produced by FCP
+    case GST_MAKE_FOURCC ('m', 'x', '4', 'p'): // MPEG2 IMX PAL 625/60 40mb/s produced by FCP
+    case GST_MAKE_FOURCC ('m', 'x', '3', 'n'): // MPEG2 IMX NTSC 525/60 30mb/s produced by FCP
+    case GST_MAKE_FOURCC ('m', 'x', '3', 'p'): // MPEG2 IMX PAL 625/50 30mb/s produced by FCP
+    case GST_MAKE_FOURCC ('x', 'd', 'v', '2'): // XDCAM HD 1080i60
+    case GST_MAKE_FOURCC ('A', 'V', 'm', 'p'): // AVID IMX PAL
       _codec ("MPEG-2 video");
       caps = gst_caps_from_string ("video/mpeg, "
           "systemstream = (boolean) false, " "mpegversion = (int) 2");

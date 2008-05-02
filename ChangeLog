@@ -1,3 +1,10 @@
+2008-05-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: j^ <j@bootlab.org>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):
+	Add more mpeg2 variants. Fixes #530886.
+
 2008-05-01  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Youness Alaoui <youness.alaoui at collabora co uk>
