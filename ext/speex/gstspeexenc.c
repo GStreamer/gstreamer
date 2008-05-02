@@ -48,7 +48,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-speex")
+    GST_STATIC_CAPS ("audio/x-speex, "
+        "rate = (int) [ 6000, 48000 ], " "channels = (int) [ 1, 2]")
     );
 
 static const GstElementDetails speexenc_details =
@@ -219,6 +220,39 @@ gst_speex_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   return enc->setup;
 }
+
+
+static GstCaps *
+gst_speex_enc_sink_getcaps (GstPad * pad)
+{
+  GstCaps *caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  GstCaps *peercaps = NULL;
+  GstSpeexEnc *enc = GST_SPEEX_ENC (gst_pad_get_parent_element (pad));
+
+  peercaps = gst_pad_peer_get_caps (enc->srcpad);
+
+  if (peercaps) {
+    if (!gst_caps_is_empty (peercaps) && !gst_caps_is_any (peercaps)) {
+      GstStructure *ps = gst_caps_get_structure (peercaps, 0);
+      GstStructure *s = gst_caps_get_structure (caps, 0);;
+      gint rate, channels;
+
+      if (gst_structure_get_int (ps, "rate", &rate)) {
+        gst_structure_fixate_field_nearest_int (s, "rate", rate);
+      }
+
+      if (gst_structure_get_int (ps, "channels", &channels)) {
+        gst_structure_fixate_field_nearest_int (s, "channels", channels);
+      }
+    }
+    gst_caps_unref (peercaps);
+  }
+
+  gst_object_unref (enc);
+
+  return caps;
+}
+
 
 static gboolean
 gst_speex_enc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
@@ -458,6 +492,8 @@ gst_speex_enc_init (GstSpeexEnc * enc, GstSpeexEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_speex_enc_chain));
   gst_pad_set_setcaps_function (enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_speex_enc_sink_setcaps));
+  gst_pad_set_getcaps_function (enc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_speex_enc_sink_getcaps));
   gst_pad_set_query_function (enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_speex_enc_sink_query));
 
@@ -780,6 +816,10 @@ gst_speex_enc_chain (GstPad * pad, GstBuffer * buf)
     /* mark and put on caps */
     caps = gst_pad_get_caps (enc->srcpad);
     caps = gst_speex_enc_set_header_on_caps (caps, buf1, buf2);
+
+    gst_caps_set_simple (caps,
+        "rate", G_TYPE_INT, enc->rate,
+        "channels", G_TYPE_INT, enc->channels, NULL);
 
     /* negotiate with these caps */
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
