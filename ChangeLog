@@ -1,3 +1,9 @@
+2008-05-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  Include stdlib to fix the build. Use g_free instead of free, libsoup
+	  uses glib.
+
 2008-05-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: j^ <j@bootlab.org>

@@ -89,6 +89,9 @@
 #endif
 
 #include <string.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>             /* atoi() */
+#endif
 #include <gst/gstelement.h>
 #include <gst/gst-i18n-plugin.h>
 #include <libsoup/soup.h>
@@ -437,7 +440,7 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
         char *proxy = soup_uri_to_string (src->proxy, FALSE);
 
         g_value_set_string (value, proxy);
-        free (proxy);
+        g_free (proxy);
       }
       break;
     case PROP_COOKIES:
