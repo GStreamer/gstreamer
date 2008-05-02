@@ -1,3 +1,12 @@
+2008-05-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/playback/test4.c:
+	* gst/playback/test5.c:
+	* gst/playback/test6.c:
+	* gst/playback/test7.c:
+	  Also include config.h when relying on defines from it. Fixes the
+	  build. Its been a please to serve :)
+
 2008-05-02  Thijs Vermeir <thijsvermeir@gmail.com>
 
 	* gst/videotestsrc/videotestsrc.c (paint_setup_NV12),
