@@ -2,6 +2,14 @@
 
 	Patch by: Olivier Crete <tester at tester dot ca>
 
+	* gst/rtp/gstrtpspeexpay.c: (gst_rtp_speex_pay_class_init),
+	(gst_rtp_speex_pay_getcaps):
+	Add negotiation for the speec channels and rate. See #465146.
+
+2008-05-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Olivier Crete <tester at tester dot ca>
+
 	* gst/rtp/gstrtpilbcpay.c: (gst_rtpilbcpay_class_init),
 	(gst_rtpilbcpay_sink_setcaps), (gst_rtpilbcpay_sink_getcaps):
 	Add negotiation for the ILBC mode. See #465146.

@@ -41,7 +41,8 @@ static GstStaticPadTemplate gst_rtp_speex_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-speex")
+    GST_STATIC_CAPS ("audio/x-speex, "
+        "rate = (int) [ 6000, 48000 ], " "channels = (int) 1")
     );
 
 static GstStaticPadTemplate gst_rtp_speex_pay_src_template =
@@ -61,6 +62,8 @@ static GstStateChangeReturn gst_rtp_speex_pay_change_state (GstElement *
 
 static gboolean gst_rtp_speex_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
+static GstCaps *gst_rtp_speex_pay_getcaps (GstBaseRTPPayload * payload,
+    GstPad * pad);
 static GstFlowReturn gst_rtp_speex_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
@@ -96,6 +99,7 @@ gst_rtp_speex_pay_class_init (GstRtpSPEEXPayClass * klass)
   gstelement_class->change_state = gst_rtp_speex_pay_change_state;
 
   gstbasertppayload_class->set_caps = gst_rtp_speex_pay_setcaps;
+  gstbasertppayload_class->get_caps = gst_rtp_speex_pay_getcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_speex_pay_handle_buffer;
 }
 
@@ -112,6 +116,32 @@ gst_rtp_speex_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   /* don't configure yet, we wait for the ident packet */
   return TRUE;
+}
+
+
+static GstCaps *
+gst_rtp_speex_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
+{
+  GstCaps *otherpadcaps;
+  GstCaps *caps;
+
+  otherpadcaps = gst_pad_get_allowed_caps (payload->srcpad);
+  caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+
+  if (otherpadcaps) {
+    if (!gst_caps_is_empty (otherpadcaps)) {
+      GstStructure *ps = gst_caps_get_structure (otherpadcaps, 0);
+      GstStructure *s = gst_caps_get_structure (caps, 0);
+      gint clock_rate;
+
+      if (gst_structure_get_int (ps, "clock-rate", &clock_rate)) {
+        gst_structure_fixate_field_nearest_int (s, "rate", clock_rate);
+      }
+    }
+    gst_caps_unref (otherpadcaps);
+  }
+
+  return caps;
 }
 
 static gboolean
