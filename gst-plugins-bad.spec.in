@@ -145,9 +145,12 @@ rm -rf $RPM_BUILD_ROOT
 @USE_X264_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstx264.so
 @USE_DC1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 @USE_TIMIDITY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so
-
+@USE_WILDMIDI_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
 
 %changelog
+* Fri May 2 2008 Christian Schaller <christian.schaller at collabora dot co uk>
+- Add Wildmidi plugin
+
 * Mon Apr 14 2008 Tim-Philipp Müller <tim.muller at collabora dot co uk>
 - Remove souphttpsrc plugin, which has moved to gst-plugins-good.
 
