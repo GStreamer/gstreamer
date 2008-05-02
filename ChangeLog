@@ -1,5 +1,13 @@
 2008-05-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_init),
+	(gst_basertppayload_sink_setcaps),
+	(gst_basertppayload_sink_getcaps):
+	Rename the setcaps/getcaps function internally to make it clear that
+	they are called for the sink pad.
+
+2008-05-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
 	(gst_base_rtp_depayload_class_init),
 	(gst_base_rtp_depayload_handle_sink_event), (create_segment_event),

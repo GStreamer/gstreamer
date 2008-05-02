@@ -90,8 +90,8 @@ static void gst_basertppayload_init (GstBaseRTPPayload * basertppayload,
     gpointer g_class);
 static void gst_basertppayload_finalize (GObject * object);
 
-static gboolean gst_basertppayload_setcaps (GstPad * pad, GstCaps * caps);
-static GstCaps *gst_basertppayload_getcaps (GstPad * pad);
+static gboolean gst_basertppayload_sink_setcaps (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_basertppayload_sink_getcaps (GstPad * pad);
 static gboolean gst_basertppayload_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_basertppayload_chain (GstPad * pad,
     GstBuffer * buffer);
@@ -234,9 +234,9 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
 
   basertppayload->sinkpad = gst_pad_new_from_template (templ, "sink");
   gst_pad_set_setcaps_function (basertppayload->sinkpad,
-      gst_basertppayload_setcaps);
+      gst_basertppayload_sink_setcaps);
   gst_pad_set_getcaps_function (basertppayload->sinkpad,
-      gst_basertppayload_getcaps);
+      gst_basertppayload_sink_getcaps);
   gst_pad_set_event_function (basertppayload->sinkpad,
       gst_basertppayload_event);
   gst_pad_set_chain_function (basertppayload->sinkpad,
@@ -288,7 +288,7 @@ gst_basertppayload_finalize (GObject * object)
 }
 
 static gboolean
-gst_basertppayload_setcaps (GstPad * pad, GstCaps * caps)
+gst_basertppayload_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseRTPPayload *basertppayload;
   GstBaseRTPPayloadClass *basertppayload_class;
@@ -307,7 +307,7 @@ gst_basertppayload_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstCaps *
-gst_basertppayload_getcaps (GstPad * pad)
+gst_basertppayload_sink_getcaps (GstPad * pad)
 {
   GstBaseRTPPayload *basertppayload;
   GstBaseRTPPayloadClass *basertppayload_class;
