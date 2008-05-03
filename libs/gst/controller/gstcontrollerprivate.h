@@ -45,6 +45,8 @@ typedef struct _GstControlledProperty
 
 #define GST_CONTROLLED_PROPERTY(obj)    ((GstControlledProperty *)(obj))
 
+extern GQuark priv_gst_controller_key;
+
 G_END_DECLS
 
 #endif /* __GST_CONTROLLER_PRIVATE_H__ */

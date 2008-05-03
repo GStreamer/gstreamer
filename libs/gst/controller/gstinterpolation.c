@@ -866,9 +866,8 @@ static GstInterpolateMethod interpolate_cubic = {
   (GstControlSourceGetValueArray) NULL
 };
 
-
 /*  register all interpolation methods */
-GstInterpolateMethod *interpolation_methods[] = {
+GstInterpolateMethod *priv_gst_interpolation_methods[] = {
   &interpolate_none,
   &interpolate_trigger,
   &interpolate_linear,
@@ -876,4 +875,5 @@ GstInterpolateMethod *interpolation_methods[] = {
   &interpolate_cubic
 };
 
-guint num_interpolation_methods = G_N_ELEMENTS (interpolation_methods);
+guint priv_gst_num_interpolation_methods =
+G_N_ELEMENTS (priv_gst_interpolation_methods);

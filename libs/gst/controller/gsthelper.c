@@ -41,8 +41,6 @@
 #define GST_CAT_DEFAULT controller_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 
-extern GQuark priv_gst_controller_key;
-
 /**
  * gst_object_control_properties:
  * @object: the object of which some properties should be controlled

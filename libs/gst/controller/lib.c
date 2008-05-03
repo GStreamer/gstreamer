@@ -24,6 +24,7 @@
 #  include "config.h"
 #endif
 #include <gst/gst.h>
+#include <gst/controller/gstcontroller.h>
 
 /* library initialisation */
 

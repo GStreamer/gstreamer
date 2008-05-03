@@ -96,5 +96,8 @@ struct _GstInterpolationControlSourcePrivate
   gboolean valid_cache;
 };
 
+extern GstInterpolateMethod *priv_gst_interpolation_methods[];
+extern guint priv_gst_num_interpolation_methods;
+
 #endif /* __GST_INTERPOLATION_CONTROL_SOURCE_PRIVATE_H__ */
 

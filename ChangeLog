@@ -1,3 +1,14 @@
+2008-05-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* libs/gst/controller/gstcontrollerprivate.h:
+	* libs/gst/controller/gsthelper.c:
+	* libs/gst/controller/gstinterpolation.c:
+	* libs/gst/controller/gstinterpolationcontrolsource.c:
+	(gst_interpolation_control_source_set_interpolation_mode):
+	* libs/gst/controller/gstinterpolationcontrolsourceprivate.h:
+	* libs/gst/controller/lib.c:
+	Move some private declarations into private headers.
+
 2008-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstdebugutils.c: (debug_dump_element_pad):
