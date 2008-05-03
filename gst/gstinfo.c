@@ -665,20 +665,25 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
       gst_util_get_timestamp ());
 
-  /*
-     g_printerr ("%s (%p - %" GST_TIME_FORMAT ") %s%20s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",
-     gst_debug_level_get_name (level), g_thread_self (),
-     GST_TIME_ARGS (elapsed), color,
-     gst_debug_category_get_name (category), clear, pidcolor, pid, clear,
-     color, file, line, function, obj, clear, gst_debug_message_get (message));
-   */
-
+#if defined (GLIB_SIZEOF_VOID_P) && GLIB_SIZEOF_VOID_P == 8
+  /* width of %p varies depending on actual value of pointer, which can make
+   * output unevenly aligned if multiple threads are involved, hence the %14p
+   * (should really be %18p, but %14p seems a good compromise between too many
+   * white spaces and likely unalignment on my system) */
   g_printerr ("%" GST_TIME_FORMAT
-      " %s%5d%s %p %s%s%s %s%20s %s:%d:%s:%s%s %s\n", GST_TIME_ARGS (elapsed),
+      " %s%5d%s %14p %s%s%s %s%20s %s:%d:%s:%s%s %s\n", GST_TIME_ARGS (elapsed),
       pidcolor, pid, clear, g_thread_self (), levelcolor,
       gst_debug_level_get_name (level), clear, color,
       gst_debug_category_get_name (category), file, line, function, obj, clear,
       gst_debug_message_get (message));
+#else
+  g_printerr ("%" GST_TIME_FORMAT
+      " %s%5d%s %10p %s%s%s %s%20s %s:%d:%s:%s%s %s\n", GST_TIME_ARGS (elapsed),
+      pidcolor, pid, clear, g_thread_self (), levelcolor,
+      gst_debug_level_get_name (level), clear, color,
+      gst_debug_category_get_name (category), file, line, function, obj, clear,
+      gst_debug_message_get (message));
+#endif
 
   if (free_color)
     g_free (color);
