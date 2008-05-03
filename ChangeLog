@@ -1,5 +1,11 @@
 2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* gst/gstminiobject.c: (gst_value_get_mini_object):
+	  Fix 'Since:' version in gst_value_dup_mini_object() docs blurb: this
+	  function was not in the unscheduled 0.10.19 release.
+
+2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst/gstregistry.c: (gst_registry_scan_path_level):
 	  Only print one log message per non-plugin file.
 

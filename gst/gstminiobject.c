@@ -530,7 +530,7 @@ gst_value_get_mini_object (const GValue * value)
  *
  * Returns: mini object contents of @value
  *
- * Since: 0.10.19
+ * Since: 0.10.20
  */
 GstMiniObject *
 gst_value_dup_mini_object (const GValue * value)
