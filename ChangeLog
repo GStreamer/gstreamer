@@ -1,5 +1,17 @@
 2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* gst/subparse/gstsubparse.c: (handle_buffer),
+	  (gst_sub_parse_sink_event):
+	* gst/subparse/tmplayerparse.c: (tmplayer_process_buffer),
+	  (tmplayer_parse_line):
+	  Fix parsing of tmplayer subtitle variant where every single line contains
+	  text and there isn't an empty line after each line to determine the
+	  duration (#530962). Improve EOS handling for tmplayer subtitles a bit by
+	  making sure that we push out the last line of text without a duration if
+	  there's still text left in the buffer at the end.
+
+2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst/subparse/gstsubparse.c: (feed_textbuf):
 	  Fix detection of discontinuities based on the buffer offset (doesn't work
 	  so well if no buffer offset is set) and also check for the DISCONT buffer

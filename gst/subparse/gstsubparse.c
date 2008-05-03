@@ -1093,6 +1093,10 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
         ret = gst_pad_push (self->srcpad, buf);
       }
 
+      /* move this forward (the tmplayer parser needs this) */
+      if (self->state.duration != GST_CLOCK_TIME_NONE)
+        self->state.start_time += self->state.duration;
+
       g_free (subtitle);
       subtitle = NULL;
 
@@ -1143,13 +1147,15 @@ gst_sub_parse_sink_event (GstPad * pad, GstEvent * event)
       /* Make sure the last subrip chunk is pushed out even
        * if the file does not have an empty line at the end */
       if (self->parser_type == GST_SUB_PARSE_FORMAT_SUBRIP ||
+          self->parser_type == GST_SUB_PARSE_FORMAT_TMPLAYER ||
           self->parser_type == GST_SUB_PARSE_FORMAT_MPL2) {
-        GstBuffer *buf = gst_buffer_new_and_alloc (1 + 1);
+        GstBuffer *buf = gst_buffer_new_and_alloc (2 + 1);
 
         GST_DEBUG ("EOS. Pushing remaining text (if any)");
         GST_BUFFER_DATA (buf)[0] = '\n';
-        GST_BUFFER_DATA (buf)[1] = '\0';        /* play it safe */
-        GST_BUFFER_SIZE (buf) = 1;
+        GST_BUFFER_DATA (buf)[1] = '\n';
+        GST_BUFFER_DATA (buf)[2] = '\0';        /* play it safe */
+        GST_BUFFER_SIZE (buf) = 2;
         GST_BUFFER_OFFSET (buf) = self->offset;
         gst_sub_parse_chain (pad, buf);
       }
