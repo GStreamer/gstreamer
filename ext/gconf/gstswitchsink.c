@@ -76,15 +76,17 @@ gst_switch_sink_class_init (GstSwitchSinkClass * klass)
   }
 }
 
-static void
+static gboolean
 gst_switch_sink_reset (GstSwitchSink * sink)
 {
   /* this will install fakesink if no other child has been set,
    * otherwise we rely on the subclass to know when to unset its
    * custom kid */
   if (sink->kid == NULL) {
-    gst_switch_sink_set_child (sink, NULL);
+    return gst_switch_sink_set_child (sink, NULL);
   }
+
+  return TRUE;
 }
 
 static void
@@ -143,6 +145,10 @@ gst_switch_commit_new_kid (GstSwitchSink * sink)
   if (new_kid == NULL) {
     GST_DEBUG_OBJECT (sink, "Replacing kid with fakesink");
     new_kid = gst_element_factory_make ("fakesink", "testsink");
+    if (new_kid == NULL) {
+      GST_ERROR_OBJECT (sink, "Failed to create fakesink");
+      return FALSE;
+    }
     /* Add a reference, as it would if the element came from sink->new_kid */
     gst_object_ref (new_kid);
     g_object_set (new_kid, "sync", TRUE, NULL);
@@ -299,7 +305,8 @@ gst_switch_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_switch_sink_reset (sink);
+      if (!gst_switch_sink_reset (sink))
+        ret = GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;

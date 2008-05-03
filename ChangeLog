@@ -1,3 +1,16 @@
+2008-05-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/gconf/gstgconfaudiosrc.c: (gst_gconf_audio_src_reset),
+	(gst_gconf_audio_src_change_state):
+	* ext/gconf/gstgconfvideosink.c: (gst_gconf_video_sink_reset),
+	(gst_gconf_video_sink_change_state):
+	* ext/gconf/gstgconfvideosrc.c: (gst_gconf_video_src_reset),
+	(gst_gconf_video_src_change_state):
+	* ext/gconf/gstswitchsink.c: (gst_switch_sink_reset),
+	(gst_switch_commit_new_kid), (gst_switch_sink_change_state):
+	When we can't create a fakesink/fakesrc complain instead of unreffing
+	NULL pointers and crashing later. See bug #530535.
+
 2008-05-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/gstrtph263pdepay.c: (gst_rtp_h263p_depay_process):
