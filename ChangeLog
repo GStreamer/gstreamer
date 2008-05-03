@@ -1,3 +1,9 @@
+2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* docs/libs/Makefile.am:
+	* docs/libs/gstreamer-libs-sections.txt:
+	  Ignore private controller headers for docs.
+
 2008-05-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* libs/gst/controller/gstcontrollerprivate.h:
