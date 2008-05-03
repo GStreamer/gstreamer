@@ -811,21 +811,19 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
   while ((dirent = g_dir_read_name (dir))) {
     filename = g_strjoin ("/", path, dirent, NULL);
 
-    GST_LOG_OBJECT (registry, "examining file: %s", filename);
-
     if (g_file_test (filename, G_FILE_TEST_IS_DIR)) {
       if (level > 0) {
-        GST_LOG_OBJECT (registry, "found directory, recursing");
+        GST_LOG_OBJECT (registry, "recursing into directory %s", filename);
         changed |= gst_registry_scan_path_level (registry, filename, level - 1);
       } else {
-        GST_LOG_OBJECT (registry,
-            "found directory, but recursion level is too deep");
+        GST_LOG_OBJECT (registry, "not recursing into directory %s, "
+            "recursion level too deep", filename);
       }
       g_free (filename);
       continue;
     }
     if (!g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
-      GST_LOG_OBJECT (registry, "not a regular file, ignoring");
+      GST_LOG_OBJECT (registry, "%s is not a regular file, ignoring", filename);
       g_free (filename);
       continue;
     }
@@ -834,11 +832,13 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
         && !g_str_has_suffix (dirent, GST_EXTRA_MODULE_SUFFIX)
 #endif
         ) {
-      GST_LOG_OBJECT (registry,
-          "extension is not recognized as module file, ignoring");
+      GST_LOG_OBJECT (registry, "extension is not recognized as module file, "
+          "ignoring file %s", filename);
       g_free (filename);
       continue;
     }
+
+    GST_LOG_OBJECT (registry, "file %s looks like a possible module", filename);
 
     /* plug-ins are considered unique by basename; if the given name
      * was already seen by the registry, we ignore it */

@@ -1,5 +1,10 @@
 2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* gst/gstregistry.c: (gst_registry_scan_path_level):
+	  Only print one log message per non-plugin file.
+
+2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst/gstinfo.c: (gst_debug_log_default):
 	  Fix alignment of debug log columns on 64-bit.
 
