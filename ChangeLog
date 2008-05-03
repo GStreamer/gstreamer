@@ -1,5 +1,11 @@
 2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* tests/check/elements/subparse.c: (do_test),
+	  (test_tmplayer_style3b), (subparse_suite):
+	  Add unit test for the tmplayer variant from bug #530962.
+
+2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst/subparse/gstsubparse.c: (handle_buffer),
 	  (gst_sub_parse_sink_event):
 	* gst/subparse/tmplayerparse.c: (tmplayer_process_buffer),

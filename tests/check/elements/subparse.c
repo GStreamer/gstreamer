@@ -1,6 +1,5 @@
 /* GStreamer unit tests for subparse
- *
- * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2006-2008 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -249,11 +248,19 @@ do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
 
     buf = g_list_nth_data (buffers, n);
     fail_unless (buf != NULL);
+
+    /* check timestamp */
     fail_unless (GST_BUFFER_TIMESTAMP_IS_VALID (buf), NULL);
-    fail_unless (GST_BUFFER_DURATION_IS_VALID (buf), NULL);
     fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (buf), input[n].from_ts);
-    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf),
-        input[n].to_ts - input[n].from_ts);
+
+    /* might not be able to put a duration on the last buffer */
+    if (input[n].to_ts != GST_CLOCK_TIME_NONE) {
+      /* check duration */
+      fail_unless (GST_BUFFER_DURATION_IS_VALID (buf), NULL);
+      fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf),
+          input[n].to_ts - input[n].from_ts);
+    }
+
     out = (gchar *) GST_BUFFER_DATA (buf);
     out_size = GST_BUFFER_SIZE (buf);
     /* shouldn't have trailing newline characters */
@@ -378,6 +385,26 @@ GST_START_TEST (test_tmplayer_style3)
 
   test_tmplayer_do_test (tmplayer_style3_input,
       G_N_ELEMENTS (tmplayer_style3_input));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_tmplayer_style3b)
+{
+  static SubParseInputChunk tmplayer_style3b_input[] = {
+    {
+          "0:00:10:This is the Earth at a time|when the dinosaurs roamed...\n",
+          10 * GST_SECOND, 14 * GST_SECOND,
+        "This is the Earth at a time\nwhen the dinosaurs roamed..."}, {
+          "0:00:14:a lush and fertile planet.\n",
+          14 * GST_SECOND, 16 * GST_SECOND,
+        "a lush and fertile planet."}, {
+          "0:00:16:Yet another line.",
+        16 * GST_SECOND, GST_CLOCK_TIME_NONE, "Yet another line."}
+  };
+
+  test_tmplayer_do_test (tmplayer_style3b_input,
+      G_N_ELEMENTS (tmplayer_style3b_input));
 }
 
 GST_END_TEST;
@@ -571,6 +598,7 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_tmplayer_style1);
   tcase_add_test (tc_chain, test_tmplayer_style2);
   tcase_add_test (tc_chain, test_tmplayer_style3);
+  tcase_add_test (tc_chain, test_tmplayer_style3b);
   tcase_add_test (tc_chain, test_tmplayer_style4);
   tcase_add_test (tc_chain, test_tmplayer_style4_with_bogus_lines);
   tcase_add_test (tc_chain, test_microdvd_with_fps);
