@@ -1010,11 +1010,25 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
 static void
 feed_textbuf (GstSubParse * self, GstBuffer * buf)
 {
-  if (GST_BUFFER_OFFSET (buf) != self->offset) {
+  gboolean discont;
+
+  discont = GST_BUFFER_IS_DISCONT (buf);
+
+  if (GST_BUFFER_OFFSET_IS_VALID (buf) &&
+      GST_BUFFER_OFFSET (buf) != self->offset) {
+    self->offset = GST_BUFFER_OFFSET (buf);
+    discont = TRUE;
+  }
+
+  if (discont) {
+    GST_INFO ("discontinuity");
     /* flush the parser state */
     parser_state_init (&self->state);
     g_string_truncate (self->textbuf, 0);
     sami_context_reset (&self->state);
+    /* we could set a flag to make sure that the next buffer we push out also
+     * has the DISCONT flag set, but there's no point really given that it's
+     * subtitles which are discontinuous by nature. */
   }
 
   self->textbuf = g_string_append_len (self->textbuf,

@@ -1,5 +1,13 @@
 2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* gst/subparse/gstsubparse.c: (feed_textbuf):
+	  Fix detection of discontinuities based on the buffer offset (doesn't work
+	  so well if no buffer offset is set) and also check for the DISCONT buffer
+	  flag. This keeps the parser state from being reset after each buffer in
+	  the unit test.
+
+2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst/typefind/gsttypefindfunctions.c: (mpeg_video_stream_type_find):
 	  Further fine-tuning: don't absolutely require sequence or GOP headers
 	  (as introduced in the previous commit), but adjust the typefind
