@@ -1,3 +1,13 @@
+2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/typefind/gsttypefindfunctions.c: (mpeg_video_stream_type_find):
+	  Further fine-tuning: don't absolutely require sequence or GOP headers
+	  (as introduced in the previous commit), but adjust the typefind
+	  probabilities returned accordingly if we don't see them. Also make sure
+	  picture header and first slice are somewhat close to each other (which
+	  is not perfect but still better than requiring a fixed offset or having
+	  no limit at all).
+
 2008-05-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_init),

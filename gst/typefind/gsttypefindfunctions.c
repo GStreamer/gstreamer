@@ -1699,8 +1699,10 @@ static void
 mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
 {
   MpegVideoStreamCtx c = { 0, NULL, 0 };
+  gboolean seen_seq_at_0 = FALSE;
   gboolean seen_seq = FALSE;
   gboolean seen_gop = FALSE;
+  guint64 last_pic_offset = 0;
   guint num_pic_headers = 0;
   gint found = 0;
 
@@ -1720,35 +1722,32 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
 
     /* do we have a sequence header? */
     if (c.data[3] == 0xB3) {
+      seen_seq_at_0 = seen_seq_at_0 || (c.offset == 0);
       seen_seq = TRUE;
       mpeg_video_stream_ctx_advance (tf, &c, 4 + 8);
       continue;
     }
 
-    /* we really want to see a sequence header first */
-    if (!seen_seq)
-      goto next;
-
-    /* next, a GOP header would be nice */
+    /* or a GOP header */
     if (c.data[3] == 0xB8) {
       seen_gop = TRUE;
       mpeg_video_stream_ctx_advance (tf, &c, 8);
       continue;
     }
 
-    /* we really want to see a sequence+GOP header before continuing */
-    if (!seen_gop)
-      goto next;
-
-    /* now that we've had a sequence+GOP, we'd like to see a picture header */
+    /* but what we'd really like to see is a picture header */
     if (c.data[3] == 0x00) {
       ++num_pic_headers;
+      last_pic_offset = c.offset;
       mpeg_video_stream_ctx_advance (tf, &c, 8);
       continue;
     }
 
-    /* ... each followed by a slice header with slice_vertical_pos=1 */
-    if (c.data[3] == 0x01 && num_pic_headers > found) {
+    /* ... each followed by a slice header with slice_vertical_pos=1 that's
+     * not too far away from the previously seen picture header. */
+    if (c.data[3] == 0x01 && num_pic_headers > found &&
+        (c.offset - last_pic_offset) >= 4 &&
+        (c.offset - last_pic_offset) <= 64) {
       mpeg_video_stream_ctx_advance (tf, &c, 4);
       found += 1;
       continue;
@@ -1759,16 +1758,30 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
     mpeg_video_stream_ctx_advance (tf, &c, 1);
   }
 
-  if (found > 0 || num_pic_headers > 0) {
-    GstTypeFindProbability probability;
+  if (found > 0 || seen_seq) {
+    GstTypeFindProbability probability = 0;
     GstCaps *caps;
 
-    if (found >= GST_MPEGVID_TYPEFIND_TRY_PICTURES)
-      probability = GST_TYPE_FIND_MAXIMUM - 2;
+    GST_LOG ("Found %d pictures, seq:%d, gop:%d", found, seen_seq, seen_gop);
+
+    if (found >= GST_MPEGVID_TYPEFIND_TRY_PICTURES && seen_seq && seen_gop)
+      probability = GST_TYPE_FIND_NEARLY_CERTAIN - 1;
+    else if (found >= GST_MPEGVID_TYPEFIND_TRY_PICTURES && seen_seq)
+      probability = GST_TYPE_FIND_NEARLY_CERTAIN - 9;
+    else if (found >= GST_MPEGVID_TYPEFIND_TRY_PICTURES)
+      probability = GST_TYPE_FIND_LIKELY;
+    else if (seen_seq_at_0 && seen_gop && found > 2)
+      probability = GST_TYPE_FIND_LIKELY - 10;
+    else if (seen_seq && seen_gop && found > 2)
+      probability = GST_TYPE_FIND_LIKELY - 20;
+    else if (seen_seq_at_0 && found > 0)
+      probability = GST_TYPE_FIND_POSSIBLE;
+    else if (seen_seq && found > 0)
+      probability = GST_TYPE_FIND_POSSIBLE - 5;
     else if (found > 0)
-      probability = GST_TYPE_FIND_POSSIBLE + 1;
-    else
       probability = GST_TYPE_FIND_POSSIBLE - 10;
+    else if (seen_seq)
+      probability = GST_TYPE_FIND_POSSIBLE - 20;
 
     caps = gst_caps_copy (MPEG_VIDEO_CAPS);
     gst_caps_set_simple (caps, "mpegversion", G_TYPE_INT, 1, NULL);
