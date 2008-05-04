@@ -1,3 +1,15 @@
+2008-05-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst-libs/gst/audio/gstaudiosink.c: (audioringbuffer_thread_func):
+	* gst-libs/gst/audio/gstaudiosrc.c: (audioringbuffer_thread_func):
+	* gst/tcp/gsttcp.c: (gst_tcp_socket_write):
+	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_get_fps_list):
+	Remove some unused code.
+
+	* gst/audioconvert/gstaudioquantize.c:
+	(gst_audio_quantize_free_noise_shaping):
+	Don't return before freeing the noise shaping history.
+
 2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* tests/check/elements/subparse.c: (do_test),

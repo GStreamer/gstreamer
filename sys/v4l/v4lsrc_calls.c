@@ -611,7 +611,6 @@ gst_v4lsrc_get_fps_list (GstV4lSrc * v4lsrc)
     gst_v4l_set_window_properties (v4lelement);
     return list;
   }
-  return NULL;
 }
 
 #define GST_TYPE_V4LSRC_BUFFER (gst_v4lsrc_buffer_get_type())

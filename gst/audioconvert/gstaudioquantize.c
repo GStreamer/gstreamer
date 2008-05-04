@@ -430,7 +430,6 @@ gst_audio_quantize_free_noise_shaping (AudioConvertCtx * ctx)
     default:
       break;
   }
-  return;
 
   g_free (ctx->error_buf);
   ctx->error_buf = NULL;

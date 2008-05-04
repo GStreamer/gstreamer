@@ -255,8 +255,8 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
       GST_OBJECT_UNLOCK (abuf);
     }
   }
-  GST_DEBUG_OBJECT (sink, "exit thread");
 
+  /* Will never be reached */
   return;
 
   /* ERROR */
