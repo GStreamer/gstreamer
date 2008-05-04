@@ -1,3 +1,8 @@
+2008-05-04  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst-libs/gst/pbutils/descriptions.c: (formats):
+	  Fix description of video/x-flash-video.
+
 2008-05-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/audio/gstaudiosink.c: (audioringbuffer_thread_func):
