@@ -45,7 +45,7 @@ n_print (const char *format, ...)
   gint retval;
 
   if (_name)
-    g_print (_name);
+    g_print ("%s", _name);
 
   va_start (args, format);
   retval = g_vprintf (format, args);
@@ -225,7 +225,7 @@ print_hierarchy (GType type, gint level, gint * maxlevel)
     print_hierarchy (parent, level, maxlevel);
 
   if (_name)
-    g_print (_name);
+    g_print ("%s", _name);
 
   for (i = 1; i < *maxlevel - level; i++)
     g_print ("      ");
@@ -247,17 +247,17 @@ print_interfaces (GType type)
   if (ifaces) {
     if (n_ifaces) {
       if (_name)
-        g_print (_name);
+        g_print ("%s", _name);
       g_print (_("Implemented Interfaces:\n"));
       iface = ifaces;
       while (*iface) {
         if (_name)
-          g_print (_name);
+          g_print ("%s", _name);
         g_print ("  %s\n", g_type_name (*iface));
         iface++;
       }
       if (_name)
-        g_print (_name);
+        g_print ("%s", _name);
       g_print ("\n");
     }
     g_free (ifaces);
@@ -474,7 +474,7 @@ print_element_properties_info (GstElement * element)
           while (values[j].value_name) {
             g_print ("\n");
             if (_name)
-              g_print (_name);
+              g_print ("%s", _name);
             g_print ("%-23.23s    (%d): %-16s - %s", "",
                 values[j].value, values[j].value_nick, values[j].value_name);
             j++;
@@ -520,7 +520,7 @@ print_element_properties_info (GstElement * element)
           while (values[j].value_name) {
             g_print ("\n");
             if (_name)
-              g_print (_name);
+              g_print ("%s", _name);
             g_print ("%-23.23s    (0x%08x): %-16s - %s", "",
                 values[j].value, values[j].value_nick, values[j].value_name);
             j++;
@@ -891,7 +891,7 @@ print_signal_info (GstElement * element)
 
       for (j = 0; j < query->n_params; j++) {
         if (_name)
-          g_print (_name);
+          g_print ("%s", _name);
         if (G_TYPE_IS_FUNDAMENTAL (query->param_types[j])) {
           g_print (",\n%s%s arg%d", indent,
               g_type_name (query->param_types[j]), j);
@@ -906,7 +906,7 @@ print_signal_info (GstElement * element)
 
       if (k == 0) {
         if (_name)
-          g_print (_name);
+          g_print ("%s", _name);
         g_print (",\n%sgpointer user_data);\n", indent);
       } else
         g_print (");\n");
