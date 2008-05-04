@@ -1,3 +1,11 @@
+2008-05-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstclock.c: (gst_clock_set_calibration):
+	Make some checks actually useful.
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_load_plugin):
+	Remove some unused code. Unsigned integers tend to be >= 0.
+
 2008-05-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gstminiobject.c: (gst_value_get_mini_object):

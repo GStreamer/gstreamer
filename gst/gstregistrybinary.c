@@ -994,16 +994,6 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
   GST_LOG ("Reading/casting for GstBinaryPluginElement at address %p", *in);
   unpack_element (*in, pe, GstBinaryPluginElement);
 
-  if (pe->nfeatures < 0) {
-    GST_ERROR ("The number of feature structure is not valid !");
-    return FALSE;
-  }
-
-  if (pe->file_mtime < 0 || pe->file_size < 0) {
-    GST_ERROR ("Plugin time or file size is not valid !");
-    return FALSE;
-  }
-
   plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
 
   /* TODO: also set GST_PLUGIN_FLAG_CONST */

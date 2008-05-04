@@ -932,8 +932,8 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
     external, GstClockTime rate_num, GstClockTime rate_denom)
 {
   g_return_if_fail (GST_IS_CLOCK (clock));
-  g_return_if_fail (rate_num >= 0);
-  g_return_if_fail (rate_denom > 0);
+  g_return_if_fail (rate_num != GST_CLOCK_TIME_NONE);
+  g_return_if_fail (rate_denom > 0 && rate_denom != GST_CLOCK_TIME_NONE);
   g_return_if_fail (internal <= gst_clock_get_internal_time (clock));
 
   GST_OBJECT_LOCK (clock);
