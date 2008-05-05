@@ -1,5 +1,16 @@
 2008-05-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Young-Ho Cha <ganadist at chollian dot net>
+
+	* gst/subparse/samiparse.c: (handle_start_sync),
+	(start_sami_element), (end_sami_element), (characters_sami),
+	(sami_context_reset):
+	Only output characters inside the "sync" elements. There could be
+	other elements like "style" that have some content but should
+	not be printed. Fixes bug #467911.
+
+2008-05-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/playback/gstplaybasebin.c: (set_audio_mute),
 	(set_active_source):
 	* gst/playback/gstplaybasebin.h:
