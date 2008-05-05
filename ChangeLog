@@ -1,3 +1,8 @@
+2008-05-05  Edward Hervey  <edward.hervey at collabora co uk>
+
+	* gst-libs/gst/pbutils/descriptions.c: (formats): 
+	It's SorensOn and not SorensEn.
+
 2008-05-04  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst-libs/gst/pbutils/descriptions.c: (formats):
