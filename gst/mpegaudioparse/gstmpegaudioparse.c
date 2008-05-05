@@ -39,6 +39,11 @@ GST_DEBUG_CATEGORY_STATIC (mp3parse_debug);
 #define CRC_PROTECTED 0
 #define CRC_NOT_PROTECTED 1
 
+#define XING_FRAMES_FLAG     0x0001
+#define XING_BYTES_FLAG      0x0002
+#define XING_TOC_FLAG        0x0004
+#define XING_VBR_SCALE_FLAG  0x0008
+
 #define GST_READ_UINT24_BE(p) (p[2] | (p[1] << 8) | (p[0] << 16))
 
 static inline MPEGAudioSeekEntry *
@@ -690,6 +695,16 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
     mp3parse->last_posted_bitrate = bitrate;
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
         mp3parse->last_posted_bitrate, NULL);
+
+    /* Post a new duration message if the average bitrate changes that much
+     * so applications can update their cached values
+     */
+    if ((mp3parse->xing_flags & XING_TOC_FLAG) == 0
+        && mp3parse->vbri_total_time == 0) {
+      gst_element_post_message (GST_ELEMENT (mp3parse),
+          gst_message_new_duration (GST_OBJECT (mp3parse), GST_FORMAT_TIME,
+              -1));
+    }
   }
 
   if (mp3parse->last_posted_crc != crc) {
@@ -804,11 +819,6 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
 
   return ret;
 }
-
-#define XING_FRAMES_FLAG     0x0001
-#define XING_BYTES_FLAG      0x0002
-#define XING_TOC_FLAG        0x0004
-#define XING_VBR_SCALE_FLAG  0x0008
 
 static void
 gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)

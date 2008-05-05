@@ -1,3 +1,11 @@
+2008-05-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_emit_frame):
+	Send a new duration message if the average bitrate changed and
+	we don't know the duration from the Xing or VBRI header.
+	Fixes bug #321857.
+
 2008-04-30  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/realmedia/rtspreal.c: (rtsp_ext_real_before_send),
