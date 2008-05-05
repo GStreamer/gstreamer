@@ -1,5 +1,15 @@
 2008-05-05  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	Patch by: Sjoerd Simons <sjoerd at luon net>
+
+	* gst/gstbus.c: (gst_bus_source_dispatch):
+	  Don't print a warning if the queue is empty when we try to pop
+	  here. That could happen if another thread or callback set the
+	  bus to flushing between the source's check/prepare and the
+	  dispatch being called (#531538).
+
+2008-05-05  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* plugins/elements/gstmultiqueue.c:
 	  Small docs fix.
 	

@@ -769,7 +769,11 @@ gst_bus_source_dispatch (GSource * source, GSourceFunc callback,
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
 
   message = gst_bus_pop (bus);
-  g_return_val_if_fail (message != NULL, FALSE);
+
+  /* The message queue might be empty if some other thread or callback set
+   * the bus to flushing between check/prepare and dispatch */
+  if (G_UNLIKELY (message == NULL))
+    return TRUE;
 
   if (!handler)
     goto no_handler;
