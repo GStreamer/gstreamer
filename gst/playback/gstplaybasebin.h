@@ -113,6 +113,8 @@ struct _GstPlayBaseBinClass {
 
   void     (*set_subtitles_visible) (GstPlayBaseBin *play_base_bin,
                                      gboolean visible);
+  void     (*set_audio_mute)        (GstPlayBaseBin *play_base_bin,
+                                     gboolean mute);
 };
 
 GType gst_play_base_bin_get_type (void);

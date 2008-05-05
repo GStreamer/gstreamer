@@ -2400,6 +2400,17 @@ set_subtitles_visible (GstPlayBaseBin * play_base_bin, gboolean visible)
     klass->set_subtitles_visible (play_base_bin, visible);
 }
 
+static void
+set_audio_mute (GstPlayBaseBin * play_base_bin, gboolean mute)
+{
+  GstPlayBaseBinClass *klass = GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin);
+
+  /* we use a vfunc for this since we don't have a reference to the
+   * textoverlay element, but playbin does */
+  if (klass != NULL && klass->set_audio_mute != NULL)
+    klass->set_audio_mute (play_base_bin, mute);
+}
+
 /*
  * Caller has group-lock held.
  */
@@ -2431,6 +2442,13 @@ set_active_source (GstPlayBaseBin * play_base_bin,
 
     set_subtitles_visible (play_base_bin, visible);
     if (!visible)
+      return;
+  } else if (type == GST_STREAM_TYPE_AUDIO) {
+    gboolean mute = (source_num == -1);
+
+    set_audio_mute (play_base_bin, mute);
+
+    if (mute)
       return;
   }
 

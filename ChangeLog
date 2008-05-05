@@ -1,3 +1,13 @@
+2008-05-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/playback/gstplaybasebin.c: (set_audio_mute),
+	(set_active_source):
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),
+	(playbin_set_audio_mute):
+	Allow setting -1 as current-audio to mute the current audio stream,
+	similar to what is done for subtitles. Fixes bug #342294.
+
 2008-05-05  Edward Hervey  <edward.hervey at collabora co uk>
 
 	* gst-libs/gst/pbutils/descriptions.c: (formats): 

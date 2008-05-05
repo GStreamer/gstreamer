@@ -326,6 +326,8 @@ static gboolean setup_sinks (GstPlayBaseBin * play_base_bin,
 static void remove_sinks (GstPlayBin * play_bin);
 static void playbin_set_subtitles_visible (GstPlayBaseBin * play_base_bin,
     gboolean visible);
+static void playbin_set_audio_mute (GstPlayBaseBin * play_base_bin,
+    gboolean mute);
 
 static void gst_play_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -431,6 +433,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
 
   playbasebin_klass->setup_output_pads = setup_sinks;
   playbasebin_klass->set_subtitles_visible = playbin_set_subtitles_visible;
+  playbasebin_klass->set_audio_mute = playbin_set_audio_mute;
 }
 
 static void
@@ -1639,6 +1642,16 @@ playbin_set_subtitles_visible (GstPlayBaseBin * play_base_bin, gboolean visible)
   if (playbin->textoverlay_element != NULL) {
     GST_LOG_OBJECT (playbin, "setting subtitle visibility to %d", visible);
     g_object_set (playbin->textoverlay_element, "silent", !visible, NULL);
+  }
+}
+
+static void
+playbin_set_audio_mute (GstPlayBaseBin * play_base_bin, gboolean mute)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (play_base_bin);
+
+  if (playbin->volume_element) {
+    g_object_set (G_OBJECT (playbin->volume_element), "mute", mute, NULL);
   }
 }
 
