@@ -4064,6 +4064,10 @@ setup_failed:
   }
 cleanup_error:
   {
+    if (src->connection) {
+      gst_rtsp_connection_free (src->connection);
+      src->connection = NULL;
+    }
     GST_RTSP_STATE_UNLOCK (src);
     gst_rtsp_message_unset (&request);
     gst_rtsp_message_unset (&response);

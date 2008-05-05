@@ -1,3 +1,10 @@
+2008-05-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init), (gst_rtspsrc_open):
+	Don't leak file descriptors on error. Fixes #531532.
+
 2008-05-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/gconf/gstgconfaudiosrc.c: (gst_gconf_audio_src_reset),
