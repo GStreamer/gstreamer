@@ -1,3 +1,9 @@
+2008-05-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/gst/gstvalue.c: (GST_START_TEST), (gst_value_suite):
+	Add unit test for deserializing uint64s and check some really large
+	numbers in the int64 test.
+
 2008-05-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tools/gst-inspect.c: (n_print), (print_hierarchy),
