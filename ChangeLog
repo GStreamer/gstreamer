@@ -1,3 +1,18 @@
+2008-05-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsink.c: (gst_app_sink_class_init),
+	(gst_app_sink_init), (gst_app_sink_set_property),
+	(gst_app_sink_get_property), (gst_app_sink_unlock_start),
+	(gst_app_sink_unlock_stop), (gst_app_sink_flush_unlocked),
+	(gst_app_sink_start), (gst_app_sink_stop), (gst_app_sink_event),
+	(gst_app_sink_preroll), (gst_app_sink_render),
+	(gst_app_sink_set_caps), (gst_app_sink_set_drop),
+	(gst_app_sink_get_drop):
+	* gst-libs/gst/app/gstappsink.h:
+	Start some docs.
+	Add property to drop buffers when the queue is filled
+	Fix unlocking and flushing when the queues are filled.
+
 2008-04-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Jens Granseuer <jensgr at gmx dot net>

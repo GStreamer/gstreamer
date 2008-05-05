@@ -47,11 +47,13 @@ struct _GstAppSink
   GstCaps *caps;
   gboolean emit_signals;
   guint max_buffers;
+  gboolean drop;
 
   GCond *cond;
   GMutex *mutex;
   GQueue *queue;
   GstBuffer *preroll;
+  gboolean flushing;
   gboolean started;
   gboolean is_eos;
 };
@@ -84,6 +86,9 @@ gboolean        gst_app_sink_get_emit_signals (GstAppSink *appsink);
 
 void            gst_app_sink_set_max_buffers  (GstAppSink *appsink, guint max);
 guint           gst_app_sink_get_max_buffers  (GstAppSink *appsink);
+
+void            gst_app_sink_set_drop         (GstAppSink *appsink, gboolean drop);
+gboolean        gst_app_sink_get_drop         (GstAppSink *appsink);
 
 GstBuffer *     gst_app_sink_pull_preroll     (GstAppSink *appsink);
 GstBuffer *     gst_app_sink_pull_buffer      (GstAppSink *appsink);

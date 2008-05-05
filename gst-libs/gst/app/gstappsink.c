@@ -17,6 +17,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-appsink
+ * @short_description: hand data to an application
+ * @see_also: #GstBaseSrc
+ *
+ * <refsect2>
+ * <para>
+ * Appsink is a sink plugin that supports many different methods for making
+ * the application get a handle on the GStreamer data in a pipeline.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2008-05-03 (0.10.8)
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -54,8 +69,9 @@ enum
 };
 
 #define DEFAULT_PROP_EOS		TRUE
-#define DEFAULT_PROP_EMIT_SIGNALS	TRUE
+#define DEFAULT_PROP_EMIT_SIGNALS	FALSE
 #define DEFAULT_PROP_MAX_BUFFERS	0
+#define DEFAULT_PROP_DROP		FALSE
 
 enum
 {
@@ -64,8 +80,8 @@ enum
   PROP_EOS,
   PROP_EMIT_SIGNALS,
   PROP_MAX_BUFFERS,
-
-  PROP_LAST,
+  PROP_DROP,
+  PROP_LAST
 };
 
 static GstStaticPadTemplate gst_app_sink_template =
@@ -82,6 +98,8 @@ static void gst_app_sink_set_property (GObject * object, guint prop_id,
 static void gst_app_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_app_sink_unlock_start (GstBaseSink * bsink);
+static gboolean gst_app_sink_unlock_stop (GstBaseSink * bsink);
 static gboolean gst_app_sink_start (GstBaseSink * psink);
 static gboolean gst_app_sink_stop (GstBaseSink * psink);
 static gboolean gst_app_sink_event (GstBaseSink * sink, GstEvent * event);
@@ -154,7 +172,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps",
-          "The caps of the sink pad", GST_TYPE_CAPS,
+          "The allowed caps for the sink pad", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_EOS,
@@ -169,8 +187,13 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_MAX_BUFFERS,
       g_param_spec_uint ("max-buffers", "Max Buffers",
-          "Control the maximum buffers to queue internally (0 = unlimited)",
+          "The maximum number of buffers to queue internally (0 = unlimited)",
           0, G_MAXUINT, DEFAULT_PROP_MAX_BUFFERS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DROP,
+      g_param_spec_boolean ("drop", "Drop",
+          "Drop old buffers when the buffer queue is filled", DEFAULT_PROP_DROP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -262,9 +285,12 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    *
    * This function will only return buffers when the appsink is in the PLAYING
    * state. All rendered buffers will be put in a queue so that the application
-   * can pull buffers at its own rate. Note that when the application does not
-   * pull buffers fast enough, the queued buffers could consume a lot of memory,
-   * especially when dealing with raw video frames.
+   * can pull buffers at its own rate. 
+   *
+   * Note that when the application does not pull buffers fast enough, the
+   * queued buffers could consume a lot of memory, especially when dealing with
+   * raw video frames. It's possible to control the behaviour of the queue with
+   * the "drop" and "max-buffers" properties.
    *
    * If an EOS event was received before any buffers, this function returns
    * %NULL. Use gst_app_sink_is_eos () to check for the EOS condition. 
@@ -277,6 +303,8 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
           pull_buffer), NULL, NULL, gst_app_marshal_OBJECT__VOID,
       GST_TYPE_BUFFER, 0, G_TYPE_NONE);
 
+  basesink_class->unlock = gst_app_sink_unlock_start;
+  basesink_class->unlock_stop = gst_app_sink_unlock_stop;
   basesink_class->start = gst_app_sink_start;
   basesink_class->stop = gst_app_sink_stop;
   basesink_class->event = gst_app_sink_event;
@@ -297,6 +325,7 @@ gst_app_sink_init (GstAppSink * appsink, GstAppSinkClass * klass)
 
   appsink->emit_signals = DEFAULT_PROP_EMIT_SIGNALS;
   appsink->max_buffers = DEFAULT_PROP_MAX_BUFFERS;
+  appsink->drop = DEFAULT_PROP_DROP;
 }
 
 static void
@@ -349,6 +378,9 @@ gst_app_sink_set_property (GObject * object, guint prop_id,
     case PROP_MAX_BUFFERS:
       gst_app_sink_set_max_buffers (appsink, g_value_get_uint (value));
       break;
+    case PROP_DROP:
+      gst_app_sink_set_drop (appsink, g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -381,10 +413,41 @@ gst_app_sink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_MAX_BUFFERS:
       g_value_set_uint (value, gst_app_sink_get_max_buffers (appsink));
       break;
+    case PROP_DROP:
+      g_value_set_boolean (value, gst_app_sink_get_drop (appsink));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_app_sink_unlock_start (GstBaseSink * bsink)
+{
+  GstAppSink *appsink = GST_APP_SINK (bsink);
+
+  g_mutex_lock (appsink->mutex);
+  GST_DEBUG_OBJECT (appsink, "unlock start");
+  appsink->flushing = TRUE;
+  g_cond_signal (appsink->cond);
+  g_mutex_unlock (appsink->mutex);
+
+  return TRUE;
+}
+
+static gboolean
+gst_app_sink_unlock_stop (GstBaseSink * bsink)
+{
+  GstAppSink *appsink = GST_APP_SINK (bsink);
+
+  g_mutex_lock (appsink->mutex);
+  GST_DEBUG_OBJECT (appsink, "unlock stop");
+  appsink->flushing = FALSE;
+  g_cond_signal (appsink->cond);
+  g_mutex_unlock (appsink->mutex);
+
+  return TRUE;
 }
 
 static void
@@ -392,7 +455,7 @@ gst_app_sink_flush_unlocked (GstAppSink * appsink)
 {
   GstBuffer *buffer;
 
-  GST_DEBUG_OBJECT (appsink, "flushing appsink");
+  GST_DEBUG_OBJECT (appsink, "flush stop appsink");
   appsink->is_eos = FALSE;
   gst_buffer_replace (&appsink->preroll, NULL);
   while ((buffer = g_queue_pop_head (appsink->queue)))
@@ -406,9 +469,8 @@ gst_app_sink_start (GstBaseSink * psink)
   GstAppSink *appsink = GST_APP_SINK (psink);
 
   g_mutex_lock (appsink->mutex);
-  appsink->is_eos = FALSE;
-  appsink->started = TRUE;
   GST_DEBUG_OBJECT (appsink, "starting");
+  appsink->started = TRUE;
   g_mutex_unlock (appsink->mutex);
 
   return TRUE;
@@ -421,6 +483,8 @@ gst_app_sink_stop (GstBaseSink * psink)
 
   g_mutex_lock (appsink->mutex);
   GST_DEBUG_OBJECT (appsink, "stopping");
+  appsink->is_eos = FALSE;
+  appsink->flushing = TRUE;
   appsink->started = FALSE;
   gst_app_sink_flush_unlocked (appsink);
   g_mutex_unlock (appsink->mutex);
@@ -446,6 +510,9 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
       g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_EOS], 0);
       break;
     case GST_EVENT_FLUSH_START:
+      /* we don't have to do anything here, the base class will call unlock
+       * which will make sure we exit the _render method */
+      GST_DEBUG_OBJECT (appsink, "received FLUSH_START");
       break;
     case GST_EVENT_FLUSH_STOP:
       g_mutex_lock (appsink->mutex);
@@ -466,6 +533,9 @@ gst_app_sink_preroll (GstBaseSink * psink, GstBuffer * buffer)
   gboolean emit;
 
   g_mutex_lock (appsink->mutex);
+  if (appsink->flushing)
+    goto flushing;
+
   GST_DEBUG_OBJECT (appsink, "setting preroll buffer %p", buffer);
   gst_buffer_replace (&appsink->preroll, buffer);
   g_cond_signal (appsink->cond);
@@ -476,6 +546,13 @@ gst_app_sink_preroll (GstBaseSink * psink, GstBuffer * buffer)
     g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_NEW_PREROLL], 0);
 
   return GST_FLOW_OK;
+
+flushing:
+  {
+    GST_DEBUG_OBJECT (appsink, "we are flushing");
+    g_mutex_unlock (appsink->mutex);
+    return GST_FLOW_WRONG_STATE;
+  }
 }
 
 static GstFlowReturn
@@ -485,15 +562,31 @@ gst_app_sink_render (GstBaseSink * psink, GstBuffer * buffer)
   gboolean emit;
 
   g_mutex_lock (appsink->mutex);
-  GST_DEBUG_OBJECT (appsink, "pushing render buffer %p on queue", buffer);
+  if (appsink->flushing)
+    goto flushing;
+
+  GST_DEBUG_OBJECT (appsink, "pushing render buffer %p on queue (%d)",
+      buffer, appsink->queue->length);
 
   while (appsink->max_buffers > 0 &&
       appsink->queue->length >= appsink->max_buffers) {
-    /* FIXME, do proper unlocking when flushing */
-    g_cond_wait (appsink->cond, appsink->mutex);
-    if (!appsink->started)
-      goto not_started;
+    if (appsink->drop) {
+      GstBuffer *buf;
+
+      /* we need to drop the oldest buffer and try again */
+      buf = g_queue_pop_head (appsink->queue);
+      GST_DEBUG_OBJECT (appsink, "dropping old buffer %p", buf);
+      gst_buffer_unref (buf);
+    } else {
+      GST_DEBUG_OBJECT (appsink, "waiting for free space, length %d >= %d",
+          appsink->queue->length, appsink->max_buffers);
+      /* wait for a buffer to be removed or flush */
+      g_cond_wait (appsink->cond, appsink->mutex);
+      if (appsink->flushing)
+        goto flushing;
+    }
   }
+  /* we need to ref the buffer when pushing it in the queue */
   g_queue_push_tail (appsink->queue, gst_buffer_ref (buffer));
   g_cond_signal (appsink->cond);
   emit = appsink->emit_signals;
@@ -504,9 +597,9 @@ gst_app_sink_render (GstBaseSink * psink, GstBuffer * buffer)
 
   return GST_FLOW_OK;
 
-not_started:
+flushing:
   {
-    GST_DEBUG_OBJECT (appsink, "we stopped");
+    GST_DEBUG_OBJECT (appsink, "we are flushing");
     g_mutex_unlock (appsink->mutex);
     return GST_FLOW_WRONG_STATE;
   }
@@ -550,13 +643,14 @@ gst_app_sink_set_caps (GstAppSink * appsink, const GstCaps * caps)
 
   GST_OBJECT_LOCK (appsink);
   GST_DEBUG_OBJECT (appsink, "setting caps to %" GST_PTR_FORMAT, caps);
-  old = appsink->caps;
-  if (caps)
-    appsink->caps = gst_caps_copy (caps);
-  else
-    appsink->caps = NULL;
-  if (old)
-    gst_caps_unref (old);
+  if ((old = appsink->caps) != caps) {
+    if (caps)
+      appsink->caps = gst_caps_copy (caps);
+    else
+      appsink->caps = NULL;
+    if (old)
+      gst_caps_unref (old);
+  }
   GST_OBJECT_UNLOCK (appsink);
 }
 
@@ -710,6 +804,52 @@ gst_app_sink_get_max_buffers (GstAppSink * appsink)
 
   g_mutex_lock (appsink->mutex);
   result = appsink->max_buffers;
+  g_mutex_unlock (appsink->mutex);
+
+  return result;
+}
+
+/**
+ * gst_app_sink_set_drop:
+ * @appsink: a #GstAppSink
+ * @emit: the new state
+ *
+ * Instruct @appsink to drop old buffers when the maximum amount of queued
+ * buffers is reached.
+ */
+void
+gst_app_sink_set_drop (GstAppSink * appsink, gboolean drop)
+{
+  g_return_if_fail (GST_IS_APP_SINK (appsink));
+
+  g_mutex_lock (appsink->mutex);
+  if (appsink->drop != drop) {
+    appsink->drop = drop;
+    /* signal the change */
+    g_cond_signal (appsink->cond);
+  }
+  g_mutex_unlock (appsink->mutex);
+}
+
+/**
+ * gst_app_sink_get_drop:
+ * @appsink: a #GstAppSink
+ *
+ * Check if @appsink will drop old buffers when the maximum amount of queued
+ * buffers is reached.
+ *
+ * Returns: %TRUE if @appsink is dropping old buffers when the queue is
+ * filled.
+ */
+gboolean
+gst_app_sink_get_drop (GstAppSink * appsink)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_APP_SINK (appsink), FALSE);
+
+  g_mutex_lock (appsink->mutex);
+  result = appsink->drop;
   g_mutex_unlock (appsink->mutex);
 
   return result;
