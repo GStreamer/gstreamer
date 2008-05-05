@@ -579,6 +579,42 @@ GST_START_TEST (test_subviewer2)
 
 GST_END_TEST;
 
+GST_START_TEST (test_sami)
+{
+  SubParseInputChunk sami_input[] = {
+    {"<SAMI>\n"
+          "<HEAD>\n"
+          "    <TITLE>Subtitle</TITLE>\n"
+          "    <STYLE TYPE=\"text/css\">\n"
+          "    <!--\n"
+          "        P {margin-left:8pt; margin-right:8pt; margin-bottom:2pt; margin-top:2pt; text-align:center; font-size:12pt; font-weight:normal; color:black;}\n"
+          "        .CC {Name:English; lang:en-AU; SAMIType:CC;}\n"
+          "        #STDPrn {Name:Standard Print;}\n"
+          "        #LargePrn {Name:Large Print; font-size:24pt;}\n"
+          "        #SmallPrn {Name:Small Print; font-size:16pt;}\n"
+          "    -->\n"
+          "    </Style>\n"
+          "</HEAD>\n"
+          "<BODY>\n"
+          "    <SYNC Start=1000>\n"
+          "        <P Class=CC>\n"
+          "            This is a comment.<br>\n"
+          "            This is a second comment.\n",
+          1000 * GST_MSECOND, 2000 * GST_MSECOND,
+        "This is a comment.\nThis is a second comment."},
+    {"    <SYNC Start=2000>\n"
+          "        <P Class=CC>\n"
+          "            This is a third comment.<br>\n"
+          "            This is a fourth comment.\n" "</BODY>\n" "</SAMI>\n",
+          2000 * GST_MSECOND, GST_CLOCK_TIME_NONE,
+        "This is a third comment.\nThis is a fourth comment."}
+  };
+
+  do_test (sami_input, G_N_ELEMENTS (sami_input), "text/x-pango-markup");
+}
+
+GST_END_TEST;
+
 /* TODO:
  *  - add/modify tests so that lines aren't dogfed to the parsers in complete
  *    lines or sets of complete lines, but rather in random chunks
@@ -606,6 +642,7 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_mpl2);
   tcase_add_test (tc_chain, test_subviewer);
   tcase_add_test (tc_chain, test_subviewer2);
+  tcase_add_test (tc_chain, test_sami);
   return s;
 }
 

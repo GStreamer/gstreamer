@@ -131,18 +131,13 @@ handle_start_sync (GstSamiContext * sctx, const xmlChar ** atts)
       if (!value)
         continue;
       if (!xmlStrncmp ((const xmlChar *) "start", key, 5)) {
-        /* FIXME: this is not correct. According to[0] the start parameter
-         * specifies the time when the text should be shown and not the time
-         * when the text should be hidden again.
-         * This essentially means that we have to look at the next sync element
-         * before pushing one buffer and push the last buffer with -1
-         * as duration after the body element is closed.
-         * [0] http://msdn.microsoft.com/en-us/library/ms971327.aspx
-         */
-        sctx->time1 = sctx->time2;
+        /* Only set a new start time if we don't have text pending */
+        if (sctx->resultbuf->len == 0)
+          sctx->time1 = sctx->time2;
+
         sctx->time2 = atoi ((const char *) value) * GST_MSECOND;
-        sctx->has_result = TRUE;
         g_string_append (sctx->resultbuf, sctx->buf->str);
+        sctx->has_result = (sctx->resultbuf->len != 0) ? TRUE : FALSE;
         g_string_truncate (sctx->buf, 0);
       }
     }
@@ -248,6 +243,19 @@ end_sami_element (void *ctx, const xmlChar * name)
 
   if (!xmlStrncmp ((const xmlChar *) "sync", name, 4)) {
     sctx->in_sync = FALSE;
+  } else if (!xmlStrncmp ((const xmlChar *) "body", name, 4)) {
+    /* We will usually have one buffer left when the body is closed
+     * as we need the next sync to actually send it */
+    if (sctx->buf->len != 0) {
+      /* Only set a new start time if we don't have text pending */
+      if (sctx->resultbuf->len == 0)
+        sctx->time1 = sctx->time2;
+
+      sctx->time2 = GST_CLOCK_TIME_NONE;
+      g_string_append (sctx->resultbuf, sctx->buf->str);
+      sctx->has_result = (sctx->resultbuf->len != 0) ? TRUE : FALSE;
+      g_string_truncate (sctx->buf, 0);
+    }
   } else if (!xmlStrncmp ((const xmlChar *) "font", name, 4)) {
     sami_context_pop_state (sctx, SPAN_TAG);
   } else if (!xmlStrncmp ((const xmlChar *) "ruby", name, 4)) {
@@ -262,12 +270,29 @@ characters_sami (void *ctx, const xmlChar * ch, int len)
 {
   GstSamiContext *sctx = (GstSamiContext *) ctx;
   gchar *escaped;
+  gchar *tmp;
+  gint i;
 
   /* Skip everything except content of the sync elements */
   if (!sctx->in_sync)
     return;
 
   escaped = g_markup_escape_text ((const gchar *) ch, len);
+  g_strstrip (escaped);
+
+  /* Remove double spaces forom the string as those are
+   * usually added by newlines and indention */
+  tmp = escaped;
+  for (i = 0; i <= strlen (escaped); i++) {
+    escaped[i] = *tmp;
+    if (*tmp != ' ') {
+      tmp++;
+      continue;
+    }
+    while (*tmp == ' ')
+      tmp++;
+  }
+
   if (has_tag (sctx->state, RT_TAG)) {
     g_string_append_c (sctx->rubybuf, ' ');
     g_string_append (sctx->rubybuf, escaped);

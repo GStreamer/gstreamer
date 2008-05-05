@@ -1,5 +1,16 @@
 2008-05-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/subparse/samiparse.c: (handle_start_sync),
+	(end_sami_element), (characters_sami):
+	Remove trailing, leading and double whitespaces.
+	Correctly timestamp buffers and output the last buffer too.
+
+	* tests/check/elements/subparse.c: (GST_START_TEST),
+	(subparse_suite):
+	Add a simple unit test for SAMI parsing.
+
+2008-05-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Young-Ho Cha <ganadist at chollian dot net>
 
 	* gst/subparse/samiparse.c: (handle_start_sync),
