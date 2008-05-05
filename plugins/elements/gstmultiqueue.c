@@ -35,12 +35,12 @@
  *   <itemizedlist><title>Multiple streamhandling</title>
  *   <listitem><para>
  *     The element handles queueing data on more than one stream at once. To
- *     achieve such a feature it has request sink pads (sink_%d) and
- *     'sometimes' src pads (src_%d).
+ *     achieve such a feature it has request sink pads (sink%d) and
+ *     'sometimes' src pads (src%d).
  *   </para><para>
  *     When requesting a given sinkpad with gst_element_get_request_pad(),
  *     the associated srcpad for that stream will be created.
- *     Ex: requesting sink_1 will generate src_1.
+ *     Example: requesting sink1 will generate src1.
  *   </para></listitem>
  *   </itemizedlist>
  * </listitem>

@@ -1,3 +1,8 @@
+2008-05-05  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* plugins/elements/gstmultiqueue.c:
+	  Small docs fix.
+	
 2008-05-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/gst/gstvalue.c: (GST_START_TEST), (gst_value_suite):
