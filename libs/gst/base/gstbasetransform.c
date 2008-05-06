@@ -884,6 +884,8 @@ failed_configure:
  * inbuf, the caller should be prepared for this and perform 
  * appropriate refcounting.
  */
+
+/* FIXME 0.11: out_size should be unsigned */
 static GstFlowReturn
 gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * in_buf, gint out_size, GstCaps * out_caps, GstBuffer ** out_buf)
@@ -891,6 +893,8 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   GstBaseTransformClass *bclass;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean copy_inbuf = FALSE;
+
+  g_return_val_if_fail (out_size >= 0, GST_FLOW_ERROR);
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 

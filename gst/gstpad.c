@@ -2711,6 +2711,7 @@ fallback:
   }
 }
 
+/* FIXME 0.11: size should be unsigned */
 static GstFlowReturn
 gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
     GstCaps * caps, GstBuffer ** buf, gboolean setcaps)
@@ -2722,6 +2723,7 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (size >= 0, GST_FLOW_ERROR);
 
   GST_DEBUG_OBJECT (pad, "offset %" G_GUINT64_FORMAT ", size %d", offset, size);
 
@@ -2816,6 +2818,8 @@ not_negotiated:
  *
  * MT safe.
  */
+
+/* FIXME 0.11: size should be unsigned */
 GstFlowReturn
 gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
     GstBuffer ** buf)
@@ -2843,6 +2847,8 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
  *
  * MT safe.
  */
+
+/* FIXME 0.11: size should be unsigned */
 GstFlowReturn
 gst_pad_alloc_buffer_and_set_caps (GstPad * pad, guint64 offset, gint size,
     GstCaps * caps, GstBuffer ** buf)

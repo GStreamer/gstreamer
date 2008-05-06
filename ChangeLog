@@ -1,3 +1,11 @@
+2008-05-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstpad.c: (gst_pad_alloc_buffer_full):
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buffer):
+	Don't allow negative sizes when allocating new buffers.
+	Fixes bug #461253.
+
 2008-05-05  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Sjoerd Simons <sjoerd at luon net>
