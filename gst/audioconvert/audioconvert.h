@@ -54,6 +54,7 @@ struct _AudioConvertFmt
   gint rate;
   gint channels;
   GstAudioChannelPosition *pos;
+  gboolean unpositioned_layout;
 
   /* int audio caps */
   gboolean sign;

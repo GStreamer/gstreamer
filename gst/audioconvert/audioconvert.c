@@ -420,6 +420,9 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
   /* first clean the existing context */
   audio_convert_clean_context (ctx);
 
+  g_return_val_if_fail (in->unpositioned_layout == out->unpositioned_layout,
+      FALSE);
+
   ctx->in = *in;
   ctx->out = *out;
 

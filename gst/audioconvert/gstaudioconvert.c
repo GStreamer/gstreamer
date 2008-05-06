@@ -107,7 +107,8 @@ static void gst_audio_convert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_audio_convert_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
+static gboolean structure_has_fixed_channel_positions (GstStructure * s,
+    gboolean * unpositioned_layout);
 
 /* AudioConvert signals and args */
 enum
@@ -135,37 +136,37 @@ GST_BOILERPLATE_FULL (GstAudioConvert, gst_audio_convert, GstBaseTransform,
 GST_STATIC_CAPS ( \
   "audio/x-raw-float, " \
     "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 8 ], " \
+    "channels = (int) [ 1, MAX ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) 64;" \
   "audio/x-raw-float, " \
     "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 8 ], " \
+    "channels = (int) [ 1, MAX ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) 32;" \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 8 ], " \
+    "channels = (int) [ 1, MAX ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) 32, " \
     "depth = (int) [ 1, 32 ], " \
     "signed = (boolean) { true, false }; " \
   "audio/x-raw-int, "   \
     "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 8 ], "       \
+    "channels = (int) [ 1, MAX ], "       \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "        \
     "width = (int) 24, "        \
     "depth = (int) [ 1, 24 ], " "signed = (boolean) { true, false }; "  \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 8 ], " \
+    "channels = (int) [ 1, MAX ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) 16, " \
     "depth = (int) [ 1, 16 ], " \
     "signed = (boolean) { true, false }; " \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 8 ], " \
+    "channels = (int) [ 1, MAX ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) 8, " \
     "depth = (int) [ 1, 8 ], " \
@@ -333,6 +334,10 @@ gst_audio_convert_parse_caps (const GstCaps * caps, AudioConvertFmt * fmt)
     goto no_values;
   if (!(fmt->pos = gst_audio_get_channel_positions (structure)))
     goto no_values;
+
+  fmt->unpositioned_layout = FALSE;
+  structure_has_fixed_channel_positions (structure, &fmt->unpositioned_layout);
+
   if (!gst_structure_get_int (structure, "width", &fmt->width))
     goto no_values;
   if (!gst_structure_get_int (structure, "rate", &fmt->rate))
@@ -532,6 +537,42 @@ append_with_other_format (GstCaps * caps, GstStructure * s, gboolean isfloat)
   }
 }
 
+static gboolean
+structure_has_fixed_channel_positions (GstStructure * s,
+    gboolean * unpositioned_layout)
+{
+  GstAudioChannelPosition *pos;
+  const GValue *val;
+  gint channels = 0;
+
+  if (!gst_structure_get_int (s, "channels", &channels))
+    return FALSE;               /* probably a range */
+
+  if (channels > 8) {
+    GST_LOG ("%d channels, undefined channel positions are implicit", channels);
+    *unpositioned_layout = TRUE;
+    return TRUE;
+  }
+
+  val = gst_structure_get_value (s, "channel-positions");
+  if (val == NULL || !gst_value_is_fixed (val)) {
+    GST_LOG ("no or unfixed channel-positions in %" GST_PTR_FORMAT, s);
+    return FALSE;
+  }
+
+  pos = gst_audio_get_channel_positions (s);
+  if ((pos && pos[0] == GST_AUDIO_CHANNEL_POSITION_NONE) || channels > 8) {
+    GST_LOG ("fixed undefined channel-positions in %" GST_PTR_FORMAT, s);
+    *unpositioned_layout = TRUE;
+  } else {
+    GST_LOG ("fixed defined channel-positions in %" GST_PTR_FORMAT, s);
+    *unpositioned_layout = FALSE;
+  }
+  g_free (pos);
+
+  return TRUE;
+}
+
 /* Audioconvert can perform all conversions on audio except for resampling. 
  * However, there are some conversions we _prefer_ not to do. For example, it's
  * better to convert format (float<->int, endianness, etc) than the number of
@@ -549,8 +590,8 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
 {
   GstCaps *ret;
   GstStructure *s, *structure;
-  gboolean isfloat;
-  gint width, depth, channels;
+  gboolean isfloat, allow_mixing;
+  gint width, depth, channels = 0;
   const gchar *fields_used[] = {
     "width", "depth", "rate", "channels", "endianness", "signed"
   };
@@ -606,11 +647,26 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
     }
   }
 
+  allow_mixing = TRUE;
   if (gst_structure_get_int (structure, "channels", &channels)) {
-    if (channels == 8)
-      gst_structure_set (s, "channels", G_TYPE_INT, 8, NULL);
+    gboolean unpositioned;
+
+    /* we don't support mixing for channels without channel positions */
+    if (structure_has_fixed_channel_positions (structure, &unpositioned))
+      allow_mixing = (unpositioned == FALSE);
+  }
+
+  if (!allow_mixing || channels == 8) {
+    gst_structure_set (s, "channels", G_TYPE_INT, channels, NULL);
+    if (gst_structure_has_field (structure, "channel-positions"))
+      gst_structure_set_value (s, "channel-positions",
+          gst_structure_get_value (structure, "channel-positions"));
+  } else {
+    if (channels == 0)
+      gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 8, NULL);
     else
       gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, channels, 8, NULL);
+    gst_structure_remove_field (s, "channel-positions");
   }
   gst_caps_append_structure (ret, s);
 
@@ -639,7 +695,16 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
    * it's very bad to drop channels entirely.
    */
   s = gst_structure_copy (s);
-  gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 8, NULL);
+  if (allow_mixing) {
+    gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 8, NULL);
+    gst_structure_remove_field (s, "channel-positions");
+  } else {
+    /* allow_mixing can only be FALSE if we got a fixed number of channels */
+    gst_structure_set (s, "channels", G_TYPE_INT, channels, NULL);
+    if (gst_structure_has_field (structure, "channel-positions"))
+      gst_structure_set_value (s, "channel-positions",
+          gst_structure_get_value (structure, "channel-positions"));
+  }
   gst_caps_append_structure (ret, s);
 
   /* Same, plus a float<->int conversion */

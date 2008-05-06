@@ -464,9 +464,12 @@ static void
 gst_channel_mix_fill_matrix (AudioConvertCtx * this)
 {
   gst_channel_mix_fill_identical (this);
-  gst_channel_mix_fill_compatible (this);
-  gst_channel_mix_fill_others (this);
-  gst_channel_mix_fill_normalize (this);
+
+  if (!this->in.unpositioned_layout) {
+    gst_channel_mix_fill_compatible (this);
+    gst_channel_mix_fill_others (this);
+    gst_channel_mix_fill_normalize (this);
+  }
 }
 
 /* only call after this->out and this->in are filled in */
