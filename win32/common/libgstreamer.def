@@ -316,6 +316,7 @@ EXPORTS
 	gst_error_get_message
 	gst_event_get_structure
 	gst_event_get_type
+	gst_event_has_name
 	gst_event_new_buffer_size
 	gst_event_new_custom
 	gst_event_new_eos

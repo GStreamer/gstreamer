@@ -1,5 +1,10 @@
 2008-05-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* win32/common/libgstreamer.def:
+	Add gst_pad_has_name() to the exported symbols.
+
+2008-05-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/gstpad.c: (gst_pad_alloc_buffer_full):
 	* libs/gst/base/gstbasetransform.c:
 	(gst_base_transform_prepare_output_buffer):
