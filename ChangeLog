@@ -1,3 +1,10 @@
+2008-05-06  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	Patch by: Gabriel Bouvigne  <bouvigne at mp3-tech dot org>
+	* ext/libpostproc/gstpostproc.c:
+	Support for non-I420 colorspaces in postproc
+	Fixes #496127
+
 2008-04-21  Edward Hervey  <edward@collabora.co.uk>
 
 	Patch by: Dejan Sakelšak <sakdean at gmail dot com>
