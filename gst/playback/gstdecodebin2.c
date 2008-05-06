@@ -1150,6 +1150,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     if (!(sinkpad = find_sink_pad (element))) {
       GST_WARNING_OBJECT (dbin, "Element %s doesn't have a sink pad",
           GST_ELEMENT_NAME (element));
+      gst_element_set_state (element, GST_STATE_NULL);
       gst_object_unref (element);
       continue;
     }
@@ -1159,6 +1160,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       GST_WARNING_OBJECT (dbin, "Couldn't add %s to the bin",
           GST_ELEMENT_NAME (element));
       gst_object_unref (sinkpad);
+      gst_element_set_state (element, GST_STATE_NULL);
       gst_object_unref (element);
       continue;
     }

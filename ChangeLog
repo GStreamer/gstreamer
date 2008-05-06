@@ -1,3 +1,9 @@
+2008-05-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c: (connect_pad):
+	When autoplugging fails, set the element back to NULL before
+	unreffing it.
+
 2008-05-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* win32/common/libgstaudio.def:
