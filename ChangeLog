@@ -1,3 +1,10 @@
+2008-05-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Thijs Vermeir <thijsvermeir at gmail dot com>
+
+	* sys/osxvideo/cocoawindow.m:
+	Fix compiler warnings on PPC64. Fixes bug #499318.
+
 2008-05-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>

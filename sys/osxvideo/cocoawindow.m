@@ -170,7 +170,7 @@
 
   /* Free previous texture if any */
   if (pi_texture) {
-    glDeleteTextures (1, &pi_texture);
+    glDeleteTextures (1, (GLuint *)&pi_texture);
   }
 
   if (data) {
@@ -179,7 +179,7 @@
     data = g_malloc0(width * height * sizeof(short));
   }
   /* Create textures */
-  glGenTextures (1, &pi_texture);
+  glGenTextures (1, (GLuint *)&pi_texture);
 
   glEnable (GL_TEXTURE_RECTANGLE_EXT);
   glEnable (GL_UNPACK_CLIENT_STORAGE_APPLE);
@@ -262,7 +262,7 @@
 }
 
 - (void) drawRect:(NSRect) rect {
-  int params[] = { 1 };
+  GLint params[] = { 1 };
 
   [actualContext makeCurrentContext];
 
