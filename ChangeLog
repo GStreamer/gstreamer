@@ -1,5 +1,11 @@
 2008-05-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/volume/gstvolume.c: (volume_transform_ip):
+	Return NOT_NEGOTIATED if we didn't set a process function yet for some
+	reason instead of crashing later. Might fix bug #509125.
+
+2008-05-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Based on a patch by: Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/audioconvert/audioconvert.c: (audio_convert_prepare_context):

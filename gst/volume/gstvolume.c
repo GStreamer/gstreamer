@@ -689,6 +689,8 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   GstVolume *this = GST_VOLUME (base);
   GstClockTime timestamp;
 
+  g_return_val_if_fail (this->process != NULL, GST_FLOW_NOT_NEGOTIATED);
+
   /* FIXME: if controllers are bound, subdivide GST_BUFFER_SIZE into small
    * chunks for smooth fades, what is small? 1/10th sec.
    */
