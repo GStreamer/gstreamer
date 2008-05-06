@@ -1,5 +1,14 @@
 2008-05-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_parse_mdpr),
+	(gst_rmdemux_fix_timestamp), (gst_rmdemux_parse_video_packet),
+	(gst_rmdemux_parse_audio_packet), (gst_rmdemux_parse_packet):
+	Fix video timestamps by adjusting it with the first timestamp found.
+	Don't assume we have a complete fragment when flushing the adapter,
+	packets might have been lost or the stream might just be broken.
+
+2008-05-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/realmedia/rdtmanager.c: (gst_rdt_manager_plugin_init):
 	Set Rank to NONE so that we don't accidentally try to autoplug the
 	rdtmanager.

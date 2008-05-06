@@ -1543,6 +1543,8 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, int length)
   stream->id = RMDEMUX_GUINT16_GET (data);
   stream->index = NULL;
   stream->seek_offset = 0;
+  stream->last_ts = -1;
+  stream->next_ts = -1;
   stream->last_flow = GST_FLOW_OK;
   stream->adapter = gst_adapter_new ();
   GST_LOG_OBJECT (rmdemux, "stream_number=%d", stream->id);
@@ -2045,7 +2047,10 @@ gst_rmdemux_fix_timestamp (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     {
       GST_LOG_OBJECT (rmdemux, "I frame %d", frame_type);
       /* I frame */
-      timestamp = stream->next_ts;
+      if (stream->next_ts == -1)
+        stream->next_ts = timestamp;
+      else
+        timestamp = stream->next_ts;
       stream->last_ts = stream->next_ts;
       stream->next_ts = ts;
       stream->last_seq = stream->next_seq;
@@ -2226,7 +2231,7 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
       GstBuffer *out;
       guint8 *outdata;
       guint header_size;
-      gint i;
+      gint i, avail;
 
       /* calculate header size, which is:
        * 1 byte for the number of fragments - 1
@@ -2244,7 +2249,9 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
           "fragmented completed. count %d, header_size %u", stream->frag_count,
           header_size);
 
-      out = gst_buffer_new_and_alloc (header_size + stream->frag_length);
+      avail = gst_adapter_available (stream->adapter);
+
+      out = gst_buffer_new_and_alloc (header_size + avail);
       outdata = GST_BUFFER_DATA (out);
 
       /* create header */
@@ -2257,12 +2264,23 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
       }
 
       /* copy packet data after the header now */
-      gst_adapter_copy (stream->adapter, outdata, 0, stream->frag_length);
-      gst_adapter_flush (stream->adapter, stream->frag_length);
+      gst_adapter_copy (stream->adapter, outdata, 0, avail);
+      gst_adapter_flush (stream->adapter, avail);
+
+      stream->frag_current = 0;
+      stream->frag_count = 0;
+      stream->frag_length = 0;
 
       gst_buffer_set_caps (out, GST_PAD_CAPS (stream->pad));
-      GST_BUFFER_TIMESTAMP (out) =
+      timestamp =
           gst_rmdemux_fix_timestamp (rmdemux, stream, outdata, timestamp);
+
+      if (timestamp > rmdemux->first_ts)
+        timestamp -= rmdemux->first_ts;
+      else
+        timestamp = 0;
+
+      GST_BUFFER_TIMESTAMP (out) = timestamp;
 
       ret = gst_pad_push (stream->pad, out);
 
@@ -2318,7 +2336,13 @@ gst_rmdemux_parse_audio_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     goto alloc_failed;
 
   memcpy (GST_BUFFER_DATA (buffer), (guint8 *) data, size);
-  GST_BUFFER_TIMESTAMP (buffer) = timestamp - rmdemux->first_ts;
+
+  if (timestamp > rmdemux->first_ts)
+    timestamp -= rmdemux->first_ts;
+  else
+    timestamp = 0;
+
+  GST_BUFFER_TIMESTAMP (buffer) = timestamp;
 
   if (stream->needs_descrambling) {
     ret = gst_rmdemux_handle_scrambled_packet (rmdemux, stream, buffer, key);
@@ -2349,6 +2373,7 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
   gboolean key;
   guint8 *data, *base;
   guint8 flags;
+  guint32 ts;
 
   base = data = GST_BUFFER_DATA (in);
   size = GST_BUFFER_SIZE (in);
@@ -2361,13 +2386,14 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
     goto unknown_stream;
 
   /* timestamp in Msec */
-  timestamp = RMDEMUX_GUINT32_GET (data + 2) * GST_MSECOND;
+  ts = RMDEMUX_GUINT32_GET (data + 2);
+  timestamp = ts * GST_MSECOND;
 
   gst_segment_set_last_stop (&rmdemux->segment, GST_FORMAT_TIME, timestamp);
 
   GST_LOG_OBJECT (rmdemux, "Parsing a packet for stream=%d, timestamp=%"
-      GST_TIME_FORMAT ", size %u, version=%d", id, GST_TIME_ARGS (timestamp),
-      size, version);
+      GST_TIME_FORMAT ", size %u, version=%d, ts=%u", id,
+      GST_TIME_ARGS (timestamp), size, version, ts);
 
   if (rmdemux->first_ts == GST_CLOCK_TIME_NONE) {
     GST_DEBUG_OBJECT (rmdemux, "First timestamp: %" GST_TIME_FORMAT,
