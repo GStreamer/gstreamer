@@ -946,5 +946,5 @@ gboolean
 gst_rdt_manager_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rdtmanager",
-      GST_RANK_MARGINAL, GST_TYPE_RDT_MANAGER);
+      GST_RANK_NONE, GST_TYPE_RDT_MANAGER);
 }

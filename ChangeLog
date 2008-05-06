@@ -1,3 +1,9 @@
+2008-05-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rdtmanager.c: (gst_rdt_manager_plugin_init):
+	Set Rank to NONE so that we don't accidentally try to autoplug the
+	rdtmanager.
+
 2008-05-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
