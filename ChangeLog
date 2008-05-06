@@ -1,3 +1,9 @@
+2008-05-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* win32/common/libgstaudio.def:
+	Add gst_base_audio_src_[sg]et_slave_method() to the exported
+	symbols.
+
 2008-05-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/subparse/samiparse.c: (handle_start_sync),

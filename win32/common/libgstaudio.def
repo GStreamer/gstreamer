@@ -26,8 +26,10 @@ EXPORTS
 	gst_base_audio_sink_set_slave_method
 	gst_base_audio_src_create_ringbuffer
 	gst_base_audio_src_get_provide_clock
+	gst_base_audio_src_get_slave_method
 	gst_base_audio_src_get_type
 	gst_base_audio_src_set_provide_clock
+	gst_base_audio_src_set_slave_method
 	gst_ring_buffer_acquire
 	gst_ring_buffer_advance
 	gst_ring_buffer_clear
