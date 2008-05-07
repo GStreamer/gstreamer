@@ -880,7 +880,11 @@ gst_directdraw_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
       GST_CAT_WARNING_OBJECT (directdrawsink_debug, ddrawsink,
           "gst_directdraw_sink_show_frame failed locking surface %s",
           DDErrorString (hRes));
-      return GST_FLOW_ERROR;
+
+      if (IDirectDrawSurface7_IsLost (ddrawsink->offscreen_surface) == DD_OK)
+        return GST_FLOW_OK;
+      else
+        return GST_FLOW_ERROR;
     }
 
     /* Write each line respecting the destination surface pitch */
