@@ -705,6 +705,7 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
 
   /* Now we should have a surface, set appropriate caps on it */
   if (surface) {
+    GST_BUFFER_FLAGS (GST_BUFFER (surface)) = 0;
     gst_buffer_set_caps (GST_BUFFER (surface), buffer_caps);
   }
 
