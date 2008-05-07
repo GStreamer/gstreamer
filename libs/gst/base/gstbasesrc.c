@@ -863,9 +863,10 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       break;
     case GST_QUERY_BUFFERING:
     {
-      res = FALSE;
       GstFormat format;
       gint64 start, stop, estimated;
+
+      res = FALSE;
 
       gst_query_parse_buffering_range (query, &format, NULL, NULL, NULL);
 
