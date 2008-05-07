@@ -1,3 +1,9 @@
+2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
+	* win32/common/config.h.in:
+	  Don't define GST_FUNCTION, if GLib supports MSVC we'd much rather
+	  use the real thing than having "???" unconditionally.
+
 2008-05-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/app/.cvsignore:
