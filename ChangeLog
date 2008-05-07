@@ -2,6 +2,20 @@
 
 	* sys/directdraw/gstdirectdrawsink.c
 	  (gst_directdraw_sink_buffer_alloc):
+	  Make it so that gst_directdraw_sink_buffer_alloc uses the right
+	  width/height.
+
+	  Especially when looking through the pool of buffers, make sure that
+	  the width/height of caps is used instead of the already negotiated
+	  dimensions.
+	  For example if a buffer with different caps is requested, i.e.
+	  higher resolution, the caller would get a buffer with the old
+	  dimensions and thus corrupt the heap.
+
+2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
+	* sys/directdraw/gstdirectdrawsink.c
+	  (gst_directdraw_sink_buffer_alloc):
 	  Clear the flags on recycled buffers from buffer_alloc.
 	  Partially fixes #520885.
 
