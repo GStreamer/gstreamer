@@ -510,6 +510,12 @@ gst_directdraw_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
         (GetSystemMetrics (SM_CYSIZEFRAME) * 2), SWP_SHOWWINDOW | SWP_NOMOVE);
   }
 
+  /* release the surface, we have to recreate it! */
+  if (ddrawsink->offscreen_surface) {
+    IDirectDrawSurface7_Release (ddrawsink->offscreen_surface);
+    ddrawsink->offscreen_surface = NULL;
+  }
+
   /* create an offscreen surface with the caps */
   ret = gst_directdraw_sink_check_offscreen_surface (ddrawsink);
   if (!ret) {
