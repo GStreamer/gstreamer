@@ -1,3 +1,30 @@
+2008-05-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/app/.cvsignore:
+	* gst-libs/gst/app/Makefile.am:
+	* gst-libs/gst/app/gstapp-marshal.list:
+	Add marshal.list, make it compile and add to cvsignore.
+
+	* gst-libs/gst/app/gstappsink.c: (gst_app_sink_dispose),
+	(gst_app_sink_stop):
+	Small cleanups.
+
+	* gst-libs/gst/app/gstappsrc.c: (gst_app_src_class_init),
+	(gst_app_src_init), (gst_app_src_set_property),
+	(gst_app_src_get_property), (gst_app_src_unlock),
+	(gst_app_src_unlock_stop), (gst_app_src_start), (gst_app_src_stop),
+	(gst_app_src_create), (gst_app_src_set_caps),
+	(gst_app_src_get_caps), (gst_app_src_set_size),
+	(gst_app_src_get_size), (gst_app_src_set_seekable),
+	(gst_app_src_get_seekable), (gst_app_src_set_max_buffers),
+	(gst_app_src_get_max_buffers), (gst_app_src_push_buffer),
+	(gst_app_src_end_of_stream):
+	* gst-libs/gst/app/gstappsrc.h:
+	Beat appsrc in shape, add signals and actions.
+	Add some docs.
+	Add properties for caps, size, seekability and max-buffers.
+	Fix unlock/stop code.
+
 2008-05-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac:
