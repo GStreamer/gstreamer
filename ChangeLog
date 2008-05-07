@@ -2,6 +2,15 @@
 
 	patch by: Haakon Sporsheim <haakon.sporsheim at tandberg com>
 
+	* sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_show_frame):
+	  Added checking of surface lost case after an unsuccessful
+	  IDirectDrawSurface7_Lock() call.
+	  If surface is lost, return GST_FLOW_OK.
+
+2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
+	patch by: Haakon Sporsheim <haakon.sporsheim at tandberg com>
+
 	* sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_show_frame,
 	  WndProc, gst_directdraw_sink_window_thread):
 	  Improved Windows message loop and fixed window destruction issue.
