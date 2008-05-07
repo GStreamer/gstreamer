@@ -1308,6 +1308,9 @@ gst_directdraw_sink_setup_ddraw (GstDirectDrawSink * ddrawsink)
   hRes = IDirectDraw7_CreateClipper (ddrawsink->ddraw_object, 0,
       &ddrawsink->clipper, NULL);
 
+  if (hRes == DD_OK && ddrawsink->video_window)
+    IDirectDrawClipper_SetHWnd (ddrawsink->clipper, 0, ddrawsink->video_window);
+
   /* create our primary surface */
   if (!gst_directdraw_sink_check_primary_surface (ddrawsink))
     return FALSE;
