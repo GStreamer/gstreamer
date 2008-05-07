@@ -1,3 +1,18 @@
+2008-05-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_query):
+	Report the latency with the new seglatency parameter.
+
+	* gst-libs/gst/audio/gstringbuffer.c:
+	(gst_ring_buffer_debug_spec_buff), (gst_ring_buffer_parse_caps),
+	(gst_ring_buffer_acquire):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Add new field to the ringbufferspec to specify the expected latency
+	between the underlying device read/write pointer, this is needed
+	when writing sinks that sit a little closer to the hardware.
+	Add some more docs for other fields.
+
 2008-05-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/volume/gstvolume.c: (volume_transform_ip):

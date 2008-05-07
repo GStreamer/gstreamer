@@ -333,7 +333,7 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
           basesink->priv->us_latency = min_l;
 
           min_latency =
-              gst_util_uint64_scale_int (spec->segtotal * spec->segsize,
+              gst_util_uint64_scale_int (spec->seglatency * spec->segsize,
               GST_SECOND, spec->rate * spec->bytes_per_sample);
 
           /* we cannot go lower than the buffer size and the min peer latency */

@@ -258,6 +258,7 @@ gst_ring_buffer_debug_spec_buff (GstRingBufferSpec * spec)
   GST_DEBUG ("acquire ringbuffer: latency time: %" G_GINT64_FORMAT " usec",
       spec->latency_time);
   GST_DEBUG ("acquire ringbuffer: total segments: %d", spec->segtotal);
+  GST_DEBUG ("acquire ringbuffer: latency segments: %d", spec->seglatency);
   GST_DEBUG ("acquire ringbuffer: segment size: %d bytes = %d samples",
       spec->segsize, spec->segsize / spec->bytes_per_sample);
   GST_DEBUG ("acquire ringbuffer: buffer size: %d bytes = %d samples",
@@ -414,6 +415,9 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
   spec->segsize -= spec->segsize % spec->bytes_per_sample;
 
   spec->segtotal = spec->buffer_time / spec->latency_time;
+  /* leave the latency undefined now, implementations can change it but if it's
+   * not changed, we assume the same value as segtotal */
+  spec->seglatency = -1;
 
   gst_ring_buffer_debug_spec_caps (spec);
   gst_ring_buffer_debug_spec_buff (spec);
@@ -648,6 +652,11 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   if (G_UNLIKELY ((bps = buf->spec.bytes_per_sample) == 0))
     goto invalid_bps;
+
+  /* if the seglatency was overwritten with something else than -1, use it, else
+   * assume segtotal as the latency */
+  if (buf->spec.seglatency == -1)
+    buf->spec.seglatency = buf->spec.segtotal;
 
   segsize = buf->spec.segsize;
 
