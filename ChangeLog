@@ -1,3 +1,8 @@
+2008-05-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* configure.ac:
+	  Error out if we don't have the required core/base versions.
+
 2008-05-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_parse_mdpr),
