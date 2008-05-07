@@ -44,29 +44,52 @@ struct _GstAppSrc
   GstPushSrc pushsrc;
 
   /*< private >*/
-  gboolean unlock;
   GCond *cond;
   GMutex *mutex;
   GQueue *queue;
+
   GstCaps *caps;
-  gboolean end_of_stream;
-  gboolean flush;
+  gint64 size;
+  gboolean seekable;
+  guint max_buffers;
+
+  gboolean flushing;
+  gboolean started;
+  gboolean is_eos;
 };
 
 struct _GstAppSrcClass
 {
   GstPushSrcClass pushsrc_class;
+
+  /* signals */
+  void        (*need_data)       (GstAppSrc *src);
+  void        (*enough_data)     (GstAppSrc *src);
+  gboolean    (*seek_data)       (GstAppSrc *src, guint64 offset);
+
+  /* actions */
+  void        (*push_buffer)     (GstAppSrc *src, GstBuffer *buffer);
+  void        (*end_of_stream)   (GstAppSrc *src);
 };
 
 GType gst_app_src_get_type(void);
 
 GST_DEBUG_CATEGORY_EXTERN (app_src_debug);
 
+void        gst_app_src_set_caps         (GstAppSrc *appsrc, const GstCaps *caps);
+GstCaps*    gst_app_src_get_caps         (GstAppSrc *appsrc);
 
-void gst_app_src_push_buffer (GstAppSrc *appsrc, GstBuffer *buffer);
-void gst_app_src_set_caps (GstAppSrc *appsrc, GstCaps *caps);
-void gst_app_src_flush (GstAppSrc *appsrc);
-void gst_app_src_end_of_stream (GstAppSrc *appsrc);
+void        gst_app_src_set_size         (GstAppSrc *appsrc, gint64 size);
+gint64      gst_app_src_get_size         (GstAppSrc *appsrc);
+
+void        gst_app_src_set_seekable     (GstAppSrc *appsrc, gboolean seekable);
+gboolean    gst_app_src_get_seekable     (GstAppSrc *appsrc);
+
+void        gst_app_src_set_max_buffers  (GstAppSrc *appsrc, guint max);
+guint       gst_app_src_get_max_buffers  (GstAppSrc *appsrc);
+
+void        gst_app_src_push_buffer      (GstAppSrc *appsrc, GstBuffer *buffer);
+void        gst_app_src_end_of_stream    (GstAppSrc *appsrc);
 
 G_END_DECLS
 

@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2007 David Schleef <ds@schleef.org>
+ *           (C) 2008 Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -61,7 +62,7 @@ enum
   SIGNAL_NEW_PREROLL,
   SIGNAL_NEW_BUFFER,
 
-  /* acions */
+  /* actions */
   SIGNAL_PULL_PREROLL,
   SIGNAL_PULL_BUFFER,
 
@@ -334,15 +335,18 @@ gst_app_sink_dispose (GObject * obj)
   GstAppSink *appsink = GST_APP_SINK (obj);
   GstBuffer *buffer;
 
+  GST_OBJECT_LOCK (appsink);
   if (appsink->caps) {
     gst_caps_unref (appsink->caps);
     appsink->caps = NULL;
   }
+  GST_OBJECT_UNLOCK (appsink);
+
+  g_mutex_lock (appsink->mutex);
   if (appsink->preroll) {
     gst_buffer_unref (appsink->preroll);
     appsink->preroll = NULL;
   }
-  g_mutex_lock (appsink->mutex);
   while ((buffer = g_queue_pop_head (appsink->queue)))
     gst_buffer_unref (buffer);
   g_mutex_unlock (appsink->mutex);
@@ -483,7 +487,6 @@ gst_app_sink_stop (GstBaseSink * psink)
 
   g_mutex_lock (appsink->mutex);
   GST_DEBUG_OBJECT (appsink, "stopping");
-  appsink->is_eos = FALSE;
   appsink->flushing = TRUE;
   appsink->started = FALSE;
   gst_app_sink_flush_unlocked (appsink);
