@@ -1248,7 +1248,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
           src->segment.rate, src->segment.applied_rate, src->segment.format,
           src->segment.last_stop, stop, src->segment.time);
     } else {
-      /* reverse, we send data from stop to last_stop */
+      /* reverse, we send data from last_stop to start */
       src->priv->start_segment =
           gst_event_new_new_segment_full (FALSE,
           src->segment.rate, src->segment.applied_rate, src->segment.format,

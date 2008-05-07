@@ -1,5 +1,15 @@
 2008-05-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* libs/gst/base/gstadapter.c: (gst_adapter_available_fast):
+	Small code cleanup.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_query_latency),
+	(gst_base_sink_set_flushing):
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek):
+	Fix some comments.
+
+2008-05-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* plugins/elements/gstfakesrc.c: (gst_fake_src_class_init),
 	(gst_fake_src_init), (gst_fake_src_set_property),
 	(gst_fake_src_get_property), (gst_fake_src_start):

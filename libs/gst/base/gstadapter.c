@@ -594,6 +594,9 @@ gst_adapter_available (GstAdapter * adapter)
 guint
 gst_adapter_available_fast (GstAdapter * adapter)
 {
+  GstBuffer *first;
+  guint size;
+
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), 0);
 
   /* no buffers, we have no data */
@@ -604,9 +607,13 @@ gst_adapter_available_fast (GstAdapter * adapter)
   if (adapter->assembled_len)
     return adapter->assembled_len;
 
+  /* take the first buffer and its size */
+  first = GST_BUFFER_CAST (adapter->buflist->data);
+  size = GST_BUFFER_SIZE (first);
+
   /* we cannot have skipped more than the first buffer */
-  g_assert (GST_BUFFER_SIZE (adapter->buflist->data) > adapter->skip);
+  g_assert (size > adapter->skip);
 
   /* we can quickly get the data of the first buffer */
-  return GST_BUFFER_SIZE (adapter->buflist->data) - adapter->skip;
+  return size - adapter->skip;
 }

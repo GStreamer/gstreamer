@@ -2699,7 +2699,8 @@ gst_base_sink_set_flushing (GstBaseSink * basesink, GstPad * pad,
       gst_clock_id_unschedule (basesink->clock_id);
     }
 
-    /* flush out the data thread if it's locked in finish_preroll */
+    /* flush out the data thread if it's locked in finish_preroll, this will
+     * also flush out the EOS state */
     GST_DEBUG_OBJECT (basesink,
         "flushing out data thread, need preroll to TRUE");
     gst_base_sink_preroll_queue_flush (basesink, pad);
