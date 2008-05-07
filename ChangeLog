@@ -1,5 +1,14 @@
 2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
 
+	patch by: Haakon Sporsheim <haakon.sporsheim at tandberg com>
+
+	* sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_set_caps):
+	  Fixed mid stream resolution change bug, the offscreen surface is now
+	  released when set_caps is called.
+	  Partially fixes #520885.
+
+2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
 	* sys/directdraw/gstdirectdrawsink.c
 	  (gst_directdraw_sink_buffer_alloc):
 	  Make it so that gst_directdraw_sink_buffer_alloc uses the right
