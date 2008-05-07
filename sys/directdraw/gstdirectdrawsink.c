@@ -810,8 +810,14 @@ gst_directdraw_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     /* use last buffer */
     buf = ddrawsink->last_buffer;
   }
-  if (buf == NULL)
+
+  if (buf == NULL) {
+    GST_ERROR_OBJECT (ddrawsink, "No buffer to render.");
     return GST_FLOW_ERROR;
+  } else if (!ddrawsink->video_window) {
+    GST_WARNING_OBJECT (ddrawsink, "No video window to render to.");
+    return GST_FLOW_ERROR;
+  }
 
   /* get the video window position */
   GST_OBJECT_LOCK (ddrawsink);
@@ -1314,13 +1320,13 @@ WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   switch (message) {
     case WM_ERASEBKGND:
       return TRUE;
-    case WM_DESTROY:
-      PostQuitMessage (0);
-      break;
     case WM_CLOSE:
       DestroyWindow (hWnd);
+    case WM_DESTROY:
+      PostQuitMessage (0);
       return 0;
   }
+
   return DefWindowProc (hWnd, message, wParam, lParam);
 }
 
@@ -1328,6 +1334,7 @@ static gpointer
 gst_directdraw_sink_window_thread (GstDirectDrawSink * ddrawsink)
 {
   WNDCLASS WndClass;
+  MSG msg;
 
   memset (&WndClass, 0, sizeof (WNDCLASS));
   WndClass.style = CS_HREDRAW | CS_VREDRAW;
@@ -1357,22 +1364,19 @@ gst_directdraw_sink_window_thread (GstDirectDrawSink * ddrawsink)
   ReleaseSemaphore (ddrawsink->window_created_signal, 1, NULL);
 
   /* start message loop processing our default window messages */
-  while (1) {
-    MSG msg;
-
-    if (GetMessage (&msg, ddrawsink->video_window, 0, 0) <= 0) {
-      GST_CAT_LOG_OBJECT (directdrawsink_debug, ddrawsink,
-          "our window received WM_QUIT or error.");
-      /* The window could have changed, if it is not ours anymore we don't 
-       * overwrite the current video window with NULL */
-      if (ddrawsink->our_video_window) {
-        GST_OBJECT_LOCK (ddrawsink);
-        ddrawsink->video_window = NULL;
-        GST_OBJECT_UNLOCK (ddrawsink);
-      }
-      break;
-    }
+  while (GetMessage (&msg, NULL, 0, 0) != FALSE) {
+    TranslateMessage (&msg);
     DispatchMessage (&msg);
+  }
+
+  GST_CAT_LOG_OBJECT (directdrawsink_debug, ddrawsink,
+      "our window received WM_QUIT or error.");
+  /* The window could have changed, if it is not ours anymore we don't
+   * overwrite the current video window with NULL */
+  if (ddrawsink->our_video_window) {
+    GST_OBJECT_LOCK (ddrawsink);
+    ddrawsink->video_window = NULL;
+    GST_OBJECT_UNLOCK (ddrawsink);
   }
 
   return NULL;
