@@ -612,6 +612,19 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_OBJECT_LOCK (ffmpegdec);
 
+  /* stupid check for VC1 */
+  if (oclass->in_plugin->id == CODEC_ID_WMV3) {
+    enum CodecID cid;
+
+    /* Get the code id and check it's the same as the incoming caps */
+    cid = gst_ffmpeg_caps_to_codecid (caps, NULL);
+    if (cid != CODEC_ID_WMV3) {
+      ret = FALSE;
+      GST_WARNING ("This decoder handles WMV3 and not VC1!");
+      goto done;
+    }
+  }
+
   /* close old session */
   gst_ffmpegdec_close (ffmpegdec);
 
@@ -1504,8 +1517,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
      * ffmpeg timestamp and the interpollated next timestamp invalid. */
     out_pts = -1;
     ffmpegdec->next_ts = -1;
-  }
-  else 
+  } else
     ffmpegdec->last_out = out_pts;
 
   if (ffmpegdec->ts_is_dts) {
@@ -2525,6 +2537,9 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       case CODEC_ID_MP3:
       case CODEC_ID_MPEG2VIDEO:
         rank = GST_RANK_NONE;
+        break;
+      case CODEC_ID_VC1:
+        rank = GST_RANK_MARGINAL + 1;
         break;
       default:
         rank = GST_RANK_MARGINAL;

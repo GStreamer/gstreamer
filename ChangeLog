@@ -1,3 +1,11 @@
+2008-05-07  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_setcaps),
+	(gst_ffmpegdec_video_frame), (gst_ffmpegdec_register):
+	Bump the priority of VC1 decoder so that it goes before the WMV3
+	decoder. This allows proper auto-pluggin with decodebin/playbin.
+	Fixes #531857
+
 2008-05-06  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	Patch by: Gabriel Bouvigne  <bouvigne at mp3-tech dot org>
