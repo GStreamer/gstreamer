@@ -572,8 +572,6 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf)
 {
   GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (bsink);
-  GstStructure *structure;
-  gint width, height;
   GstDDrawSurface *surface = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *buffer_caps = caps;
@@ -581,14 +579,6 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
 
   GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
       "a buffer of %u bytes was requested", size);
-
-  structure = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (structure, "width", &width) ||
-      !gst_structure_get_int (structure, "height", &height)) {
-    GST_WARNING_OBJECT (ddrawsink, "invalid caps for buffer allocation %"
-        GST_PTR_FORMAT, caps);
-    return GST_FLOW_UNEXPECTED;
-  }
 
   g_mutex_lock (ddrawsink->pool_lock);
 
@@ -601,8 +591,8 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
           ddrawsink->buffer_pool);
 
       /* If the surface is invalid for our need, destroy */
-      if ((surface->width != width) ||
-          (surface->height != height) ||
+      if ((surface->width != ddrawsink->video_width) ||
+          (surface->height != ddrawsink->video_height) ||
           (memcmp (&surface->dd_pixel_format, &ddrawsink->dd_pixel_format,
                   sizeof (DDPIXELFORMAT)) ||
               !gst_directdraw_sink_surface_check (ddrawsink, surface))
@@ -625,7 +615,9 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
     HRESULT hres;
     DDSURFACEDESC2 surface_desc;
     DDSURFACEDESC2 *sd;
+    GstStructure *structure = NULL;
 
+    structure = gst_caps_get_structure (caps, 0);
     if (!gst_structure_get_int (structure, "depth", &depth)) {
       GST_CAT_DEBUG_OBJECT (directdrawsink_debug, ddrawsink,
           "Can't get depth from buffer_alloc caps");
@@ -681,7 +673,7 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
             buffer_caps = copy_caps;
             buffercaps_unref = TRUE;
             /* update buffer size needed to store video frames according to new caps */
-            size = width * height * (bpp / 8);
+            size = ddrawsink->video_width * ddrawsink->video_height * (bpp / 8);
 
             /* update our member pixel format */
             gst_ddrawvideosink_get_format_from_caps (ddrawsink, buffer_caps,
