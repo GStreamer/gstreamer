@@ -90,6 +90,7 @@ enum
 #define DEFAULT_PARENTSIZE      4096*10
 #define DEFAULT_CAN_ACTIVATE_PULL TRUE
 #define DEFAULT_CAN_ACTIVATE_PUSH TRUE
+#define DEFAULT_FORMAT          GST_FORMAT_BYTES
 
 enum
 {
@@ -111,7 +112,9 @@ enum
   PROP_LAST_MESSAGE,
   PROP_CAN_ACTIVATE_PULL,
   PROP_CAN_ACTIVATE_PUSH,
-  PROP_IS_LIVE
+  PROP_IS_LIVE,
+  PROP_FORMAT,
+  PROP_LAST,
 };
 
 /* not implemented
@@ -325,6 +328,17 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
       g_param_spec_boolean ("is-live", "Is this a live source",
           "True if the element cannot produce data in PAUSED", FALSE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstFakeSrc:format
+   *
+   * Set the format of the newsegment events to produce.
+   *
+   * Since: 0.10.20
+   */
+  g_object_class_install_property (gobject_class, PROP_FORMAT,
+      g_param_spec_enum ("format", "Format",
+          "The format of the segment events", GST_TYPE_FORMAT,
+          DEFAULT_FORMAT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstFakeSrc::handoff:
@@ -367,6 +381,7 @@ gst_fake_src_init (GstFakeSrc * fakesrc, GstFakeSrcClass * g_class)
   fakesrc->last_message = NULL;
   fakesrc->datarate = DEFAULT_DATARATE;
   fakesrc->sync = DEFAULT_SYNC;
+  fakesrc->format = DEFAULT_FORMAT;
 }
 
 static void
@@ -501,6 +516,9 @@ gst_fake_src_set_property (GObject * object, guint prop_id,
     case PROP_IS_LIVE:
       gst_base_src_set_live (basesrc, g_value_get_boolean (value));
       break;
+    case PROP_FORMAT:
+      src->format = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -572,6 +590,9 @@ gst_fake_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_IS_LIVE:
       g_value_set_boolean (value, gst_base_src_is_live (basesrc));
+      break;
+    case PROP_FORMAT:
+      g_value_set_enum (value, src->format);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -834,6 +855,8 @@ gst_fake_src_start (GstBaseSrc * basesrc)
   src->buffer_count = 0;
   src->pattern_byte = 0x00;
   src->bytes_sent = 0;
+
+  gst_base_src_set_format (basesrc, src->format);
 
   return TRUE;
 }

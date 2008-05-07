@@ -1,3 +1,12 @@
+2008-05-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* plugins/elements/gstfakesrc.c: (gst_fake_src_class_init),
+	(gst_fake_src_init), (gst_fake_src_set_property),
+	(gst_fake_src_get_property), (gst_fake_src_start):
+	* plugins/elements/gstfakesrc.h:
+	Added format property to control the format of the newsegment events.
+	API: GstFakeSrc:format
+
 2008-05-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* win32/common/libgstreamer.def:
