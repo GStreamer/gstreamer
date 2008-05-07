@@ -1,3 +1,8 @@
+2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
+	* gst/gstinfo.h (GST_FUNCTION):
+	  Made GST_FUNCTION an alias for G_STRFUNC to avoid duplication.
+
 2008-05-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstadapter.c: (gst_adapter_available_fast):

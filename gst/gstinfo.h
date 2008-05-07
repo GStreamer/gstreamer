@@ -215,13 +215,7 @@ struct _GstDebugCategory {
  * output with the function name of the message.
  */
 #ifndef GST_FUNCTION
-#if defined (__GNUC__)
-#  define GST_FUNCTION     ((const char*) (__FUNCTION__))
-#elif defined (G_HAVE_ISO_VARARGS)
-#  define GST_FUNCTION     ((const char*) (__func__))
-#else
-#  define GST_FUNCTION     ((const char*) ("???"))
-#endif
+#  define GST_FUNCTION G_STRFUNC
 #endif /* ifndef GST_FUNCTION */
 
 
