@@ -18,11 +18,12 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#  include "config.h"
 #endif
 
-#include "gstrtpilbcpay.h"
+#include <stdlib.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include "gstrtpilbcpay.h"
 
 /* elementfactory information */
 static GstElementDetails gst_rtpilbcpay_details = {
