@@ -1,5 +1,11 @@
 2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
 
+	* win32/common/config.h.in:
+	  Don't define GST_FUNCTION, if GLib supports MSVC we'd much rather
+	  use the real thing than having "???" unconditionally.
+
+2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
 	* gst/gstinfo.h (GST_FUNCTION):
 	  Made GST_FUNCTION an alias for G_STRFUNC to avoid duplication.
 
