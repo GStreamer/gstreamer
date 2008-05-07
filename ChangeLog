@@ -1,5 +1,12 @@
 2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
 
+	* sys/directdraw/gstdirectdrawsink.c
+	  (gst_directdraw_sink_buffer_alloc):
+	  Clear the flags on recycled buffers from buffer_alloc.
+	  Partially fixes #520885.
+
+2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
 	* gst/rtp/gstrtpilbcpay.c:
 	  Added missing stdlib.h include for strtol(), and made include ordering and
 	  style consistent with the corresponding depayloader.
