@@ -1,5 +1,10 @@
 2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
 
+	* gst/gstinfo.c (gst_debug_log_valist):
+	  Improved the __FILE__ part of debug output for MSVC.
+
+2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
 	* libs/gst/base/gstbasesrc.c (gst_base_src_default_query):
 	  Declaration after statement fix for compilers like MSVC.
 

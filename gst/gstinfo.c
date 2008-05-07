@@ -412,10 +412,23 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
   LogFuncEntry *entry;
   GSList *handler;
 
+#ifdef _MSC_VER
+  gchar *file_basename;
+#endif
+
   g_return_if_fail (category != NULL);
   g_return_if_fail (file != NULL);
   g_return_if_fail (function != NULL);
   g_return_if_fail (format != NULL);
+
+#ifdef _MSC_VER
+  /*
+   * The predefined macro __FILE__ is always the exact path given to the
+   * compiler with MSVC, which may or may not be the basename.  We work
+   * around it at runtime to improve the readability.
+   */
+  file = file_basename = g_path_get_basename (file);
+#endif
 
   message.message = NULL;
   message.format = format;
@@ -430,6 +443,10 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
   }
   g_free (message.message);
   va_end (message.arguments);
+
+#ifdef _MSC_VER
+  g_free (file_basename);
+#endif
 }
 
 /**
