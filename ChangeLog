@@ -1,5 +1,11 @@
 2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
 
+	* gst/rtp/gstrtph264pay.c (gst_rtp_h264_pay_parse_sps_pps):
+	  Use GST_STR_NULL when trying to print sps and pps strings that could
+	  be NULL, as this might crash on some platforms.
+
+2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
 	patch by: Haakon Sporsheim <haakon.sporsheim at tandberg com>
 
 	* sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_setup_ddraw):

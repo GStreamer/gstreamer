@@ -512,7 +512,7 @@ gst_rtp_h264_pay_parse_sps_pps (GstBaseRTPPayload * basepayload,
         "sprop-parameter-sets", G_TYPE_STRING, sprops, NULL);
 
     GST_DEBUG ("outcaps udpate: profile=%s, sps=%s, pps=%s\n",
-        profile, sps, pps);
+        profile, GST_STR_NULL (sps), GST_STR_NULL (pps));
 
     g_free (sprops);
     g_free (profile);
