@@ -1,6 +1,11 @@
 2008-05-08  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstutils.h:
+	Intern the type name string, similar to what G_DEFINE_TYPE does.
+
+2008-05-08  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstutils.h:
 	Make GST_BOILERPLATE thread-safe if building with GLib 2.14 or newer.
 
 2008-05-08  Sebastian Dröge  <slomo@circular-chaos.org>

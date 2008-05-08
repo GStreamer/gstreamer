@@ -140,7 +140,8 @@ type_as_function ## _get_type (void)					\
   static volatile GType object_type = 0;				\
   if (__gst_once_init_enter ((gsize *) &object_type)) {			\
     GType _type;							\
-    _type = gst_type_register_static_full (parent_type_macro, #type,	\
+    _type = gst_type_register_static_full (parent_type_macro,           \
+        g_intern_static_string (#type),					\
 	sizeof (type ## Class),						\
         type_as_function ## _base_init,					\
         NULL,		  /* base_finalize */				\
