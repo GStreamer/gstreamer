@@ -26,7 +26,7 @@ try:
     import gstltihooks
     __gstltihooks_used__ = True
 except:
-   pass
+    pass
 
 import sys
 
@@ -37,43 +37,43 @@ if 'gobject' not in sys.modules:
     pygtk.require('2.0')
 
 class Value:
-   def __init__(self, type):
-      assert type in ('fourcc', 'intrange', 'doublerange', 'fractionrange', 'fraction')
-      self.type = type
+    def __init__(self, type):
+        assert type in ('fourcc', 'intrange', 'doublerange', 'fractionrange', 'fraction')
+        self.type = type
 
 class Fourcc(Value):
-   def __init__(self, string):
-      Value.__init__(self, 'fourcc')
-      self.fourcc = string
-   def __repr__(self):
-      return '<gst.Fourcc %s>' % self.fourcc
+    def __init__(self, string):
+        Value.__init__(self, 'fourcc')
+        self.fourcc = string
+    def __repr__(self):
+        return '<gst.Fourcc %s>' % self.fourcc
 
 class IntRange(Value):
-   def __init__(self, low, high):
-      Value.__init__(self, 'intrange')
-      self.low = low
-      self.high = high
-   def __repr__(self):
-      return '<gst.IntRange [%d, %d]>' % (self.low, self.high)
+    def __init__(self, low, high):
+        Value.__init__(self, 'intrange')
+        self.low = low
+        self.high = high
+    def __repr__(self):
+        return '<gst.IntRange [%d, %d]>' % (self.low, self.high)
 
 class DoubleRange(Value):
-   def __init__(self, low, high):
-      Value.__init__(self, 'doublerange')
-      self.low = low
-      self.high = high
-   def __repr__(self):
-      return '<gst.DoubleRange [%f, %f]>' % (self.low, self.high)
+    def __init__(self, low, high):
+        Value.__init__(self, 'doublerange')
+        self.low = low
+        self.high = high
+    def __repr__(self):
+        return '<gst.DoubleRange [%f, %f]>' % (self.low, self.high)
 
 class FractionRange(Value):
-   def __init__(self, low, high):
-      Value.__init__(self, 'fractionrange')
-      self.low = low
-      self.high = high
-   def __repr__(self):
-      return '<gst.FractionRange [%d/%d, %d/%d]>' % (self.low.num,
-                                                     self.low.denom,
-                                                     self.high.num,
-                                                     self.high.denom)
+    def __init__(self, low, high):
+        Value.__init__(self, 'fractionrange')
+        self.low = low
+        self.high = high
+    def __repr__(self):
+        return '<gst.FractionRange [%d/%d, %d/%d]>' % (self.low.num,
+                                                       self.low.denom,
+                                                       self.high.num,
+                                                       self.high.denom)
 
 class Fraction(Value):
     def __init__(self, num, denom=1):

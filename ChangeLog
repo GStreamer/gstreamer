@@ -1,5 +1,12 @@
 2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst/__init__.py:
+	* gst/arg-types.py:
+	Fix broken indentation
+	Fixes #531697
+
+2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/gst.override:
 	* gst/gstbuffer.override:
 	Use G_GSSIZE_FORMAT for ssize_t types.

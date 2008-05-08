@@ -19,7 +19,7 @@
 # License along with this library; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
-# 
+#
 # Author: David I. Lehn <dlehn@users.sourceforge.net>
 
 from argtypes import UInt64Arg, Int64Arg, PointerArg, ArgMatcher, ArgType, matcher
@@ -27,11 +27,11 @@ from reversewrapper import Parameter, ReturnType, GBoxedParam, GBoxedReturn, Int
 
 class XmlNodeArg(ArgType):
 	"""libxml2 node generator"""
-	
+
 	names = {"xobj":"xmlNode",
 			"xptr":"xmlNodePtr",
 			"xwrap":"libxml_xmlNodePtrWrap"}
-	
+
 	parm = ('    if(xml == NULL) return NULL;\n'
 			'    xobj = PyObject_GetAttrString(xml, "%(xobj)s");\n'
 			'    if(!PyObject_IsInstance(py%(name)s, xobj)) {\n'
@@ -43,14 +43,14 @@ class XmlNodeArg(ArgType):
 			'    o = PyObject_GetAttrString(py%(name)s, "_o");\n'
 			'    %(name)s = PyCObject_AsVoidPtr(o);\n')
 	parmp = ('    Py_DECREF(o); Py_DECREF(xobj);Py_DECREF(xml);\n')
-	
+
 	ret =  ('    if(xml == NULL) return NULL;\n')
 	retp = ('    xargs = PyTuple_New(1);\n'
 			'    xobj = PyObject_GetAttrString(xml, "%(xobj)s");\n'
 			'    o = %(xwrap)s(ret);\n'
 			'    PyTuple_SetItem(xargs, 0, o);\n'
 			'    return PyInstance_New(xobj, xargs, PyDict_New());\n')
-	
+
 	def write_param(self, ptype, pname, pdflt, pnull, keeprefcount, info):
 		info.varlist.add('PyObject', '*xml = _gst_get_libxml2_module()')
 		info.varlist.add('PyObject', '*o')
@@ -71,73 +71,73 @@ class XmlNodeArg(ArgType):
 		info.varlist.add(self.names["xptr"], 'ret')
 		info.codebefore.append(self.ret % self.names)
 		info.codeafter.append(self.retp % self.names)
-	
+
 class XmlDocArg(XmlNodeArg):
 	"""libxml2 doc generator"""
 	names = {"xobj":"xmlDoc",
 			"xptr":"xmlDocPtr",
 			"xwrap":"libxml_xmlDocPtrWrap"}
-			
+
 class GstCapsArg(ArgType):
-    """GstCaps node generator"""
+	"""GstCaps node generator"""
 
-    before = ('    %(name)s = pygst_caps_from_pyobject (py_%(name)s, %(namecopy)s);\n'
-              '    if (PyErr_Occurred())\n'
-              '      return NULL;\n')
-    beforenull = ('    if (py_%(name)s == Py_None || py_%(name)s == NULL)\n'
-                  '        %(name)s = NULL;\n'
-                  '    else\n'
-                  '  ' + before)
-    after = ('    if (%(name)s && %(name)s_is_copy)\n'
-             '        gst_caps_unref (%(name)s);\n')
+	before = ('    %(name)s = pygst_caps_from_pyobject (py_%(name)s, %(namecopy)s);\n'
+		  '    if (PyErr_Occurred())\n'
+		  '      return NULL;\n')
+	beforenull = ('    if (py_%(name)s == Py_None || py_%(name)s == NULL)\n'
+		      '        %(name)s = NULL;\n'
+		      '    else\n'
+		      '  ' + before)
+	after = ('    if (%(name)s && %(name)s_is_copy)\n'
+		 '        gst_caps_unref (%(name)s);\n')
 
-    def write_param(self, ptype, pname, pdflt, pnull, keeprefcount, info):
-        if ptype == 'const-GstCaps*':
-            self.write_const_param(pname, pdflt, pnull, info)
-        elif ptype == 'GstCaps*':
-            self.write_normal_param(pname, pdflt, pnull, info)
-        else:
-            raise RuntimeError, "write_param not implemented for %s" % ptype
-    
-    def write_const_param(self, pname, pdflt, pnull, info):
-        if pdflt:
-            assert pdflt == 'NULL'
-            info.varlist.add('PyObject', '*py_' + pname + ' = NULL')
-        else:
-            info.varlist.add('PyObject', '*py_' + pname)
-        info.varlist.add('GstCaps', '*'+pname)
-        info.varlist.add('gboolean', pname+'_is_copy')
+	def write_param(self, ptype, pname, pdflt, pnull, keeprefcount, info):
+		if ptype == 'const-GstCaps*':
+			self.write_const_param(pname, pdflt, pnull, info)
+		elif ptype == 'GstCaps*':
+			self.write_normal_param(pname, pdflt, pnull, info)
+		else:
+			raise RuntimeError, "write_param not implemented for %s" % ptype
+
+	def write_const_param(self, pname, pdflt, pnull, info):
+		if pdflt:
+			assert pdflt == 'NULL'
+			info.varlist.add('PyObject', '*py_' + pname + ' = NULL')
+		else:
+			info.varlist.add('PyObject', '*py_' + pname)
+		info.varlist.add('GstCaps', '*'+pname)
+		info.varlist.add('gboolean', pname+'_is_copy')
 		info.add_parselist('O', ['&py_'+pname], [pname])
-        info.arglist.append(pname)
-        if pnull:
-            info.codebefore.append (self.beforenull % { 'name' : pname, 'namecopy' : '&'+pname+'_is_copy' })
-        else:
-            info.codebefore.append (self.before % { 'name' : pname, 'namecopy' : '&'+pname+'_is_copy' })
-        info.codeafter.append (self.after % { 'name' : pname, 'namecopy' : '&'+pname+'_is_copy' })
-	
-    def write_normal_param(self, pname, pdflt, pnull, info):
-        if pdflt:
-            assert pdflt == 'NULL'
-            info.varlist.add('PyObject', '*py_' + pname + ' = NULL')
-        else:
-            info.varlist.add('PyObject', '*py_' + pname)
-        info.varlist.add('GstCaps', '*'+pname)
+		info.arglist.append(pname)
+		if pnull:
+			info.codebefore.append (self.beforenull % { 'name' : pname, 'namecopy' : '&'+pname+'_is_copy' })
+		else:
+			info.codebefore.append (self.before % { 'name' : pname, 'namecopy' : '&'+pname+'_is_copy' })
+		info.codeafter.append (self.after % { 'name' : pname, 'namecopy' : '&'+pname+'_is_copy' })
+
+	def write_normal_param(self, pname, pdflt, pnull, info):
+		if pdflt:
+			assert pdflt == 'NULL'
+			info.varlist.add('PyObject', '*py_' + pname + ' = NULL')
+		else:
+			info.varlist.add('PyObject', '*py_' + pname)
+		info.varlist.add('GstCaps', '*'+pname)
 		info.add_parselist('O', ['&py_'+pname], [pname])
-        info.arglist.append(pname)
-        if pnull:
-            info.codebefore.append (self.beforenull % { 'name' : pname, 'namecopy' : 'NULL' })
-        else:
-            info.codebefore.append (self.before % { 'name' : pname, 'namecopy' : 'NULL' })
-	    
-    def write_return(self, ptype, ownsreturn, info):
-        if ptype == 'GstCaps*':
-		    info.varlist.add('GstCaps', '*ret')
-            copyval = 'FALSE'
-        elif ptype == 'const-GstCaps*':
-		    info.varlist.add('const GstCaps', '*ret')
-            copyval = 'TRUE'
-        else:
-            raise RuntimeError, "write_return not implemented for %s" % ptype
+		info.arglist.append(pname)
+		if pnull:
+			info.codebefore.append (self.beforenull % { 'name' : pname, 'namecopy' : 'NULL' })
+		else:
+			info.codebefore.append (self.before % { 'name' : pname, 'namecopy' : 'NULL' })
+
+	def write_return(self, ptype, ownsreturn, info):
+		if ptype == 'GstCaps*':
+			info.varlist.add('GstCaps', '*ret')
+			copyval = 'FALSE'
+		elif ptype == 'const-GstCaps*':
+			info.varlist.add('const GstCaps', '*ret')
+			copyval = 'TRUE'
+		else:
+			raise RuntimeError, "write_return not implemented for %s" % ptype
 		info.codeafter.append('    return pyg_boxed_new (GST_TYPE_CAPS, ret, '+copyval+', TRUE);')
 
 class GstIteratorArg(ArgType):
@@ -147,39 +147,39 @@ class GstIteratorArg(ArgType):
 
 class GstMiniObjectParam(Parameter):
 
-    def get_c_type(self):
-        return self.props.get('c_type', 'GstMiniObject *')
+	def get_c_type(self):
+		return self.props.get('c_type', 'GstMiniObject *')
 
-    def convert_c2py(self):
-        self.wrapper.add_declaration("PyObject *py_%s = NULL;" % self.name)
-        self.wrapper.write_code(code=("if (%s) {\n"
-                                      "    py_%s = pygstminiobject_new((GstMiniObject *) %s);\n"
-				      "    gst_mini_object_unref ((GstMiniObject *) %s);\n"
-                                      "} else {\n"
-                                      "    Py_INCREF(Py_None);\n"
-                                      "    py_%s = Py_None;\n"
-                                      "}"
-                                      % (self.name, self.name, self.name, self.name, self.name)),
-                                cleanup=("gst_mini_object_ref ((GstMiniObject *) %s);\nPy_DECREF(py_%s);" % (self.name, self.name)))
-        self.wrapper.add_pyargv_item("py_%s" % self.name)
+	def convert_c2py(self):
+		self.wrapper.add_declaration("PyObject *py_%s = NULL;" % self.name)
+		self.wrapper.write_code(code=("if (%s) {\n"
+					      "    py_%s = pygstminiobject_new((GstMiniObject *) %s);\n"
+					      "    gst_mini_object_unref ((GstMiniObject *) %s);\n"
+					      "} else {\n"
+					      "    Py_INCREF(Py_None);\n"
+					      "    py_%s = Py_None;\n"
+					      "}"
+					      % (self.name, self.name, self.name, self.name, self.name)),
+					cleanup=("gst_mini_object_ref ((GstMiniObject *) %s);\nPy_DECREF(py_%s);" % (self.name, self.name)))
+		self.wrapper.add_pyargv_item("py_%s" % self.name)
 
 matcher.register_reverse('GstMiniObject*', GstMiniObjectParam)
 
 class GstMiniObjectReturn(ReturnType):
 
-    def get_c_type(self):
-        return self.props.get('c_type', 'GstMiniObject *')
+	def get_c_type(self):
+		return self.props.get('c_type', 'GstMiniObject *')
 
-    def write_decl(self):
-        self.wrapper.add_declaration("%s retval;" % self.get_c_type())
+	def write_decl(self):
+		self.wrapper.add_declaration("%s retval;" % self.get_c_type())
 
-    def write_error_return(self):
-        self.wrapper.write_code("return NULL;")
+	def write_error_return(self):
+		self.wrapper.write_code("return NULL;")
 
-    def write_conversion(self):
-        self.wrapper.write_code("retval = (%s) pygstminiobject_get(py_retval);"
-                                % self.get_c_type())
-        self.wrapper.write_code("gst_mini_object_ref((GstMiniObject *) retval);")
+	def write_conversion(self):
+		self.wrapper.write_code("retval = (%s) pygstminiobject_get(py_retval);"
+					% self.get_c_type())
+		self.wrapper.write_code("gst_mini_object_ref((GstMiniObject *) retval);")
 
 matcher.register_reverse_ret('GstMiniObject*', GstMiniObjectReturn)
 
@@ -219,121 +219,121 @@ class GstCapsReturn(ReturnType):
 ##         self.wrapper.write_code("gst_mini_object_ref((GstMiniObject *) retval);")
 
 matcher.register_reverse_ret('GstCaps*', GstCapsReturn)
-	
+
 
 class Int64Param(Parameter):
 
-    def get_c_type(self):
-        return self.props.get('c_type', 'gint64')
+	def get_c_type(self):
+		return self.props.get('c_type', 'gint64')
 
-    def convert_c2py(self):
-        self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
-        self.wrapper.write_code(code=("py_%s = PyLong_FromLongLong(%s);" %
-                                      (self.name, self.name)),
-                                cleanup=("Py_DECREF(py_%s);" % self.name))
-        self.wrapper.add_pyargv_item("py_%s" % self.name)
+	def convert_c2py(self):
+		self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
+		self.wrapper.write_code(code=("py_%s = PyLong_FromLongLong(%s);" %
+					      (self.name, self.name)),
+					cleanup=("Py_DECREF(py_%s);" % self.name))
+		self.wrapper.add_pyargv_item("py_%s" % self.name)
 
 class Int64Return(ReturnType):
-    def get_c_type(self):
-        return self.props.get('c_type', 'gint64')
-    def write_decl(self):
-        self.wrapper.add_declaration("%s retval;" % self.get_c_type())
-    def write_error_return(self):
-        self.wrapper.write_code("return -G_MAXINT;")
-    def write_conversion(self):
-        self.wrapper.write_code(
-            code=None,
-            failure_expression="!PyLong_Check(py_retval)",
-            failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be an long");')
-        self.wrapper.write_code("retval = PyLong_AsLongLong(py_retval);")
-			
+	def get_c_type(self):
+		return self.props.get('c_type', 'gint64')
+	def write_decl(self):
+		self.wrapper.add_declaration("%s retval;" % self.get_c_type())
+	def write_error_return(self):
+		self.wrapper.write_code("return -G_MAXINT;")
+	def write_conversion(self):
+		self.wrapper.write_code(
+		    code=None,
+		    failure_expression="!PyLong_Check(py_retval)",
+		    failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be an long");')
+		self.wrapper.write_code("retval = PyLong_AsLongLong(py_retval);")
+
 class UInt64Param(Parameter):
 
-    def get_c_type(self):
-        return self.props.get('c_type', 'guint64')
+	def get_c_type(self):
+		return self.props.get('c_type', 'guint64')
 
-    def convert_c2py(self):
-        self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
-        self.wrapper.write_code(code=("py_%s = PyLong_FromUnsignedLongLong(%s);" %
-                                      (self.name, self.name)),
-                                cleanup=("Py_DECREF(py_%s);" % self.name))
-        self.wrapper.add_pyargv_item("py_%s" % self.name)
+	def convert_c2py(self):
+		self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
+		self.wrapper.write_code(code=("py_%s = PyLong_FromUnsignedLongLong(%s);" %
+					      (self.name, self.name)),
+					cleanup=("Py_DECREF(py_%s);" % self.name))
+		self.wrapper.add_pyargv_item("py_%s" % self.name)
 
 class UInt64Return(ReturnType):
-    def get_c_type(self):
-        return self.props.get('c_type', 'guint64')
-    def write_decl(self):
-        self.wrapper.add_declaration("%s retval;" % self.get_c_type())
-    def write_error_return(self):
-        self.wrapper.write_code("return -G_MAXINT;")
-    def write_conversion(self):
-        self.wrapper.write_code(
-            code=None,
-            failure_expression="!PyLong_Check(py_retval)",
-            failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be an long");')
-        self.wrapper.write_code("retval = PyLong_AsUnsignedLongLongMask(py_retval);")
+	def get_c_type(self):
+		return self.props.get('c_type', 'guint64')
+	def write_decl(self):
+		self.wrapper.add_declaration("%s retval;" % self.get_c_type())
+	def write_error_return(self):
+		self.wrapper.write_code("return -G_MAXINT;")
+	def write_conversion(self):
+		self.wrapper.write_code(
+		    code=None,
+		    failure_expression="!PyLong_Check(py_retval)",
+		    failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be an long");')
+		self.wrapper.write_code("retval = PyLong_AsUnsignedLongLongMask(py_retval);")
 
 class ULongParam(Parameter):
 
-    def get_c_type(self):
-        return self.props.get('c_type', 'gulong')
+	def get_c_type(self):
+		return self.props.get('c_type', 'gulong')
 
-    def convert_c2py(self):
-        self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
-        self.wrapper.write_code(code=("py_%s = PyLong_FromUnsignedLong(%s);" %
-                                      (self.name, self.name)),
-                                cleanup=("Py_DECREF(py_%s);" % self.name))
-        self.wrapper.add_pyargv_item("py_%s" % self.name)
+	def convert_c2py(self):
+		self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
+		self.wrapper.write_code(code=("py_%s = PyLong_FromUnsignedLong(%s);" %
+					      (self.name, self.name)),
+					cleanup=("Py_DECREF(py_%s);" % self.name))
+		self.wrapper.add_pyargv_item("py_%s" % self.name)
 
 class ULongReturn(ReturnType):
-    def get_c_type(self):
-        return self.props.get('c_type', 'gulong')
-    def write_decl(self):
-        self.wrapper.add_declaration("%s retval;" % self.get_c_type())
-    def write_error_return(self):
-        self.wrapper.write_code("return -G_MAXINT;")
-    def write_conversion(self):
-        self.wrapper.write_code(
-            code=None,
-            failure_expression="!PyLong_Check(py_retval)",
-            failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be an long");')
-        self.wrapper.write_code("retval = PyLong_AsUnsignedLongMask(py_retval);")
+	def get_c_type(self):
+		return self.props.get('c_type', 'gulong')
+	def write_decl(self):
+		self.wrapper.add_declaration("%s retval;" % self.get_c_type())
+	def write_error_return(self):
+		self.wrapper.write_code("return -G_MAXINT;")
+	def write_conversion(self):
+		self.wrapper.write_code(
+		    code=None,
+		    failure_expression="!PyLong_Check(py_retval)",
+		    failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be an long");')
+		self.wrapper.write_code("retval = PyLong_AsUnsignedLongMask(py_retval);")
 
 class ConstStringReturn(ReturnType):
 
-    def get_c_type(self):
-        return "const gchar *"
+	def get_c_type(self):
+		return "const gchar *"
 
-    def write_decl(self):
-        self.wrapper.add_declaration("const gchar *retval;")
+	def write_decl(self):
+		self.wrapper.add_declaration("const gchar *retval;")
 
-    def write_error_return(self):
-        self.wrapper.write_code("return NULL;")
+	def write_error_return(self):
+		self.wrapper.write_code("return NULL;")
 
-    def write_conversion(self):
-        self.wrapper.write_code(
-            code=None,
-            failure_expression="!PyString_Check(py_retval)",
-            failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be a string");')
-        self.wrapper.write_code("retval = g_strdup(PyString_AsString(py_retval));")
+	def write_conversion(self):
+		self.wrapper.write_code(
+		    code=None,
+		    failure_expression="!PyString_Check(py_retval)",
+		    failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be a string");')
+		self.wrapper.write_code("retval = g_strdup(PyString_AsString(py_retval));")
 
 class StringArrayArg(ArgType):
-    """Arg type for NULL-terminated string pointer arrays (GStrv, aka gchar**)."""
-    def write_return(self, ptype, ownsreturn, info):
-        if ownsreturn:
-            raise NotImplementedError ()
-        else:
-            info.varlist.add("gchar", "**ret")
-            info.codeafter.append("    if (ret) {\n"
-                                  "        guint size = g_strv_length(ret);\n"
-                                  "        PyObject *py_ret = PyTuple_New(size);\n"
-                                  "        gint i;\n"
-                                  "        for (i = 0; i < size; i++)\n"
-                                  "            PyTuple_SetItem(py_ret, i,\n"
-                                  "                PyString_FromString(ret[i]));\n"
-                                  "        return py_ret;\n"
-                                  "    }\n"
-                                  "    return PyTuple_New (0);\n")
+	"""Arg type for NULL-terminated string pointer arrays (GStrv, aka gchar**)."""
+	def write_return(self, ptype, ownsreturn, info):
+		if ownsreturn:
+			raise NotImplementedError ()
+		else:
+			info.varlist.add("gchar", "**ret")
+			info.codeafter.append("    if (ret) {\n"
+					      "        guint size = g_strv_length(ret);\n"
+					      "        PyObject *py_ret = PyTuple_New(size);\n"
+					      "        gint i;\n"
+					      "        for (i = 0; i < size; i++)\n"
+					      "            PyTuple_SetItem(py_ret, i,\n"
+					      "                PyString_FromString(ret[i]));\n"
+					      "        return py_ret;\n"
+					      "    }\n"
+					      "    return PyTuple_New (0);\n")
 
 matcher.register('GstClockTime', UInt64Arg())
 matcher.register('GstClockTimeDiff', Int64Arg())
