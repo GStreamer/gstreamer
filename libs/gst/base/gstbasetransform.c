@@ -1209,12 +1209,14 @@ not_configured:
     /* let the default allocator handle it... */
     GST_DEBUG_OBJECT (trans, "not configured");
     gst_buffer_replace (buf, NULL);
-    if (trans->passthrough) {
-      /* ...by calling alloc_buffer without setting caps on the src pad, which
-       * will force negotiation in the chain function. */
+
+    if (gst_pad_accept_caps (trans->srcpad, caps)
+        && gst_pad_peer_accept_caps (trans->srcpad, caps)) {
+      /* ...by seeing if the downstream elements can handle this */
       res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
     } else {
-      /* ...by letting the default handler create a buffer */
+      /* If not fall back on the default handler and let things be
+       * renegotiated in the chain function */
       res = GST_FLOW_OK;
     }
     goto done;

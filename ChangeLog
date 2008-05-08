@@ -1,3 +1,13 @@
+2008-05-08  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Based on a patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_buffer_alloc):
+	Don't passthrough buffer allocation too easily if the caps change.
+	This breaks when working in passthrough mode and upstream changes
+	it's caps. Fixes bug #526768.
+
 2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
 
 	* gst/gstinfo.c (gst_debug_log_valist):
