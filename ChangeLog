@@ -1,5 +1,10 @@
 2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* ffmpegrev:
+	Update to today's upstream ffmpeg. No visible regressions.
+
+2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* configure.ac:
 	* gst-libs/ext/Makefile.am:
 	More fixes for make dist.
