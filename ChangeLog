@@ -1,3 +1,9 @@
+2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/ext/Makefile.am:
+	Use 'make clean' and not 'make dist-clean' for local cleanups.
+	Fixes #519235
+
 2008-05-07  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_setcaps),

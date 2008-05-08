@@ -17,7 +17,7 @@ all-local:
 	cd ffmpeg && $(MAKE)
 
 clean-local:
-	cd ffmpeg && $(MAKE) distclean
+	cd ffmpeg && $(MAKE) clean
 
 dist-clean:
 	rm -rf $(TMP_DIST_DIR) 
@@ -49,7 +49,7 @@ dist-local: dist-clean
 
 distdir: dist-local
 	cp -r ffmpeg Makefile* ${distdir}
-	
+
 dist: dist-local
 	tar -czf ffmpeg.tar.gz ffmpeg	
 
