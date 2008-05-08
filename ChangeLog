@@ -1,3 +1,12 @@
+2008-05-08  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Based on patch by: Clive Wright <clive_wright ntlworld com>
+
+	* sys/oss4/oss4-mixer-slider.c: (gst_oss4_mixer_slider_unpack_volume):
+	  Apparently mono sliders have the mono value repeated in the upper bits,
+	  so mask those out when reading them. Probably makes the mixer applet
+	  work properly in some more cases.
+
 2008-05-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Olivier Crete <tester at tester dot ca>
