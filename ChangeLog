@@ -1,5 +1,15 @@
 2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	Patch by: Johan Dahlin  <johan at gnome dot org>
+	* gst/__init__.py:
+	* gst/gstelement.override:
+	* testsuite/test_element.py:
+	New 'fancy' constructor for gst.Element, allows creating elements in a
+	more pythonic way (i.e. myelement = gst.Element("oggmux")).
+	Fixes #530417
+
+2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/__init__.py:
 	* gst/arg-types.py:
 	Fix broken indentation

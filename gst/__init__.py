@@ -148,6 +148,14 @@ if RTLD_GLOBAL != -1 and RTLD_LAZY != -1:
     except:
         pass
 
+import gobject
+from _gst import _install_element_meta
+
+_GstElementBaseMeta = getattr(gobject, 'GObjectMeta', type)
+class _GstElementMeta(_GstElementBaseMeta):
+    __call__ = element_factory_make
+_install_element_meta(_GstElementMeta)
+
 version = get_gst_version
 
 sys.setdlopenflags(dlsave)
