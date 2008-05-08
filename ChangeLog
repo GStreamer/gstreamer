@@ -1,5 +1,17 @@
 2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	(gst_ffmpegaudioresample_class_init),
+	(gst_ffmpegaudioresample_init),
+	(gst_ffmpegaudioresample_transform_caps),
+	(gst_ffmpegaudioresample_transform_size),
+	(gst_ffmpegaudioresample_get_unit_size),
+	(gst_ffmpegaudioresample_set_caps),
+	(gst_ffmpegaudioresample_transform):
+	small gst-indent run.
+
+2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst-libs/ext/Makefile.am:
 	Use 'make clean' and not 'make dist-clean' for local cleanups.
 	Fixes #519235
