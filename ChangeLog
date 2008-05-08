@@ -1,5 +1,11 @@
 2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_img_convert):
+	Replace usage of img_convert (deprecated) by sws_scale.
+	Fixes #529015
+
+2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* configure.ac:
 	Fix doc-building and make dist.
 

@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
+#include <libswscale/swscale.h>
 #else
 #include <ffmpeg/avcodec.h>
 #endif
@@ -3301,22 +3302,13 @@ int
 gst_ffmpeg_img_convert (AVPicture * dst, int dst_pix_fmt,
     const AVPicture * src, int src_pix_fmt, int src_width, int src_height)
 {
-  PixFmtInfo *pf = &pix_fmt_info[src_pix_fmt];
+  struct SwsContext *ctx;
+  int res;
 
-  pf = &pix_fmt_info[src_pix_fmt];
-  switch (pf->pixel_type) {
-    case FF_PIXEL_PACKED:
-      /* nothing wrong here */
-      break;
-    case FF_PIXEL_PLANAR:
-      /* patch up, so that img_copy copies all of the pixels */
-      src_width = ROUND_UP_X (src_width, pf->x_chroma_shift);
-      src_height = ROUND_UP_X (src_height, pf->y_chroma_shift);
-      break;
-    case FF_PIXEL_PALETTE:
-      /* nothing wrong here */
-      break;
-  }
-  return img_convert (dst, dst_pix_fmt, src, src_pix_fmt, src_width,
-      src_height);
+  ctx = sws_getContext (src_width, src_height, src_pix_fmt, src_width, src_height, dst_pix_fmt, 2,      /* flags : bicubic */
+      NULL, NULL, NULL);
+  res = sws_scale (ctx, (uint8_t **) src->data, (int *) src->linesize,
+      2, src_width, dst->data, dst->linesize);
+  sws_freeContext (ctx);
+  return res;
 }
