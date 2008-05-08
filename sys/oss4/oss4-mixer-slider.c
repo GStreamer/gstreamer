@@ -96,10 +96,16 @@ gst_oss4_mixer_slider_unpack_volume (GstOss4MixerSlider * s, int v,
 
   val = (guint32) v;
   switch (s->mc->mixext.type) {
-    case MIXT_MONOSLIDER:
-    case MIXT_MONOSLIDER16:
     case MIXT_SLIDER:
       volumes[0] = val;
+      break;
+    case MIXT_MONOSLIDER:
+      /* oss repeats the value in the upper bits, as if it was stereo */
+      volumes[0] = val & 0x00ff;
+      break;
+    case MIXT_MONOSLIDER16:
+      /* oss repeats the value in the upper bits, as if it was stereo */
+      volumes[0] = val & 0x0000ffff;
       break;
     case MIXT_STEREOSLIDER:
       volumes[0] = (val & 0x00ff);
