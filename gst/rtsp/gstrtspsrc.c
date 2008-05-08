@@ -2973,19 +2973,136 @@ gst_rtsp_auth_method_to_string (GstRTSPAuthMethod method)
 }
 #endif
 
+static const gchar *
+gst_rtspsrc_skip_lws (const gchar * s)
+{
+  while (g_ascii_isspace (*s))
+    s++;
+  return s;
+}
+
+static const gchar *
+gst_rtspsrc_unskip_lws (const gchar * s, const gchar * start)
+{
+  while (s > start && g_ascii_isspace (*(s - 1)))
+    s--;
+  return s;
+}
+
+static const gchar *
+gst_rtspsrc_skip_commas (const gchar * s)
+{
+  /* The grammar allows for multiple commas */
+  while (g_ascii_isspace (*s) || *s == ',')
+    s++;
+  return s;
+}
+
+static const gchar *
+gst_rtspsrc_skip_item (const gchar * s)
+{
+  gboolean quoted = FALSE;
+  const gchar *start = s;
+
+  /* A list item ends at the last non-whitespace character
+   * before a comma which is not inside a quoted-string. Or at
+   * the end of the string.
+   */
+  while (*s) {
+    if (*s == '"')
+      quoted = !quoted;
+    else if (quoted) {
+      if (*s == '\\' && *(s + 1))
+        s++;
+    } else {
+      if (*s == ',')
+        break;
+    }
+    s++;
+  }
+
+  return gst_rtspsrc_unskip_lws (s, start);
+}
+
+static void
+gst_rtsp_decode_quoted_string (gchar * quoted_string)
+{
+  gchar *src, *dst;
+
+  src = quoted_string + 1;
+  dst = quoted_string;
+  while (*src && *src != '"') {
+    if (*src == '\\' && *(src + 1))
+      src++;
+    *dst++ = *src++;
+  }
+  *dst = '\0';
+}
+
+/* Extract the authentication tokens that the server provided for each method
+ * into an array of structures and give those to the connection object.
+ */
+static void
+gst_rtspsrc_parse_digest_challenge (GstRTSPConnection * conn,
+    const gchar * header)
+{
+  GSList *list = NULL, *iter;
+  const gchar *end;
+  gchar *item, *eq, *name_end, *value;
+
+  gst_rtsp_connection_clear_auth_params (conn);
+
+  /* Parse a header whose content is described by RFC2616 as
+   * "#something", where "something" does not itself contain commas,
+   * except as part of quoted-strings, into a list of allocated strings.
+   */
+  header = gst_rtspsrc_skip_commas (header);
+  while (*header) {
+    end = gst_rtspsrc_skip_item (header);
+    list = g_slist_prepend (list, g_strndup (header, end - header));
+    header = gst_rtspsrc_skip_commas (end);
+  }
+  if (!list)
+    return;
+
+  list = g_slist_reverse (list);
+  for (iter = list; iter; iter = iter->next) {
+    item = iter->data;
+
+    eq = strchr (item, '=');
+    if (eq) {
+      name_end = (gchar *) gst_rtspsrc_unskip_lws (eq, item);
+      if (name_end == item) {
+        /* That's no good... */
+        g_free (item);
+        continue;
+      }
+
+      *name_end = '\0';
+
+      value = (gchar *) gst_rtspsrc_skip_lws (eq + 1);
+      if (*value == '"')
+        gst_rtsp_decode_quoted_string (value);
+    } else
+      value = NULL;
+
+    gst_rtsp_connection_set_auth_param (conn, item, value);
+  }
+
+  g_slist_free (list);
+}
+
 /* Parse a WWW-Authenticate Response header and determine the 
  * available authentication methods
- * FIXME: To implement digest or other auth types, we should extract
- * the authentication tokens that the server provided for each method
- * into an array of structures and give those to the connection object.
  *
  * This code should also cope with the fact that each WWW-Authenticate
  * header can contain multiple challenge methods + tokens 
  *
- * At the moment, we just do a minimal check for Basic auth and don't
+ * At the moment, for Basic auth, we just do a minimal check and don't
  * even parse out the realm */
 static void
-gst_rtspsrc_parse_auth_hdr (gchar * hdr, GstRTSPAuthMethod * methods)
+gst_rtspsrc_parse_auth_hdr (gchar * hdr, GstRTSPAuthMethod * methods,
+    GstRTSPConnection * conn)
 {
   gchar *start;
 
@@ -2997,6 +3114,10 @@ gst_rtspsrc_parse_auth_hdr (gchar * hdr, GstRTSPAuthMethod * methods)
 
   if (g_ascii_strncasecmp (start, "basic", 5) == 0)
     *methods |= GST_RTSP_AUTH_BASIC;
+  else if (g_ascii_strncasecmp (start, "digest ", 7) == 0) {
+    *methods |= GST_RTSP_AUTH_DIGEST;
+    gst_rtspsrc_parse_digest_challenge (conn, &start[7]);
+  }
 }
 
 /**
@@ -3026,7 +3147,7 @@ gst_rtspsrc_setup_auth (GstRTSPSrc * src, GstRTSPMessage * response)
   /* Identify the available auth methods and see if any are supported */
   if (gst_rtsp_message_get_header (response, GST_RTSP_HDR_WWW_AUTHENTICATE,
           &hdr, 0) == GST_RTSP_OK) {
-    gst_rtspsrc_parse_auth_hdr (hdr, &avail_methods);
+    gst_rtspsrc_parse_auth_hdr (hdr, &avail_methods, src->connection);
   }
 
   if (avail_methods == GST_RTSP_AUTH_NONE)

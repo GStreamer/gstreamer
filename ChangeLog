@@ -1,3 +1,15 @@
+2008-05-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Based on patch by: Wouter Cloetens  <wouter at mind be>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),
+	(gst_rtspsrc_skip_lws), (gst_rtspsrc_unskip_lws),
+	(gst_rtspsrc_skip_commas), (gst_rtspsrc_skip_item),
+	(gst_rtsp_decode_quoted_string),
+	(gst_rtspsrc_parse_digest_challenge), (gst_rtspsrc_parse_auth_hdr),
+	(gst_rtspsrc_setup_auth):
+	Support Digest authentication. Fixes #532065.
+
 2008-05-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/level/gstlevel.c:
