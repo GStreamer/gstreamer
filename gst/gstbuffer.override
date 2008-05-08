@@ -64,7 +64,7 @@ _wrap_gst_buffer_new(PyGstMiniObject *self, PyObject *args, PyObject *kwargs)
 	}
 	
 	self->obj = GST_MINI_OBJECT(gst_buffer_new_and_alloc(buf_size));
-	GST_INFO ("pyo:%p pyr:%d minio:%p minir:%d",
+	GST_INFO ("pyo:%p pyr:%"G_GSSIZE_FORMAT" minio:%p minir:%d",
 		  self, ((PyObject*)self)->ob_refcnt,
 		  self->obj, GST_MINI_OBJECT_REFCOUNT_VALUE(self->obj));
 	if (!self->obj) {

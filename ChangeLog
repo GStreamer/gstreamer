@@ -1,3 +1,10 @@
+2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gst.override:
+	* gst/gstbuffer.override:
+	Use G_GSSIZE_FORMAT for ssize_t types.
+	Fixes build on macosx.
+
 2008-04-28  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	Patch by: Alessandro Decina <alessandro at nnva dot org>

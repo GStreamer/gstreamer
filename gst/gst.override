@@ -1028,7 +1028,7 @@ gst_type_find_peek_handler (gpointer data, gint64 offset, guint size)
 	    Py_DECREF (args);
 	    goto beach;
 	}
-	GST_DEBUG ("got string of len %d", len);
+	GST_DEBUG ("got string of len %"G_GSSIZE_FORMAT, len);
 	if (len)
 	    ret = g_memdup((gconstpointer) str, (guint) len);
     }
