@@ -1,5 +1,10 @@
 2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst-libs/ext/Makefile.am:
+	Don't copy file which is no longer present.
+
+2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* ext/ffmpeg/gstffmpegaudioresample.c:
 	(gst_ffmpegaudioresample_class_init),
 	(gst_ffmpegaudioresample_init),

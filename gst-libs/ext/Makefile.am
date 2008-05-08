@@ -28,7 +28,7 @@ dist-local: dist-clean
 	pwd
 	cp $(TMP_DIST_DIR)/*.c $(TMP_DIST_DIR)/*.h $(TMP_DIST_DIR)/Makefile $(TMP_DIST_DIR)/configure $(TMP_DIST_DIR)/version.sh $(DIST_DIR) 
 	cp $(TMP_DIST_DIR)/common.mak $(TMP_DIST_DIR)/Changelog $(TMP_DIST_DIR)/COPYING.* $(TMP_DIST_DIR)/INSTALL $(DIST_DIR)
-	cp $(TMP_DIST_DIR)/Doxyfile $(TMP_DIST_DIR)/ffinstall.nsi $(TMP_DIST_DIR)/CREDITS $(TMP_DIST_DIR)/MAINTAINERS $(DIST_DIR)
+	cp $(TMP_DIST_DIR)/Doxyfile $(TMP_DIST_DIR)/CREDITS $(TMP_DIST_DIR)/MAINTAINERS $(DIST_DIR)
 	@for d in `cd $(TMP_DIST_DIR) && ls -d */`; \
 		do mkdir $(DIST_DIR)/$$d; \
 		cp $(TMP_DIST_DIR)/$$d* $(DIST_DIR)/$$d; \
