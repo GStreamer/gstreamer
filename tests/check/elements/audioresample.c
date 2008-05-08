@@ -414,6 +414,94 @@ GST_START_TEST (test_shutdown)
   gst_object_unref (pipeline);
 }
 
+GST_END_TEST;
+
+static GstFlowReturn
+alloc_only_48000 (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
+    GstBuffer ** buf)
+{
+  GstStructure *structure;
+  gint rate;
+
+  structure = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_get_int (structure, "rate", &rate));
+
+  if (rate != 48000)
+    return GST_FLOW_NOT_NEGOTIATED;
+
+  *buf = NULL;
+  return GST_FLOW_OK;
+}
+
+GST_START_TEST (test_live_switch)
+{
+  GstElement *audioresample;
+  GstEvent *newseg;
+  GstBuffer *inbuffer;
+  GstCaps *caps;
+  GstCaps *newcaps;
+  GList *l;
+
+  audioresample = setup_audioresample (1, 48000, 48000);
+
+  /* Let the sinkpad act like something that can only handle things of
+   * rate 48000 and can only allocate buffers for that rate */
+  gst_pad_set_bufferalloc_function (mysinkpad, alloc_only_48000);
+
+  caps = gst_pad_get_negotiated_caps (mysrcpad);
+  fail_unless (gst_caps_is_fixed (caps));
+
+  fail_unless (gst_element_set_state (audioresample,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  newseg = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
+
+  fail_unless (gst_pad_alloc_buffer_and_set_caps (mysrcpad,
+          GST_BUFFER_OFFSET_NONE, 48000 * 4, caps, &inbuffer) == GST_FLOW_OK);
+
+  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
+  GST_BUFFER_OFFSET (inbuffer) = 0;
+  gst_buffer_set_caps (inbuffer, caps);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+
+  /* ... but it ends up being collected on the global buffer list */
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  /* Prepare a new buffer, but now with different caps */
+  fail_unless ((newcaps =
+          gst_caps_make_writable (gst_caps_ref (caps))) != NULL);
+  gst_caps_set_simple (newcaps, "rate", G_TYPE_INT, 1234, NULL);
+
+  fail_unless (gst_pad_alloc_buffer_and_set_caps (mysrcpad,
+          GST_BUFFER_OFFSET_NONE, 1234 * 4, newcaps, &inbuffer) == GST_FLOW_OK);
+
+  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
+  GST_BUFFER_OFFSET (inbuffer) = 0;
+  gst_buffer_set_caps (inbuffer, newcaps);
+
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 2);
+
+  cleanup_audioresample (audioresample);
+  for (l = buffers; l; l = l->next) {
+    GstBuffer *buffer = GST_BUFFER (l->data);
+
+    gst_buffer_unref (buffer);
+  }
+  g_list_free (buffers);
+  buffers = NULL;
+  gst_caps_unref (caps);
+  gst_caps_unref (newcaps);
+}
+
 GST_END_TEST static Suite *
 audioresample_suite (void)
 {
@@ -425,6 +513,7 @@ audioresample_suite (void)
   tcase_add_test (tc_chain, test_discont_stream);
   tcase_add_test (tc_chain, test_reuse);
   tcase_add_test (tc_chain, test_shutdown);
+  tcase_add_test (tc_chain, test_live_switch);
 
   return s;
 }
