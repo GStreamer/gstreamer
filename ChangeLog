@@ -1,3 +1,16 @@
+2008-05-08  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* gst/audioresample/gstaudioresample.c: (gst_audioresample_init):
+	Let audioresample use the buffer allocation of basetransform instead
+	of it's own stuff.
+
+	* tests/check/elements/audioresample.c: (alloc_only_48000),
+	(GST_START_TEST), (audioresample_suite):
+	Add unit test for the recent basetransform bugfix, where upstream
+	changes caps to something that can't be passed through anymore.
+
 2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
 
 	* win32/common/config.h.in:
