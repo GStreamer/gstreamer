@@ -1,3 +1,9 @@
+2008-05-08  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
+	* gst/gstinfo.h (GST_FUNCTION):
+	  Reverted GST_FUNCTION to the old version as we don't want the
+	  full signature in C++ code. Also added support for MSVC.
+
 2008-05-08  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstutils.h:
