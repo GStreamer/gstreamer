@@ -1,5 +1,10 @@
 2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* configure.ac:
+	Fix doc-building and make dist.
+
+2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst-libs/ext/Makefile.am:
 	Don't copy file which is no longer present.
 
