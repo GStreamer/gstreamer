@@ -92,6 +92,7 @@
 
 #include "gstrtspconnection.h"
 #include "gstrtspbase64.h"
+#include "md5.h"
 
 #ifdef G_OS_WIN32
 #define FIONREAD_TYPE gulong
@@ -161,6 +162,7 @@ gst_rtsp_connection_create (GstRTSPUrl * url, GstRTSPConnection ** conn)
   newconn->auth_method = GST_RTSP_AUTH_NONE;
   newconn->username = NULL;
   newconn->passwd = NULL;
+  newconn->auth_params = NULL;
 
   *conn = newconn;
 
@@ -320,6 +322,65 @@ timeout:
 }
 
 static void
+md5_digest_to_hex_string (unsigned char digest[16], char string[33])
+{
+  static const char hexdigits[] = "0123456789abcdef";
+  int i;
+
+  for (i = 0; i < 16; i++) {
+    string[i * 2] = hexdigits[(digest[i] >> 4) & 0x0f];
+    string[i * 2 + 1] = hexdigits[digest[i] & 0x0f];
+  }
+  string[32] = 0;
+}
+
+static void
+auth_digest_compute_hex_urp (const gchar * username,
+    const gchar * realm, const gchar * password, gchar hex_urp[33])
+{
+  struct MD5Context md5_context;
+  unsigned char digest[16];
+
+  MD5Init (&md5_context);
+  MD5Update (&md5_context, username, strlen (username));
+  MD5Update (&md5_context, ":", 1);
+  MD5Update (&md5_context, realm, strlen (realm));
+  MD5Update (&md5_context, ":", 1);
+  MD5Update (&md5_context, password, strlen (password));
+  MD5Final (digest, &md5_context);
+  md5_digest_to_hex_string (digest, hex_urp);
+}
+
+static void
+auth_digest_compute_response (const gchar * method,
+    const gchar * uri, const gchar * hex_a1, const gchar * nonce,
+    gchar response[33])
+{
+  char hex_a2[33];
+  struct MD5Context md5_context;
+  unsigned char digest[16];
+
+  /* compute A2 */
+  MD5Init (&md5_context);
+  MD5Update (&md5_context, method, strlen (method));
+  MD5Update (&md5_context, ":", 1);
+  MD5Update (&md5_context, uri, strlen (uri));
+  MD5Final (digest, &md5_context);
+  md5_digest_to_hex_string (digest, hex_a2);
+
+  /* compute KD */
+  MD5Init (&md5_context);
+  MD5Update (&md5_context, hex_a1, strlen (hex_a1));
+  MD5Update (&md5_context, ":", 1);
+  MD5Update (&md5_context, nonce, strlen (nonce));
+  MD5Update (&md5_context, ":", 1);
+
+  MD5Update (&md5_context, hex_a2, 32);
+  MD5Final (digest, &md5_context);
+  md5_digest_to_hex_string (digest, response);
+}
+
+static void
 add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
 {
   switch (conn->auth_method) {
@@ -335,6 +396,50 @@ add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
 
       g_free (user_pass);
       g_free (user_pass64);
+      g_free (auth_string);
+      break;
+    }
+    case GST_RTSP_AUTH_DIGEST:{
+      gchar response[33], hex_urp[33];
+      gchar *auth_string, *auth_string2;
+      gchar *realm;
+      gchar *nonce;
+      gchar *opaque;
+      const gchar *uri;
+      const gchar *method;
+
+      /* we need to have some params set */
+      if (conn->auth_params == NULL)
+        break;
+
+      /* we need the realm and nonce */
+      realm = (gchar *) g_hash_table_lookup (conn->auth_params, "realm");
+      nonce = (gchar *) g_hash_table_lookup (conn->auth_params, "nonce");
+      if (realm == NULL || nonce == NULL)
+        break;
+
+      auth_digest_compute_hex_urp (conn->username, realm, conn->passwd,
+          hex_urp);
+
+      method = gst_rtsp_method_as_text (message->type_data.request.method);
+      uri = message->type_data.request.uri;
+
+      /* Assume no qop, algorithm=md5, stale=false */
+      /* For algorithm MD5, a1 = urp. */
+      auth_digest_compute_response (method, uri, hex_urp, nonce, response);
+      auth_string = g_strdup_printf ("Digest username=\"%s\", "
+          "realm=\"%s\", nonce=\"%s\", uri=\"%s\", response=\"%s\"",
+          conn->username, realm, nonce, uri, response);
+
+      opaque = (gchar *) g_hash_table_lookup (conn->auth_params, "opaque");
+      if (opaque) {
+        auth_string2 = g_strdup_printf ("%s, opaque=\"%s\"", auth_string,
+            opaque);
+        g_free (auth_string);
+        auth_string = auth_string2;
+      }
+      gst_rtsp_message_add_header (message, GST_RTSP_HDR_AUTHORIZATION,
+          auth_string);
       g_free (auth_string);
       break;
     }
@@ -1142,6 +1247,7 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
   g_timer_destroy (conn->timer);
   g_free (conn->username);
   g_free (conn->passwd);
+  gst_rtsp_connection_clear_auth_params (conn);
   g_free (conn);
 
   return res;
@@ -1317,9 +1423,9 @@ GstRTSPResult
 gst_rtsp_connection_set_auth (GstRTSPConnection * conn,
     GstRTSPAuthMethod method, const gchar * user, const gchar * pass)
 {
-  /* Digest isn't implemented yet */
-  if (method == GST_RTSP_AUTH_DIGEST)
-    return GST_RTSP_ENOTIMPL;
+  if (method == GST_RTSP_AUTH_DIGEST && ((user == NULL || pass == NULL)
+          || g_strrstr (user, ":") != NULL))
+    return GST_RTSP_EINVAL;
 
   /* Make sure the username and passwd are being set for authentication */
   if (method == GST_RTSP_AUTH_NONE && (user == NULL || pass == NULL))
@@ -1337,4 +1443,85 @@ gst_rtsp_connection_set_auth (GstRTSPConnection * conn,
   conn->passwd = g_strdup (pass);
 
   return GST_RTSP_OK;
+}
+
+/**
+ * str_case_hash:
+ * @key: ASCII string to hash
+ *
+ * Hashes @key in a case-insensitive manner.
+ *
+ * Return value: the hash code.
+ **/
+static guint
+str_case_hash (gconstpointer key)
+{
+  const char *p = key;
+  guint h = g_ascii_toupper (*p);
+
+  if (h)
+    for (p += 1; *p != '\0'; p++)
+      h = (h << 5) - h + g_ascii_toupper (*p);
+
+  return h;
+}
+
+/**
+ * str_case_equal:
+ * @v1: an ASCII string
+ * @v2: another ASCII string
+ *
+ * Compares @v1 and @v2 in a case-insensitive manner
+ *
+ * Return value: %TRUE if they are equal (modulo case)
+ **/
+static gboolean
+str_case_equal (gconstpointer v1, gconstpointer v2)
+{
+  const char *string1 = v1;
+  const char *string2 = v2;
+
+  return g_ascii_strcasecmp (string1, string2) == 0;
+}
+
+/**
+ * gst_rtsp_connection_set_auth_param:
+ * @conn: a #GstRTSPConnection
+ * @param: authentication directive
+ * @value: value
+ *
+ * Setup @conn with authentication directives. This is not necesary for
+ * methods #GST_RTSP_AUTH_NONE and #GST_RTSP_AUTH_BASIC. For
+ * #GST_RTSP_AUTH_DIGEST, directives should be taken from the digest challenge
+ * in the WWW-Authenticate response header and can include realm, domain,
+ * nonce, opaque, stale, algorithm, qop as per RFC2617.
+ * 
+ * Since: 0.10.20
+ */
+void
+gst_rtsp_connection_set_auth_param (GstRTSPConnection * conn,
+    const gchar * param, const gchar * value)
+{
+  if (conn->auth_params == NULL) {
+    conn->auth_params =
+        g_hash_table_new_full (str_case_hash, str_case_equal, g_free, g_free);
+  }
+  g_hash_table_insert (conn->auth_params, g_strdup (param), g_strdup (value));
+}
+
+/**
+ * gst_rtsp_connection_clear_auth_params:
+ * @conn: a #GstRTSPConnection
+ *
+ * Clear the list of authentication directives stored in @conn.
+ *
+ * Since: 0.10.20
+ */
+void
+gst_rtsp_connection_clear_auth_params (GstRTSPConnection * conn)
+{
+  if (conn->auth_params != NULL) {
+    g_hash_table_destroy (conn->auth_params);
+    conn->auth_params = NULL;
+  }
 }

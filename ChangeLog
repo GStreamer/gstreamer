@@ -1,3 +1,23 @@
+2008-05-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Wouter Cloetens <zombie at e2big dot org>
+
+	* gst-libs/gst/rtsp/Makefile.am:
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_create), (md5_digest_to_hex_string),
+	(auth_digest_compute_hex_urp), (auth_digest_compute_response),
+	(add_auth_header), (gst_rtsp_connection_free),
+	(gst_rtsp_connection_set_auth), (str_case_hash), (str_case_equal),
+	(gst_rtsp_connection_set_auth_param),
+	(gst_rtsp_connection_clear_auth_params):
+	* gst-libs/gst/rtsp/gstrtspconnection.h:
+	Add Digest authorization support for RTSP connections. See #532065.
+
+	* gst-libs/gst/rtsp/md5.c:
+	* gst-libs/gst/rtsp/md5.h:
+	Yeap, another md5 implementation until we can depend on a glib that has
+	support for it.
+
 2008-05-08  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>
