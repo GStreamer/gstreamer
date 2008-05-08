@@ -1,3 +1,11 @@
+2008-05-08  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_collected):
+	Update the track duration if the old one was invalid.
+	Fixes bug #532117.
+
 2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
 
 	* gst/rtp/gstrtph264pay.c (gst_rtp_h264_pay_parse_sps_pps):

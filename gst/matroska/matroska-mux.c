@@ -1972,7 +1972,7 @@ gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data)
       else if (best->track->default_duration)
         end_ts += best->track->default_duration;
 
-      if (end_ts > best->end_ts)
+      if (!GST_CLOCK_TIME_IS_VALID (best->end_ts) || end_ts > best->end_ts)
         best->end_ts = end_ts;
 
       if (G_UNLIKELY (best->start_ts == GST_CLOCK_TIME_NONE ||
