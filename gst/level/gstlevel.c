@@ -21,15 +21,14 @@
 
 /**
  * SECTION:element-level
+ * @short_description: audio level analyzer
  *
  * <refsect2>
  * <para>
- * Level analyses incoming audio buffers and, if the
- * <link linkend="GstLevel--message">message property</link> is #TRUE,
- * generates an element message named
+ * Level analyses incoming audio buffers and, if the #GstLevel:message property
+ * is #TRUE, generates an element message named
  * <classname>&quot;level&quot;</classname>:
- * after each interval of time given by the
- * <link linkend="GstLevel--interval">interval property</link>.
+ * after each interval of time given by the #GstLevel:interval property.
  * The message's structure contains four fields:
  * <itemizedlist>
  * <listitem>
@@ -82,6 +81,8 @@
 #include <math.h>
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
+/*#include <liboil/liboil.h>*/
+
 #include "gstlevel.h"
 
 GST_DEBUG_CATEGORY_STATIC (level_debug);
@@ -100,8 +101,8 @@ static GstStaticPadTemplate sink_template_factory =
         "rate = (int) [ 1, MAX ], "
         "channels = (int) [ 1, MAX ], "
         "endianness = (int) BYTE_ORDER, "
-        "width = (int) { 8, 16 }, "
-        "depth = (int) { 8, 16 }, "
+        "width = (int) { 8, 16, 32 }, "
+        "depth = (int) { 8, 16, 32 }, "
         "signed = (boolean) true; "
         "audio/x-raw-float, "
         "rate = (int) [ 1, MAX ], "
@@ -117,8 +118,8 @@ static GstStaticPadTemplate src_template_factory =
         "rate = (int) [ 1, MAX ], "
         "channels = (int) [ 1, MAX ], "
         "endianness = (int) BYTE_ORDER, "
-        "width = (int) { 8, 16 }, "
-        "depth = (int) { 8, 16 }, "
+        "width = (int) { 8, 16, 32 }, "
+        "depth = (int) { 8, 16, 32 }, "
         "signed = (boolean) true; "
         "audio/x-raw-float, "
         "rate = (int) [ 1, MAX ], "
@@ -310,7 +311,7 @@ gst_level_get_property (GObject * object, guint prop_id,
  */
 
 #define DEFINE_INT_LEVEL_CALCULATOR(TYPE, RESOLUTION)                         \
-static void inline                                                          \
+static void inline                                                            \
 gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
                             gdouble *NCS, gdouble *NPS)                       \
 {                                                                             \
@@ -324,9 +325,9 @@ gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
   /* *NCS = 0.0; Normalized Cumulative Square */                              \
   /* *NPS = 0.0; Normalized Peask Square */                                   \
                                                                               \
-  normalizer = (gdouble) (1 << (RESOLUTION * 2));                             \
+  normalizer = (gdouble) (G_GINT64_CONSTANT(1) << (RESOLUTION * 2));          \
                                                                               \
-  /* oil_squaresum_f64(&squaresum,in,num); */                                 \
+  /* oil_squaresum_shifted_s16(&squaresum,in,num); */                         \
   for (j = 0; j < num; j += channels)                                         \
   {                                                                           \
     square = ((gdouble) in[j]) * in[j];                                       \
@@ -338,6 +339,7 @@ gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
   *NPS = peaksquare / normalizer;                                             \
 }
 
+DEFINE_INT_LEVEL_CALCULATOR (gint32, 31);
 DEFINE_INT_LEVEL_CALCULATOR (gint16, 15);
 DEFINE_INT_LEVEL_CALCULATOR (gint8, 7);
 
@@ -369,6 +371,17 @@ gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
 
 DEFINE_FLOAT_LEVEL_CALCULATOR (gfloat);
 DEFINE_FLOAT_LEVEL_CALCULATOR (gdouble);
+
+/* we would need stride to deinterleave also
+static void inline
+gst_level_calculate_gdouble (gpointer data, guint num, guint channels,
+                            gdouble *NCS, gdouble *NPS)
+{
+  oil_squaresum_f64(NCS,(gdouble *)data,num);
+  *NPS = 0.0;
+}
+*/
+
 
 static gint
 structure_get_int (GstStructure * structure, const gchar * field)
@@ -405,6 +418,9 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
         break;
       case 16:
         filter->process = gst_level_calculate_gint16;
+        break;
+      case 32:
+        filter->process = gst_level_calculate_gint32;
         break;
     }
   } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
@@ -649,6 +665,8 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  /*oil_init (); */
+
   return gst_element_register (plugin, "level", GST_RANK_NONE, GST_TYPE_LEVEL);
 }
 
