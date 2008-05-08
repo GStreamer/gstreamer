@@ -844,12 +844,16 @@ source_clock_rate (RTPSource * source, guint8 pt, RTPSession * session)
 {
   gint result;
 
+  RTP_SESSION_UNLOCK (session);
+
   if (session->callbacks.clock_rate)
     result =
         session->callbacks.clock_rate (session, pt,
         session->clock_rate_user_data);
   else
     result = -1;
+
+  RTP_SESSION_LOCK (session);
 
   GST_DEBUG ("got clock-rate %d for pt %d", result, pt);
 
@@ -1608,9 +1612,11 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
 
         sess->next_rtcp_check_time += arrival->time;
 
+        RTP_SESSION_UNLOCK (sess);
         /* notify app of reconsideration */
         if (sess->callbacks.reconsider)
           sess->callbacks.reconsider (sess, sess->reconsider_user_data);
+        RTP_SESSION_LOCK (sess);
       }
     }
 
@@ -1866,9 +1872,11 @@ rtp_session_send_bye_locked (RTPSession * sess, const gchar * reason)
   GST_DEBUG ("Schedule BYE for %" GST_TIME_FORMAT ", %" GST_TIME_FORMAT,
       GST_TIME_ARGS (interval), GST_TIME_ARGS (sess->next_rtcp_check_time));
 
+  RTP_SESSION_UNLOCK (sess);
   /* notify app of reconsideration */
   if (sess->callbacks.reconsider)
     sess->callbacks.reconsider (sess, sess->reconsider_user_data);
+  RTP_SESSION_LOCK (sess);
 done:
 
   return result;

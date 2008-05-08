@@ -1,3 +1,12 @@
+2008-05-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtpmanager/rtpsession.c: (source_clock_rate),
+	(rtp_session_process_bye), (rtp_session_send_bye_locked):
+	Unlock the session lock when calling one of our callbacks. 
+	Fixes #532011.
+
 2008-05-08  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>
