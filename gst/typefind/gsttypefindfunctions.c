@@ -1588,6 +1588,9 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
 
   while (offset < H264_MAX_PROBE_LENGTH) {
     data = gst_type_find_peek (tf, offset, 4);
+    if (data == NULL)
+      goto done;
+
     if (data && IS_MPEG_HEADER (data)) {
       nut = data[3] & 0x9f;     /* forbiden_zero_bit | nal_unit_type */
       ref = data[3] & 0x60;     /* nal_ref_idc */

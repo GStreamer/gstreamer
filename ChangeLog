@@ -1,3 +1,9 @@
+2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c: (h264_video_type_find):
+	Abort the h264 typefinding as soon as _peek() doesn't return anything,
+	which happens for example with files smaller than 128kb.
+
 2008-05-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Wouter Cloetens <zombie at e2big dot org>
