@@ -88,6 +88,15 @@ GType gst_type_register_static_full (GType parent_type,
 /* Macros for defining classes.  Ideas taken from Bonobo, which took theirs
    from Nautilus and GOB. */
 
+/* FIXME: Use g_once_init_* unconditionally once we depend on glib 2.14 */
+#if GLIB_CHECK_VERSION (2, 14, 0)
+#define __gst_once_init_enter(val) (g_once_init_enter (val))
+#define __gst_once_init_leave(val,newval) (g_once_init_leave (val, newval))
+#else
+#define __gst_once_init_enter(val) (G_UNLIKELY (*(val) == 0))
+#define __gst_once_init_leave(val,newval) (*(val) = newval)
+#endif
+
 /**
  * GST_BOILERPLATE_FULL:
  * @type: the name of the type struct
@@ -128,10 +137,11 @@ GType type_as_function ## _get_type (void);				\
 GType									\
 type_as_function ## _get_type (void)					\
 {									\
-  static GType object_type = 0;						\
-  if (G_UNLIKELY (object_type == 0)) {					\
-    object_type = gst_type_register_static_full (parent_type_macro, #type,	\
-	sizeof (type ## Class),					\
+  static volatile GType object_type = 0;				\
+  if (__gst_once_init_enter ((gsize *) &object_type)) {			\
+    GType _type;							\
+    _type = gst_type_register_static_full (parent_type_macro, #type,	\
+	sizeof (type ## Class),						\
         type_as_function ## _base_init,					\
         NULL,		  /* base_finalize */				\
         type_as_function ## _class_init_trampoline,			\
@@ -142,7 +152,8 @@ type_as_function ## _get_type (void)					\
         (GInstanceInitFunc) type_as_function ## _init,                  \
         NULL,                                                           \
         (GTypeFlags) 0);				                \
-    additional_initializations (object_type);				\
+    additional_initializations (_type);				        \
+    __gst_once_init_leave ((gsize *) &object_type, (gsize) _type);      \
   }									\
   return object_type;							\
 }
