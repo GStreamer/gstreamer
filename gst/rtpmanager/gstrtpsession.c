@@ -1582,6 +1582,7 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_EOS:
       ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
+      rtp_session_send_bye (rtpsession->priv->session, "End of stream");
       break;
     default:
       ret = gst_pad_push_event (rtpsession->send_rtp_src, event);

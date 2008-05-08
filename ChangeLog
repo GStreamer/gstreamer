@@ -1,3 +1,11 @@
+2008-05-08  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	(gst_rtp_session_event_send_rtp_sink):
+	Send RTP BYE command on EOS. Fixes bug #531955.
+
 2008-05-07  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
 
 	* win32/common/config.h.in:
