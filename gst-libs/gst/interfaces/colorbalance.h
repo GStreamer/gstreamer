@@ -47,6 +47,18 @@ G_BEGIN_DECLS
 
 typedef struct _GstColorBalance GstColorBalance;
   
+/**
+ * GstColorBalanceType:
+ * @GST_COLOR_BALANCE_HARDWARE: Color balance is implemented with dedicated
+ *         hardware.
+ * @GST_COLOR_BALANCE_SOFTWARE: Color balance is implemented via software
+ *         processing.
+ * 
+ * An enumeration indicating whether an element implements color balancing
+ * operations in software or in dedicated hardware. In general, dedicated
+ * hardware implementations (such as those provided by xvimagesink) are
+ * preferred.
+ */
 typedef enum
 {
   GST_COLOR_BALANCE_HARDWARE,

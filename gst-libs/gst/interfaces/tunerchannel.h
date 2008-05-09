@@ -39,6 +39,17 @@ G_BEGIN_DECLS
 #define GST_IS_TUNER_CHANNEL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TUNER_CHANNEL))
 
+/**
+ * GstTunerChannelFlags:
+ * @GST_TUNER_CHANNEL_INPUT: The channel is for input
+ * @GST_TUNER_CHANNEL_OUTPUT: The channel is for output
+ * @GST_TUNER_CHANNEL_FREQUENCY: The channel has a frequency setting
+ *                               and signal strength.
+ * @GST_TUNER_CHANNEL_AUDIO: The channel carries audio.
+ * 
+ * An enumeration for flags indicating the available capabilities
+ * of a #GstTunerChannel.
+ */
 typedef enum {
   GST_TUNER_CHANNEL_INPUT     = (1<<0),
   GST_TUNER_CHANNEL_OUTPUT    = (1<<1),
@@ -46,24 +57,43 @@ typedef enum {
   GST_TUNER_CHANNEL_AUDIO     = (1<<3)
 } GstTunerChannelFlags;
 
+/**
+ * GST_TUNER_CHANNEL_HAS_FLAG:
+ * @channel: A #GstTunerChannel
+ * @flag: The flag to check for
+ * 
+ * Macro to check if the given flag is set on a channel
+ */
 #define GST_TUNER_CHANNEL_HAS_FLAG(channel, flag) \
   ((channel)->flags & flag)
 
+/**
+ * GstTunerChannel:
+ * @label: A string containing a descriptive name for this channel
+ * @flags: A set of #GstTunerChannelFlags for this channel
+ * @freq_multiplicator: The step size (in Hz) for the frequency setting.
+ * @min_frequency: Minimum valid frequency setting (in Hz).
+ * @max_frequency: Maximum valid frequency setting (in Hz).
+ * @min_signal: Minimum reported signal strength value.
+ * @max_signal: Maximum reported signal strength value.
+ */
 typedef struct _GstTunerChannel {
   GObject              parent;
 
+  /*< public >*/
   gchar               *label;
   GstTunerChannelFlags flags;
   gfloat               freq_multiplicator;
-  gulong               min_frequency,
-                       max_frequency;
-  gint                 min_signal,
-                       max_signal;
+  gulong               min_frequency;
+  gulong               max_frequency;
+  gint                 min_signal;
+  gint                 max_signal;
 } GstTunerChannel;
 
 typedef struct _GstTunerChannelClass {
   GObjectClass parent;
 
+  /*< private >*/
   /* signals */
   void (*frequency_changed) (GstTunerChannel *channel,
                              gulong           frequency);

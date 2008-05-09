@@ -1,3 +1,20 @@
+2008-05-09  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/interfaces/colorbalance.c:
+	* gst-libs/gst/interfaces/colorbalance.h:
+	* gst-libs/gst/interfaces/colorbalancechannel.c:
+	* gst-libs/gst/interfaces/colorbalancechannel.h:
+	* gst-libs/gst/interfaces/tuner.c:
+	* gst-libs/gst/interfaces/tunerchannel.c:
+	* gst-libs/gst/interfaces/tunerchannel.h:
+	* gst-libs/gst/interfaces/tunernorm.c:
+	* gst-libs/gst/interfaces/tunernorm.h:
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/video.h:
+	Document the GstTuner and GstColorBalance interfaces, and some
+	other random API functions that needed it. 70% symbol coverage, woo.
+
 2008-05-09  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/audio/gstaudiosink.c: (gst_audioringbuffer_acquire):

@@ -25,6 +25,24 @@
 
 #include "tunerchannel.h"
 
+/**
+ * SECTION:gsttunerchannel
+ * @short_description: A channel from an element implementing the #GstTuner
+ * interface.
+ *
+ * <refsect2>
+ * <para>The #GstTunerChannel object is provided by an element implementing
+ * the #GstTuner interface.
+ * </para>
+ * <para>
+ * GstTunerChannel provides a name and flags to determine the type and
+ * capabilities of the channel. If the GST_TUNER_CHANNEL_FREQUENCY flag is
+ * set, then the channel also information about the minimum and maximum
+ * frequency, and range of the reported signal strength.
+ * </para>
+ * </refsect2>
+ */
+
 enum
 {
   /* FILL ME */
@@ -74,12 +92,28 @@ gst_tuner_channel_class_init (GstTunerChannelClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  /**
+   * GstTunerChannel::frequency-changed:
+   * @tunerchannel: The #GstTunerChannel
+   * @frequency: The new frequency (an unsigned long)
+   *
+   * Reports that the current frequency has changed.
+   */
   signals[SIGNAL_FREQUENCY_CHANGED] =
       g_signal_new ("frequency-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstTunerChannelClass,
           frequency_changed),
       NULL, NULL, g_cclosure_marshal_VOID__ULONG, G_TYPE_NONE, 1, G_TYPE_ULONG);
+  /**
+   * GstTunerChannel::signal-changed:
+   * @tunerchannel: The #GstTunerChannel
+   * @signal: The new signal strength (an integer)
+   *
+   * Reports that the signal strength has changed.
+   *
+   * See Also: gst_tuner_signal_strength()
+   */
   signals[SIGNAL_SIGNAL_CHANGED] =
       g_signal_new ("signal-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,

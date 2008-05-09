@@ -45,7 +45,19 @@ static GstVideoFormat gst_video_format_from_rgb24_masks (int red_mask,
     int green_mask, int blue_mask);
 
 
-/* This is simply a convenience function, nothing more or less */
+/**
+ * gst_video_frame_rate:
+ * @pad: pointer to a #GstPad
+ *
+ * A convenience function to retrieve a GValue holding the framerate
+ * from the caps on a pad.
+ * 
+ * The pad needs to have negotiated caps containing a framerate property.
+ *
+ * Returns: NULL if the pad has no configured caps or the configured caps
+ * do not contain a framerate.
+ *
+ */
 const GValue *
 gst_video_frame_rate (GstPad * pad)
 {
@@ -84,6 +96,20 @@ gst_video_frame_rate (GstPad * pad)
   return fps;
 }
 
+/**
+ * gst_video_get_size:
+ * @pad: pointer to a #GstPad
+ * @width: pointer to integer to hold pixel width of the video frames (output)
+ * @height: pointer to integer to hold pixel height of the video frames (output)
+ *
+ * Inspect the caps of the provided pad and retrieve the width and height of
+ * the video frames it is configured for.
+ * 
+ * The pad needs to have negotiated caps containing width and height properties.
+ *
+ * Returns: TRUE if the width and height could be retrieved.
+ *
+ */
 gboolean
 gst_video_get_size (GstPad * pad, gint * width, gint * height)
 {
@@ -290,9 +316,9 @@ gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
 
 /**
  * gst_video_parse_caps_framerate:
- * @caps:
- * @fps_n: pointer to numerator of frame rate (output)
- * @fps_d: pointer to denominator of frame rate (output)
+ * @caps: pointer to a #GstCaps instance
+ * @fps_n: pointer to integer to hold numerator of frame rate (output)
+ * @fps_d: pointer to integer to hold denominator of frame rate (output)
  *
  * Extracts the frame rate from @caps and places the values in the locations
  * pointed to by @fps_n and @fps_d.  Returns TRUE if the values could be
@@ -320,7 +346,7 @@ gst_video_parse_caps_framerate (GstCaps * caps, int *fps_n, int *fps_d)
 
 /**
  * gst_video_parse_caps_pixel_aspect_ratio:
- * @caps:
+ * @caps: pointer to a #GstCaps instance
  * @par_n: pointer to numerator of pixel aspect ratio (output)
  * @par_d: pointer to denominator of pixel aspect ratio (output)
  *
@@ -530,7 +556,7 @@ gst_video_format_to_fourcc (GstVideoFormat format)
   }
 }
 
-/**
+/*
  * gst_video_format_from_rgb32_masks:
  * @red_mask: red bit mask
  * @green_mask: green bit mask
@@ -607,6 +633,8 @@ gst_video_format_from_rgb24_masks (int red_mask, int green_mask, int blue_mask)
  * gst_video_format_is_rgb:
  * @format: a #GstVideoFormat
  *
+ * Determine whether the video format is an RGB format.
+ *
  * Since: 0.10.16
  *
  * Returns: TRUE if @format represents RGB video
@@ -643,6 +671,8 @@ gst_video_format_is_rgb (GstVideoFormat format)
  * gst_video_format_is_yuv:
  * @format: a #GstVideoFormat
  *
+ * Determine whether the video format is a YUV format.
+ *
  * Since: 0.10.16
  *
  * Returns: TRUE if @format represents YUV video
@@ -678,6 +708,9 @@ gst_video_format_is_yuv (GstVideoFormat format)
 /**
  * gst_video_format_has_alpha:
  * @format: a #GstVideoFormat
+ * 
+ * Returns TRUE or FALSE depending on if the video format provides an
+ * alpha channel.
  *
  * Since: 0.10.16
  *

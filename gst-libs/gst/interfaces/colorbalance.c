@@ -30,6 +30,15 @@
 /**
  * SECTION:gstcolorbalance
  * @short_description: Interface for adjusting color balance settings
+ *
+ * <refsect2><para>
+ * This interface is implemented by elements which can perform some color
+ * balance operation on video frames they process. For example, modifying
+ * the brightness, contrast, hue or saturation.
+ * </para><para>
+ * Example elements are 'xvimagesink' and 'colorbalance'
+ * </para>
+ * </refsect2>
  */
 
 enum
@@ -75,6 +84,14 @@ gst_color_balance_class_init (GstColorBalanceClass * klass)
   static gboolean initialized = FALSE;
 
   if (!initialized) {
+    /**
+     * GstColorBalance::value-changed:
+     * @colorbalance: The GstColorBalance instance
+     * @channel: The #GstColorBalanceChannel
+     * @value: The new value
+     *
+     * Fired when the value of the indicated channel has changed.
+     */
     gst_color_balance_signals[VALUE_CHANGED] =
         g_signal_new ("value-changed",
         GST_TYPE_COLOR_BALANCE, G_SIGNAL_RUN_LAST,
@@ -94,6 +111,16 @@ gst_color_balance_class_init (GstColorBalanceClass * klass)
   klass->get_value = NULL;
 }
 
+/**
+ * gst_color_balance_list_channels:
+ * @balance: A #GstColorBalance instance
+ * 
+ * Retrieve a list of the available channels.
+ *
+ * Returns: A GList containing pointers to #GstColorBalanceChannel objects.
+ *          The list is owned by the #GstColorBalance instance and must not
+ *          be freed.
+ */
 const GList *
 gst_color_balance_list_channels (GstColorBalance * balance)
 {
@@ -106,6 +133,19 @@ gst_color_balance_list_channels (GstColorBalance * balance)
   return NULL;
 }
 
+/**
+ * gst_color_balance_set_value:
+ * @balance: A #GstColorBalance instance
+ * @channel: A #GstColorBalanceChannel instance
+ * @value: The new value for the channel.
+ *
+ * Sets the current value of the channel to the passed value, which must
+ * be between min_value and max_value.
+ * 
+ * See Also: The #GstColorBalanceChannel::min_value and
+ *         #GstColorBalanceChannel::max_value members of the
+ *         #GstColorBalanceChannel object.
+ */
 void
 gst_color_balance_set_value (GstColorBalance * balance,
     GstColorBalanceChannel * channel, gint value)
@@ -117,6 +157,20 @@ gst_color_balance_set_value (GstColorBalance * balance,
   }
 }
 
+/**
+ * gst_color_balance_get_value:
+ * @balance: A #GstColorBalance instance
+ * @channel: A #GstColorBalanceChannel instance
+ *
+ * Retrieve the current value of the indicated channel, between min_value
+ * and max_value.
+ * 
+ * See Also: The #GstColorBalanceChannel::min_value and
+ *         #GstColorBalanceChannel::max_value members of the
+ *         #GstColorBalanceChannel object.
+ * 
+ * Returns: The current value of the channel.
+ */
 gint
 gst_color_balance_get_value (GstColorBalance * balance,
     GstColorBalanceChannel * channel)
@@ -130,6 +184,17 @@ gst_color_balance_get_value (GstColorBalance * balance,
   return channel->min_value;
 }
 
+/**
+ * gst_color_balance_value_changed:
+ * @balance: A #GstColorBalance instance
+ * @channel: A #GstColorBalanceChannel whose value has changed
+ * @value: The new value of the channel
+ *
+ * A helper function called by implementations of the GstColorBalance
+ * interface. It fires the #GstColorBalance::value-changed signal on the
+ * instance, and the #GstColorBalanceChannel::value-changed signal on the
+ * channel object.
+ */
 void
 gst_color_balance_value_changed (GstColorBalance * balance,
     GstColorBalanceChannel * channel, gint value)

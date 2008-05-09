@@ -25,6 +25,17 @@
 
 #include "colorbalancechannel.h"
 
+/**
+ * SECTION:gstcolorbalancechannel
+ * @short_description: Object representing a channel from the #GstColorBalance
+ *         interface.
+ *
+ * <refsect2><para>The #GstColorBalanceChannel object represents a parameter
+ * for modifying the color balance implemented by an element providing the
+ * #GstColorBalance interface. For example, Hue or Saturation.
+ * </para></refsect2>
+ */
+
 enum
 {
   /* FILL ME */
@@ -74,6 +85,13 @@ gst_color_balance_channel_class_init (GstColorBalanceChannelClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  /**
+   * GstColorBalanceChannel::value-changed:
+   * @channel: The #GstColorBalanceChannel
+   * @value: The new value
+   *
+   * Fired when the value of the indicated channel has changed.
+   */
   signals[SIGNAL_VALUE_CHANGED] =
       g_signal_new ("value-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
