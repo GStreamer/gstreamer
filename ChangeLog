@@ -1,3 +1,14 @@
+2008-05-09  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstutils.h: (GST_BOILERPLATE_FULL):
+	  Try to fix 'dereferencing type-punned pointer will break strict
+	  aliasing rules' warnings with C++ compilers and GLib >= 2.14.0: GLib
+	  changed the default GType typedef from gulong to gsize at some point,
+	  but kept GType typedef'ed to gulong for C++ for ABI reasons; the
+	  g_once_* functions all take a gsize * though, so work around the type
+	  mismatch for C++ by doing everything in gsize and casting to GType
+	  later.
+
 2008-05-09  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* plugins/elements/gstmultiqueue.c:

@@ -137,8 +137,11 @@ GType type_as_function ## _get_type (void);				\
 GType									\
 type_as_function ## _get_type (void)					\
 {									\
-  static volatile GType object_type = 0;				\
-  if (__gst_once_init_enter ((gsize *) &object_type)) {			\
+  /* The typedef for GType may be gulong or gsize, depending on the	\
+   * system and whether the compiler is c++ or not. The g_once_init_*	\
+   * functions always take a gsize * though ... */			\
+  static volatile gsize gonce_data;					\
+  if (__gst_once_init_enter (&gonce_data)) {				\
     GType _type;							\
     _type = gst_type_register_static_full (parent_type_macro,           \
         g_intern_static_string (#type),					\
@@ -154,9 +157,9 @@ type_as_function ## _get_type (void)					\
         NULL,                                                           \
         (GTypeFlags) 0);				                \
     additional_initializations (_type);				        \
-    __gst_once_init_leave ((gsize *) &object_type, (gsize) _type);      \
+    __gst_once_init_leave (&gonce_data, (gsize) _type);			\
   }									\
-  return object_type;							\
+  return (GType) gonce_data;						\
 }
 
 #define __GST_DO_NOTHING(type)	/* NOP */
