@@ -360,9 +360,6 @@ gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   if (!result)
     goto could_not_open;
 
-  /* allocate one more segment as we need some headroom */
-  spec->segtotal++;
-
   buf->data = gst_buffer_new_and_alloc (spec->segtotal * spec->segsize);
   memset (GST_BUFFER_DATA (buf->data), 0, GST_BUFFER_SIZE (buf->data));
 

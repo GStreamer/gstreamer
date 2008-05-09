@@ -1,3 +1,28 @@
+2008-05-09  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiosink.c: (gst_audioringbuffer_acquire):
+	Choose to allocate one less segment but require one additional segment
+	as latency. 
+
+	* gst-libs/gst/audio/gstaudiosrc.c: (gst_audioringbuffer_acquire):
+	No need to increment the number of segments in the source.
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_get_time), (clock_convert_external),
+	(gst_base_audio_sink_resample_slaving),
+	(gst_base_audio_sink_skew_slaving),
+	(gst_base_audio_sink_none_slaving), (gst_base_audio_sink_render),
+	(gst_base_audio_sink_async_play):
+	Remove adding latency when returning the internal time while subtracting
+	it again when we use the value a little later.
+	When calculating the end timestamp, we are making a rounding error
+	with the current algorithm. Ensure that we don't accumulate these
+	rounding errors when aligning samples by not resampling at all if we
+	don't need to. Fixes #419351.
+	Make the initial calibration of the clock slaving a little more
+	predictable and accurate. Also handle the case where we don't do
+	clock slaving.
+
 2008-05-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Based on a patch by:
