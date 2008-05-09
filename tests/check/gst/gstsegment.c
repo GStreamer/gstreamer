@@ -1624,6 +1624,29 @@ GST_START_TEST (segment_newsegment_accum2)
 
 GST_END_TEST;
 
+GST_START_TEST (segment_copy)
+{
+  GstSegment *copy;
+  GstSegment segment = { 0.0, };
+
+  /* this is a boxed type copy function, we support copying NULL */
+  fail_unless (gst_segment_copy (NULL) == NULL);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  gst_segment_set_newsegment_full (&segment, FALSE, -1.0, 1.0,
+      GST_FORMAT_TIME, 0, 200, 0);
+
+  copy = gst_segment_copy (&segment);
+  fail_unless (copy != NULL);
+  /* we inited the struct on the stack to zeroes, so direct comparison should
+   * be ok here despite the padding field and regardless of implementation */
+  fail_unless (memcmp (copy, &segment, sizeof (GstSegment)) == 0);
+  gst_segment_free (copy);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_segment_suite (void)
 {
@@ -1646,6 +1669,7 @@ gst_segment_suite (void)
   tcase_add_test (tc_chain, segment_newsegment_runningtime);
   tcase_add_test (tc_chain, segment_newsegment_accum);
   tcase_add_test (tc_chain, segment_newsegment_accum2);
+  tcase_add_test (tc_chain, segment_copy);
 
   return s;
 }
