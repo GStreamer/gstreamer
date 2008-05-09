@@ -1,3 +1,11 @@
+2008-05-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	* gst/mpegtsparse/mpegtsparse.c:
+	Make sure all schedule EIT and non-actual transport stream
+	EITs are parsed. Also add present-following flag and
+	actual-transport-stream flag to eit bus message.
+
 2008-05-09  Peter Kjellerstedt  <pkj@axis.com>
 
 	* gst/rtpmanager/rtpsource.c: (rtp_source_finalize):

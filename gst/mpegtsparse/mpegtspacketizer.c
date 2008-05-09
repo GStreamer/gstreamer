@@ -1345,6 +1345,10 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
       "version-number", G_TYPE_UINT, section->version_number,
       "current-next-indicator", G_TYPE_UINT, section->current_next_indicator,
       "service-id", G_TYPE_UINT, service_id,
+      "actual-transport-stream", G_TYPE_BOOLEAN, (section->table_id == 0x4E ||
+          (section->table_id >= 0x50 && section->table_id <= 0x5F)),
+      "present-following", G_TYPE_BOOLEAN, (section->table_id == 0x4E ||
+          section->table_id == 0x4F),
       "transport-stream-id", G_TYPE_UINT, transport_stream_id,
       "original-network-id", G_TYPE_UINT, original_network_id,
       "segment-last-section-number", G_TYPE_UINT, segment_last_section_number,

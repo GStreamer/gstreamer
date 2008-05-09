@@ -800,6 +800,7 @@ mpegts_parse_is_psi (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
       i = 0;
       while (si_tables[i] != TABLE_ID_UNSET) {
         if (si_tables[i] == table_id) {
+          GST_DEBUG_OBJECT (parse, "Packet has table id 0x%x", table_id);
           retval = TRUE;
           break;
         }
@@ -1095,6 +1096,7 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
       break;
     }
     case 0x42:
+    case 0x46:
     {
       /* SDT */
       GstStructure *sdt_info;
@@ -1107,6 +1109,7 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
       break;
     }
     case 0x4E:
+    case 0x4F:
       /* EIT, present/following */
     case 0x50:
     case 0x51:
@@ -1124,6 +1127,22 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
     case 0x5D:
     case 0x5E:
     case 0x5F:
+    case 0x60:
+    case 0x61:
+    case 0x62:
+    case 0x63:
+    case 0x64:
+    case 0x65:
+    case 0x66:
+    case 0x67:
+    case 0x68:
+    case 0x69:
+    case 0x6A:
+    case 0x6B:
+    case 0x6C:
+    case 0x6D:
+    case 0x6E:
+    case 0x6F:
       /* EIT, schedule */
     {
       /* EIT */
