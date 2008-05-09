@@ -272,11 +272,32 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
       GST_DEBUG_FUNCPTR (gst_multi_queue_get_property);
 
   /* SIGNALS */
+
+  /**
+   * GstMultiQueue::underrun:
+   * @multiqueue: the multqueue instance
+   *
+   * This signal is emitted from the streaming thread when there is
+   * no data in any of the queues inside the multiqueue instance (underrun).
+   *
+   * This indicates either starvation or EOS from the upstream data sources.
+   */
   gst_multi_queue_signals[SIGNAL_UNDERRUN] =
       g_signal_new ("underrun", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
       G_STRUCT_OFFSET (GstMultiQueueClass, underrun), NULL, NULL,
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
+  /**
+   * GstMultiQueue::overrun:
+   * @multiqueue: the multiqueue instance
+   *
+   * Reports that one of the queues in the multiqueue is full (overrun).
+   * A queue is full if the total amount of data inside it (num-buffers, time,
+   * size) is higher than the boundary values which can be set through the
+   * GObject properties.
+   *
+   * This can be used as an indicator of pre-roll. 
+   */
   gst_multi_queue_signals[SIGNAL_OVERRUN] =
       g_signal_new ("overrun", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
       G_STRUCT_OFFSET (GstMultiQueueClass, overrun), NULL, NULL,

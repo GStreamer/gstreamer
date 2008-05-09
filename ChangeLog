@@ -1,3 +1,9 @@
+2008-05-09  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	Add documentation for the signals to push our core plugin docs
+	coverage back up to 100%.
+
 2008-05-08  Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
 
 	* gst/gstinfo.h (GST_FUNCTION):
