@@ -1,3 +1,17 @@
+2008-05-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Based on a patch by:
+	  Björn Benderius <bjoern dot benderius at axis dot com>
+
+	* gst/ffmpegcolorspace/avcodec.h:
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_to_pixfmt),
+	(gst_ffmpegcsp_avpicture_fill):
+	* gst/ffmpegcolorspace/imgconvert.c: (nv12_to_nv21):
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	Add conversions from/to NV12 and NV21 and conversions between those
+	two formats. Fixes bug #532166.
+
 2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/typefind/gsttypefindfunctions.c: (h264_video_type_find):

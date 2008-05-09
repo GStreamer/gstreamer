@@ -167,6 +167,12 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
     case PIX_FMT_YUV420P:
       fmt = GST_MAKE_FOURCC ('I', '4', '2', '0');
       break;
+    case PIX_FMT_NV12:
+      fmt = GST_MAKE_FOURCC ('N', 'V', '1', '2');
+      break;
+    case PIX_FMT_NV21:
+      fmt = GST_MAKE_FOURCC ('N', 'V', '2', '1');
+      break;
     case PIX_FMT_YVU420P:
       fmt = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
       break;
@@ -593,6 +599,12 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
         case GST_MAKE_FOURCC ('I', '4', '2', '0'):
           context->pix_fmt = PIX_FMT_YUV420P;
           break;
+        case GST_MAKE_FOURCC ('N', 'V', '1', '2'):
+          context->pix_fmt = PIX_FMT_NV12;
+          break;
+        case GST_MAKE_FOURCC ('N', 'V', '2', '1'):
+          context->pix_fmt = PIX_FMT_NV21;
+          break;
         case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
           context->pix_fmt = PIX_FMT_YVU420P;
           break;
@@ -799,6 +811,22 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
       picture->linesize[1] = stride2;
       picture->linesize[2] = stride2;
       return size + 2 * size2;
+    case PIX_FMT_NV12:
+    case PIX_FMT_NV21:
+      stride = GST_ROUND_UP_4 (width);
+      h2 = ROUND_UP_X (height, pinfo->y_chroma_shift);
+      size = stride * h2;
+      w2 = 2 * DIV_ROUND_UP_X (width, pinfo->x_chroma_shift);
+      stride2 = GST_ROUND_UP_4 (w2);
+      h2 = DIV_ROUND_UP_X (height, pinfo->y_chroma_shift);
+      size2 = stride2 * h2;
+      picture->data[0] = ptr;
+      picture->data[1] = picture->data[0] + size;
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      picture->linesize[1] = stride2;
+      picture->linesize[2] = 0;
+      return size + size2;
     case PIX_FMT_RGB24:
     case PIX_FMT_BGR24:
       stride = GST_ROUND_UP_4 (width * 3);

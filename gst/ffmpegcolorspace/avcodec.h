@@ -53,6 +53,8 @@ enum CodecType {
  */
 enum PixelFormat {
     PIX_FMT_YUV420P,   ///< Planar YUV 4:2:0 (1 Cr & Cb sample per 2x2 Y samples) (I420)
+    PIX_FMT_NV12,      ///< Packed YUV 4:2:0 (separate Y plane, interleaved Cb & Cr planes)
+    PIX_FMT_NV21,      ///< Packed YUV 4:2:0 (separate Y plane, interleaved Cb & Cr planes)
     PIX_FMT_YVU420P,   ///< Planar YUV 4:2:0 (1 Cb & Cr sample per 2x2 Y samples) (YV12)
     PIX_FMT_YUV422,    ///< Packed pixel, Y0 Cb Y1 Cr 
     PIX_FMT_RGB24,     ///< Packed pixel, 3 bytes per pixel, RGBRGB...
@@ -60,9 +62,9 @@ enum PixelFormat {
     PIX_FMT_YUV422P,   ///< Planar YUV 4:2:2 (1 Cr & Cb sample per 2x1 Y samples)
     PIX_FMT_YUV444P,   ///< Planar YUV 4:4:4 (1 Cr & Cb sample per 1x1 Y samples)
     PIX_FMT_RGBA32,    ///< Packed pixel, 4 bytes per pixel, BGRABGRA..., stored in cpu endianness
-    PIX_FMT_BGRA32,     ///< Packed pixel, 4 bytes per pixel, ARGBARGB...
+    PIX_FMT_BGRA32,    ///< Packed pixel, 4 bytes per pixel, ARGBARGB...
     PIX_FMT_ARGB32,    ///< Packed pixel, 4 bytes per pixel, ABGRABGR..., stored in cpu endianness
-    PIX_FMT_ABGR32,     ///< Packed pixel, 4 bytes per pixel, RGBARGBA...
+    PIX_FMT_ABGR32,    ///< Packed pixel, 4 bytes per pixel, RGBARGBA...
     PIX_FMT_RGB32,     ///< Packed pixel, 4 bytes per pixel, BGRxBGRx..., stored in cpu endianness
     PIX_FMT_xRGB32,    ///< Packed pixel, 4 bytes per pixel, xBGRxBGR..., stored in cpu endianness
     PIX_FMT_BGR32,     ///< Packed pixel, 4 bytes per pixel, xRGBxRGB...

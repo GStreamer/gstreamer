@@ -103,7 +103,7 @@ static void glue(yuv420p_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
         /* handle width */
         if (w) {
             YUV_TO_RGB1_CCIR(cb_ptr[0], cr_ptr[0]);
-            /* output 2 pixels */
+            /* output 2 pixel */
             YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[0]);
             RGB_OUT(d1, r, g, b);
             d1 += BPP;
@@ -111,6 +111,180 @@ static void glue(yuv420p_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
             y1_ptr++;
             cb_ptr++;
             cr_ptr++;
+        }
+    }
+}
+
+static void glue(nv12_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
+                                        int width, int height)
+{
+    const uint8_t *y1_ptr, *y2_ptr, *c_ptr;
+    uint8_t *d, *d1, *d2;
+    int w, y, cb, cr, r_add, g_add, b_add;
+    uint8_t *cm = cropTbl + MAX_NEG_CROP;
+    unsigned int r, g, b;
+
+    d = dst->data[0];
+    y1_ptr = src->data[0];
+    c_ptr = src->data[1];
+    for(;height >= 2; height -= 2) {
+        d1 = d;
+        d2 = d + dst->linesize[0];
+        y2_ptr = y1_ptr + src->linesize[0];
+        for(w = width; w >= 2; w -= 2) {
+            YUV_TO_RGB1_CCIR(c_ptr[0], c_ptr[1]);
+            /* output 4 pixels */
+            YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[0]);
+            RGB_OUT(d1, r, g, b);
+
+            YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[1]);
+            RGB_OUT(d1 + BPP, r, g, b);
+
+            YUV_TO_RGB2_CCIR(r, g, b, y2_ptr[0]);
+            RGB_OUT(d2, r, g, b);
+
+            YUV_TO_RGB2_CCIR(r, g, b, y2_ptr[1]);
+            RGB_OUT(d2 + BPP, r, g, b);
+
+            d1 += 2 * BPP;
+            d2 += 2 * BPP;
+
+            y1_ptr += 2;
+            y2_ptr += 2;
+            c_ptr += 2;
+        }
+        /* handle odd width */
+        if (w) {
+            YUV_TO_RGB1_CCIR(c_ptr[0], c_ptr[1]);
+            YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[0]);
+            RGB_OUT(d1, r, g, b);
+
+            YUV_TO_RGB2_CCIR(r, g, b, y2_ptr[0]);
+            RGB_OUT(d2, r, g, b);
+            d1 += BPP;
+            d2 += BPP;
+            y1_ptr++;
+            y2_ptr++;
+            c_ptr += 2;
+        }
+        d += 2 * dst->linesize[0];
+        y1_ptr += 2 * src->linesize[0] - width;
+        c_ptr += src->linesize[1] - width;
+    }
+    /* handle odd height */
+    if (height) {
+        d1 = d;
+        for(w = width; w >= 2; w -= 2) {
+            YUV_TO_RGB1_CCIR(c_ptr[0], c_ptr[1]);
+            /* output 2 pixels */
+            YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[0]);
+            RGB_OUT(d1, r, g, b);
+
+            YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[1]);
+            RGB_OUT(d1 + BPP, r, g, b);
+
+            d1 += 2 * BPP;
+
+            y1_ptr += 2;
+            c_ptr += 2;
+        }
+        /* handle odd width */
+        if (w) {
+            YUV_TO_RGB1_CCIR(c_ptr[0], c_ptr[1]);
+            /* output 1 pixel */
+            YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[0]);
+            RGB_OUT(d1, r, g, b);
+            d1 += BPP;
+
+            y1_ptr++;
+            c_ptr += 2;
+        }
+    }
+}
+
+static void glue(nv21_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
+                                        int width, int height)
+{
+    const uint8_t *y1_ptr, *y2_ptr, *c_ptr;
+    uint8_t *d, *d1, *d2;
+    int w, y, cb, cr, r_add, g_add, b_add;
+    uint8_t *cm = cropTbl + MAX_NEG_CROP;
+    unsigned int r, g, b;
+
+    d = dst->data[0];
+    y1_ptr = src->data[0];
+    c_ptr = src->data[1];
+    for(;height >= 2; height -= 2) {
+        d1 = d;
+        d2 = d + dst->linesize[0];
+        y2_ptr = y1_ptr + src->linesize[0];
+        for(w = width; w >= 2; w -= 2) {
+            YUV_TO_RGB1_CCIR(c_ptr[1], c_ptr[0]);
+            /* output 4 pixels */
+            YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[0]);
+            RGB_OUT(d1, r, g, b);
+
+            YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[1]);
+            RGB_OUT(d1 + BPP, r, g, b);
+
+            YUV_TO_RGB2_CCIR(r, g, b, y2_ptr[0]);
+            RGB_OUT(d2, r, g, b);
+
+            YUV_TO_RGB2_CCIR(r, g, b, y2_ptr[1]);
+            RGB_OUT(d2 + BPP, r, g, b);
+
+            d1 += 2 * BPP;
+            d2 += 2 * BPP;
+
+            y1_ptr += 2;
+            y2_ptr += 2;
+            c_ptr += 2;
+        }
+        /* handle odd width */
+        if (w) {
+            YUV_TO_RGB1_CCIR(c_ptr[1], c_ptr[0]);
+            YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[0]);
+            RGB_OUT(d1, r, g, b);
+
+            YUV_TO_RGB2_CCIR(r, g, b, y2_ptr[0]);
+            RGB_OUT(d2, r, g, b);
+            d1 += BPP;
+            d2 += BPP;
+            y1_ptr++;
+            y2_ptr++;
+            c_ptr += 2;
+        }
+        d += 2 * dst->linesize[0];
+        y1_ptr += 2 * src->linesize[0] - width;
+        c_ptr += src->linesize[1] - width;
+    }
+    /* handle odd height */
+    if (height) {
+        d1 = d;
+        for(w = width; w >= 2; w -= 2) {
+            YUV_TO_RGB1_CCIR(c_ptr[1], c_ptr[0]);
+            /* output 2 pixels */
+            YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[0]);
+            RGB_OUT(d1, r, g, b);
+
+            YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[1]);
+            RGB_OUT(d1 + BPP, r, g, b);
+
+            d1 += 2 * BPP;
+
+            y1_ptr += 2;
+            c_ptr += 2;
+        }
+        /* handle odd width */
+        if (w) {
+            YUV_TO_RGB1_CCIR(c_ptr[1], c_ptr[0]);
+            /* output 1 pixel */
+            YUV_TO_RGB2_CCIR(r, g, b, y1_ptr[0]);
+            RGB_OUT(d1, r, g, b);
+            d1 += BPP;
+
+            y1_ptr++;
+            c_ptr += 2;
         }
     }
 }
@@ -313,6 +487,214 @@ static void glue(RGB_NAME, _to_yuv420p)(AVPicture *dst, const AVPicture *src,
             lum[0] = RGB_TO_Y_CCIR(r, g, b);
             cb[0] = RGB_TO_U_CCIR(r, g, b, 0);
             cr[0] = RGB_TO_V_CCIR(r, g, b, 0);
+        }
+    }
+}
+
+static void glue(RGB_NAME, _to_nv12)(AVPicture *dst, const AVPicture *src,
+                                        int width, int height)
+{
+    int wrap, wrap3;
+    int r, g, b, r1, g1, b1, w;
+    uint8_t *lum, *c;
+    const uint8_t *p;
+
+    lum = dst->data[0];
+    c = dst->data[1];
+
+    wrap = dst->linesize[0];
+    wrap3 = src->linesize[0];
+    p = src->data[0];
+    for(;height>=2;height -= 2) {
+        for(w = width; w >= 2; w -= 2) {
+            RGB_IN(r, g, b, p);
+            r1 = r;
+            g1 = g;
+            b1 = b;
+            lum[0] = RGB_TO_Y_CCIR(r, g, b);
+
+            RGB_IN(r, g, b, p + BPP);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[1] = RGB_TO_Y_CCIR(r, g, b);
+            p += wrap3;
+            lum += wrap;
+
+            RGB_IN(r, g, b, p);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[0] = RGB_TO_Y_CCIR(r, g, b);
+
+            RGB_IN(r, g, b, p + BPP);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[1] = RGB_TO_Y_CCIR(r, g, b);
+
+            c[0] = RGB_TO_U_CCIR(r1, g1, b1, 2);
+            c[1] = RGB_TO_V_CCIR(r1, g1, b1, 2);
+
+
+            c += 2;
+            p += -wrap3 + 2 * BPP;
+            lum += -wrap + 2;
+        }
+	/* handle odd width */
+        if (w) {
+            RGB_IN(r, g, b, p);
+            r1 = r;
+            g1 = g;
+            b1 = b;
+            lum[0] = RGB_TO_Y_CCIR(r, g, b);
+            p += wrap3;
+            lum += wrap;
+            RGB_IN(r, g, b, p);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[0] = RGB_TO_Y_CCIR(r, g, b);
+            c[0] = RGB_TO_U_CCIR(r1, g1, b1, 1);
+            c[1] = RGB_TO_V_CCIR(r1, g1, b1, 1);
+            c += 2;
+            p += -wrap3 + BPP;
+            lum += -wrap + 1;
+        }
+        p += wrap3 + (wrap3 - width * BPP);
+        lum += wrap + (wrap - width);
+        c += dst->linesize[1] - width;
+    }
+    /* handle odd height */
+    if (height) {
+        for(w = width; w >= 2; w -= 2) {
+            RGB_IN(r, g, b, p);
+            r1 = r;
+            g1 = g;
+            b1 = b;
+            lum[0] = RGB_TO_Y_CCIR(r, g, b);
+
+            RGB_IN(r, g, b, p + BPP);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[1] = RGB_TO_Y_CCIR(r, g, b);
+            c[0] = RGB_TO_U_CCIR(r1, g1, b1, 1);
+            c[1] = RGB_TO_V_CCIR(r1, g1, b1, 1);
+            c += 2;
+            p += 2 * BPP;
+            lum += 2;
+        }
+	/* handle odd width */
+        if (w) {
+            RGB_IN(r, g, b, p);
+            lum[0] = RGB_TO_Y_CCIR(r, g, b);
+            c[0] = RGB_TO_U_CCIR(r, g, b, 0);
+            c[1] = RGB_TO_V_CCIR(r, g, b, 0);
+        }
+    }
+}
+
+static void glue(RGB_NAME, _to_nv21)(AVPicture *dst, const AVPicture *src,
+                                        int width, int height)
+{
+    int wrap, wrap3;
+    int r, g, b, r1, g1, b1, w;
+    uint8_t *lum, *c;
+    const uint8_t *p;
+
+    lum = dst->data[0];
+    c = dst->data[1];
+
+    wrap = dst->linesize[0];
+    wrap3 = src->linesize[0];
+    p = src->data[0];
+    for(;height>=2;height -= 2) {
+        for(w = width; w >= 2; w -= 2) {
+            RGB_IN(r, g, b, p);
+            r1 = r;
+            g1 = g;
+            b1 = b;
+            lum[0] = RGB_TO_Y_CCIR(r, g, b);
+
+            RGB_IN(r, g, b, p + BPP);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[1] = RGB_TO_Y_CCIR(r, g, b);
+            p += wrap3;
+            lum += wrap;
+
+            RGB_IN(r, g, b, p);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[0] = RGB_TO_Y_CCIR(r, g, b);
+
+            RGB_IN(r, g, b, p + BPP);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[1] = RGB_TO_Y_CCIR(r, g, b);
+
+            c[1] = RGB_TO_U_CCIR(r1, g1, b1, 2);
+            c[0] = RGB_TO_V_CCIR(r1, g1, b1, 2);
+
+
+            c += 2;
+            p += -wrap3 + 2 * BPP;
+            lum += -wrap + 2;
+        }
+	/* handle odd width */
+        if (w) {
+            RGB_IN(r, g, b, p);
+            r1 = r;
+            g1 = g;
+            b1 = b;
+            lum[0] = RGB_TO_Y_CCIR(r, g, b);
+            p += wrap3;
+            lum += wrap;
+            RGB_IN(r, g, b, p);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[0] = RGB_TO_Y_CCIR(r, g, b);
+            c[1] = RGB_TO_U_CCIR(r1, g1, b1, 1);
+            c[0] = RGB_TO_V_CCIR(r1, g1, b1, 1);
+            c += 2;
+            p += -wrap3 + BPP;
+            lum += -wrap + 1;
+        }
+        p += wrap3 + (wrap3 - width * BPP);
+        lum += wrap + (wrap - width);
+        c += dst->linesize[1] - width;
+    }
+    /* handle odd height */
+    if (height) {
+        for(w = width; w >= 2; w -= 2) {
+            RGB_IN(r, g, b, p);
+            r1 = r;
+            g1 = g;
+            b1 = b;
+            lum[0] = RGB_TO_Y_CCIR(r, g, b);
+
+            RGB_IN(r, g, b, p + BPP);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[1] = RGB_TO_Y_CCIR(r, g, b);
+            c[1] = RGB_TO_U_CCIR(r1, g1, b1, 1);
+            c[0] = RGB_TO_V_CCIR(r1, g1, b1, 1);
+            c += 2;
+            p += 2 * BPP;
+            lum += 2;
+        }
+	/* handle odd width */
+        if (w) {
+            RGB_IN(r, g, b, p);
+            lum[0] = RGB_TO_Y_CCIR(r, g, b);
+            c[1] = RGB_TO_U_CCIR(r, g, b, 0);
+            c[0] = RGB_TO_V_CCIR(r, g, b, 0);
         }
     }
 }
