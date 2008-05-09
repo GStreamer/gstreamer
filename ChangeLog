@@ -1,3 +1,8 @@
+2008-05-09  Peter Kjellerstedt  <pkj@axis.com>
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_finalize):
+	Make sure to unref the caps used by RTPSource to prevent a memory leak.
+
 2008-05-08  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Based on patch by: Clive Wright <clive_wright ntlworld com>
