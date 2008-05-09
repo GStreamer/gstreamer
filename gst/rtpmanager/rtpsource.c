@@ -197,6 +197,8 @@ rtp_source_finalize (GObject * object)
 
   g_free (src->bye_reason);
 
+  gst_caps_replace (&src->caps, NULL);
+
   G_OBJECT_CLASS (rtp_source_parent_class)->finalize (object);
 }
 
