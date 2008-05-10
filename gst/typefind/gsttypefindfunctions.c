@@ -1220,9 +1220,9 @@ static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
     "systemstream = (boolean) true, mpegversion = (int) [ 1, 2 ]");
 
 #define MPEG_SYS_CAPS gst_static_caps_get(&mpeg_sys_caps)
-#define IS_MPEG_HEADER(data)            ((((guint8 *)(data))[0] == 0x00) &&  \
+#define IS_MPEG_HEADER(data) (G_UNLIKELY((((guint8 *)(data))[0] == 0x00) &&  \
                                          (((guint8 *)(data))[1] == 0x00) &&  \
-                                         (((guint8 *)(data))[2] == 0x01))
+                                         (((guint8 *)(data))[2] == 0x01)))
 
 #define IS_MPEG_PACK_CODE(b) ((b) == 0xBA)
 #define IS_MPEG_SYS_CODE(b) ((b) == 0xBB)
@@ -1630,11 +1630,11 @@ static GstStaticCaps h264_video_caps = GST_STATIC_CAPS ("video/x-h264");
 static void
 h264_video_type_find (GstTypeFind * tf, gpointer unused)
 {
+  DataScanCtx c = { 0, NULL, 0 };
+
   /* Stream consists of: a series of sync codes (00 00 00 01) followed 
    * by NALs
    */
-  guint8 *data = NULL;
-  int offset = 0;
   int stat_slice = 0;
   int stat_dpa = 0;
   int stat_dpb = 0;
@@ -1644,18 +1644,17 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
   int stat_pps = 0;
   int nut, ref;
 
-  while (offset < H264_MAX_PROBE_LENGTH) {
-    data = gst_type_find_peek (tf, offset, 4);
-    if (data == NULL)
-      goto done;
+  while (c.offset < H264_MAX_PROBE_LENGTH) {
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 4)))
+      break;
 
-    if (data && IS_MPEG_HEADER (data)) {
-      nut = data[3] & 0x9f;     /* forbiden_zero_bit | nal_unit_type */
-      ref = data[3] & 0x60;     /* nal_ref_idc */
+    if (IS_MPEG_HEADER (c.data)) {
+      nut = c.data[3] & 0x9f;   /* forbiden_zero_bit | nal_unit_type */
+      ref = c.data[3] & 0x60;   /* nal_ref_idc */
 
       /* if forbiden bit is different to 0 won't be h264 */
       if (nut > 0x1f)
-        goto done;
+        break;
 
       /* collect statistics about the NAL types */
       if (nut == 1)
@@ -1673,23 +1672,19 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
       else if ((nut == 8) && (ref != 0))
         stat_pps++;
 
-      offset += 4;
+      if ((stat_slice > 4 || (stat_dpa > 4 && stat_dpb > 4 && stat_dpc > 4)) &&
+          stat_idr >= 1 && stat_sps >= 1 && stat_pps >= 1) {
+        GstCaps *caps = gst_caps_copy (H264_VIDEO_CAPS);
+
+        gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
+        gst_caps_unref (caps);
+        return;
+      }
+
+      data_scan_ctx_advance (tf, &c, 4);
     }
-    offset += 1;
-
-    if ((stat_slice > 4 || (stat_dpa > 4 && stat_dpb > 4 && stat_dpc > 4)) &&
-        stat_idr >= 1 && stat_sps >= 1 && stat_pps >= 1) {
-      GstCaps *caps = gst_caps_copy (H264_VIDEO_CAPS);
-
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
-      gst_caps_unref (caps);
-
-      goto done;
-    }
+    data_scan_ctx_advance (tf, &c, 1);
   }
-
-done:
-  return;
 }
 
 /*** video/mpeg video stream ***/

@@ -1,5 +1,14 @@
 2008-05-10  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* gst/typefind/gsttypefindfunctions.c: (h264_video_type_find):
+	  Don't do lots of 4-byte peeks, but use the 'new' data scan helper
+	  for this instead; don't check if we've found enough markers after
+	  each and every step, it's enough to do that only if we've actually
+	  found a new marker.
+	  Embed a G_UNLIKELY into the IS_MPEG_HEADER macro.
+
+2008-05-10  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst/typefind/gsttypefindfunctions.c:
 	  (DATA_SCAN_CTX_CHUNK_SIZE), (DataScanCtx), (data_scan_ctx_advance),
 	  (data_scan_ctx_ensure_data), (GST_MPEGVID_TYPEFIND_TRY_SYNC),
