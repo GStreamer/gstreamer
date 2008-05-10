@@ -1,3 +1,15 @@
+2008-05-10  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  (DATA_SCAN_CTX_CHUNK_SIZE), (DataScanCtx), (data_scan_ctx_advance),
+	  (data_scan_ctx_ensure_data), (GST_MPEGVID_TYPEFIND_TRY_SYNC),
+	  (mpeg_video_stream_type_find):
+	  Move scan helper thingy to the beginning of the file so we can use
+	  it in other typefind functions. Rename it to something more
+	  generic. Also improve handling of things towards the end of the
+	  typefind data: peek as much as we can if we know the size of the
+	  data, rather than just min_size.
+
 2008-05-09  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:

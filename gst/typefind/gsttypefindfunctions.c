@@ -37,6 +37,64 @@
 GST_DEBUG_CATEGORY_STATIC (type_find_debug);
 #define GST_CAT_DEFAULT type_find_debug
 
+/* DataScanCtx: helper for typefind functions that scan through data
+ * step-by-step, to avoid doing a peek at each and every offset */
+
+#define DATA_SCAN_CTX_CHUNK_SIZE 4096
+
+typedef struct
+{
+  guint64 offset;
+  guint8 *data;
+  gint size;
+} DataScanCtx;
+
+static inline void
+data_scan_ctx_advance (GstTypeFind * tf, DataScanCtx * c, guint bytes_to_skip)
+{
+  c->offset += bytes_to_skip;
+  if (G_LIKELY (c->size > bytes_to_skip)) {
+    c->size -= bytes_to_skip;
+    c->data += bytes_to_skip;
+  } else {
+    c->data += c->size;
+    c->size = 0;
+  }
+}
+
+static inline gboolean
+data_scan_ctx_ensure_data (GstTypeFind * tf, DataScanCtx * c, gint min_len)
+{
+  guint64 len;
+
+  if (G_LIKELY (c->size >= min_len))
+    return TRUE;
+
+  c->data = gst_type_find_peek (tf, c->offset, DATA_SCAN_CTX_CHUNK_SIZE);
+  if (G_LIKELY (c->data != NULL)) {
+    c->size = DATA_SCAN_CTX_CHUNK_SIZE;
+    return TRUE;
+  }
+
+  /* if there's less than our chunk size, try to get as much as we can, but
+   * always at least min_len bytes (we might be typefinding the first buffer
+   * of the stream and not have as much data available as we'd like) */
+  len = gst_type_find_get_length (tf);
+  if (len > 0) {
+    len = CLAMP (len - c->offset, min_len, DATA_SCAN_CTX_CHUNK_SIZE);
+  } else {
+    len = min_len;
+  }
+
+  c->data = gst_type_find_peek (tf, c->offset, len);
+  if (c->data != NULL) {
+    c->size = len;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 /*** text/plain ***/
 static gboolean xml_check_first_element (GstTypeFind * tf,
     const gchar * element, guint elen, gboolean strict);
@@ -1651,57 +1709,11 @@ static GstStaticCaps mpeg_video_caps = GST_STATIC_CAPS ("video/mpeg, "
 
 #define GST_MPEGVID_TYPEFIND_TRY_PICTURES 6
 #define GST_MPEGVID_TYPEFIND_TRY_SYNC (100 * 1024)      /* 100 kB */
-#define GST_MPEGVID_TYPEFIND_SYNC_SIZE 2048
-
-typedef struct
-{
-  guint64 offset;
-  guint8 *data;
-  gint size;
-} MpegVideoStreamCtx;
-
-static inline void
-mpeg_video_stream_ctx_advance (GstTypeFind * tf, MpegVideoStreamCtx * c,
-    guint bytes_to_skip)
-{
-  c->offset += bytes_to_skip;
-  if (c->size > bytes_to_skip) {
-    c->size -= bytes_to_skip;
-    c->data += bytes_to_skip;
-  } else {
-    c->data += c->size;
-    c->size = 0;
-  }
-}
-
-static inline gboolean
-mpeg_video_stream_ctx_ensure_data (GstTypeFind * tf, MpegVideoStreamCtx * c,
-    gint min_len)
-{
-  if (c->size >= min_len)
-    return TRUE;
-
-  c->data = gst_type_find_peek (tf, c->offset, GST_MPEGVID_TYPEFIND_SYNC_SIZE);
-  if (c->data != NULL) {
-    c->size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
-    return TRUE;
-  }
-
-  /* try min_size as fallback: we might be typefinding the first buffer of the
-   * stream and not have as much data available as we'd like */
-  c->data = gst_type_find_peek (tf, c->offset, min_len);
-  if (c->data != NULL) {
-    c->size = min_len;
-    return TRUE;
-  }
-
-  return FALSE;
-}
 
 static void
 mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
 {
-  MpegVideoStreamCtx c = { 0, NULL, 0 };
+  DataScanCtx c = { 0, NULL, 0 };
   gboolean seen_seq_at_0 = FALSE;
   gboolean seen_seq = FALSE;
   gboolean seen_gop = FALSE;
@@ -1713,7 +1725,7 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
     if (found >= GST_MPEGVID_TYPEFIND_TRY_PICTURES)
       break;
 
-    if (!mpeg_video_stream_ctx_ensure_data (tf, &c, 5))
+    if (!data_scan_ctx_ensure_data (tf, &c, 5))
       break;
 
     if (!IS_MPEG_HEADER (c.data))
@@ -1727,14 +1739,14 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
     if (c.data[3] == 0xB3) {
       seen_seq_at_0 = seen_seq_at_0 || (c.offset == 0);
       seen_seq = TRUE;
-      mpeg_video_stream_ctx_advance (tf, &c, 4 + 8);
+      data_scan_ctx_advance (tf, &c, 4 + 8);
       continue;
     }
 
     /* or a GOP header */
     if (c.data[3] == 0xB8) {
       seen_gop = TRUE;
-      mpeg_video_stream_ctx_advance (tf, &c, 8);
+      data_scan_ctx_advance (tf, &c, 8);
       continue;
     }
 
@@ -1742,7 +1754,7 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
     if (c.data[3] == 0x00) {
       ++num_pic_headers;
       last_pic_offset = c.offset;
-      mpeg_video_stream_ctx_advance (tf, &c, 8);
+      data_scan_ctx_advance (tf, &c, 8);
       continue;
     }
 
@@ -1751,14 +1763,14 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
     if (c.data[3] == 0x01 && num_pic_headers > found &&
         (c.offset - last_pic_offset) >= 4 &&
         (c.offset - last_pic_offset) <= 64) {
-      mpeg_video_stream_ctx_advance (tf, &c, 4);
+      data_scan_ctx_advance (tf, &c, 4);
       found += 1;
       continue;
     }
 
   next:
 
-    mpeg_video_stream_ctx_advance (tf, &c, 1);
+    data_scan_ctx_advance (tf, &c, 1);
   }
 
   if (found > 0 || seen_seq) {
