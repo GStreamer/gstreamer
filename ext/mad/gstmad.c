@@ -988,6 +988,7 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
       mad->tempsize = 0;
       mad_frame_mute (&mad->frame);
       mad_synth_mute (&mad->synth);
+    case GST_EVENT_FLUSH_START:
       result = gst_pad_event_default (pad, event);
 
       break;

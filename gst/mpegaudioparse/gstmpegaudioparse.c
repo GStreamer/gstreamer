@@ -558,7 +558,9 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (mp3parse->srcpad, event);
       break;
     default:
-      if (mp3parse->pending_segment && GST_EVENT_TYPE (event) != GST_EVENT_EOS) {
+      if (mp3parse->pending_segment &&
+          (GST_EVENT_TYPE (event) != GST_EVENT_EOS) &&
+          (GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_START)) {
         /* Cache all events except EOS and the ones above if we have
          * a pending segment */
         mp3parse->pending_events =

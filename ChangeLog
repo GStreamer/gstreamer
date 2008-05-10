@@ -1,3 +1,10 @@
+2008-05-10  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/mad/gstmad.c: (gst_mad_sink_event):
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_sink_event):
+	Always let FLUSH_START events flow downstream.
+
 2008-05-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac:
