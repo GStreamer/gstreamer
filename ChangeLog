@@ -1,3 +1,8 @@
+2008-05-10  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.7.2 pre-release
+
 2008-05-10  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/mad/gstmad.c: (gst_mad_sink_event):
