@@ -38,6 +38,7 @@ typedef struct _GstDeinterlaceClass GstDeinterlaceClass;
 struct _GstDeinterlace {
   GstBaseTransform basetransform;
 
+  /*< private >*/
   gint         width;
   gint         height;
   gint         uv_height;

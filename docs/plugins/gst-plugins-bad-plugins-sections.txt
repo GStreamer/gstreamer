@@ -69,6 +69,20 @@ gst_dc1394_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-deinterlace</FILE>
+<TITLE>deinterlace</TITLE>
+GstDeinterlace
+<SUBSECTION Standard>
+GstDeinterlaceClass
+GST_DEINTERLACE
+GST_DEINTERLACE_CLASS
+GST_IS_DEINTERLACE
+GST_IS_DEINTERLACE_CLASS
+GST_TYPE_DEINTERLACE
+gst_deinterlace_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-dfbvideosink</FILE>
 <TITLE>dfbvideosink</TITLE>
 GstDfbVideoSink

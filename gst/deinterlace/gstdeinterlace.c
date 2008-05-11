@@ -28,6 +28,26 @@
 #include "gstdeinterlace.h"
 #include <gst/video/video.h>
 
+/**
+ * SECTION:element-deinterlace
+ * @short_description: Adaptively deinterlace video
+ *
+ * <refsect2>
+ * <para>
+ * Adaptively deinterlaces video frames by detecting interlacing artifacts.
+ * An edge detection matrix is used, with a threshold value. Pixels detected
+ * as 'interlaced' are replaced with pixels blended from the pixels above and
+ * below.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v videotestsrc ! deinterlace ! ffmpegcolorspace ! xvimagesink
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 GST_DEBUG_CATEGORY_STATIC (deinterlace_debug);
 #define GST_CAT_DEFAULT deinterlace_debug
 
@@ -103,26 +123,71 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
   gobject_class->set_property = gst_deinterlace_set_property;
   gobject_class->get_property = gst_deinterlace_get_property;
 
+  /**
+   * GstDeinterlace:deinterlace:
+   *
+   * Turn processing on/off. When false, no modification of the 
+   * video frames occurs and they pass through intact.
+   */
   g_object_class_install_property (gobject_class, ARG_DEINTERLACE,
       g_param_spec_boolean ("deinterlace", "deinterlace",
           "turn deinterlacing on/off", DEFAULT_DEINTERLACE, G_PARAM_READWRITE));
+  /**
+   * GstDeinterlace:di-area-only:
+   *
+   * When set to true, only areas affected by the deinterlacing are output,
+   * making it easy to see which regions are being modified.
+   *
+   * See Also: #GstDeinterlace::ni-area-only
+   */
   g_object_class_install_property (gobject_class, ARG_DI_ONLY,
       g_param_spec_boolean ("di-area-only", "di-area-only",
           "displays deinterlaced areas only", DEFAULT_DI_AREA_ONLY,
           G_PARAM_READWRITE));
+  /**
+   * GstDeinterlace:ni-area-only:
+   *
+   * When set to true, only areas unaffected by the deinterlacing are output,
+   * making it easy to see which regions are being preserved intact.
+   *
+   * See Also: #GstDeinterlace::di-area-only
+   */
   g_object_class_install_property (gobject_class, ARG_NI_ONLY,
       g_param_spec_boolean ("ni-area-only", "ni-area-only",
           "displays non-interlaced areas only", DEFAULT_DI_AREA_ONLY,
           G_PARAM_READWRITE));
+  /**
+   * GstDeinterlace:blend:
+   *
+   * Change the blending for pixels which are detected as
+   * 'interlacing artifacts'. When true, the output pixel is a weighted
+   * average (1,2,1) of the pixel and the pixels above and below it.
+   * When false, the odd field lines are preserved, and the even field lines
+   * are averaged from the surrounding pixels above and below (the odd field).
+   */
   g_object_class_install_property (gobject_class, ARG_BLEND,
       g_param_spec_boolean ("blend", "blend", "blend", DEFAULT_BLEND,
           G_PARAM_READWRITE));
+  /**
+   * GstDeinterlace:threshold:
+   *
+   * Affects the threshold of the edge-detection function used for detecting
+   * interlacing artifacts.
+   */
   g_object_class_install_property (gobject_class, ARG_THRESHOLD,
-      g_param_spec_int ("threshold", "threshold", "threshold", G_MININT,
-          G_MAXINT, 0, G_PARAM_READWRITE));
+      g_param_spec_int ("threshold", "Edge-detection threshold",
+          "Threshold value for the interlacing artifacts in the output "
+          "of the edge detection", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+  /**
+   * GstDeinterlace:edge-detect:
+   *
+   * Affects the weighting of the edge-detection function used for detecting
+   * interlacing artifacts.
+   */
   g_object_class_install_property (gobject_class, ARG_EDGE_DETECT,
-      g_param_spec_int ("edge-detect", "edge-detect", "edge-detect", G_MININT,
-          G_MAXINT, 0, G_PARAM_READWRITE));
+      g_param_spec_int ("edge-detect", "edge detection weighting",
+          "Weighting value used for calculating the edge detection matrix",
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
 
   basetransform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_deinterlace_transform_ip);
