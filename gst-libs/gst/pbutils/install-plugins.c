@@ -144,7 +144,7 @@
  * as interlocutor to the real installer though, even more so if command line
  * argument munging is required to transform the command line arguments
  * passed by GStreamer to the helper application into arguments that are
- * understood by the reeal installer.
+ * understood by the real installer.
  * </para>
  * <para>
  * The helper application path defined at compile time can be overriden at
@@ -389,8 +389,9 @@ struct _GstInstallPluginsContext
  *
  * This function is for X11-based applications (such as most Gtk/Qt
  * applications on linux/unix) only. You can use it to tell the external
- * the XID of your main application window, so the installer can make its
- * own window transient to your application windonw during the installation.
+ * installer the XID of your main application window. That way the installer
+ * can make its own window transient to your application window during the
+ * installation.
  *
  * If set, the XID will be passed to the installer via a --transient-for=XID
  * command line option.
