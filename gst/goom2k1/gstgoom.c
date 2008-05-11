@@ -19,13 +19,14 @@
  */
 
 /**
- * SECTION:element-goom
- * @see_also: synaesthesia
+ * SECTION:element-goom2k1
+ * @see_also: goom, synaesthesia
  *
  * <refsect2>
  * <para>
- * Goom is an audio visualisation element. It creates warping structures
- * based on the incomming audio signal.
+ * Goom2k1 is an audio visualisation element. It creates warping structures
+ * based on the incomming audio signal. Goom2k1 is the older version of the
+ * visualisation. Also available is goom2k4, with a different look.
  * </para>
  * <title>Example launch line</title>
  * <para>

@@ -25,7 +25,7 @@
  * <refsect2>
  * <para>
  * Goom is an audio visualisation element. It creates warping structures
- * based on the incomming audio signal.
+ * based on the incoming audio signal.
  * </para>
  * <title>Example launch line</title>
  * <para>

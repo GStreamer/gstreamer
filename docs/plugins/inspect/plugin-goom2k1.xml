@@ -1,8 +1,8 @@
 <plugin>
-  <name>goom</name>
-  <description>GOOM visualization filter</description>
-  <filename>../../gst/goom/.libs/libgstgoom.so</filename>
-  <basename>libgstgoom.so</basename>
+  <name>goom2k1</name>
+  <description>GOOM 2k1 visualization filter</description>
+  <filename>../../gst/goom2k1/.libs/libgstgoom2k1.so</filename>
+  <basename>libgstgoom2k1.so</basename>
   <version>0.10.8.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
@@ -10,10 +10,10 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>goom</name>
-      <longname>GOOM: what a GOOM!</longname>
+      <name>goom2k1</name>
+      <longname>GOOM: what a GOOM! 2k1 edition</longname>
       <class>Visualization</class>
-      <description>Takes frames of data and outputs video frames using the GOOM filter</description>
+      <description>Takes frames of data and outputs video frames using the GOOM 2k1 filter</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>

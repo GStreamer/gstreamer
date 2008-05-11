@@ -510,6 +510,20 @@ gst_goom_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-goom2k1</FILE>
+<TITLE>goom2k1</TITLE>
+GstGoom
+<SUBSECTION Standard>
+GstGoomClass
+GOOM_SAMPLES
+GST_GOOM
+GST_IS_GOOM
+GST_TYPE_GOOM
+GST_GOOM_CLASS
+GST_IS_GOOM_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-halaudiosink</FILE>
 <TITLE>halaudiosink</TITLE>
 GstHalAudioSink

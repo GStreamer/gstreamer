@@ -1,3 +1,13 @@
+2008-05-11  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* gst/goom/gstgoom.c:
+	* gst/goom2k1/gstgoom.c:
+	Add goom2k1 into the docs.
+
 2008-05-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Based on patch by: Wouter Cloetens  <wouter at mind be>
