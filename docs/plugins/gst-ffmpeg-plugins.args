@@ -55,7 +55,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -66,6 +66,566 @@
 <NICK>RTP Payload Size</NICK>
 <BLURB>Target GOB length.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::b-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Factor</NICK>
+<BLURB>Factor in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::b-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Offset</NICK>
+<BLURB>Offset in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::bitrate-tolerance</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate Tolerance</NICK>
+<BLURB>Number of bits the bitstream is allowed to diverge from the reference.</BLURB>
+<DEFAULT>8000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::chroma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Chroma Elimination Threshold</NICK>
+<BLURB>Chroma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::dark-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Darkness Masking</NICK>
+<BLURB>Darkness Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::dct-algo</NAME>
+<TYPE>GstFFMpegDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DCT Algorithm</NICK>
+<BLURB>DCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::flags</NAME>
+<TYPE>GstFFMpegFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::i-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Factor</NICK>
+<BLURB>Factor in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::i-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Offset</NICK>
+<BLURB>Offset in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::idct-algo</NAME>
+<TYPE>GstFFMpegIDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IDCT Algorithm</NICK>
+<BLURB>IDCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::ildct-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced DCT Compare Function</NICK>
+<BLURB>Interlaced DCT Compare Function.</BLURB>
+<DEFAULT>VSAD</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::inter-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Inter Quantizer Bias</NICK>
+<BLURB>Inter Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::interlaced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced Material</NICK>
+<BLURB>Interlaced Material.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::intra-dc-precision</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra DC precision</NICK>
+<BLURB>Precision of the Intra DC coefficient - 8.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::intra-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra Quantizer Bias</NICK>
+<BLURB>Intra Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::last-predictor-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Last Predictor Count</NICK>
+<BLURB>Amount of previous Motion Vector predictors.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::lmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Lagrange Multiplier</NICK>
+<BLURB>Maximum Lagrange Multiplier.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::lmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Lagrange Multiplier</NICK>
+<BLURB>Minimum Lagrange Multiplier.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::luma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luma Elimination Threshold</NICK>
+<BLURB>Luma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::lumi-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luminance Masking</NICK>
+<BLURB>Luminance Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::max-bframes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max B-Frames</NICK>
+<BLURB>Maximum B-frames in a row.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::max-key-interval</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -100</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Key Interval</NICK>
+<BLURB>Maximum number of frames between two keyframes (< 0 is in sec).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::max-qdiff</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer Difference</NICK>
+<BLURB>Maximum Quantizer Difference between frames.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::mb-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Compare Function</NICK>
+<BLURB>Macroblok Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::mb-decision</NAME>
+<TYPE>GstFFMpegEncMBDecision</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Decision</NICK>
+<BLURB>Macroblok Decision Mode.</BLURB>
+<DEFAULT>Use method set by mb-cmp</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::mb-qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum MB Quantizer</NICK>
+<BLURB>Maximum MB Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::mb-qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum MB Quantizer</NICK>
+<BLURB>Minimum MB Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::me-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Compare Function</NICK>
+<BLURB>Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::me-pre-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Compare Function</NICK>
+<BLURB>Motion Estimation Pre Pass Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::me-range</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Range</NICK>
+<BLURB>Motion Estimation search range in subpel units.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::me-sub-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subpixel Motion Estimation Compare Function</NICK>
+<BLURB>Subpixel Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::me-subpel-quality</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Subpixel Quality</NICK>
+<BLURB>Motion Estimation Subpixel Refinement Quality.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::noise-reduction</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Reduction</NICK>
+<BLURB>Noise Reduction Strength.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::p-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>P Block Masking</NICK>
+<BLURB>P Block  Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::pass</NAME>
+<TYPE>GstFFMpegEncPass</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding pass/type</NICK>
+<BLURB>Encoding pass/type.</BLURB>
+<DEFAULT>Constant Bitrate Encoding</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::pre-dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::pre-me</NAME>
+<TYPE>GstFFMpegEncPreME</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pre Pass for Motion Estimation</NICK>
+<BLURB>Pre Pass for Motion Estimation.</BLURB>
+<DEFAULT>Only after I-frames</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::qblur</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Smoothing</NICK>
+<BLURB>Quantizer Smoothing over time.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::qcompress</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Change</NICK>
+<BLURB>Quantizer Change between easy and hard scenes.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer</NICK>
+<BLURB>Maximum Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Quantizer</NICK>
+<BLURB>Minimum Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::quant-type</NAME>
+<TYPE>GstFFMpegEncQuantTypes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Type</NICK>
+<BLURB>Quantizer Type.</BLURB>
+<DEFAULT>H263 quantization</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::quantizer</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,30]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constant Quantizer</NICK>
+<BLURB>Constant Quantizer.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::rc-buffer-aggressivity</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Aggressivity</NICK>
+<BLURB>Ratecontrol Buffer Aggressivity.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::rc-buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Size</NICK>
+<BLURB>Decoder bitstream buffer size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::rc-eq</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Equation</NICK>
+<BLURB>Ratecontrol Equation.</BLURB>
+<DEFAULT>"tex^qComp"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::rc-initial-cplx</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1e+07]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Initial Complexity for Pass 1 Ratecontrol</NICK>
+<BLURB>Initial Complexity for Pass 1 Ratecontrol.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::rc-max-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Maximum Bitrate</NICK>
+<BLURB>Ratecontrol Maximum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::rc-min-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Minimum Bitrate</NICK>
+<BLURB>Ratecontrol Minimum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::rc-qmod-amp</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Mod</NICK>
+<BLURB>Ratecontrol Mod.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::rc-qmod-freq</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,0]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Freq</NICK>
+<BLURB>Ratecontrol Freq.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::rc-qsquish</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Limiting Method</NICK>
+<BLURB>0 means limit by clipping, otherwise use nice continuous function.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::spatial-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Spatial Complexity Masking</NICK>
+<BLURB>Spatial Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::statsfile</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Statistics Filename</NICK>
+<BLURB>Filename to store data for 2-pass encoding.</BLURB>
+<DEFAULT>"stats.log"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg1video::temporal-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporal Complexity Masking</NICK>
+<BLURB>Temporal Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -105,7 +665,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -116,6 +676,566 @@
 <NICK>RTP Payload Size</NICK>
 <BLURB>Target GOB length.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::b-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Factor</NICK>
+<BLURB>Factor in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::b-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Offset</NICK>
+<BLURB>Offset in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::bitrate-tolerance</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate Tolerance</NICK>
+<BLURB>Number of bits the bitstream is allowed to diverge from the reference.</BLURB>
+<DEFAULT>8000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::chroma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Chroma Elimination Threshold</NICK>
+<BLURB>Chroma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::dark-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Darkness Masking</NICK>
+<BLURB>Darkness Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::dct-algo</NAME>
+<TYPE>GstFFMpegDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DCT Algorithm</NICK>
+<BLURB>DCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::flags</NAME>
+<TYPE>GstFFMpegFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::i-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Factor</NICK>
+<BLURB>Factor in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::i-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Offset</NICK>
+<BLURB>Offset in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::idct-algo</NAME>
+<TYPE>GstFFMpegIDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IDCT Algorithm</NICK>
+<BLURB>IDCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::ildct-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced DCT Compare Function</NICK>
+<BLURB>Interlaced DCT Compare Function.</BLURB>
+<DEFAULT>VSAD</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::inter-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Inter Quantizer Bias</NICK>
+<BLURB>Inter Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::interlaced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced Material</NICK>
+<BLURB>Interlaced Material.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::intra-dc-precision</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra DC precision</NICK>
+<BLURB>Precision of the Intra DC coefficient - 8.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::intra-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra Quantizer Bias</NICK>
+<BLURB>Intra Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::last-predictor-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Last Predictor Count</NICK>
+<BLURB>Amount of previous Motion Vector predictors.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::lmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Lagrange Multiplier</NICK>
+<BLURB>Maximum Lagrange Multiplier.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::lmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Lagrange Multiplier</NICK>
+<BLURB>Minimum Lagrange Multiplier.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::luma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luma Elimination Threshold</NICK>
+<BLURB>Luma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::lumi-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luminance Masking</NICK>
+<BLURB>Luminance Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::max-bframes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max B-Frames</NICK>
+<BLURB>Maximum B-frames in a row.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::max-key-interval</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -100</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Key Interval</NICK>
+<BLURB>Maximum number of frames between two keyframes (< 0 is in sec).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::max-qdiff</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer Difference</NICK>
+<BLURB>Maximum Quantizer Difference between frames.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::mb-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Compare Function</NICK>
+<BLURB>Macroblok Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::mb-decision</NAME>
+<TYPE>GstFFMpegEncMBDecision</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Decision</NICK>
+<BLURB>Macroblok Decision Mode.</BLURB>
+<DEFAULT>Use method set by mb-cmp</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::mb-qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum MB Quantizer</NICK>
+<BLURB>Maximum MB Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::mb-qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum MB Quantizer</NICK>
+<BLURB>Minimum MB Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::me-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Compare Function</NICK>
+<BLURB>Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::me-pre-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Compare Function</NICK>
+<BLURB>Motion Estimation Pre Pass Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::me-range</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Range</NICK>
+<BLURB>Motion Estimation search range in subpel units.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::me-sub-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subpixel Motion Estimation Compare Function</NICK>
+<BLURB>Subpixel Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::me-subpel-quality</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Subpixel Quality</NICK>
+<BLURB>Motion Estimation Subpixel Refinement Quality.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::noise-reduction</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Reduction</NICK>
+<BLURB>Noise Reduction Strength.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::p-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>P Block Masking</NICK>
+<BLURB>P Block  Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::pass</NAME>
+<TYPE>GstFFMpegEncPass</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding pass/type</NICK>
+<BLURB>Encoding pass/type.</BLURB>
+<DEFAULT>Constant Bitrate Encoding</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::pre-dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::pre-me</NAME>
+<TYPE>GstFFMpegEncPreME</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pre Pass for Motion Estimation</NICK>
+<BLURB>Pre Pass for Motion Estimation.</BLURB>
+<DEFAULT>Only after I-frames</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::qblur</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Smoothing</NICK>
+<BLURB>Quantizer Smoothing over time.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::qcompress</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Change</NICK>
+<BLURB>Quantizer Change between easy and hard scenes.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer</NICK>
+<BLURB>Maximum Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Quantizer</NICK>
+<BLURB>Minimum Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::quant-type</NAME>
+<TYPE>GstFFMpegEncQuantTypes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Type</NICK>
+<BLURB>Quantizer Type.</BLURB>
+<DEFAULT>H263 quantization</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::quantizer</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,30]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constant Quantizer</NICK>
+<BLURB>Constant Quantizer.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::rc-buffer-aggressivity</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Aggressivity</NICK>
+<BLURB>Ratecontrol Buffer Aggressivity.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::rc-buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Size</NICK>
+<BLURB>Decoder bitstream buffer size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::rc-eq</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Equation</NICK>
+<BLURB>Ratecontrol Equation.</BLURB>
+<DEFAULT>"tex^qComp"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::rc-initial-cplx</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1e+07]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Initial Complexity for Pass 1 Ratecontrol</NICK>
+<BLURB>Initial Complexity for Pass 1 Ratecontrol.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::rc-max-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Maximum Bitrate</NICK>
+<BLURB>Ratecontrol Maximum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::rc-min-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Minimum Bitrate</NICK>
+<BLURB>Ratecontrol Minimum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::rc-qmod-amp</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Mod</NICK>
+<BLURB>Ratecontrol Mod.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::rc-qmod-freq</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,0]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Freq</NICK>
+<BLURB>Ratecontrol Freq.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::rc-qsquish</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Limiting Method</NICK>
+<BLURB>0 means limit by clipping, otherwise use nice continuous function.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::spatial-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Spatial Complexity Masking</NICK>
+<BLURB>Spatial Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::statsfile</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Statistics Filename</NICK>
+<BLURB>Filename to store data for 2-pass encoding.</BLURB>
+<DEFAULT>"stats.log"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg2video::temporal-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporal Complexity Masking</NICK>
+<BLURB>Temporal Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -155,7 +1275,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -205,7 +1325,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -255,7 +1375,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -266,6 +1386,566 @@
 <NICK>RTP Payload Size</NICK>
 <BLURB>Target GOB length.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::b-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Factor</NICK>
+<BLURB>Factor in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::b-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Offset</NICK>
+<BLURB>Offset in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::bitrate-tolerance</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate Tolerance</NICK>
+<BLURB>Number of bits the bitstream is allowed to diverge from the reference.</BLURB>
+<DEFAULT>8000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::chroma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Chroma Elimination Threshold</NICK>
+<BLURB>Chroma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::dark-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Darkness Masking</NICK>
+<BLURB>Darkness Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::dct-algo</NAME>
+<TYPE>GstFFMpegDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DCT Algorithm</NICK>
+<BLURB>DCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::flags</NAME>
+<TYPE>GstFFMpegFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::i-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Factor</NICK>
+<BLURB>Factor in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::i-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Offset</NICK>
+<BLURB>Offset in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::idct-algo</NAME>
+<TYPE>GstFFMpegIDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IDCT Algorithm</NICK>
+<BLURB>IDCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::ildct-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced DCT Compare Function</NICK>
+<BLURB>Interlaced DCT Compare Function.</BLURB>
+<DEFAULT>VSAD</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::inter-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Inter Quantizer Bias</NICK>
+<BLURB>Inter Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::interlaced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced Material</NICK>
+<BLURB>Interlaced Material.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::intra-dc-precision</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra DC precision</NICK>
+<BLURB>Precision of the Intra DC coefficient - 8.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::intra-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra Quantizer Bias</NICK>
+<BLURB>Intra Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::last-predictor-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Last Predictor Count</NICK>
+<BLURB>Amount of previous Motion Vector predictors.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::lmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Lagrange Multiplier</NICK>
+<BLURB>Maximum Lagrange Multiplier.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::lmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Lagrange Multiplier</NICK>
+<BLURB>Minimum Lagrange Multiplier.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::luma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luma Elimination Threshold</NICK>
+<BLURB>Luma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::lumi-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luminance Masking</NICK>
+<BLURB>Luminance Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::max-bframes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max B-Frames</NICK>
+<BLURB>Maximum B-frames in a row.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::max-key-interval</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -100</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Key Interval</NICK>
+<BLURB>Maximum number of frames between two keyframes (< 0 is in sec).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::max-qdiff</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer Difference</NICK>
+<BLURB>Maximum Quantizer Difference between frames.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::mb-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Compare Function</NICK>
+<BLURB>Macroblok Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::mb-decision</NAME>
+<TYPE>GstFFMpegEncMBDecision</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Decision</NICK>
+<BLURB>Macroblok Decision Mode.</BLURB>
+<DEFAULT>Use method set by mb-cmp</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::mb-qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum MB Quantizer</NICK>
+<BLURB>Maximum MB Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::mb-qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum MB Quantizer</NICK>
+<BLURB>Minimum MB Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::me-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Compare Function</NICK>
+<BLURB>Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::me-pre-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Compare Function</NICK>
+<BLURB>Motion Estimation Pre Pass Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::me-range</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Range</NICK>
+<BLURB>Motion Estimation search range in subpel units.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::me-sub-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subpixel Motion Estimation Compare Function</NICK>
+<BLURB>Subpixel Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::me-subpel-quality</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Subpixel Quality</NICK>
+<BLURB>Motion Estimation Subpixel Refinement Quality.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::noise-reduction</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Reduction</NICK>
+<BLURB>Noise Reduction Strength.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::p-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>P Block Masking</NICK>
+<BLURB>P Block  Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::pass</NAME>
+<TYPE>GstFFMpegEncPass</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding pass/type</NICK>
+<BLURB>Encoding pass/type.</BLURB>
+<DEFAULT>Constant Bitrate Encoding</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::pre-dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::pre-me</NAME>
+<TYPE>GstFFMpegEncPreME</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pre Pass for Motion Estimation</NICK>
+<BLURB>Pre Pass for Motion Estimation.</BLURB>
+<DEFAULT>Only after I-frames</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::qblur</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Smoothing</NICK>
+<BLURB>Quantizer Smoothing over time.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::qcompress</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Change</NICK>
+<BLURB>Quantizer Change between easy and hard scenes.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer</NICK>
+<BLURB>Maximum Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Quantizer</NICK>
+<BLURB>Minimum Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::quant-type</NAME>
+<TYPE>GstFFMpegEncQuantTypes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Type</NICK>
+<BLURB>Quantizer Type.</BLURB>
+<DEFAULT>H263 quantization</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::quantizer</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,30]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constant Quantizer</NICK>
+<BLURB>Constant Quantizer.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::rc-buffer-aggressivity</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Aggressivity</NICK>
+<BLURB>Ratecontrol Buffer Aggressivity.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::rc-buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Size</NICK>
+<BLURB>Decoder bitstream buffer size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::rc-eq</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Equation</NICK>
+<BLURB>Ratecontrol Equation.</BLURB>
+<DEFAULT>"tex^qComp"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::rc-initial-cplx</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1e+07]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Initial Complexity for Pass 1 Ratecontrol</NICK>
+<BLURB>Initial Complexity for Pass 1 Ratecontrol.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::rc-max-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Maximum Bitrate</NICK>
+<BLURB>Ratecontrol Maximum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::rc-min-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Minimum Bitrate</NICK>
+<BLURB>Ratecontrol Minimum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::rc-qmod-amp</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Mod</NICK>
+<BLURB>Ratecontrol Mod.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::rc-qmod-freq</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,0]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Freq</NICK>
+<BLURB>Ratecontrol Freq.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::rc-qsquish</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Limiting Method</NICK>
+<BLURB>0 means limit by clipping, otherwise use nice continuous function.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::spatial-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Spatial Complexity Masking</NICK>
+<BLURB>Spatial Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::statsfile</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Statistics Filename</NICK>
+<BLURB>Filename to store data for 2-pass encoding.</BLURB>
+<DEFAULT>"stats.log"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_h263p::temporal-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporal Complexity Masking</NICK>
+<BLURB>Temporal Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -305,7 +1985,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -780,7 +2460,7 @@
 
 <ARG>
 <NAME>ffenc_flv::rc-eq</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Equation</NICK>
@@ -860,7 +2540,7 @@
 
 <ARG>
 <NAME>ffenc_flv::statsfile</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Statistics Filename</NICK>
@@ -915,7 +2595,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -965,7 +2645,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1015,7 +2695,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1490,7 +3170,7 @@
 
 <ARG>
 <NAME>ffenc_mpeg4::rc-eq</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Equation</NICK>
@@ -1570,7 +3250,7 @@
 
 <ARG>
 <NAME>ffenc_mpeg4::statsfile</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Statistics Filename</NICK>
@@ -1625,7 +3305,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2100,7 +3780,7 @@
 
 <ARG>
 <NAME>ffenc_msmpeg4v1::rc-eq</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Equation</NICK>
@@ -2180,7 +3860,7 @@
 
 <ARG>
 <NAME>ffenc_msmpeg4v1::statsfile</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Statistics Filename</NICK>
@@ -2235,7 +3915,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2710,7 +4390,7 @@
 
 <ARG>
 <NAME>ffenc_msmpeg4v2::rc-eq</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Equation</NICK>
@@ -2790,7 +4470,7 @@
 
 <ARG>
 <NAME>ffenc_msmpeg4v2::statsfile</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Statistics Filename</NICK>
@@ -2845,7 +4525,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3320,7 +5000,7 @@
 
 <ARG>
 <NAME>ffenc_msmpeg4::rc-eq</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Equation</NICK>
@@ -3400,7 +5080,7 @@
 
 <ARG>
 <NAME>ffenc_msmpeg4::statsfile</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Statistics Filename</NICK>
@@ -3455,7 +5135,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3505,7 +5185,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3555,7 +5235,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3605,7 +5285,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3655,7 +5335,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3705,7 +5385,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3755,7 +5435,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3805,7 +5485,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3855,7 +5535,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3905,7 +5585,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3955,7 +5635,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4005,7 +5685,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4065,7 +5745,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4125,7 +5805,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4175,7 +5855,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4225,7 +5905,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4275,7 +5955,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4325,7 +6005,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4529,6 +6209,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_ppm::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_ppm::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_ppm::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_pgm::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -4546,6 +6256,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_pgm::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_pgm::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_pgm::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4569,6 +6309,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_pgmyuv::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_pgmyuv::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_pgmyuv::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_pbm::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -4586,6 +6356,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_pbm::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_pbm::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_pbm::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4609,6 +6409,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_pam::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_pam::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_pam::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_h263::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -4626,6 +6456,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_h263::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_h263::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_h263::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4649,6 +6509,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_h261::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_h261::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_h261::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_mpeg4::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -4666,6 +6556,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mpeg4::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mpeg4::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mpeg4::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4689,6 +6609,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_msmpeg4v1::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_msmpeg4v1::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_msmpeg4v1::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_msmpeg4v2::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -4706,6 +6656,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_msmpeg4v2::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_msmpeg4v2::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_msmpeg4v2::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4729,6 +6709,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_msmpeg4::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_msmpeg4::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_msmpeg4::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_wmv1::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -4749,6 +6759,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_wmv1::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_wmv1::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_wmv1::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_wmv2::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -4766,6 +6806,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_wmv2::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_wmv2::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_wmv2::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4809,6 +6879,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_wmv3::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_wmv3::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_wmv3::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_h263i::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -4826,6 +6926,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_h263i::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_h263i::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_h263i::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4849,6 +6979,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_flv::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_flv::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_flv::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_rv10::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -4866,6 +7026,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_rv10::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_rv10::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_rv10::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4889,6 +7079,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_rv20::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_rv20::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_rv20::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_svq1::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -4909,6 +7129,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_svq1::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_svq1::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_svq1::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_svq3::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -4926,6 +7176,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_svq3::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_svq3::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_svq3::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4989,6 +7269,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_indeo2::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_indeo2::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_indeo2::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_indeo3::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5006,6 +7316,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_indeo3::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_indeo3::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_indeo3::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5029,6 +7369,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_camtasia::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_camtasia::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_camtasia::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_ultimotion::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5046,6 +7416,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_ultimotion::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_ultimotion::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_ultimotion::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5069,6 +7469,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_qdraw::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_qdraw::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_qdraw::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_xl::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5086,6 +7516,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_xl::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_xl::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_xl::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5109,6 +7569,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_loco::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_loco::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_loco::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_wnv1::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5126,6 +7616,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_wnv1::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_wnv1::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_wnv1::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5149,6 +7669,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_aasc::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_aasc::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_aasc::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_fraps::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5166,6 +7716,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_fraps::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_fraps::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_fraps::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5189,6 +7769,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_mpeg2video::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mpeg2video::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mpeg2video::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_mpegvideo::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5206,6 +7816,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mpegvideo::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mpegvideo::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mpegvideo::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5229,6 +7869,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_dvvideo::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_dvvideo::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_dvvideo::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_mjpeg::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5246,6 +7916,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mjpeg::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mjpeg::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mjpeg::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5269,6 +7969,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_sp5x::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_sp5x::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_sp5x::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_png::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5286,6 +8016,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_png::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_png::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_png::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5409,6 +8169,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_huffyuv::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_huffyuv::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_huffyuv::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_ffvhuff::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5426,6 +8216,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_ffvhuff::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_ffvhuff::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_ffvhuff::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5449,6 +8269,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_ffv1::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_ffv1::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_ffv1::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_snow::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5466,6 +8316,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_snow::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_snow::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_snow::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5489,6 +8369,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_cyuv::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_cyuv::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_cyuv::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_h264::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5506,6 +8416,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_h264::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_h264::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_h264::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5529,6 +8469,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_vp3::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp3::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp3::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_theora::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5546,6 +8516,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_theora::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_theora::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_theora::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5569,6 +8569,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_asv1::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_asv1::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_asv1::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_asv2::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5586,6 +8616,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_asv2::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_asv2::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_asv2::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5609,6 +8669,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_vcr1::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vcr1::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vcr1::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_cljr::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5626,6 +8716,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_cljr::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_cljr::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_cljr::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5649,6 +8769,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_4xm::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_4xm::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_4xm::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_mdec::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5666,6 +8816,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mdec::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mdec::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mdec::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5689,6 +8869,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_roqvideo::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_roqvideo::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_roqvideo::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_interplayvideo::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5706,6 +8916,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_interplayvideo::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_interplayvideo::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_interplayvideo::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5729,6 +8969,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_xan_wc3::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_xan_wc3::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_xan_wc3::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_rpza::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5746,6 +9016,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_rpza::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_rpza::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_rpza::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5769,6 +9069,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_cinepak::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_cinepak::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_cinepak::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_msrle::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5786,6 +9116,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_msrle::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_msrle::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_msrle::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5809,6 +9169,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_msvideo1::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_msvideo1::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_msvideo1::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_vqavideo::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5826,6 +9216,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vqavideo::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vqavideo::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vqavideo::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5849,6 +9269,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_idcinvideo::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_idcinvideo::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_idcinvideo::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_8bps::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5866,6 +9316,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_8bps::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_8bps::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_8bps::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5889,6 +9369,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_smc::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_smc::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_smc::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_flic::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5906,6 +9416,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_flic::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_flic::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_flic::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -5929,6 +9469,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_truemotion1::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_truemotion1::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_truemotion1::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_truemotion2::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5949,6 +9519,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_truemotion2::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_truemotion2::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_truemotion2::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_vmdvideo::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -5966,6 +9566,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vmdvideo::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vmdvideo::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vmdvideo::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -6009,6 +9639,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_mszh::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mszh::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mszh::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_zlib::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -6026,6 +9686,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_zlib::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_zlib::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_zlib::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -6186,6 +9876,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_qtrle::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_qtrle::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_qtrle::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -6669,6 +10389,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_mmvideo::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mmvideo::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mmvideo::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_bmp::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -6689,6 +10439,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_bmp::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_bmp::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_bmp::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_avs::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -6706,6 +10486,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_avs::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_avs::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_avs::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -6789,6 +10599,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_zmbv::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_zmbv::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_zmbv::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_camstudio::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -6806,6 +10646,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_camstudio::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_camstudio::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_camstudio::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -7499,6 +11369,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_flashsv::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_flashsv::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_flashsv::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_cavs::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -7539,6 +11439,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_vp6f::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6f::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6f::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_vp6::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -7556,6 +11486,36 @@
 <NICK>Skip frames</NICK>
 <BLURB>Which types of frames to skip during decoding.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -7579,6 +11539,36 @@
 </ARG>
 
 <ARG>
+<NAME>ffdec_vp5::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp5::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp5::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ffdec_vc1::lowres</NAME>
 <TYPE>GstFFMpegDecLowres</TYPE>
 <RANGE></RANGE>
@@ -7590,6 +11580,566 @@
 
 <ARG>
 <NAME>ffdec_vc1::skip-frame</NAME>
+<TYPE>GstFFMpegDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vc1::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vc1::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vc1::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_bmp::bitrate</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit Rate</NICK>
+<BLURB>Target Video Bitrate.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_bmp::buffer-size</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>Size of the video buffers.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_bmp::gop-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GOP Size</NICK>
+<BLURB>Number of frames within one GOP.</BLURB>
+<DEFAULT>15</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_bmp::me-method</NAME>
+<TYPE>GstFFMpegEncMeMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ME Method</NICK>
+<BLURB>Motion Estimation Method.</BLURB>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_bmp::rtp-payload-size</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTP Payload Size</NICK>
+<BLURB>Target GOB length.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flashsv::bitrate</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit Rate</NICK>
+<BLURB>Target Video Bitrate.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flashsv::buffer-size</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>Size of the video buffers.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flashsv::gop-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GOP Size</NICK>
+<BLURB>Number of frames within one GOP.</BLURB>
+<DEFAULT>15</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flashsv::me-method</NAME>
+<TYPE>GstFFMpegEncMeMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ME Method</NICK>
+<BLURB>Motion Estimation Method.</BLURB>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flashsv::rtp-payload-size</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTP Payload Size</NICK>
+<BLURB>Target GOB length.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_qtrle::bitrate</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit Rate</NICK>
+<BLURB>Target Video Bitrate.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_qtrle::buffer-size</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>Size of the video buffers.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_qtrle::gop-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GOP Size</NICK>
+<BLURB>Number of frames within one GOP.</BLURB>
+<DEFAULT>15</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_qtrle::me-method</NAME>
+<TYPE>GstFFMpegEncMeMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ME Method</NICK>
+<BLURB>Motion Estimation Method.</BLURB>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_qtrle::rtp-payload-size</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTP Payload Size</NICK>
+<BLURB>Target GOB length.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_roqvideo::bitrate</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit Rate</NICK>
+<BLURB>Target Video Bitrate.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_roqvideo::buffer-size</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>Size of the video buffers.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_roqvideo::gop-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GOP Size</NICK>
+<BLURB>Number of frames within one GOP.</BLURB>
+<DEFAULT>15</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_roqvideo::me-method</NAME>
+<TYPE>GstFFMpegEncMeMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ME Method</NICK>
+<BLURB>Motion Estimation Method.</BLURB>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_roqvideo::rtp-payload-size</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTP Payload Size</NICK>
+<BLURB>Target GOB length.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_zmbv::bitrate</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit Rate</NICK>
+<BLURB>Target Video Bitrate.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_zmbv::buffer-size</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>Size of the video buffers.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_zmbv::gop-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GOP Size</NICK>
+<BLURB>Number of frames within one GOP.</BLURB>
+<DEFAULT>15</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_zmbv::me-method</NAME>
+<TYPE>GstFFMpegEncMeMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ME Method</NICK>
+<BLURB>Motion Estimation Method.</BLURB>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_zmbv::rtp-payload-size</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTP Payload Size</NICK>
+<BLURB>Target GOB length.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_wmav1::bitrate</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit Rate</NICK>
+<BLURB>Target Audio Bitrate.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_wmav2::bitrate</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit Rate</NICK>
+<BLURB>Target Audio Bitrate.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_roq_dpcm::bitrate</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit Rate</NICK>
+<BLURB>Target Audio Bitrate.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_kmvc::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_kmvc::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_kmvc::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_kmvc::lowres</NAME>
+<TYPE>GstFFMpegDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_kmvc::skip-frame</NAME>
+<TYPE>GstFFMpegDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mjpegb::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mjpegb::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mjpegb::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mjpegb::lowres</NAME>
+<TYPE>GstFFMpegDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_mjpegb::skip-frame</NAME>
+<TYPE>GstFFMpegDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_nuv::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_nuv::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_nuv::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_nuv::lowres</NAME>
+<TYPE>GstFFMpegDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_nuv::skip-frame</NAME>
+<TYPE>GstFFMpegDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_qpeg::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_qpeg::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_qpeg::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_qpeg::lowres</NAME>
+<TYPE>GstFFMpegDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_qpeg::skip-frame</NAME>
+<TYPE>GstFFMpegDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6a::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether ffmpeg should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6a::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6a::do-padding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Padding</NICK>
+<BLURB>Add 0 padding before decoding data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6a::lowres</NAME>
+<TYPE>GstFFMpegDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6a::skip-frame</NAME>
 <TYPE>GstFFMpegDecSkipFrame</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>

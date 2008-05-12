@@ -1,2 +1,15 @@
 GstBin GstChildProxy
 GstPipeline GstChildProxy
+ffmux_amr GstTagSetter
+ffmux_asf GstTagSetter
+ffmux_dv GstTagSetter
+ffmux_flv GstTagSetter
+ffmux_gif GstTagSetter
+ffmux_mmf GstTagSetter
+ffmux_mov GstTagSetter
+ffmux_mp4 GstTagSetter
+ffmux_mpeg GstTagSetter
+ffmux_vob GstTagSetter
+ffmux_mpegts GstTagSetter
+ffmux_3g2 GstTagSetter
+ffmux_3gp GstTagSetter

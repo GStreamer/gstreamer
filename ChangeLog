@@ -1,3 +1,12 @@
+2008-05-13  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* docs/plugins/gst-ffmpeg-plugins.args:
+	* docs/plugins/gst-ffmpeg-plugins.hierarchy:
+	* docs/plugins/gst-ffmpeg-plugins.interfaces:
+	* docs/plugins/gst-ffmpeg-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-ffmpeg.xml:
+	Update docs
+
 2008-05-12  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst-libs/ext/Makefile.am:
