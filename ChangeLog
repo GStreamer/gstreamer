@@ -1,3 +1,12 @@
+2008-05-12  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_render), (gst_base_audio_sink_async_play):
+	Revert previous patch that attempted to more accurately calculate the
+	initial offset between master and slave clock. The best thing we can do
+	in general is take the time of both clocks as the diff since we don't
+	know when the actual preroll happened.
+
 2008-05-11  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst-libs/gst/pbutils/install-plugins.c:

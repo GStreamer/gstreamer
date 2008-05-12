@@ -1419,21 +1419,15 @@ gst_base_audio_sink_async_play (GstBaseSink * basesink)
 
   /* if we are slaved to a clock, we need to set the initial
    * calibration */
-  /* get external and internal time to set as calibration params */
-  etime = GST_ELEMENT_CAST (sink)->base_time;
-  itime = gst_base_audio_sink_get_time (sink->provided_clock, sink);
-
   switch (sink->priv->slave_method) {
     case GST_BASE_AUDIO_SINK_SLAVE_SKEW:
     case GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE:
-      /* adjust with upstream latency, when we are prerolled, our internal clock
-       * should exactly have been the time of the upstream latency */
-      etime += sink->priv->us_latency;
-      break;
     case GST_BASE_AUDIO_SINK_SLAVE_NONE:
-      /* no slaving, base_time corresponds to our 0 time */
-      itime = 0;
     default:
+      /* When we are prerolled, our internal clock should exactly have been the time
+       * of the external clock */
+      etime = gst_clock_get_time (clock);
+      itime = gst_base_audio_sink_get_time (sink->provided_clock, sink);
       break;
   }
   GST_DEBUG_OBJECT (sink,
