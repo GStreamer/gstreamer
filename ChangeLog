@@ -1,5 +1,10 @@
 2008-05-12  Jan Schmidt  <Jan.Schmidt@sun.com>
 
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	Quieten some docs output
+
+2008-05-12  Jan Schmidt  <Jan.Schmidt@sun.com>
+
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
 	(gst_rtp_jitter_buffer_loop):
 	Initialise with GST_CLOCK_TIME_NONE to avoid compiler warning.
