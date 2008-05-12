@@ -1,5 +1,10 @@
 2008-05-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* configure.ac:
+	0.10.3.2 pre-release
+
+2008-05-13  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* docs/plugins/gst-ffmpeg-plugins.args:
 	* docs/plugins/gst-ffmpeg-plugins.hierarchy:
 	* docs/plugins/gst-ffmpeg-plugins.interfaces:
