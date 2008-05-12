@@ -1528,6 +1528,9 @@ gst_rtp_session_query_send_rtcp_src (GstPad * pad, GstQuery * query)
       /* other queries simply fail for now */
       break;
   }
+
+  gst_object_unref (rtpsession);
+
   return ret;
 }
 
