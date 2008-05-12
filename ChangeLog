@@ -1,3 +1,9 @@
+2008-05-12  Mark Nauwelaerts  <mnauw@users.sf.net>
+
+	* gst/avi/gstavimux.c: (gst_avi_mux_pad_reset):
+	Do not leave fourcc stream header field empty upon reset.
+	Fixes #519301.
+
 2008-05-11  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:

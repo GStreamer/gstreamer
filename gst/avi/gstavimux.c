@@ -314,8 +314,6 @@ gst_avi_mux_pad_reset (GstAviPad * avipad, gboolean free)
 {
   /* generic part */
   memset (&(avipad->hdr), 0, sizeof (gst_riff_strh));
-  avipad->hdr.rate = 1;
-  avipad->hdr.quality = 0xFFFFFFFF;
 
   memset (&(avipad->idx[0]), 0, sizeof (avipad->idx));
 
@@ -329,6 +327,7 @@ gst_avi_mux_pad_reset (GstAviPad * avipad, gboolean free)
   if (avipad->is_video) {
     GstAviVideoPad *vidpad = (GstAviVideoPad *) avipad;
 
+    avipad->hdr.type = GST_MAKE_FOURCC ('v', 'i', 'd', 's');
     if (vidpad->vids_codec_data) {
       gst_buffer_unref (vidpad->vids_codec_data);
       vidpad->vids_codec_data = NULL;
@@ -338,6 +337,7 @@ gst_avi_mux_pad_reset (GstAviPad * avipad, gboolean free)
   } else {
     GstAviAudioPad *audpad = (GstAviAudioPad *) avipad;
 
+    avipad->hdr.type = GST_MAKE_FOURCC ('a', 'u', 'd', 's');
     if (audpad->auds_codec_data) {
       gst_buffer_unref (audpad->auds_codec_data);
       audpad->auds_codec_data = NULL;
