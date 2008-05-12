@@ -1103,7 +1103,7 @@ again:
     GstClockTime sync_time;
     GstClockReturn ret;
     GstClock *clock;
-    GstClockTime duration = -1;
+    GstClockTime duration = GST_CLOCK_TIME_NONE;
 
     if (gap > 0) {
       /* we have a gap */
