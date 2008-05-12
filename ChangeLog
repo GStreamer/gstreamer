@@ -1,3 +1,8 @@
+2008-05-12  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/ext/Makefile.am:
+	More fixes for make dist
+
 2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ffmpegrev:
