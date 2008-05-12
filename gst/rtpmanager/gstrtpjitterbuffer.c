@@ -1117,8 +1117,13 @@ again:
             GST_TIME_ARGS (out_time), GST_TIME_ARGS (priv->last_out_time));
         /* interpollate between the current time and the last time based on
          * number of packets we are missing, this is the estimated duration
-         * for the missing packet based on equidistant packet spacing. */
-        duration = (out_time - priv->last_out_time) / (gap + 1);
+         * for the missing packet based on equidistant packet spacing. Also make
+         * sure we never go negative. */
+        if (out_time > priv->last_out_time)
+          duration = (out_time - priv->last_out_time) / (gap + 1);
+        else
+          goto lost;
+
         GST_DEBUG_OBJECT (jitterbuffer, "duration %" GST_TIME_FORMAT,
             GST_TIME_ARGS (duration));
         /* add this duration to the timestamp of the last packet we pushed */
@@ -1176,6 +1181,7 @@ again:
       goto again;
     }
 
+  lost:
     /* we now timed out, this means we lost a packet or finished synchronizing
      * on the first buffer. */
     if (gap > 0) {
