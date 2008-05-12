@@ -1,3 +1,10 @@
+2008-05-12  Peter Kjellerstedt  <pkj@axis.com>
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_query_send_rtcp_src):
+	Make sure to unref the rtpsession returned by gst_pad_get_parent() to
+	prevent a memory leak.
+
+
 2008-05-12  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
