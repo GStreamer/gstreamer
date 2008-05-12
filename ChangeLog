@@ -1,3 +1,9 @@
+2008-05-12  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_loop):
+	Initialise with GST_CLOCK_TIME_NONE to avoid compiler warning.
+
 2008-05-11  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/plugins/Makefile.am:
