@@ -1,3 +1,25 @@
+2008-05-12  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Based on patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpdvdepay.c: (gst_rtp_dv_depay_base_init),
+	(gst_rtp_dv_depay_class_init), (gst_rtp_dv_depay_init),
+	(parse_encode), (gst_rtp_dv_depay_setcaps),
+	(calculate_difblock_location), (gst_rtp_dv_depay_process),
+	(gst_rtp_dv_depay_reset), (gst_rtp_dv_depay_change_state),
+	(gst_rtp_dv_depay_plugin_init):
+	* gst/rtp/gstrtpdvdepay.h:
+	* gst/rtp/gstrtpdvpay.c: (gst_dv_pay_mode_get_type),
+	(gst_rtp_dv_pay_base_init), (gst_rtp_dv_pay_class_init),
+	(gst_rtp_dv_pay_init), (gst_dv_pay_set_property),
+	(gst_dv_pay_get_property), (gst_rtp_dv_pay_setcaps),
+	(gst_dv_pay_negotiate), (include_dif),
+	(gst_rtp_dv_pay_handle_buffer), (gst_rtp_dv_pay_plugin_init):
+	* gst/rtp/gstrtpdvpay.h:
+	Add DV pay and depayloaders. Fixes #532423.
+
 2008-05-12  Mark Nauwelaerts  <mnauw@users.sf.net>
 
 	* gst/matroska/matroska-demux.c:
