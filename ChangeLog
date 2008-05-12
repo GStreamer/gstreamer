@@ -1,5 +1,12 @@
 2008-05-12  Mark Nauwelaerts  <mnauw@users.sf.net>
 
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_push_dvd_clut_change_event):
+	Convert subtitle palette info in VobSub private data from VobSub's
+	(buggy) RGB to YUV.
+
+2008-05-12  Mark Nauwelaerts  <mnauw@users.sf.net>
+
 	* gst/avi/gstavimux.c: (gst_avi_mux_pad_reset):
 	Do not leave fourcc stream header field empty upon reset.
 	Fixes #519301.

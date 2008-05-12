@@ -2400,17 +2400,28 @@ gst_matroska_demux_push_dvd_clut_change_event (GstMatroskaDemux * demux,
   start = strstr (stream->codec_priv, "palette:");
   if (start) {
     gint i;
-    guint clut[16];
+    guint32 clut[16];
+    guint32 col;
+    guint8 r, g, b, y, u, v;
 
     start += 8;
     while (g_ascii_isspace (*start))
       start++;
     for (i = 0; i < 16; i++) {
-      if (sscanf (start, "%06x", &clut[i]) != 1)
+      if (sscanf (start, "%06x", &col) != 1)
         break;
       start += 6;
       while ((*start == ',') || g_ascii_isspace (*start))
         start++;
+      /* sigh, need to convert this from vobsub pseudo-RGB to YUV */
+      r = (col >> 16) & 0xff;
+      g = (col >> 8) & 0xff;
+      b = col & 0xff;
+      y = CLAMP ((0.1494 * r + 0.6061 * g + 0.2445 * b) * 219 / 255 + 16, 0,
+          255);
+      u = CLAMP (0.6066 * r - 0.4322 * g - 0.1744 * b + 128, 0, 255);
+      v = CLAMP (-0.08435 * r - 0.3422 * g + 0.4266 * b + 128, 0, 255);
+      clut[i] = (y << 16) | (u << 8) | v;
     }
 
     /* got them all without problems; build and send event */
