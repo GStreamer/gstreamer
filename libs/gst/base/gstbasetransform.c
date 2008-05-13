@@ -1214,6 +1214,13 @@ not_configured:
         && gst_pad_peer_accept_caps (trans->srcpad, caps)) {
       /* ...by seeing if the downstream elements can handle this */
       res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
+
+      if (res == GST_FLOW_OK
+          && !gst_caps_is_equal (caps, GST_BUFFER_CAPS (*buf))) {
+        /* In case downstream wants to see something different, ignore this
+         * buffer and leave it to the chain function to renegotiate */
+        gst_buffer_replace (buf, NULL);
+      }
     } else {
       /* If not fall back on the default handler and let things be
        * renegotiated in the chain function */

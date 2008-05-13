@@ -1,3 +1,13 @@
+2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_buffer_alloc):
+	Check the caps of the buffer returned by gst_pad_alloc_buffer() and
+	fall back to default negotiation in the chain function if the caps
+	are different from what was requested. Fixes bug #526768.
+
 2008-05-09  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gstsegment.c:
