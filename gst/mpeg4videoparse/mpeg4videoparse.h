@@ -43,6 +43,7 @@ typedef struct _GstMpeg4VParseClass GstMpeg4VParseClass;
 typedef enum {
   PARSE_NEED_START,
   PARSE_START_FOUND,
+  PARSE_VOS_FOUND,
   PARSE_VOP_FOUND
 } GstMpeg4VParseState;
 
@@ -54,8 +55,17 @@ struct _GstMpeg4VParse {
 
   GstAdapter * adapter;
   guint offset;
+  guint vos_offset;
+  gboolean intra_frame;
   
   GstMpeg4VParseState state;
+  GstClockTime timestamp;
+
+  GstBuffer *config;
+  guint8 profile;
+  GstClockTime frame_duration;
+
+  gboolean drop;
 };
 
 struct _GstMpeg4VParseClass {

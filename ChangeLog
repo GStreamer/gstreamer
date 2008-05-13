@@ -1,5 +1,28 @@
 2008-05-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* gst/mpeg4videoparse/mpeg4videoparse.c:
+	(gst_mpeg4vparse_set_new_caps), (gst_mpeg4vparse_align),
+	(get_bits), (next_start_code), (gst_mpeg4vparse_handle_vos),
+	(gst_mpeg4vparse_push), (gst_mpeg4vparse_drain),
+	(gst_mpeg4vparse_chain), (gst_mpeg4vparse_sink_setcaps),
+	(gst_mpeg4vparse_sink_event), (gst_mpeg4vparse_src_query),
+	(gst_mpeg4vparse_set_property), (gst_mpeg4vparse_get_property),
+	(gst_mpeg4vparse_class_init), (gst_mpeg4vparse_init):
+	* gst/mpeg4videoparse/mpeg4videoparse.h:
+	Parse the config data (either outbound or in the stream) to set   
+	width/height, apect ration, framerate in the caps if applicable.
+	Mark frames as GST_BUFFER_FLAG_DELTA_UNIT when they are not
+	intra frames
+	Set the timestamps of outgoing buffers to the buffer in
+	which the VOP header was found.
+	Drop incoming data untill configuration is found (by default,
+	configurable using a property).
+	Report a 1 frame latency. Fixes #532723.
+
+2008-05-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/real/gstrealvideodec.c: (open_library):
 	Add some debug for where we are searching for libraries.
 
