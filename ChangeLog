@@ -1,5 +1,10 @@
 2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/ffmpegcolorspace/imgconvert.c: (nv12_to_nv21):
+	Fix nv12<->nv21 conversion if stride is larger than width.
+
+2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: j^ <j at oil21 dot org>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_parse_skeleton_fishead),

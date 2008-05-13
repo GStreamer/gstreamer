@@ -1129,6 +1129,8 @@ nv12_to_nv21 (AVPicture * dst, const AVPicture * src, int width, int height)
       s_c_ptr += 2;
       d_c_ptr += 2;
     }
+    s_c_ptr += src->linesize[1] - width;
+    d_c_ptr += src->linesize[1] - width;
   }
   /* handle odd height */
   if (height) {
