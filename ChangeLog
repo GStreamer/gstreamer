@@ -1,3 +1,9 @@
+2008-05-13  Mark Nauwelaerts  <mnauw@users.sf.net>
+
+	* gst/avi/gstavimux.c: (gst_avi_mux_start_file):
+	Send an initial BYTE segment to inform downstream of later seeking,
+	and to forego sync attempts.
+
 2008-05-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/gstrtpg729depay.c: (gst_rtp_g729_depay_setcaps):

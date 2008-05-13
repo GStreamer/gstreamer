@@ -1417,6 +1417,10 @@ gst_avi_mux_start_file (GstAviMux * avimux)
     }
   }
 
+  /* let downstream know we think in BYTES and expect to do seeking later on */
+  gst_pad_push_event (avimux->srcpad,
+      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
+
   /* header */
   avimux->avi_hdr.streams = g_slist_length (avimux->sinkpads);
   avimux->is_bigfile = FALSE;
