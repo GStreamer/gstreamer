@@ -1,5 +1,14 @@
 2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init):
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_class_init):
+	* gst/playback/gstplay-marshal.list:
+	* gst/playback/gsturidecodebin.c: (gst_uri_decode_bin_class_init):
+	Use correct marshallers. GstCaps are a boxed type and no GObject
+	subclass.
+
+2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* win32/common/libgstrtsp.def:
 	Add gst_rtsp_connection_(set|clear)_auth_param() to the exported
 	symbols.
