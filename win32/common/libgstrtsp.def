@@ -2,6 +2,7 @@ EXPORTS
 	gst_rtsp_auth_method_get_type
 	gst_rtsp_base64_decode_ip
 	gst_rtsp_base64_encode
+	gst_rtsp_connection_clear_auth_params
 	gst_rtsp_connection_close
 	gst_rtsp_connection_connect
 	gst_rtsp_connection_create
@@ -14,6 +15,7 @@ EXPORTS
 	gst_rtsp_connection_reset_timeout
 	gst_rtsp_connection_send
 	gst_rtsp_connection_set_auth
+	gst_rtsp_connection_set_auth_param
 	gst_rtsp_connection_write
 	gst_rtsp_event_get_type
 	gst_rtsp_extension_after_send

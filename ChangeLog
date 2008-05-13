@@ -1,5 +1,11 @@
 2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* win32/common/libgstrtsp.def:
+	Add gst_rtsp_connection_(set|clear)_auth_param() to the exported
+	symbols.
+
+2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>
 
 	* tests/check/elements/audioresample.c:
