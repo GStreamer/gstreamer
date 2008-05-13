@@ -1,3 +1,15 @@
+2008-05-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Hannes Bistry <hannesb at gmx dot de>
+
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcp_client_src_start):
+	* gst/tcp/gsttcpserversink.c:
+	(gst_tcp_server_sink_handle_server_read),
+	(gst_tcp_server_sink_handle_wait), (gst_tcp_server_sink_init_send):
+	Fix regression in clientsrc because we did not add the fd to the poll
+	set anymore. Fixes #532364.
+	Do some cleanups here and there.
+
 2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init):

@@ -334,23 +334,12 @@ gst_tcp_client_src_start (GstBaseSrc * bsrc)
   GST_DEBUG_OBJECT (src, "connecting to server");
   ret = connect (src->sock_fd.fd, (struct sockaddr *) &src->server_sin,
       sizeof (src->server_sin));
+  if (ret)
+    goto connect_failed;
 
-  if (ret) {
-    gst_tcp_client_src_stop (GST_BASE_SRC (src));
-    switch (errno) {
-      case ECONNREFUSED:
-        GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-            (_("Connection to %s:%d refused."), src->host, src->port), (NULL));
-        return FALSE;
-        break;
-      default:
-        GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
-            ("connect to %s:%d failed: %s", src->host, src->port,
-                g_strerror (errno)));
-        return FALSE;
-        break;
-    }
-  }
+  /* add the socket to the poll */
+  gst_poll_add_fd (src->fdset, &src->sock_fd);
+  gst_poll_fd_ctl_read (src->fdset, &src->sock_fd, TRUE);
 
   return TRUE;
 
@@ -368,6 +357,22 @@ no_socket:
 name_resolv:
   {
     gst_tcp_client_src_stop (GST_BASE_SRC (src));
+    return FALSE;
+  }
+connect_failed:
+  {
+    gst_tcp_client_src_stop (GST_BASE_SRC (src));
+    switch (errno) {
+      case ECONNREFUSED:
+        GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+            (_("Connection to %s:%d refused."), src->host, src->port), (NULL));
+        break;
+      default:
+        GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+            ("connect to %s:%d failed: %s", src->host, src->port,
+                g_strerror (errno)));
+        break;
+    }
     return FALSE;
   }
 }
