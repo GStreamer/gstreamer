@@ -417,36 +417,100 @@ GST_START_TEST (test_shutdown)
 GST_END_TEST;
 
 static GstFlowReturn
-alloc_only_48000 (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
-    GstBuffer ** buf)
+live_switch_alloc_only_48000 (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf)
 {
   GstStructure *structure;
   gint rate;
+  gint channels;
+  GstCaps *desired;
 
   structure = gst_caps_get_structure (caps, 0);
   fail_unless (gst_structure_get_int (structure, "rate", &rate));
+  fail_unless (gst_structure_get_int (structure, "channels", &channels));
 
-  if (rate != 48000)
+  if (rate < 48000)
     return GST_FLOW_NOT_NEGOTIATED;
 
-  *buf = NULL;
+  desired = gst_caps_copy (caps);
+  gst_caps_set_simple (desired, "rate", G_TYPE_INT, 48000, NULL);
+
+  *buf = gst_buffer_new_and_alloc (channels * 48000);
+  gst_buffer_set_caps (*buf, desired);
+  gst_caps_unref (desired);
+
   return GST_FLOW_OK;
+}
+
+static GstCaps *
+live_switch_get_sink_caps (GstPad * pad)
+{
+  GstCaps *result;
+
+  result = gst_caps_copy (GST_PAD_CAPS (pad));
+
+  gst_caps_set_simple (result,
+      "rate", GST_TYPE_INT_RANGE, 48000, G_MAXINT, NULL);
+
+  return result;
+}
+
+static void
+live_switch_push (int rate, GstCaps * caps)
+{
+  GstBuffer *inbuffer;
+  GstCaps *desired;
+  GList *l;
+
+  desired = gst_caps_copy (caps);
+  gst_caps_set_simple (desired, "rate", G_TYPE_INT, rate, NULL);
+
+  fail_unless (gst_pad_alloc_buffer_and_set_caps (mysrcpad,
+          GST_BUFFER_OFFSET_NONE, rate * 4, desired, &inbuffer) == GST_FLOW_OK);
+
+  /* When the basetransform hits the non-configured case it always
+   * returns a buffer with exactly the same caps as we requested so the actual
+   * renegotiation (if needed) will be done in the _chain*/
+  fail_unless (inbuffer != NULL);
+  fail_unless (gst_caps_is_equal (desired, GST_BUFFER_CAPS (inbuffer)));
+
+  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
+  GST_BUFFER_OFFSET (inbuffer) = 0;
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+
+  /* ... but it ends up being collected on the global buffer list */
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  for (l = buffers; l; l = l->next) {
+    GstBuffer *buffer = GST_BUFFER (l->data);
+
+    gst_buffer_unref (buffer);
+  }
+
+  g_list_free (buffers);
+  buffers = NULL;
+
+  gst_caps_unref (desired);
 }
 
 GST_START_TEST (test_live_switch)
 {
   GstElement *audioresample;
   GstEvent *newseg;
-  GstBuffer *inbuffer;
   GstCaps *caps;
-  GstCaps *newcaps;
-  GList *l;
 
-  audioresample = setup_audioresample (1, 48000, 48000);
+  audioresample = setup_audioresample (4, 48000, 48000);
 
   /* Let the sinkpad act like something that can only handle things of
-   * rate 48000 and can only allocate buffers for that rate */
-  gst_pad_set_bufferalloc_function (mysinkpad, alloc_only_48000);
+   * rate 48000- and can only allocate buffers for that rate, but if someone
+   * tries to get a buffer with a rate higher then 48000 tries to renegotiate
+   * */
+  gst_pad_set_bufferalloc_function (mysinkpad, live_switch_alloc_only_48000);
+  gst_pad_set_getcaps_function (mysinkpad, live_switch_get_sink_caps);
 
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
@@ -458,48 +522,18 @@ GST_START_TEST (test_live_switch)
   newseg = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
   fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
 
-  fail_unless (gst_pad_alloc_buffer_and_set_caps (mysrcpad,
-          GST_BUFFER_OFFSET_NONE, 48000 * 4, caps, &inbuffer) == GST_FLOW_OK);
+  /* downstream can provide the requested rate, a buffer alloc will be passed
+   * on */
+  live_switch_push (48000, caps);
 
-  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
-  GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
-  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  GST_BUFFER_OFFSET (inbuffer) = 0;
-  gst_buffer_set_caps (inbuffer, caps);
+  /* Downstream can never accept this rate, buffer alloc isn't passed on */
+  live_switch_push (40000, caps);
 
-  /* pushing gives away my reference ... */
-  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
-
-  /* ... but it ends up being collected on the global buffer list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-
-  /* Prepare a new buffer, but now with different caps */
-  fail_unless ((newcaps =
-          gst_caps_make_writable (gst_caps_ref (caps))) != NULL);
-  gst_caps_set_simple (newcaps, "rate", G_TYPE_INT, 1234, NULL);
-
-  fail_unless (gst_pad_alloc_buffer_and_set_caps (mysrcpad,
-          GST_BUFFER_OFFSET_NONE, 1234 * 4, newcaps, &inbuffer) == GST_FLOW_OK);
-
-  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
-  GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
-  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  GST_BUFFER_OFFSET (inbuffer) = 0;
-  gst_buffer_set_caps (inbuffer, newcaps);
-
-  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
-  fail_unless_equals_int (g_list_length (buffers), 2);
+  /* Downstream can provide the requested rate but will re-negotiate */
+  live_switch_push (50000, caps);
 
   cleanup_audioresample (audioresample);
-  for (l = buffers; l; l = l->next) {
-    GstBuffer *buffer = GST_BUFFER (l->data);
-
-    gst_buffer_unref (buffer);
-  }
-  g_list_free (buffers);
-  buffers = NULL;
   gst_caps_unref (caps);
-  gst_caps_unref (newcaps);
 }
 
 GST_END_TEST static Suite *
