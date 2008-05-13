@@ -547,13 +547,15 @@ gst_ogg_pad_parse_skeleton_fishead (GstOggPad * pad, ogg_packet * packet)
   data += 8;
 
   ogg->basetime = gst_util_uint64_scale (GST_SECOND, basetime_n, basetime_d);
+  ogg->prestime = gst_util_uint64_scale (GST_SECOND, prestime_n, prestime_d);
   ogg->have_fishead = TRUE;
   pad->is_skeleton = TRUE;
   pad->start_time = GST_CLOCK_TIME_NONE;
   pad->first_granule = -1;
   pad->first_time = GST_CLOCK_TIME_NONE;
   GST_INFO_OBJECT (ogg, "skeleton fishead parsed (basetime: %"
-      GST_TIME_FORMAT ")", GST_TIME_ARGS (ogg->basetime));
+      GST_TIME_FORMAT ", prestime: %" GST_TIME_FORMAT ")",
+      GST_TIME_ARGS (ogg->basetime), GST_TIME_ARGS (ogg->prestime));
 }
 
 /* function called when a skeleton fisbone is found. Caller ensures that
@@ -561,6 +563,7 @@ gst_ogg_pad_parse_skeleton_fishead (GstOggPad * pad, ogg_packet * packet)
 static void
 gst_ogg_pad_parse_skeleton_fisbone (GstOggPad * pad, ogg_packet * packet)
 {
+  GstOggDemux *ogg = pad->ogg;
   GstOggPad *fisbone_pad;
   gint64 start_granule;
   guint32 serialno;
@@ -596,7 +599,8 @@ gst_ogg_pad_parse_skeleton_fisbone (GstOggPad * pad, ogg_packet * packet)
     /* padding */
     data += 3;
 
-    fisbone_pad->start_time = gst_annodex_granule_to_time (start_granule,
+    fisbone_pad->start_time = ogg->prestime - ogg->basetime;
+    fisbone_pad->start_time += gst_annodex_granule_to_time (start_granule,
         fisbone_pad->granulerate_n, fisbone_pad->granulerate_d,
         fisbone_pad->granuleshift);
 

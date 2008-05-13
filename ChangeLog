@@ -1,3 +1,13 @@
+2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: j^ <j at oil21 dot org>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_parse_skeleton_fishead),
+	(gst_ogg_pad_parse_skeleton_fisbone):
+	* ext/ogg/gstoggdemux.h:
+	Parse presentation time from skeleton streams and use it as offset
+	for the timestamps. Fixes bug #530068.
+
 2008-05-12  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

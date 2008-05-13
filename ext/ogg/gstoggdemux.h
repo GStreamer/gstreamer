@@ -169,6 +169,7 @@ struct _GstOggDemux
   /* annodex stuff */
   gboolean have_fishead;
   gint64 basetime;
+  gint64 prestime;
 
   /* ogg stuff */
   ogg_sync_state sync;
