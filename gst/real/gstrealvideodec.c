@@ -432,6 +432,7 @@ open_library (GstRealVideoDec * dec, GstRealVideoDecHooks * hooks,
     for (j = 0; split_names[j]; j++) {
       gchar *codec = g_strconcat (split_path[i], "/", split_names[j], NULL);
 
+      GST_DEBUG_OBJECT (dec, "trying %s", codec);
       module = g_module_open (codec, G_MODULE_BIND_LAZY);
       g_free (codec);
       if (module)
@@ -445,6 +446,8 @@ codec_search_done:
 
   if (module == NULL)
     goto could_not_open;
+
+  GST_DEBUG_OBJECT (dec, "module opened, finding symbols");
 
   /* First try opening legacy symbols, if that fails try loading new symbols */
   if (g_module_symbol (module, "RV20toYUV420Init", &rv_init) &&
