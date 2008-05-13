@@ -1,5 +1,22 @@
 2008-05-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Based on patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpg729depay.c: (gst_rtp_g729_depay_base_init),
+	(gst_rtp_g729_depay_class_init), (gst_rtp_g729_depay_init),
+	(gst_rtp_g729_depay_setcaps), (gst_rtp_g729_depay_process),
+	(gst_rtp_g729_depay_plugin_init):
+	* gst/rtp/gstrtpg729depay.h:
+	* gst/rtp/gstrtpg729pay.c: (gst_rtpg729pay_base_init),
+	(gst_rtpg729pay_class_init), (gst_rtpg729pay_init),
+	(gst_rtpg729pay_setcaps), (gst_rtp_g729_pay_plugin_init):
+	* gst/rtp/gstrtpg729pay.h:
+	Added G729 pay and depayloaders. Fixes #532409.
+
+2008-05-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/speex/gstspeexdec.c: (speex_dec_sink_event):
 	Fix the calculation of the duration of the concealment packets.
 
