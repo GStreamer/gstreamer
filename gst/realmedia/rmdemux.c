@@ -2139,6 +2139,9 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
   base = GST_BUFFER_DATA (in);
   data = base + offset;
   size = GST_BUFFER_SIZE (in) - offset;
+  /* if size <= 2, we want this method to return the same GstFlowReturn as it
+   * was previously for that given stream. */
+  ret = stream->last_flow;
 
   while (size > 2) {
     guint8 pkg_header;
@@ -2283,6 +2286,9 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
       GST_BUFFER_TIMESTAMP (out) = timestamp;
 
       ret = gst_pad_push (stream->pad, out);
+      ret = gst_rmdemux_combine_flows (rmdemux, stream, ret);
+      if (ret != GST_FLOW_OK)
+        break;
 
       timestamp = GST_CLOCK_TIME_NONE;
     }
@@ -2292,8 +2298,6 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
   GST_DEBUG_OBJECT (rmdemux, "%d bytes left", size);
 
   gst_buffer_unref (in);
-
-  ret = GST_FLOW_OK;
 
   return ret;
 
