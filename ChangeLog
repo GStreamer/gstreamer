@@ -1,6 +1,15 @@
 2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_handle_event),
+	(gst_type_find_element_send_cached_events),
+	(gst_type_find_element_change_state):
+	Clean up on FLUSH_STOP and not FLUSH_START. Forward both events
+	immediately.
+
+2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* plugins/elements/gsttypefindelement.c:
 	(gst_type_find_handle_src_query), (stop_typefinding),
 	(gst_type_find_element_handle_event),
 	(gst_type_find_element_send_cached_events),
