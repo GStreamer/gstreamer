@@ -1,5 +1,10 @@
 2008-05-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtp/gstrtpg729depay.c: (gst_rtp_g729_depay_setcaps):
+	Fix wrong caps string.
+
+2008-05-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Based on patch by: Olivier Crete <tester at tester dot ca>
 
 	* gst/rtp/Makefile.am:
