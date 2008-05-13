@@ -1,5 +1,15 @@
 2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* tests/check/elements/audioresample.c:
+	(live_switch_alloc_only_48000), (live_switch_get_sink_caps),
+	(live_switch_push), (GST_START_TEST):
+	Add unit test for the latest basetransform negotiation changes.
+	See bug #526768.
+
+2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/ffmpegcolorspace/imgconvert.c: (nv12_to_nv21):
 	Fix nv12<->nv21 conversion if stride is larger than width.
 
