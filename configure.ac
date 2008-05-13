@@ -207,7 +207,7 @@ AC_ARG_WITH(system-ffmpeg,
             [AC_HELP_STRING([--with-system-ffmpeg], [use system FFmpeg libraries])])
 
 if test "x$with_system_ffmpeg" = "xyes"; then
-  PKG_CHECK_MODULES(FFMPEG, libavutil libavcodec libavformat)
+  PKG_CHECK_MODULES(FFMPEG, libavutil libavcodec libavformat libswscale)
   PKG_CHECK_MODULES(POSTPROC, libavcodec libpostproc)
   saved_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $FFMPEG_CFLAGS"
@@ -303,9 +303,10 @@ AC_SUBST(FFMPEG_LIBS)
 AC_SUBST(FFMPEG_SUBDIRS)
 AC_SUBST(POSTPROC_CFLAGS)
 AC_SUBST(POSTPROC_LIBS)
-  
-AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, $HAVE_FFMPEG_UNINSTALLED,
-                   [Defined if building against uninstalled FFmpeg source])
+ 
+if test x$HAVE_FFMPEG_UNINSTALLED = x1; then
+  AC_DEFINE(HAVE_FFMPEG_UNINSTALLED, [], [Defined if building against uninstalled FFmpeg source])
+fi
 AM_CONDITIONAL(HAVE_FFMPEG_UNINSTALLED, test x$HAVE_FFMPEG_UNINSTALLED = x1)
 
 AC_CONFIG_FILES(

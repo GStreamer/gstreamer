@@ -27,6 +27,7 @@
 #include <avcodec.h>
 #include <libswscale/swscale.h>
 #else
+#include <ffmpeg/swscale.h>
 #include <ffmpeg/avcodec.h>
 #endif
 #include <string.h>

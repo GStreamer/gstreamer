@@ -33,42 +33,43 @@
 #include <postprocess.h>
 #else
 #include <ffmpeg/avcodec.h>
-#include <ffmpeg/libpostproc/postprocess.h>
+#include <postproc/postprocess.h>
 #endif
 
 
 typedef struct _PostProcDetails PostProcDetails;
 
-struct _PostProcDetails {
-  char  *shortname;
-  char  *longname;
-  char  *description;
+struct _PostProcDetails
+{
+  char *shortname;
+  char *longname;
+  char *description;
 };
 
 static PostProcDetails filterdetails[] = {
-  {"hb", "hdeblock",            "horizontal deblocking filter"},
-  {"vb", "vdeblock",            "vertical deblocking filter"},
-  {"h1", "x1hdeblock",          "experimental horizontal deblocking filter 1"},
-  {"v1", "x1vdeblock",          "experimental vertical deblocking filter 1"},
-  {"ha", "ahdeblock",           "another horizontal deblocking filter"},
-  {"va", "avdeblock",           "another vertical deblocking filter"},
-  {"dr", "dering",              "deringing filter"},
-  {"al", "autolevels",          "automatic brightness/contrast filter"},
-  {"lb", "linblenddeint",       "linear blend interpolater"},
-  {"li", "linipoldeint",        "linear interpolation deinterlacer"},
-  {"ci", "cubicipoldeint",      "cubic interpolation deinterlacer"},
-  {"md", "mediandeint",         "median deinterlacer"},
-  {"fd", "ffmpegdeint",         "ffmpeg deinterlacer"},
-  {"l5", "lowpass5",            "FIR lowpass deinterlacer"},
-  {"tn", "tmpnoise",            "temporal noise reducer"},
-  {"fq", "forcequant",          "force quantizer"},
-  {"de", "default",             "default filters"},
-  {NULL, NULL,                  NULL}
+  {"hb", "hdeblock", "horizontal deblocking filter"},
+  {"vb", "vdeblock", "vertical deblocking filter"},
+  {"h1", "x1hdeblock", "experimental horizontal deblocking filter 1"},
+  {"v1", "x1vdeblock", "experimental vertical deblocking filter 1"},
+  {"ha", "ahdeblock", "another horizontal deblocking filter"},
+  {"va", "avdeblock", "another vertical deblocking filter"},
+  {"dr", "dering", "deringing filter"},
+  {"al", "autolevels", "automatic brightness/contrast filter"},
+  {"lb", "linblenddeint", "linear blend interpolater"},
+  {"li", "linipoldeint", "linear interpolation deinterlacer"},
+  {"ci", "cubicipoldeint", "cubic interpolation deinterlacer"},
+  {"md", "mediandeint", "median deinterlacer"},
+  {"fd", "ffmpegdeint", "ffmpeg deinterlacer"},
+  {"l5", "lowpass5", "FIR lowpass deinterlacer"},
+  {"tn", "tmpnoise", "temporal noise reducer"},
+  {"fq", "forcequant", "force quantizer"},
+  {"de", "default", "default filters"},
+  {NULL, NULL, NULL}
 };
 
-typedef struct  _GstPostProc GstPostProc;
+typedef struct _GstPostProc GstPostProc;
 
-struct  _GstPostProc
+struct _GstPostProc
 {
   GstVideoFilter element;
 
@@ -96,9 +97,9 @@ struct  _GstPostProc
   gchar *cargs, *args;
 };
 
-typedef struct  _GstPostProcClass GstPostProcClass;
+typedef struct _GstPostProcClass GstPostProcClass;
 
-struct  _GstPostProcClass
+struct _GstPostProcClass
 {
   GstVideoFilterClass parent_class;
 
@@ -194,8 +195,8 @@ static void gst_post_proc_base_init (GstPostProcClass * klass);
 static void gst_post_proc_init (GstPostProc * pproc);
 static void gst_post_proc_dispose (GObject * object);
 
-static gboolean gst_post_proc_setcaps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps);
+static gboolean gst_post_proc_setcaps (GstBaseTransform * btrans,
+    GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_post_proc_transform_ip (GstBaseTransform * btrans,
     GstBuffer * in);
 
@@ -203,25 +204,25 @@ static GstFlowReturn gst_post_proc_transform_ip (GstBaseTransform * btrans,
 /*     GstStateChange transition); */
 
 static void gst_post_proc_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec *pspec);
+    guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_post_proc_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec *pspec);
+    guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_post_proc_deblock_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec *pspec);
+    guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_post_proc_deblock_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec *pspec);
+    guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_post_proc_autolevels_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec *pspec);
+    guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_post_proc_autolevels_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec *pspec);
+    guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_post_proc_tmpnoise_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec *pspec);
+    guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_post_proc_tmpnoise_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec *pspec);
+    guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_post_proc_forcequant_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec *pspec);
+    guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_post_proc_forcequant_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec *pspec);
+    guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstElementClass *parent_class = NULL;
 
@@ -239,15 +240,14 @@ gst_pp_scope_get_type (void)
   };
 
   if (!pp_scope_type) {
-    pp_scope_type =
-        g_enum_register_static ("GstPostProcPPScope", pp_scope);
+    pp_scope_type = g_enum_register_static ("GstPostProcPPScope", pp_scope);
   }
   return pp_scope_type;
 }
 
 #ifndef GST_DISABLE_GST_DEBUG
 static void
-gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)
+gst_ffmpeg_log_callback (void *ptr, int level, const char *fmt, va_list vl)
 {
   GstDebugLevel gst_level;
 
@@ -289,7 +289,7 @@ change_context (GstPostProc * postproc, gint width, gint height)
   if ((width != postproc->width) && (height != postproc->height)) {
     if (postproc->context)
       pp_free_context (postproc->context);
-    flags = oil_cpu_get_flags();
+    flags = oil_cpu_get_flags ();
     ppflags = (flags & OIL_IMPL_FLAG_MMX ? PP_CPU_CAPS_MMX : 0)
         | (flags & OIL_IMPL_FLAG_MMXEXT ? PP_CPU_CAPS_MMX2 : 0)
         | (flags & OIL_IMPL_FLAG_3DNOW ? PP_CPU_CAPS_3DNOW : 0)
@@ -327,9 +327,9 @@ append (gchar ** base, gchar * app)
 }
 
 static void
-change_mode (GstPostProc * postproc )
+change_mode (GstPostProc * postproc)
 {
-  GstPostProcClass * klass;
+  GstPostProcClass *klass;
   gchar *name;
 
   klass = (GstPostProcClass *) G_OBJECT_GET_CLASS (G_OBJECT (postproc));
@@ -356,19 +356,20 @@ gst_post_proc_base_init (GstPostProcClass * klass)
   gint ppidx;
 
   ppidx = GPOINTER_TO_INT (g_hash_table_lookup (global_plugins,
-      GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class))));
+          GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class))));
 
   details.longname = g_strdup_printf ("LibPostProc %s filter",
       filterdetails[ppidx].longname);
   details.klass = "Filter/Video";
   details.description = g_strdup_printf ("LibPostProc %s",
       filterdetails[ppidx].description);
-  details.author = "Edward Hervey <edward@fluendo.com>, Mark Nauwelaerts (manauw@skynet.be)";
+  details.author =
+      "Edward Hervey <edward@fluendo.com>, Mark Nauwelaerts (manauw@skynet.be)";
   gst_element_class_set_details (element_class, &details);
-  g_free(details.longname);
-  g_free(details.description);
+  g_free (details.longname);
+  g_free (details.description);
 
-  gst_element_class_add_pad_template (element_class, 
+  gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_post_proc_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_post_proc_sink_template));
@@ -379,7 +380,8 @@ gst_post_proc_base_init (GstPostProcClass * klass)
 static void
 gst_post_proc_class_init (GstPostProcClass * klass)
 {
-  GObjectClass  *gobject_class = G_OBJECT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
 /*   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass); */
   GstBaseTransformClass *btrans_class = GST_BASE_TRANSFORM_CLASS (klass);
   gint ppidx;
@@ -449,8 +451,7 @@ gst_post_proc_class_init (GstPostProcClass * klass)
     /* autolevels */
     g_object_class_install_property (gobject_class, PROP_RANGE,
         g_param_spec_boolean ("fully-range", "Fully Range",
-            "Stretch luminance to (0-255)",
-            DEFAULT_RANGE, G_PARAM_READWRITE));
+            "Stretch luminance to (0-255)", DEFAULT_RANGE, G_PARAM_READWRITE));
 
     gobject_class->set_property =
         GST_DEBUG_FUNCPTR (gst_post_proc_autolevels_set_property);
@@ -461,7 +462,7 @@ gst_post_proc_class_init (GstPostProcClass * klass)
     /* forcequant */
     g_object_class_install_property (gobject_class, PROP_QUANT,
         g_param_spec_int ("quantizer", "Force Quantizer",
-          "Quantizer to use (-1 = pp default)",
+            "Quantizer to use (-1 = pp default)",
             -1, G_MAXINT, DEFAULT_QUANT, G_PARAM_READWRITE));
 
     gobject_class->set_property =
@@ -508,7 +509,7 @@ gst_post_proc_init (GstPostProc * postproc)
 static void
 gst_post_proc_dispose (GObject * object)
 {
-  GstPostProc * postproc = (GstPostProc *) object;
+  GstPostProc *postproc = (GstPostProc *) object;
 
   if (postproc->mode)
     pp_free_mode (postproc->mode);
@@ -551,7 +552,7 @@ gst_post_proc_transform_ip (GstBaseTransform * btrans, GstBuffer * in)
   guint8 *outplane[3];
   guint8 *inplane[3];
 
-  /* postprocess the buffer !*/
+  /* postprocess the buffer ! */
   postproc = (GstPostProc *) btrans;
 
   stride[0] = postproc->ystride;
@@ -564,8 +565,8 @@ gst_post_proc_transform_ip (GstBaseTransform * btrans, GstBuffer * in)
   GST_DEBUG_OBJECT (postproc, "calling pp_postprocess, width:%d, height:%d",
       postproc->width, postproc->height);
 
-  pp_postprocess ((const guint8**) inplane, stride, outplane, stride,
-      postproc->width, postproc->height, (int8_t*) "", 0,
+  pp_postprocess ((const guint8 **) inplane, stride, outplane, stride,
+      postproc->width, postproc->height, (int8_t *) "", 0,
       postproc->mode, postproc->context, 0);
 
   return GST_FLOW_OK;
@@ -574,7 +575,7 @@ gst_post_proc_transform_ip (GstBaseTransform * btrans, GstBuffer * in)
 
 static void
 gst_post_proc_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec *pspec)
+    const GValue * value, GParamSpec * pspec)
 {
   GstPostProc *postproc = (GstPostProc *) object;
   gint quality;
@@ -583,16 +584,16 @@ gst_post_proc_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_QUALITY:
       quality = g_value_get_uint (value);
-    break;
+      break;
     case PROP_AUTOQ:
       postproc->autoq = g_value_get_boolean (value);
       break;
     case PROP_SCOPE:
       postproc->scope = g_value_get_enum (value);
       break;
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-    break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
 
   /* construct common args */
@@ -619,7 +620,7 @@ gst_post_proc_set_property (GObject * object, guint prop_id,
 
 static void
 gst_post_proc_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec *pspec)
+    GValue * value, GParamSpec * pspec)
 {
   GstPostProc *postproc = (GstPostProc *) object;
 
@@ -634,15 +635,15 @@ gst_post_proc_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, postproc->scope);
       break;
     default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-    break;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
 }
 
 
 static void
 gst_post_proc_deblock_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec *pspec)
+    const GValue * value, GParamSpec * pspec)
 {
   GstPostProc *postproc = (GstPostProc *) object;
 
@@ -670,8 +671,8 @@ gst_post_proc_deblock_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_post_proc_deblock_get_property ( GObject * object, guint prop_id,
-    GValue * value, GParamSpec *pspec )
+gst_post_proc_deblock_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   GstPostProc *postproc = (GstPostProc *) object;
 
@@ -690,7 +691,7 @@ gst_post_proc_deblock_get_property ( GObject * object, guint prop_id,
 
 static void
 gst_post_proc_tmpnoise_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec *pspec)
+    const GValue * value, GParamSpec * pspec)
 {
   GstPostProc *postproc = (GstPostProc *) object;
 
@@ -725,7 +726,7 @@ gst_post_proc_tmpnoise_set_property (GObject * object, guint prop_id,
 
 static void
 gst_post_proc_tmpnoise_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec *pspec )
+    GValue * value, GParamSpec * pspec)
 {
   GstPostProc *postproc = (GstPostProc *) object;
 
@@ -747,7 +748,7 @@ gst_post_proc_tmpnoise_get_property (GObject * object, guint prop_id,
 
 static void
 gst_post_proc_autolevels_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec *pspec)
+    const GValue * value, GParamSpec * pspec)
 {
   GstPostProc *postproc = (GstPostProc *) object;
 
@@ -771,7 +772,7 @@ gst_post_proc_autolevels_set_property (GObject * object, guint prop_id,
 
 static void
 gst_post_proc_autolevels_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec *pspec )
+    GValue * value, GParamSpec * pspec)
 {
   GstPostProc *postproc = (GstPostProc *) object;
 
@@ -787,7 +788,7 @@ gst_post_proc_autolevels_get_property (GObject * object, guint prop_id,
 
 static void
 gst_post_proc_forcequant_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec *pspec)
+    const GValue * value, GParamSpec * pspec)
 {
   GstPostProc *postproc = (GstPostProc *) object;
 
@@ -811,7 +812,7 @@ gst_post_proc_forcequant_set_property (GObject * object, guint prop_id,
 
 static void
 gst_post_proc_forcequant_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec *pspec )
+    GValue * value, GParamSpec * pspec)
 {
   GstPostProc *postproc = (GstPostProc *) object;
 
@@ -827,9 +828,9 @@ gst_post_proc_forcequant_get_property (GObject * object, guint prop_id,
 
 
 gboolean
-gst_post_proc_register(GstPlugin * plugin)
+gst_post_proc_register (GstPlugin * plugin)
 {
-  GTypeInfo     typeinfo = {
+  GTypeInfo typeinfo = {
     sizeof (GstPostProcClass),
     (GBaseInitFunc) gst_post_proc_base_init,
     NULL,
@@ -851,7 +852,7 @@ gst_post_proc_register(GstPlugin * plugin)
         GINT_TO_POINTER (i));
 
     /* create type_name */
-    type_name = g_strdup_printf("postproc_%s", filterdetails[i].longname);
+    type_name = g_strdup_printf ("postproc_%s", filterdetails[i].longname);
     if (g_type_from_name (type_name)) {
       g_free (type_name);
       continue;
@@ -866,11 +867,11 @@ gst_post_proc_register(GstPlugin * plugin)
 
     /* register element */
     if (!gst_element_register (plugin, type_name, GST_RANK_PRIMARY, type)) {
-      g_free(type_name);
+      g_free (type_name);
       return FALSE;
     }
 
-    g_free(type_name);
+    g_free (type_name);
   }
   g_hash_table_remove (global_plugins, GINT_TO_POINTER (0));
 
@@ -899,5 +900,3 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "postprocessing elements (" FFMPEG_SOURCE ")",
     plugin_init,
     PACKAGE_VERSION, "GPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
-
-

@@ -31,7 +31,9 @@
 #endif
 #else
 #include <ffmpeg/avformat.h>
+#ifdef HAVE_AVI_H
 #include <ffmpeg/avi.h>
+#endif
 #endif
 #include <gst/gst.h>
 
