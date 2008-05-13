@@ -230,6 +230,34 @@ static GstFlowReturn gst_fake_src_create (GstBaseSrc * src, guint64 offset,
 static guint gst_fake_src_signals[LAST_SIGNAL] = { 0 };
 
 static void
+marshal_VOID__MINIOBJECT_OBJECT (GClosure * closure, GValue * return_value,
+    guint n_param_values, const GValue * param_values, gpointer invocation_hint,
+    gpointer marshal_data)
+{
+  typedef void (*marshalfunc_VOID__MINIOBJECT_OBJECT) (gpointer obj,
+      gpointer arg1, gpointer arg2, gpointer data2);
+  register marshalfunc_VOID__MINIOBJECT_OBJECT callback;
+  register GCClosure *cc = (GCClosure *) closure;
+  register gpointer data1, data2;
+
+  g_return_if_fail (n_param_values == 3);
+
+  if (G_CCLOSURE_SWAP_DATA (closure)) {
+    data1 = closure->data;
+    data2 = g_value_peek_pointer (param_values + 0);
+  } else {
+    data1 = g_value_peek_pointer (param_values + 0);
+    data2 = closure->data;
+  }
+  callback =
+      (marshalfunc_VOID__MINIOBJECT_OBJECT) (marshal_data ? marshal_data : cc->
+      callback);
+
+  callback (data1, gst_value_get_mini_object (param_values + 1),
+      g_value_get_object (param_values + 2), data2);
+}
+
+static void
 gst_fake_src_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
@@ -351,7 +379,7 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
   gst_fake_src_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
-      gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2, GST_TYPE_BUFFER,
+      marshal_VOID__MINIOBJECT_OBJECT, G_TYPE_NONE, 2, GST_TYPE_BUFFER,
       GST_TYPE_PAD);
 
   gstbase_src_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fake_src_is_seekable);

@@ -1,5 +1,15 @@
 2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* plugins/elements/gstfakesink.c:
+	(marshal_VOID__MINIOBJECT_OBJECT), (gst_fake_sink_class_init):
+	* plugins/elements/gstfakesrc.c: (marshal_VOID__MINIOBJECT_OBJECT),
+	(gst_fake_src_class_init):
+	Use custom marshalers that take GstMiniObject as first parameter.
+	Using OBJECT as parameter while a GstMiniObject is given will lead
+	to assertions if built with G_ENABLE_DEBUG. Fixes bug #525532.
+
+2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* plugins/elements/gsttypefindelement.c:
 	(gst_type_find_element_handle_event),
 	(gst_type_find_element_send_cached_events),
