@@ -368,7 +368,7 @@ gst_type_find_handle_src_query (GstPad * pad, GstQuery * query)
       /* FIXME: this code assumes that there's no discont in the queue */
       switch (format) {
         case GST_FORMAT_BYTES:
-          peer_pos -= typefind->store->size;
+          peer_pos -= GST_BUFFER_SIZE (typefind->store);
           break;
         default:
           /* FIXME */
@@ -517,11 +517,23 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
           res = gst_pad_event_default (pad, event);
           break;
         }
+        case GST_EVENT_FLUSH_START:
+          GST_OBJECT_LOCK (typefind);
+          g_list_foreach (typefind->cached_events,
+              (GFunc) gst_mini_object_unref, NULL);
+          g_list_free (typefind->cached_events);
+          typefind->cached_events = NULL;
+          GST_OBJECT_UNLOCK (typefind);
+          gst_buffer_replace (&typefind->store, NULL);
+          res = gst_pad_event_default (pad, event);
+          break;
         default:
           GST_DEBUG_OBJECT (typefind, "Saving %s event to send later",
               GST_EVENT_TYPE_NAME (event));
+          GST_OBJECT_LOCK (typefind);
           typefind->cached_events =
               g_list_append (typefind->cached_events, event);
+          GST_OBJECT_UNLOCK (typefind);
           res = TRUE;
           break;
       }
@@ -542,6 +554,7 @@ gst_type_find_element_send_cached_events (GstTypeFindElement * typefind)
 {
   GList *l;
 
+  GST_OBJECT_LOCK (typefind);
   for (l = typefind->cached_events; l != NULL; l = l->next) {
     GstEvent *event = GST_EVENT (l->data);
 
@@ -551,6 +564,7 @@ gst_type_find_element_send_cached_events (GstTypeFindElement * typefind)
   }
   g_list_free (typefind->cached_events);
   typefind->cached_events = NULL;
+  GST_OBJECT_UNLOCK (typefind);
 }
 
 static gboolean
@@ -824,10 +838,13 @@ gst_type_find_element_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_caps_replace (&typefind->caps, NULL);
+
+      GST_OBJECT_LOCK (typefind);
       g_list_foreach (typefind->cached_events,
           (GFunc) gst_mini_object_unref, NULL);
       g_list_free (typefind->cached_events);
       typefind->cached_events = NULL;
+      GST_OBJECT_UNLOCK (typefind);
       break;
     default:
       break;

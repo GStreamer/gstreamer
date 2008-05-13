@@ -1,5 +1,15 @@
 2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_handle_src_query), (stop_typefinding),
+	(gst_type_find_element_handle_event),
+	(gst_type_find_element_send_cached_events),
+	(gst_type_find_element_change_state):
+	Forward FLUSH_START events immediately and clean up instead of
+	caching them.
+
+2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>
 
 	* libs/gst/base/gstbasetransform.c:
