@@ -1302,6 +1302,11 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           "The NOTE to put in SDES messages of this session",
           DEFAULT_SDES_NOTE, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_DO_LOST,
+      g_param_spec_boolean ("do-lost", "Do Lost",
+          "Send an event downstream when a packet is lost", DEFAULT_DO_LOST,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_provide_clock);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
