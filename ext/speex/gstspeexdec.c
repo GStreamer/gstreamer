@@ -466,7 +466,7 @@ speex_dec_sink_event (GstPad * pad, GstEvent * event)
         if (dec->segment.last_stop < start) {
           GstClockTime duration;
 
-          duration = dec->segment.last_stop - start;
+          duration = start - dec->segment.last_stop;
           speex_dec_chain_parse_data (dec, NULL, dec->segment.last_stop,
               duration);
         }
