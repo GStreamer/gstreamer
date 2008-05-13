@@ -1,3 +1,8 @@
+2008-05-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_class_init):
+	Actually add the do-lost property to the object.
+
 2008-05-12  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
