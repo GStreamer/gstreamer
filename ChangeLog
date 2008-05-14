@@ -1,3 +1,29 @@
+2008-05-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/interleave/Makefile.am:
+	* gst/interleave/deinterleave.h:
+	* gst/interleave/interleave.h:
+	* gst/interleave/plugin.h:
+	Split definitions into separate header files for better documentation
+	generation.
+	
+	* gst/interleave/deinterleave.c: (gst_deinterleave_base_init),
+	(gst_deinterleave_class_init), (gst_deinterleave_sink_setcaps),
+	(gst_deinterleave_process):
+	Don't use alloca, allow caps changes as long as the number of channels
+	does not change, don't use g_warning, return NOT_NEGOTIATED as early
+	as possible and some other cleanup.
+
+	* gst/interleave/interleave.c: (gst_interleave_base_init),
+	(gst_interleave_class_init):
+	Do some random cleanup.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/deinterleave.c: (GST_START_TEST),
+	(deinterleave_chain_func), (deinterleave_pad_added),
+	(deinterleave_suite):
+	Add unit tests for the deinterleave element.
+
 2008-05-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>

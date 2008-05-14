@@ -73,6 +73,7 @@ check_PROGRAMS = \
 	$(check_neon)      \
 	$(check_ofa)        \
 	$(check_timidity)  \
+	elements/deinterleave \
 	elements/interleave \
 	elements/rganalysis \
 	elements/rglimiter \

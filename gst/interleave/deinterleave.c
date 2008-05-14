@@ -3,6 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *                    2007 Andy Wingo <wingo at pobox.com>
+ *                    2008 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * deinterleave.c: deinterleave samples, based on interleave.c
  *
@@ -22,47 +23,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
 
 #include <gst/gst.h>
-
-
-#define GST_TYPE_DEINTERLEAVE            (gst_deinterleave_get_type())
-#define GST_DEINTERLEAVE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DEINTERLEAVE,GstDeinterleave))
-#define GST_DEINTERLEAVE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DEINTERLEAVE,GstDeinterleaveClass))
-#define GST_DEINTERLEAVE_GET_CLASS(obj) \
-        (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_DEINTERLEAVE,GstDeinterleaveClass))
-#define GST_IS_DEINTERLEAVE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DEINTERLEAVE))
-#define GST_IS_DEINTERLEAVE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DEINTERLEAVE))
-
-typedef struct _GstDeinterleave GstDeinterleave;
-typedef struct _GstDeinterleaveClass GstDeinterleaveClass;
-
-
-struct _GstDeinterleave
-{
-  GstElement element;
-
-  /*< private > */
-  GList *srcpads;
-  GstCaps *sinkcaps;
-  gint channels;
-
-  GstPad *sink;
-};
-
-struct _GstDeinterleaveClass
-{
-  GstElementClass parent_class;
-};
-
+#include "deinterleave.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_deinterleave_debug);
 #define GST_CAT_DEFAULT gst_deinterleave_debug
-
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src%d",
     GST_PAD_SRC,
@@ -85,26 +54,18 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_BOILERPLATE (GstDeinterleave, gst_deinterleave, GstElement,
     GST_TYPE_ELEMENT);
 
-
 static GstFlowReturn gst_deinterleave_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_deinterleave_sink_activate_push (GstPad * pad,
     gboolean active);
 
-
-static const GstElementDetails details =
-GST_ELEMENT_DETAILS ("Audio deinterleaver",
-    "Filter/Converter/Audio",
-    "Splits one interleaved multichannel audio stream into many mono audio streams",
-    "Andy Wingo <wingo at pobox.com>, " "Iain <iain@prettypeople.org>");
-
 static void
 gst_deinterleave_base_init (gpointer g_class)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_deinterleave_debug, "interleave", 0,
-      "interleave element");
-
-  gst_element_class_set_details (g_class, &details);
+  gst_element_class_set_details_simple (g_class, "Audio deinterleaver",
+      "Filter/Converter/Audio",
+      "Splits one interleaved multichannel audio stream into many mono audio streams",
+      "Andy Wingo <wingo at pobox.com>, " "Iain <iain@prettypeople.org>");
 
   gst_element_class_add_pad_template (g_class,
       gst_static_pad_template_get (&sink_template));
@@ -115,7 +76,8 @@ gst_deinterleave_base_init (gpointer g_class)
 static void
 gst_deinterleave_class_init (GstDeinterleaveClass * klass)
 {
-  /* pass */
+  GST_DEBUG_CATEGORY_INIT (gst_deinterleave_debug, "deinterleave", 0,
+      "deinterleave element");
 }
 
 static void
@@ -179,20 +141,47 @@ static gboolean
 gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstDeinterleave *self;
+  GstCaps *srccaps;
+  GstStructure *s;
 
   self = GST_DEINTERLEAVE (gst_pad_get_parent (pad));
 
   if (self->sinkcaps && !gst_caps_is_equal (caps, self->sinkcaps)) {
-    goto cannot_change_caps_dog;
+    GList *l;
+    gint new_channels;
+
+    if (!caps)
+      goto cannot_change_caps;
+
+    s = gst_caps_get_structure (caps, 0);
+
+    /* We allow caps changes as long as the number of channels doesn't change */
+    if (!gst_structure_get_int (s, "channels", &new_channels) ||
+        new_channels != self->channels)
+      goto cannot_change_caps;
+
+    GST_DEBUG_OBJECT (self, "got caps: %" GST_PTR_FORMAT, caps);
+    gst_caps_replace (&self->sinkcaps, caps);
+
+    /* Set new caps on all srcpads */
+    srccaps = gst_caps_copy (caps);
+    s = gst_caps_get_structure (srccaps, 0);
+    gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
+    gst_structure_remove_field (s, "channel-positions");
+
+    for (l = self->srcpads; l; l = l->next) {
+      GstPad *pad = GST_PAD (l->data);
+
+      if (!gst_pad_set_caps (pad, srccaps))
+        goto cannot_change_caps;
+    }
+
+    gst_caps_unref (srccaps);
   } else {
     GST_DEBUG_OBJECT (self, "got caps: %" GST_PTR_FORMAT, caps);
     gst_caps_replace (&self->sinkcaps, caps);
-  }
 
-  {
-    GstCaps *srccaps;
-    GstStructure *s;
-
+    /* Add all srcpads */
     srccaps = gst_caps_copy (caps);
     s = gst_caps_get_structure (srccaps, 0);
     if (!gst_structure_get_int (s, "channels", &self->channels))
@@ -207,14 +196,15 @@ gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   return TRUE;
 
-cannot_change_caps_dog:
+cannot_change_caps:
   {
+    GST_ERROR_OBJECT (self, "can't set new caps: %" GST_PTR_FORMAT, caps);
     gst_object_unref (self);
     return FALSE;
   }
 no_channels:
   {
-    g_warning ("yarr, shiver me timbers");
+    GST_ERROR_OBJECT (self, "invalid caps");
     gst_object_unref (self);
     return FALSE;
   }
@@ -225,37 +215,45 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;      /* initialized to silence a warning */
   GList *srcs;
-  guint bufsize, i, j, channels, pads_pushed, nframes;
+  guint bufsize, i, j, channels, pads_pushed, buffers_allocated, nframes;
   GstBuffer **buffers_out;
   gfloat *in, *out;
 
   channels = self->channels;
-  buffers_out = g_alloca (sizeof (GstBuffer *) * channels);
+  buffers_out = g_new0 (GstBuffer *, channels);
   nframes = GST_BUFFER_SIZE (buf) / channels / sizeof (gfloat);
   bufsize = nframes * sizeof (gfloat);
   pads_pushed = 0;
+  buffers_allocated = 0;
 
-  for (i = 0; i < channels; i++)
-    buffers_out[i] = NULL;
-
+  /* Allocate buffers */
   for (srcs = self->srcpads, i = 0; srcs; srcs = srcs->next, i++) {
     GstPad *pad = (GstPad *) srcs->data;
 
     buffers_out[i] = NULL;
-    ret = gst_pad_alloc_buffer (pad, -1, bufsize, GST_PAD_CAPS (pad),
-        &buffers_out[i]);
+    ret =
+        gst_pad_alloc_buffer (pad, GST_BUFFER_OFFSET_NONE, bufsize,
+        GST_PAD_CAPS (pad), &buffers_out[i]);
 
     if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
       goto alloc_buffer_failed;
     if (buffers_out[i] && GST_BUFFER_SIZE (buffers_out[i]) != bufsize)
       goto alloc_buffer_bad_size;
 
-    if (buffers_out[i])
+    if (buffers_out[i]) {
       gst_buffer_copy_metadata (buffers_out[i], buf,
-          GST_BUFFER_COPY_TIMESTAMPS);
+          GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
+      buffers_allocated++;
+    }
   }
 
-  /* do the thing */
+  /* Return NOT_LINKED if we couldn't allocate any buffers */
+  if (!buffers_allocated) {
+    ret = GST_FLOW_NOT_LINKED;
+    goto done;
+  }
+
+  /* deinterleave */
   for (srcs = self->srcpads, i = 0; srcs; srcs = srcs->next, i++) {
     GstPad *pad = (GstPad *) srcs->data;
 
@@ -263,8 +261,8 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
     in += i;                    /* gfloat * arith */
     if (buffers_out[i]) {
       out = (gfloat *) GST_BUFFER_DATA (buffers_out[i]);
-      for (j = 0; j < nframes; j++)
-        out[j] = in[j * channels];
+      for (j = 0; j < nframes * channels; j += channels)
+        *out++ = in[j];
 
       ret = gst_pad_push (pad, buffers_out[i]);
       buffers_out[i] = NULL;
@@ -280,7 +278,9 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
   if (!pads_pushed)
     ret = GST_FLOW_NOT_LINKED;
 
+done:
   gst_buffer_unref (buf);
+  g_free (buffers_out);
   return ret;
 
 alloc_buffer_failed:
@@ -307,6 +307,7 @@ clean_buffers:
         gst_buffer_unref (buffers_out[i]);
     }
     gst_buffer_unref (buf);
+    g_free (buffers_out);
     return ret;
   }
 }

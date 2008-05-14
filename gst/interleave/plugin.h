@@ -25,12 +25,7 @@
 
 
 #include <gst/gst.h>
-
-G_BEGIN_DECLS
-
-GType gst_interleave_get_type (void);
-GType gst_deinterleave_get_type (void);
-
-G_END_DECLS
+#include "interleave.h"
+#include "deinterleave.h"
 
 #endif /* __GST_PLUGIN_INTERLEAVE_H__ */
