@@ -1,3 +1,12 @@
+2008-05-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/adder/gstadder.c: (gst_adder_setcaps),
+	(gst_adder_class_init):
+	Correctly declare the supported endianness on the pad templates
+	and check for correct endianness in the set caps function. Adder
+	only supports native endianness.
+	Also use gst_element_class_set_details_simple().
+
 2008-05-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/xvimage/xvimagesink.c:

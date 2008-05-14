@@ -71,25 +71,33 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 /* elementfactory information */
-static const GstElementDetails adder_details = GST_ELEMENT_DETAILS ("Adder",
-    "Generic/Audio",
-    "Add N audio channels together",
-    "Thomas <thomas@apestaart.org>");
+
+#define CAPS \
+  "audio/x-raw-int, " \
+  "rate = (int) [ 1, MAX ], " \
+  "channels = (int) [ 1, MAX ], " \
+  "endianness = (int) BYTE_ORDER, " \
+  "width = (int) { 8, 16, 24, 32 }, " \
+  "depth = (int) [ 1, 32 ], " \
+  "signed = (boolean) { true, false } ;" \
+  "audio/x-raw-float, " \
+  "rate = (int) [ 1, MAX ], " \
+  "channels = (int) [ 1, MAX ], " \
+  "endianness = (int) BYTE_ORDER, " \
+  "width = (int) { 32, 64 }"
 
 static GstStaticPadTemplate gst_adder_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS (CAPS)
     );
 
 static GstStaticPadTemplate gst_adder_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink%d",
+GST_STATIC_PAD_TEMPLATE ("sink%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS (CAPS)
     );
 
 static void gst_adder_class_init (GstAdderClass * klass);
@@ -257,6 +265,10 @@ gst_adder_setcaps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (adder, "parse_caps sets adder to format float");
     adder->format = GST_ADDER_FORMAT_FLOAT;
     gst_structure_get_int (structure, "width", &adder->width);
+    gst_structure_get_int (structure, "endianness", &adder->endianness);
+
+    if (adder->endianness != G_BYTE_ORDER)
+      goto not_supported;
 
     switch (adder->width) {
       case 32:
@@ -567,7 +579,9 @@ gst_adder_class_init (GstAdderClass * klass)
       gst_static_pad_template_get (&gst_adder_src_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_adder_sink_template));
-  gst_element_class_set_details (gstelement_class, &adder_details);
+  gst_element_class_set_details_simple (gstelement_class, "Adder",
+      "Generic/Audio",
+      "Add N audio channels together", "Thomas <thomas@apestaart.org>");
 
   parent_class = g_type_class_peek_parent (klass);
 
