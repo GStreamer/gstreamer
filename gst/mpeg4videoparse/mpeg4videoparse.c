@@ -798,12 +798,12 @@ gst_mpeg4vparse_init (GstMpeg4VParse * parse, GstMpeg4VParseClass * g_class)
       GST_DEBUG_FUNCPTR (gst_mpeg4vparse_sink_event));
   gst_pad_set_setcaps_function (parse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_mpeg4vparse_sink_setcaps));
-  gst_pad_use_fixed_caps (parse->srcpad);
   gst_element_add_pad (GST_ELEMENT (parse), parse->sinkpad);
 
   parse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_query_function (parse->srcpad,
       GST_DEBUG_FUNCPTR (gst_mpeg4vparse_src_query));
+  gst_pad_use_fixed_caps (parse->srcpad);
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 
   parse->adapter = gst_adapter_new ();

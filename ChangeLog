@@ -1,3 +1,8 @@
+2008-05-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/mpeg4videoparse/mpeg4videoparse.c: (gst_mpeg4vparse_init):
+	Set fixed caps on the srcpad after we created the pad...
+
 2008-05-14  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* tests/check/Makefile.am:
