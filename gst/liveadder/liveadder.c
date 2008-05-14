@@ -543,6 +543,7 @@ gst_live_adder_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (adder->srcpad, event);
       ret = gst_live_adder_src_activate_push (adder->srcpad, TRUE);
       GST_OBJECT_LOCK (adder);
+      reset_pad_private (pad);
       adder->segment_pending = TRUE;
       GST_OBJECT_UNLOCK (adder);
       break;
