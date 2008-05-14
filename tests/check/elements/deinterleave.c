@@ -22,6 +22,7 @@
 #endif
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/multichannel.h>
 
 GST_START_TEST (test_create_and_unref)
 {
@@ -340,6 +341,187 @@ GST_START_TEST (test_2_channels_caps_change)
 GST_END_TEST;
 
 
+#define SAMPLES_PER_BUFFER  10
+#define NUM_CHANNELS        8
+#define SAMPLE_RATE         44100
+
+static guint pads_created;
+
+static void
+set_channel_positions (GstCaps * caps, int channels,
+    GstAudioChannelPosition * channelpositions)
+{
+  GValue chanpos = { 0 };
+  GValue pos = { 0 };
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  int c;
+
+  g_value_init (&chanpos, GST_TYPE_ARRAY);
+  g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
+
+  for (c = 0; c < channels; c++) {
+    g_value_set_enum (&pos, channelpositions[c]);
+    gst_value_array_append_value (&chanpos, &pos);
+  }
+  g_value_unset (&pos);
+
+  gst_structure_set_value (structure, "channel-positions", &chanpos);
+  g_value_unset (&chanpos);
+}
+
+static void
+src_handoff_float32_8ch (GstElement * src, GstBuffer * buf, GstPad * pad,
+    gpointer user_data)
+{
+  GstAudioChannelPosition layout[NUM_CHANNELS];
+  GstCaps *caps;
+  gfloat *data;
+  guint size, i, c;
+
+  caps = gst_caps_new_simple ("audio/x-raw-float",
+      "width", G_TYPE_INT, 32,
+      "depth", G_TYPE_INT, 32,
+      "channels", G_TYPE_INT, NUM_CHANNELS,
+      "rate", G_TYPE_INT, SAMPLE_RATE,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
+
+  for (i = 0; i < NUM_CHANNELS; ++i)
+    layout[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+
+  set_channel_positions (caps, NUM_CHANNELS, layout);
+
+  size = sizeof (gfloat) * SAMPLES_PER_BUFFER * NUM_CHANNELS;
+  data = (gfloat *) g_malloc (size);
+
+  GST_BUFFER_MALLOCDATA (buf) = (guint8 *) data;
+  GST_BUFFER_DATA (buf) = (guint8 *) data;
+  GST_BUFFER_SIZE (buf) = size;
+
+  GST_BUFFER_OFFSET (buf) = 0;
+  GST_BUFFER_TIMESTAMP (buf) = 0;
+
+  for (i = 0; i < SAMPLES_PER_BUFFER; ++i) {
+    for (c = 0; c < NUM_CHANNELS; ++c) {
+      *data = (gfloat) ((i * NUM_CHANNELS) + c);
+      ++data;
+    }
+  }
+
+  gst_buffer_set_caps (buf, caps);
+  gst_caps_unref (caps);
+}
+
+static gboolean
+float_buffer_check_probe (GstPad * pad, GstBuffer * buf, gpointer userdata)
+{
+  gfloat *data;
+  guint padnum, numpads;
+  guint num, i;
+
+  fail_unless_equals_int (sscanf (GST_PAD_NAME (pad), "src%u", &padnum), 1);
+
+  numpads = pads_created;
+
+  data = (gfloat *) GST_BUFFER_DATA (buf);
+  num = GST_BUFFER_SIZE (buf) / sizeof (gfloat);
+
+  for (i = 0; i < num; ++i) {
+    guint val, rest;
+
+    val = (guint) data[i];
+    GST_LOG ("%s[%u]: %8f", GST_PAD_NAME (pad), i, data[i]);
+    /* can't use the modulo operator in the assertion statement, since due to
+     * the way it gets expanded it would be interpreted as a printf operator
+     * in the failure case, which will result in segfaults */
+    rest = val % numpads;
+    /* check that the first channel is on pad src0, the second on src1 etc. */
+    fail_unless_equals_int (rest, padnum);
+  }
+
+  return TRUE;                  /* don't drop data */
+}
+
+static void
+pad_added_setup_data_check_float32_8ch_cb (GstElement * deinterleave,
+    GstPad * pad, GstElement * pipeline)
+{
+  GstElement *queue, *sink;
+  GstPad *sinkpad;
+
+  queue = gst_element_factory_make ("queue", NULL);
+  fail_unless (queue != NULL);
+
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (sink != NULL);
+
+  gst_bin_add_many (GST_BIN (pipeline), queue, sink, NULL);
+  fail_unless (gst_element_link_many (queue, sink, NULL));
+
+  sinkpad = gst_element_get_pad (queue, "sink");
+  fail_unless_equals_int (gst_pad_link (pad, sinkpad), GST_PAD_LINK_OK);
+  gst_object_unref (sinkpad);
+
+  gst_pad_add_buffer_probe (pad, G_CALLBACK (float_buffer_check_probe), NULL);
+
+  gst_element_set_state (sink, GST_STATE_PLAYING);
+  gst_element_set_state (queue, GST_STATE_PLAYING);
+
+  GST_LOG ("new pad: %s", GST_PAD_NAME (pad));
+  ++pads_created;
+}
+
+static GstElement *
+make_fake_src_8chans_float32 (void)
+{
+  GstElement *src;
+
+  src = gst_element_factory_make ("fakesrc", "src");
+  fail_unless (src != NULL, "failed to create fakesrc element");
+
+  g_object_set (src, "num-buffers", 1, NULL);
+  g_object_set (src, "signal-handoffs", TRUE, NULL);
+
+  g_signal_connect (src, "handoff", G_CALLBACK (src_handoff_float32_8ch), NULL);
+
+  return src;
+}
+
+GST_START_TEST (test_8_channels_float32)
+{
+  GstElement *pipeline, *src, *deinterleave;
+  GstMessage *msg;
+
+  pipeline = (GstElement *) gst_pipeline_new ("pipeline");
+  fail_unless (pipeline != NULL, "failed to create pipeline");
+
+  src = make_fake_src_8chans_float32 ();
+
+  deinterleave = gst_element_factory_make ("deinterleave", "deinterleave");
+  fail_unless (deinterleave != NULL, "failed to create deinterleave element");
+
+  gst_bin_add_many (GST_BIN (pipeline), src, deinterleave, NULL);
+
+  fail_unless (gst_element_link (src, deinterleave),
+      "failed to link src <=> deinterleave");
+
+  g_signal_connect (deinterleave, "pad-added",
+      G_CALLBACK (pad_added_setup_data_check_float32_8ch_cb), pipeline);
+
+  pads_created = 0;
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  msg = gst_bus_poll (GST_ELEMENT_BUS (pipeline), GST_MESSAGE_EOS, -1);
+  gst_message_unref (msg);
+
+  fail_unless_equals_int (pads_created, NUM_CHANNELS);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 deinterleave_suite (void)
 {
@@ -351,6 +533,7 @@ deinterleave_suite (void)
   tcase_add_test (tc_chain, test_2_channels);
   tcase_add_test (tc_chain, test_2_channels_1_linked);
   tcase_add_test (tc_chain, test_2_channels_caps_change);
+  tcase_add_test (tc_chain, test_8_channels_float32);
 
   return s;
 }
