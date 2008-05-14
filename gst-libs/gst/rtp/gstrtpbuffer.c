@@ -1033,21 +1033,15 @@ gst_rtp_buffer_default_clock_rate (guint8 payload_type)
  * Compare two sequence numbers, taking care of wraparounds. This function
  * returns the difference between @seqnum1 and @seqnum2.
  *
- * Returns: a negative value if @seqnum1 is before @seqnum2, 0 if they are equal
- * or a positive value if  @seqnum1 is bigger than @segnum2.
+ * Returns: a negative value if @seqnum1 is bigger than @seqnum2, 0 if they
+ * are equal or a positive value if @seqnum1 is smaller than @segnum2.
  *
  * Since: 0.10.15
  */
 gint
 gst_rtp_buffer_compare_seqnum (guint16 seqnum1, guint16 seqnum2)
 {
-  /* check if diff more than half of the 16bit range */
-  if (abs (seqnum2 - seqnum1) > (1 << 15)) {
-    /* one of a/b has wrapped */
-    return seqnum1 - seqnum2;
-  } else {
-    return seqnum2 - seqnum1;
-  }
+  return (gint16) (seqnum2 - seqnum1);
 }
 
 /**

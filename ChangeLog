@@ -1,3 +1,14 @@
+2008-05-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Bernard B <b-gnome at largestprime dot net>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c: (gst_rtp_buffer_compare_seqnum):
+	Fix seqnum compare function for bordercase values and fix the docs
+	again. Fixes #533075.
+
+	* tests/check/libs/rtp.c: (GST_START_TEST), (rtp_suite):
+	Add a testcase for seqnum compare function.
+
 2008-05-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/adder/gstadder.c: (gst_adder_setcaps),
