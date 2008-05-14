@@ -126,6 +126,9 @@ static gboolean
 gst_live_adder_sink_event (GstPad * pad, GstEvent * event);
 
 
+static void
+reset_pad_private (GstPad *pad);
+
 /* clipping versions */
 #define MAKE_FUNC(name,type,ttype,min,max)                      \
 static void name (type *out, type *in, gint bytes) {            \
@@ -1327,9 +1330,8 @@ gst_live_adder_release_pad (GstElement * element, GstPad * pad)
 }
 
 static void
-reset_pad_private (gpointer data, gpointer unused)
+reset_pad_private (GstPad *pad)
 {
-  GstPad *pad = data;
   GstLiveAdderPadPrivate *padprivate;
 
   padprivate = gst_pad_get_element_private (pad);
@@ -1358,7 +1360,7 @@ gst_live_adder_change_state (GstElement * element, GstStateChange transition)
         adder->segment_pending = TRUE;
         adder->peer_latency = 0;
         adder->next_timestamp = GST_CLOCK_TIME_NONE;
-        g_list_foreach (adder->sinkpads, reset_pad_private, NULL);
+        g_list_foreach (adder->sinkpads, (GFunc) reset_pad_private, NULL);
         GST_OBJECT_UNLOCK (adder);
         break;
       }
