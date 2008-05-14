@@ -437,6 +437,11 @@ gst_live_adder_flush_start (GstLiveAdder * adder)
   GST_OBJECT_LOCK (adder);
   /* mark ourselves as flushing */
   adder->srcresult = GST_FLOW_WRONG_STATE;
+
+  /* Empty the queue */
+  g_queue_foreach (adder->buffers, (GFunc) gst_mini_object_unref, NULL);
+  while (g_queue_pop_head (adder->buffers)) {}
+
   /* unlock clock, we just unschedule, the entry will be released by the
    * locking streaming thread. */
   if (adder->clock_id)
