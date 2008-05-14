@@ -1,6 +1,12 @@
 2008-05-14  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* tests/check/Makefile.am:
+	  Remove deinterleave test from VALGRIND_TO_FIX again now that
+	  there are suppressions in gst.supp which make this work for me.
+
+2008-05-14  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* tests/check/Makefile.am:
 	  Add deinterleave unit test to VALGRIND_TO_FIX, since it causes
 	  weird invalid free errors in valgrind/libc after _exit for some
 	  reason.

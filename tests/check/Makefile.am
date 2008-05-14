@@ -59,7 +59,6 @@ endif
 
 
 VALGRIND_TO_FIX = \
-	elements/deinterleave \
 	elements/mpeg2enc \
 	elements/mplex
 
