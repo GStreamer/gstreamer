@@ -1,3 +1,18 @@
+2008-05-14  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* tests/check/Makefile.am:
+	  Add deinterleave unit test to VALGRIND_TO_FIX, since it causes
+	  weird invalid free errors in valgrind/libc after _exit for some
+	  reason.
+
+	* tests/check/elements/deinterleave.c: (pads_created),
+	  (set_channel_positions), (src_handoff_float32_8ch),
+	  (float_buffer_check_probe),
+	  (pad_added_setup_data_check_float32_8ch_cb),
+	  (make_fake_src_8chans_float32), (GST_START_TEST),
+	  (deinterleave_suite):
+	  Add some more deinterleave unit test bits I had locally.
+
 2008-05-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/interleave/Makefile.am:

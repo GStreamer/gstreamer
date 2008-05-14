@@ -59,6 +59,7 @@ endif
 
 
 VALGRIND_TO_FIX = \
+	elements/deinterleave \
 	elements/mpeg2enc \
 	elements/mplex
 
@@ -87,6 +88,9 @@ TESTS = $(check_PROGRAMS)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)  $(GST_OPTION_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
+
+elements_deinterleave_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+elements_deinterleave_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
 
 elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
