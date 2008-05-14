@@ -1,3 +1,11 @@
+2008-05-14  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/audioresample/gstaudioresample.c: (gst_audioresample_init):
+	  Revert previous change which made basetransform handle buffer_alloc
+	  and which breaks things badly in the non-passthrough case since it
+	  returned buffers with a different (ie. sometimes smaller) size than
+	  the size requested.
+
 2008-05-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Bernard B <b-gnome at largestprime dot net>
