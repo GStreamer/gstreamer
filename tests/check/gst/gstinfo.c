@@ -180,6 +180,16 @@ GST_START_TEST (info_segment_format_printf_extension)
 
 GST_END_TEST;
 
+GST_START_TEST (info_log_handler)
+{
+  guint removed;
+
+  removed = gst_debug_remove_log_function (gst_debug_log_default);
+  fail_unless (removed == 1);
+}
+
+GST_END_TEST;
+
 #endif
 
 static Suite *
@@ -194,6 +204,7 @@ gst_info_suite (void)
 #ifndef GST_DISABLE_GST_DEBUG
   tcase_add_test (tc_chain, info_segment_format_printf_extension);
   tcase_add_test (tc_chain, info_ptr_format_printf_extension);
+  tcase_add_test (tc_chain, info_log_handler);
 #endif
 
   return s;

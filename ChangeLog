@@ -1,3 +1,9 @@
+2008-05-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/gst/gstinfo.c:
+	Add a test for removing the default log handler. Seems to fail under
+	windows.
+
 2008-05-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstpad.c: (gst_pad_peer_accept_caps):
