@@ -1,5 +1,12 @@
 2008-05-14  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	Patch by: Jan Schmidt <thaytan at mad dot scientist dot com>
+	* gst/__init__.py:
+	Make gst.Fraction simplify like the C counterpart
+	Fixes #532809
+
+2008-05-14  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/gstcaps.override:
 	Fix typo
 

@@ -77,9 +77,36 @@ class FractionRange(Value):
 
 class Fraction(Value):
     def __init__(self, num, denom=1):
+        def __gcd(a,b):
+            while b != 0:
+                tmp = a
+                a = b
+                b = tmp % b
+            return abs(a)
+
+        def __simplify():
+            num = self.num
+            denom = self.denom
+    
+            if num < 0:
+                num = -num
+                denom = -denom
+    
+            # Compute greatest common divisor
+            gcd = __gcd(num,denom)
+            if gcd != 0:
+              num /= gcd
+              denom /= gcd
+    
+            self.num = num
+            self.denom = denom
+
         Value.__init__(self, 'fraction')
+    
         self.num = num
         self.denom = denom
+
+        __simplify()
 
     def __repr__(self):
         return '<gst.Fraction %d/%d>' % (self.num, self.denom)
@@ -117,7 +144,6 @@ class Fraction(Value):
 
     def __float__(self):
         return float(self.num) / float(self.denom)
-
 
 import sys
 dlsave = sys.getdlopenflags()
