@@ -1,3 +1,14 @@
+2008-05-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstinfo.c:
+	  Explain why we copy the list.
+
+	* gst/gstpipeline.c:
+	  Improve docs.
+
+	* gst/gstutils.c:
+	  Add one debug-log statement to help tracing probelms with linking pads.
+
 2008-05-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/gst/gstinfo.c:

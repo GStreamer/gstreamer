@@ -959,6 +959,10 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
   }
   gst_iterator_free (pads);
 
+  GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
+      "Could not find a compatible unlinked always pad to link to %s:%s, now checking request pads",
+      GST_DEBUG_PAD_NAME (pad));
+
   /* try to create a new one */
   /* requesting is a little crazy, we need a template. Let's create one */
   templcaps = gst_pad_get_caps (pad);

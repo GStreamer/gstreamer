@@ -799,6 +799,8 @@ gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
   new = __log_functions;
   while ((found = g_slist_find_custom (new, data, func))) {
     if (new == __log_functions) {
+      /* make a copy when we have the first hit, so that we modify the copy and
+       * make that the new list later */
       new = g_slist_copy (new);
       continue;
     }
