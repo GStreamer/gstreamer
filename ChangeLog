@@ -1,3 +1,10 @@
+2008-05-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/inspect/plugin-ladspa.xml:
+	  Remove ladspa fro plugin-docs, its in gst-plugins-bad.
+
 2008-05-13  Mark Nauwelaerts  <mnauw@users.sf.net>
 
 	* gst/avi/gstavimux.c: (gst_avi_mux_start_file):

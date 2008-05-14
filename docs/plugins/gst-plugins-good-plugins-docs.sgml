@@ -125,7 +125,6 @@
     <xi:include href="xml/plugin-icydemux.xml" />
     <xi:include href="xml/plugin-id3demux.xml" />
     <xi:include href="xml/plugin-jpeg.xml" />
-    <xi:include href="xml/plugin-ladspa.xml" />
     <xi:include href="xml/plugin-level.xml" />
     <xi:include href="xml/plugin-matroska.xml" />
     <xi:include href="xml/plugin-monoscope.xml" />
