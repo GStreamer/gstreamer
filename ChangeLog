@@ -1,5 +1,13 @@
 2008-05-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_chain):
+	Simply drop bad RTP packets with a warning instead of just posting an
+	error and stopping. This is a perfectly recoverable event and we don't
+	force people to use an rtpbin to filter out bad packets first.
+
+2008-05-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/mpeg4videoparse/mpeg4videoparse.c: (gst_mpeg4vparse_init):
 	Set fixed caps on the srcpad after we created the pad...
 
