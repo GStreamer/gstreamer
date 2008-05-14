@@ -45,44 +45,10 @@
 #endif
 
 #include <gst/gst.h>
-
-
-#define GST_TYPE_INTERLEAVE            (gst_interleave_get_type())
-#define GST_INTERLEAVE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_INTERLEAVE,GstInterleave))
-#define GST_INTERLEAVE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_INTERLEAVE,GstInterleaveClass))
-#define GST_INTERLEAVE_GET_CLASS(obj) \
-        (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_INTERLEAVE,GstInterleaveClass))
-#define GST_IS_INTERLEAVE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_INTERLEAVE))
-#define GST_IS_INTERLEAVE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_INTERLEAVE))
-
-
-typedef struct _GstInterleave GstInterleave;
-typedef struct _GstInterleaveClass GstInterleaveClass;
-
-
-struct _GstInterleave
-{
-  GstElement element;
-
-  GstCaps *sinkcaps;
-  guint channels;
-
-  GstPad *src;
-
-  GstActivateMode mode;
-
-  guint pending_in;
-};
-
-struct _GstInterleaveClass
-{
-  GstElementClass parent_class;
-};
-
+#include "interleave.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_interleave_debug);
 #define GST_CAT_DEFAULT gst_interleave_debug
-
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink%d",
     GST_PAD_SINK,
@@ -156,20 +122,13 @@ static gboolean gst_interleave_src_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_interleave_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_interleave_src_getcaps (GstPad * pad);
 
-
-static const GstElementDetails details =
-GST_ELEMENT_DETAILS ("Audio interleaver",
-    "Filter/Converter/Audio",
-    "Folds many mono channels into one interleaved audio stream",
-    "Andy Wingo <wingo at pobox.com>");
-
 static void
 gst_interleave_base_init (gpointer g_class)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_interleave_debug, "interleave", 0,
-      "interleave element");
-
-  gst_element_class_set_details (g_class, &details);
+  gst_element_class_set_details_simple (g_class, "Audio interleaver",
+      "Filter/Converter/Audio",
+      "Folds many mono channels into one interleaved audio stream",
+      "Andy Wingo <wingo at pobox.com>");
 
   gst_element_class_add_pad_template (g_class,
       gst_static_pad_template_get (&sink_template));
@@ -183,6 +142,9 @@ gst_interleave_class_init (GstInterleaveClass * klass)
   GstElementClass *gstelement_class;
 
   gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (gst_interleave_debug, "interleave", 0,
+      "interleave element");
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_interleave_request_new_pad);
