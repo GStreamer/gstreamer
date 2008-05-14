@@ -1366,20 +1366,33 @@ gst_live_adder_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      {
-        GST_OBJECT_LOCK (adder);
-        adder->segment_pending = TRUE;
-        adder->peer_latency = 0;
-        adder->next_timestamp = GST_CLOCK_TIME_NONE;
-        g_list_foreach (adder->sinkpads, (GFunc) reset_pad_private, NULL);
-        GST_OBJECT_UNLOCK (adder);
-        break;
-      }
+      GST_OBJECT_LOCK (adder);
+      adder->segment_pending = TRUE;
+      adder->peer_latency = 0;
+      adder->next_timestamp = GST_CLOCK_TIME_NONE;
+      g_list_foreach (adder->sinkpads, (GFunc) reset_pad_private, NULL);
+      GST_OBJECT_UNLOCK (adder);
+      break;
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      GST_OBJECT_LOCK (adder);
+      adder->playing = FALSE;
+      GST_OBJECT_UNLOCK (adder);
+      break;
     default:
       break;
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      GST_OBJECT_LOCK (adder);
+      adder->playing = TRUE;
+      GST_OBJECT_UNLOCK (adder);
+      break;
+    default:
+      break;
+  }
 
   return ret;
 }
