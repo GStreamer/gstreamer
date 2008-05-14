@@ -1,3 +1,8 @@
+2008-05-14  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gstcaps.override:
+	Fix typo
+
 2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	Patch by: Johan Dahlin  <johan at gnome dot org>

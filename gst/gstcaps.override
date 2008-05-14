@@ -127,7 +127,7 @@ _wrap_gst_caps_new_empty(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 		}
 	}
 	if (!self->boxed) {
-		PyErr_SetString(PyExc_TypeError, "wrong arguemntes when creating GstCaps object");
+		PyErr_SetString(PyExc_TypeError, "wrong arguments when creating GstCaps object");
 		return -1;
 	}
 	return 0;
