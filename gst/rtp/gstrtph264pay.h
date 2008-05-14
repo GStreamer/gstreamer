@@ -49,6 +49,10 @@ struct _GstRtpH264Pay
 
   gboolean packetized;
   guint nal_length_size;
+
+  gchar *profile_level_id;
+  gchar *sprop_parameter_sets;
+  gboolean update_caps;
 };
 
 struct _GstRtpH264PayClass

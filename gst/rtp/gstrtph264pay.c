@@ -64,10 +64,25 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H264\"")
     );
 
+#define DEFAULT_PROFILE_LEVEL_ID        NULL
+#define DEFAULT_SPROP_PARAMETER_SETS    NULL
+
+enum
+{
+  ARG_0,
+  ARG_PROFILE_LEVEL_ID,
+  ARG_SPROP_PARAMETER_SETS
+};
+
 static void gst_rtp_h264_pay_finalize (GObject * object);
 
 static GstStateChangeReturn gst_rtp_h264_pay_change_state (GstElement * element,
     GstStateChange transition);
+
+static void gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static gboolean gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload,
     GstCaps * caps);
@@ -101,6 +116,22 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
+  gobject_class->set_property = gst_rtp_h264_pay_set_property;
+  gobject_class->get_property = gst_rtp_h264_pay_get_property;
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PROFILE_LEVEL_ID,
+      g_param_spec_string ("profile-level-id", "profile-level-id",
+          "The profile-level-id to set in out caps (set to NULL to extract from stream)",
+          DEFAULT_PROFILE_LEVEL_ID,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      ARG_SPROP_PARAMETER_SETS, g_param_spec_string ("sprop-parameter-sets",
+          "sprop-parameter-sets",
+          "The sprop-parameter-sets to set in out caps (set to NULL to extract from stream)",
+          DEFAULT_SPROP_PARAMETER_SETS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gobject_class->finalize = gst_rtp_h264_pay_finalize;
 
   gstelement_class->change_state = gst_rtp_h264_pay_change_state;
@@ -127,10 +158,11 @@ gst_rtp_h264_pay_finalize (GObject * object)
 
   rtph264pay = GST_RTP_H264_PAY (object);
 
-  if (rtph264pay->sps)
-    g_free (rtph264pay->sps);
-  if (rtph264pay->pps)
-    g_free (rtph264pay->pps);
+  g_free (rtph264pay->sps);
+  g_free (rtph264pay->pps);
+
+  g_free (rtph264pay->profile_level_id);
+  g_free (rtph264pay->sprop_parameter_sets);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -574,9 +606,23 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   pdata += 4;
   idxdata -= 4;
 
-  /* We know our stream is a valid H264 NAL packet, 
-   * go parse it for SPS/PPS to enrich the caps */
-  gst_rtp_h264_pay_parse_sps_pps (basepayload, pdata, idxdata);
+  if (rtph264pay->profile_level_id != NULL &&
+      rtph264pay->sprop_parameter_sets != NULL) {
+    if (rtph264pay->update_caps) {
+      gst_basertppayload_set_outcaps (basepayload, "profile-level-id",
+          G_TYPE_STRING, rtph264pay->profile_level_id, "sprop-parameter-sets",
+          G_TYPE_STRING, rtph264pay->sprop_parameter_sets, NULL);
+      rtph264pay->update_caps = FALSE;
+
+      GST_DEBUG
+          ("outcaps udpate: profile-level-id=%s, sprop-parameter-sets=%s\n",
+          rtph264pay->profile_level_id, rtph264pay->sprop_parameter_sets);
+    }
+  } else {
+    /* We know our stream is a valid H264 NAL packet,
+     * go parse it for SPS/PPS to enrich the caps */
+    gst_rtp_h264_pay_parse_sps_pps (basepayload, pdata, idxdata);
+  }
 
   nalType = pdata[0] & 0x1f;
   GST_DEBUG_OBJECT (basepayload, "Processing Buffer with NAL TYPE=%d", nalType);
@@ -696,6 +742,48 @@ gst_rtp_h264_pay_change_state (GstElement * element, GstStateChange transition)
       break;
   }
   return ret;
+}
+
+static void
+gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpH264Pay *rtph264pay;
+
+  rtph264pay = GST_RTP_H264_PAY (object);
+
+  switch (prop_id) {
+    case ARG_PROFILE_LEVEL_ID:
+      rtph264pay->profile_level_id = g_value_dup_string (value);
+      rtph264pay->update_caps = TRUE;
+      break;
+    case ARG_SPROP_PARAMETER_SETS:
+      rtph264pay->sprop_parameter_sets = g_value_dup_string (value);
+      rtph264pay->update_caps = TRUE;
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpH264Pay *rtph264pay;
+
+  rtph264pay = GST_RTP_H264_PAY (object);
+
+  switch (prop_id) {
+    case ARG_PROFILE_LEVEL_ID:
+      g_value_set_string (value, rtph264pay->profile_level_id);
+      break;
+    case ARG_SPROP_PARAMETER_SETS:
+      g_value_set_string (value, rtph264pay->sprop_parameter_sets);
+      break;
+    default:
+      break;
+  }
 }
 
 gboolean
