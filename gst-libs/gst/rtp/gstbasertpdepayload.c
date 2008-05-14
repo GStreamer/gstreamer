@@ -258,6 +258,9 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
 
   filter = GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
 
+  if (!gst_rtp_buffer_validate (in))
+    goto invalid_buffer;
+
   priv = filter->priv;
   priv->discont = GST_BUFFER_IS_DISCONT (in);
 
@@ -285,6 +288,16 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   gst_buffer_unref (in);
 
   return ret;
+
+  /* ERRORS */
+invalid_buffer:
+  {
+    /* this is not fatal but should be filtered earlier */
+    GST_ELEMENT_WARNING (filter, STREAM, DECODE, (NULL),
+        ("Received invalid RTP payload, dropping"));
+    gst_buffer_unref (in);
+    return GST_FLOW_OK;
+  }
 }
 
 static gboolean

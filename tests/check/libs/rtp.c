@@ -144,8 +144,9 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   data = GST_BUFFER_DATA (buf);
 
   /* should be impossible to set the extension data */
-  fail_unless (gst_rtp_buffer_set_extension_data (buf, 0, 4) == FALSE);
-  fail_unless (gst_rtp_buffer_get_extension (buf) == TRUE);
+  ASSERT_WARNING (fail_unless (gst_rtp_buffer_set_extension_data (buf, 0,
+              4) == FALSE));
+  fail_unless (gst_rtp_buffer_get_extension (buf) == FALSE);
 
   /* should be possible to set the extension data */
   fail_unless (gst_rtp_buffer_set_extension_data (buf, 270, 0) == TRUE);

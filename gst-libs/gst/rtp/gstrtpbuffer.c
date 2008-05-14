@@ -655,24 +655,31 @@ gst_rtp_buffer_set_extension_data (GstBuffer * buffer, guint16 bits,
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, FALSE);
 
-  gst_rtp_buffer_set_extension (buffer, TRUE);
+  /* check if the buffer is big enough to hold the extension */
   min_size =
       GST_RTP_HEADER_LEN + GST_RTP_HEADER_CSRC_SIZE (buffer) + 4 +
       length * sizeof (guint32);
+  if (G_UNLIKELY (min_size > GST_BUFFER_SIZE (buffer)))
+    goto too_small;
 
-  if (min_size > GST_BUFFER_SIZE (buffer)) {
-    GST_WARNING_OBJECT (buffer,
-        "rtp buffer too small: need more than %d bytes but only have %d bytes",
-        min_size, GST_BUFFER_SIZE (buffer));
-    return FALSE;
-  }
+  /* now we can set the extension bit */
+  gst_rtp_buffer_set_extension (buffer, TRUE);
 
-  data =
-      GST_BUFFER_DATA (buffer) + GST_RTP_HEADER_LEN +
+  data = GST_BUFFER_DATA (buffer) + GST_RTP_HEADER_LEN +
       GST_RTP_HEADER_CSRC_SIZE (buffer);
   GST_WRITE_UINT16_BE (data, bits);
   GST_WRITE_UINT16_BE (data + 2, length);
+
   return TRUE;
+
+  /* ERRORS */
+too_small:
+  {
+    g_warning
+        ("rtp buffer too small: need more than %d bytes but only have %d bytes",
+        min_size, GST_BUFFER_SIZE (buffer));
+    return FALSE;
+  }
 }
 
 /**
@@ -920,10 +927,8 @@ gst_rtp_buffer_get_payload_subbuffer (GstBuffer * buffer, guint offset,
 
   plen = gst_rtp_buffer_get_payload_len (buffer);
   /* we can't go past the length */
-  if (G_UNLIKELY (offset >= plen)) {
-    GST_WARNING ("offset=%u should be less then plen=%u", offset, plen);
-    return (NULL);
-  }
+  if (G_UNLIKELY (offset >= plen))
+    goto wrong_offset;
 
   /* apply offset */
   poffset = gst_rtp_buffer_get_header_len (buffer) + offset;
@@ -934,6 +939,13 @@ gst_rtp_buffer_get_payload_subbuffer (GstBuffer * buffer, guint offset,
     plen = len;
 
   return gst_buffer_create_sub (buffer, poffset, plen);
+
+  /* ERRORS */
+wrong_offset:
+  {
+    g_warning ("offset=%u should be less then plen=%u", offset, plen);
+    return NULL;
+  }
 }
 
 /**

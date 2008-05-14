@@ -1,3 +1,24 @@
+2008-05-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_chain):
+	Validate the RTP packet before further processing it. It's just too
+	dangerous to accept random packets and people are not forced to use a
+	jitterbuffer or session manager to filter out the bad packets.
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	(gst_rtp_buffer_set_extension_data),
+	(gst_rtp_buffer_get_payload_subbuffer):
+	Small cleanups.
+	When setting extension data in a buffer that is too small, we fail and
+	we should not set the extension bit.
+	Change GST_WARNINGS into g_warning because they really are
+	programming errors.
+
+	* tests/check/libs/rtp.c: (GST_START_TEST):
+	Catch the g_warnings now in the unit tests and that fact that failing to
+	set extension data left the extension bit untouched.
+
 2008-05-14  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/audioresample/gstaudioresample.c: (gst_audioresample_init):
