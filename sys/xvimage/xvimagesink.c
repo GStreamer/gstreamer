@@ -117,6 +117,8 @@
  * </refsect2>
  */
 
+/* for developers: there are two useful tools : xvinfo and xvattr */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -1343,34 +1345,30 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
 
   /* Set XV_AUTOPAINT_COLORKEY and XV_DOUBLE_BUFFER and XV_COLORKEY */
   {
-    int count;
+    int count, todo = 3;
     XvAttribute *const attr = XvQueryPortAttributes (xcontext->disp,
         xcontext->xv_port_id, &count);
     static const char autopaint[] = "XV_AUTOPAINT_COLORKEY";
     static const char dbl_buffer[] = "XV_DOUBLE_BUFFER";
     static const char colorkey[] = "XV_COLORKEY";
 
-    for (i = 0; i < count; i++)
+    GST_DEBUG_OBJECT (xvimagesink, "Checking %d Xv port attributes", count);
+
+    for (i = 0; ((i < count) && todo); i++)
       if (!strcmp (attr[i].name, autopaint)) {
         const Atom atom = XInternAtom (xcontext->disp, autopaint, False);
 
         XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom, 1);
-        break;
-      }
-
-    for (i = 0; i < count; i++)
-      if (!strcmp (attr[i].name, dbl_buffer)) {
+        todo--;
+      } else if (!strcmp (attr[i].name, dbl_buffer)) {
         const Atom atom = XInternAtom (xcontext->disp, dbl_buffer, False);
 
         XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
             (xvimagesink->double_buffer ? 1 : 0));
-        break;
-      }
-
-    /* Set the colorkey to something that is dark but hopefully won't randomly
-     * appear on the screen elsewhere (ie not black or greys) */
-    for (i = 0; i < count; i++)
-      if (!strcmp (attr[i].name, colorkey)) {
+        todo--;
+      } else if (!strcmp (attr[i].name, colorkey)) {
+        /* Set the colorkey to something that is dark but hopefully won't randomly
+         * appear on the screen elsewhere (ie not black or greys) */
         const Atom atom = XInternAtom (xcontext->disp, colorkey, False);
         guint32 ckey;
         guint32 keymask;
@@ -1395,7 +1393,6 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
         else
           set_attr = FALSE;
 
-
         if (set_attr) {
           ckey = CLAMP (ckey, (guint32) attr[i].min_value,
               (guint32) attr[i].max_value);
@@ -1406,10 +1403,10 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
           XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
               (gint) ckey);
         } else {
-          GST_LOG_OBJECT (xvimagesink,
-              "Unknown bit depth for Xv Colorkey - not adjusting ");
+          GST_DEBUG_OBJECT (xvimagesink,
+              "Unknown bit depth %d for Xv Colorkey - not adjusting", bits);
         }
-        break;
+        todo--;
       }
 
     XFree (attr);

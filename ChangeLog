@@ -1,3 +1,9 @@
+2008-05-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/xvimage/xvimagesink.c:
+	  Better debug logging in port value handling. Merging separate port
+	  value loops into one.
+
 2008-05-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Hannes Bistry <hannesb at gmx dot de>
