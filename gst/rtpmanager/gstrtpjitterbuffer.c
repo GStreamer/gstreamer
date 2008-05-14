@@ -945,12 +945,12 @@ finished:
   /* ERRORS */
 invalid_buffer:
   {
-    /* this is fatal and should be filtered earlier */
-    GST_ELEMENT_ERROR (jitterbuffer, STREAM, DECODE, (NULL),
-        ("Received invalid RTP payload"));
+    /* this is not fatal but should be filtered earlier */
+    GST_ELEMENT_WARNING (jitterbuffer, STREAM, DECODE, (NULL),
+        ("Received invalid RTP payload, dropping"));
     gst_buffer_unref (buffer);
     gst_object_unref (jitterbuffer);
-    return GST_FLOW_ERROR;
+    return GST_FLOW_OK;
   }
 not_negotiated:
   {
