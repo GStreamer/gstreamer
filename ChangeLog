@@ -1,5 +1,10 @@
 2008-05-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstpad.c: (gst_pad_peer_accept_caps):
+	Release pad lock before calling out to avoid a possible deadlock.
+
+2008-05-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/parse/grammar.y:
 	Remove unneeded value unset.
 

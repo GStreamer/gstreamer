@@ -2327,8 +2327,13 @@ gst_pad_peer_accept_caps (GstPad * pad, GstCaps * caps)
   if (G_UNLIKELY (peerpad == NULL))
     goto no_peer;
 
-  result = gst_pad_accept_caps (peerpad, caps);
+  gst_object_ref (peerpad);
+  /* release lock before calling external methods but keep ref to pad */
   GST_OBJECT_UNLOCK (pad);
+
+  result = gst_pad_accept_caps (peerpad, caps);
+
+  gst_object_unref (peerpad);
 
   return result;
 
