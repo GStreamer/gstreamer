@@ -1083,7 +1083,10 @@ gst_live_adder_loop (gpointer data)
 
   /* If we have no clock, then we can't do anything.. error */
   if (!clock) {
-    goto no_clock;
+    if (adder->playing)
+      goto no_clock;
+    else
+      goto push_buffer;
   }
 
   GST_DEBUG_OBJECT (adder, "sync to timestamp %" GST_TIME_FORMAT,
@@ -1121,6 +1124,8 @@ gst_live_adder_loop (gpointer data)
 
   if (ret != GST_CLOCK_OK && ret != GST_CLOCK_EARLY)
     goto clock_error;
+
+ push_buffer:
 
   buffer = g_queue_pop_head (adder->buffers);
 
