@@ -536,12 +536,14 @@ gst_live_adder_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (adder->srcpad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
-      ret = gst_pad_push_event (adder->srcpad, event);
-      ret = gst_live_adder_src_activate_push (adder->srcpad, TRUE);
       GST_OBJECT_LOCK (adder);
+      adder->segment_pending = TRUE;
+      adder->next_timestamp = GST_CLOCK_TIME_NONE;
       reset_pad_private (pad);
       adder->segment_pending = TRUE;
       GST_OBJECT_UNLOCK (adder);
+      ret = gst_pad_push_event (adder->srcpad, event);
+      ret = gst_live_adder_src_activate_push (adder->srcpad, TRUE);
       break;
     case GST_EVENT_EOS:
     {
