@@ -583,6 +583,81 @@ newseg_wrong_format:
   }
 }
 
+/* FIXME:
+ *
+ * When we add a new stream (or remove a stream) the duration might
+ * also become invalid again and we need to post a new DURATION
+ * message to notify this fact to the parent.
+ * For now we take the max of all the upstream elements so the simple
+ * cases work at least somewhat.
+ */
+static gboolean
+gst_live_adder_query_duration (GstLiveAdder * adder, GstQuery * query)
+{
+  gint64 max;
+  gboolean res;
+  GstFormat format;
+  GstIterator *it;
+  gboolean done;
+
+  /* parse format */
+  gst_query_parse_duration (query, &format, NULL);
+
+  max = -1;
+  res = TRUE;
+  done = FALSE;
+
+  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (adder));
+  while (!done) {
+    GstIteratorResult ires;
+    gpointer item;
+
+    ires = gst_iterator_next (it, &item);
+    switch (ires) {
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_OK:
+        {
+          GstPad *pad = GST_PAD_CAST (item);
+          gint64 duration;
+
+          /* ask sink peer for duration */
+          res &= gst_pad_query_peer_duration (pad, &format, &duration);
+          /* take max from all valid return values */
+          if (res) {
+            /* valid unknown length, stop searching */
+            if (duration == -1) {
+              max = duration;
+              done = TRUE;
+            }
+            /* else see if bigger than current max */
+            else if (duration > max)
+              max = duration;
+          }
+          break;
+        }
+      case GST_ITERATOR_RESYNC:
+        max = -1;
+        res = TRUE;
+        break;
+      default:
+        res = FALSE;
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (it);
+
+  if (res) {
+    /* and store the max */
+    gst_query_set_duration (query, format, max);
+  }
+
+  return res;
+}
+
+
 static gboolean
 gst_live_adder_query (GstPad * pad, GstQuery * query)
 {
@@ -664,6 +739,9 @@ gst_live_adder_query (GstPad * pad, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_DURATION:
+      res = gst_live_adder_query_duration (adder, query);
+      break;
     default:
       res = gst_pad_query_default (pad, query);
       break;
