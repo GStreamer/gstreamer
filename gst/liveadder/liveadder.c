@@ -817,10 +817,6 @@ gst_live_adder_src_event (GstPad * pad, GstEvent * event)
       /* TODO : QoS might be tricky */
       result = FALSE;
       break;
-    case GST_EVENT_SEEK:
-      /* TODO : I'm not certain how to handle seeks yet */
-      result = FALSE;
-      break;
     case GST_EVENT_NAVIGATION:
       /* TODO : navigation is rather pointless. */
       result = FALSE;
