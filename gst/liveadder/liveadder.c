@@ -451,17 +451,6 @@ gst_live_adder_flush_start (GstLiveAdder * adder)
   GST_OBJECT_UNLOCK (adder);
 }
 
-static void
-gst_live_adder_flush_stop (GstLiveAdder * adder)
-{
-  GST_DEBUG_OBJECT (adder, "Enabling pop on queue");
-
-  /* Mark as non flushing */
-  GST_OBJECT_LOCK (adder);
-  adder->srcresult = GST_FLOW_OK;
-  GST_OBJECT_UNLOCK (adder);
-}
-
 static gboolean
 gst_live_adder_src_activate_push (GstPad * pad, gboolean active)
 {
@@ -471,8 +460,10 @@ gst_live_adder_src_activate_push (GstPad * pad, gboolean active)
   adder = GST_LIVE_ADDER (gst_pad_get_parent (pad));
 
   if (active) {
-    /* allow data processing */
-    gst_live_adder_flush_stop (adder);
+    /* Mark as non flushing */
+    GST_OBJECT_LOCK (adder);
+    adder->srcresult = GST_FLOW_OK;
+    GST_OBJECT_UNLOCK (adder);
 
     /* start pushing out buffers */
     GST_DEBUG_OBJECT (adder, "Starting task on srcpad");
