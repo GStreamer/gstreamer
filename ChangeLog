@@ -1,3 +1,12 @@
+2008-05-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* libs/gst/base/gsttypefindhelper.c: (helper_find_peek):
+	Sort buffer cache list by end offsets. This makes sure that we don't
+	stop to search for a cached buffer that contains the requested data
+	too early.
+	Also read a minimum of 4k bytes instead of 512 bytes as this is a bit
+	more efficient. Fixes bug #459862.
+
 2008-05-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstinfo.c:

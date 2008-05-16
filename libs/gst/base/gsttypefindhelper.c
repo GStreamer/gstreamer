@@ -111,16 +111,14 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
       guint64 buf_offset = GST_BUFFER_OFFSET (buf);
       guint buf_size = GST_BUFFER_SIZE (buf);
 
+      /* buffers are kept sorted by end offset (highest first) in the list, so
+       * at this point we save the current position and stop searching if 
+       * we're after the searched end offset */
       if (buf_offset <= offset) {
         if ((offset + size) < (buf_offset + buf_size)) {
           return GST_BUFFER_DATA (buf) + (offset - buf_offset);
         }
-        /* buffers are kept sorted by offset (highest first) in the list, so
-         * at this point we know we don't need to check the remaining buffers
-         * (is that correct or just a guess that we're unlikely to find a
-         * match further down and it's most of the time not worth going through
-         * the entire list? How do we know the next buffer isn't offset-N with
-         * a big enough size to cover the requested offset+size?) */
+      } else if (offset + size >= buf_offset + buf_size) {
         insert_pos = walk;
         break;
       }
@@ -134,7 +132,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
    * of the file is also not a problem here, we'll just get a truncated buffer
    * in that case (and we'll have to double-check the size we actually get
    * anyway, see below) */
-  ret = helper->func (helper->obj, offset, MAX (size, 512), &buffer);
+  ret = helper->func (helper->obj, offset, MAX (size, 4096), &buffer);
 
   if (ret != GST_FLOW_OK)
     goto error;
@@ -157,8 +155,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     /* if insert_pos is not set, our offset is bigger than the largest offset
      * we have so far; since we keep the list sorted with highest offsets
      * first, we need to prepend the buffer to the list */
-    /* FIXME: why not last_offset = buffer_offset + buffer_size here? */
-    helper->last_offset = GST_BUFFER_OFFSET (buffer);
+    helper->last_offset = GST_BUFFER_OFFSET (buffer) + GST_BUFFER_SIZE (buffer);
     helper->buffers = g_slist_prepend (helper->buffers, buffer);
   }
   return GST_BUFFER_DATA (buffer);
