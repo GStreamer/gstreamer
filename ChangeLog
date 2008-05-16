@@ -1,3 +1,9 @@
+2008-05-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/adder/gstadder.c:
+	Adder doesn't support 24 bit samples so don't claim it supports them
+	in the pad template caps.
+
 2008-05-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
