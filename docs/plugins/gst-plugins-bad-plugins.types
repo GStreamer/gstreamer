@@ -1,5 +1,1 @@
 #include <gst/gst.h>
-
-#include "ext/metadata/gstbasemetadata.h"
-gst_base_metadata_get_type
-

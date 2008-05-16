@@ -1,3 +1,9 @@
+2008-05-16  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* docs/plugins/gst-plugins-bad-plugins.types:
+	Remove bogus attempt to pull 'metadata' plugin's base
+	class into the docs.
+
 2008-05-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
