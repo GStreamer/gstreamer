@@ -43,7 +43,7 @@ gst_wavpack_stream_reader_read_bytes (void *id, void *data, int32_t bcount)
     rid->position += to_read;
     return to_read;
   } else {
-    GST_WARNING ("Couldn't read %d bytes");
+    GST_WARNING ("Couldn't read %d bytes", bcount);
     return 0;
   }
 }

@@ -1,3 +1,10 @@
+2008-05-16  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/wavpack/gstwavpackstreamreader.c:
+	* tests/examples/spectrum/demo-audiotest.c:
+	* tests/examples/spectrum/demo-osssrc.c:
+	Fix some compiler warnings.
+
 2008-05-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_process):

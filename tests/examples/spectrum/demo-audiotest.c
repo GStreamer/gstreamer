@@ -28,7 +28,9 @@
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 
+#ifndef DEFAULT_AUDIOSINK
 #define DEFAULT_AUDIOSINK "autoaudiosink"
+#endif
 
 static GtkWidget *drawingarea = NULL;
 static guint spect_height = 64;

@@ -27,7 +27,10 @@
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 
+#ifndef DEFAULT_AUDIOSRC
 #define DEFAULT_AUDIOSRC "alsasrc"
+#endif
+
 static guint spect_height = 64;
 static guint spect_bands = 256;
 static gfloat height_scale = 1.0;
