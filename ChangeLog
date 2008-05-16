@@ -1,5 +1,12 @@
 2008-05-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/timidity/gstwildmidi.c: (wildmidi_open_config):
+	Check some more common locations for a valid configuration file.
+	Fixes bug #533435. Packagers should still #define WILDMIDI_CFG
+	to the distributions default location.
+
+2008-05-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/interleave/Makefile.am:
 	* gst/interleave/deinterleave.c: (deinterleave_24),
 	(gst_deinterleave_finalize), (gst_deinterleave_base_init),
