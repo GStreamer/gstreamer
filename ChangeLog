@@ -1,3 +1,27 @@
+2008-05-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/interleave/Makefile.am:
+	* gst/interleave/deinterleave.c: (deinterleave_24),
+	(gst_deinterleave_finalize), (gst_deinterleave_base_init),
+	(gst_deinterleave_class_init), (gst_deinterleave_init),
+	(gst_deinterleave_add_new_pads), (gst_deinterleave_set_pads_caps),
+	(gst_deinterleave_set_process_function),
+	(gst_deinterleave_sink_setcaps), (__remove_channels),
+	(__set_channels), (gst_deinterleave_getcaps),
+	(gst_deinterleave_process), (gst_deinterleave_chain),
+	(gst_deinterleave_sink_activate_push):
+	* gst/interleave/deinterleave.h:
+	Add support for all raw audio formats and provide better negotiation
+	if the caps are changing.
+
+	Don't allow changes of the channel positions and set the position of
+	the corresponding channel on the src pad caps.
+
+	General cleanup and smaller bugfixes.
+
+	* tests/check/elements/deinterleave.c: (float_buffer_check_probe):
+	Check the channel positions on the output buffer caps.
+
 2008-05-16  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/Makefile.am:

@@ -55,7 +55,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-float, "
         "width = (int) 32, "
-        "channels = (int) 2, "
+        "channels = (int) { 2, 3 }, "
         "rate = (int) {32000, 48000}, " "endianness = (int) BYTE_ORDER"));
 
 #define CAPS_32khz \
@@ -417,14 +417,30 @@ float_buffer_check_probe (GstPad * pad, GstBuffer * buf, gpointer userdata)
   gfloat *data;
   guint padnum, numpads;
   guint num, i;
+  GstCaps *caps;
+  GstStructure *s;
+  GstAudioChannelPosition *pos;
+  gint channels;
 
   fail_unless_equals_int (sscanf (GST_PAD_NAME (pad), "src%u", &padnum), 1);
 
   numpads = pads_created;
 
+  /* Check caps */
+  caps = GST_BUFFER_CAPS (buf);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_get_int (s, "channels", &channels));
+  fail_unless_equals_int (channels, 1);
+  fail_unless (gst_structure_has_field (s, "channel-positions"));
+  pos = gst_audio_get_channel_positions (s);
+  fail_unless (pos != NULL && pos[0] == GST_AUDIO_CHANNEL_POSITION_NONE);
+  g_free (pos);
+
   data = (gfloat *) GST_BUFFER_DATA (buf);
   num = GST_BUFFER_SIZE (buf) / sizeof (gfloat);
 
+  /* Check buffer content */
   for (i = 0; i < num; ++i) {
     guint val, rest;
 
