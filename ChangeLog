@@ -1,5 +1,16 @@
 2008-05-16  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* docs/Makefile.am:
+	Don't attempt to build plugin docs when they're disabled.
+
+	* gst/bayer/Makefile.am:
+	Add libgstvideo to the link.
+
+	* gst/rtpmanager/Makefile.am:
+	Fix link order, and move LIBS things to _LIBS
+
+2008-05-16  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* docs/plugins/gst-plugins-bad-plugins.types:
 	Remove bogus attempt to pull 'metadata' plugin's base
 	class into the docs.

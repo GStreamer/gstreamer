@@ -36,10 +36,12 @@ noinst_HEADERS = gstrtpbin.h \
 		 rtpstats.h  \
 		 gstrtpsession.h
 
-libgstrtpmanager_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(ERROR_CFLAGS)
-libgstrtpmanager_la_LIBADD = $(GST_LIBS_LIBS)
-libgstrtpmanager_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_MAJORMINOR@ \
-			      -lgstnetbuffer-@GST_MAJORMINOR@
+libgstrtpmanager_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
+	$(ERROR_CFLAGS)
+libgstrtpmanager_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
+	-lgstnetbuffer-@GST_MAJORMINOR@ -lgstrtp-@GST_MAJORMINOR@ \
+	$(GST_BASE_LIBS) $(GST_LIBS_LIBS)
+libgstrtpmanager_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 CLEANFILES = $(BUILT_SOURCES)
 
