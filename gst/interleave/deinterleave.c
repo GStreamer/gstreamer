@@ -300,8 +300,9 @@ gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (self, "got caps: %" GST_PTR_FORMAT, caps);
 
   if (self->sinkcaps && !gst_caps_is_equal (caps, self->sinkcaps)) {
-    gint new_channels;
+    gint new_channels, i;
     GstAudioChannelPosition *pos;
+    gboolean same_layout = TRUE;
 
     s = gst_caps_get_structure (caps, 0);
 
@@ -314,25 +315,27 @@ gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps)
         !gst_deinterleave_set_process_function (self, caps))
       goto cannot_change_caps;
 
-    if (gst_structure_has_field (s, "channel-positions")) {
-      gint i;
-      gboolean same = TRUE;
+    /* Now check the channel positions. If we had no channel positions
+     * and get them or the other way around things have changed.
+     * If we had channel positions and get different ones things have
+     * changed too of course
+     */
+    pos = gst_audio_get_channel_positions (s);
+    if ((pos && !self->pos) || (!pos && self->pos))
+      goto cannot_change_caps;
 
-      if (!self->pos)
-        goto cannot_change_caps;
-
-      pos = gst_audio_get_channel_positions (s);
+    if (pos) {
       for (i = 0; i < self->channels; i++) {
         if (self->pos[i] != pos[i]) {
-          same = FALSE;
+          same_layout = FALSE;
           break;
         }
       }
-
       g_free (pos);
-      if (!same)
+      if (!same_layout)
         goto cannot_change_caps;
     }
+
   } else {
     s = gst_caps_get_structure (caps, 0);
 
@@ -342,8 +345,7 @@ gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps)
     if (!gst_deinterleave_set_process_function (self, caps))
       goto unsupported_caps;
 
-    if (gst_structure_has_field (s, "channel-positions"))
-      self->pos = gst_audio_get_channel_positions (s);
+    self->pos = gst_audio_get_channel_positions (s);
   }
 
   gst_caps_replace (&self->sinkcaps, caps);
@@ -425,7 +427,6 @@ gst_deinterleave_getcaps (GstPad * pad)
   GList *l;
 
   GST_OBJECT_LOCK (self);
-
   /* Intersect all of our pad template caps with the peer caps of the pad
    * to get all formats that are possible up- and downstream.
    *
@@ -436,7 +437,7 @@ gst_deinterleave_getcaps (GstPad * pad)
   ret = gst_caps_new_any ();
   for (l = GST_ELEMENT (self)->pads; l != NULL; l = l->next) {
     GstPad *ourpad = GST_PAD (l->data);
-    GstCaps *peercaps, *ourcaps;
+    GstCaps *peercaps = NULL, *ourcaps;
 
     ourcaps = gst_caps_copy (gst_pad_get_pad_template_caps (ourpad));
 
@@ -447,17 +448,20 @@ gst_deinterleave_getcaps (GstPad * pad)
         __set_channels (ourcaps, 1);
     } else {
       __remove_channels (ourcaps);
+      /* Only ask for peer caps for other pads than pad
+       * as otherwise gst_pad_peer_get_caps() might call
+       * back into this function and deadlock
+       */
+      peercaps = gst_pad_peer_get_caps (ourpad);
     }
-
-    peercaps = gst_pad_peer_get_caps (ourpad);
-    if (pad != ourpad && peercaps)
-      __remove_channels (peercaps);
 
     /* If the peer exists and has caps add them to the intersection,
      * otherwise assume that the peer accepts everything */
     if (peercaps) {
       GstCaps *intersection;
       GstCaps *oldret = ret;
+
+      __remove_channels (peercaps);
 
       intersection = gst_caps_intersect (peercaps, ourcaps);
 
@@ -473,7 +477,6 @@ gst_deinterleave_getcaps (GstPad * pad)
     }
     gst_caps_unref (ourcaps);
   }
-
   GST_OBJECT_UNLOCK (self);
 
   gst_object_unref (self);

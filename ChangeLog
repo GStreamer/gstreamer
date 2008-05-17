@@ -1,3 +1,15 @@
+2008-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/interleave/deinterleave.c: (gst_deinterleave_sink_setcaps),
+	(gst_deinterleave_getcaps):
+	Always set the channel positions when gst_audio_get_channel_positions()
+	returns something, even if they're not set in the caps. This makes
+	sure that the output channels can be interleaved again correctly
+	in the mono/stereo cases too.
+
+	Don't ask for the peercaps of the current pad in getcaps() as this
+	might call getcaps() again and deadlock.
+
 2008-05-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/timidity/gstwildmidi.c: (wildmidi_open_config):
