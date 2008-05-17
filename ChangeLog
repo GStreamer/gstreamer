@@ -1,3 +1,13 @@
+2008-05-17  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* docs/Makefile.am:
+	Don't descend into the plugins dir if plugin docs building
+	is disabled.
+
+	* docs/README:
+	Add a note about the new type:GTypeName syntax for the plugin
+	documentation .types file.
+
 2008-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstmessage.c: (gst_message_new_error),

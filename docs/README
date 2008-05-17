@@ -242,6 +242,14 @@ in the various plugin packages.
       cvs add *-plugins-docs.sgml *-plugins.args *-plugins.hierarchy *-plugins.interfaces *-plugins.prerequisites *-plugins.signals *-plugins.types inspect-build.stamp inspect.stamp scanobj-build.stamp
       cvs add inspect
       cvs add inspect/*.xml
+    - Additional types can be added to the documentation by placing them in
+      the .types file like this:
+        type:GstPlayBaseBin
+      This is useful for documenting plugin-private types that implement
+      signals or properties. The GType is looked up by name after all the
+      element classes have been printed - so this is only useful for types
+      that are created as a consequence of loading plugins and registering
+      the element(s).
 
 - to add a plugin to be documented:
   - make sure inspect/ has generated a inspect/plugin-xxx.xml file for it.
