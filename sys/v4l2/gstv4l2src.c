@@ -55,7 +55,9 @@
 
 #include "gstv4l2colorbalance.h"
 #include "gstv4l2tuner.h"
+#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
 #include "gstv4l2xoverlay.h"
+#endif
 #include "gstv4l2vidorient.h"
 
 static const GstElementDetails gst_v4l2src_details =
