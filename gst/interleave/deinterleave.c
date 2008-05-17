@@ -30,6 +30,23 @@
  *         and passing downstream caps changes upstream there
  */
 
+/**
+ * SECTION:element-deinterleave
+ *
+ * <refsect2>
+ * <para>
+ * Splits one interleaved multichannel audio stream into many mono audio streams.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch-0.10 filesrc location=/path/to/file.mp3 ! decodebin ! audioconvert ! "audio/x-raw-int,channels=2 ! deinterleave name=d  d.src0 ! queue ! audioconvert ! vorbisenc ! oggmux ! filesink location=channel1.ogg  d.src1 ! queue ! audioconvert ! vorbisenc ! oggmux ! filesink location=channel2.ogg
+ * </programlisting>
+ * Decodes an MP3 file and encodes the left and right channel into a separate 
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -111,6 +128,7 @@ static gboolean gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_deinterleave_getcaps (GstPad * pad);
 static gboolean gst_deinterleave_sink_activate_push (GstPad * pad,
     gboolean active);
+static gboolean gst_deinterleave_sink_event (GstPad * pad, GstEvent * event);
 
 static void
 gst_deinterleave_finalize (GObject * obj)
@@ -120,6 +138,12 @@ gst_deinterleave_finalize (GObject * obj)
   if (self->pos) {
     g_free (self->pos);
     self->pos = NULL;
+  }
+
+  if (self->pending_events) {
+    g_list_foreach (self->pending_events, (GFunc) gst_mini_object_unref, NULL);
+    g_list_free (self->pending_events);
+    self->pending_events = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
@@ -169,6 +193,8 @@ gst_deinterleave_init (GstDeinterleave * self, GstDeinterleaveClass * klass)
   gst_pad_set_getcaps_function (self->sink, gst_deinterleave_getcaps);
   gst_pad_set_activatepush_function (self->sink,
       GST_DEBUG_FUNCPTR (gst_deinterleave_sink_activate_push));
+  gst_pad_set_event_function (self->sink,
+      GST_DEBUG_FUNCPTR (gst_deinterleave_sink_event));
   gst_element_add_pad (GST_ELEMENT (self), self->sink);
 }
 
@@ -486,6 +512,42 @@ gst_deinterleave_getcaps (GstPad * pad)
   return ret;
 }
 
+static gboolean
+gst_deinterleave_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstDeinterleave *self = GST_DEINTERLEAVE (gst_pad_get_parent (pad));
+  gboolean ret;
+
+  GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
+      GST_DEBUG_PAD_NAME (pad));
+
+  /* Send FLUSH_STOP, FLUSH_START and EOS immediately, no matter if
+   * we have src pads already or not. Queue all other events and
+   * push them after we have src pads
+   */
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_EOS:
+      ret = gst_pad_event_default (pad, event);
+      break;
+    default:
+      if (self->srcpads) {
+        ret = gst_pad_event_default (pad, event);
+      } else {
+        GST_OBJECT_LOCK (self);
+        self->pending_events = g_list_append (self->pending_events, event);
+        GST_OBJECT_UNLOCK (self);
+        ret = TRUE;
+      }
+      break;
+  }
+
+  gst_object_unref (self);
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
 {
@@ -498,6 +560,27 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
   GList *srcs;
   GstBuffer **buffers_out = g_new0 (GstBuffer *, channels);
   guint8 *in, *out;
+
+  /* Send any pending events to all src pads */
+  GST_OBJECT_LOCK (self);
+  if (self->pending_events) {
+    GList *events;
+    GstEvent *event;
+
+    GST_DEBUG_OBJECT (self, "Sending pending events to all src pads");
+
+    for (events = self->pending_events; events != NULL; events = events->next) {
+      event = GST_EVENT (events->data);
+
+      for (srcs = self->srcpads; srcs != NULL; srcs = srcs->next)
+        gst_pad_push_event (GST_PAD (srcs->data), gst_event_ref (event));
+      gst_event_unref (event);
+    }
+
+    g_list_free (self->pending_events);
+    self->pending_events = NULL;
+  }
+  GST_OBJECT_UNLOCK (self);
 
   /* Allocate buffers */
   for (srcs = self->srcpads, i = 0; srcs; srcs = srcs->next, i++) {
@@ -528,6 +611,8 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
 
   /* Return NOT_LINKED if no pad was linked */
   if (!buffers_allocated) {
+    GST_WARNING_OBJECT (self,
+        "Couldn't allocate any buffers because no pad was linked");
     ret = GST_FLOW_NOT_LINKED;
     goto done;
   }
@@ -631,6 +716,13 @@ gst_deinterleave_sink_activate_push (GstPad * pad, gboolean active)
     self->channels = 0;
     self->width = 0;
     self->func = NULL;
+
+    if (self->pending_events) {
+      g_list_foreach (self->pending_events, (GFunc) gst_mini_object_unref,
+          NULL);
+      g_list_free (self->pending_events);
+      self->pending_events = NULL;
+    }
   }
 
   gst_object_unref (self);

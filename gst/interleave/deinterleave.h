@@ -58,6 +58,8 @@ struct _GstDeinterleave
 
   gint width;
   GstDeinterleaveFunc func;
+
+  GList *pending_events;
 };
 
 struct _GstDeinterleaveClass
