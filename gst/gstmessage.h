@@ -275,15 +275,15 @@ GstMessage *	gst_message_new_eos		(GstObject * src);
 
 /* ERROR */
 
-GstMessage *	gst_message_new_error		(GstObject * src, GError * error, gchar * debug);
+GstMessage *	gst_message_new_error		(GstObject * src, GError * error, const gchar * debug);
 void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
 
 /* WARNING */
-GstMessage *	gst_message_new_warning		(GstObject * src, GError * error, gchar * debug);
+GstMessage *	gst_message_new_warning		(GstObject * src, GError * error, const gchar * debug);
 void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
 
 /* INFO */
-GstMessage *	gst_message_new_info		(GstObject * src, GError * error, gchar * debug);
+GstMessage *	gst_message_new_info		(GstObject * src, GError * error, const gchar * debug);
 void		gst_message_parse_info 		(GstMessage *message, GError **gerror, gchar **debug);
 
 /* TAG */

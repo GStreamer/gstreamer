@@ -1,3 +1,10 @@
+2008-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstmessage.c: (gst_message_new_error),
+	(gst_message_new_warning), (gst_message_new_info):
+	* gst/gstmessage.h:
+	Mark the debug string parameters as const. Fixes bug #533490.
+
 2008-05-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* libs/gst/base/gsttypefindhelper.c: (helper_find_peek):

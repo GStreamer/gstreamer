@@ -341,7 +341,7 @@ gst_message_new_eos (GstObject * src)
  * MT safe.
  */
 GstMessage *
-gst_message_new_error (GstObject * src, GError * error, gchar * debug)
+gst_message_new_error (GstObject * src, GError * error, const gchar * debug)
 {
   GstMessage *message;
   GstStructure *structure;
@@ -369,7 +369,7 @@ gst_message_new_error (GstObject * src, GError * error, gchar * debug)
  * MT safe.
  */
 GstMessage *
-gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
+gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
 {
   GstMessage *message;
   GstStructure *structure;
@@ -399,7 +399,7 @@ gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
  * MT safe.
  */
 GstMessage *
-gst_message_new_info (GstObject * src, GError * error, gchar * debug)
+gst_message_new_info (GstObject * src, GError * error, const gchar * debug)
 {
   GstMessage *message;
   GstStructure *structure;
