@@ -1,5 +1,14 @@
 2008-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/interleave/deinterleave.c: (gst_deinterleave_finalize),
+	(gst_deinterleave_init), (gst_deinterleave_sink_event),
+	(gst_deinterleave_process), (gst_deinterleave_sink_activate_push):
+	* gst/interleave/deinterleave.h:
+	Queue events until src pads were added and they can be sent. Otherwise
+	downstream will never get the first newsegment event.
+
+2008-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/interleave/deinterleave.c: (gst_deinterleave_sink_setcaps),
 	(gst_deinterleave_getcaps):
 	Always set the channel positions when gst_audio_get_channel_positions()
