@@ -2,19 +2,19 @@
 # vi:si:et:sw=4:sts=4:ts=4
 
 # discoverer.py
-# (c) 2005 Edward Hervey <edward at fluendo dot com>
+# (c) 2005-2008 Edward Hervey <bilboed at bilboed dot com>
 # Discovers multimedia information on files
 
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-# 
+#
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -45,7 +45,7 @@ class Discoverer(gst.Pipeline):
                         None,
                         (gobject.TYPE_BOOLEAN, ))
         }
-    
+
     mimetype = None
 
     audiocaps = {}
@@ -74,7 +74,7 @@ class Discoverer(gst.Pipeline):
     tags = {}
 
 
-    def __init__(self, filename, max_interleave=1.0):
+    def __init__(self, filename, max_interleave=1.0, timeout=3000):
         """
         filename: str; absolute path of the file to be discovered.
         max_interleave: int or float; the maximum frame interleave in seconds.
@@ -82,6 +82,7 @@ class Discoverer(gst.Pipeline):
             or the discoverer may not find out all input file's streams.
             The default value is 1 second and you shouldn't have to change it,
             changing it mean larger discovering time and bigger memory usage.
+        timeout: int; duration in ms for the discovery to complete.
         """
         gobject.GObject.__init__(self)
 
@@ -114,13 +115,14 @@ class Discoverer(gst.Pipeline):
         self._nomorepads = False
 
         self._timeoutid = 0
+        self._timeout = timeout
         self._max_interleave = max_interleave
 
         if not os.path.isfile(filename):
             self.debug("File '%s' does not exist, finished" % filename)
             self.finished = True
             return
-        
+
         # the initial elements of the pipeline
         self.src = gst.element_factory_make("filesrc")
         self.src.set_property("location", filename)
@@ -184,8 +186,8 @@ class Discoverer(gst.Pipeline):
         self.bus.connect("message", self._bus_message_cb)
 
         # 3s timeout
-        self._timeoutid = gobject.timeout_add(3000, self._timed_out_or_eos)
-        
+        self._timeoutid = gobject.timeout_add(self._timeout, self._timed_out_or_eos)
+
         self.info("setting to PLAY")
         if not self.set_state(gst.STATE_PLAYING):
             self._finished()
@@ -265,13 +267,16 @@ class Discoverer(gst.Pipeline):
         # the caps are fixed
         # We now get the total length of that stream
         q = gst.query_new_duration(gst.FORMAT_TIME)
-        pad.info("sending position query")
+        pad.info("sending duration query")
         if pad.get_peer().query(q):
             format, length = q.parse_duration()
-            pad.info("got position query answer : %d:%d" % (length, format))
+            if format == gst.FORMAT_TIME:
+                pad.info("got duration (time) : %s" % (gst.TIME_ARGS(length),))
+            else:
+                pad.info("got duration : %d [format:%d]" % (length, format))
         else:
             length = -1
-            gst.warning("position query didn't work")
+            gst.warning("duration query failed")
 
         # We store the caps and length in the proper location
         if "audio" in caps.to_string():
