@@ -2,7 +2,7 @@
 #define __GST_GL_H__
 
 #include <GL/glew.h>
-#include <GL/freeglut.h>
+#include <gstfreeglut.h>
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
