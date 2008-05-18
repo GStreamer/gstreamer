@@ -1,3 +1,8 @@
+2008-05-18  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* docs/Makefile.am:
+	Oops - fix the spelling of the variable I added.
+
 2008-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/interleave/deinterleave.c: (gst_deinterleave_finalize),
