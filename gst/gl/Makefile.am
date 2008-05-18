@@ -18,6 +18,7 @@ libgstopengl_la_SOURCES = \
 libgstopengl_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GL_CFLAGS) \
 	-I$(top_srcdir)/gst-libs \
+	-I$(top_srcdir)/gst-libs/gst/freeglut \
 	-I$(top_srcdir)/gst-libs/gst/gl
 libgstopengl_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_MAJORMINOR).la \

@@ -15,7 +15,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_gl_gstgl_debug, "gstgl", 0, "gstgl");
+  GST_DEBUG_CATEGORY_INIT (gst_gl_gstgl_debug, "gstopengl", 0, "gstopengl");
  
   if (!gst_element_register (plugin, "glvideomaker",
           GST_RANK_NONE, GST_TYPE_GL_VIDEOMAKER)) {
@@ -37,6 +37,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "gstgl",
+    "opengl",
     "OpenGL plugin",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
