@@ -1,7 +1,7 @@
 #ifndef __GST_GL_H__
 #define __GST_GL_H__
 
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <GL/freeglut.h>
 
 #include <gst/gst.h>
@@ -166,7 +166,7 @@ GType gst_gl_display_get_type (void);
 
 
 //------------------------------------------------------------
-//-------------------- Public déclarations ------------------
+//-------------------- Public dï¿½clarations ------------------
 //------------------------------------------------------------ 
 GstGLDisplay *gst_gl_display_new (void);
 void gst_gl_display_initGLContext (GstGLDisplay* display, 
