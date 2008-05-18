@@ -1,3 +1,9 @@
+2008-05-18  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstevent.c:
+	  Document that gst_event_new_tag() and gst_event_new_navigation()
+	  take ownership of the taglist/structure passed to them. (#533635).
+
 2008-05-17  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/Makefile.am:

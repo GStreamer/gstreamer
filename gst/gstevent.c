@@ -628,7 +628,7 @@ gst_event_parse_new_segment_full (GstEvent * event, gboolean * update,
 
 /**
  * gst_event_new_tag:
- * @taglist: metadata list
+ * @taglist: metadata list. The event will take ownership of @taglist.
  *
  * Generates a metadata tag event from the given @taglist.
  *
@@ -929,7 +929,8 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate,
 
 /**
  * gst_event_new_navigation:
- * @structure: description of the event
+ * @structure: description of the event. The event will take ownership of the
+ *     structure.
  *
  * Create a new navigation event from the given description.
  *
