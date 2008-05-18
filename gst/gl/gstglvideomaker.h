@@ -36,10 +36,6 @@ struct _GstGLVideomakerClass
   GstBaseTransformClass base_transform_class;
 };
 
-typedef struct _GstGLVideomaker GstGLVideomaker;
-typedef struct _GstGLVideomakerClass GstGLVideomakerClass;
-
-
 GType gst_gl_videomaker_get_type (void);
 
 G_END_DECLS

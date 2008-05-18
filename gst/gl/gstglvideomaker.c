@@ -142,7 +142,7 @@ gst_gl_videomaker_reset (GstGLVideomaker* videomaker)
 static gboolean
 gst_gl_videomaker_start (GstBaseTransform* bt)
 {
-  GstGLVideomaker* videomaker = GST_GL_VIDEOMAKER (bt);
+  //GstGLVideomaker* videomaker = GST_GL_VIDEOMAKER (bt);
 
   return TRUE;
 }

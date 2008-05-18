@@ -22,7 +22,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition);
 
 static void gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
     GstClockTime * start, GstClockTime * end);
-static GstCaps *gst_glimage_sink_get_caps (GstBaseSink * bsink);
+//static GstCaps *gst_glimage_sink_get_caps (GstBaseSink * bsink);
 static gboolean gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static GstFlowReturn gst_glimage_sink_render (GstBaseSink * bsink,
     GstBuffer * buf);

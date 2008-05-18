@@ -196,7 +196,7 @@ gst_gl_graphicmaker_reset (GstGLGraphicmaker* graphicmaker)
 static gboolean
 gst_gl_graphicmaker_start (GstBaseTransform * bt)
 {
-    GstGLGraphicmaker* graphicmaker = GST_GL_GRAPHICMAKER (bt);
+    //GstGLGraphicmaker* graphicmaker = GST_GL_GRAPHICMAKER (bt);
 
     return TRUE;
 }

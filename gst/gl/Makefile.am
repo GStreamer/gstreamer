@@ -6,8 +6,8 @@ AM_LIBS = $(GST_BASE_LIBS)
 
 libgstopengl_la_SOURCES = \
 	gstopengl.c \
-	glimagesink.c \
-	glimagesink.h \
+	gstglimagesink.c \
+	gstglimagesink.h \
 	gstglgraphicmaker.c \
 	gstglgraphicmaker.h \
 	gstglvideomaker.c \
@@ -21,6 +21,7 @@ libgstopengl_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \
 	-I$(top_srcdir)/gst-libs/gst/freeglut \
 	-I$(top_srcdir)/gst-libs/gst/gl
 libgstopengl_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/freeglut/libgstfreeglut-$(GST_MAJORMINOR).la \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_MAJORMINOR).la \
 	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_MAJORMINOR)
