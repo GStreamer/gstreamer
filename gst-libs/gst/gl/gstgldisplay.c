@@ -13,7 +13,7 @@
 
 
 //------------------------------------------------------------
-//-------------------- Private déclarations ------------------
+//-------------------- Private dï¿½clarations ------------------
 //------------------------------------------------------------
 static void gst_gl_display_finalize (GObject * object);
 static gpointer gst_gl_display_glutThreadFunc (GstGLDisplay* display);
@@ -371,15 +371,19 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     gint glutWinId = 0;
     GList *keys = NULL;
     gchar buffer[5];
-	GLenum err = 0;
+    GLenum err = 0;
 
     //prepare opengl context
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowPosition(display->win_xpos, display->win_ypos);
     glutInitWindowSize(display->glcontext_width, display->glcontext_height); 	
 
     //create opengl context
-    sprintf_s(buffer, 5, "%d", glutWinId); 
+#if WIN32
+    sprintf_s(buffer, 5, "%d", glutWinId);
+#else
+    sprintf(buffer, "%d", glutWinId);
+#endif
     display->title =  g_string_append (display->title, buffer);
     glutWinId = glutCreateWindow (display->title->str, display->winId);
 
@@ -388,27 +392,27 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     else
         glutHideWindow ();
 
-	//Init glew
+    //Init glew
     err = glewInit();
     if (err != GLEW_OK)
-		g_print ("Error: %s\n", glewGetErrorString(err));
-	else
-		g_print ("Context %d, Using GLEW %s\n", glutWinId, glewGetString(GLEW_VERSION));
+        g_print ("Error: %s\n", glewGetErrorString(err));
+    else
+        g_print ("Context %d, Using GLEW %s\n", glutWinId, glewGetString(GLEW_VERSION));
 
     if (GLEW_EXT_framebuffer_object)
     {
         g_print ("Context %d, EXT_framebuffer_object supported: yes\n", glutWinId);
 
         //-- init intput frame buffer object (video -> GL)
-        
+ 
         //setup FBO
         glGenFramebuffersEXT (1, &display->fbo);
         glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->fbo);
 
         //setup the render buffer for depth	
         glGenRenderbuffersEXT(1, &display->depthBuffer);
-	    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->depthBuffer);
-	    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, 
+        glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->depthBuffer);
+        glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
             display->textureFBOWidth, display->textureFBOHeight);
 
         //setup a texture to render to
@@ -559,11 +563,18 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
 		g_print ("Context %d, ARB_fragment_program supported: yes\n", glutWinId);
 
 		//from video to texture
-        
+#if WIN32
         sprintf_s (program, 2048, display->textFProgram_YUY2_UYVY, 'r', 'g', 'a');
+#else
+	sprintf (program, display->textFProgram_YUY2_UYVY, 'r', 'g', 'a');
+#endif
 		display->GLSLProgram_YUY2 = gst_gl_display_loadGLSLprogram (program);
 
+#if WIN32
 		sprintf_s (program, 2048, display->textFProgram_YUY2_UYVY, 'a', 'b', 'r');
+#else
+	sprintf (program, display->textFProgram_YUY2_UYVY, 'a', 'b', 'r');
+#endif
 		display->GLSLProgram_UYVY = gst_gl_display_loadGLSLprogram (program);
 
 		display->GLSLProgram_I420_YV12 = gst_gl_display_loadGLSLprogram (display->textFProgram_I420_YV12);
@@ -572,10 +583,10 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
 
         //from texture to video
 
-        sprintf_s (program, 2048, display->textFProgram_to_YUY2_UYVY, "y2,u,y1,v");
+        sprintf (program, display->textFProgram_to_YUY2_UYVY, "y2,u,y1,v");
         display->GLSLProgram_to_YUY2 = gst_gl_display_loadGLSLprogram (program);
 
-        sprintf_s (program, 2048, display->textFProgram_to_YUY2_UYVY, "v,y1,u,y2");
+        sprintf (program, display->textFProgram_to_YUY2_UYVY, "v,y1,u,y2");
         display->GLSLProgram_to_UYVY = gst_gl_display_loadGLSLprogram (program);
 
         display->GLSLProgram_to_I420_YV12 = gst_gl_display_loadGLSLprogram (display->textFProgram_to_I420_YV12);
