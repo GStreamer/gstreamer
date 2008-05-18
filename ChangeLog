@@ -1,5 +1,11 @@
 2008-05-18  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* tests/check/gst/gstcaps.c: (test_intersect2), (gst_caps_suite):
+	  Add David's and Benjamin's tests for array subtraction to the
+	  unit test suite, which suggests that #147931 is fixed these days.
+
+2008-05-18  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst/gstevent.c:
 	  Document that gst_event_new_tag() and gst_event_new_navigation()
 	  take ownership of the taglist/structure passed to them. (#533635).

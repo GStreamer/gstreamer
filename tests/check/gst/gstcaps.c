@@ -580,6 +580,43 @@ GST_START_TEST (test_intersect)
 
 GST_END_TEST;
 
+GST_START_TEST (test_intersect2)
+{
+  GstCaps *caps1, *caps2, *icaps;
+
+  /* tests array subtraction */
+  caps1 = gst_caps_from_string ("audio/x-raw-float, "
+      "channel-positions=(int)<                      "
+      "{ 1, 2, 3, 4, 5, 6 },                         "
+      "{ 1, 2, 3, 4, 5, 6 },                         "
+      "{ 1, 2, 3, 4, 5, 6 },                         "
+      "{ 1, 2, 3, 4, 5, 6 },                         "
+      "{ 1, 2, 3, 4, 5, 6 },                         " "{ 1, 2, 3, 4, 5, 6 }>");
+  caps2 = gst_caps_from_string ("audio/x-raw-float, "
+      "channel-positions=(int)< 1, 2, 3, 4, 5, 6 >");
+  icaps = gst_caps_intersect (caps1, caps2);
+  GST_LOG ("intersected caps: %" GST_PTR_FORMAT, icaps);
+  fail_if (gst_caps_is_empty (icaps));
+  fail_unless (gst_caps_is_equal (icaps, caps2));
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+  gst_caps_unref (icaps);
+
+  /* ===== */
+
+  caps1 = gst_caps_from_string ("some/type, foo=(int)< { 1, 2 }, { 3, 4} >");
+  caps2 = gst_caps_from_string ("some/type, foo=(int)< 1, 3 >");
+  icaps = gst_caps_intersect (caps1, caps2);
+  GST_LOG ("intersected caps: %" GST_PTR_FORMAT, icaps);
+  fail_if (gst_caps_is_empty (icaps));
+  fail_unless (gst_caps_is_equal (icaps, caps2));
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+  gst_caps_unref (icaps);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_caps_suite (void)
 {
@@ -598,6 +635,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_merge_same);
   tcase_add_test (tc_chain, test_merge_subset);
   tcase_add_test (tc_chain, test_intersect);
+  tcase_add_test (tc_chain, test_intersect2);
 
   return s;
 }
