@@ -1,5 +1,10 @@
 2008-05-18  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* gst/gsttypefind.h:
+	  Tabs to spaces, oh yes!
+
+2008-05-18  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* tests/check/gst/gstcaps.c: (test_intersect2), (gst_caps_suite):
 	  Add David's and Benjamin's tests for array intersection to the
 	  unit test suite (#147931).
