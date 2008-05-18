@@ -24,6 +24,7 @@ libgstopengl_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/freeglut/libgstfreeglut-$(GST_MAJORMINOR).la \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_MAJORMINOR).la \
 	$(GST_BASE_LIBS) \
-	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_MAJORMINOR)
+	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_MAJORMINOR) \
+	-lGLEW
 libgstopengl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
