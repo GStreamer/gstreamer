@@ -629,11 +629,28 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
 
   if (!strcmp (mimetype, "audio/x-raw-int")) {
     gint width, depth;
+    gboolean signedness;
 
     avipad->auds.format = GST_RIFF_WAVE_FORMAT_PCM;
 
     if (!gst_structure_get_int (structure, "width", &width) ||
-        (width != 8 && !gst_structure_get_int (structure, "depth", &depth))) {
+        !gst_structure_get_int (structure, "depth", &depth) ||
+        !gst_structure_get_boolean (structure, "signed", &signedness)) {
+      GST_DEBUG_OBJECT (avimux,
+          "broken caps, width/depth/signed field missing");
+      goto refuse_caps;
+    }
+
+    /* no clear place to put different values for these while keeping to spec */
+    if (width != depth) {
+      GST_DEBUG_OBJECT (avimux, "width must be same as depth!");
+      goto refuse_caps;
+    }
+
+    /* because that's the way the caps will be recreated from riff data */
+    if ((width == 8 && signedness) || (width == 16 && !signedness)) {
+      GST_DEBUG_OBJECT (avimux,
+          "8-bit PCM must be unsigned, 16-bit PCM signed");
       goto refuse_caps;
     }
 
@@ -683,12 +700,12 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
     avipad->auds.blockalign = 1;
     avipad->auds.av_bps = 0;
     avipad->auds.size = 16;
-
-    if (!avipad->auds.format)
-      goto refuse_caps;
   }
 
-  avipad->parent.hdr.rate = avipad->auds.blockalign * avipad->auds.rate;
+  if (!avipad->auds.format)
+    goto refuse_caps;
+
+  avipad->parent.hdr.rate = avipad->auds.rate;
   avipad->parent.hdr.samplesize = avipad->auds.blockalign;
   avipad->parent.hdr.scale = 1;
 

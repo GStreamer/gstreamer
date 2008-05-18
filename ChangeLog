@@ -1,3 +1,9 @@
+2008-05-18  Mark Nauwelaerts  <mnauw@users.sf.net>
+
+	* gst/avi/gstavimux.c: (gst_avi_mux_audsink_set_caps):
+	Set proper rate in avi stream header for PCM audio, and also do some
+	more sanity checks on caps in this case.  Fixes #511489.
+
 2008-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* sys/v4l2/gstv4l2src.c:
