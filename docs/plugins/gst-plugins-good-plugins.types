@@ -1,1 +1,4 @@
 #include <gst/gst.h>
+
+type:GstIirEqualizer
+type:GstVideoMixerPad

@@ -158,4 +158,10 @@
     <xi:include href="xml/plugin-wavparse.xml" />
     <xi:include href="xml/plugin-ximagesrc.xml" />
   </chapter>
+  
+  <chapter>
+    <title>gst-plugins-good Base Classes</title>
+    <xi:include href="xml/gstiirequalizer.xml" />
+    <xi:include href="xml/gstvideomixerpad.xml" />
+  </chapter>
 </book>

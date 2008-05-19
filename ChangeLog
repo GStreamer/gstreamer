@@ -1,3 +1,16 @@
+2008-05-19  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/gst-plugins-good-plugins.types:
+	* gst/videomixer/videomixer.c:
+	  Try using thaytans new mechanism to get extra classes into plugin
+	  docs. Aparently works for the Eq. For VideoMixer the GObject stuff is
+	  missing still.
+
 2008-05-18  Mark Nauwelaerts  <mnauw@users.sf.net>
 
 	* gst/avi/gstavimux.c: (gst_avi_mux_audsink_set_caps):

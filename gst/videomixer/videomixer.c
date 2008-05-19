@@ -29,6 +29,10 @@
  * output parameters. Indeed output video frames will have the geometry of the
  * biggest incoming video stream and the framerate of the fastest incoming one.
  * </para>
+ * <para>
+ * Individual parameters for each input stream can be configured on the
+ * #GstVideoMixerPad.
+ * </para>
  * <title>Sample pipelines</title>
  * <para>
  * Here is a pipeline to demonstrate videomixer used together with videobox :
