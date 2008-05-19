@@ -1,5 +1,10 @@
 2008-05-19  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* configure.ac:
+	  Error out if we don't have the required version of core.
+
+2008-05-19  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst/typefind/gsttypefindfunctions.c: (aac_type_find):
 	  Use data scan helper in aac typefinder and stop scanning
 	  for headers when we've found a type. Also fix potential invalid
