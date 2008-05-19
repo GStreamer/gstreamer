@@ -1,3 +1,8 @@
+2008-05-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_send_event):
+	Flush timestamp correction variables on a flush. Fixes #533832.
+
 2008-05-14  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

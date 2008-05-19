@@ -1255,6 +1255,17 @@ gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event)
     GST_DEBUG_OBJECT (rmdemux, "Pushing %s event on pad %s",
         GST_EVENT_TYPE_NAME (event), GST_PAD_NAME (stream->pad));
 
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_FLUSH_STOP:
+        stream->last_ts = -1;
+        stream->next_ts = -1;
+        stream->last_seq = -1;
+        stream->next_seq = -1;
+        stream->last_flow = GST_FLOW_OK;
+        break;
+      default:
+        break;
+    }
     gst_event_ref (event);
     gst_pad_push_event (stream->pad, event);
   }
