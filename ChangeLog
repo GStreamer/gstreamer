@@ -1,3 +1,13 @@
+2008-05-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/interleave/deinterleave.c: (gst_deinterleave_class_init),
+	(gst_deinterleave_init), (gst_deinterleave_add_new_pads),
+	(gst_deinterleave_set_pads_caps), (gst_deinterleave_set_property),
+	(gst_deinterleave_get_property):
+	* gst/interleave/deinterleave.h:
+	Add a property to select whether channel positions should be kept on
+	the mono output buffers or should be dropped.
+
 2008-05-18  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/Makefile.am:
