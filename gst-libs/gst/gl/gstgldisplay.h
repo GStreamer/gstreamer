@@ -97,6 +97,7 @@ struct _GstGLDisplay {
     gint glcontext_width;
     gint glcontext_height;
     gboolean visible;
+    gboolean isAlive;
 
     //intput frame buffer object (video -> GL)
     GLuint fbo;
@@ -209,7 +210,7 @@ void gst_gl_display_clearTexture (GstGLDisplay* display, guint texture,
 
 void gst_gl_display_videoChanged (GstGLDisplay* display, GstVideoFormat video_format,
                                   gpointer data);
-void gst_gl_display_postRedisplay (GstGLDisplay* display);
+gboolean gst_gl_display_postRedisplay (GstGLDisplay* display);
 void gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId);
 
 #endif
