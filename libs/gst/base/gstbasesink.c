@@ -1396,39 +1396,16 @@ out_of_segment:
 }
 
 /* with STREAM_LOCK, PREROLL_LOCK
- *
- * Waits for the clock to reach @time. If @time is not valid, no
- * synchronisation is done and BADTIME is returned. 
- * If synchronisation is disabled in the element or there is no
- * clock, no synchronisation is done and BADTIME is returned.
- *
- * Else a blocking wait is performed on the clock. We save the ClockID
- * so we can unlock the entry at any time. While we are blocking, we 
- * release the PREROLL_LOCK so that other threads can interrupt the entry.
- *
- * @time is expressed in running time.
- */
-static GstClockReturn
-gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time,
-    GstClockTimeDiff * jitter)
+ * adjust a timestamp with the latency and timestamp offset */
+static GstClockTime
+gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
 {
-  GstClockID id;
-  GstClockReturn ret;
-  GstClock *clock;
   GstClockTimeDiff ts_offset;
 
+  /* don't do anything funny with invalid timestamps */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time)))
-    goto invalid_time;
+    return time;
 
-  GST_OBJECT_LOCK (basesink);
-  if (G_UNLIKELY (!basesink->sync))
-    goto no_sync;
-
-  if (G_UNLIKELY ((clock = GST_ELEMENT_CLOCK (basesink)) == NULL))
-    goto no_clock;
-
-  /* add base time and latency */
-  time += GST_ELEMENT_CAST (basesink)->base_time;
   time += basesink->priv->latency;
 
   /* apply offset, be carefull for underflows */
@@ -1441,6 +1418,44 @@ gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time,
       time = 0;
   } else
     time += ts_offset;
+
+  return time;
+}
+
+/* with STREAM_LOCK, PREROLL_LOCK
+ *
+ * Waits for the clock to reach @time. If @time is not valid, no
+ * synchronisation is done and BADTIME is returned. 
+ * If synchronisation is disabled in the element or there is no
+ * clock, no synchronisation is done and BADTIME is returned.
+ *
+ * Else a blocking wait is performed on the clock. We save the ClockID
+ * so we can unlock the entry at any time. While we are blocking, we 
+ * release the PREROLL_LOCK so that other threads can interrupt the entry.
+ *
+ * @time is expressed in running time and must be compensated for latency and
+ * other offsets by the caller.
+ */
+static GstClockReturn
+gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time,
+    GstClockTimeDiff * jitter)
+{
+  GstClockID id;
+  GstClockReturn ret;
+  GstClock *clock;
+
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time)))
+    goto invalid_time;
+
+  GST_OBJECT_LOCK (basesink);
+  if (G_UNLIKELY (!basesink->sync))
+    goto no_sync;
+
+  if (G_UNLIKELY ((clock = GST_ELEMENT_CLOCK (basesink)) == NULL))
+    goto no_clock;
+
+  /* add base_time, latency and ts_offset */
+  time += GST_ELEMENT_CAST (basesink)->base_time;
 
   id = gst_clock_new_single_shot_id (clock, time);
   GST_OBJECT_UNLOCK (basesink);
@@ -1542,6 +1557,8 @@ gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
   GstFlowReturn ret;
 
   do {
+    GstClockTime stime;
+
     GST_DEBUG_OBJECT (sink, "checking preroll");
 
     /* first wait for the playing state before we can continue */
@@ -1557,7 +1574,8 @@ gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
 
     /* wait for the clock, this can be interrupted because we got shut down or 
      * we PAUSED. */
-    status = gst_base_sink_wait_clock (sink, time, jitter);
+    stime = gst_base_sink_adjust_time (sink, time);
+    status = gst_base_sink_wait_clock (sink, stime, jitter);
 
     GST_DEBUG_OBJECT (sink, "clock returned %d", status);
 
@@ -1614,7 +1632,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
   GstClockTimeDiff jitter;
   gboolean syncable;
   GstClockReturn status = GST_CLOCK_OK;
-  GstClockTime rstart, rstop, sstart, sstop;
+  GstClockTime rstart, rstop, sstart, sstop, stime;
   gboolean do_sync;
   GstBaseSinkPrivate *priv;
 
@@ -1679,7 +1697,8 @@ again:
 
   /* this function will return immediatly if start == -1, no clock
    * or sync is disabled with GST_CLOCK_BADTIME. */
-  status = gst_base_sink_wait_clock (basesink, rstart, &jitter);
+  stime = gst_base_sink_adjust_time (basesink, rstart);
+  status = gst_base_sink_wait_clock (basesink, stime, &jitter);
 
   GST_DEBUG_OBJECT (basesink, "clock returned %d", status);
 
@@ -2496,6 +2515,7 @@ static GstFlowReturn
 gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     GstBuffer * buf)
 {
+  GstBaseSinkClass *bclass;
   GstFlowReturn result;
   GstClockTime start = GST_CLOCK_TIME_NONE, end = GST_CLOCK_TIME_NONE;
   GstSegment *clip_segment;
@@ -2527,10 +2547,18 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     basesink->segment.stop = -1;
   }
 
-  /* check if the buffer needs to be dropped */
-  /* we don't use the subclassed method as it may not return
-   * valid values for our purpose here */
-  gst_base_sink_get_times (basesink, buf, &start, &end);
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
+
+  /* check if the buffer needs to be dropped, we first ask the subclass for the
+   * start and end */
+  if (bclass->get_times)
+    bclass->get_times (basesink, buf, &start, &end);
+
+  if (start == -1) {
+    /* if the subclass does not want sync, we use our own values so that we at
+     * least clip the buffer to the segment */
+    gst_base_sink_get_times (basesink, buf, &start, &end);
+  }
 
   GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
       ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));

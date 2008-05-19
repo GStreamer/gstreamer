@@ -1,3 +1,13 @@
+2008-05-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_adjust_time),
+	(gst_base_sink_wait_clock), (gst_base_sink_wait_eos),
+	(gst_base_sink_do_sync), (gst_base_sink_chain_unlocked):
+	Refactor adjusting the running_time with latency and offset into a
+	separate method.
+	When doing clipping, we still want to use the subclass get_times method,
+	just in case the DURATION or TIMESTAMP are not set.
+
 2008-05-19  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* docs/gst/gstreamer-sections.txt:
