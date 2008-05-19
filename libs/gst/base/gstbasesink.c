@@ -1422,21 +1422,31 @@ gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
   return time;
 }
 
-/* with STREAM_LOCK, PREROLL_LOCK
+/* gst_base_sink_wait_clock:
+ * @sink: the sink
+ * @time: the running_time to be reached
+ * @jitter: the jitter to be filled with time diff (can be NULL)
  *
- * Waits for the clock to reach @time. If @time is not valid, no
- * synchronisation is done and BADTIME is returned. 
- * If synchronisation is disabled in the element or there is no
- * clock, no synchronisation is done and BADTIME is returned.
+ * This function will block until @time is reached. It is usually called by
+ * subclasses that use their own internal synchronisation.
  *
- * Else a blocking wait is performed on the clock. We save the ClockID
- * so we can unlock the entry at any time. While we are blocking, we 
- * release the PREROLL_LOCK so that other threads can interrupt the entry.
+ * If @time is not valid, no sycnhronisation is done and #GST_CLOCK_BADTIME is
+ * returned. Likewise, if synchronisation is disabled in the element or there
+ * is no clock, no synchronisation is done and #GST_CLOCK_BADTIME is returned.
  *
- * @time is expressed in running time and must be compensated for latency and
- * other offsets by the caller.
+ * This function should only be called with the PREROLL_LOCK held, like when
+ * receiving an EOS event in the ::event vmethod or when receiving a buffer in
+ * the ::render vmethod.
+ *
+ * The @time argument should be the running_time of when this method should
+ * return and is not adjusted with any latency or offset configured in the
+ * sink.
+ *
+ * Since 0.10.20
+ *
+ * Returns: #GstClockReturn
  */
-static GstClockReturn
+GstClockReturn
 gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time,
     GstClockTimeDiff * jitter)
 {
@@ -1454,12 +1464,16 @@ gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time,
   if (G_UNLIKELY ((clock = GST_ELEMENT_CLOCK (basesink)) == NULL))
     goto no_clock;
 
-  /* add base_time, latency and ts_offset */
+  /* add base_time to running_time to get the time against the clock */
   time += GST_ELEMENT_CAST (basesink)->base_time;
 
   id = gst_clock_new_single_shot_id (clock, time);
   GST_OBJECT_UNLOCK (basesink);
 
+  /* A blocking wait is performed on the clock. We save the ClockID
+   * so we can unlock the entry at any time. While we are blocking, we 
+   * release the PREROLL_LOCK so that other threads can interrupt the
+   * entry. */
   basesink->clock_id = id;
   /* release the preroll lock while waiting */
   GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
@@ -1544,6 +1558,9 @@ stopping:
  *
  * This function should only be called with the PREROLL_LOCK held, like when
  * receiving an EOS event in the ::event vmethod.
+ *
+ * The @time argument should be the running_time of when the EOS should happen
+ * and will be adjusted with any latency and offset configured in the sink.
  *
  * Since 0.10.15
  *
