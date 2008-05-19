@@ -2671,11 +2671,17 @@ gst_pad_buffer_alloc_unchecked (GstPad * pad, guint64 offset, gint size,
     goto fallback;
 
   ret = bufferallocfunc (pad, offset, size, caps, buf);
+
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto error;
+
   /* no error, but NULL buffer means fallback to the default */
   if (G_UNLIKELY (*buf == NULL))
     goto fallback;
+
+  /* sanity check */
+  if (G_UNLIKELY (GST_BUFFER_SIZE (*buf) < size))
+    goto wrong_size;
 
   /* If the buffer alloc function didn't set up the caps like it should,
    * do it for it */
@@ -2698,6 +2704,14 @@ error:
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
         "alloc function returned error (%d) %s", ret, gst_flow_get_name (ret));
     return ret;
+  }
+wrong_size:
+  {
+    GST_CAT_ERROR_OBJECT (GST_CAT_PADS, pad, "buffer returned by alloc "
+        "function is too small: %u < %d", GST_BUFFER_SIZE (*buf), size);
+    gst_buffer_unref (*buf);
+    *buf = NULL;
+    goto fallback;
   }
 fallback:
   {
