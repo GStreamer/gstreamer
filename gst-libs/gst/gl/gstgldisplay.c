@@ -1890,7 +1890,7 @@ gst_gl_display_loadGLSLprogram (gchar* textFProgram)
 	
 	//Compile the shader
     FHandle = glCreateShaderObjectARB (GL_FRAGMENT_SHADER_ARB);
-    glShaderSourceARB (FHandle, 1, &textFProgram, NULL);
+    glShaderSourceARB (FHandle, 1, (const GLcharARB**)&textFProgram, NULL);
     glCompileShaderARB (FHandle);
 
     //Print the compilation log
