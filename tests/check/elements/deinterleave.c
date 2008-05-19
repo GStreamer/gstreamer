@@ -514,6 +514,7 @@ GST_START_TEST (test_8_channels_float32)
 
   deinterleave = gst_element_factory_make ("deinterleave", "deinterleave");
   fail_unless (deinterleave != NULL, "failed to create deinterleave element");
+  g_object_set (deinterleave, "keep-positions", TRUE, NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), src, deinterleave, NULL);
 
