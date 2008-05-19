@@ -53,6 +53,7 @@ struct _GstDeinterleave
   GstCaps *sinkcaps;
   gint channels;
   GstAudioChannelPosition *pos;
+  gboolean keep_positions;
 
   GstPad *sink;
 

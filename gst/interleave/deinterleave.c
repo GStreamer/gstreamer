@@ -123,12 +123,23 @@ deinterleave_24 (guint8 * out, guint8 * in, guint stride, guint nframes)
 GST_BOILERPLATE (GstDeinterleave, gst_deinterleave, GstElement,
     GST_TYPE_ELEMENT);
 
+enum
+{
+  PROP_0,
+  PROP_KEEP_POSITIONS
+};
+
 static GstFlowReturn gst_deinterleave_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_deinterleave_getcaps (GstPad * pad);
 static gboolean gst_deinterleave_sink_activate_push (GstPad * pad,
     gboolean active);
 static gboolean gst_deinterleave_sink_event (GstPad * pad, GstEvent * event);
+static void gst_deinterleave_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_deinterleave_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+
 
 static void
 gst_deinterleave_finalize (GObject * obj)
@@ -174,6 +185,13 @@ gst_deinterleave_class_init (GstDeinterleaveClass * klass)
       "deinterleave element");
 
   gobject_class->finalize = gst_deinterleave_finalize;
+  gobject_class->set_property = gst_deinterleave_set_property;
+  gobject_class->get_property = gst_deinterleave_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_KEEP_POSITIONS,
+      g_param_spec_boolean ("keep-positions", "Keep positions",
+          "Keep the original channel positions on the output buffers",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -181,6 +199,7 @@ gst_deinterleave_init (GstDeinterleave * self, GstDeinterleaveClass * klass)
 {
   self->channels = 0;
   self->pos = NULL;
+  self->keep_positions = FALSE;
   self->width = 0;
   self->func = NULL;
 
@@ -213,10 +232,15 @@ gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
     g_free (name);
 
     /* Set channel position if we know it */
-    if (self->pos) {
+    if (self->keep_positions) {
+      GstAudioChannelPosition pos[1] = { GST_AUDIO_CHANNEL_POSITION_NONE };
+
       srccaps = gst_caps_copy (caps);
       s = gst_caps_get_structure (srccaps, 0);
-      gst_audio_set_channel_positions (s, &self->pos[i]);
+      if (self->pos)
+        gst_audio_set_channel_positions (s, &self->pos[i]);
+      else
+        gst_audio_set_channel_positions (s, pos);
     } else {
       srccaps = caps;
     }
@@ -228,7 +252,7 @@ gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
     gst_element_add_pad (GST_ELEMENT (self), pad);
     self->srcpads = g_list_prepend (self->srcpads, gst_object_ref (pad));
 
-    if (self->pos)
+    if (self->keep_positions)
       gst_caps_unref (srccaps);
   }
 
@@ -248,17 +272,22 @@ gst_deinterleave_set_pads_caps (GstDeinterleave * self, GstCaps * caps)
     GstCaps *srccaps;
 
     /* Set channel position if we know it */
-    if (self->pos) {
+    if (self->keep_positions) {
+      GstAudioChannelPosition pos[1] = { GST_AUDIO_CHANNEL_POSITION_NONE };
+
       srccaps = gst_caps_copy (caps);
       s = gst_caps_get_structure (srccaps, 0);
-      gst_audio_set_channel_positions (s, &self->pos[i]);
+      if (self->pos)
+        gst_audio_set_channel_positions (s, &self->pos[i]);
+      else
+        gst_audio_set_channel_positions (s, pos);
     } else {
       srccaps = caps;
     }
 
     gst_pad_set_caps (pad, srccaps);
 
-    if (self->pos)
+    if (self->keep_positions)
       gst_caps_unref (srccaps);
   }
 }
@@ -546,6 +575,38 @@ gst_deinterleave_sink_event (GstPad * pad, GstEvent * event)
   gst_object_unref (self);
 
   return ret;
+}
+
+static void
+gst_deinterleave_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstDeinterleave *self = GST_DEINTERLEAVE (object);
+
+  switch (prop_id) {
+    case PROP_KEEP_POSITIONS:
+      self->keep_positions = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_deinterleave_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstDeinterleave *self = GST_DEINTERLEAVE (object);
+
+  switch (prop_id) {
+    case PROP_KEEP_POSITIONS:
+      g_value_set_boolean (value, self->keep_positions);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstFlowReturn
