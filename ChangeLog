@@ -1,3 +1,8 @@
+2008-05-14  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.7.3 pre-release
+
 2008-05-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_parse_video_packet):
