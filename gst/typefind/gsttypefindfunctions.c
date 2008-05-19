@@ -547,68 +547,65 @@ static GstStaticCaps aac_caps = GST_STATIC_CAPS ("audio/mpeg, "
 static void
 aac_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint8 *data = gst_type_find_peek (tf, 0, AAC_AMOUNT);
-  gint snc;
+  DataScanCtx c = { 0, NULL, 0 };
 
-  /* detect adts header or adif header.
-   * The ADIF header is 4 bytes, that should be OK. The ADTS header, on
-   * the other hand, is 14 bits only, so we require one valid frame with
-   * again a valid syncpoint on the next one (28 bits) for certainty. We
-   * require 4 kB, which is quite a lot, since frames are generally 200-400
-   * bytes.
-   */
-  if (data) {
-    gint n;
+  while (c.offset < AAC_AMOUNT) {
+    guint snc, len;
 
-    for (n = 0; n < AAC_AMOUNT - 3; n++) {
-      snc = GST_READ_UINT16_BE (&data[n]);
+    /* detect adts header or adif header.
+     * The ADIF header is 4 bytes, that should be OK. The ADTS header, on
+     * the other hand, is 14 bits only, so we require one valid frame with
+     * again a valid syncpoint on the next one (28 bits) for certainty. We
+     * require 4 kB, which is quite a lot, since frames are generally 200-400
+     * bytes.
+     */
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 6)))
+      break;
+
+    snc = GST_READ_UINT16_BE (c.data);
+    if (G_UNLIKELY ((snc & 0xfff6) == 0xfff0)) {
+      /* ADTS header - find frame length */
+      GST_DEBUG ("Found one ADTS syncpoint at offset 0x%x, tracing next...",
+          c.offset);
+      len = ((c.data[3] & 0x03) << 11) |
+          (c.data[4] << 3) | ((c.data[5] & 0xe0) >> 5);
+
+      if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len + 2)) {
+        GST_DEBUG ("Wrong sync or next frame not within reach, len=%u", len);
+        goto next;
+      }
+
+      snc = GST_READ_UINT16_BE (c.data + len);
       if ((snc & 0xfff6) == 0xfff0) {
-        /* ADTS header - find frame length */
-        gint len;
-
-        GST_DEBUG ("Found one ADTS syncpoint at offset 0x%x, tracing next...",
-            n);
-        if (AAC_AMOUNT - n < 5) {
-          GST_DEBUG ("Not enough data to parse ADTS header");
-          break;
-        }
-        len = ((data[n + 3] & 0x03) << 11) |
-            (data[n + 4] << 3) | ((data[n + 5] & 0xe0) >> 5);
-        if (n + len + 2 >= AAC_AMOUNT) {
-          GST_DEBUG ("Next frame is not within reach");
-          break;
-        } else if (len == 0) {
-          continue;
-        }
-
-        snc = GST_READ_UINT16_BE (&data[n + len]);
-        if ((snc & 0xfff6) == 0xfff0) {
-          gint mpegversion = (data[n + 1] & 0x08) ? 2 : 4;
-          GstCaps *caps = gst_caps_new_simple ("audio/mpeg",
-              "framed", G_TYPE_BOOLEAN, FALSE,
-              "mpegversion", G_TYPE_INT, mpegversion,
-              NULL);
-
-          gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
-          gst_caps_unref (caps);
-
-          GST_DEBUG ("Found ADTS-%d syncpoint at offset 0x%x (framelen %u)",
-              mpegversion, n, len);
-          break;
-        }
-
-        GST_DEBUG ("No next frame found... (should be at 0x%x)", n + len);
-      } else if (!memcmp (&data[n], "ADIF", 4)) {
-        /* ADIF header */
+        gint mpegversion = (c.data[1] & 0x08) ? 2 : 4;
         GstCaps *caps = gst_caps_new_simple ("audio/mpeg",
             "framed", G_TYPE_BOOLEAN, FALSE,
-            "mpegversion", G_TYPE_INT, 4,
+            "mpegversion", G_TYPE_INT, mpegversion,
             NULL);
 
         gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
         gst_caps_unref (caps);
+        GST_DEBUG ("Found second ADTS-%d syncpoint at offset 0x%x, framelen %u",
+            mpegversion, c.offset, len);
+        break;
       }
+
+      GST_DEBUG ("No next frame found... (should have been at 0x%x)", len);
+    } else if (!memcmp (c.data, "ADIF", 4)) {
+      /* ADIF header */
+      GstCaps *caps = gst_caps_new_simple ("audio/mpeg",
+          "framed", G_TYPE_BOOLEAN, FALSE,
+          "mpegversion", G_TYPE_INT, 4,
+          NULL);
+
+      gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
+      gst_caps_unref (caps);
+      break;
     }
+
+  next:
+
+    data_scan_ctx_advance (tf, &c, 1);
   }
 }
 
