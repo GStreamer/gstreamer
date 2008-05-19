@@ -383,7 +383,6 @@ static void
 gst_gl_display_glutCreateWindow (GstGLDisplay *display)
 {
     gint glutWinId = 0;
-    GList *keys = NULL;
     gchar buffer[5];
     GLenum err = 0;
 
@@ -612,7 +611,7 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
 
     //insert glut context to the map
     display->glutWinId = glutWinId;
-    g_hash_table_insert (gst_gl_display_map, (gpointer)(guint64)glutWinId, display);
+    g_hash_table_insert (gst_gl_display_map, GINT_TO_POINTER (glutWinId), display);
     
     //check glut id validity
     g_assert (glutGetWindow() == glutWinId);
@@ -671,7 +670,7 @@ gst_gl_display_glutDestroyWindow (GstGLDisplay *display)
 		}
 	}
 
-    g_hash_table_remove (gst_gl_display_map, (gpointer)(guint64)display->glutWinId); 
+    g_hash_table_remove (gst_gl_display_map, GINT_TO_POINTER (display->glutWinId)); 
     g_print ("glut window destroyed: %d\n", display->glutWinId);
 
     //if the map is empty, leaveMainloop and join the thread
@@ -845,7 +844,7 @@ gst_gl_display_checkMsgValidity (GstGLDisplayMsg *msg)
         case GST_GL_DISPLAY_ACTION_VIDEO:
         case GST_GL_DISPLAY_ACTION_REDISPLAY:
             //msg is out of date if the associated display is not in the map
-            if (!g_hash_table_lookup (gst_gl_display_map, (gpointer)(guint64)msg->glutWinId))
+            if (!g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (msg->glutWinId)))
                 valid = FALSE;
             break;
         default:
@@ -1092,7 +1091,7 @@ gst_gl_display_onReshape(gint width, gint height)
   
     //retrieve the display associated to the glut context
     glutWinId = glutGetWindow ();
-    display = g_hash_table_lookup (gst_gl_display_map, (gpointer)(guint64)glutWinId);
+    display = g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (glutWinId));
 
     //glutGetWindow return 0 if no windows exists, then g_hash_table_lookup return NULL
     if (display == NULL) return;
@@ -1124,7 +1123,7 @@ void gst_gl_display_draw(void)
   
     //retrieve the display associated to the glut context
     glutWinId = glutGetWindow ();
-    display = g_hash_table_lookup (gst_gl_display_map, (gpointer)(guint64)glutWinId);
+    display = g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (glutWinId));
     
     //glutGetWindow return 0 if no windows exists, then g_hash_table_lookup return NULL
     if (display == NULL) return;
@@ -1201,7 +1200,7 @@ void gst_gl_display_onClose (void)
   
     //retrieve the display associated to the glut context
     glutWinId = glutGetWindow ();
-    display = g_hash_table_lookup (gst_gl_display_map, (gpointer)(guint64)glutWinId);
+    display = g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (glutWinId));
     
     //glutGetWindow return 0 if no windows exists, then g_hash_table_lookup return NULL
     if (display == NULL) return;
