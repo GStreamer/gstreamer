@@ -355,9 +355,12 @@ gst_gl_display_finalize (GObject *object)
 static gpointer
 gst_gl_display_glutThreadFunc (GstGLDisplay *display)
 {
-    static char *argv = "gst-launch-0.10.exe";
+    static char *argv = "gst-launch-0.10";
     static gint argc = 1; 
 
+    //-display  DISPLAY
+    //Specify the X server to connect to. If not specified, the value of the DISPLAY environment variable is used.
+    //Should be pass through a glimagesink property
     glutInit(&argc, &argv);
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
     
