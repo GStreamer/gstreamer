@@ -1,3 +1,23 @@
+/* 
+ * GStreamer
+ * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -22,7 +42,6 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition);
 
 static void gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
     GstClockTime * start, GstClockTime * end);
-//static GstCaps *gst_glimage_sink_get_caps (GstBaseSink * bsink);
 static gboolean gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static GstFlowReturn gst_glimage_sink_render (GstBaseSink * bsink,
     GstBuffer * buf);
@@ -40,10 +59,10 @@ static void gst_glimage_sink_implements_init (GstImplementsInterfaceClass *
     klass);
 
 static const GstElementDetails gst_glimage_sink_details =
-GST_ELEMENT_DETAILS ("OpenGL video sink",
-    "Sink/Video",
-    "A videosink based on OpenGL",
-    "Julien Isorce <julien.isorce@gmail.com>");
+    GST_ELEMENT_DETAILS ("OpenGL video sink",
+        "Sink/Video",
+        "A videosink based on OpenGL",
+        "Julien Isorce <julien.isorce@gmail.com>");
 
 static GstStaticPadTemplate gst_glimage_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -52,7 +71,7 @@ static GstStaticPadTemplate gst_glimage_sink_template =
     GST_STATIC_CAPS (GST_GL_VIDEO_CAPS ";"
         GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_YUV ("{ YUY2, UYVY, AYUV, YV12, I420 }"))
+        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
     );
 
 enum
@@ -483,7 +502,6 @@ gst_glimage_sink_set_xwindow_id (GstXOverlay* overlay, gulong window_id)
         //close internal window
 
         glimage_sink->window_id = window_id;
-        //gst_gl_display_set_windowId (glimage_sink->display, glimage_sink->window_id);
     }
 
     //Handle the case where window_id is 0 and we want the sink to 

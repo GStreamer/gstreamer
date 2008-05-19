@@ -1,3 +1,23 @@
+/* 
+ * GStreamer
+ * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -379,11 +399,8 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     glutInitWindowSize(display->glcontext_width, display->glcontext_height); 	
 
     //create opengl context
-#if WIN32
-    sprintf_s(buffer, 5, "%d", glutWinId);
-#else
     sprintf(buffer, "%d", glutWinId);
-#endif
+
     display->title =  g_string_append (display->title, buffer);
     glutWinId = glutCreateWindow (display->title->str, display->winId);
 
@@ -563,18 +580,13 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
 		g_print ("Context %d, ARB_fragment_program supported: yes\n", glutWinId);
 
 		//from video to texture
-#if WIN32
-        sprintf_s (program, 2048, display->textFProgram_YUY2_UYVY, 'r', 'g', 'a');
-#else
-	sprintf (program, display->textFProgram_YUY2_UYVY, 'r', 'g', 'a');
-#endif
+
+	    sprintf (program, display->textFProgram_YUY2_UYVY, 'r', 'g', 'a');
+
 		display->GLSLProgram_YUY2 = gst_gl_display_loadGLSLprogram (program);
 
-#if WIN32
-		sprintf_s (program, 2048, display->textFProgram_YUY2_UYVY, 'a', 'b', 'r');
-#else
-	sprintf (program, display->textFProgram_YUY2_UYVY, 'a', 'b', 'r');
-#endif
+	    sprintf (program, display->textFProgram_YUY2_UYVY, 'a', 'b', 'r');
+
 		display->GLSLProgram_UYVY = gst_gl_display_loadGLSLprogram (program);
 
 		display->GLSLProgram_I420_YV12 = gst_gl_display_loadGLSLprogram (display->textFProgram_I420_YV12);
@@ -1044,8 +1056,6 @@ void
 gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId)
 {
     static gint glheight = 0;
-    
-    //g_print ("Display::gst_gl_display_set_windowId\n");
 
     gst_gl_display_lock (display);
     gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_DESTROY, display);
