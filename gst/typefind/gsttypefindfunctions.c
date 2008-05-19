@@ -45,7 +45,7 @@ GST_DEBUG_CATEGORY_STATIC (type_find_debug);
 typedef struct
 {
   guint64 offset;
-  guint8 *data;
+  const guint8 *data;
   gint size;
 } DataScanCtx;
 
@@ -65,13 +65,15 @@ data_scan_ctx_advance (GstTypeFind * tf, DataScanCtx * c, guint bytes_to_skip)
 static inline gboolean
 data_scan_ctx_ensure_data (GstTypeFind * tf, DataScanCtx * c, gint min_len)
 {
+  const guint8 *data;
   guint64 len;
 
   if (G_LIKELY (c->size >= min_len))
     return TRUE;
 
-  c->data = gst_type_find_peek (tf, c->offset, DATA_SCAN_CTX_CHUNK_SIZE);
-  if (G_LIKELY (c->data != NULL)) {
+  data = gst_type_find_peek (tf, c->offset, DATA_SCAN_CTX_CHUNK_SIZE);
+  if (G_LIKELY (data != NULL)) {
+    c->data = data;
     c->size = DATA_SCAN_CTX_CHUNK_SIZE;
     return TRUE;
   }
@@ -86,8 +88,9 @@ data_scan_ctx_ensure_data (GstTypeFind * tf, DataScanCtx * c, gint min_len)
     len = min_len;
   }
 
-  c->data = gst_type_find_peek (tf, c->offset, len);
-  if (c->data != NULL) {
+  data = gst_type_find_peek (tf, c->offset, len);
+  if (data != NULL) {
+    c->data = data;
     c->size = len;
     return TRUE;
   }
@@ -1241,7 +1244,7 @@ static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
 #define MPEG2_MAX_SYS_HEADERS 5
 
 static gboolean
-mpeg_sys_is_valid_pack (GstTypeFind * tf, guint8 * data, guint len,
+mpeg_sys_is_valid_pack (GstTypeFind * tf, const guint8 * data, guint len,
     guint * pack_size)
 {
   /* Check the pack header @ offset for validity, assuming that the 4 byte header

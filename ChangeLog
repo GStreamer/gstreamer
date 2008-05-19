@@ -1,3 +1,12 @@
+2008-05-19  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/typefind/gsttypefindfunctions.c: (data_scan_ctx_ensure_data),
+	  (mpeg_sys_is_valid_pack):
+	  Don't modify scan context when we return FALSE in ensure_data, so
+	  it's possible to continue scanning, and we don't end up with a NULL
+	  data pointer and a positive size, which might bite us the next time
+	  we're called. Small constification.
+
 2008-05-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/adder/gstadder.c:
