@@ -2413,9 +2413,7 @@ could_not_negotiate:
 typefind_failed:
   {
     GST_DEBUG_OBJECT (basesrc, "could not typefind, stopping");
-    GST_ELEMENT_ERROR (basesrc, STREAM, FORMAT,
-        ("Could not determine media type"),
-        ("Add support for this media type"));
+    GST_ELEMENT_ERROR (basesrc, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
     /* we must call stop */
     gst_base_src_stop (basesrc);
     return FALSE;
