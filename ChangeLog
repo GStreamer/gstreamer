@@ -1,5 +1,11 @@
 2008-05-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/elements/deinterleave.c: (GST_START_TEST):
+	Set keep-positions property to TRUE for the 8 channel test to ensure
+	that the original channel position is set on the output.
+
+2008-05-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/interleave/deinterleave.c: (gst_deinterleave_class_init),
 	(gst_deinterleave_init), (gst_deinterleave_add_new_pads),
 	(gst_deinterleave_set_pads_caps), (gst_deinterleave_set_property),
