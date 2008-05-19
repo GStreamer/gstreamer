@@ -1825,6 +1825,10 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
       && GST_BUFFER_TIMESTAMP (*buf) == -1)
     GST_BUFFER_TIMESTAMP (*buf) = 0;
 
+  /* set pad caps on the buffer if the buffer had no caps */
+  if (GST_BUFFER_CAPS (*buf) == NULL)
+    gst_buffer_set_caps (*buf, GST_PAD_CAPS (src->srcpad));
+
   /* now sync before pushing the buffer */
   status = gst_base_src_do_sync (src, *buf);
 
@@ -2377,7 +2381,9 @@ gst_base_src_start (GstBaseSrc * basesrc)
   if (basesrc->random_access && basesrc->data.ABI.typefind && size != -1) {
     GstCaps *caps;
 
-    caps = gst_type_find_helper (basesrc->srcpad, size);
+    if (!(caps = gst_type_find_helper (basesrc->srcpad, size)))
+      goto typefind_failed;
+
     gst_pad_set_caps (basesrc->srcpad, caps);
     gst_caps_unref (caps);
   } else {
@@ -2400,6 +2406,16 @@ could_not_negotiate:
     GST_DEBUG_OBJECT (basesrc, "could not negotiate, stopping");
     GST_ELEMENT_ERROR (basesrc, STREAM, FORMAT,
         ("Could not negotiate format"), ("Check your filtered caps, if any"));
+    /* we must call stop */
+    gst_base_src_stop (basesrc);
+    return FALSE;
+  }
+typefind_failed:
+  {
+    GST_DEBUG_OBJECT (basesrc, "could not typefind, stopping");
+    GST_ELEMENT_ERROR (basesrc, STREAM, FORMAT,
+        ("Could not determine media type"),
+        ("Add support for this media type"));
     /* we must call stop */
     gst_base_src_stop (basesrc);
     return FALSE;
