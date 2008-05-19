@@ -397,6 +397,7 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
     GstGLImageSink *glimage_sink = NULL;
     GstGLBuffer *gl_buffer = NULL;
+    gboolean isAlive = TRUE;
 
     glimage_sink = GST_GLIMAGE_SINK (bsink);
 
@@ -469,9 +470,12 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     glimage_sink->stored_buffer = gl_buffer;
 
     //redisplay opengl scene
-    gst_gl_display_postRedisplay (glimage_sink->display);
+    isAlive = gst_gl_display_postRedisplay (glimage_sink->display);
 
-    return GST_FLOW_OK;
+    if (isAlive)
+        return GST_FLOW_OK;
+    else
+        return GST_FLOW_UNEXPECTED;;
 }
 
 

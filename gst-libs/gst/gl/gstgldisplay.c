@@ -25,16 +25,6 @@
 #include "gstgldisplay.h"
 #include <gst/gst.h>
 
-
-//-------------------------------------------------------------------------------------------
-//--------------------------- TODO ----------------------------------------------------------
-// - send EOS when the user click on the window cross
-//-------------------------------------------------------------------------------------------
-
-
-//------------------------------------------------------------
-//-------------------- Private d�clarations ------------------
-//------------------------------------------------------------
 static void gst_gl_display_finalize (GObject * object);
 static gpointer gst_gl_display_glutThreadFunc (GstGLDisplay* display);
 static void gst_gl_display_glutCreateWindow (GstGLDisplay* display);
@@ -159,6 +149,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->glcontext_width = 0;
     display->glcontext_height = 0;
     display->visible = FALSE;
+    display->isAlive = TRUE;
     display->clientReshapeCallback = NULL;
     display->clientDrawCallback = NULL;
     display->title = g_string_new ("OpenGL renderer ");
@@ -1042,12 +1033,18 @@ gst_gl_display_videoChanged (GstGLDisplay* display, GstVideoFormat video_format,
 
 
 /* Called by gst_gl elements */
-void 
+gboolean 
 gst_gl_display_postRedisplay (GstGLDisplay* display)
 {
+    gboolean isAlive = TRUE;
+    
     gst_gl_display_lock (display);
+    isAlive = display->isAlive;
     gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_REDISPLAY, display);
     gst_gl_display_unlock (display);
+
+    return isAlive;
+
 }
 
 
@@ -1207,7 +1204,10 @@ void gst_gl_display_onClose (void)
     if (display == NULL) return;
     
     g_print ("on close\n");
-	//gst_event_new_eos();
+
+    gst_gl_display_lock (display);
+    display->isAlive = FALSE;
+    gst_gl_display_unlock (display);
 }
 
 
