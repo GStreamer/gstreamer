@@ -1,3 +1,9 @@
+2008-05-19  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/mad/gstmad.c: (gst_mad_convert_src), (gst_mad_chain):
+	Fix inconsistent use of rate and channels.
+	Fixes #533581
+
 2008-05-19  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_send_event):

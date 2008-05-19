@@ -384,7 +384,7 @@ gst_mad_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
 
   mad = GST_MAD (GST_PAD_PARENT (pad));
 
-  bytes_per_sample = MAD_NCHANNELS (&mad->frame.header) * 4;
+  bytes_per_sample = mad->channels * 4;
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
@@ -396,7 +396,7 @@ gst_mad_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
           break;
         case GST_FORMAT_TIME:
         {
-          gint byterate = bytes_per_sample * mad->frame.header.samplerate;
+          gint byterate = bytes_per_sample * mad->rate;
 
           if (byterate == 0)
             return FALSE;
@@ -414,10 +414,10 @@ gst_mad_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
           *dest_value = src_value * bytes_per_sample;
           break;
         case GST_FORMAT_TIME:
-          if (mad->frame.header.samplerate == 0)
+          if (mad->rate == 0)
             return FALSE;
           *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
-              mad->frame.header.samplerate);
+              mad->rate);
           break;
         default:
           res = FALSE;
@@ -430,7 +430,7 @@ gst_mad_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
           /* fallthrough */
         case GST_FORMAT_DEFAULT:
           *dest_value = gst_util_uint64_scale_int (src_value,
-              scale * mad->frame.header.samplerate, GST_SECOND);
+              scale * mad->rate, GST_SECOND);
           break;
         default:
           res = FALSE;
@@ -1482,9 +1482,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
       nsamples = MAD_NSBSAMPLES (&mad->frame.header) *
           (mad->stream.options & MAD_OPTION_HALFSAMPLERATE ? 16 : 32);
 
-      if (mad->frame.header.samplerate == 0) {
-        g_warning
-            ("mad->frame.header.samplerate is 0; timestamps cannot be calculated");
+      if (mad->rate == 0) {
+        g_warning ("mad->rate is 0; timestamps cannot be calculated");
       } else {
         /* if we have a pending timestamp, we can use it now to calculate the sample offset */
         if (GST_CLOCK_TIME_IS_VALID (mad->last_ts)) {
