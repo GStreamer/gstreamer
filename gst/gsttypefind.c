@@ -157,6 +157,57 @@ gst_type_find_suggest (GstTypeFind * find, guint probability,
 }
 
 /**
+ * gst_type_find_suggest_simple:
+ * @find: The #GstTypeFind object the function was called with
+ * @probability: The probability in percent that the suggestion is right
+ * @media_type: the media type of the suggested caps
+ * @fieldname: first field of the suggested caps, or NULL
+ * @...: additional arguments to the suggested caps in the same format as the
+ *     arguments passed to gst_structure_new() (ie. triplets of field name,
+ *     field GType and field value)
+ *
+ * If a #GstTypeFindFunction calls this function it suggests the caps with the
+ * given probability. A #GstTypeFindFunction may supply different suggestions
+ * in one call. It is up to the caller of the #GstTypeFindFunction to interpret
+ * these values.
+ *
+ * This function is similar to gst_type_find_suggest(), only that instead of
+ * passing a #GstCaps argument you can create the caps on the fly in the same
+ * way as you can with gst_caps_new_simple().
+ *
+ * Make sure you terminate the list of arguments with a NULL argument and that
+ * the values passed have the correct type (in terms of width in bytes when
+ * passed to the vararg function - this applies particularly to gdouble and
+ * guint64 arguments).
+ *
+ * Since: 0.10.20
+ */
+void
+gst_type_find_suggest_simple (GstTypeFind * find, guint probability,
+    const char *media_type, const char *fieldname, ...)
+{
+  GstStructure *structure;
+  va_list var_args;
+  GstCaps *caps;
+
+  g_return_if_fail (find->suggest != NULL);
+  g_return_if_fail (probability <= 100);
+  g_return_if_fail (media_type != NULL);
+
+  caps = gst_caps_new_empty ();
+
+  va_start (var_args, fieldname);
+  structure = gst_structure_new_valist (media_type, fieldname, var_args);
+  va_end (var_args);
+
+  gst_caps_append_structure (caps, structure);
+  g_return_if_fail (gst_caps_is_fixed (caps));
+
+  find->suggest (find->data, probability, caps);
+  gst_caps_unref (caps);
+}
+
+/**
  * gst_type_find_get_length:
  * @find: The #GstTypeFind the function was called with
  *

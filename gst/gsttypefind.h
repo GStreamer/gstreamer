@@ -100,6 +100,11 @@ void      gst_type_find_suggest    (GstTypeFind   * find,
                                     guint           probability,
                                     const GstCaps * caps);
 
+void      gst_type_find_suggest_simple (GstTypeFind * find,
+                                        guint         probability,
+                                        const char  * media_type,
+                                        const char  * fieldname, ...);
+
 guint64   gst_type_find_get_length (GstTypeFind   * find);
 
 /* registration interface */

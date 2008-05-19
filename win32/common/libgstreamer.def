@@ -907,6 +907,7 @@ EXPORTS
 	gst_type_find_probability_get_type
 	gst_type_find_register
 	gst_type_find_suggest
+	gst_type_find_suggest_simple
 	gst_type_register_static_full
 	gst_update_registry
 	gst_uri_construct

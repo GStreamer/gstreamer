@@ -1,5 +1,13 @@
 2008-05-19  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttypefind.c: (gst_type_find_suggest_simple):
+	* gst/gsttypefind.h:
+	* win32/common/libgstreamer.def:
+	  API: add gst_type_find_suggest_simple(), #533740.
+
+2008-05-19  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_start):
 	  Use right error code when typefinding fails, so we can use
 	  the default (translated) error messages.
