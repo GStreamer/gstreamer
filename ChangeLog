@@ -1,3 +1,8 @@
+2008-05-19  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.7.4 pre-release
+
 2008-05-19  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/mad/gstmad.c: (gst_mad_convert_src), (gst_mad_chain):
