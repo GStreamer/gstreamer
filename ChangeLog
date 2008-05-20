@@ -1,3 +1,10 @@
+2008-05-20  Peter Kjellerstedt  <pkj@axis.com>
+
+	* gst/rtp/gstrtph264pay.c: (gst_h264_scan_mode_get_type),
+	(gst_rtp_h264_pay_handle_buffer):
+	* gst/rtp/gstrtph264pay.h:
+	Correct a typo (sinle -> single).
+
 2008-05-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_class_init),

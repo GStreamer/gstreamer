@@ -75,7 +75,7 @@ gst_h264_scan_mode_get_type (void)
         "bytestream"},
     {GST_H264_SCAN_MODE_MULTI_NAL, "Buffers contain multiple complete NALUs",
         "multiple"},
-    {GST_H264_SCAN_MODE_SINLE_NAL, "Buffers contain a single complete NALU",
+    {GST_H264_SCAN_MODE_SINGLE_NAL, "Buffers contain a single complete NALU",
         "single"},
     {0, NULL, NULL},
   };
@@ -89,7 +89,6 @@ gst_h264_scan_mode_get_type (void)
 
 #define DEFAULT_PROFILE_LEVEL_ID        NULL
 #define DEFAULT_SPROP_PARAMETER_SETS    NULL
-#define DEFAULT_SPROP_PARAMETER_SETS    NULL
 #define DEFAULT_SCAN_MODE               GST_H264_SCAN_MODE_MULTI_NAL
 
 enum
@@ -100,7 +99,6 @@ enum
   PROP_SCAN_MODE,
   PROP_LAST
 };
-
 
 #define IS_ACCESS_UNIT(x) (((x) > 0x00) && ((x) < 0x06))
 
@@ -772,7 +770,7 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       data += 4;
       size -= 4;
 
-      if (rtph264pay->scan_mode == GST_H264_SCAN_MODE_SINLE_NAL) {
+      if (rtph264pay->scan_mode == GST_H264_SCAN_MODE_SINGLE_NAL) {
         /* we are told that there is only a single NAL in this packet so that we
          * can avoid scanning for the next NAL. */
         next = size;
