@@ -270,18 +270,9 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 gst_glimage_sink_start (GstBaseSink * bsink)
 {
-  GstGLImageSink *glimage_sink;
+  //GstGLImageSink* glimage_sink = GST_GLIMAGE_SINK (bsink);
 
   GST_DEBUG ("start");
-
-  glimage_sink = GST_GLIMAGE_SINK (bsink);
-
-  /*if (glimage_sink->display && glimage_sink->window_id) {
-    gst_gl_display_set_window (glimage_sink->display, glimage_sink->window_id);
-    gst_gl_display_set_visible (glimage_sink->display, TRUE);
-  }*/
-
-  GST_DEBUG ("start done");
 
   return TRUE;
 }
@@ -311,13 +302,9 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
 static gboolean
 gst_glimage_sink_unlock (GstBaseSink * bsink)
 {
-  //GstGLImageSink *glimage_sink;
+  //GstGLImageSink* glimage_sink = GST_GLIMAGE_SINK (bsink);
 
   GST_DEBUG ("unlock");
-
-  //glimage_sink = GST_GLIMAGE_SINK (bsink);
-
-  /* FIXME */
 
   return TRUE;
 }

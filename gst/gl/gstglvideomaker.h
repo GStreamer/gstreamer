@@ -39,21 +39,19 @@ G_BEGIN_DECLS
 typedef struct _GstGLVideomaker GstGLVideomaker;
 typedef struct _GstGLVideomakerClass GstGLVideomakerClass;
 
-//typedef void (*GstGLVideomakerProcessFunc) (GstGLVideomaker *, guint8 *, guint);
-
 struct _GstGLVideomaker
 {
-  GstBaseTransform base_transform;
+    GstBaseTransform base_transform;
 
-  GstGLDisplay *display;
-  GstVideoFormat video_format;
-  gint width;
-  gint height;
+    GstGLDisplay *display;
+    GstVideoFormat video_format;
+    gint width;
+    gint height;
 };
 
 struct _GstGLVideomakerClass
 {
-  GstBaseTransformClass base_transform_class;
+    GstBaseTransformClass base_transform_class;
 };
 
 GType gst_gl_videomaker_get_type (void);

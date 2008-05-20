@@ -45,32 +45,30 @@ typedef struct _GstGLImageSinkClass GstGLImageSinkClass;
 
 struct _GstGLImageSink
 {
-  GstVideoSink video_sink;
+    GstVideoSink video_sink;
 
-  //properties
-  gchar *display_name;
+    //properties
+    gchar *display_name;
 
-  gulong window_id;
-  //gboolean isInternal;
+    gulong window_id;
+    //gboolean isInternal;
 
-  //caps
-  GstCaps *caps;
-  GstVideoFormat format;
-  gint width;
-  gint height;
-  gboolean is_gl;
-  gint fps_n, fps_d;
-  gint par_n, par_d;
+    //caps
+    GstCaps *caps;
+    GstVideoFormat format;
+    gint width;
+    gint height;
+    gboolean is_gl;
+    gint fps_n, fps_d;
+    gint par_n, par_d;
 
-  GstGLDisplay *display;
-  GstGLBuffer *stored_buffer;
-
+    GstGLDisplay *display;
+    GstGLBuffer *stored_buffer;
 };
 
 struct _GstGLImageSinkClass
 {
-  GstVideoSinkClass video_sink_class;
-
+    GstVideoSinkClass video_sink_class;
 };
 
 GType gst_glimage_sink_get_type(void);

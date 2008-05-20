@@ -126,7 +126,7 @@ static void
 gst_gl_videomaker_set_property (GObject* object, guint prop_id,
     const GValue* value, GParamSpec* pspec)
 {
-  //GstGLVideomaker *videomaker = GST_GL_VIDEOMAKER (object);
+  GstGLVideomaker *videomaker = GST_GL_VIDEOMAKER (object);
 
   switch (prop_id) {
     default:
