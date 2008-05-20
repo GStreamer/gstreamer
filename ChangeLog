@@ -1,3 +1,13 @@
+2008-05-20  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/videomixer/videomixer.c:
+	* gst/videomixer/videomixer.h:
+	Instead of a random number for the request pad id's,
+	use a counter.
+
+	Register the videomixerpad class from the element's class_init
+	where it's safer, and allows the docs generator to scan it.
+
 2008-05-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/smpte/Makefile.am:

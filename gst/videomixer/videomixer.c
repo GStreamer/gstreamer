@@ -57,7 +57,6 @@
 #include <gst/base/gstcollectpads.h>
 #include <gst/controller/gstcontroller.h>
 
-#include <stdlib.h>
 #include <string.h>
 
 #include "videomixer.h"
@@ -500,6 +499,9 @@ gst_videomixer_class_init (GstVideoMixerClass * klass)
       GST_DEBUG_FUNCPTR (gst_videomixer_release_pad);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_videomixer_change_state);
+
+  /* Register the pad class */
+  (void) (GST_TYPE_VIDEO_MIXER_PAD);
 }
 
 static void
@@ -532,6 +534,8 @@ gst_videomixer_reset (GstVideoMixer * mix)
     gst_videomixer_collect_free (data);
     walk = g_slist_next (walk);
   }
+
+  mix->next_sinkpad = 0;
 }
 
 static void
@@ -622,11 +626,13 @@ gst_videomixer_request_new_pad (GstElement * element,
     GstVideoMixerCollect *mixcol = NULL;
 
     if (req_name == NULL || strlen (req_name) < 6) {
-      /* no name given when requesting the pad, use random serial number */
-      serial = rand ();
+      /* no name given when requesting the pad, use next available int */
+      serial = mix->next_sinkpad++;
     } else {
       /* parse serial number from requested padname */
       serial = atoi (&req_name[5]);
+      if (serial >= mix->next_sinkpad)
+        mix->next_sinkpad = serial + 1;
     }
     /* create new pad with the name */
     name = g_strdup_printf ("sink_%d", serial);
