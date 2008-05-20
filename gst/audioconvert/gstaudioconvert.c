@@ -848,7 +848,7 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
   in_layout = gst_structure_get_value (ins, "channel-positions");
 
   if (out_layout == NULL) {
-    if (out_chans <= 2 && in_chans != out_chans && in_layout == NULL)
+    if (out_chans <= 2 && (in_chans != out_chans || in_layout == NULL))
       return;                   /* nothing to do, default layout will be assumed */
     GST_WARNING_OBJECT (base, "downstream caps contain no channel layout");
   }
