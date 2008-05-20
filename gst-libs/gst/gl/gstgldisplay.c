@@ -87,8 +87,8 @@ gst_gl_display_class_init (GstGLDisplayClass * klass)
 static void
 gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
 {
-	display->mutex = g_mutex_new ();
-	display->texturePool = g_queue_new ();
+    display->mutex = g_mutex_new ();
+    display->texturePool = g_queue_new ();
     display->cond_make = g_cond_new ();
     display->cond_fill = g_cond_new ();
     display->cond_clear = g_cond_new ();
@@ -109,7 +109,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->requestedTexture = 0;
     display->requestedTexture_u = 0;
     display->requestedTexture_v = 0;
-	display->requestedVideo_format = 0;
+    display->requestedVideo_format = 0;
     display->requestedTextureWidth = 0;
     display->requestedTextureHeight = 0;
 
@@ -153,136 +153,136 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->clientReshapeCallback = NULL;
     display->clientDrawCallback = NULL;
     display->title = g_string_new ("OpenGL renderer ");
-	
-	display->GLSLProgram_YUY2 = 0;
-	display->GLSLProgram_UYVY = 0;
-	display->GLSLProgram_I420_YV12 = 0;
-	display->GLSLProgram_AYUV = 0;
+
+    display->GLSLProgram_YUY2 = 0;
+    display->GLSLProgram_UYVY = 0;
+    display->GLSLProgram_I420_YV12 = 0;
+    display->GLSLProgram_AYUV = 0;
 
     display->GLSLProgram_to_YUY2 = 0;
-	display->GLSLProgram_to_UYVY = 0;
+    display->GLSLProgram_to_UYVY = 0;
     display->GLSLProgram_to_I420_YV12 = 0;
     display->GLSLProgram_to_AYUV = 0;
-	
-	//YUY2:r,g,a
-	//UYVY:a,b,r
-	display->textFProgram_YUY2_UYVY =
-		"uniform sampler2DRect Ytex, UVtex;\n"
-		"void main(void) {\n"
-		"  float fx, fy, y, u, v, r, g, b;\n"
-		"  fx   = gl_TexCoord[0].x;\n"	  
-		"  fy   = gl_TexCoord[0].y;\n"
-		"  y = texture2DRect(Ytex,vec2(fx,fy)).%c;\n"
-		"  u = texture2DRect(UVtex,vec2(fx*0.5,fy)).%c;\n"
-		"  v = texture2DRect(UVtex,vec2(fx*0.5,fy)).%c;\n"
-		"  y=1.164*(y-0.0627);\n"
-		"  u=u-0.5;\n"
-		"  v=v-0.5;\n"
-		"  r = y+1.5958*v;\n"
-		"  g = y-0.39173*u-0.81290*v;\n"
-		"  b = y+2.017*u;\n"
-		"  gl_FragColor = vec4(r, g, b, 1.0);\n"
-		"}\n";
-	
-	display->textFProgram_I420_YV12 =
-		"uniform sampler2DRect Ytex,Utex,Vtex;\n"
-		"void main(void) {\n"
-		"  float r,g,b,y,u,v;\n"
-		"  vec2 nxy=gl_TexCoord[0].xy;\n"
-		"  y=texture2DRect(Ytex,nxy*0.5).r;\n"
-		"  u=texture2DRect(Utex,nxy).r;\n"
-		"  v=texture2DRect(Vtex,nxy*0.5).r;\n"
-		"  y=1.1643*(y-0.0625);\n"
-		"  u=u-0.5;\n"
-		"  v=v-0.5;\n"
-		"  r=y+1.5958*v;\n"
-		"  g=y-0.39173*u-0.81290*v;\n"
-		"  b=y+2.017*u;\n"
-		"  gl_FragColor=vec4(r,g,b,1.0);\n"
-		"}\n";
 
-	display->textFProgram_AYUV =
-		"uniform sampler2DRect tex;\n"
-		"void main(void) {\n"
-		"  float r,g,b,y,u,v;\n"
-		"  vec2 nxy=gl_TexCoord[0].xy;\n"
-		"  y=texture2DRect(tex,nxy).r;\n"
-		"  u=texture2DRect(tex,nxy).g;\n"
-		"  v=texture2DRect(tex,nxy).b;\n"
-		"  y=1.1643*(y-0.0625);\n"
-		"  u=u-0.5;\n"
-		"  v=v-0.5;\n"
-		"  r=y+1.5958*v;\n"
-		"  g=y-0.39173*u-0.81290*v;\n"
-		"  b=y+2.017*u;\n"
-		"  gl_FragColor=vec4(r,g,b,1.0);\n"
-		"}\n";
+    //YUY2:r,g,a
+    //UYVY:a,b,r
+    display->textFProgram_YUY2_UYVY =
+	    "uniform sampler2DRect Ytex, UVtex;\n"
+	    "void main(void) {\n"
+	    "  float fx, fy, y, u, v, r, g, b;\n"
+	    "  fx   = gl_TexCoord[0].x;\n"	  
+	    "  fy   = gl_TexCoord[0].y;\n"
+	    "  y = texture2DRect(Ytex,vec2(fx,fy)).%c;\n"
+	    "  u = texture2DRect(UVtex,vec2(fx*0.5,fy)).%c;\n"
+	    "  v = texture2DRect(UVtex,vec2(fx*0.5,fy)).%c;\n"
+	    "  y=1.164*(y-0.0627);\n"
+	    "  u=u-0.5;\n"
+	    "  v=v-0.5;\n"
+	    "  r = y+1.5958*v;\n"
+	    "  g = y-0.39173*u-0.81290*v;\n"
+	    "  b = y+2.017*u;\n"
+	    "  gl_FragColor = vec4(r, g, b, 1.0);\n"
+	    "}\n";
+
+    display->textFProgram_I420_YV12 =
+	    "uniform sampler2DRect Ytex,Utex,Vtex;\n"
+	    "void main(void) {\n"
+	    "  float r,g,b,y,u,v;\n"
+	    "  vec2 nxy=gl_TexCoord[0].xy;\n"
+	    "  y=texture2DRect(Ytex,nxy*0.5).r;\n"
+	    "  u=texture2DRect(Utex,nxy).r;\n"
+	    "  v=texture2DRect(Vtex,nxy*0.5).r;\n"
+	    "  y=1.1643*(y-0.0625);\n"
+	    "  u=u-0.5;\n"
+	    "  v=v-0.5;\n"
+	    "  r=y+1.5958*v;\n"
+	    "  g=y-0.39173*u-0.81290*v;\n"
+	    "  b=y+2.017*u;\n"
+	    "  gl_FragColor=vec4(r,g,b,1.0);\n"
+	    "}\n";
+
+    display->textFProgram_AYUV =
+	    "uniform sampler2DRect tex;\n"
+	    "void main(void) {\n"
+	    "  float r,g,b,y,u,v;\n"
+	    "  vec2 nxy=gl_TexCoord[0].xy;\n"
+	    "  y=texture2DRect(tex,nxy).r;\n"
+	    "  u=texture2DRect(tex,nxy).g;\n"
+	    "  v=texture2DRect(tex,nxy).b;\n"
+	    "  y=1.1643*(y-0.0625);\n"
+	    "  u=u-0.5;\n"
+	    "  v=v-0.5;\n"
+	    "  r=y+1.5958*v;\n"
+	    "  g=y-0.39173*u-0.81290*v;\n"
+	    "  b=y+2.017*u;\n"
+	    "  gl_FragColor=vec4(r,g,b,1.0);\n"
+	    "}\n";
 
     //YUY2:y2,u,y1,v
-	//UYVY:v,y1,u,y2
+    //UYVY:v,y1,u,y2
     display->textFProgram_to_YUY2_UYVY =
-		"uniform sampler2DRect tex;\n"
-		"void main(void) {\n"
-		"  float fx,fy,r,g,b,r2,g2,b2,y1,y2,u,v;\n"
+	    "uniform sampler2DRect tex;\n"
+	    "void main(void) {\n"
+	    "  float fx,fy,r,g,b,r2,g2,b2,y1,y2,u,v;\n"
         "  fx = gl_TexCoord[0].x;\n"	  
-		"  fy = gl_TexCoord[0].y;\n"
+	    "  fy = gl_TexCoord[0].y;\n"
         "  r=texture2DRect(tex,vec2(fx*2.0,fy)).r;\n"
-		"  g=texture2DRect(tex,vec2(fx*2.0,fy)).g;\n"
-		"  b=texture2DRect(tex,vec2(fx*2.0,fy)).b;\n"
+	    "  g=texture2DRect(tex,vec2(fx*2.0,fy)).g;\n"
+	    "  b=texture2DRect(tex,vec2(fx*2.0,fy)).b;\n"
         "  r2=texture2DRect(tex,vec2(fx*2.0+1.0,fy)).r;\n"
-		"  g2=texture2DRect(tex,vec2(fx*2.0+1.0,fy)).g;\n"
-		"  b2=texture2DRect(tex,vec2(fx*2.0+1.0,fy)).b;\n"
+	    "  g2=texture2DRect(tex,vec2(fx*2.0+1.0,fy)).g;\n"
+	    "  b2=texture2DRect(tex,vec2(fx*2.0+1.0,fy)).b;\n"
         "  y1=0.299011*r + 0.586987*g + 0.114001*b;\n"
         "  y2=0.299011*r2 + 0.586987*g2 + 0.114001*b2;\n"
         "  u=-0.148246*r -0.29102*g + 0.439266*b;\n"
         "  v=0.439271*r - 0.367833*g - 0.071438*b ;\n"
         "  y1=0.858885*y1 + 0.0625;\n"
         "  y2=0.858885*y2 + 0.0625;\n"
-		"  u=u + 0.5;\n"
-		"  v=v + 0.5;\n"
+	    "  u=u + 0.5;\n"
+	    "  v=v + 0.5;\n"
         "  gl_FragColor=vec4(%s);\n"
-		"}\n";
+	    "}\n";
 
     display->textFProgram_to_I420_YV12 =
         "uniform sampler2DRect tex;\n"
         "uniform float w, h;\n"
-		"void main(void) {\n"
-		"  float r,g,b,r2,b2,g2,y,u,v;\n"
-		"  vec2 nxy=gl_TexCoord[0].xy;\n"
+	    "void main(void) {\n"
+	    "  float r,g,b,r2,b2,g2,y,u,v;\n"
+	    "  vec2 nxy=gl_TexCoord[0].xy;\n"
         "  vec2 nxy2=mod(2.0*nxy, vec2(w, h));\n"
         "  r=texture2DRect(tex,nxy).r;\n"
-		"  g=texture2DRect(tex,nxy).g;\n"
-		"  b=texture2DRect(tex,nxy).b;\n"
+	    "  g=texture2DRect(tex,nxy).g;\n"
+	    "  b=texture2DRect(tex,nxy).b;\n"
         "  r2=texture2DRect(tex,nxy2).r;\n"
-		"  g2=texture2DRect(tex,nxy2).g;\n"
-		"  b2=texture2DRect(tex,nxy2).b;\n"
+	    "  g2=texture2DRect(tex,nxy2).g;\n"
+	    "  b2=texture2DRect(tex,nxy2).b;\n"
         "  y=0.299011*r + 0.586987*g + 0.114001*b;\n"
         "  u=-0.148246*r2 -0.29102*g2 + 0.439266*b2;\n"
         "  v=0.439271*r2 - 0.367833*g2 - 0.071438*b2 ;\n"
         "  y=0.858885*y + 0.0625;\n"
-		"  u=u + 0.5;\n"
-		"  v=v + 0.5;\n"
-		"  gl_FragData[0] = vec4(y, 0.0, 0.0, 1.0);\n"
+	    "  u=u + 0.5;\n"
+	    "  v=v + 0.5;\n"
+	    "  gl_FragData[0] = vec4(y, 0.0, 0.0, 1.0);\n"
         "  gl_FragData[1] = vec4(u, 0.0, 0.0, 1.0);\n"
         "  gl_FragData[2] = vec4(v, 0.0, 0.0, 1.0);\n"
-		"}\n";
+	    "}\n";
 
     display->textFProgram_to_AYUV =
-		"uniform sampler2DRect tex;\n"
-		"void main(void) {\n"
-		"  float r,g,b,y,u,v;\n"
-		"  vec2 nxy=gl_TexCoord[0].xy;\n"
-		"  r=texture2DRect(tex,nxy).r;\n"
-		"  g=texture2DRect(tex,nxy).g;\n"
-		"  b=texture2DRect(tex,nxy).b;\n"
+	    "uniform sampler2DRect tex;\n"
+	    "void main(void) {\n"
+	    "  float r,g,b,y,u,v;\n"
+	    "  vec2 nxy=gl_TexCoord[0].xy;\n"
+	    "  r=texture2DRect(tex,nxy).r;\n"
+	    "  g=texture2DRect(tex,nxy).g;\n"
+	    "  b=texture2DRect(tex,nxy).b;\n"
         "  y=0.299011*r + 0.586987*g + 0.114001*b;\n"
         "  u=-0.148246*r -0.29102*g + 0.439266*b;\n"
         "  v=0.439271*r - 0.367833*g - 0.071438*b ;\n"
         "  y=0.858885*y + 0.0625;\n"
-		"  u=u + 0.5;\n"
-		"  v=v + 0.5;\n"
-		"  gl_FragColor=vec4(y,u,v,1.0);\n"
-		"}\n";
+	    "  u=u + 0.5;\n"
+	    "  v=v + 0.5;\n"
+	    "  gl_FragColor=vec4(y,u,v,1.0);\n"
+	    "}\n";
 }
 
 static void
@@ -343,7 +343,7 @@ gst_gl_display_finalize (GObject *object)
     if (g_hash_table_size (gst_gl_display_map) == 0)
     {
         g_thread_join (gst_gl_display_glutThread);
-        g_print ("Glut thread joined\n");
+        GST_DEBUG ("Glut thread joined");
         gst_gl_display_glutThread = NULL;
         g_async_queue_unref (gst_gl_display_messageQueue);
         g_hash_table_unref  (gst_gl_display_map);
@@ -370,9 +370,9 @@ gst_gl_display_glutThreadFunc (GstGLDisplay *display)
     gst_gl_display_glutCreateWindow (display);
     gst_gl_display_unlock (display);
 
-    g_print ("Glut mainLoop start\n");
+    GST_DEBUG ("Glut mainLoop start");
     glutMainLoop ();
-    g_print ("Glut mainLoop exited\n");
+    GST_DEBUG ("Glut mainLoop exited");
 
     return NULL;
 }
@@ -405,16 +405,16 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     //Init glew
     err = glewInit();
     if (err != GLEW_OK)
-        g_print ("Error: %s\n", glewGetErrorString(err));
+        GST_DEBUG ("Error: %s", glewGetErrorString(err));
     else
-        g_print ("Context %d, Using GLEW %s\n", glutWinId, glewGetString(GLEW_VERSION));
+        GST_DEBUG ("Context %d, Using GLEW %s", glutWinId, glewGetString(GLEW_VERSION));
 
     if (GLEW_EXT_framebuffer_object)
     {
-        g_print ("Context %d, EXT_framebuffer_object supported: yes\n", glutWinId);
+        GST_DEBUG ("Context %d, EXT_framebuffer_object supported: yes", glutWinId);
 
         //-- init intput frame buffer object (video -> GL)
- 
+
         //setup FBO
         glGenFramebuffersEXT (1, &display->fbo);
         glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->fbo);
@@ -431,9 +431,9 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, 
             display->textureFBOWidth, display->textureFBOHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         //attach the texture to the FBO to renderer to
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, 
@@ -442,7 +442,7 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         //attach the depth render buffer to the FBO
         glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, 
             GL_RENDERBUFFER_EXT, display->depthBuffer);
-        
+
         g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
             GL_FRAMEBUFFER_COMPLETE_EXT);
 
@@ -457,8 +457,8 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
 
         //setup the render buffer for depth	
         glGenRenderbuffersEXT(1, &display->graphicDepthBuffer);
-	    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->graphicDepthBuffer);
-	    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, 
+        glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->graphicDepthBuffer);
+        glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, 
             display->glcontext_width, display->glcontext_height);
 
         //setup a texture to render to
@@ -467,9 +467,9 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, 
             display->glcontext_width, display->glcontext_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         //attach the texture to the FBO to renderer to
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, 
@@ -478,13 +478,13 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         //attach the depth render buffer to the FBO
         glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, 
             GL_RENDERBUFFER_EXT, display->graphicDepthBuffer);
-        
+
         g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
             GL_FRAMEBUFFER_COMPLETE_EXT);
 
         //unbind the FBO
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-     
+
         //-- init output frame buffer object (GL -> video)
 
         display->outputWidth = display->glcontext_width;
@@ -496,8 +496,8 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
 
         //setup the render buffer for depth	
         glGenRenderbuffersEXT(1, &display->videoDepthBuffer);
-	    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->videoDepthBuffer);
-	    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, 
+        glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->videoDepthBuffer);
+        glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, 
             display->outputWidth, display->outputHeight);
 
         //setup a first texture to render to
@@ -506,9 +506,9 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, 
             display->outputWidth, display->outputHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         //attach the first texture to the FBO to renderer to
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, 
@@ -520,9 +520,9 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, 
             display->outputWidth, display->outputHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         //attach the second texture to the FBO to renderer to
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, 
@@ -534,9 +534,9 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, 
             display->outputWidth, display->outputHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         //attach the third texture to the FBO to renderer to
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT2_EXT, 
@@ -547,7 +547,7 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
             GL_RENDERBUFFER_EXT, display->videoDepthBuffer);
 
         checkFramebufferStatus();
-        
+
         g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
             GL_FRAMEBUFFER_COMPLETE_EXT);
 
@@ -561,30 +561,30 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     }
     else    
     {
-        g_print ("Context %d, EXT_framebuffer_object supported: no\n", glutWinId);
+        GST_DEBUG ("Context %d, EXT_framebuffer_object supported: no", glutWinId);
         g_assert_not_reached ();
     }
 
 	//check if fragment program is available, then load them
 	if (GLEW_ARB_vertex_program)
 	{
-		gchar program[2048];
-		
-		g_print ("Context %d, ARB_fragment_program supported: yes\n", glutWinId);
+        gchar program[2048];
 
-		//from video to texture
+        GST_DEBUG ("Context %d, ARB_fragment_program supported: yes", glutWinId);
 
-	    sprintf (program, display->textFProgram_YUY2_UYVY, 'r', 'g', 'a');
+        //from video to texture
 
-		display->GLSLProgram_YUY2 = gst_gl_display_loadGLSLprogram (program);
+        sprintf (program, display->textFProgram_YUY2_UYVY, 'r', 'g', 'a');
 
-	    sprintf (program, display->textFProgram_YUY2_UYVY, 'a', 'b', 'r');
+        display->GLSLProgram_YUY2 = gst_gl_display_loadGLSLprogram (program);
 
-		display->GLSLProgram_UYVY = gst_gl_display_loadGLSLprogram (program);
+        sprintf (program, display->textFProgram_YUY2_UYVY, 'a', 'b', 'r');
 
-		display->GLSLProgram_I420_YV12 = gst_gl_display_loadGLSLprogram (display->textFProgram_I420_YV12);
+        display->GLSLProgram_UYVY = gst_gl_display_loadGLSLprogram (program);
 
-		display->GLSLProgram_AYUV = gst_gl_display_loadGLSLprogram (display->textFProgram_AYUV);
+        display->GLSLProgram_I420_YV12 = gst_gl_display_loadGLSLprogram (display->textFProgram_I420_YV12);
+
+        display->GLSLProgram_AYUV = gst_gl_display_loadGLSLprogram (display->textFProgram_AYUV);
 
         //from texture to video
 
@@ -600,22 +600,22 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
 	}
 	else 
     {
-        g_print ("Context %d, ARB_fragment_program supported: no\n", glutWinId);
+        GST_DEBUG ("Context %d, ARB_fragment_program supported: no", glutWinId);
         g_assert_not_reached ();
     }
 
     //setup callbacks
-	glutReshapeFunc (gst_gl_display_onReshape);
+    glutReshapeFunc (gst_gl_display_onReshape);
     glutDisplayFunc (gst_gl_display_draw);
-	glutCloseFunc (gst_gl_display_onClose);
+    glutCloseFunc (gst_gl_display_onClose);
 
     //insert glut context to the map
     display->glutWinId = glutWinId;
-    g_hash_table_insert (gst_gl_display_map, GINT_TO_POINTER (glutWinId), display);
-    
+    g_hash_table_insert (gst_gl_display_map, GUINT_TO_POINTER ((guint64)glutWinId), display);
+
     //check glut id validity
     g_assert (glutGetWindow() == glutWinId);
-    g_print ("Context %d initialized\n", display->glutWinId);
+    GST_DEBUG ("Context %d initialized", display->glutWinId);
 
     //release display constructor
     g_cond_signal (display->cond_create);
@@ -629,15 +629,15 @@ gst_gl_display_glutDestroyWindow (GstGLDisplay *display)
     glutSetWindow (display->glutWinId);
     glutReshapeFunc (NULL);
     glutDestroyWindow (display->glutWinId);
-	glUseProgramObjectARB (0);
+    glUseProgramObjectARB (0);
 
-	glDeleteObjectARB (display->GLSLProgram_YUY2);
-	glDeleteObjectARB (display->GLSLProgram_UYVY);
-	glDeleteObjectARB (display->GLSLProgram_I420_YV12);
-	glDeleteObjectARB (display->GLSLProgram_AYUV);
+    glDeleteObjectARB (display->GLSLProgram_YUY2);
+    glDeleteObjectARB (display->GLSLProgram_UYVY);
+    glDeleteObjectARB (display->GLSLProgram_I420_YV12);
+    glDeleteObjectARB (display->GLSLProgram_AYUV);
 
     glDeleteObjectARB (display->GLSLProgram_to_YUY2);
-	glDeleteObjectARB (display->GLSLProgram_to_UYVY);
+    glDeleteObjectARB (display->GLSLProgram_to_UYVY);
     glDeleteObjectARB (display->GLSLProgram_to_I420_YV12);
     glDeleteObjectARB (display->GLSLProgram_to_AYUV);
 
@@ -656,22 +656,22 @@ gst_gl_display_glutDestroyWindow (GstGLDisplay *display)
     glDeleteTextures (1, &display->videoTexture_v);
 
     //clean up the texture pool
-	while (g_queue_get_length (display->texturePool))
-	{
-		GstGLDisplayTex* tex = g_queue_pop_head (display->texturePool);
-		
-		//delete textures
-		glDeleteTextures (1, &tex->texture);
-		if (tex->texture_u) {
-			glDeleteTextures (1, &tex->texture_u);
-		}
-		if (tex->texture_v) {
-			glDeleteTextures (1, &tex->texture_v);
-		}
-	}
+    while (g_queue_get_length (display->texturePool))
+    {
+	    GstGLDisplayTex* tex = g_queue_pop_head (display->texturePool);
+    	
+	    //delete textures
+	    glDeleteTextures (1, &tex->texture);
+	    if (tex->texture_u) {
+		    glDeleteTextures (1, &tex->texture_u);
+	    }
+	    if (tex->texture_v) {
+		    glDeleteTextures (1, &tex->texture_v);
+	    }
+    }
 
-    g_hash_table_remove (gst_gl_display_map, GINT_TO_POINTER (display->glutWinId)); 
-    g_print ("glut window destroyed: %d\n", display->glutWinId);
+    g_hash_table_remove (gst_gl_display_map, GINT_TO_POINTER ((guint64)display->glutWinId)); 
+    GST_DEBUG ("glut window destroyed: %d", display->glutWinId);
 
     //if the map is empty, leaveMainloop and join the thread
     if (g_hash_table_size (gst_gl_display_map) == 0)
@@ -720,21 +720,21 @@ static void
 gst_gl_display_glutCleanTexture (GstGLDisplay * display)
 {
     GstGLDisplayTex* tex = NULL;
-	
-	glutSetWindow (display->glutWinId);
+
+    glutSetWindow (display->glutWinId);
 
     //contructuct a texture pool element
-	tex = g_new0 (GstGLDisplayTex, 1);
-	tex->texture = display->textureTrash;
-	tex->texture_u = display->textureTrash_u;
-	tex->texture_v = display->textureTrash_v;
+    tex = g_new0 (GstGLDisplayTex, 1);
+    tex->texture = display->textureTrash;
+    tex->texture_u = display->textureTrash_u;
+    tex->texture_v = display->textureTrash_v;
 
     display->textureTrash = 0;
     display->textureTrash_u = 0;
     display->textureTrash_v = 0;
 
-	//add tex to the pool, it makes texture allocation reusable
-	g_queue_push_tail (display->texturePool, tex);
+    //add tex to the pool, it makes texture allocation reusable
+    g_queue_push_tail (display->texturePool, tex);
 
     g_cond_signal (display->cond_clear);
 }
@@ -782,7 +782,7 @@ gst_gl_display_glut_idle (void)
                 gst_gl_display_glutDispatchAction (msg);  
         }
     }
-    else g_print ("timeout reached in idle func\n");
+    else GST_DEBUG ("timeout reached in idle func");
 }
 
 
@@ -844,7 +844,7 @@ gst_gl_display_checkMsgValidity (GstGLDisplayMsg *msg)
         case GST_GL_DISPLAY_ACTION_VIDEO:
         case GST_GL_DISPLAY_ACTION_REDISPLAY:
             //msg is out of date if the associated display is not in the map
-            if (!g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (msg->glutWinId)))
+            if (!g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER ((guint64)msg->glutWinId)))
                 valid = FALSE;
             break;
         default:
@@ -955,12 +955,12 @@ gst_gl_display_setClientDrawCallback (GstGLDisplay * display, CDCB cb)
 void 
 gst_gl_display_setVisibleWindow (GstGLDisplay * display, gboolean visible)
 {
-	gst_gl_display_lock (display);
-	if (display->visible != visible)
-	{
-	    display->visible = visible;
-	    gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_VISIBLE, display);
-	}
+    gst_gl_display_lock (display);
+    if (display->visible != visible)
+    {
+        display->visible = visible;
+        gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_VISIBLE, display);
+    }
     gst_gl_display_unlock (display);
 }
 
@@ -1064,7 +1064,7 @@ gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId)
     if (g_hash_table_size (gst_gl_display_map) == 0)
     {
         g_thread_join (gst_gl_display_glutThread);
-        g_print ("Glut thread joined when setting winId\n");
+        GST_DEBUG ("Glut thread joined when setting winId");
         gst_gl_display_glutThread = NULL;
         g_async_queue_unref (gst_gl_display_messageQueue);
         g_hash_table_unref  (gst_gl_display_map);
@@ -1091,7 +1091,7 @@ gst_gl_display_onReshape(gint width, gint height)
   
     //retrieve the display associated to the glut context
     glutWinId = glutGetWindow ();
-    display = g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (glutWinId));
+    display = g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER ((guint64)glutWinId));
 
     //glutGetWindow return 0 if no windows exists, then g_hash_table_lookup return NULL
     if (display == NULL) return;
@@ -1123,7 +1123,7 @@ void gst_gl_display_draw(void)
   
     //retrieve the display associated to the glut context
     glutWinId = glutGetWindow ();
-    display = g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (glutWinId));
+    display = g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER ((guint64)glutWinId));
     
     //glutGetWindow return 0 if no windows exists, then g_hash_table_lookup return NULL
     if (display == NULL) return;
@@ -1200,12 +1200,12 @@ void gst_gl_display_onClose (void)
   
     //retrieve the display associated to the glut context
     glutWinId = glutGetWindow ();
-    display = g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (glutWinId));
+    display = g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER ((guint64)glutWinId));
     
     //glutGetWindow return 0 if no windows exists, then g_hash_table_lookup return NULL
     if (display == NULL) return;
     
-    g_print ("on close\n");
+    GST_DEBUG ("on close");
 
     gst_gl_display_lock (display);
     display->isAlive = FALSE;
@@ -1217,92 +1217,92 @@ void gst_gl_display_onClose (void)
 void gst_gl_display_make_texture (GstGLDisplay * display)
 { 
     GstGLDisplayTex* tex = NULL;
-	
-	//check if there is a tex available in the pool
-	if (g_queue_get_length (display->texturePool))
-		tex = g_queue_pop_head (display->texturePool);
-		
-	//one tex is available
-	if (tex)
-		display->requestedTexture = tex->texture;
-	else
-		glGenTextures (1, &display->requestedTexture);
+
+    //check if there is a tex available in the pool
+    if (g_queue_get_length (display->texturePool))
+	    tex = g_queue_pop_head (display->texturePool);
+    	
+    //one tex is available
+    if (tex)
+	    display->requestedTexture = tex->texture;
+    else
+	    glGenTextures (1, &display->requestedTexture);
 
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->requestedTexture);
-	switch (display->requestedVideo_format) {
-		case GST_VIDEO_FORMAT_RGBx:
-		case GST_VIDEO_FORMAT_BGRx:
-		case GST_VIDEO_FORMAT_xRGB:
-		case GST_VIDEO_FORMAT_xBGR:
-		case GST_VIDEO_FORMAT_RGBA:
-		case GST_VIDEO_FORMAT_BGRA:
-		case GST_VIDEO_FORMAT_ARGB:
-		case GST_VIDEO_FORMAT_ABGR:
-		case GST_VIDEO_FORMAT_AYUV:
-			glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-				display->requestedTextureWidth, display->requestedTextureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-			break;
+    switch (display->requestedVideo_format) {
+	    case GST_VIDEO_FORMAT_RGBx:
+	    case GST_VIDEO_FORMAT_BGRx:
+	    case GST_VIDEO_FORMAT_xRGB:
+	    case GST_VIDEO_FORMAT_xBGR:
+	    case GST_VIDEO_FORMAT_RGBA:
+	    case GST_VIDEO_FORMAT_BGRA:
+	    case GST_VIDEO_FORMAT_ARGB:
+	    case GST_VIDEO_FORMAT_ABGR:
+	    case GST_VIDEO_FORMAT_AYUV:
+		    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+			    display->requestedTextureWidth, display->requestedTextureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		    break;
 
-		case GST_VIDEO_FORMAT_RGB:
-		case GST_VIDEO_FORMAT_BGR:
-			glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
-				display->requestedTextureWidth, display->requestedTextureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-			break;
+	    case GST_VIDEO_FORMAT_RGB:
+	    case GST_VIDEO_FORMAT_BGR:
+		    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
+			    display->requestedTextureWidth, display->requestedTextureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		    break;
 
-		case GST_VIDEO_FORMAT_YUY2:
-		case GST_VIDEO_FORMAT_UYVY:
-			glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
-				display->requestedTextureWidth, display->requestedTextureHeight,
-				0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
+	    case GST_VIDEO_FORMAT_YUY2:
+	    case GST_VIDEO_FORMAT_UYVY:
+		    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
+			    display->requestedTextureWidth, display->requestedTextureHeight,
+			    0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
 
-			//one tex is available
-			if (tex)
-				display->requestedTexture_u = tex->texture_u;
-			else
-				glGenTextures (1, &display->requestedTexture_u);
+		    //one tex is available
+		    if (tex)
+			    display->requestedTexture_u = tex->texture_u;
+		    else
+			    glGenTextures (1, &display->requestedTexture_u);
 
-			glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->requestedTexture_u);
-			glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-				display->requestedTextureWidth, display->requestedTextureHeight,
-				0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
-			break;
+		    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->requestedTexture_u);
+		    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+			    display->requestedTextureWidth, display->requestedTextureHeight,
+			    0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
+		    break;
 
-		case GST_VIDEO_FORMAT_I420:
-		case GST_VIDEO_FORMAT_YV12:
-			glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-				display->requestedTextureWidth, display->requestedTextureHeight,
-				0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+	    case GST_VIDEO_FORMAT_I420:
+	    case GST_VIDEO_FORMAT_YV12:
+		    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+			    display->requestedTextureWidth, display->requestedTextureHeight,
+			    0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
 
-			//one tex is available
-			if (tex)
-				display->requestedTexture_u = tex->texture_u;
-			else
-				glGenTextures (1, &display->requestedTexture_u);
+		    //one tex is available
+		    if (tex)
+			    display->requestedTexture_u = tex->texture_u;
+		    else
+			    glGenTextures (1, &display->requestedTexture_u);
 
-			glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->requestedTexture_u);
-			glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-				GST_ROUND_UP_2 (display->requestedTextureWidth) / 2,
-				GST_ROUND_UP_2 (display->requestedTextureHeight) / 2,
-				0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+		    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->requestedTexture_u);
+		    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+			    GST_ROUND_UP_2 (display->requestedTextureWidth) / 2,
+			    GST_ROUND_UP_2 (display->requestedTextureHeight) / 2,
+			    0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
 
-			//one tex is available
-			if (tex)
-				display->requestedTexture_v = tex->texture_v;
-			else
-				glGenTextures (1, &display->requestedTexture_v);
+		    //one tex is available
+		    if (tex)
+			    display->requestedTexture_v = tex->texture_v;
+		    else
+			    glGenTextures (1, &display->requestedTexture_v);
 
-			glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->requestedTexture_v);
-			glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-				GST_ROUND_UP_2 (display->requestedTextureWidth) / 2,
-				GST_ROUND_UP_2 (display->requestedTextureHeight) / 2,
-				0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-			break;
+		    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->requestedTexture_v);
+		    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+			    GST_ROUND_UP_2 (display->requestedTextureWidth) / 2,
+			    GST_ROUND_UP_2 (display->requestedTextureHeight) / 2,
+			    0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+		    break;
 
-		default:
-			g_assert_not_reached ();
+	    default:
+		    g_assert_not_reached ();
     }
-	if (tex)
-		g_free (tex);
+    if (tex)
+	    g_free (tex);
 }
 
 
@@ -1838,18 +1838,18 @@ gst_gl_display_fill_video (GstGLDisplay* display)
                 gint offsetV = 0;
 
                 switch (outputVideo_format) 
-			    {
-				    case GST_VIDEO_FORMAT_I420:
-					    offsetU = 1;
-					    offsetV = 2;
-					    break;
-				    case GST_VIDEO_FORMAT_YV12:
-					    offsetU = 2;
-					    offsetV = 1;
-					    break;
-				    default:
-					    g_assert_not_reached ();
-			    }
+		        {
+			        case GST_VIDEO_FORMAT_I420:
+				        offsetU = 1;
+				        offsetV = 2;
+				        break;
+			        case GST_VIDEO_FORMAT_YV12:
+				        offsetU = 2;
+				        offsetV = 1;
+				        break;
+			        default:
+				        g_assert_not_reached ();
+		        }
 
                 glReadPixels (0, 0, width, height, GL_LUMINANCE,
                     GL_UNSIGNED_BYTE, data);
@@ -1880,15 +1880,15 @@ gst_gl_display_fill_video (GstGLDisplay* display)
 GLhandleARB
 gst_gl_display_loadGLSLprogram (gchar* textFProgram) 
 {
-	GLhandleARB FHandle = 0;
-	GLhandleARB PHandle = 0;
-	gchar s[32768]; 
+    GLhandleARB FHandle = 0;
+    GLhandleARB PHandle = 0;
+    gchar s[32768]; 
     gint i = 0;
-	
-	//Set up program objects
+
+    //Set up program objects
     PHandle = glCreateProgramObjectARB ();
-	
-	//Compile the shader
+
+    //Compile the shader
     FHandle = glCreateShaderObjectARB (GL_FRAGMENT_SHADER_ARB);
     glShaderSourceARB (FHandle, 1, (const GLcharARB**)&textFProgram, NULL);
     glCompileShaderARB (FHandle);
@@ -1896,7 +1896,7 @@ gst_gl_display_loadGLSLprogram (gchar* textFProgram)
     //Print the compilation log
     glGetObjectParameterivARB (FHandle, GL_OBJECT_COMPILE_STATUS_ARB, &i);
     glGetInfoLogARB (FHandle, sizeof(s)/sizeof(char), NULL, s);
-    g_print ("Compile Log: %s\n", s);
+    GST_DEBUG ("Compile Log: %s", s);
 
     //link the shader
     glAttachObjectARB (PHandle, FHandle);
@@ -1904,9 +1904,9 @@ gst_gl_display_loadGLSLprogram (gchar* textFProgram)
 
     //Print the link log
     glGetInfoLogARB (PHandle, sizeof(s)/sizeof(char), NULL, s);
-    g_print ("Link Log: %s\n", s);
+    GST_DEBUG ("Link Log: %s", s);
 
-	return PHandle;
+    return PHandle;
 }
 
 
@@ -1914,7 +1914,6 @@ gst_gl_display_loadGLSLprogram (gchar* textFProgram)
 void 
 checkFramebufferStatus(void)
 {
-
     GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 
     switch(status)
@@ -1923,10 +1922,10 @@ checkFramebufferStatus(void)
             break;
 
         case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-            g_print("GL_FRAMEBUFFER_UNSUPPORTED_EXT\n");
+            GST_DEBUG("GL_FRAMEBUFFER_UNSUPPORTED_EXT");
             break;
 
         default:
-            g_print("General FBO error\n");
+            GST_DEBUG("General FBO error");
     }
 }
