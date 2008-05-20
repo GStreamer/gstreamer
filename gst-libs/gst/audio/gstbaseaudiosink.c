@@ -52,6 +52,8 @@ struct _GstBaseAudioSinkPrivate
   GstClockTimeDiff avg_skew;
   /* the number of samples we aligned last time */
   gint64 last_align;
+
+  gboolean sync_latency;
 };
 
 /* BaseAudioSink signals and args */
@@ -809,6 +811,22 @@ gst_base_audio_sink_resample_slaving (GstBaseAudioSink * sink,
   GstClockTime cinternal, cexternal;
   GstClockTime crate_num, crate_denom;
 
+  /* FIXME, we can sample and add observations here or use the timeouts on the
+   * clock. No idea which one is better or more stable. The timeout seems more
+   * arbitrary but this one seems more demanding and does not work when there is
+   * no data comming in to the sink. */
+#if 0
+  GstClockTime etime, itime;
+  gdouble r_squared;
+
+  /* sample clocks and figure out clock skew */
+  etime = gst_clock_get_time (GST_ELEMENT_CLOCK (sink));
+  itime = gst_clock_get_internal_time (sink->provided_clock);
+
+  /* add new observation */
+  gst_clock_add_observation (sink->provided_clock, itime, etime, &r_squared);
+#endif
+
   /* get calibration parameters to compensate for speed and offset differences
    * when we are slaved */
   gst_clock_get_calibration (sink->provided_clock, &cinternal, &cexternal,
@@ -857,6 +875,12 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
   /* sample clocks and figure out clock skew */
   etime = gst_clock_get_time (GST_ELEMENT_CLOCK (sink));
   itime = gst_clock_get_internal_time (sink->provided_clock);
+
+  GST_DEBUG_OBJECT (sink,
+      "internal %" GST_TIME_FORMAT " external %" GST_TIME_FORMAT
+      " cinternal %" GST_TIME_FORMAT " cexternal %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (itime), GST_TIME_ARGS (etime),
+      GST_TIME_ARGS (cinternal), GST_TIME_ARGS (cexternal));
 
   /* make sure we never go below 0 */
   etime = etime > cexternal ? etime - cexternal : 0;
@@ -990,6 +1014,136 @@ gst_base_audio_sink_handle_slaving (GstBaseAudioSink * sink,
   }
 }
 
+/* must be called with LOCK */
+static GstFlowReturn
+gst_base_audio_sink_sync_latency (GstBaseSink * bsink)
+{
+  GstClock *clock;
+  GstClockReturn status;
+  GstClockTime time;
+  GstFlowReturn ret;
+  GstBaseAudioSink *sink;
+  GstClockTime itime, etime;
+  GstClockTime rate_num, rate_denom;
+
+  sink = GST_BASE_AUDIO_SINK (bsink);
+
+  clock = GST_ELEMENT_CLOCK (sink);
+  if (G_UNLIKELY (clock == NULL))
+    goto no_clock;
+
+  /* we provided the global clock, don't need to do anything special */
+  if (clock == sink->provided_clock)
+    goto no_slaving;
+
+  GST_OBJECT_UNLOCK (sink);
+
+  do {
+    GstClockTimeDiff jitter;
+
+    GST_DEBUG_OBJECT (sink, "checking preroll");
+
+    /* first wait for the playing state before we can continue */
+    if (G_UNLIKELY (bsink->need_preroll)) {
+      ret = gst_base_sink_wait_preroll (bsink);
+      if (ret != GST_FLOW_OK)
+        goto flushing;
+    }
+
+    GST_OBJECT_LOCK (sink);
+    time = sink->priv->us_latency;
+    GST_OBJECT_UNLOCK (sink);
+
+    /* preroll done, we can sync since we are in PLAYING now. */
+    GST_DEBUG_OBJECT (sink, "possibly waiting for clock to reach %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (time));
+
+    /* wait for the clock, this can be interrupted because we got shut down or 
+     * we PAUSED. */
+    status = gst_base_sink_wait_clock (bsink, time, &jitter);
+
+    GST_DEBUG_OBJECT (sink, "clock returned %d %" GST_TIME_FORMAT, status,
+        GST_TIME_ARGS (jitter));
+
+    /* invalid time, no clock or sync disabled, just continue then */
+    if (status == GST_CLOCK_BADTIME)
+      break;
+
+    /* waiting could have been interrupted and we can be flushing now */
+    if (G_UNLIKELY (bsink->flushing))
+      goto flushing;
+
+    /* retry if we got unscheduled, which means we did not reach the timeout
+     * yet. if some other error occures, we continue. */
+  } while (status == GST_CLOCK_UNSCHEDULED);
+
+
+  GST_OBJECT_LOCK (sink);
+  GST_DEBUG_OBJECT (sink, "latency synced");
+
+  /* if we are slaved to a clock, we need to set the initial
+   * calibration */
+  switch (sink->priv->slave_method) {
+    case GST_BASE_AUDIO_SINK_SLAVE_SKEW:
+    case GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE:
+    case GST_BASE_AUDIO_SINK_SLAVE_NONE:
+    default:
+      /* When we are prerolled, our internal clock should exactly have been the
+       * latency (== the running time of the external clock) */
+      etime = GST_ELEMENT_CAST (sink)->base_time + time;
+      itime = gst_base_audio_sink_get_time (sink->provided_clock, sink);
+      break;
+  }
+  GST_DEBUG_OBJECT (sink,
+      "internal time: %" GST_TIME_FORMAT " external time: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (itime), GST_TIME_ARGS (etime));
+
+  /* copy the original calibrated rate but update the internal and external
+   * times. */
+  gst_clock_get_calibration (sink->provided_clock, NULL, NULL, &rate_num,
+      &rate_denom);
+  gst_clock_set_calibration (sink->provided_clock, itime, etime,
+      rate_num, rate_denom);
+
+  switch (sink->priv->slave_method) {
+    case GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE:
+      /* only set as master when we are resampling */
+      GST_DEBUG_OBJECT (sink, "Setting clock as master");
+      gst_clock_set_master (sink->provided_clock, clock);
+      break;
+    case GST_BASE_AUDIO_SINK_SLAVE_SKEW:
+    case GST_BASE_AUDIO_SINK_SLAVE_NONE:
+    default:
+      break;
+  }
+
+  sink->priv->avg_skew = -1;
+  sink->next_sample = -1;
+
+  /* start ringbuffer so we can start slaving right away when we need to */
+  gst_ring_buffer_start (sink->ringbuffer);
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+no_clock:
+  {
+    GST_DEBUG_OBJECT (sink, "we have no clock");
+    return GST_FLOW_OK;
+  }
+no_slaving:
+  {
+    GST_DEBUG_OBJECT (sink, "we are not slaved");
+    return GST_FLOW_OK;
+  }
+flushing:
+  {
+    GST_DEBUG_OBJECT (sink, "we are flushing");
+    GST_OBJECT_LOCK (sink);
+    return GST_FLOW_WRONG_STATE;
+  }
+}
+
 static GstFlowReturn
 gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
@@ -1007,6 +1161,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstClockTime base_time = GST_CLOCK_TIME_NONE, latency;
   GstClock *clock;
   gboolean sync, slaved, align_next;
+  GstFlowReturn ret;
 
   sink = GST_BASE_AUDIO_SINK (bsink);
 
@@ -1015,6 +1170,21 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   /* can't do anything when we don't have the device */
   if (G_UNLIKELY (!gst_ring_buffer_is_acquired (ringbuf)))
     goto wrong_state;
+
+  /* Wait for upstream latency before starting the ringbuffer, we do this so
+   * that we can align the first sample of the ringbuffer to the base_time +
+   * latency. */
+  GST_OBJECT_LOCK (sink);
+  if (G_UNLIKELY (sink->priv->sync_latency)) {
+    /* only do this once until we are set back to PLAYING */
+    sink->priv->sync_latency = FALSE;
+    ret = gst_base_audio_sink_sync_latency (bsink);
+    GST_OBJECT_UNLOCK (sink);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto sync_latency_failed;
+  } else {
+    GST_OBJECT_UNLOCK (sink);
+  }
 
   bps = ringbuf->spec.bytes_per_sample;
 
@@ -1293,6 +1463,11 @@ stopping:
     GST_DEBUG_OBJECT (sink, "ringbuffer is stopping");
     return GST_FLOW_WRONG_STATE;
   }
+sync_latency_failed:
+  {
+    GST_DEBUG_OBJECT (sink, "failed waiting for latency");
+    return ret;
+  }
 }
 
 /**
@@ -1399,65 +1574,14 @@ eos:
 static GstStateChangeReturn
 gst_base_audio_sink_async_play (GstBaseSink * basesink)
 {
-  GstClock *clock;
   GstBaseAudioSink *sink;
-  GstClockTime itime, etime;
-  GstClockTime rate_num, rate_denom;
 
   sink = GST_BASE_AUDIO_SINK (basesink);
 
   GST_DEBUG_OBJECT (sink, "ringbuffer may start now");
+  sink->priv->sync_latency = TRUE;
   gst_ring_buffer_may_start (sink->ringbuffer, TRUE);
 
-  clock = GST_ELEMENT_CLOCK (sink);
-  if (clock == NULL)
-    goto done;
-
-  /* we provided the global clock, don't need to do anything special */
-  if (clock == sink->provided_clock)
-    goto done;
-
-  /* if we are slaved to a clock, we need to set the initial
-   * calibration */
-  switch (sink->priv->slave_method) {
-    case GST_BASE_AUDIO_SINK_SLAVE_SKEW:
-    case GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE:
-    case GST_BASE_AUDIO_SINK_SLAVE_NONE:
-    default:
-      /* When we are prerolled, our internal clock should exactly have been the time
-       * of the external clock */
-      etime = gst_clock_get_time (clock);
-      itime = gst_base_audio_sink_get_time (sink->provided_clock, sink);
-      break;
-  }
-  GST_DEBUG_OBJECT (sink,
-      "internal time: %" GST_TIME_FORMAT " external time: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (itime), GST_TIME_ARGS (etime));
-
-  gst_clock_get_calibration (sink->provided_clock, NULL, NULL, &rate_num,
-      &rate_denom);
-  gst_clock_set_calibration (sink->provided_clock, itime, etime,
-      rate_num, rate_denom);
-
-  switch (sink->priv->slave_method) {
-    case GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE:
-      /* only set as master when we are resampling */
-      GST_DEBUG_OBJECT (sink, "Setting clock as master");
-      gst_clock_set_master (sink->provided_clock, clock);
-      break;
-    case GST_BASE_AUDIO_SINK_SLAVE_SKEW:
-    case GST_BASE_AUDIO_SINK_SLAVE_NONE:
-    default:
-      break;
-  }
-
-  sink->priv->avg_skew = -1;
-  sink->next_sample = -1;
-
-  /* start ringbuffer so we can start slaving right away when we need to */
-  gst_ring_buffer_start (sink->ringbuffer);
-
-done:
   return GST_STATE_CHANGE_SUCCESS;
 }
 
@@ -1504,6 +1628,7 @@ gst_base_audio_sink_change_state (GstElement * element,
       /* ringbuffer cannot start anymore */
       gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
       gst_ring_buffer_pause (sink->ringbuffer);
+      sink->priv->sync_latency = FALSE;
       GST_OBJECT_UNLOCK (sink);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:

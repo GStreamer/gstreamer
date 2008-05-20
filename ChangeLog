@@ -1,3 +1,18 @@
+2008-05-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_resample_slaving),
+	(gst_base_audio_sink_skew_slaving),
+	(gst_base_audio_sink_sync_latency), (gst_base_audio_sink_render),
+	(gst_base_audio_sink_async_play),
+	(gst_base_audio_sink_change_state):
+	Change the way in which the ringbuffer is started when dealing with a
+	slaved clock and latency. We now sync to the clock until we reach
+	upstream latency before starting the ringbuffer. This has the effect
+	that we can accurately align the master and slave clocks and let the
+	rate correction code take care of the initial drift or rounding errors
+	instead of leaving them uncorrected with the old approach.
+
 2008-05-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/audioconvert/gstaudioconvert.c:
