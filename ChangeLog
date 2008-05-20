@@ -1,3 +1,23 @@
+2008-05-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_class_init),
+	(gst_rtp_h264_depay_init), (gst_rtp_h264_depay_set_property),
+	(gst_rtp_h264_depay_get_property), (gst_rtp_h264_depay_setcaps),
+	(gst_rtp_h264_depay_process):
+	* gst/rtp/gstrtph264depay.h:
+	Add experimental support for outputting quicktime-like AVC output in
+	addition to the existing bytestream output.
+
+	* gst/rtp/gstrtph264pay.c: (gst_h264_scan_mode_get_type),
+	(gst_rtp_h264_pay_class_init), (gst_rtp_h264_pay_init),
+	(gst_rtp_h264_pay_setcaps), (gst_rtp_h264_pay_payload_nal),
+	(gst_rtp_h264_pay_handle_buffer), (gst_rtp_h264_pay_set_property),
+	(gst_rtp_h264_pay_get_property):
+	* gst/rtp/gstrtph264pay.h:
+	Make the parsing mode configurable, for some inputs we don't need to
+	scan every byte for start codes.
+	Only set the marker bit on ACCESS units.
+
 2008-05-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/equalizer/gstiirequalizer.c:

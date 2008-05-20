@@ -44,9 +44,12 @@ struct _GstRtpH264Depay
 {
   GstBaseRTPDepayload depayload;
 
+  gboolean    byte_stream;
+
   GstBuffer  *codec_data;
   GstAdapter *adapter;
   gboolean    wait_start;
+
 };
 
 struct _GstRtpH264DepayClass

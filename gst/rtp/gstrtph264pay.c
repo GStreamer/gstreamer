@@ -64,15 +64,45 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H264\"")
     );
 
+#define GST_TYPE_H264_SCAN_MODE (gst_h264_scan_mode_get_type())
+static GType
+gst_h264_scan_mode_get_type (void)
+{
+  static GType h264_scan_mode_type = 0;
+  static const GEnumValue h264_scan_modes[] = {
+    {GST_H264_SCAN_MODE_BYTESTREAM,
+          "Scan complete bytestream for NALUs (not implemented)",
+        "bytestream"},
+    {GST_H264_SCAN_MODE_MULTI_NAL, "Buffers contain multiple complete NALUs",
+        "multiple"},
+    {GST_H264_SCAN_MODE_SINLE_NAL, "Buffers contain a single complete NALU",
+        "single"},
+    {0, NULL, NULL},
+  };
+
+  if (!h264_scan_mode_type) {
+    h264_scan_mode_type =
+        g_enum_register_static ("GstH264PayScanMode", h264_scan_modes);
+  }
+  return h264_scan_mode_type;
+}
+
 #define DEFAULT_PROFILE_LEVEL_ID        NULL
 #define DEFAULT_SPROP_PARAMETER_SETS    NULL
+#define DEFAULT_SPROP_PARAMETER_SETS    NULL
+#define DEFAULT_SCAN_MODE               GST_H264_SCAN_MODE_MULTI_NAL
 
 enum
 {
-  ARG_0,
-  ARG_PROFILE_LEVEL_ID,
-  ARG_SPROP_PARAMETER_SETS
+  PROP_0,
+  PROP_PROFILE_LEVEL_ID,
+  PROP_SPROP_PARAMETER_SETS,
+  PROP_SCAN_MODE,
+  PROP_LAST
 };
+
+
+#define IS_ACCESS_UNIT(x) (((x) > 0x00) && ((x) < 0x06))
 
 static void gst_rtp_h264_pay_finalize (GObject * object);
 
@@ -119,17 +149,27 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
   gobject_class->set_property = gst_rtp_h264_pay_set_property;
   gobject_class->get_property = gst_rtp_h264_pay_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PROFILE_LEVEL_ID,
-      g_param_spec_string ("profile-level-id", "profile-level-id",
-          "The base64 profile-level-id to set in out caps (set to NULL to extract from stream)",
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_PROFILE_LEVEL_ID, g_param_spec_string ("profile-level-id",
+          "profile-level-id",
+          "The base64 profile-level-id to set in out caps (set to NULL to "
+          "extract from stream)",
           DEFAULT_PROFILE_LEVEL_ID,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      ARG_SPROP_PARAMETER_SETS, g_param_spec_string ("sprop-parameter-sets",
+      PROP_SPROP_PARAMETER_SETS, g_param_spec_string ("sprop-parameter-sets",
           "sprop-parameter-sets",
-          "The base64 sprop-parameter-sets to set in out caps (set to NULL to extract from stream)",
+          "The base64 sprop-parameter-sets to set in out caps (set to NULL to "
+          "extract from stream)",
           DEFAULT_SPROP_PARAMETER_SETS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SCAN_MODE,
+      g_param_spec_enum ("scan-mode", "Scan Mode",
+          "How to scan the input buffers for NAL units. Performance can be "
+          "increased when certain assumptions are made about the input buffers",
+          GST_TYPE_H264_SCAN_MODE, DEFAULT_SCAN_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_rtp_h264_pay_finalize;
@@ -149,6 +189,7 @@ gst_rtp_h264_pay_init (GstRtpH264Pay * rtph264pay, GstRtpH264PayClass * klass)
   rtph264pay->profile = 0;
   rtph264pay->sps = NULL;
   rtph264pay->pps = NULL;
+  rtph264pay->scan_mode = GST_H264_SCAN_MODE_MULTI_NAL;
 }
 
 static void
@@ -239,6 +280,8 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
     GST_DEBUG_OBJECT (rtph264pay, "profile %06x", profile);
 
     /* 6 bits reserved | 2 bits lengthSizeMinusOne */
+    /* this is the number of bytes in front of the NAL units to mark their
+     * length */
     rtph264pay->nal_length_size = (data[4] & 0x03) + 1;
     GST_DEBUG_OBJECT (rtph264pay, "nal length %u", rtph264pay->nal_length_size);
     /* 3 bits reserved | 5 bits numOfSequenceParameterSets */
@@ -277,6 +320,7 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
     if (size < 1)
       goto avcc_error;
 
+    /* 8 bits numOfPictureParameterSets */
     num_pps = data[0];
     data += 1;
     size -= 1;
@@ -579,7 +623,10 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
     outbuf = gst_rtp_buffer_new_allocate (size, 0, 0);
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-    gst_rtp_buffer_set_marker (outbuf, 1);
+    /* only set the marker bit on packets containing access units */
+    if (IS_ACCESS_UNIT (nalType)) {
+      gst_rtp_buffer_set_marker (outbuf, 1);
+    }
 
     payload = gst_rtp_buffer_get_payload (outbuf);
     GST_DEBUG_OBJECT (basepayload, "Copying %d bytes to outbuf", size);
@@ -621,7 +668,9 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
         GST_DEBUG_OBJECT (basepayload, "end size=%d iteration=%d", size, ii);
         end = 1;
       }
-      gst_rtp_buffer_set_marker (outbuf, end);
+      if (IS_ACCESS_UNIT (nalType)) {
+        gst_rtp_buffer_set_marker (outbuf, end);
+      }
 
       /* FU indicator */
       payload[0] = (nalHeader & 0x60) | 28;
@@ -723,14 +772,20 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       data += 4;
       size -= 4;
 
-      /* use next_start_code() to scan buffer.
-       * next_start_code() returns the offset in data, 
-       * starting from zero to the first byte of 0.0.0.1
-       * If no start code is found, it returns the value of the 
-       * 'size' parameter. 
-       * data is unchanged by the call to next_start_code()
-       */
-      next = next_start_code (data, size);
+      if (rtph264pay->scan_mode == GST_H264_SCAN_MODE_SINLE_NAL) {
+        /* we are told that there is only a single NAL in this packet so that we
+         * can avoid scanning for the next NAL. */
+        next = size;
+      } else {
+        /* use next_start_code() to scan buffer.
+         * next_start_code() returns the offset in data, 
+         * starting from zero to the first byte of 0.0.0.1
+         * If no start code is found, it returns the value of the 
+         * 'size' parameter. 
+         * data is unchanged by the call to next_start_code()
+         */
+        next = next_start_code (data, size);
+      }
 
       /* nal length is distance to next start code */
       nal_len = next;
@@ -804,15 +859,21 @@ gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
   rtph264pay = GST_RTP_H264_PAY (object);
 
   switch (prop_id) {
-    case ARG_PROFILE_LEVEL_ID:
+    case PROP_PROFILE_LEVEL_ID:
+      g_free (rtph264pay->profile_level_id);
       rtph264pay->profile_level_id = g_value_dup_string (value);
       rtph264pay->update_caps = TRUE;
       break;
-    case ARG_SPROP_PARAMETER_SETS:
+    case PROP_SPROP_PARAMETER_SETS:
+      g_free (rtph264pay->sprop_parameter_sets);
       rtph264pay->sprop_parameter_sets = g_value_dup_string (value);
       rtph264pay->update_caps = TRUE;
       break;
+    case PROP_SCAN_MODE:
+      rtph264pay->scan_mode = g_value_get_enum (value);
+      break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -826,13 +887,17 @@ gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
   rtph264pay = GST_RTP_H264_PAY (object);
 
   switch (prop_id) {
-    case ARG_PROFILE_LEVEL_ID:
+    case PROP_PROFILE_LEVEL_ID:
       g_value_set_string (value, rtph264pay->profile_level_id);
       break;
-    case ARG_SPROP_PARAMETER_SETS:
+    case PROP_SPROP_PARAMETER_SETS:
       g_value_set_string (value, rtph264pay->sprop_parameter_sets);
       break;
+    case PROP_SCAN_MODE:
+      g_value_set_enum (value, rtph264pay->scan_mode);
+      break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

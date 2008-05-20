@@ -29,6 +29,16 @@
 GST_DEBUG_CATEGORY_STATIC (rtph264depay_debug);
 #define GST_CAT_DEFAULT (rtph264depay_debug)
 
+#define DEFAULT_BYTE_STREAM	TRUE
+
+enum
+{
+  PROP_0,
+  PROP_BYTE_STREAM,
+  PROP_LAST
+};
+
+
 /* 3 zero bytes syncword */
 static const guint8 sync_bytes[] = { 0, 0, 0, 1 };
 
@@ -77,6 +87,10 @@ GST_BOILERPLATE (GstRtpH264Depay, gst_rtp_h264_depay, GstBaseRTPDepayload,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void gst_rtp_h264_depay_finalize (GObject * object);
+static void gst_rtp_h264_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_rtp_h264_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn gst_rtp_h264_depay_change_state (GstElement *
     element, GstStateChange transition);
@@ -112,6 +126,14 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
 
   gobject_class->finalize = gst_rtp_h264_depay_finalize;
 
+  gobject_class->set_property = gst_rtp_h264_depay_set_property;
+  gobject_class->get_property = gst_rtp_h264_depay_get_property;
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BYTE_STREAM,
+      g_param_spec_boolean ("byte-stream", "Byte Stream",
+          "Generate byte stream format of NALU", DEFAULT_BYTE_STREAM,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = gst_rtp_h264_depay_change_state;
 
   gstbasertpdepayload_class->process = gst_rtp_h264_depay_process;
@@ -126,6 +148,7 @@ gst_rtp_h264_depay_init (GstRtpH264Depay * rtph264depay,
     GstRtpH264DepayClass * klass)
 {
   rtph264depay->adapter = gst_adapter_new ();
+  rtph264depay->byte_stream = DEFAULT_BYTE_STREAM;
 }
 
 static void
@@ -141,6 +164,42 @@ gst_rtp_h264_depay_finalize (GObject * object)
   g_object_unref (rtph264depay->adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_rtp_h264_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpH264Depay *rtph264depay;
+
+  rtph264depay = GST_RTP_H264_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_BYTE_STREAM:
+      rtph264depay->byte_stream = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_h264_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpH264Depay *rtph264depay;
+
+  rtph264depay = GST_RTP_H264_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_BYTE_STREAM:
+      g_value_set_boolean (value, rtph264depay->byte_stream);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static const guint8 a2bin[256] = {
@@ -198,6 +257,9 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   gint clock_rate = 90000;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstRtpH264Depay *rtph264depay;
+  const gchar *ps, *profile;
+  GstBuffer *codec_data;
+  guint8 *b64;
 
   rtph264depay = GST_RTP_H264_DEPAY (depayload);
 
@@ -206,16 +268,18 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   srccaps = gst_caps_new_simple ("video/x-h264", NULL);
 
-  if (gst_structure_has_field (structure, "sprop-parameter-sets")) {
-    const gchar *ps;
+  /* Base64 encoded, comma separated config NALs */
+  ps = gst_structure_get_string (structure, "sprop-parameter-sets");
+  /* hex: AVCProfileIndication:8 | profile_compat:8 | AVCLevelIndication:8 */
+  profile = gst_structure_get_string (structure, "profile-level-id");
+
+  if (rtph264depay->byte_stream && ps != NULL) {
+    /* for bytestream we only need the parameter sets but we don't error out
+     * when they are not there, we assume they are in the stream. */
     gchar **params;
     guint len, total;
     gint i;
-    GstBuffer *codec_data;
-    guint8 *b64;
 
-    /* Base64 encoded, comma separated config NALs */
-    ps = gst_structure_get_string (structure, "sprop-parameter-sets");
     params = g_strsplit (ps, ",", 0);
 
     /* count total number of bytes in base64. Also include the sync bytes in
@@ -246,14 +310,106 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     if (rtph264depay->codec_data)
       gst_buffer_unref (rtph264depay->codec_data);
     rtph264depay->codec_data = codec_data;
+  } else if (!rtph264depay->byte_stream) {
+    gchar **params;
+    guint8 **sps, **pps;
+    guint len, num_sps, num_pps;
+    gint i;
+    guint8 *data;
+    guint32 profile_id;
+
+    if (ps == NULL || profile == NULL)
+      goto incomplete_caps;
+
+    params = g_strsplit (ps, ",", 0);
+    len = g_strv_length (params);
+
+    GST_DEBUG_OBJECT (depayload, "we have %d params", len);
+
+    sps = g_new0 (guint8 *, len + 1);
+    pps = g_new0 (guint8 *, len + 1);
+    num_sps = num_pps = 0;
+
+    /* start with 7 bytes header */
+    len = 7;
+    for (i = 0; params[i]; i++) {
+      gint nal_len;
+      guint8 *nalp;
+
+      nal_len = strlen (params[i]);
+      nalp = g_malloc (nal_len + 2);
+      nal_len = decode_base64 (params[i], nalp + 2);
+      nalp[0] = (nal_len >> 8) & 0xff;
+      nalp[1] = nal_len & 0xff;
+      len += nal_len + 2;
+
+      /* copy to the right list */
+      if ((nalp[2] & 0x1f) == 7) {
+        GST_DEBUG_OBJECT (depayload, "adding param %d as SPS %d", i, num_sps);
+        sps[num_sps++] = nalp;
+      } else {
+        GST_DEBUG_OBJECT (depayload, "adding param %d as PPS %d", i, num_pps);
+        pps[num_pps++] = nalp;
+      }
+    }
+    g_strfreev (params);
+
+    codec_data = gst_buffer_new_and_alloc (len);
+    data = GST_BUFFER_DATA (codec_data);
+
+    /* 8 bits version == 1 */
+    *data++ = 1;
+    /* hex: AVCProfileIndication:8 | profile_compat:8 | AVCLevelIndication:8 */
+    sscanf (profile, "%6x", &profile_id);
+    *data++ = (profile_id >> 16) & 0xff;
+    *data++ = (profile_id >> 8) & 0xff;
+    *data++ = profile_id & 0xff;
+    /* 6 bits reserved | 2 bits lengthSizeMinusOn */
+    *data++ = 0xff;
+    /* 3 bits reserved | 5 bits numOfSequenceParameterSets */
+    *data++ = 0xe0 | (num_sps & 0x1f);
+
+    /* copy all SPS */
+    for (i = 0; sps[i]; i++) {
+      len = ((sps[i][0] << 8) | sps[i][1]) + 2;
+      GST_DEBUG_OBJECT (depayload, "copy SPS %d of length %d", i, len);
+      memcpy (data, sps[i], len);
+      g_free (sps[i]);
+      data += len;
+    }
+    g_free (sps);
+    /* 8 bits numOfPictureParameterSets */
+    *data++ = num_pps;
+    /* copy all PPS */
+    for (i = 0; pps[i]; i++) {
+      len = ((pps[i][0] << 8) | pps[i][1]) + 2;
+      GST_DEBUG_OBJECT (depayload, "copy PPS %d of length %d", i, len);
+      memcpy (data, pps[i], len);
+      g_free (pps[i]);
+      data += len;
+    }
+    g_free (pps);
+    GST_BUFFER_SIZE (codec_data) = data - GST_BUFFER_DATA (codec_data);
+
+    gst_caps_set_simple (srccaps,
+        "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
   }
 
   gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
   return TRUE;
+
+  /* ERRORS */
+incomplete_caps:
+  {
+    GST_DEBUG_OBJECT (depayload, "we have incomplete caps");
+    return FALSE;
+  }
 }
 
+/* FIXME, non-bytestream handling is freaking out ffmpeg. Apparently we need to
+ * group all NAL units belonging to one frame together */
 static GstBuffer *
 gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
@@ -337,17 +493,24 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
            */
           nalu_size = (payload[0] << 8) | payload[1];
 
-          /* strip NALU size */
-          payload += 2;
-          payload_len -= 2;
-
           if (nalu_size > payload_len)
             nalu_size = payload_len;
 
           outsize = nalu_size + sizeof (sync_bytes);
           outbuf = gst_buffer_new_and_alloc (outsize);
           outdata = GST_BUFFER_DATA (outbuf);
-          memcpy (outdata, sync_bytes, sizeof (sync_bytes));
+          if (rtph264depay->byte_stream) {
+            memcpy (outdata, sync_bytes, sizeof (sync_bytes));
+          } else {
+            outdata[0] = outdata[1] = 0;
+            outdata[2] = payload[0];
+            outdata[3] = payload[1];
+          }
+
+          /* strip NALU size */
+          payload += 2;
+          payload_len -= 2;
+
           outdata += sizeof (sync_bytes);
           memcpy (outdata, payload, nalu_size);
 
@@ -414,7 +577,6 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
           outsize = nalu_size + sizeof (sync_bytes);
           outbuf = gst_buffer_new_and_alloc (outsize);
           outdata = GST_BUFFER_DATA (outbuf);
-          memcpy (outdata, sync_bytes, sizeof (sync_bytes));
           outdata += sizeof (sync_bytes);
           memcpy (outdata, payload, nalu_size);
           outdata[0] = nal_header;
@@ -445,7 +607,17 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
           outsize = gst_adapter_available (rtph264depay->adapter);
           outbuf = gst_adapter_take_buffer (rtph264depay->adapter, outsize);
+          outdata = GST_BUFFER_DATA (outbuf);
 
+          if (rtph264depay->byte_stream) {
+            memcpy (outdata, sync_bytes, sizeof (sync_bytes));
+          } else {
+            outsize -= 4;
+            outdata[0] = (outsize >> 24);
+            outdata[1] = (outsize >> 16);
+            outdata[2] = (outsize >> 8);
+            outdata[3] = (outsize);
+          }
           gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
           /* push codec_data first */
@@ -469,7 +641,13 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         outsize = nalu_size + sizeof (sync_bytes);
         outbuf = gst_buffer_new_and_alloc (outsize);
         outdata = GST_BUFFER_DATA (outbuf);
-        memcpy (outdata, sync_bytes, sizeof (sync_bytes));
+        if (rtph264depay->byte_stream) {
+          memcpy (outdata, sync_bytes, sizeof (sync_bytes));
+        } else {
+          outdata[0] = outdata[1] = 0;
+          outdata[2] = nalu_size >> 8;
+          outdata[3] = nalu_size & 0xff;
+        }
         outdata += sizeof (sync_bytes);
         memcpy (outdata, payload, nalu_size);
 
