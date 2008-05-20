@@ -640,17 +640,11 @@ gst_smpte_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+gboolean
+gst_smpte_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_smpte_debug, "smpte", 0,
       "SMPTE transition effect");
 
   return gst_element_register (plugin, "smpte", GST_RANK_NONE, GST_TYPE_SMPTE);
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "smpte",
-    "Apply the standard SMPTE transitions on video images",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

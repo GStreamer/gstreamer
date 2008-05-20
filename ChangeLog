@@ -1,3 +1,25 @@
+2008-05-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/smpte/Makefile.am:
+	* gst/smpte/gstsmpte.c: (gst_smpte_plugin_init):
+	* gst/smpte/gstsmpte.h:
+	* gst/smpte/gstsmptealpha.c:
+	(gst_smpte_alpha_transition_type_get_type),
+	(gst_smpte_alpha_get_type), (gst_smpte_alpha_base_init),
+	(gst_smpte_alpha_class_init), (gst_smpte_alpha_update_mask),
+	(gst_smpte_alpha_setcaps), (gst_smpte_alpha_get_unit_size),
+	(gst_smpte_alpha_init), (gst_smpte_alpha_finalize),
+	(gst_smpte_alpha_do_ayuv), (gst_smpte_alpha_do_i420),
+	(gst_smpte_alpha_transform), (gst_smpte_alpha_set_property),
+	(gst_smpte_alpha_get_property), (gst_smpte_alpha_plugin_init):
+	* gst/smpte/gstsmptealpha.h:
+	* gst/smpte/plugin.c: (plugin_init):
+	Add new plugin that adds the SMPTE transition in the alpha channel of
+	I420 and AYUV frames so that they can be blended with videomixer later
+	on. Uses all niceties such as using base transform for efficient alloc
+	and negotiation. It currently requires GstController to control the
+	position in the transition effect.
+
 2008-05-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:

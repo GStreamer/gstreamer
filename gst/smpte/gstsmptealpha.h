@@ -18,64 +18,56 @@
  */
 
 
-#ifndef __GST_SMPTE_H__
-#define __GST_SMPTE_H__
+#ifndef __GST_SMPTE_ALPHA_H__
+#define __GST_SMPTE_ALPHA_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/video/video.h>
+#include <gst/video/gstvideofilter.h>
+
 
 G_BEGIN_DECLS
 
 #include "gstmask.h"
 
-#define GST_TYPE_SMPTE \
-  (gst_smpte_get_type())
-#define GST_SMPTE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SMPTE,GstSMPTE))
-#define GST_SMPTE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SMPTE,GstSMPTEClass))
-#define GST_IS_SMPTE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SMPTE))
-#define GST_IS_SMPTE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SMPTE))
+#define GST_TYPE_SMPTE_ALPHA \
+  (gst_smpte_alpha_get_type())
+#define GST_SMPTE_ALPHA(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SMPTE_ALPHA,GstSMPTEAlpha))
+#define GST_SMPTE_ALPHA_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SMPTE_ALPHA,GstSMPTEAlphaClass))
+#define GST_IS_SMPTE_ALPHA(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SMPTE_ALPHA))
+#define GST_IS_SMPTE_ALPHA_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SMPTE_ALPHA))
 
-typedef struct _GstSMPTE GstSMPTE;
-typedef struct _GstSMPTEClass GstSMPTEClass;
+typedef struct _GstSMPTEAlpha GstSMPTEAlpha;
+typedef struct _GstSMPTEAlphaClass GstSMPTEAlphaClass;
 
-struct _GstSMPTE {
-  GstElement     element;
-
-  /* pads */
-  GstPad        *srcpad,
-                *sinkpad1,
-                *sinkpad2;
-  GstCollectPads *collect;
+struct _GstSMPTEAlpha {
+  GstVideoFilter element;
 
   /* properties */
   gint           type;
   gint           border;
   gint           depth;
-  guint64        duration;
+  gdouble        position;
 
   /* negotiated format */
-  gint           format;
+  GstVideoFormat format;
   gint           width;
   gint           height;
-  gdouble        fps;
-  gint           fps_num;
-  gint           fps_denom;
 
   /* state of the effect */
-  gint           position;
-  gint           end_position;
   GstMask       *mask;
 };
 
-struct _GstSMPTEClass {
-  GstElementClass parent_class;
+struct _GstSMPTEAlphaClass {
+  GstVideoFilterClass parent_class;
 };
 
-gboolean gst_smpte_plugin_init (GstPlugin * plugin);
+gboolean gst_smpte_alpha_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-#endif /* __GST_SMPTE_H__ */
+
+#endif /* __GST_SMPTE_ALPHA_H__ */
