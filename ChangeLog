@@ -1,3 +1,13 @@
+2008-05-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_sink_event):
+	Unref events that the GstBaseTransform::event vfunc didn't want to
+	have forwarded by the base class. Closes a leak in identity.
+	Fixes bug #446763.
+
 2008-05-19  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/libs/gstreamer-libs-sections.txt:

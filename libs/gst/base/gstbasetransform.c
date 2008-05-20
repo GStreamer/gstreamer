@@ -1263,6 +1263,8 @@ gst_base_transform_sink_event (GstPad * pad, GstEvent * event)
    * something different. */
   if (forward)
     ret = gst_pad_push_event (trans->srcpad, event);
+  else
+    gst_event_unref (event);
 
   gst_object_unref (trans);
 
