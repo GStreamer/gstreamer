@@ -914,7 +914,7 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
    * and try to add/remove channels from the input layout, or pick a default
    * layout based on LFE-presence in input layout, but let's save that for
    * another day) */
-  if (out_chans > 0 && out_chans < G_N_ELEMENTS (default_positions[0])) {
+  if (out_chans > 0 && out_chans <= G_N_ELEMENTS (default_positions[0])) {
     GST_DEBUG_OBJECT (base, "using default channel layout as fallback");
     gst_audio_set_channel_positions (outs, default_positions[out_chans - 1]);
   }
