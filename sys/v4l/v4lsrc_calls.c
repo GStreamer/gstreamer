@@ -732,8 +732,5 @@ gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = duration;
 
-  /* the negotiate() method already set caps on the source pad */
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (v4lsrc)));
-
   return buf;
 }

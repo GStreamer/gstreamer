@@ -275,7 +275,6 @@ gst_gnome_vfs_src_init (GstGnomeVFSSrc * gnomevfssrc)
   gnomevfssrc->curoffset = 0;
   gnomevfssrc->seekable = FALSE;
 
-  gnomevfssrc->icy_caps = NULL;
   gnomevfssrc->iradio_mode = FALSE;
   gnomevfssrc->http_callbacks_pushed = FALSE;
   gnomevfssrc->iradio_name = NULL;
@@ -328,11 +327,6 @@ gst_gnome_vfs_src_finalize (GObject * object)
 
   g_free (src->iradio_title);
   src->iradio_title = NULL;
-
-  if (src->icy_caps) {
-    gst_caps_unref (src->icy_caps);
-    src->icy_caps = NULL;
-  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -534,9 +528,14 @@ gst_gnome_vfs_src_received_headers_callback (gconstpointer in,
     /* Icecast stuff */
     if (strncmp (data, "icy-metaint:", 12) == 0) {      /* ugh */
       if (sscanf (data + 12, "%d", &icy_metaint) == 1) {
-        if (icy_metaint > 0)
-          src->icy_caps = gst_caps_new_simple ("application/x-icy",
+        if (icy_metaint > 0) {
+          GstCaps *icy_caps;
+
+          icy_caps = gst_caps_new_simple ("application/x-icy",
               "metadata-interval", G_TYPE_INT, icy_metaint, NULL);
+          gst_pad_set_caps (GST_BASE_SRC_PAD (src), icy_caps);
+          gst_caps_unref (icy_caps);
+        }
       }
       continue;
     }
@@ -632,9 +631,6 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   }
 
   buf = gst_buffer_new_and_alloc (size);
-
-  if (src->icy_caps)
-    gst_buffer_set_caps (buf, src->icy_caps);
 
   data = GST_BUFFER_DATA (buf);
   GST_BUFFER_OFFSET (buf) = src->curoffset;
@@ -865,11 +861,6 @@ gst_gnome_vfs_src_stop (GstBaseSrc * basesrc)
     src->handle = NULL;
   }
   src->curoffset = 0;
-
-  if (src->icy_caps) {
-    gst_caps_unref (src->icy_caps);
-    src->icy_caps = NULL;
-  }
 
   return TRUE;
 }

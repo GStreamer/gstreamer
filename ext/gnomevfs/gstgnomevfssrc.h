@@ -67,8 +67,6 @@ struct _GstGnomeVFSSrc
   gboolean iradio_mode;
   gboolean http_callbacks_pushed;
 
-  GstCaps *icy_caps;
-
   gchar *iradio_name;
   gchar *iradio_genre;
   gchar *iradio_url;

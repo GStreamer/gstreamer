@@ -808,8 +808,6 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   GST_BUFFER_OFFSET (buf) = sample;
   GST_BUFFER_OFFSET_END (buf) = sample + samples;
 
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (bsrc)));
-
   *outbuf = buf;
 
   return GST_FLOW_OK;
