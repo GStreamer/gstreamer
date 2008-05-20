@@ -819,7 +819,7 @@ static void
 gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
     GstStructure * outs)
 {
-  const GValue *out_layout;
+  const GValue *in_layout, *out_layout;
   gint in_chans, out_chans;
 
   if (!gst_structure_get_int (ins, "channels", &in_chans))
@@ -844,18 +844,17 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
   /* check if the output has a channel layout (or a list of layouts) */
   out_layout = gst_structure_get_value (outs, "channel-positions");
 
+  /* get the channel layout of the input if any */
+  in_layout = gst_structure_get_value (ins, "channel-positions");
+
   if (out_layout == NULL) {
-    if (out_chans <= 2)
+    if (out_chans <= 2 && in_chans != out_chans && in_layout == NULL)
       return;                   /* nothing to do, default layout will be assumed */
     GST_WARNING_OBJECT (base, "downstream caps contain no channel layout");
   }
 
-  if (in_chans == out_chans) {
-    const GValue *in_layout;
+  if (in_chans == out_chans && in_layout != NULL) {
     GValue res = { 0, };
-
-    in_layout = gst_structure_get_value (ins, "channel-positions");
-    g_return_if_fail (in_layout != NULL);
 
     /* same number of channels and no output layout: just use input layout */
     if (out_layout == NULL) {
