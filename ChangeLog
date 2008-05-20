@@ -1,3 +1,10 @@
+2008-05-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_sync_latency):
+	We can only use our optimal calibration if we prerolled before the
+	latency expired.
+
 2008-05-20  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac:

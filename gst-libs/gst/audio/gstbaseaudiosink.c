@@ -1025,6 +1025,7 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink)
   GstBaseAudioSink *sink;
   GstClockTime itime, etime;
   GstClockTime rate_num, rate_denom;
+  GstClockTimeDiff jitter;
 
   sink = GST_BASE_AUDIO_SINK (bsink);
 
@@ -1039,8 +1040,6 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink)
   GST_OBJECT_UNLOCK (sink);
 
   do {
-    GstClockTimeDiff jitter;
-
     GST_DEBUG_OBJECT (sink, "checking preroll");
 
     /* first wait for the playing state before we can continue */
@@ -1077,23 +1076,24 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink)
      * yet. if some other error occures, we continue. */
   } while (status == GST_CLOCK_UNSCHEDULED);
 
-
   GST_OBJECT_LOCK (sink);
   GST_DEBUG_OBJECT (sink, "latency synced");
 
-  /* if we are slaved to a clock, we need to set the initial
-   * calibration */
-  switch (sink->priv->slave_method) {
-    case GST_BASE_AUDIO_SINK_SLAVE_SKEW:
-    case GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE:
-    case GST_BASE_AUDIO_SINK_SLAVE_NONE:
-    default:
-      /* When we are prerolled, our internal clock should exactly have been the
-       * latency (== the running time of the external clock) */
-      etime = GST_ELEMENT_CAST (sink)->base_time + time;
-      itime = gst_base_audio_sink_get_time (sink->provided_clock, sink);
-      break;
+  /* when we prerolled in time, we can accurately set the calibration,
+   * our internal clock should exactly have been the latency (== the running
+   * time of the external clock) */
+  etime = GST_ELEMENT_CAST (sink)->base_time + time;
+  itime = gst_base_audio_sink_get_time (sink->provided_clock, sink);
+
+  if (status == GST_CLOCK_EARLY) {
+    /* when we prerolled late, we have to take into account the lateness */
+    GST_DEBUG_OBJECT (sink, "late preroll, adding jitter");
+    etime += jitter;
   }
+
+  /* start ringbuffer so we can start slaving right away when we need to */
+  gst_ring_buffer_start (sink->ringbuffer);
+
   GST_DEBUG_OBJECT (sink,
       "internal time: %" GST_TIME_FORMAT " external time: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (itime), GST_TIME_ARGS (etime));
@@ -1119,9 +1119,6 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink)
 
   sink->priv->avg_skew = -1;
   sink->next_sample = -1;
-
-  /* start ringbuffer so we can start slaving right away when we need to */
-  gst_ring_buffer_start (sink->ringbuffer);
 
   return GST_FLOW_OK;
 
