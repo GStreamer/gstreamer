@@ -1,3 +1,21 @@
+2008-05-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Brian Koropoff <brianhk at cs dot washington dot edu>
+
+	* ext/spc/Makefile.am:
+	* ext/spc/gstspc.c: (gst_spc_dec_class_init),
+	(gst_spc_dec_src_query_type), (gst_spc_dec_init),
+	(gst_spc_dec_dispose), (gst_spc_dec_sink_event),
+	(gst_spc_duration), (gst_spc_fadeout), (gst_spc_dec_src_event),
+	(gst_spc_dec_src_query), (spc_play), (spc_setup):
+	* ext/spc/gstspc.h:
+	* ext/spc/tag.c: (spc_tag_is_extended), (spc_tag_is_text_format),
+	(spc_tag_is_present), (spc_tag_unpack_date), (spc_tag_clear),
+	(spc_tag_get_info), (spc_tag_free):
+	* ext/spc/tag.h:
+	Add support for some essential features like seeking, reading song
+	duration and extended tags. Fixes bug #454151.
+
 2008-05-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/elements/deinterleave.c: (GST_START_TEST):

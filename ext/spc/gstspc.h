@@ -1,5 +1,6 @@
 /* Copyright (C) 2004-2005 Michael Pyne <michael dot pyne at kdemail net>
  * Copyright (C) 2004-2006 Chris Lee <clee at kde org>
+ * Copyright (C) 2007 Brian Koropoff <bkoropoff at gmail com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,6 +24,8 @@
 #include <gst/gst.h>
 
 #include <openspc.h>
+
+#include "tag.h"
 
 G_BEGIN_DECLS
 
@@ -49,6 +52,12 @@ struct _GstSpcDec
 
   GstBuffer  *buf;
   gboolean    initialized;
+  gboolean    seeking;
+  guint32     seekpoint;
+  
+  spc_tag_info tag_info;
+  
+  guint32 byte_pos;
 };
 
 struct _GstSpcDecClass
