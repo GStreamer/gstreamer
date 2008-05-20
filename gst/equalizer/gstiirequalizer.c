@@ -515,16 +515,16 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
 
 #define CREATE_OPTIMIZED_FUNCTIONS(TYPE,BIG_TYPE,MIN_VAL,MAX_VAL)       \
 typedef struct {                                                        \
-  TYPE x1, x2;          /* history of input values for a filter */      \
-  TYPE y1, y2;          /* history of output values for a filter */     \
+  BIG_TYPE x1, x2;          /* history of input values for a filter */  \
+  BIG_TYPE y1, y2;          /* history of output values for a filter */ \
 } SecondOrderHistory ## TYPE;                                           \
                                                                         \
-static inline TYPE                                                      \
+static inline BIG_TYPE                                                  \
 one_step_ ## TYPE (GstIirEqualizerBand *filter,                         \
-    SecondOrderHistory ## TYPE *history, TYPE input)                    \
+    SecondOrderHistory ## TYPE *history, BIG_TYPE input)                \
 {                                                                       \
   /* calculate output */                                                \
-  TYPE output = filter->a0 * input + filter->a1 * history->x1 +         \
+  BIG_TYPE output = filter->a0 * input + filter->a1 * history->x1 +     \
       filter->a2 * history->x2 + filter->b1 * history->y1 +             \
       filter->b2 * history->y2;                                         \
   /* update history */                                                  \
@@ -564,7 +564,7 @@ guint size, guint channels)                                             \
   }                                                                     \
 }
 
-CREATE_OPTIMIZED_FUNCTIONS (gint16, gint, -32768, 32767);
+CREATE_OPTIMIZED_FUNCTIONS (gint16, gint32, -32768, 32767);
 CREATE_OPTIMIZED_FUNCTIONS (gfloat, gfloat, -1.0, 1.0);
 CREATE_OPTIMIZED_FUNCTIONS (gdouble, gdouble, -1.0, 1.0);
 
