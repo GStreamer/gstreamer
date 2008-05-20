@@ -1,5 +1,20 @@
 2008-05-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Bastien Nocera <hadess at hadess dot net>
+
+	* ext/mythtv/gstmythtvsrc.c: (gst_mythtv_src_class_init),
+	(gst_mythtv_src_init), (gst_mythtv_src_clear),
+	(do_read_request_response), (gst_mythtv_src_create),
+	(gst_mythtv_src_start):
+	Correctly set duration to get a more correct seek bar in totem.
+
+	Disable query and event functions as they don't work and do some
+	smaller cleanup.
+
+	Fixes bug #533736.
+
+2008-05-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Brian Koropoff <brianhk at cs dot washington dot edu>
 
 	* ext/spc/Makefile.am:

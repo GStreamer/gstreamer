@@ -132,7 +132,7 @@ static gboolean gst_mythtv_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_mythtv_src_get_size (GstBaseSrc * bsrc, guint64 * size);
 static gboolean gst_mythtv_src_is_seekable (GstBaseSrc * push_src);
 
-static gboolean gst_mythtv_src_do_seek (GstBaseSrc * base,
+static GstFlowReturn gst_mythtv_src_do_seek (GstBaseSrc * base,
     GstSegment * segment);
 
 static GstStateChangeReturn
@@ -146,9 +146,10 @@ static void gst_mythtv_src_get_property (GObject * object,
 static void gst_mythtv_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
+#if 0
 static gboolean gst_mythtv_src_handle_query (GstPad * pad, GstQuery * query);
-
 static gboolean gst_mythtv_src_handle_event (GstPad * pad, GstEvent * event);
+#endif
 
 static GMythFileReadResult do_read_request_response (GstMythtvSrc * src,
     guint size, GByteArray * data_ptr);
@@ -241,12 +242,13 @@ gst_mythtv_src_class_init (GstMythtvSrcClass * klass)
       g_param_spec_string ("mythtv-channel", "mythtv-channel",
           "Change MythTV channel number", "", G_PARAM_READWRITE));
 
-  gstbasesrc_class->start = gst_mythtv_src_start;
-  gstbasesrc_class->stop = gst_mythtv_src_stop;
-  gstbasesrc_class->get_size = gst_mythtv_src_get_size;
-  gstbasesrc_class->is_seekable = gst_mythtv_src_is_seekable;
-  gstbasesrc_class->do_seek = gst_mythtv_src_do_seek;
-  gstpushsrc_class->create = gst_mythtv_src_create;
+  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_mythtv_src_start);
+  gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_mythtv_src_stop);
+  gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_mythtv_src_get_size);
+  gstbasesrc_class->is_seekable =
+      GST_DEBUG_FUNCPTR (gst_mythtv_src_is_seekable);
+  gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_mythtv_src_do_seek);
+  gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_mythtv_src_create);
 
   GST_DEBUG_CATEGORY_INIT (mythtvsrc_debug, "mythtvsrc", 0,
       "MythTV Client Source");
@@ -274,10 +276,14 @@ gst_mythtv_src_init (GstMythtvSrc * this, GstMythtvSrcClass * g_class)
   this->wait_to_transfer = 0;
   this->spawn_livetv = NULL;
   gst_base_src_set_format (GST_BASE_SRC (this), GST_FORMAT_BYTES);
+#if 0
   gst_pad_set_event_function (GST_BASE_SRC_PAD (GST_BASE_SRC (this)),
       gst_mythtv_src_handle_event);
+#endif
+#if 0
   gst_pad_set_query_function (GST_BASE_SRC_PAD (GST_BASE_SRC (this)),
       gst_mythtv_src_handle_query);
+#endif
 
 }
 
@@ -286,6 +292,7 @@ gst_mythtv_src_clear (GstMythtvSrc * mythtv_src)
 {
   mythtv_src->unique_setup = FALSE;
 
+#if 0
   if (mythtv_src->spawn_livetv) {
     g_object_unref (mythtv_src->spawn_livetv);
     mythtv_src->spawn_livetv = NULL;
@@ -300,6 +307,7 @@ gst_mythtv_src_clear (GstMythtvSrc * mythtv_src)
     g_object_unref (mythtv_src->backend_info);
     mythtv_src->backend_info = NULL;
   }
+#endif
 }
 
 static void
@@ -380,6 +388,7 @@ eos:
   src->eos = TRUE;
 
 done:
+  GST_LOG_OBJECT (src, "Finished read: result %d", result);
   return result;
 }
 
@@ -401,7 +410,6 @@ gst_mythtv_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   if (result == GMYTH_FILE_READ_ERROR)
     goto read_error;
-
 
   *outbuf = gst_buffer_new ();
   GST_BUFFER_SIZE (*outbuf) = buffer->len;
@@ -429,6 +437,7 @@ gst_mythtv_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   if (src->eos || (!src->live_tv && (src->bytes_read >= src->content_size)))
     ret = GST_FLOW_UNEXPECTED;
 
+  GST_LOG_OBJECT (src, "Create finished: %d", ret);
   return ret;
 
 read_error:
@@ -522,6 +531,7 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
   GString *chain_id_local = NULL;
   GMythURI *gmyth_uri = NULL;
   gboolean ret = TRUE;
+  GstBaseSrc *basesrc;
   GstMessage *msg;
 
   if (src->unique_setup == FALSE) {
@@ -629,9 +639,17 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
 
   src->do_start = FALSE;
 
+  basesrc = GST_BASE_SRC_CAST (src);
+  gst_segment_set_duration (&basesrc->segment, GST_FORMAT_BYTES,
+      src->content_size);
+  gst_element_post_message (GST_ELEMENT (src),
+      gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_BYTES,
+          src->content_size));
+#if 0
   gst_pad_push_event (GST_BASE_SRC_PAD (GST_BASE_SRC (src)),
       gst_event_new_new_segment (TRUE, 1.0,
           GST_FORMAT_BYTES, 0, src->content_size, 0));
+#endif
 done:
   if (gmyth_uri != NULL) {
     g_object_unref (gmyth_uri);
@@ -724,6 +742,7 @@ gst_mythtv_src_stop (GstBaseSrc * bsrc)
   return TRUE;
 }
 
+#if 0
 static gboolean
 gst_mythtv_src_handle_event (GstPad * pad, GstEvent * event)
 {
@@ -751,13 +770,14 @@ gst_mythtv_src_handle_event (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (src, "HANDLE EVENT %d", ret);
   return ret;
 }
-
+#endif
 static gboolean
 gst_mythtv_src_is_seekable (GstBaseSrc * push_src)
 {
   return TRUE;
 }
 
+#if 0
 static gboolean
 gst_mythtv_src_handle_query (GstPad * pad, GstQuery * query)
 {
@@ -798,7 +818,7 @@ gst_mythtv_src_handle_query (GstPad * pad, GstQuery * query)
 
   return res;
 }
-
+#endif
 static GstStateChangeReturn
 gst_mythtv_src_change_state (GstElement * element, GstStateChange transition)
 {
