@@ -1,3 +1,10 @@
+2008-05-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/esd/esdsink.c: (gst_esdsink_write):
+	When we post an error, we must return -1 to let the parent know that we
+	cannot write the segment else it will loop and continue to call us again
+	forever. Patch by Michael Meeks.
+
 2008-05-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/videomixer/videomixer.c:

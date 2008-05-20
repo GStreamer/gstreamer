@@ -413,7 +413,7 @@ write_error:
   {
     GST_ELEMENT_ERROR (esdsink, RESOURCE, WRITE,
         ("Failed to write data to the esound daemon"), GST_ERROR_SYSTEM);
-    return 0;
+    return -1;
   }
 }
 
