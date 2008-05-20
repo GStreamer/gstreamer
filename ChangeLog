@@ -1,3 +1,8 @@
+2008-05-20  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* configure.ac:
+	  Require core CVS for GstBaseSrc buffer caps setting magic.
+
 2008-05-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/audioconvert/gstaudioconvert.c:
