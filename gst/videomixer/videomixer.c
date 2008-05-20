@@ -57,7 +57,12 @@
 #include <gst/base/gstcollectpads.h>
 #include <gst/controller/gstcontroller.h>
 
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
 
 #include "videomixer.h"
 

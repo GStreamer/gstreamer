@@ -1,3 +1,8 @@
+2008-05-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/videomixer/videomixer.c:
+	  Add missing incudes.
+
 2008-05-20  Peter Kjellerstedt  <pkj@axis.com>
 
 	* gst/rtp/gstrtph264pay.c: (gst_h264_scan_mode_get_type),
