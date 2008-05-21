@@ -1,3 +1,14 @@
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Henrik Eriksson <henriken at axis dot com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init),
+	(gst_multi_fd_sink_init), (setup_dscp_client), (setup_dscp),
+	(gst_multi_fd_sink_add_full), (gst_multi_fd_sink_set_property),
+	(gst_multi_fd_sink_get_property):
+	* gst/tcp/gstmultifdsink.h:
+	Add support for DSCP QOS. Fixes #469933.
+
 2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/elements/audioconvert.c: (GST_START_TEST):

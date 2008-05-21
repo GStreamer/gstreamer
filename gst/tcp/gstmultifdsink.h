@@ -208,6 +208,7 @@ struct _GstMultiFdSink {
 
   GstTCPProtocol protocol;
   guint mtu;
+  gint qos_dscp;
 
   GArray *bufqueue;     /* global queue of buffers */
 

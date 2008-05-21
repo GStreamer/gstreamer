@@ -126,6 +126,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <netinet/in.h>
 
 #ifdef HAVE_FIONREAD_IN_SYS_FILIO
 #include <sys/filio.h>
@@ -190,6 +191,8 @@ enum
 #define DEFAULT_BURST_UNIT              GST_UNIT_TYPE_UNDEFINED
 #define DEFAULT_BURST_VALUE             0
 
+#define DEFAULT_QOS_DSCP                -1
+
 enum
 {
   PROP_0,
@@ -218,6 +221,10 @@ enum
 
   PROP_BURST_UNIT,
   PROP_BURST_VALUE,
+
+  PROP_QOS_DSCP,
+
+  PROP_LAST
 };
 
 /* For backward compat, we can't really select the poll mode anymore with
@@ -490,6 +497,11 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
           "The amount of burst expressed in burst-unit", 0, G_MAXUINT64,
           DEFAULT_BURST_VALUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_QOS_DSCP,
+      g_param_spec_int ("qos_dscp", "QoS diff srv code point",
+          "Quality of Service, differentiated services code point (-1 default)",
+          -1, 63, DEFAULT_QOS_DSCP, G_PARAM_READWRITE));
+
   /**
    * GstMultiFdSink::add:
    * @gstmultifdsink: the multifdsink element to emit this signal on
@@ -678,6 +690,8 @@ gst_multi_fd_sink_init (GstMultiFdSink * this, GstMultiFdSinkClass * klass)
   this->def_burst_unit = DEFAULT_BURST_UNIT;
   this->def_burst_value = DEFAULT_BURST_VALUE;
 
+  this->qos_dscp = DEFAULT_QOS_DSCP;
+
   this->header_flags = 0;
 }
 
@@ -693,6 +707,79 @@ gst_multi_fd_sink_finalize (GObject * object)
   g_array_free (this->bufqueue, TRUE);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static gint
+setup_dscp_client (GstMultiFdSink * sink, GstTCPClient * client)
+{
+  gint tos;
+  gint ret;
+  struct sockaddr_storage ssaddr;
+  socklen_t slen = sizeof (ssaddr);
+  gint af;
+
+  /* don't touch */
+  if (sink->qos_dscp < 0)
+    return 0;
+
+  if ((ret =
+          getsockname (client->fd.fd, (struct sockaddr *) &ssaddr,
+              &slen)) < 0) {
+    GST_DEBUG_OBJECT (sink, "could not get sockname: %s", g_strerror (errno));
+    return ret;
+  }
+
+  af = ssaddr.ss_family;
+
+  /* If this is a v4-mapped address then do ipv4 qos. */
+  if (af == AF_INET6) {
+    struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *) &ssaddr;
+
+    GST_DEBUG_OBJECT (sink, "check IP6 socket");
+    if (IN6_IS_ADDR_V4MAPPED (&(saddr6->sin6_addr)))
+      GST_DEBUG_OBJECT (sink, "mapped to IPV4");
+    af = AF_INET;
+  }
+
+  /* Extract and shift 6 bits of the dscp. */
+  tos = (sink->qos_dscp & 0x3f) << 2;
+  switch (af) {
+    case AF_INET:
+      ret = setsockopt (client->fd.fd, SOL_IP, IP_TOS, &tos, sizeof (tos));
+      break;
+    case AF_INET6:
+#ifdef IPV6_TCLASS
+      ret =
+          setsockopt (client->fd.fd, SOL_IPV6, IPV6_TCLASS, &tos, sizeof (tos));
+      break;
+#endif
+    default:
+      ret = 0;
+      GST_ERROR_OBJECT (sink, "unsupported AF");
+      break;
+  }
+  if (ret)
+    GST_DEBUG_OBJECT (sink, "could not set DSCP: %s", g_strerror (errno));
+
+  return ret;
+}
+
+
+static void
+setup_dscp (GstMultiFdSink * sink)
+{
+  GList *clients, *next;
+
+  CLIENTS_LOCK (sink);
+  for (clients = sink->clients; clients; clients = next) {
+    GstTCPClient *client;
+
+    client = (GstTCPClient *) clients->data;
+    next = g_list_next (clients);
+
+    setup_dscp_client (sink, client);
+  }
+  CLIENTS_UNLOCK (sink);
 }
 
 /* "add-full" signal implementation */
@@ -770,6 +857,7 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
   res = fstat (fd, &statbuf);
   if (S_ISSOCK (statbuf.st_mode)) {
     client->is_socket = TRUE;
+    setup_dscp_client (sink, client);
   }
 
   gst_poll_restart (sink->fdset);
@@ -2577,6 +2665,10 @@ gst_multi_fd_sink_set_property (GObject * object, guint prop_id,
     case PROP_BURST_VALUE:
       multifdsink->def_burst_value = g_value_get_uint64 (value);
       break;
+    case PROP_QOS_DSCP:
+      multifdsink->qos_dscp = g_value_get_int (value);
+      setup_dscp (multifdsink);
+      break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2653,7 +2745,9 @@ gst_multi_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_BURST_VALUE:
       g_value_set_uint64 (value, multifdsink->def_burst_value);
       break;
-
+    case PROP_QOS_DSCP:
+      g_value_set_int (value, multifdsink->qos_dscp);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
