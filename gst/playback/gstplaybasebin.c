@@ -628,7 +628,7 @@ queue_remove_probe (GstElement * queue, GstPlayBaseBin * play_base_bin)
   GstPad *sinkpad;
 
   data = g_object_get_data (G_OBJECT (queue), "probe");
-  sinkpad = gst_element_get_pad (queue, "sink");
+  sinkpad = gst_element_get_static_pad (queue, "sink");
 
   if (data) {
     GST_DEBUG_OBJECT (play_base_bin,
@@ -752,7 +752,7 @@ queue_out_of_data (GstElement * queue, GstPlayBaseBin * play_base_bin)
     GstPad *sinkpad;
     guint id;
 
-    sinkpad = gst_element_get_pad (queue, "sink");
+    sinkpad = gst_element_get_static_pad (queue, "sink");
     id = gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (check_queue), queue);
     g_object_set_data (G_OBJECT (queue), "probe", GINT_TO_POINTER (id));
     GST_DEBUG_OBJECT (play_base_bin,
@@ -863,7 +863,7 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     g_object_set_data (G_OBJECT (preroll), "pbb", play_base_bin);
 
     /* give updates on queue size */
-    sinkpad = gst_element_get_pad (preroll, "sink");
+    sinkpad = gst_element_get_static_pad (preroll, "sink");
     id = gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (check_queue), preroll);
     GST_DEBUG_OBJECT (play_base_bin, "Attaching probe to pad %s:%s (%p)",
         GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
@@ -884,7 +884,7 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
   }
 
   /* listen for EOS so we can switch groups when one ended. */
-  preroll_pad = gst_element_get_pad (preroll, "src");
+  preroll_pad = gst_element_get_static_pad (preroll, "src");
   gst_pad_add_event_probe (preroll_pad, G_CALLBACK (probe_triggered), info);
   gst_object_unref (preroll_pad);
 
@@ -1250,7 +1250,7 @@ preroll_unlinked (GstPad * pad, GstPad * peerpad,
 
   GST_DEBUG ("patching unlinked pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  srcpad = gst_element_get_pad (fakesrc, "src");
+  srcpad = gst_element_get_static_pad (fakesrc, "src");
   gst_bin_add (GST_BIN_CAST (play_base_bin), fakesrc);
   gst_pad_link (srcpad, pad);
   gst_object_unref (srcpad);
@@ -2345,13 +2345,13 @@ mute_group_type (GstPlayBaseGroup * group, GstStreamType type, gboolean mute)
   gboolean active = !mute;
   GstPad *pad;
 
-  pad = gst_element_get_pad (group->type[type - 1].preroll, "src");
+  pad = gst_element_get_static_pad (group->type[type - 1].preroll, "src");
   gst_pad_set_active (pad, active);
   gst_object_unref (pad);
-  pad = gst_element_get_pad (group->type[type - 1].preroll, "sink");
+  pad = gst_element_get_static_pad (group->type[type - 1].preroll, "sink");
   gst_pad_set_active (pad, active);
   gst_object_unref (pad);
-  pad = gst_element_get_pad (group->type[type - 1].selector, "src");
+  pad = gst_element_get_static_pad (group->type[type - 1].selector, "src");
   gst_pad_set_active (pad, active);
   gst_object_unref (pad);
 

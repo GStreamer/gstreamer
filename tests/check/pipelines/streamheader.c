@@ -91,7 +91,7 @@ GST_START_TEST (test_multifdsink_gdp_tag)
   depay = gst_bin_get_by_name (GST_BIN (p2), "depay");
   fail_if (depay == NULL);
 
-  pad = gst_element_get_pad (depay, "src");
+  pad = gst_element_get_static_pad (depay, "src");
   fail_unless (pad != NULL, "Could not get pad out of depay");
   gst_object_unref (depay);
 
@@ -188,7 +188,7 @@ GST_START_TEST (test_multifdsink_gdp_vorbisenc)
   depay = gst_bin_get_by_name (GST_BIN (p2), "depay");
   fail_if (depay == NULL);
 
-  pad = gst_element_get_pad (depay, "src");
+  pad = gst_element_get_static_pad (depay, "src");
   fail_unless (pad != NULL, "Could not get pad out of depay");
   gst_object_unref (depay);
 

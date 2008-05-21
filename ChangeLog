@@ -1,3 +1,56 @@
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind):
+	* gst/playback/decodetest.c: (new_decoded_pad_cb):
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
+	(try_to_link_1), (elem_is_dynamic), (close_link), (type_found),
+	(cleanup_decodebin):
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_init),
+	(connect_element), (gst_decode_group_control_demuxer_pad):
+	* gst/playback/gstplaybasebin.c: (queue_remove_probe),
+	(queue_out_of_data), (gen_preroll_element), (preroll_unlinked),
+	(mute_group_type):
+	* gst/playback/gstplaybin.c: (gst_play_bin_vis_blocked),
+	(gst_play_bin_set_property), (handoff), (gen_video_element),
+	(gen_text_element), (gen_audio_element), (gen_vis_element),
+	(remove_sinks), (add_sink), (setup_sinks):
+	* gst/playback/gstplaybin2.c: (pad_added_cb), (no_more_pads_cb):
+	* gst/playback/gstplaysink.c: (gst_play_sink_get_video_sink),
+	(gst_play_sink_get_audio_sink), (gst_play_sink_vis_unblocked),
+	(gst_play_sink_vis_blocked), (gst_play_sink_set_vis_plugin),
+	(gst_play_sink_get_vis_plugin), (gst_play_sink_set_mute),
+	(gen_video_chain), (gen_text_chain), (gen_audio_chain),
+	(gen_vis_chain), (gst_play_sink_reconfigure),
+	(gst_play_sink_set_font_desc), (gst_play_sink_get_font_desc),
+	(gst_play_sink_request_pad):
+	* gst/playback/gsturidecodebin.c: (type_found), (setup_source):
+	* gst/playback/test.c: (gen_video_element), (gen_audio_element),
+	(cb_newpad):
+	* gst/playback/test6.c: (new_decoded_pad_cb):
+	* tests/check/elements/audioconvert.c: (GST_START_TEST):
+	* tests/check/elements/audiorate.c: (test_injector_chain),
+	(do_perfect_stream_test):
+	* tests/check/elements/ffmpegcolorspace.c: (GST_START_TEST):
+	* tests/check/elements/gdpdepay.c: (GST_START_TEST):
+	* tests/check/elements/gnomevfssink.c:
+	* tests/check/elements/textoverlay.c:
+	(notgst_check_setup_src_pad2), (notgst_check_teardown_src_pad2):
+	* tests/check/elements/videotestsrc.c: (GST_START_TEST):
+	* tests/check/libs/cddabasesrc.c: (GST_START_TEST):
+	* tests/check/pipelines/oggmux.c: (test_pipeline):
+	* tests/check/pipelines/streamheader.c: (GST_START_TEST):
+	* tests/check/pipelines/theoraenc.c: (GST_START_TEST):
+	* tests/check/pipelines/vorbisenc.c: (GST_START_TEST):
+	* tests/examples/seek/scrubby.c: (make_wav_pipeline):
+	* tests/examples/seek/seek.c: (make_mod_pipeline),
+	(make_dv_pipeline), (make_wav_pipeline), (make_flac_pipeline),
+	(make_sid_pipeline), (make_parse_pipeline), (make_vorbis_pipeline),
+	(make_theora_pipeline), (make_vorbis_theora_pipeline),
+	(make_avi_msmpeg4v3_mp3_pipeline), (make_mp3_pipeline),
+	(make_avi_pipeline), (make_mpeg_pipeline), (make_mpegnt_pipeline),
+	(update_fill), (msg_buffering):
+	Don't use bad gst_element_get_pad().
+
 2008-05-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/riff/riff-media.c:

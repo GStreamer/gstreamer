@@ -1462,7 +1462,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     gst_element_set_state (select->selector, GST_STATE_PAUSED);
 
     /* save source pad */
-    select->srcpad = gst_element_get_pad (select->selector, "src");
+    select->srcpad = gst_element_get_static_pad (select->selector, "src");
   }
 
   /* get sinkpad for the new stream */

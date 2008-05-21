@@ -287,7 +287,7 @@ GST_START_TEST (test_rgb_to_rgb)
   fail_unless (gst_element_link (csp, filter2));
   fail_unless (gst_element_link (filter2, sink));
 
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   template_caps = gst_pad_get_pad_template_caps (srcpad);
   gst_object_unref (srcpad);
 

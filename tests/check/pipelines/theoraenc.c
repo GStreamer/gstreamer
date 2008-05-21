@@ -148,7 +148,7 @@ GST_START_TEST (test_granulepos_offset)
     GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "fs0");
 
     fail_unless (sink != NULL, "Could not get fakesink out of bin");
-    pad = gst_element_get_pad (sink, "sink");
+    pad = gst_element_get_static_pad (sink, "sink");
     fail_unless (pad != NULL, "Could not get pad out of fakesink");
     gst_object_unref (sink);
   }
@@ -241,7 +241,7 @@ GST_START_TEST (test_continuity)
     GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "fs0");
 
     fail_unless (sink != NULL, "Could not get fakesink out of bin");
-    pad = gst_element_get_pad (sink, "sink");
+    pad = gst_element_get_static_pad (sink, "sink");
     fail_unless (pad != NULL, "Could not get pad out of fakesink");
     gst_object_unref (sink);
   }
@@ -342,7 +342,7 @@ GST_START_TEST (test_discontinuity)
     GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "theoraenc0");
 
     fail_unless (sink != NULL, "Could not get theoraenc out of bin");
-    droppad = gst_element_get_pad (sink, "sink");
+    droppad = gst_element_get_static_pad (sink, "sink");
     fail_unless (droppad != NULL, "Could not get pad out of theoraenc");
     gst_object_unref (sink);
   }
@@ -352,7 +352,7 @@ GST_START_TEST (test_discontinuity)
     GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "fs0");
 
     fail_unless (sink != NULL, "Could not get fakesink out of bin");
-    pad = gst_element_get_pad (sink, "sink");
+    pad = gst_element_get_static_pad (sink, "sink");
     fail_unless (pad != NULL, "Could not get pad out of fakesink");
     gst_object_unref (sink);
   }

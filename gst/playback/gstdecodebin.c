@@ -337,7 +337,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
     }
 
     /* get the sinkpad */
-    pad = gst_element_get_pad (decode_bin->typefind, "sink");
+    pad = gst_element_get_static_pad (decode_bin->typefind, "sink");
 
     /* ghost the sink pad to ourself */
     gpad = gst_ghost_pad_new ("sink", pad);
@@ -919,8 +919,8 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
     g_object_set (G_OBJECT (queue), "max-size-bytes", 8192, NULL);
     gst_bin_add (GST_BIN (decode_bin), queue);
     gst_element_set_state (queue, GST_STATE_READY);
-    queuesinkpad = gst_element_get_pad (queue, "sink");
-    usedsrcpad = queuesrcpad = gst_element_get_pad (queue, "src");
+    queuesinkpad = gst_element_get_static_pad (queue, "sink");
+    usedsrcpad = queuesrcpad = gst_element_get_static_pad (queue, "src");
 
     dqlink = gst_pad_link (pad, queuesinkpad);
     g_return_val_if_fail (dqlink == GST_PAD_LINK_OK, NULL);
@@ -947,7 +947,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
     /* try to link the given pad to a sinkpad */
     /* FIXME, find the sinkpad by looping over the pads instead of
      * looking it up by name */
-    if ((sinkpad = gst_element_get_pad (element, "sink")) == NULL) {
+    if ((sinkpad = gst_element_get_static_pad (element, "sink")) == NULL) {
       /* if no pad is found we can't do anything */
       GST_WARNING_OBJECT (decode_bin, "could not find sinkpad in element");
       continue;
@@ -1418,7 +1418,7 @@ elem_is_dynamic (GstElement * element, GstDecodeBin * decode_bin)
       {
         /* try to get the pad to see if it is already created or
          * not */
-        GstPad *pad = gst_element_get_pad (element, templ_name);
+        GstPad *pad = gst_element_get_static_pad (element, templ_name);
 
         if (pad) {
           GST_DEBUG_OBJECT (decode_bin, "got the pad for sometimes template %s",
@@ -1505,7 +1505,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
       case GST_PAD_ALWAYS:
       {
         /* get the pad that we need to autoplug */
-        GstPad *pad = gst_element_get_pad (element, templ_name);
+        GstPad *pad = gst_element_get_static_pad (element, templ_name);
 
         if (pad) {
           GST_DEBUG_OBJECT (decode_bin, "got the pad for always template %s",
@@ -1524,7 +1524,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
       {
         /* try to get the pad to see if it is already created or
          * not */
-        GstPad *pad = gst_element_get_pad (element, templ_name);
+        GstPad *pad = gst_element_get_static_pad (element, templ_name);
 
         if (pad) {
           GST_DEBUG_OBJECT (decode_bin, "got the pad for sometimes template %s",
@@ -1625,7 +1625,7 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
   }
 
   /* autoplug the new pad with the caps that the signal gave us. */
-  pad = gst_element_get_pad (typefind, "src");
+  pad = gst_element_get_static_pad (typefind, "src");
   close_pad_link (typefind, pad, caps, decode_bin, FALSE);
   gst_object_unref (pad);
 
@@ -1691,7 +1691,7 @@ cleanup_decodebin (GstDecodeBin * decode_bin)
 
   GST_DEBUG_OBJECT (decode_bin, "cleaning up decodebin");
 
-  typefind_pad = gst_element_get_pad (decode_bin->typefind, "src");
+  typefind_pad = gst_element_get_static_pad (decode_bin->typefind, "src");
   if (GST_IS_PAD (typefind_pad)) {
     g_signal_handlers_block_by_func (typefind_pad, (gpointer) unlinked,
         decode_bin);

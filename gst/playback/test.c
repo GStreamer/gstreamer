@@ -42,7 +42,7 @@ gen_video_element (void)
   gst_bin_add (GST_BIN (element), sink);
   gst_element_link_pads (conv, "src", sink, "sink");
 
-  pad = gst_element_get_pad (conv, "sink");
+  pad = gst_element_get_static_pad (conv, "sink");
   gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
   gst_object_unref (pad);
 
@@ -65,7 +65,7 @@ gen_audio_element (void)
   gst_bin_add (GST_BIN (element), sink);
   gst_element_link_pads (conv, "src", sink, "sink");
 
-  pad = gst_element_get_pad (conv, "sink");
+  pad = gst_element_get_static_pad (conv, "sink");
   gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
   gst_object_unref (pad);
 
@@ -112,7 +112,7 @@ cb_newpad (GstElement * decodebin, GstPad * pad, gboolean last, gpointer data)
       goto state_error;
 
     /* get the ghostpad of the sink bin */
-    sinkpad = gst_element_get_pad (sink, "sink");
+    sinkpad = gst_element_get_static_pad (sink, "sink");
 
     /* link'n'play */
     lret = gst_pad_link (pad, sinkpad);

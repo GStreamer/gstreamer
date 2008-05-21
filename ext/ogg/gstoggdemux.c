@@ -767,7 +767,7 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
         gst_object_sink (GST_OBJECT (element));
 
         /* FIXME, it might not be named "sink" */
-        pad->elem_pad = gst_element_get_pad (element, "sink");
+        pad->elem_pad = gst_element_get_static_pad (element, "sink");
         gst_element_set_state (element, GST_STATE_PAUSED);
         template = gst_static_pad_template_get (&internaltemplate);
         pad->elem_out = gst_pad_new_from_template (template, "internal");
@@ -781,7 +781,7 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
         {
           GstPad *p;
 
-          p = gst_element_get_pad (element, "src");
+          p = gst_element_get_static_pad (element, "src");
           if (p) {
             gst_pad_link (p, pad->elem_out);
             gst_object_unref (p);

@@ -1188,7 +1188,7 @@ GST_START_TEST (test_caps_negotiation)
   ac2 = gst_element_factory_make ("audioconvert", "ac2");
   ac3 = gst_element_factory_make ("audioconvert", "ac3");
   sink = gst_element_factory_make ("fakesink", "sink");
-  ac3_src = gst_element_get_pad (ac3, "src");
+  ac3_src = gst_element_get_static_pad (ac3, "src");
 
   /* test with 2 audioconvert elements */
   gst_bin_add_many (GST_BIN (pipeline), src, ac1, ac3, sink, NULL);

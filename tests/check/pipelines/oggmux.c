@@ -270,7 +270,7 @@ test_pipeline (const char *pipeline)
   sink = gst_element_factory_make ("fakesink", "fake_sink");
   fail_unless (sink != NULL, "Could create fakesink");
   fail_unless (gst_bin_add (GST_BIN (bin), sink), "Could not insert fakesink");
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_unless (sinkpad != NULL, "Could not get fakesink src pad");
 
   linkret = gst_pad_link (pad, sinkpad);

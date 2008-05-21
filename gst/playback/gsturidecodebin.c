@@ -1095,7 +1095,7 @@ type_found (GstElement * typefind, guint probability,
     goto no_queue2;
 
   g_object_set (G_OBJECT (queue), "use-buffering", TRUE, NULL);
-  //g_object_set (G_OBJECT (queue), "temp-location", "temp", NULL);
+//  g_object_set (G_OBJECT (queue), "temp-location", "temp", NULL);
 
   gst_bin_add (GST_BIN_CAST (decoder), queue);
 

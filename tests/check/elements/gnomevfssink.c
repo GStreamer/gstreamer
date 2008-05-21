@@ -71,12 +71,12 @@ cleanup_gnomevfssink (GstElement * gnomevfssink)
       fail_unless_equals_int (pos, position);                            \
     } G_STMT_END
 #else
-#define CHECK_QUERY_POSITION(gnomevfssink,format,position)                   \
+#define CHECK_QUERY_POSITION(gnomevfssink,format,position)               \
     G_STMT_START {                                                       \
       GstFormat fmt = format;                                            \
       GstPad *pad;                                                       \
       gint64 pos;                                                        \
-      pad = gst_element_get_pad (gnomevfssink, "sink");                      \
+      pad = gst_element_get_static_pad (gnomevfssink, "sink");           \
       fail_unless (gst_pad_query_position (pad, &fmt, &pos));            \
       fail_unless_equals_int (pos, position);                            \
       gst_object_unref (pad);                                            \

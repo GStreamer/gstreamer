@@ -79,7 +79,8 @@ test_injector_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret;
   GstPad *srcpad;
 
-  srcpad = gst_element_get_pad (GST_ELEMENT (GST_PAD_PARENT (pad)), "src");
+  srcpad =
+      gst_element_get_static_pad (GST_ELEMENT (GST_PAD_PARENT (pad)), "src");
 
   /* since we're increasing timestamp/offsets, push this one first */
   GST_LOG (" passing buffer   [t=%" GST_TIME_FORMAT "-%" GST_TIME_FORMAT
@@ -223,7 +224,7 @@ do_perfect_stream_test (guint rate, guint width, gdouble drop_probability,
 
   injector = GST_ELEMENT (g_object_new (test_injector_get_type (), NULL));
 
-  srcpad = gst_element_get_pad (injector, "src");
+  srcpad = gst_element_get_static_pad (injector, "src");
   fail_unless (srcpad != NULL);
   gst_pad_add_buffer_probe (srcpad, G_CALLBACK (probe_cb), &drop_probability);
   gst_object_unref (srcpad);

@@ -396,8 +396,8 @@ gst_play_sink_vis_blocked (GstPad * tee_pad, gboolean blocked,
   gst_element_set_state (chain->vis, GST_STATE_PLAYING);
 
   /* get pads */
-  chain->vissinkpad = gst_element_get_pad (chain->vis, "sink");
-  chain->vissrcpad = gst_element_get_pad (chain->vis, "src");
+  chain->vissinkpad = gst_element_get_static_pad (chain->vis, "sink");
+  chain->vissrcpad = gst_element_get_static_pad (chain->vis, "src");
 
   /* link pads */
   gst_pad_link (chain->blockpad, chain->vissinkpad);
@@ -717,11 +717,11 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
     if (!gst_element_link_pads (chain->scale, "src", chain->sink, NULL))
       goto link_failed;
 
-    pad = gst_element_get_pad (chain->queue, "sink");
+    pad = gst_element_get_static_pad (chain->queue, "sink");
   } else {
     if (!gst_element_link_pads (chain->queue, "src", chain->sink, NULL))
       goto link_failed;
-    pad = gst_element_get_pad (chain->queue, "sink");
+    pad = gst_element_get_static_pad (chain->queue, "sink");
   }
 
   chain->sinkpad = gst_ghost_pad_new ("sink", pad);
@@ -818,17 +818,17 @@ gen_text_chain (GstPlaySink * playsink)
   gst_element_link_pads (chain->conv, "src", chain->overlay, "video_sink");
 
   /* Add ghost pads on the subtitle bin */
-  pad = gst_element_get_pad (chain->overlay, "text_sink");
+  pad = gst_element_get_static_pad (chain->overlay, "text_sink");
   chain->textsinkpad = gst_ghost_pad_new ("text_sink", pad);
   gst_object_unref (pad);
   gst_element_add_pad (chain->chain.bin, chain->textsinkpad);
 
-  pad = gst_element_get_pad (chain->conv, "sink");
+  pad = gst_element_get_static_pad (chain->conv, "sink");
   chain->videosinkpad = gst_ghost_pad_new ("sink", pad);
   gst_object_unref (pad);
   gst_element_add_pad (chain->chain.bin, chain->videosinkpad);
 
-  pad = gst_element_get_pad (chain->overlay, "src");
+  pad = gst_element_get_static_pad (chain->overlay, "src");
   chain->srcpad = gst_ghost_pad_new ("src", pad);
   gst_object_unref (pad);
   gst_element_add_pad (chain->chain.bin, chain->srcpad);
@@ -968,16 +968,16 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 
     if (queue) {
       res = gst_element_link_pads (chain->queue, "src", chain->conv, "sink");
-      pad = gst_element_get_pad (chain->queue, "sink");
+      pad = gst_element_get_static_pad (chain->queue, "sink");
     } else {
-      pad = gst_element_get_pad (chain->conv, "sink");
+      pad = gst_element_get_static_pad (chain->conv, "sink");
     }
   } else {
     if (queue) {
       res = gst_element_link_pads (chain->queue, "src", chain->sink, "sink");
-      pad = gst_element_get_pad (chain->queue, "sink");
+      pad = gst_element_get_static_pad (chain->queue, "sink");
     } else {
-      pad = gst_element_get_pad (chain->sink, "sink");
+      pad = gst_element_get_static_pad (chain->sink, "sink");
     }
   }
   /* post a warning if we have no way to configure the volume */
@@ -1082,7 +1082,7 @@ gen_vis_chain (GstPlaySink * playsink)
 
   /* this pad will be used for blocking the dataflow and switching the vis
    * plugin */
-  chain->blockpad = gst_element_get_pad (chain->resample, "src");
+  chain->blockpad = gst_element_get_static_pad (chain->resample, "src");
 
   if (playsink->visualisation) {
     chain->vis = gst_object_ref (playsink->visualisation);
@@ -1099,10 +1099,10 @@ gen_vis_chain (GstPlaySink * playsink)
   if (!res)
     goto link_failed;
 
-  chain->vissinkpad = gst_element_get_pad (chain->vis, "sink");
-  chain->vissrcpad = gst_element_get_pad (chain->vis, "src");
+  chain->vissinkpad = gst_element_get_static_pad (chain->vis, "sink");
+  chain->vissrcpad = gst_element_get_static_pad (chain->vis, "src");
 
-  pad = gst_element_get_pad (chain->queue, "sink");
+  pad = gst_element_get_static_pad (chain->queue, "sink");
   chain->sinkpad = gst_ghost_pad_new ("sink", pad);
   gst_object_unref (pad);
   gst_element_add_pad (chain->chain.bin, chain->sinkpad);
@@ -1292,8 +1292,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     GST_DEBUG_OBJECT (playsink, "adding visualisation");
 
     srcpad =
-        gst_element_get_pad (GST_ELEMENT_CAST (playsink->vischain->chain.bin),
-        "src");
+        gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->chain.
+            bin), "src");
     add_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
     gst_pad_link (playsink->audio_tee_vissrc, playsink->vischain->sinkpad);
     gst_pad_link (srcpad, playsink->videochain->sinkpad);
@@ -1458,7 +1458,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
          * and the vis chain. */
         playsink->audio_tee = gst_element_factory_make ("tee", "audiotee");
         playsink->audio_tee_sink =
-            gst_element_get_pad (playsink->audio_tee, "sink");
+            gst_element_get_static_pad (playsink->audio_tee, "sink");
         /* get two request pads */
         playsink->audio_tee_vissrc =
             gst_element_get_request_pad (playsink->audio_tee, "src%d");

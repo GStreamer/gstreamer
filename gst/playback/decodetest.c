@@ -79,7 +79,7 @@ new_decoded_pad_cb (GstElement * decodebin, GstPad * pad, gboolean last,
   GstPad *fakesink_pad;
 
   fakesink = gst_element_factory_make ("fakesink", NULL);
-  fakesink_pad = gst_element_get_pad (fakesink, "sink");
+  fakesink_pad = gst_element_get_static_pad (fakesink, "sink");
 
   gst_bin_add (GST_BIN (pipeline), fakesink);
 

@@ -598,7 +598,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
     }
 
     /* get the sinkpad */
-    pad = gst_element_get_pad (decode_bin->typefind, "sink");
+    pad = gst_element_get_static_pad (decode_bin->typefind, "sink");
 
     /* ghost the sink pad to ourself */
     gpad = gst_ghost_pad_new ("sink", pad);
@@ -1249,7 +1249,7 @@ connect_element (GstDecodeBin * dbin, GstElement * element,
       case GST_PAD_ALWAYS:
       {
         /* get the pad that we need to autoplug */
-        GstPad *pad = gst_element_get_pad (element, templ_name);
+        GstPad *pad = gst_element_get_static_pad (element, templ_name);
 
         if (pad) {
           GST_DEBUG_OBJECT (dbin, "got the pad for always template %s",
@@ -1268,7 +1268,7 @@ connect_element (GstDecodeBin * dbin, GstElement * element,
       {
         /* try to get the pad to see if it is already created or
          * not */
-        GstPad *pad = gst_element_get_pad (element, templ_name);
+        GstPad *pad = gst_element_get_static_pad (element, templ_name);
 
         if (pad) {
           GST_DEBUG_OBJECT (dbin, "got the pad for sometimes template %s",
@@ -1739,7 +1739,7 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
 
   GROUP_MUTEX_LOCK (group);
 
-  if (!(srcpad = gst_element_get_pad (group->multiqueue, srcname))) {
+  if (!(srcpad = gst_element_get_static_pad (group->multiqueue, srcname))) {
     GST_ERROR ("Couldn't get srcpad %s from multiqueue", srcname);
     goto chiringuito;
   }

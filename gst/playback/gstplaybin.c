@@ -537,7 +537,7 @@ gst_play_bin_vis_blocked (GstPad * tee_pad, gboolean blocked,
     goto beach;
   }
 
-  vis_src_pad = gst_element_get_pad (play_bin->visualisation, "src");
+  vis_src_pad = gst_element_get_static_pad (play_bin->visualisation, "src");
   vis_sink_pad = gst_pad_get_peer (tee_pad);
 
   /* Can be fakesink */
@@ -580,8 +580,8 @@ gst_play_bin_vis_blocked (GstPad * tee_pad, gboolean blocked,
     /* Synchronizing state */
     gst_element_set_state (pending_visualisation, bin_state);
 
-    vis_sink_pad = gst_element_get_pad (pending_visualisation, "sink");
-    vis_src_pad = gst_element_get_pad (pending_visualisation, "src");
+    vis_sink_pad = gst_element_get_static_pad (pending_visualisation, "sink");
+    vis_src_pad = gst_element_get_static_pad (pending_visualisation, "src");
 
     if (!GST_IS_PAD (vis_sink_pad) || !GST_IS_PAD (vis_src_pad)) {
       goto beach;
@@ -681,7 +681,7 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
             GstPad *vis_sink_pad = NULL, *tee_pad = NULL;
 
             /* Now get tee pad and block it async */
-            vis_sink_pad = gst_element_get_pad (play_bin->visualisation,
+            vis_sink_pad = gst_element_get_static_pad (play_bin->visualisation,
                 "sink");
             if (!GST_IS_PAD (vis_sink_pad)) {
               goto beach;
@@ -780,7 +780,7 @@ handoff (GstElement * identity, GstBuffer * frame, gpointer data)
   if (GST_BUFFER_CAPS (frame) == NULL) {
     GstPad *pad;
 
-    if ((pad = gst_element_get_pad (identity, "sink"))) {
+    if ((pad = gst_element_get_static_pad (identity, "sink"))) {
       gst_buffer_set_caps (frame, GST_PAD_CAPS (pad));
       gst_object_unref (pad);
     }
@@ -869,7 +869,7 @@ gen_video_element (GstPlayBin * play_bin)
   if (!gst_element_link_pads (scale, "src", sink, NULL))
     goto link_failed;
 
-  pad = gst_element_get_pad (identity, "sink");
+  pad = gst_element_get_static_pad (identity, "sink");
   gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
   gst_object_unref (pad);
 
@@ -975,11 +975,11 @@ gen_text_element (GstPlayBin * play_bin)
   gst_element_link_pads (overlay, "src", vbin, "sink");
 
   /* Add ghost pads on the subtitle bin */
-  pad = gst_element_get_pad (overlay, "text_sink");
+  pad = gst_element_get_static_pad (overlay, "text_sink");
   gst_element_add_pad (element, gst_ghost_pad_new ("text_sink", pad));
   gst_object_unref (pad);
 
-  pad = gst_element_get_pad (csp, "sink");
+  pad = gst_element_get_static_pad (csp, "sink");
   gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
   gst_object_unref (pad);
 
@@ -1067,7 +1067,7 @@ gen_audio_element (GstPlayBin * play_bin)
   if (!res)
     goto link_failed;
 
-  pad = gst_element_get_pad (conv, "sink");
+  pad = gst_element_get_static_pad (conv, "sink");
   gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
   gst_object_unref (pad);
 
@@ -1217,20 +1217,20 @@ gen_vis_element (GstPlayBin * play_bin)
   if (!res)
     goto link_failed;
 
-  pad = gst_element_get_pad (aqueue, "sink");
+  pad = gst_element_get_static_pad (aqueue, "sink");
   rpad = gst_element_get_request_pad (tee, "src%d");
   gst_pad_link (rpad, pad);
   gst_object_unref (rpad);
   gst_object_unref (pad);
   gst_element_link_pads (aqueue, "src", asink, "sink");
 
-  pad = gst_element_get_pad (vqueue, "sink");
+  pad = gst_element_get_static_pad (vqueue, "sink");
   rpad = gst_element_get_request_pad (tee, "src%d");
   gst_pad_link (rpad, pad);
   gst_object_unref (rpad);
   gst_object_unref (pad);
 
-  pad = gst_element_get_pad (tee, "sink");
+  pad = gst_element_get_static_pad (tee, "sink");
   gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
   gst_object_unref (pad);
 
@@ -1298,7 +1298,7 @@ remove_sinks (GstPlayBin * play_bin)
       gst_bin_remove (GST_BIN_CAST (parent), element);
       gst_object_unref (parent);
     }
-    pad = gst_element_get_pad (element, "sink");
+    pad = gst_element_get_static_pad (element, "sink");
     if (pad != NULL) {
       peer = gst_pad_get_peer (pad);
       if (peer != NULL) {
@@ -1317,7 +1317,7 @@ remove_sinks (GstPlayBin * play_bin)
       gst_bin_remove (GST_BIN_CAST (parent), element);
       gst_object_unref (parent);
     }
-    pad = gst_element_get_pad (element, "sink");
+    pad = gst_element_get_static_pad (element, "sink");
     if (pad != NULL) {
       peer = gst_pad_get_peer (pad);
       if (peer != NULL) {
@@ -1333,7 +1333,7 @@ remove_sinks (GstPlayBin * play_bin)
     GstPad *pad;
     GstPad *peer;
 
-    pad = gst_element_get_pad (element, "sink");
+    pad = gst_element_get_static_pad (element, "sink");
 
     GST_LOG ("removing sink %p", element);
 
@@ -1417,7 +1417,7 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad,
     goto state_failed;
 
   /* we found a sink for this stream, now try to install it */
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   linkres = gst_pad_link (srcpad, sinkpad);
   gst_object_unref (sinkpad);
 
@@ -1426,7 +1426,7 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad,
     goto link_failed;
 
   if (GST_IS_PAD (subtitle_pad)) {
-    sinkpad = gst_element_get_pad (sink, "text_sink");
+    sinkpad = gst_element_get_static_pad (sink, "text_sink");
     linkres = gst_pad_link (subtitle_pad, sinkpad);
     gst_object_unref (sinkpad);
   }
@@ -1527,8 +1527,9 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
     if (!sink)
       return FALSE;
 
-    pad = gst_element_get_pad (group->type[GST_STREAM_TYPE_AUDIO - 1].preroll,
-        "src");
+    pad =
+        gst_element_get_static_pad (group->type[GST_STREAM_TYPE_AUDIO -
+            1].preroll, "src");
     res = add_sink (play_bin, sink, pad, NULL);
     gst_object_unref (pad);
   }
@@ -1541,8 +1542,8 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
 
       sink = gen_text_element (play_bin);
       textsrcpad =
-          gst_element_get_pad (group->type[GST_STREAM_TYPE_TEXT - 1].preroll,
-          "src");
+          gst_element_get_static_pad (group->type[GST_STREAM_TYPE_TEXT -
+              1].preroll, "src");
 
       /* This pad is from subtitle-bin, we need to create a ghost pad to have
          common grandparents */
@@ -1608,8 +1609,9 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
   beach:
     if (!sink)
       return FALSE;
-    pad = gst_element_get_pad (group->type[GST_STREAM_TYPE_VIDEO - 1].preroll,
-        "src");
+    pad =
+        gst_element_get_static_pad (group->type[GST_STREAM_TYPE_VIDEO -
+            1].preroll, "src");
     res = add_sink (play_bin, sink, pad, textsrcpad);
     gst_object_unref (pad);
     if (textsrcpad)

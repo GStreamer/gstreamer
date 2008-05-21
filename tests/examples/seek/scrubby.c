@@ -109,8 +109,8 @@ make_wav_pipeline (const gchar * location)
 
   gst_element_link (src, decoder);
 
-  setup_dynamic_link (decoder, "src", gst_element_get_pad (audiosink, "sink"),
-      NULL);
+  setup_dynamic_link (decoder, "src", gst_element_get_static_pad (audiosink,
+          "sink"), NULL);
 
   return pipeline;
 }

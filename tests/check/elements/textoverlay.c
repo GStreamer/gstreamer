@@ -86,7 +86,8 @@ notgst_check_setup_src_pad2 (GstElement * element,
   fail_if (srcpad == NULL, "Could not create a srcpad");
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
 
-  sinkpad = gst_element_get_pad (element, sink_template_name);
+  if (!(sinkpad = gst_element_get_static_pad (element, sink_template_name)))
+    sinkpad = gst_element_get_request_pad (element, sink_template_name);
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
   ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
@@ -110,7 +111,8 @@ notgst_check_teardown_src_pad2 (GstElement * element,
     sink_template_name = "sink";
 
   /* clean up floating src pad */
-  sinkpad = gst_element_get_pad (element, sink_template_name);
+  if (!(sinkpad = gst_element_get_static_pad (element, sink_template_name)))
+    sinkpad = gst_element_get_request_pad (element, sink_template_name);
   ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
   srcpad = gst_pad_get_peer (sinkpad);
 

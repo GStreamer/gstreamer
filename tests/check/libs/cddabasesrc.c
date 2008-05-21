@@ -310,7 +310,7 @@ GST_START_TEST (test_buffer_timestamps)
   fakesink = gst_element_factory_make ("fakesink", "fakesink");
   gst_bin_add_many (GST_BIN (pipeline), foosrc, fakesink, NULL);
   fail_unless (gst_element_link (foosrc, fakesink));
-  sinkpad = gst_element_get_pad (fakesink, "sink");
+  sinkpad = gst_element_get_static_pad (fakesink, "sink");
 
   GST_CD_FOO_SRC (foosrc)->cur_disc = 0;
 
