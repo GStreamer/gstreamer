@@ -182,9 +182,12 @@ static GstStaticPadTemplate audio_sink_factory =
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
 #endif*/
         "audio/x-ac3, "
-        "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]")
+        "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
+        "audio/x-alaw, "
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]; "
+        "audio/x-mulaw, "
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]; ")
     );
-
 
 static void gst_avi_mux_base_init (gpointer g_class);
 static void gst_avi_mux_class_init (GstAviMuxClass * klass);
@@ -661,10 +664,12 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
     avipad->auds.blockalign /= 8;
     avipad->auds.blockalign *= avipad->auds.channels;
     avipad->auds.av_bps = avipad->auds.blockalign * avipad->auds.rate;
-  } else if (!strcmp (mimetype, "audio/mpeg") ||
-      !strcmp (mimetype, "audio/x-vorbis") ||
-      !strcmp (mimetype, "audio/x-ac3")) {
+  } else {
     avipad->auds.format = 0;
+    /* set some defaults */
+    avipad->auds.blockalign = 1;
+    avipad->auds.av_bps = 0;
+    avipad->auds.size = 16;
 
     if (!strcmp (mimetype, "audio/mpeg")) {
       gint mpegversion;
@@ -695,11 +700,18 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
       avipad->auds.format = GST_RIFF_WAVE_FORMAT_VORBIS3;
     } else if (!strcmp (mimetype, "audio/x-ac3")) {
       avipad->auds.format = GST_RIFF_WAVE_FORMAT_A52;
+    } else if (!strcmp (mimetype, "audio/x-alaw")) {
+      avipad->auds.format = GST_RIFF_WAVE_FORMAT_ALAW;
+      avipad->auds.size = 8;
+      avipad->auds.blockalign = avipad->auds.channels;
+      avipad->auds.av_bps = avipad->auds.blockalign * avipad->auds.rate;
+    } else if (!strcmp (mimetype, "audio/x-mulaw")) {
+      avipad->auds.format = GST_RIFF_WAVE_FORMAT_MULAW;
+      avipad->auds.av_bps = 8;
+      avipad->auds.size = 8;
+      avipad->auds.blockalign = avipad->auds.channels;
+      avipad->auds.av_bps = avipad->auds.blockalign * avipad->auds.rate;
     }
-
-    avipad->auds.blockalign = 1;
-    avipad->auds.av_bps = 0;
-    avipad->auds.size = 16;
   }
 
   if (!avipad->auds.format)
@@ -728,29 +740,27 @@ gst_avi_mux_request_new_pad (GstElement * element,
   GstAviMux *avimux;
   GstPad *newpad;
   GstAviPad *avipad;
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
+  GstElementClass *klass;
 
   g_return_val_if_fail (templ != NULL, NULL);
 
-  if (templ->direction != GST_PAD_SINK) {
-    g_warning ("avimux: request pad that is not a SINK pad\n");
-    return NULL;
-  }
+  if (templ->direction != GST_PAD_SINK)
+    goto wrong_direction;
 
   g_return_val_if_fail (GST_IS_AVI_MUX (element), NULL);
-
   avimux = GST_AVI_MUX (element);
 
-  if (!avimux->write_header) {
-    g_warning ("avimux: request pad cannot be added after streaming started\n");
-    return NULL;
-  }
+  if (!avimux->write_header)
+    goto too_late;
+
+  klass = GST_ELEMENT_GET_CLASS (element);
 
   if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
     gchar *name;
 
     /* setup pad */
     name = g_strdup_printf ("audio_%02d", avimux->audio_pads);
+    GST_DEBUG_OBJECT (avimux, "adding new pad: %s", name);
     newpad = gst_pad_new_from_template (templ, name);
     g_free (name);
     gst_pad_set_setcaps_function (newpad,
@@ -770,6 +780,7 @@ gst_avi_mux_request_new_pad (GstElement * element,
     if (avimux->video_pads > 0)
       return NULL;
     /* setup pad */
+    GST_DEBUG_OBJECT (avimux, "adding new pad: video_00");
     newpad = gst_pad_new_from_template (templ, "video_00");
     gst_pad_set_setcaps_function (newpad,
         GST_DEBUG_FUNCPTR (gst_avi_mux_vidsink_set_caps));
@@ -781,10 +792,8 @@ gst_avi_mux_request_new_pad (GstElement * element,
     avimux->video_pads++;
     /* video goes first */
     avimux->sinkpads = g_slist_prepend (avimux->sinkpads, avipad);
-  } else {
-    g_warning ("avimux: this is not our template!\n");
-    return NULL;
-  }
+  } else
+    goto wrong_template;
 
   avipad->collect = gst_collect_pads_add_pad (avimux->collect,
       newpad, sizeof (GstAviCollectData));
@@ -799,6 +808,23 @@ gst_avi_mux_request_new_pad (GstElement * element,
   gst_element_add_pad (element, newpad);
 
   return newpad;
+
+  /* ERRORS */
+wrong_direction:
+  {
+    g_warning ("avimux: request pad that is not a SINK pad\n");
+    return NULL;
+  }
+too_late:
+  {
+    g_warning ("avimux: request pad cannot be added after streaming started\n");
+    return NULL;
+  }
+wrong_template:
+  {
+    g_warning ("avimuxx: this is not our template!\n");
+    return NULL;
+  }
 }
 
 static void

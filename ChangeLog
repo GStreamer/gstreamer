@@ -1,3 +1,8 @@
+2008-05-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavimux.c:
+	  Also support alaw/mulaw.
+
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init),
