@@ -738,7 +738,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   }
 
   if (gst_udp_is_multicast (&src->myaddr)) {
-    ret = gst_udp_join_group (src->sock.fd, TRUE, src->ttl, &src->myaddr);
+    ret = gst_udp_join_group (src->sock.fd, &src->myaddr);
     if (ret < 0)
       goto membership;
   }

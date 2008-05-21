@@ -1,3 +1,14 @@
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_init_send),
+	(gst_multiudpsink_add_internal):
+	* gst/udp/gstudpnetutils.c: (gst_udp_set_loop_ttl),
+	(gst_udp_join_group):
+	* gst/udp/gstudpnetutils.h:
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_start):
+	Joining a multicast group and setting the loop/ttl properties are
+	totally unrelated tasks are must be separated.
+
 2008-05-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavimux.c:

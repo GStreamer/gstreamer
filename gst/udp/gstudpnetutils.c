@@ -91,11 +91,52 @@ gst_udp_get_addr (const char *hostname, int port, struct sockaddr_storage *addr)
 }
 
 int
-gst_udp_join_group (int sockfd, gboolean loop, int ttl,
-    struct sockaddr_storage *addr)
+gst_udp_set_loop_ttl (int sockfd, gboolean loop, int ttl)
 {
   int ret = -1;
+
+#if 0
   int l = (loop == FALSE) ? 0 : 1;
+
+  switch (addr->ss_family) {
+    case AF_INET:
+    {
+      if ((ret =
+              setsockopt (sockfd, IPPROTO_IP, IP_MULTICAST_LOOP, &l,
+                  sizeof (l))) < 0)
+        return ret;
+
+      if ((ret =
+              setsockopt (sockfd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl,
+                  sizeof (ttl))) < 0)
+        return ret;
+      break;
+    }
+    case AF_INET6:
+    {
+      if ((ret =
+              setsockopt (sockfd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &l,
+                  sizeof (l))) < 0)
+        return ret;
+
+      if ((ret =
+              setsockopt (sockfd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &ttl,
+                  sizeof (ttl))) < 0)
+        return ret;
+
+      break;
+    }
+    default:
+      errno = EAFNOSUPPORT;
+  }
+#endif
+  return ret;
+}
+
+int
+gst_udp_join_group (int sockfd, struct sockaddr_storage *addr)
+{
+  int ret = -1;
 
   switch (addr->ss_family) {
     case AF_INET:
@@ -107,22 +148,12 @@ gst_udp_join_group (int sockfd, gboolean loop, int ttl,
       mreq4.imr_interface.s_addr = INADDR_ANY;
 
       if ((ret =
-              setsockopt (sockfd, IPPROTO_IP, IP_MULTICAST_LOOP, &l,
-                  sizeof (l))) < 0)
-        return ret;
-
-      if ((ret =
-              setsockopt (sockfd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl,
-                  sizeof (ttl))) < 0)
-        return ret;
-
-      if ((ret =
               setsockopt (sockfd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
                   (const void *) &mreq4, sizeof (mreq4))) < 0)
         return ret;
-    }
-      break;
 
+      break;
+    }
     case AF_INET6:
     {
       struct ipv6_mreq mreq6;
@@ -133,26 +164,15 @@ gst_udp_join_group (int sockfd, gboolean loop, int ttl,
       mreq6.ipv6mr_interface = 0;
 
       if ((ret =
-              setsockopt (sockfd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &l,
-                  sizeof (l))) < 0)
-        return ret;
-
-      if ((ret =
-              setsockopt (sockfd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &ttl,
-                  sizeof (ttl))) < 0)
-        return ret;
-
-      if ((ret =
               setsockopt (sockfd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP,
                   (const void *) &mreq6, sizeof (mreq6))) < 0)
         return ret;
-    }
-      break;
 
+      break;
+    }
     default:
       errno = EAFNOSUPPORT;
   }
-
   return ret;
 }
 
