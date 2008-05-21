@@ -49,11 +49,7 @@ setup_multiqueue (GstElement * pipe, GstElement * inputs[],
     if (inputs != NULL && inputs[i] != NULL) {
       gst_bin_add (GST_BIN (pipe), inputs[i]);
 
-      srcpad = gst_element_get_pad (inputs[i], "src");
-      if (srcpad == NULL)
-        srcpad = gst_element_get_pad (inputs[i], "src%d");
-      if (srcpad == NULL)
-        srcpad = gst_element_get_pad (inputs[i], "src_%d");
+      srcpad = gst_element_get_static_pad (inputs[i], "src");
       fail_unless (srcpad != NULL, "failed to find src pad for input #%u", i);
 
       fail_unless_equals_int (GST_PAD_LINK_OK, gst_pad_link (srcpad, sinkpad));
@@ -74,18 +70,14 @@ setup_multiqueue (GstElement * pipe, GstElement * inputs[],
       fail_unless (srcpad == NULL);
 
       g_snprintf (padname, sizeof (padname), "src%d", i);
-      srcpad = gst_element_get_pad (mq, padname);
+      srcpad = gst_element_get_static_pad (mq, padname);
       fail_unless (srcpad != NULL, "failed to get multiqueue src pad #%u", i);
       fail_unless (GST_PAD_IS_SRC (srcpad),
           "%s:%s is not a source pad?!", GST_DEBUG_PAD_NAME (srcpad));
 
       gst_bin_add (GST_BIN (pipe), outputs[i]);
 
-      sinkpad = gst_element_get_pad (outputs[i], "sink");
-      if (sinkpad == NULL)
-        sinkpad = gst_element_get_pad (outputs[i], "sink%d");
-      if (sinkpad == NULL)
-        sinkpad = gst_element_get_pad (outputs[i], "sink_%d");
+      sinkpad = gst_element_get_static_pad (outputs[i], "sink");
       fail_unless (sinkpad != NULL, "failed to find sink pad of output #%u", i);
       fail_unless (GST_PAD_IS_SINK (sinkpad));
 
@@ -263,7 +255,7 @@ mq_sinkpad_to_srcpad (GstElement * mq, GstPad * sink)
   mq_sinkpad_name = gst_pad_get_name (sink);
   fail_unless (g_str_has_prefix (mq_sinkpad_name, "sink"));
   mq_srcpad_name = g_strdup_printf ("src%s", mq_sinkpad_name + 4);
-  srcpad = gst_element_get_pad (mq, mq_srcpad_name);
+  srcpad = gst_element_get_static_pad (mq, mq_srcpad_name);
   fail_unless (srcpad != NULL);
 
   g_free (mq_sinkpad_name);

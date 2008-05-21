@@ -419,11 +419,11 @@ GST_START_TEST (send_custom_events)
   g_object_set (G_OBJECT (fakesink), "silent", TRUE, "sync", TRUE, NULL);
 
   /* add pad-probes to faksrc.src and fakesink.sink */
-  fail_if ((srcpad = gst_element_get_pad (fakesrc, "src")) == NULL);
+  fail_if ((srcpad = gst_element_get_static_pad (fakesrc, "src")) == NULL);
   gst_pad_add_event_probe (srcpad, (GCallback) event_probe,
       GINT_TO_POINTER (TRUE));
 
-  fail_if ((sinkpad = gst_element_get_pad (fakesink, "sink")) == NULL);
+  fail_if ((sinkpad = gst_element_get_static_pad (fakesink, "sink")) == NULL);
   gst_pad_add_event_probe (sinkpad, (GCallback) event_probe,
       GINT_TO_POINTER (FALSE));
 

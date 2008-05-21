@@ -180,7 +180,7 @@ GST_START_TEST (test_pull)
       "could not set to ready");
 
   /* get the source pad */
-  pad = gst_element_get_pad (src, "src");
+  pad = gst_element_get_static_pad (src, "src");
   fail_unless (pad != NULL);
 
   /* activate the pad in pull mode */

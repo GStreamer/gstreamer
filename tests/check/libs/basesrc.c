@@ -73,7 +73,7 @@ GST_START_TEST (basesrc_eos_events_push_live_op)
   g_object_set (src, "can-activate-pull", FALSE, NULL);
 
   /* set up event probe to count EOS events */
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
   probe = gst_pad_add_event_probe (srcpad,
@@ -153,7 +153,7 @@ GST_START_TEST (basesrc_eos_events_push)
   g_object_set (src, "num-buffers", 8, NULL);
 
   /* set up event probe to count EOS events */
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
   probe = gst_pad_add_event_probe (srcpad,
@@ -220,7 +220,7 @@ GST_START_TEST (basesrc_eos_events_pull_live_op)
   g_object_set (src, "can-activate-pull", TRUE, NULL);
 
   /* set up event probe to count EOS events */
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
   probe = gst_pad_add_event_probe (srcpad,
@@ -292,7 +292,7 @@ GST_START_TEST (basesrc_eos_events_pull)
   g_object_set (src, "num-buffers", 8, NULL);
 
   /* set up event probe to count EOS events */
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
   probe = gst_pad_add_event_probe (srcpad,
@@ -362,7 +362,7 @@ GST_START_TEST (basesrc_eos_events_push_live_eos)
   g_object_set (src, "can-activate-pull", FALSE, NULL);
 
   /* set up event probe to count EOS events */
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
   probe = gst_pad_add_event_probe (srcpad,
@@ -439,7 +439,7 @@ GST_START_TEST (basesrc_eos_events_pull_live_eos)
   g_object_set (src, "can-activate-pull", TRUE, NULL);
 
   /* set up event probe to count EOS events */
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
   probe = gst_pad_add_event_probe (srcpad,

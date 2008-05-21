@@ -369,7 +369,7 @@ run_delayed_test (const gchar * pipe_str, const gchar * peer,
   fail_if (sink == NULL, "Test sink element was not created");
 
   /* The src should not yet have a src pad */
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad == NULL, "Source element already has a source pad");
 
   /* Set the state to PAUSED and wait until the src at least reaches that
@@ -383,7 +383,7 @@ run_delayed_test (const gchar * pipe_str, const gchar * peer,
   /* Now, the source element should have a src pad, and if "peer" was passed, 
    * then the src pad should have gotten linked to the 'sink' pad of that 
    * peer */
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   fail_if (srcpad == NULL, "Source element did not create source pad");
 
   peerpad = gst_pad_get_peer (srcpad);
@@ -402,7 +402,7 @@ run_delayed_test (const gchar * pipe_str, const gchar * peer,
 
     fail_if (peer_elem == NULL, "Could not retrieve peer %s", peer);
 
-    sinkpad = gst_element_get_pad (peer_elem, "sink");
+    sinkpad = gst_element_get_static_pad (peer_elem, "sink");
     fail_if (sinkpad == NULL, "Peer element did not have a 'sink' pad");
 
     fail_unless (peerpad == sinkpad,
@@ -521,7 +521,7 @@ gst_parse_test_element_change_state (GstElement * element,
     if (src->fakesrc == NULL)
       return GST_STATE_CHANGE_FAILURE;
 
-    pad = gst_element_get_pad (src->fakesrc, "src");
+    pad = gst_element_get_static_pad (src->fakesrc, "src");
     if (pad == NULL)
       return GST_STATE_CHANGE_FAILURE;
 

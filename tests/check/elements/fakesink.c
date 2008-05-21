@@ -88,7 +88,7 @@ GST_START_TEST (test_clipping)
   sink = gst_element_factory_make ("fakesink", "sink");
   fail_if (sink == NULL);
 
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_if (sinkpad == NULL);
 
   /* make element ready to accept data */
@@ -234,7 +234,7 @@ GST_START_TEST (test_preroll_sync)
 
   gst_bin_add (GST_BIN (pipeline), sink);
 
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_if (sinkpad == NULL);
 
   /* make pipeline and element ready to accept data */
@@ -315,7 +315,7 @@ GST_START_TEST (test_eos)
 
   gst_bin_add (GST_BIN (pipeline), sink);
 
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_if (sinkpad == NULL);
 
   /* make pipeline and element ready to accept data */
@@ -464,7 +464,7 @@ GST_START_TEST (test_eos2)
 
   gst_bin_add (GST_BIN (pipeline), sink);
 
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_if (sinkpad == NULL);
 
   /* make pipeline and element ready to accept data */

@@ -1364,7 +1364,8 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
   /* get a src pad */
   if (srcpadname) {
     /* name specified, look it up */
-    srcpad = gst_element_get_pad (src, srcpadname);
+    if (!(srcpad = gst_element_get_static_pad (src, srcpadname)))
+      srcpad = gst_element_get_request_pad (src, srcpadname);
     if (!srcpad) {
       GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no pad %s:%s",
           GST_ELEMENT_NAME (src), srcpadname);
@@ -1397,7 +1398,8 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
   /* get a destination pad */
   if (destpadname) {
     /* name specified, look it up */
-    destpad = gst_element_get_pad (dest, destpadname);
+    if (!(destpad = gst_element_get_static_pad (dest, destpadname)))
+      destpad = gst_element_get_request_pad (dest, destpadname);
     if (!destpad) {
       GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no pad %s:%s",
           GST_ELEMENT_NAME (dest), destpadname);
@@ -1748,6 +1750,9 @@ gst_element_unlink_pads (GstElement * src, const gchar * srcpadname,
     GstElement * dest, const gchar * destpadname)
 {
   GstPad *srcpad, *destpad;
+  gboolean srcrequest, destrequest;
+
+  srcrequest = destrequest = FALSE;
 
   g_return_if_fail (src != NULL);
   g_return_if_fail (GST_IS_ELEMENT (src));
@@ -1757,23 +1762,33 @@ gst_element_unlink_pads (GstElement * src, const gchar * srcpadname,
   g_return_if_fail (destpadname != NULL);
 
   /* obtain the pads requested */
-  srcpad = gst_element_get_pad (src, srcpadname);
+  if (!(srcpad = gst_element_get_static_pad (src, srcpadname)))
+    if ((srcpad = gst_element_get_request_pad (src, srcpadname)))
+      srcrequest = TRUE;
   if (srcpad == NULL) {
     GST_WARNING_OBJECT (src, "source element has no pad \"%s\"", srcpadname);
     return;
   }
-  destpad = gst_element_get_pad (dest, destpadname);
+  if (!(destpad = gst_element_get_static_pad (dest, destpadname)))
+    if ((destpad = gst_element_get_request_pad (dest, destpadname)))
+      destrequest = TRUE;
   if (destpad == NULL) {
     GST_WARNING_OBJECT (dest, "destination element has no pad \"%s\"",
         destpadname);
-    gst_object_unref (srcpad);
-    return;
+    goto free_src;
   }
 
   /* we're satisified they can be unlinked, let's do it */
   gst_pad_unlink (srcpad, destpad);
-  gst_object_unref (srcpad);
+
+  if (destrequest)
+    gst_element_release_request_pad (dest, destpad);
   gst_object_unref (destpad);
+
+free_src:
+  if (srcrequest)
+    gst_element_release_request_pad (src, srcpad);
+  gst_object_unref (srcpad);
 }
 
 /**

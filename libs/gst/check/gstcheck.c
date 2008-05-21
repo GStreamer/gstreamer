@@ -270,7 +270,7 @@ gst_check_setup_src_pad (GstElement * element,
   fail_if (srcpad == NULL, "Could not create a srcpad");
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
 
-  sinkpad = gst_element_get_pad (element, "sink");
+  sinkpad = gst_element_get_static_pad (element, "sink");
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
   ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
@@ -290,7 +290,7 @@ gst_check_teardown_src_pad (GstElement * element)
   GstPad *srcpad, *sinkpad;
 
   /* clean up floating src pad */
-  sinkpad = gst_element_get_pad (element, "sink");
+  sinkpad = gst_element_get_static_pad (element, "sink");
   ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
   srcpad = gst_pad_get_peer (sinkpad);
 
@@ -323,7 +323,7 @@ gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
   GST_DEBUG_OBJECT (element, "setting up receiving pad %p", sinkpad);
   fail_if (sinkpad == NULL, "Could not create a sinkpad");
 
-  srcpad = gst_element_get_pad (element, "src");
+  srcpad = gst_element_get_static_pad (element, "src");
   fail_if (srcpad == NULL, "Could not get source pad from %s",
       GST_ELEMENT_NAME (element));
   if (caps)
@@ -346,7 +346,7 @@ gst_check_teardown_sink_pad (GstElement * element)
   GstPad *srcpad, *sinkpad;
 
   /* clean up floating sink pad */
-  srcpad = gst_element_get_pad (element, "src");
+  srcpad = gst_element_get_static_pad (element, "src");
   sinkpad = gst_pad_get_peer (srcpad);
 
   gst_pad_unlink (srcpad, sinkpad);
@@ -447,7 +447,7 @@ gst_check_element_push_buffer_list (const gchar * element_name,
   src_caps = GST_BUFFER_CAPS (buffer);
   src_pad = gst_pad_new (NULL, GST_PAD_SRC);
   gst_pad_set_caps (src_pad, src_caps);
-  pad_peer = gst_element_get_pad (element, "sink");
+  pad_peer = gst_element_get_static_pad (element, "sink");
   fail_if (pad_peer == NULL);
   fail_unless (gst_pad_link (src_pad, pad_peer) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
@@ -473,7 +473,7 @@ gst_check_element_push_buffer_list (const gchar * element_name,
     fail_unless (GST_IS_PAD (sink_pad));
     gst_pad_set_caps (sink_pad, sink_caps);
     /* get the peer pad */
-    pad_peer = gst_element_get_pad (element, "src");
+    pad_peer = gst_element_get_static_pad (element, "src");
     fail_unless (gst_pad_link (pad_peer, sink_pad) == GST_PAD_LINK_OK,
         "Could not link sink and %s source pads", GST_ELEMENT_NAME (element));
     gst_object_unref (pad_peer);

@@ -79,7 +79,7 @@ GST_START_TEST (test_num_buffers)
     req_pads[i] = gst_element_get_request_pad (tee, "src%d");
     fail_unless (req_pads[i] != NULL);
 
-    qpad = gst_element_get_pad (queues[i], "sink");
+    qpad = gst_element_get_static_pad (queues[i], "sink");
     fail_unless_equals_int (gst_pad_link (req_pads[i], qpad), GST_PAD_LINK_OK);
     gst_object_unref (qpad);
   }

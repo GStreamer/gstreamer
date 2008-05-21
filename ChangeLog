@@ -1,3 +1,30 @@
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c: (gst_pad_load_and_link):
+	* gst/gstutils.c: (gst_element_link_pads),
+	(gst_element_unlink_pads):
+	* libs/gst/check/gstcheck.c: (gst_check_setup_src_pad),
+	(gst_check_teardown_src_pad), (gst_check_setup_sink_pad),
+	(gst_check_teardown_sink_pad),
+	(gst_check_element_push_buffer_list):
+	* tests/check/elements/fakesink.c: (GST_START_TEST):
+	* tests/check/elements/filesink.c:
+	* tests/check/elements/filesrc.c: (GST_START_TEST):
+	* tests/check/elements/multiqueue.c: (setup_multiqueue),
+	(mq_sinkpad_to_srcpad):
+	* tests/check/elements/tee.c: (GST_START_TEST):
+	* tests/check/generic/sinks.c: (GST_START_TEST):
+	* tests/check/gst/gstbin.c: (GST_START_TEST):
+	* tests/check/gst/gstevent.c: (GST_START_TEST):
+	* tests/check/gst/gstghostpad.c: (GST_START_TEST):
+	* tests/check/gst/gstpipeline.c: (GST_START_TEST):
+	* tests/check/gst/gstquery.c: (GST_START_TEST):
+	* tests/check/gst/gstutils.c: (GST_START_TEST):
+	* tests/check/libs/basesrc.c: (GST_START_TEST):
+	* tests/check/pipelines/parse-launch.c: (run_delayed_test),
+	(gst_parse_test_element_change_state):
+	Don't use gst_element_get_pad().
+
 2008-05-21  Felipe Contreras  <felipe.contreras@gmail.com>
 
 	* docs/Makefile.am:

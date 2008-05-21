@@ -80,7 +80,7 @@ GST_START_TEST (test_buffer_probe_n_times)
   gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
   gst_element_link (fakesrc, fakesink);
 
-  pad = gst_element_get_pad (fakesink, "sink");
+  pad = gst_element_get_static_pad (fakesink, "sink");
 
   /* add the probes we need for the test */
   gst_pad_add_data_probe (pad, G_CALLBACK (data_probe), SPECIAL_POINTER (0));
@@ -173,7 +173,7 @@ GST_START_TEST (test_buffer_probe_once)
   gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
   gst_element_link (fakesrc, fakesink);
 
-  pad = gst_element_get_pad (fakesink, "sink");
+  pad = gst_element_get_static_pad (fakesink, "sink");
   id1 = gst_pad_add_data_probe (pad, G_CALLBACK (data_probe_once), &id1);
   id2 = gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe_once), &id2);
   id3 = gst_pad_add_event_probe (pad, G_CALLBACK (event_probe_once), &id3);
@@ -382,7 +382,7 @@ GST_START_TEST (test_parse_bin_from_description)
     g_assert (bin != NULL);
 
     s = g_string_new ("");
-    if ((ghost_pad = gst_element_get_pad (bin, "sink"))) {
+    if ((ghost_pad = gst_element_get_static_pad (bin, "sink"))) {
       g_assert (GST_IS_GHOST_PAD (ghost_pad));
 
       target_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (ghost_pad));
@@ -399,7 +399,7 @@ GST_START_TEST (test_parse_bin_from_description)
       gst_object_unref (ghost_pad);
     }
 
-    if ((ghost_pad = gst_element_get_pad (bin, "src"))) {
+    if ((ghost_pad = gst_element_get_static_pad (bin, "src"))) {
       g_assert (GST_IS_GHOST_PAD (ghost_pad));
 
       target_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (ghost_pad));

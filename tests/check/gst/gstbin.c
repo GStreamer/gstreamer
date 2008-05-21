@@ -456,9 +456,9 @@ GST_START_TEST (test_add_linked)
   sink = gst_element_factory_make ("fakesink", NULL);
   fail_if (sink == NULL, "Could not create fakesink");
 
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_unless (sinkpad != NULL);
 
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);

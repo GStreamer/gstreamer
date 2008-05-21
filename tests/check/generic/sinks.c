@@ -136,8 +136,8 @@ GST_START_TEST (test_src_sink)
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), sink);
 
-  srcpad = gst_element_get_pad (src, "src");
-  sinkpad = gst_element_get_pad (sink, "sink");
+  srcpad = gst_element_get_static_pad (src, "src");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
@@ -182,8 +182,8 @@ GST_START_TEST (test_livesrc_remove)
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), sink);
 
-  srcpad = gst_element_get_pad (src, "src");
-  sinkpad = gst_element_get_pad (sink, "sink");
+  srcpad = gst_element_get_static_pad (src, "src");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
@@ -235,8 +235,8 @@ GST_START_TEST (test_livesrc_sink)
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), sink);
 
-  srcpad = gst_element_get_pad (src, "src");
-  sinkpad = gst_element_get_pad (sink, "sink");
+  srcpad = gst_element_get_static_pad (src, "src");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
@@ -358,8 +358,8 @@ GST_START_TEST (test_livesrc2_sink)
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), sink);
 
-  srcpad = gst_element_get_pad (src, "src");
-  sinkpad = gst_element_get_pad (sink, "sink");
+  srcpad = gst_element_get_static_pad (src, "src");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
@@ -427,8 +427,8 @@ GST_START_TEST (test_livesrc3_sink)
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), sink);
 
-  srcpad = gst_element_get_pad (src, "src");
-  sinkpad = gst_element_get_pad (sink, "sink");
+  srcpad = gst_element_get_static_pad (src, "src");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
@@ -524,8 +524,8 @@ GST_START_TEST (test_unlinked_live)
   gst_bin_add (GST_BIN (pipeline), sink);
 
   /* link non live source to sink */
-  srcpad = gst_element_get_pad (src, "src");
-  sinkpad = gst_element_get_pad (sink, "sink");
+  srcpad = gst_element_get_static_pad (src, "src");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
@@ -596,8 +596,8 @@ GST_START_TEST (test_delayed_async)
   fail_unless (pending == GST_STATE_VOID_PENDING, "have pending");
 
   /* link live source to sink */
-  srcpad = gst_element_get_pad (src, "src");
-  sinkpad = gst_element_get_pad (sink, "sink");
+  srcpad = gst_element_get_static_pad (src, "src");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
@@ -655,8 +655,8 @@ GST_START_TEST (test_added_async)
   fail_unless (pending == GST_STATE_VOID_PENDING, "have pending");
 
   /* link live source to sink */
-  srcpad = gst_element_get_pad (src, "src");
-  sinkpad = gst_element_get_pad (sink, "sink");
+  srcpad = gst_element_get_static_pad (src, "src");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
@@ -796,7 +796,7 @@ GST_START_TEST (test_add_live2)
 
   GST_DEBUG ("blocking srcpad");
   /* block source pad */
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   gst_pad_set_blocked_async (srcpad, TRUE, pad_blocked_cb, NULL);
 
   /* set source to PAUSED without adding it to the pipeline */
@@ -817,7 +817,7 @@ GST_START_TEST (test_add_live2)
   GST_DEBUG ("linking pads");
 
   /* link to sink */
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
@@ -863,8 +863,8 @@ GST_START_TEST (test_bin_live)
   gst_bin_add (GST_BIN (bin), sink);
   gst_bin_add (GST_BIN (pipeline), bin);
 
-  srcpad = gst_element_get_pad (src, "src");
-  sinkpad = gst_element_get_pad (sink, "sink");
+  srcpad = gst_element_get_static_pad (src, "src");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
@@ -920,7 +920,7 @@ GST_START_TEST (test_fake_eos)
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
 
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
 
   gst_bin_add (GST_BIN_CAST (pipeline), sink);
 
@@ -1057,7 +1057,7 @@ GST_START_TEST (test_async_done)
   g_signal_connect (sink, "preroll-handoff", (GCallback) async_done_handoff,
       sink);
 
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
 
   ret = gst_element_set_state (sink, GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC, "no ASYNC state return");
@@ -1195,7 +1195,7 @@ GST_START_TEST (test_async_done_eos)
   g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
   g_object_set (G_OBJECT (sink), "preroll-queue-len", 1, NULL);
 
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
 
   ret = gst_element_set_state (sink, GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC, "no ASYNC state return");

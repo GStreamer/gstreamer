@@ -44,13 +44,13 @@ GST_START_TEST (test_remove1)
   ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 1);
   ASSERT_OBJECT_REFCOUNT (b2, "bin", 1);
 
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_element_add_pad (b2, gst_ghost_pad_new ("sink", sinkpad));
   gst_object_unref (sinkpad);
 
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   /* get the ghostpad */
-  sinkpad = gst_element_get_pad (b2, "sink");
+  sinkpad = gst_element_get_static_pad (b2, "sink");
 
   ret = gst_pad_link (srcpad, sinkpad);
   fail_unless (ret == GST_PAD_LINK_OK);
@@ -62,7 +62,7 @@ GST_START_TEST (test_remove1)
   ASSERT_OBJECT_REFCOUNT (b2, "bin", 1);
   gst_bin_remove (GST_BIN (b1), b2);
 
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   /* pad cannot be linked now */
   fail_if (gst_pad_is_linked (srcpad));
   gst_object_unref (srcpad);
@@ -92,14 +92,14 @@ GST_START_TEST (test_remove2)
   fail_unless (gst_bin_add (GST_BIN (b1), b2));
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
 
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_element_add_pad (b2, gst_ghost_pad_new ("sink", sinkpad));
   gst_object_unref (sinkpad);
 
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 2); /* since we got one */
   /* get the ghostpad */
-  sinkpad = gst_element_get_pad (b2, "sink");
+  sinkpad = gst_element_get_static_pad (b2, "sink");
   ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);       /* since we got one */
 
   GST_DEBUG ("linking srcpad and sinkpad");
@@ -116,7 +116,7 @@ GST_START_TEST (test_remove2)
   /* now remove the sink from the bin */
   gst_bin_remove (GST_BIN (b2), sink);
 
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   /* pad is still linked to ghostpad */
   fail_if (!gst_pad_is_linked (srcpad));
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
@@ -172,7 +172,7 @@ GST_START_TEST (test_ghost_pads_notarget)
 
   srcpad = gst_ghost_pad_new_no_target ("src", GST_PAD_SRC);
   fail_unless (srcpad != NULL);
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_unless (sinkpad != NULL);
 
   ret = gst_pad_link (srcpad, sinkpad);
@@ -226,9 +226,9 @@ GST_START_TEST (test_link)
   fail_unless (gst_bin_add (GST_BIN (b1), src));
   fail_unless (gst_bin_add (GST_BIN (b1), b2));
 
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_unless (sinkpad != NULL);
 
   /* linking in different hierarchies should fail */
@@ -292,18 +292,18 @@ GST_START_TEST (test_ghost_pads)
   fail_unless (GST_IS_GHOST_PAD (b2->srcpads->data));
   GST_OBJECT_UNLOCK (b2);
 
-  fsrc = gst_element_get_pad (src, "src");
+  fsrc = gst_element_get_static_pad (src, "src");
   fail_unless (fsrc != NULL);
   gsink = GST_PAD (gst_object_ref (b2->sinkpads->data));
   fail_unless (gsink != NULL);
   gsrc = GST_PAD (gst_object_ref (b2->srcpads->data));
   fail_unless (gsrc != NULL);
-  fsink = gst_element_get_pad (sink, "sink");
+  fsink = gst_element_get_static_pad (sink, "sink");
   fail_unless (fsink != NULL);
 
-  isink = gst_element_get_pad (i1, "sink");
+  isink = gst_element_get_static_pad (i1, "sink");
   fail_unless (isink != NULL);
-  isrc = gst_element_get_pad (i1, "src");
+  isrc = gst_element_get_static_pad (i1, "src");
   fail_unless (isrc != NULL);
   gisrc = gst_pad_get_peer (isink);
   fail_unless (gisrc != NULL);
@@ -393,14 +393,14 @@ GST_START_TEST (test_ghost_pads_bin)
 
   src = gst_element_factory_make ("fakesrc", "src");
   gst_bin_add (srcbin, src);
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   srcghost = gst_ghost_pad_new ("src", srcpad);
   gst_object_unref (srcpad);
   gst_element_add_pad (GST_ELEMENT (srcbin), srcghost);
 
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add (sinkbin, sink);
-  sinkpad = gst_element_get_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   sinkghost = gst_ghost_pad_new ("sink", sinkpad);
   gst_object_unref (sinkpad);
   gst_element_add_pad (GST_ELEMENT (sinkbin), sinkghost);
@@ -456,7 +456,7 @@ GST_START_TEST (test_ghost_pads_block)
 
   src = gst_element_factory_make ("fakesrc", "src");
   gst_bin_add (srcbin, src);
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   srcghost = gst_ghost_pad_new ("src", srcpad);
   gst_element_add_pad (GST_ELEMENT (srcbin), srcghost);
   gst_object_unref (srcpad);
@@ -497,7 +497,7 @@ GST_START_TEST (test_ghost_pads_probes)
 
   src = gst_element_factory_make ("fakesrc", "src");
   gst_bin_add (srcbin, src);
-  srcpad = gst_element_get_pad (src, "src");
+  srcpad = gst_element_get_static_pad (src, "src");
   srcghost = gst_ghost_pad_new ("src", srcpad);
   gst_element_add_pad (GST_ELEMENT (srcbin), srcghost);
   gst_object_unref (srcpad);

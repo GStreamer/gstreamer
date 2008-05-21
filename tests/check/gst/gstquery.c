@@ -226,7 +226,7 @@ GST_START_TEST (test_queries)
       "Could not query duration of fakesink");
 
   /* Query pads */
-  fail_unless ((pad = gst_element_get_pad (src, "src")) != NULL,
+  fail_unless ((pad = gst_element_get_static_pad (src, "src")) != NULL,
       "Could not get source pad of fakesrc");
   fail_unless (gst_pad_query (pad, pos),
       "Could not query position of fakesrc src pad");
