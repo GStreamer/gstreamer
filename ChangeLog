@@ -1,3 +1,8 @@
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstclock.c: (gst_clock_set_calibration):
+	Fix debug of the new clock rate.
+
 2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* win32/common/libgstbase.def:

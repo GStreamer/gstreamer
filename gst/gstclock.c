@@ -941,7 +941,7 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
       "internal %" GST_TIME_FORMAT " external %" GST_TIME_FORMAT " %"
       G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT " = %f", GST_TIME_ARGS (internal),
       GST_TIME_ARGS (external), rate_num, rate_denom,
-      gst_guint64_to_gdouble (rate_num / rate_denom));
+      gst_guint64_to_gdouble (rate_num) / gst_guint64_to_gdouble (rate_denom));
 
   clock->internal_calibration = internal;
   clock->external_calibration = external;
