@@ -81,6 +81,8 @@ enum
 #define DEFAULT_SOCK               -1
 #define DEFAULT_CLIENTS            NULL
 #define DEFAULT_AUTO_MULTICAST     TRUE
+#define DEFAULT_TTL                64
+#define DEFAULT_LOOP               TRUE
 
 enum
 {
@@ -91,7 +93,9 @@ enum
   PROP_CLOSEFD,
   PROP_SOCK,
   PROP_CLIENTS,
-  PROP_AUTO_MULTICAST
+  PROP_AUTO_MULTICAST,
+  PROP_TTL,
+  PROP_LOOP
       /* FILL ME */
 };
 
@@ -292,6 +296,14 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
           "Automatically join/leave multicast groups",
           "Automatically join/leave the multicast groups, FALSE means user"
           " has to do it himself", DEFAULT_AUTO_MULTICAST, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_TTL,
+      g_param_spec_int ("ttl", "Multicast TTL",
+          "Used for setting the multicast TTL parameter",
+          0, 255, DEFAULT_TTL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_LOOP,
+      g_param_spec_boolean ("loop", "Multicast Loopback",
+          "Used for setting the multicast loop parameter. TRUE = enable,"
+          " FALSE = disable", DEFAULT_LOOP, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
@@ -316,6 +328,8 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   sink->closefd = DEFAULT_CLOSEFD;
   sink->externalfd = (sink->sockfd != -1);
   sink->auto_multicast = DEFAULT_AUTO_MULTICAST;
+  sink->ttl = DEFAULT_TTL;
+  sink->loop = DEFAULT_LOOP;
 }
 
 static void
@@ -473,6 +487,12 @@ gst_multiudpsink_set_property (GObject * object, guint prop_id,
     case PROP_AUTO_MULTICAST:
       udpsink->auto_multicast = g_value_get_boolean (value);
       break;
+    case PROP_TTL:
+      udpsink->ttl = g_value_get_int (value);
+      break;
+    case PROP_LOOP:
+      udpsink->loop = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -510,6 +530,12 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_AUTO_MULTICAST:
       g_value_set_boolean (value, udpsink->auto_multicast);
       break;
+    case PROP_TTL:
+      g_value_set_int (value, udpsink->ttl);
+      break;
+    case PROP_LOOP:
+      g_value_set_boolean (value, udpsink->loop);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -517,33 +543,13 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-join_multicast (GstUDPClient * client)
+join_multicast (GstUDPClient * client, gboolean loop, int ttl)
 {
-  unsigned char ttl = 64;
-  unsigned char loop = 1;
-
   /* Joining the multicast group */
   /* FIXME, can we use multicast and unicast over the same
    * socket? if not, search for socket of this multicast group or
    * create a new one. */
-  if (setsockopt (*(client->sock), IPPROTO_IP, IP_ADD_MEMBERSHIP,
-          &(client->multi_addr), sizeof (client->multi_addr)) < 0)
-    perror ("setsockopt IP_ADD_MEMBERSHIP\n");
-  if (setsockopt (*(client->sock), IPPROTO_IP, IP_MULTICAST_TTL, &ttl,
-          sizeof (ttl)) < 0)
-    perror ("setsockopt IP_MULTICAST_TTL\n");
-  if (setsockopt (*(client->sock), IPPROTO_IP, IP_MULTICAST_LOOP, &loop,
-          sizeof (loop)) < 0)
-    perror ("setsockopt IP_MULTICAST_LOOP\n");
-}
-
-static void
-leave_multicast (GstUDPClient * client)
-{
-  if (setsockopt (*(client->sock), IPPROTO_IP, IP_DROP_MEMBERSHIP,
-          &(client->multi_addr), sizeof (client->multi_addr)) < 0)
-    GST_WARNING ("setsockopt IP_DROP_MEMBERSHIP failed '%s'",
-        g_strerror (errno));
+  gst_udp_join_group (*(client->sock), loop, ttl, &client->theiraddr);
 }
 
 /* create a socket for sending to remote machine */
@@ -557,8 +563,9 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
 
   if (sink->sockfd == -1) {
     /* create sender socket */
-    if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
-      goto no_socket;
+    if ((sink->sock = socket (AF_INET6, SOCK_DGRAM, 0)) == -1)
+      if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
+        goto no_socket;
 
     sink->externalfd = FALSE;
   } else {
@@ -580,8 +587,8 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
 
   for (clients = sink->clients; clients; clients = g_list_next (clients)) {
     client = (GstUDPClient *) clients->data;
-    if (client->multi_addr.imr_multiaddr.s_addr && sink->auto_multicast)
-      join_multicast (client);
+    if (gst_udp_is_multicast (&client->theiraddr) && sink->auto_multicast)
+      join_multicast (client, sink->loop, sink->ttl);
   }
   return TRUE;
 
@@ -612,8 +619,6 @@ static void
 gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
     gint port, gboolean lock)
 {
-  struct hostent *he;
-  struct in_addr addr;
   GstUDPClient *client;
   GTimeVal now;
 
@@ -623,42 +628,19 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
   client->port = port;
   client->sock = &sink->sock;
 
-  memset (&client->theiraddr, 0, sizeof (client->theiraddr));
-  memset (&client->multi_addr, 0, sizeof (client->multi_addr));
-  client->theiraddr.sin_family = AF_INET;       /* host byte order */
-  client->theiraddr.sin_port = g_htons (port);  /* short, network byte order */
+  if (gst_udp_get_addr (host, port, &client->theiraddr) < 0)
+    goto getaddrinfo_error;
 
   g_get_current_time (&now);
   client->connect_time = GST_TIMEVAL_TO_TIME (now);
 
-  /* if its an IP address */
-  if (inet_aton (host, &addr)) {
-    /* check if its a multicast address */
-    if ((g_ntohl (addr.s_addr) & 0xf0000000) == 0xe0000000) {
-      GST_DEBUG_OBJECT (sink, "multicast address detected");
-      client->multi_addr.imr_multiaddr.s_addr = addr.s_addr;
-      client->multi_addr.imr_interface.s_addr = INADDR_ANY;
-
-      client->theiraddr.sin_addr = client->multi_addr.imr_multiaddr;
-
-    } else {
-      GST_DEBUG_OBJECT (sink, "normal address detected");
-      client->theiraddr.sin_addr = *((struct in_addr *) &addr);
-    }
-    /* if init_send has already been called, set sockopts for multicast */
-    if (*client->sock > 0 && client->multi_addr.imr_multiaddr.s_addr &&
-        sink->auto_multicast)
-      join_multicast (client);
-  }
-  /* we dont need to lookup for localhost */
-  else if (strcmp (host, "localhost") == 0 && inet_aton ("127.0.0.1", &addr)) {
-    client->theiraddr.sin_addr = *((struct in_addr *) &addr);
-  }
-  /* if its a hostname */
-  else if ((he = gethostbyname (host))) {
-    client->theiraddr.sin_addr = *((struct in_addr *) he->h_addr);
+  /* check if its a multicast address */
+  if (*client->sock > 0 && gst_udp_is_multicast (&client->theiraddr) &&
+      sink->auto_multicast) {
+    GST_DEBUG_OBJECT (sink, "multicast address detected");
+    join_multicast (client, sink->loop, sink->ttl);
   } else {
-    goto host_error;
+    GST_DEBUG_OBJECT (sink, "normal address detected");
   }
 
   if (lock)
@@ -673,9 +655,9 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
   return;
 
   /* ERRORS */
-host_error:
+getaddrinfo_error:
   {
-    GST_WARNING_OBJECT (sink, "hostname lookup error?");
+    GST_WARNING_OBJECT (sink, "getaddrinfo lookup error?");
     g_free (client->host);
     g_free (client);
     return;
@@ -728,9 +710,9 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
   g_get_current_time (&now);
   client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
 
-  if (*(client->sock) != -1 && client->multi_addr.imr_multiaddr.s_addr
+  if (*(client->sock) != -1 && gst_udp_is_multicast (&client->theiraddr)
       && sink->auto_multicast)
-    leave_multicast (client);
+    gst_udp_leave_group (*(client->sock), &client->theiraddr);
 
   /* Unlock to emit signal before we delete the actual client */
   g_mutex_unlock (sink->client_lock);

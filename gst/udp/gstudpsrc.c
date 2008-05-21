@@ -349,7 +349,7 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstUDPSrc *udpsrc;
   GstNetBuffer *outbuf;
-  struct sockaddr_in tmpaddr;
+  struct sockaddr_storage tmpaddr;
   socklen_t len;
   guint8 *pktdata;
   gint pktsize;
@@ -468,8 +468,28 @@ no_select:
   GST_BUFFER_DATA (outbuf) = pktdata;
   GST_BUFFER_SIZE (outbuf) = ret;
 
-  gst_netaddress_set_ip4_address (&outbuf->from, tmpaddr.sin_addr.s_addr,
-      tmpaddr.sin_port);
+  switch (tmpaddr.ss_family) {
+    case AF_INET:
+    {
+      gst_netaddress_set_ip4_address (&outbuf->from,
+          ((struct sockaddr_in *) &tmpaddr)->sin_addr.s_addr,
+          ((struct sockaddr_in *) &tmpaddr)->sin_port);
+    }
+      break;
+    case AF_INET6:
+    {
+      guint8 ip6[16];
+
+      memcpy (ip6, &((struct sockaddr_in6 *) &tmpaddr)->sin6_addr,
+          sizeof (ip6));
+      gst_netaddress_set_ip6_address (&outbuf->from, ip6,
+          ((struct sockaddr_in *) &tmpaddr)->sin_port);
+    }
+      break;
+    default:
+      errno = EAFNOSUPPORT;
+      goto receive_error;
+  }
 
   gst_buffer_set_caps (GST_BUFFER_CAST (outbuf), udpsrc->caps);
 
@@ -681,7 +701,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 {
   guint bc_val;
   gint reuse;
-  struct sockaddr_in my_addr;
+  struct sockaddr_storage my_addr;
   guint len;
   int port;
   GstUDPSrc *src;
@@ -690,12 +710,12 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
   src = GST_UDPSRC (bsrc);
 
-  if (!inet_aton (src->multi_group, &(src->multi_addr.imr_multiaddr)))
-    src->multi_addr.imr_multiaddr.s_addr = 0;
-
   if (src->sockfd == -1) {
     /* need to allocate a socket */
-    if ((ret = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+    if ((ret =
+            gst_udp_get_addr (src->multi_group, src->port, &src->myaddr)) < 0)
+      goto getaddrinfo_error;
+    if ((ret = socket (src->myaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP)) < 0)
       goto no_socket;
 
     src->sock.fd = ret;
@@ -707,15 +727,6 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
                 sizeof (reuse))) < 0)
       goto setsockopt_error;
 
-    memset (&src->myaddr, 0, sizeof (src->myaddr));
-    src->myaddr.sin_family = AF_INET;   /* host byte order */
-    src->myaddr.sin_port = g_htons (src->port); /* short, network byte order */
-
-    if (src->multi_addr.imr_multiaddr.s_addr)
-      src->myaddr.sin_addr.s_addr = src->multi_addr.imr_multiaddr.s_addr;
-    else
-      src->myaddr.sin_addr.s_addr = INADDR_ANY;
-
     GST_DEBUG_OBJECT (src, "binding on port %d", src->port);
     if ((ret = bind (src->sock.fd, (struct sockaddr *) &src->myaddr,
                 sizeof (src->myaddr))) < 0)
@@ -726,11 +737,9 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     src->externalfd = TRUE;
   }
 
-  if (src->multi_addr.imr_multiaddr.s_addr) {
-    src->multi_addr.imr_interface.s_addr = INADDR_ANY;
-    if ((ret =
-            setsockopt (src->sock.fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-                &src->multi_addr, sizeof (src->multi_addr))) < 0)
+  if (gst_udp_is_multicast (&src->myaddr)) {
+    ret = gst_udp_join_group (src->sock.fd, TRUE, src->ttl, &src->myaddr);
+    if (ret < 0)
       goto membership;
   }
 
@@ -769,7 +778,9 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
               sizeof (bc_val))) < 0)
     goto no_broadcast;
 
-  port = g_ntohs (my_addr.sin_port);
+  /* NOTE: sockaddr_in.sin_port works for ipv4 and ipv6 because sin_port
+   * follows ss_family on both */
+  port = ntohs (((struct sockaddr_in *) &my_addr)->sin_port);
   GST_DEBUG_OBJECT (src, "bound, on port %d", port);
   if (port != src->port) {
     src->port = port;
@@ -777,7 +788,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     g_object_notify (G_OBJECT (src), "port");
   }
 
-  src->myaddr.sin_port = g_htons (src->port + 1);
+  ((struct sockaddr_in *) &src->myaddr)->sin_port = htons (src->port + 1);
 
   if ((src->fdset = gst_poll_new (TRUE)) == NULL)
     goto no_fdset;
@@ -788,6 +799,12 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   return TRUE;
 
   /* ERRORS */
+getaddrinfo_error:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("getaddrinfo failed %d: %s (%d)", ret, g_strerror (errno), errno));
+    return FALSE;
+  }
 no_socket:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),

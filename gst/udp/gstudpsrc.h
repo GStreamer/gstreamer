@@ -68,8 +68,7 @@ struct _GstUDPSrc {
   GstPoll   *fdset;
   gboolean   externalfd;
 
-  struct   sockaddr_in myaddr;
-  struct   ip_mreq multi_addr;
+  struct   sockaddr_storage myaddr;
 };
 
 struct _GstUDPSrcClass {

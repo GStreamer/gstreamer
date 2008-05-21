@@ -52,7 +52,6 @@
 #define IOCTL_SOCKET ioctlsocket
 #define CLOSE_SOCKET(sock) closesocket(sock)
 #define setsockopt(sock,l,opt,val,len) setsockopt(sock,l,opt,(char *)(val),len)
-#define inet_aton(c,addr) gst_udp_net_utils_win32_inet_aton ((c),(addr))
 #define WSA_STARTUP(obj) gst_udp_net_utils_win32_wsa_startup(GST_OBJECT(obj))
 #define WSA_CLEANUP(obj) WSACleanup ()
 
@@ -68,10 +67,15 @@
 
 #ifdef G_OS_WIN32
 
-int      gst_udp_net_utils_win32_inet_aton (const char *c, struct in_addr * addr);
 gboolean gst_udp_net_utils_win32_wsa_startup (GstObject * obj);
 
 #endif
+
+int gst_udp_get_addr      (const char *hostname, int port, struct sockaddr_storage *addr);
+int gst_udp_is_multicast  (struct sockaddr_storage *addr);
+
+int gst_udp_join_group    (int sockfd, gboolean loop, int ttl, struct sockaddr_storage *addr);
+int gst_udp_leave_group   (int sockfd, struct sockaddr_storage *addr);
 
 #endif /* __GST_UDP_NET_UTILS_H__*/
 

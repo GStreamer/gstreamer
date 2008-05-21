@@ -1,5 +1,30 @@
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Bruno Santos <brunof at ua dot pt>
+
+	* gst/udp/gstudpnetutils.c: (gst_udp_get_addr),
+	(gst_udp_join_group), (gst_udp_leave_group),
+	(gst_udp_is_multicast):
+	* gst/udp/gstudpnetutils.h:
+	Provide a bunch of helper methods to deal with IPv4 and IPv6
+	transparently.
+
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init),
+	(gst_multiudpsink_init), (gst_multiudpsink_set_property),
+	(gst_multiudpsink_get_property), (join_multicast),
+	(gst_multiudpsink_init_send), (gst_multiudpsink_add_internal),
+	(gst_multiudpsink_remove):
+	* gst/udp/gstmultiudpsink.h:
+	Add multicast TTL and loopback properties.
+	Use the helper methods to implement ip4 and ip6.
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_create), (gst_udpsrc_start):
+	* gst/udp/gstudpsrc.h:
+	Use the helper methods to implement ip4 and ip6.
+	Fixes #515962.
+
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Patrick Radizi <patrick dot radizi at axis dot com>
 
 	* gst/multipart/multipartdemux.c: (gst_multipart_demux_class_init),
