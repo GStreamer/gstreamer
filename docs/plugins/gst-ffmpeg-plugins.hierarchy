@@ -297,9 +297,6 @@ GObject
           postproc_tmpnoise
           postproc_forcequant
           postproc_default
-    GstBus
-    GstTask
-    GstClock
     GstPlugin
     GstRegistry
   GstSignalObject

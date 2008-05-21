@@ -1,5 +1,5 @@
 
-Release notes for GStreamer FFmpeg Plug-ins 0.10.3 "My T-Shirt is slowly fading"
+Release notes for GStreamer FFmpeg Plug-ins 0.10.4 "A jump to the left"
         
 
 The GStreamer team is proud to announce a new release
@@ -34,42 +34,43 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Memory usage fixes
-      * Playback and seeking fixes
-      * Improved QOS support
-      * Parallel installability with 0.8.x series
-      * Threadsafe design and API
+      * New build system based on direct upstream FFmpeg svn
+      * Much newer FFmpeg with more decoders
+      * New ffaudioresample element
+      * Better timestamp handling
+      * Basic reverse playback
+      * New codecs wrapped
 
 Bugs fixed in this release
      
-      * 474845 : ffmux_mp4 does not encode metadata
-      * 433245 : Non-mutex-protected calls to avcodec_open/_close
-      * 153263 : no decoder available for real proprietary codecs
-      * 334990 : Crash with a .rm file
-      * 341736 : [patch] H.263/QDesign Music v.2 movie has great playback ...
-      * 342962 : [ffdec_h264] jerky playback of h264 in matroska and quick...
-      * 363363 : Please permit building against an external ffmpeg
-      * 364139 : [ffdec_h264] regression: artefacts with 'climates' quickt...
-      * 375534 : FLV demuxer produces bad framerate, durations
-      * 392359 : [ffmpegenc] potential crash in dispose due to double-free
-      * 393187 : ffenc_mpeg4 does not set codec_data on caps
-      * 394075 : ffdemux disregards FlowReturn result of downstream pushing
-      * 403168 : [ffmux_flv] crash on buffer after returning FLOW_ERROR pr...
-      * 403739 : ffenc_mpeg1/2video segfaults
-      * 407779 : Add more explanations when building against external ffmpeg
-      * 435742 : gst-ffmpeg installation fails during make
-      * 440253 : no shared lib created and installed (MinGW)
-      * 453135 : broken ffenc_*
-      * 460274 : FFmpeg buffer duration issues
-      * 466221 : Doesn't play " video/sp5x " videos
-      * 485033 : Wrong return type for gst_ffmpegdec_setcaps
-      * 492419 : Build issues on Windows/MSVC
-      * 398875 : [ffdec_camtasia] requires " bits_per_sample " to be set or ...
-      * 394071 : ffmpeg now uses YUV4MPEG version 2, caps still indicate v...
-      * 399108 : ffmpeg's yuv4mpegpipe demuxer not activated for auto-plug...
-      * 444332 : missing unref for videoscale after gst_pad_get_parent
-      * 444384 : ffmux_asf could support more input capabilities
-      * 482946 : warning in demuxer when receiving GST_EVENT_LATENCY
+      * 504056 : [ffvideoscale] Switch to using libswscale
+      * 488913 : Move to a saner ffmpeg checkout system
+      * 321662 : reenable our get_buffer function in gst-ffmpeg
+      * 334707 : ffmpeg reads past the end of data passed to it
+      * 337866 : [ffmpeg] timestamps wrong
+      * 338989 : [ffenc_mjpeg] Creates garbled content
+      * 359965 : ffenc_huffyuv broken
+      * 394208 : Compile Error on Intel Mac OS X
+      * 421068 : ffenc_h263p -- missing options
+      * 427082 : [fixed upstream] totem crashes when trying to play an .AIF
+      * 449420 : [fixed upstream] [FLV] Incorrect FLV frame sizes
+      * 467121 : [fixed upstream] WVC1 codec
+      * 482660 : h264 playback is not smooth
+      * 496127 : [deinterlace/scale/postproc] support for non-I420 colorsp...
+      * 503249 : Add GIF support
+      * 503733 : PATCH: stop gst-inspect --print-all from crashing when gs...
+      * 510745 : Add musepack sv7 support
+      * 510985 : Don't register typefinders for which we have replacements...
+      * 511011 : gst-ffmpeg autogen.sh not checking for subversion presence
+      * 511476 : Missing codec inside gstffmpegcodecmap.c
+      * 515205 : Dubious .flv file crashes totem
+      * 515811 : add debug-mv property to ffdec_*
+      * 518033 : Add Monkey's Audio (APE) support
+      * 519235 : make clean twice produces some error messages
+      * 528082 : [ffmpeg] compile error
+      * 529015 : Port from deprecated img_convert to swscale
+      * 531857 : Can't play WVC1 videos
+      * 532803 : Doesn't build properly with system ffmpeg
 
 Download
 
@@ -99,25 +100,15 @@ Applications
   
 Contributors to this release
     
-      * 
+      * Andy Wingo
+      * Damien Lespiau
+      * Dejan Sakelšak
       * Edward Hervey
-      * Jan Arne Petersen
+      * Gabriel Bouvigne
       * Jan Schmidt
-      * Johan Dahlin
-      * Josselin Mouette
-      * Julien Moutte
-      * Laurent Glayal
-      * Mark Nauwelaerts
-      * Martin Szulecki
       * Michael Smith
-      * Ole André Vadla Ravnås
       * Sebastian Dröge
       * Stefan Kost
-      * Sébastien Moutte
-      * Thomas Vander Stichele
-      * Tim-Philipp Müller
-      * Tuomas Kulve
+      * Tim-Philipp MÃ¼ller
       * Wim Taymans
-      * Yann Gilquin
-      * Yves Lefebvre
  

@@ -1,3 +1,10 @@
+=== release 0.10.4 ===
+
+2008-05-21  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.4, "A jump to the left"
+
 2008-05-20  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

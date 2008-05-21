@@ -10761,7 +10761,7 @@
 <ARG>
 <NAME>postproc_forcequant::quantizer</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Force Quantizer</NICK>
 <BLURB>Quantizer to use (-1 = pp default).</BLURB>
@@ -10811,7 +10811,7 @@
 <ARG>
 <NAME>postproc_tmpnoise::threshold-1</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Threshold One</NICK>
 <BLURB>Higher values mean stronger filtering (-1 = pp default).</BLURB>
@@ -10821,7 +10821,7 @@
 <ARG>
 <NAME>postproc_tmpnoise::threshold-2</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Threshold Two</NICK>
 <BLURB>Higher values mean stronger filtering (-1 = pp default).</BLURB>
@@ -10831,7 +10831,7 @@
 <ARG>
 <NAME>postproc_tmpnoise::threshold-3</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Threshold Three</NICK>
 <BLURB>Higher values mean stronger filtering (-1 = pp default).</BLURB>
@@ -11101,7 +11101,7 @@
 <ARG>
 <NAME>postproc_avdeblock::difference</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Difference Factor</NICK>
 <BLURB>Higher values mean more deblocking (-1 = pp default).</BLURB>
@@ -11111,7 +11111,7 @@
 <ARG>
 <NAME>postproc_avdeblock::flatness</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flatness Threshold</NICK>
 <BLURB>Lower values mean more deblocking (-1 = pp default).</BLURB>
@@ -11151,7 +11151,7 @@
 <ARG>
 <NAME>postproc_ahdeblock::difference</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Difference Factor</NICK>
 <BLURB>Higher values mean more deblocking (-1 = pp default).</BLURB>
@@ -11161,7 +11161,7 @@
 <ARG>
 <NAME>postproc_ahdeblock::flatness</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flatness Threshold</NICK>
 <BLURB>Lower values mean more deblocking (-1 = pp default).</BLURB>
@@ -11261,7 +11261,7 @@
 <ARG>
 <NAME>postproc_vdeblock::difference</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Difference Factor</NICK>
 <BLURB>Higher values mean more deblocking (-1 = pp default).</BLURB>
@@ -11271,7 +11271,7 @@
 <ARG>
 <NAME>postproc_vdeblock::flatness</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flatness Threshold</NICK>
 <BLURB>Lower values mean more deblocking (-1 = pp default).</BLURB>
@@ -11311,7 +11311,7 @@
 <ARG>
 <NAME>postproc_hdeblock::difference</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Difference Factor</NICK>
 <BLURB>Higher values mean more deblocking (-1 = pp default).</BLURB>
@@ -11321,7 +11321,7 @@
 <ARG>
 <NAME>postproc_hdeblock::flatness</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flatness Threshold</NICK>
 <BLURB>Lower values mean more deblocking (-1 = pp default).</BLURB>

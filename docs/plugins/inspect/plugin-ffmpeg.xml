@@ -3,7 +3,7 @@
   <description>All FFMPEG codecs (local snapshot)</description>
   <filename>../../ext/ffmpeg/.libs/libgstffmpeg.so</filename>
   <basename>libgstffmpeg.so</basename>
-  <version>0.10.3.1</version>
+  <version>0.10.4</version>
   <license>LGPL</license>
   <source>gst-ffmpeg</source>
   <package>FFMpeg</package>

@@ -1,5 +1,45 @@
-This is GStreamer FFmpeg Plug-ins 0.10.3, "My T-Shirt is slowly fading"
+This is GStreamer FFmpeg Plug-ins 0.10.4, "A jump to the left"
 
+Changes since 0.10.3:
+    
+      * New build system based on direct upstream FFmpeg svn
+      * Much newer FFmpeg with more decoders
+      * New ffaudioresample element
+      * Better timestamp handling
+      * Basic reverse playback
+      * New codecs wrapped
+
+Bugs fixed since 0.10.3:
+
+      * 504056 : [ffvideoscale] Switch to using libswscale
+      * 488913 : Move to a saner ffmpeg checkout system
+      * 321662 : reenable our get_buffer function in gst-ffmpeg
+      * 334707 : ffmpeg reads past the end of data passed to it
+      * 337866 : [ffmpeg] timestamps wrong
+      * 338989 : [ffenc_mjpeg] Creates garbled content
+      * 359965 : ffenc_huffyuv broken
+      * 394208 : Compile Error on Intel Mac OS X
+      * 421068 : ffenc_h263p -- missing options
+      * 427082 : [fixed upstream] totem crashes when trying to play an .AIF
+      * 449420 : [fixed upstream] [FLV] Incorrect FLV frame sizes
+      * 467121 : [fixed upstream] WVC1 codec
+      * 482660 : h264 playback is not smooth
+      * 496127 : [deinterlace/scale/postproc] support for non-I420 colorsp...
+      * 503249 : Add GIF support
+      * 503733 : PATCH: stop gst-inspect --print-all from crashing when gs...
+      * 510745 : Add musepack sv7 support
+      * 510985 : Don't register typefinders for which we have replacements...
+      * 511011 : gst-ffmpeg autogen.sh not checking for subversion presence
+      * 511476 : Missing codec inside gstffmpegcodecmap.c
+      * 515205 : Dubious .flv file crashes totem
+      * 515811 : add debug-mv property to ffdec_*
+      * 518033 : Add Monkey's Audio (APE) support
+      * 519235 : make clean twice produces some error messages
+      * 528082 : [ffmpeg] compile error
+      * 529015 : Port from deprecated img_convert to swscale
+      * 531857 : Can't play WVC1 videos
+      * 532803 : Doesn't build properly with system ffmpeg
+     
 Changes since 0.10.2:
     
       * Memory usage fixes
