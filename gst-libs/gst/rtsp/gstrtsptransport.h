@@ -110,7 +110,6 @@ typedef struct
  * A structure holding the RTSP transport values.
  */
 typedef struct _GstRTSPTransport {
-  /*< private >*/
   GstRTSPTransMode  trans;
   GstRTSPProfile    profile;
   GstRTSPLowerTrans lower_transport;
