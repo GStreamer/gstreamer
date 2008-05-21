@@ -1,3 +1,10 @@
+2008-05-21  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstpad.c: (gst_pad_alloc_buffer_full):
+	  Move size sanity check to the right place: downstream may return
+	  a buffer with a smaller size if the buffer caps are different than
+	  the requested ones, as may happen when doing reverse negotiation.
+
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* plugins/elements/gstfilesink.c: (gst_file_sink_set_location),

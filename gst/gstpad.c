@@ -2679,10 +2679,6 @@ gst_pad_buffer_alloc_unchecked (GstPad * pad, guint64 offset, gint size,
   if (G_UNLIKELY (*buf == NULL))
     goto fallback;
 
-  /* sanity check */
-  if (G_UNLIKELY (GST_BUFFER_SIZE (*buf) < size))
-    goto wrong_size;
-
   /* If the buffer alloc function didn't set up the caps like it should,
    * do it for it */
   if (G_UNLIKELY (caps && (GST_BUFFER_CAPS (*buf) == NULL))) {
@@ -2704,14 +2700,6 @@ error:
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
         "alloc function returned error (%d) %s", ret, gst_flow_get_name (ret));
     return ret;
-  }
-wrong_size:
-  {
-    GST_CAT_ERROR_OBJECT (GST_CAT_PADS, pad, "buffer returned by alloc "
-        "function is too small: %u < %d", GST_BUFFER_SIZE (*buf), size);
-    gst_buffer_unref (*buf);
-    *buf = NULL;
-    goto fallback;
   }
 fallback:
   {
@@ -2781,7 +2769,12 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
         GST_PAD_CAPS (pad), caps, caps);
     if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, setcaps)))
       goto not_negotiated;
+  } else {
+    /* sanity check (only if caps haven't changed) */
+    if (G_UNLIKELY (GST_BUFFER_SIZE (*buf) < size))
+      goto wrong_size_fallback;
   }
+
   return ret;
 
 flushed:
@@ -2811,6 +2804,24 @@ not_negotiated:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "alloc function returned unacceptable buffer");
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+wrong_size_fallback:
+  {
+    GST_CAT_ERROR_OBJECT (GST_CAT_PADS, pad, "buffer returned by alloc "
+        "function is too small (%u < %d), doing fallback buffer alloc",
+        GST_BUFFER_SIZE (*buf), size);
+
+    gst_buffer_unref (*buf);
+
+    if ((*buf = gst_buffer_try_new_and_alloc (size))) {
+      GST_BUFFER_OFFSET (*buf) = offset;
+      gst_buffer_set_caps (*buf, caps);
+      return GST_FLOW_OK;
+    } else {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+          "out of memory allocating %d bytes", size);
+      return GST_FLOW_ERROR;
+    }
   }
 }
 
