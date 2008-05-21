@@ -1,4 +1,25 @@
-This is GStreamer Ugly Plug-ins 0.10.7 "I Cheated Time"
+This is GStreamer Ugly Plug-ins 0.10.8 "And yet"
+
+Changes since 0.10.7:
+    
+      * ASF demuxer fixes
+      * MP3 parsing and Xing header output bug-fixes
+      * Real streaming and demuxing improvements
+
+Bugs fixed since 0.10.7:
+     
+      * 527572 : Crash in volume_process_int32
+      * 321857 : [mp3parse] needs to post DURATION message for VBR mp3s
+      * 428021 : [mad, mp3parse] better duration estimates for VBR
+      * 517985 : [lame] compile error on Solaris, broken GST_ELEMENT_ERROR...
+      * 518676 : xingmux doesn't work anymore
+      * 518933 : mp3 tags are not copied when converting to another format
+      * 521459 : RTSP extension for Real Audio doesn't extract  Author, Co...
+      * 524346 : Framerate not being displayed correctly on running gst-di...
+      * 529488 : [sidplay] Missing sentinel in function call
+      * 532807 : [rmdemux] Doesn't properly aggregate flow returns
+      * 533581 : [mad] inconsistent use of rate and channels
+      * 533832 : [rmdemux] reset variables on flush
 
 Changes since 0.10.6:
     

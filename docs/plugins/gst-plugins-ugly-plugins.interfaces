@@ -1,7 +1,7 @@
 GstBin GstChildProxy
 GstPipeline GstChildProxy
+GstLame GstTagSetter
 GstID3Tag GstTagSetter
 GstDvdReadSrc GstURIHandler
-GstLame GstTagSetter
-GstRTSPReal GstRTSPExtension
 GstRTSPWMS GstRTSPExtension
+GstRTSPReal GstRTSPExtension
