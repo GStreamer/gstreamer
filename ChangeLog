@@ -1,5 +1,32 @@
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/gconf/gstgconfaudiosrc.c: (gst_gconf_audio_src_reset),
+	(do_toggle_element):
+	* ext/gconf/gstgconfvideosink.c: (gst_gconf_video_sink_reset),
+	(do_toggle_element):
+	* ext/gconf/gstgconfvideosrc.c: (gst_gconf_video_src_reset),
+	(do_toggle_element):
+	* ext/gconf/gstswitchsink.c: (gst_switch_commit_new_kid):
+	* ext/hal/gsthalaudiosink.c: (gst_hal_audio_sink_reset),
+	(do_toggle_element):
+	* ext/hal/gsthalaudiosrc.c: (gst_hal_audio_src_reset),
+	(do_toggle_element):
+	* gst/autodetect/gstautoaudiosink.c: (gst_auto_audio_sink_reset),
+	(gst_auto_audio_sink_detect):
+	* gst/autodetect/gstautovideosink.c: (gst_auto_video_sink_reset),
+	(gst_auto_video_sink_detect):
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),
+	(gst_rtspsrc_stream_free), (gst_rtspsrc_stream_configure_udp),
+	(gst_rtspsrc_stream_configure_udp_sink), (gst_rtspsrc_skip_lws),
+	(gst_rtspsrc_unskip_lws), (gst_rtspsrc_skip_commas),
+	(gst_rtspsrc_skip_item), (gst_rtsp_decode_quoted_string),
+	(gst_rtspsrc_parse_digest_challenge), (gst_rtspsrc_parse_auth_hdr):
+	* tests/icles/videocrop-test.c: (test_with_caps),
+	(video_crop_get_test_caps):
+	Don't use gst_element_get_pad(), it's a bad method.
+
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_init_send),
 	(gst_multiudpsink_add_internal):
 	* gst/udp/gstudpnetutils.c: (gst_udp_set_loop_ttl),

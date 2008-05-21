@@ -122,7 +122,7 @@ gst_hal_audio_sink_reset (GstHalAudioSink * sink)
   sink->kid = gst_element_factory_make ("fakesink", "testsink");
   gst_bin_add (GST_BIN (sink), sink->kid);
 
-  targetpad = gst_element_get_pad (sink->kid, "sink");
+  targetpad = gst_element_get_static_pad (sink->kid, "sink");
   gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
   gst_object_unref (targetpad);
 }
@@ -176,7 +176,7 @@ do_toggle_element (GstHalAudioSink * sink)
 
   /* re-attach ghostpad */
   GST_DEBUG_OBJECT (sink, "Creating new ghostpad");
-  targetpad = gst_element_get_pad (sink->kid, "sink");
+  targetpad = gst_element_get_static_pad (sink->kid, "sink");
   gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
   gst_object_unref (targetpad);
   GST_DEBUG_OBJECT (sink, "done changing hal audio sink");

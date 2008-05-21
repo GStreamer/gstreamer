@@ -709,7 +709,7 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
       GstPad *pad;
 
       /* unlink the pad */
-      pad = gst_element_get_pad (udpsrc, "src");
+      pad = gst_element_get_static_pad (udpsrc, "src");
       if (stream->channelpad[i]) {
         gst_pad_unlink (pad, stream->channelpad[i]);
       }
@@ -1982,7 +1982,7 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
         NULL);
 
     /* get output pad of the UDP source. */
-    *outpad = gst_element_get_pad (stream->udpsrc[0], "src");
+    *outpad = gst_element_get_static_pad (stream->udpsrc[0], "src");
 
     /* save it so we can unblock */
     stream->blockedpad = *outpad;
@@ -2015,7 +2015,7 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
 
       GST_DEBUG_OBJECT (src, "connecting UDP source 1 to manager");
 
-      pad = gst_element_get_pad (stream->udpsrc[1], "src");
+      pad = gst_element_get_static_pad (stream->udpsrc[1], "src");
       gst_pad_link (pad, stream->channelpad[1]);
       gst_object_unref (pad);
     } else {
@@ -2082,7 +2082,7 @@ gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
   gst_object_ref (stream->udpsink);
   gst_bin_add (GST_BIN_CAST (src), stream->udpsink);
 
-  stream->rtcppad = gst_element_get_pad (stream->udpsink, "sink");
+  stream->rtcppad = gst_element_get_static_pad (stream->udpsink, "sink");
 
   /* get session RTCP pad */
   name = g_strdup_printf ("send_rtcp_src_%d", stream->id);

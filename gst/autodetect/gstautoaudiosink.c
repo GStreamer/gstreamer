@@ -161,7 +161,7 @@ gst_auto_audio_sink_reset (GstAutoAudioSink * sink)
   gst_bin_add (GST_BIN (sink), sink->kid);
 
   /* pad */
-  targetpad = gst_element_get_pad (sink->kid, "sink");
+  targetpad = gst_element_get_static_pad (sink->kid, "sink");
   gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
   gst_object_unref (targetpad);
 }
@@ -364,7 +364,7 @@ gst_auto_audio_sink_detect (GstAutoAudioSink * sink)
 
   /* attach ghost pad */
   GST_DEBUG_OBJECT (sink, "Re-assigning ghostpad");
-  targetpad = gst_element_get_pad (sink->kid, "sink");
+  targetpad = gst_element_get_static_pad (sink->kid, "sink");
   gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
   gst_object_unref (targetpad);
   GST_DEBUG_OBJECT (sink, "done changing auto audio sink");

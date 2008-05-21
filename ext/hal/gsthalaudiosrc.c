@@ -124,7 +124,7 @@ gst_hal_audio_src_reset (GstHalAudioSrc * src)
   src->kid = gst_element_factory_make ("fakesrc", "testsrc");
   gst_bin_add (GST_BIN (src), src->kid);
 
-  targetpad = gst_element_get_pad (src->kid, "src");
+  targetpad = gst_element_get_static_pad (src->kid, "src");
   gst_ghost_pad_set_target (GST_GHOST_PAD (src->pad), targetpad);
   gst_object_unref (targetpad);
 }
@@ -178,7 +178,7 @@ do_toggle_element (GstHalAudioSrc * src)
 
   /* re-attach ghostpad */
   GST_DEBUG_OBJECT (src, "Creating new ghostpad");
-  targetpad = gst_element_get_pad (src->kid, "src");
+  targetpad = gst_element_get_static_pad (src->kid, "src");
   gst_ghost_pad_set_target (GST_GHOST_PAD (src->pad), targetpad);
   gst_object_unref (targetpad);
   GST_DEBUG_OBJECT (src, "done changing hal audio source");

@@ -87,7 +87,7 @@ test_with_caps (GstElement * src, GstElement * videocrop, GstCaps * caps)
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
   /* pad to block */
-  pad = gst_element_get_pad (src, "src");
+  pad = gst_element_get_static_pad (src, "src");
 
   time_run = 0;
   do {
@@ -139,7 +139,7 @@ video_crop_get_test_caps (GstElement * videocrop)
   GList *list = NULL;
   guint i;
 
-  srcpad = gst_element_get_pad (videocrop, "src");
+  srcpad = gst_element_get_static_pad (videocrop, "src");
   g_assert (srcpad != NULL);
   allowed_caps = gst_pad_get_pad_template_caps (srcpad);
   g_assert (allowed_caps != NULL);
