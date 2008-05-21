@@ -120,7 +120,7 @@ GST_START_TEST (test_audio_per_byte)
   pk = gst_dp_packetizer_new (GST_DP_VERSION_1_0);
 
   gdpdepay = setup_gdpdepay ();
-  srcpad = gst_element_get_pad (gdpdepay, "src");
+  srcpad = gst_element_get_static_pad (gdpdepay, "src");
 
   fail_unless (gst_element_set_state (gdpdepay,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -196,7 +196,7 @@ GST_START_TEST (test_audio_in_one_buffer)
   pk = gst_dp_packetizer_new (GST_DP_VERSION_1_0);
 
   gdpdepay = setup_gdpdepay ();
-  srcpad = gst_element_get_pad (gdpdepay, "src");
+  srcpad = gst_element_get_static_pad (gdpdepay, "src");
 
   fail_unless (gst_element_set_state (gdpdepay,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -298,7 +298,7 @@ GST_START_TEST (test_streamheader)
   pk = gst_dp_packetizer_new (GST_DP_VERSION_1_0);
 
   gdpdepay = setup_gdpdepay_streamheader ();
-  srcpad = gst_element_get_pad (gdpdepay, "src");
+  srcpad = gst_element_get_static_pad (gdpdepay, "src");
   ASSERT_OBJECT_REFCOUNT (gdpdepay, "gdpdepay", 1);
 
   fail_unless (gst_element_set_state (gdpdepay,
