@@ -77,8 +77,22 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
   "rate = (int) [ 1, MAX ], " \
   "channels = (int) [ 1, MAX ], " \
   "endianness = (int) BYTE_ORDER, " \
-  "width = (int) { 8, 16, 32 }, " \
-  "depth = (int) [ 1, 32 ], " \
+  "width = (int) 32, " \
+  "depth = (int) 32, " \
+  "signed = (boolean) { true, false } ;" \
+  "audio/x-raw-int, " \
+  "rate = (int) [ 1, MAX ], " \
+  "channels = (int) [ 1, MAX ], " \
+  "endianness = (int) BYTE_ORDER, " \
+  "width = (int) 16, " \
+  "depth = (int) 16, " \
+  "signed = (boolean) { true, false } ;" \
+  "audio/x-raw-int, " \
+  "rate = (int) [ 1, MAX ], " \
+  "channels = (int) [ 1, MAX ], " \
+  "endianness = (int) BYTE_ORDER, " \
+  "width = (int) 8, " \
+  "depth = (int) 8, " \
   "signed = (boolean) { true, false } ;" \
   "audio/x-raw-float, " \
   "rate = (int) [ 1, MAX ], " \

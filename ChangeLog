@@ -1,3 +1,9 @@
+2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/adder/gstadder.c:
+	Adder also doesn't support audio/x-raw-int with width!=depth so don't
+	claim this on the pad template caps.
+
 2008-05-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
