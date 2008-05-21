@@ -388,6 +388,10 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
           (struct sockaddr *) &client->theiraddr, sizeof (client->theiraddr));
 
       if (ret < 0) {
+        /* we get a non-posix EPERM on Linux when a firewall rule blocks this
+         * destination. We will simply ignore this. */
+        if (errno == EPERM)
+          break;
         if (errno != EINTR && errno != EAGAIN) {
           goto send_error;
         }
