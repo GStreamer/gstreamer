@@ -317,6 +317,8 @@ gst_file_src_set_location (GstFileSrc * src, const gchar * location)
     src->filename = NULL;
     src->uri = NULL;
   } else {
+    /* we store the filename as received by the application. On Windoes this
+     * should be UTF8 */
     src->filename = g_strdup (location);
     src->uri = gst_uri_construct ("file", src->filename);
   }
@@ -909,6 +911,7 @@ gst_file_src_start (GstBaseSrc * basesrc)
 
   /* open the file */
   src->fd = open (src->filename, O_RDONLY | O_BINARY);
+
   if (src->fd < 0)
     goto open_failed;
 

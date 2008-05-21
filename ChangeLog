@@ -1,5 +1,14 @@
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* plugins/elements/gstfilesink.c: (gst_file_sink_set_location),
+	(gst_file_sink_render):
+	* plugins/elements/gstfilesrc.c: (gst_file_src_set_location),
+	(gst_file_src_start):
+	Small cleanups. Add note adbout g_fopen() on windows and why we don't
+	use it yet.
+
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstpad.c: (gst_pad_load_and_link):
 	* gst/gstutils.c: (gst_element_link_pads),
 	(gst_element_unlink_pads):

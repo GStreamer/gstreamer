@@ -228,8 +228,10 @@ gst_file_sink_set_location (GstFileSink * sink, const gchar * location)
   g_free (sink->filename);
   g_free (sink->uri);
   if (location != NULL) {
+    /* we store the filename as we received it from the application. On Windows
+     * this should be in UTF8 */
     sink->filename = g_strdup (location);
-    sink->uri = gst_uri_construct ("file", location);
+    sink->uri = gst_uri_construct ("file", sink->filename);
   } else {
     sink->filename = NULL;
     sink->uri = NULL;
@@ -298,6 +300,9 @@ gst_file_sink_open_file (GstFileSink * sink)
   if (sink->filename == NULL || sink->filename[0] == '\0')
     goto no_filename;
 
+  /* FIXME, can we use g_fopen here? some people say that the FILE object is
+   * local to the .so that performed the fopen call, which would not be us when
+   * we use g_fopen. */
   sink->file = fopen (sink->filename, "wb");
   if (sink->file == NULL)
     goto open_failed;
@@ -552,16 +557,18 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstFileSink *filesink;
   guint size;
-
-  size = GST_BUFFER_SIZE (buffer);
+  guint8 *data;
 
   filesink = GST_FILE_SINK (sink);
+
+  size = GST_BUFFER_SIZE (buffer);
+  data = GST_BUFFER_DATA (buffer);
 
   GST_DEBUG_OBJECT (filesink, "writing %u bytes at %" G_GUINT64_FORMAT,
       size, filesink->current_pos);
 
-  if (size > 0 && GST_BUFFER_DATA (buffer) != NULL) {
-    if (fwrite (GST_BUFFER_DATA (buffer), size, 1, filesink->file) != 1)
+  if (size > 0 && data != NULL) {
+    if (fwrite (data, size, 1, filesink->file) != 1)
       goto handle_error;
 
     filesink->current_pos += size;
