@@ -1,5 +1,12 @@
 2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Antoine Tremblay <hexa00 at gmail dot com>
+
+	* gst/gdp/gstgdppay.c: (gst_gdp_pay_chain):
+	Close a buffer memory leak. Fixes bug #534071.
+
+2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst-libs/gst/rtsp/gstrtsptransport.h:
 	Make the GstRTSPTransport struct members public as there are no
 	setters/getters and it's supposed to be changed directly.
