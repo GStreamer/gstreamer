@@ -397,6 +397,8 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     display->title =  g_string_append (display->title, buffer);
     glutWinId = glutCreateWindow (display->title->str, display->winId);
 
+    GST_DEBUG ("Context %d created\n", glutWinId);
+
     if (display->visible)
         glutShowWindow ();
     else
@@ -407,7 +409,29 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     if (err != GLEW_OK)
         GST_DEBUG ("Error: %s", glewGetErrorString(err));
     else
-        GST_DEBUG ("Context %d, Using GLEW %s", glutWinId, glewGetString(GLEW_VERSION));
+    {
+        //OpenGL > 2.1.0 and Glew > 1.5.0
+        GString* opengl_version = g_string_new (glGetString (GL_VERSION));
+        gboolean check_versions = g_str_has_prefix (opengl_version->str, "2.1");
+        GString* glew_version = g_string_new (glewGetString (GLEW_VERSION));
+        check_versions = check_versions && g_str_has_prefix (glew_version->str, "1.5");
+
+
+        GST_DEBUG ("GL_VERSION: %s", opengl_version->str);
+        GST_DEBUG ("GLEW_VERSION: %s", glew_version->str);
+        
+        GST_DEBUG ("GL_VENDOR: %s\n", glGetString (GL_VENDOR));
+        GST_DEBUG ("GL_RENDERER: %s\n", glGetString (GL_RENDERER));
+
+        g_string_free (opengl_version, TRUE);
+        g_string_free (glew_version, TRUE);
+
+        if (!check_versions)
+        {
+            GST_DEBUG ("Required OpenGL > 2.1.0 and Glew > 1.5.0");
+            g_assert_not_reached ();
+        }
+    }
 
     if (GLEW_EXT_framebuffer_object)
     {
