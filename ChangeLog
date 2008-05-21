@@ -1,5 +1,10 @@
 2008-05-21  Felipe Contreras  <felipe.contreras@gmail.com>
 
+	* docs/Makefile.am:
+	Fix installing plugin documentation when gtk-doc is disabled.
+
+2008-05-21  Felipe Contreras  <felipe.contreras@gmail.com>
+
 	* gst-libs/gst/rtsp/Makefile.am:
 	Distribute, don't install md5.h
 
