@@ -35,7 +35,7 @@ GST_DEBUG_CATEGORY_EXTERN (riff_debug);
 #define GST_CAT_DEFAULT riff_debug
 
 /**
- * gst_riff_create_video_caps_with_data:
+ * gst_riff_create_video_caps:
  * @codec_fcc: fourCC codec for this codec.
  * @strh: pointer to the strh stream header structure.
  * @strf: pointer to the strf stream header structure, including any
@@ -961,14 +961,14 @@ gst_riff_create_audio_caps (guint16 codec_id,
           GST_WARNING ("invalid depth (%d) of alaw audio, overwriting.",
               strf->size);
           strf->size = 8;
-          strf->av_bps = 8;
-          strf->blockalign = strf->av_bps * strf->channels;
+          strf->blockalign = (strf->size * strf->channels) / 8;
+          strf->av_bps = strf->blockalign * strf->rate;
         }
         if (strf->av_bps == 0 || strf->blockalign == 0) {
           GST_WARNING ("fixing av_bps (%d) and blockalign (%d) of alaw audio",
               strf->av_bps, strf->blockalign);
-          strf->av_bps = strf->size;
-          strf->blockalign = strf->av_bps * strf->channels;
+          strf->blockalign = (strf->size * strf->channels) / 8;
+          strf->av_bps = strf->blockalign * strf->rate;
         }
       }
       rate_max = 48000;
@@ -999,14 +999,14 @@ gst_riff_create_audio_caps (guint16 codec_id,
           GST_WARNING ("invalid depth (%d) of mulaw audio, overwriting.",
               strf->size);
           strf->size = 8;
-          strf->av_bps = 8;
-          strf->blockalign = strf->av_bps * strf->channels;
+          strf->blockalign = (strf->size * strf->channels) / 8;
+          strf->av_bps = strf->blockalign * strf->rate;
         }
         if (strf->av_bps == 0 || strf->blockalign == 0) {
           GST_WARNING ("fixing av_bps (%d) and blockalign (%d) of mulaw audio",
               strf->av_bps, strf->blockalign);
-          strf->av_bps = strf->size;
-          strf->blockalign = strf->av_bps * strf->channels;
+          strf->blockalign = (strf->size * strf->channels) / 8;
+          strf->av_bps = strf->blockalign * strf->rate;
         }
       }
       rate_max = 48000;

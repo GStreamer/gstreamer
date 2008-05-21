@@ -656,7 +656,7 @@ gst_riff_parse_info (GstElement * element,
         type = GST_TAG_GENRE;
         break;
       case GST_RIFF_INFO_IKEY:
-        type = NULL; /*"Keywords"; */ ;
+        type = NULL;            /*"Keywords"; */
         break;
       case GST_RIFF_INFO_ILGT:
         type = NULL;            /*"Lightness"; */
