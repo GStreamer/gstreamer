@@ -753,6 +753,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
 
   switch (method) {
     case GST_VIDEO_SCALE_NEAREST:
+      GST_LOG_OBJECT (videoscale, "doing nearest scaling");
       switch (videoscale->format) {
         case GST_VIDEO_SCALE_RGBx:
         case GST_VIDEO_SCALE_xRGB:
@@ -796,6 +797,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
       }
       break;
     case GST_VIDEO_SCALE_BILINEAR:
+      GST_LOG_OBJECT (videoscale, "doing bilinear scaling");
       switch (videoscale->format) {
         case GST_VIDEO_SCALE_RGBx:
         case GST_VIDEO_SCALE_xRGB:
@@ -839,6 +841,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
       }
       break;
     case GST_VIDEO_SCALE_4TAP:
+      GST_LOG_OBJECT (videoscale, "doing 4tap scaling");
       switch (videoscale->format) {
         case GST_VIDEO_SCALE_I420:
         case GST_VIDEO_SCALE_YV12:

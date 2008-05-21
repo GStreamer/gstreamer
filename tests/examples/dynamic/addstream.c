@@ -239,9 +239,9 @@ main (int argc, char *argv[])
 
   /* start our actions while we are in the mainloop so that we can catch errors
    * and other messages. */
-  g_idle_add ((GSourceFunc) perform_step, GINT_TO_POINTER (0)),
-      /* go to main loop */
-      g_main_loop_run (loop);
+  g_idle_add ((GSourceFunc) perform_step, GINT_TO_POINTER (0));
+  /* go to main loop */
+  g_main_loop_run (loop);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 

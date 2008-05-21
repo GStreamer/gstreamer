@@ -2191,11 +2191,11 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
   if (GST_IS_XVIMAGE_BUFFER (buf)) {
-    GST_LOG_OBJECT (xvimagesink, "fast put of bufferpool buffer");
+    GST_LOG_OBJECT (xvimagesink, "fast put of bufferpool buffer %p", buf);
     if (!gst_xvimagesink_xvimage_put (xvimagesink, GST_XVIMAGE_BUFFER (buf)))
       goto no_window;
   } else {
-    GST_LOG_OBJECT (xvimagesink, "slow copy into bufferpool buffer");
+    GST_LOG_OBJECT (xvimagesink, "slow copy into bufferpool buffer %p", buf);
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
     if (!xvimagesink->xvimage) {

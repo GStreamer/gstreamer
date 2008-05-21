@@ -1166,7 +1166,7 @@ empty_header:
  *    output queue:    
  *
  * Then we decode each buffer in the decode queue in order and put the output
- * buffer in the output queue. The first buffer (7) will not produce and output
+ * buffer in the output queue. The first buffer (7) will not produce any output
  * because it needs the previous buffer (6) which did not arrive yet. This
  * yields:
  *
