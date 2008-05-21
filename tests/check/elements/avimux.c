@@ -65,7 +65,8 @@ setup_src_pad (GstElement * element,
   fail_if (srcpad == NULL, "Could not create a srcpad");
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
 
-  sinkpad = gst_element_get_pad (element, sinkname);
+  if (!(sinkpad = gst_element_get_static_pad (element, sinkname)))
+    sinkpad = gst_element_get_request_pad (element, sinkname);
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
   /* references are owned by: 1) us, 2) avimux, 3) collect pads */
@@ -92,7 +93,8 @@ teardown_src_pad (GstElement * element, gchar * sinkname)
   /* hm, avimux uses _00 as suffixes for padnames */
   padname = g_strdup (sinkname);
   memcpy (strchr (padname, '%'), "00", 2);
-  sinkpad = gst_element_get_pad (element, padname);
+  if (!(sinkpad = gst_element_get_static_pad (element, padname)))
+    sinkpad = gst_element_get_request_pad (element, padname);
   g_free (padname);
   /* pad refs held by 1) avimux 2) collectpads and 3) us (through _get) */
   ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);

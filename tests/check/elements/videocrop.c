@@ -40,7 +40,7 @@ video_crop_get_test_caps (GstElement * videocrop)
   GList *list = NULL;
   guint i;
 
-  srcpad = gst_element_get_pad (videocrop, "src");
+  srcpad = gst_element_get_static_pad (videocrop, "src");
   fail_unless (srcpad != NULL);
   allowed_caps = gst_pad_get_pad_template_caps (srcpad);
   fail_unless (allowed_caps != NULL);
@@ -464,7 +464,7 @@ GST_START_TEST (test_passthrough)
 
   g_object_set (ctx.src, "num-buffers", 1, NULL);
 
-  srcpad = gst_element_get_pad (ctx.src, "src");
+  srcpad = gst_element_get_static_pad (ctx.src, "src");
   fail_unless (srcpad != NULL);
   gst_pad_add_buffer_probe (srcpad, G_CALLBACK (buffer_probe_cb), &gen_buf);
   gst_object_unref (srcpad);

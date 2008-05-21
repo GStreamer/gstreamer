@@ -81,7 +81,7 @@ icydemux_found_pad (GstElement * src, GstPad * pad, gpointer data)
   /* sinkpad = gst_check_setup_sink_pad (icydemux, &sinktemplate, NULL); */
   sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   fail_if (sinkpad == NULL, "Couldn't create sinkpad");
-  srcpad = gst_element_get_pad (icydemux, "src");
+  srcpad = gst_element_get_static_pad (icydemux, "src");
   fail_if (srcpad == NULL, "Failed to get srcpad from icydemux");
   gst_pad_set_chain_function (sinkpad, gst_check_chain_func);
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
@@ -206,12 +206,12 @@ GST_START_TEST (test_first_buf_offset_when_merged_for_typefinding)
   push_data (buf1, G_N_ELEMENTS (buf1), icy_caps, 0);
 
   /* one byte isn't really enough for typefinding, can't have a srcpad yet */
-  fail_unless (gst_element_get_pad (icydemux, "src") == NULL);
+  fail_unless (gst_element_get_static_pad (icydemux, "src") == NULL);
 
   push_data (buf2, G_N_ELEMENTS (buf2), icy_caps, -1);
 
   /* should have been enough to create a audio/x-musepack source pad .. */
-  icy_srcpad = gst_element_get_pad (icydemux, "src");
+  icy_srcpad = gst_element_get_static_pad (icydemux, "src");
   fail_unless (icy_srcpad != NULL);
   gst_object_unref (icy_srcpad);
 

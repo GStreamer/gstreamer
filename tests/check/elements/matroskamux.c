@@ -67,7 +67,8 @@ setup_src_pad (GstElement * element,
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
   gst_pad_set_active (srcpad, TRUE);
 
-  sinkpad = gst_element_get_pad (element, "audio_%d");
+  if (!(sinkpad = gst_element_get_static_pad (element, "audio_%d")))
+    sinkpad = gst_element_get_request_pad (element, "audio_%d");
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
   /* references are owned by: 1) us, 2) matroskamux, 3) collect pads */
@@ -90,7 +91,8 @@ teardown_src_pad (GstElement * element)
   GstPad *srcpad, *sinkpad;
 
   /* clean up floating src pad */
-  sinkpad = gst_element_get_pad (element, "audio_0");
+  if (!(sinkpad = gst_element_get_static_pad (element, "audio_0")))
+    sinkpad = gst_element_get_request_pad (element, "audio_0");
   ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
   srcpad = gst_pad_get_peer (sinkpad);
 
@@ -120,7 +122,7 @@ setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
   fail_if (sinkpad == NULL, "Could not create a sinkpad");
   gst_pad_set_active (sinkpad, TRUE);
 
-  srcpad = gst_element_get_pad (element, "src");
+  srcpad = gst_element_get_static_pad (element, "src");
   fail_if (srcpad == NULL, "Could not get source pad from %s",
       GST_ELEMENT_NAME (element));
   if (caps)
@@ -141,7 +143,7 @@ teardown_sink_pad (GstElement * element)
   GstPad *srcpad, *sinkpad;
 
   /* clean up floating sink pad */
-  srcpad = gst_element_get_pad (element, "src");
+  srcpad = gst_element_get_static_pad (element, "src");
   sinkpad = gst_pad_get_peer (srcpad);
   gst_pad_unlink (srcpad, sinkpad);
 

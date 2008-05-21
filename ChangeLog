@@ -1,5 +1,19 @@
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* tests/check/elements/avimux.c: (setup_src_pad),
+	(teardown_src_pad):
+	* tests/check/elements/icydemux.c: (icydemux_found_pad),
+	(GST_START_TEST):
+	* tests/check/elements/matroskamux.c: (setup_src_pad),
+	(teardown_src_pad), (setup_sink_pad), (teardown_sink_pad):
+	* tests/check/elements/videocrop.c: (video_crop_get_test_caps),
+	(GST_START_TEST):
+	* tests/check/elements/wavpackparse.c: (wavpackparse_found_pad),
+	(setup_wavpackparse), (cleanup_wavpackparse):
+	Don't use gst_element_get_pad(), it's a bad, bad method.
+
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/gconf/gstgconfaudiosrc.c: (gst_gconf_audio_src_reset),
 	(do_toggle_element):
 	* ext/gconf/gstgconfvideosink.c: (gst_gconf_video_sink_reset),

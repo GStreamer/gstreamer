@@ -76,7 +76,7 @@ wavpackparse_found_pad (GstElement * src, GstPad * pad, gpointer data)
 
   mysinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   fail_if (mysinkpad == NULL, "Couldn't create sinkpad");
-  srcpad = gst_element_get_pad (wavpackparse, "src");
+  srcpad = gst_element_get_static_pad (wavpackparse, "src");
   fail_if (srcpad == NULL, "Failed to get srcpad from wavpackparse");
   gst_pad_set_chain_function (mysinkpad, gst_check_chain_func);
   fail_unless (gst_pad_link (srcpad, mysinkpad) == GST_PAD_LINK_OK,
@@ -98,7 +98,7 @@ setup_wavpackparse ()
   mysrcpad = gst_pad_new_from_static_template (&srctemplate, "src");
   fail_if (mysrcpad == NULL, "Could not create srcpad");
 
-  sinkpad = gst_element_get_pad (wavpackparse, "sink");
+  sinkpad = gst_element_get_static_pad (wavpackparse, "sink");
   fail_if (sinkpad == NULL, "Failed to get sinkpad from wavpackparse");
   fail_unless (gst_pad_link (mysrcpad, sinkpad) == GST_PAD_LINK_OK,
       "Failed to link pads");
@@ -126,14 +126,14 @@ cleanup_wavpackparse ()
   gst_element_set_bus (wavpackparse, NULL);
   gst_object_unref (GST_OBJECT (bus));
 
-  sinkpad = gst_element_get_pad (wavpackparse, "sink");
+  sinkpad = gst_element_get_static_pad (wavpackparse, "sink");
   fail_if (sinkpad == NULL, "Failed to get sinkpad from wavpackparse");
   fail_unless (gst_pad_unlink (mysrcpad, sinkpad), "Failed to unlink pads");
   gst_pad_set_caps (mysrcpad, NULL);
   gst_object_unref (sinkpad);
   gst_object_unref (mysrcpad);
 
-  srcpad = gst_element_get_pad (wavpackparse, "src");
+  srcpad = gst_element_get_static_pad (wavpackparse, "src");
   fail_if (srcpad == NULL, "Failed to get srcpad from wavpackparse");
   fail_unless (gst_pad_unlink (srcpad, mysinkpad), "Failed to unlink pads");
   gst_pad_set_caps (mysinkpad, NULL);
