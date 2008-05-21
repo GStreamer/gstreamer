@@ -135,12 +135,14 @@ gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
 
   /* Throw warning if we encounter an unusual 2-channel configuration,
    * at least until someone finds a reason why we should not */
+#if 0
   if (channels == 2 && (pos[0] != GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT ||
           pos[1] != GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT)) {
     g_warning ("channels=2 implies stereo, but channel positions are "
         "< %d, %d>", pos[0], pos[1]);
     return FALSE;
   }
+#endif
 
   return TRUE;
 }

@@ -1,5 +1,15 @@
 2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst-libs/gst/audio/multichannel.c:
+	(gst_audio_check_channel_positions):
+	Allow non-standard 2 channel layouts.
+	
+	* tests/check/elements/audioconvert.c: (GST_START_TEST):
+	Add some tests for converting and remapping non-standard 1 and 2
+	channel layouts.
+
+2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/audioconvert/gstchannelmix.c:
 	(gst_channel_mix_fill_normalize):
 	Prevent division by zero if the channel mix matrix contains only

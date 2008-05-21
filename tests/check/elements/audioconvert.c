@@ -827,6 +827,119 @@ GST_START_TEST (test_multichannel_conversion)
             TRUE));
   }
 
+  {
+    gint16 in[] = { 1, 2 };
+    gint16 out[] = { 1, 1, 2, 2 };
+    GstCaps *in_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstAudioChannelPosition in_layout[1] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO };
+    GstAudioChannelPosition out_layout[2] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+    };
+
+    set_channel_positions (in_caps, 1, in_layout);
+    set_channel_positions (out_caps, 2, out_layout);
+
+    RUN_CONVERSION ("1 channels to 2 with standard layout", in,
+        in_caps, out, out_caps);
+  }
+
+  {
+    gint16 in[] = { 1, 2 };
+    gint16 out[] = { 1, 0, 2, 0 };
+    GstCaps *in_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstAudioChannelPosition in_layout[1] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT };
+    GstAudioChannelPosition out_layout[2] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+    };
+
+    set_channel_positions (in_caps, 1, in_layout);
+    set_channel_positions (out_caps, 2, out_layout);
+
+    RUN_CONVERSION ("1 channels to 2 with non-standard layout", in,
+        in_caps, out, out_caps);
+  }
+
+  {
+    gint16 in[] = { 1, 2, 3, 4 };
+    gint16 out[] = { 2, 4 };
+    GstCaps *in_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstAudioChannelPosition in_layout[2] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+    };
+    GstAudioChannelPosition out_layout[1] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER };
+
+    set_channel_positions (in_caps, 2, in_layout);
+    set_channel_positions (out_caps, 1, out_layout);
+
+    RUN_CONVERSION ("2 channels to 1 with non-standard layout", in,
+        in_caps, out, out_caps);
+  }
+
+  {
+    gint16 in[] = { 1, 2, 3, 4 };
+    gint16 out[] = { 2, 4 };
+    GstCaps *in_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstAudioChannelPosition in_layout[2] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+    };
+    GstAudioChannelPosition out_layout[1] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO };
+
+    set_channel_positions (in_caps, 2, in_layout);
+    set_channel_positions (out_caps, 1, out_layout);
+
+    RUN_CONVERSION ("2 channels to 1 with standard layout", in,
+        in_caps, out, out_caps);
+  }
+
+  {
+    gint16 in[] = { 1, 2, 3, 4 };
+    gint16 out[] = { 2, 4 };
+    GstCaps *in_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstAudioChannelPosition in_layout[2] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_REAR_CENTER
+    };
+    GstAudioChannelPosition out_layout[1] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO };
+
+    set_channel_positions (in_caps, 2, in_layout);
+    set_channel_positions (out_caps, 1, out_layout);
+
+    RUN_CONVERSION ("2 channels to 1 with non-standard layout", in,
+        in_caps, out, out_caps);
+  }
+
+  {
+    gint16 in[] = { 1, 2, 3, 4 };
+    gint16 out[] = { 1, 3 };
+    GstCaps *in_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstAudioChannelPosition in_layout[2] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_REAR_LEFT
+    };
+    GstAudioChannelPosition out_layout[1] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO };
+
+    set_channel_positions (in_caps, 2, in_layout);
+    set_channel_positions (out_caps, 1, out_layout);
+
+    RUN_CONVERSION ("2 channels to 1 with non-standard layout", in,
+        in_caps, out, out_caps);
+  }
 }
 
 GST_END_TEST;
@@ -921,6 +1034,126 @@ GST_START_TEST (test_channel_remapping)
     GstCaps *out_caps = get_int_mc_caps (3, "BYTE_ORDER", 16, 16, TRUE, FALSE);
 
     RUN_CONVERSION ("3 channels layout remapping float32 --> int16", in,
+        in_caps, out, out_caps);
+  }
+
+  /* gint16 to gint16 with 2 channels and non-standard layout */
+  {
+    gint16 in[] = { 1, 2, 3, 4 };
+    gint16 out[] = { -1, 2, -2, 4 };
+    GstCaps *in_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstAudioChannelPosition in_layout[2] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_LFE
+    };
+    GstAudioChannelPosition out_layout[2] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+    };
+
+    set_channel_positions (in_caps, 2, in_layout);
+    set_channel_positions (out_caps, 2, out_layout);
+
+    RUN_CONVERSION ("2 channels layout remapping int16 --> int16", in,
+        in_caps, out, out_caps);
+  }
+
+  /* gint16 to gint16 with 2 channels and non-standard layout */
+  {
+    gint16 in[] = { 1, 2, 3, 4 };
+    gint16 out[] = { 2, 1, 4, 3 };
+    GstCaps *in_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstAudioChannelPosition in_layout[2] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT
+    };
+    GstAudioChannelPosition out_layout[2] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+    };
+
+    set_channel_positions (in_caps, 2, in_layout);
+    set_channel_positions (out_caps, 2, out_layout);
+
+    RUN_CONVERSION ("2 channels layout remapping int16 --> int16", in,
+        in_caps, out, out_caps);
+  }
+
+  /* gint16 to gint16 with 2 channels and non-standard layout */
+  {
+    gint16 in[] = { 1, 2, 3, 4 };
+    gint16 out[] = { -1, 2, -3, 4 };
+    GstCaps *in_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstAudioChannelPosition in_layout[2] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_REAR_CENTER
+    };
+    GstAudioChannelPosition out_layout[2] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+    };
+
+    set_channel_positions (in_caps, 2, in_layout);
+    set_channel_positions (out_caps, 2, out_layout);
+
+    RUN_CONVERSION ("2 channels layout remapping int16 --> int16", in,
+        in_caps, out, out_caps);
+  }
+
+  /* gint16 to gint16 with 1 channel and non-standard layout */
+  {
+    gint16 in[] = { 1, 2, 3, 4 };
+    gint16 out[] = { 0, 0, 0, 0 };
+    GstCaps *in_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstAudioChannelPosition in_layout[1] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT };
+    GstAudioChannelPosition out_layout[1] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT };
+
+    set_channel_positions (in_caps, 1, in_layout);
+    set_channel_positions (out_caps, 1, out_layout);
+
+    RUN_CONVERSION ("1 channels layout remapping int16 --> int16", in,
+        in_caps, out, out_caps);
+  }
+
+  /* gint16 to gint16 with 1 channel and non-standard layout */
+  {
+    gint16 in[] = { 1, 2, 3, 4 };
+    gint16 out[] = { 1, 2, 3, 4 };
+    GstCaps *in_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstAudioChannelPosition in_layout[1] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO };
+    GstAudioChannelPosition out_layout[1] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER };
+
+    set_channel_positions (in_caps, 1, in_layout);
+    set_channel_positions (out_caps, 1, out_layout);
+
+    RUN_CONVERSION ("1 channels layout remapping int16 --> int16", in,
+        in_caps, out, out_caps);
+  }
+
+  /* gint16 to gint16 with 1 channel and non-standard layout */
+  {
+    gint16 in[] = { 1, 2, 3, 4 };
+    gint16 out[] = { -1, -2, -3, -4 };
+    GstCaps *in_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstAudioChannelPosition in_layout[1] =
+        { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO };
+    GstAudioChannelPosition out_layout[1] =
+        { GST_AUDIO_CHANNEL_POSITION_REAR_LEFT };
+
+    set_channel_positions (in_caps, 1, in_layout);
+    set_channel_positions (out_caps, 1, out_layout);
+
+    RUN_CONVERSION ("1 channels layout remapping int16 --> int16", in,
         in_caps, out, out_caps);
   }
 }
