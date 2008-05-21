@@ -1,5 +1,13 @@
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* docs/manual/advanced-autoplugging.xml:
+	* docs/manual/basics-helloworld.xml:
+	* docs/manual/basics-pads.xml:
+	* docs/manual/highlevel-components.xml:
+	Avoid using a bad function in the example code.
+
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstclock.c: (gst_clock_set_calibration):
 	Fix debug of the new clock rate.
 

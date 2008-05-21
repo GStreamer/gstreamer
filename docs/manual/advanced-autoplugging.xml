@@ -366,7 +366,7 @@ close_link (GstPad      *srcpad,
     gst_bin_add (GST_BIN (pipeline), sinkelement);
     gst_element_set_state (sinkelement, GST_STATE_READY);
   }
-  pad = gst_element_get_pad (sinkelement, padname);
+  pad = gst_element_get_static_pad (sinkelement, padname);
   gst_pad_link (srcpad, pad);
   if (sinkelement != audiosink) {
     gst_element_set_state (sinkelement, GST_STATE_PAUSED);
@@ -386,7 +386,7 @@ close_link (GstPad      *srcpad,
 
     switch (templ->presence) {
       case GST_PAD_ALWAYS: {
-        GstPad *pad = gst_element_get_pad (sinkelement, templ->name_template);
+        GstPad *pad = gst_element_get_static_pad (sinkelement, templ->name_template);
         GstCaps *caps = gst_pad_get_caps (pad);
 
         /* link */
@@ -419,7 +419,7 @@ try_to_plug (GstPad        *pad,
   GstCaps *res, *audiocaps;
 
   /* don't plug if we're already plugged - FIXME: memleak for pad */
-  if (GST_PAD_IS_LINKED (gst_element_get_pad (audiosink, "sink"))) {
+  if (GST_PAD_IS_LINKED (gst_element_get_static_pad (audiosink, "sink"))) {
     g_print ("Omitting link for pad %s:%s because we're already linked\n",
 	     GST_OBJECT_NAME (parent), GST_OBJECT_NAME (pad));
     return;
@@ -434,7 +434,7 @@ try_to_plug (GstPad        *pad,
   }
 
   /* can it link to the audiopad? */
-  audiocaps = gst_pad_get_caps (gst_element_get_pad (audiosink, "sink"));
+  audiocaps = gst_pad_get_caps (gst_element_get_static_pad (audiosink, "sink"));
   res = gst_caps_intersect (caps, audiocaps);
   if (res &amp;&amp; !gst_caps_is_empty (res)) {
     g_print ("Found pad to link to audiosink - plugging is now done\n");
@@ -503,7 +503,7 @@ cb_typefound (GstElement *typefind,
   g_free (s);
 
   /* actually plug now */
-  pad = gst_element_get_pad (typefind, "src");
+  pad = gst_element_get_static_pad (typefind, "src");
   try_to_plug (pad, caps);
   gst_object_unref (GST_OBJECT (pad));
 }

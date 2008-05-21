@@ -243,7 +243,7 @@ cb_newpad (GstElement *decodebin,
   GstPad *audiopad;
 
   /* only link once */
-  audiopad = gst_element_get_pad (audio, "sink");
+  audiopad = gst_element_get_static_pad (audio, "sink");
   if (GST_PAD_IS_LINKED (audiopad)) {
     g_object_unref (audiopad);
     return;
@@ -299,7 +299,7 @@ main (gint   argc,
   /* create audio output */
   audio = gst_bin_new ("audiobin");
   conv = gst_element_factory_make ("audioconvert", "aconv");
-  audiopad = gst_element_get_pad (conv, "sink");
+  audiopad = gst_element_get_static_pad (conv, "sink");
   sink = gst_element_factory_make ("alsasink", "sink");
   gst_bin_add_many (GST_BIN (audio), conv, sink, NULL);
   gst_element_link (conv, sink);

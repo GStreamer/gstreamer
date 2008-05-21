@@ -656,7 +656,7 @@ main (int   argc,
   gst_bin_add (GST_BIN (bin), sink);
 
   /* add ghostpad */
-  pad = gst_element_get_pad (sink, "sink");
+  pad = gst_element_get_static_pad (sink, "sink");
   gst_element_add_pad (bin, gst_ghost_pad_new ("sink", pad));
   gst_object_unref (GST_OBJECT (pad));
 <!-- example-end ghostpad.c a -->
