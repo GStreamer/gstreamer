@@ -1,3 +1,10 @@
+2008-05-21  Julien Moutte  <julien@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (setup_dscp_client): Use IPPROTO_IP
+	instead of SOL_IP, works on more platforms.
+	* gst/typefind/gsttypefindfunctions.c: (aac_type_find): Fix printf
+	arguments.
+
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/vorbis/vorbisdec.c:

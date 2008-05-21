@@ -565,8 +565,8 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
     snc = GST_READ_UINT16_BE (c.data);
     if (G_UNLIKELY ((snc & 0xfff6) == 0xfff0)) {
       /* ADTS header - find frame length */
-      GST_DEBUG ("Found one ADTS syncpoint at offset 0x%x, tracing next...",
-          c.offset);
+      GST_DEBUG ("Found one ADTS syncpoint at offset 0x%" G_GINT64_MODIFIER
+          "x, tracing next...", c.offset);
       len = ((c.data[3] & 0x03) << 11) |
           (c.data[4] << 3) | ((c.data[5] & 0xe0) >> 5);
 
@@ -585,8 +585,8 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
 
         gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
         gst_caps_unref (caps);
-        GST_DEBUG ("Found second ADTS-%d syncpoint at offset 0x%x, framelen %u",
-            mpegversion, c.offset, len);
+        GST_DEBUG ("Found second ADTS-%d syncpoint at offset 0x%"
+            G_GINT64_MODIFIER "x, framelen %u", mpegversion, c.offset, len);
         break;
       }
 

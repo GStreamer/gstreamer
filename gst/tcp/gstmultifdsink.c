@@ -745,12 +745,13 @@ setup_dscp_client (GstMultiFdSink * sink, GstTCPClient * client)
   tos = (sink->qos_dscp & 0x3f) << 2;
   switch (af) {
     case AF_INET:
-      ret = setsockopt (client->fd.fd, SOL_IP, IP_TOS, &tos, sizeof (tos));
+      ret = setsockopt (client->fd.fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos));
       break;
     case AF_INET6:
 #ifdef IPV6_TCLASS
       ret =
-          setsockopt (client->fd.fd, SOL_IPV6, IPV6_TCLASS, &tos, sizeof (tos));
+          setsockopt (client->fd.fd, IPPROTO_IPV6, IPV6_TCLASS, &tos,
+          sizeof (tos));
       break;
 #endif
     default:
