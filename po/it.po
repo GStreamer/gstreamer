@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-10 15:06+0000\n"
+"POT-Creation-Date: 2008-05-10 16:16+0100\n"
 "PO-Revision-Date: 2008-02-09 22:16+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -15,26 +15,27 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/dvdnav/dvdnavsrc.c:1428
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
+msgid "Could not open DVD"
+msgstr "Impossibile aprire il DVD"
+
+#: ext/dvdnav/dvdnavsrc.c:1823
 msgid "Invalid title information on DVD."
 msgstr "Informazioni titolo non valide sul DVD."
 
-#: ext/dvdnav/dvdnavsrc.c:1598
+#: ext/dvdnav/dvdnavsrc.c:1969
 msgid "Could not read title information for DVD."
 msgstr "Impossibile leggere le informazioni sul titolo per il DVD."
 
-#: ext/dvdnav/dvdnavsrc.c:1604
+#: ext/dvdnav/dvdnavsrc.c:1991
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Apertura del device DVD «%s» fallita."
 
-#: ext/dvdnav/dvdnavsrc.c:1610
+#: ext/dvdnav/dvdnavsrc.c:1997
 msgid "Failed to set PGC based seeking."
 msgstr "Impostazione del posizionamento basato su PGC fallita."
-
-#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
-msgid "Could not open DVD"
-msgstr "Impossibile aprire il DVD"
 
 #: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
 #: ext/dvdread/dvdreadsrc.c:601
@@ -78,6 +79,6 @@ msgstr ""
 msgid "This stream contains no data."
 msgstr "Questo stream non contiene alcun dato."
 
-#: gst/asfdemux/gstasfdemux.c:3066
+#: gst/asfdemux/gstasfdemux.c:3111
 msgid "This file is encrypted and cannot be played."
 msgstr "Questo file è cifrato e non può essere riprodotto."

@@ -1,13 +1,14 @@
+# translation of gst-plugins-ugly-0.10.6.2.po to Español
 # spanish translation for gst-plugins-ugly
 # This file is put in the public domain.
 #
-# Jorge González González <aloriel@gmail.com>, 2007.
+# Jorge González González <aloriel@gmail.com>, 2007, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.6\n"
+"Project-Id-Version: gst-plugins-ugly-0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-10 15:06+0000\n"
-"PO-Revision-Date: 2007-09-15 15:17+0200\n"
+"POT-Creation-Date: 2008-05-10 16:16+0100\n"
+"PO-Revision-Date: 2008-03-01 17:47+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -16,26 +17,27 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
-#: ext/dvdnav/dvdnavsrc.c:1428
-msgid "Invalid title information on DVD."
-msgstr ""
-
-#: ext/dvdnav/dvdnavsrc.c:1598
-msgid "Could not read title information for DVD."
-msgstr ""
-
-#: ext/dvdnav/dvdnavsrc.c:1604
-#, fuzzy, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "No se pudo abrir el título %d del DVD"
-
-#: ext/dvdnav/dvdnavsrc.c:1610
-msgid "Failed to set PGC based seeking."
-msgstr ""
-
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "No se pudo abrir el DVD"
+
+#: ext/dvdnav/dvdnavsrc.c:1823
+msgid "Invalid title information on DVD."
+msgstr "Información del título del DVD no válida."
+
+#: ext/dvdnav/dvdnavsrc.c:1969
+msgid "Could not read title information for DVD."
+msgstr "No se pudo leer la información del título para el DVD."
+
+#: ext/dvdnav/dvdnavsrc.c:1991
+#, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "Falló abrir el dispositivo DVD «%s»."
+
+#: ext/dvdnav/dvdnavsrc.c:1997
+msgid "Failed to set PGC based seeking."
+msgstr "Falló al establecer la búsqueda basada en PGC."
 
 #: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
 #: ext/dvdread/dvdreadsrc.c:601
@@ -76,6 +78,6 @@ msgstr ""
 msgid "This stream contains no data."
 msgstr "Este medio no contiene datos."
 
-#: gst/asfdemux/gstasfdemux.c:3066
+#: gst/asfdemux/gstasfdemux.c:3111
 msgid "This file is encrypted and cannot be played."
 msgstr "Este archivo está cifrado y no se puede reproducir."

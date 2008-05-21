@@ -1,13 +1,14 @@
 # Hungarian translation of gst-plugins-ugly
-# This file is put in the public domain.
+# This file is distributed under the same license as the gst-plugins-ugly package.
+# Copyright (C) 2007, 2008 Free Software Foundation, Inc.
 #
-# Gabor Kelemen <kelemeng@gnome.hu>, 2007.
+# Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.6\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.7.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-10 15:06+0000\n"
-"PO-Revision-Date: 2007-07-27 21:18+0200\n"
+"POT-Creation-Date: 2008-05-10 16:16+0100\n"
+"PO-Revision-Date: 2008-05-12 03:28+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -16,26 +17,27 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
-#: ext/dvdnav/dvdnavsrc.c:1428
-msgid "Invalid title information on DVD."
-msgstr ""
-
-#: ext/dvdnav/dvdnavsrc.c:1598
-msgid "Could not read title information for DVD."
-msgstr ""
-
-#: ext/dvdnav/dvdnavsrc.c:1604
-#, fuzzy, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Nem nyitható meg a(z) %d. DVD cím"
-
-#: ext/dvdnav/dvdnavsrc.c:1610
-msgid "Failed to set PGC based seeking."
-msgstr ""
-
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "A DVD nem nyitható meg"
+
+#: ext/dvdnav/dvdnavsrc.c:1823
+msgid "Invalid title information on DVD."
+msgstr "A DVD címinformációi érvénytelenek."
+
+#: ext/dvdnav/dvdnavsrc.c:1969
+msgid "Could not read title information for DVD."
+msgstr "A DVD címinformációi nem olvashatók."
+
+#: ext/dvdnav/dvdnavsrc.c:1991
+#, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "Nem nyitható meg a DVD eszköz („%s”)."
+
+#: ext/dvdnav/dvdnavsrc.c:1997
+msgid "Failed to set PGC based seeking."
+msgstr "A PGC alapú keresés beállítása meghiúsult."
 
 #: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
 #: ext/dvdread/dvdreadsrc.c:601
@@ -68,13 +70,13 @@ msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
-"A kért %d kbit/mp bitsebesség nem engedélyezett a(z) \"%s\" tulajdonsághoz. "
-"A bitsebesség módosítva %d kbit/mp-re."
+"A kért %d kbit/s bitsebesség nem engedélyezett a(z) „%s” tulajdonsághoz. A "
+"bitsebesség módosítva %d kbit/s-re."
 
 #: gst/asfdemux/gstasfdemux.c:328
 msgid "This stream contains no data."
 msgstr "Ez az adatfolyam nem tartalmaz adatokat."
 
-#: gst/asfdemux/gstasfdemux.c:3066
+#: gst/asfdemux/gstasfdemux.c:3111
 msgid "This file is encrypted and cannot be played."
 msgstr "Ez a fájl titkosítva van és nem játszható le."

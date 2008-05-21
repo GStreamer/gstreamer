@@ -1,287 +1,81 @@
-# Messages français pour GNU gst-plugins.
-# Copyright © 2004 Free Software Foundation, Inc.
-# This file is put in the public domain.
-# Michel Robitaille <robitail@IRO.UMontreal.CA>, traducteur depuis/since 1996.
+# Translation of gst-plugins-ugly to French
+# Copyright (C) 2003-2008 GStreamer core team
+# This file is distributed under the same license as the gst-plugins-ugly package.
+#
+# Claude Paroz <claude@2xlibre.net>, 2008.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: GNU gst-plugins 0.8.3\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-02 13:00+0200\n"
-"PO-Revision-Date: 2004-08-03 12:00-0500\n"
-"Last-Translator: Michel Robitaille <robitail@IRO.UMontreal.CA>\n"
+"POT-Creation-Date: 2008-05-10 16:16+0100\n"
+"PO-Revision-Date: 2008-04-14 21:49+0200\n"
+"Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-1\n"
-"Content-Transfer-Encoding: 8-bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
+msgid "Could not open DVD"
+msgstr "Impossible d'ouvrir le DVD"
+
+#: ext/dvdnav/dvdnavsrc.c:1823
+msgid "Invalid title information on DVD."
+msgstr "Le DVD contient des informations de titre non valides."
+
+#: ext/dvdnav/dvdnavsrc.c:1969
+msgid "Could not read title information for DVD."
+msgstr "Impossible de lire les informations de titre sur le DVD."
+
+#: ext/dvdnav/dvdnavsrc.c:1991
 #, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Ne peut ouvrir le fichier \"%s\" en écriture."
+msgid "Failed to open DVD device '%s'."
+msgstr "L'ouverture du lecteur DVD Â«Â %sÂ Â» a Ã©chouÃ©."
 
-#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
+#: ext/dvdnav/dvdnavsrc.c:1997
+msgid "Failed to set PGC based seeking."
+msgstr "La dÃ©finition du positionnement basÃ© sur PGC a Ã©chouÃ©."
+
+#: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
+#: ext/dvdread/dvdreadsrc.c:601
 #, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Erreur de fermeture du fichier \"%s\"."
+msgid "Could not open DVD title %d"
+msgstr "Impossible d'ouvrir le titre %d du DVD"
 
-#: ext/audiofile/gstafsrc.c:320
+#: ext/dvdread/dvdreadsrc.c:248
 #, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Ne peut ouvrir le fichier \"%s\" en lecture."
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "Impossible d'aller au chapitre %d du titre %d du DVD"
 
-#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
-msgid "Could not open CD device for reading."
-msgstr "Ne peut ouvrir le périphérique pour CD en lecture."
-
-#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
+#: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid "Could not open vfs file \"%s\" for reading."
-msgstr "Ne peut ouvrir le fichier VFS \"%s\" en lecture."
-
-#: ext/gnomevfs/gstgnomevfssink.c:344
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Ne peut ouvrir le fichier vfs \"%s\" en écriture: %s."
-
-#: ext/gnomevfs/gstgnomevfssink.c:351
-msgid "No filename given"
-msgstr "Aucun nom de fichier fourni"
-
-#: ext/gnomevfs/gstgnomevfssink.c:377
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "Ne peut fermer le fichier VFS \"%s\"."
-
-#: ext/sndfile/gstsf.c:582
-msgid "No filename specified."
-msgstr "Aucun nom de fichier spécifié."
-
-#: ext/sndfile/gstsf.c:835
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Ne peut écrire au fichier \"%s\"."
-
-#: gst/avi/gstavimux.c:1052
-msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Aucun signal audio ou signal audio invalide, Stream AVI sera corrompu."
-
-#: gst-libs/gst/play/play.c:110
-#, c-format
-msgid "The %s element could not be found. This element is essential for playback. Please install the right plug-in and verify that it works by running 'gst-inspect %s'"
-msgstr "L'élément %s n'a pu être trouvé. Cet élément est essentiel pour la ré-écoute. SVP installer le plugin adéquat et vérifier qu'il fonctionne en exécutant 'gst-inspect %s'"
-
-#: gst-libs/gst/play/play.c:139
 msgid ""
-"No usable colorspace element could be found.\n"
-"Please install one and restart."
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
 msgstr ""
-"L'élément de d'espace de couleurs n'a pu être retrouvé.\n"
-"SVP l'installer et re-démarrer."
+"Impossible d'ouvrir le titre %d du DVD. Les titres interactifs ne sont pas "
+"pris en charge par cet Ã©lÃ©ment"
 
-#: sys/dxr3/dxr3audiosink.c:298
+#: ext/lame/gstlame.c:581
+msgid "Failed to configure LAME encoder. Check your encoding parameters."
+msgstr ""
+"La configuration du codeur LAME a Ã©chouÃ©. VÃ©rifiez vos paramÃ¨tres de codage."
+
+#: ext/lame/gstlame.c:715
 #, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "Ne peut ouvrir le périphérique audio \"%s\" en écriture."
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"Le dÃ©bit binaire demandÃ© de %dÂ kbit/s pour la propriÃ©tÃ© Â«Â %sÂ Â» n'est pas "
+"autorisÃ©. Le dÃ©bit binaire a Ã©tÃ© dÃ©fini Ã  %dÂ kbits/s."
 
-#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "Ne peut ouvrir le périphérique de contrôle \"%s\" en écriture."
+#: gst/asfdemux/gstasfdemux.c:328
+msgid "This stream contains no data."
+msgstr "Ce flux ne contient aucune donnÃ©e."
 
-#: sys/dxr3/dxr3audiosink.c:343
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "Ne peut configurer le périphérique audio \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Ne peut initialiser le périphérique audio \"%s\" à la fréquence de %dHz."
-
-#: sys/dxr3/dxr3audiosink.c:422
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "Ne peut fermer le périphérique audio \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "Ne peut fermer le périphérique de contrôle \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:271
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "Ne peut ouvrir le périphérique vidéo \"%s\" en écriture."
-
-#: sys/dxr3/dxr3videosink.c:301
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "Ne peut fermer le périphérique vidéo \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "Ne peut écrire sur le périphérique \"%s\"."
-
-#: sys/oss/gstosselement.c:725
-#, c-format
-msgid "OSS device \"%s\" is already in use by another program."
-msgstr "Le périphérique OSS \"%s\" est déjà utilisé par un autre programme."
-
-#: sys/oss/gstosselement.c:732 sys/oss/gstosselement.c:736
-#, c-format
-msgid "Could not access device \"%s\", check its permissions."
-msgstr "Ne peut accéder au périphérique \"%s\", vérifer les permissions d'accès."
-
-#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Périphérique \"%s\" n'existe pas."
-
-#: sys/oss/gstosselement.c:750
-#, c-format
-msgid "Could not open device \"%s\" for writing."
-msgstr "Ne peut ouvrir le périphérique \"%s\" en écriture."
-
-#: sys/oss/gstosselement.c:754
-#, c-format
-msgid "Could not open device \"%s\" for reading."
-msgstr "Ne peut ouvrir le périphérique \"%s\" en lecture."
-
-#: sys/oss/gstosselement.c:1131
-msgid "Your OSS device could not be probed correctly"
-msgstr "Votre périphérique OSS n'a pu être scruté correctement"
-
-#: sys/oss/gstossmixer.c:98
-msgid "Volume"
-msgstr "Volume"
-
-#: sys/oss/gstossmixer.c:100
-msgid "Bass"
-msgstr "Basse"
-
-#: sys/oss/gstossmixer.c:102
-msgid "Treble"
-msgstr "Tremolo"
-
-#: sys/oss/gstossmixer.c:104
-msgid "Synth"
-msgstr "Synth"
-
-#: sys/oss/gstossmixer.c:106
-msgid "PCM"
-msgstr "PCM"
-
-#: sys/oss/gstossmixer.c:108
-msgid "Speaker"
-msgstr "Haut-parleur"
-
-#: sys/oss/gstossmixer.c:110
-msgid "Line-in"
-msgstr "En-ligne"
-
-#: sys/oss/gstossmixer.c:112
-msgid "Microphone"
-msgstr "Microphone"
-
-#: sys/oss/gstossmixer.c:114
-msgid "CD"
-msgstr "CD"
-
-#: sys/oss/gstossmixer.c:116
-msgid "Mixer"
-msgstr "Mixeur"
-
-#: sys/oss/gstossmixer.c:118
-msgid "PCM-2"
-msgstr "PCM-2"
-
-#: sys/oss/gstossmixer.c:120
-msgid "Record"
-msgstr "Enregistrer"
-
-#: sys/oss/gstossmixer.c:122
-msgid "In-gain"
-msgstr "Gain à l'entrée"
-
-#: sys/oss/gstossmixer.c:124
-msgid "Out-gain"
-msgstr "Gain à la sortie"
-
-#: sys/oss/gstossmixer.c:126
-msgid "Line-1"
-msgstr "Ligne #1"
-
-#: sys/oss/gstossmixer.c:128
-msgid "Line-2"
-msgstr "Ligne #2"
-
-#: sys/oss/gstossmixer.c:130
-msgid "Line-3"
-msgstr "Ligne #3"
-
-#: sys/oss/gstossmixer.c:132
-msgid "Digital-1"
-msgstr "Digital #1"
-
-#: sys/oss/gstossmixer.c:134
-msgid "Digital-2"
-msgstr "Digital #2"
-
-#: sys/oss/gstossmixer.c:136
-msgid "Digital-3"
-msgstr "Digital #3"
-
-#: sys/oss/gstossmixer.c:138
-msgid "Phone-in"
-msgstr "Phone in"
-
-#: sys/oss/gstossmixer.c:140
-msgid "Phone-out"
-msgstr "Phone out"
-
-#: sys/oss/gstossmixer.c:142
-msgid "Video"
-msgstr "Vidéo"
-
-#: sys/oss/gstossmixer.c:144
-msgid "Radio"
-msgstr "Radio"
-
-#: sys/oss/gstossmixer.c:146
-msgid "Monitor"
-msgstr "Moniteur"
-
-#: sys/v4l/v4l_calls.c:158
-msgid "No device specified."
-msgstr "Aucun périphérique spécifié."
-
-#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Ne peut ouvrire le périphérique \"%s\" en lecture et en écriture."
-
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Le périphérique n'est pas ouvert."
-
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Le périphérique est ouvert."
-
-#: sys/v4l2/v4l2_calls.c:411
-#, c-format
-msgid "Device \"%s\" is not a capture device."
-msgstr "Le périphérique \"%s\" n'est pas un périphérique de capture."
-
-#: sys/v4l2/v4l2src_calls.c:255
-#, c-format
-msgid "Could not get buffers from device \"%s\"."
-msgstr "Ne peut obtenir de tampons à partir du périphérique \"%s\"."
-
-#: sys/v4l2/v4l2src_calls.c:264
-#, c-format
-msgid "Could not get enough buffers from device \"%s\"."
-msgstr "Ne peut obtenir des tampons suffisants à partir du périphérique \"%s\"."
+#: gst/asfdemux/gstasfdemux.c:3111
+msgid "This file is encrypted and cannot be played."
+msgstr "Ce fichier est chiffrÃ© et ne peut pas Ãªtre lu."

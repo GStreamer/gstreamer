@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-10 15:06+0000\n"
+"POT-Creation-Date: 2008-05-10 16:16+0100\n"
 "PO-Revision-Date: 2007-07-05 11:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -17,26 +17,27 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
 "10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/dvdnav/dvdnavsrc.c:1428
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
+msgid "Could not open DVD"
+msgstr "Не вдається відкрити DVD"
+
+#: ext/dvdnav/dvdnavsrc.c:1823
 msgid "Invalid title information on DVD."
 msgstr ""
 
-#: ext/dvdnav/dvdnavsrc.c:1598
+#: ext/dvdnav/dvdnavsrc.c:1969
 msgid "Could not read title information for DVD."
 msgstr ""
 
-#: ext/dvdnav/dvdnavsrc.c:1604
+#: ext/dvdnav/dvdnavsrc.c:1991
 #, fuzzy, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Не вдається відкрити заголовок DVD %d"
 
-#: ext/dvdnav/dvdnavsrc.c:1610
+#: ext/dvdnav/dvdnavsrc.c:1997
 msgid "Failed to set PGC based seeking."
 msgstr ""
-
-#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
-msgid "Could not open DVD"
-msgstr "Не вдається відкрити DVD"
 
 #: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
 #: ext/dvdread/dvdreadsrc.c:601
@@ -75,6 +76,6 @@ msgstr ""
 msgid "This stream contains no data."
 msgstr "Потік не містить даних."
 
-#: gst/asfdemux/gstasfdemux.c:3066
+#: gst/asfdemux/gstasfdemux.c:3111
 msgid "This file is encrypted and cannot be played."
 msgstr "Файл зашифрований та не може бути відтворений."

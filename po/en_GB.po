@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-10 15:06+0000\n"
+"POT-Creation-Date: 2008-05-10 16:16+0100\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -14,26 +14,27 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/dvdnav/dvdnavsrc.c:1428
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
+msgid "Could not open DVD"
+msgstr ""
+
+#: ext/dvdnav/dvdnavsrc.c:1823
 msgid "Invalid title information on DVD."
 msgstr ""
 
-#: ext/dvdnav/dvdnavsrc.c:1598
+#: ext/dvdnav/dvdnavsrc.c:1969
 #, fuzzy
 msgid "Could not read title information for DVD."
 msgstr "Could not write to file \"%s\"."
 
-#: ext/dvdnav/dvdnavsrc.c:1604
+#: ext/dvdnav/dvdnavsrc.c:1991
 #, fuzzy, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Could not close vfs file \"%s\"."
 
-#: ext/dvdnav/dvdnavsrc.c:1610
+#: ext/dvdnav/dvdnavsrc.c:1997
 msgid "Failed to set PGC based seeking."
-msgstr ""
-
-#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
-msgid "Could not open DVD"
 msgstr ""
 
 #: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
@@ -69,7 +70,7 @@ msgstr ""
 msgid "This stream contains no data."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:3066
+#: gst/asfdemux/gstasfdemux.c:3111
 msgid "This file is encrypted and cannot be played."
 msgstr ""
 

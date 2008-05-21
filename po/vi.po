@@ -1,14 +1,14 @@
 # Vietnamese translation for GST Plugins Ugly.
 # Copyright © 2008 Free Software Foundation, Inc.
-# This file is distributed under the same license as the gst-plugins-ugly-0.10.6.2 package.
+# This file is distributed under the same license as the gst-plugins-ugly-0.10.7.2 package.
 # Clytie Siddall <clytie@riverland.net.au>, 2007-2008.
-# 
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.6.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.7.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-02-10 15:06+0000\n"
-"PO-Revision-Date: 2008-02-10 17:59+1030\n"
+"POT-Creation-Date: 2008-05-10 16:16+0100\n"
+"PO-Revision-Date: 2008-05-11 20:55+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -17,26 +17,27 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.7b3\n"
 
-#: ext/dvdnav/dvdnavsrc.c:1428
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
+msgid "Could not open DVD"
+msgstr "Không thể mở đĩa DVD"
+
+#: ext/dvdnav/dvdnavsrc.c:1823
 msgid "Invalid title information on DVD."
 msgstr "Đĩa DVD có thông tin tựa đề sai."
 
-#: ext/dvdnav/dvdnavsrc.c:1598
+#: ext/dvdnav/dvdnavsrc.c:1969
 msgid "Could not read title information for DVD."
 msgstr "Không thể đọc thông tin tựa đề đối với đĩa DVD."
 
-#: ext/dvdnav/dvdnavsrc.c:1604
+#: ext/dvdnav/dvdnavsrc.c:1991
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Lỗi mở thiết bị đĩa DVD « %s »."
 
-#: ext/dvdnav/dvdnavsrc.c:1610
+#: ext/dvdnav/dvdnavsrc.c:1997
 msgid "Failed to set PGC based seeking."
 msgstr "Lỗi đặt cách tìm nơi dựa vào PGC."
-
-#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
-msgid "Could not open DVD"
-msgstr "Không thể mở đĩa DVD"
 
 #: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
 #: ext/dvdread/dvdreadsrc.c:601
@@ -73,6 +74,6 @@ msgstr ""
 msgid "This stream contains no data."
 msgstr "Luồng này không chứa dữ liệu."
 
-#: gst/asfdemux/gstasfdemux.c:3066
+#: gst/asfdemux/gstasfdemux.c:3111
 msgid "This file is encrypted and cannot be played."
 msgstr "Tập tin này bị mật mã nên không chạy được."
