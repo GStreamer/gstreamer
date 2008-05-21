@@ -1206,8 +1206,12 @@ gst_live_adder_loop (gpointer data)
    */
   if (GST_CLOCK_TIME_IS_VALID (adder->next_timestamp) &&
       GST_BUFFER_TIMESTAMP (buffer) != adder->next_timestamp) {
-    if (llabs (GST_BUFFER_TIMESTAMP (buffer) - adder->next_timestamp) <
-        GST_SECOND / adder->rate) {
+    GstClockTimeDiff diff = GST_CLOCK_DIFF (GST_BUFFER_TIMESTAMP (buffer),
+        adder->next_timestamp);
+    if (diff < 0)
+      diff = -diff;
+
+    if (diff < GST_SECOND / adder->rate) {
       GST_BUFFER_TIMESTAMP (buffer) = adder->next_timestamp;
       GST_DEBUG_OBJECT (adder, "Correcting slight skew");
       GST_BUFFER_FLAG_UNSET(buffer, GST_BUFFER_FLAG_DISCONT);
