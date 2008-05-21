@@ -80,10 +80,13 @@ enum
 #define DEFAULT_CLOSEFD            TRUE
 #define DEFAULT_SOCK               -1
 #define DEFAULT_CLIENTS            NULL
+/* FIXME, this should be disabled by default, we don't need to join a multicast
+ * group for sending, if this socket is also used for receiving, it should
+ * be configured in the element that does the receive. */
 #define DEFAULT_AUTO_MULTICAST     TRUE
 #define DEFAULT_TTL                64
 #define DEFAULT_LOOP               TRUE
-#define DEFAULT_QOS_DSCP           0
+#define DEFAULT_QOS_DSCP           -1
 
 enum
 {
@@ -307,9 +310,9 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
           "Used for setting the multicast loop parameter. TRUE = enable,"
           " FALSE = disable", DEFAULT_LOOP, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QOS_DSCP,
-      g_param_spec_uint ("qos-dscp", "QoS diff srv code point",
-          "Quality of Service, differentiated services code point", 0, 63,
-          DEFAULT_QOS_DSCP, G_PARAM_READWRITE));
+      g_param_spec_int ("qos-dscp", "QoS diff srv code point",
+          "Quality of Service, differentiated services code point (-1 default)",
+          -1, 63, DEFAULT_QOS_DSCP, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
@@ -480,6 +483,10 @@ static void
 gst_multiudpsink_setup_qos_dscp (GstMultiUDPSink * sink)
 {
   gint tos;
+
+  /* don't touch on -1 */
+  if (sink->qos_dscp < 0)
+    return;
 
   if (sink->sock < 0)
     return;
@@ -667,14 +674,18 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
   g_get_current_time (&now);
   client->connect_time = GST_TIMEVAL_TO_TIME (now);
 
-  /* check if its a multicast address */
-  if (*client->sock > 0 && gst_udp_is_multicast (&client->theiraddr) &&
-      sink->auto_multicast) {
-    GST_DEBUG_OBJECT (sink, "multicast address detected");
-    gst_udp_join_group (*(client->sock), sink->loop, sink->ttl,
-        &client->theiraddr);
-  } else {
-    GST_DEBUG_OBJECT (sink, "normal address detected");
+  if (*client->sock > 0) {
+    /* check if its a multicast address */
+    if (gst_udp_is_multicast (&client->theiraddr)) {
+      GST_DEBUG_OBJECT (sink, "multicast address detected");
+      if (sink->auto_multicast) {
+        GST_DEBUG_OBJECT (sink, "joining multicast group");
+        gst_udp_join_group (*(client->sock), sink->loop, sink->ttl,
+            &client->theiraddr);
+      }
+    } else {
+      GST_DEBUG_OBJECT (sink, "normal address detected");
+    }
   }
 
   if (lock)

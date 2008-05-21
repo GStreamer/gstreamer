@@ -73,7 +73,7 @@ struct _GstMultiUDPSink {
   gboolean       auto_multicast;
   gint           ttl;
   gboolean       loop;
-  guint          qos_dscp;
+  gint           qos_dscp;
 };
 
 struct _GstMultiUDPSinkClass {

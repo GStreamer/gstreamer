@@ -1,5 +1,14 @@
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init),
+	(gst_multiudpsink_setup_qos_dscp), (gst_multiudpsink_add_internal):
+	* gst/udp/gstmultiudpsink.h:
+	Add a fixme for the auto-multicast property.
+	Fix some confusing debug messages.
+	Disable setting a qos value by default.
+
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Gustaf Räntilä <g dot rantila at gmail dot com>
 
 	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_render):
@@ -14,7 +23,7 @@
 	(gst_multiudpsink_set_property), (gst_multiudpsink_get_property),
 	(gst_multiudpsink_init_send), (gst_multiudpsink_add_internal):
 	* gst/udp/gstmultiudpsink.h:
-	Add qos-dscp property to manage the Quality of service.
+	Add qos-dscp property to manage the Quality of service. Fixes #469917.
 
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
