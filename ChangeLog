@@ -1,3 +1,10 @@
+2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/audioconvert/gstchannelmix.c: (gst_channel_mix_fill_others):
+	Add support for mixing GST_AUDIO_CHANNEL_POSITION_SIDE_* from/to
+	other channel positions when source has SIDE channels and dest doesn't
+	or the other way around.
+
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Henrik Eriksson <henriken at axis dot com>

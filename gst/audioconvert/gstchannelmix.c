@@ -276,6 +276,10 @@ gst_channel_mix_fill_one_other (gfloat ** matrix,
 #define RATIO_FRONT_BASS (1.0)
 #define RATIO_REAR_BASS (1.0 / sqrt (2.0))
 #define RATIO_CENTER_BASS (1.0 / sqrt (2.0))
+#define RATIO_SIDE_BASS (1.0 / sqrt (2.0))
+#define RATIO_FRONT_SIDE (1.0 / sqrt (2.0))
+#define RATIO_REAR_SIDE (1.0 / sqrt (2.0))
+#define RATIO_CENTER_SIDE (1.0 / 2.0)
 
 static void
 gst_channel_mix_fill_others (AudioConvertCtx * this)
@@ -388,6 +392,17 @@ gst_channel_mix_fill_others (AudioConvertCtx * this)
           GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
           GST_AUDIO_CHANNEL_POSITION_REAR_CENTER, RATIO_REAR_BASS);
     }
+    if (out_has_side) {
+      gst_channel_mix_fill_one_other (this->matrix,
+          &this->in, in_b,
+          GST_AUDIO_CHANNEL_POSITION_INVALID,
+          GST_AUDIO_CHANNEL_POSITION_INVALID,
+          GST_AUDIO_CHANNEL_POSITION_LFE,
+          &this->out, out_r,
+          GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+          GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+          GST_AUDIO_CHANNEL_POSITION_INVALID, RATIO_SIDE_BASS);
+    }
   } else if (!in_has_bass && out_has_bass) {
     if (in_has_front) {
       gst_channel_mix_fill_one_other (this->matrix,
@@ -422,9 +437,88 @@ gst_channel_mix_fill_others (AudioConvertCtx * this)
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_LFE, RATIO_REAR_BASS);
     }
+    if (in_has_side) {
+      gst_channel_mix_fill_one_other (this->matrix,
+          &this->in, in_r,
+          GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+          GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+          GST_AUDIO_CHANNEL_POSITION_INVALID,
+          &this->out, out_b,
+          GST_AUDIO_CHANNEL_POSITION_INVALID,
+          GST_AUDIO_CHANNEL_POSITION_INVALID,
+          GST_AUDIO_CHANNEL_POSITION_LFE, RATIO_REAR_BASS);
+    }
   }
 
-  /* FIXME: side */
+  /* front/side */
+  if (!in_has_side && in_has_front && out_has_side) {
+    gst_channel_mix_fill_one_other (this->matrix,
+        &this->in, in_f,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_MONO,
+        &this->out, out_r,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_INVALID, RATIO_FRONT_SIDE);
+  } else if (in_has_side && !out_has_side && out_has_front) {
+    gst_channel_mix_fill_one_other (this->matrix,
+        &this->in, in_r,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        &this->out, out_f,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_MONO, RATIO_FRONT_SIDE);
+  }
+
+  /* rear/side */
+  if (!in_has_side && in_has_rear && out_has_side) {
+    gst_channel_mix_fill_one_other (this->matrix,
+        &this->in, in_f,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+        &this->out, out_r,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_INVALID, RATIO_REAR_SIDE);
+  } else if (in_has_side && !out_has_side && out_has_rear) {
+    gst_channel_mix_fill_one_other (this->matrix,
+        &this->in, in_r,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        &this->out, out_f,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER, RATIO_REAR_SIDE);
+  }
+
+  /* center/side */
+  /* FIXME: should center<->side have influence on eachother? */
+  if (!in_has_side && in_has_center && out_has_side) {
+    gst_channel_mix_fill_one_other (this->matrix,
+        &this->in, in_f,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        &this->out, out_r,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_INVALID, RATIO_CENTER_SIDE);
+  } else if (in_has_side && !out_has_side && out_has_center) {
+    gst_channel_mix_fill_one_other (this->matrix,
+        &this->in, in_r,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        &this->out, out_f,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER, RATIO_CENTER_SIDE);
+  }
 }
 
 /*
