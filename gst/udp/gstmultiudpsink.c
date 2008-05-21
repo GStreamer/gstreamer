@@ -83,6 +83,7 @@ enum
 #define DEFAULT_AUTO_MULTICAST     TRUE
 #define DEFAULT_TTL                64
 #define DEFAULT_LOOP               TRUE
+#define DEFAULT_QOS_DSCP           0
 
 enum
 {
@@ -95,8 +96,9 @@ enum
   PROP_CLIENTS,
   PROP_AUTO_MULTICAST,
   PROP_TTL,
-  PROP_LOOP
-      /* FILL ME */
+  PROP_LOOP,
+  PROP_QOS_DSCP,
+  PROP_LAST
 };
 
 #define CLOSE_IF_REQUESTED(udpctx)                                        \
@@ -304,6 +306,10 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
       g_param_spec_boolean ("loop", "Multicast Loopback",
           "Used for setting the multicast loop parameter. TRUE = enable,"
           " FALSE = disable", DEFAULT_LOOP, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QOS_DSCP,
+      g_param_spec_uint ("qos-dscp", "QoS diff srv code point",
+          "Quality of Service, differentiated services code point", 0, 63,
+          DEFAULT_QOS_DSCP, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
@@ -330,6 +336,7 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   sink->auto_multicast = DEFAULT_AUTO_MULTICAST;
   sink->ttl = DEFAULT_TTL;
   sink->loop = DEFAULT_LOOP;
+  sink->qos_dscp = DEFAULT_QOS_DSCP;
 }
 
 static void
@@ -466,6 +473,29 @@ gst_multiudpsink_get_clients_string (GstMultiUDPSink * sink)
 }
 
 static void
+gst_multiudpsink_setup_qos_dscp (GstMultiUDPSink * sink)
+{
+  gint tos;
+
+  if (sink->sock < 0)
+    return;
+
+  GST_DEBUG_OBJECT (sink, "setting TOS to %d", sink->qos_dscp);
+
+  /* Extract and shift 6 bits of DSFIELD */
+  tos = (sink->qos_dscp & 0x3f) << 2;
+
+  if (setsockopt (sink->sock, SOL_IP, IP_TOS, &tos, sizeof (tos)) < 0) {
+    GST_ERROR_OBJECT (sink, "could not set TOS: %s", g_strerror (errno));
+  }
+#ifdef IPV6_TCLASS
+  if (setsockopt (sink->sock, SOL_IPV6, IPV6_TCLASS, &tos, sizeof (tos)) < 0) {
+    GST_ERROR_OBJECT (sink, "could not set TCLASS: %s", g_strerror (errno));
+  }
+#endif
+}
+
+static void
 gst_multiudpsink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -492,6 +522,10 @@ gst_multiudpsink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_LOOP:
       udpsink->loop = g_value_get_boolean (value);
+      break;
+    case PROP_QOS_DSCP:
+      udpsink->qos_dscp = g_value_get_uint (value);
+      gst_multiudpsink_setup_qos_dscp (udpsink);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -536,20 +570,13 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_LOOP:
       g_value_set_boolean (value, udpsink->loop);
       break;
+    case PROP_QOS_DSCP:
+      g_value_set_int (value, udpsink->qos_dscp);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static void
-join_multicast (GstUDPClient * client, gboolean loop, int ttl)
-{
-  /* Joining the multicast group */
-  /* FIXME, can we use multicast and unicast over the same
-   * socket? if not, search for socket of this multicast group or
-   * create a new one. */
-  gst_udp_join_group (*(client->sock), loop, ttl, &client->theiraddr);
 }
 
 /* create a socket for sending to remote machine */
@@ -562,7 +589,7 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
   GstUDPClient *client;
 
   if (sink->sockfd == -1) {
-    /* create sender socket */
+    /* create sender socket try IP6, fall back to IP4 */
     if ((sink->sock = socket (AF_INET6, SOCK_DGRAM, 0)) == -1)
       if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
         goto no_socket;
@@ -583,12 +610,14 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
   sink->bytes_to_serve = 0;
   sink->bytes_served = 0;
 
-  /* look for multicast clients and join multicast groups approptiately */
+  gst_multiudpsink_setup_qos_dscp (sink);
 
+  /* look for multicast clients and join multicast groups approptiately */
   for (clients = sink->clients; clients; clients = g_list_next (clients)) {
     client = (GstUDPClient *) clients->data;
     if (gst_udp_is_multicast (&client->theiraddr) && sink->auto_multicast)
-      join_multicast (client, sink->loop, sink->ttl);
+      gst_udp_join_group (*(client->sock), sink->loop, sink->ttl,
+          &client->theiraddr);
   }
   return TRUE;
 
@@ -638,7 +667,8 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
   if (*client->sock > 0 && gst_udp_is_multicast (&client->theiraddr) &&
       sink->auto_multicast) {
     GST_DEBUG_OBJECT (sink, "multicast address detected");
-    join_multicast (client, sink->loop, sink->ttl);
+    gst_udp_join_group (*(client->sock), sink->loop, sink->ttl,
+        &client->theiraddr);
   } else {
     GST_DEBUG_OBJECT (sink, "normal address detected");
   }

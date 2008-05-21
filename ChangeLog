@@ -1,5 +1,16 @@
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Henrik Eriksson <henriken at axis dot com>
+
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init),
+	(gst_multiudpsink_init), (gst_multiudpsink_setup_qos_dscp),
+	(gst_multiudpsink_set_property), (gst_multiudpsink_get_property),
+	(gst_multiudpsink_init_send), (gst_multiudpsink_add_internal):
+	* gst/udp/gstmultiudpsink.h:
+	Add qos-dscp property to manage the Quality of service.
+
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtp/gstrtptheoradepay.c: (gst_rtp_theora_depay_process):
 	Improve debugging of the ident.
 
