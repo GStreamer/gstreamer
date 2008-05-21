@@ -1,5 +1,10 @@
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtp/gstrtptheoradepay.c: (gst_rtp_theora_depay_process):
+	Improve debugging of the ident.
+
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Bruno Santos <brunof at ua dot pt>
 
 	* gst/udp/gstudpnetutils.c: (gst_udp_get_addr),

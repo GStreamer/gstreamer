@@ -475,6 +475,9 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   F = (header & 0xc0) >> 6;
   packets = (header & 0xf);
 
+  GST_DEBUG_OBJECT (depayload, "ident: 0x%08x, F: %d, TDT: %d, packets: %d",
+      ident, F, TDT, packets);
+
   if (TDT == 0) {
     gboolean do_switch = FALSE;
 
@@ -496,9 +499,6 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   /* skip header */
   payload += 4;
   payload_len -= 4;
-
-  GST_DEBUG_OBJECT (depayload, "ident: %u, F: %d, TDT: %d, packets: %d", ident,
-      F, TDT, packets);
 
   /* fragmented packets, assemble */
   if (F != 0) {
