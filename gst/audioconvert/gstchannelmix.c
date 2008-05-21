@@ -398,7 +398,7 @@ gst_channel_mix_fill_others (AudioConvertCtx * this)
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_LFE,
-          &this->out, out_r,
+          &this->out, out_s,
           GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
           GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
           GST_AUDIO_CHANNEL_POSITION_INVALID, RATIO_SIDE_BASS);
@@ -439,7 +439,7 @@ gst_channel_mix_fill_others (AudioConvertCtx * this)
     }
     if (in_has_side) {
       gst_channel_mix_fill_one_other (this->matrix,
-          &this->in, in_r,
+          &this->in, in_s,
           GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
           GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
@@ -457,13 +457,13 @@ gst_channel_mix_fill_others (AudioConvertCtx * this)
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_MONO,
-        &this->out, out_r,
+        &this->out, out_s,
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_INVALID, RATIO_FRONT_SIDE);
   } else if (in_has_side && !out_has_side && out_has_front) {
     gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_r,
+        &this->in, in_s,
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_INVALID,
@@ -476,21 +476,21 @@ gst_channel_mix_fill_others (AudioConvertCtx * this)
   /* rear/side */
   if (!in_has_side && in_has_rear && out_has_side) {
     gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_f,
+        &this->in, in_r,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
-        &this->out, out_r,
+        &this->out, out_s,
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_INVALID, RATIO_REAR_SIDE);
   } else if (in_has_side && !out_has_side && out_has_rear) {
     gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_r,
+        &this->in, in_s,
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_INVALID,
-        &this->out, out_f,
+        &this->out, out_r,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_CENTER, RATIO_REAR_SIDE);
@@ -500,21 +500,21 @@ gst_channel_mix_fill_others (AudioConvertCtx * this)
   /* FIXME: should center<->side have influence on eachother? */
   if (!in_has_side && in_has_center && out_has_side) {
     gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_f,
+        &this->in, in_c,
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        &this->out, out_r,
+        &this->out, out_s,
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_INVALID, RATIO_CENTER_SIDE);
   } else if (in_has_side && !out_has_side && out_has_center) {
     gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_r,
+        &this->in, in_s,
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_INVALID,
-        &this->out, out_f,
+        &this->out, out_c,
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER, RATIO_CENTER_SIDE);

@@ -1,6 +1,11 @@
 2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/audioconvert/gstchannelmix.c: (gst_channel_mix_fill_others):
+	Fix copy & paste error in last commit.
+
+2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/audioconvert/gstchannelmix.c: (gst_channel_mix_fill_others):
 	Add support for mixing GST_AUDIO_CHANNEL_POSITION_SIDE_* from/to
 	other channel positions when source has SIDE channels and dest doesn't
 	or the other way around.
