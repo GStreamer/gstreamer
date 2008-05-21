@@ -1,3 +1,8 @@
+2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* win32/common/libgstbase.def:
+	Add gst_base_sink_wait_clock() to the exported symbols.
+
 2008-05-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Tim-Philipp Müller  <tim.muller at collabora co uk>
@@ -15,7 +20,7 @@
 	* libs/gst/base/gstbasesink.h:
 	Expose a method that was previously used internally to synchronize
 	against the clock because it can be useful for subclasses too.
-	GstBaseSink::gst_base_sink_wait_clock()
+	API: GstBaseSink::gst_base_sink_wait_clock()
 
 2008-05-19  Tim-Philipp Müller  <tim.muller at collabora co uk>
 

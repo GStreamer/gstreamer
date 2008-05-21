@@ -24,6 +24,7 @@ EXPORTS
 	gst_base_sink_set_qos_enabled
 	gst_base_sink_set_sync
 	gst_base_sink_set_ts_offset
+	gst_base_sink_wait_clock
 	gst_base_sink_wait_eos
 	gst_base_sink_wait_preroll
 	gst_base_src_get_do_timestamp
