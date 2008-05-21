@@ -1,3 +1,8 @@
+2008-05-21  Felipe Contreras  <felipe.contreras@gmail.com>
+
+	* docs/Makefile.am:
+	Fix installing plugin documentation when gtk-doc is disabled.
+
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/manual/advanced-autoplugging.xml:
