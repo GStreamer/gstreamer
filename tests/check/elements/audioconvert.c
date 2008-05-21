@@ -848,6 +848,19 @@ GST_START_TEST (test_multichannel_conversion)
 
   {
     gint16 in[] = { 1, 2 };
+    gint16 out[] = { 1, 1, 2, 2 };
+    GstCaps *in_caps = get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE);
+    GstCaps *out_caps = get_int_caps (2, "BYTE_ORDER", 16, 16, TRUE);
+
+    RUN_CONVERSION ("1 channels to 2 with standard layout and no positions set",
+        in, gst_caps_copy (in_caps), out, gst_caps_copy (out_caps));
+
+    RUN_CONVERSION ("2 channels to 1 with standard layout and no positions set",
+        out, out_caps, in, in_caps);
+  }
+
+  {
+    gint16 in[] = { 1, 2 };
     gint16 out[] = { 1, 0, 2, 0 };
     GstCaps *in_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
     GstCaps *out_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);

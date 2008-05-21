@@ -1,5 +1,11 @@
 2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/elements/audioconvert.c: (GST_START_TEST):
+	Add another test that checks if conversion between standard 1 and 2
+	channel layouts with and without positions set is working.
+
+2008-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst-libs/gst/audio/multichannel.c:
 	(gst_audio_check_channel_positions):
 	Allow non-standard 2 channel layouts.
