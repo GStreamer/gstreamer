@@ -449,6 +449,9 @@ gst_channel_mix_fill_normalize (AudioConvertCtx * this)
   }
 
   /* normalize to this */
+  if (top == 0.0)
+    return;
+
   for (j = 0; j < this->out.channels; j++) {
     for (i = 0; i < this->in.channels; i++) {
       this->matrix[i][j] /= top;
