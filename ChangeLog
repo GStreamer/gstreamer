@@ -1,3 +1,15 @@
+2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Patrick Radizi <patrick dot radizi at axis dot com>
+
+	* gst/multipart/multipartdemux.c: (gst_multipart_demux_class_init),
+	(gst_multipart_demux_get_gstname),
+	(gst_multipart_find_pad_by_mime), (gst_multipart_demux_chain):
+	* gst/multipart/multipartdemux.h:
+	Don't blindly copy the mime-type as the caps name because they not
+	always map directly. Instead use a hashtable with common mappings.
+	Fixes #533287.
+
 2008-05-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/esd/esdsink.c: (gst_esdsink_write):

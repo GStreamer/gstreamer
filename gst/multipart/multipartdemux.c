@@ -100,6 +100,19 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("multipart/x-mixed-replace")
     );
 
+typedef struct
+{
+  const gchar *key;
+  const gchar *val;
+} GstNamesMap;
+
+/* convert from mime types to gst structure names. Add more when needed. */
+static const GstNamesMap gstnames[] = {
+  {"audio/basic", "audio/x-mulaw"},
+  {NULL, NULL}
+};
+
+
 static GstFlowReturn gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf);
 
 static GstStateChangeReturn gst_multipart_demux_change_state (GstElement *
@@ -131,6 +144,8 @@ gst_multipart_demux_base_init (gpointer g_class)
 static void
 gst_multipart_demux_class_init (GstMultipartDemuxClass * klass)
 {
+  int i;
+
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
@@ -147,6 +162,13 @@ gst_multipart_demux_class_init (GstMultipartDemuxClass * klass)
       g_param_spec_boolean ("autoscan", "autoscan",
           "Try to autofind the prefix (deprecated unused, see boundary)",
           DEFAULT_AUTOSCAN, G_PARAM_READWRITE));
+
+  /* populate gst names and mime types pairs */
+  klass->gstnames = g_hash_table_new (g_str_hash, g_str_equal);
+  for (i = 0; gstnames[i].key; i++) {
+    g_hash_table_insert (klass->gstnames, (gpointer) gstnames[i].key,
+        (gpointer) gstnames[i].val);
+  }
 
   gstelement_class->change_state = gst_multipart_demux_change_state;
 }
@@ -185,6 +207,23 @@ gst_multipart_demux_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static const gchar *
+gst_multipart_demux_get_gstname (GstMultipartDemux * demux, gchar * mimetype)
+{
+  GstMultipartDemuxClass *klass;
+  const gchar *gstname;
+
+  klass = GST_MULTIPART_DEMUX_GET_CLASS (demux);
+
+  /* use hashtable to convert to gst name */
+  gstname = g_hash_table_lookup (klass->gstnames, mimetype);
+  if (gstname == NULL) {
+    /* no gst name mapping, use mime type */
+    gstname = mimetype;
+  }
+  return gstname;
+}
+
 static GstMultipartPad *
 gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
     gboolean * created)
@@ -209,6 +248,7 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
     GstPad *pad;
     GstMultipartPad *mppad;
     gchar *name;
+    const gchar *capsname;
     GstCaps *caps;
 
     mppad = g_new0 (GstMultipartPad, 1);
@@ -220,9 +260,13 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
         gst_pad_new_from_static_template (&multipart_demux_src_template_factory,
         name);
     g_free (name);
-    caps = gst_caps_from_string (mime);
+
+    /* take the mime type, convert it to the caps name */
+    capsname = gst_multipart_demux_get_gstname (demux, mime);
+    caps = gst_caps_from_string (capsname);
     gst_pad_use_fixed_caps (pad);
     gst_pad_set_caps (pad, caps);
+    gst_caps_unref (caps);
 
     mppad->pad = pad;
     mppad->mime = g_strdup (mime);
@@ -519,6 +563,7 @@ gst_multipart_demux_change_state (GstElement * element,
 
   return ret;
 }
+
 
 static void
 gst_multipart_set_property (GObject * object, guint prop_id,
