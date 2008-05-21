@@ -587,6 +587,9 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
     GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
     GST_BUFFER_DURATION (outbuffer) = 0;
     GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
+
+    if (this->caps_buf)
+      gst_buffer_unref (this->caps_buf);
     this->caps_buf = outbuffer;
     gst_gdp_pay_reset_streamheader (this);
   }
