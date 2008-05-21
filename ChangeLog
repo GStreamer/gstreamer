@@ -1,3 +1,8 @@
+2008-05-21  Felipe Contreras  <felipe.contreras@gmail.com>
+
+	* gst-libs/gst/rtsp/Makefile.am:
+	Distribute, don't install md5.h
+
 2008-05-21  Julien Moutte  <julien@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (setup_dscp_client): Use IPPROTO_IP
