@@ -190,16 +190,16 @@ fi
 
 dnl Use binary registry
 AC_ARG_ENABLE(binary-registry,
-  AC_HELP_STRING([--enable-binary-registry],
-    [enable experimental binary registry]),
+  AC_HELP_STRING([--disable-binary-registry],
+    [disable binary registry]),
   [
     case "${enableval}" in
       yes) USE_BINARY_REGISTRY=yes ;;
       no)  USE_BINARY_REGISTRY=no ;;
-      *)   AC_MSG_ERROR(bad value ${enableval} for --enable-binary-registry) ;;
+      *)   AC_MSG_ERROR(bad value ${enableval} for --disable-binary-registry) ;;
     esac
   ],
-  [USE_BINARY_REGISTRY=no]) dnl Default value
+  [USE_BINARY_REGISTRY=yes]) dnl Default value
 
 if test "x$USE_BINARY_REGISTRY" = xyes; then
   dnl for config.h:
