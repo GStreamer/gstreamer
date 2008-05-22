@@ -1,3 +1,9 @@
+2008-05-22  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/udp/Makefile.am:
+	  Add -D_GNU_SOURCE to CFLAGS so we get things like EAI_ADDRFAMILY
+	  when including netdb.h when building against glibc >= 2.8.
+
 2008-05-22  Julien Moutte  <julien@fluendo.com>
 
 	* gst/smpte/gstsmptealpha.c: (gst_smpte_alpha_setcaps): Fix
