@@ -121,32 +121,6 @@ gst_mpeg4vparse_set_new_caps (GstMpeg4VParse * parse,
   return res;
 }
 
-static void
-gst_mpeg4vparse_align (GstMpeg4VParse * parse)
-{
-  guint flushed = 0;
-
-  /* Searching for a start code */
-  while (gst_adapter_available (parse->adapter) >= 4) {
-    /* If we have enough data, ensure we're aligned to a start code */
-    const guint8 *data = gst_adapter_peek (parse->adapter, 4);
-
-    if (G_LIKELY (data[0] == 0 && data[1] == 0 && data[2] == 1)) {
-      GST_LOG_OBJECT (parse, "found start code with type %02X", data[3]);
-      parse->state = PARSE_START_FOUND;
-      break;
-    } else {
-      gst_adapter_flush (parse->adapter, 1);
-      flushed++;
-      parse->state = PARSE_NEED_START;
-    }
-  }
-
-  if (G_UNLIKELY (flushed)) {
-    GST_LOG_OBJECT (parse, "flushed %u bytes while aligning", flushed);
-  }
-}
-
 #define VOS_STARTCODE                   0xB0
 #define VOS_ENDCODE                     0xB1
 #define USER_DATA_STARTCODE             0xB2
@@ -440,7 +414,7 @@ gst_mpeg4vparse_push (GstMpeg4VParse * parse, gsize size)
 
   /* Restart now that we flushed data */
   parse->offset = 0;
-  parse->state = PARSE_START_FOUND;
+  parse->state = PARSE_NEED_START;
   parse->intra_frame = FALSE;
 }
 
@@ -452,15 +426,39 @@ gst_mpeg4vparse_drain (GstMpeg4VParse * parse, GstBuffer * last_buffer)
   guint available = 0;
 
   available = gst_adapter_available (parse->adapter);
+  /* We do a quick check here to avoid the _peek() below. */
+  if (G_UNLIKELY (available < 5)) {
+    GST_DEBUG_OBJECT (parse, "we need more data, %d < 5", available);
+    goto beach;
+  }
   data = gst_adapter_peek (parse->adapter, available);
 
   /* Need at least 5 more bytes, 4 for the startcode, 1 to optionally determine
    * the VOP frame type */
-  while (parse->offset < available - 5) {
+  while (available >= 5 && parse->offset < available - 5) {
     if (data[parse->offset] == 0 && data[parse->offset + 1] == 0 &&
         data[parse->offset + 2] == 1) {
 
       switch (parse->state) {
+        case PARSE_NEED_START:
+          switch (data[parse->offset + 3]) {
+            case VOP_STARTCODE:
+            case VOS_STARTCODE:
+            case GOP_STARTCODE:
+              /* valid starts of a frame */
+              parse->state = PARSE_START_FOUND;
+              if (parse->offset > 0) {
+                GST_LOG_OBJECT (parse, "Flushing %u bytes", parse->offset);
+                gst_adapter_flush (parse->adapter, parse->offset);
+                parse->offset = 0;
+                available = gst_adapter_available (parse->adapter);
+                data = gst_adapter_peek (parse->adapter, available);
+              }
+              break;
+            default:
+              parse->offset += 4;
+          }
+          break;
         case PARSE_START_FOUND:
           switch (data[parse->offset + 3]) {
             case VOP_STARTCODE:
@@ -498,15 +496,6 @@ gst_mpeg4vparse_drain (GstMpeg4VParse * parse, GstBuffer * last_buffer)
           break;
         case PARSE_VOP_FOUND:
         {                       /* We were in a VOP already, any start code marks the end of it */
-          if (data[parse->offset + 3] == USER_DATA_STARTCODE) {
-            /* Userdata shouldn't come directly after a VOP, but some
-             * implementation do it anyways :( This prevents pushing 
-             * USER_DATA as the initial bit of a buffer, which causes confusing
-             * with other elements */
-            parse->offset += 4;
-            break;
-          }
-
           GST_LOG_OBJECT (parse, "found VOP end marker at %u", parse->offset);
 
           gst_mpeg4vparse_push (parse, parse->offset);
@@ -543,27 +532,9 @@ gst_mpeg4vparse_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_adapter_push (parse->adapter, buffer);
 
-  /* We need to get aligned on a start code */
-  if (G_UNLIKELY (parse->state == PARSE_NEED_START)) {
-    gst_mpeg4vparse_align (parse);
-    /* No start code found in that buffer */
-    if (G_UNLIKELY (parse->state == PARSE_NEED_START)) {
-      GST_DEBUG_OBJECT (parse, "start code not found, need more data");
-      goto beach;
-    }
-  }
-
-  /* We need at least 8 bytes to find the next start code which marks the end
-     of the one we just found */
-  if (G_UNLIKELY (gst_adapter_available (parse->adapter) < 8)) {
-    GST_DEBUG_OBJECT (parse, "start code found, need more data to find next");
-    goto beach;
-  }
-
   /* Drain the accumulated blocks frame per frame */
   ret = gst_mpeg4vparse_drain (parse, buffer);
 
-beach:
   gst_object_unref (parse);
 
   return ret;
@@ -702,7 +673,6 @@ gst_mpeg4vparse_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
-
   return ret;
 }
 

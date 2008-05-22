@@ -1,3 +1,15 @@
+2008-05-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* gst/mpeg4videoparse/mpeg4videoparse.c: (gst_mpeg4vparse_push),
+	(gst_mpeg4vparse_drain), (gst_mpeg4vparse_chain),
+	(gst_mpeg4vparse_change_state):
+	Move some code around to integrate the startcode searching with the
+	other bits of parsing, avoid a whole bunch of peeks.
+	Get rid of invalid data that should not happen according to the specs.
+	Fixes #533559.
+
 2008-05-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Bastien Nocera <hadess at hadess dot net>
