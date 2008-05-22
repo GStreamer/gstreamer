@@ -5,7 +5,7 @@
  *                    2007 Andy Wingo <wingo at pobox.com>
  *                    2008 Sebastian Dröge <slomo@circular-chaos.org>
  *
- * deinterleave.c: deinterleave samples, based on interleave.c
+ * deinterleave.c: deinterleave samples
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -37,12 +37,18 @@
  * <para>
  * Splits one interleaved multichannel audio stream into many mono audio streams.
  * </para>
+ * <para>
+ * This element handles all raw audio formats and supports changing the input caps as long as
+ * all downstream elements can handle the new caps and the number of channels and the channel
+ * positions stay the same. This restriction will be removed in later versions by adding or
+ * removing some source pads as required.
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
  * gst-launch-0.10 filesrc location=/path/to/file.mp3 ! decodebin ! audioconvert ! "audio/x-raw-int,channels=2 ! deinterleave name=d  d.src0 ! queue ! audioconvert ! vorbisenc ! oggmux ! filesink location=channel1.ogg  d.src1 ! queue ! audioconvert ! vorbisenc ! oggmux ! filesink location=channel2.ogg
  * </programlisting>
- * Decodes an MP3 file and encodes the left and right channel into a separate 
+ * Decodes an MP3 file and encodes the left and right channel into separate Ogg Vorbis files.
  * </para>
  * </refsect2>
  */
@@ -131,7 +137,7 @@ enum
 
 static GstFlowReturn gst_deinterleave_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps);
-static GstCaps *gst_deinterleave_getcaps (GstPad * pad);
+static GstCaps *gst_deinterleave_sink_getcaps (GstPad * pad);
 static gboolean gst_deinterleave_sink_activate_push (GstPad * pad,
     gboolean active);
 static gboolean gst_deinterleave_sink_event (GstPad * pad, GstEvent * event);
@@ -168,7 +174,9 @@ gst_deinterleave_base_init (gpointer g_class)
   gst_element_class_set_details_simple (gstelement_class, "Audio deinterleaver",
       "Filter/Converter/Audio",
       "Splits one interleaved multichannel audio stream into many mono audio streams",
-      "Andy Wingo <wingo at pobox.com>, " "Iain <iain@prettypeople.org>");
+      "Andy Wingo <wingo at pobox.com>, "
+      "Iain <iain@prettypeople.org>, "
+      "Sebastian Dröge <slomo@circular-chaos.org>");
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
@@ -188,6 +196,15 @@ gst_deinterleave_class_init (GstDeinterleaveClass * klass)
   gobject_class->set_property = gst_deinterleave_set_property;
   gobject_class->get_property = gst_deinterleave_get_property;
 
+  /**
+   * GstDeinterleave:keep-positions
+   * 
+   * Keep positions: When enable the caps on the output buffers will
+   * contain the original channel positions. This can be used to correctly
+   * interleave the output again later but can also lead to unwanted effects
+   * if the output should be handled as Mono.
+   *
+   */
   g_object_class_install_property (gobject_class, PROP_KEEP_POSITIONS,
       g_param_spec_boolean ("keep-positions", "Keep positions",
           "Keep the original channel positions on the output buffers",
@@ -209,7 +226,8 @@ gst_deinterleave_init (GstDeinterleave * self, GstDeinterleaveClass * klass)
       GST_DEBUG_FUNCPTR (gst_deinterleave_chain));
   gst_pad_set_setcaps_function (self->sink,
       GST_DEBUG_FUNCPTR (gst_deinterleave_sink_setcaps));
-  gst_pad_set_getcaps_function (self->sink, gst_deinterleave_getcaps);
+  gst_pad_set_getcaps_function (self->sink,
+      GST_DEBUG_FUNCPTR (gst_deinterleave_sink_getcaps));
   gst_pad_set_activatepush_function (self->sink,
       GST_DEBUG_FUNCPTR (gst_deinterleave_sink_activate_push));
   gst_pad_set_event_function (self->sink,
@@ -245,7 +263,6 @@ gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
       srccaps = caps;
     }
 
-    gst_pad_set_getcaps_function (pad, gst_deinterleave_getcaps);
     gst_pad_set_caps (pad, srccaps);
     gst_pad_use_fixed_caps (pad);
     gst_pad_set_active (pad, TRUE);
@@ -475,7 +492,7 @@ __set_channels (GstCaps * caps, gint channels)
 }
 
 static GstCaps *
-gst_deinterleave_getcaps (GstPad * pad)
+gst_deinterleave_sink_getcaps (GstPad * pad)
 {
   GstDeinterleave *self = GST_DEINTERLEAVE (gst_pad_get_parent (pad));
   GstCaps *ret;

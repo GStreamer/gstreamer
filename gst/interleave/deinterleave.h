@@ -5,7 +5,7 @@
  *                    2007 Andy Wingo <wingo at pobox.com>
  *                    2008 Sebastian Dröge <slomo@circular-chaos.org>
  *
- * deinterleave.c: deinterleave samples, based on interleave.c
+ * deinterleave.c: deinterleave samples
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

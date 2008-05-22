@@ -1,3 +1,15 @@
+2008-05-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/interleave/deinterleave.c: (gst_deinterleave_base_init),
+	(gst_deinterleave_class_init), (gst_deinterleave_init),
+	(gst_deinterleave_add_new_pads), (gst_deinterleave_sink_getcaps):
+	* gst/interleave/deinterleave.h:
+	Don't set a getcaps() function on the src pads as it's not required
+	and the default getcaps() function returns the correct results for
+	our src pads.
+
+	Complete documentation and add myself to the authors of the element.
+
 2008-05-22  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* tests/icles/.cvsignore:
