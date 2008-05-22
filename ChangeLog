@@ -1,3 +1,12 @@
+2008-05-22  Julien Moutte  <julien@fluendo.com>
+
+	* gst/smpte/gstsmptealpha.c: (gst_smpte_alpha_setcaps): Fix
+	debug statement arguments.
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_setup_qos_dscp):
+	* gst/udp/gstudpnetutils.c: (gst_udp_join_group),
+	(gst_udp_leave_group): Fix IP and IPV6 options to make it work
+	on more platforms.
+
 2008-05-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/check/elements/avimux.c: (setup_src_pad),

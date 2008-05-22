@@ -164,7 +164,7 @@ gst_udp_join_group (int sockfd, struct sockaddr_storage *addr)
       mreq6.ipv6mr_interface = 0;
 
       if ((ret =
-              setsockopt (sockfd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP,
+              setsockopt (sockfd, IPPROTO_IPV6, IPV6_JOIN_GROUP,
                   (const void *) &mreq6, sizeof (mreq6))) < 0)
         return ret;
 
@@ -207,7 +207,7 @@ gst_udp_leave_group (int sockfd, struct sockaddr_storage *addr)
       mreq6.ipv6mr_interface = 0;
 
       if ((ret =
-              setsockopt (sockfd, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP,
+              setsockopt (sockfd, IPPROTO_IPV6, IPV6_LEAVE_GROUP,
                   (const void *) &mreq6, sizeof (mreq6))) < 0)
         return ret;
     }

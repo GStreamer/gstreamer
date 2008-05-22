@@ -343,7 +343,8 @@ mask_failed:
   }
 unsupported_fourcc:
   {
-    GST_ERROR_OBJECT (smpte, "unsupported fourcc %" GST_FOURCC_FORMAT, fourcc);
+    GST_ERROR_OBJECT (smpte, "unsupported fourcc %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (fourcc));
     return FALSE;
   }
 }

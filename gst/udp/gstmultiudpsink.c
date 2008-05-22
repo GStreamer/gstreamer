@@ -496,11 +496,12 @@ gst_multiudpsink_setup_qos_dscp (GstMultiUDPSink * sink)
   /* Extract and shift 6 bits of DSFIELD */
   tos = (sink->qos_dscp & 0x3f) << 2;
 
-  if (setsockopt (sink->sock, SOL_IP, IP_TOS, &tos, sizeof (tos)) < 0) {
+  if (setsockopt (sink->sock, IPPROTO_IP, IP_TOS, &tos, sizeof (tos)) < 0) {
     GST_ERROR_OBJECT (sink, "could not set TOS: %s", g_strerror (errno));
   }
 #ifdef IPV6_TCLASS
-  if (setsockopt (sink->sock, SOL_IPV6, IPV6_TCLASS, &tos, sizeof (tos)) < 0) {
+  if (setsockopt (sink->sock, IPPROTO_IPV6, IPV6_TCLASS, &tos,
+          sizeof (tos)) < 0) {
     GST_ERROR_OBJECT (sink, "could not set TCLASS: %s", g_strerror (errno));
   }
 #endif
