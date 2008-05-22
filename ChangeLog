@@ -1,3 +1,8 @@
+2008-05-22  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/videotestsrc/videotestsrc.c: (paint_hline_NV12_NV21):
+	  May just as well use the precalculated uvstride here.
+
 2008-05-22  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/plugins/Makefile.am:

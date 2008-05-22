@@ -1078,8 +1078,8 @@ paint_hline_NV12_NV21 (paintinfo * p, int x, int y, int w)
 
   oil_splat_u8_ns (p->yp + offset + x, &p->color->Y, w);
   if (uvlength) {
-    oil_splat_u8 (p->up + offsetuv, 2, &p->color->U, x2 - x1);
-    oil_splat_u8 (p->vp + offsetuv, 2, &p->color->V, x2 - x1);
+    oil_splat_u8 (p->up + offsetuv, 2, &p->color->U, uvlength);
+    oil_splat_u8 (p->vp + offsetuv, 2, &p->color->V, uvlength);
   }
 }
 
