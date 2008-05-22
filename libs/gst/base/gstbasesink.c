@@ -1363,7 +1363,10 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   }
 
   /* set last stop position */
-  gst_segment_set_last_stop (segment, GST_FORMAT_TIME, cstop);
+  if (G_LIKELY (cstop != GST_CLOCK_TIME_NONE))
+    gst_segment_set_last_stop (segment, GST_FORMAT_TIME, cstop);
+  else
+    gst_segment_set_last_stop (segment, GST_FORMAT_TIME, cstart);
 
 do_times:
   /* this can produce wrong values if we accumulated non-TIME segments. If this happens,

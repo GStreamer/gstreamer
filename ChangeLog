@@ -1,3 +1,11 @@
+2008-05-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times):
+	If nothing else can be used, use the last buffer's start time as
+	the segment's last stop. Fixes bug #534258.
+
 2008-05-21  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gstpad.c: (gst_pad_alloc_buffer_full):
