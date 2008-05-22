@@ -34,6 +34,20 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstTCPProtocol:
+ * @GST_TCP_PROTOCOL_NONE: Raw data transmission
+ * @GST_TCP_PROTOCOL_GDP: #GstBuffers are wrapped and sent/received using the
+ *      GDP protocol.
+ *
+ * This enum is provided by the tcp/multifd elements to configure the format of
+ * data transmission/reception.
+ *
+ * The GDP protocol wraps data buffers in a header that also carries format
+ * information and timestamps. The None value indicates the data is
+ * sent/received as-is. In that case, format information and timestamping
+ * must be transmitted separately, or implicit in the bytestream itself.
+ */
 typedef enum
 {
   GST_TCP_PROTOCOL_NONE,

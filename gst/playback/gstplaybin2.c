@@ -22,8 +22,13 @@
  *
  * <refsect2>
  * <para>
- * Playbin provides a stand-alone everything-in-one abstraction for an
+ * Playbin2 provides a stand-alone everything-in-one abstraction for an
  * audio and/or video player.
+ * </para>
+ * <para>
+ * At this stage, playbin2 is considered UNSTABLE. The API provided in the
+ * signals and properties may yet change in the near future. When playbin2
+ * is stable, it will probably replace #playbin
  * </para>
  * <para>
  * It can handle both audio and video files and features
@@ -329,6 +334,11 @@ struct _GstSourceGroup
 #define GST_PLAY_BIN_LOCK(bin) (g_mutex_lock (GST_PLAY_BIN_GET_LOCK(bin)))
 #define GST_PLAY_BIN_UNLOCK(bin) (g_mutex_unlock (GST_PLAY_BIN_GET_LOCK(bin)))
 
+/**
+ * GstPlayBin2:
+ *
+ * playbin element structure
+ */
 struct _GstPlayBin
 {
   GstPipeline parent;
@@ -549,7 +559,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_bin_finalize);
 
   /**
-   * GstPlayBin:uri
+   * GstPlayBin2:uri
    *
    * Set the next URI that playbin will play. This property can be set from the
    * about-to-finish signal to queue the next media file.
@@ -559,7 +569,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPlayBin:suburi
+   * GstPlayBin2:suburi
    *
    * Set the next subtitle URI that playbin will play. This property can be
    * set from the about-to-finish signal to queue the next subtitle media file.
@@ -573,7 +583,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPlayBin:flags
+   * GstPlayBin2:flags
    *
    * Control the behaviour of playbin.
    */
@@ -583,7 +593,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPlayBin:n-video
+   * GstPlayBin2:n-video
    *
    * Get the total number of available video streams. 
    */
@@ -592,7 +602,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Total number of video streams", 0, G_MAXINT, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin:current-video
+   * GstPlayBin2:current-video
    *
    * Get or set the currently playing video stream. By default the first video
    * stream with data is played.
@@ -602,7 +612,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Currently playing video stream (-1 = auto)",
           -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin:n-audio
+   * GstPlayBin2:n-audio
    *
    * Get the total number of available audio streams. 
    */
@@ -611,7 +621,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Total number of audio streams", 0, G_MAXINT, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin:current-audio
+   * GstPlayBin2:current-audio
    *
    * Get or set the currently playing audio stream. By default the first audio
    * stream with data is played.
@@ -621,7 +631,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Currently playing audio stream (-1 = auto)",
           -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin:n-text
+   * GstPlayBin2:n-text
    *
    * Get the total number of available subtitle streams. 
    */
@@ -630,7 +640,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Total number of text streams", 0, G_MAXINT, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin:current-text
+   * GstPlayBin2:current-text:
    *
    * Get or set the currently playing subtitle stream. By default the first
    * subtitle stream with data is played.
@@ -671,8 +681,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPlayBin::frame
-   * @playbin: a #GstPlayBin
+   * GstPlayBin2:frame:
+   * @playbin: a #GstPlayBin2
    *
    * Get the currently rendered or prerolled frame in the sink.
    * The #GstCaps on the buffer will describe the format of the buffer.
@@ -694,8 +704,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           0, G_MAXUINT, DEFAULT_CONNECTION_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin::about-to-finish:
-   * @playbin: a #GstPlayBin
+   * GstPlayBin2::about-to-finish
+   * @playbin: a #GstPlayBin2
    *
    * This signal is emitted when the current uri is about to finish. You can
    * set the next-uri and next-suburi to make sure that playback continues.
@@ -707,8 +717,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
-   * GstPlayBin::video-changed
-   * @playbin: a #GstPlayBin
+   * GstPlayBin2::video-changed
+   * @playbin: a #GstPlayBin2
    *
    * This signal is emited whenever the number or order of the video
    * streams has changed. The application will most likely want to select
@@ -720,8 +730,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, video_changed), NULL, NULL,
       gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
   /**
-   * GstPlayBin::audio-changed
-   * @playbin: a #GstPlayBin
+   * GstPlayBin2::audio-changed
+   * @playbin: a #GstPlayBin2
    *
    * This signal is emited whenever the number or order of the audio
    * streams has changed. The application will most likely want to select
@@ -733,8 +743,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, audio_changed), NULL, NULL,
       gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
   /**
-   * GstPlayBin::text-changed
-   * @playbin: a #GstPlayBin
+   * GstPlayBin2::text-changed
+   * @playbin: a #GstPlayBin2
    *
    * This signal is emited whenever the number or order of the text
    * streams has changed. The application will most likely want to select
@@ -747,8 +757,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
-   * GstPlayBin::get-video-tags
-   * @playbin: a #GstPlayBin
+   * GstPlayBin2::get-video-tags
+   * @playbin: a #GstPlayBin2
    * @stream: a video stream number
    *
    * Action signal to retrieve the tags of a specific video stream number.
@@ -763,8 +773,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_video_tags), NULL, NULL,
       gst_play_marshal_BOXED__INT, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
-   * GstPlayBin::get-audio-tags
-   * @playbin: a #GstPlayBin
+   * GstPlayBin2::get-audio-tags
+   * @playbin: a #GstPlayBin2
    * @stream: an audio stream number
    *
    * Action signal to retrieve the tags of a specific audio stream number.
@@ -779,8 +789,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_audio_tags), NULL, NULL,
       gst_play_marshal_BOXED__INT, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
-   * GstPlayBin::get-text-tags
-   * @playbin: a #GstPlayBin
+   * GstPlayBin2::get-text-tags
+   * @playbin: a #GstPlayBin2
    * @stream: a text stream number
    *
    * Action signal to retrieve the tags of a specific text stream number.
@@ -795,8 +805,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_text_tags), NULL, NULL,
       gst_play_marshal_BOXED__INT, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
-   * GstPlayBin::convert-frame
-   * @playbin: a #GstPlayBin
+   * GstPlayBin2::convert-frame
+   * @playbin: a #GstPlayBin2
    * @caps: the target format of the frame
    *
    * Action signal to retrieve the currently playing video frame in the format

@@ -1412,7 +1412,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPad * best)
   return GST_FLOW_OK;
 }
 
-/** all_pads_eos:
+/* all_pads_eos:
  *
  * Checks if all pads are EOS'd by peeking.
  *

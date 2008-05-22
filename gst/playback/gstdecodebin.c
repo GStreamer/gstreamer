@@ -54,6 +54,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_decode_bin_debug);
 typedef struct _GstDecodeBin GstDecodeBin;
 typedef struct _GstDecodeBinClass GstDecodeBinClass;
 
+/**
+ * GstDecodeBin:
+ *
+ * Auto-plugging decoder element structure
+ */
 struct _GstDecodeBin
 {
   GstBin bin;                   /* we extend GstBin */
@@ -205,17 +210,43 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  /**
+   * GstDecodeBin::new-decoded-pad:
+   * @bin: The decodebin
+   * @pad: The newly created pad
+   * @islast: #TRUE if this is the last pad to be added. Deprecated.
+   *
+   * This signal gets emitted as soon as a new pad of the same type as one of
+   * the valid 'raw' types is added.
+   */
   gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD] =
       g_signal_new ("new-decoded-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstDecodeBinClass, new_decoded_pad), NULL, NULL,
       gst_play_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2, GST_TYPE_PAD,
       G_TYPE_BOOLEAN);
+  /**
+   * GstDecodeBin::removed-decoded-pad:
+   * @bin: The decodebin
+   * @pad: The pad that was removed
+   *
+   * This signal is emitted when a 'final' caps pad has been removed.
+   */
   gst_decode_bin_signals[SIGNAL_REMOVED_DECODED_PAD] =
       g_signal_new ("removed-decoded-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstDecodeBinClass, removed_decoded_pad), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
+  /**
+   * GstDecodeBin::unknown-type:
+   * @bin: The decodebin
+   * @pad: The new pad containing caps that cannot be resolved to a 'final'
+   *       stream type.
+   * @caps: The #GstCaps of the pad that cannot be resolved.
+   *
+   * This signal is emitted when a pad for which there is no further possible
+   * decoding is added to the decodebin.
+   */
   gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE] =
       g_signal_new ("unknown-type", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, unknown_type),

@@ -25,14 +25,33 @@
 #include <gst/gst.h>
 #include <gst/audio/multichannel.h>
 
+/**
+ * GstAudioConvertDithering:
+ * @DITHER_NONE: No dithering
+ * @DITHER_RPDF: Rectangular dithering
+ * @DITHER_TPDF: Triangular dithering (default)
+ * @DITHER_TPDF_HF: High frequency triangular dithering
+ *
+ * Set of available dithering methods when converting audio.
+ */
 typedef enum
 {
   DITHER_NONE = 0,
   DITHER_RPDF,
   DITHER_TPDF,
   DITHER_TPDF_HF
-} DitherType;
+} GstAudioConvertDithering;
 
+/**
+ * GstAudioConvertNoiseShaping:
+ * @NOISE_SHAPING_NONE: No noise shaping (default)
+ * @NOISE_SHAPING_ERROR_FEEDBACK: Error feedback
+ * @NOISE_SHAPING_SIMPLE: Simple 2-pole noise shaping
+ * @NOISE_SHAPING_MEDIUM: Medium 5-pole noise shaping
+ * @NOISE_SHAPING_HIGH: High 8-pole noise shaping
+ *
+ * Set of available noise shaping methods
+ */
 typedef enum
 {
   NOISE_SHAPING_NONE = 0,
@@ -40,7 +59,7 @@ typedef enum
   NOISE_SHAPING_SIMPLE,
   NOISE_SHAPING_MEDIUM,
   NOISE_SHAPING_HIGH
-} NoiseShapingType;
+} GstAudioConvertNoiseShaping;
 
 typedef struct _AudioConvertCtx AudioConvertCtx;
 typedef struct _AudioConvertFmt AudioConvertFmt;
@@ -99,8 +118,9 @@ struct _AudioConvertCtx
   AudioConvertMix channel_mix;
 
   AudioConvertQuantize quantize;
-  DitherType dither;
-  NoiseShapingType ns;
+
+  GstAudioConvertDithering dither;
+  GstAudioConvertNoiseShaping ns;
   /* random number generate for dither noise */
   GRand *dither_random;
   /* last random number generated per channel for hifreq TPDF dither */
@@ -112,8 +132,8 @@ struct _AudioConvertCtx
 gboolean audio_convert_clean_fmt (AudioConvertFmt * fmt);
 
 gboolean audio_convert_prepare_context (AudioConvertCtx * ctx,
-    AudioConvertFmt * in, AudioConvertFmt * out, DitherType dither,
-    NoiseShapingType ns);
+    AudioConvertFmt * in, AudioConvertFmt * out,
+    GstAudioConvertDithering dither, GstAudioConvertNoiseShaping ns);
 gboolean audio_convert_get_sizes (AudioConvertCtx * ctx, gint samples,
     gint * srcsize, gint * dstsize);
 

@@ -423,7 +423,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   /**
    * GstDecodeBin2::unknown-type:
    * @bin: The decodebin
-   * @pad: The new pad containing caps that cannot be resolved to a 'final' stream type.
+   * @pad: The new pad containing caps that cannot be resolved to a 'final'
+   *       stream type.
    * @caps: The #GstCaps of the pad that cannot be resolved.
    *
    * This signal is emitted when a pad for which there is no further possible

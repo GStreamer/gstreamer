@@ -409,7 +409,8 @@ audio_convert_clean_fmt (AudioConvertFmt * fmt)
 
 gboolean
 audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
-    AudioConvertFmt * out, DitherType dither, NoiseShapingType ns)
+    AudioConvertFmt * out, GstAudioConvertDithering dither,
+    GstAudioConvertNoiseShaping ns)
 {
   gint idx_in, idx_out;
 

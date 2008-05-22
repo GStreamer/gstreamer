@@ -80,6 +80,11 @@ typedef struct
 }
 GstOggPad;
 
+/**
+ * GstOggMux:
+ *
+ * The ogg muxer object structure.
+ */
 struct _GstOggMux
 {
   GstElement element;

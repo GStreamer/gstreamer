@@ -161,11 +161,27 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
 
   /* FIXME: we don't really want signals for this, but messages on the bus,
    * but then we can't check any longer whether anyone is interested in them */
+  /**
+   * GstCdParanoiaSrc::transport-error
+   * @cdparanoia: The CdParanoia instance
+   * @sector: The sector number at which the error was encountered.
+   *
+   * This signal is emitted whenever an error occurs while reading.
+   * CdParanoia will attempt to recover the data.
+   */
   cdpsrc_signals[TRANSPORT_ERROR] =
       g_signal_new ("transport-error", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstCdParanoiaSrcClass, transport_error),
       NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+  /**
+   * GstCdParanoiaSrc::uncorrected-error
+   * @cdparanoia: The CdParanoia instance
+   * @sector: The sector number at which the error was encountered.
+   *
+   * This signal is emitted whenever an uncorrectable error occurs while
+   * reading. The data could not be read.
+   */
   cdpsrc_signals[UNCORRECTED_ERROR] =
       g_signal_new ("uncorrected-error", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,

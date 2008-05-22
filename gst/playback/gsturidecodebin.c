@@ -56,6 +56,11 @@ typedef struct _GstURIDecodeBinClass GstURIDecodeBinClass;
 #define GST_URI_DECODE_BIN_LOCK(dec) (g_mutex_lock(GST_URI_DECODE_BIN_GET_LOCK(dec)))
 #define GST_URI_DECODE_BIN_UNLOCK(dec) (g_mutex_unlock(GST_URI_DECODE_BIN_GET_LOCK(dec)))
 
+/**
+ * GstURIDecodeBin
+ *
+ * uridecodebin element struct
+ */
 struct _GstURIDecodeBin
 {
   GstBin parent_instance;
@@ -287,7 +292,8 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   /**
    * GstURIDecodeBin::unknown-type:
-   * @pad: the new pad containing caps that cannot be resolved to a 'final' stream type.
+   * @pad: the new pad containing caps that cannot be resolved to a 'final'
+   * stream type.
    * @caps: the #GstCaps of the pad that cannot be resolved.
    *
    * This signal is emitted when a pad for which there is no further possible

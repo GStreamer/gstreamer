@@ -3,7 +3,7 @@
   <description>Pango-based text rendering and overlay</description>
   <filename>../../ext/pango/.libs/libgstpango.so</filename>
   <basename>libgstpango.so</basename>
-  <version>0.10.18.1</version>
+  <version>0.10.19.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins CVS/prerelease</package>
@@ -14,7 +14,7 @@
       <longname>Clock overlay</longname>
       <class>Filter/Editor/Video</class>
       <description>Overlays the current clock time on a video stream</description>
-      <author>Tim-Philipp M303274ller &lt;tim@centricular.net&gt;</author>
+      <author>Tim-Philipp Müller &lt;tim@centricular.net&gt;</author>
       <pads>
         <caps>
           <name>video_sink</name>
@@ -83,7 +83,7 @@
       <longname>Time overlay</longname>
       <class>Filter/Editor/Video</class>
       <description>Overlays buffer time stamps on a video stream</description>
-      <author>Tim-Philipp M303274ller &lt;tim@centricular.net&gt;</author>
+      <author>Tim-Philipp Müller &lt;tim@centricular.net&gt;</author>
       <pads>
         <caps>
           <name>video_sink</name>

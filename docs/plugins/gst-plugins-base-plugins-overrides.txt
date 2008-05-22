@@ -19,7 +19,7 @@ struct _GstPlayBin2 {
 };
 </STRUCT>
 <STRUCT>
-<NAME>GstUriDecodeBin</NAME>
-struct _GstUriDecodeBin {
+<NAME>GstURIDecodeBin</NAME>
+struct _GstURIDecodeBin {
 };
 </STRUCT>

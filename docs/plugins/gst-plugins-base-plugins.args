@@ -1185,7 +1185,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>method</NICK>
 <BLURB>method.</BLURB>
-<DEFAULT>Nearest Neighbour</DEFAULT>
+<DEFAULT>Bilinear</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1739,6 +1739,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstDecodeBin2::sink-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sink Caps</NICK>
+<BLURB>The caps of the input data. (NULL = use typefind element).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstURIDecodeBin::uri</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -2129,6 +2139,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstGioSink::file</NAME>
+<TYPE>GFile*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File</NICK>
+<BLURB>GFile to write to.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstGioSrc::location</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -2136,6 +2156,16 @@
 <NICK>Location</NICK>
 <BLURB>URI location to read from.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGioSrc::file</NAME>
+<TYPE>GFile*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File</NICK>
+<BLURB>GFile to read from.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -2156,5 +2186,145 @@
 <NICK>Stream</NICK>
 <BLURB>Stream to read from.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::connection-speed</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection Speed</NICK>
+<BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::current-audio</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Current audio</NICK>
+<BLURB>Currently playing audio stream (-1 = none).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::current-text</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Current text</NICK>
+<BLURB>Currently playing text stream (-1 = none).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::current-video</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Current video</NICK>
+<BLURB>Currently playing video stream (-1 = none).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::nstreams</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>NStreams</NICK>
+<BLURB>number of streams.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::queue-min-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= G_MAXINT64</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Queue min threshold</NICK>
+<BLURB>Buffering low threshold of internal queues in nanoseconds.</BLURB>
+<DEFAULT>900000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::queue-size</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= G_MAXINT64</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Queue size</NICK>
+<BLURB>Size of internal queues in nanoseconds.</BLURB>
+<DEFAULT>3000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::queue-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= G_MAXINT64</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Queue threshold</NICK>
+<BLURB>Buffering threshold of internal queues in nanoseconds.</BLURB>
+<DEFAULT>2850000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::source</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Source</NICK>
+<BLURB>Source element.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::stream-info</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Stream info</NICK>
+<BLURB>List of streaminfo.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::stream-info-value-array</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>StreamInfo GValueArray</NICK>
+<BLURB>value array of streaminfo.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::subtitle-encoding</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>subtitle encoding</NICK>
+<BLURB>Encoding to assume if input subtitles are not in UTF-8 encoding. If not set, the GST_SUBTITLE_ENCODING environment variable will be checked for an encoding to use. If that is not set either, ISO-8859-15 will be assumed.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::suburi</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>.sub-URI</NICK>
+<BLURB>Optional URI of a subtitle.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBaseBin::uri</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>URI</NICK>
+<BLURB>URI of the media to play.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 

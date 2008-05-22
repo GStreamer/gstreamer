@@ -181,14 +181,14 @@ enum
 #define DEFAULT_TIME_MIN                -1
 #define DEFAULT_BYTES_MIN               -1
 #define DEFAULT_BUFFERS_MIN             -1
-#define DEFAULT_UNIT_TYPE               GST_UNIT_TYPE_BUFFERS
+#define DEFAULT_UNIT_TYPE               GST_TCP_UNIT_TYPE_BUFFERS
 #define DEFAULT_UNITS_MAX               -1
 #define DEFAULT_UNITS_SOFT_MAX          -1
 #define DEFAULT_RECOVER_POLICY          GST_RECOVER_POLICY_NONE
 #define DEFAULT_TIMEOUT                 0
 #define DEFAULT_SYNC_METHOD             GST_SYNC_METHOD_LATEST
 
-#define DEFAULT_BURST_UNIT              GST_UNIT_TYPE_UNDEFINED
+#define DEFAULT_BURST_UNIT              GST_TCP_UNIT_TYPE_UNDEFINED
 #define DEFAULT_BURST_VALUE             0
 
 #define DEFAULT_QOS_DSCP                -1
@@ -306,10 +306,10 @@ gst_unit_type_get_type (void)
 {
   static GType unit_type_type = 0;
   static const GEnumValue unit_type[] = {
-    {GST_UNIT_TYPE_UNDEFINED, "Undefined", "undefined"},
-    {GST_UNIT_TYPE_BUFFERS, "Buffers", "buffers"},
-    {GST_UNIT_TYPE_BYTES, "Bytes", "bytes"},
-    {GST_UNIT_TYPE_TIME, "Time", "time"},
+    {GST_TCP_UNIT_TYPE_UNDEFINED, "Undefined", "undefined"},
+    {GST_TCP_UNIT_TYPE_BUFFERS, "Buffers", "buffers"},
+    {GST_TCP_UNIT_TYPE_BYTES, "Bytes", "bytes"},
+    {GST_TCP_UNIT_TYPE_TIME, "Time", "time"},
     {0, NULL, NULL},
   };
 
@@ -549,7 +549,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
           remove), NULL, NULL, gst_tcp_marshal_VOID__INT, G_TYPE_NONE, 1,
       G_TYPE_INT);
   /**
-   * GstMultiFdSink::remove_flush:
+   * GstMultiFdSink::remove-flush:
    * @gstmultifdsink: the multifdsink element to emit this signal on
    * @fd:             the file descriptor to remove from multifdsink
    *
@@ -786,8 +786,8 @@ setup_dscp (GstMultiFdSink * sink)
 /* "add-full" signal implementation */
 void
 gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
-    GstSyncMethod sync_method, GstUnitType min_unit, guint64 min_value,
-    GstUnitType max_unit, guint64 max_value)
+    GstSyncMethod sync_method, GstTCPUnitType min_unit, guint64 min_value,
+    GstTCPUnitType max_unit, guint64 max_value)
 {
   GstTCPClient *client;
   GList *clink;
@@ -1493,9 +1493,9 @@ static gint
 get_buffers_max (GstMultiFdSink * sink, gint64 max)
 {
   switch (sink->unit_type) {
-    case GST_UNIT_TYPE_BUFFERS:
+    case GST_TCP_UNIT_TYPE_BUFFERS:
       return max;
-    case GST_UNIT_TYPE_TIME:
+    case GST_TCP_UNIT_TYPE_TIME:
     {
       GstBuffer *buf;
       int i;
@@ -1519,7 +1519,7 @@ get_buffers_max (GstMultiFdSink * sink, gint64 max)
       }
       return len + 1;
     }
-    case GST_UNIT_TYPE_BYTES:
+    case GST_TCP_UNIT_TYPE_BYTES:
     {
       GstBuffer *buf;
       int i;
@@ -1662,23 +1662,23 @@ find_limits (GstMultiFdSink * sink,
  * Returns: FALSE if the unit is unknown or undefined. TRUE otherwise.
  */
 static gboolean
-assign_value (GstUnitType unit, guint64 value, gint * bytes, gint * buffers,
+assign_value (GstTCPUnitType unit, guint64 value, gint * bytes, gint * buffers,
     GstClockTime * time)
 {
   gboolean res = TRUE;
 
   /* set only the limit of the given format to the given value */
   switch (unit) {
-    case GST_UNIT_TYPE_BUFFERS:
+    case GST_TCP_UNIT_TYPE_BUFFERS:
       *buffers = (gint) value;
       break;
-    case GST_UNIT_TYPE_TIME:
+    case GST_TCP_UNIT_TYPE_TIME:
       *time = value;
       break;
-    case GST_UNIT_TYPE_BYTES:
+    case GST_TCP_UNIT_TYPE_BYTES:
       *bytes = (gint) value;
       break;
-    case GST_UNIT_TYPE_UNDEFINED:
+    case GST_TCP_UNIT_TYPE_UNDEFINED:
     default:
       res = FALSE;
       break;
@@ -1695,8 +1695,9 @@ assign_value (GstUnitType unit, guint64 value, gint * bytes, gint * buffers,
  * function returns FALSE.
  */
 static gboolean
-count_burst_unit (GstMultiFdSink * sink, gint * min_idx, GstUnitType min_unit,
-    guint64 min_value, gint * max_idx, GstUnitType max_unit, guint64 max_value)
+count_burst_unit (GstMultiFdSink * sink, gint * min_idx,
+    GstTCPUnitType min_unit, guint64 min_value, gint * max_idx,
+    GstTCPUnitType max_unit, guint64 max_value)
 {
   gint bytes_min = -1, buffers_min = -1;
   gint bytes_max = -1, buffers_max = -1;

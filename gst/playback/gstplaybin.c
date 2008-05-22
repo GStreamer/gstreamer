@@ -264,6 +264,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 typedef struct _GstPlayBin GstPlayBin;
 typedef struct _GstPlayBinClass GstPlayBinClass;
 
+/**
+ * GstPlayBin:
+ *
+ * High-level player element
+ */
 struct _GstPlayBin
 {
   GstPlayBaseBin parent;

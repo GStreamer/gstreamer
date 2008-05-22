@@ -9,7 +9,6 @@ GST_TYPE_ADDER
 GST_ADDER_CLASS
 GST_IS_ADDER_CLASS
 GST_ADDER_GET_CLASS
-gst_adder_factory_init
 gst_adder_get_type
 GstAdderClass
 GstAdderFormat
@@ -71,6 +70,8 @@ gst_alsasrc_get_type
 <FILE>element-audioconvert</FILE>
 <TITLE>audioconvert</TITLE>
 GstAudioConvert
+GstAudioConvertDithering
+GstAudioConvertNoiseShaping
 <SUBSECTION Standard>
 GST_AUDIO_CONVERT
 GST_AUDIO_CONVERT_CLASS
@@ -78,6 +79,17 @@ GST_IS_AUDIO_CONVERT
 GST_IS_AUDIO_CONVERT_CLASS
 GST_TYPE_AUDIO_CONVERT
 GstAudioConvertClass
+AudioConvertCtx
+AudioConvertFmt
+AudioConvertMix
+AudioConvertPack
+AudioConvertQuantize
+AudioConvertUnpack
+audio_convert_clean_context
+audio_convert_clean_fmt
+audio_convert_convert
+audio_convert_get_sizes
+audio_convert_prepare_context
 </SECTION>
 
 <SECTION>
@@ -107,12 +119,12 @@ GST_IS_AUDIO_TEST_SRC_CLASS
 GST_TYPE_AUDIO_TEST_SRC
 GstAudioTestSrcClass
 GstAudioTestSrcFormat
-gst_audio_test_src_factory_init
 gst_audio_test_src_get_type
 GstPinkNoise
 PINK_MAX_RANDOM_ROWS
 PINK_RANDOM_BITS
 PINK_RANDOM_SHIFT
+ProcessFunc
 </SECTION>
 
 <SECTION>
@@ -128,6 +140,8 @@ GST_IS_CD_PARANOIA_SRC
 GST_IS_CD_PARANOIA_SRC_CLASS
 GST_TYPE_CD_PARANOIA_SRC
 gst_cd_paranoia_src_get_type
+size16
+size32
 </SECTION>
 
 <SECTION>
@@ -263,6 +277,8 @@ GstMultiFdSink
 GstRecoverPolicy
 GstSyncMethod
 GstClientStatus
+GstTCPProtocol
+GstTCPUnitType
 <SUBSECTION Standard>
 CLIENTS_LOCK
 CLIENTS_LOCK_FREE
@@ -275,7 +291,6 @@ GST_MULTI_FD_SINK
 GST_MULTI_FD_SINK_CLASS
 GST_MULTI_FD_SINK_GET_CLASS
 GstTCPClient
-GstUnitType
 GstMultiFdSinkFlags
 GstMultiFdSinkClass
 gst_multi_fd_sink_add
@@ -285,6 +300,8 @@ gst_multi_fd_sink_get_stats
 gst_multi_fd_sink_get_type
 gst_multi_fd_sink_remove
 gst_multi_fd_sink_remove_flush
+GST_TYPE_TCP_PROTOCOL
+gst_tcp_protocol_get_type
 </SECTION>
 
 <SECTION>
@@ -326,6 +343,16 @@ GST_IS_OGG_DEMUX
 GST_IS_OGG_DEMUX_CLASS
 GST_TYPE_OGG_DEMUX
 GstOggDemuxClass
+GST_IS_OGG_PAD
+GST_IS_OGG_PAD_CLASS
+GST_OGG_PAD
+GST_OGG_PAD_CLASS
+GST_TYPE_OGG_PAD
+GstOggChain
+GstOggPad
+GstOggPadClass
+GstOggPadMode
+GstOggPadState
 </SECTION>
 
 <SECTION>
@@ -333,6 +360,7 @@ GstOggDemuxClass
 <TITLE>oggmux</TITLE>
 GstOggMux
 <SUBSECTION Standard>
+gst_ogg_mux_get_type
 GST_OGG_MUX
 GST_OGG_MUX_CLASS
 GST_IS_OGG_MUX
@@ -352,7 +380,10 @@ GstPlayBin
 <FILE>element-playbin2</FILE>
 <TITLE>playbin2</TITLE>
 GstPlayBin2
+GstPlayFlags
 <SUBSECTION Standard>
+gst_play_flags_get_type
+GST_TYPE_PLAY_FLAGS
 </SECTION>
 
 <SECTION>
@@ -367,6 +398,19 @@ GST_TYPE_TCP_SERVER_SINK
 gst_tcp_server_sink_get_type
 GST_IS_TCP_SERVER_SINK_CLASS
 GST_IS_TCP_SERVER_SINK
+TCP_DEFAULT_HOST
+TCP_DEFAULT_PORT
+TCP_HIGHEST_PORT
+gst_tcp_gdp_read_buffer
+gst_tcp_gdp_read_caps
+gst_tcp_gdp_read_event
+gst_tcp_gdp_write_buffer
+gst_tcp_gdp_write_caps
+gst_tcp_gdp_write_event
+gst_tcp_host_to_ip
+gst_tcp_read_buffer
+gst_tcp_socket_close
+gst_tcp_socket_write
 </SECTION>
 
 <SECTION>
@@ -447,8 +491,11 @@ gst_time_overlay_get_type
 <SECTION>
 <FILE>element-uridecodebin</FILE>
 <TITLE>uridecodebin</TITLE>
-GstUriDecodeBin
+GstURIDecodeBin
+GstAutoplugSelectResult
 <SUBSECTION Standard>
+GST_TYPE_AUTOPLUG_SELECT_RESULT
+gst_autoplug_select_result_get_type
 </SECTION>
 
 <SECTION>
@@ -500,7 +547,6 @@ gst_video_test_src_get_type
 <TITLE>volume</TITLE>
 GstVolume
 <SUBSECTION Standard>
-GstVolumeFormat
 GST_VOLUME
 GST_VOLUME_CLASS
 GST_IS_VOLUME
@@ -577,11 +623,12 @@ GST_XIMAGESINK_CLASS
 GST_IS_XIMAGESINK
 GST_IS_XIMAGESINK_CLASS
 GST_TYPE_XIMAGESINK
-GstXImagesSinkClass
 gst_ximagesink_get_type
 GstXImageBuffer
 GstXImageBufferClass
 GstXImageSinkClass
+GstXContext
+GstXWindow
 </SECTION>
 
 <SECTION>
@@ -594,7 +641,6 @@ GST_XVIMAGESINK_CLASS
 GST_IS_XVIMAGESINK
 GST_IS_XVIMAGESINK_CLASS
 GST_TYPE_XVIMAGESINK
-GstXvImagesSinkClass
 gst_xvimagesink_get_type
 GstXvImageBuffer
 GstXvImageBufferClass
