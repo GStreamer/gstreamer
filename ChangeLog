@@ -1,3 +1,15 @@
+2008-05-22  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* sys/oss4/oss4-mixer.c: (gst_oss4_mixer_open):
+	* sys/oss4/oss4-property-probe.c:
+	  (gst_oss4_property_probe_find_device_name),
+	  (gst_oss4_property_probe_find_device_name_nofd):
+	* sys/oss4/oss4-property-probe.h:
+	* sys/oss4/oss4-sink.c: (gst_oss4_sink_get_property):
+	* sys/oss4/oss4-source.c: (gst_oss4_source_get_property):
+	  Make device-name probing in NULL state work better (e.g. for the
+	  gnome-control-center sound capplet).
+
 2008-05-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>

@@ -256,11 +256,17 @@ gst_oss4_source_get_property (GObject * object, guint prop_id,
           g_value_set_string (value, oss->device_name);
           gst_oss4_source_close (GST_AUDIO_SRC (oss));
         } else {
-          g_value_set_string (value, NULL);
+          gchar *name = NULL;
+
+          gst_oss4_property_probe_find_device_name_nofd (GST_OBJECT (oss),
+              oss->device, &name);
+          g_value_set_string (value, name);
+          g_free (name);
         }
       } else {
         g_value_set_string (value, oss->device_name);
       }
+
       GST_OBJECT_UNLOCK (oss);
       break;
     default:

@@ -303,6 +303,9 @@ open_failed:
       GST_ELEMENT_ERROR (mixer, RESOURCE, OPEN_READ_WRITE,
           (_("Could not open audio device for mixer control handling.")),
           GST_ERROR_SYSTEM);
+    } else {
+      GST_DEBUG_OBJECT (mixer, "open failed: %s (ignoring errors)",
+          g_strerror (errno));
     }
     g_free (device);
     return FALSE;
@@ -315,6 +318,8 @@ legacy_oss:
           (_("Could not open audio device for mixer control handling."
                   "This version of the Open Sound System is not supported by this "
                   "element.")), ("Try the 'ossmixer' element instead"));
+    } else {
+      GST_DEBUG_OBJECT (mixer, "open failed: legacy oss (ignoring errors)");
     }
     g_free (device);
     return FALSE;
