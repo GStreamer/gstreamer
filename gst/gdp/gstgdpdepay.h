@@ -48,6 +48,11 @@ typedef enum {
 typedef struct _GstGDPDepay GstGDPDepay;
 typedef struct _GstGDPDepayClass GstGDPDepayClass;
 
+/**
+ * GstGDPDepay:
+ *
+ * Private gdpdepay element structure.
+ */
 struct _GstGDPDepay
 {
   GstElement element;
