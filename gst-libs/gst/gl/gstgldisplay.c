@@ -411,9 +411,9 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     else
     {
         //OpenGL > 2.1.0 and Glew > 1.5.0
-        GString* opengl_version = g_string_new (glGetString (GL_VERSION));
+        GString* opengl_version = g_string_new ((gchar*) glGetString (GL_VERSION));
         gboolean check_versions = g_str_has_prefix (opengl_version->str, "2.1");
-        GString* glew_version = g_string_new (glewGetString (GLEW_VERSION));
+        GString* glew_version = g_string_new ((gchar*) glewGetString (GLEW_VERSION));
         check_versions = check_versions && g_str_has_prefix (glew_version->str, "1.5");
 
 
