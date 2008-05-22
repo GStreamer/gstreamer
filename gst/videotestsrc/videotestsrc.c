@@ -1070,14 +1070,17 @@ paint_hline_I420 (paintinfo * p, int x, int y, int w)
 static void
 paint_hline_NV12_NV21 (paintinfo * p, int x, int y, int w)
 {
-  int x1 = x / 2;
-  int x2 = (x + w) / 2;
+  int x1 = GST_ROUND_UP_2 (x) / 2;
+  int x2 = GST_ROUND_UP_2 (x + w) / 2;
   int offset = y * p->ystride;
-  int offsetuv = (y / 2) * p->ustride + x;
+  int offsetuv = GST_ROUND_UP_2 ((y / 2) * p->ustride + x);
+  int uvlength = x2 - x1;
 
   oil_splat_u8_ns (p->yp + offset + x, &p->color->Y, w);
-  oil_splat_u8 (p->up + offsetuv, 2, &p->color->U, x2 - x1);
-  oil_splat_u8 (p->vp + offsetuv, 2, &p->color->V, x2 - x1);
+  if (uvlength) {
+    oil_splat_u8 (p->up + offsetuv, 2, &p->color->U, x2 - x1);
+    oil_splat_u8 (p->vp + offsetuv, 2, &p->color->V, x2 - x1);
+  }
 }
 
 static void

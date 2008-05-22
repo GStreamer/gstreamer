@@ -1,3 +1,10 @@
+2008-05-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* gst/videotestsrc/videotestsrc.c: (paint_hline_NV12_NV21):
+	Fix generation of NV12/NV21 frames. Fixes bug #532454.
+
 2008-05-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>
