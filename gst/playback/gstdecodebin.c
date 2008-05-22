@@ -634,6 +634,9 @@ remove_fakesink (GstDecodeBin * decode_bin)
   if (decode_bin->fakesink) {
     GST_DEBUG_OBJECT (decode_bin, "Removing fakesink and marking state dirty");
 
+    /* Lock the state to prevent it from changing state to non-NULL
+     * before it's removed */
+    gst_element_set_locked_state (decode_bin->fakesink, TRUE);
     /* setting the state to NULL is never async */
     gst_element_set_state (decode_bin->fakesink, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (decode_bin), decode_bin->fakesink);

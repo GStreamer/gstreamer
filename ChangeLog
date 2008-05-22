@@ -1,3 +1,12 @@
+2008-05-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* gst/playback/gstdecodebin.c: (remove_fakesink):
+	Lock the fakesink before setting the state to NULL and removing it from
+	the bin so that a concurrent state change cannot interfere. 
+	Fixes #534331.
+
 2008-05-21  Felipe Contreras  <felipe.contreras@gmail.com>
 
 	* docs/Makefile.am:
