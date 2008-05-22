@@ -3,10 +3,10 @@
   <description>A TRM signature producer based on libmusicbrainz</description>
   <filename>../../ext/musicbrainz/.libs/libgsttrm.so</filename>
   <basename>libgsttrm.so</basename>
-  <version>0.10.7</version>
+  <version>0.10.7.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,14 +17,14 @@
       <author>Jeremy Simon &lt;jsimon13@yahoo.fr&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int){ 8, 16 }, depth=(int){ 8, 16 }, rate=(int)[ 8000, 96000 ], channels=(int)[ 1, 2 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int){ 8, 16 }, depth=(int){ 8, 16 }, rate=(int)[ 8000, 96000 ], channels=(int)[ 1, 2 ]</details>
         </caps>

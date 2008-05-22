@@ -1863,8 +1863,8 @@
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>edge-detect</NICK>
-<BLURB>edge-detect.</BLURB>
+<NICK>edge detection weighting</NICK>
+<BLURB>Weighting value used for calculating the edge detection matrix.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1873,8 +1873,8 @@
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>threshold</NICK>
-<BLURB>threshold.</BLURB>
+<NICK>Edge-detection threshold</NICK>
+<BLURB>Threshold value for the interlacing artifacts in the output of the edge detection.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17934,7 +17934,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Caps</NICK>
-<BLURB>The caps of the sink pad.</BLURB>
+<BLURB>The allowed caps for the sink pad.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -17944,8 +17944,38 @@
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>EOS</NICK>
-<BLURB>Check if the sink is EOS.</BLURB>
+<BLURB>Check if the sink is EOS or not started.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSink::drop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Drop</NICK>
+<BLURB>Drop old buffers when the buffer queue is filled.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSink::emit-signals</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Emit signals</NICK>
+<BLURB>Emit new-preroll and new-buffer signals.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSink::max-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Buffers</NICK>
+<BLURB>The maximum number of buffers to queue internally (0 = unlimited).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18094,8 +18124,18 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timestamp Offset</NICK>
-<BLURB>Adjust buffer RTP timestamps with offset in nanoseconds.</BLURB>
+<BLURB>Adjust buffer timestamps with offset in nanoseconds.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::do-lost</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Lost</NICK>
+<BLURB>Send an event downstream when a packet is lost.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18176,6 +18216,16 @@
 <NICK>SDES TOOL</NICK>
 <BLURB>The TOOL to put in SDES messages of this session.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::do-lost</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Lost</NICK>
+<BLURB>Send an event downstream when a packet is lost.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19141,5 +19191,815 @@
 <NICK>ybsep</NICK>
 <BLURB>ybsep.</BLURB>
 <DEFAULT>12</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFileSrc::caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps</NICK>
+<BLURB>Caps describing the format of the data.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFileSrc::index</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Index</NICK>
+<BLURB>Index to use with location property to create file names.  The index is incremented by one for each buffer read.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFileSrc::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Location</NICK>
+<BLURB>Pattern to create file names of input files.  File names are created by calling sprintf() with the pattern and the current index.</BLURB>
+<DEFAULT>"%05d"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFileSink::index</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Index</NICK>
+<BLURB>Index to use with location property to create file names.  The index is incremented by one for each buffer read.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFileSink::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Location</NICK>
+<BLURB>Location of the file to write.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps</NICK>
+<BLURB>The allowed caps for the src pad.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::max-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Buffers</NICK>
+<BLURB>The maximum number of buffers to queue internally (0 = unlimited).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::seekable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Seekable</NICK>
+<BLURB>If the source is seekable.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::size</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size</NICK>
+<BLURB>The size of the data stream (-1 if unknown).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDeinterleave::keep-positions</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keep positions</NICK>
+<BLURB>Keep the original channel positions on the output buffers.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizerNBands::num-bands</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,64]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>num-bands</NICK>
+<BLURB>number of different bands to use.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer3Bands::band0</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>110 Hz</NICK>
+<BLURB>gain for the frequency band 100 Hz, ranging from -24.0 to +12.0.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer3Bands::band1</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>1100 Hz</NICK>
+<BLURB>gain for the frequency band 1100 Hz, ranging from -24.0 to +12.0.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer3Bands::band2</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>11 kHz</NICK>
+<BLURB>gain for the frequency band 11 kHz, ranging from -24.0 to +12.0.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band0</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>29 Hz</NICK>
+<BLURB>gain for the frequency band 29 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band1</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>59 Hz</NICK>
+<BLURB>gain for the frequency band 59 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band2</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>119 Hz</NICK>
+<BLURB>gain for the frequency band 119 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band3</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>227 Hz</NICK>
+<BLURB>gain for the frequency band 227 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band4</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>474 Hz</NICK>
+<BLURB>gain for the frequency band 474 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band5</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>947 Hz</NICK>
+<BLURB>gain for the frequency band 947 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band6</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>1889 Hz</NICK>
+<BLURB>gain for the frequency band 1889 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band7</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>3770 Hz</NICK>
+<BLURB>gain for the frequency band 3770 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band8</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>7523 Hz</NICK>
+<BLURB>gain for the frequency band 7523 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIirEqualizer10Bands::band9</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-24,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>15011 Hz</NICK>
+<BLURB>gain for the frequency band 15011 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpectrum::bands</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bands</NICK>
+<BLURB>number of frequency bands.</BLURB>
+<DEFAULT>128</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpectrum::interval</NAME>
+<TYPE>guint64</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interval</NICK>
+<BLURB>Interval of time between message posts (in nanoseconds).</BLURB>
+<DEFAULT>100000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpectrum::message</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Message</NICK>
+<BLURB>Post a level message for each passed interval.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpectrum::message-magnitude</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Magnitude</NICK>
+<BLURB>Post the magnitude of the spectrum.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpectrum::message-phase</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Phase</NICK>
+<BLURB>Post the phase of the spectrum.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpectrum::threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE><= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB>dB threshold for result. All lower values will be set to this.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMplex::bufsize</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[20,4000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Decoder buf. size</NICK>
+<BLURB>Target decoders video buffer size (kB) [default determined by format if not explicitly set].</BLURB>
+<DEFAULT>46</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMplex::format</NAME>
+<TYPE>GstMplexFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format</NICK>
+<BLURB>Encoding profile format.</BLURB>
+<DEFAULT>Generic MPEG-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMplex::mux-bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,15360]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mux. bitrate</NICK>
+<BLURB>Bitrate of output stream in kbps (0 = autodetect).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMplex::packets-per-pack</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Packets per pack</NICK>
+<BLURB>Number of packets per pack for generic formats.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMplex::sector-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[256,16384]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sector size</NICK>
+<BLURB>Specify sector size in bytes for generic formats.</BLURB>
+<DEFAULT>2048</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMplex::system-headers</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>System headers</NICK>
+<BLURB>Create system header in every pack for generic formats.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMplex::vbr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VBR</NICK>
+<BLURB>Whether the input video stream is variable bitrate.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::automatic-redirect</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>automatic-redirect</NICK>
+<BLURB>Automatically follow HTTP redirects (HTTP Status Code 3xx).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::cookies</NAME>
+<TYPE>GStrv*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Cookies</NICK>
+<BLURB>HTTP request cookies.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::iradio-genre</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-genre</NICK>
+<BLURB>Genre of the stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::iradio-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>iradio-mode</NICK>
+<BLURB>Enable internet radio mode (extraction of shoutcast/icecast metadata).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::iradio-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-name</NICK>
+<BLURB>Name of the stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::iradio-title</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-title</NICK>
+<BLURB>Name of currently playing song.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::iradio-url</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-url</NICK>
+<BLURB>Homepage URL for radio stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>Location to read from.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::proxy</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxy</NICK>
+<BLURB>HTTP proxy server URI.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::user-agent</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>User-Agent</NICK>
+<BLURB>Value of the User-Agent HTTP request header field.</BLURB>
+<DEFAULT>"GStreamer souphttpsrc "</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-mono-panner::Azimuth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Azimuth</NICK>
+<BLURB>Azimuth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-mono-panner::Elevation</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-90,90]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Elevation</NICK>
+<BLURB>Elevation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-stereo-panner::Azimuth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Azimuth</NICK>
+<BLURB>Azimuth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-stereo-panner::Elevation</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-90,90]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Elevation</NICK>
+<BLURB>Elevation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-stereo-panner::Width</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-90,90]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Width.</BLURB>
+<DEFAULT>90</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-rotator::Angle</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Angle</NICK>
+<BLURB>Angle.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-square-decoder::Distance</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,30]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Distance</NICK>
+<BLURB>Distance.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-square-decoder::Front-spkr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Front-spkr</NICK>
+<BLURB>Front-spkr.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-square-decoder::HF-XY-gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,2]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>HF-XY-gain</NICK>
+<BLURB>HF-XY-gain.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-square-decoder::LF-XY-gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,2]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>LF-XY-gain</NICK>
+<BLURB>LF-XY-gain.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-square-decoder::Shelf-filt</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Shelf-filt</NICK>
+<BLURB>Shelf-filt.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-square-decoder::Shelf-freq</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[200,800]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Shelf-freq</NICK>
+<BLURB>Shelf-freq.</BLURB>
+<DEFAULT>500</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-hexagon-decoder::Distance</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,30]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Distance</NICK>
+<BLURB>Distance.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-hexagon-decoder::Front-spkr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Front-spkr</NICK>
+<BLURB>Front-spkr.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-hexagon-decoder::HF-XY-gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,2]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>HF-XY-gain</NICK>
+<BLURB>HF-XY-gain.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-hexagon-decoder::LF-XY-gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,2]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>LF-XY-gain</NICK>
+<BLURB>LF-XY-gain.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-hexagon-decoder::Shelf-filt</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Shelf-filt</NICK>
+<BLURB>Shelf-filt.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-hexagon-decoder::Shelf-freq</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[200,800]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Shelf-freq</NICK>
+<BLURB>Shelf-freq.</BLURB>
+<DEFAULT>500</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-cube-decoder::Distance</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,30]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Distance</NICK>
+<BLURB>Distance.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-cube-decoder::HF-XYZ-gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,3]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>HF-XYZ-gain</NICK>
+<BLURB>HF-XYZ-gain.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-cube-decoder::LF-XYZ-gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,3]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>LF-XYZ-gain</NICK>
+<BLURB>LF-XYZ-gain.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-cube-decoder::Shelf-filt</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Shelf-filt</NICK>
+<BLURB>Shelf-filt.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-11-cube-decoder::Shelf-freq</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[200,800]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Shelf-freq</NICK>
+<BLURB>Shelf-freq.</BLURB>
+<DEFAULT>500</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-G2reverb::Damping</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Damping</NICK>
+<BLURB>Damping.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-G2reverb::Dry-sound</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-80,0]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Dry-sound</NICK>
+<BLURB>Dry-sound.</BLURB>
+<DEFAULT>-80</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-G2reverb::Input-BW</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Input-BW</NICK>
+<BLURB>Input-BW.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-G2reverb::Reflections</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-80,0]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reflections</NICK>
+<BLURB>Reflections.</BLURB>
+<DEFAULT>-80</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-G2reverb::Reverb-tail</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-80,0]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reverb-tail</NICK>
+<BLURB>Reverb-tail.</BLURB>
+<DEFAULT>-80</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-G2reverb::Reverb-time</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,20]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reverb-time</NICK>
+<BLURB>Reverb-time.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-G2reverb::Room-size</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[10,150]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Room-size</NICK>
+<BLURB>Room-size.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-21-panner::Azimuth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Azimuth</NICK>
+<BLURB>Azimuth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-21-panner::Elevation</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-90,90]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Elevation</NICK>
+<BLURB>Elevation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-21-rotator::Angle</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Angle</NICK>
+<BLURB>Angle.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOFA::fingerprint</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Resulting fingerprint</NICK>
+<BLURB>Resulting fingerprint.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 

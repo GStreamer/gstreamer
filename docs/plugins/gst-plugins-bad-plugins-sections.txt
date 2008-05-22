@@ -200,6 +200,40 @@ gst_ivorbis_dec_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-interleave</FILE>
+<TITLE>interleave</TITLE>
+GstInterleave
+<SUBSECTION Standard>
+GST_INTERLEAVE
+GST_INTERLEAVE_CLASS
+GST_INTERLEAVE_GET_CLASS
+GST_IS_INTERLEAVE
+GST_IS_INTERLEAVE_CLASS
+GST_TYPE_INTERLEAVE
+GstInterleave
+GstInterleaveClass
+GstInterleaveFunc
+gst_interleave_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-deinterleave</FILE>
+<TITLE>deinterleave</TITLE>
+GstDeinterleave
+<SUBSECTION Standard>
+GST_DEINTERLEAVE
+GST_DEINTERLEAVE_CLASS
+GST_DEINTERLEAVE_GET_CLASS
+GST_IS_DEINTERLEAVE
+GST_IS_DEINTERLEAVE_CLASS
+GST_TYPE_DEINTERLEAVE
+GstDeinterleave
+GstDeinterleaveClass
+GstDeinterleaveFunc
+gst_deinterleave_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-jackaudiosink</FILE>
 GstJackAudioSink
 <TITLE>jackaudiosink</TITLE>

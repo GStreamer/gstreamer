@@ -3,10 +3,10 @@
   <description>Element demuxing FLV stream</description>
   <filename>../../gst/flv/.libs/libgstflvdemux.so</filename>
   <basename>libgstflvdemux.so</basename>
-  <version>0.10.7</version>
+  <version>0.10.7.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,10 +17,10 @@
       <author>Julien Moutte &lt;julien@moutte.net&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-flv</details>
+          <name>video</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
         </caps>
         <caps>
           <name>audio</name>
@@ -29,10 +29,10 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>video</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-flv</details>
         </caps>
       </pads>
     </element>

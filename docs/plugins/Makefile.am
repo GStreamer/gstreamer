@@ -114,6 +114,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/deinterlace/gstdeinterlace.h \
 	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \
 	$(top_srcdir)/gst/festival/gstfestival.h \
+	$(top_srcdir)/gst/interleave/interleave.h \
+	$(top_srcdir)/gst/interleave/deinterleave.h \
 	$(top_srcdir)/gst/modplug/gstmodplug.h \
 	$(top_srcdir)/gst/nuvdemux/gstnuvdemux.h \
 	$(top_srcdir)/gst/rawparse/gstaudioparse.h \

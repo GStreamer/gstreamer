@@ -43,6 +43,10 @@
  * positions stay the same. This restriction will be removed in later versions by adding or
  * removing some source pads as required.
  * </para>
+ * <para>
+ * In most cases a queue and an audioconvert element should be added after each source pad
+ * before further processing of the audio data.
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>

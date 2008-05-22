@@ -3,10 +3,10 @@
   <description>OpenSPC Audio Decoder</description>
   <filename>../../ext/spc/.libs/libgstspc.so</filename>
   <basename>libgstspc.so</basename>
-  <version>0.10.7</version>
+  <version>0.10.7.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,19 +14,19 @@
       <longname>OpenSPC SPC decoder</longname>
       <class>Codec/Audio/Decoder</class>
       <description>Uses OpenSPC to emulate an SPC processor</description>
-      <author>Chris Lee &lt;clee@kde.org&gt;</author>
+      <author>Chris Lee &lt;clee@kde.org&gt;, Brian Koropoff &lt;bkoropoff@gmail.com&gt;</author>
       <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-spc</details>
-        </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)32000, channels=(int)2</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-spc</details>
         </caps>
       </pads>
     </element>

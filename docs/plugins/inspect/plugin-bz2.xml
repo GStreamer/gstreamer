@@ -3,10 +3,10 @@
   <description>Compress or decompress streams</description>
   <filename>../../ext/bz2/.libs/libgstbz2.so</filename>
   <basename>libgstbz2.so</basename>
-  <version>0.10.7</version>
+  <version>0.10.7.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,16 +17,16 @@
       <author>Lutz Mueller &lt;lutz@users.sourceforge.net&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-bzip</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-bzip</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Lutz Mueller &lt;lutz@users.sourceforge.net&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-bzip</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
         </caps>
       </pads>
     </element>

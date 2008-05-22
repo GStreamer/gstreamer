@@ -3,10 +3,10 @@
   <description>Metadata (EXIF, IPTC and XMP) image (JPEG, TIFF) demuxer and muxer</description>
   <filename>../../ext/metadata/.libs/libgstmetadata.so</filename>
   <basename>libgstmetadata.so</basename>
-  <version>0.10.7</version>
+  <version>0.10.7.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,16 +17,16 @@
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>image/jpeg, tags-extracted=(boolean)true; image/png, tags-extracted=(boolean)true</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>image/jpeg, tags-extracted=(boolean)false; image/png, tags-extracted=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>image/jpeg, tags-extracted=(boolean)true; image/png, tags-extracted=(boolean)true</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>image/jpeg; image/png</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>image/jpeg, tags-extracted=(boolean)true; image/png, tags-extracted=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>image/jpeg; image/png</details>
         </caps>
       </pads>
     </element>
