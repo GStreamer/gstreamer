@@ -1,3 +1,10 @@
+2008-05-22  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstparse.c: (_gst_parse_escape), (gst_parse_launchv):
+	* gst/gstutils.c: (gst_parse_bin_from_description):
+	* gst/parse/grammar.y: (graph):
+	  More guards against bad input; typo fix; some minor clean-ups.
+
 2008-05-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>

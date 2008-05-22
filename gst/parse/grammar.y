@@ -794,6 +794,7 @@ _gst_parse_launch (const gchar *str, GError **error)
   yyscan_t scanner;
 
   g_return_val_if_fail (str != NULL, NULL);
+  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
   g.chain = NULL;
   g.links = NULL;

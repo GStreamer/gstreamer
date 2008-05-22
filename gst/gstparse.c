@@ -26,7 +26,7 @@
  * @short_description: Get a pipeline from a text pipeline description
  *
  * These function allow to create a pipeline based on the syntax used in the
- * gst-launch utillity.
+ * gst-launch utility.
  */
 
 
@@ -61,7 +61,6 @@ static gchar *
 _gst_parse_escape (const gchar * str)
 {
   GString *gstr = NULL;
-  gchar *newstr = NULL;
 
   g_return_val_if_fail (str != NULL, NULL);
 
@@ -74,10 +73,7 @@ _gst_parse_escape (const gchar * str)
     str++;
   }
 
-  newstr = gstr->str;
-  g_string_free (gstr, FALSE);
-
-  return newstr;
+  return g_string_free (gstr, FALSE);
 }
 #endif /* !GST_DISABLE_PARSE */
 
@@ -102,6 +98,7 @@ gst_parse_launchv (const gchar ** argv, GError ** error)
   gchar *tmp;
 
   g_return_val_if_fail (argv != NULL, NULL);
+  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
   /* let's give it a nice size. */
   str = g_string_sized_new (1024);
@@ -124,7 +121,7 @@ gst_parse_launchv (const gchar ** argv, GError ** error)
 #else
   gchar *msg;
 
-  GST_WARNING ("Disabled API called: gst_parse_launchv()");
+  GST_WARNING ("Disabled API called");
 
   msg = gst_error_get_message (GST_CORE_ERROR, GST_CORE_ERROR_DISABLED);
   g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_DISABLED, "%s", msg);

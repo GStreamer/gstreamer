@@ -3377,7 +3377,7 @@ gst_parse_bin_from_description (const gchar * bin_description,
 #else
   gchar *msg;
 
-  GST_WARNING ("Disabled API called: gst_parse_bin_from_description()");
+  GST_WARNING ("Disabled API called");
 
   msg = gst_error_get_message (GST_CORE_ERROR, GST_CORE_ERROR_DISABLED);
   g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_DISABLED, "%s", msg);
