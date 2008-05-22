@@ -1,5 +1,16 @@
 2008-05-22  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* tests/icles/.cvsignore:
+	* tests/icles/Makefile.am:
+	* tests/icles/test-oss4.c: (opt_show_mixer_messages), (WAIT_TIME),
+	  (show_mixer_messages), (probe_mixer_tracks), (probe_pad),
+	  (probe_details), (probe_element), (main):
+	  Small oss4 test that probes for available devices and retrieves
+	  their caps and mixer tracks and all that. Also allows testing of
+	  mixer change messages on the bus.
+
+2008-05-22  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* sys/oss4/oss4-mixer.c: (gst_oss4_mixer_open):
 	* sys/oss4/oss4-property-probe.c:
 	  (gst_oss4_property_probe_find_device_name),

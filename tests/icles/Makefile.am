@@ -1,3 +1,9 @@
+if USE_OSS4
+OSS4_TESTS=test-oss4
+else
+OSS4_TESTS=
+endif
+
 if USE_SOUNDTOUCH
 
 GST_SOUNDTOUCH_TESTS = pitch-test
@@ -40,6 +46,10 @@ equalizer_test_CFLAGS  = $(GST_CFLAGS)
 equalizer_test_LDADD   = $(GST_LIBS)
 equalizer_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
+test_oss4_SOURCES = test-oss4.c
+test_oss4_CFLAGS  = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+test_oss4_LDADD   = $(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-0.10 $(GST_LIBS)
+test_oss4_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 output_selector_test_SOURCES = output-selector-test.c
 output_selector_test_CFLAGS  = $(GST_CFLAGS)
@@ -47,6 +57,6 @@ output_selector_test_LDADD   = $(GST_LIBS)
 output_selector_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 
-noinst_PROGRAMS = $(GST_SOUNDTOUCH_TESTS) $(GST_METADATA_TESTS) \
+noinst_PROGRAMS = $(GST_SOUNDTOUCH_TESTS) $(GST_METADATA_TESTS) $(OSS4_TESTS) \
 	equalizer-test output-selector-test
 
