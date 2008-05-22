@@ -255,7 +255,12 @@ gst_oss4_sink_get_property (GObject * object, guint prop_id,
           g_value_set_string (value, oss->device_name);
           gst_oss4_sink_close (GST_AUDIO_SINK (oss));
         } else {
-          g_value_set_string (value, oss->device_name);
+          gchar *name = NULL;
+
+          gst_oss4_property_probe_find_device_name_nofd (GST_OBJECT (oss),
+              oss->device, &name);
+          g_value_set_string (value, name);
+          g_free (name);
         }
       } else {
         g_value_set_string (value, oss->device_name);
