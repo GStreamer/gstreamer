@@ -1,3 +1,18 @@
+2008-05-23  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_chain),
+	(gst_base_rtp_depayload_handle_sink_event),
+	(gst_base_rtp_depayload_push_full),
+	(gst_base_rtp_depayload_change_state):
+	Check sequence numbers, mark input buffers with a discont flag for the
+	subclass when we detected a gap, drop duplicate buffers. We do this
+	because one can use the element without a jitterbuffer in front and we
+	don't want to feed the subclasses invalid or reordered data.
+	Do an error when the subclass did not provide a process function instead
+	of crashing.
+	Some other small cleanups.
+
 2008-05-22  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/videotestsrc/videotestsrc.c: (paint_hline_NV12_NV21):
