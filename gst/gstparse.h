@@ -58,9 +58,58 @@ typedef enum
   GST_PARSE_ERROR_EMPTY
 } GstParseError;
 
+/**
+ * GstParseFlags:
+ * @GST_PARSE_FLAG_NONE: Do not use any special parsing options.
+ * @GST_PARSE_FLAG_FATAL_ERRORS: Always return NULL when an error occurs
+ *     (default behaviour is to return partially constructed bins or elements
+ *      in some cases)
+ *
+ * Parsing options.
+ *
+ * Since: 0.10.20
+ */
+typedef enum
+{
+  GST_PARSE_FLAG_NONE = 0,
+  GST_PARSE_FLAG_FATAL_ERRORS = (1 << 0)
+} GstParseFlags;
 
-GstElement*	gst_parse_launch	(const gchar *pipeline_description, GError **error);
-GstElement*	gst_parse_launchv	(const gchar **argv, GError **error);
+/**
+ * GstParseContext:
+ *
+ * Opaque structure.
+ *
+ * Since: 0.10.20
+ */
+typedef struct _GstParseContext GstParseContext;
+
+/* create, process and free a parse context */
+
+GstParseContext * gst_parse_context_new (void);
+
+gchar          ** gst_parse_context_get_missing_elements (GstParseContext * context);
+
+void              gst_parse_context_free (GstParseContext * context);
+
+
+/* parse functions */
+
+GstElement      * gst_parse_launch       (const gchar      * pipeline_description,
+                                          GError          ** error);
+
+GstElement      * gst_parse_launchv      (const gchar     ** argv,
+                                          GError          ** error);
+
+GstElement      * gst_parse_launch_full  (const gchar      * pipeline_description,
+                                          GstParseContext  * context,
+                                          GstParseFlags      flags,
+                                          GError          ** error);
+
+GstElement      * gst_parse_launchv_full (const gchar     ** argv,
+                                          GstParseContext  * context,
+                                          GstParseFlags      flags,
+                                          GError          ** error);
 
 G_END_DECLS
 

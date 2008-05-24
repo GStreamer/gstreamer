@@ -2,6 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2002 Andy Wingo <wingo@pobox.com>
+ *                    2008 Tim-Philipp Müller <tim centricular net>
  *
  * gstparse.c: get a pipeline from a text pipeline description
  *
@@ -37,7 +38,8 @@
 #include "gsterror.h"
 #include "gstinfo.h"
 
-extern GstElement *_gst_parse_launch (const gchar *, GError **);
+extern GstElement *_gst_parse_launch (const gchar *, GError **,
+    GstParseContext *, GstParseFlags);
 
 /**
  * gst_parse_error_quark:
@@ -54,6 +56,94 @@ gst_parse_error_quark (void)
   if (!quark)
     quark = g_quark_from_static_string ("gst_parse_error");
   return quark;
+}
+
+
+/**
+ * gst_parse_context_new:
+ *
+ * Allocates a parse context for use with gst_parse_launch_full() or
+ * gst_parse_launchv_full().
+ *
+ * Returns: a newly-allocated parse context. Free with gst_parse_context_free()
+ *     when no longer needed.
+ *
+ * Since: 0.10.20
+ */
+GstParseContext *
+gst_parse_context_new (void)
+{
+#ifndef GST_DISABLE_PARSE
+  GstParseContext *ctx;
+
+  ctx = g_slice_new (GstParseContext);
+  ctx->missing_elements = NULL;
+
+  return ctx;
+#else
+  return NULL;
+#endif
+}
+
+/**
+ * gst_parse_context_free:
+ * @context: a #GstParseContext
+ *
+ * Frees a parse context previously allocated with gst_parse_context_new().
+ *
+ * Since: 0.10.20
+ */
+void
+gst_parse_context_free (GstParseContext * context)
+{
+#ifndef GST_DISABLE_PARSE
+  if (context) {
+    g_list_foreach (context->missing_elements, (GFunc) g_free, NULL);
+    g_list_free (context->missing_elements);
+    g_slice_free (GstParseContext, context);
+  }
+#endif
+}
+
+/**
+ * gst_parse_context_get_missing_elements:
+ * @context: a #GstParseContext
+ *
+ * Retrieve missing elements from a previous run of gst_parse_launch_full()
+ * or gst_parse_launchv_full(). Will only return results if an error code
+ * of %GST_PARSE_ERROR_NO_SUCH_ELEMENT was returned.
+ *
+ * Returns: a NULL-terminated array of element factory name strings of
+ *     missing elements. Free with g_strfreev() when no longer needed.
+ *
+ * Since: 0.10.20
+ */
+gchar **
+gst_parse_context_get_missing_elements (GstParseContext * context)
+{
+#ifndef GST_DISABLE_PARSE
+  gchar **arr;
+  GList *l;
+  guint len, i;
+
+  g_return_val_if_fail (context != NULL, NULL);
+
+  len = g_list_length (context->missing_elements);
+
+  if (G_UNLIKELY (len == 0))
+    return NULL;
+
+  arr = g_new (gchar *, len + 1);
+
+  for (i = 0, l = context->missing_elements; l != NULL; l = l->next, ++i)
+    arr[i] = g_strdup (l->data);
+
+  arr[i] = NULL;
+
+  return arr;
+#else
+  return NULL;
+#endif
 }
 
 #ifndef GST_DISABLE_PARSE
@@ -91,6 +181,31 @@ _gst_parse_escape (const gchar * str)
 GstElement *
 gst_parse_launchv (const gchar ** argv, GError ** error)
 {
+  return gst_parse_launchv_full (argv, NULL, 0, error);
+}
+
+/**
+ * gst_parse_launchv_full:
+ * @argv: null-terminated array of arguments
+ * @context: a parse context allocated with gst_parse_context_new(), or %NULL
+ * @flags: parsing options, or #GST_PARSE_FLAG_NONE
+ * @error: pointer to a #GError (which must be initialised to %NULL)
+ *
+ * Create a new element based on command line syntax.
+ * @error will contain an error message if an erroneous pipeline is specified.
+ * An error does not mean that the pipeline could not be constructed.
+ *
+ * Returns: a new element on success; on failure, either %NULL or a
+ * partially-constructed bin or element will be returned and @error will be set
+ * (unless you passed #GST_PARSE_FLAG_FATAL_ERRORS in @flags, then %NULL will
+ * always be returned on failure)
+ *
+ * Since: 0.10.20
+ */
+GstElement *
+gst_parse_launchv_full (const gchar ** argv, GstParseContext * context,
+    GstParseFlags flags, GError ** error)
+{
 #ifndef GST_DISABLE_PARSE
   GstElement *element;
   GString *str;
@@ -113,21 +228,14 @@ gst_parse_launchv (const gchar ** argv, GError ** error)
     argvp++;
   }
 
-  element = gst_parse_launch (str->str, error);
+  element = gst_parse_launch_full (str->str, context, flags, error);
 
   g_string_free (str, TRUE);
 
   return element;
 #else
-  gchar *msg;
-
-  GST_WARNING ("Disabled API called");
-
-  msg = gst_error_get_message (GST_CORE_ERROR, GST_CORE_ERROR_DISABLED);
-  g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_DISABLED, "%s", msg);
-  g_free (msg);
-
-  return NULL;
+  /* gst_parse_launch_full() will set a GST_CORE_ERROR_DISABLED error for us */
+  return gst_parse_launch_full ("", NULL, 0, error);
 #endif
 }
 
@@ -148,21 +256,55 @@ gst_parse_launchv (const gchar ** argv, GError ** error)
 GstElement *
 gst_parse_launch (const gchar * pipeline_description, GError ** error)
 {
+  return gst_parse_launch_full (pipeline_description, NULL, 0, error);
+}
+
+/**
+ * gst_parse_launch_full:
+ * @pipeline_description: the command line describing the pipeline
+ * @context: a parse context allocated with gst_parse_context_new(), or %NULL
+ * @flags: parsing options, or #GST_PARSE_FLAG_NONE
+ * @error: the error message in case of an erroneous pipeline.
+ *
+ * Create a new pipeline based on command line syntax.
+ * Please note that you might get a return value that is not %NULL even though
+ * the @error is set. In this case there was a recoverable parsing error and you
+ * can try to play the pipeline.
+ *
+ * Returns: a new element on success, %NULL on failure. If more than one toplevel
+ * element is specified by the @pipeline_description, all elements are put into
+ * a #GstPipeline, which then is returned.
+ *
+ * Since: 0.10.20
+ */
+GstElement *
+gst_parse_launch_full (const gchar * pipeline_description,
+    GstParseContext * context, GstParseFlags flags, GError ** error)
+{
 #ifndef GST_DISABLE_PARSE
   GstElement *element;
 
   g_return_val_if_fail (pipeline_description != NULL, NULL);
+  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-  GST_CAT_INFO (GST_CAT_PIPELINE, "parsing pipeline description %s",
+  GST_CAT_INFO (GST_CAT_PIPELINE, "parsing pipeline description '%s'",
       pipeline_description);
 
-  element = _gst_parse_launch (pipeline_description, error);
+  element = _gst_parse_launch (pipeline_description, error, context, flags);
+
+  /* don't return partially constructed pipeline if FATAL_ERRORS was given */
+  if (G_UNLIKELY (error != NULL && *error != NULL && element != NULL)) {
+    if ((flags & GST_PARSE_FLAG_FATAL_ERRORS)) {
+      gst_object_unref (element);
+      element = NULL;
+    }
+  }
 
   return element;
 #else
   gchar *msg;
 
-  GST_WARNING ("Disabled API called: gst_parse_launch()");
+  GST_WARNING ("Disabled API called");
 
   msg = gst_error_get_message (GST_CORE_ERROR, GST_CORE_ERROR_DISABLED);
   g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_DISABLED, "%s", msg);

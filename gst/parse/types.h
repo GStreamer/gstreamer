@@ -3,6 +3,7 @@
 
 #include <glib-object.h>
 #include "../gstelement.h"
+#include "../gstparse.h"
 
 typedef struct {
   GstElement *src;
@@ -27,6 +28,8 @@ struct _graph_t {
   chain_t *chain; /* links are supposed to be done now */
   GSList *links;
   GError **error;
+  GstParseContext *ctx; /* may be NULL */
+  GstParseFlags flags;
 };
 
 

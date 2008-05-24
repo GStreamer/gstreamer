@@ -609,10 +609,17 @@ EXPORTS
 	gst_param_spec_mini_object
 	gst_param_spec_mini_object_get_type
 	gst_parse_bin_from_description
+	gst_parse_bin_from_description_full
+	gst_parse_context_free
+	gst_parse_context_get_missing_elements
+	gst_parse_context_new
 	gst_parse_error_get_type
 	gst_parse_error_quark
+	gst_parse_flags_get_type
 	gst_parse_launch
+	gst_parse_launch_full
 	gst_parse_launchv
+	gst_parse_launchv_full
 	gst_pipeline_auto_clock
 	gst_pipeline_flags_get_type
 	gst_pipeline_get_auto_flush_bus

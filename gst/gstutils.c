@@ -3340,6 +3340,39 @@ GstElement *
 gst_parse_bin_from_description (const gchar * bin_description,
     gboolean ghost_unconnected_pads, GError ** err)
 {
+  return gst_parse_bin_from_description_full (bin_description,
+      ghost_unconnected_pads, NULL, 0, err);
+}
+
+/**
+ * gst_parse_bin_from_description_full:
+ * @bin_description: command line describing the bin
+ * @ghost_unconnected_pads: whether to automatically create ghost pads
+ *                          for unconnected source or sink pads within
+ *                          the bin
+ * @context: a parse context allocated with gst_parse_context_new(), or %NULL
+ * @flags: parsing options, or #GST_PARSE_FLAG_NONE
+ * @err: where to store the error message in case of an error, or NULL
+ *
+ * This is a convenience wrapper around gst_parse_launch() to create a
+ * #GstBin from a gst-launch-style pipeline description. See
+ * gst_parse_launch() and the gst-launch man page for details about the
+ * syntax. Ghost pads on the bin for unconnected source or sink pads
+ * within the bin can automatically be created (but only a maximum of
+ * one ghost pad for each direction will be created; if you expect
+ * multiple unconnected source pads or multiple unconnected sink pads
+ * and want them all ghosted, you will have to create the ghost pads
+ * yourself).
+ *
+ * Returns: a newly-created bin, or NULL if an error occurred.
+ *
+ * Since: 0.10.20
+ */
+GstElement *
+gst_parse_bin_from_description_full (const gchar * bin_description,
+    gboolean ghost_unconnected_pads, GstParseContext * context,
+    GstParseFlags flags, GError ** err)
+{
 #ifndef GST_DISABLE_PARSE
   GstPad *pad = NULL;
   GstBin *bin;
@@ -3352,7 +3385,7 @@ gst_parse_bin_from_description (const gchar * bin_description,
 
   /* parse the pipeline to a bin */
   desc = g_strdup_printf ("bin.( %s )", bin_description);
-  bin = (GstBin *) gst_parse_launch (desc, err);
+  bin = (GstBin *) gst_parse_launch_full (desc, context, flags, err);
   g_free (desc);
 
   if (bin == NULL || (err && *err != NULL)) {

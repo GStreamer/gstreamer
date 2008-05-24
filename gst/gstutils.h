@@ -27,6 +27,7 @@
 
 #include <glib.h>
 #include <gst/gstbin.h>
+#include <gst/gstparse.h>
 
 G_BEGIN_DECLS
 
@@ -722,9 +723,15 @@ void			gst_element_found_tags		(GstElement * element,
 							 GstTagList * list);
 
 /* parse utility functions */
-GstElement *            gst_parse_bin_from_description  (const gchar * bin_description,
-                                                         gboolean ghost_unconnected_pads,
-                                                         GError ** err);
+GstElement *            gst_parse_bin_from_description      (const gchar     * bin_description,
+                                                             gboolean          ghost_unconnected_pads,
+                                                             GError         ** err);
+
+GstElement *            gst_parse_bin_from_description_full (const gchar     * bin_description,
+                                                             gboolean          ghost_unconnected_pads,
+                                                             GstParseContext * context,
+                                                             GstParseFlags     flags,
+                                                             GError         ** err);
 
 GstClockTime gst_util_get_timestamp (void);
 

@@ -1,3 +1,28 @@
+2008-05-24  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gst.c: (init_post):
+	* gst/gst_private.h: (_GstParseContext):
+	* gst/gstparse.c: (gst_parse_error_quark), (gst_parse_context_new),
+	  (gst_parse_context_free), (gst_parse_context_get_missing_elements),
+	  (gst_parse_launchv), (gst_parse_launchv_full), (gst_parse_launch),
+	  (gst_parse_launch_full):
+	* gst/gstparse.h: (GST_PARSE_FLAG_NONE), (GST_PARSE_FLAG_FATAL_ERRORS),
+	  (GstParseFlags), (GstParseContext):
+	* gst/gstutils.c: (gst_parse_bin_from_description),
+	  (gst_parse_bin_from_description_full):
+	* gst/gstutils.h:
+	* gst/parse/grammar.y:
+	* gst/parse/types.h:
+	* win32/common/libgstreamer.def:
+	  Add new gst_parse_*_full API (#528178):
+	  API: gst_parse_launch_full()
+	  API: gst_parse_launchv_full()
+	  API: gst_parse_bin_from_description_full()
+	  API: gst_parse_context_new()
+	  API: gst_parse_context_free()
+	  API: gst_parse_context_get_missing_elements()
+
 2008-05-23  Stefan Kost  <ensonic@users.sf.net>
 
 	patch by: Suresh Kumar P <sureshkumar.pp@gmail.com>

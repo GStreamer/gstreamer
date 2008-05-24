@@ -12,6 +12,7 @@
 #include "../gstparse.h"
 #include "../gstinfo.h"
 #include "../gsterror.h"
+#include "../gststructure.h"
 #include "../gsturi.h"
 #include "../gstutils.h"
 #include "../gstvalue.h"
@@ -213,6 +214,12 @@ YYPRINTF(const char *format, ...)
 
 #endif /* GST_DISABLE_GST_DEBUG */
 
+#define ADD_MISSING_ELEMENT(graph,name) G_STMT_START {                      \
+    if ((graph)->ctx) {                                                     \
+      (graph)->ctx->missing_elements =                                      \
+          g_list_append ((graph)->ctx->missing_elements, g_strdup (name));  \
+    } } G_STMT_END
+
 #define GST_BIN_MAKE(res, type, chainval, assign, free_string) \
 G_STMT_START { \
   chain_t *chain = chainval; \
@@ -228,6 +235,7 @@ G_STMT_START { \
       gst_parse_strfree (type); /* Need to clean up the string */ \
     YYERROR; \
   } else if (!bin) { \
+    ADD_MISSING_ELEMENT((graph_t *) graph, type); \
     SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, \
         _("no bin \"%s\", skipping"), type); \
     g_slist_foreach (assign, (GFunc) gst_parse_strfree, NULL); \
@@ -555,6 +563,7 @@ static int yyerror (void *scanner, graph_t *graph, const char *s);
 
 element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL); 
 						if ($$ == NULL) {
+						  ADD_MISSING_ELEMENT ((graph_t *) graph, $1);
 						  SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, _("no element \"%s\""), $1);
 						  gst_parse_strfree ($1);
 						  YYERROR;
@@ -784,7 +793,8 @@ yyerror (void *scanner, graph_t *graph, const char *s)
 
 
 GstElement *
-_gst_parse_launch (const gchar *str, GError **error)
+_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
+    GstParseFlags flags)
 {
   graph_t g;
   gchar *dstr;
@@ -799,6 +809,8 @@ _gst_parse_launch (const gchar *str, GError **error)
   g.chain = NULL;
   g.links = NULL;
   g.error = error;
+  g.ctx = ctx;
+  g.flags = flags;
   
 #ifdef __GST_PARSE_TRACE
   GST_CAT_DEBUG (GST_CAT_PIPELINE, "TRACE: tracing enabled");

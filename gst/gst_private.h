@@ -43,6 +43,11 @@ extern const char             g_log_domain_gstreamer[];
 
 G_BEGIN_DECLS
 
+/* used by gstparse.c and grammar.y */
+struct _GstParseContext {
+  GList * missing_elements;
+};
+
 gboolean _priv_gst_in_valgrind (void);
 
 /* Initialize GStreamer private quark storage */
