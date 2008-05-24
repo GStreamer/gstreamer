@@ -167,7 +167,8 @@ libs_typefindhelper_LDADD = \
 # these just need valgrind fixing, period
 VALGRIND_TO_FIX = \
 	gst/gstinfo \
-	libs/collectpads
+	libs/collectpads \
+	pipelines/parse-launch
 
 VALGRIND_IGNORE = \
 	pipelines/stress

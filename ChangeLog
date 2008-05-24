@@ -1,5 +1,13 @@
 2008-05-24  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/parse-launch.c:
+	  Add some unit tests for the new gst_parse_launch*_full() API.
+	  (Exposes a previously-existing memory leak in the error code
+	  path, so adding to VALGRIND_TO_FIX for now).
+
+2008-05-24  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gst.c: (init_post):
 	* gst/gst_private.h: (_GstParseContext):
