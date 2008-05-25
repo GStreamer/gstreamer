@@ -1,5 +1,14 @@
 2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* gst/gstpad.h:
+	* gst/gstutils.c: (gst_element_unlink), (element_find_unlinked_pad),
+	  (gst_bin_find_unconnected_pad), (gst_parse_bin_from_description),
+	  (gst_parse_bin_from_description_full):
+	* gst/gstutils.h:
+	  'unconnected pad' -> 'unlinked pad' for consistency (#401456).
+
+2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* docs/pwg/advanced-tagging.xml:
 	  Small docs update, can't be bothered to rewrite the nonsensical
 	  examples right now.

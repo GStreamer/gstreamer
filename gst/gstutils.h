@@ -724,11 +724,11 @@ void			gst_element_found_tags		(GstElement * element,
 
 /* parse utility functions */
 GstElement *            gst_parse_bin_from_description      (const gchar     * bin_description,
-                                                             gboolean          ghost_unconnected_pads,
+                                                             gboolean          ghost_unlinked_pads,
                                                              GError         ** err);
 
 GstElement *            gst_parse_bin_from_description_full (const gchar     * bin_description,
-                                                             gboolean          ghost_unconnected_pads,
+                                                             gboolean          ghost_unlinked_pads,
                                                              GstParseContext * context,
                                                              GstParseFlags     flags,
                                                              GError         ** err);

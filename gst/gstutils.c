@@ -1854,8 +1854,7 @@ gst_element_unlink (GstElement * src, GstElement * dest)
         if (GST_PAD_IS_SRC (pad)) {
           GstPad *peerpad = gst_pad_get_peer (pad);
 
-          /* see if the pad is connected and is really a pad
-           * of dest */
+          /* see if the pad is linked and is really a pad of dest */
           if (peerpad) {
             GstElement *peerelem;
 
@@ -3202,10 +3201,10 @@ gst_element_found_tags (GstElement * element, GstTagList * list)
 }
 
 static GstPad *
-element_find_unconnected_pad (GstElement * element, GstPadDirection direction)
+element_find_unlinked_pad (GstElement * element, GstPadDirection direction)
 {
   GstIterator *iter;
-  GstPad *unconnected_pad = NULL;
+  GstPad *unlinked_pad = NULL;
   gboolean done;
 
   switch (direction) {
@@ -3232,11 +3231,11 @@ element_find_unconnected_pad (GstElement * element, GstPadDirection direction)
 
         peer = gst_pad_get_peer (GST_PAD (pad));
         if (peer == NULL) {
-          unconnected_pad = pad;
+          unlinked_pad = pad;
           done = TRUE;
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
               "found existing unlinked pad %s:%s",
-              GST_DEBUG_PAD_NAME (unconnected_pad));
+              GST_DEBUG_PAD_NAME (unlinked_pad));
         } else {
           gst_object_unref (pad);
           gst_object_unref (peer);
@@ -3257,21 +3256,21 @@ element_find_unconnected_pad (GstElement * element, GstPadDirection direction)
 
   gst_iterator_free (iter);
 
-  return unconnected_pad;
+  return unlinked_pad;
 }
 
 /**
  * gst_bin_find_unconnected_pad:
- * @bin: bin in which to look for elements with unconnected pads
- * @direction: whether to look for an unconnected source or sink pad
+ * @bin: bin in which to look for elements with unlinked pads
+ * @direction: whether to look for an unlinked source or sink pad
  *
- * Recursively looks for elements with an unconnected pad of the given
- * direction within the specified bin and returns an unconnected pad
+ * Recursively looks for elements with an unlinked pad of the given
+ * direction within the specified bin and returns an unlinked pad
  * if one is found, or NULL otherwise. If a pad is found, the caller
  * owns a reference to it and should use gst_object_unref() on the
  * pad when it is not needed any longer.
  *
- * Returns: unconnected pad of the given direction, or NULL.
+ * Returns: unlinked pad of the given direction, or NULL.
  *
  * Since: 0.10.3
  */
@@ -3292,7 +3291,7 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
 
     switch (gst_iterator_next (iter, &element)) {
       case GST_ITERATOR_OK:
-        pad = element_find_unconnected_pad (GST_ELEMENT (element), direction);
+        pad = element_find_unlinked_pad (GST_ELEMENT (element), direction);
         gst_object_unref (element);
         if (pad != NULL)
           done = TRUE;
@@ -3317,18 +3316,17 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
 /**
  * gst_parse_bin_from_description:
  * @bin_description: command line describing the bin
- * @ghost_unconnected_pads: whether to automatically create ghost pads
- *                          for unconnected source or sink pads within
- *                          the bin
+ * @ghost_unlinked_pads: whether to automatically create ghost pads
+ *     for unlinked source or sink pads within the bin
  * @err: where to store the error message in case of an error, or NULL
  *
  * This is a convenience wrapper around gst_parse_launch() to create a
  * #GstBin from a gst-launch-style pipeline description. See
  * gst_parse_launch() and the gst-launch man page for details about the
- * syntax. Ghost pads on the bin for unconnected source or sink pads
+ * syntax. Ghost pads on the bin for unlinked source or sink pads
  * within the bin can automatically be created (but only a maximum of
  * one ghost pad for each direction will be created; if you expect
- * multiple unconnected source pads or multiple unconnected sink pads
+ * multiple unlinked source pads or multiple unlinked sink pads
  * and want them all ghosted, you will have to create the ghost pads
  * yourself).
  *
@@ -3338,18 +3336,17 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
  */
 GstElement *
 gst_parse_bin_from_description (const gchar * bin_description,
-    gboolean ghost_unconnected_pads, GError ** err)
+    gboolean ghost_unlinked_pads, GError ** err)
 {
   return gst_parse_bin_from_description_full (bin_description,
-      ghost_unconnected_pads, NULL, 0, err);
+      ghost_unlinked_pads, NULL, 0, err);
 }
 
 /**
  * gst_parse_bin_from_description_full:
  * @bin_description: command line describing the bin
- * @ghost_unconnected_pads: whether to automatically create ghost pads
- *                          for unconnected source or sink pads within
- *                          the bin
+ * @ghost_unlinked_pads: whether to automatically create ghost pads
+ *     for unlinked source or sink pads within the bin
  * @context: a parse context allocated with gst_parse_context_new(), or %NULL
  * @flags: parsing options, or #GST_PARSE_FLAG_NONE
  * @err: where to store the error message in case of an error, or NULL
@@ -3357,10 +3354,10 @@ gst_parse_bin_from_description (const gchar * bin_description,
  * This is a convenience wrapper around gst_parse_launch() to create a
  * #GstBin from a gst-launch-style pipeline description. See
  * gst_parse_launch() and the gst-launch man page for details about the
- * syntax. Ghost pads on the bin for unconnected source or sink pads
+ * syntax. Ghost pads on the bin for unlinked source or sink pads
  * within the bin can automatically be created (but only a maximum of
  * one ghost pad for each direction will be created; if you expect
- * multiple unconnected source pads or multiple unconnected sink pads
+ * multiple unlinked source pads or multiple unlinked sink pads
  * and want them all ghosted, you will have to create the ghost pads
  * yourself).
  *
@@ -3370,7 +3367,7 @@ gst_parse_bin_from_description (const gchar * bin_description,
  */
 GstElement *
 gst_parse_bin_from_description_full (const gchar * bin_description,
-    gboolean ghost_unconnected_pads, GstParseContext * context,
+    gboolean ghost_unlinked_pads, GstParseContext * context,
     GstParseFlags flags, GError ** err)
 {
 #ifndef GST_DISABLE_PARSE
@@ -3395,7 +3392,7 @@ gst_parse_bin_from_description_full (const gchar * bin_description,
   }
 
   /* find pads and ghost them if necessary */
-  if (ghost_unconnected_pads) {
+  if (ghost_unlinked_pads) {
     if ((pad = gst_bin_find_unconnected_pad (bin, GST_PAD_SRC))) {
       gst_element_add_pad (GST_ELEMENT (bin), gst_ghost_pad_new ("src", pad));
       gst_object_unref (pad);
