@@ -321,6 +321,10 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   GstObject *target = NULL;
   GType value_type;
 
+  /* do nothing if assignment is for missing element */
+  if (element == NULL)
+    goto out;
+
   /* parse the string, so the property name is null-terminated an pos points
      to the beginning of the value */
   while (!g_ascii_isspace (*pos) && (*pos != '=')) pos++; 
@@ -565,8 +569,13 @@ element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL);
 						if ($$ == NULL) {
 						  ADD_MISSING_ELEMENT ((graph_t *) graph, $1);
 						  SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, _("no element \"%s\""), $1);
-						  gst_parse_strfree ($1);
-						  YYERROR;
+						  /* if FATAL_ERRORS flag is set, we don't have to worry about backwards
+						   * compatibility and can continue parsing and check for other missing
+						   * elements */
+						  if ((((graph_t *) graph)->flags & GST_PARSE_FLAG_FATAL_ERRORS) == 0) {
+						    gst_parse_strfree ($1);
+						    YYERROR;
+						  }
 						}
 						gst_parse_strfree ($1);
                                               }
@@ -879,8 +888,12 @@ _gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
         }
       }
       if (!l->src) {
-        SET_ERROR (error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
-            "No element named \"%s\" - omitting link", l->src_name);
+        if (l->src_name) {
+          SET_ERROR (error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
+              "No element named \"%s\" - omitting link", l->src_name);
+        } else {
+          /* probably a missing element which we've handled already */
+        }
         gst_parse_free_link (l);
         continue;
       }
@@ -896,8 +909,12 @@ _gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
         }
       }
       if (!l->sink) {
-        SET_ERROR (error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
-            "No element named \"%s\" - omitting link", l->sink_name);
+        if (l->sink_name) {
+          SET_ERROR (error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
+              "No element named \"%s\" - omitting link", l->sink_name);
+        } else {
+          /* probably a missing element which we've handled already */
+        }
         gst_parse_free_link (l);
         continue;
       }

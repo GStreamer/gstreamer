@@ -546,6 +546,7 @@ GST_START_TEST (test_missing_elements)
   if (!g_getenv ("GST_DEBUG"))
     gst_debug_set_default_threshold (GST_LEVEL_NONE);
 
+  /* one missing element */
   ctx = gst_parse_context_new ();
   element = gst_parse_launch_full ("fakesrc ! coffeesink", ctx,
       GST_PARSE_FLAG_FATAL_ERRORS, &err);
@@ -556,6 +557,43 @@ GST_START_TEST (test_missing_elements)
   fail_unless (arr != NULL, "expected missing elements");
   fail_unless_equals_string (arr[0], "coffeesink");
   fail_unless (arr[1] == NULL);
+  g_strfreev (arr);
+  gst_parse_context_free (ctx);
+  g_error_free (err);
+  err = NULL;
+
+  /* multiple missing elements */
+  ctx = gst_parse_context_new ();
+  element = gst_parse_launch_full ("fakesrc ! bogusenc ! identity ! goomux ! "
+      "fakesink", ctx, GST_PARSE_FLAG_FATAL_ERRORS, &err);
+  fail_unless (err != NULL, "expected error");
+  fail_unless_equals_int (err->code, GST_PARSE_ERROR_NO_SUCH_ELEMENT);
+  fail_unless (element == NULL, "expected NULL return with FATAL_ERRORS");
+  arr = gst_parse_context_get_missing_elements (ctx);
+  fail_unless (arr != NULL, "expected missing elements");
+  fail_unless_equals_string (arr[0], "bogusenc");
+  fail_unless_equals_string (arr[1], "goomux");
+  fail_unless (arr[2] == NULL);
+  g_strfreev (arr);
+  gst_parse_context_free (ctx);
+  g_error_free (err);
+  err = NULL;
+
+  /* multiple missing elements, different link pattern */
+  ctx = gst_parse_context_new ();
+  element = gst_parse_launch_full ("fakesrc ! bogusenc ! mux.sink "
+      "blahsrc ! goomux name=mux ! fakesink   fakesrc ! goosink", ctx,
+      GST_PARSE_FLAG_FATAL_ERRORS, &err);
+  fail_unless (err != NULL, "expected error");
+  fail_unless_equals_int (err->code, GST_PARSE_ERROR_NO_SUCH_ELEMENT);
+  fail_unless (element == NULL, "expected NULL return with FATAL_ERRORS");
+  arr = gst_parse_context_get_missing_elements (ctx);
+  fail_unless (arr != NULL, "expected missing elements");
+  fail_unless_equals_string (arr[0], "bogusenc");
+  fail_unless_equals_string (arr[1], "blahsrc");
+  fail_unless_equals_string (arr[2], "goomux");
+  fail_unless_equals_string (arr[3], "goosink");
+  fail_unless (arr[4] == NULL);
   g_strfreev (arr);
   gst_parse_context_free (ctx);
   g_error_free (err);
