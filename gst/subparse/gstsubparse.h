@@ -60,6 +60,7 @@ typedef struct {
   GString *buf;
   guint64  start_time;
   guint64  duration;
+  guint64  max_duration; /* to clamp duration, 0 = no limit (used by tmplayer parser) */
   GstSegment *segment;
   gpointer user_data;
   gdouble  fps;          /* used by microdvd parser */

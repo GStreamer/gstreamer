@@ -389,6 +389,8 @@ GST_START_TEST (test_tmplayer_style3)
 
 GST_END_TEST;
 
+/* also tests the max_duration stuff (see second-last chunk which is supposed
+ * to be clipped to 5s duration) */
 GST_START_TEST (test_tmplayer_style3b)
 {
   static SubParseInputChunk tmplayer_style3b_input[] = {
@@ -399,8 +401,10 @@ GST_START_TEST (test_tmplayer_style3b)
           "0:00:14:a lush and fertile planet.\n",
           14 * GST_SECOND, 16 * GST_SECOND,
         "a lush and fertile planet."}, {
-          "0:00:16:Yet another line.",
-        16 * GST_SECOND, GST_CLOCK_TIME_NONE, "Yet another line."}
+          "0:00:16:And they liked it a lot.\n",
+        16 * GST_SECOND, (16 + 5) * GST_SECOND, "And they liked it a lot."}, {
+          "0:00:30:Last line.",
+        30 * GST_SECOND, GST_CLOCK_TIME_NONE, "Last line."}
   };
 
   test_tmplayer_do_test (tmplayer_style3b_input,

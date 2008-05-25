@@ -870,6 +870,7 @@ parser_state_init (ParserState * state)
 
   state->start_time = 0;
   state->duration = 0;
+  state->max_duration = 0;      /* no limit */
   state->state = 0;
   state->segment = NULL;
 }
@@ -991,6 +992,7 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
       return gst_caps_new_simple ("text/x-pango-markup", NULL);
     case GST_SUB_PARSE_FORMAT_TMPLAYER:
       self->parse_line = parse_tmplayer;
+      self->state.max_duration = 5 * GST_SECOND;
       return gst_caps_new_simple ("text/plain", NULL);
     case GST_SUB_PARSE_FORMAT_MPL2:
       self->parse_line = parse_mpl2;
@@ -1082,6 +1084,16 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
         GST_BUFFER_SIZE (buf) = subtitle_len;
         GST_BUFFER_TIMESTAMP (buf) = self->state.start_time;
         GST_BUFFER_DURATION (buf) = self->state.duration;
+
+        /* in some cases (e.g. tmplayer) we can only determine the duration
+         * of a text chunk from the timestamp of the next text chunk; in those
+         * cases, we probably want to limit the duration to something
+         * reasonable, so we don't end up showing some text for e.g. 40 seconds
+         * just because nothing else is being said during that time */
+        if (self->state.max_duration > 0 && GST_BUFFER_DURATION_IS_VALID (buf)) {
+          if (GST_BUFFER_DURATION (buf) > self->state.max_duration)
+            GST_BUFFER_DURATION (buf) = self->state.max_duration;
+        }
 
         gst_segment_set_last_stop (&self->segment, GST_FORMAT_TIME,
             self->state.start_time);

@@ -1,3 +1,14 @@
+2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/subparse/gstsubparse.c: (parser_state_init),
+	  (gst_sub_parse_format_autodetect), (handle_buffer):
+	* gst/subparse/gstsubparse.h:
+	* tests/check/elements/subparse.c: (test_tmplayer_style3b):
+	  Limit duration to a maximum of five seconds for tmplayer format where
+	  we can guess the duration only from the timestamp of the next line of
+	  text. We don't want to show a text for eternities just because nothing
+	  else is being said for a while.
+
 2008-05-23  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
