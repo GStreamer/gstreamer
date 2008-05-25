@@ -1159,9 +1159,13 @@ gst_ffmpegdemux_type_find (GstTypeFind * tf, gpointer priv)
       res = MAX (1, res * GST_TYPE_FIND_MAXIMUM / AVPROBE_SCORE_MAX);
       /* Restrict the probability for MPEG-TS streams, because there is
        * probably a better version in plugins-base, if the user has a recent
-       * plugins-base */
-      if (!strcmp (in_plugin->name, "mpegts"))
+       * plugins-base (in fact we shouldn't even get here for ffmpeg mpegts or
+       * mpegtsraw typefinders, since we blacklist them) */
+      if (g_str_has_prefix (in_plugin->name, "mpegts"))
         res = MIN (res, GST_TYPE_FIND_POSSIBLE);
+
+      GST_LOG ("ffmpeg typefinder '%s' suggests %" GST_PTR_FORMAT ", p=%u%%",
+          in_plugin->name, params->sinkcaps, res);
 
       gst_type_find_suggest (tf, res, params->sinkcaps);
     }
@@ -1569,6 +1573,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "mpc") ||
         !strcmp (in_plugin->name, "mpc8") ||
         !strcmp (in_plugin->name, "mpegts") ||
+        !strcmp (in_plugin->name, "mpegtsraw") ||
         !strcmp (in_plugin->name, "nuv") ||
         !strcmp (in_plugin->name, "swf") ||
         !strcmp (in_plugin->name, "voc") || !strcmp (in_plugin->name, "gif"))

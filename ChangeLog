@@ -1,5 +1,12 @@
 2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_type_find),
+	  (gst_ffmpegdemux_register):
+	  Explicitly disable 'raw' mpeg-ts typefinder as well; better debug logging
+	  for the gst-ffmpeg typefinders. (#533708).
+
+2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_src_query_list),
 	  (gst_ffmpegdemux_src_query), (gst_ffmpegdemux_get_stream),
 	  (gst_ffmpegdemux_open):
