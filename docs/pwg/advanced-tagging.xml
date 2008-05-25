@@ -1,5 +1,8 @@
 <chapter id="chapter-advanced-tagging">
   <title>Tagging (Metadata and Streaminfo)</title>
+
+  <sect1 id="section-tagging-overview" xreflabel="Overview">
+  <title>Overview</title>
   <para>
     Tags are pieces of information stored in a stream that are not the content
     itself, but they rather <emphasis>describe</emphasis> the content. Most
@@ -32,19 +35,20 @@
     once as streaminfo.
   </para>
   <para>
-    <!-- FIXME: (Company knows about this) 
-      when people are interested in tags, they should connect to the pipeline's 'found-tag' signal and use that
-      the code example on that page is bogus, too btw
-      there are no string => something else g_value_transforms
-      either use gst_value_deserialize or a custom deserialization (which is a better idea most of the time)
-    -->
-    A tag reading element is called <classname>TagGetter</classname> in
-    &GStreamer;.
+    There is no special name for tag reading elements in &GStreamer;. There are
+    specialised elements (e.g. id3demux) that do nothing besides tag reading,
+    but any  &GStreamer; element may extract tags while processing data, and
+    most decoders, demuxers and parsers do.
+  </para>
+  <para>
     A tag writer is called <ulink type="http"
     url="../../gstreamer/html/GstTagSetter.html"><classname>TagSetter</classname></ulink>.
     An element supporting both can be used in a tag editor for quick tag
-    changing.
+    changing (note: in-place tag editing is still poorly supported at the time
+    of writing and usually requires tag extraction/stripping and remuxing of
+    the stream with new tags).
   </para>
+  </sect1>
 
   <sect1 id="section-tagging-read" xreflabel="Reading Tags from Streams">
     <title>Reading Tags from Streams</title>
@@ -54,19 +58,20 @@
       </classname></ulink>. An element that is reading tags from a stream should
       create an empty taglist and fill this with individual tags. Empty tag
       lists can be created with <function>gst_tag_list_new ()</function>. Then,
-      the element can fill the list using <function>gst_tag_list_add_values ()
-      </function>. Note that an element probably reads metadata as strings, but
-      values might not necessarily be strings. Be sure to use
+      the element can fill the list using <function>gst_tag_list_add ()
+      </function> or <function>gst_tag_list_add_values ()</function>.
+      Note that elements often read metadata as strings, but the
+      values in the taglist might not necessarily be strings - they need to be
+      of the type the tag was registered as (the API documentation for each
+      predefined tag should contain the type). Be sure to use functions like
       <function>gst_value_transform ()</function>
       to make sure that your data is of the right type. After data reading, the
       application can be notified of the new taglist by calling
-      <function>gst_element_found_tags ()</function>. The tags should also be
-      part of the datastream, so they should be pushed over all source pads.
-      The function <function>gst_event_new_tag ()</function> creates an event
-      from a taglist. This can be pushed over source pads using
-      <function>gst_pad_push ()</function>. Simple elements with only one
-      source pad can combine all these steps all-in-one by using the function
-      <function>gst_element_found_tags_for_pad ()</function>.
+      <function>gst_element_found_tags ()</function> or
+      <function>gst_element_found_tags_for_pad ()</function> (if they only
+      refer to a specific sub-stream). These functions will post a tag message
+      on the pipeline's GstBus for the application to pick up, but also send
+      tag events downstream, either over all source pad or the pad specified.
     </para>
     <para>
       The following example program will parse a file and parse the data as
@@ -79,7 +84,7 @@
     <programlisting>
 <![CDATA[
 static void
-gst_my_filter_loopfunc (GstElement *element)
+gst_my_filter_task_func (GstElement *element)
 {
   GstMyFilter *filter = GST_MY_FILTER (element);
   GstBuffer *buf;
@@ -239,7 +244,7 @@ gst_my_filter_write_tag (const GstTagList *taglist,
 }
 
 static void
-gst_my_filter_loopfunc (GstElement *element)
+gst_my_filter_task_func (GstElement *element)
 {
   GstMyFilter *filter = GST_MY_FILTER (element);
   GstTagSetter *tagsetter = GST_TAG_SETTER (element);

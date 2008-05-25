@@ -1,5 +1,11 @@
 2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* docs/pwg/advanced-tagging.xml:
+	  Small docs update, can't be bothered to rewrite the nonsensical
+	  examples right now.
+
+2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst/gstevent.h:
 	  Clarify docs for GST_SEEK_TYPE_CUR (#534505).
 
