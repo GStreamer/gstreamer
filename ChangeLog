@@ -1,3 +1,13 @@
+2008-05-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/flac/Makefile.am:
+	* ext/flac/gstflacdec.c: (gst_flac_dec_write):
+	Set the channel layout when decoding FLAC files with more than 2
+	channels as defined by the FLAC spec. Fixes bug #534570.
+
+	Also don't try to decode left/side, right/side and mid/side files
+	as we don't support this at all.
+
 2008-05-24  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac:

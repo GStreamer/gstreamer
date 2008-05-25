@@ -55,8 +55,50 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/gsttagsetter.h>
 #include <gst/base/gsttypefindhelper.h>
-
+#include <gst/audio/multichannel.h>
 #include <gst/tag/tag.h>
+
+/* Taken from http://flac.sourceforge.net/format.html#frame_header */
+static const GstAudioChannelPosition channel_positions[8][8] = {
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}, {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
+  /* FIXME: 7/8 channel layouts are not defined in the FLAC specs */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+      GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}, {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}
+};
 
 GST_DEBUG_CATEGORY_STATIC (flacdec_debug);
 #define GST_CAT_DEFAULT flacdec_debug
@@ -1043,6 +1085,13 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
       goto done;
   }
 
+  /* TODO: we don't support left/side, right/side and mid/side */
+  if (frame->header.channel_assignment != FLAC__CHANNEL_ASSIGNMENT_INDEPENDENT) {
+    GST_ERROR_OBJECT (flacdec, "unsupported channel assignment: %s\n",
+        FLAC__ChannelAssignmentString[frame->header.channel_assignment]);
+    return GST_FLOW_ERROR;
+  }
+
   if (!GST_PAD_CAPS (flacdec->srcpad)) {
     GstCaps *caps;
 
@@ -1056,6 +1105,12 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         "depth", G_TYPE_INT, depth,
         "rate", G_TYPE_INT, frame->header.sample_rate,
         "channels", G_TYPE_INT, channels, NULL);
+
+    if (channels > 2) {
+      GstStructure *s = gst_caps_get_structure (caps, 0);
+
+      gst_audio_set_channel_positions (s, channel_positions[channels - 1]);
+    }
 
     flacdec->depth = depth;
     flacdec->width = width;
