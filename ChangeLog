@@ -1,3 +1,8 @@
+2008-05-25  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	Back to devel -> 0.10.8.1
+
 === release 0.10.8 ===
 
 2008-05-21  Jan Schmidt <jan.schmidt@sun.com>
