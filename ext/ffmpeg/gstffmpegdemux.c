@@ -613,6 +613,7 @@ gst_ffmpegdemux_src_query_list (GstPad * pad)
   static const GstQueryType src_types[] = {
     GST_QUERY_DURATION,
     GST_QUERY_POSITION,
+    GST_QUERY_SEEKING,
     0
   };
 
@@ -736,6 +737,22 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
       }
     }
       break;
+    case GST_QUERY_SEEKING: {
+      GstFormat format;
+      gboolean seekable;
+      gint64 dur = -1;
+
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      seekable = demux->seekable;
+      if (!gst_pad_query_duration (pad, &format, &dur)) {
+        /* unlikely that we don't know duration but can seek */
+        seekable = FALSE;
+        dur = -1;
+      }
+      gst_query_set_seeking (query, format, seekable, 0, dur);
+      res = TRUE;
+      break;
+    }
     default:
       /* FIXME : ADD GST_QUERY_CONVERT */
       res = gst_pad_query_default (pad, query);
@@ -894,7 +911,7 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   stream->pad = pad;
   gst_pad_set_element_private (pad, stream);
 
-  /* transform some usefull info to GstClockTime and remember */
+  /* transform some useful info to GstClockTime and remember */
   {
     GstClockTime tmp;
 
@@ -1063,7 +1080,7 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
         gst_message_new_tag (GST_OBJECT (demux), tags));
   }
 
-  /* transform some usefull info to GstClockTime and remember */
+  /* transform some useful info to GstClockTime and remember */
   demux->start_time = gst_util_uint64_scale_int (demux->context->start_time,
       GST_SECOND, AV_TIME_BASE);
   GST_DEBUG_OBJECT (demux, "start time: %" GST_TIME_FORMAT,

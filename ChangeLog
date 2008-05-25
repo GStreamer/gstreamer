@@ -1,3 +1,11 @@
+2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_src_query_list),
+	  (gst_ffmpegdemux_src_query), (gst_ffmpegdemux_get_stream),
+	  (gst_ffmpegdemux_open):
+	  Implement SEEKING query, so players such as totem can query
+	  seekability. Fix a comment typo or two.
+
 2008-05-25  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
