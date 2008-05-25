@@ -1,6 +1,11 @@
 2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/parse/grammar.y:
+	  Remove unneeded casts.
+
+2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/parse/grammar.y:
 	* tests/check/pipelines/parse-launch.c:
 	  Get all missing elements from a parse launch string if possible
 	  (ie. if the FATAL_ERRORS flag has been specified). Fixes #528178.
