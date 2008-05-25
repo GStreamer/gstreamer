@@ -254,7 +254,7 @@ gst_ac3parse_chain (GstPad * pad, GstData * _data)
           offset, skipped);
     }
     /* construct the header word */
-    header = GUINT16_TO_BE (*((guint16 *) (data + offset)));
+    header = GST_READ_UINT16_BE (data + offset);
 /*    g_print("AC3PARSE: sync word is 0x%02X\n",header); */
     /* if it's a valid header, go ahead and send off the frame */
     if (header == 0x0b77) {

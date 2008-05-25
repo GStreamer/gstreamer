@@ -1,3 +1,9 @@
+2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/ac3parse/gstac3parse.c: (gst_ac3parse_chain):
+	  Fix alignment issue which isn't really an issue at all because
+	  the plugin hasn't been ported to 0.10 yet.
+
 2008-05-25  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
