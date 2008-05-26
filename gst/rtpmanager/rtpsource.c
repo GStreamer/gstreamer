@@ -940,7 +940,7 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
   GST_DEBUG ("seq %d, PC: %" G_GUINT64_FORMAT ", OC: %" G_GUINT64_FORMAT,
       seqnr, src->stats.packets_received, src->stats.octets_received);
 
-  /* calculate jitter and perform skew correction */
+  /* calculate jitter for the stats */
   calculate_jitter (src, buffer, arrival);
 
   /* we're ready to push the RTP packet now */

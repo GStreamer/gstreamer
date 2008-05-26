@@ -217,8 +217,10 @@ again:
       delta_diff = jbuf->prev_send_diff - send_diff;
 
     /* server changed rtp timestamps too quickly, reset skew detection and start
-     * again. */
-    if (delta_diff > GST_SECOND / 4) {
+     * again. This value is sortof arbitrary and can be a bad measurement up if
+     * there are many packets missing because then we get a big gap that is
+     * unrelated to a timestamp switch. */
+    if (delta_diff > GST_SECOND) {
       GST_DEBUG ("delta changed too quickly %" GST_TIME_FORMAT " reset skew",
           GST_TIME_ARGS (delta_diff));
       rtp_jitter_buffer_reset_skew (jbuf);
@@ -326,23 +328,6 @@ no_skew:
   return out_time;
 }
 
-static gint
-compare_seqnum (GstBuffer * a, GstBuffer * b, RTPJitterBuffer * jbuf)
-{
-  guint16 seq1, seq2;
-
-  seq1 = gst_rtp_buffer_get_seq (a);
-  seq2 = gst_rtp_buffer_get_seq (b);
-
-  /* check if diff more than half of the 16bit range */
-  if (abs (seq2 - seq1) > (1 << 15)) {
-    /* one of a/b has wrapped */
-    return seq1 - seq2;
-  } else {
-    return seq2 - seq1;
-  }
-}
-
 /**
  * rtp_jitter_buffer_insert:
  * @jbuf: an #RTPJitterBuffer
@@ -362,22 +347,32 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
     GstClockTime time, guint32 clock_rate, gboolean * tail)
 {
   GList *list;
-  gint func_ret = 1;
   guint32 rtptime;
+  guint16 seqnum;
 
   g_return_val_if_fail (jbuf != NULL, FALSE);
   g_return_val_if_fail (buf != NULL, FALSE);
 
-  /* loop the list to skip strictly smaller seqnum buffers */
-  list = jbuf->packets->head;
-  while (list
-      && (func_ret =
-          compare_seqnum (GST_BUFFER_CAST (list->data), buf, jbuf)) < 0)
-    list = list->next;
+  seqnum = gst_rtp_buffer_get_seq (buf);
 
-  /* we hit a packet with the same seqnum, return FALSE to notify a duplicate */
-  if (func_ret == 0)
-    return FALSE;
+  /* loop the list to skip strictly smaller seqnum buffers */
+  for (list = jbuf->packets->head; list; list = g_list_next (list)) {
+    guint16 qseq;
+    gint gap;
+
+    qseq = gst_rtp_buffer_get_seq (GST_BUFFER_CAST (list->data));
+
+    /* compare the new seqnum to the one in the buffer */
+    gap = gst_rtp_buffer_compare_seqnum (seqnum, qseq);
+
+    /* we hit a packet with the same seqnum, notify a duplicate */
+    if (G_UNLIKELY (gap == 0))
+      goto duplicate;
+
+    /* seqnum > qseq, we can stop looking */
+    if (G_LIKELY (gap < 0))
+      break;
+  }
 
   /* do skew calculation by measuring the difference between rtptime and the
    * receive time, this function will retimestamp @buf with the skew corrected
@@ -391,11 +386,19 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
   else
     g_queue_push_tail (jbuf->packets, buf);
 
-  /* tail was changed when we did not find a previous packet */
+  /* tail was changed when we did not find a previous packet, we set the return
+   * flag when requested. */
   if (tail)
     *tail = (list == NULL);
 
   return TRUE;
+
+  /* ERRORS */
+duplicate:
+  {
+    GST_WARNING ("duplicate packet %d found", (gint) seqnum);
+    return FALSE;
+  }
 }
 
 /**

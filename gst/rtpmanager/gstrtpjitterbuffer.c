@@ -885,12 +885,32 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   if (priv->eos)
     goto have_eos;
 
-  /* let's check if this buffer is too late, we cannot accept packets with
-   * bigger seqnum than the one we already pushed. */
+  /* let's check if this buffer is too late, we can only accept packets with
+   * bigger seqnum than the one we last pushed. */
   if (priv->last_popped_seqnum != -1) {
-    /* FIXME. isn't this supposed to be <= ? */
-    if (gst_rtp_buffer_compare_seqnum (priv->last_popped_seqnum, seqnum) < 0)
-      goto too_late;
+    gint gap;
+
+    gap = gst_rtp_buffer_compare_seqnum (priv->last_popped_seqnum, seqnum);
+
+    if (gap <= 0) {
+      /* priv->last_popped_seqnum >= seqnum, this packet is too late or the
+       * sender might have been restarted with different seqnum. */
+      if (gap < -100) {
+        GST_DEBUG_OBJECT (jitterbuffer, "reset: buffer too old %d", gap);
+        priv->last_popped_seqnum = -1;
+        priv->next_seqnum = -1;
+      } else {
+        goto too_late;
+      }
+    } else {
+      /* priv->last_popped_seqnum < seqnum, this is a new packet */
+      if (gap > 3000) {
+        GST_DEBUG_OBJECT (jitterbuffer, "reset: too many dropped packets %d",
+            gap);
+        priv->last_popped_seqnum = -1;
+        priv->next_seqnum = -1;
+      }
+    }
   }
 
   /* let's drop oldest packet if the queue is already full and drop-on-latency
@@ -1041,7 +1061,7 @@ again:
       if (priv->eos)
         goto do_eos;
     }
-    /* wait for packets or flushing now */
+    /* underrun, wait for packets or flushing now */
     priv->waiting = TRUE;
     JBUF_WAIT_CHECK (priv, flushing);
     priv->waiting = FALSE;
@@ -1187,7 +1207,7 @@ again:
     if (gap > 0) {
       GstEvent *event;
 
-      /* we had a gap and thus we lost a packet. Creat an event for this.  */
+      /* we had a gap and thus we lost a packet. Create an event for this.  */
       GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d lost", next_seqnum);
       priv->num_late++;
       discont = TRUE;

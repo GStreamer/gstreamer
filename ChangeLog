@@ -1,5 +1,25 @@
 2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_chain), (gst_rtp_jitter_buffer_loop):
+	When checking the seqnum, reset the jitterbuffer if the gap is too big,
+	we need to do this so that we can better handle a restarted source.
+	Fix some comments.
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (calculate_skew),
+	(rtp_jitter_buffer_insert):
+	Tweak the skew resync diff.
+	Use our working seqnum compare function in -base.
+	Rework the jitterbuffer insert code to make it clearer and more
+	performant by only retrieving the seqnum of the input buffer once and by
+	adding some G_LIKELY compiler hints.
+	Improve debugging for duplicate packets.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_process_rtp):
+	Fix a comment, we don't do skew correction here..
+
+2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Håvard Graff <havard dot graff at tandberg dot com>
 
 	* gst/rtpmanager/gstrtpbin.c:
