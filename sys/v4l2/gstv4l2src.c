@@ -537,12 +537,12 @@ gst_v4l2src_v4l2fourcc_to_structure (guint32 fourcc)
       break;
     }
     case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
-    case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
-    case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
     case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
     case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
       /* FIXME: get correct fourccs here */
       break;
+    case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
+    case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
     case V4L2_PIX_FMT_YVU410:
     case V4L2_PIX_FMT_YUV410:
     case V4L2_PIX_FMT_YUV420:  /* I420/IYUV */
@@ -555,6 +555,12 @@ gst_v4l2src_v4l2fourcc_to_structure (guint32 fourcc)
       guint32 fcc = 0;
 
       switch (fourcc) {
+        case V4L2_PIX_FMT_NV12:
+          fcc = GST_MAKE_FOURCC ('N', 'V', '1', '2');
+          break;
+        case V4L2_PIX_FMT_NV21:
+          fcc = GST_MAKE_FOURCC ('N', 'V', '2', '1');
+          break;
         case V4L2_PIX_FMT_YVU410:
           fcc = GST_MAKE_FOURCC ('Y', 'V', 'U', '9');
           break;
@@ -790,6 +796,16 @@ gst_v4l2_get_caps_info (GstV4l2Src * v4l2src, GstCaps * caps,
         outsize = GST_ROUND_UP_4 (*w) * *h;
         outsize += 2 * ((GST_ROUND_UP_8 (*w) / 2) * *h);
         break;
+      case GST_MAKE_FOURCC ('N', 'V', '1', '2'):
+        fourcc = V4L2_PIX_FMT_NV12;
+        outsize = GST_ROUND_UP_4 (*w) * GST_ROUND_UP_2 (*h);
+        outsize += (GST_ROUND_UP_4 (*w) * *h) / 2;
+        break;
+      case GST_MAKE_FOURCC ('N', 'V', '2', '1'):
+        fourcc = V4L2_PIX_FMT_NV21;
+        outsize = GST_ROUND_UP_4 (*w) * GST_ROUND_UP_2 (*h);
+        outsize += (GST_ROUND_UP_4 (*w) * *h) / 2;
+        break;
     }
   } else if (!strcmp (mimetype, "video/x-raw-rgb")) {
     gint depth, endianness, r_mask;
@@ -821,6 +837,8 @@ gst_v4l2_get_caps_info (GstV4l2Src * v4l2src, GstCaps * caps,
     fourcc = V4L2_PIX_FMT_DV;
   } else if (strcmp (mimetype, "image/jpeg") == 0) {
     fourcc = V4L2_PIX_FMT_JPEG;
+  } else if (strcmp (mimetype, "video/x-raw-bayer") == 0) {
+    fourcc = V4L2_PIX_FMT_SBGGR8;
   }
 
   if (fourcc == 0)

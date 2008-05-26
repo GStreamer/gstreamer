@@ -1,5 +1,13 @@
 2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: William M. Brack <wbrack at mmm dot com dot hk>
+
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_v4l2fourcc_to_structure),
+	(gst_v4l2_get_caps_info):
+	Add NV12, NV21 and bayer support. See #520092.
+
+2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_find_segment),
 	(gst_qtdemux_activate_segment):
 	Unbreak segment activation again. Fixes #531672.
