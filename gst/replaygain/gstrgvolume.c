@@ -341,14 +341,14 @@ gst_rg_volume_init (GstRgVolume * self, GstRgVolumeClass * gclass)
   GST_BIN_CLASS (parent_class)->add_element (GST_BIN_CAST (self),
       self->volume_element);
 
-  volume_pad = gst_element_get_pad (self->volume_element, "sink");
+  volume_pad = gst_element_get_static_pad (self->volume_element, "sink");
   ghost_pad = gst_ghost_pad_new_from_template ("sink", volume_pad,
       gst_pad_get_pad_template (volume_pad));
   gst_object_unref (volume_pad);
   gst_pad_set_event_function (ghost_pad, gst_rg_volume_sink_event);
   gst_element_add_pad (GST_ELEMENT_CAST (self), ghost_pad);
 
-  volume_pad = gst_element_get_pad (self->volume_element, "src");
+  volume_pad = gst_element_get_static_pad (self->volume_element, "src");
   ghost_pad = gst_ghost_pad_new_from_template ("src", volume_pad,
       gst_pad_get_pad_template (volume_pad));
   gst_object_unref (volume_pad);
