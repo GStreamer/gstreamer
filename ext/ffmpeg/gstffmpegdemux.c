@@ -1581,8 +1581,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     /* Set the rank of demuxers know to work to MARGINAL.
      * Set demuxers for which we already have another implementation to NONE
      * Set All others to NONE*/
-    if (!strcmp (in_plugin->name, "flv") ||
-        !strcmp (in_plugin->name, "wsvqa") ||
+    if (!strcmp (in_plugin->name, "wsvqa") ||
         !strcmp (in_plugin->name, "wsaud") ||
         !strcmp (in_plugin->name, "wc3movie") ||
         !strcmp (in_plugin->name, "voc") ||

@@ -1,5 +1,11 @@
 2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	Set flv demuxer to rank NONE, we have a better, working demuxer in -bad
+	and we don't want any bug reports about this one. Fixes #534783.
+
+2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_vid_caps_new),
 	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_with_codecid):
 	Add more specific width/height for DV video so that it negotiates more
