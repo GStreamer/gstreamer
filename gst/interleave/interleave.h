@@ -3,8 +3,9 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *                    2007 Andy Wingo <wingo at pobox.com>
+ *                    2008 Sebastian Dröge <slomo@circular-chaos.org>
  *
- * interleave.c: interleave samples, based on gstsignalprocessor.c
+ * interleave.c: interleave samples, mostly based on adder
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,6 +27,7 @@
 #define __INTERLEAVE_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstcollectpads.h>
 
 G_BEGIN_DECLS
 
@@ -40,18 +42,34 @@ G_BEGIN_DECLS
 typedef struct _GstInterleave GstInterleave;
 typedef struct _GstInterleaveClass GstInterleaveClass;
 
+typedef void (*GstInterleaveFunc) (gpointer out, gpointer in, guint stride, guint nframes);
+
 struct _GstInterleave
 {
   GstElement element;
 
   /*< private >*/
+  GstCollectPads *collect;
+
+  gint channels;
+  gint rate;
+  gint width;
+
   GstCaps *sinkcaps;
-  guint channels;
+
+  GstClockTime timestamp;
+  guint64 offset;
+
+  gboolean segment_pending;
+  guint64 segment_position;
+  gdouble segment_rate;
+  GstSegment segment;
+
+  GstPadEventFunction collect_event;
+
+  GstInterleaveFunc func;
 
   GstPad *src;
-  GstActivateMode mode;
-
-  guint pending_in;
 };
 
 struct _GstInterleaveClass
