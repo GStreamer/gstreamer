@@ -149,7 +149,7 @@ GST_START_TEST (test_2_channels)
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
   gst_pad_use_fixed_caps (mysrcpad);
 
-  sinkpad = gst_element_get_pad (deinterleave, "sink");
+  sinkpad = gst_element_get_static_pad (deinterleave, "sink");
   fail_unless (sinkpad != NULL);
   fail_unless (gst_pad_link (mysrcpad, sinkpad) == GST_PAD_LINK_OK);
   g_object_unref (sinkpad);
@@ -209,7 +209,7 @@ GST_START_TEST (test_2_channels_1_linked)
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
   gst_pad_use_fixed_caps (mysrcpad);
 
-  sinkpad = gst_element_get_pad (deinterleave, "sink");
+  sinkpad = gst_element_get_static_pad (deinterleave, "sink");
   fail_unless (sinkpad != NULL);
   fail_unless (gst_pad_link (mysrcpad, sinkpad) == GST_PAD_LINK_OK);
   g_object_unref (sinkpad);
@@ -269,7 +269,7 @@ GST_START_TEST (test_2_channels_caps_change)
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
   gst_pad_use_fixed_caps (mysrcpad);
 
-  sinkpad = gst_element_get_pad (deinterleave, "sink");
+  sinkpad = gst_element_get_static_pad (deinterleave, "sink");
   fail_unless (sinkpad != NULL);
   fail_unless (gst_pad_link (mysrcpad, sinkpad) == GST_PAD_LINK_OK);
   g_object_unref (sinkpad);
@@ -473,7 +473,7 @@ pad_added_setup_data_check_float32_8ch_cb (GstElement * deinterleave,
   gst_bin_add_many (GST_BIN (pipeline), queue, sink, NULL);
   fail_unless (gst_element_link_many (queue, sink, NULL));
 
-  sinkpad = gst_element_get_pad (queue, "sink");
+  sinkpad = gst_element_get_static_pad (queue, "sink");
   fail_unless_equals_int (gst_pad_link (pad, sinkpad), GST_PAD_LINK_OK);
   gst_object_unref (sinkpad);
 

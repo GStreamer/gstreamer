@@ -1,3 +1,16 @@
+2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* examples/switch/switcher.c: (switch_timer):
+	* gst/replaygain/gstrgvolume.c: (gst_rg_volume_init):
+	* gst/rtpmanager/gstrtpclient.c: (create_stream):
+	* gst/sdp/gstsdpdemux.c: (gst_sdp_demux_stream_configure_udp),
+	(gst_sdp_demux_stream_configure_udp_sink):
+	* tests/check/elements/deinterleave.c: (GST_START_TEST),
+	(pad_added_setup_data_check_float32_8ch_cb):
+	* tests/check/elements/rganalysis.c: (send_eos_event),
+	(send_tag_event):
+	Don't use _gst_pad().
+
 2008-05-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/plugins/Makefile.am:

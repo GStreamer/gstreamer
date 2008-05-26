@@ -918,7 +918,7 @@ gst_sdp_demux_stream_configure_udp (GstSDPDemux * demux, GstSDPStream * stream)
         NULL);
 
     /* get output pad of the UDP source. */
-    pad = gst_element_get_pad (stream->udpsrc[0], "src");
+    pad = gst_element_get_static_pad (stream->udpsrc[0], "src");
 
     name = g_strdup_printf ("recv_rtp_sink_%d", stream->id);
     stream->channelpad[0] = gst_element_get_request_pad (demux->session, name);
@@ -954,7 +954,7 @@ gst_sdp_demux_stream_configure_udp (GstSDPDemux * demux, GstSDPStream * stream)
     stream->channelpad[1] = gst_element_get_request_pad (demux->session, name);
     g_free (name);
 
-    pad = gst_element_get_pad (stream->udpsrc[1], "src");
+    pad = gst_element_get_static_pad (stream->udpsrc[1], "src");
     gst_pad_link (pad, stream->channelpad[1]);
     gst_object_unref (pad);
 
@@ -1021,7 +1021,7 @@ gst_sdp_demux_stream_configure_udp_sink (GstSDPDemux * demux,
 
   /* and link */
   if (pad) {
-    sinkpad = gst_element_get_pad (stream->udpsink, "sink");
+    sinkpad = gst_element_get_static_pad (stream->udpsink, "sink");
     gst_pad_link (pad, sinkpad);
     gst_object_unref (sinkpad);
   } else {

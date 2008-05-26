@@ -201,7 +201,7 @@ static void
 send_eos_event (GstElement * element)
 {
   GstBus *bus = gst_element_get_bus (element);
-  GstPad *pad = gst_element_get_pad (element, "sink");
+  GstPad *pad = gst_element_get_static_pad (element, "sink");
   GstEvent *event = gst_event_new_eos ();
 
   fail_unless (gst_pad_send_event (pad, event),
@@ -220,7 +220,7 @@ send_eos_event (GstElement * element)
 static void
 send_tag_event (GstElement * element, GstTagList * tag_list)
 {
-  GstPad *pad = gst_element_get_pad (element, "sink");
+  GstPad *pad = gst_element_get_static_pad (element, "sink");
   GstEvent *event = gst_event_new_tag (tag_list);
 
   fail_unless (gst_pad_send_event (pad, event),

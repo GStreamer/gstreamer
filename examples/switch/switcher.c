@@ -68,20 +68,23 @@ static gboolean
 switch_timer (GstElement * video_switch)
 {
   gint nb_sources;
-  GstPad *active_pad;
+  GstPad *active_pad, *new_pad;
+  gchar *active_name;
 
   g_message ("switching");
   g_object_get (G_OBJECT (video_switch), "n-pads", &nb_sources, NULL);
   g_object_get (G_OBJECT (video_switch), "active-pad", &active_pad, NULL);
 
-  if (strcmp (gst_pad_get_name (active_pad), "sink0") == 0) {
-
-    g_object_set (G_OBJECT (video_switch), "active-pad",
-        gst_element_get_pad (video_switch, "sink1"), NULL);
+  active_name = gst_pad_get_name (active_pad);
+  if (strcmp (active_name, "sink0") == 0) {
+    new_pad = gst_element_get_static_pad (video_switch, "sink1");
   } else {
-    g_object_set (G_OBJECT (video_switch), "active-pad",
-        gst_element_get_pad (video_switch, "sink0"), NULL);
+    new_pad = gst_element_get_static_pad (video_switch, "sink0");
   }
+  g_object_set (G_OBJECT (video_switch), "active-pad", new_pad, NULL);
+  g_free (active_name);
+  gst_object_unref (new_pad);
+
   g_message ("current number of sources : %d, active source %s",
       nb_sources, gst_pad_get_name (active_pad));
 
