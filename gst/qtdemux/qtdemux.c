@@ -4413,7 +4413,23 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('d', 'v', '2', '5'):
     case GST_MAKE_FOURCC ('d', 'v', 'p', 'p'):
       _codec ("DV Video");
-      caps = gst_caps_from_string ("video/x-dv, systemstream=(boolean)false");
+      caps =
+          gst_caps_from_string
+          ("video/x-dv, dvversion=(int)25, systemstream=(boolean)false");
+      break;
+    case GST_MAKE_FOURCC ('d', 'v', '5', 'n'): //DVCPRO50 NTSC
+    case GST_MAKE_FOURCC ('d', 'v', '5', 'p'): //DVCPRO50 PAL
+      _codec ("DVCPro50 Video");
+      caps =
+          gst_caps_from_string
+          ("video/x-dv, dvversion=(int)50, systemstream=(boolean)false");
+      break;
+    case GST_MAKE_FOURCC ('d', 'v', 'h', '5'): //DVCPRO HD 50i produced by FCP
+    case GST_MAKE_FOURCC ('d', 'v', 'h', '6'): //DVCPRO HD 60i produced by FCP
+      _codec ("DVCProHD Video");
+      caps =
+          gst_caps_from_string
+          ("video/x-dv, dvversion=(int)100, systemstream=(boolean)false");
       break;
     case GST_MAKE_FOURCC ('s', 'm', 'c', ' '):
       _codec ("Apple Graphics (SMC)");
