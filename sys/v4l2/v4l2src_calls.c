@@ -690,11 +690,9 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
       }
     }
     if (!added) {
-      /* no range was added, make a default range */
-      GST_WARNING_OBJECT (v4l2src, "no range added, setting 0/1 to 100/1");
+      /* no range was added, leave the default range from the template */
+      GST_WARNING_OBJECT (v4l2src, "no range added, leaving default");
       g_value_unset (&rates);
-      g_value_init (&rates, GST_TYPE_FRACTION_RANGE);
-      gst_value_set_fraction_range_full (&rates, 0, 1, 100, 1);
     }
   } else if (ival.type == V4L2_FRMIVAL_TYPE_CONTINUOUS) {
     guint32 maxnum, maxdenom;
@@ -723,25 +721,30 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
     goto unknown_type;
   }
 
+return_data:
   s = gst_structure_copy (template);
   gst_structure_set (s, "width", G_TYPE_INT, (gint) width,
       "height", G_TYPE_INT, (gint) height, NULL);
-  gst_structure_set_value (s, "framerate", &rates);
-  g_value_unset (&rates);
 
+  if (G_IS_VALUE (&rates)) {
+    /* only change the framerate on the template when we have a valid probed new
+     * value */
+    gst_structure_set_value (s, "framerate", &rates);
+    g_value_unset (&rates);
+  }
   return s;
 
   /* ERRORS */
 enum_frameintervals_failed:
   {
     GST_DEBUG_OBJECT (v4l2src,
-        "Failed to enumerate frame sizes for %" GST_FOURCC_FORMAT "@%ux%u",
+        "Unable to enumerate intervals for %" GST_FOURCC_FORMAT "@%ux%u",
         GST_FOURCC_ARGS (pixelformat), width, height);
-    return NULL;
+    goto return_data;
   }
 unknown_type:
   {
-    /* I don't see how this is actually an error */
+    /* I don't see how this is actually an error, we ignore the format then */
     GST_WARNING_OBJECT (v4l2src,
         "Unknown frame interval type at %" GST_FOURCC_FORMAT "@%ux%u: %u",
         GST_FOURCC_ARGS (pixelformat), width, height, ival.type);
