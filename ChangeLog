@@ -1,5 +1,10 @@
 2008-05-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* Makefile.am:
+	Dist autogen.sh. Fixes bug #534371.
+
+2008-05-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
 	Explicitely disable the AAC decoders as they don't work very well
 	and we have better alternatives. Fixes bug #534392.

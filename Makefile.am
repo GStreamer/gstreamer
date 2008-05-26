@@ -6,7 +6,7 @@ SUBDIRS = $(FFMPEG_SUBDIRS) ext docs common tests
 include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
-	gst-ffmpeg.spec depcomp ffmpegrev \
+	gst-ffmpeg.spec depcomp ffmpegrev autogen.sh \
 	AUTHORS COPYING NEWS README ChangeLog gst-ffmpeg.doap \
 	$(win32)
 
