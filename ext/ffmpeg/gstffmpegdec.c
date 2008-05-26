@@ -2452,7 +2452,9 @@ gst_ffmpegdec_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "vorbis") ||
         !strcmp (in_plugin->name, "mpeg1video") ||
         !strcmp (in_plugin->name, "wavpack") ||
-        !strcmp (in_plugin->name, "mp2")) {
+        !strcmp (in_plugin->name, "mp2") ||
+        !strcmp (in_plugin->name, "libfaad") ||
+        !strcmp (in_plugin->name, "mpeg4aac")) {
       GST_LOG ("Ignoring decoder %s", in_plugin->name);
       goto next;
     }
