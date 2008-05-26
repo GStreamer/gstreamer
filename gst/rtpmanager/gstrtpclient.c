@@ -151,8 +151,8 @@ create_stream (GstRtpClient * rtpclient, guint32 ssrc)
   gst_bin_add (GST_BIN_CAST (rtpclient), stream->ptdemux);
 
   /* link jitterbuffer and PT demuxer */
-  srcpad = gst_element_get_pad (stream->jitterbuffer, "src");
-  sinkpad = gst_element_get_pad (stream->ptdemux, "sink");
+  srcpad = gst_element_get_static_pad (stream->jitterbuffer, "src");
+  sinkpad = gst_element_get_static_pad (stream->ptdemux, "sink");
   res = gst_pad_link (srcpad, sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
@@ -165,7 +165,7 @@ create_stream (GstRtpClient * rtpclient, guint32 ssrc)
 
   /* ghost sinkpad */
   name = g_strdup_printf ("rtp_sink_%d", ssrc);
-  sinkpad = gst_element_get_pad (stream->jitterbuffer, "sink");
+  sinkpad = gst_element_get_static_pad (stream->jitterbuffer, "sink");
   stream->rtp_sink = gst_ghost_pad_new (name, sinkpad);
   gst_object_unref (sinkpad);
   g_free (name);
