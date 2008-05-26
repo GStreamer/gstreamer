@@ -29,7 +29,8 @@
  * A Sink that outputs data to Jack ports.
  * </para>
  * <para>
- * It will create N Jack ports named out_&lt;num&gt; where &lt;num&gt; is starting from 1.
+ * It will create N Jack ports named out_&lt;name&gt;_&lt;num&gt; where 
+ * &lt;name&gt; is the element name and &lt;num&gt; is starting from 1.
  * Each port corresponds to a gstreamer channel.
  * </para>
  * <para>
@@ -142,11 +143,13 @@ gst_jack_audio_sink_allocate_channels (GstJackAudioSink * sink, gint channels)
   while (sink->port_count < channels) {
     gchar *name;
 
-    /* port names start from 1 */
-    name = g_strdup_printf ("out_%d", sink->port_count + 1);
+    /* port names start from 1 and are local to the element */
+    name =
+        g_strdup_printf ("out_%s_%d", GST_ELEMENT_NAME (sink),
+        sink->port_count + 1);
     sink->ports[sink->port_count] =
-        jack_port_register (client, name,
-        JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+        jack_port_register (client, name, JACK_DEFAULT_AUDIO_TYPE,
+        JackPortIsOutput, 0);
     if (sink->ports[sink->port_count] == NULL)
       return FALSE;
 
