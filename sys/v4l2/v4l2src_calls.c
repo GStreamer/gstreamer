@@ -760,13 +760,13 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
   GstCaps *ret;
   GstStructure *tmp;
 
+  ret = gst_caps_new_empty ();
+
 #ifdef VIDIOC_ENUM_FRAMESIZES
   gint fd = v4l2src->v4l2object->video_fd;
   struct v4l2_frmsizeenum size;
   GList *results = NULL;
   guint32 w, h;
-
-  ret = gst_caps_new_empty ();
 
   memset (&size, 0, sizeof (struct v4l2_frmsizeenum));
   size.index = 0;
@@ -871,7 +871,7 @@ unknown_type:
 default_frame_sizes:
 #endif /* defined VIDIOC_ENUM_FRAMESIZES */
   {
-    gint min_w, max_w, min_h, max_h;
+    gint min_w, max_w, min_h, max_h, fix_num = 0, fix_denom = 0;
 
     /* This code is for Linux < 2.6.19 */
     min_w = min_h = 1;
@@ -887,16 +887,40 @@ default_frame_sizes:
           GST_FOURCC_FORMAT, GST_FOURCC_ARGS (pixelformat));
     }
 
-    ret = gst_caps_new_empty ();
+    /* Since we can't get framerate directly, try to use the current norm */
+    if (v4l2src->v4l2object->norm && v4l2src->v4l2object->norms) {
+      GList *norms;
+      GstTunerNorm *norm;
+
+      for (norms = v4l2src->v4l2object->norms; norms != NULL;
+          norms = norms->next) {
+        norm = (GstTunerNorm *) norms->data;
+        if (!strcmp (norm->label, v4l2src->v4l2object->norm))
+          break;
+      }
+      /* If it's possible, set framerate to that (discrete) value */
+      if (norm) {
+        fix_num = gst_value_get_fraction_numerator (&norm->framerate);
+        fix_denom = gst_value_get_fraction_denominator (&norm->framerate);
+      }
+    }
+
     tmp = gst_structure_copy (template);
-    gst_structure_set (tmp,
-        "width", GST_TYPE_INT_RANGE, min_w, max_w,
-        "height", GST_TYPE_INT_RANGE, min_h, max_h,
-        "framerate", GST_TYPE_FRACTION_RANGE, (gint) 0, (gint) 1, (gint) 100,
-        (gint) 1, NULL);
+    if (fix_num) {
+      gst_structure_set (tmp,
+          "width", GST_TYPE_INT_RANGE, min_w, max_w,
+          "height", GST_TYPE_INT_RANGE, min_h, max_h,
+          "framerate", GST_TYPE_FRACTION, fix_num, fix_denom, NULL);
+    } else {
+      /* if norm can't be used, copy the template framerate */
+      gst_structure_set (tmp,
+          "width", GST_TYPE_INT_RANGE, min_w, max_w,
+          "height", GST_TYPE_INT_RANGE, min_h, max_h, NULL);
+    }
     gst_caps_append_structure (ret, tmp);
+
+    return ret;
   }
-  return ret;
 }
 
 /******************************************************
