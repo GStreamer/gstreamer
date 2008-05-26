@@ -235,3 +235,29 @@ _wrap_gst_event_new_custom(PyObject *self, PyObject *args, PyObject *kwargs)
        gst_mini_object_unref((GstMiniObject *)ret);
     return py_ret;
 }
+%%
+override gst_event_new_tag kwargs
+static PyObject *
+_wrap_gst_event_new_tag(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "taglist", NULL };
+    GstTagList *taglist = NULL;
+    PyObject *py_taglist, *py_ret;
+    GstEvent *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O:event_new_tag", kwlist, &py_taglist))
+        return NULL;
+    if (pyg_boxed_check(py_taglist, GST_TYPE_TAG_LIST))
+        taglist = pyg_boxed_get(py_taglist, GstTagList);
+    else {
+        PyErr_SetString(PyExc_TypeError, "taglist should be a GstTagList");
+        return NULL;
+    }
+    pyg_begin_allow_threads;
+    ret = gst_event_new_tag(gst_tag_list_copy(taglist));
+    pyg_end_allow_threads;
+    py_ret = pygstminiobject_new((GstMiniObject *)ret);
+    if (ret != NULL)
+       gst_mini_object_unref((GstMiniObject *)ret);
+    return py_ret;
+}

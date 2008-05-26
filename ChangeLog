@@ -1,3 +1,11 @@
+2008-05-26  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gstevent.override:
+	gst_event_new_tag takes ownership of the GstTagList given
+	as argument, therefore make a copy before calling the
+	C function.
+	Fixes #534888
+
 2008-05-17  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/extend/discoverer.py:
