@@ -31,8 +31,8 @@ G_BEGIN_DECLS
  * GstTaskFunction:
  * @data: user data passed to the function
  *
- * A function that will repeadedly be called in the thread created by
- * a GstTask. 
+ * A function that will repeatedly be called in the thread created by
+ * a #GstTask.
  */
 typedef void         (*GstTaskFunction)          (void *data);
 
@@ -51,7 +51,7 @@ typedef struct _GstTaskClass GstTaskClass;
 /**
  * GstTaskState:
  * @GST_TASK_STARTED: the task is started and running
- * @GST_TASK_STOPPED:  the task is stopped
+ * @GST_TASK_STOPPED: the task is stopped
  * @GST_TASK_PAUSED: the task is paused
  *
  * The different states a task can be in
@@ -111,10 +111,10 @@ typedef enum {
  * GstTask:
  * @state: the state of the task
  * @cond: used to pause/resume the task
- * @lock: The lock taken when iterating the taskfunction
+ * @lock: The lock taken when iterating the task function
  * @func: the function executed by this task
  * @data: data passed to the task function
- * @running: a flag indicating that the task is running.
+ * @running: a flag indicating that the task is running
  *
  * The #GstTask object.
  */
@@ -172,4 +172,3 @@ gboolean	gst_task_join		(GstTask *task);
 G_END_DECLS
 
 #endif /* __GST_TASK_H__ */
-

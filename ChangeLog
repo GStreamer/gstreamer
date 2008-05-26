@@ -1,3 +1,11 @@
+2008-05-26  Peter Kjellerstedt  <pkj@axis.com>
+
+	* gst/gstclock.c:
+	* gst/gstclock.h:
+	* gst/gsttask.c:
+	* gst/gsttask.h:
+	Fixed a bunch of typos.
+
 2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gstpad.h:

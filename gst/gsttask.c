@@ -44,11 +44,11 @@
  * The task can be started, paused and stopped with gst_task_start(), gst_task_pause()
  * and gst_task_stop() respectively.
  *
- * A #GstTask will repeadedly call the #GstTaskFunction with the user data
+ * A #GstTask will repeatedly call the #GstTaskFunction with the user data
  * that was provided when creating the task with gst_task_create(). Before calling
  * the function it will acquire the provided lock.
  *
- * Stopping a task with gst_task_stop() will not immediatly make sure the task is
+ * Stopping a task with gst_task_stop() will not immediately make sure the task is
  * not running anymore. Use gst_task_join() to make sure the task is completely
  * stopped and the thread is stopped.
  *
@@ -228,7 +228,7 @@ no_lock:
  * gst_task_cleanup_all:
  *
  * Wait for all tasks to be stopped. This is mainly used internally
- * to ensure proper cleanup of internal datastructures in testsuites.
+ * to ensure proper cleanup of internal data structures in test suites.
  *
  * MT safe.
  */
@@ -258,12 +258,12 @@ gst_task_cleanup_all (void)
  * @func: The #GstTaskFunction to use
  * @data: User data to pass to @func
  *
- * Create a new Task that will repeadedly call the provided @func
+ * Create a new Task that will repeatedly call the provided @func
  * with @data as a parameter. Typically the task will run in
  * a new thread.
  *
  * The function cannot be changed after the task has been created. You
- * must create a new GstTask to change the function.
+ * must create a new #GstTask to change the function.
  *
  * Returns: A new #GstTask.
  *
@@ -286,7 +286,7 @@ gst_task_create (GstTaskFunction func, gpointer data)
 /**
  * gst_task_set_lock:
  * @task: The #GstTask to use
- * @mutex: The GMutex to use
+ * @mutex: The #GMutex to use
  *
  * Set the mutex used by the task. The mutex will be acquired before
  * calling the #GstTaskFunction.
@@ -345,9 +345,9 @@ gst_task_get_state (GstTask * task)
  * @task: The #GstTask to start
  *
  * Starts @task. The @task must have a lock associated with it using
- * gst_task_set_lock() or thsi function will return FALSE.
+ * gst_task_set_lock() or this function will return %FALSE.
  *
- * Returns: TRUE if the task could be started.
+ * Returns: %TRUE if the task could be started.
  *
  * MT safe.
  */
@@ -376,8 +376,8 @@ gst_task_start (GstTask * task)
       if (task->running)
         break;
 
-      /* new task, push on threadpool. We ref before so
-       * that it remains alive while on the threadpool. */
+      /* new task, push on thread pool. We ref before so
+       * that it remains alive while on the thread pool. */
       gst_object_ref (task);
       /* mark task as running so that a join will wait until we schedule
        * and exit the task function. */
@@ -420,7 +420,7 @@ no_lock:
  * will not wait for the task to have completely stopped. Use
  * gst_task_join() to stop and wait for completion.
  *
- * Returns: TRUE if the task could be stopped.
+ * Returns: %TRUE if the task could be stopped.
  *
  * MT safe.
  */
@@ -462,7 +462,7 @@ gst_task_stop (GstTask * task)
  * in the paused state. This function does not wait for the task to complete
  * the paused state.
  *
- * Returns: TRUE if the task could be paused.
+ * Returns: %TRUE if the task could be paused.
  *
  * MT safe.
  */
@@ -531,7 +531,7 @@ no_lock:
  * would cause a deadlock. The function will detect this and print a 
  * g_warning.
  *
- * Returns: TRUE if the task could be joined.
+ * Returns: %TRUE if the task could be joined.
  *
  * MT safe.
  */
@@ -547,14 +547,14 @@ gst_task_join (GstTask * task)
   GST_DEBUG_OBJECT (task, "Joining task %p, thread %p", task, tself);
 
   /* we don't use a real thread join here because we are using
-   * threadpools */
+   * thread pools */
   GST_OBJECT_LOCK (task);
   if (G_UNLIKELY (tself == task->abidata.ABI.thread))
     goto joining_self;
   task->state = GST_TASK_STOPPED;
   /* signal the state change for when it was blocked in PAUSED. */
   GST_TASK_SIGNAL (task);
-  /* we set the running flag when pushing the task on the threadpool. 
+  /* we set the running flag when pushing the task on the thread pool.
    * This means that the task function might not be called when we try
    * to join it here. */
   while (G_LIKELY (task->running))
