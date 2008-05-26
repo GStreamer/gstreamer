@@ -1,3 +1,14 @@
+2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_vid_caps_new),
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_with_codecid):
+	Add more specific width/height for DV video so that it negotiates more
+	automatically.
+	Try to avoid accessing NULL caps.
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_getcaps):
+	Add some more debuggin to the caps generation.
+
 2008-05-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* Makefile.am:

@@ -287,20 +287,30 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   enum PixelFormat pixfmt;
   GstCaps *caps = NULL;
 
+  GST_DEBUG_OBJECT (ffmpegenc, "getting caps");
+
   /* audio needs no special care */
   if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
-    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+
+    GST_DEBUG_OBJECT (ffmpegenc, "audio caps, return template %"GST_PTR_FORMAT, caps);
+
+    return caps;
   }
 
   /* cached */
   if (oclass->sinkcaps) {
-    return gst_caps_copy (oclass->sinkcaps);
+    caps = gst_caps_copy (oclass->sinkcaps);
+    GST_DEBUG_OBJECT (ffmpegenc, "return cached caps %"GST_PTR_FORMAT, caps);
+    return caps;
   }
 
   /* create cache etc. */
   ctx = avcodec_alloc_context ();
   if (!ctx) {
-    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    GST_DEBUG_OBJECT (ffmpegenc, "no context, return template caps %"GST_PTR_FORMAT, caps);
+    return caps;
   }
 
   /* set some default properties */
@@ -321,6 +331,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
 #ifndef GST_DISABLE_GST_DEBUG
   _shut_up_I_am_probing = TRUE;
 #endif
+  GST_DEBUG_OBJECT (ffmpegenc, "probing caps");
   for (pixfmt = 0; pixfmt < PIX_FMT_NB; pixfmt++) {
     GstCaps *tmpcaps;
 
@@ -350,9 +361,12 @@ gst_ffmpegenc_getcaps (GstPad * pad)
 
   /* make sure we have something */
   if (!caps) {
-    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    GST_DEBUG_OBJECT (ffmpegenc, "probing gave nothing, return template %"GST_PTR_FORMAT, caps);
+    return caps;
   }
 
+  GST_DEBUG_OBJECT (ffmpegenc, "probed caps gave %"GST_PTR_FORMAT, caps);
   oclass->sinkcaps = gst_caps_copy (caps);
 
   return caps;

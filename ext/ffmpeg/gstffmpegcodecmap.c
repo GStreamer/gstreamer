@@ -116,6 +116,24 @@ gst_ff_vid_caps_new (AVCodecContext * context, enum CodecID codec_id,
         }
         break;
       }
+      case CODEC_ID_DVVIDEO:
+      {
+        const static gint widths[] = { 720, 720 };
+        const static gint heights[] = { 576, 480 };
+        GstCaps *temp;
+        gint n_sizes = G_N_ELEMENTS (widths);
+
+        caps = gst_caps_new_empty ();
+        for (i = 0; i < n_sizes; i++) {
+          temp = gst_caps_new_simple (mimetype,
+              "width", G_TYPE_INT, widths[i],
+              "height", G_TYPE_INT, heights[i],
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+          gst_caps_append (caps, temp);
+	}
+        break;
+      }
       default:
         caps = gst_caps_new_simple (mimetype,
             "width", GST_TYPE_INT_RANGE, 16, 4096,
@@ -1212,22 +1230,31 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
   if (caps == NULL) {
     if (bpp != 0) {
       if (r_mask != 0) {
-        caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw-rgb",
+	if (a_mask) {
+          caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw-rgb",
+            "bpp", G_TYPE_INT, bpp,
+            "depth", G_TYPE_INT, depth,
+            "red_mask", G_TYPE_INT, r_mask,
+            "green_mask", G_TYPE_INT, g_mask,
+            "blue_mask", G_TYPE_INT, b_mask,
+            "alpha_mask", G_TYPE_INT, a_mask, 
+            "endianness", G_TYPE_INT, endianness, NULL);
+	}
+	else {
+          caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw-rgb",
             "bpp", G_TYPE_INT, bpp,
             "depth", G_TYPE_INT, depth,
             "red_mask", G_TYPE_INT, r_mask,
             "green_mask", G_TYPE_INT, g_mask,
             "blue_mask", G_TYPE_INT, b_mask,
             "endianness", G_TYPE_INT, endianness, NULL);
-        if (a_mask) {
-          gst_caps_set_simple (caps, "alpha_mask", G_TYPE_INT, a_mask, NULL);
-        }
+	}
       } else {
         caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw-rgb",
             "bpp", G_TYPE_INT, bpp,
             "depth", G_TYPE_INT, depth,
             "endianness", G_TYPE_INT, endianness, NULL);
-        if (context) {
+        if (caps && context) {
           gst_ffmpeg_set_palette (caps, context);
         }
       }
@@ -1705,7 +1732,6 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
             break;
         }
     }
-
     default:
       break;
   }
