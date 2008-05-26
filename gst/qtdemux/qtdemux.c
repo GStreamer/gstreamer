@@ -559,13 +559,21 @@ gst_qtdemux_find_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   gint i;
   guint32 seg_idx;
 
+  GST_LOG_OBJECT (qtdemux, "finding segment for %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time_position));
+
   /* find segment corresponding to time_position if we are looking
    * for a segment. */
   seg_idx = -1;
   for (i = 0; i < stream->n_segments; i++) {
     QtDemuxSegment *segment = &stream->segments[i];
 
-    if (segment->time <= time_position && time_position <= segment->stop_time) {
+    GST_LOG_OBJECT (qtdemux,
+        "looking at segment %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (segment->time), GST_TIME_ARGS (segment->stop_time));
+
+    if (segment->time <= time_position && time_position < segment->stop_time) {
+      GST_LOG_OBJECT (qtdemux, "segment %d matches", i);
       seg_idx = i;
       break;
     }
@@ -1200,20 +1208,32 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   guint64 start, stop, time;
   gdouble rate;
 
+  GST_LOG_OBJECT (qtdemux, "activate segment %d, offset %" G_GUINT64_FORMAT,
+      seg_idx, offset);
+
   /* update the current segment */
   stream->segment_index = seg_idx;
 
   /* get the segment */
   segment = &stream->segments[seg_idx];
 
-  if (offset < segment->time)
+  if (offset < segment->time) {
+    GST_WARNING_OBJECT (qtdemux, "offset < segment->time %" G_GUINT64_FORMAT,
+        segment->time);
     return FALSE;
+  }
 
   /* get time in this segment */
   seg_time = offset - segment->time;
 
-  if (seg_time > segment->duration)
+  GST_LOG_OBJECT (qtdemux, "seg_time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (seg_time));
+
+  if (seg_time > segment->duration) {
+    GST_LOG_OBJECT (qtdemux, "seg_time > segment->duration %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (segment->duration));
     return FALSE;
+  }
 
   /* calc media start/stop */
   if (qtdemux->segment.stop == -1)
