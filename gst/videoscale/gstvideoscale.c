@@ -80,7 +80,7 @@ GST_ELEMENT_DETAILS ("Video scaler",
     "Resizes video",
     "Wim Taymans <wim.taymans@chello.be>");
 
-#define DEFAULT_PROP_METHOD	GST_VIDEO_SCALE_NEAREST
+#define DEFAULT_PROP_METHOD	GST_VIDEO_SCALE_BILINEAR
 
 enum
 {

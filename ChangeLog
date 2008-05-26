@@ -1,5 +1,10 @@
 2008-05-26  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* gst/videoscale/gstvideoscale.c: (DEFAULT_PROP_METHOD):
+	  Change default scaling method from nearest-neighbour to bilinear.
+
+2008-05-26  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* tests/check/libs/video.c:
 	  More checks.
 
