@@ -25,9 +25,7 @@
 #include <gst/gst.h>
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
-#include <libswscale/swscale.h>
 #else
-#include <ffmpeg/swscale.h>
 #include <ffmpeg/avcodec.h>
 #endif
 #include <string.h>
@@ -3286,30 +3284,4 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
   }
 
   return 0;
-}
-
-/**
- * Convert image 'src' to 'dst'.
- *
- * We use this code to copy two pictures between the same
- * colorspaces, so this function is not realy used to do
- * colorspace conversion.
- * The ffmpeg code has a bug in it where odd sized frames were
- * not copied completely. We adjust the input parameters for
- * the original ffmpeg img_convert function here so that it
- * still does the right thing.
- */
-int
-gst_ffmpeg_img_convert (AVPicture * dst, int dst_pix_fmt,
-    const AVPicture * src, int src_pix_fmt, int src_width, int src_height)
-{
-  struct SwsContext *ctx;
-  int res;
-
-  ctx = sws_getContext (src_width, src_height, src_pix_fmt, src_width, src_height, dst_pix_fmt, 2,      /* flags : bicubic */
-      NULL, NULL, NULL);
-  res = sws_scale (ctx, (uint8_t **) src->data, (int *) src->linesize,
-      2, src_width, dst->data, dst->linesize);
-  sws_freeContext (ctx);
-  return res;
 }

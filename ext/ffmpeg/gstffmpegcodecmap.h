@@ -125,15 +125,6 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
                            int         height);
 
 /*
- * convert an image, we only use this for copying the image, ie,
- * convert between the same colorspaces.
- */
-int
-gst_ffmpeg_img_convert (AVPicture * dst, int dst_pix_fmt,
-                        const AVPicture * src, int src_pix_fmt,
-                        int src_width, int src_height);
-
-/*
  * Convert from/to a GStreamer <-> FFMpeg timestamp.
  */
 static inline guint64

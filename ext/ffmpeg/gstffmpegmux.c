@@ -554,8 +554,8 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       gst_ffmpeg_avpicture_fill (&src, GST_BUFFER_DATA (buf),
           PIX_FMT_RGB24, st->codec->width, st->codec->height);
 
-      gst_ffmpeg_img_convert (&dst, PIX_FMT_RGB24,
-          &src, PIX_FMT_RGB24, st->codec->width, st->codec->height);
+      av_picture_copy (&dst, &src, PIX_FMT_RGB24,
+          st->codec->width, st->codec->height);
     } else {
       pkt.data = GST_BUFFER_DATA (buf);
       pkt.size = GST_BUFFER_SIZE (buf);

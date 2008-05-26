@@ -737,7 +737,7 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
       }
     }
       break;
-    case GST_QUERY_SEEKING: {
+    case GST_QUERY_SEEKING:{
       GstFormat format;
       gboolean seekable;
       gint64 dur = -1;
@@ -1289,9 +1289,8 @@ gst_ffmpegdemux_loop (GstPad * pad)
         avstream->codec->pix_fmt, avstream->codec->width,
         avstream->codec->height);
 
-    gst_ffmpeg_img_convert (&dst, avstream->codec->pix_fmt,
-        &src, avstream->codec->pix_fmt, avstream->codec->width,
-        avstream->codec->height);
+    av_picture_copy (&dst, &src, avstream->codec->pix_fmt,
+        avstream->codec->width, avstream->codec->height);
   } else {
     memcpy (GST_BUFFER_DATA (outbuf), pkt.data, outsize);
   }

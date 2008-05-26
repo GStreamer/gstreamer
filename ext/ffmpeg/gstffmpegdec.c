@@ -1342,11 +1342,7 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     gst_ffmpeg_avpicture_fill (&pic, GST_BUFFER_DATA (*outbuf),
         ffmpegdec->context->pix_fmt, width, height);
 
-    /* the original convert function did not do the right thing, this
-     * is a patched up version that adjust widht/height so that the
-     * ffmpeg one works correctly. */
-    gst_ffmpeg_img_convert (&pic, ffmpegdec->context->pix_fmt,
-        (AVPicture *) ffmpegdec->picture,
+    av_picture_copy (&pic, (AVPicture *) ffmpegdec->picture,
         ffmpegdec->context->pix_fmt, width, height);
   }
   ffmpegdec->picture->pts = -1;

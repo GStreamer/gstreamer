@@ -1,3 +1,17 @@
+2008-05-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by:
+	    Hans de Goede <j dot w dot r degoede at hhs dot nl>
+
+	* configure.ac:
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_avpicture_fill):
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c: (get_output_buffer):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_collected):
+	Use av_picture_copy() instead of libswscale to copy pictures. This
+	removes the swscale dependency and is faster. Fixes bug #534390.
+
 2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_type_find),
