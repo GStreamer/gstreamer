@@ -1,3 +1,15 @@
+2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_init), (gst_a52dec_push),
+	(gst_a52dec_sink_event), (gst_a52dec_handle_frame),
+	(gst_a52dec_chain), (gst_a52dec_change_state):
+	* ext/a52dec/gsta52dec.h:
+	Mark discont on outgoing buffers after receiving a DISCONT buffer or
+	when we have a decoding error.
+	We don't need to clear the cache when we receive a NEWSEGMENT event.
+	Clear buffer cache in DISCONT.
+	Add beginnings of GstSegment handling.
+
 2008-05-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstxingmux.c: (generate_xing_header):

@@ -225,6 +225,7 @@ gst_a52dec_init (GstA52Dec * a52dec)
   a52dec->request_channels = A52_CHANNEL;
   a52dec->dynamic_range_compression = FALSE;
   a52dec->cache = NULL;
+  gst_segment_init (&a52dec->segment, GST_FORMAT_UNDEFINED);
 }
 
 static int
@@ -345,6 +346,12 @@ gst_a52dec_push (GstA52Dec * a52dec,
   }
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = 256 * GST_SECOND / a52dec->sample_rate;
+  /* set discont when needed */
+  if (a52dec->discont) {
+    GST_LOG_OBJECT (a52dec, "marking DISCONT");
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    a52dec->discont = FALSE;
+  }
 
   GST_DEBUG_OBJECT (a52dec,
       "Pushing buffer with ts %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT,
@@ -409,32 +416,27 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
       } else {
         a52dec->time = val;
         a52dec->sent_segment = TRUE;
-        ret = gst_pad_event_default (pad, event);
-      }
-
-      if (a52dec->cache) {
-        gst_buffer_unref (a52dec->cache);
-        a52dec->cache = NULL;
+        ret = gst_pad_push_event (a52dec->srcpad, event);
       }
       break;
     }
     case GST_EVENT_TAG:
-    case GST_EVENT_EOS:{
-      ret = gst_pad_event_default (pad, event);
+    case GST_EVENT_EOS:
+      ret = gst_pad_push_event (a52dec->srcpad, event);
       break;
-    }
     case GST_EVENT_FLUSH_START:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_push_event (a52dec->srcpad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
       if (a52dec->cache) {
         gst_buffer_unref (a52dec->cache);
         a52dec->cache = NULL;
       }
-      ret = gst_pad_event_default (pad, event);
+      gst_segment_init (&a52dec->segment, GST_FORMAT_UNDEFINED);
+      ret = gst_pad_push_event (a52dec->srcpad, event);
       break;
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_push_event (a52dec->srcpad, event);
       break;
   }
 
@@ -527,6 +529,7 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
   a52dec->level = 1;
   if (a52_frame (a52dec->state, data, &flags, &a52dec->level, a52dec->bias)) {
     GST_WARNING ("a52_frame error");
+    a52dec->discont = TRUE;
     return GST_FLOW_OK;
   }
   channels = flags & (A52_CHANNEL_MASK | A52_LFE);
@@ -552,7 +555,9 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
   /* each frame consists of 6 blocks */
   for (i = 0; i < 6; i++) {
     if (a52_block (a52dec->state)) {
+      /* ignore errors but mark a discont */
       GST_WARNING ("a52_block error %d", i);
+      a52dec->discont = TRUE;
     } else {
       GstFlowReturn ret;
 
@@ -592,6 +597,16 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
   GstA52Dec *a52dec = GST_A52DEC (GST_PAD_PARENT (pad));
   GstFlowReturn ret;
   gint first_access;
+
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    GST_LOG_OBJECT (a52dec, "received DISCONT");
+    /* clear cache on discont and mark a discont in the element */
+    if (a52dec->cache) {
+      gst_buffer_unref (a52dec->cache);
+      a52dec->cache = NULL;
+    }
+    a52dec->discont = TRUE;
+  }
 
   if (a52dec->dvdmode) {
     gint size = GST_BUFFER_SIZE (buf);
@@ -767,6 +782,7 @@ gst_a52dec_change_state (GstElement * element, GstStateChange transition)
       a52dec->bias = 0;
       a52dec->time = 0;
       a52dec->sent_segment = FALSE;
+      gst_segment_init (&a52dec->segment, GST_FORMAT_UNDEFINED);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;

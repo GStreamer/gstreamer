@@ -45,9 +45,11 @@ struct _GstA52Dec {
   /* pads */
   GstPad        *sinkpad,
                 *srcpad;
+  GstSegment     segment;
 
   gboolean       dvdmode;
   gboolean       sent_segment;
+  gboolean       discont;
 
   int            bit_rate;
   int            sample_rate;
