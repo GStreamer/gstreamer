@@ -54,6 +54,13 @@
  * </programlisting>
  * Decodes an MP3 file and encodes the left and right channel into separate Ogg Vorbis files.
  * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch-0.10 filesrc location=file.mp3 ! decodebin ! audioconvert ! "audio/x-raw-int,channels=2" ! deinterleave name=d  interleave name=i ! audioconvert ! wavenc ! filesink location=test.wav    d.src0 ! queue ! audioconvert ! i.sink1    d.src1 ! queue ! audioconvert ! i.sink0
+ * </programlisting>
+ * Decodes and deinterleaves a Stereo MP3 file into separate channels and then interleaves the channels
+ * again to a WAV file with the channel with the channels exchanged.
+ * </para>
  * </refsect2>
  */
 

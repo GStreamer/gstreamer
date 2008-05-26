@@ -1,3 +1,31 @@
+2008-05-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/interleave/deinterleave.c:
+	Add another example launch line.
+
+	* gst/interleave/interleave.c: (interleave_24),
+	(gst_interleave_finalize), (gst_interleave_base_init),
+	(gst_interleave_class_init), (gst_interleave_init),
+	(gst_interleave_request_new_pad), (gst_interleave_release_pad),
+	(gst_interleave_change_state), (__remove_channels),
+	(__set_channels), (gst_interleave_sink_getcaps),
+	(gst_interleave_set_process_function),
+	(gst_interleave_sink_setcaps), (gst_interleave_sink_event),
+	(gst_interleave_src_query_duration), (gst_interleave_src_query),
+	(forward_event_func), (forward_event), (gst_interleave_src_event),
+	(gst_interleave_collected):
+	* gst/interleave/interleave.h:
+	Major rewrite of interleave using GstCollectpads. This new version
+	also supports almost all raw audio formats and has better caps
+	negotiation. Fixes bug #506594.
+
+	Also update docs and add some more examples.
+
+	* tests/check/elements/interleave.c: (interleave_chain_func),
+	(GST_START_TEST), (src_handoff_float32), (sink_handoff_float32),
+	(interleave_suite):
+	Add some more extensive unit tests for interleave.
+
 2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
