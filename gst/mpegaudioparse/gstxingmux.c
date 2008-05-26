@@ -256,6 +256,7 @@ static GstBuffer *
 generate_xing_header (GstXingMux * xing)
 {
   guint32 *xing_flags;
+  guint32 xing_flags_tmp = 0;
   GstBuffer *xing_header;
   guchar *data;
 
@@ -326,7 +327,7 @@ generate_xing_header (GstXingMux * xing)
     GST_DEBUG ("Setting number of frames to %u", number_of_frames);
     number_of_frames = GUINT32_TO_BE (number_of_frames);
     memcpy (data, &number_of_frames, 4);
-    *xing_flags |= GST_XING_FRAME_FIELD;
+    xing_flags_tmp |= GST_XING_FRAME_FIELD;
     data += 4;
   }
 
@@ -352,7 +353,7 @@ generate_xing_header (GstXingMux * xing)
       GST_DEBUG ("Setting number of bytes to %u", nbytes);
       nbytes = GUINT32_TO_BE (nbytes);
       memcpy (data, &nbytes, 4);
-      *xing_flags |= GST_XING_BYTES_FIELD;
+      xing_flags_tmp |= GST_XING_BYTES_FIELD;
       data += 4;
     }
   }
@@ -362,36 +363,41 @@ generate_xing_header (GstXingMux * xing)
     GList *it;
     gint percent = 0;
 
-    *xing_flags |= GST_XING_TOC_FIELD;
+    xing_flags_tmp |= GST_XING_TOC_FIELD;
 
     GST_DEBUG ("Writing seek table");
     for (it = xing->seek_table; it != NULL && percent < 100; it = it->next) {
       GstXingSeekEntry *entry = (GstXingSeekEntry *) it->data;
-      gint64 byte;
+      gint64 pos;
+      guchar byte;
 
       while ((entry->timestamp * 100) / duration >= percent) {
-        byte = (entry->byte * 256) / byte_count;
-        GST_DEBUG ("  %d %% -- %" G_GINT64_FORMAT " 1/256", percent, byte);
-        *data = byte;
+        pos = (entry->byte * 256) / byte_count;
+        GST_DEBUG ("  %d %% -- %" G_GINT64_FORMAT " 1/256", percent, pos);
+        byte = (guchar) pos;
+        memcpy (data, &byte, 1);
         data++;
         percent++;
       }
     }
 
     if (percent < 100) {
-      guchar b = *(data - 1);
+      guchar b;
       gint i;
+
+      memcpy (&b, data - 1, 1);
 
       for (i = percent; i < 100; i++) {
         GST_DEBUG ("  %d %% -- %d 1/256", i, b);
-        *data = b;
+        memcpy (data, &b, 1);
         data++;
       }
     }
   }
 
   GST_DEBUG ("Setting Xing flags to 0x%x\n", *xing_flags);
-  *xing_flags = GUINT32_TO_BE (*xing_flags);
+  xing_flags_tmp = GUINT32_TO_BE (xing_flags_tmp);
+  memcpy (xing_flags, &xing_flags_tmp, 4);
   return xing_header;
 }
 

@@ -1,3 +1,8 @@
+2008-05-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstxingmux.c: (generate_xing_header):
+	Fix alignment issues that caused SIGBUS on some architectures.
+
 2008-05-25  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/ac3parse/gstac3parse.c: (gst_ac3parse_chain):
