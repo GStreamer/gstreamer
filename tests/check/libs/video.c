@@ -393,6 +393,8 @@ GST_START_TEST (test_video_formats)
     for (w = 1; w <= 65; ++w) {
       for (h = 1; h <= 65; ++h) {
         paintinfo paintinfo = { 0, };
+        guint off0, off1, off2, off3;
+        guint size;
 
         GST_LOG ("%s, %dx%d", fourcc_list[i].fourcc, w, h);
 
@@ -409,14 +411,61 @@ GST_START_TEST (test_video_formats)
               paintinfo.vstride);
           /* check component_width * height against offsets/size somehow? */
         }
-        fail_unless_equals_int (gst_video_format_get_component_offset (fmt, 0,
-                w, h), (unsigned long) paintinfo.yp);
-        fail_unless_equals_int (gst_video_format_get_component_offset (fmt, 1,
-                w, h), (unsigned long) paintinfo.up);
-        fail_unless_equals_int (gst_video_format_get_component_offset (fmt, 2,
-                w, h), (unsigned long) paintinfo.vp);
-        fail_unless_equals_int (gst_video_format_get_size (fmt, w, h),
-            (unsigned long) paintinfo.endptr);
+
+        size = gst_video_format_get_size (fmt, w, h);
+        fail_unless_equals_int (size, (unsigned long) paintinfo.endptr);
+
+        off0 = gst_video_format_get_component_offset (fmt, 0, w, h);
+        fail_unless_equals_int (off0, (unsigned long) paintinfo.yp);
+        off1 = gst_video_format_get_component_offset (fmt, 1, w, h);
+        fail_unless_equals_int (off1, (unsigned long) paintinfo.up);
+        off2 = gst_video_format_get_component_offset (fmt, 2, w, h);
+        fail_unless_equals_int (off2, (unsigned long) paintinfo.vp);
+
+        /* should be 0 if there's no alpha component */
+        off3 = gst_video_format_get_component_offset (fmt, 3, w, h);
+        fail_unless_equals_int (off3, (unsigned long) paintinfo.ap);
+
+        /* some gstvideo checks ... (FIXME: fails for Y41B and Y42B; not sure
+         * if the check or the _get_component_size implementation is wrong) */
+        if (fmt != GST_VIDEO_FORMAT_Y41B && fmt != GST_VIDEO_FORMAT_Y42B) {
+          guint cs0, cs1, cs2, cs3;
+
+          cs0 = gst_video_format_get_component_width (fmt, 0, w) *
+              gst_video_format_get_component_height (fmt, 0, h);
+          cs1 = gst_video_format_get_component_width (fmt, 1, w) *
+              gst_video_format_get_component_height (fmt, 1, h);
+          cs2 = gst_video_format_get_component_width (fmt, 2, w) *
+              gst_video_format_get_component_height (fmt, 2, h);
+
+          /* GST_LOG ("cs0=%d,cs1=%d,cs2=%d,off0=%d,off1=%d,off2=%d,size=%d",
+             cs0, cs1, cs2, off0, off1, off2, size); */
+
+          if (!gst_video_format_is_packed (fmt))
+            fail_unless (cs0 <= off1);
+
+          if (gst_video_format_has_alpha (fmt)) {
+            cs3 = gst_video_format_get_component_width (fmt, 3, w) *
+                gst_video_format_get_component_height (fmt, 3, h);
+            fail_unless (cs3 < size);
+            /* U/V/alpha shouldn't take up more space than the Y component */
+            fail_if (cs1 > cs0, "cs1 (%d) should be <= cs0 (%d)", cs1, cs0);
+            fail_if (cs2 > cs0, "cs2 (%d) should be <= cs0 (%d)", cs2, cs0);
+            fail_if (cs3 > cs0, "cs3 (%d) should be <= cs0 (%d)", cs3, cs0);
+
+            /* all components together shouldn't take up more space than size */
+            fail_unless (cs0 + cs1 + cs2 + cs3 <= size);
+          } else {
+            /* U/V shouldn't take up more space than the Y component */
+            fail_if (cs1 > cs0, "cs1 (%d) should be <= cs0 (%d)", cs1, cs0);
+            fail_if (cs2 > cs0, "cs2 (%d) should be <= cs0 (%d)", cs2, cs0);
+
+            /* all components together shouldn't take up more space than size */
+            fail_unless (cs0 + cs1 + cs2 <= size,
+                "cs0 (%d) + cs1 (%d) + cs2 (%d) should be <= size (%d)",
+                cs0, cs1, cs2, size);
+          }
+        }
       }
     }
   }
