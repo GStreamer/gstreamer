@@ -672,6 +672,27 @@ gst_rtp_bin_clear_pt_map (GstRtpBin * bin)
   GST_RTP_BIN_UNLOCK (bin);
 }
 
+static void
+gst_rtp_bin_propagate_property_to_jitterbuffer (GstRtpBin * bin,
+    const gchar * name, const GValue * value)
+{
+  GSList *sessions, *streams;
+
+  GST_RTP_BIN_LOCK (bin);
+  for (sessions = bin->sessions; sessions; sessions = g_slist_next (sessions)) {
+    GstRtpBinSession *session = (GstRtpBinSession *) sessions->data;
+
+    GST_RTP_SESSION_LOCK (session);
+    for (streams = session->streams; streams; streams = g_slist_next (streams)) {
+      GstRtpBinStream *stream = (GstRtpBinStream *) streams->data;
+
+      g_object_set_property (G_OBJECT (stream->buffer), name, value);
+    }
+    GST_RTP_SESSION_UNLOCK (session);
+  }
+  GST_RTP_BIN_UNLOCK (bin);
+}
+
 /* get a client with the given SDES name. Must be called with RTP_BIN_LOCK */
 static GstRtpBinClient *
 get_client (GstRtpBin * bin, guint8 len, guint8 * data, gboolean * created)
@@ -1461,6 +1482,8 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       GST_RTP_BIN_LOCK (rtpbin);
       rtpbin->latency = g_value_get_uint (value);
       GST_RTP_BIN_UNLOCK (rtpbin);
+      /* propegate the property down to the jitterbuffer */
+      gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin, "latency", value);
       break;
     case PROP_SDES_CNAME:
       gst_rtp_bin_set_sdes_string (rtpbin, GST_RTCP_SDES_CNAME,
@@ -1494,6 +1517,7 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       GST_RTP_BIN_LOCK (rtpbin);
       rtpbin->do_lost = g_value_get_boolean (value);
       GST_RTP_BIN_UNLOCK (rtpbin);
+      gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin, "do-lost", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

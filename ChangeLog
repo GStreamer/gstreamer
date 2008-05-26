@@ -1,5 +1,15 @@
 2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Håvard Graff <havard dot graff at tandberg dot com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	(gst_rtp_bin_propagate_property_to_jitterbuffer),
+	(gst_rtp_bin_set_property):
+	Propagate the do-lost and latency properties to the jitterbuffers when
+	they are changed on rtpbin.
+
+2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* examples/switch/switcher.c: (switch_timer):
 	* gst/replaygain/gstrgvolume.c: (gst_rg_volume_init):
 	* gst/rtpmanager/gstrtpclient.c: (create_stream):
