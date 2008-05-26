@@ -359,9 +359,19 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     case GST_MAKE_FOURCC ('d', 'v', 's', 'd'):
     case GST_MAKE_FOURCC ('C', 'D', 'V', 'C'):
       caps = gst_caps_new_simple ("video/x-dv",
-          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+          "systemstream", G_TYPE_BOOLEAN, FALSE,
+          "dvversion", G_TYPE_INT, 25, NULL);
       if (codec_name)
         *codec_name = g_strdup ("Generic DV");
+      break;
+
+    case GST_MAKE_FOURCC ('D', 'V', '5', '0'):
+    case GST_MAKE_FOURCC ('d', 'v', '5', '0'):
+      caps = gst_caps_new_simple ("video/x-dv",
+          "systemstream", G_TYPE_BOOLEAN, FALSE,
+          "dvversion", G_TYPE_INT, 50, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("DVCPro50 Video");
       break;
 
     case GST_MAKE_FOURCC ('W', 'M', 'V', '1'):
@@ -1419,6 +1429,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('D', 'I', 'V', 'X'),
     GST_MAKE_FOURCC ('D', 'U', 'C', 'K'),
     GST_MAKE_FOURCC ('D', 'V', 'S', 'D'),
+    GST_MAKE_FOURCC ('D', 'V', '5', '0'),
     GST_MAKE_FOURCC ('D', 'X', '5', '0'),
     GST_MAKE_FOURCC ('F', 'L', 'V', '1'),
     GST_MAKE_FOURCC ('H', '2', '6', '3'),

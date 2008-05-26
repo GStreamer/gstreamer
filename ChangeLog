@@ -1,3 +1,9 @@
+2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_video_template_caps):
+	Add support for DVCPRO.
+
 2008-05-26  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/videoscale/gstvideoscale.c: (DEFAULT_PROP_METHOD):
