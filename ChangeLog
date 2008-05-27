@@ -1,5 +1,17 @@
 2008-05-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* ext/alsa/gstalsamixertrack.c:
+	  (gst_alsa_mixer_track_update_alsa_capabilities):
+	  Make sure playback volumes aren't accidentally overwritten by
+	  capture volumes if an alsa mixer track has both playback and
+	  capture capabilities: we create two GstMixerTracks in that
+	  case, so make sure we query only the alsa capabilities that
+	  refer to the type of GstMixerTrack we created from the dual
+	  capability alsa element. Should fix issues with Audigy2 sound
+	  cards (#518082).
+
+2008-05-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* tests/check/pipelines/oggmux.c: (test_pipeline):
 	  Don't use deprecated function.
 

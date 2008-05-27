@@ -75,28 +75,40 @@ gst_alsa_mixer_track_update_alsa_capabilities (GstAlsaMixerTrack * alsa_track)
   alsa_track->alsa_flags = 0;
   alsa_track->capture_group = -1;
 
+  /* common flags */
   if (snd_mixer_selem_has_common_volume (alsa_track->element))
     alsa_track->alsa_flags |= GST_ALSA_MIXER_TRACK_VOLUME;
-
-  if (snd_mixer_selem_has_playback_volume (alsa_track->element))
-    alsa_track->alsa_flags |= GST_ALSA_MIXER_TRACK_PVOLUME;
-
-  if (snd_mixer_selem_has_capture_volume (alsa_track->element))
-    alsa_track->alsa_flags |= GST_ALSA_MIXER_TRACK_CVOLUME;
 
   if (snd_mixer_selem_has_common_switch (alsa_track->element))
     alsa_track->alsa_flags |= GST_ALSA_MIXER_TRACK_SWITCH;
 
-  if (snd_mixer_selem_has_playback_switch (alsa_track->element))
-    alsa_track->alsa_flags |= GST_ALSA_MIXER_TRACK_PSWITCH;
+  /* Since we create two separate mixer track objects for alsa elements that
+   * support both playback and capture, we're going to 'hide' the alsa flags
+   * that don't pertain to this mixer track from alsa_flags, otherwise
+   * gst_alsa_mixer_track_update() is going to do things we don't want */
 
-  if (snd_mixer_selem_has_capture_switch (alsa_track->element)) {
-    alsa_track->alsa_flags |= GST_ALSA_MIXER_TRACK_CSWITCH;
+  /* playback flags */
+  if ((GST_MIXER_TRACK (alsa_track)->flags & GST_MIXER_TRACK_OUTPUT)) {
+    if (snd_mixer_selem_has_playback_volume (alsa_track->element))
+      alsa_track->alsa_flags |= GST_ALSA_MIXER_TRACK_PVOLUME;
 
-    if (snd_mixer_selem_has_capture_switch_exclusive (alsa_track->element)) {
-      alsa_track->alsa_flags |= GST_ALSA_MIXER_TRACK_CSWITCH_EXCL;
-      alsa_track->capture_group =
-          snd_mixer_selem_get_capture_group (alsa_track->element);
+    if (snd_mixer_selem_has_playback_switch (alsa_track->element))
+      alsa_track->alsa_flags |= GST_ALSA_MIXER_TRACK_PSWITCH;
+  }
+
+  /* capture flags */
+  if ((GST_MIXER_TRACK (alsa_track)->flags & GST_MIXER_TRACK_INPUT)) {
+    if (snd_mixer_selem_has_capture_volume (alsa_track->element))
+      alsa_track->alsa_flags |= GST_ALSA_MIXER_TRACK_CVOLUME;
+
+    if (snd_mixer_selem_has_capture_switch (alsa_track->element)) {
+      alsa_track->alsa_flags |= GST_ALSA_MIXER_TRACK_CSWITCH;
+
+      if (snd_mixer_selem_has_capture_switch_exclusive (alsa_track->element)) {
+        alsa_track->alsa_flags |= GST_ALSA_MIXER_TRACK_CSWITCH_EXCL;
+        alsa_track->capture_group =
+            snd_mixer_selem_get_capture_group (alsa_track->element);
+      }
     }
   }
 
