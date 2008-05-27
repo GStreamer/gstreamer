@@ -1,3 +1,10 @@
+2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_src_event),
+	(gst_type_find_element_handle_event):
+	Use faster and safer _pad_push_event().
+
 2008-05-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* docs/gst/gstreamer-sections.txt:

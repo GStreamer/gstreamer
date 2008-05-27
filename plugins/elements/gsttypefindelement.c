@@ -412,7 +412,7 @@ gst_type_find_element_src_event (GstPad * pad, GstEvent * event)
     gst_mini_object_unref (GST_MINI_OBJECT (event));
     return FALSE;
   }
-  return gst_pad_event_default (pad, event);
+  return gst_pad_push_event (typefind->sink, event);
 }
 
 static void
@@ -514,7 +514,7 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
           }
 
           stop_typefinding (typefind);
-          res = gst_pad_event_default (pad, event);
+          res = gst_pad_push_event (typefind->src, event);
           break;
         }
         case GST_EVENT_FLUSH_STOP:
@@ -525,7 +525,7 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
           gst_buffer_replace (&typefind->store, NULL);
           /* fall through */
         case GST_EVENT_FLUSH_START:
-          res = gst_pad_event_default (pad, event);
+          res = gst_pad_push_event (typefind->src, event);
           break;
         default:
           GST_DEBUG_OBJECT (typefind, "Saving %s event to send later",
@@ -537,7 +537,7 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
       }
       break;
     case MODE_NORMAL:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (typefind->src, event);
       break;
     case MODE_ERROR:
       break;
