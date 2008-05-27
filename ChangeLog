@@ -1,5 +1,10 @@
 2008-05-27  Stefan Kost  <ensonic@users.sf.net>
 
+	* libs/gst/controller/gstcontroller.c:
+	  Add parameter guards.
+
+2008-05-27  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/check/gst/gstpipeline.c:
 	  Revert test change and add comment why it should not work.
 
