@@ -1,3 +1,15 @@
+2008-05-27  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/videomixer/videomixer.c: (gst_videomixer_reset),
+	(gst_videomixer_init), (gst_videomixer_request_new_pad),
+	(gst_videomixer_fill_queues), (forward_event_func),
+	(forward_event), (gst_videomixer_src_event),
+	(gst_videomixer_sink_event):
+	* gst/videomixer/videomixer.h:
+	Implement proper seek/newsegment handling.
+	Based on adder's implementation.
+	Fixes #535121
+
 2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: j^ <j at oil21 dot org>

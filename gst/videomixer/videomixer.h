@@ -90,6 +90,11 @@ struct _GstVideoMixer
   
   /* Next available sinkpad index */
   gint next_sinkpad;
+
+  /* sink event handling */
+  GstPadEventFunction collect_event;
+  guint64	segment_position;
+  gdouble	segment_rate;
 };
 
 struct _GstVideoMixerClass

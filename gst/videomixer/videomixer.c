@@ -86,6 +86,10 @@ static void gst_videomixer_pad_get_property (GObject * object, guint prop_id,
 static void gst_videomixer_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
+static gboolean gst_videomixer_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_videomixer_sink_event (GstPad * pad, GstEvent * event);
+
+
 static void gst_videomixer_sort_pads (GstVideoMixer * mix);
 
 #define DEFAULT_PAD_ZORDER 0
@@ -530,6 +534,8 @@ gst_videomixer_reset (GstVideoMixer * mix)
   mix->fps_n = mix->fps_d = 0;
   mix->setcaps = FALSE;
   mix->sendseg = FALSE;
+  mix->segment_position = 0;
+  mix->segment_rate = 1.0;
 
   /* clean up collect data */
   walk = mix->collect->data;
@@ -553,6 +559,8 @@ gst_videomixer_init (GstVideoMixer * mix, GstVideoMixerClass * g_class)
           "src"), "src");
   gst_pad_set_getcaps_function (GST_PAD (mix->srcpad),
       GST_DEBUG_FUNCPTR (gst_videomixer_getcaps));
+  gst_pad_set_event_function (GST_PAD (mix->srcpad),
+      GST_DEBUG_FUNCPTR (gst_videomixer_src_event));
   gst_element_add_pad (GST_ELEMENT (mix), mix->srcpad);
 
   mix->collect = gst_collect_pads_new ();
@@ -654,6 +662,14 @@ gst_videomixer_request_new_pad (GstElement * element,
     mixcol = (GstVideoMixerCollect *)
         gst_collect_pads_add_pad (mix->collect, GST_PAD (mixpad),
         sizeof (GstVideoMixerCollect));
+
+    /* FIXME: hacked way to override/extend the event function of
+     * GstCollectPads; because it sets its own event function giving the
+     * element no access to events */
+    mix->collect_event =
+        (GstPadEventFunction) GST_PAD_EVENTFUNC (GST_PAD (mixpad));
+    gst_pad_set_event_function (GST_PAD (mixpad),
+        GST_DEBUG_FUNCPTR (gst_videomixer_sink_event));
 
     /* Keep track of each other */
     mixcol->mixpad = mixpad;
@@ -1016,9 +1032,22 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
       GstEvent *event;
       GstSegment *segment = &data->segment;
 
+      /* FIXME, use rate/applied_rate as set on all sinkpads.
+       * - currently we just set rate as received from last seek-event
+       * We could potentially figure out the duration as well using
+       * the current segment positions and the stated stop positions.
+       * Also we just start from stream time 0 which is rather
+       * weird. For non-synchronized mixing, the time should be
+       * the min of the stream times of all received segments,
+       * rationale being that the duration is at least going to
+       * be as long as the earliest stream we start mixing. This
+       * would also be correct for synchronized mixing but then
+       * the later streams would be delayed until the stream times
+       * match.
+       */
       GST_INFO ("_sending play segment");
       event = gst_event_new_new_segment (FALSE, segment->rate, segment->format,
-          segment->start, segment->stop, segment->time);
+          segment->start, segment->stop, mix->segment_position);
       gst_pad_push_event (mix->srcpad, event);
       mix->sendseg = FALSE;
     }
@@ -1185,6 +1214,147 @@ error:
     goto beach;
   }
 }
+
+static gboolean
+forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
+{
+  gst_event_ref (event);
+  GST_LOG_OBJECT (pad, "About to send event %s", GST_EVENT_TYPE_NAME (event));
+  if (!gst_pad_push_event (pad, event)) {
+    g_value_set_boolean (ret, FALSE);
+    GST_WARNING_OBJECT (pad, "Sending event  %p (%s) failed.",
+        event, GST_EVENT_TYPE_NAME (event));
+  } else {
+    GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
+        event, GST_EVENT_TYPE_NAME (event));
+  }
+  gst_object_unref (pad);
+  return TRUE;
+}
+
+/* forwards the event to all sinkpads, takes ownership of the
+ * event
+ *
+ * Returns: TRUE if the event could be forwarded on all
+ * sinkpads.
+ */
+static gboolean
+forward_event (GstVideoMixer * mix, GstEvent * event)
+{
+  gboolean ret;
+  GstIterator *it;
+  GValue vret = { 0 };
+
+  GST_LOG_OBJECT (mix, "Forwarding event %p (%s)", event,
+      GST_EVENT_TYPE_NAME (event));
+
+  ret = TRUE;
+
+  g_value_init (&vret, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&vret, TRUE);
+  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (mix));
+  gst_iterator_fold (it, (GstIteratorFoldFunction) forward_event_func, &vret,
+      event);
+  gst_iterator_free (it);
+  gst_event_unref (event);
+
+  ret = g_value_get_boolean (&vret);
+
+  return ret;
+}
+
+static gboolean
+gst_videomixer_src_event (GstPad * pad, GstEvent * event)
+{
+  GstVideoMixer *mix;
+  gboolean result;
+
+  mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:
+      /* QoS might be tricky */
+      result = FALSE;
+      break;
+    case GST_EVENT_SEEK:
+    {
+      GstSeekFlags flags;
+      GstSeekType curtype;
+      gint64 cur;
+
+      /* parse the seek parameters */
+      gst_event_parse_seek (event, NULL, NULL, &flags, &curtype,
+          &cur, NULL, NULL);
+
+      /* check if we are flushing */
+      if (flags & GST_SEEK_FLAG_FLUSH) {
+        /* make sure we accept nothing anymore and return WRONG_STATE */
+        gst_collect_pads_set_flushing (mix->collect, TRUE);
+
+        /* flushing seek, start flush downstream, the flush will be done
+         * when all pads received a FLUSH_STOP. */
+        gst_pad_push_event (mix->srcpad, gst_event_new_flush_start ());
+      }
+
+      /* now wait for the collected to be finished and mark a new
+       * segment */
+      GST_OBJECT_LOCK (mix->collect);
+      if (curtype == GST_SEEK_TYPE_SET)
+        mix->segment_position = cur;
+      else
+        mix->segment_position = 0;
+      mix->sendseg = TRUE;
+      GST_OBJECT_UNLOCK (mix->collect);
+
+      result = forward_event (mix, event);
+      break;
+    }
+    case GST_EVENT_NAVIGATION:
+      /* navigation is rather pointless. */
+      result = FALSE;
+      break;
+    default:
+      /* just forward the rest for now */
+      result = forward_event (mix, event);
+      break;
+  }
+  gst_object_unref (mix);
+
+  return result;
+}
+
+static gboolean
+gst_videomixer_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstVideoMixer *videomixer;
+  gboolean ret;
+
+  videomixer = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
+
+  GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
+      GST_DEBUG_PAD_NAME (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      /* mark a pending new segment. This event is synchronized
+       * with the streaming thread so we can safely update the
+       * variable without races. It's somewhat weird because we
+       * assume the collectpads forwarded the FLUSH_STOP past us
+       * and downstream (using our source pad, the bastard!).
+       */
+      videomixer->sendseg = TRUE;
+      break;
+    default:
+      break;
+  }
+
+  /* now GstCollectPads can take care of the rest, e.g. EOS */
+  ret = videomixer->collect_event (pad, event);
+
+  gst_object_unref (videomixer);
+  return ret;
+}
+
 
 static void
 gst_videomixer_get_property (GObject * object,
