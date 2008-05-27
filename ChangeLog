@@ -1,3 +1,8 @@
+2008-05-27  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/mpegvideoparse/mpegvideoparse.c:
+	Add GST_BUFFER_FLAG_DELTA_UNIT to not I frame buffers
+
 2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpbin.c:

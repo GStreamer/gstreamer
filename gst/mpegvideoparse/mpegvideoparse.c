@@ -264,6 +264,9 @@ mpegvideoparse_handle_picture (MpegVideoParse * mpegvideoparse, GstBuffer * buf)
       if (!mpeg_util_parse_picture_hdr (&hdr, pic_data, end))
         return FALSE;
 
+      if (hdr.pic_type != MPEG_PICTURE_TYPE_I)
+        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+
       GST_LOG_OBJECT (mpegvideoparse, "Picture type is %u", hdr.pic_type);
       /* FIXME: Can use the picture type and number of fields to track a
        * timestamp */
