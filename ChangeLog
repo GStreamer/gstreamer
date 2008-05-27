@@ -1,3 +1,15 @@
+2008-05-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstpreset.c: (gst_preset_default_get_meta),
+	  (gst_preset_get_preset_names), (gst_preset_get_property_names),
+	  (gst_preset_load_preset), (gst_preset_save_preset),
+	  (gst_preset_rename_preset), (gst_preset_delete_preset),
+	  (gst_preset_set_meta):
+	  Add Since: markers to docs blurbs.
+
+	* win32/common/libgstreamer.def:
+	  Add recently-added API.
+
 2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Stefan Kost  <ensonic@users.sf.net>

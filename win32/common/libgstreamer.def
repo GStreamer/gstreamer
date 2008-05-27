@@ -58,6 +58,7 @@ EXPORTS
 	gst_bin_add_many
 	gst_bin_child_proxy_get_children_count
 	gst_bin_find_unconnected_pad
+	gst_bin_find_unlinked_pad
 	gst_bin_flags_get_type
 	gst_bin_get_by_interface
 	gst_bin_get_by_name
@@ -679,6 +680,15 @@ EXPORTS
 	gst_poll_set_controllable
 	gst_poll_set_flushing
 	gst_poll_wait
+	gst_preset_delete_preset
+	gst_preset_get_meta
+	gst_preset_get_preset_names
+	gst_preset_get_property_names
+	gst_preset_get_type
+	gst_preset_load_preset
+	gst_preset_rename_preset
+	gst_preset_save_preset
+	gst_preset_set_meta
 	gst_print_element_args
 	gst_print_pad_caps
 	gst_query_get_structure

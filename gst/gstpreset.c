@@ -944,6 +944,8 @@ gst_preset_default_reset (GstPreset * preset)
  * Get a copy of preset names as a NULL terminated string array.
  *
  * Returns: list with names, ue g_strfreev() after usage.
+ *
+ * Since: 0.10.20
  */
 gchar **
 gst_preset_get_preset_names (GstPreset * preset)
@@ -960,6 +962,8 @@ gst_preset_get_preset_names (GstPreset * preset)
  * Get a the names of the GObject properties that can be used for presets.
  *
  * Returns: an array of property names which should be freed with g_strfreev() after use.
+ *
+ * Since: 0.10.20
  */
 gchar **
 gst_preset_get_property_names (GstPreset * preset)
@@ -977,6 +981,8 @@ gst_preset_get_property_names (GstPreset * preset)
  * Load the given preset.
  *
  * Returns: %TRUE for success, %FALSE if e.g. there is no preset with that @name
+ *
+ * Since: 0.10.20
  */
 gboolean
 gst_preset_load_preset (GstPreset * preset, const gchar * name)
@@ -996,6 +1002,8 @@ gst_preset_load_preset (GstPreset * preset, const gchar * name)
  * this @name it will be overwritten.
  *
  * Returns: %TRUE for success, %FALSE
+ *
+ * Since: 0.10.20
  */
 gboolean
 gst_preset_save_preset (GstPreset * preset, const gchar * name)
@@ -1016,6 +1024,8 @@ gst_preset_save_preset (GstPreset * preset, const gchar * name)
  * overwritten.
  *
  * Returns: %TRUE for success, %FALSE if e.g. there is no preset with @old_name
+ *
+ * Since: 0.10.20
  */
 gboolean
 gst_preset_rename_preset (GstPreset * preset, const gchar * old_name,
@@ -1037,6 +1047,8 @@ gst_preset_rename_preset (GstPreset * preset, const gchar * old_name,
  * Delete the given preset.
  *
  * Returns: %TRUE for success, %FALSE if e.g. there is no preset with that @name
+ *
+ * Since: 0.10.20
  */
 gboolean
 gst_preset_delete_preset (GstPreset * preset, const gchar * name)
@@ -1059,6 +1071,8 @@ gst_preset_delete_preset (GstPreset * preset, const gchar * name)
  * @value will unset an existing value.
  *
  * Returns: %TRUE for success, %FALSE if e.g. there is no preset with that @name
+ *
+ * Since: 0.10.20
  */
 gboolean
 gst_preset_set_meta (GstPreset * preset, const gchar * name, const gchar * tag,
@@ -1083,6 +1097,8 @@ gst_preset_set_meta (GstPreset * preset, const gchar * name, const gchar * tag,
  *
  * Returns: %TRUE for success, %FALSE if e.g. there is no preset with that @name
  * or no value for the given @tag
+ *
+ * Since: 0.10.20
  */
 gboolean
 gst_preset_get_meta (GstPreset * preset, const gchar * name, const gchar * tag,
