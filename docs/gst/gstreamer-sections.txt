@@ -59,6 +59,7 @@ gst_bin_iterate_all_by_interface
 <SUBSECTION>
 gst_bin_add_many
 gst_bin_remove_many
+gst_bin_find_unlinked_pad
 gst_bin_find_unconnected_pad
 
 <SUBSECTION>

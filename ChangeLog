@@ -1,3 +1,12 @@
+2008-05-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstutils.c: (element_find_unlinked_pad),
+	  (gst_bin_find_unlinked_pad), (gst_bin_find_unconnected_pad),
+	* gst/gstutils.h:
+	  API: add gst_bin_find_unlinked_pad()
+	  API: deprecate gst_bin_find_unconnected_pad() (#401456)
+
 2008-05-26  Peter Kjellerstedt  <pkj@axis.com>
 
 	* gst/gstclock.c:

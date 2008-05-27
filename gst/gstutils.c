@@ -3260,7 +3260,7 @@ element_find_unlinked_pad (GstElement * element, GstPadDirection direction)
 }
 
 /**
- * gst_bin_find_unconnected_pad:
+ * gst_bin_find_unlinked_pad:
  * @bin: bin in which to look for elements with unlinked pads
  * @direction: whether to look for an unlinked source or sink pad
  *
@@ -3272,10 +3272,10 @@ element_find_unlinked_pad (GstElement * element, GstPadDirection direction)
  *
  * Returns: unlinked pad of the given direction, or NULL.
  *
- * Since: 0.10.3
+ * Since: 0.10.20
  */
 GstPad *
-gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
+gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
 {
   GstIterator *iter;
   gboolean done;
@@ -3312,6 +3312,31 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
 
   return pad;
 }
+
+/**
+ * gst_bin_find_unconnected_pad:
+ * @bin: bin in which to look for elements with unlinked pads
+ * @direction: whether to look for an unlinked source or sink pad
+ *
+ * Recursively looks for elements with an unlinked pad of the given
+ * direction within the specified bin and returns an unlinked pad
+ * if one is found, or NULL otherwise. If a pad is found, the caller
+ * owns a reference to it and should use gst_object_unref() on the
+ * pad when it is not needed any longer.
+ *
+ * Returns: unlinked pad of the given direction, or NULL.
+ *
+ * Since: 0.10.3
+ *
+ * Deprecated: use gst_bin_find_unlinked_pad() instead.
+ */
+#ifndef GST_REMOVE_DEPRECATED
+GstPad *
+gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
+{
+  return gst_bin_find_unlinked_pad (bin, direction);
+}
+#endif
 
 /**
  * gst_parse_bin_from_description:
@@ -3393,11 +3418,11 @@ gst_parse_bin_from_description_full (const gchar * bin_description,
 
   /* find pads and ghost them if necessary */
   if (ghost_unlinked_pads) {
-    if ((pad = gst_bin_find_unconnected_pad (bin, GST_PAD_SRC))) {
+    if ((pad = gst_bin_find_unlinked_pad (bin, GST_PAD_SRC))) {
       gst_element_add_pad (GST_ELEMENT (bin), gst_ghost_pad_new ("src", pad));
       gst_object_unref (pad);
     }
-    if ((pad = gst_bin_find_unconnected_pad (bin, GST_PAD_SINK))) {
+    if ((pad = gst_bin_find_unlinked_pad (bin, GST_PAD_SINK))) {
       gst_element_add_pad (GST_ELEMENT (bin), gst_ghost_pad_new ("sink", pad));
       gst_object_unref (pad);
     }
