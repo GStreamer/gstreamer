@@ -94,6 +94,7 @@ static void
 gst_audio_clock_init (GstAudioClock * clock)
 {
   clock->last_time = 0;
+  clock->abidata.ABI.time_offset = 0;
   GST_OBJECT_FLAG_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER);
 }
 
@@ -122,17 +123,39 @@ gst_audio_clock_new (gchar * name, GstAudioClockGetTimeFunc func,
   return (GstClock *) aclock;
 }
 
+/**
+ * gst_audio_clock_reset:
+ * @clock: a #GstAudioClock
+ * @time: a #GstClockTime
+ *
+ * Inform @clock that future calls to #GstAudioClockGetTimeFunc will return values
+ * starting from @time. The clock will update an internal offset to make sure that
+ * future calls to internal_time will return an increasing result as required by
+ * the #GstClock object.
+ */
+void
+gst_audio_clock_reset (GstAudioClock * clock, GstClockTime time)
+{
+  if (clock->last_time >= time)
+    clock->abidata.ABI.time_offset = clock->last_time - time;
+  else
+    clock->abidata.ABI.time_offset = -(time - clock->last_time);
+}
+
 static GstClockTime
 gst_audio_clock_get_internal_time (GstClock * clock)
 {
-  GstAudioClock *aclock = GST_AUDIO_CLOCK (clock);
+  GstAudioClock *aclock;
   GstClockTime result;
+
+  aclock = GST_AUDIO_CLOCK (clock);
 
   result = aclock->func (clock, aclock->user_data);
   if (result == GST_CLOCK_TIME_NONE)
     result = aclock->last_time;
-  else
+  else {
+    result += aclock->abidata.ABI.time_offset;
     aclock->last_time = result;
-
+  }
   return result;
 }

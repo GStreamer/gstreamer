@@ -1604,6 +1604,7 @@ gst_base_audio_sink_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (sink->ringbuffer == NULL) {
+        gst_audio_clock_reset (GST_AUDIO_CLOCK (sink->provided_clock), 0);
         sink->ringbuffer = gst_base_audio_sink_create_ringbuffer (sink);
       }
       if (!gst_ring_buffer_open_device (sink->ringbuffer))

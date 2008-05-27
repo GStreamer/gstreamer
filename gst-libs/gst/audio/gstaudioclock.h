@@ -71,7 +71,13 @@ struct _GstAudioClock {
   GstClockTime last_time;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  union {
+    struct {
+      GstClockTimeDiff   time_offset;
+    } ABI;
+    /* adding + 0 to mark ABI change to be undone later */
+    gpointer _gst_reserved[GST_PADDING + 0];
+  } abidata;
 };
 
 struct _GstAudioClockClass {
@@ -84,6 +90,7 @@ struct _GstAudioClockClass {
 GType           gst_audio_clock_get_type        (void);
 GstClock*       gst_audio_clock_new             (gchar *name, GstAudioClockGetTimeFunc func,
                                                  gpointer user_data);
+void            gst_audio_clock_reset           (GstAudioClock *clock, GstClockTime time);
 
 G_END_DECLS
 

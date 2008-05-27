@@ -1,3 +1,21 @@
+2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudioclock.c: (gst_audio_clock_init),
+	(gst_audio_clock_reset), (gst_audio_clock_get_internal_time):
+	* gst-libs/gst/audio/gstaudioclock.h:
+	Add method to inform the clock that the time starts from 0 again. We use
+	this info to calculate a clock offset so that the time we report in
+	internal_time is monotonically increasing, as required by the clock base
+	class. Fixes #521761.
+	API: GstAudioClock::gst_audio_clock_reset()
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_skew_slaving),
+	(gst_base_audio_sink_change_state):
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_create), (gst_base_audio_src_change_state):
+	Reset reported time when we (re)create the ringbuffer.
+
 2008-05-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* ext/alsa/gstalsamixertrack.c:

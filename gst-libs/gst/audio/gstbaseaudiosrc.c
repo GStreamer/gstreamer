@@ -870,6 +870,7 @@ gst_base_audio_src_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       GST_DEBUG_OBJECT (src, "NULL->READY");
       if (src->ringbuffer == NULL) {
+        gst_audio_clock_reset (GST_AUDIO_CLOCK (src->clock), 0);
         src->ringbuffer = gst_base_audio_src_create_ringbuffer (src);
       }
       if (!gst_ring_buffer_open_device (src->ringbuffer))
