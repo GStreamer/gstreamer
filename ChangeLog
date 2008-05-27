@@ -1,5 +1,14 @@
 2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpbin.c:
+	(gst_rtp_bin_propagate_property_to_jitterbuffer),
+	(gst_rtp_bin_change_state), (new_payload_found),
+	(new_ssrc_pad_found):
+	Break out of callbacks when we are shutting down.
+	Make sure no state changes can happen when we reconfigure.
+
+2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* configure.ac:
 	Require CVS core and base for new audio clock reset method.
 

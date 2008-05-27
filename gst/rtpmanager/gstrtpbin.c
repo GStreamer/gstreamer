@@ -204,11 +204,31 @@ GST_STATIC_PAD_TEMPLATE ("sink_%d",
 #define GST_RTP_BIN_LOCK(bin)   g_mutex_lock ((bin)->priv->bin_lock)
 #define GST_RTP_BIN_UNLOCK(bin) g_mutex_unlock ((bin)->priv->bin_lock)
 
+/* lock for shutdown */
+#define GST_RTP_BIN_SHUTDOWN_LOCK(bin,label)     \
+G_STMT_START {                                   \
+  if (g_atomic_int_get (&bin->priv->shutdown))   \
+    goto label;                                  \
+  GST_STATE_LOCK (bin);                          \
+  if (g_atomic_int_get (&bin->priv->shutdown)) { \
+    GST_STATE_UNLOCK (bin);                      \
+    goto label;                                  \
+  }                                              \
+} G_STMT_END
+
+/* unlock for shutdown */
+#define GST_RTP_BIN_SHUTDOWN_UNLOCK(bin)         \
+  GST_STATE_UNLOCK (bin);                        \
+
 struct _GstRtpBinPrivate
 {
   GMutex *bin_lock;
 
+  /* the time when we went to playing */
   GstClockTime ntp_ns_base;
+
+  /* if we are shutting down or not */
+  gint shutdown;
 };
 
 /* signals and args */
@@ -1661,16 +1681,22 @@ gst_rtp_bin_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn res;
   GstRtpBin *rtpbin;
+  GstRtpBinPrivate *priv;
 
   rtpbin = GST_RTP_BIN (element);
+  priv = rtpbin->priv;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      g_atomic_int_set (&priv->shutdown, 0);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       calc_ntp_ns_base (rtpbin);
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_atomic_int_set (&priv->shutdown, 1);
       break;
     default:
       break;
@@ -1691,7 +1717,8 @@ gst_rtp_bin_change_state (GstElement * element, GstStateChange transition)
   return res;
 }
 
-/* a new pad (SSRC) was created in @session */
+/* a new pad (SSRC) was created in @session. This signal is emited from the
+ * payload demuxer. */
 static void
 new_payload_found (GstElement * element, guint pt, GstPad * pad,
     GstRtpBinStream * stream)
@@ -1706,6 +1733,8 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
 
   GST_DEBUG ("new payload pad %d", pt);
 
+  GST_RTP_BIN_SHUTDOWN_LOCK (rtpbin, shutdown);
+
   /* ghost the pad to the parent */
   klass = GST_ELEMENT_GET_CLASS (rtpbin);
   templ = gst_element_class_get_pad_template (klass, "recv_rtp_src_%d_%d_%d");
@@ -1717,6 +1746,16 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
   gst_pad_set_caps (gpad, GST_PAD_CAPS (pad));
   gst_pad_set_active (gpad, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), gpad);
+
+  GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
+
+  return;
+
+shutdown:
+  {
+    GST_DEBUG ("ignoring, we are shutting down");
+    return;
+  }
 }
 
 static GstCaps *
@@ -1788,12 +1827,17 @@ static void
 new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
     GstRtpBinSession * session)
 {
+  GstRtpBin *rtpbin;
   GstRtpBinStream *stream;
   GstPad *sinkpad, *srcpad;
   gchar *padname;
   GstCaps *caps;
 
-  GST_DEBUG_OBJECT (session->bin, "new SSRC pad %08x", ssrc);
+  rtpbin = session->bin;
+
+  GST_DEBUG_OBJECT (rtpbin, "new SSRC pad %08x", ssrc);
+
+  GST_RTP_BIN_SHUTDOWN_LOCK (rtpbin, shutdown);
 
   GST_RTP_SESSION_LOCK (session);
 
@@ -1807,14 +1851,14 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
     const GstStructure *s;
     guint val;
 
-    GST_DEBUG_OBJECT (session->bin, "pad has caps %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (rtpbin, "pad has caps %" GST_PTR_FORMAT, caps);
 
     s = gst_caps_get_structure (caps, 0);
 
     if (!gst_structure_get_int (s, "clock-rate", &stream->clock_rate)) {
       stream->clock_rate = -1;
 
-      GST_WARNING_OBJECT (session->bin,
+      GST_WARNING_OBJECT (rtpbin,
           "Caps have no clock rate %s from pad %s:%s",
           gst_caps_to_string (caps), GST_DEBUG_PAD_NAME (pad));
     }
@@ -1828,7 +1872,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
   }
 
   /* get pad and link */
-  GST_DEBUG_OBJECT (session->bin, "linking jitterbuffer");
+  GST_DEBUG_OBJECT (rtpbin, "linking jitterbuffer");
   padname = g_strdup_printf ("src_%d", ssrc);
   srcpad = gst_element_get_static_pad (element, padname);
   g_free (padname);
@@ -1838,7 +1882,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
   gst_object_unref (srcpad);
 
   /* get the RTCP sync pad */
-  GST_DEBUG_OBJECT (session->bin, "linking sync pad");
+  GST_DEBUG_OBJECT (rtpbin, "linking sync pad");
   padname = g_strdup_printf ("rtcp_src_%d", ssrc);
   srcpad = gst_element_get_static_pad (element, padname);
   g_free (padname);
@@ -1861,14 +1905,21 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
       "payload-type-change", (GCallback) payload_type_change, stream);
 
   GST_RTP_SESSION_UNLOCK (session);
+  GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
 
   return;
 
   /* ERRORS */
+shutdown:
+  {
+    GST_DEBUG_OBJECT (rtpbin, "we are shutting down");
+    return;
+  }
 no_stream:
   {
     GST_RTP_SESSION_UNLOCK (session);
-    GST_DEBUG_OBJECT (session->bin, "could not create stream");
+    GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
+    GST_DEBUG_OBJECT (rtpbin, "could not create stream");
     return;
   }
 }
