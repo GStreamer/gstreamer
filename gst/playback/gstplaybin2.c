@@ -1658,12 +1658,15 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 static void
 perform_eos (GstPlayBin * playbin, GstSourceGroup * group)
 {
+  gboolean res;
   GstEvent *event;
   gint i;
 
   GST_DEBUG_OBJECT (playbin, "doing EOS in group %p", group);
 
   event = gst_event_new_eos ();
+
+  res = FALSE;
 
   GST_SOURCE_GROUP_LOCK (group);
   for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
@@ -1672,12 +1675,18 @@ perform_eos (GstPlayBin * playbin, GstSourceGroup * group)
     if (select->selector) {
       GST_DEBUG_OBJECT (playbin, "send EOS in selector %s", select->media);
       gst_event_ref (event);
-      gst_pad_push_event (select->srcpad, event);
+      res |= gst_pad_push_event (select->srcpad, event);
     }
   }
   GST_SOURCE_GROUP_UNLOCK (group);
 
   gst_event_unref (event);
+
+  if (!res) {
+    /* we cannot post an error because we don't know if the EOS failed because
+     * of a fatal error or simply a pipeline shutdown */
+    GST_ERROR_OBJECT (playbin, "failed to send EOS");
+  }
 }
 
 static void

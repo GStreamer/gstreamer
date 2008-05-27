@@ -1768,9 +1768,12 @@ gst_decode_group_control_source_pad (GstDecodeGroup * group, GstPad * pad)
   GROUP_MUTEX_LOCK (group);
 
   /* Create GstDecodePad for the pad */
-  dpad = gst_decode_pad_new (group, pad, TRUE);
-
-  group->endpads = g_list_append (group->endpads, dpad);
+  if ((dpad = gst_decode_pad_new (group, pad, TRUE))) {
+    GST_WARNING ("created decode pad %p in group %p", dpad, group);
+    group->endpads = g_list_append (group->endpads, dpad);
+  } else {
+    GST_WARNING ("could not create a decode pad in group %p", group);
+  }
 
   GROUP_MUTEX_UNLOCK (group);
 
@@ -2006,18 +2009,23 @@ gst_decode_group_expose (GstDecodeGroup * group)
         GST_DEBUG_PAD_NAME (dpad->pad));
 
     ghost = gst_ghost_pad_new (padname, dpad->pad);
-    gst_pad_set_active (ghost, TRUE);
-    gst_element_add_pad (GST_ELEMENT (dbin), ghost);
-    group->ghosts = g_list_append (group->ghosts, ghost);
+    /* the ghostpad can be NULL when we failed to link or some other error
+     * occured */
+    if (ghost) {
+      gst_pad_set_active (ghost, TRUE);
+      gst_element_add_pad (GST_ELEMENT (dbin), ghost);
+      group->ghosts = g_list_append (group->ghosts, ghost);
 
+      /* 2. emit signal */
+      GST_DEBUG_OBJECT (dbin, "emitting new-decoded-pad");
+      g_signal_emit (G_OBJECT (dbin),
+          gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD], 0, ghost,
+          (next == NULL));
+      GST_DEBUG_OBJECT (dbin, "emitted new-decoded-pad");
+    } else {
+      GST_WARNING_OBJECT (dbin, "failed to create ghostpad");
+    }
     g_free (padname);
-
-    /* 2. emit signal */
-    GST_DEBUG_OBJECT (dbin, "emitting new-decoded-pad");
-    g_signal_emit (G_OBJECT (dbin),
-        gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD], 0, ghost,
-        (next == NULL));
-    GST_DEBUG_OBJECT (dbin, "emitted new-decoded-pad");
   }
 
   /* signal no-more-pads. This allows the application to hook stuff to the

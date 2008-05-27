@@ -1,3 +1,14 @@
+2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c:
+	(gst_decode_group_control_source_pad), (gst_decode_group_expose):
+	Check for NULL cases and log them, creating ghostpads can, for example,
+	fail when the pad returns wrong caps.
+
+	* gst/playback/gstplaybin2.c: (perform_eos):
+	When pushing out the EOS event, collect the return value and warn when
+	something failed.
+
 2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
