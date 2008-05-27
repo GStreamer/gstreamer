@@ -1,3 +1,8 @@
+2008-05-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* tests/check/pipelines/oggmux.c: (test_pipeline):
+	  Don't use deprecated function.
+
 2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstdecodebin2.c:

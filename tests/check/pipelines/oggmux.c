@@ -263,7 +263,7 @@ test_pipeline (const char *pipeline)
   bin = gst_parse_launch (pipeline, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",
       error ? error->message : "(invalid error)");
-  pad = gst_bin_find_unconnected_pad (GST_BIN (bin), GST_PAD_SRC);
+  pad = gst_bin_find_unlinked_pad (GST_BIN (bin), GST_PAD_SRC);
   fail_unless (pad != NULL, "Could not locate free src pad");
 
   /* connect the fake sink */
