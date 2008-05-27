@@ -52,6 +52,7 @@ REGISTRY_CHECKS =				\
 	gst/gstindex				\
 	gst/gstinterface				\
 	gst/gstplugin				\
+	gst/gstpreset				\
 	gst/gstquery				\
 	gst/gstregistry				\
 	gst/gsturi  				\

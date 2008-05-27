@@ -55,6 +55,7 @@
 #include <gst/gstpipeline.h>
 #include <gst/gstplugin.h>
 #include <gst/gstpoll.h>
+#include <gst/gstpreset.h>
 #include <gst/gstquery.h>
 #include <gst/gstregistry.h>
 #include <gst/gstsegment.h>

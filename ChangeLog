@@ -1,5 +1,48 @@
 2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	Add DATADIR for storing presets.
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types.in:
+	Add GstPreset to docs.
+
+	* gst/Makefile.am:
+	* gst/gst.h:
+	* gst/gstpreset.c: (preset_get_paths), (preset_skip_property),
+	(preset_open_and_parse_header), (preset_parse_version),
+	(preset_merge), (preset_get_keyfile),
+	(gst_preset_default_get_preset_names),
+	(gst_preset_default_get_property_names),
+	(gst_preset_default_load_preset),
+	(gst_preset_default_save_presets_file),
+	(gst_preset_default_save_preset),
+	(gst_preset_default_rename_preset),
+	(gst_preset_default_delete_preset), (gst_preset_default_set_meta),
+	(gst_preset_default_get_meta), (gst_preset_default_randomize),
+	(gst_preset_default_reset), (gst_preset_get_preset_names),
+	(gst_preset_get_property_names), (gst_preset_load_preset),
+	(gst_preset_save_preset), (gst_preset_rename_preset),
+	(gst_preset_delete_preset), (gst_preset_set_meta),
+	(gst_preset_get_meta), (gst_preset_class_init),
+	(gst_preset_base_init), (gst_preset_get_type):
+	* gst/gstpreset.h:
+	Add GstPreset to core. Fixes #396779
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/gstpreset.c: (gst_preset_test_get_property),
+	(gst_preset_test_set_property), (gst_preset_test_class_init),
+	(gst_preset_test_base_init), (gst_preset_test_get_type),
+	(gst_preset_test_plugin_init), (GST_START_TEST),
+	(remove_preset_file), (test_setup), (test_teardown),
+	(gst_preset_suite):
+	Add GstPreset unit tests.
+
+2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstpad.c: (gst_pad_event_default_dispatch):
 	The default event function on a sinkpad should return TRUE when
 	there are no internal links but should collect the return values from

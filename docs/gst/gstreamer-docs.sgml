@@ -37,6 +37,7 @@
 <!ENTITY GstPlugin SYSTEM "xml/gstplugin.xml">
 <!ENTITY GstPluginFeature SYSTEM "xml/gstpluginfeature.xml">
 <!ENTITY GstPoll SYSTEM "xml/gstpoll.xml">
+<!ENTITY GstPreset SYSTEM "xml/gstpreset.xml">
 <!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
 <!ENTITY GstSegment SYSTEM "xml/gstsegment.xml">
@@ -130,6 +131,7 @@ Windows.  It is released under the GNU Library General Public License
     &GstPlugin;
     &GstPluginFeature;
     &GstPoll;
+    &GstPreset;
     &GstQuery;
     &GstRegistry;
     &GstSegment;
