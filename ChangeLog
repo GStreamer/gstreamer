@@ -1,3 +1,9 @@
+2008-05-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/adder/gstadder.c: (gst_adder_query_duration):
+	Correctly resync the iterator if gst_iterator_next() returns
+	GST_ITERATOR_RESYNC.
+
 2008-05-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* win32/vs6/libgstpbutils.dsp:

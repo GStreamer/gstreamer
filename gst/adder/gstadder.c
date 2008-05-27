@@ -378,6 +378,7 @@ gst_adder_query_duration (GstAdder * adder, GstQuery * query)
       case GST_ITERATOR_RESYNC:
         max = -1;
         res = TRUE;
+        gst_iterator_resync (it);
         break;
       default:
         res = FALSE;
