@@ -2972,9 +2972,18 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
   GST_INFO_OBJECT (pad, "Sending event %p (%s) to all internally linked pads",
       event, GST_EVENT_TYPE_NAME (event));
 
-  result = (GST_PAD_DIRECTION (pad) == GST_PAD_SINK);
-
   orig = pads = gst_pad_get_internal_links (pad);
+
+  if (!pads) {
+    /* If this is a sinkpad and we don't have pads to send the event to, we
+     * return TRUE. This is so that when using the default handler on a sink
+     * element, we don't fail to push it. */
+    result = (GST_PAD_DIRECTION (pad) == GST_PAD_SINK);
+  } else {
+    /* we have pads, the result will be TRUE if one of the pads handled the
+     * event in the code below. */
+    result = FALSE;
+  }
 
   while (pads) {
     GstPad *eventpad = GST_PAD_CAST (pads->data);
@@ -2987,7 +2996,7 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
       GST_LOG_OBJECT (pad, "Reffing and sending event %p (%s) to %s:%s",
           event, GST_EVENT_TYPE_NAME (event), GST_DEBUG_PAD_NAME (eventpad));
       gst_event_ref (event);
-      gst_pad_push_event (eventpad, event);
+      result |= gst_pad_push_event (eventpad, event);
     } else {
       /* we only send the event on one pad, multi-sinkpad elements
        * should implement a handler */

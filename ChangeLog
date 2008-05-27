@@ -1,5 +1,12 @@
 2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstpad.c: (gst_pad_event_default_dispatch):
+	The default event function on a sinkpad should return TRUE when
+	there are no internal links but should collect the return values from
+	the internal links otherwise.
+
+2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* plugins/elements/gsttypefindelement.c:
 	(gst_type_find_element_src_event),
 	(gst_type_find_element_handle_event):
