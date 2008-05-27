@@ -1,3 +1,8 @@
+2008-05-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* win32/vs6/libgstpbutils.dsp:
+	  Add pbutils-enumtypes.c to sources (#518037).
+
 2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/audio/gstaudioclock.c: (gst_audio_clock_init),

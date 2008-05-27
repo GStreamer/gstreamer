@@ -120,6 +120,10 @@ SOURCE="..\..\gst-libs\gst\pbutils\missing-plugins.c"
 # End Source File
 # Begin Source File
 
+SOURCE="..\common\pbutils-enumtypes.c"
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\gst-libs\gst\pbutils\pbutils.c"
 # End Source File
 # End Group
