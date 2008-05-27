@@ -1,3 +1,11 @@
+2008-05-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	Require CVS core and base for new audio clock reset method.
+
+	* ext/alsaspdif/alsaspdifsink.c: (alsaspdifsink_change_state):
+	Reset the audio clock. See #521761.
+
 2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/jack/gstjackaudiosink.c:

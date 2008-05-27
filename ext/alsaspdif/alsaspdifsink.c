@@ -795,6 +795,7 @@ alsaspdifsink_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       sink->frames = 0;
+      gst_audio_clock_reset (GST_AUDIO_CLOCK (sink->clock), 0);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!alsaspdifsink_open (sink)) {
