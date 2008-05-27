@@ -1,3 +1,9 @@
+2008-05-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/gst/gstpipeline.c:
+	  Extending the test a little to verify that we also get the NULL state-
+	  change message.
+
 2008-05-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gstpreset.c: (gst_preset_default_get_meta),
