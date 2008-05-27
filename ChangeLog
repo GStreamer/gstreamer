@@ -1,6 +1,11 @@
 2008-05-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/gst/gstpipeline.c:
+	  Revert test change and add comment why it should not work.
+
+2008-05-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/gst/gstpipeline.c:
 	  Extending the test a little to verify that we also get the NULL state-
 	  change message.
 

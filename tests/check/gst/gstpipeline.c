@@ -70,7 +70,7 @@ GST_START_TEST (test_async_state_change_fake)
   GstPipeline *pipeline;
   GstElement *src, *sink;
   GstBus *bus;
-  gboolean done;
+  gboolean done = FALSE;
 
   pipeline = GST_PIPELINE (gst_pipeline_new (NULL));
   fail_unless (pipeline != NULL, "Could not create pipeline");
@@ -86,7 +86,6 @@ GST_START_TEST (test_async_state_change_fake)
   fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING), GST_STATE_CHANGE_ASYNC);
 
-  done = FALSE;
   while (!done) {
     GstMessage *message;
     GstState old, new, pending;
@@ -104,20 +103,8 @@ GST_START_TEST (test_async_state_change_fake)
   fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_NULL), GST_STATE_CHANGE_SUCCESS);
 
-  done = FALSE;
-  while (!done) {
-    GstMessage *message;
-    GstState old, new, pending;
-
-    message = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1);
-    if (message) {
-      gst_message_parse_state_changed (message, &old, &new, &pending);
-      GST_DEBUG_OBJECT (message->src, "state change from %d to %d", old, new);
-      if (message->src == GST_OBJECT (pipeline) && new == GST_STATE_NULL)
-        done = TRUE;
-      gst_message_unref (message);
-    }
-  }
+  /* here we don't get the state change messages, because of auto-flush in 
+   * the bus */
 
   gst_object_unref (bus);
   gst_object_unref (pipeline);
