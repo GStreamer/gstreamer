@@ -158,4 +158,8 @@ Plugins:	id3demux
 URL:		http://www.zlib.net/
 
 
+Optional (debian) packages:
+===========================
 
+gtk-doc-tools 1.6  -- needed to build documentation
+python-xml  -- needed to build plugin documentation

@@ -671,21 +671,21 @@
 <ARG>
 <NAME>GstVertigoTV::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,01,100]</RANGE>
+<RANGE>[0.01,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Speed</NICK>
 <BLURB>Control the speed of movement.</BLURB>
-<DEFAULT>0,02</DEFAULT>
+<DEFAULT>0.02</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstVertigoTV::zoom-speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[1,01,1,1]</RANGE>
+<RANGE>[1.01,1.1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Zoom Speed</NICK>
 <BLURB>Control the rate of zooming.</BLURB>
-<DEFAULT>1,01</DEFAULT>
+<DEFAULT>1.01</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2179,6 +2179,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiUDPSink::loop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multicast Loopback</NICK>
+<BLURB>Used for setting the multicast loop parameter. TRUE = enable, FALSE = disable.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::qos-dscp</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,63]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>QoS diff srv code point</NICK>
+<BLURB>Quality of Service, differentiated services code point (-1 default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::ttl</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multicast TTL</NICK>
+<BLURB>Used for setting the multicast TTL parameter.</BLURB>
+<DEFAULT>64</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstCmmlDec::wait-clip-end-time</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -2631,7 +2661,7 @@
 <ARG>
 <NAME>GstGamma::gamma</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,01,10]</RANGE>
+<RANGE>[0.01,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Gamma</NICK>
 <BLURB>gamma.</BLURB>
@@ -2775,7 +2805,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Ripple</NICK>
 <BLURB>Amount of ripple (dB).</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2835,7 +2865,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Ripple</NICK>
 <BLURB>Amount of ripple (dB).</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3186,6 +3216,16 @@
 <NICK>sprop-parameter-sets</NICK>
 <BLURB>The base64 sprop-parameter-sets to set in out caps (set to NULL to extract from stream).</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpH264Pay::scan-mode</NAME>
+<TYPE>GstH264PayScanMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scan Mode</NICK>
+<BLURB>How to scan the input buffers for NAL units. Performance can be increased when certain assumptions are made about the input buffers.</BLURB>
+<DEFAULT>Buffers contain multiple complete NALUs</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19076,5 +19116,95 @@
 <NICK>Amplitude</NICK>
 <BLURB>Amplitude.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSMPTEAlpha::border</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Border</NICK>
+<BLURB>The border width of the transition.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSMPTEAlpha::depth</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,24]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Depth</NICK>
+<BLURB>Depth of the mask in bits.</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSMPTEAlpha::position</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Position</NICK>
+<BLURB>Position of the transition effect.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSMPTEAlpha::type</NAME>
+<TYPE>GstSMPTEAlphaTransitionType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>The type of transition to use.</BLURB>
+<DEFAULT>A bar moves from left to right</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMixerPad::alpha</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha</NICK>
+<BLURB>Alpha of the picture.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMixerPad::xpos</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X Position</NICK>
+<BLURB>X Position of the picture.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMixerPad::ypos</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y Position</NICK>
+<BLURB>Y Position of the picture.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMixerPad::zorder</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 10000</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Z-Order</NICK>
+<BLURB>Z Order of the picture.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpH264Depay::byte-stream</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Byte Stream</NICK>
+<BLURB>Generate byte stream format of NALU.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 

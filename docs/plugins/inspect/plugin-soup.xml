@@ -3,11 +3,11 @@
   <description>libsoup HTTP client src</description>
   <filename>../../ext/soup/.libs/libgstsouphttpsrc.so</filename>
   <basename>libgstsouphttpsrc.so</basename>
-  <version>0.10.8</version>
+  <version>0.10.8.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
-  <origin>Unknown package origin</origin>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>souphttpsrc</name>

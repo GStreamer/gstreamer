@@ -16,6 +16,30 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-cacasink
+ * @see_also: #GstAASink
+ *
+ * <refsect2>
+ * <para>
+ * Displays video as color ascii art.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * CACA_GEOMETRY=160x60 CACA_FONT=5x7 gst-launch filesrc location=test.avi ! decodebin ! ffmpegcolorspace ! cacasink
+ * </programlisting>
+ * This pipeline renders a video to ascii art into a separate window using a
+ * small font and specifying the ascii resolution.
+ * </para>
+ * <para>
+ * <programlisting>
+ * CACA_DRIVER=ncurses gst-launch filesrc location=test.avi ! decodebin ! ffmpegcolorspace ! cacasink
+ * </programlisting>
+ * This pipeline renders a video to ascii art into the current terminal.
+ * </para>
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -281,9 +305,7 @@ gst_cacasink_set_property (GObject * object, guint prop_id,
       cacasink->antialiasing = g_value_get_boolean (value);
       if (cacasink->antialiasing) {
         caca_set_feature (CACA_ANTIALIASING_MAX);
-      }
-
-      else {
+      } else {
         caca_set_feature (CACA_ANTIALIASING_MIN);
       }
       break;
@@ -355,7 +377,6 @@ static GstStateChangeReturn
 gst_cacasink_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:

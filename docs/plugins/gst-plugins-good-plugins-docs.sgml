@@ -12,6 +12,7 @@
 
   <chapter>
     <title>gst-plugins-good Elements</title>
+    <xi:include href="xml/element-aasink.xml" />
     <xi:include href="xml/element-alphacolor.xml" />
     <xi:include href="xml/element-apedemux.xml" />
     <xi:include href="xml/element-apev2mux.xml" />
@@ -28,6 +29,7 @@
     <xi:include href="xml/element-avidemux.xml" />
     <xi:include href="xml/element-avimux.xml" />
     <xi:include href="xml/element-avisubtitle.xml" />
+    <xi:include href="xml/element-cacasink.xml" />
     <xi:include href="xml/element-cairotimeoverlay.xml" />
     <xi:include href="xml/element-cdiocddasrc.xml" />
     <xi:include href="xml/element-cmmldec.xml" />

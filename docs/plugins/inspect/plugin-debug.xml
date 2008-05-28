@@ -7,7 +7,7 @@
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>breakmydata</name>
@@ -64,21 +64,6 @@
           <presence>always</presence>
           <details>ANY</details>
         </caps>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>ANY</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>pushfilesrc</name>
-      <longname>Push File Source</longname>
-      <class>Testing</class>
-      <description>Implements pushfile:// URI-handler for push-based file access</description>
-      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
-      <pads>
         <caps>
           <name>src</name>
           <direction>source</direction>

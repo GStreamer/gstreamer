@@ -7,7 +7,7 @@
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>qtdemux</name>
@@ -23,13 +23,13 @@
           <details>video/quicktime; audio/x-m4a; application/x-3gp</details>
         </caps>
         <caps>
-          <name>audio_%02d</name>
+          <name>video_%02d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
         <caps>
-          <name>video_%02d</name>
+          <name>audio_%02d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>

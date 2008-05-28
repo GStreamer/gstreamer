@@ -7,7 +7,7 @@
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>asteriskh263</name>
@@ -165,6 +165,90 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>application/x-rtcp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpdvdepay</name>
+      <longname>RTP DV Depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Depayloads DV from RTP packets (RFC 3189)</description>
+      <author>Marcel Moreaux &lt;marcelm@spacelabs.nl&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-dv</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string){ video, audio }, payload=(int)[ 96, 127 ], encoding-name=(string)DV, clock-rate=(int)90000, encode=(string){ SD-VCR/525-60, SD-VCR/625-50, HD-VCR/1125-60, HD-VCR/1250-50, SDL-VCR/525-60, SDL-VCR/625-50, 306M/525-60, 306M/625-50, 314M-25/525-60, 314M-25/625-50, 314M-50/525-60, 314M-50/625-50 }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpdvpay</name>
+      <longname>RTP DV Payloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payloads DV into RTP packets (RFC 3189)</description>
+      <author>Marcel Moreaux &lt;marcelm@spacelabs.nl&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-dv</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string){ video, audio }, payload=(int)[ 96, 127 ], encoding-name=(string)DV, clock-rate=(int)90000, encode=(string){ SD-VCR/525-60, SD-VCR/625-50, HD-VCR/1125-60, HD-VCR/1250-50, SDL-VCR/525-60, SDL-VCR/625-50, 306M/525-60, 306M/625-50, 314M-25/525-60, 314M-25/625-50, 314M-50/525-60, 314M-50/625-50 }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpg729depay</name>
+      <longname>RTP packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts G729 audio from RTP packets (RFC 3551)</description>
+      <author>Laurent Glayal &lt;spglegle@yahoo.fr&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/G729, channels=(int)1, rate=(int)8000</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)G729; application/x-rtp, media=(string)audio, payload=(int)18, clock-rate=(int)8000</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpg729pay</name>
+      <longname>RTP Payloader for G729 Audio</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Packetize G729 audio streams into RTP packets</description>
+      <author>Laurent Glayal &lt;spglegle@yahoo.fr&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/G729, channels=(int)1, rate=(int)8000</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)G729; application/x-rtp, media=(string)audio, payload=(int)18, clock-rate=(int)8000</details>
         </caps>
       </pads>
     </element>
@@ -726,7 +810,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-speex</details>
+          <details>audio/x-speex, rate=(int)[ 6000, 48000 ], channels=(int)1</details>
         </caps>
         <caps>
           <name>src</name>

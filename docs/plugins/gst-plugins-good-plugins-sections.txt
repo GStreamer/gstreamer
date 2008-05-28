@@ -1,4 +1,18 @@
 <SECTION>
+<FILE>element-aasink</FILE>
+<TITLE>aasink</TITLE>
+GstAASink
+<SUBSECTION Standard>
+GstAASinkClass
+GST_AASINK
+GST_IS_AASINK
+GST_TYPE_AASINK
+GST_AASINK_CLASS
+GST_IS_AASINK_CLASS
+gst_aasink_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-alphacolor</FILE>
 <TITLE>alphacolor</TITLE>
 GstAlphaColor
@@ -93,9 +107,9 @@ gst_audio_cheb_limit_get_type
 <FILE>element-audiodynamic</FILE>
 <TITLE>audiodynamic</TITLE>
 GstAudioDynamic
-GstAudioDynamicProcessFunc
 <SUBSECTION Standard>
 GstAudioDynamicClass
+GstAudioDynamicProcessFunc
 GST_AUDIO_DYNAMIC
 GST_AUDIO_DYNAMIC_CLASS
 GST_AUDIO_DYNAMIC_GET_CLASS
@@ -251,6 +265,20 @@ GST_AVI_SUBTITLE_CLASS
 GST_IS_AVI_SUBTITLE
 GST_IS_AVI_SUBTITLE_CLASS
 gst_avi_subtitle_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-cacasink</FILE>
+<TITLE>cacasink</TITLE>
+GstCACASink
+<SUBSECTION Standard>
+GstCACASinkClass
+GST_CACASINK
+GST_IS_CACASINK
+GST_TYPE_CACASINK
+GST_CACASINK_CLASS
+GST_IS_CACASINK_CLASS
+gst_cacasink_get_type
 </SECTION>
 
 <SECTION>
@@ -711,10 +739,10 @@ MULTIPART_NEED_MORE_DATA
 <SECTION>
 <FILE>element-multiudpsink</FILE>
 <TITLE>multiudpsink</TITLE>
-GstUDPClient
 GstMultiUDPSink
 <SUBSECTION Standard>
 GstMultiUDPSinkClass
+GstUDPClient
 gst_multiudpsink_add
 gst_multiudpsink_remove
 gst_multiudpsink_clear

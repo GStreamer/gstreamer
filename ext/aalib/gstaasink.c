@@ -16,6 +16,29 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-aasink
+ * @see_also: #GstCACASink
+ *
+ * <refsect2>
+ * <para>
+ * Displays video as b/w ascii art.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=test.avi ! decodebin ! ffmpegcolorspace ! aasink
+ * </programlisting>
+ * This pipeline renders a video to ascii art into a separate window.
+ * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=test.avi ! decodebin ! ffmpegcolorspace ! aasink driver=curses
+ * </programlisting>
+ * This pipeline renders a video to ascii art into the current terminal.
+ * </para>
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

@@ -7,7 +7,7 @@
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>speexdec</name>
@@ -41,7 +41,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-speex</details>
+          <details>audio/x-speex, rate=(int)[ 6000, 48000 ], channels=(int)[ 1, 2 ]</details>
         </caps>
         <caps>
           <name>sink</name>
