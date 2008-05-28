@@ -1,3 +1,15 @@
+2008-05-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
+	* gst/videorate/gstvideorate.c: (gst_video_rate_reset),
+	(gst_video_rate_flush_prev), (gst_video_rate_event),
+	(gst_video_rate_chain):
+	* gst/videorate/gstvideorate.h:
+	React (more) to NEWSEGMENT
+	Small adjustment in timestamp calculation to prevent mismatches
+	Fixes #435633.
+
 2008-05-28  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* tests/examples/seek/seek.c: (make_parselaunch_pipeline):

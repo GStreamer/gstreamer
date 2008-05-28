@@ -55,6 +55,7 @@ struct _GstVideoRate
   guint64 next_ts;              /* Timestamp of next buffer to output */
   GstBuffer *prevbuf;
   guint64 prev_ts;              /* Previous buffer timestamp */
+  guint64 segment_out;          /* in-segment counting */
 
   /* segment handling */
   GstSegment segment;
