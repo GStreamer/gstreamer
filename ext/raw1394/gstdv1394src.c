@@ -19,6 +19,23 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-dv1394src
+ *
+ * <refsect2>
+ * <para>
+ * Read DV (digital video) data from firewire port.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch dv1394src ! dvdemux name=d ! queue ! dvdec ! xvimagesink d. ! queue ! alsasink
+ * </programlisting>
+ * This pipeline captures from the firewire port and displays it (might need
+ * format converters for audio/video).
+ * </para>
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
