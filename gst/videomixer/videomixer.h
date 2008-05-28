@@ -75,6 +75,8 @@ struct _GstVideoMixer
 
   gint numpads;
 
+  GstClockTime last_ts;
+
   /* the master pad */
   GstVideoMixerPad *master;
 

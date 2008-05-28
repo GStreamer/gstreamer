@@ -396,6 +396,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
 static void gst_videomixer_finalize (GObject * object);
 
 static GstCaps *gst_videomixer_getcaps (GstPad * pad);
+static gboolean gst_videomixer_query (GstPad * pad, GstQuery * query);
 
 static GstFlowReturn gst_videomixer_collected (GstCollectPads * pads,
     GstVideoMixer * mix);
@@ -537,6 +538,8 @@ gst_videomixer_reset (GstVideoMixer * mix)
   mix->segment_position = 0;
   mix->segment_rate = 1.0;
 
+  mix->last_ts = 0;
+
   /* clean up collect data */
   walk = mix->collect->data;
   while (walk) {
@@ -559,6 +562,8 @@ gst_videomixer_init (GstVideoMixer * mix, GstVideoMixerClass * g_class)
           "src"), "src");
   gst_pad_set_getcaps_function (GST_PAD (mix->srcpad),
       GST_DEBUG_FUNCPTR (gst_videomixer_getcaps));
+  gst_pad_set_query_function (GST_PAD (mix->srcpad),
+      GST_DEBUG_FUNCPTR (gst_videomixer_query));
   gst_pad_set_event_function (GST_PAD (mix->srcpad),
       GST_DEBUG_FUNCPTR (gst_videomixer_src_event));
   gst_element_add_pad (GST_ELEMENT (mix), mix->srcpad);
@@ -584,6 +589,200 @@ gst_videomixer_finalize (GObject * object)
   g_mutex_free (mix->state_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static gboolean
+gst_videomixer_query_duration (GstVideoMixer * mix, GstQuery * query)
+{
+  gint64 max;
+  gboolean res;
+  GstFormat format;
+  GstIterator *it;
+  gboolean done;
+
+  /* parse format */
+  gst_query_parse_duration (query, &format, NULL);
+
+  max = -1;
+  res = TRUE;
+  done = FALSE;
+
+  /* Take maximum of all durations */
+  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (mix));
+  while (!done) {
+    GstIteratorResult ires;
+    gpointer item;
+
+    ires = gst_iterator_next (it, &item);
+    switch (ires) {
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_OK:
+      {
+        GstPad *pad = GST_PAD_CAST (item);
+        gint64 duration;
+
+        /* ask sink peer for duration */
+        res &= gst_pad_query_peer_duration (pad, &format, &duration);
+        /* take max from all valid return values */
+        if (res) {
+          /* valid unknown length, stop searching */
+          if (duration == -1) {
+            max = duration;
+            done = TRUE;
+          }
+          /* else see if bigger than current max */
+          else if (duration > max)
+            max = duration;
+        }
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        max = -1;
+        res = TRUE;
+        gst_iterator_resync (it);
+        break;
+      default:
+        res = FALSE;
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (it);
+
+  if (res) {
+    /* and store the max */
+    GST_DEBUG_OBJECT (mix, "Total duration in format %s: %"
+        GST_TIME_FORMAT, gst_format_get_name (format), GST_TIME_ARGS (max));
+    gst_query_set_duration (query, format, max);
+  }
+
+  return res;
+}
+
+static gboolean
+gst_videomixer_query_latency (GstVideoMixer * mix, GstQuery * query)
+{
+  GstClockTime min, max;
+  gboolean live;
+  gboolean res;
+  GstIterator *it;
+  gboolean done;
+
+  res = TRUE;
+  done = FALSE;
+
+  live = FALSE;
+  min = 0;
+  max = GST_CLOCK_TIME_NONE;
+
+  /* Take maximum of all latency values */
+  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (mix));
+  while (!done) {
+    GstIteratorResult ires;
+    gpointer item;
+
+    ires = gst_iterator_next (it, &item);
+    switch (ires) {
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_OK:
+      {
+        GstPad *pad = GST_PAD_CAST (item);
+        GstQuery *peerquery;
+        GstClockTime min_cur, max_cur;
+        gboolean live_cur;
+
+        peerquery = gst_query_new_latency ();
+
+        /* Ask peer for latency */
+        res &= gst_pad_peer_query (pad, peerquery);
+
+        /* take max from all valid return values */
+        if (res) {
+          gst_query_parse_latency (peerquery, &live_cur, &min_cur, &max_cur);
+
+          if (min_cur > min)
+            min = min_cur;
+
+          if (max_cur != GST_CLOCK_TIME_NONE &&
+              ((max != GST_CLOCK_TIME_NONE && max_cur > max) ||
+                  (max == GST_CLOCK_TIME_NONE)))
+            max = max_cur;
+
+          live = live || live_cur;
+        }
+
+        gst_query_unref (peerquery);
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        live = FALSE;
+        min = 0;
+        max = GST_CLOCK_TIME_NONE;
+        res = TRUE;
+        gst_iterator_resync (it);
+        break;
+      default:
+        res = FALSE;
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (it);
+
+  if (res) {
+    /* store the results */
+    GST_DEBUG_OBJECT (mix, "Calculated total latency: live %s, min %"
+        GST_TIME_FORMAT ", max %" GST_TIME_FORMAT,
+        (live ? "yes" : "no"), GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+    gst_query_set_latency (query, live, min, max);
+  }
+
+  return res;
+}
+
+static gboolean
+gst_videomixer_query (GstPad * pad, GstQuery * query)
+{
+  GstVideoMixer *mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+
+      gst_query_parse_position (query, &format, NULL);
+
+      switch (format) {
+        case GST_FORMAT_TIME:
+          /* FIXME, bring to stream time, might be tricky */
+          gst_query_set_position (query, format, mix->last_ts);
+          res = TRUE;
+          break;
+        default:
+          break;
+      }
+      break;
+    }
+    case GST_QUERY_DURATION:
+      res = gst_videomixer_query_duration (mix, query);
+      break;
+    case GST_QUERY_LATENCY:
+      res = gst_videomixer_query_latency (mix, query);
+      break;
+    default:
+      /* FIXME, needs a custom query handler because we have multiple
+       * sinkpads */
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
+  gst_object_unref (mix);
+  return res;
 }
 
 static GstCaps *
@@ -1084,6 +1283,10 @@ gst_videomixer_blend_buffers (GstVideoMixer * mix, GstBuffer * outbuf)
       if (pad == mix->master) {
         GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (mixcol->buffer);
         GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (mixcol->buffer);
+
+        mix->last_ts = GST_BUFFER_TIMESTAMP (outbuf);
+        if (GST_BUFFER_DURATION_IS_VALID (outbuf))
+          mix->last_ts += GST_BUFFER_DURATION (outbuf);
       }
     }
   }
