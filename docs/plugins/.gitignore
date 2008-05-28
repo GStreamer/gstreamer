@@ -8,6 +8,8 @@ Makefile.in
 *-unused.txt
 *-overrides.txt
 
+gst-plugins-good-plugins.args.new
+gst-plugins-good-plugins.signals.new
 
 tmpl
 html
@@ -18,4 +20,3 @@ xml
 gst-plugins-good-plugins-scan
 gst-plugins-good-plugins-scan.c
 inspect-registry.*
-

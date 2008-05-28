@@ -1,3 +1,12 @@
+2008-05-28  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* docs/plugins/.cvsignore:
+	* tests/check/elements/.cvsignore:
+	Ignore some more generated things
+
+	* tests/check/Makefile.am:
+	Ignore OSS elements in the state changes test too.
+
 2008-05-28  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/plugins/Makefile.am:

@@ -23,6 +23,7 @@ level
 matroskamux
 multifile
 rtp-payloading
+souphttpsrc
 spectrum
 sunaudio
 videocrop
