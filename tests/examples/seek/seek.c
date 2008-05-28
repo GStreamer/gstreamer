@@ -904,7 +904,7 @@ static GstElement *
 make_parselaunch_pipeline (const gchar * description)
 {
   GstElement *pipeline;
-  GError *error;
+  GError *error = NULL;
 
   pipeline = gst_parse_launch (description, &error);
 

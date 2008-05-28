@@ -1,3 +1,8 @@
+2008-05-28  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* tests/examples/seek/seek.c: (make_parselaunch_pipeline):
+	  Initialise error to NULL as we should.
+
 2008-05-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/adder/gstadder.c: (gst_adder_query_duration),
