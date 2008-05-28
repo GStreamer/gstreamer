@@ -1,3 +1,16 @@
+2008-05-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Based on patch by: Bjarne Rosengren <bjarne at axis dot com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_send_event),
+	(gst_base_src_get_range), (gst_base_src_pad_get_range),
+	(gst_base_src_loop), (gst_base_src_set_flushing),
+	(gst_base_src_change_state):
+	Make sending an EOS event to the basesrc non-blocking even if the
+	implementation does blocking waits in the create function. This is done
+	by unlocking the create function when EOS is sent.
+	Fixes #535218.
+
 2008-05-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tools/gst-inspect.c: (print_element_properties_info):
