@@ -470,21 +470,80 @@ gst_vcdsrc_uri_get_protocols (void)
 static const gchar *
 gst_vcdsrc_uri_get_uri (GstURIHandler * handler)
 {
-  return "vcd://";
+  GstVCDSrc *src = GST_VCDSRC (handler);
+  gchar *result;
+
+  GST_OBJECT_LOCK (src);
+  result = g_strdup_printf ("vcd://%d", src->track);
+  GST_OBJECT_UNLOCK (src);
+
+  return result;
 }
 
 static gboolean
 gst_vcdsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
-  gboolean ret;
+  GstVCDSrc *src = GST_VCDSRC (handler);
   gchar *protocol;
+  gchar *location = NULL;
+  gint tracknr;
+
+  GST_DEBUG_OBJECT (src, "setting uri '%s'", uri);
 
   protocol = gst_uri_get_protocol (uri);
 
-  ret = (protocol && !strcmp (protocol, "vcd")) ? TRUE : FALSE;
+  if (protocol == NULL || strcmp (protocol, "vcd"))
+    goto wrong_protocol;
+
+  GST_DEBUG_OBJECT (src, "have protocol '%s'", protocol);
   g_free (protocol);
 
-  return ret;
+  /* parse out the track in the location */
+  if (!(location = gst_uri_get_location (uri)))
+    goto no_location;
+
+  GST_DEBUG_OBJECT (src, "have location '%s'", location);
+
+  if (*location == '\0') {
+    /* empty location selects track 1 */
+    tracknr = 1;
+  } else {
+    /* scan the track number */
+    if (sscanf (location, "%d", &tracknr) != 1)
+      goto invalid_location;
+
+    if (tracknr < 1)
+      goto invalid_location;
+  }
+
+  GST_OBJECT_LOCK (src);
+  src->track = tracknr;
+  GST_DEBUG_OBJECT (src, "configured track %d", src->track);
+  GST_OBJECT_UNLOCK (src);
+
+  g_free (location);
+
+  return TRUE;
+
+  /* ERRORS */
+wrong_protocol:
+  {
+    GST_ERROR_OBJECT (src, "wrong protocol %s specified",
+        GST_STR_NULL (protocol));
+    g_free (protocol);
+    return FALSE;
+  }
+no_location:
+  {
+    GST_ERROR_OBJECT (src, "no location specified");
+    return FALSE;
+  }
+invalid_location:
+  {
+    GST_ERROR_OBJECT (src, "Invalid location %s in URI '%s'", location, uri);
+    g_free (location);
+    return FALSE;
+  }
 }
 
 static void

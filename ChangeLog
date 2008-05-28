@@ -1,3 +1,11 @@
+2008-05-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Based on patch by: <onkarshinde at gmail dot com>
+
+	* sys/vcd/vcdsrc.c: (gst_vcdsrc_uri_get_uri),
+	(gst_vcdsrc_uri_set_uri):
+	Allow the track to be set by using the uri. Fixes #535043.
+
 2008-05-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/interleave/interleave.c: (gst_interleave_src_query_duration),
