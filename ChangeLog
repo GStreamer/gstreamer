@@ -1,5 +1,12 @@
 2008-05-28  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: José Alburquerque <jaalburqu at svn dot gnome dot org>
+
+	* gst/gstelementfactory.c:
+	Small doc fix. Fixes #535285.
+
+2008-05-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Based on patch by: Bjarne Rosengren <bjarne at axis dot com>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_send_event),

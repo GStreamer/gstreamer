@@ -643,7 +643,7 @@ gst_element_factory_get_static_pad_templates (GstElementFactory * factory)
  * gst_element_factory_get_uri_type:
  * @factory: a #GstElementFactory
  *
- * Gets the type of URIs the element supports or GST_URI_UNKNOWN if none.
+ * Gets the type of URIs the element supports or #GST_URI_UNKNOWN if none.
  *
  * Returns: type of URIs this element supports
  */
