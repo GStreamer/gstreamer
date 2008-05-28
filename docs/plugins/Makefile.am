@@ -93,6 +93,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/pango/gsttimeoverlay.h \
 	$(top_srcdir)/ext/theora/gsttheoradec.h \
 	$(top_srcdir)/ext/theora/gsttheoraenc.h \
+	$(top_srcdir)/ext/theora/gsttheoraparse.h \
 	$(top_srcdir)/ext/vorbis/vorbisdec.h \
 	$(top_srcdir)/ext/vorbis/vorbisenc.h \
 	$(top_srcdir)/ext/vorbis/vorbisparse.h \

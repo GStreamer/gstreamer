@@ -42,6 +42,7 @@
     <xi:include href="xml/element-textrender.xml" />
     <xi:include href="xml/element-theoradec.xml" />
     <xi:include href="xml/element-theoraenc.xml" />
+    <xi:include href="xml/element-theoraparse.xml" />
     <xi:include href="xml/element-timeoverlay.xml" />
     <xi:include href="xml/element-uridecodebin.xml" />
     <xi:include href="xml/element-videorate.xml" />

@@ -475,6 +475,20 @@ GstTheoraEncClass
 </SECTION>
 
 <SECTION>
+<FILE>element-theoraparse</FILE>
+<TITLE>theoraparse</TITLE>
+GstTheoraParse
+<SUBSECTION Standard>
+GstTheoraParseClass
+GST_THEORA_PARSE
+GST_IS_THEORA_PARSE
+GST_TYPE_THEORA_PARSE
+gst_theora_parse_get_type
+GST_THEORA_PARSE_CLASS
+GST_IS_THEORA_PARSE_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-timeoverlay</FILE>
 <TITLE>timeoverlay</TITLE>
 GstTimeOverlay
