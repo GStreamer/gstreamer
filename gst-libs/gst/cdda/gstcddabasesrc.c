@@ -1027,7 +1027,7 @@ gst_cdda_base_src_add_track (GstCddaBaseSrc * src, GstCddaBaseSrcTrack * track)
   if (src->num_tracks > 0) {
     guint end_of_previous_track = src->tracks[src->num_tracks - 1].end;
 
-    if (track->start < end_of_previous_track) {
+    if (track->start <= end_of_previous_track) {
       GST_WARNING ("track %2u overlaps with previous tracks", track->num);
       return FALSE;
     }
@@ -1517,10 +1517,10 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 
   switch (src->mode) {
     case GST_CDDA_BASE_SRC_MODE_NORMAL:
-      eos = (src->cur_sector >= src->tracks[src->cur_track].end);
+      eos = (src->cur_sector > src->tracks[src->cur_track].end);
       break;
     case GST_CDDA_BASE_SRC_MODE_CONTINUOUS:
-      eos = (src->cur_sector >= src->tracks[src->num_tracks - 1].end);
+      eos = (src->cur_sector > src->tracks[src->num_tracks - 1].end);
       src->cur_track = gst_cdda_base_src_get_track_from_sector (src,
           src->cur_sector);
       break;
