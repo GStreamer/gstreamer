@@ -77,6 +77,8 @@
     <xi:include href="xml/element-rtspsrc.xml" />
     <xi:include href="xml/element-smokedec.xml" />
     <xi:include href="xml/element-smokeenc.xml" />
+    <xi:include href="xml/element-smpte.xml" />
+    <xi:include href="xml/element-smptealpha.xml" />
     <xi:include href="xml/element-souphttpsrc.xml" />
     <xi:include href="xml/element-spectrum.xml" />
     <xi:include href="xml/element-udpsrc.xml" />

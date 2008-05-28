@@ -1,3 +1,10 @@
+2008-05-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	Add SMPTE effect elements to docs.
+
 2008-05-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/Makefile.am:
