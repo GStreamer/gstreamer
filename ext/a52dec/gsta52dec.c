@@ -17,6 +17,31 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-a52dec
+ *
+ * <refsect2>
+ * <para>
+ * Dolby Digital (AC-3) audio decoder.
+ * </para>
+ * </refsect2>
+ * <refsect2>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch dvdreadsrc title=1 ! dvddemux ! a52dec ! audioresample ! audioconvert ! alsasink
+ * </programlisting>
+ * Play audio track from a dvd.
+ * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=abc.ac3 ! a52dec ! audioresample ! audioconvert ! alsasink
+ * </programlisting>
+ * Decode a stand alone file and play it.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -410,7 +435,8 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment (event, NULL, NULL, &format, &val, NULL,
           NULL);
       if (format != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (val)) {
-        GST_WARNING ("No time in newsegment event %p", event);
+        GST_WARNING ("No time in newsegment event %p (format is %s)",
+            event, gst_format_get_name (format));
         gst_event_unref (event);
         a52dec->sent_segment = FALSE;
       } else {

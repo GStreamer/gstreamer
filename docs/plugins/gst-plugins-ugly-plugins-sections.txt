@@ -1,4 +1,18 @@
 <SECTION>
+<FILE>element-a52dec</FILE>
+<TITLE>a52dec</TITLE>
+GstA52Dec
+<SUBSECTION Standard>
+GstA52DecClass
+GST_A52DEC
+GST_A52DEC_CLASS
+GST_IS_A52DEC
+GST_IS_A52DEC_CLASS
+GST_TYPE_A52DEC
+gst_a52dec_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-amrnbdec</FILE>
 <TITLE>amrnbdec</TITLE>
 GstAmrnbDec

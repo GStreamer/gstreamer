@@ -12,6 +12,7 @@
 
   <chapter>
     <title>gst-plugins-ugly Elements</title>
+    <xi:include href="xml/element-a52dec.xml" />
     <xi:include href="xml/element-amrnbdec.xml" />
     <xi:include href="xml/element-amrnbenc.xml" />
     <xi:include href="xml/element-amrnbparse.xml" />

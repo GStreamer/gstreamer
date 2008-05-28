@@ -668,3 +668,13 @@
 <DEFAULT>200</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstAmrnbEnc::band-mode</NAME>
+<TYPE>GstAmrnbEncBandMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Band Mode</NICK>
+<BLURB>Encoding Band Mode (Kbps).</BLURB>
+<DEFAULT>MR122</DEFAULT>
+</ARG>
+
