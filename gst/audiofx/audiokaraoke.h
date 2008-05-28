@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_AUDIO_VOICE_H__
-#define __GST_AUDIO_VOICE_H__
+#ifndef __GST_AUDIO_KARAOKE_H__
+#define __GST_AUDIO_KARAOKE_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
@@ -27,18 +27,18 @@
 #include <gst/audio/gstaudiofilter.h>
 
 G_BEGIN_DECLS
-#define GST_TYPE_AUDIO_VOICE            (gst_audio_voice_get_type())
-#define GST_AUDIO_VOICE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_VOICE,GstAudioVoice))
-#define GST_IS_AUDIO_VOICE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_VOICE))
-#define GST_AUDIO_VOICE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_AUDIO_VOICE,GstAudioVoiceClass))
-#define GST_IS_AUDIO_VOICE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_AUDIO_VOICE))
-#define GST_AUDIO_VOICE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AUDIO_VOICE,GstAudioVoiceClass))
-typedef struct _GstAudioVoice GstAudioVoice;
-typedef struct _GstAudioVoiceClass GstAudioVoiceClass;
+#define GST_TYPE_AUDIO_KARAOKE            (gst_audio_karaoke_get_type())
+#define GST_AUDIO_KARAOKE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_KARAOKE,GstAudioKaraoke))
+#define GST_IS_AUDIO_KARAOKE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_KARAOKE))
+#define GST_AUDIO_KARAOKE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_AUDIO_KARAOKE,GstAudioKaraokeClass))
+#define GST_IS_AUDIO_KARAOKE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_AUDIO_KARAOKE))
+#define GST_AUDIO_KARAOKE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AUDIO_KARAOKE,GstAudioKaraokeClass))
+typedef struct _GstAudioKaraoke GstAudioKaraoke;
+typedef struct _GstAudioKaraokeClass GstAudioKaraokeClass;
 
-typedef void (*GstAudioVoiceProcessFunc) (GstAudioVoice *, guint8 *, guint);
+typedef void (*GstAudioKaraokeProcessFunc) (GstAudioKaraoke *, guint8 *, guint);
 
-struct _GstAudioVoice
+struct _GstAudioKaraoke
 {
   GstAudioFilter audiofilter;
 
@@ -56,15 +56,15 @@ struct _GstAudioVoice
   gfloat y1, y2;
 
   /* < private > */
-  GstAudioVoiceProcessFunc process;
+  GstAudioKaraokeProcessFunc process;
 };
 
-struct _GstAudioVoiceClass
+struct _GstAudioKaraokeClass
 {
   GstAudioFilterClass parent;
 };
 
-GType gst_audio_voice_get_type (void);
+GType gst_audio_karaoke_get_type (void);
 
 G_END_DECLS
-#endif /* __GST_AUDIO_VOICE_H__ */
+#endif /* __GST_AUDIO_KARAOKE_H__ */

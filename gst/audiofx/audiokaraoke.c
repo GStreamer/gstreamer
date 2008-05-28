@@ -19,16 +19,16 @@
  */
 
 /**
- * SECTION:element-audiovoice
+ * SECTION:element-audiokaraoke
  * @short_description: Voice removal element
  *
  * <refsect2>
- * Remove the voice from audio by removing the center channel.
+ * Remove the voice from audio by filtering the center channel.
  * This plugin is useful for karaoke applications.
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch filesrc location="song.ogg" ! oggdemux ! vorbisdec ! audiovoice ! audioconvert ! alsasink
+ * gst-launch filesrc location=song.ogg ! oggdemux ! vorbisdec ! audiokaraoke ! audioconvert ! alsasink
  * </programlisting>
  * </para>
  * </refsect2>
@@ -46,13 +46,13 @@
 #include <gst/audio/gstaudiofilter.h>
 #include <gst/controller/gstcontroller.h>
 
-#include "audiovoice.h"
+#include "audiokaraoke.h"
 
-#define GST_CAT_DEFAULT gst_audio_voice_debug
+#define GST_CAT_DEFAULT gst_audio_karaoke_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("AudioVoice",
+GST_ELEMENT_DETAILS ("AudioKaraoke",
     "Filter/Effect/Audio",
     "Removes voice from sound",
     "Wim Taymans <wim.taymans@gmail.com>");
@@ -94,30 +94,30 @@ enum
     " channels=(int)[1,MAX]"
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_voice_debug, "audiovoice", 0, "audiovoice element");
+  GST_DEBUG_CATEGORY_INIT (gst_audio_karaoke_debug, "audiokaraoke", 0, "audiokaraoke element");
 
-GST_BOILERPLATE_FULL (GstAudioVoice, gst_audio_voice, GstAudioFilter,
+GST_BOILERPLATE_FULL (GstAudioKaraoke, gst_audio_karaoke, GstAudioFilter,
     GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
 
-static void gst_audio_voice_set_property (GObject * object, guint prop_id,
+static void gst_audio_karaoke_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_audio_voice_get_property (GObject * object, guint prop_id,
+static void gst_audio_karaoke_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_audio_voice_setup (GstAudioFilter * filter,
+static gboolean gst_audio_karaoke_setup (GstAudioFilter * filter,
     GstRingBufferSpec * format);
-static GstFlowReturn gst_audio_voice_transform_ip (GstBaseTransform * base,
+static GstFlowReturn gst_audio_karaoke_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 
-static void gst_audio_voice_transform_int (GstAudioVoice * filter,
+static void gst_audio_karaoke_transform_int (GstAudioKaraoke * filter,
     gint16 * data, guint num_samples);
-static void gst_audio_voice_transform_float (GstAudioVoice * filter,
+static void gst_audio_karaoke_transform_float (GstAudioKaraoke * filter,
     gfloat * data, guint num_samples);
 
 /* GObject vmethod implementations */
 
 static void
-gst_audio_voice_base_init (gpointer klass)
+gst_audio_karaoke_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCaps *caps;
@@ -131,13 +131,13 @@ gst_audio_voice_base_init (gpointer klass)
 }
 
 static void
-gst_audio_voice_class_init (GstAudioVoiceClass * klass)
+gst_audio_karaoke_class_init (GstAudioKaraokeClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
-  gobject_class->set_property = gst_audio_voice_set_property;
-  gobject_class->get_property = gst_audio_voice_get_property;
+  gobject_class->set_property = gst_audio_karaoke_set_property;
+  gobject_class->get_property = gst_audio_karaoke_get_property;
 
   g_object_class_install_property (gobject_class, PROP_LEVEL,
       g_param_spec_float ("level", "Level",
@@ -160,13 +160,13 @@ gst_audio_voice_class_init (GstAudioVoiceClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   GST_AUDIO_FILTER_CLASS (klass)->setup =
-      GST_DEBUG_FUNCPTR (gst_audio_voice_setup);
+      GST_DEBUG_FUNCPTR (gst_audio_karaoke_setup);
   GST_BASE_TRANSFORM_CLASS (klass)->transform_ip =
-      GST_DEBUG_FUNCPTR (gst_audio_voice_transform_ip);
+      GST_DEBUG_FUNCPTR (gst_audio_karaoke_transform_ip);
 }
 
 static void
-gst_audio_voice_init (GstAudioVoice * filter, GstAudioVoiceClass * klass)
+gst_audio_karaoke_init (GstAudioKaraoke * filter, GstAudioKaraokeClass * klass)
 {
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (filter), TRUE);
@@ -178,7 +178,7 @@ gst_audio_voice_init (GstAudioVoice * filter, GstAudioVoiceClass * klass)
 }
 
 static void
-update_filter (GstAudioVoice * filter, gint rate)
+update_filter (GstAudioKaraoke * filter, gint rate)
 {
   gfloat A, B, C;
 
@@ -197,12 +197,12 @@ update_filter (GstAudioVoice * filter, gint rate)
 }
 
 static void
-gst_audio_voice_set_property (GObject * object, guint prop_id,
+gst_audio_karaoke_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAudioVoice *filter;
+  GstAudioKaraoke *filter;
 
-  filter = GST_AUDIO_VOICE (object);
+  filter = GST_AUDIO_KARAOKE (object);
 
   switch (prop_id) {
     case PROP_LEVEL:
@@ -226,12 +226,12 @@ gst_audio_voice_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_audio_voice_get_property (GObject * object, guint prop_id,
+gst_audio_karaoke_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstAudioVoice *filter;
+  GstAudioKaraoke *filter;
 
-  filter = GST_AUDIO_VOICE (object);
+  filter = GST_AUDIO_KARAOKE (object);
 
   switch (prop_id) {
     case PROP_LEVEL:
@@ -255,20 +255,20 @@ gst_audio_voice_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_voice_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+gst_audio_karaoke_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
-  GstAudioVoice *filter = GST_AUDIO_VOICE (base);
+  GstAudioKaraoke *filter = GST_AUDIO_KARAOKE (base);
   gboolean ret = TRUE;
 
   filter->channels = format->channels;
   filter->rate = format->rate;
 
   if (format->type == GST_BUFTYPE_FLOAT && format->width == 32)
-    filter->process = (GstAudioVoiceProcessFunc)
-        gst_audio_voice_transform_float;
+    filter->process = (GstAudioKaraokeProcessFunc)
+        gst_audio_karaoke_transform_float;
   else if (format->type == GST_BUFTYPE_LINEAR && format->width == 16)
-    filter->process = (GstAudioVoiceProcessFunc)
-        gst_audio_voice_transform_int;
+    filter->process = (GstAudioKaraokeProcessFunc)
+        gst_audio_karaoke_transform_int;
   else
     ret = FALSE;
 
@@ -278,7 +278,7 @@ gst_audio_voice_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 }
 
 static void
-gst_audio_voice_transform_int (GstAudioVoice * filter,
+gst_audio_karaoke_transform_int (GstAudioKaraoke * filter,
     gint16 * data, guint num_samples)
 {
   gint i, l, r, o, x;
@@ -311,7 +311,7 @@ gst_audio_voice_transform_int (GstAudioVoice * filter,
 }
 
 static void
-gst_audio_voice_transform_float (GstAudioVoice * filter,
+gst_audio_karaoke_transform_float (GstAudioKaraoke * filter,
     gfloat * data, guint num_samples)
 {
   gint i;
@@ -340,9 +340,9 @@ gst_audio_voice_transform_float (GstAudioVoice * filter,
 
 /* GstBaseTransform vmethod implementations */
 static GstFlowReturn
-gst_audio_voice_transform_ip (GstBaseTransform * base, GstBuffer * buf)
+gst_audio_karaoke_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
-  GstAudioVoice *filter = GST_AUDIO_VOICE (base);
+  GstAudioKaraoke *filter = GST_AUDIO_KARAOKE (base);
   guint num_samples =
       GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
 

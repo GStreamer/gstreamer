@@ -102,6 +102,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audiofx/audioamplify.h \
 	$(top_srcdir)/gst/audiofx/audiodynamic.h \
 	$(top_srcdir)/gst/audiofx/audioinvert.h \
+	$(top_srcdir)/gst/audiofx/audiokaraoke.h \
 	$(top_srcdir)/gst/audiofx/audiopanorama.h \
 	$(top_srcdir)/gst/audiofx/audiocheblimit.h \
 	$(top_srcdir)/gst/audiofx/audiochebband.h \

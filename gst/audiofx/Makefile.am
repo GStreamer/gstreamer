@@ -8,7 +8,7 @@ libgstaudiofx_la_SOURCES = audiofx.c\
 	audioinvert.c \
 	audioamplify.c \
 	audiodynamic.c \
-	audiovoice.c \
+	audiokaraoke.c \
 	audiocheblimit.c \
 	audiochebband.c \
 	audiowsincband.c \
@@ -32,7 +32,7 @@ noinst_HEADERS = audiopanorama.h \
 	audioinvert.h \
 	audioamplify.h \
 	audiodynamic.h \
-	audiovoice.h \
+	audiokaraoke.h \
 	audiocheblimit.h \
 	audiochebband.h \
 	audiowsincband.h \

@@ -45,6 +45,7 @@ GObject
         GstAudioPanorama
         GstAudioFilter
           GstAudioInvert
+          GstAudioKaraoke
           GstAudioAmplify
           GstAudioDynamic
           GstAudioChebLimit

@@ -136,6 +136,22 @@ gst_audio_invert_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-audiokaraoke</FILE>
+<TITLE>audiokaraoke</TITLE>
+GstAudioKaraoke
+<SUBSECTION Standard>
+GstAudioKaraokeClass
+GstAudioKaraokeProcessFunc
+GST_AUDIO_KARAOKE
+GST_AUDIO_KARAOKE_CLASS
+GST_AUDIO_KARAOKE_GET_CLASS
+GST_IS_AUDIO_KARAOKE
+GST_IS_AUDIO_KARAOKE_CLASS
+GST_TYPE_AUDIO_KARAOKE
+gst_audio_karaoke_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-audiopanorama</FILE>
 <TITLE>audiopanorama</TITLE>
 GstAudioPanorama

@@ -19208,3 +19208,43 @@
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstAudioKaraoke::filter-band</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,441]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Filter Band</NICK>
+<BLURB>The Frequency band of the filter.</BLURB>
+<DEFAULT>220</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioKaraoke::filter-width</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Filter Width</NICK>
+<BLURB>The Frequency width of the filter.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioKaraoke::level</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Level</NICK>
+<BLURB>Level of the effect (1.0 = full).</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioKaraoke::mono-level</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mono Level</NICK>
+<BLURB>Level of the mono channel (1.0 = full).</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
