@@ -1,3 +1,8 @@
+2008-05-28  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstiterator.c:
+	Remove an unused field from the private GstListIterator struct.
+
 2008-05-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/controller/gstcontroller.c:

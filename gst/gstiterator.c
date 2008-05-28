@@ -142,7 +142,6 @@ typedef struct _GstListIterator
   gpointer owner;
   GList **orig;
   GList *list;                  /* pointer in list */
-  GType *type;
   GstIteratorDisposeFunction freefunc;
 } GstListIterator;
 
