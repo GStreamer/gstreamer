@@ -544,7 +544,14 @@ print_element_properties_info (GstElement * element)
             n_print ("%-23.23s Pointer.", "");
           }
         } else if (param->value_type == G_TYPE_VALUE_ARRAY) {
-          n_print ("%-23.23s Array of GValues", "");
+          GParamSpecValueArray *pvarray = G_PARAM_SPEC_VALUE_ARRAY (param);
+
+          if (pvarray->element_spec) {
+            n_print ("%-23.23s Array of GValues of type \"%s\"", "",
+                g_type_name (pvarray->element_spec->value_type));
+          } else {
+            n_print ("%-23.23s Array of GValues", "");
+          }
         } else if (GST_IS_PARAM_SPEC_FRACTION (param)) {
           GstParamSpecFraction *pfraction = GST_PARAM_SPEC_FRACTION (param);
 

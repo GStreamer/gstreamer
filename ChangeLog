@@ -1,5 +1,10 @@
 2008-05-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tools/gst-inspect.c: (print_element_properties_info):
+	If possible print the element type of GValueArray properties.
+
+2008-05-28  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/gstiterator.c:
 	Remove an unused field from the private GstListIterator struct.
 
