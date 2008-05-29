@@ -1302,7 +1302,11 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     switch (GST_EVENT_TYPE (event)) {
         /* EOS event needs syncing */
       case GST_EVENT_EOS:
-        sstart = sstop = priv->current_sstop;
+        if (basesink->segment.rate >= 0.0)
+          sstart = sstop = priv->current_sstop;
+        else
+          sstart = sstop = priv->current_sstart;
+
         rstart = rstop = priv->eos_rtime;
         *do_sync = rstart != -1;
         GST_DEBUG_OBJECT (basesink, "sync times for EOS %" GST_TIME_FORMAT,
@@ -3036,6 +3040,7 @@ gst_base_sink_get_position_last (GstBaseSink * basesink, gint64 * cur)
 {
   /* return last observed stream time */
   *cur = basesink->priv->current_sstop;
+
   GST_DEBUG_OBJECT (basesink, "POSITION: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (*cur));
   return TRUE;
@@ -3159,11 +3164,16 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
        * duration. */
       if (rate < 0.0)
         time += duration;
+
       *cur = time + gst_guint64_to_gdouble (now - base) * rate;
 
       /* never report more than last seen position */
-      if (last != -1)
-        *cur = MIN (last, *cur);
+      if (last != -1) {
+        if (rate < 0.0)
+          *cur = MIN (last, *cur);
+        else
+          *cur = MAX (last, *cur);
+      }
 
       gst_object_unref (clock);
 

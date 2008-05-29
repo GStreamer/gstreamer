@@ -1,3 +1,9 @@
+2008-05-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times),
+	(gst_base_sink_get_position_last), (gst_base_sink_get_position):
+	Fix position query range checks in reverse playback.
+
 2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstelement.c:
