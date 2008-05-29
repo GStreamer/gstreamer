@@ -1,5 +1,40 @@
 2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst-libs/gst/audio/multichannel.c:
+	(gst_audio_check_channel_positions),
+	(gst_audio_set_structure_channel_positions_list),
+	(gst_audio_fixate_channel_positions):
+	Allow rear center together with rear left/right and other previously
+	conflicting channel positions. The reason why they weren't allowed
+	was the channel mixing implementation in audioconvert.
+	Also take this into account when fixing channel layouts.
+
+	Allow setting channel positions for 1/2 channels when using
+	gst_audio_set_structure_channel_position().
+
+	* gst/audioconvert/gstchannelmix.c:
+	(gst_channel_mix_fill_compatible), (gst_channel_mix_detect_pos),
+	(gst_channel_mix_fill_one_other), (gst_channel_mix_fill_others),
+	(gst_channel_mix_fill_special), (gst_channel_mix_fill_matrix):
+	Major rewrite of the channel mixing.
+
+	We now allow previously	conflicting channel positions to appear
+	together (rear center and rear left/right for example).
+	Fixes bug #533817.
+
+	Rework the way channels are mixed together to take more possible
+	channel positions into account, properly mix from/to side channels
+	and don't assume that either center, left&right or nothing of a
+	specific position is available anymore.
+
+	* tests/check/elements/audioconvert.c: (GST_START_TEST):
+	Adjust unit tests with non-standard 1/2 channel layouts to the more
+	correct new behaviour.
+
+	Add a unit test for 5.1->Stereo downmixing.
+
+2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/vorbis/vorbisdec.c: (vorbis_handle_identification_packet):
 	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_generate_sink_caps):
 	Add sane defaults for the 7 and 8 channel layouts as those are

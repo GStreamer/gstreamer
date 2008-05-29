@@ -28,13 +28,10 @@
 /*
  * This function checks if basic assumptions apply:
  *  - does each position occur at most once?
+ *  - invalid positions?
  *  - do conflicting positions occur?
  *     + front_mono vs. front_left/right
- *     + front_center vs. front_left/right_of_center
- *     + rear_center vs. rear_left/right
- * It also adds some hacks that 0.8.x needs for compatibility:
- *  - if channels == 1, are we really mono?
- *  - if channels == 2, are we really stereo?
+ *     + none vs not-none
  */
 
 static gboolean
@@ -51,17 +48,7 @@ gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
     { {
     GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
             GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_MONO}},
-        /* front center: 2 <-> 1 */
-    { {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
-            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER}, {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}},
-        /* rear: 2 <-> 1 */
-    { {
-    GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
-    GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}}, { {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_MONO}}, { {
     GST_AUDIO_CHANNEL_POSITION_INVALID}}
   };
 
@@ -132,17 +119,6 @@ gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
       return FALSE;
     }
   }
-
-  /* Throw warning if we encounter an unusual 2-channel configuration,
-   * at least until someone finds a reason why we should not */
-#if 0
-  if (channels == 2 && (pos[0] != GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT ||
-          pos[1] != GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT)) {
-    g_warning ("channels=2 implies stereo, but channel positions are "
-        "< %d, %d>", pos[0], pos[1]);
-    return FALSE;
-  }
-#endif
 
   return TRUE;
 }
@@ -373,11 +349,6 @@ gst_audio_set_structure_channel_positions_list (GstStructure * str,
   g_return_if_fail (res);
   g_return_if_fail (channels > 0);
 
-  /* 0.8.x: channels=1 or channels=2 is mono/stereo, no positions needed
-   * there (we discard them anyway) */
-  if (channels == 1 || channels == 2)
-    return;
-
   /* create the array of lists */
   g_value_init (&pos_val_arr, GST_TYPE_ARRAY);
   g_value_init (&pos_val_entry, GST_TYPE_AUDIO_CHANNEL_POSITION);
@@ -525,19 +496,20 @@ gst_audio_fixate_channel_positions (GstStructure * str)
     const GstAudioChannelPosition pos2[1];
   } conf[] = {
     /* front: mono <-> stereo */
-    { {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    {
+      {
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
             GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_MONO}},
-        /* front center: 2 <-> 1 */
-    { {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_MONO}}, { {
     GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
             GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER}, {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}},
-        /* rear: 2 <-> 1 */
-    { {
+    GST_AUDIO_CHANNEL_POSITION_INVALID}}, { {
+    GST_AUDIO_CHANNEL_POSITION_INVALID, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}}, { {
     GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
             GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
+    GST_AUDIO_CHANNEL_POSITION_INVALID}}, { {
+    GST_AUDIO_CHANNEL_POSITION_INVALID, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
     GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}}, { {
     GST_AUDIO_CHANNEL_POSITION_INVALID, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
     GST_AUDIO_CHANNEL_POSITION_LFE}}, { {

@@ -918,7 +918,7 @@ GST_START_TEST (test_multichannel_conversion)
 
   {
     gint16 in[] = { 1, 2, 3, 4 };
-    gint16 out[] = { 2, 4 };
+    gint16 out[] = { 1, 3 };
     GstCaps *in_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
     GstCaps *out_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
     GstAudioChannelPosition in_layout[2] =
@@ -953,6 +953,15 @@ GST_START_TEST (test_multichannel_conversion)
     RUN_CONVERSION ("2 channels to 1 with non-standard layout", in,
         in_caps, out, out_caps);
   }
+  {
+    gint16 in[] = { 4, 5, 4, 2, 2, 1 };
+    gint16 out[] = { 3, 3 };
+    GstCaps *in_caps = get_int_mc_caps (6, "BYTE_ORDER", 16, 16, TRUE, FALSE);
+    GstCaps *out_caps = get_int_caps (2, "BYTE_ORDER", 16, 16, TRUE);
+
+    RUN_CONVERSION ("5.1 to 2 channels", in, in_caps, out, out_caps);
+  }
+
 }
 
 GST_END_TEST;
@@ -1053,7 +1062,7 @@ GST_START_TEST (test_channel_remapping)
   /* gint16 to gint16 with 2 channels and non-standard layout */
   {
     gint16 in[] = { 1, 2, 3, 4 };
-    gint16 out[] = { -1, 2, -2, 4 };
+    gint16 out[] = { 1, 2, 2, 4 };
     GstCaps *in_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
     GstCaps *out_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
     GstAudioChannelPosition in_layout[2] =
@@ -1097,7 +1106,7 @@ GST_START_TEST (test_channel_remapping)
   /* gint16 to gint16 with 2 channels and non-standard layout */
   {
     gint16 in[] = { 1, 2, 3, 4 };
-    gint16 out[] = { -1, 2, -3, 4 };
+    gint16 out[] = { 1, 1, 3, 3 };
     GstCaps *in_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
     GstCaps *out_caps = get_int_mc_caps (2, "BYTE_ORDER", 16, 16, TRUE, FALSE);
     GstAudioChannelPosition in_layout[2] =
@@ -1155,7 +1164,7 @@ GST_START_TEST (test_channel_remapping)
   /* gint16 to gint16 with 1 channel and non-standard layout */
   {
     gint16 in[] = { 1, 2, 3, 4 };
-    gint16 out[] = { -1, -2, -3, -4 };
+    gint16 out[] = { 1, 2, 3, 4 };
     GstCaps *in_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
     GstCaps *out_caps = get_int_mc_caps (1, "BYTE_ORDER", 16, 16, TRUE, FALSE);
     GstAudioChannelPosition in_layout[1] =
