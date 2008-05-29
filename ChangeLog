@@ -1,3 +1,11 @@
+2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstelement.c:
+	* gst/gstelement.h:
+	Deprecated gst_element_get_pad() as it can't be used sanely. It's not
+	clear of the reference to the resulting pad must be released later
+	or not, resulting in possible leaks. Fixes bug #533865.
+
 2008-05-28  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: José Alburquerque <jaalburqu at svn dot gnome dot org>

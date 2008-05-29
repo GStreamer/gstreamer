@@ -1003,13 +1003,15 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
  * Retrieves a pad from @element by name. Tries gst_element_get_static_pad()
  * first, then gst_element_get_request_pad().
  *
- * <note>Usage of this function is not recommended as it is unclear if the reference
+ * Deprecated: This function is deprecated as it's unclear if the reference
  * to the result pad should be released with gst_object_unref() in case of a static pad
- * or gst_element_release_request_pad() in case of a request pad.</note>
+ * or gst_element_release_request_pad() in case of a request pad.
+ * Use gst_element_get_static_pad() or gst_element_get_request_pad() instead.
  *
  * Returns: the #GstPad if found, otherwise %NULL. Unref or Release after usage,
  * depending on the type of the pad.
  */
+#ifndef GST_REMOVE_DEPRECATED
 GstPad *
 gst_element_get_pad (GstElement * element, const gchar * name)
 {
@@ -1024,6 +1026,7 @@ gst_element_get_pad (GstElement * element, const gchar * name)
 
   return pad;
 }
+#endif /* GST_REMOVE_DEPRECATED */
 
 static GstIteratorItem
 iterate_pad (GstIterator * it, GstPad * pad)

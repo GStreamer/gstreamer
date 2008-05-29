@@ -601,7 +601,9 @@ gboolean		gst_element_add_pad		(GstElement *element, GstPad *pad);
 gboolean		gst_element_remove_pad		(GstElement *element, GstPad *pad);
 void			gst_element_no_more_pads	(GstElement *element);
 
+#ifndef GST_DISABLE_DEPRECATED
 GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);
+#endif /* GST_DISABLE_DEPRECATED */
 GstPad*			gst_element_get_static_pad	(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_request_pad	(GstElement *element, const gchar *name);
 void			gst_element_release_request_pad	(GstElement *element, GstPad *pad);
