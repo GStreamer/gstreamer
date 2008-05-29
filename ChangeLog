@@ -1,5 +1,11 @@
 2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/elements/mplex.c: (setup_src_pad),
+	(teardown_src_pad):
+	Don't use the deprecated gst_element_get_pad().
+
+2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* examples/directfb/gstdfb.c: (main):
 	Don't use the deprecated gst_element_get_pad().
 
