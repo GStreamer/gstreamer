@@ -267,20 +267,30 @@ gst_channel_mix_fill_one_other (gfloat ** matrix,
   }
 
   /* src has left & dst has center => put into center */
-  if (from_idx[0] != -1 && to_idx[1] != -1) {
+  if (from_idx[0] != -1 && to_idx[1] != -1 && from_idx[1] != -1) {
+    matrix[from_idx[0]][to_idx[1]] = 0.5 * ratio;
+  } else if (from_idx[0] != -1 && to_idx[1] != -1 && from_idx[1] == -1) {
     matrix[from_idx[0]][to_idx[1]] = ratio;
   }
+
   /* src has right & dst has center => put into center */
-  if (from_idx[2] != -1 && to_idx[1] != -1) {
+  if (from_idx[2] != -1 && to_idx[1] != -1 && from_idx[1] != -1) {
+    matrix[from_idx[2]][to_idx[1]] = 0.5 * ratio;
+  } else if (from_idx[2] != -1 && to_idx[1] != -1 && from_idx[1] == -1) {
     matrix[from_idx[2]][to_idx[1]] = ratio;
   }
 
   /* src has center & dst has left => passthrough */
-  if (from_idx[1] != -1 && to_idx[0] != -1) {
+  if (from_idx[1] != -1 && to_idx[0] != -1 && from_idx[0] != -1) {
+    matrix[from_idx[1]][to_idx[0]] = 0.5 * ratio;
+  } else if (from_idx[1] != -1 && to_idx[0] != -1 && from_idx[0] == -1) {
     matrix[from_idx[1]][to_idx[0]] = ratio;
   }
+
   /* src has center & dst has right => passthrough */
-  if (from_idx[1] != -1 && to_idx[2] != -1) {
+  if (from_idx[1] != -1 && to_idx[2] != -1 && from_idx[2] != -1) {
+    matrix[from_idx[1]][to_idx[2]] = 0.5 * ratio;
+  } else if (from_idx[1] != -1 && to_idx[2] != -1 && from_idx[2] == -1) {
     matrix[from_idx[1]][to_idx[2]] = ratio;
   }
 }

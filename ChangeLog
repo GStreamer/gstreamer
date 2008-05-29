@@ -1,5 +1,13 @@
 2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/audioconvert/gstchannelmix.c:
+	(gst_channel_mix_fill_one_other):
+	If mixing left or right to center (or the other way around) only take
+	the complete value if we don't already have the original position in
+	the source.
+
+2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst-libs/gst/audio/multichannel.c:
 	(gst_audio_check_channel_positions),
 	(gst_audio_set_structure_channel_positions_list),
