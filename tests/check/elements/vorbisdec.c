@@ -94,47 +94,6 @@ cleanup_vorbisdec (GstElement * vorbisdec)
   gst_check_teardown_element (vorbisdec);
 }
 
-GST_START_TEST (test_wrong_channels_identification_header)
-{
-  GstElement *vorbisdec;
-  GstBuffer *inbuffer;
-  GstBus *bus;
-  GstMessage *message;
-
-  vorbisdec = setup_vorbisdec ();
-  fail_unless (gst_element_set_state (vorbisdec,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
-  bus = gst_bus_new ();
-
-  inbuffer = gst_buffer_new_and_alloc (30);
-  memcpy (GST_BUFFER_DATA (inbuffer), identification_header, 30);
-  /* set the channel count to 7, which is not supported */
-  GST_BUFFER_DATA (inbuffer)[11] = 7;
-  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  gst_buffer_ref (inbuffer);
-
-  gst_element_set_bus (vorbisdec, bus);
-  /* pushing gives away my reference ... */
-  fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_ERROR);
-  /* ... and nothing ends up on the global buffer list */
-  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  gst_buffer_unref (inbuffer);
-  fail_unless_equals_int (g_list_length (buffers), 0);
-
-  fail_if ((message = gst_bus_pop (bus)) == NULL);
-  fail_unless_message_error (message, STREAM, NOT_IMPLEMENTED);
-  gst_message_unref (message);
-  gst_element_set_bus (vorbisdec, NULL);
-
-  /* cleanup */
-  gst_object_unref (GST_OBJECT (bus));
-  cleanup_vorbisdec (vorbisdec);
-}
-
-GST_END_TEST;
-
-
 GST_START_TEST (test_empty_identification_header)
 {
   GstElement *vorbisdec;
@@ -371,7 +330,6 @@ vorbisdec_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_empty_identification_header);
-  tcase_add_test (tc_chain, test_wrong_channels_identification_header);
   tcase_add_test (tc_chain, test_identification_header);
   tcase_add_test (tc_chain, test_empty_vorbis_packet);
 

@@ -1,5 +1,11 @@
 2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/elements/vorbisdec.c: (vorbisdec_suite):
+	Remove wrong_channels_identification_header unit test as we now
+	support 7 (and more channels).
+
+2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/audioconvert/gstchannelmix.c:
 	(gst_channel_mix_fill_one_other):
 	If mixing left or right to center (or the other way around) only take
