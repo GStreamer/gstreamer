@@ -349,8 +349,8 @@ main (int argc, char *argv[])
     gst_element_link_many (v_queue, v_scale, cs, v_sink, NULL);
     gst_element_link_many (a_queue, conv, a_sink, NULL);
 
-    v_pad = gst_element_get_pad (v_queue, "sink");
-    a_pad = gst_element_get_pad (a_queue, "sink");
+    v_pad = gst_element_get_static_pad (v_queue, "sink");
+    a_pad = gst_element_get_static_pad (a_queue, "sink");
 
     setup_dynamic_link (decode, NULL, v_pad, NULL);
     setup_dynamic_link (decode, NULL, a_pad, NULL);
