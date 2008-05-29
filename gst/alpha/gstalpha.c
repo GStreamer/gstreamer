@@ -81,6 +81,8 @@ struct _GstAlpha
 
   gfloat angle;
   gfloat noise_level;
+  guint black_sensitivity;
+  guint white_sensitivity;
 
   gfloat y;                     /* chroma color */
   gint8 cb, cr;
@@ -121,18 +123,22 @@ enum
 #define DEFAULT_TARGET_B 0
 #define DEFAULT_ANGLE 20.0
 #define DEFAULT_NOISE_LEVEL 2.0
+#define DEFAULT_BLACK_SENSITIVITY 100
+#define DEFAULT_WHITE_SENSITIVITY 100
 
 enum
 {
-  ARG_0,
-  ARG_METHOD,
-  ARG_ALPHA,
-  ARG_TARGET_R,
-  ARG_TARGET_G,
-  ARG_TARGET_B,
-  ARG_ANGLE,
-  ARG_NOISE_LEVEL,
-  /* FILL ME */
+  PROP_0,
+  PROP_METHOD,
+  PROP_ALPHA,
+  PROP_TARGET_R,
+  PROP_TARGET_G,
+  PROP_TARGET_B,
+  PROP_ANGLE,
+  PROP_NOISE_LEVEL,
+  PROP_BLACK_SENSITIVITY,
+  PROP_WHITE_SENSITIVITY,
+  PROP_LAST
 };
 
 static GstStaticPadTemplate gst_alpha_src_template =
@@ -216,34 +222,45 @@ gst_alpha_class_init (GstAlphaClass * klass)
   gobject_class->set_property = gst_alpha_set_property;
   gobject_class->get_property = gst_alpha_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METHOD,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_METHOD,
       g_param_spec_enum ("method", "Method",
           "How the alpha channels should be created", GST_TYPE_ALPHA_METHOD,
           DEFAULT_METHOD, (GParamFlags) G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALPHA,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "The value for the alpha channel",
           0.0, 1.0, DEFAULT_ALPHA,
           (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TARGET_R,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TARGET_R,
       g_param_spec_uint ("target_r", "Target Red", "The Red target", 0, 255,
           DEFAULT_TARGET_R,
           (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TARGET_G,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TARGET_G,
       g_param_spec_uint ("target_g", "Target Green", "The Green target", 0, 255,
           DEFAULT_TARGET_G,
           (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TARGET_B,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TARGET_B,
       g_param_spec_uint ("target_b", "Target Blue", "The Blue target", 0, 255,
           DEFAULT_TARGET_B,
           (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ANGLE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ANGLE,
       g_param_spec_float ("angle", "Angle", "Size of the colorcube to change",
           0.0, 90.0, DEFAULT_ANGLE,
           (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NOISE_LEVEL,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_NOISE_LEVEL,
       g_param_spec_float ("noise_level", "Noise Level", "Size of noise radius",
           0.0, 64.0, DEFAULT_NOISE_LEVEL,
           (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_BLACK_SENSITIVITY, g_param_spec_uint ("black-sensitivity",
+          "Black Sensitivity", "Sensitivity to dark colors", 0, 128,
+          DEFAULT_BLACK_SENSITIVITY,
+          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_WHITE_SENSITIVITY, g_param_spec_uint ("white-sensitivity",
+          "Sensitivity", "Sensitivity to bright colors", 0, 128,
+          DEFAULT_WHITE_SENSITIVITY,
+          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
 
   btrans_class->start = GST_DEBUG_FUNCPTR (gst_alpha_start);
   btrans_class->transform = GST_DEBUG_FUNCPTR (gst_alpha_transform);
@@ -262,6 +279,8 @@ gst_alpha_init (GstAlpha * alpha, GstAlphaClass * klass)
   alpha->target_b = DEFAULT_TARGET_B;
   alpha->angle = DEFAULT_ANGLE;
   alpha->noise_level = DEFAULT_NOISE_LEVEL;
+  alpha->black_sensitivity = DEFAULT_BLACK_SENSITIVITY;
+  alpha->white_sensitivity = DEFAULT_WHITE_SENSITIVITY;
 }
 
 /* do we need this function? */
@@ -276,7 +295,7 @@ gst_alpha_set_property (GObject * object, guint prop_id,
   alpha = GST_ALPHA (object);
 
   switch (prop_id) {
-    case ARG_METHOD:
+    case PROP_METHOD:
       alpha->method = g_value_get_enum (value);
       switch (alpha->method) {
         case ALPHA_METHOD_GREEN:
@@ -294,28 +313,34 @@ gst_alpha_set_property (GObject * object, guint prop_id,
       }
       gst_alpha_init_params (alpha);
       break;
-    case ARG_ALPHA:
+    case PROP_ALPHA:
       alpha->alpha = g_value_get_double (value);
       break;
-    case ARG_TARGET_R:
+    case PROP_TARGET_R:
       alpha->target_r = g_value_get_uint (value);
       gst_alpha_init_params (alpha);
       break;
-    case ARG_TARGET_G:
+    case PROP_TARGET_G:
       alpha->target_g = g_value_get_uint (value);
       gst_alpha_init_params (alpha);
       break;
-    case ARG_TARGET_B:
+    case PROP_TARGET_B:
       alpha->target_b = g_value_get_uint (value);
       gst_alpha_init_params (alpha);
       break;
-    case ARG_ANGLE:
+    case PROP_ANGLE:
       alpha->angle = g_value_get_float (value);
       gst_alpha_init_params (alpha);
       break;
-    case ARG_NOISE_LEVEL:
+    case PROP_NOISE_LEVEL:
       alpha->noise_level = g_value_get_float (value);
       gst_alpha_init_params (alpha);
+      break;
+    case PROP_BLACK_SENSITIVITY:
+      alpha->black_sensitivity = g_value_get_uint (value);
+      break;
+    case PROP_WHITE_SENSITIVITY:
+      alpha->white_sensitivity = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -333,26 +358,32 @@ gst_alpha_get_property (GObject * object, guint prop_id, GValue * value,
   alpha = GST_ALPHA (object);
 
   switch (prop_id) {
-    case ARG_METHOD:
+    case PROP_METHOD:
       g_value_set_enum (value, alpha->method);
       break;
-    case ARG_ALPHA:
+    case PROP_ALPHA:
       g_value_set_double (value, alpha->alpha);
       break;
-    case ARG_TARGET_R:
+    case PROP_TARGET_R:
       g_value_set_uint (value, alpha->target_r);
       break;
-    case ARG_TARGET_G:
+    case PROP_TARGET_G:
       g_value_set_uint (value, alpha->target_g);
       break;
-    case ARG_TARGET_B:
+    case PROP_TARGET_B:
       g_value_set_uint (value, alpha->target_b);
       break;
-    case ARG_ANGLE:
+    case PROP_ANGLE:
       g_value_set_float (value, alpha->angle);
       break;
-    case ARG_NOISE_LEVEL:
+    case PROP_NOISE_LEVEL:
       g_value_set_float (value, alpha->noise_level);
+      break;
+    case PROP_BLACK_SENSITIVITY:
+      g_value_set_uint (value, alpha->black_sensitivity);
+      break;
+    case PROP_WHITE_SENSITIVITY:
+      g_value_set_uint (value, alpha->white_sensitivity);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -525,6 +556,10 @@ gst_alpha_chroma_key_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
   gint x, z, u, v, y, a;
   gint tmp, tmp1;
   gint x1, y1;
+  gint smin, smax;
+
+  smin = 128 - alpha->black_sensitivity;
+  smax = 128 + alpha->white_sensitivity;
 
   src1 = src;
   dest1 = dest;
@@ -536,66 +571,71 @@ gst_alpha_chroma_key_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
       u = *src1++ - 128;
       v = *src1++ - 128;
 
-      /* Convert foreground to XZ coords where X direction is defined by
-         the key color */
-      tmp = ((short) u * alpha->cb + (short) v * alpha->cr) >> 7;
-      x = CLAMP (tmp, -128, 127);
-      tmp = ((short) v * alpha->cb - (short) u * alpha->cr) >> 7;
-      z = CLAMP (tmp, -128, 127);
-
-      /* WARNING: accept angle should never be set greater than "somewhat less
-         than 90 degrees" to avoid dealing with negative/infinite tg. In reality,
-         80 degrees should be enough if foreground is reasonable. If this seems
-         to be a problem, go to alternative ways of checking point position
-         (scalar product or line equations). This angle should not be too small
-         either to avoid infinite ctg (used to suppress foreground without use of
-         division) */
-
-      tmp = ((short) (x) * alpha->accept_angle_tg) >> 4;
-      tmp = MIN (tmp, 127);
-
-      if (abs (z) > tmp) {
-        /* keep foreground Kfg = 0 */
+      if (y < smin || y > smax) {
+        /* too dark or too bright, keep alpha */
         b_alpha = a;
       } else {
-        /* Compute Kfg (implicitly) and Kbg, suppress foreground in XZ coord
-           according to Kfg */
-        tmp = ((short) (z) * alpha->accept_angle_ctg) >> 4;
-        tmp = CLAMP (tmp, -128, 127);
-        x1 = abs (tmp);
-        y1 = z;
+        /* Convert foreground to XZ coords where X direction is defined by
+           the key color */
+        tmp = ((short) u * alpha->cb + (short) v * alpha->cr) >> 7;
+        x = CLAMP (tmp, -128, 127);
+        tmp = ((short) v * alpha->cb - (short) u * alpha->cr) >> 7;
+        z = CLAMP (tmp, -128, 127);
 
-        tmp1 = x - x1;
-        tmp1 = MAX (tmp1, 0);
-        b_alpha = (((unsigned char) (tmp1) *
-                (unsigned short) (alpha->one_over_kc)) / 2);
-        b_alpha = 255 - CLAMP (b_alpha, 0, 255);
-        b_alpha = (a * b_alpha) >> 8;
+        /* WARNING: accept angle should never be set greater than "somewhat less
+           than 90 degrees" to avoid dealing with negative/infinite tg. In reality,
+           80 degrees should be enough if foreground is reasonable. If this seems
+           to be a problem, go to alternative ways of checking point position
+           (scalar product or line equations). This angle should not be too small
+           either to avoid infinite ctg (used to suppress foreground without use of
+           division) */
 
-        tmp = ((unsigned short) (tmp1) * alpha->kfgy_scale) >> 4;
-        tmp1 = MIN (tmp, 255);
+        tmp = ((short) (x) * alpha->accept_angle_tg) >> 4;
+        tmp = MIN (tmp, 127);
 
-        tmp = y - tmp1;
-        y = MAX (tmp, 0);
+        if (abs (z) > tmp) {
+          /* keep foreground Kfg = 0 */
+          b_alpha = a;
+        } else {
+          /* Compute Kfg (implicitly) and Kbg, suppress foreground in XZ coord
+             according to Kfg */
+          tmp = ((short) (z) * alpha->accept_angle_ctg) >> 4;
+          tmp = CLAMP (tmp, -128, 127);
+          x1 = abs (tmp);
+          y1 = z;
 
-        /* Convert suppressed foreground back to CbCr */
-        tmp = ((char) (x1) * (short) (alpha->cb) -
-            (char) (y1) * (short) (alpha->cr)) >> 7;
-        u = CLAMP (tmp, -128, 127);
+          tmp1 = x - x1;
+          tmp1 = MAX (tmp1, 0);
+          b_alpha = (((unsigned char) (tmp1) *
+                  (unsigned short) (alpha->one_over_kc)) / 2);
+          b_alpha = 255 - CLAMP (b_alpha, 0, 255);
+          b_alpha = (a * b_alpha) >> 8;
 
-        tmp = ((char) (x1) * (short) (alpha->cr) +
-            (char) (y1) * (short) (alpha->cb)) >> 7;
-        v = CLAMP (tmp, -128, 127);
+          tmp = ((unsigned short) (tmp1) * alpha->kfgy_scale) >> 4;
+          tmp1 = MIN (tmp, 255);
 
-        /* Deal with noise. For now, a circle around the key color with
-           radius of noise_level treated as exact key color. Introduces
-           sharp transitions.
-         */
-        tmp = z * (short) (z) + (x - alpha->kg) * (short) (x - alpha->kg);
-        tmp = MIN (tmp, 0xffff);
+          tmp = y - tmp1;
+          y = MAX (tmp, 0);
 
-        if (tmp < alpha->noise_level * alpha->noise_level) {
-          b_alpha = 0;
+          /* Convert suppressed foreground back to CbCr */
+          tmp = ((char) (x1) * (short) (alpha->cb) -
+              (char) (y1) * (short) (alpha->cr)) >> 7;
+          u = CLAMP (tmp, -128, 127);
+
+          tmp = ((char) (x1) * (short) (alpha->cr) +
+              (char) (y1) * (short) (alpha->cb)) >> 7;
+          v = CLAMP (tmp, -128, 127);
+
+          /* Deal with noise. For now, a circle around the key color with
+             radius of noise_level treated as exact key color. Introduces
+             sharp transitions.
+           */
+          tmp = z * (short) (z) + (x - alpha->kg) * (short) (x - alpha->kg);
+          tmp = MIN (tmp, 0xffff);
+
+          if (tmp < alpha->noise_level * alpha->noise_level) {
+            b_alpha = 0;
+          }
         }
       }
 
@@ -619,8 +659,11 @@ gst_alpha_chromakey_row_i420 (GstAlpha * alpha, guint8 * dest1, guint8 * dest2,
   gint x, z, u, v, y11, y12, y21, y22, a;
   gint tmp, tmp1;
   gint x1, y1;
+  gint smin, smax;
 
   a = 255 * alpha->alpha;
+  smin = 128 - alpha->black_sensitivity;
+  smax = 128 + alpha->white_sensitivity;
 
   for (xpos = 0; xpos < width / 2; xpos++) {
     y11 = *srcY1++;
@@ -630,73 +673,80 @@ gst_alpha_chromakey_row_i420 (GstAlpha * alpha, guint8 * dest1, guint8 * dest2,
     u = *srcU++ - 128;
     v = *srcV++ - 128;
 
-    /* Convert foreground to XZ coords where X direction is defined by
-       the key color */
-    tmp = ((short) u * alpha->cb + (short) v * alpha->cr) >> 7;
-    x = CLAMP (tmp, -128, 127);
-    tmp = ((short) v * alpha->cb - (short) u * alpha->cr) >> 7;
-    z = CLAMP (tmp, -128, 127);
-
-    /* WARNING: accept angle should never be set greater than "somewhat less
-       than 90 degrees" to avoid dealing with negative/infinite tg. In reality,
-       80 degrees should be enough if foreground is reasonable. If this seems
-       to be a problem, go to alternative ways of checking point position
-       (scalar product or line equations). This angle should not be too small
-       either to avoid infinite ctg (used to suppress foreground without use of
-       division) */
-
-    tmp = ((short) (x) * alpha->accept_angle_tg) >> 4;
-    tmp = MIN (tmp, 127);
-
-    if (abs (z) > tmp) {
-      /* keep foreground Kfg = 0 */
+    if (y11 < smin || y11 > smax ||
+        y12 < smin || y12 > smax ||
+        y21 < smin || y21 > smax || y22 < smin || y22 > smax) {
+      /* too dark or too bright, make opaque */
       b_alpha = 255;
     } else {
-      /* Compute Kfg (implicitly) and Kbg, suppress foreground in XZ coord
-         according to Kfg */
-      tmp = ((short) (z) * alpha->accept_angle_ctg) >> 4;
-      tmp = CLAMP (tmp, -128, 127);
-      x1 = abs (tmp);
-      y1 = z;
+      /* Convert foreground to XZ coords where X direction is defined by
+         the key color */
+      tmp = ((short) u * alpha->cb + (short) v * alpha->cr) >> 7;
+      x = CLAMP (tmp, -128, 127);
+      tmp = ((short) v * alpha->cb - (short) u * alpha->cr) >> 7;
+      z = CLAMP (tmp, -128, 127);
 
-      tmp1 = x - x1;
-      tmp1 = MAX (tmp1, 0);
-      b_alpha = (((unsigned char) (tmp1) *
-              (unsigned short) (alpha->one_over_kc)) / 2);
-      b_alpha = 255 - CLAMP (b_alpha, 0, 255);
-      b_alpha = (a * b_alpha) >> 8;
+      /* WARNING: accept angle should never be set greater than "somewhat less
+         than 90 degrees" to avoid dealing with negative/infinite tg. In reality,
+         80 degrees should be enough if foreground is reasonable. If this seems
+         to be a problem, go to alternative ways of checking point position
+         (scalar product or line equations). This angle should not be too small
+         either to avoid infinite ctg (used to suppress foreground without use of
+         division) */
 
-      tmp = ((unsigned short) (tmp1) * alpha->kfgy_scale) >> 4;
-      tmp1 = MIN (tmp, 255);
+      tmp = ((short) (x) * alpha->accept_angle_tg) >> 4;
+      tmp = MIN (tmp, 127);
 
-      tmp = y11 - tmp1;
-      y11 = MAX (tmp, 0);
-      tmp = y12 - tmp1;
-      y12 = MAX (tmp, 0);
-      tmp = y21 - tmp1;
-      y21 = MAX (tmp, 0);
-      tmp = y22 - tmp1;
-      y22 = MAX (tmp, 0);
+      if (abs (z) > tmp) {
+        /* keep foreground Kfg = 0 */
+        b_alpha = 255;
+      } else {
+        /* Compute Kfg (implicitly) and Kbg, suppress foreground in XZ coord
+           according to Kfg */
+        tmp = ((short) (z) * alpha->accept_angle_ctg) >> 4;
+        tmp = CLAMP (tmp, -128, 127);
+        x1 = abs (tmp);
+        y1 = z;
 
-      /* Convert suppressed foreground back to CbCr */
-      tmp = ((char) (x1) * (short) (alpha->cb) -
-          (char) (y1) * (short) (alpha->cr)) >> 7;
-      u = CLAMP (tmp, -128, 127);
+        tmp1 = x - x1;
+        tmp1 = MAX (tmp1, 0);
+        b_alpha = (((unsigned char) (tmp1) *
+                (unsigned short) (alpha->one_over_kc)) / 2);
+        b_alpha = 255 - CLAMP (b_alpha, 0, 255);
+        b_alpha = (a * b_alpha) >> 8;
 
-      tmp = ((char) (x1) * (short) (alpha->cr) +
-          (char) (y1) * (short) (alpha->cb)) >> 7;
-      v = CLAMP (tmp, -128, 127);
+        tmp = ((unsigned short) (tmp1) * alpha->kfgy_scale) >> 4;
+        tmp1 = MIN (tmp, 255);
 
-      /* Deal with noise. For now, a circle around the key color with
-         radius of noise_level treated as exact key color. Introduces
-         sharp transitions.
-       */
-      tmp = z * (short) (z) + (x - alpha->kg) * (short) (x - alpha->kg);
-      tmp = MIN (tmp, 0xffff);
+        tmp = y11 - tmp1;
+        y11 = MAX (tmp, 0);
+        tmp = y12 - tmp1;
+        y12 = MAX (tmp, 0);
+        tmp = y21 - tmp1;
+        y21 = MAX (tmp, 0);
+        tmp = y22 - tmp1;
+        y22 = MAX (tmp, 0);
 
-      if (tmp < alpha->noise_level * alpha->noise_level) {
-        /* Uncomment this if you want total suppression within the noise circle */
-        b_alpha = 0;
+        /* Convert suppressed foreground back to CbCr */
+        tmp = ((char) (x1) * (short) (alpha->cb) -
+            (char) (y1) * (short) (alpha->cr)) >> 7;
+        u = CLAMP (tmp, -128, 127);
+
+        tmp = ((char) (x1) * (short) (alpha->cr) +
+            (char) (y1) * (short) (alpha->cb)) >> 7;
+        v = CLAMP (tmp, -128, 127);
+
+        /* Deal with noise. For now, a circle around the key color with
+           radius of noise_level treated as exact key color. Introduces
+           sharp transitions.
+         */
+        tmp = z * (short) (z) + (x - alpha->kg) * (short) (x - alpha->kg);
+        tmp = MIN (tmp, 0xffff);
+
+        if (tmp < alpha->noise_level * alpha->noise_level) {
+          /* Uncomment this if you want total suppression within the noise circle */
+          b_alpha = 0;
+        }
       }
     }
 

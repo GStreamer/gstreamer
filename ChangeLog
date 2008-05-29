@@ -1,3 +1,15 @@
+2008-05-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Based on patch by: Sebastian Keller <sebastian-keller at gmx dot de>
+
+	* gst/alpha/gstalpha.c: (gst_alpha_class_init), (gst_alpha_init),
+	(gst_alpha_set_property), (gst_alpha_get_property),
+	(gst_alpha_chroma_key_ayuv), (gst_alpha_chromakey_row_i420):
+	Try to skip pixels or areas that are too dark or too bright for us to do
+	meaningfull color detection.
+	Added properties to control the sensitivity to light and darkness.
+	Added some small cleanups. Fixes #512345.
+
 2008-05-28  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/plugins/.cvsignore:
