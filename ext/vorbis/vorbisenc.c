@@ -241,7 +241,7 @@ gst_vorbis_enc_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static const GstAudioChannelPosition vorbischannelpositions[][6] = {
+static const GstAudioChannelPosition vorbischannelpositions[][8] = {
   {                             /* Mono */
       GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
   {                             /* Stereo */
@@ -272,6 +272,25 @@ static const GstAudioChannelPosition vorbischannelpositions[][6] = {
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_LFE,
       },
+  {                             /* Not defined by spec, GStreamer default */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+      },
+  {                             /* Not defined by spec, GStreamer default */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+      },
 };
 static GstCaps *
 gst_vorbis_enc_generate_sink_caps (void)
@@ -291,7 +310,7 @@ gst_vorbis_enc_generate_sink_caps (void)
           "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32,
           NULL));
 
-  for (i = 3; i <= 6; i++) {
+  for (i = 3; i <= 8; i++) {
     GValue chanpos = { 0 };
     GValue pos = { 0 };
     GstStructure *structure;
@@ -317,7 +336,7 @@ gst_vorbis_enc_generate_sink_caps (void)
 
   gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw-float",
           "rate", GST_TYPE_INT_RANGE, 1, 200000,
-          "channels", GST_TYPE_INT_RANGE, 7, 256,
+          "channels", GST_TYPE_INT_RANGE, 9, 256,
           "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32,
           NULL));
 

@@ -618,8 +618,49 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
       pos = pos6;
       break;
     }
-    default:
-      goto channel_count_error;
+      /* FIXME: for >6 channels the layout is not defined by the Vorbis
+       * spec. These are the gstreamer "defaults" for 7/8 channels and
+       * NONE layouts for more channels
+       */
+    case 7:{
+      static const GstAudioChannelPosition pos7[] = {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+      };
+      pos = pos7;
+    }
+    case 8:{
+      static const GstAudioChannelPosition pos8[] = {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+      };
+
+      pos = pos8;
+    }
+    default:{
+      gint i;
+      GstAudioChannelPosition *posn =
+          g_new (GstAudioChannelPosition, vd->vi.channels);
+
+      GST_ELEMENT_WARNING (GST_ELEMENT (vd), STREAM, DECODE,
+          (NULL), ("Using NONE channel layout for more than 8 channels"));
+
+      for (i = 0; i < vd->vi.channels; i++)
+        posn[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+
+      pos = posn;
+    }
   }
 
   caps = gst_caps_new_simple ("audio/x-raw-float",
@@ -630,18 +671,15 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
   if (pos) {
     gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
   }
+
+  if (vd->vi.channels > 8) {
+    g_free ((GstAudioChannelPosition *) pos);
+  }
+
   gst_pad_set_caps (vd->srcpad, caps);
   gst_caps_unref (caps);
 
   return GST_FLOW_OK;
-
-  /* ERROR */
-channel_count_error:
-  {
-    GST_ELEMENT_ERROR (vd, STREAM, NOT_IMPLEMENTED, (NULL),
-        ("Unsupported channel count %d", vd->vi.channels));
-    return GST_FLOW_ERROR;
-  }
 }
 
 static GstFlowReturn
