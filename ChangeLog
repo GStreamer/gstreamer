@@ -1,5 +1,10 @@
 2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* win32/common/libgstaudio.def:
+	Add gst_audio_clock_reset to the list of exported symbols.
+
+2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/elements/vorbisdec.c: (vorbisdec_suite):
 	Remove wrong_channels_identification_header unit test as we now
 	support 7 (and more channels).

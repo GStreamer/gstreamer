@@ -3,6 +3,7 @@ EXPORTS
 	gst_audio_channel_position_get_type
 	gst_audio_clock_get_type
 	gst_audio_clock_new
+	gst_audio_clock_reset
 	gst_audio_default_registry_mixer_filter
 	gst_audio_duration_from_pad_buffer
 	gst_audio_filter_class_add_pad_templates
