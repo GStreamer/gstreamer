@@ -45,8 +45,6 @@ struct _GstBaseRTPPayloadPrivate
   gboolean seqnum_offset_random;
   gboolean ssrc_random;
   guint16 next_seqnum;
-
-  GstClockTime rt_base;
 };
 
 /* BaseRTPPayload signals and args */
@@ -661,15 +659,6 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
     rtime = gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
         timestamp);
 
-    /* take first timestamp as base, we want to calculate the RTP timestamp
-     * starting from the ts_base */
-    if (priv->rt_base == -1) {
-      priv->rt_base = rtime;
-      GST_LOG_OBJECT (payload, "first timestamp %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (rtime));
-    }
-    rtime -= priv->rt_base;
-
     rtime = gst_util_uint64_scale_int (rtime, payload->clock_rate, GST_SECOND);
 
     /* add running_time in clock-rate units to the base timestamp */
@@ -837,8 +826,6 @@ gst_basertppayload_change_state (GstElement * element,
         basertppayload->ts_base = g_rand_int (basertppayload->ts_rand);
       else
         basertppayload->ts_base = basertppayload->ts_offset;
-
-      priv->rt_base = -1;
       break;
     default:
       break;

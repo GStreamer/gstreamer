@@ -1,3 +1,13 @@
+2008-05-30  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_push),
+	(gst_basertppayload_change_state):
+	Simply converting the running time into an RTP timestamp by scaling it
+	based on the clock-rate is good enough for making an RTP timestamp. This
+	has the added benefit that we can later on expose a property with the
+	RTP timestamp of running time 0, as is needed for RTSP servers to
+	generate the response of the PLAY request.
+
 2008-05-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/audioconvert/gstaudioconvert.c:
