@@ -1,3 +1,16 @@
+2008-05-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/audioconvert/gstaudioconvert.c:
+	(structure_has_fixed_channel_positions),
+	(gst_audio_convert_transform_caps):
+	Allow up to 11 positioned channels now that audioconvert can handle
+	this but add no default positions for > 8 channels.
+	
+	* tests/check/elements/audioconvert.c: (GST_START_TEST):
+	Add some unit tests for the above change: Test conversion of
+	11 positioned channels to stereo and the other way around, test
+	conversion of 15 unpositioned channels in different ways.
+
 2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* win32/common/libgstaudio.def:

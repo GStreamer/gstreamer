@@ -548,20 +548,18 @@ structure_has_fixed_channel_positions (GstStructure * s,
   if (!gst_structure_get_int (s, "channels", &channels))
     return FALSE;               /* probably a range */
 
-  if (channels > 8) {
-    GST_LOG ("%d channels, undefined channel positions are implicit", channels);
+  val = gst_structure_get_value (s, "channel-positions");
+  if ((val == NULL || !gst_value_is_fixed (val)) && channels <= 8) {
+    GST_LOG ("no or unfixed channel-positions in %" GST_PTR_FORMAT, s);
+    return FALSE;
+  } else if (val == NULL || !gst_value_is_fixed (val)) {
+    GST_LOG ("implicit undefined channel-positions");
     *unpositioned_layout = TRUE;
     return TRUE;
   }
 
-  val = gst_structure_get_value (s, "channel-positions");
-  if (val == NULL || !gst_value_is_fixed (val)) {
-    GST_LOG ("no or unfixed channel-positions in %" GST_PTR_FORMAT, s);
-    return FALSE;
-  }
-
   pos = gst_audio_get_channel_positions (s);
-  if ((pos && pos[0] == GST_AUDIO_CHANNEL_POSITION_NONE) || channels > 8) {
+  if (pos && pos[0] == GST_AUDIO_CHANNEL_POSITION_NONE) {
     GST_LOG ("fixed undefined channel-positions in %" GST_PTR_FORMAT, s);
     *unpositioned_layout = TRUE;
   } else {
@@ -656,16 +654,18 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
       allow_mixing = (unpositioned == FALSE);
   }
 
-  if (!allow_mixing || channels == 8) {
+  if (!allow_mixing) {
     gst_structure_set (s, "channels", G_TYPE_INT, channels, NULL);
     if (gst_structure_has_field (structure, "channel-positions"))
       gst_structure_set_value (s, "channel-positions",
           gst_structure_get_value (structure, "channel-positions"));
   } else {
     if (channels == 0)
-      gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 8, NULL);
+      gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 11, NULL);
+    else if (channels == 11)
+      gst_structure_set (s, "channels", G_TYPE_INT, 11, NULL);
     else
-      gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, channels, 8, NULL);
+      gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, channels, 11, NULL);
     gst_structure_remove_field (s, "channel-positions");
   }
   gst_caps_append_structure (ret, s);
@@ -696,7 +696,7 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
    */
   s = gst_structure_copy (s);
   if (allow_mixing) {
-    gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 8, NULL);
+    gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 11, NULL);
     gst_structure_remove_field (s, "channel-positions");
   } else {
     /* allow_mixing can only be FALSE if we got a fixed number of channels */
