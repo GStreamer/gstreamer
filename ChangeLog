@@ -1,3 +1,16 @@
+2008-05-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Rob Bradford <rob at robster dot org dot uk>
+
+	* gst/gstregistry.c: (gst_registry_scan_path_level):
+	Don't recurse into .debug directories as some distros install
+	the debugging symbols next to the plugins in .debug directories
+	and dlopen() crashes on them sometimes. Fixes bug #508070.
+
+	Add FIXME for 0.11 to not recurse into directories at all because
+	it's very inconsistent to the behaviour of other PATH environment
+	variables.
+
 2008-05-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times),

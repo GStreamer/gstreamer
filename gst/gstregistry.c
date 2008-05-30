@@ -812,6 +812,16 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
     filename = g_strjoin ("/", path, dirent, NULL);
 
     if (g_file_test (filename, G_FILE_TEST_IS_DIR)) {
+      /* skip the .debug directory, these contain elf files that are not
+       * useful or worse, can crash dlopen () */
+      if (g_str_equal (dirent, ".debug")) {
+        GST_LOG_OBJECT (registry, "found .debug directory, ignoring");
+        g_free (filename);
+        continue;
+      }
+      /* FIXME 0.11: Don't recurse into directories, this behaviour
+       * is inconsistent with other PATH environment variables
+       */
       if (level > 0) {
         GST_LOG_OBJECT (registry, "recursing into directory %s", filename);
         changed |= gst_registry_scan_path_level (registry, filename, level - 1);
