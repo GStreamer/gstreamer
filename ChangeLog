@@ -1,3 +1,10 @@
+2008-05-30  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times),
+	(gst_base_sink_get_position):
+	The reported position must always be smaller than the last seen
+	timestamps (or timestamp + duration for reverse).
+
 2008-05-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Rob Bradford <rob at robster dot org dot uk>

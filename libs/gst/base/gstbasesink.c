@@ -3168,12 +3168,8 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       *cur = time + gst_guint64_to_gdouble (now - base) * rate;
 
       /* never report more than last seen position */
-      if (last != -1) {
-        if (rate < 0.0)
-          *cur = MIN (last, *cur);
-        else
-          *cur = MAX (last, *cur);
-      }
+      if (last != -1)
+        *cur = MIN (last, *cur);
 
       gst_object_unref (clock);
 
