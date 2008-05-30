@@ -60,6 +60,8 @@ struct _GstIirEqualizer
   gpointer history;
   guint history_size;
 
+  gboolean need_new_coefficients;
+
   ProcessFunc process;
 };
 
