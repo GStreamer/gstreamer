@@ -1,3 +1,10 @@
+2008-05-31  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/equalizer/gstiirequalizer.c:
+	(gst_iir_equalizer_transform_ip):
+	Don't clip float/double samples, correctly unset passthrough mode
+	and use better rounding for integer samples.
+
 2008-05-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/equalizer/gstiirequalizer.c:

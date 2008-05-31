@@ -543,7 +543,7 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
 
 /* start of code that is type specific */
 
-#define CREATE_OPTIMIZED_FUNCTIONS(TYPE,BIG_TYPE,MIN_VAL,MAX_VAL)       \
+#define CREATE_OPTIMIZED_FUNCTIONS_INT(TYPE,BIG_TYPE,MIN_VAL,MAX_VAL)   \
 typedef struct {                                                        \
   BIG_TYPE x1, x2;          /* history of input values for a filter */  \
   BIG_TYPE y1, y2;          /* history of output values for a filter */ \
@@ -554,9 +554,9 @@ one_step_ ## TYPE (GstIirEqualizerBand *filter,                         \
     SecondOrderHistory ## TYPE *history, BIG_TYPE input)                \
 {                                                                       \
   /* calculate output */                                                \
-  BIG_TYPE output = filter->a0 * input + filter->a1 * history->x1 +     \
-      filter->a2 * history->x2 + filter->b1 * history->y1 +             \
-      filter->b2 * history->y2;                                         \
+  BIG_TYPE output = floor (filter->a0 * input +                         \
+      filter->a1 * history->x1 + filter->a2 * history->x2 +             \
+      filter->b1 * history->y1 + filter->b2 * history->y2 + 0.5);       \
   /* update history */                                                  \
   history->y2 = history->y1;                                            \
   history->y1 = output;                                                 \
@@ -594,9 +594,59 @@ guint size, guint channels)                                             \
   }                                                                     \
 }
 
-CREATE_OPTIMIZED_FUNCTIONS (gint16, gint32, -32768, 32767);
-CREATE_OPTIMIZED_FUNCTIONS (gfloat, gfloat, -1.0, 1.0);
-CREATE_OPTIMIZED_FUNCTIONS (gdouble, gdouble, -1.0, 1.0);
+#define CREATE_OPTIMIZED_FUNCTIONS(TYPE)       \
+typedef struct {                                                        \
+  TYPE x1, x2;          /* history of input values for a filter */  \
+  TYPE y1, y2;          /* history of output values for a filter */ \
+} SecondOrderHistory ## TYPE;                                           \
+                                                                        \
+static inline TYPE                                                  \
+one_step_ ## TYPE (GstIirEqualizerBand *filter,                         \
+    SecondOrderHistory ## TYPE *history, TYPE input)                \
+{                                                                       \
+  /* calculate output */                                                \
+  TYPE output = filter->a0 * input + filter->a1 * history->x1 +     \
+      filter->a2 * history->x2 + filter->b1 * history->y1 +             \
+      filter->b2 * history->y2;                                         \
+  /* update history */                                                  \
+  history->y2 = history->y1;                                            \
+  history->y1 = output;                                                 \
+  history->x2 = history->x1;                                            \
+  history->x1 = input;                                                  \
+                                                                        \
+  return output;                                                        \
+}                                                                       \
+                                                                        \
+static const guint                                                      \
+history_size_ ## TYPE = sizeof (SecondOrderHistory ## TYPE);            \
+                                                                        \
+static void                                                             \
+gst_iir_equ_process_ ## TYPE (GstIirEqualizer *equ, guint8 *data,       \
+guint size, guint channels)                                             \
+{                                                                       \
+  guint frames = size / channels / sizeof (TYPE);                       \
+  guint i, c, f;                                                        \
+  TYPE cur;                                                         \
+                                                                        \
+  for (i = 0; i < frames; i++) {                                        \
+    for (c = 0; c < channels; c++) {                                    \
+      SecondOrderHistory ## TYPE *history = equ->history;               \
+      cur = *((TYPE *) data);                                           \
+      for (f = 0; f < equ->freq_band_count; f++) {                      \
+        GstIirEqualizerBand *filter = equ->bands[f];                    \
+                                                                        \
+        cur = one_step_ ## TYPE (filter, history, cur);                 \
+        history++;                                                      \
+      }                                                                 \
+      *((TYPE *) data) = (TYPE) cur;                                    \
+      data += sizeof (TYPE);                                            \
+    }                                                                   \
+  }                                                                     \
+}
+
+CREATE_OPTIMIZED_FUNCTIONS_INT (gint16, gint32, -32768, 32767);
+CREATE_OPTIMIZED_FUNCTIONS (gfloat);
+CREATE_OPTIMIZED_FUNCTIONS (gdouble);
 
 static GstFlowReturn
 gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
@@ -607,9 +657,6 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
 
   GstClockTime timestamp;
 
-  if (gst_base_transform_is_passthrough (btrans))
-    return GST_FLOW_OK;
-
   if (G_UNLIKELY (filter->format.channels < 1 || equ->process == NULL))
     return GST_FLOW_NOT_NEGOTIATED;
 
@@ -617,6 +664,9 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
     update_coefficients (equ);
     set_passthrough (equ);
   }
+
+  if (gst_base_transform_is_passthrough (btrans))
+    return GST_FLOW_OK;
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   timestamp =
