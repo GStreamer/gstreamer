@@ -1,6 +1,12 @@
 2008-05-31  Mark Nauwelaerts  <mnauw@users.sf.net>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_class_init):
+	Add a gtk-doc chunk for the new properties to have a Since: indication.
+
+2008-05-31  Mark Nauwelaerts  <mnauw@users.sf.net>
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
 	(gst_base_audio_src_class_init), (gst_base_audio_src_dispose),
 	(gst_base_audio_src_get_property), (gst_base_audio_src_setcaps),
 	(gst_base_audio_src_change_state):

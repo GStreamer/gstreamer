@@ -183,12 +183,26 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
           G_MAXINT64, DEFAULT_LATENCY_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstBaseAudioSrc:actual-buffer-time:
+   *
+   * Actual configured size of audio buffer in microseconds.
+   *
+   * Since: 0.10.20
+   **/
   g_object_class_install_property (gobject_class, PROP_ACTUAL_BUFFER_TIME,
       g_param_spec_int64 ("actual-buffer-time", "Actual Buffer Time",
           "Actual configured size of audio buffer in microseconds",
           DEFAULT_ACTUAL_BUFFER_TIME, G_MAXINT64, DEFAULT_ACTUAL_BUFFER_TIME,
           G_PARAM_READABLE));
 
+  /**
+   * GstBaseAudioSrc:actual-latency-time:
+   *
+   * Actual configured audio latency in microseconds.
+   *
+   * Since: 0.10.20
+   **/
   g_object_class_install_property (gobject_class, PROP_ACTUAL_LATENCY_TIME,
       g_param_spec_int64 ("actual-latency-time", "Actual Latency Time",
           "Actual configured audio latency in microseconds",
