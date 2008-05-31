@@ -1,3 +1,13 @@
+2008-05-31  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	Patch by: Bastien Nocera <hadess at hadess dot net>
+	* gst/qtdemux/qtdemux.c: (qtdemux_tag_add_str),
+	(qtdemux_parse_udta):
+	* gst/qtdemux/qtdemux_fourcc.h:
+	Improve meta-data handling, add 'comment', 'description' and
+	'copyright' tag handling.
+	Fixes #535935
+
 2008-05-31  Julien Moutte  <julien@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_find_keyframe),

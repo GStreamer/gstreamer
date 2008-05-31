@@ -3680,6 +3680,7 @@ qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, GNode * node)
   char *s;
   int len;
   int type;
+  int offset;
 
   data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
   if (data) {
@@ -3696,6 +3697,27 @@ qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, GNode * node)
       } else {
         GST_DEBUG_OBJECT (qtdemux, "failed to convert %s tag to UTF-8", tag);
       }
+    }
+  } else {
+    len = QT_UINT32 (node->data);
+    type = QT_UINT32 ((guint8 *) node->data + 4);
+    if (type & 0xa9000000) {
+      /* Type starts with the (C) symbol, so the next 32 bits are
+       * the language code, which we ignore */
+      offset = 12;
+      GST_DEBUG_OBJECT (qtdemux, "found international text tag");
+    } else {
+      offset = 8;
+      GST_DEBUG_OBJECT (qtdemux, "found normal text tag");
+    }
+    s = gst_tag_freeform_string_to_utf8 ((char *) node->data + offset,
+        len - offset, env_vars);
+    if (s) {
+      GST_DEBUG_OBJECT (qtdemux, "adding tag %s", GST_STR_NULL (s));
+      gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE, tag, s, NULL);
+      g_free (s);
+    } else {
+      GST_DEBUG_OBJECT (qtdemux, "failed to convert %s tag to UTF-8", tag);
     }
   }
 }
@@ -3819,15 +3841,15 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
   GNode *node;
 
   meta = qtdemux_tree_get_child_by_type (udta, FOURCC_meta);
-  if (meta == NULL) {
-    GST_LOG_OBJECT (qtdemux, "no meta");
-    return;
-  }
-
-  ilst = qtdemux_tree_get_child_by_type (meta, FOURCC_ilst);
-  if (ilst == NULL) {
-    GST_LOG_OBJECT (qtdemux, "no ilst");
-    return;
+  if (meta != NULL) {
+    ilst = qtdemux_tree_get_child_by_type (meta, FOURCC_ilst);
+    if (ilst == NULL) {
+      GST_LOG_OBJECT (qtdemux, "no ilst");
+      return;
+    }
+  } else {
+    ilst = udta;
+    GST_LOG_OBJECT (qtdemux, "no meta so using udta itself");
   }
 
   GST_DEBUG_OBJECT (qtdemux, "new tag list");
@@ -3856,6 +3878,21 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
   node = qtdemux_tree_get_child_by_type (ilst, FOURCC__alb);
   if (node) {
     qtdemux_tag_add_str (qtdemux, GST_TAG_ALBUM, node);
+  }
+
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__cpy);
+  if (node) {
+    qtdemux_tag_add_str (qtdemux, GST_TAG_COPYRIGHT, node);
+  }
+
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__cmt);
+  if (node) {
+    qtdemux_tag_add_str (qtdemux, GST_TAG_COMMENT, node);
+  }
+
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__des);
+  if (node) {
+    qtdemux_tag_add_str (qtdemux, GST_TAG_DESCRIPTION, node);
   }
 
   node = qtdemux_tree_get_child_by_type (ilst, FOURCC__day);
