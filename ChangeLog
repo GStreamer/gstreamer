@@ -6,7 +6,8 @@
 	(gst_base_audio_src_change_state):
 	Provide readable actual-buffer-time and actual-latency-time properties
 	that reflect the configured ringbuffer values. Fixes #524724.
-
+	API: GstBaseAudioSrc:actual-buffer-time
+	API: GstBaseAudioSrc:actual-latency-time
 
 2008-05-30  Wim Taymans  <wim.taymans@collabora.co.uk>
 
