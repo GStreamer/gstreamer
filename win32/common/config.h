@@ -36,7 +36,7 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Good Plug-ins source release"
+#define GST_PACKAGE_NAME "GStreamer Good Plug-ins CVS/prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
@@ -244,13 +244,13 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.8"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.8.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.8"
+#define PACKAGE_VERSION "0.10.8.1"
 
 /* Define the plugin directory */
 #ifdef _DEBUG
@@ -266,7 +266,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.8"
+#define VERSION "0.10.8.1"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

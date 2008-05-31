@@ -1,3 +1,15 @@
+2008-05-31  Julien Moutte  <julien@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_find_keyframe),
+	(gst_qtdemux_find_segment), (gst_qtdemux_perform_seek),
+	(gst_qtdemux_seek_to_previous_keyframe),
+	(gst_qtdemux_activate_segment), (gst_qtdemux_loop): Make sure we
+	we don't clip the segment's stop using the main segment duration as
+	that could crop quite some video frames. Make reverse playback support
+	more robust and support edit lists. Support seeking to the last frame,
+	and fix reverse looping playback. Add some debugging.
+	* win32/common/config.h: Updated.
+
 2008-05-31  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/equalizer/gstiirequalizer.c:
