@@ -86,6 +86,8 @@ enum
 
 #define DEFAULT_BUFFER_TIME     ((200 * GST_MSECOND) / GST_USECOND)
 #define DEFAULT_LATENCY_TIME    ((10 * GST_MSECOND) / GST_USECOND)
+#define DEFAULT_ACTUAL_BUFFER_TIME     -1
+#define DEFAULT_ACTUAL_LATENCY_TIME    -1
 #define DEFAULT_PROVIDE_CLOCK   TRUE
 #define DEFAULT_SLAVE_METHOD    GST_BASE_AUDIO_SRC_SLAVE_RETIMESTAMP
 
@@ -94,6 +96,8 @@ enum
   PROP_0,
   PROP_BUFFER_TIME,
   PROP_LATENCY_TIME,
+  PROP_ACTUAL_BUFFER_TIME,
+  PROP_ACTUAL_LATENCY_TIME,
   PROP_PROVIDE_CLOCK,
   PROP_SLAVE_METHOD,
   PROP_LAST
@@ -179,6 +183,18 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
           G_MAXINT64, DEFAULT_LATENCY_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_ACTUAL_BUFFER_TIME,
+      g_param_spec_int64 ("actual-buffer-time", "Actual Buffer Time",
+          "Actual configured size of audio buffer in microseconds",
+          DEFAULT_ACTUAL_BUFFER_TIME, G_MAXINT64, DEFAULT_ACTUAL_BUFFER_TIME,
+          G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_class, PROP_ACTUAL_LATENCY_TIME,
+      g_param_spec_int64 ("actual-latency-time", "Actual Latency Time",
+          "Actual configured audio latency in microseconds",
+          DEFAULT_ACTUAL_LATENCY_TIME, G_MAXINT64, DEFAULT_ACTUAL_LATENCY_TIME,
+          G_PARAM_READABLE));
+
   g_object_class_install_property (gobject_class, PROP_PROVIDE_CLOCK,
       g_param_spec_boolean ("provide-clock", "Provide Clock",
           "Provide a clock to be used as the global pipeline clock",
@@ -241,6 +257,7 @@ gst_base_audio_src_dispose (GObject * object)
 
   src = GST_BASE_AUDIO_SRC (object);
 
+  GST_OBJECT_LOCK (src);
   if (src->clock)
     gst_object_unref (src->clock);
   src->clock = NULL;
@@ -249,6 +266,7 @@ gst_base_audio_src_dispose (GObject * object)
     gst_object_unparent (GST_OBJECT_CAST (src->ringbuffer));
     src->ringbuffer = NULL;
   }
+  GST_OBJECT_UNLOCK (src);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -461,6 +479,22 @@ gst_base_audio_src_get_property (GObject * object, guint prop_id,
     case PROP_LATENCY_TIME:
       g_value_set_int64 (value, src->latency_time);
       break;
+    case PROP_ACTUAL_BUFFER_TIME:
+      GST_OBJECT_LOCK (src);
+      if (src->ringbuffer && src->ringbuffer->acquired)
+        g_value_set_int64 (value, src->ringbuffer->spec.buffer_time);
+      else
+        g_value_set_int64 (value, DEFAULT_ACTUAL_BUFFER_TIME);
+      GST_OBJECT_UNLOCK (src);
+      break;
+    case PROP_ACTUAL_LATENCY_TIME:
+      GST_OBJECT_LOCK (src);
+      if (src->ringbuffer && src->ringbuffer->acquired)
+        g_value_set_int64 (value, src->ringbuffer->spec.latency_time);
+      else
+        g_value_set_int64 (value, DEFAULT_ACTUAL_LATENCY_TIME);
+      GST_OBJECT_UNLOCK (src);
+      break;
     case PROP_PROVIDE_CLOCK:
       g_value_set_boolean (value, gst_base_audio_src_get_provide_clock (src));
       break;
@@ -537,6 +571,9 @@ gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
       spec->bytes_per_sample);
 
   gst_ring_buffer_debug_spec_buff (spec);
+
+  g_object_notify (G_OBJECT (src), "actual-buffer-time");
+  g_object_notify (G_OBJECT (src), "actual-latency-time");
 
   return TRUE;
 
@@ -869,10 +906,12 @@ gst_base_audio_src_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       GST_DEBUG_OBJECT (src, "NULL->READY");
+      GST_OBJECT_LOCK (src);
       if (src->ringbuffer == NULL) {
         gst_audio_clock_reset (GST_AUDIO_CLOCK (src->clock), 0);
         src->ringbuffer = gst_base_audio_src_create_ringbuffer (src);
       }
+      GST_OBJECT_UNLOCK (src);
       if (!gst_ring_buffer_open_device (src->ringbuffer))
         goto open_failed;
       break;
@@ -909,8 +948,10 @@ gst_base_audio_src_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_DEBUG_OBJECT (src, "READY->NULL");
       gst_ring_buffer_close_device (src->ringbuffer);
+      GST_OBJECT_LOCK (src);
       gst_object_unparent (GST_OBJECT_CAST (src->ringbuffer));
       src->ringbuffer = NULL;
+      GST_OBJECT_UNLOCK (src);
       break;
     default:
       break;
