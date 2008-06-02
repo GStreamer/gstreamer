@@ -1220,7 +1220,6 @@ ext/Makefile
 ext/nas/Makefile
 ext/mpeg2enc/Makefile
 ext/mplex/Makefile
-ext/mozilla/Makefile
 ext/musepack/Makefile
 ext/musicbrainz/Makefile
 ext/mythtv/Makefile

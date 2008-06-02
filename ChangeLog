@@ -1,3 +1,24 @@
+2008-06-02  Michael Smith <msmith@songbirdnest.com>
+
+	* configure.ac:
+	  Revert accidental addition in configure.ac. Sorry.
+
+2008-06-02  Michael Smith <msmith@songbirdnest.com>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/dshowvideosink/Makefile.am:
+	* sys/dshowvideosink/README:
+	* sys/dshowvideosink/dshowvideofakesrc.cpp:
+	* sys/dshowvideosink/dshowvideofakesrc.h:
+	* sys/dshowvideosink/dshowvideosink.cpp:
+	* sys/dshowvideosink/dshowvideosink.h:
+	Add a new win32 videosink. Uses the DirectShow renderers for
+	high-performance video rendering on win32.
+	Currently only supports some YUV formats.
+	Rank PRIMARY, since it's much more useful for the common cases that the
+	directdraw sink (which only does RGB).
+
 2008-06-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* ext/spc/Makefile.am:
