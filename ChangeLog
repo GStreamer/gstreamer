@@ -1,3 +1,10 @@
+2008-06-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/adder/gstadder.c: (gst_adder_query_duration),
+	(gst_adder_query_latency):
+	When using gst_element_iterate_pads() one has to unref every pad
+	after usage.
+
 2008-05-31  Mark Nauwelaerts  <mnauw@users.sf.net>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c:
