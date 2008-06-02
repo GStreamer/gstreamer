@@ -224,11 +224,17 @@ gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
 {
   /* Skip the startcode */
   guint32 bits;
+
   guint16 time_increment_resolution = 0;
+
   guint16 fixed_time_increment = 0;
+
   gint aspect_ratio_width = -1, aspect_ratio_height = -1;
+
   gint height = -1, width = -1;
+
   guint8 profile;
+
   gboolean equal;
   bitstream_t bs = { data, 0, 0, size };
 
@@ -264,7 +270,7 @@ gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
   /* Expect Visual Object startcode */
   GET_BITS (&bs, 32, &bits);
 
-  if (GUINT32_FROM_LE (bits) != VISUAL_OBJECT_STARTCODE_MARKER)
+  if (bits != VISUAL_OBJECT_STARTCODE_MARKER)
     goto failed;
 
   GET_BITS (&bs, 1, &bits);
@@ -297,12 +303,12 @@ gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
 
   /* expecting a video object startcode */
   GET_BITS (&bs, 32, &bits);
-  if (GUINT32_FROM_LE (bits) > 0x11F)
+  if (bits > 0x11F)
     goto failed;
 
   /* expecting a video object layer startcode */
   GET_BITS (&bs, 32, &bits);
-  if (GUINT32_FROM_LE (bits) < 0x120 || (GUINT32_FROM_LE (bits) > 0x12F))
+  if (bits < 0x120 || bits > 0x12F)
     goto failed;
 
   /* ignore random accessible vol  and video object type indication */
@@ -422,7 +428,9 @@ static GstFlowReturn
 gst_mpeg4vparse_drain (GstMpeg4VParse * parse, GstBuffer * last_buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+
   const guint8 *data = NULL;
+
   guint available = 0;
 
   available = gst_adapter_available (parse->adapter);
@@ -523,6 +531,7 @@ static GstFlowReturn
 gst_mpeg4vparse_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (gst_pad_get_parent (pad));
+
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (parse, "received buffer of %u bytes with ts %"
@@ -544,8 +553,11 @@ static gboolean
 gst_mpeg4vparse_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   gboolean res = TRUE;
+
   GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (gst_pad_get_parent (pad));
+
   GstStructure *s;
+
   const GValue *value;
 
   GST_DEBUG_OBJECT (parse, "setcaps called with %" GST_PTR_FORMAT, caps);
@@ -572,6 +584,7 @@ static gboolean
 gst_mpeg4vparse_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
+
   GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (parse, "handling event type %s",
@@ -601,6 +614,7 @@ static gboolean
 gst_mpeg4vparse_src_query (GstPad * pad, GstQuery * query)
 {
   GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (gst_pad_get_parent (pad));
+
   gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -609,7 +623,9 @@ gst_mpeg4vparse_src_query (GstPad * pad, GstQuery * query)
       /* We need to send the query upstream and add the returned latency to our
        * own */
       GstClockTime min_latency, max_latency;
+
       gboolean us_live;
+
       GstClockTime our_latency;
 
       if ((res = gst_pad_peer_query (parse->sinkpad, query))) {
@@ -662,6 +678,7 @@ static GstStateChangeReturn
 gst_mpeg4vparse_change_state (GstElement * element, GstStateChange transition)
 {
   GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (element);
+
   GstStateChangeReturn ret;
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
@@ -736,6 +753,7 @@ static void
 gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
 {
   GObjectClass *gobject_class;
+
   GstElementClass *gstelement_class;
 
   gstelement_class = (GstElementClass *) klass;

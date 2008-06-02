@@ -1,3 +1,11 @@
+2008-06-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* gst/mpeg4videoparse/mpeg4videoparse.c:
+	(gst_mpeg4vparse_handle_vos):
+	Fix mpeg4videoparse on big endian architectures. Fixes bug #536042.
+
 2008-05-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/elements/mplex.c: (setup_src_pad),
