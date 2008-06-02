@@ -1,5 +1,11 @@
 2008-06-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* sys/v4l/v4l_calls.c: (gst_v4l_get_chan_names):
+	  minrange and maxrange are scaled according to the frequency
+	  multiplier.
+
+2008-06-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* ext/pango/Makefile.am:
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_shade_y),
 	  (gst_text_overlay_blit_yuv420), (gst_text_overlay_push_frame):
