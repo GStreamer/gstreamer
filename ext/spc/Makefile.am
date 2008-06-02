@@ -6,4 +6,4 @@ libgstspc_la_CFLAGS = $(GST_CFLAGS) $(SPC_CFLAGS)
 libgstspc_la_LIBADD = $(GST_LIBS) $(SPC_LIBS)
 libgstspc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstspc.h
+noinst_HEADERS = gstspc.h tag.h

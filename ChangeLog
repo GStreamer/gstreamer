@@ -1,3 +1,8 @@
+2008-06-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* ext/spc/Makefile.am:
+	  Dist tag.h
+
 2008-06-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/faad/gstfaad.c: (gst_faad_sink_event):
