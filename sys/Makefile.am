@@ -54,5 +54,6 @@ endif
 
 SUBDIRS = $(DVB_DIR) $(FBDEV_DIR) $(OSS4_DIR) $(QT_DIR) $(VCD_DIR) $(WININET_DIR)
 
-DIST_SUBDIRS = dvb fbdev dshowdecwrapper dshowsrcwrapper oss4 qtwrapper vcd wininet
+DIST_SUBDIRS = dvb fbdev dshowdecwrapper dshowsrcwrapper dshowvideosink \
+			   oss4 qtwrapper vcd wininet
 

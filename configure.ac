@@ -1188,6 +1188,7 @@ gst-libs/gst/dshow/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
 sys/dshowsrcwrapper/Makefile
+sys/dshowvideosink/Makefile
 sys/dvb/Makefile
 sys/fbdev/Makefile
 sys/oss4/Makefile
@@ -1219,6 +1220,7 @@ ext/Makefile
 ext/nas/Makefile
 ext/mpeg2enc/Makefile
 ext/mplex/Makefile
+ext/mozilla/Makefile
 ext/musepack/Makefile
 ext/musicbrainz/Makefile
 ext/mythtv/Makefile
