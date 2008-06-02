@@ -1,3 +1,11 @@
+2008-06-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/a52dec/gsta52dec.c: (clear_queued), (flush_queued),
+	(gst_a52dec_drain), (gst_a52dec_push), (gst_a52dec_sink_event),
+	(gst_a52dec_chain), (gst_a52dec_change_state):
+	* ext/a52dec/gsta52dec.h:
+	Add segment handling, buffer clipping and basic reverse playback.
+
 2008-05-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/Makefile.am:

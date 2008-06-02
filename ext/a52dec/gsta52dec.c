@@ -341,6 +341,48 @@ gst_a52dec_channels (int flags, GstAudioChannelPosition ** _pos)
   return chans;
 }
 
+static void
+clear_queued (GstA52Dec * dec)
+{
+  g_list_foreach (dec->queued, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (dec->queued);
+  dec->queued = NULL;
+}
+
+static GstFlowReturn
+flush_queued (GstA52Dec * dec)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  while (dec->queued) {
+    GstBuffer *buf = GST_BUFFER_CAST (dec->queued->data);
+
+    GST_LOG_OBJECT (dec, "pushing buffer %p, timestamp %"
+        GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT, buf,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+    /* iterate ouput queue an push downstream */
+    ret = gst_pad_push (dec->srcpad, buf);
+
+    dec->queued = g_list_delete_link (dec->queued, dec->queued);
+  }
+  return ret;
+}
+
+static GstFlowReturn
+gst_a52dec_drain (GstA52Dec * dec)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  if (dec->segment.rate < 0.0) {
+    /* if we have some queued frames for reverse playback, flush
+     * them now */
+    ret = flush_queued (dec);
+  }
+  return ret;
+}
+
 static GstFlowReturn
 gst_a52dec_push (GstA52Dec * a52dec,
     GstPad * srcpad, int flags, sample_t * samples, GstClockTime timestamp)
@@ -371,19 +413,31 @@ gst_a52dec_push (GstA52Dec * a52dec,
   }
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = 256 * GST_SECOND / a52dec->sample_rate;
-  /* set discont when needed */
-  if (a52dec->discont) {
-    GST_LOG_OBJECT (a52dec, "marking DISCONT");
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-    a52dec->discont = FALSE;
+
+  result = GST_FLOW_OK;
+  if ((buf = gst_audio_buffer_clip (buf, &a52dec->segment,
+              a52dec->sample_rate, (SAMPLE_WIDTH / 8) * chans))) {
+    /* set discont when needed */
+    if (a52dec->discont) {
+      GST_LOG_OBJECT (a52dec, "marking DISCONT");
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+      a52dec->discont = FALSE;
+    }
+
+    if (a52dec->segment.rate > 0.0) {
+      GST_DEBUG_OBJECT (a52dec,
+          "Pushing buffer with ts %" GST_TIME_FORMAT " duration %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+      result = gst_pad_push (srcpad, buf);
+    } else {
+      /* reverse playback, queue frame till later when we get a discont. */
+      GST_DEBUG_OBJECT (a52dec, "queued frame");
+      a52dec->queued = g_list_prepend (a52dec->queued, buf);
+    }
   }
-
-  GST_DEBUG_OBJECT (a52dec,
-      "Pushing buffer with ts %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
-
-  return gst_pad_push (srcpad, buf);
+  return result;
 }
 
 static gboolean
@@ -428,26 +482,40 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
   GST_LOG ("Handling %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:{
-      GstFormat format;
-      gint64 val;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      GstFormat fmt;
+      gboolean update;
+      gint64 start, end, pos;
+      gdouble rate;
 
-      gst_event_parse_new_segment (event, NULL, NULL, &format, &val, NULL,
-          NULL);
-      if (format != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (val)) {
+      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &end,
+          &pos);
+
+      if (fmt != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (start)) {
         GST_WARNING ("No time in newsegment event %p (format is %s)",
-            event, gst_format_get_name (format));
+            event, gst_format_get_name (fmt));
         gst_event_unref (event);
         a52dec->sent_segment = FALSE;
+        /* set some dummy values, FIXME do proper conversion */
       } else {
-        a52dec->time = val;
+        a52dec->time = start;
         a52dec->sent_segment = TRUE;
         ret = gst_pad_push_event (a52dec->srcpad, event);
       }
+      /* drain queued buffers before activating the segment so that we can clip
+       * against the old segment first */
+      gst_a52dec_drain (a52dec);
+
+      gst_segment_set_newsegment (&a52dec->segment, update, rate, fmt, start,
+          end, pos);
       break;
     }
     case GST_EVENT_TAG:
+      ret = gst_pad_push_event (a52dec->srcpad, event);
+      break;
     case GST_EVENT_EOS:
+      gst_a52dec_drain (a52dec);
       ret = gst_pad_push_event (a52dec->srcpad, event);
       break;
     case GST_EVENT_FLUSH_START:
@@ -458,6 +526,7 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
         gst_buffer_unref (a52dec->cache);
         a52dec->cache = NULL;
       }
+      clear_queued (a52dec);
       gst_segment_init (&a52dec->segment, GST_FORMAT_UNDEFINED);
       ret = gst_pad_push_event (a52dec->srcpad, event);
       break;
@@ -626,6 +695,7 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
 
   if (GST_BUFFER_IS_DISCONT (buf)) {
     GST_LOG_OBJECT (a52dec, "received DISCONT");
+    gst_a52dec_drain (a52dec);
     /* clear cache on discont and mark a discont in the element */
     if (a52dec->cache) {
       gst_buffer_unref (a52dec->cache);
@@ -827,6 +897,7 @@ gst_a52dec_change_state (GstElement * element, GstStateChange transition)
         gst_buffer_unref (a52dec->cache);
         a52dec->cache = NULL;
       }
+      clear_queued (a52dec);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       a52_free (a52dec->state);

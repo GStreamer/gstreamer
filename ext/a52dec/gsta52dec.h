@@ -65,6 +65,9 @@ struct _GstA52Dec {
 
   GstBuffer     *cache;
   GstClockTime   time;
+
+  /* reverse */
+  GList         *queued;
 };
 
 struct _GstA52DecClass {
