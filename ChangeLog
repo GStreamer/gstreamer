@@ -1,3 +1,17 @@
+2008-06-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* ext/pango/Makefile.am:
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_shade_y),
+	  (gst_text_overlay_blit_yuv420), (gst_text_overlay_push_frame):
+	  Use gstvideo functions to calculate strides and plane offsets. Fixes
+	  rendering issue ('ghost' images of the text on the chroma planes)
+	  with widths or heights that are not multiples of 8 (#506659 and
+	  probably also #485729).
+
+	* tests/icles/test-textoverlay.c: (show_text), (test_textoverlay),
+	  (main):
+	  Test with odd height/width too.
+
 2008-06-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/adder/gstadder.c: (gst_adder_query_duration),

@@ -65,23 +65,26 @@ show_text (GstElement * textoverlay, const gchar * txt, const gchar * valign,
     pipe = GST_ELEMENT_PARENT (pipe);
 
   gst_element_set_state (pipe, GST_STATE_PLAYING);
-  gst_bus_poll (GST_ELEMENT_BUS (pipe), GST_MESSAGE_ERROR, 2 * GST_SECOND);
+  gst_bus_poll (GST_ELEMENT_BUS (pipe), GST_MESSAGE_ERROR, GST_SECOND);
   gst_element_set_state (pipe, GST_STATE_NULL);
 }
 
-int
-main (int argc, char **argv)
+static void
+test_textoverlay (int width, int height)
 {
-  GstElement *pipe, *toverlay;
   const gchar *valigns[] = { /* "baseline", */ "bottom", "top" };
   const gchar *haligns[] = { "left", "center", "right" };
   const gchar *linealigns[] = { "left", "center", "right" };
+  GstElement *pipe, *toverlay;
+  gchar *pstr;
   gint a, b, c;
 
-  gst_init (&argc, &argv);
+  pstr = g_strdup_printf ("videotestsrc pattern=blue ! "
+      "video/x-raw-yuv,width=%d,height=%d ! t.video_sink "
+      "textoverlay name=t font-desc=\"Sans Serif, 20\" ! "
+      " ffmpegcolorspace ! videoscale ! autovideosink", width, height);
 
-  pipe = gst_parse_launch ("videotestsrc pattern=black ! textoverlay name=t ! "
-      " ffmpegcolorspace ! videoscale ! autovideosink", NULL);
+  pipe = gst_parse_launch_full (pstr, NULL, GST_PARSE_FLAG_NONE, NULL);
   g_assert (pipe);
 
   toverlay = gst_bin_get_by_name (GST_BIN (pipe), "t");
@@ -102,6 +105,21 @@ main (int argc, char **argv)
       }
     }
   }
+
+  g_free (pstr);
+}
+
+int
+main (int argc, char **argv)
+{
+  gst_init (&argc, &argv);
+
+  test_textoverlay (640, 480);
+
+  g_print ("Now with odd width/height ...\n");
+  test_textoverlay (639, 479);
+
+  /* test_textoverlay (796, 256); */
 
   return 0;
 }

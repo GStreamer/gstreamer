@@ -2,7 +2,7 @@
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2003> David Schleef <ds@schleef.org>
  * Copyright (C) <2006> Julien Moutte <julien@moutte.net>
- * Copyright (C) <2006> Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) <2006-2008> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -244,17 +244,6 @@ gst_text_overlay_line_align_get_type (void)
   }
   return text_overlay_line_align_type;
 }
-
-/* These macros are adapted from videotestsrc.c */
-#define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
-#define I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
-#define I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(I420_Y_ROWSTRIDE(width)))/2)
-
-#define I420_Y_OFFSET(w,h) (0)
-#define I420_U_OFFSET(w,h) (I420_Y_OFFSET(w,h)+(I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
-#define I420_V_OFFSET(w,h) (I420_U_OFFSET(w,h)+(I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
-
-#define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
 #define GST_TEXT_OVERLAY_GET_COND(ov) (((GstTextOverlay *)ov)->cond)
 #define GST_TEXT_OVERLAY_WAIT(ov)     (g_cond_wait (GST_TEXT_OVERLAY_GET_COND (ov), GST_OBJECT_GET_LOCK (ov)))
@@ -873,9 +862,12 @@ gst_text_overlay_getcaps (GstPad * pad)
 
 static inline void
 gst_text_overlay_shade_y (GstTextOverlay * overlay, guchar * dest,
-    guint dest_stride, gint x0, gint x1, gint y0, gint y1)
+    gint x0, gint x1, gint y0, gint y1)
 {
-  gint i, j;
+  gint i, j, dest_stride;
+
+  dest_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0,
+      overlay->width);
 
   x0 = CLAMP (x0 - BOX_XPAD, 0, overlay->width);
   x1 = CLAMP (x1 + BOX_XPAD, 0, overlay->width);
@@ -903,20 +895,28 @@ gst_text_overlay_blit_yuv420 (GstTextOverlay * overlay, FT_Bitmap * bitmap,
     guint8 * yuv_pixels, gint x0, gint y0)
 {
   int y;                        /* text bitmap coordinates */
-  int x1, y1;                   /* video buffer coordinates */
-  int bit_rowinc, uv_rowinc;
-  guint8 *p, *bitp, *u_p;
-  int video_width, video_height;
+  int x1;                       /* video buffer coordinates */
+  guint8 *y_p, *bitp, *u_p, *v_p;
   int bitmap_x0 = 0;            //x0 < 1 ? -(x0 - 1) : 1;       /* 1 pixel border */
   int bitmap_y0 = y0 < 1 ? -(y0 - 1) : 1;       /* 1 pixel border */
   int bitmap_width = bitmap->width - bitmap_x0;
   int bitmap_height = bitmap->rows - bitmap_y0;
-  int u_plane_size;
   int skip_y, skip_x;
+  int y_stride, u_stride, v_stride;
+  int u_offset, v_offset;
+  int h, w;
   guint8 v;
 
-  video_width = I420_Y_ROWSTRIDE (overlay->width);
-  video_height = overlay->height;
+  w = overlay->width;
+  h = overlay->height;
+
+  y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, w);
+  u_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, w);
+  v_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 2, w);
+  u_offset =
+      gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 1, w, h);
+  v_offset =
+      gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2, w, h);
 
 /*
   if (x0 < 0 && abs (x0) < bitmap_width) {
@@ -925,73 +925,65 @@ gst_text_overlay_blit_yuv420 (GstTextOverlay * overlay, FT_Bitmap * bitmap,
   }
 */
 
-  if (x0 + bitmap_x0 + bitmap_width > overlay->width - 1)       /* 1 pixel border */
-    bitmap_width -= x0 + bitmap_x0 + bitmap_width - overlay->width + 1;
-  if (y0 + bitmap_y0 + bitmap_height > video_height - 1)        /* 1 pixel border */
-    bitmap_height -= y0 + bitmap_y0 + bitmap_height - video_height + 1;
+  if (x0 + bitmap_x0 + bitmap_width > w - 1)    /* 1 pixel border */
+    bitmap_width -= x0 + bitmap_x0 + bitmap_width - w + 1;
+  if (y0 + bitmap_y0 + bitmap_height > h - 1)   /* 1 pixel border */
+    bitmap_height -= y0 + bitmap_y0 + bitmap_height - h + 1;
 
-  uv_rowinc = video_width / 2 - bitmap_width / 2;
-  bit_rowinc = bitmap->pitch - bitmap_width;
-  u_plane_size = (video_width / 2) * (video_height / 2);
-
-  y1 = y0 + bitmap_y0;
   x1 = x0 + bitmap_x0;
-  bitp = bitmap->buffer + bitmap->pitch * bitmap_y0 + bitmap_x0;
+
+  /* draw an outline around the text */
   for (y = bitmap_y0; y < bitmap_y0 + bitmap_height; y++) {
     int n;
 
-    p = yuv_pixels + (y + y0) * I420_Y_ROWSTRIDE (overlay->width) + x1;
+    bitp = bitmap->buffer + (y * bitmap->pitch) + bitmap_x0;
+    y_p = yuv_pixels + ((y + y0) * y_stride) + x1;
     for (n = bitmap_width; n > 0; --n) {
       v = *bitp;
       if (v) {
-        p[-1] = CLAMP (p[-1] - v, 0, 255);
-        p[1] = CLAMP (p[1] - v, 0, 255);
-        p[-video_width] = CLAMP (p[-video_width] - v, 0, 255);
-        p[video_width] = CLAMP (p[video_width] - v, 0, 255);
+        y_p[-1] = CLAMP (y_p[-1] - v, 0, 255);
+        y_p[1] = CLAMP (y_p[1] - v, 0, 255);
+        y_p[-w] = CLAMP (y_p[-w] - v, 0, 255);
+        y_p[w] = CLAMP (y_p[w] - v, 0, 255);
       }
-      p++;
+      y_p++;
       bitp++;
     }
-    bitp += bit_rowinc;
   }
 
-  y = bitmap_y0;
-  y1 = y0 + bitmap_y0;
+  /* now blit text */
   x1 = x0 + bitmap_x0;
-  bitp = bitmap->buffer + bitmap->pitch * bitmap_y0 + bitmap_x0;
-  p = yuv_pixels + video_width * y1 + x1;
-  u_p =
-      yuv_pixels + video_width * video_height + (video_width >> 1) * (y1 >> 1) +
-      (x1 >> 1);
   skip_y = 0;
-  skip_x = 0;
-
-  for (; y < bitmap_y0 + bitmap_height; y++) {
+  for (y = bitmap_y0; y < bitmap_y0 + bitmap_height; y++) {
     int n;
 
-    x1 = x0 + bitmap_x0;
+    bitp = bitmap->buffer + (y * bitmap->pitch) + bitmap_x0;
+
+    y_p = yuv_pixels + 0 + ((y0 + y) * y_stride) + x1;
+    u_p = yuv_pixels + u_offset + (((y0 + y) / 2) * u_stride) + (x1 / 2);
+    v_p = yuv_pixels + v_offset + (((y0 + y) / 2) * v_stride) + (x1 / 2);
+
     skip_x = 0;
     for (n = bitmap_width; n > 0; --n) {
       v = *bitp;
       if (v) {
-        *p = v;
+        *y_p = v;
         if (!skip_y) {
-          u_p[0] = u_p[u_plane_size] = 0x80;
+          *u_p = 0x80;
+          *v_p = 0x80;
         }
       }
       if (!skip_y) {
-        skip_x = !skip_x;
-        if (!skip_x)
+        if (!skip_x) {
           u_p++;
+          v_p++;
+        }
+        skip_x = !skip_x;
       }
-      p++;
+      y_p++;
       bitp++;
     }
-    /*if (!skip_x && !skip_y) u_p--; */
-    p += I420_Y_ROWSTRIDE (overlay->width) - bitmap_width;
-    bitp += bit_rowinc;
     skip_y = !skip_y;
-    u_p += skip_y ? uv_rowinc : 0;
   }
 }
 
@@ -1107,9 +1099,8 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
   /* shaded background box */
   if (overlay->want_shading) {
     gst_text_overlay_shade_y (overlay,
-        GST_BUFFER_DATA (video_frame),
-        I420_Y_ROWSTRIDE (overlay->width),
-        xpos, xpos + overlay->bitmap.width, ypos, ypos + overlay->bitmap.rows);
+        GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->bitmap.width,
+        ypos, ypos + overlay->bitmap.rows);
   }
 
 
