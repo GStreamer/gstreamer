@@ -1,5 +1,10 @@
 2008-06-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_sink_event):
+	Drain queued buffers before forwarding the segment event.
+
+2008-06-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/a52dec/gsta52dec.c: (clear_queued), (flush_queued),
 	(gst_a52dec_drain), (gst_a52dec_push), (gst_a52dec_sink_event),
 	(gst_a52dec_chain), (gst_a52dec_change_state):

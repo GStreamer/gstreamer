@@ -492,6 +492,10 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &end,
           &pos);
 
+      /* drain queued buffers before activating the segment so that we can clip
+       * against the old segment first */
+      gst_a52dec_drain (a52dec);
+
       if (fmt != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (start)) {
         GST_WARNING ("No time in newsegment event %p (format is %s)",
             event, gst_format_get_name (fmt));
@@ -503,9 +507,6 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
         a52dec->sent_segment = TRUE;
         ret = gst_pad_push_event (a52dec->srcpad, event);
       }
-      /* drain queued buffers before activating the segment so that we can clip
-       * against the old segment first */
-      gst_a52dec_drain (a52dec);
 
       gst_segment_set_newsegment (&a52dec->segment, update, rate, fmt, start,
           end, pos);
