@@ -1,3 +1,24 @@
+2008-06-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/interleave/interleave.c: (gst_interleave_pad_get_type),
+	(gst_interleave_finalize), (gst_audio_check_channel_positions),
+	(gst_interleave_set_channel_positions),
+	(gst_interleave_class_init), (gst_interleave_init),
+	(gst_interleave_set_property), (gst_interleave_get_property),
+	(gst_interleave_request_new_pad), (gst_interleave_release_pad),
+	(gst_interleave_sink_setcaps), (gst_interleave_src_query_duration),
+	(gst_interleave_src_query_latency), (gst_interleave_collected):
+	* gst/interleave/interleave.h:
+	Allow setting channel positions via a property and allow using the
+	channel positions on the input as the channel positions of the output.
+
+	Fix some broken logic and memory leaks.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/interleave.c: (src_handoff_float32),
+	(sink_handoff_float32), (GST_START_TEST), (interleave_suite):
+	Add unit tests for checking correct handling of channel positions.
+
 2008-06-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/faad/gstfaad.c: (gst_faad_dispose), (clear_queued),
