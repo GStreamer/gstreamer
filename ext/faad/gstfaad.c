@@ -896,6 +896,9 @@ gst_faad_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment (event, &is_update, &rate, &fmt, &start,
           &end, &base);
 
+      /* drain queued buffers before we activate the new segment */
+      gst_faad_drain (faad);
+
       if (fmt == GST_FORMAT_TIME) {
         GST_DEBUG ("Got NEWSEGMENT event in GST_FORMAT_TIME, passing on (%"
             GST_TIME_FORMAT " - %" GST_TIME_FORMAT ")", GST_TIME_ARGS (start),
@@ -920,9 +923,6 @@ gst_faad_sink_event (GstPad * pad, GstEvent * event)
               ("no average bitrate yet, sending newsegment with start at 0");
         }
         gst_event_unref (event);
-
-        /* drain queued buffers before we activate the new segment */
-        gst_faad_drain (faad);
 
         event = gst_event_new_new_segment (is_update, rate,
             GST_FORMAT_TIME, new_start, new_end, new_start);

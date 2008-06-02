@@ -1,3 +1,8 @@
+2008-06-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/faad/gstfaad.c: (gst_faad_sink_event):
+	Always drain before activating the new segment.
+
 2008-06-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/interleave/interleave.c: (gst_interleave_pad_get_type),
