@@ -68,9 +68,16 @@ typedef struct _GstFaad {
   guint64 bytes_in;    /* bytes received                                  */
   guint64 sum_dur_out; /* sum of durations of decoded buffers we sent out */
   gint    error_count;
+  gboolean discont;
 
   /* segment handling */
   GstSegment * segment;
+
+  /* list of raw output buffers for reverse playback */
+  GList *queued;
+  /* gather/decode queues for reverse playback */
+  GList *gather;
+  GList *decode;
 } GstFaad;
 
 typedef struct _GstFaadClass {

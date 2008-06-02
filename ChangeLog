@@ -1,3 +1,15 @@
+2008-06-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/faad/gstfaad.c: (gst_faad_dispose), (clear_queued),
+	(flush_queued), (gst_faad_drain), (gst_faad_do_raw_seek),
+	(gst_faad_src_event), (gst_faad_sink_event), (gst_faad_chain),
+	(gst_faad_change_state):
+	* ext/faad/gstfaad.h:
+	Add basic reverse playback support.
+	Clear decoder state after disconts.
+	Remove some unused code.
+	Mark output buffers with a discont after a decoding error.
+
 2008-06-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>
