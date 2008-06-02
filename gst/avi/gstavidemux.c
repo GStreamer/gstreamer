@@ -287,15 +287,44 @@ gst_avi_demux_index_last (GstAviDemux * avi, gint stream_nr)
   return result;
 }
 
+#if 0
 static gst_avi_index_entry *
-gst_avi_demux_index_next (GstAviDemux * avi, gint stream_nr, gint start)
+gst_avi_demux_index_next (GstAviDemux * avi, gint stream_nr, gint last,
+    guchar flags)
 {
   gint i;
-  gst_avi_index_entry *result = NULL;
+  gst_avi_index_entry *result = NULL, *entry;
 
-  for (i = start; i < avi->index_size; i++) {
-    if (avi->index_entries[i].stream_nr == stream_nr) {
-      result = &avi->index_entries[i];
+  for (i = last + 1; i < avi->index_size; i++) {
+    entry = &avi->index_entries[i];
+
+    if (entry->stream_nr != stream_nr)
+      continue;
+
+    if ((entry->flags & flags) == flags) {
+      result = entry;
+      break;
+    }
+  }
+  return result;
+}
+#endif
+
+static gst_avi_index_entry *
+gst_avi_demux_index_prev (GstAviDemux * avi, gint stream_nr, gint last,
+    guchar flags)
+{
+  gint i;
+  gst_avi_index_entry *result = NULL, *entry;
+
+  for (i = last - 1; i >= 0; i--) {
+    entry = &avi->index_entries[i];
+
+    if (entry->stream_nr != stream_nr)
+      continue;
+
+    if ((entry->flags & flags) == flags) {
+      result = entry;
       break;
     }
   }
@@ -307,7 +336,6 @@ gst_avi_demux_index_next (GstAviDemux * avi, gint stream_nr, gint start)
  * @avi: Avi object
  * @stream_nr: stream number
  * @time: seek time position
- * @flags: index entry flags to match
  *
  * Finds the index entry which time is less or equal than the requested time.
  *
@@ -315,30 +343,30 @@ gst_avi_demux_index_next (GstAviDemux * avi, gint stream_nr, gint start)
  */
 static gst_avi_index_entry *
 gst_avi_demux_index_entry_for_time (GstAviDemux * avi,
-    gint stream_nr, guint64 time, guchar flags)
+    gint stream_nr, guint64 time)
 {
   gst_avi_index_entry *entry = NULL, *last_entry = NULL;
   gint i;
 
-  GST_LOG_OBJECT (avi, "stream_nr:%d , time:%" GST_TIME_FORMAT " flags:%x",
-      stream_nr, GST_TIME_ARGS (time), flags);
+  GST_LOG_OBJECT (avi, "stream_nr:%d , time:%" GST_TIME_FORMAT,
+      stream_nr, GST_TIME_ARGS (time));
 
-  i = -1;
-  do {
-    /* get next entry for given stream */
-    entry = gst_avi_demux_index_next (avi, stream_nr, i + 1);
-    if (!entry)
+  for (i = 0; i < avi->index_size; i++) {
+    entry = &avi->index_entries[i];
+
+    if (entry->stream_nr != stream_nr)
+      continue;
+
+    if (entry->ts > time)
       break;
 
-    i = entry->index_nr;
-    if (entry->ts <= time && (entry->flags & flags) == flags)
-      last_entry = entry;
+    last_entry = entry;
 
     GST_LOG_OBJECT (avi,
-        "looking at entry %d / ts:%" GST_TIME_FORMAT " / dur:%" GST_TIME_FORMAT
+        "best at entry %d / ts:%" GST_TIME_FORMAT " / dur:%" GST_TIME_FORMAT
         " flags:%02x", i, GST_TIME_ARGS (entry->ts), GST_TIME_ARGS (entry->dur),
         entry->flags);
-  } while (entry->ts < time);
+  }
 
   return last_entry;
 }
@@ -3078,7 +3106,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
 {
   GstClockTime seek_time;
   gboolean keyframe;
-  gst_avi_index_entry *entry;
+  gst_avi_index_entry *entry, *kentry;
   gint old_entry;
 
   seek_time = segment->last_stop;
@@ -3095,24 +3123,52 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
    * time and stream we automagically are positioned for the other streams as
    * well. FIXME, this code assumes the main stream with keyframes is stream 0,
    * which is mostly correct... */
-  entry = gst_avi_demux_index_entry_for_time (avi, 0, seek_time,
-      GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME);
-  if (entry) {
-    GST_DEBUG_OBJECT (avi,
-        "Got keyframe entry %d [stream:%d / ts:%" GST_TIME_FORMAT
-        " / duration:%" GST_TIME_FORMAT "]", entry->index_nr,
-        entry->stream_nr, GST_TIME_ARGS (entry->ts),
-        GST_TIME_ARGS (entry->dur));
+  if (!(entry = gst_avi_demux_index_entry_for_time (avi, 0, seek_time)))
+    goto no_entry;
 
-    avi->current_entry = entry->index_nr;
+  GST_DEBUG_OBJECT (avi,
+      "Got requested entry %d [stream:%d / ts:%" GST_TIME_FORMAT
+      " / duration:%" GST_TIME_FORMAT "]", entry->index_nr,
+      entry->stream_nr, GST_TIME_ARGS (entry->ts), GST_TIME_ARGS (entry->dur));
+
+  /* check if we are already on a keyframe */
+  if (!(entry->flags & GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME)) {
+    /* now go to the previous keyframe, this is where we should start
+     * decoding from. */
+    if (!(kentry = gst_avi_demux_index_prev (avi, 0, entry->index_nr,
+                GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME))) {
+      goto no_entry;
+    }
   } else {
-    GST_WARNING_OBJECT (avi,
-        "Couldn't find AviIndexEntry for time:%" GST_TIME_FORMAT,
-        GST_TIME_ARGS (seek_time));
-    if (avi->current_entry >= avi->index_size && avi->index_size > 0)
-      avi->current_entry = avi->index_size - 1;
+    /* we were on a keyframe */
+    kentry = entry;
   }
 
+  GST_DEBUG_OBJECT (avi,
+      "Got keyframe entry %d [stream:%d / ts:%" GST_TIME_FORMAT
+      " / duration:%" GST_TIME_FORMAT "]", kentry->index_nr,
+      entry->stream_nr, GST_TIME_ARGS (kentry->ts),
+      GST_TIME_ARGS (kentry->dur));
+
+  /* we must start decoding at the keyframe */
+  avi->current_entry = kentry->index_nr;
+
+  if (segment->rate < 0.0) {
+    /* play between the keyframe and the destination entry */
+    avi->reverse_start_index = kentry->index_nr;
+    avi->reverse_stop_index = entry->index_nr;
+
+    GST_DEBUG_OBJECT (avi, "reverse seek: start idx (%d) and stop idx (%d)",
+        avi->reverse_start_index, avi->reverse_stop_index);
+  }
+
+  if (keyframe) {
+    /* when seeking to a keyframe, we update the result seek time
+     * to the time of the keyframe. */
+    seek_time = avi->index_entries[avi->current_entry].ts;
+  }
+
+next:
   /* if we changed position, mark a DISCONT on all streams */
   if (avi->current_entry != old_entry) {
     gint i;
@@ -3125,16 +3181,23 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   GST_DEBUG_OBJECT (avi, "seek: %" GST_TIME_FORMAT
       " keyframe seeking:%d", GST_TIME_ARGS (seek_time), keyframe);
 
-  if (keyframe) {
-    /* when seeking to a keyframe, we update the result seek time
-     * to the time of the keyframe. */
-    seek_time = avi->index_entries[avi->current_entry].ts;
-  }
   /* the seek time is also the last_stop and stream time */
   segment->last_stop = seek_time;
   segment->time = seek_time;
 
   return TRUE;
+
+no_entry:
+  {
+    /* we could not find an entry for the given time */
+    GST_WARNING_OBJECT (avi,
+        "Couldn't find AviIndexEntry for time:%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (seek_time));
+    if (avi->current_entry >= avi->index_size && avi->index_size > 0)
+      avi->current_entry = avi->index_size - 1;
+
+    goto next;
+  }
 }
 
 /*
@@ -3175,6 +3238,9 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
 
       format = fmt;
     }
+    GST_DEBUG_OBJECT (avi,
+        "seek requested: rate %g cur %" GST_TIME_FORMAT " stop %"
+        GST_TIME_FORMAT, rate, GST_TIME_ARGS (cur), GST_TIME_ARGS (stop));
     /* FIXME: can we do anything with rate!=1.0 */
   } else {
     GST_DEBUG_OBJECT (avi, "doing seek without event");
@@ -3260,9 +3326,15 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   /* queue the segment event for the streaming thread. */
   if (avi->seek_event)
     gst_event_unref (avi->seek_event);
-  avi->seek_event = gst_event_new_new_segment (FALSE,
-      avi->segment.rate, avi->segment.format,
-      avi->segment.last_stop, stop, avi->segment.time);
+  if (avi->segment.rate > 0.0) {
+    avi->seek_event = gst_event_new_new_segment (FALSE,
+        avi->segment.rate, avi->segment.format,
+        avi->segment.last_stop, stop, avi->segment.time);
+  } else {
+    avi->seek_event = gst_event_new_new_segment (FALSE,
+        avi->segment.rate, avi->segment.format,
+        avi->segment.start, avi->segment.last_stop, avi->segment.start);
+  }
 
   if (!avi->streaming) {
     avi->segment_running = TRUE;
@@ -3376,14 +3448,43 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
   avi_stream_context *stream;
   gst_avi_index_entry *entry;
   GstBuffer *buf;
+  gint i;
 
   do {
     /* see if we are at the end */
-    if (avi->current_entry >= avi->index_size)
+    if ((avi->segment.rate > 0 && avi->current_entry >= avi->index_size))
       goto eos;
 
     /* get next entry, this will work as we checked for the index size above */
     entry = &avi->index_entries[avi->current_entry++];
+
+    /* check for reverse playback */
+    if (avi->segment.rate < 0 && avi->current_entry > avi->reverse_stop_index) {
+      GST_LOG_OBJECT (avi, "stop_index %d reached", avi->reverse_stop_index);
+      avi->reverse_stop_index = avi->reverse_start_index;
+      if (avi->reverse_start_index == 0) {
+        GST_DEBUG_OBJECT (avi, "start_index was 0, sending eos");
+        goto eos;
+      }
+      entry =
+          gst_avi_demux_index_prev (avi, 0, avi->reverse_stop_index,
+          GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME);
+      if (!entry) {
+        GST_DEBUG_OBJECT (avi, "no valid index entry found index %d",
+            avi->reverse_stop_index);
+        goto eos;
+      }
+      avi->current_entry = avi->reverse_start_index = entry->index_nr;
+      GST_DEBUG_OBJECT (avi,
+          "reverse playback jump: start idx (%d) and stop idx (%d)",
+          avi->reverse_start_index, avi->reverse_stop_index);
+      gst_segment_set_last_stop (&avi->segment, GST_FORMAT_TIME, entry->ts);
+      for (i = 0; i < avi->num_streams; i++) {
+        avi->stream[i].last_flow = GST_FLOW_OK;
+        avi->stream[i].discont = TRUE;
+      }
+      avi->current_entry++;
+    }
 
     /* see if we have a valid stream, ignore if not
      * FIXME: can't we check this when building the index?
@@ -3399,11 +3500,14 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
     /* get stream now */
     stream = &avi->stream[entry->stream_nr];
 
-    if ((entry->flags & GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME)
-        && GST_CLOCK_TIME_IS_VALID (entry->ts)
-        && GST_CLOCK_TIME_IS_VALID (avi->segment.stop)
-        && (entry->ts > avi->segment.stop)) {
-      goto eos_stop;
+    if (avi->segment.rate > 0.0) {
+      /* only check this for fowards playback for now */
+      if ((entry->flags & GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME)
+          && GST_CLOCK_TIME_IS_VALID (entry->ts)
+          && GST_CLOCK_TIME_IS_VALID (avi->segment.stop)
+          && (entry->ts > avi->segment.stop)) {
+        goto eos_stop;
+      }
     }
 
     /* skip empty entries */

@@ -137,6 +137,8 @@ typedef struct _GstAviDemux {
   guint          index_size;
   guint64        index_offset;
   guint          current_entry;
+  guint          reverse_start_index;
+  guint          reverse_stop_index;
 
   /* streams */
   guint          num_streams;

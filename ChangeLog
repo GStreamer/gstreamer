@@ -1,3 +1,15 @@
+2008-06-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Thijs Vermeir <thijsvermeir at gmail dot com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_index_next),
+	(gst_avi_demux_index_prev), (gst_avi_demux_index_entry_for_time),
+	(gst_avi_demux_do_seek), (gst_avi_demux_handle_seek),
+	(gst_avi_demux_process_next_entry):
+	* gst/avi/gstavidemux.h:
+	Implement reverse playback. Fixes #535300.
+	Small cleanups.
+
 2008-06-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/videomixer/videomixer.c: (gst_videomixer_query_duration),
