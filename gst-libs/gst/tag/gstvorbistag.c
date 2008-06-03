@@ -86,7 +86,10 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_LANGUAGE_CODE, "LANGUAGE"},
   {GST_TAG_CDDA_MUSICBRAINZ_DISCID, "MUSICBRAINZ_DISCID"},
   {GST_TAG_CDDA_CDDB_DISCID, "DISCID"},
-  /* some incidence that this makes sense:
+  /* For the apparent de-facto standard for coverart in vorbis comments, see:
+   * http://www.hydrogenaudio.org/forums/lofiversion/index.php/t48386.html */
+  {GST_TAG_PREVIEW_IMAGE, "COVERART"},
+  /* some evidence that "BPM" is used elsewhere:
    * http://mail.kde.org/pipermail/amarok/2006-May/000090.html
    */
   {GST_TAG_BEATS_PER_MINUTE, "BPM"},
@@ -301,6 +304,68 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
   }
 }
 
+static void
+gst_vorbis_tag_add_coverart (GstTagList * tags, const gchar * img_data_base64,
+    gint base64_len)
+{
+  GstBuffer *img;
+  guchar *img_data;
+  gsize img_len;
+  guint save = 0;
+  gint state = 0;
+
+  if (base64_len < 2)
+    goto not_enough_data;
+
+  img_data = g_try_malloc0 (base64_len * 3 / 4);
+
+  if (img_data == NULL)
+    goto alloc_failed;
+
+  img_len = g_base64_decode_step (img_data_base64, base64_len, img_data,
+      &state, &save);
+
+  if (img_len == 0)
+    goto decode_failed;
+
+  img = gst_tag_image_data_to_image_buffer (img_data, img_len,
+      GST_TAG_IMAGE_TYPE_NONE);
+
+  if (img == NULL)
+    goto convert_failed;
+
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
+      GST_TAG_PREVIEW_IMAGE, img, NULL);
+
+  gst_buffer_unref (img);
+  g_free (img_data);
+  return;
+
+/* ERRORS */
+not_enough_data:
+  {
+    GST_WARNING ("COVERART tag with too little base64-encoded data");
+    return;
+  }
+alloc_failed:
+  {
+    GST_WARNING ("Couldn't allocate enough memory to decode COVERART tag");
+    return;
+  }
+decode_failed:
+  {
+    GST_WARNING ("Couldn't decode bas64 image data from COVERART tag");
+    g_free (img_data);
+    return;
+  }
+convert_failed:
+  {
+    GST_WARNING ("Couldn't extract image or image type from COVERART tag");
+    g_free (img_data);
+    return;
+  }
+}
+
 /**
  * gst_tag_list_from_vorbiscomment_buffer:
  * @buffer: buffer to convert
@@ -333,7 +398,7 @@ gst_tag_list_from_vorbiscomment_buffer (const GstBuffer * buffer,
   guint cur_size;
   guint iterations;
   guint8 *data;
-  guint size;
+  guint size, value_len;
   GstTagList *list;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
@@ -345,14 +410,19 @@ gst_tag_list_from_vorbiscomment_buffer (const GstBuffer * buffer,
 
   if (size < 11 || size <= id_data_length + 4)
     goto error;
+
   if (id_data_length > 0 && memcmp (data, id_data, id_data_length) != 0)
     goto error;
+
   ADVANCE (id_data_length);
+
   if (vendor_string)
     *vendor_string = g_strndup (cur, cur_size);
+
   ADVANCE (cur_size);
   iterations = cur_size;
   cur_size = 0;
+
   while (iterations) {
     ADVANCE (cur_size);
     iterations--;
@@ -364,11 +434,19 @@ gst_tag_list_from_vorbiscomment_buffer (const GstBuffer * buffer,
     }
     *value = '\0';
     value++;
-    if (!g_utf8_validate (value, -1, NULL)) {
+    value_len = strlen (value);
+    if (value_len == 0 || !g_utf8_validate (value, value_len, NULL)) {
       g_free (cur);
       continue;
     }
-    gst_vorbis_tag_add (list, cur, value);
+    /* we'll just ignore COVERARTMIME and typefind the image data */
+    if (g_ascii_strcasecmp (cur, "COVERARTMIME") == 0) {
+      continue;
+    } else if (g_ascii_strcasecmp (cur, "COVERART") == 0) {
+      gst_vorbis_tag_add_coverart (list, value, value_len);
+    } else {
+      gst_vorbis_tag_add (list, cur, value);
+    }
     g_free (cur);
   }
 

@@ -1,5 +1,13 @@
 2008-06-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	Based on patch by: John Millikin <jmillikin gmail com>
+
+	* gst-libs/gst/tag/gstvorbistag.c: (tag_matches), (gst_vorbis_tag_add),
+	  (gst_vorbis_tag_add_coverart):
+	  Retrieve COVERART tags from vorbis comments (#512333)
+
+2008-06-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst-libs/gst/tag/tag.h:
 	* gst-libs/gst/tag/tags.c: (register_tag_image_type_enum):
 	  Don't forget to add new enum value here too (should probably use
