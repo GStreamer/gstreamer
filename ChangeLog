@@ -1,3 +1,14 @@
+2008-06-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/audio/multichannel.c:
+	(gst_audio_check_channel_positions):
+	* gst-libs/gst/audio/multichannel.h:
+	API: Make gst_audio_check_channel_positions() public.
+
+	* tests/check/libs/audio.c: (GST_START_TEST):
+	Add some simple checks for gst_audio_check_channel_positions().
+
 2008-06-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* sys/v4l/v4l_calls.c: (gst_v4l_get_chan_names):

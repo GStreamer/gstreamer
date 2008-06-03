@@ -73,6 +73,12 @@ GST_START_TEST (test_multichannel_checks)
 
   s = gst_structure_new ("audio/x-raw-int", "channels", G_TYPE_INT, 2, NULL);
 
+  /* check if the audio channel position checks work */
+  fail_if (gst_audio_check_channel_positions (pos_2_mixed, 2));
+  fail_unless (gst_audio_check_channel_positions (pos_2_none, 2));
+  fail_unless (gst_audio_check_channel_positions (pos_2_flr, 2));
+  fail_if (gst_audio_check_channel_positions (pos_2_frr, 2));
+
   /* this should not work and issue a warning: FRONT_MONO + NONE */
   _gst_check_expecting_log = TRUE;
   gst_audio_set_channel_positions (s, pos_2_mixed);
@@ -121,8 +127,11 @@ GST_END_TEST;
 GST_START_TEST (test_buffer_clipping_time)
 {
   GstSegment s;
+
   GstBuffer *buf;
+
   GstBuffer *ret;
+
   guint8 *data;
 
   /* Clip start and end */
@@ -302,8 +311,11 @@ GST_END_TEST;
 GST_START_TEST (test_buffer_clipping_samples)
 {
   GstSegment s;
+
   GstBuffer *buf;
+
   GstBuffer *ret;
+
   guint8 *data;
 
   /* Clip start and end */
@@ -516,6 +528,7 @@ static Suite *
 audio_suite (void)
 {
   Suite *s = suite_create ("audio support library");
+
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
@@ -533,6 +546,7 @@ main (int argc, char **argv)
   int nf;
 
   Suite *s = audio_suite ();
+
   SRunner *sr = srunner_create (s);
 
   gst_check_init (&argc, &argv);

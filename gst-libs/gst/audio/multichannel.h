@@ -90,6 +90,8 @@ void    gst_audio_set_caps_channel_positions_list
 GstAudioChannelPosition *
         gst_audio_fixate_channel_positions (GstStructure *str);
 
+gboolean gst_audio_check_channel_positions (const GstAudioChannelPosition * pos, guint channels);
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_MULTICHANNEL_H__ */

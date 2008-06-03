@@ -25,20 +25,33 @@
 
 #define GST_AUDIO_CHANNEL_POSITIONS_FIELD_NAME "channel-positions"
 
-/*
- * This function checks if basic assumptions apply:
- *  - does each position occur at most once?
- *  - invalid positions?
- *  - do conflicting positions occur?
- *     + front_mono vs. front_left/right
- *     + none vs not-none
+/**
+ * gst_audio_check_channel_positions:
+ * @pos: An array of #GstAudioChannelPosition.
+ * @channels: The number of elements in @pos.
+ *
+ * This functions checks if the given channel positions are valid. Channel
+ * positions are valid if:
+ * <itemizedlist>
+ *   <listitem><para>No channel positions appears twice or all positions are %GST_AUDIO_CHANNEL_POSITION_NONE.
+ *   </para></listitem>
+ *   <listitem><para>Either all or none of the channel positions are %GST_AUDIO_CHANNEL_POSITION_NONE.
+ *   </para></listitem>
+ *   <listitem><para>%GST_AUDIO_CHANNEL_POSITION_FRONT_MONO and %GST_AUDIO_CHANNEL_POSITION_LEFT or %GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT don't appear together in the given positions.
+ *   </para></listitem>
+ * </itemizedlist>
+ *
+ * Since: 0.10.20
+ *
+ * Returns: %TRUE if the given channel positions are valid
+ * and %FALSE otherwise.
  */
-
-static gboolean
+gboolean
 gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
-    gint channels)
+    guint channels)
 {
   gint i, n;
+
   const struct
   {
     const GstAudioChannelPosition pos1[2];
@@ -52,13 +65,14 @@ gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
     GST_AUDIO_CHANNEL_POSITION_INVALID}}
   };
 
-  g_assert (pos != NULL && channels > 0);
+  g_return_val_if_fail (pos != NULL, FALSE);
+  g_return_val_if_fail (channels > 0, FALSE);
 
   /* check for invalid channel positions */
   for (n = 0; n < channels; n++) {
     if (pos[n] <= GST_AUDIO_CHANNEL_POSITION_INVALID ||
         pos[n] >= GST_AUDIO_CHANNEL_POSITION_NUM) {
-      g_warning ("Channel position %d for channel %d is invalid", pos[n], n);
+      GST_WARNING ("Channel position %d for channel %d is invalid", pos[n], n);
       return FALSE;
     }
   }
@@ -69,7 +83,7 @@ gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
   if (pos[0] == GST_AUDIO_CHANNEL_POSITION_NONE) {
     for (n = 1; n < channels; ++n) {
       if (pos[n] != GST_AUDIO_CHANNEL_POSITION_NONE) {
-        g_warning ("Either all channel positions must be defined, or all "
+        GST_WARNING ("Either all channel positions must be defined, or all "
             "be set to NONE, having only some defined is not allowed");
         return FALSE;
       }
@@ -90,13 +104,13 @@ gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
 
     /* NONE may not occur mixed with other channel positions */
     if (i == GST_AUDIO_CHANNEL_POSITION_NONE && count > 0) {
-      g_warning ("Either all channel positions must be defined, or all "
+      GST_WARNING ("Either all channel positions must be defined, or all "
           "be set to NONE, having only some defined is not allowed");
       return FALSE;
     }
 
     if (count > 1) {
-      g_warning ("Channel position %d occurred %d times, not allowed",
+      GST_WARNING ("Channel position %d occurred %d times, not allowed",
           i, count);
       return FALSE;
     }
@@ -114,7 +128,7 @@ gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
     }
 
     if (found1 && found2) {
-      g_warning ("Found conflicting channel positions %d/%d and %d",
+      GST_WARNING ("Found conflicting channel positions %d/%d and %d",
           conf[i].pos1[0], conf[i].pos1[1], conf[i].pos2[0]);
       return FALSE;
     }
@@ -210,9 +224,13 @@ GstAudioChannelPosition *
 gst_audio_get_channel_positions (GstStructure * str)
 {
   GstAudioChannelPosition *pos;
+
   gint channels, n;
+
   const GValue *pos_val_arr, *pos_val_entry;
+
   gboolean res;
+
   GType t;
 
   /* get number of channels, general type checkups */
@@ -286,6 +304,7 @@ gst_audio_set_channel_positions (GstStructure * str,
   GValue pos_val_arr = { 0 }, pos_val_entry = {
   0};
   gint channels, n;
+
   gboolean res;
 
   /* get number of channels, checkups */
@@ -378,6 +397,7 @@ add_list_to_struct (GstStructure * str,
     const GstAudioChannelPosition * pos, gint num_positions)
 {
   GstCaps *caps = gst_caps_new_empty ();
+
   const GValue *chan_val;
 
   chan_val = gst_structure_get_value (str, "channels");
@@ -385,6 +405,7 @@ add_list_to_struct (GstStructure * str,
     gst_audio_set_structure_channel_positions_list (str, pos, num_positions);
   } else if (G_VALUE_TYPE (chan_val) == GST_TYPE_LIST) {
     gint size;
+
     const GValue *sub_val;
 
     size = gst_value_list_get_size (chan_val);
@@ -479,9 +500,13 @@ GstAudioChannelPosition *
 gst_audio_fixate_channel_positions (GstStructure * str)
 {
   GstAudioChannelPosition *pos;
+
   gint channels, n, num_unfixed = 0, i, c;
+
   const GValue *pos_val_arr, *pos_val_entry, *pos_val;
+
   gboolean res, is_stereo = TRUE;
+
   GType t;
 
   /*
