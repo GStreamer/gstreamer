@@ -153,7 +153,7 @@ gst_interleave_pad_get_type (void)
 {
   static GType type = 0;
 
-  if (!type) {
+  if (G_UNLIKELY (type == 0)) {
     static const GTypeInfo info = {
       sizeof (GstPadClass),
       NULL,
@@ -170,7 +170,6 @@ gst_interleave_pad_get_type (void)
   }
   return type;
 }
-
 
 GST_BOILERPLATE (GstInterleave, gst_interleave, GstElement, GST_TYPE_ELEMENT);
 
@@ -614,13 +613,19 @@ gst_interleave_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
+  /* Stop before calling the parent's state change function as
+   * GstCollectPads might take locks and we would deadlock in that
+   * case
+   */
+  if (transition == GST_STATE_CHANGE_PAUSED_TO_READY)
+    gst_collect_pads_stop (self->collect);
+
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads_stop (self->collect);
       gst_pad_set_caps (self->src, NULL);
       gst_caps_replace (&self->sinkcaps, NULL);
       break;

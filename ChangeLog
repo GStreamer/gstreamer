@@ -1,3 +1,11 @@
+2008-06-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/interleave/interleave.c: (gst_interleave_pad_get_type),
+	(gst_interleave_change_state):
+	Stop GstCollectPads before calling the parent's state change function
+	when going from PAUSED to READY as we otherwise deadlock.
+	Fixes bug #536258.
+
 2008-06-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/h264parse/gsth264parse.c: (gst_nal_bs_init),
