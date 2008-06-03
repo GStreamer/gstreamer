@@ -52,6 +52,7 @@ struct _GstH264Parse
   GstPad *srcpad;
 
   gboolean split_packetized;
+  guint nal_length_size;
 
   GstSegment segment;
   gboolean packetized;

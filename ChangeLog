@@ -1,3 +1,17 @@
+2008-06-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/h264parse/gsth264parse.c: (gst_nal_bs_init),
+	(gst_h264_parse_sink_setcaps), (gst_h264_parse_chain_forward),
+	(gst_h264_parse_queue_buffer), (gst_h264_parse_chain_reverse),
+	(gst_h264_parse_chain):
+	* gst/h264parse/gsth264parse.h:
+	Parse codec_data and use the nalu_size_length field to get the NALU
+	length in packetized h264.
+	When queueing a packetized buffer in reverse mode, don't unref the
+	buffer twice.
+	Avoid accessing the buffer TIMESTAMP field after we pushed it on
+	the adaptor.
+
 2008-06-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/interleave/interleave.c:

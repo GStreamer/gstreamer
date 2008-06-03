@@ -127,14 +127,14 @@ gst_nal_list_delete_head (GstNalList * list)
  * emulation_prevention_three_bytes. */
 typedef struct
 {
-  guint8 *data;
-  guint8 *end;
+  const guint8 *data;
+  const guint8 *end;
   gint head;                    /* bitpos in the cache of next bit */
   guint64 cache;                /* cached bytes */
 } GstNalBs;
 
 static void
-gst_nal_bs_init (GstNalBs * bs, guint8 * data, guint size)
+gst_nal_bs_init (GstNalBs * bs, const guint8 * data, guint size)
 {
   bs->data = data;
   bs->end = data + size;
@@ -335,6 +335,8 @@ gst_h264_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstH264Parse *h264parse;
   GstStructure *str;
   const GValue *value;
+  guint8 *data;
+  guint size;
 
   h264parse = GST_H264PARSE (GST_PAD_PARENT (pad));
 
@@ -342,18 +344,59 @@ gst_h264_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   /* packetized video has a codec_data */
   if ((value = gst_structure_get_value (str, "codec_data"))) {
+    GstBuffer *buffer;
+    gint profile;
+
     GST_DEBUG_OBJECT (h264parse, "have packetized h264");
     h264parse->packetized = TRUE;
+
+    buffer = gst_value_get_buffer (value);
+    data = GST_BUFFER_DATA (buffer);
+    size = GST_BUFFER_SIZE (buffer);
+
+    /* parse the avcC data */
+    if (size < 7)
+      goto avcc_too_small;
+    /* parse the version, this must be 1 */
+    if (data[0] != 1)
+      goto wrong_version;
+
+    /* AVCProfileIndication */
+    /* profile_compat */
+    /* AVCLevelIndication */
+    profile = (data[1] << 16) | (data[2] << 8) | data[3];
+    GST_DEBUG_OBJECT (h264parse, "profile %06x", profile);
+
+    /* 6 bits reserved | 2 bits lengthSizeMinusOne */
+    /* this is the number of bytes in front of the NAL units to mark their
+     * length */
+    h264parse->nal_length_size = (data[4] & 0x03) + 1;
+    GST_DEBUG_OBJECT (h264parse, "nal length %u", h264parse->nal_length_size);
+
     /* FIXME, PPS, SPS have vital info for detecting new I-frames */
   } else {
     GST_DEBUG_OBJECT (h264parse, "have bytestream h264");
     h264parse->packetized = FALSE;
+    /* we have 4 sync bytes */
+    h264parse->nal_length_size = 4;
   }
 
   /* forward the caps */
   res = gst_pad_set_caps (h264parse->srcpad, caps);
 
   return res;
+
+  /* ERRORS */
+avcc_too_small:
+  {
+    GST_ERROR_OBJECT (h264parse, "avcC size %u < 7", size);
+    return FALSE;
+  }
+wrong_version:
+  {
+    GST_ERROR_OBJECT (h264parse, "wrong avcC version");
+    return FALSE;
+  }
 }
 
 static void
@@ -382,31 +425,30 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
 {
   GstFlowReturn res = GST_FLOW_OK;
   const guint8 *data;
+  GstClockTime timestamp;
 
   if (discont) {
     gst_adapter_clear (h264parse->adapter);
     h264parse->discont = TRUE;
   }
 
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
   gst_adapter_push (h264parse->adapter, buffer);
 
   while (res == GST_FLOW_OK) {
     gint i;
     gint next_nalu_pos = -1;
-    guint32 nalu_size;
     gint avail;
     gboolean delta_unit = TRUE;
 
     avail = gst_adapter_available (h264parse->adapter);
-    if (avail < 5)
+    if (avail < h264parse->nal_length_size + 1)
       break;
     data = gst_adapter_peek (h264parse->adapter, avail);
 
-    nalu_size = (data[0] << 24)
-        + (data[1] << 16) + (data[2] << 8) + data[3];
-
-    if (nalu_size == 1) {
-      /* Bytestream format */
+    if (!h264parse->packetized) {
+      /* Bytestream format, first 4 bytes are sync code */
       /* Find next NALU header */
       for (i = 1; i < avail - 4; ++i) {
         if (data[i + 0] == 0 && data[i + 1] == 0 && data[i + 2] == 0
@@ -416,21 +458,32 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
         }
       }
     } else {
+      guint32 nalu_size;
+
+      nalu_size = 0;
+      for (i = 0; i < h264parse->nal_length_size; i++)
+        nalu_size = (nalu_size << 8) | data[i];
+
       /* Packetized format, see if we have to split it, usually splitting is not
        * a good idea as decoders have no way of handling it. */
       if (h264parse->split_packetized) {
-        if (nalu_size + 4 <= avail)
-          next_nalu_pos = nalu_size + 4;
+        if (nalu_size + h264parse->nal_length_size <= avail)
+          next_nalu_pos = nalu_size + h264parse->nal_length_size;
       } else {
         next_nalu_pos = avail;
       }
     }
+
+    /* skip nalu_size bytes or sync */
+    data += h264parse->nal_length_size;
+    avail -= h264parse->nal_length_size;
+
     /* Figure out if this is a delta unit */
     {
       gint nal_type, nal_ref_idc;
 
-      nal_type = (data[4] & 0x1f);
-      nal_ref_idc = (data[4] & 0x60) >> 5;
+      nal_type = (data[0] & 0x1f);
+      nal_ref_idc = (data[0] & 0x60) >> 5;
 
       GST_DEBUG_OBJECT (h264parse, "NAL type: %d, ref_idc: %d", nal_type,
           nal_ref_idc);
@@ -439,9 +492,8 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
       if (nal_type >= NAL_SLICE && nal_type <= NAL_SLICE_IDR) {
         GstNalBs bs;
         gint first_mb_in_slice, slice_type;
-        guint8 *bs_data = (guint8 *) data + 5;
 
-        gst_nal_bs_init (&bs, bs_data, avail - 5);
+        gst_nal_bs_init (&bs, data + 1, avail - 1);
 
         first_mb_in_slice = gst_nal_bs_read_ue (&bs);
         slice_type = gst_nal_bs_read_ue (&bs);
@@ -495,12 +547,13 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
         h264parse->discont = FALSE;
       }
 
-      if (delta_unit) {
+      if (delta_unit)
         GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-      }
+      else
+        GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (h264parse->srcpad));
-      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
+      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
       res = gst_pad_push (h264parse->srcpad, outbuf);
     } else {
       /* NALU can not be parsed yet, we wait for more data in the adapter. */
@@ -584,19 +637,29 @@ gst_h264_parse_queue_buffer (GstH264Parse * parse, GstBuffer * buffer)
 
   /* now parse all the NAL units in this buffer, for bytestream we only have one
    * NAL unit but for packetized streams we can have multiple ones */
-  while (size >= 5) {
-    nalu_size = (data[0] << 24)
-        + (data[1] << 16) + (data[2] << 8) + data[3];
+  while (size >= parse->nal_length_size + 1) {
+    gint i;
 
-    link->nal_ref_idc = (data[4] & 0x60) >> 5;
-    link->nal_type = (data[4] & 0x1f);
+    nalu_size = 0;
+    if (parse->packetized) {
+      for (i = 0; i < parse->nal_length_size; i++)
+        nalu_size = (nalu_size << 8) | data[i];
+    }
 
+    /* skip nalu_size or sync bytes */
+    data += parse->nal_length_size;
+    size -= parse->nal_length_size;
+
+    link->nal_ref_idc = (data[0] & 0x60) >> 5;
+    link->nal_type = (data[0] & 0x1f);
+
+    /* nalu_size is 0 for bytestream, we have a complete packet */
     GST_DEBUG_OBJECT (parse, "size: %u, NAL type: %d, ref_idc: %d",
         nalu_size, link->nal_type, link->nal_ref_idc);
 
     /* first parse some things needed to get to the frame type */
     if (link->nal_type >= NAL_SLICE && link->nal_type <= NAL_SLICE_IDR) {
-      gst_nal_bs_init (&bs, data + 5, size - 5);
+      gst_nal_bs_init (&bs, data + 1, size - 1);
 
       link->first_mb_in_slice = gst_nal_bs_read_ue (&bs);
       link->slice_type = gst_nal_bs_read_ue (&bs);
@@ -629,11 +692,11 @@ gst_h264_parse_queue_buffer (GstH264Parse * parse, GstBuffer * buffer)
       }
     }
     /* bytestream, we can exit now */
-    if (nalu_size == 1)
+    if (!parse->packetized)
       break;
 
-    /* packetized format, continue parsing all packets, skip size */
-    nalu_size += 4;
+    /* packetized format, continue parsing all packets, skip size, we already
+     * skipped the nal_length_size bytes */
     data += nalu_size;
     size -= nalu_size;
   }
@@ -717,6 +780,7 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
          * store them */
         GST_DEBUG_OBJECT (h264parse, "copied packetized buffer");
         res = gst_h264_parse_queue_buffer (h264parse, gbuf);
+        gbuf = NULL;
       } else {
         /* bytestream, we have to split the NALUs on the sync markers */
         code = 0xffffffff;
@@ -808,10 +872,11 @@ gst_h264_parse_chain (GstPad * pad, GstBuffer * buffer)
     if (!gst_pad_set_caps (h264parse->srcpad, caps))
       goto caps_failed;
 
-    /* we assume the bytestream format but won't really fail otherwise if the
-     * data turns out to be a nicely aligned packetized format (except we don't
-     * do the codec_data caps with the PPS and SPS). */
+    /* we assume the bytestream format. If the data turns out to be packetized,
+     * we have a problem because we don't know the length of the nalu_size
+     * indicator. Packetized input MUST set the codec_data. */
     h264parse->packetized = FALSE;
+    h264parse->nal_length_size = 4;
 
     gst_caps_unref (caps);
   }
