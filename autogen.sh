@@ -2,7 +2,7 @@
 # Run this to generate all the initial makefiles, etc.
 
 DIE=0
-package=gst-plugins
+package=gst-plugins-bad
 srcfile=gst/speed/gstspeed.c
 
 # a quick cvs co to ease the transition
