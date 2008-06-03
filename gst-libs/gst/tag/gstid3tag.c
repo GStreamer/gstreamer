@@ -428,3 +428,58 @@ gst_tag_id3_genre_get (const guint id)
     return NULL;
   return genres[id];
 }
+
+/**
+ * gst_tag_list_add_id3_image:
+ * @tag_list: a tag list
+ * @image_data: the (encoded) image
+ * @image_data_len: the length of the encoded image data at @image_data
+ * @id3_picture_type: picture type as per the ID3 (v2.4.0) specification for
+ *    the APIC frame (0 = unknown/other)
+ *
+ * Adds an image from an ID3 APIC frame (or similar, such as used in FLAC)
+ * to the given tag list. Also see gst_tag_image_data_to_image_buffer() for
+ * more information on image tags in GStreamer.
+ *
+ * Returns: %TRUE if the image was processed, otherwise %FALSE
+ *
+ * Since: 0.10.20
+ */
+gboolean
+gst_tag_list_add_id3_image (GstTagList * tag_list, const guint8 * image_data,
+    guint image_data_len, guint id3_picture_type)
+{
+  GstTagImageType tag_image_type;
+  const gchar *tag_name;
+  GstBuffer *image;
+
+  g_return_val_if_fail (GST_IS_TAG_LIST (tag_list), FALSE);
+  g_return_val_if_fail (image_data != NULL, FALSE);
+  g_return_val_if_fail (image_data_len > 0, FALSE);
+
+  if (id3_picture_type == 0x01 || id3_picture_type == 0x02) {
+    /* file icon for preview. Don't add image-type to caps, since there
+     * is only supposed to be one of these, and the type is already indicated
+     * via the special tag */
+    tag_name = GST_TAG_PREVIEW_IMAGE;
+    tag_image_type = GST_TAG_IMAGE_TYPE_NONE;
+  } else {
+    tag_name = GST_TAG_IMAGE;
+
+    /* Remap the ID3v2 APIC type our ImageType enum */
+    if (id3_picture_type >= 0x3 && id3_picture_type <= 0x14)
+      tag_image_type = (GstTagImageType) (id3_picture_type - 2);
+    else
+      tag_image_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
+  }
+
+  image = gst_tag_image_data_to_image_buffer (image_data, image_data_len,
+      tag_image_type);
+
+  if (image == NULL)
+    return FALSE;
+
+  gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, tag_name, image, NULL);
+  gst_buffer_unref (image);
+  return TRUE;
+}

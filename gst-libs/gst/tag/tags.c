@@ -1,6 +1,6 @@
 /* GStreamer non-core tag registration and tag utility functions
  * Copyright (C) 2005 Ross Burton <ross@burtonini.com>
- * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2006-2008 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/gst-i18n-plugin.h>
+#include <gst/base/gsttypefindhelper.h>
 #include <gst/gst.h>
 #include "tag.h"
 
@@ -144,6 +145,9 @@ register_tag_image_type_enum (GType * id)
   };
 
   *id = g_enum_register_static ("GstTagImageType", image_types);
+
+  /* work around thread-safety issue with class creation in GLib */
+  g_type_class_ref (*id);
 }
 
 GType
@@ -154,6 +158,19 @@ gst_tag_image_type_get_type (void)
 
   g_once (&once, (GThreadFunc) register_tag_image_type_enum, &id);
   return id;
+}
+
+static inline gboolean
+gst_tag_image_type_is_valid (GstTagImageType type)
+{
+  GEnumClass *klass;
+  gboolean res;
+
+  klass = g_type_class_ref (gst_tag_image_type_get_type ());
+  res = (g_enum_get_value (klass, type) != NULL);
+  g_type_class_unref (klass);
+
+  return res;
 }
 
 /**
@@ -325,4 +342,109 @@ beach:
 
   g_free (utf8);
   return NULL;
+}
+
+/**
+ * gst_tag_image_data_to_image_buffer:
+ * @image_data: the (encoded) image
+ * @image_data_len: the length of the encoded image data at @image_data
+ * @image_type: type of the image, or #GST_TAG_IMAGE_TYPE_UNDEFINED. Pass
+ *     #GST_TAG_IMAGE_TYPE_NONE if no image type should be set at all (e.g.
+ *     for preview images)
+ *
+ * Helper function for tag-reading plugins to create a #GstBuffer suitable to
+ * add to a #GstTagList as an image tag (such as #GST_TAG_IMAGE or
+ * #GST_TAG_PREVIEW_IMAGE) from the encoded image data and an (optional) image
+ * type.
+ *
+ * Background: cover art and other images in tags are usually stored as a
+ * blob of binary image data, often accompanied by a MIME type or some other
+ * content type string (e.g. 'png', 'jpeg', 'jpg'). Sometimes there is also an
+ * 'image type' to indicate what kind of image this is (e.g. front cover,
+ * back cover, artist, etc.). The image data may also be an URI to the image
+ * rather than the image itself.
+ *
+ * In GStreamer, image tags are #GstBuffer<!-- -->s containing the raw image
+ * data, with the buffer caps describing the content type of the image
+ * (e.g. image/jpeg, image/png, text/uri-list). The buffer caps may contain
+ * an additional 'image-type' field of #GST_TYPE_TAG_IMAGE_TYPE to describe
+ * the type of image (front cover, back cover etc.). #GST_TAG_PREVIEW_IMAGE
+ * tags should not carry an image type, their type is already indicated via
+ * the special tag name.
+ *
+ * This function will do various checks and typefind the encoded image
+ * data (we can't trust the declared mime type).
+ *
+ * Returns: a newly-allocated image buffer for use in tag lists, or NULL
+ *
+ * Since: 0.10.20
+ */
+GstBuffer *
+gst_tag_image_data_to_image_buffer (const guint8 * image_data,
+    guint image_data_len, GstTagImageType image_type)
+{
+  const gchar *name;
+  GstBuffer *image;
+  GstCaps *caps;
+
+  g_return_val_if_fail (image_data != NULL, NULL);
+  g_return_val_if_fail (image_data_len > 0, NULL);
+  g_return_val_if_fail (gst_tag_image_type_is_valid (image_type), NULL);
+
+  GST_DEBUG ("image data len: %u bytes", image_data_len);
+
+  /* allocate space for a NUL terminator for an uri too */
+  image = gst_buffer_try_new_and_alloc (image_data_len + 1);
+  if (image == NULL) {
+    GST_WARNING ("failed to allocate buffer of %d for image", image_data_len);
+    return NULL;
+  }
+
+  memcpy (GST_BUFFER_DATA (image), image_data, image_data_len);
+  GST_BUFFER_DATA (image)[image_data_len] = '\0';
+  GST_BUFFER_SIZE (image) = image_data_len;
+
+  /* Find GStreamer media type, can't trust declared type */
+  caps = gst_type_find_helper_for_buffer (NULL, image, NULL);
+
+  if (caps == NULL)
+    goto no_type;
+
+  GST_DEBUG ("Found GStreamer media type: %" GST_PTR_FORMAT, caps);
+
+  /* sanity check: make sure typefound/declared caps are either URI or image */
+  name = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+
+  if (!g_str_has_prefix (name, "image/") &&
+      !g_str_has_prefix (name, "video/") &&
+      !g_str_equal (name, "text/uri-list")) {
+    GST_DEBUG ("Unexpected image type '%s', ignoring image frame", name);
+    goto error;
+  }
+
+  if (image_type != GST_TAG_IMAGE_TYPE_NONE) {
+    GST_LOG ("Setting image type: %d", image_type);
+    caps = gst_caps_make_writable (caps);
+    gst_caps_set_simple (caps, "image-type", GST_TYPE_TAG_IMAGE_TYPE,
+        image_type, NULL);
+  }
+
+  gst_buffer_set_caps (image, caps);
+  gst_caps_unref (caps);
+  return image;
+
+/* ERRORS */
+no_type:
+  {
+    GST_DEBUG ("Could not determine GStreamer media type, ignoring image");
+    /* fall through */
+  }
+error:
+  {
+    if (image)
+      gst_buffer_unref (image);
+    if (caps)
+      gst_caps_unref (caps);
+    return NULL;
+  }
 }
