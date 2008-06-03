@@ -232,28 +232,16 @@ gst_interleave_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-/* Copied from base/gst-libs/gst/audio/multichannel.c and adjusted to our needs */
 static gboolean
-gst_audio_check_channel_positions (GValueArray * positions)
+gst_interleave_check_channel_positions (GValueArray * positions)
 {
-  gint i, n;
+  gint i;
 
-  gint channels;
+  guint channels;
 
   GstAudioChannelPosition *pos;
 
-  const struct
-  {
-    const GstAudioChannelPosition pos1[2];
-    const GstAudioChannelPosition pos2[1];
-  } conf[] = {
-    /* front: mono <-> stereo */
-    { {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_MONO}}, { {
-    GST_AUDIO_CHANNEL_POSITION_INVALID}}
-  };
+  gboolean ret;
 
   channels = positions->n_values;
   pos = g_new (GstAudioChannelPosition, positions->n_values);
@@ -264,69 +252,10 @@ gst_audio_check_channel_positions (GValueArray * positions)
     pos[i] = g_value_get_enum (v);
   }
 
-  /* check for invalid channel positions */
-  for (n = 0; n < channels; n++) {
-    if (pos[n] <= GST_AUDIO_CHANNEL_POSITION_INVALID ||
-        pos[n] >= GST_AUDIO_CHANNEL_POSITION_NUM) {
-      goto fail;
-    }
-  }
-
-  /* either all channel positions are NONE or all are defined,
-   * but having only some channel positions NONE and others not
-   * is not allowed */
-  if (pos[0] == GST_AUDIO_CHANNEL_POSITION_NONE) {
-    for (n = 1; n < channels; ++n) {
-      if (pos[n] != GST_AUDIO_CHANNEL_POSITION_NONE) {
-        goto fail;
-      }
-    }
-    /* all positions are NONE, we are done here */
-    goto fail;
-  }
-
-  /* check for multiple position occurrences */
-  for (i = GST_AUDIO_CHANNEL_POSITION_INVALID + 1;
-      i < GST_AUDIO_CHANNEL_POSITION_NUM; i++) {
-    gint count = 0;
-
-    for (n = 0; n < channels; n++) {
-      if (pos[n] == i)
-        count++;
-    }
-
-    /* NONE may not occur mixed with other channel positions */
-    if (i == GST_AUDIO_CHANNEL_POSITION_NONE && count > 0) {
-      goto fail;
-    }
-
-    if (count > 1) {
-      goto fail;
-    }
-  }
-
-  /* check for position conflicts */
-  for (i = 0; conf[i].pos1[0] != GST_AUDIO_CHANNEL_POSITION_INVALID; i++) {
-    gboolean found1 = FALSE, found2 = FALSE;
-
-    for (n = 0; n < channels; n++) {
-      if (pos[n] == conf[i].pos1[0] || pos[n] == conf[i].pos1[1])
-        found1 = TRUE;
-      else if (pos[n] == conf[i].pos2[0])
-        found2 = TRUE;
-    }
-
-    if (found1 && found2) {
-      goto fail;
-    }
-  }
-
+  ret = gst_audio_check_channel_positions (pos, channels);
   g_free (pos);
-  return TRUE;
 
-fail:
-  g_free (pos);
-  return FALSE;
+  return ret;
 }
 
 static void
@@ -339,7 +268,7 @@ gst_interleave_set_channel_positions (GstInterleave * self, GstStructure * s)
 
   if (self->channel_positions
       && self->channels == self->channel_positions->n_values
-      && gst_audio_check_channel_positions (self->channel_positions)) {
+      && gst_interleave_check_channel_positions (self->channel_positions)) {
     GST_DEBUG_OBJECT (self, "Using provided channel positions");
     for (i = 0; i < self->channels; i++)
       gst_value_array_append_value (&pos_array,
@@ -388,6 +317,11 @@ gst_interleave_class_init (GstInterleaveClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_interleave_debug, "interleave", 0,
       "interleave element");
+
+  /* Reference GstInterleavePad class to have the type registered from
+   * a threadsafe context
+   */
+  g_type_class_ref (GST_TYPE_INTERLEAVE_PAD);
 
   gobject_class->finalize = gst_interleave_finalize;
   gobject_class->set_property = gst_interleave_set_property;

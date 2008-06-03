@@ -1,3 +1,12 @@
+2008-06-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/interleave/interleave.c:
+	(gst_interleave_check_channel_positions),
+	(gst_interleave_set_channel_positions),
+	(gst_interleave_class_init):
+	Use new gst_audio_check_channel_positions() function and register
+	the GstInterleavePad type from a threadsafe context.
+
 2008-06-02  Michael Smith <msmith@songbirdnest.com>
 
 	* configure.ac:
