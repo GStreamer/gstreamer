@@ -154,6 +154,7 @@ G_BEGIN_DECLS
  *
  * Since: 0.10.9
  */
+/* Note: keep in sync with register_tag_image_type_enum() */
 typedef enum {
   GST_TAG_IMAGE_TYPE_NONE = -1,
   GST_TAG_IMAGE_TYPE_UNDEFINED = 0,

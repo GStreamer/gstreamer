@@ -1,5 +1,12 @@
 2008-06-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* gst-libs/gst/tag/tag.h:
+	* gst-libs/gst/tag/tags.c: (register_tag_image_type_enum):
+	  Don't forget to add new enum value here too (should probably use
+	  glib-mkenums here...).
+
+2008-06-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst-libs/gst/tag/gstid3tag.c: (gst_tag_list_add_id3_image):
 	* gst-libs/gst/tag/tag.h: (GST_TAG_IMAGE_TYPE_NONE),
 	* gst-libs/gst/tag/tags.c: (register_tag_image_type_enum),
@@ -8,6 +15,7 @@
 	  Add two utility functions to avoid code duplication (#512333):
 	  API: add gst_tag_image_data_to_image_buffer()
 	  API: add gst_tag_list_add_id3_image()
+	  API: add GST_TAG_IMAGE_TYPE_NONE enum value
 
 2008-06-03  Sebastian Dröge  <slomo@circular-chaos.org>
 

@@ -107,6 +107,7 @@ static void
 register_tag_image_type_enum (GType * id)
 {
   static const GEnumValue image_types[] = {
+    {GST_TAG_IMAGE_TYPE_NONE, "GST_TAG_IMAGE_TYPE_NONE", "none"},
     {GST_TAG_IMAGE_TYPE_UNDEFINED, "GST_TAG_IMAGE_TYPE_UNDEFINED", "undefined"},
     {GST_TAG_IMAGE_TYPE_FRONT_COVER, "GST_TAG_IMAGE_TYPE_FRONT_COVER",
         "front-cover"},
