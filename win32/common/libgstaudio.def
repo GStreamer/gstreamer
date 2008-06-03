@@ -1,6 +1,7 @@
 EXPORTS
 	gst_audio_buffer_clip
 	gst_audio_channel_position_get_type
+	gst_audio_check_channel_positions
 	gst_audio_clock_get_type
 	gst_audio_clock_new
 	gst_audio_clock_reset

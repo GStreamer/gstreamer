@@ -1,5 +1,10 @@
 2008-06-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* win32/common/libgstaudio.def:
+	Add gst_audio_check_channel_positions() to the exported symbols.
+
+2008-06-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* gst-libs/gst/audio/multichannel.c:
 	(gst_audio_check_channel_positions):
