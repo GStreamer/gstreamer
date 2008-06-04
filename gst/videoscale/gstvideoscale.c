@@ -387,26 +387,16 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
       "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
-  gst_caps_merge_structure (ret, structure);
-  structure = gst_caps_get_structure (ret, 0);
+  gst_caps_merge_structure (ret, gst_structure_copy (structure));
 
   /* if pixel aspect ratio, make a range of it */
   if ((par = gst_structure_get_value (structure, "pixel-aspect-ratio"))) {
-    GstCaps *copy;
-
-    GstStructure *cstruct;
-
-    /* copy input PAR first, this is the prefered PAR */
-    gst_structure_set_value (structure, "pixel-aspect-ratio", par);
-
-    /* then make a copy with a fraction range as a second choice */
-    copy = gst_caps_copy (ret);
-    cstruct = gst_caps_get_structure (copy, 0);
-    gst_structure_set (cstruct,
+    gst_structure_set (structure,
         "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
-    /* and append */
-    gst_caps_append (ret, copy);
+    gst_caps_merge_structure (ret, structure);
+  } else {
+    gst_structure_free (structure);
   }
 
   GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);

@@ -1,6 +1,13 @@
 2008-06-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/videoscale/gstvideoscale.c: (gst_video_scale_transform_caps):
+	Transform a given PAR to a range on the struct with the generic
+	height/width instead of the struct with the possibly restricted
+	height/width.
+
+2008-06-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_transform_caps):
 	Prefer the given format if it contains something stricter than [1,MAX]
 	for height or width and only put a structure that requires rescaling
 	as second. This makes it possible to use videoscale in pipelines where
