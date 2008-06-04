@@ -287,7 +287,6 @@ gst_avi_demux_index_last (GstAviDemux * avi, gint stream_nr)
   return result;
 }
 
-#if 0
 static gst_avi_index_entry *
 gst_avi_demux_index_next (GstAviDemux * avi, gint stream_nr, gint last,
     guchar flags)
@@ -308,7 +307,6 @@ gst_avi_demux_index_next (GstAviDemux * avi, gint stream_nr, gint last,
   }
   return result;
 }
-#endif
 
 static gst_avi_index_entry *
 gst_avi_demux_index_prev (GstAviDemux * avi, gint stream_nr, gint last,
@@ -3154,9 +3152,21 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   avi->current_entry = kentry->index_nr;
 
   if (segment->rate < 0.0) {
-    /* play between the keyframe and the destination entry */
+    gst_avi_index_entry *next_keyframe;
+
+    /* Because we don't know the frame order we need to push from the prev keyframe
+     * to the next keyframe. If there is a smart decoder downstream he will notice
+     * that there are too many decoded frames send and return UNEXPECTED when there
+     * are enough decoded frames to fill the segment.
+     */
+    next_keyframe =
+        gst_avi_demux_index_next (avi, 0, kentry->index_nr,
+        GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME);
+    if (!next_keyframe)
+      next_keyframe = gst_avi_demux_index_last (avi, 0);
+
     avi->reverse_start_index = kentry->index_nr;
-    avi->reverse_stop_index = entry->index_nr;
+    avi->reverse_stop_index = next_keyframe->index_nr;
 
     GST_DEBUG_OBJECT (avi, "reverse seek: start idx (%d) and stop idx (%d)",
         avi->reverse_start_index, avi->reverse_stop_index);
