@@ -1,3 +1,11 @@
+2008-06-04  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/dshowvideosink/dshowvideofakesrc.cpp:
+	* sys/dshowvideosink/dshowvideofakesrc.h:
+	* sys/dshowvideosink/dshowvideosink.cpp:
+	* sys/dshowvideosink/dshowvideosink.h:
+	  Fix up copyright notice on new plugin.
+
 2008-06-04  David Schleef  <ds@schleef.org>
 
 	* ext/dirac/gstdiracenc.cc: Update properties for recent

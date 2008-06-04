@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2008 Michael Smith <msmith@songbirdnest.com>
+ * Copyright (C) 2008 Pioneers of the Inevitable <songbird@songbirdnest.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

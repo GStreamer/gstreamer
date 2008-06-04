@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2008 Michael Smith <msmith@songbirdnest.com>
+ * Copyright (C) 2008 Pioneers of the Inevitable <songbird@songbirdnest.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -32,7 +32,7 @@ static const GstElementDetails gst_dshowvideosink_details =
 GST_ELEMENT_DETAILS ("DirectShow video sink",
     "Sink/Video",
     "Display data using a DirectShow video renderer",
-    "Michael Smith <msmith@songbirdnest.com>");
+    "Pioneers of the Inevitable <songbird@songbirdnest.com>");
 
 GST_DEBUG_CATEGORY_STATIC (dshowvideosink_debug);
 #define GST_CAT_DEFAULT dshowvideosink_debug
