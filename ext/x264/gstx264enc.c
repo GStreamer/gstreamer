@@ -220,6 +220,9 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   guint8 *buffer, *sps;
   gulong buffer_size;
 
+  if (G_UNLIKELY (encoder->x264enc == NULL))
+    return NULL;
+
   /* Create avcC header. */
 
   header_return = x264_encoder_headers (encoder->x264enc, &nal, &i_nal);
@@ -681,25 +684,23 @@ gst_x264_enc_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean ret;
   GstX264Enc *encoder;
-  GstFlowReturn flow_ret;
-  int i_nal;
 
   encoder = GST_X264_ENC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      /* send the rest NAL units */
+    case GST_EVENT_EOS:{
+      GstFlowReturn flow_ret;
+      int i_nal;
+
+      /* first send the rest NAL units */
       do {
         flow_ret = gst_x264_enc_encode_frame (encoder, NULL, &i_nal);
       } while (flow_ret == GST_FLOW_OK && i_nal > 0);
 
-      /* send EOS */
-      if (flow_ret == GST_FLOW_OK) {
-        ret = gst_pad_push_event (encoder->srcpad, event);
-      } else {
-        ret = FALSE;
-      }
+      /* then push the EOS downstream */
+      ret = gst_pad_push_event (encoder->srcpad, event);
       break;
+    }
     default:
       ret = gst_pad_push_event (encoder->srcpad, event);
       break;
@@ -779,10 +780,9 @@ gst_x264_enc_chain (GstPad * pad, GstBuffer * buf)
 /* ERRORS */
 not_inited:
   {
-    GST_ELEMENT_ERROR (encoder, CORE, NEGOTIATION, (NULL),
-        ("Got buffer before pads were fully negotiated"));
+    GST_WARNING_OBJECT (encoder, "Got buffer before set_caps was called");
     gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 wrong_buffer_size:
   {
@@ -809,6 +809,9 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   GstFlowReturn ret;
   GstClockTime timestamp;
   GstClockTime duration;
+
+  if (G_UNLIKELY (encoder->x264enc == NULL))
+    return GST_FLOW_NOT_NEGOTIATED;
 
   encoder_return = x264_encoder_encode (encoder->x264enc,
       &nal, i_nal, pic_in, &pic_out);
