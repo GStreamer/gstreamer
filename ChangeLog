@@ -1,3 +1,9 @@
+2008-06-04  Peter Kjellerstedt  <pkj@axis.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_stream_configure_udp_sink):
+	Use the new gst_rtsp_connection_get_ip() to access the IP address
+	of a GstRTSPConnection since it is a private member.
+
 2008-06-04  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* ext/flac/gstflacdec.c: (gst_flac_extract_picture_buffer):

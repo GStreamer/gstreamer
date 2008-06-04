@@ -2032,7 +2032,8 @@ gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
 {
   GstPad *pad;
   gint port, sockfd = -1;
-  gchar *destination, *uri, *name;
+  const gchar *destination;
+  gchar *uri, *name;
 
   /* no session, we're done */
   if (src->session == NULL)
@@ -2048,7 +2049,7 @@ gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
    * the RTCP. */
   destination = transport->source;
   if (destination == NULL)
-    destination = src->connection->ip;
+    destination = gst_rtsp_connection_get_ip (src->connection);
 
   GST_DEBUG_OBJECT (src, "configure UDP sink for %s:%d", destination, port);
 
