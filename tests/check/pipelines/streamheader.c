@@ -107,6 +107,7 @@ GST_START_TEST (test_multifdsink_gdp_tag)
 
 GST_END_TEST;
 
+#ifdef HAVE_VORBIS
 /* this tests gdp-serialized Vorbis header pages being sent only once
  * to clients of multifdsink; the gdp depayloader should deserialize
  * exactly three in_caps buffers for the three header packets */
@@ -204,7 +205,7 @@ GST_START_TEST (test_multifdsink_gdp_vorbisenc)
 }
 
 GST_END_TEST;
-
+#endif /* HAVE_VORBIS */
 
 #endif /* #ifndef GST_DISABLE_PARSE */
 
@@ -217,12 +218,14 @@ streamheader_suite (void)
   suite_add_tcase (s, tc_chain);
 #ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_multifdsink_gdp_tag);
+#ifdef HAVE_VORBIS
 #ifdef HAVE_CPU_PPC64
   g_print ("\n\n***** skipping test test_multifdsink_gdp_vorbisenc.  May fail "
       "on PPC64 due to compiler bug. See bug #348114 for details\n\n\n");
   if (0)                        /* this avoids the 'function not used' warning */
 #endif
     tcase_add_test (tc_chain, test_multifdsink_gdp_vorbisenc);
+#endif
 #endif
 
   return s;

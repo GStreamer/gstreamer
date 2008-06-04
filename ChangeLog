@@ -1,5 +1,12 @@
 2008-06-04  Peter Kjellerstedt  <pkj@axis.com>
 
+	* tests/check/pipelines/streamheader.c: (buffer_probe_cb),
+	(test_multifdsink_gdp_vorbisenc), (streamheader_suite):
+	Do not try to run a test which requires vorbisenc unless we have
+	actually built it.
+
+2008-06-04  Peter Kjellerstedt  <pkj@axis.com>
+
 	* gst-libs/gst/rtsp/gstrtspconnection.c:
 	(gst_rtsp_connection_set_auth), (gst_rtsp_connection_set_auth_param),
 	(gst_rtsp_connection_clear_auth_params),
