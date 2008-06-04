@@ -1,3 +1,9 @@
+2008-06-04  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* ext/flac/gstflacdec.c: (gst_flac_extract_picture_buffer):
+	* gst/id3demux/id3v2frames.c: (parse_picture_frame):
+	  Use new utility functions in libgsttag to process coverart (#512333).
+
 2008-06-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/flac/gstflacdec.c: (gst_flac_dec_write):
