@@ -111,7 +111,7 @@ GstRTSPResult      gst_rtsp_connection_reset_timeout (GstRTSPConnection *conn);
 /* flushing state */
 GstRTSPResult      gst_rtsp_connection_flush         (GstRTSPConnection *conn, gboolean flush);
 
-/* Configure Authentication data */
+/* configure authentication data */
 GstRTSPResult      gst_rtsp_connection_set_auth      (GstRTSPConnection *conn, GstRTSPAuthMethod method,
                                                       const gchar *user, const gchar *pass);
 
@@ -119,6 +119,13 @@ void               gst_rtsp_connection_set_auth_param    (GstRTSPConnection *con
 		                                          const gchar * param,
 							  const gchar *value);
 void               gst_rtsp_connection_clear_auth_params (GstRTSPConnection *conn);
+
+/* configure DSCP */
+GstRTSPResult      gst_rtsp_connection_set_qos_dscp  (GstRTSPConnection *conn,
+                                                      guint qos_dscp);
+
+/* accessors */
+const gchar *      gst_rtsp_connection_get_ip        (const GstRTSPConnection *conn);
 
 G_END_DECLS
 

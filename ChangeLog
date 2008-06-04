@@ -1,5 +1,17 @@
 2008-06-04  Peter Kjellerstedt  <pkj@axis.com>
 
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_set_auth), (gst_rtsp_connection_set_auth_param),
+	(gst_rtsp_connection_clear_auth_params),
+	(gst_rtsp_connection_set_qos_dscp), (gst_rtsp_connection_get_ip):
+	* gst-libs/gst/rtsp/gstrtspconnection.h:
+	Add a couple of missing argument guards.
+	Add a way of setting the DSCP for an RTSP connection.
+	Add an accessor method for the ip member of GstRTSPConnection as all
+	members are supposed to be private.
+
+2008-06-04  Peter Kjellerstedt  <pkj@axis.com>
+
 	* gst/tcp/gstmultifdsink.c: (setup_dscp_client):
 	Fixed accidental use of IPv4 options for all IPv6 addresses.
 

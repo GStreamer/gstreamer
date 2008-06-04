@@ -1423,6 +1423,8 @@ GstRTSPResult
 gst_rtsp_connection_set_auth (GstRTSPConnection * conn,
     GstRTSPAuthMethod method, const gchar * user, const gchar * pass)
 {
+  g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
+
   if (method == GST_RTSP_AUTH_DIGEST && ((user == NULL || pass == NULL)
           || g_strrstr (user, ":") != NULL))
     return GST_RTSP_EINVAL;
@@ -1451,7 +1453,7 @@ gst_rtsp_connection_set_auth (GstRTSPConnection * conn,
  *
  * Hashes @key in a case-insensitive manner.
  *
- * Return value: the hash code.
+ * Returns: the hash code.
  **/
 static guint
 str_case_hash (gconstpointer key)
@@ -1473,7 +1475,7 @@ str_case_hash (gconstpointer key)
  *
  * Compares @v1 and @v2 in a case-insensitive manner
  *
- * Return value: %TRUE if they are equal (modulo case)
+ * Returns: %TRUE if they are equal (modulo case)
  **/
 static gboolean
 str_case_equal (gconstpointer v1, gconstpointer v2)
@@ -1502,6 +1504,9 @@ void
 gst_rtsp_connection_set_auth_param (GstRTSPConnection * conn,
     const gchar * param, const gchar * value)
 {
+  g_return_if_fail (conn != NULL);
+  g_return_if_fail (param != NULL);
+
   if (conn->auth_params == NULL) {
     conn->auth_params =
         g_hash_table_new_full (str_case_hash, str_case_equal, g_free, g_free);
@@ -1520,8 +1525,97 @@ gst_rtsp_connection_set_auth_param (GstRTSPConnection * conn,
 void
 gst_rtsp_connection_clear_auth_params (GstRTSPConnection * conn)
 {
+  g_return_if_fail (conn != NULL);
+
   if (conn->auth_params != NULL) {
     g_hash_table_destroy (conn->auth_params);
     conn->auth_params = NULL;
   }
+}
+
+/**
+ * gst_rtsp_connection_set_qos_dscp:
+ * @conn: a #GstRTSPConnection
+ * @qos_dscp: DSCP value
+ *
+ * Configure @conn to use the specified DSCP value.
+ *
+ * Returns: #GST_RTSP_OK on success.
+ *
+ * Since: 0.10.20
+ */
+GstRTSPResult
+gst_rtsp_connection_set_qos_dscp (GstRTSPConnection * conn, guint qos_dscp)
+{
+  struct sockaddr_storage sa_s;
+  socklen_t sa_sl = sizeof (sa_s);
+  gint af;
+  gint tos;
+
+  g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (conn->fd.fd >= 0, GST_RTSP_EINVAL);
+
+  if (getsockname (conn->fd.fd, (struct sockaddr *) &sa_s, &sa_sl) < 0)
+    goto no_getsockname;
+
+  af = sa_s.ss_family;
+
+  /* if this is an IPv4-mapped address then do IPv4 QoS */
+  if (af == AF_INET6) {
+    struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *) &sa_s;
+
+    if (IN6_IS_ADDR_V4MAPPED (&saddr6->sin6_addr))
+      af = AF_INET;
+  }
+
+  /* extract and shift 6 bits of the DSCP */
+  tos = (qos_dscp & 0x3f) << 2;
+
+  switch (af) {
+    case AF_INET:
+      if (setsockopt (conn->fd.fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos)) < 0)
+        goto no_setsockopt;
+      break;
+    case AF_INET6:
+#ifdef IPV6_TCLASS
+      if (setsockopt (conn->fd.fd, IPPROTO_IPV6, IPV6_TCLASS, &tos,
+              sizeof (tos)) < 0)
+        goto no_setsockopt;
+      break;
+#endif
+    default:
+      goto wrong_family;
+  }
+
+  return GST_RTSP_OK;
+
+  /* ERRORS */
+no_getsockname:
+no_setsockopt:
+  {
+    return GST_RTSP_ESYS;
+  }
+
+wrong_family:
+  {
+    return GST_RTSP_ERROR;
+  }
+}
+
+/**
+ * gst_rtsp_connection_get_ip:
+ * @conn: a #GstRTSPConnection
+ *
+ * Retrieve the IP address of the other end of @conn.
+ *
+ * Returns: The IP address as a string.
+ *
+ * Since: 0.10.20
+ */
+const gchar *
+gst_rtsp_connection_get_ip (const GstRTSPConnection * conn)
+{
+  g_return_val_if_fail (conn != NULL, NULL);
+
+  return conn->ip;
 }
