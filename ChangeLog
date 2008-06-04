@@ -1,3 +1,17 @@
+2008-06-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/interleave/interleave.c: (gst_interleave_pad_get_type),
+	(gst_interleave_pad_get_property), (gst_interleave_pad_class_init),
+	(gst_interleave_request_new_pad), (gst_interleave_release_pad):
+	* gst/interleave/interleave.h:
+	Use an always increasing integer for the number in the name of the
+	requested sink pads to guarantuee a unique name. Add a "channel"
+	property to GstInterleavePad to make it possible for applications
+	to retrieve the channel number in the output for every pad.
+
+	Use g_type_register_static_simple() instead of
+	g_type_register_static() to save some relocations.
+
 2008-06-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/interleave/interleave.c: (gst_interleave_pad_get_type),
