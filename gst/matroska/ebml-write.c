@@ -71,6 +71,11 @@ gst_ebml_write_finalize (GObject * object)
 
   gst_object_unref (ebml->srcpad);
 
+  if (ebml->cache) {
+    gst_buffer_unref (ebml->cache);
+    ebml->cache = NULL;
+  }
+
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
@@ -153,7 +158,7 @@ gst_ebml_last_write_result (GstEbmlWrite * ebml)
 void
 gst_ebml_write_set_cache (GstEbmlWrite * ebml, guint size)
 {
-  /* This is currently broken. I don't know why yet. */
+  /* FIXME: This is currently broken. I don't know why yet. */
   return;
 
   g_return_if_fail (ebml->cache == NULL);
@@ -250,6 +255,7 @@ static void
 gst_ebml_write_element_id (GstBuffer * buf, guint32 id)
 {
   guint8 *data = GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf);
+
   guint bytes = 4, mask = 0x10;
 
   /* get ID length */
@@ -285,6 +291,7 @@ static void
 gst_ebml_write_element_size (GstBuffer * buf, guint64 size)
 {
   guint8 *data = GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf);
+
   guint bytes = 1, mask = 0x80;
 
   if (size != GST_EBML_SIZE_UNKNOWN) {
@@ -474,6 +481,7 @@ void
 gst_ebml_write_uint (GstEbmlWrite * ebml, guint32 id, guint64 num)
 {
   GstBuffer *buf = gst_ebml_write_element_new (ebml, sizeof (num));
+
   guint size = gst_ebml_write_get_uint_size (num);
 
   /* write */
@@ -502,6 +510,7 @@ gst_ebml_write_sint (GstEbmlWrite * ebml, guint32 id, gint64 num)
    * have a number (-)0x8000 (G_MINSHORT), then my abs()<<1
    * will be 0x10000; this is G_MAXUSHORT+1! So: if (<0) -1. */
   guint64 unum = (num < 0 ? (-num - 1) << 1 : num << 1);
+
   guint size = gst_ebml_write_get_uint_size (unum);
 
   /* make unsigned */
@@ -563,6 +572,7 @@ void
 gst_ebml_write_ascii (GstEbmlWrite * ebml, guint32 id, const gchar * str)
 {
   gint len = strlen (str) + 1;  /* add trailing '\0' */
+
   GstBuffer *buf = gst_ebml_write_element_new (ebml, len);
 
   gst_ebml_write_element_id (buf, id);
@@ -618,6 +628,7 @@ guint64
 gst_ebml_write_master_start (GstEbmlWrite * ebml, guint32 id)
 {
   guint64 pos = ebml->pos, t;
+
   GstBuffer *buf = gst_ebml_write_element_new (ebml, 0);
 
   t = GST_BUFFER_SIZE (buf);
@@ -641,6 +652,7 @@ void
 gst_ebml_write_master_finish (GstEbmlWrite * ebml, guint64 startpos)
 {
   guint64 pos = ebml->pos;
+
   GstBuffer *buf;
 
   gst_ebml_write_seek (ebml, startpos);
@@ -734,6 +746,7 @@ void
 gst_ebml_replace_uint (GstEbmlWrite * ebml, guint64 pos, guint64 num)
 {
   guint64 oldpos = ebml->pos;
+
   GstBuffer *buf = gst_buffer_new_and_alloc (8);
 
   gst_ebml_write_seek (ebml, pos);
