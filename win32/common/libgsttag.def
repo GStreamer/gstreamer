@@ -6,7 +6,9 @@ EXPORTS
 	gst_tag_from_vorbis_tag
 	gst_tag_id3_genre_count
 	gst_tag_id3_genre_get
+	gst_tag_image_data_to_image_buffer
 	gst_tag_image_type_get_type
+	gst_tag_list_add_id3_image
 	gst_tag_list_from_vorbiscomment_buffer
 	gst_tag_list_new_from_id3v1
 	gst_tag_list_to_vorbiscomment_buffer
