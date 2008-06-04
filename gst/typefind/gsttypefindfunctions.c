@@ -577,29 +577,22 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
 
       snc = GST_READ_UINT16_BE (c.data + len);
       if ((snc & 0xfff6) == 0xfff0) {
-        gint mpegversion = (c.data[1] & 0x08) ? 2 : 4;
-        GstCaps *caps = gst_caps_new_simple ("audio/mpeg",
-            "framed", G_TYPE_BOOLEAN, FALSE,
-            "mpegversion", G_TYPE_INT, mpegversion,
-            NULL);
+        gint mpegversion;
 
-        gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
-        gst_caps_unref (caps);
+        mpegversion = (c.data[1] & 0x08) ? 2 : 4;
         GST_DEBUG ("Found second ADTS-%d syncpoint at offset 0x%"
             G_GINT64_MODIFIER "x, framelen %u", mpegversion, c.offset, len);
+        gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
+            "framed", G_TYPE_BOOLEAN, FALSE,
+            "mpegversion", G_TYPE_INT, mpegversion, NULL);
         break;
       }
 
       GST_DEBUG ("No next frame found... (should have been at 0x%x)", len);
     } else if (!memcmp (c.data, "ADIF", 4)) {
       /* ADIF header */
-      GstCaps *caps = gst_caps_new_simple ("audio/mpeg",
-          "framed", G_TYPE_BOOLEAN, FALSE,
-          "mpegversion", G_TYPE_INT, 4,
-          NULL);
-
-      gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
-      gst_caps_unref (caps);
+      gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
+          "framed", G_TYPE_BOOLEAN, FALSE, "mpegversion", G_TYPE_INT, 4, NULL);
       break;
     }
 
@@ -949,16 +942,10 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
 
 suggest:
   {
-    GstCaps *caps;
+    g_return_if_fail (layer >= 1 && layer <= 3);
 
-    g_assert (layer > 0);
-
-    caps = gst_caps_make_writable (MP3_CAPS);
-    gst_structure_set (gst_caps_get_structure (caps, 0), "layer",
-        G_TYPE_INT, layer, NULL);
-    gst_type_find_suggest (tf, prob, caps);
-    gst_caps_unref (caps);
-    return;
+    gst_type_find_suggest_simple (tf, prob, "audio/mpeg",
+        "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, layer, NULL);
   }
 }
 
@@ -988,15 +975,8 @@ musepack_type_find (GstTypeFind * tf, gpointer unused)
   }
 
   if (streamversion != -1) {
-    GstCaps *caps;
-
-    caps = gst_caps_make_writable (MUSEPACK_CAPS);
-    gst_structure_set (gst_caps_get_structure (caps, 0), "streamversion",
-        G_TYPE_INT, streamversion, NULL);
-
-    gst_type_find_suggest (tf, prop, caps);
-
-    gst_caps_unref (caps);
+    gst_type_find_suggest_simple (tf, prop, "audio/x-musepack",
+        "streamversion", G_TYPE_INT, streamversion, NULL);
   }
 }
 
@@ -1206,10 +1186,7 @@ multipart_type_find (GstTypeFind * tf, gpointer unused)
     }
     if (*x == '\n' &&
         !g_ascii_strncasecmp ("content-type:", (gchar *) x + 1, 13)) {
-      GstCaps *caps = gst_caps_copy (MULTIPART_CAPS);
-
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
-      gst_caps_unref (caps);
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MULTIPART_CAPS);
       return;
     }
   }
@@ -1457,7 +1434,6 @@ mpeg_sys_type_find (GstTypeFind * tf, gpointer unused)
   return;
 suggest:
   {
-    GstCaps *caps = gst_caps_copy (MPEG_SYS_CAPS);
     guint prob;
 
     prob = GST_TYPE_FIND_POSSIBLE + (10 * (pack_headers + pes_headers));
@@ -1470,10 +1446,9 @@ suggest:
     GST_LOG ("Suggesting MPEG %d system stream, %d packs, %d pes, prob %u%%\n",
         mpegversion, pack_headers, pes_headers, prob);
 
-    gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-        G_TYPE_INT, mpegversion, NULL);
-    gst_type_find_suggest (tf, prob, caps);
-    gst_caps_unref (caps);
+    gst_type_find_suggest_simple (tf, prob, "video/mpeg",
+        "systemstream", G_TYPE_BOOLEAN, TRUE,
+        "mpegversion", G_TYPE_INT, mpegversion, NULL);
   }
 };
 
@@ -1551,18 +1526,15 @@ mpeg_ts_type_find (GstTypeFind * tf, gpointer unused)
         found = mpeg_ts_probe_headers (tf, skipped, pack_sizes[p]);
         if (found >= GST_MPEGTS_TYPEFIND_MIN_HEADERS) {
           gint probability;
-          GstCaps *caps = gst_caps_copy (MPEGTS_CAPS);
-
-          gst_structure_set (gst_caps_get_structure (caps, 0), "packetsize",
-              G_TYPE_INT, pack_sizes[p], NULL);
 
           /* found at least 4 headers. 10 headers = MAXIMUM probability. 
            * Arbitrarily, I assigned 10% probability for each header we
            * found, 40% -> 100% */
           probability = MIN (10 * found, GST_TYPE_FIND_MAXIMUM);
 
-          gst_type_find_suggest (tf, probability, caps);
-          gst_caps_unref (caps);
+          gst_type_find_suggest_simple (tf, probability, "video/mpegts",
+              "systemstream", G_TYPE_BOOLEAN, TRUE,
+              "packetsize", G_TYPE_INT, pack_sizes[p], NULL);
           return;
         }
       }
@@ -1605,10 +1577,8 @@ mpeg4_video_type_find (GstTypeFind * tf, gpointer unused)
         seen_vos = TRUE;
       } else if (sc >= 0x20 && sc <= 0x2F) {    /* video_object_layer_start_code */
         if (seen_vos) {
-          GstCaps *caps = gst_caps_copy (MPEG4_VIDEO_CAPS);
-
-          gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
-          gst_caps_unref (caps);
+          gst_type_find_suggest (tf, GST_TYPE_FIND_NEARLY_CERTAIN,
+              MPEG4_VIDEO_CAPS);
           return;
         } else
           return;
@@ -1674,10 +1644,8 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
 
       if ((stat_slice > 4 || (stat_dpa > 4 && stat_dpb > 4 && stat_dpc > 4)) &&
           stat_idr >= 1 && stat_sps >= 1 && stat_pps >= 1) {
-        GstCaps *caps = gst_caps_copy (H264_VIDEO_CAPS);
-
-        gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
-        gst_caps_unref (caps);
+        gst_type_find_suggest (tf, GST_TYPE_FIND_NEARLY_CERTAIN,
+            H264_VIDEO_CAPS);
         return;
       }
 
@@ -1770,7 +1738,6 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
 
   if (found > 0 || seen_seq) {
     GstTypeFindProbability probability = 0;
-    GstCaps *caps;
 
     GST_LOG ("Found %d pictures, seq:%d, gop:%d", found, seen_seq, seen_gop);
 
@@ -1793,10 +1760,9 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
     else if (seen_seq)
       probability = GST_TYPE_FIND_POSSIBLE - 20;
 
-    caps = gst_caps_copy (MPEG_VIDEO_CAPS);
-    gst_caps_set_simple (caps, "mpegversion", G_TYPE_INT, 1, NULL);
-    gst_type_find_suggest (tf, probability, caps);
-    gst_caps_unref (caps);
+    gst_type_find_suggest_simple (tf, probability, "video/mpeg",
+        "systemstream", G_TYPE_BOOLEAN, FALSE,
+        "mpegversion", G_TYPE_INT, 1, NULL);
   }
 }
 
@@ -2378,19 +2344,17 @@ dv_type_find (GstTypeFind * tf, gpointer private)
   /* check for DIF  and DV flag */
   if (data && (data[0] == 0x1f) && (data[1] == 0x07) && (data[2] == 0x00) &&
       ((data[4] & 0x01) == 0)) {
-    gchar *format;
-    GstCaps *caps = gst_caps_copy (DV_CAPS);
+    const gchar *format;
 
     if (data[3] & 0x80) {
       format = "PAL";
     } else {
       format = "NTSC";
     }
-    gst_structure_set (gst_caps_get_structure (caps, 0), "format",
-        G_TYPE_STRING, format, NULL);
 
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
-    gst_caps_unref (caps);
+    gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM, "video/x-dv",
+        "systemstream", G_TYPE_BOOLEAN, TRUE,
+        "format", G_TYPE_STRING, format, NULL);
   }
 }
 
@@ -2783,11 +2747,7 @@ mmsh_type_find (GstTypeFind * tf, gpointer unused)
   if (data && data[0] == 0x24 && data[1] == 0x48 &&
       GST_READ_UINT16_LE (data + 2) > 2 + 2 + 4 + 2 + 2 + 16 &&
       memcmp (data + 2 + 2 + 4 + 2 + 2, asf_marker, 16) == 0) {
-    GstCaps *caps = gst_caps_copy (MMSH_CAPS);
-
-    gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
-    gst_caps_unref (caps);
-    return;
+    gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, MMSH_CAPS);
   }
 }
 

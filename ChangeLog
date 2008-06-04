@@ -1,3 +1,15 @@
+2008-06-04  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/typefind/gsttypefindfunctions.c: (aac_type_find),
+	  (mp3_type_find), (musepack_type_find), (MULTIPART_MAX_HEADER_SIZE),
+	  (mpeg_sys_type_find), (mpeg_ts_type_find), (mpeg4_video_type_find),
+	  (h264_video_type_find), (mpeg_video_stream_type_find),
+	  (dv_type_find), (mmsh_type_find):
+	  Bunch of small clean-ups: use gst_type_find_suggest_simple(); don't
+	  copy caps for no good reason (this may be desirable to make it easier
+	  to detect leaks, but then it should probably be done for all caps
+	  in the typefinder somewhere).
+
 2008-06-04  Peter Kjellerstedt  <pkj@axis.com>
 
 	* tests/check/Makefile.am:
