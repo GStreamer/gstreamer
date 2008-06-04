@@ -1,6 +1,11 @@
 2008-06-04  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/avi/gstavidemux.c:
+	Fix typo in comment
+
+2008-06-04  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/avi/gstavidemux.c:
 	Because we don't know the frame order we need to push till
 	the next keyframe
 

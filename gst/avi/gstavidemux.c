@@ -3156,7 +3156,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
 
     /* Because we don't know the frame order we need to push from the prev keyframe
      * to the next keyframe. If there is a smart decoder downstream he will notice
-     * that there are too many decoded frames send and return UNEXPECTED when there
+     * that there are too many encoded frames send and return UNEXPECTED when there
      * are enough decoded frames to fill the segment.
      */
     next_keyframe =
