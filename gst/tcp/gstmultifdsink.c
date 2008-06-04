@@ -731,18 +731,20 @@ setup_dscp_client (GstMultiFdSink * sink, GstTCPClient * client)
 
   af = ssaddr.ss_family;
 
-  /* If this is a v4-mapped address then do ipv4 qos. */
+  /* if this is an IPv4-mapped address then do IPv4 QoS */
   if (af == AF_INET6) {
     struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *) &ssaddr;
 
     GST_DEBUG_OBJECT (sink, "check IP6 socket");
-    if (IN6_IS_ADDR_V4MAPPED (&(saddr6->sin6_addr)))
+    if (IN6_IS_ADDR_V4MAPPED (&(saddr6->sin6_addr))) {
       GST_DEBUG_OBJECT (sink, "mapped to IPV4");
-    af = AF_INET;
+      af = AF_INET;
+    }
   }
 
-  /* Extract and shift 6 bits of the dscp. */
+  /* extract and shift 6 bits of the DSCP */
   tos = (sink->qos_dscp & 0x3f) << 2;
+
   switch (af) {
     case AF_INET:
       ret = setsockopt (client->fd.fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos));
@@ -2750,6 +2752,7 @@ gst_multi_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_QOS_DSCP:
       g_value_set_int (value, multifdsink->qos_dscp);
       break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

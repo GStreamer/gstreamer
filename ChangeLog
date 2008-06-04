@@ -1,3 +1,8 @@
+2008-06-04  Peter Kjellerstedt  <pkj@axis.com>
+
+	* gst/tcp/gstmultifdsink.c: (setup_dscp_client):
+	Fixed accidental use of IPv4 options for all IPv6 addresses.
+
 2008-06-04  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst-libs/gst/interfaces/mixertrack.h:
