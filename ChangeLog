@@ -1,3 +1,12 @@
+2008-06-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_class_init),
+	(gst_v4l2src_fixate), (gst_v4l2src_negotiate):
+	Provide a custom negotiation function to make sure to pick the highest
+	possible framerate and resolution. Fixes bug #536646.
+
 2008-06-04  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/avi/gstavidemux.c:
