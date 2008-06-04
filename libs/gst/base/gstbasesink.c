@@ -724,6 +724,7 @@ gst_base_sink_set_async_enabled (GstBaseSink * sink, gboolean enabled)
 
   GST_PAD_PREROLL_LOCK (sink->sinkpad);
   sink->priv->async_enabled = enabled;
+  GST_LOG_OBJECT (sink, "set async enabled to %d", enabled);
   GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
 }
 
@@ -772,6 +773,7 @@ gst_base_sink_set_ts_offset (GstBaseSink * sink, GstClockTimeDiff offset)
 
   GST_OBJECT_LOCK (sink);
   sink->priv->ts_offset = offset;
+  GST_LOG_OBJECT (sink, "set time offset to %" G_GINT64_FORMAT, offset);
   GST_OBJECT_UNLOCK (sink);
 }
 
@@ -1402,7 +1404,7 @@ out_of_segment:
   }
 }
 
-/* with STREAM_LOCK, PREROLL_LOCK
+/* with STREAM_LOCK, PREROLL_LOCK, LOCK
  * adjust a timestamp with the latency and timestamp offset */
 static GstClockTime
 gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
@@ -1810,10 +1812,19 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
   stop = priv->current_rstop;
   jitter = priv->current_jitter;
 
-  /* this is the time the buffer entered the sink */
-  entered = start + jitter;
-  /* this is the time the buffer left the sink */
-  left = start + (jitter < 0 ? 0 : jitter);
+  if (jitter < 0) {
+    /* this is the time the buffer entered the sink */
+    if (start < -jitter)
+      entered = 0;
+    else
+      entered = start + jitter;
+    left = start;
+  } else {
+    /* this is the time the buffer entered the sink */
+    entered = start + jitter;
+    /* this is the time the buffer left the sink */
+    left = start + jitter;
+  }
 
   /* calculate duration of the buffer */
   if (stop != -1)
@@ -1881,8 +1892,14 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
       GST_TIME_ARGS (priv->avg_pt), priv->avg_rate);
 
 
-  /* if we have a valid rate, start sending QoS messages */
   if (priv->avg_rate >= 0.0) {
+    /* if we have a valid rate, start sending QoS messages */
+    if (priv->current_jitter < 0) {
+      /* make sure we never go below 0 when adding the jitter to the
+       * timestamp. */
+      if (priv->current_rstart < -priv->current_jitter)
+        priv->current_jitter = -priv->current_rstart;
+    }
     gst_base_sink_send_qos (sink, priv->avg_rate, priv->current_rstart,
         priv->current_jitter);
   }
