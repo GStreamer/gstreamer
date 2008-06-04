@@ -3461,11 +3461,14 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
     /* check for reverse playback */
     if (avi->segment.rate < 0 && avi->current_entry > avi->reverse_stop_index) {
       GST_LOG_OBJECT (avi, "stop_index %d reached", avi->reverse_stop_index);
+
+      /* check if we have pushed enough data for this segment */
+      if (avi->reverse_start_index == 0)
+        goto eos_reverse_zero;
+      if (avi->index_entries[avi->reverse_start_index].ts < avi->segment.start)
+        goto eos_reverse_segment;
+
       avi->reverse_stop_index = avi->reverse_start_index;
-      if (avi->reverse_start_index == 0) {
-        GST_DEBUG_OBJECT (avi, "start_index was 0, sending eos");
-        goto eos;
-      }
       entry =
           gst_avi_demux_index_prev (avi, 0, avi->reverse_stop_index,
           GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME);
@@ -3594,6 +3597,18 @@ eos_stop:
     GST_LOG_OBJECT (avi, "Found keyframe after segment,"
         " setting EOS (%" GST_TIME_FORMAT " > %" GST_TIME_FORMAT ")",
         GST_TIME_ARGS (entry->ts), GST_TIME_ARGS (avi->segment.stop));
+    res = GST_FLOW_UNEXPECTED;
+    goto beach;
+  }
+eos_reverse_zero:
+  {
+    GST_DEBUG_OBJECT (avi, "start_index was 0, setting EOS");
+    res = GST_FLOW_UNEXPECTED;
+    goto beach;
+  }
+eos_reverse_segment:
+  {
+    GST_DEBUG_OBJECT (avi, "full segment pushed, setting EOS");
     res = GST_FLOW_UNEXPECTED;
     goto beach;
   }
