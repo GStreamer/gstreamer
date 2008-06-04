@@ -74,6 +74,12 @@ else
 check_theora =
 endif
 
+if USE_PLUGIN_SUBPARSE
+check_subparse = elements/subparse
+else
+check_subparse =
+endif
+
 check_PROGRAMS = \
 	$(check_alsa) \
 	$(check_gnomevfs) \
@@ -93,7 +99,7 @@ check_PROGRAMS = \
 	elements/gdppay \
 	elements/multifdsink \
 	elements/playbin \
-	elements/subparse \
+	$(check_subparse) \
 	elements/videorate \
 	elements/videotestsrc \
 	elements/volume \

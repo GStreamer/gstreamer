@@ -1,5 +1,11 @@
 2008-06-04  Peter Kjellerstedt  <pkj@axis.com>
 
+	* tests/check/Makefile.am:
+	Do not try to run the check tests for subparse unless it has been
+	built.
+
+2008-06-04  Peter Kjellerstedt  <pkj@axis.com>
+
 	* tests/check/pipelines/streamheader.c: (buffer_probe_cb),
 	(test_multifdsink_gdp_vorbisenc), (streamheader_suite):
 	Do not try to run a test which requires vorbisenc unless we have
