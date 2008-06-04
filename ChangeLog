@@ -1,3 +1,8 @@
+2008-06-04  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst-libs/gst/interfaces/mixertrack.h:
+	  Document mixer track flags.
+
 2008-06-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Antoine Tremblay <hexa00 at gmail dot com>

@@ -54,7 +54,19 @@ G_BEGIN_DECLS
  * mixer, which means that setting this track will change
  * the hearable volume on any output.
  */
-
+/**
+ * GstMixerTrackFlags:
+ * @GST_MIXER_TRACK_INPUT: mixer track is for input
+ * @GST_MIXER_TRACK_OUTPUT: mixer track is for output
+ * @GST_MIXER_TRACK_MUTE: input or output is muted
+ * @GST_MIXER_TRACK_RECORD: input is audible in speakers attached to output
+ *     (for #GST_MIXER_TRACK_INPUT mixer tracks only)
+ * @GST_MIXER_TRACK_MASTER: this mixer track is likely to be the master control
+ * @GST_MIXER_TRACK_SOFTWARE: mixer track's' volume control is implemented
+ *     in software (as opposed to a hardware control)
+ *
+ * Mixer track flags.
+ */
 typedef enum {
   GST_MIXER_TRACK_INPUT  = (1<<0),
   GST_MIXER_TRACK_OUTPUT = (1<<1),
