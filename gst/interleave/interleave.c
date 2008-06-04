@@ -45,6 +45,9 @@
  * some of the request pads but this will change the caps of the output buffers. Changing the input
  * caps is _not_ supported yet.
  * </para>
+ * <para>
+ * The channel number of every sinkpad in the out can be retrieved from the "channel" property of the pad.
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
@@ -144,6 +147,14 @@ typedef struct
   guint channel;
 } GstInterleavePad;
 
+enum
+{
+  PROP_PAD_0,
+  PROP_PAD_CHANNEL
+};
+
+static void gst_interleave_pad_class_init (GstPadClass * klass);
+
 #define GST_TYPE_INTERLEAVE_PAD (gst_interleave_pad_get_type())
 #define GST_INTERLEAVE_PAD(pad) (G_TYPE_CHECK_INSTANCE_CAST((pad),GST_TYPE_INTERLEAVE_PAD,GstInterleavePad))
 #define GST_INTERLEAVE_PAD_CAST(pad) ((GstInterleavePad *) pad)
@@ -154,21 +165,43 @@ gst_interleave_pad_get_type (void)
   static GType type = 0;
 
   if (G_UNLIKELY (type == 0)) {
-    static const GTypeInfo info = {
-      sizeof (GstPadClass),
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      sizeof (GstInterleavePad),
-      0,
-      NULL
-    };
-
-    type = g_type_register_static (GST_TYPE_PAD, "GstInterleavePad", &info, 0);
+    type = g_type_register_static_simple (GST_TYPE_PAD,
+        g_intern_static_string ("GstInterleavePad"), sizeof (GstPadClass),
+        (GClassInitFunc) gst_interleave_pad_class_init,
+        sizeof (GstInterleavePad), NULL, 0);
   }
   return type;
+}
+
+static void
+gst_interleave_pad_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstInterleavePad *self = GST_INTERLEAVE_PAD (object);
+
+  switch (prop_id) {
+    case PROP_PAD_CHANNEL:
+      g_value_set_uint (value, self->channel);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_interleave_pad_class_init (GstPadClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  gobject_class->get_property = gst_interleave_pad_get_property;
+
+  g_object_class_install_property (gobject_class,
+      PROP_PAD_CHANNEL,
+      g_param_spec_uint ("channel",
+          "Channel number",
+          "Number of the channel of this pad in the output", 0, G_MAXUINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 GST_BOILERPLATE (GstInterleave, gst_interleave, GstElement, GST_TYPE_ELEMENT);
@@ -455,15 +488,16 @@ gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   gchar *pad_name;
 
-  gint channels;
+  gint channels, padnumber;
   GValue val = { 0, };
 
   if (templ->direction != GST_PAD_SINK)
     goto not_sink_pad;
 
   channels = g_atomic_int_exchange_and_add (&self->channels, 1);
+  padnumber = g_atomic_int_exchange_and_add (&self->padcounter, 1);
 
-  pad_name = g_strdup_printf ("sink%d", channels);
+  pad_name = g_strdup_printf ("sink%d", padnumber);
   new_pad = GST_PAD_CAST (g_object_new (GST_TYPE_INTERLEAVE_PAD,
           "name", pad_name, "direction", templ->direction,
           "template", templ, NULL));
@@ -544,7 +578,7 @@ gst_interleave_release_pad (GstElement * element, GstPad * pad)
   /* Take lock to make sure we're not changing this when processing buffers */
   GST_OBJECT_LOCK (self->collect);
 
-  self->channels--;
+  g_atomic_int_add (&self->channels, -1);
 
   g_value_array_remove (self->input_channel_positions,
       GST_INTERLEAVE_PAD_CAST (pad)->channel);

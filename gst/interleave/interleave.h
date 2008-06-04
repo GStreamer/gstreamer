@@ -52,6 +52,7 @@ struct _GstInterleave
   GstCollectPads *collect;
 
   gint channels;
+  gint padcounter;
   gint rate;
   gint width;
 
