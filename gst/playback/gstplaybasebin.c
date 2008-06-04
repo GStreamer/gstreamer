@@ -1936,6 +1936,19 @@ remove_decoders (GstPlayBaseBin * bin)
     GstElement *decoder = GST_ELEMENT_CAST (walk->data);
 
     GST_DEBUG_OBJECT (bin, "removing old decoder element");
+    /* Disconnect all the signal handlers we attached to the decodebin before
+     * we dispose of it */
+    g_signal_handlers_disconnect_by_func (decoder,
+        G_CALLBACK (decodebin_element_added_cb), bin);
+    g_signal_handlers_disconnect_by_func (decoder,
+        G_CALLBACK (decodebin_element_removed_cb), bin);
+    g_signal_handlers_disconnect_by_func (decoder,
+        G_CALLBACK (new_decoded_pad), bin);
+    g_signal_handlers_disconnect_by_func (decoder,
+        G_CALLBACK (no_more_pads), bin);
+    g_signal_handlers_disconnect_by_func (decoder,
+        G_CALLBACK (unknown_type), bin);
+
     gst_element_set_state (decoder, GST_STATE_NULL);
     gst_bin_remove (GST_BIN_CAST (bin), decoder);
   }
