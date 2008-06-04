@@ -1,3 +1,13 @@
+2008-06-04  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* ext/x264/gstx264enc.c: (gst_x264_enc_header_buf),
+	  (gst_x264_enc_sink_event), (gst_x264_enc_chain),
+	  (gst_x264_enc_encode_frame):
+	  Try harder not to crash when we get an EOS event but haven't set
+	  up the encoder yet (as may happen when upstream errors out with
+	  not-negotiated, for example). Also, always push the EOS event
+	  downstream.
+
 2008-06-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/interleave/interleave.c: (gst_interleave_pad_get_type),
