@@ -1,5 +1,15 @@
 2008-06-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Antoine Tremblay <hexa00 at gmail dot com>
+
+	* gst/gdp/gstgdppay.c: (gst_gdp_pay_reset_streamheader):
+	Don't set caps on the buffers that contain a copy of the buffer
+	including the caps of them resulting in an always increasing refcount
+	of the caps and insanely large caps. Instead include a buffer without
+	caps in the new caps. Fixes bug #536475.
+
+2008-06-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/videoscale/gstvideoscale.c: (gst_video_scale_transform_caps):
 	Transform a given PAR to a range on the struct with the generic
 	height/width instead of the struct with the possibly restricted
