@@ -1,3 +1,8 @@
+2008-06-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstevent.c: (gst_event_new_qos):
+	Add some assert and docs for invalid input to the qos function.
+
 2008-05-30  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times),

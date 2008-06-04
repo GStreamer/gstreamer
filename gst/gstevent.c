@@ -757,7 +757,8 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
  * The upstream element can use the @diff and @timestamp values to decide
  * whether to process more buffers. For possitive @diff, all buffers with
  * timestamp <= @timestamp + @diff will certainly arrive late in the sink
- * as well. 
+ * as well. A (negative) @diff value so that @timestamp + @diff would yield a
+ * result smaller than 0 is not allowed.
  *
  * The application can use general event probes to intercept the QoS
  * event and implement custom application specific QoS handling.
@@ -768,6 +769,9 @@ GstEvent *
 gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
     GstClockTime timestamp)
 {
+  /* diff must be positive or timestamp + diff must be positive */
+  g_return_val_if_fail (diff >= 0 || -diff <= timestamp, NULL);
+
   GST_CAT_INFO (GST_CAT_EVENT,
       "creating qos proportion %lf, diff %" G_GINT64_FORMAT
       ", timestamp %" GST_TIME_FORMAT, proportion,
