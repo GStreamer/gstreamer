@@ -1,5 +1,11 @@
 2008-06-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/flac/gstflacdec.c: (gst_flac_dec_write):
+	We actually support left/side, right/side and mid/side files. The
+	conversion to normal, interleaved stereo is done by libflac.
+
+2008-06-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/matroska/ebml-write.c: (gst_ebml_write_finalize),
 	(gst_ebml_write_set_cache):
 	Unref the write cache in finalize if it was set and add add "FIXME"
