@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2 -*- */
-/* Copyright 2006 Tim-Philipp Müller <tim centricular net>
+/* Copyright 2006-2008 Tim-Philipp Müller <tim centricular net>
  * Copyright 2005 Jan Schmidt <thaytan@mad.scientist.com>
  * Copyright 2002,2003 Scott Wheeler <wheeler@kde.org> (portions from taglib)
  *
@@ -493,11 +493,8 @@ scan_encoded_string (guint8 encoding, gchar * data, gint data_size)
 static gboolean
 parse_picture_frame (ID3TagsWorking * work)
 {
-  GstBuffer *image = NULL;
-  GstCaps *image_caps = NULL;
-  gboolean is_pic_uri = FALSE;
   guint8 txt_encoding, pic_type;
-  gchar *c, *mime_str = NULL;
+  gchar *mime_str = NULL;
   gint len, datalen;
 
   GST_LOG ("APIC frame (ID3v2.%u)", ID3V2_VER_MAJOR (work->hdr.version));
@@ -522,29 +519,6 @@ parse_picture_frame (ID3TagsWorking * work)
     if (!parse_id_string (work, &mime_str, &len, &datalen))
       return FALSE;
     ++len;                      /* for string terminator */
-  }
-
-  /* Fix up 'jpg' => 'jpeg' in mime/media type */
-  if (mime_str != NULL &&
-      (g_ascii_strcasecmp (mime_str, "jpg") == 0 ||
-          g_ascii_strcasecmp (mime_str, "image/jpg") == 0)) {
-    g_free (mime_str);
-    mime_str = g_strdup ("jpeg");
-  }
-
-  /* Make lower-case */
-  for (c = mime_str; c != NULL && *c != '\0'; ++c) {
-    *c = g_ascii_tolower (*c);
-  }
-
-  is_pic_uri = (mime_str != NULL && strcmp (mime_str, "-->") == 0);
-
-  if (mime_str && *mime_str && strchr (mime_str, '/') == NULL && !is_pic_uri) {
-    gchar *tmp;
-
-    tmp = g_strdup_printf ("image/%s", mime_str);
-    g_free (mime_str);
-    mime_str = tmp;
   }
 
   if (work->parse_size < len + 1 + 1 + 1)
@@ -584,62 +558,9 @@ parse_picture_frame (ID3TagsWorking * work)
   if (work->parse_size <= 0)
     goto not_enough_data;
 
-  if (is_pic_uri) {
-    gchar *uri;
-
-    uri = g_strndup ((gchar *) work->parse_data, work->parse_size);
-    GST_DEBUG ("image URI: %s", uri);
-
-    image = gst_buffer_new ();
-    GST_BUFFER_MALLOCDATA (image) = (guint8 *) uri;     /* take ownership */
-    GST_BUFFER_DATA (image) = (guint8 *) uri;
-    GST_BUFFER_SIZE (image) = work->parse_size;
-
-    image_caps = gst_caps_new_simple ("text/uri-list", NULL);
-  } else {
-    image = gst_buffer_new_and_alloc (work->parse_size);
-    memcpy (GST_BUFFER_DATA (image), work->parse_data, work->parse_size);
-
-    /* if possible use GStreamer media type rather than declared type */
-    image_caps = gst_type_find_helper_for_buffer (NULL, image, NULL);
-    if (image_caps) {
-      GST_DEBUG ("Found GStreamer media type: %" GST_PTR_FORMAT, image_caps);
-    } else if (mime_str && *mime_str) {
-      GST_DEBUG ("No GStreamer media type found, using declared type");
-      image_caps = gst_caps_new_simple (mime_str, NULL);
-    } else {
-      GST_DEBUG ("Empty declared mime type, ignoring image frame");
-      image = NULL;
-      image_caps = NULL;
-      goto error;
-    }
-  }
-
-  if (image && image_caps) {
-
-    if (pic_type == 0x01 || pic_type == 0x02) {
-      /* file icon for preview. Don't add image-type to caps, since there
-       * is only supposed to be one of these. */
-      gst_buffer_set_caps (image, image_caps);
-      gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
-          GST_TAG_PREVIEW_IMAGE, image, NULL);
-    } else {
-      GstTagImageType gst_tag_pic_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
-
-      /* Remap the ID3v2 APIC type our ImageType enum */
-      if (pic_type >= 0x3 && pic_type <= 0x14)
-        gst_tag_pic_type = (GstTagImageType) (pic_type - 2);
-
-      gst_structure_set (gst_caps_get_structure (image_caps, 0),
-          "image-type", GST_TYPE_TAG_IMAGE_TYPE, gst_tag_pic_type, NULL);
-
-      gst_buffer_set_caps (image, image_caps);
-      gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
-          GST_TAG_IMAGE, image, NULL);
-    }
-
-    gst_caps_unref (image_caps);
-    gst_buffer_unref (image);
+  if (!gst_tag_list_add_id3_image (work->tags, (guint8 *) work->parse_data,
+          work->parse_size, pic_type)) {
+    goto error;
   }
 
   g_free (mime_str);
