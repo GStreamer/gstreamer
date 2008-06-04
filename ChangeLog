@@ -1,3 +1,8 @@
+2008-06-04  David Schleef  <ds@schleef.org>
+
+	* ext/dirac/gstdiracenc.cc: Update properties for recent
+	  dirac changes.  Patch from Jonathan Rosser.
+
 2008-06-04  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* ext/x264/gstx264enc.c: (gst_x264_enc_header_buf),

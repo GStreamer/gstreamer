@@ -111,7 +111,9 @@ enum
   PROP_MULTI_QUANTS,
   PROP_MV_PREC,
   PROP_NO_SPARTITION,
-  PROP_DENOISE,
+  PROP_PREFILTER,
+  PROP_PREFILTER_STRENGTH,
+  PROP_PICTURE_CODING_MODE,
   PROP_USE_VLC
 };
 
@@ -228,12 +230,18 @@ gst_dirac_enc_class_init (GstDiracEncClass * klass)
   g_object_class_install_property (gobject_class, PROP_NO_SPARTITION,
       g_param_spec_boolean ("no_spartition", "no_spartition", "no_spartition",
           FALSE, (GParamFlags) G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, PROP_DENOISE,
-      g_param_spec_boolean ("denoise", "denoise", "denoise",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_PREFILTER,
+      g_param_spec_int ("prefilter", "prefilter", "prefilter",
+          0, 3, 0, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_PREFILTER_STRENGTH,
+      g_param_spec_int ("pf_strength", "pf_strength", "pf_strength",
+          0, 10, 0, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_PICTURE_CODING_MODE,
+      g_param_spec_int ("picture_coding_mode", "picture_coding_mode",
+          "picture_coding_mode", 0, 1, 0, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_USE_VLC,
-      g_param_spec_boolean ("use_vlc", "use_vlc", "use_vlc",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_boolean ("use_vlc", "use_vlc", "use_vlc", FALSE,
+          (GParamFlags) G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_dirac_enc_change_state;
 }
@@ -419,11 +427,18 @@ gst_dirac_enc_set_property (GObject * object, guint prop_id,
       encoder->enc_ctx.enc_params.spatial_partition =
           !g_value_get_boolean (value);
       break;
-    case PROP_DENOISE:
-      encoder->enc_ctx.enc_params.denoise = g_value_get_boolean (value);
+    case PROP_PREFILTER:
+      encoder->enc_ctx.enc_params.prefilter =
+          (dirac_prefilter_t) g_value_get_int (value);
+      break;
+    case PROP_PREFILTER_STRENGTH:
+      encoder->enc_ctx.enc_params.prefilter_strength = g_value_get_int (value);
+      break;
+    case PROP_PICTURE_CODING_MODE:
+      encoder->enc_ctx.enc_params.picture_coding_mode = g_value_get_int (value);
       break;
     case PROP_USE_VLC:
-      encoder->enc_ctx.enc_params.using_ac = !g_value_get_boolean (value);
+      encoder->enc_ctx.enc_params.using_ac = g_value_get_boolean (value);
       break;
   }
 }
