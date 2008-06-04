@@ -1,3 +1,12 @@
+2008-06-04  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_transform_caps):
+	Prefer the given format if it contains something stricter than [1,MAX]
+	for height or width and only put a structure that requires rescaling
+	as second. This makes it possible to use videoscale in pipelines where
+	the source can actually produce the wanted height/width but usually
+	selects a different one from the requested.
+
 2008-06-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Based on patch by: John Millikin <jmillikin gmail com>
