@@ -1,3 +1,13 @@
+2008-06-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/interleave/deinterleave.c: (gst_deinterleave_add_new_pads),
+	(gst_deinterleave_src_query):
+	* gst/interleave/interleave.c: (gst_interleave_src_query_duration),
+	(gst_interleave_src_query):
+	Properly implement duration and position queries in bytes format. We
+	have to take the upstream reply and divide/multiply it by the number
+	of channels to get the correct result.
+
 2008-06-04  Michael Smith <msmith@songbirdnest.com>
 
 	* sys/dshowvideosink/dshowvideofakesrc.cpp:

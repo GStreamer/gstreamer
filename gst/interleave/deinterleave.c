@@ -91,6 +91,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src%d",
         "endianness = (int) { LITTLE_ENDIAN , BIG_ENDIAN }, "
         "width = (int) { 32, 64 }")
     );
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -147,11 +148,17 @@ enum
 };
 
 static GstFlowReturn gst_deinterleave_chain (GstPad * pad, GstBuffer * buffer);
+
 static gboolean gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps);
+
 static GstCaps *gst_deinterleave_sink_getcaps (GstPad * pad);
+
 static gboolean gst_deinterleave_sink_activate_push (GstPad * pad,
     gboolean active);
 static gboolean gst_deinterleave_sink_event (GstPad * pad, GstEvent * event);
+
+static gboolean gst_deinterleave_src_query (GstPad * pad, GstQuery * query);
+
 static void gst_deinterleave_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_deinterleave_get_property (GObject * object,
@@ -250,11 +257,14 @@ static void
 gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
 {
   GstPad *pad;
+
   guint i;
 
   for (i = 0; i < self->channels; i++) {
     gchar *name = g_strdup_printf ("src%d", i);
+
     GstCaps *srccaps;
+
     GstStructure *s;
 
     pad = gst_pad_new_from_static_template (&src_template, name);
@@ -276,6 +286,8 @@ gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
 
     gst_pad_set_caps (pad, srccaps);
     gst_pad_use_fixed_caps (pad);
+    gst_pad_set_query_function (pad,
+        GST_DEBUG_FUNCPTR (gst_deinterleave_src_query));
     gst_pad_set_active (pad, TRUE);
     gst_element_add_pad (GST_ELEMENT (self), pad);
     self->srcpads = g_list_prepend (self->srcpads, gst_object_ref (pad));
@@ -292,11 +304,14 @@ static void
 gst_deinterleave_set_pads_caps (GstDeinterleave * self, GstCaps * caps)
 {
   GList *l;
+
   GstStructure *s;
+
   gint i;
 
   for (l = self->srcpads, i = 0; l; l = l->next, i++) {
     GstPad *pad = GST_PAD (l->data);
+
     GstCaps *srccaps;
 
     /* Set channel position if we know it */
@@ -375,7 +390,9 @@ static gboolean
 gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstDeinterleave *self;
+
   GstCaps *srccaps;
+
   GstStructure *s;
 
   self = GST_DEINTERLEAVE (gst_pad_get_parent (pad));
@@ -384,7 +401,9 @@ gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   if (self->sinkcaps && !gst_caps_is_equal (caps, self->sinkcaps)) {
     gint new_channels, i;
+
     GstAudioChannelPosition *pos;
+
     gboolean same_layout = TRUE;
 
     s = gst_caps_get_structure (caps, 0);
@@ -476,6 +495,7 @@ static void
 __remove_channels (GstCaps * caps)
 {
   GstStructure *s;
+
   gint i, size;
 
   size = gst_caps_get_size (caps);
@@ -490,6 +510,7 @@ static void
 __set_channels (GstCaps * caps, gint channels)
 {
   GstStructure *s;
+
   gint i, size;
 
   size = gst_caps_get_size (caps);
@@ -506,7 +527,9 @@ static GstCaps *
 gst_deinterleave_sink_getcaps (GstPad * pad)
 {
   GstDeinterleave *self = GST_DEINTERLEAVE (gst_pad_get_parent (pad));
+
   GstCaps *ret;
+
   GList *l;
 
   GST_OBJECT_LOCK (self);
@@ -520,6 +543,7 @@ gst_deinterleave_sink_getcaps (GstPad * pad)
   ret = gst_caps_new_any ();
   for (l = GST_ELEMENT (self)->pads; l != NULL; l = l->next) {
     GstPad *ourpad = GST_PAD (l->data);
+
     GstCaps *peercaps = NULL, *ourcaps;
 
     ourcaps = gst_caps_copy (gst_pad_get_pad_template_caps (ourpad));
@@ -542,6 +566,7 @@ gst_deinterleave_sink_getcaps (GstPad * pad)
      * otherwise assume that the peer accepts everything */
     if (peercaps) {
       GstCaps *intersection;
+
       GstCaps *oldret = ret;
 
       __remove_channels (peercaps);
@@ -573,6 +598,7 @@ static gboolean
 gst_deinterleave_sink_event (GstPad * pad, GstEvent * event)
 {
   GstDeinterleave *self = GST_DEINTERLEAVE (gst_pad_get_parent (pad));
+
   gboolean ret;
 
   GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
@@ -603,6 +629,45 @@ gst_deinterleave_sink_event (GstPad * pad, GstEvent * event)
   gst_object_unref (self);
 
   return ret;
+}
+
+static gboolean
+gst_deinterleave_src_query (GstPad * pad, GstQuery * query)
+{
+  GstDeinterleave *self = GST_DEINTERLEAVE (gst_pad_get_parent (pad));
+
+  gboolean res;
+
+  res = gst_pad_query_default (pad, query);
+
+  if (res && GST_QUERY_TYPE (query) == GST_QUERY_DURATION) {
+    GstFormat format;
+
+    gint64 dur;
+
+    gst_query_parse_duration (query, &format, &dur);
+
+    /* Need to divide by the number of channels in byte format
+     * to get the correct value. All other formats should be fine
+     */
+    if (format == GST_FORMAT_BYTES && dur != -1)
+      gst_query_set_duration (query, format, dur / self->channels);
+  } else if (res && GST_QUERY_TYPE (query) == GST_QUERY_POSITION) {
+    GstFormat format;
+
+    gint64 pos;
+
+    gst_query_parse_position (query, &format, &pos);
+
+    /* Need to divide by the number of channels in byte format
+     * to get the correct value. All other formats should be fine
+     */
+    if (format == GST_FORMAT_BYTES && pos != -1)
+      gst_query_set_position (query, format, pos / self->channels);
+  }
+
+  gst_object_unref (self);
+  return res;
 }
 
 static void
@@ -641,19 +706,28 @@ static GstFlowReturn
 gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+
   guint channels = self->channels;
+
   guint pads_pushed = 0, buffers_allocated = 0;
+
   guint nframes = GST_BUFFER_SIZE (buf) / channels / (self->width / 8);
+
   guint bufsize = nframes * (self->width / 8);
+
   guint i;
+
   GList *srcs;
+
   GstBuffer **buffers_out = g_new0 (GstBuffer *, channels);
+
   guint8 *in, *out;
 
   /* Send any pending events to all src pads */
   GST_OBJECT_LOCK (self);
   if (self->pending_events) {
     GList *events;
+
     GstEvent *event;
 
     GST_DEBUG_OBJECT (self, "Sending pending events to all src pads");
@@ -776,6 +850,7 @@ static GstFlowReturn
 gst_deinterleave_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstDeinterleave *self = GST_DEINTERLEAVE (GST_PAD_PARENT (pad));
+
   GstFlowReturn ret;
 
   g_return_val_if_fail (self->func != NULL, GST_FLOW_NOT_NEGOTIATED);

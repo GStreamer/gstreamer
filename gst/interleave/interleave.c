@@ -974,6 +974,11 @@ gst_interleave_src_query_duration (GstInterleave * self, GstQuery * query)
   gst_iterator_free (it);
 
   if (res) {
+    /* If in bytes format we have to multiply with the number of channels
+     * to get the correct results. All other formats should be fine */
+    if (format == GST_FORMAT_BYTES && max != -1)
+      max *= self->channels;
+
     /* and store the max */
     GST_DEBUG_OBJECT (self, "Total duration in format %s: %"
         GST_TIME_FORMAT, gst_format_get_name (format), GST_TIME_ARGS (max));
@@ -1093,6 +1098,11 @@ gst_interleave_src_query (GstPad * pad, GstQuery * query)
         case GST_FORMAT_TIME:
           /* FIXME, bring to stream time, might be tricky */
           gst_query_set_position (query, format, self->timestamp);
+          res = TRUE;
+          break;
+        case GST_FORMAT_BYTES:
+          gst_query_set_position (query, format,
+              self->offset * self->channels * self->width);
           res = TRUE;
           break;
         case GST_FORMAT_DEFAULT:
