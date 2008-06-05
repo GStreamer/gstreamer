@@ -247,7 +247,7 @@ _gst_stream_errors_init (void)
   TABLE (t, STREAM, DECRYPT,
       N_("The stream is encrypted and decryption is not supported."));
   TABLE (t, STREAM, DECRYPT_NOKEY,
-      N_("The stream is encrypted and can't be decrypted because no suitable"
+      N_("The stream is encrypted and can't be decrypted because no suitable "
           "key has been supplied."));
 
   return t;

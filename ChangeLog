@@ -1,3 +1,8 @@
+2008-06-05  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gsterror.c: (_gst_stream_errors_init):
+	  Fix typo (spotted by Fabricio Godoy, #536723).
+
 2008-06-04  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_set_async_enabled),
