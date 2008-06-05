@@ -1,3 +1,9 @@
+2008-06-05  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/avi/gstavidemux.c:
+	Catch UNEXPECTED when downstream has reached end of
+	segment in reverse mode.
+
 2008-06-04  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/avi/gstavidemux.c:

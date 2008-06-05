@@ -140,7 +140,8 @@ gst_avi_demux_base_init (GstAviDemuxClass * klass)
       "Demultiplex an avi file into audio and video",
       "Erik Walthinsen <omega@cse.ogi.edu>\n"
       "Wim Taymans <wim.taymans@chello.be>\n"
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
+      "Thijs Vermeir <thijsvermeir@gmail.com>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstPadTemplate *videosrctempl, *audiosrctempl, *subsrctempl;
   GstCaps *audcaps, *vidcaps, *subcaps;
@@ -1693,7 +1694,7 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
     stream->total_frames++;
     stream->idx_duration = next_ts;
 
-    GST_DEBUG_OBJECT (avi,
+    GST_LOG_OBJECT (avi,
         "Adding index entry %d (%6u), flags %02x, stream %d, size %u "
         ", offset %" G_GUINT64_FORMAT ", time %" GST_TIME_FORMAT ", dur %"
         GST_TIME_FORMAT,
@@ -2403,7 +2404,7 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
       num_per_stream[entry->stream_nr]++;
 #endif
 
-      GST_DEBUG ("Sorted index entry %3d for stream %d of size %6u"
+      GST_LOG_OBJECT (avi, "Sorted index entry %3d for stream %d of size %6u"
           " at offset %7" G_GUINT64_FORMAT ", time %" GST_TIME_FORMAT
           " dur %" GST_TIME_FORMAT,
           avi->index_entries[i].index_nr, entry->stream_nr, entry->size,
@@ -3448,6 +3449,38 @@ done:
 }
 
 /*
+ * prepare the avi element for a reverse jump to a prev keyframe
+ * this function will return the start entry. if the function returns
+ * NULL there was no prev keyframe.
+ */
+static gst_avi_index_entry *
+gst_avi_demux_step_reverse (GstAviDemux * avi)
+{
+  gst_avi_index_entry *entry;
+  gint i;
+
+  avi->reverse_stop_index = avi->reverse_start_index;
+  entry =
+      gst_avi_demux_index_prev (avi, 0, avi->reverse_stop_index,
+      GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME);
+  if (!entry) {
+    GST_DEBUG_OBJECT (avi, "no valid index entry found index %d",
+        avi->reverse_stop_index);
+    return NULL;
+  }
+  avi->current_entry = avi->reverse_start_index = entry->index_nr;
+  GST_DEBUG_OBJECT (avi,
+      "reverse playback jump: start idx (%d) and stop idx (%d)",
+      avi->reverse_start_index, avi->reverse_stop_index);
+  gst_segment_set_last_stop (&avi->segment, GST_FORMAT_TIME, entry->ts);
+  for (i = 0; i < avi->num_streams; i++) {
+    avi->stream[i].last_flow = GST_FLOW_OK;
+    avi->stream[i].discont = TRUE;
+  }
+  return entry;
+}
+
+/*
  * Read data from one index entry
  */
 static GstFlowReturn
@@ -3458,7 +3491,6 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
   avi_stream_context *stream;
   gst_avi_index_entry *entry;
   GstBuffer *buf;
-  gint i;
 
   do {
     /* see if we are at the end */
@@ -3478,24 +3510,9 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
       if (avi->index_entries[avi->reverse_start_index].ts < avi->segment.start)
         goto eos_reverse_segment;
 
-      avi->reverse_stop_index = avi->reverse_start_index;
-      entry =
-          gst_avi_demux_index_prev (avi, 0, avi->reverse_stop_index,
-          GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME);
-      if (!entry) {
-        GST_DEBUG_OBJECT (avi, "no valid index entry found index %d",
-            avi->reverse_stop_index);
+      if (!(entry = gst_avi_demux_step_reverse (avi)))
         goto eos;
-      }
-      avi->current_entry = avi->reverse_start_index = entry->index_nr;
-      GST_DEBUG_OBJECT (avi,
-          "reverse playback jump: start idx (%d) and stop idx (%d)",
-          avi->reverse_start_index, avi->reverse_stop_index);
-      gst_segment_set_last_stop (&avi->segment, GST_FORMAT_TIME, entry->ts);
-      for (i = 0; i < avi->num_streams; i++) {
-        avi->stream[i].last_flow = GST_FLOW_OK;
-        avi->stream[i].discont = TRUE;
-      }
+
       avi->current_entry++;
     }
 
@@ -3574,14 +3591,33 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
 
     res = gst_pad_push (stream->pad, buf);
 
-    /* combine flows */
-    res = gst_avi_demux_combine_flows (avi, stream, res);
-
     /* mark as processed, we increment the frame and byte counters then
      * leave the while loop and return the GstFlowReturn */
     processed = TRUE;
     GST_DEBUG_OBJECT (avi, "Processed buffer %d: %s", entry->index_nr,
         gst_flow_get_name (res));
+
+    if (avi->segment.rate < 0
+        && entry->ts > avi->segment.stop && res == GST_FLOW_UNEXPECTED) {
+      /* In reverse playback we can get a GST_FLOW_UNEXPECTED when
+       * we are at the end of the segment, so we just need to jump
+       * back to the previous section.
+       */
+      GST_DEBUG_OBJECT (avi, "downstream has reached end of segment");
+
+      if (!(entry = gst_avi_demux_step_reverse (avi)))
+        goto eos;
+
+      res = GST_FLOW_OK;
+
+      stream->current_frame = entry->frames_before;
+      stream->current_byte = entry->bytes_before;
+
+      continue;
+    }
+
+    /* combine flows */
+    res = gst_avi_demux_combine_flows (avi, stream, res);
 
   next:
     stream->current_frame = entry->frames_before + 1;
