@@ -1,3 +1,41 @@
+2008-06-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* examples/app/.cvsignore:
+	* examples/app/Makefile.am:
+	* examples/app/appsrc-stream.c: (read_data), (start_feed),
+	(stop_feed), (found_source), (bus_message), (main):
+	Added an example on how to use appsrc in playbin in streaming mode from
+	an mmapped file.
+
+	* examples/app/appsrc_ex.c: (main):
+	Set pipeline to NULL to free queued buffers.
+
+	* gst-libs/gst/app/gstapp-marshal.list:
+	* gst-libs/gst/app/gstappsrc.c: (stream_type_get_type), (_do_init),
+	(gst_app_src_class_init), (gst_app_src_init),
+	(gst_app_src_flush_queued), (gst_app_src_dispose),
+	(gst_app_src_set_property), (gst_app_src_get_property),
+	(gst_app_src_unlock), (gst_app_src_unlock_stop),
+	(gst_app_src_start), (gst_app_src_stop), (gst_app_src_is_seekable),
+	(gst_app_src_check_get_range), (gst_app_src_do_seek),
+	(gst_app_src_create), (gst_app_src_set_stream_type),
+	(gst_app_src_get_stream_type), (gst_app_src_set_max_bytes),
+	(gst_app_src_get_max_bytes), (gst_app_src_push_buffer),
+	(gst_app_src_end_of_stream), (gst_app_src_uri_get_type),
+	(gst_app_src_uri_get_protocols), (gst_app_src_uri_get_uri),
+	(gst_app_src_uri_set_uri), (gst_app_src_uri_handler_init):
+	* gst-libs/gst/app/gstappsrc.h:
+	Measure max queue size in bytes instead.
+	Add support for 3 modes of operation, streaming, seekable and
+	random-access, making basesrc handle the scheduling modes for each.
+	Add appsrc:// uri handler so that automatic plugging can be done from
+	playbin2 or uridecodebin, for example.
+	Added support for custom segment formats.
+	Add support for push and pull based operations from the application.
+	Expand the methods so that errors can be detected.
+	Flush the queued buffers on seeks and when shutting down.
+	Add signals to inform the app that a seek must happen.
+
 2008-06-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/interleave/deinterleave.c: (gst_deinterleave_add_new_pads),
