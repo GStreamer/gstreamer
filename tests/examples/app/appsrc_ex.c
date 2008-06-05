@@ -62,8 +62,8 @@ main (int argc, char *argv[])
     data = malloc (100);
     memset (data, i, 100);
 
-    printf ("%d: creating buffer for pointer %p\n", i, data);
     buf = gst_app_buffer_new (data, 100, dont_eat_my_chicken_wings, data);
+    printf ("%d: creating buffer for pointer %p, %p\n", i, data, buf);
     gst_app_src_push_buffer (GST_APP_SRC (app->src), buf);
   }
 
@@ -73,8 +73,10 @@ main (int argc, char *argv[])
     GstBuffer *buf;
 
     buf = gst_app_sink_pull_buffer (GST_APP_SINK (app->sink));
+    printf ("retrieved buffer %p\n", buf);
     gst_buffer_unref (buf);
   }
+  gst_element_set_state (app->pipe, GST_STATE_NULL);
 
   return 0;
 }
