@@ -1,3 +1,8 @@
+2008-06-05  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.19.2 pre-release
+
 2008-06-05  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gsterror.c: (_gst_stream_errors_init):
