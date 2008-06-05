@@ -1,3 +1,10 @@
+2008-06-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	Explicitely link with -ldl if dladdr() is found there. Before it was
+	implicitely linked by the gmodule pkgconfig file but in glib 2.17.0
+	-ldl has moved from Libs to Libs.private. Fixes bug #536744.
+
 2008-06-05  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gsterror.c: (_gst_stream_errors_init):

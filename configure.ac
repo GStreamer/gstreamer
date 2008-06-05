@@ -454,8 +454,8 @@ dnl test if we have dladdr(); we use it for debugging; see gst/gstinfo.c
 save_cflags="$CFLAGS"
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
 AC_CHECK_LIB(dl, dladdr,
-   AC_DEFINE(HAVE_DLADDR, 1,
-             [Defined if we have dladdr ()]))
+   AC_DEFINE(HAVE_DLADDR, 1, [Defined if we have dladdr ()])
+   LIBS="$LIBS -ldl")
 CFLAGS="$save_cflags"
 
 dnl check for inet_aton()
