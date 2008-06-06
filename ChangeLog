@@ -1,5 +1,27 @@
 2008-06-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* examples/app/Makefile.am:
+	* examples/app/appsrc-ra.c: (feed_data), (seek_data),
+	(found_source), (bus_message), (main):
+	* examples/app/appsrc-seekable.c: (feed_data), (seek_data),
+	(found_source), (bus_message), (main):
+	* examples/app/appsrc-stream2.c: (feed_data), (found_source),
+	(bus_message), (main):
+	Added 3 more example application for using appsrc in random-access mode,
+	pull-mode streaming and pull mode seekable.
+
+	* gst-libs/gst/app/gstappsrc.c: (gst_app_src_class_init),
+	(gst_app_src_start), (gst_app_src_do_get_size),
+	(gst_app_src_create):
+	* gst-libs/gst/app/gstappsrc.h:
+	Make stream-type property writable.
+	Unset flushing when starting so that we reuse appsrc.
+	Inform basesrc about the configured size.
+	Emit seek-data signal when we are going to a different offset in
+	random-access mode.
+
+2008-06-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* examples/app/appsrc-stream.c: (found_source), (main):
 	Use deep-notify until we can depend on a playbin2 with support for the
 	source property.

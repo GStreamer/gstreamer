@@ -115,6 +115,7 @@ static gboolean gst_app_src_unlock_stop (GstBaseSrc * bsrc);
 static gboolean gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment);
 static gboolean gst_app_src_is_seekable (GstBaseSrc * src);
 static gboolean gst_app_src_check_get_range (GstBaseSrc * src);
+static gboolean gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size);
 
 static guint gst_app_src_signals[LAST_SIGNAL] = { 0 };
 
@@ -177,7 +178,8 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_STREAM_TYPE,
       g_param_spec_enum ("stream-type", "Stream Type",
           "the type of the stream", GST_TYPE_APP_STREAM_TYPE,
-          DEFAULT_PROP_STREAM_TYPE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_STREAM_TYPE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MAX_BYTES,
       g_param_spec_uint64 ("max-bytes", "Max bytes",
@@ -268,6 +270,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   basesrc_class->do_seek = gst_app_src_do_seek;
   basesrc_class->is_seekable = gst_app_src_is_seekable;
   basesrc_class->check_get_range = gst_app_src_check_get_range;
+  basesrc_class->get_size = gst_app_src_do_get_size;
 
   klass->push_buffer = gst_app_src_push_buffer;
   klass->end_of_stream = gst_app_src_end_of_stream;
@@ -421,6 +424,10 @@ gst_app_src_start (GstBaseSrc * bsrc)
   g_mutex_lock (appsrc->mutex);
   GST_DEBUG_OBJECT (appsrc, "starting");
   appsrc->started = TRUE;
+  /* set the offset to -1 so that we always do a first seek. This is only used
+   * in random-access mode. */
+  appsrc->offset = -1;
+  appsrc->flushing = FALSE;
   g_mutex_unlock (appsrc->mutex);
 
   gst_base_src_set_format (bsrc, appsrc->format);
@@ -478,6 +485,16 @@ gst_app_src_check_get_range (GstBaseSrc * src)
   return res;
 }
 
+static gboolean
+gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size)
+{
+  GstAppSrc *appsrc = GST_APP_SRC (src);
+
+  *size = gst_app_src_get_size (appsrc);
+
+  return TRUE;
+}
+
 /* will be called in push mode */
 static gboolean
 gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
@@ -516,45 +533,84 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
   GstFlowReturn ret;
 
   g_mutex_lock (appsrc->mutex);
-  while (TRUE) {
-    /* check flushing first */
-    if (appsrc->flushing)
-      goto flushing;
+  /* check flushing first */
+  if (G_UNLIKELY (appsrc->flushing))
+    goto flushing;
 
+  if (appsrc->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS) {
+    /* if we are dealing with a random-access stream, issue a seek if the offset
+     * changed. */
+    if (G_UNLIKELY (appsrc->offset != offset)) {
+      gboolean res;
+
+      g_mutex_unlock (appsrc->mutex);
+
+      GST_DEBUG_OBJECT (appsrc,
+          "we are at %" G_GINT64_FORMAT ", seek to %" G_GINT64_FORMAT,
+          appsrc->offset, offset);
+
+      g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_SEEK_DATA], 0,
+          offset, &res);
+
+      if (G_UNLIKELY (!res))
+        /* failing to seek is fatal */
+        goto seek_error;
+
+      g_mutex_lock (appsrc->mutex);
+
+      appsrc->offset = offset;
+    }
+  }
+
+  while (TRUE) {
     /* return data as long as we have some */
     if (!g_queue_is_empty (appsrc->queue)) {
-    again:
-      *buf = g_queue_pop_head (appsrc->queue);
+      guint buf_size;
 
-      appsrc->queued_bytes -= GST_BUFFER_SIZE (*buf);
+      *buf = g_queue_pop_head (appsrc->queue);
+      buf_size = GST_BUFFER_SIZE (*buf);
+
+      GST_DEBUG_OBJECT (appsrc, "we have buffer %p of size %u", *buf, buf_size);
+
+      appsrc->queued_bytes -= buf_size;
+
+      /* only update the offset when in random_access mode */
+      if (appsrc->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS) {
+        appsrc->offset += buf_size;
+      }
 
       gst_buffer_set_caps (*buf, appsrc->caps);
 
-      GST_DEBUG_OBJECT (appsrc, "we have buffer %p", *buf);
       ret = GST_FLOW_OK;
       break;
     } else {
-      /* we have no data, we need some. We fire the signal with the size hint. */
       g_mutex_unlock (appsrc->mutex);
 
+      /* we have no data, we need some. We fire the signal with the size hint. */
       g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_NEED_DATA], 0, size,
           NULL);
 
       g_mutex_lock (appsrc->mutex);
       /* we can be flushing now because we released the lock */
-      if (appsrc->flushing)
+      if (G_UNLIKELY (appsrc->flushing))
         goto flushing;
 
-      /* if we have a buffer now, retry to return it */
+      /* if we have a buffer now, continue the loop and try to return it. In
+       * random-access mode (where a buffer is normally pushed in the above
+       * signal) we can still be empty because the pushed buffer got flushed or
+       * when the application pushes the requested buffer later, we support both
+       * possiblities. */
       if (!g_queue_is_empty (appsrc->queue))
-        goto again;
+        continue;
+
+      /* no buffer yet, maybe we are EOS, if not, block for more data. */
     }
 
     /* check EOS */
-    if (appsrc->is_eos)
+    if (G_UNLIKELY (appsrc->is_eos))
       goto eos;
 
-    /* nothing to return, wait a while for new data or flushing */
+    /* nothing to return, wait a while for new data or flushing. */
     g_cond_wait (appsrc->cond, appsrc->mutex);
   }
   g_mutex_unlock (appsrc->mutex);
@@ -573,6 +629,12 @@ eos:
     GST_DEBUG_OBJECT (appsrc, "we are EOS");
     g_mutex_unlock (appsrc->mutex);
     return GST_FLOW_UNEXPECTED;
+  }
+seek_error:
+  {
+    GST_ELEMENT_ERROR (appsrc, RESOURCE, READ, ("failed to seek"),
+        GST_ERROR_SYSTEM);
+    return GST_FLOW_ERROR;
   }
 }
 
