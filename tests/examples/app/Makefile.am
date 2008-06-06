@@ -1,5 +1,6 @@
 
-noinst_PROGRAMS = appsrc_ex appsrc-stream
+noinst_PROGRAMS = appsrc_ex appsrc-stream appsrc-stream2 appsrc-ra \
+		  appsrc-seekable
 
 appsrc_ex_SOURCES = appsrc_ex.c
 appsrc_ex_CFLAGS = $(GST_CFLAGS) $(GCONF_CFLAGS)
@@ -10,3 +11,15 @@ appsrc_ex_LDFLAGS = \
 appsrc_stream_SOURCES = appsrc-stream.c
 appsrc_stream_CFLAGS = $(GST_CFLAGS) $(GCONF_CFLAGS)
 appsrc_stream_LDFLAGS = $(GST_LIBS)
+
+appsrc_stream2_SOURCES = appsrc-stream2.c
+appsrc_stream2_CFLAGS = $(GST_CFLAGS) $(GCONF_CFLAGS)
+appsrc_stream2_LDFLAGS = $(GST_LIBS)
+
+appsrc_ra_SOURCES = appsrc-ra.c
+appsrc_ra_CFLAGS = $(GST_CFLAGS) $(GCONF_CFLAGS)
+appsrc_ra_LDFLAGS = $(GST_LIBS)
+
+appsrc_seekable_SOURCES = appsrc-seekable.c
+appsrc_seekable_CFLAGS = $(GST_CFLAGS) $(GCONF_CFLAGS)
+appsrc_seekable_LDFLAGS = $(GST_LIBS)

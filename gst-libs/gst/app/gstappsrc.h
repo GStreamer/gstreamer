@@ -76,6 +76,7 @@ struct _GstAppSrc
   gboolean started;
   gboolean is_eos;
   guint64 queued_bytes;
+  guint64 offset;
   GstAppStreamType current_type;
 };
 
