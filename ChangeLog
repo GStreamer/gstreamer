@@ -1,3 +1,10 @@
+2008-06-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_init),
+	(gst_rtp_bin_finalize), (gst_rtp_bin_change_state):
+	Fix deadlock when shutting down, use a new lock instead to properly
+	shutdown.
+
 2008-06-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* examples/app/.cvsignore:
