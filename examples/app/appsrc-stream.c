@@ -140,10 +140,10 @@ stop_feed (GstElement * playbin, App * app)
  * appsrc that we must handle. We set up some signals to start and stop pushing
  * data into appsrc */
 static void
-found_source (GObject * playbin, GParamSpec * pspec, App * app)
+found_source (GObject * object, GObject * orig, GParamSpec * pspec, App * app)
 {
   /* get a handle to the appsrc */
-  g_object_get (playbin, pspec->name, &app->appsrc, NULL);
+  g_object_get (orig, pspec->name, &app->appsrc, NULL);
 
   GST_DEBUG ("got appsrc %p", app->appsrc);
 
@@ -225,8 +225,8 @@ main (int argc, char *argv[])
 
   /* get notification when the source is created so that we get a handle to it
    * and can configure it */
-  g_signal_connect (app->playbin, "notify::source", (GCallback) found_source,
-      app);
+  g_signal_connect (app->playbin, "deep-notify::source",
+      (GCallback) found_source, app);
 
   /* go to playing and wait in a mainloop. */
   gst_element_set_state (app->playbin, GST_STATE_PLAYING);

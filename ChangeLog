@@ -1,5 +1,11 @@
 2008-06-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* examples/app/appsrc-stream.c: (found_source), (main):
+	Use deep-notify until we can depend on a playbin2 with support for the
+	source property.
+
+2008-06-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_init),
 	(gst_rtp_bin_finalize), (gst_rtp_bin_change_state):
 	Fix deadlock when shutting down, use a new lock instead to properly
