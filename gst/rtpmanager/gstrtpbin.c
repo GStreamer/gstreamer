@@ -204,25 +204,32 @@ GST_STATIC_PAD_TEMPLATE ("sink_%d",
 #define GST_RTP_BIN_LOCK(bin)   g_mutex_lock ((bin)->priv->bin_lock)
 #define GST_RTP_BIN_UNLOCK(bin) g_mutex_unlock ((bin)->priv->bin_lock)
 
+/* lock to protect dynamic callbacks, like pad-added and new ssrc. */
+#define GST_RTP_BIN_DYN_LOCK(bin)    g_mutex_lock ((bin)->priv->dyn_lock)
+#define GST_RTP_BIN_DYN_UNLOCK(bin)  g_mutex_unlock ((bin)->priv->dyn_lock)
+
 /* lock for shutdown */
 #define GST_RTP_BIN_SHUTDOWN_LOCK(bin,label)     \
 G_STMT_START {                                   \
   if (g_atomic_int_get (&bin->priv->shutdown))   \
     goto label;                                  \
-  GST_STATE_LOCK (bin);                          \
+  GST_RTP_BIN_DYN_LOCK (bin);                    \
   if (g_atomic_int_get (&bin->priv->shutdown)) { \
-    GST_STATE_UNLOCK (bin);                      \
+    GST_RTP_BIN_DYN_UNLOCK (bin);                \
     goto label;                                  \
   }                                              \
 } G_STMT_END
 
 /* unlock for shutdown */
 #define GST_RTP_BIN_SHUTDOWN_UNLOCK(bin)         \
-  GST_STATE_UNLOCK (bin);                        \
+  GST_RTP_BIN_DYN_UNLOCK (bin);                  \
 
 struct _GstRtpBinPrivate
 {
   GMutex *bin_lock;
+
+  /* lock protecting dynamic adding/removing */
+  GMutex *dyn_lock;
 
   /* the time when we went to playing */
   GstClockTime ntp_ns_base;
@@ -1369,6 +1376,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
 
   rtpbin->priv = GST_RTP_BIN_GET_PRIVATE (rtpbin);
   rtpbin->priv->bin_lock = g_mutex_new ();
+  rtpbin->priv->dyn_lock = g_mutex_new ();
   rtpbin->provided_clock = gst_system_clock_obtain ();
 
   rtpbin->latency = DEFAULT_LATENCY_MS;
@@ -1412,6 +1420,7 @@ gst_rtp_bin_finalize (GObject * object)
     g_free (rtpbin->sdes[i]);
 
   g_mutex_free (rtpbin->priv->bin_lock);
+  g_mutex_free (rtpbin->priv->dyn_lock);
   gst_object_unref (rtpbin->provided_clock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -1690,13 +1699,20 @@ gst_rtp_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_LOG_OBJECT (rtpbin, "clearing shutdown flag");
       g_atomic_int_set (&priv->shutdown, 0);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       calc_ntp_ns_base (rtpbin);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_LOG_OBJECT (rtpbin, "setting shutdown flag");
       g_atomic_int_set (&priv->shutdown, 1);
+      /* wait for all callbacks to end by taking the lock. No new callbacks will
+       * be able to happen as we set the shutdown flag. */
+      GST_RTP_BIN_DYN_LOCK (rtpbin);
+      GST_LOG_OBJECT (rtpbin, "dynamic lock taken, we can continue shutdown");
+      GST_RTP_BIN_DYN_UNLOCK (rtpbin);
       break;
     default:
       break;
