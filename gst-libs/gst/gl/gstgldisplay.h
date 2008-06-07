@@ -139,6 +139,11 @@ struct _GstGLDisplay {
     GLuint rejectedDepthBuffer;
     GLuint rejectedTextureFBO;
 
+    //displayed texture
+    GLuint displayedTexture;
+    GLuint displayedTextureWidth;
+    GLuint displayedTextureHeight;
+
     GLuint requestedTexture;
     GLuint requestedTexture_u;
     GLuint requestedTexture_v;
@@ -232,13 +237,13 @@ void gst_gl_display_textureRequested (GstGLDisplay* display, GstVideoFormat form
                                       guint* texture_u, guint* texture_v);
 void gst_gl_display_textureChanged (GstGLDisplay* display, GstVideoFormat video_format, 
                                     GLuint texture, GLuint texture_u, GLuint texture_v, 
-                                    gint width, gint height, gpointer data);
+                                    gint width, gint height, gpointer data, GLuint* outputTexture);
 void gst_gl_display_clearTexture (GstGLDisplay* display, guint texture, 
                                   guint texture_u, guint texture_v);
 
 void gst_gl_display_videoChanged (GstGLDisplay* display, GstVideoFormat video_format,
                                   gpointer data);
-gboolean gst_gl_display_postRedisplay (GstGLDisplay* display);
+gboolean gst_gl_display_postRedisplay (GstGLDisplay* display, GLuint texture, gint width, gint height);
 void gst_gl_display_requestFBO (GstGLDisplay* display, gint width, gint height, 
                                 guint* fbo, guint* depthbuffer, guint* texture);
 void gst_gl_display_useFBO (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 

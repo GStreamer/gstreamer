@@ -74,10 +74,13 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_cube_filter;
 }
 
+static gint c = 0;
+
 static void
 gst_gl_filter_cube_init (GstGLFilterCube* filter,
     GstGLFilterCubeClass* klass)
 {
+    c += 1;
 }
 
 static void
@@ -114,16 +117,17 @@ gst_gl_filter_cube_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 {
     GstGLFilterCube* cube_filter = GST_GL_FILTER_CUBE(filter);
 
-    g_print ("gstglfiltercube: gst_gl_filter_cube_filter\n");
-
     //blocking call, generate a FBO
     gst_gl_display_useFBO (filter->display, filter->width, filter->height,
         filter->fbo, filter->depthbuffer, filter->texture, gst_gl_filter_cube_callback,
-        inbuf->width, inbuf->height, inbuf->texture);
+        inbuf->width, inbuf->height, inbuf->textureGL);
 
     outbuf->width = filter->width;
     outbuf->height = filter->height;
-    outbuf->texture = filter->texture;
+    outbuf->texture = inbuf->texture;
+    outbuf->texture_u = inbuf->texture_u;
+    outbuf->texture_v = inbuf->texture_v;
+    outbuf->textureGL = filter->texture;
 
     return TRUE;
 }
@@ -135,8 +139,6 @@ gst_gl_filter_cube_callback (guint width, guint height, guint texture)
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;				
     static GLfloat	zrot = 0;
-
-    g_print ("gstglfiltercube: gst_gl_filter_cube_callback\n");
 
     glEnable(GL_DEPTH_TEST);
 

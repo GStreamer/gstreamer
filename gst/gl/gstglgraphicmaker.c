@@ -424,6 +424,7 @@ gst_gl_graphicmaker_transform (GstBaseTransform* trans, GstBuffer* inbuf,
 {
     GstGLGraphicmaker* graphicmaker;
     GstGLBuffer* gl_outbuf = GST_GL_BUFFER (outbuf);
+    guint outputTexture = 0;
 
     graphicmaker = GST_GL_GRAPHICMAKER (trans);
 
@@ -433,7 +434,7 @@ gst_gl_graphicmaker_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     //blocking call
     gst_gl_display_textureChanged(graphicmaker->display, graphicmaker->video_format,
         gl_outbuf->texture, gl_outbuf->texture_u, gl_outbuf->texture_v, 
-        gl_outbuf->width, gl_outbuf->height, GST_BUFFER_DATA (inbuf));
+        gl_outbuf->width, gl_outbuf->height, GST_BUFFER_DATA (inbuf), &gl_outbuf->textureGL);
 
     return GST_FLOW_OK;
 }

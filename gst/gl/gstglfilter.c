@@ -211,8 +211,6 @@ gst_gl_filter_prepare_output_buffer (GstBaseTransform* trans,
     *buf = GST_BUFFER (gl_outbuf);
     gst_buffer_set_caps (*buf, caps);
 
-    g_print ("gstglfilter: gst_gl_filter_prepare_output_buffer\n");
-
     return GST_FLOW_OK;
 }
 
@@ -248,8 +246,6 @@ gst_gl_filter_transform (GstBaseTransform* bt, GstBuffer* inbuf,
     GstGLBuffer* gl_outbuf = GST_GL_BUFFER (outbuf);
 
     filter = GST_GL_FILTER (bt);
-
-    g_print ("gstglfilter: gst_gl_filter_transform\n");
 
     gst_gl_filter_do_transform (filter, gl_inbuf, gl_outbuf);
 

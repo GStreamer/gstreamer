@@ -418,7 +418,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
     //is not gl
     else 
     {	
-		//if glimagesink has not the display yet
+        //if glimagesink has not the display yet
         if (glimage_sink->display == NULL) 
         {
   
@@ -449,7 +449,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
 		//blocking call
 		gst_gl_display_textureChanged(glimage_sink->display, glimage_sink->format,
 			gl_buffer->texture, gl_buffer->texture_u, gl_buffer->texture_v,
-            gl_buffer->width, gl_buffer->height, GST_BUFFER_DATA (buf));
+            gl_buffer->width, gl_buffer->height, GST_BUFFER_DATA (buf), &gl_buffer->textureGL);
 
         //gl_buffer is created in this block, so the gl buffer is already referenced
     }
@@ -465,7 +465,8 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
     glimage_sink->stored_buffer = gl_buffer;
 
     //redisplay opengl scene
-    isAlive = gst_gl_display_postRedisplay (glimage_sink->display);
+    isAlive = gst_gl_display_postRedisplay (glimage_sink->display, 
+        gl_buffer->textureGL, gl_buffer->width, gl_buffer->height);
 
     if (isAlive)
         return GST_FLOW_OK;
@@ -515,7 +516,7 @@ gst_glimage_sink_expose (GstXOverlay* overlay)
 
     //redisplay opengl scene
     if (glimage_sink->display)
-        gst_gl_display_postRedisplay (glimage_sink->display);
+        gst_gl_display_postRedisplay (glimage_sink->display, 0, 0, 0);
 }
 
 
