@@ -95,7 +95,7 @@ gst_gl_buffer_new_from_video_format (GstGLDisplay* display,
 {
     GstGLBuffer *buffer;
 
-    g_return_val_if_fail (video_format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
+    //g_return_val_if_fail (video_format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
     g_return_val_if_fail (display != NULL, NULL);
     g_return_val_if_fail (width > 0, NULL);
     g_return_val_if_fail (height > 0, NULL);
@@ -108,10 +108,11 @@ gst_gl_buffer_new_from_video_format (GstGLDisplay* display,
     buffer->video_format = video_format;
     GST_BUFFER_SIZE (buffer) = gst_gl_buffer_format_get_size (video_format, context_width, context_height);
 
-    //blocking call, init texture 
-    gst_gl_display_textureRequested (buffer->display, buffer->video_format, 
-	    buffer->width, buffer->height, 
-	    &buffer->texture, &buffer->texture_u, &buffer->texture_v) ;
+    //blocking call, init texture
+    if (video_format != GST_VIDEO_FORMAT_UNKNOWN)
+        gst_gl_display_textureRequested (buffer->display, buffer->video_format, 
+	        buffer->width, buffer->height, 
+	        &buffer->texture, &buffer->texture_u, &buffer->texture_v) ;
 
     return buffer;
 }

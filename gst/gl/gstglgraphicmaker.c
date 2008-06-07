@@ -199,7 +199,8 @@ gst_gl_graphicmaker_get_property (GObject* object, guint prop_id,
 static void
 gst_gl_graphicmaker_reset (GstGLGraphicmaker* graphicmaker)
 { 
-    if (graphicmaker->display) {
+    if (graphicmaker->display) 
+    {
         g_object_unref (graphicmaker->display);
         graphicmaker->display = NULL;
     }
@@ -322,7 +323,8 @@ gst_gl_graphicmaker_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     ret = gst_video_format_parse_caps (incaps, &graphicmaker->video_format,
         &graphicmaker->width, &graphicmaker->height);
 
-    if (!ret) {
+    if (!ret) 
+    {
       GST_DEBUG ("bad caps");
       return FALSE;
     }

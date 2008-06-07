@@ -280,55 +280,59 @@ gst_glimage_sink_start (GstBaseSink * bsink)
 static gboolean
 gst_glimage_sink_stop (GstBaseSink * bsink)
 {
-  GstGLImageSink *glimage_sink;
+    GstGLImageSink *glimage_sink;
 
-  GST_DEBUG ("stop");
+    GST_DEBUG ("stop");
 
-  glimage_sink = GST_GLIMAGE_SINK (bsink);
+    glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  if (glimage_sink->stored_buffer) {
-    gst_buffer_unref (glimage_sink->stored_buffer);
-    glimage_sink->stored_buffer = NULL;
-  }
-  if (glimage_sink->display) {
-	gst_gl_display_setVisibleWindow (glimage_sink->display, FALSE);
-    g_object_unref (glimage_sink->display);
-    glimage_sink->display = NULL;
-  }
+    if (glimage_sink->stored_buffer) 
+    {
+        gst_buffer_unref (glimage_sink->stored_buffer);
+        glimage_sink->stored_buffer = NULL;
+    }
+    if (glimage_sink->display) 
+    {
+        gst_gl_display_setVisibleWindow (glimage_sink->display, FALSE);
+        g_object_unref (glimage_sink->display);
+        glimage_sink->display = NULL;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 static gboolean
 gst_glimage_sink_unlock (GstBaseSink * bsink)
 {
-  //GstGLImageSink* glimage_sink = GST_GLIMAGE_SINK (bsink);
+    //GstGLImageSink* glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  GST_DEBUG ("unlock");
+    GST_DEBUG ("unlock");
 
-  return TRUE;
+    return TRUE;
 }
 
 static void
 gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
     GstClockTime * start, GstClockTime * end)
 {
-  GstGLImageSink *glimagesink;
+    GstGLImageSink *glimagesink;
 
-  glimagesink = GST_GLIMAGE_SINK (bsink);
+    glimagesink = GST_GLIMAGE_SINK (bsink);
 
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    *start = GST_BUFFER_TIMESTAMP (buf);
-    if (GST_BUFFER_DURATION_IS_VALID (buf)) {
-      *end = *start + GST_BUFFER_DURATION (buf);
-    } else {
-      if (glimagesink->fps_n > 0) {
-        *end = *start +
-            gst_util_uint64_scale_int (GST_SECOND, glimagesink->fps_d,
-            glimagesink->fps_n);
-      }
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) 
+    {
+        *start = GST_BUFFER_TIMESTAMP (buf);
+        if (GST_BUFFER_DURATION_IS_VALID (buf)) 
+            *end = *start + GST_BUFFER_DURATION (buf);
+        else 
+        {
+            if (glimagesink->fps_n > 0) {
+            *end = *start +
+                gst_util_uint64_scale_int (GST_SECOND, glimagesink->fps_d,
+                glimagesink->fps_n);
+            }
+        }
     }
-  }
 }
 
 

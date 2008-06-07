@@ -28,6 +28,7 @@
 static void gst_gl_display_finalize (GObject * object);
 static gpointer gst_gl_display_glutThreadFunc (GstGLDisplay* display);
 static void gst_gl_display_glutCreateWindow (GstGLDisplay* display);
+static void gst_gl_display_glutGenerateFBO (GstGLDisplay *display);
 static void gst_gl_display_glutDestroyWindow (GstGLDisplay* display);
 static void gst_gl_display_glutSetVisibleWindow (GstGLDisplay* display);
 static void gst_gl_display_glutPrepareTexture (GstGLDisplay* display);
@@ -93,6 +94,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->cond_fill = g_cond_new ();
     display->cond_clear = g_cond_new ();
     display->cond_video = g_cond_new ();
+    display->cond_generateFBO = g_cond_new ();
     display->cond_create = g_cond_new ();
     display->cond_destroy = g_cond_new ();
 
@@ -105,6 +107,12 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->graphicFBO = 0;
     display->graphicDepthBuffer = 0;
     display->graphicTexture = 0;
+
+    display->requestedFBO = 0;
+    display->requestedDepthBuffer = 0;
+    display->requestedTextureFBO = 0;
+    display->requestedTextureFBOWidth = 0;
+    display->requestedTextureFBOHeight = 0;
 
     display->requestedTexture = 0;
     display->requestedTexture_u = 0;
@@ -326,6 +334,10 @@ gst_gl_display_finalize (GObject *object)
         g_cond_free (display->cond_video);
         display->cond_video = NULL;
     }
+    if (display->cond_generateFBO) {
+        g_cond_free (display->cond_generateFBO);
+        display->cond_generateFBO = NULL;
+    }
     if (display->cond_create) {
         g_cond_free (display->cond_create);
         display->cond_create = NULL;
@@ -343,7 +355,7 @@ gst_gl_display_finalize (GObject *object)
     if (g_hash_table_size (gst_gl_display_map) == 0)
     {
         g_thread_join (gst_gl_display_glutThread);
-        GST_DEBUG ("Glut thread joined");
+        g_print ("Glut thread joined\n");
         gst_gl_display_glutThread = NULL;
         g_async_queue_unref (gst_gl_display_messageQueue);
         g_hash_table_unref  (gst_gl_display_map);
@@ -370,9 +382,9 @@ gst_gl_display_glutThreadFunc (GstGLDisplay *display)
     gst_gl_display_glutCreateWindow (display);
     gst_gl_display_unlock (display);
 
-    GST_DEBUG ("Glut mainLoop start");
+    g_print ("Glut mainLoop start\n");
     glutMainLoop ();
-    GST_DEBUG ("Glut mainLoop exited");
+    g_print ("Glut mainLoop exited\n");
 
     return NULL;
 }
@@ -397,7 +409,7 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     display->title =  g_string_append (display->title, buffer);
     glutWinId = glutCreateWindow (display->title->str, display->winId);
 
-    GST_DEBUG ("Context %d created\n", glutWinId);
+    g_print ("Context %d created\n", glutWinId);
 
     if (display->visible)
         glutShowWindow ();
@@ -646,6 +658,53 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
 }
 
 
+/* Called by the idle funtion */
+static void
+gst_gl_display_glutGenerateFBO (GstGLDisplay *display)
+{
+    
+    glutSetWindow (display->glutWinId);
+   
+    //-- generate frame buffer object
+
+    //setup FBO
+    glGenFramebuffersEXT (1, &display->requestedFBO);
+    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->requestedFBO);
+
+    //setup the render buffer for depth	
+    glGenRenderbuffersEXT(1, &display->requestedDepthBuffer);
+    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->requestedDepthBuffer);
+    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
+        display->requestedTextureFBOWidth, display->requestedTextureFBOHeight);
+
+    //setup a texture to render to
+    glGenTextures (1, &display->requestedTextureFBO);
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->requestedTextureFBO);
+    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, 
+        display->requestedTextureFBOWidth, display->requestedTextureFBOHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    //attach the texture to the FBO to renderer to
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, 
+        GL_TEXTURE_RECTANGLE_ARB, display->requestedTextureFBO, 0);
+
+    //attach the depth render buffer to the FBO
+    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, 
+        GL_RENDERBUFFER_EXT, display->requestedDepthBuffer);
+
+    g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
+        GL_FRAMEBUFFER_COMPLETE_EXT);
+
+    //unbind the FBO
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+    g_cond_signal (display->cond_video);
+}
+
+
 /* Called by the idle function */
 static void
 gst_gl_display_glutDestroyWindow (GstGLDisplay *display)
@@ -695,7 +754,7 @@ gst_gl_display_glutDestroyWindow (GstGLDisplay *display)
     }
 
     g_hash_table_remove (gst_gl_display_map, GINT_TO_POINTER (display->glutWinId)); 
-    GST_DEBUG ("glut window destroyed: %d", display->glutWinId);
+    g_print ("glut window destroyed: %d\n", display->glutWinId);
 
     //if the map is empty, leaveMainloop and join the thread
     if (g_hash_table_size (gst_gl_display_map) == 0)
@@ -806,7 +865,7 @@ gst_gl_display_glut_idle (void)
                 gst_gl_display_glutDispatchAction (msg);  
         }
     }
-    else GST_DEBUG ("timeout reached in idle func");
+    else g_print ("timeout reached in idle func\n");
 }
 
 
@@ -841,6 +900,9 @@ gst_gl_display_glutDispatchAction (GstGLDisplayMsg* msg)
         case GST_GL_DISPLAY_ACTION_REDISPLAY:
             gst_gl_display_glutPostRedisplay (msg->display);
             break;
+        case GST_GL_DISPLAY_ACTION_GENFBO:
+            gst_gl_display_glutGenerateFBO (msg->display);
+            break;
         default:
             g_assert_not_reached ();
     }
@@ -867,6 +929,7 @@ gst_gl_display_checkMsgValidity (GstGLDisplayMsg *msg)
         case GST_GL_DISPLAY_ACTION_CLEAR:          
         case GST_GL_DISPLAY_ACTION_VIDEO:
         case GST_GL_DISPLAY_ACTION_REDISPLAY:
+        case GST_GL_DISPLAY_ACTION_GENFBO:
             //msg is out of date if the associated display is not in the map
             if (!g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (msg->glutWinId)))
                 valid = FALSE;
@@ -1010,7 +1073,7 @@ gst_gl_display_textureRequested (GstGLDisplay * display, GstVideoFormat video_fo
 
 /* Called by gst_gl elements */
 void 
-gst_gl_display_textureChanged (GstGLDisplay * display, GstVideoFormat video_format, 
+gst_gl_display_textureChanged (GstGLDisplay* display, GstVideoFormat video_format, 
                                GLuint texture, GLuint texture_u, GLuint texture_v, 
                                gint width, gint height, gpointer data)
 {
@@ -1030,7 +1093,7 @@ gst_gl_display_textureChanged (GstGLDisplay * display, GstVideoFormat video_form
 
 /* Called by gstglbuffer */
 void 
-gst_gl_display_clearTexture (GstGLDisplay * display, guint texture, 
+gst_gl_display_clearTexture (GstGLDisplay* display, guint texture, 
                              guint texture_u, guint texture_v)
 {
     gst_gl_display_lock (display);
@@ -1076,6 +1139,23 @@ gst_gl_display_postRedisplay (GstGLDisplay* display)
 
 /* Called by gst_gl elements */
 void 
+gst_gl_display_requestFBO (GstGLDisplay* display, gint width, gint height, 
+                           guint* fbo, guint* depthbuffer, guint* texture)
+{
+    gst_gl_display_lock (display);
+    display->requestedTextureFBOWidth = width;
+    display->requestedTextureFBOHeight = height;
+    gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_GENFBO, display);
+    g_cond_wait (display->cond_generateFBO, display->mutex);
+    *fbo = display->requestedFBO;
+    *depthbuffer = display->requestedDepthBuffer;
+    *texture = display->requestedTextureFBO;
+    gst_gl_display_unlock (display);
+}
+
+
+/* Called by gst_gl elements */
+void 
 gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId)
 {
     static gint glheight = 0;
@@ -1088,7 +1168,7 @@ gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId)
     if (g_hash_table_size (gst_gl_display_map) == 0)
     {
         g_thread_join (gst_gl_display_glutThread);
-        GST_DEBUG ("Glut thread joined when setting winId");
+        g_print ("Glut thread joined when setting winId\n");
         gst_gl_display_glutThread = NULL;
         g_async_queue_unref (gst_gl_display_messageQueue);
         g_hash_table_unref  (gst_gl_display_map);

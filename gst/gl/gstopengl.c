@@ -23,6 +23,7 @@
 #endif
 
 #include "gstglgraphicmaker.h"
+#include "gstglfiltercube.h"
 #include "gstglvideomaker.h"
 #include "gstglimagesink.h"
 
@@ -34,14 +35,19 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_gl_gstgl_debug, "gstopengl", 0, "gstopengl");
- 
-  if (!gst_element_register (plugin, "glvideomaker",
-          GST_RANK_NONE, GST_TYPE_GL_VIDEOMAKER)) {
-    return FALSE;
-  }
   
   if (!gst_element_register (plugin, "glgraphicmaker",
           GST_RANK_NONE, GST_TYPE_GL_GRAPHICMAKER)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glfiltercube",
+          GST_RANK_NONE, GST_TYPE_GL_FILTER_CUBE)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glvideomaker",
+          GST_RANK_NONE, GST_TYPE_GL_VIDEOMAKER)) {
     return FALSE;
   }
 
