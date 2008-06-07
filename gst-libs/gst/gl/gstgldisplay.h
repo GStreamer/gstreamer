@@ -50,7 +50,8 @@ typedef enum {
     GST_GL_DISPLAY_ACTION_CHANGE,
     GST_GL_DISPLAY_ACTION_CLEAR,
     GST_GL_DISPLAY_ACTION_VIDEO,
-    GST_GL_DISPLAY_ACTION_REDISPLAY
+    GST_GL_DISPLAY_ACTION_REDISPLAY,
+    GST_GL_DISPLAY_ACTION_GENFBO
 	
 } GstGLDisplayAction;
 
@@ -78,20 +79,21 @@ typedef gboolean (* CDCB) ( GLuint, GLuint, GLuint);
 struct _GstGLDisplay {
     GObject object;
 
-    GMutex *mutex;
+    GMutex* mutex;
 
 	GQueue* texturePool;
     
-    GCond *cond_make;
-    GCond *cond_fill;
-    GCond *cond_clear;
-    GCond *cond_video;
+    GCond* cond_make;
+    GCond* cond_fill;
+    GCond* cond_clear;
+    GCond* cond_video;
+    GCond* cond_generateFBO;
 
-    GCond *cond_create;
-    GCond *cond_destroy;
+    GCond* cond_create;
+    GCond* cond_destroy;
     gint glutWinId;
     gulong winId;
-    GString *title;
+    GString* title;
     gint win_xpos;
     gint win_ypos;
     gint glcontext_width;
@@ -110,6 +112,13 @@ struct _GstGLDisplay {
     GLuint graphicFBO;
     GLuint graphicDepthBuffer;
     GLuint graphicTexture;
+
+    //filter frame buffer object (GL -> GL)
+    GLuint requestedFBO;
+    GLuint requestedDepthBuffer;
+    GLuint requestedTextureFBO;
+    GLuint requestedTextureFBOWidth;
+    GLuint requestedTextureFBOHeight;
 
     GLuint requestedTexture;
     GLuint requestedTexture_u;
@@ -211,6 +220,8 @@ void gst_gl_display_clearTexture (GstGLDisplay* display, guint texture,
 void gst_gl_display_videoChanged (GstGLDisplay* display, GstVideoFormat video_format,
                                   gpointer data);
 gboolean gst_gl_display_postRedisplay (GstGLDisplay* display);
+void gst_gl_display_requestFBO (GstGLDisplay* display, gint width, gint height, 
+                                guint* fbo, guint* depthbuffer, guint* texture);
 void gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId);
 
 #endif
