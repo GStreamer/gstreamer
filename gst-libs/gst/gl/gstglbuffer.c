@@ -47,6 +47,7 @@ gst_gl_buffer_init (GstGLBuffer* buffer, gpointer g_class)
     buffer->texture = 0;
     buffer->texture_u = 0;
     buffer->texture_v = 0;
+    buffer->textureGL = 0;
     buffer->width = 0;
     buffer->height = 0;
 }

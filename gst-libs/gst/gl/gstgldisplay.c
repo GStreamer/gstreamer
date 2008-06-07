@@ -130,6 +130,10 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->rejectedDepthBuffer = 0;
     display->rejectedTextureFBO = 0;
 
+    display->displayedTexture = 0;
+    display->displayedTextureWidth = 0;
+    display->displayedTextureHeight = 0;
+
     display->requestedTexture = 0;
     display->requestedTexture_u = 0;
     display->requestedTexture_v = 0;
@@ -213,8 +217,8 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
 	    "void main(void) {\n"
 	    "  float r,g,b,y,u,v;\n"
 	    "  vec2 nxy=gl_TexCoord[0].xy;\n"
-	    "  y=texture2DRect(Ytex,nxy).r;\n"
-	    "  u=texture2DRect(Utex,nxy*0.5).r;\n"
+	    "  y=texture2DRect(Ytex,nxy*0.5).r;\n"
+	    "  u=texture2DRect(Utex,nxy).r;\n"
 	    "  v=texture2DRect(Vtex,nxy*0.5).r;\n"
 	    "  y=1.1643*(y-0.0625);\n"
 	    "  u=u-0.5;\n"
@@ -1175,7 +1179,7 @@ gst_gl_display_textureRequested (GstGLDisplay * display, GstVideoFormat video_fo
 void 
 gst_gl_display_textureChanged (GstGLDisplay* display, GstVideoFormat video_format, 
                                GLuint texture, GLuint texture_u, GLuint texture_v, 
-                               gint width, gint height, gpointer data)
+                               gint width, gint height, gpointer data, GLuint* outputTexture)
 {
     gst_gl_display_lock (display);
     display->candidateTexture = texture;
@@ -1187,6 +1191,9 @@ gst_gl_display_textureChanged (GstGLDisplay* display, GstVideoFormat video_forma
     display->candidateData = data;
     gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_CHANGE, display);
     g_cond_wait (display->cond_fill, display->mutex);
+    //Here texture width and height are always the same than the fbo
+    if (outputTexture)
+        *outputTexture = display->textureFBO;
     gst_gl_display_unlock (display);
 }
 
@@ -1223,12 +1230,18 @@ gst_gl_display_videoChanged (GstGLDisplay* display, GstVideoFormat video_format,
 
 /* Called by gst_gl elements */
 gboolean 
-gst_gl_display_postRedisplay (GstGLDisplay* display)
+gst_gl_display_postRedisplay (GstGLDisplay* display, GLuint texture, gint width , gint height)
 {
     gboolean isAlive = TRUE;
     
     gst_gl_display_lock (display);
     isAlive = display->isAlive;
+    if (texture)
+    {
+        display->displayedTexture = texture;
+        display->displayedTextureWidth = width;
+        display->displayedTextureHeight = height;
+    }
     gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_REDISPLAY, display);
     gst_gl_display_unlock (display);
 
@@ -1390,8 +1403,8 @@ void gst_gl_display_draw(void)
     if (display->clientDrawCallback) 
     {
 		gboolean doRedisplay = 
-            display->clientDrawCallback(display->textureFBO,
-				display->textureFBOWidth, display->textureFBOHeight);
+            display->clientDrawCallback(display->displayedTexture,
+				display->displayedTextureWidth, display->displayedTextureHeight);
         
         glFlush();
         glutSwapBuffers();
@@ -1408,17 +1421,17 @@ void gst_gl_display_draw(void)
         glMatrixMode (GL_PROJECTION);
         glLoadIdentity ();      
 	    
-	    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->textureFBO);
+	    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->displayedTexture);
         glEnable (GL_TEXTURE_RECTANGLE_ARB);
 
         glBegin (GL_QUADS);
-            glTexCoord2i (display->textureFBOWidth, 0);
+            glTexCoord2i (display->displayedTextureWidth, 0);
             glVertex2f (1.0f, 1.0f);
             glTexCoord2i (0, 0);
             glVertex2f (-1.0f, 1.0f);
-            glTexCoord2i (0, display->textureFBOHeight);
+            glTexCoord2i (0, display->displayedTextureHeight);
             glVertex2f (-1.0f, -1.0f);
-            glTexCoord2i (display->textureFBOWidth, display->textureFBOHeight);
+            glTexCoord2i (display->displayedTextureWidth, display->displayedTextureHeight);
             glVertex2f (1.0f, -1.0f);
         glEnd ();
 

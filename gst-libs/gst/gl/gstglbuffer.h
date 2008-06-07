@@ -45,6 +45,7 @@ struct _GstGLBuffer {
     GLuint texture;
     GLuint texture_u;
     GLuint texture_v;
+    GLuint textureGL;
 
     gint width;
     gint height;
