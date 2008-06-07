@@ -29,8 +29,6 @@
 
 GST_DEBUG_CATEGORY (gst_cdio_debug);
 
-#if (LIBCDIO_VERSION_NUM >= 76)
-
 void
 gst_cdio_add_cdtext_field (GstObject * src, cdtext_t * cdtext,
     cdtext_field_t field, const gchar * gst_tag, GstTagList ** p_tags)
@@ -75,18 +73,6 @@ gst_cdio_get_cdtext (GstObject * src, CdIo * cdio, track_t track)
 
   return tags;
 }
-
-#else
-
-GstTagList *
-gst_cdio_get_cdtext (GstObject * src, CdIo * cdio, track_t track)
-{
-  GST_DEBUG_OBJECT (src, "This libcdio version (%u) does not support "
-      "CDTEXT (want >= 76)", LIBCDIO_VERSION_NUM);
-  return NULL;
-}
-
-#endif
 
 static void
 gst_cdio_log_handler (cdio_log_level_t level, const char *msg)
