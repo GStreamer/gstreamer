@@ -118,100 +118,102 @@ gst_glimage_sink_base_init (gpointer g_class)
 }
 
 static void
-gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
+gst_glimage_sink_class_init (GstGLImageSinkClass* klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBaseSinkClass *gstbasesink_class;
+    GObjectClass *gobject_class;
+    GstElementClass *gstelement_class;
+    GstBaseSinkClass *gstbasesink_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasesink_class = (GstBaseSinkClass *) klass;
+    gobject_class = (GObjectClass *) klass;
+    gstelement_class = (GstElementClass *) klass;
+    gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  gobject_class->set_property = gst_glimage_sink_set_property;
-  gobject_class->get_property = gst_glimage_sink_get_property;
+    gobject_class->set_property = gst_glimage_sink_set_property;
+    gobject_class->get_property = gst_glimage_sink_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_DISPLAY,
+    g_object_class_install_property (gobject_class, ARG_DISPLAY,
       g_param_spec_string ("display", "Display", "Display name",
           NULL, G_PARAM_READWRITE));
 
-  gobject_class->finalize = gst_glimage_sink_finalize;
+    gobject_class->finalize = gst_glimage_sink_finalize;
 
-  gstelement_class->change_state = gst_glimage_sink_change_state;
+    gstelement_class->change_state = gst_glimage_sink_change_state;
 
-  gstbasesink_class->set_caps = gst_glimage_sink_set_caps;
-  gstbasesink_class->get_times = gst_glimage_sink_get_times;
-  gstbasesink_class->preroll = gst_glimage_sink_render;
-  gstbasesink_class->render = gst_glimage_sink_render;
-  gstbasesink_class->start = gst_glimage_sink_start;
-  gstbasesink_class->stop = gst_glimage_sink_stop;
-  gstbasesink_class->unlock = gst_glimage_sink_unlock;
+    gstbasesink_class->set_caps = gst_glimage_sink_set_caps;
+    gstbasesink_class->get_times = gst_glimage_sink_get_times;
+    gstbasesink_class->preroll = gst_glimage_sink_render;
+    gstbasesink_class->render = gst_glimage_sink_render;
+    gstbasesink_class->start = gst_glimage_sink_start;
+    gstbasesink_class->stop = gst_glimage_sink_stop;
+    gstbasesink_class->unlock = gst_glimage_sink_unlock;
 }
 
 static void
-gst_glimage_sink_init (GstGLImageSink * glimage_sink,
-    GstGLImageSinkClass * glimage_sink_class)
+gst_glimage_sink_init (GstGLImageSink* glimage_sink,
+    GstGLImageSinkClass* glimage_sink_class)
 {
-  glimage_sink->display_name = NULL;
-  glimage_sink->window_id = 0;
-  glimage_sink->display = NULL;
-  glimage_sink->stored_buffer = NULL;
+    glimage_sink->display_name = NULL;
+    glimage_sink->window_id = 0;
+    glimage_sink->display = NULL;
+    glimage_sink->stored_buffer = NULL;
 }
 
 static void
-gst_glimage_sink_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
+gst_glimage_sink_set_property (GObject* object, guint prop_id,
+    const GValue* value, GParamSpec* pspec)
 {
-  GstGLImageSink *glimage_sink;
+    GstGLImageSink *glimage_sink;
 
-  g_return_if_fail (GST_IS_GLIMAGE_SINK (object));
+    g_return_if_fail (GST_IS_GLIMAGE_SINK (object));
 
-  glimage_sink = GST_GLIMAGE_SINK (object);
+    glimage_sink = GST_GLIMAGE_SINK (object);
 
-  switch (prop_id) {
-    case ARG_DISPLAY:
-      g_free (glimage_sink->display_name);
-      glimage_sink->display_name = g_strdup (g_value_get_string (value));
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+    switch (prop_id) 
+    {
+        case ARG_DISPLAY:
+            g_free (glimage_sink->display_name);
+            glimage_sink->display_name = g_strdup (g_value_get_string (value));
+            break;
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
+    }
 }
 
 static void
-gst_glimage_sink_finalize (GObject * object)
+gst_glimage_sink_finalize (GObject* object)
 {
-  GstGLImageSink *glimage_sink;
+    GstGLImageSink* glimage_sink;
 
-  g_return_if_fail (GST_IS_GLIMAGE_SINK (object));
+    g_return_if_fail (GST_IS_GLIMAGE_SINK (object));
 
-  glimage_sink = GST_GLIMAGE_SINK (object);
+    glimage_sink = GST_GLIMAGE_SINK (object);
 
-  if (glimage_sink->caps) {
-    gst_caps_unref (glimage_sink->caps);
-  }
-  g_free (glimage_sink->display_name);
+    if (glimage_sink->caps) 
+        gst_caps_unref (glimage_sink->caps);
+
+    g_free (glimage_sink->display_name);
 }
 
 static void
-gst_glimage_sink_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
+gst_glimage_sink_get_property (GObject* object, guint prop_id,
+    GValue* value, GParamSpec* pspec)
 {
-  GstGLImageSink *glimage_sink;
+    GstGLImageSink *glimage_sink;
 
-  g_return_if_fail (GST_IS_GLIMAGE_SINK (object));
+    g_return_if_fail (GST_IS_GLIMAGE_SINK (object));
 
-  glimage_sink = GST_GLIMAGE_SINK (object);
+    glimage_sink = GST_GLIMAGE_SINK (object);
 
-  switch (prop_id) {
-    case ARG_DISPLAY:
-      g_value_set_string (value, glimage_sink->display_name);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+    switch (prop_id) 
+    {
+        case ARG_DISPLAY:
+            g_value_set_string (value, glimage_sink->display_name);
+            break;
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
+    }
 }
 
 /*
@@ -219,48 +221,50 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
  */
 
 static GstStateChangeReturn
-gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
+gst_glimage_sink_change_state (GstElement* element, GstStateChange transition)
 {
-  GstGLImageSink *glimage_sink;
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+    GstGLImageSink* glimage_sink;
+    GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
-  GST_DEBUG ("change state");
+    GST_DEBUG ("change state");
 
-  glimage_sink = GST_GLIMAGE_SINK (element);
+    glimage_sink = GST_GLIMAGE_SINK (element);
 
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
+    switch (transition) 
+    {
+        case GST_STATE_CHANGE_NULL_TO_READY:
+            break;
+        case GST_STATE_CHANGE_READY_TO_PAUSED:
+            break;
+        case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+            break;
+        default:
+            break;
+    }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
+    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+    if (ret == GST_STATE_CHANGE_FAILURE)
+        return ret;
+
+    switch (transition) 
+    {
+        case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+            break;
+        case GST_STATE_CHANGE_PAUSED_TO_READY:
+            /* FIXME clear window */
+            glimage_sink->fps_n = 0;
+            glimage_sink->fps_d = 1;
+            GST_VIDEO_SINK_WIDTH (glimage_sink) = 0;
+            GST_VIDEO_SINK_HEIGHT (glimage_sink) = 0;
+            break;
+        case GST_STATE_CHANGE_READY_TO_NULL:
+            /* FIXME dispose of window */
+            break;
+        default:
+            break;
+    }
+
     return ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      /* FIXME clear window */
-      glimage_sink->fps_n = 0;
-      glimage_sink->fps_d = 1;
-      GST_VIDEO_SINK_WIDTH (glimage_sink) = 0;
-      GST_VIDEO_SINK_HEIGHT (glimage_sink) = 0;
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      /* FIXME dispose of window */
-      break;
-    default:
-      break;
-  }
-
-  return ret;
 }
 
 /*
@@ -268,19 +272,19 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
  */
 
 static gboolean
-gst_glimage_sink_start (GstBaseSink * bsink)
+gst_glimage_sink_start (GstBaseSink* bsink)
 {
-  //GstGLImageSink* glimage_sink = GST_GLIMAGE_SINK (bsink);
+    //GstGLImageSink* glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  GST_DEBUG ("start");
+    GST_DEBUG ("start");
 
-  return TRUE;
+    return TRUE;
 }
 
 static gboolean
-gst_glimage_sink_stop (GstBaseSink * bsink)
+gst_glimage_sink_stop (GstBaseSink* bsink)
 {
-    GstGLImageSink *glimage_sink;
+    GstGLImageSink* glimage_sink;
 
     GST_DEBUG ("stop");
 
@@ -302,7 +306,7 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
 }
 
 static gboolean
-gst_glimage_sink_unlock (GstBaseSink * bsink)
+gst_glimage_sink_unlock (GstBaseSink* bsink)
 {
     //GstGLImageSink* glimage_sink = GST_GLIMAGE_SINK (bsink);
 
@@ -312,10 +316,10 @@ gst_glimage_sink_unlock (GstBaseSink * bsink)
 }
 
 static void
-gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
-    GstClockTime * start, GstClockTime * end)
+gst_glimage_sink_get_times (GstBaseSink* bsink, GstBuffer* buf,
+    GstClockTime* start, GstClockTime* end)
 {
-    GstGLImageSink *glimagesink;
+    GstGLImageSink* glimagesink;
 
     glimagesink = GST_GLIMAGE_SINK (bsink);
 
@@ -337,9 +341,9 @@ gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
 
 
 static gboolean
-gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+gst_glimage_sink_set_caps (GstBaseSink* bsink, GstCaps* caps)
 {
-    GstGLImageSink *glimage_sink;
+    GstGLImageSink* glimage_sink;
     gint width;
     gint height;
     gboolean ok;
@@ -384,10 +388,10 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
+gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
 {
-    GstGLImageSink *glimage_sink = NULL;
-    GstGLBuffer *gl_buffer = NULL;
+    GstGLImageSink* glimage_sink = NULL;
+    GstGLBuffer* gl_buffer = NULL;
     gboolean isAlive = TRUE;
 
     glimage_sink = GST_GLIMAGE_SINK (bsink);
@@ -473,8 +477,8 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 static void
 gst_glimage_sink_xoverlay_init (GstXOverlayClass* iface)
 {
-  iface->set_xwindow_id = gst_glimage_sink_set_xwindow_id;
-  iface->expose = gst_glimage_sink_expose;
+    iface->set_xwindow_id = gst_glimage_sink_set_xwindow_id;
+    iface->expose = gst_glimage_sink_expose;
 }
 
 
@@ -505,7 +509,7 @@ gst_glimage_sink_set_xwindow_id (GstXOverlay* overlay, gulong window_id)
 
 
 static void
-gst_glimage_sink_expose (GstXOverlay * overlay)
+gst_glimage_sink_expose (GstXOverlay* overlay)
 {
     GstGLImageSink* glimage_sink = GST_GLIMAGE_SINK (overlay);
 
@@ -516,15 +520,15 @@ gst_glimage_sink_expose (GstXOverlay * overlay)
 
 
 static gboolean
-gst_glimage_sink_interface_supported (GstImplementsInterface * iface,
+gst_glimage_sink_interface_supported (GstImplementsInterface* iface,
     GType type)
 {
-  return TRUE;
+    return TRUE;
 }
 
 
 static void
-gst_glimage_sink_implements_init (GstImplementsInterfaceClass * klass)
+gst_glimage_sink_implements_init (GstImplementsInterfaceClass* klass)
 {
-  klass->supported = gst_glimage_sink_interface_supported;
+    klass->supported = gst_glimage_sink_interface_supported;
 }

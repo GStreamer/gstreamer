@@ -51,6 +51,7 @@ static void gst_gl_filter_cube_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_gl_filter_cube_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+static void gst_gl_filter_cube_callback (guint width, guint height, guint texture);
 
 
 static void
@@ -64,7 +65,7 @@ gst_gl_filter_cube_base_init (gpointer klass)
 static void
 gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
 {
-  GObjectClass *gobject_class;
+  GObjectClass* gobject_class;
 
   gobject_class = (GObjectClass *) klass;
   gobject_class->set_property = gst_gl_filter_cube_set_property;
@@ -74,114 +75,123 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
 }
 
 static void
-gst_gl_filter_cube_init (GstGLFilterCube * filter,
-    GstGLFilterCubeClass * klass)
+gst_gl_filter_cube_init (GstGLFilterCube* filter,
+    GstGLFilterCubeClass* klass)
 {
 }
 
 static void
-gst_gl_filter_cube_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
+gst_gl_filter_cube_set_property (GObject* object, guint prop_id,
+    const GValue* value, GParamSpec* pspec)
 {
-  //GstGLFilterCube *filter = GST_GL_FILTER_CUBE (object);
+    //GstGLFilterCube *filter = GST_GL_FILTER_CUBE (object);
 
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+    switch (prop_id) 
+    {
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
+    }
 }
 
 static void
-gst_gl_filter_cube_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
+gst_gl_filter_cube_get_property (GObject* object, guint prop_id,
+    GValue* value, GParamSpec* pspec)
 {
-  //GstGLFilterCube *filter = GST_GL_FILTER_CUBE (object);
+    //GstGLFilterCube *filter = GST_GL_FILTER_CUBE (object);
 
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+    switch (prop_id) 
+    {
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
+    }
 }
 
 static gboolean
-gst_gl_filter_cube_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
-    GstGLBuffer * outbuf)
+gst_gl_filter_cube_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
+    GstGLBuffer* outbuf)
 {
-  GstGLFilterCube* cube = GST_GL_FILTER_CUBE(filter);
+    GstGLFilterCube* cube_filter = GST_GL_FILTER_CUBE(filter);
 
-  g_print ("gstglfiltercube: gst_gl_filter_cube_filter\n");
-  /*int i, j;
-  double *vertex_x, *vertex_y;
+    g_print ("gstglfiltercube: gst_gl_filter_cube_filter\n");
 
-  glDisable (GL_CULL_FACE);
-  glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+    //blocking call, generate a FBO
+    gst_gl_display_useFBO (filter->display, filter->width, filter->height,
+        filter->fbo, filter->depthbuffer, filter->texture, gst_gl_filter_cube_callback,
+        inbuf->width, inbuf->height, inbuf->texture);
 
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    outbuf->width = filter->width;
+    outbuf->height = filter->height;
+    outbuf->texture = filter->texture;
 
-  glColor4f (1, 0, 1, 1);
+    return TRUE;
+}
 
+//opengl scene, params: input texture (not the output filter->texture)
+static void
+gst_gl_filter_cube_callback (guint width, guint height, guint texture)
+{
+    static GLfloat	xrot = 0;
+    static GLfloat	yrot = 0;				
+    static GLfloat	zrot = 0;
 
+    g_print ("gstglfiltercube: gst_gl_filter_cube_callback\n");
 
-    glMatrixMode (GL_COLOR);
-    glLoadMatrixd (matrix);
-    glPixelTransferf (GL_POST_COLOR_MATRIX_RED_BIAS, (1 - GAIN) / 2);
-    glPixelTransferf (GL_POST_COLOR_MATRIX_GREEN_BIAS, (1 - GAIN) / 2);
-    glPixelTransferf (GL_POST_COLOR_MATRIX_BLUE_BIAS, (1 - GAIN) / 2);
-  }
+    glEnable(GL_DEPTH_TEST);
 
-  
+    glEnable (GL_TEXTURE_RECTANGLE_ARB);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-#define N 10
-#define SCALE (1.0/N)
-#define NOISE() (0.1*SCALE*g_random_double_range(-1,1))
-  vertex_x = malloc (sizeof (double) * (N + 1) * (N + 1));
-  vertex_y = malloc (sizeof (double) * (N + 1) * (N + 1));
-  for (j = 0; j < N + 1; j++) {
-    for (i = 0; i < N + 1; i++) {
-      vertex_x[j * (N + 1) + i] = i * SCALE + NOISE ();
-      vertex_y[j * (N + 1) + i] = j * SCALE + NOISE ();
-    }
-  }
-  for (j = 0; j < N; j++) {
-    for (i = 0; i < N; i++) {
-      glBegin (GL_QUADS);
-      glNormal3f (0, 0, -1);
-      glTexCoord2f (i * SCALE, j * SCALE);
-      glVertex3f (vertex_x[j * (N + 1) + i], vertex_y[j * (N + 1) + i], 0);
-      glTexCoord2f ((i + 1) * SCALE, j * SCALE);
-      glVertex3f (vertex_x[j * (N + 1) + (i + 1)],
-          vertex_y[j * (N + 1) + (i + 1)], 0);
-      glTexCoord2f ((i + 1) * SCALE, (j + 1) * SCALE);
-      glVertex3f (vertex_x[(j + 1) * (N + 1) + (i + 1)],
-          vertex_y[(j + 1) * (N + 1) + (i + 1)], 0);
-      glTexCoord2f (i * SCALE, (j + 1) * SCALE);
-      glVertex3f (vertex_x[(j + 1) * (N + 1) + i],
-          vertex_y[(j + 1) * (N + 1) + i], 0);
-      glEnd ();
-    }
-  }
-  free (vertex_x);
-  free (vertex_y);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+	
+    glTranslatef(0.0f,0.0f,-5.0f);
 
+    glRotatef(xrot,1.0f,0.0f,0.0f);
+    glRotatef(yrot,0.0f,1.0f,0.0f);
+    glRotatef(zrot,0.0f,0.0f,1.0f);
 
-  glFlush ();
+    glBegin(GL_QUADS);
+	      // Front Face
+	      glTexCoord2f((gfloat)width, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+	      glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f( 1.0f,  1.0f,  1.0f);
+	      glTexCoord2f((gfloat)width, (gfloat)height); glVertex3f(-1.0f,  1.0f,  1.0f);
+	      // Back Face
+	      glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f(-1.0f,  1.0f, -1.0f);
+	      glTexCoord2f((gfloat)width, (gfloat)height); glVertex3f( 1.0f,  1.0f, -1.0f);
+	      glTexCoord2f((gfloat)width, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+	      // Top Face
+	      glTexCoord2f((gfloat)width, (gfloat)height); glVertex3f(-1.0f,  1.0f, -1.0f);
+	      glTexCoord2f((gfloat)width, 0.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+	      glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f( 1.0f,  1.0f, -1.0f);
+	      // Bottom Face
+	      glTexCoord2f((gfloat)width, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+	      glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f( 1.0f, -1.0f,  1.0f);
+	      glTexCoord2f((gfloat)width,(gfloat)height); glVertex3f(-1.0f, -1.0f,  1.0f);
+	      // Right face
+	      glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f( 1.0f,  1.0f, -1.0f);
+	      glTexCoord2f((gfloat)width, (gfloat)height); glVertex3f( 1.0f,  1.0f,  1.0f);
+	      glTexCoord2f((gfloat)width, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+	      // Left Face
+	      glTexCoord2f((gfloat)width, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+	      glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f(-1.0f,  1.0f,  1.0f);
+	      glTexCoord2f((gfloat)width, (gfloat)height); glVertex3f(-1.0f,  1.0f, -1.0f);
+    glEnd();
 
-  glMatrixMode (GL_MODELVIEW);
-  glLoadIdentity ();
-  glMatrixMode (GL_TEXTURE);
-  glLoadIdentity ();
-  glMatrixMode (GL_COLOR);
-  glLoadIdentity ();
-  glPixelTransferf (GL_POST_COLOR_MATRIX_RED_SCALE, 1.0);
-  glPixelTransferf (GL_POST_COLOR_MATRIX_RED_BIAS, 0);
-  glPixelTransferf (GL_POST_COLOR_MATRIX_GREEN_BIAS, 0);
-  glPixelTransferf (GL_POST_COLOR_MATRIX_BLUE_BIAS, 0);*/
-
-  return TRUE;
+    xrot+=0.3f;
+    yrot+=0.2f;
+    zrot+=0.4f;
 }

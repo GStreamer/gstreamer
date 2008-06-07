@@ -41,15 +41,18 @@ typedef gboolean (*GstGLFilterProcessFunc) (GstGLFilter *filter,
 
 struct _GstGLFilter
 {
-  GstBaseTransform base_transform;
+    GstBaseTransform base_transform;
 
-  GstPad *srcpad;
-  GstPad *sinkpad;
+    GstPad *srcpad;
+    GstPad *sinkpad;
 
-  GstGLDisplay *display;
-  GstVideoFormat video_format;
-  int width;
-  int height;
+    GstGLDisplay *display;
+    GstVideoFormat video_format;
+    gint width;
+    gint height;
+    guint fbo;
+    guint depthbuffer;
+    guint texture;
 };
 
 struct _GstGLFilterClass

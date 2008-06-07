@@ -105,10 +105,6 @@ gst_gl_filter_init (GstGLFilter * filter, GstGLFilterClass * klass)
   filter->sinkpad = gst_element_get_static_pad (GST_ELEMENT (filter), "sink");
   filter->srcpad = gst_element_get_static_pad (GST_ELEMENT (filter), "src");
 
-  /*gst_gl_display_requestFBO
-
-  filter->fbo = */
-
   gst_gl_filter_reset (filter);
 }
 
@@ -143,12 +139,18 @@ gst_gl_filter_reset (GstGLFilter* filter)
 {
     if (filter->display) 
     {
+        //blocking call, delete the FBO
+        gst_gl_display_rejectFBO (filter->display, filter->fbo, 
+            filter->depthbuffer, filter->texture);
         g_object_unref (filter->display);
         filter->display = NULL;
     }
     filter->video_format = GST_VIDEO_FORMAT_UNKNOWN;
     filter->width = 0;
     filter->height = 0;
+    filter->fbo = 0;
+    filter->depthbuffer = 0;
+    filter->texture = 0;
 }
 
 static gboolean
@@ -194,7 +196,12 @@ gst_gl_filter_prepare_output_buffer (GstBaseTransform* trans,
     filter = GST_GL_FILTER (trans);
 
     if (filter->display == NULL)
+    {
         filter->display = g_object_ref (gl_inbuf->display);
+        //blocking call, generate a FBO
+        gst_gl_display_requestFBO (filter->display, filter->width, filter->height,
+            &filter->fbo, &filter->depthbuffer, &filter->texture); 
+    }
 
     gl_outbuf = gst_gl_buffer_new_from_video_format (filter->display,
             filter->video_format, 
@@ -210,8 +217,8 @@ gst_gl_filter_prepare_output_buffer (GstBaseTransform* trans,
 }
 
 static gboolean
-gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_gl_filter_set_caps (GstBaseTransform* bt, GstCaps* incaps,
+    GstCaps* outcaps)
 {
     GstGLFilter *filter;
     gboolean ret;
@@ -233,8 +240,8 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 }
 
 static GstFlowReturn
-gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_gl_filter_transform (GstBaseTransform* bt, GstBuffer* inbuf,
+    GstBuffer* outbuf)
 {
     GstGLFilter* filter;
     GstGLBuffer* gl_inbuf = GST_GL_BUFFER (inbuf);
@@ -250,80 +257,13 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 }
 
 static gboolean
-gst_gl_filter_do_transform (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf)
+gst_gl_filter_do_transform (GstGLFilter* filter,
+    GstGLBuffer* inbuf, GstGLBuffer* outbuf)
 {
-  GstGLDisplay* display = inbuf->display;
-  GstGLFilterClass* filter_class = GST_GL_FILTER_GET_CLASS (filter);
+    GstGLDisplay* display = inbuf->display;
+    GstGLFilterClass* filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
-  outbuf->texture = inbuf->texture;
+    filter_class->filter (filter, inbuf, outbuf);
 
-  /*unsigned int fbo;
-
-  gst_gl_display_lock (display);
-
-  glGenFramebuffersEXT (1, &fbo);
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fbo);
-
-  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
-      GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_RECTANGLE_ARB, outbuf->texture, 0);
-
-  glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
-  glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
-
-  g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
-      GL_FRAMEBUFFER_COMPLETE_EXT);
-
-  glViewport (0, 0, outbuf->width, outbuf->height);
-
-  glClearColor (0.3, 0.3, 0.3, 1.0);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
-
-  glMatrixMode (GL_MODELVIEW);
-  glLoadIdentity ();
-
-  glDisable (GL_CULL_FACE);
-  glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-
-  glColor4f (1, 1, 1, 1);
-
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glActiveTexture (GL_TEXTURE0);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, inbuf->texture);*/
-
-  filter_class->filter (filter, inbuf, outbuf);
-/*
-#if 0
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-  glColor4f (1, 0, 1, 1);
-  glBegin (GL_QUADS);
-
-  glNormal3f (0, 0, -1);
-
-  glTexCoord2f (inbuf->width, 0);
-  glVertex3f (0.9, -0.9, 0);
-  glTexCoord2f (0, 0);
-  glVertex3f (-1.0, -1.0, 0);
-  glTexCoord2f (0, inbuf->height);
-  glVertex3f (-1.0, 1.0, 0);
-  glTexCoord2f (inbuf->width, inbuf->height);
-  glVertex3f (1.0, 1.0, 0);
-  glEnd ();
-#endif
-
-  glFlush ();
-
-  glDeleteFramebuffersEXT (1, &fbo);
-
-  gst_gl_display_unlock (display);*/
-
-  return TRUE;
+    return TRUE;
 }

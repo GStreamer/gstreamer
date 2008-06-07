@@ -51,7 +51,9 @@ typedef enum {
     GST_GL_DISPLAY_ACTION_CLEAR,
     GST_GL_DISPLAY_ACTION_VIDEO,
     GST_GL_DISPLAY_ACTION_REDISPLAY,
-    GST_GL_DISPLAY_ACTION_GENFBO
+    GST_GL_DISPLAY_ACTION_GENFBO,
+    GST_GL_DISPLAY_ACTION_DELFBO,
+    GST_GL_DISPLAY_ACTION_USEFBO
 	
 } GstGLDisplayAction;
 
@@ -76,6 +78,9 @@ typedef struct _GstGLDisplayTex {
 typedef void (* CRCB) ( GLuint, GLuint );
 typedef gboolean (* CDCB) ( GLuint, GLuint, GLuint);
 
+//opengl scene callback
+typedef void (* GLCB) ( GLuint, GLuint, GLuint);
+
 struct _GstGLDisplay {
     GObject object;
 
@@ -88,6 +93,8 @@ struct _GstGLDisplay {
     GCond* cond_clear;
     GCond* cond_video;
     GCond* cond_generateFBO;
+    GCond* cond_useFBO;
+    GCond* cond_destroyFBO;
 
     GCond* cond_create;
     GCond* cond_destroy;
@@ -119,6 +126,18 @@ struct _GstGLDisplay {
     GLuint requestedTextureFBO;
     GLuint requestedTextureFBOWidth;
     GLuint requestedTextureFBOHeight;
+    GLuint usedFBO;
+    GLuint usedDepthBuffer;
+    GLuint usedTextureFBO;
+    GLuint usedTextureFBOWidth;
+    GLuint usedTextureFBOHeight;
+    GLCB glsceneFBO_cb;
+    GLuint inputTextureWidth;
+    GLuint inputTextureHeight;
+    GLuint inputTexture;
+    GLuint rejectedFBO;
+    GLuint rejectedDepthBuffer;
+    GLuint rejectedTextureFBO;
 
     GLuint requestedTexture;
     GLuint requestedTexture_u;
@@ -196,7 +215,7 @@ GType gst_gl_display_get_type (void);
 
 
 //------------------------------------------------------------
-//-------------------- Public d�clarations ------------------
+//-------------------- Public declarations ------------------
 //------------------------------------------------------------ 
 GstGLDisplay *gst_gl_display_new (void);
 void gst_gl_display_initGLContext (GstGLDisplay* display, 
@@ -222,6 +241,11 @@ void gst_gl_display_videoChanged (GstGLDisplay* display, GstVideoFormat video_fo
 gboolean gst_gl_display_postRedisplay (GstGLDisplay* display);
 void gst_gl_display_requestFBO (GstGLDisplay* display, gint width, gint height, 
                                 guint* fbo, guint* depthbuffer, guint* texture);
+void gst_gl_display_useFBO (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
+                            guint fbo, guint depthbuffer, guint textureFBO, GLCB cb,
+                            guint inputTextureWidth, guint inputTextureHeight, guint inputTexture);
+void gst_gl_display_rejectFBO (GstGLDisplay* display, guint fbo, 
+                               guint depthbuffer, guint texture);
 void gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId);
 
 #endif
