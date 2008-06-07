@@ -662,7 +662,7 @@ AG_GST_CHECK_FEATURE(CAIRO, [Cairo graphics rendering], cairo, [
 dnl *** cdio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDIO, true)
 AG_GST_CHECK_FEATURE(CDIO, [cdio library], cdio, [
-  AG_GST_PKG_CHECK_MODULES(CDIO, libcdio >= 0.71)
+  AG_GST_PKG_CHECK_MODULES(CDIO, libcdio >= 0.76)
 ])
 
 dnl **** ESound ****

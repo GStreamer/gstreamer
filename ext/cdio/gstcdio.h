@@ -23,21 +23,16 @@
 
 #include <gst/gst.h>
 #include <cdio/cdio.h>
+#include <cdio/cdtext.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_cdio_debug);
 #define GST_CAT_DEFAULT gst_cdio_debug
-
-#if (LIBCDIO_VERSION_NUM >= 76)
-
-#include <cdio/cdtext.h>
 
 void     gst_cdio_add_cdtext_field (GstObject      * src,
                                     cdtext_t       * cdtext,
                                     cdtext_field_t   field,
                                     const gchar    * gst_tag,
                                     GstTagList    ** p_tags);
-
-#endif
 
 GstTagList  * gst_cdio_get_cdtext  (GstObject      * src,
                                     CdIo           * cdio,

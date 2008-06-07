@@ -1,3 +1,11 @@
+2008-06-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* configure.ac:
+	* ext/cdio/gstcdio.c:
+	* ext/cdio/gstcdio.h:
+	* ext/cdio/gstcdiocddasrc.c: (gst_cdio_cdda_src_open):
+	  Require libcdio >= 0.76.
+
 2008-06-05  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/avi/gstavidemux.c:

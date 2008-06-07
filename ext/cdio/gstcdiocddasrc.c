@@ -245,14 +245,8 @@ gst_cdio_cdda_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
   if (num_tracks <= 0 || first_track < 0)
     return TRUE;                /* base class will generate 'has no tracks' error */
 
-  if (src->read_speed != -1) {
-#if (LIBCDIO_VERSION_NUM >= 76)
+  if (src->read_speed != -1)
     cdio_set_speed (src->cdio, src->read_speed);
-#else
-    GST_WARNING_OBJECT (src, "This libcdio version (%u) does not support "
-        "setting the drive reading speed (want >= 76)", LIBCDIO_VERSION_NUM);
-#endif
-  }
 
   GST_LOG_OBJECT (src, "%u tracks, first track: %d", num_tracks, first_track);
 
