@@ -170,6 +170,10 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->outputVideo_format = 0;
     display->outputData = NULL;
 
+    display->recordedTexture = 0;
+    display->recordedTextureWidth = 0;
+    display->recordedTextureHeight = 0;
+
     display->glutWinId = -1;
     display->winId = 0;
     display->win_xpos = 0;
@@ -1216,12 +1220,15 @@ gst_gl_display_clearTexture (GstGLDisplay* display, guint texture,
 /* Called by gst_gl elements */
 void 
 gst_gl_display_videoChanged (GstGLDisplay* display, GstVideoFormat video_format,
-                             gpointer data)
+                             gint width, gint height, GLuint recordedTexture, gpointer data)
 {
     gst_gl_display_lock (display);
     //data size is aocciated to the glcontext size
     display->outputVideo_format = video_format;
     display->outputData = data;
+    display->recordedTexture = recordedTexture;
+    display->recordedTextureWidth = width;
+    display->recordedTextureHeight = height;
     gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_VIDEO, display);
     g_cond_wait (display->cond_video, display->mutex);
     gst_gl_display_unlock (display);
@@ -1890,25 +1897,25 @@ gst_gl_display_draw_graphic (GstGLDisplay* display)
     //check if a client draw callback is registered
     if (display->clientDrawCallback) 
     {
-        display->clientDrawCallback(display->textureFBO,
-			display->textureFBOWidth, display->textureFBOHeight);
+        display->clientDrawCallback(display->recordedTexture,
+			display->recordedTextureWidth, display->recordedTextureHeight);
     }
     else
     {
         glMatrixMode (GL_PROJECTION);
 	    glLoadIdentity ();
 
-        glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->textureFBO);
+        glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->recordedTexture);
         glEnable (GL_TEXTURE_RECTANGLE_ARB);
         
         glBegin (GL_QUADS);
-            glTexCoord2i (display->textureFBOWidth, 0);
+            glTexCoord2i (display->recordedTextureWidth, 0);
             glVertex2f (1.0f, 1.0f);
             glTexCoord2i (0, 0);
             glVertex2f (-1.0f, 1.0f);
-            glTexCoord2i (0, display->textureFBOHeight);
+            glTexCoord2i (0, display->recordedTextureHeight);
             glVertex2f (-1.0f, -1.0f);
-            glTexCoord2i (display->textureFBOWidth, display->textureFBOHeight);
+            glTexCoord2i (display->recordedTextureWidth, display->recordedTextureHeight);
             glVertex2f (1.0f, -1.0f);
         glEnd ();
     }
