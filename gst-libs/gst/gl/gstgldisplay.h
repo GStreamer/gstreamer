@@ -252,5 +252,7 @@ void gst_gl_display_useFBO (GstGLDisplay* display, gint textureFBOWidth, gint te
 void gst_gl_display_rejectFBO (GstGLDisplay* display, guint fbo, 
                                guint depthbuffer, guint texture);
 void gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId);
+void gst_gl_display_resetGLcontext (GstGLDisplay* display, 
+                                    gint glcontext_width, gint glcontext_height);
 
 #endif

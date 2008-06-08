@@ -27,6 +27,8 @@
 
 #include "gstglbuffer.h"
 
+G_BEGIN_DECLS
+
 #define GST_TYPE_GL_FILTER            (gst_gl_filter_get_type())
 #define GST_GL_FILTER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_FILTER,GstGLFilter))
 #define GST_IS_GL_FILTER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_FILTER))
@@ -36,8 +38,12 @@
 typedef struct _GstGLFilter GstGLFilter;
 typedef struct _GstGLFilterClass GstGLFilterClass;
 
+
+typedef gboolean (*GstGLFilterSetCaps) (GstGLFilter* filter, 
+    GstCaps* incaps, GstCaps* outcaps);
 typedef gboolean (*GstGLFilterProcessFunc) (GstGLFilter *filter,
     GstGLBuffer *inbuf, GstGLBuffer *outbuf);
+typedef void (*GstGLFilterOnInitFBO) (GstGLFilter *filter);
 
 struct _GstGLFilter
 {
@@ -57,11 +63,15 @@ struct _GstGLFilter
 
 struct _GstGLFilterClass
 {
-  GstBaseTransformClass base_transform_class;
-  GstGLFilterProcessFunc filter;
+    GstBaseTransformClass base_transform_class;
+    GstGLFilterSetCaps set_caps;
+    GstGLFilterProcessFunc filter;
+    GstGLFilterOnInitFBO onInitFBO;
 };
 
 GType gst_gl_filter_get_type(void);
+
+G_END_DECLS
 
 #endif
 

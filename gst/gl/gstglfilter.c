@@ -53,6 +53,8 @@ static void gst_gl_filter_set_property (GObject * object, guint prop_id,
 static void gst_gl_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstCaps* gst_gl_filter_transform_caps (GstBaseTransform* bt,
+    GstPadDirection direction, GstCaps* caps);
 static void gst_gl_filter_reset (GstGLFilter * filter);
 static gboolean gst_gl_filter_start (GstBaseTransform * bt);
 static gboolean gst_gl_filter_stop (GstBaseTransform * bt);
@@ -88,6 +90,8 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
   gobject_class->set_property = gst_gl_filter_set_property;
   gobject_class->get_property = gst_gl_filter_get_property;
 
+  /*GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
+        gst_gl_filter_transform_caps;*/
   GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_filter_transform;
   GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_filter_start;
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_stop;
@@ -95,6 +99,10 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_filter_get_unit_size;
   GST_BASE_TRANSFORM_CLASS (klass)->prepare_output_buffer =
       gst_gl_filter_prepare_output_buffer;
+
+  klass->set_caps = NULL;
+  klass->filter = NULL;
+  klass->onInitFBO = NULL;
 }
 
 static void
@@ -169,6 +177,14 @@ gst_gl_filter_stop (GstBaseTransform* bt)
     return TRUE;
 }
 
+static GstCaps*
+gst_gl_filter_transform_caps (GstBaseTransform* bt,
+    GstPadDirection direction, GstCaps* caps)
+{
+    return NULL;
+}
+
+
 static gboolean
 gst_gl_filter_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
     guint* size)
@@ -189,18 +205,22 @@ static GstFlowReturn
 gst_gl_filter_prepare_output_buffer (GstBaseTransform* trans,
     GstBuffer* inbuf, gint size, GstCaps* caps, GstBuffer** buf)
 {
-    GstGLFilter* filter;
+    GstGLFilter* filter = NULL;
     GstGLBuffer* gl_inbuf = GST_GL_BUFFER (inbuf);
-    GstGLBuffer* gl_outbuf;
+    GstGLBuffer* gl_outbuf = NULL;
 
     filter = GST_GL_FILTER (trans);
 
     if (filter->display == NULL)
     {
+        GstGLFilterClass* filter_class = GST_GL_FILTER_GET_CLASS (filter);
+        
         filter->display = g_object_ref (gl_inbuf->display);
         //blocking call, generate a FBO
         gst_gl_display_requestFBO (filter->display, filter->width, filter->height,
-            &filter->fbo, &filter->depthbuffer, &filter->texture); 
+            &filter->fbo, &filter->depthbuffer, &filter->texture);
+        if (filter_class->onInitFBO)
+            filter_class->onInitFBO (filter);
     }
 
     gl_outbuf = gst_gl_buffer_new_from_video_format (filter->display,
@@ -218,10 +238,9 @@ static gboolean
 gst_gl_filter_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     GstCaps* outcaps)
 {
-    GstGLFilter *filter;
-    gboolean ret;
-
-    filter = GST_GL_FILTER (bt);
+    GstGLFilter* filter = GST_GL_FILTER (bt);
+    gboolean ret = FALSE;
+    GstGLFilterClass* filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
     ret = gst_gl_buffer_format_parse_caps (incaps, &filter->video_format,
       &filter->width, &filter->height);
@@ -231,6 +250,9 @@ gst_gl_filter_set_caps (GstBaseTransform* bt, GstCaps* incaps,
         GST_DEBUG ("bad caps");
         return FALSE;
     }
+
+    if (filter_class->set_caps)
+        filter_class->set_caps (filter, incaps, outcaps);
 
     GST_ERROR ("set_caps %d %d", filter->width, filter->height);
 

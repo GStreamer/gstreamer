@@ -11,7 +11,13 @@ libgstopengl_la_SOURCES = \
 	gstglgraphicmaker.c \
 	gstglgraphicmaker.h \
 	gstglvideomaker.c \
-	gstglvideomaker.h 
+	gstglvideomaker.h \
+	gstglfilter.c \
+	gstglfilter.h \
+	gstglfiltercube.c \
+	gstglfiltercube.h \
+	gstglfilterapp.c \
+	gstglfilterapp.h
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
 # (like in AM_CFLAGS)?

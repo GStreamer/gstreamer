@@ -24,6 +24,7 @@
 
 #include "gstglgraphicmaker.h"
 #include "gstglfiltercube.h"
+#include "gstglfilterapp.h"
 #include "gstglvideomaker.h"
 #include "gstglimagesink.h"
 
@@ -43,6 +44,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glfiltercube",
           GST_RANK_NONE, GST_TYPE_GL_FILTER_CUBE)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glfilterapp",
+          GST_RANK_NONE, GST_TYPE_GL_FILTER_APP)) {
     return FALSE;
   }
 

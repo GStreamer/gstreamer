@@ -74,13 +74,10 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_cube_filter;
 }
 
-static gint c = 0;
-
 static void
 gst_gl_filter_cube_init (GstGLFilterCube* filter,
     GstGLFilterCubeClass* klass)
 {
-    c += 1;
 }
 
 static void

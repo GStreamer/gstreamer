@@ -42,27 +42,20 @@ typedef struct _GstGLGraphicmakerClass GstGLGraphicmakerClass;
 
 struct _GstGLGraphicmaker
 {
-  GstBaseTransform base_transform;
+    GstBaseTransform base_transform;
 
-  GstPad *srcpad;
-  GstPad *sinkpad;
+    GstPad *srcpad;
+    GstPad *sinkpad;
 
-  GstGLDisplay *display;
-  GstVideoFormat video_format;
-  gint width;
-  gint height;  
-
-  gboolean peek;
-
-  gint glcontext_width;
-  gint glcontext_height;
-  CRCB clientReshapeCallback;
-  CDCB clientDrawCallback;
+    GstGLDisplay *display;
+    GstVideoFormat video_format;
+    gint width;
+    gint height;  
 };
 
 struct _GstGLGraphicmakerClass
 {
-  GstBaseTransformClass base_transform_class;
+    GstBaseTransformClass base_transform_class;
 };
 
 GType gst_gl_graphicmaker_get_type (void);
