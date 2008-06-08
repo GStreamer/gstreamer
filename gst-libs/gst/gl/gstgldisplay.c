@@ -1332,7 +1332,38 @@ gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId)
         display->textureFBOWidth, display->textureFBOHeight,
         winId,
         TRUE);
+}
 
+
+/* Called by gst_gl elements */
+void 
+gst_gl_display_resetGLcontext (GstGLDisplay* display, 
+                               gint glcontext_width, gint glcontext_height)
+{
+    static gint glheight = 0;
+
+    gst_gl_display_lock (display);
+    gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_DESTROY, display);
+    g_cond_wait (display->cond_destroy, display->mutex);
+    gst_gl_display_unlock (display);
+
+    if (g_hash_table_size (gst_gl_display_map) == 0)
+    {
+        g_thread_join (gst_gl_display_glutThread);
+        g_print ("Glut thread joined when setting winId\n");
+        gst_gl_display_glutThread = NULL;
+        g_async_queue_unref (gst_gl_display_messageQueue);
+        g_hash_table_unref  (gst_gl_display_map);
+        gst_gl_display_map = NULL;
+    }
+
+    //init opengl context
+    gst_gl_display_initGLContext (display, 
+        50, glheight++ * (glcontext_height+50) + 50, 
+        glcontext_width, glcontext_height,
+        display->textureFBOWidth, display->textureFBOHeight,
+        display->winId,
+        FALSE);
 }
 
 
