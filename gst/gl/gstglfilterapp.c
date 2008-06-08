@@ -198,8 +198,9 @@ gst_gl_filter_app_setClientCallbacks (GstGLFilter* filter)
     gst_gl_display_setClientDrawCallback (filter->display, 
         app_filter->clientDrawCallback);
 
-    gst_gl_display_resetGLcontext (filter->display,
-        app_filter->glcontext_width, app_filter->glcontext_height);
+    if (app_filter->glcontext_width != 0 && app_filter->glcontext_height != 0)
+        gst_gl_display_resetGLcontext (filter->display,
+            app_filter->glcontext_width, app_filter->glcontext_height);
 }
 
 static gboolean

@@ -84,62 +84,64 @@ gst_gl_filter_base_init (gpointer klass)
 static void
 gst_gl_filter_class_init (GstGLFilterClass * klass)
 {
-  GObjectClass *gobject_class;
+    GObjectClass *gobject_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gobject_class->set_property = gst_gl_filter_set_property;
-  gobject_class->get_property = gst_gl_filter_get_property;
+    gobject_class = (GObjectClass *) klass;
+    gobject_class->set_property = gst_gl_filter_set_property;
+    gobject_class->get_property = gst_gl_filter_get_property;
 
-  /*GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
+    /*GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
         gst_gl_filter_transform_caps;*/
-  GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_filter_transform;
-  GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_filter_start;
-  GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_stop;
-  GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_filter_set_caps;
-  GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_filter_get_unit_size;
-  GST_BASE_TRANSFORM_CLASS (klass)->prepare_output_buffer =
+    GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_filter_transform;
+    GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_filter_start;
+    GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_stop;
+    GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_filter_set_caps;
+    GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_filter_get_unit_size;
+    GST_BASE_TRANSFORM_CLASS (klass)->prepare_output_buffer =
       gst_gl_filter_prepare_output_buffer;
 
-  klass->set_caps = NULL;
-  klass->filter = NULL;
-  klass->onInitFBO = NULL;
+    klass->set_caps = NULL;
+    klass->filter = NULL;
+    klass->onInitFBO = NULL;
 }
 
 static void
 gst_gl_filter_init (GstGLFilter * filter, GstGLFilterClass * klass)
 {
-  //gst_element_create_all_pads (GST_ELEMENT (filter));
+    //gst_element_create_all_pads (GST_ELEMENT (filter));
 
-  filter->sinkpad = gst_element_get_static_pad (GST_ELEMENT (filter), "sink");
-  filter->srcpad = gst_element_get_static_pad (GST_ELEMENT (filter), "src");
+    filter->sinkpad = gst_element_get_static_pad (GST_ELEMENT (filter), "sink");
+    filter->srcpad = gst_element_get_static_pad (GST_ELEMENT (filter), "src");
 
-  gst_gl_filter_reset (filter);
+    gst_gl_filter_reset (filter);
 }
 
 static void
 gst_gl_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  //GstGLFilter *filter = GST_GL_FILTER (object);
+    //GstGLFilter *filter = GST_GL_FILTER (object);
 
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+    switch (prop_id) 
+    {
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
+    }
 }
 
 static void
 gst_gl_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  //GstGLFilter *filter = GST_GL_FILTER (object);
+    //GstGLFilter *filter = GST_GL_FILTER (object);
 
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+    switch (prop_id) 
+    {
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
+    }
 }
 
 static void

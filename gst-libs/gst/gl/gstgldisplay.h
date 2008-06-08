@@ -182,6 +182,11 @@ struct _GstGLDisplay {
     gpointer outputData;
     GLenum multipleRT[3];
 
+    //recorded texture
+    GLuint recordedTexture;
+    GLuint recordedTextureWidth;
+    GLuint recordedTextureHeight;
+
     //from video to texture
 
 	gchar* textFProgram_YUY2_UYVY;
@@ -241,8 +246,8 @@ void gst_gl_display_textureChanged (GstGLDisplay* display, GstVideoFormat video_
 void gst_gl_display_clearTexture (GstGLDisplay* display, guint texture, 
                                   guint texture_u, guint texture_v);
 
-void gst_gl_display_videoChanged (GstGLDisplay* display, GstVideoFormat video_format,
-                                  gpointer data);
+void gst_gl_display_videoChanged (GstGLDisplay* display, GstVideoFormat video_format, 
+                                  gint width, gint height, GLuint recordedTexture, gpointer data);
 gboolean gst_gl_display_postRedisplay (GstGLDisplay* display, GLuint texture, gint width, gint height);
 void gst_gl_display_requestFBO (GstGLDisplay* display, gint width, gint height, 
                                 guint* fbo, guint* depthbuffer, guint* texture);

@@ -31,18 +31,18 @@ G_BEGIN_DECLS
 #define GST_GL_FILTER_CUBE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_GL_FILTER_CUBE,GstGLFilterCubeClass))
 #define GST_IS_GL_FILTER_CUBE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_FILTER_CUBE))
 #define GST_GL_FILTER_CUBE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_FILTER_CUBE,GstGLFilterCubeClass))
+
 typedef struct _GstGLFilterCube GstGLFilterCube;
 typedef struct _GstGLFilterCubeClass GstGLFilterCubeClass;
 
 struct _GstGLFilterCube
 {
-  GstGLFilter filter;
-
+    GstGLFilter filter;
 };
 
 struct _GstGLFilterCubeClass
 {
-  GstGLFilterClass filter_class;
+    GstGLFilterClass filter_class;
 };
 
 GType gst_gl_glfiltercube_get_type (void);
