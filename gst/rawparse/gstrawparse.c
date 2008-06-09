@@ -27,6 +27,8 @@
 #  include "config.h"
 #endif
 
+#include <string.h>
+
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 #include <gst/base/gstadapter.h>
@@ -49,6 +51,8 @@ static gboolean gst_raw_parse_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_raw_parse_convert (GstRawParse * rp,
     GstFormat src_format, gint64 src_value,
     GstFormat dest_format, gint64 * dest_value);
+static gboolean gst_raw_parse_handle_seek_pull (GstRawParse * rp,
+    GstEvent * event);
 
 static void gst_raw_parse_reset (GstRawParse * rp);
 
@@ -176,13 +180,9 @@ static void
 gst_raw_parse_reset (GstRawParse * rp)
 {
   rp->n_frames = 0;
-  rp->offset = 0;
   rp->discont = TRUE;
 
-  rp->upstream_length = 0;
-
   gst_segment_init (&rp->segment, GST_FORMAT_TIME);
-  rp->need_newsegment = TRUE;
   gst_adapter_clear (rp->adapter);
 }
 
@@ -216,20 +216,21 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
 
   nframes = GST_BUFFER_SIZE (buffer) / rp->framesize;
 
+  GST_BUFFER_OFFSET (buffer) = rp->n_frames;
+  GST_BUFFER_OFFSET_END (buffer) = rp->n_frames + nframes;
+
   if (rp->fps_n) {
-    GST_BUFFER_TIMESTAMP (buffer) = rp->segment.start +
+    GST_BUFFER_TIMESTAMP (buffer) =
         gst_util_uint64_scale (rp->n_frames, GST_SECOND * rp->fps_d, rp->fps_n);
     GST_BUFFER_DURATION (buffer) =
-        gst_util_uint64_scale (nframes * GST_SECOND, rp->fps_d, rp->fps_n);
-    GST_BUFFER_OFFSET (buffer) = rp->offset / rp->framesize;
-    GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET (buffer) + nframes;
+        gst_util_uint64_scale ((rp->n_frames + nframes) * GST_SECOND, rp->fps_d,
+        rp->fps_n) - GST_BUFFER_TIMESTAMP (buffer);
   } else {
     GST_BUFFER_TIMESTAMP (buffer) = rp->segment.start;
     GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_OFFSET (buffer) = rp->offset / rp->framesize;
-    GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET (buffer) + nframes;
   }
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (rp->srcpad));
+
   if (rp->discont) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
     rp->discont = FALSE;
@@ -258,11 +259,12 @@ gst_raw_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (rp, "received DISCONT buffer");
-
+    gst_adapter_clear (rp->adapter);
     rp->discont = TRUE;
   }
 
-  g_return_val_if_fail (gst_raw_parse_set_src_caps (rp), GST_FLOW_ERROR);
+  if (!gst_raw_parse_set_src_caps (rp))
+    goto no_caps;
 
   gst_adapter_push (rp->adapter, buffer);
 
@@ -277,13 +279,21 @@ gst_raw_parse_chain (GstPad * pad, GstBuffer * buffer)
     buffer = gst_adapter_take_buffer (rp->adapter, buffersize);
 
     ret = gst_raw_parse_push_buffer (rp, buffer);
-
     if (ret != GST_FLOW_OK)
       break;
   }
-
+done:
   gst_object_unref (rp);
+
   return ret;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_ERROR_OBJECT (rp, "could not set caps");
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
 }
 
 static void
@@ -295,9 +305,18 @@ gst_raw_parse_loop (GstElement * element)
   GstBuffer *buffer;
   gint size;
 
-  if (!gst_raw_parse_set_src_caps (rp)) {
-    ret = GST_FLOW_ERROR;
-    goto pause;
+  if (!gst_raw_parse_set_src_caps (rp))
+    goto no_caps;
+
+  if (rp->close_segment) {
+    GST_DEBUG_OBJECT (rp, "sending close segment");
+    gst_pad_push_event (rp->srcpad, rp->close_segment);
+    rp->close_segment = NULL;
+  }
+  if (rp->start_segment) {
+    GST_DEBUG_OBJECT (rp, "sending start segment");
+    gst_pad_push_event (rp->srcpad, rp->start_segment);
+    rp->start_segment = NULL;
   }
 
   if (rp_class->multiple_frames_per_buffer && rp->framesize < 4096)
@@ -323,7 +342,7 @@ gst_raw_parse_loop (GstElement * element)
 
   ret = gst_pad_pull_range (rp->sinkpad, rp->offset, size, &buffer);
 
-  if (GST_FLOW_IS_FATAL (ret)) {
+  if (ret != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (rp, "pull_range (%" G_GINT64_FORMAT ", %u) "
         "failed, flow: %s", rp->offset, size, gst_flow_get_name (ret));
     buffer = NULL;
@@ -345,23 +364,19 @@ gst_raw_parse_loop (GstElement * element)
     }
   }
 
-  if (rp->need_newsegment) {
-    GST_DEBUG_OBJECT (rp, "sending newsegment from %" GST_TIME_FORMAT
-        " to %" GST_TIME_FORMAT, GST_TIME_ARGS (rp->segment.start),
-        GST_TIME_ARGS (rp->segment.stop));
-
-    if (gst_pad_push_event (rp->srcpad, gst_event_new_new_segment (FALSE,
-                rp->segment.rate, GST_FORMAT_TIME, rp->segment.start,
-                rp->segment.stop, rp->segment.last_stop)));
-    rp->need_newsegment = FALSE;
-  }
-
   ret = gst_raw_parse_push_buffer (rp, buffer);
-  if (GST_FLOW_IS_FATAL (ret))
+  if (ret != GST_FLOW_OK)
     goto pause;
 
   return;
 
+  /* ERRORS */
+no_caps:
+  {
+    GST_ERROR_OBJECT (rp, "could not negotiate caps");
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto pause;
+  }
 pause:
   {
     const gchar *reason = gst_flow_get_name (ret);
@@ -370,7 +385,7 @@ pause:
     gst_pad_pause_task (rp->sinkpad);
 
     if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED && rp->srcpad) {
+      if (ret == GST_FLOW_UNEXPECTED) {
         if (rp->segment.flags & GST_SEEK_FLAG_SEGMENT) {
           GstClockTime stop;
 
@@ -390,8 +405,7 @@ pause:
         GST_ELEMENT_ERROR (rp, STREAM, FAILED,
             ("Internal data stream error."),
             ("stream stopped, reason %s", reason));
-        if (rp->srcpad)
-          gst_pad_push_event (rp->srcpad, gst_event_new_eos ());
+        gst_pad_push_event (rp->srcpad, gst_event_new_eos ());
       }
     }
     return;
@@ -413,14 +427,34 @@ gst_raw_parse_sink_activate (GstPad * sinkpad)
 static gboolean
 gst_raw_parse_sink_activatepull (GstPad * sinkpad, gboolean active)
 {
+  GstRawParse *rp = GST_RAW_PARSE (gst_pad_get_parent (sinkpad));
   gboolean result;
 
   if (active) {
-    result = gst_pad_start_task (sinkpad,
-        (GstTaskFunction) gst_raw_parse_loop, GST_PAD_PARENT (sinkpad));
+    GstFormat format;
+    gint64 duration;
+
+    /* get the duration in bytes */
+    format = GST_FORMAT_BYTES;
+    result = gst_pad_query_peer_duration (sinkpad, &format, &duration);
+    if (result) {
+      GST_DEBUG_OBJECT (rp, "got duration %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (duration));
+      rp->upstream_length = duration;
+      /* convert to time */
+      gst_raw_parse_convert (rp, format, duration, GST_FORMAT_TIME, &duration);
+    } else {
+      rp->upstream_length = -1;
+      duration = -1;
+    }
+    gst_segment_set_duration (&rp->segment, GST_FORMAT_TIME, duration);
+
+    result = gst_raw_parse_handle_seek_pull (rp, NULL);
   } else {
     result = gst_pad_stop_task (sinkpad);
   }
+
+  gst_object_unref (rp);
 
   return result;
 }
@@ -460,9 +494,9 @@ gst_raw_parse_convert (GstRawParse * rp,
 {
   gboolean ret = FALSE;
 
-  GST_DEBUG ("converting value %" G_GINT64_FORMAT " from %s to %s",
-      src_value, gst_format_get_name (src_format),
-      gst_format_get_name (dest_format));
+  GST_DEBUG ("converting value %" G_GINT64_FORMAT " from %s (%d) to %s (%d)",
+      src_value, gst_format_get_name (src_format), src_format,
+      gst_format_get_name (dest_format), dest_format);
 
   if (src_format == dest_format) {
     *dest_value = src_value;
@@ -580,9 +614,9 @@ gst_raw_parse_sink_event (GstPad * pad, GstEvent * event)
           &start, &stop, &time);
 
       if (format == GST_FORMAT_TIME) {
-        ret = gst_pad_push_event (rp->srcpad, event);
         gst_segment_set_newsegment_full (&rp->segment, update, rate, arate,
             GST_FORMAT_TIME, start, stop, time);
+        ret = gst_pad_push_event (rp->srcpad, event);
       } else {
 
         gst_event_unref (event);
@@ -599,17 +633,12 @@ gst_raw_parse_sink_event (GstPad * pad, GstEvent * event)
 
         gst_segment_set_newsegment_full (&rp->segment, update, rate, arate,
             GST_FORMAT_TIME, start, stop, time);
-        event = gst_event_new_new_segment (FALSE, rp->segment.rate,
+
+        /* create new segment with the fields converted to time */
+        event = gst_event_new_new_segment_full (update, rate, arate,
             GST_FORMAT_TIME, start, stop, time);
 
         ret = gst_pad_push_event (rp->srcpad, event);
-      }
-
-      if (ret) {
-        rp->n_frames = 0;
-        rp->offset = 0;
-        rp->discont = TRUE;
-        gst_adapter_clear (rp->adapter);
       }
       break;
     }
@@ -642,9 +671,6 @@ gst_raw_parse_handle_seek_push (GstRawParse * rp, GstEvent * event)
   if (ret)
     return ret;
 
-
-  gst_event_unref (event);
-
   /* Otherwise convert to bytes and push upstream */
   if (format == GST_FORMAT_TIME || format == GST_FORMAT_DEFAULT) {
     ret = gst_raw_parse_convert (rp, format, start, GST_FORMAT_BYTES, &start);
@@ -674,73 +700,106 @@ gst_raw_parse_handle_seek_push (GstRawParse * rp, GstEvent * event)
 static gboolean
 gst_raw_parse_handle_seek_pull (GstRawParse * rp, GstEvent * event)
 {
-  GstFormat format;
   gdouble rate;
+  GstFormat format;
   GstSeekFlags flags;
   GstSeekType start_type, stop_type;
   gint64 start, stop;
-  gint64 start_byte, stop_byte;
   gint64 last_stop;
   gboolean ret = FALSE;
   gboolean flush;
-  GstFormat fmt = GST_FORMAT_BYTES;
-  GstSegment segment;
+  GstSegment seeksegment;
 
-  gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
-      &stop_type, &stop);
+  if (event) {
+    gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
+        &stop_type, &stop);
 
-  gst_event_unref (event);
+    /* can't seek backwards yet */
+    if (rate <= 0.0)
+      goto wrong_rate;
 
-  if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT) {
-    GST_DEBUG ("seeking is only supported in TIME or DEFAULT format");
-    return FALSE;
+    /* convert input offsets to time */
+    ret = gst_raw_parse_convert (rp, format, start, GST_FORMAT_TIME, &start);
+    ret &= gst_raw_parse_convert (rp, format, stop, GST_FORMAT_TIME, &stop);
+    if (!ret)
+      goto convert_failed;
+
+    GST_DEBUG_OBJECT (rp, "converted start - stop to time");
+
+    format = GST_FORMAT_TIME;
+
+    gst_event_unref (event);
+  } else {
+    format = GST_FORMAT_TIME;
+    flags = 0;
   }
 
-  GST_OBJECT_LOCK (rp);
+  flush = ((flags & GST_SEEK_FLAG_FLUSH) != 0);
 
+  /* start flushing up and downstream so that the loop function pauses and we
+   * can acquire the STREAM_LOCK. */
+  if (flush) {
+    GST_LOG_OBJECT (rp, "flushing");
+    gst_pad_push_event (rp->sinkpad, gst_event_new_flush_start ());
+    gst_pad_push_event (rp->srcpad, gst_event_new_flush_start ());
+  } else {
+    GST_LOG_OBJECT (rp, "pause task");
+    gst_pad_pause_task (rp->sinkpad);
+  }
 
-  if (stop == -1 && !gst_pad_query_peer_duration (rp->sinkpad, &fmt, &stop))
-    stop = -1;
+  GST_PAD_STREAM_LOCK (rp->sinkpad);
 
+  memcpy (&seeksegment, &rp->segment, sizeof (GstSegment));
+
+  if (event) {
+    /* configure the seek values */
+    gst_segment_set_seek (&seeksegment, rate, format, flags,
+        start_type, start, stop_type, stop, NULL);
+  }
+
+  /* get the desired position */
+  last_stop = seeksegment.last_stop;
+
+  GST_LOG_OBJECT (rp, "seeking to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (last_stop));
+
+  /* convert the desired position to bytes */
   ret =
-      gst_raw_parse_convert (rp, format, start, GST_FORMAT_BYTES, &start_byte);
-  ret &= gst_raw_parse_convert (rp, format, stop, GST_FORMAT_BYTES, &stop_byte);
+      gst_raw_parse_convert (rp, format, last_stop, GST_FORMAT_BYTES,
+      &last_stop);
+
+  /* prepare for streaming */
+  if (flush) {
+    GST_LOG_OBJECT (rp, "stop flush");
+    gst_pad_push_event (rp->sinkpad, gst_event_new_flush_stop ());
+    gst_pad_push_event (rp->srcpad, gst_event_new_flush_stop ());
+  } else if (ret && rp->running) {
+    /* we are running the current segment and doing a non-flushing seek, 
+     * close the segment first based on the last_stop. */
+    GST_DEBUG_OBJECT (rp, "prepare close segment %" G_GINT64_FORMAT
+        " to %" G_GINT64_FORMAT, rp->segment.start, rp->segment.last_stop);
+
+    /* queue the segment for sending in the stream thread */
+    if (rp->close_segment)
+      gst_event_unref (rp->close_segment);
+    rp->close_segment =
+        gst_event_new_new_segment_full (TRUE,
+        rp->segment.rate, rp->segment.applied_rate, rp->segment.format,
+        rp->segment.start, rp->segment.last_stop, rp->segment.time);
+  }
 
   if (ret) {
+    /* seek done */
+
     /* Seek on a frame boundary */
-    start_byte -= start_byte % rp->framesize;
-    if (stop_byte != -1)
-      stop_byte += rp->framesize - stop_byte % rp->framesize;
+    last_stop -= last_stop % rp->framesize;
 
-    flush = ((flags & GST_SEEK_FLAG_FLUSH) != 0);
+    rp->offset = last_stop;
+    rp->n_frames = last_stop / rp->framesize;
 
-    segment = rp->segment;
+    GST_LOG_OBJECT (rp, "seeking to bytes %" G_GINT64_FORMAT, last_stop);
 
-    gst_segment_set_seek (&segment, rate, GST_FORMAT_TIME, flags, start_type,
-        start, stop_type, stop, NULL);
-
-    gst_pad_push_event (rp->sinkpad, gst_event_new_flush_start ());
-    if (flush)
-      gst_pad_push_event (rp->srcpad, gst_event_new_flush_start ());
-    else
-      gst_pad_pause_task (rp->sinkpad);
-
-    GST_PAD_STREAM_LOCK (rp->sinkpad);
-
-    last_stop = rp->segment.last_stop;
-
-    gst_pad_push_event (rp->sinkpad, gst_event_new_flush_stop ());
-    if (flush)
-      gst_pad_push_event (rp->srcpad, gst_event_new_flush_stop ());
-
-    GST_DEBUG_OBJECT (rp, "Performing seek to %" GST_TIME_FORMAT ", byte %"
-        G_GINT64_FORMAT, GST_TIME_ARGS (segment.start), start_byte);
-
-    rp->offset = start_byte;
-    rp->segment = segment;
-    rp->segment.last_stop = start;
-    rp->need_newsegment = TRUE;
-    rp->discont = (last_stop != start) ? TRUE : FALSE;
+    memcpy (&rp->segment, &seeksegment, sizeof (GstSegment));
 
     if (rp->segment.flags & GST_SEEK_FLAG_SEGMENT) {
       gst_element_post_message (GST_ELEMENT_CAST (rp),
@@ -748,16 +807,54 @@ gst_raw_parse_handle_seek_pull (GstRawParse * rp, GstEvent * event)
               rp->segment.format, rp->segment.last_stop));
     }
 
-    GST_PAD_STREAM_UNLOCK (rp->sinkpad);
-  } else {
-    GST_DEBUG_OBJECT (rp, "Seek failed: couldn't convert to byte positions");
+    /* for deriving a stop position for the playback segment from the seek
+     * segment, we must take the duration when the stop is not set */
+    if ((stop = rp->segment.stop) == -1)
+      stop = rp->segment.duration;
+
+    GST_DEBUG_OBJECT (rp, "preparing newsegment from %" G_GINT64_FORMAT
+        " to %" G_GINT64_FORMAT, rp->segment.start, stop);
+
+    /* now replace the old segment so that we send it in the stream thread the
+     * next time it is scheduled. */
+    if (rp->start_segment)
+      gst_event_unref (rp->start_segment);
+
+    if (rp->segment.rate >= 0.0) {
+      /* forward, we send data from last_stop to stop */
+      rp->start_segment =
+          gst_event_new_new_segment_full (FALSE,
+          rp->segment.rate, rp->segment.applied_rate, rp->segment.format,
+          rp->segment.last_stop, stop, rp->segment.time);
+    } else {
+      /* reverse, we send data from last_stop to start */
+      rp->start_segment =
+          gst_event_new_new_segment_full (FALSE,
+          rp->segment.rate, rp->segment.applied_rate, rp->segment.format,
+          rp->segment.start, rp->segment.last_stop, rp->segment.time);
+    }
   }
+  rp->discont = TRUE;
 
-  GST_OBJECT_UNLOCK (rp);
-
+  GST_LOG_OBJECT (rp, "start streaming");
+  rp->running = TRUE;
   gst_pad_start_task (rp->sinkpad, (GstTaskFunction) gst_raw_parse_loop, rp);
 
+  GST_PAD_STREAM_UNLOCK (rp->sinkpad);
+
   return ret;
+
+  /* ERRORS */
+wrong_rate:
+  {
+    GST_DEBUG_OBJECT (rp, "Seek failed: negative rates not supported yet");
+    return FALSE;
+  }
+convert_failed:
+  {
+    GST_DEBUG_OBJECT (rp, "Seek failed: couldn't convert to byte positions");
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -827,7 +924,7 @@ gst_raw_parse_src_query (GstPad * pad, GstQuery * query)
       GstQuery *bquery;
 
       GST_LOG ("query duration");
-      ret = gst_pad_peer_query (rp->srcpad, query);
+      ret = gst_pad_peer_query (rp->sinkpad, query);
       if (ret)
         goto done;
 
@@ -837,8 +934,7 @@ gst_raw_parse_src_query (GstPad * pad, GstQuery * query)
         goto error;
 
       bquery = gst_query_new_duration (GST_FORMAT_BYTES);
-      ret = gst_pad_peer_query (rp->srcpad, bquery);
-
+      ret = gst_pad_peer_query (rp->sinkpad, bquery);
       if (!ret) {
         gst_query_unref (bquery);
         goto error;
@@ -878,9 +974,13 @@ gst_raw_parse_src_query (GstPad * pad, GstQuery * query)
 done:
   gst_object_unref (rp);
   return ret;
+
+  /* ERRORS */
 error:
-  GST_DEBUG_OBJECT (rp, "query failed");
-  goto done;
+  {
+    GST_DEBUG_OBJECT (rp, "query failed");
+    goto done;
+  }
 }
 
 void
@@ -907,8 +1007,10 @@ gst_raw_parse_get_fps (GstRawParse * rp, int *fps_n, int *fps_d)
 {
   g_return_if_fail (GST_IS_RAW_PARSE (rp));
 
-  *fps_n = rp->fps_n;
-  *fps_d = rp->fps_d;
+  if (fps_n)
+    *fps_n = rp->fps_n;
+  if (fps_d)
+    *fps_d = rp->fps_d;
 }
 
 gboolean

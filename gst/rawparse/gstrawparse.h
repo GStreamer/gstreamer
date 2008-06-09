@@ -61,14 +61,16 @@ struct _GstRawParse
 
   gboolean discont;
   guint64 n_frames;
+
+  gint64 upstream_length;
   gint64 offset;
 
   GstSegment segment;
-
-  gint64 upstream_length;
+  gboolean running;
+  GstEvent *close_segment;
+  GstEvent *start_segment;
 
   gboolean negotiated;
-  gboolean need_newsegment;
 };
 
 struct _GstRawParseClass

@@ -1,3 +1,14 @@
+2008-06-09  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rawparse/gstrawparse.c: (gst_raw_parse_reset),
+	(gst_raw_parse_push_buffer), (gst_raw_parse_chain),
+	(gst_raw_parse_loop), (gst_raw_parse_sink_activatepull),
+	(gst_raw_parse_convert), (gst_raw_parse_sink_event),
+	(gst_raw_parse_handle_seek_push), (gst_raw_parse_handle_seek_pull),
+	(gst_raw_parse_src_query), (gst_raw_parse_get_fps):
+	* gst/rawparse/gstrawparse.h:
+	Fix seeking, timestamps, duration and some more. Fixes #536309.
+
 2008-06-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* examples/app/Makefile.am:
