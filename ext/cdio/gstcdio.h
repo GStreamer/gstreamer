@@ -38,5 +38,9 @@ GstTagList  * gst_cdio_get_cdtext  (GstObject      * src,
                                     CdIo           * cdio,
                                     track_t          track);
 
+void      gst_cdio_add_cdtext_album_tags (GstObject  * src,
+                                          CdIo       * cdio,
+                                          GstTagList * tags);
+
 #endif /* __GST_CDIO_H__ */
 

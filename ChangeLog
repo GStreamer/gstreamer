@@ -1,3 +1,14 @@
+2008-06-09  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: Benjamin Kampmann  <benjamin at fluendo dot com>
+
+	* ext/cdio/gstcdio.c: (gst_cdio_get_cdtext),
+	  (gst_cdio_add_cdtext_album_tags):
+	* ext/cdio/gstcdio.h:
+	* ext/cdio/gstcdiocddasrc.c: (gst_cdio_cdda_src_open):
+	  Also extract album title and album genre from CD-TEXT if
+	  available (#537021).
+
 2008-06-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>

@@ -248,6 +248,9 @@ gst_cdio_cdda_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
   if (src->read_speed != -1)
     cdio_set_speed (src->cdio, src->read_speed);
 
+  gst_cdio_add_cdtext_album_tags (GST_OBJECT_CAST (src), src->cdio,
+      cddabasesrc->tags);
+
   GST_LOG_OBJECT (src, "%u tracks, first track: %d", num_tracks, first_track);
 
   for (i = 0; i < num_tracks; ++i) {
