@@ -216,6 +216,11 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
 
   nframes = GST_BUFFER_SIZE (buffer) / rp->framesize;
 
+  if (rp->segment.rate < 0) {
+    rp->n_frames -= nframes;
+    rp->discont = TRUE;
+  }
+
   GST_BUFFER_OFFSET (buffer) = rp->n_frames;
   GST_BUFFER_OFFSET_END (buffer) = rp->n_frames + nframes;
 
@@ -236,8 +241,10 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
     rp->discont = FALSE;
   }
 
-  rp->offset += GST_BUFFER_SIZE (buffer);
-  rp->n_frames += nframes;
+  if (rp->segment.rate >= 0) {
+    rp->offset += GST_BUFFER_SIZE (buffer);
+    rp->n_frames += nframes;
+  }
 
   rp->segment.last_stop = GST_BUFFER_TIMESTAMP (buffer);
 
@@ -324,20 +331,31 @@ gst_raw_parse_loop (GstElement * element)
   else
     size = rp->framesize;
 
-  if (rp->offset + size > rp->upstream_length) {
-    GstFormat fmt = GST_FORMAT_BYTES;
+  if (rp->segment.rate >= 0) {
+    if (rp->offset + size > rp->upstream_length) {
+      GstFormat fmt = GST_FORMAT_BYTES;
 
-    if (!gst_pad_query_peer_duration (rp->sinkpad, &fmt, &rp->upstream_length)) {
-      GST_WARNING_OBJECT (rp,
-          "Could not get upstream duration, trying to pull frame by frame");
-      size = rp->framesize;
-    } else if (rp->upstream_length < rp->offset + rp->framesize) {
+      if (!gst_pad_query_peer_duration (rp->sinkpad, &fmt,
+              &rp->upstream_length)) {
+        GST_WARNING_OBJECT (rp,
+            "Could not get upstream duration, trying to pull frame by frame");
+        size = rp->framesize;
+      } else if (rp->upstream_length < rp->offset + rp->framesize) {
+        ret = GST_FLOW_UNEXPECTED;
+        goto pause;
+      } else if (rp->offset + size > rp->upstream_length) {
+        size = rp->upstream_length - rp->offset;
+        size -= size % rp->framesize;
+      }
+    }
+  } else {
+    if (rp->offset == 0) {
       ret = GST_FLOW_UNEXPECTED;
       goto pause;
-    } else if (rp->offset + size > rp->upstream_length) {
-      size = rp->upstream_length - rp->offset;
-      size -= size % rp->framesize;
+    } else if (rp->offset < size) {
+      size -= rp->offset;
     }
+    rp->offset -= size;
   }
 
   ret = gst_pad_pull_range (rp->sinkpad, rp->offset, size, &buffer);
@@ -666,6 +684,10 @@ gst_raw_parse_handle_seek_push (GstRawParse * rp, GstEvent * event)
   gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
 
+  /* can't seek backwards yet */
+  if (rate <= 0.0)
+    goto wrong_rate;
+
   /* First try if upstream handles the seek */
   ret = gst_pad_push_event (rp->sinkpad, event);
   if (ret)
@@ -695,6 +717,13 @@ gst_raw_parse_handle_seek_push (GstRawParse * rp, GstEvent * event)
         "seeking is only supported in TIME or DEFAULT format");
   }
   return ret;
+
+  /* ERRORS */
+wrong_rate:
+  {
+    GST_DEBUG_OBJECT (rp, "Seek failed: negative rates not supported yet");
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -713,10 +742,6 @@ gst_raw_parse_handle_seek_pull (GstRawParse * rp, GstEvent * event)
   if (event) {
     gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
         &stop_type, &stop);
-
-    /* can't seek backwards yet */
-    if (rate <= 0.0)
-      goto wrong_rate;
 
     /* convert input offsets to time */
     ret = gst_raw_parse_convert (rp, format, start, GST_FORMAT_TIME, &start);
@@ -845,11 +870,6 @@ gst_raw_parse_handle_seek_pull (GstRawParse * rp, GstEvent * event)
   return ret;
 
   /* ERRORS */
-wrong_rate:
-  {
-    GST_DEBUG_OBJECT (rp, "Seek failed: negative rates not supported yet");
-    return FALSE;
-  }
 convert_failed:
   {
     GST_DEBUG_OBJECT (rp, "Seek failed: couldn't convert to byte positions");
