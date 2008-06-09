@@ -45,6 +45,14 @@
 
 #include "gstv4l2src.h"
 
+/* Those are ioctl calls */
+#ifndef V4L2_CID_HCENTER
+#define V4L2_CID_HCENTER V4L2_CID_HCENTER_DEPRECATED
+#endif
+#ifndef V4L2_CID_VCENTER
+#define V4L2_CID_VCENTER V4L2_CID_VCENTER_DEPRECATED
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define GST_CAT_DEFAULT v4l2_debug
 
@@ -97,6 +105,7 @@ static gboolean
 gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
 {
   gint n;
+
   GstElement *e;
 
   e = v4l2object->element;
@@ -109,6 +118,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   for (n = 0;; n++) {
     struct v4l2_input input = { 0, };
     GstV4l2TunerChannel *v4l2channel;
+
     GstTunerChannel *channel;
 
     input.index = n;
@@ -177,6 +187,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   for (n = 0;; n++) {
     struct v4l2_standard standard = { 0, };
     GstV4l2TunerNorm *v4l2norm;
+
     GstTunerNorm *norm;
 
     /* fill in defaults */
@@ -216,6 +227,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   for (n = V4L2_CID_BASE;; n++) {
     struct v4l2_queryctrl control = { 0, };
     GstV4l2ColorBalanceChannel *v4l2channel;
+
     GstColorBalanceChannel *channel;
 
     /* when we reached the last official CID, continue with private CIDs */
@@ -267,6 +279,12 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       case V4L2_CID_VFLIP:
       case V4L2_CID_HCENTER:
       case V4L2_CID_VCENTER:
+#ifdef V4L2_CID_PAN_RESET
+      case V4L2_CID_PAN_RESET:
+#endif
+#ifdef V4L2_CID_TILT_RESET
+      case V4L2_CID_TILT_RESET:
+#endif
         /* not handled here, handled by VideoOrientation interface */
         control.id++;
         break;
@@ -297,6 +315,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
                                    (currently none of base controls are of this type) */
     if (control.type == V4L2_CTRL_TYPE_MENU) {
       struct v4l2_querymenu menu, *mptr;
+
       int i;
 
       menu.id = n;
@@ -557,6 +576,7 @@ gst_v4l2_get_frequency (GstV4l2Object * v4l2object,
     gint tunernum, gulong * frequency)
 {
   struct v4l2_frequency freq;
+
   GstTunerChannel *channel;
 
   GST_DEBUG_OBJECT (v4l2object->element, "getting current tuner frequency");
@@ -595,6 +615,7 @@ gst_v4l2_set_frequency (GstV4l2Object * v4l2object,
     gint tunernum, gulong frequency)
 {
   struct v4l2_frequency freq;
+
   GstTunerChannel *channel;
 
   GST_DEBUG_OBJECT (v4l2object->element,

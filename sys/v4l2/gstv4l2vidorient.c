@@ -34,6 +34,14 @@
 GST_DEBUG_CATEGORY_STATIC (v4l2vo_debug);
 #define GST_CAT_DEFAULT v4l2vo_debug
 
+/* Those are deprecated calls that have been replaced */
+#ifndef V4L2_CID_HCENTER
+#define V4L2_CID_HCENTER V4L2_CID_PAN_RESET
+#endif
+#ifndef V4L2_CID_VCENTER
+#define V4L2_CID_VCENTER V4L2_CID_TILT_RESET
+#endif
+
 void
 gst_v4l2_video_orientation_interface_init (GstVideoOrientationInterface * klass)
 {
