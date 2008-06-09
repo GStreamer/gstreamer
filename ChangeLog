@@ -1,5 +1,14 @@
 2008-06-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_negotiate):
+	Improve negotiation a bit more by picking the smallest possible
+	resolution that is larger than the resolution specified in the
+	first caps entry of the peer caps. Fixes bug #536994.
+
+2008-06-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Bastien Nocera <hadess at hadess dot net>
 
 	* sys/v4l2/gstv4l2vidorient.c:

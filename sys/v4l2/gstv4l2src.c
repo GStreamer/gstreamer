@@ -497,13 +497,48 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
     }
 
     GST_DEBUG_OBJECT (basesrc, "intersect: %" GST_PTR_FORMAT, icaps);
+    if (icaps) {
+      /* If there are multiple intersections pick the one with the smallest
+       * resolution strictly bigger then the first peer caps */
+      if (gst_caps_get_size (icaps) > 1) {
+        GstStructure *s = gst_caps_get_structure (peercaps, 0);
+
+        int best = 0;
+
+        int twidth, theight;
+
+        int width = G_MAXINT, height = G_MAXINT;
+
+        if (gst_structure_get_int (s, "width", &twidth)
+            && gst_structure_get_int (s, "height", &theight)) {
+
+          /* Walk the structure backwards to get the first entry of the
+           * smallest resolution bigger (or equal to) the preferred resolution)
+           */
+          for (i = gst_caps_get_size (icaps) - 1; i >= 0; i--) {
+            GstStructure *is = gst_caps_get_structure (icaps, i);
+
+            int w, h;
+
+            if (gst_structure_get_int (is, "width", &w)
+                && gst_structure_get_int (is, "height", &h)) {
+              if (w >= twidth && w <= width && h >= theight && h <= height) {
+                width = w;
+                height = h;
+                best = i;
+              }
+            }
+          }
+        }
+
+        caps = gst_caps_copy_nth (icaps, best);
+        gst_caps_unref (icaps);
+      } else {
+        caps = icaps;
+      }
+    }
     gst_caps_unref (thiscaps);
     gst_caps_unref (peercaps);
-    if (icaps) {
-      /* take first (and best, since they are sorted) possibility */
-      caps = gst_caps_copy_nth (icaps, 0);
-      gst_caps_unref (icaps);
-    }
   } else {
     /* no peer or peer have ANY caps, work with our own caps then */
     caps = thiscaps;
