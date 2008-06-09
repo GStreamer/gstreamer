@@ -74,6 +74,24 @@ gst_cdio_get_cdtext (GstObject * src, CdIo * cdio, track_t track)
   return tags;
 }
 
+void
+gst_cdio_add_cdtext_album_tags (GstObject * src, CdIo * cdio, GstTagList * tags)
+{
+  cdtext_t *t;
+
+  t = cdio_get_cdtext (cdio, 0);
+  if (t == NULL) {
+    GST_DEBUG_OBJECT (src, "no CD-TEXT for album %u");
+    return;
+  }
+
+  /* FIXME: map CDTEXT_PERFORMER to GST_TAG_ALBUM_ARTIST once we have that */
+  gst_cdio_add_cdtext_field (src, t, CDTEXT_TITLE, GST_TAG_ALBUM, &tags);
+  gst_cdio_add_cdtext_field (src, t, CDTEXT_GENRE, GST_TAG_GENRE, &tags);
+
+  GST_DEBUG ("CD-TEXT album tags: %" GST_PTR_FORMAT, tags);
+}
+
 static void
 gst_cdio_log_handler (cdio_log_level_t level, const char *msg)
 {
