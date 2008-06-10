@@ -1294,8 +1294,8 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
        * match.
        */
       GST_INFO ("_sending play segment");
-      event = gst_event_new_new_segment (FALSE, segment->rate, segment->format,
-          segment->start, segment->stop, mix->segment_position);
+      event = gst_event_new_new_segment_full (FALSE, segment->rate, 1.0,
+          segment->format, 0, -1, mix->segment_position);
       gst_pad_push_event (mix->srcpad, event);
       mix->sendseg = FALSE;
     }
@@ -1324,17 +1324,36 @@ gst_videomixer_blend_buffers (GstVideoMixer * mix, GstBuffer * outbuf)
     walk = g_slist_next (walk);
 
     if (mixcol->buffer != NULL) {
-      if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (mixcol->buffer)))
-        gst_object_sync_values (G_OBJECT (pad),
-            GST_BUFFER_TIMESTAMP (mixcol->buffer));
+      GstClockTime timestamp;
+      gint64 stream_time;
+      GstSegment *seg;
+
+      seg = &mixcol->collect.segment;
+
+      timestamp = GST_BUFFER_TIMESTAMP (mixcol->buffer);
+
+      stream_time =
+          gst_segment_to_stream_time (seg, GST_FORMAT_TIME, timestamp);
+
+      /* sync object properties on stream time */
+      if (GST_CLOCK_TIME_IS_VALID (stream_time))
+        gst_object_sync_values (G_OBJECT (pad), stream_time);
+
       gst_videomixer_blend_ayuv_ayuv (GST_BUFFER_DATA (mixcol->buffer),
           pad->xpos, pad->ypos, pad->in_width, pad->in_height, pad->alpha,
           GST_BUFFER_DATA (outbuf), mix->out_width, mix->out_height);
+
       if (pad == mix->master) {
-        GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (mixcol->buffer);
+        gint64 running_time;
+
+        running_time =
+            gst_segment_to_running_time (seg, GST_FORMAT_TIME, timestamp);
+
+        /* outgoing buffers need the running_time */
+        GST_BUFFER_TIMESTAMP (outbuf) = running_time;
         GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (mixcol->buffer);
 
-        mix->last_ts = GST_BUFFER_TIMESTAMP (outbuf);
+        mix->last_ts = running_time;
         if (GST_BUFFER_DURATION_IS_VALID (outbuf))
           mix->last_ts += GST_BUFFER_DURATION (outbuf);
       }

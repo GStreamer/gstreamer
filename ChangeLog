@@ -1,5 +1,14 @@
 2008-06-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/videomixer/videomixer.c: (gst_videomixer_fill_queues),
+	(gst_videomixer_blend_buffers):
+	Use stream_time to synchronize the object properties.
+	Use running_time of the master pad to timestamp outgoing buffers.
+	Fix the initial segment event to extend an unknown amount of time.
+	Fixes #537361.
+
+2008-06-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream),
 	(gst_avi_demux_parse_index), (gst_avi_demux_massage_index),
 	(gst_avi_demux_calculate_durations_from_index),
