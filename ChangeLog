@@ -1,5 +1,51 @@
 2008-06-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/matroska/ebml-write.c: (gst_ebml_write_float):
+	Use GDOUBLE_TO_BE() instead of (probably slower) custom code.
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_base_init),
+	(gst_matroska_demux_class_init), (gst_matroska_demux_init),
+	(gst_matroska_track_free), (gst_matroska_demux_encoding_cmp),
+	(gst_matroska_demux_read_track_encodings),
+	(gst_matroska_demux_add_stream),
+	(gst_matroska_demux_handle_src_query),
+	(gst_matroska_demux_init_stream),
+	(gst_matroska_demux_parse_index_cuetrack),
+	(gst_matroska_demux_parse_index_pointentry),
+	(gst_matroska_demux_parse_info),
+	(gst_matroska_demux_parse_metadata_id_simple_tag),
+	(gst_matroska_demux_parse_metadata),
+	(gst_matroska_demux_add_wvpk_header), (gst_matroska_decode_buffer),
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock),
+	(gst_matroska_demux_parse_cluster),
+	(gst_matroska_demux_parse_contents_seekentry),
+	(gst_matroska_demux_loop_stream_parse_id),
+	(gst_matroska_demux_loop), (gst_matroska_demux_video_caps),
+	(gst_matroska_demux_audio_caps),
+	(gst_matroska_demux_subtitle_caps):
+	* gst/matroska/matroska-demux.h:
+	* gst/matroska/matroska-ids.c:
+	(gst_matroska_track_init_subtitle_context):
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_base_init),
+	(gst_matroska_mux_class_init), (gst_matroska_mux_init),
+	(gst_matroska_mux_create_uid), (gst_matroska_mux_reset),
+	(gst_matroska_mux_video_pad_setcaps),
+	(gst_matroska_mux_audio_pad_setcaps),
+	(gst_matroska_mux_subtitle_pad_setcaps),
+	(gst_matroska_mux_request_new_pad),
+	(gst_matroska_mux_track_header), (gst_matroska_mux_start),
+	(gst_matroska_mux_write_simple_tag), (gst_matroska_mux_finish),
+	(gst_matroska_mux_write_data), (gst_matroska_mux_collected),
+	(gst_matroska_mux_set_property):
+	Add many FIXMEs/TODOs all over the matroska muxer and demuxer
+	elements, do some checks for valid values in the demuxer, handle
+	tracktimecodescale in the demuxer, set correct default values for all
+	settings in the demuxer, review and add all missing matroska
+	IDs and some more raw YUV formats, and some trivial cleanup.
+
+2008-06-10  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/pulse/pulsemixer.c: (gst_pulsemixer_base_init),
 	(gst_pulsemixer_class_init):
 	* ext/pulse/pulsesink.c: (gst_pulsesink_base_init),

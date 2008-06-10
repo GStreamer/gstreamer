@@ -30,117 +30,289 @@
  * Matroska element IDs. max. 32-bit.
  */
 
-/* toplevel segment */
-#define GST_MATROSKA_ID_SEGMENT    0x18538067
+/* toplevel Segment */
+#define GST_MATROSKA_ID_SEGMENT                    0x18538067
 
-/* matroska top-level master IDs */
-#define GST_MATROSKA_ID_INFO       0x1549A966
-#define GST_MATROSKA_ID_TRACKS     0x1654AE6B
-#define GST_MATROSKA_ID_CUES       0x1C53BB6B
-#define GST_MATROSKA_ID_TAGS       0x1254C367
-#define GST_MATROSKA_ID_SEEKHEAD   0x114D9B74
-#define GST_MATROSKA_ID_CLUSTER    0x1F43B675
+/* matroska top-level master IDs, childs of Segment */
+#define GST_MATROSKA_ID_SEGMENTINFO                0x1549A966
+#define GST_MATROSKA_ID_TRACKS                     0x1654AE6B
+#define GST_MATROSKA_ID_CUES                       0x1C53BB6B
+#define GST_MATROSKA_ID_TAGS                       0x1254C367
+#define GST_MATROSKA_ID_SEEKHEAD                   0x114D9B74
+#define GST_MATROSKA_ID_CLUSTER                    0x1F43B675
+#define GST_MATROSKA_ID_ATTACHMENTS                0x1941A469
+#define GST_MATROSKA_ID_CHAPTERS                   0x1043A770
 
-/* IDs in the info master */
-#define GST_MATROSKA_ID_TIMECODESCALE 0x2AD7B1
-#define GST_MATROSKA_ID_DURATION   0x4489
-#define GST_MATROSKA_ID_WRITINGAPP 0x5741
-#define GST_MATROSKA_ID_MUXINGAPP  0x4D80
-#define GST_MATROSKA_ID_DATEUTC    0x4461
-#define GST_MATROSKA_ID_SEGMENTUID 0x73A4
+/* IDs in the SegmentInfo master */
+#define GST_MATROSKA_ID_TIMECODESCALE              0x2AD7B1
+#define GST_MATROSKA_ID_DURATION                   0x4489
+#define GST_MATROSKA_ID_WRITINGAPP                 0x5741
+#define GST_MATROSKA_ID_MUXINGAPP                  0x4D80
+#define GST_MATROSKA_ID_DATEUTC                    0x4461
+#define GST_MATROSKA_ID_SEGMENTUID                 0x73A4
+#define GST_MATROSKA_ID_SEGMENTFILENAME            0x7384
+#define GST_MATROSKA_ID_PREVUID                    0x3CB923
+#define GST_MATROSKA_ID_PREVFILENAME               0x3C83AB
+#define GST_MATROSKA_ID_NEXTUID                    0x3EB923
+#define GST_MATROSKA_ID_NEXTFILENAME               0x3E83BB
+#define GST_MATROSKA_ID_TITLE                      0x7BA9
+#define GST_MATROSKA_ID_SEGMENTFAMILY              0x4444
+#define GST_MATROSKA_ID_CHAPTERTRANSLATE           0x6924
 
-/* ID in the tracks master */
-#define GST_MATROSKA_ID_TRACKENTRY 0xAE
+/* IDs in the ChapterTranslate master */
+#define GST_MATROSKA_ID_CHAPTERTRANSLATEEDITIONUID 0x69FC
+#define GST_MATROSKA_ID_CHAPTERTRANSLATECODEC      0x69BF
+#define GST_MATROSKA_ID_CHAPTERTRANSLATEID         0x69A5
 
-/* IDs in the trackentry master */
-#define GST_MATROSKA_ID_TRACKNUMBER 0xD7
-#define GST_MATROSKA_ID_TRACKUID   0x73C5
-#define GST_MATROSKA_ID_TRACKTYPE  0x83
-#define GST_MATROSKA_ID_TRACKAUDIO 0xE1
-#define GST_MATROSKA_ID_TRACKVIDEO 0xE0
-#define GST_MATROSKA_ID_CODECID    0x86
-#define GST_MATROSKA_ID_CODECPRIVATE 0x63A2
-#define GST_MATROSKA_ID_CODECNAME  0x258688
-#define GST_MATROSKA_ID_CODECINFOURL 0x3B4040
-#define GST_MATROSKA_ID_CODECDOWNLOADURL 0x26B240
-#define GST_MATROSKA_ID_TRACKNAME  0x536E
-#define GST_MATROSKA_ID_TRACKLANGUAGE 0x22B59C
-#define GST_MATROSKA_ID_TRACKFLAGENABLED 0xB9
-#define GST_MATROSKA_ID_TRACKFLAGDEFAULT 0x88
-#define GST_MATROSKA_ID_TRACKFLAGLACING 0x9C
-#define GST_MATROSKA_ID_TRACKMINCACHE 0x6DE7
-#define GST_MATROSKA_ID_TRACKMAXCACHE 0x6DF8
-#define GST_MATROSKA_ID_TRACKDEFAULTDURATION 0x23E383
-#define GST_MATROSKA_ID_CONTENTENCODINGS 0x6D80
+/* ID in the Tracks master */
+#define GST_MATROSKA_ID_TRACKENTRY                 0xAE
 
-/* IDs in the trackvideo master */
-#define GST_MATROSKA_ID_VIDEOFRAMERATE 0x2383E3
-#define GST_MATROSKA_ID_VIDEODISPLAYWIDTH 0x54B0
-#define GST_MATROSKA_ID_VIDEODISPLAYHEIGHT 0x54BA
-#define GST_MATROSKA_ID_VIDEOPIXELWIDTH 0xB0
-#define GST_MATROSKA_ID_VIDEOPIXELHEIGHT 0xBA
-#define GST_MATROSKA_ID_VIDEOFLAGINTERLACED 0x9A
-#define GST_MATROSKA_ID_VIDEOSTEREOMODE 0x53B9
-#define GST_MATROSKA_ID_VIDEOASPECTRATIO 0x54B3
-#define GST_MATROSKA_ID_VIDEOCOLOURSPACE 0x2EB524
+/* IDs in the TrackEntry master */
+#define GST_MATROSKA_ID_TRACKNUMBER                0xD7
+#define GST_MATROSKA_ID_TRACKUID                   0x73C5
+#define GST_MATROSKA_ID_TRACKTYPE                  0x83
+#define GST_MATROSKA_ID_TRACKAUDIO                 0xE1
+#define GST_MATROSKA_ID_TRACKVIDEO                 0xE0
+#define GST_MATROSKA_ID_CONTENTENCODINGS           0x6D80
+#define GST_MATROSKA_ID_CODECID                    0x86
+#define GST_MATROSKA_ID_CODECPRIVATE               0x63A2
+#define GST_MATROSKA_ID_CODECNAME                  0x258688
+#define GST_MATROSKA_ID_TRACKNAME                  0x536E
+#define GST_MATROSKA_ID_TRACKLANGUAGE              0x22B59C
+#define GST_MATROSKA_ID_TRACKFLAGENABLED           0xB9
+#define GST_MATROSKA_ID_TRACKFLAGDEFAULT           0x88
+#define GST_MATROSKA_ID_TRACKFLAGFORCED            0x55AA
+#define GST_MATROSKA_ID_TRACKFLAGLACING            0x9C
+#define GST_MATROSKA_ID_TRACKMINCACHE              0x6DE7
+#define GST_MATROSKA_ID_TRACKMAXCACHE              0x6DF8
+#define GST_MATROSKA_ID_TRACKDEFAULTDURATION       0x23E383
+#define GST_MATROSKA_ID_TRACKTIMECODESCALE         0x23314F
+#define GST_MATROSKA_ID_MAXBLOCKADDITIONID         0x55EE
+#define GST_MATROSKA_ID_TRACKATTACHMENTLINK        0x7446
+#define GST_MATROSKA_ID_TRACKOVERLAY               0x6FAB
+#define GST_MATROSKA_ID_TRACKTRANSLATE             0x6624
+/* semi-draft */
+#define GST_MATROSKA_ID_TRACKOFFSET                0x537F
+/* semi-draft */
+#define GST_MATROSKA_ID_CODECSETTINGS              0x3A9697
+/* semi-draft */
+#define GST_MATROSKA_ID_CODECINFOURL               0x3B4040
+/* semi-draft */
+#define GST_MATROSKA_ID_CODECDOWNLOADURL           0x26B240
+/* semi-draft */
+#define GST_MATROSKA_ID_CODECDECODEALL             0xAA
 
-/* IDs in the trackaudio master */
-#define GST_MATROSKA_ID_AUDIOSAMPLINGFREQ 0xB5
-#define GST_MATROSKA_ID_AUDIOBITDEPTH 0x6264
-#define GST_MATROSKA_ID_AUDIOCHANNELS 0x9F
+/* IDs in the TrackTranslate master */
+#define GST_MATROSKA_ID_TRACKTRANSLATEEDITIONUID   0x66FC
+#define GST_MATROSKA_ID_TRACKTRANSLATECODEC        0x66BF
+#define GST_MATROSKA_ID_TRACKTRANSLATETRACKID      0x66A5
 
-/* ID in the cues master */
-#define GST_MATROSKA_ID_POINTENTRY 0xBB
+
+/* IDs in the TrackVideo master */
+/* NOTE: This one is here only for backward compatibility.
+ * Use _TRACKDEFAULDURATION */
+#define GST_MATROSKA_ID_VIDEOFRAMERATE             0x2383E3
+#define GST_MATROSKA_ID_VIDEODISPLAYWIDTH          0x54B0
+#define GST_MATROSKA_ID_VIDEODISPLAYHEIGHT         0x54BA
+#define GST_MATROSKA_ID_VIDEODISPLAYUNIT           0x54B2
+#define GST_MATROSKA_ID_VIDEOPIXELWIDTH            0xB0
+#define GST_MATROSKA_ID_VIDEOPIXELHEIGHT           0xBA
+#define GST_MATROSKA_ID_VIDEOPIXELCROPBOTTOM       0x54AA
+#define GST_MATROSKA_ID_VIDEOPIXELCROPTOP          0x54BB
+#define GST_MATROSKA_ID_VIDEOPIXELCROPLEFT         0x54CC
+#define GST_MATROSKA_ID_VIDEOPIXELCROPRIGHT        0x54DD
+#define GST_MATROSKA_ID_VIDEOFLAGINTERLACED        0x9A
+/* semi-draft */
+#define GST_MATROSKA_ID_VIDEOSTEREOMODE            0x53B8
+#define GST_MATROSKA_ID_VIDEOASPECTRATIOTYPE       0x54B3
+#define GST_MATROSKA_ID_VIDEOCOLOURSPACE           0x2EB524
+/* semi-draft */
+#define GST_MATROSKA_ID_VIDEOGAMMAVALUE            0x2FB523
+
+/* IDs in the TrackAudio master */
+#define GST_MATROSKA_ID_AUDIOSAMPLINGFREQ          0xB5
+#define GST_MATROSKA_ID_AUDIOBITDEPTH              0x6264
+#define GST_MATROSKA_ID_AUDIOCHANNELS              0x9F
+/* semi-draft */
+#define GST_MATROSKA_ID_AUDIOCHANNELPOSITIONS      0x7D7B
+#define GST_MATROSKA_ID_AUDIOOUTPUTSAMPLINGFREQ    0x78B5
+
+/* IDs in the TrackContentEncoding master */
+#define GST_MATROSKA_ID_CONTENTENCODING            0x6240
+
+/* IDs in the ContentEncoding master */
+#define GST_MATROSKA_ID_CONTENTENCODINGORDER       0x5031
+#define GST_MATROSKA_ID_CONTENTENCODINGSCOPE       0x5032
+#define GST_MATROSKA_ID_CONTENTENCODINGTYPE        0x5033
+#define GST_MATROSKA_ID_CONTENTCOMPRESSION         0x5034
+#define GST_MATROSKA_ID_CONTENTENCRYPTION          0x5035
+
+/* IDs in the ContentCompression master */
+#define GST_MATROSKA_ID_CONTENTCOMPALGO            0x4254
+#define GST_MATROSKA_ID_CONTENTCOMPSETTINGS        0x4255
+
+/* IDs in the ContentEncryption master */
+#define GST_MATROSKA_ID_CONTENTENCALGO             0x47E1
+#define GST_MATROSKA_ID_CONTENTENCKEYID            0x47E2
+#define GST_MATROSKA_ID_CONTENTSIGNATURE           0x47E3
+#define GST_MATROSKA_ID_CONTENTSIGKEYID            0x47E4
+#define GST_MATROSKA_ID_CONTENTSIGALGO             0x47E5
+#define GST_MATROSKA_ID_CONTENTSIGHASHALGO         0x47E6
+
+/* ID in the CUEs master */
+#define GST_MATROSKA_ID_POINTENTRY                 0xBB
 
 /* IDs in the pointentry master */
-#define GST_MATROSKA_ID_CUETIME    0xB3
-#define GST_MATROSKA_ID_CUETRACKPOSITION 0xB7
+#define GST_MATROSKA_ID_CUETIME                    0xB3
+#define GST_MATROSKA_ID_CUETRACKPOSITIONS          0xB7
 
-/* IDs in the cuetrackposition master */
-#define GST_MATROSKA_ID_CUETRACK   0xF7
-#define GST_MATROSKA_ID_CUECLUSTERPOSITION 0xF1
+/* IDs in the CueTrackPositions master */
+#define GST_MATROSKA_ID_CUETRACK                   0xF7
+#define GST_MATROSKA_ID_CUECLUSTERPOSITION         0xF1
+#define GST_MATROSKA_ID_CUEBLOCKNUMBER             0x5378
+/* semi-draft */
+#define GST_MATROSKA_ID_CUECODECSTATE              0xEA
+/* semi-draft */
+#define GST_MATROSKA_ID_CUEREFERENCE               0xDB
 
-/* IDs in the tags master */
-#define GST_MATROSKA_ID_TAG        0x7373
+/* IDs in the CueReference master */
+/* semi-draft */
+#define GST_MATROSKA_ID_CUEREFTIME                 0x96
+/* semi-draft */
+#define GST_MATROSKA_ID_CUEREFCLUSTER              0x97
+/* semi-draft */
+#define GST_MATROSKA_ID_CUEREFNUMBER               0x535F
+/* semi-draft */
+#define GST_MATROSKA_ID_CUEREFCODECSTATE           0xEB
 
-/* in the tag master */
-#define GST_MATROSKA_ID_SIMPLETAG  0x67C8
+/* IDs in the Tags master */
+#define GST_MATROSKA_ID_TAG                        0x7373
 
-/* in the simpletag master */
-#define GST_MATROSKA_ID_TAGNAME    0x45A3
-#define GST_MATROSKA_ID_TAGSTRING  0x4487
+/* in the Tag master */
+#define GST_MATROSKA_ID_SIMPLETAG                  0x67C8
+#define GST_MATROSKA_ID_TARGETS                    0x63C0
 
-/* IDs in the seekhead master */
-#define GST_MATROSKA_ID_SEEKENTRY  0x4DBB
+/* in the SimpleTag master */
+#define GST_MATROSKA_ID_TAGNAME                    0x45A3
+#define GST_MATROSKA_ID_TAGSTRING                  0x4487
+#define GST_MATROSKA_ID_TAGLANGUAGE                0x447A
+#define GST_MATROSKA_ID_TAGDEFAULT                 0x4484
+#define GST_MATROSKA_ID_TAGBINARY                  0x4485
 
-/* IDs in the seekpoint master */
-#define GST_MATROSKA_ID_SEEKID     0x53AB
-#define GST_MATROSKA_ID_SEEKPOSITION 0x53AC
+/* in the Targets master */
+#define GST_MATROSKA_ID_TARGETTYPEVALUE            0x68CA
+#define GST_MATROSKA_ID_TARGETTYPE                 0x63CA
+#define GST_MATROSKA_ID_TARGETTRACKUID             0x63C5
+#define GST_MATROSKA_ID_TARGETEDITIONUID           0x63C5
+#define GST_MATROSKA_ID_TARGETCHAPTERUID           0x63C4
+#define GST_MATROSKA_ID_TARGETATTACHMENTUID        0x63C6
 
-/* IDs in the cluster master */
-#define GST_MATROSKA_ID_CLUSTERTIMECODE 0xE7
-#define GST_MATROSKA_ID_BLOCKGROUP 0xA0
-#define GST_MATROSKA_ID_SIMPLEBLOCK 0xA3
-#define GST_MATROSKA_ID_REFERENCEBLOCK 0xFB
+/* IDs in the SeekHead master */
+#define GST_MATROSKA_ID_SEEKENTRY                  0x4DBB
 
-/* IDs in the blockgroup master */
-#define GST_MATROSKA_ID_BLOCK      0xA1
-#define GST_MATROSKA_ID_BLOCKDURATION 0x9B
+/* IDs in the SeekEntry master */
+#define GST_MATROSKA_ID_SEEKID                     0x53AB
+#define GST_MATROSKA_ID_SEEKPOSITION               0x53AC
 
-/* IDs in the contentencodings master */
-#define GST_MATROSKA_ID_CONTENTENCODING 0x6240
+/* IDs in the Cluster master */
+#define GST_MATROSKA_ID_CLUSTERTIMECODE            0xE7
+#define GST_MATROSKA_ID_BLOCKGROUP                 0xA0
+#define GST_MATROSKA_ID_SIMPLEBLOCK                0xA3
+#define GST_MATROSKA_ID_REFERENCEBLOCK             0xFB
+#define GST_MATROSKA_ID_POSITION                   0xA7
+#define GST_MATROSKA_ID_PREVSIZE                   0xAB
+/* semi-draft */
+#define GST_MATROSKA_ID_ENCRYPTEDBLOCK             0xAF
+#define GST_MATROSKA_ID_SILENTTRACKS               0x5854
 
-/* IDS IN THE CONTENTENCODING MASTER */
-#define GST_MATROSKA_ID_CONTENTENCODINGORDER 0X5031
-#define GST_MATROSKA_ID_CONTENTENCODINGSCOPE 0X5032
-#define GST_MATROSKA_ID_CONTENTENCODINGTYPE  0X5033
-#define GST_MATROSKA_ID_CONTENTCOMPRESSION   0X5034
-#define GST_MATROSKA_ID_CONTENTENCRYPTION    0X5035
+/* IDs in the SilentTracks master */
+#define GST_MATROSKA_ID_SILENTTRACKNUMBER          0x58D7
 
-/* IDS IN THE CONTENTCOMPRESSION MASTER */
-#define GST_MATROSKA_ID_CONTENTCOMPALGO      0X4254
-#define GST_MATROSKA_ID_CONTENTCOMPSETTINGS  0X4255
+/* IDs in the BlockGroup master */
+#define GST_MATROSKA_ID_BLOCK                      0xA1
+#define GST_MATROSKA_ID_BLOCKDURATION              0x9B
+/* semi-draft */
+#define GST_MATROSKA_ID_BLOCKVIRTUAL               0xA2
+#define GST_MATROSKA_ID_REFERENCEBLOCK             0xFB
+#define GST_MATROSKA_ID_BLOCKADDITIONS             0x75A1
+#define GST_MATROSKA_ID_REFERENCEPRIORITY          0xFA
+/* semi-draft */
+#define GST_MATROSKA_ID_REFERENCEVIRTUAL           0xFD
+/* semi-draft */
+#define GST_MATROSKA_ID_CODECSTATE                 0xA4
+#define GST_MATROSKA_ID_SLICES                     0x8E
 
+/* IDs in the BlockAdditions master */
+#define GST_MATROSKA_ID_BLOCKMORE                  0xA6
+
+/* IDs in the BlockMore master */
+#define GST_MATROSKA_ID_BLOCKADDID                 0xEE
+#define GST_MATROSKA_ID_BLOCKADDITIONAL            0xA5
+
+/* IDs in the Slices master */
+#define GST_MATROSKA_ID_TIMESLICE                  0xE8
+
+/* IDs in the TimeSlice master */
+#define GST_MATROSKA_ID_LACENUMBER                 0xCC
+/* semi-draft */
+#define GST_MATROSKA_ID_FRAMENUMBER                0xCD
+/* semi-draft */
+#define GST_MATROSKA_ID_BLOCKADDITIONID            0xCB
+/* semi-draft */
+#define GST_MATROSKA_ID_TIMESLICEDELAY             0xCE
+#define GST_MATROSKA_ID_TIMESLICEDURATION          0xCF
+
+/* IDs in the Attachments master */
+#define GST_MATROSKA_ID_ATTACHEDFILE               0x61A7
+
+/* IDs in the AttachedFile master */
+#define GST_MATROSKA_ID_FILEDESCRIPTION            0x467E
+#define GST_MATROSKA_ID_FILENAME                   0x466E
+#define GST_MATROSKA_ID_FILEMIMETYPE               0x4660
+#define GST_MATROSKA_ID_FILEDATA                   0x465C
+#define GST_MATROSKA_ID_FILEUID                    0x46AE
+/* semi-draft */
+#define GST_MATROSKA_ID_FILEREFERRAL               0x4675
+
+/* IDs in the Chapters master */
+#define GST_MATROSKA_ID_EDITIONENTRY               0x45B9
+
+/* IDs in the EditionEntry master */
+#define GST_MATROSKA_ID_EDITIONUID                 0x45BC
+#define GST_MATROSKA_ID_EDITIONFLAGHIDDEN          0x45BD
+#define GST_MATROSKA_ID_EDITIONFLAGDEFAULT         0x45DB
+#define GST_MATROSKA_ID_EDITIONFLAGORDERED         0x45DD
+#define GST_MATROSKA_ID_CHAPTERATOM                0xB6
+
+/* IDs in the ChapterAtom master */
+#define GST_MATROSKA_ID_CHAPTERUID                 0x73C4
+#define GST_MATROSKA_ID_CHAPTERTIMESTART           0x91
+#define GST_MATROSKA_ID_CHAPTERTIMESTOP            0x92
+#define GST_MATROSKA_ID_CHAPTERFLAGHIDDEN          0x98
+#define GST_MATROSKA_ID_CHAPTERFLAGENABLED         0x4598
+#define GST_MATROSKA_ID_CHAPTERSEGMENTUID          0x6E67
+#define GST_MATROSKA_ID_CHAPTERSEGMENTEDITIONUID   0x6EBC
+#define GST_MATROSKA_ID_CHAPTERPHYSICALEQUIV       0x63C3
+#define GST_MATROSKA_ID_CHAPTERTRACK               0x8F
+#define GST_MATROSKA_ID_CHAPTERDISPLAY             0x80
+#define GST_MATROSKA_ID_CHAPPROCESS                0x6944
+
+/* IDs in the ChapProcess master */
+#define GST_MATROSKA_ID_CHAPPROCESSCODECID         0x6955
+#define GST_MATROSKA_ID_CHAPPROCESSPRIVATE         0x450D
+#define GST_MATROSKA_ID_CHAPPROCESSCOMMAND         0x6911
+
+/* IDs in the ChapProcessCommand master */
+#define GST_MATROSKA_ID_CHAPPROCESSTIME            0x6922
+#define GST_MATROSKA_ID_CHAPPROCESSDATA            0x6933
+
+/* IDs in the ChapterDisplay master */
+#define GST_MATROSKA_ID_CHAPSTRING                 0x85
+#define GST_MATROSKA_ID_CHAPLANGUAGE               0x437C
+#define GST_MATROSKA_ID_CHAPCOUNTRY                0x437E
+
+/* IDs in the ChapterTrack master */
+#define GST_MATROSKA_ID_CHAPTERTRACKNUMBER         0x89
 
 /*
  * Matroska Codec IDs. Strings.
@@ -155,48 +327,60 @@
 #define GST_MATROSKA_CODEC_ID_VIDEO_MSMPEG4V3    "V_MPEG4/MS/V3"
 #define GST_MATROSKA_CODEC_ID_VIDEO_MPEG1        "V_MPEG1"
 #define GST_MATROSKA_CODEC_ID_VIDEO_MPEG2        "V_MPEG2"
+/* FIXME: not (yet) in the spec! */
 #define GST_MATROSKA_CODEC_ID_VIDEO_MJPEG        "V_MJPEG"
 #define GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO1   "V_REAL/RV10"
 #define GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO2   "V_REAL/RV20"
 #define GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO3   "V_REAL/RV30"
 #define GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO4   "V_REAL/RV40"
 #define GST_MATROSKA_CODEC_ID_VIDEO_THEORA       "V_THEORA"
+#define GST_MATROSKA_CODEC_ID_VIDEO_QUICKTIME    "V_QUICKTIME"
+#define GST_MATROSKA_CODEC_ID_VIDEO_SNOW         "V_SNOW"
 #define GST_MATROSKA_CODEC_ID_VIDEO_DIRAC        "V_DIRAC"
-/* TODO: Quicktime */
 
-#define GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1     "A_MPEG/L1"
-#define GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L2     "A_MPEG/L2"
-#define GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L3     "A_MPEG/L3"
-#define GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_BE   "A_PCM/INT/BIG"
-#define GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_LE   "A_PCM/INT/LIT"
-#define GST_MATROSKA_CODEC_ID_AUDIO_PCM_FLOAT    "A_PCM/FLOAT/IEEE"
-#define GST_MATROSKA_CODEC_ID_AUDIO_AC3          "A_AC3"
-#define GST_MATROSKA_CODEC_ID_AUDIO_DTS          "A_DTS"
-#define GST_MATROSKA_CODEC_ID_AUDIO_VORBIS       "A_VORBIS"
-#define GST_MATROSKA_CODEC_ID_AUDIO_FLAC         "A_FLAC"
-#define GST_MATROSKA_CODEC_ID_AUDIO_ACM          "A_MS/ACM"
-#define GST_MATROSKA_CODEC_ID_AUDIO_MPEG2        "A_AAC/MPEG2/"
-#define GST_MATROSKA_CODEC_ID_AUDIO_MPEG4        "A_AAC/MPEG4/"
-#define GST_MATROSKA_CODEC_ID_AUDIO_TTA          "A_TTA1"
-#define GST_MATROSKA_CODEC_ID_AUDIO_WAVPACK4     "A_WAVPACK4"
-#define GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4    "A_REAL/28_8"
-#define GST_MATROSKA_CODEC_ID_AUDIO_REAL_28_8    "A_REAL/28_8"
-#define GST_MATROSKA_CODEC_ID_AUDIO_REAL_COOK    "A_REAL/COOK"
-#define GST_MATROSKA_CODEC_ID_AUDIO_REAL_SIPR    "A_REAL/SIPR"
-#define GST_MATROSKA_CODEC_ID_AUDIO_REAL_RALF    "A_REAL/RALF"
-#define GST_MATROSKA_CODEC_ID_AUDIO_REAL_ATRC    "A_REAL/ATRC"
+#define GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1       "A_MPEG/L1"
+#define GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L2       "A_MPEG/L2"
+#define GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L3       "A_MPEG/L3"
+#define GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_BE     "A_PCM/INT/BIG"
+#define GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_LE     "A_PCM/INT/LIT"
+#define GST_MATROSKA_CODEC_ID_AUDIO_PCM_FLOAT      "A_PCM/FLOAT/IEEE"
+#define GST_MATROSKA_CODEC_ID_AUDIO_AC3            "A_AC3"
+#define GST_MATROSKA_CODEC_ID_AUDIO_AC3_BSID9      "A_AC3/BSID9"
+#define GST_MATROSKA_CODEC_ID_AUDIO_AC3_BSID10     "A_AC3/BSID10"
+#define GST_MATROSKA_CODEC_ID_AUDIO_DTS            "A_DTS"
+#define GST_MATROSKA_CODEC_ID_AUDIO_VORBIS         "A_VORBIS"
+#define GST_MATROSKA_CODEC_ID_AUDIO_FLAC           "A_FLAC"
+#define GST_MATROSKA_CODEC_ID_AUDIO_ACM            "A_MS/ACM"
+#define GST_MATROSKA_CODEC_ID_AUDIO_TTA            "A_TTA1"
+#define GST_MATROSKA_CODEC_ID_AUDIO_WAVPACK4       "A_WAVPACK4"
+#define GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4      "A_REAL/14_4"
+#define GST_MATROSKA_CODEC_ID_AUDIO_REAL_28_8      "A_REAL/28_8"
+#define GST_MATROSKA_CODEC_ID_AUDIO_REAL_COOK      "A_REAL/COOK"
+#define GST_MATROSKA_CODEC_ID_AUDIO_REAL_SIPR      "A_REAL/SIPR"
+#define GST_MATROSKA_CODEC_ID_AUDIO_REAL_RALF      "A_REAL/RALF"
+#define GST_MATROSKA_CODEC_ID_AUDIO_REAL_ATRC      "A_REAL/ATRC"
+#define GST_MATROSKA_CODEC_ID_AUDIO_AAC            "A_AAC"
+#define GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG2      "A_AAC/MPEG2/"
+#define GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG4      "A_AAC/MPEG4/"
+#define GST_MATROSKA_CODEC_ID_AUDIO_QUICKTIME_QDMC "A_QUICKTIME/QDMC"
+#define GST_MATROSKA_CODEC_ID_AUDIO_QUICKTIME_QDM2 "A_QUICKTIME/QDM2"
+/* Undefined for now:
+#define GST_MATROSKA_CODEC_ID_AUDIO_MPC            "A_MPC"
+*/
 
-/* TODO: AC3-9/10 (?), Musepack, Quicktime */
-
+#define GST_MATROSKA_CODEC_ID_SUBTITLE_ASCII     "S_TEXT/ASCII"
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8      "S_TEXT/UTF8"
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_SSA       "S_TEXT/SSA"
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_ASS       "S_TEXT/ASS" 
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_USF       "S_TEXT/USF"
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB    "S_VOBSUB"
+#define GST_MATROSKA_CODEC_ID_SUBTITLE_BMP       "S_IMAGE/BMP"
 
 /*
- * Matrodka tags. Strings.
+ * Matroska tags. Strings.
  */
+
+/* TODO: check for other tags */
 
 #define GST_MATROSKA_TAG_ID_TITLE    "TITLE"
 #define GST_MATROSKA_TAG_ID_AUTHOR   "AUTHOR"
@@ -209,6 +393,30 @@
 #define GST_MATROSKA_TAG_ID_COPYRIGHT "COPYRIGHT"
 
 /*
+ * TODO: add this tag & mappings
+ * "URL" -> GST_TAG_LOCATION
+ * "BPS" -> GST_TAG_BITRATE
+ * "BPM" -> GST_TAG_BEATS_PER_MINUTE
+ * "REPLAYGAIN_GAIN" -> GST_TAG_*_GAIN   see http://replaygain.hydrogenaudio.org/rg_data_format.html
+ * "REPLAYGAIN_PEAK" -> GST_TAG_*_PEAK   see http://replaygain.hydrogenaudio.org/peak_data_format.html
+ * "TERMS_OF_USE" -> GST_TAG_LICENSE
+ * "DATE_RECORDED" -> GST_TAG_DATE
+ * "COMPOSER" -> GST_TAG_COMPOSER
+ * "LEAD_PERFORMER" -> GST_TAG_PERFORMER
+ * "GENRE" -> GST_TAG_GENRE
+ *
+ * "TOTAL_PARTS" -> GST_TAG_TRACK_COUNT    depending on target
+ * "PART_NUMBER" -> GST_TAG_TRACK_NUMBER   depending on target
+ *
+ * "EMAIL"       ->
+ * "ADDRESS"     ->
+ * "FAX"         ->  GST_TAG_CONTACT
+ * "PHONE"       ->
+ *
+ * TODO: maybe add custom gstreamer tags for other standard matroska tags
+ */
+
+/*
  * Enumerations for various types (mapping from binary
  * value to what it actually means).
  */
@@ -219,6 +427,7 @@ typedef enum {
   GST_MATROSKA_TRACK_TYPE_COMPLEX  = 0x3,
   GST_MATROSKA_TRACK_TYPE_LOGO     = 0x10,
   GST_MATROSKA_TRACK_TYPE_SUBTITLE = 0x11,
+  GST_MATROSKA_TRACK_TYPE_BUTTONS  = 0x12,
   GST_MATROSKA_TRACK_TYPE_CONTROL  = 0x20,
 } GstMatroskaTrackType;
 
@@ -244,6 +453,7 @@ typedef enum {
   GST_MATROSKA_TRACK_ENABLED = (1<<0),
   GST_MATROSKA_TRACK_DEFAULT = (1<<1),
   GST_MATROSKA_TRACK_LACING  = (1<<2),
+  GST_MATROSKA_TRACK_FORCED  = (1<<3),
   GST_MATROSKA_TRACK_SHIFT   = (1<<16)
 } GstMatroskaTrackFlags;
 
@@ -251,6 +461,7 @@ typedef enum {
   GST_MATROSKA_VIDEOTRACK_INTERLACED = (GST_MATROSKA_TRACK_SHIFT<<0)
 } GstMatroskaVideoTrackFlags;
 
+/* TODO: check if all fields are used */
 typedef struct _GstMatroskaTrackContext {
   GstPad       *pad;
   GstCaps      *caps;
@@ -266,6 +477,7 @@ typedef struct _GstMatroskaTrackContext {
   GstMatroskaTrackFlags flags;
   guint64       default_duration;
   guint64       pos;
+  gdouble       timecodescale;
 
   gboolean      set_discont; /* TRUE = set DISCONT flag on next buffer */
 
@@ -313,12 +525,6 @@ typedef struct _GstMatroskaTrackAudioContext {
   guint         samplerate, channels, bitdepth;
 } GstMatroskaTrackAudioContext;
 
-typedef struct _GstMatroskaTrackComplexContext {
-  GstMatroskaTrackContext parent;
-
-  /* nothing special goes here, apparently */
-} GstMatroskaTrackComplexContext;
-
 typedef struct _GstMatroskaTrackSubtitleContext {
   GstMatroskaTrackContext parent;
 
@@ -357,6 +563,5 @@ typedef struct _GstMatroskaTrackEncoding {
 gboolean gst_matroska_track_init_video_context    (GstMatroskaTrackContext ** p_context);
 gboolean gst_matroska_track_init_audio_context    (GstMatroskaTrackContext ** p_context);
 gboolean gst_matroska_track_init_subtitle_context (GstMatroskaTrackContext ** p_context);
-gboolean gst_matroska_track_init_complex_context  (GstMatroskaTrackContext ** p_context);
 
 #endif /* __GST_MATROSKA_IDS_H__ */

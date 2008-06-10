@@ -109,25 +109,3 @@ gst_matroska_track_init_subtitle_context (GstMatroskaTrackContext ** p_context)
   subtitle_context->invalid_utf8 = FALSE;
   return TRUE;
 }
-
-gboolean
-gst_matroska_track_init_complex_context (GstMatroskaTrackContext ** p_context)
-{
-  GstMatroskaTrackComplexContext *complex_context;
-
-  g_assert (p_context != NULL && *p_context != NULL);
-
-  /* already set up? (track info might come before track type) */
-  if ((*p_context)->type == GST_MATROSKA_TRACK_TYPE_COMPLEX)
-    return TRUE;
-
-  /* it better not have been set up as some other track type ... */
-  if ((*p_context)->type != 0) {
-    g_return_val_if_reached (FALSE);
-  }
-
-  complex_context = g_renew (GstMatroskaTrackComplexContext, *p_context, 1);
-  *p_context = (GstMatroskaTrackContext *) complex_context;
-  (*p_context)->type = GST_MATROSKA_TRACK_TYPE_COMPLEX;
-  return TRUE;
-}

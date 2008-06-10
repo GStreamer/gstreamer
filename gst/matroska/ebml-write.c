@@ -25,6 +25,7 @@
 #endif
 
 #include <string.h>
+#include <gst/floatcast/floatcast.h>
 
 #include "ebml-write.h"
 #include "ebml-ids.h"
@@ -541,21 +542,12 @@ gst_ebml_write_sint (GstEbmlWrite * ebml, guint32 id, gint64 num)
 void
 gst_ebml_write_float (GstEbmlWrite * ebml, guint32 id, gdouble num)
 {
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-  gint n;
-#endif
   GstBuffer *buf = gst_ebml_write_element_new (ebml, sizeof (num));
 
   gst_ebml_write_element_id (buf, id);
   gst_ebml_write_element_size (buf, 8);
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-  for (n = 0; n < 8; n++) {
-    GST_BUFFER_DATA (buf)[GST_BUFFER_SIZE (buf)] = ((guint8 *) & num)[7 - n];
-    GST_BUFFER_SIZE (buf) += 1;
-  }
-#else
+  num = GDOUBLE_TO_BE (num);
   gst_ebml_write_element_data (buf, (guint8 *) & num, 8);
-#endif
   gst_ebml_write_element_push (ebml, buf);
 }
 
