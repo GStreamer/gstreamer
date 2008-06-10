@@ -59,7 +59,8 @@ GType gst_gl_buffer_get_type (void);
 #define gst_gl_buffer_unref(x) (gst_buffer_unref((GstBuffer *)(x)))
 
 GstGLBuffer* gst_gl_buffer_new_from_video_format (GstGLDisplay* display, GstVideoFormat format, 
-												  gint context_width, gint context_height, 
+												  gint context_width, gint context_height,
+                                                  gint widthGL, gint heightGL,
                                                   gint width, gint height);
 gint gst_gl_buffer_format_get_size (GstVideoFormat format, gint width, gint height);
 gboolean gst_gl_buffer_format_parse_caps (GstCaps* caps, GstVideoFormat* format,
