@@ -1,6 +1,12 @@
 2008-06-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/videomixer/videomixer.c: (gst_videomixer_fill_queues),
+	(gst_videomixer_blend_buffers), (gst_videomixer_update_queues):
+	Remove bogus check.
+
+2008-06-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/videomixer/videomixer.c: (gst_videomixer_fill_queues),
 	(gst_videomixer_blend_buffers):
 	Use stream_time to synchronize the object properties.
 	Use running_time of the master pad to timestamp outgoing buffers.
