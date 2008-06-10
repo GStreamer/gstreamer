@@ -1335,12 +1335,12 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   }
 
   if (!got_strh) {
-    GST_ERROR_OBJECT (avi, "Failed to find strh chunk");
+    GST_WARNING_OBJECT (avi, "Failed to find strh chunk");
     goto fail;
   }
 
   if (!got_strf) {
-    GST_ERROR_OBJECT (avi, "Failed to find strf chunk");
+    GST_WARNING_OBJECT (avi, "Failed to find strf chunk");
     goto fail;
   }
 
@@ -1641,6 +1641,11 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
     }
     target->stream_nr = stream_nr;
     stream = &avi->stream[stream_nr];
+
+    if (!stream->strh) {
+      GST_WARNING_OBJECT (avi, "Unhandled stream %d, skipping", stream_nr);
+      continue;
+    }
 
     target->index_nr = i;
     target->flags =
@@ -2422,6 +2427,8 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
       gchar *pad_name;
 
       for (i = 0; i < avi->num_streams; i++) {
+        if (!avi->stream[i].pad)
+          continue;
         pad_name = GST_OBJECT_NAME (avi->stream[i].pad);
         sprintf (&str[i * (1 + 6 + 2)], " %6u %c", num_per_stream[i],
             pad_name[0]);
@@ -2471,6 +2478,8 @@ gst_avi_demux_calculate_durations_from_index (GstAviDemux * avi)
     avi_stream_context *streamc = &avi->stream[stream];
     gst_riff_strh *strh = streamc->strh;
 
+    if (!strh)
+      continue;
     /* get header duration */
     hduration = gst_util_uint64_scale ((guint64) strh->length *
         strh->scale, GST_SECOND, (guint64) strh->rate);
@@ -2615,8 +2624,9 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
               switch (GST_READ_UINT32_LE (GST_BUFFER_DATA (sub))) {
                 case GST_RIFF_LIST_strl:
                   if (!(gst_avi_demux_parse_stream (avi, sub))) {
-                    GST_DEBUG_OBJECT (avi, "avi_demux_parse_stream failed");
-                    return GST_FLOW_ERROR;
+                    GST_ELEMENT_WARNING (avi, STREAM, DEMUX, (NULL),
+                        ("failed to parse stream, ignoring"));
+                    goto next;
                   }
                   goto next;
                 case GST_RIFF_LIST_odml:
@@ -2891,9 +2901,11 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
 
         switch (fourcc) {
           case GST_RIFF_LIST_strl:
-            if (!(gst_avi_demux_parse_stream (avi, sub)))
-              goto parse_stream_failed;
-
+            if (!(gst_avi_demux_parse_stream (avi, sub))) {
+              GST_ELEMENT_WARNING (avi, STREAM, DEMUX, (NULL),
+                  ("faile to parse stream, ignoring"));
+              sub = NULL;
+            }
             goto next;
           case GST_RIFF_LIST_odml:
             gst_avi_demux_parse_odml (avi, sub);
@@ -2915,7 +2927,8 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
         /* fall-through */
       case GST_RIFF_TAG_JUNK:
       next:
-        gst_buffer_unref (sub);
+        if (sub)
+          gst_buffer_unref (sub);
         sub = NULL;
         break;
     }
@@ -3033,11 +3046,6 @@ skipping_done:
   return GST_FLOW_OK;
 
   /* ERRORS */
-parse_stream_failed:
-  {
-    GST_DEBUG_OBJECT (avi, "avi_demux_parse_stream failed");
-    return GST_FLOW_ERROR;
-  }
 no_list:
   {
     GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL),

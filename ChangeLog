@@ -1,3 +1,13 @@
+2008-06-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream),
+	(gst_avi_demux_parse_index), (gst_avi_demux_massage_index),
+	(gst_avi_demux_calculate_durations_from_index),
+	(gst_avi_demux_stream_header_push),
+	(gst_avi_demux_stream_header_pull):
+	Try to ignore unparsable/unknown streams and give a warning instead of
+	erroring out. Fixes #537377.
+
 2008-06-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/matroska/ebml-write.c: (gst_ebml_write_float):
