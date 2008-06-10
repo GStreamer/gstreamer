@@ -123,14 +123,11 @@ gst_pulsemixer_init_interfaces (GType type)
 static void
 gst_pulsemixer_base_init (gpointer g_class)
 {
-
-  static const GstElementDetails details =
-      GST_ELEMENT_DETAILS ("PulseAudio Mixer",
+  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (g_class),
+      "PulseAudio Mixer",
       "Generic/Audio",
       "Control sound input and output levels for PulseAudio",
       "Lennart Poettering");
-
-  gst_element_class_set_details (GST_ELEMENT_CLASS (g_class), &details);
 }
 
 static void
@@ -150,17 +147,20 @@ gst_pulsemixer_class_init (GstPulseMixerClass * g_class)
   g_object_class_install_property (gobject_class,
       PROP_SERVER,
       g_param_spec_string ("server", "Server",
-          "The PulseAudio server to connect to", NULL, G_PARAM_READWRITE));
+          "The PulseAudio server to connect to", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_DEVICE,
       g_param_spec_string ("device", "Sink/Source",
-          "The PulseAudio sink or source to control", NULL, G_PARAM_READWRITE));
+          "The PulseAudio sink or source to control", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", NULL, G_PARAM_READABLE));
+          "Human-readable name of the sound device", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

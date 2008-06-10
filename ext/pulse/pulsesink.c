@@ -142,15 +142,11 @@ gst_pulsesink_base_init (gpointer g_class)
           "rate = (int) [ 1, MAX], " "channels = (int) [ 1, 16 ]")
       );
 
-  static const GstElementDetails details =
-      GST_ELEMENT_DETAILS ("PulseAudio Audio Sink",
-      "Sink/Audio",
-      "Plays audio to a PulseAudio server",
-      "Lennart Poettering");
-
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &details);
+  gst_element_class_set_details_simple (element_class,
+      "PulseAudio Audio Sink",
+      "Sink/Audio", "Plays audio to a PulseAudio server", "Lennart Poettering");
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&pad_template));
 }
@@ -186,10 +182,12 @@ gst_pulsesink_class_init (gpointer g_class, gpointer class_data)
   g_object_class_install_property (gobject_class,
       PROP_SERVER,
       g_param_spec_string ("server", "Server",
-          "The PulseAudio server to connect to", NULL, G_PARAM_READWRITE));
+          "The PulseAudio server to connect to", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Sink",
-          "The PulseAudio sink device to connect to", NULL, G_PARAM_READWRITE));
+          "The PulseAudio sink device to connect to", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

@@ -63,33 +63,33 @@ enum
 
 static GstAudioSrcClass *parent_class = NULL;
 
-GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS (GstPulseSrc, gst_pulsesrc)
+GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS (GstPulseSrc, gst_pulsesrc);
 
-     static void gst_pulsesrc_destroy_stream (GstPulseSrc * pulsesrc);
+static void gst_pulsesrc_destroy_stream (GstPulseSrc * pulsesrc);
 
-     static void gst_pulsesrc_destroy_context (GstPulseSrc * pulsesrc);
+static void gst_pulsesrc_destroy_context (GstPulseSrc * pulsesrc);
 
-     static void gst_pulsesrc_set_property (GObject * object, guint prop_id,
+static void gst_pulsesrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-     static void gst_pulsesrc_get_property (GObject * object, guint prop_id,
+static void gst_pulsesrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-     static void gst_pulsesrc_finalize (GObject * object);
+static void gst_pulsesrc_finalize (GObject * object);
 
-     static void gst_pulsesrc_dispose (GObject * object);
+static void gst_pulsesrc_dispose (GObject * object);
 
-     static gboolean gst_pulsesrc_open (GstAudioSrc * asrc);
+static gboolean gst_pulsesrc_open (GstAudioSrc * asrc);
 
-     static gboolean gst_pulsesrc_close (GstAudioSrc * asrc);
+static gboolean gst_pulsesrc_close (GstAudioSrc * asrc);
 
-     static gboolean gst_pulsesrc_prepare (GstAudioSrc * asrc,
+static gboolean gst_pulsesrc_prepare (GstAudioSrc * asrc,
     GstRingBufferSpec * spec);
-     static gboolean gst_pulsesrc_unprepare (GstAudioSrc * asrc);
+static gboolean gst_pulsesrc_unprepare (GstAudioSrc * asrc);
 
-     static guint gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data,
+static guint gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data,
     guint length);
-     static guint gst_pulsesrc_delay (GstAudioSrc * asrc);
+static guint gst_pulsesrc_delay (GstAudioSrc * asrc);
 
-     static GstStateChangeReturn gst_pulsesrc_change_state (GstElement *
+static GstStateChangeReturn gst_pulsesrc_change_state (GstElement *
     element, GstStateChange transition);
 
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
@@ -98,7 +98,8 @@ GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS (GstPulseSrc, gst_pulsesrc)
 # define ENDIANNESS   "BIG_ENDIAN, LITTLE_ENDIAN"
 #endif
 
-     static gboolean gst_pulsesrc_interface_supported (GstImplementsInterface *
+static gboolean
+gst_pulsesrc_interface_supported (GstImplementsInterface *
     iface, GType interface_type)
 {
   GstPulseSrc *this = GST_PULSESRC (iface);
@@ -173,15 +174,12 @@ gst_pulsesrc_base_init (gpointer g_class)
           "rate = (int) [ 1, MAX], " "channels = (int) [ 1, 16 ]")
       );
 
-  static const GstElementDetails details =
-      GST_ELEMENT_DETAILS ("PulseAudio Audio Source",
-      "Source/Audio",
-      "Captures audio from a PulseAudio server",
-      "Lennart Poettering");
-
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &details);
+  gst_element_class_set_details_simple (element_class,
+      "PulseAudio Audio Source",
+      "Source/Audio",
+      "Captures audio from a PulseAudio server", "Lennart Poettering");
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&pad_template));
 }
@@ -217,11 +215,12 @@ gst_pulsesrc_class_init (gpointer g_class, gpointer class_data)
   g_object_class_install_property (gobject_class,
       PROP_SERVER,
       g_param_spec_string ("server", "Server",
-          "The PulseAudio server to connect to", NULL, G_PARAM_READWRITE));
+          "The PulseAudio server to connect to", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Source",
           "The PulseAudio source device to connect to", NULL,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

@@ -1,5 +1,18 @@
 2008-06-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/pulse/pulsemixer.c: (gst_pulsemixer_base_init),
+	(gst_pulsemixer_class_init):
+	* ext/pulse/pulsesink.c: (gst_pulsesink_base_init),
+	(gst_pulsesink_class_init), (gst_pulsesink_prepare):
+	* ext/pulse/pulsesrc.c: (gst_pulsesrc_interface_supported),
+	(gst_pulsesrc_base_init), (gst_pulsesrc_class_init),
+	(gst_pulsesrc_prepare):
+	Some smaller cleanup. Use G_PARAM_STATIC_STRINGS,
+	gst_element_class_set_details_simple() and fix coding style a bit
+	more.
+
+2008-06-10  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
