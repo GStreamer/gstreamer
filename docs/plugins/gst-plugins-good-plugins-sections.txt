@@ -897,6 +897,48 @@ gst_pngenc_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-pulsesink</FILE>
+<TITLE>pulsesink</TITLE>
+GstPulseSink
+<SUBSECTION Standard>
+GstPulseSinkClass
+GST_PULSESINK
+GST_IS_PULSESINK
+GST_TYPE_PULSESINK
+GST_PULSESINK_CLASS
+GST_IS_PULSESINK_CLASS
+gst_pulsesink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-pulsesrc</FILE>
+<TITLE>pulsesrc</TITLE>
+GstPulseSrc
+<SUBSECTION Standard>
+GstPulseSrcClass
+GST_PULSESRC
+GST_IS_PULSESRC
+GST_TYPE_PULSESRC
+GST_PULSESRC_CLASS
+GST_IS_PULSESRC_CLASS
+gst_pulsesrc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-pulsemixer</FILE>
+<TITLE>pulsemixer</TITLE>
+GstPulseMixer
+<SUBSECTION Standard>
+GstPulseMixerClass
+GST_PULSEMIXER
+GST_IS_PULSEMIXER
+GST_TYPE_PULSEMIXER
+GST_PULSEMIXER_CLASS
+GST_IS_PULSEMIXER_CLASS
+gst_pulsemixer_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-progressreport</FILE>
 <TITLE>progressreport</TITLE>
 GstProgressReport

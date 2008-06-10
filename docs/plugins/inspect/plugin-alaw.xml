@@ -7,7 +7,7 @@
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>alawdec</name>
@@ -17,16 +17,16 @@
       <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-alaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-alaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-alaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
         </caps>
       </pads>
     </element>

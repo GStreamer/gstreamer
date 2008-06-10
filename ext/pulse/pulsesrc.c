@@ -19,6 +19,25 @@
  *  USA.
  */
 
+/**
+ * SECTION:element-pulsesrc
+ * @short_description: Capture audio from a PulseAudio sound server
+ * @see_also: pulsesink, pulsemixer
+ *
+ * <refsect2>
+ * <para>
+ * This element captures audio from a PulseAudio sound server.
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v pulsesrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=alsasrc.ogg
+ * </programlisting>
+ * Record from a sound card using ALSA and encode to Ogg/Vorbis.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -452,8 +471,9 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   if (!pulsesrc->context
       || pa_context_get_state (pulsesrc->context) != PA_CONTEXT_READY) {
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Bad context state: %s",
-            pulsesrc->context ? pa_strerror (pa_context_errno (pulsesrc->
-                    context)) : NULL), (NULL));
+            pulsesrc->
+            context ? pa_strerror (pa_context_errno (pulsesrc->context)) :
+            NULL), (NULL));
     goto unlock_and_fail;
   }
 

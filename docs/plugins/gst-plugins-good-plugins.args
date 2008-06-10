@@ -809,6 +809,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstAlpha::black-sensitivity</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 128</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Black Sensitivity</NICK>
+<BLURB>Sensitivity to dark colors.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAlpha::white-sensitivity</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 128</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sensitivity</NICK>
+<BLURB>Sensitivity to bright colors.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstShout2send::description</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -19246,5 +19266,75 @@
 <NICK>Mono Level</NICK>
 <BLURB>Level of the mono channel (1.0 = full).</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPulseSink::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sink</NICK>
+<BLURB>The PulseAudio sink device to connect to.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPulseSink::server</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Server</NICK>
+<BLURB>The PulseAudio server to connect to.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPulseSrc::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Source</NICK>
+<BLURB>The PulseAudio source device to connect to.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPulseSrc::server</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Server</NICK>
+<BLURB>The PulseAudio server to connect to.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPulseMixer::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sink/Source</NICK>
+<BLURB>The PulseAudio sink or source to control.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPulseMixer::device-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Human-readable name of the sound device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPulseMixer::server</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Server</NICK>
+<BLURB>The PulseAudio server to connect to.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 

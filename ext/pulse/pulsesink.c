@@ -19,6 +19,32 @@
  *  USA.
  */
 
+/**
+ * SECTION:element-pulsesink
+ * @short_description: Output audio to a PulseAudio sound server
+ * @see_also: pulsesrc, pulsemixer
+ *
+ * <refsect2>
+ * <para>
+ * This element outputs audio to a PulseAudio sound server.
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! pulsesink
+ * </programlisting>
+ * Play an Ogg/Vorbis file.
+ * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch -v audiotestsrc ! audioconvert ! volume volume=0.4 ! pulsesink
+ * </programlisting>
+ * Play a 440Hz sine wave.
+ * </para>
+ * </refsect2>
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -414,14 +440,16 @@ gst_pulsesink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   if (!pulsesink->context
       || pa_context_get_state (pulsesink->context) != PA_CONTEXT_READY) {
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED, ("Bad context state: %s",
-            pulsesink->context ? pa_strerror (pa_context_errno (pulsesink->
-                    context)) : NULL), (NULL));
+            pulsesink->
+            context ? pa_strerror (pa_context_errno (pulsesink->context)) :
+            NULL), (NULL));
     goto unlock_and_fail;
   }
 
   if (!(pulsesink->stream = pa_stream_new (pulsesink->context,
-              pulsesink->stream_name ? pulsesink->
-              stream_name : "Playback Stream", &pulsesink->sample_spec,
+              pulsesink->
+              stream_name ? pulsesink->stream_name : "Playback Stream",
+              &pulsesink->sample_spec,
               gst_pulse_gst_to_channel_map (&channel_map, spec)))) {
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
         ("Failed to create stream: %s",

@@ -1,0 +1,53 @@
+<plugin>
+  <name>pulseaudio</name>
+  <description>PulseAudio Elements Plugin</description>
+  <filename>../../ext/pulse/.libs/libgstpulse.so</filename>
+  <basename>libgstpulse.so</basename>
+  <version>0.10.8.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>pulsemixer</name>
+      <longname>PulseAudio Mixer</longname>
+      <class>Generic/Audio</class>
+      <description>Control sound input and output levels for PulseAudio</description>
+      <author>Lennart Poettering</author>
+      <pads>
+    
+      </pads>
+    </element>
+    <element>
+      <name>pulsesink</name>
+      <longname>PulseAudio Audio Sink</longname>
+      <class>Sink/Audio</class>
+      <description>Plays audio to a PulseAudio server</description>
+      <author>Lennart Poettering</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int){ 1234, 4321 }, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 16 ]; audio/x-raw-float, endianness=(int){ 1234, 4321 }, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 16 ]; audio/x-raw-int, endianness=(int){ 1234, 4321 }, signed=(boolean)true, width=(int)32, depth=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 16 ]; audio/x-raw-int, signed=(boolean)false, width=(int)8, depth=(int)8, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 16 ]; audio/x-alaw, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 16 ]; audio/x-mulaw, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 16 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>pulsesrc</name>
+      <longname>PulseAudio Audio Source</longname>
+      <class>Source/Audio</class>
+      <description>Captures audio from a PulseAudio server</description>
+      <author>Lennart Poettering</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int){ 1234, 4321 }, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 16 ]; audio/x-raw-int, endianness=(int){ 1234, 4321 }, signed=(boolean)true, width=(int)32, depth=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 16 ]; audio/x-raw-float, endianness=(int){ 1234, 4321 }, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 16 ]; audio/x-raw-int, signed=(boolean)false, width=(int)8, depth=(int)8, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 16 ]; audio/x-alaw, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 16 ]; audio/x-mulaw, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 16 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

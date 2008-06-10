@@ -72,6 +72,9 @@
     <xi:include href="xml/element-pngdec.xml" />
     <xi:include href="xml/element-pngenc.xml" />
     <xi:include href="xml/element-progressreport.xml" />
+    <xi:include href="xml/element-pulsesink.xml" />
+    <xi:include href="xml/element-pulsesrc.xml" />
+    <xi:include href="xml/element-pulsemixer.xml" />
     <xi:include href="xml/element-qtdemux.xml" />
     <xi:include href="xml/element-rtpdec.xml" />
     <xi:include href="xml/element-rtspsrc.xml" />
@@ -142,6 +145,7 @@
     <xi:include href="xml/plugin-osxaudio.xml" />
     <xi:include href="xml/plugin-osxvideo.xml" />
     <xi:include href="xml/plugin-png.xml" />
+    <xi:include href="xml/plugin-pulseaudio.xml" />
     <xi:include href="xml/plugin-quicktime.xml" />
     <xi:include href="xml/plugin-rtp.xml" />
     <xi:include href="xml/plugin-rtsp.xml" />
