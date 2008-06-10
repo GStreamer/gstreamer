@@ -36,8 +36,6 @@ static const GstElementDetails element_details =
 enum
 {
     PROP_0,
-    PROP_GLCONTEXT_WIDTH,
-    PROP_GLCONTEXT_HEIGHT,
     PROP_CLIENT_RESHAPE_CALLBACK,
     PROP_CLIENT_DRAW_CALLBACK
 };
@@ -48,16 +46,16 @@ enum
 GST_BOILERPLATE_FULL (GstGLFilterApp, gst_gl_filter_app, GstGLFilter,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
-static void gst_gl_filter_app_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_gl_filter_app_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
+static void gst_gl_filter_app_set_property (GObject* object, guint prop_id,
+    const GValue* value, GParamSpec* pspec);
+static void gst_gl_filter_app_get_property (GObject* object, guint prop_id,
+    GValue* value, GParamSpec * pspec);
 
 static gboolean gst_gl_filter_app_set_caps (GstGLFilter* filter, 
     GstCaps* incaps, GstCaps* outcaps);
 static void gst_gl_filter_app_setClientCallbacks (GstGLFilter* filter);
-static gboolean gst_gl_filter_app_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+static gboolean gst_gl_filter_app_filter (GstGLFilter* filter,
+    GstGLBuffer* inbuf, GstGLBuffer* outbuf);
 static void gst_gl_filter_app_callback (guint width, guint height, guint texture);
 
 
@@ -70,36 +68,26 @@ gst_gl_filter_app_base_init (gpointer klass)
 }
 
 static void
-gst_gl_filter_app_class_init (GstGLFilterAppClass * klass)
+gst_gl_filter_app_class_init (GstGLFilterAppClass* klass)
 {
-  GObjectClass* gobject_class;
+    GObjectClass* gobject_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gobject_class->set_property = gst_gl_filter_app_set_property;
-  gobject_class->get_property = gst_gl_filter_app_get_property;
+    gobject_class = (GObjectClass *) klass;
+    gobject_class->set_property = gst_gl_filter_app_set_property;
+    gobject_class->get_property = gst_gl_filter_app_get_property;
 
-  GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_filter_app_set_caps;
-  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_app_filter;
-  GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_app_setClientCallbacks;
-
-  g_object_class_install_property (gobject_class, PROP_GLCONTEXT_WIDTH,
-      g_param_spec_int ("glcontext_width", "OpenGL context width",
-          "Change the opengl context width", 0, INT_MAX, 0, 
-          G_PARAM_WRITABLE));
-
-    g_object_class_install_property (gobject_class, PROP_GLCONTEXT_HEIGHT,
-      g_param_spec_int ("glcontext_height", "OpenGL context height",
-          "Change the opengl context height", 0, INT_MAX, 0, 
-          G_PARAM_WRITABLE));
+    GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_filter_app_set_caps;
+    GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_app_filter;
+    GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_app_setClientCallbacks;
 
     g_object_class_install_property (gobject_class, PROP_CLIENT_RESHAPE_CALLBACK,
       g_param_spec_pointer ("client_reshape_callback", "Client reshape callback",
-          "Executed in next glut loop iteration when window size is changed", 
+          "Define a custom reshape callback in a client code", 
           G_PARAM_WRITABLE));
 
     g_object_class_install_property (gobject_class, PROP_CLIENT_DRAW_CALLBACK,
       g_param_spec_pointer ("client_draw_callback", "Client draw callback",
-          "Executed in next glut loop iteration when glutPostRedisplay is called", 
+          "Define a custom draw callback in a client code", 
           G_PARAM_WRITABLE));
 }
 
@@ -107,8 +95,6 @@ static void
 gst_gl_filter_app_init (GstGLFilterApp* filter,
     GstGLFilterAppClass* klass)
 {
-    filter->glcontext_width = 0;
-    filter->glcontext_height = 0;
     filter->clientReshapeCallback = NULL;
     filter->clientDrawCallback = NULL;
 }
@@ -120,29 +106,19 @@ gst_gl_filter_app_set_property (GObject* object, guint prop_id,
     GstGLFilterApp* filter = GST_GL_FILTER_APP (object);
 
     switch (prop_id) {
-    case PROP_GLCONTEXT_WIDTH:
-    {
-        filter->glcontext_width = g_value_get_int (value);
-        break;
-    }
-    case PROP_GLCONTEXT_HEIGHT:
-    {
-        filter->glcontext_height = g_value_get_int (value);
-        break;
-    }
-    case PROP_CLIENT_RESHAPE_CALLBACK:
-    {
-        filter->clientReshapeCallback = g_value_get_pointer (value);
-        break;
-    }
-    case PROP_CLIENT_DRAW_CALLBACK:
-    {
-        filter->clientDrawCallback = g_value_get_pointer (value);
-        break;
-    }
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-        break;
+        case PROP_CLIENT_RESHAPE_CALLBACK:
+        {
+            filter->clientReshapeCallback = g_value_get_pointer (value);
+            break;
+        }
+        case PROP_CLIENT_DRAW_CALLBACK:
+        {
+            filter->clientDrawCallback = g_value_get_pointer (value);
+            break;
+        }
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
     }
 }
 
@@ -164,24 +140,8 @@ static gboolean
 gst_gl_filter_app_set_caps (GstGLFilter* filter, GstCaps* incaps,
     GstCaps* outcaps)
 {
-    GstGLFilterApp* app_filter = GST_GL_FILTER_APP(filter);
+    //GstGLFilterApp* app_filter = GST_GL_FILTER_APP(filter);
 
-    g_print ("app_filter: gst_gl_filter_set_caps\n");
-
-    /*if (graphicmaker->glcontext_width != 0 && graphicmaker->glcontext_height != 0)
-        {
-            GValue value_w = { 0 };
-            GValue value_h = { 0 };
-            g_value_init (&value_w, G_TYPE_INT);
-            g_value_init (&value_h, G_TYPE_INT);
-            g_value_set_int (&value_w, graphicmaker->glcontext_width);
-            g_value_set_int (&value_h, graphicmaker->glcontext_height);
-            gst_structure_set_value (newstruct, "width", &value_w);
-	        gst_structure_set_value (newstruct, "height", &value_h);
-            g_value_unset (&value_w);
-            g_value_unset (&value_h);
-        }
-        else*/
     return TRUE;
 }
 
@@ -197,10 +157,6 @@ gst_gl_filter_app_setClientCallbacks (GstGLFilter* filter)
     //set the client draw callback
     gst_gl_display_setClientDrawCallback (filter->display, 
         app_filter->clientDrawCallback);
-
-    if (app_filter->glcontext_width != 0 && app_filter->glcontext_height != 0)
-        gst_gl_display_resetGLcontext (filter->display,
-            app_filter->glcontext_width, app_filter->glcontext_height);
 }
 
 static gboolean
@@ -209,11 +165,13 @@ gst_gl_filter_app_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 {
     GstGLFilterApp* app_filter = GST_GL_FILTER_APP(filter);
 
-    outbuf->width = filter->width;
-    outbuf->height = filter->height;
+    outbuf->width = inbuf->width;
+    outbuf->height = inbuf->height;
     outbuf->texture = inbuf->texture;
     outbuf->texture_u = inbuf->texture_u;
     outbuf->texture_v = inbuf->texture_v;
+    outbuf->widthGL = inbuf->widthGL;
+    outbuf->heightGL = inbuf->heightGL;
     outbuf->textureGL = inbuf->textureGL;
 
     return TRUE;

@@ -37,8 +37,7 @@ typedef struct _GstGLFilterAppClass GstGLFilterAppClass;
 struct _GstGLFilterApp
 {
     GstGLFilter filter;
-    gint glcontext_width;
-    gint glcontext_height;
+
     CRCB clientReshapeCallback;
     CDCB clientDrawCallback;
 };

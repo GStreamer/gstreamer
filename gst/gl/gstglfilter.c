@@ -90,8 +90,8 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
     gobject_class->set_property = gst_gl_filter_set_property;
     gobject_class->get_property = gst_gl_filter_get_property;
 
-    /*GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
-        gst_gl_filter_transform_caps;*/
+    GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
+        gst_gl_filter_transform_caps;
     GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_filter_transform;
     GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_filter_start;
     GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_stop;
@@ -183,7 +183,31 @@ static GstCaps*
 gst_gl_filter_transform_caps (GstBaseTransform* bt,
     GstPadDirection direction, GstCaps* caps)
 {
-    return NULL;
+    GstGLFilter* filter = GST_GL_FILTER (bt);
+    GstStructure* structure = gst_caps_get_structure (caps, 0);
+    GstCaps* ret = gst_caps_copy (caps);
+    const GValue* par = NULL;
+
+    structure = gst_structure_copy (gst_caps_get_structure (ret, 0));
+
+    gst_structure_set (structure,
+        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+
+    gst_caps_merge_structure (ret, gst_structure_copy (structure));
+
+    if ((par = gst_structure_get_value (structure, "pixel-aspect-ratio"))) 
+    {
+        gst_structure_set (structure,
+            "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+        gst_caps_merge_structure (ret, structure);
+    } 
+    else
+        gst_structure_free (structure);
+
+    GST_DEBUG_OBJECT (bt, "returning caps: %" GST_PTR_FORMAT, ret);
+
+    return ret;
 }
 
 
@@ -218,9 +242,11 @@ gst_gl_filter_prepare_output_buffer (GstBaseTransform* trans,
         GstGLFilterClass* filter_class = GST_GL_FILTER_GET_CLASS (filter);
         
         filter->display = g_object_ref (gl_inbuf->display);
+
         //blocking call, generate a FBO
         gst_gl_display_requestFBO (filter->display, filter->width, filter->height,
             &filter->fbo, &filter->depthbuffer, &filter->texture);
+
         if (filter_class->onInitFBO)
             filter_class->onInitFBO (filter);
     }
@@ -228,7 +254,7 @@ gst_gl_filter_prepare_output_buffer (GstBaseTransform* trans,
     gl_outbuf = gst_gl_buffer_new_from_video_format (filter->display,
             filter->video_format, 
             filter->width, filter->height,
-            filter->width, filter->height);
+            gl_inbuf->width, gl_inbuf->height);
 
     *buf = GST_BUFFER (gl_outbuf);
     gst_buffer_set_caps (*buf, caps);
@@ -244,17 +270,17 @@ gst_gl_filter_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     gboolean ret = FALSE;
     GstGLFilterClass* filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
-    ret = gst_gl_buffer_format_parse_caps (incaps, &filter->video_format,
+    ret = gst_gl_buffer_format_parse_caps (outcaps, &filter->video_format,
       &filter->width, &filter->height);
+
+    if (filter_class->set_caps)
+        filter_class->set_caps (filter, incaps, outcaps);
 
     if (!ret) 
     {
         GST_DEBUG ("bad caps");
         return FALSE;
     }
-
-    if (filter_class->set_caps)
-        filter_class->set_caps (filter, incaps, outcaps);
 
     GST_ERROR ("set_caps %d %d", filter->width, filter->height);
 

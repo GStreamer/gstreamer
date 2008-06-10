@@ -46,6 +46,7 @@ typedef enum {
     GST_GL_DISPLAY_ACTION_CREATE,
     GST_GL_DISPLAY_ACTION_DESTROY,
 	GST_GL_DISPLAY_ACTION_VISIBLE,
+    GST_GL_DISPLAY_ACTION_RESHAPE,
     GST_GL_DISPLAY_ACTION_PREPARE,
     GST_GL_DISPLAY_ACTION_CHANGE,
     GST_GL_DISPLAY_ACTION_CLEAR,
@@ -53,7 +54,8 @@ typedef enum {
     GST_GL_DISPLAY_ACTION_REDISPLAY,
     GST_GL_DISPLAY_ACTION_GENFBO,
     GST_GL_DISPLAY_ACTION_DELFBO,
-    GST_GL_DISPLAY_ACTION_USEFBO
+    GST_GL_DISPLAY_ACTION_USEFBO,
+    GST_GL_DISPLAY_ACTION_OVFBO
 	
 } GstGLDisplayAction;
 
@@ -95,6 +97,7 @@ struct _GstGLDisplay {
     GCond* cond_generateFBO;
     GCond* cond_useFBO;
     GCond* cond_destroyFBO;
+    GCond* cond_download;
 
     GCond* cond_create;
     GCond* cond_destroy;
@@ -237,6 +240,7 @@ void gst_gl_display_initGLContext (GstGLDisplay* display,
 void gst_gl_display_setClientReshapeCallback (GstGLDisplay* display, CRCB cb);
 void gst_gl_display_setClientDrawCallback (GstGLDisplay* display, CDCB cb);
 void gst_gl_display_setVisibleWindow (GstGLDisplay* display, gboolean visible);
+void gst_gl_display_resizeWindow (GstGLDisplay* display, gint width, gint height);
 void gst_gl_display_textureRequested (GstGLDisplay* display, GstVideoFormat format, 
                                       gint width, gint height, guint* texture,
                                       guint* texture_u, guint* texture_v);
@@ -256,8 +260,7 @@ void gst_gl_display_useFBO (GstGLDisplay* display, gint textureFBOWidth, gint te
                             guint inputTextureWidth, guint inputTextureHeight, guint inputTexture);
 void gst_gl_display_rejectFBO (GstGLDisplay* display, guint fbo, 
                                guint depthbuffer, guint texture);
+void gst_gl_display_initDonwloadFBO (GstGLDisplay* display, gint width, gint height);
 void gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId);
-void gst_gl_display_resetGLcontext (GstGLDisplay* display, 
-                                    gint glcontext_width, gint glcontext_height);
 
 #endif

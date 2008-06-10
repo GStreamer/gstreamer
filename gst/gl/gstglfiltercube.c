@@ -119,8 +119,8 @@ gst_gl_filter_cube_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
         filter->fbo, filter->depthbuffer, filter->texture, gst_gl_filter_cube_callback,
         inbuf->width, inbuf->height, inbuf->textureGL);
 
-    outbuf->width = filter->width;
-    outbuf->height = filter->height;
+    outbuf->width = inbuf->width;
+    outbuf->height = inbuf->height;
     outbuf->texture = inbuf->texture;
     outbuf->texture_u = inbuf->texture_u;
     outbuf->texture_v = inbuf->texture_v;

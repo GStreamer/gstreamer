@@ -412,6 +412,8 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
             if (glimage_sink->window_id)
                 gst_gl_display_set_windowId (glimage_sink->display, glimage_sink->window_id);
 
+            gst_gl_display_resizeWindow (glimage_sink->display, glimage_sink->width, glimage_sink->height);
+
             gst_gl_display_setVisibleWindow (glimage_sink->display, TRUE);
         } 
     } 
@@ -466,7 +468,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
 
     //redisplay opengl scene
     isAlive = gst_gl_display_postRedisplay (glimage_sink->display, 
-        gl_buffer->textureGL, gl_buffer->width, gl_buffer->height);
+        gl_buffer->textureGL, gl_buffer->widthGL, gl_buffer->heightGL);
 
     if (isAlive)
         return GST_FLOW_OK;

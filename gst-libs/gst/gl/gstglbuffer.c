@@ -44,12 +44,14 @@ gst_gl_buffer_init (GstGLBuffer* buffer, gpointer g_class)
 {
     buffer->display = NULL;
     buffer->video_format = 0;
+    buffer->width = 0;
+    buffer->height = 0;
     buffer->texture = 0;
     buffer->texture_u = 0;
     buffer->texture_v = 0;
+    buffer->widthGL = 0;
+    buffer->heightGL = 0;
     buffer->textureGL = 0;
-    buffer->width = 0;
-    buffer->height = 0;
 }
 
 static void
@@ -107,6 +109,8 @@ gst_gl_buffer_new_from_video_format (GstGLDisplay* display,
     buffer->width = width;
     buffer->height = height;
     buffer->video_format = video_format;
+    buffer->widthGL = context_width;
+    buffer->heightGL = context_height;
     GST_BUFFER_SIZE (buffer) = gst_gl_buffer_format_get_size (video_format, context_width, context_height);
 
     //blocking call, init texture

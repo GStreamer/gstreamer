@@ -297,7 +297,10 @@ gst_gl_videomaker_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     videomaker = GST_GL_VIDEOMAKER (trans);
 
     if (videomaker->display == NULL) 
+    {
         videomaker->display = g_object_ref (gl_inbuf->display);
+        gst_gl_display_initDonwloadFBO (videomaker->display, videomaker->width, videomaker->height);
+    }
     else 
         g_assert (videomaker->display == gl_inbuf->display);
 
