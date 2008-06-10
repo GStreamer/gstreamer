@@ -1,3 +1,75 @@
+2008-06-10  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* ext/pulse/Makefile.am:
+	* ext/pulse/plugin.c: (plugin_init):
+	* ext/pulse/pulsemixer.c: (gst_pulsemixer_interface_supported),
+	(gst_pulsemixer_implements_interface_init),
+	(gst_pulsemixer_init_interfaces), (gst_pulsemixer_base_init),
+	(gst_pulsemixer_class_init), (gst_pulsemixer_init),
+	(gst_pulsemixer_finalize), (gst_pulsemixer_set_property),
+	(gst_pulsemixer_get_property), (gst_pulsemixer_change_state):
+	* ext/pulse/pulsemixer.h:
+	* ext/pulse/pulsemixerctrl.c:
+	(gst_pulsemixer_ctrl_context_state_cb),
+	(gst_pulsemixer_ctrl_sink_info_cb),
+	(gst_pulsemixer_ctrl_source_info_cb),
+	(gst_pulsemixer_ctrl_subscribe_cb),
+	(gst_pulsemixer_ctrl_success_cb), (gst_pulsemixer_ctrl_open),
+	(gst_pulsemixer_ctrl_close), (gst_pulsemixer_ctrl_new),
+	(gst_pulsemixer_ctrl_free), (gst_pulsemixer_ctrl_list_tracks),
+	(gst_pulsemixer_ctrl_timeout_event), (restart_time_event),
+	(gst_pulsemixer_ctrl_set_volume), (gst_pulsemixer_ctrl_get_volume),
+	(gst_pulsemixer_ctrl_set_record), (gst_pulsemixer_ctrl_set_mute):
+	* ext/pulse/pulsemixerctrl.h:
+	* ext/pulse/pulsemixertrack.c: (gst_pulsemixer_track_class_init),
+	(gst_pulsemixer_track_init), (gst_pulsemixer_track_new):
+	* ext/pulse/pulsemixertrack.h:
+	* ext/pulse/pulseprobe.c: (gst_pulseprobe_context_state_cb),
+	(gst_pulseprobe_sink_info_cb), (gst_pulseprobe_source_info_cb),
+	(gst_pulseprobe_invalidate), (gst_pulseprobe_open),
+	(gst_pulseprobe_enumerate), (gst_pulseprobe_close),
+	(gst_pulseprobe_new), (gst_pulseprobe_free),
+	(gst_pulseprobe_get_properties), (gst_pulseprobe_needs_probe),
+	(gst_pulseprobe_probe_property), (gst_pulseprobe_get_values),
+	(gst_pulseprobe_set_server):
+	* ext/pulse/pulseprobe.h:
+	* ext/pulse/pulsesink.c: (gst_pulsesink_base_init),
+	(gst_pulsesink_class_init), (gst_pulsesink_init),
+	(gst_pulsesink_destroy_stream), (gst_pulsesink_destroy_context),
+	(gst_pulsesink_finalize), (gst_pulsesink_dispose),
+	(gst_pulsesink_set_property), (gst_pulsesink_get_property),
+	(gst_pulsesink_context_state_cb), (gst_pulsesink_stream_state_cb),
+	(gst_pulsesink_stream_request_cb),
+	(gst_pulsesink_stream_latency_update_cb), (gst_pulsesink_open),
+	(gst_pulsesink_close), (gst_pulsesink_prepare),
+	(gst_pulsesink_unprepare), (gst_pulsesink_write),
+	(gst_pulsesink_delay), (gst_pulsesink_success_cb),
+	(gst_pulsesink_reset), (gst_pulsesink_change_title),
+	(gst_pulsesink_event), (gst_pulsesink_get_type):
+	* ext/pulse/pulsesink.h:
+	* ext/pulse/pulsesrc.c: (gst_pulsesrc_interface_supported),
+	(gst_pulsesrc_implements_interface_init),
+	(gst_pulsesrc_init_interfaces), (gst_pulsesrc_base_init),
+	(gst_pulsesrc_class_init), (gst_pulsesrc_init),
+	(gst_pulsesrc_destroy_stream), (gst_pulsesrc_destroy_context),
+	(gst_pulsesrc_finalize), (gst_pulsesrc_dispose),
+	(gst_pulsesrc_set_property), (gst_pulsesrc_get_property),
+	(gst_pulsesrc_context_state_cb), (gst_pulsesrc_stream_state_cb),
+	(gst_pulsesrc_stream_request_cb), (gst_pulsesrc_open),
+	(gst_pulsesrc_close), (gst_pulsesrc_prepare),
+	(gst_pulsesrc_unprepare), (gst_pulsesrc_read),
+	(gst_pulsesrc_delay), (gst_pulsesrc_change_state),
+	(gst_pulsesrc_get_type):
+	* ext/pulse/pulsesrc.h:
+	* ext/pulse/pulseutil.c: (gst_pulse_fill_sample_spec),
+	(gst_pulse_client_name), (gst_pulse_gst_to_channel_map):
+	* ext/pulse/pulseutil.h:
+	Add pulseaudio GStreamer element from gst-pulse. Development will
+	continue here instead of pulseaudio SVN. Fixes bug #400679.
+	Only changes over gst-pulse SVN are added copyright to the top of
+	files and coding style changes.
+
 2008-06-09  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Benjamin Kampmann  <benjamin at fluendo dot com>

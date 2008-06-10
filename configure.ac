@@ -776,6 +776,12 @@ AG_GST_CHECK_FEATURE(LIBPNG, [Portable Network Graphics library], png, [
   AG_GST_PKG_CHECK_MODULES(LIBPNG, libpng12)
 ])
 
+dnl *** pulseaudio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_PULSE, true)
+AG_GST_CHECK_FEATURE(PULSE, [pulseaudio plug-in], pulseaudio, [
+  AG_GST_PKG_CHECK_MODULES(PULSE, libpulse >= 0.9.8)
+])
+
 dnl *** dv1394 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DV1394, true)
 AG_GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], 1394, [
@@ -1073,6 +1079,7 @@ ext/hal/Makefile
 ext/ladspa/Makefile
 ext/libcaca/Makefile
 ext/libpng/Makefile
+ext/pulse/Makefile
 ext/raw1394/Makefile
 ext/shout2/Makefile
 ext/soup/Makefile
