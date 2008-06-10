@@ -1,5 +1,16 @@
 2008-06-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Brian Cameron <brian.cameron at sun dot com>
+
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	(gst_sunaudiomixer_ctrl_get_volume),
+	(gst_sunaudiomixer_ctrl_set_volume):
+	Improvements for the SunAudio mixer by handling mute as no gain
+	for tracks that have a gain property but no mute property.
+	Fixes bug #536067.
+
+2008-06-10  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	* ext/pulse/Makefile.am:
 	* ext/pulse/plugin.c: (plugin_init):
