@@ -42,13 +42,15 @@ struct _GstGLBuffer {
 
     GstVideoFormat video_format;
 
+    gint width;
+    gint height;
     GLuint texture;
     GLuint texture_u;
     GLuint texture_v;
-    GLuint textureGL;
 
-    gint width;
-    gint height;
+    gint widthGL;
+    gint heightGL;
+    GLuint textureGL;
 };
 
 GType gst_gl_buffer_get_type (void);
@@ -66,8 +68,8 @@ gboolean gst_gl_buffer_format_parse_caps (GstCaps* caps, GstVideoFormat* format,
 
 #define GST_GL_VIDEO_CAPS \
   "video/x-raw-gl," \
-  "width=(int)[1,1920]," \
-  "height=(int)[1,1080]," \
+  "width=(int)[1,8000]," \
+  "height=(int)[1,6000]," \
   "pixel-aspect-ratio=(fraction)1/1," \
   "framerate=(fraction)[0/1,100/1]"
 

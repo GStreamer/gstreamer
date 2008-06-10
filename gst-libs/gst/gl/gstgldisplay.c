@@ -28,11 +28,13 @@
 static void gst_gl_display_finalize (GObject * object);
 static gpointer gst_gl_display_glutThreadFunc (GstGLDisplay* display);
 static void gst_gl_display_glutCreateWindow (GstGLDisplay* display);
+static void gst_gldisplay_glutGenerateOutputVideoFBO (GstGLDisplay *display);
 static void gst_gl_display_glutGenerateFBO (GstGLDisplay *display);
 static void gst_gl_display_glutUseFBO (GstGLDisplay *display);
 static void gst_gl_display_glutDestroyFBO (GstGLDisplay *display);
 static void gst_gl_display_glutDestroyWindow (GstGLDisplay* display);
 static void gst_gl_display_glutSetVisibleWindow (GstGLDisplay* display);
+static void gst_gl_display_glutReshapeWindow (GstGLDisplay* display);
 static void gst_gl_display_glutPrepareTexture (GstGLDisplay* display);
 static void gst_gl_display_glutUpdateTexture (GstGLDisplay* display);
 static void gst_gl_display_glutCleanTexture (GstGLDisplay* display);
@@ -101,6 +103,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->cond_destroyFBO = g_cond_new ();
     display->cond_create = g_cond_new ();
     display->cond_destroy = g_cond_new ();
+    display->cond_download = g_cond_new ();
 
     display->fbo = 0;
     display->depthBuffer = 0;
@@ -221,7 +224,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
 	    "void main(void) {\n"
 	    "  float r,g,b,y,u,v;\n"
 	    "  vec2 nxy=gl_TexCoord[0].xy;\n"
-	    "  y=texture2DRect(Ytex,nxy*).r;\n"
+	    "  y=texture2DRect(Ytex,nxy).r;\n"
 	    "  u=texture2DRect(Utex,nxy*0.5).r;\n"
 	    "  v=texture2DRect(Vtex,nxy*0.5).r;\n"
 	    "  y=1.1643*(y-0.0625);\n"
@@ -357,6 +360,10 @@ gst_gl_display_finalize (GObject *object)
     if (display->cond_video) {
         g_cond_free (display->cond_video);
         display->cond_video = NULL;
+    }
+    if (display->cond_download) {
+        g_cond_free (display->cond_download);
+        display->cond_download = NULL;
     }
     if (display->cond_generateFBO) {
         g_cond_free (display->cond_generateFBO);
@@ -519,6 +526,70 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         //unbind the FBO
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
+    }
+    else    
+    {
+        GST_DEBUG ("Context %d, EXT_framebuffer_object supported: no", glutWinId);
+        g_assert_not_reached ();
+    }
+
+	//check if fragment program is available, then load them
+	if (GLEW_ARB_vertex_program)
+	{
+        gchar program[2048];
+
+        GST_DEBUG ("Context %d, ARB_fragment_program supported: yes", glutWinId);
+
+        //from video to texture
+
+        sprintf (program, display->textFProgram_YUY2_UYVY, 'r', 'g', 'a');
+
+        display->GLSLProgram_YUY2 = gst_gl_display_loadGLSLprogram (program);
+
+        sprintf (program, display->textFProgram_YUY2_UYVY, 'a', 'b', 'r');
+
+        display->GLSLProgram_UYVY = gst_gl_display_loadGLSLprogram (program);
+
+        display->GLSLProgram_I420_YV12 = gst_gl_display_loadGLSLprogram (display->textFProgram_I420_YV12);
+
+        display->GLSLProgram_AYUV = gst_gl_display_loadGLSLprogram (display->textFProgram_AYUV);
+	}
+	else 
+    {
+        GST_DEBUG ("Context %d, ARB_fragment_program supported: no", glutWinId);
+        g_assert_not_reached ();
+    }
+
+    //setup callbacks
+    glutReshapeFunc (gst_gl_display_onReshape);
+    glutDisplayFunc (gst_gl_display_draw);
+    glutCloseFunc (gst_gl_display_onClose);
+
+    //insert glut context to the map
+    display->glutWinId = glutWinId;
+    g_hash_table_insert (gst_gl_display_map, GUINT_TO_POINTER (glutWinId), display);
+
+    //check glut id validity
+    g_assert (glutGetWindow() == glutWinId);
+    GST_DEBUG ("Context %d initialized", display->glutWinId);
+
+    //release display constructor
+    g_cond_signal (display->cond_create);
+}
+
+
+/* Called by the idle funtion */
+static void
+gst_gldisplay_glutGenerateOutputVideoFBO (GstGLDisplay *display)
+{
+    glutSetWindow (display->glutWinId);
+    
+    
+    if (GLEW_EXT_framebuffer_object)
+    {
+        GST_DEBUG ("Context %d, EXT_framebuffer_object supported: yes", display->glutWinId);
+
+
         //-- init graphic frame buffer object (GL texture -> GL scene)
 
         //setup FBO
@@ -627,34 +698,16 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         display->multipleRT[0] = GL_COLOR_ATTACHMENT0_EXT;
         display->multipleRT[1] = GL_COLOR_ATTACHMENT1_EXT;
         display->multipleRT[2] = GL_COLOR_ATTACHMENT2_EXT;
-
     }
     else    
     {
-        GST_DEBUG ("Context %d, EXT_framebuffer_object supported: no", glutWinId);
+        GST_DEBUG ("Context %d, EXT_framebuffer_object supported: no", display->glutWinId);
         g_assert_not_reached ();
     }
 
-	//check if fragment program is available, then load them
-	if (GLEW_ARB_vertex_program)
+    if (GLEW_ARB_vertex_program)
 	{
         gchar program[2048];
-
-        GST_DEBUG ("Context %d, ARB_fragment_program supported: yes", glutWinId);
-
-        //from video to texture
-
-        sprintf (program, display->textFProgram_YUY2_UYVY, 'r', 'g', 'a');
-
-        display->GLSLProgram_YUY2 = gst_gl_display_loadGLSLprogram (program);
-
-        sprintf (program, display->textFProgram_YUY2_UYVY, 'a', 'b', 'r');
-
-        display->GLSLProgram_UYVY = gst_gl_display_loadGLSLprogram (program);
-
-        display->GLSLProgram_I420_YV12 = gst_gl_display_loadGLSLprogram (display->textFProgram_I420_YV12);
-
-        display->GLSLProgram_AYUV = gst_gl_display_loadGLSLprogram (display->textFProgram_AYUV);
 
         //from texture to video
 
@@ -667,28 +720,14 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         display->GLSLProgram_to_I420_YV12 = gst_gl_display_loadGLSLprogram (display->textFProgram_to_I420_YV12);
 
         display->GLSLProgram_to_AYUV = gst_gl_display_loadGLSLprogram (display->textFProgram_to_AYUV);
-	}
-	else 
+    }
+    else 
     {
-        GST_DEBUG ("Context %d, ARB_fragment_program supported: no", glutWinId);
+        GST_DEBUG ("Context %d, ARB_fragment_program supported: no", display->glutWinId);
         g_assert_not_reached ();
     }
 
-    //setup callbacks
-    glutReshapeFunc (gst_gl_display_onReshape);
-    glutDisplayFunc (gst_gl_display_draw);
-    glutCloseFunc (gst_gl_display_onClose);
-
-    //insert glut context to the map
-    display->glutWinId = glutWinId;
-    g_hash_table_insert (gst_gl_display_map, GUINT_TO_POINTER (glutWinId), display);
-
-    //check glut id validity
-    g_assert (glutGetWindow() == glutWinId);
-    GST_DEBUG ("Context %d initialized", display->glutWinId);
-
-    //release display constructor
-    g_cond_signal (display->cond_create);
+    g_cond_signal (display->cond_download);
 }
 
 
@@ -879,6 +918,16 @@ gst_gl_display_glutSetVisibleWindow (GstGLDisplay *display)
 
 /* Called by the idle function */
 static void
+gst_gl_display_glutReshapeWindow (GstGLDisplay* display)
+{
+    glutSetWindow (display->glutWinId);
+    glutReshapeWindow (display->glcontext_width, display->glcontext_height);
+    //should reset glcontext_width and height
+}
+
+
+/* Called by the idle function */
+static void
 gst_gl_display_glutPrepareTexture (GstGLDisplay * display)
 {
     glutSetWindow (display->glutWinId);
@@ -985,6 +1034,9 @@ gst_gl_display_glutDispatchAction (GstGLDisplayMsg* msg)
 		case GST_GL_DISPLAY_ACTION_VISIBLE:
             gst_gl_display_glutSetVisibleWindow (msg->display);
             break;
+        case GST_GL_DISPLAY_ACTION_RESHAPE:
+            gst_gl_display_glutReshapeWindow (msg->display);
+            break;
         case GST_GL_DISPLAY_ACTION_PREPARE:
             gst_gl_display_glutPrepareTexture (msg->display);
             break;
@@ -1009,6 +1061,9 @@ gst_gl_display_glutDispatchAction (GstGLDisplayMsg* msg)
         case GST_GL_DISPLAY_ACTION_USEFBO:
             gst_gl_display_glutUseFBO (msg->display);
             break;
+        case GST_GL_DISPLAY_ACTION_OVFBO:
+            gst_gldisplay_glutGenerateOutputVideoFBO (msg->display);
+            break;
         default:
             g_assert_not_reached ();
     }
@@ -1029,7 +1084,8 @@ gst_gl_display_checkMsgValidity (GstGLDisplayMsg *msg)
             valid = TRUE;
             break;
         case GST_GL_DISPLAY_ACTION_DESTROY:   
-		case GST_GL_DISPLAY_ACTION_VISIBLE:            
+		case GST_GL_DISPLAY_ACTION_VISIBLE:
+        case GST_GL_DISPLAY_ACTION_RESHAPE:
         case GST_GL_DISPLAY_ACTION_PREPARE:           
         case GST_GL_DISPLAY_ACTION_CHANGE:           
         case GST_GL_DISPLAY_ACTION_CLEAR:          
@@ -1038,6 +1094,7 @@ gst_gl_display_checkMsgValidity (GstGLDisplayMsg *msg)
         case GST_GL_DISPLAY_ACTION_GENFBO:
         case GST_GL_DISPLAY_ACTION_DELFBO:
         case GST_GL_DISPLAY_ACTION_USEFBO:
+        case GST_GL_DISPLAY_ACTION_OVFBO:
             //msg is out of date if the associated display is not in the map
             if (!g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (msg->glutWinId)))
                 valid = FALSE;
@@ -1148,7 +1205,7 @@ gst_gl_display_setClientDrawCallback (GstGLDisplay * display, CDCB cb)
 
 /* Called by gst gl elements */
 void 
-gst_gl_display_setVisibleWindow (GstGLDisplay * display, gboolean visible)
+gst_gl_display_setVisibleWindow (GstGLDisplay* display, gboolean visible)
 {
     gst_gl_display_lock (display);
     if (display->visible != visible)
@@ -1160,11 +1217,23 @@ gst_gl_display_setVisibleWindow (GstGLDisplay * display, gboolean visible)
 }
 
 
+/* Called by gst gl elements */
+void 
+gst_gl_display_resizeWindow (GstGLDisplay* display, gint width, gint height)
+{
+    gst_gl_display_lock (display);
+    display->glcontext_width = width;
+    display->glcontext_height = height;
+    gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_RESHAPE, display);
+    gst_gl_display_unlock (display);
+}
+
+
 /* Called by gstglbuffer */
 void 
-gst_gl_display_textureRequested (GstGLDisplay * display, GstVideoFormat video_format, 
-                                 gint width, gint height, guint *texture,
-                                 guint *texture_u, guint *texture_v)
+gst_gl_display_textureRequested (GstGLDisplay* display, GstVideoFormat video_format, 
+                                 gint width, gint height, guint* texture,
+                                 guint* texture_u, guint* texture_v)
 {
     gst_gl_display_lock (display);
     display->requestedVideo_format = video_format;
@@ -1313,6 +1382,19 @@ gst_gl_display_rejectFBO (GstGLDisplay* display, guint fbo,
 
 /* Called by gst_gl elements */
 void 
+gst_gl_display_initDonwloadFBO (GstGLDisplay* display, gint width, gint height)
+{
+    gst_gl_display_lock (display);
+    display->glcontext_width = width;
+    display->glcontext_height = height;
+    gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_OVFBO, display);
+    g_cond_wait (display->cond_download, display->mutex);
+    gst_gl_display_unlock (display);
+}
+
+
+/* Called by gst_gl elements */
+void 
 gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId)
 {
     static gint glheight = 0;
@@ -1339,38 +1421,6 @@ gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId)
         display->textureFBOWidth, display->textureFBOHeight,
         winId,
         TRUE);
-}
-
-
-/* Called by gst_gl elements */
-void 
-gst_gl_display_resetGLcontext (GstGLDisplay* display, 
-                               gint glcontext_width, gint glcontext_height)
-{
-    static gint glheight = 0;
-
-    gst_gl_display_lock (display);
-    gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_DESTROY, display);
-    g_cond_wait (display->cond_destroy, display->mutex);
-    gst_gl_display_unlock (display);
-
-    if (g_hash_table_size (gst_gl_display_map) == 0)
-    {
-        g_thread_join (gst_gl_display_glutThread);
-        g_print ("Glut thread joined when setting winId\n");
-        gst_gl_display_glutThread = NULL;
-        g_async_queue_unref (gst_gl_display_messageQueue);
-        g_hash_table_unref  (gst_gl_display_map);
-        gst_gl_display_map = NULL;
-    }
-
-    //init opengl context
-    gst_gl_display_initGLContext (display, 
-        50, glheight++ * (glcontext_height+50) + 50, 
-        glcontext_width, glcontext_height,
-        display->textureFBOWidth, display->textureFBOHeight,
-        display->winId,
-        FALSE);
 }
 
 
