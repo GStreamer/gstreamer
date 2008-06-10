@@ -30,7 +30,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 static const GstElementDetails element_details = 
     GST_ELEMENT_DETAILS ("OpenGL cube filter",
         "Filter/Effect",
-        "Put input texture on the cube faces",
+        "Map input texture on the 6 cube faces",
         "Julien Isorce <julien.isorce@gmail.com>");
 
 enum

@@ -27,6 +27,7 @@
 #include "gstglfilterapp.h"
 #include "gstglvideomaker.h"
 #include "gstglimagesink.h"
+#include "gstglcolorscale.h"
 
 #define GST_CAT_DEFAULT gst_gl_gstgl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -59,6 +60,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glimagesink",
           GST_RANK_NONE, GST_TYPE_GLIMAGE_SINK)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glcolorscale",
+          GST_RANK_NONE, GST_TYPE_GL_COLORSCALE)) {
     return FALSE;
   }
 
