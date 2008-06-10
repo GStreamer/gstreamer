@@ -446,6 +446,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
         //blocking call
         gl_buffer = gst_gl_buffer_new_from_video_format (glimage_sink->display,
             glimage_sink->format, glimage_sink->width, glimage_sink->height,
+            glimage_sink->width, glimage_sink->height,
             glimage_sink->width, glimage_sink->height);
 
 		//blocking call

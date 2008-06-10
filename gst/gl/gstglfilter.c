@@ -254,6 +254,7 @@ gst_gl_filter_prepare_output_buffer (GstBaseTransform* trans,
     gl_outbuf = gst_gl_buffer_new_from_video_format (filter->display,
             filter->video_format, 
             filter->width, filter->height,
+            filter->width, filter->height,
             gl_inbuf->width, gl_inbuf->height);
 
     *buf = GST_BUFFER (gl_outbuf);

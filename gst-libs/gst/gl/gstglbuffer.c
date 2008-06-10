@@ -93,7 +93,8 @@ gst_gl_buffer_get_type (void)
 
 GstGLBuffer*
 gst_gl_buffer_new_from_video_format (GstGLDisplay* display,
-    GstVideoFormat video_format, gint context_width, gint context_height, 
+    GstVideoFormat video_format, gint context_width, gint context_height,
+    gint widthGL, gint heightGL,
     gint width, gint height)
 {
     GstGLBuffer *buffer;
@@ -109,8 +110,8 @@ gst_gl_buffer_new_from_video_format (GstGLDisplay* display,
     buffer->width = width;
     buffer->height = height;
     buffer->video_format = video_format;
-    buffer->widthGL = context_width;
-    buffer->heightGL = context_height;
+    buffer->widthGL = widthGL;
+    buffer->heightGL = heightGL;
     GST_BUFFER_SIZE (buffer) = gst_gl_buffer_format_get_size (video_format, context_width, context_height);
 
     //blocking call, init texture

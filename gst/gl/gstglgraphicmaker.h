@@ -49,8 +49,10 @@ struct _GstGLGraphicmaker
 
     GstGLDisplay *display;
     GstVideoFormat video_format;
-    gint width;
-    gint height;  
+    gint inWidth;
+    gint inHeight;
+    gint outWidth;
+    gint outHeight;  
 };
 
 struct _GstGLGraphicmakerClass
