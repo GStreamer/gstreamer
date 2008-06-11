@@ -56,7 +56,6 @@ static gboolean gst_gl_filter_app_set_caps (GstGLFilter* filter,
 static void gst_gl_filter_app_setClientCallbacks (GstGLFilter* filter);
 static gboolean gst_gl_filter_app_filter (GstGLFilter* filter,
     GstGLBuffer* inbuf, GstGLBuffer* outbuf);
-static void gst_gl_filter_app_callback (guint width, guint height, guint texture);
 
 
 static void
