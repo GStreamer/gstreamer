@@ -30,6 +30,9 @@
 #include "gstglimagesink.h"
 #include "gstglcolorscale.h"
 
+GType gst_gl_filter_app_get_type (void);
+GType gst_gl_filter_cube_get_type (void);
+
 #define GST_CAT_DEFAULT gst_gl_gstgl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
