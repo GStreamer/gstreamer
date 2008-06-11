@@ -1519,10 +1519,18 @@ gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
     GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {
     GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {
     GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}, {
+    GST_MATROSKA_TAG_ID_BPS, GST_TAG_BITRATE}, {
+    GST_MATROSKA_TAG_ID_ENCODER, GST_TAG_ENCODER}, {
     GST_MATROSKA_TAG_ID_DATE, GST_TAG_DATE}, {
     GST_MATROSKA_TAG_ID_ISRC, GST_TAG_ISRC}, {
-    GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}
+    GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}, {
+    GST_MATROSKA_TAG_ID_BPM, GST_TAG_BEATS_PER_MINUTE}, {
+    GST_MATROSKA_TAG_ID_TERMS_OF_USE, GST_TAG_LICENSE}, {
+    GST_MATROSKA_TAG_ID_COMPOSER, GST_TAG_COMPOSER}, {
+    GST_MATROSKA_TAG_ID_LEAD_PERFORMER, GST_TAG_PERFORMER}, {
+    GST_MATROSKA_TAG_ID_GENRE, GST_TAG_GENRE}
   };
+
   GstEbmlWrite *ebml = (GstEbmlWrite *) data;
 
   guint i;
@@ -1541,15 +1549,18 @@ gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
       if (!gst_tag_list_copy_value (&src, list, tag))
         break;
       g_value_init (&dest, G_TYPE_STRING);
-      g_value_transform (&src, &dest);
-      g_value_unset (&src);
+      if (g_value_transform (&src, &dest)) {
 
-      simpletag_master = gst_ebml_write_master_start (ebml,
-          GST_MATROSKA_ID_SIMPLETAG);
-      gst_ebml_write_ascii (ebml, GST_MATROSKA_ID_TAGNAME, tagname_mkv);
-      gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_TAGSTRING,
-          g_value_get_string (&dest));
-      gst_ebml_write_master_finish (ebml, simpletag_master);
+        simpletag_master = gst_ebml_write_master_start (ebml,
+            GST_MATROSKA_ID_SIMPLETAG);
+        gst_ebml_write_ascii (ebml, GST_MATROSKA_ID_TAGNAME, tagname_mkv);
+        gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_TAGSTRING,
+            g_value_get_string (&dest));
+        gst_ebml_write_master_finish (ebml, simpletag_master);
+      } else {
+        GST_WARNING ("Can't transform tag '%s' to string", tagname_mkv);
+      }
+      g_value_unset (&src);
       g_value_unset (&dest);
       break;
     }

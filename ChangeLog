@@ -1,5 +1,15 @@
 2008-06-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_metadata_id_simple_tag):
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_write_simple_tag):
+	Add some more tags, improve debugging a bit and make sure that
+	GValue transformation has succeeded before using the result
+	as a tag.
+
+2008-06-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Olivier Crete <tester at tester dot ca>
 
 	* gst/rtp/gstrtptheorapay.c:

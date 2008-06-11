@@ -2168,10 +2168,16 @@ gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
     GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {
     GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {
     GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}, {
+    GST_MATROSKA_TAG_ID_BPS, GST_TAG_BITRATE}, {
     GST_MATROSKA_TAG_ID_ENCODER, GST_TAG_ENCODER}, {
     GST_MATROSKA_TAG_ID_DATE, GST_TAG_DATE}, {
     GST_MATROSKA_TAG_ID_ISRC, GST_TAG_ISRC}, {
-    GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}
+    GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}, {
+    GST_MATROSKA_TAG_ID_BPM, GST_TAG_BEATS_PER_MINUTE}, {
+    GST_MATROSKA_TAG_ID_TERMS_OF_USE, GST_TAG_LICENSE}, {
+    GST_MATROSKA_TAG_ID_COMPOSER, GST_TAG_COMPOSER}, {
+    GST_MATROSKA_TAG_ID_LEAD_PERFORMER, GST_TAG_PERFORMER}, {
+    GST_MATROSKA_TAG_ID_GENRE, GST_TAG_GENRE}
   };
   GstEbmlRead *ebml = GST_EBML_READ (demux);
 
@@ -2246,9 +2252,13 @@ gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
         g_value_init (&src, G_TYPE_STRING);
         g_value_set_string (&src, value);
         g_value_init (&dest, dest_type);
-        if (g_value_transform (&src, &dest))
+        if (g_value_transform (&src, &dest)) {
           gst_tag_list_add_values (*p_taglist, GST_TAG_MERGE_APPEND,
               tagname_gst, &dest, NULL);
+        } else {
+          GST_WARNING_OBJECT (demux, "Can't transform tag '%s' with"
+              "value '%s' to target type", tag, value);
+        }
         g_value_unset (&src);
         g_value_unset (&dest);
         break;

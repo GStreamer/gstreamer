@@ -380,40 +380,38 @@
  * Matroska tags. Strings.
  */
 
-/* TODO: check for other tags */
-
 #define GST_MATROSKA_TAG_ID_TITLE    "TITLE"
 #define GST_MATROSKA_TAG_ID_AUTHOR   "AUTHOR"
 #define GST_MATROSKA_TAG_ID_ALBUM    "ALBUM"
 #define GST_MATROSKA_TAG_ID_COMMENTS "COMMENTS"
 #define GST_MATROSKA_TAG_ID_BITSPS   "BITSPS"
+#define GST_MATROSKA_TAG_ID_BPS      "BPS"
 #define GST_MATROSKA_TAG_ID_ENCODER  "ENCODER"
 #define GST_MATROSKA_TAG_ID_DATE     "DATE"
 #define GST_MATROSKA_TAG_ID_ISRC     "ISRC"
 #define GST_MATROSKA_TAG_ID_COPYRIGHT "COPYRIGHT"
+#define GST_MATROSKA_TAG_ID_BPM       "BPM"
+#define GST_MATROSKA_TAG_ID_TERMS_OF_USE "TERMS_OF_USE"
+#define GST_MATROSKA_TAG_ID_DATE      "DATE"
+#define GST_MATROSKA_TAG_ID_COMPOSER  "COMPOSER"
+#define GST_MATROSKA_TAG_ID_LEAD_PERFORMER  "LEAD_PERFOMER"
+#define GST_MATROSKA_TAG_ID_GENRE     "GENRE"
 
 /*
  * TODO: add this tag & mappings
- * "URL" -> GST_TAG_LOCATION
- * "BPS" -> GST_TAG_BITRATE
- * "BPM" -> GST_TAG_BEATS_PER_MINUTE
  * "REPLAYGAIN_GAIN" -> GST_TAG_*_GAIN   see http://replaygain.hydrogenaudio.org/rg_data_format.html
  * "REPLAYGAIN_PEAK" -> GST_TAG_*_PEAK   see http://replaygain.hydrogenaudio.org/peak_data_format.html
- * "TERMS_OF_USE" -> GST_TAG_LICENSE
- * "DATE_RECORDED" -> GST_TAG_DATE
- * "COMPOSER" -> GST_TAG_COMPOSER
- * "LEAD_PERFORMER" -> GST_TAG_PERFORMER
- * "GENRE" -> GST_TAG_GENRE
+ * both are depending on the target (track, album?)
  *
  * "TOTAL_PARTS" -> GST_TAG_TRACK_COUNT    depending on target
  * "PART_NUMBER" -> GST_TAG_TRACK_NUMBER   depending on target
  *
- * "EMAIL"       ->
- * "ADDRESS"     ->
- * "FAX"         ->  GST_TAG_CONTACT
- * "PHONE"       ->
+ * "SORT_WITH" -> nested in other elements, GST_TAG_TITLE_SORTNAME, etc
  *
- * TODO: maybe add custom gstreamer tags for other standard matroska tags
+ * TODO: maybe add custom gstreamer tags for other standard matroska tags,
+ * see http://matroska.org/technical/specs/tagging/index.html
+ *
+ * TODO: handle tag targets and nesting correctly
  */
 
 /*
