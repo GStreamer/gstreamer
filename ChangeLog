@@ -1,5 +1,13 @@
 2008-06-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_request_new_pad),
+	(gst_matroska_mux_release_pad), (gst_matroska_mux_write_data):
+	Update the counter for the number of streams when pads are added or
+	removed. This will make sure that a seek table is generated for
+	files with just one audio stream.
+
+2008-06-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/matroska/matroska-demux.c:
 	(gst_matroska_demux_parse_metadata_id_simple_tag):
 	* gst/matroska/matroska-ids.h:

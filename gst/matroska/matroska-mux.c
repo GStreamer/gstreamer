@@ -1219,6 +1219,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   gst_pad_set_setcaps_function (newpad, setcapsfunc);
   gst_pad_set_active (newpad, TRUE);
   gst_element_add_pad (element, newpad);
+  mux->num_streams++;
 
   return newpad;
 }
@@ -1261,6 +1262,7 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
       gst_matroska_pad_free (collect_pad);
       gst_collect_pads_remove_pad (mux->collect, pad);
       gst_element_remove_pad (element, pad);
+      mux->num_streams--;
       return;
     }
   }
@@ -1950,6 +1952,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
    * for audio only files. This can be largely improved, such as doing
    * one for each keyframe or each second (for all-keyframe
    * streams), only the *first* video track. But that'll come later... */
+
   if (is_video_keyframe) {
     GstMatroskaIndex *idx;
 
