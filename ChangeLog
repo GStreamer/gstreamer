@@ -1,3 +1,10 @@
+2008-06-11  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	Fix build on win32.
+	Patch By: David Schleef <ds@schleef.org>
+	Fixes: #536874
+
 2008-06-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/gio/gstgiobasesrc.c: (gst_gio_base_src_finalize),

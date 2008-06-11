@@ -76,6 +76,7 @@
 
 #ifdef G_OS_WIN32
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #define EINPROGRESS WSAEINPROGRESS
 #else
 #include <sys/ioctl.h>
@@ -97,8 +98,9 @@
 #ifdef G_OS_WIN32
 #define FIONREAD_TYPE gulong
 #define IOCTL_SOCKET ioctlsocket
-#define READ_SOCKET(fd, buf, len) recv (fd, buf, len, 0)
-#define WRITE_SOCKET(fd, buf, len) send (fd, buf, len, 0)
+#define READ_SOCKET(fd, buf, len) recv (fd, (char *)buf, len, 0)
+#define WRITE_SOCKET(fd, buf, len) send (fd, (const char *)buf, len, 0)
+#define SETSOCKOPT(sock, level, name, val, len) setsockopt (sock, level, name, (const char *)val, len)
 #define CLOSE_SOCKET(sock) closesocket (sock)
 #define ERRNO_IS_NOT_EAGAIN (WSAGetLastError () != WSAEWOULDBLOCK)
 #define ERRNO_IS_NOT_EINTR (WSAGetLastError () != WSAEINTR)
@@ -110,6 +112,7 @@
 #define IOCTL_SOCKET ioctl
 #define READ_SOCKET(fd, buf, len) read (fd, buf, len)
 #define WRITE_SOCKET(fd, buf, len) write (fd, buf, len)
+#define SETSOCKOPT(sock, level, name, val, len) setsockopt (sock, level, name, val, len)
 #define CLOSE_SOCKET(sock) close (sock)
 #define ERRNO_IS_NOT_EAGAIN (errno != EAGAIN)
 #define ERRNO_IS_NOT_EINTR (errno != EINTR)
@@ -1573,12 +1576,12 @@ gst_rtsp_connection_set_qos_dscp (GstRTSPConnection * conn, guint qos_dscp)
 
   switch (af) {
     case AF_INET:
-      if (setsockopt (conn->fd.fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos)) < 0)
+      if (SETSOCKOPT (conn->fd.fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos)) < 0)
         goto no_setsockopt;
       break;
     case AF_INET6:
 #ifdef IPV6_TCLASS
-      if (setsockopt (conn->fd.fd, IPPROTO_IPV6, IPV6_TCLASS, &tos,
+      if (SETSOCKOPT (conn->fd.fd, IPPROTO_IPV6, IPV6_TCLASS, &tos,
               sizeof (tos)) < 0)
         goto no_setsockopt;
       break;
