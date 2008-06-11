@@ -163,7 +163,7 @@ static gboolean
 gst_gl_filter_app_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
     GstGLBuffer* outbuf)
 {
-    GstGLFilterApp* app_filter = GST_GL_FILTER_APP(filter);
+    //GstGLFilterApp* app_filter = GST_GL_FILTER_APP(filter);
 
     outbuf->width = inbuf->width;
     outbuf->height = inbuf->height;
