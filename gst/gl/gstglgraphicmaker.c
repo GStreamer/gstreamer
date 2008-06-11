@@ -132,7 +132,7 @@ static void
 gst_gl_graphicmaker_set_property (GObject* object, guint prop_id,
     const GValue* value, GParamSpec* pspec)
 {
-    GstGLGraphicmaker* graphicmaker = GST_GL_GRAPHICMAKER (object);
+    //GstGLGraphicmaker* graphicmaker = GST_GL_GRAPHICMAKER (object);
 
     switch (prop_id) 
     {
@@ -188,7 +188,7 @@ static GstCaps*
 gst_gl_graphicmaker_transform_caps (GstBaseTransform* bt,
     GstPadDirection direction, GstCaps* caps)
 {
-	GstGLGraphicmaker* graphicmaker = GST_GL_GRAPHICMAKER (bt);
+	//GstGLGraphicmaker* graphicmaker = GST_GL_GRAPHICMAKER (bt);
 	GstStructure* structure = gst_caps_get_structure (caps, 0);
 	GstCaps* newcaps = NULL;
 	const GValue* framerate_value = NULL;
@@ -462,7 +462,6 @@ gst_gl_graphicmaker_transform (GstBaseTransform* trans, GstBuffer* inbuf,
 {
     GstGLGraphicmaker* graphicmaker;
     GstGLBuffer* gl_outbuf = GST_GL_BUFFER (outbuf);
-    guint outputTexture = 0;
 
     graphicmaker = GST_GL_GRAPHICMAKER (trans);
 
