@@ -19,7 +19,9 @@ libgstopengl_la_SOURCES = \
 	gstglfilterapp.c \
 	gstglfilterapp.h \
 	gstglcolorscale.c \
-	gstglcolorscale.h
+	gstglcolorscale.h \
+	gstgltestsrc.c \
+	gstgltestsrc.h
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
 # (like in AM_CFLAGS)?

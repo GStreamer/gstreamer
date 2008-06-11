@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include "gstgltestsrc.h"
 #include "gstglgraphicmaker.h"
 #include "gstglfiltercube.h"
 #include "gstglfilterapp.h"
@@ -37,6 +38,11 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_gl_gstgl_debug, "gstopengl", 0, "gstopengl");
+  
+  if (!gst_element_register (plugin, "gltestsrc",
+          GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
+    return FALSE;
+  }
   
   if (!gst_element_register (plugin, "glgraphicmaker",
           GST_RANK_NONE, GST_TYPE_GL_GRAPHICMAKER)) {
