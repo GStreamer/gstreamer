@@ -1,5 +1,11 @@
 2008-06-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/debug/gsttaginject.c:
+	* gst/debug/gsttaginject.h:
+	  Now actually adding the new element.
+
+2008-06-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
