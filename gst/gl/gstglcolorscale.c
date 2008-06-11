@@ -132,7 +132,7 @@ static void
 gst_gl_colorscale_set_property (GObject* object, guint prop_id,
     const GValue* value, GParamSpec* pspec)
 {
-    GstGLColorscale* colorscale = GST_GL_COLORSCALE (object);
+    //GstGLColorscale* colorscale = GST_GL_COLORSCALE (object);
 
     switch (prop_id) 
     {
@@ -188,7 +188,7 @@ static GstCaps*
 gst_gl_colorscale_transform_caps (GstBaseTransform* bt,
     GstPadDirection direction, GstCaps* caps)
 {
-	GstGLColorscale* colorscale = GST_GL_COLORSCALE (bt);
+	//GstGLColorscale* colorscale = GST_GL_COLORSCALE (bt);
 	GstStructure* structure = gst_caps_get_structure (caps, 0);
 	GstCaps* newcaps = gst_caps_new_simple ("video/x-raw-yuv", NULL);
     GstCaps* newothercaps = gst_caps_new_simple ("video/x-raw-rgb", NULL);
@@ -435,7 +435,6 @@ gst_gl_colorscale_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     GstBuffer* outbuf)
 {
     GstGLColorscale* colorscale = GST_GL_COLORSCALE (trans);
-    guint outputTexture = 0;
 
     //blocking call
     GstGLBuffer* gl_tembuf = gst_gl_buffer_new_from_video_format (colorscale->display,
