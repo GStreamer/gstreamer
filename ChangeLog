@@ -1,3 +1,17 @@
+2008-06-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Based on a patch by:  Sonicadvance1 at GMAIL dot COM
+
+	* ext/timidity/gstwildmidi.c: (gst_wildmidi_init),
+	(gst_wildmidi_change_state), (plugin_init):
+	* ext/timidity/gstwildmidi.h:
+	Initialize wildmidi only once in the plugin init function instead
+	of once for every instance. The second and following calls to the
+	wildmidi initialization function will fail. Fixes bug #525613.
+
+	Also don't register the element at all if wildmidi initialization
+	fails.
+
 2008-06-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/soundtouch/gstpitch.cc:
