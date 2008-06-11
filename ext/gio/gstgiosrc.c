@@ -72,6 +72,7 @@
 #endif
 
 #include "gstgiosrc.h"
+#include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_gio_src_debug);
 #define GST_CAT_DEFAULT gst_gio_src_debug
@@ -87,11 +88,15 @@ GST_BOILERPLATE_FULL (GstGioSrc, gst_gio_src, GstGioBaseSrc,
     GST_TYPE_GIO_BASE_SRC, gst_gio_uri_handler_do_init);
 
 static void gst_gio_src_finalize (GObject * object);
+
 static void gst_gio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gio_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
 static gboolean gst_gio_src_start (GstBaseSrc * base_src);
+
+static gboolean gst_gio_src_check_get_range (GstBaseSrc * base_src);
 
 static void
 gst_gio_src_base_init (gpointer gclass)
@@ -111,7 +116,9 @@ static void
 gst_gio_src_class_init (GstGioSrcClass * klass)
 {
   GObjectClass *gobject_class;
+
   GstElementClass *gstelement_class;
+
   GstBaseSrcClass *gstbasesrc_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -138,6 +145,8 @@ gst_gio_src_class_init (GstGioSrcClass * klass)
           G_TYPE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_gio_src_start);
+  gstbasesrc_class->check_get_range =
+      GST_DEBUG_FUNCPTR (gst_gio_src_check_get_range);
 }
 
 static void
@@ -248,12 +257,52 @@ gst_gio_src_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
+gst_gio_src_check_get_range (GstBaseSrc * base_src)
+{
+  GstGioSrc *src = GST_GIO_SRC (base_src);
+
+  gchar *scheme;
+
+  if (src->file == NULL)
+    goto done;
+
+  scheme = g_file_get_uri_scheme (src->file);
+  if (scheme == NULL)
+    goto done;
+
+  if (strcmp (scheme, "file") == 0) {
+    GST_LOG_OBJECT (src, "local URI, assuming random access is possible");
+    g_free (scheme);
+    return TRUE;
+  } else if (strcmp (scheme, "http") == 0 || strcmp (scheme, "https") == 0) {
+    GST_LOG_OBJECT (src, "blacklisted protocol '%s', "
+        "no random access possible", scheme);
+    g_free (scheme);
+    return FALSE;
+  }
+
+  g_free (scheme);
+
+done:
+
+  GST_DEBUG_OBJECT (src, "undecided about random access, asking base class");
+
+  return GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS,
+      check_get_range, (base_src), FALSE);
+}
+
+
+static gboolean
 gst_gio_src_start (GstBaseSrc * base_src)
 {
   GstGioSrc *src = GST_GIO_SRC (base_src);
+
   GError *err = NULL;
+
   GInputStream *stream;
+
   GCancellable *cancel = GST_GIO_BASE_SRC (src)->cancel;
+
   gchar *uri = NULL;
 
   if (src->file == NULL) {

@@ -49,6 +49,8 @@ struct _GstGioBaseSrc
   GCancellable *cancel;
   guint64 position;
   GInputStream *stream;
+
+  GstBuffer *cache;
 };
 
 struct _GstGioBaseSrcClass 

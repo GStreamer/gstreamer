@@ -37,14 +37,21 @@ GST_BOILERPLATE (GstGioBaseSrc, gst_gio_base_src, GstBaseSrc,
     GST_TYPE_BASE_SRC);
 
 static void gst_gio_base_src_finalize (GObject * object);
+
 static gboolean gst_gio_base_src_start (GstBaseSrc * base_src);
+
 static gboolean gst_gio_base_src_stop (GstBaseSrc * base_src);
+
 static gboolean gst_gio_base_src_get_size (GstBaseSrc * base_src,
     guint64 * size);
 static gboolean gst_gio_base_src_is_seekable (GstBaseSrc * base_src);
+
 static gboolean gst_gio_base_src_unlock (GstBaseSrc * base_src);
+
 static gboolean gst_gio_base_src_unlock_stop (GstBaseSrc * base_src);
+
 static gboolean gst_gio_base_src_check_get_range (GstBaseSrc * base_src);
+
 static GstFlowReturn gst_gio_base_src_create (GstBaseSrc * base_src,
     guint64 offset, guint size, GstBuffer ** buf);
 
@@ -64,7 +71,9 @@ static void
 gst_gio_base_src_class_init (GstGioBaseSrcClass * klass)
 {
   GObjectClass *gobject_class;
+
   GstElementClass *gstelement_class;
+
   GstBaseSrcClass *gstbasesrc_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -107,6 +116,11 @@ gst_gio_base_src_finalize (GObject * object)
     src->stream = NULL;
   }
 
+  if (src->cache) {
+    gst_buffer_unref (src->cache);
+    src->cache = NULL;
+  }
+
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
@@ -132,7 +146,9 @@ static gboolean
 gst_gio_base_src_stop (GstBaseSrc * base_src)
 {
   GstGioBaseSrc *src = GST_GIO_BASE_SRC (base_src);
+
   gboolean success;
+
   GError *err = NULL;
 
   if (G_IS_INPUT_STREAM (src->stream)) {
@@ -167,6 +183,7 @@ gst_gio_base_src_get_size (GstBaseSrc * base_src, guint64 * size)
 
   if (G_IS_FILE_INPUT_STREAM (src->stream)) {
     GFileInfo *info;
+
     GError *err = NULL;
 
     info = g_file_input_stream_query_info (G_FILE_INPUT_STREAM (src->stream),
@@ -193,9 +210,13 @@ gst_gio_base_src_get_size (GstBaseSrc * base_src, guint64 * size)
 
   if (GST_GIO_STREAM_IS_SEEKABLE (src->stream)) {
     goffset old;
+
     goffset stream_size;
+
     gboolean ret;
+
     GSeekable *seekable = G_SEEKABLE (src->stream);
+
     GError *err = NULL;
 
     old = g_seekable_tell (seekable);
@@ -248,6 +269,7 @@ static gboolean
 gst_gio_base_src_is_seekable (GstBaseSrc * base_src)
 {
   GstGioBaseSrc *src = GST_GIO_BASE_SRC (base_src);
+
   gboolean seekable;
 
   seekable = GST_GIO_STREAM_IS_SEEKABLE (src->stream);
@@ -295,56 +317,114 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
     GstBuffer ** buf_return)
 {
   GstGioBaseSrc *src = GST_GIO_BASE_SRC (base_src);
+
   GstBuffer *buf;
-  gssize read;
-  gboolean success, eos;
+
   GstFlowReturn ret = GST_FLOW_OK;
-  GError *err = NULL;
 
   g_return_val_if_fail (G_IS_INPUT_STREAM (src->stream), GST_FLOW_ERROR);
 
-  if (G_UNLIKELY (offset != src->position)) {
-    if (!GST_GIO_STREAM_IS_SEEKABLE (src->stream))
-      return GST_FLOW_NOT_SUPPORTED;
+  /* If we have the requested part in our cache take a subbuffer of that,
+   * otherwise fill the cache again with at least 4096 bytes from the
+   * requested offset and return a subbuffer of that.
+   *
+   * We need caching because every read/seek operation will need to go
+   * over DBus if our backend is GVfs and this is painfully slow. */
+  if (src->cache && offset >= GST_BUFFER_OFFSET (src->cache) &&
+      offset + size <= GST_BUFFER_OFFSET_END (src->cache)) {
 
-    ret = gst_gio_seek (src, G_SEEKABLE (src->stream), offset, src->cancel);
+    GST_DEBUG_OBJECT (src, "Creating subbuffer from cached buffer: offset %"
+        G_GUINT64_FORMAT " length %u", offset, size);
 
-    if (ret == GST_FLOW_OK)
-      src->position = offset;
-    else
-      return ret;
-  }
+    buf = gst_buffer_create_sub (src->cache,
+        offset - GST_BUFFER_OFFSET (src->cache), size);
 
-  buf = gst_buffer_new_and_alloc (size);
-
-  GST_LOG_OBJECT (src, "reading %u bytes from offset %" G_GUINT64_FORMAT,
-      size, offset);
-
-  read =
-      g_input_stream_read (G_INPUT_STREAM (src->stream), GST_BUFFER_DATA (buf),
-      size, src->cancel, &err);
-
-  success = (read >= 0);
-  eos = (size > 0 && read == 0);
-
-  if (!success && !gst_gio_error (src, "g_input_stream_read", &err, &ret)) {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("Could not read from stream: %s", err->message));
-    g_clear_error (&err);
-  }
-
-  if (success && !eos) {
-    src->position += read;
     GST_BUFFER_OFFSET (buf) = offset;
-    GST_BUFFER_SIZE (buf) = read;
-    *buf_return = buf;
+    GST_BUFFER_OFFSET_END (buf) = offset + size;
+    GST_BUFFER_SIZE (buf) = size;
   } else {
-    /* !success || eos */
-    gst_buffer_unref (buf);
+    guint cachesize = MAX (4096, size);
+
+    gssize read, res;
+
+    gboolean success, eos;
+
+    GError *err = NULL;
+
+    if (src->cache) {
+      gst_buffer_unref (src->cache);
+      src->cache = NULL;
+    }
+
+    if (G_UNLIKELY (offset != src->position)) {
+      if (!GST_GIO_STREAM_IS_SEEKABLE (src->stream))
+        return GST_FLOW_NOT_SUPPORTED;
+
+      GST_DEBUG_OBJECT (src, "Seeking to position %" G_GUINT64_FORMAT, offset);
+      ret = gst_gio_seek (src, G_SEEKABLE (src->stream), offset, src->cancel);
+
+      if (ret == GST_FLOW_OK)
+        src->position = offset;
+      else
+        return ret;
+    }
+
+    src->cache = gst_buffer_new_and_alloc (cachesize);
+
+    GST_LOG_OBJECT (src, "Reading %u bytes from offset %" G_GUINT64_FORMAT,
+        cachesize, offset);
+
+    /* GIO sometimes gives less bytes than requested although
+     * it's not at the end of file. SMB for example only
+     * supports reads up to 64k. So we loop here until we get at
+     * at least the requested amount of bytes or a read returns
+     * nothing. */
+    read = 0;
+    while (size - read > 0 && (res =
+            g_input_stream_read (G_INPUT_STREAM (src->stream),
+                GST_BUFFER_DATA (src->cache) + read, cachesize - read,
+                src->cancel, &err)) > 0) {
+      read += res;
+    }
+
+    success = (read >= 0);
+    eos = (cachesize > 0 && read == 0);
+
+    if (!success && !gst_gio_error (src, "g_input_stream_read", &err, &ret)) {
+      GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+          ("Could not read from stream: %s", err->message));
+      g_clear_error (&err);
+    }
+
+    if (success && !eos) {
+      src->position += read;
+      GST_BUFFER_SIZE (src->cache) = read;
+
+      GST_BUFFER_OFFSET (src->cache) = offset;
+      GST_BUFFER_OFFSET_END (src->cache) = offset + read;
+
+      GST_DEBUG_OBJECT (src, "Read successful");
+      GST_DEBUG_OBJECT (src, "Creating subbuffer from new "
+          "cached buffer: offset %" G_GUINT64_FORMAT " length %u", offset,
+          size);
+
+      buf = gst_buffer_create_sub (src->cache, 0, MIN (size, read));
+
+      GST_BUFFER_OFFSET (buf) = offset;
+      GST_BUFFER_OFFSET_END (buf) = offset + MIN (size, read);
+      GST_BUFFER_SIZE (buf) = MIN (size, read);
+    } else {
+      GST_DEBUG_OBJECT (src, "Read not successful");
+      gst_buffer_unref (src->cache);
+      src->cache = NULL;
+      buf = NULL;
+    }
+
+    if (eos)
+      ret = GST_FLOW_UNEXPECTED;
   }
 
-  if (eos)
-    ret = GST_FLOW_UNEXPECTED;
+  *buf_return = buf;
 
   return ret;
 }
@@ -353,6 +433,7 @@ void
 gst_gio_base_src_set_stream (GstGioBaseSrc * src, GInputStream * stream)
 {
   gboolean success;
+
   GError *err = NULL;
 
   g_return_if_fail (G_IS_INPUT_STREAM (stream));

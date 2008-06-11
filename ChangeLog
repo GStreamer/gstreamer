@@ -1,3 +1,26 @@
+2008-06-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/gio/gstgiobasesrc.c: (gst_gio_base_src_finalize),
+	(gst_gio_base_src_create):
+	* ext/gio/gstgiobasesrc.h:
+	Try to read the requested number of bytes, even if the first
+	read returns less than requested, until nothing is read anymore
+	or we have the requested amount of bytes. This fixes playback of
+	files via Samba as Samba only allows to read 64k at once.
+
+	Implement a caching algorithm that makes sure that we read at
+	least 4k of data every time. Some elements will try to read a few
+	bytes, then seek, read again a few bytes and so on and this is
+	painfully slow as every operation has to go over DBus if GVfs is
+	used as backend.
+
+	Fixes bug #536849 and #536848.
+
+	* ext/gio/gstgiosrc.c: (gst_gio_src_class_init),
+	(gst_gio_src_check_get_range):
+	Override check_get_range() to blacklist http/https URIs
+	and whitelist file URIs. More to be added on demand.
+
 2008-06-05  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
