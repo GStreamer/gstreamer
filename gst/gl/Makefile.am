@@ -12,8 +12,6 @@ libgstopengl_la_SOURCES = \
 	gstglgraphicmaker.h \
 	gstglvideomaker.c \
 	gstglvideomaker.h \
-	gstglfilter.c \
-	gstglfilter.h \
 	gstglfiltercube.c \
 	gstglfiltercube.h \
 	gstglfilterapp.c \
