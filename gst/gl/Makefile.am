@@ -20,6 +20,8 @@ libgstopengl_la_SOURCES = \
 	gstglfilterapp.h \
 	gstglcolorscale.c \
 	gstglcolorscale.h \
+    gltestsrc.c \
+    gltestsrc.h \
 	gstgltestsrc.c \
 	gstgltestsrc.h
 
