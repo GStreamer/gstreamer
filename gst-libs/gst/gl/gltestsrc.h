@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include "gstglbuffer.h"
+#include "gstgltestsrc.h"
 
 struct vts_color_struct {
         guint8 Y, U, V;
