@@ -112,7 +112,7 @@ static gboolean
 gst_gl_filter_cube_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
     GstGLBuffer* outbuf)
 {
-    GstGLFilterCube* cube_filter = GST_GL_FILTER_CUBE(filter);
+    //GstGLFilterCube* cube_filter = GST_GL_FILTER_CUBE(filter);
 
     //blocking call, generate a FBO
     gst_gl_display_useFBO (filter->display, filter->width, filter->height,
