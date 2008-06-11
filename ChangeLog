@@ -1,5 +1,128 @@
 2008-06-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Based on a patch by: Martin Eikermann <meiker at upb dot de>
+
+	* gst/deinterlace2/Makefile.am:
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace2_method_get_type),
+	(gst_deinterlace2_fields_get_type),
+	(gst_deinterlace2_field_layout_get_type),
+	(gst_deinterlace2_base_init), (gst_deinterlace2_class_init),
+	(gst_deinterlace2_init), (gst_deinterlace2_set_method),
+	(gst_deinterlace2_set_property), (gst_deinterlace2_get_property),
+	(gst_deinterlace2_finalize), (gst_deinterlace2_pop_history),
+	(gst_deinterlace2_head_history), (gst_deinterlace2_push_history),
+	(gst_deinterlace2_deinterlace_scanlines), (gst_deinterlace2_chain),
+	(gst_deinterlace2_setcaps), (gst_deinterlace2_sink_event),
+	(gst_deinterlace2_change_state), (gst_deinterlace2_src_event),
+	(gst_deinterlace2_src_query), (gst_deinterlace2_src_query_types),
+	(plugin_init):
+	* gst/deinterlace2/gstdeinterlace2.h:
+	* gst/deinterlace2/tvtime/greedy.c: (copy_scanline),
+	(deinterlace_greedy_packed422_scanline_mmxext),
+	(dscaler_greedyl_get_method):
+	* gst/deinterlace2/tvtime/greedyh.asm:
+	* gst/deinterlace2/tvtime/greedyh.c:
+	(deinterlace_frame_di_greedyh), (dscaler_greedyh_get_method),
+	(greedyh_init), (greedyh_filter_mmx), (greedyh_filter_3dnow),
+	(greedyh_filter_sse):
+	* gst/deinterlace2/tvtime/greedyh.h:
+	* gst/deinterlace2/tvtime/greedyhmacros.h:
+	* gst/deinterlace2/tvtime/mmx.h:
+	* gst/deinterlace2/tvtime/plugins.h:
+	* gst/deinterlace2/tvtime/speedtools.h:
+	* gst/deinterlace2/tvtime/speedy.c: (multiply_alpha), (clip255),
+	(comb_factor_packed422_scanline_mmx),
+	(diff_factor_packed422_scanline_c),
+	(diff_factor_packed422_scanline_mmx),
+	(diff_packed422_block8x8_mmx), (diff_packed422_block8x8_c),
+	(packed444_to_packed422_scanline_c),
+	(packed422_to_packed444_scanline_c),
+	(packed422_to_packed444_rec601_scanline_c),
+	(vfilter_chroma_121_packed422_scanline_mmx),
+	(vfilter_chroma_121_packed422_scanline_c),
+	(vfilter_chroma_332_packed422_scanline_mmx),
+	(vfilter_chroma_332_packed422_scanline_c),
+	(kill_chroma_packed422_inplace_scanline_mmx),
+	(kill_chroma_packed422_inplace_scanline_c),
+	(invert_colour_packed422_inplace_scanline_mmx),
+	(invert_colour_packed422_inplace_scanline_c),
+	(mirror_packed422_inplace_scanline_c),
+	(interpolate_packed422_scanline_c),
+	(convert_uyvy_to_yuyv_scanline_mmx),
+	(convert_uyvy_to_yuyv_scanline_c),
+	(interpolate_packed422_scanline_mmx),
+	(interpolate_packed422_scanline_mmxext),
+	(blit_colour_packed422_scanline_c),
+	(blit_colour_packed422_scanline_mmx),
+	(blit_colour_packed422_scanline_mmxext),
+	(blit_colour_packed4444_scanline_c),
+	(blit_colour_packed4444_scanline_mmx),
+	(blit_colour_packed4444_scanline_mmxext), (small_memcpy),
+	(speedy_memcpy_c), (speedy_memcpy_mmx), (speedy_memcpy_mmxext),
+	(blit_packed422_scanline_c), (blit_packed422_scanline_mmx),
+	(blit_packed422_scanline_mmxext),
+	(composite_colour4444_alpha_to_packed422_scanline_c),
+	(composite_colour4444_alpha_to_packed422_scanline_mmxext),
+	(composite_packed4444_alpha_to_packed422_scanline_c),
+	(composite_packed4444_alpha_to_packed422_scanline_mmxext),
+	(composite_packed4444_to_packed422_scanline_c),
+	(composite_packed4444_to_packed422_scanline_mmxext),
+	(composite_alphamask_to_packed4444_scanline_c),
+	(composite_alphamask_to_packed4444_scanline_mmxext),
+	(composite_alphamask_alpha_to_packed4444_scanline_c),
+	(premultiply_packed4444_scanline_c),
+	(premultiply_packed4444_scanline_mmxext),
+	(blend_packed422_scanline_c), (blend_packed422_scanline_mmxext),
+	(quarter_blit_vertical_packed422_scanline_mmxext),
+	(quarter_blit_vertical_packed422_scanline_c),
+	(subpix_blit_vertical_packed422_scanline_c),
+	(a8_subpix_blit_scanline_c), (myround), (init_RGB_to_YCbCr_tables),
+	(init_YCbCr_to_RGB_tables), (rgb24_to_packed444_rec601_scanline_c),
+	(rgba32_to_packed4444_rec601_scanline_c),
+	(packed444_to_rgb24_rec601_scanline_c),
+	(packed444_to_nonpremultiplied_packed4444_scanline_c),
+	(aspect_adjust_packed4444_scanline_c), (setup_speedy_calls),
+	(speedy_get_accel):
+	* gst/deinterlace2/tvtime/speedy.h:
+	* gst/deinterlace2/tvtime/sse.h:
+	* gst/deinterlace2/tvtime/tomsmocomp.c: (Fieldcopy),
+	(deinterlace_frame_di_tomsmocomp), (dscaler_tomsmocomp_get_method),
+	(tomsmocomp_init), (tomsmocomp_filter_mmx),
+	(tomsmocomp_filter_3dnow), (tomsmocomp_filter_sse):
+	* gst/deinterlace2/tvtime/tomsmocomp.h:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoop0A.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopEdgeA.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopEdgeA8.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA2.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA6.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddAH.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddAH2.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopTop.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopVA.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopVAH.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/StrangeBob.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll2.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/WierdBob.inc:
+	* gst/deinterlace2/tvtime/vfir.c: (deinterlace_line),
+	(deinterlace_scanline_vfir), (copy_scanline),
+	(dscaler_vfir_get_method):
+	* gst/deinterlace2/tvtime/x86-64_macros.inc:
+	Add a deinterlacer plugin based on the tvtime/DScaler deinterlacer,
+	which was relicensed to LGPL for GStreamer and in theory provides
+	better and faster results than the simple deinterlace element.
+	Fixes bug #163578.
+
+	Ported to GStreamer 0.10 but still not enabled or included in the
+	build system by default because of bad artefacts caused by a bug
+	somewhere and as it can be only build on x86/amd64 ATM and requires
+	special CFLAGS. Will be fixed soon.
+
+2008-06-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Based on a patch by:  Sonicadvance1 at GMAIL dot COM
 
 	* ext/timidity/gstwildmidi.c: (gst_wildmidi_init),
