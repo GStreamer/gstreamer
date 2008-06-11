@@ -7,7 +7,7 @@
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>matroskademux</name>
@@ -17,16 +17,10 @@
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-matroska</details>
-        </caps>
-        <caps>
-          <name>subtitle_%02d</name>
+          <name>video_%02d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>text/plain; application/x-ssa; application/x-ass; application/x-usf; video/x-dvd-subpicture; application/x-subtitle-unknown</details>
+          <details>ANY</details>
         </caps>
         <caps>
           <name>audio_%02d</name>
@@ -35,10 +29,16 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>video_%02d</name>
+          <name>subtitle_%02d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>ANY</details>
+          <details>text/plain; application/x-ssa; application/x-ass; application/x-usf; video/x-dvd-subpicture; application/x-subtitle-unknown</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-matroska</details>
         </caps>
       </pads>
     </element>
@@ -50,16 +50,10 @@
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-matroska</details>
-        </caps>
-        <caps>
-          <name>subtitle_%d</name>
+          <name>video_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>ANY</details>
+          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-xvid, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-huffyuv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-msmpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/jpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-theora; video/x-dirac, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc){ YUY2, I420 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>audio_%d</name>
@@ -68,10 +62,16 @@
           <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ], channels=(int)[ 1, 8 ], rate=(int)[ 8000, 96000 ]; audio/mpeg, mpegversion=(int){ 2, 4 }, channels=(int)[ 1, 8 ], rate=(int)[ 8000, 96000 ]; audio/x-ac3, channels=(int)[ 1, 8 ], rate=(int)[ 8000, 96000 ]; audio/x-vorbis, channels=(int)[ 1, 8 ], rate=(int)[ 8000, 96000 ]; audio/x-raw-int, width=(int)8, depth=(int)8, signed=(boolean)false, channels=(int)[ 1, 8 ], rate=(int)[ 8000, 96000 ]; audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int){ 4321, 1234 }, signed=(boolean)true, channels=(int)[ 1, 8 ], rate=(int)[ 8000, 96000 ]; audio/x-tta, width=(int){ 8, 16, 24 }, channels=(int){ 1, 2 }, rate=(int)[ 8000, 96000 ]</details>
         </caps>
         <caps>
-          <name>video_%d</name>
+          <name>subtitle_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-xvid, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-huffyuv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-msmpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/jpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-theora; video/x-dirac, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc){ YUY2, I420 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-matroska</details>
         </caps>
       </pads>
     </element>

@@ -23,27 +23,34 @@
 
 #include <gst/gst.h>
 
-gboolean gst_break_my_data_plugin_init (GstPlugin * plugin);
-gboolean gst_rnd_buffer_size_plugin_init (GstPlugin * plugin);
-gboolean gst_navseek_plugin_init (GstPlugin * plugin);
-gboolean gst_progress_report_plugin_init (GstPlugin * plugin);
-gboolean gst_test_plugin_init (GstPlugin * plugin);
-
+GType gst_break_my_data_get_type (void);
+GType gst_rnd_buffer_size_get_type (void);
+GType gst_navseek_get_type (void);
+GType gst_progress_report_get_type (void);
+GType gst_tag_inject_get_type (void);
+GType gst_test_get_type (void);
 /*
-gboolean gst_push_file_src_plugin_init (GstPlugin * plugin);
-gboolean gst_negotiation_plugin_init (GstPlugin * plugin);
+GType gst_push_file_src_get_type (void);
+GType gst_gst_negotiation_get_type (void);
 */
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_break_my_data_plugin_init (plugin) ||
-      !gst_rnd_buffer_size_plugin_init (plugin) ||
-      !gst_navseek_plugin_init (plugin) ||
-/*    !gst_push_file_src_plugin_init (plugin) || */
-/*    !gst_negotiation_plugin_init (plugin) || */
-      !gst_progress_report_plugin_init (plugin) ||
-      !gst_test_plugin_init (plugin))
+  if (!gst_element_register (plugin, "breakmydata", GST_RANK_NONE,
+          gst_break_my_data_get_type ())
+      || !gst_element_register (plugin, "rndbuffersize", GST_RANK_NONE,
+          gst_rnd_buffer_size_get_type ())
+      || !gst_element_register (plugin, "navseek", GST_RANK_NONE,
+          gst_navseek_get_type ()) ||
+/*    !gst_element_register (plugin, "pushfilesrc", GST_RANK_NONE, gst_push_file_src_get_type ()) || */
+/*    !gst_element_register (plugin, "negotiation", GST_RANK_NONE, gst_gst_negotiation_get_type ()) || */
+      !gst_element_register (plugin, "progressreport", GST_RANK_NONE,
+          gst_progress_report_get_type ())
+      || !gst_element_register (plugin, "taginject", GST_RANK_NONE,
+          gst_tag_inject_get_type ())
+      || !gst_element_register (plugin, "testsink", GST_RANK_NONE,
+          gst_test_get_type ()))
     return FALSE;
 
   return TRUE;

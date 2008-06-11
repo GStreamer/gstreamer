@@ -7,7 +7,7 @@
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>icydemux</name>
@@ -18,16 +18,16 @@
     Michael Smith &lt;msmith@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-icy, metadata-interval=(int)[ 0, 2147483647 ]</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-icy, metadata-interval=(int)[ 0, 2147483647 ]</details>
         </caps>
       </pads>
     </element>

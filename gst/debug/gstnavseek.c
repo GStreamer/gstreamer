@@ -129,7 +129,6 @@ gst_navseek_seek (GstNavSeek * navseek, gint64 offset)
   GstPad *peer_pad;
   gint64 peer_value;
 
-
   /* Query for the current time then attempt to set to time + offset */
   peer_pad = gst_pad_get_peer (GST_BASE_TRANSFORM (navseek)->sinkpad);
   ret = gst_pad_query_position (peer_pad, &peer_format, &peer_value);
@@ -338,11 +337,4 @@ gst_navseek_stop (GstBaseTransform * trans)
 {
   /* anything we should be doing here? */
   return TRUE;
-}
-
-gboolean
-gst_navseek_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "navseek", GST_RANK_NONE,
-      GST_TYPE_NAVSEEK);
 }

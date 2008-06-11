@@ -52,6 +52,8 @@ struct _GstPushFileSrcClass
   GstBinClass parent_class;
 };
 
+GType gst_push_file_src_get_type(void);
+
 G_END_DECLS
 
 #endif /* __GST_PUSH_FILE_SRC_H__*/

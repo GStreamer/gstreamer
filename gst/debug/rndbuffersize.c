@@ -92,9 +92,12 @@ static void gst_rnd_buffer_size_loop (GstRndBufferSize * self);
 static GstStateChangeReturn gst_rnd_buffer_size_change_state (GstElement *
     element, GstStateChange transition);
 
+#define DEBUG_INIT(bla) \
+  GST_DEBUG_CATEGORY_INIT (gst_rnd_buffer_size_debug, "rndbuffersize", 0, \
+      "rndbuffersize element");
 
-GST_BOILERPLATE (GstRndBufferSize, gst_rnd_buffer_size, GstElement,
-    GST_TYPE_ELEMENT);
+GST_BOILERPLATE_FULL (GstRndBufferSize, gst_rnd_buffer_size, GstElement,
+    GST_TYPE_ELEMENT, DEBUG_INIT);
 
 
 static void
@@ -365,18 +368,4 @@ gst_rnd_buffer_size_change_state (GstElement * element,
   }
 
   return ret;
-}
-
-
-gboolean
-gst_rnd_buffer_size_plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "rndbuffersize", GST_RANK_NONE,
-          GST_TYPE_RND_BUFFER_SIZE))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (gst_rnd_buffer_size_debug, "rndbuffersize", 0,
-      "rndbuffersize element");
-
-  return TRUE;
 }

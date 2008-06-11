@@ -512,11 +512,6 @@ gst_fenced_buffer_class_init (gpointer g_class, gpointer class_data)
   mini_object_class->copy = (GstMiniObjectCopyFunction) gst_fenced_buffer_copy;
 }
 
-static void
-gst_fenced_buffer_init (GTypeInstance * instance, gpointer g_class)
-{
-}
-
 GType
 gst_fenced_buffer_get_type (void)
 {
@@ -532,7 +527,7 @@ gst_fenced_buffer_get_type (void)
       NULL,
       sizeof (GstFencedBuffer),
       0,
-      (GInstanceInitFunc) gst_fenced_buffer_init,
+      NULL,
     };
 
     fenced_buf_type = g_type_register_static (GST_TYPE_BUFFER,

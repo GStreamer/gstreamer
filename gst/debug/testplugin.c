@@ -86,7 +86,13 @@ static const GstElementDetails details = GST_ELEMENT_DETAILS ("Test plugin",
     "perform a number of tests",
     "Benjamin Otte <otte@gnome>");
 
-GST_BOILERPLATE (GstTest, gst_test, GstBaseSink, GST_TYPE_BASE_SINK);
+#define DEBUG_INIT(bla) \
+  GST_DEBUG_CATEGORY_INIT (gst_test_debug, "testsink", 0, \
+      "debugging category for testsink element");
+
+GST_BOILERPLATE_FULL (GstTest, gst_test, GstBaseSink, GST_TYPE_BASE_SINK,
+    DEBUG_INIT);
+
 
 static void
 gst_test_base_init (gpointer g_class)
@@ -309,16 +315,4 @@ gst_test_get_property (GObject * object, guint prop_id, GValue * value,
   }
 
   GST_OBJECT_UNLOCK (test);
-}
-
-gboolean
-gst_test_plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "testsink", GST_RANK_NONE, GST_TYPE_TEST))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (gst_test_debug, "testsink", 0,
-      "debugging category for testsink element");
-
-  return TRUE;
 }

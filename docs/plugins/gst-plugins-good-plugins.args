@@ -19338,3 +19338,13 @@
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstTagInject::tags</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>taglist</NICK>
+<BLURB>List of tags to inject into the target file.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+

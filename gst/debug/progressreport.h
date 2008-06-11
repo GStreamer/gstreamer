@@ -62,6 +62,8 @@ struct _GstProgressReportClass
   GstBaseTransformClass parent_class;
 };
 
+GType gst_progress_report_get_type(void);
+
 G_END_DECLS
 
 #endif /* __GST_PROGRESS_REPORT_H__*/

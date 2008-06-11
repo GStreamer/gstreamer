@@ -285,13 +285,3 @@ gst_negotiation_get_property (GObject * object, guint prop_id,
       break;
   }
 }
-
-gboolean
-gst_negotiation_plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "negotiation", GST_RANK_NONE,
-          GST_TYPE_NEGOTIATION))
-    return FALSE;
-
-  return TRUE;
-}

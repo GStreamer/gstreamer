@@ -7,7 +7,7 @@
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>flacdec</name>
@@ -17,16 +17,16 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int){ 8, 16, 32 }, depth=(int){ 8, 12, 16, 20, 24, 32 }, rate=(int)[ 8000, 96000 ], channels=(int)[ 1, 8 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-flac</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int){ 8, 16, 32 }, depth=(int){ 8, 12, 16, 20, 24, 32 }, rate=(int)[ 8000, 96000 ], channels=(int)[ 1, 8 ]</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 8000, 96000 ], channels=(int)[ 1, 2 ]</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-flac</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 8000, 96000 ], channels=(int)[ 1, 2 ]</details>
         </caps>
       </pads>
     </element>

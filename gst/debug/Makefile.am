@@ -11,6 +11,7 @@ noinst_HEADERS = \
 	gstnavigationtest.h \
 	gstnavseek.h \
 	gstpushfilesrc.h \
+	gsttaginject.h \
 	progressreport.h \
 	tests.h
 
@@ -31,10 +32,9 @@ libgstdebug_la_SOURCES = \
 	breakmydata.c \
 	gstnavseek.c \
 	gstpushfilesrc.c \
-	gstpushfilesrc.h \
+	gsttaginject.c \
 	rndbuffersize.c \
 	progressreport.c \
-	progressreport.h \
 	tests.c \
 	testplugin.c
 

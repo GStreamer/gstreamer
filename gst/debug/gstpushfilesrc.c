@@ -196,10 +196,3 @@ gst_push_file_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_uri = gst_push_file_src_uri_get_uri;
   iface->set_uri = gst_push_file_src_uri_set_uri;
 }
-
-gboolean
-gst_push_file_src_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "pushfilesrc", GST_RANK_NONE,
-      GST_TYPE_PUSH_FILE_SRC);
-}

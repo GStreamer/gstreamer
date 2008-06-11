@@ -100,8 +100,14 @@ GstStaticPadTemplate bmd_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_BOILERPLATE (GstBreakMyData, gst_break_my_data, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+
+#define DEBUG_INIT(bla) \
+  GST_DEBUG_CATEGORY_INIT (gst_break_my_data_debug, "breakmydata", 0, \
+      "debugging category for breakmydata element");
+
+GST_BOILERPLATE_FULL (GstBreakMyData, gst_break_my_data, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+
 
 static void
 gst_break_my_data_base_init (gpointer g_class)
@@ -286,19 +292,6 @@ gst_break_my_data_stop (GstBaseTransform * trans)
   g_rand_free (bmd->rand);
   bmd->rand = NULL;
   GST_OBJECT_UNLOCK (bmd);
-
-  return TRUE;
-}
-
-gboolean
-gst_break_my_data_plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "breakmydata", GST_RANK_NONE,
-          GST_TYPE_BREAK_MY_DATA))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (gst_break_my_data_debug, "breakmydata", 0,
-      "debugging category for breakmydata element");
 
   return TRUE;
 }
