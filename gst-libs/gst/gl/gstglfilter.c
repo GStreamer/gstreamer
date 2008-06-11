@@ -183,7 +183,7 @@ static GstCaps*
 gst_gl_filter_transform_caps (GstBaseTransform* bt,
     GstPadDirection direction, GstCaps* caps)
 {
-    GstGLFilter* filter = GST_GL_FILTER (bt);
+    //GstGLFilter* filter = GST_GL_FILTER (bt);
     GstStructure* structure = gst_caps_get_structure (caps, 0);
     GstCaps* ret = gst_caps_copy (caps);
     const GValue* par = NULL;
@@ -307,7 +307,6 @@ static gboolean
 gst_gl_filter_do_transform (GstGLFilter* filter,
     GstGLBuffer* inbuf, GstGLBuffer* outbuf)
 {
-    GstGLDisplay* display = inbuf->display;
     GstGLFilterClass* filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
     filter_class->filter (filter, inbuf, outbuf);
