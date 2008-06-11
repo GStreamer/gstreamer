@@ -524,11 +524,11 @@ GST_LICENSE="LGPL"
 AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
 AC_SUBST(GST_LICENSE)
 
-dnl define LIBDIR, DATADIR so we can inform people where we live
+dnl define LIBDIR, GST_DATADIR so we can inform people where we live
 AS_AC_EXPAND(LIBDIR, $libdir)
 AC_DEFINE_UNQUOTED(LIBDIR, "$LIBDIR", [library dir])
 AS_AC_EXPAND(DATADIR, $datadir)
-AC_DEFINE_UNQUOTED(DATADIR, "$DATADIR", [data dir])
+AC_DEFINE_UNQUOTED(GST_DATADIR, "$DATADIR", [data dir])
 
 dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
