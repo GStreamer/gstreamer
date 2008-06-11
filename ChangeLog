@@ -1,6 +1,11 @@
 2008-06-11  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
+	0.10.19.3 pre-release
+
+2008-06-11  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
 	* gst/gstpreset.c:
 	Rename DATADIR to GST_DATADIR to avoid build problems
 	on win32. Patch By: David Schleef <ds@schleef.org>
