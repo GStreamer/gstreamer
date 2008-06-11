@@ -51,7 +51,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"THEORA\""
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"THEORA\", "
+        "delivery-method = (string) \"inline\""
         /* All required parameters
          *
          * "sampling = (string) { "YCbCr-4:2:0", "YCbCr-4:2:2", "YCbCr-4:4:4" } "
@@ -101,7 +102,9 @@ static void
 gst_rtp_theora_pay_class_init (GstRtpTheoraPayClass * klass)
 {
   GObjectClass *gobject_class;
+
   GstElementClass *gstelement_class;
+
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -188,7 +191,9 @@ static GstFlowReturn
 gst_rtp_theora_pay_flush_packet (GstRtpTheoraPay * rtptheorapay)
 {
   GstFlowReturn ret;
+
   guint8 *payload;
+
   guint hlen;
 
   /* check for empty packet */
@@ -236,6 +241,7 @@ static gchar *
 encode_base64 (const guint8 * in, guint size, guint * len)
 {
   gchar *ret, *d;
+
   static const gchar *v =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -261,10 +267,15 @@ static gboolean
 gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
 {
   GstRtpTheoraPay *rtptheorapay = GST_RTP_THEORA_PAY (basepayload);
+
   GList *walk;
+
   guint length, size, n_headers, configlen;
+
   gchar *wstr, *hstr, *configuration;
+
   guint8 *data, *config;
+
   guint32 ident;
 
   GST_DEBUG_OBJECT (rtptheorapay, "finish headers");
@@ -322,6 +333,7 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
   ident = fnv1_hash_32_new ();
   for (walk = rtptheorapay->headers; walk; walk = g_list_next (walk)) {
     GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+
     guint bsize;
 
     bsize = GST_BUFFER_SIZE (buf);
@@ -371,6 +383,7 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
   /* store length for each header */
   for (walk = rtptheorapay->headers; walk; walk = g_list_next (walk)) {
     GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+
     guint bsize, size, temp;
 
     /* only need to store the length when it's not the last header */
@@ -441,6 +454,7 @@ gst_rtp_theora_pay_parse_id (GstBaseRTPPayload * basepayload, guint8 * data,
     guint size)
 {
   GstRtpTheoraPay *rtptheorapay;
+
   gint width, height;
 
   rtptheorapay = GST_RTP_THEORA_PAY (basepayload);
@@ -498,15 +512,25 @@ gst_rtp_theora_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpTheoraPay *rtptheorapay;
+
   GstFlowReturn ret;
+
   guint size, newsize;
+
   guint8 *data;
+
   guint packet_len;
+
   GstClockTime duration, newduration, timestamp;
+
   gboolean flush;
+
   guint8 TDT;
+
   guint plen;
+
   guint8 *ppos, *payload;
+
   gboolean fragmented;
 
   rtptheorapay = GST_RTP_THEORA_PAY (basepayload);
@@ -679,6 +703,7 @@ gst_rtp_theora_pay_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstRtpTheoraPay *rtptheorapay;
+
   GstStateChangeReturn ret;
 
   rtptheorapay = GST_RTP_THEORA_PAY (element);
