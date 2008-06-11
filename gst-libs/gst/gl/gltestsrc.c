@@ -23,9 +23,8 @@
 
 /* non-GST-specific stuff */
 
-#include "gstgltestsrc.h"
 #include "gltestsrc.h"
-#include "gstglbuffer.h"
+
 
 
 #include <string.h>
