@@ -31,6 +31,7 @@ static void gst_gl_display_glutCreateWindow (GstGLDisplay* display);
 static void gst_gldisplay_glutGenerateOutputVideoFBO (GstGLDisplay *display);
 static void gst_gl_display_glutGenerateFBO (GstGLDisplay *display);
 static void gst_gl_display_glutUseFBO (GstGLDisplay *display);
+static void gst_gl_display_glutUseFBO2 (GstGLDisplay *display);
 static void gst_gl_display_glutDestroyFBO (GstGLDisplay *display);
 static void gst_gl_display_glutDestroyWindow (GstGLDisplay* display);
 static void gst_gl_display_glutSetVisibleWindow (GstGLDisplay* display);
@@ -100,6 +101,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->cond_video = g_cond_new ();
     display->cond_generateFBO = g_cond_new ();
     display->cond_useFBO = g_cond_new ();
+    display->cond_useFBO2 = g_cond_new ();
     display->cond_destroyFBO = g_cond_new ();
     display->cond_create = g_cond_new ();
     display->cond_destroy = g_cond_new ();
@@ -126,6 +128,9 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->usedTextureFBOWidth = 0;
     display->usedTextureFBOHeight = 0;
     display->glsceneFBO_cb = NULL;
+    display->glsceneFBO_cb2 = NULL;
+    display->p1 = NULL;
+    display->p2 = NULL;
     display->inputTextureWidth = 0;
     display->inputTextureHeight = 0;
     display->inputTexture = 0;
@@ -373,6 +378,10 @@ gst_gl_display_finalize (GObject *object)
         g_cond_free (display->cond_useFBO);
         display->cond_useFBO = NULL;
     }
+    if (display->cond_useFBO2) {
+        g_cond_free (display->cond_useFBO2);
+        display->cond_useFBO2 = NULL;
+    }
     if (display->cond_destroyFBO) {
         g_cond_free (display->cond_destroyFBO);
         display->cond_destroyFBO = NULL;
@@ -391,6 +400,12 @@ gst_gl_display_finalize (GObject *object)
         display->clientDrawCallback = NULL;
     if (display->glsceneFBO_cb)
         display->glsceneFBO_cb = NULL;
+    if (display->glsceneFBO_cb2)
+        display->glsceneFBO_cb2 = NULL;
+    if (display->p1)
+        display->p1 = NULL;
+    if (display->p2)
+        display->p2 = NULL;
     
     //at this step, the next condition imply that the last display has been pushed 
     if (g_hash_table_size (gst_gl_display_map) == 0)
@@ -828,6 +843,53 @@ gst_gl_display_glutUseFBO (GstGLDisplay *display)
 
 /* Called by the idle funtion */
 static void
+gst_gl_display_glutUseFBO2 (GstGLDisplay *display)
+{
+    glutSetWindow (display->glutWinId);
+
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->usedFBO);
+
+    glPushAttrib(GL_VIEWPORT_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    //gluPerspective(45, (gfloat)display->usedTextureFBOWidth/(gfloat)display->usedTextureFBOHeight, 0.1, 100);	
+    gluOrtho2D(0.0, display->usedTextureFBOWidth, 0.0, display->usedTextureFBOHeight);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glViewport(0, 0, display->usedTextureFBOWidth, display->usedTextureFBOHeight);
+
+    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //the opengl scene
+    display->glsceneFBO_cb2 (display->p1, display->p2, display->usedTextureFBOWidth, display->usedTextureFBOHeight);
+
+    glDrawBuffer(GL_NONE);
+
+    glUseProgramObjectARB (0);
+
+    glDisable(GL_TEXTURE_RECTANGLE_ARB);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopAttrib();
+
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    
+    g_cond_signal (display->cond_useFBO2);
+}
+
+
+/* Called by the idle funtion */
+static void
 gst_gl_display_glutDestroyFBO (GstGLDisplay *display)
 {
     
@@ -1061,6 +1123,9 @@ gst_gl_display_glutDispatchAction (GstGLDisplayMsg* msg)
         case GST_GL_DISPLAY_ACTION_USEFBO:
             gst_gl_display_glutUseFBO (msg->display);
             break;
+        case GST_GL_DISPLAY_ACTION_USEFBO2:
+            gst_gl_display_glutUseFBO2 (msg->display);
+            break;
         case GST_GL_DISPLAY_ACTION_OVFBO:
             gst_gldisplay_glutGenerateOutputVideoFBO (msg->display);
             break;
@@ -1094,6 +1159,7 @@ gst_gl_display_checkMsgValidity (GstGLDisplayMsg *msg)
         case GST_GL_DISPLAY_ACTION_GENFBO:
         case GST_GL_DISPLAY_ACTION_DELFBO:
         case GST_GL_DISPLAY_ACTION_USEFBO:
+        case GST_GL_DISPLAY_ACTION_USEFBO2:
         case GST_GL_DISPLAY_ACTION_OVFBO:
             //msg is out of date if the associated display is not in the map
             if (!g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (msg->glutWinId)))
@@ -1367,6 +1433,25 @@ gst_gl_display_useFBO (GstGLDisplay* display, gint textureFBOWidth, gint texture
 
 /* Called by gst_gl elements */
 void 
+gst_gl_display_useFBO2 (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
+                       guint fbo, guint depthbuffer, guint textureFBO, GLCB2 cb2,
+                       gpointer* p1, gpointer* p2)
+{
+    gst_gl_display_lock (display);
+    display->usedFBO = fbo;
+    display->usedDepthBuffer = depthbuffer;
+    display->usedTextureFBO = textureFBO;
+    display->usedTextureFBOWidth = textureFBOWidth;
+    display->usedTextureFBOHeight = textureFBOheight;
+    display->glsceneFBO_cb2 = cb2;
+    gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_USEFBO2, display);
+    g_cond_wait (display->cond_useFBO2, display->mutex);
+    gst_gl_display_unlock (display);
+}
+
+
+/* Called by gst_gl elements */
+void 
 gst_gl_display_rejectFBO (GstGLDisplay* display, guint fbo, 
                           guint depthbuffer, guint texture)
 {
@@ -1475,7 +1560,7 @@ void gst_gl_display_draw(void)
     gst_gl_display_lock (display);
     
     //check if video format has been setup
-    if (!display->currentVideo_format)
+    if (!display->displayedTexture)
 	{
 		gst_gl_display_unlock (display);
 		return;

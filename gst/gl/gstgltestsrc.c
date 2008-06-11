@@ -340,6 +340,7 @@ gst_gl_test_src_setcaps (GstBaseSrc* bsrc, GstCaps* caps)
     gboolean res;
     gint width, height, rate_denominator, rate_numerator;
     GstGLTestSrc* gltestsrc;
+    static gint y = 0;
 
     gltestsrc = GST_GL_TEST_SRC (bsrc);
 
@@ -359,6 +360,16 @@ gst_gl_test_src_setcaps (GstBaseSrc* bsrc, GstCaps* caps)
         GST_DEBUG_OBJECT (gltestsrc, "size %dx%d, %d/%d fps",
             gltestsrc->width, gltestsrc->height,
             gltestsrc->rate_numerator, gltestsrc->rate_denominator);
+
+        gltestsrc->display = gst_gl_display_new ();
+
+        gst_gl_display_initGLContext (gltestsrc->display, 
+            50, y++ * (gltestsrc->height+50) + 50,
+            gltestsrc->width, gltestsrc->height,
+            gltestsrc->width, gltestsrc->height, 0, FALSE);
+
+        gst_gl_display_requestFBO (gltestsrc->display, gltestsrc->width, gltestsrc->height,
+            &gltestsrc->fbo, &gltestsrc->depthbuffer, &gltestsrc->texture);
     }
     return res;
 }
@@ -540,43 +551,43 @@ gst_gl_test_src_create (GstPushSrc* psrc, GstBuffer** buffer)
 
     gst_buffer_set_caps (GST_BUFFER (outbuf),
         GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
+
+    if (src->pattern_type == GST_GL_TEST_SRC_BLINK) 
+    {
+        if (src->n_frames & 0x1)
+            src->make_image = gst_gl_test_src_white;
+        else
+            src->make_image = gst_gl_test_src_black;
+    } 
  
     //blocking call, generate a FBO
-    gst_gl_display_useFBO (src->display, src->width, src->height,
-        src->fbo, src->depthbuffer, src->texture, NULL,
-        0, 0, 0);
+    gst_gl_display_useFBO2 (src->display, src->width, src->height,
+        src->fbo, src->depthbuffer, src->texture, (GLCB2)src->make_image,
+        (gpointer*)src, (gpointer*)outbuf);
     outbuf->textureGL = src->texture;
 
-  /*if (src->pattern_type == GST_GL_TEST_SRC_BLINK) {
-    if (src->n_frames & 0x1) {
-      gst_gl_test_src_white (src, outbuf, src->width, src->height);
-    } else {
-      gst_gl_test_src_black (src, outbuf, src->width, src->height);
+    GST_BUFFER_TIMESTAMP (GST_BUFFER (outbuf)) =
+        src->timestamp_offset + src->running_time;
+    GST_BUFFER_OFFSET (GST_BUFFER (outbuf)) = src->n_frames;
+        src->n_frames++;
+    GST_BUFFER_OFFSET_END (GST_BUFFER (outbuf)) = src->n_frames;
+    if (src->rate_numerator) 
+    {
+        next_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
+            src->rate_denominator, src->rate_numerator);
+        GST_BUFFER_DURATION (GST_BUFFER (outbuf)) = next_time - src->running_time;
+    } 
+    else {
+        next_time = src->timestamp_offset;
+        /* NONE means forever */
+        GST_BUFFER_DURATION (GST_BUFFER (outbuf)) = GST_CLOCK_TIME_NONE;
     }
-  } else {
-    src->make_image (src, outbuf, src->width, src->height);
-  }*/
 
-  GST_BUFFER_TIMESTAMP (GST_BUFFER (outbuf)) =
-      src->timestamp_offset + src->running_time;
-  GST_BUFFER_OFFSET (GST_BUFFER (outbuf)) = src->n_frames;
-  src->n_frames++;
-  GST_BUFFER_OFFSET_END (GST_BUFFER (outbuf)) = src->n_frames;
-  if (src->rate_numerator) {
-    next_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
-        src->rate_denominator, src->rate_numerator);
-    GST_BUFFER_DURATION (GST_BUFFER (outbuf)) = next_time - src->running_time;
-  } else {
-    next_time = src->timestamp_offset;
-    /* NONE means forever */
-    GST_BUFFER_DURATION (GST_BUFFER (outbuf)) = GST_CLOCK_TIME_NONE;
-  }
+    src->running_time = next_time;
 
-  src->running_time = next_time;
+    *buffer = GST_BUFFER (outbuf);
 
-  *buffer = GST_BUFFER (outbuf);
-
-  return GST_FLOW_OK;
+    return GST_FLOW_OK;
 
 not_negotiated:
   {
@@ -602,23 +613,13 @@ no_buffer:
 static gboolean
 gst_gl_test_src_start (GstBaseSrc* basesrc)
 {
-  GstGLTestSrc* src = GST_GL_TEST_SRC (basesrc);
-  static gint y = 0;
+    GstGLTestSrc* src = GST_GL_TEST_SRC (basesrc);
 
-  src->running_time = 0;
-  src->n_frames = 0;
-  src->negotiated = FALSE;
-  src->display = gst_gl_display_new ();
+    src->running_time = 0;
+    src->n_frames = 0;
+    src->negotiated = FALSE;
 
-  gst_gl_display_initGLContext (src->display, 
-        50, y++ * (src->height+50) + 50,
-        src->width, src->height,
-        src->width, src->height, 0, FALSE);
-
-  gst_gl_display_requestFBO (src->display, src->width, src->height,
-            &src->fbo, &src->depthbuffer, &src->texture);
-
-  return TRUE;
+    return TRUE;
 }
 
 static gboolean
@@ -626,7 +627,14 @@ gst_gl_test_src_stop (GstBaseSrc* basesrc)
 {
     GstGLTestSrc* src = GST_GL_TEST_SRC (basesrc);
 
-    g_object_unref (src->display);
+    if (src->display) 
+    {
+        //blocking call, delete the FBO
+        gst_gl_display_rejectFBO (src->display, src->fbo, 
+            src->depthbuffer, src->texture);
+        g_object_unref (src->display);
+        src->display = NULL;
+    }
 
     return TRUE;
 }
