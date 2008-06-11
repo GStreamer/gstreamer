@@ -55,6 +55,7 @@ typedef enum {
     GST_GL_DISPLAY_ACTION_GENFBO,
     GST_GL_DISPLAY_ACTION_DELFBO,
     GST_GL_DISPLAY_ACTION_USEFBO,
+    GST_GL_DISPLAY_ACTION_USEFBO2,
     GST_GL_DISPLAY_ACTION_OVFBO
 	
 } GstGLDisplayAction;
@@ -82,6 +83,7 @@ typedef gboolean (* CDCB) ( GLuint, GLuint, GLuint);
 
 //opengl scene callback
 typedef void (* GLCB) ( GLuint, GLuint, GLuint);
+typedef void (* GLCB2) ( gpointer* p1, gpointer* p2, gint w, gint h);
 
 struct _GstGLDisplay {
     GObject object;
@@ -96,6 +98,7 @@ struct _GstGLDisplay {
     GCond* cond_video;
     GCond* cond_generateFBO;
     GCond* cond_useFBO;
+    GCond* cond_useFBO2;
     GCond* cond_destroyFBO;
     GCond* cond_download;
 
@@ -135,6 +138,9 @@ struct _GstGLDisplay {
     GLuint usedTextureFBOWidth;
     GLuint usedTextureFBOHeight;
     GLCB glsceneFBO_cb;
+    GLCB2 glsceneFBO_cb2;
+    gpointer* p1;
+    gpointer* p2;
     GLuint inputTextureWidth;
     GLuint inputTextureHeight;
     GLuint inputTexture;
@@ -258,6 +264,9 @@ void gst_gl_display_requestFBO (GstGLDisplay* display, gint width, gint height,
 void gst_gl_display_useFBO (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
                             guint fbo, guint depthbuffer, guint textureFBO, GLCB cb,
                             guint inputTextureWidth, guint inputTextureHeight, guint inputTexture);
+void gst_gl_display_useFBO2 (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
+                            guint fbo, guint depthbuffer, guint textureFBO, GLCB2 cb,
+                            gpointer* p1, gpointer* p2);
 void gst_gl_display_rejectFBO (GstGLDisplay* display, guint fbo, 
                                guint depthbuffer, guint texture);
 void gst_gl_display_initDonwloadFBO (GstGLDisplay* display, gint width, gint height);
