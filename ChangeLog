@@ -1,3 +1,10 @@
+2008-06-12  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gstpad.override:
+	* testsuite/test_pad.py:
+	Revert 2008-02-10  Alessandro Decina  <alessandro@nnva.org>
+	Re-opens #514717
+
 2008-06-05  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
