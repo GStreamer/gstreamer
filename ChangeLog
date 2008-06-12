@@ -1,3 +1,11 @@
+2008-06-12  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Sebastien Merle <sylane at gmail dot com>
+
+	* ext/amrwb/gstamrwbdec.c: (gst_amrwbdec_chain):
+	Fix the sign of the data we pass to the decoder so that the decoder
+	compiles with newer reference code as well. Fixes #528618.
+
 2008-06-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/icles/test-oss4.c:

@@ -306,7 +306,7 @@ gst_amrwbdec_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_set_caps (out, GST_PAD_CAPS (amrwbdec->srcpad));
 
     /* decode */
-    D_IF_decode (amrwbdec->handle, (Word8 *) data,
+    D_IF_decode (amrwbdec->handle, (UWord8 *) data,
         (Word16 *) GST_BUFFER_DATA (out), _good_frame);
 
     g_free ((gpointer) data);
