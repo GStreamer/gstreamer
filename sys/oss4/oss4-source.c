@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-oss4src
- * @short_description: record sound from your sound card using OSS4
  *
  * <refsect2>
  * <para>

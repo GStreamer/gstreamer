@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-oss4mixer
- * @short_description: element to control sound input and output levels with OSS4
  *
  * <refsect2>
  * <para>

@@ -18,7 +18,6 @@
  */
 /**
  * SECTION:element-oss4sink
- * @short_description: output sound using OSS4
  *
  * <refsect2>
  * <para>
