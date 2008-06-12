@@ -1,11 +1,3 @@
-2008-06-12  Wim Taymans  <wim.taymans@collabora.co.uk>
-
-	Patch by: Sebastien Merle <sylane at gmail dot com>
-
-	* ext/amrwb/gstamrwbdec.c: (gst_amrwbdec_chain):
-	Fix the sign of the data we pass to the decoder so that the decoder
-	compiles with newer reference code as well. Fixes #528618.
-
 2008-06-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/dc1394/gstdc1394.c:
@@ -35,6 +27,15 @@
 	* sys/oss4/oss4-source.c:
 	  Do not use short_description in section docs for elements. We extract
 	  them from element details and there will be warnings if they differ.
+	  Also fixing up the ChangeLog order.
+
+2008-06-12  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Sebastien Merle <sylane at gmail dot com>
+
+	* ext/amrwb/gstamrwbdec.c: (gst_amrwbdec_chain):
+	Fix the sign of the data we pass to the decoder so that the decoder
+	compiles with newer reference code as well. Fixes #528618.
 
 2008-06-12  Stefan Kost  <ensonic@users.sf.net>
 

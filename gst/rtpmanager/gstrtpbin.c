@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-gstrtpbin
- * @short_description: handle media from one RTP bin
  * @see_also: gstrtpjitterbuffer, gstrtpsession, gstrtpptdemux, gstrtpssrcdemux
  *
  * <refsect2>

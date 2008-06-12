@@ -22,7 +22,6 @@
 
 /**
  * SECTION:element-ivorbisdec
- * @short_description: a decoder that decodes Vorbis to raw audio
  * @see_also: vorbisenc, oggdemux
  *
  * <refsect2>

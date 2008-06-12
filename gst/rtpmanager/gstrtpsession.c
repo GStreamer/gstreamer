@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-gstrtpsession
- * @short_description: an RTP session manager
  * @see_also: gstrtpjitterbuffer, gstrtpbin, gstrtpptdemux, gstrtpssrcdemux
  *
  * <refsect2>

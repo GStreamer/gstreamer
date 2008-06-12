@@ -21,7 +21,6 @@
  */
 /**
  * SECTION:element-videoparse
- * @short_description: parses a byte stream into video frames
  *
  * Converts a byte stream into video frames.
  */

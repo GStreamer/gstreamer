@@ -25,7 +25,6 @@
 
 /**
  * SECTION:element-gstrtpptdemux
- * @short_description: separate RTP payloads based on the payload type
  *
  * <refsect2>
  * <para>

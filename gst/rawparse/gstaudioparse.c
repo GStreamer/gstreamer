@@ -20,7 +20,6 @@
  */
 /**
  * SECTION:element-audioparse
- * @short_description: parses a byte stream into audio frames
  *
  * Converts a byte stream into audio frames.
  */

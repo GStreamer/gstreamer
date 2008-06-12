@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-videodetect
- * @short_description: Detect a pattern in a video signal
  *
  * <refsect2>
  * <para>

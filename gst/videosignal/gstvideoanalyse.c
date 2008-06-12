@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-videoanalyse
- * @short_description: Analyse and report about the video frame
  *
  * <refsect2>
  * <para>

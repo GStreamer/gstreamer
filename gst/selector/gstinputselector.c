@@ -24,7 +24,6 @@
 
 /**
  * SECTION:element-input-selector
- * @short_description: N-to-1 stream selectoring
  * @see_also: #GstOutputSelector
  *
  * Direct one out of N input streams to the output pad.

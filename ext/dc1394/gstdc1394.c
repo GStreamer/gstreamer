@@ -20,7 +20,6 @@
 
 /**
  * SECTION:element-dc1394
- * @short_description: source for IIDC firewire cameras
  *
  * <refsect2>
  * <title>Example launch line</title>

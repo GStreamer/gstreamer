@@ -30,7 +30,6 @@
 
 /**
  * SECTION:element-deinterlace
- * @short_description: Adaptively deinterlace video
  *
  * <refsect2>
  * <para>

@@ -20,7 +20,6 @@
 
 /**
  * SECTION:element-appsink
- * @short_description: hand data to an application
  * @see_also: #GstBaseSrc
  *
  * <refsect2>

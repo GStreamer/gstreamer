@@ -21,7 +21,6 @@
 
 /**
  * SECTION:element-gstrtpssrcdemux
- * @short_description: separate RTP payloads based on the SSRC
  *
  * <refsect2>
  * <para>

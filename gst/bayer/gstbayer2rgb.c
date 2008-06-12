@@ -21,7 +21,7 @@
  * Logic enhanced by William Brack <wbrack@mmm.com.hk>
  */
 
-/*
+/**
  * SECTION:element-bayer2rgb
  *
  * Decodes raw camera bayer (fourcc BA81) to RGB.

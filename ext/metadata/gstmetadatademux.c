@@ -43,7 +43,6 @@
 
 /**
  * SECTION: element-metadatademux
- * @short_description: element that parse or demux metadata from image files
  * @see_also: #metadatamux
  *
  * <refsect2>

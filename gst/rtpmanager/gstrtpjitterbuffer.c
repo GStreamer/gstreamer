@@ -25,8 +25,6 @@
 
 /**
  * SECTION:element-gstrtpjitterbuffer
- * @short_description: buffer, reorder and remove duplicate RTP packets to
- * compensate for network oddities.
  *
  * <refsect2>
  * <para>

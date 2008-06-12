@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-videomark
- * @short_description: Mark a pattern in a video signal
  *
  * <refsect2>
  * <para>
