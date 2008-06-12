@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-gstrtpclient
- * @short_description: handle media from one RTP client
  * @see_also: gstrtpjitterbuffer, gstrtpbin, gstrtpsession
  *
  * <refsect2>
