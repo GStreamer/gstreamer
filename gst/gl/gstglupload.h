@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GST_GLGRAPHICMAKER_H_
-#define _GST_GLGRAPHICMAKER_H_
+#ifndef _GST_GLUPLOAD_H_
+#define _GST_GLUPLOAD_H_
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
@@ -29,18 +29,18 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_GL_GRAPHICMAKER            (gst_gl_graphicmaker_get_type())
-#define GST_GL_GRAPHICMAKER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_GRAPHICMAKER,GstGLGraphicmaker))
-#define GST_IS_GL_GRAPHICMAKER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_GRAPHICMAKER))
-#define GST_GL_GRAPHICMAKER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_GL_GRAPHICMAKER,GstGLGraphicmakerClass))
-#define GST_IS_GL_GRAPHICMAKER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_GRAPHICMAKER))
-#define GST_GL_GRAPHICMAKER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_GRAPHICMAKER,GstGLGraphicmakerClass))
+#define GST_TYPE_GL_UPLOAD            (gst_gl_upload_get_type())
+#define GST_GL_UPLOAD(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_UPLOAD,GstGLUpload))
+#define GST_IS_GL_UPLOAD(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_UPLOAD))
+#define GST_GL_UPLOAD_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_GL_UPLOAD,GstGLUploadClass))
+#define GST_IS_GL_UPLOAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_UPLOAD))
+#define GST_GL_UPLOAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_UPLOAD,GstGLUploadClass))
 
-typedef struct _GstGLGraphicmaker GstGLGraphicmaker;
-typedef struct _GstGLGraphicmakerClass GstGLGraphicmakerClass;
+typedef struct _GstGLUpload GstGLUpload;
+typedef struct _GstGLUploadClass GstGLUploadClass;
 
 
-struct _GstGLGraphicmaker
+struct _GstGLUpload
 {
     GstBaseTransform base_transform;
 
@@ -55,13 +55,13 @@ struct _GstGLGraphicmaker
     gint outHeight;  
 };
 
-struct _GstGLGraphicmakerClass
+struct _GstGLUploadClass
 {
     GstBaseTransformClass base_transform_class;
 };
 
-GType gst_gl_graphicmaker_get_type (void);
+GType gst_gl_upload_get_type (void);
 
 G_END_DECLS
 
-#endif /* _GST_GLGRAPHICMAKER_H_ */
+#endif /* _GST_GLUPLOAD_H_ */

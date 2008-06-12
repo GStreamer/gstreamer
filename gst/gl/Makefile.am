@@ -8,10 +8,10 @@ libgstopengl_la_SOURCES = \
 	gstopengl.c \
 	gstglimagesink.c \
 	gstglimagesink.h \
-	gstglgraphicmaker.c \
-	gstglgraphicmaker.h \
-	gstglvideomaker.c \
-	gstglvideomaker.h \
+	gstglupload.c \
+	gstglupload.h \
+	gstgldownload.c \
+	gstgldownload.h \
 	gstglfiltercube.c \
 	gstglfiltercube.h \
 	gstglfilterapp.c \

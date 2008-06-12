@@ -23,10 +23,10 @@
 #endif
 
 #include "gstgltestsrc.h"
-#include "gstglgraphicmaker.h"
+#include "gstglupload.h"
 #include "gstglfiltercube.h"
 #include "gstglfilterapp.h"
-#include "gstglvideomaker.h"
+#include "gstgldownload.h"
 #include "gstglimagesink.h"
 #include "gstglcolorscale.h"
 
@@ -47,8 +47,8 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
   
-  if (!gst_element_register (plugin, "glgraphicmaker",
-          GST_RANK_NONE, GST_TYPE_GL_GRAPHICMAKER)) {
+  if (!gst_element_register (plugin, "glupload",
+          GST_RANK_NONE, GST_TYPE_GL_UPLOAD)) {
     return FALSE;
   }
 
@@ -62,8 +62,8 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 
-  if (!gst_element_register (plugin, "glvideomaker",
-          GST_RANK_NONE, GST_TYPE_GL_VIDEOMAKER)) {
+  if (!gst_element_register (plugin, "gldownload",
+          GST_RANK_NONE, GST_TYPE_GL_DOWNLOAD)) {
     return FALSE;
   }
 

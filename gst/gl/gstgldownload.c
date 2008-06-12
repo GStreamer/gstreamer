@@ -22,9 +22,9 @@
 #include "config.h"
 #endif
 
-#include "gstglvideomaker.h"
+#include "gstgldownload.h"
 
-#define GST_CAT_DEFAULT gst_gl_videomaker_debug
+#define GST_CAT_DEFAULT gst_gl_download_debug
 	GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails element_details = 
@@ -33,7 +33,7 @@ static const GstElementDetails element_details =
         "A from GL to video flow filter",
         "Julien Isorce <julien.isorce@gmail.com>");
 
-static GstStaticPadTemplate gst_gl_videomaker_src_pad_template =
+static GstStaticPadTemplate gst_gl_download_src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -44,7 +44,7 @@ static GstStaticPadTemplate gst_gl_videomaker_src_pad_template =
         GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
     );
 
-static GstStaticPadTemplate gst_gl_videomaker_sink_pad_template =
+static GstStaticPadTemplate gst_gl_download_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -57,75 +57,75 @@ enum
 };
 
 #define DEBUG_INIT(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_gl_videomaker_debug, "glvideomaker", 0, "glvideomaker element");
+    GST_DEBUG_CATEGORY_INIT (gst_gl_download_debug, "gldownload", 0, "gldownload element");
 
-GST_BOILERPLATE_FULL (GstGLVideomaker, gst_gl_videomaker, GstBaseTransform,
+GST_BOILERPLATE_FULL (GstGLDownload, gst_gl_download, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
-static void gst_gl_videomaker_set_property (GObject* object, guint prop_id,
+static void gst_gl_download_set_property (GObject* object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_gl_videomaker_get_property (GObject* object, guint prop_id,
+static void gst_gl_download_get_property (GObject* object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_gl_videomaker_reset (GstGLVideomaker* videomaker);
-static gboolean gst_gl_videomaker_set_caps (GstBaseTransform* bt,
+static void gst_gl_download_reset (GstGLDownload* download);
+static gboolean gst_gl_download_set_caps (GstBaseTransform* bt,
     GstCaps* incaps, GstCaps* outcaps);
-static GstCaps* gst_gl_videomaker_transform_caps (GstBaseTransform* bt,
+static GstCaps* gst_gl_download_transform_caps (GstBaseTransform* bt,
     GstPadDirection direction, GstCaps* caps);
-static gboolean gst_gl_videomaker_start (GstBaseTransform* bt);
-static gboolean gst_gl_videomaker_stop (GstBaseTransform* bt);
-static GstFlowReturn gst_gl_videomaker_transform (GstBaseTransform* trans,
+static gboolean gst_gl_download_start (GstBaseTransform* bt);
+static gboolean gst_gl_download_stop (GstBaseTransform* bt);
+static GstFlowReturn gst_gl_download_transform (GstBaseTransform* trans,
     GstBuffer* inbuf, GstBuffer* outbuf);
-static gboolean gst_gl_videomaker_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
+static gboolean gst_gl_download_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
     guint* size);
 
 
 static void
-gst_gl_videomaker_base_init (gpointer klass)
+gst_gl_download_base_init (gpointer klass)
 {
     GstElementClass* element_class = GST_ELEMENT_CLASS (klass);
 
     gst_element_class_set_details (element_class, &element_details);
 
     gst_element_class_add_pad_template (element_class,
-        gst_static_pad_template_get (&gst_gl_videomaker_src_pad_template));
+        gst_static_pad_template_get (&gst_gl_download_src_pad_template));
     gst_element_class_add_pad_template (element_class,
-        gst_static_pad_template_get (&gst_gl_videomaker_sink_pad_template));
+        gst_static_pad_template_get (&gst_gl_download_sink_pad_template));
 }
 
 
 static void
-gst_gl_videomaker_class_init (GstGLVideomakerClass* klass)
+gst_gl_download_class_init (GstGLDownloadClass* klass)
 {
     GObjectClass* gobject_class;
 
     gobject_class = (GObjectClass *) klass;
-    gobject_class->set_property = gst_gl_videomaker_set_property;
-    gobject_class->get_property = gst_gl_videomaker_get_property;
+    gobject_class->set_property = gst_gl_download_set_property;
+    gobject_class->get_property = gst_gl_download_get_property;
 
     GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
-        gst_gl_videomaker_transform_caps;
-    GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_videomaker_transform;
-    GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_videomaker_start;
-    GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_videomaker_stop;
-    GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_videomaker_set_caps;
+        gst_gl_download_transform_caps;
+    GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_download_transform;
+    GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_download_start;
+    GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_download_stop;
+    GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_download_set_caps;
     GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size =
-        gst_gl_videomaker_get_unit_size;
+        gst_gl_download_get_unit_size;
 }
 
 
 static void
-gst_gl_videomaker_init (GstGLVideomaker* videomaker, GstGLVideomakerClass* klass)
+gst_gl_download_init (GstGLDownload* download, GstGLDownloadClass* klass)
 {
-    gst_gl_videomaker_reset (videomaker);
+    gst_gl_download_reset (download);
 }
 
 
 static void
-gst_gl_videomaker_set_property (GObject* object, guint prop_id,
+gst_gl_download_set_property (GObject* object, guint prop_id,
     const GValue* value, GParamSpec* pspec)
 {
-    //GstGLVideomaker *videomaker = GST_GL_VIDEOMAKER (object);
+    //GstGLDownload *download = GST_GL_DOWNLOAD (object);
 
     switch (prop_id) 
     {
@@ -137,10 +137,10 @@ gst_gl_videomaker_set_property (GObject* object, guint prop_id,
 
 
 static void
-gst_gl_videomaker_get_property (GObject* object, guint prop_id,
+gst_gl_download_get_property (GObject* object, guint prop_id,
     GValue* value, GParamSpec* pspec)
 {
-    //GstGLVideomaker *videomaker = GST_GL_VIDEOMAKER (object);
+    //GstGLDownload *download = GST_GL_DOWNLOAD (object);
 
     switch (prop_id) {
         default:
@@ -151,39 +151,39 @@ gst_gl_videomaker_get_property (GObject* object, guint prop_id,
 
 
 static void
-gst_gl_videomaker_reset (GstGLVideomaker* videomaker)
+gst_gl_download_reset (GstGLDownload* download)
 {
-    if (videomaker->display) 
+    if (download->display) 
     {
-        g_object_unref (videomaker->display);
-        videomaker->display = NULL;
+        g_object_unref (download->display);
+        download->display = NULL;
     }
 }
 
 
 static gboolean
-gst_gl_videomaker_start (GstBaseTransform* bt)
+gst_gl_download_start (GstBaseTransform* bt)
 {
-    //GstGLVideomaker* videomaker = GST_GL_VIDEOMAKER (bt);
+    //GstGLDownload* download = GST_GL_DOWNLOAD (bt);
 
     return TRUE;
 }
 
 static gboolean
-gst_gl_videomaker_stop (GstBaseTransform* bt)
+gst_gl_download_stop (GstBaseTransform* bt)
 {
-    GstGLVideomaker* videomaker = GST_GL_VIDEOMAKER (bt);
+    GstGLDownload* download = GST_GL_DOWNLOAD (bt);
 
-    gst_gl_videomaker_reset (videomaker);
+    gst_gl_download_reset (download);
 
     return TRUE;
 }
 
 static GstCaps*
-gst_gl_videomaker_transform_caps (GstBaseTransform * bt,
+gst_gl_download_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps* caps)
 {
-    GstGLVideomaker* videomaker;
+    GstGLDownload* download;
     GstStructure* structure;
     GstCaps *newcaps, *newothercaps;
     GstStructure* newstruct;
@@ -192,7 +192,7 @@ gst_gl_videomaker_transform_caps (GstBaseTransform * bt,
     const GValue* framerate_value;
     const GValue* par_value;
 
-    videomaker = GST_GL_VIDEOMAKER (bt);
+    download = GST_GL_DOWNLOAD (bt);
 
     GST_ERROR ("transform caps %" GST_PTR_FORMAT, caps);
 
@@ -236,18 +236,18 @@ gst_gl_videomaker_transform_caps (GstBaseTransform * bt,
 }
 
 static gboolean
-gst_gl_videomaker_set_caps (GstBaseTransform* bt, GstCaps* incaps,
+gst_gl_download_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     GstCaps* outcaps)
 {
-    GstGLVideomaker* videomaker;
+    GstGLDownload* download;
     gboolean ret;
 
-    videomaker = GST_GL_VIDEOMAKER (bt);
+    download = GST_GL_DOWNLOAD (bt);
 
     GST_DEBUG ("called with %" GST_PTR_FORMAT, incaps);
 
-    ret = gst_video_format_parse_caps (outcaps, &videomaker->video_format,
-        &videomaker->width, &videomaker->height);
+    ret = gst_video_format_parse_caps (outcaps, &download->video_format,
+        &download->width, &download->height);
 
     if (!ret) 
     {
@@ -259,7 +259,7 @@ gst_gl_videomaker_set_caps (GstBaseTransform* bt, GstCaps* incaps,
 }
 
 static gboolean
-gst_gl_videomaker_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
+gst_gl_download_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
     guint* size)
 {
 	gboolean ret;
@@ -288,27 +288,27 @@ gst_gl_videomaker_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
 }
 
 static GstFlowReturn
-gst_gl_videomaker_transform (GstBaseTransform* trans, GstBuffer* inbuf,
+gst_gl_download_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     GstBuffer* outbuf)
 {
-    GstGLVideomaker* videomaker = NULL;
+    GstGLDownload* download = NULL;
     GstGLBuffer* gl_inbuf = GST_GL_BUFFER (inbuf);
 
-    videomaker = GST_GL_VIDEOMAKER (trans);
+    download = GST_GL_DOWNLOAD (trans);
 
-    if (videomaker->display == NULL) 
+    if (download->display == NULL) 
     {
-        videomaker->display = g_object_ref (gl_inbuf->display);
-        gst_gl_display_initDonwloadFBO (videomaker->display, videomaker->width, videomaker->height);
+        download->display = g_object_ref (gl_inbuf->display);
+        gst_gl_display_initDonwloadFBO (download->display, download->width, download->height);
     }
     else 
-        g_assert (videomaker->display == gl_inbuf->display);
+        g_assert (download->display == gl_inbuf->display);
 
     GST_DEBUG ("making video %p size %d",
       GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
 
     //blocking call
-    gst_gl_display_videoChanged(videomaker->display, videomaker->video_format, 
+    gst_gl_display_videoChanged(download->display, download->video_format, 
         gl_inbuf->width, gl_inbuf->height, gl_inbuf->textureGL, GST_BUFFER_DATA (outbuf));
 
     return GST_FLOW_OK;

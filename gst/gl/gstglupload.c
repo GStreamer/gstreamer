@@ -22,20 +22,20 @@
 #include "config.h"
 #endif
 
-#include "gstglgraphicmaker.h"
+#include "gstglupload.h"
 
 
-#define GST_CAT_DEFAULT gst_gl_graphicmaker_debug
+#define GST_CAT_DEFAULT gst_gl_upload_debug
 	GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails element_details = 
-    GST_ELEMENT_DETAILS ("OpenGL graphic maker",
+    GST_ELEMENT_DETAILS ("OpenGL upload",
         "Filter/Effect",
         "A from video to GL flow filter",
         "Julien Isorce <julien.isorce@gmail.com>");
 
 /* Source pad definition */
-static GstStaticPadTemplate gst_gl_graphicmaker_src_pad_template =
+static GstStaticPadTemplate gst_gl_upload_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -43,7 +43,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 /* Source pad definition */
-static GstStaticPadTemplate gst_gl_graphicmaker_sink_pad_template =
+static GstStaticPadTemplate gst_gl_upload_sink_pad_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -61,78 +61,78 @@ enum
 };
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_gl_graphicmaker_debug, "glgraphicmaker", 0, "glgraphicmaker element");
+  GST_DEBUG_CATEGORY_INIT (gst_gl_upload_debug, "glupload", 0, "glupload element");
 
-GST_BOILERPLATE_FULL (GstGLGraphicmaker, gst_gl_graphicmaker, GstBaseTransform,
+GST_BOILERPLATE_FULL (GstGLUpload, gst_gl_upload, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
-static void gst_gl_graphicmaker_set_property (GObject* object, guint prop_id,
+static void gst_gl_upload_set_property (GObject* object, guint prop_id,
     const GValue* value, GParamSpec* pspec);
-static void gst_gl_graphicmaker_get_property (GObject* object, guint prop_id,
+static void gst_gl_upload_get_property (GObject* object, guint prop_id,
     GValue* value, GParamSpec* pspec);
 
-static void gst_gl_graphicmaker_reset (GstGLGraphicmaker* graphicmaker);
-static gboolean gst_gl_graphicmaker_set_caps (GstBaseTransform* bt,
+static void gst_gl_upload_reset (GstGLUpload* upload);
+static gboolean gst_gl_upload_set_caps (GstBaseTransform* bt,
     GstCaps* incaps, GstCaps* outcaps);
-static GstCaps *gst_gl_graphicmaker_transform_caps (GstBaseTransform* bt,
+static GstCaps *gst_gl_upload_transform_caps (GstBaseTransform* bt,
     GstPadDirection direction, GstCaps* caps);
-static void gst_gl_graphicmaker_fixate_caps (GstBaseTransform* base, GstPadDirection direction,
+static void gst_gl_upload_fixate_caps (GstBaseTransform* base, GstPadDirection direction,
     GstCaps* caps, GstCaps* othercaps);
-static gboolean gst_gl_graphicmaker_start (GstBaseTransform* bt);
-static gboolean gst_gl_graphicmaker_stop (GstBaseTransform* bt);
-static GstFlowReturn gst_gl_graphicmaker_prepare_output_buffer (GstBaseTransform* trans, 
+static gboolean gst_gl_upload_start (GstBaseTransform* bt);
+static gboolean gst_gl_upload_stop (GstBaseTransform* bt);
+static GstFlowReturn gst_gl_upload_prepare_output_buffer (GstBaseTransform* trans, 
     GstBuffer* input, gint size, GstCaps* caps, GstBuffer** buf);
-static GstFlowReturn gst_gl_graphicmaker_transform (GstBaseTransform* trans,
+static GstFlowReturn gst_gl_upload_transform (GstBaseTransform* trans,
     GstBuffer* inbuf, GstBuffer * outbuf);
-static gboolean gst_gl_graphicmaker_get_unit_size (GstBaseTransform* trans,
+static gboolean gst_gl_upload_get_unit_size (GstBaseTransform* trans,
     GstCaps* caps, guint* size);
 
 
 static void
-gst_gl_graphicmaker_base_init (gpointer klass)
+gst_gl_upload_base_init (gpointer klass)
 {
     GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
     gst_element_class_set_details (element_class, &element_details);
 
     gst_element_class_add_pad_template (element_class,
-        gst_static_pad_template_get (&gst_gl_graphicmaker_src_pad_template));
+        gst_static_pad_template_get (&gst_gl_upload_src_pad_template));
     gst_element_class_add_pad_template (element_class,
-        gst_static_pad_template_get (&gst_gl_graphicmaker_sink_pad_template));
+        gst_static_pad_template_get (&gst_gl_upload_sink_pad_template));
 }
 
 static void
-gst_gl_graphicmaker_class_init (GstGLGraphicmakerClass * klass)
+gst_gl_upload_class_init (GstGLUploadClass * klass)
 {
     GObjectClass *gobject_class;
 
     gobject_class = (GObjectClass *) klass;
-    gobject_class->set_property = gst_gl_graphicmaker_set_property;
-    gobject_class->get_property = gst_gl_graphicmaker_get_property;
+    gobject_class->set_property = gst_gl_upload_set_property;
+    gobject_class->get_property = gst_gl_upload_get_property;
 
     GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
-        gst_gl_graphicmaker_transform_caps;
-    GST_BASE_TRANSFORM_CLASS (klass)->fixate_caps = gst_gl_graphicmaker_fixate_caps;
-    GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_graphicmaker_transform;
-    GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_graphicmaker_start;
-    GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_graphicmaker_stop;
-    GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_graphicmaker_set_caps;
-    GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_graphicmaker_get_unit_size;
+        gst_gl_upload_transform_caps;
+    GST_BASE_TRANSFORM_CLASS (klass)->fixate_caps = gst_gl_upload_fixate_caps;
+    GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_upload_transform;
+    GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_upload_start;
+    GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_upload_stop;
+    GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_upload_set_caps;
+    GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_upload_get_unit_size;
     GST_BASE_TRANSFORM_CLASS (klass)->prepare_output_buffer =
-        gst_gl_graphicmaker_prepare_output_buffer;
+        gst_gl_upload_prepare_output_buffer;
 }
 
 static void
-gst_gl_graphicmaker_init (GstGLGraphicmaker* graphicmaker, GstGLGraphicmakerClass * klass)
+gst_gl_upload_init (GstGLUpload* upload, GstGLUploadClass * klass)
 {
-    gst_gl_graphicmaker_reset (graphicmaker);
+    gst_gl_upload_reset (upload);
 }
 
 static void
-gst_gl_graphicmaker_set_property (GObject* object, guint prop_id,
+gst_gl_upload_set_property (GObject* object, guint prop_id,
     const GValue* value, GParamSpec* pspec)
 {
-    //GstGLGraphicmaker* graphicmaker = GST_GL_GRAPHICMAKER (object);
+    //GstGLUpload* upload = GST_GL_UPLOAD (object);
 
     switch (prop_id) 
     {
@@ -143,10 +143,10 @@ gst_gl_graphicmaker_set_property (GObject* object, guint prop_id,
 }
 
 static void
-gst_gl_graphicmaker_get_property (GObject* object, guint prop_id,
+gst_gl_upload_get_property (GObject* object, guint prop_id,
     GValue* value, GParamSpec* pspec)
 {
-    //GstGLGraphicmaker *graphicmaker = GST_GL_GRAPHICMAKER (object);
+    //GstGLUpload *upload = GST_GL_UPLOAD (object);
 
     switch (prop_id) 
     {
@@ -157,38 +157,38 @@ gst_gl_graphicmaker_get_property (GObject* object, guint prop_id,
 }
 
 static void
-gst_gl_graphicmaker_reset (GstGLGraphicmaker* graphicmaker)
+gst_gl_upload_reset (GstGLUpload* upload)
 { 
-    if (graphicmaker->display) 
+    if (upload->display) 
     {
-        g_object_unref (graphicmaker->display);
-        graphicmaker->display = NULL;
+        g_object_unref (upload->display);
+        upload->display = NULL;
     }
 }
 
 static gboolean
-gst_gl_graphicmaker_start (GstBaseTransform* bt)
+gst_gl_upload_start (GstBaseTransform* bt)
 {
-    //GstGLGraphicmaker* graphicmaker = GST_GL_GRAPHICMAKER (bt);
+    //GstGLUpload* upload = GST_GL_UPLOAD (bt);
 
     return TRUE;
 }
 
 static gboolean
-gst_gl_graphicmaker_stop (GstBaseTransform* bt)
+gst_gl_upload_stop (GstBaseTransform* bt)
 {
-    GstGLGraphicmaker* graphicmaker = GST_GL_GRAPHICMAKER (bt);
+    GstGLUpload* upload = GST_GL_UPLOAD (bt);
 
-    gst_gl_graphicmaker_reset (graphicmaker);
+    gst_gl_upload_reset (upload);
 
     return TRUE;
 }
 
 static GstCaps*
-gst_gl_graphicmaker_transform_caps (GstBaseTransform* bt,
+gst_gl_upload_transform_caps (GstBaseTransform* bt,
     GstPadDirection direction, GstCaps* caps)
 {
-	//GstGLGraphicmaker* graphicmaker = GST_GL_GRAPHICMAKER (bt);
+	//GstGLUpload* upload = GST_GL_UPLOAD (bt);
 	GstStructure* structure = gst_caps_get_structure (caps, 0);
 	GstCaps* newcaps = NULL;
 	const GValue* framerate_value = NULL;
@@ -231,7 +231,7 @@ gst_gl_graphicmaker_transform_caps (GstBaseTransform* bt,
 
 /* from gst-plugins-base "videoscale" code */
 static void
-gst_gl_graphicmaker_fixate_caps (GstBaseTransform* base, GstPadDirection direction,
+gst_gl_upload_fixate_caps (GstBaseTransform* base, GstPadDirection direction,
     GstCaps* caps, GstCaps* othercaps)
 {
     GstStructure *ins, *outs;
@@ -371,10 +371,10 @@ gst_gl_graphicmaker_fixate_caps (GstBaseTransform* base, GstPadDirection directi
 }
 
 static gboolean
-gst_gl_graphicmaker_set_caps (GstBaseTransform* bt, GstCaps* incaps,
+gst_gl_upload_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     GstCaps* outcaps)
 {
-    GstGLGraphicmaker* graphicmaker = GST_GL_GRAPHICMAKER (bt);
+    GstGLUpload* upload = GST_GL_UPLOAD (bt);
     gboolean ret = FALSE;
     GstVideoFormat video_format = GST_VIDEO_FORMAT_UNKNOWN;
     static gint glcontext_y = 0;
@@ -382,10 +382,10 @@ gst_gl_graphicmaker_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     GST_DEBUG ("called with %" GST_PTR_FORMAT, incaps);
 
     ret = gst_video_format_parse_caps (outcaps, &video_format,
-        &graphicmaker->outWidth, &graphicmaker->outHeight);
+        &upload->outWidth, &upload->outHeight);
 
-    ret |= gst_video_format_parse_caps (incaps, &graphicmaker->video_format,
-        &graphicmaker->inWidth, &graphicmaker->inHeight);
+    ret |= gst_video_format_parse_caps (incaps, &upload->video_format,
+        &upload->inWidth, &upload->inHeight);
 
     if (!ret) 
     {
@@ -393,19 +393,19 @@ gst_gl_graphicmaker_set_caps (GstBaseTransform* bt, GstCaps* incaps,
       return FALSE;
     }
 
-    graphicmaker->display = gst_gl_display_new ();
+    upload->display = gst_gl_display_new ();
   
     //init unvisible opengl context
-    gst_gl_display_initGLContext (graphicmaker->display, 
-        50, glcontext_y++ * (graphicmaker->inHeight+50) + 50,
-        graphicmaker->inWidth, graphicmaker->inHeight,
-        graphicmaker->inWidth, graphicmaker->inHeight, 0, FALSE);
+    gst_gl_display_initGLContext (upload->display, 
+        50, glcontext_y++ * (upload->inHeight+50) + 50,
+        upload->inWidth, upload->inHeight,
+        upload->inWidth, upload->inHeight, 0, FALSE);
 
     return ret;
 }
 
 static gboolean
-gst_gl_graphicmaker_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
+gst_gl_upload_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
                                guint* size)
 {
     gboolean ret;
@@ -435,20 +435,20 @@ gst_gl_graphicmaker_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
 }
 
 static GstFlowReturn
-gst_gl_graphicmaker_prepare_output_buffer (GstBaseTransform* trans,
+gst_gl_upload_prepare_output_buffer (GstBaseTransform* trans,
     GstBuffer* input, gint size, GstCaps* caps, GstBuffer** buf)
 {
-    GstGLGraphicmaker* graphicmaker;
+    GstGLUpload* upload;
     GstGLBuffer* gl_outbuf;
 
-    graphicmaker = GST_GL_GRAPHICMAKER (trans);
+    upload = GST_GL_UPLOAD (trans);
 
     //blocking call
-    gl_outbuf = gst_gl_buffer_new_from_video_format (graphicmaker->display,
-        graphicmaker->video_format, 
-        graphicmaker->outWidth, graphicmaker->outHeight,
-        graphicmaker->inWidth, graphicmaker->inHeight,
-        graphicmaker->inWidth, graphicmaker->inHeight);
+    gl_outbuf = gst_gl_buffer_new_from_video_format (upload->display,
+        upload->video_format, 
+        upload->outWidth, upload->outHeight,
+        upload->inWidth, upload->inHeight,
+        upload->inWidth, upload->inHeight);
     *buf = GST_BUFFER (gl_outbuf);
     gst_buffer_set_caps (*buf, caps);
 
@@ -457,19 +457,19 @@ gst_gl_graphicmaker_prepare_output_buffer (GstBaseTransform* trans,
 
 
 static GstFlowReturn
-gst_gl_graphicmaker_transform (GstBaseTransform* trans, GstBuffer* inbuf,
+gst_gl_upload_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     GstBuffer* outbuf)
 {
-    GstGLGraphicmaker* graphicmaker;
+    GstGLUpload* upload;
     GstGLBuffer* gl_outbuf = GST_GL_BUFFER (outbuf);
 
-    graphicmaker = GST_GL_GRAPHICMAKER (trans);
+    upload = GST_GL_UPLOAD (trans);
 
     GST_DEBUG ("making graphic %p size %d",
         GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf));
 
     //blocking call
-    gst_gl_display_textureChanged(graphicmaker->display, graphicmaker->video_format,
+    gst_gl_display_textureChanged(upload->display, upload->video_format,
         gl_outbuf->texture, gl_outbuf->texture_u, gl_outbuf->texture_v, 
         gl_outbuf->width, gl_outbuf->height, GST_BUFFER_DATA (inbuf), &gl_outbuf->textureGL);
 
