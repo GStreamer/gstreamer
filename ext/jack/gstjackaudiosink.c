@@ -21,7 +21,6 @@
 
 /**
  * SECTION:element-jackaudiosink
- * @short_description: JACK audio sink
  * @see_also: #GstBaseAudioSink, #GstRingBuffer
  *
  * <refsect2>
