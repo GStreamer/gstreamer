@@ -71,6 +71,7 @@ struct _GstAppSrc
   GstAppStreamType stream_type;
   guint64 max_bytes;
   GstFormat format;
+  gboolean block;
 
   gboolean flushing;
   gboolean started;

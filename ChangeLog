@@ -1,3 +1,23 @@
+2008-06-12  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* examples/app/.cvsignore:
+	* examples/app/Makefile.am:
+	* examples/app/appsink-src.c: (on_new_buffer_from_source),
+	(on_source_message), (on_sink_message), (main):
+	Add beefed up example app from bug #413418. It now also uses appsink
+	instead of fakesink for more ultimate coolness.
+
+	* gst-libs/gst/app/gstappsrc.c: (gst_app_src_class_init),
+	(gst_app_src_init), (gst_app_src_set_property),
+	(gst_app_src_get_property), (gst_app_src_unlock),
+	(gst_app_src_unlock_stop), (gst_app_src_create),
+	(gst_app_src_set_max_bytes), (gst_app_src_push_buffer),
+	(gst_app_src_end_of_stream):
+	* gst-libs/gst/app/gstappsrc.h:
+	Add block property to allow push based implementation to block when we
+	fill up the appsrc queues.
+	Emit the enough-data signal while releasing our lock.
+
 2008-06-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* examples/app/.cvsignore:
