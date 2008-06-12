@@ -8,6 +8,36 @@
 
 2008-06-12  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/dc1394/gstdc1394.c:
+	* ext/ivorbis/vorbisdec.c:
+	* ext/jack/gstjackaudiosink.c:
+	* ext/metadata/gstmetadatademux.c:
+	* ext/mythtv/gstmythtvsrc.c:
+	* ext/theora/theoradec.c:
+	* gst-libs/gst/app/gstappsink.c:
+	* gst/bayer/gstbayer2rgb.c:
+	* gst/deinterlace/gstdeinterlace.c:
+	* gst/rawparse/gstaudioparse.c:
+	* gst/rawparse/gstvideoparse.c:
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpclient.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/gstrtpptdemux.c:
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	* gst/selector/gstinputselector.c:
+	* gst/selector/gstoutputselector.c:
+	* gst/videosignal/gstvideoanalyse.c:
+	* gst/videosignal/gstvideodetect.c:
+	* gst/videosignal/gstvideomark.c:
+	* sys/oss4/oss4-mixer.c:
+	* sys/oss4/oss4-sink.c:
+	* sys/oss4/oss4-source.c:
+	  Do not use short_description in section docs for elements. We extract
+	  them from element details and there will be warnings if they differ.
+
+2008-06-12  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/icles/test-oss4.c:
 	  Include stdlib.h.
 
