@@ -1,3 +1,8 @@
+2008-06-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/icles/test-oss4.c:
+	  Include stdlib.h.
+
 2008-06-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Based on a patch by: Martin Eikermann <meiker at upb dot de>
