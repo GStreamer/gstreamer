@@ -1,3 +1,9 @@
+2008-06-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavimux.c:
+	  Simplify code. gst_tag_list_merge() does the NULL checks. Add a FIXME
+	  for a random constant in tagmuxing code.
+
 2008-06-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/debug/gsttaginject.c:

@@ -940,20 +940,16 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
   /* need to take snapshot of tags now */
   iface_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (avimux));
   if ((iface_tags || avimux->tags) && !avimux->tags_snap) {
-    if (iface_tags && avimux->tags) {
-      tags = gst_tag_list_merge (iface_tags, avimux->tags,
-          GST_TAG_MERGE_APPEND);
-    } else if (iface_tags) {
-      tags = gst_tag_list_copy (iface_tags);
-    } else {
-      tags = gst_tag_list_copy (avimux->tags);
-    }
+    /* gst_tag_list_merge() will handle NULL for either or both lists fine */
+    tags = gst_tag_list_merge (iface_tags, avimux->tags,
+        gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (avimux)));
     gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER,
         PACKAGE_STRING " AVI muxer", NULL);
   } else {
     tags = avimux->tags_snap;
   }
   avimux->tags_snap = tags;
+  /* FIXME: that should be the strlen of all tags + header sizes */
   if (avimux->tags_snap)
     size += 1024;
 
