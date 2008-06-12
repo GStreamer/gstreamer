@@ -22,6 +22,7 @@
 #endif
 
 #include <string.h>
+#include <stdlib.h>
 
 #include <gst/gst.h>
 #include <gst/interfaces/propertyprobe.h>
