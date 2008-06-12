@@ -3,3 +3,4 @@ appsrc-ra
 appsrc-seekable
 appsrc-stream
 appsrc-stream2
+appsink-src

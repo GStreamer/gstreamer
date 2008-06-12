@@ -57,6 +57,7 @@ enum
 #define DEFAULT_PROP_STREAM_TYPE   GST_APP_STREAM_TYPE_STREAM
 #define DEFAULT_PROP_MAX_BYTES     200000
 #define DEFAULT_PROP_FORMAT        GST_FORMAT_BYTES
+#define DEFAULT_PROP_BLOCK         FALSE
 
 enum
 {
@@ -66,6 +67,7 @@ enum
   PROP_STREAM_TYPE,
   PROP_MAX_BYTES,
   PROP_FORMAT,
+  PROP_BLOCK,
 
   PROP_LAST
 };
@@ -187,6 +189,11 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           0, G_MAXUINT64, DEFAULT_PROP_MAX_BYTES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_BLOCK,
+      g_param_spec_boolean ("block", "Block",
+          "Block push-buffer when max-bytes are queued",
+          DEFAULT_PROP_BLOCK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstAppSrc::need-data:
    * @appsrc: the appsrc element that emited the signal
@@ -287,6 +294,7 @@ gst_app_src_init (GstAppSrc * appsrc, GstAppSrcClass * klass)
   appsrc->stream_type = DEFAULT_PROP_STREAM_TYPE;
   appsrc->max_bytes = DEFAULT_PROP_MAX_BYTES;
   appsrc->format = DEFAULT_PROP_FORMAT;
+  appsrc->block = DEFAULT_PROP_BLOCK;
 }
 
 static void
@@ -346,6 +354,9 @@ gst_app_src_set_property (GObject * object, guint prop_id,
     case PROP_FORMAT:
       appsrc->format = g_value_get_enum (value);
       break;
+    case PROP_BLOCK:
+      appsrc->block = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -382,6 +393,9 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_FORMAT:
       g_value_set_enum (value, appsrc->format);
       break;
+    case PROP_BLOCK:
+      g_value_set_boolean (value, appsrc->block);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -396,7 +410,7 @@ gst_app_src_unlock (GstBaseSrc * bsrc)
   g_mutex_lock (appsrc->mutex);
   GST_DEBUG_OBJECT (appsrc, "unlock start");
   appsrc->flushing = TRUE;
-  g_cond_signal (appsrc->cond);
+  g_cond_broadcast (appsrc->cond);
   g_mutex_unlock (appsrc->mutex);
 
   return TRUE;
@@ -410,7 +424,7 @@ gst_app_src_unlock_stop (GstBaseSrc * bsrc)
   g_mutex_lock (appsrc->mutex);
   GST_DEBUG_OBJECT (appsrc, "unlock stop");
   appsrc->flushing = FALSE;
-  g_cond_signal (appsrc->cond);
+  g_cond_broadcast (appsrc->cond);
   g_mutex_unlock (appsrc->mutex);
 
   return TRUE;
@@ -580,6 +594,9 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
       }
 
       gst_buffer_set_caps (*buf, appsrc->caps);
+
+      /* signal that we removed an item */
+      g_cond_broadcast (appsrc->cond);
 
       ret = GST_FLOW_OK;
       break;
@@ -806,7 +823,7 @@ gst_app_src_set_max_bytes (GstAppSrc * appsrc, guint64 max)
     GST_DEBUG_OBJECT (appsrc, "setting max-bytes to %u", max);
     appsrc->max_bytes = max;
     /* signal the change */
-    g_cond_signal (appsrc->cond);
+    g_cond_broadcast (appsrc->cond);
   }
   g_mutex_unlock (appsrc->mutex);
 }
@@ -849,28 +866,55 @@ gst_app_src_get_max_bytes (GstAppSrc * appsrc)
 GstFlowReturn
 gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
 {
+  gboolean first = TRUE;
+
   g_return_val_if_fail (appsrc, GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
   g_mutex_lock (appsrc->mutex);
-  /* can't accept buffers when we are flushing or EOS */
-  if (appsrc->flushing)
-    goto flushing;
 
-  if (appsrc->is_eos)
-    goto eos;
+  while (TRUE) {
+    /* can't accept buffers when we are flushing or EOS */
+    if (appsrc->flushing)
+      goto flushing;
+
+    if (appsrc->is_eos)
+      goto eos;
+
+    if (appsrc->queued_bytes >= appsrc->max_bytes) {
+      GST_DEBUG_OBJECT (appsrc, "queue filled (%u >= %u)",
+          appsrc->queued_bytes, appsrc->max_bytes);
+
+      if (first) {
+        /* only signal on the first push */
+        g_mutex_unlock (appsrc->mutex);
+
+        g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_ENOUGH_DATA], 0,
+            NULL);
+
+        g_mutex_lock (appsrc->mutex);
+        /* continue to check for flushing/eos after releasing the lock */
+        first = FALSE;
+        continue;
+      }
+      if (appsrc->block) {
+        GST_DEBUG_OBJECT (appsrc, "waiting for free space");
+        /* we are filled, wait until a buffer gets popped or when we
+         * flush. */
+        g_cond_wait (appsrc->cond, appsrc->mutex);
+      } else {
+        /* no need to wait for free space, we just pump data into the queue */
+        break;
+      }
+    } else
+      break;
+  }
 
   GST_DEBUG_OBJECT (appsrc, "queueing buffer %p", buffer);
   g_queue_push_tail (appsrc->queue, buffer);
-
   appsrc->queued_bytes += GST_BUFFER_SIZE (buffer);
-  if (appsrc->queued_bytes >= appsrc->max_bytes) {
-    GST_DEBUG_OBJECT (appsrc, "queue filled (%u >= %u), signal enough-data",
-        appsrc->queued_bytes, appsrc->max_bytes);
-    g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_ENOUGH_DATA], 0, NULL);
-  }
-  g_cond_signal (appsrc->cond);
+  g_cond_broadcast (appsrc->cond);
   g_mutex_unlock (appsrc->mutex);
 
   return GST_FLOW_OK;
@@ -914,7 +958,7 @@ gst_app_src_end_of_stream (GstAppSrc * appsrc)
 
   GST_DEBUG_OBJECT (appsrc, "sending EOS");
   appsrc->is_eos = TRUE;
-  g_cond_signal (appsrc->cond);
+  g_cond_broadcast (appsrc->cond);
   g_mutex_unlock (appsrc->mutex);
 
   return GST_FLOW_OK;
