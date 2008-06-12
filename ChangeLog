@@ -1,5 +1,10 @@
 2008-06-12  Stefan Kost  <ensonic@users.sf.net>
 
+	* examples/app/.cvsignore:
+	  Ignore more.
+
+2008-06-12  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/dc1394/gstdc1394.c:
 	* ext/ivorbis/vorbisdec.c:
 	* ext/jack/gstjackaudiosink.c:
