@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-output-selector
- * @short_description: 1-to-N stream selectoring
  * @see_also: #GstTee, #GstInputSelector
  *
  * Direct input stream to one out of N output pads.
