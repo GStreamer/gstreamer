@@ -1935,7 +1935,7 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
     gst_object_sink (stream->udpsrc[0]);
 
     /* change state */
-    gst_element_set_state (stream->udpsrc[0], GST_STATE_READY);
+    gst_element_set_state (stream->udpsrc[0], GST_STATE_PAUSED);
   }
 
   /* creating another UDP source */
@@ -1951,7 +1951,7 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
     gst_object_ref (stream->udpsrc[1]);
     gst_object_sink (stream->udpsrc[1]);
 
-    gst_element_set_state (stream->udpsrc[1], GST_STATE_READY);
+    gst_element_set_state (stream->udpsrc[1], GST_STATE_PAUSED);
   }
   return TRUE;
 

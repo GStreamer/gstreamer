@@ -1,3 +1,9 @@
+2008-06-12  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_stream_configure_mcast):
+	Set udpsrc for receiving data from multicast groups to PAUSED instead of
+	leaving them in READY. Fixes #537832.
+
 2008-06-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavimux.c:
