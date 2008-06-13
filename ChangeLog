@@ -1,3 +1,10 @@
+2008-06-13  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/Makefile.am:
+	* ffmpegrev:
+	Bump upstream ffmpeg revision to todays (rev 13766).
+	ffmpeg now requires libbz2.
+
 2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):

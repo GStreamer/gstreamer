@@ -15,7 +15,7 @@ libgstffmpeg_la_SOURCES = gstffmpeg.c	\
 
 libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	$(FFMPEG_CFLAGS)
-libgstffmpeg_la_LIBADD = $(FFMPEG_LIBS) $(GST_BASE_LIBS) $(LIBM) -lz
+libgstffmpeg_la_LIBADD = $(FFMPEG_LIBS) $(GST_BASE_LIBS) $(LIBM) -lz -lbz2
 libgstffmpeg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DARWIN_LDFLAGS)
 
 if HAVE_FFMPEG_UNINSTALLED
