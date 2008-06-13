@@ -1,3 +1,27 @@
+2008-06-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_chain),
+	(close_library), (open_library),
+	(gst_real_audio_dec_probe_modules), (gst_real_audio_dec_getcaps),
+	(gst_real_audio_dec_setcaps), (gst_real_audio_dec_init),
+	(gst_real_audio_dec_change_state), (gst_real_audio_dec_finalize):
+	Add raversions we can support on the caps.
+	Refactor the loading of the real codecs like realvideo so that we can
+	implement probing.
+	Probe all supported formats by trying to load the .so files, only report
+	the versions on the caps that we can actually load.
+
+	* gst/real/gstrealvideodec.c: (gst_real_video_dec_chain),
+	(gst_real_video_dec_getcaps), (gst_real_video_dec_setcaps),
+	(open_library), (close_library),
+	(gst_real_video_dec_probe_modules),
+	(gst_real_video_dec_change_state), (gst_real_video_dec_init),
+	(gst_real_video_dec_finalize), (gst_real_video_dec_class_init):
+	* gst/real/gstrealvideodec.h:
+	Change the loading of the library like the audio decoder.
+	Probe the supported formats by trying to load the .so files and only
+	report the versions on the caps that we can actually load.
+
 2008-06-13  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	patch by: Sebastian Pölsterl

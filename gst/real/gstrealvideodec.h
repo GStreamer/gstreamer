@@ -35,11 +35,6 @@ typedef struct _GstRealVideoDec GstRealVideoDec;
 typedef struct _GstRealVideoDecClass GstRealVideoDecClass;
 typedef enum _GstRealVideoDecVersion GstRealVideoDecVersion;
 
-typedef guint32 (*GstRealVideoDecMessageFunc) (gpointer, gpointer);
-typedef guint32 (*GstRealVideoDecFreeFunc) (gpointer);
-typedef guint32 (*GstRealVideoDecInitFunc) (gpointer, gpointer);
-typedef guint32 (*GstRealVideoDecTransformFunc) (gchar *, gchar *, gpointer, gpointer, gpointer);
-
 enum _GstRealVideoDecVersion
 {
   GST_REAL_VIDEO_DEC_VERSION_2 = 2,
@@ -50,13 +45,21 @@ enum _GstRealVideoDecVersion
 typedef struct {
   GModule *module;
 
+  gpointer context;
+
+  guint32 (*Init) (gpointer, gpointer);
+  guint32 (*Free) (gpointer);
+  guint32 (*Transform) (gchar *, gchar *, gpointer, gpointer, gpointer);
+  guint32 (*Message) (gpointer, gpointer);
+
+  /*
   GstRealVideoDecMessageFunc custom_message;
   GstRealVideoDecFreeFunc free;
   GstRealVideoDecInitFunc init;
   GstRealVideoDecTransformFunc transform;
+  */
 
-  gpointer context;
-} GstRealVideoDecHooks;
+} GstRVDecLibrary;
 
 struct _GstRealVideoDec
 {
@@ -72,14 +75,18 @@ struct _GstRealVideoDec
 
   gint error_count;
 
-  /* Hooks */
-  GstRealVideoDecHooks hooks;
+  /* Library functions */
+  GstRVDecLibrary lib;
 
   /* Properties */
   gchar *real_codecs_path;
+  gboolean checked_modules;
   gchar *rv20_names;
+  gboolean valid_rv20;
   gchar *rv30_names;
+  gboolean valid_rv30;
   gchar *rv40_names;
+  gboolean valid_rv40;
   gint max_errors;
 };
 

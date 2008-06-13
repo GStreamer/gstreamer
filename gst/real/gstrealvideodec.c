@@ -65,8 +65,8 @@ GST_BOILERPLATE (GstRealVideoDec, gst_real_video_dec, GstElement,
     GST_TYPE_ELEMENT);
 
 static gboolean open_library (GstRealVideoDec * dec,
-    GstRealVideoDecHooks * hooks, GstRealVideoDecVersion version);
-static void close_library (GstRealVideoDecHooks hooks);
+    GstRealVideoDecVersion version, GstRVDecLibrary * lib);
+static void close_library (GstRealVideoDec * dec, GstRVDecLibrary * lib);
 
 typedef struct
 {
@@ -103,7 +103,7 @@ gst_real_video_dec_chain (GstPad * pad, GstBuffer * in)
 
   dec = GST_REAL_VIDEO_DEC (GST_PAD_PARENT (pad));
 
-  if (G_UNLIKELY (dec->hooks.transform == NULL || dec->hooks.module == NULL))
+  if (G_UNLIKELY (dec->lib.Transform == NULL || dec->lib.module == NULL))
     goto not_negotiated;
 
   data = GST_BUFFER_DATA (in);
@@ -162,9 +162,9 @@ gst_real_video_dec_chain (GstPad * pad, GstBuffer * in)
   /* jump over the frag table to the fragments */
   data += frag_size;
 
-  result = dec->hooks.transform (
+  result = dec->lib.Transform (
       (gchar *) data,
-      (gchar *) GST_BUFFER_DATA (out), &tin, &tout, dec->hooks.context);
+      (gchar *) GST_BUFFER_DATA (out), &tin, &tout, dec->lib.context);
   if (result)
     goto could_not_transform;
 
@@ -243,10 +243,51 @@ could_not_push:
   }
 }
 
-static gboolean
-gst_real_video_dec_activate_push (GstPad * pad, gboolean active)
+static GstCaps *
+gst_real_video_dec_getcaps (GstPad * pad)
 {
-  return TRUE;
+  GstRealVideoDec *dec = GST_REAL_VIDEO_DEC (GST_PAD_PARENT (pad));
+  GstCaps *res;
+
+  if (dec->checked_modules) {
+    GValue versions = { 0 };
+    GValue version = { 0 };
+
+    GST_LOG_OBJECT (dec, "constructing caps");
+    res = gst_caps_new_empty ();
+
+    g_value_init (&versions, GST_TYPE_LIST);
+    g_value_init (&version, G_TYPE_INT);
+
+    if (dec->valid_rv20) {
+      g_value_set_int (&version, GST_REAL_VIDEO_DEC_VERSION_2);
+      gst_value_list_append_value (&versions, &version);
+    }
+    if (dec->valid_rv30) {
+      g_value_set_int (&version, GST_REAL_VIDEO_DEC_VERSION_3);
+      gst_value_list_append_value (&versions, &version);
+    }
+    if (dec->valid_rv40) {
+      g_value_set_int (&version, GST_REAL_VIDEO_DEC_VERSION_4);
+      gst_value_list_append_value (&versions, &version);
+    }
+
+    if (gst_value_list_get_size (&versions) > 0) {
+      res = gst_caps_new_simple ("video/x-pn-realvideo", NULL);
+      gst_structure_set_value (gst_caps_get_structure (res, 0),
+          "rmversion", &versions);
+    } else {
+      res = gst_caps_new_empty ();
+    }
+    g_value_unset (&versions);
+    g_value_unset (&version);
+  } else {
+    GST_LOG_OBJECT (dec, "returning padtemplate caps");
+    res = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
+  GST_LOG_OBJECT (dec, "returning caps %" GST_PTR_FORMAT, res);
+
+  return res;
 }
 
 static gboolean
@@ -259,7 +300,6 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
   gchar data[36];
   gboolean bres;
   const GValue *v;
-  GstRealVideoDecHooks hooks = { 0, 0, 0, 0, 0, 0 };
 
   if (!gst_structure_get_int (s, "rmversion", &version) ||
       !gst_structure_get_int (s, "width", (gint *) & width) ||
@@ -272,8 +312,10 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_LOG_OBJECT (dec, "Setting version to %d", version);
 
-  if (!open_library (dec, &hooks, version))
-    return FALSE;
+  close_library (dec, &dec->lib);
+
+  if (!open_library (dec, version, &dec->lib))
+    goto open_failed;
 
   /* Initialize REAL driver. */
   GST_WRITE_UINT16_LE (data + 0, 11);
@@ -285,8 +327,7 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
   GST_WRITE_UINT32_LE (data + 16, 1);
   GST_WRITE_UINT32_LE (data + 20, format);
 
-  res = hooks.init (&data, &hooks.context);
-  if (res)
+  if ((res = dec->lib.Init (&data, &dec->lib.context)))
     goto could_not_initialize;
 
   if ((v = gst_structure_get_value (s, "codec_data"))) {
@@ -328,7 +369,7 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
     for (i = 0; i < bufsize; i++)
       msgdata[i + 2] = 4 * (guint32) bufdata[i];
 
-    res = hooks.custom_message (&msg, hooks.context);
+    res = dec->lib.Message (&msg, dec->lib.context);
 
     g_free (msgdata);
     if (res)
@@ -344,8 +385,6 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
   if (!bres)
     goto could_not_set_caps;
 
-  close_library (dec->hooks);
-  dec->hooks = hooks;
   dec->version = version;
   dec->width = width;
   dec->height = height;
@@ -361,34 +400,35 @@ missing_keys:
     GST_ERROR_OBJECT (dec, "Could not find all necessary keys in structure.");
     return FALSE;
   }
-
+open_failed:
+  {
+    GST_ERROR_OBJECT (dec, "failed to open library");
+    return FALSE;
+  }
 could_not_initialize:
   {
-    close_library (hooks);
     GST_ERROR_OBJECT (dec, "Initialization of REAL driver failed (%i).", res);
+    close_library (dec, &dec->lib);
     return FALSE;
   }
-
 could_not_allocate:
   {
-    close_library (hooks);
     GST_ERROR_OBJECT (dec, "Could not allocate memory.");
+    close_library (dec, &dec->lib);
     return FALSE;
   }
-
 could_not_send_message:
   {
-    close_library (hooks);
     GST_ERROR_OBJECT (dec, "Failed to send custom message needed for "
         "initialization (%i).", res);
+    close_library (dec, &dec->lib);
     return FALSE;
   }
-
 could_not_set_caps:
   {
-    close_library (hooks);
     GST_ERROR_OBJECT (dec, "Could not convince peer to accept dimensions "
         "%i x %i.", dec->width, dec->height);
+    close_library (dec, &dec->lib);
     return FALSE;
   }
 }
@@ -396,8 +436,8 @@ could_not_set_caps:
 /* Attempts to open the correct library for the configured version */
 
 static gboolean
-open_library (GstRealVideoDec * dec, GstRealVideoDecHooks * hooks,
-    GstRealVideoDecVersion version)
+open_library (GstRealVideoDec * dec, GstRealVideoDecVersion version,
+    GstRVDecLibrary * lib)
 {
   gpointer rv_custom_msg, rv_free, rv_init, rv_transform;
   GModule *module = NULL;
@@ -464,11 +504,11 @@ codec_search_done:
     goto could_not_load;
   }
 
-  hooks->init = (GstRealVideoDecInitFunc) rv_init;
-  hooks->free = (GstRealVideoDecFreeFunc) rv_free;
-  hooks->transform = (GstRealVideoDecTransformFunc) rv_transform;
-  hooks->custom_message = (GstRealVideoDecMessageFunc) rv_custom_msg;
-  hooks->module = module;
+  lib->Init = rv_init;
+  lib->Free = rv_free;
+  lib->Transform = rv_transform;
+  lib->Message = rv_custom_msg;
+  lib->module = module;
 
   dec->error_count = 0;
 
@@ -479,44 +519,93 @@ unknown_version:
     GST_ERROR_OBJECT (dec, "Cannot handle version %i.", version);
     return FALSE;
   }
-
 could_not_open:
   {
     GST_ERROR_OBJECT (dec, "Could not open library '%s' in '%s': %s", names,
         path, g_module_error ());
     return FALSE;
   }
-
 could_not_load:
   {
-    close_library (*hooks);
+    close_library (dec, lib);
     GST_ERROR_OBJECT (dec, "Could not load all symbols: %s", g_module_error ());
     return FALSE;
   }
 }
 
 static void
-close_library (GstRealVideoDecHooks hooks)
+close_library (GstRealVideoDec * dec, GstRVDecLibrary * lib)
 {
-  if (hooks.context && hooks.free)
-    hooks.free (hooks.context);
-
-  if (hooks.module) {
-    g_module_close (hooks.module);
-    hooks.module = NULL;
+  if (lib->context) {
+    GST_LOG_OBJECT (dec, "closing library");
+    if (lib->Free)
+      lib->Free (lib->context);
   }
+  if (lib->module) {
+    GST_LOG_OBJECT (dec, "closing library module");
+    g_module_close (lib->module);
+    lib->module = NULL;
+  }
+  memset (lib, 0, sizeof (*lib));
+}
+
+static void
+gst_real_video_dec_probe_modules (GstRealVideoDec * dec)
+{
+  GstRVDecLibrary dummy = { NULL };
+
+  if ((dec->valid_rv20 =
+          open_library (dec, GST_REAL_VIDEO_DEC_VERSION_2, &dummy)))
+    close_library (dec, &dummy);
+  if ((dec->valid_rv30 =
+          open_library (dec, GST_REAL_VIDEO_DEC_VERSION_3, &dummy)))
+    close_library (dec, &dummy);
+  if ((dec->valid_rv40 =
+          open_library (dec, GST_REAL_VIDEO_DEC_VERSION_4, &dummy)))
+    close_library (dec, &dummy);
+}
+
+static GstStateChangeReturn
+gst_real_video_dec_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstRealVideoDec *dec = GST_REAL_VIDEO_DEC (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      gst_real_video_dec_probe_modules (dec);
+      dec->checked_modules = TRUE;
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      close_library (dec, &dec->lib);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      dec->checked_modules = FALSE;
+      break;
+    default:
+      break;
+  }
+  return ret;
 }
 
 static void
 gst_real_video_dec_init (GstRealVideoDec * dec, GstRealVideoDecClass * klass)
 {
   dec->snk = gst_pad_new_from_static_template (&snk_t, "sink");
+  gst_pad_set_getcaps_function (dec->snk,
+      GST_DEBUG_FUNCPTR (gst_real_video_dec_getcaps));
   gst_pad_set_setcaps_function (dec->snk,
       GST_DEBUG_FUNCPTR (gst_real_video_dec_setcaps));
   gst_pad_set_chain_function (dec->snk,
       GST_DEBUG_FUNCPTR (gst_real_video_dec_chain));
-  gst_pad_set_activatepush_function (dec->snk,
-      GST_DEBUG_FUNCPTR (gst_real_video_dec_activate_push));
   gst_element_add_pad (GST_ELEMENT (dec), dec->snk);
 
   dec->src = gst_pad_new_from_static_template (&src_t, "src");
@@ -542,8 +631,7 @@ gst_real_video_dec_finalize (GObject * object)
 {
   GstRealVideoDec *dec = GST_REAL_VIDEO_DEC (object);
 
-  close_library (dec->hooks);
-  memset (&dec->hooks, 0, sizeof (dec->hooks));
+  close_library (dec, &dec->lib);
 
   if (dec->real_codecs_path) {
     g_free (dec->real_codecs_path);
@@ -641,10 +729,13 @@ static void
 gst_real_video_dec_class_init (GstRealVideoDecClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   object_class->set_property = gst_real_video_dec_set_property;
   object_class->get_property = gst_real_video_dec_get_property;
   object_class->finalize = gst_real_video_dec_finalize;
+
+  element_class->change_state = gst_real_video_dec_change_state;
 
   g_object_class_install_property (object_class, PROP_REAL_CODECS_PATH,
       g_param_spec_string ("real-codecs-path",

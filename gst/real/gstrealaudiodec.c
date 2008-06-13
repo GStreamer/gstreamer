@@ -38,7 +38,9 @@ GST_ELEMENT_DETAILS ("RealAudio decoder",
 
 static GstStaticPadTemplate snk_t =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-pn-realaudio; " "audio/x-sipro "));
+    GST_STATIC_CAPS ("audio/x-pn-realaudio, "
+        "raversion = { 3, 4, 5, 6, 8 }; " "audio/x-sipro "));
+
 static GstStaticPadTemplate src_t =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
@@ -67,25 +69,31 @@ enum
 
 typedef enum
 {
-  GST_REAL_AUDIO_DEC_VERSION_COOK = 8,
   GST_REAL_AUDIO_DEC_VERSION_ATRK = 3,
   GST_REAL_AUDIO_DEC_VERSION_14_4 = 4,
   GST_REAL_AUDIO_DEC_VERSION_28_8 = 5,
-  GST_REAL_AUDIO_DEC_VERSION_SIPR = 6
+  GST_REAL_AUDIO_DEC_VERSION_SIPR = 6,
+  GST_REAL_AUDIO_DEC_VERSION_COOK = 8
 } GstRealAudioDecVersion;
 
 typedef struct
 {
-  guint16 (*RADecode) (gpointer, guint8 *, guint32, guint8 *, guint32 *,
+  /* Hooks */
+  GModule *module;
+
+  /* Used by the REAL library. */
+  gpointer context;
+
+    guint16 (*RADecode) (gpointer, guint8 *, guint32, guint8 *, guint32 *,
       guint32);
-  guint16 (*RACloseCodec) (gpointer);
-  guint16 (*RAFreeDecoder) (gpointer);
-  guint16 (*RAInitDecoder) (gpointer, gpointer);
-  guint16 (*RAOpenCodec2) (gpointer, const gchar *);
-  guint16 (*RASetFlavor) (gpointer, guint16);
+    guint16 (*RACloseCodec) (gpointer);
+    guint16 (*RAFreeDecoder) (gpointer);
+    guint16 (*RAInitDecoder) (gpointer, gpointer);
+    guint16 (*RAOpenCodec2) (gpointer, const gchar *);
+    guint16 (*RASetFlavor) (gpointer, guint16);
   void (*SetDLLAccessPath) (gchar *);
   void (*RASetPwd) (gpointer, gchar *);
-} RealFunctions;
+} GstRADecLibrary;
 
 typedef struct
 {
@@ -108,16 +116,21 @@ struct _GstRealAudioDec
   /* Caps */
   guint width, height, leaf_size;
 
-  /* Hooks */
-  GModule *module;
-  RealFunctions funcs;
-
-  /* Used by the REAL library. */
-  gpointer context;
+  GstRADecLibrary lib;
 
   /* Properties */
-  gchar *real_codecs_path, *racook_names, *raatrk_names, *ra14_4_names,
-      *ra28_8_names, *rasipr_names;
+  gboolean checked_modules;
+  gchar *real_codecs_path;
+  gchar *raatrk_names;
+  gboolean valid_atrk;
+  gchar *ra14_4_names;
+  gboolean valid_ra14_4;
+  gchar *ra28_8_names;
+  gboolean valid_ra28_8;
+  gchar *rasipr_names;
+  gboolean valid_sipr;
+  gchar *racook_names;
+  gboolean valid_cook;
   gchar *pwd;
 };
 
@@ -139,7 +152,7 @@ gst_real_audio_dec_chain (GstPad * pad, GstBuffer * in)
   guint16 res = 0;
   guint len;
 
-  if (G_UNLIKELY (dec->funcs.RADecode == NULL || dec->module == NULL))
+  if (G_UNLIKELY (dec->lib.RADecode == NULL || dec->lib.module == NULL))
     goto not_negotiated;
 
   timestamp = GST_BUFFER_TIMESTAMP (in);
@@ -151,7 +164,7 @@ gst_real_audio_dec_chain (GstPad * pad, GstBuffer * in)
   if (flow != GST_FLOW_OK)
     goto done;
 
-  res = dec->funcs.RADecode (dec->context, GST_BUFFER_DATA (in),
+  res = dec->lib.RADecode (dec->lib.context, GST_BUFFER_DATA (in),
       GST_BUFFER_SIZE (in), GST_BUFFER_DATA (out), &len, -1);
 
   if (res != 0)
@@ -184,47 +197,36 @@ not_negotiated:
   }
 }
 
-static gboolean
-gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
+static void
+close_library (GstRealAudioDec * dec, GstRADecLibrary * lib)
 {
-  GstRealAudioDec *dec = GST_REAL_AUDIO_DEC (GST_PAD_PARENT (pad));
-  GstStructure *s = gst_caps_get_structure (caps, 0);
+  if (lib->context) {
+    GST_LOG_OBJECT (dec, "closing library");
+    if (lib->RACloseCodec)
+      lib->RACloseCodec (lib->context);
+    /* lib->RAFreeDecoder (lib->context); */
+    lib->context = NULL;
+    lib->module = NULL;
+    lib->RACloseCodec = NULL;
+  }
+  if (lib->module) {
+    GST_LOG_OBJECT (dec, "closing library module");
+    g_module_close (lib->module);
+    lib->module = NULL;
+  }
+}
+
+static gboolean
+open_library (GstRealAudioDec * dec, gint version, GstRADecLibrary * lib)
+{
+  gchar *path, *names;
+  gchar **split_names, **split_path;
+  gint i, j;
   gpointer ra_close_codec, ra_decode, ra_free_decoder;
   gpointer ra_open_codec2, ra_init_decoder, ra_set_flavor;
   gpointer set_dll_access_path = NULL, ra_set_pwd = NULL;
-  gchar *path, *names;
-  gchar **split_names, **split_path;
-  gint version, flavor, channels, rate, leaf_size, packet_size, width, height;
-  guint16 res = 0;
-  RAInit data;
-  gboolean bres;
-  const GValue *v;
-  GstBuffer *buf = NULL;
-  const gchar *name = gst_structure_get_name (s);
-  GModule *module = NULL;
-  gpointer context = NULL;
-  RealFunctions funcs = { NULL, };
-  int i, j;
   gchar *tmppath = NULL;
-
-  if (!strcmp (name, "audio/x-sipro"))
-    version = GST_REAL_AUDIO_DEC_VERSION_SIPR;
-  else {
-    if (!gst_structure_get_int (s, "raversion", &version))
-      goto missing_keys;
-  }
-
-  if (!gst_structure_get_int (s, "flavor", &flavor) ||
-      !gst_structure_get_int (s, "channels", &channels) ||
-      !gst_structure_get_int (s, "width", &width) ||
-      !gst_structure_get_int (s, "rate", &rate) ||
-      !gst_structure_get_int (s, "height", &height) ||
-      !gst_structure_get_int (s, "leaf_size", &leaf_size) ||
-      !gst_structure_get_int (s, "packet_size", &packet_size))
-    goto missing_keys;
-
-  if ((v = gst_structure_get_value (s, "codec_data")))
-    buf = g_value_peek_pointer (v);
+  guint16 res = 0;
 
   path = dec->real_codecs_path ? dec->real_codecs_path :
       DEFAULT_REAL_CODECS_PATH;
@@ -249,6 +251,8 @@ gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
       goto unknown_version;
   }
 
+  GST_LOG_OBJECT (dec, "splitting paths %s, names %s", path, names);
+
   split_path = g_strsplit (path, ":", 0);
   split_names = g_strsplit (names, ":", 0);
 
@@ -256,10 +260,14 @@ gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
     for (j = 0; split_names[j]; j++) {
       gchar *codec = g_strconcat (split_path[i], "/", split_names[j], NULL);
 
-      module = g_module_open (codec, G_MODULE_BIND_LAZY);
+      GST_LOG_OBJECT (dec, "opening module %s", codec);
+
+      lib->module = g_module_open (codec, G_MODULE_BIND_LAZY);
       g_free (codec);
-      if (module)
+      if (lib->module)
         goto codec_search_done;
+
+      GST_LOG_OBJECT (dec, "failure, try next one...");
     }
   }
 
@@ -267,37 +275,39 @@ codec_search_done:
   /* we keep the path for a while to set the dll access path */
   g_strfreev (split_names);
 
-  if (module == NULL)
+  if (lib->module == NULL)
     goto could_not_open;
 
-  if (!g_module_symbol (module, "RACloseCodec", &ra_close_codec) ||
-      !g_module_symbol (module, "RADecode", &ra_decode) ||
-      !g_module_symbol (module, "RAFreeDecoder", &ra_free_decoder) ||
-      !g_module_symbol (module, "RAOpenCodec2", &ra_open_codec2) ||
-      !g_module_symbol (module, "RAInitDecoder", &ra_init_decoder) ||
-      !g_module_symbol (module, "RASetFlavor", &ra_set_flavor)) {
+  GST_LOG_OBJECT (dec, "finding symbols");
+
+  if (!g_module_symbol (lib->module, "RACloseCodec", &ra_close_codec) ||
+      !g_module_symbol (lib->module, "RADecode", &ra_decode) ||
+      !g_module_symbol (lib->module, "RAFreeDecoder", &ra_free_decoder) ||
+      !g_module_symbol (lib->module, "RAOpenCodec2", &ra_open_codec2) ||
+      !g_module_symbol (lib->module, "RAInitDecoder", &ra_init_decoder) ||
+      !g_module_symbol (lib->module, "RASetFlavor", &ra_set_flavor)) {
     goto could_not_load;
   }
 
-  g_module_symbol (module, "RASetPwd", &ra_set_pwd);
-  g_module_symbol (module, "SetDLLAccessPath", &set_dll_access_path);
+  g_module_symbol (lib->module, "RASetPwd", &ra_set_pwd);
+  g_module_symbol (lib->module, "SetDLLAccessPath", &set_dll_access_path);
 
-  funcs.RACloseCodec = (guint16 (*)(gpointer)) ra_close_codec;
-  funcs.RADecode =
+  lib->RACloseCodec = (guint16 (*)(gpointer)) ra_close_codec;
+  lib->RADecode =
       (guint16 (*)(gpointer, guint8 *, guint32, guint8 *, guint32 *, guint32))
       ra_decode;
-  funcs.RAFreeDecoder = (guint16 (*)(gpointer)) ra_free_decoder;
-  funcs.RAOpenCodec2 = (guint16 (*)(gpointer, const gchar *)) ra_open_codec2;
-  funcs.RAInitDecoder = (guint16 (*)(gpointer, gpointer)) ra_init_decoder;
-  funcs.RASetFlavor = (guint16 (*)(gpointer, guint16)) ra_set_flavor;
-  funcs.RASetPwd = (void (*)(gpointer, gchar *)) ra_set_pwd;
-  funcs.SetDLLAccessPath = (void (*)(gchar *)) set_dll_access_path;
+  lib->RAFreeDecoder = (guint16 (*)(gpointer)) ra_free_decoder;
+  lib->RAOpenCodec2 = (guint16 (*)(gpointer, const gchar *)) ra_open_codec2;
+  lib->RAInitDecoder = (guint16 (*)(gpointer, gpointer)) ra_init_decoder;
+  lib->RASetFlavor = (guint16 (*)(gpointer, guint16)) ra_set_flavor;
+  lib->RASetPwd = (void (*)(gpointer, gchar *)) ra_set_pwd;
+  lib->SetDLLAccessPath = (void (*)(gchar *)) set_dll_access_path;
 
-  if (funcs.SetDLLAccessPath)
-    funcs.SetDLLAccessPath (split_path[i]);
+  if (lib->SetDLLAccessPath)
+    lib->SetDLLAccessPath (split_path[i]);
 
   tmppath = g_strdup_printf ("%s/", split_path[i]);
-  if ((res = funcs.RAOpenCodec2 (&context, tmppath))) {
+  if ((res = lib->RAOpenCodec2 (&lib->context, tmppath))) {
     g_free (tmppath);
     goto could_not_initialize;
   }
@@ -306,6 +316,157 @@ codec_search_done:
   /* now we are done with the split paths, so free them */
   g_strfreev (split_path);
 
+  return TRUE;
+
+  /* ERRORS */
+unknown_version:
+  {
+    GST_DEBUG_OBJECT (dec, "Cannot handle version %i.", version);
+    return FALSE;
+  }
+could_not_open:
+  {
+    g_strfreev (split_path);
+    GST_DEBUG_OBJECT (dec, "Could not find library '%s' in '%s'", names, path);
+    return FALSE;
+  }
+could_not_load:
+  {
+    g_strfreev (split_path);
+    close_library (dec, lib);
+    GST_DEBUG_OBJECT (dec, "Could not load all symbols: %s", g_module_error ());
+    return FALSE;
+  }
+could_not_initialize:
+  {
+    close_library (dec, lib);
+    GST_WARNING_OBJECT (dec, "Initialization of REAL driver failed (%i).", res);
+    return FALSE;
+  }
+}
+
+static void
+gst_real_audio_dec_probe_modules (GstRealAudioDec * dec)
+{
+  GstRADecLibrary dummy = { NULL };
+
+  if ((dec->valid_atrk =
+          open_library (dec, GST_REAL_AUDIO_DEC_VERSION_ATRK, &dummy)))
+    close_library (dec, &dummy);
+  if ((dec->valid_ra14_4 =
+          open_library (dec, GST_REAL_AUDIO_DEC_VERSION_14_4, &dummy)))
+    close_library (dec, &dummy);
+  if ((dec->valid_ra28_8 =
+          open_library (dec, GST_REAL_AUDIO_DEC_VERSION_28_8, &dummy)))
+    close_library (dec, &dummy);
+  if ((dec->valid_sipr =
+          open_library (dec, GST_REAL_AUDIO_DEC_VERSION_SIPR, &dummy)))
+    close_library (dec, &dummy);
+  if ((dec->valid_cook =
+          open_library (dec, GST_REAL_AUDIO_DEC_VERSION_COOK, &dummy)))
+    close_library (dec, &dummy);
+}
+
+static GstCaps *
+gst_real_audio_dec_getcaps (GstPad * pad)
+{
+  GstRealAudioDec *dec = GST_REAL_AUDIO_DEC (GST_PAD_PARENT (pad));
+  GstCaps *res;
+
+  if (dec->checked_modules) {
+    GValue versions = { 0 };
+    GValue version = { 0 };
+
+    GST_LOG_OBJECT (dec, "constructing caps");
+    res = gst_caps_new_empty ();
+
+    g_value_init (&versions, GST_TYPE_LIST);
+    g_value_init (&version, G_TYPE_INT);
+
+    if (dec->valid_atrk) {
+      g_value_set_int (&version, GST_REAL_AUDIO_DEC_VERSION_ATRK);
+      gst_value_list_append_value (&versions, &version);
+    }
+    if (dec->valid_ra14_4) {
+      g_value_set_int (&version, GST_REAL_AUDIO_DEC_VERSION_14_4);
+      gst_value_list_append_value (&versions, &version);
+    }
+    if (dec->valid_ra28_8) {
+      g_value_set_int (&version, GST_REAL_AUDIO_DEC_VERSION_28_8);
+      gst_value_list_append_value (&versions, &version);
+    }
+    if (dec->valid_sipr) {
+      g_value_set_int (&version, GST_REAL_AUDIO_DEC_VERSION_SIPR);
+      gst_value_list_append_value (&versions, &version);
+    }
+    if (dec->valid_cook) {
+      g_value_set_int (&version, GST_REAL_AUDIO_DEC_VERSION_COOK);
+      gst_value_list_append_value (&versions, &version);
+    }
+
+    if (gst_value_list_get_size (&versions) > 0) {
+      res = gst_caps_new_simple ("audio/x-pn-realaudio", NULL);
+      gst_structure_set_value (gst_caps_get_structure (res, 0),
+          "raversion", &versions);
+    } else {
+      res = gst_caps_new_empty ();
+    }
+
+    if (dec->valid_sipr) {
+      gst_caps_append (res, gst_caps_new_simple ("audio/x-sipro", NULL));
+    }
+    g_value_unset (&versions);
+    g_value_unset (&version);
+  } else {
+    GST_LOG_OBJECT (dec, "returning padtemplate caps");
+    res = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
+  GST_LOG_OBJECT (dec, "returning caps %" GST_PTR_FORMAT, res);
+
+  return res;
+}
+
+static gboolean
+gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstRealAudioDec *dec = GST_REAL_AUDIO_DEC (GST_PAD_PARENT (pad));
+  GstStructure *s = gst_caps_get_structure (caps, 0);
+  gint version, flavor, channels, rate, leaf_size, packet_size, width, height;
+  guint16 res = 0;
+  RAInit data;
+  gboolean bres;
+  const GValue *v;
+  GstBuffer *buf = NULL;
+  const gchar *name = gst_structure_get_name (s);
+
+  if (!strcmp (name, "audio/x-sipro")) {
+    version = GST_REAL_AUDIO_DEC_VERSION_SIPR;
+  } else {
+    if (!gst_structure_get_int (s, "raversion", &version))
+      goto missing_keys;
+  }
+
+  if (!gst_structure_get_int (s, "flavor", &flavor) ||
+      !gst_structure_get_int (s, "channels", &channels) ||
+      !gst_structure_get_int (s, "width", &width) ||
+      !gst_structure_get_int (s, "rate", &rate) ||
+      !gst_structure_get_int (s, "height", &height) ||
+      !gst_structure_get_int (s, "leaf_size", &leaf_size) ||
+      !gst_structure_get_int (s, "packet_size", &packet_size))
+    goto missing_keys;
+
+  if ((v = gst_structure_get_value (s, "codec_data")))
+    buf = g_value_peek_pointer (v);
+
+  GST_LOG_OBJECT (dec, "opening code for version %d", version);
+
+  /* first close existing decoder */
+  close_library (dec, &dec->lib);
+
+  if (!open_library (dec, version, &dec->lib))
+    goto could_not_open;
+
+  /* we have the module, no initialize with the caps data */
   data.samplerate = rate;
   data.width = width;
   data.channels = channels;
@@ -315,16 +476,16 @@ codec_search_done:
   data.datalen = buf ? GST_BUFFER_SIZE (buf) : 0;
   data.data = buf ? GST_BUFFER_DATA (buf) : NULL;
 
-  if ((res = funcs.RAInitDecoder (context, &data))) {
+  if ((res = dec->lib.RAInitDecoder (dec->lib.context, &data))) {
     GST_WARNING_OBJECT (dec, "RAInitDecoder() failed");
     goto could_not_initialize;
   }
 
-  if (funcs.RASetPwd) {
-    funcs.RASetPwd (context, dec->pwd ? dec->pwd : DEFAULT_PWD);
+  if (dec->lib.RASetPwd) {
+    dec->lib.RASetPwd (dec->lib.context, dec->pwd ? dec->pwd : DEFAULT_PWD);
   }
 
-  if ((res = funcs.RASetFlavor (context, flavor))) {
+  if ((res = dec->lib.RASetFlavor (dec->lib.context, flavor))) {
     GST_WARNING_OBJECT (dec, "RASetFlavor(%d) failed", flavor);
     goto could_not_initialize;
   }
@@ -343,15 +504,8 @@ codec_search_done:
   dec->width = width;
   dec->height = height;
   dec->leaf_size = leaf_size;
-  if (dec->context) {
-    dec->funcs.RACloseCodec (dec->context);
-    dec->funcs.RAFreeDecoder (dec->context);
-  }
-  dec->context = context;
-  if (dec->module)
-    g_module_close (dec->module);
-  dec->module = module;
-  dec->funcs = funcs;
+
+  GST_LOG_OBJECT (dec, "opened module");
 
   return TRUE;
 
@@ -360,41 +514,21 @@ missing_keys:
     GST_DEBUG_OBJECT (dec, "Could not find all necessary keys in structure.");
     return FALSE;
   }
-unknown_version:
-  {
-    GST_DEBUG_OBJECT (dec, "Cannot handle version %i.", version);
-    return FALSE;
-  }
 could_not_open:
   {
-    g_strfreev (split_path);
-    GST_DEBUG_OBJECT (dec, "Could not find library '%s' in '%s'", names, path);
-    return FALSE;
-  }
-could_not_load:
-  {
-    g_module_close (module);
-    g_strfreev (split_path);
-    GST_DEBUG_OBJECT (dec, "Could not load all symbols: %s", g_module_error ());
+    GST_DEBUG_OBJECT (dec, "Could not find decoder");
     return FALSE;
   }
 could_not_initialize:
   {
-    if (context) {
-      funcs.RACloseCodec (context);
-      funcs.RAFreeDecoder (context);
-    }
-    g_module_close (module);
+    close_library (dec, &dec->lib);
     GST_WARNING_OBJECT (dec, "Initialization of REAL driver failed (%i).", res);
     return FALSE;
   }
 could_not_set_caps:
   {
-    if (context) {
-      funcs.RACloseCodec (context);
-      funcs.RAFreeDecoder (context);
-    }
-    g_module_close (module);
+    /* should normally not fail */
+    close_library (dec, &dec->lib);
     GST_DEBUG_OBJECT (dec, "Could not convince peer to accept caps.");
     return FALSE;
   }
@@ -406,6 +540,8 @@ gst_real_audio_dec_init (GstRealAudioDec * dec, GstRealAudioDecClass * klass)
   dec->snk = gst_pad_new_from_static_template (&snk_t, "sink");
   gst_pad_set_setcaps_function (dec->snk,
       GST_DEBUG_FUNCPTR (gst_real_audio_dec_setcaps));
+  gst_pad_set_getcaps_function (dec->snk,
+      GST_DEBUG_FUNCPTR (gst_real_audio_dec_getcaps));
   gst_pad_set_chain_function (dec->snk,
       GST_DEBUG_FUNCPTR (gst_real_audio_dec_chain));
   gst_element_add_pad (GST_ELEMENT (dec), dec->snk);
@@ -430,10 +566,25 @@ gst_real_audio_dec_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstStateChangeReturn ret;
+  GstRealAudioDec *dec = GST_REAL_AUDIO_DEC (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      gst_real_audio_dec_probe_modules (dec);
+      dec->checked_modules = TRUE;
+      break;
+    default:
+      break;
+  }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      close_library (dec, &dec->lib);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      dec->checked_modules = FALSE;
       break;
     default:
       break;
@@ -446,19 +597,7 @@ gst_real_audio_dec_finalize (GObject * object)
 {
   GstRealAudioDec *dec = GST_REAL_AUDIO_DEC (object);
 
-  if (dec->context) {
-    dec->funcs.RACloseCodec (dec->context);
-    /* Calling RAFreeDecoder seems to randomly cause SEGFAULTs.
-     * All other implementation (xine, mplayer) have also got this function call
-     * commented. So until we know more, we comment it too. */
-
-    /*     dec->funcs.RAFreeDecoder (dec->context); */
-    dec->context = NULL;
-  }
-  if (dec->module) {
-    g_module_close (dec->module);
-    dec->module = NULL;
-  }
+  close_library (dec, &dec->lib);
 
   if (dec->real_codecs_path) {
     g_free (dec->real_codecs_path);
