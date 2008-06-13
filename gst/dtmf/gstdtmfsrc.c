@@ -251,6 +251,7 @@ static void gst_dtmf_src_add_stop_event (GstDTMFSrc *dtmfsrc);
 static gboolean gst_dtmf_src_unlock (GstBaseSrc *src);
 
 static gboolean gst_dtmf_src_unlock_stop (GstBaseSrc *src);
+static gboolean gst_dtmf_src_negotiate (GstBaseSrc * basesrc);
 
 static void
 gst_dtmf_src_base_init (gpointer g_class)
@@ -300,7 +301,8 @@ gst_dtmf_src_class_init (GstDTMFSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_dtmf_src_handle_event);
   gstbasesrc_class->create =
       GST_DEBUG_FUNCPTR (gst_dtmf_src_create);
-
+  gstbasesrc_class->negotiate =
+      GST_DEBUG_FUNCPTR (gst_dtmf_src_negotiate);
 }
 
 
@@ -808,6 +810,83 @@ gst_dtmf_src_unlock_stop (GstBaseSrc *src) {
   return TRUE;
 }
 
+
+static gboolean
+gst_dtmf_src_negotiate (GstBaseSrc * basesrc)
+{
+  GstCaps *srccaps, *peercaps;
+  GstDTMFSrc *dtmfsrc = GST_DTMF_SRC (basesrc);
+  gboolean ret = FALSE;
+
+  srccaps = gst_caps_new_simple ("audio/x-raw-int",
+      "width", G_TYPE_INT, 16,
+      "depth", G_TYPE_INT, 16,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER,
+      "signed", G_TYPE_BOOLEAN, TRUE,
+      "channels", G_TYPE_INT, 1,
+      NULL);
+
+  peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
+
+  if (peercaps == NULL) {
+    /* no peer caps, just add the other properties */
+    gst_caps_set_simple (srccaps,
+        "rate", G_TYPE_INT, dtmfsrc->sample_rate,
+        NULL);
+  } else {
+    GstStructure *s;
+    gint sample_rate;
+    GstCaps *temp = NULL;
+
+    g_debug ("HAS PEERCAPS %s", gst_caps_to_string (peercaps));
+
+    /* peer provides caps we can use to fixate, intersect. This always returns a
+     * writable caps. */
+    temp = gst_caps_intersect (srccaps, peercaps);
+    gst_caps_unref (srccaps);
+    gst_caps_unref (peercaps);
+
+    if (!temp) {
+      GST_DEBUG_OBJECT (dtmfsrc, "Could not get intersection with peer caps");
+      return FALSE;
+    }
+
+    if (gst_caps_is_empty (temp)) {
+      GST_DEBUG_OBJECT (dtmfsrc, "Intersection with peer caps is empty");
+      gst_caps_unref (temp);
+      return FALSE;
+    }
+
+    /* now fixate, start by taking the first caps */
+    gst_caps_truncate (temp);
+    srccaps = temp;
+
+    /* get first structure */
+    s = gst_caps_get_structure (srccaps, 0);
+
+    if (gst_structure_get_int (s, "rate", &sample_rate))
+    {
+      dtmfsrc->sample_rate = sample_rate;
+      GST_LOG_OBJECT (dtmfsrc, "using rate from caps %d",
+          dtmfsrc->sample_rate);
+    } else {
+      GST_LOG_OBJECT (dtmfsrc, "using existing rate %d",
+          dtmfsrc->sample_rate);
+    }
+    gst_structure_set (s, "rate", G_TYPE_INT, dtmfsrc->sample_rate,
+        NULL);
+  }
+
+  ret = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), srccaps);
+
+  g_warning ("negotiated %s", gst_caps_to_string (srccaps));
+
+
+
+  gst_caps_unref (srccaps);
+
+  return ret;
+}
 
 static GstStateChangeReturn
 gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
