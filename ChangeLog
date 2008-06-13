@@ -1,3 +1,21 @@
+2008-06-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtp/gstrtptheoradepay.c: (gst_rtp_theora_depay_setcaps):
+	Make the delivery-method mandatory on the caps and only accept inline
+	for now.
+	Reverse strcmp checks for delivery-method.
+
+	* gst/rtp/gstrtpvorbisdepay.c: (gst_rtp_vorbis_depay_setcaps):
+	Make delivery method optional when parsing caps and note this in the
+	caps.
+	Reverse strcmp checks for delivery-method.
+
+	* gst/rtp/gstrtpvorbispay.c:
+	Update a comment to note that the delivery-method is optional, 
+	Fixes #537675.
+
 2008-06-12  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_stream_configure_mcast):

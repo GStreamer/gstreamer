@@ -52,11 +52,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         /* All required parameters 
          *
          * "encoding-params = (string) <num channels>"
-         * "delivery-method = (string) { inline, in_band, out_band/<specific_name> } " 
          * "configuration = (string) ANY" 
          */
         /* All optional parameters
          *
+         * "delivery-method = (string) { inline, in_band, out_band/<specific_name> } " 
          * "configuration-uri =" 
          */
     )
@@ -344,18 +344,19 @@ gst_rtp_vorbis_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   /* see how the configuration parameters will be transmitted */
   delivery_method = gst_structure_get_string (structure, "delivery-method");
-  if (delivery_method == NULL)
-    goto no_delivery_method;
 
-  if (g_ascii_strcasecmp (delivery_method, "inline")) {
-    /* configure string is in the caps */
-  } else if (g_ascii_strcasecmp (delivery_method, "in_band")) {
-    /* headers will (also) be transmitted in the RTP packets */
-  } else if (g_str_has_prefix (delivery_method, "out_band/")) {
-    /* some other method of header delivery. */
-    goto unsupported_delivery_method;
-  } else
-    goto unsupported_delivery_method;
+  if (delivery_method) {
+    if (!g_ascii_strcasecmp (delivery_method, "inline")) {
+      /* configure string is in the caps */
+    } else if (!g_ascii_strcasecmp (delivery_method, "in_band")) {
+      /* headers will (also) be transmitted in the RTP packets */
+      goto unsupported_delivery_method;
+    } else if (g_str_has_prefix (delivery_method, "out_band/")) {
+      /* some other method of header delivery. */
+      goto unsupported_delivery_method;
+    } else
+      goto unsupported_delivery_method;
+  }
 
   /* read and parse configuration string */
   configuration = gst_structure_get_string (structure, "configuration");
@@ -380,11 +381,6 @@ unsupported_delivery_method:
   {
     GST_ERROR_OBJECT (rtpvorbisdepay,
         "unsupported delivery-method \"%s\" specified", delivery_method);
-    return FALSE;
-  }
-no_delivery_method:
-  {
-    GST_ERROR_OBJECT (rtpvorbisdepay, "no delivery-method specified");
     return FALSE;
   }
 no_configuration:

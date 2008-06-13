@@ -53,11 +53,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
         /* All required parameters
          *
          * "encoding-params = (string) <num channels>"
-         * "delivery-method = (string) { inline, in_band, out_band/<specific_name> } "
          * "configuration = (string) ANY"
          */
         /* All optional parameters
          *
+         * "delivery-method = (string) { inline, in_band, out_band/<specific_name> } "
          * "configuration-uri ="
          */
     )
