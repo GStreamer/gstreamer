@@ -230,7 +230,7 @@ gst_udp_is_multicast (struct sockaddr_storage *addr)
     {
       struct sockaddr_in *addr4 = (struct sockaddr_in *) addr;
 
-      ret = IN_MULTICAST (ntohl (addr4->sin_addr.s_addr));
+      ret = IN_MULTICAST (g_ntohl (addr4->sin_addr.s_addr));
     }
       break;
 
