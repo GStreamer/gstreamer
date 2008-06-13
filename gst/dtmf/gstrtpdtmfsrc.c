@@ -195,7 +195,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) [ 0, MAX ], "
         "ssrc = (int) [ 0, MAX ], "
         "encoding-name = (string) \"TELEPHONE-EVENT\"")
-    /*  "events = (string) \"1-16\" */
+    /*  "events = (string) \"0-15\" */
 
     );
 
@@ -856,7 +856,6 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
   /* fill in the defaults, there properties cannot be negotiated. */
   srccaps = gst_caps_new_simple ("application/x-rtp",
       "media", G_TYPE_STRING, "audio",
-      "clock-rate", G_TYPE_INT, dtmfsrc->clock_rate,
       "encoding-name", G_TYPE_STRING, "TELEPHONE-EVENT", NULL);
 
   /* the peer caps can override some of the defaults */
@@ -867,6 +866,7 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
         "payload", G_TYPE_INT, dtmfsrc->pt,
         "ssrc", G_TYPE_UINT, dtmfsrc->current_ssrc,
         "clock-base", G_TYPE_UINT, dtmfsrc->ts_base,
+        "clock-rate", G_TYPE_INT, dtmfsrc->clock_rate,
         "seqnum-base", G_TYPE_UINT, dtmfsrc->seqnum_base, NULL);
 
     GST_DEBUG_OBJECT (dtmfsrc, "no peer caps: %" GST_PTR_FORMAT, srccaps);
@@ -875,6 +875,7 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
     GstStructure *s;
     const GValue *value;
     gint pt;
+    gint clock_rate;
 
     /* peer provides caps we can use to fixate, intersect. This always returns a
      * writable caps. */
@@ -918,6 +919,19 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
         GST_LOG_OBJECT (dtmfsrc, "using internal pt", pt);
       }
     }
+
+    if (gst_structure_get_int (s, "clock-rate", &clock_rate))
+    {
+      dtmfsrc->clock_rate = clock_rate;
+      GST_LOG_OBJECT (dtmfsrc, "using clock-rate from caps %d",
+          dtmfsrc->clock_rate);
+    } else {
+      GST_LOG_OBJECT (dtmfsrc, "using existing clock-rate %d",
+          dtmfsrc->clock_rate);
+    }
+    gst_structure_set (s, "clock-rate", G_TYPE_INT, dtmfsrc->clock_rate,
+        NULL);
+
 
     if (gst_structure_has_field_typed (s, "ssrc", G_TYPE_UINT)) {
       value = gst_structure_get_value (s, "ssrc");
