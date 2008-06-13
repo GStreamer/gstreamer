@@ -1,5 +1,11 @@
 2008-06-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	(gst_ffmpeg_formatid_get_codecids):
+	MP4 does not allow H263 and AMR.
+
+2008-06-13  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
 	(gst_ffmpeg_get_codecid_longname):
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_base_init),
