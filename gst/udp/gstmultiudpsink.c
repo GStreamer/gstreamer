@@ -625,10 +625,10 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
   gst_udp_set_loop_ttl (sink->sock, sink->loop, sink->ttl);
   gst_multiudpsink_setup_qos_dscp (sink);
 
-  /* look for multicast clients and join multicast groups approptiately */
+  /* look for multicast clients and join multicast groups appropriately */
   for (clients = sink->clients; clients; clients = g_list_next (clients)) {
     client = (GstUDPClient *) clients->data;
-    if (gst_udp_is_multicast (&client->theiraddr) && sink->auto_multicast)
+    if (sink->auto_multicast && gst_udp_is_multicast (&client->theiraddr))
       gst_udp_join_group (*(client->sock), &client->theiraddr);
   }
   return TRUE;
@@ -755,8 +755,8 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
   g_get_current_time (&now);
   client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
 
-  if (*(client->sock) != -1 && gst_udp_is_multicast (&client->theiraddr)
-      && sink->auto_multicast)
+  if (*(client->sock) != -1 && sink->auto_multicast
+      && gst_udp_is_multicast (&client->theiraddr))
     gst_udp_leave_group (*(client->sock), &client->theiraddr);
 
   /* Unlock to emit signal before we delete the actual client */
