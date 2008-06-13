@@ -23,21 +23,17 @@
  * SECTION:element-wildmidi
  * @see_also: timidity
  *
- * <refsect2>
- * <para>
  * This element renders midi-files as audio streams using
  * <ulink url="http://wildmidi.sourceforge.net//">Wildmidi</ulink>.
  * It offers better sound quality compared to the timidity element. Wildmidi
  * uses the same sound-patches as timidity (it tries the path in $WILDMIDI_CFG,
  * $HOME/.wildmidirc and /etc/wildmidi.cfg)
- * </para>
- * <para>
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipeline</title>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=song.mid ! wildmidi ! alsasink
- * </programlisting>
- * This example pipeline will parse the midi and render to raw audio which is
+ * ]| This example pipeline will parse the midi and render to raw audio which is
  * played via alsa.
  * </refsect2>
  */

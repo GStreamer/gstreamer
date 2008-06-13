@@ -318,6 +318,20 @@ gst_modplug_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-mpeg2enc</FILE>
+<TITLE>mpeg2enc</TITLE>
+GstMpeg2enc
+<SUBSECTION Standard>
+GstMpeg2encClass
+GST_MPEG2ENC
+GST_MPEG2ENC_CLASS
+GST_IS_MPEG2ENC
+GST_IS_MPEG2ENC_CLASS
+GST_TYPE_MPEG2ENC
+gst_mpeg2enc_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-mythtvsrc</FILE>
 <TITLE>mythtvsrc</TITLE>
 GstMythtvSrc

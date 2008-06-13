@@ -24,20 +24,17 @@
  * SECTION:element-ivorbisdec
  * @see_also: vorbisenc, oggdemux
  *
- * <refsect2>
- * <para>
  * This element decodes a Vorbis stream to raw int audio.
  * <ulink url="http://www.vorbis.com/">Vorbis</ulink> is a royalty-free
  * audio codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
  * Foundation</ulink>.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! alsasink
- * </programlisting>
- * Decode an Ogg/Vorbis. To create an Ogg/Vorbis file refer to the documentation of vorbisenc.
- * </para>
+ * ]| Decode an Ogg/Vorbis. To create an Ogg/Vorbis file refer to the
+ * documentation of vorbisenc.
  * </refsect2>
  *
  * Last reviewed on 2006-03-01 (0.10.4)

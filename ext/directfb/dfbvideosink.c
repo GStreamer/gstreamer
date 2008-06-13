@@ -20,8 +20,6 @@
 /**
  * SECTION:element-dfbvideosink
  *
- * <refsect2>
- * <para>
  * DfbVideoSink renders video frames using the
  * <ulink url="http://www.directfb.org/">DirectFB</ulink> library.
  * Rendering can happen in two different modes :
@@ -47,19 +45,19 @@
  * <listitem>
  *   <para>
  *   Embedded: this mode will render video frames in a 
- *   <link linkend="GstDfbVideoSink--surface">surface</link> provided by the
+ *   #GstDfbVideoSink:surface provided by the
  *   application developer. This is a more advanced usage of the element and
  *   it is required to integrate video playback in existing 
  *   <ulink url="http://www.directfb.org/">DirectFB</ulink> applications.
  *   </para>
  *   <para>
  *   When using this mode the element just renders to the
- *   <link linkend="GstDfbVideoSink--surface">surface</link> provided by the 
+ *   #GstDfbVideoSink:surface provided by the 
  *   application, that means it won't handle navigation events and won't resize
- *   the <link linkend="GstDfbVideoSink--surface">surface</link> to fit video
+ *   the #GstDfbVideoSink:surface to fit video
  *   frames geometry. Application has to implement the necessary code to grab
  *   informations about the negotiated geometry and resize there
- *   <link linkend="GstDfbVideoSink--surface">surface</link> accordingly.
+ *   #GstDfbVideoSink:surface accordingly.
  *   </para>
  * </listitem>
  * </itemizedlist>
@@ -67,20 +65,19 @@
  * optimize memory allocation time and handle reverse negotiation. Indeed if 
  * you insert an element like videoscale in the pipeline the video sink will
  * negotiate with it to try get a scaled video for either the fullscreen layout
- * or the application provided external
- * <link linkend="GstDfbVideoSink--surface">surface</link>.
- * </para>
+ * or the application provided external #GstDfbVideoSink:surface.
+ *
+ * <refsect2>
  * <title>Example application</title>
  * <para>
  * <include xmlns="http://www.w3.org/2003/XInclude" href="element-dfb-example.xml" />
  * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * Here is a test pipeline to test the colorbalance interface :
- * <programlisting>
+ * |[
  * gst-launch -v videotestsrc ! dfbvideosink hue=20000 saturation=40000 brightness=25000
- * </programlisting>
- * </para>
+ * ]| test the colorbalance interface implementation in dfbvideosink
  * </refsect2>
  */
 

@@ -16,20 +16,16 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-/*
+/**
  * SECTION:element-dvdspu
  *
- * <refsect2>
- * <para>
  * DVD sub picture overlay element.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * FIXME: gst-launch ...
- * </programlisting>
- * FIXME: description for the sample launch pipeline
- * </para>
+ * ]| FIXME: description for the sample launch pipeline
  * </refsect2>
  */
 #ifdef HAVE_CONFIG_H

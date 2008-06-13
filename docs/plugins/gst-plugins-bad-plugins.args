@@ -11,7 +11,7 @@
 <ARG>
 <NAME>GstPitch::pitch</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.1,10]</RANGE>
+<RANGE>[0,1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Pitch</NICK>
 <BLURB>Audio stream pitch.</BLURB>
@@ -21,7 +21,7 @@
 <ARG>
 <NAME>GstPitch::rate</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.1,10]</RANGE>
+<RANGE>[0,1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Rate</NICK>
 <BLURB>Audio stream rate.</BLURB>
@@ -31,7 +31,7 @@
 <ARG>
 <NAME>GstPitch::tempo</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.1,10]</RANGE>
+<RANGE>[0,1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Tempo</NICK>
 <BLURB>Audio stream tempo.</BLURB>
@@ -1331,7 +1331,7 @@
 <ARG>
 <NAME>GstSpeed::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.1,40]</RANGE>
+<RANGE>[0,1,40]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>speed</NICK>
 <BLURB>speed.</BLURB>
@@ -16835,7 +16835,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Dry-Wet-Balance</NICK>
 <BLURB>Dry-Wet-Balance.</BLURB>
-<DEFAULT>0.5</DEFAULT>
+<DEFAULT>0,5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17715,7 +17715,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern sensitivity</NICK>
 <BLURB>The sensitivity around the center for detecting the markers (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0.3</DEFAULT>
+<DEFAULT>0,3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17755,7 +17755,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern center</NICK>
 <BLURB>The center of the black/white separation (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0.5</DEFAULT>
+<DEFAULT>0,5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17905,7 +17905,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>stereo</NICK>
 <BLURB>stereo.</BLURB>
-<DEFAULT>0.1</DEFAULT>
+<DEFAULT>0,1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19284,6 +19284,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstAppSrc::format</NAME>
+<TYPE>GstFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format</NICK>
+<BLURB>The format of the segment events and seek.</BLURB>
+<DEFAULT>GST_FORMAT_BYTES</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::max-bytes</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max bytes</NICK>
+<BLURB>The maximum number of bytes to queue internally (0 = unlimited).</BLURB>
+<DEFAULT>200000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::stream-type</NAME>
+<TYPE>GstAppStreamType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stream Type</NICK>
+<BLURB>the type of the stream.</BLURB>
+<DEFAULT>Stream</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDeinterleave::keep-positions</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -20001,5 +20031,35 @@
 <NICK>Resulting fingerprint</NICK>
 <BLURB>Resulting fingerprint.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterleave::channel-positions</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel positions</NICK>
+<BLURB>Channel positions used on the output.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterleave::channel-positions-from-input</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel positions from input</NICK>
+<BLURB>Take channel positions from the input.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg4VParse::drop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>drop</NICK>
+<BLURB>Drop data untill valid configuration data is received either in the stream or through caps.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 

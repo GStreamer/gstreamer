@@ -7,7 +7,7 @@
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>dvbbasebin</name>
@@ -17,15 +17,15 @@
       <author>Alessandro Decina &lt;alessandro@nnva.org&gt;</author>
       <pads>
         <caps>
-          <name>src%d</name>
-          <direction>source</direction>
-          <presence>request</presence>
-          <details>video/mpegts, systemstream=(boolean)true</details>
-        </caps>
-        <caps>
           <name>program_%d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src%d</name>
+          <direction>source</direction>
+          <presence>request</presence>
           <details>video/mpegts, systemstream=(boolean)true</details>
         </caps>
       </pads>

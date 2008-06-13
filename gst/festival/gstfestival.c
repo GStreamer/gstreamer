@@ -63,16 +63,15 @@
 /**
  * SECTION:element-festival
  * 
- * <refsect2>
- * <para>
  * This element connects to a
  * <ulink url="http://www.festvox.org/festival/index.html">festival</ulink> server 
  * process and uses it to synthesize speech.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipeline</title>
- * <programlisting>
+ * |[
  * echo "hi" | gst-launch fdsrc fd=0 ! festival ! wavparse ! audioconvert ! alsasink
- * </programlisting>
+ * ]|
  * </refsect2>
  */
 

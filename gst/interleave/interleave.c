@@ -30,38 +30,30 @@
 
 /**
  * SECTION:element-interleave
+ * @see_also: deinterleave
  *
- * <refsect2>
- * <para>
  * Merges separate mono inputs into one interleaved stream.
- * </para>
- * <para>
+ * 
  * This element handles all raw floating point sample formats and all signed integer sample formats. The first
  * caps on one of the sinkpads will set the caps of the output so usually an audioconvert element should be
  * placed before every sinkpad of interleave.
- * </para>
- * <para>
+ * 
  * It's possible to change the number of channels while the pipeline is running by adding or removing
  * some of the request pads but this will change the caps of the output buffers. Changing the input
  * caps is _not_ supported yet.
- * </para>
- * <para>
+ * 
  * The channel number of every sinkpad in the out can be retrieved from the "channel" property of the pad.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch-0.10 filesrc location=file.mp3 ! decodebin ! audioconvert ! "audio/x-raw-int,channels=2" ! deinterleave name=d  interleave name=i ! audioconvert ! wavenc ! filesink location=test.wav    d.src0 ! queue ! audioconvert ! i.sink1    d.src1 ! queue ! audioconvert ! i.sink0
- * </programlisting>
- * Decodes and deinterleaves a Stereo MP3 file into separate channels and then interleaves the channels
- * again to a WAV file with the channel with the channels exchanged.
- * </para>
- * <para>
- * <programlisting>
+ * ]| Decodes and deinterleaves a Stereo MP3 file into separate channels and
+ * then interleaves the channels again to a WAV file with the channel with the
+ * channels exchanged.
+ * |[
  * gst-launch-0.10 interleave name=i ! audioconvert ! wavenc ! filesink location=file.wav  filesrc location=file1.wav ! decodebin ! audioconvert ! "audio/x-raw-int,channels=1" ! queue ! i.sink0   filesrc location=file2.wav ! decodebin ! audioconvert ! "audio/x-raw-int,channels=1" ! queue ! i.sink1
- * </programlisting>
- * Interleaves two Mono WAV files to a single Stereo WAV file.
- * </para>
+ * ]| Interleaves two Mono WAV files to a single Stereo WAV file.
  * </refsect2>
  */
 

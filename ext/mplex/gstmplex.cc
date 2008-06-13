@@ -24,8 +24,6 @@
  * SECTION:element-mplex
  * @see_also: mpeg2enc
  *
- * <refsect2>
- * <para>
  * This element is an audio/video multiplexer for MPEG-1/2 video streams
  * and (un)compressed audio streams such as AC3, MPEG layer I/II/III.
  * It is based on the <ulink url="http://mjpeg.sourceforge.net/">mjpegtools</ulink> library.
@@ -33,15 +31,13 @@
  * <ulink url="https://sourceforge.net/docman/display_doc.php?docid=3456&group_id=5776#s7">MJPEG Howto</ulink>
  * and the man-page of the mplex tool documents the properties of this element,
  * which are shared with the mplex tool.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipeline</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v videotestsrc num-buffers=1000 ! mpeg2enc ! mplex ! filesink location=videotestsrc.mpg
- * </programlisting>
- * This example pipeline will encode a test video source to a an
+ * ]| This example pipeline will encode a test video source to an
  * MPEG1 elementary stream and multiplexes this to an MPEG system stream.
- * </para>
  * <para>
  * If several streams are being multiplexed, there should (as usual) be
  * a queue in each stream, and due to mplex' buffering the capacities of these

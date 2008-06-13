@@ -22,21 +22,17 @@
  * SECTION:element-theoradecexp
  * @see_also: theoradec, theoraenc, oggdemux
  *
- * <refsect2>
- * <para>
  * This element decodes theora streams into raw video using the theora-exp
  * decoder
  * <ulink url="http://www.theora.org/">Theora</ulink> is a royalty-free
  * video codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
  * Foundation</ulink>, based on the VP3 codec.
- * </para>
- * <para>
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipeline</title>
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoraexpdec ! xvimagesink
- * </programlisting>
- * This example pipeline will demux an ogg stream and decode the theora video,
+ * ]| This example pipeline will demux an ogg stream and decode the theora video,
  * displaying it on screen.
  * </refsect2>
  */

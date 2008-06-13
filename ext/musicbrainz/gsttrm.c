@@ -21,35 +21,27 @@
 /**
  * SECTION:element-trm
  *
- * <refsect2>
- * <para>
  * GstTRM computes <ulink url="http://www.musicbrainz.org/">MusicBrainz</ulink>
  * TRM identifiers for audio streams using libmusicbrainz.
- * </para>
- * <para>
+ * 
  * A TRM identifier is something like an 'acoustic fingerprint', the aim is
  * to uniquely identify the same song regardless of which source it comes from
  * or which audio format the stream is in.
- * </para>
- * <para>
+ * 
  * The TRM element will collect about 30 seconds of audio and let
  * libmusicbrainz calculate a preliminary audio signature from that. That audio
  * signature will then be sent over the internet to a musicbrainz.org server
  * which will calculate the TRM for that signature.
- * </para>
- * <para>
+ * 
  * The TRM element will post a tag message with a #GST_TAG_MUSICBRAINZ_TRMID
  * tag on the bus once the TRM has been calculated (and also send a tag event
  * with that information downstream).
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipeline</title>
- * <para>
- * Here is a test pipeline to test the TRM element:
- * <programlisting>
+ * |[
  * gst-launch -m filesrc location=somefile.ogg ! decodebin ! audioconvert ! trm ! fakesink
- * </programlisting>
- * this should (among many other things) print the tag message with the TRM ID.
- * </para>
+ * ]| calculate the TRM and print the tag message with the TRM ID.
  * </refsect2>
  */
 

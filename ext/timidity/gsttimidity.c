@@ -23,18 +23,14 @@
  * SECTION:element-timidity
  * @see_also: wildmidi
  *
- * <refsect2>
- * <para>
  * This element renders midi-files as audio streams using
  * <ulink url="http://timidity.sourceforge.net/">Timidity</ulink>.
- * </para>
- * <para>
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipeline</title>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=song.mid ! timidity ! alsasink
- * </programlisting>
- * This example pipeline will parse the midi and render to raw audio which is
+ * ]| This example pipeline will parse the midi and render to raw audio which is
  * played via alsa.
  * </refsect2>
  */

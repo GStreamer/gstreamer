@@ -32,35 +32,29 @@
 
 /**
  * SECTION:element-deinterleave
+ * @see_also: interleave
  *
- * <refsect2>
- * <para>
  * Splits one interleaved multichannel audio stream into many mono audio streams.
- * </para>
- * <para>
+ * 
  * This element handles all raw audio formats and supports changing the input caps as long as
  * all downstream elements can handle the new caps and the number of channels and the channel
  * positions stay the same. This restriction will be removed in later versions by adding or
  * removing some source pads as required.
- * </para>
- * <para>
+ * 
  * In most cases a queue and an audioconvert element should be added after each source pad
  * before further processing of the audio data.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch-0.10 filesrc location=/path/to/file.mp3 ! decodebin ! audioconvert ! "audio/x-raw-int,channels=2 ! deinterleave name=d  d.src0 ! queue ! audioconvert ! vorbisenc ! oggmux ! filesink location=channel1.ogg  d.src1 ! queue ! audioconvert ! vorbisenc ! oggmux ! filesink location=channel2.ogg
- * </programlisting>
- * Decodes an MP3 file and encodes the left and right channel into separate Ogg Vorbis files.
- * </para>
- * <para>
- * <programlisting>
+ * ]| Decodes an MP3 file and encodes the left and right channel into separate
+ * Ogg Vorbis files.
+ * |[
  * gst-launch-0.10 filesrc location=file.mp3 ! decodebin ! audioconvert ! "audio/x-raw-int,channels=2" ! deinterleave name=d  interleave name=i ! audioconvert ! wavenc ! filesink location=test.wav    d.src0 ! queue ! audioconvert ! i.sink1    d.src1 ! queue ! audioconvert ! i.sink0
- * </programlisting>
- * Decodes and deinterleaves a Stereo MP3 file into separate channels and then interleaves the channels
- * again to a WAV file with the channel with the channels exchanged.
- * </para>
+ * ]| Decodes and deinterleaves a Stereo MP3 file into separate channels and
+ * then interleaves the channels again to a WAV file with the channel with the
+ * channels exchanged.
  * </refsect2>
  */
 

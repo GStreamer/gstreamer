@@ -21,16 +21,13 @@
  * SECTION:element-amrwbparse
  * @see_also: #GstAmrwbDec, #GstAmrwbEnc
  *
- * <refsect2>
- * <para>
  * This is an AMR wideband parser.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=abc.amr ! amrwbparse ! amrwbdec ! audioresample ! audioconvert ! alsasink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

@@ -24,40 +24,32 @@
  * SECTION:element-mpeg2enc
  * @see_also: mpeg2dec
  *
- * <refsect2>
- * <para>
  * This element encodes raw video into an MPEG ?? stream using the
  * <ulink url="http://mjpeg.sourceforge.net/">mjpegtools</ulink> library.
  * Documentation on MPEG encoding in general can be found in the 
  * <ulink url="https://sourceforge.net/docman/display_doc.php?docid=3456&group_id=5776#s7">MJPEG Howto</ulink>
  * and on the various available parameters in the documentation
  * of the mpeg2enc tool in particular, which shares options with this element.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipeline</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch-0.10 videotestsrc num-buffers=1000 ! mpeg2enc ! filesink location=videotestsrc.m1v
- * </programlisting>
- * This example pipeline will encode a test video source to a an 
- * MPEG1 elementary stream (with Generic MPEG1 profile).
- * </para>
+ * ]| This example pipeline will encode a test video source to a an MPEG1
+ * elementary stream (with Generic MPEG1 profile).
  * <para>
- * Likely, the <link linkend="GstMpeg2enc--format">format</link> property
+ * Likely, the #GstMpeg2enc:format property
  * is most important, as it selects the type of MPEG stream that is produced.
  * In particular, default property values are dependent on the format,
  * and can even be forcibly restrained to certain pre-sets (and thereby ignored).
  * Note that the (S)VCD profiles also restrict the image size, so some scaling
  * may be needed to accomodate this.  The so-called generic profiles (as used
  * in the example above) allow most parameters to be adjusted.
- * <programlisting>
- * gst-launch-0.10 videotestsrc num-buffers=1000 ! videoscale \
- * ! mpeg2enc format=1 norm=p ! filesink location=videotestsrc.m1v
- * </programlisting>
- * (write everything in one line, without the backslash characters)
- * This will produce an MPEG1 profile stream according to VCD2.0 specifications
- * for PAL <link linkend="GstMpeg2enc--norm">norm</link> (as the image height
- * is dependent on video norm).
  * </para>
+ * |[
+ * gst-launch-0.10 videotestsrc num-buffers=1000 ! videoscale ! mpeg2enc format=1 norm=p ! filesink location=videotestsrc.m1v
+ * ]| This will produce an MPEG1 profile stream according to VCD2.0 specifications
+ * for PAL #GstMpeg2enc:norm (as the image height is dependent on video norm).
  * </refsect2>
  */
 

@@ -18,16 +18,14 @@
 /**
  * SECTION:element-freeze
  *
- * <refsect2>
- * <para>
  * Makes a stream from buffers of data.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
  * <para>
- * <programlisting>
- * gst-launch-0.10 --gst-debug=*freeze*:5 -mvt filesrc location=gnome-home.png blocksize=4135 !  pngdec ! freeze ! ffmpegcolorspace ! xvimagesink 
- * </programlisting>
- * Produces a video stream from one picture.
+ * |[
+ * gst-launch-0.10 filesrc location=gnome-home.png blocksize=4135 !  pngdec ! freeze ! ffmpegcolorspace ! xvimagesink
+ * ]| Produces a video stream from one picture.
  * </para>
  * </refsect2>
  */

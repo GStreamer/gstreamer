@@ -7,7 +7,7 @@
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>mpegvideoparse</name>
@@ -18,16 +18,16 @@
     Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)[ 1, 2 ], parsed=(boolean)false, systemstream=(boolean)false</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>video/mpeg, mpegversion=(int)[ 1, 2 ], parsed=(boolean)true, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], pixel-aspect-ratio=(fraction)[ 0/1, 2147483647/1 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)[ 1, 2 ], parsed=(boolean)false, systemstream=(boolean)false</details>
         </caps>
       </pads>
     </element>

@@ -7,7 +7,7 @@
   <license>GPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>nsfdec</name>
@@ -17,16 +17,16 @@
       <author>Johan Dahlin &lt;johan@gnome.org&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-nsf</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int){ 8, 16 }, depth=(int){ 8, 16 }, rate=(int)[ 8000, 48000 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-nsf</details>
         </caps>
       </pads>
     </element>

@@ -22,12 +22,8 @@
  * SECTION:element-appsink
  * @see_also: #GstBaseSrc
  *
- * <refsect2>
- * <para>
  * Appsink is a sink plugin that supports many different methods for making
  * the application get a handle on the GStreamer data in a pipeline.
- * </para>
- * </refsect2>
  *
  * Last reviewed on 2008-05-03 (0.10.8)
  */

@@ -21,25 +21,21 @@
 
 /**
  * SECTION:element-nuvdemux
+ * @see_also: mythtvsrc
  *
- * <refsect2>
- * <para>
  * Demuxes MythTVs NuppelVideo .nuv file into raw or compressed audio and/or
  * video streams.
- * </para>
- * <para>
+ * 
  * This element currently only supports pull-based scheduling.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc test.nuv ! nuvdemux name=demux  demux.audio_00 ! decodebin ! audioconvert ! audioresample ! autoaudiosink   demux.video_00 ! queue ! decodebin ! ffmpegcolorspace ! videoscale ! autovideosink
- * </programlisting>
- * Play (parse and decode) an .nuv file and try to output it to
+ * ]| Play (parse and decode) an .nuv file and try to output it to
  * an automatically detected soundcard and videosink. If the NUV file contains
  * compressed audio or video data, this will only work if you have the
  * right decoder elements/plugins installed.
- * </para>
  * </refsect2>
  *
  */

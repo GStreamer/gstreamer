@@ -7,7 +7,7 @@
   <license>GPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>mpeg2enc</name>
@@ -18,16 +18,16 @@
     Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-raw-yuv, format=(fourcc){ I420 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction){ 24000/1001, 24/1, 25/1, 30000/1001, 30/1, 50/1, 60000/1001 }</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>video/mpeg, systemstream=(boolean)false, mpegversion=(int){ 1, 2 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction){ 24000/1001, 24/1, 25/1, 30000/1001, 30/1, 50/1, 60000/1001 }</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc){ I420 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction){ 24000/1001, 24/1, 25/1, 30000/1001, 30/1, 50/1, 60000/1001 }</details>
         </caps>
       </pads>
     </element>

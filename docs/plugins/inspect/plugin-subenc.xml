@@ -1,8 +1,8 @@
 <plugin>
-  <name>festival</name>
-  <description>Synthesizes plain text into audio</description>
-  <filename>../../gst/festival/.libs/libgstfestival.so</filename>
-  <basename>libgstfestival.so</basename>
+  <name>subenc</name>
+  <description>subtitle encoders</description>
+  <filename>../../gst/subenc/.libs/libgstsubenc.so</filename>
+  <basename>libgstsubenc.so</basename>
   <version>0.10.7.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
@@ -10,23 +10,23 @@
   <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
-      <name>festival</name>
-      <longname>Festival Text-to-Speech synthesizer</longname>
-      <class>Filter/Effect/Audio</class>
-      <description>Synthesizes plain text into audio</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+      <name>srtenc</name>
+      <longname>Srt encoder</longname>
+      <class>Codec/Encoder/Subtitle</class>
+      <description>Srt subtitle encoder</description>
+      <author>Thijs Vermeir &lt;thijsvermeir@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>text/plain</details>
+          <details>text/plain; text/x-pango-markup</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-wav</details>
+          <details>application/x-subtitle</details>
         </caps>
       </pads>
     </element>

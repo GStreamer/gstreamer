@@ -31,19 +31,16 @@
 /**
  * SECTION:element-deinterlace
  *
- * <refsect2>
- * <para>
  * Adaptively deinterlaces video frames by detecting interlacing artifacts.
  * An edge detection matrix is used, with a threshold value. Pixels detected
  * as 'interlaced' are replaced with pixels blended from the pixels above and
  * below.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v videotestsrc ! deinterlace ! ffmpegcolorspace ! xvimagesink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

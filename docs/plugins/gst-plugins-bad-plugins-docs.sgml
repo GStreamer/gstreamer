@@ -35,7 +35,8 @@
     <xi:include href="xml/element-metadatademux.xml" />
     <xi:include href="xml/element-metadatamux.xml" />
     <xi:include href="xml/element-modplug.xml" />
-    <!--xi:include href="xml/element-mythtvsrc.xml" /-->
+    <xi:include href="xml/element-mpeg2enc.xml" />
+    <xi:include href="xml/element-mythtvsrc.xml" />
     <xi:include href="xml/element-nuvdemux.xml" />
     <xi:include href="xml/element-output-selector.xml" />
     <xi:include href="xml/element-rganalysis.xml" />

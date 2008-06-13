@@ -17,47 +17,38 @@
 
 /**
  * SECTION:element-mythtvsrc
+ * @see_also: nuvdemux
  *
- * <refsect2>
- * <para>
  * MythTVSrc allows to access a remote MythTV backend streaming Video/Audio server,
  * and to render audio and video content through a TCP/IP connection to a specific
  * port on this server, and based on a known MythTV protocol that is based on 
  * some message passing, such as REQUEST_BLOCK on a specified number of bytes, to get
  * some chunk of remote file data.
  * You should pass the information aboute the remote MythTV backend server 
- * through the <link linkend="GstMythTVSrc--location">location</link> property.
- * </para>
+ * through the #GstMythtvSrc:location property.
+ * 
+ * <refsect2>
  * <title>Examples</title>
  * <para>
  * If you want to get the LiveTV content (set channel, TV tuner, RemoteEncoder, 
- * Recorder),
- * put the following URI:
- * 
- * <programlisting> 
+ * Recorder), use the following URI:
+ * <programlisting>
  *  myth://xxx.xxx.xxx.xxx:6543/livetv?channel=BBC
  * </programlisting>
  *
- * This URI will say to the gmyth library to configure the Recorder instance (used to
- * change the channel, start the TV multimedia content transmition, etc.), using
+ * This URI will configure the Recorder instance (used to change the channel,
+ * start the TV multimedia content transmition, etc.), using
  * the IP address (xxx.xxx.xxx.xxx) and port number (6543) of the MythTV backend 
  * server, and setting the channel name to "BBC". 
  * 
  * To get a already recorded the MythTV NUV file, put the following URI:
- * 
  * <programlisting>
  *  myth://xxx.xxx.xxx.xxx:6543/filename.nuv
  * </programlisting>
- *
- * This URI will say to the gmyth library to configure the Recorder instance (used to
- * change the channel, start the TV multimedia content transmition, etc.), using
- * the IP address (xxx.xxx.xxx.xxx) and port number (6543) of the MythTV backend 
- * server, and setting the channel name to "BBC".
  * 
  * Another possible way to use the LiveTV content, and just in the case you want to 
  * use the mysql database, put the location URI in the following format:
- * 
- * <programlisting> 
+ * <programlisting>
  *  myth://mythtv:mythtv@xxx.xxx.xxx.xxx:6543/?mythconverg&channel=9
  * </programlisting>
  * 

@@ -58,7 +58,7 @@ FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html \
 	--extra-dir=$(GSTPB_PREFIX)/share/gtk-doc/html
 
 # Used for dependencies.
-HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.h
+HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.h $(DOC_SOURCE_DIR)/*/*/*.hh
 CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c $(DOC_SOURCE_DIR)/*/*/*.cc
 
 # this is a wingo addition
@@ -105,6 +105,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/metadata/gstbasemetadata.h \
 	$(top_srcdir)/ext/metadata/gstmetadatademux.h \
 	$(top_srcdir)/ext/metadata/gstmetadatamux.h \
+	$(top_srcdir)/ext/mpeg2enc/gstmpeg2enc.hh \
 	$(top_srcdir)/ext/mythtv/gstmythtvsrc.h \
 	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
 	$(top_srcdir)/ext/sdl/sdlvideosink.h \

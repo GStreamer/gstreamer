@@ -21,17 +21,14 @@
  * SECTION:element-amrwbdec
  * @see_also: #GstAmrwbEnc, #GstAmrwbParse
  *
- * <refsect2>
- * <para>
- * This is an AMR wideband decoder based on the 
+ * AMR wideband decoder based on the 
  * <ulink url="http://www.penguin.cz/~utx/amr">reference codec implementation</ulink>.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=abc.amr ! amrwbparse ! amrwbdec ! audioresample ! audioconvert ! alsasink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 
