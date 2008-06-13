@@ -51,7 +51,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_tag_inject_debug);
 
 enum
 {
-  PROP_TAGS = 1,
+  PROP_TAGS = 1
 };
 
 
@@ -67,8 +67,8 @@ static void gst_tag_inject_set_property (GObject * object, guint prop_id,
 static void gst_tag_inject_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-//static GstFlowReturn gst_tag_inject_transform_ip (GstBaseTransform * trans,
-//    GstBuffer * buf);
+/*static GstFlowReturn gst_tag_inject_transform_ip (GstBaseTransform * trans,
+    GstBuffer * buf); */
 static gboolean gst_tag_inject_start (GstBaseTransform * trans);
 
 
@@ -91,7 +91,10 @@ gst_tag_inject_finalize (GObject * object)
 {
   GstTagInject *self = GST_TAG_INJECT (object);
 
-  gst_tag_list_free (self->tags);
+  if (self->tags) {
+    gst_tag_list_free (self->tags);
+    self->tags = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -117,8 +120,9 @@ gst_tag_inject_class_init (GstTagInjectClass * klass)
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_tag_inject_finalize);
 
-  //gstbasetrans_class->transform_ip =
-  //    GST_DEBUG_FUNCPTR (gst_tag_inject_transform_ip);
+  /*gstbasetrans_class->transform_ip =
+     GST_DEBUG_FUNCPTR (gst_tag_inject_transform_ip); */
+
   gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_tag_inject_start);
 }
 
@@ -132,7 +136,7 @@ gst_tag_inject_init (GstTagInject * self, GstTagInjectClass * g_class)
 static GstFlowReturn
 gst_tag_inject_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
-  //GstTagInject *self = GST_TAG_INJECT (trans);
+  GstTagInject *self = GST_TAG_INJECT (trans);
 
   return GST_FLOW_OK;
 }

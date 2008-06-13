@@ -1,3 +1,10 @@
+2008-06-13  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/debug/gsttaginject.c: (gst_tag_inject_finalize),
+	  (gst_tag_inject_class_init), (gst_tag_inject_init):
+	  Don't unref NULL taglist in finalize. Don't use c++ style
+	  comments.
+
 2008-06-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/matroska/matroska-demux.c:
