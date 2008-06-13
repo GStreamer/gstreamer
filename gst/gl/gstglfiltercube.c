@@ -51,7 +51,7 @@ static void gst_gl_filter_cube_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_gl_filter_cube_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
-static void gst_gl_filter_cube_callback (guint width, guint height, guint texture);
+static void gst_gl_filter_cube_callback (guint width, guint height, guint texture, GLhandleARB shader);
 
 
 static void
@@ -117,7 +117,7 @@ gst_gl_filter_cube_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
     //blocking call, generate a FBO
     gst_gl_display_useFBO (filter->display, filter->width, filter->height,
         filter->fbo, filter->depthbuffer, filter->texture, gst_gl_filter_cube_callback,
-        inbuf->width, inbuf->height, inbuf->textureGL);
+        inbuf->width, inbuf->height, inbuf->textureGL, 0);
 
     outbuf->width = inbuf->width;
     outbuf->height = inbuf->height;
@@ -131,7 +131,7 @@ gst_gl_filter_cube_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 
 //opengl scene, params: input texture (not the output filter->texture)
 static void
-gst_gl_filter_cube_callback (guint width, guint height, guint texture)
+gst_gl_filter_cube_callback (guint width, guint height, guint texture, GLhandleARB shader)
 {
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;				

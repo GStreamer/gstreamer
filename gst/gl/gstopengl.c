@@ -25,6 +25,7 @@
 #include "gstgltestsrc.h"
 #include "gstglupload.h"
 #include "gstglfiltercube.h"
+#include "gstglfilteredge.h"
 #include "gstglfilterapp.h"
 #include "gstgldownload.h"
 #include "gstglimagesink.h"
@@ -32,6 +33,7 @@
 
 GType gst_gl_filter_app_get_type (void);
 GType gst_gl_filter_cube_get_type (void);
+GType gst_gl_filter_edge_get_type (void);
 
 #define GST_CAT_DEFAULT gst_gl_gstgl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -54,6 +56,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glfiltercube",
           GST_RANK_NONE, GST_TYPE_GL_FILTER_CUBE)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glfilteredge",
+          GST_RANK_NONE, GST_TYPE_GL_FILTER_EDGE)) {
     return FALSE;
   }
 

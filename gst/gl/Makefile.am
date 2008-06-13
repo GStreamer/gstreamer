@@ -14,6 +14,8 @@ libgstopengl_la_SOURCES = \
 	gstgldownload.h \
 	gstglfiltercube.c \
 	gstglfiltercube.h \
+	gstglfilteredge.c \
+	gstglfilteredge.h \
 	gstglfilterapp.c \
 	gstglfilterapp.h \
 	gstglcolorscale.c \
