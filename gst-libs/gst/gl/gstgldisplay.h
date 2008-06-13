@@ -56,7 +56,9 @@ typedef enum {
     GST_GL_DISPLAY_ACTION_DELFBO,
     GST_GL_DISPLAY_ACTION_USEFBO,
     GST_GL_DISPLAY_ACTION_USEFBO2,
-    GST_GL_DISPLAY_ACTION_OVFBO
+    GST_GL_DISPLAY_ACTION_OVFBO,
+    GST_GL_DISPLAY_ACTION_GENSHADER,
+    GST_GL_DISPLAY_ACTION_DELSHADER
 	
 } GstGLDisplayAction;
 
@@ -82,7 +84,7 @@ typedef void (* CRCB) ( GLuint, GLuint );
 typedef gboolean (* CDCB) ( GLuint, GLuint, GLuint);
 
 //opengl scene callback
-typedef void (* GLCB) ( GLuint, GLuint, GLuint);
+typedef void (* GLCB) ( GLuint, GLuint, GLuint, GLhandleARB);
 typedef void (* GLCB2) ( gpointer* p1, gpointer* p2, gint w, gint h);
 
 struct _GstGLDisplay {
@@ -101,6 +103,8 @@ struct _GstGLDisplay {
     GCond* cond_useFBO2;
     GCond* cond_destroyFBO;
     GCond* cond_download;
+    GCond* cond_initShader;
+    GCond* cond_destroyShader;
 
     GCond* cond_create;
     GCond* cond_destroy;
@@ -219,6 +223,12 @@ struct _GstGLDisplay {
 
     gchar* textFProgram_to_AYUV;
 	GLhandleARB GLSLProgram_to_AYUV;
+
+    //requested shader
+    gchar* requestedTextShader;
+    GLhandleARB requestedHandleShader;
+    GLhandleARB usedHandleShader;
+    GLhandleARB rejectedHandleShader;
 	
     //client callbacks
     CRCB clientReshapeCallback;
@@ -263,13 +273,16 @@ void gst_gl_display_requestFBO (GstGLDisplay* display, gint width, gint height,
                                 guint* fbo, guint* depthbuffer, guint* texture);
 void gst_gl_display_useFBO (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
                             guint fbo, guint depthbuffer, guint textureFBO, GLCB cb,
-                            guint inputTextureWidth, guint inputTextureHeight, guint inputTexture);
+                            guint inputTextureWidth, guint inputTextureHeight, guint inputTexture,
+                            GLhandleARB handleShader);
 void gst_gl_display_useFBO2 (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
                             guint fbo, guint depthbuffer, guint textureFBO, GLCB2 cb,
                             gpointer* p1, gpointer* p2);
 void gst_gl_display_rejectFBO (GstGLDisplay* display, guint fbo, 
                                guint depthbuffer, guint texture);
 void gst_gl_display_initDonwloadFBO (GstGLDisplay* display, gint width, gint height);
+void gst_gl_display_initShader (GstGLDisplay* display, gchar* textShader, GLhandleARB* handleShader);
+void gst_gl_display_destroyShader (GstGLDisplay* display, GLhandleARB shader);
 void gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId);
 
 #endif

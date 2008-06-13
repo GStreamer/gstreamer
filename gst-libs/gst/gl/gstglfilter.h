@@ -44,6 +44,7 @@ typedef gboolean (*GstGLFilterSetCaps) (GstGLFilter* filter,
 typedef gboolean (*GstGLFilterProcessFunc) (GstGLFilter *filter,
     GstGLBuffer *inbuf, GstGLBuffer *outbuf);
 typedef void (*GstGLFilterOnInitFBO) (GstGLFilter *filter);
+typedef void (*GstGLFilterOnReset) (GstGLFilter *filter);
 
 struct _GstGLFilter
 {
@@ -67,6 +68,7 @@ struct _GstGLFilterClass
     GstGLFilterSetCaps set_caps;
     GstGLFilterProcessFunc filter;
     GstGLFilterOnInitFBO onInitFBO;
+    GstGLFilterOnReset onReset;
 };
 
 GType gst_gl_filter_get_type(void);

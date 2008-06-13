@@ -28,11 +28,13 @@
 static void gst_gl_display_finalize (GObject * object);
 static gpointer gst_gl_display_glutThreadFunc (GstGLDisplay* display);
 static void gst_gl_display_glutCreateWindow (GstGLDisplay* display);
-static void gst_gldisplay_glutGenerateOutputVideoFBO (GstGLDisplay *display);
+static void gst_gl_display_glutGenerateOutputVideoFBO (GstGLDisplay *display);
 static void gst_gl_display_glutGenerateFBO (GstGLDisplay *display);
 static void gst_gl_display_glutUseFBO (GstGLDisplay *display);
 static void gst_gl_display_glutUseFBO2 (GstGLDisplay *display);
 static void gst_gl_display_glutDestroyFBO (GstGLDisplay *display);
+static void gst_gl_display_glutInitShader (GstGLDisplay *display);
+static void gst_gl_display_glutDestroyShader (GstGLDisplay *display);
 static void gst_gl_display_glutDestroyWindow (GstGLDisplay* display);
 static void gst_gl_display_glutSetVisibleWindow (GstGLDisplay* display);
 static void gst_gl_display_glutReshapeWindow (GstGLDisplay* display);
@@ -106,6 +108,8 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->cond_create = g_cond_new ();
     display->cond_destroy = g_cond_new ();
     display->cond_download = g_cond_new ();
+    display->cond_initShader = g_cond_new ();
+    display->cond_destroyShader = g_cond_new ();
 
     display->fbo = 0;
     display->depthBuffer = 0;
@@ -203,6 +207,11 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->GLSLProgram_to_UYVY = 0;
     display->GLSLProgram_to_I420_YV12 = 0;
     display->GLSLProgram_to_AYUV = 0;
+
+    display->requestedTextShader = NULL;
+    display->requestedHandleShader = 0;
+    display->usedHandleShader = 0;
+    display->rejectedHandleShader = 0;
 
     //YUY2:r,g,a
     //UYVY:a,b,r
@@ -369,6 +378,14 @@ gst_gl_display_finalize (GObject *object)
     if (display->cond_download) {
         g_cond_free (display->cond_download);
         display->cond_download = NULL;
+    }
+    if (display->cond_initShader) {
+        g_cond_free (display->cond_initShader);
+        display->cond_initShader = NULL;
+    }
+    if (display->cond_destroyShader) {
+        g_cond_free (display->cond_destroyShader);
+        display->cond_destroyShader = NULL;
     }
     if (display->cond_generateFBO) {
         g_cond_free (display->cond_generateFBO);
@@ -595,7 +612,7 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
 
 /* Called by the idle funtion */
 static void
-gst_gldisplay_glutGenerateOutputVideoFBO (GstGLDisplay *display)
+gst_gl_display_glutGenerateOutputVideoFBO (GstGLDisplay *display)
 {
     glutSetWindow (display->glutWinId);
     
@@ -821,7 +838,8 @@ gst_gl_display_glutUseFBO (GstGLDisplay *display)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //the opengl scene
-    display->glsceneFBO_cb (display->inputTextureWidth, display->inputTextureHeight, display->inputTexture);
+    display->glsceneFBO_cb (display->inputTextureWidth, display->inputTextureHeight, display->inputTexture,
+        display->usedHandleShader);
 
     glDrawBuffer(GL_NONE);
 
@@ -890,9 +908,8 @@ gst_gl_display_glutUseFBO2 (GstGLDisplay *display)
 
 /* Called by the idle funtion */
 static void
-gst_gl_display_glutDestroyFBO (GstGLDisplay *display)
+gst_gl_display_glutDestroyFBO (GstGLDisplay* display)
 {
-    
     glutSetWindow (display->glutWinId);
 
     glDeleteFramebuffersEXT (1, &display->rejectedFBO); 
@@ -904,6 +921,27 @@ gst_gl_display_glutDestroyFBO (GstGLDisplay *display)
 
     g_cond_signal (display->cond_destroyFBO);
 }
+
+
+/* Called by the idle funtion */
+static void
+gst_gl_display_glutInitShader (GstGLDisplay* display)
+{
+    glutSetWindow (display->glutWinId);
+    display->requestedHandleShader = gst_gl_display_loadGLSLprogram (display->requestedTextShader);
+    g_cond_signal (display->cond_initShader);
+}
+
+
+/* Called by the idle funtion */
+static void
+gst_gl_display_glutDestroyShader (GstGLDisplay* display)
+{
+    glutSetWindow (display->glutWinId);
+    glDeleteObjectARB (display->rejectedHandleShader);
+    g_cond_signal (display->cond_destroyShader);
+}
+
 
 
 /* Called by the idle function */
@@ -1127,7 +1165,13 @@ gst_gl_display_glutDispatchAction (GstGLDisplayMsg* msg)
             gst_gl_display_glutUseFBO2 (msg->display);
             break;
         case GST_GL_DISPLAY_ACTION_OVFBO:
-            gst_gldisplay_glutGenerateOutputVideoFBO (msg->display);
+            gst_gl_display_glutGenerateOutputVideoFBO (msg->display);
+            break;
+        case GST_GL_DISPLAY_ACTION_GENSHADER:
+            gst_gl_display_glutInitShader (msg->display);
+            break;
+        case GST_GL_DISPLAY_ACTION_DELSHADER:
+            gst_gl_display_glutDestroyShader (msg->display);
             break;
         default:
             g_assert_not_reached ();
@@ -1161,6 +1205,8 @@ gst_gl_display_checkMsgValidity (GstGLDisplayMsg *msg)
         case GST_GL_DISPLAY_ACTION_USEFBO:
         case GST_GL_DISPLAY_ACTION_USEFBO2:
         case GST_GL_DISPLAY_ACTION_OVFBO:
+        case GST_GL_DISPLAY_ACTION_GENSHADER:
+        case GST_GL_DISPLAY_ACTION_DELSHADER:
             //msg is out of date if the associated display is not in the map
             if (!g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (msg->glutWinId)))
                 valid = FALSE;
@@ -1413,7 +1459,8 @@ gst_gl_display_requestFBO (GstGLDisplay* display, gint width, gint height,
 void 
 gst_gl_display_useFBO (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
                        guint fbo, guint depthbuffer, guint textureFBO, GLCB cb,
-                       guint inputTextureWidth, guint inputTextureHeight, guint inputTexture)
+                       guint inputTextureWidth, guint inputTextureHeight, guint inputTexture,
+                       GLhandleARB handleShader)
 {
     gst_gl_display_lock (display);
     display->usedFBO = fbo;
@@ -1425,6 +1472,7 @@ gst_gl_display_useFBO (GstGLDisplay* display, gint textureFBOWidth, gint texture
     display->inputTextureWidth = inputTextureWidth;
     display->inputTextureHeight = inputTextureHeight;
     display->inputTexture = inputTexture;
+    display->usedHandleShader = handleShader;
     gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_USEFBO, display);
     g_cond_wait (display->cond_useFBO, display->mutex);
     gst_gl_display_unlock (display);
@@ -1474,6 +1522,31 @@ gst_gl_display_initDonwloadFBO (GstGLDisplay* display, gint width, gint height)
     display->glcontext_height = height;
     gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_OVFBO, display);
     g_cond_wait (display->cond_download, display->mutex);
+    gst_gl_display_unlock (display);
+}
+
+
+/* Called by gst_gl elements */
+void 
+gst_gl_display_initShader (GstGLDisplay* display, gchar* textShader, GLhandleARB* handleShader)
+{
+    gst_gl_display_lock (display);
+    display->requestedTextShader = textShader;
+    gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_GENSHADER, display);
+    g_cond_wait (display->cond_initShader, display->mutex);
+    *handleShader = display->requestedHandleShader;
+    gst_gl_display_unlock (display);
+}
+
+
+/* Called by gst_gl elements */
+void 
+gst_gl_display_destroyShader (GstGLDisplay* display, GLhandleARB shader)
+{
+    gst_gl_display_lock (display);
+    display->rejectedHandleShader = shader;
+    gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_DELSHADER, display);
+    g_cond_wait (display->cond_destroyShader, display->mutex);
     gst_gl_display_unlock (display);
 }
 

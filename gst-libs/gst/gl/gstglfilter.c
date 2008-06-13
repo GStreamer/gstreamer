@@ -103,6 +103,7 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
     klass->set_caps = NULL;
     klass->filter = NULL;
     klass->onInitFBO = NULL;
+    klass->onReset = NULL;
 }
 
 static void
@@ -147,6 +148,11 @@ gst_gl_filter_get_property (GObject * object, guint prop_id,
 static void
 gst_gl_filter_reset (GstGLFilter* filter)
 {
+    GstGLFilterClass* filter_class = GST_GL_FILTER_GET_CLASS (filter);
+    
+    if (filter_class->onReset)
+        filter_class->onReset (filter);
+    
     if (filter->display) 
     {
         //blocking call, delete the FBO
