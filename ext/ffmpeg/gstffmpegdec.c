@@ -244,7 +244,7 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
 
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFMPEG %s decoder",
-      gst_ffmpeg_get_codecid_longname (params->in_plugin->id));
+      params->in_plugin->long_name);
   details.klass = g_strdup_printf ("Codec/Decoder/%s",
       (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
   details.description = g_strdup_printf ("FFMPEG %s decoder",
@@ -2445,6 +2445,9 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       goto next;
     }
 
+    GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name,
+	       in_plugin->long_name);
+
     /* no codecs for which we're GUARANTEED to have better alternatives */
     /* MPEG1VIDEO : the mpeg2video decoder is preferred */
     /* MP2 : Use MP3 for decoding */
@@ -2459,17 +2462,11 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       goto next;
     }
 
-    /* name */
-    if (!gst_ffmpeg_get_codecid_longname (in_plugin->id)) {
-      GST_WARNING ("Add a longname mapping for decoder %s (%d) please",
-          in_plugin->name, in_plugin->id);
-      goto next;
-    }
-
     /* first make sure we've got a supported type */
     sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);
     if (!sinkcaps) {
-      GST_WARNING ("Couldn't get input caps for decoder '%s'", in_plugin->name);
+      GST_WARNING ("Couldn't get sink caps for decoder '%s'", in_plugin->name);
+      goto next;
     }
     if (in_plugin->type == CODEC_TYPE_VIDEO) {
       srccaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
@@ -2477,8 +2474,8 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       srccaps =
           gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL, in_plugin->id);
     }
-    if (!sinkcaps || !srccaps) {
-      GST_WARNING ("Couldn't get source or sink caps for decoder %s",
+    if (!srccaps) {
+      GST_WARNING ("Couldn't get source caps for decoder %s",
           in_plugin->name);
       goto next;
     }

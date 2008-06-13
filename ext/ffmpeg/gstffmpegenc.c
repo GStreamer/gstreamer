@@ -132,7 +132,7 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
 
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFMPEG %s encoder",
-      gst_ffmpeg_get_codecid_longname (params->in_plugin->id));
+				      params->in_plugin->long_name);
   details.klass = g_strdup_printf ("Codec/Encoder/%s",
       (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
   details.description = g_strdup_printf ("FFMPEG %s encoder",
@@ -983,6 +983,9 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       goto next;
     }
 
+    GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name,
+	       in_plugin->long_name);
+
     /* no codecs for which we're GUARANTEED to have better alternatives */
     if (!strcmp (in_plugin->name, "vorbis") ||
         !strcmp (in_plugin->name, "gif") || !strcmp (in_plugin->name, "flac")) {
@@ -990,15 +993,12 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       goto next;
     }
 
-    /* name */
-    if (!gst_ffmpeg_get_codecid_longname (in_plugin->id)) {
-      GST_WARNING ("Add a longname mapping for encoder %s (%d) please",
-          in_plugin->name, in_plugin->id);
+    /* first make sure we've got a supported type */
+    if (!(srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE))) {
+      GST_WARNING ("Couldn't get source caps for encoder %s", in_plugin->name);
       goto next;
     }
 
-    /* first make sure we've got a supported type */
-    srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE);
     if (in_plugin->type == CODEC_TYPE_VIDEO) {
       sinkcaps = gst_caps_from_string
           ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray");
@@ -1006,8 +1006,8 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       sinkcaps =
           gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL, in_plugin->id);
     }
-    if (!sinkcaps || !srccaps) {
-      GST_WARNING ("Couldn't get either source/sink caps for encoder %s",
+    if (!sinkcaps) {
+      GST_WARNING ("Couldn't get sink caps for encoder %s",
           in_plugin->name);
       goto next;
     }

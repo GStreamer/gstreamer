@@ -1,5 +1,19 @@
 2008-06-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_get_codecid_longname):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_base_init),
+	(gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_base_init),
+	(gst_ffmpegenc_register):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_register):
+	FFMpeg now provides proper long_name for AVCodec, remove our
+	internal mapping and directly use upstream naming.
+	Improve debugging messages.
+	Remove g_warning() which isn't really needed.
+
+2008-06-13  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* ext/ffmpeg/Makefile.am:
 	* ffmpegrev:
 	Bump upstream ffmpeg revision to todays (rev 13766).

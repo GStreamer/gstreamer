@@ -716,7 +716,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
             &video_ids, &audio_ids)) {
       gst_caps_unref (srccaps);
       GST_WARNING
-          ("Couldn't get sink caps for muxer %s, mapping maybe missing ?",
+          ("Couldn't get sink caps for muxer %s. Most likely because no input format mapping exists.",
           in_plugin->name);
       goto next;
     }
