@@ -1,3 +1,11 @@
+2008-06-13  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	patch by: Sebastian Pölsterl
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	Handle character sets in strings coming from DVB SI according
+	to the DVB SI spec.
+
 2008-06-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/replaygain/gstrganalysis.c:

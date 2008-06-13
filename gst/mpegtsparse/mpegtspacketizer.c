@@ -31,6 +31,11 @@ G_DEFINE_TYPE (MpegTSPacketizer, mpegts_packetizer, G_TYPE_OBJECT);
 
 static void mpegts_packetizer_dispose (GObject * object);
 static void mpegts_packetizer_finalize (GObject * object);
+static gchar *convert_to_utf8 (const gchar * text, gint length, guint start,
+    const gchar * encoding, gboolean is_multibyte, GError ** error);
+static gchar *get_encoding (const gchar * text, guint * start_text,
+    gboolean * is_multibyte);
+static gchar *get_encoding_and_convert (const gchar * text, guint length);
 
 #define CONTINUITY_UNSET 255
 #define MAX_CONTINUITY 15
@@ -606,11 +611,9 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
           DESC_DVB_NETWORK_NAME_length (networkname_descriptor);
       gchar *networkname =
           (gchar *) DESC_DVB_NETWORK_NAME_text (networkname_descriptor);
-      if (networkname[0] < 0x20) {
-        networkname_length -= 1;
-        networkname += 1;
-      }
-      networkname_tmp = g_strndup (networkname, networkname_length);
+
+      networkname_tmp =
+          get_encoding_and_convert (networkname, networkname_length);
       gst_structure_set (nit, "network-name", G_TYPE_STRING, networkname_tmp,
           NULL);
       g_free (networkname_tmp);
@@ -1213,17 +1216,13 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
             (gchar *) DESC_DVB_SERVICE_name_text (service_descriptor);
         if (servicename_length + serviceprovider_name_length + 2 <=
             DESC_LENGTH (service_descriptor)) {
-          if (servicename[0] < 0x20) {
-            servicename_length -= 1;
-            servicename += 1;
-          }
-          if (serviceprovider_name[0] < 0x20) {
-            serviceprovider_name_length -= 1;
-            serviceprovider_name += 1;
-          }
-          servicename_tmp = g_strndup (servicename, servicename_length);
+
+          servicename_tmp =
+              get_encoding_and_convert (servicename, servicename_length);
           serviceprovider_name_tmp =
-              g_strndup (serviceprovider_name, serviceprovider_name_length);
+              get_encoding_and_convert (serviceprovider_name,
+              serviceprovider_name_length);
+
           gst_structure_set (service, "name", G_TYPE_STRING, servicename_tmp,
               NULL);
           gst_structure_set (service, "provider-name", G_TYPE_STRING,
@@ -1444,17 +1443,12 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
             (gchar *) DESC_DVB_SHORT_EVENT_description_text (event_descriptor);
         if (eventname_length + eventdescription_length + 2 <=
             DESC_LENGTH (event_descriptor)) {
-          if (eventname[0] < 0x20) {
-            eventname_length -= 1;
-            eventname += 1;
-          }
-          if (eventdescription[0] < 0x20) {
-            eventdescription_length -= 1;
-            eventdescription += 1;
-          }
-          eventname_tmp = g_strndup (eventname, eventname_length),
+
+          eventname_tmp =
+              get_encoding_and_convert (eventname, eventname_length),
               eventdescription_tmp =
-              g_strndup (eventdescription, eventdescription_length);
+              get_encoding_and_convert (eventdescription,
+              eventdescription_length);
 
           gst_structure_set (event, "name", G_TYPE_STRING, eventname_tmp, NULL);
           gst_structure_set (event, "description", G_TYPE_STRING,
@@ -1932,4 +1926,257 @@ mpegts_packetizer_init_debug ()
 {
   GST_DEBUG_CATEGORY_INIT (mpegts_packetizer_debug, "mpegtspacketizer", 0,
       "MPEG transport stream parser");
+}
+
+/**
+ * @text: The text you want to get the encoding from
+ * @start_text: Location where the beginning of the actual text is stored
+ * @is_multibyte: Location where information whether it's a multibyte encoding
+ * or not is stored
+ * @returns: Name of encoding or NULL of encoding could not be detected.
+ * 
+ * The returned string should be freed with g_free () when no longer needed.
+ */
+static gchar *
+get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
+{
+  gchar *encoding;
+  guint8 firstbyte;
+
+  g_return_val_if_fail (text != NULL, NULL);
+
+  firstbyte = (guint8) text[0];
+
+  if (firstbyte == 0x01) {
+    encoding = g_strdup ("iso8859-5");
+    *start_text = 1;
+    *is_multibyte = FALSE;
+  } else if (firstbyte == 0x02) {
+    encoding = g_strdup ("iso8859-6");
+    *start_text = 1;
+    *is_multibyte = FALSE;
+  } else if (firstbyte == 0x03) {
+    encoding = g_strdup ("iso8859-7");
+    *start_text = 1;
+    *is_multibyte = FALSE;
+  } else if (firstbyte == 0x04) {
+    encoding = g_strdup ("iso8859-8");
+    *start_text = 1;
+    *is_multibyte = FALSE;
+  } else if (firstbyte == 0x05) {
+    encoding = g_strdup ("iso8859-9");
+    *start_text = 1;
+    *is_multibyte = FALSE;
+  } else if (firstbyte >= 0x20) {
+    encoding = g_strdup ("iso6937");
+    *start_text = 0;
+    *is_multibyte = FALSE;
+  } else if (firstbyte == 0x10) {
+    guint16 table;
+    gchar table_str[6];
+
+    text++;
+    table = GST_READ_UINT16_BE (text);
+    g_snprintf (table_str, 6, "%d", table);
+
+    encoding = g_strconcat ("iso8859-", table_str, NULL);
+    *start_text = 3;
+    *is_multibyte = FALSE;
+  } else if (firstbyte == 0x11) {
+    encoding = g_strdup ("ISO-10646/UCS2");
+    *start_text = 1;
+    *is_multibyte = TRUE;
+  } else if (firstbyte == 0x12) {
+    // That's korean encoding.
+    // The spec says it's encoded in KSC 5601, but iconv only knows KSC 5636.
+    // Couldn't find any information about either of them.
+    encoding = NULL;
+    *start_text = 1;
+    *is_multibyte = TRUE;
+  } else {
+    // reserved
+    encoding = NULL;
+  }
+
+  return encoding;
+}
+
+/**
+ * @text: The text to convert. It may include pango markup (<b> and </b>)
+ * @length: The length of the string -1 if it's nul-terminated
+ * @start: Where to start converting in the text
+ * @encoding: The encoding of text
+ * @is_multibyte: Whether the encoding is a multibyte encoding
+ * @error: The location to store the error, or NULL to ignore errors
+ * @returns: UTF-8 encoded string
+ *
+ * Convert text to UTF-8.
+ */
+static gchar *
+convert_to_utf8 (const gchar * text, gint length, guint start,
+    const gchar * encoding, gboolean is_multibyte, GError ** error)
+{
+  gchar *new_text;
+  GByteArray *sb;
+  gint i;
+
+  g_return_val_if_fail (text != NULL, NULL);
+  g_return_val_if_fail (encoding != NULL, NULL);
+
+  text += start;
+
+  sb = g_byte_array_sized_new (length * 1.1);
+
+  if (is_multibyte) {
+    if (length == -1) {
+      while (*text != '\0') {
+        guint16 code = GST_READ_UINT16_BE (text);
+
+        switch (code) {
+          case 0xE086:{
+            guint8 emph_on[] = { 0x3C, 0x00,    // <
+              0x62, 0x00,       // b
+              0x3E, 0x00        // >
+            };
+            g_byte_array_append (sb, emph_on, 6);
+            break;
+          }
+          case 0xE087:{
+            guint8 emph_on[] = { 0x3C, 0x00,    // <
+              0x2F, 0x00,       // /
+              0x62, 0x00,       // b
+              0x3E, 0x00        // >
+            };
+            g_byte_array_append (sb, emph_on, 8);
+            break;
+          }
+          case 0xE08A:{
+            guint8 nl[] = { 0x0A, 0x00 };       // new line
+            g_byte_array_append (sb, nl, 2);
+            break;
+          }
+          default:
+            g_byte_array_append (sb, (guint8 *) text, 2);
+            break;
+        }
+
+        text += 2;
+      }
+    } else {
+      for (i = 0; i < length; i += 2) {
+        guint16 code = GST_READ_UINT16_BE (text);
+
+        switch (code) {
+          case 0xE086:{
+            guint8 emph_on[] = { 0x3C, 0x00,    // <
+              0x62, 0x00,       // b
+              0x3E, 0x00        // >
+            };
+            g_byte_array_append (sb, emph_on, 6);
+            break;
+          }
+          case 0xE087:{
+            guint8 emph_on[] = { 0x3C, 0x00,    // <
+              0x2F, 0x00,       // /
+              0x62, 0x00,       // b
+              0x3E, 0x00        // >
+            };
+            g_byte_array_append (sb, emph_on, 8);
+            break;
+          }
+          case 0xE08A:{
+            guint8 nl[] = { 0x0A, 0x00 };       // new line
+            g_byte_array_append (sb, nl, 2);
+            break;
+          }
+          default:
+            g_byte_array_append (sb, (guint8 *) text, 2);
+            break;
+        }
+
+        text += 2;
+      }
+    }
+  } else {
+    if (length == -1) {
+      while (*text != '\0') {
+        guint8 code = (guint8) (*text);
+
+        switch (code) {
+          case 0x86:
+            g_byte_array_append (sb, (guint8 *) "<b>", 3);
+            break;
+          case 0x87:
+            g_byte_array_append (sb, (guint8 *) "</b>", 4);
+            break;
+          case 0x8A:
+            g_byte_array_append (sb, (guint8 *) "\n", 1);
+            break;
+          default:
+            g_byte_array_append (sb, &code, 1);
+            break;
+        }
+
+        text++;
+      }
+    } else {
+      for (i = 0; i < length; i++) {
+        guint8 code = (guint8) (*text);
+
+        switch (code) {
+          case 0x86:
+            g_byte_array_append (sb, (guint8 *) "<b>", 3);
+            break;
+          case 0x87:
+            g_byte_array_append (sb, (guint8 *) "</b>", 4);
+            break;
+          case 0x8A:
+            g_byte_array_append (sb, (guint8 *) "\n", 1);
+            break;
+          default:
+            g_byte_array_append (sb, &code, 1);
+            break;
+        }
+
+        text++;
+      }
+    }
+  }
+
+  new_text =
+      g_convert ((gchar *) sb->data, sb->len, "utf-8", encoding, NULL, NULL,
+      error);
+
+  g_byte_array_free (sb, TRUE);
+
+  return new_text;
+}
+
+static gchar *
+get_encoding_and_convert (const gchar * text, guint length)
+{
+  GError *error = NULL;
+  gchar *converted_str;
+  gchar *encoding;
+  guint start_text = 0;
+  gboolean is_multibyte;
+
+  encoding = get_encoding (text, &start_text, &is_multibyte);
+
+  if (encoding == NULL) {
+    converted_str = g_strndup (text, length);
+  } else {
+    converted_str = convert_to_utf8 (text, length - start_text, start_text,
+        encoding, is_multibyte, &error);
+    if (error != NULL) {
+      g_critical ("Could not convert string: %s", error->message);
+      g_error_free (error);
+      text += start_text;
+      converted_str = g_strndup (text, length - start_text);
+    }
+
+    g_free (encoding);
+  }
+
+  return converted_str;
 }
