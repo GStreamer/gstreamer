@@ -308,6 +308,8 @@ gst_dshowaudiodec_init (GstDshowAudioDec * adec,
   adec->layer = 0;
   adec->codec_data = NULL;
 
+  adec->last_ret = GST_FLOW_OK;
+
   CoInitializeEx (NULL, COINIT_MULTITHREADED);
 }
 
@@ -420,7 +422,6 @@ end:
 static GstFlowReturn
 gst_dshowaudiodec_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
   GstDshowAudioDec *adec = (GstDshowAudioDec *) gst_pad_get_parent (pad);
   gboolean discount = FALSE;
 
@@ -436,13 +437,20 @@ gst_dshowaudiodec_chain (GstPad * pad, GstBuffer * buffer)
 
     /* setup dshow graph */
     if (!gst_dshowaudiodec_setup_graph (adec)) {
-      return GST_FLOW_ERROR;
+      adec->last_ret = GST_FLOW_ERROR;
+      goto beach;
     }
   }
 
   if (!adec->gstdshowsrcfilter) {
     /* we are not setup */
-    ret = GST_FLOW_WRONG_STATE;
+    adec->last_ret = GST_FLOW_WRONG_STATE;
+    goto beach;
+  }
+
+  if (GST_FLOW_IS_FATAL (adec->last_ret)) {
+    GST_DEBUG_OBJECT (adec, "last decoding iteration generated a fatal error "
+        "%s", gst_flow_get_name (adec->last_ret));
     goto beach;
   }
 
@@ -470,7 +478,7 @@ gst_dshowaudiodec_chain (GstPad * pad, GstBuffer * buffer)
 beach:
   gst_buffer_unref (buffer);
   gst_object_unref (adec);
-  return ret;
+  return adec->last_ret;
 }
 
 static gboolean
@@ -509,7 +517,7 @@ gst_dshowaudiodec_push_buffer (byte * buffer, long size, byte * src_object,
   /* buffer is in our segment allocate a new out buffer and clip it if needed */
 
   /* allocate a new buffer for raw audio */
-  gst_pad_alloc_buffer (adec->srcpad, GST_BUFFER_OFFSET_NONE,
+  adec->last_ret = gst_pad_alloc_buffer (adec->srcpad, GST_BUFFER_OFFSET_NONE,
       size, GST_PAD_CAPS (adec->srcpad), &out_buf);
   if (!out_buf) {
     GST_CAT_ERROR_OBJECT (dshowaudiodec_debug, adec,
@@ -518,10 +526,10 @@ gst_dshowaudiodec_push_buffer (byte * buffer, long size, byte * src_object,
   }
 
   /* set buffer properties */
-  GST_BUFFER_SIZE (out_buf) = size;
   GST_BUFFER_TIMESTAMP (out_buf) = buf_start;
   GST_BUFFER_DURATION (out_buf) = buf_stop - buf_start;
-  memcpy (GST_BUFFER_DATA (out_buf), buffer, size);
+  memcpy (GST_BUFFER_DATA (out_buf), buffer,
+      MIN (size, GST_BUFFER_SIZE (out_buf)));
 
   /* we have to remove some heading samples */
   if (clip_start > buf_start) {
@@ -560,7 +568,7 @@ gst_dshowaudiodec_push_buffer (byte * buffer, long size, byte * src_object,
           GST_BUFFER_DURATION (out_buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (out_buf)));
 
-  gst_pad_push (adec->srcpad, out_buf);
+  adec->last_ret = gst_pad_push (adec->srcpad, out_buf);
 
   return TRUE;
 }
@@ -608,6 +616,9 @@ gst_dshowaudiodec_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_event_default (pad, event);
       break;
   }
+
+  gst_object_unref (adec);
+
   return ret;
 }
 
@@ -899,7 +910,6 @@ gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec)
   ret = TRUE;
   adec->setup = TRUE;
 end:
-  gst_object_unref (adec);
   if (input_format)
     g_free (input_format);
   if (gstdshowinterface)

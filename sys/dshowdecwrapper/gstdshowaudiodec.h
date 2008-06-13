@@ -68,6 +68,8 @@ struct _GstDshowAudioDec
   /* element pads */
   GstPad *sinkpad;
   GstPad *srcpad;
+  
+  GstFlowReturn last_ret;
 
   /* filters interfaces*/
   IBaseFilter *srcfilter;

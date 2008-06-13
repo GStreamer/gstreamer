@@ -88,6 +88,7 @@ struct _GstFLVDemux
   gboolean audio_need_discont;
   gboolean audio_need_segment;
   gboolean audio_linked;
+  GstBuffer * audio_codec_data;
 
   /* Video infos */
   guint32 w;
@@ -100,6 +101,7 @@ struct _GstFLVDemux
   gboolean video_need_segment;
   gboolean video_linked;
   gboolean got_par;
+  GstBuffer * video_codec_data;
 
   gboolean random_access;
   gboolean need_header;

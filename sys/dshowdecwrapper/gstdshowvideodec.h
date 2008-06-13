@@ -70,6 +70,8 @@ struct _GstDshowVideoDec
 
   /* caps of our src pad */
   GstCaps *srccaps;
+  
+  GstFlowReturn last_ret;
 
   /* list of dshow mediatypes coresponding to the caps list */
   GList *mediatypes;

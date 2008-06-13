@@ -1,3 +1,22 @@
+2008-06-14  Julien Moutte  <julien@fluendo.com>
+
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),
+	(gst_flv_demux_dispose):
+	* gst/flv/gstflvdemux.h:
+	* gst/flv/gstflvparse.c: (gst_flv_parse_audio_negotiate),
+	(gst_flv_parse_tag_audio), (gst_flv_parse_video_negotiate),
+	(gst_flv_parse_tag_video): Introduce demuxing support for AAC and
+	H.264/AVC inside FLV.
+	* sys/dshowdecwrapper/gstdshowaudiodec.c: (gst_dshowaudiodec_init),
+	(gst_dshowaudiodec_chain), (gst_dshowaudiodec_push_buffer),
+	(gst_dshowaudiodec_sink_event), (gst_dshowaudiodec_setup_graph):
+	* sys/dshowdecwrapper/gstdshowaudiodec.h:
+	* sys/dshowdecwrapper/gstdshowvideodec.c: (gst_dshowvideodec_init),
+	(gst_dshowvideodec_sink_event), (gst_dshowvideodec_chain),
+	(gst_dshowvideodec_push_buffer), (gst_dshowvideodec_src_getcaps):
+	* sys/dshowdecwrapper/gstdshowvideodec.h: Lot of random fixes 
+	to improve stability (ref counting, safety checks...)
+
 2008-06-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_probe_modules):
