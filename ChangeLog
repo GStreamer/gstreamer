@@ -1,5 +1,10 @@
 2008-06-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* configure.ac:
+	0.10.11.3 pre-release
+
+2008-06-13  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/__init__.py:
 	* gst/gstelement.override:
 	* testsuite/test_element.py:
