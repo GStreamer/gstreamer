@@ -22,11 +22,8 @@
 
 /**
  * SECTION:element-rgvolume
- * @see_also: <link linkend="GstRgLimiter">rglimiter</link>,
- *            <link linkend="GstRgAnalysis">rganalysis</link>
+ * @see_also: #GstRgLimiter, #GstRgAnalysis
  *
- * <refsect2>
- * <para>
  * This element applies volume changes to streams as lined out in the proposed
  * <ulink url="http://replaygain.org">ReplayGain standard</ulink>.  It
  * interprets the ReplayGain meta data tags and carries out the adjustment (by
@@ -41,21 +38,20 @@
  * The information carried by these tags must have been calculated beforehand by
  * performing the ReplayGain analysis.  This is implemented by the <link
  * linkend="GstRgAnalysis">rganalysis</link> element.
- * </para>
- * <para>
+ * 
  * The signal compression/limiting recommendations outlined in the proposed
  * standard are not implemented by this element.  This has to be handled by
  * separate elements because applications might want to have additional filters
  * between the volume adjustment and the limiting stage.  A basic limiter is
  * included with this plugin: The <link linkend="GstRgLimiter">rglimiter</link>
  * element applies -6 dB hard limiting as mentioned in the ReplayGain standard.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>Playback of a file:</para>
- * <programlisting>
- * gst-launch filesrc location="Filename.ext" ! decodebin ! audioconvert \
+ * |[
+ * gst-launch filesrc location=filename.ext ! decodebin ! audioconvert \
  *     ! rgvolume ! audioconvert ! audioresample ! alsasink
- * </programlisting>
+ * ]| Playback of a file
  * </refsect2>
  */
 

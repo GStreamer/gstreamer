@@ -22,10 +22,8 @@
 
 /**
  * SECTION:element-rganalysis
- * @see_also: <link linkend="GstRgVolume">rgvolume</link>
+ * @see_also: #GstRgVolume
  *
- * <refsect2>
- * <para>
  * This element analyzes raw audio sample data in accordance with the proposed
  * <ulink url="http://replaygain.org">ReplayGain standard</ulink> for
  * calculating the ideal replay gain for music tracks and albums.  The element
@@ -35,8 +33,7 @@
  * posted on the message bus with a tag message.  The EOS event is forwarded as
  * normal afterwards.  Result tag lists at least contain the tags
  * #GST_TAG_TRACK_GAIN, #GST_TAG_TRACK_PEAK and #GST_TAG_REFERENCE_LEVEL.
- * </para>
- * <para>
+ * 
  * Because the generated metadata tags become available at the end of streams,
  * downstream muxer and encoder elements are normally unable to save them in
  * their output since they generally save metadata in the file header.
@@ -45,28 +42,27 @@
  * needed for <link linkend="GstRgAnalysis--num-tracks">album processing</link>
  * since the album gain and peak values need to be associated with all tracks of
  * an album, not just the last one.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch lines</title>
- * <para>Analyze a simple test waveform:</para>
- * <programlisting>
+ * |[
  * gst-launch -t audiotestsrc wave=sine num-buffers=512 ! rganalysis ! fakesink
- * </programlisting>
- * <para>Analyze a given file:</para>
- * <programlisting>
- * gst-launch -t filesrc location="Some file.ogg" ! decodebin \
+ * ]| Analyze a simple test waveform
+ * |[
+ * gst-launch -t filesrc location=filename.ext ! decodebin \
  *     ! audioconvert ! audioresample ! rganalysis ! fakesink
- * </programlisting>
- * <para>Analyze the pink noise reference file:</para>
- * <programlisting>
+ * ]| Analyze a given file
+ * |[
  * gst-launch -t gnomevfssrc location=http://replaygain.hydrogenaudio.org/ref_pink.wav \
  *     ! wavparse ! rganalysis ! fakesink
- * </programlisting>
+ * ]| Analyze the pink noise reference file
  * <para>
  * The above launch line yields a result gain of +6 dB (instead of the expected
- * +0 dB).  This is not in error, refer to the <link
- * linkend="GstRgAnalysis--reference-level">reference-level</link> property
- * documentation for more information.
+ * +0 dB).  This is not in error, refer to the #GstRgAnalysis:reference-level
+ * property documentation for more information.
  * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Acknowledgements</title>
  * <para>
  * This element is based on code used in the <ulink
