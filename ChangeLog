@@ -1,5 +1,28 @@
 2008-06-13  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* ext/a52dec/gsta52dec.c:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c:
+	* ext/amrnb/amrnbparse.c:
+	* ext/lame/gstlame.c:
+	* ext/mad/gstmad.c:
+	* ext/sidplay/gstsiddec.cc:
+	* gst/asfdemux/gstrtspwms.c:
+	* gst/mpegaudioparse/gstxingmux.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rtspreal.c:
+	* gst/synaesthesia/gstsynaesthesia.c:
+	  Add missing elements to docs. Restore alphabetical order in section
+	  file. Document mad (it was included in docs already).
+	  Fix doc-markup: use convinience syntax for examples
+	  (produces valid docbook), add several refsec2 when we have several
+	  titles. Fix some types.
+
+2008-06-13  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/lame/gstlame.c:
 	* ext/sidplay/gstsiddec.cc:
 	* gst/mpegaudioparse/gstxingmux.c:

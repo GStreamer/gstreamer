@@ -55,6 +55,20 @@ gst_amrnbparse_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-lame</FILE>
+<TITLE>lame</TITLE>
+GstLame
+<SUBSECTION Standard>
+GstLameClass
+GST_LAME
+GST_LAME_CLASS
+GST_IS_LAME
+GST_IS_LAME_CLASS
+GST_TYPE_LAME
+gst_lame_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-mad</FILE>
 <TITLE>mad</TITLE>
 GstMad
@@ -72,17 +86,18 @@ gst_mad_tag_list_to_id3_tag
 </SECTION>
 
 <SECTION>
-<FILE>element-lame</FILE>
-<TITLE>lame</TITLE>
-GstLame
+<FILE>element-rademux</FILE>
+<TITLE>rademux</TITLE>
+GstRealAudioDemux
 <SUBSECTION Standard>
-GstLameClass
-GST_LAME
-GST_LAME_CLASS
-GST_IS_LAME
-GST_IS_LAME_CLASS
-GST_TYPE_LAME
-gst_lame_get_type
+GstRealAudioDemuxClass
+GstRealAudioDemuxState
+GST_REAL_AUDIO_DEMUX
+GST_REAL_AUDIO_DEMUX_CLASS
+GST_IS_REAL_AUDIO_DEMUX
+GST_IS_REAL_AUDIO_DEMUX_CLASS
+GST_TYPE_REAL_AUDIO_DEMUX
+gst_real_audio_demux_get_type
 </SECTION>
 
 <SECTION>
@@ -99,21 +114,6 @@ GST_IS_RDT_MANAGER_CLASS
 GST_TYPE_RDT_MANAGER
 gst_rdt_manager_get_type
 gst_rdt_manager_plugin_init
-</SECTION>
-
-<SECTION>
-<FILE>element-rademux</FILE>
-<TITLE>rademux</TITLE>
-GstRealAudioDemux
-<SUBSECTION Standard>
-GstRealAudioDemuxClass
-GstRealAudioDemuxState
-GST_REAL_AUDIO_DEMUX
-GST_REAL_AUDIO_DEMUX_CLASS
-GST_IS_REAL_AUDIO_DEMUX
-GST_IS_REAL_AUDIO_DEMUX_CLASS
-GST_TYPE_REAL_AUDIO_DEMUX
-gst_real_audio_demux_get_type
 </SECTION>
 
 <SECTION>

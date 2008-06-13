@@ -24,23 +24,19 @@
 /**
  * SECTION:element-xingmux
  *
- * <refsect2>
- * <para>
  * xingmux adds a Xing header to MP3 files. This contains information about the duration and size
  * of the file and a seek table and is very useful for getting an almost correct duration and better
  * seeking on VBR MP3 files.
- * </para>
- * <para>
+ * 
  * This element will remove any existing Xing, LAME or VBRI headers from the beginning of the file.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch audiotestsrc num-buffers=1000 ! audioconvert ! lame ! xingmux ! filesink location=test.mp3
  * gst-launch filesrc location=test.mp3 ! xingmux ! filesink location=test2.mp3
  * gst-launch filesrc location=test.mp3 ! mp3parse ! xingmux ! filesink location=test2.mp3
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

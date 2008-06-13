@@ -18,6 +18,10 @@
     <xi:include href="xml/element-amrnbparse.xml" />
     <xi:include href="xml/element-lame.xml" />
     <xi:include href="xml/element-mad.xml" />
+    <xi:include href="xml/element-rademux.xml" />
+    <xi:include href="xml/element-rdtmanager.xml" />
+    <xi:include href="xml/element-rtspreal.xml" />
+    <xi:include href="xml/element-rtspwms.xml" />
     <xi:include href="xml/element-siddec.xml" />
     <xi:include href="xml/element-synaesthesia.xml" />
     <xi:include href="xml/element-xingmux.xml" />

@@ -21,16 +21,13 @@
  * SECTION:element-amrnbparse
  * @see_also: #GstAmrnbDec, #GstAmrnbEnc
  *
+ * AMR narrowband bitstream parser.
+ * 
  * <refsect2>
- * <para>
- * This is an AMR narrowband parser.
- * </para>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=abc.amr ! amrnbparse ! amrnbdec ! audioresample ! audioconvert ! alsasink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

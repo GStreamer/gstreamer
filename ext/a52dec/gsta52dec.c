@@ -20,25 +20,16 @@
 /**
  * SECTION:element-a52dec
  *
- * <refsect2>
- * <para>
  * Dolby Digital (AC-3) audio decoder.
- * </para>
- * </refsect2>
+ * 
  * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch dvdreadsrc title=1 ! dvddemux ! a52dec ! audioresample ! audioconvert ! alsasink
- * </programlisting>
- * Play audio track from a dvd.
- * </para>
- * <para>
- * <programlisting>
+ * ]| Play audio track from a dvd.
+ * |[
  * gst-launch filesrc location=abc.ac3 ! a52dec ! audioresample ! audioconvert ! alsasink
- * </programlisting>
- * Decode a stand alone file and play it.
- * </para>
+ * ]| Decode a stand alone file and play it.
  * </refsect2>
  */
 

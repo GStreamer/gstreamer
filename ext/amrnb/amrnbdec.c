@@ -21,17 +21,14 @@
  * SECTION:element-amrnbdec
  * @see_also: #GstAmrnbEnc, #GstAmrnbParse
  *
- * <refsect2>
- * <para>
- * This is an AMR narrowband decoder based on the 
+ * AMR narrowband decoder based on the 
  * <ulink url="http://www.penguin.cz/~utx/amr">reference codec implementation</ulink>.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=abc.amr ! amrnbparse ! amrnbdec ! audioresample ! audioconvert ! alsasink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

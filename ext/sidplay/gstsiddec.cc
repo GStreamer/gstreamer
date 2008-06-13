@@ -21,26 +21,20 @@
 /**
  * SECTION:element-siddec
  *
- * <refsect2>
- * <para>
  * This element decodes .sid files to raw audio. .sid files are in fact 
  * small Commodore 64 programs that are executed on an emulated 6502 CPU and a 
- * MOS 6581 sound chip. 
- * </para>
- * <para>
+ * MOS 6581 sound chip.
+ * 
  * This plugin will first load the complete program into memory before starting
  * the emulator and producing output.
- * </para>
- * <para>
+ * 
  * Seeking is not (and cannot be) implemented.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=Hawkeye.sid ! siddec ! audioconvert ! alsasink
- * </programlisting>
- * Decode a sid file and play back the audio using alsasink.
- * </para>
+ * ]| Decode a sid file and play back the audio using alsasink.
  * </refsect2>
  *
  * Last reviewed on 2006-12-30 (0.10.5)

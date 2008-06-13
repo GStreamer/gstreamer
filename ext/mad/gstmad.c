@@ -17,6 +17,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-mad
+ * @see_also: lame
+ *
+ * MP3 audio decoder.
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch filesrc location=music.mp3 ! mad ! audioconvert ! audioresample ! autoaudiosink
+ * ]| Decode the mp3 file and play
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

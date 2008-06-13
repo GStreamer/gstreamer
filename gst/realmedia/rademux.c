@@ -20,25 +20,18 @@
 /**
  * SECTION:element-rademux
  *
- * <refsect2>
- * <para>
  * Demuxes/parses a RealAudio (.ra) file or stream into compressed audio.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=interview.ra ! rademux ! ffdec_real_288 ! audioconvert ! audioresample ! alsasink
- * </programlisting>
- * Read a RealAudio file and decode it and output it to the soundcard using
+ * ]| Read a RealAudio file and decode it and output it to the soundcard using
  * the ALSA element. The .ra file is assumed to contain RealAudio version 2.
- * </para>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch gnomevfssrc location=http://www.example.org/interview.ra ! rademux ! a52dec ! audioconvert ! audioresample ! alsasink
- * </programlisting>
- * Stream RealAudio data containing AC3 (dnet) compressed audio and decode it
+ * ]| Stream RealAudio data containing AC3 (dnet) compressed audio and decode it
  * and output it to the soundcard using the ALSA element.
- * </para>
  * </refsect2>
  *
  * Last reviewed on 2006-10-24 (0.10.5)

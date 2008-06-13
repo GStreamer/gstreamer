@@ -21,18 +21,14 @@
  * SECTION:element-synaesthesia
  * @see_also: goom
  *
- * <refsect2>
- * <para>
  * Synaesthesia is an audio visualisation element. It creates glitter and
  * pulsating fog based on the incomming audio signal.
- * </para>
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v audiotestsrc ! audioconvert ! synaesthesia ! ximagesink
  * gst-launch -v audiotestsrc ! audioconvert ! synaesthesia ! ffmpegcolorspace ! xvimagesink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

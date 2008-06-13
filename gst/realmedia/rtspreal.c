@@ -21,11 +21,7 @@
 /**
  * SECTION:element-rtspreal
  *
- * <refsect2>
- * <para>
  * A RealMedia RTSP extension
- * </para>
- * </refsect2>
  *
  * Last reviewed on 2007-07-25 (0.10.14)
  */

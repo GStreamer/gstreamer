@@ -43,12 +43,9 @@
 
 /**
  * SECTION:element-rdtmanager
+ * @see_also: GstRtspSrc
  *
- * <refsect2>
- * <para>
  * A simple RTP session manager used internally by rtspsrc.
- * </para>
- * </refsect2>
  *
  * Last reviewed on 2006-06-20 (0.10.4)
  */
