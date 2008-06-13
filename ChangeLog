@@ -1,5 +1,10 @@
 2008-06-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_probe_modules):
+	Disable sipro on 64bits, it crashes.
+
+2008-06-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_chain),
 	(close_library), (open_library),
 	(gst_real_audio_dec_probe_modules), (gst_real_audio_dec_getcaps),

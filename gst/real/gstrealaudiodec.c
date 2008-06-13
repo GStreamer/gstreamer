@@ -359,9 +359,14 @@ gst_real_audio_dec_probe_modules (GstRealAudioDec * dec)
   if ((dec->valid_ra28_8 =
           open_library (dec, GST_REAL_AUDIO_DEC_VERSION_28_8, &dummy)))
     close_library (dec, &dummy);
+#ifdef HAVE_CPU_X86_64
+  /* disabled because it does not seem to work on 64 bits */
+  dec->valid_sipr = FALSE;
+#else
   if ((dec->valid_sipr =
           open_library (dec, GST_REAL_AUDIO_DEC_VERSION_SIPR, &dummy)))
     close_library (dec, &dummy);
+#endif
   if ((dec->valid_cook =
           open_library (dec, GST_REAL_AUDIO_DEC_VERSION_COOK, &dummy)))
     close_library (dec, &dummy);
