@@ -11,6 +11,7 @@
 	internal mapping and directly use upstream naming.
 	Improve debugging messages.
 	Remove g_warning() which isn't really needed.
+	Add mapping for new codecs (MPC8, DNXHD, MIMIC, VMNC)
 
 2008-06-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
