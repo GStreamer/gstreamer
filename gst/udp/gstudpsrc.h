@@ -44,6 +44,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_UDPSRC))
 #define GST_IS_UDPSRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_UDPSRC))
+#define GST_UDPSRC_CAST(obj) ((GstUDPSrc *)(obj))
 
 typedef struct _GstUDPSrc GstUDPSrc;
 typedef struct _GstUDPSrcClass GstUDPSrcClass;
@@ -62,6 +63,7 @@ struct _GstUDPSrc {
   gint       skip_first_bytes;
   int        sockfd;
   gboolean   closefd;
+  gboolean   auto_multicast;
 
   /* our sockets */
   GstPollFD  sock;

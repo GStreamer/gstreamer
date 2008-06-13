@@ -1,5 +1,23 @@
 2008-06-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init), (gst_udpsrc_init),
+	(gst_udpsrc_create), (gst_udpsrc_set_property),
+	(gst_udpsrc_get_property), (gst_udpsrc_start), (gst_udpsrc_stop):
+	* gst/udp/gstudpsrc.h:
+	Add property to control automatic join/leave of multicast groups.
+	Add G_LIKELY.
+	Remove setting caps on buffers explicitly, basesrc does that for us now.
+	Improve debug info.
+	Convert some non-fatal error into warnings.
+	Use g_ntohs for better portability.
+	Leave multicast groups when stopping.
+	When using external sockets, use getsockname() on them to fill up the
+	addr structure before calling methods that use the structure.
+	Should all fix #536903.
+	API: GstUDPSrc::auto-multicast property
+
+2008-06-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/udp/gstudpnetutils.c: (gst_udp_is_multicast):
 	Use g_ntohl for better portability.
 
