@@ -143,7 +143,7 @@
 #define DEFAULT_PACKET_INTERVAL  50 /* ms */
 #define MIN_PACKET_INTERVAL      10 /* ms */
 #define MAX_PACKET_INTERVAL      50 /* ms */
-#define SAMPLE_RATE              8000
+#define DEFAULT_SAMPLE_RATE      8000
 #define SAMPLE_SIZE              16
 #define CHANNELS                 1
 #define MIN_EVENT                0
@@ -242,8 +242,6 @@ static void gst_dtmf_src_get_property (GObject * object, guint prop_id,
 static gboolean gst_dtmf_src_handle_event (GstBaseSrc *src, GstEvent * event);
 static GstStateChangeReturn gst_dtmf_src_change_state (GstElement * element,
     GstStateChange transition);
-static void gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key,
-    float duration, GstBuffer * buffer);
 static GstFlowReturn gst_dtmf_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint length, GstBuffer ** buffer);
 static void gst_dtmf_src_add_start_event (GstDTMFSrc *dtmfsrc,
@@ -317,6 +315,8 @@ gst_dtmf_src_init (GstDTMFSrc * dtmfsrc, GstDTMFSrcClass *g_class)
 
   dtmfsrc->event_queue = g_async_queue_new ();
   dtmfsrc->last_event = NULL;
+
+  dtmfsrc->sample_rate = DEFAULT_SAMPLE_RATE;
 
   GST_DEBUG_OBJECT (dtmfsrc, "init done");
 }
@@ -522,12 +522,13 @@ gst_dtmf_src_add_stop_event (GstDTMFSrc *dtmfsrc)
 }
 
 static void
-gst_dtmf_src_generate_silence(GstBuffer * buffer, float duration)
+gst_dtmf_src_generate_silence(GstBuffer * buffer, float duration,
+    gint sample_rate)
 {
   gint buf_size;
 
   /* Create a buffer with data set to 0 */
-  buf_size = ((duration/1000)*SAMPLE_RATE*SAMPLE_SIZE*CHANNELS)/8;
+  buf_size = ((duration/1000)*sample_rate*SAMPLE_SIZE*CHANNELS)/8;
   GST_BUFFER_SIZE (buffer) = buf_size;
   GST_BUFFER_MALLOCDATA (buffer) = g_malloc0(buf_size);
   GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
@@ -536,7 +537,7 @@ gst_dtmf_src_generate_silence(GstBuffer * buffer, float duration)
 
 static void
 gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration,
-    GstBuffer * buffer)
+    GstBuffer * buffer, gint sample_rate)
 {
   gint16 *p;
   gint tone_size;
@@ -545,7 +546,7 @@ gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration,
   double volume_factor;
 
   /* Create a buffer for the tone */
-  tone_size = ((duration/1000)*SAMPLE_RATE*SAMPLE_SIZE*CHANNELS)/8;
+  tone_size = ((duration/1000)*sample_rate*SAMPLE_SIZE*CHANNELS)/8;
   GST_BUFFER_SIZE (buffer) = tone_size;
   GST_BUFFER_MALLOCDATA (buffer) = g_malloc(tone_size);
   GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
@@ -562,8 +563,8 @@ gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration,
     /*
      * We add the fundamental frequencies together.
      */
-    f1 = sin(2 * M_PI * key.low_frequency * (event->sample / SAMPLE_RATE));
-    f2 = sin(2 * M_PI * key.high_frequency * (event->sample / SAMPLE_RATE));
+    f1 = sin(2 * M_PI * key.low_frequency * (event->sample / sample_rate));
+    f2 = sin(2 * M_PI * key.high_frequency * (event->sample / sample_rate));
 
     amplitude = (f1 + f2) / 2;
 
@@ -602,11 +603,12 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc *dtmfsrc,
 
   if (send_silence) {
     GST_DEBUG_OBJECT (dtmfsrc,  "Generating silence");
-    gst_dtmf_src_generate_silence (buf, dtmfsrc->interval);
+    gst_dtmf_src_generate_silence (buf, dtmfsrc->interval,
+        dtmfsrc->sample_rate);
   } else {
     GST_DEBUG_OBJECT (dtmfsrc,  "Generating tone");
     gst_dtmf_src_generate_tone(event, DTMF_KEYS[event->event_number],
-        dtmfsrc->interval, buf);
+        dtmfsrc->interval, buf, dtmfsrc->sample_rate);
   }
   event->packet_count++;
 
@@ -805,6 +807,7 @@ gst_dtmf_src_unlock_stop (GstBaseSrc *src) {
 
   return TRUE;
 }
+
 
 static GstStateChangeReturn
 gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
