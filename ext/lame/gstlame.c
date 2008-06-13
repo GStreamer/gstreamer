@@ -23,61 +23,45 @@
  * SECTION:element-lame
  * @see_also: mad, vorbisenc
  *
- * <refsect2>
- * <para>
  * This element encodes raw integer audio into an MPEG-1 layer 3 (MP3) stream.
  * Note that <ulink url="http://en.wikipedia.org/wiki/MP3">MP3</ulink> is not
  * a free format, there are licensing and patent issues to take into
  * consideration. See <ulink url="http://www.vorbis.com/">Ogg/Vorbis</ulink>
  * for a royalty free (and often higher quality) alternative.
- * </para>
+ *
+ * <refsect2>
  * <title>Output sample rate</title>
- * <para>
  * If no fixed output sample rate is negotiated on the element's src pad,
  * the element will choose an optimal sample rate to resample to internally.
  * For example, a 16-bit 44.1 KHz mono audio stream encoded at 48 kbit will
  * get resampled to 32 KHz.  Use filter caps on the src pad to force a
  * particular sample rate.
- * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Writing metadata (tags)</title>
- * <para>
  * Whilst the lame encoder element does claim to implement the GstTagSetter
  * interface, it does so only for backwards compatibility reasons. Tag writing
  * has been removed from lame. Use external elements like id3v2mux or apev2mux
  * to add tags to your MP3 streams. The same goes for XING headers: use the
  * xingmux element to add XING headers to your VBR mp3 file.
- * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * Encode a test sine signal to MP3.
- * </para>
- * <programlisting>
+ * |[
  * gst-launch -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! lame ! filesink location=sine.mp3
- * </programlisting>
- * <para>
- * Record from a sound card using ALSA and encode to MP3
- * </para>
- * <programlisting>
+ * ]| Encode a test sine signal to MP3.
+ * |[
  * gst-launch -v alsasrc ! audioconvert ! lame bitrate=192 ! filesink location=alsasrc.mp3
- * </programlisting>
- * <para>
- * Transcode from a .wav file to MP3 (the id3v2mux element is optional):
- * </para>
- * <programlisting>
+ * ]| Record from a sound card using ALSA and encode to MP3
+ * |[
  * gst-launch -v filesrc location=music.wav ! decodebin ! audioconvert ! audioresample ! lame bitrate=192 ! id3v2mux ! filesink location=music.mp3
- * </programlisting>
- * <para>
- * Encode Audio CD track 5 to MP3:
- * </para>
- * <programlisting>
+ * ]| Transcode from a .wav file to MP3 (the id3v2mux element is optional)
+ * |[
  * gst-launch -v cdda://5 ! audioconvert ! lame bitrate=192 ! filesink location=track5.mp3
- * </programlisting>
- * <para>
- * Encode to a fixed sample rate:
- * </para>
- * <programlisting>
+ * ]| Encode Audio CD track 5 to MP3
+ * |[
  * gst-launch -v audiotestsrc num-buffers=10 ! audio/x-raw-int,rate=44100,channels=1 ! lame bitrate=48 mode=3 ! filesink location=test.mp3
- * </programlisting>
+ * ]| Encode to a fixed sample rate
  * </refsect2>
  *
  * Last reviewed on 2007-07-24 (0.10.7)
