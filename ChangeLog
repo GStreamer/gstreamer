@@ -1,3 +1,25 @@
+2008-06-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_reset),
+	(gst_matroska_demux_parse_tracks),
+	(gst_matroska_demux_parse_index), (gst_matroska_demux_parse_info),
+	(gst_matroska_demux_parse_attachments),
+	(gst_matroska_demux_parse_chapters),
+	(gst_matroska_demux_parse_contents_seekentry),
+	(gst_matroska_demux_loop_stream_parse_id):
+	* gst/matroska/matroska-demux.h:
+	Only parse Tracks, SeekHead and SegmentInfo elements once but allow
+	Tags multiple times. The first ones can appear more than once but must
+	contain the same content as the first for backup purposes so we ignore
+	all but the first one. Tags can appear multiple times with different
+	content.
+
+	Jump to all elements except Clusters that are available from a
+	SeekHead to make it more likely to have all required informations
+	before getting to the first Clusters.
+
+	Add dummy functions for parsing Attachments and Chapters.
+
 2008-06-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init), (gst_udpsrc_init),

@@ -99,6 +99,9 @@ static GstStaticPadTemplate subtitle_src_templ =
         "application/x-subtitle-unknown")
     );
 
+static GstFlowReturn gst_matroska_demux_parse_contents (GstMatroskaDemux *
+    demux, gboolean * p_run_loop);
+
 /* element functions */
 static void gst_matroska_demux_loop (GstPad * pad);
 
@@ -306,8 +309,9 @@ gst_matroska_demux_reset (GstElement * element)
   demux->time_scale = 1000000;
   demux->created = G_MININT64;
 
-  demux->metadata_parsed = FALSE;
   demux->index_parsed = FALSE;
+  demux->tracks_parsed = FALSE;
+  demux->segmentinfo_parsed = FALSE;
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 }
@@ -1807,6 +1811,8 @@ gst_matroska_demux_parse_tracks (GstMatroskaDemux * demux)
     }
   }
 
+  demux->tracks_parsed = TRUE;
+
   return ret;
 }
 
@@ -2036,6 +2042,8 @@ gst_matroska_demux_parse_index (GstMatroskaDemux * demux, gboolean prevent_eos)
     }
   }
 
+  demux->index_parsed = TRUE;
+
   return ret;
 }
 
@@ -2147,6 +2155,8 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
       break;
     }
   }
+
+  demux->segmentinfo_parsed = TRUE;
 
   return ret;
 }
@@ -2383,6 +2393,107 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
     gst_element_found_tags (GST_ELEMENT (ebml), taglist);
   } else {
     gst_tag_list_free (taglist);
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_matroska_demux_parse_attachments (GstMatroskaDemux * demux,
+    gboolean prevent_eos)
+{
+  GstEbmlRead *ebml = GST_EBML_READ (demux);
+
+  guint64 length = 0;
+
+  guint32 id;
+
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  GST_WARNING_OBJECT (demux, "Parsing of attachments not implemented yet");
+
+  /* TODO: implement parsing of attachments */
+
+  if (prevent_eos) {
+    length = gst_ebml_read_get_length (ebml);
+  }
+
+  while (ret == GST_FLOW_OK) {
+    /* We're an element that can be seeked to. If we are, then
+     * we want to prevent EOS, since that'll kill us. So we cache
+     * file size and seek until there, and don't call EOS upon os. */
+    if (prevent_eos && length == ebml->offset)
+      break;
+
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
+
+    if (demux->level_up) {
+      demux->level_up--;
+      break;
+    }
+
+    switch (id) {
+      default:
+      case GST_EBML_ID_VOID:
+        ret = gst_ebml_read_skip (ebml);
+        break;
+    }
+
+    if (demux->level_up) {
+      demux->level_up--;
+      break;
+    }
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_matroska_demux_parse_chapters (GstMatroskaDemux * demux,
+    gboolean prevent_eos)
+{
+  GstEbmlRead *ebml = GST_EBML_READ (demux);
+
+  guint64 length = 0;
+
+  guint32 id;
+
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  GST_WARNING_OBJECT (demux, "Parsing of chapters not implemented yet");
+
+  /* TODO: implement parsing of chapters */
+  if (prevent_eos) {
+    length = gst_ebml_read_get_length (ebml);
+  }
+
+  while (ret == GST_FLOW_OK) {
+    /* We're an element that can be seeked to. If we are, then
+     * we want to prevent EOS, since that'll kill us. So we cache
+     * file size and seek until there, and don't call EOS upon os. */
+    if (prevent_eos && length == ebml->offset)
+      break;
+
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
+
+    if (demux->level_up) {
+      demux->level_up--;
+      break;
+    }
+
+    switch (id) {
+      default:
+      case GST_EBML_ID_VOID:
+        ret = gst_ebml_read_skip (ebml);
+        break;
+    }
+
+    if (demux->level_up) {
+      demux->level_up--;
+      break;
+    }
   }
 
   return ret;
@@ -3434,11 +3545,14 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
     return GST_FLOW_OK;
   }
 
-  /* FIXME: Do this for the other elements except CLUSTERS too.
-   * We can't know that they will come before the CLUSTERS */
   switch (seek_id) {
     case GST_MATROSKA_ID_CUES:
     case GST_MATROSKA_ID_TAGS:
+    case GST_MATROSKA_ID_TRACKS:
+    case GST_MATROSKA_ID_SEEKHEAD:
+    case GST_MATROSKA_ID_SEGMENTINFO:
+    case GST_MATROSKA_ID_ATTACHMENTS:
+    case GST_MATROSKA_ID_CHAPTERS:
     {
       guint level_up = demux->level_up;
 
@@ -3485,16 +3599,16 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
       /* read master + parse */
       switch (id) {
         case GST_MATROSKA_ID_CUES:
-          if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
-            return ret;
-          if ((ret =
-                  gst_matroska_demux_parse_index (demux, TRUE)) != GST_FLOW_OK)
-            return ret;
-          /* FIXME: why is this here? */
+          if (!demux->index_parsed) {
+            if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+              return ret;
+            if ((ret =
+                    gst_matroska_demux_parse_index (demux,
+                        TRUE)) != GST_FLOW_OK)
+              return ret;
+          }
           if (gst_ebml_read_get_length (ebml) == ebml->offset)
             *p_run_loop = FALSE;
-          else
-            demux->index_parsed = TRUE;
           break;
         case GST_MATROSKA_ID_TAGS:
           if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
@@ -3503,11 +3617,75 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
                   gst_matroska_demux_parse_metadata (demux,
                       TRUE)) != GST_FLOW_OK)
             return ret;
-          /* FIXME: why is this here? */
           if (gst_ebml_read_get_length (ebml) == ebml->offset)
             *p_run_loop = FALSE;
-          else
-            demux->metadata_parsed = TRUE;
+          break;
+        case GST_MATROSKA_ID_TRACKS:
+          if (!demux->tracks_parsed) {
+            if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+              return ret;
+            if ((ret = gst_matroska_demux_parse_tracks (demux)) != GST_FLOW_OK)
+              return ret;
+          }
+          if (gst_ebml_read_get_length (ebml) == ebml->offset)
+            *p_run_loop = FALSE;
+          break;
+
+        case GST_MATROSKA_ID_SEGMENTINFO:
+          if (!demux->segmentinfo_parsed) {
+            if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+              return ret;
+            if ((ret = gst_matroska_demux_parse_info (demux)) != GST_FLOW_OK)
+              return ret;
+          }
+          if (gst_ebml_read_get_length (ebml) == ebml->offset)
+            *p_run_loop = FALSE;
+          break;
+        case GST_MATROSKA_ID_SEEKHEAD:
+        {
+          GList *l;
+
+          if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+            return ret;
+
+          /* Prevent infinite recursion if there's a cycle from
+           * one seekhead to the same again. Simply break if
+           * we already had this seekhead, finish will clean up
+           * everything. */
+          for (l = ebml->level; l; l = l->next) {
+            GstEbmlLevel *level = (GstEbmlLevel *) l->data;
+
+            if (level->start == ebml->offset && l->next)
+              goto finish;
+          }
+
+          if ((ret =
+                  gst_matroska_demux_parse_contents (demux,
+                      p_run_loop)) != GST_FLOW_OK)
+            return ret;
+          if (gst_ebml_read_get_length (ebml) == ebml->offset)
+            *p_run_loop = FALSE;
+          break;
+        }
+        case GST_MATROSKA_ID_ATTACHMENTS:
+          if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+            return ret;
+          if ((ret =
+                  gst_matroska_demux_parse_attachments (demux,
+                      TRUE)) != GST_FLOW_OK)
+            return ret;
+          if (gst_ebml_read_get_length (ebml) == ebml->offset)
+            *p_run_loop = FALSE;
+          break;
+        case GST_MATROSKA_ID_CHAPTERS:
+          if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+            return ret;
+          if ((ret =
+                  gst_matroska_demux_parse_chapters (demux,
+                      TRUE)) != GST_FLOW_OK)
+            return ret;
+          if (gst_ebml_read_get_length (ebml) == ebml->offset)
+            *p_run_loop = FALSE;
           break;
       }
 
@@ -3596,32 +3774,41 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
   GstFlowReturn ret;
 
   switch (id) {
-      /* FIXME: not mandatory... will things break? 
-       * Can only happen exactly once, ignore second
-       * occurences! */
-      /* stream info */
+      /* stream info 
+       * Can exist more than once but following occurences
+       * must have the same content so ignore them */
     case GST_MATROSKA_ID_SEGMENTINFO:
-      if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
-        return ret;
-      if ((ret = gst_matroska_demux_parse_info (demux)) != GST_FLOW_OK)
-        return ret;
+      if (!demux->segmentinfo_parsed) {
+        if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+          return ret;
+        if ((ret = gst_matroska_demux_parse_info (demux)) != GST_FLOW_OK)
+          return ret;
+      } else {
+        if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+          return ret;
+      }
       break;
 
-      /* FIXME: might happen more than once, second
-       * occurences must be exactly the same so drop them */
-      /* track info headers */
+      /* track info headers
+       * Can exist more than once but following occurences
+       * must have the same content so ignore them */
     case GST_MATROSKA_ID_TRACKS:
     {
-      if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
-        return ret;
-      if ((ret = gst_matroska_demux_parse_tracks (demux)) != GST_FLOW_OK)
-        return ret;
+      if (!demux->tracks_parsed) {
+        if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+          return ret;
+        if ((ret = gst_matroska_demux_parse_tracks (demux)) != GST_FLOW_OK)
+          return ret;
+      } else {
+        if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+          return ret;
+      }
       break;
     }
 
-      /* FIXME: can only happen once or never but
-       * for the sake of sanity ignore second occurences */
-      /* stream index */
+      /* cues - seek table
+       * Either exists exactly one time or never but ignore
+       * following occurences for the sake of sanity */
     case GST_MATROSKA_ID_CUES:
     {
       if (!demux->index_parsed) {
@@ -3637,28 +3824,19 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
       break;
     }
 
-      /* FIXME: can be there more than once, why do we have
-       * ->metadata_parsed? */
-      /* metadata */
+      /* metadata
+       * can exist more than one time with different content */
     case GST_MATROSKA_ID_TAGS:
     {
-      if (!demux->metadata_parsed) {
-        if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
-          return ret;
-        if ((ret =
-                gst_matroska_demux_parse_metadata (demux,
-                    FALSE)) != GST_FLOW_OK)
-          return ret;
-      } else {
-        if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
-          return ret;
-      }
+      if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+        return ret;
+      if ((ret =
+              gst_matroska_demux_parse_metadata (demux, FALSE)) != GST_FLOW_OK)
+        return ret;
       break;
     }
 
-      /* FIXME: must not be there but can happen more than once with
-       * different content */
-      /* file index (if seekable, seek to Cues/Tags to parse it) */
+      /* file index (if seekable, seek to Cues/Tags/etc to parse it) */
     case GST_MATROSKA_ID_SEEKHEAD:
     {
       if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
@@ -3670,7 +3848,7 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
       break;
     }
 
-      /* FIXME: must not be there */
+      /* cluster - contains the payload */
     case GST_MATROSKA_ID_CLUSTER:
     {
       if (demux->state != GST_MATROSKA_DEMUX_STATE_DATA) {
@@ -3704,21 +3882,25 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
       break;
     }
 
-      /* TODO: Implement parsing of attachments and push them
-       * through an attachment pad, one for each attachment */
-      /* FIXME: must not be there but can only be once */
+      /* attachments - contains files attached to the mkv container
+       * like album art, etc */
     case GST_MATROSKA_ID_ATTACHMENTS:{
-      GST_INFO ("Attachments elements are not supported yet");
-      if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+      if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+        return ret;
+      if ((ret =
+              gst_matroska_demux_parse_attachments (demux,
+                  FALSE)) != GST_FLOW_OK)
         return ret;
       break;
     }
 
-      /* TODO: Implement parsing of chapters */
-      /* FIXME: Must not be there but can only be once */
+      /* chapters - contains meta information about how to group
+       * the file into chapters, similar to DVD */
     case GST_MATROSKA_ID_CHAPTERS:{
-      GST_INFO ("Chapters elements are not supported yet");
-      if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+      if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+        return ret;
+      if ((ret =
+              gst_matroska_demux_parse_chapters (demux, FALSE)) != GST_FLOW_OK)
         return ret;
       break;
     }
