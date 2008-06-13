@@ -23,7 +23,6 @@
 
 /**
  * SECTION:element-xingmux
- * @short_description: Adds a Xing header to MP3 files
  *
  * <refsect2>
  * <para>

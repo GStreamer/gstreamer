@@ -20,7 +20,6 @@
 
 /**
  * SECTION:element-siddec
- * @short_description: a decoder for sid files
  *
  * <refsect2>
  * <para>

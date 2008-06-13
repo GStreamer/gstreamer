@@ -1,3 +1,11 @@
+2008-06-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/lame/gstlame.c:
+	* ext/sidplay/gstsiddec.cc:
+	* gst/mpegaudioparse/gstxingmux.c:
+	  Do not use short_description in section docs for elements. We extract
+	  them from element details and there will be warnings if they differ.
+
 2008-06-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (head_check):

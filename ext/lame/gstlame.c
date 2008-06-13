@@ -21,7 +21,6 @@
 
 /**
  * SECTION:element-lame
- * @short_description: an encoder that encodes audio to MPEG-1 layer 3 (mp3)
  * @see_also: mad, vorbisenc
  *
  * <refsect2>
