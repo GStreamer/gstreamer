@@ -23,41 +23,33 @@
  * SECTION:element-jackaudiosink
  * @see_also: #GstBaseAudioSink, #GstRingBuffer
  *
- * <refsect2>
- * <para>
  * A Sink that outputs data to Jack ports.
- * </para>
- * <para>
+ * 
  * It will create N Jack ports named out_&lt;name&gt;_&lt;num&gt; where 
  * &lt;name&gt; is the element name and &lt;num&gt; is starting from 1.
  * Each port corresponds to a gstreamer channel.
- * </para>
- * <para>
+ * 
  * The samplerate as exposed on the caps is always the same as the samplerate of
  * the jack server.
- * </para>
- * <para>
- * When the ::connect property is set to auto, this element will try to connect
- * each output port to a random physical jack input pin. In this mode, the sink
- * will expose the number of physical channels on its pad caps.
- * </para>
- * <para>
- * When the ::connect property is set to none, the element will accept any
- * number of input channels and will create (but not connect) an output port for
- * each channel.
- * </para>
- * <para>
+ * 
+ * When the #GstJackAudioSink:connect property is set to auto, this element
+ * will try to connect each output port to a random physical jack input pin. In
+ * this mode, the sink will expose the number of physical channels on its pad
+ * caps.
+ * 
+ * When the #GstJackAudioSink:connect property is set to none, the element will
+ * accept any number of input channels and will create (but not connect) an
+ * output port for each channel.
+ * 
  * The element will generate an error when the Jack server is shut down when it
  * was PAUSED or PLAYING. This element does not support dynamic rate and buffer
  * size changes at runtime.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch audiotestsrc ! jackaudiosink
- * </programlisting>
- * Play a sine wave to using jack.
- * </para>
+ * ]| Play a sine wave to using jack.
  * </refsect2>
  *
  * Last reviewed on 2006-11-30 (0.10.4)
