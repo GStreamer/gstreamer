@@ -1546,24 +1546,21 @@ gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
 
     if (strcmp (tagname_gst, tag) == 0) {
       GValue src = { 0, };
-      GValue dest = { 0, };
+      gchar *dest;
 
       if (!gst_tag_list_copy_value (&src, list, tag))
         break;
-      g_value_init (&dest, G_TYPE_STRING);
-      if (g_value_transform (&src, &dest)) {
+      if ((dest = gst_value_serialize (&src))) {
 
         simpletag_master = gst_ebml_write_master_start (ebml,
             GST_MATROSKA_ID_SIMPLETAG);
         gst_ebml_write_ascii (ebml, GST_MATROSKA_ID_TAGNAME, tagname_mkv);
-        gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_TAGSTRING,
-            g_value_get_string (&dest));
+        gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_TAGSTRING, dest);
         gst_ebml_write_master_finish (ebml, simpletag_master);
       } else {
         GST_WARNING ("Can't transform tag '%s' to string", tagname_mkv);
       }
       g_value_unset (&src);
-      g_value_unset (&dest);
       break;
     }
   }
@@ -1953,6 +1950,9 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
    * one for each keyframe or each second (for all-keyframe
    * streams), only the *first* video track. But that'll come later... */
 
+  /* TODO: index is useful for every track, should contain the number of
+   * the block in the cluster which contains the timestamp
+   */
   if (is_video_keyframe) {
     GstMatroskaIndex *idx;
 

@@ -2255,21 +2255,18 @@ gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
       const gchar *tagname_mkv = tag_conv[i].matroska_tagname;
 
       if (strcmp (tagname_mkv, tag) == 0) {
-        GValue src = { 0, };
         GValue dest = { 0, };
         GType dest_type = gst_tag_get_type (tagname_gst);
 
-        g_value_init (&src, G_TYPE_STRING);
-        g_value_set_string (&src, value);
         g_value_init (&dest, dest_type);
-        if (g_value_transform (&src, &dest)) {
+        if (gst_value_deserialize (&dest, value)) {
           gst_tag_list_add_values (*p_taglist, GST_TAG_MERGE_APPEND,
               tagname_gst, &dest, NULL);
         } else {
-          GST_WARNING_OBJECT (demux, "Can't transform tag '%s' with"
-              "value '%s' to target type", tag, value);
+          GST_WARNING_OBJECT (demux, "Can't transform tag '%s' with "
+              "value '%s' to target type '%s'", tag, value,
+              g_type_name (dest_type));
         }
-        g_value_unset (&src);
         g_value_unset (&dest);
         break;
       }

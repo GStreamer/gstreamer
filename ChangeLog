@@ -1,5 +1,16 @@
 2008-06-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_metadata_id_simple_tag):
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_write_simple_tag),
+	(gst_matroska_mux_write_data):
+	Use gst_value_serialize() and gst_value_deserialize() for transforming
+	tags from some GType to a string and the other way around. The default
+	transformations in GLib don't include transformations from string to
+	number types.
+
+2008-06-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_reset),
 	(gst_matroska_demux_parse_tracks),
 	(gst_matroska_demux_parse_index), (gst_matroska_demux_parse_info),
