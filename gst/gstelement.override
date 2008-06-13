@@ -26,22 +26,6 @@ ignore
   gst_element_get_property
   gst_element_set_property
 %%
-define _install_element_meta
-static PyObject *
-_wrap__install_element_meta(PyObject *self, PyObject *args)
-{
-    PyObject *metaclass;
-
-    if (!PyArg_ParseTuple(args, "O", &metaclass))
-	return NULL;
-
-    Py_INCREF(metaclass);
-    PyGstElement_Type.ob_type = (PyTypeObject*)metaclass;
-
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-%%
 override gst_element_get_pad_template args
 static PyObject *
 _wrap_gst_element_get_pad_template(PyGObject *self, PyObject *args)

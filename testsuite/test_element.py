@@ -40,12 +40,6 @@ class ElementTest(TestCase):
         assert isinstance(element, gst.Element)
         assert element.get_name() == self.alias
 
-    def testFancyConstructor(self):
-        element = gst.Element(self.name, self.alias)
-        self.failUnless(element, 'element is None')
-        self.failUnless(isinstance(element, gst.Element))
-        self.assertEquals(element.get_name(), self.alias)
-
 ## FIXME : Make a new test for state changes, using bus signals
         
 ## class FakeSinkTest(ElementTest):
@@ -153,7 +147,6 @@ class NonExistentTest(ElementTest):
     
     testGoodConstructor = lambda s: None
     testGoodConstructor2 = lambda s: None
-    testFancyConstructor = lambda s: None
 
 class FileSrcTest(ElementTest):
     name = 'filesrc'

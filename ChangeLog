@@ -1,3 +1,11 @@
+2008-06-13  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/__init__.py:
+	* gst/gstelement.override:
+	* testsuite/test_element.py:
+	Revert 2008-05-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+	Re-opens #530417
+
 2008-06-12  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/gstpad.override:
