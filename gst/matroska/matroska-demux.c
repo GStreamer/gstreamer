@@ -3577,10 +3577,10 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
 
       /* we don't want to lose our seekhead level, so we add
        * a dummy. This is a crude hack. */
-      level = g_new (GstEbmlLevel, 1);
+      level = g_slice_new (GstEbmlLevel);
       level->start = 0;
       level->length = G_MAXUINT64;
-      ebml->level = g_list_append (ebml->level, level);
+      ebml->level = g_list_prepend (ebml->level, level);
 
       /* check ID */
       if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
@@ -3652,7 +3652,7 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
           for (l = ebml->level; l; l = l->next) {
             GstEbmlLevel *level = (GstEbmlLevel *) l->data;
 
-            if (level->start == ebml->offset && l->next)
+            if (level->start == ebml->offset && l->prev)
               goto finish;
           }
 
@@ -3695,10 +3695,10 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
       while (ebml->level) {
         guint64 length;
 
-        level = g_list_last (ebml->level)->data;
-        ebml->level = g_list_remove (ebml->level, level);
+        level = ebml->level->data;
+        ebml->level = g_list_delete_link (ebml->level, ebml->level);
         length = level->length;
-        g_free (level);
+        g_slice_free (GstEbmlLevel, level);
         if (length == G_MAXUINT64)
           break;
       }

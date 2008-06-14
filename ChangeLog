@@ -1,3 +1,17 @@
+2008-06-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/matroska/ebml-read.c: (gst_ebml_level_free),
+	(gst_ebml_finalize), (gst_ebml_read_change_state),
+	(gst_ebml_read_element_level_up), (gst_ebml_read_master):
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_contents_seekentry):
+	Reverse the level list as we usually are only interested in the
+	first element or want to add a new first element. Having the
+	first element stored at the end and calling g_list_last() and
+	g_list_append() is more expensive.
+
+	Also use GSlice for allocating the GstEbmlLevel structs.
+
 2008-06-13  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/debug/gsttaginject.c: (gst_tag_inject_finalize),
