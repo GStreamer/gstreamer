@@ -496,24 +496,26 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     else
     {
         //OpenGL > 2.1.0 and Glew > 1.5.0
-        GString* opengl_version = g_string_new ((gchar*) glGetString (GL_VERSION));
-        gboolean check_versions = g_str_has_prefix (opengl_version->str, "2.1");
-        GString* glew_version = g_string_new ((gchar*) glewGetString (GLEW_VERSION));
-        check_versions = check_versions && g_str_has_prefix (glew_version->str, "1.5");
+        GString* opengl_version = g_string_truncate (g_string_new ((gchar*) glGetString (GL_VERSION)), 3);
+        gfloat opengl_version_f = 0.0f;
+        GString* glew_version = g_string_truncate (g_string_new ((gchar*) glewGetString (GLEW_VERSION)), 3);
+        gfloat glew_version_f = 0.0f;
 
+        sscanf(opengl_version->str, "%f", &opengl_version_f);
+        sscanf(glew_version->str, "%f", &glew_version_f);
 
-        GST_DEBUG ("GL_VERSION: %s", opengl_version->str);
-        GST_DEBUG ("GLEW_VERSION: %s", glew_version->str);
+        GST_DEBUG ("GL_VERSION: %s", glGetString (GL_VERSION));
+        GST_DEBUG ("GLEW_VERSION: %s", glewGetString (GLEW_VERSION));
         
-        GST_DEBUG ("GL_VENDOR: %s\n", glGetString (GL_VENDOR));
-        GST_DEBUG ("GL_RENDERER: %s\n", glGetString (GL_RENDERER));
+        GST_DEBUG ("GL_VENDOR: %s", glGetString (GL_VENDOR));
+        GST_DEBUG ("GL_RENDERER: %s", glGetString (GL_RENDERER));
 
         g_string_free (opengl_version, TRUE);
         g_string_free (glew_version, TRUE);
 
-        if (!check_versions)
+        if (opengl_version_f < 1.4f || glew_version_f < 1.4)
         {
-            GST_DEBUG ("Required OpenGL > 2.1.0 and Glew > 1.5.0");
+            GST_DEBUG ("Required OpenGL >= 1.4.0 and Glew >= 1.4.0");
             g_assert_not_reached ();
         }
     }
