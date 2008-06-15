@@ -1,3 +1,26 @@
+2008-06-15  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/matroska/ebml-read.c: (gst_ebml_peek_id),
+	(gst_ebml_read_header):
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream),
+	(gst_matroska_demux_parse_tracks),
+	(gst_matroska_demux_parse_index_cuetrack),
+	(gst_matroska_demux_parse_index_pointentry),
+	(gst_matroska_demux_parse_index), (gst_matroska_demux_parse_info),
+	(gst_matroska_demux_parse_metadata_id_simple_tag),
+	(gst_matroska_demux_parse_metadata_id_tag),
+	(gst_matroska_demux_parse_metadata),
+	(gst_matroska_demux_parse_attachments),
+	(gst_matroska_demux_parse_chapters),
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock),
+	(gst_matroska_demux_parse_cluster),
+	(gst_matroska_demux_parse_contents_seekentry),
+	(gst_matroska_demux_parse_contents),
+	(gst_matroska_demux_loop_stream_parse_id):
+	Handle EBML elements like Void or CRC32 in the EbmlRead base class
+	already. They're not useful in the matroska parser and only cause
+	additional code.
+
 2008-06-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/matroska/ebml-read.c: (gst_ebml_level_free),

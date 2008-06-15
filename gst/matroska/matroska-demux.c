@@ -23,7 +23,6 @@
 /* TODO: "Unkown track header" & "Unknown entry": implement if useful
  * TODO: dynamic number of tracks without upper bound
  * FIXME: uint64 -> int64 overflows!
- * FIXME: ignore 0xBF aka. CRC32 elements without warning
  * TODO: check CRC32 if present
  * FIXME: go out of loops, don't add Track or whatever if something goes wrong
  *        or required elements are not there
@@ -888,9 +887,6 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             default:
               GST_WARNING ("Unknown video track header entry 0x%x - ignoring",
                   id);
-              /* pass-through */
-
-            case GST_EBML_ID_VOID:
               ret = gst_ebml_read_skip (ebml);
               break;
           }
@@ -991,9 +987,6 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
             default:
               GST_WARNING ("Unknown audio track header entry 0x%x - ignoring",
                   id);
-              /* pass-through */
-
-            case GST_EBML_ID_VOID:
               ret = gst_ebml_read_skip (ebml);
               break;
           }
@@ -1186,7 +1179,6 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_CODECINFOURL:
       case GST_MATROSKA_ID_CODECDOWNLOADURL:
       case GST_MATROSKA_ID_CODECDECODEALL:
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -1798,9 +1790,6 @@ gst_matroska_demux_parse_tracks (GstMatroskaDemux * demux)
 
       default:
         GST_WARNING ("Unknown entry 0x%x in track header", id);
-        /* fall-through */
-
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -1881,7 +1870,6 @@ gst_matroska_demux_parse_index_cuetrack (GstMatroskaDemux * demux,
       case GST_MATROSKA_ID_CUEBLOCKNUMBER:
       case GST_MATROSKA_ID_CUECODECSTATE:
       case GST_MATROSKA_ID_CUEREFERENCE:
-      case GST_EBML_ID_VOID:
         if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
           goto error;
         break;
@@ -1957,9 +1945,6 @@ gst_matroska_demux_parse_index_pointentry (GstMatroskaDemux * demux,
 
       default:
         GST_WARNING ("Unknown entry 0x%x in cuespoint index", id);
-        /* fall-through */
-
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -2029,9 +2014,6 @@ gst_matroska_demux_parse_index (GstMatroskaDemux * demux, gboolean prevent_eos)
 
       default:
         GST_WARNING ("Unknown entry 0x%x in cues header", id);
-        /* fall-through */
-
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -2143,9 +2125,6 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
 
       default:
         GST_WARNING ("Unknown entry 0x%x in info header", id);
-        /* fall-through */
-
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -2235,7 +2214,6 @@ gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
       case GST_MATROSKA_ID_TAGLANGUAGE:
       case GST_MATROSKA_ID_TAGDEFAULT:
       case GST_MATROSKA_ID_TAGBINARY:
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -2313,9 +2291,6 @@ gst_matroska_demux_parse_metadata_id_tag (GstMatroskaDemux * demux,
 
       default:
         GST_WARNING ("Unknown entry 0x%x in metadata collection", id);
-        /* fall-through */
-
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -2371,9 +2346,6 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
 
       default:
         GST_WARNING ("Unknown entry 0x%x in metadata header", id);
-        /* fall-through */
-
-      case GST_EBML_ID_VOID:
         /* FIXME: Use to limit the tags to specific pads */
       case GST_MATROSKA_ID_TARGETS:
         ret = gst_ebml_read_skip (ebml);
@@ -2432,7 +2404,6 @@ gst_matroska_demux_parse_attachments (GstMatroskaDemux * demux,
 
     switch (id) {
       default:
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -2482,7 +2453,6 @@ gst_matroska_demux_parse_chapters (GstMatroskaDemux * demux,
 
     switch (id) {
       default:
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -3264,7 +3234,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       case GST_MATROSKA_ID_REFERENCEVIRTUAL:
       case GST_MATROSKA_ID_CODECSTATE:
       case GST_MATROSKA_ID_SLICES:
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -3457,7 +3426,6 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_PREVSIZE:
       case GST_MATROSKA_ID_ENCRYPTEDBLOCK:
       case GST_MATROSKA_ID_SILENTTRACKS:
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -3520,9 +3488,6 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
 
       default:
         GST_WARNING ("Unknown seekhead ID 0x%x", id);
-        /* fall-through */
-
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -3745,9 +3710,6 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux,
 
       default:
         GST_WARNING ("Unknown seekhead ID 0x%x", id);
-        /* fall-through */
-
-      case GST_EBML_ID_VOID:
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -3905,14 +3867,9 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
     default:
       GST_WARNING ("Unknown matroska file header ID 0x%x at %"
           G_GUINT64_FORMAT, id, GST_EBML_READ (demux)->offset);
-      /* fall-through */
-
-    case GST_EBML_ID_VOID:
-    {
       if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
         return ret;
       break;
-    }
   }
   return GST_FLOW_OK;
 }

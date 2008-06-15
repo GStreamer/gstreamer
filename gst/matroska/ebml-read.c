@@ -432,16 +432,41 @@ gst_ebml_peek_id (GstEbmlRead * ebml, guint * level_up, guint32 * id)
 {
   guint64 off;
 
+  guint level_up_tmp = 0;
+
   GstFlowReturn ret;
 
   g_assert (level_up);
+  g_assert (id);
 
+  *level_up = 0;
+
+next:
   off = ebml->offset;           /* save offset */
 
-  if ((ret = gst_ebml_read_element_id (ebml, id, level_up)) != GST_FLOW_OK)
+  if ((ret = gst_ebml_read_element_id (ebml, id, &level_up_tmp)) != GST_FLOW_OK)
     return ret;
 
   ebml->offset = off;           /* restore offset */
+
+  *level_up += level_up_tmp;
+  level_up_tmp = 0;
+
+  switch (*id) {
+    case GST_EBML_ID_VOID:
+      GST_DEBUG_OBJECT (ebml, "Skipping EBML Void element");
+      if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+        return ret;
+      goto next;
+      break;
+    case GST_EBML_ID_CRC32:
+      GST_DEBUG_OBJECT (ebml, "Skipping EBML CRC32 element");
+      if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+        return ret;
+      goto next;
+      break;
+  }
+
   return ret;
 }
 
@@ -990,7 +1015,6 @@ gst_ebml_read_header (GstEbmlRead * ebml, gchar ** doctype, guint * version)
         /* pass-through */
 
         /* we ignore these two, as they don't tell us anything we care about */
-      case GST_EBML_ID_VOID:
       case GST_EBML_ID_EBMLVERSION:
       case GST_EBML_ID_DOCTYPEVERSION:
         ret = gst_ebml_read_skip (ebml);
