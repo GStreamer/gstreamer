@@ -129,10 +129,6 @@ typedef struct _GstMatroskaMux {
                  cluster_time,
                  cluster_pos;
 
-  /* meta-seek info */
-  GstMatroskaMetaSeekIndex *meta_index;
-  guint          num_meta_indexes;
-
   /* tags */
   GstTagList     *tags;
 } GstMatroskaMux;

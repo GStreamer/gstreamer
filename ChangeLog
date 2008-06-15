@@ -1,5 +1,14 @@
 2008-06-15  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_reset),
+	(gst_matroska_mux_start), (gst_matroska_mux_finish),
+	(gst_matroska_mux_write_data):
+	* gst/matroska/matroska-mux.h:
+	Don't write another SeekHead which indexes all Clusters to the end of
+	the file. This isn't useful for anything and just increases filesize.
+
+2008-06-15  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/matroska/ebml-read.c: (_ext2dbl), (gst_ebml_read_float):
 	Prevent unaligned memory access when reading floats.
 
