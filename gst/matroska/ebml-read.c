@@ -24,6 +24,7 @@
 #endif
 
 #include <string.h>
+#include <gst/floatcast/floatcast.h>
 
 #include "ebml-read.h"
 #include "ebml-ids.h"
@@ -692,21 +693,24 @@ struct _ext_float
 static gdouble
 _ext2dbl (guint8 * data)
 {
-  struct _ext_float *ext = (struct _ext_float *) data;
+  struct _ext_float ext;
 
   guint64 m = 0;
 
   gint e, i;
 
+  memcpy (&ext.exponent, data, 2);
+  memcpy (&ext.mantissa, data + 2, 8);
+
   for (i = 0; i < 8; i++)
-    m = (m << 8) + ext->mantissa[i];
-  e = (((gint) ext->exponent[0] & 0x7f) << 8) | ext->exponent[1];
+    m = (m << 8) + ext.mantissa[i];
+  e = (((gint) ext.exponent[0] & 0x7f) << 8) | ext.exponent[1];
   if (e == 0x7fff && m)
     return 0.0 / 0.0;
   e -= 16383 + 63;              /* In IEEE 80 bits, the whole (i.e. 1.xxxx)
                                  * mantissa bit is written as opposed to the
                                  * single and double precision formats */
-  if (ext->exponent[0] & 0x80)
+  if (ext.exponent[0] & 0x80)
     m = -m;
   return ldexp (m, e);
 }
@@ -739,27 +743,15 @@ gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
   if (size == 4) {
     gfloat f;
 
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-    f = *(gfloat *) data;
-#else
-    while (size > 0) {
-      ((guint8 *) & f)[size - 1] = data[4 - size];
-      size--;
-    }
-#endif
+    memcpy (&f, data, 4);
+    f = GFLOAT_FROM_BE (f);
 
     *num = f;
   } else if (size == 8) {
     gdouble d;
 
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-    d = *(gdouble *) data;
-#else
-    while (size > 0) {
-      ((guint8 *) & d)[size - 1] = data[8 - size];
-      size--;
-    }
-#endif
+    memcpy (&d, data, 8);
+    d = GDOUBLE_FROM_BE (d);
 
     *num = d;
   } else {

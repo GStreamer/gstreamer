@@ -1,5 +1,10 @@
 2008-06-15  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/matroska/ebml-read.c: (_ext2dbl), (gst_ebml_read_float):
+	Prevent unaligned memory access when reading floats.
+
+2008-06-15  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/matroska/ebml-read.c:
 	* gst/matroska/ebml-read.h:
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_reset),
