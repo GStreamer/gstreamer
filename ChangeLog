@@ -1,5 +1,23 @@
 2008-06-15  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_reset),
+	(gst_matroskademux_do_index_seek),
+	(gst_matroska_demux_parse_index_cuetrack),
+	(gst_matroska_demux_parse_index_pointentry),
+	(gst_matroska_index_compare), (gst_matroska_demux_parse_index),
+	(gst_matroska_demux_parse_metadata):
+	* gst/matroska/matroska-demux.h:
+	* gst/matroska/matroska-ids.h:
+	Use a GArray for storing the Cue (i.e. seek) information, store
+	the CueTrackPositions for every track, store the block number
+	and optimize searching in the array by sorting it after the last
+	element was added.
+
+	Fix a small memory leak when trying to parse a tags element that was
+	already parsed.
+
+2008-06-15  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_reset),
 	(gst_matroska_mux_start), (gst_matroska_mux_finish),
 	(gst_matroska_mux_write_data):

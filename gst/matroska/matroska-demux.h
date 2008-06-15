@@ -87,8 +87,7 @@ typedef struct _GstMatroskaDemux {
   guint64                  ebml_segment_start;
 
   /* a cue (index) table */
-  GstMatroskaIndex        *index;
-  guint                    num_indexes;
+  GArray                  *index;
 
   /* timescale in the file */
   guint64                  time_scale;

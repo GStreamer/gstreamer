@@ -299,9 +299,10 @@ gst_matroska_demux_reset (GstElement * element)
   demux->muxing_app = NULL;
 
   /* reset indexes */
-  demux->num_indexes = 0;
-  g_free (demux->index);
-  demux->index = NULL;
+  if (demux->index) {
+    g_array_free (demux->index, TRUE);
+    demux->index = NULL;
+  }
 
   /* reset timers */
   demux->clock = NULL;
@@ -1400,44 +1401,53 @@ static GstMatroskaIndex *
 gst_matroskademux_do_index_seek (GstMatroskaDemux * demux, gint64 seek_pos,
     gint64 segment_stop, gboolean keyunit)
 {
-  guint entry;
+  GstMatroskaIndex *entry = NULL;
 
-  guint n = 0;
+  guint n;
 
-  if (!demux->num_indexes)
+  if (!demux->index || !demux->index->len)
     return NULL;
 
-  if (keyunit) {
-    /* find index entry closest to the requested position */
-    entry = 0;
-    for (n = 0; n < demux->num_indexes; ++n) {
-      gdouble d_entry, d_this;
+  /* find entry just before or at the requested position */
+  for (n = 0; n < demux->index->len; n++) {
+    GstMatroskaIndex *index;
 
-      d_entry = fabs (gst_guint64_to_gdouble (demux->index[entry].time) -
-          gst_guint64_to_gdouble (seek_pos));
-      d_this = fabs (gst_guint64_to_gdouble (demux->index[n].time) -
-          gst_guint64_to_gdouble (seek_pos));
+    index = &g_array_index (demux->index, GstMatroskaIndex, n);
+
+    if (index->time <= seek_pos)
+      entry = index;
+    else
+      break;
+  }
+
+  if (keyunit) {
+    /* find index entry closest to the requested position.
+     * n contains the index of the GstMatroskaIndex after
+     * entry
+     */
+    if (entry && n < demux->index->len) {
+      GstMatroskaIndex *index;
+
+      GstClockTimeDiff d_this, d_entry;
+
+      index = &g_array_index (demux->index, GstMatroskaIndex, n);
+
+      d_entry = GST_CLOCK_DIFF (entry->time, seek_pos);
+      if (d_entry < 0)
+        d_entry = -d_entry;
+
+      d_this = GST_CLOCK_DIFF (index->time, seek_pos);
+      if (d_this < 0)
+        d_this = -d_this;
 
       if (d_this < d_entry &&
-          (demux->index[n].time < segment_stop || segment_stop == -1)) {
-        entry = n;
+          (index->time < segment_stop || segment_stop == -1)) {
+        entry = index;
       }
-    }
-  } else {
-    /* find index entry at or before the requested position */
-    entry = demux->num_indexes - 1;
-
-    while (n < demux->num_indexes - 1) {
-      if ((demux->index[n].time <= seek_pos) &&
-          (demux->index[n + 1].time > seek_pos)) {
-        entry = n;
-        break;
-      }
-      n++;
     }
   }
 
-  return &demux->index[entry];
+  return entry;
 }
 
 /* takes ownership of the passed event! */
@@ -1811,13 +1821,20 @@ gst_matroska_demux_parse_tracks (GstMatroskaDemux * demux)
 
 static GstFlowReturn
 gst_matroska_demux_parse_index_cuetrack (GstMatroskaDemux * demux,
-    gboolean prevent_eos, GstMatroskaIndex * idx, guint64 length)
+    gboolean prevent_eos, guint * nentries, guint64 length)
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
 
   guint32 id;
 
   GstFlowReturn ret;
+
+  GstMatroskaIndex idx;
+
+  idx.pos = (guint64) - 1;
+  idx.track = 0;
+  idx.time = GST_CLOCK_TIME_NONE;
+  idx.block = 1;
 
   if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
     return ret;
@@ -1843,13 +1860,13 @@ gst_matroska_demux_parse_index_cuetrack (GstMatroskaDemux * demux,
         if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
           goto error;
         if (num == 0) {
-          idx->track = -1;
+          idx.track = 0;
           GST_WARNING ("Invalid cue track number (0)");
           goto error;
           break;
         }
 
-        idx->track = num;
+        idx.track = num;
         break;
       }
 
@@ -1863,7 +1880,23 @@ gst_matroska_demux_parse_index_cuetrack (GstMatroskaDemux * demux,
 
         /* FIXME: may overflow, our seeks, etc are int64 based */
 
-        idx->pos = num;
+        idx.pos = num;
+        break;
+      }
+
+        /* number of block in the cluster */
+      case GST_MATROSKA_ID_CUEBLOCKNUMBER:
+      {
+        guint64 num;
+
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          goto error;
+
+        if (num == 0) {
+          GST_WARNING_OBJECT (demux, "Invalid CueBlockNumber (0)");
+        } else {
+          idx.block = num;
+        }
         break;
       }
 
@@ -1871,7 +1904,6 @@ gst_matroska_demux_parse_index_cuetrack (GstMatroskaDemux * demux,
         GST_WARNING ("Unknown entry 0x%x in CuesTrackPositions", id);
         /* fall-through */
 
-      case GST_MATROSKA_ID_CUEBLOCKNUMBER:
       case GST_MATROSKA_ID_CUECODECSTATE:
       case GST_MATROSKA_ID_CUEREFERENCE:
         if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
@@ -1883,6 +1915,13 @@ gst_matroska_demux_parse_index_cuetrack (GstMatroskaDemux * demux,
       demux->level_up--;
       break;
     }
+  }
+
+  if (ret == GST_FLOW_OK && idx.pos != (guint64) - 1 && idx.track > 0) {
+    g_array_append_val (demux->index, idx);
+    (*nentries)++;
+  } else {
+    GST_DEBUG_OBJECT (demux, "CueTrackPositions without valid content");
   }
 
   return ret;
@@ -1900,20 +1939,16 @@ gst_matroska_demux_parse_index_pointentry (GstMatroskaDemux * demux,
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
 
-  GstMatroskaIndex idx;
-
   guint32 id;
 
   GstFlowReturn ret;
 
+  GstClockTime time = GST_CLOCK_TIME_NONE;
+
+  guint nentries = 0;
+
   if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
     return ret;
-
-  /* in the end, we hope to fill one entry with a
-   * timestamp, a file position and a tracknum */
-  idx.pos = (guint64) - 1;
-  idx.time = (guint64) - 1;
-  idx.track = (guint16) - 1;
 
   while (ret == GST_FLOW_OK) {
     if (prevent_eos && length == ebml->offset)
@@ -1931,25 +1966,27 @@ gst_matroska_demux_parse_index_pointentry (GstMatroskaDemux * demux,
         /* one single index entry ('point') */
       case GST_MATROSKA_ID_CUETIME:
       {
-        guint64 time;
+        if ((ret = gst_ebml_read_uint (ebml, &id, &time)) != GST_FLOW_OK)
+          return ret;
 
-        if ((ret = gst_ebml_read_uint (ebml, &id, &time)) == GST_FLOW_OK) {
-          idx.time = time * demux->time_scale;
-        }
+        time = time * demux->time_scale;
         break;
       }
 
         /* position in the file + track to which it belongs */
       case GST_MATROSKA_ID_CUETRACKPOSITIONS:
       {
-        ret = gst_matroska_demux_parse_index_cuetrack (demux, prevent_eos, &idx,
-            length);
+        if ((ret =
+                gst_matroska_demux_parse_index_cuetrack (demux, prevent_eos,
+                    &nentries, length)) != GST_FLOW_OK)
+          return ret;
         break;
       }
 
       default:
         GST_WARNING ("Unknown entry 0x%x in cuespoint index", id);
-        ret = gst_ebml_read_skip (ebml);
+        if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+          return ret;
         break;
     }
 
@@ -1959,24 +1996,40 @@ gst_matroska_demux_parse_index_pointentry (GstMatroskaDemux * demux,
     }
   }
 
-  /* so let's see if we got what we wanted */
-  if (idx.pos != (guint64) - 1 &&
-      idx.time != (guint64) - 1 && idx.track != (guint16) - 1) {
-    if (demux->num_indexes % 32 == 0) {
-      /* re-allocate bigger index */
-      demux->index = g_renew (GstMatroskaIndex, demux->index,
-          demux->num_indexes + 32);
+  if (nentries > 0) {
+    if (time == GST_CLOCK_TIME_NONE) {
+      GST_WARNING_OBJECT (demux, "CuePoint without valid time");
+      g_array_remove_range (demux->index, demux->index->len - nentries,
+          nentries);
+    } else {
+      gint i;
+
+      for (i = demux->index->len - nentries; i < demux->index->len; i++) {
+        GstMatroskaIndex *idx =
+            &g_array_index (demux->index, GstMatroskaIndex, i);
+
+        idx->time = time;
+        GST_DEBUG_OBJECT (demux, "Index entry: pos=%" G_GUINT64_FORMAT
+            ", time=%" GST_TIME_FORMAT ", track=%u, block=%u", idx->pos,
+            GST_TIME_ARGS (idx->time), (guint) idx->track, (guint) idx->block);
+      }
     }
-    GST_DEBUG_OBJECT (demux, "Index entry: pos=%" G_GUINT64_FORMAT
-        ", time=%" GST_TIME_FORMAT ", track=%u", idx.pos,
-        GST_TIME_ARGS (idx.time), (guint) idx.track);
-    demux->index[demux->num_indexes].pos = idx.pos;
-    demux->index[demux->num_indexes].time = idx.time;
-    demux->index[demux->num_indexes].track = idx.track;
-    demux->num_indexes++;
+  } else {
+    GST_DEBUG_OBJECT (demux, "Empty CuePoint");
   }
 
   return ret;
+}
+
+static gint
+gst_matroska_index_compare (GstMatroskaIndex * i1, GstMatroskaIndex * i2)
+{
+  if (i1->time < i2->time)
+    return -1;
+  else if (i1->time > i2->time)
+    return 1;
+  else
+    return 0;
 }
 
 static GstFlowReturn
@@ -1993,6 +2046,11 @@ gst_matroska_demux_parse_index (GstMatroskaDemux * demux, gboolean prevent_eos)
   if (prevent_eos) {
     length = gst_ebml_read_get_length (ebml);
   }
+
+  if (demux->index)
+    g_array_free (demux->index, TRUE);
+  demux->index =
+      g_array_sized_new (FALSE, FALSE, sizeof (GstMatroskaIndex), 128);
 
   while (ret == GST_FLOW_OK) {
     /* We're an element that can be seeked to. If we are, then
@@ -2027,6 +2085,9 @@ gst_matroska_demux_parse_index (GstMatroskaDemux * demux, gboolean prevent_eos)
       break;
     }
   }
+
+  /* Sort index by time, smallest time first, for easier searching */
+  g_array_sort (demux->index, (GCompareFunc) gst_matroska_index_compare);
 
   demux->index_parsed = TRUE;
 
@@ -2314,7 +2375,7 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
 
-  GstTagList *taglist = gst_tag_list_new ();
+  GstTagList *taglist;
 
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -2347,6 +2408,8 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
       return ret;
     }
   }
+
+  taglist = gst_tag_list_new ();
 
   GST_DEBUG_OBJECT (demux, "Parsing Tags at offset %" G_GUINT64_FORMAT,
       ebml->offset);
