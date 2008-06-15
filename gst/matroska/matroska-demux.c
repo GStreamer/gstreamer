@@ -312,6 +312,10 @@ gst_matroska_demux_reset (GstElement * element)
   demux->tracks_parsed = FALSE;
   demux->segmentinfo_parsed = FALSE;
 
+  g_list_foreach (demux->tags_parsed, (GFunc) gst_ebml_level_free, NULL);
+  g_list_free (demux->tags_parsed);
+  demux->tags_parsed = NULL;
+
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 }
 
@@ -2317,6 +2321,39 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
   guint64 length = 0;
 
   guint32 id;
+
+  GList *l;
+
+  GstEbmlLevel *curlevel;
+
+  /* Can't be NULL at this point */
+  g_assert (ebml->level != NULL);
+  curlevel = ebml->level->data;
+
+  /* Make sure we don't parse a tags element twice and
+   * post it's tags twice */
+  for (l = demux->tags_parsed; l; l = l->next) {
+    GstEbmlLevel *level = l->data;
+
+    if (ebml->level)
+      curlevel = ebml->level->data;
+    else
+      break;
+
+    if (level->start == curlevel->start && level->length == curlevel->length) {
+      GST_DEBUG_OBJECT (demux, "Skipping already parsed Tags at offset %"
+          G_GUINT64_FORMAT, ebml->offset);
+      ret = gst_ebml_read_skip (ebml);
+      return ret;
+    }
+  }
+
+  GST_DEBUG_OBJECT (demux, "Parsing Tags at offset %" G_GUINT64_FORMAT,
+      ebml->offset);
+  /* TODO: g_slice_dup() if we depend on GLib 2.14 */
+  curlevel = g_slice_new (GstEbmlLevel);
+  memcpy (curlevel, ebml->level->data, sizeof (GstEbmlLevel));
+  demux->tags_parsed = g_list_prepend (demux->tags_parsed, curlevel);
 
   /* TODO: review length/eos logic */
   if (prevent_eos) {

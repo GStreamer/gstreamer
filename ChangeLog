@@ -1,5 +1,15 @@
 2008-06-15  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/matroska/ebml-read.c:
+	* gst/matroska/ebml-read.h:
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_reset),
+	(gst_matroska_demux_parse_metadata):
+	* gst/matroska/matroska-demux.h:
+	Make sure that every Tags element is only parsed once and it's
+	containing tags are only posted once.
+
+2008-06-15  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/matroska/ebml-read.c: (gst_ebml_peek_id),
 	(gst_ebml_read_header):
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream),

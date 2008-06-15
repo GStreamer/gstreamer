@@ -61,6 +61,8 @@ typedef struct _GstEbmlReadClass {
 
 GType    gst_ebml_read_get_type          (void);
 
+void          gst_ebml_level_free        (GstEbmlLevel *level);
+
 GstFlowReturn gst_ebml_peek_id           (GstEbmlRead *ebml,
                                           guint       *level_up,
                                           guint32     *id);

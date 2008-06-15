@@ -75,7 +75,7 @@ gst_ebml_read_get_type (void)
   return gst_ebml_read_type;
 }
 
-static void
+void
 gst_ebml_level_free (GstEbmlLevel * level)
 {
   g_slice_free (GstEbmlLevel, level);
