@@ -30,7 +30,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 static const GstElementDetails element_details = 
     GST_ELEMENT_DETAILS ("OpenGL edge filter",
         "Filter/Effect",
-        "Edge detection",
+        "Edge detection using GLSL",
         "Julien Isorce <julien.isorce@gmail.com>");
 
 enum
@@ -86,12 +86,33 @@ gst_gl_filter_edge_init (GstGLFilterEdge* filter,
     filter->textShader =
         "uniform sampler2DRect tex;\n"
 	    "void main(void) {\n"
-	    "  float r,g,b,y;\n"
-	    "  vec2 nxy=gl_TexCoord[0].xy;\n"
-	    "  r=texture2DRect(tex,nxy).r;\n"
-	    "  g=texture2DRect(tex,nxy).g;\n"
-	    "  b=texture2DRect(tex,nxy).b;\n"
-	    "  gl_FragColor=vec4(b,g,r,1.0);\n"
+        "  const int N = 8;\n"
+        "  const vec2 delta[N] = vec2[N](\n"
+        "    vec2( -1.0,  -1.0 ),\n" 
+        "    vec2( -1.0 ,  0.0 ),\n"
+        "    vec2( -1.0 ,  1.0 ),\n"
+        "    vec2(  0.0 ,  1.0 ),\n"
+        "    vec2(  1.0 ,  1.0 ),\n"
+        "    vec2(  1.0 ,  0.0 ),\n"
+        "    vec2(  1.0 , -1.0 ),\n"
+        "    vec2(  0.0 , -1.0 )\n"
+        "  );\n"
+        "  const float filterH[N] = float[N]\n"
+        "    (-1.0, 0.0, 1.0, 2.0, 1.0, 0.0, -1.0, -2.0);\n"
+        "  const float filterV[N] = float[N]\n"
+        "    (-1.0, -2.0, -1.0, 0.0, 1.0, 2.0, 1.0, 0.0);\n"
+        "  float gH = 0.0;\n"
+        "  float gV = 0.0;\n"
+        "  int i;\n"
+        "  vec2 nxy = gl_TexCoord[0].xy;\n"
+        "  for (i = 0; i < N; i++) {\n"
+        "    vec4 vcolor_i = texture2DRect(tex, nxy + delta[i]);\n"
+        "    float gray_i = (vcolor_i.r + vcolor_i.g + vcolor_i.b) / 3.0;\n"
+        "    gH += gH +  filterH[i] * gray_i;\n"
+        "    gV += gV +  filterV[i] * gray_i;\n"
+        "  }\n"
+        "  float g = sqrt(gH * gH + gV * gV) / 8.0;\n"
+	    "  gl_FragColor = vec4(g, g, g, 1.0);\n"
 	    "}\n";
 }
 
@@ -186,13 +207,14 @@ gst_gl_filter_edge_callback (guint width, guint height, guint texture, GLhandleA
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
     glBegin (GL_QUADS);
-        glTexCoord2i (width, 0);
-        glVertex2f (1.0f, 1.0f);
         glTexCoord2i (0, 0);
-        glVertex2f (-1.0f, 1.0f);
-        glTexCoord2i (0, height);
         glVertex2f (-1.0f, -1.0f);
-        glTexCoord2i (width, height);
+        glTexCoord2i (width, 0);
         glVertex2f (1.0f, -1.0f);
+        glTexCoord2i (width, height);
+        glVertex2f (1.0f, 1.0f);
+        glTexCoord2i (0, height);
+        glVertex2f (-1.0f, 1.0f);
+        
     glEnd ();
 }
