@@ -65,16 +65,15 @@ static GstElementDetails dvbsrc_details = {
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8MHz frequency=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 ! flutsdemux crc-check=false name=demux ! queue max-size-buffers=0 max-size-time=0 ! flumpeg2vdec ! xvimagesink sync=false demux. ! queue max-size-buffers=0 max-size-time=0 ! flump3dec ! alsasink sync=false
+ * gst-launch dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8MHz frequency=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 ! flutsdemux crc-check=false name=demux ! queue max-size-buffers=0 max-size-time=0 ! flumpeg2vdec ! xvimagesink sync demux. ! queue max-size-buffers=0 max-size-time=0 ! flump3dec ! alsasink sync
  * ]| Captures a full transport stream from dvb card 0 that is a DVB-T card at tuned frequency 514000000 with other parameters as seen in the 
- * pipeline and outputs the first tv program on the transport stream.  The reason the sinks have to be set to have sync=false is due to bug #340482.
+ * pipeline and outputs the first tv program on the transport stream.
  * |[
- * gst-launch dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8 frequency=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 pids=256:257 ! flutsdemux crc-check=false name=demux es-pids=256:257 ! queue max-size-buffers=0 max-size-time=0 ! flumpeg2vdec ! xvimagesink sync=false demux. ! queue max-size-buffers=0 max-size-time=0 ! flump3dec ! alsasink sync=false
- * ]| Captures a partial transport stream from dvb card 0 that is a DVB-T card for a program at tuned frequency 514000000 and pids of 256:257 with other parameters as seen in the pipeline and outputs the program with the pids 256 and 257.  The reason the sinks have to be set to
- * have sync=false is due to bug #340482 (FIXME: wrong bug number?).
+ * gst-launch dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8 frequency=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 pids=256:257 ! flutsdemux crc-check=false name=demux es-pids=256:257 ! queue max-size-buffers=0 max-size-time=0 ! flumpeg2vdec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! flump3dec ! alsasink
+ * ]| Captures a partial transport stream from dvb card 0 that is a DVB-T card for a program at tuned frequency 514000000 and pids of 256:257 with other parameters as seen in the pipeline and outputs the program with the pids 256 and 257.  
  * |[
- * gst-launch dvbsrc polarity="h" frequency=11302000 srate=27500 diseqc-src=0 pids=102:103 ! queue max-size-buffers=0 max-size-time=0 ! flumpeg2vdec ! xvimagesink sync=false demux. ! queue max-size-buffers=0 max-size-time=0 ! flump3dec ! alsasink sync=false
- * ]| Captures a partial transport stream from dvb card 0 that is a DVB-S card for a program at tuned frequency 11302000 Hz, symbol rate of 27500 kHz and pids of 256:257 and outputs the program with the pids 256 and 257.  The reason the sinks have to be set to have sync=false is due to bug #340482.
+ * gst-launch dvbsrc polarity="h" frequency=11302000 srate=27500 diseqc-src=0 pids=102:103 ! queue max-size-buffers=0 max-size-time=0 ! flumpeg2vdec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! flump3dec ! alsasink
+ * ]| Captures a partial transport stream from dvb card 0 that is a DVB-S card for a program at tuned frequency 11302000 Hz, symbol rate of 27500 kHz and pids of 256:257 and outputs the program with the pids 256 and 257.
  * </para>
  * </refsect2>
  */

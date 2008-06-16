@@ -1,5 +1,10 @@
 2008-06-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* sys/dvb/gstdvbsrc.c:
+	Fix out of date docs.
+
+2008-06-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	Patch from: Vincent Genieux
 
 	* gst/mpegtsparse/mpegtsparse.c:
