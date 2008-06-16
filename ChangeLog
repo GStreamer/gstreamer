@@ -1,3 +1,9 @@
+2008-06-16  Andy Wingo  <wingo@pobox.com>
+
+	* gst-libs/gst/app/gstappsrc.c (gst_app_src_set_max_bytes)
+	(gst_app_src_get_max_bytes, gst_app_src_push_buffer): Use
+	G_GUINT64_FORMAT. Avoid overflow in get_max_bytes().
+
 2008-06-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/dvb/gstdvbsrc.c:
