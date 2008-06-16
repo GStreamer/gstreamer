@@ -1,5 +1,12 @@
 2008-06-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	Patch from: Vincent Genieux
+
+	* gst/mpegtsparse/mpegtsparse.c:
+	Fix refcount issues, fixes #538560.
+
+2008-06-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* gst/mpegtsparse/gstmpegdesc.h:
 	* gst/mpegtsparse/mpegtspacketizer.c:
 	Parse the extended event descriptor.
