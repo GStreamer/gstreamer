@@ -60,6 +60,7 @@ GST_ELEMENT_DETAILS ("Speex audio encoder",
 
 #define DEFAULT_QUALITY         8.0
 #define DEFAULT_BITRATE         0
+#define DEFAULT_MODE            GST_SPEEX_ENC_MODE_AUTO
 #define DEFAULT_VBR             FALSE
 #define DEFAULT_ABR             0
 #define DEFAULT_VAD             FALSE
@@ -69,17 +70,37 @@ GST_ELEMENT_DETAILS ("Speex audio encoder",
 
 enum
 {
-  ARG_0,
-  ARG_QUALITY,
-  ARG_BITRATE,
-  ARG_VBR,
-  ARG_ABR,
-  ARG_VAD,
-  ARG_DTX,
-  ARG_COMPLEXITY,
-  ARG_NFRAMES,
-  ARG_LAST_MESSAGE
+  PROP_0,
+  PROP_QUALITY,
+  PROP_BITRATE,
+  PROP_MODE,
+  PROP_VBR,
+  PROP_ABR,
+  PROP_VAD,
+  PROP_DTX,
+  PROP_COMPLEXITY,
+  PROP_NFRAMES,
+  PROP_LAST_MESSAGE
 };
+
+#define GST_TYPE_SPEEX_ENC_MODE (gst_speex_enc_mode_get_type())
+static GType
+gst_speex_enc_mode_get_type (void)
+{
+  static GType speex_enc_mode_type = 0;
+  static const GEnumValue speex_enc_modes[] = {
+    {GST_SPEEX_ENC_MODE_AUTO, "Auto", "auto"},
+    {GST_SPEEX_ENC_MODE_UWB, "Ultra Wide Band", "uwb"},
+    {GST_SPEEX_ENC_MODE_WB, "Wide Band", "wb"},
+    {GST_SPEEX_ENC_MODE_NB, "Narrow Band", "nb"},
+    {0, NULL, NULL},
+  };
+  if (G_UNLIKELY (speex_enc_mode_type == 0)) {
+    speex_enc_mode_type = g_enum_register_static ("GstSpeexEncMode",
+        speex_enc_modes);
+  }
+  return speex_enc_mode_type;
+}
 
 #if 0
 static const GstFormat *
@@ -152,35 +173,39 @@ gst_speex_enc_class_init (GstSpeexEncClass * klass)
   gobject_class->set_property = gst_speex_enc_set_property;
   gobject_class->get_property = gst_speex_enc_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QUALITY,
       g_param_spec_float ("quality", "Quality", "Encoding quality",
           0.0, 10.0, DEFAULT_QUALITY, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
       g_param_spec_int ("bitrate", "Encoding Bit-rate",
           "Specify an encoding bit-rate (in bps). (0 = automatic)",
           0, G_MAXINT, DEFAULT_BITRATE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR,
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode", "The encoding mode",
+          GST_TYPE_SPEEX_ENC_MODE, GST_SPEEX_ENC_MODE_AUTO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VBR,
       g_param_spec_boolean ("vbr", "VBR",
           "Enable variable bit-rate", DEFAULT_VBR, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ABR,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ABR,
       g_param_spec_int ("abr", "ABR",
           "Enable average bit-rate (0 = disabled)",
           0, G_MAXINT, DEFAULT_ABR, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VAD,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VAD,
       g_param_spec_boolean ("vad", "VAD",
           "Enable voice activity detection", DEFAULT_VAD, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DTX,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DTX,
       g_param_spec_boolean ("dtx", "DTX",
           "Enable discontinuous transmission", DEFAULT_DTX, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_COMPLEXITY,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COMPLEXITY,
       g_param_spec_int ("complexity", "Complexity",
           "Set encoding complexity",
           0, G_MAXINT, DEFAULT_COMPLEXITY, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NFRAMES,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_NFRAMES,
       g_param_spec_int ("nframes", "NFrames",
           "Number of frames per buffer",
           0, G_MAXINT, DEFAULT_NFRAMES, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LAST_MESSAGE,
       g_param_spec_string ("last-message", "last-message",
           "The last status message", NULL, G_PARAM_READABLE));
 
@@ -360,6 +385,12 @@ gst_speex_enc_convert_sink (GstPad * pad, GstFormat src_format,
   return res;
 }
 
+static gint64
+gst_speex_enc_get_latency (GstSpeexEnc * enc)
+{
+  return 30 * GST_MSECOND;
+}
+
 static const GstQueryType *
 gst_speex_enc_get_query_types (GstPad * pad)
 {
@@ -367,6 +398,7 @@ gst_speex_enc_get_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
     GST_QUERY_CONVERT,
+    GST_QUERY_LATENCY,
     0
   };
 
@@ -438,8 +470,28 @@ gst_speex_enc_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
+    case GST_QUERY_LATENCY:
+    {
+      gboolean live;
+      GstClockTime min_latency, max_latency;
+      gint64 latency;
+
+      if ((res = gst_pad_peer_query (pad, query))) {
+        gst_query_parse_latency (query, &live, &min_latency, &max_latency);
+
+        latency = gst_speex_enc_get_latency (enc);
+
+        /* add our latency */
+        min_latency += latency;
+        if (max_latency != -1)
+          max_latency += latency;
+
+        gst_query_set_latency (query, live, min_latency, max_latency);
+      }
+      break;
+    }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_peer_query (pad, query);
       break;
   }
 
@@ -509,14 +561,13 @@ gst_speex_enc_init (GstSpeexEnc * enc, GstSpeexEncClass * klass)
 
   enc->quality = DEFAULT_QUALITY;
   enc->bitrate = DEFAULT_BITRATE;
+  enc->mode = DEFAULT_MODE;
   enc->vbr = DEFAULT_VBR;
   enc->abr = DEFAULT_ABR;
   enc->vad = DEFAULT_VAD;
   enc->dtx = DEFAULT_DTX;
   enc->complexity = DEFAULT_COMPLEXITY;
   enc->nframes = DEFAULT_NFRAMES;
-
-  /* FIXME: what about enc->mode? */
 
   enc->setup = FALSE;
   enc->header_sent = FALSE;
@@ -570,22 +621,27 @@ gst_speex_enc_setup (GstSpeexEnc * enc)
 
   switch (enc->mode) {
     case GST_SPEEX_ENC_MODE_UWB:
+      GST_LOG_OBJECT (enc, "configuring for requested UWB mode");
       enc->speex_mode = (SpeexMode *) & speex_uwb_mode;
       break;
     case GST_SPEEX_ENC_MODE_WB:
+      GST_LOG_OBJECT (enc, "configuring for requested WB mode");
       enc->speex_mode = (SpeexMode *) & speex_wb_mode;
       break;
     case GST_SPEEX_ENC_MODE_NB:
+      GST_LOG_OBJECT (enc, "configuring for requested NB mode");
       enc->speex_mode = (SpeexMode *) & speex_nb_mode;
       break;
     case GST_SPEEX_ENC_MODE_AUTO:
       /* fall through */
+      GST_LOG_OBJECT (enc, "finding best mode");
     default:
       break;
   }
 
   if (enc->rate > 25000) {
     if (enc->mode == GST_SPEEX_ENC_MODE_AUTO) {
+      GST_LOG_OBJECT (enc, "selected UWB mode for samplerate %d", enc->rate);
       enc->speex_mode = (SpeexMode *) & speex_uwb_mode;
     } else {
       if (enc->speex_mode != &speex_uwb_mode) {
@@ -595,6 +651,7 @@ gst_speex_enc_setup (GstSpeexEnc * enc)
     }
   } else if (enc->rate > 12500) {
     if (enc->mode == GST_SPEEX_ENC_MODE_AUTO) {
+      GST_LOG_OBJECT (enc, "selected WB mode for samplerate %d", enc->rate);
       enc->speex_mode = (SpeexMode *) & speex_wb_mode;
     } else {
       if (enc->speex_mode != &speex_wb_mode) {
@@ -604,6 +661,7 @@ gst_speex_enc_setup (GstSpeexEnc * enc)
     }
   } else {
     if (enc->mode == GST_SPEEX_ENC_MODE_AUTO) {
+      GST_LOG_OBJECT (enc, "selected NB mode for samplerate %d", enc->rate);
       enc->speex_mode = (SpeexMode *) & speex_nb_mode;
     } else {
       if (enc->speex_mode != &speex_nb_mode) {
@@ -674,6 +732,9 @@ gst_speex_enc_setup (GstSpeexEnc * enc)
 
   speex_encoder_ctl (enc->state, SPEEX_GET_LOOKAHEAD, &enc->lookahead);
 
+  GST_LOG_OBJECT (enc, "we have frame size %d, lookahead %d", enc->frame_size,
+      enc->lookahead);
+
   enc->setup = TRUE;
 
   return TRUE;
@@ -700,10 +761,15 @@ gst_speex_enc_buffer_from_data (GstSpeexEnc * enc, guchar * data,
 static GstFlowReturn
 gst_speex_enc_push_buffer (GstSpeexEnc * enc, GstBuffer * buffer)
 {
-  enc->bytes_out += GST_BUFFER_SIZE (buffer);
+  guint size;
+
+  size = GST_BUFFER_SIZE (buffer);
+
+  enc->bytes_out += size;
+
+  GST_DEBUG_OBJECT (enc, "pushing output buffer of size %u", size);
 
   return gst_pad_push (enc->srcpad, buffer);
-
 }
 
 static GstCaps *
@@ -822,7 +888,7 @@ gst_speex_enc_chain (GstPad * pad, GstBuffer * buf)
         "channels", G_TYPE_INT, enc->channels, NULL);
 
     /* negotiate with these caps */
-    GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (enc, "here are the caps: %" GST_PTR_FORMAT, caps);
     gst_pad_set_caps (enc->srcpad, caps);
 
     gst_buffer_set_caps (buf1, caps);
@@ -851,6 +917,9 @@ gst_speex_enc_chain (GstPad * pad, GstBuffer * buf)
     gint frame_size = enc->frame_size;
     gint bytes = frame_size * 2 * enc->channels;
 
+    GST_DEBUG_OBJECT (enc, "received buffer of %u bytes",
+        GST_BUFFER_SIZE (buf));
+
     /* push buffer to adapter */
     gst_adapter_push (enc->adapter, buf);
     buf = NULL;
@@ -869,6 +938,9 @@ gst_speex_enc_chain (GstPad * pad, GstBuffer * buf)
       gst_adapter_flush (enc->adapter, bytes);
 
       enc->samples_in += frame_size;
+
+      GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)", frame_size,
+          bytes);
 
       if (enc->channels == 2) {
         speex_encode_stereo (enc->input, frame_size, &enc->bits);
@@ -941,31 +1013,34 @@ gst_speex_enc_get_property (GObject * object, guint prop_id, GValue * value,
   enc = GST_SPEEX_ENC (object);
 
   switch (prop_id) {
-    case ARG_QUALITY:
+    case PROP_QUALITY:
       g_value_set_float (value, enc->quality);
       break;
-    case ARG_BITRATE:
+    case PROP_BITRATE:
       g_value_set_int (value, enc->bitrate);
       break;
-    case ARG_VBR:
+    case PROP_MODE:
+      g_value_set_enum (value, enc->mode);
+      break;
+    case PROP_VBR:
       g_value_set_boolean (value, enc->vbr);
       break;
-    case ARG_ABR:
+    case PROP_ABR:
       g_value_set_int (value, enc->abr);
       break;
-    case ARG_VAD:
+    case PROP_VAD:
       g_value_set_boolean (value, enc->vad);
       break;
-    case ARG_DTX:
+    case PROP_DTX:
       g_value_set_boolean (value, enc->dtx);
       break;
-    case ARG_COMPLEXITY:
+    case PROP_COMPLEXITY:
       g_value_set_int (value, enc->complexity);
       break;
-    case ARG_NFRAMES:
+    case PROP_NFRAMES:
       g_value_set_int (value, enc->nframes);
       break;
-    case ARG_LAST_MESSAGE:
+    case PROP_LAST_MESSAGE:
       g_value_set_string (value, enc->last_message);
       break;
     default:
@@ -983,28 +1058,31 @@ gst_speex_enc_set_property (GObject * object, guint prop_id,
   enc = GST_SPEEX_ENC (object);
 
   switch (prop_id) {
-    case ARG_QUALITY:
+    case PROP_QUALITY:
       enc->quality = g_value_get_float (value);
       break;
-    case ARG_BITRATE:
+    case PROP_BITRATE:
       enc->bitrate = g_value_get_int (value);
       break;
-    case ARG_VBR:
+    case PROP_MODE:
+      enc->mode = g_value_get_enum (value);
+      break;
+    case PROP_VBR:
       enc->vbr = g_value_get_boolean (value);
       break;
-    case ARG_ABR:
+    case PROP_ABR:
       enc->abr = g_value_get_int (value);
       break;
-    case ARG_VAD:
+    case PROP_VAD:
       enc->vad = g_value_get_boolean (value);
       break;
-    case ARG_DTX:
+    case PROP_DTX:
       enc->dtx = g_value_get_boolean (value);
       break;
-    case ARG_COMPLEXITY:
+    case PROP_COMPLEXITY:
       enc->complexity = g_value_get_int (value);
       break;
-    case ARG_NFRAMES:
+    case PROP_NFRAMES:
       enc->nframes = g_value_get_int (value);
       break;
     default:

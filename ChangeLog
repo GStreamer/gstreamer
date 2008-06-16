@@ -1,3 +1,16 @@
+2008-06-16  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/speex/gstspeexenc.c: (gst_speex_enc_mode_get_type),
+	(gst_speex_enc_class_init), (gst_speex_enc_sink_getcaps),
+	(gst_speex_enc_get_latency), (gst_speex_enc_get_query_types),
+	(gst_speex_enc_src_query), (gst_speex_enc_init),
+	(gst_speex_enc_setup), (gst_speex_enc_push_buffer),
+	(gst_speex_enc_chain), (gst_speex_enc_get_property),
+	(gst_speex_enc_set_property):
+	Add mode property.
+	Some cleanups, add more debug info.
+	Add latency query.
+
 2008-06-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/matroska/ebml-read.c: (gst_ebml_read_peek_bytes):
