@@ -20,11 +20,10 @@
 /**
  * SECTION:element-videoanalyse
  *
- * <refsect2>
- * <para>
- * This plugin analyses every video frame and if the <link
- * linkend="GstVideoAnalyse--message">message property</link> is #TRUE, posts an element
- * message with video statistics called <classname>&quot;GstVideoAnalyse&quot;</classname>.
+ * This plugin analyses every video frame and if the #GstVideoAnalyse:message
+ * property is #TRUE, posts an element message with video statistics called
+ * <classname>&quot;GstVideoAnalyse&quot;</classname>.
+ *
  * The message's structure contains these fields:
  * <itemizedlist>
  * <listitem>
@@ -69,15 +68,13 @@
  *   the brightness variance of the frame.
  *   </para>
  * </listitem>
-  * </itemizedlist>
- * </para>
+ * </itemizedlist>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -m videotestsrc ! videoanalyse ! ffmpegcolorspace ! ximagesink
- * </programlisting>
- * This pipeline emits messages to the console for each frame that has been analysed. 
- * </para>
+ * ]| This pipeline emits messages to the console for each frame that has been analysed. 
  * </refsect2>
  *
  * Last reviewed on 2007-05-30 (0.10.5)

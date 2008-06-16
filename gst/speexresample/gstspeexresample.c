@@ -22,19 +22,16 @@
 /**
  * SECTION:element-speexresample
  *
- * <refsect2>
  * speexresample resamples raw audio buffers to different sample rates using
  * a configurable windowing function to enhance quality.
- * <title>Example launch line</title>
- * <para>
- * <programlisting>
- * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! speexresample ! audio/x-raw-int, rate=8000 ! alsasink
- * </programlisting>
- * Decode an Ogg/Vorbis downsample to 8Khz and play sound through alsa. 
- * To create the Ogg/Vorbis file refer to the documentation of vorbisenc.
- * </para>
- * </refsect2>
  *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! speexresample ! audio/x-raw-int, rate=8000 ! alsasink
+ * ]| Decode an Ogg/Vorbis downsample to 8Khz and play sound through alsa.
+ * To create the Ogg/Vorbis file refer to the documentation of vorbisenc.
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

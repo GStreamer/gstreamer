@@ -1,5 +1,20 @@
 2008-06-16  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/speed/gstspeed.c:
+	* gst/speexresample/gstspeexresample.c:
+	* gst/videosignal/gstvideoanalyse.c:
+	* gst/videosignal/gstvideodetect.c:
+	* gst/videosignal/gstvideomark.c:
+	* sys/dvb/gstdvbsrc.c:
+	* sys/oss4/oss4-mixer.c:
+	* sys/oss4/oss4-sink.c:
+	* sys/oss4/oss4-source.c:
+	* sys/wininet/gstwininetsrc.c:
+	  Final round of doc updates.
+
+2008-06-16  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/deinterlace/gstdeinterlace.c:
 	* gst/rtpmanager/gstrtpbin.c:
 	* gst/rtpmanager/gstrtpclient.c:

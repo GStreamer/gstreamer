@@ -22,11 +22,9 @@
  *
  * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch-0.10 -v wininetsrc location="http://71.83.57.210:9000" ! application/x-icy,metadata-interval=0 ! icydemux ! mad ! audioconvert ! directsoundsink
- * </programlisting>
- * </para>
+ * ]| receive mp3 audio over http and play it back.
  * </refsect2>
  */
 

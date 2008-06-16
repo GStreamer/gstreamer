@@ -21,23 +21,18 @@
 /**
  * SECTION:element-speed
  *
- * <refsect2>
- * <para>
  * Plays an audio stream at a different speed.
- * </para>
- * <para>
+ * 
  * Do not use this element. Either use the 'pitch' element, or do a seek with
  * a non-1.0 rate parameter, this will have the same effect as using the speed
  * element (but relies on the decoder/demuxer to handle this correctly, also
  * requires a fairly up-to-date gst-plugins-base, as of February 2007).
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=test.ogg ! decodebin ! audioconvert ! speed speed=1.5 ! audioconvert ! audioresample ! autoaudiosink
- * </programlisting>
- * Plays an .ogg file at 1.5x speed.
- * </para>
+ * ]| Plays an .ogg file at 1.5x speed.
  * </refsect2>
  *
  * Last reviewed on 2007-02-26 (0.10.4.1)

@@ -19,29 +19,24 @@
 
 /**
  * SECTION:element-videodetect
+ * @see_also: #GstVideoMark
  *
- * <refsect2>
- * <para>
- * This plugin detects ::pattern-count squares in the bottom left corner of
- * the video frames. The squares have a width and height of respectively
- * ::pattern-width and ::patern-height. Even squares must be black and odd
- * squares must be white.
- * </para>
- * <para>
- * When the pattern has been found, ::pattern-data-count squares after the
- * pattern squares are read as a bitarray. White squares represent a 1 bit and
- * black squares a 0 bit. The bitarray will will included in the element message
- * that is posted (see below).
- * </para>
- * <para>
+ * This plugin detects #GstVideoDetect:pattern-count squares in the bottom left
+ * corner of the video frames. The squares have a width and height of
+ * respectively #GstVideoDetect:pattern-width and #GstVideoDetect:pattern-height.
+ * Even squares must be black and odd squares must be white.
+ * 
+ * When the pattern has been found, #GstVideoDetect:pattern-data-count squares
+ * after the pattern squares are read as a bitarray. White squares represent a 1
+ * bit and black squares a 0 bit. The bitarray will will included in the element
+ * message that is posted (see below).
+ * 
  * After the pattern has been found and the data pattern has been read, an
  * element message called <classname>&quot;GstVideoDetect&quot;</classname> will
  * be posted on the bus. If the pattern is no longer found in the frame, the
  * same element message is posted with the have-pattern field set to #FALSE.
- * The message is only posted if the <link linkend="GstVideoDetect--message">message
- * property</link> is #TRUE.
- * </para>
- * <para>
+ * The message is only posted if the #GstVideoDetect:message property is #TRUE.
+ * 
  * The message's structure contains these fields:
  * <itemizedlist>
  * <listitem>
@@ -89,13 +84,12 @@
  *   </para>
  * </listitem>
  * </itemizedlist>
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch videotestsrc ! videodetect ! ffmpegcolorspace ! ximagesink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  *
  * Last reviewed on 2007-05-30 (0.10.5)

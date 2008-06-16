@@ -19,30 +19,26 @@
 
 /**
  * SECTION:element-videomark
+ * @see_also: #GstVideoDetect
  *
+ * This plugin produces #GstVideoMark::pattern-count squares in the bottom left
+ * corner of the video frames. The squares have a width and height of 
+ * respectively #GstVideoMark:pattern-width and #GstVideoMark:pattern-height.
+ * Even squares will be black and odd squares will be white.
+ * 
+ * After writing the pattern, #GstVideoMark:pattern-data-count squares after the
+ * pattern squares are produced as the bitarray given in
+ * #GstVideoMark:pattern-data. 1 bits will produce white squares and 0 bits will
+ * produce black squares.
+ * 
+ * The element can be enabled with the #GstVideoMark:enabled property. It is
+ * mostly used together with the #GstVideoDetect plugin.
+ * 
  * <refsect2>
- * <para>
- * This plugin produces ::pattern-count squares in the bottom left corner of
- * the video frames. The squares have a width and height of respectively
- * ::pattern-width and ::patern-height. Even squares will be black and odd
- * squares will be white.
- * </para>
- * <para>
- * After writing the pattern, ::pattern-data-count squares after the
- * pattern squares are produced as the bitarray given in ::pattern-data. 1 bits
- * will produce white squares and 0 bits will produce black squares.
- * </para>
- * <para>
- * The element can be enabled with the ::enabled property. It is mostly used
- * together with the videodetect plugin.
- * </para>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch videotestsrc ! videomark ! ximagesink
- * </programlisting>
- * Add the default black/white squares at the bottom left of the video frames.
- * </para>
+ * ]| Add the default black/white squares at the bottom left of the video frames.
  * </refsect2>
  *
  * Last reviewed on 2007-06-01 (0.10.6)
