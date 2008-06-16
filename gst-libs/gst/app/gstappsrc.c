@@ -820,7 +820,7 @@ gst_app_src_set_max_bytes (GstAppSrc * appsrc, guint64 max)
 
   g_mutex_lock (appsrc->mutex);
   if (max != appsrc->max_bytes) {
-    GST_DEBUG_OBJECT (appsrc, "setting max-bytes to %u", max);
+    GST_DEBUG_OBJECT (appsrc, "setting max-bytes to %" G_GUINT64_FORMAT, max);
     appsrc->max_bytes = max;
     /* signal the change */
     g_cond_broadcast (appsrc->cond);
@@ -839,13 +839,13 @@ gst_app_src_set_max_bytes (GstAppSrc * appsrc, guint64 max)
 guint64
 gst_app_src_get_max_bytes (GstAppSrc * appsrc)
 {
-  guint result;
+  guint64 result;
 
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), 0);
 
   g_mutex_lock (appsrc->mutex);
   result = appsrc->max_bytes;
-  GST_DEBUG_OBJECT (appsrc, "getting max-bytes of %u", result);
+  GST_DEBUG_OBJECT (appsrc, "getting max-bytes of %" G_GUINT64_FORMAT, result);
   g_mutex_unlock (appsrc->mutex);
 
   return result;
@@ -883,8 +883,8 @@ gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
       goto eos;
 
     if (appsrc->queued_bytes >= appsrc->max_bytes) {
-      GST_DEBUG_OBJECT (appsrc, "queue filled (%u >= %u)",
-          appsrc->queued_bytes, appsrc->max_bytes);
+      GST_DEBUG_OBJECT (appsrc, "queue filled (%" G_GUINT64_FORMAT " >= %"
+          G_GUINT64_FORMAT ")", appsrc->queued_bytes, appsrc->max_bytes);
 
       if (first) {
         /* only signal on the first push */
