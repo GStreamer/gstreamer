@@ -1,3 +1,10 @@
+2008-06-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/matroska/ebml-read.c: (gst_ebml_read_peek_bytes):
+	Return GST_FLOW_UNEXPECTED instead of GST_FLOW_ERROR on short reads.
+	If we get less bytes than requested we can't do anything except doing
+	our EOS logic.
+
 2008-06-15  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_reset),

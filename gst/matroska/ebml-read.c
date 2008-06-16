@@ -266,7 +266,7 @@ gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf,
       *p_buf = NULL;
     if (bytes)
       *bytes = NULL;
-    return GST_FLOW_ERROR;
+    return GST_FLOW_UNEXPECTED;
   }
 
   if (p_buf)
