@@ -25,10 +25,12 @@
 
 #include "matroska-demux.h"
 #include "matroska-mux.h"
+#include "matroska-ids.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_matroska_register_tags ();
   return gst_matroska_demux_plugin_init (plugin) &&
       gst_matroska_mux_plugin_init (plugin);
 }

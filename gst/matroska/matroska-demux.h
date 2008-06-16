@@ -81,6 +81,7 @@ typedef struct _GstMatroskaDemux {
   gboolean                 index_parsed;
   gboolean                 tracks_parsed;
   gboolean                 segmentinfo_parsed;
+  gboolean                 attachments_parsed;
   GList                   *tags_parsed;
 
   /* start-of-segment */

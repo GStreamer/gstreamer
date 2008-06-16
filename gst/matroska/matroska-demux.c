@@ -1,6 +1,7 @@
 /* GStreamer Matroska muxer/demuxer
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  * (c) 2006 Tim-Philipp Müller <tim centricular net>
+ * (c) 2008 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * matroska-demux.c: matroska file/stream demuxer
  *
@@ -49,6 +50,10 @@
 #include <gst/riff/riff-read.h>
 #include <gst/riff/riff-ids.h>
 #include <gst/riff/riff-media.h>
+
+#include <gst/tag/tag.h>
+
+#include <gst/base/gsttypefindhelper.h>
 
 #ifdef HAVE_ZLIB
 #include <zlib.h>
@@ -312,6 +317,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->index_parsed = FALSE;
   demux->tracks_parsed = FALSE;
   demux->segmentinfo_parsed = FALSE;
+  demux->attachments_parsed = FALSE;
 
   g_list_foreach (demux->tags_parsed, (GFunc) gst_ebml_level_free, NULL);
   g_list_free (demux->tags_parsed);
@@ -2468,6 +2474,173 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
 }
 
 static GstFlowReturn
+gst_matroska_demux_parse_attached_file (GstMatroskaDemux * demux,
+    gboolean prevent_eos, guint64 length, GstTagList * taglist)
+{
+  GstEbmlRead *ebml = GST_EBML_READ (demux);
+
+  guint32 id;
+
+  GstFlowReturn ret;
+
+  gchar *description = NULL;
+
+  gchar *filename = NULL;
+
+  gchar *mimetype = NULL;
+
+  guint8 *data = NULL;
+
+  guint64 datalen = 0;
+
+  GST_DEBUG_OBJECT (demux, "Parsing AttachedFile at offset %" G_GUINT64_FORMAT,
+      ebml->offset);
+
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+    return ret;
+
+  while (ret == GST_FLOW_OK) {
+    /* read all sub-entries */
+    if (prevent_eos && length == ebml->offset)
+      break;
+
+    if ((ret = gst_ebml_peek_id (ebml, &demux->level_up, &id)) != GST_FLOW_OK)
+      return ret;
+
+    if (demux->level_up) {
+      demux->level_up--;
+      break;
+    }
+
+    switch (id) {
+      case GST_MATROSKA_ID_FILEDESCRIPTION:
+        if (description) {
+          GST_WARNING_OBJECT (demux, "FileDescription can only appear once");
+          break;
+        }
+
+        if ((ret = gst_ebml_read_utf8 (ebml, &id, &description)) != GST_FLOW_OK)
+          return ret;
+        break;
+      case GST_MATROSKA_ID_FILENAME:
+        if (filename) {
+          GST_WARNING_OBJECT (demux, "FileName can only appear once");
+          break;
+        }
+
+        if ((ret = gst_ebml_read_utf8 (ebml, &id, &filename)) != GST_FLOW_OK)
+          return ret;
+        break;
+      case GST_MATROSKA_ID_FILEMIMETYPE:
+        if (mimetype) {
+          GST_WARNING_OBJECT (demux, "FileMimeType can only appear once");
+          break;
+        }
+
+        if ((ret = gst_ebml_read_ascii (ebml, &id, &mimetype)) != GST_FLOW_OK)
+          return ret;
+        break;
+      case GST_MATROSKA_ID_FILEDATA:
+        if (data) {
+          GST_WARNING_OBJECT (demux, "FileData can only appear once");
+          break;
+        }
+
+        if ((ret =
+                gst_ebml_read_binary (ebml, &id, &data,
+                    &datalen)) != GST_FLOW_OK)
+          return ret;
+        break;
+
+      default:
+        GST_WARNING ("Unknown entry 0x%x in AttachedFile", id);
+        /* fall through */
+      case GST_MATROSKA_ID_FILEUID:
+        ret = gst_ebml_read_skip (ebml);
+        break;
+    }
+
+    if (demux->level_up) {
+      demux->level_up--;
+      break;
+    }
+  }
+
+  if (filename && mimetype && data && datalen > 0) {
+    GstBuffer *tagbuffer;
+
+    GstCaps *caps;
+
+    GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
+
+    gchar *filename_lc = g_utf8_strdown (filename, -1);
+
+    GST_DEBUG_OBJECT (demux, "Creating tag for attachment with filename '%s', "
+        "mimetype '%s', description '%s', size %" G_GUINT64_FORMAT, filename,
+        mimetype, GST_STR_NULL (description), datalen);
+
+    /* TODO: better heuristics for different image types */
+    if (strstr (filename_lc, "cover")) {
+      if (strstr (filename_lc, "back"))
+        image_type = GST_TAG_IMAGE_TYPE_BACK_COVER;
+      else
+        image_type = GST_TAG_IMAGE_TYPE_FRONT_COVER;
+    } else if (g_str_has_prefix (mimetype, "image/")) {
+      image_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
+    }
+    g_free (filename_lc);
+
+    /* First try to create an image tag buffer from this */
+    if (image_type != GST_TAG_IMAGE_TYPE_NONE) {
+      tagbuffer =
+          gst_tag_image_data_to_image_buffer (data, datalen, image_type);
+
+      if (!tagbuffer)
+        image_type = GST_TAG_IMAGE_TYPE_NONE;
+    }
+
+    /* if this failed create an attachment buffer */
+    if (!tagbuffer) {
+      tagbuffer = gst_buffer_new_and_alloc (datalen);
+
+      memcpy (GST_BUFFER_DATA (tagbuffer), data, datalen);
+      GST_BUFFER_SIZE (tagbuffer) = datalen;
+
+      caps = gst_type_find_helper_for_buffer (NULL, tagbuffer, NULL);
+      if (caps == NULL)
+        caps = gst_caps_new_simple (mimetype, NULL);
+      gst_buffer_set_caps (tagbuffer, caps);
+      gst_caps_unref (caps);
+    }
+
+    /* Set filename and description on the caps */
+    caps = GST_BUFFER_CAPS (tagbuffer);
+    gst_caps_set_simple (caps, "filename", G_TYPE_STRING, filename, NULL);
+    if (description)
+      gst_caps_set_simple (caps, "description", G_TYPE_STRING, description,
+          NULL);
+
+    GST_DEBUG_OBJECT (demux, "Created tag buffer with caps: %" GST_PTR_FORMAT,
+        caps);
+
+    /* and append to the tag list */
+    if (image_type != GST_TAG_IMAGE_TYPE_NONE)
+      gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_IMAGE, tagbuffer,
+          NULL);
+    else
+      gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_ATTACHMENT,
+          tagbuffer, NULL);
+  }
+
+  g_free (filename);
+  g_free (mimetype);
+  g_free (data);
+  g_free (description);
+
+  return ret;
+}
+
+static GstFlowReturn
 gst_matroska_demux_parse_attachments (GstMatroskaDemux * demux,
     gboolean prevent_eos)
 {
@@ -2479,13 +2652,16 @@ gst_matroska_demux_parse_attachments (GstMatroskaDemux * demux,
 
   GstFlowReturn ret = GST_FLOW_OK;
 
-  GST_WARNING_OBJECT (demux, "Parsing of attachments not implemented yet");
-
-  /* TODO: implement parsing of attachments */
+  GstTagList *taglist;
 
   if (prevent_eos) {
     length = gst_ebml_read_get_length (ebml);
   }
+
+  GST_DEBUG_OBJECT (demux, "Parsing Attachments at offset %" G_GUINT64_FORMAT,
+      ebml->offset);
+
+  taglist = gst_tag_list_new ();
 
   while (ret == GST_FLOW_OK) {
     /* We're an element that can be seeked to. If we are, then
@@ -2503,7 +2679,14 @@ gst_matroska_demux_parse_attachments (GstMatroskaDemux * demux,
     }
 
     switch (id) {
+      case GST_MATROSKA_ID_ATTACHEDFILE:
+        ret =
+            gst_matroska_demux_parse_attached_file (demux, prevent_eos, length,
+            taglist);
+        break;
+
       default:
+        GST_WARNING ("Unknown entry 0x%x in Attachments", id);
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -2513,6 +2696,16 @@ gst_matroska_demux_parse_attachments (GstMatroskaDemux * demux,
       break;
     }
   }
+
+  if (gst_structure_n_fields (GST_STRUCTURE (taglist)) > 0) {
+    GST_DEBUG_OBJECT (demux, "Posting attachment tags");
+    gst_element_found_tags (GST_ELEMENT (ebml), taglist);
+  } else {
+    GST_DEBUG_OBJECT (demux, "No valid attachments found");
+    gst_tag_list_free (taglist);
+  }
+
+  demux->attachments_parsed = TRUE;
 
   return ret;
 }
@@ -3730,12 +3923,14 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
           break;
         }
         case GST_MATROSKA_ID_ATTACHMENTS:
-          if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
-            return ret;
-          if ((ret =
-                  gst_matroska_demux_parse_attachments (demux,
-                      TRUE)) != GST_FLOW_OK)
-            return ret;
+          if (!demux->attachments_parsed) {
+            if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+              return ret;
+            if ((ret =
+                    gst_matroska_demux_parse_attachments (demux,
+                        TRUE)) != GST_FLOW_OK)
+              return ret;
+          }
           if (gst_ebml_read_get_length (ebml) == ebml->offset)
             *p_run_loop = FALSE;
           break;
@@ -3944,12 +4139,18 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
       /* attachments - contains files attached to the mkv container
        * like album art, etc */
     case GST_MATROSKA_ID_ATTACHMENTS:{
-      if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
-        return ret;
-      if ((ret =
-              gst_matroska_demux_parse_attachments (demux,
-                  FALSE)) != GST_FLOW_OK)
-        return ret;
+
+      if (!demux->attachments_parsed) {
+        if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+          return ret;
+        if ((ret =
+                gst_matroska_demux_parse_attachments (demux,
+                    FALSE)) != GST_FLOW_OK)
+          return ret;
+      } else {
+        if ((ret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+          return ret;
+      }
       break;
     }
 

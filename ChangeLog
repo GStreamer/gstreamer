@@ -1,3 +1,19 @@
+2008-06-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/matroska/Makefile.am:
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_reset),
+	(gst_matroska_demux_parse_attached_file),
+	(gst_matroska_demux_parse_attachments),
+	(gst_matroska_demux_parse_contents_seekentry),
+	(gst_matroska_demux_loop_stream_parse_id):
+	* gst/matroska/matroska-demux.h:
+	* gst/matroska/matroska-ids.c: (gst_matroska_register_tags):
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska.c: (plugin_init):
+	Parse Attachments and post them as GST_TAG_IMAGE if we detect
+	it as image and otherwise as GST_TAG_ATTACHMENT. Include filename
+	and description of the attachments in the caps. Fixes bug #537622.
+
 2008-06-16  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/speex/gstspeexenc.c: (gst_speex_enc_mode_get_type),
