@@ -320,7 +320,8 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    * GstRtpJitterBuffer::clear-pt-map:
    * @buffer: the object which received the signal
    *
-   * Invalidate the clock-rate as obtained with the ::request-pt-map signal.
+   * Invalidate the clock-rate as obtained with the
+   * #GstRtpJitterBuffer::request-pt-map signal.
    */
   gst_rtp_jitter_buffer_signals[SIGNAL_CLEAR_PT_MAP] =
       g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
