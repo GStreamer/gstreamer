@@ -2034,6 +2034,10 @@ gst_matroska_index_compare (GstMatroskaIndex * i1, GstMatroskaIndex * i2)
     return -1;
   else if (i1->time > i2->time)
     return 1;
+  else if (i1->block < i2->block)
+    return -1;
+  else if (i1->block > i2->block)
+    return 1;
   else
     return 0;
 }
@@ -2568,8 +2572,11 @@ gst_matroska_demux_parse_attached_file (GstMatroskaDemux * demux,
 
   if (filename && mimetype && data && datalen > 0) {
     GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
+
     GstBuffer *tagbuffer = NULL;
+
     GstCaps *caps;
+
     gchar *filename_lc = g_utf8_strdown (filename, -1);
 
     GST_DEBUG_OBJECT (demux, "Creating tag for attachment with filename '%s', "

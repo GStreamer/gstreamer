@@ -1,3 +1,9 @@
+2008-06-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_index_compare):
+	When comparing index elements with the same time compare their
+	block number.
+
 2008-06-16  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/matroska/matroska-demux.c:
