@@ -134,7 +134,7 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
    * When set to true, only areas affected by the deinterlacing are output,
    * making it easy to see which regions are being modified.
    *
-   * See Also: #GstDeinterlace::ni-area-only
+   * See Also: #GstDeinterlace:ni-area-only
    */
   g_object_class_install_property (gobject_class, ARG_DI_ONLY,
       g_param_spec_boolean ("di-area-only", "di-area-only",
@@ -146,7 +146,7 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
    * When set to true, only areas unaffected by the deinterlacing are output,
    * making it easy to see which regions are being preserved intact.
    *
-   * See Also: #GstDeinterlace::di-area-only
+   * See Also: #GstDeinterlace:di-area-only
    */
   g_object_class_install_property (gobject_class, ARG_NI_ONLY,
       g_param_spec_boolean ("ni-area-only", "ni-area-only",

@@ -19,31 +19,25 @@
 /**
  * SECTION:element-sdpdemux
  *
- * <refsect2>
- * <para>
  * sdpdemux currently understands SDP as the input format of the session description.
  * For each stream listed in the SDP a new rtp_stream%d pad will be created
  * with caps derived from the SDP media description. This is a caps of mime type
  * "application/x-rtp" that can be connected to any available RTP depayloader
  * element. 
- * </para>
- * <para>
+ * 
  * sdpdemux will internally instantiate an RTP session manager element
  * that will handle the RTCP messages to and from the server, jitter removal,
  * packet reordering along with providing a clock for the pipeline. 
- * </para>
- * <para>
+ * 
  * sdpdemux acts like a live element and will therefore only generate data in the 
  * PLAYING state.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch gnomevfssrc location=http://some.server/session.sdp ! sdpdemux ! fakesink
- * </programlisting>
- * Establish a connection to an HTTP server that contains an SDP session description
+ * ]| Establish a connection to an HTTP server that contains an SDP session description
  * that gets parsed by sdpdemux and send the raw RTP packets to a fakesink.
- * </para>
  * </refsect2>
  *
  * Last reviewed on 2007-10-01 (0.10.6)

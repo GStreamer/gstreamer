@@ -1,3 +1,15 @@
+2008-06-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpclient.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/gstrtpptdemux.c:
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	* gst/sdp/gstsdpdemux.c:
+	  More doc updates. More xrefs.
+
 2008-06-14  Julien Moutte  <julien@fluendo.com>
 
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),

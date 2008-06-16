@@ -21,20 +21,17 @@
  * SECTION:element-gstrtpclient
  * @see_also: gstrtpjitterbuffer, gstrtpbin, gstrtpsession
  *
- * <refsect2>
- * <para>
  * This element handles RTP data from one client. It accepts multiple RTP streams that
  * should be synchronized together.
- * </para>
- * <para>
+ * 
  * Normally the SSRCs that map to the same CNAME (as given in the RTCP SDES messages)
  * should be synchronized.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
- * </programlisting>
- * </para>
+ * |[
+ * FIXME: gst-launch
+ * ]| FIXME: describe
  * </refsect2>
  *
  * Last reviewed on 2007-04-02 (0.10.5)
