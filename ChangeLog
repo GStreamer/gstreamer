@@ -1,3 +1,8 @@
+2008-06-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/dvb/gstdvbsrc.c:
+	  Move docblob upwards. Balance tags and restore blank line.
+
 2008-06-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c:
