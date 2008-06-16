@@ -111,7 +111,7 @@ gst_gl_filter_edge_init (GstGLFilterEdge* filter,
         "    gH += gH +  filterH[i] * gray_i;\n"
         "    gV += gV +  filterV[i] * gray_i;\n"
         "  }\n"
-        "  float g = sqrt(gH * gH + gV * gV) / 8.0;\n"
+        "  float g = sqrt(gH * gH + gV * gV) / 256.0;\n"
 	    "  gl_FragColor = vec4(g, g, g, 1.0);\n"
 	    "}\n";
 }
