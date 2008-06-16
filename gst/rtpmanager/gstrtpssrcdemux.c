@@ -22,24 +22,19 @@
 /**
  * SECTION:element-gstrtpssrcdemux
  *
- * <refsect2>
- * <para>
  * gstrtpssrcdemux acts as a demuxer for RTP packets based on the SSRC of the
  * packets. Its main purpose is to allow an application to easily receive and
  * decode an RTP stream with multiple SSRCs.
- * </para>
- * <para>
+ * 
  * For each SSRC that is detected, a new pad will be created and the
- * ::new-ssrc-pad signal will be emitted. 
- * </para>
+ * #GstRtpSsrcDemux::new-ssrc-pad signal will be emitted. 
+ * 
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch udpsrc caps="application/x-rtp" ! gstrtpssrcdemux ! fakesink
- * </programlisting>
- * Takes an RTP stream and send the RTP packets with the first detected SSRC
+ * ]| Takes an RTP stream and send the RTP packets with the first detected SSRC
  * to fakesink, discarding the other SSRCs.
- * </para>
  * </refsect2>
  *
  * Last reviewed on 2007-05-28 (0.10.5)
@@ -133,7 +128,7 @@ static gboolean gst_rtp_ssrc_demux_src_query (GstPad * pad, GstQuery * query);
 
 static guint gst_rtp_ssrc_demux_signals[LAST_SIGNAL] = { 0 };
 
-/**
+/*
  * Item for storing GstPad <-> SSRC pairs.
  */
 struct _GstRtpSsrcDemuxPad

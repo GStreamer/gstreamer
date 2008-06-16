@@ -26,29 +26,25 @@
 /**
  * SECTION:element-gstrtpptdemux
  *
- * <refsect2>
- * <para>
- * gstrtpptdemux acts as a demuxer for RTP packets based on the payload type of the
- * packets. Its main purpose is to allow an application to easily receive and
- * decode an RTP stream with multiple payload types.
- * </para>
- * <para>
+ * gstrtpptdemux acts as a demuxer for RTP packets based on the payload type of
+ * the packets. Its main purpose is to allow an application to easily receive
+ * and decode an RTP stream with multiple payload types.
+ * 
  * For each payload type that is detected, a new pad will be created and the
- * ::new-payload-type signal will be emitted. When the payload for the RTP
- * stream changes, the ::payload-type-change signal will be emitted.
- * </para>
- * <para>
+ * #GstRtpPtDemux::new-payload-type signal will be emitted. When the payload for
+ * the RTP stream changes, the #GstRtpPtDemux::payload-type-change signal will be
+ * emitted.
+ * 
  * The element will try to set complete and unique application/x-rtp caps on the
- * outgoing buffers and pads based on the result of the ::request-pt-map signal.
- * </para>
+ * outgoing buffers and pads based on the result of the
+ * #GstRtpPtDemux::request-pt-map signal.
+ * 
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch udpsrc caps="application/x-rtp" ! gstrtpptdemux ! fakesink
- * </programlisting>
- * Takes an RTP stream and send the RTP packets with the first detected payload
- * type to fakesink, discarding the other payload types.
- * </para>
+ * ]| Takes an RTP stream and send the RTP packets with the first detected
+ * payload type to fakesink, discarding the other payload types.
  * </refsect2>
  *
  * Last reviewed on 2007-05-28 (0.10.5)

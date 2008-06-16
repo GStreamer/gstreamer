@@ -21,61 +21,50 @@
  * SECTION:element-gstrtpbin
  * @see_also: gstrtpjitterbuffer, gstrtpsession, gstrtpptdemux, gstrtpssrcdemux
  *
- * <refsect2>
- * <para>
- * RTP bin combines the functions of gstrtpsession, gstrtpssrcdemux, gstrtpjitterbuffer
- * and gstrtpptdemux in one element. It allows for multiple RTP sessions that will
- * be synchronized together using RTCP SR packets.
- * </para>
- * <para>
- * gstrtpbin is configured with a number of request pads that define the
- * functionality that is activated, similar to the gstrtpsession element.
- * </para>
- * <para>
- * To use gstrtpbin as an RTP receiver, request a recv_rtp_sink_%%d pad. The session
+ * RTP bin combines the functions of #GstRtpSession, #GstRtpsSrcDemux,
+ * #GstRtpJitterBuffer and #GstRtpPtDemux in one element. It allows for multiple
+ * RTP sessions that will be synchronized together using RTCP SR packets.
+ * 
+ * #GstRtpBin is configured with a number of request pads that define the
+ * functionality that is activated, similar to the #GstRtpSession element.
+ * 
+ * To use #GstRtpBin as an RTP receiver, request a recv_rtp_sink_%%d pad. The session
  * number must be specified in the pad name. 
  * Data received on the recv_rtp_sink_%%d pad will be processed in the gstrtpsession
- * manager and after being validated forwarded on gstrtpssrcdemuxer element. Each
- * RTP stream is demuxed based on the SSRC and send to a gstrtpjitterbuffer. After
+ * manager and after being validated forwarded on #GstRtpsSrcDemux element. Each
+ * RTP stream is demuxed based on the SSRC and send to a #GstRtpJitterBuffer. After
  * the packets are released from the jitterbuffer, they will be forwarded to a
- * gstrtpptdemuxer element. The gstrtpptdemuxer element will demux the packets based
+ * #GstRtpsSrcDemux element. The #GstRtpsSrcDemux element will demux the packets based
  * on the payload type and will create a unique pad recv_rtp_src_%%d_%%d_%%d on
  * gstrtpbin with the session number, SSRC and payload type respectively as the pad
  * name.
- * </para>
- * <para>
- * To also use gstrtpbin as an RTCP receiver, request a recv_rtcp_sink_%%d pad. The
+ * 
+ * To also use #GstRtpBin as an RTCP receiver, request a recv_rtcp_sink_%%d pad. The
  * session number must be specified in the pad name.
- * </para>
- * <para>
+ * 
  * If you want the session manager to generate and send RTCP packets, request
  * the send_rtcp_src_%%d pad with the session number in the pad name. Packet pushed
  * on this pad contain SR/RR RTCP reports that should be sent to all participants
  * in the session.
- * </para>
- * <para>
- * To use gstrtpbin as a sender, request a send_rtp_sink_%%d pad, which will
+ * 
+ * To use #GstRtpBin as a sender, request a send_rtp_sink_%%d pad, which will
  * automatically create a send_rtp_src_%%d pad. If the session number is not provided,
  * the pad from the lowest available session will be returned. The session manager will modify the
  * SSRC in the RTP packets to its own SSRC and wil forward the packets on the
  * send_rtp_src_%%d pad after updating its internal state.
- * </para>
- * <para>
+ * 
  * The session manager needs the clock-rate of the payload types it is handling
- * and will signal the GstRtpSession::request-pt-map signal when it needs such a
- * mapping. One can clear the cached values with the GstRtpSession::clear-pt-map
+ * and will signal the #GstRtpSession::request-pt-map signal when it needs such a
+ * mapping. One can clear the cached values with the #GstRtpSession::clear-pt-map
  * signal.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch udpsrc port=5000 caps="application/x-rtp, ..." ! .recv_rtp_sink_0 \
  *     gstrtpbin ! rtptheoradepay ! theoradec ! xvimagesink
- * </programlisting>
- * Receive RTP data from port 5000 and send to the session 0 in gstrtpbin.
- * </para>
- * <para>
- * <programlisting>
+ * ]| Receive RTP data from port 5000 and send to the session 0 in gstrtpbin.
+ * |[
  * gst-launch gstrtpbin name=rtpbin \
  *         v4l2src ! ffmpegcolorspace ! ffenc_h263 ! rtph263ppay ! rtpbin.send_rtp_sink_0 \
  *                   rtpbin.send_rtp_src_0 ! udpsink port=5000                            \
@@ -85,8 +74,7 @@
  *                   rtpbin.send_rtp_src_1 ! udpsink port=5002                            \
  *                   rtpbin.send_rtcp_src_1 ! udpsink port=5003 sync=false async=false    \
  *                   udpsrc port=5007 ! rtpbin.recv_rtcp_sink_1
- * </programlisting>
- * Encode and payload H263 video captured from a v4l2src. Encode and payload AMR
+ * ]| Encode and payload H263 video captured from a v4l2src. Encode and payload AMR
  * audio generated from audiotestsrc. The video is sent to session 0 in rtpbin
  * and the audio is sent to session 1. Video packets are sent on UDP port 5000
  * and audio packets on port 5002. The video RTCP packets for session 0 are sent
@@ -95,10 +83,8 @@
  * is received on port 5007. Since RTCP packets from the sender should be sent
  * as soon as possible and do not participate in preroll, sync=false and 
  * async=false is configured on udpsink
- * </para>
- * <para>
- * <programlisting>
- *  gst-launch -v gstrtpbin name=rtpbin                                          \
+ * |[
+ * gst-launch -v gstrtpbin name=rtpbin                                          \
  *     udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H263-1998" \
  *             port=5000 ! rtpbin.recv_rtp_sink_0                                \
  *         rtpbin. ! rtph263pdepay ! ffdec_h263 ! xvimagesink                    \
@@ -109,8 +95,7 @@
  *         rtpbin. ! rtpamrdepay ! amrnbdec ! alsasink                           \
  *      udpsrc port=5003 ! rtpbin.recv_rtcp_sink_1                               \
  *      rtpbin.send_rtcp_src_1 ! udpsink port=5007 sync=false async=false
- * </programlisting>
- * Receive H263 on port 5000, send it through rtpbin in session 0, depayload,
+ * ]| Receive H263 on port 5000, send it through rtpbin in session 0, depayload,
  * decode and display the video.
  * Receive AMR on port 5002, send it through rtpbin in session 1, depayload,
  * decode and play the audio.
@@ -119,7 +104,6 @@
  * synchronisation.
  * Send RTCP reports for session 0 on port 5005 and RTCP reports for session 1
  * on port 5007.
- * </para>
  * </refsect2>
  *
  * Last reviewed on 2007-08-30 (0.10.6)
@@ -1200,7 +1184,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * @rtpbin: the object which received the signal
    *
    * Clear all previously cached pt-mapping obtained with
-   * GstRtpBin::request-pt-map.
+   * #GstRtpBin::request-pt-map.
    */
   gst_rtp_bin_signals[SIGNAL_CLEAR_PT_MAP] =
       g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),

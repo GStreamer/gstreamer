@@ -26,34 +26,28 @@
 /**
  * SECTION:element-gstrtpjitterbuffer
  *
- * <refsect2>
- * <para>
  * This element reorders and removes duplicate RTP packets as they are received
  * from a network source. It will also wait for missing packets up to a
- * configurable time limit using the ::latency property. Packets arriving too
- * late are considered to be lost packets.
- * </para>
- * <para>
- * This element acts as a live element and so adds ::latency to the pipeline.
- * </para>
- * <para>
+ * configurable time limit using the #GstRtpJitterBuffer:latency property.
+ * Packets arriving too late are considered to be lost packets.
+ * 
+ * This element acts as a live element and so adds #GstRtpJitterBuffer:latency
+ * to the pipeline.
+ * 
  * The element needs the clock-rate of the RTP payload in order to estimate the
  * delay. This information is obtained either from the caps on the sink pad or,
- * when no caps are present, from the ::request-pt-map signal. To clear the
- * previous pt-map use the ::clear-pt-map signal.
- * </para>
- * <para>
+ * when no caps are present, from the #GstRtpJitterBuffer::request-pt-map signal.
+ * To clear the previous pt-map use the #GstRtpJitterBuffer::clear-pt-map signal.
+ * 
  * This element will automatically be used inside gstrtpbin.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch rtspsrc location=rtsp://192.168.1.133:8554/mpeg1or2AudioVideoTest ! gstrtpjitterbuffer ! rtpmpvdepay ! mpeg2dec ! xvimagesink
- * </programlisting>
- * Connect to a streaming server and decode the MPEG video. The jitterbuffer is
+ * ]| Connect to a streaming server and decode the MPEG video. The jitterbuffer is
  * inserted into the pipeline to smooth out network jitter and to reorder the
  * out-of-order RTP packets.
- * </para>
  * </refsect2>
  *
  * Last reviewed on 2007-05-28 (0.10.5)
