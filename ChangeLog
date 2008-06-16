@@ -1,3 +1,9 @@
+2008-06-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/gstmpegdesc.h:
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	Parse the extended event descriptor.
+
 2008-06-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:

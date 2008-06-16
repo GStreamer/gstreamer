@@ -266,6 +266,15 @@
 #define DESC_DVB_SHORT_EVENT_description_text(desc) (desc + 6 + DESC_DVB_SHORT_EVENT_name_length(desc) + 1)
 #define DESC_DVB_SHORT_EVENT_description_length(desc)	(desc[6 + DESC_DVB_SHORT_EVENT_name_length(desc)])
 
+/* DVB Extended Event Descriptor */
+#define DESC_DVB_EXTENDED_EVENT_descriptor_number(desc) ((desc[2] & 0xF0) >> 4)
+#define DESC_DVB_EXTENDED_EVENT_last_descriptor_number(desc) (desc[2] & 0x0F)
+#define DESC_DVB_EXTENDED_EVENT_iso639_language_code(desc) (desc + 3)
+#define DESC_DVB_EXTENDED_EVENT_items_length(desc) (desc[6])
+#define DESC_DVB_EXTENDED_EVENT_items(desc) (desc + 7) 
+#define DESC_DVB_EXTENDED_EVENT_text_length(desc) (desc[6 + DESC_DVB_EXTENDED_EVENT_items_length(desc)])
+#define DESC_DVB_EXTENDED_EVENT_text(desc) (desc + 6 + DESC_DVB_EXTENDED_EVENT_items_length(desc) + 1)
+
 /* DVB Satellite Delivery System Descriptor */
 #define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_frequency(desc)	(desc + 2)
 #define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_orbital_position(desc)	(desc + 6)

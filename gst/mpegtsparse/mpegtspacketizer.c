@@ -1419,6 +1419,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
     if (descriptors_loop_length) {
       guint8 *event_descriptor;
       GArray *component_descriptors;
+      GArray *extended_event_descriptors;
       GstMPEGDescriptor *mpegdescriptor;
 
       if (data + descriptors_loop_length > end - 4) {
@@ -1457,6 +1458,45 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
           g_free (eventdescription_tmp);
         }
       }
+      extended_event_descriptors = gst_mpeg_descriptor_find_all (mpegdescriptor,
+          DESC_DVB_EXTENDED_EVENT);
+      if (extended_event_descriptors) {
+        int i;
+        guint8 *extended_descriptor;
+        /*GValue extended_items = { 0 }; */
+        gchar *extended_text = NULL;
+        /*g_value_init (&extended_items, GST_TYPE_LIST); */
+        for (i = 0; i < extended_event_descriptors->len; i++) {
+          extended_descriptor = g_array_index (extended_event_descriptors,
+              guint8 *, i);
+          if (DESC_DVB_EXTENDED_EVENT_descriptor_number (extended_descriptor) ==
+              i) {
+            if (extended_text) {
+              gchar *tmp;
+              gchar *old_extended_text = extended_text;
+              tmp =
+                  g_strndup ((gchar *)
+                  DESC_DVB_EXTENDED_EVENT_text (extended_descriptor),
+                  DESC_DVB_EXTENDED_EVENT_text_length (extended_descriptor));
+              extended_text = g_strdup_printf ("%s%s", extended_text, tmp);
+              g_free (old_extended_text);
+              g_free (tmp);
+            } else {
+              extended_text =
+                  g_strndup ((gchar *)
+                  DESC_DVB_EXTENDED_EVENT_text (extended_descriptor),
+                  DESC_DVB_EXTENDED_EVENT_text_length (extended_descriptor));
+            }
+          }
+        }
+        if (extended_text) {
+          gst_structure_set (event, "extended-text", G_TYPE_STRING,
+              extended_text, NULL);
+          g_free (extended_text);
+        }
+        g_array_free (extended_event_descriptors, TRUE);
+      }
+
       component_descriptors = gst_mpeg_descriptor_find_all (mpegdescriptor,
           DESC_DVB_COMPONENT);
       if (component_descriptors) {
