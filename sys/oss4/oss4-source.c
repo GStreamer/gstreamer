@@ -20,20 +20,16 @@
 /**
  * SECTION:element-oss4src
  *
- * <refsect2>
- * <para>
  * This element lets you record sound using the Open Sound System (OSS)
  * version 4.
- * </para>
+ * 
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v oss4src ! queue ! audioconvert ! vorbisenc ! oggmux ! filesink location=mymusic.ogg
- * </programlisting>
- * will record sound from your sound card using OSS4 and encode it to an
+ * ]| will record sound from your sound card using OSS4 and encode it to an
  * Ogg/Vorbis file (this will only work if your mixer settings are right
  * and the right inputs areenabled etc.)
- * </para>
  * </refsect2>
  *
  * Since: 0.10.7
