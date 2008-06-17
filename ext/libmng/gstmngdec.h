@@ -18,23 +18,20 @@
  */
 
 
-#ifndef __GST_MNGDEC_H__
-#define __GST_MNGDEC_H__
+#ifndef __GST_MNG_DEC_H__
+#define __GST_MNG_DEC_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
 #include <libmng.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
-
-#define GST_TYPE_MNGDEC            (gst_mngdec_get_type())
-#define GST_MNGDEC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MNGDEC,GstMngDec))
-#define GST_MNGDEC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MNGDEC,GstMngDecClass))
-#define GST_IS_MNGDEC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MNGDEC))
-#define GST_IS_MNGDEC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MNGDEC))
+#define GST_TYPE_MNG_DEC            (gst_mng_dec_get_type())
+#define GST_MNG_DEC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MNG_DEC,GstMngDec))
+#define GST_MNG_DEC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MNG_DEC,GstMngDecClass))
+#define GST_IS_MNG_DEC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MNG_DEC))
+#define GST_IS_MNG_DEC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MNG_DEC))
+#define GST_MNG_DEC_CAST(obj)       ((GstMngDec *) (obj))
 
 typedef struct _GstMngDec GstMngDec;
 typedef struct _GstMngDecClass GstMngDecClass;
@@ -46,7 +43,6 @@ struct _GstMngDec
   GstPad *sinkpad, *srcpad;
 
   GstBuffer *buffer_out;
-  GstByteStream *bs;
 
   mng_handle mng;
   gboolean first;
@@ -64,12 +60,8 @@ struct _GstMngDecClass
   GstElementClass parent_class;
 };
 
-GType gst_mngdec_get_type(void);
+GType gst_mng_dec_get_type(void);
 
+G_END_DECLS
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-
-#endif /* __GST_MNGDEC_H__ */
+#endif /* __GST_MNG_DEC_H__ */

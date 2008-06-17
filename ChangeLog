@@ -1,3 +1,24 @@
+2008-06-17  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/libmng/Makefile.am:
+	* ext/libmng/gstmng.c: (plugin_init):
+	* ext/libmng/gstmngdec.c: (gst_mng_dec_base_init),
+	(gst_mng_dec_class_init), (gst_mng_dec_sink_setcaps),
+	(gst_mng_dec_init), (gst_mng_dec_src_getcaps), (gst_mng_dec_loop),
+	(gst_mng_dec_get_property), (gst_mng_dec_set_property),
+	(mngdec_error), (mngdec_openstream), (mngdec_closestream),
+	(gst_mng_dec_sink_event), (mngdec_readdata), (mngdec_settimer),
+	(mngdec_processheader), (mngdec_getcanvasline), (mngdec_refresh),
+	(gst_mng_dec_change_state):
+	* ext/libmng/gstmngdec.h:
+	* ext/libmng/gstmngenc.c: (gst_mng_enc_base_init),
+	(gst_mng_enc_class_init), (gst_mng_enc_sink_setcaps),
+	(gst_mng_enc_init), (gst_mng_enc_chain),
+	(gst_mng_enc_get_property), (gst_mng_enc_set_property):
+	* ext/libmng/gstmngenc.h:
+	Somewhat port mngenc and mngdec to 0.10. Does not work yet and has many
+	bits ifdeffed out still.
+
 2008-06-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_index_compare):

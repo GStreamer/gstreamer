@@ -21,12 +21,11 @@
 #include "gstmngdec.h"
 #include <gst/video/video.h>
 
-static const GstElementDetails gst_mngdec_details =
+static const GstElementDetails gst_mng_dec_details =
 GST_ELEMENT_DETAILS ("MNG video decoder",
     "Codec/Decoder/Video",
     "Decode a mng video to raw images",
     "Wim Taymans <wim@fluendo.com>");
-
 
 /* Filter signals and args */
 enum
@@ -37,60 +36,17 @@ enum
 
 enum
 {
-  ARG_0
+  PROP_0
 };
 
-static void gst_mngdec_base_init (gpointer g_class);
-static void gst_mngdec_class_init (GstMngDecClass * klass);
-static void gst_mngdec_init (GstMngDec * mngdec);
-
-static void gst_mngdec_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
-static void gst_mngdec_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
-
-static GstStateChangeReturn gst_mngdec_change_state (GstElement * element,
-    GstStateChange transition);
-
-static void gst_mngdec_loop (GstElement * element);
-
-static GstCaps *gst_mngdec_src_getcaps (GstPad * pad);
-
-static GstElementClass *parent_class = NULL;
-
-
-GType
-gst_mngdec_get_type (void)
-{
-  static GType mngdec_type = 0;
-
-  if (!mngdec_type) {
-    static const GTypeInfo mngdec_info = {
-      sizeof (GstMngDecClass),
-      gst_mngdec_base_init,
-      NULL,
-      (GClassInitFunc) gst_mngdec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMngDec),
-      0,
-      (GInstanceInitFunc) gst_mngdec_init,
-    };
-
-    mngdec_type = g_type_register_static (GST_TYPE_ELEMENT, "GstMngDec",
-        &mngdec_info, 0);
-  }
-  return mngdec_type;
-}
-
-static GstStaticPadTemplate gst_mngdec_src_pad_template =
+static GstStaticPadTemplate gst_mng_dec_src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB)
     );
 
-static GstStaticPadTemplate gst_mngdec_sink_pad_template =
+static GstStaticPadTemplate gst_mng_dec_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -99,20 +55,32 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "height = (int) [ 16, 4096 ], " "framerate = (double) [ 0.0, MAX ]")
     );
 
+static void gst_mng_dec_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+static void gst_mng_dec_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+
+static GstStateChangeReturn gst_mng_dec_change_state (GstElement * element,
+    GstStateChange transition);
+
+static gboolean gst_mng_dec_sink_event (GstPad * pad, GstEvent * event);
+
+GST_BOILERPLATE (GstMngDec, gst_mng_dec, GstElement, GST_TYPE_ELEMENT);
+
 static void
-gst_mngdec_base_init (gpointer g_class)
+gst_mng_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_mngdec_src_pad_template));
+      gst_static_pad_template_get (&gst_mng_dec_src_pad_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_mngdec_sink_pad_template));
-  gst_element_class_set_details (element_class, &gst_mngdec_details);
+      gst_static_pad_template_get (&gst_mng_dec_sink_pad_template));
+  gst_element_class_set_details (element_class, &gst_mng_dec_details);
 }
 
 static void
-gst_mngdec_class_init (GstMngDecClass * klass)
+gst_mng_dec_class_init (GstMngDecClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -120,45 +88,42 @@ gst_mngdec_class_init (GstMngDecClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
+  gobject_class->get_property = gst_mng_dec_get_property;
+  gobject_class->set_property = gst_mng_dec_set_property;
 
-  gstelement_class->change_state = gst_mngdec_change_state;
-
-  gstelement_class->get_property = gst_mngdec_get_property;
-  gstelement_class->set_property = gst_mngdec_set_property;
-
+  gstelement_class->change_state = gst_mng_dec_change_state;
 }
 
-
-static GstPadLinkReturn
-gst_mngdec_sinklink (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_mng_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstMngDec *mngdec;
   GstStructure *structure;
 
-  mngdec = GST_MNGDEC (gst_pad_get_parent (pad));
+  mngdec = GST_MNG_DEC (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_double (structure, "framerate", &mngdec->fps);
+
   gst_object_unref (mngdec);
 
   return TRUE;
 }
 
 static void
-gst_mngdec_init (GstMngDec * mngdec)
+gst_mng_dec_init (GstMngDec * mngdec, GstMngDecClass * gclass)
 {
   mngdec->sinkpad =
-      gst_pad_new_from_static_template (&gst_mngdec_sink_pad_template, "sink");
+      gst_pad_new_from_static_template (&gst_mng_dec_sink_pad_template, "sink");
   gst_element_add_pad (GST_ELEMENT (mngdec), mngdec->sinkpad);
 
   mngdec->srcpad =
-      gst_pad_new_from_static_template (&gst_mngdec_src_pad_template, "src");
+      gst_pad_new_from_static_template (&gst_mng_dec_src_pad_template, "src");
   gst_element_add_pad (GST_ELEMENT (mngdec), mngdec->srcpad);
 
-  gst_pad_set_link_function (mngdec->sinkpad, gst_mngdec_sinklink);
-
-  gst_pad_set_getcaps_function (mngdec->srcpad, gst_mngdec_src_getcaps);
+  gst_pad_set_setcaps_function (mngdec->sinkpad, gst_mng_dec_sink_setcaps);
+  gst_pad_set_event_function (mngdec->sinkpad, gst_mng_dec_sink_event);
+  //gst_pad_set_getcaps_function (mngdec->srcpad, gst_mng_dec_src_getcaps);
 
   mngdec->mng = NULL;
   mngdec->buffer_out = NULL;
@@ -167,12 +132,11 @@ gst_mngdec_init (GstMngDec * mngdec)
   mngdec->width = -1;
   mngdec->height = -1;
   mngdec->fps = -1;
-
-  gst_element_set_loop_function (GST_ELEMENT (mngdec), gst_mngdec_loop);
 }
 
+#if 0
 static GstCaps *
-gst_mngdec_src_getcaps (GstPad * pad)
+gst_mng_dec_src_getcaps (GstPad * pad)
 {
   GstMngDec *mngdec;
   GstCaps *caps;
@@ -180,8 +144,8 @@ gst_mngdec_src_getcaps (GstPad * pad)
   GstPadTemplate *templ;
   GstCaps *inter;
 
-  mngdec = GST_MNGDEC (gst_pad_get_parent (pad));
-  templ = gst_static_pad_template_get (&gst_mngdec_src_pad_template);
+  mngdec = GST_MNG_DEC (gst_pad_get_parent (pad));
+  templ = gst_static_pad_template_get (&gst_mng_dec_src_pad_template);
   caps = gst_caps_copy (gst_pad_template_get_caps (templ));
 
   if (mngdec->color_type != -1) {
@@ -232,15 +196,16 @@ gst_mngdec_src_getcaps (GstPad * pad)
 
   return caps;
 }
+#endif
 
-
+#if 0
 static void
-gst_mngdec_loop (GstElement * element)
+gst_mng_dec_loop (GstElement * element)
 {
   GstMngDec *mngdec;
   mng_retcode ret;
 
-  mngdec = GST_MNGDEC (element);
+  mngdec = GST_MNG_DEC (element);
 
   if (mngdec->first) {
     GST_DEBUG ("display");
@@ -254,18 +219,18 @@ gst_mngdec_loop (GstElement * element)
     /* libmng needs more data later on */
   } else {
     /* assume EOS here */
-    gst_pad_push (mngdec->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
-    gst_element_set_eos (element);
+    gst_pad_push_event (mngdec->srcpad, (gst_event_new_eos ()));
   }
 }
+#endif
 
 static void
-gst_mngdec_get_property (GObject * object,
+gst_mng_dec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
   GstMngDec *mngdec;
 
-  mngdec = GST_MNGDEC (object);
+  mngdec = GST_MNG_DEC (object);
 
   switch (prop_id) {
     default:
@@ -276,12 +241,12 @@ gst_mngdec_get_property (GObject * object,
 
 
 static void
-gst_mngdec_set_property (GObject * object,
+gst_mng_dec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
   GstMngDec *mngdec;
 
-  mngdec = GST_MNGDEC (object);
+  mngdec = GST_MNG_DEC (object);
 
   switch (prop_id) {
     default:
@@ -297,7 +262,7 @@ mngdec_error (mng_handle mng, mng_int32 code, mng_int8 severity,
 {
   GstMngDec *mngdec;
 
-  mngdec = GST_MNGDEC (mng_get_userdata (mng));
+  mngdec = GST_MNG_DEC (mng_get_userdata (mng));
 
   GST_ERROR_OBJECT (mngdec, "error in chunk %4.4s (%d): %s",
       (gchar *) & chunktype, chunkseq, text);
@@ -310,9 +275,7 @@ mngdec_openstream (mng_handle mng)
 {
   GstMngDec *mngdec;
 
-  mngdec = GST_MNGDEC (mng_get_userdata (mng));
-
-  mngdec->bs = gst_bytestream_new (mngdec->sinkpad);
+  mngdec = GST_MNG_DEC (mng_get_userdata (mng));
 
   return MNG_TRUE;
 }
@@ -322,41 +285,37 @@ mngdec_closestream (mng_handle mng)
 {
   GstMngDec *mngdec;
 
-  mngdec = GST_MNGDEC (mng_get_userdata (mng));
-
-  gst_bytestream_destroy (mngdec->bs);
+  mngdec = GST_MNG_DEC (mng_get_userdata (mng));
 
   return MNG_TRUE;
 }
 
 static gboolean
-mngdec_handle_sink_event (GstMngDec * mngdec)
+gst_mng_dec_sink_event (GstPad * pad, GstEvent * event)
 {
-  guint32 remaining;
-  GstEvent *event;
   GstEventType type;
+  GstMngDec *mngdec;
 
-  gst_bytestream_get_status (mngdec->bs, &remaining, &event);
+  mngdec = GST_MNG_DEC_CAST (gst_pad_get_parent (pad));
 
-  type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
-  GST_DEBUG ("mngdec: event %p %d", event, type);
+  type = GST_EVENT_TYPE (event);
+
+  GST_DEBUG_OBJECT (mngdec, "mngdec: event %p %d", event, type);
 
   switch (type) {
     case GST_EVENT_EOS:
-      gst_bytestream_flush (mngdec->bs, remaining);
-      gst_pad_event_default (mngdec->sinkpad, event);
-      return FALSE;
-    case GST_EVENT_FLUSH:
       break;
-    case GST_EVENT_DISCONTINUOUS:
-      GST_DEBUG ("discontinuous event");
+    case GST_EVENT_FLUSH_START:
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      break;
+    case GST_EVENT_NEWSEGMENT:
       break;
     default:
-      g_warning ("unhandled event %d", type);
       break;
   }
-
   gst_event_unref (event);
+
   return TRUE;
 }
 
@@ -365,13 +324,16 @@ mngdec_readdata (mng_handle mng, mng_ptr buffer,
     mng_uint32 size, mng_uint32 * bytesread)
 {
   GstMngDec *mngdec;
+#if 0
   guint8 *bytes;
   guint32 read;
+#endif
 
-  mngdec = GST_MNGDEC (mng_get_userdata (mng));
+  mngdec = GST_MNG_DEC (mng_get_userdata (mng));
 
   GST_DEBUG ("read data %d", size);
 
+#if 0
   do {
     read = gst_bytestream_peek_bytes (mngdec->bs, &bytes, size);
     if (read != size) {
@@ -388,6 +350,7 @@ mngdec_readdata (mng_handle mng, mng_ptr buffer,
   memcpy (buffer, bytes, size);
   gst_bytestream_flush_fast (mngdec->bs, read);
   *bytesread = size;
+#endif
 
   return MNG_TRUE;
 }
@@ -411,7 +374,7 @@ mngdec_settimer (mng_handle mng, mng_uint32 msecs)
 {
   GstMngDec *mngdec;
 
-  mngdec = GST_MNGDEC (mng_get_userdata (mng));
+  mngdec = GST_MNG_DEC (mng_get_userdata (mng));
   //mymng->delay = msecs;
   GST_DEBUG ("set timer %d", msecs);
 
@@ -426,7 +389,7 @@ mngdec_processheader (mng_handle mng, mng_uint32 width, mng_uint32 height)
   guint32 framecount;
   guint32 ticks;
 
-  mngdec = GST_MNGDEC (mng_get_userdata (mng));
+  mngdec = GST_MNG_DEC (mng_get_userdata (mng));
 
   GST_DEBUG ("process header %d %d", width, height);
 
@@ -445,10 +408,12 @@ mngdec_processheader (mng_handle mng, mng_uint32 width, mng_uint32 height)
     mngdec->stride = ((width + 3) & ~3) * 4;
     mngdec->height = height;
 
+#if 0
     if (GST_PAD_LINK_FAILED (gst_pad_renegotiate (mngdec->srcpad))) {
       GST_ELEMENT_ERROR (mngdec, CORE, NEGOTIATION, (NULL), (NULL));
       return MNG_FALSE;
     }
+#endif
 
     mngdec->buffer_out =
         gst_buffer_new_and_alloc (mngdec->height * mngdec->stride);
@@ -461,7 +426,7 @@ mngdec_getcanvasline (mng_handle mng, mng_uint32 line)
 {
   GstMngDec *mngdec;
 
-  mngdec = GST_MNGDEC (mng_get_userdata (mng));
+  mngdec = GST_MNG_DEC (mng_get_userdata (mng));
 
   GST_DEBUG ("get canvas line %d", line);
 
@@ -476,7 +441,7 @@ mngdec_refresh (mng_handle mng, mng_uint32 x, mng_uint32 y,
   GstMngDec *mngdec;
   guint32 current;
 
-  mngdec = GST_MNGDEC (mng_get_userdata (mng));
+  mngdec = GST_MNG_DEC (mng_get_userdata (mng));
 
   current = mng_get_currentplaytime (mng);
 
@@ -484,16 +449,17 @@ mngdec_refresh (mng_handle mng, mng_uint32 x, mng_uint32 y,
   if (h == mngdec->height) {
     GstBuffer *out = gst_buffer_copy (mngdec->buffer_out);
 
-    gst_pad_push (mngdec->srcpad, GST_DATA (out));
+    gst_pad_push (mngdec->srcpad, out);
   }
 
   return MNG_TRUE;
 }
 
 static GstStateChangeReturn
-gst_mngdec_change_state (GstElement * element, GstStateChange transition)
+gst_mng_dec_change_state (GstElement * element, GstStateChange transition)
 {
-  GstMngDec *mngdec = GST_MNGDEC (element);
+  GstStateChangeReturn ret;
+  GstMngDec *mngdec = GST_MNG_DEC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -523,6 +489,13 @@ gst_mngdec_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -533,9 +506,5 @@ gst_mngdec_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }

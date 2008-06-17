@@ -18,22 +18,20 @@
  */
 
 
-#ifndef __GST_MNGENC_H__
-#define __GST_MNGENC_H__
+#ifndef __GST_MNG_ENC_H__
+#define __GST_MNG_ENC_H__
 
 #include <gst/gst.h>
 #include <libmng.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
-
-#define GST_TYPE_MNGENC            (gst_mngenc_get_type())
-#define GST_MNGENC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MNGENC,GstMngEnc))
-#define GST_MNGENC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MNGENC,GstMngEncClass))
-#define GST_IS_MNGENC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MNGENC))
-#define GST_IS_MNGENC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MNGENC))
+#define GST_TYPE_MNG_ENC            (gst_mng_enc_get_type())
+#define GST_MNG_ENC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MNG_ENC,GstMngEnc))
+#define GST_MNG_ENC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MNG_ENC,GstMngEncClass))
+#define GST_IS_MNG_ENC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MNG_ENC))
+#define GST_IS_MNG_ENC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MNG_ENC))
+#define GST_MNG_ENC_CAST(obj)       (GstMngEnc *)(obj)
 
 typedef struct _GstMngEnc GstMngEnc;
 typedef struct _GstMngEncClass GstMngEncClass;
@@ -52,9 +50,6 @@ struct _GstMngEnc
   gint width;
   gint height;
   gint bpp;
-
-  gboolean snapshot;
-  gboolean newmedia;
 };
 
 struct _GstMngEncClass
@@ -62,12 +57,8 @@ struct _GstMngEncClass
   GstElementClass parent_class;
 };
 
-GType gst_mngenc_get_type(void);
+GType gst_mng_enc_get_type(void);
 
+G_END_DECLS
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-
-#endif /* __GST_MNGENC_H__ */
+#endif /* __GST_MNG_ENC_H__ */

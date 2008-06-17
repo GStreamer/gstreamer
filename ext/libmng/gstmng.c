@@ -26,14 +26,11 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
-
   if (!gst_element_register (plugin, "mngdec", GST_RANK_PRIMARY,
-          GST_TYPE_MNGDEC))
+          GST_TYPE_MNG_DEC))
     return FALSE;
 
-  if (!gst_element_register (plugin, "mngenc", GST_RANK_NONE, GST_TYPE_MNGENC))
+  if (!gst_element_register (plugin, "mngenc", GST_RANK_NONE, GST_TYPE_MNG_ENC))
     return FALSE;
 
   return TRUE;
