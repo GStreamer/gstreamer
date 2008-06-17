@@ -234,6 +234,7 @@ AG_GST_CHECK_PLUGIN(app)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(deinterlace)
+AG_GST_CHECK_PLUGIN(deinterlace2)
 AG_GST_CHECK_PLUGIN(dvdspu)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(filter)
@@ -499,13 +500,15 @@ AG_GST_CHECK_FEATURE(DVDNAV, [dvdnav library], resindvd, [
          [[ "$DVDNAV_MICRO" -lt "7" ]]; then
       AC_MSG_WARN([libdvdnav >= 0.1.7 is required, you have $DVDNAV_VERSION])
       HAVE_DVDNAV="no"
+    elif [[ "$DVDNAV_MAJOR" -eq "0" ]]; then
+      AC_DEFINE(DVDNAV_OLD, 1, [Define if an old libdvdnav is used])      
     fi
   fi
   dnl now check for dvdread/nav_print.h - see #133002
   AC_CHECK_HEADER(dvdread/nav_print.h, , [
       AC_MSG_WARN([header dvdread/nav_print.h from dvdread missing])
       HAVE_DVDNAV="no"
-  ])
+  ], [ #include "_stdint.h" ])
   AS_SCRUB_INCLUDE(DVDNAV_CFLAGS)
 ])
 
@@ -1183,6 +1186,7 @@ gst/app/Makefile
 gst/bayer/Makefile
 gst/cdxaparse/Makefile
 gst/deinterlace/Makefile
+gst/deinterlace2/Makefile
 gst/dvdspu/Makefile
 gst/festival/Makefile
 gst/filter/Makefile

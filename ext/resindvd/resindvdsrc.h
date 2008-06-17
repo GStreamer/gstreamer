@@ -25,11 +25,20 @@
 
 #include "_stdint.h"
 
+#ifndef DVDNAV_OLD
+
+#include <dvdnav/dvdnav.h>
+#include <dvdread/ifo_read.h>
+
+#else
+
 #include <dvdnav/dvd_reader.h>
 #include <dvdnav/ifo_read.h>
 
 #include <dvdnav/dvdnav.h>
 #include <dvdnav/nav_print.h>
+
+#endif
 
 G_BEGIN_DECLS
 
