@@ -658,6 +658,9 @@ gst_wipe_triangles_draw (GstMask * mask)
   }
 }
 
+/* see also:
+ * http://www.w3c.rl.ac.uk/pasttalks/slidemaker/XML_Multimedia/htmls/transitions.html
+ */
 static const GstMaskDefinition definitions[] = {
   {1, "bar-wipe-lr",
         "A bar moves from left to right",

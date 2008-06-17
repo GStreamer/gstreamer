@@ -57,10 +57,10 @@ VRTPSINK="udpsink port=5000 host=$DEST ts-offset=$VOFFSET name=vrtpsink"
 VRTCPSINK="udpsink port=5001 host=$DEST sync=false async=false name=vrtcpsink"
 VRTCPSRC="udpsrc port=5005 name=vrtpsrc"
 
-# PCMA encode from an the source
+# PCMA encode from the source
 AELEM="alsasrc"
 #AELEM="audiotestsrc is-live=1"
-ASOURCE="$AELEM ! queue ! audioconvert"
+ASOURCE="$AELEM ! queue ! audioresample ! audioconvert"
 AENC="alawenc ! rtppcmapay"
 
 ARTPSINK="udpsink port=5002 host=$DEST ts-offset=$AOFFSET name=artpsink"

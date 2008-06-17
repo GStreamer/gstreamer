@@ -1,5 +1,16 @@
 2008-06-17  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtsp/URLS:
+	Some more urls.
+
+	* gst/smpte/barboxwipes.c:
+	Add a comment
+
+	* tests/examples/rtp/server-v4l2-H264-alsasrc-PCMA.sh:
+	Fix typo, add audioresample to the pipeline.
+
+2008-06-17  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/libmng/Makefile.am:
 	* ext/libmng/gstmng.c: (plugin_init):
 	* ext/libmng/gstmngdec.c: (gst_mng_dec_base_init),

@@ -27,3 +27,6 @@ H264/MPA
 REAL:
   rtsp://213.254.239.61/farm/*/encoder/tagesschau/live1high.rm
   rtsp://64.192.137.105:554/real.amazon-de.eu2/phononet/B/0/0/0/H/W/Y/4/K/S/01.01.rm?cloakport=80,554,7070
+
+  rtsp://211.89.225.1/encoder/cnr7_p
+  rtsp://stream2.visual.cz/broadcast/ct/CT24-High.rm
