@@ -113,6 +113,7 @@ static void rsn_dvdsrc_update_highlight (resinDvdSrc * src);
 
 static GstFlowReturn rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** buf);
 static gboolean rsn_dvdsrc_src_event (RsnBaseSrc * basesrc, GstEvent * event);
+static gboolean rsn_dvdsrc_src_query (RsnBaseSrc * basesrc, GstQuery * query);
 
 static void
 rsn_dvdsrc_register_extra (GType rsn_dvdsrc_type)
@@ -160,6 +161,7 @@ rsn_dvdsrc_class_init (resinDvdSrcClass * klass)
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (rsn_dvdsrc_unlock);
   gstbasesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (rsn_dvdsrc_unlock_stop);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (rsn_dvdsrc_src_event);
+  gstbasesrc_class->query = GST_DEBUG_FUNCPTR (rsn_dvdsrc_src_query);
   gstbasesrc_class->prepare_seek_segment =
       GST_DEBUG_FUNCPTR (rsn_dvdsrc_prepare_seek);
   gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (rsn_dvdsrc_do_seek);
@@ -187,6 +189,7 @@ static void
 rsn_dvdsrc_finalize (GObject * object)
 {
   resinDvdSrc *src = RESINDVDSRC (object);
+
   g_mutex_free (src->dvd_lock);
   g_mutex_free (src->branch_lock);
   g_cond_free (src->still_cond);
@@ -287,6 +290,7 @@ rsn_dvdsrc_start (RsnBaseSrc * bsrc)
   src->need_segment = TRUE;
 
   src->cur_position = GST_CLOCK_TIME_NONE;
+  src->pgc_duration = GST_CLOCK_TIME_NONE;
   src->cur_start_ts = GST_CLOCK_TIME_NONE;
   src->cur_end_ts = GST_CLOCK_TIME_NONE;
 
@@ -343,6 +347,7 @@ read_vts_info (resinDvdSrc * src)
 
   for (i = 1; i <= n_vts; i++) {
     ifo_handle_t *ifo = ifoOpen (src->dvdread, i);
+
     if (!ifo) {
       GST_ERROR ("Can't open VTS %d", i);
       return FALSE;
@@ -574,6 +579,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock, GstBuffer ** outbuf)
       break;
     case DVDNAV_STILL_FRAME:{
       dvdnav_still_event_t *info = (dvdnav_still_event_t *) data;
+
       g_print ("STILL frame duration %d\n", info->length);
 
       if (!have_dvd_lock) {
@@ -660,6 +666,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock, GstBuffer ** outbuf)
       rsn_dvdsrc_update_highlight (src);
       if (src->highlight_event && have_dvd_lock) {
         GstEvent *hl_event = src->highlight_event;
+
         src->highlight_event = NULL;
         g_mutex_unlock (src->dvd_lock);
         g_print ("Highlight change - button: %d\n", src->active_button);
@@ -893,6 +900,7 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
 
   if (strcmp (event_type, "key-press") == 0) {
     const gchar *key = gst_structure_get_string (s, "key");
+
     if (key == NULL)
       return FALSE;
 
@@ -1321,6 +1329,31 @@ rsn_dvdsrc_src_event (RsnBaseSrc * basesrc, GstEvent * event)
       break;
     default:
       res = GST_BASE_SRC_CLASS (parent_class)->event (basesrc, event);
+      break;
+  }
+
+  return res;
+}
+
+static gboolean
+rsn_dvdsrc_src_query (RsnBaseSrc * basesrc, GstQuery * query)
+{
+  resinDvdSrc *src = RESINDVDSRC (basesrc);
+  gboolean res = FALSE;
+  GstFormat format;
+  gint64 val;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_DURATION:
+      gst_query_parse_duration (query, &format, NULL);
+      if (format == GST_FORMAT_TIME && src->pgc_duration != GST_CLOCK_TIME_NONE) {
+        val = src->pgc_duration;
+        gst_query_set_duration (query, format, val);
+        res = TRUE;
+      }
+      break;
+    default:
+      res = GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
       break;
   }
 

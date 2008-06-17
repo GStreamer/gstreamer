@@ -102,7 +102,7 @@ static void gst_dvd_spu_clear (GstDVDSpu * dvdspu);
 static void gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu);
 static void gst_dvd_spu_advance_spu (GstDVDSpu * dvdspu, GstClockTime new_ts);
 static GstFlowReturn
-dvspu_handle_vid_buffer (GstDVDSpu * dvdspu, GstBuffer * buf);
+dvdspu_handle_vid_buffer (GstDVDSpu * dvdspu, GstBuffer * buf);
 
 static void
 gst_dvd_spu_base_init (gpointer gclass)
@@ -470,7 +470,7 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
         while (dvdspu->video_seg.last_stop < start &&
             !(state->flags & SPU_STATE_STILL_FRAME)) {
           DVD_SPU_UNLOCK (dvdspu);
-          if (dvspu_handle_vid_buffer (dvdspu, NULL) != GST_FLOW_OK) {
+          if (dvdspu_handle_vid_buffer (dvdspu, NULL) != GST_FLOW_OK) {
             DVD_SPU_LOCK (dvdspu);
             break;
           }
@@ -525,7 +525,7 @@ gst_dvd_spu_video_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (dvdspu, "video buffer %p with TS %" GST_TIME_FORMAT,
       buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
-  ret = dvspu_handle_vid_buffer (dvdspu, buf);
+  ret = dvdspu_handle_vid_buffer (dvdspu, buf);
 
   gst_object_unref (dvdspu);
 
@@ -533,7 +533,7 @@ gst_dvd_spu_video_chain (GstPad * pad, GstBuffer * buf)
 }
 
 static GstFlowReturn
-dvspu_handle_vid_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
+dvdspu_handle_vid_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
 {
   GstClockTime new_ts;
   GstFlowReturn ret;

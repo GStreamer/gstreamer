@@ -191,7 +191,7 @@ rsn_dvdbin_uri_get_uri (GstURIHandler * handler)
 static gboolean
 rsn_dvdbin_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
-  // RsnDvdBin *dvdbin = RESINDVDBIN (handler);
+  RsnDvdBin *dvdbin = RESINDVDBIN (handler);
   gboolean ret;
   gchar *protocol, *location;
 
@@ -208,9 +208,14 @@ rsn_dvdbin_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   location = gst_uri_get_location (uri);
   if (!location)
     return ret;
+
   /*
-   * Parse out the device name
+   * URI structure: dvd:///path/to/device
    */
+  if (g_str_has_prefix (uri, "dvd://")) {
+    g_free (dvdbin->device);
+    dvdbin->device = g_strdup (uri + 6);
+  }
 #if 0
   /*
    * Parse out the new t/c/a and seek to them
@@ -219,11 +224,6 @@ rsn_dvdbin_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     gchar **strs;
     gchar **strcur;
     gint pos = 0;
-
-    location = gst_uri_get_location (uri);
-
-    if (!location)
-      return ret;
 
     strcur = strs = g_strsplit (location, ",", 0);
     while (strcur && *strcur) {
@@ -527,6 +527,7 @@ remove_elements (RsnDvdBin * dvdbin)
     DVDBIN_LOCK (dvdbin);
     if (dvdbin->pieces[i] != NULL) {
       GstElement *piece = dvdbin->pieces[i];
+
       dvdbin->pieces[i] = NULL;
       DVDBIN_UNLOCK (dvdbin);
 

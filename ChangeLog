@@ -1,3 +1,15 @@
+2008-06-17  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/resindvd/resindvdbin.c:
+	Parse the URI argument into the device name so dvd:///path/to/image
+	works.
+
+	* ext/resindvd/resindvdsrc.c:
+	Implement a trivial duration query reporting the current PGC length.
+
+	* gst/dvdspu/gstdvdspu.c:
+	Rename typo in the function name.
+
 2008-06-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
