@@ -1,3 +1,41 @@
+2008-06-17  Jan Schmidt  <thaytan@noraisin.net>
+
+	* configure.ac:
+	Check for libdvdnav to build resindvd.
+
+	* ext/Makefile.am:
+	* ext/resindvd/Makefile.am:
+	* ext/resindvd/gstmpegdefs.h:
+	* ext/resindvd/gstmpegdemux.c:
+	* ext/resindvd/gstmpegdemux.h:
+	* ext/resindvd/gstmpegdesc.c:
+	* ext/resindvd/gstmpegdesc.h:
+	* ext/resindvd/gstpesfilter.c:
+	* ext/resindvd/gstpesfilter.h:
+	* ext/resindvd/plugin.c:
+	* ext/resindvd/resin-play:
+	* ext/resindvd/resindvdbin.c:
+	* ext/resindvd/resindvdbin.h:
+	* ext/resindvd/resindvdsrc.c:
+	* ext/resindvd/resindvdsrc.h:
+	* ext/resindvd/rsnaudiomunge.c:
+	* ext/resindvd/rsnaudiomunge.h:
+	* ext/resindvd/rsnbasesrc.c:
+	* ext/resindvd/rsnbasesrc.h:
+	* ext/resindvd/rsnpushsrc.c:
+	* ext/resindvd/rsnpushsrc.h:
+	* ext/resindvd/rsnstreamselector.c:
+	* ext/resindvd/rsnstreamselector.h:
+
+	First commit of DVD-Video playback component 'rsndvdbin'
+	and helper elements.
+
+	Use --enable-experimental for now, but feel free to give it a
+	try using the resin-play script.
+
+	* gst/dvdspu/gstdvdspu.c:
+	Add some extra guards for malformed events.
+
 2008-06-16  David Schleef  <ds@schleef.org>
 
 	* configure.ac:

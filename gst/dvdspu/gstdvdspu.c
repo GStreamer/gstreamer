@@ -395,12 +395,22 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
       const GstStructure *structure = gst_event_get_structure (event);
       const char *event_type;
 
+      if (structure == NULL) {
+        res = gst_pad_event_default (pad, event);
+        break;
+      }
+
       if (!gst_structure_has_name (structure, "application/x-gst-dvd")) {
         res = gst_pad_event_default (pad, event);
         break;
       }
 
       event_type = gst_structure_get_string (structure, "event");
+      if (event_type == NULL) {
+        res = gst_pad_event_default (pad, event);
+        break;
+      }
+
       GST_DEBUG_OBJECT (dvdspu,
           "DVD event of type %s on video pad", event_type);
 

@@ -477,6 +477,38 @@ return 0;
   fi
 ])
 
+dnl *** dvdnav for resindvd ***
+USE_DVDNAV=$BUILD_EXPERIMENTAL
+translit(dnm, m, l) AM_CONDITIONAL(USE_DVDNAV, true)
+AG_GST_CHECK_FEATURE(DVDNAV, [dvdnav library], resindvd, [
+  translit(dnm, m, l) AC_SUBST(DVDNAV_LIBS)
+  translit(dnm, m, l) AC_SUBST(DVDNAV_CFLAGS)
+  AG_GST_CHECK_CONFIGPROG(DVDNAV, dvdnav-config)
+  if test x"$HAVE_DVDNAV" = x"yes"; then
+    dnl check version
+    DVDNAV_VERSION=`dvdnav-config --version|head -n 1|sed 's/^.*) //'|sed 's/ (.*)//'`
+    DVDNAV_MAJOR=`echo $DVDNAV_VERSION | cut -d. -f1 | sed s/[a-zA-Z\-].*//g`
+    DVDNAV_MINOR=`echo $DVDNAV_VERSION | cut -d. -f2 | sed s/[a-zA-Z\-].*//g`
+    DVDNAV_MICRO=`echo $DVDNAV_VERSION | cut -d. -f3 | sed s/[a-zA-Z\-].*//g`
+    if [[ "$DVDNAV_MAJOR" -eq "0" ]] && \
+       [[ "$DVDNAV_MINOR" -lt "1" ]]; then
+      AC_MSG_WARN([libdvdnav >= 0.1.7 is required, you have $DVDNAV_VERSION])
+      HAVE_DVDNAV="no"
+    elif [[ "$DVDNAV_MAJOR" -eq "0" ]] && \
+         [[ "$DVDNAV_MINOR" -eq "1" ]] && \
+         [[ "$DVDNAV_MICRO" -lt "7" ]]; then
+      AC_MSG_WARN([libdvdnav >= 0.1.7 is required, you have $DVDNAV_VERSION])
+      HAVE_DVDNAV="no"
+    fi
+  fi
+  dnl now check for dvdread/nav_print.h - see #133002
+  AC_CHECK_HEADER(dvdread/nav_print.h, , [
+      AC_MSG_WARN([header dvdread/nav_print.h from dvdread missing])
+      HAVE_DVDNAV="no"
+  ])
+  AS_SCRUB_INCLUDE(DVDNAV_CFLAGS)
+])
+
 dnl *** METADATA ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_METADATA, true)
 AG_GST_CHECK_FEATURE(METADATA, [METADATA muxer and demuxer], metadata, [
@@ -1225,6 +1257,7 @@ ext/musicbrainz/Makefile
 ext/mythtv/Makefile
 ext/neon/Makefile
 ext/ofa/Makefile
+ext/resindvd/Makefile
 ext/sdl/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile

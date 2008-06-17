@@ -76,6 +76,12 @@ else
 DTS_DIR=
 endif
 
+if USE_DVDNAV
+ DVDNAV_DIR = resindvd
+else
+ DVDNAV_DIR =
+endif
+
 if USE_FAAC
 FAAC_DIR=faac
 else

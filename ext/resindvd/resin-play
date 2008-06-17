@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if [ $# -ge 1 ]; then
+  DEVICE_OPT="device=$1"
+else
+  DEVICE_OPT=""
+fi
+
+gst-launch rsndvdbin name=dvd "$DEVICE_OPT" \
+   dvd. ! ffmpegcolorspace ! videoscale ! autovideosink \
+   dvd. ! audioconvert ! autoaudiosink
