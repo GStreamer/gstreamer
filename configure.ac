@@ -234,7 +234,6 @@ AG_GST_CHECK_PLUGIN(app)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(deinterlace)
-AG_GST_CHECK_PLUGIN(deinterlace2)
 AG_GST_CHECK_PLUGIN(dvdspu)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(filter)
@@ -1186,7 +1185,6 @@ gst/app/Makefile
 gst/bayer/Makefile
 gst/cdxaparse/Makefile
 gst/deinterlace/Makefile
-gst/deinterlace2/Makefile
 gst/dvdspu/Makefile
 gst/festival/Makefile
 gst/filter/Makefile

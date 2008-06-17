@@ -1,6 +1,12 @@
 2008-06-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
+	Disable deinterlace2 plugin again which was accidently enabled
+	with last commit.
+
+2008-06-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
 	* ext/resindvd/resindvdsrc.h:
 	Make resindvd work with libdvdnav >= 4.0.0.
 
