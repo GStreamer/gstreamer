@@ -387,7 +387,7 @@ AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
 dnl **** Dirac ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRAC, true)
 AG_GST_CHECK_FEATURE(DIRAC, [dirac], dirac, [
-  PKG_CHECK_MODULES(DIRAC, dirac >= 0.9, HAVE_DIRAC="yes", [
+  PKG_CHECK_MODULES(DIRAC, dirac >= 0.10, HAVE_DIRAC="yes", [
     HAVE_DIRAC="no"
     AC_MSG_RESULT(no)
   ])

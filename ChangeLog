@@ -1,3 +1,8 @@
+2008-06-16  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	Bump dirac requirement to 0.10 due to api changes.
+
 2008-06-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst-libs/gst/app/gstappsrc.c (gst_app_src_set_max_bytes)
