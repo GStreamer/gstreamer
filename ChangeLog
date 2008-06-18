@@ -1,3 +1,59 @@
+2008-06-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_reset),
+	(gst_matroska_demux_stream_from_num),
+	(gst_matroska_demux_encoding_cmp),
+	(gst_matroska_demux_encoding_order_unique),
+	(gst_matroska_demux_read_track_encoding),
+	(gst_matroska_demux_read_track_encodings),
+	(gst_matroska_demux_tracknumber_unique),
+	(gst_matroska_demux_add_stream), (gst_matroska_demux_init_stream),
+	(gst_matroska_demux_parse_tracks),
+	(gst_matroska_demux_parse_index_cuetrack),
+	(gst_matroska_demux_parse_index_pointentry),
+	(gst_matroska_demux_parse_index), (gst_matroska_demux_parse_info),
+	(gst_matroska_demux_parse_metadata_id_simple_tag),
+	(gst_matroska_demux_parse_metadata_id_tag),
+	(gst_matroska_demux_parse_metadata),
+	(gst_matroska_demux_parse_attached_file),
+	(gst_matroska_demux_parse_attachments),
+	(gst_matroska_demux_parse_chapters),
+	(gst_matroska_demux_sync_streams), (gst_matroska_decode_buffer),
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock),
+	(gst_matroska_demux_parse_cluster),
+	(gst_matroska_demux_parse_contents_seekentry),
+	(gst_matroska_demux_parse_contents),
+	(gst_matroska_demux_loop_stream_parse_id),
+	(gst_matroska_demux_loop):
+	Improve debug output everywhere and fix the EOS logic.
+
+	Check the values of the ContentEncoding elements more strictly and
+	don't use tracks for which it's invalid.
+
+	Check that the track number is unique for this stream.
+
+	Check that seek positions are below G_MAXINT64 as our seeks are
+	int64-based and overflows will fail badly.
+
+	After seeks also don't push SimpleBlocks until the first one
+	containing a keyframe is found. Before this was done only for normal
+	Blocks.
+
+	Update some FIXME/TODOs.
+	
+	* gst/matroska/ebml-read.c: (gst_ebml_read_peek_bytes),
+	(gst_ebml_read_utf8), (gst_ebml_read_header):
+	Improve debug output.
+
+	* gst/matroska/matroska-ids.c:
+	(gst_matroska_track_init_video_context):
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-mux.c:
+	(gst_matroska_mux_video_pad_setcaps):
+	Remove eye mode and don't parse it anymore. We can't use that
+	information in GStreamer yet so it's useless.
+
+
 2008-06-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: mersad <mersad at axis dot com>

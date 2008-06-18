@@ -430,13 +430,6 @@ typedef enum {
 } GstMatroskaTrackType;
 
 typedef enum {
-  GST_MATROSKA_EYE_MODE_MONO  = 0x0,
-  GST_MATROSKA_EYE_MODE_RIGHT = 0x1,
-  GST_MATROSKA_EYE_MODE_LEFT  = 0x2,
-  GST_MATROSKA_EYE_MODE_BOTH  = 0x3,
-} GstMatroskaEyeMode;
-
-typedef enum {
   GST_MATROSKA_ASPECT_RATIO_MODE_FREE  = 0x0,
   GST_MATROSKA_ASPECT_RATIO_MODE_KEEP  = 0x1,
   GST_MATROSKA_ASPECT_RATIO_MODE_FIXED = 0x2,
@@ -512,7 +505,6 @@ typedef struct _GstMatroskaTrackVideoContext {
   guint         pixel_width, pixel_height;
   guint         display_width, display_height;
   gdouble       default_fps;
-  GstMatroskaEyeMode eye_mode;
   GstMatroskaAspectRatioMode asr_mode;
   guint32       fourcc;
 } GstMatroskaTrackVideoContext;

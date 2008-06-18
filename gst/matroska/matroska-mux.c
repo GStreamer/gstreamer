@@ -589,7 +589,6 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
 skip_details:
 
   videocontext->asr_mode = GST_MATROSKA_ASPECT_RATIO_MODE_FREE;
-  videocontext->eye_mode = GST_MATROSKA_EYE_MODE_MONO;
   videocontext->fourcc = 0;
 
   /* TODO: - check if we handle all codecs by the spec, i.e. codec private

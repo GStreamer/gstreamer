@@ -247,7 +247,7 @@ gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf,
       gst_pad_pull_range (ebml->sinkpad, ebml->offset, size,
       &ebml->cached_buffer);
   if (ret != GST_FLOW_OK) {
-    GST_DEBUG ("pull_range returned %d", ret);
+    GST_DEBUG_OBJECT (ebml, "pull_range returned %d", ret);
     if (p_buf)
       *p_buf = NULL;
     if (bytes)
@@ -804,7 +804,8 @@ gst_ebml_read_utf8 (GstEbmlRead * ebml, guint32 * id, gchar ** str)
 
   if (str != NULL && *str != NULL && **str != '\0' &&
       !g_utf8_validate (*str, -1, NULL)) {
-    GST_WARNING ("Invalid UTF-8 string at offset %" G_GUINT64_FORMAT, oldoff);
+    GST_WARNING_OBJECT (ebml,
+        "Invalid UTF-8 string at offset %" G_GUINT64_FORMAT, oldoff);
   }
 
   return ret;
@@ -942,6 +943,8 @@ gst_ebml_read_header (GstEbmlRead * ebml, gchar ** doctype, guint * version)
           GST_ELEMENT_ERROR (ebml, STREAM, WRONG_TYPE, (NULL), (NULL));
           return GST_FLOW_ERROR;
         }
+
+        GST_DEBUG_OBJECT (ebml, "EbmlReadVersion: %" G_GUINT64_FORMAT, num);
         break;
       }
 
@@ -957,6 +960,7 @@ gst_ebml_read_header (GstEbmlRead * ebml, gchar ** doctype, guint * version)
           GST_ELEMENT_ERROR (ebml, STREAM, WRONG_TYPE, (NULL), (NULL));
           return GST_FLOW_ERROR;
         }
+        GST_DEBUG_OBJECT (ebml, "EbmlMaxSizeLength: %" G_GUINT64_FORMAT, num);
         break;
       }
 
@@ -972,6 +976,7 @@ gst_ebml_read_header (GstEbmlRead * ebml, gchar ** doctype, guint * version)
           GST_ELEMENT_ERROR (ebml, STREAM, WRONG_TYPE, (NULL), (NULL));
           return GST_FLOW_ERROR;
         }
+        GST_DEBUG_OBJECT (ebml, "EbmlMaxIdLength: %" G_GUINT64_FORMAT, num);
         break;
       }
 
@@ -982,6 +987,9 @@ gst_ebml_read_header (GstEbmlRead * ebml, gchar ** doctype, guint * version)
         if (ret != GST_FLOW_OK)
           return ret;
         g_assert (id == GST_EBML_ID_DOCTYPE);
+
+        GST_DEBUG_OBJECT (ebml, "EbmlDocType: %s", GST_STR_NULL (text));
+
         if (doctype) {
           g_free (*doctype);
           *doctype = text;
@@ -999,11 +1007,13 @@ gst_ebml_read_header (GstEbmlRead * ebml, gchar ** doctype, guint * version)
         g_assert (id == GST_EBML_ID_DOCTYPEREADVERSION);
         if (version)
           *version = num;
+        GST_DEBUG_OBJECT (ebml, "EbmlReadVersion: %" G_GUINT64_FORMAT, num);
         break;
       }
 
       default:
-        GST_WARNING ("Unknown data type 0x%x in EBML header (ignored)", id);
+        GST_WARNING_OBJECT (ebml,
+            "Unknown data type 0x%x in EBML header (ignored)", id);
         /* pass-through */
 
         /* we ignore these two, as they don't tell us anything we care about */
