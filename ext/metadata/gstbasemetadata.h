@@ -67,10 +67,10 @@ G_BEGIN_DECLS
 typedef struct _GstBaseMetadata GstBaseMetadata;
 typedef struct _GstBaseMetadataClass GstBaseMetadataClass;
 
-typedef enum _tag_BaseMetadataType {
+enum {
   BASE_METADATA_DEMUXING,
   BASE_METADATA_MUXING
-} BaseMetadataType;
+};
 
 
 /*
@@ -126,7 +126,7 @@ typedef enum _tag_BaseMetadataType {
     (GST_BASE_METADATA_CAST (obj)->img_type)
 
 
-typedef enum _tag_MetadataState
+typedef enum _MetadataState
 {
   MT_STATE_NULL,                /* still need to check media type */
   MT_STATE_PARSED

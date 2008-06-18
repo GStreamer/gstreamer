@@ -1914,11 +1914,7 @@ done:
  * EXIF, IPTC, XMP or not.
  * @see_also: #gst_base_metadata_unset_option_flag
  * #gst_base_metadata_get_option_flag 
- *
- * Returns: nothing
- *
  */
-
 void
 gst_base_metadata_set_option_flag (GstBaseMetadata * base, MetaOptions options)
 {
@@ -1934,11 +1930,7 @@ gst_base_metadata_set_option_flag (GstBaseMetadata * base, MetaOptions options)
  * EXIF, IPTC, XMP or not.
  * @see_also: #gst_base_metadata_set_option_flag
  * #gst_base_metadata_get_option_flag 
- *
- * Returns: nothing
- *
  */
-
 void
 gst_base_metadata_unset_option_flag (GstBaseMetadata * base,
     MetaOptions options)
@@ -1956,9 +1948,7 @@ gst_base_metadata_unset_option_flag (GstBaseMetadata * base,
  * #gst_base_metadata_unset_option_flag
  *
  * Returns: The current mode of operation
- *
  */
-
 MetaOptions
 gst_base_metadata_get_option_flag (const GstBaseMetadata * base)
 {
@@ -1979,11 +1969,7 @@ gst_base_metadata_get_option_flag (const GstBaseMetadata * base)
  * the @data ownership will be taken and @data and @size willl be set to 0;
  * Hanlding EXIF, IPTC, XMP or not.
  * @see_also: #gst_base_metadata_calculate_offsets
- *
- * Returns: Nothing
- *
  */
-
 void gst_base_metadata_update_inject_segment_with_new_data
     (GstBaseMetadata * base,
     guint8 ** data, guint32 * size, MetadataChunkType type)

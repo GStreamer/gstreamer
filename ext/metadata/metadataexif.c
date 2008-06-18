@@ -41,7 +41,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*
+/**
  * SECTION: metadataexif
  * @short_description: This module provides functions to extract tags from
  * EXIF metadata chunks and create EXIF chunks from metadata tags.

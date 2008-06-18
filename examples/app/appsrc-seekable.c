@@ -33,7 +33,7 @@
 GST_DEBUG_CATEGORY (appsrc_playbin_debug);
 #define GST_CAT_DEFAULT appsrc_playbin_debug
 
-/**
+/*
  * an example application of using appsrc in seekable mode. When the
  * appsrc requests data with the need-data signal, we retrieve a buffer and
  * push it to appsrc. We can also use the method as demonstrated in

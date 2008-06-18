@@ -141,8 +141,10 @@ GST_TYPE_DVD_SPU
 gst_dvd_spu_get_type
 SpuColour
 SpuLineCtrlI
+SpuPacket
 SpuPixCtrlI
 SpuRect
+SpuState
 DVD_SPU_LOCK
 DVD_SPU_UNLOCK
 SPU_STATE_FLAGS_MASK
@@ -210,7 +212,6 @@ GST_INTERLEAVE_GET_CLASS
 GST_IS_INTERLEAVE
 GST_IS_INTERLEAVE_CLASS
 GST_TYPE_INTERLEAVE
-GstInterleave
 GstInterleaveClass
 GstInterleaveFunc
 gst_interleave_get_type
@@ -227,7 +228,6 @@ GST_DEINTERLEAVE_GET_CLASS
 GST_IS_DEINTERLEAVE
 GST_IS_DEINTERLEAVE_CLASS
 GST_TYPE_DEINTERLEAVE
-GstDeinterleave
 GstDeinterleaveClass
 GstDeinterleaveFunc
 gst_deinterleave_get_type
@@ -251,7 +251,7 @@ gst_jack_audio_sink_get_type
 
 <SECTION>
 <FILE>gstbasemetadata</FILE>
-<TITLE>GstBaseMetadata/TITLE>
+<TITLE>GstBaseMetadata</TITLE>
 GstBaseMetadata
 GST_BASE_METADATA_SINK_PAD
 GST_BASE_METADATA_SRC_PAD
@@ -261,6 +261,7 @@ gst_base_metadata_unset_option_flag
 gst_base_metadata_update_inject_segment_with_new_data
 <SUBSECTION Standard>
 GstBaseMetadataClass
+MetadataState
 GST_BASE_METADATA
 GST_BASE_METADATA_CLASS
 GST_IS_BASE_METADATA
@@ -328,6 +329,10 @@ GST_MPEG2ENC_CLASS
 GST_IS_MPEG2ENC
 GST_IS_MPEG2ENC_CLASS
 GST_TYPE_MPEG2ENC
+GST_MPEG2ENC_MUTEX_LOCK
+GST_MPEG2ENC_MUTEX_UNLOCK
+GST_MPEG2ENC_SIGNAL
+GST_MPEG2ENC_WAIT
 gst_mpeg2enc_get_type
 </SECTION>
 

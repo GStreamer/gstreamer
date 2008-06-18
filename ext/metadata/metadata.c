@@ -41,7 +41,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*
+/**
  * SECTION: metadata
  * @short_description: This module provides high-level functions to parse files
  *

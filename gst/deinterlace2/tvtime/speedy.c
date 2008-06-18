@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2002, 2003 Billy Biggs <vektor@dumbterm.net>.
  * Copyright (C) 2001 Matthew J. Marjanovic <maddog@mir.com>
  *
@@ -17,7 +17,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/**
+/*
  * Includes 420to422, 422to444 scaling filters from the MPEG2 reference
  * implementation.  The v12 source code indicates that they were written
  * by Cheung Auyeung <auyeung@mot.com>.  The file they were in was:
@@ -49,7 +49,7 @@
  *
  */
 
-/**
+/*
  * Code for the UYVY to YUYV routine comes from rivatv:
  *
  *   rivatv-convert.c video image conversion routines
@@ -157,7 +157,7 @@ void (*convert_uyvy_to_yuyv_scanline) (uint8_t * uyvy_buf, uint8_t * yuyv_buf,
 void (*composite_colour4444_alpha_to_packed422_scanline) (uint8_t * output,
     uint8_t * input, int af, int y, int cb, int cr, int width, int alpha);
 
-/**
+/*
  * result = (1 - alpha)B + alpha*F
  *        =  B - alpha*B + alpha*F
  *        =  B + alpha*(F - B)
@@ -574,7 +574,7 @@ packed422_to_packed444_scanline_c (uint8_t * output, uint8_t * input, int width)
   }
 }
 
-/**
+/*
  * For the middle pixels, the filter kernel is:
  *
  * [-1 3 -6 12 -24 80 80 -24 12 -6 3 -1]
@@ -1290,7 +1290,7 @@ blit_colour_packed4444_scanline_mmxext (uint8_t * output, int width,
 #endif
 
 
-/**
+/*
  * Some memcpy code inspired by the xine code which originally came
  * from mplayer.
  */
@@ -1450,12 +1450,12 @@ composite_colour4444_alpha_to_packed422_scanline_c (uint8_t * output,
     int i;
 
     for (i = 0; i < width; i++) {
-            /**
-             * (1 - alpha)*B + alpha*F
-             * (1 - af*a)*B + af*a*F
-             *  B - af*a*B + af*a*F
-             *  B + a*(af*F - af*B)
-             */
+      /*
+       * (1 - alpha)*B + alpha*F
+       * (1 - af*a)*B + af*a*F
+       *  B - af*a*B + af*a*F
+       *  B + a*(af*F - af*B)
+       */
 
       output[0] =
           input[0] + ((alpha * (y - multiply_alpha (af,
@@ -1463,17 +1463,17 @@ composite_colour4444_alpha_to_packed422_scanline_c (uint8_t * output,
 
       if ((i & 1) == 0) {
 
-                    /**
-                     * At first I thought I was doing this incorrectly, but
-                     * the following math has convinced me otherwise.
-                     *
-                     * C_r = (1 - alpha)*B + alpha*F
-                     * C_r = B - af*a*B + af*a*F
-                     *
-                     * C_r = 128 + ((1 - af*a)*(B - 128) + a*af*(F - 128))
-                     * C_r = 128 + (B - af*a*B - 128 + af*a*128 + a*af*F - a*af*128)
-                     * C_r = B - af*a*B + a*af*F
-                     */
+        /*
+         * At first I thought I was doing this incorrectly, but
+         * the following math has convinced me otherwise.
+         *
+         * C_r = (1 - alpha)*B + alpha*F
+         * C_r = B - af*a*B + af*a*F
+         *
+         * C_r = 128 + ((1 - af*a)*(B - 128) + a*af*(F - 128))
+         * C_r = 128 + (B - af*a*B - 128 + af*a*128 + a*af*F - a*af*128)
+         * C_r = B - af*a*B + a*af*F
+         */
 
         output[1] =
             input[1] + ((alpha * (cb - multiply_alpha (af,
@@ -1604,12 +1604,12 @@ composite_packed4444_alpha_to_packed422_scanline_c (uint8_t * output,
           output[3] = foreground[3];
         }
       } else if (a) {
-                /**
-                 * (1 - alpha)*B + alpha*F
-                 * (1 - af*a)*B + af*a*F
-                 *  B - af*a*B + af*a*F
-                 *  B + a*(af*F - af*B)
-                 */
+        /*
+         * (1 - alpha)*B + alpha*F
+         * (1 - af*a)*B + af*a*F
+         *  B - af*a*B + af*a*F
+         *  B + a*(af*F - af*B)
+         */
 
         output[0] = input[0]
             + ((alpha * (foreground[1]
@@ -1617,17 +1617,17 @@ composite_packed4444_alpha_to_packed422_scanline_c (uint8_t * output,
 
         if ((i & 1) == 0) {
 
-                    /**
-                     * At first I thought I was doing this incorrectly, but
-                     * the following math has convinced me otherwise.
-                     *
-                     * C_r = (1 - alpha)*B + alpha*F
-                     * C_r = B - af*a*B + af*a*F
-                     *
-                     * C_r = 128 + ((1 - af*a)*(B - 128) + a*af*(F - 128))
-                     * C_r = 128 + (B - af*a*B - 128 + af*a*128 + a*af*F - a*af*128)
-                     * C_r = B - af*a*B + a*af*F
-                     */
+          /*
+           * At first I thought I was doing this incorrectly, but
+           * the following math has convinced me otherwise.
+           *
+           * C_r = (1 - alpha)*B + alpha*F
+           * C_r = B - af*a*B + af*a*F
+           *
+           * C_r = 128 + ((1 - af*a)*(B - 128) + a*af*(F - 128))
+           * C_r = 128 + (B - af*a*B - 128 + af*a*128 + a*af*F - a*af*128)
+           * C_r = B - af*a*B + a*af*F
+           */
 
           output[1] = input[1] + ((alpha * (foreground[2]
                       - multiply_alpha (foreground[0], input[1])) + 0x80) >> 8);
@@ -1762,20 +1762,20 @@ composite_packed4444_to_packed422_scanline_c (uint8_t * output, uint8_t * input,
         output[3] = foreground[3];
       }
     } else if (a) {
-            /**
-             * (1 - alpha)*B + alpha*F
-             *  B + af*F - af*B
-             */
+      /*
+       * (1 - alpha)*B + alpha*F
+       *  B + af*F - af*B
+       */
 
       output[0] =
           input[0] + foreground[1] - multiply_alpha (foreground[0], input[0]);
 
       if ((i & 1) == 0) {
 
-                /**
-                 * C_r = (1 - af)*B + af*F
-                 * C_r = B - af*B + af*F
-                 */
+        /*
+         * C_r = (1 - af)*B + af*F
+         * C_r = B - af*B + af*F
+         */
 
         output[1] =
             input[1] + foreground[2] - multiply_alpha (foreground[0], input[1]);
@@ -1887,7 +1887,7 @@ composite_packed4444_to_packed422_scanline_mmxext (uint8_t * output,
 }
 #endif
 
-/**
+/*
  * um... just need some scrap paper...
  *   D = (1 - alpha)*B + alpha*F
  *   D = (1 - a)*B + a*textluma
@@ -2287,7 +2287,7 @@ a8_subpix_blit_scanline_c (uint8_t * output, uint8_t * input,
   }
 }
 
-/**
+/*
  * These are from lavtools in mjpegtools:
  *
  * colorspace.c:  Routines to perform colorspace conversions.
@@ -2552,7 +2552,7 @@ packed444_to_rgb24_rec601_scanline_c (uint8_t * output, uint8_t * input,
   }
 }
 
-/**
+/*
  * 601 numbers:
  *
  * Y' =  0.299*R' + 0.587*G' + 0.114*B' (in  0.0 to  1.0)

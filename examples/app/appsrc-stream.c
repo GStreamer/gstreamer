@@ -33,7 +33,7 @@
 GST_DEBUG_CATEGORY (appsrc_playbin_debug);
 #define GST_CAT_DEFAULT appsrc_playbin_debug
 
-/**
+/*
  * an example application of using appsrc in streaming push mode. We simply push
  * buffers into appsrc. The size of the buffers we push can be any size we
  * choose.

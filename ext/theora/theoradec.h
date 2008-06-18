@@ -54,6 +54,7 @@ struct _GstTheoraExpDec
 {
   GstElement element;
 
+  /* <private> */
   /* Pads */
   GstPad *sinkpad;
   GstPad *srcpad;

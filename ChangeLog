@@ -1,3 +1,23 @@
+2008-06-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* examples/app/appsrc-ra.c:
+	* examples/app/appsrc-seekable.c:
+	* examples/app/appsrc-stream.c:
+	* examples/app/appsrc-stream2.c:
+	* ext/directfb/dfbvideosink.h:
+	* ext/metadata/gstbasemetadata.c:
+	* ext/metadata/gstbasemetadata.h:
+	* ext/metadata/metadata.c:
+	* ext/metadata/metadataexif.c:
+	* ext/theora/theoradec.h:
+	* gst/deinterlace2/gstdeinterlace2.h:
+	* gst/deinterlace2/tvtime/speedy.c:
+	* gst/deinterlace2/tvtime/speedy.h:
+	* gst/deinterlace2/tvtime/vfir.c:
+	 Fix gtk-doc warnings. Also don't misuse api-doc comments for normal
+	 comments.
+
 2008-06-17  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/resindvd/resindvdbin.c:

@@ -71,9 +71,9 @@ struct _GstDfbVMode {
  * The opaque #GstDfbVideoSink structure.
  */
 struct _GstDfbVideoSink {
-  /* Our element stuff */
   GstVideoSink videosink;
   
+  /* < private > */
   GMutex *pool_lock;
   GSList *buffer_pool;
   

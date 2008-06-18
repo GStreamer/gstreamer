@@ -43,7 +43,7 @@
 #include "speedy.h"
 #include "gstdeinterlace2.h"
 
-/**
+/*
  * The MPEG2 spec uses a slightly harsher filter, they specify
  * [-1 8 2 8 -1].  ffmpeg uses a similar filter but with more of
  * a tendancy to blur than to use the local information.  The
@@ -118,7 +118,7 @@ deinterlace_line (uint8_t * dst, uint8_t * lum_m4,
 }
 
 
-/**
+/*
  * The commented-out method below that uses the bottom_field member is more
  * like the filter as specified in the MPEG2 spec, but it doesn't seem to
  * have the desired effect.
