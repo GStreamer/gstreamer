@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Python bindings 0.10.11 "What I got"
+Release notes for GStreamer Python bindings 0.10.12 "A Wild Finish"
         
 
 
@@ -17,14 +17,24 @@ It is, however, parallel installable with the 0.8.x series.
 
 Features of this release
     
-      * Wrap gst.Pad.start_task
-      * New videomixer example
-      * Various other fixes
+      * Build fixes
+      * make gst.Fraction do simplification like GstFraction does in C
+      * Wrap gst_type_find_register
+      * Various bug-fixes
 
 Bugs fixed in this release
      
-      * 512916 : python_do_pending_calls timer is apparently redundant
-      * 514717 : memleak in Pad.set_blocked_async()
+      * 529728 : wrap gst_type_find_register
+      * 529731 : release the GIL around gst_element_factory_make
+      * 531697 : wrong indentation
+      * 532809 : gst-python version of gst.Fraction doesn't simplify
+      * 534888 : gst-python refcount error with gst_event_new_tag
+
+API changed in this release
+     
+- API additions:
+    
+* gst.type_find_register()
 
 Download
 
@@ -55,8 +65,9 @@ Applications
 Contributors to this release
     
       * Alessandro Decina
+      * Damien Lespiau
       * Edward Hervey
       * Jan Schmidt
-      * Rene Stadler
-      * Stefan Kost
+      * Johan Dahlin
+      * Sebastian Dröge
  
