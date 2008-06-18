@@ -33,7 +33,7 @@
 GST_DEBUG_CATEGORY (appsrc_playbin_debug);
 #define GST_CAT_DEFAULT appsrc_playbin_debug
 
-/**
+/*
  * an example application of using appsrc in random-access mode. When the
  * appsrc requests data with the need-data signal, we retrieve a buffer of the
  * requested size and push it to appsrc.

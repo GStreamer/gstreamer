@@ -33,7 +33,7 @@
 GST_DEBUG_CATEGORY (appsrc_playbin_debug);
 #define GST_CAT_DEFAULT appsrc_playbin_debug
 
-/**
+/*
  * an example application of using appsrc in streaming pull mode. When the
  * appsrc request data with the need-data signal, we retrieve a buffer of an
  * arbitrary size and push it to appsrc.
