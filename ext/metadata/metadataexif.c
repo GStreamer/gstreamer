@@ -216,6 +216,9 @@ static MapIntStr mappedTags[] = {
   {EXIF_TAG_DATE_TIME_ORIGINAL,          /*ASCII,*/     EXIF_IFD_EXIF,
    GST_TAG_DATE_TIME_ORIGINAL            /*G_TYPE_STRING*/},
 
+  {EXIF_TAG_IMAGE_DESCRIPTION,           /*ASCII,*/     EXIF_IFD_0,
+   GST_TAG_DESCRIPTION                   /*G_TYPE_STRING*/},
+
   {EXIF_TAG_MAKE,                        /*ASCII,*/     EXIF_IFD_0,
    GST_TAG_DEVICE_MAKE                   /*G_TYPE_STRING*/},
 

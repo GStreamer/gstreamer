@@ -1,5 +1,10 @@
 2008-06-18  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/metadata/metadataexif.c:
+	  Add description tag mapping.
+
+2008-06-18  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
 	* examples/app/appsrc-ra.c:
 	* examples/app/appsrc-seekable.c:
