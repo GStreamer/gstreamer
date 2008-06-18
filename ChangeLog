@@ -1,3 +1,20 @@
+2008-06-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: mersad <mersad at axis dot com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpg726depay.c: (gst_rtp_g726_depay_base_init),
+	(gst_rtp_g726_depay_class_init), (gst_rtp_g726_depay_init),
+	(gst_rtp_g726_depay_setcaps), (gst_rtp_g726_depay_process),
+	(gst_rtp_g726_depay_plugin_init):
+	* gst/rtp/gstrtpg726depay.h:
+	* gst/rtp/gstrtpg726pay.c: (gst_rtp_g726_pay_base_init),
+	(gst_rtp_g726_pay_class_init), (gst_rtp_g726_pay_init),
+	(gst_rtp_g726_pay_setcaps), (gst_rtp_g726_pay_plugin_init):
+	* gst/rtp/gstrtpg726pay.h:
+	Added G726 pay/depayloaders. Fixes #538891.
+
 2008-06-17  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtsp/URLS:
