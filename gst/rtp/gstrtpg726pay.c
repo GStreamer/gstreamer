@@ -37,16 +37,14 @@ GST_ELEMENT_DETAILS ("RTP packet payloader",
     "Axis Communications <dev-gstreamer@axis.com>");
 
 static GstStaticPadTemplate gst_rtp_g726_pay_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-adpcm, "
         "channels = (int) 1, "
         "rate = (int) 8000, "
         "bitrate = (int) { 16000, 24000, 32000, 40000 }, "
-        "layout = (string) \"g726\"; "
-        "audio/G723, channels=(int)1, rate=(int)8000; "
-        "audio/32KADPCM, channels=(int)1, rate=(int)8000")
+        "layout = (string) \"g726\"")
     );
 
 static GstStaticPadTemplate gst_rtp_g726_pay_src_template =
