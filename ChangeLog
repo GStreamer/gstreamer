@@ -1,3 +1,10 @@
+=== release 0.10.20 ===
+
+2008-06-18  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.20, "You Crazy Diamond"
+
 2008-06-11  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

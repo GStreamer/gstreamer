@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.19 "Me again"
+Release notes for GStreamer 0.10.20 "You Crazy Diamond"
         
 
 
@@ -37,11 +37,113 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Fix a regression in raw fd handling
+      * Add the Presets interface
+      * Use the binary registry by default
+      * Deprecate gst_element_get_pad and don't use it anywhere any more.
+      * Reverse playback fixes
+      * API to get missing element messages from parse_launch parsing.
+      * Fixes in latency calculations
+      * BaseTransform negotiation fixes
+      * New Buffering query and messages
+      * Fix multiqueue deadlocks when changing limits
+      * Remove pre-generated parser hacks and require newer flex/bison
+      * Use GSlice in more places
+      * Use static strings in property declarations everywhere to save memory allocations
+      * Fix unaligned memory accesses with the binary registry and add CRC checks
+      * Lots of other bug fixes
 
 Bugs fixed in this release
      
-      * 524041 : gstfdsrc broken in 0.10.18
+      * 535069 : basesrc no longer support non-flushing seeks on itself
+      * 522882 : Add a configure option to enable/disable OPTION_PARSING i...
+      * 396779 : Preset interface for elements
+      * 359653 : GStreamer Binary Registry patch
+      * 401456 : [API] Rename gst_bin_find_unconnected_pad to gst_bin_find...
+      * 446763 : [identity] leaks events in single segment mode
+      * 459862 : typefinding coud be more efficient
+      * 461253 : Crash when gst_base_transform_prepare_output_buffer is se...
+      * 489269 : valgrind option parameter invalid for valgrind 2.2
+      * 508070 : gstreamer crashes whilst trying to read .so files in .deb...
+      * 512577 : GstTagMergeMode doc has slightly incorrect explanation
+      * 512578 : gst_tag_setter_merge_tags can mess up with KEEP_ALL merge...
+      * 514507 : gst-xmlinspect outputs text instead of xml for plugins
+      * 518022 : [libgstnet] MSVC 6.0 compile error due to socklen_t
+      * 518932 : Expose gst_segment_copy() to facilitate wrapping of GstSe...
+      * 520468 : Add a Env to enable/disable scan_and_update_registry for ...
+      * 522326 : use of 'char*' instead of 'const char*' in gst_caps_set_s...
+      * 523798 : [API] Some GstMiniObject enhancements
+      * 523806 : Should use G_PARAM_STATIC_(NAME|NICK|BLURB) when possible
+      * 523978 : Documentation fixes.
+      * 523985 : [PATCH] [identity] meta-writes buffers without meta-writa...
+      * 524659 : Add specific error code for encrypted streams (e.g. WMA/A...
+      * 525532 : [fakesink/fakesrc/identity] Uses GObject marshallers for ...
+      * 526042 : [identity] check-imperfect-timestamp doesn't handle new s...
+      * 526236 : mingw32 gstpoll compilation fix
+      * 526247 : Actually build dlls when cross-compiling with mingw32
+      * 526705 : GstIndexResolver uses nickname field as description field
+      * 526768 : Basetransform bufferalloc passing through too easily
+      * 526814 : [API] add gst_pad_add_{data,event,buffer}_probe_full() wi...
+      * 527967 : gst_gerror_get_type is not thread safe
+      * 528187 : Get missing elements from gst_parse_launch()
+      * 528868 : URI schemes/protocols should be handled case insensitive
+      * 529148 : Make gstqueue give the right min latency
+      * 530317 : GType registration error - race condition when parallel c...
+      * 530637 : queue leak on capacity change
+      * 531538 : Race between gst_bus_set_flushing and async bus watches
+      * 533490 : gst_message_new_warning() should take const gchar*
+      * 533635 : gst_event_new_tag() documentation should say it takes own...
+      * 533740 : [API] add gst_typefind_suggest_simple()
+      * 533865 : gst_element_get_pad() should really be deprecated
+      * 534258 : basesink not accumulated time in some cases.
+      * 535218 : gst_base_src_send_event will block if basesrc is blocking...
+      * 536723 : Misspelled word in error string
+      * 536744 : Must link to libdl if dladdr() is used
+      * 536780 : gcc 4.3.0 compile warnings
+      * 536857 : DATADIR definition conflicts with windows headers
+      * 525961 : Build fails on darwin
+      * 535285 : Correct reference to GST_URI_UNKNOWN in gst_element_facto...
+
+API changed in this release
+     
+- API additions:
+    
+* Add GST_IS_PARAM_SPEC_MINI_OBJECT, GST_PARAM_SPEC_MINI_OBJECT
+        GST_TYPE_PARAM_MINI_OBJECT and gst_value_dup_mini_object
+* typefind::force-caps
+* gst_message_set_buffering_stats()
+* gst_message_parse_buffering_stats()
+* GST_QUERY_BUFFERING
+* GstBufferingMode
+* gst_query_new_buffering()
+* gst_query_set_buffering_percent()
+* gst_query_parse_buffering_percent()
+* gst_query_set_buffering_stats()
+* gst_query_parse_buffering_stats()
+* gst_query_set_buffering_range()
+* gst_query_parse_buffering_range()
+* GST_STREAM_ERROR_DECRYPT
+* GST_STREAM_ERROR_DECRYPT_NOKEY
+* gst_segment_copy()
+* gst_pad_add_data_probe_full()
+* gst_pad_add_buffer_probe_full()
+* gst_pad_add_event_probe_full()
+* GstEvent::gst_event_has_name()
+* GstFakeSrc:format
+* gst_type_find_suggest_simple()
+* GstBaseSink::gst_base_sink_wait_clock()
+* gst_parse_launch_full()
+* gst_parse_launchv_full()
+* gst_parse_bin_from_description_full()
+* gst_parse_context_new()
+* gst_parse_context_free()
+* gst_parse_context_get_missing_elements()
+* gst_bin_find_unlinked_pad()
+* GstPreset interface
+- API deprecations:
+    
+* gst_element_get_pad - use gst_element_get_static_pad or gst_element_get_request_pad
+* gst_atomic_int_set() - g_atomic_int_set from GLib
+* gst_bin_find_unconnected_pad()
 
 Download
 
@@ -76,6 +178,29 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
+      *  José Alburquerque
+      * Antoine Tremblay
+      * Bjarne Rosengren
+      * Damien Lespiau
+      * Felipe Contreras
       * Jan Schmidt
+      * Jason Zhao
+      * Jonas Holmberg
+      * José Alburquerque
+      * Julien Moutte
+      * Kwang Yul Seo
+      * Mark Nauwelaerts
+      * Michael Smith
+      * Milosz Derezynski
+      * Ole André Vadla Ravnås
+      * Olivier Crete
+      * Peter Kjellerstedt
+      * Rene Stadler
+      * Rob Bradford
+      * Sebastian Dröge
+      * Sjoerd Simons
+      * Stefan Kost
+      * Suresh Kumar P
+      * Tim-Philipp Müller
       * Wim Taymans
  

@@ -17,9 +17,6 @@
 /* Define if pipeline parsing code is disabled */
 /* #undef GST_DISABLE_PARSE */
 
-/* macro to use to show function name */
-#define GST_FUNCTION "(function)"
-
 /* Defined if gcov is enabled to force a rebuild due to config.h changing */
 /* #undef GST_GCOV_ENABLED */
 
@@ -197,13 +194,13 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 0.10.18"
+#define PACKAGE_STRING "GStreamer 0.10.20"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.18"
+#define PACKAGE_VERSION "0.10.20"
 
 /* Define the plugin directory */
 #ifdef _DEBUG
@@ -219,7 +216,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.18"
+#define VERSION "0.10.20"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

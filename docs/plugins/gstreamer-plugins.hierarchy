@@ -25,6 +25,9 @@ GObject
       GstTee
       GstTypeFindElement
       GstMultiQueue
+    GstBus
+    GstTask
+    GstClock
     GstPlugin
     GstRegistry
     GstIndex
@@ -32,5 +35,6 @@ GObject
       GstFileIndex
   GstSignalObject
 GInterface
+  GTypePlugin
   GstChildProxy
   GstURIHandler

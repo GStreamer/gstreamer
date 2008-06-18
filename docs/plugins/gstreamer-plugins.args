@@ -189,6 +189,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstFakeSrc::format</NAME>
+<TYPE>GstFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format</NICK>
+<BLURB>The format of the segment events.</BLURB>
+<DEFAULT>GST_FORMAT_BYTES</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstFakeSink::can-activate-pull</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -686,6 +696,16 @@
 <NICK>minimum</NICK>
 <BLURB>minimum probability required to accept caps.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTypeFindElement::force-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>force caps</NICK>
+<BLURB>force caps without doing a typefind.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
