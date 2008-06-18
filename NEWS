@@ -1,4 +1,4 @@
-This is GStreamer Base Plug-ins 0.10.19, "Good Times"
+This is GStreamer Base Plug-ins 0.10.20, "Here I Go Again"
 
 IMPORTANT NOTES
 
@@ -6,6 +6,93 @@ IMPORTANT NOTES
 still considered unstable and WILL change in future releases. At this stage,
 only developers or early adopters should consider using decodebin2 or playbin2
 API embodied in their signals and properties.
+
+Changes since 0.10.19:
+
+      * RTP improvements
+      * Support digest auth for RTSP
+      * Additional documentation
+      * Support DSCP QoS in multifdsink
+      * Add NV12/NV21 video buffer layouts
+      * Video scaling now bilinear by default
+      * Support more than 8 channels in audio conversions
+      * Channel mapping fixes for audioconvert
+      * Improve tmplayer and sami subtitle support
+      * Support 1x1 pixel buffers for videoscale
+      * Typefinding improvements for MPEG2, musepack
+      * Ogg/Dirac mapping updated in oggmux
+      * Fixes in ogg demuxing
+      * audiosink synchronisation and slaving fixes
+      * Support muting of the audio in playbin by selecting -1 as the audio stream
+      * Work done on playbin2 and uridecodebin
+      * Improvements in the experimental GIO plugin
+      * decodebin fixes
+      * Handle GAP buffers in some places
+      * Various other leak and bug-fixes
+
+Bugs fixed since 0.10.20:
+
+      * 526794 : [giosrc] totem doesn't work with some gvfs backends
+      * 510417 : [PLUGIN-MOVE] Move gio to gst-plugins-base
+      * 509125 : crash in CD Player: - playing CD - lowering/...
+      * 517813 : [audioconvert] make gap aware
+      * 302798 : [playbin] add mute property
+      * 342294 : Setting playbin property current-audio=-1 also stops the ...
+      * 398033 : [audioconvert] support more than 8 channels
+      * 419351 : [avi/a52dec] AV synchronization problems
+      * 467911 : [subparse] sami parser update
+      * 469933 : multifdsink IPv6 and diffserv TOS/TC markup
+      * 506659 : [textoverlay] rendering error when using non-standard widths
+      * 512333 : [gstvorbistag] Retrieve Ogg/Vorbis cover art as image met...
+      * 512382 : [playbin] race condition when pausing/playing multiple in...
+      * 518037 : pbutils-enumtypes.c is not included in win32/vs6/libgstpb...
+      * 521761 : gstaudioclock frozen the clock value until reaches latest...
+      * 522401 : gdpdepay doesn't validate payload CRCs
+      * 523993 : playbin2 blocks after a while when listening to a radio s...
+      * 524724 : [PATCH] [baseaudiosrc] buffer-time and latency-time do no...
+      * 525665 : Crash on Ogg/Vorbis with chain=NULL
+      * 525915 : [streamheader] Unit test fails with " gst_adapter_peek: as...
+      * 526173 : [typefinding] fails to detect mpeg video stream whereas m...
+      * 529018 : gst_ogm_parse_stream_header creates fraction value with w...
+      * 529500 : [videotestsrc] support for NV12 and NV21
+      * 529546 : [Playbin] Memory leak in streaminfo handling
+      * 530068 : Ogg Streams with Skeleton and Granulepos > 0 do not work(...
+      * 530531 : [typefinding] bad read in mpeg_video_stream_type_find
+      * 530719 : gst_video_calculate_display_ratio fails when playing Ogg ...
+      * 530962 : [subparse] parses only every second line of TMPlayer subt...
+      * 532454 : [NV12/NV21] videotestsrc and ffmpegcolorspace don't play ...
+      * 533087 : GstRTSPTransport kept opaque in docs
+      * 533817 : [audioconvert] Can't use default 7 channel layout / only ...
+      * 534071 : Gdppay memleak
+      * 534331 : race in decodebin when changing states while the internal...
+      * 535356 : vorbisdec doesn't support 8 channels
+      * 536475 : gdppay memleak and possible crash
+      * 536521 : Refcounting errors in playbin
+      * 536874 : Build failure on windows
+      * 532166 : [ffmpegcolorspace] support NV12 format
+      * 533617 : [audioconvert] Produces silence when converting 1/2 chann...
+      * 536848 : [giosrc] Doesn't handle short reads properly
+      * 536849 : [giosrc] Very slow doing any playback
+      * 518082 : [alsamixer] playback volumes overwritten by capture volum...
+      * 435633 : [PATCH] videorate not (fully) segment aware; causes frame...
+      * 532364 : tcpclientsrc broken in 0.10.19
+      * 533075 : gst_rtp_buffer_compare_seqnum doesn't do what it says
+      * 533265 : [cddabasesrc] Sound Juicer cut a sector when ripping a track
+
+API additions since 0.10.20:
+
+      * decodebin2::sink-caps property
+      * giosrc::file property
+      * giosink::file property
+      * gst_base_audio_src_set_slave_method()
+      * gst_base_audio_src_get_slave_method()
+      * GstAudioClock::gst_audio_clock_reset()
+      * GstBaseAudioSrc:actual-buffer-time property
+      * GstBaseAudioSrc:actual-latency-time property
+      * gst_audio_check_channel_positions()
+      * add gst_tag_image_data_to_image_buffer()
+      * add gst_tag_list_add_id3_image()
+      * add GST_TAG_IMAGE_TYPE_NONE enum value
 
 Changes since 0.10.18:
 

@@ -12,51 +12,67 @@ GObject
           GstPlayBaseBin
             GstPlayBin
           GstPlayBin2
+        GstDecodeBin
         GstDecodeBin2
         GstURIDecodeBin
-        GstDecodeBin
+      GstVideoRate
+      GstAudioRate
       GstBaseSrc
-        GstGnomeVFSSrc
         GstPushSrc
-          GstCddaBaseSrc
-            GstCdParanoiaSrc
+          GstVideoTestSrc
+          GstTCPClientSrc
+          GstTCPServerSrc
+          GstV4lElement
+            GstV4lSrc
           GstBaseAudioSrc
             GstAudioSrc
               GstAlsaSrc
-          GstV4lElement
-            GstV4lSrc
-          GstTCPClientSrc
-          GstTCPServerSrc
-          GstVideoTestSrc
-        GstGioBaseSrc
-          GstGioSrc
-          GstGioStreamSrc
+          GstCddaBaseSrc
+            GstCdParanoiaSrc
         GstAudioTestSrc
+        GstGnomeVFSSrc
+      GstBaseTransform
+        GstAudioConvert
+        GstAudioresample
+        GstAudioFilter
+          GstVolume
+        GstVideoScale
+        GstFFMpegCsp
+      GstQueue2
+      GstStreamSelector
+      GstAdder
+      GstSubParse
+      GstSsaParse
       GstBaseSink
-        GstGnomeVFSSink
-        GstGioBaseSink
-          GstGioSink
-          GstGioStreamSink
-        GstBaseAudioSink
-          GstAudioSink
-            GstAlsaSink
-        GstVideoSink
-          GstXImageSink
-          GstXvImageSink
         GstTCPClientSink
         GstMultiFdSink
           GstTCPServerSink
-      GstTheoraDec
-      GstTheoraEnc
-      GstTheoraParse
-      GstVorbisEnc
-      GstVorbisDec
-      GstVorbisParse
-        GstVorbisTag
+        GstVideoSink
+          GstXImageSink
+          GstXvImageSink
+        GstBaseAudioSink
+          GstAudioSink
+            GstAlsaSink
+        GstGnomeVFSSink
+      GstGDPDepay
+      GstGDPPay
+      GstAlsaMixerElement
       GstTextOverlay
         GstTimeOverlay
         GstClockOverlay
       GstTextRender
+      GstTheoraDec
+      GstTheoraEnc
+      GstTheoraParse
+      GstVisual
+        GstVisualbumpscope
+        GstVisualcorona
+        GstVisualinfinite
+        GstVisualjakdaw
+        GstVisualjess
+        GstVisuallv_analyzer
+        GstVisuallv_scope
+        GstVisualoinksie
       GstOggDemux
       GstOggMux
       GstOgmParse
@@ -65,23 +81,10 @@ GObject
         GstOgmTextParse
       GstOggParse
       GstOggAviParse
-      GstAlsaMixerElement
-      GstBaseTransform
-        GstFFMpegCsp
-        GstVideoScale
-        GstAudioresample
-        GstAudioConvert
-        GstAudioFilter
-          GstVolume
-      GstGDPDepay
-      GstGDPPay
-      GstVideoRate
-      GstQueue2
-      GstStreamSelector
-      GstSubParse
-      GstSsaParse
-      GstAdder
-      GstAudioRate
+      GstVorbisEnc
+      GstVorbisDec
+      GstVorbisParse
+        GstVorbisTag
     GstBus
     GstTask
     GstClock
@@ -91,62 +94,30 @@ GObject
     GstRegistry
     GstRingBuffer
   GstSignalObject
+  GstStreamInfo
+  GstMixerTrack
+    GstMixerOptions
+  GstColorBalanceChannel
+  GstTunerNorm
+  GstTunerChannel
+  PangoFontMap
+    PangoFcFontMap
+      PangoFT2FontMap
+  PangoContext
   LinkConnection
     GIOPConnection
   LinkServer
     GIOPServer
   GConfClient
-  GFileMonitor
-    GLocalDirectoryMonitor
-      GFamDirectoryMonitor
-      GInotifyDirectoryMonitor
-    GLocalFileMonitor
-      GFamFileMonitor
-      GInotifyFileMonitor
-  GVolumeMonitor
-    GNativeVolumeMonitor
-      GHalVolumeMonitor
-      GUnixVolumeMonitor
-    GDaemonVolumeMonitor
-  GVfs
-    GDaemonVfs
-    GLocalVfs
-  GTypeModule
-    GIOModule
-  HalDevice
-  HalPool
-  GHalDrive
-  GHalMount
-  GHalVolume
-  GVfsUriMapper
-    GVfsUriMapperSmb
-    GVfsUriMapperHttp
-  GAppLookupGConf
-  GOutputStream
-  GInputStream
-  PangoFontMap
-    PangoFcFontMap
-      PangoFT2FontMap
-  PangoContext
-  GstTunerNorm
-  GstTunerChannel
-  GstColorBalanceChannel
-  GstMixerTrack
-  GstStreamInfo
 GInterface
   GTypePlugin
   GstChildProxy
   GstURIHandler
-  GFile
-  GDesktopAppInfoLookup
-  GDrive
-  GMount
-  GVolume
-  GstTagSetter
   GstImplementsInterface
   GstMixer
-  GstPropertyProbe
   GstNavigation
   GstXOverlay
-  GstTuner
   GstColorBalance
+  GstPropertyProbe
+  GstTuner
+  GstTagSetter

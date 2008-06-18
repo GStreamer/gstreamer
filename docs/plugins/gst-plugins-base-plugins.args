@@ -659,6 +659,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiFdSink::qos-dscp</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,63]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>QoS diff srv code point</NICK>
+<BLURB>Quality of Service, differentiated services code point (-1 default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecodeBin::threaded</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
