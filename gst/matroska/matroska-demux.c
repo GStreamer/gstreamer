@@ -21,12 +21,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* TODO: "Unkown track header" & "Unknown entry": implement if useful
- * TODO: dynamic number of tracks without upper bound
- * FIXME: uint64 -> int64 overflows!
+/* TODO: dynamic number of tracks without upper bound
  * TODO: check CRC32 if present
- * FIXME: go out of loops, don't add Track or whatever if something goes wrong
- *        or required elements are not there
  * TODO: there can be a segment after the first segment. Handle like
  *       chained oggs. Fixes #334082
  * TODO: handle gaps better, especially gaps at the start of a track.
@@ -955,8 +951,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
               else
                 context->flags &= ~GST_MATROSKA_VIDEOTRACK_INTERLACED;
               GST_DEBUG_OBJECT (demux, "TrackVideoInterlaced: %d",
-                  (context->
-                      flags & GST_MATROSKA_VIDEOTRACK_INTERLACED) ? 1 : 0);
+                  (context->flags & GST_MATROSKA_VIDEOTRACK_INTERLACED) ? 1 :
+                  0);
               break;
             }
 
@@ -4104,12 +4100,8 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux)
           GList *l;
 
           DEBUG_ELEMENT_START (demux, ebml, "SeekHead");
-          ret = gst_ebml_read_master (ebml, &id);
-          if (ret == GST_FLOW_UNEXPECTED)
-            ret = GST_FLOW_OK;
-
-          if (ret != GST_FLOW_OK)
-            break;
+          if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+            goto finish;
 
           /* Prevent infinite recursion if there's a cycle from
            * one seekhead to the same again. Simply break if
@@ -4123,9 +4115,6 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux)
           }
 
           ret = gst_matroska_demux_parse_contents (demux);
-
-          if (ret == GST_FLOW_UNEXPECTED)
-            ret = GST_FLOW_OK;
           break;
         }
         case GST_MATROSKA_ID_ATTACHMENTS:

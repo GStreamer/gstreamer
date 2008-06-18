@@ -1,3 +1,10 @@
+2008-06-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_contents_seekentry):
+	Update FIXME/TODOs and only ignore EOS at the central, important place
+	instead of several places.
+
 2008-06-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/gstrtpg726pay.c:
