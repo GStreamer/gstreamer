@@ -50,7 +50,7 @@ typedef struct deinterlace_method_s deinterlace_method_t;
 typedef struct deinterlace_scanline_data_s deinterlace_scanline_data_t;
 typedef struct deinterlace_frame_data_s deinterlace_frame_data_t;
 
-/**
+/*
  * There are two scanline functions that every deinterlacer plugin
  * must implement to do its work: one for a 'copy' and one for
  * an 'interpolate' for the currently active field.  This so so that
@@ -70,7 +70,7 @@ struct deinterlace_scanline_data_s
   int bottom_field;
 };
 
-/**
+/*
  * |   t-3       t-2       t-1       t
  * | Field 3 | Field 2 | Field 1 | Field 0 |
  * |  TT3    |         |   TT1   |         |
@@ -87,7 +87,7 @@ struct deinterlace_scanline_data_s
  */
 typedef void (*deinterlace_interp_scanline_t) (GstDeinterlace2 * object,
     deinterlace_scanline_data_t * data, guint8 * output);
-/**
+/*
  * For the copy scanline, the API is basically the same, except that
  * we're given a scanline to 'copy'.
  *
@@ -102,7 +102,7 @@ typedef void (*deinterlace_interp_scanline_t) (GstDeinterlace2 * object,
 typedef void (*deinterlace_copy_scanline_t) (GstDeinterlace2 * object,
     deinterlace_scanline_data_t * data, guint8 * output);
 
-/**
+/*
  * The frame function is for deinterlacing plugins that can only act
  * on whole frames, rather than on a scanline at a time.
  */
@@ -117,7 +117,7 @@ struct deinterlace_frame_data_s
 typedef void (*deinterlace_frame_t) (GstDeinterlace2 * object);
 
 
-/**
+/*
  * This structure defines the deinterlacer plugin.
  */
 struct deinterlace_method_s
