@@ -1,121 +1,129 @@
-# SOME DESCRIPTIVE TITLE.
+# Chinese (simplified) translation about gstreamer.
 # This file is put in the public domain.
 # Funda Wang <fundawang@linux.net.cn>, 2005.
-#
+# Ji ZhengYu <zhengyuji@gmail.com>, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.9.7\n"
+"Project-Id-Version: gstreamer 0.10.19.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-03-03 22:36+0000\n"
-"PO-Revision-Date: 2005-12-03 00:05+0800\n"
-"Last-Translator: Funda Wang <fundawang@linux.net.cn>\n"
-"Language-Team: Chinese (simplified) <i18n-translation@lists.linux.net.cn>\n"
+"POT-Creation-Date: 2008-06-11 21:29+0100\n"
+"PO-Revision-Date: 2008-06-14 16:00中国标准时间\n"
+"Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
+"Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
+"sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:303
+#: gst/gst.c:307
 msgid "Print the GStreamer version"
 msgstr "打印 GStreamer 版本"
 
-#: gst/gst.c:305
+#: gst/gst.c:309
 msgid "Make all warnings fatal"
 msgstr "将所有的警告也当作严重问题"
 
-#: gst/gst.c:309
+#: gst/gst.c:313
 msgid "Print available debug categories and exit"
 msgstr "打印可用的调试类别并退出"
 
-#: gst/gst.c:313
+#: gst/gst.c:317
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr "默认调试级别，从 1(仅有错误)到 5(所有内容)，0代表无输出"
 
-#: gst/gst.c:315
+#: gst/gst.c:319
 msgid "LEVEL"
 msgstr "级别"
 
-#: gst/gst.c:317
+#: gst/gst.c:321
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
+"逗号分隔的“类别名称:级别”列表用来为每个类别设置指定的调试级别。如:"
+"GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:320
+#: gst/gst.c:324
 msgid "LIST"
 msgstr "列表"
 
-#: gst/gst.c:322
+#: gst/gst.c:326
 msgid "Disable colored debugging output"
-msgstr ""
+msgstr "禁止彩色的调试信息输出"
 
-#: gst/gst.c:325
+#: gst/gst.c:329
 msgid "Disable debugging"
 msgstr "禁止调试"
 
-#: gst/gst.c:329
+#: gst/gst.c:333
 msgid "Enable verbose plugin loading diagnostics"
-msgstr ""
+msgstr "开启详细的插件载入分析"
 
-#: gst/gst.c:333
+#: gst/gst.c:337
 msgid "Colon-separated paths containing plugins"
-msgstr ""
+msgstr "冒号分隔的包含插件的路径"
 
-#: gst/gst.c:333
+#: gst/gst.c:337
 msgid "PATHS"
 msgstr "路径"
 
-#: gst/gst.c:336
+#: gst/gst.c:340
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
+"逗号分隔的预载入的插件列表，而且此列表被保存于环境变量 GST_PLUGIN_PATH 中"
 
-#: gst/gst.c:338
+#: gst/gst.c:342
 msgid "PLUGINS"
 msgstr "插件"
 
-#: gst/gst.c:341
+#: gst/gst.c:345
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "禁止跟踪装入插件时的段严重错误"
 
-#: gst/gst.c:346
-msgid "Disable the use of fork() while scanning the registry"
-msgstr ""
+#: gst/gst.c:350
+msgid "Disable updating the registry"
+msgstr "禁止更新寄存器"
 
-#: gst/gst.c:367
+#: gst/gst.c:355
+msgid "Disable the use of fork() while scanning the registry"
+msgstr "扫描寄存器时禁用 fork() 例程"
+
+#: gst/gst.c:376
 msgid "GStreamer Options"
 msgstr "GStreamer 选项"
 
-#: gst/gst.c:368
+#: gst/gst.c:377
 msgid "Show GStreamer Options"
 msgstr "显示 GStreamer 选项"
 
-#: gst/gst.c:737
+#: gst/gst.c:752
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr ""
+msgstr "寄存器缓存写入 %s 时出错: %s"
 
-#: gst/gst.c:779 gst/gst.c:795 gst/gst.c:840
+#: gst/gst.c:788 gst/gst.c:797 gst/gst.c:842
 #, c-format
 msgid "Error re-scanning registry %s: %s"
-msgstr ""
+msgstr "重新扫描寄存器 %s 时出错: %s"
 
-#: gst/gst.c:855
+#: gst/gst.c:857
 #, c-format
 msgid "Error re-scanning registry %s"
-msgstr ""
+msgstr "重新扫描寄存器 %s 时出错"
 
-#: gst/gst.c:1144
+#: gst/gst.c:1235
 msgid "Unknown option"
 msgstr "未知选项"
 
-#: gst/gstelement.c:299 gst/gstutils.c:2184
+#: gst/gstelement.c:299 gst/gstutils.c:2202
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr "错误：来自元素 %s：%s\n"
+msgstr "错误：来自组件 %s：%s\n"
 
-#: gst/gstelement.c:301 gst/gstutils.c:2186 tools/gst-launch.c:460
+#: gst/gstelement.c:301 gst/gstutils.c:2204 tools/gst-launch.c:460
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -142,8 +150,9 @@ msgid "Internal GStreamer error: state change failed."
 msgstr "GStreamer 内部错误：状态更改失败。"
 
 #: gst/gsterror.c:147
+#, fuzzy
 msgid "Internal GStreamer error: pad problem."
-msgstr ""
+msgstr "GStreamer 内部错误: 填充问题。"
 
 #: gst/gsterror.c:149
 msgid "Internal GStreamer error: thread problem."
@@ -151,7 +160,7 @@ msgstr "GStreamer 内部错误：线程问题。"
 
 #: gst/gsterror.c:151
 msgid "Internal GStreamer error: negotiation problem."
-msgstr ""
+msgstr "GStreamer 内部错误: 协商问题。"
 
 #: gst/gsterror.c:153
 msgid "Internal GStreamer error: event problem."
@@ -163,7 +172,7 @@ msgstr "GStreamer 内部错误：搜索问题。"
 
 #: gst/gsterror.c:157
 msgid "Internal GStreamer error: caps problem."
-msgstr ""
+msgstr "GStreamer 内部错误: 分析器问题。"
 
 #: gst/gsterror.c:158
 msgid "Internal GStreamer error: tag problem."
@@ -181,7 +190,7 @@ msgstr "GStreamer 内部错误：始终错误。"
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
 "disabled."
-msgstr ""
+msgstr "此程序正尝试使用已被禁用的 GStreamer 功能。"
 
 #: gst/gsterror.c:179
 msgid "GStreamer encountered a general supporting library error."
@@ -196,9 +205,8 @@ msgid "Could not close supporting library."
 msgstr "无法关闭支持库。"
 
 #: gst/gsterror.c:185
-#, fuzzy
 msgid "Could not configure supporting library."
-msgstr "无法关闭支持库。"
+msgstr "无法配置支持库。"
 
 #: gst/gsterror.c:199
 msgid "GStreamer encountered a general resource error."
@@ -250,7 +258,7 @@ msgstr "无法从资源获得设置或在资源上设定设置。"
 
 #: gst/gsterror.c:216
 msgid "No space left on the resource."
-msgstr ""
+msgstr "资源上无剩余空间。"
 
 #: gst/gsterror.c:230
 msgid "GStreamer encountered a general stream error."
@@ -258,7 +266,7 @@ msgstr "GStreamer 遇到了常规流错误。"
 
 #: gst/gsterror.c:235
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr "元素未实现对此流的处理。请提交错误报告。"
+msgstr "组件未实现对此流的处理。请提交错误报告。"
 
 #: gst/gsterror.c:237
 msgid "Could not determine type of stream."
@@ -266,7 +274,7 @@ msgstr "无法确定流类型。"
 
 #: gst/gsterror.c:239
 msgid "The stream is of a different type than handled by this element."
-msgstr "此流的类型与此元素可处理的类型不符。"
+msgstr "此流的类型与此组件可处理的类型不符。"
 
 #: gst/gsterror.c:241
 msgid "There is no codec present that can handle the stream's type."
@@ -281,30 +289,42 @@ msgid "Could not encode stream."
 msgstr "无法编码流。"
 
 #: gst/gsterror.c:244
+#, fuzzy
 msgid "Could not demultiplex stream."
-msgstr ""
+msgstr "无法解码多工传送的流。"
 
 #: gst/gsterror.c:245
+#, fuzzy
 msgid "Could not multiplex stream."
-msgstr ""
+msgstr "无法编码多工传送的流。"
 
 #: gst/gsterror.c:246
 msgid "The stream is in the wrong format."
-msgstr ""
+msgstr "此流的格式错误。"
 
-#: gst/gsterror.c:297
+#: gst/gsterror.c:248
+msgid "The stream is encrypted and decryption is not supported."
+msgstr "此为加密流且不支持解密。"
+
+#: gst/gsterror.c:250
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr "此为加密流，而且由于未提供合适的密钥因此无法解密。"
+
+#: gst/gsterror.c:302
 #, c-format
 msgid "No error message for domain %s."
-msgstr ""
+msgstr "域 %s 无错误信息。"
 
-#: gst/gsterror.c:305
+#: gst/gsterror.c:310
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr ""
+msgstr "域 %s 和代码 %d 中无标准错误信息。"
 
 #: gst/gstpipeline.c:527
 msgid "Selected clock cannot be used in pipeline."
-msgstr ""
+msgstr "选中的时钟序列无法用在管道中。"
 
 #: gst/gsttaglist.c:97
 msgid "title"
@@ -316,16 +336,15 @@ msgstr "公用标题"
 
 #: gst/gsttaglist.c:100
 msgid "title sortname"
-msgstr ""
+msgstr "排序后的标题名"
 
 #: gst/gsttaglist.c:100
-#, fuzzy
 msgid "commonly used title for sorting purposes"
-msgstr "公用标题"
+msgstr "用于排序的公用标题"
 
 #: gst/gsttaglist.c:103
 msgid "artist"
-msgstr "艺人"
+msgstr "艺术家"
 
 #: gst/gsttaglist.c:104
 msgid "person(s) responsible for the recording"
@@ -333,12 +352,11 @@ msgstr "负责录制的个人"
 
 #: gst/gsttaglist.c:108
 msgid "artist sortname"
-msgstr ""
+msgstr "排序后的艺术家"
 
 #: gst/gsttaglist.c:109
-#, fuzzy
 msgid "person(s) responsible for the recording for sorting purposes"
-msgstr "负责录制的个人"
+msgstr "用于排序的负责录制的个人"
 
 #: gst/gsttaglist.c:112
 msgid "album"
@@ -350,12 +368,11 @@ msgstr "包含此数据的专辑"
 
 #: gst/gsttaglist.c:116
 msgid "album sortname"
-msgstr ""
+msgstr "排序后的专辑名"
 
 #: gst/gsttaglist.c:117
-#, fuzzy
 msgid "album containing this data for sorting purposes"
-msgstr "包含此数据的专辑"
+msgstr "用于排序的包含此数据的专辑"
 
 #: gst/gsttaglist.c:119
 msgid "date"
@@ -379,16 +396,16 @@ msgstr "注释"
 
 #: gst/gsttaglist.c:127
 msgid "free text commenting the data"
-msgstr ""
+msgstr "注释数据的任意文本"
 
 #: gst/gsttaglist.c:130
-#, fuzzy
 msgid "extended comment"
-msgstr "注释"
+msgstr "更多注释"
 
 #: gst/gsttaglist.c:131
+#, fuzzy
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr ""
+msgstr "以“关键词＝值或 key[en]＝注释”这种形式注释数据的任意文本"
 
 #: gst/gsttaglist.c:135
 msgid "track number"
@@ -396,63 +413,63 @@ msgstr "音轨编号"
 
 #: gst/gsttaglist.c:136
 msgid "track number inside a collection"
-msgstr ""
+msgstr "收藏集中的音轨编号"
 
 #: gst/gsttaglist.c:139
 msgid "track count"
-msgstr "音轨统计"
+msgstr "音轨数"
 
 #: gst/gsttaglist.c:140
 msgid "count of tracks inside collection this track belongs to"
-msgstr ""
+msgstr "此音轨所属的收藏集中的音轨数"
 
 #: gst/gsttaglist.c:144
 msgid "disc number"
-msgstr ""
+msgstr "碟片编号"
 
 #: gst/gsttaglist.c:145
 msgid "disc number inside a collection"
-msgstr ""
+msgstr "收藏集中的碟片编号"
 
 #: gst/gsttaglist.c:148
 msgid "disc count"
-msgstr ""
+msgstr "碟片数"
 
 #: gst/gsttaglist.c:149
 msgid "count of discs inside collection this disc belongs to"
-msgstr ""
+msgstr "此碟所属的收藏集中的碟片数"
 
 #: gst/gsttaglist.c:153
 msgid "location"
-msgstr ""
+msgstr "位置"
 
 #: gst/gsttaglist.c:154
 msgid "original location of file as a URI"
-msgstr ""
+msgstr "文件原始位置作为 URI 地址"
 
 #: gst/gsttaglist.c:158
 msgid "description"
-msgstr ""
+msgstr "描述"
 
 #: gst/gsttaglist.c:159
 msgid "short text describing the content of the data"
-msgstr ""
+msgstr "描述数据内容的简要文本"
 
 #: gst/gsttaglist.c:162
 msgid "version"
-msgstr ""
+msgstr "版本"
 
 #: gst/gsttaglist.c:162
 msgid "version of this data"
-msgstr ""
+msgstr "此数据的版本"
 
 #: gst/gsttaglist.c:165
 msgid "ISRC"
-msgstr ""
+msgstr "ISRC"
 
 #: gst/gsttaglist.c:167
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr ""
+msgstr "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 
 #: gst/gsttaglist.c:169
 msgid "organization"
@@ -464,185 +481,184 @@ msgstr "版权"
 
 #: gst/gsttaglist.c:172
 msgid "copyright notice of the data"
-msgstr ""
+msgstr "数据的版权警告"
 
 #: gst/gsttaglist.c:174
 #, fuzzy
 msgid "copyright uri"
-msgstr "版权"
+msgstr "版权 uri"
 
 #: gst/gsttaglist.c:175
 msgid "URI to the copyright notice of the data"
-msgstr ""
+msgstr "数据的版权警告 URI"
 
 #: gst/gsttaglist.c:178
 msgid "contact"
-msgstr ""
+msgstr "联系人"
 
 #: gst/gsttaglist.c:178
 msgid "contact information"
-msgstr ""
+msgstr "联系人信息"
 
 #: gst/gsttaglist.c:180
 msgid "license"
-msgstr ""
+msgstr "许可证"
 
 #: gst/gsttaglist.c:180
 msgid "license of data"
-msgstr ""
+msgstr "数据许可证"
 
 #: gst/gsttaglist.c:182
 msgid "license uri"
-msgstr ""
+msgstr "许可证 uri"
 
 #: gst/gsttaglist.c:183
 msgid "URI to the license of the data"
-msgstr ""
+msgstr "数据许可证的 URI"
 
 #: gst/gsttaglist.c:186
 msgid "performer"
-msgstr ""
+msgstr "演奏者"
 
 #: gst/gsttaglist.c:187
 msgid "person(s) performing"
-msgstr ""
+msgstr "演奏者"
 
 #: gst/gsttaglist.c:190
 msgid "composer"
-msgstr ""
+msgstr "作曲人"
 
 #: gst/gsttaglist.c:191
-#, fuzzy
 msgid "person(s) who composed the recording"
-msgstr "负责录制的个人"
+msgstr "负责录制的人"
 
 #: gst/gsttaglist.c:195
 msgid "duration"
-msgstr ""
+msgstr "时期"
 
 #: gst/gsttaglist.c:195
 msgid "length in GStreamer time units (nanoseconds)"
-msgstr ""
+msgstr "GStreamer 时间单位的长度(纳秒)"
 
 #: gst/gsttaglist.c:198
 msgid "codec"
-msgstr ""
+msgstr "编码"
 
 #: gst/gsttaglist.c:199
 msgid "codec the data is stored in"
-msgstr ""
+msgstr "数据以...编码存储"
 
 #: gst/gsttaglist.c:202
 msgid "video codec"
-msgstr ""
+msgstr "视频编码"
 
 #: gst/gsttaglist.c:202
 msgid "codec the video data is stored in"
-msgstr ""
+msgstr "视频数据以...编码存储"
 
 #: gst/gsttaglist.c:205
 msgid "audio codec"
-msgstr ""
+msgstr "音频编码"
 
 #: gst/gsttaglist.c:205
 msgid "codec the audio data is stored in"
-msgstr ""
+msgstr "音频数据以...编码存储"
 
 #: gst/gsttaglist.c:207
 msgid "bitrate"
-msgstr ""
+msgstr "比特率"
 
 #: gst/gsttaglist.c:207
 msgid "exact or average bitrate in bits/s"
-msgstr ""
+msgstr "精确或平均比特率(比特/秒)"
 
 #: gst/gsttaglist.c:209
 msgid "nominal bitrate"
-msgstr ""
+msgstr "名义比特率"
 
 #: gst/gsttaglist.c:209
 msgid "nominal bitrate in bits/s"
-msgstr ""
+msgstr "名义比特率(比特/秒)"
 
 #: gst/gsttaglist.c:211
 msgid "minimum bitrate"
-msgstr ""
+msgstr "最小比特率"
 
 #: gst/gsttaglist.c:211
 msgid "minimum bitrate in bits/s"
-msgstr ""
+msgstr "最小比特率(比特/秒)"
 
 #: gst/gsttaglist.c:213
 msgid "maximum bitrate"
-msgstr ""
+msgstr "最大比特率"
 
 #: gst/gsttaglist.c:213
 msgid "maximum bitrate in bits/s"
-msgstr ""
+msgstr "最大比特率(比特/秒)"
 
 #: gst/gsttaglist.c:216
 msgid "encoder"
-msgstr ""
+msgstr "编码器"
 
 #: gst/gsttaglist.c:216
 msgid "encoder used to encode this stream"
-msgstr ""
+msgstr "用于编码此流的编码器"
 
 #: gst/gsttaglist.c:219
 msgid "encoder version"
-msgstr ""
+msgstr "编码器版本"
 
 #: gst/gsttaglist.c:220
 msgid "version of the encoder used to encode this stream"
-msgstr ""
+msgstr "用于编码此流的编码器版本"
 
 #: gst/gsttaglist.c:222
 msgid "serial"
-msgstr ""
+msgstr "序列号"
 
 #: gst/gsttaglist.c:222
 msgid "serial number of track"
-msgstr ""
+msgstr "音轨的序列号"
 
 #: gst/gsttaglist.c:224
 msgid "replaygain track gain"
-msgstr ""
+msgstr "重放增益音轨增益"
 
 #: gst/gsttaglist.c:224
 msgid "track gain in db"
-msgstr ""
+msgstr "音轨增益(db)"
 
 #: gst/gsttaglist.c:226
 msgid "replaygain track peak"
-msgstr ""
+msgstr "重放增益音轨峰值"
 
 #: gst/gsttaglist.c:226
 msgid "peak of the track"
-msgstr ""
+msgstr "音轨峰值"
 
 #: gst/gsttaglist.c:228
 msgid "replaygain album gain"
-msgstr ""
+msgstr "重放增益专辑增益"
 
 #: gst/gsttaglist.c:228
 msgid "album gain in db"
-msgstr ""
+msgstr "专辑增益(db)"
 
 #: gst/gsttaglist.c:230
 msgid "replaygain album peak"
-msgstr ""
+msgstr "回放增益专辑峰值"
 
 #: gst/gsttaglist.c:230
 msgid "peak of the album"
-msgstr ""
+msgstr "专辑峰值"
 
 #: gst/gsttaglist.c:232
 msgid "replaygain reference level"
-msgstr ""
+msgstr "回放增益参考级别"
 
 #: gst/gsttaglist.c:233
 msgid "reference level of track and album gain values"
-msgstr ""
+msgstr "音轨和专辑增益的参考级别值"
 
 #: gst/gsttaglist.c:235
 msgid "language code"
@@ -654,312 +670,322 @@ msgstr "此流的语言代码，遵从为 ISO-639-1"
 
 #: gst/gsttaglist.c:238
 msgid "image"
-msgstr ""
+msgstr "图像"
 
 #: gst/gsttaglist.c:238
 msgid "image related to this stream"
-msgstr ""
+msgstr "有关此流的图像"
 
 #: gst/gsttaglist.c:240
 msgid "preview image"
-msgstr ""
+msgstr "上一图像"
 
 #: gst/gsttaglist.c:240
 msgid "preview image related to this stream"
-msgstr ""
+msgstr "有关此流的上一图像"
 
 #: gst/gsttaglist.c:242
+#, fuzzy
 msgid "beats per minute"
-msgstr ""
+msgstr "每分钟振次"
 
 #: gst/gsttaglist.c:242
 msgid "number of beats per minute in audio"
-msgstr ""
+msgstr "音频中的每分钟振次"
 
 #: gst/gsttaglist.c:282
 msgid ", "
 msgstr ", "
 
-#: gst/parse/grammar.y:223
-#, c-format
+#: gst/parse/grammar.y:230
+#, fuzzy, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr ""
+msgstr "不允许指定空储仓“%s”"
 
-#: gst/parse/grammar.y:232
-#, c-format
+#: gst/parse/grammar.y:240
+#, fuzzy, c-format
 msgid "no bin \"%s\", skipping"
-msgstr ""
+msgstr "找不到储仓“%s”，跳过"
 
-#: gst/parse/grammar.y:354
+#: gst/parse/grammar.y:366
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr ""
+msgstr "组件“%2$s”中找不到属性“%1$s”"
 
-#: gst/parse/grammar.y:369
+#: gst/parse/grammar.y:381
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr ""
+msgstr "无法设置组件“%2$s”中的属性“%1$s”为“%3$s”"
 
-#: gst/parse/grammar.y:511
+#: gst/parse/grammar.y:523
 #, c-format
 msgid "could not link %s to %s"
 msgstr "无法将 %s 链接到 %s"
 
-#: gst/parse/grammar.y:558
+#: gst/parse/grammar.y:571
 #, c-format
 msgid "no element \"%s\""
-msgstr "无元素“%s”"
+msgstr "无组件“%s”"
 
-#: gst/parse/grammar.y:605
+#: gst/parse/grammar.y:623
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr ""
+msgstr "无法解析分析器“%s”"
 
-#: gst/parse/grammar.y:627 gst/parse/grammar.y:675 gst/parse/grammar.y:691
-#: gst/parse/grammar.y:754
+#: gst/parse/grammar.y:645 gst/parse/grammar.y:693 gst/parse/grammar.y:709
+#: gst/parse/grammar.y:772
 msgid "link without source element"
-msgstr ""
+msgstr "不带源组件的链接"
 
-#: gst/parse/grammar.y:633 gst/parse/grammar.y:672 gst/parse/grammar.y:763
+#: gst/parse/grammar.y:651 gst/parse/grammar.y:690 gst/parse/grammar.y:781
 msgid "link without sink element"
-msgstr ""
-
-#: gst/parse/grammar.y:709
-#, c-format
-msgid "no source element for URI \"%s\""
-msgstr ""
-
-#: gst/parse/grammar.y:719
-#, c-format
-msgid "no element to link URI \"%s\" to"
-msgstr ""
+msgstr "不带消音组件的链接"
 
 #: gst/parse/grammar.y:727
 #, c-format
-msgid "no sink element for URI \"%s\""
-msgstr ""
+msgid "no source element for URI \"%s\""
+msgstr "URI“%s”无源组件"
 
-#: gst/parse/grammar.y:734
+#: gst/parse/grammar.y:737
+#, c-format
+msgid "no element to link URI \"%s\" to"
+msgstr "无组件让 URI“%s”来连接"
+
+#: gst/parse/grammar.y:745
+#, c-format
+msgid "no sink element for URI \"%s\""
+msgstr "URI“%s”上无消音组件"
+
+#: gst/parse/grammar.y:752
 #, c-format
 msgid "could not link sink element for URI \"%s\""
-msgstr ""
+msgstr "无法连接 URI“%s”的消音组件"
 
-#: gst/parse/grammar.y:748
+#: gst/parse/grammar.y:766
 msgid "empty pipeline not allowed"
-msgstr ""
+msgstr "不允许空管道"
 
-#: libs/gst/base/gstbasesrc.c:1818
-#, fuzzy
+#: libs/gst/base/gstbasesrc.c:1915
 msgid "Internal clock error."
-msgstr "内部数据流错误。"
+msgstr "内部时钟错误。"
 
-#: libs/gst/base/gstbasesrc.c:2164 libs/gst/base/gstbasesrc.c:2175
+#: libs/gst/base/gstbasesrc.c:2239 libs/gst/base/gstbasesrc.c:2250
 msgid "Internal data flow error."
 msgstr "内部数据流错误。"
 
-#: libs/gst/base/gstbasesink.c:2518
+#: libs/gst/base/gstbasesink.c:2579
 msgid "Internal data flow problem."
 msgstr "内部数据流问题。"
 
-#: libs/gst/base/gstbasesink.c:2657
-#, fuzzy
+#: libs/gst/base/gstbasesink.c:2726
 msgid "Internal data stream error."
 msgstr "内部数据流错误。"
 
 #: plugins/elements/gstcapsfilter.c:109
 msgid "Filter caps"
-msgstr ""
+msgstr "过滤分析器"
 
 #: plugins/elements/gstcapsfilter.c:110
+#, fuzzy
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
+"限制所允许的功能的可能性 (NULL 表示 ANY)。设置此属性可以为所提供的 GstCaps 对"
+"象带来一个关联。"
 
 #: plugins/elements/gstfdsink.c:297
-#, fuzzy, c-format
+#, c-format
 msgid "Error while writing to file descriptor \"%d\"."
-msgstr "写入文件“%s”时出错。"
+msgstr "写入文件描述符“%d”时出错。"
 
 #: plugins/elements/gstfdsink.c:337
 #, c-format
 msgid "File descriptor \"%d\" is not valid."
-msgstr ""
+msgstr "文件描述符“%d”无效。"
 
-#: plugins/elements/gstfilesink.c:345
+#: plugins/elements/gstfilesink.c:352
 msgid "No file name specified for writing."
 msgstr "未指定写入的文件名。"
 
-#: plugins/elements/gstfilesink.c:351
+#: plugins/elements/gstfilesink.c:358
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "无法打开文件“%s”写入。"
 
-#: plugins/elements/gstfilesink.c:376
+#: plugins/elements/gstfilesink.c:383
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "关闭文件“%s”出错。"
 
-#: plugins/elements/gstfilesink.c:512
-#, fuzzy, c-format
+#: plugins/elements/gstfilesink.c:519
+#, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "写入文件“%s”时出错。"
+msgstr "在文件“%s”搜寻时出错。"
 
-#: plugins/elements/gstfilesink.c:519 plugins/elements/gstfilesink.c:579
+#: plugins/elements/gstfilesink.c:526 plugins/elements/gstfilesink.c:588
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "写入文件“%s”时出错。"
 
-#: plugins/elements/gstfilesrc.c:969
+#: plugins/elements/gstfilesrc.c:973
 msgid "No file name specified for reading."
 msgstr "未指定读取的文件名。"
 
-#: plugins/elements/gstfilesrc.c:981
-#, fuzzy, c-format
+#: plugins/elements/gstfilesrc.c:985
+#, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "无法打开文件“%s”读取：%s。"
+msgstr "无法打开文件“%s”读取。"
 
-#: plugins/elements/gstfilesrc.c:990
-#, fuzzy, c-format
+#: plugins/elements/gstfilesrc.c:994
+#, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "无法在“%s”上获得信息。"
 
-#: plugins/elements/gstfilesrc.c:997
+#: plugins/elements/gstfilesrc.c:1001
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "“%s”不是目录。"
 
-#: plugins/elements/gstfilesrc.c:1004
+#: plugins/elements/gstfilesrc.c:1008
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "文件“%s”是套接字。"
 
-#: plugins/elements/gstidentity.c:511
+#: plugins/elements/gstidentity.c:548
 msgid "Failed after iterations as requested."
-msgstr ""
+msgstr "在完成所要求的迭代操作后出错。"
 
-#: plugins/elements/gsttypefindelement.c:192
+#: plugins/elements/gsttypefindelement.c:194
 msgid "caps"
-msgstr ""
+msgstr "分析器"
 
-#: plugins/elements/gsttypefindelement.c:193
+#: plugins/elements/gsttypefindelement.c:195
+#, fuzzy
 msgid "detected capabilities in stream"
-msgstr ""
+msgstr "流中探测到的信息"
 
-#: plugins/elements/gsttypefindelement.c:196
+#: plugins/elements/gsttypefindelement.c:198
 msgid "minimum"
 msgstr "最小"
 
-#: plugins/elements/gsttypefindelement.c:200
+#: plugins/elements/gsttypefindelement.c:203
 msgid "maximum"
 msgstr "最大"
 
-#: plugins/elements/gsttypefindelement.c:493
-#: plugins/elements/gsttypefindelement.c:742
-#, fuzzy
+#: plugins/elements/gsttypefindelement.c:208
+msgid "force caps"
+msgstr "强制分析"
+
+#: plugins/elements/gsttypefindelement.c:209
+msgid "force caps without doing a typefind"
+msgstr "不做类型查找的强制分析"
+
+#: plugins/elements/gsttypefindelement.c:512
+#: plugins/elements/gsttypefindelement.c:776
 msgid "Stream contains no data."
-msgstr "包含此数据的专辑"
+msgstr "流中不含数据"
 
 #: tools/gst-inspect.c:251
 msgid "Implemented Interfaces:\n"
-msgstr ""
+msgstr "实现的接口:\n"
 
 #: tools/gst-inspect.c:300
 msgid "readable"
-msgstr ""
+msgstr "可读"
 
 #: tools/gst-inspect.c:307
-#, fuzzy
 msgid "writable"
-msgstr "标题"
+msgstr "可写"
 
 #: tools/gst-inspect.c:314
 msgid "controllable"
-msgstr ""
+msgstr "可控制"
 
-#: tools/gst-inspect.c:990
-#, fuzzy
+#: tools/gst-inspect.c:1033
 msgid "Total count: "
-msgstr "音轨统计"
+msgstr "总数:"
 
-#: tools/gst-inspect.c:991
+#: tools/gst-inspect.c:1034
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-inspect.c:993
+#: tools/gst-inspect.c:1036
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-inspect.c:1304
+#: tools/gst-inspect.c:1348
 msgid "Print all elements"
-msgstr "打印全部元素"
+msgstr "打印全部组件"
 
-#: tools/gst-inspect.c:1306
+#: tools/gst-inspect.c:1350
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
+"打印机器可解析的指定插件提供的特性列表。\n"
+"                                       与外部自动插件安装机制连接时有用"
 
-#: tools/gst-inspect.c:1386
-#, fuzzy, c-format
+#: tools/gst-inspect.c:1430
+#, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "无法打开文件“%s”写入。"
+msgstr "无法载入插件文件: %s\n"
 
-#: tools/gst-inspect.c:1391
+#: tools/gst-inspect.c:1435
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr ""
+msgstr "没有那样的组件或插件‘%s’\n"
 
 #: tools/gst-launch.c:80
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr ""
+msgstr "用法: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 
 #: tools/gst-launch.c:89
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr ""
+msgstr "错误: xml 文件‘%s’解析失败。\n"
 
 #: tools/gst-launch.c:95
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr ""
+msgstr "错误: 文件‘%s’中没有顶级管道组件。\n"
 
 #: tools/gst-launch.c:102
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
-msgstr ""
+msgstr "警告: 此时仅支持一个顶级组件。"
 
 #: tools/gst-launch.c:113
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr ""
+msgstr "错误: 无法解析命令行参数 %d: %s。\n"
 
 #: tools/gst-launch.c:124
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
-msgstr ""
+msgstr "警告: 组件名‘%s’未找到。\n"
 
 #: tools/gst-launch.c:394
 #, c-format
 msgid "Got Message from element \"%s\" (%s): "
-msgstr ""
+msgstr "从组件“%s”中获取信息(%s):"
 
 #: tools/gst-launch.c:420
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr ""
+msgstr "从组件“%s”中获取 EOS。\n"
 
 #: tools/gst-launch.c:428
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr ""
+msgstr "找到标识    :由组件“%s”找到。\n"
 
 #: tools/gst-launch.c:441
 #, c-format
@@ -967,148 +993,150 @@ msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
+"信息:\n"
+"%s\n"
 
 #: tools/gst-launch.c:458
-#, fuzzy, c-format
+#, c-format
 msgid "WARNING: from element %s: %s\n"
-msgstr "错误：来自元素 %s：%s\n"
+msgstr "警告：来自组件 %s：%s\n"
 
 #: tools/gst-launch.c:506
 #, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr ""
+msgstr "Prerolled，等待缓冲完成...\n"
 
 #: tools/gst-launch.c:521
 #, c-format
 msgid "buffering... %d  \r"
-msgstr ""
+msgstr "正在缓冲... %d  \r"
 
 #: tools/gst-launch.c:533
 #, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "缓冲完成，设置播放管道 ...\n"
 
 #: tools/gst-launch.c:541
 #, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "正在缓冲，设置暂停管道 ...\n"
 
 #: tools/gst-launch.c:556
 #, c-format
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr ""
+msgstr "中断: 中止管道 ...\n"
 
 #: tools/gst-launch.c:591
 msgid "Output tags (also known as metadata)"
-msgstr ""
+msgstr "输出标识(也可认为是元数据)"
 
 #: tools/gst-launch.c:593
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "输出状态信息和属性通告"
 
 #: tools/gst-launch.c:595
 msgid "Output messages"
-msgstr ""
+msgstr "输出信息"
 
 #: tools/gst-launch.c:597
 msgid "Do not output status information of TYPE"
-msgstr ""
+msgstr "不输出类型的状态信息"
 
 #: tools/gst-launch.c:597
 msgid "TYPE1,TYPE2,..."
-msgstr ""
+msgstr "类型1，类型2，..."
 
 #: tools/gst-launch.c:600
 msgid "Save xml representation of pipeline to FILE and exit"
-msgstr ""
+msgstr "保存管道的 xml 描述符至文件并退出"
 
 #: tools/gst-launch.c:600
 msgid "FILE"
-msgstr ""
+msgstr "文件"
 
 #: tools/gst-launch.c:603
 msgid "Do not install a fault handler"
-msgstr ""
+msgstr "不安装错误的处理程序"
 
 #: tools/gst-launch.c:605
 msgid "Print alloc trace (if enabled at compile time)"
-msgstr ""
+msgstr "打印分配记录(如果在编译时开启的话)"
 
 #: tools/gst-launch.c:673
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr ""
+msgstr "错误: 无法创建管道: %s。\n"
 
 #: tools/gst-launch.c:677
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr ""
+msgstr "错误: 无法创建管道。\n"
 
 #: tools/gst-launch.c:681
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
-msgstr ""
+msgstr "警告: 错误管道: %s\n"
 
 #: tools/gst-launch.c:708
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr ""
+msgstr "错误: 未找到‘管道’组件。\n"
 
 #: tools/gst-launch.c:714 tools/gst-launch.c:784
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "设置暂停管道 ...\n"
 
 #: tools/gst-launch.c:719
 #, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr ""
+msgstr "错误: 管道不想暂停。\n"
 
 #: tools/gst-launch.c:724
 #, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr ""
+msgstr "管道正在使用且不需要 PREROLL ...\n"
 
 #: tools/gst-launch.c:728
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
-msgstr ""
+msgstr "管道正在 PREROLLING ...\n"
 
 #: tools/gst-launch.c:731 tools/gst-launch.c:744
 #, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr ""
+msgstr "错误: 管道不需要 preroll.\n"
 
 #: tools/gst-launch.c:737
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
+msgstr "管道被 PREROLLED ...\n"
 
 #: tools/gst-launch.c:749
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "设置播放管道 ...\n"
 
 #: tools/gst-launch.c:755
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr ""
+msgstr "错误: 管道不想播放。\n"
 
 #: tools/gst-launch.c:778
 msgid "Execution ended after %"
-msgstr ""
+msgstr "在 % 后运行终止"
 
 #: tools/gst-launch.c:788
 #, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr ""
+msgstr "设置备用管道 ...\n"
 
 #: tools/gst-launch.c:793
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr ""
+msgstr "设置 NULL 管道 ...\n"
 
 #: tools/gst-launch.c:798
 #, c-format
 msgid "FREEING pipeline ...\n"
-msgstr ""
+msgstr "正在释放管道 ...\n"

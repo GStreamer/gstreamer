@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-03-03 22:36+0000\n"
+"POT-Creation-Date: 2008-06-11 21:29+0100\n"
 "PO-Revision-Date: 2007-11-15 11:04+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: gst/gst.c:303
+#: gst/gst.c:307
 msgid "Print the GStreamer version"
 msgstr "Skriv ut Gstreamer-versionen"
 
-#: gst/gst.c:305
+#: gst/gst.c:309
 msgid "Make all warnings fatal"
 msgstr "Gör alla varningar ödesdigra"
 
-#: gst/gst.c:309
+#: gst/gst.c:313
 msgid "Print available debug categories and exit"
 msgstr "Skriv ut tillgängliga felsökningskategorier och avsluta"
 
-#: gst/gst.c:313
+#: gst/gst.c:317
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Standardfelsökningsnivå från 1 (endast fel) till 5 (allting) eller 0 för "
 "ingen utmatning"
 
-#: gst/gst.c:315
+#: gst/gst.c:319
 msgid "LEVEL"
 msgstr "NIVÅ"
 
-#: gst/gst.c:317
+#: gst/gst.c:321
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -47,31 +47,31 @@ msgstr ""
 "Kommaseparerad lista med kategorinamn:nivå-par för att ställa in specifika "
 "nivåer för de enskilda kategorierna. Exempel: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:320
+#: gst/gst.c:324
 msgid "LIST"
 msgstr "LISTA"
 
-#: gst/gst.c:322
+#: gst/gst.c:326
 msgid "Disable colored debugging output"
 msgstr "Inaktivera färglagd felsökningsutmatning"
 
-#: gst/gst.c:325
+#: gst/gst.c:329
 msgid "Disable debugging"
 msgstr "Inaktivera felsökning"
 
-#: gst/gst.c:329
+#: gst/gst.c:333
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Aktivera utförlig diagnostik vid inläsning av insticksmoduler"
 
-#: gst/gst.c:333
+#: gst/gst.c:337
 msgid "Colon-separated paths containing plugins"
 msgstr "Kolonseparerade sökvägar som innehåller insticksmoduler"
 
-#: gst/gst.c:333
+#: gst/gst.c:337
 msgid "PATHS"
 msgstr "SÖKVÄGAR"
 
-#: gst/gst.c:336
+#: gst/gst.c:340
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -79,52 +79,57 @@ msgstr ""
 "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
 "som lagras i miljövariabeln GST_PLUGIN_PATH"
 
-#: gst/gst.c:338
+#: gst/gst.c:342
 msgid "PLUGINS"
 msgstr "INSTICKSMODULER"
 
-#: gst/gst.c:341
+#: gst/gst.c:345
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Inaktivera fångst av segmenteringsfel under inläsning av insticksmoduler"
 
-#: gst/gst.c:346
+#: gst/gst.c:350
+#, fuzzy
+msgid "Disable updating the registry"
+msgstr "Inaktivera användningen av fork() vid avsökning av registret"
+
+#: gst/gst.c:355
 msgid "Disable the use of fork() while scanning the registry"
 msgstr "Inaktivera användningen av fork() vid avsökning av registret"
 
-#: gst/gst.c:367
+#: gst/gst.c:376
 msgid "GStreamer Options"
 msgstr "GStreamer-alternativ"
 
-#: gst/gst.c:368
+#: gst/gst.c:377
 msgid "Show GStreamer Options"
 msgstr "Visa GStreamer-alternativ"
 
-#: gst/gst.c:737
+#: gst/gst.c:752
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Fel vid skrivning av registercache till %s: %s"
 
-#: gst/gst.c:779 gst/gst.c:795 gst/gst.c:840
+#: gst/gst.c:788 gst/gst.c:797 gst/gst.c:842
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr "Fel vid återsökning av registret %s: %s"
 
-#: gst/gst.c:855
+#: gst/gst.c:857
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr "Fel vid återsökning av registret %s"
 
-#: gst/gst.c:1144
+#: gst/gst.c:1235
 msgid "Unknown option"
 msgstr "Okänt alternativ"
 
-#: gst/gstelement.c:299 gst/gstutils.c:2184
+#: gst/gstelement.c:299 gst/gstutils.c:2202
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FEL: från element %s: %s\n"
 
-#: gst/gstelement.c:301 gst/gstutils.c:2186 tools/gst-launch.c:460
+#: gst/gstelement.c:301 gst/gstutils.c:2204 tools/gst-launch.c:460
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -309,12 +314,22 @@ msgstr "Kunde inte multiplexera ström."
 msgid "The stream is in the wrong format."
 msgstr "Strömmen är av fel format."
 
-#: gst/gsterror.c:297
+#: gst/gsterror.c:248
+msgid "The stream is encrypted and decryption is not supported."
+msgstr ""
+
+#: gst/gsterror.c:250
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr ""
+
+#: gst/gsterror.c:302
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Inget felmeddelande för domänen %s."
 
-#: gst/gsterror.c:305
+#: gst/gsterror.c:310
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Inget standardfelmeddelande för domänen %s och koden %d."
@@ -699,88 +714,88 @@ msgid ", "
 msgstr ", "
 
 # Osäker.
-#: gst/parse/grammar.y:223
+#: gst/parse/grammar.y:230
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "angav tom korg \"%s\", inte tillåtet"
 
-#: gst/parse/grammar.y:232
+#: gst/parse/grammar.y:240
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "ingen korg \"%s\", hoppar över"
 
-#: gst/parse/grammar.y:354
+#: gst/parse/grammar.y:366
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "ingen \"%s\"-egenskap i elementet \"%s\""
 
-#: gst/parse/grammar.y:369
+#: gst/parse/grammar.y:381
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kunde inte ställa in egenskapen \"%s\" i elementet \"%s\" till \"%s\""
 
-#: gst/parse/grammar.y:511
+#: gst/parse/grammar.y:523
 #, c-format
 msgid "could not link %s to %s"
 msgstr "kunde inte länka %s till %s"
 
-#: gst/parse/grammar.y:558
+#: gst/parse/grammar.y:571
 #, c-format
 msgid "no element \"%s\""
 msgstr "inget \"%s\"-element"
 
 # Osäker. Jag tror "caps" är kort för "capabilities".
-#: gst/parse/grammar.y:605
+#: gst/parse/grammar.y:623
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "kunde inte tolka förmågorna \"%s\""
 
-#: gst/parse/grammar.y:627 gst/parse/grammar.y:675 gst/parse/grammar.y:691
-#: gst/parse/grammar.y:754
+#: gst/parse/grammar.y:645 gst/parse/grammar.y:693 gst/parse/grammar.y:709
+#: gst/parse/grammar.y:772
 msgid "link without source element"
 msgstr "länk utan källelement"
 
-#: gst/parse/grammar.y:633 gst/parse/grammar.y:672 gst/parse/grammar.y:763
+#: gst/parse/grammar.y:651 gst/parse/grammar.y:690 gst/parse/grammar.y:781
 msgid "link without sink element"
 msgstr "länk utan utgångselement"
 
-#: gst/parse/grammar.y:709
+#: gst/parse/grammar.y:727
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "inget källelement för URI:n \"%s\""
 
-#: gst/parse/grammar.y:719
+#: gst/parse/grammar.y:737
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "inget element att länka URI:n \"%s\" till"
 
-#: gst/parse/grammar.y:727
+#: gst/parse/grammar.y:745
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "inget utgångselement för URI:n \"%s\""
 
-#: gst/parse/grammar.y:734
+#: gst/parse/grammar.y:752
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 
-#: gst/parse/grammar.y:748
+#: gst/parse/grammar.y:766
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
-#: libs/gst/base/gstbasesrc.c:1818
+#: libs/gst/base/gstbasesrc.c:1915
 msgid "Internal clock error."
 msgstr "Internt klockfel."
 
-#: libs/gst/base/gstbasesrc.c:2164 libs/gst/base/gstbasesrc.c:2175
+#: libs/gst/base/gstbasesrc.c:2239 libs/gst/base/gstbasesrc.c:2250
 msgid "Internal data flow error."
 msgstr "Internt fel i dataflöde."
 
-#: libs/gst/base/gstbasesink.c:2518
+#: libs/gst/base/gstbasesink.c:2579
 msgid "Internal data flow problem."
 msgstr "Internt dataflödesproblem."
 
-#: libs/gst/base/gstbasesink.c:2657
+#: libs/gst/base/gstbasesink.c:2726
 msgid "Internal data stream error."
 msgstr "Internt fel i dataström."
 
@@ -806,77 +821,85 @@ msgstr "Fel vid skrivning till filbeskrivaren \"%d\"."
 msgid "File descriptor \"%d\" is not valid."
 msgstr "Filbeskrivaren \"%d\" är ogiltig."
 
-#: plugins/elements/gstfilesink.c:345
+#: plugins/elements/gstfilesink.c:352
 msgid "No file name specified for writing."
 msgstr "Inget filnamn angivet för skrivning."
 
-#: plugins/elements/gstfilesink.c:351
+#: plugins/elements/gstfilesink.c:358
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kunde inte öppna filen \"%s\" för skrivning."
 
-#: plugins/elements/gstfilesink.c:376
+#: plugins/elements/gstfilesink.c:383
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: plugins/elements/gstfilesink.c:512
+#: plugins/elements/gstfilesink.c:519
 #, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Fel vid sökning i filen \"%s\"."
 
-#: plugins/elements/gstfilesink.c:519 plugins/elements/gstfilesink.c:579
+#: plugins/elements/gstfilesink.c:526 plugins/elements/gstfilesink.c:588
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid skrivning till filen \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:969
+#: plugins/elements/gstfilesrc.c:973
 msgid "No file name specified for reading."
 msgstr "Inget filnamn angivet för läsning."
 
-#: plugins/elements/gstfilesrc.c:981
+#: plugins/elements/gstfilesrc.c:985
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: plugins/elements/gstfilesrc.c:990
+#: plugins/elements/gstfilesrc.c:994
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Kunde inte få information om \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:997
+#: plugins/elements/gstfilesrc.c:1001
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" är en katalog."
 
-#: plugins/elements/gstfilesrc.c:1004
+#: plugins/elements/gstfilesrc.c:1008
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Filen \"%s\" är ett uttag."
 
-#: plugins/elements/gstidentity.c:511
+#: plugins/elements/gstidentity.c:548
 msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
 # Osäker. Jag tror "caps" är kort för "capabilities".
-#: plugins/elements/gsttypefindelement.c:192
+#: plugins/elements/gsttypefindelement.c:194
 msgid "caps"
 msgstr "förmågor"
 
-#: plugins/elements/gsttypefindelement.c:193
+#: plugins/elements/gsttypefindelement.c:195
 msgid "detected capabilities in stream"
 msgstr "detekterade förmågor i strömmen"
 
-#: plugins/elements/gsttypefindelement.c:196
+#: plugins/elements/gsttypefindelement.c:198
 msgid "minimum"
 msgstr "minimum"
 
-#: plugins/elements/gsttypefindelement.c:200
+#: plugins/elements/gsttypefindelement.c:203
 msgid "maximum"
 msgstr "maximum"
 
-#: plugins/elements/gsttypefindelement.c:493
-#: plugins/elements/gsttypefindelement.c:742
+#: plugins/elements/gsttypefindelement.c:208
+msgid "force caps"
+msgstr ""
+
+#: plugins/elements/gsttypefindelement.c:209
+msgid "force caps without doing a typefind"
+msgstr ""
+
+#: plugins/elements/gsttypefindelement.c:512
+#: plugins/elements/gsttypefindelement.c:776
 msgid "Stream contains no data."
 msgstr "Strömmen innehåller inget data."
 
@@ -896,29 +919,29 @@ msgstr "skrivbar"
 msgid "controllable"
 msgstr "kontrollerbar"
 
-#: tools/gst-inspect.c:990
+#: tools/gst-inspect.c:1033
 msgid "Total count: "
 msgstr "Totalt antal: "
 
-#: tools/gst-inspect.c:991
+#: tools/gst-inspect.c:1034
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d insticksmodul"
 msgstr[1] "%d insticksmoduler"
 
-#: tools/gst-inspect.c:993
+#: tools/gst-inspect.c:1036
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d funktion"
 msgstr[1] "%d funktioner"
 
-#: tools/gst-inspect.c:1304
+#: tools/gst-inspect.c:1348
 msgid "Print all elements"
 msgstr "Skriv ut alla element"
 
-#: tools/gst-inspect.c:1306
+#: tools/gst-inspect.c:1350
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
@@ -929,12 +952,12 @@ msgstr ""
 "                                       Användbart tillsammans med externa "
 "mekanismer för automatisk installation av insticksmodul"
 
-#: tools/gst-inspect.c:1386
+#: tools/gst-inspect.c:1430
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Kunde inte läsa in fil för insticksmodul: %s\n"
 
-#: tools/gst-inspect.c:1391
+#: tools/gst-inspect.c:1435
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Inget sådant element eller insticksmodul \"%s\"\n"

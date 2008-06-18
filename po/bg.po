@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.15.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-03-03 22:36+0000\n"
+"POT-Creation-Date: 2008-06-11 21:29+0100\n"
 "PO-Revision-Date: 2008-01-19 09:57+0200\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: gst/gst.c:303
+#: gst/gst.c:307
 msgid "Print the GStreamer version"
 msgstr "Отпечатване на версията на GStreamer"
 
-#: gst/gst.c:305
+#: gst/gst.c:309
 msgid "Make all warnings fatal"
 msgstr "Всички предупреждения да са фатални"
 
-#: gst/gst.c:309
+#: gst/gst.c:313
 msgid "Print available debug categories and exit"
 msgstr "Отпечатване на наличните категории за изчистване на грешки и изход"
 
-#: gst/gst.c:313
+#: gst/gst.c:317
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Стандартното ниво за изчистване на грешки — от 1 (само грешки) до 5 (всичко) "
 "или 0 — без никакви съобщения за изчистване на грешки"
 
-#: gst/gst.c:315
+#: gst/gst.c:319
 msgid "LEVEL"
 msgstr "НИВО"
 
-#: gst/gst.c:317
+#: gst/gst.c:321
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,31 +48,31 @@ msgstr ""
 "конкретните нива за съобщения за изчистване на грешки на отделните "
 "категории. Например: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:320
+#: gst/gst.c:324
 msgid "LIST"
 msgstr "СПИСЪК"
 
-#: gst/gst.c:322
+#: gst/gst.c:326
 msgid "Disable colored debugging output"
 msgstr "Спиране на оцветените съобщения за изчистване на грешки"
 
-#: gst/gst.c:325
+#: gst/gst.c:329
 msgid "Disable debugging"
 msgstr "Спиране на съобщенията за изчистване на грешки"
 
-#: gst/gst.c:329
+#: gst/gst.c:333
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Включване на подробни съобщения при зареждане на приставка"
 
-#: gst/gst.c:333
+#: gst/gst.c:337
 msgid "Colon-separated paths containing plugins"
 msgstr "Пътища с приставки, разделени с двоеточие"
 
-#: gst/gst.c:333
+#: gst/gst.c:337
 msgid "PATHS"
 msgstr "ПЪТИЩА"
 
-#: gst/gst.c:336
+#: gst/gst.c:340
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -81,53 +81,58 @@ msgstr ""
 "заредени в допълнение към тези от списъка в променливата на средата "
 "GST_PPLUGIN_PATH"
 
-#: gst/gst.c:338
+#: gst/gst.c:342
 msgid "PLUGINS"
 msgstr "ПРИСТАВКИ"
 
-#: gst/gst.c:341
+#: gst/gst.c:345
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Спиране на прихващането на сегментационни грешки по времето на зареждане на "
 "приставка"
 
-#: gst/gst.c:346
+#: gst/gst.c:350
+#, fuzzy
+msgid "Disable updating the registry"
+msgstr "При прочитането на регистъра да не се ползва fork()"
+
+#: gst/gst.c:355
 msgid "Disable the use of fork() while scanning the registry"
 msgstr "При прочитането на регистъра да не се ползва fork()"
 
-#: gst/gst.c:367
+#: gst/gst.c:376
 msgid "GStreamer Options"
 msgstr "Настройки на GStreamer"
 
-#: gst/gst.c:368
+#: gst/gst.c:377
 msgid "Show GStreamer Options"
 msgstr "Показване на опциите на GStreamer"
 
-#: gst/gst.c:737
+#: gst/gst.c:752
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Грешка при запазването на кеша на регистъра в „%s“: %s"
 
-#: gst/gst.c:779 gst/gst.c:795 gst/gst.c:840
+#: gst/gst.c:788 gst/gst.c:797 gst/gst.c:842
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr "Грешка при повторното прочитане на регистъра „%s“: %s"
 
-#: gst/gst.c:855
+#: gst/gst.c:857
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr "Грешка при повторното прочитане на регистъра „%s“"
 
-#: gst/gst.c:1144
+#: gst/gst.c:1235
 msgid "Unknown option"
 msgstr "Непозната опция"
 
-#: gst/gstelement.c:299 gst/gstutils.c:2184
+#: gst/gstelement.c:299 gst/gstutils.c:2202
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ГРЕШКА: от елемент %s: %s\n"
 
-#: gst/gstelement.c:301 gst/gstutils.c:2186 tools/gst-launch.c:460
+#: gst/gstelement.c:301 gst/gstutils.c:2204 tools/gst-launch.c:460
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -309,12 +314,22 @@ msgstr "Потокът от данни не може да бъде уплътн�
 msgid "The stream is in the wrong format."
 msgstr "Потокът е с грешен формат."
 
-#: gst/gsterror.c:297
+#: gst/gsterror.c:248
+msgid "The stream is encrypted and decryption is not supported."
+msgstr ""
+
+#: gst/gsterror.c:250
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr ""
+
+#: gst/gsterror.c:302
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Няма съобщение за грешка за областта %s."
 
-#: gst/gsterror.c:305
+#: gst/gsterror.c:310
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Няма стандартно съобщение за грешка за областта %s с код %d."
@@ -693,87 +708,87 @@ msgstr "брой тактове в минута в аудио"
 msgid ", "
 msgstr ", "
 
-#: gst/parse/grammar.y:223
+#: gst/parse/grammar.y:230
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "указан е празен резервоар „%s“, това е забранено"
 
-#: gst/parse/grammar.y:232
+#: gst/parse/grammar.y:240
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "няма резервоар на име „%s“, пропуска се"
 
-#: gst/parse/grammar.y:354
+#: gst/parse/grammar.y:366
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "елементът „2$%s“ няма свойството „1$%s“"
 
-#: gst/parse/grammar.y:369
+#: gst/parse/grammar.y:381
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "свойството „%s“ на елемента „%s“ не може да се зададе да е „%s“"
 
-#: gst/parse/grammar.y:511
+#: gst/parse/grammar.y:523
 #, c-format
 msgid "could not link %s to %s"
 msgstr "%s не може да се свърже към %s"
 
-#: gst/parse/grammar.y:558
+#: gst/parse/grammar.y:571
 #, c-format
 msgid "no element \"%s\""
 msgstr "елементът „%s“ липсва"
 
-#: gst/parse/grammar.y:605
+#: gst/parse/grammar.y:623
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "възможностите „%s“ не могат да бъдат анализирани"
 
-#: gst/parse/grammar.y:627 gst/parse/grammar.y:675 gst/parse/grammar.y:691
-#: gst/parse/grammar.y:754
+#: gst/parse/grammar.y:645 gst/parse/grammar.y:693 gst/parse/grammar.y:709
+#: gst/parse/grammar.y:772
 msgid "link without source element"
 msgstr "връзка без елемент-източник"
 
-#: gst/parse/grammar.y:633 gst/parse/grammar.y:672 gst/parse/grammar.y:763
+#: gst/parse/grammar.y:651 gst/parse/grammar.y:690 gst/parse/grammar.y:781
 msgid "link without sink element"
 msgstr "връзка без елемент-приемник"
 
-#: gst/parse/grammar.y:709
+#: gst/parse/grammar.y:727
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "няма елемент-източник за адрес „%s“"
 
-#: gst/parse/grammar.y:719
+#: gst/parse/grammar.y:737
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "няма елемент-връзка от адрес „%s“ към"
 
-#: gst/parse/grammar.y:727
+#: gst/parse/grammar.y:745
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "няма елемент-приемник за адрес „%s“"
 
-#: gst/parse/grammar.y:734
+#: gst/parse/grammar.y:752
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "не може да се свърже елемент-приемник към адрес „%s“"
 
-#: gst/parse/grammar.y:748
+#: gst/parse/grammar.y:766
 msgid "empty pipeline not allowed"
 msgstr "не е позволен празен конвейер"
 
-#: libs/gst/base/gstbasesrc.c:1818
+#: libs/gst/base/gstbasesrc.c:1915
 msgid "Internal clock error."
 msgstr "Вътрешна грешка на часовника."
 
-#: libs/gst/base/gstbasesrc.c:2164 libs/gst/base/gstbasesrc.c:2175
+#: libs/gst/base/gstbasesrc.c:2239 libs/gst/base/gstbasesrc.c:2250
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка на потока от данни."
 
-#: libs/gst/base/gstbasesink.c:2518
+#: libs/gst/base/gstbasesink.c:2579
 msgid "Internal data flow problem."
 msgstr "Вътрешен проблем на потока от данни."
 
-#: libs/gst/base/gstbasesink.c:2657
+#: libs/gst/base/gstbasesink.c:2726
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка на потока от данни."
 
@@ -799,76 +814,84 @@ msgstr "Грешка при запис във файловия дескрипт�
 msgid "File descriptor \"%d\" is not valid."
 msgstr "Файловият дескриптор „%d“ е неправилен."
 
-#: plugins/elements/gstfilesink.c:345
+#: plugins/elements/gstfilesink.c:352
 msgid "No file name specified for writing."
 msgstr "Не е указано име на файл за запис."
 
-#: plugins/elements/gstfilesink.c:351
+#: plugins/elements/gstfilesink.c:358
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Файлът „%s“ не може да се отвори за запис."
 
-#: plugins/elements/gstfilesink.c:376
+#: plugins/elements/gstfilesink.c:383
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Грешка при затварянето на файла „%s“."
 
-#: plugins/elements/gstfilesink.c:512
+#: plugins/elements/gstfilesink.c:519
 #, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Грешка при позициониране във файл „%s“."
 
-#: plugins/elements/gstfilesink.c:519 plugins/elements/gstfilesink.c:579
+#: plugins/elements/gstfilesink.c:526 plugins/elements/gstfilesink.c:588
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Грешка при запис във файл „%s“."
 
-#: plugins/elements/gstfilesrc.c:969
+#: plugins/elements/gstfilesrc.c:973
 msgid "No file name specified for reading."
 msgstr "Не е указано име на файл за четене."
 
-#: plugins/elements/gstfilesrc.c:981
+#: plugins/elements/gstfilesrc.c:985
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Файлът „%s“ не може да се отвори за четене."
 
-#: plugins/elements/gstfilesrc.c:990
+#: plugins/elements/gstfilesrc.c:994
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Не може да се получи информация за „%s“."
 
-#: plugins/elements/gstfilesrc.c:997
+#: plugins/elements/gstfilesrc.c:1001
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "„%s“ е папка."
 
-#: plugins/elements/gstfilesrc.c:1004
+#: plugins/elements/gstfilesrc.c:1008
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Файлът „%s“ е гнездо."
 
-#: plugins/elements/gstidentity.c:511
+#: plugins/elements/gstidentity.c:548
 msgid "Failed after iterations as requested."
 msgstr "Грешка след заявения брой повторения."
 
-#: plugins/elements/gsttypefindelement.c:192
+#: plugins/elements/gsttypefindelement.c:194
 msgid "caps"
 msgstr "възможности"
 
-#: plugins/elements/gsttypefindelement.c:193
+#: plugins/elements/gsttypefindelement.c:195
 msgid "detected capabilities in stream"
 msgstr "засечените възможности на потока"
 
-#: plugins/elements/gsttypefindelement.c:196
+#: plugins/elements/gsttypefindelement.c:198
 msgid "minimum"
 msgstr "минимум"
 
-#: plugins/elements/gsttypefindelement.c:200
+#: plugins/elements/gsttypefindelement.c:203
 msgid "maximum"
 msgstr "максимум"
 
-#: plugins/elements/gsttypefindelement.c:493
-#: plugins/elements/gsttypefindelement.c:742
+#: plugins/elements/gsttypefindelement.c:208
+msgid "force caps"
+msgstr ""
+
+#: plugins/elements/gsttypefindelement.c:209
+msgid "force caps without doing a typefind"
+msgstr ""
+
+#: plugins/elements/gsttypefindelement.c:512
+#: plugins/elements/gsttypefindelement.c:776
 msgid "Stream contains no data."
 msgstr "Потокът не съдържа никакви данни"
 
@@ -888,29 +911,29 @@ msgstr "с права за запис"
 msgid "controllable"
 msgstr "може да се контролира"
 
-#: tools/gst-inspect.c:990
+#: tools/gst-inspect.c:1033
 msgid "Total count: "
 msgstr "Общ брой:"
 
-#: tools/gst-inspect.c:991
+#: tools/gst-inspect.c:1034
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d приставка"
 msgstr[1] "%d приставки"
 
-#: tools/gst-inspect.c:993
+#: tools/gst-inspect.c:1036
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d свойство"
 msgstr[1] "%d свойства"
 
-#: tools/gst-inspect.c:1304
+#: tools/gst-inspect.c:1348
 msgid "Print all elements"
 msgstr "Отпечатване на всички елементи"
 
-#: tools/gst-inspect.c:1306
+#: tools/gst-inspect.c:1350
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
@@ -921,12 +944,12 @@ msgstr ""
 "                                       Удобно във връзка с външни механизми "
 "за автоматично инсталиране на приставки"
 
-#: tools/gst-inspect.c:1386
+#: tools/gst-inspect.c:1430
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Файлът на приставката не може да бъде зареден: %s\n"
 
-#: tools/gst-inspect.c:1391
+#: tools/gst-inspect.c:1435
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Няма такъв елемент или приставка „%s“\n"

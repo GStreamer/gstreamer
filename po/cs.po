@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-03-03 22:36+0000\n"
+"POT-Creation-Date: 2008-06-11 21:29+0100\n"
 "PO-Revision-Date: 2007-12-30 22:44+0100\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -18,29 +18,29 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
 "10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: gst/gst.c:303
+#: gst/gst.c:307
 msgid "Print the GStreamer version"
 msgstr "Vypsat verzi GStreamer"
 
-#: gst/gst.c:305
+#: gst/gst.c:309
 msgid "Make all warnings fatal"
 msgstr "Chápat všechna varování jako fatální"
 
-#: gst/gst.c:309
+#: gst/gst.c:313
 msgid "Print available debug categories and exit"
 msgstr "Vypsat dostupné kategorie ladění a skončit"
 
-#: gst/gst.c:313
+#: gst/gst.c:317
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Implicitní úroveň ladění od 1 (jen chyby) do 5 (vše) nebo 0 pro žádný výstup"
 
-#: gst/gst.c:315
+#: gst/gst.c:319
 msgid "LEVEL"
 msgstr "ÚROVEŇ"
 
-#: gst/gst.c:317
+#: gst/gst.c:321
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -49,31 +49,31 @@ msgstr ""
 "konkrétních úrovní pro jednotlivé kategorie. Příklad: GST_AUTOPLUG:5,"
 "GST_ELEMENT_*:3"
 
-#: gst/gst.c:320
+#: gst/gst.c:324
 msgid "LIST"
 msgstr "SEZNAM"
 
-#: gst/gst.c:322
+#: gst/gst.c:326
 msgid "Disable colored debugging output"
 msgstr "Zakázat obarvený ladicí výstup"
 
-#: gst/gst.c:325
+#: gst/gst.c:329
 msgid "Disable debugging"
 msgstr "Zakázat ladění"
 
-#: gst/gst.c:329
+#: gst/gst.c:333
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Povolit podrobnou diagnostiku načítání modulů"
 
-#: gst/gst.c:333
+#: gst/gst.c:337
 msgid "Colon-separated paths containing plugins"
 msgstr "Dvojtečkou oddělené cesty obsahující moduly"
 
-#: gst/gst.c:333
+#: gst/gst.c:337
 msgid "PATHS"
 msgstr "CESTY"
 
-#: gst/gst.c:336
+#: gst/gst.c:340
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -81,51 +81,56 @@ msgstr ""
 "Čárkami oddělený seznam modulů, které přednačíst kromě seznamu uloženém v "
 "proměnné prostředí GST_PLUGIN_PATH"
 
-#: gst/gst.c:338
+#: gst/gst.c:342
 msgid "PLUGINS"
 msgstr "MODULY"
 
-#: gst/gst.c:341
+#: gst/gst.c:345
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Zakázat zachycování porušení segmentace při načítání modulů"
 
-#: gst/gst.c:346
+#: gst/gst.c:350
+#, fuzzy
+msgid "Disable updating the registry"
+msgstr "Zakázat používání fork() při prohledávání registru"
+
+#: gst/gst.c:355
 msgid "Disable the use of fork() while scanning the registry"
 msgstr "Zakázat používání fork() při prohledávání registru"
 
-#: gst/gst.c:367
+#: gst/gst.c:376
 msgid "GStreamer Options"
 msgstr "Přepínače GStreameru"
 
-#: gst/gst.c:368
+#: gst/gst.c:377
 msgid "Show GStreamer Options"
 msgstr "Zobrazit přepínače GStreameru"
 
-#: gst/gst.c:737
+#: gst/gst.c:752
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Chyba při zapisování cache registru do %s: %s"
 
-#: gst/gst.c:779 gst/gst.c:795 gst/gst.c:840
+#: gst/gst.c:788 gst/gst.c:797 gst/gst.c:842
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr "Chyba při opětovném prohledávání registru %s: %s"
 
-#: gst/gst.c:855
+#: gst/gst.c:857
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr "Chyba při opětovném prohledávání registru %s"
 
-#: gst/gst.c:1144
+#: gst/gst.c:1235
 msgid "Unknown option"
 msgstr "Neznámý přepínač"
 
-#: gst/gstelement.c:299 gst/gstutils.c:2184
+#: gst/gstelement.c:299 gst/gstutils.c:2202
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "CHYBA: od elementu %s: %s\n"
 
-#: gst/gstelement.c:301 gst/gstutils.c:2186 tools/gst-launch.c:460
+#: gst/gstelement.c:301 gst/gstutils.c:2204 tools/gst-launch.c:460
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -304,12 +309,22 @@ msgstr "Nemohu multiplexovat proud."
 msgid "The stream is in the wrong format."
 msgstr "Proud je ve špatném formátu."
 
-#: gst/gsterror.c:297
+#: gst/gsterror.c:248
+msgid "The stream is encrypted and decryption is not supported."
+msgstr ""
+
+#: gst/gsterror.c:250
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr ""
+
+#: gst/gsterror.c:302
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Pro doménu %s není zpráva o chybě."
 
-#: gst/gsterror.c:305
+#: gst/gsterror.c:310
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Pro doménu %s a kód %d není standardní zpráva o chybě."
@@ -687,87 +702,87 @@ msgstr "počet taktů ve zvuku za minutu"
 msgid ", "
 msgstr ", "
 
-#: gst/parse/grammar.y:223
+#: gst/parse/grammar.y:230
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "zadán prázdný zásobník \"%s\", nedovoleno"
 
-#: gst/parse/grammar.y:232
+#: gst/parse/grammar.y:240
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "zásobník \"%s\" neexistuje, přeskakuji"
 
-#: gst/parse/grammar.y:354
+#: gst/parse/grammar.y:366
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "v elementu \"%2$s\" není vlastnost \"%1$s\""
 
-#: gst/parse/grammar.y:369
+#: gst/parse/grammar.y:381
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "nemohu nastavit vlastnost \"%s\" v elementu \"%s\" na \"%s\""
 
-#: gst/parse/grammar.y:511
+#: gst/parse/grammar.y:523
 #, c-format
 msgid "could not link %s to %s"
 msgstr "nemohu připojit %s k %s"
 
-#: gst/parse/grammar.y:558
+#: gst/parse/grammar.y:571
 #, c-format
 msgid "no element \"%s\""
 msgstr "element \"%s\" neexistuje"
 
-#: gst/parse/grammar.y:605
+#: gst/parse/grammar.y:623
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "nemohu zpracovat schopnosti \"%s\""
 
-#: gst/parse/grammar.y:627 gst/parse/grammar.y:675 gst/parse/grammar.y:691
-#: gst/parse/grammar.y:754
+#: gst/parse/grammar.y:645 gst/parse/grammar.y:693 gst/parse/grammar.y:709
+#: gst/parse/grammar.y:772
 msgid "link without source element"
 msgstr "propojení bez elementu zdroje"
 
-#: gst/parse/grammar.y:633 gst/parse/grammar.y:672 gst/parse/grammar.y:763
+#: gst/parse/grammar.y:651 gst/parse/grammar.y:690 gst/parse/grammar.y:781
 msgid "link without sink element"
 msgstr "propojení bez elementu spotřebiče"
 
-#: gst/parse/grammar.y:709
+#: gst/parse/grammar.y:727
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "neexistuje element zdroje pro URI \"%s\""
 
-#: gst/parse/grammar.y:719
+#: gst/parse/grammar.y:737
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "neexistuje element, ke kterému připojit URI \"%s\""
 
-#: gst/parse/grammar.y:727
+#: gst/parse/grammar.y:745
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "neexistuje element spotřebiče pro URI \"%s\""
 
-#: gst/parse/grammar.y:734
+#: gst/parse/grammar.y:752
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "nemohu připojit element spotřebiče pro URI \"%s\""
 
-#: gst/parse/grammar.y:748
+#: gst/parse/grammar.y:766
 msgid "empty pipeline not allowed"
 msgstr "prázdná roura není povolena"
 
-#: libs/gst/base/gstbasesrc.c:1818
+#: libs/gst/base/gstbasesrc.c:1915
 msgid "Internal clock error."
 msgstr "Interní chyba hodin."
 
-#: libs/gst/base/gstbasesrc.c:2164 libs/gst/base/gstbasesrc.c:2175
+#: libs/gst/base/gstbasesrc.c:2239 libs/gst/base/gstbasesrc.c:2250
 msgid "Internal data flow error."
 msgstr "Interní chyba toku dat."
 
-#: libs/gst/base/gstbasesink.c:2518
+#: libs/gst/base/gstbasesink.c:2579
 msgid "Internal data flow problem."
 msgstr "Interní problém toku dat."
 
-#: libs/gst/base/gstbasesink.c:2657
+#: libs/gst/base/gstbasesink.c:2726
 msgid "Internal data stream error."
 msgstr "Interní chyba proudu dat."
 
@@ -793,76 +808,84 @@ msgstr "Chyba při zápisu do deksriptoru souboru \"%d\"."
 msgid "File descriptor \"%d\" is not valid."
 msgstr "Deskriptor souboru \"%d\" není platný."
 
-#: plugins/elements/gstfilesink.c:345
+#: plugins/elements/gstfilesink.c:352
 msgid "No file name specified for writing."
 msgstr "Nezadán název souboru pro zápis."
 
-#: plugins/elements/gstfilesink.c:351
+#: plugins/elements/gstfilesink.c:358
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Nemohu otevřít soubor \"%s\" pro zápis."
 
-#: plugins/elements/gstfilesink.c:376
+#: plugins/elements/gstfilesink.c:383
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Chyba při zavírání souboru \"%s\"."
 
-#: plugins/elements/gstfilesink.c:512
+#: plugins/elements/gstfilesink.c:519
 #, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Chyba při posunu v souboru \"%s\"."
 
-#: plugins/elements/gstfilesink.c:519 plugins/elements/gstfilesink.c:579
+#: plugins/elements/gstfilesink.c:526 plugins/elements/gstfilesink.c:588
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Chyba při zápisu do souboru \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:969
+#: plugins/elements/gstfilesrc.c:973
 msgid "No file name specified for reading."
 msgstr "Nezadán název souboru pro čtení."
 
-#: plugins/elements/gstfilesrc.c:981
+#: plugins/elements/gstfilesrc.c:985
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nemohu otevřít soubor \"%s\" pro čtení."
 
-#: plugins/elements/gstfilesrc.c:990
+#: plugins/elements/gstfilesrc.c:994
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Nemohu získat informace o \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:997
+#: plugins/elements/gstfilesrc.c:1001
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" je adresář."
 
-#: plugins/elements/gstfilesrc.c:1004
+#: plugins/elements/gstfilesrc.c:1008
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Soubor \"%s\" je socket."
 
-#: plugins/elements/gstidentity.c:511
+#: plugins/elements/gstidentity.c:548
 msgid "Failed after iterations as requested."
 msgstr "Selhání po iteracích podle požadavku."
 
-#: plugins/elements/gsttypefindelement.c:192
+#: plugins/elements/gsttypefindelement.c:194
 msgid "caps"
 msgstr "schopnosti"
 
-#: plugins/elements/gsttypefindelement.c:193
+#: plugins/elements/gsttypefindelement.c:195
 msgid "detected capabilities in stream"
 msgstr "detekované schopnosti v proudu"
 
-#: plugins/elements/gsttypefindelement.c:196
+#: plugins/elements/gsttypefindelement.c:198
 msgid "minimum"
 msgstr "minimum"
 
-#: plugins/elements/gsttypefindelement.c:200
+#: plugins/elements/gsttypefindelement.c:203
 msgid "maximum"
 msgstr "maximum"
 
-#: plugins/elements/gsttypefindelement.c:493
-#: plugins/elements/gsttypefindelement.c:742
+#: plugins/elements/gsttypefindelement.c:208
+msgid "force caps"
+msgstr ""
+
+#: plugins/elements/gsttypefindelement.c:209
+msgid "force caps without doing a typefind"
+msgstr ""
+
+#: plugins/elements/gsttypefindelement.c:512
+#: plugins/elements/gsttypefindelement.c:776
 msgid "Stream contains no data."
 msgstr "Proud neobsahuje žádná data."
 
@@ -882,11 +905,11 @@ msgstr "lze zapisovat"
 msgid "controllable"
 msgstr "lze ovládat"
 
-#: tools/gst-inspect.c:990
+#: tools/gst-inspect.c:1033
 msgid "Total count: "
 msgstr "Celkový počet: "
 
-#: tools/gst-inspect.c:991
+#: tools/gst-inspect.c:1034
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
@@ -894,7 +917,7 @@ msgstr[0] "%d modul"
 msgstr[1] "%d moduly"
 msgstr[2] "%d modulů"
 
-#: tools/gst-inspect.c:993
+#: tools/gst-inspect.c:1036
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
@@ -902,11 +925,11 @@ msgstr[0] "%d funkce"
 msgstr[1] "%d funkce"
 msgstr[2] "%d funkcí"
 
-#: tools/gst-inspect.c:1304
+#: tools/gst-inspect.c:1348
 msgid "Print all elements"
 msgstr "Vypsat všechny elementy"
 
-#: tools/gst-inspect.c:1306
+#: tools/gst-inspect.c:1350
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
@@ -916,12 +939,12 @@ msgstr ""
 "                                       Užitečné spolu s externími mechanismy "
 "pro automatickou instlaci modulů"
 
-#: tools/gst-inspect.c:1386
+#: tools/gst-inspect.c:1430
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Nemohu načíst soubor modulu: %s\n"
 
-#: tools/gst-inspect.c:1391
+#: tools/gst-inspect.c:1435
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Element nebo modul '%s' neexistuje\n"
