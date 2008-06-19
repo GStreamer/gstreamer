@@ -1,5 +1,25 @@
 2008-06-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/matroska/matroska-demux.c: (gst_matroska_track_free),
+	(gst_matroska_demux_add_mpeg_seq_header),
+	(gst_matroska_demux_add_wvpk_header),
+	(gst_matroska_demux_check_subtitle_buffer),
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock),
+	(gst_matroska_demux_video_caps), (gst_matroska_demux_audio_caps),
+	(gst_matroska_demux_subtitle_caps):
+	* gst/matroska/matroska-ids.h:
+	Add a "vfunc" to the track context for postprocessing frames and
+	convert the wavpack and subtitle postprocessing to this vfunc.
+	Copy buffer flags in those functions to the new buffers too.
+
+	Parse CodecState elements of Blocks.
+
+	Add a postprocessing function for MPEG video that adds the sequence
+	header from the codec private data or codec state to the frames if
+	it's not already there.
+
+2008-06-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/matroska/matroska-demux.c:
 	(gst_matroska_demux_parse_blockgroup_or_simpleblock):
 	If a gap of more than 1/2 second is found in one stream send a

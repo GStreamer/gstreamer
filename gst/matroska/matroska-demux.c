@@ -219,6 +219,7 @@ gst_matroska_track_free (GstMatroskaTrackContext * track)
   g_free (track->name);
   g_free (track->language);
   g_free (track->codec_priv);
+  g_free (track->codec_state);
 
   if (track->encodings != NULL) {
     int i;
@@ -3248,20 +3249,72 @@ gst_matroska_demux_push_dvd_clut_change_event (GstMatroskaDemux * demux,
   g_free (buf);
 }
 
-static gboolean
-gst_matroska_demux_stream_is_wavpack (GstMatroskaTrackContext * stream)
+static GstFlowReturn
+gst_matroska_demux_add_mpeg_seq_header (GstElement * element,
+    GstMatroskaTrackContext * stream, GstBuffer ** buf)
 {
-  if (stream->type == GST_MATROSKA_TRACK_TYPE_AUDIO) {
-    return (strcmp (stream->codec_id,
-            GST_MATROSKA_CODEC_ID_AUDIO_WAVPACK4) == 0);
+  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
+
+  guint8 *seq_header;
+
+  guint seq_header_len;
+
+  guint32 header;
+
+  if (stream->codec_state) {
+    seq_header = stream->codec_state;
+    seq_header_len = stream->codec_state_size;
+  } else if (stream->codec_priv) {
+    seq_header = stream->codec_priv;
+    seq_header_len = stream->codec_priv_size;
+  } else {
+    return GST_FLOW_OK;
   }
-  return FALSE;
+
+  /* Sequence header only needed for keyframes */
+  if (GST_BUFFER_FLAG_IS_SET (*buf, GST_BUFFER_FLAG_DELTA_UNIT))
+    return GST_FLOW_OK;
+
+  if (GST_BUFFER_SIZE (*buf) < 4)
+    return GST_FLOW_OK;
+
+  header = GST_READ_UINT32_BE (GST_BUFFER_DATA (*buf));
+  /* Sequence start code, if not found prepend */
+  if (header != 0x000001b3) {
+    GstBuffer *newbuf;
+
+    GstFlowReturn ret, cret;
+
+    ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
+        GST_BUFFER_OFFSET_NONE, GST_BUFFER_SIZE (*buf) + seq_header_len,
+        stream->caps, &newbuf);
+    cret = gst_matroska_demux_combine_flows (demux, stream, ret);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (demux, "Reallocating buffer for sequence header "
+          "failed: %s, combined flow return: %s", gst_flow_get_name (ret),
+          gst_flow_get_name (cret));
+      return cret;
+    }
+
+    GST_DEBUG_OBJECT (demux, "Prepending MPEG sequence header");
+    gst_buffer_copy_metadata (newbuf, *buf, GST_BUFFER_COPY_TIMESTAMPS |
+        GST_BUFFER_COPY_FLAGS);
+    g_memmove (GST_BUFFER_DATA (newbuf), seq_header, seq_header_len);
+    g_memmove (GST_BUFFER_DATA (newbuf) + seq_header_len,
+        GST_BUFFER_DATA (*buf), GST_BUFFER_SIZE (*buf));
+    gst_buffer_unref (*buf);
+    *buf = newbuf;
+  }
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
-gst_matroska_demux_add_wvpk_header (GstMatroskaDemux * demux,
-    GstMatroskaTrackContext * stream, gint block_length, GstBuffer ** buf)
+gst_matroska_demux_add_wvpk_header (GstElement * element,
+    GstMatroskaTrackContext * stream, GstBuffer ** buf)
 {
+  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
+
   GstBuffer *newbuf;
 
   guint8 *data;
@@ -3283,7 +3336,7 @@ gst_matroska_demux_add_wvpk_header (GstMatroskaDemux * demux,
   /* -20 because ck_size is the size of the wavpack block -8
    * and lace_size is the size of the wavpack block + 12
    * (the three guint32 of the header that already are in the buffer) */
-  wvh.ck_size = block_length + sizeof (Wavpack4Header) - 20;
+  wvh.ck_size = GST_BUFFER_SIZE (*buf) + sizeof (Wavpack4Header) - 20;
   wvh.version = GST_READ_UINT16_LE (stream->codec_priv);
   wvh.track_no = 0;
   wvh.index_no = 0;
@@ -3291,7 +3344,7 @@ gst_matroska_demux_add_wvpk_header (GstMatroskaDemux * demux,
   wvh.block_index = 0;
 
   /* block_samples, flags and crc are already in the buffer */
-  newlen = block_length + sizeof (Wavpack4Header) - 12;
+  newlen = GST_BUFFER_SIZE (*buf) + sizeof (Wavpack4Header) - 12;
   ret = gst_pad_alloc_buffer_and_set_caps (stream->pad, GST_BUFFER_OFFSET_NONE,
       newlen, stream->caps, &newbuf);
   cret = gst_matroska_demux_combine_flows (demux, stream, ret);
@@ -3312,18 +3365,21 @@ gst_matroska_demux_add_wvpk_header (GstMatroskaDemux * demux,
   GST_WRITE_UINT8 (data + 11, wvh.index_no);
   GST_WRITE_UINT32_LE (data + 12, wvh.total_samples);
   GST_WRITE_UINT32_LE (data + 16, wvh.block_index);
-  g_memmove (data + 20, GST_BUFFER_DATA (*buf), block_length);
-  gst_buffer_copy_metadata (newbuf, *buf, GST_BUFFER_COPY_TIMESTAMPS);
+  g_memmove (data + 20, GST_BUFFER_DATA (*buf), GST_BUFFER_SIZE (*buf));
+  gst_buffer_copy_metadata (newbuf, *buf,
+      GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
   gst_buffer_unref (*buf);
   *buf = newbuf;
 
   return cret;
 }
 
-static GstBuffer *
-gst_matroska_demux_check_subtitle_buffer (GstMatroskaDemux * demux,
-    GstMatroskaTrackContext * stream, GstBuffer * buf)
+static GstFlowReturn
+gst_matroska_demux_check_subtitle_buffer (GstElement * element,
+    GstMatroskaTrackContext * stream, GstBuffer ** buf)
 {
+  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
+
   GstMatroskaTrackSubtitleContext *sub_stream;
 
   const gchar *encoding, *data;
@@ -3338,15 +3394,12 @@ gst_matroska_demux_check_subtitle_buffer (GstMatroskaDemux * demux,
 
   sub_stream = (GstMatroskaTrackSubtitleContext *) stream;
 
-  if (!sub_stream->check_utf8)
-    return buf;
-
-  data = (const gchar *) GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  data = (const gchar *) GST_BUFFER_DATA (*buf);
+  size = GST_BUFFER_SIZE (*buf);
 
   if (!sub_stream->invalid_utf8) {
     if (g_utf8_validate (data, size, NULL)) {
-      return buf;
+      return GST_FLOW_OK;
     }
     GST_WARNING_OBJECT (demux, "subtitle stream %d is not valid UTF-8, this "
         "is broken according to the matroska specification", stream->num);
@@ -3388,10 +3441,12 @@ gst_matroska_demux_check_subtitle_buffer (GstMatroskaDemux * demux,
   GST_BUFFER_MALLOCDATA (newbuf) = (guint8 *) utf8;
   GST_BUFFER_DATA (newbuf) = (guint8 *) utf8;
   GST_BUFFER_SIZE (newbuf) = strlen (utf8);
-  gst_buffer_copy_metadata (newbuf, buf, GST_BUFFER_COPY_TIMESTAMPS);
+  gst_buffer_copy_metadata (newbuf, *buf,
+      GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
   gst_buffer_unref (buf);
 
-  return newbuf;
+  *buf = newbuf;
+  return GST_FLOW_OK;
 }
 
 static GstBuffer *
@@ -3709,6 +3764,25 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         break;
       }
 
+      case GST_MATROSKA_ID_CODECSTATE:{
+        guint8 *data;
+
+        guint64 data_len = 0;
+
+        if ((ret =
+                gst_ebml_read_binary (ebml, &id, &data,
+                    &data_len)) != GST_FLOW_OK)
+          break;
+
+        g_free (stream->codec_state);
+        stream->codec_state = data;
+        stream->codec_state_size = data_len;
+        /* TODO: decompress/decrypt if necessary */
+        GST_DEBUG_OBJECT (demux, "CodecState of %u bytes",
+            stream->codec_state_size);
+        break;
+      }
+
       default:
         GST_WARNING_OBJECT (demux,
             "Unknown BlockGroup subelement 0x%x - ignoring", id);
@@ -3718,7 +3792,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       case GST_MATROSKA_ID_BLOCKADDITIONS:
       case GST_MATROSKA_ID_REFERENCEPRIORITY:
       case GST_MATROSKA_ID_REFERENCEVIRTUAL:
-      case GST_MATROSKA_ID_CODECSTATE:
       case GST_MATROSKA_ID_SLICES:
         ret = gst_ebml_read_skip (ebml);
         break;
@@ -3802,11 +3875,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       gst_matroska_demux_sync_streams (demux);
 
-      if (gst_matroska_demux_stream_is_wavpack (stream)) {
-        ret =
-            gst_matroska_demux_add_wvpk_header (demux, stream, lace_size[n],
-            &sub);
-      }
 
       if (duration) {
         GST_BUFFER_DURATION (sub) = duration / laces;
@@ -3848,9 +3916,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       gst_buffer_set_caps (sub, GST_PAD_CAPS (stream->pad));
 
-      /* Fix up broken files with subtitles that are not UTF8 */
-      if (stream->type == GST_MATROSKA_TRACK_TYPE_SUBTITLE) {
-        sub = gst_matroska_demux_check_subtitle_buffer (demux, stream, sub);
+      /* Postprocess the buffers depending on the codec used */
+      if (stream->postprocess_frame) {
+        ret = stream->postprocess_frame (GST_ELEMENT (demux), stream, &sub);
       }
 
       ret = gst_pad_push (stream->pad, sub);
@@ -4639,6 +4707,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         "systemstream", G_TYPE_BOOLEAN, FALSE,
         "mpegversion", G_TYPE_INT, mpegversion, NULL);
     *codec_name = g_strdup_printf ("MPEG-%d video", mpegversion);
+    context->postprocess_frame = gst_matroska_demux_add_mpeg_seq_header;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MJPEG)) {
     caps = gst_caps_new_simple ("image/jpeg", NULL);
     *codec_name = g_strdup ("Motion-JPEG");
@@ -4996,6 +5065,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
         "width", G_TYPE_INT, audiocontext->bitdepth,
         "framed", G_TYPE_BOOLEAN, TRUE, NULL);
     *codec_name = g_strdup ("Wavpack audio");
+    context->postprocess_frame = gst_matroska_demux_add_wvpk_header;
   } else if ((!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4)) ||
       (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4)) ||
       (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_COOK))) {
@@ -5047,6 +5117,9 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
 {
   GstCaps *caps = NULL;
 
+  GstMatroskaTrackContext *context =
+      (GstMatroskaTrackContext *) subtitlecontext;
+
   /* for backwards compatibility */
   if (!g_ascii_strcasecmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_ASCII))
     codec_id = GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8;
@@ -5061,24 +5134,22 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
    * Check if we have to do something with codec_private */
   if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8)) {
     caps = gst_caps_new_simple ("text/plain", NULL);
-    subtitlecontext->check_utf8 = TRUE;
+    context->postprocess_frame = gst_matroska_demux_check_subtitle_buffer;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_SSA)) {
     caps = gst_caps_new_simple ("application/x-ssa", NULL);
-    subtitlecontext->check_utf8 = TRUE;
+    context->postprocess_frame = gst_matroska_demux_check_subtitle_buffer;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_ASS)) {
     caps = gst_caps_new_simple ("application/x-ass", NULL);
-    subtitlecontext->check_utf8 = TRUE;
+    context->postprocess_frame = gst_matroska_demux_check_subtitle_buffer;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_USF)) {
     caps = gst_caps_new_simple ("application/x-usf", NULL);
-    subtitlecontext->check_utf8 = TRUE;
+    context->postprocess_frame = gst_matroska_demux_check_subtitle_buffer;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB)) {
     caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
     ((GstMatroskaTrackContext *) subtitlecontext)->send_dvd_event = TRUE;
-    subtitlecontext->check_utf8 = FALSE;
   } else {
     GST_DEBUG ("Unknown subtitle stream: codec_id='%s'", codec_id);
     caps = gst_caps_new_simple ("application/x-subtitle-unknown", NULL);
-    subtitlecontext->check_utf8 = FALSE;
   }
 
   if (data != NULL && size > 0) {

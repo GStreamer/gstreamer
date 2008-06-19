@@ -452,8 +452,11 @@ typedef enum {
   GST_MATROSKA_VIDEOTRACK_INTERLACED = (GST_MATROSKA_TRACK_SHIFT<<0)
 } GstMatroskaVideoTrackFlags;
 
+
+typedef struct _GstMatroskaTrackContext GstMatroskaTrackContext;
+
 /* TODO: check if all fields are used */
-typedef struct _GstMatroskaTrackContext {
+struct _GstMatroskaTrackContext {
   GstPad       *pad;
   GstCaps      *caps;
   guint         index;
@@ -463,6 +466,8 @@ typedef struct _GstMatroskaTrackContext {
   gchar        *codec_id, *codec_name, *name, *language;
   gpointer      codec_priv;
   guint         codec_priv_size;
+  gpointer      codec_state;
+  guint         codec_state_size;
   GstMatroskaTrackType type;
   guint         uid, num;
   GstMatroskaTrackFlags flags;
@@ -491,13 +496,18 @@ typedef struct _GstMatroskaTrackContext {
    * they are put into codec private data, not muxed into the stream */
   guint         xiph_headers_to_skip;
 
+  /* Used for postprocessing a frame before it is pushed from the demuxer */
+  GstFlowReturn (*postprocess_frame) (GstElement *element,
+                                      GstMatroskaTrackContext *context,
+				      GstBuffer **buffer);
+
   /* Tags to send after newsegment event */
   GstTagList   *pending_tags;
 
   /* A GArray of GstMatroskaTrackEncoding structures which contain the
    * encoding (compression/encryption) settings for this track, if any */
   GArray       *encodings;
-} GstMatroskaTrackContext;
+};
 
 typedef struct _GstMatroskaTrackVideoContext {
   GstMatroskaTrackContext parent;
