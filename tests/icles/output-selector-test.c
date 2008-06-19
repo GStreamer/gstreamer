@@ -1,8 +1,13 @@
 #include <gst/gst.h>
 
-//[.. my_bus_callback goes here ..]
+#define SWITCH_TIMEOUT 1000
+#define NUM_VIDEO_BUFFERS 500
 
 static GMainLoop *loop;
+
+/* Output selector src pads */
+static GstPad *osel_src1 = NULL;
+static GstPad *osel_src2 = NULL;
 
 static gboolean
 my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
@@ -40,21 +45,22 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 static gboolean
 switch_cb (gpointer user_data)
 {
-
   GstElement *sel = GST_ELEMENT (user_data);
-  gchar *old_pad_name, *new_pad_name;
+  GstPad *old_pad, *new_pad = NULL;
 
-  g_object_get (G_OBJECT (sel), "active-pad", &old_pad_name, NULL);
+  g_object_get (G_OBJECT (sel), "active-pad", &old_pad, NULL);
 
-  if (g_str_equal (old_pad_name, "src0"))
-    new_pad_name = "src1";
+  if (old_pad == osel_src1)
+    new_pad = osel_src2;
   else
-    new_pad_name = "src0";
+    new_pad = osel_src1;
 
-  g_object_set (G_OBJECT (sel), "active-pad", new_pad_name, NULL);
+  g_object_set (G_OBJECT (sel), "active-pad", new_pad, NULL);
 
-  g_print ("switched from %s to %s\n", old_pad_name, new_pad_name);
-  g_free (old_pad_name);
+  g_print ("switched from %s:%s to %s:%s\n", GST_DEBUG_PAD_NAME (old_pad),
+      GST_DEBUG_PAD_NAME (new_pad));
+
+  gst_object_unref (old_pad);
 
   return TRUE;
 
@@ -64,7 +70,7 @@ gint
 main (gint argc, gchar * argv[])
 {
   GstElement *pipeline, *src, *toverlay, *osel, *sink1, *sink2, *convert;
-  GstPad *osel_src1, *osel_src2, *sinkpad;
+  GstPad *sinkpad;
   GstBus *bus;
 
   /* init GStreamer */
@@ -92,7 +98,7 @@ main (gint argc, gchar * argv[])
   /* set properties */
   g_object_set (G_OBJECT (src), "is-live", TRUE, NULL);
   g_object_set (G_OBJECT (src), "do-timestamp", TRUE, NULL);
-  g_object_set (G_OBJECT (src), "num-buffers", 500, NULL);
+  g_object_set (G_OBJECT (src), "num-buffers", NUM_VIDEO_BUFFERS, NULL);
   g_object_set (G_OBJECT (sink1), "sync", FALSE, "async", FALSE, NULL);
   g_object_set (G_OBJECT (sink2), "sync", FALSE, "async", FALSE, NULL);
   g_object_set (G_OBJECT (osel), "resend-latest", TRUE, NULL);
@@ -127,7 +133,7 @@ main (gint argc, gchar * argv[])
   }
 
   /* add switch callback */
-  g_timeout_add (1000, switch_cb, osel);
+  g_timeout_add (SWITCH_TIMEOUT, switch_cb, osel);
 
   /* change to playing */
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));

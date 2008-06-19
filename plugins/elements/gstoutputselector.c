@@ -61,10 +61,10 @@ enum
   PROP_LAST
 };
 
+GST_BOILERPLATE (GstOutputSelector, gst_output_selector, GstElement,
+    GST_TYPE_ELEMENT);
+
 static void gst_output_selector_dispose (GObject * object);
-static void gst_output_selector_init (GstOutputSelector * sel);
-static void gst_output_selector_base_init (GstOutputSelectorClass * klass);
-static void gst_output_selector_class_init (GstOutputSelectorClass * klass);
 static void gst_output_selector_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_output_selector_get_property (GObject * object,
@@ -79,39 +79,10 @@ static GstStateChangeReturn gst_output_selector_change_state (GstElement *
 static gboolean gst_output_selector_handle_sink_event (GstPad * pad,
     GstEvent * event);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_output_selector_get_type (void)
-{
-  static GType output_selector_type = 0;
-
-  if (!output_selector_type) {
-    static const GTypeInfo output_selector_info = {
-      sizeof (GstOutputSelectorClass),
-      (GBaseInitFunc) gst_output_selector_base_init,
-      NULL,
-      (GClassInitFunc) gst_output_selector_class_init,
-      NULL,
-      NULL,
-      sizeof (GstOutputSelector),
-      0,
-      (GInstanceInitFunc) gst_output_selector_init,
-    };
-    output_selector_type =
-        g_type_register_static (GST_TYPE_ELEMENT,
-        "GstOutputSelector", &output_selector_info, 0);
-    GST_DEBUG_CATEGORY_INIT (output_selector_debug,
-        "output-selector", 0, "An output stream selector element");
-  }
-
-  return output_selector_type;
-}
-
 static void
-gst_output_selector_base_init (GstOutputSelectorClass * klass)
+gst_output_selector_base_init (gpointer g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_set_details (element_class, &gst_output_selector_details);
   gst_element_class_add_pad_template (element_class,
@@ -137,8 +108,7 @@ gst_output_selector_class_init (GstOutputSelectorClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_ACTIVE_PAD,
       g_param_spec_object ("active-pad", "Active pad",
-          "Name of the currently active src pad", GST_TYPE_PAD,
-          G_PARAM_READWRITE));
+          "Currently active src pad", GST_TYPE_PAD, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_RESEND_LATEST,
       g_param_spec_boolean ("resend-latest", "Resend latest buffer",
           "Resend latest buffer after a switch to a new pad", FALSE,
@@ -150,10 +120,14 @@ gst_output_selector_class_init (GstOutputSelectorClass * klass)
       GST_DEBUG_FUNCPTR (gst_output_selector_release_pad);
 
   gstelement_class->change_state = gst_output_selector_change_state;
+
+  GST_DEBUG_CATEGORY_INIT (output_selector_debug,
+      "output-selector", 0, "An output stream selector element");
 }
 
 static void
-gst_output_selector_init (GstOutputSelector * sel)
+gst_output_selector_init (GstOutputSelector * sel,
+    GstOutputSelectorClass * g_class)
 {
   sel->sinkpad =
       gst_pad_new_from_static_template (&gst_output_selector_sink_factory,
@@ -213,7 +187,8 @@ gst_output_selector_set_property (GObject * object, guint prop_id,
 
       next_pad = g_value_get_object (value);
 
-      GST_LOG ("Activating pad %s:%s", GST_DEBUG_PAD_NAME (next_pad));
+      GST_LOG_OBJECT (sel, "Activating pad %s:%s",
+          GST_DEBUG_PAD_NAME (next_pad));
 
       GST_OBJECT_LOCK (object);
       if (next_pad != sel->active_srcpad) {
@@ -335,7 +310,8 @@ gst_output_selector_switch (GstOutputSelector * osel)
     ev = gst_event_new_new_segment (TRUE, seg->rate,
         seg->format, start, seg->stop, position);
     if (!gst_pad_push_event (osel->pending_srcpad, ev)) {
-      GST_WARNING ("newsegment handling failed in %" GST_PTR_FORMAT,
+      GST_WARNING_OBJECT (osel,
+          "newsegment handling failed in %" GST_PTR_FORMAT,
           osel->pending_srcpad);
     }
 
@@ -349,7 +325,7 @@ gst_output_selector_switch (GstOutputSelector * osel)
     /* Switch */
     osel->active_srcpad = osel->pending_srcpad;
   } else {
-    GST_WARNING ("switch failed, pad not linked");
+    GST_WARNING_OBJECT (osel, "switch failed, pad not linked");
     res = FALSE;
   }
 
@@ -386,11 +362,13 @@ gst_output_selector_chain (GstPad * pad, GstBuffer * buf)
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
       last_stop += duration;
     }
-    GST_LOG ("setting last stop %" GST_TIME_FORMAT, GST_TIME_ARGS (last_stop));
+    GST_LOG_OBJECT (osel, "setting last stop %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (last_stop));
     gst_segment_set_last_stop (&osel->segment, osel->segment.format, last_stop);
   }
 
-  GST_LOG ("pushing buffer to %" GST_PTR_FORMAT, osel->active_srcpad);
+  GST_LOG_OBJECT (osel, "pushing buffer to %" GST_PTR_FORMAT,
+      osel->active_srcpad);
   res = gst_pad_push (osel->active_srcpad, buf);
   gst_object_unref (osel);
 
@@ -423,9 +401,9 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
-      GST_DEBUG ("configured NEWSEGMENT update %d, rate %lf, applied rate %lf, "
-          "format %d, "
-          "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
+      GST_DEBUG_OBJECT (sel,
+          "configured NEWSEGMENT update %d, rate %lf, applied rate %lf, "
+          "format %d, " "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
           G_GINT64_FORMAT, update, rate, arate, format, start, stop, time);
 
       gst_segment_set_newsegment_full (&sel->segment, update,
