@@ -3315,61 +3315,148 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
 {
   GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
 
-  GstBuffer *newbuf;
+  GstMatroskaTrackAudioContext *audiocontext =
+      (GstMatroskaTrackAudioContext *) stream;
+  GstBuffer *newbuf = NULL;
 
   guint8 *data;
 
   guint newlen;
 
-  GstFlowReturn ret, cret;
+  GstFlowReturn ret, cret = GST_FLOW_OK;
 
-  /* we need to reconstruct the header of the wavpack block */
   Wavpack4Header wvh;
-
-  /* FIXME: broken for > 2 channels and hybrid files
-     http://www.matroska.org/technical/specs/codecid/wavpack.html */
 
   wvh.ck_id[0] = 'w';
   wvh.ck_id[1] = 'v';
   wvh.ck_id[2] = 'p';
   wvh.ck_id[3] = 'k';
-  /* -20 because ck_size is the size of the wavpack block -8
-   * and lace_size is the size of the wavpack block + 12
-   * (the three guint32 of the header that already are in the buffer) */
-  wvh.ck_size = GST_BUFFER_SIZE (*buf) + sizeof (Wavpack4Header) - 20;
+
   wvh.version = GST_READ_UINT16_LE (stream->codec_priv);
   wvh.track_no = 0;
   wvh.index_no = 0;
   wvh.total_samples = -1;
-  wvh.block_index = 0;
+  wvh.block_index = audiocontext->wvpk_block_index;
 
-  /* block_samples, flags and crc are already in the buffer */
-  newlen = GST_BUFFER_SIZE (*buf) + sizeof (Wavpack4Header) - 12;
-  ret = gst_pad_alloc_buffer_and_set_caps (stream->pad, GST_BUFFER_OFFSET_NONE,
-      newlen, stream->caps, &newbuf);
-  cret = gst_matroska_demux_combine_flows (demux, stream, ret);
-  if (ret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (demux, "pad_alloc failed %s, combined %s",
-        gst_flow_get_name (ret), gst_flow_get_name (cret));
-    return cret;
+  if (audiocontext->channels <= 2) {
+    guint32 block_samples;
+
+    block_samples = GST_READ_UINT32_LE (GST_BUFFER_DATA (*buf));
+    /* we need to reconstruct the header of the wavpack block */
+
+    /* -20 because ck_size is the size of the wavpack block -8
+     * and lace_size is the size of the wavpack block + 12
+     * (the three guint32 of the header that already are in the buffer) */
+    wvh.ck_size = GST_BUFFER_SIZE (*buf) + sizeof (Wavpack4Header) - 20;
+
+    /* block_samples, flags and crc are already in the buffer */
+    newlen = GST_BUFFER_SIZE (*buf) + sizeof (Wavpack4Header) - 12;
+    ret =
+        gst_pad_alloc_buffer_and_set_caps (stream->pad, GST_BUFFER_OFFSET_NONE,
+        newlen, stream->caps, &newbuf);
+    cret = gst_matroska_demux_combine_flows (demux, stream, ret);
+    if (ret != GST_FLOW_OK) {
+      GST_DEBUG_OBJECT (demux, "pad_alloc failed %s, combined %s",
+          gst_flow_get_name (ret), gst_flow_get_name (cret));
+      return cret;
+    }
+
+    data = GST_BUFFER_DATA (newbuf);
+    data[0] = 'w';
+    data[1] = 'v';
+    data[2] = 'p';
+    data[3] = 'k';
+    GST_WRITE_UINT32_LE (data + 4, wvh.ck_size);
+    GST_WRITE_UINT16_LE (data + 8, wvh.version);
+    GST_WRITE_UINT8 (data + 10, wvh.track_no);
+    GST_WRITE_UINT8 (data + 11, wvh.index_no);
+    GST_WRITE_UINT32_LE (data + 12, wvh.total_samples);
+    GST_WRITE_UINT32_LE (data + 16, wvh.block_index);
+    g_memmove (data + 20, GST_BUFFER_DATA (*buf), GST_BUFFER_SIZE (*buf));
+    gst_buffer_copy_metadata (newbuf, *buf,
+        GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
+    gst_buffer_unref (*buf);
+    *buf = newbuf;
+    audiocontext->wvpk_block_index += block_samples;
+  } else {
+    guint8 *outdata;
+
+    guint outpos = 0;
+
+    guint size;
+
+    guint32 block_samples, flags, crc, blocksize;
+
+    data = GST_BUFFER_DATA (*buf);
+    size = GST_BUFFER_SIZE (*buf);
+
+    if (size < 4) {
+      GST_ERROR_OBJECT (demux, "Too small wavpack buffer");
+      return GST_FLOW_ERROR;
+    }
+
+    block_samples = GST_READ_UINT32_LE (data);
+    data += 4;
+    size -= 4;
+
+    while (size > 12) {
+      flags = GST_READ_UINT32_LE (data);
+      data += 4;
+      size -= 4;
+      crc = GST_READ_UINT32_LE (data);
+      data += 4;
+      size -= 4;
+      blocksize = GST_READ_UINT32_LE (data);
+      data += 4;
+      size -= 4;
+
+      if (blocksize == 0 || size < blocksize)
+        break;
+
+      if (newbuf == NULL) {
+        newbuf = gst_buffer_new_and_alloc (sizeof (Wavpack4Header) + blocksize);
+        gst_buffer_set_caps (newbuf, stream->caps);
+
+        gst_buffer_copy_metadata (newbuf, *buf,
+            GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
+
+        outpos = 0;
+        outdata = GST_BUFFER_DATA (newbuf);
+      } else {
+        GST_BUFFER_SIZE (newbuf) += sizeof (Wavpack4Header) + blocksize;
+        GST_BUFFER_DATA (newbuf) =
+            g_realloc (GST_BUFFER_DATA (newbuf), GST_BUFFER_SIZE (newbuf));
+        GST_BUFFER_MALLOCDATA (newbuf) = GST_BUFFER_DATA (newbuf);
+        outdata = GST_BUFFER_DATA (newbuf);
+      }
+
+      outdata[outpos] = 'w';
+      outdata[outpos + 1] = 'v';
+      outdata[outpos + 2] = 'p';
+      outdata[outpos + 3] = 'k';
+      outpos += 4;
+
+      GST_WRITE_UINT32_LE (outdata + outpos,
+          blocksize + sizeof (Wavpack4Header) - 8);
+      GST_WRITE_UINT16_LE (outdata + outpos + 4, wvh.version);
+      GST_WRITE_UINT8 (outdata + outpos + 6, wvh.track_no);
+      GST_WRITE_UINT8 (outdata + outpos + 7, wvh.index_no);
+      GST_WRITE_UINT32_LE (outdata + outpos + 8, wvh.total_samples);
+      GST_WRITE_UINT32_LE (outdata + outpos + 12, wvh.block_index);
+      GST_WRITE_UINT32_LE (outdata + outpos + 16, block_samples);
+      GST_WRITE_UINT32_LE (outdata + outpos + 20, flags);
+      GST_WRITE_UINT32_LE (outdata + outpos + 24, crc);
+      outpos += 28;
+
+      g_memmove (outdata + outpos, data, blocksize);
+      outpos += blocksize;
+      data += blocksize;
+      size -= blocksize;
+    }
+    gst_buffer_unref (*buf);
+    *buf = newbuf;
+    audiocontext->wvpk_block_index += block_samples;
   }
-
-  data = GST_BUFFER_DATA (newbuf);
-  data[0] = 'w';
-  data[1] = 'v';
-  data[2] = 'p';
-  data[3] = 'k';
-  GST_WRITE_UINT32_LE (data + 4, wvh.ck_size);
-  GST_WRITE_UINT16_LE (data + 8, wvh.version);
-  GST_WRITE_UINT8 (data + 10, wvh.track_no);
-  GST_WRITE_UINT8 (data + 11, wvh.index_no);
-  GST_WRITE_UINT32_LE (data + 12, wvh.total_samples);
-  GST_WRITE_UINT32_LE (data + 16, wvh.block_index);
-  g_memmove (data + 20, GST_BUFFER_DATA (*buf), GST_BUFFER_SIZE (*buf));
-  gst_buffer_copy_metadata (newbuf, *buf,
-      GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
-  gst_buffer_unref (*buf);
-  *buf = newbuf;
 
   return cret;
 }
@@ -5066,6 +5153,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
         "framed", G_TYPE_BOOLEAN, TRUE, NULL);
     *codec_name = g_strdup ("Wavpack audio");
     context->postprocess_frame = gst_matroska_demux_add_wvpk_header;
+    audiocontext->wvpk_block_index = 0;
   } else if ((!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4)) ||
       (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4)) ||
       (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_COOK))) {

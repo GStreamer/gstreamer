@@ -1,5 +1,13 @@
 2008-06-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_add_wvpk_header),
+	(gst_matroska_demux_audio_caps):
+	* gst/matroska/matroska-ids.h:
+	Fix demuxing of WavPack files. Muxing is still broken.
+
+2008-06-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/matroska/matroska-demux.c: (gst_matroska_track_free),
 	(gst_matroska_demux_add_mpeg_seq_header),
 	(gst_matroska_demux_add_wvpk_header),

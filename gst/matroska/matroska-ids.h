@@ -523,6 +523,8 @@ typedef struct _GstMatroskaTrackAudioContext {
   GstMatroskaTrackContext parent;
 
   guint         samplerate, channels, bitdepth;
+
+  guint32       wvpk_block_index;
 } GstMatroskaTrackAudioContext;
 
 typedef struct _GstMatroskaTrackSubtitleContext {
