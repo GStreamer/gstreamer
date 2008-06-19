@@ -1,5 +1,12 @@
 2008-06-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_reset),
+	(gst_wavpack_parse_src_query), (gst_wavpack_parse_create_src_pad):
+	Use G_GINT64_CONSTANT, this fixes the duration query on files without
+	known length.
+
+2008-06-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/matroska/matroska-demux.c:
 	(gst_matroska_demux_add_wvpk_header),
 	(gst_matroska_demux_audio_caps):
