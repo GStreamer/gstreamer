@@ -1,3 +1,17 @@
+2008-06-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock):
+	If a gap of more than 1/2 second is found in one stream send a
+	NEWSEGMENT event to not stall the pipeline if the gap is too large.
+	This also fixes Matroska files where the first buffer doesn't start
+	at timestamp 0. Fixes bug #429322.
+
+	The duration of a block is the default duration multiplied with the
+	number of laces. Every lace is one frame and the default duration
+	is the duration of one frame. This fixes playback of files that use
+	lacing for some tracks.
+
 2008-06-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/matroska/matroska-demux.c:

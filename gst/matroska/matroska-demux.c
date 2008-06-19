@@ -25,9 +25,8 @@
  * TODO: check CRC32 if present
  * TODO: there can be a segment after the first segment. Handle like
  *       chained oggs. Fixes #334082
- * TODO: handle gaps better, especially gaps at the start of a track.
- *       Needs sending of filler segments, closing of segments and
- *       other magic... Fixes #429322
+ * TODO: Better handling of segments: close old segments, start first segment
+ *       at the first buffer timestamp and not at 0
  * TODO: Test samples: http://www.matroska.org/samples/matrix/index.html
  *                     http://samples.mplayerhq.hu/Matroska/
  * TODO: check if demuxing is done correct for all codecs according to spec
@@ -3766,11 +3765,13 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             gst_util_gdouble_to_guint64 (gst_util_guint64_to_gdouble
             (block_duration * demux->time_scale) * stream->timecodescale);
     } else if (stream->default_duration) {
-      duration = stream->default_duration;
+      duration = stream->default_duration * laces;
     }
     /* else duration is diff between timecode of this and next block */
     for (n = 0; n < laces; n++) {
       GstBuffer *sub;
+
+      GstClockTimeDiff diff;
 
       if (lace_size[n] == 0)
         continue;
@@ -3782,10 +3783,23 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         sub = gst_matroska_decode_buffer (stream, sub);
 
       GST_BUFFER_TIMESTAMP (sub) = lace_time;
-      if (lace_time != GST_CLOCK_TIME_NONE)
+
+      if (lace_time != GST_CLOCK_TIME_NONE) {
         demux->segment.last_stop = lace_time;
 
+        diff = GST_CLOCK_DIFF (stream->pos, lace_time);
+        if (diff < -GST_SECOND / 2 || diff > GST_SECOND / 2) {
+          GST_DEBUG_OBJECT (demux, "Gap of %" G_GINT64_FORMAT " ns detected in"
+              "stream %d. Sending updated NEWSEGMENT event", diff,
+              stream->index);
+          gst_pad_push_event (stream->pad, gst_event_new_new_segment (TRUE,
+                  demux->segment.rate, GST_FORMAT_TIME, lace_time, -1,
+                  lace_time));
+        }
+      }
+
       stream->pos = demux->segment.last_stop;
+
       gst_matroska_demux_sync_streams (demux);
 
       if (gst_matroska_demux_stream_is_wavpack (stream)) {
@@ -3794,11 +3808,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             &sub);
       }
 
-      /* FIXME: do all laces have the same length? the lenght of a lace should
-       * in theory be default_duration as one lace should contain on frame */
       if (duration) {
         GST_BUFFER_DURATION (sub) = duration / laces;
         stream->pos += GST_BUFFER_DURATION (sub);
+        demux->segment.last_stop += GST_BUFFER_DURATION (sub);
       }
 
       if (is_simpleblock) {
@@ -3820,7 +3833,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
          * decoders might choke. */
         goto done;
       }
-
 
       if (stream->set_discont) {
         GST_BUFFER_FLAG_SET (sub, GST_BUFFER_FLAG_DISCONT);
@@ -3847,7 +3859,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       size -= lace_size[n];
       if (lace_time != GST_CLOCK_TIME_NONE)
-        lace_time += duration;
+        lace_time += duration / laces;
     }
   }
 
