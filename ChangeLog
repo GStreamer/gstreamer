@@ -1,3 +1,8 @@
+2008-06-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpg726pay.c: (gst_rtp_g726_pay_setcaps):
+	Remove unused variable so that we can compile again.
+
 2008-06-19  Peter Kjellerstedt  <pkj@axis.com>
 
 	* gst/rtp/gstrtpg726pay.c: (gst_rtp_g726_pay_setcaps):

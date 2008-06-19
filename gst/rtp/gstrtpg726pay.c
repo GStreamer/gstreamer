@@ -110,7 +110,6 @@ gst_rtp_g726_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   gchar *encoding_name;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
-  const gchar *stname = gst_structure_get_name (structure);
   GstBaseRTPAudioPayload *basertpaudiopayload;
   gint bitrate;
 
