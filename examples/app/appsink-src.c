@@ -38,12 +38,14 @@ on_new_buffer_from_source (GstElement * elt, ProgramData * data)
   memcpy (raw_buffer, GST_BUFFER_DATA (buffer), size);
   app_buffer = gst_app_buffer_new (raw_buffer, size, g_free, raw_buffer);
 
-  /* we don't need the appsink buffer anymore */
-  gst_buffer_unref (buffer);
-
   /* newer basesrc will set caps for use automatically but it does not really
    * hurt to set it on the buffer again */
   gst_buffer_set_caps (app_buffer, GST_BUFFER_CAPS (buffer));
+
+  /* we don't need the appsink buffer anymore */
+  gst_buffer_unref (buffer);
+
+  /* get source an push new buffer */
   source = gst_bin_get_by_name (GST_BIN (data->sink), "testsource");
   gst_app_src_push_buffer (GST_APP_SRC (source), app_buffer);
 }

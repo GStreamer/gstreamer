@@ -1,3 +1,8 @@
+2008-06-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* examples/app/appsink-src.c: (on_new_buffer_from_source):
+	Don't use a buffer after unreffing it.
+
 2008-06-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/metadata/metadataexif.c:
