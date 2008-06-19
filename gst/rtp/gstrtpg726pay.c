@@ -116,15 +116,8 @@ gst_rtp_g726_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
   basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (payload);
 
-  if (strcmp ("audio/x-adpcm", stname) == 0) {
-    if (!gst_structure_get_int (structure, "bitrate", &bitrate))
-      bitrate = 32000;
-  } else if (strcmp ("audio/G723", stname) == 0) {
-    bitrate = 24000;
-  } else if (strcmp ("audio/32KADPCM", stname) == 0) {
+  if (!gst_structure_get_int (structure, "bitrate", &bitrate))
     bitrate = 32000;
-  } else
-    goto invalid_caps;
 
   switch (bitrate) {
     case 16000:
@@ -159,11 +152,6 @@ gst_rtp_g726_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   return TRUE;
 
   /* ERRORS */
-invalid_caps:
-  {
-    GST_ERROR_OBJECT (payload, "unknown caps specified");
-    return FALSE;
-  }
 invalid_bitrate:
   {
     GST_ERROR_OBJECT (payload, "invalid bitrate %d specified", bitrate);

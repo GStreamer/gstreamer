@@ -1,3 +1,9 @@
+2008-06-19  Peter Kjellerstedt  <pkj@axis.com>
+
+	* gst/rtp/gstrtpg726pay.c: (gst_rtp_g726_pay_setcaps):
+	No need to check for audio/G723 and audio/32KADPCM here as they are
+	no longer supported.
+
 2008-06-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_reset),
