@@ -666,7 +666,8 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
 {
   GstControlledProperty *prop;
   GList *node;
-  gboolean ret = FALSE;
+  gboolean ret;
+  GValue value = { 0, };
 
   g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
@@ -674,25 +675,30 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
   GST_LOG ("sync_values");
 
   g_mutex_lock (self->lock);
+  g_object_freeze_notify (self->object);
   /* go over the controlled properties of the controller */
   for (node = self->properties; node; node = g_list_next (node)) {
-    GValue value = { 0, };
     prop = node->data;
 
-    GST_DEBUG ("  property '%s' at ts=%" G_GUINT64_FORMAT, prop->name,
-        timestamp);
+    GST_LOG ("property '%s' at ts=%" G_GUINT64_FORMAT, prop->name, timestamp);
 
     if (!prop->csource || prop->disabled)
       continue;
 
+    /* we can make this faster
+     * http://bugzilla.gnome.org/show_bug.cgi?id=536939
+     */
     g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (prop->pspec));
     ret = gst_control_source_get_value (prop->csource, timestamp, &value);
-    if (ret) {
+    if (G_LIKELY (ret)) {
       g_object_set_property (self->object, prop->name, &value);
-      g_value_unset (&value);
+    } else {
+      GST_LOG ("no control value");
     }
+    g_value_unset (&value);
   }
   self->priv->last_sync = timestamp;
+  g_object_thaw_notify (self->object);
 
   g_mutex_unlock (self->lock);
 
