@@ -1,3 +1,8 @@
+2008-06-20  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	Bump verion back to devel -> 0.10.20.1
+
 2008-06-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/tag/tags.c: (gst_tag_image_data_to_image_buffer):
@@ -895,7 +900,7 @@
 
 2008-05-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
-	Patch by: j^ <j at oil21 dot org>
+	Patch by: Jan Gerber <j at oil21 dot org>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_parse_skeleton_fishead),
 	(gst_ogg_pad_parse_skeleton_fisbone):
