@@ -24,7 +24,7 @@
 # include "config.h"
 #endif
 
-#ifdef HAVE_VALGRIND
+#ifdef HAVE_VALGRIND_H
 # include <valgrind/valgrind.h>
 #else
 # define RUNNING_ON_VALGRIND FALSE

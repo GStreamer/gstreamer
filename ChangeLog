@@ -1,5 +1,11 @@
 2008-06-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tests/check/gst/gstbuffer.c:
+	* tests/check/pipelines/parse-launch.c:
+	  Use HAVE_VALGRIND_H some more.
+
+2008-06-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* scripts/cvs-update.sh:
 	  Pass arguments to make.
 	  Run autoregen.sh if Makefile is not there.
