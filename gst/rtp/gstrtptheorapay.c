@@ -280,8 +280,10 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
 
   GST_DEBUG_OBJECT (rtptheorapay, "finish headers");
 
-  if (!rtptheorapay->headers)
+  if (!rtptheorapay->headers) {
+    GST_DEBUG_OBJECT (rtptheorapay, "We need 2 headers but have none");
     goto no_headers;
+  }
 
   /* +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    * |                     Number of packed headers                  |

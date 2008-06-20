@@ -1,3 +1,9 @@
+2008-06-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/rtp/gstrtptheorapay.c:
+	* gst/udp/gstmultiudpsink.c:
+	  Added debug.
+
 2008-06-20  Christian Schaller <christian.schaller@collabora.co.uk>
 
 	* configure.ac: switch v4l2src over to the normal build instead of

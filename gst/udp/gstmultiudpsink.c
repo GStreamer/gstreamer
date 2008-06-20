@@ -374,7 +374,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   sink->bytes_to_serve += size;
 
-  /* grab lock while iterating and sending to clients, this shuld be
+  /* grab lock while iterating and sending to clients, this should be
    * fast as UDP never blocks */
   g_mutex_lock (sink->client_lock);
   GST_LOG_OBJECT (bsink, "about to send %d bytes", size);
@@ -697,11 +697,14 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
   g_signal_emit (G_OBJECT (sink),
       gst_multiudpsink_signals[SIGNAL_CLIENT_ADDED], 0, host, port);
 
+  GST_DEBUG_OBJECT (sink, "added client on host %s, port %d", host, port);
   return;
 
   /* ERRORS */
 getaddrinfo_error:
   {
+    GST_DEBUG_OBJECT (sink, "did not add client on host %s, port %d", host,
+        port);
     GST_WARNING_OBJECT (sink, "getaddrinfo lookup error?");
     g_free (client->host);
     g_free (client);
