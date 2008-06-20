@@ -1,3 +1,8 @@
+2008-06-20  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	Bump version number back to dev -> 0.10.20.1
+
 2008-06-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/gst/gstreamer-sections.txt:
