@@ -362,6 +362,9 @@ struct _GstPlayBin
   /* our play sink */
   GstPlaySink *playsink;
 
+  /* the last activated source */
+  GstElement *source;
+
   GValueArray *elements;        /* factories we can use for selecting elements */
 };
 
@@ -1299,7 +1302,12 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     }
     case PROP_SOURCE:
+    {
+      GST_OBJECT_LOCK (playbin);
+      g_value_set_object (value, playbin->source);
+      GST_OBJECT_UNLOCK (playbin);
       break;
+    }
     case PROP_FLAGS:
       g_value_set_flags (value, gst_play_sink_get_flags (playbin->playsink));
       break;
@@ -1815,12 +1823,31 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   return GST_AUTOPLUG_SELECT_EXPOSE;
 }
 
+static void
+notify_source (GstElement * uridecodebin, GParamSpec * pspec,
+    GstSourceGroup * group)
+{
+  GstPlayBin *playbin;
+  GstElement *source;
+
+  playbin = group->playbin;
+
+  GST_OBJECT_LOCK (playbin);
+  g_object_get (group->uridecodebin, "source", &source, NULL);
+  if (playbin->source)
+    gst_object_unref (playbin->source);
+  playbin->source = source;
+  GST_OBJECT_UNLOCK (playbin);
+
+  g_object_notify (G_OBJECT (playbin), "source");
+}
+
 /* must be called with PLAY_BIN_LOCK */
 static gboolean
 activate_group (GstPlayBin * playbin, GstSourceGroup * group)
 {
   GstElement *uridecodebin;
-  GstElement *suburidecodebin;
+  GstElement *suburidecodebin = NULL;
 
   g_return_val_if_fail (group->valid, FALSE);
   g_return_val_if_fail (!group->active, FALSE);
@@ -1850,6 +1877,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_signal_connect (uridecodebin, "pad-removed", G_CALLBACK (pad_removed_cb),
       group);
   g_signal_connect (uridecodebin, "no-more-pads", G_CALLBACK (no_more_pads_cb),
+      group);
+  g_signal_connect (uridecodebin, "notify::source", G_CALLBACK (notify_source),
       group);
   /* we have 1 pending no-more-pads */
   group->pending = 1;

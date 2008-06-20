@@ -1,5 +1,12 @@
 2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstplaybin2.c: (gst_play_bin_get_property),
+	(notify_source), (activate_group):
+	Implement the source property, emit notify when it changes in the
+	underlying uridecodebin.
+
+2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* tests/examples/seek/seek.c: (stop_cb):
 	Free and clear the seek element list so that we don't use invalid
 	references when seeking after recreating a gst-launch line.
