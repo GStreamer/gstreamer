@@ -351,8 +351,8 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
         } else {
           GST_DEBUG_OBJECT (basesink,
               "peer or we are not live, don't care about latency");
-          min_latency = 0;
-          max_latency = -1;
+          min_latency = min_l;
+          max_latency = max_l;
         }
         gst_query_set_latency (query, live, min_latency, max_latency);
       }
@@ -1146,6 +1146,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   guint64 in_offset;
   GstClockTime time, stop, render_start, render_stop, sample_offset;
+  GstClockTimeDiff sync_offset, ts_offset;
   GstBaseAudioSink *sink;
   GstRingBuffer *ringbuf;
   gint64 diff, align, ctime, cstop;
@@ -1155,10 +1156,11 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   gint bps;
   gint accum;
   gint out_samples;
-  GstClockTime base_time = GST_CLOCK_TIME_NONE, latency;
+  GstClockTime base_time, render_delay, latency;
   GstClock *clock;
   gboolean sync, slaved, align_next;
   GstFlowReturn ret;
+  GstSegment clip_seg;
 
   sink = GST_BASE_AUDIO_SINK (bsink);
 
@@ -1172,6 +1174,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
    * that we can align the first sample of the ringbuffer to the base_time +
    * latency. */
   GST_OBJECT_LOCK (sink);
+  base_time = GST_ELEMENT_CAST (sink)->base_time;
   if (G_UNLIKELY (sink->priv->sync_latency)) {
     /* only do this once until we are set back to PLAYING */
     sink->priv->sync_latency = FALSE;
@@ -1194,8 +1197,6 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   in_offset = GST_BUFFER_OFFSET (buf);
   time = GST_BUFFER_TIMESTAMP (buf);
-  stop = time + gst_util_uint64_scale_int (samples, GST_SECOND,
-      ringbuf->spec.rate);
 
   GST_DEBUG_OBJECT (sink,
       "time %" GST_TIME_FORMAT ", offset %llu, start %" GST_TIME_FORMAT
@@ -1212,16 +1213,48 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     GST_DEBUG_OBJECT (sink,
         "Buffer of size %u has no time. Using render_start=%" G_GUINT64_FORMAT,
         GST_BUFFER_SIZE (buf), render_start);
+    /* we don't have a start so we don't know stop either */
+    stop = -1;
     goto no_sync;
+  }
+
+  /* let's calc stop based on the number of samples in the buffer instead
+   * of trusting the DURATION */
+  stop = time + gst_util_uint64_scale_int (samples, GST_SECOND,
+      ringbuf->spec.rate);
+
+  /* prepare the clipping segment. Since we will be subtracting ts-offset and
+   * device-delay later we scale the start and stop with those values so that we
+   * can correctly clip them */
+  clip_seg.format = GST_FORMAT_TIME;
+  clip_seg.start = bsink->segment.start;
+  clip_seg.stop = bsink->segment.stop;
+  clip_seg.duration = -1;
+
+  /* the sync offset is the combination of ts-offset and device-delay */
+  latency = gst_base_sink_get_latency (bsink);
+  ts_offset = gst_base_sink_get_ts_offset (bsink);
+  render_delay = gst_base_sink_get_render_delay (bsink);
+  sync_offset = ts_offset - render_delay + latency;
+
+  GST_DEBUG_OBJECT (sink,
+      "sync-offset %" G_GINT64_FORMAT ", render-delay %" GST_TIME_FORMAT
+      ", ts-offset %" G_GINT64_FORMAT, sync_offset,
+      GST_TIME_ARGS (render_delay), ts_offset);
+
+  /* compensate for ts-offset and device-delay when negative we need to
+   * clip. */
+  if (sync_offset < 0) {
+    clip_seg.start += -sync_offset;
+    if (clip_seg.stop != -1)
+      clip_seg.stop += -sync_offset;
   }
 
   /* samples should be rendered based on their timestamp. All samples
    * arriving before the segment.start or after segment.stop are to be 
    * thrown away. All samples should also be clipped to the segment 
    * boundaries */
-  /* let's calc stop based on the number of samples in the buffer instead
-   * of trusting the DURATION */
-  if (!gst_segment_clip (&bsink->segment, GST_FORMAT_TIME, time, stop, &ctime,
+  if (!gst_segment_clip (&clip_seg, GST_FORMAT_TIME, time, stop, &ctime,
           &cstop))
     goto out_of_segment;
 
@@ -1271,26 +1304,23 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       "running: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
       GST_TIME_ARGS (render_start), GST_TIME_ARGS (render_stop));
 
-  base_time = gst_element_get_base_time (GST_ELEMENT_CAST (bsink));
-
-  GST_DEBUG_OBJECT (sink, "base_time %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (sink, "adding base_time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (base_time));
 
   /* add base time to sync against the clock */
   render_start += base_time;
   render_stop += base_time;
 
-  /* compensate for latency */
-  latency = gst_base_sink_get_latency (bsink);
+  /* compensate for ts-offset and delay we know this will not underflow because we
+   * clipped above. */
   GST_DEBUG_OBJECT (sink,
-      "compensating for latency %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
-
-  /* add latency to get the timestamp to sync against the pipeline clock */
-  render_start += latency;
-  render_stop += latency;
+      "compensating for sync-offset %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (sync_offset));
+  render_start += sync_offset;
+  render_stop += sync_offset;
 
   GST_DEBUG_OBJECT (sink,
-      "after latency: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
+      "after compensation: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
       GST_TIME_ARGS (render_start), GST_TIME_ARGS (render_stop));
 
   if ((slaved = clock != sink->provided_clock)) {

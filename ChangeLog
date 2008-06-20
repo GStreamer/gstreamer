@@ -1,3 +1,14 @@
+2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_query), (gst_base_audio_sink_skew_slaving),
+	(gst_base_audio_sink_render):
+	Report latency even if we are not live instead of hiding it.
+	Take ts-offset and render-delay of the basesink into account when
+	scheduling samples.
+	Rework the clipping code so that we can take the various offsets into
+	account and still do correct clipping.
+
 2008-06-20  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
