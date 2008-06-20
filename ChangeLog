@@ -1,3 +1,8 @@
+2008-06-20  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstbus.c:
+	  Make it known that gst_bus_poll() is pure evil (fixes #538810).
+
 2008-06-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* plugins/elements/gstcapsfilter.c:

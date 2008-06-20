@@ -972,7 +972,8 @@ poll_destroy_timeout (GstBusPollData * poll_data)
  * @bus: a #GstBus
  * @events: a mask of #GstMessageType, representing the set of message types to
  * poll for.
- * @timeout: the poll timeout, as a #GstClockTimeDiff, or -1 to poll indefinitely.
+ * @timeout: the poll timeout, as a #GstClockTimeDiff, or -1 to poll
+ * indefinitely.
  *
  * Poll the bus for messages. Will block while waiting for messages to come.
  * You can specify a maximum time to poll with the @timeout parameter. If
@@ -988,6 +989,23 @@ poll_destroy_timeout (GstBusPollData * poll_data)
  *
  * This function will run a main loop from the default main context when
  * polling.
+ *
+ * You should never use this function, since it is pure evil. This is
+ * especially true for GUI applications based on Gtk+ or Qt, but also for any
+ * other non-trivial application that uses the GLib main loop. As this function
+ * runs a GLib main loop, any callback attached to the default GLib main
+ * context may be invoked. This could be timeouts, GUI events, I/O events etc.;
+ * even if gst_bus_poll() is called with a 0 timeout. Any of these callbacks
+ * may do things you do not expect, e.g. destroy the main application window or
+ * some other resource; change other application state; display a dialog and
+ * run another main loop until the user clicks it away. In short, using this
+ * function may add a lot of complexity to your code through unexpected
+ * re-entrancy and unexpected changes to your application's state.
+ *
+ * For 0 timeouts use gst_bus_pop_filtered() instead of this function; for
+ * other short timeouts use gst_bus_timed_pop_filtered(); everything else is
+ * better handled by setting up an asynchronous bus watch and doing things
+ * from there.
  *
  * Returns: The message that was received, or NULL if the poll timed out.
  * The message is taken from the bus and needs to be unreffed with
