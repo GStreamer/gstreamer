@@ -1027,6 +1027,11 @@ gst_xvimagesink_update_colorbalance (GstXvImageSink * xvimagesink)
   if (xvimagesink->xcontext == NULL)
     return;
 
+  /* Don't set the attributes if they haven't been changed, to avoid
+   * rounding errors changing the values */
+  if (!xvimagesink->cb_changed)
+    return;
+
   /* For each channel of the colorbalance we calculate the correct value
      doing range conversion and then set the Xv port attribute to match our
      values. */
