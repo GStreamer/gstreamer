@@ -1,10 +1,12 @@
 
 EXTRA_DIST = \
+	draft-framestep.txt \
 	draft-ghostpads.txt \
 	draft-klass.txt \
 	draft-latency.txt \
 	draft-missing-plugins.txt \
 	draft-push-pull.txt \
+	draft-tagreading.txt \
 	part-activation.txt \
 	part-block.txt \
 	part-buffering.txt \

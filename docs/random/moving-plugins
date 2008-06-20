@@ -55,6 +55,10 @@ CHECKLIST
     e.g.: GST_BASE_SINK, GstBaseSink, gst_base_sink_
   - use g_assert(), g_return_if_fail(), g_return_val_if_fail() for pre/post
     condition checks
+  - must not have any functional code within g_assert(), g_return_if_fail() or
+    g_return_val_if_fail() statements, since those would be turned into NO-OPS
+    if the code is compiled with -DG_DISABLE_CHECKS (as is often done on
+    embedded systems).
 
 - The plug-in's build:
   - should be correctly integrated with configure.ac

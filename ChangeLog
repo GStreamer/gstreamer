@@ -1,3 +1,12 @@
+2008-06-20  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* docs/design/Makefile.am:
+	  Dist some more design docs.
+
+	* docs/random/moving-plugins:
+	  Small addition: good plugins mustn't have functional code
+	  within assertion macros.
+
 2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/design/draft-framestep.txt:
@@ -6,6 +15,12 @@
 	* docs/design/part-element-transform.txt:
 	Start design and use cases for basetransform in order to get it
 	fixed soon.
+
+2008-06-20  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gsttaglist.h:
+	  In GST_TAG_ATTACHEMENT docs, mention that the file name needs to
+	  be in UTF-8 encoding.
 
 2008-06-20  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
