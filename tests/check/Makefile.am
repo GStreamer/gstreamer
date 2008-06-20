@@ -100,7 +100,8 @@ check_PROGRAMS =				\
 	libs/gdp				\
 	libs/adapter				\
 	libs/gstnetclientclock			\
-	libs/gstnettimeprovider
+	libs/gstnettimeprovider			\
+	libs/transform1				
 
 # failing tests
 # queue : tests is unstable (race conditions)
@@ -161,6 +162,9 @@ libs_gstnettimeprovider_LDADD = \
 	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la \
 	$(LDADD)
 libs_typefindhelper_LDADD = \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(LDADD)
+libs_transform1_LDADD = \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(LDADD)
 

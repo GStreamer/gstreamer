@@ -1,5 +1,18 @@
 2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* tests/check/Makefile.am:
+	* tests/check/libs/test_transform.c: (gst_test_trans_base_init),
+	(gst_test_trans_class_init), (gst_test_trans_init),
+	(gst_test_trans_set_data), (result_sink_chain),
+	(gst_test_trans_new), (gst_test_trans_free), (gst_test_trans_push),
+	(gst_test_trans_pop):
+	* tests/check/libs/transform1.c: (GST_START_TEST),
+	(transform_ip_1), (set_caps_1), (gst_basetransform_suite):
+	Add some test basetransform element and the beginnings of various
+	unit tests for it.
+
+2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* libs/gst/base/gsttypefindhelper.c: (helper_find_peek):
 	Increase code readability.
 	Don't try to compare buffer offsets when ther are invalid.
