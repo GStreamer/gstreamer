@@ -1,6 +1,11 @@
 2008-06-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/controller/gstcontroller.c:
+	  Revert one change, that make ret value possible uninitialized.
+
+2008-06-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/controller/gstcontroller.c:
 	  Use freeze/thaw notify to sync notify emission a bit (its also more
 	  efficient). Move debug output to LOG (is called a lot in a loop).
 	  Always unset g_values if the have been initialized.

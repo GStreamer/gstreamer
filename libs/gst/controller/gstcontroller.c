@@ -666,7 +666,7 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
 {
   GstControlledProperty *prop;
   GList *node;
-  gboolean ret;
+  gboolean ret = FALSE;
   GValue value = { 0, };
 
   g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
