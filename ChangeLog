@@ -1,5 +1,11 @@
 2008-06-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/plugins/tmpl/.cvsignore:
+	* tests/check/gst/.cvsignore:
+	  Ignore more.
+
+2008-06-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* libs/gst/controller/gstinterpolation.c:
 	* libs/gst/controller/gstinterpolationcontrolsource.c:
 	* tests/check/libs/controller.c:
