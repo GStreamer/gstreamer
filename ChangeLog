@@ -1,5 +1,11 @@
 2008-06-20  Michael Smith <msmith@songbirdnest.com>
 
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gstplaysink.c:
+	  Fix a whole bunch of typos in comments and log statements. 
+
+2008-06-20  Michael Smith <msmith@songbirdnest.com>
+
 	* sys/xvimage/xvimagesink.c:
 	  Don't set colour balance values on the Xv port if the user hasn't
 	  changed them (via properties or the interface). Avoids accumulating

@@ -350,7 +350,7 @@ struct _GstPlayBin
   GstSourceGroup *curr_group;   /* pointer to the currently playing group */
   GstSourceGroup *next_group;   /* pointer to the next group */
 
-  gboolean about_to_finish;     /* the about-to-finish signal is emited */
+  gboolean about_to_finish;     /* the about-to-finish signal is emitted */
 
   /* properties */
   guint connection_speed;       /* connection speed in bits/sec (0 = unknown) */
@@ -723,7 +723,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * GstPlayBin2::video-changed
    * @playbin: a #GstPlayBin2
    *
-   * This signal is emited whenever the number or order of the video
+   * This signal is emitted whenever the number or order of the video
    * streams has changed. The application will most likely want to select
    * a new video stream.
    */
@@ -736,7 +736,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * GstPlayBin2::audio-changed
    * @playbin: a #GstPlayBin2
    *
-   * This signal is emited whenever the number or order of the audio
+   * This signal is emitted whenever the number or order of the audio
    * streams has changed. The application will most likely want to select
    * a new audio stream.
    */
@@ -749,7 +749,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * GstPlayBin2::text-changed
    * @playbin: a #GstPlayBin2
    *
-   * This signal is emited whenever the number or order of the text
+   * This signal is emitted whenever the number or order of the text
    * streams has changed. The application will most likely want to select
    * a new text stream.
    */
@@ -1532,7 +1532,7 @@ link_failed:
   }
 }
 
-/* called when a pad is removed form the uridecodebin. We unlink the pad from
+/* called when a pad is removed from the uridecodebin. We unlink the pad from
  * the selector. This will make the selector select a new pad. */
 static void
 pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
@@ -1706,8 +1706,8 @@ drained_cb (GstElement * decodebin, GstSourceGroup * group)
 
   GST_DEBUG_OBJECT (playbin, "about to finish in group %p", group);
 
-  /* mark use as sending out the about-to-finish signal. When the app sets a URI
-   * when this signal is emited, we're marking it as next-uri */
+  /* mark us as sending out the about-to-finish signal. When the app sets a URI
+   * when this signal is emitted, we're marking it as next-uri */
   playbin->about_to_finish = TRUE;
 
   /* after this call, we should have a next group to activate or we EOS */

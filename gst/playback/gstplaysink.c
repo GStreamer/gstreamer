@@ -911,7 +911,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   /* check if the sink has the volume property, if it does we don't need to
    * add a volume element. */
   if (g_object_class_find_property (G_OBJECT_GET_CLASS (chain->sink), "volume")) {
-    GST_DEBUG_OBJECT (playsink, "the sink as a volume property");
+    GST_DEBUG_OBJECT (playsink, "the sink has a volume property");
     have_volume = TRUE;
     /* take ref to sink to control the volume */
     chain->volume = gst_object_ref (chain->sink);
@@ -920,12 +920,12 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
      * use the mute property if there is a volume property. We can simulate the
      * mute with the volume otherwise. */
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (chain->sink), "mute")) {
-      GST_DEBUG_OBJECT (playsink, "the sink as a mute property");
+      GST_DEBUG_OBJECT (playsink, "the sink has a mute property");
       chain->mute = gst_object_ref (chain->sink);
     }
   } else {
     /* no volume, we need to add a volume element when we can */
-    GST_DEBUG_OBJECT (playsink, "the sink as no volume property");
+    GST_DEBUG_OBJECT (playsink, "the sink has no volume property");
     have_volume = FALSE;
   }
 
@@ -1172,7 +1172,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
   /* figure out which components we need */
   if (flags & GST_PLAY_FLAG_TEXT && playsink->text_pad) {
-    /* we subtitles and we are requested to show it, we also need to show
+    /* we have subtitles and we are requested to show it, we also need to show
      * video in this case. */
     need_video = TRUE;
     need_text = TRUE;
@@ -1239,7 +1239,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     gst_pad_link (playsink->textchain->srcpad, playsink->videochain->sinkpad);
     activate_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
   } else {
-    /* we have no audio or we are requested to not play audio */
+    /* we have no subtitles/text or we are requested to not show them */
     if (playsink->textchain) {
       add_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
