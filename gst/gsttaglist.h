@@ -653,6 +653,18 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  * Since: 0.10.7
  */
 #define GST_TAG_PREVIEW_IMAGE          "preview-image"
+
+/**
+ * GST_TAG_ATTACHMENT:
+ *
+ * generic file attachment (buffer) (buffer caps should specify the content
+ * type and if possible set "filename" to the file name of the
+ * attachment)
+ *
+ * Since: 0.10.21
+ */
+#define GST_TAG_ATTACHMENT             "attachment"
+
 /**
  * GST_TAG_BEATS_PER_MINUTE:
  *

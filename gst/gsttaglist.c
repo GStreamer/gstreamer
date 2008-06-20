@@ -62,7 +62,9 @@ GstTagInfo;
 
 #define TAGLIST "taglist"
 static GQuark gst_tag_list_quark;
+
 static GMutex *__tag_mutex;
+
 static GHashTable *__tags;
 
 #define TAG_LOCK g_mutex_lock (__tag_mutex)
@@ -238,6 +240,9 @@ _gst_tag_initialize (void)
       _("image"), _("image related to this stream"), gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_PREVIEW_IMAGE, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
       _("preview image"), _("preview image related to this stream"), NULL);
+  gst_tag_register (GST_TAG_ATTACHMENT, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
+      _("attachment"), _("file attached to this stream"),
+      gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_BEATS_PER_MINUTE, GST_TAG_FLAG_META, G_TYPE_DOUBLE,
       _("beats per minute"), _("number of beats per minute in audio"), NULL);
 
@@ -273,6 +278,7 @@ void
 gst_tag_merge_strings_with_comma (GValue * dest, const GValue * src)
 {
   GString *str;
+
   gint i, count;
 
   count = gst_value_list_get_size (src);
@@ -289,6 +295,7 @@ gst_tag_merge_strings_with_comma (GValue * dest, const GValue * src)
   g_value_take_string (dest, str->str);
   g_string_free (str, FALSE);
 }
+
 static GstTagInfo *
 gst_tag_lookup (GQuark entry)
 {
@@ -337,6 +344,7 @@ gst_tag_register (const gchar * name, GstTagFlag flag, GType type,
     const gchar * nick, const gchar * blurb, GstTagMergeFunc func)
 {
   GQuark key;
+
   GstTagInfo *info;
 
   g_return_if_fail (name != NULL);
@@ -532,17 +540,20 @@ gst_is_tag_list (gconstpointer p)
 
   return (GST_IS_STRUCTURE (s) && s->name == gst_tag_list_quark);
 }
+
 typedef struct
 {
   GstStructure *list;
   GstTagMergeMode mode;
 }
 GstTagCopyData;
+
 static void
 gst_tag_list_add_value_internal (GstStructure * list, GstTagMergeMode mode,
     GQuark tag, const GValue * value)
 {
   GstTagInfo *info = gst_tag_lookup (tag);
+
   const GValue *value2;
 
   g_assert (info != NULL);
@@ -593,6 +604,7 @@ gst_tag_list_add_value_internal (GstStructure * list, GstTagMergeMode mode,
     }
   }
 }
+
 static gboolean
 gst_tag_list_copy_foreach (GQuark tag, const GValue * value, gpointer user_data)
 {
@@ -780,7 +792,9 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
     const gchar * tag, va_list var_args)
 {
   GstTagInfo *info;
+
   GQuark quark;
+
   gchar *error = NULL;
 
   g_return_if_fail (GST_IS_TAG_LIST (list));
@@ -825,6 +839,7 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
     const gchar * tag, va_list var_args)
 {
   GstTagInfo *info;
+
   GQuark quark;
 
   g_return_if_fail (GST_IS_TAG_LIST (list));
@@ -856,6 +871,7 @@ gst_tag_list_remove_tag (GstTagList * list, const gchar * tag)
 
   gst_structure_remove_field ((GstStructure *) list, tag);
 }
+
 typedef struct
 {
   GstTagForeachFunc func;
@@ -863,6 +879,7 @@ typedef struct
   gpointer data;
 }
 TagForeachData;
+
 static int
 structure_foreach_wrapper (GQuark field_id, const GValue * value,
     gpointer user_data)
