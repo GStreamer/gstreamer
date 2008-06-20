@@ -1,3 +1,13 @@
+2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_class_init), (gst_base_transform_init),
+	(gst_base_transform_transform_caps),
+	(gst_base_transform_prepare_output_buffer):
+	Add debug info.
+	When a buffer is writable, its metadata is also writable so we don't
+	need to subbuffer (which then makes the buffer not-writable anymore).
+
 === release 0.10.20 ===
 
 2008-06-18  Jan Schmidt <jan.schmidt@sun.com>
