@@ -271,7 +271,7 @@
 <ARG>
 <NAME>GstFakeSink::num-buffers</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>num-buffers</NICK>
 <BLURB>Number of buffers to accept going EOS.</BLURB>
@@ -285,6 +285,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>fd</NICK>
 <BLURB>An open file descriptor to read from.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFdSrc::timeout</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timeout</NICK>
+<BLURB>Post a message after timeout microseconds (0 = disabled).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 

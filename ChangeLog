@@ -1,5 +1,18 @@
 2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: joel larsson <tilljoel at gmail dot com>
+
+	* docs/plugins/gstreamer-plugins.args:
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_class_init),
+	(gst_fd_src_init), (gst_fd_src_update_fd),
+	(gst_fd_src_set_property), (gst_fd_src_get_property),
+	(gst_fd_src_create):
+	* plugins/elements/gstfdsrc.h:
+	Add timeout property like udpsrc. Fixes #538628.
+	Add some more docs and example pipelines.
+
+2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_init),
 	(gst_base_sink_query_latency), (gst_base_sink_set_render_delay),

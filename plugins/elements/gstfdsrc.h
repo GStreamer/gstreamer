@@ -62,6 +62,9 @@ struct _GstFdSrc {
   gint fd;
   gboolean seekable_fd;
 
+  /* poll timeout */
+  guint64 timeout;
+
   gchar *uri;
 
   GstPoll *fdset;

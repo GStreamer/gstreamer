@@ -25,9 +25,41 @@
  * @short_description: read from a unix file descriptor
  * @see_also: #GstFdSink
  *
+ * <refsect2>
+ * <para>
  * Read data from a unix file descriptor.
+ * </para>
+ * <title>Examples</title>
+ * <para>
+ * Here is a simple pipeline to read from the standard input and dump the data
+ * with a fakesink.
+ * <programlisting>
+ * gst-launch -v fdsrc ! fakesink dump=1
+ * </programlisting>
+ * To generate data, enter some data on the console folowed by enter.
+ * The above mentioned pipeline should dump data packets to the console.
+ * </para>
+ * <para>
+ * If the <link linkend="GstFdSrc--timeout">timeout property</link> is set to a
+ * value bigger than 0, fdsrc will generate an element message named
+ * <classname>&quot;GstFdSrcTimeout&quot;</classname>
+ * if no data was recieved in the given timeout.
+ * The message's structure contains one field:
+ * <itemizedlist>
+ * <listitem>
+ *   <para>
+ *   #guint64
+ *   <classname>&quot;timeout&quot;</classname>: the timeout in microseconds that
+ *   expired when waiting for data.
+ *   </para>
+ * </listitem>
+ * </itemizedlist>
+ * </para>
+ * <para>
+ * Last reviewed on 2008-06-20 (0.10.21)
+ * </para>
+ * </refsect2>
  */
-
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -50,8 +82,6 @@
 
 #include "gstfdsrc.h"
 
-#define DEFAULT_BLOCKSIZE       4096
-
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -60,10 +90,17 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_fd_src_debug);
 #define GST_CAT_DEFAULT gst_fd_src_debug
 
+#define DEFAULT_FD              0
+#define DEFAULT_TIMEOUT         0
+
 enum
 {
   PROP_0,
+
   PROP_FD,
+  PROP_TIMEOUT,
+
+  PROP_LAST
 };
 
 static void gst_fd_src_uri_handler_init (gpointer g_iface, gpointer iface_data);
@@ -136,7 +173,12 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
-          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          0, G_MAXINT, DEFAULT_FD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMEOUT,
+      g_param_spec_uint64 ("timeout", "Timeout",
+          "Post a message after timeout microseconds (0 = disabled)", 0,
+          G_MAXUINT64, DEFAULT_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_fd_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_fd_src_stop);
@@ -152,9 +194,10 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
 static void
 gst_fd_src_init (GstFdSrc * fdsrc, GstFdSrcClass * klass)
 {
-  fdsrc->fd = -1;
   fdsrc->new_fd = 0;
   fdsrc->seekable_fd = FALSE;
+  fdsrc->fd = DEFAULT_FD;
+  fdsrc->timeout = DEFAULT_TIMEOUT;
   fdsrc->uri = g_strdup_printf ("fd://0");
   fdsrc->curoffset = 0;
 }
@@ -176,7 +219,7 @@ gst_fd_src_update_fd (GstFdSrc * src)
   struct stat stat_results;
 
   /* we need to always update the fdset since it may not have existed when
-   * gst_fd_src_update_fd() was called earlier */
+   * gst_fd_src_update_fd () was called earlier */
   if (src->fdset != NULL) {
     GstPollFD fd = GST_POLL_FD_INIT;
 
@@ -303,6 +346,11 @@ gst_fd_src_set_property (GObject * object, guint prop_id, const GValue * value,
       }
       GST_OBJECT_UNLOCK (object);
       break;
+    case PROP_TIMEOUT:
+      src->timeout = g_value_get_uint64 (value);
+      GST_DEBUG_OBJECT (src, "poll timeout set to %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (src->timeout));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -319,6 +367,9 @@ gst_fd_src_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_FD:
       g_value_set_int (value, src->fd);
       break;
+    case PROP_TIMEOUT:
+      g_value_set_uint64 (value, src->timeout);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -332,24 +383,49 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   GstBuffer *buf;
   gssize readbytes;
   guint blocksize;
+  GstClockTime timeout;
 
 #ifndef HAVE_WIN32
+  gboolean try_again;
   gint retval;
 #endif
 
   src = GST_FD_SRC (psrc);
 
+  if (src->timeout > 0) {
+    timeout = src->timeout * GST_USECOND;
+  } else {
+    timeout = GST_CLOCK_TIME_NONE;
+  }
+
 #ifndef HAVE_WIN32
   do {
-    retval = gst_poll_wait (src->fdset, GST_CLOCK_TIME_NONE);
-  } while (retval == -1 && (errno == EINTR || errno == EAGAIN));        /* retry if interrupted */
+    try_again = FALSE;
 
-  if (retval == -1) {
-    if (errno == EBUSY)
-      goto stopped;
-    else
-      goto select_error;
-  }
+    GST_LOG_OBJECT (src, "doing poll, timeout %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (src->timeout));
+
+    retval = gst_poll_wait (src->fdset, timeout);
+    GST_LOG_OBJECT (src, "poll returned %d", retval);
+
+    if (G_UNLIKELY (retval == -1)) {
+      if (errno == EINTR || errno == EAGAIN) {
+        /* retry if interrupted */
+        try_again = TRUE;
+      } else if (errno == EBUSY) {
+        goto stopped;
+      } else {
+        goto poll_error;
+      }
+    } else if (G_UNLIKELY (retval == 0)) {
+      try_again = TRUE;
+      /* timeout, post element message */
+      gst_element_post_message (GST_ELEMENT_CAST (src),
+          gst_message_new_element (GST_OBJECT_CAST (src),
+              gst_structure_new ("GstFdSrcTimeout",
+                  "timeout", G_TYPE_UINT64, src->timeout, NULL)));
+    }
+  } while (G_UNLIKELY (try_again));     /* retry if interrupted or timeout */
 #endif
 
   blocksize = GST_BASE_SRC (src)->blocksize;
@@ -382,16 +458,16 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   /* ERRORS */
 #ifndef HAVE_WIN32
-select_error:
+poll_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("select on file descriptor: %s.", g_strerror (errno)));
-    GST_DEBUG_OBJECT (psrc, "Error during select");
+        ("poll on file descriptor: %s.", g_strerror (errno)));
+    GST_DEBUG_OBJECT (psrc, "Error during poll");
     return GST_FLOW_ERROR;
   }
 stopped:
   {
-    GST_DEBUG_OBJECT (psrc, "Select stopped");
+    GST_DEBUG_OBJECT (psrc, "Poll stopped");
     return GST_FLOW_WRONG_STATE;
   }
 #endif
