@@ -1,6 +1,12 @@
 2008-06-20  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/playback/gstplaybin2.c:
+	  Use a different constant for the convert-frame signal id.
+	  Fixes #537009.
+
+2008-06-20  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/playback/gstplaybin2.c:
 	* gst/playback/gstplaysink.c:
 	  Fix a whole bunch of typos in comments and log statements. 
 

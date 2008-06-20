@@ -440,6 +440,7 @@ enum
 enum
 {
   SIGNAL_ABOUT_TO_FINISH,
+  SIGNAL_CONVERT_FRAME,
   SIGNAL_VIDEO_CHANGED,
   SIGNAL_AUDIO_CHANGED,
   SIGNAL_TEXT_CHANGED,
@@ -822,7 +823,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * %NULL is returned when no current buffer can be retrieved or when the
    * conversion failed.
    */
-  gst_play_bin_signals[SIGNAL_GET_TEXT_TAGS] =
+  gst_play_bin_signals[SIGNAL_CONVERT_FRAME] =
       g_signal_new ("convert-frame", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstPlayBinClass, convert_frame), NULL, NULL,
