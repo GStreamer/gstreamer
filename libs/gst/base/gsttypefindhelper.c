@@ -86,6 +86,8 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   GstBuffer *buffer;
   GstFlowReturn ret;
   GSList *insert_pos = NULL;
+  guint buf_size;
+  guint64 buf_offset;
 
   helper = (GstTypeFindHelper *) data;
 
@@ -139,11 +141,13 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
 
   /* getrange might silently return shortened buffers at the end of a file,
    * we must, however, always return either the full requested data or NULL */
-  if (GST_BUFFER_OFFSET (buffer) != offset || GST_BUFFER_SIZE (buffer) < size) {
+  buf_offset = GST_BUFFER_OFFSET (buffer);
+  buf_size = GST_BUFFER_SIZE (buffer);
+
+  if ((buf_offset != -1 && buf_offset != offset) || buf_size < size) {
     GST_DEBUG ("droping short buffer: %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT
         " instead of %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT,
-        GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET (buffer) +
-        GST_BUFFER_SIZE (buffer) - 1, offset, offset + size - 1);
+        buf_offset, buf_offset + buf_size - 1, offset, offset + size - 1);
     gst_buffer_unref (buffer);
     return NULL;
   }
