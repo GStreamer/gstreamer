@@ -1496,6 +1496,9 @@ stop_cb (GtkButton * button, gpointer data)
       gst_element_set_state (pipeline, GST_STATE_NULL);
       gst_object_unref (pipeline);
 
+      g_list_free (seekable_elements);
+      seekable_elements = NULL;
+
       pipeline = pipelines[pipeline_type].func (pipeline_spec);
       g_assert (pipeline);
       gst_element_set_state (pipeline, GST_STATE_READY);
