@@ -174,6 +174,13 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
           0, G_MAXINT, DEFAULT_FD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstFdSrc:timeout
+   *
+   * Post a message after timeout microseconds
+   *
+   * Since: 0.10.21
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
           "Post a message after timeout microseconds (0 = disabled)", 0,

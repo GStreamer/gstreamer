@@ -1,5 +1,10 @@
 2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_class_init):
+	Added Since doc.
+
+2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: joel larsson <tilljoel at gmail dot com>
 
 	* docs/plugins/gstreamer-plugins.args:
