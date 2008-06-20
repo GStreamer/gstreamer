@@ -1,3 +1,8 @@
+2008-06-20  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* configure.ac: switch v4l2src over to the normal build instead of
+	being 'experimental'. Fixes bug #536831.
+
 2008-06-19  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/gstrtpg726pay.c: (gst_rtp_g726_pay_setcaps):

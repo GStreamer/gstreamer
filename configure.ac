@@ -479,7 +479,6 @@ esac
 dnl *** Video 4 Linux 2 ***
 dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
 dnl renamed to GST_V4L2 because of some conflict with kernel headers
-USE_GST_V4L2=$BUILD_EXPERIMENTAL
 translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L2, true)
 AG_GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
   AC_MSG_CHECKING([Checking for up to date v4l2 installation])
