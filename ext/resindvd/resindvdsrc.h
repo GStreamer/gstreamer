@@ -29,6 +29,7 @@
 
 #include <dvdnav/dvdnav.h>
 #include <dvdread/ifo_read.h>
+#include <dvdread/nav_read.h>
 
 #else
 
@@ -36,7 +37,7 @@
 #include <dvdnav/ifo_read.h>
 
 #include <dvdnav/dvdnav.h>
-#include <dvdnav/nav_print.h>
+#include <dvdnav/nav_read.h>
 
 #endif
 
@@ -84,16 +85,25 @@ struct _resinDvdSrc
 
   gboolean	running;
   gboolean	discont;
+  gboolean	flushing_seek;
   gboolean	need_segment;
   gboolean	active_highlight;
 
   GstBuffer	*alloc_buf;
   GstBuffer	*next_buf;
+  /* TRUE if the next_buf is a nav block that needs enqueueing */
+  gboolean      next_is_nav_block;
+  /* PTS for activating the pending nav block in next_buf */
+  GstClockTime  next_nav_ts;
+  /* Track accumulated segment position, cleared by flushing */
+  GstSegment    src_segment;
 
   /* Start timestamp of the previous NAV block */
   GstClockTime  cur_start_ts;
   /* End timestamp of the previous NAV block */
   GstClockTime  cur_end_ts;
+  /* base ts is cur_start_ts - cell_time for each VOBU */
+  GstClockTime  cur_vobu_base_ts;
   /* Position info of the previous NAV block */
   GstClockTime  cur_position;
   /* Duration of the current PGC */
@@ -108,6 +118,16 @@ struct _resinDvdSrc
   GstEvent	*spu_select_event;
   GstEvent	*audio_select_event;
   GstEvent	*highlight_event;
+
+  /* GList of NAV packets awaiting activation, and the
+   * running times to activate them. */
+  GSList *pending_nav_blocks;
+  GSList *pending_nav_blocks_end;
+
+  GstClockID nav_clock_id;
+
+  gboolean have_pci;
+  pci_t cur_pci;
 };
 
 struct _resinDvdSrcClass 

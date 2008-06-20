@@ -1037,7 +1037,17 @@ rsn_base_src_perform_seek (RsnBaseSrc * src, GstEvent * event, gboolean unlock)
   /* if successfull seek, we update our real segment and push
    * out the new segment. */
   if (res) {
-    memcpy (&src->segment, &seeksegment, sizeof (GstSegment));
+    if (flush) {
+      memcpy (&src->segment, &seeksegment, sizeof (GstSegment));
+    } else {
+      gst_segment_set_newsegment_full (&src->segment,
+          FALSE, seeksegment.rate, seeksegment.applied_rate,
+          seeksegment.format, seeksegment.last_stop,
+          seeksegment.stop, seeksegment.time);
+
+      gst_segment_set_last_stop (&src->segment, GST_FORMAT_TIME,
+          seeksegment.last_stop);
+    }
 
     if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
       gst_element_post_message (GST_ELEMENT (src),

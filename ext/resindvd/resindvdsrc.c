@@ -70,6 +70,13 @@ enum
   ARG_DEVICE
 };
 
+typedef struct
+{
+  GstBuffer *buffer;
+  GstClockTime ts;
+  GstClockTime running_ts;
+} RsnDvdPendingNav;
+
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -101,6 +108,8 @@ static gboolean rsn_dvdsrc_unlock_stop (RsnBaseSrc * bsrc);
 static gboolean rsn_dvdsrc_prepare_seek (RsnBaseSrc * bsrc, GstEvent * event,
     GstSegment * segment);
 static gboolean rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment);
+static GstStateChangeReturn
+rsn_dvdsrc_change_state (GstElement * element, GstStateChange transition);
 
 static void rsn_dvdsrc_prepare_spu_stream_event (resinDvdSrc * src,
     guint8 phys_stream, gboolean forced_only);
@@ -111,9 +120,41 @@ static void rsn_dvdsrc_prepare_clut_change_event (resinDvdSrc * src,
     const guint32 * clut);
 static void rsn_dvdsrc_update_highlight (resinDvdSrc * src);
 
+static void rsn_dvdsrc_enqueue_nav_block (resinDvdSrc * src,
+    GstBuffer * nav_buf, GstClockTime ts);
+static void rsn_dvdsrc_activate_nav_block (resinDvdSrc * src,
+    GstBuffer * nav_buf);
+static void rsn_dvdsrc_clear_nav_blocks (resinDvdSrc * src);
+static void rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src);
+static void rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src,
+    RsnDvdPendingNav * next_nav);
+
 static GstFlowReturn rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** buf);
 static gboolean rsn_dvdsrc_src_event (RsnBaseSrc * basesrc, GstEvent * event);
 static gboolean rsn_dvdsrc_src_query (RsnBaseSrc * basesrc, GstQuery * query);
+
+static GstClockTime ifotime_to_gsttime (dvd_time_t * ifo_time);
+
+static GstClockTime
+ifotime_to_gsttime (dvd_time_t * ifo_time)
+{
+  GstClockTime ts;
+  guint frames;
+
+  ts = 3600 * GST_SECOND * ifo_time->hour;
+  ts += 60 * GST_SECOND * ifo_time->minute;
+  ts += GST_SECOND * ifo_time->second;
+
+  frames = ((ifo_time->frame_u >> 4) & 0x3) * 10;
+  frames += (ifo_time->frame_u & 0xf);
+
+  if (ifo_time->frame_u & 0x80)
+    ts += GST_SECOND * frames / 30;
+  else
+    ts += GST_SECOND * frames / 25;
+
+  return ts;
+}
 
 static void
 rsn_dvdsrc_register_extra (GType rsn_dvdsrc_type)
@@ -145,16 +186,20 @@ static void
 rsn_dvdsrc_class_init (resinDvdSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   RsnBaseSrcClass *gstbasesrc_class;
   RsnPushSrcClass *gstpush_src_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   gstpush_src_class = GST_PUSH_SRC_CLASS (klass);
 
   gobject_class->finalize = rsn_dvdsrc_finalize;
   gobject_class->set_property = rsn_dvdsrc_set_property;
   gobject_class->get_property = rsn_dvdsrc_get_property;
+
+  gstelement_class->change_state = rsn_dvdsrc_change_state;
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (rsn_dvdsrc_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (rsn_dvdsrc_stop);
@@ -293,6 +338,7 @@ rsn_dvdsrc_start (RsnBaseSrc * bsrc)
   src->pgc_duration = GST_CLOCK_TIME_NONE;
   src->cur_start_ts = GST_CLOCK_TIME_NONE;
   src->cur_end_ts = GST_CLOCK_TIME_NONE;
+  src->cur_vobu_base_ts = GST_CLOCK_TIME_NONE;
 
   src->vts_n = 0;
   src->in_menu = FALSE;
@@ -377,6 +423,14 @@ rsn_dvdsrc_stop (RsnBaseSrc * bsrc)
 
   g_mutex_lock (src->dvd_lock);
 
+  if (src->nav_clock_id) {
+    gst_clock_id_unschedule (src->nav_clock_id);
+    gst_clock_id_unref (src->nav_clock_id);
+    src->nav_clock_id = NULL;
+  }
+  rsn_dvdsrc_clear_nav_blocks (src);
+  src->have_pci = FALSE;
+
   /* Clear any allocated output buffer */
   gst_buffer_replace (&src->alloc_buf, NULL);
   gst_buffer_replace (&src->next_buf, NULL);
@@ -435,6 +489,7 @@ static gboolean
 rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
 {
   GstEvent *still_event;
+  GstEvent *hl_event;
   GstStructure *s;
   GstEvent *seg_event;
   GstSegment *segment = &(GST_BASE_SRC (src)->segment);
@@ -448,18 +503,23 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
       "still-state", G_TYPE_BOOLEAN, TRUE, NULL);
   still_event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
 
-  segment->last_stop = src->cur_end_ts;
+  gst_segment_set_last_stop (segment, GST_FORMAT_TIME, src->cur_end_ts);
 
   seg_event = gst_event_new_new_segment_full (TRUE,
       segment->rate, segment->applied_rate, segment->format,
       segment->start, segment->last_stop, segment->time);
 
+  /* Grab any pending highlight event to send too */
+  hl_event = src->highlight_event;
+  src->highlight_event = NULL;
+
   /* Now, send the events. We need to drop the dvd lock while doing so,
-   * and then check after if we got flushed
-   */
+   * and then check after if we got flushed */
   g_mutex_unlock (src->dvd_lock);
   gst_pad_push_event (GST_BASE_SRC_PAD (src), still_event);
   gst_pad_push_event (GST_BASE_SRC_PAD (src), seg_event);
+  if (hl_event)
+    gst_pad_push_event (GST_BASE_SRC_PAD (src), hl_event);
   g_mutex_lock (src->dvd_lock);
 
   g_mutex_lock (src->branch_lock);
@@ -507,7 +567,7 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
 }
 
 static GstFlowReturn
-rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock, GstBuffer ** outbuf)
+rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   dvdnav_status_t dvdnav_ret;
@@ -532,44 +592,65 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock, GstBuffer ** outbuf)
   switch (event) {
     case DVDNAV_BLOCK_OK:
       /* Data block that needs outputting */
-      *outbuf = src->alloc_buf;
+      src->next_buf = src->alloc_buf;
+      src->next_is_nav_block = FALSE;
+      src->next_nav_ts = GST_CLOCK_TIME_NONE;
       src->alloc_buf = NULL;
       break;
-    case DVDNAV_NAV_PACKET:{
+    case DVDNAV_NAV_PACKET:
+    {
       pci_t *pci = dvdnav_get_current_nav_pci (src->dvdnav);
+      GstClockTime new_start_ptm = MPEGTIME_TO_GSTTIME (pci->pci_gi.vobu_s_ptm);
+      GstClockTime new_end_ptm = MPEGTIME_TO_GSTTIME (pci->pci_gi.vobu_e_ptm);
+      GstClockTimeDiff new_base_time = ifotime_to_gsttime (&pci->pci_gi.e_eltm);
+      gboolean discont = FALSE;
+
+      if (new_start_ptm != src->cur_end_ts)
+        discont = TRUE;
 
       GST_LOG_OBJECT (src, "NAV packet start TS %" GST_TIME_FORMAT
-          " end TS %" GST_TIME_FORMAT " %s",
-          GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (pci->pci_gi.vobu_s_ptm)),
-          GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (pci->pci_gi.vobu_e_ptm)),
-          (MPEGTIME_TO_GSTTIME (pci->pci_gi.vobu_s_ptm) != src->cur_end_ts) ?
-          "discont" : "");
+          " end TS %" GST_TIME_FORMAT " base %" G_GINT64_FORMAT " %s",
+          GST_TIME_ARGS (new_start_ptm), GST_TIME_ARGS (new_end_ptm),
+          new_base_time, discont ? "discont" : "");
+
 #if 0
       g_print ("NAV packet start TS %" GST_TIME_FORMAT
-          " end TS %" GST_TIME_FORMAT " %s\n",
-          GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (pci->pci_gi.vobu_s_ptm)),
-          GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (pci->pci_gi.vobu_e_ptm)),
-          (MPEGTIME_TO_GSTTIME (pci->pci_gi.vobu_s_ptm) != src->cur_end_ts) ?
-          "discont" : "");
+          " end TS %" GST_TIME_FORMAT " base %" G_GINT64_FORMAT " %s\n",
+          GST_TIME_ARGS (new_start_ptm), GST_TIME_ARGS (new_end_ptm),
+          new_base_time, discont ? "discont" : "");
 #endif
 
-      if (MPEGTIME_TO_GSTTIME (pci->pci_gi.vobu_s_ptm) != src->cur_end_ts) {
+      if (discont) {
         g_print ("NAV packet discont: cur_end_ts %" GST_TIME_FORMAT " != "
-            " vobu_s_ptm: %" GST_TIME_FORMAT "\n",
+            " vobu_start_ptm: %" GST_TIME_FORMAT " base %" GST_TIME_FORMAT
+            "\n",
             GST_TIME_ARGS (src->cur_end_ts),
-            GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (pci->pci_gi.vobu_s_ptm)));
+            GST_TIME_ARGS (new_start_ptm), GST_TIME_ARGS (new_base_time));
         src->need_segment = TRUE;
       }
 
-      src->cur_start_ts = MPEGTIME_TO_GSTTIME (pci->pci_gi.vobu_s_ptm);
-      src->cur_end_ts = MPEGTIME_TO_GSTTIME (pci->pci_gi.vobu_e_ptm);
-
-      /* highlight might change, let's check */
-      rsn_dvdsrc_update_highlight (src);
+      src->cur_start_ts = new_start_ptm;
+      src->cur_end_ts = new_end_ptm;
+      src->cur_vobu_base_ts = new_base_time;
 
       /* NAV packet is also a data block that needs sending */
-      *outbuf = src->alloc_buf;
+      src->next_buf = src->alloc_buf;
       src->alloc_buf = NULL;
+
+      if (!src->have_pci || pci->hli.hl_gi.hli_ss != 2) {
+        /* Store the nav packet for activation at the right moment
+         * if we don't have a packet yet or the info has changed (hli_ss != 2)
+         */
+        if (pci->hli.hl_gi.hli_s_ptm != 0)
+          new_start_ptm = MPEGTIME_TO_GSTTIME (pci->hli.hl_gi.hli_s_ptm);
+
+        src->next_is_nav_block = TRUE;
+        src->next_nav_ts = new_start_ptm;
+      } else {
+        src->next_is_nav_block = FALSE;
+        src->next_nav_ts = GST_CLOCK_TIME_NONE;
+      }
+
       break;
     }
     case DVDNAV_STOP:
@@ -577,7 +658,8 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock, GstBuffer ** outbuf)
       g_print ("STOP found. End of disc\n");
       ret = GST_FLOW_UNEXPECTED;
       break;
-    case DVDNAV_STILL_FRAME:{
+    case DVDNAV_STILL_FRAME:
+    {
       dvdnav_still_event_t *info = (dvdnav_still_event_t *) data;
 
       g_print ("STILL frame duration %d\n", info->length);
@@ -664,15 +746,6 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock, GstBuffer ** outbuf)
     }
     case DVDNAV_HIGHLIGHT:{
       rsn_dvdsrc_update_highlight (src);
-      if (src->highlight_event && have_dvd_lock) {
-        GstEvent *hl_event = src->highlight_event;
-
-        src->highlight_event = NULL;
-        g_mutex_unlock (src->dvd_lock);
-        g_print ("Highlight change - button: %d\n", src->active_button);
-        gst_pad_push_event (GST_BASE_SRC_PAD (src), hl_event);
-        g_mutex_lock (src->dvd_lock);
-      }
       break;
     }
     case DVDNAV_HOP_CHANNEL:
@@ -684,6 +757,16 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock, GstBuffer ** outbuf)
     default:
       GST_WARNING_OBJECT (src, "Unknown dvdnav event %d", event);
       break;
+  }
+
+  if (src->highlight_event && have_dvd_lock) {
+    GstEvent *hl_event = src->highlight_event;
+
+    src->highlight_event = NULL;
+    g_mutex_unlock (src->dvd_lock);
+    g_print ("Highlight change - button: %d\n", src->active_button);
+    gst_pad_push_event (GST_BASE_SRC_PAD (src), hl_event);
+    g_mutex_lock (src->dvd_lock);
   }
 
   return ret;
@@ -712,7 +795,7 @@ rsn_dvdsrc_prepare_next_block (resinDvdSrc * src, gboolean have_dvd_lock)
     return GST_FLOW_OK;
 
   do {
-    ret = rsn_dvdsrc_step (src, have_dvd_lock, &src->next_buf);
+    ret = rsn_dvdsrc_step (src, have_dvd_lock);
   }
   while (ret == GST_FLOW_OK && src->next_buf == NULL);
 
@@ -743,17 +826,6 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
     return ret;
   }
 
-  if (src->next_buf != NULL) {
-    *outbuf = src->next_buf;
-    src->next_buf = NULL;
-
-    if (src->discont) {
-      g_print ("Discont packet\n");
-      GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_DISCONT);
-      src->discont = FALSE;
-    }
-  }
-
   streams_event = src->streams_event;
   src->streams_event = NULL;
 
@@ -766,16 +838,19 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
   clut_event = src->clut_event;
   src->clut_event = NULL;
 
-  highlight_event = src->highlight_event;
-  src->highlight_event = NULL;
-
   g_mutex_unlock (src->dvd_lock);
 
-  /* Push in-band events now that we've dropped the dvd_lock */
+  /* Push in-band events now that we've dropped the dvd_lock, before
+   * we change segment */
   if (streams_event) {
     g_print ("Pushing stream event\n");
     gst_pad_push_event (GST_BASE_SRC_PAD (src), streams_event);
   }
+  if (clut_event) {
+    g_print ("Pushing clut event\n");
+    gst_pad_push_event (GST_BASE_SRC_PAD (src), clut_event);
+  }
+  /* Out of band events */
   if (spu_select_event) {
     g_print ("Pushing spu_select event\n");
     gst_pad_push_event (GST_BASE_SRC_PAD (src), spu_select_event);
@@ -783,16 +858,6 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
   if (audio_select_event) {
     g_print ("Pushing audio_select event\n");
     gst_pad_push_event (GST_BASE_SRC_PAD (src), audio_select_event);
-  }
-  if (clut_event) {
-    g_print ("Pushing clut event\n");
-    gst_pad_push_event (GST_BASE_SRC_PAD (src), clut_event);
-  }
-
-  if (highlight_event) {
-    g_print ("Pushing highlight event with TS %" GST_TIME_FORMAT "\n",
-        GST_TIME_ARGS (GST_EVENT_TIMESTAMP (highlight_event)));
-    gst_pad_push_event (GST_BASE_SRC_PAD (src), highlight_event);
   }
 
   g_mutex_lock (src->dvd_lock);
@@ -807,8 +872,37 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
     src->need_segment = FALSE;
   }
   if (src->cur_end_ts != GST_CLOCK_TIME_NONE)
-    segment->last_stop = src->cur_end_ts;
+    gst_segment_set_last_stop (segment, GST_FORMAT_TIME, src->cur_end_ts);
+
+  if (src->next_buf != NULL) {
+    /* Now that we're in the new segment, we can enqueue any nav packet
+     * correctly */
+    if (src->next_is_nav_block)
+      rsn_dvdsrc_enqueue_nav_block (src, src->next_buf, src->next_nav_ts);
+
+    *outbuf = src->next_buf;
+    src->next_buf = NULL;
+
+    if (src->discont) {
+      g_print ("Discont packet\n");
+      GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_DISCONT);
+      src->discont = FALSE;
+    }
+  }
+
+  highlight_event = src->highlight_event;
+  src->highlight_event = NULL;
+
+  /* Schedule a clock callback for the any pending nav packet */
+  rsn_dvdsrc_check_nav_blocks (src);
+
   g_mutex_unlock (src->dvd_lock);
+
+  if (highlight_event) {
+    g_print ("Pushing highlight event with TS %" GST_TIME_FORMAT "\n",
+        GST_TIME_ARGS (GST_EVENT_TIMESTAMP (highlight_event)));
+    gst_pad_push_event (GST_BASE_SRC_PAD (src), highlight_event);
+  }
 
   return ret;
 }
@@ -816,13 +910,14 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
 static RsnNavResult
 rsn_dvdsrc_perform_button_action (resinDvdSrc * src, RsnNavAction action)
 {
-  pci_t *pci = dvdnav_get_current_nav_pci (src->dvdnav);
+  pci_t *pci;
   RsnNavResult result = RSN_NAV_RESULT_NONE;
   int button = 0;
   btni_t *btn_info;
 
-  if (pci == NULL)
+  if (!src->have_pci)
     return RSN_NAV_RESULT_NONE;
+  pci = &src->cur_pci;
 
   if (pci->hli.hl_gi.hli_ss == 0)
     return RSN_NAV_RESULT_NONE; /* No buttons at the moment */
@@ -877,7 +972,7 @@ rsn_dvdsrc_perform_button_action (resinDvdSrc * src, RsnNavAction action)
   }
 
   if (result == RSN_NAV_RESULT_HIGHLIGHT)
-    g_cond_signal (src->still_cond);
+    g_cond_broadcast (src->still_cond);
 
   return result;
 }
@@ -957,7 +1052,6 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
 
   } else if (strcmp (event_type, "mouse-move") == 0) {
     gdouble x, y;
-    pci_t *nav;
 
     if (!gst_structure_get_double (s, "pointer_x", &x) ||
         !gst_structure_get_double (s, "pointer_y", &y))
@@ -968,14 +1062,13 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
     if (!src->running)
       goto not_running;
 
-    nav = dvdnav_get_current_nav_pci (src->dvdnav);
-    if (nav && dvdnav_mouse_select (src->dvdnav, nav, (int) x, (int) y) ==
+    if (src->have_pci &&
+        dvdnav_mouse_select (src->dvdnav, &src->cur_pci, (int) x, (int) y) ==
         DVDNAV_STATUS_OK) {
       nav_res = RSN_NAV_RESULT_HIGHLIGHT;
     }
   } else if (strcmp (event_type, "mouse-button-release") == 0) {
     gdouble x, y;
-    pci_t *nav;
 
     if (!gst_structure_get_double (s, "pointer_x", &x) ||
         !gst_structure_get_double (s, "pointer_y", &y))
@@ -988,9 +1081,8 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
     if (!src->running)
       goto not_running;
 
-    nav = dvdnav_get_current_nav_pci (src->dvdnav);
-    if (nav &&
-        dvdnav_mouse_activate (src->dvdnav, nav, (int) x, (int) y) ==
+    if (src->have_pci &&
+        dvdnav_mouse_activate (src->dvdnav, &src->cur_pci, (int) x, (int) y) ==
         DVDNAV_STATUS_OK) {
       nav_res = RSN_NAV_RESULT_BRANCH;
     }
@@ -1012,7 +1104,7 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
       g_print ("flush and jump\n");
       g_mutex_lock (src->branch_lock);
       src->branching = TRUE;
-      g_cond_signal (src->still_cond);
+      g_cond_broadcast (src->still_cond);
       g_mutex_unlock (src->branch_lock);
 
       hl_event = src->highlight_event;
@@ -1236,26 +1328,28 @@ static void
 rsn_dvdsrc_update_highlight (resinDvdSrc * src)
 {
   int button = 0;
-  pci_t *pci;
+  pci_t *pci = &src->cur_pci;
   dvdnav_highlight_area_t area;
   int mode = 0;
   GstEvent *event = NULL;
   GstStructure *s;
 
-  if (dvdnav_get_current_highlight (src->dvdnav, &button) != DVDNAV_STATUS_OK) {
-    GST_ELEMENT_ERROR (src, LIBRARY, FAILED, (NULL),
-        ("dvdnav_get_current_highlight: %s",
-            dvdnav_err_to_string (src->dvdnav)));
-    return;
+  if (src->have_pci) {
+    if (dvdnav_get_current_highlight (src->dvdnav, &button) != DVDNAV_STATUS_OK) {
+      GST_ELEMENT_ERROR (src, LIBRARY, FAILED, (NULL),
+          ("dvdnav_get_current_highlight: %s",
+              dvdnav_err_to_string (src->dvdnav)));
+      return;
+    }
+
+    if (pci->hli.hl_gi.hli_ss == 0 || (button > pci->hli.hl_gi.btn_ns) ||
+        (button < 1)) {
+      /* button is out of the range of possible buttons. */
+      button = 0;
+    }
   }
 
-  pci = dvdnav_get_current_nav_pci (src->dvdnav);
-  if ((button > pci->hli.hl_gi.btn_ns) || (button < 1)) {
-    /* button is out of the range of possible buttons. */
-    button = 0;
-  }
-
-  if (pci->hli.hl_gi.hli_ss == 0 || button == 0) {
+  if (button == 0) {
     /* No highlight available, or no button selected - clear the SPU */
     if (src->active_button != 0) {
       src->active_button = 0;
@@ -1303,14 +1397,172 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
 
     src->active_button = button;
 
-    g_print ("Setting highlight. Button %d active %d TS %" GST_TIME_FORMAT
-        " palette 0x%x\n", button, mode,
-        GST_TIME_ARGS (GST_EVENT_TIMESTAMP (event)), area.palette);
+    g_print ("Setting highlight. Button %d @ %d,%d active %d"
+        " palette 0x%x\n", button, area.sx, area.sy, mode, area.palette);
 
     if (src->highlight_event)
       gst_event_unref (src->highlight_event);
     src->highlight_event = event;
   }
+}
+
+static void
+rsn_dvdsrc_enqueue_nav_block (resinDvdSrc * src, GstBuffer * nav_buf,
+    GstClockTime ts)
+{
+  RsnDvdPendingNav *pend_nav = g_new0 (RsnDvdPendingNav, 1);
+  GstSegment *seg = &(GST_BASE_SRC (src)->segment);
+
+  pend_nav->buffer = gst_buffer_ref (nav_buf);
+  pend_nav->ts = ts;
+  pend_nav->running_ts = gst_segment_to_running_time (seg, GST_FORMAT_TIME, ts);
+
+  if (src->pending_nav_blocks == NULL) {
+    src->pending_nav_blocks = src->pending_nav_blocks_end =
+        g_slist_append (src->pending_nav_blocks_end, pend_nav);
+  } else {
+    src->pending_nav_blocks_end =
+        g_slist_append (src->pending_nav_blocks_end, pend_nav);
+    src->pending_nav_blocks_end = g_slist_next (src->pending_nav_blocks_end);
+  }
+
+#if 0
+  g_print ("Enqueued nav with TS %" GST_TIME_FORMAT " with run ts %"
+      GST_TIME_FORMAT ". %d packs pending\n", GST_TIME_ARGS (ts),
+      GST_TIME_ARGS (pend_nav->running_ts),
+      g_slist_length (src->pending_nav_blocks));
+#endif
+}
+
+static void
+rsn_dvdsrc_activate_nav_block (resinDvdSrc * src, GstBuffer * nav_buf)
+{
+  int32_t forced_button;
+
+  navRead_PCI (&src->cur_pci, GST_BUFFER_DATA (nav_buf) + 0x2d);
+  src->have_pci = TRUE;
+
+  forced_button = src->cur_pci.hli.hl_gi.fosl_btnn & 0x3f;
+
+  if (forced_button != 0)
+    dvdnav_button_select (src->dvdnav, &src->cur_pci, forced_button);
+
+  /* highlight might change, let's check */
+  rsn_dvdsrc_update_highlight (src);
+  if (src->highlight_event)
+    g_cond_broadcast (src->still_cond);
+}
+
+static void
+rsn_dvdsrc_clear_nav_blocks (resinDvdSrc * src)
+{
+  while (src->pending_nav_blocks) {
+    RsnDvdPendingNav *cur = (RsnDvdPendingNav *) src->pending_nav_blocks->data;
+
+    gst_buffer_unref (cur->buffer);
+    g_free (cur);
+
+    src->pending_nav_blocks =
+        g_slist_delete_link (src->pending_nav_blocks, src->pending_nav_blocks);
+  }
+
+  src->pending_nav_blocks_end = NULL;
+}
+
+static gboolean
+rsn_dvdsrc_nav_clock_cb (GstClock * clock, GstClockTime time, GstClockID id,
+    gpointer user_data)
+{
+  resinDvdSrc *src = (resinDvdSrc *) user_data;
+  GstClockTime base_time = gst_element_get_base_time (GST_ELEMENT (src));
+
+  GST_LOG_OBJECT (src, "NAV pack callback for TS %" GST_TIME_FORMAT " at ts %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (time),
+      GST_TIME_ARGS (gst_clock_get_time (clock) - base_time));
+
+  g_mutex_lock (src->dvd_lock);
+
+  /* Destroy the clock id that caused this callback */
+  gst_clock_id_unref (src->nav_clock_id);
+  src->nav_clock_id = NULL;
+
+  while (src->pending_nav_blocks) {
+    RsnDvdPendingNav *cur = (RsnDvdPendingNav *) src->pending_nav_blocks->data;
+
+    if (time < base_time + cur->running_ts)
+      break;                    /* Next NAV is in the future */
+
+    g_print ("Activating nav pack for with TS %" GST_TIME_FORMAT
+        " at running TS %" GST_TIME_FORMAT "\n",
+        GST_TIME_ARGS (cur->ts), GST_TIME_ARGS (cur->running_ts));
+    rsn_dvdsrc_activate_nav_block (src, cur->buffer);
+
+    gst_buffer_unref (cur->buffer);
+    g_free (cur);
+
+    src->pending_nav_blocks =
+        g_slist_delete_link (src->pending_nav_blocks, src->pending_nav_blocks);
+  }
+
+  if (src->pending_nav_blocks == NULL)
+    src->pending_nav_blocks_end = NULL;
+  else {
+    /* Schedule a next packet, if any */
+    RsnDvdPendingNav *next_nav =
+        (RsnDvdPendingNav *) src->pending_nav_blocks->data;
+    rsn_dvdsrc_schedule_nav_cb (src, next_nav);
+  }
+
+  g_mutex_unlock (src->dvd_lock);
+
+  return TRUE;
+}
+
+static void
+rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src, RsnDvdPendingNav * next_nav)
+{
+  GstClock *clock;
+  GstClockTime base_ts;
+  GstState cur_state;
+
+  gst_element_get_state (GST_ELEMENT (src), &cur_state, NULL, 0);
+  if (cur_state != GST_STATE_PLAYING)
+    return;                     /* Not in playing state yet */
+
+  GST_OBJECT_LOCK (src);
+  clock = GST_ELEMENT_CLOCK (src);
+  if (clock)
+    gst_object_ref (clock);
+  base_ts = GST_ELEMENT (src)->base_time;
+  GST_OBJECT_UNLOCK (src);
+
+  if (clock == NULL)
+    return;
+
+  GST_LOG_OBJECT (src, "Schedule nav pack for running TS %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (next_nav->running_ts));
+
+  src->nav_clock_id = gst_clock_new_single_shot_id (clock,
+      base_ts + next_nav->running_ts);
+  gst_clock_id_wait_async (src->nav_clock_id, rsn_dvdsrc_nav_clock_cb, src);
+
+  gst_object_unref (clock);
+}
+
+static void
+rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src)
+{
+  RsnDvdPendingNav *next_nav;
+
+  /* Make sure a callback is scheduled for the first nav packet */
+  if (src->nav_clock_id != NULL)
+    return;                     /* Something already scheduled */
+  if (src->pending_nav_blocks == NULL)
+    return;                     /* No nav blocks available yet */
+
+  next_nav = (RsnDvdPendingNav *) src->pending_nav_blocks->data;
+
+  rsn_dvdsrc_schedule_nav_cb (src, next_nav);
 }
 
 /* Use libdvdread to read and cache info from the IFO file about
@@ -1333,6 +1585,40 @@ rsn_dvdsrc_src_event (RsnBaseSrc * basesrc, GstEvent * event)
   }
 
   return res;
+}
+
+static GstStateChangeReturn
+rsn_dvdsrc_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  resinDvdSrc *src = RESINDVDSRC (element);
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      /* Kick off the NAV packet callback if needed */
+      g_mutex_lock (src->dvd_lock);
+      rsn_dvdsrc_check_nav_blocks (src);
+      g_mutex_unlock (src->dvd_lock);
+      break;
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      /* Unschedule any NAV packet callback */
+      g_mutex_lock (src->dvd_lock);
+      if (src->nav_clock_id) {
+        gst_clock_id_unschedule (src->nav_clock_id);
+        gst_clock_id_unref (src->nav_clock_id);
+        src->nav_clock_id = NULL;
+      }
+      g_mutex_unlock (src->dvd_lock);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean
@@ -1364,6 +1650,7 @@ static gboolean
 rsn_dvdsrc_prepare_seek (RsnBaseSrc * bsrc, GstEvent * event,
     GstSegment * segment)
 {
+  resinDvdSrc *src = RESINDVDSRC (bsrc);
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
   GstSeekFlags flags;
@@ -1380,7 +1667,9 @@ rsn_dvdsrc_prepare_seek (RsnBaseSrc * bsrc, GstEvent * event,
     gst_segment_init (segment, seek_format);
     gst_segment_set_seek (segment, rate, seek_format, flags, cur_type, cur,
         stop_type, stop, &update);
-    g_print ("Have internal seek event\n");
+
+    if (flags & GST_SEEK_FLAG_FLUSH)
+      src->flushing_seek = TRUE;
 
     return TRUE;
   }
@@ -1401,7 +1690,6 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
   gboolean ret = FALSE;
 
   if (segment->format == rsndvd_format) {
-    g_print ("Handling internal seek event\n");
     ret = TRUE;
   } else {
     /* FIXME: Handle other formats: Time, title, chapter, angle */
@@ -1419,6 +1707,24 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
     /* Force a highlight update */
     src->active_button = -1;
 
+    if (src->flushing_seek) {
+      g_mutex_lock (src->dvd_lock);
+      src->flushing_seek = FALSE;
+
+      gst_buffer_replace (&src->next_buf, NULL);
+      src->cur_start_ts = GST_CLOCK_TIME_NONE;
+      src->cur_end_ts = GST_CLOCK_TIME_NONE;
+      src->cur_vobu_base_ts = GST_CLOCK_TIME_NONE;
+      src->have_pci = FALSE;
+      if (src->nav_clock_id) {
+        gst_clock_id_unschedule (src->nav_clock_id);
+        gst_clock_id_unref (src->nav_clock_id);
+        src->nav_clock_id = NULL;
+      }
+      rsn_dvdsrc_clear_nav_blocks (src);
+      g_mutex_unlock (src->dvd_lock);
+    }
+
     g_print ("Entering prepare_next_block after seek\n");
     if (rsn_dvdsrc_prepare_next_block (src, FALSE) != GST_FLOW_OK)
       goto fail;
@@ -1429,7 +1735,11 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
     segment->last_stop = segment->start = src->cur_start_ts;
 
     /* time field = position is the 'logical' stream time here: */
-    segment->time = src->cur_position;
+    segment->time = 0;
+    if (src->cur_position != GST_CLOCK_TIME_NONE)
+      segment->time += src->cur_position;
+    if (src->cur_vobu_base_ts != GST_CLOCK_TIME_NONE)
+      segment->time += src->cur_vobu_base_ts;
 
     segment->stop = -1;
     segment->duration = -1;

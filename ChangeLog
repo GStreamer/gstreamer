@@ -1,3 +1,19 @@
+2008-06-20  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/resindvd/resindvdsrc.c:
+	* ext/resindvd/resindvdsrc.h:
+	Schedule NAV packets and activate them with an async clock callback
+	at the right moment. This makes delayed menu highlights appear
+	at the correct time and fixes Back To The Future.
+
+	When outputting new segment in do_seek(), calculate our position
+	value properly, so we report the right time when popping in and
+	out of the menus.
+
+	* ext/resindvd/rsnbasesrc.c:
+	When handling a non-flushing seek, accumulate the segment,
+	rather than having every seek start from 0 and messing with sync
+
 2008-06-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/selector/gstoutputselector.c:
