@@ -1,3 +1,8 @@
+2008-06-20  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	Bump version back to dev -> 0.10.12.1
+
 === release 0.10.12 ===
 
 2008-06-18  Jan Schmidt <jan.schmidt@sun.com>
