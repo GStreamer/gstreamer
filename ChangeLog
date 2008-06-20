@@ -1,5 +1,12 @@
 2008-06-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/tvtime/vfir.c: (deinterlace_line_mmxext),
+	(deinterlace_line_c), (deinterlace_scanline_vfir):
+	Make it possible to use the vfir method on X86 CPUs without MMXEXT too
+	but use the MMXEXT optimized code whenever possible.
+
+2008-06-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/gstdeinterlace2.c:
 	(gst_deinterlace2_class_init), (gst_deinterlace2_init),
 	(gst_deinterlace2_reset_history), (gst_deinterlace2_reset),
