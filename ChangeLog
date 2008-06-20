@@ -1,3 +1,10 @@
+2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times),
+	(gst_base_sink_wait_eos), (gst_base_sink_event):
+	If we have not seen a buffer before EOS, use the segment values to
+	report the current position instead of invalid positions.
+
 2008-06-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/tmpl/.cvsignore:

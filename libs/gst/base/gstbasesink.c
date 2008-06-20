@@ -1304,23 +1304,36 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     switch (GST_EVENT_TYPE (event)) {
         /* EOS event needs syncing */
       case GST_EVENT_EOS:
-        if (basesink->segment.rate >= 0.0)
+      {
+        if (basesink->segment.rate >= 0.0) {
           sstart = sstop = priv->current_sstop;
-        else
+          if (sstart == -1) {
+            /* we have not seen a buffer yet, use the segment values */
+            sstart = sstop = gst_segment_to_stream_time (&basesink->segment,
+                basesink->segment.format, basesink->segment.stop);
+          }
+        } else {
           sstart = sstop = priv->current_sstart;
+          if (sstart == -1) {
+            /* we have not seen a buffer yet, use the segment values */
+            sstart = sstop = gst_segment_to_stream_time (&basesink->segment,
+                basesink->segment.format, basesink->segment.start);
+          }
+        }
 
         rstart = rstop = priv->eos_rtime;
         *do_sync = rstart != -1;
         GST_DEBUG_OBJECT (basesink, "sync times for EOS %" GST_TIME_FORMAT,
             GST_TIME_ARGS (rstart));
         goto done;
+      }
+      default:
         /* other events do not need syncing */
         /* FIXME, maybe NEWSEGMENT might need synchronisation
          * since the POSITION query depends on accumulated times and
          * we cannot accumulate the current segment before the previous
          * one completed.
          */
-      default:
         return FALSE;
     }
   }
@@ -1598,9 +1611,12 @@ gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
     GST_DEBUG_OBJECT (sink, "possibly waiting for clock to reach %"
         GST_TIME_FORMAT, GST_TIME_ARGS (time));
 
+    /* compensate for latency and ts_offset. We don't adjust for device latency
+     * because we don't interact with the device on EOS normally. */
+    stime = gst_base_sink_adjust_time (sink, time);
+
     /* wait for the clock, this can be interrupted because we got shut down or 
      * we PAUSED. */
-    stime = gst_base_sink_adjust_time (sink, time);
     status = gst_base_sink_wait_clock (sink, stime, jitter);
 
     GST_DEBUG_OBJECT (sink, "clock returned %d", status);
@@ -2472,6 +2488,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_LOCK (basesink);
       basesink->priv->current_sstart = -1;
       basesink->priv->current_sstop = -1;
+      basesink->priv->eos_rtime = -1;
       GST_OBJECT_UNLOCK (basesink);
 
       gst_event_unref (event);
