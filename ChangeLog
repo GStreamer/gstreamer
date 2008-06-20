@@ -1,5 +1,10 @@
 2008-06-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h:
+	Add missing header.
+
+2008-06-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* configure.ac:
 	* gst/deinterlace2/Makefile.am:
 	* gst/deinterlace2/tvtime/greedyh.asm:
