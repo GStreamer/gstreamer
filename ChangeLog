@@ -1,3 +1,10 @@
+2008-06-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* gst/gstinfo.c:
+	  Don't assume that <valgrind/valgrind.h> exists just because
+	  the binary is there.
+
 2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/check/Makefile.am:

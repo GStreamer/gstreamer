@@ -108,7 +108,7 @@
 #include "gst_private.h"
 #include "gstutils.h"
 #include "gstsegment.h"
-#ifdef HAVE_VALGRIND
+#ifdef HAVE_VALGRIND_H
 #  include <valgrind/valgrind.h>
 #endif
 #include <glib/gprintf.h>       /* g_sprintf */
@@ -248,7 +248,7 @@ _priv_gst_in_valgrind (void)
   in_valgrind = GST_VG_UNCHECKED;
 
   if (in_valgrind == GST_VG_UNCHECKED) {
-#ifdef HAVE_VALGRIND
+#ifdef HAVE_VALGRIND_H
     if (RUNNING_ON_VALGRIND) {
       GST_CAT_INFO (GST_CAT_GST_INIT, "we're running inside valgrind");
       printf ("GStreamer has detected that it is running inside valgrind.\n");

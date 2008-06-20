@@ -319,6 +319,11 @@ AC_CHECK_HEADERS([sys/utsname.h])
 dnl Check for stdio_ext.f for __fbufsize
 AC_CHECK_HEADERS([stdio_ext.h])
 
+dnl Check for valgrind.h
+dnl separate from HAVE_VALGRIND because you can have the program, but not
+dnl the dev package
+AC_CHECK_HEADERS([valgrind/valgrind.h], HAVE_VALGRIND_H=yes)
+
 dnl *** checks for types/defines ***
 
 dnl *** checks for structures ***
