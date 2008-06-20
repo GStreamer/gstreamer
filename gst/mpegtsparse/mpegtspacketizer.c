@@ -2183,9 +2183,13 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
     }
   }
 
-  new_text =
-      g_convert ((gchar *) sb->data, sb->len, "utf-8", encoding, NULL, NULL,
-      error);
+  if (sb->len > 0) {
+    new_text =
+        g_convert ((gchar *) sb->data, sb->len, "utf-8", encoding, NULL, NULL,
+        error);
+  } else {
+    new_text = g_strdup ("");
+  }
 
   g_byte_array_free (sb, TRUE);
 
@@ -2200,6 +2204,8 @@ get_encoding_and_convert (const gchar * text, guint length)
   gchar *encoding;
   guint start_text = 0;
   gboolean is_multibyte;
+
+  g_return_val_if_fail (text != NULL, NULL);
 
   encoding = get_encoding (text, &start_text, &is_multibyte);
 

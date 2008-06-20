@@ -1,3 +1,10 @@
+2008-06-20  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	Patch by: Sebastian Pölsterl
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	Fix problem when empty string is provided.
+
 2008-06-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/tvtime/vfir.c: (deinterlace_line_mmxext),
