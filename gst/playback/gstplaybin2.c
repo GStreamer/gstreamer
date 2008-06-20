@@ -259,8 +259,6 @@
 #include "gstplaysink.h"
 #include "gstfactorylists.h"
 #include "gstscreenshot.h"
-#include "gststreaminfo.h"
-#include "gststreamselector.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 #define GST_CAT_DEFAULT gst_play_bin_debug
@@ -388,6 +386,11 @@ struct _GstPlayBinClass
 
   /* get the last video frame and convert it to the given caps */
   GstBuffer *(*convert_frame) (GstPlayBin * playbin, GstCaps * caps);
+
+  /* get audio/video/text pad for a stream */
+  GstPad *(*get_video_pad) (GstPlayBin * playbin, gint stream);
+  GstPad *(*get_audio_pad) (GstPlayBin * playbin, gint stream);
+  GstPad *(*get_text_pad) (GstPlayBin * playbin, gint stream);
 };
 
 /* props */
@@ -447,6 +450,9 @@ enum
   SIGNAL_GET_VIDEO_TAGS,
   SIGNAL_GET_AUDIO_TAGS,
   SIGNAL_GET_TEXT_TAGS,
+  SIGNAL_GET_VIDEO_PAD,
+  SIGNAL_GET_AUDIO_PAD,
+  SIGNAL_GET_TEXT_PAD,
   LAST_SIGNAL
 };
 
@@ -473,6 +479,10 @@ static GstTagList *gst_play_bin_get_text_tags (GstPlayBin * playbin,
 
 static GstBuffer *gst_play_bin_convert_frame (GstPlayBin * playbin,
     GstCaps * caps);
+
+static GstPad *gst_play_bin_get_video_pad (GstPlayBin * playbin, gint stream);
+static GstPad *gst_play_bin_get_audio_pad (GstPlayBin * playbin, gint stream);
+static GstPad *gst_play_bin_get_text_pad (GstPlayBin * playbin, gint stream);
 
 static gboolean setup_next_source (GstPlayBin * playbin);
 
@@ -829,11 +839,67 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, convert_frame), NULL, NULL,
       gst_play_marshal_BUFFER__BOXED, GST_TYPE_BUFFER, 1, GST_TYPE_CAPS);
 
+  /**
+   * GstPlayBin2::get-video-pad
+   * @playbin: a #GstPlayBin2
+   * @stream: a video stream number
+   *
+   * Action signal to retrieve the stream-selector sinkpad for a specific 
+   * video stream.
+   * This pad can be used for notifications of caps changes, stream-specific
+   * queries, etc.
+   *
+   * Returns: a #GstPad, or NULL when the stream number does not exist.
+   */
+  gst_play_bin_signals[SIGNAL_GET_VIDEO_PAD] =
+      g_signal_new ("get-video-pad", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstPlayBinClass, get_video_pad), NULL, NULL,
+      gst_play_marshal_OBJECT__INT, GST_TYPE_PAD, 1, G_TYPE_INT);
+  /**
+   * GstPlayBin2::get-audio-pad
+   * @playbin: a #GstPlayBin2
+   * @stream: an audio stream number
+   *
+   * Action signal to retrieve the stream-selector sinkpad for a specific 
+   * audio stream.
+   * This pad can be used for notifications of caps changes, stream-specific
+   * queries, etc.
+   *
+   * Returns: a #GstPad, or NULL when the stream number does not exist.
+   */
+  gst_play_bin_signals[SIGNAL_GET_AUDIO_PAD] =
+      g_signal_new ("get-audio-pad", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstPlayBinClass, get_audio_pad), NULL, NULL,
+      gst_play_marshal_OBJECT__INT, GST_TYPE_PAD, 1, G_TYPE_INT);
+  /**
+   * GstPlayBin2::get-text-pad
+   * @playbin: a #GstPlayBin2
+   * @stream: a text stream number
+   *
+   * Action signal to retrieve the stream-selector sinkpad for a specific 
+   * text stream.
+   * This pad can be used for notifications of caps changes, stream-specific
+   * queries, etc.
+   *
+   * Returns: a #GstPad, or NULL when the stream number does not exist.
+   */
+  gst_play_bin_signals[SIGNAL_GET_TEXT_PAD] =
+      g_signal_new ("get-text-pad", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstPlayBinClass, get_text_pad), NULL, NULL,
+      gst_play_marshal_OBJECT__INT, GST_TYPE_PAD, 1, G_TYPE_INT);
+
   klass->get_video_tags = gst_play_bin_get_video_tags;
   klass->get_audio_tags = gst_play_bin_get_audio_tags;
   klass->get_text_tags = gst_play_bin_get_text_tags;
 
   klass->convert_frame = gst_play_bin_convert_frame;
+
+  klass->get_video_pad = gst_play_bin_get_video_pad;
+  klass->get_audio_pad = gst_play_bin_get_audio_pad;
+  klass->get_text_pad = gst_play_bin_get_text_pad;
 
   gst_element_class_set_details (gstelement_klass, &gst_play_bin_details);
 
@@ -905,10 +971,11 @@ gst_play_bin_init (GstPlayBin * playbin)
   gst_bin_add (GST_BIN_CAST (playbin), GST_ELEMENT_CAST (playbin->playsink));
   gst_play_sink_set_flags (playbin->playsink, DEFAULT_FLAGS);
 
+  playbin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
+
   playbin->current_video = DEFAULT_CURRENT_VIDEO;
   playbin->current_audio = DEFAULT_CURRENT_AUDIO;
   playbin->current_text = DEFAULT_CURRENT_TEXT;
-  playbin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
 }
 
 static void
@@ -989,13 +1056,65 @@ get_group (GstPlayBin * playbin)
   return result;
 }
 
+static GstPad *
+gst_play_bin_get_video_pad (GstPlayBin * playbin, gint stream)
+{
+  GstPad *sinkpad = NULL;
+  GstSourceGroup *group;
+
+  GST_PLAY_BIN_LOCK (playbin);
+  group = get_group (playbin);
+  if (stream < group->video_channels->len) {
+    sinkpad = g_ptr_array_index (group->video_channels, stream);
+    gst_object_ref (sinkpad);
+  }
+  GST_PLAY_BIN_UNLOCK (playbin);
+
+  return sinkpad;
+}
+
+static GstPad *
+gst_play_bin_get_audio_pad (GstPlayBin * playbin, gint stream)
+{
+  GstPad *sinkpad = NULL;
+  GstSourceGroup *group;
+
+  GST_PLAY_BIN_LOCK (playbin);
+  group = get_group (playbin);
+  if (stream < group->audio_channels->len) {
+    sinkpad = g_ptr_array_index (group->audio_channels, stream);
+    gst_object_ref (sinkpad);
+  }
+  GST_PLAY_BIN_UNLOCK (playbin);
+
+  return sinkpad;
+}
+
+static GstPad *
+gst_play_bin_get_text_pad (GstPlayBin * playbin, gint stream)
+{
+  GstPad *sinkpad = NULL;
+  GstSourceGroup *group;
+
+  GST_PLAY_BIN_LOCK (playbin);
+  group = get_group (playbin);
+  if (stream < group->text_channels->len) {
+    sinkpad = g_ptr_array_index (group->text_channels, stream);
+    gst_object_ref (sinkpad);
+  }
+  GST_PLAY_BIN_UNLOCK (playbin);
+
+  return sinkpad;
+}
+
+
 static GstTagList *
 get_tags (GstPlayBin * playbin, GPtrArray * channels, gint stream)
 {
   GstTagList *result;
   GstPad *sinkpad;
 
-  if (!channels || channels->len < stream)
+  if (!channels || stream >= channels->len)
     return NULL;
 
   sinkpad = g_ptr_array_index (channels, stream);

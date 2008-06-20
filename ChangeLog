@@ -1,5 +1,13 @@
 2008-06-20  Michael Smith <msmith@songbirdnest.com>
 
+	* gst/playback/gstplay-marshal.list:
+	* gst/playback/gstplaybin2.c:
+	  Add get-video-pad, get-audio-pad, get-text-pad action signals to
+	  playbin2. This allows the user to get to the selector's sinkpads, and
+	  thus inspect a range of things - caps, tags, etc. 
+
+2008-06-20  Michael Smith <msmith@songbirdnest.com>
+
 	* gst/playback/gstplaybin2.c:
 	  Use a different constant for the convert-frame signal id.
 	  Fixes #537009.
