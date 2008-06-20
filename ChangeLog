@@ -1,3 +1,12 @@
+2008-06-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/controller/gstinterpolation.c:
+	* libs/gst/controller/gstinterpolationcontrolsource.c:
+	* tests/check/libs/controller.c:
+	  Rewrite handling of default values. Fix overflow with unsigned types
+	  in linear interpolation. Remove now obsolete _first_value() function.
+	  Add more tests. Fixes #538201.
+
 2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasetransform.c:

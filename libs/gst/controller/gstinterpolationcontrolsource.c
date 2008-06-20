@@ -533,19 +533,11 @@ gst_interpolation_control_source_unset (GstInterpolationControlSource * self,
   /* check if a control point for the timestamp exists */
   if ((node = g_list_find_custom (self->priv->values, &timestamp,
               gst_control_point_find))) {
-    GstControlPoint *cp = node->data;
-
-    if (cp->timestamp == 0) {
-      /* Restore the default node */
-      g_value_reset (&cp->value);
-      g_value_copy (&self->priv->default_value, &cp->value);
-    } else {
-      if (node == self->priv->last_requested_value)
-        self->priv->last_requested_value = NULL;
-      gst_control_point_free (node->data);      /* free GstControlPoint */
-      self->priv->values = g_list_delete_link (self->priv->values, node);
-      self->priv->nvalues--;
-    }
+    if (node == self->priv->last_requested_value)
+      self->priv->last_requested_value = NULL;
+    gst_control_point_free (node->data);        /* free GstControlPoint */
+    self->priv->values = g_list_delete_link (self->priv->values, node);
+    self->priv->nvalues--;
     self->priv->valid_cache = FALSE;
     res = TRUE;
   }

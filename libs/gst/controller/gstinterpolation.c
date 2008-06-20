@@ -80,27 +80,6 @@ static GList *gst_interpolation_control_source_find_control_point_node
   return prev_node;
 }
 
-/*
- * gst_interpolation_control_source_get_first_value:
- * @self: the interpolation control source to search in
- *
- * Find the first value and return it.
- *
- * Returns: the found #GValue or %NULL if there are none.
- */
-static inline GValue *
-gst_interpolation_control_source_get_first_value (GstInterpolationControlSource
-    * self)
-{
-  if (self->priv->values && self->priv->nvalues > 0) {
-    GstControlPoint *cp = self->priv->values->data;
-
-    return &cp->value;
-  } else {
-    return NULL;
-  }
-}
-
 /*  steps-like (no-)interpolation, default */
 /*  just returns the value for the most recent key-frame */
 
@@ -123,7 +102,7 @@ _interpolate_none_get_##type (GstInterpolationControlSource *self, GstClockTime 
     else \
       ret = &cp->value; \
   } else { \
-    ret = gst_interpolation_control_source_get_first_value (self); \
+    ret = &self->priv->default_value; \
   } \
   return ret; \
 } \
@@ -193,7 +172,7 @@ _interpolate_none_get (GstInterpolationControlSource * self,
 
     ret = &cp->value;
   } else {
-    ret = gst_interpolation_control_source_get_first_value (self);
+    ret = &self->priv->default_value;
   }
   return ret;
 }
@@ -535,51 +514,53 @@ static GstInterpolateMethod interpolate_trigger = {
 /*  linear interpolation */
 /*  smoothes inbetween values */
 
-#define DEFINE_LINEAR_GET(type,round,convert) \
+#define DEFINE_LINEAR_GET(vtype,round,convert) \
 static inline gboolean \
-_interpolate_linear_get_##type (GstInterpolationControlSource *self, GstClockTime timestamp, g##type *ret) \
+_interpolate_linear_get_##vtype (GstInterpolationControlSource *self, GstClockTime timestamp, g##vtype *ret) \
 { \
   GList *node; \
+  GstControlPoint *cp1 = NULL, *cp2, cp={0,}; \
   \
-  if ((node = gst_interpolation_control_source_find_control_point_node (self, timestamp))) { \
-    GstControlPoint *cp1, *cp2; \
-    \
+  node = gst_interpolation_control_source_find_control_point_node (self, timestamp); \
+  if (node) { \
     cp1 = node->data; \
-    if ((node = g_list_next (node))) { \
-      gdouble slope; \
-      g##type value1,value2; \
-      \
-      cp2 = node->data; \
-      \
-      value1 = g_value_get_##type (&cp1->value); \
-      value2 = g_value_get_##type (&cp2->value); \
-      slope = (gdouble) convert (value2 - value1) / gst_guint64_to_gdouble (cp2->timestamp - cp1->timestamp); \
-      \
-      if (round) \
-        *ret = (g##type) (convert (value1) + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope + 0.5); \
-      else \
-        *ret = (g##type) (convert (value1) + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope); \
-    } \
-    else { \
-      *ret = g_value_get_##type (&cp1->value); \
-    } \
+    node = g_list_next (node); \
   } else { \
-    GValue *first = gst_interpolation_control_source_get_first_value (self); \
-    if (!first) \
-      return FALSE; \
-    *ret = g_value_get_##type (first); \
+    cp.timestamp = G_GUINT64_CONSTANT(0); \
+    g_value_init (&cp.value, self->priv->type); \
+    g_value_copy (&self->priv->default_value, &cp.value); \
+    cp1 = &cp; \
+    node = self->priv->values; \
   } \
-  *ret = CLAMP (*ret, g_value_get_##type (&self->priv->minimum_value), g_value_get_##type (&self->priv->maximum_value)); \
+  if (node) { \
+    gdouble slope; \
+    g##vtype value1,value2; \
+    \
+    cp2 = node->data; \
+    \
+    value1 = g_value_get_##vtype (&cp1->value); \
+    value2 = g_value_get_##vtype (&cp2->value); \
+    slope = ((gdouble) convert (value2) - (gdouble) convert (value1)) / gst_guint64_to_gdouble (cp2->timestamp - cp1->timestamp); \
+    \
+    if (round) \
+      *ret = (g##vtype) (convert (value1) + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope + 0.5); \
+    else \
+      *ret = (g##vtype) (convert (value1) + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope); \
+  } \
+  else { \
+    *ret = g_value_get_##vtype (&cp1->value); \
+  } \
+  *ret = CLAMP (*ret, g_value_get_##vtype (&self->priv->minimum_value), g_value_get_##vtype (&self->priv->maximum_value)); \
   return TRUE; \
 } \
 \
 static gboolean \
-interpolate_linear_get_##type (GstInterpolationControlSource *self, GstClockTime timestamp, GValue *value) \
+interpolate_linear_get_##vtype (GstInterpolationControlSource *self, GstClockTime timestamp, GValue *value) \
 { \
-  g##type ret; \
+  g##vtype ret; \
   g_mutex_lock (self->lock); \
-  if (_interpolate_linear_get_##type (self, timestamp, &ret)) { \
-    g_value_set_##type (value, ret); \
+  if (_interpolate_linear_get_##vtype (self, timestamp, &ret)) { \
+    g_value_set_##vtype (value, ret); \
     g_mutex_unlock (self->lock); \
     return TRUE; \
   } \
@@ -588,16 +569,16 @@ interpolate_linear_get_##type (GstInterpolationControlSource *self, GstClockTime
 } \
 \
 static gboolean \
-interpolate_linear_get_##type##_value_array (GstInterpolationControlSource *self, \
+interpolate_linear_get_##vtype##_value_array (GstInterpolationControlSource *self, \
     GstClockTime timestamp, GstValueArray * value_array) \
 { \
   gint i; \
   GstClockTime ts = timestamp; \
-  g##type *values = (g##type *) value_array->values; \
+  g##vtype *values = (g##vtype *) value_array->values; \
   \
   g_mutex_lock (self->lock); \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    if (! _interpolate_linear_get_##type (self, ts, values)) { \
+    if (! _interpolate_linear_get_##vtype (self, ts, values)) { \
       g_mutex_unlock (self->lock); \
       return FALSE; \
     } \
@@ -661,9 +642,9 @@ static GstInterpolateMethod interpolate_linear = {
  *    .    .    .    .    .
  */
 
-#define DEFINE_CUBIC_GET(type,round, convert) \
+#define DEFINE_CUBIC_GET(vtype,round, convert) \
 static void \
-_interpolate_cubic_update_cache_##type (GstInterpolationControlSource *self) \
+_interpolate_cubic_update_cache_##vtype (GstInterpolationControlSource *self) \
 { \
   gint i, n = self->priv->nvalues; \
   gdouble *o = g_new0 (gdouble, n); \
@@ -677,20 +658,20 @@ _interpolate_cubic_update_cache_##type (GstInterpolationControlSource *self) \
   GList *node; \
   GstControlPoint *cp; \
   GstClockTime x_prev, x, x_next; \
-  g##type y_prev, y, y_next; \
+  g##vtype y_prev, y, y_next; \
   \
   /* Fill linear system of equations */ \
   node = self->priv->values; \
   cp = node->data; \
   x = cp->timestamp; \
-  y = g_value_get_##type (&cp->value); \
+  y = g_value_get_##vtype (&cp->value); \
   \
   p[0] = 1.0; \
   \
   node = node->next; \
   cp = node->data; \
   x_next = cp->timestamp; \
-  y_next = g_value_get_##type (&cp->value); \
+  y_next = g_value_get_##vtype (&cp->value); \
   h[0] = gst_util_guint64_to_gdouble (x_next - x); \
   \
   for (i = 1; i < n-1; i++) { \
@@ -702,7 +683,7 @@ _interpolate_cubic_update_cache_##type (GstInterpolationControlSource *self) \
     node = node->next; \
     cp = node->data; \
     x_next = cp->timestamp; \
-    y_next = g_value_get_##type (&cp->value); \
+    y_next = g_value_get_##vtype (&cp->value); \
     \
     h[i] = gst_util_guint64_to_gdouble (x_next - x); \
     o[i] = h[i-1]; \
@@ -744,64 +725,66 @@ _interpolate_cubic_update_cache_##type (GstInterpolationControlSource *self) \
 } \
 \
 static inline gboolean \
-_interpolate_cubic_get_##type (GstInterpolationControlSource *self, GstClockTime timestamp, g##type *ret) \
+_interpolate_cubic_get_##vtype (GstInterpolationControlSource *self, GstClockTime timestamp, g##vtype *ret) \
 { \
   GList *node; \
+  GstControlPoint *cp1 = NULL, *cp2, cp={0,}; \
   \
   if (self->priv->nvalues <= 2) \
-    return _interpolate_linear_get_##type (self, timestamp, ret); \
+    return _interpolate_linear_get_##vtype (self, timestamp, ret); \
   \
   if (!self->priv->valid_cache) { \
-    _interpolate_cubic_update_cache_##type (self); \
+    _interpolate_cubic_update_cache_##vtype (self); \
     self->priv->valid_cache = TRUE; \
   } \
   \
-  if ((node = gst_interpolation_control_source_find_control_point_node (self, timestamp))) { \
-    GstControlPoint *cp1, *cp2; \
-    \
+  node = gst_interpolation_control_source_find_control_point_node (self, timestamp); \
+  if (node) { \
     cp1 = node->data; \
-    if ((node = g_list_next (node))) { \
-      gdouble diff1, diff2; \
-      g##type value1,value2; \
-      gdouble out; \
-      \
-      cp2 = node->data; \
-      \
-      value1 = g_value_get_##type (&cp1->value); \
-      value2 = g_value_get_##type (&cp2->value); \
-      \
-      diff1 = gst_guint64_to_gdouble (timestamp - cp1->timestamp); \
-      diff2 = gst_guint64_to_gdouble (cp2->timestamp - timestamp); \
-      \
-      out = (cp2->cache.cubic.z * diff1 * diff1 * diff1 + cp1->cache.cubic.z * diff2 * diff2 * diff2) / cp1->cache.cubic.h; \
-      out += (convert (value2) / cp1->cache.cubic.h - cp1->cache.cubic.h * cp2->cache.cubic.z) * diff1; \
-      out += (convert (value1) / cp1->cache.cubic.h - cp1->cache.cubic.h * cp1->cache.cubic.z) * diff2; \
-      \
-      if (round) \
-        *ret = (g##type) (out + 0.5); \
-      else \
-        *ret = (g##type) out; \
-    } \
-    else { \
-      *ret = g_value_get_##type (&cp1->value); \
-    } \
+    node = g_list_next (node); \
   } else { \
-    GValue *first = gst_interpolation_control_source_get_first_value (self); \
-    if (!first) \
-      return FALSE; \
-    *ret = g_value_get_##type (first); \
+    cp.timestamp = G_GUINT64_CONSTANT(0); \
+    g_value_init (&cp.value, self->priv->type); \
+    g_value_copy (&self->priv->default_value, &cp.value); \
+    cp1 = &cp; \
+    node = self->priv->values; \
   } \
-  *ret = CLAMP (*ret, g_value_get_##type (&self->priv->minimum_value), g_value_get_##type (&self->priv->maximum_value)); \
+  if (node) { \
+    gdouble diff1, diff2; \
+    g##vtype value1,value2; \
+    gdouble out; \
+    \
+    cp2 = node->data; \
+    \
+    value1 = g_value_get_##vtype (&cp1->value); \
+    value2 = g_value_get_##vtype (&cp2->value); \
+    \
+    diff1 = gst_guint64_to_gdouble (timestamp - cp1->timestamp); \
+    diff2 = gst_guint64_to_gdouble (cp2->timestamp - timestamp); \
+    \
+    out = (cp2->cache.cubic.z * diff1 * diff1 * diff1 + cp1->cache.cubic.z * diff2 * diff2 * diff2) / cp1->cache.cubic.h; \
+    out += (convert (value2) / cp1->cache.cubic.h - cp1->cache.cubic.h * cp2->cache.cubic.z) * diff1; \
+    out += (convert (value1) / cp1->cache.cubic.h - cp1->cache.cubic.h * cp1->cache.cubic.z) * diff2; \
+    \
+    if (round) \
+      *ret = (g##vtype) (out + 0.5); \
+    else \
+      *ret = (g##vtype) out; \
+  } \
+  else { \
+    *ret = g_value_get_##vtype (&cp1->value); \
+  } \
+  *ret = CLAMP (*ret, g_value_get_##vtype (&self->priv->minimum_value), g_value_get_##vtype (&self->priv->maximum_value)); \
   return TRUE; \
 } \
 \
 static gboolean \
-interpolate_cubic_get_##type (GstInterpolationControlSource *self, GstClockTime timestamp, GValue *value) \
+interpolate_cubic_get_##vtype (GstInterpolationControlSource *self, GstClockTime timestamp, GValue *value) \
 { \
-  g##type ret; \
+  g##vtype ret; \
   g_mutex_lock (self->lock); \
-  if (_interpolate_cubic_get_##type (self, timestamp, &ret)) { \
-    g_value_set_##type (value, ret); \
+  if (_interpolate_cubic_get_##vtype (self, timestamp, &ret)) { \
+    g_value_set_##vtype (value, ret); \
     g_mutex_unlock (self->lock); \
     return TRUE; \
   } \
@@ -810,16 +793,16 @@ interpolate_cubic_get_##type (GstInterpolationControlSource *self, GstClockTime 
 } \
 \
 static gboolean \
-interpolate_cubic_get_##type##_value_array (GstInterpolationControlSource *self, \
+interpolate_cubic_get_##vtype##_value_array (GstInterpolationControlSource *self, \
     GstClockTime timestamp, GstValueArray * value_array) \
 { \
   gint i; \
   GstClockTime ts = timestamp; \
-  g##type *values = (g##type *) value_array->values; \
+  g##vtype *values = (g##vtype *) value_array->values; \
   \
   g_mutex_lock (self->lock); \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    if (! _interpolate_cubic_get_##type (self, ts, values)) { \
+    if (! _interpolate_cubic_get_##vtype (self, ts, values)) { \
       g_mutex_unlock (self->lock); \
       return FALSE; \
     } \
