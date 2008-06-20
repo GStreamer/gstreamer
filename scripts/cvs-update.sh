@@ -23,14 +23,26 @@ for m in \
       cd ..
       continue
     fi
-    make
+    if test ! -e Makefile
+    then
+      ./autoregen.sh
+      if test $? -ne 0
+      then
+        FAILURE="$FAILURE$m: autoregen.sh\n"
+        cd ..
+        continue
+      fi
+    fi
+
+    make $@
     if test $? -ne 0
     then
       FAILURE="$FAILURE$m: make\n"
       cd ..
       continue
     fi
-    make check
+
+    make $@ check
     if test $? -ne 0
     then
       FAILURE="$FAILURE$m: check\n"
