@@ -39,7 +39,6 @@
 # include "config.h"
 #endif
 
-#include "mmx.h"
 #include "speedy.h"
 #include "gstdeinterlace2.h"
 
@@ -50,12 +49,13 @@
  * filter taps here are: [-1 4 2 4 -1].
  */
 
+#ifdef HAVE_CPU_I386
+#include "mmx.h"
 static void
-deinterlace_line (uint8_t * dst, uint8_t * lum_m4,
+deinterlace_line_mmxext (uint8_t * dst, uint8_t * lum_m4,
     uint8_t * lum_m3, uint8_t * lum_m2,
     uint8_t * lum_m1, uint8_t * lum, int size)
 {
-#ifdef HAVE_CPU_I386
   mmx_t rounder;
 
   rounder.uw[0] = 4;
@@ -94,10 +94,17 @@ deinterlace_line (uint8_t * dst, uint8_t * lum_m4,
     dst += 4;
   }
   emms ();
-#else
-    /**
-     * C implementation.
-     */
+}
+#endif
+
+/**
+  * C implementation.
+  */
+static void
+deinterlace_line_c (uint8_t * dst, uint8_t * lum_m4,
+    uint8_t * lum_m3, uint8_t * lum_m2,
+    uint8_t * lum_m1, uint8_t * lum, int size)
+{
   int sum;
 
   for (; size > 0; size--) {
@@ -114,9 +121,7 @@ deinterlace_line (uint8_t * dst, uint8_t * lum_m4,
     lum++;
     dst++;
   }
-#endif
 }
-
 
 /*
  * The commented-out method below that uses the bottom_field member is more
@@ -128,8 +133,18 @@ static void
 deinterlace_scanline_vfir (GstDeinterlace2 * object,
     deinterlace_scanline_data_t * data, uint8_t * output)
 {
-  deinterlace_line (output, data->tt1, data->t0, data->m1, data->b0, data->bb1,
-      object->frame_width * 2);
+#ifdef HAVE_CPU_I386
+  if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMXEXT) {
+    deinterlace_line_mmxext (output, data->tt1, data->t0, data->m1, data->b0,
+        data->bb1, object->frame_width * 2);
+  } else {
+    deinterlace_line_c (output, data->tt1, data->t0, data->m1, data->b0,
+        data->bb1, object->frame_width * 2);
+  }
+#else
+  deinterlace_line_c (output, data->tt1, data->t0, data->m1, data->b0,
+      data->bb1, object->frame_width * 2);
+#endif
   // blit_packed422_scanline( output, data->m1, width );
 }
 
@@ -153,11 +168,7 @@ static deinterlace_method_t vfirmethod = {
   "Blur: Vertical",
   "BlurVertical",
   2,
-#ifdef HAVE_CPU_I386
-  OIL_IMPL_FLAG_MMXEXT,
-#else
   0,
-#endif
   0,
   0,
   0,
