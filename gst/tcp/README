@@ -8,16 +8,16 @@ TESTS
 -----
 Use these tests to test functionality of the various tcp plugins
 
-* server: nc -l -p 3000
+* server: nc -l 3000
   client: nc localhost 3000
   everything you type in the server is shown on the client
   everything you type in the client is shown on the server
 
-* server: nc -l -p 3000
+* server: nc -l 3000
   client: gst-launch tcpclientsrc protocol=none port=3000 ! fdsink fd=2
   everything you type in the server is shown on the client
 
-* server: nc -l -p 3000
+* server: nc -l 3000
   client: gst-launch fdsrc fd=1 ! tcpclientsink protocol=none port=3000
   everything you type in the client is shown on the server
 
