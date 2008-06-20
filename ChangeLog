@@ -1,5 +1,11 @@
 2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_get_latency),
+	(gst_vorbis_enc_src_query), (gst_vorbis_enc_chain):
+	Report the encoder latency. Fixes #538232.
+
+2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstplaybin2.c: (gst_play_bin_get_property),
 	(notify_source), (activate_group):
 	Implement the source property, emit notify when it changes in the

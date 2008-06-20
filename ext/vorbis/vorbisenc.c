@@ -491,6 +491,15 @@ gst_vorbis_enc_convert_sink (GstPad * pad, GstFormat src_format,
   return res;
 }
 
+static gint64
+gst_vorbis_enc_get_latency (GstVorbisEnc * vorbisenc)
+{
+  /* FIXME, this probably depends on the bitrate and other setting but for now
+   * we return this value, which was obtained by totally unscientific
+   * measurements */
+  return 58 * GST_MSECOND;
+}
+
 static const GstQueryType *
 gst_vorbis_enc_get_query_types (GstPad * pad)
 {
@@ -568,8 +577,28 @@ gst_vorbis_enc_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
+    case GST_QUERY_LATENCY:
+    {
+      gboolean live;
+      GstClockTime min_latency, max_latency;
+      gint64 latency;
+
+      if ((res = gst_pad_query (peerpad, query))) {
+        gst_query_parse_latency (query, &live, &min_latency, &max_latency);
+
+        latency = gst_vorbis_enc_get_latency (vorbisenc);
+
+        /* add our latency */
+        min_latency += latency;
+        if (max_latency != -1)
+          max_latency += latency;
+
+        gst_query_set_latency (query, live, min_latency, max_latency);
+      }
+      break;
+    }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query (peerpad, query);
       break;
   }
 
@@ -1197,6 +1226,8 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
 
   /* tell the library how much we actually submitted */
   vorbis_analysis_wrote (&vorbisenc->vd, size);
+
+  GST_LOG_OBJECT (vorbisenc, "wrote %lu samples to vorbis", size);
 
   vorbisenc->samples_in += size;
 
