@@ -1,3 +1,12 @@
+2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/design/draft-framestep.txt:
+	Some ideas about a framestep API
+
+	* docs/design/part-element-transform.txt:
+	Start design and use cases for basetransform in order to get it
+	fixed soon.
+
 2008-06-20  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gstbus.c:
