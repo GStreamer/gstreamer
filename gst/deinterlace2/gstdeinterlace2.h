@@ -252,8 +252,6 @@ struct _GstDeinterlace2
      need not match the pixel width
    */
   guint field_stride;
-
-  gboolean bottom_field;
 };
 
 struct _GstDeinterlace2Class

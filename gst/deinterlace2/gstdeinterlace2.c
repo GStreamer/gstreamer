@@ -30,6 +30,8 @@
 #include "tvtime/plugins.h"
 #include "tvtime/speedy.h"
 
+#include <string.h>
+
 GST_DEBUG_CATEGORY_STATIC (deinterlace2_debug);
 #define GST_CAT_DEFAULT (deinterlace2_debug)
 
@@ -146,6 +148,8 @@ static const GstQueryType *gst_deinterlace2_src_query_types (GstPad * pad);
 
 static void gst_deinterlace2_deinterlace_scanlines (GstDeinterlace2 * object);
 
+static void gst_deinterlace2_reset (GstDeinterlace2 * object);
+
 GST_BOILERPLATE (GstDeinterlace2, gst_deinterlace2, GstElement,
     GST_TYPE_ELEMENT);
 
@@ -183,7 +187,7 @@ gst_deinterlace2_class_init (GstDeinterlace2Class * klass)
           "Method",
           "Deinterlace Method",
           GST_TYPE_DEINTERLACE2_METHOD,
-          GST_DEINTERLACE2_GREEDY_H, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+          GST_DEINTERLACE2_TOM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
   g_object_class_install_property (gobject_class, ARG_FIELDS,
@@ -243,22 +247,45 @@ gst_deinterlace2_init (GstDeinterlace2 * object, GstDeinterlace2Class * klass)
   object->pMemcpy = speedy_memcpy;
 
   object->method = dscaler_tomsmocomp_get_method ();
-
-  object->history_count = 0;
-
   object->field_layout = GST_DEINTERLACE2_LAYOUT_AUTO;
+  object->fields = GST_DEINTERLACE2_ALL;
 
-  object->out_buf = NULL;
+  gst_deinterlace2_reset (object);
+}
+
+static void
+gst_deinterlace2_reset_history (GstDeinterlace2 * object)
+{
+  gint i;
+
+  for (i = 0; i < object->history_count; i++) {
+    if (object->field_history[i].buf) {
+      gst_buffer_unref (object->field_history[i].buf);
+      object->field_history[i].buf = NULL;
+    }
+  }
+  memset (object->field_history, 0, MAX_FIELD_HISTORY * sizeof (GstPicture));
+  object->history_count = 0;
+}
+
+static void
+gst_deinterlace2_reset (GstDeinterlace2 * object)
+{
+  if (object->out_buf) {
+    gst_buffer_unref (object->out_buf);
+    object->out_buf = NULL;
+  }
+
   object->output_stride = 0;
   object->line_length = 0;
   object->frame_width = 0;
   object->frame_height = 0;
+  object->frame_rate_n = 0;
+  object->frame_rate_d = 0;
   object->field_height = 0;
   object->field_stride = 0;
 
-  object->fields = GST_DEINTERLACE2_ALL;
-
-  object->bottom_field = TRUE;
+  gst_deinterlace2_reset_history (object);
 }
 
 static void
@@ -349,7 +376,9 @@ gst_deinterlace2_get_property (GObject * _object, guint prop_id,
 static void
 gst_deinterlace2_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  gst_deinterlace2_reset (GST_DEINTERLACE2 (object));
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstBuffer *
@@ -544,12 +573,11 @@ gst_deinterlace2_deinterlace_scanlines (GstDeinterlace2 * object)
 static GstFlowReturn
 gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
 {
-  //GstBuffer *out_buf = NULL;
   GstDeinterlace2 *object = NULL;
 
   GstClockTime timestamp;
 
-  //GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   object = GST_DEINTERLACE2 (GST_PAD_PARENT (pad));
 
@@ -581,8 +609,11 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
       GST_DEBUG ("deinterlacing top field");
 
       /* create new buffer */
-      object->out_buf = gst_buffer_new_and_alloc (object->frame_size);
-      gst_buffer_set_caps (object->out_buf, GST_PAD_CAPS (object->srcpad));
+      ret = gst_pad_alloc_buffer_and_set_caps (object->srcpad,
+          GST_BUFFER_OFFSET_NONE, object->frame_size,
+          GST_PAD_CAPS (object->srcpad), &object->out_buf);
+      if (ret != GST_FLOW_OK)
+        return ret;
 
       /* do magic calculus */
       if (object->method->deinterlace_frame != NULL) {
@@ -593,7 +624,10 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
         gst_buffer_unref (buf);
 
         GST_BUFFER_TIMESTAMP (object->out_buf) = timestamp;
-        gst_pad_push (object->srcpad, object->out_buf);
+        ret = gst_pad_push (object->srcpad, object->out_buf);
+        object->out_buf = NULL;
+        if (ret != GST_FLOW_OK)
+          return ret;
       }
     }
     /* no calculation done: remove excess field */
@@ -613,8 +647,11 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
       GST_DEBUG ("deinterlacing bottom field");
 
       /* create new buffer */
-      object->out_buf = gst_buffer_new_and_alloc (object->frame_size);
-      gst_buffer_set_caps (object->out_buf, GST_PAD_CAPS (object->srcpad));
+      ret = gst_pad_alloc_buffer_and_set_caps (object->srcpad,
+          GST_BUFFER_OFFSET_NONE, object->frame_size,
+          GST_PAD_CAPS (object->srcpad), &object->out_buf);
+      if (ret != GST_FLOW_OK)
+        return ret;
 
       /* do magic calculus */
       if (object->method->deinterlace_frame != NULL) {
@@ -625,7 +662,11 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
         gst_buffer_unref (buf);
 
         GST_BUFFER_TIMESTAMP (object->out_buf) = timestamp;
-        gst_pad_push (object->srcpad, object->out_buf);
+        ret = gst_pad_push (object->srcpad, object->out_buf);
+        object->out_buf = NULL;
+
+        if (ret != GST_FLOW_OK)
+          return ret;
       }
     }
     /* no calculation done: remove excess field */
@@ -639,11 +680,14 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
 
   } else {
     object->out_buf = gst_deinterlace2_pop_history (object);
-    gst_pad_push (object->srcpad, object->out_buf);
+    ret = gst_pad_push (object->srcpad, object->out_buf);
+    object->out_buf = NULL;
+    if (ret != GST_FLOW_OK)
+      return ret;
   }
   GST_DEBUG ("----chain end ----\n\n");
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static gboolean
@@ -729,7 +773,7 @@ gst_deinterlace2_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
     case GST_EVENT_EOS:
     case GST_EVENT_NEWSEGMENT:
-      /* TODO: reset history */
+      gst_deinterlace2_reset_history (object);
 
       /* fall through */
     default:
@@ -745,6 +789,8 @@ static GstStateChangeReturn
 gst_deinterlace2_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
+
+  GstDeinterlace2 *object = GST_DEINTERLACE2 (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -765,7 +811,7 @@ gst_deinterlace2_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      /* TODO: reset history, clean up, etc */
+      gst_deinterlace2_reset (object);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
     default:
@@ -823,10 +869,7 @@ gst_deinterlace2_src_query (GstPad * pad, GstQuery * query)
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
               GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
-          /* TODO: calculate our own latency from framerate
-           *       and object->method->fields_required */
           /* add our own latency */
-
           latency =
               gst_util_uint64_scale (object->method->fields_required *
               GST_SECOND, object->frame_rate_d, object->frame_rate_n);

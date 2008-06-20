@@ -1,5 +1,18 @@
 2008-06-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace2_class_init), (gst_deinterlace2_init),
+	(gst_deinterlace2_reset_history), (gst_deinterlace2_reset),
+	(gst_deinterlace2_finalize), (gst_deinterlace2_chain),
+	(gst_deinterlace2_sink_event), (gst_deinterlace2_change_state),
+	(gst_deinterlace2_src_query):
+	* gst/deinterlace2/gstdeinterlace2.h:
+	Reset element state on PAUSED->READY properly, don't leak any buffers
+	when finalizing, allocate buffers with gst_pad_alloc_buffer() and
+	properly return flow returns from gst_pad_push() instead of ignoring them.
+
+2008-06-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h:
 	Add missing header.
 
