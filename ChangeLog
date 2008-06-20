@@ -1,5 +1,12 @@
 2008-06-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst-libs/gst/tag/tags.c: (gst_tag_image_data_to_image_buffer):
+	Don't increase the size of non-string image buffers by one as this
+	might in theory confuse decoders. Still increase it by one for string
+	image buffers to append '\0'.
+
+2008-06-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Antoine Tremblay <hexa00 at gmail dot com>
 	
 	* gst/gdp/gstgdppay.c: (gst_gdp_pay_reset):
