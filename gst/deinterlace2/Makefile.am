@@ -28,7 +28,7 @@ libgstdeinterlace2_la_SOURCES = \
 	tvtime/tomsmocomp/WierdBob.inc
 
 libgstdeinterlace2_la_CFLAGS = $(GST_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(LIBOIL_CFLAGS) -march=athlon-xp
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(LIBOIL_CFLAGS) -DHAVE_MMX -DHAVE_SSE
 libgstdeinterlace2_la_LIBADD = $(GST_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(LIBOIL_LIBS)
 libgstdeinterlace2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
