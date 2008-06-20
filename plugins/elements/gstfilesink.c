@@ -22,7 +22,6 @@
  */
 /**
  * SECTION:element-filesink
- * @short_description: write stream to a file
  * @see_also: #GstFileSrc
  *
  * Write incoming data to a file in the local file system.

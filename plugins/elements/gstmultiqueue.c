@@ -23,7 +23,6 @@
 
 /**
  * SECTION:element-multiqueue
- * @short_description: Asynchronous data queues
  * @see_also: #GstQueue
  *
  * <refsect2>

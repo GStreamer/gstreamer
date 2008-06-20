@@ -21,7 +21,6 @@
  */
 /**
  * SECTION:element-capsfilter
- * @short_description: pass data though unmodified, but enforces format limmits
  *
  * The element does not modify data as such, but can enforce limmitations on the
  * data format.

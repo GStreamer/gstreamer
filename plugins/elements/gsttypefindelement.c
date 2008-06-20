@@ -18,6 +18,15 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-typefind
+ *
+ * Determines the media-type of a stream. It applies typefind functions in the
+ * order of their rank. One the type has been deteted it sets its src pad caps
+ * to the found media type.
+ *
+ * Plugins can register custom typefinders by using #GstTypeFindFactory.
+ */
 
 /* FIXME: need a better solution for non-seekable streams */
 

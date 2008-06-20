@@ -21,7 +21,6 @@
  */
 /**
  * SECTION:element-filesrc
- * @short_description: read from arbitrary point in a file
  * @see_also: #GstFileSrc
  *
  * Read data from a file in the local file system.

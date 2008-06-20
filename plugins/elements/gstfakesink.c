@@ -21,7 +21,6 @@
  */
 /**
  * SECTION:element-fakesink
- * @short_description: black hole for data
  * @see_also: #GstFakeSrc
  *
  * Dummy sink that swallows everything.

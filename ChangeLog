@@ -1,3 +1,20 @@
+2008-06-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* plugins/elements/gstcapsfilter.c:
+	* plugins/elements/gstfakesink.c:
+	* plugins/elements/gstfakesrc.c:
+	* plugins/elements/gstfdsink.c:
+	* plugins/elements/gstfdsrc.c:
+	* plugins/elements/gstfilesink.c:
+	* plugins/elements/gstfilesrc.c:
+	* plugins/elements/gstidentity.c:
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gsttee.c:
+	* plugins/elements/gsttypefindelement.c:
+	  Remove short_description. Add basic docs for gsttypefindelement.
+	  Simplify markup for fakesrc/fdsrc.
+
 2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* plugins/elements/gstfdsrc.c: (gst_fd_src_class_init):

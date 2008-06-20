@@ -21,30 +21,23 @@
  */
 /**
  * SECTION:element-fakesrc
- * @short_description: Generate (meaningless) buffers
  * @see_also: #GstFakeSink
  *
- * <refsect2>
- * <para>
  * The fakesrc element is a multipurpose element that can generate
  * a wide range of buffers and can operate in various scheduling modes.
- * </para>
- * <para>
+ * 
  * It is mostly used as a testing element, one trivial example for testing
  * basic <application>GStreamer</application> core functionality is:
- * </para>
+ * 
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v fakesrc num-buffers=5 ! fakesink
- * </programlisting>
- * This pipeline will push 5 empty buffers to the fakesink element and then
+ * ]| This pipeline will push 5 empty buffers to the fakesink element and then
  * sends an EOS.
- * </para>
- * <para>
- * Last reviewed on 2005-12-02 (0.9.7)
- * </para>
  * </refsect2>
+ * 
+ * Last reviewed on 2008-06-20 (0.10.21)
  */
 
 #ifdef HAVE_CONFIG_H

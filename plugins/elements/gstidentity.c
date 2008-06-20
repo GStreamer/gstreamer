@@ -22,7 +22,6 @@
  */
 /**
  * SECTION:element-identity
- * @short_description: pass data through without modification
  *
  * Dummy element that passes incomming data through unmodified. I has some
  * useful diagnostic functions, such as offset and timestamp checking.

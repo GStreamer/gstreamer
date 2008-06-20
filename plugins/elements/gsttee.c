@@ -23,7 +23,6 @@
 
 /**
  * SECTION:element-tee
- * @short_description: 1-to-N pipe fitting
  * @see_also: #GstIdentity
  *
  * Split data to multiple pads.

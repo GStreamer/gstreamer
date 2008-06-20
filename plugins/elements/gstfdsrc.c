@@ -22,26 +22,15 @@
  */
 /**
  * SECTION:element-fdsrc
- * @short_description: read from a unix file descriptor
  * @see_also: #GstFdSink
  *
- * <refsect2>
- * <para>
  * Read data from a unix file descriptor.
- * </para>
- * <title>Examples</title>
- * <para>
- * Here is a simple pipeline to read from the standard input and dump the data
- * with a fakesink.
- * <programlisting>
- * gst-launch -v fdsrc ! fakesink dump=1
- * </programlisting>
+ * 
  * To generate data, enter some data on the console folowed by enter.
  * The above mentioned pipeline should dump data packets to the console.
- * </para>
- * <para>
- * If the <link linkend="GstFdSrc--timeout">timeout property</link> is set to a
- * value bigger than 0, fdsrc will generate an element message named
+ * 
+ * If the #GstFdSrc:timeout property is set to a value bigger than 0, fdsrc will
+ * generate an element message named
  * <classname>&quot;GstFdSrcTimeout&quot;</classname>
  * if no data was recieved in the given timeout.
  * The message's structure contains one field:
@@ -54,11 +43,16 @@
  *   </para>
  * </listitem>
  * </itemizedlist>
- * </para>
- * <para>
- * Last reviewed on 2008-06-20 (0.10.21)
- * </para>
+ * 
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * echo "Hello GStreamer" | gst-launch -v fdsrc ! fakesink dump=true
+ * ]| A simple pipeline to read from the standard input and dump the data
+ * with a fakesink as hex ascii block.
  * </refsect2>
+ * 
+ * Last reviewed on 2008-06-20 (0.10.21)
  */
 
 #ifdef HAVE_CONFIG_H
