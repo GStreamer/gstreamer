@@ -1,3 +1,17 @@
+2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_init),
+	(gst_base_sink_query_latency), (gst_base_sink_set_render_delay),
+	(gst_base_sink_get_render_delay), (gst_base_sink_wait_eos),
+	(gst_base_sink_do_sync):
+	* libs/gst/base/gstbasesink.h:
+	* win32/common/libgstbase.def:
+	Add method to allow sinks to specify additional delay between the sync
+	times and the actual rendering of the data.
+	API: gst_base_sink_set_render_delay()
+	API: gst_base_sink_get_render_delay()
+
 2008-06-20  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

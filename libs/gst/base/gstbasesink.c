@@ -160,6 +160,7 @@ struct _GstBaseSinkPrivate
   gint qos_enabled;             /* ATOMIC */
   gboolean async_enabled;
   GstClockTimeDiff ts_offset;
+  GstClockTime render_delay;
 
   /* start, stop of current buffer, stream time, used to report position */
   GstClockTime current_sstart;
@@ -551,6 +552,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   g_atomic_int_set (&priv->qos_enabled, DEFAULT_QOS);
   priv->async_enabled = DEFAULT_ASYNC;
   priv->ts_offset = DEFAULT_TS_OFFSET;
+  priv->render_delay = 0;
 
   GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
 }
@@ -899,7 +901,7 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
     GstClockTime * max_latency)
 {
   gboolean l, us_live, res, have_latency;
-  GstClockTime min, max;
+  GstClockTime min, max, render_delay;
   GstQuery *query;
   GstClockTime us_min, us_max;
 
@@ -907,6 +909,7 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
   GST_OBJECT_LOCK (sink);
   l = sink->sync;
   have_latency = sink->priv->have_latency;
+  render_delay = sink->priv->render_delay;
   GST_OBJECT_UNLOCK (sink);
 
   /* assume no latency */
@@ -930,6 +933,13 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
          * values to create the complete latency. */
         min = us_min;
         max = us_max;
+      }
+      if (l) {
+        /* we need to add the render delay if we are live */
+        if (min != -1)
+          min += render_delay;
+        if (max != -1)
+          max += render_delay;
       }
     }
     gst_query_unref (query);
@@ -962,6 +972,60 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
     if (max_latency)
       *max_latency = max;
   }
+  return res;
+}
+
+/**
+ * gst_base_sink_set_render_delay:
+ * @sink: a #GstBaseSink
+ * @delay: the new delay
+ *
+ * Set the render delay in @sink to @delay. The render delay is the time 
+ * between actual rendering of a buffer and its synchronisation time. Some
+ * devices might delay media rendering which can be compensated for with this
+ * function. 
+ *
+ * After calling this function, this sink will report additional latency and
+ * other sinks will adjust their latency to delay the rendering of their media.
+ *
+ * This function is usually called by subclasses.
+ *
+ * Since: 0.10.21
+ */
+void
+gst_base_sink_set_render_delay (GstBaseSink * sink, GstClockTime delay)
+{
+  g_return_if_fail (GST_IS_BASE_SINK (sink));
+
+  GST_OBJECT_LOCK (sink);
+  sink->priv->render_delay = delay;
+  GST_LOG_OBJECT (sink, "set render delay to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (delay));
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_sink_get_render_delay:
+ * @sink: a #GstBaseSink
+ *
+ * Get the render delay of @sink. see gst_base_sink_set_render_delay() for more
+ * information about the render delay.
+ *
+ * Returns: the render delay of @sink.
+ *
+ * Since: 0.10.21
+ */
+GstClockTime
+gst_base_sink_get_render_delay (GstBaseSink * sink)
+{
+  GstClockTimeDiff res;
+
+  g_return_val_if_fail (GST_IS_BASE_SINK (sink), 0);
+
+  GST_OBJECT_LOCK (sink);
+  res = sink->priv->render_delay;
+  GST_OBJECT_UNLOCK (sink);
+
   return res;
 }
 
@@ -1611,7 +1675,7 @@ gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
     GST_DEBUG_OBJECT (sink, "possibly waiting for clock to reach %"
         GST_TIME_FORMAT, GST_TIME_ARGS (time));
 
-    /* compensate for latency and ts_offset. We don't adjust for device latency
+    /* compensate for latency and ts_offset. We don't adjust for render delay
      * because we don't interact with the device on EOS normally. */
     stime = gst_base_sink_adjust_time (sink, time);
 
@@ -1733,13 +1797,24 @@ again:
   if (!do_sync)
     goto done;
 
+  /* adjust for latency */
+  stime = gst_base_sink_adjust_time (basesink, rstart);
+
+  /* adjust for render-delay, avoid underflows */
+  if (stime != -1) {
+    if (stime > priv->render_delay)
+      stime -= priv->render_delay;
+    else
+      stime = 0;
+  }
+
   /* preroll done, we can sync since we are in PLAYING now. */
   GST_DEBUG_OBJECT (basesink, "possibly waiting for clock to reach %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (rstart));
+      GST_TIME_FORMAT ", adjusted %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (rstart), GST_TIME_ARGS (stime));
 
-  /* this function will return immediatly if start == -1, no clock
+  /* This function will return immediatly if start == -1, no clock
    * or sync is disabled with GST_CLOCK_BADTIME. */
-  stime = gst_base_sink_adjust_time (basesink, rstart);
   status = gst_base_sink_wait_clock (basesink, stime, &jitter);
 
   GST_DEBUG_OBJECT (basesink, "clock returned %d", status);

@@ -217,6 +217,11 @@ gboolean	gst_base_sink_query_latency 	(GstBaseSink *sink, gboolean *live, gboole
 						 GstClockTime *min_latency, GstClockTime *max_latency);
 GstClockTime	gst_base_sink_get_latency 	(GstBaseSink *sink);
 
+/* render delay */
+void		gst_base_sink_set_render_delay  (GstBaseSink *sink, GstClockTime delay);
+GstClockTime    gst_base_sink_get_render_delay 	(GstBaseSink *sink);
+
+
 GstClockReturn  gst_base_sink_wait_clock        (GstBaseSink * basesink, GstClockTime time,
                                                  GstClockTimeDiff * jitter);
 GstFlowReturn   gst_base_sink_wait_eos          (GstBaseSink *sink, GstClockTime time,

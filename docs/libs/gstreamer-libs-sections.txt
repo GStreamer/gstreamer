@@ -270,6 +270,8 @@ gst_base_sink_set_async_enabled
 gst_base_sink_is_async_enabled
 gst_base_sink_set_ts_offset
 gst_base_sink_get_ts_offset
+gst_base_sink_set_render_delay
+gst_base_sink_get_render_delay
 gst_base_sink_get_last_buffer
 
 GST_BASE_SINK_PAD
