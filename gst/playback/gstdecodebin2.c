@@ -1836,6 +1836,14 @@ gst_decode_group_check_if_drained (GstDecodeGroup * group)
 
   GST_LOG ("group : %p", group);
 
+  DECODE_BIN_LOCK (dbin);
+
+  /* Ensure we only emit the drained signal once, for this group */
+  if (group->drained) {
+    drained = FALSE;
+    goto done;
+  }
+
   for (tmp = group->endpads; tmp; tmp = g_list_next (tmp)) {
     GstDecodePad *dpad = (GstDecodePad *) tmp->data;
 
@@ -1849,10 +1857,9 @@ gst_decode_group_check_if_drained (GstDecodeGroup * group)
 
   group->drained = drained;
   if (!drained)
-    return;
+    goto done;
 
   /* we are drained. Check if there is a next group to activate */
-  DECODE_BIN_LOCK (dbin);
   if ((group == dbin->activegroup) && dbin->groups) {
     GST_DEBUG_OBJECT (dbin, "Switching to new group");
 
@@ -1863,6 +1870,8 @@ gst_decode_group_check_if_drained (GstDecodeGroup * group)
     /* we're not yet drained now */
     drained = FALSE;
   }
+
+done:
   DECODE_BIN_UNLOCK (dbin);
 
   if (drained) {

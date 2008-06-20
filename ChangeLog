@@ -1,3 +1,9 @@
+2008-06-20  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  Ensure decodebin2 emits 'drained' signal once, and only once, when all
+	  pads are drained.
+
 2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_get_latency),
