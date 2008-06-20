@@ -282,7 +282,8 @@ void FUNCT_NAME( GstDeinterlace2 *object)
 #ifdef HAVE_CPU_I386
                "st", "st(1)", "st(2)", "st(3)", "st(4)", "st(5)", "st(6)", "st(7)",
 #endif
-               "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7",
+               /* FIXME: breaks unless compiling with -mmmx
+	          "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7", */
                "memory", "cc"
             );
 

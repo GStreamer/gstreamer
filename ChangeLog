@@ -1,3 +1,13 @@
+2008-06-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* gst/deinterlace2/Makefile.am:
+	* gst/deinterlace2/tvtime/greedyh.asm:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	Fix compilation on generic x86/amd64 and include deinterlace2 in the
+	build system. Because of several bugs it's still enabled only
+	by --enable-experimental.
+
 2008-06-20  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/resindvd/resindvdsrc.c:

@@ -141,6 +141,16 @@ dnl *** checks for types/defines ***
 dnl *** checks for structures ***
 
 dnl *** checks for compiler characteristics ***
+dnl check if we have GCC inline-asm
+AS_GCC_INLINE_ASSEMBLY([HAVE_GCC_ASM=yes], [HAVE_GCC_ASM=no])
+if test x$HAVE_GCC_ASM = xyes ; then
+  AC_DEFINE(HAVE_GCC_ASM, 1,
+    [Define if compiler supports gcc inline assembly])
+else
+  AC_MSG_WARN([Not building deinterlace2 plugin, needs GCC inline assembly for now])
+  AG_GST_DISABLE_PLUGIN(deinterlace2)
+fi
+AM_CONDITIONAL(HAVE_GCC_ASM, test "x$HAVE_GCC_ASM" = "xyes")
 
 dnl *** checks for library functions ***
 
@@ -234,6 +244,7 @@ AG_GST_CHECK_PLUGIN(app)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(deinterlace)
+AG_GST_CHECK_PLUGIN(deinterlace2)
 AG_GST_CHECK_PLUGIN(dvdspu)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(filter)
@@ -276,6 +287,14 @@ dnl real plugin only works on i386 and x86_64 for the time being.
 if test "x$HAVE_CPU_I386" != "xyes" && test "x$HAVE_CPU_X86_64" != "xyes"; then
   AC_MSG_WARN([Not building real plugin, only works on 32bit and 64bit x86 platforms])
   AG_GST_DISABLE_PLUGIN(real)
+
+  AC_MSG_WARN([Not building deinterlace2 plugin, only works on 32bit and 64bit x86 platforms for now])
+  AG_GST_DISABLE_PLUGIN(deinterlace2)
+fi
+
+dnl disable experimental plug-ins
+if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
+  AG_GST_DISABLE_PLUGIN(deinterlace2)
 fi
 
 dnl disable gst plugins we might not be able to build on this
@@ -1185,6 +1204,7 @@ gst/app/Makefile
 gst/bayer/Makefile
 gst/cdxaparse/Makefile
 gst/deinterlace/Makefile
+gst/deinterlace2/Makefile
 gst/dvdspu/Makefile
 gst/festival/Makefile
 gst/filter/Makefile
