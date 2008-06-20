@@ -1,3 +1,11 @@
+2008-06-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Antoine Tremblay <hexa00 at gmail dot com>
+	
+	* gst/gdp/gstgdppay.c: (gst_gdp_pay_reset):
+	Fix a buffer memleak and remove a confusing and wrong debug output.
+	Fixes bug #538663.
+
 === release 0.10.20 ===
 
 2008-06-18  Jan Schmidt <jan.schmidt@sun.com>
