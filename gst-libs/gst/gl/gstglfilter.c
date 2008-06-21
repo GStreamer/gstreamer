@@ -157,16 +157,14 @@ gst_gl_filter_reset (GstGLFilter* filter)
     {
         //blocking call, delete the FBO
         gst_gl_display_rejectFBO (filter->display, filter->fbo, 
-            filter->depthbuffer, filter->texture);
+            filter->depthbuffer);
         g_object_unref (filter->display);
         filter->display = NULL;
     }
-    filter->video_format = GST_VIDEO_FORMAT_UNKNOWN;
     filter->width = 0;
     filter->height = 0;
     filter->fbo = 0;
     filter->depthbuffer = 0;
-    filter->texture = 0;
 }
 
 static gboolean
@@ -221,14 +219,13 @@ static gboolean
 gst_gl_filter_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
     guint* size)
 {
-    gboolean ret;
-    GstVideoFormat video_format;
-    gint width;
-    gint height;
+    gboolean ret = FALSE;
+    gint width = 0;
+    gint height = 0;
 
-    ret = gst_gl_buffer_format_parse_caps (caps, &video_format, &width, &height);
+    ret = gst_gl_buffer_parse_caps (caps, &width, &height);
     if (ret) 
-        *size = gst_gl_buffer_format_get_size (video_format, width, height);
+        *size = gst_gl_buffer_get_size (width, height);
 
     return TRUE;
 }
@@ -251,17 +248,14 @@ gst_gl_filter_prepare_output_buffer (GstBaseTransform* trans,
 
         //blocking call, generate a FBO
         gst_gl_display_requestFBO (filter->display, filter->width, filter->height,
-            &filter->fbo, &filter->depthbuffer, &filter->texture);
+            &filter->fbo, &filter->depthbuffer);
 
         if (filter_class->onInitFBO)
             filter_class->onInitFBO (filter);
     }
 
-    gl_outbuf = gst_gl_buffer_new_from_video_format (filter->display,
-            filter->video_format, 
-            filter->width, filter->height,
-            filter->width, filter->height,
-            gl_inbuf->width, gl_inbuf->height);
+    gl_outbuf = gst_gl_buffer_new (filter->display,
+            filter->width, filter->height);
 
     *buf = GST_BUFFER (gl_outbuf);
     gst_buffer_set_caps (*buf, caps);
@@ -277,8 +271,7 @@ gst_gl_filter_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     gboolean ret = FALSE;
     GstGLFilterClass* filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
-    ret = gst_gl_buffer_format_parse_caps (outcaps, &filter->video_format,
-      &filter->width, &filter->height);
+    ret = gst_gl_buffer_parse_caps (outcaps, &filter->width, &filter->height);
 
     if (filter_class->set_caps)
         filter_class->set_caps (filter, incaps, outcaps);

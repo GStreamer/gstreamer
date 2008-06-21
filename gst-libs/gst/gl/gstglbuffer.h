@@ -33,24 +33,19 @@ typedef struct _GstGLBuffer GstGLBuffer;
 #define GST_IS_GL_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GL_BUFFER))
 #define GST_GL_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GL_BUFFER, GstGLBuffer))
 
-
+//A gl buffer has only one texture.
+//Note that when a gl buffer is created by the upload filter,
+//the colorspace conversion is made using a FBO. 
+//And so the texture attached to this FBO is the one managed by the gl buffer.
 
 struct _GstGLBuffer {
     GstBuffer buffer;
 
     GstGLDisplay *display;
 
-    GstVideoFormat video_format;
-
     gint width;
     gint height;
     GLuint texture;
-    GLuint texture_u;
-    GLuint texture_v;
-
-    gint widthGL;
-    gint heightGL;
-    GLuint textureGL;
 };
 
 GType gst_gl_buffer_get_type (void);
@@ -58,13 +53,9 @@ GType gst_gl_buffer_get_type (void);
 #define gst_gl_buffer_ref(x) ((GstGLBuffer *)(gst_buffer_ref((GstBuffer *)(x))))
 #define gst_gl_buffer_unref(x) (gst_buffer_unref((GstBuffer *)(x)))
 
-GstGLBuffer* gst_gl_buffer_new_from_video_format (GstGLDisplay* display, GstVideoFormat format, 
-												  gint context_width, gint context_height,
-                                                  gint widthGL, gint heightGL,
-                                                  gint width, gint height);
-gint gst_gl_buffer_format_get_size (GstVideoFormat format, gint width, gint height);
-gboolean gst_gl_buffer_format_parse_caps (GstCaps* caps, GstVideoFormat* format,
-										  gint* width, gint* height);
+GstGLBuffer* gst_gl_buffer_new (GstGLDisplay* display, gint gl_width, gint gl_height);
+gint gst_gl_buffer_get_size (gint width, gint height);
+gboolean gst_gl_buffer_parse_caps (GstCaps* caps, gint* width, gint* height);
 
 
 #define GST_GL_VIDEO_CAPS \

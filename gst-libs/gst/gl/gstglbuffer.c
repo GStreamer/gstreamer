@@ -30,8 +30,7 @@ static void
 gst_gl_buffer_finalize (GstGLBuffer* buffer)
 {
     //wait clear textures end, blocking call
-    gst_gl_display_clearTexture (buffer->display, buffer->texture,
-	    buffer->texture_u, buffer->texture_v);
+    gst_gl_display_clearTexture (buffer->display, buffer->texture);
 
     g_object_unref (buffer->display);
 
@@ -43,15 +42,10 @@ static void
 gst_gl_buffer_init (GstGLBuffer* buffer, gpointer g_class)
 {
     buffer->display = NULL;
-    buffer->video_format = 0;
+
     buffer->width = 0;
     buffer->height = 0;
     buffer->texture = 0;
-    buffer->texture_u = 0;
-    buffer->texture_v = 0;
-    buffer->widthGL = 0;
-    buffer->heightGL = 0;
-    buffer->textureGL = 0;
 }
 
 static void
@@ -92,57 +86,43 @@ gst_gl_buffer_get_type (void)
 
 
 GstGLBuffer*
-gst_gl_buffer_new_from_video_format (GstGLDisplay* display,
-    GstVideoFormat video_format, gint context_width, gint context_height,
-    gint widthGL, gint heightGL,
-    gint width, gint height)
+gst_gl_buffer_new (GstGLDisplay* display,
+    gint gl_width, gint gl_height)
 {
-    GstGLBuffer *buffer;
+    GstGLBuffer* gl_buffer = (GstGLBuffer *) gst_mini_object_new (GST_TYPE_GL_BUFFER);
 
-    //g_return_val_if_fail (video_format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
-    g_return_val_if_fail (display != NULL, NULL);
-    g_return_val_if_fail (width > 0, NULL);
-    g_return_val_if_fail (height > 0, NULL);
+    gl_buffer->display = g_object_ref (display);
+    gl_buffer->width = gl_width;
+    gl_buffer->height = gl_height;
 
-    buffer = (GstGLBuffer *) gst_mini_object_new (GST_TYPE_GL_BUFFER);
+    //it does not depends on the video format because gl buffer has always one texture.
+    //the one attached to the upload FBO
+    GST_BUFFER_SIZE (gl_buffer) = gst_gl_buffer_get_size (gl_width, gl_height);
 
-    buffer->display = g_object_ref (display);
-    buffer->width = width;
-    buffer->height = height;
-    buffer->video_format = video_format;
-    buffer->widthGL = widthGL;
-    buffer->heightGL = heightGL;
-    GST_BUFFER_SIZE (buffer) = gst_gl_buffer_format_get_size (video_format, context_width, context_height);
+    //blocking call, request a texture and attach it to the upload FBO
+    gst_gl_display_prepare_texture (gl_buffer->display, &gl_buffer->texture) ;
 
-    //blocking call, init texture
-    if (video_format != GST_VIDEO_FORMAT_UNKNOWN)
-        gst_gl_display_textureRequested (buffer->display, buffer->video_format, 
-	        buffer->width, buffer->height, 
-	        &buffer->texture, &buffer->texture_u, &buffer->texture_v) ;
-
-    return buffer;
+    return gl_buffer;
 }
 
 
-int
-gst_gl_buffer_format_get_size (GstVideoFormat format, int width, int height)
+gint
+gst_gl_buffer_get_size (gint width, gint height)
 {
-  /* this is not strictly true, but it's used for compatibility with
-   * queue and BaseTransform */
-  return width * height * 4;
+    //this is not strictly true, but it's used for compatibility with
+    //queue and BaseTransform
+    return width * height * 4;
 }
+
 
 gboolean
-gst_gl_buffer_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
-    gint* width, gint* height)
+gst_gl_buffer_parse_caps (GstCaps* caps, gint* width, gint* height)
 {
-    GstStructure *structure;
-    gboolean ret;
+    GstStructure* structure = gst_caps_get_structure (caps, 0);
+    gboolean ret = gst_structure_has_name (structure, "video/x-raw-gl");
 
-    structure = gst_caps_get_structure (caps, 0);
-
-    if (!gst_structure_has_name (structure, "video/x-raw-gl"))
-	    return FALSE;
+    if (!ret)
+        return ret;
 
     ret = gst_structure_get_int (structure, "width", width);
     ret &= gst_structure_get_int (structure, "height", height);

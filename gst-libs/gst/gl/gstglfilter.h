@@ -54,12 +54,11 @@ struct _GstGLFilter
     GstPad *sinkpad;
 
     GstGLDisplay *display;
-    GstVideoFormat video_format;
+
     gint width;
     gint height;
     guint fbo;
     guint depthbuffer;
-    guint texture;
 };
 
 struct _GstGLFilterClass
