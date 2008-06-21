@@ -56,6 +56,7 @@ static gboolean gst_gl_filter_app_set_caps (GstGLFilter* filter,
 static void gst_gl_filter_app_setClientCallbacks (GstGLFilter* filter);
 static gboolean gst_gl_filter_app_filter (GstGLFilter* filter,
     GstGLBuffer* inbuf, GstGLBuffer* outbuf);
+static void gst_gl_filter_app_callback (guint width, guint height, guint texture, GLhandleARB shader);
 
 
 static void
@@ -164,14 +165,39 @@ gst_gl_filter_app_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 {
     //GstGLFilterApp* app_filter = GST_GL_FILTER_APP(filter);
 
-    outbuf->width = inbuf->width;
-    outbuf->height = inbuf->height;
-    outbuf->texture = inbuf->texture;
-    outbuf->texture_u = inbuf->texture_u;
-    outbuf->texture_v = inbuf->texture_v;
-    outbuf->widthGL = inbuf->widthGL;
-    outbuf->heightGL = inbuf->heightGL;
-    outbuf->textureGL = inbuf->textureGL;
+    //blocking call, use a FBO
+    gst_gl_display_useFBO (filter->display, filter->width, filter->height,
+        filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filter_app_callback,
+        inbuf->width, inbuf->height, inbuf->texture, 0);
 
     return TRUE;
+}
+
+//opengl scene, params: input texture (not the output filter->texture)
+static void
+gst_gl_filter_app_callback (guint width, guint height, guint texture, GLhandleARB shader)
+{
+    glEnable (GL_TEXTURE_RECTANGLE_ARB);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+    glMatrixMode (GL_PROJECTION);
+    glLoadIdentity ();
+
+    glBegin (GL_QUADS);
+        glTexCoord2i (0, 0);
+        glVertex2f (-1.0f, -1.0f);
+        glTexCoord2i (width, 0);
+        glVertex2f (1.0f, -1.0f);
+        glTexCoord2i (width, height);
+        glVertex2f (1.0f, 1.0f);
+        glTexCoord2i (0, height);
+        glVertex2f (-1.0f, 1.0f);
+    glEnd ();
 }

@@ -98,7 +98,6 @@ struct _GstGLTestSrc {
 
     guint fbo;
     guint depthbuffer;
-    guint texture;
 
     /* private */
     GstGLDisplay *display;

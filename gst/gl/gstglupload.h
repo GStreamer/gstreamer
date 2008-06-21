@@ -48,11 +48,12 @@ struct _GstGLUpload
     GstPad *sinkpad;
 
     GstGLDisplay *display;
+
     GstVideoFormat video_format;
-    gint inWidth;
-    gint inHeight;
-    gint outWidth;
-    gint outHeight;  
+    gint video_width;
+    gint video_height;
+    gint gl_width;
+    gint gl_height;  
 };
 
 struct _GstGLUploadClass

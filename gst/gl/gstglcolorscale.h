@@ -48,12 +48,14 @@ struct _GstGLColorscale
     GstPad *sinkpad;
 
     GstGLDisplay *display;
-    GstVideoFormat inVideo_format;
-    gint inWidth;
-    gint inHeight;
-    GstVideoFormat outVideo_format;
-    gint outWidth;
-    gint outHeight;  
+
+    GstVideoFormat input_video_format;
+    gint input_video_width;
+    gint input_video_height;
+
+    GstVideoFormat output_video_format;
+    gint output_video_width;
+    gint output_video_height;  
 };
 
 struct _GstGLColorscaleClass

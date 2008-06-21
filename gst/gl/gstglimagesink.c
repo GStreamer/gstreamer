@@ -444,15 +444,13 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
         }
 
         //blocking call
-        gl_buffer = gst_gl_buffer_new_from_video_format (glimage_sink->display,
-            glimage_sink->format, glimage_sink->width, glimage_sink->height,
-            glimage_sink->width, glimage_sink->height,
+        gl_buffer = gst_gl_buffer_new (glimage_sink->display,
             glimage_sink->width, glimage_sink->height);
 
 		//blocking call
-		gst_gl_display_textureChanged(glimage_sink->display, glimage_sink->format,
-			gl_buffer->texture, gl_buffer->texture_u, gl_buffer->texture_v,
-            gl_buffer->width, gl_buffer->height, GST_BUFFER_DATA (buf), &gl_buffer->textureGL);
+		gst_gl_display_do_upload(glimage_sink->display, glimage_sink->format,
+			glimage_sink->width, glimage_sink->height, GST_BUFFER_DATA (buf),
+            gl_buffer->width, gl_buffer->height, gl_buffer->texture);
 
         //gl_buffer is created in this block, so the gl buffer is already referenced
     }
@@ -469,7 +467,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
 
     //redisplay opengl scene
     isAlive = gst_gl_display_postRedisplay (glimage_sink->display, 
-        gl_buffer->textureGL, gl_buffer->widthGL, gl_buffer->heightGL);
+        gl_buffer->texture, gl_buffer->width, gl_buffer->height);
 
     if (isAlive)
         return GST_FLOW_OK;

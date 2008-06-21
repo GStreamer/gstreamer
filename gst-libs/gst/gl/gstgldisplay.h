@@ -74,8 +74,6 @@ typedef struct _GstGLDisplayMsg {
 //Texture pool elements
 typedef struct _GstGLDisplayTex {
     GLuint texture;
-    GLuint texture_u;
-    GLuint texture_v;
 } GstGLDisplayTex;
 
 
@@ -133,9 +131,9 @@ struct _GstGLDisplay {
     //filter frame buffer object (GL -> GL)
     GLuint requestedFBO;
     GLuint requestedDepthBuffer;
-    GLuint requestedTextureFBO;
     GLuint requestedTextureFBOWidth;
     GLuint requestedTextureFBOHeight;
+
     GLuint usedFBO;
     GLuint usedDepthBuffer;
     GLuint usedTextureFBO;
@@ -150,38 +148,23 @@ struct _GstGLDisplay {
     GLuint inputTexture;
     GLuint rejectedFBO;
     GLuint rejectedDepthBuffer;
-    GLuint rejectedTextureFBO;
 
     //displayed texture
     GLuint displayedTexture;
     GLuint displayedTextureWidth;
     GLuint displayedTextureHeight;
 
-    GLuint requestedTexture;
-    GLuint requestedTexture_u;
-    GLuint requestedTexture_v;
-	GstVideoFormat requestedVideo_format;
-    GLuint requestedTextureWidth;
-    GLuint requestedTextureHeight;
-     
-    GLuint candidateTexture;
-    GLuint candidateTexture_u;
-    GLuint candidateTexture_v;
-    GstVideoFormat candidateVideo_format;
-    GLuint candidateTextureWidth;
-    GLuint candidateTextureHeight;
-    gpointer candidateData;
+    GLuint preparedTexture;
     
     GLuint currentTexture;
     GLuint currentTexture_u;
     GLuint currentTexture_v;
-    GstVideoFormat currentVideo_format;
     GLuint currentTextureWidth;
     GLuint currentTextureHeight;
+    GstVideoFormat currentVideo_format;
+    gpointer currentData;
 
     GLuint textureTrash;
-    GLuint textureTrash_u;
-    GLuint textureTrash_v;
 
     //output frame buffer object (GL -> video)
     GLuint videoFBO;
@@ -257,20 +240,17 @@ void gst_gl_display_setClientReshapeCallback (GstGLDisplay* display, CRCB cb);
 void gst_gl_display_setClientDrawCallback (GstGLDisplay* display, CDCB cb);
 void gst_gl_display_setVisibleWindow (GstGLDisplay* display, gboolean visible);
 void gst_gl_display_resizeWindow (GstGLDisplay* display, gint width, gint height);
-void gst_gl_display_textureRequested (GstGLDisplay* display, GstVideoFormat format, 
-                                      gint width, gint height, guint* texture,
-                                      guint* texture_u, guint* texture_v);
-void gst_gl_display_textureChanged (GstGLDisplay* display, GstVideoFormat video_format, 
-                                    GLuint texture, GLuint texture_u, GLuint texture_v, 
-                                    gint width, gint height, gpointer data, GLuint* outputTexture);
-void gst_gl_display_clearTexture (GstGLDisplay* display, guint texture, 
-                                  guint texture_u, guint texture_v);
+void gst_gl_display_prepare_texture (GstGLDisplay* display, guint* pTexture);
+void gst_gl_display_do_upload (GstGLDisplay* display, GstVideoFormat video_format,
+                               gint video_width, gint video_height, gpointer data,
+                               guint gl_width, guint gl_height, guint pTexture);
+void gst_gl_display_clearTexture (GstGLDisplay* display, guint texture);
 
 void gst_gl_display_videoChanged (GstGLDisplay* display, GstVideoFormat video_format, 
                                   gint width, gint height, GLuint recordedTexture, gpointer data);
 gboolean gst_gl_display_postRedisplay (GstGLDisplay* display, GLuint texture, gint width, gint height);
 void gst_gl_display_requestFBO (GstGLDisplay* display, gint width, gint height, 
-                                guint* fbo, guint* depthbuffer, guint* texture);
+                                guint* fbo, guint* depthbuffer);
 void gst_gl_display_useFBO (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
                             guint fbo, guint depthbuffer, guint textureFBO, GLCB cb,
                             guint inputTextureWidth, guint inputTextureHeight, guint inputTexture,
@@ -279,7 +259,7 @@ void gst_gl_display_useFBO2 (GstGLDisplay* display, gint textureFBOWidth, gint t
                             guint fbo, guint depthbuffer, guint textureFBO, GLCB2 cb,
                             gpointer* p1, gpointer* p2);
 void gst_gl_display_rejectFBO (GstGLDisplay* display, guint fbo, 
-                               guint depthbuffer, guint texture);
+                               guint depthbuffer);
 void gst_gl_display_initDonwloadFBO (GstGLDisplay* display, gint width, gint height);
 void gst_gl_display_initShader (GstGLDisplay* display, gchar* textShader, GLhandleARB* handleShader);
 void gst_gl_display_destroyShader (GstGLDisplay* display, GLhandleARB shader);

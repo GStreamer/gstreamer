@@ -369,7 +369,7 @@ gst_gl_test_src_setcaps (GstBaseSrc* bsrc, GstCaps* caps)
             gltestsrc->width, gltestsrc->height, 0, FALSE);
 
         gst_gl_display_requestFBO (gltestsrc->display, gltestsrc->width, gltestsrc->height,
-            &gltestsrc->fbo, &gltestsrc->depthbuffer, &gltestsrc->texture);
+            &gltestsrc->fbo, &gltestsrc->depthbuffer);
     }
     return res;
 }
@@ -543,10 +543,7 @@ gst_gl_test_src_create (GstPushSrc* psrc, GstBuffer** buffer)
     GST_LOG_OBJECT (src, "creating buffer %dx%d image for frame %d",
         src->width, src->height, (gint) src->n_frames);
 
-    outbuf = gst_gl_buffer_new_from_video_format (src->display,
-        GST_VIDEO_FORMAT_UNKNOWN, 
-        src->width, src->height,
-        src->width, src->height,
+    outbuf = gst_gl_buffer_new (src->display,
         src->width, src->height);
 
     gst_buffer_set_caps (GST_BUFFER (outbuf),
@@ -562,9 +559,8 @@ gst_gl_test_src_create (GstPushSrc* psrc, GstBuffer** buffer)
  
     //blocking call, generate a FBO
     gst_gl_display_useFBO2 (src->display, src->width, src->height,
-        src->fbo, src->depthbuffer, src->texture, (GLCB2)src->make_image,
+        src->fbo, src->depthbuffer, outbuf->texture, (GLCB2)src->make_image,
         (gpointer*)src, (gpointer*)outbuf);
-    outbuf->textureGL = src->texture;
 
     GST_BUFFER_TIMESTAMP (GST_BUFFER (outbuf)) =
         src->timestamp_offset + src->running_time;
@@ -631,7 +627,7 @@ gst_gl_test_src_stop (GstBaseSrc* basesrc)
     {
         //blocking call, delete the FBO
         gst_gl_display_rejectFBO (src->display, src->fbo, 
-            src->depthbuffer, src->texture);
+            src->depthbuffer);
         g_object_unref (src->display);
         src->display = NULL;
     }

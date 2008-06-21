@@ -170,15 +170,8 @@ gst_gl_filter_edge_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 
     //blocking call, generate a FBO
     gst_gl_display_useFBO (filter->display, filter->width, filter->height,
-        filter->fbo, filter->depthbuffer, filter->texture, gst_gl_filter_edge_callback,
-        inbuf->width, inbuf->height, inbuf->textureGL, edge_filter->handleShader);
-
-    outbuf->width = inbuf->width;
-    outbuf->height = inbuf->height;
-    outbuf->texture = inbuf->texture;
-    outbuf->texture_u = inbuf->texture_u;
-    outbuf->texture_v = inbuf->texture_v;
-    outbuf->textureGL = filter->texture;
+        filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filter_edge_callback,
+        inbuf->width, inbuf->height, inbuf->texture, edge_filter->handleShader);
 
     return TRUE;
 }
@@ -214,7 +207,6 @@ gst_gl_filter_edge_callback (guint width, guint height, guint texture, GLhandleA
         glTexCoord2i (width, height);
         glVertex2f (1.0f, 1.0f);
         glTexCoord2i (0, height);
-        glVertex2f (-1.0f, 1.0f);
-        
+        glVertex2f (-1.0f, 1.0f);     
     glEnd ();
 }

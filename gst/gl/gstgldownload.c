@@ -270,11 +270,9 @@ gst_gl_download_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
 	structure = gst_caps_get_structure (caps, 0);
 	if (gst_structure_has_name (structure, "video/x-raw-gl")) 
 	{
-		GstVideoFormat video_format;
-
-		ret = gst_gl_buffer_format_parse_caps (caps, &video_format, &width, &height);
+		ret = gst_gl_buffer_parse_caps (caps, &width, &height);
 		if (ret) 
-			*size = gst_gl_buffer_format_get_size (video_format, width, height);
+			*size = gst_gl_buffer_get_size (width, height);
 	} 
 	else 
 	{
@@ -309,7 +307,7 @@ gst_gl_download_transform (GstBaseTransform* trans, GstBuffer* inbuf,
 
     //blocking call
     gst_gl_display_videoChanged(download->display, download->video_format, 
-        gl_inbuf->width, gl_inbuf->height, gl_inbuf->textureGL, GST_BUFFER_DATA (outbuf));
+        gl_inbuf->width, gl_inbuf->height, gl_inbuf->texture, GST_BUFFER_DATA (outbuf));
 
     return GST_FLOW_OK;
 }

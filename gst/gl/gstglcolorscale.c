@@ -104,9 +104,9 @@ gst_gl_colorscale_base_init (gpointer klass)
 }
 
 static void
-gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
+gst_gl_colorscale_class_init (GstGLColorscaleClass* klass)
 {
-    GObjectClass *gobject_class;
+    GObjectClass* gobject_class;
 
     gobject_class = (GObjectClass *) klass;
     gobject_class->set_property = gst_gl_colorscale_set_property;
@@ -123,7 +123,7 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
 }
 
 static void
-gst_gl_colorscale_init (GstGLColorscale* colorscale, GstGLColorscaleClass * klass)
+gst_gl_colorscale_init (GstGLColorscale* colorscale, GstGLColorscaleClass* klass)
 {
     gst_gl_colorscale_reset (colorscale);
 }
@@ -370,15 +370,15 @@ gst_gl_colorscale_set_caps (GstBaseTransform* bt, GstCaps* incaps,
 {
     GstGLColorscale* colorscale = GST_GL_COLORSCALE (bt);
     gboolean ret = FALSE;
-    static gint glcontext_y = 0;
+    static gint y_pos = 0;
 
     GST_DEBUG ("called with %" GST_PTR_FORMAT, incaps);
 
-    ret = gst_video_format_parse_caps (outcaps, &colorscale->outVideo_format,
-        &colorscale->outWidth, &colorscale->outHeight);
+    ret = gst_video_format_parse_caps (outcaps, &colorscale->output_video_format,
+        &colorscale->output_video_width, &colorscale->output_video_height);
 
-    ret |= gst_video_format_parse_caps (incaps, &colorscale->inVideo_format,
-        &colorscale->inWidth, &colorscale->inHeight);
+    ret |= gst_video_format_parse_caps (incaps, &colorscale->input_video_format,
+        &colorscale->input_video_width, &colorscale->input_video_height);
 
     if (!ret) 
     {
@@ -390,12 +390,13 @@ gst_gl_colorscale_set_caps (GstBaseTransform* bt, GstCaps* incaps,
   
     //init unvisible opengl context
     gst_gl_display_initGLContext (colorscale->display, 
-        50, glcontext_y++ * (colorscale->inHeight+50) + 50,
-        colorscale->inWidth, colorscale->inHeight,
-        colorscale->inWidth, colorscale->inHeight, 0, FALSE);
+        50, y_pos++ * (colorscale->output_video_height+50) + 50,
+        colorscale->output_video_width, colorscale->output_video_height,
+        colorscale->output_video_width, colorscale->output_video_height, 0, FALSE);
 
     //blocking call
-    gst_gl_display_initDonwloadFBO (colorscale->display, colorscale->outWidth, colorscale->outHeight);
+    gst_gl_display_initDonwloadFBO (colorscale->display, 
+        colorscale->output_video_width, colorscale->output_video_height);
 
     return ret;
 }
@@ -412,11 +413,9 @@ gst_gl_colorscale_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
     structure = gst_caps_get_structure (caps, 0);
     if (gst_structure_has_name (structure, "video/x-raw-gl")) 
     {
-        GstVideoFormat video_format;
-
-        ret = gst_gl_buffer_format_parse_caps (caps, &video_format, &width, &height);
+        ret = gst_gl_buffer_parse_caps (caps, &width, &height);
         if (ret) 
-            *size = gst_gl_buffer_format_get_size (video_format, width, height);
+            *size = gst_gl_buffer_get_size (width, height);
     } 
     else 
     {
@@ -437,26 +436,26 @@ gst_gl_colorscale_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     GstGLColorscale* colorscale = GST_GL_COLORSCALE (trans);
 
     //blocking call
-    GstGLBuffer* gl_tembuf = gst_gl_buffer_new_from_video_format (colorscale->display,
-        colorscale->inVideo_format, 
-        colorscale->outWidth, colorscale->outHeight,
-        colorscale->inWidth, colorscale->inHeight,
-        colorscale->inWidth, colorscale->inHeight);
+    GstGLBuffer* gl_temp_buffer = gst_gl_buffer_new (colorscale->display,
+        colorscale->output_video_width, colorscale->output_video_height);
 
     GST_DEBUG ("input size %p size %d",
         GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf));
 
     //blocking call
-    gst_gl_display_textureChanged(colorscale->display, colorscale->inVideo_format,
-        gl_tembuf->texture, gl_tembuf->texture_u, gl_tembuf->texture_v, 
-        gl_tembuf->width, gl_tembuf->height, GST_BUFFER_DATA (inbuf), &gl_tembuf->textureGL);
+    gst_gl_display_do_upload (colorscale->display, colorscale->input_video_format, 
+        colorscale->input_video_width, colorscale->input_video_height, GST_BUFFER_DATA (inbuf),
+        gl_temp_buffer->width, gl_temp_buffer->height, gl_temp_buffer->texture);
 
     GST_DEBUG ("output size %p size %d",
       GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
 
     //blocking call
-    gst_gl_display_videoChanged(colorscale->display, colorscale->outVideo_format, 
-        gl_tembuf->width, gl_tembuf->height, gl_tembuf->textureGL, GST_BUFFER_DATA (outbuf));
+    gst_gl_display_videoChanged(colorscale->display, colorscale->output_video_format, 
+        gl_temp_buffer->width, gl_temp_buffer->height, gl_temp_buffer->texture, 
+        GST_BUFFER_DATA (outbuf));
+
+    gst_buffer_unref (gl_temp_buffer);
 
     return GST_FLOW_OK;
 }

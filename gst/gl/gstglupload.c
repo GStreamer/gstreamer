@@ -377,54 +377,53 @@ gst_gl_upload_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     GstGLUpload* upload = GST_GL_UPLOAD (bt);
     gboolean ret = FALSE;
     GstVideoFormat video_format = GST_VIDEO_FORMAT_UNKNOWN;
-    static gint glcontext_y = 0;
+    static gint y_pos = 0;
 
     GST_DEBUG ("called with %" GST_PTR_FORMAT, incaps);
 
     ret = gst_video_format_parse_caps (outcaps, &video_format,
-        &upload->outWidth, &upload->outHeight);
+        &upload->gl_width, &upload->gl_height);
 
     ret |= gst_video_format_parse_caps (incaps, &upload->video_format,
-        &upload->inWidth, &upload->inHeight);
+        &upload->video_width, &upload->video_height);
 
     if (!ret) 
     {
-      GST_DEBUG ("bad caps");
-      return FALSE;
+        GST_DEBUG ("caps connot be parsed");
+        return FALSE;
     }
 
+    //we have video and gl size, we can now init OpenGL stuffs
     upload->display = gst_gl_display_new ();
   
     //init unvisible opengl context
     gst_gl_display_initGLContext (upload->display, 
-        50, glcontext_y++ * (upload->inHeight+50) + 50,
-        upload->inWidth, upload->inHeight,
-        upload->inWidth, upload->inHeight, 0, FALSE);
+        50, y_pos++ * (upload->gl_height+50) + 50,
+        upload->gl_width, upload->gl_height,
+        upload->gl_width, upload->gl_height, 0, FALSE);
 
     return ret;
 }
 
 static gboolean
 gst_gl_upload_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
-                               guint* size)
+                             guint* size)
 {
-    gboolean ret;
-    GstStructure *structure;
-    gint width;
-    gint height;
+    gboolean ret = FALSE;
+    GstStructure* structure = NULL;
+    gint width = 0;
+    gint height = 0;
 
     structure = gst_caps_get_structure (caps, 0);
     if (gst_structure_has_name (structure, "video/x-raw-gl")) 
     {
-        GstVideoFormat video_format;
-
-        ret = gst_gl_buffer_format_parse_caps (caps, &video_format, &width, &height);
+        ret = gst_gl_buffer_parse_caps (caps, &width, &height);
         if (ret) 
-            *size = gst_gl_buffer_format_get_size (video_format, width, height);
+            *size = gst_gl_buffer_get_size (width, height);
     } 
     else 
     {
-        GstVideoFormat video_format;
+        GstVideoFormat video_format = GST_VIDEO_FORMAT_UNKNOWN;
 
         ret = gst_video_format_parse_caps (caps, &video_format, &width, &height);
         if (ret) 
@@ -438,17 +437,12 @@ static GstFlowReturn
 gst_gl_upload_prepare_output_buffer (GstBaseTransform* trans,
     GstBuffer* input, gint size, GstCaps* caps, GstBuffer** buf)
 {
-    GstGLUpload* upload;
-    GstGLBuffer* gl_outbuf;
+    GstGLUpload* upload = GST_GL_UPLOAD (trans);
 
-    upload = GST_GL_UPLOAD (trans);
+    //blocking call, request a texture and attach it to the upload FBO
+    GstGLBuffer* gl_outbuf = gst_gl_buffer_new (upload->display,
+        upload->gl_width, upload->gl_height);
 
-    //blocking call
-    gl_outbuf = gst_gl_buffer_new_from_video_format (upload->display,
-        upload->video_format, 
-        upload->outWidth, upload->outHeight,
-        upload->inWidth, upload->inHeight,
-        upload->inWidth, upload->inHeight);
     *buf = GST_BUFFER (gl_outbuf);
     gst_buffer_set_caps (*buf, caps);
 
@@ -460,18 +454,19 @@ static GstFlowReturn
 gst_gl_upload_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     GstBuffer* outbuf)
 {
-    GstGLUpload* upload;
+    GstGLUpload* upload = GST_GL_UPLOAD (trans);
     GstGLBuffer* gl_outbuf = GST_GL_BUFFER (outbuf);
 
-    upload = GST_GL_UPLOAD (trans);
-
-    GST_DEBUG ("making graphic %p size %d",
+    GST_DEBUG ("Upload %p size %d",
         GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf));
 
-    //blocking call
-    gst_gl_display_textureChanged(upload->display, upload->video_format,
-        gl_outbuf->texture, gl_outbuf->texture_u, gl_outbuf->texture_v, 
-        gl_outbuf->width, gl_outbuf->height, GST_BUFFER_DATA (inbuf), &gl_outbuf->textureGL);
+    //blocking call.
+    //Depending on the colorspace, video is upload into several textures.
+    //However, there is only one output texture. The one attached
+    //to the upload FBO.
+    gst_gl_display_do_upload (upload->display, upload->video_format, 
+        upload->video_width, upload->video_height, GST_BUFFER_DATA (inbuf),
+        gl_outbuf->width, gl_outbuf->height, gl_outbuf->texture);
 
     return GST_FLOW_OK;
 }

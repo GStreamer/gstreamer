@@ -114,17 +114,10 @@ gst_gl_filter_cube_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 {
     //GstGLFilterCube* cube_filter = GST_GL_FILTER_CUBE(filter);
 
-    //blocking call, generate a FBO
+    //blocking call, use a FBO
     gst_gl_display_useFBO (filter->display, filter->width, filter->height,
-        filter->fbo, filter->depthbuffer, filter->texture, gst_gl_filter_cube_callback,
-        inbuf->width, inbuf->height, inbuf->textureGL, 0);
-
-    outbuf->width = inbuf->width;
-    outbuf->height = inbuf->height;
-    outbuf->texture = inbuf->texture;
-    outbuf->texture_u = inbuf->texture_u;
-    outbuf->texture_v = inbuf->texture_v;
-    outbuf->textureGL = filter->texture;
+        filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filter_cube_callback,
+        inbuf->width, inbuf->height, inbuf->texture, 0);
 
     return TRUE;
 }
