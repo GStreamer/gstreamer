@@ -37,7 +37,9 @@
 #include "rsnbasesrc.h"
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/gstmarshal.h>
-#include <gst/gst-i18n-lib.h>
+
+#include <gst/gst-i18n-plugin.h>
+
 
 GST_DEBUG_CATEGORY_STATIC (rsn_base_src_debug);
 #define GST_CAT_DEFAULT rsn_base_src_debug

@@ -1,3 +1,8 @@
+2008-06-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/resindvd/rsnbasesrc.c:
+	  Use the right i18n header.
+
 2008-06-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/tvtime/greedy.c:
