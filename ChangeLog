@@ -1,3 +1,8 @@
+2008-06-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tests/check/pipelines/oggmux.c:
+	  Properly ifdef tests to fix compilation.
+
 2008-06-20  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/playback/gstplay-marshal.list:
@@ -138,10 +143,10 @@
 2008-06-04  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/playback/gstplaybasebin.c:
-	  Disconnect signals from decodebins we created before we remove it from
-	  playbin, to avoid crashes if the decodebin is eventually disposed after
-	  the playbin itself (possible if the app takes a reference on the
-	  decodebin).
+	  Disconnect signals from decodebins we created before we remove it
+	  from playbin, to avoid crashes if the decodebin is eventually
+	  disposed after the playbin itself (possible if the app takes a
+	  reference on the decodebin).
 	  Fixes #536521.
 
 2008-06-04  Tim-Philipp Müller  <tim.muller at collabora co uk>

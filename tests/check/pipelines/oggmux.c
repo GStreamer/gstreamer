@@ -294,6 +294,7 @@ test_pipeline (const char *pipeline)
   gst_object_unref (bin);
 }
 
+#ifdef HAVE_VORBIS
 GST_START_TEST (test_vorbis)
 {
   test_pipeline
@@ -301,7 +302,9 @@ GST_START_TEST (test_vorbis)
 }
 
 GST_END_TEST;
+#endif
 
+#ifdef HAVE_THEORA
 GST_START_TEST (test_theora)
 {
   test_pipeline
@@ -309,7 +312,9 @@ GST_START_TEST (test_theora)
 }
 
 GST_END_TEST;
+#endif
 
+#if (defined (HAVE_THEORA) && defined (HAVE_VORBIS))
 GST_START_TEST (test_theora_vorbis)
 {
   test_pipeline
@@ -327,6 +332,7 @@ GST_START_TEST (test_vorbis_theora)
 }
 
 GST_END_TEST;
+#endif
 
 GST_START_TEST (test_simple_cleanup)
 {
