@@ -1,5 +1,13 @@
 2008-06-21  Thijs Vermeir  <thijsvermeir@gmail.com>
 
+	* docs/libs/gstreamer-libs-sections.txt:
+	Add new API to doc
+	* libs/gst/check/gstcheck.c:
+	* libs/gst/check/gstcheck.h:
+	API: gst_check_teardown_pad_by_name
+
+2008-06-21  Thijs Vermeir  <thijsvermeir@gmail.com>
+
 	* libs/gst/check/gstcheck.c:
 	* libs/gst/check/gstcheck.h:
 	Also setup request pads and allow setup pads by name (#537812)

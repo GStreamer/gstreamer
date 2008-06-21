@@ -297,29 +297,38 @@ gst_check_setup_src_pad_by_name (GstElement * element,
 }
 
 void
-gst_check_teardown_src_pad (GstElement * element)
+gst_check_teardown_pad_by_name (GstElement * element, gchar * name)
 {
-  GstPad *srcpad, *sinkpad;
+  GstPad *pad_peer, *pad_element;
 
   /* clean up floating src pad */
-  sinkpad = gst_element_get_static_pad (element, "sink");
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
-  srcpad = gst_pad_get_peer (sinkpad);
+  pad_element = gst_element_get_static_pad (element, name);
+  ASSERT_OBJECT_REFCOUNT (pad_element, "pad", 2);
+  pad_peer = gst_pad_get_peer (pad_element);
 
-  gst_pad_unlink (srcpad, sinkpad);
+  if (gst_pad_get_direction (pad_element) == GST_PAD_SINK)
+    gst_pad_unlink (pad_peer, pad_element);
+  else
+    gst_pad_unlink (pad_element, pad_peer);
 
   /* caps could have been set, make sure they get unset */
-  gst_pad_set_caps (srcpad, NULL);
+  gst_pad_set_caps (pad_peer, NULL);
 
   /* pad refs held by both creator and this function (through _get) */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "element sinkpad", 2);
-  gst_object_unref (sinkpad);
+  ASSERT_OBJECT_REFCOUNT (pad_element, "element pad_element", 2);
+  gst_object_unref (pad_element);
   /* one more ref is held by element itself */
 
   /* pad refs held by both creator and this function (through _get_peer) */
-  ASSERT_OBJECT_REFCOUNT (srcpad, "check srcpad", 2);
-  gst_object_unref (srcpad);
-  gst_object_unref (srcpad);
+  ASSERT_OBJECT_REFCOUNT (pad_peer, "check pad_peer", 2);
+  gst_object_unref (pad_peer);
+  gst_object_unref (pad_peer);
+}
+
+void
+gst_check_teardown_src_pad (GstElement * element)
+{
+  gst_check_teardown_pad_by_name (element, "sink");
 }
 
 /* FIXME: set_caps isn't that useful; might want to check if fixed,
@@ -367,23 +376,7 @@ gst_check_setup_sink_pad_by_name (GstElement * element,
 void
 gst_check_teardown_sink_pad (GstElement * element)
 {
-  GstPad *srcpad, *sinkpad;
-
-  /* clean up floating sink pad */
-  srcpad = gst_element_get_static_pad (element, "src");
-  sinkpad = gst_pad_get_peer (srcpad);
-
-  gst_pad_unlink (srcpad, sinkpad);
-
-  /* pad refs held by both creator and this function (through _get_pad) */
-  ASSERT_OBJECT_REFCOUNT (srcpad, "element srcpad", 2);
-  gst_object_unref (srcpad);
-  /* one more ref is held by element itself */
-
-  /* pad refs held by both creator and this function (through _get_peer) */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "check sinkpad", 2);
-  gst_object_unref (sinkpad);
-  gst_object_unref (sinkpad);
+  gst_check_teardown_pad_by_name (element, "src");
 }
 
 /**

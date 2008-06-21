@@ -77,6 +77,7 @@ GstPad * gst_check_setup_src_pad_by_name (GstElement * element,
           GstStaticPadTemplate * template, gchar *name);
 GstPad * gst_check_setup_sink_pad_by_name (GstElement * element, 
           GstStaticPadTemplate * template, gchar *name);
+void gst_check_teardown_pad_by_name (GstElement * element, gchar *name);
 void gst_check_teardown_src_pad (GstElement * element);
 void gst_check_drop_buffers ();
 void gst_check_caps_equal (GstCaps * caps1, GstCaps * caps2);
