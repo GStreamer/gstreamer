@@ -1461,10 +1461,12 @@
 	(gst_gio_src_set_property), (gst_gio_src_get_property),
 	(gst_gio_src_start):
 	* ext/gio/gstgiosrc.h:
-	API: Add "file" properties where one can set a GFile as source/destination.
+	API: Add "file" properties where one can set a GFile as
+	source/destination.
 
-	Add locking to the properties and use gst_element_class_set_details_simple()
-	instead of a static GstElementDetails struct.
+	Add locking to the properties and use
+	gst_element_class_set_details_simple() instead of a static
+	GstElementDetails struct.
 
 2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
