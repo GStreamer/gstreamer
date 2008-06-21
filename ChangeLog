@@ -1,3 +1,13 @@
+2008-06-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/tvtime/greedy.c:
+	(deinterlace_greedy_packed422_scanline_sse),
+	(deinterlace_greedy_packed422_scanline_c),
+	(deinterlace_greedy_packed422_scanline):
+	Implement a C version of the greedy low motion algorithm and mark the
+	assembly optimized version as SSE as it uses SSE instructions
+	additional to MMX instructions.
+
 2008-06-20  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	Patch by: Sebastian Pölsterl
