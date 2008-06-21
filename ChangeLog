@@ -1,3 +1,11 @@
+2008-06-21  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* libs/gst/check/gstcheck.c:
+	* libs/gst/check/gstcheck.h:
+	Also setup request pads and allow setup pads by name (#537812)
+	API: gst_check_setup_src_pad_by_name
+	API: gst_check_setup_sink_pad_by_name
+
 2008-06-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tests/check/gst/gstbuffer.c:
