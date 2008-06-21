@@ -37,8 +37,6 @@
 # include "config.h"
 #endif
 
-#include "mmx.h"
-#include "sse.h"
 #include "gstdeinterlace2.h"
 #include "speedtools.h"
 #include "speedy.h"
@@ -64,11 +62,13 @@ copy_scanline (GstDeinterlace2 * object,
 
 static int GreedyMaxComb = 15;
 
+#ifdef HAVE_CPU_I386
+#include "mmx.h"
+#include "sse.h"
 static void
-deinterlace_greedy_packed422_scanline_mmxext (GstDeinterlace2 * object,
+deinterlace_greedy_packed422_scanline_sse (GstDeinterlace2 * object,
     deinterlace_scanline_data_t * data, uint8_t * output)
 {
-#ifdef HAVE_CPU_I386
   mmx_t MaxComb;
 
   uint8_t *m0 = data->m0;
@@ -171,6 +171,72 @@ deinterlace_greedy_packed422_scanline_mmxext (GstDeinterlace2 * object,
   }
   sfence ();
   emms ();
+}
+#endif
+
+static void
+deinterlace_greedy_packed422_scanline_c (GstDeinterlace2 * object,
+    deinterlace_scanline_data_t * data, uint8_t * output)
+{
+  uint8_t *m0 = data->m0;
+
+  uint8_t *t1 = data->t1;
+
+  uint8_t *b1 = data->b1;
+
+  uint8_t *m2 = data->m2;
+
+  int width = 2 * object->frame_width;
+
+  uint16_t avg, l2_diff, lp2_diff, max, min, best;
+
+  // L2 == m0
+  // L1 == t1
+  // L3 == b1
+  // LP2 == m2
+
+  while (width--) {
+    avg = (*t1 + *b1) / 2;
+
+    l2_diff = ABS (*m0 - avg);
+    lp2_diff = ABS (*m2 - avg);
+
+    if (l2_diff > lp2_diff)
+      best = *m2;
+    else
+      best = *m0;
+
+    max = MAX (*t1, *b1);
+    min = MIN (*t1, *b1);
+
+    if (max < 256 - GreedyMaxComb)
+      max += GreedyMaxComb;
+    if (min > GreedyMaxComb)
+      min -= GreedyMaxComb;
+
+    *output = MIN (MAX (best, min), max);
+
+    // Advance to the next set of pixels.
+    output += 1;
+    m0 += 1;
+    t1 += 1;
+    b1 += 1;
+    m2 += 1;
+  }
+}
+
+static void
+deinterlace_greedy_packed422_scanline (GstDeinterlace2 * object,
+    deinterlace_scanline_data_t * data, uint8_t * output)
+{
+#ifdef HAVE_CPU_I386
+  if (object->cpu_feature_flags & OIL_IMPL_FLAG_SSE) {
+    deinterlace_greedy_packed422_scanline_sse (object, data, output);
+  } else {
+    deinterlace_greedy_packed422_scanline_c (object, data, output);
+  }
+#else
+  deinterlace_greedy_packed422_scanline_c (object, data, output);
 #endif
 }
 
@@ -180,13 +246,13 @@ static deinterlace_method_t greedyl_method = {
   "Motion Adaptive: Simple Detection",
   "AdaptiveSimple",
   3,
-  OIL_IMPL_FLAG_MMXEXT,
+  0,
   0,
   0,
   0,
   1,
   copy_scanline,
-  deinterlace_greedy_packed422_scanline_mmxext,
+  deinterlace_greedy_packed422_scanline,
   0,
   {"Uses heuristics to detect motion in the input",
         "frames and reconstruct image detail where",
