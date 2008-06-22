@@ -1,3 +1,9 @@
+2008-06-22  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	Don't update the cur_time on GST_CLOCK_TIME_NONE (#537804) and don't
+	activate the pads if they are added in STATE_NULL.
+
 2008-06-21  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* docs/libs/gstreamer-libs-sections.txt:

@@ -625,20 +625,28 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
   sink_time =
       gst_segment_to_running_time (&sq->sink_segment, GST_FORMAT_TIME,
       sq->sink_segment.last_stop);
+  if (sink_time == GST_CLOCK_TIME_NONE)
+    goto beach;
 
   src_time = gst_segment_to_running_time (&sq->src_segment, GST_FORMAT_TIME,
       sq->src_segment.last_stop);
+  if (src_time == GST_CLOCK_TIME_NONE)
+    goto beach;
 
   GST_DEBUG_OBJECT (mq,
       "queue %d, sink %" GST_TIME_FORMAT ", src %" GST_TIME_FORMAT, sq->id,
       GST_TIME_ARGS (sink_time), GST_TIME_ARGS (src_time));
 
-  /* This allows for streams with out of order timestamping - sometimes the 
+  /* This allows for streams with out of order timestamping - sometimes the
    * emerging timestamp is later than the arriving one(s) */
-  if (sink_time >= src_time)
-    sq->cur_time = sink_time - src_time;
-  else
-    sq->cur_time = 0;
+  if (sink_time < src_time)
+    goto beach;
+
+  sq->cur_time = sink_time - src_time;
+  return;
+
+beach:
+  sq->cur_time = 0;
 }
 
 /* take a NEWSEGMENT event and apply the values to segment, updating the time
@@ -1475,11 +1483,17 @@ gst_single_queue_new (GstMultiQueue * mqueue)
   gst_pad_set_element_private (sq->sinkpad, (gpointer) sq);
   gst_pad_set_element_private (sq->srcpad, (gpointer) sq);
 
-  gst_pad_set_active (sq->srcpad, TRUE);
+  /* only activate the pads when we are not in the NULL state
+   * and add the pad under the state_lock to prevend state changes
+   * between activating and adding */
+  g_static_rec_mutex_lock (GST_STATE_GET_LOCK (mqueue));
+  if (GST_STATE_TARGET (mqueue) != GST_STATE_NULL) {
+    gst_pad_set_active (sq->srcpad, TRUE);
+    gst_pad_set_active (sq->sinkpad, TRUE);
+  }
   gst_element_add_pad (GST_ELEMENT (mqueue), sq->srcpad);
-
-  gst_pad_set_active (sq->sinkpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (mqueue), sq->sinkpad);
+  g_static_rec_mutex_unlock (GST_STATE_GET_LOCK (mqueue));
 
   GST_DEBUG_OBJECT (mqueue, "GstSingleQueue [%d] created and pads added",
       sq->id);
