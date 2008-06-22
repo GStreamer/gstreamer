@@ -1498,6 +1498,10 @@ stop_cb (GtkButton * button, gpointer data)
 
       g_list_free (seekable_elements);
       seekable_elements = NULL;
+      g_list_free (seekable_pads);
+      seekable_pads = NULL;
+      g_list_free (rate_pads);
+      rate_pads = NULL;
 
       pipeline = pipelines[pipeline_type].func (pipeline_spec);
       g_assert (pipeline);

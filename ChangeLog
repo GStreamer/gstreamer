@@ -1,3 +1,8 @@
+2008-06-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/examples/seek/seek.c:
+	  Fix crasher when playing a parse-launch line the 2nd time.
+
 2008-06-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tests/check/pipelines/oggmux.c:
