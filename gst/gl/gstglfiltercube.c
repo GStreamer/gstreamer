@@ -35,7 +35,7 @@ static const GstElementDetails element_details =
 
 enum
 {
-  PROP_0
+    PROP_0
 };
 
 #define DEBUG_INIT(bla) \
@@ -44,34 +44,34 @@ enum
 GST_BOILERPLATE_FULL (GstGLFilterCube, gst_gl_filter_cube, GstGLFilter,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
-static void gst_gl_filter_cube_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_gl_filter_cube_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
+static void gst_gl_filter_cube_set_property (GObject* object, guint prop_id,
+    const GValue* value, GParamSpec * pspec);
+static void gst_gl_filter_cube_get_property (GObject* object, guint prop_id,
+    GValue* value, GParamSpec* pspec);
 
-static gboolean gst_gl_filter_cube_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+static gboolean gst_gl_filter_cube_filter (GstGLFilter* filter,
+    GstGLBuffer* inbuf, GstGLBuffer* outbuf);
 static void gst_gl_filter_cube_callback (guint width, guint height, guint texture, GLhandleARB shader);
 
 
 static void
 gst_gl_filter_cube_base_init (gpointer klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+    GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &element_details);
+    gst_element_class_set_details (element_class, &element_details);
 }
 
 static void
 gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
 {
-  GObjectClass* gobject_class;
+    GObjectClass* gobject_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gobject_class->set_property = gst_gl_filter_cube_set_property;
-  gobject_class->get_property = gst_gl_filter_cube_get_property;
+    gobject_class = (GObjectClass *) klass;
+    gobject_class->set_property = gst_gl_filter_cube_set_property;
+    gobject_class->get_property = gst_gl_filter_cube_get_property;
 
-  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_cube_filter;
+    GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_cube_filter;
 }
 
 static void
