@@ -39,7 +39,7 @@ struct _GstGLFilterApp
     GstGLFilter filter;
 
     CRCB clientReshapeCallback;
-    CDCB clientDrawCallback;
+    GLCB clientDrawCallback;
 };
 
 struct _GstGLFilterAppClass

@@ -389,10 +389,10 @@ gst_gl_colorscale_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     colorscale->display = gst_gl_display_new ();
   
     //init unvisible opengl context
-    gst_gl_display_initGLContext (colorscale->display, 
+    gst_gl_display_init_gl_context (colorscale->display, 
         50, y_pos++ * (colorscale->output_video_height+50) + 50,
-        colorscale->output_video_width, colorscale->output_video_height,
-        colorscale->output_video_width, colorscale->output_video_height, 0, FALSE);
+        colorscale->output_video_width, colorscale->output_video_height, 
+        0, FALSE);
 
     //blocking call
     gst_gl_display_initDonwloadFBO (colorscale->display, 

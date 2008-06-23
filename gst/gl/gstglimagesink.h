@@ -51,7 +51,6 @@ struct _GstGLImageSink
     gchar *display_name;
 
     gulong window_id;
-    //gboolean isInternal;
 
     //caps
     GstCaps *caps;
@@ -64,6 +63,9 @@ struct _GstGLImageSink
 
     GstGLDisplay *display;
     GstGLBuffer *stored_buffer;
+
+    CRCB clientReshapeCallback;
+    CDCB clientDrawCallback;
 };
 
 struct _GstGLImageSinkClass

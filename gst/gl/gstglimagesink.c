@@ -76,8 +76,10 @@ static GstStaticPadTemplate gst_glimage_sink_template =
 
 enum
 {
-  ARG_0,
-  ARG_DISPLAY
+    ARG_0,
+    ARG_DISPLAY,
+    PROP_CLIENT_RESHAPE_CALLBACK,
+    PROP_CLIENT_DRAW_CALLBACK
 };
 
 GST_BOILERPLATE_FULL (GstGLImageSink, gst_glimage_sink, GstVideoSink,
@@ -135,6 +137,16 @@ gst_glimage_sink_class_init (GstGLImageSinkClass* klass)
       g_param_spec_string ("display", "Display", "Display name",
           NULL, G_PARAM_READWRITE));
 
+    g_object_class_install_property (gobject_class, PROP_CLIENT_RESHAPE_CALLBACK,
+      g_param_spec_pointer ("client_reshape_callback", "Client reshape callback",
+          "Define a custom reshape callback in a client code", 
+          G_PARAM_WRITABLE));
+
+    g_object_class_install_property (gobject_class, PROP_CLIENT_DRAW_CALLBACK,
+      g_param_spec_pointer ("client_draw_callback", "Client draw callback",
+          "Define a custom draw callback in a client code", 
+          G_PARAM_WRITABLE));
+
     gobject_class->finalize = gst_glimage_sink_finalize;
 
     gstelement_class->change_state = gst_glimage_sink_change_state;
@@ -156,6 +168,8 @@ gst_glimage_sink_init (GstGLImageSink* glimage_sink,
     glimage_sink->window_id = 0;
     glimage_sink->display = NULL;
     glimage_sink->stored_buffer = NULL;
+    glimage_sink->clientReshapeCallback = NULL;
+    glimage_sink->clientDrawCallback = NULL;
 }
 
 static void
@@ -171,9 +185,21 @@ gst_glimage_sink_set_property (GObject* object, guint prop_id,
     switch (prop_id) 
     {
         case ARG_DISPLAY:
+        {
             g_free (glimage_sink->display_name);
             glimage_sink->display_name = g_strdup (g_value_get_string (value));
             break;
+        }
+        case PROP_CLIENT_RESHAPE_CALLBACK:
+        {
+            glimage_sink->clientReshapeCallback = g_value_get_pointer (value);
+            break;
+        }
+        case PROP_CLIENT_DRAW_CALLBACK:
+        {
+            glimage_sink->clientDrawCallback = g_value_get_pointer (value);
+            break;
+        }
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
             break;
@@ -412,6 +438,12 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
             if (glimage_sink->window_id)
                 gst_gl_display_set_windowId (glimage_sink->display, glimage_sink->window_id);
 
+            gst_gl_display_setClientReshapeCallback (glimage_sink->display, 
+                glimage_sink->clientReshapeCallback);
+    
+            gst_gl_display_setClientDrawCallback (glimage_sink->display, 
+                glimage_sink->clientDrawCallback);
+
             gst_gl_display_resizeWindow (glimage_sink->display, glimage_sink->width, glimage_sink->height);
 
             gst_gl_display_setVisibleWindow (glimage_sink->display, TRUE);
@@ -425,7 +457,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
         {
   
             //do not stack when multiple windows
-            static gint glheight = 0;
+            static gint y_pos = 0;
             
             //create a display
             glimage_sink->display = gst_gl_display_new ();
@@ -435,12 +467,16 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
                 gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (glimage_sink));
 
             //init opengl context
-            gst_gl_display_initGLContext (glimage_sink->display, 
-                50, glheight++ * (glimage_sink->height+50) + 50, 
+            gst_gl_display_init_gl_context (glimage_sink->display, 
+                50, y_pos++ * (glimage_sink->height+50) + 50, 
                 glimage_sink->width, glimage_sink->height, 
-                glimage_sink->width, glimage_sink->height,
-                glimage_sink->window_id,
-                TRUE);
+                glimage_sink->window_id, TRUE);
+
+            gst_gl_display_setClientReshapeCallback (glimage_sink->display, 
+                glimage_sink->clientReshapeCallback);
+    
+            gst_gl_display_setClientDrawCallback (glimage_sink->display, 
+                glimage_sink->clientDrawCallback);
         }
 
         //blocking call

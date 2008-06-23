@@ -111,8 +111,6 @@ struct _GstGLDisplay {
     GString* title;
     gint win_xpos;
     gint win_ypos;
-    gint glcontext_width;
-    gint glcontext_height;
     gboolean visible;
     gboolean isAlive;
 
@@ -122,11 +120,6 @@ struct _GstGLDisplay {
     GLuint textureFBO;
     GLuint textureFBOWidth;
     GLuint textureFBOHeight;
-
-    //graphic frame buffer object (GL texture -> GL scene)
-    GLuint graphicFBO;
-    GLuint graphicDepthBuffer;
-    GLuint graphicTexture;
 
     //filter frame buffer object (GL -> GL)
     GLuint requestedFBO;
@@ -153,6 +146,9 @@ struct _GstGLDisplay {
     GLuint displayedTexture;
     GLuint displayedTextureWidth;
     GLuint displayedTextureHeight;
+
+    gint resize_width;
+    gint resize_height;
 
     GLuint preparedTexture;
     
@@ -230,12 +226,11 @@ GType gst_gl_display_get_type (void);
 //-------------------- Public declarations ------------------
 //------------------------------------------------------------ 
 GstGLDisplay *gst_gl_display_new (void);
-void gst_gl_display_initGLContext (GstGLDisplay* display, 
-                                   GLint x, GLint y, 
-                                   GLint graphic_width, GLint graphic_height,
-                                   GLint video_width, GLint video_height,
-                                   gulong winId,
-                                   gboolean visible);
+void gst_gl_display_init_gl_context (GstGLDisplay* display, 
+                                     GLint x, GLint y, 
+                                     GLint width, GLint height,
+                                     gulong winId,
+                                     gboolean visible);
 void gst_gl_display_setClientReshapeCallback (GstGLDisplay* display, CRCB cb);
 void gst_gl_display_setClientDrawCallback (GstGLDisplay* display, CDCB cb);
 void gst_gl_display_setVisibleWindow (GstGLDisplay* display, gboolean visible);

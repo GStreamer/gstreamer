@@ -53,7 +53,6 @@ static void gst_gl_filter_app_get_property (GObject* object, guint prop_id,
 
 static gboolean gst_gl_filter_app_set_caps (GstGLFilter* filter, 
     GstCaps* incaps, GstCaps* outcaps);
-static void gst_gl_filter_app_setClientCallbacks (GstGLFilter* filter);
 static gboolean gst_gl_filter_app_filter (GstGLFilter* filter,
     GstGLBuffer* inbuf, GstGLBuffer* outbuf);
 static void gst_gl_filter_app_callback (guint width, guint height, guint texture, GLhandleARB shader);
@@ -78,7 +77,6 @@ gst_gl_filter_app_class_init (GstGLFilterAppClass* klass)
 
     GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_filter_app_set_caps;
     GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_app_filter;
-    GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_app_setClientCallbacks;
 
     g_object_class_install_property (gobject_class, PROP_CLIENT_RESHAPE_CALLBACK,
       g_param_spec_pointer ("client_reshape_callback", "Client reshape callback",
@@ -145,30 +143,27 @@ gst_gl_filter_app_set_caps (GstGLFilter* filter, GstCaps* incaps,
     return TRUE;
 }
 
-static void
-gst_gl_filter_app_setClientCallbacks (GstGLFilter* filter)
-{
-    GstGLFilterApp* app_filter = GST_GL_FILTER_APP(filter);
-    
-    //set the client reshape callback
-    gst_gl_display_setClientReshapeCallback (filter->display, 
-        app_filter->clientReshapeCallback);
-    
-    //set the client draw callback
-    gst_gl_display_setClientDrawCallback (filter->display, 
-        app_filter->clientDrawCallback);
-}
-
 static gboolean
 gst_gl_filter_app_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
     GstGLBuffer* outbuf)
 {
-    //GstGLFilterApp* app_filter = GST_GL_FILTER_APP(filter);
+    GstGLFilterApp* app_filter = GST_GL_FILTER_APP(filter);
 
-    //blocking call, use a FBO
-    gst_gl_display_useFBO (filter->display, filter->width, filter->height,
-        filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filter_app_callback,
-        inbuf->width, inbuf->height, inbuf->texture, 0);
+    if (app_filter->clientDrawCallback)
+    {
+        //blocking call, use a FBO
+        gst_gl_display_useFBO (filter->display, filter->width, filter->height,
+            filter->fbo, filter->depthbuffer, outbuf->texture, app_filter->clientDrawCallback,
+            inbuf->width, inbuf->height, inbuf->texture, 0);
+    }
+    //default
+    else
+    {
+        //blocking call, use a FBO
+        gst_gl_display_useFBO (filter->display, filter->width, filter->height,
+            filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filter_app_callback,
+            inbuf->width, inbuf->height, inbuf->texture, 0);
+    }
 
     return TRUE;
 }

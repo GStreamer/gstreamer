@@ -397,9 +397,8 @@ gst_gl_upload_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     upload->display = gst_gl_display_new ();
   
     //init unvisible opengl context
-    gst_gl_display_initGLContext (upload->display, 
+    gst_gl_display_init_gl_context (upload->display, 
         50, y_pos++ * (upload->gl_height+50) + 50,
-        upload->gl_width, upload->gl_height,
         upload->gl_width, upload->gl_height, 0, FALSE);
 
     return ret;

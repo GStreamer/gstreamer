@@ -340,7 +340,7 @@ gst_gl_test_src_setcaps (GstBaseSrc* bsrc, GstCaps* caps)
     gboolean res;
     gint width, height, rate_denominator, rate_numerator;
     GstGLTestSrc* gltestsrc;
-    static gint y = 0;
+    static gint y_pos = 0;
 
     gltestsrc = GST_GL_TEST_SRC (bsrc);
 
@@ -363,9 +363,8 @@ gst_gl_test_src_setcaps (GstBaseSrc* bsrc, GstCaps* caps)
 
         gltestsrc->display = gst_gl_display_new ();
 
-        gst_gl_display_initGLContext (gltestsrc->display, 
-            50, y++ * (gltestsrc->height+50) + 50,
-            gltestsrc->width, gltestsrc->height,
+        gst_gl_display_init_gl_context (gltestsrc->display, 
+            50, y_pos++ * (gltestsrc->height+50) + 50,
             gltestsrc->width, gltestsrc->height, 0, FALSE);
 
         gst_gl_display_requestFBO (gltestsrc->display, gltestsrc->width, gltestsrc->height,
