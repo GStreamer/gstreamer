@@ -55,7 +55,6 @@ void gst_gl_display_onClose (void);
 void gst_gl_display_make_texture (GstGLDisplay* display);
 void gst_gl_display_fill_texture (GstGLDisplay* display);
 void gst_gl_display_draw_texture (GstGLDisplay* display);
-void gst_gl_display_draw_graphic (GstGLDisplay* display);
 void gst_gl_display_fill_video (GstGLDisplay* display);
 void gst_gl_display_gen_texture (GstGLDisplay* display, guint* pTexture);
 void gst_gl_display_del_texture (GstGLDisplay* display, guint* pTexture);
@@ -119,10 +118,6 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->textureFBOWidth = 0;
     display->textureFBOHeight = 0;
 
-    display->graphicFBO = 0;
-    display->graphicDepthBuffer = 0;
-    display->graphicTexture = 0;
-
     display->requestedFBO = 0;
     display->requestedDepthBuffer = 0;
     display->requestedTextureFBOWidth = 0;
@@ -145,6 +140,9 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->displayedTexture = 0;
     display->displayedTextureWidth = 0;
     display->displayedTextureHeight = 0;
+
+    display->resize_width = 0;
+    display->resize_height = 0;
 
     display->preparedTexture = 0;   
 
@@ -176,8 +174,6 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->winId = 0;
     display->win_xpos = 0;
     display->win_ypos = 0;
-    display->glcontext_width = 0;
-    display->glcontext_height = 0;
     display->visible = FALSE;
     display->isAlive = TRUE;
     display->clientReshapeCallback = NULL;
@@ -224,8 +220,8 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
 	    "void main(void) {\n"
 	    "  float r,g,b,y,u,v;\n"
 	    "  vec2 nxy=gl_TexCoord[0].xy;\n"
-	    "  y=texture2DRect(Ytex,nxy).r;\n"
-	    "  u=texture2DRect(Utex,nxy*0.5).r;\n"
+	    "  y=texture2DRect(Ytex,nxy*0.5).r;\n"
+	    "  u=texture2DRect(Utex,nxy).r;\n"
 	    "  v=texture2DRect(Vtex,nxy*0.5).r;\n"
 	    "  y=1.1643*(y-0.0625);\n"
 	    "  u=u-0.5;\n"
@@ -460,7 +456,7 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     //prepare opengl context
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowPosition(display->win_xpos, display->win_ypos);
-    glutInitWindowSize(display->glcontext_width, display->glcontext_height);
+    glutInitWindowSize(display->textureFBOWidth, display->textureFBOHeight);
 
     //create opengl context
     sprintf(buffer, "%d", glutWinId);
@@ -614,49 +610,7 @@ gst_gl_display_glutGenerateOutputVideoFBO (GstGLDisplay *display)
     {
         GST_DEBUG ("Context %d, EXT_framebuffer_object supported: yes", display->glutWinId);
 
-
-        //-- init graphic frame buffer object (GL texture -> GL scene)
-
-        //setup FBO
-        glGenFramebuffersEXT (1, &display->graphicFBO);
-        glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->graphicFBO);
-
-        //setup the render buffer for depth
-        glGenRenderbuffersEXT(1, &display->graphicDepthBuffer);
-        glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->graphicDepthBuffer);
-        glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
-            display->glcontext_width, display->glcontext_height);
-
-        //setup a texture to render to
-        glGenTextures (1, &display->graphicTexture);
-        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->graphicTexture);
-        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-            display->glcontext_width, display->glcontext_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        //attach the texture to the FBO to renderer to
-        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-            GL_TEXTURE_RECTANGLE_ARB, display->graphicTexture, 0);
-
-        //attach the depth render buffer to the FBO
-        glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
-            GL_RENDERBUFFER_EXT, display->graphicDepthBuffer);
-
-        checkFramebufferStatus();
-
-        g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
-            GL_FRAMEBUFFER_COMPLETE_EXT);
-
-        //unbind the FBO
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
         //-- init output frame buffer object (GL -> video)
-
-        display->outputWidth = display->glcontext_width;
-        display->outputHeight = display->glcontext_height;
 
         //setup FBO
         glGenFramebuffersEXT (1, &display->videoFBO);
@@ -984,10 +938,6 @@ gst_gl_display_glutDestroyWindow (GstGLDisplay *display)
     glDeleteFramebuffersEXT (1, &display->fbo);
     glDeleteRenderbuffersEXT(1, &display->depthBuffer);
 
-    glDeleteFramebuffersEXT (1, &display->graphicFBO);
-    glDeleteRenderbuffersEXT(1, &display->graphicDepthBuffer);
-    glDeleteTextures (1, &display->graphicTexture);
-
     glDeleteFramebuffersEXT (1, &display->videoFBO);
     glDeleteRenderbuffersEXT(1, &display->videoDepthBuffer);
     glDeleteTextures (1, &display->videoTexture);
@@ -1031,8 +981,7 @@ static void
 gst_gl_display_glutReshapeWindow (GstGLDisplay* display)
 {
     glutSetWindow (display->glutWinId);
-    glutReshapeWindow (display->glcontext_width, display->glcontext_height);
-    //should reset glcontext_width and height
+    glutReshapeWindow (display->resize_width, display->resize_height);
 }
 
 
@@ -1074,7 +1023,6 @@ static void
 gst_gl_display_glutUpdateVideo (GstGLDisplay * display)
 {
     glutSetWindow (display->glutWinId);
-    gst_gl_display_draw_graphic (display);
     gst_gl_display_fill_video (display);
     g_cond_signal (display->cond_video);
 }
@@ -1228,22 +1176,19 @@ gst_gl_display_new (void)
 
 /* Init an opengl context */
 void
-gst_gl_display_initGLContext (GstGLDisplay *display,
-                              GLint x, GLint y,
-                              GLint graphic_width, GLint graphic_height,
-                              GLint video_width, GLint video_height,
-                              gulong winId,
-                              gboolean visible)
+gst_gl_display_init_gl_context (GstGLDisplay *display,
+                                GLint x, GLint y,
+                                GLint width, GLint height,
+                                gulong winId,
+                                gboolean visible)
 {
     gst_gl_display_lock (display);
 
     display->winId = winId;
     display->win_xpos = x;
     display->win_ypos = y;
-    display->glcontext_width = graphic_width;
-    display->glcontext_height = graphic_height;
-    display->textureFBOWidth = video_width;
-    display->textureFBOHeight = video_height;
+    display->textureFBOWidth = width;
+    display->textureFBOHeight = height;
     display->visible = visible;
 
     //if no glut_thread exists, create it with a window associated to the display
@@ -1331,8 +1276,8 @@ void
 gst_gl_display_resizeWindow (GstGLDisplay* display, gint width, gint height)
 {
     gst_gl_display_lock (display);
-    display->glcontext_width = width;
-    display->glcontext_height = height;
+    display->resize_width = width;
+    display->resize_height = height;
     gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_RESHAPE, display);
     gst_gl_display_unlock (display);
 }
@@ -1500,8 +1445,8 @@ void
 gst_gl_display_initDonwloadFBO (GstGLDisplay* display, gint width, gint height)
 {
     gst_gl_display_lock (display);
-    display->glcontext_width = width;
-    display->glcontext_height = height;
+    display->outputWidth = width;
+    display->outputHeight = height;
     gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_OVFBO, display);
     g_cond_wait (display->cond_download, display->mutex);
     gst_gl_display_unlock (display);
@@ -1537,7 +1482,7 @@ gst_gl_display_destroyShader (GstGLDisplay* display, GLhandleARB shader)
 void
 gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId)
 {
-    static gint glheight = 0;
+    static gint y_pos = 0;
 
     gst_gl_display_lock (display);
     gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_DESTROY, display);
@@ -1555,9 +1500,8 @@ gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId)
     }
 
     //init opengl context
-    gst_gl_display_initGLContext (display,
-        50, glheight++ * (display->glcontext_height+50) + 50,
-        display->glcontext_width, display->glcontext_height,
+    gst_gl_display_init_gl_context (display,
+        50, y_pos++ * (display->textureFBOHeight+50) + 50,
         display->textureFBOWidth, display->textureFBOHeight,
         winId,
         TRUE);
@@ -2048,80 +1992,10 @@ gst_gl_display_draw_texture (GstGLDisplay* display)
 }
 
 
-/* called by gst_gl_display_glutUpdateTexture (in the glut thread) */
-void
-gst_gl_display_draw_graphic (GstGLDisplay* display)
-{
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->graphicFBO);
-
-    glPushAttrib(GL_VIEWPORT_BIT);
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    gluPerspective(45, (gfloat)display->glcontext_width/(gfloat)display->glcontext_height, 0.1, 100);
-    //gluOrtho2D(0.0, display->glcontext_width, 0.0, display->glcontext_height);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glViewport(0, 0, display->glcontext_width, display->glcontext_height);
-
-    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-    //check if a client draw callback is registered
-    if (display->clientDrawCallback)
-    {
-        display->clientDrawCallback(display->recordedTexture,
-			display->recordedTextureWidth, display->recordedTextureHeight);
-    }
-    else
-    {
-        glMatrixMode (GL_PROJECTION);
-	    glLoadIdentity ();
-
-        glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->recordedTexture);
-        glEnable (GL_TEXTURE_RECTANGLE_ARB);
-
-        glBegin (GL_QUADS);
-            glTexCoord2i (display->recordedTextureWidth, 0);
-            glVertex2f (1.0f, 1.0f);
-            glTexCoord2i (0, 0);
-            glVertex2f (-1.0f, 1.0f);
-            glTexCoord2i (0, display->recordedTextureHeight);
-            glVertex2f (-1.0f, -1.0f);
-            glTexCoord2i (display->recordedTextureWidth, display->recordedTextureHeight);
-            glVertex2f (1.0f, -1.0f);
-        glEnd ();
-    }
-
-    glDrawBuffer(GL_NONE);
-
-    glUseProgramObjectARB (0);
-
-    glDisable(GL_TEXTURE_RECTANGLE_ARB);
-
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopAttrib();
-
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
-    checkFramebufferStatus();
-}
-
-
 /* called by gst_gl_display_glutUpdateVideo (in the glut thread) */
 void
 gst_gl_display_fill_video (GstGLDisplay* display)
 {
-
     gint width = display->outputWidth;
     gint height = display->outputHeight;
     GstVideoFormat outputVideo_format = display->outputVideo_format;
@@ -2134,7 +2008,8 @@ gst_gl_display_fill_video (GstGLDisplay* display)
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    gluOrtho2D(0.0, width, 0.0, height);
+    //gluOrtho2D(0.0, width, 0.0, height);
+    gluPerspective(45, (gfloat)width/(gfloat)height, 0.1, 100);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -2157,7 +2032,7 @@ gst_gl_display_fill_video (GstGLDisplay* display)
                 glMatrixMode (GL_PROJECTION);
 	            glLoadIdentity ();
 
-                glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->graphicTexture);
+                glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->recordedTexture);
                 glEnable(GL_TEXTURE_RECTANGLE_ARB);
             }
             break;
@@ -2193,7 +2068,7 @@ gst_gl_display_fill_video (GstGLDisplay* display)
                 glActiveTextureARB(GL_TEXTURE0_ARB);
                 i = glGetUniformLocationARB (GLSLProgram_to_YUY2_UYVY, "tex");
                 glUniform1iARB (i, 0);
-                glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->graphicTexture);
+                glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->recordedTexture);
             }
             break;
 
@@ -2216,10 +2091,10 @@ gst_gl_display_fill_video (GstGLDisplay* display)
                 i = glGetUniformLocationARB (display->GLSLProgram_to_I420_YV12, "tex");
                 glUniform1iARB (i, 0);
                 i = glGetUniformLocationARB (display->GLSLProgram_to_I420_YV12, "w");
-                glUniform1fARB (i, (gfloat)width);
+                glUniform1fARB (i, (gfloat)display->recordedTextureWidth);
                 i = glGetUniformLocationARB (display->GLSLProgram_to_I420_YV12, "h");
-                glUniform1fARB (i, (gfloat)height);
-                glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->graphicTexture);
+                glUniform1fARB (i, (gfloat)display->recordedTextureHeight);
+                glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->recordedTexture);
 			}
 			break;
 
@@ -2240,7 +2115,7 @@ gst_gl_display_fill_video (GstGLDisplay* display)
                 glActiveTextureARB(GL_TEXTURE0_ARB);
                 i = glGetUniformLocationARB (display->GLSLProgram_to_AYUV, "tex");
                 glUniform1iARB (i, 0);
-                glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->graphicTexture);
+                glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->recordedTexture);
             }
             break;
 
@@ -2250,14 +2125,14 @@ gst_gl_display_fill_video (GstGLDisplay* display)
 	}//end switch display->currentVideo_format
 
     glBegin (GL_QUADS);
-        glTexCoord2i (width, 0);
-        glVertex2f (1.0f, 1.0f);
         glTexCoord2i (0, 0);
-        glVertex2f (-1.0f, 1.0f);
-        glTexCoord2i (0, height);
         glVertex2f (-1.0f, -1.0f);
-        glTexCoord2i (width, height);
+        glTexCoord2i (width, 0);
         glVertex2f (1.0f, -1.0f);
+        glTexCoord2i (width, height);
+        glVertex2f (1.0f, 1.0f);
+        glTexCoord2i (0, height);
+        glVertex2f (-1.0f, 1.0f);
     glEnd ();
 
     glDrawBuffer(GL_NONE);
