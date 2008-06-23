@@ -1,3 +1,10 @@
+2008-06-23  Julien Moutte  <julien@fluendo.com>
+
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_read_track_encoding),
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock): Fix buggy
+	format strings in macros. (makes it build on OS X again...)
+
 2008-06-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/rtp/gstrtptheorapay.c:

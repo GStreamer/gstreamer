@@ -434,12 +434,12 @@ gst_matroska_demux_read_track_encoding (GstMatroskaDemux * demux,
           break;
 
         if (num > 7 && num == 0) {
-          GST_ERROR_OBJECT (demux, "Invalid ContentEncodingScope %",
+          GST_ERROR_OBJECT (demux, "Invalid ContentEncodingScope %"
               G_GUINT64_FORMAT, num);
           ret = GST_FLOW_ERROR;
           break;
         } else if (num & 0x4) {
-          GST_ERROR_OBJECT (demux, "Unsupported ContentEncodingScope %",
+          GST_ERROR_OBJECT (demux, "Unsupported ContentEncodingScope %"
               G_GUINT64_FORMAT, num);
           ret = GST_FLOW_ERROR;
         }
@@ -3840,14 +3840,14 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       case GST_MATROSKA_ID_BLOCKDURATION:{
         ret = gst_ebml_read_uint (ebml, &id, &block_duration);
         GST_DEBUG_OBJECT (demux, "BlockDuration: %" G_GUINT64_FORMAT,
-            &block_duration);
+            block_duration);
         break;
       }
 
       case GST_MATROSKA_ID_REFERENCEBLOCK:{
         ret = gst_ebml_read_sint (ebml, &id, &referenceblock);
         GST_DEBUG_OBJECT (demux, "ReferenceBlock: %" G_GINT64_FORMAT,
-            &referenceblock);
+            referenceblock);
         break;
       }
 
