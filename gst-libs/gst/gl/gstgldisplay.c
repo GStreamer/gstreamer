@@ -144,7 +144,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->resize_width = 0;
     display->resize_height = 0;
 
-    display->preparedTexture = 0;   
+    display->preparedTexture = 0;
 
     display->currentTexture = 0;
     display->currentTexture_u = 0;
@@ -220,8 +220,8 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
 	    "void main(void) {\n"
 	    "  float r,g,b,y,u,v;\n"
 	    "  vec2 nxy=gl_TexCoord[0].xy;\n"
-	    "  y=texture2DRect(Ytex,nxy*0.5).r;\n"
-	    "  u=texture2DRect(Utex,nxy).r;\n"
+	    "  y=texture2DRect(Ytex,nxy).r;\n"
+	    "  u=texture2DRect(Utex,nxy*0.5).r;\n"
 	    "  v=texture2DRect(Vtex,nxy*0.5).r;\n"
 	    "  y=1.1643*(y-0.0625);\n"
 	    "  u=u-0.5;\n"
@@ -509,7 +509,7 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     {
         //a texture must be attached to the FBO
         guint fake_texture = 0;
-        
+
         GST_DEBUG ("Context %d, EXT_framebuffer_object supported: yes", glutWinId);
 
         //-- init intput frame buffer object (video -> GL)
@@ -539,7 +539,7 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
             GL_RENDERBUFFER_EXT, display->depthBuffer);
 
         checkFramebufferStatus();
-        
+
         g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
             GL_FRAMEBUFFER_COMPLETE_EXT);
 
@@ -718,7 +718,7 @@ gst_gl_display_glutGenerateFBO (GstGLDisplay *display)
 {
     //a texture must be attached to the FBO
     guint fake_texture = 0;
-    
+
     glutSetWindow (display->glutWinId);
 
     //-- generate frame buffer object
@@ -1644,11 +1644,11 @@ void gst_gl_display_make_texture (GstGLDisplay* display)
 {
     gint width = display->currentTextureWidth;
     gint height = display->currentTextureHeight;
-    
+
     gst_gl_display_gen_texture (display, &display->currentTexture);
 
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture);
-    switch (display->currentVideo_format) 
+    switch (display->currentVideo_format)
     {
 	    case GST_VIDEO_FORMAT_RGBx:
 	    case GST_VIDEO_FORMAT_BGRx:
@@ -1710,7 +1710,7 @@ void gst_gl_display_make_texture (GstGLDisplay* display)
 		    g_assert_not_reached ();
     }
 }
-	    
+
 
 /* called by gst_gl_display_glutUpdateTexture (in the glut thread) */
 void
@@ -2247,7 +2247,7 @@ gst_gl_display_del_texture (GstGLDisplay* display, guint* pTexture)
 {
     //Each existing texture is destroyed only when the pool is destroyed
     //The pool of textures is deleted in the GstGLDisplay destructor
-    
+
     //contruct a texture pool element
     GstGLDisplayTex* tex = g_new0 (GstGLDisplayTex, 1);
     tex->texture = *pTexture;
