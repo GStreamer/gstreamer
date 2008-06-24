@@ -118,6 +118,8 @@ deinterlace_greedy_packed422_scanline_mmx (GstDeinterlace2 * object,
 {
   mmx_t MaxComb;
 
+  mmx_t ShiftMask;
+
   // How badly do we let it weave? 0-255
   MaxComb.ub[0] = GreedyMaxComb;
   MaxComb.ub[1] = GreedyMaxComb;
@@ -128,10 +130,21 @@ deinterlace_greedy_packed422_scanline_mmx (GstDeinterlace2 * object,
   MaxComb.ub[6] = GreedyMaxComb;
   MaxComb.ub[7] = GreedyMaxComb;
 
+  ShiftMask.ub[0] = 0x7f;
+  ShiftMask.ub[1] = 0x7f;
+  ShiftMask.ub[2] = 0x7f;
+  ShiftMask.ub[3] = 0x7f;
+  ShiftMask.ub[4] = 0x7f;
+  ShiftMask.ub[5] = 0x7f;
+  ShiftMask.ub[6] = 0x7f;
+  ShiftMask.ub[7] = 0x7f;
+
   // L2 == m0
   // L1 == t1
   // L3 == b1
-  // LP2 == m2
+  // LP2 == m2  
+
+  movq_m2r (MaxComb, mm6);
 
   for (; width > 7; width -= 8) {
     movq_m2r (*t1, mm1);        // L1
@@ -143,7 +156,9 @@ deinterlace_greedy_packed422_scanline_mmx (GstDeinterlace2 * object,
     movq_r2r (mm1, mm4);        // L1
     movq_r2r (mm3, mm5);        // L3
     psrlw_i2r (1, mm4);         // L1/2
+    pand_m2r (ShiftMask, mm4);
     psrlw_i2r (1, mm5);         // L3/2
+    pand_m2r (ShiftMask, mm5);
     paddusb_r2r (mm5, mm4);     // (L1 + L3) / 2
 
     // get abs value of possible L2 comb
@@ -152,7 +167,6 @@ deinterlace_greedy_packed422_scanline_mmx (GstDeinterlace2 * object,
     movq_r2r (mm4, mm5);        // avg
     psubusb_r2r (mm2, mm5);     // avg - L2
     por_r2r (mm7, mm5);         // abs(avg-L2)
-
 
     // get abs value of possible LP2 comb
     movq_r2r (mm0, mm7);        // LP2
@@ -186,8 +200,8 @@ deinterlace_greedy_packed422_scanline_mmx (GstDeinterlace2 * object,
     psubusb_r2r (mm7, mm3);     // now = Min(L1,L3)
 
     // allow the value to be above the high or below the low by amt of MaxComb
-    paddusb_m2r (MaxComb, mm2); // increase max by diff
-    psubusb_m2r (MaxComb, mm3); // lower min by diff
+    paddusb_r2r (mm6, mm2);     // increase max by diff
+    psubusb_r2r (mm6, mm3);     // lower min by diff
 
     psubusb_r2r (mm3, mm4);     // best - Min
     paddusb_r2r (mm3, mm4);     // now = Max(best,Min(L1,L3)
@@ -236,6 +250,8 @@ deinterlace_greedy_packed422_scanline_mmxext (GstDeinterlace2 * object,
   // L3 == b1
   // LP2 == m2
 
+  movq_m2r (MaxComb, mm6);
+
   for (; width > 7; width -= 8) {
     movq_m2r (*t1, mm1);        // L1
     movq_m2r (*m0, mm2);        // L2
@@ -281,8 +297,8 @@ deinterlace_greedy_packed422_scanline_mmxext (GstDeinterlace2 * object,
     pminub_r2r (mm1, mm3);      // now = Min(L1,L3)
 
     // allow the value to be above the high or below the low by amt of MaxComb
-    paddusb_m2r (MaxComb, mm2); // increase max by diff
-    psubusb_m2r (MaxComb, mm3); // lower min by diff
+    paddusb_r2r (mm6, mm2);     // increase max by diff
+    psubusb_r2r (mm6, mm3);     // lower min by diff
 
 
     pmaxub_r2r (mm3, mm4);      // now = Max(best,Min(L1,L3)
