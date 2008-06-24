@@ -1,3 +1,16 @@
+2008-06-24  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* sys/ximage/ximagesink.c (gst_ximagesink_ximage_put),
+	(gst_ximagesink_setcaps):
+	* sys/ximage/ximagesink.h:
+	When the caps change, make sure to re-draw borders in
+	force-aspect-ratio=true mode.
+	* sys/xvimage/xvimagesink.c (gst_xvimagesink_xvimage_put):
+	Don't clear the border_draw flag until we actually draw the border.
+	* tests/check/Makefile.am:
+	Ignore alsasink/src during the states test too, so it doesn't fail
+	when running without access to the sound device.
+
 2008-06-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/examples/seek/seek.c:

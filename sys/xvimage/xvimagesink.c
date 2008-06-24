@@ -763,7 +763,6 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
      draw borders only on expose event or after a size change. */
   if (!xvimagesink->cur_image || xvimagesink->draw_border) {
     draw_border = TRUE;
-    xvimagesink->draw_border = FALSE;
   }
 
   /* Store a reference to the last image we put, lose the previous one */
@@ -810,6 +809,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
   if (draw_border) {
     gst_xvimagesink_xwindow_draw_borders (xvimagesink, xvimagesink->xwindow,
         result);
+    xvimagesink->draw_border = FALSE;
   }
 
   /* We scale to the window's geometry */

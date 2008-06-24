@@ -694,8 +694,8 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
   }
 
   /* Draw borders when displaying the first frame. After this
-     draw borders only on expose event. */
-  if (!ximagesink->cur_image) {
+     draw borders only on expose event or caps change (ximagesink->draw_border = TRUE). */
+  if (!ximagesink->cur_image || ximagesink->draw_border) {
     draw_border = TRUE;
   }
 
@@ -735,6 +735,7 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
   if (draw_border) {
     gst_ximagesink_xwindow_draw_borders (ximagesink, ximagesink->xwindow,
         result);
+    ximagesink->draw_border = FALSE;
   }
 #ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm) {
@@ -1465,6 +1466,8 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     ximagesink->xwindow = gst_ximagesink_xwindow_new (ximagesink,
         GST_VIDEO_SINK_WIDTH (ximagesink), GST_VIDEO_SINK_HEIGHT (ximagesink));
   }
+  /* Remember to draw borders for next frame */
+  ximagesink->draw_border = TRUE;
   g_mutex_unlock (ximagesink->flow_lock);
 
   /* If our ximage has changed we destroy it, next chain iteration will create

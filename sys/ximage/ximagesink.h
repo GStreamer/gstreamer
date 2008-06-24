@@ -214,6 +214,7 @@ struct _GstXImageSink {
   gboolean keep_aspect;
   gboolean handle_events;
   gboolean handle_expose;
+  gboolean draw_border;
 };
 
 struct _GstXImageSinkClass {
