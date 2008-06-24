@@ -1,6 +1,15 @@
 2008-06-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/tvtime/greedy.c:
+	(deinterlace_greedy_packed422_scanline_mmx),
+	(deinterlace_greedy_packed422_scanline_mmxext):
+	Optimize MMX/MMXEXT implementations a bit by requiring two less
+	memory accesses and fix the workaround for the missing right shift
+	on bytes to unset the highest bit of every byte.
+
+2008-06-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/tvtime/greedy.c:
 	(deinterlace_greedy_packed422_scanline_mmxext):
 	Remove sfence instruction as it's not needed and actually is an SSE
 	instruction.
