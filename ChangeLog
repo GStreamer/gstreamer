@@ -1,5 +1,14 @@
 2008-06-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/Makefile.am:
+	Move the assembly includes to noinst_HEADERS where they belong.
+
+	* gst/deinterlace2/tvtime/vfir.c: (deinterlace_line_c),
+	(deinterlace_line_mmx):
+	Fix C and MMX implementations a bit more.
+
+2008-06-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/tvtime/greedy.c:
 	(deinterlace_greedy_packed422_scanline_c),
 	(deinterlace_greedy_packed422_scanline_mmxext),
