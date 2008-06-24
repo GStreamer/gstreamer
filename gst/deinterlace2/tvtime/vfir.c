@@ -59,7 +59,7 @@ deinterlace_line_c (uint8_t * dst, uint8_t * lum_m4,
 {
   int sum;
 
-  for (; size > 0; size--) {
+  for (; size >= 0; size--) {
     sum = -lum_m4[0];
     sum += lum_m3[0] << 2;
     sum += lum_m2[0] << 1;
@@ -89,8 +89,7 @@ deinterlace_line_mmx (uint8_t * dst, uint8_t * lum_m4,
   rounder.uw[2] = 4;
   rounder.uw[3] = 4;
   pxor_r2r (mm7, mm7);
-  movd_m2r (rounder, mm6);
-  punpcklbw_r2r (mm7, mm6);
+  movq_m2r (rounder, mm6);
 
   for (; size > 3; size -= 4) {
     movd_m2r (*lum_m4, mm0);
