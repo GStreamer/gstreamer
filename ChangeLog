@@ -1,5 +1,10 @@
 2008-06-24  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/Makefile.am:
+	  Name the test registry format neutral.
+
+2008-06-24  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/playback/gstqueue2.c:
 	  Do not double notify. Remove the unsued return value.
 
