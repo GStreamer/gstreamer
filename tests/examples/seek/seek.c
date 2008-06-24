@@ -26,6 +26,11 @@
 #include <gst/gst.h>
 #include <string.h>
 
+#include <X11/Xlib.h>
+#include <gdk/gdkx.h>
+#include <gst/interfaces/xoverlay.h>
+#include <gst/video/gstvideosink.h>
+
 GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define GST_CAT_DEFAULT (seek_debug)
 
@@ -53,6 +58,8 @@ GST_DEBUG_CATEGORY_STATIC (seek_debug);
 
 /* timeout for gst_element_get_state() after a seek */
 #define SEEK_TIMEOUT 40 * GST_MSECOND
+
+#define DEFAULT_VIDEO_HEIGHT 300
 
 
 static GList *seekable_pads = NULL;
@@ -94,6 +101,10 @@ static gboolean need_streams = TRUE;
 static GtkWidget *video_combo, *audio_combo, *text_combo, *vis_combo;
 static GtkWidget *vis_checkbox, *video_checkbox, *audio_checkbox;
 static GtkWidget *text_checkbox, *mute_checkbox, *volume_spinbutton;
+static GtkWidget *video_window;
+static guint embed_xid = 0;
+
+GList *paths = NULL, *l = NULL;
 
 /* we keep an array of the visualisation entries so that we can easily switch
  * with the combo box index. */
@@ -863,15 +874,30 @@ make_mpegnt_pipeline (const gchar * location)
   return pipeline;
 }
 
+static void
+playerbin_set_uri (GstElement * player, const gchar * location)
+{
+  gchar *uri;
+
+  /* Add "file://" prefix for convenience */
+  if (g_str_has_prefix (location, "/")) {
+    uri = g_strconcat ("file://", location, NULL);
+    g_object_set (G_OBJECT (player), "uri", uri, NULL);
+    g_free (uri);
+  } else {
+    g_object_set (G_OBJECT (player), "uri", location, NULL);
+  }
+}
+
 static GstElement *
-make_playerbin_pipeline (const gchar * location)
+construct_playerbin (const gchar * name, const gchar * location)
 {
   GstElement *player;
 
-  player = gst_element_factory_make ("playbin", "player");
+  player = gst_element_factory_make (name, "player");
   g_assert (player);
 
-  g_object_set (G_OBJECT (player), "uri", location, NULL);
+  playerbin_set_uri (player, location);
 
   seekable_elements = g_list_prepend (seekable_elements, player);
 
@@ -882,21 +908,15 @@ make_playerbin_pipeline (const gchar * location)
 }
 
 static GstElement *
+make_playerbin_pipeline (const gchar * location)
+{
+  return construct_playerbin ("playbin", location);
+}
+
+static GstElement *
 make_playerbin2_pipeline (const gchar * location)
 {
-  GstElement *player;
-
-  player = gst_element_factory_make ("playbin2", "player");
-  g_assert (player);
-
-  g_object_set (G_OBJECT (player), "uri", location, NULL);
-
-  seekable_elements = g_list_prepend (seekable_elements, player);
-
-  /* force element seeking on this pipeline */
-  elem_seek = TRUE;
-
-  return player;
+  return construct_playerbin ("playbin2", location);
 }
 
 #ifndef GST_DISABLE_PARSE
@@ -2071,10 +2091,53 @@ msg_buffering (GstBus * bus, GstMessage * message, GstPipeline * data)
   }
 }
 
+static GstBusSyncReply
+bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
+{
+  if ((GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) &&
+      gst_structure_has_name (message->structure, "prepare-xwindow-id")) {
+    GstElement *element = GST_ELEMENT (GST_MESSAGE_SRC (message));
+
+    g_print ("got prepare-xwindow-id\n");
+    if (!embed_xid) {
+      embed_xid = GDK_WINDOW_XID (GDK_WINDOW (video_window->window));
+    }
+
+    if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+            "force-aspect-ratio")) {
+      g_object_set (element, "force-aspect-ratio", TRUE, NULL);
+    }
+
+    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
+        embed_xid);
+  }
+  return GST_BUS_PASS;
+}
+
+static void
+msg_eos (GstBus * bus, GstMessage * message, GstPipeline * data)
+{
+  message_received (bus, message, data);
+
+  /* Set new uri for playerbins and continue playback */
+  if (l && (pipeline_type == 14 || pipeline_type == 16)) {
+    stop_cb (NULL, NULL);
+    l = g_list_next (l);
+    if (l) {
+      playerbin_set_uri (GST_ELEMENT (data), l->data);
+      play_cb (NULL, NULL);
+    }
+  }
+}
+
 static void
 connect_bus_signals (GstElement * pipeline)
 {
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+
+  /* handle prepare-xwindow-id element message synchronously */
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
+      pipeline);
 
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
@@ -2091,8 +2154,7 @@ connect_bus_signals (GstElement * pipeline)
       pipeline);
   g_signal_connect (bus, "message::warning", (GCallback) message_received,
       pipeline);
-  g_signal_connect (bus, "message::eos", (GCallback) message_received,
-      pipeline);
+  g_signal_connect (bus, "message::eos", (GCallback) msg_eos, pipeline);
   g_signal_connect (bus, "message::tag", (GCallback) message_received,
       pipeline);
   g_signal_connect (bus, "message::element", (GCallback) message_received,
@@ -2103,6 +2165,47 @@ connect_bus_signals (GstElement * pipeline)
       pipeline);
 
   gst_object_unref (bus);
+}
+
+/* Return GList of paths described in location string */
+static GList *
+handle_wildcards (const gchar * location)
+{
+  GList *res = NULL;
+  gchar *path = g_path_get_dirname (location);
+  gchar *pattern = g_path_get_basename (location);
+  GPatternSpec *pspec = g_pattern_spec_new (pattern);
+  GDir *dir = g_dir_open (path, 0, NULL);
+  const gchar *name;
+
+  g_print ("matching %s from %s\n", pattern, path);
+
+  if (!dir) {
+    g_print ("opening directory %s failed\n", path);
+    goto out;
+  }
+
+  while ((name = g_dir_read_name (dir)) != NULL) {
+    if (g_pattern_match_string (pspec, name)) {
+      res = g_list_append (res, g_strjoin ("/", path, name, NULL));
+      g_print ("  found clip %s\n", name);
+    }
+  }
+
+  g_dir_close (dir);
+out:
+  g_pattern_spec_free (pspec);
+  g_free (pattern);
+  g_free (path);
+
+  return res;
+}
+
+static void
+delete_event_cb (void)
+{
+  stop_cb (NULL, NULL);
+  gtk_main_quit ();
 }
 
 static void
@@ -2142,6 +2245,11 @@ main (int argc, char **argv)
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
+  if (!XInitThreads ()) {
+    g_print ("XInitThreads failed\n");
+    exit (-1);
+  }
+
   ctx = g_option_context_new ("- test seeking in gsteamer");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
@@ -2169,12 +2277,28 @@ main (int argc, char **argv)
 
   pipeline_spec = argv[2];
 
-  pipeline = pipelines[pipeline_type].func (pipeline_spec);
+  if (g_strrstr (pipeline_spec, "*") != NULL ||
+      g_strrstr (pipeline_spec, "?") != NULL) {
+    paths = handle_wildcards (pipeline_spec);
+  } else {
+    paths = g_list_prepend (paths, g_strdup (pipeline_spec));
+  }
+
+  if (!paths) {
+    g_print ("opening %s failed\n", pipeline_spec);
+    exit (-1);
+  }
+
+  l = paths;
+
+  pipeline = pipelines[pipeline_type].func ((gchar *) l->data);
   g_assert (pipeline);
 
   /* initialize gui elements ... */
   tips = gtk_tooltips_new ();
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  video_window = gtk_drawing_area_new ();
+  gtk_widget_set_double_buffered (video_window, FALSE);
   statusbar = gtk_statusbar_new ();
   status_id = gtk_statusbar_get_context_id (GTK_STATUSBAR (statusbar), "seek");
   gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Stopped");
@@ -2310,8 +2434,12 @@ main (int argc, char **argv)
 
   /* do the packing stuff ... */
   gtk_window_set_default_size (GTK_WINDOW (window), 250, 96);
+  /* FIXME: can we avoid this for audio only? */
+  gtk_widget_set_size_request (GTK_WIDGET (video_window), -1,
+      DEFAULT_VIDEO_HEIGHT);
   gtk_container_add (GTK_CONTAINER (window), vbox);
-  gtk_container_add (GTK_CONTAINER (vbox), hbox);
+  gtk_box_pack_start (GTK_BOX (vbox), video_window, TRUE, TRUE, 2);
+  gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), play_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), pause_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), stop_button, FALSE, FALSE, 2);
@@ -2328,12 +2456,12 @@ main (int argc, char **argv)
   gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_spinbutton, 3, 4, 1,
       2);
   if (panel && boxes && boxes2) {
-    gtk_box_pack_start (GTK_BOX (vbox), panel, TRUE, TRUE, 2);
-    gtk_box_pack_start (GTK_BOX (vbox), boxes, TRUE, TRUE, 2);
-    gtk_box_pack_start (GTK_BOX (vbox), boxes2, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (vbox), panel, FALSE, FALSE, 2);
+    gtk_box_pack_start (GTK_BOX (vbox), boxes, FALSE, FALSE, 2);
+    gtk_box_pack_start (GTK_BOX (vbox), boxes2, FALSE, FALSE, 2);
   }
-  gtk_box_pack_start (GTK_BOX (vbox), hscale, TRUE, TRUE, 2);
-  gtk_box_pack_start (GTK_BOX (vbox), statusbar, TRUE, TRUE, 2);
+  gtk_box_pack_start (GTK_BOX (vbox), hscale, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (vbox), statusbar, FALSE, FALSE, 2);
 
   /* connect things ... */
   g_signal_connect (G_OBJECT (play_button), "clicked", G_CALLBACK (play_cb),
@@ -2357,7 +2485,7 @@ main (int argc, char **argv)
   g_signal_connect (G_OBJECT (rate_spinbutton), "value_changed",
       G_CALLBACK (rate_spinbutton_changed_cb), pipeline);
 
-  g_signal_connect (G_OBJECT (window), "delete-event", gtk_main_quit, NULL);
+  g_signal_connect (G_OBJECT (window), "delete-event", delete_event_cb, NULL);
 
   /* show the gui. */
   gtk_widget_show_all (window);
@@ -2375,6 +2503,9 @@ main (int argc, char **argv)
 
   g_print ("free pipeline\n");
   gst_object_unref (pipeline);
+
+  g_list_foreach (paths, (GFunc) g_free, NULL);
+  g_list_free (paths);
 
   return 0;
 }
