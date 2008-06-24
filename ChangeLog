@@ -1,5 +1,10 @@
 2008-06-24  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/playback/gstqueue2.c:
+	  Do not double notify. Remove the unsued return value.
+
+2008-06-24  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/alsa/gstalsamixer.c:
 	  Also consider "speaker" as a name for master volume. If that doesn't
 	  help look for the first non-mono volume control that also has a

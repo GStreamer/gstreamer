@@ -1927,7 +1927,7 @@ gst_queue_change_state (GstElement * element, GstStateChange transition)
 #define QUEUE_THRESHOLD_CHANGE(q)\
   g_cond_signal (queue->item_add);
 
-static gboolean
+static void
 gst_queue_set_temp_location (GstQueue * queue, const gchar * location)
 {
   GstState state;
@@ -1943,16 +1943,13 @@ gst_queue_set_temp_location (GstQueue * queue, const gchar * location)
   g_free (queue->temp_location);
   queue->temp_location = g_strdup (location);
 
-  g_object_notify (G_OBJECT (queue), "temp-location");
-
-  return TRUE;
+  return;
 
 /* ERROR */
 wrong_state:
   {
-    GST_DEBUG_OBJECT (queue, "setting temp-location in wrong state");
+    GST_WARNING_OBJECT (queue, "setting temp-location in wrong state");
     GST_OBJECT_UNLOCK (queue);
-    return FALSE;
   }
 }
 
