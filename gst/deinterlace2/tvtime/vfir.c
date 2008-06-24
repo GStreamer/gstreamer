@@ -49,58 +49,10 @@
  * filter taps here are: [-1 4 2 4 -1].
  */
 
-#ifdef HAVE_CPU_I386
-#include "mmx.h"
-static void
-deinterlace_line_mmxext (uint8_t * dst, uint8_t * lum_m4,
-    uint8_t * lum_m3, uint8_t * lum_m2,
-    uint8_t * lum_m1, uint8_t * lum, int size)
-{
-  mmx_t rounder;
-
-  rounder.uw[0] = 4;
-  rounder.uw[1] = 4;
-  rounder.uw[2] = 4;
-  rounder.uw[3] = 4;
-  pxor_r2r (mm7, mm7);
-  movq_m2r (rounder, mm6);
-
-  for (; size > 3; size -= 4) {
-    movd_m2r (lum_m4[0], mm0);
-    movd_m2r (lum_m3[0], mm1);
-    movd_m2r (lum_m2[0], mm2);
-    movd_m2r (lum_m1[0], mm3);
-    movd_m2r (lum[0], mm4);
-    punpcklbw_r2r (mm7, mm0);
-    punpcklbw_r2r (mm7, mm1);
-    punpcklbw_r2r (mm7, mm2);
-    punpcklbw_r2r (mm7, mm3);
-    punpcklbw_r2r (mm7, mm4);
-    paddw_r2r (mm3, mm1);
-    psllw_i2r (1, mm2);
-    paddw_r2r (mm4, mm0);
-    psllw_i2r (2, mm1);         // 2
-    paddw_r2r (mm6, mm2);
-    paddw_r2r (mm2, mm1);
-    psubusw_r2r (mm0, mm1);
-    psrlw_i2r (3, mm1);         // 3
-    packuswb_r2r (mm7, mm1);
-    movd_r2m (mm1, dst[0]);
-    lum_m4 += 4;
-    lum_m3 += 4;
-    lum_m2 += 4;
-    lum_m1 += 4;
-    lum += 4;
-    dst += 4;
-  }
-  emms ();
-}
-#endif
-
 /**
   * C implementation.
   */
-static void
+static inline void
 deinterlace_line_c (uint8_t * dst, uint8_t * lum_m4,
     uint8_t * lum_m3, uint8_t * lum_m2,
     uint8_t * lum_m1, uint8_t * lum, int size)
@@ -123,6 +75,59 @@ deinterlace_line_c (uint8_t * dst, uint8_t * lum_m4,
   }
 }
 
+#ifdef HAVE_CPU_I386
+#include "mmx.h"
+static void
+deinterlace_line_mmx (uint8_t * dst, uint8_t * lum_m4,
+    uint8_t * lum_m3, uint8_t * lum_m2,
+    uint8_t * lum_m1, uint8_t * lum, int size)
+{
+  mmx_t rounder;
+
+  rounder.uw[0] = 4;
+  rounder.uw[1] = 4;
+  rounder.uw[2] = 4;
+  rounder.uw[3] = 4;
+  pxor_r2r (mm7, mm7);
+  movd_m2r (rounder, mm6);
+  punpcklbw_r2r (mm7, mm6);
+
+  for (; size > 3; size -= 4) {
+    movd_m2r (*lum_m4, mm0);
+    movd_m2r (*lum_m3, mm1);
+    movd_m2r (*lum_m2, mm2);
+    movd_m2r (*lum_m1, mm3);
+    movd_m2r (*lum, mm4);
+    punpcklbw_r2r (mm7, mm0);
+    punpcklbw_r2r (mm7, mm1);
+    punpcklbw_r2r (mm7, mm2);
+    punpcklbw_r2r (mm7, mm3);
+    punpcklbw_r2r (mm7, mm4);
+    paddw_r2r (mm3, mm1);
+    psllw_i2r (1, mm2);
+    paddw_r2r (mm4, mm0);
+    psllw_i2r (2, mm1);         // 2
+    paddw_r2r (mm6, mm2);
+    paddw_r2r (mm2, mm1);
+    psubusw_r2r (mm0, mm1);
+    psrlw_i2r (3, mm1);         // 3
+    packuswb_r2r (mm7, mm1);
+    movd_r2m (mm1, *dst);
+    lum_m4 += 4;
+    lum_m3 += 4;
+    lum_m2 += 4;
+    lum_m1 += 4;
+    lum += 4;
+    dst += 4;
+  }
+  emms ();
+
+  /* Handle odd widths */
+  if (size > 0)
+    deinterlace_line_c (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
+}
+#endif
+
 /*
  * The commented-out method below that uses the bottom_field member is more
  * like the filter as specified in the MPEG2 spec, but it doesn't seem to
@@ -134,8 +139,8 @@ deinterlace_scanline_vfir (GstDeinterlace2 * object,
     deinterlace_scanline_data_t * data, uint8_t * output)
 {
 #ifdef HAVE_CPU_I386
-  if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMXEXT) {
-    deinterlace_line_mmxext (output, data->tt1, data->t0, data->m1, data->b0,
+  if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMX) {
+    deinterlace_line_mmx (output, data->tt1, data->t0, data->m1, data->b0,
         data->bb1, object->frame_width * 2);
   } else {
     deinterlace_line_c (output, data->tt1, data->t0, data->m1, data->b0,
