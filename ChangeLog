@@ -1,5 +1,12 @@
 2008-06-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/tvtime/greedy.c:
+	(deinterlace_greedy_packed422_scanline_mmx),
+	(deinterlace_greedy_packed422_scanline):
+	Add plain MMX implementation for the greedyl method.
+
+2008-06-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/Makefile.am:
 	Move the assembly includes to noinst_HEADERS where they belong.
 
