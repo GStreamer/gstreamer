@@ -1,8 +1,13 @@
 2008-06-24  Stefan Kost  <ensonic@users.sf.net>
 
+	* ChangeLog:
+	  Forgot to save the ChangeLog :/
+
+2008-06-24  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/examples/seek/Makefile.am:
 	* tests/examples/seek/seek.c:
-	  Embedd the xwindow.
+	  Embedd the xwindow. Allow to play multiple files.
 
 2008-06-24  Jan Schmidt  <jan.schmidt@sun.com>
 
