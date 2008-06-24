@@ -1,6 +1,13 @@
 2008-06-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/tvtime/greedy.c:
+	(deinterlace_greedy_packed422_scanline_mmxext):
+	Remove sfence instruction as it's not needed and actually is an SSE
+	instruction.
+
+2008-06-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/tvtime/greedy.c:
 	(deinterlace_greedy_packed422_scanline_mmx),
 	(deinterlace_greedy_packed422_scanline):
 	Add plain MMX implementation for the greedyl method.

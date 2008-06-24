@@ -297,7 +297,6 @@ deinterlace_greedy_packed422_scanline_mmxext (GstDeinterlace2 * object,
     b1 += 8;
     m2 += 8;
   }
-  sfence ();
   emms ();
 
   if (width > 0)
