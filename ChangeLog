@@ -1,3 +1,8 @@
+2008-06-24  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* configure.ac:
+	  Depend on released versions of core and -base.
+
 2008-06-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/tvtime/greedy.c:
