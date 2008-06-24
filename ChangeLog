@@ -1,3 +1,23 @@
+2008-06-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/tvtime/greedy.c:
+	(deinterlace_greedy_packed422_scanline_c),
+	(deinterlace_greedy_packed422_scanline_mmxext),
+	(deinterlace_greedy_packed422_scanline):
+	Fix the C implementation to produce correct results and optimize the
+	MMXEXT implementation.
+
+	Handle odd widths and don't read over array boundaries in the MMXEXT
+	implementation.
+
+	* gst/deinterlace2/tvtime/vfir.c: (deinterlace_line_c),
+	(deinterlace_line_mmx), (deinterlace_scanline_vfir):
+	Fix a small rounding bug in the MMX implementation, the MMX
+	implementation doesn't actually need MMXEXT instructions so don't mark
+	it as such.
+
+	Handle odd widths in both implementations.
+
 2008-06-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/resindvd/rsnbasesrc.c:
