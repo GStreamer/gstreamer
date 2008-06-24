@@ -537,7 +537,7 @@ link_elements_with_filter (GstElement *element1, GstElement *element2)
   return link_ok;
 }
       </programlisting>
-      This will force the data flow between those two elements to a
+      This will force the data flow between those two elements to
       a certain video format, width, height and framerate (or the linking
       will fail if that cannot be achieved in the context of the elments
       involved). Keep in mind that when you use <function>

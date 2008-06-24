@@ -137,8 +137,8 @@ main(int argc, char *argv[])
       in the XML file.
     </para>
     <para>
-      In addition to loading a file, you can also load a from a xmlDocPtr and
-      an in memory buffer using gst_xml_parse_doc and gst_xml_parse_memory
+      In addition to loading a file, you can also load from a xmlDocPtr and
+      an in-memory buffer using gst_xml_parse_doc and gst_xml_parse_memory
       respectively. Both of these methods return a gboolean indicating
       success or failure of the requested action.
     </para>

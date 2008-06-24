@@ -55,7 +55,7 @@ for wider use of free formats like the Xiph.org formats.
 If you do decide that you want to allow for non-free plugins to be used 
 with your application you have a variety of choices. One of the simplest 
 is using licenses like LGPL, MPL or BSD for your application instead of 
-the GPL. Or you can add a exceptions clause to your GPL license stating 
+the GPL. Or you can add an exception clause to your GPL license stating 
 that you except GStreamer plugins from the obligations of the GPL.
 </para>
 <para>
@@ -77,7 +77,7 @@ exception clause and thus code can be shared more freely.
 </para>
 <para>
 I have above outlined the practical reasons for why the GStreamer 
-community suggest you allow non-free plugins to be used with your 
+community suggests you allow non-free plugins to be used with your 
 applications. We feel that in the multimedia arena, the free software 
 community is still not strong enough to set the agenda and that blocking 
 non-free plugins to be used in our infrastructure hurts us more than it 

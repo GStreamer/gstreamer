@@ -56,9 +56,9 @@
   <!-- ############ sect1 ############# -->
 
   <sect1 id="section-intro-who" xreflabel="Who Should Read This Manual?">
-    <title>Who Should Read This Manual?</title>
+    <title>Who should read this manual?</title>
     <para>
-      This book is about &GStreamer; from a developer's point of view; it
+      This book is about &GStreamer; from an application developer's point of view; it
       describes how to write a &GStreamer; application using the &GStreamer;
       libraries and tools. For an explanation about writing plugins, we
       suggest the <ulink type="http"
@@ -70,7 +70,7 @@
   <!-- ############ sect1 ############# -->
 
   <sect1 id="section-intro-reading" xreflabel="Preliminary Reading">
-    <title>Preliminary Reading</title>
+    <title>Preliminary reading</title>
     <para><!-- synchronize with PWG -->
       In order to understand this manual, you will need to have a basic
       understanding of the C language.
@@ -92,7 +92,7 @@
   <!-- ############ sect1 ############# -->
 
   <sect1 id="section-intro-structure">
-    <title>Structure of this Manual</title>
+    <title>Structure of this manual</title>
     <para>
       To help you navigate through this guide, it is divided into several large
       parts. Each part addresses a particular broad topic concerning &GStreamer;
@@ -112,7 +112,7 @@
     </para>
 
     <para>
-      In <xref linkend="part-advanced"/>, we will move on to complicated
+      In <xref linkend="part-advanced"/>, we will move on to advanced
       subjects which make &GStreamer; stand out of its competitors. We
       will discuss application-pipeline interaction using dynamic parameters
       and interfaces, we will discuss threading and threaded pipelines,

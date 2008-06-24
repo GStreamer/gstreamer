@@ -16,7 +16,7 @@
       For the application programmer, elements are best visualized as black
       boxes. On the one end, you might put something in, the element does
       something with it and something else comes out at the other side. For
-      a decoder element, ifor example, you'd put in encoded data, and the
+      a decoder element, for example, you'd put in encoded data, and the
       element would output decoded data. In the next chapter (see <xref
       linkend="chapter-pads"/>), you will learn more about data input and
       output in elements, and how you can set that up in your application.
@@ -292,7 +292,7 @@ main (int   argc,
       <classname>GstElement</classname></ulink> also provides various 
       <classname>GObject</classname> signals that can be used as a flexible
       callback mechanism. Here, too, you can use <command>gst-inspect</command>
-      to see which signals a specific elements supports. Together, signals
+      to see which signals a specific element supports. Together, signals
       and properties are the most basic way in which elements and
       applications interact.
     </para>

@@ -2,8 +2,8 @@
   <title>Components</title>
 
   <para>
-    &GStreamer; includes several higher-level components to simplify your
-    applications life. All of the components discussed here (for now) are
+    &GStreamer; includes several higher-level components to simplify an
+    application developer's life. All of the components discussed here (for now) are
     targetted at media playback. The idea of each of these components is
     to integrate as closely as possible with a &GStreamer; pipeline, but
     to hide the complexity of media type detection and several other
@@ -17,7 +17,7 @@
     linkend="section-components-decodebin"/>), depending on their needs.
     Playbin is the recommended solution for everything related to simple
     playback of media that should just work. Decodebin is a more flexible
-    autoplugger that could be used to add more advanced featuers, such
+    autoplugger that could be used to add more advanced features, such
     as playlist support, crossfading of audio tracks and so on. Its
     programming interface is more low-level than that of playbin, though.
   </para>
@@ -37,11 +37,11 @@
 
     <para>
       Setting up a playbin pipeline is as simple as creating an instance of
-      the playbin element, setting a file location (this has to be a valid
-      URI, so <quote>&lt;protocol&gt;://&lt;location&gt;</quote>, e.g.
-      file:///tmp/my.ogg or http://www.example.org/stream.ogg) using the
+      the playbin element, setting a file location using the
       <quote>uri</quote> property on playbin, and then setting the element
-      to the <classname>GST_STATE_PLAYING</classname> state. Internally,
+      to the <classname>GST_STATE_PLAYING</classname> state (the location has to be a valid
+      URI, so <quote>&lt;protocol&gt;://&lt;location&gt;</quote>, e.g.
+      file:///tmp/my.ogg or http://www.example.org/stream.ogg). Internally,
       playbin will set up a pipeline to playback the media location.
     </para>
 

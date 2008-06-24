@@ -30,7 +30,7 @@
       audio player, we'll need a source element that reads files from a
       disk. &GStreamer; includes this element under the name
       <quote>filesrc</quote>. Next, we'll need something to parse the
-      file and decoder it into raw audio. &GStreamer; has two elements
+      file and decode it into raw audio. &GStreamer; has two elements
       for this: the first parses Ogg streams into elementary streams (video,
       audio) and is called <quote>oggdemux</quote>. The second is a Vorbis
       audio decoder, it's conveniently called <quote>vorbisdec</quote>.
@@ -156,7 +156,7 @@ main (int   argc,
 		    source, parser, decoder, conv, sink, NULL);
 
   /* link together - note that we cannot link the parser and
-   * decoder yet, becuse the parser uses dynamic pads. For that,
+   * decoder yet, because the parser uses dynamic pads. For that,
    * we set a pad-added signal handler. */
   gst_element_link (source, parser);
   gst_element_link_many (decoder, conv, sink, NULL);

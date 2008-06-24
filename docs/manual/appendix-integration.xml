@@ -86,7 +86,7 @@ static GOptionEntries cmd_options[] = {
    * example of how to add your own command line options here */
 
   /* at the end we have a special option that collects all remaining 
-   * command line arguments (like filenames) for us. If you don&apos;
+   * command line arguments (like filenames) for us. If you don&apos;t
    * need this, you can safely remove it */
   { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &amp;cmd_filenames,
     "Special option that collects any remaining arguments for us" },

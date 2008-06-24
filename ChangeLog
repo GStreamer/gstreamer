@@ -1,3 +1,18 @@
+2008-06-24  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: Luc Pionchon  <luc.pionchon@nokia.com>
+
+	* docs/manual/appendix-integration.xml:
+	* docs/manual/appendix-licensing.xml:
+	* docs/manual/basics-elements.xml:
+	* docs/manual/basics-helloworld.xml:
+	* docs/manual/basics-pads.xml:
+	* docs/manual/highlevel-components.xml:
+	* docs/manual/highlevel-xml.xml:
+	* docs/manual/intro-basics.xml:
+	* docs/manual/intro-preface.xml:
+	  Typo and formatting fixes (#538594).
+
 2008-06-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* tests/check/gst/gstghostpad.c: (GST_START_TEST):
