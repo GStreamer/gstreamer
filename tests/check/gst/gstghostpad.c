@@ -26,7 +26,9 @@
 GST_START_TEST (test_remove1)
 {
   GstElement *b1, *b2, *src, *sink;
+
   GstPad *srcpad, *sinkpad;
+
   GstPadLinkReturn ret;
 
   b1 = gst_element_factory_make ("pipeline", NULL);
@@ -78,7 +80,9 @@ GST_END_TEST;
 GST_START_TEST (test_remove2)
 {
   GstElement *b1, *b2, *src, *sink;
+
   GstPad *srcpad, *sinkpad;
+
   GstPadLinkReturn ret;
 
   b1 = gst_element_factory_make ("pipeline", NULL);
@@ -151,10 +155,15 @@ GST_END_TEST;
 GST_START_TEST (test_ghost_pads_notarget)
 {
   GstElement *b1, *b2, *sink;
+
   GstPad *srcpad, *sinkpad, *peer;
+
   GstPadLinkReturn ret;
+
   gboolean bret;
+
   GstBus *bus;
+
   GstCaps *caps;
 
   b1 = gst_element_factory_make ("pipeline", NULL);
@@ -214,7 +223,9 @@ GST_END_TEST;
 GST_START_TEST (test_link)
 {
   GstElement *b1, *b2, *src, *sink;
+
   GstPad *srcpad, *sinkpad, *gpad;
+
   GstPadLinkReturn ret;
 
   b1 = gst_element_factory_make ("pipeline", NULL);
@@ -269,7 +280,9 @@ GST_END_TEST;
 GST_START_TEST (test_ghost_pads)
 {
   GstElement *b1, *b2, *src, *i1, *sink;
+
   GstPad *gsink, *gsrc, *gisrc, *gisink, *isink, *isrc, *fsrc, *fsink;
+
   GstStateChangeReturn ret;
 
   b1 = gst_element_factory_make ("pipeline", NULL);
@@ -373,11 +386,17 @@ GST_END_TEST;
 GST_START_TEST (test_ghost_pads_bin)
 {
   GstBin *pipeline;
+
   GstBin *srcbin;
+
   GstBin *sinkbin;
+
   GstElement *src;
+
   GstElement *sink;
+
   GstPad *srcpad, *srcghost, *target;
+
   GstPad *sinkpad, *sinkghost;
 
   pipeline = GST_BIN (gst_pipeline_new ("pipe"));
@@ -443,10 +462,15 @@ block_callback (GstPad * pad, gboolean blocked, gpointer user_data)
 GST_START_TEST (test_ghost_pads_block)
 {
   GstBin *pipeline;
+
   GstBin *srcbin;
+
   GstElement *src;
+
   GstPad *srcpad;
+
   GstPad *srcghost;
+
   BlockData block_data;
 
   pipeline = GST_BIN (gst_pipeline_new ("pipeline"));
@@ -484,10 +508,15 @@ GST_END_TEST;
 GST_START_TEST (test_ghost_pads_probes)
 {
   GstBin *pipeline;
+
   GstBin *srcbin;
+
   GstElement *src;
+
   GstPad *srcpad;
+
   GstPad *srcghost;
+
   BlockData block_data;
 
   pipeline = GST_BIN (gst_pipeline_new ("pipeline"));
@@ -525,7 +554,9 @@ GST_END_TEST;
 GST_START_TEST (test_ghost_pads_new_from_template)
 {
   GstPad *sinkpad, *ghostpad;
+
   GstPadTemplate *padtempl, *ghosttempl;
+
   GstCaps *padcaps, *ghostcaps, *newcaps;
 
   padcaps = gst_caps_from_string ("some/caps");
@@ -534,7 +565,7 @@ GST_START_TEST (test_ghost_pads_new_from_template)
   fail_unless (ghostcaps != NULL);
 
   padtempl = gst_pad_template_new ("padtempl", GST_PAD_SINK,
-      GST_PAD_ALWAYS, padcaps);
+      GST_PAD_ALWAYS, gst_caps_copy (padcaps));
   fail_unless (padtempl != NULL);
   ghosttempl = gst_pad_template_new ("ghosttempl", GST_PAD_SINK,
       GST_PAD_ALWAYS, ghostcaps);
@@ -554,6 +585,12 @@ GST_START_TEST (test_ghost_pads_new_from_template)
   fail_unless (gst_caps_is_equal (newcaps, padcaps));
   gst_caps_unref (newcaps);
   gst_caps_unref (padcaps);
+
+  gst_object_unref (sinkpad);
+  gst_object_unref (ghostpad);
+
+  gst_object_unref (padtempl);
+  gst_object_unref (ghosttempl);
 }
 
 GST_END_TEST;
@@ -561,7 +598,9 @@ GST_END_TEST;
 GST_START_TEST (test_ghost_pads_new_no_target_from_template)
 {
   GstPad *sinkpad, *ghostpad;
+
   GstPadTemplate *padtempl, *ghosttempl;
+
   GstCaps *padcaps, *ghostcaps, *newcaps;
 
   padcaps = gst_caps_from_string ("some/caps");
@@ -570,10 +609,10 @@ GST_START_TEST (test_ghost_pads_new_no_target_from_template)
   fail_unless (ghostcaps != NULL);
 
   padtempl = gst_pad_template_new ("padtempl", GST_PAD_SINK,
-      GST_PAD_ALWAYS, padcaps);
+      GST_PAD_ALWAYS, gst_caps_copy (padcaps));
   fail_unless (padtempl != NULL);
   ghosttempl = gst_pad_template_new ("ghosttempl", GST_PAD_SINK,
-      GST_PAD_ALWAYS, ghostcaps);
+      GST_PAD_ALWAYS, gst_caps_copy (ghostcaps));
 
   sinkpad = gst_pad_new_from_template (padtempl, "sinkpad");
   fail_unless (sinkpad != NULL);
@@ -598,6 +637,14 @@ GST_START_TEST (test_ghost_pads_new_no_target_from_template)
   fail_unless (gst_caps_is_equal (newcaps, padcaps));
   gst_caps_unref (newcaps);
 
+  gst_object_unref (sinkpad);
+  gst_object_unref (ghostpad);
+
+  gst_object_unref (padtempl);
+  gst_object_unref (ghosttempl);
+
+  gst_caps_unref (padcaps);
+  gst_caps_unref (ghostcaps);
 }
 
 GST_END_TEST;
@@ -606,6 +653,7 @@ static Suite *
 gst_ghost_pad_suite (void)
 {
   Suite *s = suite_create ("GstGhostPad");
+
   TCase *tc_chain = tcase_create ("ghost pad tests");
 
   suite_add_tcase (s, tc_chain);
