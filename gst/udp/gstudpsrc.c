@@ -194,11 +194,17 @@ enum
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
 static GstCaps *gst_udpsrc_getcaps (GstBaseSrc * src);
+
 static GstFlowReturn gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf);
+
 static gboolean gst_udpsrc_start (GstBaseSrc * bsrc);
+
 static gboolean gst_udpsrc_stop (GstBaseSrc * bsrc);
+
 static gboolean gst_udpsrc_unlock (GstBaseSrc * bsrc);
+
 static gboolean gst_udpsrc_unlock_stop (GstBaseSrc * bsrc);
+
 static void gst_udpsrc_finalize (GObject * object);
 
 static void gst_udpsrc_set_property (GObject * object, guint prop_id,
@@ -238,7 +244,9 @@ static void
 gst_udpsrc_class_init (GstUDPSrcClass * klass)
 {
   GObjectClass *gobject_class;
+
   GstBaseSrcClass *gstbasesrc_class;
+
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -362,10 +370,15 @@ static GstFlowReturn
 gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstUDPSrc *udpsrc;
+
   GstNetBuffer *outbuf;
+
   struct sockaddr_storage tmpaddr;
+
   socklen_t len;
+
   guint8 *pktdata;
+
   gint pktsize;
 
 #ifdef G_OS_UNIX
@@ -374,7 +387,9 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   gulong readsize;
 #endif
   GstClockTime timeout;
+
   gint ret;
+
   gboolean try_again;
 
   udpsrc = GST_UDPSRC_CAST (psrc);
@@ -565,7 +580,9 @@ static gboolean
 gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri)
 {
   gchar *protocol;
+
   gchar *location;
+
   gchar *colptr;
 
   protocol = gst_uri_get_protocol (uri);
@@ -631,7 +648,9 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_CAPS:
     {
       const GstCaps *new_caps_val = gst_value_get_caps (value);
+
       GstCaps *new_caps;
+
       GstCaps *old_caps;
 
       if (new_caps_val == NULL) {
@@ -719,11 +738,17 @@ static gboolean
 gst_udpsrc_start (GstBaseSrc * bsrc)
 {
   guint bc_val;
+
   gint reuse;
+
   int port;
+
   GstUDPSrc *src;
+
   gint ret;
+
   int rcvsize;
+
   guint len;
 
   src = GST_UDPSRC (bsrc);
@@ -752,6 +777,11 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     if ((ret = bind (src->sock.fd, (struct sockaddr *) &src->myaddr,
                 sizeof (src->myaddr))) < 0)
       goto bind_error;
+
+    len = sizeof (src->myaddr);
+    if ((ret = getsockname (src->sock.fd, (struct sockaddr *) &src->myaddr,
+                &len)) < 0)
+      goto getsockname_error;
   } else {
     GST_DEBUG_OBJECT (src, "using provided socket %d", src->sockfd);
     /* we use the configured socket, try to get some info about it */
@@ -935,6 +965,7 @@ gst_udpsrc_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
+
 static gchar **
 gst_udpsrc_uri_get_protocols (void)
 {
@@ -955,6 +986,7 @@ static gboolean
 gst_udpsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   gboolean ret;
+
   GstUDPSrc *src = GST_UDPSRC (handler);
 
   ret = gst_udpsrc_set_uri (src, uri);

@@ -1,5 +1,13 @@
 2008-06-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_start):
+	Call getsockname() after the call to bind() to get updated values
+	for the port, etc. This fixes the usage of udpsrc on anonymous
+	binding and it's usage by rtspsrc. Fixes bugs #539372, #539548.
+	Thanks to Aurelien Grimaud for pointing out the obvious fix.
+
+2008-06-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* tests/check/pipelines/wavpack.c: (bus_handler):
 	Remove workaround for a bug in identity that is fixed in 0.10.20.
 
