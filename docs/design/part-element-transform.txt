@@ -397,3 +397,80 @@ Negotiation
     <----------------------------------|                      |
                   |                    |                      |
 
+ In order to perform passthrough buffer-alloc or pad-alloc, we need to be able
+ to get the size of the output buffer after the transform.
+ 
+ For passthrough buffer-alloc, this is trivial: the input size equals the output
+ size.
+
+ For the copy transform or the in-place transform we need additional function to
+ retrieve the size. There are two functions:
+
+  - transform_size()
+    
+    Given a caps and a size on one pad, and a caps on the other pad, calculate
+    the size of the other buffer. This function is able to perform all size
+    transforms and is the prefered method of transforming a size.
+
+  - get_unit_size()
+
+    When the input size and output size are always a multiple of eachother
+    (audio conversion, ..) we can define a more simple get_unit_size() function.
+    The transform will use this function to get the same amount of units in the
+    source and destination buffers.
+
+ For performance reasons, the mapping between caps and size is kept in a cache.
+
+
+Issues
+------
+
+ passthrough and in-place transforms (with writable buffers) never need to
+ perform a pad-alloc on the srcpad. This means that if upstream negotiation
+ happens, the transform element will never know about it.
+
+ The transform element will keep therefore track of the allocation pattern of
+ the peer elements. We can see the following cases:
+
+  - upstream peer calls buffer-alloc on the sinkpad of the transform. In some
+    cases (see above) this call gets proxied or not.
+
+  - upstream peer does never call buffer-alloc.
+
+ We will keeps state about this allocation pattern and perform the following in
+ each case respectively:
+
+  - Upstream calls buffer-alloc: In passthrough and (some) in-place we proxy
+    this call onto the downstream element. If the caps are changed, we mark
+    a flag that we will require a new pad-alloc for the output of the next
+    output buffer.
+
+  - upstream peer does not call buffer-alloc: We always perform a pad-alloc
+    when processing buffers. We can further optimize by only looking at the
+    returned caps instead of doing a full, needless buffer copy.
+
+
+Use cases
+---------
+
+ videotestsrc ! ximagesink
+  
+   - resizing happens because videotestsrc performs pad-alloc.
+
+ videotestsrc peer-alloc=0 ! ximagesink
+
+   - resizing cannot happen because videotestsrc never performs pad-alloc.
+
+ videotestsrc ! videoscale ! ximagesink
+  
+   - videoscale is initially configured in passthrough mode, pad-alloc from
+     videotestsrc is proxied through videoscale.
+   - pad-alloc will renegotiate a new size in videotestsrc.
+
+ videotestsrc peer-alloc=0 ! videoscale ! ximagesink
+  
+   - videoscale is initially configured in passthrough mode.
+   - videoscale performs pad-alloc because no buffer-alloc is called on the
+     sinkpad
+   - resizing the videosink makes videoscale perform the scaling.
+   

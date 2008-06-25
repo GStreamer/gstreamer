@@ -1,3 +1,27 @@
+2008-06-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-block.txt:
+	Fix typo.
+
+	* docs/design/part-element-transform.txt:
+	Add notes about why transform needs to know input/output sizes.
+	Add some issues that need to be solved.
+	Add some more use cases.
+
+	* tests/check/libs/test_transform.c: (gst_test_trans_base_init),
+	(gst_test_trans_class_init), (result_sink_chain),
+	(result_buffer_alloc), (gst_test_trans_new), (gst_test_trans_free),
+	(gst_test_trans_push), (gst_test_trans_pop):
+	* tests/check/libs/transform1.c: (buffer_alloc_pt1),
+	(set_caps_pt1), (GST_START_TEST), (set_caps_pt2), (transform_ip_1),
+	(set_caps_1), (set_caps_ct1), (transform_ct1),
+	(transform_caps_ct1), (transform_size_ct1), (buffer_alloc_ct1),
+	(gst_basetransform_suite):
+	Add suport for different pad templates and buffer-alloc.
+	Add more checks for caps and buffer-alloc.
+	Add checks for proxy buffer alloc.
+	Add unit test for copy transform.
+
 2008-06-24  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Luc Pionchon  <luc.pionchon@nokia.com>

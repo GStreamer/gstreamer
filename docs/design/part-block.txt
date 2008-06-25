@@ -125,7 +125,7 @@ Use cases:
  pipeline. 
 
   1) block element1 src pad. This can be done async.
-  2) wait for block to happen. at this point nothing flowing between
+  2) wait for block to happen. at that point nothing is flowing between
      element1 and element2 and nothing will flow until unblocked.
   3) unlink element1 and element2
   4) optional step: make sure data is flushed out of element2:
