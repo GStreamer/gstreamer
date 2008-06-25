@@ -1,3 +1,8 @@
+2008-06-25  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h:
+	Remove unneeded macros that break build on macosx.
+
 2008-06-24  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac:

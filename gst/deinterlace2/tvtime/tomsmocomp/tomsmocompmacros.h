@@ -1,7 +1,5 @@
-#include <malloc.h>
 #include <string.h>
 #include <math.h>
-#include <malloc.h>
 
 #define USE_FOR_DSCALER
 
