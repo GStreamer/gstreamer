@@ -2,6 +2,27 @@
 
 	patch by: Luc Pionchon  <luc.pionchon@nokia.com>
 
+	* docs/manual/manual.xml:
+	- Reorganised the previous "introduction" bundle into Foreword,
+	Introduction, and About GStreamer. The two first are <preface>
+	docbook elements. The later is the first part of the book.
+	- added intro-gstreamer.xml (content partially from
+	intro-preface.xml)
+	- moved appendix-win32.xml into appendix-integration.xml
+
+	* docs/manual/intro-preface.xml: gstreamer section moved...
+	* docs/manual/intro-gstreamer.xml: ...here. new file.
+
+	* docs/manual/appendix-win32.xml: removed file. Content moved...
+	* docs/manual/appendix-integration.xml: ...here.
+	
+	* docs/manual/highlevel-components.xml: section about GstEditor moved...
+	* docs/manual/appendix-checklist.xml: ...here.
+
+2008-06-25  Stefan Kost  <ensonic@users.sf.net>
+
+	patch by: Luc Pionchon  <luc.pionchon@nokia.com>
+
 	* docs/manual/basics-helloworld.xml:
 	* docs/manual/hello-world.fig:
 	  - Explicitely include glib.h.

@@ -186,5 +186,14 @@
         for more information.
       </para>
     </sect2>
+
+    <sect2 id="section-applications-gst-editor">
+      <title>GstEditor</title>
+      <para> 
+        GstEditor is a set of widgets to display a graphical representation of a 
+        pipeline.
+      </para> 
+    </sect2>
+
   </sect1>
 </chapter>

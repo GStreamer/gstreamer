@@ -22,6 +22,8 @@
 
 <!-- Part 1: Overview -->
 <!ENTITY INTRO                SYSTEM "intro-preface.xml">
+
+<!ENTITY GSTREAMER            SYSTEM "intro-gstreamer.xml">
 <!ENTITY MOTIVATION           SYSTEM "intro-motivation.xml">
 <!ENTITY CONCEPTS             SYSTEM "intro-basics.xml">
 
@@ -53,7 +55,6 @@
 <!ENTITY PORTING              SYSTEM "appendix-porting.xml">
 <!ENTITY INTEGRATION          SYSTEM "appendix-integration.xml">
 <!ENTITY LICENSING            SYSTEM "appendix-licensing.xml">
-<!ENTITY WIN32                SYSTEM "appendix-win32.xml">
 <!ENTITY QUOTES               SYSTEM "appendix-quotes.xml">
 
 <!ENTITY GStreamer    "<application>GStreamer</application>">
@@ -63,11 +64,9 @@
 <book id="index">
   &TITLEPAGE;
   
-<!-- ############# Introduction & Overview - part ############### -->
+<!-- ############# Introduction ############### -->
 
-  <part id="part-introduction">
-    <title>Introduction</title>
-    <partintro>
+<preface><title>Foreword</title>
       <para><!-- synchronize with PWG -->
         &GStreamer; is an extremely powerful and versatile framework for
         creating streaming media applications. Many of the virtues of the
@@ -85,9 +84,27 @@
         more advanced topics related to media playback, but also at
         other forms of media processing (capture, editing, etc.).
       </para>
+</preface>
+
+
+<preface><title>Introduction</title>
+
+  &INTRO;
+
+</preface>
+
+<!-- ############# Overview - part ############### -->
+
+  <part id="part-introduction">
+    <title>About GStreamer</title>
+    <partintro>
+      <para>
+    This part gives you an overview of the technologies described in
+    this book.
+      </para>
     </partintro>
 
-    &INTRO;
+    &GSTREAMER;
     &MOTIVATION;
     &CONCEPTS;
 
@@ -242,7 +259,6 @@
     &PORTING;
     &INTEGRATION;
     &LICENSING;
-    &WIN32;
     &QUOTES;
 
   </part>

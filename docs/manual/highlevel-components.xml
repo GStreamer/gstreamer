@@ -367,12 +367,4 @@ main (gint   argc,
     </para>
   </sect1>
 
-  <sect1 id="section-components-gst-editor">
-    <title>GstEditor</title>
-    <para> 
-      GstEditor is a set of widgets to display a graphical representation of a 
-      pipeline.
-    </para> 
-  </sect1>
-
 </chapter>
