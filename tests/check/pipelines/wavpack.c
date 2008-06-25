@@ -32,6 +32,7 @@ bus_handler (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_WARNING:
     case GST_MESSAGE_ERROR:{
       GError *gerror;
+
       gchar *debug;
 
       gst_message_parse_error (message, &gerror, &debug);
@@ -45,17 +46,8 @@ bus_handler (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_ELEMENT:
     {
       const GstStructure *s = gst_message_get_structure (message);
+
       const gchar *name = gst_structure_get_name (s);
-
-      /* FIXME: identity bug http://bugzilla.gnome.org/show_bug.cgi?id=526042 */
-      if (strcmp (name, "imperfect-timestamp") == 0
-          || strcmp (name, "imperfect-offset") == 0) {
-        const GValue *cur_offset = gst_structure_get_value (s, "cur-offset");
-
-        fail_unless (G_VALUE_HOLDS_UINT64 (cur_offset));
-        if (g_value_get_uint64 (cur_offset) == 0)
-          break;
-      }
 
       fail_unless (strcmp (name, "imperfect-timestamp") != 0);
       fail_unless (strcmp (name, "imperfect-offset") != 0);
@@ -98,11 +90,13 @@ fakesink_handoff (GstElement * object, GstBuffer * buffer, GstPad * pad,
 GST_START_TEST (test_encode_decode)
 {
   GstElement *pipeline;
+
   GstElement *audiotestsrc, *identity1, *wavpackenc, *identity2, *wavpackdec,
       *identity3, *fakesink;
   GstAdapter *srcadapter, *sinkadapter;
 
   GstBus *bus;
+
   GMainLoop *loop;
 
   GstBuffer *in, *out;
@@ -198,6 +192,7 @@ Suite *
 wavpack_suite (void)
 {
   Suite *s = suite_create ("Wavpack");
+
   TCase *tc_chain = tcase_create ("linear");
 
   /* time out after 60s, not the default 3 */
@@ -215,6 +210,7 @@ main (int argc, char **argv)
   int nf;
 
   Suite *s = wavpack_suite ();
+
   SRunner *sr = srunner_create (s);
 
   gst_check_init (&argc, &argv);

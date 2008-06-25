@@ -1,5 +1,10 @@
 2008-06-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* tests/check/pipelines/wavpack.c: (bus_handler):
+	Remove workaround for a bug in identity that is fixed in 0.10.20.
+
+2008-06-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Jason Donenfeld <BugZilla at zx2c4 dot com>
 
 	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_got_headers_cb):
