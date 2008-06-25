@@ -69,6 +69,7 @@ static GstCaps *(*klass_transform_caps) (GstBaseTransform * trans,
 static gboolean (*klass_transform_size) (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, guint size, GstCaps * othercaps,
     guint * othersize) = NULL;
+static gboolean klass_passthrough_on_same_caps = FALSE;
 
 static GstStaticPadTemplate *sink_template = &gst_test_trans_sink_template;
 static GstStaticPadTemplate *src_template = &gst_test_trans_src_template;
@@ -98,6 +99,7 @@ gst_test_trans_class_init (GstTestTransClass * klass)
   gobject_class = (GObjectClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
 
+  trans_class->passthrough_on_same_caps = klass_passthrough_on_same_caps;
   trans_class->transform_ip = klass_transform_ip;
   trans_class->transform = klass_transform;
   trans_class->transform_caps = klass_transform_caps;
