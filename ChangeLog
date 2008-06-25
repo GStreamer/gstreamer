@@ -1,3 +1,9 @@
+2008-06-25  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gstmultiqueue.h:
+	Fix dead-lock in underrun_cb
+
 2008-06-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/design/part-states.txt:

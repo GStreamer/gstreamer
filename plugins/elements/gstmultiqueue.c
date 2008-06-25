@@ -1272,22 +1272,15 @@ compute_high_id (GstMultiQueue * mq)
 #define IS_FILLED(format, value) ((sq->max_size.format) != 0 && \
      (sq->max_size.format) <= (value))
 
-/*
- * GstSingleQueue functions
- */
 static void
-single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
+single_queue_overrun_cb_unlocked (GstDataQueue * dq, GstSingleQueue * sq)
 {
   GstMultiQueue *mq = sq->mqueue;
   GList *tmp;
   GstDataQueueSize size;
-  gboolean filled = TRUE;
 
   gst_data_queue_get_level (sq->queue, &size);
-
-  GST_LOG_OBJECT (mq, "Single Queue %d is full", sq->id);
-
-  GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+  mq->filled = FALSE;
 
   /* if we have reached max visible we can maybe bump this
    * if another queue is empty, skip this if we can't grow anymore
@@ -1309,13 +1302,30 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
       }
     }
     /* check if the queue is still full */
-    filled = gst_data_queue_is_full (sq->queue);
+    mq->filled = gst_data_queue_is_full (sq->queue);
   }
+}
+
+/*
+ * GstSingleQueue functions
+ */
+static void
+single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
+{
+  GstMultiQueue *mq = sq->mqueue;
+
+  GST_LOG_OBJECT (mq, "Single Queue %d is full", sq->id);
+
+  GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+
+  single_queue_overrun_cb_unlocked (dq, sq);
+
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
-  if (filled) {
+  if (mq->filled) {
     GST_DEBUG_OBJECT (mq, "A queue is filled, signalling overrun");
     g_signal_emit (G_OBJECT (mq), gst_multi_queue_signals[SIGNAL_OVERRUN], 0);
+    mq->filled = FALSE;
   }
 }
 
@@ -1338,9 +1348,8 @@ single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
 
     /* prevent data starvation */
     if (gst_data_queue_is_full (ssq->queue)) {
-      single_queue_overrun_cb (dq, ssq);
-      all_empty = FALSE;
-      break;
+      single_queue_overrun_cb_unlocked (dq, ssq);
+      goto check_filled;
     }
 
     if (!gst_data_queue_is_empty (ssq->queue)) {
@@ -1353,6 +1362,14 @@ single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
   if (all_empty) {
     GST_DEBUG_OBJECT (mq, "All queues are empty, signalling it");
     g_signal_emit (G_OBJECT (mq), gst_multi_queue_signals[SIGNAL_UNDERRUN], 0);
+  }
+  return;
+
+check_filled:
+  if (mq->filled) {
+    GST_DEBUG_OBJECT (mq, "A queue is filled, signalling overrun");
+    g_signal_emit (G_OBJECT (mq), gst_multi_queue_signals[SIGNAL_OVERRUN], 0);
+    mq->filled = FALSE;
   }
 }
 
