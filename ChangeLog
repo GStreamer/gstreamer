@@ -1,3 +1,10 @@
+2008-06-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/examples/seek/Makefile.am:
+	* tests/examples/seek/seek.c:
+	  Remove libgstvideo usage. Use gtk_get_option_group instead of
+	  gtk_init().
+
 2008-06-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/Makefile.am:

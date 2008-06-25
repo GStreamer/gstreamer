@@ -29,7 +29,6 @@
 #include <X11/Xlib.h>
 #include <gdk/gdkx.h>
 #include <gst/interfaces/xoverlay.h>
-#include <gst/video/gstvideosink.h>
 
 GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define GST_CAT_DEFAULT (seek_debug)
@@ -2253,6 +2252,7 @@ main (int argc, char **argv)
   ctx = g_option_context_new ("- test seeking in gsteamer");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
+  g_option_context_add_group (ctx, gtk_get_option_group (TRUE));
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_print ("Error initializing: %s\n", err->message);
@@ -2260,8 +2260,6 @@ main (int argc, char **argv)
   }
 
   GST_DEBUG_CATEGORY_INIT (seek_debug, "seek", 0, "seek example");
-
-  gtk_init (&argc, &argv);
 
   if (argc != 3) {
     print_usage (argc, argv);
