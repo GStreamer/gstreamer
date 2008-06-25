@@ -32,9 +32,10 @@ the following state changes are possible:
    - The element must check if the resources it needs are available.
      Device sinks and -sources typically try to probe the device to constain
      their caps.
+   - The element opens the device, this is needed if the previous step requires
+     the device to be opened.
 
  READY -> PAUSED
-   - The element opens the device and prepares itself for PLAYING.
    - the element pads are activated in order to receive data in PAUSED.
      Streaming threads are started.
    - some elements might need to return ASYNC and complete the state change
@@ -76,12 +77,13 @@ the following state changes are possible:
  PAUSED -> READY
    - sinks unblock any waits in the preroll.
    - elements unblock any waits on devices
-   - elements close devices
    - chain or get_range functions return WRONG_STATE.
    - the element pads are deactivated so that streaming becomes impossible and
      all streaming threads are stopped. 
+   - the sink forgets all negotiated formats
  
  READY -> NULL
+   - elements close devices
    - element removes any dynamically created pads
 
 

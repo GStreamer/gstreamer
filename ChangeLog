@@ -1,3 +1,8 @@
+2008-06-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-states.txt:
+	Fix device open/close docs.
+
 2008-06-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* ChangeLog:
