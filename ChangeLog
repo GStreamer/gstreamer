@@ -1,5 +1,10 @@
 2008-06-25  Stefan Kost  <ensonic@users.sf.net>
 
+	* ChangeLog:
+	  Mention bugnumber for last commit.
+
+2008-06-25  Stefan Kost  <ensonic@users.sf.net>
+
 	patch by: Luc Pionchon  <luc.pionchon@nokia.com>
 
 	* docs/manual/manual.xml:
@@ -18,6 +23,8 @@
 	
 	* docs/manual/highlevel-components.xml: section about GstEditor moved...
 	* docs/manual/appendix-checklist.xml: ...here.
+	
+	Fixes: 538764
 
 2008-06-25  Stefan Kost  <ensonic@users.sf.net>
 
