@@ -135,6 +135,7 @@ static void gst_soup_http_src_uri_handler_init (gpointer g_iface,
 static void gst_soup_http_src_init (GstSoupHTTPSrc * src,
     GstSoupHTTPSrcClass * g_class);
 static void gst_soup_http_src_dispose (GObject * gobject);
+
 static void gst_soup_http_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_soup_http_src_get_property (GObject * object, guint prop_id,
@@ -143,12 +144,17 @@ static void gst_soup_http_src_get_property (GObject * object, guint prop_id,
 static GstFlowReturn gst_soup_http_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
 static gboolean gst_soup_http_src_start (GstBaseSrc * bsrc);
+
 static gboolean gst_soup_http_src_stop (GstBaseSrc * bsrc);
+
 static gboolean gst_soup_http_src_get_size (GstBaseSrc * bsrc, guint64 * size);
+
 static gboolean gst_soup_http_src_is_seekable (GstBaseSrc * bsrc);
+
 static gboolean gst_soup_http_src_do_seek (GstBaseSrc * bsrc,
     GstSegment * segment);
 static gboolean gst_soup_http_src_unlock (GstBaseSrc * bsrc);
+
 static gboolean gst_soup_http_src_unlock_stop (GstBaseSrc * bsrc);
 
 static gboolean gst_soup_http_src_set_location (GstSoupHTTPSrc * src,
@@ -159,16 +165,23 @@ static gboolean gst_soup_http_src_set_proxy (GstSoupHTTPSrc * src,
 static char *gst_soup_http_src_unicodify (const char *str);
 
 static gboolean gst_soup_http_src_build_message (GstSoupHTTPSrc * src);
+
 static void gst_soup_http_src_cancel_message (GstSoupHTTPSrc * src);
+
 static void gst_soup_http_src_queue_message (GstSoupHTTPSrc * src);
+
 static gboolean gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src,
     guint64 offset);
 static void gst_soup_http_src_session_unpause_message (GstSoupHTTPSrc * src);
+
 static void gst_soup_http_src_session_pause_message (GstSoupHTTPSrc * src);
+
 static void gst_soup_http_src_session_close (GstSoupHTTPSrc * src);
+
 static void gst_soup_http_src_parse_status (SoupMessage * msg,
     GstSoupHTTPSrc * src);
 static void gst_soup_http_src_chunk_free (gpointer gstbuf);
+
 static SoupBuffer *gst_soup_http_src_chunk_allocator (SoupMessage * msg,
     gsize max_len, gpointer user_data);
 static void gst_soup_http_src_got_chunk_cb (SoupMessage * msg,
@@ -216,7 +229,9 @@ static void
 gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
 {
   GObjectClass *gobject_class;
+
   GstBaseSrcClass *gstbasesrc_class;
+
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -498,6 +513,7 @@ static gboolean
 gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src, guint64 offset)
 {
   gchar buf[64];
+
   gint rc;
 
   soup_message_headers_remove (src->msg->request_headers, "Range");
@@ -538,8 +554,11 @@ static void
 gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 {
   const char *value;
+
   GstTagList *tag_list;
+
   GstBaseSrc *basesrc;
+
   guint64 newsize;
 
   GST_DEBUG_OBJECT (src, "got headers");
@@ -549,6 +568,9 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
         soup_message_headers_get (msg->response_headers, "Location"));
     return;
   }
+
+  if (msg->status_code == SOUP_STATUS_UNAUTHORIZED)
+    return;
 
   src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING;
 
@@ -723,10 +745,15 @@ gst_soup_http_src_chunk_allocator (SoupMessage * msg, gsize max_len,
     gpointer user_data)
 {
   GstSoupHTTPSrc *src = (GstSoupHTTPSrc *) user_data;
+
   GstBaseSrc *basesrc = GST_BASE_SRC_CAST (src);
+
   GstBuffer *gstbuf;
+
   SoupBuffer *soupbuf;
+
   gsize length;
+
   GstFlowReturn rc;
 
   if (max_len)
@@ -760,6 +787,7 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
     GstSoupHTTPSrc * src)
 {
   GstBaseSrc *basesrc;
+
   guint64 new_position;
 
   if (G_UNLIKELY (msg != src->msg)) {
@@ -782,8 +810,9 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
   GST_BUFFER_OFFSET (*src->outbuf) = basesrc->segment.last_stop;
 
   gst_buffer_set_caps (*src->outbuf,
-      (src->icy_caps) ? src->
-      icy_caps : GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)));
+      (src->
+          icy_caps) ? src->icy_caps :
+      GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)));
 
   new_position = src->read_position + chunk->length;
   if (G_LIKELY (src->request_position == src->read_position))
