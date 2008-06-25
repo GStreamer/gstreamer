@@ -32,6 +32,9 @@ not trivial.
 Before anything is done, the build-system copies all xml files into the build
 subdir and this breaks including shared docs via entities.
 
+The examples should be updated in the xml. We run a perlscript in
+tests/examples/manual that extracts them.
+
 Wtay's original comments :
 --------------------------
 

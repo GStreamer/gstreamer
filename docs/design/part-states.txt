@@ -76,6 +76,7 @@ the following state changes are possible:
  PAUSED -> READY
    - sinks unblock any waits in the preroll.
    - elements unblock any waits on devices
+   - elements close devices
    - chain or get_range functions return WRONG_STATE.
    - the element pads are deactivated so that streaming becomes impossible and
      all streaming threads are stopped. 

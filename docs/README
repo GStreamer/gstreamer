@@ -307,6 +307,12 @@ in the various plugin packages.
   - you need to commit resulting files to CVS:
     - changes to *.signals and *.args
     - new files for your plugin created in inspect/
+  - if you get thsi warning:
+    " Documentation in template xxx for ./tmpl/element-yyy:Short_Description
+      being overridden by inline comments"
+    per-default the description from the GST_ELEMENT_DETAILS is put to the
+    Short_Description. This warning mean you have a different one in the section
+    docs as "@short_description:".
 
 - the plugin-doc-list on the gstreamer homepage is updated along with other
   web site updates.

@@ -90,7 +90,7 @@ $(BUILDDIR)/$(MAIN): $(XML) $(CSS) $(EXTRA_SRC)
 # we should switch to xsltproc
 # docbook2html aka jade can't add the encoding easily to the html meta
 # jw -f docbook -b html -d pwg.dsl -o ../html -V '%use-id-as-filename%' $(MAIN)
-# this is a startng point
+# this is a starting point
 # xsltproc --nonet /usr/share/xml/docbook/stylesheet/nwalsh/html/docbook.xsl pwg.xml
 # 
 html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)

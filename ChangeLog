@@ -1,3 +1,18 @@
+2008-06-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/README:
+	  Document that for plgin-docs we extraxt he short-desc from the element
+	  details.
+
+	* docs/design/part-states.txt:
+	  Tell that devices should be closed in PAUSED -> READY.
+
+	* docs/manual/README:
+	  Document how tests in the manual are handled.
+
+	* docs/manuals.mak:
+	  Typo in comment.
+
 2008-06-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstbin.c: (bin_query_latency_fold):
@@ -249,6 +264,7 @@
 	When a buffer is writable, its metadata is also writable so we don't
 	need to subbuffer (which then makes the buffer not-writable anymore).
 
+>>>>>>> 1.3935
 === release 0.10.20 ===
 
 2008-06-18  Jan Schmidt <jan.schmidt@sun.com>
