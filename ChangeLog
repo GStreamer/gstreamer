@@ -1,5 +1,21 @@
 2008-06-25  Stefan Kost  <ensonic@users.sf.net>
 
+	patch by: Luc Pionchon  <luc.pionchon@nokia.com>
+
+	* docs/manual/basics-helloworld.xml:
+	* docs/manual/hello-world.fig:
+	  - Explicitely include glib.h.
+	  - Do not use global variables.
+	  - Use g_printerr() instead of g_print().
+	  - Minor formating/renaming to increase readibility.
+	  - Renamed new_pad() to on_pad_added()
+	  - Improved explenatory comments.
+	  - renamed ogg parser to ogg demuxer
+	  - Use "autoaudiosink" instead of "alsasink".
+	  Fixes: #538619
+
+2008-06-25  Stefan Kost  <ensonic@users.sf.net>
+
 	* ChangeLog:
 	  Remove cvs conflict marker.
 
