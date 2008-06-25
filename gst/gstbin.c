@@ -3029,14 +3029,16 @@ bin_query_latency_fold (GstElement * item, GValue * ret, QueryFold * fold)
 
     /* for the combined latency we collect the MAX of all min latencies and
      * the MIN of all max latencies */
-    if (min > fold->min)
-      fold->min = min;
-    if (fold->max == -1)
-      fold->max = max;
-    else if (max < fold->max)
-      fold->max = max;
-    if (fold->live == FALSE)
-      fold->live = live;
+    if (live) {
+      if (min > fold->min)
+        fold->min = min;
+      if (fold->max == -1)
+        fold->max = max;
+      else if (max < fold->max)
+        fold->max = max;
+      if (fold->live == FALSE)
+        fold->live = live;
+    }
   } else {
     g_value_set_boolean (ret, FALSE);
     GST_DEBUG_OBJECT (item, "failed query");

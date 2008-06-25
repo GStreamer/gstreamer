@@ -1,5 +1,11 @@
 2008-06-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstbin.c: (bin_query_latency_fold):
+	Only care about latency min and max when the sink is actually a live
+	sink.
+
+2008-06-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/design/part-block.txt:
 	Fix typo.
 
