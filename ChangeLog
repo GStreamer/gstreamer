@@ -1,3 +1,11 @@
+2008-06-26  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* gst/y4m/gsty4mencode.c:
+	Add documentation for YUV4MPEG2 encoder element.
+
 2008-06-25  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h:

@@ -55,6 +55,7 @@
     <xi:include href="xml/element-videomark.xml" />
     <xi:include href="xml/element-videoparse.xml" />
     <xi:include href="xml/element-wildmidi.xml" />
+    <xi:include href="xml/element-y4menc.xml" />
   </chapter>
 
   <chapter>
