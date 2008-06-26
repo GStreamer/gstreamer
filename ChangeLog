@@ -1,3 +1,10 @@
+2008-06-26  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gstmultiqueue.h:
+	revert extra-size-buffers stuff, caused some race conditions
+	and extra-size-buffers is not used anymore. Docs needs some updates
+
 2008-06-26  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* win32/common/config.h:
