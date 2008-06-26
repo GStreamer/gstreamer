@@ -147,6 +147,8 @@ GType gst_rank_get_type (void);
 /* enumerations from "gstquery.h" */
 GType gst_query_type_get_type (void);
 #define GST_TYPE_QUERY_TYPE (gst_query_type_get_type())
+GType gst_buffering_mode_get_type (void);
+#define GST_TYPE_BUFFERING_MODE (gst_buffering_mode_get_type())
 
 /* enumerations from "gsttaglist.h" */
 GType gst_tag_merge_mode_get_type (void);
@@ -173,6 +175,8 @@ GType gst_uri_type_get_type (void);
 /* enumerations from "gstparse.h" */
 GType gst_parse_error_get_type (void);
 #define GST_TYPE_PARSE_ERROR (gst_parse_error_get_type())
+GType gst_parse_flags_get_type (void);
+#define GST_TYPE_PARSE_FLAGS (gst_parse_flags_get_type())
 G_END_DECLS
 
 #endif /* __GST_ENUM_TYPES_H__ */

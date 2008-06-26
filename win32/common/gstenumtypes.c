@@ -504,6 +504,9 @@ register_gst_stream_error (GType * id)
     {C_ENUM (GST_STREAM_ERROR_DEMUX), "GST_STREAM_ERROR_DEMUX", "demux"},
     {C_ENUM (GST_STREAM_ERROR_MUX), "GST_STREAM_ERROR_MUX", "mux"},
     {C_ENUM (GST_STREAM_ERROR_FORMAT), "GST_STREAM_ERROR_FORMAT", "format"},
+    {C_ENUM (GST_STREAM_ERROR_DECRYPT), "GST_STREAM_ERROR_DECRYPT", "decrypt"},
+    {C_ENUM (GST_STREAM_ERROR_DECRYPT_NOKEY), "GST_STREAM_ERROR_DECRYPT_NOKEY",
+        "decrypt-nokey"},
     {C_ENUM (GST_STREAM_ERROR_NUM_ERRORS), "GST_STREAM_ERROR_NUM_ERRORS",
         "num-errors"},
     {0, NULL, NULL}
@@ -1248,6 +1251,7 @@ register_gst_query_type (GType * id)
     {C_ENUM (GST_QUERY_SEGMENT), "GST_QUERY_SEGMENT", "segment"},
     {C_ENUM (GST_QUERY_CONVERT), "GST_QUERY_CONVERT", "convert"},
     {C_ENUM (GST_QUERY_FORMATS), "GST_QUERY_FORMATS", "formats"},
+    {C_ENUM (GST_QUERY_BUFFERING), "GST_QUERY_BUFFERING", "buffering"},
     {0, NULL, NULL}
   };
   *id = g_enum_register_static ("GstQueryType", values);
@@ -1260,6 +1264,28 @@ gst_query_type_get_type (void)
   static GOnce once = G_ONCE_INIT;
 
   g_once (&once, (GThreadFunc) register_gst_query_type, &id);
+  return id;
+}
+static void
+register_gst_buffering_mode (GType * id)
+{
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_BUFFERING_STREAM), "GST_BUFFERING_STREAM", "stream"},
+    {C_ENUM (GST_BUFFERING_DOWNLOAD), "GST_BUFFERING_DOWNLOAD", "download"},
+    {C_ENUM (GST_BUFFERING_TIMESHIFT), "GST_BUFFERING_TIMESHIFT", "timeshift"},
+    {C_ENUM (GST_BUFFERING_LIVE), "GST_BUFFERING_LIVE", "live"},
+    {0, NULL, NULL}
+  };
+  *id = g_enum_register_static ("GstBufferingMode", values);
+}
+
+GType
+gst_buffering_mode_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_gst_buffering_mode, &id);
   return id;
 }
 
@@ -1438,6 +1464,27 @@ gst_parse_error_get_type (void)
   static GOnce once = G_ONCE_INIT;
 
   g_once (&once, (GThreadFunc) register_gst_parse_error, &id);
+  return id;
+}
+static void
+register_gst_parse_flags (GType * id)
+{
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_PARSE_FLAG_NONE), "GST_PARSE_FLAG_NONE", "none"},
+    {C_FLAGS (GST_PARSE_FLAG_FATAL_ERRORS), "GST_PARSE_FLAG_FATAL_ERRORS",
+        "fatal-errors"},
+    {0, NULL, NULL}
+  };
+  *id = g_flags_register_static ("GstParseFlags", values);
+}
+
+GType
+gst_parse_flags_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_gst_parse_flags, &id);
   return id;
 }
 

@@ -57,7 +57,7 @@ G_BEGIN_DECLS
  *
  * The micro version of GStreamer at compile time:
  */
-#define GST_VERSION_MICRO (14)
+#define GST_VERSION_MICRO (20)
 /**
  * GST_VERSION_NANO:
  *
@@ -65,6 +65,23 @@ G_BEGIN_DECLS
  * Actual releases have 0, CVS versions have 1, prerelease versions have 2-...
  */
 #define GST_VERSION_NANO (1)
+
+/**
+ * GST_CHECK_VERSION:
+ * @major: a number indicating the major version
+ * @minor: a number indicating the minor version
+ * @micro: a number indicating the micro version
+ *
+ * Check whether a GStreamer version equal to or greater than
+ * major.minor.micro is present.
+ *
+ * Since: 0.10.18
+ */
+#define	GST_CHECK_VERSION(major,minor,micro)	\
+    (GST_VERSION_MAJOR > (major) || \
+     (GST_VERSION_MAJOR == (major) && GST_VERSION_MINOR > (minor)) || \
+     (GST_VERSION_MAJOR == (major) && GST_VERSION_MINOR == (minor) && \
+      GST_VERSION_MICRO >= (micro)))
 
 G_END_DECLS
 
