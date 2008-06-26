@@ -28,7 +28,7 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include "pygobject.h"
+#include <pygobject.h>
 #include "pygstminiobject.h"
 
 #if (defined HAVE_OLD_PYGTK && (PY_VERSION_HEX < 0x02030000))

@@ -1,5 +1,17 @@
 2008-06-26  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst/common.h:
+	* gst/gstmodule.c:
+	* gst/interfaces.override:
+	* gst/pbutils.override:
+	* gst/pygstiterator.c:
+	* gst/pygstminiobject.c:
+	* gst/pygstminiobject.h:
+	Fix double-import issues on macosx.
+	Fixes #461838
+
+2008-06-26  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/gstmodule.c: (pygstminiobject_from_gvalue):
 	Return None if GstMiniObject GValue doesn't contain anything (NULL).
 	Fixes #540221

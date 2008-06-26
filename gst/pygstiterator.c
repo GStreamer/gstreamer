@@ -19,6 +19,9 @@
  * 
  * Author: Johan Dahlin <johan@gnome.org>
  */
+/* define this for all source files that don't run init_pygobject()
+ * before including pygobject.h */
+#define NO_IMPORT_PYGOBJECT
 
 #include "common.h"
 

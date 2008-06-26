@@ -24,15 +24,15 @@
 #include "config.h"
 #endif
 
-#include "pygstminiobject.h"
-#include "pygstexception.h"
-
-#include <locale.h>
-
 /* include this first, before NO_IMPORT_PYGOBJECT is defined */
 #include <pygobject.h>
 #include <gst/gst.h>
 #include <gst/gstversion.h>
+#include "common.h"
+#include "pygstexception.h"
+
+#include <locale.h>
+
 
 void pygst_register_classes (PyObject *d);
 void pygst_add_constants(PyObject *module, const gchar *strip_prefix);

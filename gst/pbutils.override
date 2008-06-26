@@ -24,6 +24,7 @@ headers
 # include <config.h>
 #endif
 
+#define NO_IMPORT_PYGOBJECT
 #include "common.h"
 
 #include <gst/gst.h>

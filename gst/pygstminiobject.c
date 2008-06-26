@@ -20,6 +20,7 @@
  * USA
  */
 
+#define NO_IMPORT_PYGOBJECT
 #include "pygstminiobject.h"
 #include <gst/gst.h>
 

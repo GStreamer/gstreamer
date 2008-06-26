@@ -45,7 +45,6 @@ pygst_miniobject_init();
 
 #ifndef _INSIDE_PYGSTMINIOBJECT_
 
-struct _PyGObject_Functions *_PyGObject_API;
 
 extern PyTypeObject PyGstMiniObject_Type;
 
