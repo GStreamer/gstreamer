@@ -34,16 +34,8 @@ plugin_init (GstPlugin * plugin)
           gst_dvdemux_get_type ()))
     return FALSE;
 
-  /* libdv does not correctly play back videos on big-endian machines. also it's
-     only optimized properly on x86-32 and x86-64. */
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  rank = GST_RANK_PRIMARY;
-#else
-  rank = GST_RANK_MARGINAL;
-#endif
-
-  if (!gst_element_register (plugin, "dvdec", rank, gst_dvdec_get_type ()))
+  if (!gst_element_register (plugin, "dvdec", GST_RANK_MARGINAL,
+          gst_dvdec_get_type ()))
     return FALSE;
 
   return TRUE;

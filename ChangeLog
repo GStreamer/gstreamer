@@ -1,3 +1,10 @@
+2008-06-26  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/dv/gstdv.c: (plugin_init):
+	Marking rank of dvdec as GST_RANK_MARGINAL since it's the slowest
+	DV decoder available.
+	Fixes #532393
+
 2008-06-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_start):
