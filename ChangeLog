@@ -1,3 +1,13 @@
+2008-06-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/check/libs/transform1.c: (buffer_alloc_pt1),
+	(set_caps_pt1), (GST_START_TEST), (set_caps_pt2), (transform_ip_1),
+	(set_caps_1), (set_caps_ct1), (transform_ct1),
+	(transform_caps_ct1), (transform_size_ct1), (buffer_alloc_ct1),
+	(set_caps_ct2), (transform_ct2), (transform_caps_ct2),
+	(transform_size_ct2), (buffer_alloc_ct2):
+	Add some more tests with switching caps in buffer_alloc.
+
 2008-06-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/check/libs/test_transform.c: (gst_test_trans_base_init),
