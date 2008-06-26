@@ -63,8 +63,10 @@ pygstminiobject_from_gvalue(const GValue *value)
 {
      GstMiniObject	*miniobj;
 
-     if ((miniobj = gst_value_get_mini_object (value)) == NULL)
-	  return NULL;
+     if ((miniobj = gst_value_get_mini_object (value)) == NULL) {
+	  Py_INCREF(Py_None);
+	  return Py_None;
+     }
      return pygstminiobject_new(miniobj);
 }
 

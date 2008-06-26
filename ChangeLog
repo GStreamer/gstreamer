@@ -1,3 +1,9 @@
+2008-06-26  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gstmodule.c: (pygstminiobject_from_gvalue):
+	Return None if GstMiniObject GValue doesn't contain anything (NULL).
+	Fixes #540221
+
 2008-06-20  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
