@@ -131,6 +131,7 @@ gst_alsa_mixer_track_new (snd_mixer_elem_t * element,
   GstAlsaMixerTrack *alsa_track;
   GstMixerTrack *track;
   const gchar *name;
+  guint index;
   const gchar *label;
   gint i;
   long min = 0, max = 0;
@@ -154,12 +155,15 @@ gst_alsa_mixer_track_new (snd_mixer_elem_t * element,
   };
 
   name = snd_mixer_selem_get_name (element);
+  index = snd_mixer_selem_get_index (element);
 
-  GST_LOG ("[%s] num=%d,track_num=%d,flags=0x%08x,sw=%s,shared_mute_track=%p",
-      name, num, track_num, flags, (sw) ? "true" : "false", shared_mute_track);
+  GST_LOG
+      ("[%s,%u] num=%d,track_num=%d,flags=0x%08x,sw=%s,shared_mute_track=%p",
+      name, index, num, track_num, flags, (sw) ? "true" : "false",
+      shared_mute_track);
 
   track = (GstMixerTrack *) g_object_new (GST_ALSA_MIXER_TRACK_TYPE,
-      "untranslated-label", name, NULL);
+      "untranslated-label", name, "index", index, NULL);
 
   alsa_track = (GstAlsaMixerTrack *) track;
 

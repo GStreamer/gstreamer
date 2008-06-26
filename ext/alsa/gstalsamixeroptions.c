@@ -73,13 +73,17 @@ gst_alsa_mixer_options_new (snd_mixer_elem_t * element, gint track_num)
   GstAlsaMixerOptions *alsa_opts;
   GstMixerTrack *track;
   const gchar *label;
+  guint index;
   gint num, i;
   gchar str[256];
 
   label = snd_mixer_selem_get_name (element);
+  index = snd_mixer_selem_get_index (element);
+
+  GST_LOG ("[%s,%u]", label, index);
 
   opts = g_object_new (GST_ALSA_MIXER_OPTIONS_TYPE,
-      "untranslated-label", label, NULL);
+      "untranslated-label", label, "index", index, NULL);
   alsa_opts = (GstAlsaMixerOptions *) opts;
   track = (GstMixerTrack *) opts;
 

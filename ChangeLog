@@ -1,3 +1,18 @@
+2008-06-26  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Sam Morris <sam at robots dot org to uk>
+
+	* gst-libs/gst/interfaces/mixertrack.c:
+	(gst_mixer_track_class_init), (gst_mixer_track_get_property),
+	(gst_mixer_track_set_property):
+	API: Add "index" property to GstMixerTrack to differantiate between
+	multiple mixer tracks with the same label.
+
+	* ext/alsa/gstalsamixeroptions.c: (gst_alsa_mixer_options_new):
+	* ext/alsa/gstalsamixertrack.c: (gst_alsa_mixer_track_new):
+	Set the "index" property of GstMixerTrack to the index given by ALSA.
+	Fixes bug #528299.
+
 2008-06-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/examples/seek/Makefile.am:
