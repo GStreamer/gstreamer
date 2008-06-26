@@ -1406,28 +1406,28 @@ head_check (GstMPEGAudioParse * mp3parse, unsigned long head)
   }
   /* if it's an invalid MPEG version */
   if (((head >> 19) & 3) == 0x1) {
-    GST_WARNING_OBJECT (mp3parse, "invalid MPEG version: 0x%x",
+    GST_WARNING_OBJECT (mp3parse, "invalid MPEG version: 0x%lx",
         (head >> 19) & 3);
     return FALSE;
   }
   /* if it's an invalid layer */
   if (!((head >> 17) & 3)) {
-    GST_WARNING_OBJECT (mp3parse, "invalid layer: 0x%x", (head >> 17) & 3);
+    GST_WARNING_OBJECT (mp3parse, "invalid layer: 0x%lx", (head >> 17) & 3);
     return FALSE;
   }
   /* if it's an invalid bitrate */
   if (((head >> 12) & 0xf) == 0x0) {
-    GST_WARNING_OBJECT (mp3parse, "invalid bitrate: 0x%x."
+    GST_WARNING_OBJECT (mp3parse, "invalid bitrate: 0x%lx."
         "Free format files are not supported yet", (head >> 12) & 0xf);
     return FALSE;
   }
   if (((head >> 12) & 0xf) == 0xf) {
-    GST_WARNING_OBJECT (mp3parse, "invalid bitrate: 0x%x", (head >> 12) & 0xf);
+    GST_WARNING_OBJECT (mp3parse, "invalid bitrate: 0x%lx", (head >> 12) & 0xf);
     return FALSE;
   }
   /* if it's an invalid samplerate */
   if (((head >> 10) & 0x3) == 0x3) {
-    GST_WARNING_OBJECT (mp3parse, "invalid samplerate: 0x%x",
+    GST_WARNING_OBJECT (mp3parse, "invalid samplerate: 0x%lx",
         (head >> 10) & 0x3);
     return FALSE;
   }
@@ -1435,7 +1435,7 @@ head_check (GstMPEGAudioParse * mp3parse, unsigned long head)
   if ((head & 0x3) == 0x2) {
     /* Ignore this as there are some files with emphasis 0x2 that can
      * be played fine. See BGO #537235 */
-    GST_WARNING_OBJECT (mp3parse, "invalid emphasis: 0x%x", head & 0x3);
+    GST_WARNING_OBJECT (mp3parse, "invalid emphasis: 0x%lx", head & 0x3);
   }
 
   return TRUE;

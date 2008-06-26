@@ -1,3 +1,8 @@
+2008-06-26  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (head_check):
+	Fix build on macosx.
+
 2008-06-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
