@@ -28,8 +28,6 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GstRank rank;
-
   if (!gst_element_register (plugin, "dvdemux", GST_RANK_PRIMARY,
           gst_dvdemux_get_type ()))
     return FALSE;
