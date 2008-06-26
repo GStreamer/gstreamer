@@ -1,3 +1,9 @@
+2008-06-26  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstdebugutils.h: (GstDebugGraphDetails),
+	  (GST_DEBUG_BIN_TO_DOT_FILE):
+	  Add missing Since' markers to gtk-doc blurbs.
+
 2008-06-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/check/libs/transform1.c: (buffer_alloc_pt1),
