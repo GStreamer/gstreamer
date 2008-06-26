@@ -40,7 +40,9 @@
 #endif
 #include "v4l2_calls.h"
 #include "gstv4l2tuner.h"
+#if 0
 #include "gstv4l2xoverlay.h"
+#endif
 #include "gstv4l2colorbalance.h"
 
 #include "gstv4l2src.h"
