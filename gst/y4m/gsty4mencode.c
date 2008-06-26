@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) <2006> Mark Nauwelaerts <mnauw@skynet.be>
+ * Copyright (C) <2006> Mark Nauwelaerts <mnauw@users.sourceforge.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -16,6 +16,25 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ */
+/**
+ * SECTION:element-y4menc
+ *
+ * <refsect2>
+ * <para>
+ * Creates a YU4MPEG2 raw video stream as defined by the mjpegtools project.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * (write everything in one line, without the backslash characters)
+ * <programlisting>
+ * gst-launch-0.10 videotestsrc num-buffers=250 \
+ * ! 'video/x-raw-yuv,format=(fourcc)I420,width=320,height=240,framerate=(fraction)25/1' \
+ * ! y4menc ! filesink location=test.yuv
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ *
  */
 
 /* see mjpegtools/yuv4mpeg.h for yuv4mpeg format */
