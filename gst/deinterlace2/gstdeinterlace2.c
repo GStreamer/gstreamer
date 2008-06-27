@@ -337,9 +337,18 @@ gst_deinterlace2_set_property (GObject * _object, guint prop_id,
     case ARG_METHOD:
       gst_deinterlace2_set_method (object, g_value_get_enum (value));
       break;
-    case ARG_FIELDS:
+    case ARG_FIELDS:{
+      gint oldfields;
+
+      GST_OBJECT_LOCK (object);
+      oldfields = object->fields;
       object->fields = g_value_get_enum (value);
+      if (object->fields != oldfields && GST_PAD_CAPS (object->srcpad))
+        gst_deinterlace2_setcaps (object->sinkpad,
+            GST_PAD_CAPS (object->sinkpad));
+      GST_OBJECT_UNLOCK (object);
       break;
+    }
     case ARG_FIELD_LAYOUT:
       object->field_layout = g_value_get_enum (value);
       break;
@@ -624,6 +633,12 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
         gst_buffer_unref (buf);
 
         GST_BUFFER_TIMESTAMP (object->out_buf) = timestamp;
+        GST_BUFFER_DURATION (object->out_buf) =
+            GST_SECOND / object->frame_rate_d / object->frame_rate_n;
+        if (object->fields == GST_DEINTERLACE2_ALL)
+          GST_BUFFER_DURATION (object->out_buf) =
+              GST_BUFFER_DURATION (object->out_buf) / 2;
+
         ret = gst_pad_push (object->srcpad, object->out_buf);
         object->out_buf = NULL;
         if (ret != GST_FLOW_OK)
@@ -662,6 +677,12 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
         gst_buffer_unref (buf);
 
         GST_BUFFER_TIMESTAMP (object->out_buf) = timestamp;
+        GST_BUFFER_DURATION (object->out_buf) =
+            GST_SECOND / object->frame_rate_d / object->frame_rate_n;
+        if (object->fields == GST_DEINTERLACE2_ALL)
+          GST_BUFFER_DURATION (object->out_buf) =
+              GST_BUFFER_DURATION (object->out_buf) / 2;
+
         ret = gst_pad_push (object->srcpad, object->out_buf);
         object->out_buf = NULL;
 
@@ -676,8 +697,6 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
       buf = gst_deinterlace2_pop_history (object);
       gst_buffer_unref (buf);
     }
-
-
   } else {
     object->out_buf = gst_deinterlace2_pop_history (object);
     ret = gst_pad_push (object->srcpad, object->out_buf);
@@ -694,22 +713,14 @@ static gboolean
 gst_deinterlace2_setcaps (GstPad * pad, GstCaps * caps)
 {
   gboolean res = TRUE;
-
   GstDeinterlace2 *object = GST_DEINTERLACE2 (gst_pad_get_parent (pad));
-
   GstPad *otherpad;
-
   GstStructure *structure;
-
   GstVideoFormat fmt;
-
   guint32 fourcc;
+  GstCaps *othercaps;
 
   otherpad = (pad == object->srcpad) ? object->sinkpad : object->srcpad;
-
-  if (!gst_pad_accept_caps (otherpad, caps)
-      || !gst_pad_set_caps (otherpad, caps))
-    goto caps_not_accepted;
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -722,6 +733,27 @@ gst_deinterlace2_setcaps (GstPad * pad, GstCaps * caps)
   /* TODO: get interlaced, field_layout, field_order */
   if (!res)
     goto invalid_caps;
+
+  if (object->fields == GST_DEINTERLACE2_ALL) {
+    gint fps_n = object->frame_rate_n, fps_d = object->frame_rate_d;
+
+    othercaps = gst_caps_copy (caps);
+
+    if (otherpad == object->srcpad)
+      fps_n *= 2;
+    else
+      fps_d *= 2;
+
+    gst_caps_set_simple (othercaps, "framerate", GST_TYPE_FRACTION, fps_n,
+        fps_d, NULL);
+  } else {
+    othercaps = gst_caps_ref (caps);
+  }
+
+  if (                          /*!gst_pad_accept_caps (otherpad, othercaps)
+                                   || */ !gst_pad_set_caps (otherpad, othercaps))
+    goto caps_not_accepted;
+  gst_caps_unref (othercaps);
 
   /* TODO: introduce object->field_stride */
   object->field_height = object->frame_height / 2;
@@ -756,7 +788,8 @@ invalid_caps:
 
 caps_not_accepted:
   res = FALSE;
-  GST_ERROR_OBJECT (object, "Caps not accepted: %" GST_PTR_FORMAT, caps);
+  GST_ERROR_OBJECT (object, "Caps not accepted: %" GST_PTR_FORMAT, othercaps);
+  gst_caps_unref (othercaps);
   goto done;
 }
 

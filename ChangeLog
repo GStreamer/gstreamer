@@ -1,3 +1,12 @@
+2008-06-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace2_set_property), (gst_deinterlace2_chain),
+	(gst_deinterlace2_setcaps):
+	If we're outputting all fields the framerate has to be doubled.
+
+	Set duration on the outgoing buffers.
+
 2008-06-26  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* docs/plugins/Makefile.am:
