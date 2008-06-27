@@ -107,7 +107,6 @@ static GtkWidget *video_combo, *audio_combo, *text_combo, *vis_combo;
 static GtkWidget *vis_checkbox, *video_checkbox, *audio_checkbox;
 static GtkWidget *text_checkbox, *mute_checkbox, *volume_spinbutton;
 static GtkWidget *video_window;
-static guint embed_xid = 0;
 
 GList *paths = NULL, *l = NULL;
 
@@ -2097,6 +2096,9 @@ msg_buffering (GstBus * bus, GstMessage * message, GstPipeline * data)
 }
 
 #ifdef HAVE_X
+
+static guint embed_xid = 0;
+
 static GstBusSyncReply
 bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
 {
