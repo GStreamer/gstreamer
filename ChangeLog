@@ -1,3 +1,8 @@
+2008-06-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/examples/seek/seek.c:
+	  Include config.h and check if we have X. Fixes: #540334.
+
 2008-06-26  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Sam Morris <sam at robots dot org to uk>

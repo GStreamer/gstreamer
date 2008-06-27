@@ -20,14 +20,20 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 #include <string.h>
 
-#include <X11/Xlib.h>
+#ifdef HAVE_X
 #include <gdk/gdkx.h>
+#endif
 #include <gst/interfaces/xoverlay.h>
 
 GST_DEBUG_CATEGORY_STATIC (seek_debug);
@@ -2090,6 +2096,7 @@ msg_buffering (GstBus * bus, GstMessage * message, GstPipeline * data)
   }
 }
 
+#ifdef HAVE_X
 static GstBusSyncReply
 bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
 {
@@ -2112,6 +2119,7 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
   }
   return GST_BUS_PASS;
 }
+#endif
 
 static void
 msg_eos (GstBus * bus, GstMessage * message, GstPipeline * data)
@@ -2134,9 +2142,11 @@ connect_bus_signals (GstElement * pipeline)
 {
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
+#ifdef HAVE_X
   /* handle prepare-xwindow-id element message synchronously */
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
       pipeline);
+#endif
 
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
@@ -2243,11 +2253,6 @@ main (int argc, char **argv)
 
   if (!g_thread_supported ())
     g_thread_init (NULL);
-
-  if (!XInitThreads ()) {
-    g_print ("XInitThreads failed\n");
-    exit (-1);
-  }
 
   ctx = g_option_context_new ("- test seeking in gsteamer");
   g_option_context_add_main_entries (ctx, options, NULL);
