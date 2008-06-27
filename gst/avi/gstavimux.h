@@ -52,6 +52,15 @@ typedef struct _gst_avi_superindex_entry {
   guint32 duration;
 } gst_avi_superindex_entry;
 
+typedef struct _gst_riff_strh_full {
+  gst_riff_strh  parent;
+  /* rcFrame, RECT structure (struct of 4 shorts) */
+  gint16  left;
+  gint16  top;
+  gint16  right;
+  gint16  bottom;
+} gst_riff_strh_full;
+
 typedef struct _GstAviPad {
   /* do not extend, link to it */
   /* is NULL if original sink request pad has been removed */

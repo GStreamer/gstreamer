@@ -955,7 +955,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
 
   /* allocate the buffer, starting with some wild/safe upper bound */
   size += avimux->codec_data_size + 100 + sizeof (gst_riff_avih)
-      + (g_slist_length (avimux->sinkpads) * (100 + sizeof (gst_riff_strh)
+      + (g_slist_length (avimux->sinkpads) * (100 + sizeof (gst_riff_strh_full)
           + sizeof (gst_riff_strf_vids)
           + sizeof (gst_riff_strf_auds)
           + ODML_SUPERINDEX_SIZE));
@@ -1008,12 +1008,12 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     if (avipad->is_video) {
       if (vidpad->vids_codec_data)
         codec_size = GST_BUFFER_SIZE (vidpad->vids_codec_data);
-      strl_size = sizeof (gst_riff_strh) + sizeof (gst_riff_strf_vids)
+      strl_size = sizeof (gst_riff_strh_full) + sizeof (gst_riff_strf_vids)
           + codec_size + 4 * 5 + ODML_SUPERINDEX_SIZE;
     } else {
       if (audpad->auds_codec_data)
         codec_size = GST_BUFFER_SIZE (audpad->auds_codec_data);
-      strl_size = sizeof (gst_riff_strh) + sizeof (gst_riff_strf_auds)
+      strl_size = sizeof (gst_riff_strh_full) + sizeof (gst_riff_strf_auds)
           + codec_size + 4 * 5 + ODML_SUPERINDEX_SIZE;
     }
 
@@ -1023,7 +1023,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     memcpy (buffdata + 8, "strl", 4);
     /* generic header */
     memcpy (buffdata + 12, "strh", 4);
-    GST_WRITE_UINT32_LE (buffdata + 16, sizeof (gst_riff_strh));
+    GST_WRITE_UINT32_LE (buffdata + 16, sizeof (gst_riff_strh_full));
     /* the actual header */
     GST_WRITE_UINT32_LE (buffdata + 20, avipad->hdr.type);
     GST_WRITE_UINT32_LE (buffdata + 24, avipad->hdr.fcc_handler);
@@ -1037,26 +1037,32 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     GST_WRITE_UINT32_LE (buffdata + 56, avipad->hdr.bufsize);
     GST_WRITE_UINT32_LE (buffdata + 60, avipad->hdr.quality);
     GST_WRITE_UINT32_LE (buffdata + 64, avipad->hdr.samplesize);
+    GST_WRITE_UINT16_LE (buffdata + 68, 0);
+    GST_WRITE_UINT16_LE (buffdata + 70, 0);
+    GST_WRITE_UINT16_LE (buffdata + 72, 0);
+    GST_WRITE_UINT16_LE (buffdata + 74, 0);
+    buffdata += 76;
+    highmark += 76;
 
     if (avipad->is_video) {
       /* the video header */
-      memcpy (buffdata + 68, "strf", 4);
-      GST_WRITE_UINT32_LE (buffdata + 72,
+      memcpy (buffdata + 0, "strf", 4);
+      GST_WRITE_UINT32_LE (buffdata + 4,
           sizeof (gst_riff_strf_vids) + codec_size);
       /* the actual header */
-      GST_WRITE_UINT32_LE (buffdata + 76, vidpad->vids.size + codec_size);
-      GST_WRITE_UINT32_LE (buffdata + 80, vidpad->vids.width);
-      GST_WRITE_UINT32_LE (buffdata + 84, vidpad->vids.height);
-      GST_WRITE_UINT16_LE (buffdata + 88, vidpad->vids.planes);
-      GST_WRITE_UINT16_LE (buffdata + 90, vidpad->vids.bit_cnt);
-      GST_WRITE_UINT32_LE (buffdata + 92, vidpad->vids.compression);
-      GST_WRITE_UINT32_LE (buffdata + 96, vidpad->vids.image_size);
-      GST_WRITE_UINT32_LE (buffdata + 100, vidpad->vids.xpels_meter);
-      GST_WRITE_UINT32_LE (buffdata + 104, vidpad->vids.ypels_meter);
-      GST_WRITE_UINT32_LE (buffdata + 108, vidpad->vids.num_colors);
-      GST_WRITE_UINT32_LE (buffdata + 112, vidpad->vids.imp_colors);
-      buffdata += 116;
-      highmark += 116;
+      GST_WRITE_UINT32_LE (buffdata + 8, vidpad->vids.size + codec_size);
+      GST_WRITE_UINT32_LE (buffdata + 12, vidpad->vids.width);
+      GST_WRITE_UINT32_LE (buffdata + 16, vidpad->vids.height);
+      GST_WRITE_UINT16_LE (buffdata + 20, vidpad->vids.planes);
+      GST_WRITE_UINT16_LE (buffdata + 22, vidpad->vids.bit_cnt);
+      GST_WRITE_UINT32_LE (buffdata + 24, vidpad->vids.compression);
+      GST_WRITE_UINT32_LE (buffdata + 28, vidpad->vids.image_size);
+      GST_WRITE_UINT32_LE (buffdata + 32, vidpad->vids.xpels_meter);
+      GST_WRITE_UINT32_LE (buffdata + 36, vidpad->vids.ypels_meter);
+      GST_WRITE_UINT32_LE (buffdata + 40, vidpad->vids.num_colors);
+      GST_WRITE_UINT32_LE (buffdata + 44, vidpad->vids.imp_colors);
+      buffdata += 48;
+      highmark += 48;
 
       /* include codec data, if any */
       if (codec_size) {
@@ -1068,18 +1074,18 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
       }
     } else {
       /* the audio header */
-      memcpy (buffdata + 68, "strf", 4);
-      GST_WRITE_UINT32_LE (buffdata + 72,
+      memcpy (buffdata + 0, "strf", 4);
+      GST_WRITE_UINT32_LE (buffdata + 4,
           sizeof (gst_riff_strf_auds) + codec_size);
       /* the actual header */
-      GST_WRITE_UINT16_LE (buffdata + 76, audpad->auds.format);
-      GST_WRITE_UINT16_LE (buffdata + 78, audpad->auds.channels);
-      GST_WRITE_UINT32_LE (buffdata + 80, audpad->auds.rate);
-      GST_WRITE_UINT32_LE (buffdata + 84, audpad->auds.av_bps);
-      GST_WRITE_UINT16_LE (buffdata + 88, audpad->auds.blockalign);
-      GST_WRITE_UINT16_LE (buffdata + 90, audpad->auds.size);
-      buffdata += 92;
-      highmark += 92;
+      GST_WRITE_UINT16_LE (buffdata + 8, audpad->auds.format);
+      GST_WRITE_UINT16_LE (buffdata + 10, audpad->auds.channels);
+      GST_WRITE_UINT32_LE (buffdata + 12, audpad->auds.rate);
+      GST_WRITE_UINT32_LE (buffdata + 16, audpad->auds.av_bps);
+      GST_WRITE_UINT16_LE (buffdata + 20, audpad->auds.blockalign);
+      GST_WRITE_UINT16_LE (buffdata + 22, audpad->auds.size);
+      buffdata += 24;
+      highmark += 24;
 
       /* include codec data, if any */
       if (codec_size) {
