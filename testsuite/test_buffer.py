@@ -87,6 +87,16 @@ class BufferTest(TestCase):
 
         spaned_buffer = buffer1.span(0L, buffer2, 6L)
         assert str(spaned_buffer) == 'foobar'
+    def testBufferCopyOnWrite(self):
+        s='test_vector'
+        buffer = gst.Buffer(s)
+        sub = buffer.create_sub(0, buffer.size)
+        self.assertEquals(sub.size, buffer.size)
+        out = sub.copy_on_write ()
+        self.assertEquals(out.size, sub.size)
+        assert str(out) == str(buffer)
+        out[5] = 'w'
+        assert str(out) == 'test_wector'
 
     def testBufferFlagIsSet(self):
         buffer = gst.Buffer()

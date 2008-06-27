@@ -1,3 +1,22 @@
+2008-06-27  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/gstbuffer.override:
+        the GstBuffer overrides seem to be confused about whether they're
+	mini-objects or a GBoxed, and it makes copy_on_write no actually
+	return a usable gst.Buffer. Fix up places where GstBuffers are 
+	treated as GBoxed to use pygstminiobject functions.
+
+	Makes gst.Buffer('blah').copy_on_write() work.
+
+	* testsuite/test_buffer.py:
+	Add test for copy-on-write writability
+
+	* examples/buffer-draw.py:
+	Add an example of drawing on a GStreamer buffer with cairo
+
+	* gst/gstpad.override:
+	Make function static
+
 2008-06-26  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/common.h:

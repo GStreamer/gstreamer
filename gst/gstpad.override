@@ -1006,7 +1006,7 @@ _wrap_gst_pad_add_buffer_probe(PyGObject *self, PyObject *args)
 %%
 override-slot GstPadTemplate.tp_getattr
 #define IS_ATTR(name) (strcmp (name, attr) == 0)
-PyObject *
+static PyObject *
 _wrap_gst_pad_template_tp_getattr(PyObject *self, char *attr)
 {
   GstPadTemplate *templ = GST_PAD_TEMPLATE (pygobject_get (self));

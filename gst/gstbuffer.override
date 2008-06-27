@@ -89,7 +89,7 @@ _wrap_gst_buffer_tp_str (PyGstMiniObject *self)
 	GstBuffer *buf;
 
 	g_assert (self);
-	buf = pyg_boxed_get (self, GstBuffer);
+        buf = GST_BUFFER(pygstminiobject_get(self));
 	g_assert (buf);
 
 	return PyString_FromStringAndSize((const gchar*) GST_BUFFER_DATA(buf),
@@ -143,7 +143,7 @@ static Py_ssize_t
 gst_buffer_getreadbuffer(PyObject *self, Py_ssize_t index, 
     void **ptr)
 {
-	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+	GstBuffer *buf = GST_BUFFER(pygstminiobject_get(self));
 
 	if ( index != 0 ) {
 		PyErr_SetString(PyExc_SystemError,
@@ -158,7 +158,7 @@ gst_buffer_getreadbuffer(PyObject *self, Py_ssize_t index,
 static Py_ssize_t
 gst_buffer_getsegcount(PyObject *self, Py_ssize_t *lenp)
 {
-	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+	GstBuffer *buf = GST_BUFFER(pygstminiobject_get(self));
 
 	if (lenp)
 		*lenp = GST_BUFFER_SIZE(buf);
@@ -180,7 +180,7 @@ static Py_ssize_t gst_buffer_getcharbuf    (PyObject   *self,
 static Py_ssize_t
 gst_buffer_getwritebuf(PyObject *self, Py_ssize_t index, void **ptr)
 {
-	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+	GstBuffer *buf = GST_BUFFER(pygstminiobject_get(self));
 
 	if ( index != 0 ) {
 		PyErr_SetString(PyExc_SystemError,
@@ -299,7 +299,7 @@ define GstBuffer.copy_on_write
 static PyObject *
 _wrap_gst_buffer_copy_on_write (PyObject *self)
 {
-	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+	GstBuffer *buf = GST_BUFFER(pygstminiobject_get(self));
 
 	GST_INFO("INCREF");
 	if (gst_buffer_is_writable (buf)) {
@@ -307,7 +307,8 @@ _wrap_gst_buffer_copy_on_write (PyObject *self)
 	  return self;
 	}
 	buf = gst_buffer_copy (buf);
-	self = pyg_boxed_new (GST_TYPE_BUFFER, buf, FALSE, TRUE);
+	self = pygstminiobject_new ((GstMiniObject *)(buf));
+        gst_buffer_unref (buf);
 	return self;
 }
 %%
@@ -322,7 +323,7 @@ _wrap_gst_buffer_flag_is_set(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "i:GstBuffer.flag_is_set", &flag))
 		return NULL;
 
-	buf = pyg_boxed_get(self, GstBuffer);
+	buf = GST_BUFFER(pygstminiobject_get(self));
 	g_assert(GST_IS_BUFFER(buf));
 	
 	retval = GST_BUFFER_FLAG_IS_SET(buf, flag) ? Py_True : Py_False;
@@ -340,7 +341,7 @@ _wrap_gst_buffer_flag_set(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "i:GstBuffer.set", &flag))
 		return NULL;
 
-	buf = pyg_boxed_get(self, GstBuffer);
+	buf = GST_BUFFER(pygstminiobject_get(self));
 	g_assert(GST_IS_BUFFER(buf));
 	GST_BUFFER_FLAG_SET(buf, flag);
 
@@ -358,7 +359,7 @@ _wrap_gst_buffer_flag_unset(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "i:GstBuffer.unset", &flag))
 		return NULL;
 
-	buf = pyg_boxed_get(self, GstBuffer);
+        buf = GST_BUFFER(pygstminiobject_get(self));
 	g_assert(GST_IS_BUFFER(buf));
 	GST_BUFFER_FLAG_UNSET(buf, flag);
 
@@ -374,7 +375,7 @@ _wrap_gst_buffer__get_data(PyObject *self, void *closure)
 	GstBuffer *buf;
 
 	g_assert (self);
-	buf = pyg_boxed_get (self, GstBuffer);
+        buf = GST_BUFFER(pygstminiobject_get(self));
 	g_assert (buf);
 
 	return PyString_FromStringAndSize((const gchar*) GST_BUFFER_DATA(buf),
