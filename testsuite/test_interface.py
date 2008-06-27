@@ -24,6 +24,14 @@ from common import gst, unittest, TestCase
 
 import gobject
 
+def find_mixer_element():
+    """ Searches for an element implementing the mixer interface """
+    allmix = [x for x in gst.registry_get_default().get_feature_list(gst.ElementFactory)
+              if x.has_interface("GstMixer") and x.has_interface("GstPropertyProbe")]
+    if allmix == []:
+        return None
+    return allmix[0]
+
 class Availability(TestCase):
     def testXOverlay(self):
         assert hasattr(gst.interfaces, 'XOverlay')
@@ -42,11 +50,15 @@ class FunctionCall(TestCase):
         assert isinstance(element, gst.Element)
         assert isinstance(element, gst.interfaces.XOverlay)
         element.set_xwindow_id(0L)
-        
+
 class MixerTest(TestCase):
     def setUp(self):
         TestCase.setUp(self)
-        self.mixer = gst.element_factory_make('alsasrc', '')
+        amix = find_mixer_element()
+        if amix:
+            self.mixer = amix.create()
+        else:
+            self.mixer = None
         assert self.mixer
 
     def tearDown(self):
@@ -54,11 +66,15 @@ class MixerTest(TestCase):
         TestCase.tearDown(self)
 
     def testGetProperty(self):
+        if self.mixer == None:
+            return
         self.failUnless(self.mixer.probe_get_property('device'))
         self.assertRaises(ValueError,
                           self.mixer.probe_get_property, 'non-existent')
 
     def testGetProperties(self):
+        if self.mixer == None:
+            return
         properties = self.mixer.probe_get_properties()
         self.failUnless(properties)
         self.assertEqual(type(properties), list)
@@ -67,8 +83,11 @@ class MixerTest(TestCase):
         self.assertEqual(prop.value_type, gobject.TYPE_STRING)
 
     def testGetValuesName(self):
+        if self.mixer == None:
+            return
         values = self.mixer.probe_get_values_name('device')
         self.assertEqual(type(values), list)
+
 
 if __name__ == "__main__":
     unittest.main()

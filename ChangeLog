@@ -1,5 +1,12 @@
 2008-06-27  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* testsuite/test_interface.py:
+	Don't hardcode 'alsasrc' for testing GstMixer and GstPropertyProbe
+	interfaces, but instead search one through the registry.
+	If none are available, return gracefully.
+
+2008-06-27  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* testsuite/test_xml.py:
 	Don't attempt to test gst.XML if there's no available libxml2 module.
 
