@@ -25,6 +25,11 @@ from common import gst, unittest, TestCase
 class PadTest(TestCase):
         
     def testQuery(self):
+        # don't run this test if we don't have the libxml2 module
+        try:
+            import libxml2
+        except:
+            return
         xml = gst.XML()
         xml.parse_memory("""<?xml version="1.0"?>
 <gstreamer xmlns:gst="http://gstreamer.net/gst-core/1.0/">
