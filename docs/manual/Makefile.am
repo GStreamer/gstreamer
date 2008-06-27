@@ -16,7 +16,7 @@ XML = $(notdir $(wildcard $(srcdir)/*.xml))
 CSS = base.css
 
 # image sources
-PNG_SRC = 
+PNG_SRC = $(notdir $(wildcard $(srcdir)/*.png))
 FIG_SRC = $(notdir $(wildcard $(srcdir)/*.fig))
 
 # extra sources to copy in build directory

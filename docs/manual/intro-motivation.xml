@@ -1,5 +1,7 @@
 <chapter id="chapter-motivation">
-  <title>Motivation &amp; Goals</title>
+  <title>Design principles</title>
+
+<!--
   <para> 
     Linux has historically lagged behind other operating systems in the
     multimedia arena. Microsoft's <trademark>Windows</trademark> and
@@ -139,10 +141,12 @@
     <para> 
       We describe what we try to achieve with &GStreamer;.
     </para>
-    <sect2 id="section-goals-clean">
+-->
+
+    <section id="section-goals-clean">
       <title>Clean and powerful</title>
       <para>
-        &GStreamer; wants to provide a clean interface to:
+        &GStreamer; provides a clean interface to:
       </para>
       <itemizedlist>
         <listitem>
@@ -163,12 +167,12 @@
         </listitem>
       </itemizedlist>
 
-    </sect2>
-    <sect2 id="section-goals-object">
+    </section>
+    <section id="section-goals-object">
       <title>Object oriented</title>
       <para>
-        &GStreamer; adheres to the GLib 2.0 object model. A programmer
-        familiar with GLib 2.0 or older versions of GTK+ will be
+        &GStreamer; adheres to GObject, the GLib 2.0 object model. A programmer
+        familiar with GLib 2.0 or GTK+ will be
         comfortable with &GStreamer;.
       </para>
       <para>
@@ -181,11 +185,11 @@
       <para>
         &GStreamer; intends to be similar in programming methodology to GTK+.
 	This applies to the object model, ownership of objects, reference
-        counting, ...
+        counting, etc.
       </para> 
-    </sect2>
+    </section>
   
-    <sect2 id="section-goals-extensible">
+    <section id="section-goals-extensible">
       <title>Extensible</title>
       <para> 
 	All &GStreamer; Objects can be extended using the GObject
@@ -195,10 +199,10 @@
         All plugins are loaded dynamically and can be extended and upgraded
 	independently.
       </para> 
-    </sect2>
+    </section>
 
-    <sect2 id="section-goals-binary">
-      <title>Allow binary only plugins</title>
+    <section id="section-goals-binary">
+      <title>Allow binary-only plugins</title>
       <para>
         Plugins are shared libraries that are loaded at runtime. Since all
         the properties of the plugin can be set using the GObject properties,
@@ -209,9 +213,9 @@
         Special care has been taken to make plugins completely self-contained. 
         All relevant aspects of plugins can be queried at run-time.
       </para> 
-    </sect2>
+    </section>
 
-    <sect2 id="section-goals-performance">
+    <section id="section-goals-performance">
       <title>High performance</title>
       <para> 
         High performance is obtained by:
@@ -272,9 +276,9 @@
 	  </para>
         </listitem>
       </itemizedlist>
-    </sect2>
+    </section>
 
-    <sect2 id="section-goals-separation">
+    <section id="section-goals-separation">
       <title>Clean core/plugins separation</title>
       <para>
         The core of &GStreamer; is essentially media-agnostic. It only knows
@@ -287,9 +291,9 @@
         external to the core. These tell the core how to handle specific
         types of media.
       </para>
-    </sect2>
+    </section>
 
-    <sect2 id="section-goals-testbed">
+    <section id="section-goals-testbed">
       <title>Provide a framework for codec experimentation</title>
       <para>
 	&GStreamer; also wants to be an easy framework where codec
@@ -298,7 +302,9 @@
 	url="http://www.xiph.org/ogg/index.html" type="http">Theora and
 	Vorbis</ulink>.
       </para>
-    </sect2>
+    </section>
 
+<!--
   </sect1>
+-->
 </chapter>

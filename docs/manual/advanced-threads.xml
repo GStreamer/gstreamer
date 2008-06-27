@@ -36,14 +36,16 @@
         </para>
       </listitem>
     </itemizedlist>
+
     <figure float="1" id="section-queues-img">
       <title>a two-threaded decoder with a queue</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/queue.&image;" format="&IMAGE;"/>
+          <imagedata scale="75" fileref="images/queue.&image;" format="&IMAGE;"/>
         </imageobject>
       </mediaobject>
     </figure>
+
     <para>
       Above, we've mentioned the <quote>queue</quote> element several times
       now. A queue is the thread boundary element through which you can

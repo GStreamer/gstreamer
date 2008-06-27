@@ -59,15 +59,16 @@
       linkend="section-mime-img"/> shows what MIME-type belongs to each
       pad in this pipeline.
     </para>
-    <!-- FIXME: update for ogg/vorbis rather than mp3 -->
+
     <figure float="1" id="section-mime-img">
       <title>The Hello world pipeline with MIME types</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/mime-world.&image;" format="&IMAGE;"/>
+          <imagedata scale="75" fileref="images/mime-world.&image;" format="&IMAGE;"/>
         </imageobject>
       </mediaobject>
     </figure>
+
     <para>
       Now that we have an idea how &GStreamer; identifies known media
       streams, we can look at methods &GStreamer; uses to setup pipelines

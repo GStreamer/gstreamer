@@ -47,4 +47,52 @@
       API to write applications using the various plugins.
     </para> 
 
+
+    <para>
+      Specifically, &GStreamer; provides
+      <itemizedlist>
+        <listitem><para>an API for multimedia applications</para></listitem>
+        <listitem><para>a plugin architecture</para></listitem>
+        <listitem><para>a pipeline architecture</para></listitem>
+        <listitem><para>a mechanism for media type handling/negociation</para></listitem>
+        <listitem><para>over 150 plug-ins</para></listitem>
+        <listitem><para>a set of tools</para></listitem>
+      </itemizedlist>
+    </para> 
+
+    <para>
+      &GStreamer; plug-ins could be classified into
+      <itemizedlist>
+	<listitem><para>protocols handling</para></listitem>
+	<listitem><para>sources: for audio and video (involves protocol plugins)</para></listitem>
+	<listitem><para>formats: parsers, formaters, muxers, demuxers, metadata, subtitles</para></listitem>
+	<listitem><para>codecs: coders and decoders</para></listitem>
+	<listitem><para>filters: converters, mixers, effects, ...</para></listitem>
+	<listitem><para>sinks: for audio and video (involves protocol plugins)</para></listitem>
+      </itemizedlist>
+    </para> 
+    
+    <figure float="1" id="section-gstreamer-img">
+      <title>Gstreamer overview</title>
+      <mediaobject>
+        <imageobject>
+          <imagedata scale="75" fileref="images/gstreamer-overview.&image;" format="&IMAGE;" />
+        </imageobject>
+      </mediaobject>  
+    </figure>
+
+    <para>
+      &GStreamer; is packaged into
+      <itemizedlist>
+        <listitem><para>gstreamer: the core package</para></listitem>
+        <listitem><para>gst-plugins-base: an essential exemplary set of elements</para></listitem>
+        <listitem><para>gst-plugins-good: a set of good-quality plug-ins under LGPL</para></listitem>
+        <listitem><para>gst-plugins-ugly: a set of good-quality plug-ins that might pose distribution problems</para></listitem>
+        <listitem><para>gst-plugins-bad: a set of plug-ins that need more quality</para></listitem>
+        <listitem><para>gst-python: the python bindings</para></listitem>
+        <listitem><para>a few others packages</para></listitem>
+      </itemizedlist>
+    </para> 
+
+
 </chapter>

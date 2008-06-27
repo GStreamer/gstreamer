@@ -202,19 +202,20 @@ main (int   argc,
 }
 <!-- example-end helloworld.c -->
     </programlisting>
-    <!-- FIXME: this image needs updating -->
     <para>
       We now have created a complete pipeline.  We can visualise the
       pipeline as follows:
     </para>
+
     <figure float="1" id="section-hello-img">
       <title>The "hello world" pipeline</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/hello-world.&image;" format="&IMAGE;" />
+          <imagedata scale="75" fileref="images/hello-world.&image;" format="&IMAGE;" />
         </imageobject>
       </mediaobject>  
     </figure>
+
   </sect1>
 
   <sect1 id="section-helloworld-compilerun">

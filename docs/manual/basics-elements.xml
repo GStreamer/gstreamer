@@ -35,7 +35,7 @@
         <title>Visualisation of a source element</title>
           <mediaobject>  
             <imageobject>
-              <imagedata fileref="images/src-element.&image;"
+              <imagedata scale="75" fileref="images/src-element.&image;"
               format="&IMAGE;"/>
             </imageobject>
           </mediaobject>
@@ -67,7 +67,7 @@
         <title>Visualisation of a filter element</title>
           <mediaobject>  
             <imageobject>
-              <imagedata fileref="images/filter-element.&image;"
+              <imagedata scale="75" fileref="images/filter-element.&image;"
               format="&IMAGE;"/>
             </imageobject>
           </mediaobject>
@@ -83,7 +83,7 @@
 	  more than one output pad</title>
         <mediaobject>  
           <imageobject>
-            <imagedata fileref="images/filter-element-multi.&image;" 
+            <imagedata scale="75" fileref="images/filter-element-multi.&image;" 
             format="&IMAGE;" />
           </imageobject>
         </mediaobject>
@@ -112,7 +112,7 @@
         <title>Visualisation of a sink element</title>
         <mediaobject>  
           <imageobject>
-            <imagedata fileref="images/sink-element.&image;"
+            <imagedata scale="75" fileref="images/sink-element.&image;"
             format="&IMAGE;" />
           </imageobject>
         </mediaobject>
@@ -400,7 +400,7 @@ main (int   argc,
       <title>Visualisation of three linked elements</title>
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/linked-elements.&image;"
+            <imagedata scale="75" fileref="images/linked-elements.&image;"
             format="&IMAGE;"/>
           </imageobject>
         </mediaobject>

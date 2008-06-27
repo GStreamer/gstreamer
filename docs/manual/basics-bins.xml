@@ -30,7 +30,7 @@
       <title>Visualisation of a bin with some elements in it</title>
         <mediaobject>  
           <imageobject>
-            <imagedata fileref="images/bin-element.&image;" format="&IMAGE;"/>
+            <imagedata scale="75" fileref="images/bin-element.&image;" format="&IMAGE;"/>
           </imageobject>
         </mediaobject>
     </figure>

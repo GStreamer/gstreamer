@@ -602,7 +602,7 @@ link_elements_with_filter (GstElement *element1, GstElement *element2)
       element without ghost pads</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/bin-element-noghost.&image;"
+          <imagedata scale="75" fileref="images/bin-element-noghost.&image;"
           format="&IMAGE;"/>
         </imageobject>
       </mediaobject>  
@@ -621,7 +621,7 @@ link_elements_with_filter (GstElement *element1, GstElement *element2)
       element with a ghost pad</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/bin-element-ghost.&image;"
+          <imagedata scale="75" fileref="images/bin-element-ghost.&image;"
           format="&IMAGE;"/>
         </imageobject>
       </mediaobject>  

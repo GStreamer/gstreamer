@@ -1,3 +1,64 @@
+2008-06-27  Stefan Kost  <ensonic@users.sf.net>
+
+	patch by: Luc Pionchon  <luc.pionchon@nokia.com>
+
+	* docs/manual/advanced-autoplugging.xml:
+	* docs/manual/advanced-threads.xml:
+	* docs/manual/basics-bins.xml:
+	* docs/manual/basics-elements.xml:
+	* docs/manual/basics-helloworld.xml:
+	* docs/manual/basics-pads.xml:
+	  Add scale factor for pdf output.
+
+	* docs/manual/intro-basics.xml:
+	  Switched sections "pads" and "bins" and added a pipeline diagram.
+
+	* docs/manual/intro-gstreamer.xml:
+	  Added more info on gstreamer.
+
+	* docs/manual/intro-motivation.xml:
+	  Commented out the whole section "current problem", which sounds
+	  historical and somehow osolete; it could be turned in a positive
+	  way and reused to improve the design principles.
+
+	* docs/manual/intro-preface.xml:
+	  - Update URLs to library.gnome.org. 
+	  - Do not mention GTK+ in preliminary reading (irrelevant). 
+	  - Mention Plugin Writer's Manual and further reading only in the
+	    previous section.
+	  - Added a list of most relevant GObject/glib topics.
+
+	* docs/manual/Makefile.am:
+	* docs/manual/bin-element-ghost.fig:
+	* docs/manual/bin-element-ghost.png:
+	* docs/manual/bin-element-noghost.fig:
+	* docs/manual/bin-element-noghost.png:
+	* docs/manual/bin-element.fig:
+	* docs/manual/bin-element.png:
+	* docs/manual/filter-element-multi.fig:
+	* docs/manual/filter-element-multi.png:
+	* docs/manual/filter-element.fig:
+	* docs/manual/filter-element.png:
+	* docs/manual/gstreamer-overview.png:
+	* docs/manual/hello-world.fig:
+	* docs/manual/hello-world.png:
+	* docs/manual/linked-elements.fig:
+	* docs/manual/linked-elements.png:
+	* docs/manual/mime-world.fig:
+	* docs/manual/mime-world.png:
+	* docs/manual/queue.fig:
+	* docs/manual/queue.png:
+	* docs/manual/simple-player.png:
+	* docs/manual/sink-element.fig:
+	* docs/manual/sink-element.png:
+	* docs/manual/src-element.fig:
+	* docs/manual/src-element.png:
+	* docs/manual/diagrams-general.svg:
+	* docs/manual/diagrams-pipelines.svg:
+	  Removed .fig, added .png counterpart.
+	  
+	  Fixes: #539137
+
 2008-06-26  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* plugins/elements/gstmultiqueue.c:
