@@ -4519,6 +4519,10 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
        * allow 0 sized packets while theora does */
       stream->padding = 1;
       break;
+    case GST_MAKE_FOURCC ('d', 'r', 'a', 'c'):
+      _codec ("Dirac");
+      caps = gst_caps_from_string ("video/x-dirac");
+      break;
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
     {
