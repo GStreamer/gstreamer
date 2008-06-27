@@ -383,9 +383,16 @@ gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
           if (CLASS (mpeg_parse)->send_event) {
             CLASS (mpeg_parse)->send_event (mpeg_parse,
                 gst_event_new_new_segment (FALSE, rate, GST_FORMAT_TIME,
-                    start, -1, time));
+                    start, stop, time));
+            mpeg_parse->pending_newsegment = FALSE;
           }
         }
+      } else if (format != GST_FORMAT_TIME && !update) {
+        GST_DEBUG_OBJECT (mpeg_parse,
+            "Received non-time newsegment from stream");
+        mpeg_parse->do_adjust = TRUE;
+        mpeg_parse->adjust = 0;
+        mpeg_parse->pending_newsegment = TRUE;
       }
       mpeg_parse->packetize->resync = TRUE;
 
@@ -488,7 +495,7 @@ gst_mpeg_parse_pad_added (GstElement * element, GstPad * pad)
   event = gst_event_new_new_segment (FALSE,
       mpeg_parse->current_segment.rate,
       GST_FORMAT_TIME, mpeg_parse->current_segment.start,
-      -1, mpeg_parse->current_segment.start);
+      mpeg_parse->current_segment.stop, mpeg_parse->current_segment.start);
 
   gst_pad_push_event (pad, event);
 }
@@ -1038,6 +1045,8 @@ gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query)
 
       /* Convert the value to the desired format. */
       if ((res = gst_mpeg_parse_convert (mpeg_parse, src_format, src_value,
+                  &format, &value)) ||
+          (res = gst_pad_query_peer_duration (mpeg_parse->sinkpad,
                   &format, &value))) {
         gst_query_set_duration (query, format, value);
       }
@@ -1067,6 +1076,8 @@ gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query)
 
       /* Convert the value to the desired format. */
       if ((res = gst_mpeg_parse_convert (mpeg_parse, src_format, src_value,
+                  &format, &value)) ||
+          (res = gst_pad_query_peer_position (mpeg_parse->sinkpad,
                   &format, &value))) {
         gst_query_set_position (query, format, value);
       }
@@ -1076,7 +1087,9 @@ gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query)
       gst_query_parse_convert (query, &src_format, &src_value, &format, NULL);
 
       if ((res = gst_mpeg_parse_convert (mpeg_parse, src_format, src_value,
-                  &format, &value))) {
+                  &format, &value)) ||
+          (res = gst_pad_query_peer_convert (mpeg_parse->sinkpad,
+                  src_format, src_value, &format, &value))) {
         gst_query_set_convert (query, src_format, src_value, format, value);
       }
       break;

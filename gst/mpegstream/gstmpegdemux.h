@@ -206,6 +206,9 @@ struct _GstMPEGDemuxClass {
 
 void            gst_mpeg_streams_reset_last_flow (GstMPEGStream *streams[],
                                                   guint          num);
+void            gst_mpeg_streams_reset_cur_ts    (GstMPEGStream *streams[],
+                                                  guint          num,
+                                                  GstClockTime   cur_ts);
 
 GType           gst_mpeg_demux_get_type          (void);
 

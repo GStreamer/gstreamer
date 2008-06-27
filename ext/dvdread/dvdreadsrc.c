@@ -724,11 +724,15 @@ gst_dvd_read_src_read (GstDvdReadSrc * src, gint angle, gint new_seek,
     GstBuffer ** p_buf)
 {
   GstBuffer *buf;
+  GstSegment *seg;
   guint8 oneblock[DVD_VIDEO_LB_LEN];
   dsi_t dsi_pack;
   guint next_vobu, next_ilvu_start, cur_output_size;
   gint len;
   gint retries;
+  gint64 next_time;
+
+  seg = &(GST_BASE_SRC (src)->segment);
 
   /* playback by cell in this pgc, starting at the cell for our chapter */
   if (new_seek)
@@ -738,8 +742,12 @@ again:
 
   if (src->cur_cell >= src->last_cell) {
     /* advance to next chapter */
-    if (src->chapter == (src->num_chapters - 1))
+    if (src->chapter == (src->num_chapters - 1) ||
+        (seg->format == chapter_format && seg->stop != -1 &&
+            src->chapter == (seg->stop - 1))) {
+      GST_DEBUG_OBJECT (src, "end of chapter segment");
       goto eos;
+    }
 
     GST_INFO_OBJECT (src, "end of chapter %d, switch to next",
         src->chapter + 1);
@@ -847,16 +855,24 @@ nav_retry:
 
   *p_buf = buf;
 
+  GST_LOG_OBJECT (src, "Read %u sectors", cur_output_size);
+
   src->cur_pack = next_vobu;
 
-  GST_LOG_OBJECT (src, "Read %u sectors", cur_output_size);
+  next_time = GST_BUFFER_TIMESTAMP (buf);
+  if (GST_CLOCK_TIME_IS_VALID (next_time) && seg->format == GST_FORMAT_TIME &&
+      GST_CLOCK_TIME_IS_VALID (seg->stop) &&
+      next_time > seg->stop + 5 * GST_SECOND) {
+    GST_DEBUG_OBJECT (src, "end of TIME segment");
+    goto eos;
+  }
 
   return GST_DVD_READ_OK;
 
   /* ERRORS */
 eos:
   {
-    GST_INFO_OBJECT (src, "last chapter done - EOS");
+    GST_INFO_OBJECT (src, "Reached end-of-segment/stream - EOS");
     return GST_DVD_READ_EOS;
   }
 read_error:
@@ -920,7 +936,6 @@ gst_dvd_read_src_create (GstPushSrc * pushsrc, GstBuffer ** p_buf)
       return GST_FLOW_ERROR;
     }
     case GST_DVD_READ_EOS:{
-      GST_INFO_OBJECT (src, "Reached EOS");
       return GST_FLOW_UNEXPECTED;
     }
     case GST_DVD_READ_OK:{
@@ -1060,19 +1075,12 @@ gst_dvd_read_src_handle_seek_event (GstDvdReadSrc * src, GstEvent * event)
     return FALSE;
   }
 
-  if ((flags & GST_SEEK_FLAG_SEGMENT) != 0) {
-    GST_DEBUG_OBJECT (src, "segment seek not supported");
-    return FALSE;
-  }
-
-  if ((flags & GST_SEEK_FLAG_FLUSH) == 0) {
-    GST_DEBUG_OBJECT (src, "can only do flushing seeks at the moment");
-    return FALSE;
-  }
-
   if (end_type != GST_SEEK_TYPE_NONE) {
-    GST_DEBUG_OBJECT (src, "end seek type not supported");
-    return FALSE;
+    if ((format != chapter_format && format != GST_FORMAT_TIME) ||
+        end_type != GST_SEEK_TYPE_SET) {
+      GST_DEBUG_OBJECT (src, "end seek type not supported");
+      return FALSE;
+    }
   }
 
   if (cur_type != GST_SEEK_TYPE_SET) {

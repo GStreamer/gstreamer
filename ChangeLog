@@ -1,3 +1,25 @@
+2008-06-27  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_read),
+	(gst_dvd_read_src_create), (gst_dvd_read_src_handle_seek_event):
+	Allow and implement non-flushing and/or segment seek
+	(mainly in TIME and chapter format).
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_process_event),
+	(gst_dvd_demux_get_subpicture_stream),
+	(gst_dvd_demux_synchronise_pads),
+	(gst_dvd_demux_sync_stream_to_time):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_process_event),
+	(gst_mpeg_demux_send_subbuffer),
+	(gst_mpeg_demux_sync_stream_to_time),
+	(gst_mpeg_streams_reset_cur_ts):
+	* gst/mpegstream/gstmpegdemux.h:
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_process_event),
+	(gst_mpeg_parse_pad_added), (gst_mpeg_parse_handle_src_query):
+	Delegate a query to upstream if it can't be handled.
+	Make segment stop aware.
+	Fix (subtitle) stream synchronization.
+	Add some debug statements.
+
 2008-06-26  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (head_check):

@@ -309,6 +309,10 @@ gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
            may mean that we find some audio blocks lying outside the
            segment. Filter them. */
         dvd_demux->segment_filter = TRUE;
+
+        /* reset stream synchronization; parent handles other streams */
+        gst_mpeg_streams_reset_cur_ts (dvd_demux->subpicture_stream,
+            GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS, 0);
       }
 
       ret = GST_MPEG_PARSE_CLASS (parent_class)->process_event (mpeg_parse,
@@ -733,9 +737,6 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
     }
 
     if (add_pad) {
-      gst_pad_set_active (str->pad, TRUE);
-      gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
-
       if (dvd_demux->langcodes) {
         gchar *t;
 
@@ -744,15 +745,21 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
             gst_structure_get_string (gst_event_get_structure (dvd_demux->
                 langcodes), t);
         g_free (t);
+      }
 
-        if (lang_code) {
-          GstTagList *list = gst_tag_list_new ();
+      GST_DEBUG_OBJECT (mpeg_demux, "adding pad %s with language = %s",
+          GST_PAD_NAME (str->pad), (lang_code) ? lang_code : "(unknown)");
 
-          gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-              GST_TAG_LANGUAGE_CODE, lang_code, NULL);
-          gst_element_found_tags_for_pad (GST_ELEMENT (mpeg_demux),
-              str->pad, list);
-        }
+      gst_pad_set_active (str->pad, TRUE);
+      gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
+
+      if (lang_code) {
+        GstTagList *list = gst_tag_list_new ();
+
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            GST_TAG_LANGUAGE_CODE, lang_code, NULL);
+        gst_element_found_tags_for_pad (GST_ELEMENT (mpeg_demux),
+            str->pad, list);
       }
     }
     str->type = GST_DVD_DEMUX_SUBP_DVD;
@@ -1155,6 +1162,14 @@ gst_dvd_demux_synchronise_pads (GstMPEGDemux * mpeg_demux,
   parent_class->synchronise_pads (mpeg_demux, threshold, new_ts);
 
   for (i = 0; i < GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS; i++) {
+#ifndef GST_DISABLE_DEBUG
+    if (dvd_demux->subpicture_stream[i]) {
+      GST_LOG_OBJECT (mpeg_demux, "stream: %d, current: %" GST_TIME_FORMAT
+          ", threshold %" GST_TIME_FORMAT, i,
+          GST_TIME_ARGS (dvd_demux->subpicture_stream[i]->cur_ts),
+          GST_TIME_ARGS (threshold));
+    }
+#endif
     if (dvd_demux->subpicture_stream[i]
         && (dvd_demux->subpicture_stream[i]->cur_ts < threshold)) {
       DEMUX_CLASS (mpeg_demux)->sync_stream_to_time (mpeg_demux,
@@ -1193,9 +1208,13 @@ gst_dvd_demux_sync_stream_to_time (GstMPEGDemux * mpeg_demux,
   }
 
   if (outpad && (cur_nr == stream->number)) {
+    guint64 update_time;
+
+    update_time =
+        MIN ((guint64) last_ts, (guint64) mpeg_parse->current_segment.stop);
     gst_pad_push_event (outpad, gst_event_new_new_segment (TRUE,
             mpeg_parse->current_segment.rate, GST_FORMAT_TIME,
-            last_ts, -1, last_ts));
+            update_time, mpeg_parse->current_segment.stop, update_time));
   }
 }
 
