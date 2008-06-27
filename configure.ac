@@ -695,3 +695,41 @@ gstreamer.spec
 )
 
 AC_OUTPUT
+
+dnl negate for output
+if test "x${GST_DISABLE_LOADSAVE}" = "xno"; then enable_loadsave="yes"; fi
+if test "x${GST_DISABLE_PARSE}" = "xno"; then enable_parse="yes"; fi
+if test "x${GST_DISABLE_OPTION_PARSING}" = "xno"; then enable_option_parsing="yes"; fi
+if test "x${GST_DISABLE_TRACE}" = "xno"; then enable_trace="yes"; fi
+if test "x${GST_DISABLE_ALLOC_TRACE}" = "xno"; then enable_alloc_trace="yes"; fi
+if test "x${GST_DISABLE_PLUGIN}" = "xno"; then enable_plugin="yes"; fi
+if test "x${GST_DISABLE_NET}" = "xno"; then enable_net="yes"; fi
+
+echo "
+
+Configuration
+	Version                    : ${VERSION}
+	Source code location       : ${srcdir}
+	Prefix                     : ${prefix}
+	Compiler                   : ${CC}
+	Package name               : ${GST_PACKAGE_NAME}
+	Package origin             : ${GST_PACKAGE_ORIGIN}
+
+	Documentation (manuals)    : ${enable_docbook}
+	Documentation (API)        : ${enable_gtk_doc}
+
+	Pipeline XML load/save     : ${enable_loadsave}
+	Command-line parser        : ${enable_parse}
+	Option parsing in gst_init : ${enable_option_parsing}
+	Tracing subsystem          : ${enable_trace}
+	Allocation tracing         : ${enable_alloc_trace}
+	Plugin registry            : ${enable_plugin}
+	Network support            : ${enable_net}
+
+	Debug                      : ${USE_DEBUG}
+	Profiling                  : ${USE_PROFILING}
+
+	Building examples          : ${BUILD_EXAMPLES}
+	Building test apps         : ${BUILD_TESTS}
+	Building tests that fail   : ${BUILD_FAILING_TESTS}
+"

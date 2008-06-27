@@ -1,5 +1,11 @@
 2008-06-27  Stefan Kost  <ensonic@users.sf.net>
 
+	* configure.ac:
+	  Show configuration sumary after configure run. Based on patch by
+	  Luc Pionchon <luc.pionchon@nokia.com>. Fixes: #540134
+
+2008-06-27  Stefan Kost  <ensonic@users.sf.net>
+
 	patch by: Luc Pionchon  <luc.pionchon@nokia.com>
 
 	* docs/manual/advanced-autoplugging.xml:
