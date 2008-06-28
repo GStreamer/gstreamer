@@ -1,3 +1,13 @@
+2008-06-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/tvtime/greedyh.asm:
+	* gst/deinterlace2/tvtime/greedyh.c: (greedyDScaler_C),
+	(deinterlace_frame_di_greedyh), (dscaler_greedyh_get_method):
+	* gst/deinterlace2/tvtime/greedyhmacros.h:
+	Add a C implementation for the greedyh deinterlacing method, clean
+	up the code a bit and mark the SSE version as MMXEXT as it doesn't
+	require any SSE instructions.
+
 2008-06-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/gstdeinterlace2.c:
