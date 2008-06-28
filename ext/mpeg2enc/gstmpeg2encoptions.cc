@@ -88,16 +88,22 @@ gst_mpeg2enc_format_get_type (void)
 
   if (!mpeg2enc_format_type) {
     static const GEnumValue mpeg2enc_formats[] = {
-      {0, "Generic MPEG-1", "0"},
-      {1, "Standard VCD", "1"},
-      {2, "User VCD", "2"},
-      {3, "Generic MPEG-2", "3"},
-      {4, "Standard SVCD", "4"},
-      {5, "User SVCD", "5"},
-      {6, "VCD Stills sequences", "6"},
-      {7, "SVCD Stills sequences", "7"},
-      {8, "DVD MPEG-2 for dvdauthor", "8"},
-      {9, "DVD MPEG-2", "9"},
+      {MPEG_FORMAT_MPEG1, "Generic MPEG-1", "0"},
+      {MPEG_FORMAT_VCD, "Standard VCD", "1"},
+      {MPEG_FORMAT_VCD_NSR, "User VCD", "2"},
+      {MPEG_FORMAT_MPEG2, "Generic MPEG-2", "3"},
+      {MPEG_FORMAT_SVCD, "Standard SVCD", "4"},
+      {MPEG_FORMAT_SVCD_NSR, "User SVCD", "5"},
+      {MPEG_FORMAT_VCD_STILL, "VCD Stills sequences", "6"},
+      {MPEG_FORMAT_SVCD_STILL, "SVCD Stills sequences", "7"},
+      {MPEG_FORMAT_DVD_NAV, "DVD MPEG-2 for dvdauthor", "8"},
+      {MPEG_FORMAT_DVD, "DVD MPEG-2", "9"},
+#ifdef MPEG_FORMAT_ATSC1080i
+      {MPEG_FORMAT_ATSC480i, "ATSC 480i", "10"},
+      {MPEG_FORMAT_ATSC480p, "ATSC 480p", "11"},
+      {MPEG_FORMAT_ATSC720p, "ATSC 720p", "12"},
+      {MPEG_FORMAT_ATSC1080i, "ATSC 1080i", "13"},
+#endif
       {0, NULL, NULL},
     };
 

@@ -23,6 +23,7 @@
 #define __GST_MPEG2ENCOPTIONS_H__
 
 #include <glib-object.h>
+#include <format_codes.h>
 #include <mpeg2encoptions.hh>
 
 class GstMpeg2EncOptions : public MPEG2EncOptions {

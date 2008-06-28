@@ -1,3 +1,10 @@
+2008-06-28  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/mpeg2enc/gstmpeg2encoptions.cc:
+	* ext/mpeg2enc/gstmpeg2encoptions.hh:
+	Expose the additional MPEG HDTV format profiles available in latest
+	mjpegtools version.
+
 2008-06-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/gstdeinterlace2.c: (gst_deinterlace2_src_query):
