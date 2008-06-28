@@ -772,6 +772,7 @@ gst_deinterlace2_src_query (GstPad * pad, GstQuery * query)
           latency =
               gst_util_uint64_scale (object->method->fields_required *
               GST_SECOND, object->frame_rate_d, object->frame_rate_n);
+          latency /= 2;
 
           GST_DEBUG ("Our latency: min %" GST_TIME_FORMAT
               ", max %" GST_TIME_FORMAT,
