@@ -194,7 +194,7 @@ check_avimux_pad (GstStaticPadTemplate * srctemplate, gchar * src_caps_string,
         data += 32 + 56;
         fail_unless (memcmp (data, data3, sizeof (data3)) == 0);
         fail_unless (memcmp (data + 8, data4, sizeof (data4)) == 0);
-        fail_unless (memcmp (data + 68, data5, sizeof (data5)) == 0);
+        fail_unless (memcmp (data + 76, data5, sizeof (data5)) == 0);
         /* avi data header */
         data = GST_BUFFER_DATA (outbuffer);
         data += GST_BUFFER_SIZE (outbuffer) - 12;

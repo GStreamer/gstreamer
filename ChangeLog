@@ -1,3 +1,8 @@
+2008-06-28  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* tests/check/elements/avimux.c: (check_avimux_pad):
+	Adjust avimux unit test according to increased streamheader size.
+
 2008-06-27  David Schleef  <ds@schleef.org>
 
 	* gst/qtdemux/qtdemux.c: Add Dirac stream type
