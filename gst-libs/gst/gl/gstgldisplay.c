@@ -28,6 +28,7 @@
 static void gst_gl_display_finalize (GObject * object);
 static gpointer gst_gl_display_glutThreadFunc (GstGLDisplay* display);
 static void gst_gl_display_glutCreateWindow (GstGLDisplay* display);
+static void gst_gl_display_glutInitUpload (GstGLDisplay* display);
 static void gst_gl_display_glutGenerateOutputVideoFBO (GstGLDisplay *display);
 static void gst_gl_display_glutGenerateFBO (GstGLDisplay *display);
 static void gst_gl_display_glutUseFBO (GstGLDisplay *display);
@@ -98,6 +99,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
 {
     display->mutex = g_mutex_new ();
     display->texturePool = g_queue_new ();
+    display->cond_init_upload = g_cond_new ();
     display->cond_make = g_cond_new ();
     display->cond_fill = g_cond_new ();
     display->cond_clear = g_cond_new ();
@@ -117,6 +119,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->textureFBO = 0;
     display->textureFBOWidth = 0;
     display->textureFBOHeight = 0;
+    display->upload_video_format = 0;
 
     display->requestedFBO = 0;
     display->requestedDepthBuffer = 0;
@@ -179,6 +182,8 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->clientReshapeCallback = NULL;
     display->clientDrawCallback = NULL;
     display->title = g_string_new ("OpenGL renderer ");
+
+    display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_GLSL;
 
     display->GLSLProgram_YUY2 = 0;
     display->GLSLProgram_UYVY = 0;
@@ -341,6 +346,10 @@ gst_gl_display_finalize (GObject *object)
         g_mutex_free (display->mutex);
         display->mutex = NULL;
     }
+    if (display->cond_init_upload) {
+        g_cond_free (display->cond_init_upload);
+        display->cond_init_upload = NULL;
+    }
     if (display->cond_make) {
         g_cond_free (display->cond_make);
         display->cond_make = NULL;
@@ -437,9 +446,9 @@ gst_gl_display_glutThreadFunc (GstGLDisplay *display)
     gst_gl_display_glutCreateWindow (display);
     gst_gl_display_unlock (display);
 
-    g_print ("Glut mainLoop start\n");
+    g_print ("gl mainLoop started\n");
     glutMainLoop ();
-    g_print ("Glut mainLoop exited\n");
+    g_print ("gl mainLoop exited\n");
 
     return NULL;
 }
@@ -474,7 +483,10 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
     //Init glew
     err = glewInit();
     if (err != GLEW_OK)
+    {
         GST_DEBUG ("Error: %s", glewGetErrorString(err));
+        display->isAlive = FALSE;
+    }
     else
     {
         //OpenGL > 2.1.0 and Glew > 1.5.0
@@ -497,20 +509,46 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         g_string_free (opengl_version, TRUE);
         g_string_free (glew_version, TRUE);
 
-        if ( (opengl_version_major < 1 && opengl_version_minor < 4) ||
-             (glew_version_major   < 1 && glew_version_minor   < 4) )
+        if ((opengl_version_major < 1 && opengl_version_minor < 4) ||
+            (glew_version_major   < 1 && glew_version_minor   < 4) )
         {
+            //turn off the pipeline, the old drivers are not yet supported
             g_print ("Required OpenGL >= 1.4.0 and Glew >= 1.4.0\n");
-            g_assert_not_reached ();
+            display->isAlive = FALSE;
         }
     }
 
+    //setup callbacks
+    glutReshapeFunc (gst_gl_display_onReshape);
+    glutDisplayFunc (gst_gl_display_draw);
+    glutCloseFunc (gst_gl_display_onClose);
+
+    //insert glut context to the map
+    display->glutWinId = glutWinId;
+    g_hash_table_insert (gst_gl_display_map, GUINT_TO_POINTER (glutWinId), display);
+
+    //check glut id validity
+    g_assert (glutGetWindow() == glutWinId);
+    GST_DEBUG ("Context %d initialized", display->glutWinId);
+
+    //release display constructor
+    g_cond_signal (display->cond_create);
+}
+
+
+/* Called in the gl thread */
+static void
+gst_gl_display_glutInitUpload (GstGLDisplay *display)
+{
+    glutSetWindow (display->glutWinId);
+    
+    //Frame buffer object is a requirement for every cases
     if (GLEW_EXT_framebuffer_object)
     {
         //a texture must be attached to the FBO
         guint fake_texture = 0;
 
-        GST_DEBUG ("Context %d, EXT_framebuffer_object supported: yes", glutWinId);
+        g_print ("Context %d, EXT_framebuffer_object supported: yes\n", display->glutWinId);
 
         //-- init intput frame buffer object (video -> GL)
 
@@ -524,7 +562,7 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
             display->textureFBOWidth, display->textureFBOHeight);
 
-        //setup a texture to render to
+        //a fake texture is attached to the upload FBO (cannot init without it)
         glGenTextures (1, &fake_texture);
         glBindTexture(GL_TEXTURE_RECTANGLE_ARB, fake_texture);
         glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
@@ -547,56 +585,120 @@ gst_gl_display_glutCreateWindow (GstGLDisplay *display)
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
         glDeleteTextures (1, &fake_texture);
-
     }
     else
     {
-        GST_DEBUG ("Context %d, EXT_framebuffer_object supported: no", glutWinId);
-        g_assert_not_reached ();
+        //turn off the pipeline because Frame buffer object is a requirement
+        g_print ("Context %d, EXT_framebuffer_object supported: no\n", display->glutWinId);
+        display->isAlive = FALSE;
     }
 
-	//check if fragment program is available, then load them
-	if (GLEW_ARB_vertex_program)
-	{
-        gchar program[2048];
-
-        GST_DEBUG ("Context %d, ARB_fragment_program supported: yes", glutWinId);
-
-        //from video to texture
-
-        sprintf (program, display->textFProgram_YUY2_UYVY, 'r', 'g', 'a');
-
-        display->GLSLProgram_YUY2 = gst_gl_display_loadGLSLprogram (program);
-
-        sprintf (program, display->textFProgram_YUY2_UYVY, 'a', 'b', 'r');
-
-        display->GLSLProgram_UYVY = gst_gl_display_loadGLSLprogram (program);
-
-        display->GLSLProgram_I420_YV12 = gst_gl_display_loadGLSLprogram (display->textFProgram_I420_YV12);
-
-        display->GLSLProgram_AYUV = gst_gl_display_loadGLSLprogram (display->textFProgram_AYUV);
-	}
-	else
+    switch (display->upload_video_format)
     {
-        GST_DEBUG ("Context %d, ARB_fragment_program supported: no", glutWinId);
-        g_assert_not_reached ();
+        case GST_VIDEO_FORMAT_RGBx:
+        case GST_VIDEO_FORMAT_BGRx:
+        case GST_VIDEO_FORMAT_xRGB:
+        case GST_VIDEO_FORMAT_xBGR:
+        case GST_VIDEO_FORMAT_RGBA:
+        case GST_VIDEO_FORMAT_BGRA:
+        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_ABGR:
+        case GST_VIDEO_FORMAT_RGB:
+        case GST_VIDEO_FORMAT_BGR:
+            //color space conversion is not needed
+            break;
+        case GST_VIDEO_FORMAT_YUY2:
+        case GST_VIDEO_FORMAT_UYVY:
+        case GST_VIDEO_FORMAT_I420:
+        case GST_VIDEO_FORMAT_YV12:
+        case GST_VIDEO_FORMAT_AYUV:
+            //color space conversion is needed
+            {
+	            //check if fragment shader is available, then load them
+	            if (GLEW_ARB_fragment_shader)
+	            {
+                    g_print ("Context %d, ARB_fragment_shader supported: yes\n", display->glutWinId);
+
+                    display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_GLSL;
+
+                    switch (display->upload_video_format)
+                    {
+                        case GST_VIDEO_FORMAT_YUY2:
+                            {
+                                gchar program[2048];
+                                sprintf (program, display->textFProgram_YUY2_UYVY, 'r', 'g', 'a');
+                                display->GLSLProgram_YUY2 = gst_gl_display_loadGLSLprogram (program);
+                            }
+                            break;
+                        case GST_VIDEO_FORMAT_UYVY:
+                            {
+                                gchar program[2048];
+                                sprintf (program, display->textFProgram_YUY2_UYVY, 'a', 'b', 'r');
+                                display->GLSLProgram_UYVY = gst_gl_display_loadGLSLprogram (program);
+                            }
+                            break;
+		                case GST_VIDEO_FORMAT_I420:
+                        case GST_VIDEO_FORMAT_YV12:
+                            display->GLSLProgram_I420_YV12 = gst_gl_display_loadGLSLprogram (display->textFProgram_I420_YV12);
+                            break;
+                        case GST_VIDEO_FORMAT_AYUV:
+                            display->GLSLProgram_AYUV = gst_gl_display_loadGLSLprogram (display->textFProgram_AYUV);
+                            break;
+                        default:
+                            g_assert_not_reached ();
+                    }     
+	            }
+                //check if YCBCR MESA is available
+	            else if (GLEW_MESA_ycbcr_texture)
+	            {
+                    //GLSL and Color Matrix are not available on your drivers, switch to YCBCR MESA
+                    g_print ("Context %d, ARB_fragment_shader supported: no\n", display->glutWinId);
+                    g_print ("Context %d, GLEW_ARB_imaging supported: no\n", display->glutWinId);
+                    g_print ("Context %d, GLEW_MESA_ycbcr_texture supported: yes\n", display->glutWinId);
+                    
+                    display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
+
+                    switch (display->upload_video_format)
+                    {
+                        case GST_VIDEO_FORMAT_YUY2:
+                        case GST_VIDEO_FORMAT_UYVY:
+                            break;
+                        case GST_VIDEO_FORMAT_I420:
+                        case GST_VIDEO_FORMAT_YV12:
+                        case GST_VIDEO_FORMAT_AYUV:
+                            //turn off the pipeline because
+                            //MESA only support YUY2 and UYVY
+                            display->isAlive = FALSE;
+                            break;
+                        default:
+                            g_assert_not_reached ();
+                    }     
+                }
+                //check if color matrix is available
+	            else if (GLEW_ARB_imaging)
+	            {
+                    //GLSL is not available on your drivers, switch to Color Matrix
+                    g_print ("Context %d, ARB_fragment_shader supported: no\n", display->glutWinId);
+                    g_print ("Context %d, GLEW_ARB_imaging supported: yes\n", display->glutWinId);
+                    
+                    display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MATRIX;
+                }
+                else
+                {
+                    g_print ("Context %d, ARB_fragment_shader supported: no\n", display->glutWinId);
+                    g_print ("Context %d, GLEW_ARB_imaging supported: no\n", display->glutWinId);
+                    g_print ("Context %d, GLEW_MESA_ycbcr_texture supported: no\n", display->glutWinId);
+                    
+                    //turn off the pipeline because colorspace conversion is not possible
+                    display->isAlive = FALSE;
+                }
+            }
+            break;
+        default:
+            g_assert_not_reached ();
     }
 
-    //setup callbacks
-    glutReshapeFunc (gst_gl_display_onReshape);
-    glutDisplayFunc (gst_gl_display_draw);
-    glutCloseFunc (gst_gl_display_onClose);
-
-    //insert glut context to the map
-    display->glutWinId = glutWinId;
-    g_hash_table_insert (gst_gl_display_map, GUINT_TO_POINTER (glutWinId), display);
-
-    //check glut id validity
-    g_assert (glutGetWindow() == glutWinId);
-    GST_DEBUG ("Context %d initialized", display->glutWinId);
-
-    //release display constructor
-    g_cond_signal (display->cond_create);
+    g_cond_signal (display->cond_init_upload);
 }
 
 
@@ -686,7 +788,7 @@ gst_gl_display_glutGenerateOutputVideoFBO (GstGLDisplay *display)
         g_assert_not_reached ();
     }
 
-    if (GLEW_ARB_vertex_program)
+    if (GLEW_ARB_fragment_shader)
 	{
         gchar program[2048];
 
@@ -1082,6 +1184,9 @@ gst_gl_display_glutDispatchAction (GstGLDisplayMsg* msg)
         case GST_GL_DISPLAY_ACTION_RESHAPE:
             gst_gl_display_glutReshapeWindow (msg->display);
             break;
+        case GST_GL_DISPLAY_ACTION_INIT_UPLOAD:
+            gst_gl_display_glutInitUpload (msg->display);
+            break;
         case GST_GL_DISPLAY_ACTION_PREPARE:
             gst_gl_display_glutPrepareTexture (msg->display);
             break;
@@ -1140,6 +1245,7 @@ gst_gl_display_checkMsgValidity (GstGLDisplayMsg *msg)
         case GST_GL_DISPLAY_ACTION_DESTROY:
 		case GST_GL_DISPLAY_ACTION_VISIBLE:
         case GST_GL_DISPLAY_ACTION_RESHAPE:
+        case GST_GL_DISPLAY_ACTION_INIT_UPLOAD:
         case GST_GL_DISPLAY_ACTION_PREPARE:
         case GST_GL_DISPLAY_ACTION_CHANGE:
         case GST_GL_DISPLAY_ACTION_CLEAR:
@@ -1279,6 +1385,20 @@ gst_gl_display_resizeWindow (GstGLDisplay* display, gint width, gint height)
     display->resize_width = width;
     display->resize_height = height;
     gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_RESHAPE, display);
+    gst_gl_display_unlock (display);
+}
+
+/* Called by gst gl elements */
+void
+gst_gl_display_init_upload (GstGLDisplay* display, GstVideoFormat video_format,
+                            guint gl_width, guint gl_height)
+{
+    gst_gl_display_lock (display);
+    display->upload_video_format = video_format;
+    display->textureFBOWidth = gl_width;
+    display->textureFBOHeight = gl_height;
+    gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_INIT_UPLOAD, display);
+    g_cond_wait (display->cond_init_upload, display->mutex);
     gst_gl_display_unlock (display);
 }
 
@@ -1505,6 +1625,10 @@ gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId)
         display->textureFBOWidth, display->textureFBOHeight,
         winId,
         TRUE);
+
+    //init colorspace conversion if needed
+    gst_gl_display_init_upload (display, display->upload_video_format, 
+        display->textureFBOWidth, display->textureFBOHeight);
 }
 
 
@@ -1670,17 +1794,54 @@ void gst_gl_display_make_texture (GstGLDisplay* display)
 		    break;
 
 	    case GST_VIDEO_FORMAT_YUY2:
+            switch (display->colorspace_conversion)
+            {
+	            case GST_GL_DISPLAY_CONVERSION_GLSL:
+                case GST_GL_DISPLAY_CONVERSION_MATRIX:
+		            glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
+                        width, height,
+                        0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
+
+                    gst_gl_display_gen_texture (display, &display->currentTexture_u);
+
+                    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture_u);
+                    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+                        width, height,
+                        0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
+		            break;
+	            case GST_GL_DISPLAY_CONVERSION_MESA:
+		            glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA,
+                        width, height,
+                        0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
+		            break;
+	            default:
+		            g_assert_not_reached ();
+            }
+		    break;
 	    case GST_VIDEO_FORMAT_UYVY:
-		    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
-			    width, height,
-			    0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
+            switch (display->colorspace_conversion)
+            {
+	            case GST_GL_DISPLAY_CONVERSION_GLSL:
+                case GST_GL_DISPLAY_CONVERSION_MATRIX:
+		            glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
+                        width, height,
+                        0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
 
-            gst_gl_display_gen_texture (display, &display->currentTexture_u);
+                    gst_gl_display_gen_texture (display, &display->currentTexture_u);
 
-		    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture_u);
-		    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-			    width, height,
-			    0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
+                    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture_u);
+                    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+                        width, height,
+                        0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
+		            break;
+	            case GST_GL_DISPLAY_CONVERSION_MESA:
+		            glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA,
+                        width, height,
+                        0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
+		            break;
+	            default:
+		            g_assert_not_reached ();
+            }
 		    break;
 
 	    case GST_VIDEO_FORMAT_I420:
@@ -1742,14 +1903,48 @@ gst_gl_display_fill_texture (GstGLDisplay * display)
                 GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
             break;
         case GST_VIDEO_FORMAT_YUY2:
-        case GST_VIDEO_FORMAT_UYVY:
-            glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
-                GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
+            switch (display->colorspace_conversion)
+            {
+	            case GST_GL_DISPLAY_CONVERSION_GLSL:
+                case GST_GL_DISPLAY_CONVERSION_MATRIX:
+		            glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+                        GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
 
-            glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture_u);
-            glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
-                GST_ROUND_UP_2 (width) / 2, height,
-                GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
+                    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture_u);
+                    glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+                        GST_ROUND_UP_2 (width) / 2, height,
+                        GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
+		            break;
+                case GST_GL_DISPLAY_CONVERSION_MESA:
+	                glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+                        GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, data);
+                    display->currentVideo_format = GST_VIDEO_FORMAT_RGBx;
+		            break;
+	            default:
+		            g_assert_not_reached ();
+            }
+            break;
+        case GST_VIDEO_FORMAT_UYVY:
+            switch (display->colorspace_conversion)
+            {
+	            case GST_GL_DISPLAY_CONVERSION_GLSL:
+                case GST_GL_DISPLAY_CONVERSION_MATRIX:
+		            glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+                        GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
+
+                    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture_u);
+                    glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+                        GST_ROUND_UP_2 (width) / 2, height,
+                        GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
+		            break;
+                case GST_GL_DISPLAY_CONVERSION_MESA:
+	                glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+                        GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, data);
+                    display->currentVideo_format = GST_VIDEO_FORMAT_RGBx;
+		            break;
+	            default:
+		            g_assert_not_reached ();
+            }
             break;
         case GST_VIDEO_FORMAT_I420:
         case GST_VIDEO_FORMAT_YV12:
@@ -1853,43 +2048,43 @@ gst_gl_display_draw_texture (GstGLDisplay* display)
 		case GST_VIDEO_FORMAT_YUY2:
 		case GST_VIDEO_FORMAT_UYVY:
 			{
-				gint i=0;
-				GLhandleARB GLSLProgram_YUY2_UYVY = 0;
+                gint i=0;
+			    GLhandleARB GLSLProgram_YUY2_UYVY = 0;
 
-				switch (display->currentVideo_format)
-				{
-					case GST_VIDEO_FORMAT_YUY2:
-						GLSLProgram_YUY2_UYVY = display->GLSLProgram_YUY2;
-						break;
-					case GST_VIDEO_FORMAT_UYVY:
-						GLSLProgram_YUY2_UYVY = display->GLSLProgram_UYVY;
-						break;
-					default:
-						g_assert_not_reached ();
-				}
+			    switch (display->currentVideo_format)
+			    {
+				    case GST_VIDEO_FORMAT_YUY2:
+					    GLSLProgram_YUY2_UYVY = display->GLSLProgram_YUY2;
+					    break;
+				    case GST_VIDEO_FORMAT_UYVY:
+					    GLSLProgram_YUY2_UYVY = display->GLSLProgram_UYVY;
+					    break;
+				    default:
+					    g_assert_not_reached ();
+			    }
 
                 glUseProgramObjectARB (GLSLProgram_YUY2_UYVY);
 
-				glMatrixMode (GL_PROJECTION);
-				glLoadIdentity ();
+			    glMatrixMode (GL_PROJECTION);
+			    glLoadIdentity ();
 
-				glActiveTextureARB(GL_TEXTURE1_ARB);
-				i = glGetUniformLocationARB (GLSLProgram_YUY2_UYVY, "UVtex");
-				glUniform1iARB (i, 1);
-				glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture_u);
-				glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			    glActiveTextureARB(GL_TEXTURE1_ARB);
+			    i = glGetUniformLocationARB (GLSLProgram_YUY2_UYVY, "UVtex");
+			    glUniform1iARB (i, 1);
+			    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture_u);
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
                 glActiveTextureARB(GL_TEXTURE0_ARB);
-				i = glGetUniformLocationARB (GLSLProgram_YUY2_UYVY, "Ytex");
-				glUniform1iARB (i, 0);
-				glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture);
-				glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			    i = glGetUniformLocationARB (GLSLProgram_YUY2_UYVY, "Ytex");
+			    glUniform1iARB (i, 0);
+			    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture);
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			}
 			break;
 
@@ -1934,21 +2129,21 @@ gst_gl_display_draw_texture (GstGLDisplay* display)
 
 		case GST_VIDEO_FORMAT_AYUV:
 			{
-				gint i=0;
+                gint i=0;
 
-				glUseProgramObjectARB (display->GLSLProgram_AYUV);
+			    glUseProgramObjectARB (display->GLSLProgram_AYUV);
 
-				glMatrixMode (GL_PROJECTION);
-				glLoadIdentity ();
+			    glMatrixMode (GL_PROJECTION);
+			    glLoadIdentity ();
 
                 glActiveTextureARB(GL_TEXTURE0_ARB);
-				i = glGetUniformLocationARB (display->GLSLProgram_AYUV, "tex");
-				glUniform1iARB (i, 0);
-				glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture);
-				glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			    i = glGetUniformLocationARB (display->GLSLProgram_AYUV, "tex");
+			    glUniform1iARB (i, 0);
+			    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->currentTexture);
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);               
 			}
 			break;
 
