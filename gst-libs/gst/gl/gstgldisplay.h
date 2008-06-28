@@ -65,7 +65,7 @@ typedef enum {
     GST_GL_DISPLAY_ACTION_DELFBO,
     GST_GL_DISPLAY_ACTION_USEFBO,
     GST_GL_DISPLAY_ACTION_USEFBO2,
-    GST_GL_DISPLAY_ACTION_OVFBO,
+    GST_GL_DISPLAY_ACTION_INIT_DOWNLOAD,
     GST_GL_DISPLAY_ACTION_GENSHADER,
     GST_GL_DISPLAY_ACTION_DELSHADER
 	
@@ -110,7 +110,7 @@ struct _GstGLDisplay {
     GCond* cond_useFBO;
     GCond* cond_useFBO2;
     GCond* cond_destroyFBO;
-    GCond* cond_download;
+    GCond* cond_init_download;
     GCond* cond_initShader;
     GCond* cond_destroyShader;
 
@@ -271,7 +271,8 @@ void gst_gl_display_useFBO2 (GstGLDisplay* display, gint textureFBOWidth, gint t
                             gpointer* p1, gpointer* p2);
 void gst_gl_display_rejectFBO (GstGLDisplay* display, guint fbo, 
                                guint depthbuffer);
-void gst_gl_display_initDonwloadFBO (GstGLDisplay* display, gint width, gint height);
+void gst_gl_display_init_download (GstGLDisplay* display, GstVideoFormat video_format, 
+                                   gint width, gint height);
 void gst_gl_display_initShader (GstGLDisplay* display, gchar* textShader, GLhandleARB* handleShader);
 void gst_gl_display_destroyShader (GstGLDisplay* display, GLhandleARB shader);
 void gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId);
