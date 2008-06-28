@@ -394,12 +394,12 @@ gst_gl_colorscale_set_caps (GstBaseTransform* bt, GstCaps* incaps,
         colorscale->output_video_width, colorscale->output_video_height, 
         0, FALSE);
 
-    //init colorspace conversion if needed
+    //blocking call, init colorspace conversion if needed
     gst_gl_display_init_upload (colorscale->display, colorscale->input_video_format, 
         colorscale->output_video_width, colorscale->output_video_height);
 
-    //blocking call
-    gst_gl_display_initDonwloadFBO (colorscale->display, 
+    //blocking call, init colorspace conversion if needed
+    gst_gl_display_init_download (colorscale->display, colorscale->output_video_format,
         colorscale->output_video_width, colorscale->output_video_height);
 
     return ret;

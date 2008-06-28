@@ -289,21 +289,22 @@ static GstFlowReturn
 gst_gl_download_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     GstBuffer* outbuf)
 {
-    GstGLDownload* download = NULL;
+    GstGLDownload* download = GST_GL_DOWNLOAD (trans);
     GstGLBuffer* gl_inbuf = GST_GL_BUFFER (inbuf);
-
-    download = GST_GL_DOWNLOAD (trans);
 
     if (download->display == NULL) 
     {
         download->display = g_object_ref (gl_inbuf->display);
-        gst_gl_display_initDonwloadFBO (download->display, download->width, download->height);
+
+        //blocking call, init color space conversion if needed
+        gst_gl_display_init_download (download->display, download->video_format,
+            download->width, download->height);
     }
     else 
         g_assert (download->display == gl_inbuf->display);
 
     GST_DEBUG ("making video %p size %d",
-      GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
+        GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
 
     //blocking call
     gst_gl_display_videoChanged(download->display, download->video_format, 

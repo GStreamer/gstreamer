@@ -29,7 +29,7 @@ static void gst_gl_display_finalize (GObject * object);
 static gpointer gst_gl_display_glutThreadFunc (GstGLDisplay* display);
 static void gst_gl_display_glutCreateWindow (GstGLDisplay* display);
 static void gst_gl_display_glutInitUpload (GstGLDisplay* display);
-static void gst_gl_display_glutGenerateOutputVideoFBO (GstGLDisplay *display);
+static void gst_gl_display_glutInitDownload (GstGLDisplay *display);
 static void gst_gl_display_glutGenerateFBO (GstGLDisplay *display);
 static void gst_gl_display_glutUseFBO (GstGLDisplay *display);
 static void gst_gl_display_glutUseFBO2 (GstGLDisplay *display);
@@ -110,7 +110,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->cond_destroyFBO = g_cond_new ();
     display->cond_create = g_cond_new ();
     display->cond_destroy = g_cond_new ();
-    display->cond_download = g_cond_new ();
+    display->cond_init_download = g_cond_new ();
     display->cond_initShader = g_cond_new ();
     display->cond_destroyShader = g_cond_new ();
 
@@ -366,9 +366,9 @@ gst_gl_display_finalize (GObject *object)
         g_cond_free (display->cond_video);
         display->cond_video = NULL;
     }
-    if (display->cond_download) {
-        g_cond_free (display->cond_download);
-        display->cond_download = NULL;
+    if (display->cond_init_download) {
+        g_cond_free (display->cond_init_download);
+        display->cond_init_download = NULL;
     }
     if (display->cond_initShader) {
         g_cond_free (display->cond_initShader);
@@ -702,9 +702,9 @@ gst_gl_display_glutInitUpload (GstGLDisplay *display)
 }
 
 
-/* Called by the idle funtion */
+/* Called by the gl thread */
 static void
-gst_gl_display_glutGenerateOutputVideoFBO (GstGLDisplay *display)
+gst_gl_display_glutInitDownload (GstGLDisplay *display)
 {
     glutSetWindow (display->glutWinId);
 
@@ -738,33 +738,61 @@ gst_gl_display_glutGenerateOutputVideoFBO (GstGLDisplay *display)
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
             GL_TEXTURE_RECTANGLE_ARB, display->videoTexture, 0);
 
-        //setup a second texture to render to
-        glGenTextures (1, &display->videoTexture_u);
-        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->videoTexture_u);
-        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-            display->outputWidth, display->outputHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        switch (display->outputVideo_format)
+        {
+            case GST_VIDEO_FORMAT_RGBx:
+            case GST_VIDEO_FORMAT_BGRx:
+            case GST_VIDEO_FORMAT_xRGB:
+            case GST_VIDEO_FORMAT_xBGR:
+            case GST_VIDEO_FORMAT_RGBA:
+            case GST_VIDEO_FORMAT_BGRA:
+            case GST_VIDEO_FORMAT_ARGB:
+            case GST_VIDEO_FORMAT_ABGR:
+            case GST_VIDEO_FORMAT_RGB:
+            case GST_VIDEO_FORMAT_BGR:
+            case GST_VIDEO_FORMAT_YUY2:
+            case GST_VIDEO_FORMAT_UYVY:           
+            case GST_VIDEO_FORMAT_AYUV:
+                //only one attached texture is needed
+                break;
 
-        //attach the second texture to the FBO to renderer to
-        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT,
-            GL_TEXTURE_RECTANGLE_ARB, display->videoTexture_u, 0);
+            case GST_VIDEO_FORMAT_I420:
+            case GST_VIDEO_FORMAT_YV12:
+                //setup a second texture to render to
+                glGenTextures (1, &display->videoTexture_u);
+                glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->videoTexture_u);
+                glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+                    display->outputWidth, display->outputHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+                glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-        //setup a third texture to render to
-        glGenTextures (1, &display->videoTexture_v);
-        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->videoTexture_v);
-        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-            display->outputWidth, display->outputHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                //attach the second texture to the FBO to renderer to
+                glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT,
+                    GL_TEXTURE_RECTANGLE_ARB, display->videoTexture_u, 0);
 
-        //attach the third texture to the FBO to renderer to
-        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT2_EXT,
-            GL_TEXTURE_RECTANGLE_ARB, display->videoTexture_v, 0);
+                //setup a third texture to render to
+                glGenTextures (1, &display->videoTexture_v);
+                glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->videoTexture_v);
+                glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+                    display->outputWidth, display->outputHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+                glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+                //attach the third texture to the FBO to renderer to
+                glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT2_EXT,
+                    GL_TEXTURE_RECTANGLE_ARB, display->videoTexture_v, 0);
+
+                display->multipleRT[0] = GL_COLOR_ATTACHMENT0_EXT;
+                display->multipleRT[1] = GL_COLOR_ATTACHMENT1_EXT;
+                display->multipleRT[2] = GL_COLOR_ATTACHMENT2_EXT;
+                break;
+            default:
+                g_assert_not_reached ();
+        }
 
         //attach the depth render buffer to the FBO
         glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
@@ -776,41 +804,80 @@ gst_gl_display_glutGenerateOutputVideoFBO (GstGLDisplay *display)
             GL_FRAMEBUFFER_COMPLETE_EXT);
 
         //unbind the FBO
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
-        display->multipleRT[0] = GL_COLOR_ATTACHMENT0_EXT;
-        display->multipleRT[1] = GL_COLOR_ATTACHMENT1_EXT;
-        display->multipleRT[2] = GL_COLOR_ATTACHMENT2_EXT;
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);    
     }
     else
     {
-        GST_DEBUG ("Context %d, EXT_framebuffer_object supported: no", display->glutWinId);
-        g_assert_not_reached ();
+        //turn off the pipeline because Frame buffer object is a requirement
+        g_print ("Context %d, EXT_framebuffer_object supported: no\n", display->glutWinId);
+        display->isAlive = FALSE;
     }
 
-    if (GLEW_ARB_fragment_shader)
-	{
-        gchar program[2048];
-
-        //from texture to video
-
-        sprintf (program, display->textFProgram_to_YUY2_UYVY, "y2,u,y1,v");
-        display->GLSLProgram_to_YUY2 = gst_gl_display_loadGLSLprogram (program);
-
-        sprintf (program, display->textFProgram_to_YUY2_UYVY, "v,y1,u,y2");
-        display->GLSLProgram_to_UYVY = gst_gl_display_loadGLSLprogram (program);
-
-        display->GLSLProgram_to_I420_YV12 = gst_gl_display_loadGLSLprogram (display->textFProgram_to_I420_YV12);
-
-        display->GLSLProgram_to_AYUV = gst_gl_display_loadGLSLprogram (display->textFProgram_to_AYUV);
-    }
-    else
+    switch (display->outputVideo_format)
     {
-        GST_DEBUG ("Context %d, ARB_fragment_program supported: no", display->glutWinId);
-        g_assert_not_reached ();
+        case GST_VIDEO_FORMAT_RGBx:
+        case GST_VIDEO_FORMAT_BGRx:
+        case GST_VIDEO_FORMAT_xRGB:
+        case GST_VIDEO_FORMAT_xBGR:
+        case GST_VIDEO_FORMAT_RGBA:
+        case GST_VIDEO_FORMAT_BGRA:
+        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_ABGR:
+        case GST_VIDEO_FORMAT_RGB:
+        case GST_VIDEO_FORMAT_BGR:
+            //color space conversion is not needed
+            break;
+        case GST_VIDEO_FORMAT_YUY2:
+        case GST_VIDEO_FORMAT_UYVY:
+        case GST_VIDEO_FORMAT_I420:
+        case GST_VIDEO_FORMAT_YV12:
+        case GST_VIDEO_FORMAT_AYUV:
+            //color space conversion is needed
+            {
+                //check if fragment shader is available, then load them
+                //GLSL is a requirement for donwload
+                if (GLEW_ARB_fragment_shader)
+	            {
+                    switch (display->outputVideo_format)
+                    {
+                        case GST_VIDEO_FORMAT_YUY2:
+                            {
+                                gchar program[2048];
+                                sprintf (program, display->textFProgram_to_YUY2_UYVY, "y2,u,y1,v");
+                                display->GLSLProgram_to_YUY2 = gst_gl_display_loadGLSLprogram (program);
+                            }
+                            break;
+                        case GST_VIDEO_FORMAT_UYVY:
+                            {
+                                gchar program[2048];
+                                sprintf (program, display->textFProgram_to_YUY2_UYVY, "v,y1,u,y2");
+                                display->GLSLProgram_to_UYVY = gst_gl_display_loadGLSLprogram (program);
+                            }
+                            break;
+		                case GST_VIDEO_FORMAT_I420:
+                        case GST_VIDEO_FORMAT_YV12:
+                            display->GLSLProgram_to_I420_YV12 = gst_gl_display_loadGLSLprogram (display->textFProgram_to_I420_YV12);
+                            break;
+                        case GST_VIDEO_FORMAT_AYUV:
+                            display->GLSLProgram_to_AYUV = gst_gl_display_loadGLSLprogram (display->textFProgram_to_AYUV);
+                            break;
+                        default:
+                            g_assert_not_reached ();
+                    }                                                                
+                }
+                else
+                {
+                    //turn off the pipeline because colorspace conversion is not possible
+                    GST_DEBUG ("Context %d, ARB_fragment_shader supported: no", display->glutWinId); 
+                    display->isAlive = FALSE;
+                }
+            }
+            break;
+        default:
+            g_assert_not_reached ();
     }
 
-    g_cond_signal (display->cond_download);
+    g_cond_signal (display->cond_init_download);
 }
 
 
@@ -1214,8 +1281,8 @@ gst_gl_display_glutDispatchAction (GstGLDisplayMsg* msg)
         case GST_GL_DISPLAY_ACTION_USEFBO2:
             gst_gl_display_glutUseFBO2 (msg->display);
             break;
-        case GST_GL_DISPLAY_ACTION_OVFBO:
-            gst_gl_display_glutGenerateOutputVideoFBO (msg->display);
+        case GST_GL_DISPLAY_ACTION_INIT_DOWNLOAD:
+            gst_gl_display_glutInitDownload (msg->display);
             break;
         case GST_GL_DISPLAY_ACTION_GENSHADER:
             gst_gl_display_glutInitShader (msg->display);
@@ -1255,7 +1322,7 @@ gst_gl_display_checkMsgValidity (GstGLDisplayMsg *msg)
         case GST_GL_DISPLAY_ACTION_DELFBO:
         case GST_GL_DISPLAY_ACTION_USEFBO:
         case GST_GL_DISPLAY_ACTION_USEFBO2:
-        case GST_GL_DISPLAY_ACTION_OVFBO:
+        case GST_GL_DISPLAY_ACTION_INIT_DOWNLOAD:
         case GST_GL_DISPLAY_ACTION_GENSHADER:
         case GST_GL_DISPLAY_ACTION_DELSHADER:
             //msg is out of date if the associated display is not in the map
@@ -1562,13 +1629,15 @@ gst_gl_display_rejectFBO (GstGLDisplay* display, guint fbo,
 
 /* Called by gst_gl elements */
 void
-gst_gl_display_initDonwloadFBO (GstGLDisplay* display, gint width, gint height)
+gst_gl_display_init_download (GstGLDisplay* display, GstVideoFormat video_format,
+                              gint width, gint height)
 {
     gst_gl_display_lock (display);
+    display->outputVideo_format = video_format;
     display->outputWidth = width;
     display->outputHeight = height;
-    gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_OVFBO, display);
-    g_cond_wait (display->cond_download, display->mutex);
+    gst_gl_display_postMessage (GST_GL_DISPLAY_ACTION_INIT_DOWNLOAD, display);
+    g_cond_wait (display->cond_init_download, display->mutex);
     gst_gl_display_unlock (display);
 }
 
@@ -2203,8 +2272,7 @@ gst_gl_display_fill_video (GstGLDisplay* display)
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    //gluOrtho2D(0.0, width, 0.0, height);
-    gluPerspective(45, (gfloat)width/(gfloat)height, 0.1, 100);
+    gluOrtho2D(0.0, width, 0.0, height);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
