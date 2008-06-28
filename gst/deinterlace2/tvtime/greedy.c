@@ -53,19 +53,11 @@
 // I'd intended this to be part of a larger more elaborate method added to 
 // Blended Clip but this give too good results for the CPU to ignore here.
 
-static void
-copy_scanline (GstDeinterlace2 * object,
-    deinterlace_scanline_data_t * data, uint8_t * output)
-{
-  blit_packed422_scanline (output, data->m1, object->frame_width);
-}
-
 static const int GreedyMaxComb = 15;
 
 static inline void
-deinterlace_greedy_packed422_scanline_c (GstDeinterlace2 * object,
-    uint8_t * m0, uint8_t * t1, uint8_t * b1, uint8_t * m2, uint8_t * output,
-    int width)
+deinterlace_greedy_packed422_scanline_c (uint8_t * m0, uint8_t * t1,
+    uint8_t * b1, uint8_t * m2, uint8_t * output, int width)
 {
   int avg, l2_diff, lp2_diff, max, min, best;
 
@@ -112,9 +104,8 @@ deinterlace_greedy_packed422_scanline_c (GstDeinterlace2 * object,
 #ifdef HAVE_CPU_I386
 #include "mmx.h"
 static void
-deinterlace_greedy_packed422_scanline_mmx (GstDeinterlace2 * object,
-    uint8_t * m0, uint8_t * t1, uint8_t * b1, uint8_t * m2, uint8_t * output,
-    int width)
+deinterlace_greedy_packed422_scanline_mmx (uint8_t * m0, uint8_t * t1,
+    uint8_t * b1, uint8_t * m2, uint8_t * output, int width)
 {
   mmx_t MaxComb;
 
@@ -222,16 +213,14 @@ deinterlace_greedy_packed422_scanline_mmx (GstDeinterlace2 * object,
   }
   emms ();
   if (width > 0)
-    deinterlace_greedy_packed422_scanline_c (object, m0, t1, b1, m2, output,
-        width);
+    deinterlace_greedy_packed422_scanline_c (m0, t1, b1, m2, output, width);
 }
 
 #include "sse.h"
 
 static void
-deinterlace_greedy_packed422_scanline_mmxext (GstDeinterlace2 * object,
-    uint8_t * m0, uint8_t * t1, uint8_t * b1, uint8_t * m2, uint8_t * output,
-    int width)
+deinterlace_greedy_packed422_scanline_mmxext (uint8_t * m0, uint8_t * t1,
+    uint8_t * b1, uint8_t * m2, uint8_t * output, int width)
 {
   mmx_t MaxComb;
 
@@ -316,47 +305,104 @@ deinterlace_greedy_packed422_scanline_mmxext (GstDeinterlace2 * object,
   emms ();
 
   if (width > 0)
-    deinterlace_greedy_packed422_scanline_c (object, m0, t1, b1, m2, output,
-        width);
+    deinterlace_greedy_packed422_scanline_c (m0, t1, b1, m2, output, width);
 }
 
 #endif
 
 static void
-deinterlace_greedy_packed422_scanline (GstDeinterlace2 * object,
-    deinterlace_scanline_data_t * data, uint8_t * output)
+deinterlace_frame_di_greedy (GstDeinterlace2 * object)
 {
+  void (*func) (uint8_t * L2, uint8_t * L1, uint8_t * L3, uint8_t * L2P,
+      uint8_t * Dest, int size);
+
+  int InfoIsOdd = 0;
+  int Line;
+  unsigned int Pitch = object->field_stride;
+  unsigned char *L1;            // ptr to Line1, of 3
+  unsigned char *L2;            // ptr to Line2, the weave line
+  unsigned char *L3;            // ptr to Line3
+
+  unsigned char *L2P;           // ptr to prev Line2
+  unsigned char *Dest = GST_BUFFER_DATA (object->out_buf);
+
 #ifdef HAVE_CPU_I386
   if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMXEXT) {
-    deinterlace_greedy_packed422_scanline_mmxext (object, data->m0, data->t1,
-        data->b1, data->m2, output, 2 * object->frame_width);
+    func = deinterlace_greedy_packed422_scanline_mmxext;
   } else if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMX) {
-    deinterlace_greedy_packed422_scanline_mmx (object, data->m0, data->t1,
-        data->b1, data->m2, output, 2 * object->frame_width);
+    func = deinterlace_greedy_packed422_scanline_mmx;
   } else {
-    deinterlace_greedy_packed422_scanline_c (object, data->m0, data->t1,
-        data->b1, data->m2, output, 2 * object->frame_width);
+    func = deinterlace_greedy_packed422_scanline_c;
   }
 #else
-  deinterlace_greedy_packed422_scanline_c (object, data->m0, data->t1, data->b1,
-      data->m2, output, 2 * object->frame_width);
+  func = deinterlace_greedy_packed422_scanline_c;
 #endif
-}
 
+  // copy first even line no matter what, and the first odd line if we're
+  // processing an EVEN field. (note diff from other deint rtns.)
+
+  if (object->field_history[object->history_count - 1].flags ==
+      PICTURE_INTERLACED_BOTTOM) {
+    InfoIsOdd = 1;
+
+    L1 = GST_BUFFER_DATA (object->field_history[object->history_count - 2].buf);
+    L2 = GST_BUFFER_DATA (object->field_history[object->history_count - 1].buf);
+    L3 = L1 + Pitch;
+    L2P =
+        GST_BUFFER_DATA (object->field_history[object->history_count - 3].buf);
+
+    // copy first even line
+    object->pMemcpy (Dest, L1, object->line_length);
+    Dest += object->output_stride;
+  } else {
+    InfoIsOdd = 0;
+    L1 = GST_BUFFER_DATA (object->field_history[object->history_count - 2].buf);
+    L2 = GST_BUFFER_DATA (object->field_history[object->history_count -
+            1].buf) + Pitch;
+    L3 = L1 + Pitch;
+    L2P =
+        GST_BUFFER_DATA (object->field_history[object->history_count - 3].buf) +
+        Pitch;
+
+    // copy first even line
+    object->pMemcpy (Dest, GST_BUFFER_DATA (object->field_history[0].buf),
+        object->line_length);
+    Dest += object->output_stride;
+    // then first odd line
+    object->pMemcpy (Dest, L1, object->line_length);
+    Dest += object->output_stride;
+  }
+
+  for (Line = 0; Line < (object->field_height - 1); ++Line) {
+    func (L2, L1, L3, L2P, Dest, object->line_length);
+    Dest += object->output_stride;
+    object->pMemcpy (Dest, L3, object->line_length);
+    Dest += object->output_stride;
+
+    L1 += Pitch;
+    L2 += Pitch;
+    L3 += Pitch;
+    L2P += Pitch;
+  }
+
+  if (InfoIsOdd) {
+    object->pMemcpy (Dest, L2, object->line_length);
+  }
+}
 
 static deinterlace_method_t greedyl_method = {
   0,                            //DEINTERLACE_PLUGIN_API_VERSION,
   "Motion Adaptive: Simple Detection",
   "AdaptiveSimple",
-  3,
+  4,
   0,
   0,
   0,
   0,
   1,
-  copy_scanline,
-  deinterlace_greedy_packed422_scanline,
   0,
+  0,
+  deinterlace_frame_di_greedy,
   {"Uses heuristics to detect motion in the input",
         "frames and reconstruct image detail where",
         "possible.  Use this for high quality output",

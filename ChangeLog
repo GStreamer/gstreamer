@@ -1,5 +1,32 @@
 2008-06-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/tvtime/greedy.c:
+	(deinterlace_greedy_packed422_scanline_c),
+	(deinterlace_greedy_packed422_scanline_mmx),
+	(deinterlace_greedy_packed422_scanline_mmxext),
+	(deinterlace_frame_di_greedy):
+	Don't use scanlines function from gstdeinterlace2 as it's
+	not appropiate for this method. Instead implement deinterlace_frame
+	function by taking the one from greedyh.
+	
+	* gst/deinterlace2/tvtime/greedyh.c: (greedyDScaler_C):
+	Small fix for the C implementation.
+
+	* gst/deinterlace2/tvtime/vfir.c: (deinterlace_frame_vfir):
+	Don't use the scanlines function from gstdeinterlace2 as it's only
+	used for this method and will be removed. Instead implement
+	deinterlace_frame function and make it a bit more efficient.
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace2_class_init), (gst_deinterlace2_set_method),
+	(gst_deinterlace2_push_history), (gst_deinterlace2_chain),
+	(gst_deinterlace2_setcaps), (gst_deinterlace2_sink_event),
+	(gst_deinterlace2_change_state), (gst_deinterlace2_src_event),
+	(gst_deinterlace2_src_query):
+	Fix coding style and remove scanlines function as it's unused now.
+
+2008-06-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/tvtime/greedyh.asm:
 	* gst/deinterlace2/tvtime/greedyh.c: (greedyDScaler_C),
 	(deinterlace_frame_di_greedyh), (dscaler_greedyh_get_method):

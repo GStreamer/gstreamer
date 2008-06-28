@@ -85,6 +85,11 @@ greedyDScaler_C (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
     avg_l = (l1_l + l3_l) / 2;
     avg_c = (l1_c + l3_c) / 2;
 
+    if (Pos == 0) {
+      avg_l__1 = avg_l;
+      avg_c__1 = avg_c;
+    }
+
     /* Average of next L1 and next L3 */
     avg_l_1 = (l1_1_l + l3_1_l) / 2;
     avg_c_1 = (l1_1_c + l3_1_c) / 2;
