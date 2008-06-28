@@ -125,28 +125,20 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static void gst_deinterlace2_finalize (GObject * object);
-
 static void gst_deinterlace2_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_deinterlace2_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_deinterlace2_setcaps (GstPad * pad, GstCaps * caps);
-
 static gboolean gst_deinterlace2_sink_event (GstPad * pad, GstEvent * event);
-
 static GstFlowReturn gst_deinterlace2_chain (GstPad * pad, GstBuffer * buffer);
-
 static GstStateChangeReturn gst_deinterlace2_change_state (GstElement * element,
     GstStateChange transition);
 
 static gboolean gst_deinterlace2_src_event (GstPad * pad, GstEvent * event);
-
 static gboolean gst_deinterlace2_src_query (GstPad * pad, GstQuery * query);
-
 static const GstQueryType *gst_deinterlace2_src_query_types (GstPad * pad);
-
-static void gst_deinterlace2_deinterlace_scanlines (GstDeinterlace2 * object);
 
 static void gst_deinterlace2_reset (GstDeinterlace2 * object);
 
@@ -197,7 +189,6 @@ gst_deinterlace2_class_init (GstDeinterlace2Class * klass)
           GST_TYPE_DEINTERLACE2_FIELDS,
           GST_DEINTERLACE2_ALL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
-
 
   g_object_class_install_property (gobject_class, ARG_FIELDS,
       g_param_spec_enum ("tff",
@@ -314,14 +305,9 @@ gst_deinterlace2_set_method (GstDeinterlace2 * object,
       GST_WARNING ("Invalid Deinterlacer Method");
   }
 
-
-  if (object->method->deinterlace_frame == NULL)
-    object->method->deinterlace_frame = gst_deinterlace2_deinterlace_scanlines;
-
   /* TODO: if current method requires less fields in the history,
      pop the diff from field_history.
    */
-
 }
 
 static void
@@ -422,9 +408,7 @@ static void
 gst_deinterlace2_push_history (GstDeinterlace2 * object, GstBuffer * buffer)
 {
   int i = 1;
-
   GstClockTime timestamp;
-
   GstClockTime field_diff;
 
   g_assert (object->history_count < MAX_FIELD_HISTORY - 2);
@@ -470,122 +454,11 @@ gst_deinterlace2_push_history (GstDeinterlace2 * object, GstBuffer * buffer)
   GST_DEBUG ("push, size(history): %d", object->history_count);
 }
 
-/* some methods support only deinterlace_/copy_scanline functions.
-   This funtion calls them in the right manner. */
-static void
-gst_deinterlace2_deinterlace_scanlines (GstDeinterlace2 * object)
-{
-
-  gint line = 1;
-
-  gint cur_field_idx = object->history_count - object->method->fields_required;
-
-  GST_INFO ("cur_field_idx: %d", cur_field_idx);
-
-  guint8 *out_data = GST_BUFFER_DATA (object->out_buf);
-
-  guint8 *cur_field =
-      GST_BUFFER_DATA (object->field_history[cur_field_idx].buf);
-  guint8 *last_field = NULL;
-
-  guint8 *second_last_field = NULL;
-
-  /* method can just handle up to 3 history fields, 
-     bcs until now there isn't a plugin (with interp./copy scanline methods)
-     that uses more */
-  g_assert (object->method->fields_required <= 3);
-
-  if (object->method->fields_required >= 2) {
-    last_field = GST_BUFFER_DATA (object->field_history[cur_field_idx + 1].buf);
-  }
-  if (object->method->fields_required >= 3) {
-    second_last_field =
-        GST_BUFFER_DATA (object->field_history[cur_field_idx + 2].buf);
-  }
-
-  if (object->field_history[cur_field_idx].flags == PICTURE_INTERLACED_BOTTOM) {
-    /* double the first scanline of the bottom field */
-    blit_packed422_scanline (out_data, cur_field, object->frame_width);
-    out_data += object->output_stride;
-  }
-
-  blit_packed422_scanline (out_data, cur_field, object->frame_width);
-  out_data += object->output_stride;
-  line++;
-
-  for (; line <= object->field_height;) {
-    deinterlace_scanline_data_t data;
-
-    /* interp. scanline */
-    data.t0 = cur_field;
-    data.b0 = cur_field + object->field_stride;
-
-    if (last_field != NULL) {
-      data.tt1 = last_field;
-      data.m1 = last_field + object->field_stride;
-      data.bb1 = last_field + (object->field_stride * 2);
-
-      last_field += object->field_stride;
-    }
-
-    if (second_last_field != NULL) {
-      data.t2 = second_last_field;
-      data.b2 = second_last_field + object->field_stride;
-    }
-
-    /* set valid data for corner cases */
-    if (line == 2) {
-      data.tt1 = data.bb1;
-    } else if (line == object->field_height) {
-      data.bb1 = data.tt1;
-    }
-
-    object->method->interpolate_scanline (object, &data, out_data);
-    out_data += object->output_stride;
-
-    /* copy a scanline */
-    data.tt0 = cur_field;
-    data.m0 = cur_field + (object->field_stride);
-    data.bb0 = cur_field + (object->field_stride * 2);
-    cur_field += object->field_stride;
-
-    if (last_field != NULL) {
-      data.t1 = last_field;
-      data.b1 = last_field + object->field_stride;
-    }
-
-    if (second_last_field != NULL) {
-      data.tt2 = second_last_field;
-      data.m2 = second_last_field + (object->field_stride);
-      data.bb2 = second_last_field + (object->field_stride * 2);
-      second_last_field += object->field_stride;
-    }
-
-    /* set valid data for corner cases */
-    if (line == object->field_height) {
-      data.bb0 = data.tt0;
-      data.bb2 = data.tt2;
-      data.b1 = data.t1;
-    }
-
-    object->method->copy_scanline (object, &data, out_data);
-    out_data += object->output_stride;
-    line++;
-  }
-
-  if (object->field_history[cur_field_idx].flags == PICTURE_INTERLACED_TOP) {
-    /* double the last scanline of the top field */
-    blit_packed422_scanline (out_data, cur_field, object->frame_width);
-  }
-}
-
 static GstFlowReturn
 gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
 {
   GstDeinterlace2 *object = NULL;
-
   GstClockTime timestamp;
-
   GstFlowReturn ret = GST_FLOW_OK;
 
   object = GST_DEINTERLACE2 (GST_PAD_PARENT (pad));
@@ -750,8 +623,7 @@ gst_deinterlace2_setcaps (GstPad * pad, GstCaps * caps)
     othercaps = gst_caps_ref (caps);
   }
 
-  if (                          /*!gst_pad_accept_caps (otherpad, othercaps)
-                                   || */ !gst_pad_set_caps (otherpad, othercaps))
+  if (!gst_pad_set_caps (otherpad, othercaps))
     goto caps_not_accepted;
   gst_caps_unref (othercaps);
 
@@ -797,7 +669,6 @@ static gboolean
 gst_deinterlace2_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-
   GstDeinterlace2 *object = GST_DEINTERLACE2 (gst_pad_get_parent (pad));
 
   GST_LOG_OBJECT (pad, "received %s event", GST_EVENT_TYPE_NAME (event));
@@ -822,7 +693,6 @@ static GstStateChangeReturn
 gst_deinterlace2_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-
   GstDeinterlace2 *object = GST_DEINTERLACE2 (element);
 
   switch (transition) {
@@ -858,7 +728,6 @@ static gboolean
 gst_deinterlace2_src_event (GstPad * pad, GstEvent * event)
 {
   GstDeinterlace2 *object = GST_DEINTERLACE2 (gst_pad_get_parent (pad));
-
   gboolean res;
 
   GST_DEBUG_OBJECT (pad, "received %s event", GST_EVENT_TYPE_NAME (event));
@@ -878,7 +747,6 @@ static gboolean
 gst_deinterlace2_src_query (GstPad * pad, GstQuery * query)
 {
   GstDeinterlace2 *object = GST_DEINTERLACE2 (gst_pad_get_parent (pad));
-
   gboolean res = FALSE;
 
   GST_LOG_OBJECT (object, "%s query", GST_QUERY_TYPE_NAME (query));
@@ -887,9 +755,7 @@ gst_deinterlace2_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_LATENCY:
     {
       GstClockTime min, max;
-
       gboolean live;
-
       GstPad *peer;
 
       if ((peer = gst_pad_get_peer (object->sinkpad))) {

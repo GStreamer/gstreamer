@@ -127,45 +127,73 @@ deinterlace_line_mmx (uint8_t * dst, uint8_t * lum_m4,
 }
 #endif
 
-/*
- * The commented-out method below that uses the bottom_field member is more
- * like the filter as specified in the MPEG2 spec, but it doesn't seem to
- * have the desired effect.
- */
-
 static void
-deinterlace_scanline_vfir (GstDeinterlace2 * object,
-    deinterlace_scanline_data_t * data, uint8_t * output)
+deinterlace_frame_vfir (GstDeinterlace2 * object)
 {
+  void (*func) (uint8_t * dst, uint8_t * lum_m4,
+      uint8_t * lum_m3, uint8_t * lum_m2,
+      uint8_t * lum_m1, uint8_t * lum, int size);
+  gint line = 0;
+  uint8_t *cur_field, *last_field;
+  uint8_t *t0, *b0, *tt1, *m1, *bb1, *out_data;
+
 #ifdef HAVE_CPU_I386
   if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMX) {
-    deinterlace_line_mmx (output, data->tt1, data->t0, data->m1, data->b0,
-        data->bb1, object->frame_width * 2);
+    func = deinterlace_line_mmx;
   } else {
-    deinterlace_line_c (output, data->tt1, data->t0, data->m1, data->b0,
-        data->bb1, object->frame_width * 2);
+    func = deinterlace_line_c;
   }
 #else
-  deinterlace_line_c (output, data->tt1, data->t0, data->m1, data->b0,
-      data->bb1, object->frame_width * 2);
+  func = deinterlace_line_c;
 #endif
-  // blit_packed422_scanline( output, data->m1, width );
-}
 
-static void
-copy_scanline (GstDeinterlace2 * object,
-    deinterlace_scanline_data_t * data, uint8_t * output)
-{
-  blit_packed422_scanline (output, data->m0, object->frame_width);
-  /*
-     if( data->bottom_field ) {
-     deinterlace_line( output, data->tt2, data->t1, data->m2, data->b1, data->bb2, width*2 );
-     } else {
-     deinterlace_line( output, data->tt0, data->t1, data->m0, data->b1, data->bb0, width*2 );
-     }
-   */
-}
+  cur_field =
+      GST_BUFFER_DATA (object->field_history[object->history_count - 2].buf);
+  last_field =
+      GST_BUFFER_DATA (object->field_history[object->history_count - 1].buf);
 
+  out_data = GST_BUFFER_DATA (object->out_buf);
+
+  if (object->field_history[object->history_count - 2].flags ==
+      PICTURE_INTERLACED_BOTTOM) {
+    blit_packed422_scanline (out_data, cur_field, object->frame_width);
+    out_data += object->output_stride;
+  }
+
+  blit_packed422_scanline (out_data, cur_field, object->frame_width);
+  out_data += object->output_stride;
+  line++;
+
+  for (; line < object->field_height; line++) {
+    t0 = cur_field;
+    b0 = cur_field + object->field_stride;
+
+    tt1 = last_field;
+    m1 = last_field + object->field_stride;
+    bb1 = last_field + (object->field_stride * 2);
+
+    /* set valid data for corner cases */
+    if (line == 1) {
+      tt1 = bb1;
+    } else if (line == object->field_height - 1) {
+      bb1 = tt1;
+    }
+
+    func (out_data, tt1, t0, m1, b0, bb1, object->line_length);
+    out_data += object->output_stride;
+    cur_field += object->field_stride;
+    last_field += object->field_stride;
+
+    blit_packed422_scanline (out_data, cur_field, object->frame_width);
+    out_data += object->output_stride;
+  }
+
+  if (object->field_history[object->history_count - 2].flags ==
+      PICTURE_INTERLACED_TOP) {
+    /* double the last scanline of the top field */
+    blit_packed422_scanline (out_data, cur_field, object->frame_width);
+  }
+}
 
 static deinterlace_method_t vfirmethod = {
   0,                            //DEINTERLACE_PLUGIN_API_VERSION,
@@ -177,9 +205,9 @@ static deinterlace_method_t vfirmethod = {
   0,
   0,
   1,
-  deinterlace_scanline_vfir,
-  copy_scanline,
   0,
+  0,
+  deinterlace_frame_vfir,
   {"Avoids flicker by blurring consecutive frames",
         "of input.  Use this if you want to run your",
         "monitor at an arbitrary refresh rate and not",
