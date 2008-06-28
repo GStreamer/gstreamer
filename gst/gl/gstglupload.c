@@ -401,6 +401,10 @@ gst_gl_upload_set_caps (GstBaseTransform* bt, GstCaps* incaps,
         50, y_pos++ * (upload->gl_height+50) + 50,
         upload->gl_width, upload->gl_height, 0, FALSE);
 
+    //init colorspace conversion if needed
+    gst_gl_display_init_upload (upload->display, upload->video_format, 
+        upload->gl_width, upload->gl_height);
+
     return ret;
 }
 

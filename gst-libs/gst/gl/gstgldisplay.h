@@ -41,12 +41,21 @@
 typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstGLDisplayClass GstGLDisplayClass;
 
+//Color space conversion metthod
+typedef enum {
+    GST_GL_DISPLAY_CONVERSION_GLSL,   //ARB_fragment_shade
+    GST_GL_DISPLAY_CONVERSION_MATRIX, //ARB_imaging
+	GST_GL_DISPLAY_CONVERSION_MESA,   //MESA_ycbcr_texture
+} GstGLDisplayConversion;
+
+
 //Message type
 typedef enum {
     GST_GL_DISPLAY_ACTION_CREATE,
     GST_GL_DISPLAY_ACTION_DESTROY,
 	GST_GL_DISPLAY_ACTION_VISIBLE,
     GST_GL_DISPLAY_ACTION_RESHAPE,
+    GST_GL_DISPLAY_ACTION_INIT_UPLOAD,
     GST_GL_DISPLAY_ACTION_PREPARE,
     GST_GL_DISPLAY_ACTION_CHANGE,
     GST_GL_DISPLAY_ACTION_CLEAR,
@@ -63,7 +72,7 @@ typedef enum {
 } GstGLDisplayAction;
 
 
-//Message to communicate with the glut thread
+//Message to communicate with the gl thread
 typedef struct _GstGLDisplayMsg {
     GstGLDisplayAction action;
     gint glutWinId;
@@ -92,6 +101,7 @@ struct _GstGLDisplay {
 
 	GQueue* texturePool;
     
+    GCond* cond_init_upload;
     GCond* cond_make;
     GCond* cond_fill;
     GCond* cond_clear;
@@ -120,6 +130,7 @@ struct _GstGLDisplay {
     GLuint textureFBO;
     GLuint textureFBOWidth;
     GLuint textureFBOHeight;
+    GstVideoFormat upload_video_format;
 
     //filter frame buffer object (GL -> GL)
     GLuint requestedFBO;
@@ -179,6 +190,9 @@ struct _GstGLDisplay {
     GLuint recordedTextureWidth;
     GLuint recordedTextureHeight;
 
+    //colorspace conversion method
+    GstGLDisplayConversion colorspace_conversion;
+
     //from video to texture
 
 	gchar* textFProgram_YUY2_UYVY;
@@ -235,6 +249,8 @@ void gst_gl_display_setClientReshapeCallback (GstGLDisplay* display, CRCB cb);
 void gst_gl_display_setClientDrawCallback (GstGLDisplay* display, CDCB cb);
 void gst_gl_display_setVisibleWindow (GstGLDisplay* display, gboolean visible);
 void gst_gl_display_resizeWindow (GstGLDisplay* display, gint width, gint height);
+void gst_gl_display_init_upload (GstGLDisplay* display, GstVideoFormat video_format,
+                                 guint gl_width, guint gl_height);
 void gst_gl_display_prepare_texture (GstGLDisplay* display, guint* pTexture);
 void gst_gl_display_do_upload (GstGLDisplay* display, GstVideoFormat video_format,
                                gint video_width, gint video_height, gpointer data,

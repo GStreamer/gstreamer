@@ -472,6 +472,10 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
                 glimage_sink->width, glimage_sink->height, 
                 glimage_sink->window_id, TRUE);
 
+            //init colorspace conversion if needed
+            gst_gl_display_init_upload (glimage_sink->display, glimage_sink->format, 
+                glimage_sink->width, glimage_sink->height);
+
             gst_gl_display_setClientReshapeCallback (glimage_sink->display, 
                 glimage_sink->clientReshapeCallback);
     
