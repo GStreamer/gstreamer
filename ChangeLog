@@ -1,5 +1,10 @@
 2008-06-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/gstdeinterlace2.c: (gst_deinterlace2_src_query):
+	Divide latency be 2 to convert from fields to frames.
+
+2008-06-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/tvtime/greedy.c:
 	(deinterlace_greedy_packed422_scanline_c),
 	(deinterlace_greedy_packed422_scanline_mmx),
