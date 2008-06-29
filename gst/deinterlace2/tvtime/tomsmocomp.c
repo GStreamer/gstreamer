@@ -28,7 +28,6 @@
 #include "gst/gst.h"
 #include "gstdeinterlace2.h"
 #include "plugins.h"
-#include "speedy.h"
 
 #include "tomsmocomp.h"
 #include "tomsmocomp/tomsmocompmacros.h"
@@ -39,33 +38,18 @@
 #define UseStrangeBobDefault 0
 
 long SearchEffort;
-
 int UseStrangeBob;
-
-MEMCPY_FUNC *pMyMemcpy;
-
 int IsOdd;
-
 const unsigned char *pWeaveSrc;
-
 const unsigned char *pWeaveSrcP;
-
 unsigned char *pWeaveDest;
-
 const unsigned char *pCopySrc;
-
 const unsigned char *pCopySrcP;
-
 unsigned char *pCopyDest;
-
 int src_pitch;
-
 int dst_pitch;
-
 int rowsize;
-
 int height;
-
 int FldHeight;
 
 int
@@ -73,13 +57,12 @@ Fieldcopy (void *dest, const void *src, size_t count,
     int rows, int dst_pitch, int src_pitch)
 {
   unsigned char *pDest = (unsigned char *) dest;
-
   unsigned char *pSrc = (unsigned char *) src;
 
   int i;
 
   for (i = 0; i < rows; i++) {
-    pMyMemcpy (pDest, pSrc, count);
+    memcpy (pDest, pSrc, count);
     pSrc += src_pitch;
     pDest += dst_pitch;
   }
@@ -111,8 +94,6 @@ Fieldcopy (void *dest, const void *src, size_t count,
 #undef  SSE_TYPE
 #undef  FUNCT_NAME
 
-
-
 void
 deinterlace_frame_di_tomsmocomp (GstDeinterlace2 * object)
 {
@@ -135,8 +116,6 @@ static deinterlace_method_t tomsmocompmethod = {
   0,
   0,
   0,
-  0,
-  0,
   deinterlace_frame_di_tomsmocomp,
   {"Uses heuristics to detect motion in the input",
         "frames and reconstruct image detail where",
@@ -150,16 +129,12 @@ static deinterlace_method_t tomsmocompmethod = {
       ""}
 };
 
-
-
 deinterlace_method_t *
 dscaler_tomsmocomp_get_method (void)
 {
   tomsmocomp_init ();
   return &tomsmocompmethod;
 }
-
-
 
 void
 tomsmocomp_init (void)

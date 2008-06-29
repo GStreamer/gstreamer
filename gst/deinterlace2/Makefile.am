@@ -4,7 +4,6 @@ libgstdeinterlace2_la_SOURCES = \
 	gstdeinterlace2.c \
 	tvtime/greedy.c \
 	tvtime/greedyh.c \
-	tvtime/speedy.c \
 	tvtime/vfir.c \
 	tvtime/tomsmocomp.c
 
@@ -22,8 +21,6 @@ noinst_HEADERS = \
 	tvtime/greedyh.asm \
 	tvtime/greedyhmacros.h \
 	tvtime/plugins.h \
-	tvtime/speedtools.h \
-	tvtime/speedy.h \
 	tvtime/x86-64_macros.inc \
 	tvtime/tomsmocomp.h \
 	tvtime/tomsmocomp/SearchLoop0A.inc \

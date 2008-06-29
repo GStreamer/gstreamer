@@ -47,75 +47,8 @@ typedef struct _GstDeinterlace2Class GstDeinterlace2Class;
 
 typedef struct deinterlace_setting_s deinterlace_setting_t;
 typedef struct deinterlace_method_s deinterlace_method_t;
-typedef struct deinterlace_scanline_data_s deinterlace_scanline_data_t;
-typedef struct deinterlace_frame_data_s deinterlace_frame_data_t;
-
-/*
- * There are two scanline functions that every deinterlacer plugin
- * must implement to do its work: one for a 'copy' and one for
- * an 'interpolate' for the currently active field.  This so so that
- * while plugins may be delaying fields, the external API assumes that
- * the plugin is completely realtime.
- *
- * Each deinterlacing routine can require data from up to four fields.
- * The most recent field captured is field 0, and increasing numbers go
- * backwards in time.
- */
-struct deinterlace_scanline_data_s
-{
-  guint8 *tt0, *t0, *m0, *b0, *bb0;
-  guint8 *tt1, *t1, *m1, *b1, *bb1;
-  guint8 *tt2, *t2, *m2, *b2, *bb2;
-  guint8 *tt3, *t3, *m3, *b3, *bb3;
-  int bottom_field;
-};
-
-/*
- * |   t-3       t-2       t-1       t
- * | Field 3 | Field 2 | Field 1 | Field 0 |
- * |  TT3    |         |   TT1   |         |
- * |         |   T2    |         |   T0    |
- * |   M3    |         |    M1   |         |
- * |         |   B2    |         |   B0    |
- * |  BB3    |         |   BB1   |         |
- *
- * While all pointers are passed in, each plugin is only guarenteed for
- * the ones it indicates it requires (in the fields_required parameter)
- * to be available.
- *
- * Pointers are always to scanlines in the standard packed 4:2:2 format.
- */
-typedef void (*deinterlace_interp_scanline_t) (GstDeinterlace2 * object,
-    deinterlace_scanline_data_t * data, guint8 * output);
-/*
- * For the copy scanline, the API is basically the same, except that
- * we're given a scanline to 'copy'.
- *
- * |   t-3       t-2       t-1       t
- * | Field 3 | Field 2 | Field 1 | Field 0 |
- * |         |   TT2   |         |  TT0    |
- * |   T3    |         |   T1    |         |
- * |         |    M2   |         |   M0    |
- * |   B3    |         |   B1    |         |
- * |         |   BB2   |         |  BB0    |
- */
-typedef void (*deinterlace_copy_scanline_t) (GstDeinterlace2 * object,
-    deinterlace_scanline_data_t * data, guint8 * output);
-
-/*
- * The frame function is for deinterlacing plugins that can only act
- * on whole frames, rather than on a scanline at a time.
- */
-struct deinterlace_frame_data_s
-{
-  guint8 *f0;
-  guint8 *f1;
-  guint8 *f2;
-  guint8 *f3;
-};
 
 typedef void (*deinterlace_frame_t) (GstDeinterlace2 * object);
-
 
 /*
  * This structure defines the deinterlacer plugin.
@@ -131,31 +64,9 @@ struct deinterlace_method_s
   int numsettings;
   deinterlace_setting_t *settings;
   int scanlinemode;
-  deinterlace_interp_scanline_t interpolate_scanline;
-  deinterlace_copy_scanline_t copy_scanline;
   deinterlace_frame_t deinterlace_frame;
   const char *description[10];
 };
-
-/**
- * Registers a new deinterlace method.
- */
-void register_deinterlace_method (deinterlace_method_t * method);
-
-/**
- * Returns how many deinterlacing methods are available.
- */
-int get_num_deinterlace_methods (void);
-
-/**
- * Returns the specified method in the list.
- */
-deinterlace_method_t *get_deinterlace_method (int i);
-
-/**
- * Builds the usable method list.
- */
-void filter_deinterlace_methods (int accel, int fieldsavailable);
 
 #define MAX_FIELD_HISTORY 10
 
@@ -244,9 +155,6 @@ struct _GstDeinterlace2
      cleanliness so we don't have to keep dividing FrameHeight by 2.
    */
   gint field_height;
-
-  /* Function pointer to optimized memcpy function */
-  MEMCPY_FUNC *pMemcpy;
 
   /* distance between lines in image
      need not match the pixel width
