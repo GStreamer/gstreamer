@@ -41,7 +41,7 @@
 typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstGLDisplayClass GstGLDisplayClass;
 
-//Color space conversion metthod
+//Color space conversion method
 typedef enum {
     GST_GL_DISPLAY_CONVERSION_GLSL,   //ARB_fragment_shade
     GST_GL_DISPLAY_CONVERSION_MATRIX, //ARB_imaging
@@ -51,23 +51,23 @@ typedef enum {
 
 //Message type
 typedef enum {
-    GST_GL_DISPLAY_ACTION_CREATE,
-    GST_GL_DISPLAY_ACTION_DESTROY,
-	GST_GL_DISPLAY_ACTION_VISIBLE,
-    GST_GL_DISPLAY_ACTION_RESHAPE,
-    GST_GL_DISPLAY_ACTION_INIT_UPLOAD,
-    GST_GL_DISPLAY_ACTION_PREPARE,
-    GST_GL_DISPLAY_ACTION_CHANGE,
-    GST_GL_DISPLAY_ACTION_CLEAR,
-    GST_GL_DISPLAY_ACTION_VIDEO,
-    GST_GL_DISPLAY_ACTION_REDISPLAY,
-    GST_GL_DISPLAY_ACTION_GENFBO,
-    GST_GL_DISPLAY_ACTION_DELFBO,
-    GST_GL_DISPLAY_ACTION_USEFBO,
-    GST_GL_DISPLAY_ACTION_USEFBO2,
+    GST_GL_DISPLAY_ACTION_CREATE_CONTEXT,
+    GST_GL_DISPLAY_ACTION_DESTROY_CONTEXT,
+	GST_GL_DISPLAY_ACTION_VISIBLE_CONTEXT,
+    GST_GL_DISPLAY_ACTION_RESIZE_CONTEXT,
+    GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT,
+    GST_GL_DISPLAY_ACTION_GEN_TEXTURE,
+    GST_GL_DISPLAY_ACTION_DEL_TEXTURE,
+    GST_GL_DISPLAY_ACTION_INIT_UPLOAD, 
+    GST_GL_DISPLAY_ACTION_DO_UPLOAD,
     GST_GL_DISPLAY_ACTION_INIT_DOWNLOAD,
-    GST_GL_DISPLAY_ACTION_GENSHADER,
-    GST_GL_DISPLAY_ACTION_DELSHADER
+    GST_GL_DISPLAY_ACTION_DO_DOWNLOAD,   
+    GST_GL_DISPLAY_ACTION_GEN_FBO, 
+    GST_GL_DISPLAY_ACTION_USE_FBO,
+    GST_GL_DISPLAY_ACTION_USE_FBO2,
+    GST_GL_DISPLAY_ACTION_DEL_FBO,  
+    GST_GL_DISPLAY_ACTION_GEN_SHADER,
+    GST_GL_DISPLAY_ACTION_DEL_SHADER
 	
 } GstGLDisplayAction;
 
@@ -101,21 +101,23 @@ struct _GstGLDisplay {
 
 	GQueue* texturePool;
     
+    //conditions
+    GCond* cond_create_context;
+    GCond* cond_destroy_context;
+    GCond* cond_gen_texture;
+    GCond* cond_del_texture;
     GCond* cond_init_upload;
-    GCond* cond_make;
-    GCond* cond_fill;
-    GCond* cond_clear;
-    GCond* cond_video;
-    GCond* cond_generateFBO;
-    GCond* cond_useFBO;
-    GCond* cond_useFBO2;
-    GCond* cond_destroyFBO;
+    GCond* cond_do_upload;
     GCond* cond_init_download;
-    GCond* cond_initShader;
-    GCond* cond_destroyShader;
+    GCond* cond_do_download;
+    GCond* cond_gen_fbo;
+    GCond* cond_use_fbo;
+    GCond* cond_use_fbo_2;
+    GCond* cond_del_fbo;
+    GCond* cond_gen_shader;
+    GCond* cond_del_shader;
 
-    GCond* cond_create;
-    GCond* cond_destroy;
+    
     gint glutWinId;
     gulong winId;
     GString* title;
@@ -239,42 +241,49 @@ GType gst_gl_display_get_type (void);
 //------------------------------------------------------------
 //-------------------- Public declarations ------------------
 //------------------------------------------------------------ 
-GstGLDisplay *gst_gl_display_new (void);
-void gst_gl_display_init_gl_context (GstGLDisplay* display, 
-                                     GLint x, GLint y, 
-                                     GLint width, GLint height,
-                                     gulong winId,
-                                     gboolean visible);
-void gst_gl_display_setClientReshapeCallback (GstGLDisplay* display, CRCB cb);
-void gst_gl_display_setClientDrawCallback (GstGLDisplay* display, CDCB cb);
-void gst_gl_display_setVisibleWindow (GstGLDisplay* display, gboolean visible);
-void gst_gl_display_resizeWindow (GstGLDisplay* display, gint width, gint height);
+GstGLDisplay* gst_gl_display_new (void);
+
+void gst_gl_display_create_context (GstGLDisplay* display, 
+                                    GLint x, GLint y, 
+                                    GLint width, GLint height,
+                                    gulong winId,
+                                    gboolean visible);
+void gst_gl_display_set_visible_context (GstGLDisplay* display, gboolean visible);
+void gst_gl_display_resize_context (GstGLDisplay* display, gint width, gint height);
+gboolean gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width, gint height);
+
+void gst_gl_display_gen_texture (GstGLDisplay* display, guint* pTexture);
+void gst_gl_display_del_texture (GstGLDisplay* display, guint texture);
+
 void gst_gl_display_init_upload (GstGLDisplay* display, GstVideoFormat video_format,
                                  guint gl_width, guint gl_height);
-void gst_gl_display_prepare_texture (GstGLDisplay* display, guint* pTexture);
 void gst_gl_display_do_upload (GstGLDisplay* display, GstVideoFormat video_format,
                                gint video_width, gint video_height, gpointer data,
                                guint gl_width, guint gl_height, guint pTexture);
-void gst_gl_display_clearTexture (GstGLDisplay* display, guint texture);
 
-void gst_gl_display_videoChanged (GstGLDisplay* display, GstVideoFormat video_format, 
-                                  gint width, gint height, GLuint recordedTexture, gpointer data);
-gboolean gst_gl_display_postRedisplay (GstGLDisplay* display, GLuint texture, gint width, gint height);
-void gst_gl_display_requestFBO (GstGLDisplay* display, gint width, gint height, 
-                                guint* fbo, guint* depthbuffer);
-void gst_gl_display_useFBO (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
-                            guint fbo, guint depthbuffer, guint textureFBO, GLCB cb,
-                            guint inputTextureWidth, guint inputTextureHeight, guint inputTexture,
-                            GLhandleARB handleShader);
-void gst_gl_display_useFBO2 (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
-                            guint fbo, guint depthbuffer, guint textureFBO, GLCB2 cb,
-                            gpointer* p1, gpointer* p2);
-void gst_gl_display_rejectFBO (GstGLDisplay* display, guint fbo, 
-                               guint depthbuffer);
+
 void gst_gl_display_init_download (GstGLDisplay* display, GstVideoFormat video_format, 
                                    gint width, gint height);
-void gst_gl_display_initShader (GstGLDisplay* display, gchar* textShader, GLhandleARB* handleShader);
-void gst_gl_display_destroyShader (GstGLDisplay* display, GLhandleARB shader);
-void gst_gl_display_set_windowId (GstGLDisplay* display, gulong winId);
+void gst_gl_display_do_download (GstGLDisplay* display, GstVideoFormat video_format, 
+                                 gint width, gint height, GLuint recordedTexture, gpointer data);
+
+void gst_gl_display_gen_fbo (GstGLDisplay* display, gint width, gint height, 
+                             guint* fbo, guint* depthbuffer);
+void gst_gl_display_use_fbo (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
+                             guint fbo, guint depthbuffer, guint textureFBO, GLCB cb,
+                             guint inputTextureWidth, guint inputTextureHeight, guint inputTexture,
+                             GLhandleARB handleShader);
+void gst_gl_display_use_fbo_2 (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
+                               guint fbo, guint depthbuffer, guint textureFBO, GLCB2 cb,
+                               gpointer* p1, gpointer* p2);
+void gst_gl_display_del_fbo (GstGLDisplay* display, guint fbo, 
+                             guint depthbuffer);
+
+void gst_gl_display_gen_shader (GstGLDisplay* display, gchar* textShader, GLhandleARB* handleShader);
+void gst_gl_display_del_shader (GstGLDisplay* display, GLhandleARB shader);
+
+void gst_gl_display_set_window_id (GstGLDisplay* display, gulong winId);
+void gst_gl_display_set_client_reshape_callback (GstGLDisplay* display, CRCB cb);
+void gst_gl_display_set_client_draw_callback (GstGLDisplay* display, CDCB cb);
 
 #endif
