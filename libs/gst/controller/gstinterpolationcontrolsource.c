@@ -415,33 +415,103 @@ gst_control_point_find (gconstpointer p1, gconstpointer p2)
   return ((ct1 < ct2) ? -1 : ((ct1 == ct2) ? 0 : 1));
 }
 
+/*
+ * _list_find_sorted_custom:
+ *
+ * This works like g_list_find_custom() with the difference that it expects the
+ * list to be sorted in ascending order (0->MAX), stops when it the list-values
+ * are bigger that what is searched for and optionaly delivers the last node
+ * back in the @prev_node argument. This can be used to quickly insert a new
+ * node at the correct position. 
+ */
+static GList *
+_list_find_sorted_custom (GList * list, gconstpointer data, GCompareFunc func,
+    GList ** prev_node)
+{
+  g_return_val_if_fail (func != NULL, list);
+  GList *prev = list;
+  gint cmp;
+
+  while (list) {
+    cmp = func (list->data, data);
+    switch (cmp) {
+      case -1:
+        prev = list;
+        list = list->next;
+        break;
+      case 0:
+        return list;
+      case 1:
+        if (prev_node)
+          *prev_node = prev;
+        return NULL;
+    }
+  }
+  if (prev_node)
+    *prev_node = prev;
+  return NULL;
+}
+
+static GstControlPoint *
+_make_new_cp (GstInterpolationControlSource * self, GstClockTime timestamp,
+    GValue * value)
+{
+  GstControlPoint *cp;
+
+  /* create a new GstControlPoint */
+  cp = g_slice_new0 (GstControlPoint);
+  cp->timestamp = timestamp;
+  g_value_init (&cp->value, self->priv->type);
+  g_value_copy (value, &cp->value);
+
+  return cp;
+}
+
 static void
 gst_interpolation_control_source_set_internal (GstInterpolationControlSource *
     self, GstClockTime timestamp, GValue * value)
 {
-  GstControlPoint *cp;
-  GList *node;
+  GList *node, *prev = self->priv->values;
+
+  /* check if we can shortcut and append */
+  if ((node = g_list_last (self->priv->values))) {
+    GstControlPoint *last_cp = node->data;
+
+    if (timestamp > last_cp->timestamp) {
+      /* pass 'node' instead of list, and also deliberately ignore the result */
+      node = g_list_append (node, _make_new_cp (self, timestamp, value));
+      self->priv->nvalues++;
+      goto done;
+    }
+  }
 
   /* check if a control point for the timestamp already exists */
-  if ((node = g_list_find_custom (self->priv->values, &timestamp,
-              gst_control_point_find))) {
-    cp = node->data;
+  if ((node = _list_find_sorted_custom (self->priv->values, &timestamp,
+              gst_control_point_find, &prev))) {
+    /* update control point */
+    GstControlPoint *cp = node->data;
     g_value_reset (&cp->value);
     g_value_copy (value, &cp->value);
   } else {
-    /* create a new GstControlPoint */
-    cp = g_slice_new0 (GstControlPoint);
-    cp->timestamp = timestamp;
-    g_value_init (&cp->value, self->priv->type);
-    g_value_copy (value, &cp->value);
-    /* and sort it into the prop->values list */
-    self->priv->values =
-        g_list_insert_sorted (self->priv->values, cp,
-        gst_control_point_compare);
+    /* sort new cp into the prop->values list */
+    if (self->priv->values) {
+      GList *new_list;
+
+      /* pass 'prev' instead of list */
+      new_list = g_list_insert_sorted (prev,
+          _make_new_cp (self, timestamp, value), gst_control_point_compare);
+      if (self->priv->values == prev)
+        self->priv->values = new_list;
+    } else {
+      self->priv->values = g_list_prepend (NULL,
+          _make_new_cp (self, timestamp, value));
+    }
     self->priv->nvalues++;
   }
+done:
   self->priv->valid_cache = FALSE;
 }
+
 
 /**
  * gst_interpolation_control_source_set:

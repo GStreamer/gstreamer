@@ -1,5 +1,12 @@
 2008-06-29  Stefan Kost  <ensonic@users.sf.net>
 
+	* libs/gst/controller/gstinterpolationcontrolsource.c:
+	  Optimize list handling. Use own find function. Exploit that fact that
+	  the list is sorted. Also pass back the node before, so that we can
+	  insert quickly. Have a fast path for append.
+
+2008-06-29  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/design/draft-framestep.txt:
 	* docs/design/part-negotiation.txt:
 	  Fix two typos.
