@@ -18,7 +18,7 @@ The following requirements are needed:
  - Arbitrary increments in any supported format (time, frames, bytes ...)
  - High speed, minimal overhead. This mechanism is not more expensive than
    simple playback.
- - swithing between forwards and backwards stepping should be fast.
+ - switching between forwards and backwards stepping should be fast.
  - Maintain synchronisation between streams.
  - Get feedback of the amount of skipped data.
  - Ability to play a certain amount of data at an arbitrary speed.

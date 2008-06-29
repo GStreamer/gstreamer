@@ -1,3 +1,9 @@
+2008-06-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/design/draft-framestep.txt:
+	* docs/design/part-negotiation.txt:
+	  Fix two typos.
+
 2008-06-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
