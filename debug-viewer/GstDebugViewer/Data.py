@@ -119,26 +119,25 @@ def strip_escape (s):
 def default_log_line_regex_ ():
 
     # "DEBUG             "
-    LEVEL = "([A-Z]+) +"
+    LEVEL = "([A-Z]+)\s+"
     # "0x8165430 "
-    THREAD = r"(0x[0-9a-f]+) +" #r"\((0x[0-9a-f]+) - "
+    THREAD = r"(0x[0-9a-f]+)\s+" #r"\((0x[0-9a-f]+) - "
     # "0:00:00.777913000  "
-    TIME = r"([0-9]+:[0-9][0-9]:[0-9][0-9]\.[0-9]+) +"
-    CATEGORY = "([A-Za-z0-9_-]+) +" # "GST_REFCOUNTING ", "flacdec "
+    TIME = r"(\d+:\d\d:\d\d\.\d+)\s+"
+    CATEGORY = "([A-Za-z0-9_-]+)\s+" # "GST_REFCOUNTING ", "flacdec "
     # "  3089 "
-    PID = r"([0-9]+) +"
+    PID = r"(\d+)\s+"
     FILENAME = r"([^:]+):"
-    LINE = r"([0-9]+):"
+    LINE = r"(\d+):"
     FUNCTION = "([A-Za-z0-9_]+):"
     # FIXME: When non-g(st)object stuff is logged with *_OBJECT (like
     # buffers!), the address is printed *without* <> brackets!
-    OBJECT = "(?:<([^>]+)>)?"
-    MESSAGE = " (.+)"
+    OBJECT = "(?:<([^>]+)> )?"
+    MESSAGE = "(.+)"
 
-    expressions = [" *", CATEGORY, FILENAME, LINE, FUNCTION, OBJECT]
     # New log format:
-    ## expressions = [TIME, PID, THREAD, LEVEL, CATEGORY, FILENAME, LINE, FUNCTION,
-    ##                OBJECT, MESSAGE]
+    expressions = [TIME, PID, THREAD, LEVEL, CATEGORY, FILENAME, LINE, FUNCTION,
+                   OBJECT, MESSAGE]
     # Old log format:
     ## expressions = [LEVEL, THREAD, TIME, CATEGORY, PID, FILENAME, LINE,
     ##                FUNCTION, OBJECT, MESSAGE]
@@ -200,15 +199,10 @@ class LineCache (Producer):
         offsets = self.offsets
         levels = self.levels
 
-        # FIXME: Duplicated from GUI.LazyLogModel!
-        ts_len = 17
-        pid_len = 5
-        # Need to find out thread len below...
-        level_len = 5
-        thread_start = ts_len + 1 + pid_len + 1
         dict_levels = {"D" : debug_level_debug, "L" : debug_level_log,
                        "I" : debug_level_info, "E" : debug_level_error,
                        "W" : debug_level_warning, " " : debug_level_none}
+        rexp = re.compile (r"\d:\d\d:\d\d\.\d+\s+\d+\s+0x[0-9a-f]+\s+([DLIEW ])")
 
         readline = self.__fileobj.readline
         tell = self.__fileobj.tell
@@ -216,30 +210,16 @@ class LineCache (Producer):
         self.__fileobj.seek (0)
         limit = self._lines_per_iteration
         i = 0
-        # TODO: Remove the checks inside this loop.  Instead, let exceptions
-        # raise, catch them outside (for performance) and resume the iteration.
         while True:
             offset = tell ()
             line = readline ()
             if not line:
                 break
-            if not line.strip ():
-                # Ignore empty lines, especially the one established by the
-                # final newline at the end:
+            match = rexp.match (line)
+            if match is None:
                 continue
-            if len (line) < ts_len:
-                continue
-            # FIXME: We need to handle foreign lines separately!
-            if line[1] != ":" or line[4] != ":" or line[7] != ".":
-                # No timestamp at start, ignore line:
-                continue
-
-            thread_end = line.find (" ", thread_start)
-            if thread_end == -1 or thread_end + 1 >= len (line):
-                continue
+            levels.append (dict_levels.get (match.group (1), debug_level_none))
             offsets.append (offset)
-            level_start = line[thread_end + 1:thread_end + 2]
-            levels.append (dict_levels.get (level_start, debug_level_none))
             i += 1
             if i >= limit:
                 i = 0
@@ -255,50 +235,33 @@ class LogLine (list):
     @classmethod
     def parse_full (cls, line_string):
 
-        ts_len = 17
-        pid_len = 5
-
-        thread_pos = ts_len + 1 + pid_len + 1
-        thread_len = line_string[thread_pos:thread_pos + 32].find (" ")
-        level_len = 5
-
-        non_regex_len = ts_len + 1 + pid_len + thread_len + 1 + level_len + 1
-        non_regex_line = line_string[:non_regex_len]
-        regex_line = line_string[non_regex_len:]
-
-        prefix = non_regex_line.rstrip ()
-        while "  " in prefix:
-            prefix = prefix.replace ("  ", " ")
-        if prefix.count (" ") < 3:
-            return [0, 0, 0, 0, "", "", 0, "", "", 0]
-        ts_s, pid_s, thread_s = prefix.split (" ")[:-1] # Omits level.
-        ts = parse_time (ts_s)
-        pid = int (pid_s)
-        thread = int (thread_s, 16)
-        try:
-            ## level = DebugLevel (level_s)
-            match = cls._line_regex.match (regex_line[:-len (os.linesep)])
-        except ValueError:
-            level = debug_level_none
-            match = None
-
+        match = cls._line_regex.match (line_string)
         if match is None:
-            # FIXME?
-            groups = [ts, pid, thread, 0, "", "", 0, "", "", non_regex_len]
-        else:
-            # FIXME: Level (the 0 after thread) needs to be moved out of here!
-            groups = [ts, pid, thread, 0] + list (match.groups ()) + [non_regex_len + match.end ()]
+            ## raise ValueError ("not a valid log line (%r)" % (line_string,))
+            groups = [0, 0, 0, 0, "", "", 0, "", "", 0]
+            return cls (groups)
 
-            for col_id in (4,   # COL_CATEGORY
-                           5,   # COL_FILENAME
-                           7,   # COL_FUNCTION,
-                           8,): # COL_OBJECT
-                groups[col_id] = intern (groups[col_id] or "")
-            
-            groups[6] = int (groups[6]) # line
-            # groups[8] = groups[8] or "" # object (optional)
+        line = cls (match.groups ())
+        # Timestamp.
+        line[0] = parse_time (line[0])
+        # PID.
+        line[1] = int (line[1])
+        # Thread.
+        line[2] = int (line[2], 16)
+        # Level (this is handled in LineCache).
+        line[3] = 0
+        # Line.
+        line[6] = int (line[6])
+        # Message start offset.
+        line[9] = match.start (9 + 1)
 
-        return cls (groups)
+        for col_id in (4,   # COL_CATEGORY
+                       5,   # COL_FILENAME
+                       7,   # COL_FUNCTION,
+                       8,): # COL_OBJECT
+            line[col_id] = intern (line[col_id] or "")
+
+        return line
 
     def line_string (self, message = None):
 
