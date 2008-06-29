@@ -193,7 +193,6 @@ static GstCaps *
 gst_adder_sink_getcaps (GstPad * pad)
 {
   GstAdder *adder;
-
   GstCaps *result, *peercaps, *sinkcaps;
 
   adder = GST_ADDER (GST_PAD_PARENT (pad));
@@ -706,7 +705,7 @@ gst_adder_class_init (GstAdderClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  gobject_class->finalize = gst_adder_finalize;
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_adder_finalize);
 
   gstelement_class = (GstElementClass *) klass;
 
@@ -720,9 +719,10 @@ gst_adder_class_init (GstAdderClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gstelement_class->request_new_pad = gst_adder_request_new_pad;
-  gstelement_class->release_pad = gst_adder_release_pad;
-  gstelement_class->change_state = gst_adder_change_state;
+  gstelement_class->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_adder_request_new_pad);
+  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_adder_release_pad);
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_adder_change_state);
 }
 
 static void
@@ -733,6 +733,7 @@ gst_adder_init (GstAdder * adder)
   template = gst_static_pad_template_get (&gst_adder_src_template);
   adder->srcpad = gst_pad_new_from_template (template, "src");
   gst_object_unref (template);
+
   gst_pad_set_getcaps_function (adder->srcpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_setcaps_function (adder->srcpad,
@@ -769,11 +770,8 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * unused)
 {
   gchar *name;
-
   GstAdder *adder;
-
   GstPad *newpad;
-
   gint padcount;
 
   if (templ->direction != GST_PAD_SINK)

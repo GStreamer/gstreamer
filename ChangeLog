@@ -1,3 +1,8 @@
+2008-06-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/adder/gstadder.c:
+	  Use GST_DEBUG_FUNCPTR and remove some extra vlnak lines.
+
 2008-06-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* ChangeLog:
