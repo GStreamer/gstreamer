@@ -32,14 +32,12 @@
 #include "greedyhmacros.h"
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
+#include <_stdint.h>
 #include <string.h>
 
 #include "gst/gst.h"
 #include "plugins.h"
 #include "gstdeinterlace2.h"
-#include "speedy.h"
 
 static const unsigned int GreedyMaxComb = 5;
 static const unsigned int GreedyMotionThreshold = 25;
@@ -249,7 +247,7 @@ deinterlace_frame_di_greedyh (GstDeinterlace2 * object)
         GST_BUFFER_DATA (object->field_history[object->history_count - 3].buf);
 
     // copy first even line
-    object->pMemcpy (Dest, L1, object->line_length);
+    memcpy (Dest, L1, object->line_length);
     Dest += object->output_stride;
   } else {
     InfoIsOdd = 0;
@@ -262,18 +260,18 @@ deinterlace_frame_di_greedyh (GstDeinterlace2 * object)
         Pitch;
 
     // copy first even line
-    object->pMemcpy (Dest, GST_BUFFER_DATA (object->field_history[0].buf),
+    memcpy (Dest, GST_BUFFER_DATA (object->field_history[0].buf),
         object->line_length);
     Dest += object->output_stride;
     // then first odd line
-    object->pMemcpy (Dest, L1, object->line_length);
+    memcpy (Dest, L1, object->line_length);
     Dest += object->output_stride;
   }
 
   for (Line = 0; Line < (object->field_height - 1); ++Line) {
     func (L1, L2, L3, L2P, Dest, object->line_length);
     Dest += object->output_stride;
-    object->pMemcpy (Dest, L3, object->line_length);
+    memcpy (Dest, L3, object->line_length);
     Dest += object->output_stride;
 
     L1 += Pitch;
@@ -283,7 +281,7 @@ deinterlace_frame_di_greedyh (GstDeinterlace2 * object)
   }
 
   if (InfoIsOdd) {
-    object->pMemcpy (Dest, L2, object->line_length);
+    memcpy (Dest, L2, object->line_length);
   }
 }
 
@@ -292,8 +290,6 @@ static deinterlace_method_t greedyh_method = {
   "Motion Adaptive: Advanced Detection",
   "AdaptiveAdvanced",
   4,
-  0,
-  0,
   0,
   0,
   0,

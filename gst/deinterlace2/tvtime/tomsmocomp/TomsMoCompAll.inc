@@ -51,8 +51,6 @@
 
 void FUNCT_NAME(GstDeinterlace2* object)
 {
-  pMyMemcpy = object->pMemcpy;
-  
   /* double stride do address just every odd/even scanline */
   src_pitch = object->field_stride;
   dst_pitch = object->output_stride;

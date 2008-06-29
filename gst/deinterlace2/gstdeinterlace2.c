@@ -28,7 +28,6 @@
 #include <gst/video/video.h>
 
 #include "tvtime/plugins.h"
-#include "tvtime/speedy.h"
 
 #include <string.h>
 
@@ -233,9 +232,6 @@ gst_deinterlace2_init (GstDeinterlace2 * object, GstDeinterlace2Class * klass)
   gst_element_no_more_pads (GST_ELEMENT (object));
 
   object->cpu_feature_flags = oil_cpu_get_flags ();
-
-  setup_speedy_calls (object->cpu_feature_flags, 0);
-  object->pMemcpy = speedy_memcpy;
 
   object->method = dscaler_tomsmocomp_get_method ();
   object->field_layout = GST_DEINTERLACE2_LAYOUT_AUTO;

@@ -1,3 +1,23 @@
+2008-06-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/Makefile.am:
+	* gst/deinterlace2/gstdeinterlace2.c: (gst_deinterlace2_init):
+	* gst/deinterlace2/tvtime/greedy.c: (deinterlace_frame_di_greedy):
+	* gst/deinterlace2/tvtime/greedyh.c:
+	(deinterlace_frame_di_greedyh):
+	* gst/deinterlace2/tvtime/speedtools.h:
+	* gst/deinterlace2/tvtime/speedy.c:
+	* gst/deinterlace2/tvtime/speedy.h:
+	* gst/deinterlace2/tvtime/tomsmocomp.c: (Fieldcopy):
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	* gst/deinterlace2/tvtime/vfir.c: (deinterlace_frame_vfir):
+	Get rid of speedy.[ch] as we don't use most of it's code anyway
+	and it doesn't seem to be relicensed to LGPL. Use memcpy() instead
+	of the speedy memcpy everywhere instead.
+	
+	* gst/deinterlace2/gstdeinterlace2.h:
+	Remove many unused declarations.
+
 2008-06-28  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/mpeg2enc/gstmpeg2encoptions.cc:

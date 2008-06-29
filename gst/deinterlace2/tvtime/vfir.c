@@ -28,19 +28,13 @@
  * See: http://bugzilla.gnome.org/show_bug.cgi?id=163578
  */
 
-#include <stdio.h>
-#if defined (__SVR4) && defined (__sun)
-# include <sys/int_types.h>
-#else
-# include <stdint.h>
-#endif
-
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
 
-#include "speedy.h"
+#include "_stdint.h"
 #include "gstdeinterlace2.h"
+#include <string.h>
 
 /*
  * The MPEG2 spec uses a slightly harsher filter, they specify
@@ -156,11 +150,11 @@ deinterlace_frame_vfir (GstDeinterlace2 * object)
 
   if (object->field_history[object->history_count - 2].flags ==
       PICTURE_INTERLACED_BOTTOM) {
-    blit_packed422_scanline (out_data, cur_field, object->frame_width);
+    memcpy (out_data, cur_field, object->line_length);
     out_data += object->output_stride;
   }
 
-  blit_packed422_scanline (out_data, cur_field, object->frame_width);
+  memcpy (out_data, cur_field, object->line_length);
   out_data += object->output_stride;
   line++;
 
@@ -184,14 +178,14 @@ deinterlace_frame_vfir (GstDeinterlace2 * object)
     cur_field += object->field_stride;
     last_field += object->field_stride;
 
-    blit_packed422_scanline (out_data, cur_field, object->frame_width);
+    memcpy (out_data, cur_field, object->line_length);
     out_data += object->output_stride;
   }
 
   if (object->field_history[object->history_count - 2].flags ==
       PICTURE_INTERLACED_TOP) {
     /* double the last scanline of the top field */
-    blit_packed422_scanline (out_data, cur_field, object->frame_width);
+    memcpy (out_data, cur_field, object->line_length);
   }
 }
 
@@ -205,8 +199,6 @@ static deinterlace_method_t vfirmethod = {
   0,
   0,
   1,
-  0,
-  0,
   deinterlace_frame_vfir,
   {"Avoids flicker by blurring consecutive frames",
         "of input.  Use this if you want to run your",

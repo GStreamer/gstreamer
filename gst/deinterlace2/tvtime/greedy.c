@@ -26,20 +26,14 @@
  * See: http://bugzilla.gnome.org/show_bug.cgi?id=163578
  */
 
-#include <stdio.h>
-#if defined (__SVR4) && defined (__sun)
-# include <sys/int_types.h>
-#else
-# include <stdint.h>
-#endif
-
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
 
+#include <_stdint.h>
+
 #include "gstdeinterlace2.h"
-#include "speedtools.h"
-#include "speedy.h"
+#include <string.h>
 
 // This is a simple lightweight DeInterlace method that uses little CPU time
 // but gives very good results for low or intermedite motion.
@@ -352,7 +346,7 @@ deinterlace_frame_di_greedy (GstDeinterlace2 * object)
         GST_BUFFER_DATA (object->field_history[object->history_count - 3].buf);
 
     // copy first even line
-    object->pMemcpy (Dest, L1, object->line_length);
+    memcpy (Dest, L1, object->line_length);
     Dest += object->output_stride;
   } else {
     InfoIsOdd = 0;
@@ -365,18 +359,18 @@ deinterlace_frame_di_greedy (GstDeinterlace2 * object)
         Pitch;
 
     // copy first even line
-    object->pMemcpy (Dest, GST_BUFFER_DATA (object->field_history[0].buf),
+    memcpy (Dest, GST_BUFFER_DATA (object->field_history[0].buf),
         object->line_length);
     Dest += object->output_stride;
     // then first odd line
-    object->pMemcpy (Dest, L1, object->line_length);
+    memcpy (Dest, L1, object->line_length);
     Dest += object->output_stride;
   }
 
   for (Line = 0; Line < (object->field_height - 1); ++Line) {
     func (L2, L1, L3, L2P, Dest, object->line_length);
     Dest += object->output_stride;
-    object->pMemcpy (Dest, L3, object->line_length);
+    memcpy (Dest, L3, object->line_length);
     Dest += object->output_stride;
 
     L1 += Pitch;
@@ -386,7 +380,7 @@ deinterlace_frame_di_greedy (GstDeinterlace2 * object)
   }
 
   if (InfoIsOdd) {
-    object->pMemcpy (Dest, L2, object->line_length);
+    memcpy (Dest, L2, object->line_length);
   }
 }
 
@@ -400,8 +394,6 @@ static deinterlace_method_t greedyl_method = {
   0,
   0,
   1,
-  0,
-  0,
   deinterlace_frame_di_greedy,
   {"Uses heuristics to detect motion in the input",
         "frames and reconstruct image detail where",
