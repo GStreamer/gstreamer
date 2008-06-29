@@ -307,7 +307,7 @@ gst_gl_download_transform (GstBaseTransform* trans, GstBuffer* inbuf,
         GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
 
     //blocking call
-    gst_gl_display_videoChanged(download->display, download->video_format, 
+    gst_gl_display_do_download(download->display, download->video_format, 
         gl_inbuf->width, gl_inbuf->height, gl_inbuf->texture, GST_BUFFER_DATA (outbuf));
 
     return GST_FLOW_OK;

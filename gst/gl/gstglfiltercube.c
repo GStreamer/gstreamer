@@ -115,7 +115,7 @@ gst_gl_filter_cube_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
     //GstGLFilterCube* cube_filter = GST_GL_FILTER_CUBE(filter);
 
     //blocking call, use a FBO
-    gst_gl_display_useFBO (filter->display, filter->width, filter->height,
+    gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
         filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filter_cube_callback,
         inbuf->width, inbuf->height, inbuf->texture, 0);
 

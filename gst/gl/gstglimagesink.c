@@ -323,7 +323,7 @@ gst_glimage_sink_stop (GstBaseSink* bsink)
     }
     if (glimage_sink->display) 
     {
-        gst_gl_display_setVisibleWindow (glimage_sink->display, FALSE);
+        gst_gl_display_set_visible_context (glimage_sink->display, FALSE);
         g_object_unref (glimage_sink->display);
         glimage_sink->display = NULL;
     }
@@ -436,17 +436,17 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
             gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (glimage_sink));
 
             if (glimage_sink->window_id)
-                gst_gl_display_set_windowId (glimage_sink->display, glimage_sink->window_id);
+                gst_gl_display_set_window_id (glimage_sink->display, glimage_sink->window_id);
 
-            gst_gl_display_setClientReshapeCallback (glimage_sink->display, 
+            gst_gl_display_set_client_reshape_callback (glimage_sink->display, 
                 glimage_sink->clientReshapeCallback);
     
-            gst_gl_display_setClientDrawCallback (glimage_sink->display, 
+            gst_gl_display_set_client_draw_callback (glimage_sink->display, 
                 glimage_sink->clientDrawCallback);
 
-            gst_gl_display_resizeWindow (glimage_sink->display, glimage_sink->width, glimage_sink->height);
+            gst_gl_display_resize_context (glimage_sink->display, glimage_sink->width, glimage_sink->height);
 
-            gst_gl_display_setVisibleWindow (glimage_sink->display, TRUE);
+            gst_gl_display_set_visible_context (glimage_sink->display, TRUE);
         } 
     } 
     //is not gl
@@ -467,7 +467,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
                 gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (glimage_sink));
 
             //init opengl context
-            gst_gl_display_init_gl_context (glimage_sink->display, 
+            gst_gl_display_create_context (glimage_sink->display, 
                 50, y_pos++ * (glimage_sink->height+50) + 50, 
                 glimage_sink->width, glimage_sink->height, 
                 glimage_sink->window_id, TRUE);
@@ -476,10 +476,10 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
             gst_gl_display_init_upload (glimage_sink->display, glimage_sink->format, 
                 glimage_sink->width, glimage_sink->height);
 
-            gst_gl_display_setClientReshapeCallback (glimage_sink->display, 
+            gst_gl_display_set_client_reshape_callback (glimage_sink->display, 
                 glimage_sink->clientReshapeCallback);
     
-            gst_gl_display_setClientDrawCallback (glimage_sink->display, 
+            gst_gl_display_set_client_draw_callback (glimage_sink->display, 
                 glimage_sink->clientDrawCallback);
         }
 
@@ -506,7 +506,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
     glimage_sink->stored_buffer = gl_buffer;
 
     //redisplay opengl scene
-    isAlive = gst_gl_display_postRedisplay (glimage_sink->display, 
+    isAlive = gst_gl_display_redisplay (glimage_sink->display, 
         gl_buffer->texture, gl_buffer->width, gl_buffer->height);
 
     if (isAlive)
@@ -557,7 +557,7 @@ gst_glimage_sink_expose (GstXOverlay* overlay)
 
     //redisplay opengl scene
     if (glimage_sink->display)
-        gst_gl_display_postRedisplay (glimage_sink->display, 0, 0, 0);
+        gst_gl_display_redisplay (glimage_sink->display, 0, 0, 0);
 }
 
 

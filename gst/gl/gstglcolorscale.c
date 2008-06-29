@@ -389,7 +389,7 @@ gst_gl_colorscale_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     colorscale->display = gst_gl_display_new ();
   
     //init unvisible opengl context
-    gst_gl_display_init_gl_context (colorscale->display, 
+    gst_gl_display_create_context (colorscale->display, 
         50, y_pos++ * (colorscale->output_video_height+50) + 50,
         colorscale->output_video_width, colorscale->output_video_height, 
         0, FALSE);
@@ -455,7 +455,7 @@ gst_gl_colorscale_transform (GstBaseTransform* trans, GstBuffer* inbuf,
       GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
 
     //blocking call
-    gst_gl_display_videoChanged(colorscale->display, colorscale->output_video_format, 
+    gst_gl_display_do_download(colorscale->display, colorscale->output_video_format, 
         gl_temp_buffer->width, gl_temp_buffer->height, gl_temp_buffer->texture, 
         GST_BUFFER_DATA (outbuf));
 

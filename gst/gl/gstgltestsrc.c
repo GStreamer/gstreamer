@@ -363,11 +363,11 @@ gst_gl_test_src_setcaps (GstBaseSrc* bsrc, GstCaps* caps)
 
         gltestsrc->display = gst_gl_display_new ();
 
-        gst_gl_display_init_gl_context (gltestsrc->display, 
+        gst_gl_display_create_context (gltestsrc->display, 
             50, y_pos++ * (gltestsrc->height+50) + 50,
             gltestsrc->width, gltestsrc->height, 0, FALSE);
 
-        gst_gl_display_requestFBO (gltestsrc->display, gltestsrc->width, gltestsrc->height,
+        gst_gl_display_gen_fbo (gltestsrc->display, gltestsrc->width, gltestsrc->height,
             &gltestsrc->fbo, &gltestsrc->depthbuffer);
     }
     return res;
@@ -557,7 +557,7 @@ gst_gl_test_src_create (GstPushSrc* psrc, GstBuffer** buffer)
     } 
  
     //blocking call, generate a FBO
-    gst_gl_display_useFBO2 (src->display, src->width, src->height,
+    gst_gl_display_use_fbo_2 (src->display, src->width, src->height,
         src->fbo, src->depthbuffer, outbuf->texture, (GLCB2)src->make_image,
         (gpointer*)src, (gpointer*)outbuf);
 
@@ -625,7 +625,7 @@ gst_gl_test_src_stop (GstBaseSrc* basesrc)
     if (src->display) 
     {
         //blocking call, delete the FBO
-        gst_gl_display_rejectFBO (src->display, src->fbo, 
+        gst_gl_display_del_fbo (src->display, src->fbo, 
             src->depthbuffer);
         g_object_unref (src->display);
         src->display = NULL;

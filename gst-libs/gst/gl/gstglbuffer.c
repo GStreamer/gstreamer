@@ -29,8 +29,8 @@ static GObjectClass* gst_gl_buffer_parent_class;
 static void
 gst_gl_buffer_finalize (GstGLBuffer* buffer)
 {
-    //wait clear textures end, blocking call
-    gst_gl_display_clearTexture (buffer->display, buffer->texture);
+    //blocking call, put the texture in the pool
+    gst_gl_display_del_texture (buffer->display, buffer->texture);
 
     g_object_unref (buffer->display);
 
@@ -99,8 +99,8 @@ gst_gl_buffer_new (GstGLDisplay* display,
     //the one attached to the upload FBO
     GST_BUFFER_SIZE (gl_buffer) = gst_gl_buffer_get_size (gl_width, gl_height);
 
-    //blocking call, request a texture and attach it to the upload FBO
-    gst_gl_display_prepare_texture (gl_buffer->display, &gl_buffer->texture) ;
+    //blocking call, generate a texture using the pool
+    gst_gl_display_gen_texture (gl_buffer->display, &gl_buffer->texture) ;
 
     return gl_buffer;
 }

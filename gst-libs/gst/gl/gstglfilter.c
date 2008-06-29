@@ -156,7 +156,7 @@ gst_gl_filter_reset (GstGLFilter* filter)
     if (filter->display) 
     {
         //blocking call, delete the FBO
-        gst_gl_display_rejectFBO (filter->display, filter->fbo, 
+        gst_gl_display_del_fbo (filter->display, filter->fbo, 
             filter->depthbuffer);
         g_object_unref (filter->display);
         filter->display = NULL;
@@ -247,7 +247,7 @@ gst_gl_filter_prepare_output_buffer (GstBaseTransform* trans,
         filter->display = g_object_ref (gl_inbuf->display);
 
         //blocking call, generate a FBO
-        gst_gl_display_requestFBO (filter->display, filter->width, filter->height,
+        gst_gl_display_gen_fbo (filter->display, filter->width, filter->height,
             &filter->fbo, &filter->depthbuffer);
 
         if (filter_class->onInitFBO)

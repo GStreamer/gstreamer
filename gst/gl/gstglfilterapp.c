@@ -152,7 +152,7 @@ gst_gl_filter_app_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
     if (app_filter->clientDrawCallback)
     {
         //blocking call, use a FBO
-        gst_gl_display_useFBO (filter->display, filter->width, filter->height,
+        gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
             filter->fbo, filter->depthbuffer, outbuf->texture, app_filter->clientDrawCallback,
             inbuf->width, inbuf->height, inbuf->texture, 0);
     }
@@ -160,7 +160,7 @@ gst_gl_filter_app_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
     else
     {
         //blocking call, use a FBO
-        gst_gl_display_useFBO (filter->display, filter->width, filter->height,
+        gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
             filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filter_app_callback,
             inbuf->width, inbuf->height, inbuf->texture, 0);
     }

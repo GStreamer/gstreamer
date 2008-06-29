@@ -122,7 +122,7 @@ gst_gl_filter_edge_reset (GstGLFilter* filter)
     GstGLFilterEdge* edge_filter = GST_GL_FILTER_EDGE(filter);
 
     //blocking call, wait the opengl thread has destroyed the shader program
-    gst_gl_display_destroyShader (filter->display, edge_filter->handleShader);
+    gst_gl_display_del_shader (filter->display, edge_filter->handleShader);
 }
 
 static void
@@ -159,7 +159,7 @@ gst_gl_filter_edge_init_shader (GstGLFilter* filter)
     GstGLFilterEdge* edge_filter = GST_GL_FILTER_EDGE(filter);
     
     //blocking call, wait the opengl thread has compiled the shader program
-    gst_gl_display_initShader (filter->display, edge_filter->textShader, &edge_filter->handleShader);
+    gst_gl_display_gen_shader (filter->display, edge_filter->textShader, &edge_filter->handleShader);
 }
 
 static gboolean
@@ -169,7 +169,7 @@ gst_gl_filter_edge_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
     GstGLFilterEdge* edge_filter = GST_GL_FILTER_EDGE(filter);
 
     //blocking call, generate a FBO
-    gst_gl_display_useFBO (filter->display, filter->width, filter->height,
+    gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
         filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filter_edge_callback,
         inbuf->width, inbuf->height, inbuf->texture, edge_filter->handleShader);
 
