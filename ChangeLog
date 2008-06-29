@@ -1,3 +1,16 @@
+2008-06-29  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/avi-ids.h:
+	Add vprp chunk related structures.
+	* gst/avi/gstavidemux.c: (gst_avi_demux_riff_parse_vprp),
+	(gst_avi_demux_parse_stream):
+	Parse optional vprp chunk and add calculated pixel-aspect-ratio
+	to caps.  Fixes #539482.
+	* gst/avi/gstavimux.h:
+	* gst/avi/gstavimux.c: (gst_avi_mux_pad_reset),
+	(gst_avi_mux_vidsink_set_caps), (gst_avi_mux_riff_get_avi_header):
+	Add a vprp chunk if non-trival pixel-aspect-ratio provided in caps.
+
 2008-06-28  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* tests/check/elements/avimux.c: (check_avimux_pad):

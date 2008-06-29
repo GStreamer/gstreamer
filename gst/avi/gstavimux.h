@@ -89,6 +89,8 @@ typedef struct _GstAviVideoPad {
   gst_riff_strf_vids vids;
   /* extra data */
   GstBuffer *vids_codec_data;
+  /* ODML video properties */
+  gst_riff_vprp vprp;
 
 } GstAviVideoPad;
 

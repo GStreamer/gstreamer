@@ -1197,6 +1197,127 @@ gst_avi_demux_read_subindexes_pull (GstAviDemux * avi,
 }
 
 /*
+ * gst_avi_demux_riff_parse_vprp:
+ * @element: caller element (used for debugging/error).
+ * @buf: input data to be used for parsing, stripped from header.
+ * @vprp: a pointer (returned by this function) to a filled-in vprp
+ *        structure. Caller should free it.
+ *
+ * Parses a video stream´s vprp. This function takes ownership of @buf.
+ *
+ * Returns: TRUE if parsing succeeded, otherwise FALSE. The stream
+ *          should be skipped on error, but it is not fatal.
+ */
+static gboolean
+gst_avi_demux_riff_parse_vprp (GstElement * element,
+    GstBuffer * buf, gst_riff_vprp ** _vprp)
+{
+  gst_riff_vprp *vprp;
+  gint k;
+
+  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (_vprp != NULL, FALSE);
+
+  if (GST_BUFFER_SIZE (buf) < G_STRUCT_OFFSET (gst_riff_vprp, field_info))
+    goto too_small;
+
+  vprp = g_memdup (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+  vprp->format_token = GUINT32_FROM_LE (vprp->format_token);
+  vprp->standard = GUINT32_FROM_LE (vprp->standard);
+  vprp->vert_rate = GUINT32_FROM_LE (vprp->vert_rate);
+  vprp->hor_t_total = GUINT32_FROM_LE (vprp->hor_t_total);
+  vprp->vert_lines = GUINT32_FROM_LE (vprp->vert_lines);
+  vprp->aspect = GUINT32_FROM_LE (vprp->aspect);
+  vprp->width = GUINT32_FROM_LE (vprp->width);
+  vprp->height = GUINT32_FROM_LE (vprp->height);
+  vprp->fields = GUINT32_FROM_LE (vprp->fields);
+#endif
+
+  /* size checking */
+  /* calculate fields based on size */
+  k = (GST_BUFFER_SIZE (buf) - G_STRUCT_OFFSET (gst_riff_vprp, field_info)) /
+      vprp->fields;
+  if (vprp->fields > k) {
+    GST_WARNING_OBJECT (element,
+        "vprp header indicated %d fields, only %d available", vprp->fields, k);
+    vprp->fields = k;
+  }
+  if (vprp->fields > GST_RIFF_VPRP_VIDEO_FIELDS) {
+    GST_WARNING_OBJECT (element,
+        "vprp header indicated %d fields, at most %d supported", vprp->fields,
+        GST_RIFF_VPRP_VIDEO_FIELDS);
+    vprp->fields = GST_RIFF_VPRP_VIDEO_FIELDS;
+  }
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+  for (k = 0; k < vprp->fields; k++) {
+    gst_riff_vprp_video_field_desc *fd;
+
+    fd = &(vidpad->vprp.field_info[k]);
+    fd->compressed_bm_height = GUINT32_FROM_LE (fd->compressed_bm_height);
+    fd->compressed_bm_width = GUINT32_FROM_LE (fd->compressed_bm_width);
+    fd->valid_bm_height = GUINT32_FROM_LE (fd->valid_bm_height);
+    fd->valid_bm_width = GUINT16_FROM_LE (fd->valid_bm_width);
+    fd->valid_bm_x_offset = GUINT16_FROM_LE (fd->valid_bm_x_offset);
+    fd->valid_bm_y_offset = GUINT32_FROM_LE (fd->valid_bm_y_offset);
+    fd->video_x_t_offset = GUINT32_FROM_LE (fd->video_x_t_offset);
+    fd->video_y_start = GUINT32_FROM_LE (fd->video_y_start);
+  }
+#endif
+
+  /* debug */
+  GST_INFO_OBJECT (element, "vprp tag found in context vids:");
+  GST_INFO_OBJECT (element, " format_token  %d", vprp->format_token);
+  GST_INFO_OBJECT (element, " standard      %d", vprp->standard);
+  GST_INFO_OBJECT (element, " vert_rate     %d", vprp->vert_rate);
+  GST_INFO_OBJECT (element, " hor_t_total   %d", vprp->hor_t_total);
+  GST_INFO_OBJECT (element, " vert_lines    %d", vprp->vert_lines);
+  GST_INFO_OBJECT (element, " aspect        %d:%d", vprp->aspect >> 16,
+      vprp->aspect & 0xffff);
+  GST_INFO_OBJECT (element, " width         %d", vprp->width);
+  GST_INFO_OBJECT (element, " height        %d", vprp->height);
+  GST_INFO_OBJECT (element, " fields        %d", vprp->fields);
+  for (k = 0; k < vprp->fields; k++) {
+    gst_riff_vprp_video_field_desc *fd;
+
+    fd = &(vprp->field_info[k]);
+    GST_INFO_OBJECT (element, " field %u description:", k);
+    GST_INFO_OBJECT (element, "  compressed_bm_height  %d",
+        fd->compressed_bm_height);
+    GST_INFO_OBJECT (element, "  compressed_bm_width  %d",
+        fd->compressed_bm_width);
+    GST_INFO_OBJECT (element, "  valid_bm_height       %d",
+        fd->valid_bm_height);
+    GST_INFO_OBJECT (element, "  valid_bm_width        %d", fd->valid_bm_width);
+    GST_INFO_OBJECT (element, "  valid_bm_x_offset     %d",
+        fd->valid_bm_x_offset);
+    GST_INFO_OBJECT (element, "  valid_bm_y_offset     %d",
+        fd->valid_bm_y_offset);
+    GST_INFO_OBJECT (element, "  video_x_t_offset      %d",
+        fd->video_x_t_offset);
+    GST_INFO_OBJECT (element, "  video_y_start         %d", fd->video_y_start);
+  }
+
+  gst_buffer_unref (buf);
+
+  *_vprp = vprp;
+
+  return TRUE;
+
+  /* ERRORS */
+too_small:
+  {
+    GST_ERROR_OBJECT (element,
+        "Too small vprp (%d available, at least %d needed)",
+        GST_BUFFER_SIZE (buf),
+        (int) G_STRUCT_OFFSET (gst_riff_vprp, field_info));
+    gst_buffer_unref (buf);
+    return FALSE;
+  }
+}
+
+/*
  * gst_avi_demux_parse_stream:
  * @avi: calling element (used for debugging/errors).
  * @buf: input buffer used to parse the stream.
@@ -1223,7 +1344,8 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   GstCaps *caps = NULL;
   GstPad *pad;
   GstElement *element;
-  gboolean got_strh = FALSE, got_strf = FALSE;
+  gboolean got_strh = FALSE, got_strf = FALSE, got_vprp = FALSE;
+  gst_riff_vprp *vprp = NULL;
 
   element = GST_ELEMENT_CAST (avi);
 
@@ -1294,6 +1416,30 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
         got_strf = TRUE;
         break;
       }
+      case GST_RIFF_TAG_vprp:
+      {
+        if (got_vprp) {
+          GST_WARNING_OBJECT (avi, "Ignoring additional vprp chunk");
+          break;
+        }
+        if (!got_strh) {
+          GST_ERROR_OBJECT (avi, "Found vprp chunk before strh chunk");
+          goto fail;
+        }
+        if (!got_strf) {
+          GST_ERROR_OBJECT (avi, "Found vprp chunk before strf chunk");
+          goto fail;
+        }
+
+        if (!gst_avi_demux_riff_parse_vprp (element, sub, &vprp)) {
+          GST_WARNING_OBJECT (avi, "Failed to parse vprp chunk");
+          /* not considered fatal */
+          g_free (vprp);
+          vprp = NULL;
+        } else
+          got_vprp = TRUE;
+        break;
+      }
       case GST_RIFF_TAG_strd:
         if (stream->initdata)
           gst_buffer_unref (stream->initdata);
@@ -1362,6 +1508,21 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
       if (!caps) {
         caps = gst_caps_new_simple ("video/x-avi-unknown", "fourcc",
             GST_TYPE_FOURCC, fourcc, NULL);
+      } else if (got_vprp && vprp) {
+        guint32 aspect_n, aspect_d;
+        gint n, d;
+
+        aspect_n = vprp->aspect >> 16;
+        aspect_d = vprp->aspect & 0xffff;
+        /* calculate the pixel aspect ratio using w/h and aspect ratio */
+        n = aspect_n * stream->strf.vids->height;
+        d = aspect_d * stream->strf.vids->width;
+        if (n && d)
+          gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              n, d, NULL);
+        /* very local, not needed elsewhere */
+        g_free (vprp);
+        vprp = NULL;
       }
       tag_name = GST_TAG_VIDEO_CODEC;
       avi->num_v_streams++;
@@ -1483,6 +1644,7 @@ fail:
       gst_buffer_unref (buf);
     if (sub)
       gst_buffer_unref (sub);
+    g_free (vprp);
     g_free (codec_name);
     g_free (stream->strh);
     g_free (stream->strf.data);

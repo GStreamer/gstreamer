@@ -45,4 +45,33 @@ typedef struct _gst_riff_avih {
   guint32 length;
 } gst_riff_avih;
 
+/* vprp (video properties) ODML header */
+/* see ODML spec for some/more explanation */
+#define GST_RIFF_TAG_vprp GST_MAKE_FOURCC ('v','p','r','p')
+#define GST_RIFF_VPRP_VIDEO_FIELDS        (2)
+
+typedef struct _gst_riff_vprp_video_field_desc {
+  guint32 compressed_bm_height;
+  guint32 compressed_bm_width;
+  guint32 valid_bm_height;
+  guint32 valid_bm_width;
+  guint32 valid_bm_x_offset;
+  guint32 valid_bm_y_offset;
+  guint32 video_x_t_offset;
+  guint32 video_y_start;
+} gst_riff_vprp_video_field_desc;
+
+typedef struct _gst_riff_vprp {
+  guint32 format_token;      /* whether fields defined by standard */
+  guint32 standard;          /* video display standard, UNKNOWN, PAL, etc */
+  guint32 vert_rate;         /* vertical refresh rate */
+  guint32 hor_t_total;       /* width */
+  guint32 vert_lines;        /* height */
+  guint32 aspect;            /* aspect ratio high word:low word */
+  guint32 width;             /* active width */
+  guint32 height;            /* active height */
+  guint32 fields;            /* field count */
+  gst_riff_vprp_video_field_desc field_info[GST_RIFF_VPRP_VIDEO_FIELDS];
+} gst_riff_vprp;
+
 #endif /* __GST_AVI_H__ */

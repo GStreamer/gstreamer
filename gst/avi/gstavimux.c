@@ -337,6 +337,7 @@ gst_avi_mux_pad_reset (GstAviPad * avipad, gboolean free)
     }
 
     memset (&(vidpad->vids), 0, sizeof (gst_riff_strf_vids));
+    memset (&(vidpad->vprp), 0, sizeof (gst_riff_vprp));
   } else {
     GstAviAudioPad *audpad = (GstAviAudioPad *) avipad;
 
@@ -425,9 +426,10 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
   GstAviCollectData *collect_pad;
   GstStructure *structure;
   const gchar *mimetype;
-  const GValue *fps;
+  const GValue *fps, *par;
   const GValue *codec_data;
   gint width, height;
+  gint par_n, par_d;
 
   avimux = GST_AVI_MUX (gst_pad_get_parent (pad));
 
@@ -462,6 +464,36 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
 
   avipad->parent.hdr.rate = gst_value_get_fraction_numerator (fps);
   avipad->parent.hdr.scale = gst_value_get_fraction_denominator (fps);
+
+  /* (pixel) aspect ratio data, if any */
+  par = gst_structure_get_value (structure, "pixel-aspect-ratio");
+  /* only use video properties header if there is non-trivial aspect info */
+  if (par && GST_VALUE_HOLDS_FRACTION (par) &&
+      ((par_n = gst_value_get_fraction_numerator (par)) !=
+          (par_d = gst_value_get_fraction_denominator (par)))) {
+    GValue to_ratio = { 0, };
+    guint ratio_n, ratio_d;
+
+    /* some fraction voodoo to obtain simplest possible ratio */
+    g_value_init (&to_ratio, GST_TYPE_FRACTION);
+    gst_value_set_fraction (&to_ratio, width * par_n, height * par_d);
+    ratio_n = gst_value_get_fraction_numerator (&to_ratio);
+    ratio_d = gst_value_get_fraction_denominator (&to_ratio);
+    GST_DEBUG_OBJECT (avimux, "generating vprp data with aspect ratio %d/%d",
+        ratio_n, ratio_d);
+    /* simply fill in */
+    avipad->vprp.vert_rate = avipad->parent.hdr.rate / avipad->parent.hdr.scale;
+    avipad->vprp.hor_t_total = width;
+    avipad->vprp.vert_lines = height;
+    avipad->vprp.aspect = (ratio_n) << 16 | (ratio_d & 0xffff);
+    avipad->vprp.width = width;
+    avipad->vprp.height = height;
+    avipad->vprp.fields = 1;
+    avipad->vprp.field_info[0].compressed_bm_height = height;
+    avipad->vprp.field_info[0].compressed_bm_width = width;
+    avipad->vprp.field_info[0].valid_bm_height = height;
+    avipad->vprp.field_info[0].valid_bm_width = width;
+  }
 
   /* codec initialization data, if any */
   codec_data = gst_structure_get_value (structure, "codec_data");
@@ -957,6 +989,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
   size += avimux->codec_data_size + 100 + sizeof (gst_riff_avih)
       + (g_slist_length (avimux->sinkpads) * (100 + sizeof (gst_riff_strh_full)
           + sizeof (gst_riff_strf_vids)
+          + sizeof (gst_riff_vprp)
           + sizeof (gst_riff_strf_auds)
           + ODML_SUPERINDEX_SIZE));
   buffer = gst_buffer_new_and_alloc (size);
@@ -1003,13 +1036,21 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     GstAviPad *avipad = (GstAviPad *) node->data;
     GstAviVideoPad *vidpad = (GstAviVideoPad *) avipad;
     GstAviAudioPad *audpad = (GstAviAudioPad *) avipad;
-    guint codec_size = 0, strl_size = 0;
+    guint codec_size = 0, strl_size = 0, vprp_size = 0;
 
     if (avipad->is_video) {
       if (vidpad->vids_codec_data)
         codec_size = GST_BUFFER_SIZE (vidpad->vids_codec_data);
       strl_size = sizeof (gst_riff_strh_full) + sizeof (gst_riff_strf_vids)
           + codec_size + 4 * 5 + ODML_SUPERINDEX_SIZE;
+      if (vidpad->vprp.aspect) {
+        /* let's be on the safe side */
+        vidpad->vprp.fields = MIN (vidpad->vprp.fields,
+            GST_RIFF_VPRP_VIDEO_FIELDS);
+        vprp_size = G_STRUCT_OFFSET (gst_riff_vprp, field_info)
+            + (vidpad->vprp.fields * sizeof (gst_riff_vprp_video_field_desc));
+        strl_size += 4 * 2 + vprp_size;
+      }
     } else {
       if (audpad->auds_codec_data)
         codec_size = GST_BUFFER_SIZE (audpad->auds_codec_data);
@@ -1071,6 +1112,42 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
 
         buffdata += codec_size;
         highmark += codec_size;
+      }
+
+      /* add video property data, mainly for aspect ratio, if any */
+      if (vprp_size) {
+        gint f;
+
+        /* the vprp header */
+        memcpy (buffdata + 0, "vprp", 4);
+        GST_WRITE_UINT32_LE (buffdata + 4, vprp_size);
+        /* the actual data */
+        GST_WRITE_UINT32_LE (buffdata + 8, vidpad->vprp.format_token);
+        GST_WRITE_UINT32_LE (buffdata + 12, vidpad->vprp.standard);
+        GST_WRITE_UINT32_LE (buffdata + 16, vidpad->vprp.vert_rate);
+        GST_WRITE_UINT32_LE (buffdata + 20, vidpad->vprp.hor_t_total);
+        GST_WRITE_UINT32_LE (buffdata + 24, vidpad->vprp.vert_lines);
+        GST_WRITE_UINT32_LE (buffdata + 28, vidpad->vprp.aspect);
+        GST_WRITE_UINT32_LE (buffdata + 32, vidpad->vprp.width);
+        GST_WRITE_UINT32_LE (buffdata + 36, vidpad->vprp.height);
+        GST_WRITE_UINT32_LE (buffdata + 40, vidpad->vprp.fields);
+        buffdata += codec_size + 44;
+        highmark += codec_size + 44;
+        for (f = 0; f < vidpad->vprp.fields; ++f) {
+          gst_riff_vprp_video_field_desc *fd;
+
+          fd = &(vidpad->vprp.field_info[f]);
+          GST_WRITE_UINT32_LE (buffdata + 0, fd->compressed_bm_height);
+          GST_WRITE_UINT32_LE (buffdata + 4, fd->compressed_bm_width);
+          GST_WRITE_UINT32_LE (buffdata + 8, fd->valid_bm_height);
+          GST_WRITE_UINT32_LE (buffdata + 12, fd->valid_bm_width);
+          GST_WRITE_UINT32_LE (buffdata + 16, fd->valid_bm_x_offset);
+          GST_WRITE_UINT32_LE (buffdata + 20, fd->valid_bm_y_offset);
+          GST_WRITE_UINT32_LE (buffdata + 24, fd->video_x_t_offset);
+          GST_WRITE_UINT32_LE (buffdata + 28, fd->video_y_start);
+          buffdata += codec_size + 32;
+          highmark += codec_size + 32;
+        }
       }
     } else {
       /* the audio header */
