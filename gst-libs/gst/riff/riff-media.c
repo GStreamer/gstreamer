@@ -1133,6 +1133,27 @@ gst_riff_create_audio_caps (guint16 codec_id,
         *codec_name = g_strdup ("Sony ATRAC3");
       break;
 
+    case GST_RIFF_WAVE_FORMAT_ADPCM_IMA_DK4:
+      rate_min = 8000;
+      rate_max = 96000;
+      channels_max = 2;
+      caps =
+          gst_caps_new_simple ("audio/x-adpcm", "layout", G_TYPE_STRING, "dk4",
+          NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("IMA/DK4 ADPCM");
+      break;
+    case GST_RIFF_WAVE_FORMAT_ADPCM_IMA_DK3:
+      rate_min = 8000;
+      rate_max = 96000;
+      channels_max = 2;
+      caps =
+          gst_caps_new_simple ("audio/x-adpcm", "layout", G_TYPE_STRING, "dk3",
+          NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("IMA/DK3 ADPCM");
+      break;
+
     case GST_RIFF_WAVE_FORMAT_EXTENSIBLE:{
       guint16 valid_bits_per_sample;
       guint32 channel_mask;
@@ -1310,7 +1331,6 @@ gst_riff_create_audio_caps (guint16 codec_id,
       break;
     }
       /* can anything decode these? pitfdll? */
-    case GST_RIFF_WAVE_FORMAT_VOXWARE:
     case GST_RIFF_WAVE_FORMAT_VOXWARE_BYTE_ALIGNED:
     case GST_RIFF_WAVE_FORMAT_VOXWARE_AC8:
     case GST_RIFF_WAVE_FORMAT_VOXWARE_AC10:
@@ -1514,8 +1534,10 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_WMAV3,
     GST_RIFF_WAVE_FORMAT_SONY_ATRAC3,
     GST_RIFF_WAVE_FORMAT_IEEE_FLOAT,
-    GST_RIFF_WAVE_FORMAT_VOXWARE
-        /* FILL ME */
+    GST_RIFF_WAVE_FORMAT_VOXWARE_METASOUND,
+    GST_RIFF_WAVE_FORMAT_ADPCM_IMA_DK4,
+    GST_RIFF_WAVE_FORMAT_ADPCM_IMA_DK3,
+    /* FILL ME */
   };
   guint i;
   GstCaps *caps, *one;

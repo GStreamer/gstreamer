@@ -1,5 +1,13 @@
 2008-06-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst-libs/gst/riff/riff-ids.h:
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps),
+	(gst_riff_create_audio_template_caps):
+	Add support for ADPCM IMA DK3 and DK4 variant in RIFF containers.
+	Fixes bug #540351.
+
+2008-06-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
 	(gst_ffmpeg_pixfmt_to_caps):
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
