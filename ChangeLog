@@ -1,5 +1,11 @@
 2008-06-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* tests/check/libs/gdp.c: (gst_dp_suite):
+	Also enable the GDP unit test again on PPC now that the bug
+	is fixed.
+
+2008-06-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* libs/gst/dataprotocol/dataprotocol.c:
 	Don't write to the same region of memory as a uint64 and uint16
 	as this breaks strict aliasing rules and apparantly breaks on PPC
