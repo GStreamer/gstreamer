@@ -467,9 +467,8 @@ gst_gl_upload_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     //Depending on the colorspace, video is upload into several textures.
     //However, there is only one output texture. The one attached
     //to the upload FBO.
-    gst_gl_display_do_upload (upload->display, upload->video_format, 
-        upload->video_width, upload->video_height, GST_BUFFER_DATA (inbuf),
-        gl_outbuf->width, gl_outbuf->height, gl_outbuf->texture);
+    gst_gl_display_do_upload (upload->display, gl_outbuf->texture, 
+        upload->video_width, upload->video_height, GST_BUFFER_DATA (inbuf));
 
     return GST_FLOW_OK;
 }
