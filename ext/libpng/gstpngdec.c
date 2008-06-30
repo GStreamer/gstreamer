@@ -228,6 +228,8 @@ user_endrow_callback (png_structp png_ptr, png_bytep new_row,
 
   /* FIXME: implement interlaced pictures */
 
+  /* If buffer_out doesn't exist, it means buffer_alloc failed, which 
+   * will already have set the return code */
   if (GST_IS_BUFFER (pngdec->buffer_out)) {
     size_t offset = row_num * GST_ROUND_UP_4 (pngdec->rowbytes);
 
@@ -236,9 +238,6 @@ user_endrow_callback (png_structp png_ptr, png_bytep new_row,
     memcpy (GST_BUFFER_DATA (pngdec->buffer_out) + offset, new_row,
         pngdec->rowbytes);
     pngdec->ret = GST_FLOW_OK;
-  } else {
-    GST_LOG ("we don't have any output buffer to write this row !");
-    pngdec->ret = GST_FLOW_ERROR;
   }
 }
 

@@ -1,3 +1,9 @@
+2008-06-30  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/libpng/gstpngdec.c:
+	Don't return GST_FLOW_ERROR when buffer_alloc fails - return
+	whatever it returned.
+
 2008-06-29  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/avi/avi-ids.h:
