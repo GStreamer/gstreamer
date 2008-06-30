@@ -204,8 +204,13 @@ class LineCache (Producer):
                        "W" : debug_level_warning, " " : debug_level_none}
         rexp = re.compile (r"\d:\d\d:\d\d\.\d+\s+\d+\s+0x[0-9a-f]+\s+([DLIEW ])")
 
+        # Moving attribute lookups out of the loop:
         readline = self.__fileobj.readline
         tell = self.__fileobj.tell
+        rexp_match = rexp.match
+        levels_append = levels.append
+        offsets_append = offsets.append
+        dict_levels_get = dict_levels.get
 
         self.__fileobj.seek (0)
         limit = self._lines_per_iteration
@@ -215,11 +220,11 @@ class LineCache (Producer):
             line = readline ()
             if not line:
                 break
-            match = rexp.match (line)
+            match = rexp_match (line)
             if match is None:
                 continue
-            levels.append (dict_levels.get (match.group (1), debug_level_none))
-            offsets.append (offset)
+            levels_append (dict_levels_get (match.group (1), debug_level_none))
+            offsets_append (offset)
             i += 1
             if i >= limit:
                 i = 0

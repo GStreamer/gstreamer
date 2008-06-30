@@ -209,10 +209,15 @@ class LogModelBase (gtk.GenericTreeModel):
 
     def iter_rows_offset (self):
 
+        ensure_cached = self.ensure_cached
+        line_cache = self.line_cache
+        line_levels = self.line_levels
+        COL_LEVEL = self.COL_LEVEL
+
         for i, offset in enumerate (self.line_offsets):
-            self.ensure_cached (offset)
-            row = self.line_cache[offset]
-            row[self.COL_LEVEL] = self.line_levels[i] # FIXME
+            ensure_cached (offset)
+            row = line_cache[offset]
+            row[COL_LEVEL] = line_levels[i] # FIXME
             yield (row, offset,)
 
     def on_get_flags (self):
