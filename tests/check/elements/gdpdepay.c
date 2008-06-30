@@ -405,13 +405,7 @@ gdpdepay_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_audio_per_byte);
   tcase_add_test (tc_chain, test_audio_in_one_buffer);
-
-#ifdef HAVE_CPU_PPC64           /* Test known to fail on PPC64. See #348114 */
-  g_print ("\n\n***** skipping test test_streamheader.  May fail "
-      "on PPC due to a compiler bug. See bug #348114 for details\n\n\n");
-  if (0)                        /* this avoids the 'function not used' warning */
-#endif
-    tcase_add_test (tc_chain, test_streamheader);
+  tcase_add_test (tc_chain, test_streamheader);
 
   return s;
 }
