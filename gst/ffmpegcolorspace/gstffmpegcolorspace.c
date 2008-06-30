@@ -412,7 +412,8 @@ gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
    * GStreamer currently puts it into the caps as 'palette_data' field,
    * so for paletted data the frame size avpicture_get_size() returns is
    * 1024 bytes larger than what GStreamer expects. */
-  if (gst_structure_has_field (structure, "palette_data")) {
+  if (gst_structure_has_field (structure, "palette_data") &&
+      ctx->pix_fmt == PIX_FMT_PAL8) {
     *size -= 4 * 256;           /* = AVPALETTE_SIZE */
   }
 

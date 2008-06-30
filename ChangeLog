@@ -1,3 +1,13 @@
+2008-06-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps):
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_get_unit_size):
+	Only set/get on the PAL8 format, ffmpegcolorspace doesn't support
+	it on other formats. Also adjust the unit size only for that format
+	to not include the palette. Fixes bug #540497.
+
 2008-06-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/adder/gstadder.c:

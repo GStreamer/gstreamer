@@ -390,7 +390,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
             "bpp", G_TYPE_INT, bpp,
             "depth", G_TYPE_INT, depth,
             "endianness", G_TYPE_INT, endianness, NULL);
-        if (context) {
+        if (context && context->pix_fmt == PIX_FMT_PAL8) {
           gst_ffmpeg_set_palette (caps, context);
         }
       }
