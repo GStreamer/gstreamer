@@ -1,3 +1,8 @@
+2008-06-30  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/rawparse/gstvideoparse.c:
+	Fix size calculation for RGB buffers -> bpp is in bits, so divide by 8
+
 2008-06-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/Makefile.am:

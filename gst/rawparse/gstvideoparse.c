@@ -369,9 +369,9 @@ gst_video_parse_update_frame_size (GstVideoParse * vp)
       || vp->format == GST_VIDEO_PARSE_FORMAT_UYVY) {
     framesize = GST_ROUND_UP_4 (vp->width * 2) * vp->height;
   } else if (vp->format == GST_VIDEO_PARSE_FORMAT_RGB) {
-    framesize = GST_ROUND_UP_4 (vp->width * vp->bpp) * vp->height;
+    framesize = GST_ROUND_UP_4 (vp->width * vp->bpp / 8) * vp->height;
   } else {
-    framesize = GST_ROUND_UP_4 (vp->width * vp->bpp) * vp->height;
+    framesize = GST_ROUND_UP_4 (vp->width * vp->bpp / 8) * vp->height;
   }
 
   gst_raw_parse_set_framesize (GST_RAW_PARSE (vp), framesize);
