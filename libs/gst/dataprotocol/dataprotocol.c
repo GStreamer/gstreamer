@@ -82,7 +82,7 @@ GST_DEBUG_CATEGORY_STATIC (data_protocol_debug);
 
 /* helper macros */
 
-/* write first 6 bytes of header, as well as ABI padding */
+/* write first 6 bytes of header */
 #define GST_DP_INIT_HEADER(h, version, flags, type)		\
 G_STMT_START {							\
   gint maj = 0, min = 0;					\
@@ -95,9 +95,6 @@ G_STMT_START {							\
   h[2] = (guint8) flags;					\
   h[3] = 0; /* padding byte */					\
   GST_WRITE_UINT16_BE (h + 4, type);				\
-								\
-  GST_WRITE_UINT64_BE (h + 42, (guint64) 0); /* ABI padding */	\
-  GST_WRITE_UINT64_BE (h + 50, (guint64) 0); /* ABI padding */	\
 } G_STMT_END
 
 #define GST_DP_SET_CRC(h, flags, payload, length);		\

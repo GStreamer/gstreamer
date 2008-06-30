@@ -1,3 +1,10 @@
+2008-06-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/dataprotocol/dataprotocol.c:
+	Don't write to the same region of memory as a uint64 and uint16
+	as this breaks strict aliasing rules and apparantly breaks on PPC
+	and s390. Thanks to Sjoerd Simons for analysing. Fixes bug #348114.
+
 2008-06-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/controller/gstinterpolationcontrolsource.c:
