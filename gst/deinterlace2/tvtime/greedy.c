@@ -30,7 +30,7 @@
 # include "config.h"
 #endif
 
-#include <_stdint.h>
+#include "_stdint.h"
 
 #include "gstdeinterlace2.h"
 #include <string.h>

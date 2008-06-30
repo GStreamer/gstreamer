@@ -21,38 +21,34 @@
 #endif
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
+#include "_stdint.h"
 #include <string.h>
 
 #include "gst/gst.h"
 #include "gstdeinterlace2.h"
 #include "plugins.h"
 
-#include "tomsmocomp.h"
 #include "tomsmocomp/tomsmocompmacros.h"
 #include "x86-64_macros.inc"
-
 
 #define SearchEffortDefault 5
 #define UseStrangeBobDefault 0
 
-long SearchEffort;
-int UseStrangeBob;
-int IsOdd;
-const unsigned char *pWeaveSrc;
-const unsigned char *pWeaveSrcP;
-unsigned char *pWeaveDest;
-const unsigned char *pCopySrc;
-const unsigned char *pCopySrcP;
-unsigned char *pCopyDest;
-int src_pitch;
-int dst_pitch;
-int rowsize;
-int height;
-int FldHeight;
+static long SearchEffort;
+static int UseStrangeBob;
+static int IsOdd;
+static const unsigned char *pWeaveSrc;
+static const unsigned char *pWeaveSrcP;
+static unsigned char *pWeaveDest;
+static const unsigned char *pCopySrc;
+static const unsigned char *pCopySrcP;
+static unsigned char *pCopyDest;
+static int src_pitch;
+static int dst_pitch;
+static int rowsize;
+static int FldHeight;
 
-int
+static int
 Fieldcopy (void *dest, const void *src, size_t count,
     int rows, int dst_pitch, int src_pitch)
 {
@@ -94,15 +90,42 @@ Fieldcopy (void *dest, const void *src, size_t count,
 #undef  SSE_TYPE
 #undef  FUNCT_NAME
 
-void
+static void
+tomsmocomp_init (void)
+{
+  SearchEffort = SearchEffortDefault;
+  UseStrangeBob = UseStrangeBobDefault;
+}
+
+static void
+tomsmocomp_filter_mmx (GstDeinterlace2 * object)
+{
+  tomsmocompDScaler_MMX (object);
+}
+
+static void
+tomsmocomp_filter_3dnow (GstDeinterlace2 * object)
+{
+  tomsmocompDScaler_3DNOW (object);
+}
+
+static void
+tomsmocomp_filter_sse (GstDeinterlace2 * object)
+{
+  tomsmocompDScaler_SSE (object);
+}
+
+static void
 deinterlace_frame_di_tomsmocomp (GstDeinterlace2 * object)
 {
   if (object->cpu_feature_flags & OIL_IMPL_FLAG_SSE) {
     tomsmocomp_filter_sse (object);
   } else if (object->cpu_feature_flags & OIL_IMPL_FLAG_3DNOW) {
     tomsmocomp_filter_3dnow (object);
-  } else {
+  } else if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMX) {
     tomsmocomp_filter_mmx (object);
+  } else {
+    g_assert_not_reached ();
   }
 }
 
@@ -134,29 +157,4 @@ dscaler_tomsmocomp_get_method (void)
 {
   tomsmocomp_init ();
   return &tomsmocompmethod;
-}
-
-void
-tomsmocomp_init (void)
-{
-  SearchEffort = SearchEffortDefault;
-  UseStrangeBob = UseStrangeBobDefault;
-}
-
-void
-tomsmocomp_filter_mmx (GstDeinterlace2 * object)
-{
-  tomsmocompDScaler_MMX (object);
-}
-
-void
-tomsmocomp_filter_3dnow (GstDeinterlace2 * object)
-{
-  tomsmocompDScaler_3DNOW (object);
-}
-
-void
-tomsmocomp_filter_sse (GstDeinterlace2 * object)
-{
-  tomsmocompDScaler_SSE (object);
 }

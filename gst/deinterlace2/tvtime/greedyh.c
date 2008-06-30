@@ -32,7 +32,7 @@
 #include "greedyhmacros.h"
 
 #include <stdlib.h>
-#include <_stdint.h>
+#include "_stdint.h"
 #include <string.h>
 
 #include "gst/gst.h"

@@ -49,11 +49,6 @@ int  Search_Effort_19_SB();
 int  Search_Effort_21_SB();
 int  Search_Effort_Max_SB();
 
-void tomsmocomp_init( void );
-void tomsmocomp_filter_mmx( GstDeinterlace2 *object );
-void tomsmocomp_filter_3dnow( GstDeinterlace2 *object );
-void tomsmocomp_filter_sse( GstDeinterlace2 *object );
-
 #ifdef __cplusplus
 };
 #endif
