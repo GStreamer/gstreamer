@@ -1,5 +1,11 @@
 2008-06-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* tests/check/elements/gdpdepay.c: (gdpdepay_suite):
+	* tests/check/pipelines/streamheader.c: (streamheader_suite):
+	Enable unit tests on PPC again as the bugs are now fixed.
+
+2008-06-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst-libs/gst/riff/riff-ids.h:
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps),
 	(gst_riff_create_audio_template_caps):
