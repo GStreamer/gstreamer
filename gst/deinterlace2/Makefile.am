@@ -22,7 +22,6 @@ noinst_HEADERS = \
 	tvtime/greedyhmacros.h \
 	tvtime/plugins.h \
 	tvtime/x86-64_macros.inc \
-	tvtime/tomsmocomp.h \
 	tvtime/tomsmocomp/SearchLoop0A.inc \
 	tvtime/tomsmocomp/SearchLoopBottom.inc \
 	tvtime/tomsmocomp/SearchLoopEdgeA8.inc \

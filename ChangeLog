@@ -1,3 +1,16 @@
+2008-06-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/Makefile.am:
+	* gst/deinterlace2/tvtime/tomsmocomp.c: (tomsmocomp_init),
+	(tomsmocomp_filter_mmx), (tomsmocomp_filter_3dnow),
+	(tomsmocomp_filter_sse), (deinterlace_frame_di_tomsmocomp):
+	* gst/deinterlace2/tvtime/tomsmocomp.h:
+	Remove useless file and mark everything possible as static.
+
+	* gst/deinterlace2/tvtime/greedy.c:
+	* gst/deinterlace2/tvtime/greedyh.c:
+	Use "_stdint.h" instead of <stdint.h>.
+
 2008-06-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/Makefile.am:
