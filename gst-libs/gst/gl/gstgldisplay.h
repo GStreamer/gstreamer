@@ -97,8 +97,17 @@ typedef void (* GLCB2) ( gpointer* p1, gpointer* p2, gint w, gint h);
 struct _GstGLDisplay {
     GObject object;
 
+    //thread safe
     GMutex* mutex;
-
+    
+    //gl context
+    gint glutWinId;
+    gulong winId;
+    GString* title;
+    gint win_xpos;
+    gint win_ypos;
+    gboolean visible;
+    gboolean isAlive;
 	GQueue* texturePool;
     
     //conditions
@@ -117,98 +126,92 @@ struct _GstGLDisplay {
     GCond* cond_gen_shader;
     GCond* cond_del_shader;
 
-    
-    gint glutWinId;
-    gulong winId;
-    GString* title;
-    gint win_xpos;
-    gint win_ypos;
-    gboolean visible;
-    gboolean isAlive;
+    //action redisplay
+    GLuint redisplay_texture;
+    GLuint redisplay_texture_width;
+    GLuint redisplay_texture_height;
 
-    //intput frame buffer object (video -> GL)
-    GLuint fbo;
-    GLuint depthBuffer;
-    GLuint textureFBO;
-    GLuint textureFBOWidth;
-    GLuint textureFBOHeight;
-    GstVideoFormat upload_video_format;
-
-    //filter frame buffer object (GL -> GL)
-    GLuint requestedFBO;
-    GLuint requestedDepthBuffer;
-    GLuint requestedTextureFBOWidth;
-    GLuint requestedTextureFBOHeight;
-
-    GLuint usedFBO;
-    GLuint usedDepthBuffer;
-    GLuint usedTextureFBO;
-    GLuint usedTextureFBOWidth;
-    GLuint usedTextureFBOHeight;
-    GLCB glsceneFBO_cb;
-    GLCB2 glsceneFBO_cb2;
-    gpointer* p1;
-    gpointer* p2;
-    GLuint inputTextureWidth;
-    GLuint inputTextureHeight;
-    GLuint inputTexture;
-    GLuint rejectedFBO;
-    GLuint rejectedDepthBuffer;
-
-    //displayed texture
-    GLuint displayedTexture;
-    GLuint displayedTextureWidth;
-    GLuint displayedTextureHeight;
-
+    //action resize
     gint resize_width;
     gint resize_height;
 
-    GLuint preparedTexture;
-    
-    GLuint currentTexture;
-    GLuint currentTexture_u;
-    GLuint currentTexture_v;
-    GLuint currentTextureWidth;
-    GLuint currentTextureHeight;
-    GstVideoFormat currentVideo_format;
-    gpointer currentData;
+    //action gen and del texture
+    GLuint gen_texture;
+    GLuint del_texture;
 
-    GLuint textureTrash;
+    //client callbacks
+    CRCB clientReshapeCallback;
+    CDCB clientDrawCallback;
 
-    //output frame buffer object (GL -> video)
-    GLuint videoFBO;
-    GLuint videoDepthBuffer;
-    GLuint videoTexture;
-    GLuint videoTexture_u;
-    GLuint videoTexture_v;
-    gint outputWidth;
-    gint outputHeight;
-    GstVideoFormat outputVideo_format;
-    gpointer outputData;
-    GLenum multipleRT[3];
-
-    //recorded texture
-    GLuint recordedTexture;
-    GLuint recordedTextureWidth;
-    GLuint recordedTextureHeight;
-
-    //colorspace conversion method
+    //upload
+    GLuint upload_fbo;
+    GLuint upload_depth_buffer;
+    GLuint upload_texture;
+    GLuint upload_width;
+    GLuint upload_height;
+    GstVideoFormat upload_video_format;
     GstGLDisplayConversion colorspace_conversion;
+    gint upload_data_with;
+    gint upload_data_height;
+    gpointer upload_data;
 
-    //from video to texture
+    //filter gen fbo
+    GLuint gen_fbo_width;
+    GLuint gen_fbo_height;
+    GLuint generated_fbo;
+    GLuint generated_depth_buffer;
+    
+    //filter use fbo
+    GLuint use_fbo;
+    GLuint use_depth_buffer;
+    GLuint use_fbo_texture;
+    GLuint use_fbo_width;
+    GLuint use_fbo_height;
+    GLCB use_fbo_scene_cb;
+    GLhandleARB use_shader;
+    GLCB2 use_fbo_scene_cb_2;
+    gpointer* p1;
+    gpointer* p2;
+    GLuint input_texture_width;
+    GLuint input_texture_height;
+    GLuint input_texture;
 
+    //filter del fbo
+    GLuint del_fbo;
+    GLuint del_depth_buffer;
+
+    //download
+    GLuint download_fbo;
+    GLuint download_depth_buffer;
+    GLuint download_texture;
+    GLuint download_texture_u;
+    GLuint download_texture_v;
+    gint download_width;
+    gint download_height;
+    GstVideoFormat download_video_format;
+    gpointer download_data;
+    GLenum multipleRT[3];
+    GLuint ouput_texture;
+    GLuint ouput_texture_width;
+    GLuint ouput_texture_height;
+
+    //action gen and del shader
+    gchar* gen_text_shader;
+    GLhandleARB gen_handle_shader;
+    GLhandleARB del_handle_shader;
+
+    //fragement shader upload
 	gchar* textFProgram_YUY2_UYVY;
 	GLhandleARB GLSLProgram_YUY2;
 	GLhandleARB GLSLProgram_UYVY;
-	
+
 	gchar* textFProgram_I420_YV12;
 	GLhandleARB GLSLProgram_I420_YV12;
 
 	gchar* textFProgram_AYUV;
 	GLhandleARB GLSLProgram_AYUV;
 
-    //from texture to video
-    
+    //fragement shader download
     gchar* textFProgram_to_YUY2_UYVY;
 	GLhandleARB GLSLProgram_to_YUY2;
 	GLhandleARB GLSLProgram_to_UYVY;
@@ -218,16 +221,6 @@ struct _GstGLDisplay {
 
     gchar* textFProgram_to_AYUV;
 	GLhandleARB GLSLProgram_to_AYUV;
-
-    //requested shader
-    gchar* requestedTextShader;
-    GLhandleARB requestedHandleShader;
-    GLhandleARB usedHandleShader;
-    GLhandleARB rejectedHandleShader;
-	
-    //client callbacks
-    CRCB clientReshapeCallback;
-    CDCB clientDrawCallback;
 };
 
 
@@ -257,27 +250,26 @@ void gst_gl_display_del_texture (GstGLDisplay* display, guint texture);
 
 void gst_gl_display_init_upload (GstGLDisplay* display, GstVideoFormat video_format,
                                  guint gl_width, guint gl_height);
-void gst_gl_display_do_upload (GstGLDisplay* display, GstVideoFormat video_format,
-                               gint video_width, gint video_height, gpointer data,
-                               guint gl_width, guint gl_height, guint pTexture);
-
-
+void gst_gl_display_do_upload (GstGLDisplay* display, guint texture,
+                               gint data_width, gint data_height, 
+                               gpointer data);
 void gst_gl_display_init_download (GstGLDisplay* display, GstVideoFormat video_format, 
                                    gint width, gint height);
-void gst_gl_display_do_download (GstGLDisplay* display, GstVideoFormat video_format, 
-                                 gint width, gint height, GLuint recordedTexture, gpointer data);
+void gst_gl_display_do_download (GstGLDisplay* display, GLuint texture,
+                                 gint width, gint height,
+                                 gpointer data);
 
 void gst_gl_display_gen_fbo (GstGLDisplay* display, gint width, gint height, 
                              guint* fbo, guint* depthbuffer);
-void gst_gl_display_use_fbo (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
-                             guint fbo, guint depthbuffer, guint textureFBO, GLCB cb,
-                             guint inputTextureWidth, guint inputTextureHeight, guint inputTexture,
-                             GLhandleARB handleShader);
-void gst_gl_display_use_fbo_2 (GstGLDisplay* display, gint textureFBOWidth, gint textureFBOheight, 
-                               guint fbo, guint depthbuffer, guint textureFBO, GLCB2 cb,
+void gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint texture_fbo_height,
+                             guint fbo, guint depth_buffer, guint texture_fbo, GLCB cb,
+                             guint input_texture_width, guint input_texture_height, guint input_texture,
+                             GLhandleARB shader);
+void gst_gl_display_use_fbo_2 (GstGLDisplay* display, gint texture_fbo_width, gint texture_fbo_height,
+                               guint fbo, guint depth_buffer, guint texture_fbo, GLCB2 cb2,
                                gpointer* p1, gpointer* p2);
 void gst_gl_display_del_fbo (GstGLDisplay* display, guint fbo, 
-                             guint depthbuffer);
+                             guint depth_buffer);
 
 void gst_gl_display_gen_shader (GstGLDisplay* display, gchar* textShader, GLhandleARB* handleShader);
 void gst_gl_display_del_shader (GstGLDisplay* display, GLhandleARB shader);
