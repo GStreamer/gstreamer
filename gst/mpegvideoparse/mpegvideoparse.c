@@ -98,6 +98,9 @@ static GstStateChangeReturn
 gst_mpegvideoparse_change_state (GstElement * element,
     GstStateChange transition);
 
+static void mpv_send_pending_segs (MpegVideoParse * mpegvideoparse);
+static void mpv_clear_pending_segs (MpegVideoParse * mpegvideoparse);
+
 static GstElementClass *parent_class = NULL;
 
 /*static guint gst_mpegvideoparse_signals[LAST_SIGNAL] = { 0 }; */
@@ -162,6 +165,36 @@ mpv_parse_reset (MpegVideoParse * mpegvideoparse)
   mpegvideoparse->seq_hdr.width = mpegvideoparse->seq_hdr.height = -1;
   mpegvideoparse->seq_hdr.fps_n = mpegvideoparse->seq_hdr.par_w = 0;
   mpegvideoparse->seq_hdr.fps_d = mpegvideoparse->seq_hdr.par_h = 1;
+
+  mpv_clear_pending_segs (mpegvideoparse);
+}
+
+static void
+mpv_send_pending_segs (MpegVideoParse * mpegvideoparse)
+{
+  while (mpegvideoparse->pending_segs) {
+    GstEvent *ev = mpegvideoparse->pending_segs->data;
+
+    gst_pad_push_event (mpegvideoparse->srcpad, ev);
+
+    mpegvideoparse->pending_segs =
+        g_list_delete_link (mpegvideoparse->pending_segs,
+        mpegvideoparse->pending_segs);
+  }
+  mpegvideoparse->pending_segs = NULL;
+}
+
+static void
+mpv_clear_pending_segs (MpegVideoParse * mpegvideoparse)
+{
+  while (mpegvideoparse->pending_segs) {
+    GstEvent *ev = mpegvideoparse->pending_segs->data;
+    gst_event_unref (ev);
+
+    mpegvideoparse->pending_segs =
+        g_list_delete_link (mpegvideoparse->pending_segs,
+        mpegvideoparse->pending_segs);
+  }
 }
 
 static void
@@ -310,6 +343,8 @@ gst_mpegvideoparse_flush (MpegVideoParse * mpegvideoparse)
   g_list_free (mpegvideoparse->decode);
   mpegvideoparse->decode = NULL;
   mpeg_packetiser_flush (&mpegvideoparse->packer);
+
+  mpv_clear_pending_segs (mpegvideoparse);
 }
 
 static GstFlowReturn
@@ -377,6 +412,9 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
         GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
         mpegvideoparse->need_discont = FALSE;
       }
+
+      mpv_send_pending_segs (mpegvideoparse);
+
       res = gst_pad_push (mpegvideoparse->srcpad, buf);
       buf = NULL;
     }
@@ -778,7 +816,15 @@ mpv_parse_sink_event (GstPad * pad, GstEvent * event)
           G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", pos %" G_GINT64_FORMAT,
           rate, applied_rate, format, start, stop, pos);
 
-      res = gst_pad_push_event (mpegvideoparse->srcpad, event);
+      /* Forward the event if we've seen a sequence header
+       * and therefore set output caps, otherwise queue it for later */
+      if (mpegvideoparse->seq_hdr.mpeg_version != 0)
+        res = gst_pad_push_event (mpegvideoparse->srcpad, event);
+      else {
+        res = TRUE;
+        mpegvideoparse->pending_segs =
+            g_list_append (mpegvideoparse->pending_segs, event);
+      }
       break;
     }
     case GST_EVENT_FLUSH_STOP:

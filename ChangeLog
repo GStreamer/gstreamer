@@ -1,3 +1,10 @@
+2008-07-01  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/mpegvideoparse/mpegvideoparse.c:
+	* gst/mpegvideoparse/mpegvideoparse.h:
+	Queue new-segment events and send them after caps have been
+	determined and set, so that the decoder will have been auto-plugged.
+
 2008-07-01  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	Patch by : Michael Smith <msmith @ xiph dot org>

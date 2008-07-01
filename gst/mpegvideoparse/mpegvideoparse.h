@@ -44,6 +44,7 @@ struct _MpegVideoParse {
 
   GstPad *sinkpad, *srcpad;
   GstSegment segment;
+  GList *pending_segs;
 
   gint64 next_offset;
   gboolean need_discont;
