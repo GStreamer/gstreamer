@@ -42,8 +42,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <QuickTime/Movies.h>
-#include <QuickTime/ImageCodec.h>
+#ifdef G_OS_WIN32
+#include <ImageCodec.h>
+#else
+#include <Quicktime/ImageCodec.h>
+#endif
 #include <gst/gst.h>
 #include "qtwrapper.h"
 

@@ -1,3 +1,34 @@
+2008-07-01  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	Patch by : Michael Smith <msmith @ xiph dot org>
+	
+	* sys/qtwrapper/audiodecoders.c: (qtwrapper_audio_decoder_init),
+	(clear_AudioStreamBasicDescription), (fill_indesc_mp3),
+	(fill_indesc_aac), (make_samr_magic_cookie), (write_len),
+	(make_aac_magic_cookie), (open_decoder), (process_buffer_cb),
+	(qtwrapper_audio_decoder_chain),
+	(qtwrapper_audio_decoder_sink_event),
+	(qtwrapper_audio_decoder_base_init),
+	(qtwrapper_audio_decoder_class_init),
+	(qtwrapper_audio_decoders_register):
+	* sys/qtwrapper/codecmapping.h:
+	* sys/qtwrapper/imagedescription.c: (image_description_for_avc1),
+	(image_description_for_mp4v), (image_description_from_stsd_buffer):
+	* sys/qtwrapper/imagedescription.h:
+	* sys/qtwrapper/qtutils.c: (get_name_info_from_component),
+	(dump_avcc_atom), (dump_image_description),
+	(AllocateAudioBufferList):
+	* sys/qtwrapper/qtutils.h:
+	* sys/qtwrapper/qtwrapper.c: (plugin_init):
+	* sys/qtwrapper/qtwrapper.h:
+	* sys/qtwrapper/videodecoders.c:
+	(qtwrapper_video_decoder_base_init), (open_decoder),
+	(decompressCb), (qtwrapper_video_decoder_chain),
+	(qtwrapper_video_decoders_register):
+	Make qtwrapper compile/work on win32.
+	Lots of fixes
+	Fixes #531840
+
 2008-06-30  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/rawparse/gstvideoparse.c:

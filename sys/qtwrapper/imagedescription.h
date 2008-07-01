@@ -46,7 +46,6 @@
 #include "config.h"
 #endif
 
-#include <QuickTime/Movies.h>
 #include "qtwrapper.h"
 #include "qtutils.h"
 

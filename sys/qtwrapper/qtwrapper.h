@@ -46,6 +46,12 @@
 #define __GST_QTWRAPPER_H__
 
 #include <gst/gst.h>
+#ifdef G_OS_WIN32
+#include <Movies.h>
+#include <QTML.h>
+#else
+#include <Quicktime/Movies.h>
+#endif
 
 /* Set following to 1 if you want to have extra debug in form of
  * memory dumps */

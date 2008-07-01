@@ -42,31 +42,39 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
+
 #include "qtutils.h"
 
 gboolean
 get_name_info_from_component (Component componentID,
     ComponentDescription * desc, gchar ** name, gchar ** info)
 {
-  gchar *tmp1 = NULL;
-  gchar *tmp2 = NULL;
+  Handle nameHandle = NewHandle (200);
+  Handle infoHandle = NewHandle (200);
   gchar *tmpname;
   gchar *tmpinfo;
   OSErr result;
+  gboolean ret = TRUE;
 
-  result = GetComponentInfo (componentID, desc, &tmp1, &tmp2, NULL);
-  if (result != noErr)
-    return FALSE;
-
+  result = GetComponentInfo (componentID, desc, nameHandle, infoHandle, NULL);
+  if (result != noErr) {
+    ret = FALSE;
+    goto done;
+  }
 #if DEBUG_DUMP
   GST_LOG ("ComponentDescription dump");
   gst_util_dump_mem ((const guchar *) desc, sizeof (ComponentDescription));
+  gst_util_dump_mem ((gpointer) * nameHandle, 200);
+  gst_util_dump_mem ((gpointer) * infoHandle, 200);
+  GST_LOG ("0x%x 0x%x", **((guint8 **) nameHandle), **((guint8 **) infoHandle));
 #endif
 
-  if (tmp1 && name) {
+  if (*nameHandle && name) {
     gsize read, written;
 
-    tmpname = g_strndup (tmp1 + 1, (guint8) * tmp1);
+    tmpname = g_strndup ((*(char **) nameHandle) + 1,
+        **((guint8 **) nameHandle));
     *name = g_convert_with_fallback (tmpname, -1, "ASCII", "MAC",
         " ", &read, &written, NULL);
     if (!*name)
@@ -75,14 +83,20 @@ get_name_info_from_component (Component componentID,
     g_free (tmpname);
   }
 
-  if (tmp2 && info) {
-    tmpinfo = g_strndup (tmp2 + 1, (guint8) * tmp2);
-    *info = g_convert_with_fallback (tmpinfo, -1, "ASCII", "MAC",
-        " ", NULL, NULL, NULL);
+  if (*infoHandle && info) {
+    tmpinfo =
+        g_strndup ((*(char **) infoHandle) + 1, **((guint8 **) infoHandle));
+    *info =
+        g_convert_with_fallback (tmpinfo, -1, "ASCII", "MAC", " ", NULL, NULL,
+        NULL);
     g_free (tmpinfo);
   }
 
-  return TRUE;
+done:
+  DisposeHandle (nameHandle);
+  DisposeHandle (infoHandle);
+
+  return ret;
 }
 
 /*
@@ -296,7 +310,7 @@ beach:
 }
 
 void
-dump_avcc_atom (gpointer atom)
+dump_avcc_atom (guint8 * atom)
 {
   /* first 8 bytes : length + atom */
   GST_LOG ("version:0x%x", QT_UINT8 (atom + 8));
@@ -331,14 +345,14 @@ dump_image_description (ImageDescription * desc)
   GST_LOG ("clutID:%d", desc->clutID);
 
   if (desc->idSize > sizeof (ImageDescription)) {
-    gpointer extradata =
-        (gpointer) (gulong) desc + (gulong) sizeof (ImageDescription);
+    guint8 *extradata = (guint8 *) desc + sizeof (ImageDescription);
     guint32 type = QT_READ_UINT32 (extradata + 4);
 
     GST_LOG ("Extra Data size:%lu",
         (gulong) desc->idSize - (gulong) sizeof (ImageDescription));
 #if DEBUG_DUMP
-    gst_util_dump_mem ((gulong) desc + (gulong) sizeof (ImageDescription),
+    gst_util_dump_mem ((gpointer) (gulong) desc +
+        (gulong) sizeof (ImageDescription),
         (gulong) desc->idSize - (gulong) sizeof (ImageDescription));
 #endif
     GST_LOG ("Extra Data Type : %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (type));
@@ -455,23 +469,18 @@ AudioBufferList *
 AllocateAudioBufferList (UInt32 numChannels, UInt32 size)
 {
   AudioBufferList *list;
-  UInt32 i;
 
-  list =
-      (AudioBufferList *) calloc (1,
-      sizeof (AudioBufferList) + sizeof (AudioBuffer));
+  list = (AudioBufferList *) calloc (1, sizeof (AudioBufferList));
   if (list == NULL)
     return NULL;
 
   list->mNumberBuffers = 1;
-  for (i = 0; i < 1; ++i) {
-    list->mBuffers[i].mNumberChannels = numChannels;
-    list->mBuffers[i].mDataByteSize = size;
-    list->mBuffers[i].mData = malloc (size);
-    if (list->mBuffers[i].mData == NULL) {
-      DestroyAudioBufferList (list);
-      return NULL;
-    }
+  list->mBuffers[0].mNumberChannels = numChannels;
+  list->mBuffers[0].mDataByteSize = size;
+  list->mBuffers[0].mData = malloc (size);
+  if (list->mBuffers[0].mData == NULL) {
+    DestroyAudioBufferList (list);
+    return NULL;
   }
   return list;
 }

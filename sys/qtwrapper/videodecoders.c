@@ -46,7 +46,7 @@
 #include "config.h"
 #endif
 
-#include <QuickTime/Movies.h>
+#include <string.h>
 
 #include "qtwrapper.h"
 #include "codecmapping.h"
@@ -153,14 +153,19 @@ qtwrapper_video_decoder_base_init (QTWrapperVideoDecoderClass * klass)
   get_name_info_from_component (params->component, &desc, &name, &info);
 
   /* Fill in details */
-  details.longname = g_strdup_printf ("QTWrapper Video Decoder : %s", name);
+  details.longname =
+      g_strdup_printf ("QTWrapper Video Decoder : %s", GST_STR_NULL (name));
   details.klass = "Codec/Decoder/Video";
-  details.description = info;
-  details.author = "Fluendo <gstreamer@fluendo.com>, "
+  details.description =
+      g_strdup_printf ("QTWrapper SCAudio wrapper for decoder: %s",
+      GST_STR_NULL (info));
+  details.author =
+      "Fluendo <gstreamer@fluendo.com>, "
       "Pioneers of the Inevitable <songbird@songbirdnest.com>";
   gst_element_class_set_details (element_class, &details);
 
   g_free (details.longname);
+  g_free (details.description);
   g_free (name);
   g_free (info);
 
@@ -375,7 +380,7 @@ open_decoder (QTWrapperVideoDecoder * qtwrapper, GstCaps * caps,
   const GValue *par = NULL;
   const GValue *rate = NULL;
   const GValue *cdata = NULL;
-  OSErr oserr;
+  OSStatus status;
   gboolean res = FALSE;
   guint32 outformat;
 
@@ -452,7 +457,7 @@ open_decoder (QTWrapperVideoDecoder * qtwrapper, GstCaps * caps,
   cbrecord.decompressionTrackingRefCon = qtwrapper;
 
   /* 6. create decompressionsession */
-  oserr = ICMDecompressionSessionCreate (NULL,
+  status = ICMDecompressionSessionCreate (NULL,
       qtwrapper->idesc,
       sessionoptions, pixelBufferAttributes, &cbrecord, &qtwrapper->decsession);
 
@@ -460,9 +465,9 @@ open_decoder (QTWrapperVideoDecoder * qtwrapper, GstCaps * caps,
   qtwrapper->width = width;
   qtwrapper->height = height;
 
-  if (oserr != noErr) {
+  if (status) {
     GST_DEBUG_OBJECT (qtwrapper,
-        "Error when Calling ICMDecompressionSessionCreate : %d", oserr);
+        "Error when Calling ICMDecompressionSessionCreate : %ld", status);
     goto beach;
   }
 #if G_BYTE_ORDER == G_BIG_ENDIAN
@@ -555,12 +560,13 @@ decompressCb (void *decompressionTrackingRefCon,
 
   if ((decompressionTrackingFlags & kICMDecompressionTracking_EmittingFrame)
       && pixelBuffer) {
-    gpointer addr;
+    guint8 *addr;
     GstBuffer *outbuf;
-    gsize size;
+    size_t size;
+    GstClockTime outtime;
 
     size = CVPixelBufferGetDataSize (pixelBuffer);
-    GstClockTime outtime = gst_util_uint64_scale (displayTime, GST_SECOND, 600);
+    outtime = gst_util_uint64_scale (displayTime, GST_SECOND, 600);
 
     GST_LOG ("Got a buffer ready outtime : %" GST_TIME_FORMAT,
         GST_TIME_ARGS (outtime));
@@ -580,7 +586,7 @@ decompressCb (void *decompressionTrackingRefCon,
     /* allocate buffer */
     qtwrapper->lastret =
         gst_pad_alloc_buffer (qtwrapper->srcpad, GST_BUFFER_OFFSET_NONE,
-        qtwrapper->outsize, GST_PAD_CAPS (qtwrapper->srcpad), &outbuf);
+        (gint) qtwrapper->outsize, GST_PAD_CAPS (qtwrapper->srcpad), &outbuf);
     if (G_UNLIKELY (qtwrapper->lastret != GST_FLOW_OK)) {
       GST_LOG ("gst_pad_alloc_buffer() returned %s",
           gst_flow_get_name (qtwrapper->lastret));
@@ -593,7 +599,8 @@ decompressCb (void *decompressionTrackingRefCon,
     if (G_UNLIKELY ((qtwrapper->width * 2) !=
             CVPixelBufferGetBytesPerRow (pixelBuffer))) {
       guint i;
-      gulong stride, realpixels;
+      gulong realpixels;
+      size_t stride;
 
       stride = CVPixelBufferGetBytesPerRow (pixelBuffer);
       realpixels = qtwrapper->width * 2;
@@ -604,7 +611,7 @@ decompressCb (void *decompressionTrackingRefCon,
             addr + stride * i, realpixels);
 
     } else
-      g_memmove (GST_BUFFER_DATA (outbuf), addr, qtwrapper->outsize);
+      g_memmove (GST_BUFFER_DATA (outbuf), addr, (int) qtwrapper->outsize);
 
     /* Release CVPixelBuffer */
     CVPixelBufferUnlockBaseAddress (pixelBuffer, 0);
@@ -614,7 +621,7 @@ decompressCb (void *decompressionTrackingRefCon,
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (qtwrapper->srcpad));
     GST_BUFFER_TIMESTAMP (outbuf) = qtwrapper->last_ts;
     GST_BUFFER_DURATION (outbuf) = qtwrapper->last_duration;
-    GST_BUFFER_SIZE (outbuf) = qtwrapper->outsize;
+    GST_BUFFER_SIZE (outbuf) = (int) qtwrapper->outsize;
 
     /* See if we push buffer downstream */
     if (G_LIKELY (!qtwrapper->framebuffering)) {
@@ -670,7 +677,7 @@ qtwrapper_video_decoder_chain (GstPad * pad, GstBuffer * buf)
   QTWrapperVideoDecoder *qtwrapper;
   GstFlowReturn ret = GST_FLOW_OK;
   ICMFrameTimeRecord frameTime = { {0} };
-  OSErr oserr;
+  OSStatus status;
   guint64 intime;
 
   qtwrapper = (QTWrapperVideoDecoder *) gst_pad_get_parent (pad);
@@ -684,28 +691,28 @@ qtwrapper_video_decoder_chain (GstPad * pad, GstBuffer * buf)
 
   frameTime.recordSize = sizeof (ICMFrameTimeRecord);
 /*   *(TimeValue64 *)&frameTime.value = intime; */
-  frameTime.value.lo = intime;
-  frameTime.value.hi = 0;
+  frameTime.value.lo = (guint32) (intime & 0xffffffff);
+  frameTime.value.hi = (guint32) (intime >> 32);
   frameTime.base = 0;
   frameTime.scale = 600;
   frameTime.rate = fixed1;
   frameTime.duration = 1;
   frameTime.flags = icmFrameTimeDecodeImmediately;
 /*   frameTime.flags = icmFrameTimeIsNonScheduledDisplayTime; */
-  frameTime.frameNumber = ++qtwrapper->frameNumber;
+  frameTime.frameNumber = (long) (++qtwrapper->frameNumber);
 
   MAC_LOCK (qtwrapper);
 
   qtwrapper->last_ts = GST_BUFFER_TIMESTAMP (buf);
   qtwrapper->last_duration = GST_BUFFER_DURATION (buf);
 
-  oserr = ICMDecompressionSessionDecodeFrame (qtwrapper->decsession,
+  status = ICMDecompressionSessionDecodeFrame (qtwrapper->decsession,
       GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), NULL, &frameTime, buf);
   MAC_UNLOCK (qtwrapper);
 
-  if (oserr != noErr) {
-    GST_WARNING_OBJECT (qtwrapper, "Error when Calling DecodeFrame() : %d",
-        oserr);
+  if (status) {
+    GST_WARNING_OBJECT (qtwrapper, "Error when Calling DecodeFrame() : %ld",
+        status);
     ret = GST_FLOW_ERROR;
     goto beach;
   }
@@ -763,7 +770,6 @@ gboolean
 qtwrapper_video_decoders_register (GstPlugin * plugin)
 {
   gboolean res = TRUE;
-  OSErr result;
   Component componentID = NULL;
   ComponentDescription desc = {
     'imdc', 0, 0, 0, 0
@@ -779,14 +785,6 @@ qtwrapper_video_decoders_register (GstPlugin * plugin)
     0,
     (GInstanceInitFunc) qtwrapper_video_decoder_init,
   };
-
-  /* Initialize quicktime environment */
-  result = EnterMovies ();
-  if (result != noErr) {
-    GST_ERROR ("Error initializing QuickTime environment");
-    res = FALSE;
-    goto beach;
-  }
 
   /* Find all ImageDecoders ! */
   GST_DEBUG ("There are %ld decompressors available", CountComponents (&desc));
@@ -814,8 +812,8 @@ qtwrapper_video_decoders_register (GstPlugin * plugin)
         goto next;
       }
 
-      GST_LOG (" name:%s", name);
-      GST_LOG (" info:%s", info);
+      GST_LOG (" name:%s", GST_STR_NULL (name));
+      GST_LOG (" info:%s", GST_STR_NULL (info));
 
       GST_LOG (" type:%" GST_FOURCC_FORMAT,
           QT_FOURCC_ARGS (thisdesc.componentType));
@@ -843,6 +841,7 @@ qtwrapper_video_decoders_register (GstPlugin * plugin)
       params->component = componentID;
       params->sinkcaps = gst_caps_ref (caps);
 
+      GST_INFO ("Registering g_type for type_name: %s", type_name);
       type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
       /* Store params in type qdata */
       g_type_set_qdata (type, QTWRAPPER_VDEC_PARAMS_QDATA, (gpointer) params);
@@ -854,6 +853,8 @@ qtwrapper_video_decoders_register (GstPlugin * plugin)
         g_free (params);
         res = FALSE;
         goto next;
+      } else {
+        GST_LOG ("Reigstered video plugin %s", type_name);
       }
 
     next:
@@ -869,6 +870,5 @@ qtwrapper_video_decoders_register (GstPlugin * plugin)
 
   } while (componentID && res);
 
-beach:
   return res;
 }

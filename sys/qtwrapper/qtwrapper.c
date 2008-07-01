@@ -47,6 +47,7 @@
 #endif
 
 #include "qtwrapper.h"
+#include <stdio.h>
 
 GST_DEBUG_CATEGORY (qtwrapper_debug);
 
@@ -54,11 +55,26 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean res;
+  OSErr status;
 
   GST_DEBUG_CATEGORY_INIT (qtwrapper_debug, "qtwrapper",
       0, "QuickTime codecs wrappers");
 
+  /* Initialize quicktime environment */
+#ifdef G_OS_WIN32
+  /* Only required on win32 */
+  InitializeQTML (0);
+#endif
+
+  status = EnterMovies ();
+  if (status) {
+    GST_ERROR ("Error initializing QuickTime environment: %d", status);
+    return FALSE;
+  }
+
+  GST_INFO ("Registering video decoders");
   res = qtwrapper_video_decoders_register (plugin);
+  GST_INFO ("Registering audio decoders");
   res &= qtwrapper_audio_decoders_register (plugin);
 
   return res;

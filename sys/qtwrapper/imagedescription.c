@@ -42,16 +42,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
+
 #include "imagedescription.h"
 
 static ImageDescription *
 image_description_for_avc1 (GstBuffer * buf)
 {
   ImageDescription *desc = NULL;
-  gpointer pos;
+  guint8 *pos;
 
   desc = g_malloc0 (sizeof (ImageDescription) + GST_BUFFER_SIZE (buf) + 8);
-  pos = (gpointer) ((gulong) desc + (gulong) sizeof (ImageDescription));
+  pos = (guint8 *) desc + sizeof (ImageDescription);
 
   desc->idSize = sizeof (ImageDescription) + GST_BUFFER_SIZE (buf) + 8;
   /* write size in Big-Endian */
@@ -74,7 +76,7 @@ image_description_for_mp4v (GstBuffer * buf)
 {
   ImageDescription *desc = NULL;
   guint32 offset = sizeof (ImageDescription);
-  gpointer location;
+  guint8 *location;
 
   GST_LOG ("buf %p , size:%d", buf, GST_BUFFER_SIZE (buf));
 
@@ -88,7 +90,7 @@ image_description_for_mp4v (GstBuffer * buf)
   desc = g_malloc0 (offset + 37 + GST_BUFFER_SIZE (buf));
   desc->idSize = offset + 37 + GST_BUFFER_SIZE (buf);
 
-  location = (gpointer) ((gulong) desc + (gulong) offset);
+  location = (guint8 *) desc + offset;
 
   /* Fill in ESDS */
   /*  size */
@@ -137,8 +139,9 @@ static ImageDescription *
 image_description_from_stsd_buffer (GstBuffer * buf)
 {
   ImageDescription *desc = NULL;
-  gpointer content;
-  guint size, imds;
+  guint8 *content;
+  guint size;
+  gint imds;
 
   GST_LOG ("buffer %p, size:%u", buf, GST_BUFFER_SIZE (buf));
 
@@ -171,8 +174,7 @@ image_description_from_stsd_buffer (GstBuffer * buf)
   if (desc->idSize > imds) {
     GST_LOG ("Copying %d bytes from %p to %p",
         size - imds, content + imds, desc + imds);
-    memcpy ((gpointer) ((gulong) desc + imds),
-        (gpointer) ((gulong) content + imds), size - imds);
+    memcpy ((guint8 *) desc + imds, (guint8 *) content + imds, size - imds);
   }
 #if DEBUG_DUMP
   GST_LOG ("outgoing data in machine-endian");
