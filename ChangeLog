@@ -1,3 +1,13 @@
+2008-07-01  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_video_test_src_class_init), (gst_video_test_src_init),
+	(gst_video_test_src_set_property),
+	(gst_video_test_src_get_property), (gst_video_test_src_create):
+	* gst/videotestsrc/gstvideotestsrc.h:
+	Cleanups, use default property values as defines.
+	Add property to enable/disable peer buffer allocation.
+
 2008-06-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* tests/check/elements/gdpdepay.c: (gdpdepay_suite):

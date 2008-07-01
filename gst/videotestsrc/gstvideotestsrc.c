@@ -47,11 +47,8 @@
 #include <stdlib.h>
 #include <liboil/liboil.h>
 
-#define USE_PEER_BUFFERALLOC
-
 GST_DEBUG_CATEGORY_STATIC (video_test_src_debug);
 #define GST_CAT_DEFAULT video_test_src_debug
-
 
 static const GstElementDetails video_test_src_details =
 GST_ELEMENT_DETAILS ("Video test source",
@@ -59,14 +56,19 @@ GST_ELEMENT_DETAILS ("Video test source",
     "Creates a test video stream",
     "David A. Schleef <ds@schleef.org>");
 
+#define DEFAULT_PATTERN            GST_VIDEO_TEST_SRC_SMPTE
+#define DEFAULT_TIMESTAMP_OFFSET   0
+#define DEFAULT_IS_LIVE            FALSE
+#define DEFAULT_PEER_ALLOC         TRUE
 
 enum
 {
   PROP_0,
   PROP_PATTERN,
   PROP_TIMESTAMP_OFFSET,
-  PROP_IS_LIVE
-      /* FILL ME */
+  PROP_IS_LIVE,
+  PROP_PEER_ALLOC,
+  PROP_LAST
 };
 
 
@@ -154,15 +156,18 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_PATTERN,
       g_param_spec_enum ("pattern", "Pattern",
           "Type of test pattern to generate", GST_TYPE_VIDEO_TEST_SRC_PATTERN,
-          GST_VIDEO_TEST_SRC_SMPTE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PATTERN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TIMESTAMP_OFFSET,
       g_param_spec_int64 ("timestamp-offset", "Timestamp offset",
           "An offset added to timestamps set on buffers (in ns)", G_MININT64,
           G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_IS_LIVE,
       g_param_spec_boolean ("is-live", "Is Live",
-          "Whether to act as a live source", FALSE,
+          "Whether to act as a live source", DEFAULT_IS_LIVE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PEER_ALLOC,
+      g_param_spec_boolean ("peer-alloc", "Peer Alloc",
+          "Ask the peer to allocate an output buffer", DEFAULT_PEER_ALLOC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
@@ -183,13 +188,14 @@ gst_video_test_src_init (GstVideoTestSrc * src, GstVideoTestSrcClass * g_class)
 
   gst_pad_set_fixatecaps_function (pad, gst_video_test_src_src_fixate);
 
-  gst_video_test_src_set_pattern (src, GST_VIDEO_TEST_SRC_SMPTE);
+  gst_video_test_src_set_pattern (src, DEFAULT_PATTERN);
 
-  src->timestamp_offset = 0;
+  src->timestamp_offset = DEFAULT_TIMESTAMP_OFFSET;
 
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
-  gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
+  gst_base_src_set_live (GST_BASE_SRC (src), DEFAULT_IS_LIVE);
+  src->peer_alloc = DEFAULT_PEER_ALLOC;
 }
 
 static void
@@ -273,6 +279,9 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
     case PROP_IS_LIVE:
       gst_base_src_set_live (GST_BASE_SRC (src), g_value_get_boolean (value));
       break;
+    case PROP_PEER_ALLOC:
+      src->peer_alloc = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -293,6 +302,9 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_IS_LIVE:
       g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (src)));
+      break;
+    case PROP_PEER_ALLOC:
+      g_value_set_boolean (value, src->peer_alloc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -558,17 +570,17 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
       "creating buffer of %lu bytes with %dx%d image for frame %d", newsize,
       src->width, src->height, (gint) src->n_frames);
 
-#ifdef USE_PEER_BUFFERALLOC
-  res =
-      gst_pad_alloc_buffer_and_set_caps (GST_BASE_SRC_PAD (psrc),
-      GST_BUFFER_OFFSET_NONE, newsize, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)),
-      &outbuf);
-  if (res != GST_FLOW_OK)
-    goto no_buffer;
-#else
-  outbuf = gst_buffer_new_and_alloc (newsize);
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
-#endif
+  if (src->peer_alloc) {
+    res =
+        gst_pad_alloc_buffer_and_set_caps (GST_BASE_SRC_PAD (psrc),
+        GST_BUFFER_OFFSET_NONE, newsize, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)),
+        &outbuf);
+    if (res != GST_FLOW_OK)
+      goto no_buffer;
+  } else {
+    outbuf = gst_buffer_new_and_alloc (newsize);
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
+  }
 
   if (src->pattern_type == GST_VIDEO_TEST_SRC_BLINK) {
     if (src->n_frames & 0x1) {
