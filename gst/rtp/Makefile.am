@@ -47,7 +47,9 @@ libgstrtp_la_SOURCES = \
 	gstrtptheoradepay.c \
 	gstrtptheorapay.c \
 	gstrtpvorbisdepay.c \
-	gstrtpvorbispay.c 
+	gstrtpvorbispay.c  \
+	gstrtpvrawdepay.c  \
+	gstrtpvrawpay.c 
 	
 
 if HAVE_WINSOCK2_H
@@ -108,4 +110,6 @@ noinst_HEADERS =			\
 	 	 gstrtptheoradepay.h    \
 	 	 gstrtptheorapay.h      \
 	 	 gstrtpvorbisdepay.h    \
-	 	 gstrtpvorbispay.h
+	 	 gstrtpvorbispay.h      \
+	 	 gstrtpvrawdepay.h      \
+	 	 gstrtpvrawpay.h
