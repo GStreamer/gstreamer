@@ -557,9 +557,10 @@ gst_event_new_new_segment_full (gboolean update, gdouble rate,
         GST_TIME_ARGS (stop), GST_TIME_ARGS (position));
   } else {
     GST_CAT_INFO (GST_CAT_EVENT,
-        "creating newsegment update %d, rate %lf, format %d, "
+        "creating newsegment update %d, rate %lf, format %s, "
         "start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", position %"
-        G_GINT64_FORMAT, update, rate, format, start, stop, position);
+        G_GINT64_FORMAT, update, rate, gst_format_get_name (format), start,
+        stop, position);
   }
 
   g_return_val_if_fail (position != -1, NULL);
@@ -679,8 +680,8 @@ gst_event_new_buffer_size (GstFormat format, gint64 minsize,
     gint64 maxsize, gboolean async)
 {
   GST_CAT_INFO (GST_CAT_EVENT,
-      "creating buffersize format %d, minsize %" G_GINT64_FORMAT
-      ", maxsize %" G_GINT64_FORMAT ", async %d", format,
+      "creating buffersize format %s, minsize %" G_GINT64_FORMAT
+      ", maxsize %" G_GINT64_FORMAT ", async %d", gst_format_get_name (format),
       minsize, maxsize, async);
 
   return gst_event_new_custom (GST_EVENT_BUFFERSIZE,
@@ -873,10 +874,11 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
         stop_type, GST_TIME_ARGS (stop));
   } else {
     GST_CAT_INFO (GST_CAT_EVENT,
-        "creating seek rate %lf, format %d, flags %d, "
+        "creating seek rate %lf, format %s, flags %d, "
         "start_type %d, start %" G_GINT64_FORMAT ", "
         "stop_type %d, stop %" G_GINT64_FORMAT,
-        rate, format, flags, start_type, start, stop_type, stop);
+        rate, gst_format_get_name (format), flags, start_type, start, stop_type,
+        stop);
   }
 
   return gst_event_new_custom (GST_EVENT_SEEK,

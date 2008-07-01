@@ -1,3 +1,14 @@
+2008-07-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstevent.c:
+	  Use gst_format_get_name() to improve debug output.
+
+	* gst/gstpreset.c:
+	  Remove #ifdef'ed code. Add TODO comment.
+
+	* gst/gstsegment.c:
+	  Add debug output to ease spotting format != segment.format assertions.
+
 2008-06-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* tests/check/libs/gdp.c: (gst_dp_suite):

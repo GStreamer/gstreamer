@@ -62,10 +62,24 @@
  *   - this would alloow to hanve preset-bundles too (a preset on bins that
  *     specifies presets for children
  *
- * - meta presets : presets that load presets for children (childproxy/bin)
- *   [<preset name>]
- *   _child/<childname>=<presetname>
- *   _child/...
+ * - GstChildProxy suport
+ *   - if we stick with GParamSpec **_list_properties()
+ *     we need to use g_param_spec_set_qdata() to specify the instance on each GParamSpec
+ *     OBJECT_LOCK(obj);  // ChildProxy needs GstIterator support
+ *     num=gst_child_proxy_get_children_count(obj);
+ *     for(i=0;i<num;i++) {
+ *       child=gst_child_proxy_get_child_by_index(obj,i);
+ *       // v1 ----
+ *       g_object_class_list_properties(child,&num);
+ *       // foreach prop
+ *       //   g_param_spec_set_qdata(prop, quark, (gpointer)child);
+ *       //   add to result
+ *       // v2 ----
+ *       // children have to implement preset-iface too tag the returned GParamSpec* with the owner
+ *       props=gst_preset_list_properties(child);
+ *       // add props to result
+ *     }
+ *     OBJECT_UNLOCK(obj);
  *
  */
 
@@ -73,8 +87,9 @@
 
 #include "gstpreset.h"
 
-#include "stdlib.h"
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <glib/gstdio.h>
 
 #define GST_CAT_DEFAULT preset_debug
@@ -841,99 +856,6 @@ no_presets:
     return FALSE;
   }
 }
-
-#if 0
-static void
-gst_preset_default_randomize (GstPreset * preset)
-{
-  GList *properties;
-  GType base, parent;
-
-  if ((properties = gst_preset_get_property_names (preset))) {
-    GParamSpec *property;
-    GList *node;
-    gdouble rnd;
-
-    for (node = properties; node; node = g_list_next (node)) {
-      property = g_object_class_find_property (G_OBJECT_CLASS
-          (GST_ELEMENT_GET_CLASS (preset)), node->data);
-
-      rnd = ((gdouble) rand ()) / (RAND_MAX + 1.0);
-
-      /* get base type */
-      base = property->value_type;
-      while ((parent = g_type_parent (base)))
-        base = parent;
-      GST_INFO ("set random value for property: %s (type is %s)",
-          property->name, g_type_name (base));
-
-      switch (base) {
-        case G_TYPE_BOOLEAN:{
-          g_object_set (preset, property->name, (gboolean) (2.0 * rnd), NULL);
-        }
-          break;
-        case G_TYPE_INT:{
-          const GParamSpecInt *int_property = G_PARAM_SPEC_INT (property);
-
-          g_object_set (preset, property->name,
-              (gint) (int_property->minimum + ((int_property->maximum -
-                          int_property->minimum) * rnd)), NULL);
-        } break;
-        case G_TYPE_UINT:{
-          const GParamSpecUInt *uint_property = G_PARAM_SPEC_UINT (property);
-
-          g_object_set (preset, property->name,
-              (guint) (uint_property->minimum + ((uint_property->maximum -
-                          uint_property->minimum) * rnd)), NULL);
-        } break;
-        case G_TYPE_DOUBLE:{
-          const GParamSpecDouble *double_property =
-              G_PARAM_SPEC_DOUBLE (property);
-
-          g_object_set (preset, property->name,
-              (gdouble) (double_property->minimum + ((double_property->maximum -
-                          double_property->minimum) * rnd)), NULL);
-        } break;
-        case G_TYPE_ENUM:{
-          const GParamSpecEnum *enum_property = G_PARAM_SPEC_ENUM (property);
-          const GEnumClass *enum_class = enum_property->enum_class;
-
-          g_object_set (preset, property->name,
-              (gulong) (enum_class->minimum + ((enum_class->maximum -
-                          enum_class->minimum) * rnd)), NULL);
-        } break;
-        default:
-          GST_WARNING ("incomplete implementation for GParamSpec type '%s'",
-              G_PARAM_SPEC_TYPE_NAME (property));
-      }
-    }
-    /* FIXME: handle childproxy properties as well */
-  }
-}
-
-static void
-gst_preset_default_reset (GstPreset * preset)
-{
-  GList *properties;
-
-  if ((properties = gst_preset_get_property_names (preset))) {
-    GParamSpec *property;
-    GList *node;
-    GValue gvalue = { 0, };
-
-    for (node = properties; node; node = g_list_next (node)) {
-      property = g_object_class_find_property (G_OBJECT_CLASS
-          (GST_ELEMENT_GET_CLASS (preset)), node->data);
-
-      g_value_init (&gvalue, property->value_type);
-      g_param_value_set_default (property, &gvalue);
-      g_object_set_property (G_OBJECT (preset), property->name, &gvalue);
-      g_value_unset (&gvalue);
-    }
-    /* FIXME: handle childproxy properties as well */
-  }
-}
-#endif
 
 /* wrapper */
 

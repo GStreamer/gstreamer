@@ -446,6 +446,12 @@ gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
   g_return_if_fail (applied_rate != 0.0);
   g_return_if_fail (segment != NULL);
 
+  GST_DEBUG ("configuring segment update %d, rate %lf, format %s, "
+      "start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", position %"
+      G_GINT64_FORMAT, update, rate, gst_format_get_name (format), start,
+      stop, time);
+  GST_DEBUG ("old segment was: %" GST_SEGMENT_FORMAT, segment);
+
   if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;
 
