@@ -1,3 +1,13 @@
+2008-07-01  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	If ffmpeg reports 0 bytes of input data consumed, don't break out
+	unless it also didn't produce any output. Fixes the audio in #377400
+	and doesn't break anything else I've tested.
+
+	Enable the mp3 parser, and set mp3 and mpeg2-video decoding autoplug
+	at marginal level, as they seem to both work fine now.
+
 2008-06-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c:

@@ -529,7 +529,6 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
   switch (oclass->in_plugin->id) {
     case CODEC_ID_MPEG4:
     case CODEC_ID_MJPEG:
-    case CODEC_ID_MP3:
     case CODEC_ID_VC1:
       GST_LOG_OBJECT (ffmpegdec, "not using parser, blacklisted codec");
       ffmpegdec->pctx = NULL;
@@ -2245,7 +2244,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       break;
     }
     if (!ffmpegdec->pctx) {
-      if (len == 0) {
+      if (len == 0 && !have_data) {
         /* nothing was decoded, this could be because no data was available or
          * because we were skipping frames.
          * If we have no context we must exit and wait for more data, we keep the
@@ -2285,7 +2284,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   } while (bsize > 0);
 
   /* keep left-over */
-  if ((ffmpegdec->pctx || oclass->in_plugin->id == CODEC_ID_MP3) && bsize > 0) {
+  if (ffmpegdec->pctx && bsize > 0) {
     in_timestamp = GST_BUFFER_TIMESTAMP (inbuf);
 
     GST_LOG_OBJECT (ffmpegdec,
@@ -2517,13 +2516,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
            libdv's quality is better though. leave as secondary.
            note: if you change this, see the code in gstdv.c in good/ext/dv. */
         rank = GST_RANK_SECONDARY;
-        break;
-        /* MP3 and MPEG2 have better alternatives and
-           the ffmpeg versions don't work properly feel
-           free to assign rank if you fix them */
-      case CODEC_ID_MP3:
-      case CODEC_ID_MPEG2VIDEO:
-        rank = GST_RANK_NONE;
         break;
       default:
         rank = GST_RANK_MARGINAL;
