@@ -10,10 +10,10 @@ EXPORTS
 	gst_adapter_push
 	gst_adapter_take
 	gst_adapter_take_buffer
-	gst_base_sink_get_render_delay
 	gst_base_sink_get_last_buffer
 	gst_base_sink_get_latency
 	gst_base_sink_get_max_lateness
+	gst_base_sink_get_render_delay
 	gst_base_sink_get_sync
 	gst_base_sink_get_ts_offset
 	gst_base_sink_get_type
@@ -21,9 +21,9 @@ EXPORTS
 	gst_base_sink_is_qos_enabled
 	gst_base_sink_query_latency
 	gst_base_sink_set_async_enabled
-	gst_base_sink_set_render_delay
 	gst_base_sink_set_max_lateness
 	gst_base_sink_set_qos_enabled
+	gst_base_sink_set_render_delay
 	gst_base_sink_set_sync
 	gst_base_sink_set_ts_offset
 	gst_base_sink_wait_clock
