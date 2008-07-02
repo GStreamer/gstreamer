@@ -1,3 +1,8 @@
+2008-07-02  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* tools/gst-plot-timeline.py:
+	Fix parsing of log messages
+
 2008-07-01  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* win32/common/libgstbase.def::

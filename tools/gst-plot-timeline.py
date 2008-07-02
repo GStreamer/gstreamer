@@ -28,7 +28,7 @@ BACKGROUND_COLOR = (0, 0, 0)
 
 # assumes GST_DEBUG_LOG_COLOR=1
 #                             timestamp          pid  thread        level   category,file,line,msg
-mark_regex = re.compile (r'^(\d:\d\d:\d\d\.\d+) +\d+ 0?x?[0-9a-f]+ [A-Z]+ +([-a-zA-Z0-9_]+ )(.*)')
+mark_regex = re.compile (r'^(\d:\d\d:\d\d\.\d+) +\d+ +0?x?[0-9a-f]+ [A-Z]+ +([-a-zA-Z0-9_]+ )(.*)')
 mark_timestamp_group = 1
 mark_program_group = 2
 mark_log_group = 3
