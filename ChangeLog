@@ -1,3 +1,9 @@
+2008-07-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_sync_streams):
+	Resync non-subtitle tracks too if a too large gap compared to other
+	tracks is detected.
+
 2008-07-01  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/Makefile.am:

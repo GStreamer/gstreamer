@@ -3025,8 +3025,6 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
     GstMatroskaTrackContext *context;
 
     context = demux->src[stream_nr];
-    if (context->type != GST_MATROSKA_TRACK_TYPE_SUBTITLE)
-      continue;
 
     GST_LOG_OBJECT (demux,
         "Checking for resync on stream %d (%" GST_TIME_FORMAT ")", stream_nr,
