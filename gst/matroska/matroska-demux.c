@@ -331,6 +331,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->tags_parsed = NULL;
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
+  demux->duration = -1;
 }
 
 static gint
@@ -1537,7 +1538,7 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
       }
 
       GST_OBJECT_LOCK (demux);
-      gst_query_set_duration (query, GST_FORMAT_TIME, demux->segment.duration);
+      gst_query_set_duration (query, GST_FORMAT_TIME, demux->duration);
       GST_OBJECT_UNLOCK (demux);
 
       res = TRUE;
@@ -2331,7 +2332,7 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
         dur = gst_gdouble_to_guint64 (num *
             gst_guint64_to_gdouble (demux->time_scale));
         if (GST_CLOCK_TIME_IS_VALID (dur) && dur <= G_MAXINT64)
-          demux->segment.duration = dur;
+          demux->duration = dur;
         break;
       }
 
@@ -4511,7 +4512,6 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
           break;
 
         demux->state = GST_MATROSKA_DEMUX_STATE_DATA;
-        /* FIXME: different streams might have different lengths! */
         /* send initial discont */
         gst_matroska_demux_send_event (demux,
             gst_event_new_new_segment (FALSE, 1.0,
