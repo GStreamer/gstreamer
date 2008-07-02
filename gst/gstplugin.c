@@ -430,6 +430,11 @@ static void _gst_plugin_fault_handler_setup ();
 
 static GStaticMutex gst_plugin_loading_mutex = G_STATIC_MUTEX_INIT;
 
+#define CHECK_PLUGIN_DESC_FIELD(desc,field,fn)                               \
+  if (G_UNLIKELY ((desc)->field == NULL)) {                                  \
+    GST_ERROR ("GstPluginDesc for '%s' has no %s", fn, G_STRINGIFY (field)); \
+  }
+
 /**
  * gst_plugin_load_file:
  * @filename: the plugin filename to load
@@ -519,6 +524,16 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     goto return_error;
   }
   plugin->orig_desc = (GstPluginDesc *) ptr;
+
+  /* check plugin description: complain about bad values but accept them, to
+   * maintain backwards compatibility (FIXME: 0.11) */
+  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, name, filename);
+  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, description, filename);
+  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, version, filename);
+  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, license, filename);
+  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, source, filename);
+  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, package, filename);
+  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, origin, filename);
 
   GST_LOG ("Plugin %p for file \"%s\" prepared, calling entry function...",
       plugin, filename);

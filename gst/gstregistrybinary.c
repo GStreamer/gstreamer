@@ -291,6 +291,11 @@ gst_registry_binary_save_const_string (GList ** list, const gchar * str)
 {
   GstBinaryChunk *chunk;
 
+  if (G_UNLIKELY (str == NULL)) {
+    GST_ERROR ("unexpected NULL string in plugin or plugin feature data");
+    str = "";
+  }
+
   chunk = g_malloc (sizeof (GstBinaryChunk));
   chunk->data = (gpointer) str;
   chunk->size = strlen ((gchar *) chunk->data) + 1;

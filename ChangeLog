@@ -1,3 +1,13 @@
+2008-07-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstplugin.c: (CHECK_PLUGIN_DESC_FIELD), (gst_plugin_load_file):
+	  Print error debug message if plugin description fields that should
+	  be set are NULL.
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_save_const_string):
+	  Don't crash if the string to serialise is NULL (it really should
+	  not be, but apparently this used to work with the xml registry ...).
+
 2008-07-02  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* tools/gst-plot-timeline.py:
