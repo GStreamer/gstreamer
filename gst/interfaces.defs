@@ -407,6 +407,15 @@
   )
 )
 
+(define-function gst_mixer_message_parse_options_list_changed
+  (c-name "gst_mixer_message_parse_options_list_changed")
+  (return-type "none")
+  (parameters
+    '("GstMessage*" "message")
+    '("GstMixerOptions**" "options")
+  )
+)
+
 (define-virtual list_tracks
   (of-object "GstMixer")
   (return-type "const-GList*")

@@ -658,7 +658,7 @@
   (c-name "gst_caps_set_simple")
   (return-type "none")
   (parameters
-    '("char*" "field")
+    '("const-char*" "field")
   )
   (varargs #t)
 )
@@ -668,7 +668,7 @@
   (c-name "gst_caps_set_simple_valist")
   (return-type "none")
   (parameters
-    '("char*" "field")
+    '("const-char*" "field")
     '("va_list" "varargs")
   )
 )
@@ -1958,6 +1958,15 @@
   (return-type "const-GstStructure*")
 )
 
+(define-method has_name
+  (of-object "GstEvent")
+  (c-name "gst_event_has_name")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
 (define-function event_new_flush_start
   (c-name "gst_event_new_flush_start")
   (return-type "GstEvent*")
@@ -2374,6 +2383,17 @@
   (parameters
     '("GstIndexResolver" "resolver")
     '("gpointer" "user_data")
+  )
+)
+
+(define-method set_resolver_full
+  (of-object "GstIndex")
+  (c-name "gst_index_set_resolver_full")
+  (return-type "none")
+  (parameters
+    '("GstIndexResolver" "resolver")
+    '("gpointer" "user_data")
+    '("GDestroyNotify" "user_data_destroy")
   )
 )
 
@@ -3202,6 +3222,30 @@
   )
 )
 
+(define-method set_buffering_stats
+  (of-object "GstMessage")
+  (c-name "gst_message_set_buffering_stats")
+  (return-type "none")
+  (parameters
+    '("GstBufferingMode" "mode")
+    '("gint" "avg_in")
+    '("gint" "avg_out")
+    '("gint64" "buffering_left")
+  )
+)
+
+(define-method parse_buffering_stats
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_buffering_stats")
+  (return-type "none")
+  (parameters
+    '("GstBufferingMode*" "mode")
+    '("gint*" "avg_in")
+    '("gint*" "avg_out")
+    '("gint64*" "buffering_left")
+  )
+)
+
 (define-method parse_state_changed
   (of-object "GstMessage")
   (c-name "gst_message_parse_state_changed")
@@ -3401,6 +3445,13 @@
   )
 )
 
+(define-function gst_value_dup_mini_object
+  (c-name "gst_value_dup_mini_object")
+  (return-type "GstMiniObject*")
+  (parameters
+    '("const-GValue*" "value")
+  )
+)
 ;; From ../gstreamer/gst/gstobject.h
 
 (define-function object_get_type
@@ -4314,6 +4365,24 @@
   (return-type "GQuark")
 )
 
+(define-function gst_parse_context_new
+  (c-name "gst_parse_context_new")
+  (is-constructor-of "GstParseContext")
+  (return-type "GstParseContext*")
+)
+
+(define-method get_missing_elements
+  (of-object "GstParseContext")
+  (c-name "gst_parse_context_get_missing_elements")
+  (return-type "gchar**")
+)
+
+(define-method free
+  (of-object "GstParseContext")
+  (c-name "gst_parse_context_free")
+  (return-type "none")
+)
+
 (define-function parse_launch
   (c-name "gst_parse_launch")
   (return-type "GstElement*")
@@ -4334,6 +4403,27 @@
   )
 )
 
+(define-function parse_launch_full
+  (c-name "gst_parse_launch_full")
+  (return-type "GstElement*")
+  (parameters
+    '("const-gchar*" "pipeline_description")
+    '("GstParseContext*" "context")
+    '("GstParseFlags" "flags")
+    '("GError**" "error")
+  )
+)
+
+(define-function parse_launchv_full
+  (c-name "gst_parse_launchv_full")
+  (return-type "GstElement*")
+  (parameters
+    '("const-gchar**" "argv")
+    '("GstParseContext*" "context")
+    '("GstParseFlags" "flags")
+    '("GError**" "error")
+  )
+)
 
 
 ;; From ../gstreamer/gst/gstpipeline.h
@@ -4630,6 +4720,147 @@
     '("guint" "min_micro")
   )
 )
+
+;; From gstpoll.h
+
+(define-function gst_poll_new
+  (c-name "gst_poll_new")
+  (is-constructor-of "GstPoll")
+  (return-type "GstPoll*")
+  (parameters
+    '("gboolean" "controllable")
+  )
+)
+
+(define-method free
+  (of-object "GstPoll")
+  (c-name "gst_poll_free")
+  (return-type "none")
+)
+
+(define-method init
+  (of-object "GstPollFD")
+  (c-name "gst_poll_fd_init")
+  (return-type "none")
+)
+
+(define-method add_fd
+  (of-object "GstPoll")
+  (c-name "gst_poll_add_fd")
+  (return-type "gboolean")
+  (parameters
+    '("GstPollFD*" "fd")
+  )
+)
+
+(define-method remove_fd
+  (of-object "GstPoll")
+  (c-name "gst_poll_remove_fd")
+  (return-type "gboolean")
+  (parameters
+    '("GstPollFD*" "fd")
+  )
+)
+
+(define-method fd_ctl_write
+  (of-object "GstPoll")
+  (c-name "gst_poll_fd_ctl_write")
+  (return-type "gboolean")
+  (parameters
+    '("GstPollFD*" "fd")
+    '("gboolean" "active")
+  )
+)
+
+(define-method fd_ctl_read
+  (of-object "GstPoll")
+  (c-name "gst_poll_fd_ctl_read")
+  (return-type "gboolean")
+  (parameters
+    '("GstPollFD*" "fd")
+    '("gboolean" "active")
+  )
+)
+
+(define-method fd_ignored
+  (of-object "GstPoll")
+  (c-name "gst_poll_fd_ignored")
+  (return-type "none")
+  (parameters
+    '("GstPollFD*" "fd")
+  )
+)
+
+(define-method fd_has_closed
+  (of-object "GstPoll")
+  (c-name "gst_poll_fd_has_closed")
+  (return-type "gboolean")
+  (parameters
+    '("GstPollFD*" "fd")
+  )
+)
+
+(define-method fd_has_error
+  (of-object "GstPoll")
+  (c-name "gst_poll_fd_has_error")
+  (return-type "gboolean")
+  (parameters
+    '("GstPollFD*" "fd")
+  )
+)
+
+(define-method fd_can_read
+  (of-object "GstPoll")
+  (c-name "gst_poll_fd_can_read")
+  (return-type "gboolean")
+  (parameters
+    '("GstPollFD*" "fd")
+  )
+)
+
+(define-method fd_can_write
+  (of-object "GstPoll")
+  (c-name "gst_poll_fd_can_write")
+  (return-type "gboolean")
+  (parameters
+    '("GstPollFD*" "fd")
+  )
+)
+
+(define-method wait
+  (of-object "GstPoll")
+  (c-name "gst_poll_wait")
+  (return-type "gint")
+  (parameters
+    '("GstClockTime" "timeout")
+  )
+)
+
+(define-method set_controllable
+  (of-object "GstPoll")
+  (c-name "gst_poll_set_controllable")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean" "controllable")
+  )
+)
+
+(define-method restart
+  (of-object "GstPoll")
+  (c-name "gst_poll_restart")
+  (return-type "none")
+)
+
+(define-method set_flushing
+  (of-object "GstPoll")
+  (c-name "gst_poll_set_flushing")
+  (return-type "none")
+  (parameters
+    '("gboolean" "flushing")
+  )
+)
+
+
 
 ;; From ../gstreamer/gst/gstquery.h
 

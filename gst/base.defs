@@ -421,7 +421,7 @@
   (c-name "gst_base_src_set_do_timestamp")
   (return-type "none")
   (parameters
-    '("gboolean" "live")
+    '("gboolean" "timestamp")
   )
 )
 
@@ -859,6 +859,26 @@
   (parameters
     '("GstCollectData*" "data")
     '("guint8**" "bytes")
+    '("guint" "size")
+  )
+)
+
+(define-method read_buffer
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_read_buffer")
+  (return-type "GstBuffer*")
+  (parameters
+    '("GstCollectData*" "data")
+    '("guint" "size")
+  )
+)
+
+(define-method take_buffer
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_take_buffer")
+  (return-type "GstBuffer*")
+  (parameters
+    '("GstCollectData*" "data")
     '("guint" "size")
   )
 )

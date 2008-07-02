@@ -515,6 +515,8 @@
     '("demux" "GST_STREAM_ERROR_DEMUX")
     '("mux" "GST_STREAM_ERROR_MUX")
     '("format" "GST_STREAM_ERROR_FORMAT")
+    '("decrypt" "GST_STREAM_ERROR_DECRYPT")
+    '("decrypt-nokey" "GST_STREAM_ERROR_DECRYPT_NOKEY")
     '("num-errors" "GST_STREAM_ERROR_NUM_ERRORS")
   )
 )
@@ -883,6 +885,16 @@
   )
 )
 
+(define-flags ParseFlags
+  (in-module "Gst")
+  (c-name "GstParseFlags")
+  (gtype-id "GST_TYPE_PARSE_FLAGS")
+  (values
+    '("none" "GST_PARSE_FLAG_NONE")
+    '("fatal-errors" "GST_PARSE_FLAG_FATAL_ERRORS")
+  )
+)
+
 (define-flags PipelineFlags
   (in-module "Gst")
   (c-name "GstPipelineFlags")
@@ -928,6 +940,19 @@
     '("segment" "GST_QUERY_SEGMENT")
     '("convert" "GST_QUERY_CONVERT")
     '("formats" "GST_QUERY_FORMATS")
+    '("buffering" "GST_QUERY_BUFFERING")
+  )
+)
+
+(define-enum BufferingMode
+  (in-module "Gst")
+  (c-name "GstBufferingMode")
+  (gtype-id "GST_TYPE_BUFFERING_MODE")
+  (values
+    '("stream" "GST_BUFFERING_STREAM")
+    '("download" "GST_BUFFERING_DOWNLOAD")
+    '("timeshift" "GST_BUFFERING_TIMESHIFT")
+    '("live" "GST_BUFFERING_LIVE")
   )
 )
 

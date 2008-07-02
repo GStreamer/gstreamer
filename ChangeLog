@@ -1,3 +1,17 @@
+2008-07-02  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/base.defs:
+	* gst/gst-0.10.18.ignore:
+	* gst/gst-0.10.20.ignore:
+	* gst/gst-pb-0.10.18.ignore:
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/gstversion.override.in:
+	* gst/interfaces.defs:
+	update upstream API changes
+
 2008-06-27  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* testsuite/test_interface.py:

@@ -1,0 +1,16 @@
+%%
+ignore
+  gst_event_has_name
+  gst_message_set_buffering_stats
+  gst_message_parse_buffering_stats
+  gst_value_dup_mini_object
+  gst_parse_context_new
+  gst_parse_context_get_missing_elements
+  gst_parse_context_free
+  gst_parse_launch_full
+  gst_parse_launchv_full
+%%
+ignore-type
+  GstParseFlags
+  GstBufferingMode
+%%
