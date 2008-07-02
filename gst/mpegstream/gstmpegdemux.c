@@ -1041,6 +1041,37 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + offset;
+
+  if (GST_CLOCK_TIME_IS_VALID (timestamp) &&
+      GST_CLOCK_TIME_IS_VALID (mpeg_parse->current_segment.last_stop)) {
+    GstClockTimeDiff diff;
+    guint64 update_time;
+
+    update_time = MIN (timestamp, mpeg_parse->current_segment.stop);
+    update_time = MAX (timestamp, mpeg_parse->current_segment.start);
+    diff = GST_CLOCK_DIFF (mpeg_parse->current_segment.last_stop, update_time);
+    if (diff > GST_SECOND * 2) {
+      GST_DEBUG_OBJECT (mpeg_demux, "Gap of %" GST_TIME_FORMAT " detected in "
+          "stream %d. Sending updated NEWSEGMENT events", GST_TIME_ARGS (diff),
+          outstream->number);
+      PARSE_CLASS (mpeg_parse)->send_event (mpeg_parse,
+          gst_event_new_new_segment (TRUE, mpeg_parse->current_segment.rate,
+              GST_FORMAT_TIME, mpeg_parse->current_segment.last_stop,
+              mpeg_parse->current_segment.last_stop,
+              mpeg_parse->current_segment.last_stop));
+      gst_segment_set_newsegment (&mpeg_parse->current_segment,
+          FALSE, mpeg_parse->current_segment.rate, GST_FORMAT_TIME,
+          update_time, mpeg_parse->current_segment.stop, update_time);
+      PARSE_CLASS (mpeg_parse)->send_event (mpeg_parse,
+          gst_event_new_new_segment (FALSE, mpeg_parse->current_segment.rate,
+              GST_FORMAT_TIME, update_time,
+              mpeg_parse->current_segment.stop, update_time));
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    }
+    gst_segment_set_last_stop (&mpeg_parse->current_segment,
+        GST_FORMAT_TIME, update_time);
+  }
+
   ret = gst_pad_push (outstream->pad, outbuf);
   GST_LOG_OBJECT (outstream->pad, "flow: %s", gst_flow_get_name (ret));
   ++outstream->buffers_sent;
@@ -1135,8 +1166,6 @@ gst_mpeg_demux_sync_stream_to_time (GstMPEGDemux * mpeg_demux,
   gst_pad_push_event (stream->pad, gst_event_new_new_segment (TRUE,
           mpeg_parse->current_segment.rate, GST_FORMAT_TIME,
           update_time, mpeg_parse->current_segment.stop, update_time));
-
-  mpeg_parse->current_segment.last_stop = update_time;
 }
 
 #if 0
