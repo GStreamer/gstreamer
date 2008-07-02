@@ -1,5 +1,18 @@
 2008-07-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_class_init),
+	(gst_matroska_demux_add_stream), (gst_matroska_demux_query),
+	(gst_matroska_demux_element_query),
+	(gst_matroska_demux_handle_src_query),
+	(gst_matroska_demux_handle_seek_event):
+	Handle position and duration query in DEFAULT format if the
+	pad's track has a default frame duration set.
+
+	Fix seeking now that the segment's duration doesn't contain the
+	(possibly wrong or inaccurate) duration of the Matroska file.
+
+2008-07-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/matroska/ebml-read.c: (_ext2dbl):
 	Use NAN constant instead of 0.0/0.0 if possible. NAN is defined
 	in math.h except on MSVC where it is defined in xmath.h.

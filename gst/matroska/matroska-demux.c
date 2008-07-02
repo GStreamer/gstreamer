@@ -116,6 +116,9 @@ static void gst_matroska_demux_loop (GstPad * pad);
 static gboolean gst_matroska_demux_element_send_event (GstElement * element,
     GstEvent * event);
 
+static gboolean gst_matroska_demux_element_query (GstElement * element,
+    GstQuery * query);
+
 /* pad functions */
 static gboolean gst_matroska_demux_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
@@ -183,6 +186,8 @@ gst_matroska_demux_class_init (GstMatroskaDemuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_matroska_demux_change_state);
   gstelement_class->send_event =
       GST_DEBUG_FUNCPTR (gst_matroska_demux_element_send_event);
+  gstelement_class->query =
+      GST_DEBUG_FUNCPTR (gst_matroska_demux_element_query);
 }
 
 static void
@@ -1472,6 +1477,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
 
   context->pending_tags = list;
 
+  gst_pad_set_element_private (context->pad, context);
+
   gst_pad_use_fixed_caps (context->pad);
   gst_pad_set_caps (context->pad, context->caps);
   gst_pad_set_active (context->pad, TRUE);
@@ -1496,17 +1503,16 @@ gst_matroska_demux_get_src_query_types (GstPad * pad)
 }
 
 static gboolean
-gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
+gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
+    GstQuery * query)
 {
-  GstMatroskaDemux *demux;
-
   gboolean res = FALSE;
+  GstMatroskaTrackContext *context = NULL;
 
-  demux = GST_MATROSKA_DEMUX (gst_pad_get_parent (pad));
+  if (pad) {
+    context = gst_pad_get_element_private (pad);
+  }
 
-  /* FIXME: do queries on the Tracks, not on the Segment.
-   * Convert between time and frames if we know the duration
-   * of one frame for the track */
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
@@ -1514,14 +1520,24 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_position (query, &format, NULL);
 
-      if (format != GST_FORMAT_TIME) {
-        GST_DEBUG ("only query position on TIME is supported");
-        break;
+      if (format == GST_FORMAT_TIME) {
+        GST_OBJECT_LOCK (demux);
+        if (context)
+          gst_query_set_position (query, GST_FORMAT_TIME, context->pos);
+        else
+          gst_query_set_position (query, GST_FORMAT_TIME,
+              demux->segment.last_stop);
+        GST_OBJECT_UNLOCK (demux);
+      } else if (format == GST_FORMAT_DEFAULT && context
+          && context->default_duration) {
+        GST_OBJECT_LOCK (demux);
+        gst_query_set_position (query, GST_FORMAT_DEFAULT,
+            context->pos / context->default_duration);
+        GST_OBJECT_UNLOCK (demux);
+      } else {
+        GST_DEBUG_OBJECT (demux,
+            "only position query in TIME and DEFAULT format is supported");
       }
-
-      GST_OBJECT_LOCK (demux);
-      gst_query_set_position (query, GST_FORMAT_TIME, demux->segment.last_stop);
-      GST_OBJECT_UNLOCK (demux);
 
       res = TRUE;
       break;
@@ -1532,14 +1548,20 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_duration (query, &format, NULL);
 
-      if (format != GST_FORMAT_TIME) {
-        GST_DEBUG ("only query duration on TIME is supported");
-        break;
+      if (format == GST_FORMAT_TIME) {
+        GST_OBJECT_LOCK (demux);
+        gst_query_set_duration (query, GST_FORMAT_TIME, demux->duration);
+        GST_OBJECT_UNLOCK (demux);
+      } else if (format == GST_FORMAT_DEFAULT && context
+          && context->default_duration) {
+        GST_OBJECT_LOCK (demux);
+        gst_query_set_duration (query, GST_FORMAT_DEFAULT,
+            demux->duration / context->default_duration);
+        GST_OBJECT_UNLOCK (demux);
+      } else {
+        GST_DEBUG_OBJECT (demux,
+            "only duration query in TIME and DEFAULT format is supported");
       }
-
-      GST_OBJECT_LOCK (demux);
-      gst_query_set_duration (query, GST_FORMAT_TIME, demux->duration);
-      GST_OBJECT_UNLOCK (demux);
 
       res = TRUE;
       break;
@@ -1550,10 +1572,27 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
-  gst_object_unref (demux);
   return res;
 }
 
+static gboolean
+gst_matroska_demux_element_query (GstElement * element, GstQuery * query)
+{
+  return gst_matroska_demux_query (GST_MATROSKA_DEMUX (element), NULL, query);
+}
+
+static gboolean
+gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean ret;
+  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (gst_pad_get_parent (pad));
+
+  ret = gst_matroska_demux_query (demux, pad, query);
+
+  gst_object_unref (demux);
+
+  return ret;
+}
 
 static GstMatroskaIndex *
 gst_matroskademux_do_index_seek (GstMatroskaDemux * demux, gint64 seek_pos,
@@ -1729,28 +1768,26 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   /* if nothing configured, play complete file */
   if (!GST_CLOCK_TIME_IS_VALID (cur))
     cur = 0;
-  if (!GST_CLOCK_TIME_IS_VALID (stop))
-    stop = demux->segment.duration;
   /* prevent some calculations and comparisons involving INVALID */
   segment_start = demux->segment.start;
   segment_stop = demux->segment.stop;
   if (!GST_CLOCK_TIME_IS_VALID (segment_start))
     segment_start = 0;
-  if (!GST_CLOCK_TIME_IS_VALID (segment_stop))
-    segment_stop = demux->segment.duration;
 
   if (cur_type == GST_SEEK_TYPE_SET)
     segment_start = cur;
   else if (cur_type == GST_SEEK_TYPE_CUR)
     segment_start += cur;
 
-  if (stop_type == GST_SEEK_TYPE_SET)
+  if (stop_type == GST_SEEK_TYPE_SET) {
     segment_stop = stop;
-  else if (stop_type == GST_SEEK_TYPE_CUR)
-    segment_stop += stop;
-
-  segment_start = CLAMP (segment_start, 0, demux->segment.duration);
-  segment_stop = CLAMP (segment_stop, 0, demux->segment.duration);
+  } else if (stop_type == GST_SEEK_TYPE_CUR) {
+    if (GST_CLOCK_TIME_IS_VALID (segment_stop)
+        && GST_CLOCK_TIME_IS_VALID (stop))
+      segment_stop += stop;
+    else
+      segment_stop = -1;
+  }
 
   GST_DEBUG ("New segment positions: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
       GST_TIME_ARGS (segment_start), GST_TIME_ARGS (segment_stop));
