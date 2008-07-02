@@ -31,6 +31,16 @@
 
 #include <math.h>
 
+/* NAN is supposed to be in math.h, Microsoft defines it in xmath.h */
+#ifdef _MSC_VER
+#include <xmath.h>
+#endif
+
+/* If everything goes wrong try 0.0/0.0 which should be NAN */
+#ifndef NAN
+#define NAN (0.0 / 0.0)
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (ebmlread_debug);
 #define GST_CAT_DEFAULT ebmlread_debug
 
@@ -706,7 +716,7 @@ _ext2dbl (guint8 * data)
     m = (m << 8) + ext.mantissa[i];
   e = (((gint) ext.exponent[0] & 0x7f) << 8) | ext.exponent[1];
   if (e == 0x7fff && m)
-    return 0.0 / 0.0;
+    return NAN;
   e -= 16383 + 63;              /* In IEEE 80 bits, the whole (i.e. 1.xxxx)
                                  * mantissa bit is written as opposed to the
                                  * single and double precision formats */
