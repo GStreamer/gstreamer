@@ -4373,7 +4373,7 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
 
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   switch (id) {
       /* stream info 
@@ -4443,8 +4443,73 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
     case GST_MATROSKA_ID_CLUSTER:
     {
       if (demux->state != GST_MATROSKA_DEMUX_STATE_DATA) {
-        /* FIXME: Skip first and try to read TRACKS and other things
-         * first, then go back here. */
+        /* We need a Tracks element first before we can output anything.
+         * Search it!
+         */
+        if (!demux->tracks_parsed) {
+          GstEbmlLevel *level;
+          GstFlowReturn iret = GST_FLOW_OK;
+          guint32 iid;
+          guint level_up;
+          guint64 before_pos;
+
+          GST_WARNING_OBJECT (demux,
+              "Found Cluster element before Tracks, searching Tracks");
+
+          /* remember */
+          level_up = demux->level_up;
+          before_pos = ebml->offset;
+
+          /* we don't want to lose our seekhead level, so we add
+           * a dummy. This is a crude hack. */
+
+          level = g_slice_new (GstEbmlLevel);
+          level->start = 0;
+          level->length = G_MAXUINT64;
+          ebml->level = g_list_prepend (ebml->level, level);
+
+          /* Search Tracks element */
+          while (iret == GST_FLOW_OK) {
+            if ((iret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+              break;
+
+            if ((iret =
+                    gst_ebml_peek_id (ebml, &demux->level_up,
+                        &iid)) != GST_FLOW_OK)
+              break;
+
+            if (iid != GST_MATROSKA_ID_TRACKS)
+              continue;
+
+            iret = gst_matroska_demux_parse_tracks (demux);
+            break;
+          }
+
+          if (!demux->tracks_parsed) {
+            GST_ERROR_OBJECT (demux, "No Tracks element found");
+            ret = GST_FLOW_ERROR;
+          }
+
+          /* remove dummy level */
+          while (ebml->level) {
+            guint64 length;
+
+            level = ebml->level->data;
+            ebml->level = g_list_delete_link (ebml->level, ebml->level);
+            length = level->length;
+            g_slice_free (GstEbmlLevel, level);
+            if (length == G_MAXUINT64)
+              break;
+          }
+
+          /* seek back */
+          gst_ebml_read_seek (ebml, before_pos);
+          demux->level_up = level_up;
+        }
+
+        if (ret != GST_FLOW_OK)
+          break;
+
         demux->state = GST_MATROSKA_DEMUX_STATE_DATA;
         /* FIXME: different streams might have different lengths! */
         /* send initial discont */

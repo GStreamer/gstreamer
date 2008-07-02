@@ -1,5 +1,12 @@
 2008-07-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_loop_stream_parse_id):
+	If no Tracks element is found until the first Cluster is found
+	search it and error out if none is found in the complete file.
+
+2008-07-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_sync_streams):
 	Resync non-subtitle tracks too if a too large gap compared to other
 	tracks is detected.
