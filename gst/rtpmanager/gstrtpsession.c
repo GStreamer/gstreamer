@@ -236,6 +236,7 @@ enum
 struct _GstRtpSessionPrivate
 {
   GMutex *lock;
+  GstClock *sysclock;
   RTPSession *session;
 
   /* thread for sending out RTCP */
@@ -651,6 +652,7 @@ gst_rtp_session_init (GstRtpSession * rtpsession, GstRtpSessionClass * klass)
 {
   rtpsession->priv = GST_RTP_SESSION_GET_PRIVATE (rtpsession);
   rtpsession->priv->lock = g_mutex_new ();
+  rtpsession->priv->sysclock = gst_system_clock_obtain ();
   rtpsession->priv->session = rtp_session_new ();
   /* configure callbacks */
   rtp_session_set_callbacks (rtpsession->priv->session, &callbacks, rtpsession);
@@ -698,6 +700,7 @@ gst_rtp_session_finalize (GObject * object)
 
   g_hash_table_destroy (rtpsession->priv->ptmap);
   g_mutex_free (rtpsession->priv->lock);
+  g_object_unref (rtpsession->priv->sysclock);
   g_object_unref (rtpsession->priv->session);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -857,22 +860,16 @@ get_current_ntp_ns_time (GstRtpSession * rtpsession)
 static void
 rtcp_thread (GstRtpSession * rtpsession)
 {
-  GstClock *sysclock;
   GstClockID id;
   GstClockTime current_time;
   GstClockTime next_timeout;
   guint64 ntpnstime;
 
-  /* for RTCP timeouts we use the system clock */
-  sysclock = gst_system_clock_obtain ();
-  if (sysclock == NULL)
-    goto no_sysclock;
-
-  current_time = gst_clock_get_time (sysclock);
-
   GST_DEBUG_OBJECT (rtpsession, "entering RTCP thread");
 
   GST_RTP_SESSION_LOCK (rtpsession);
+
+  current_time = gst_clock_get_time (rtpsession->priv->sysclock);
 
   while (!rtpsession->priv->stop_thread) {
     GstClockReturn res;
@@ -889,7 +886,7 @@ rtcp_thread (GstRtpSession * rtpsession)
       break;
 
     id = rtpsession->priv->id =
-        gst_clock_new_single_shot_id (sysclock, next_timeout);
+        gst_clock_new_single_shot_id (rtpsession->priv->sysclock, next_timeout);
     GST_RTP_SESSION_UNLOCK (rtpsession);
 
     res = gst_clock_id_wait (id, NULL);
@@ -902,7 +899,7 @@ rtcp_thread (GstRtpSession * rtpsession)
       break;
 
     /* update current time */
-    current_time = gst_clock_get_time (sysclock);
+    current_time = gst_clock_get_time (rtpsession->priv->sysclock);
 
     /* get current NTP time */
     ntpnstime = get_current_ntp_ns_time (rtpsession);
@@ -921,18 +918,7 @@ rtcp_thread (GstRtpSession * rtpsession)
   rtpsession->priv->thread_stopped = TRUE;
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
-  gst_object_unref (sysclock);
-
   GST_DEBUG_OBJECT (rtpsession, "leaving RTCP thread");
-  return;
-
-  /* ERRORS */
-no_sysclock:
-  {
-    GST_ELEMENT_ERROR (rtpsession, CORE, CLOCK, (NULL),
-        ("Could not get system clock"));
-    return;
-  }
 }
 
 static gboolean
@@ -1397,6 +1383,7 @@ gst_rtp_session_chain_recv_rtp (GstPad * pad, GstBuffer * buffer)
   GstRtpSession *rtpsession;
   GstRtpSessionPrivate *priv;
   GstFlowReturn ret;
+  GstClockTime current_time;
   guint64 ntpnstime;
   GstClockTime timestamp;
 
@@ -1418,7 +1405,9 @@ gst_rtp_session_chain_recv_rtp (GstPad * pad, GstBuffer * buffer)
     ntpnstime = get_current_ntp_ns_time (rtpsession);
   }
 
-  ret = rtp_session_process_rtp (priv->session, buffer, ntpnstime);
+  current_time = gst_clock_get_time (priv->sysclock);
+  ret = rtp_session_process_rtp (priv->session, buffer, current_time,
+      ntpnstime);
   if (ret != GST_FLOW_OK)
     goto push_error;
 
@@ -1472,6 +1461,7 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstBuffer * buffer)
 {
   GstRtpSession *rtpsession;
   GstRtpSessionPrivate *priv;
+  GstClockTime current_time;
   GstFlowReturn ret;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
@@ -1479,7 +1469,8 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (rtpsession, "received RTCP packet");
 
-  ret = rtp_session_process_rtcp (priv->session, buffer);
+  current_time = gst_clock_get_time (priv->sysclock);
+  ret = rtp_session_process_rtcp (priv->session, buffer, current_time);
 
   gst_object_unref (rtpsession);
 
@@ -1531,8 +1522,7 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstEvent * event)
       gst_segment_init (&rtpsession->send_rtp_seg, GST_FORMAT_UNDEFINED);
       ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
       break;
-    case GST_EVENT_NEWSEGMENT:
-    {
+    case GST_EVENT_NEWSEGMENT:{
       gboolean update;
       gdouble rate, arate;
       GstFormat format;
@@ -1563,10 +1553,15 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
       break;
     }
-    case GST_EVENT_EOS:
+    case GST_EVENT_EOS:{
+      GstClockTime current_time;
+
       ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
-      rtp_session_send_bye (rtpsession->priv->session, "End of stream");
+      current_time = gst_clock_get_time (rtpsession->priv->sysclock);
+      rtp_session_send_bye (rtpsession->priv->session, "End of stream",
+          current_time);
       break;
+    }
     default:
       ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
       break;
@@ -1613,6 +1608,7 @@ gst_rtp_session_chain_send_rtp (GstPad * pad, GstBuffer * buffer)
   GstRtpSessionPrivate *priv;
   GstFlowReturn ret;
   GstClockTime timestamp;
+  GstClockTime current_time;
   guint64 ntpnstime;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
@@ -1635,7 +1631,8 @@ gst_rtp_session_chain_send_rtp (GstPad * pad, GstBuffer * buffer)
     ntpnstime = -1;
   }
 
-  ret = rtp_session_send_rtp (priv->session, buffer, ntpnstime);
+  current_time = gst_clock_get_time (priv->sysclock);
+  ret = rtp_session_send_rtp (priv->session, buffer, current_time, ntpnstime);
   if (ret != GST_FLOW_OK)
     goto push_error;
 
