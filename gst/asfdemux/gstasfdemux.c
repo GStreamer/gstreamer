@@ -3107,8 +3107,7 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
 /* ERRORS */
 error_encrypted:
   {
-    GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
-        (_("This file is encrypted and cannot be played.")), (NULL));
+    GST_ELEMENT_ERROR (demux, STREAM, DECRYPT, (NULL), (NULL));
     return GST_FLOW_ERROR;
   }
 }

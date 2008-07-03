@@ -1,3 +1,9 @@
+2008-07-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* configure.ac:
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_object):
+	  Use correct error code for encrypted streams.
+
 2008-07-02  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_send_subbuffer),
