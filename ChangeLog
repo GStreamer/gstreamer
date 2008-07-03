@@ -1,3 +1,11 @@
+2008-07-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	Makes libgstsdp compile with mingw32 by defining the right WINVER so
+	that getaddrinfo() can be used. Fixes #541358.
+
 2008-07-01  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/videotestsrc/gstvideotestsrc.c:

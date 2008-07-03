@@ -72,6 +72,11 @@
 #ifdef _MSC_VER
 #include <Winsock2.h>
 #endif
+/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
+ * minwg32 headers check WINVER before allowing the use of these */
+#ifndef WINVER
+#define WINVER 0x0501
+#endif
 #include <ws2tcpip.h>
 #else
 #include <sys/socket.h>
