@@ -1062,7 +1062,7 @@ gst_rtp_session_process_rtp (RTPSession * sess, RTPSource * src,
   priv = rtpsession->priv;
 
   if (rtpsession->recv_rtp_src) {
-    GST_DEBUG_OBJECT (rtpsession, "pushing received RTP packet");
+    GST_LOG_OBJECT (rtpsession, "pushing received RTP packet");
     result = gst_pad_push (rtpsession->recv_rtp_src, buffer);
   } else {
     GST_DEBUG_OBJECT (rtpsession, "dropping received RTP packet");
@@ -1085,7 +1085,7 @@ gst_rtp_session_send_rtp (RTPSession * sess, RTPSource * src,
   rtpsession = GST_RTP_SESSION (user_data);
   priv = rtpsession->priv;
 
-  GST_DEBUG_OBJECT (rtpsession, "sending RTP packet");
+  GST_LOG_OBJECT (rtpsession, "sending RTP packet");
 
   if (rtpsession->send_rtp_src) {
     result = gst_pad_push (rtpsession->send_rtp_src, buffer);
@@ -1119,7 +1119,7 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
       gst_caps_unref (caps);
     }
     gst_buffer_set_caps (buffer, caps);
-    GST_DEBUG_OBJECT (rtpsession, "sending RTCP");
+    GST_LOG_OBJECT (rtpsession, "sending RTCP");
     result = gst_pad_push (rtpsession->send_rtcp_src, buffer);
   } else {
     GST_DEBUG_OBJECT (rtpsession, "not sending RTCP, no output pad");
@@ -1152,7 +1152,7 @@ gst_rtp_session_sync_rtcp (RTPSession * sess,
       gst_caps_unref (caps);
     }
     gst_buffer_set_caps (buffer, caps);
-    GST_DEBUG_OBJECT (rtpsession, "sending Sync RTCP");
+    GST_LOG_OBJECT (rtpsession, "sending Sync RTCP");
     result = gst_pad_push (rtpsession->sync_src, buffer);
   } else {
     GST_DEBUG_OBJECT (rtpsession, "not sending Sync RTCP, no output pad");
@@ -1390,7 +1390,7 @@ gst_rtp_session_chain_recv_rtp (GstPad * pad, GstBuffer * buffer)
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
   priv = rtpsession->priv;
 
-  GST_DEBUG_OBJECT (rtpsession, "received RTP packet");
+  GST_LOG_OBJECT (rtpsession, "received RTP packet");
 
   /* get NTP time when this packet was captured, this depends on the timestamp. */
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
@@ -1467,7 +1467,7 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstBuffer * buffer)
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
   priv = rtpsession->priv;
 
-  GST_DEBUG_OBJECT (rtpsession, "received RTCP packet");
+  GST_LOG_OBJECT (rtpsession, "received RTCP packet");
 
   current_time = gst_clock_get_time (priv->sysclock);
   ret = rtp_session_process_rtcp (priv->session, buffer, current_time);
@@ -1614,7 +1614,7 @@ gst_rtp_session_chain_send_rtp (GstPad * pad, GstBuffer * buffer)
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
   priv = rtpsession->priv;
 
-  GST_DEBUG_OBJECT (rtpsession, "received RTP packet");
+  GST_LOG_OBJECT (rtpsession, "received RTP packet");
 
   /* get NTP time when this packet was captured, this depends on the timestamp. */
   timestamp = GST_BUFFER_TIMESTAMP (buffer);

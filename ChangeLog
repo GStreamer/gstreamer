@@ -1,5 +1,18 @@
 2008-07-03  Peter Kjellerstedt  <pkj@axis.com>
 
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_process_rtp),
+	(gst_rtp_session_send_rtp), (gst_rtp_session_send_rtcp),
+	(gst_rtp_session_sync_rtcp), (gst_rtp_session_chain_recv_rtp),
+	(gst_rtp_session_chain_recv_rtcp), (gst_rtp_session_chain_send_rtp):
+	* gst/rtpmanager/rtpsession.c: (source_push_rtp),
+	(rtp_session_send_rtp):
+	* gst/rtpmanager/rtpsource.c: (push_packet), (calculate_jitter),
+	(rtp_source_process_rtp), (rtp_source_send_rtp):
+	Changed some GST_DEBUG() to GST_LOG() to reduce the spam when a
+	pipeline is running normally.
+
+2008-07-03  Peter Kjellerstedt  <pkj@axis.com>
+
 	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_init),
 	(gst_rtp_session_finalize), (rtcp_thread),
 	(gst_rtp_session_chain_recv_rtp), (gst_rtp_session_chain_recv_rtcp),
