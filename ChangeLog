@@ -1,3 +1,19 @@
+2008-07-03  Peter Kjellerstedt  <pkj@axis.com>
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_init),
+	(gst_rtp_session_finalize), (rtcp_thread),
+	(gst_rtp_session_chain_recv_rtp), (gst_rtp_session_chain_recv_rtcp),
+	(gst_rtp_session_event_send_rtp_sink),
+	(gst_rtp_session_chain_send_rtp):
+	* gst/rtpmanager/rtpsession.c: (check_collision),
+	(update_arrival_stats), (rtp_session_process_rtp),
+	(rtp_session_process_rtcp), (rtp_session_send_rtp),
+	(rtp_session_send_bye_locked), (rtp_session_send_bye),
+	(rtp_session_next_timeout), (session_report_blocks), (session_cleanup),
+	(is_rtcp_time), (rtp_session_on_timeout):
+	* gst/rtpmanager/rtpsession.h:
+	Do not mix the use of g_get_current_time() with gst_clock_get_time().
+
 2008-07-01  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/mpegvideoparse/mpegvideoparse.c:
