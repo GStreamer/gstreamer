@@ -1,3 +1,11 @@
+2008-07-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
+
+	* configure.ac:
+	Fix build of the RTP plugin with mingw32 by linking to ws2_32
+	for htons() and htonl(). Fixes bug #541412.
+
 2008-07-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_class_init),

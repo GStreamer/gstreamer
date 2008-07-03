@@ -144,7 +144,7 @@ AX_CREATE_STDINT_H
 
 dnl used in gst/rtp/gstasteriskh263.c
 AC_CHECK_HEADERS([netinet/in.h])
-AC_CHECK_HEADERS([winsock2.h])
+AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
 AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
 
 dnl used in gst/udp
