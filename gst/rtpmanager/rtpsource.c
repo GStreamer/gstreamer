@@ -1184,7 +1184,7 @@ rtp_source_get_new_sr (RTPSource * src, guint64 ntpnstime,
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
 
-  /* use the sync params to interpollate the date->time member to rtptime. We
+  /* use the sync params to interpolate the date->time member to rtptime. We
    * use the last sent timestamp and rtptime as reference points. We assume
    * that the slope of the rtptime vs timestamp curve is 1, which is certainly
    * sufficient for the frequency at which we report SR and the rate we send
@@ -1211,7 +1211,7 @@ rtp_source_get_new_sr (RTPSource * src, guint64 ntpnstime,
       t_rtp -= gst_util_uint64_scale_int (diff, src->clock_rate, GST_SECOND);
     }
   } else {
-    GST_WARNING ("no clock-rate, cannot interpollate rtp time");
+    GST_WARNING ("no clock-rate, cannot interpolate rtp time");
   }
 
   /* convert the NTP time in nanoseconds to 32.32 fixed point */
