@@ -1128,7 +1128,7 @@ again:
         GST_DEBUG_OBJECT (jitterbuffer,
             "out_time %" GST_TIME_FORMAT ", last %" GST_TIME_FORMAT,
             GST_TIME_ARGS (out_time), GST_TIME_ARGS (priv->last_out_time));
-        /* interpollate between the current time and the last time based on
+        /* interpolate between the current time and the last time based on
          * number of packets we are missing, this is the estimated duration
          * for the missing packet based on equidistant packet spacing. Also make
          * sure we never go negative. */

@@ -1,5 +1,12 @@
 2008-07-03  Peter Kjellerstedt  <pkj@axis.com>
 
+	* ChangeLog:
+	* gst/rtpmanager/gstrtpjitterbuffer.c: (gst_rtp_jitter_buffer_loop):
+	* gst/rtpmanager/rtpsource.c: (rtp_source_get_new_sr):
+	Corrected a typo (interpollate -> interpolate).
+
+2008-07-03  Peter Kjellerstedt  <pkj@axis.com>
+
 	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_process_rtp),
 	(gst_rtp_session_send_rtp), (gst_rtp_session_send_rtcp),
 	(gst_rtp_session_sync_rtcp), (gst_rtp_session_chain_recv_rtp),
@@ -7110,7 +7117,7 @@
 
 	* gst/rtpmanager/rtpjitterbuffer.c: (calculate_skew):
 	Handle cases where input buffers have no timestamps so that no clock
-	skew can be calculated, in this case interpollate timestamps based on
+	skew can be calculated, in this case interpolate timestamps based on
 	rtp timestamp and assume a 0 clock skew.
 
 2007-09-28  Wim Taymans  <wim.taymans@gmail.com>
@@ -7647,7 +7654,7 @@
 	Make the clock skew window a little bigger.
 	Apply the clock skew to all buffers, not just one with a new timestamp.
 	Calculate and debug sender clock drift.
-	Use extended last timestamp to interpollate for SR reports.
+	Use extended last timestamp to interpolate for SR reports.
 
 2007-09-12  Tim-Philipp Müller  <tim at centricular dot net>
 
