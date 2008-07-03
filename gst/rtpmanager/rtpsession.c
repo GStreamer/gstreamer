@@ -812,7 +812,7 @@ source_push_rtp (RTPSource * source, GstBuffer * buffer, RTPSession * session)
   GstFlowReturn result = GST_FLOW_OK;
 
   if (source == session->source) {
-    GST_DEBUG ("source %08x pushed sender RTP packet", source->ssrc);
+    GST_LOG ("source %08x pushed sender RTP packet", source->ssrc);
 
     RTP_SESSION_UNLOCK (session);
 
@@ -824,7 +824,7 @@ source_push_rtp (RTPSource * source, GstBuffer * buffer, RTPSession * session)
       gst_buffer_unref (buffer);
 
   } else {
-    GST_DEBUG ("source %08x pushed receiver RTP packet", source->ssrc);
+    GST_LOG ("source %08x pushed receiver RTP packet", source->ssrc);
     RTP_SESSION_UNLOCK (session);
 
     if (session->callbacks.process_rtp)
@@ -1772,7 +1772,7 @@ rtp_session_send_rtp (RTPSession * sess, GstBuffer * buffer,
   if (!gst_rtp_buffer_validate (buffer))
     goto invalid_packet;
 
-  GST_DEBUG ("received RTP packet for sending");
+  GST_LOG ("received RTP packet for sending");
 
   RTP_SESSION_LOCK (sess);
   source = sess->source;
