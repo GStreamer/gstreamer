@@ -30,7 +30,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_MIMDEC \
-  (gst_gst_mimdec_get_type())
+  (gst_mimdec_get_type())
 #define GST_MIMDEC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MIMDEC,GstMimDec))
 #define GST_MIMDEC_CLASS(klass) \
@@ -65,7 +65,7 @@ struct _GstMimDecClass
   GstElementClass parent_class;
 };
 
-GType gst_gst_mimdec_get_type (void);
+GType gst_mimdec_get_type (void);
 
 G_END_DECLS
 

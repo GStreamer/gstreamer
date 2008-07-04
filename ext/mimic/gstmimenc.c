@@ -71,10 +71,6 @@ GST_STATIC_PAD_TEMPLATE (
 );
 
 
-static void          gst_mimenc_class_init	      (GstMimEncClass *klass);
-static void          gst_mimenc_base_init	      (GstMimEncClass *klass);
-static void          gst_mimenc_init              (GstMimEnc      *mimenc);
-
 static gboolean      gst_mimenc_setcaps           (GstPad         *pad,
                                                    GstCaps        *caps);
 static GstFlowReturn gst_mimenc_chain             (GstPad         *pad,
@@ -86,36 +82,11 @@ static GstStateChangeReturn
                      gst_mimenc_change_state      (GstElement     *element,
                                                   GstStateChange   transition);
 
-static GstElementClass *parent_class = NULL;
 
-GType
-gst_gst_mimenc_get_type (void)
-{
-  static GType plugin_type = 0;
-
-  if (!plugin_type)
-  {
-    static const GTypeInfo plugin_info =
-    {
-      sizeof (GstMimEncClass),
-      (GBaseInitFunc) gst_mimenc_base_init,
-      NULL,
-      (GClassInitFunc) gst_mimenc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMimEnc),
-      0,
-      (GInstanceInitFunc) gst_mimenc_init,
-    };
-    plugin_type = g_type_register_static (GST_TYPE_ELEMENT,
-   	                                      "GstMimEnc",
-                                          &plugin_info, 0);
-  }
-  return plugin_type;
-}
+GST_BOILERPLATE (GstMimEnc, gst_mimenc, GstElement, GST_TYPE_ELEMENT);
 
 static void
-gst_mimenc_base_init (GstMimEncClass *klass)
+gst_mimenc_base_init (gpointer klass)
 {
   static GstElementDetails plugin_details = {
     "MimEnc",
@@ -142,13 +113,11 @@ gst_mimenc_class_init (GstMimEncClass *klass)
   gstelement_class = (GstElementClass*) klass;
   gstelement_class->change_state = gst_mimenc_change_state;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   GST_DEBUG_CATEGORY_INIT (mimenc_debug, "mimenc", 0, "Mimic encoder plugin");
 }
 
 static void
-gst_mimenc_init (GstMimEnc *mimenc)
+gst_mimenc_init (GstMimEnc *mimenc, GstMimEncClass *klass)
 {
   mimenc->sinkpad = gst_pad_new_from_template (
 	gst_static_pad_template_get (&sink_factory), "sink");

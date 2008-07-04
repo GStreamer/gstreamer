@@ -59,9 +59,6 @@ GST_STATIC_PAD_TEMPLATE (
     )
 );
 
-static void          gst_mimdec_class_init   (GstMimDecClass *klass);
-static void          gst_mimdec_base_init    (GstMimDecClass *klass);
-static void          gst_mimdec_init	     (GstMimDec      *mimdec);
 static void          gst_mimdec_finalize      (GObject        *object);
 
 static GstFlowReturn gst_mimdec_chain        (GstPad         *pad,
@@ -72,36 +69,11 @@ static GstStateChangeReturn
                      gst_mimdec_change_state (GstElement     *element,
                                               GstStateChange  transition);
 
-static GstElementClass *parent_class = NULL;
 
-GType
-gst_gst_mimdec_get_type (void)
-{
-  static GType plugin_type = 0;
-
-  if (!plugin_type)
-  {
-    static const GTypeInfo plugin_info =
-    {
-      sizeof (GstMimDecClass),
-      (GBaseInitFunc) gst_mimdec_base_init,
-      NULL,
-      (GClassInitFunc) gst_mimdec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMimDec),
-      0,
-      (GInstanceInitFunc) gst_mimdec_init,
-    };
-    plugin_type = g_type_register_static (GST_TYPE_ELEMENT,
-                                          "GstMimDec",
-                                          &plugin_info, 0);
-  }
-  return plugin_type;
-}
+GST_BOILERPLATE (GstMimDec, gst_mimdec, GstElement, GST_TYPE_ELEMENT);
 
 static void
-gst_mimdec_base_init (GstMimDecClass *klass)
+gst_mimdec_base_init (gpointer klass)
 {
   static GstElementDetails plugin_details = {
     "MimDec",
@@ -134,13 +106,11 @@ gst_mimdec_class_init (GstMimDecClass *klass)
 
   gobject_class->finalize = gst_mimdec_finalize;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   GST_DEBUG_CATEGORY_INIT (mimdec_debug, "mimdec", 0, "Mimic decoder plugin");
 }
 
 static void
-gst_mimdec_init (GstMimDec *mimdec)
+gst_mimdec_init (GstMimDec *mimdec, GstMimDecClass *klass)
 {
   mimdec->sinkpad = gst_pad_new_from_template (
           gst_static_pad_template_get (&sink_factory), "sink");

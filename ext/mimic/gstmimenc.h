@@ -30,7 +30,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_MIMENC \
-  (gst_gst_mimenc_get_type())
+  (gst_mimenc_get_type())
 #define GST_MIMENC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MIMENC,GstMimEnc))
 #define GST_MIMENC_CLASS(klass) \
@@ -62,7 +62,7 @@ struct _GstMimEncClass
   GstElementClass parent_class;
 };
 
-GType gst_gst_mimenc_get_type (void);
+GType gst_mimenc_get_type (void);
 
 G_END_DECLS
 
