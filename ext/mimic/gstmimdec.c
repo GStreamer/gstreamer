@@ -50,7 +50,7 @@ GST_STATIC_PAD_TEMPLATE (
         "bpp = (int) 24, "
         "depth = (int) 24, "
         "endianness = (int) 4321, "
-        "framerate = (double) [1.0, 30.0], "
+        "framerate = (fraction) [ 0/1, 30/1 ], "
         "red_mask = (int) 16711680, "
         "green_mask = (int) 65280, "
         "blue_mask = (int) 255, "
@@ -233,6 +233,9 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
           }
 
           mimdec->payload_size = GUINT32_FROM_LE (*((guint32 *) (header + 8)));
+
+          mimdec->current_ts = GUINT32_FROM_LE (*((guint32 *) (header + 20)));
+
           GST_DEBUG ("Got packet, payload size %d", mimdec->payload_size);
 
           gst_adapter_flush (mimdec->adapter, 24);
@@ -299,7 +302,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       }
 
       out_buf = gst_buffer_new_and_alloc (mimdec->buffer_size);
-      GST_BUFFER_TIMESTAMP(out_buf) = GST_BUFFER_TIMESTAMP(buf);
+
       if (!mimic_decode_frame (mimdec->dec, frame_body, GST_BUFFER_DATA (out_buf))) {
           GST_WARNING_OBJECT (mimdec, "mimic_decode_frame error\n");
 
@@ -310,7 +313,18 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
           res = GST_FLOW_ERROR;
           goto out;
       }
-      
+
+      if (mimdec->last_ts != -1) {
+        int diff = mimdec->current_ts - mimdec->last_ts;
+        if (diff < 0 || diff > 5000) {
+          diff = 1000;
+        }
+        mimdec->gst_timestamp += diff * GST_MSECOND;
+      }
+      GST_BUFFER_TIMESTAMP(out_buf) = mimdec->gst_timestamp;
+      mimdec->last_ts = mimdec->current_ts;
+
+
       mimic_get_property(mimdec->dec, "width", &width);
       mimic_get_property(mimdec->dec, "height", &height);
       GST_DEBUG_OBJECT (mimdec, 
@@ -320,7 +334,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
               "bpp", G_TYPE_INT, 24,
               "depth", G_TYPE_INT, 24,
               "endianness", G_TYPE_INT, 4321,
-              "framerate", G_TYPE_DOUBLE, 30.0,
+              "framerate", GST_TYPE_FRACTION, 7, 1,
               "red_mask", G_TYPE_INT, 16711680,
               "green_mask", G_TYPE_INT, 65280,
               "blue_mask", G_TYPE_INT, 255,
@@ -354,6 +368,9 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
         mimdec->buffer_size = -1;
         mimdec->have_header = FALSE;
         mimdec->payload_size = -1;
+        mimdec->gst_timestamp = -1;
+        mimdec->current_ts = -1;
+        mimdec->last_ts = -1;
       }
       break;
     default:
