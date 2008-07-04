@@ -130,7 +130,7 @@ gst_mimdec_init (GstMimDec *mimdec, GstMimDecClass *klass)
   mimdec->payload_size = -1;
   mimdec->last_ts = -1;
   mimdec->current_ts = -1;
-  mimdec->gst_timestamp = -1;
+  mimdec->gst_timestamp = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -167,19 +167,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
   gst_adapter_push (mimdec->adapter, buf);
 
 
-  if (mimdec->gst_timestamp == -1) {
-    GstClock *clock;
-    GstClockTime base_time;
-
-    base_time = gst_element_get_base_time (GST_ELEMENT (mimdec));
-
-    clock = gst_element_get_clock (GST_ELEMENT (mimdec));
-    if (clock != NULL) {
-      mimdec->gst_timestamp = gst_clock_get_time (clock) - base_time;
-      gst_object_unref (clock);
-    }
-  }
-
+  if (!GST_CLOCK_TIME_IS_VALID (mimdec->gst_timestamp))
+    mimdec->gst_timestamp = GST_BUFFER_TIMESTAMP (in);
 
   // do we have enough bytes to read a header
   while (gst_adapter_available (mimdec->adapter) >= (mimdec->have_header ? mimdec->payload_size : 24)) {
@@ -286,7 +275,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       if (diff < 0 || diff > 5000) {
         diff = 1000;
       }
-      mimdec->gst_timestamp += diff * GST_MSECOND;
+      if (GST_CLOCK_TIME_IS_VALID (mimdec->gst_timestamp))
+        mimdec->gst_timestamp += diff * GST_MSECOND;
     }
     GST_BUFFER_TIMESTAMP(out_buf) = mimdec->gst_timestamp;
     mimdec->last_ts = mimdec->current_ts;
@@ -335,7 +325,7 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
         mimdec->buffer_size = -1;
         mimdec->have_header = FALSE;
         mimdec->payload_size = -1;
-        mimdec->gst_timestamp = -1;
+        mimdec->gst_timestamp = GST_CLOCK_TIME_NONE;
         mimdec->current_ts = -1;
         mimdec->last_ts = -1;
       }
