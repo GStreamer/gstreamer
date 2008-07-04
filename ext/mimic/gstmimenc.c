@@ -163,6 +163,8 @@ gst_mimenc_setcaps (GstPad *pad, GstCaps *caps)
     goto out;
   }
 
+  GST_OBJECT_LOCK (filter);
+
   if (width == 320 && height == 240)
     filter->res = MIMIC_RES_HIGH;
   else if (width == 160 && height == 120)
@@ -170,6 +172,7 @@ gst_mimenc_setcaps (GstPad *pad, GstCaps *caps)
   else {
     GST_WARNING_OBJECT (filter, "Invalid resolution %dx%d", width, height);
     ret = FALSE;
+    GST_OBJECT_UNLOCK (filter);
     goto out;
   }
 
@@ -178,6 +181,8 @@ gst_mimenc_setcaps (GstPad *pad, GstCaps *caps)
 
   GST_DEBUG_OBJECT (filter,"Got info from caps w : %d, h : %d",
       filter->width, filter->height);
+
+  GST_OBJECT_UNLOCK (filter);
  out:
   gst_object_unref(filter);
   return ret;
@@ -197,14 +202,15 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
   mimenc = GST_MIMENC (gst_pad_get_parent (pad));
 
   g_return_val_if_fail (GST_IS_MIMENC (mimenc), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_PAD_IS_LINKED (mimenc->srcpad), GST_FLOW_ERROR);
+
+  GST_OBJECT_LOCK (mimenc);
 
   if (mimenc->enc == NULL) {
     mimenc->enc = mimic_open ();
     if (mimenc->enc == NULL) {
       GST_WARNING_OBJECT (mimenc, "mimic_open error\n");
       res = GST_FLOW_ERROR;
-      goto out;
+      goto out_unlock;
     }
 
     if (!mimic_encoder_init (mimenc->enc, mimenc->res)) {
@@ -212,7 +218,7 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
       mimic_close (mimenc->enc);
       mimenc->enc = NULL;
       res = GST_FLOW_ERROR;
-      goto out;
+      goto out_unlock;
     }
 
     if (!mimic_get_property (mimenc->enc, "buffer_size", &mimenc->buffer_size)) {
@@ -220,7 +226,7 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
       mimic_close (mimenc->enc);
       mimenc->enc = NULL;
       res = GST_FLOW_ERROR;
-      goto out;
+      goto out_unlock;
     }
   }
 
@@ -236,7 +242,7 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
     gst_buffer_unref (out_buf);
     gst_buffer_unref (buf);
     res = GST_FLOW_ERROR;
-    goto out;
+    goto out_unlock;
   }
   GST_BUFFER_SIZE (out_buf) = buffer_size;
 
@@ -247,6 +253,8 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
   // now let's create that tcp header
   header = gst_mimenc_create_tcp_header (mimenc, buffer_size,
       GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND);
+
+  GST_OBJECT_UNLOCK (mimenc);
 
   if (header)
   {
@@ -270,6 +278,11 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
   gst_object_unref (mimenc);
 
   return res;
+
+ out_unlock:
+  GST_OBJECT_UNLOCK (mimenc);
+  goto out;
+
 }
 
 static GstBuffer*
@@ -301,12 +314,14 @@ gst_mimenc_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       mimenc = GST_MIMENC (element);
+      GST_OBJECT_LOCK (element);
       if (mimenc->enc != NULL) {
         mimic_close (mimenc->enc);
         mimenc->enc = NULL;
         mimenc->buffer_size = -1;
         mimenc->frames = 0;
       }
+      GST_OBJECT_UNLOCK (element);
       break;
 
     default:

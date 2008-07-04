@@ -49,6 +49,7 @@ struct _GstMimEnc
 
   GstPad *sinkpad, *srcpad;
 
+  /* Protected by the object lock */
   MimCtx *enc;
 
   MimicResEnum res;
