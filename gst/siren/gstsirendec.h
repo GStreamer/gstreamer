@@ -52,6 +52,7 @@ struct _GstSirenDec
 {
   GstElement parent;
 
+  /* Protected by stream lock */
   SirenDecoder     decoder;
 
   GstPad *sinkpad;

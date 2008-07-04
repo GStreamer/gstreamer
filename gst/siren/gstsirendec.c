@@ -167,14 +167,7 @@ gst_siren_dec_chain (GstPad *pad, GstBuffer *buf)
   gint decode_ret = 0;
   guint size = 0;
 
-  GST_LOG_OBJECT (dec, "Transform");
-
-  if (dec->decoder == NULL) {
-    GST_DEBUG ("Siren decoder not set");
-    return GST_FLOW_WRONG_STATE;
-  }
-
-  GST_LOG_OBJECT (dec,"Received buffer of size %d", GST_BUFFER_SIZE (buf));
+  GST_LOG_OBJECT (dec, "Decoding buffer of size %d", GST_BUFFER_SIZE (buf));
 
   size = GST_BUFFER_SIZE (buf) * 16;
   size -= size % 640;
