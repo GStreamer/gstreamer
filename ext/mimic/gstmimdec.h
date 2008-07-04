@@ -48,8 +48,11 @@ struct _GstMimDec
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
+
+  /* Protected by stream lock */
   GstAdapter *adapter;
 
+  /* Protected by object lock */
   MimCtx *dec;
 
   gint buffer_size;

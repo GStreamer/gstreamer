@@ -164,6 +164,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
   buf = GST_BUFFER (in);
   gst_adapter_push (mimdec->adapter, buf);
 
+  GST_OBJECT_LOCK (mimdec);
+
   if (!GST_CLOCK_TIME_IS_VALID (mimdec->gst_timestamp))
     mimdec->gst_timestamp = GST_BUFFER_TIMESTAMP (in);
 
@@ -245,7 +247,9 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
 
       event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
           0, -1, 0);
+      GST_OBJECT_UNLOCK (mimdec);
       result = gst_pad_push_event (mimdec->srcpad, event);
+      GST_OBJECT_LOCK (mimdec);
       if (!result)
       {
         GST_WARNING_OBJECT (mimdec, "gst_pad_push_event failed");
@@ -298,13 +302,16 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
         "height", G_TYPE_INT, height, NULL);
     gst_buffer_set_caps (out_buf, caps);
     gst_caps_unref (caps);
+    GST_OBJECT_UNLOCK (mimdec);
     res = gst_pad_push (mimdec->srcpad, out_buf);
+    GST_OBJECT_LOCK (mimdec);
 
     gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
     mimdec->have_header = FALSE;
   }
 
  out:
+  GST_OBJECT_UNLOCK (mimdec);
   gst_object_unref (mimdec);
 
   return res;
@@ -319,6 +326,7 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_NULL:
       mimdec = GST_MIMDEC (element);
       if (mimdec->dec != NULL) {
+        GST_OBJECT_LOCK (element);
         mimic_close (mimdec->dec);
         mimdec->dec = NULL;
         mimdec->buffer_size = -1;
@@ -327,6 +335,7 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
         mimdec->gst_timestamp = GST_CLOCK_TIME_NONE;
         mimdec->current_ts = -1;
         mimdec->last_ts = -1;
+        GST_OBJECT_UNLOCK (element);
       }
       break;
     default:
