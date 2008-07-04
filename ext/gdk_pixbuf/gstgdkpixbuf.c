@@ -399,6 +399,7 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstBuffer * buf)
     filter->pixbuf_loader = NULL;
   }
 
+  gst_buffer_unref (buf);
   gst_object_unref (filter);
 
   return ret;
@@ -409,6 +410,7 @@ error:
     GST_ELEMENT_ERROR (filter, STREAM, DECODE, (NULL),
         ("gdk_pixbuf_loader_write error: %s", error->message));
     g_error_free (error);
+    gst_buffer_unref (buf);
     gst_object_unref (filter);
     return GST_FLOW_ERROR;
   }
