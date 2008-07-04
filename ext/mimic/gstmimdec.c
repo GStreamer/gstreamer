@@ -63,8 +63,6 @@ static void          gst_mimdec_finalize      (GObject        *object);
 
 static GstFlowReturn gst_mimdec_chain        (GstPad         *pad,
                                               GstBuffer      *in);
-static GstCaps      *gst_mimdec_src_getcaps  (GstPad         *pad);
-
 static GstStateChangeReturn
                      gst_mimdec_change_state (GstElement     *element,
                                               GstStateChange  transition);
@@ -119,7 +117,6 @@ gst_mimdec_init (GstMimDec *mimdec, GstMimDecClass *klass)
 
   mimdec->srcpad = gst_pad_new_from_template (
       gst_static_pad_template_get (&src_factory), "src");
-  gst_pad_set_getcaps_function (mimdec->srcpad, gst_mimdec_src_getcaps);
   gst_element_add_pad (GST_ELEMENT (mimdec), mimdec->srcpad);
 
   mimdec->adapter = gst_adapter_new ();
@@ -343,16 +340,4 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
   }
 
   return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-}
-
-static GstCaps *
-gst_mimdec_src_getcaps (GstPad *pad)
-{
-  GstCaps *caps;
-
-  if (!(caps = GST_PAD_CAPS (pad)))
-    caps = (GstCaps *) gst_pad_get_pad_template_caps (pad);
-  caps = gst_caps_ref (caps);
-
-  return caps;
 }
