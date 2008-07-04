@@ -55,7 +55,7 @@ GST_STATIC_PAD_TEMPLATE (
         "green_mask = (int) 65280, "
         "blue_mask = (int) 255, "
         "height = (int) [16, 4096], "
-        "width = (int) [16, 4096]" 
+        "width = (int) [16, 4096]"
     )
 );
 
@@ -64,12 +64,12 @@ static void          gst_mimdec_base_init    (GstMimDecClass *klass);
 static void          gst_mimdec_init	     (GstMimDec      *mimdec);
 static void          gst_mimdec_finalize      (GObject        *object);
 
-static GstFlowReturn gst_mimdec_chain        (GstPad         *pad, 
+static GstFlowReturn gst_mimdec_chain        (GstPad         *pad,
                                               GstBuffer      *in);
 static GstCaps      *gst_mimdec_src_getcaps  (GstPad         *pad);
 
 static GstStateChangeReturn
-                     gst_mimdec_change_state (GstElement     *element, 
+                     gst_mimdec_change_state (GstElement     *element,
                                               GstStateChange  transition);
 
 static GstElementClass *parent_class = NULL;
@@ -217,7 +217,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
           header = (guchar *) gst_adapter_peek (mimdec->adapter, 24);
           header_size = GUINT16_FROM_LE (*(guint16 *) (header + 0));
           if (header_size != 24) {
-              GST_WARNING_OBJECT (mimdec, 
+              GST_WARNING_OBJECT (mimdec,
                 "invalid frame: header size %d incorrect", header_size);
               gst_adapter_flush (mimdec->adapter, 24);
               res = GST_FLOW_ERROR;
@@ -327,7 +327,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
 
       mimic_get_property(mimdec->dec, "width", &width);
       mimic_get_property(mimdec->dec, "height", &height);
-      GST_DEBUG_OBJECT (mimdec, 
+      GST_DEBUG_OBJECT (mimdec,
           "got WxH %d x %d payload size %d buffer_size %d",
           width, height, mimdec->payload_size, mimdec->buffer_size);
       caps = gst_caps_new_simple ("video/x-raw-rgb",

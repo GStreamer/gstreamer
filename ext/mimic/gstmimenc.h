@@ -53,11 +53,11 @@ struct _GstMimEnc
 
   MimicResEnum res;
   gint buffer_size;
-  guint32 frames;  
+  guint32 frames;
   guint16 height, width;
 };
 
-struct _GstMimEncClass 
+struct _GstMimEncClass
 {
   GstElementClass parent_class;
 };

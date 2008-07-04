@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (c) 2005 INdT.
  * @author Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>
@@ -46,8 +46,8 @@ GST_PLUGIN_DEFINE (
   GST_VERSION_MINOR,
   "mimic",
   "Mimic codec",
-  plugin_init, 
-  VERSION, 
-  "GPL", 
-  "Farsight", 
+  plugin_init,
+  VERSION,
+  "GPL",
+  "Farsight",
   "http://farsight.sf.net/")

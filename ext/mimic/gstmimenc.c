@@ -1,4 +1,4 @@
-   /* 
+   /*
  * GStreamer
  * Copyright (c) 2005 INdT.
  * @author Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>
@@ -75,11 +75,11 @@ static void          gst_mimenc_class_init	      (GstMimEncClass *klass);
 static void          gst_mimenc_base_init	      (GstMimEncClass *klass);
 static void          gst_mimenc_init              (GstMimEnc      *mimenc);
 
-static gboolean      gst_mimenc_setcaps           (GstPad         *pad, 
+static gboolean      gst_mimenc_setcaps           (GstPad         *pad,
                                                    GstCaps        *caps);
-static GstFlowReturn gst_mimenc_chain             (GstPad         *pad, 
+static GstFlowReturn gst_mimenc_chain             (GstPad         *pad,
                                                    GstBuffer      *in);
-static GstBuffer*    gst_mimenc_create_tcp_header (GstMimEnc      *mimenc, 
+static GstBuffer*    gst_mimenc_create_tcp_header (GstMimEnc      *mimenc,
                                                    gint            payload_size);
 
 static GstStateChangeReturn
@@ -236,7 +236,7 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
       res = GST_FLOW_ERROR;
       goto out;
     }
-    
+
     if (!mimic_encoder_init (mimenc->enc, mimenc->res)) {
       GST_WARNING_OBJECT (mimenc, "mimic_encoder_init error\n");
       mimic_close (mimenc->enc);
@@ -244,7 +244,7 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
       res = GST_FLOW_ERROR;
       goto out;
     }
-    
+
     if (!mimic_get_property (mimenc->enc, "buffer_size", &mimenc->buffer_size)) {
       GST_WARNING_OBJECT (mimenc, "mimic_get_property('buffer_size') error\n");
       mimic_close (mimenc->enc);
@@ -260,7 +260,7 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
   out_buf = gst_buffer_new_and_alloc (mimenc->buffer_size);
   GST_BUFFER_TIMESTAMP(out_buf) = GST_BUFFER_TIMESTAMP(buf);
   buffer_size = mimenc->buffer_size;
-  if (!mimic_encode_frame (mimenc->enc, data, GST_BUFFER_DATA (out_buf), 
+  if (!mimic_encode_frame (mimenc->enc, data, GST_BUFFER_DATA (out_buf),
       &buffer_size, ((mimenc->frames % MAX_INTERFRAMES) == 0 ? TRUE : FALSE))) {
     GST_WARNING_OBJECT (mimenc, "mimic_encode_frame error\n");
     gst_buffer_unref (out_buf);
@@ -301,7 +301,7 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
   return res;
 }
 
-static GstBuffer* 
+static GstBuffer*
 gst_mimenc_create_tcp_header (GstMimEnc *mimenc, gint payload_size)
 {
     // 24 bytes
@@ -313,9 +313,9 @@ gst_mimenc_create_tcp_header (GstMimEnc *mimenc, gint payload_size)
     *((guint16 *) (p + 2)) = GUINT16_TO_LE(mimenc->width);
     *((guint16 *) (p + 4)) = GUINT16_TO_LE(mimenc->height);
     *((guint16 *) (p + 6)) = 0;
-    *((guint32 *) (p + 8)) = GUINT32_TO_LE(payload_size); 
-    *((guint32 *) (p + 12)) = GUINT32_TO_LE(GST_MAKE_FOURCC ('M', 'L', '2', '0')); 
-    *((guint32 *) (p + 16)) = 0; 
+    *((guint32 *) (p + 8)) = GUINT32_TO_LE(payload_size);
+    *((guint32 *) (p + 12)) = GUINT32_TO_LE(GST_MAKE_FOURCC ('M', 'L', '2', '0'));
+    *((guint32 *) (p + 16)) = 0;
     *((guint32 *) (p + 20)) = 0; /* FIXME: must be timestamp */
 
     return buf_header;

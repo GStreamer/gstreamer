@@ -60,7 +60,7 @@ struct _GstMimDec
   GstClockTime gst_timestamp;
 };
 
-struct _GstMimDecClass 
+struct _GstMimDecClass
 {
   GstElementClass parent_class;
 };
