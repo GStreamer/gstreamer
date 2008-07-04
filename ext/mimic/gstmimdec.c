@@ -221,7 +221,6 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       frame_body = (guchar *) gst_adapter_peek (mimdec->adapter, mimdec->payload_size);
 
       if (mimdec->dec == NULL) {
-          GstSegment segment;
           GstEvent * event;
           gboolean result;
 
@@ -258,10 +257,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
               goto out;
           }
 
-          gst_segment_init (&segment, GST_FORMAT_TIME);
-          event = gst_event_new_new_segment (FALSE, segment.rate,
-              segment.format, segment.start, segment.stop, segment.time);
-
+          event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+              0, -1, 0);
           result = gst_pad_push_event (mimdec->srcpad, event);
           if (!result)
           {
