@@ -52,7 +52,9 @@ struct _GstSirenEnc
 {
   GstElement parent;
 
+  /* protected by the stream lock */
   SirenEncoder     encoder;
+  /* protected by the object lock */
   GstAdapter *adapter;
 
   GstPad *srcpad;
