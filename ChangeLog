@@ -3,6 +3,15 @@
 	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
 
 	* configure.ac:
+	Fix checking of headers for the OSS4 plugin to fail if a single
+	header doesn't exist already. AC_CHECK_HEADERS only fails if none
+	of the headers is found. Fixes bug #541543.
+
+2008-07-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
+
+	* configure.ac:
 	* gst/festival/Makefile.am:
 	* gst/festival/gstfestival.c:
 	Fix built of the festival plugin with mingw32 by linking to ws2_32.dll

@@ -1083,7 +1083,8 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_OSS4, true)
 AG_GST_CHECK_FEATURE(OSS4, [Open Sound System 4], oss4, [
   AC_MSG_CHECKING([Checking if we can build the OSS4 elements])
   AC_CHECK_HEADERS([fcntl.h sys/ioctl.h sys/stat.h sys/types.h],
-      [HAVE_OSS4="yes"], [HAVE_OSS4="no"])
+      [test -z "$OSS4_MISSING_HEADER" && HAVE_OSS4="yes"],
+      [OSS4_MISSING_HEADER="yes";HAVE_OSS4="no"])
 ])
 
 dnl *** wininet ***
