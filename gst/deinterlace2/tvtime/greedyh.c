@@ -182,6 +182,8 @@ greedyDScaler_C (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
   }
 }
 
+#ifdef HAVE_CPU_I386
+
 #define IS_MMXEXT
 #define SIMD_TYPE MMXEXT
 #define FUNCT_NAME greedyDScaler_MMXEXT
@@ -206,6 +208,8 @@ greedyDScaler_C (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
 #undef IS_MMX
 #undef FUNCT_NAME
 
+#endif
+
 static void
 deinterlace_frame_di_greedyh (GstDeinterlace2 * object)
 {
@@ -223,6 +227,7 @@ deinterlace_frame_di_greedyh (GstDeinterlace2 * object)
   unsigned char *L2P;           // ptr to prev Line2
   unsigned char *Dest = GST_BUFFER_DATA (object->out_buf);
 
+#ifdef HAVE_CPU_I386
   if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMXEXT) {
     func = greedyDScaler_MMXEXT;
   } else if (object->cpu_feature_flags & OIL_IMPL_FLAG_3DNOW) {
@@ -232,6 +237,9 @@ deinterlace_frame_di_greedyh (GstDeinterlace2 * object)
   } else {
     func = greedyDScaler_C;
   }
+#else
+  func = greedyDScaler_C;
+#endif
 
   // copy first even line no matter what, and the first odd line if we're
   // processing an EVEN field. (note diff from other deint rtns.)

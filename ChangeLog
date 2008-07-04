@@ -1,5 +1,11 @@
 2008-07-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/tvtime/greedyh.c:
+	(deinterlace_frame_di_greedyh):
+	Only build the assembly optimized implementations on x86.
+
+2008-07-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
 
 	* configure.ac:
