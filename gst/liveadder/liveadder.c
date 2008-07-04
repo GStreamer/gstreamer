@@ -585,34 +585,21 @@ newseg_wrong_format:
   }
 }
 
-/* FIXME:
- *
- * When we add a new stream (or remove a stream) the duration might
- * also become invalid again and we need to post a new DURATION
- * message to notify this fact to the parent.
- * For now we take the max of all the upstream elements so the simple
- * cases work at least somewhat.
- */
 static gboolean
-gst_live_adder_query_duration (GstLiveAdder * adder, GstQuery * query)
+gst_live_adder_query_pos_dur (GstLiveAdder * adder, GstFormat informat,
+    gboolean position, gint64 *outvalue)
 {
-  gint64 max;
-  gboolean res;
-  GstFormat format;
+  gint64 max = G_MININT64;
+  gboolean res = TRUE;
   GstIterator *it;
-  gboolean done;
+  gboolean done = FALSE;
 
-  /* parse format */
-  gst_query_parse_duration (query, &format, NULL);
-
-  max = -1;
-  res = TRUE;
-  done = FALSE;
 
   it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (adder));
   while (!done) {
     GstIteratorResult ires;
     gpointer item;
+    GstFormat format = informat;
 
     ires = gst_iterator_next (it, &item);
     switch (ires) {
@@ -622,20 +609,29 @@ gst_live_adder_query_duration (GstLiveAdder * adder, GstQuery * query)
       case GST_ITERATOR_OK:
         {
           GstPad *pad = GST_PAD_CAST (item);
-          gint64 duration;
+          gint64 value;
+          gboolean curres;
 
           /* ask sink peer for duration */
-          res &= gst_pad_query_peer_duration (pad, &format, &duration);
+          if (position)
+            curres = gst_pad_query_peer_position (pad, &format, &value);
+          else
+            curres = gst_pad_query_peer_duration (pad, &format, &value);
+
           /* take max from all valid return values */
-          if (res) {
+          /* Only if the format is the one we requested, otherwise ignore it ?
+           */
+
+          if (curres && format == informat) {
+            res &= curres;
+
             /* valid unknown length, stop searching */
-            if (duration == -1) {
-              max = duration;
+            if (value == -1) {
+              max = value;
               done = TRUE;
+            } else if (value > max) {
+              max = value;
             }
-            /* else see if bigger than current max */
-            else if (duration > max)
-              max = duration;
           }
           break;
         }
@@ -651,6 +647,32 @@ gst_live_adder_query_duration (GstLiveAdder * adder, GstQuery * query)
   }
   gst_iterator_free (it);
 
+  if (res)
+    *outvalue = max;
+
+  return res;
+}
+
+/* FIXME:
+ *
+ * When we add a new stream (or remove a stream) the duration might
+ * also become invalid again and we need to post a new DURATION
+ * message to notify this fact to the parent.
+ * For now we take the max of all the upstream elements so the simple
+ * cases work at least somewhat.
+ */
+static gboolean
+gst_live_adder_query_duration (GstLiveAdder * adder, GstQuery * query)
+{
+  GstFormat format;
+  gint64 max;
+  gboolean res;
+
+  /* parse format */
+  gst_query_parse_duration (query, &format, NULL);
+
+  res = gst_live_adder_query_pos_dur (adder, format, FALSE, &max);
+
   if (res) {
     /* and store the max */
     gst_query_set_duration (query, format, max);
@@ -658,6 +680,27 @@ gst_live_adder_query_duration (GstLiveAdder * adder, GstQuery * query)
 
   return res;
 }
+
+static gboolean
+gst_live_adder_query_position (GstLiveAdder * adder, GstQuery * query)
+{
+  GstFormat format;
+  gint64 max;
+  gboolean res;
+
+  /* parse format */
+  gst_query_parse_position (query, &format, NULL);
+
+  res = gst_live_adder_query_pos_dur (adder, format, TRUE, &max);
+
+  if (res) {
+    /* and store the max */
+    gst_query_set_position (query, format, max);
+  }
+
+  return res;
+}
+
 
 
 static gboolean
@@ -743,6 +786,9 @@ gst_live_adder_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_DURATION:
       res = gst_live_adder_query_duration (adder, query);
+      break;
+    case GST_QUERY_POSITION:
+      res = gst_live_adder_query_position (adder, query);
       break;
     default:
       res = gst_pad_query_default (pad, query);
