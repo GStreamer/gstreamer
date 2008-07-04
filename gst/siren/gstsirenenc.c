@@ -234,6 +234,8 @@ gst_siren_enc_chain (GstPad *pad, GstBuffer *buf)
 
   ret = gst_pad_push (enc->srcpad, encoded);
 
+  gst_object_unref (enc);
+
   return ret;
 }
 
