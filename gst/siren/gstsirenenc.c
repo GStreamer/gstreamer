@@ -124,7 +124,7 @@ static void
 gst_siren_enc_init (GstSirenEnc *enc, GstSirenEncClass *klass)
 {
 
-  GST_DEBUG ("Initializing");
+  GST_DEBUG_OBJECT (enc, "Initializing");
   enc->encoder = Siren7_NewEncoder (16000);
   enc->adapter = gst_adapter_new ();
 
@@ -139,7 +139,7 @@ gst_siren_enc_init (GstSirenEnc *enc, GstSirenEncClass *klass)
 
   enc->srccaps = gst_static_pad_template_get_caps (&srctemplate);
 
-  GST_DEBUG ("Init done");
+  GST_DEBUG_OBJECT (enc, "Init done");
 }
 
 static void
@@ -147,7 +147,7 @@ gst_siren_enc_dispose (GObject *object)
 {
   GstSirenEnc *enc = GST_SIREN_ENC (object);
 
-  GST_DEBUG ("Disposing");
+  GST_DEBUG_OBJECT (object, "Disposing");
 
   if (enc->encoder) {
     Siren7_CloseEncoder (enc->encoder);
@@ -166,9 +166,6 @@ gst_siren_enc_dispose (GObject *object)
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-
-  GST_DEBUG ("Dispose done");
-
 }
 
 static GstFlowReturn
@@ -182,8 +179,6 @@ gst_siren_enc_chain (GstPad *pad, GstBuffer *buf)
   gint encode_ret = 0;
   gint size = 0;
 
-  GST_DEBUG ("Transform");
-
   if (enc->encoder == NULL) {
     GST_WARNING ("Siren encoder not set");
     return GST_FLOW_WRONG_STATE;
@@ -195,7 +190,7 @@ gst_siren_enc_chain (GstPad *pad, GstBuffer *buf)
 
   gst_adapter_push (enc->adapter, buf);
 
-  GST_DEBUG ("Received buffer of size %d with adapter of size : %d",
+  GST_LOG_OBJECT (enc, "Received buffer of size %d with adapter of size : %d",
       GST_BUFFER_SIZE (buf), gst_adapter_available (enc->adapter));
 
   size = gst_adapter_available (enc->adapter);
@@ -215,13 +210,13 @@ gst_siren_enc_chain (GstPad *pad, GstBuffer *buf)
   while (gst_adapter_available (enc->adapter) >= 640  &&
       ret == GST_FLOW_OK) {
 
-    GST_DEBUG ("Encoding frame");
+    GST_LOG_OBJECT (enc, "Encoding frame");
 
     encode_ret = Siren7_EncodeFrame (enc->encoder,
         (guint8 *)gst_adapter_peek (enc->adapter, 640),
         data + offset);
     if (encode_ret != 0) {
-      GST_ERROR ("Siren7_EncodeFrame returned %d", encode_ret);
+      GST_ERROR_OBJECT (enc, "Siren7_EncodeFrame returned %d", encode_ret);
       ret = GST_FLOW_ERROR;
     }
 
@@ -229,7 +224,7 @@ gst_siren_enc_chain (GstPad *pad, GstBuffer *buf)
     offset += 40;
   }
 
-  GST_DEBUG ("Finished encoding : %d", offset);
+  GST_LOG_OBJECT (enc, "Finished encoding : %d", offset);
 
   GST_BUFFER_SIZE (encoded) = offset;
 

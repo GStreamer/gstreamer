@@ -198,7 +198,7 @@ gst_siren_dec_chain (GstPad *pad, GstBuffer *buf)
   while((inoffset + 40 <= GST_BUFFER_SIZE (buf)) &&
       ret == GST_FLOW_OK) {
 
-    GST_DEBUG ("Decoding frame");
+    GST_LOG_OBJECT (dec, "Decoding frame");
 
     decode_ret = Siren7_DecodeFrame (dec->decoder,
         GST_BUFFER_DATA (buf) + inoffset,
