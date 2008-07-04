@@ -153,6 +153,7 @@ gst_siren_enc_dispose (GObject *object)
     Siren7_CloseEncoder (enc->encoder);
     enc->encoder = NULL;
   }
+
   if (enc->adapter) {
     g_object_unref (enc->adapter);
     enc->adapter = NULL;
