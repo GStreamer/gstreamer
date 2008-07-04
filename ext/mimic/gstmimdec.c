@@ -270,15 +270,17 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       goto out;
     }
 
+    GST_BUFFER_TIMESTAMP(out_buf) = mimdec->gst_timestamp;
+
     if (mimdec->last_ts != -1) {
       int diff = mimdec->current_ts - mimdec->last_ts;
       if (diff < 0 || diff > 5000) {
         diff = 1000;
+        mimdec->gst_timestamp = GST_CLOCK_TIME_NONE;
       }
       if (GST_CLOCK_TIME_IS_VALID (mimdec->gst_timestamp))
         mimdec->gst_timestamp += diff * GST_MSECOND;
     }
-    GST_BUFFER_TIMESTAMP(out_buf) = mimdec->gst_timestamp;
     mimdec->last_ts = mimdec->current_ts;
 
 
