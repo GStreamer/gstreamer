@@ -76,7 +76,8 @@ static gboolean      gst_mimenc_setcaps           (GstPad         *pad,
 static GstFlowReturn gst_mimenc_chain             (GstPad         *pad,
                                                    GstBuffer      *in);
 static GstBuffer*    gst_mimenc_create_tcp_header (GstMimEnc      *mimenc,
-                                                   gint            payload_size);
+                                                   guint32         payload_size,
+                                                   guint32         timestamp);
 
 static GstStateChangeReturn
                      gst_mimenc_change_state      (GstElement     *element,
@@ -244,7 +245,8 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
   ++mimenc->frames;
 
   // now let's create that tcp header
-  header = gst_mimenc_create_tcp_header (mimenc, buffer_size);
+  header = gst_mimenc_create_tcp_header (mimenc, buffer_size,
+      GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND);
 
   if (header)
   {
@@ -271,7 +273,8 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
 }
 
 static GstBuffer*
-gst_mimenc_create_tcp_header (GstMimEnc *mimenc, gint payload_size)
+gst_mimenc_create_tcp_header (GstMimEnc *mimenc, guint32 payload_size,
+    guint32 timestamp)
 {
     // 24 bytes
     GstBuffer *buf_header = gst_buffer_new_and_alloc (24);
@@ -285,7 +288,7 @@ gst_mimenc_create_tcp_header (GstMimEnc *mimenc, gint payload_size)
     *((guint32 *) (p + 8)) = GUINT32_TO_LE(payload_size);
     *((guint32 *) (p + 12)) = GUINT32_TO_LE(GST_MAKE_FOURCC ('M', 'L', '2', '0'));
     *((guint32 *) (p + 16)) = 0;
-    *((guint32 *) (p + 20)) = 0; /* FIXME: must be timestamp */
+    *((guint32 *) (p + 20)) = timestamp;
 
     return buf_header;
 }
