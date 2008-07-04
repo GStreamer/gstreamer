@@ -24,7 +24,6 @@
 #define __GST_SIREN_ENC_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
 #include <gst/base/gstadapter.h>
 
 #include "siren7.h"
@@ -51,22 +50,20 @@ typedef struct _GstSirenEncPrivate GstSirenEncPrivate;
 
 struct _GstSirenEnc
 {
-  GstBaseTransform parent;
+  GstElement parent;
 
   SirenEncoder     encoder;
   GstAdapter *adapter;
 
-  /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
+  GstPad *srcpad;
+  GstPad *sinkpad;
+
+  GstCaps *srccaps;
 };
 
 struct _GstSirenEncClass
 {
-  GstBaseTransformClass parent_class;
-
-
-  /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
+  GstElementClass parent_class;
 };
 
 GType gst_siren_enc_get_type (void);
