@@ -161,11 +161,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
   mimdec = GST_MIMDEC (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_IS_MIMDEC (mimdec), GST_FLOW_ERROR);
 
-  g_return_val_if_fail(GST_PAD_IS_LINKED(mimdec->srcpad), GST_FLOW_ERROR);
-
   buf = GST_BUFFER (in);
   gst_adapter_push (mimdec->adapter, buf);
-
 
   if (!GST_CLOCK_TIME_IS_VALID (mimdec->gst_timestamp))
     mimdec->gst_timestamp = GST_BUFFER_TIMESTAMP (in);
