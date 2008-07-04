@@ -79,16 +79,23 @@
 #include "config.h"
 #endif
 
+#include <glib.h>               /* Needed for G_OS_XXXX macros */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <string.h>
 #include <sys/types.h>
+#ifdef G_OS_WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
 
 #include "gstfestival.h"
 #include <gst/audio/audio.h>

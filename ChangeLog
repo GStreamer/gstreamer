@@ -1,3 +1,13 @@
+2008-07-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
+
+	* configure.ac:
+	* gst/festival/Makefile.am:
+	* gst/festival/gstfestival.c:
+	Fix built of the festival plugin with mingw32 by linking to ws2_32.dll
+	and including winsock headers. Fixes bug #541522.
+
 2008-07-03  Peter Kjellerstedt  <pkj@axis.com>
 
 	* ChangeLog:
