@@ -140,11 +140,11 @@ static void
 gst_siren_dec_init (GstSirenDec *dec, GstSirenDecClass *klass)
 {
 
-  GST_DEBUG ("Initializing");
+  GST_DEBUG_OBJECT (dec, "Initializing");
   dec->decoder = NULL;
   dec->adapter = gst_adapter_new ();
 
-  GST_DEBUG ("Init done");
+  GST_DEBUG_OBJECT (dec, "Init done");
 }
 
 static void
@@ -152,7 +152,7 @@ gst_siren_dec_dispose (GObject *object)
 {
   GstSirenDec *dec = GST_SIREN_DEC (object);
 
-  GST_DEBUG ("Disposing");
+  GST_DEBUG_OBJECT (dec, "Disposing");
 
   if (dec->decoder) {
     Siren7_CloseDecoder (dec->decoder);
@@ -164,9 +164,6 @@ gst_siren_dec_dispose (GObject *object)
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-
-  GST_DEBUG ("Dispose done");
-
 }
 
 static gboolean
@@ -284,7 +281,7 @@ gst_siren_dec_transform (GstBaseTransform *trans, GstBuffer *inbuf,
   gint offset = 0;
   gint decode_ret = 0;
 
-  GST_DEBUG ("Transform");
+  GST_LOG_OBJECT (dec, "Transform");
 
   if (dec->decoder == NULL) {
     GST_DEBUG ("Siren decoder not set");
@@ -298,7 +295,7 @@ gst_siren_dec_transform (GstBaseTransform *trans, GstBuffer *inbuf,
   gst_buffer_ref (inbuf);
   gst_adapter_push (dec->adapter, inbuf);
 
-  GST_DEBUG ("Received buffer of size %d with adapter of size : %d",
+  GST_LOG_OBJECT (dec,"Received buffer of size %d with adapter of size : %d",
       GST_BUFFER_SIZE (inbuf), gst_adapter_available (dec->adapter));
 
   data = GST_BUFFER_DATA (outbuf);
@@ -313,7 +310,7 @@ gst_siren_dec_transform (GstBaseTransform *trans, GstBuffer *inbuf,
         (guint8 *) gst_adapter_peek (dec->adapter, 40),
         data + offset);
     if (decode_ret != 0) {
-      GST_DEBUG ("Siren7_DecodeFrame returned %d", decode_ret);
+      GST_ERROR_OBJECT (dec, "Siren7_DecodeFrame returned %d", decode_ret);
       ret = GST_FLOW_ERROR;
     }
 
@@ -321,16 +318,16 @@ gst_siren_dec_transform (GstBaseTransform *trans, GstBuffer *inbuf,
     offset += 640;
   }
 
-  GST_DEBUG ("Finished decoding : %d", offset);
+  GST_LOG_OBJECT (dec, "Finished decoding : %d", offset);
   if (offset != GST_BUFFER_SIZE (outbuf)) {
-    GST_DEBUG ("didn't decode enough : offfset (%d) != BUFFER_SIZE (%d)",
+    GST_ERROR_OBJECT (dec,
+        "didn't decode enough : offfset (%d) != BUFFER_SIZE (%d)",
         offset, GST_BUFFER_SIZE (outbuf));
     return GST_FLOW_ERROR;
   }
 
   return ret;
 }
-
 
 
 gboolean
