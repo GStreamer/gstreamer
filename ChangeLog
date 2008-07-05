@@ -1,3 +1,10 @@
+2008-07-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Tal Shalif <tshalif at nargila dot org>
+
+	* ext/dvdnav/dvdnavsrc.c: (gst_dvd_nav_src_stop):
+	Prevent double free. Fixes bug #541697.
+
 2008-07-05  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_base_init),

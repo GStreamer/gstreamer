@@ -620,8 +620,8 @@ gst_dvd_nav_src_update_tmaps (GstDvdNavSrc * src)
       int tmap_length;
 
       tmap_length =
-          (src->title_tmap->map_ent[src->title_tmap->
-              nr_of_entries] & 0x7fffffff);
+          (src->title_tmap->map_ent[src->
+              title_tmap->nr_of_entries] & 0x7fffffff);
       if (tmap_length >= dvdnav_length) {
         GST_LOG_OBJECT (src, "Using time maps for seeking");
       } else {
@@ -1682,8 +1682,7 @@ gst_dvd_nav_src_process_next_block (GstDvdNavSrc * src, GstBuffer ** p_buf)
             GST_DVD_NAV_SRC_PAUSE_INTERVAL);
         GstClock *system_clock = gst_system_clock_obtain ();
         GstClockTime cur_time = gst_clock_get_internal_time (system_clock);
-        GstClockID id =
-            gst_clock_new_single_shot_id (system_clock,
+        GstClockID id = gst_clock_new_single_shot_id (system_clock,
             cur_time + GST_DVD_NAV_SRC_PAUSE_INTERVAL);
         gst_clock_id_wait (id, NULL);
         gst_clock_id_unref (id);
@@ -2067,8 +2066,10 @@ gst_dvd_nav_src_stop (GstBaseSrc * basesrc)
   }
 
   /* Close old vts file if opened */
-  if (src->vts_file)
+  if (src->vts_file) {
     ifoClose (src->vts_file);
+    src->vts_file = NULL;
+  }
 
   /* Close the video manager */
   ifoClose (src->vmg_file);
