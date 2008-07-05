@@ -423,7 +423,7 @@ gst_child_proxy_child_added (GstObject * object, GstObject * child)
 /**
  * gst_child_proxy_child_removed:
  * @object: the parent object
- * @child: the newly added child
+ * @child: the removed child
  *
  * Emits the "child-removed" signal.
  */

@@ -1,3 +1,8 @@
+2008-07-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/gstchildproxy.c:
+	Fix copy&paste error in gst_child_proxy_removed() documentation.
+
 2008-07-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gstplugin.c: (CHECK_PLUGIN_DESC_FIELD), (gst_plugin_load_file):
