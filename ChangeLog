@@ -1,3 +1,9 @@
+2008-07-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/tvtime/greedyh.asm:
+	Support widths that are not a multiply of 4 when using the assembly
+	optimized greedyh implementations.
+
 2008-07-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/tvtime/greedyh.c:
