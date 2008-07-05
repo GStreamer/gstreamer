@@ -129,6 +129,9 @@ struct _GstDeinterlace2
   guint frame_size;
   gint frame_rate_n, frame_rate_d;
 
+  /* Duration of one field */
+  GstClockTime field_duration;
+
   GstDeinterlace2Fields fields;
 
   GstDeinterlace2Methods method_id;

@@ -1,5 +1,17 @@
 2008-07-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace_method_get_latency),
+	(gst_deinterlace2_set_method), (gst_deinterlace2_class_init),
+	(gst_deinterlace2_push_history), (gst_deinterlace2_chain),
+	(gst_deinterlace2_setcaps), (gst_deinterlace2_src_query):
+	* gst/deinterlace2/gstdeinterlace2.h:
+	Include latency of the method in the returned latency.
+
+	Fix outputting of all fields, i.e. doubling of the framerate.
+
+2008-07-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/Makefile.am:
 	* gst/deinterlace2/gstdeinterlace2.c:
 	(gst_deinterlace_method_class_init), (gst_deinterlace_method_init),
