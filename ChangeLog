@@ -1,3 +1,16 @@
+2008-07-05  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_base_init),
+	(gst_dvd_demux_get_audio_stream),
+	(gst_dvd_demux_get_subpicture_stream),
+	(gst_dvd_demux_parse_packhead), (gst_dvd_demux_reset):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_init),
+	(gst_mpeg_demux_process_event), (gst_mpeg_demux_init_stream),
+	(gst_mpeg_demux_parse_packhead), (gst_mpeg_demux_reset):
+	* gst/mpegstream/gstmpegdemux.h:
+	Resend tags event after a FLUSH (seek) to support prerolling
+	a partial pipeline.
+
 2008-07-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac:

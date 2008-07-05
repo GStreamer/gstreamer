@@ -141,6 +141,8 @@ static void gst_dvd_demux_init (GstDVDDemux * dvd_demux,
 
 static gboolean gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse,
     GstEvent * event);
+static gboolean gst_dvd_demux_parse_packhead (GstMPEGParse * mpeg_parse,
+    GstBuffer * buffer);
 
 static gboolean gst_dvd_demux_handle_dvd_event
     (GstDVDDemux * dvd_demux, GstEvent * event);
@@ -195,6 +197,7 @@ gst_dvd_demux_base_init (gpointer klass)
 
   mpeg_parse_class->send_buffer = NULL;
   mpeg_parse_class->process_event = gst_dvd_demux_process_event;
+  mpeg_parse_class->parse_packhead = gst_dvd_demux_parse_packhead;
 
   /* sink pad */
   gst_element_class_add_pad_template (element_class,
@@ -669,6 +672,7 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
           gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
               GST_TAG_LANGUAGE_CODE, lang_code, NULL);
         }
+        str->tags = gst_tag_list_copy (list);
         gst_element_found_tags_for_pad (GST_ELEMENT (mpeg_demux),
             str->pad, list);
       }
@@ -758,6 +762,7 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
 
         gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
             GST_TAG_LANGUAGE_CODE, lang_code, NULL);
+        str->tags = gst_tag_list_copy (list);
         gst_element_found_tags_for_pad (GST_ELEMENT (mpeg_demux),
             str->pad, list);
       }
@@ -766,6 +771,31 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
   }
 
   return str;
+}
+
+static gboolean
+gst_dvd_demux_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
+{
+  GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (mpeg_parse);
+  GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_parse);
+  gboolean pending_tags = mpeg_demux->pending_tags;
+
+  GST_MPEG_PARSE_CLASS (parent_class)->parse_packhead (mpeg_parse, buffer);
+
+  if (pending_tags) {
+    GstMPEGStream **streams;
+    guint i, num;
+
+    streams = dvd_demux->subpicture_stream;
+    num = GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS;
+    for (i = 0; i < num; ++i) {
+      if (streams[i] != NULL && streams[i]->tags != NULL)
+        gst_pad_push_event (streams[i]->pad,
+            gst_event_new_tag (gst_tag_list_copy (streams[i]->tags)));
+    }
+  }
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -1134,6 +1164,8 @@ gst_dvd_demux_reset (GstDVDDemux * dvd_demux)
 
       gst_element_remove_pad (GST_ELEMENT (dvd_demux),
           dvd_demux->subpicture_stream[i]->pad);
+      if (dvd_demux->subpicture_stream[i]->tags)
+        gst_tag_list_free (dvd_demux->subpicture_stream[i]->tags);
       g_free (dvd_demux->subpicture_stream[i]);
       dvd_demux->subpicture_stream[i] = NULL;
     }

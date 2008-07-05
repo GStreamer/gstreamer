@@ -231,6 +231,7 @@ gst_mpeg_demux_init (GstMPEGDemux * mpeg_demux, GstMPEGDemuxClass * klass)
   mpeg_demux->max_gap_tolerance = GST_CLOCK_TIME_NONE;
 
   mpeg_demux->last_pts = -1;
+  mpeg_demux->pending_tags = FALSE;
 }
 
 
@@ -244,6 +245,8 @@ gst_mpeg_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       ret = GST_MPEG_PARSE_CLASS (parent_class)->process_event (mpeg_parse,
           event);
+
+      demux->pending_tags = TRUE;
 
       gst_mpeg_streams_reset_last_flow (demux->video_stream,
           GST_MPEG_DEMUX_NUM_VIDEO_STREAMS);
@@ -327,6 +330,7 @@ gst_mpeg_demux_init_stream (GstMPEGDemux * mpeg_demux,
 
   str->last_flow = GST_FLOW_OK;
   str->buffers_sent = 0;
+  str->tags = NULL;
 }
 
 static GstMPEGStream *
@@ -493,12 +497,27 @@ gst_mpeg_demux_get_private_stream (GstMPEGDemux * mpeg_demux,
 static gboolean
 gst_mpeg_demux_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
 {
+  GstMPEGDemux *demux = GST_MPEG_DEMUX (mpeg_parse);
   guint8 *buf;
 
   parent_class->parse_packhead (mpeg_parse, buffer);
 
   buf = GST_BUFFER_DATA (buffer);
   /* do something useful here */
+
+  if (demux->pending_tags) {
+    GstMPEGStream **streams;
+    guint i, num;
+
+    streams = demux->audio_stream;
+    num = GST_MPEG_DEMUX_NUM_AUDIO_STREAMS;
+    for (i = 0; i < num; ++i) {
+      if (streams[i] != NULL && streams[i]->tags != NULL)
+        gst_pad_push_event (streams[i]->pad,
+            gst_event_new_tag (gst_tag_list_copy (streams[i]->tags)));
+    }
+    demux->pending_tags = FALSE;
+  }
 
   return TRUE;
 }
@@ -1323,6 +1342,8 @@ gst_mpeg_demux_reset (GstMPEGDemux * mpeg_demux)
           gst_event_new_eos ());
       gst_element_remove_pad (GST_ELEMENT (mpeg_demux),
           mpeg_demux->audio_stream[i]->pad);
+      if (mpeg_demux->audio_stream[i]->tags)
+        gst_tag_list_free (mpeg_demux->audio_stream[i]->tags);
       g_free (mpeg_demux->audio_stream[i]);
       mpeg_demux->audio_stream[i] = NULL;
     }
@@ -1351,6 +1372,7 @@ gst_mpeg_demux_reset (GstMPEGDemux * mpeg_demux)
 
   mpeg_demux->index = NULL;
   mpeg_demux->last_pts = -1;
+  mpeg_demux->pending_tags = FALSE;
 
   /*
    * Don't adjust things that are only for subclass use
