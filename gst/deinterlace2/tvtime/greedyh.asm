@@ -240,4 +240,9 @@ FUNCT_NAME (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
       /* FIXME: breaks unless compiling with -mmmx
          "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7", */
       "memory", "cc");
+
+      if (size % 8 != 0) {
+        int offset = GST_ROUND_DOWN_8 (size);
+        greedyDScaler_C (L1 + offset, L2 + offset, L3 + offset, L2P + offset, Dest + offset, size % 8);
+      }
 }
