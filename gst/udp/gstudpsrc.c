@@ -593,7 +593,7 @@ gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri)
   location = gst_uri_get_location (uri);
   if (!location)
     return FALSE;
-  colptr = strstr (location, ":");
+  colptr = strrchr (location, ':');
   if (colptr != NULL) {
     g_free (src->multi_group);
     src->multi_group = g_strndup (location, colptr - location);
