@@ -49,6 +49,13 @@ typedef enum {
 } GstGLDisplayConversion;
 
 
+//Projection type
+typedef enum {
+    GST_GL_DISPLAY_PROJECTION_ORTHO2D,
+    GST_GL_DISPLAY_PROJECTION_PERSPECIVE
+} GstGLDisplayProjection;
+
+
 //Message type
 typedef enum {
     GST_GL_DISPLAY_ACTION_CREATE_CONTEXT,
@@ -64,7 +71,6 @@ typedef enum {
     GST_GL_DISPLAY_ACTION_DO_DOWNLOAD,   
     GST_GL_DISPLAY_ACTION_GEN_FBO, 
     GST_GL_DISPLAY_ACTION_USE_FBO,
-    GST_GL_DISPLAY_ACTION_USE_FBO2,
     GST_GL_DISPLAY_ACTION_DEL_FBO,  
     GST_GL_DISPLAY_ACTION_GEN_SHADER,
     GST_GL_DISPLAY_ACTION_DEL_SHADER
@@ -91,8 +97,7 @@ typedef void (* CRCB) ( GLuint, GLuint );
 typedef gboolean (* CDCB) ( GLuint, GLuint, GLuint);
 
 //opengl scene callback
-typedef void (* GLCB) ( GLuint, GLuint, GLuint, GLhandleARB);
-typedef void (* GLCB2) ( gpointer* p1, gpointer* p2, gint w, gint h);
+typedef void (* GLCB) ( gint, gint, guint, gpointer stuff);
 
 struct _GstGLDisplay {
     GObject object;
@@ -121,7 +126,6 @@ struct _GstGLDisplay {
     GCond* cond_do_download;
     GCond* cond_gen_fbo;
     GCond* cond_use_fbo;
-    GCond* cond_use_fbo_2;
     GCond* cond_del_fbo;
     GCond* cond_gen_shader;
     GCond* cond_del_shader;
@@ -168,10 +172,12 @@ struct _GstGLDisplay {
     GLuint use_fbo_width;
     GLuint use_fbo_height;
     GLCB use_fbo_scene_cb;
-    GLhandleARB use_shader;
-    GLCB2 use_fbo_scene_cb_2;
-    gpointer* p1;
-    gpointer* p2;
+    gdouble use_fbo_proj_param1;
+    gdouble use_fbo_proj_param2;
+    gdouble use_fbo_proj_param3;
+    gdouble use_fbo_proj_param4;
+    GstGLDisplayProjection use_fbo_projection;
+    gpointer* use_fbo_stuff;
     GLuint input_texture_width;
     GLuint input_texture_height;
     GLuint input_texture;
@@ -263,11 +269,10 @@ void gst_gl_display_gen_fbo (GstGLDisplay* display, gint width, gint height,
                              guint* fbo, guint* depthbuffer);
 void gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint texture_fbo_height,
                              guint fbo, guint depth_buffer, guint texture_fbo, GLCB cb,
-                             guint input_texture_width, guint input_texture_height, guint input_texture,
-                             GLhandleARB shader);
-void gst_gl_display_use_fbo_2 (GstGLDisplay* display, gint texture_fbo_width, gint texture_fbo_height,
-                               guint fbo, guint depth_buffer, guint texture_fbo, GLCB2 cb2,
-                               gpointer* p1, gpointer* p2);
+                             gint input_texture_width, gint input_texture_height, guint input_texture,
+                             gdouble proj_param1, gdouble proj_param2,
+                             gdouble proj_param3, gdouble proj_param4,
+                             GstGLDisplayProjection projection, gpointer* stuff);
 void gst_gl_display_del_fbo (GstGLDisplay* display, guint fbo, 
                              guint depth_buffer);
 
