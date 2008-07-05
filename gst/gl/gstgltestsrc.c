@@ -88,6 +88,8 @@ static GstFlowReturn gst_gl_test_src_create (GstPushSrc* psrc,
 static gboolean gst_gl_test_src_start (GstBaseSrc* basesrc);
 static gboolean gst_gl_test_src_stop (GstBaseSrc* basesrc);
 
+static void gst_gl_test_src_callback (gint width, gint height, guint texture, gpointer stuff);
+
 #define GST_TYPE_GL_TEST_SRC_PATTERN (gst_gl_test_src_pattern_get_type ())
 static GType
 gst_gl_test_src_pattern_get_type (void)
@@ -524,8 +526,8 @@ gst_gl_test_src_is_seekable (GstBaseSrc* psrc)
 static GstFlowReturn
 gst_gl_test_src_create (GstPushSrc* psrc, GstBuffer** buffer)
 {
-    GstGLTestSrc *src;
-    GstGLBuffer *outbuf;
+    GstGLTestSrc* src;
+    GstGLBuffer* outbuf;
 
     //GstFlowReturn res;
     GstClockTime next_time;
@@ -554,12 +556,18 @@ gst_gl_test_src_create (GstPushSrc* psrc, GstBuffer** buffer)
             src->make_image = gst_gl_test_src_white;
         else
             src->make_image = gst_gl_test_src_black;
-    } 
+    }
+
+    src->buffer = outbuf;
  
     //blocking call, generate a FBO
-    gst_gl_display_use_fbo_2 (src->display, src->width, src->height,
-        src->fbo, src->depthbuffer, outbuf->texture, (GLCB2)src->make_image,
-        (gpointer*)src, (gpointer*)outbuf);
+    gst_gl_display_use_fbo (src->display, src->width, src->height,
+        src->fbo, src->depthbuffer, outbuf->texture,
+        gst_gl_test_src_callback,
+        0, 0, 0, //no input texture
+        0, src->width, 0, src->height,
+        GST_GL_DISPLAY_PROJECTION_ORTHO2D,
+        (gpointer)src);
 
     GST_BUFFER_TIMESTAMP (GST_BUFFER (outbuf)) =
         src->timestamp_offset + src->running_time;
@@ -632,4 +640,13 @@ gst_gl_test_src_stop (GstBaseSrc* basesrc)
     }
 
     return TRUE;
+}
+
+//opengl scene
+static void
+gst_gl_test_src_callback (gint width, gint height, guint texture, gpointer stuff)
+{
+    GstGLTestSrc* src = GST_GL_TEST_SRC (stuff);
+
+    src->make_image (src, src->buffer, src->width, src->height);
 }

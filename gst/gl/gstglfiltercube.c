@@ -35,11 +35,18 @@ static const GstElementDetails element_details =
 
 enum
 {
-    PROP_0
+    PROP_0,
+    PROP_RED,
+    PROP_GREEN,
+    PROP_BLUE,
+    PROP_FOVY,
+    PROP_ASPECT,
+    PROP_ZNEAR,
+    PROP_ZFAR
 };
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_gl_filter_cube_debug, "glfiltercube", 0, "glfiltercube element");
+    GST_DEBUG_CATEGORY_INIT (gst_gl_filter_cube_debug, "glfiltercube", 0, "glfiltercube element");
 
 GST_BOILERPLATE_FULL (GstGLFilterCube, gst_gl_filter_cube, GstGLFilter,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
@@ -49,9 +56,11 @@ static void gst_gl_filter_cube_set_property (GObject* object, guint prop_id,
 static void gst_gl_filter_cube_get_property (GObject* object, guint prop_id,
     GValue* value, GParamSpec* pspec);
 
+static gboolean gst_gl_filter_cube_set_caps (GstGLFilter* filter, 
+    GstCaps* incaps, GstCaps* outcaps);
 static gboolean gst_gl_filter_cube_filter (GstGLFilter* filter,
     GstGLBuffer* inbuf, GstGLBuffer* outbuf);
-static void gst_gl_filter_cube_callback (guint width, guint height, guint texture, GLhandleARB shader);
+static void gst_gl_filter_cube_callback (gint width, gint height, guint texture, gpointer stuff);
 
 
 static void
@@ -71,23 +80,79 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
     gobject_class->set_property = gst_gl_filter_cube_set_property;
     gobject_class->get_property = gst_gl_filter_cube_get_property;
 
+    GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_filter_cube_set_caps;
     GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_cube_filter;
+
+    g_object_class_install_property (gobject_class, PROP_RED,
+        g_param_spec_float ("red", "Red", "Background red color",
+            0.0f, 1.0f, 0.0f, G_PARAM_WRITABLE));
+
+    g_object_class_install_property (gobject_class, PROP_GREEN,
+        g_param_spec_float ("green", "Green", "Background reen color",
+            0.0f, 1.0f, 0.0f, G_PARAM_WRITABLE));
+
+    g_object_class_install_property (gobject_class, PROP_BLUE,
+        g_param_spec_float ("blue", "Blue", "Background blue color",
+            0.0f, 1.0f, 0.0f, G_PARAM_WRITABLE));
+
+    g_object_class_install_property (gobject_class, PROP_FOVY,
+        g_param_spec_double ("fovy", "Fovy", "Field of view angle in degrees",
+            0.0, 180.0, 45.0, G_PARAM_WRITABLE));
+
+    g_object_class_install_property (gobject_class, PROP_ASPECT,
+        g_param_spec_double ("aspect", "Aspect", "Field of view in the x direction",
+            0.0, 100, 0.0, G_PARAM_WRITABLE));
+
+    g_object_class_install_property (gobject_class, PROP_ZNEAR,
+        g_param_spec_double ("znear", "Znear", 
+            "Specifies the	distance from the viewer to the	near clipping plane",
+            0.0, 100.0, 0.1, G_PARAM_WRITABLE));
+
+    g_object_class_install_property (gobject_class, PROP_ZFAR,
+        g_param_spec_double ("zfar", "Zfar", 
+            "Specifies the	distance from the viewer to the	far clipping plane",
+            0.0, 1000.0, 100.0, G_PARAM_WRITABLE));
 }
 
 static void
 gst_gl_filter_cube_init (GstGLFilterCube* filter,
     GstGLFilterCubeClass* klass)
 {
+    filter->fovy = 45;
+    filter->aspect = 0;
+    filter->znear = 0.1;
+    filter->zfar = 100;
 }
 
 static void
 gst_gl_filter_cube_set_property (GObject* object, guint prop_id,
     const GValue* value, GParamSpec* pspec)
 {
-    //GstGLFilterCube *filter = GST_GL_FILTER_CUBE (object);
+    GstGLFilterCube* filter = GST_GL_FILTER_CUBE (object);
 
     switch (prop_id) 
     {
+        case PROP_RED:
+            filter->red = g_value_get_float (value);
+            break;
+        case PROP_GREEN:
+            filter->green = g_value_get_float (value);
+            break;
+        case PROP_BLUE:
+            filter->blue = g_value_get_float (value);
+            break;
+        case PROP_FOVY:
+            filter->fovy = g_value_get_double (value);
+            break;
+        case PROP_ASPECT:
+            filter->aspect = g_value_get_double (value);
+            break;
+        case PROP_ZNEAR:
+            filter->znear = g_value_get_double (value);
+            break;
+        case PROP_ZFAR:
+            filter->zfar = g_value_get_double (value);
+            break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
             break;
@@ -98,7 +163,7 @@ static void
 gst_gl_filter_cube_get_property (GObject* object, guint prop_id,
     GValue* value, GParamSpec* pspec)
 {
-    //GstGLFilterCube *filter = GST_GL_FILTER_CUBE (object);
+    //GstGLFilterCube* filter = GST_GL_FILTER_CUBE (object);
 
     switch (prop_id) 
     {
@@ -109,26 +174,42 @@ gst_gl_filter_cube_get_property (GObject* object, guint prop_id,
 }
 
 static gboolean
+gst_gl_filter_cube_set_caps (GstGLFilter* filter, GstCaps* incaps,
+    GstCaps* outcaps)
+{
+    GstGLFilterCube* cube_filter = GST_GL_FILTER_CUBE (filter);
+
+    if (cube_filter->aspect == 0)
+        cube_filter->aspect = (gdouble)filter->width / (gdouble)filter->height;
+
+    return TRUE;
+}
+
+static gboolean
 gst_gl_filter_cube_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
     GstGLBuffer* outbuf)
 {
-    //GstGLFilterCube* cube_filter = GST_GL_FILTER_CUBE(filter);
-
+    GstGLFilterCube* cube_filter = GST_GL_FILTER_CUBE (filter);
+    
     //blocking call, use a FBO
     gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
         filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filter_cube_callback,
-        inbuf->width, inbuf->height, inbuf->texture, 0);
+        inbuf->width, inbuf->height, inbuf->texture, 
+        cube_filter->fovy, cube_filter->aspect, cube_filter->znear, cube_filter->zfar,
+        GST_GL_DISPLAY_PROJECTION_PERSPECIVE, (gpointer)cube_filter);
 
     return TRUE;
 }
 
 //opengl scene, params: input texture (not the output filter->texture)
 static void
-gst_gl_filter_cube_callback (guint width, guint height, guint texture, GLhandleARB shader)
+gst_gl_filter_cube_callback (gint width, gint height, guint texture, gpointer stuff)
 {
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;				
     static GLfloat	zrot = 0;
+
+    GstGLFilterCube* cube_filter = GST_GL_FILTER_CUBE (stuff);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -140,6 +221,7 @@ gst_gl_filter_cube_callback (guint width, guint height, guint texture, GLhandleA
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
+    glClearColor(cube_filter->red, cube_filter->green, cube_filter->blue, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();

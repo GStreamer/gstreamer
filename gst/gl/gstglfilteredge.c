@@ -53,7 +53,7 @@ static void gst_gl_filter_edge_reset (GstGLFilter* filter);
 static void gst_gl_filter_edge_init_shader (GstGLFilter* filter);
 static gboolean gst_gl_filter_edge_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
-static void gst_gl_filter_edge_callback (guint width, guint height, guint texture, GLhandleARB shader);
+static void gst_gl_filter_edge_callback (gint width, gint height, guint texture, gpointer stuff);
 
 
 static void
@@ -156,7 +156,7 @@ gst_gl_filter_edge_get_property (GObject* object, guint prop_id,
 static void
 gst_gl_filter_edge_init_shader (GstGLFilter* filter)
 {
-    GstGLFilterEdge* edge_filter = GST_GL_FILTER_EDGE(filter);
+    GstGLFilterEdge* edge_filter = GST_GL_FILTER_EDGE (filter);
     
     //blocking call, wait the opengl thread has compiled the shader program
     gst_gl_display_gen_shader (filter->display, edge_filter->textShader, &edge_filter->handleShader);
@@ -166,36 +166,32 @@ static gboolean
 gst_gl_filter_edge_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
     GstGLBuffer* outbuf)
 {
-    GstGLFilterEdge* edge_filter = GST_GL_FILTER_EDGE(filter);
-
+    gpointer edge_filter = GST_GL_FILTER_EDGE (filter);
+    
     //blocking call, generate a FBO
     gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
         filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filter_edge_callback,
-        inbuf->width, inbuf->height, inbuf->texture, edge_filter->handleShader);
+        inbuf->width, inbuf->height, inbuf->texture,
+        0, filter->width, 0, filter->height,
+        GST_GL_DISPLAY_PROJECTION_ORTHO2D, edge_filter);
 
     return TRUE;
 }
 
 //opengl scene, params: input texture (not the output filter->texture)
 static void
-gst_gl_filter_edge_callback (guint width, guint height, guint texture, GLhandleARB shader)
+gst_gl_filter_edge_callback (gint width, gint height, guint texture, gpointer stuff)
 {
+    GstGLFilterEdge* edge_filter = GST_GL_FILTER_EDGE (stuff);
     gint i=0;
     
-    glViewport(0, 0, width, height);
-
-    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glUseProgramObjectARB (shader);
-
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
 
+    glUseProgramObjectARB (edge_filter->handleShader);
+
     glActiveTextureARB(GL_TEXTURE0_ARB);
-    i = glGetUniformLocationARB (shader, "tex");
+    i = glGetUniformLocationARB (edge_filter->handleShader, "tex");
     glUniform1iARB (i, 0);
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 

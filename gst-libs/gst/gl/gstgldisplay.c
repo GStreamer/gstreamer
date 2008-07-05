@@ -48,7 +48,6 @@ static void gst_gl_display_thread_init_download (GstGLDisplay *display);
 static void gst_gl_display_thread_do_download (GstGLDisplay* display);
 static void gst_gl_display_thread_gen_fbo (GstGLDisplay *display);
 static void gst_gl_display_thread_use_fbo (GstGLDisplay *display);
-static void gst_gl_display_thread_use_fbo_2 (GstGLDisplay *display);
 static void gst_gl_display_thread_del_fbo (GstGLDisplay *display);
 static void gst_gl_display_thread_gen_shader (GstGLDisplay *display);
 static void gst_gl_display_thread_del_shader (GstGLDisplay *display);
@@ -79,17 +78,17 @@ static void gst_gl_display_thread_do_download_draw (GstGLDisplay* display);
 
 
 //------------------------------------------------------------
-//-------------------- Glut context management ---------------
+//-------------------- GL context management -----------------
 //------------------------------------------------------------
 
 //(key=int glutWinId) and (value=GstGLDisplay *display)
-static GHashTable *gst_gl_display_map = NULL;
+static GHashTable* gst_gl_display_map = NULL;
 
 //all glut functions and opengl primitives are called in this thread
-static GThread *gst_gl_display_glutThread = NULL;
+static GThread* gst_gl_display_glutThread = NULL;
 
 //-timepoped by glutIdleFunc
-static GAsyncQueue *gst_gl_display_messageQueue = NULL;
+static GAsyncQueue* gst_gl_display_messageQueue = NULL;
 
 
 //------------------------------------------------------------
@@ -135,7 +134,6 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->cond_do_download = g_cond_new ();
     display->cond_gen_fbo = g_cond_new ();
     display->cond_use_fbo = g_cond_new ();
-    display->cond_use_fbo_2 = g_cond_new ();
     display->cond_del_fbo = g_cond_new (); 
     display->cond_gen_shader = g_cond_new ();
     display->cond_del_shader = g_cond_new ();
@@ -182,10 +180,12 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->use_fbo_width = 0;
     display->use_fbo_height = 0;
     display->use_fbo_scene_cb = NULL;
-    display->use_shader = 0;
-    display->use_fbo_scene_cb_2 = NULL;
-    display->p1 = NULL;
-    display->p2 = NULL;
+    display->use_fbo_proj_param1 = 0;
+    display->use_fbo_proj_param2 = 0;
+    display->use_fbo_proj_param3 = 0;
+    display->use_fbo_proj_param4 = 0;
+    display->use_fbo_projection = 0;
+    display->use_fbo_stuff = NULL;
     display->input_texture_width = 0;
     display->input_texture_height = 0;
     display->input_texture = 0;
@@ -382,10 +382,6 @@ gst_gl_display_finalize (GObject *object)
         g_cond_free (display->cond_del_fbo);
         display->cond_del_fbo = NULL;
     }
-    if (display->cond_use_fbo_2) {
-        g_cond_free (display->cond_use_fbo_2);
-        display->cond_use_fbo_2 = NULL;
-    }
     if (display->cond_use_fbo) {
         g_cond_free (display->cond_use_fbo);
         display->cond_use_fbo = NULL;
@@ -432,12 +428,8 @@ gst_gl_display_finalize (GObject *object)
         display->clientDrawCallback = NULL;
     if (display->use_fbo_scene_cb)
         display->use_fbo_scene_cb = NULL;
-    if (display->use_fbo_scene_cb_2)
-        display->use_fbo_scene_cb_2 = NULL;
-    if (display->p1)
-        display->p1 = NULL;
-    if (display->p2)
-        display->p2 = NULL;
+    if (display->use_fbo_stuff)
+        display->use_fbo_stuff = NULL;
 
     //at this step, the next condition imply that the last display has been pushed
     if (g_hash_table_size (gst_gl_display_map) == 0)
@@ -556,9 +548,6 @@ gst_gl_display_thread_dispatch_action (GstGLDisplayMsg* msg)
         case GST_GL_DISPLAY_ACTION_USE_FBO:
             gst_gl_display_thread_use_fbo (msg->display);
             break;
-        case GST_GL_DISPLAY_ACTION_USE_FBO2:
-            gst_gl_display_thread_use_fbo_2 (msg->display);
-            break;
         case GST_GL_DISPLAY_ACTION_DEL_FBO:
             gst_gl_display_thread_del_fbo (msg->display);
             break;
@@ -600,7 +589,6 @@ gst_gl_display_thread_check_msg_validity (GstGLDisplayMsg *msg)
         case GST_GL_DISPLAY_ACTION_DO_DOWNLOAD:      
         case GST_GL_DISPLAY_ACTION_GEN_FBO:
         case GST_GL_DISPLAY_ACTION_USE_FBO:
-        case GST_GL_DISPLAY_ACTION_USE_FBO2:
         case GST_GL_DISPLAY_ACTION_DEL_FBO:       
         case GST_GL_DISPLAY_ACTION_GEN_SHADER:
         case GST_GL_DISPLAY_ACTION_DEL_SHADER:
@@ -625,6 +613,9 @@ gst_gl_display_thread_check_msg_validity (GstGLDisplayMsg *msg)
 //------------------ BEGIN GL THREAD ACTIONS -----------------
 //------------------------------------------------------------
 
+//The following functions are thread safe because
+//called by the "gst_gl_display_thread_dispatch_action"
+//in a lock/unlock scope.
 
 /* Called in the gl thread */
 static void
@@ -1261,8 +1252,20 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    gluPerspective(45, (gfloat)display->use_fbo_width/(gfloat)display->use_fbo_height, 0.1, 100);
-    //gluOrtho2D(0.0, display->use_fbo_width, 0.0, display->use_fbo_height);
+
+    switch (display->use_fbo_projection)
+    {
+        case GST_GL_DISPLAY_PROJECTION_ORTHO2D:
+            gluOrtho2D(display->use_fbo_proj_param1, display->use_fbo_proj_param2, 
+                display->use_fbo_proj_param3, display->use_fbo_proj_param4);
+            break;
+        case GST_GL_DISPLAY_PROJECTION_PERSPECIVE:
+            gluPerspective(display->use_fbo_proj_param1, display->use_fbo_proj_param2, 
+                display->use_fbo_proj_param3, display->use_fbo_proj_param4);
+            break;
+        default:
+            g_assert_not_reached ();
+    }
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -1276,7 +1279,7 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
 
     //the opengl scene
     display->use_fbo_scene_cb (display->input_texture_width, display->input_texture_height, 
-        display->input_texture, display->use_shader);
+        display->input_texture, display->use_fbo_stuff);
 
     glDrawBuffer(GL_NONE);
 
@@ -1293,66 +1296,6 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
     g_cond_signal (display->cond_use_fbo);
-}
-
-
-/* Called in the gl thread */
-static void
-gst_gl_display_thread_use_fbo_2 (GstGLDisplay *display)
-{
-    glutSetWindow (display->glutWinId);
-
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->use_fbo);
-
-    //setup a texture to render to
-    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->use_fbo_texture);
-    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-        display->use_fbo_width, display->use_fbo_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    //attach the texture to the FBO to renderer to
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-        GL_TEXTURE_RECTANGLE_ARB, display->use_fbo_texture, 0);
-
-    glPushAttrib(GL_VIEWPORT_BIT);
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    gluOrtho2D(0.0, display->use_fbo_width, 0.0, display->use_fbo_height);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glViewport(0, 0, display->use_fbo_width, display->use_fbo_height);
-
-    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    //the opengl scene
-    display->use_fbo_scene_cb_2 (display->p1, display->p2, 
-        display->use_fbo_width, display->use_fbo_height);
-
-    glDrawBuffer(GL_NONE);
-
-    glUseProgramObjectARB (0);
-
-    glDisable(GL_TEXTURE_RECTANGLE_ARB);
-
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopAttrib();
-
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
-    g_cond_signal (display->cond_use_fbo_2);
 }
 
 
@@ -1867,8 +1810,10 @@ gst_gl_display_gen_fbo (GstGLDisplay* display, gint width, gint height,
 void
 gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint texture_fbo_height,
                         guint fbo, guint depth_buffer, guint texture_fbo, GLCB cb,
-                        guint input_texture_width, guint input_texture_height, guint input_texture,
-                        GLhandleARB shader)
+                        gint input_texture_width, gint input_texture_height, guint input_texture,
+                        gdouble proj_param1, gdouble proj_param2,
+                        gdouble proj_param3, gdouble proj_param4,
+                        GstGLDisplayProjection projection, gpointer* stuff)
 {
     gst_gl_display_lock (display);
     display->use_fbo = fbo;
@@ -1877,33 +1822,17 @@ gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint text
     display->use_fbo_width = texture_fbo_width;
     display->use_fbo_height = texture_fbo_height;
     display->use_fbo_scene_cb = cb;
-    display->use_shader = shader;
+    display->use_fbo_proj_param1 = proj_param1;
+    display->use_fbo_proj_param2 = proj_param2;
+    display->use_fbo_proj_param3 = proj_param3;
+    display->use_fbo_proj_param4 = proj_param4;
+    display->use_fbo_projection = projection;
+    display->use_fbo_stuff = stuff;
     display->input_texture_width = input_texture_width;
     display->input_texture_height = input_texture_height;
     display->input_texture = input_texture;
     gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_USE_FBO, display);
     g_cond_wait (display->cond_use_fbo, display->mutex);
-    gst_gl_display_unlock (display);
-}
-
-
-/* Called by gltestsrc */
-void
-gst_gl_display_use_fbo_2 (GstGLDisplay* display, gint texture_fbo_width, gint texture_fbo_height,
-                          guint fbo, guint depth_buffer, guint texture_fbo, GLCB2 cb2,
-                          gpointer* p1, gpointer* p2)
-{
-    gst_gl_display_lock (display);
-    display->use_fbo = fbo;
-    display->use_depth_buffer = depth_buffer;
-    display->use_fbo_texture = texture_fbo;
-    display->use_fbo_width = texture_fbo_width;
-    display->use_fbo_height = texture_fbo_height;
-    display->use_fbo_scene_cb_2 = cb2;
-    display->p1 = p1;
-    display->p2 = p2;
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_USE_FBO2, display);
-    g_cond_wait (display->cond_use_fbo_2, display->mutex);
     gst_gl_display_unlock (display);
 }
 

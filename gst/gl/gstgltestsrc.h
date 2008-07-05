@@ -99,6 +99,8 @@ struct _GstGLTestSrc {
     guint fbo;
     guint depthbuffer;
 
+    GstGLBuffer* buffer;
+
     /* private */
     GstGLDisplay *display;
     gint64 timestamp_offset;              /* base offset */
@@ -106,7 +108,7 @@ struct _GstGLTestSrc {
     gint64 n_frames;                      /* total frames sent */
     gboolean negotiated;
 
-    void (*make_image) (GstGLTestSrc *v, GstGLBuffer *buffer, int w, int h);
+    void (*make_image) (GstGLTestSrc* v, GstGLBuffer* buffer, gint w, gint h);
 };
 
 struct _GstGLTestSrcClass {

@@ -55,7 +55,7 @@ static gboolean gst_gl_filter_app_set_caps (GstGLFilter* filter,
     GstCaps* incaps, GstCaps* outcaps);
 static gboolean gst_gl_filter_app_filter (GstGLFilter* filter,
     GstGLBuffer* inbuf, GstGLBuffer* outbuf);
-static void gst_gl_filter_app_callback (guint width, guint height, guint texture, GLhandleARB shader);
+static void gst_gl_filter_app_callback (gint width, gint height, guint texture, gpointer stuff);
 
 
 static void
@@ -154,7 +154,9 @@ gst_gl_filter_app_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
         //blocking call, use a FBO
         gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
             filter->fbo, filter->depthbuffer, outbuf->texture, app_filter->clientDrawCallback,
-            inbuf->width, inbuf->height, inbuf->texture, 0);
+            inbuf->width, inbuf->height, inbuf->texture, 
+            45, (gfloat)filter->width / (gfloat)filter->height, 0.1, 100, 
+            GST_GL_DISPLAY_PROJECTION_PERSPECIVE, NULL);
     }
     //default
     else
@@ -162,7 +164,9 @@ gst_gl_filter_app_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
         //blocking call, use a FBO
         gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
             filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filter_app_callback,
-            inbuf->width, inbuf->height, inbuf->texture, 0);
+            inbuf->width, inbuf->height, inbuf->texture, 
+            0, filter->width, 0, filter->height, 
+            GST_GL_DISPLAY_PROJECTION_ORTHO2D, NULL);
     }
 
     return TRUE;
@@ -170,7 +174,7 @@ gst_gl_filter_app_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 
 //opengl scene, params: input texture (not the output filter->texture)
 static void
-gst_gl_filter_app_callback (guint width, guint height, guint texture, GLhandleARB shader)
+gst_gl_filter_app_callback (gint width, gint height, guint texture, gpointer stuff)
 {
     glEnable (GL_TEXTURE_RECTANGLE_ARB);
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);

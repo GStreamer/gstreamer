@@ -38,6 +38,17 @@ typedef struct _GstGLFilterCubeClass GstGLFilterCubeClass;
 struct _GstGLFilterCube
 {
     GstGLFilter filter;
+
+    //background color
+    gfloat red;
+    gfloat green;
+    gfloat blue;
+
+    //perspective
+    gdouble fovy;
+    gdouble aspect;
+    gdouble znear;
+    gdouble zfar;
 };
 
 struct _GstGLFilterCubeClass
