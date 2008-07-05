@@ -2,6 +2,7 @@
  *
  * GStreamer
  * Copyright (C) 2004 Billy Biggs <vektor@dumbterm.net>
+ * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -27,10 +28,15 @@
 #ifndef TVTIME_PLUGINS_H_INCLUDED
 #define TVTIME_PLUGINS_H_INCLUDED
 
-deinterlace_method_t* dscaler_tomsmocomp_get_method( void );
-deinterlace_method_t* dscaler_greedyh_get_method( void );
-deinterlace_method_t* dscaler_greedyl_get_method( void );
-deinterlace_method_t* dscaler_vfir_get_method( void );
+#define GST_TYPE_DEINTERLACE_TOMSMOCOMP (gst_deinterlace_method_tomsmocomp_get_type ())
+#define GST_TYPE_DEINTERLACE_GREEDY_H (gst_deinterlace_method_greedy_h_get_type ())
+#define GST_TYPE_DEINTERLACE_GREEDY_L (gst_deinterlace_method_greedy_l_get_type ())
+#define GST_TYPE_DEINTERLACE_VFIR (gst_deinterlace_method_vfir_get_type ())
+
+GType gst_deinterlace_method_tomsmocomp_get_type (void);
+GType gst_deinterlace_method_greedy_h_get_type (void);
+GType gst_deinterlace_method_greedy_l_get_type (void);
+GType gst_deinterlace_method_vfir_get_type (void);
 
 //void linear_plugin_init( void );
 //void scalerbob_plugin_init( void );

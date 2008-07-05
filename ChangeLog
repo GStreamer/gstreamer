@@ -1,5 +1,59 @@
 2008-07-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/Makefile.am:
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace_method_class_init), (gst_deinterlace_method_init),
+	(gst_deinterlace_method_deinterlace_frame),
+	(gst_deinterlace_method_get_fields_required),
+	(gst_deinterlace2_methods_get_type), (_do_init),
+	(gst_deinterlace2_set_method), (gst_deinterlace2_class_init),
+	(gst_deinterlace2_child_proxy_get_child_by_index),
+	(gst_deinterlace2_child_proxy_get_children_count),
+	(gst_deinterlace2_child_proxy_interface_init),
+	(gst_deinterlace2_init), (gst_deinterlace2_finalize),
+	(gst_deinterlace2_chain), (gst_deinterlace2_src_query):
+	* gst/deinterlace2/gstdeinterlace2.h:
+	* gst/deinterlace2/tvtime/greedy.c:
+	(deinterlace_greedy_packed422_scanline_c),
+	(deinterlace_greedy_packed422_scanline_mmx),
+	(deinterlace_greedy_packed422_scanline_mmxext),
+	(deinterlace_frame_di_greedy),
+	(gst_deinterlace_method_greedy_l_set_property),
+	(gst_deinterlace_method_greedy_l_get_property),
+	(gst_deinterlace_method_greedy_l_class_init),
+	(gst_deinterlace_method_greedy_l_init):
+	* gst/deinterlace2/tvtime/greedyh.asm:
+	* gst/deinterlace2/tvtime/greedyh.c: (greedyDScaler_C),
+	(deinterlace_frame_di_greedyh),
+	(gst_deinterlace_method_greedy_h_set_property),
+	(gst_deinterlace_method_greedy_h_get_property),
+	(gst_deinterlace_method_greedy_h_class_init),
+	(gst_deinterlace_method_greedy_h_init):
+	* gst/deinterlace2/tvtime/greedyh.h:
+	* gst/deinterlace2/tvtime/plugins.h:
+	* gst/deinterlace2/tvtime/tomsmocomp.c:
+	(gst_deinterlace_method_tomsmocomp_set_property),
+	(gst_deinterlace_method_tomsmocomp_get_property),
+	(gst_deinterlace_method_tomsmocomp_class_init),
+	(gst_deinterlace_method_tomsmocomp_init):
+	* gst/deinterlace2/tvtime/tomsmocomp.h:
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	* gst/deinterlace2/tvtime/vfir.c: (deinterlace_frame_vfir),
+	(gst_deinterlace_method_vfir_class_init),
+	(gst_deinterlace_method_vfir_init):
+	Use a GstObject subtype for the deinterlacing methods and export
+	the different settings for each deinterlacing method via GObject
+	properties.
+
+	Implement GstChildProxy interface to allow access to the used
+	deinterlacing method and to allow adjusting the different settings.
+
+	Move global variables of the tomsmocomp deinterlacing method into
+	function local variables to make it possible to use this deinterlacing
+	method from different instances.
+
+2008-07-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/tvtime/greedyh.asm:
 	Support widths that are not a multiply of 4 when using the assembly
 	optimized greedyh implementations.

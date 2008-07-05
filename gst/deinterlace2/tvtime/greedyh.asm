@@ -2,6 +2,7 @@
  *
  * GStreamer
  * Copyright (c) 2001 Tom Barry.  All rights reserved.
+ * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,7 +30,7 @@
 #include "x86-64_macros.inc"
 
 void
-FUNCT_NAME (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
+FUNCT_NAME (GstDeinterlaceMethodGreedyH *self, uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
     uint8_t * Dest, int size)
 {
 
@@ -49,14 +50,14 @@ FUNCT_NAME (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
   int64_t LastAvg = 0;          //interp value from left qword
 
   // Set up our two parms that are actually evaluated for each pixel
-  i = GreedyMaxComb;
+  i = self->max_comb;
   MaxComb =
       i << 56 | i << 48 | i << 40 | i << 32 | i << 24 | i << 16 | i << 8 | i;
 
-  i = GreedyMotionThreshold;    // scale to range of 0-257
+  i = self->motion_threshold;    // scale to range of 0-257
   MotionThreshold = i << 48 | i << 32 | i << 16 | i | UVMask;
 
-  i = GreedyMotionSense;        // scale to range of 0-257
+  i = self->motion_sense;        // scale to range of 0-257
   MotionSense = i << 48 | i << 32 | i << 16 | i;
 
   i = 0xffffffff - 256;
@@ -243,6 +244,6 @@ FUNCT_NAME (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
 
       if (size % 8 != 0) {
         int offset = GST_ROUND_DOWN_8 (size);
-        greedyDScaler_C (L1 + offset, L2 + offset, L3 + offset, L2P + offset, Dest + offset, size % 8);
+        greedyDScaler_C (self, L1 + offset, L2 + offset, L3 + offset, L2P + offset, Dest + offset, size % 8);
       }
 }

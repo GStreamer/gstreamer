@@ -2,6 +2,7 @@
  *
  * GStreamer
  * Copyright (C) 2004 Billy Biggs <vektor@dumbterm.net>
+ * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -28,7 +29,6 @@
 # include "config.h"
 #endif
 
-#include "greedyh.h"
 #include "greedyhmacros.h"
 
 #include <stdlib.h>
@@ -39,13 +39,33 @@
 #include "plugins.h"
 #include "gstdeinterlace2.h"
 
-static const unsigned int GreedyMaxComb = 5;
-static const unsigned int GreedyMotionThreshold = 25;
-static const unsigned int GreedyMotionSense = 30;
+#define GST_TYPE_DEINTERLACE_METHOD_GREEDY_H	(gst_deinterlace_method_greedy_h_get_type ())
+#define GST_IS_DEINTERLACE_METHOD_GREEDY_H(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_GREEDY_H))
+#define GST_IS_DEINTERLACE_METHOD_GREEDY_H_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DEINTERLACE_METHOD_GREEDY_H))
+#define GST_DEINTERLACE_METHOD_GREEDY_H_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DEINTERLACE_METHOD_GREEDY_H, GstDeinterlaceMethodGreedyHClass))
+#define GST_DEINTERLACE_METHOD_GREEDY_H(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DEINTERLACE_METHOD_GREEDY_H, GstDeinterlaceMethodGreedyH))
+#define GST_DEINTERLACE_METHOD_GREEDY_H_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEINTERLACE_METHOD_GREEDY_H, GstDeinterlaceMethodGreedyHClass))
+#define GST_DEINTERLACE_METHOD_GREEDY_H_CAST(obj)	((GstDeinterlaceMethodGreedyH*)(obj))
+
+GType gst_deinterlace_method_greedy_h_get_type (void);
+
+typedef struct
+{
+  GstDeinterlaceMethod parent;
+
+  guint max_comb, motion_threshold, motion_sense;
+} GstDeinterlaceMethodGreedyH;
+
+typedef struct
+{
+  GstDeinterlaceMethodClass parent_class;
+  void (*scanline) (GstDeinterlaceMethodGreedyH * self, uint8_t * L2,
+      uint8_t * L1, uint8_t * L3, uint8_t * L2P, uint8_t * Dest, int size);
+} GstDeinterlaceMethodGreedyHClass;
 
 void
-greedyDScaler_C (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
-    uint8_t * Dest, int size)
+greedyDScaler_C (GstDeinterlaceMethodGreedyH * self, uint8_t * L1, uint8_t * L2,
+    uint8_t * L3, uint8_t * L2P, uint8_t * Dest, int size)
 {
   int Pos;
   uint8_t l1_l, l1_1_l, l3_l, l3_1_l;
@@ -60,6 +80,9 @@ greedyDScaler_C (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
   uint8_t l2_l, l2_c, lp2_l, lp2_c;
   uint8_t l2_l_diff, l2_c_diff, lp2_l_diff, lp2_c_diff;
   uint8_t min_l, min_c, max_l, max_c;
+  guint max_comb = self->max_comb;
+  guint motion_sense = self->motion_sense;
+  guint motion_threshold = self->motion_threshold;
 
   for (Pos = 0; Pos < size; Pos += 2) {
     l1_l = L1[0];
@@ -130,26 +153,26 @@ greedyDScaler_C (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
     max_l = MAX (l1_l, l3_l);
     min_l = MIN (l1_l, l3_l);
 
-    if (max_l < 256 - GreedyMaxComb)
-      max_l += GreedyMaxComb;
+    if (max_l < 256 - max_comb)
+      max_l += max_comb;
     else
       max_l = 255;
 
-    if (min_l > GreedyMaxComb)
-      min_l -= GreedyMaxComb;
+    if (min_l > max_comb)
+      min_l -= max_comb;
     else
       min_l = 0;
 
     max_c = MAX (l1_c, l3_c);
     min_c = MIN (l1_c, l3_c);
 
-    if (max_c < 256 - GreedyMaxComb)
-      max_c += GreedyMaxComb;
+    if (max_c < 256 - max_comb)
+      max_c += max_comb;
     else
       max_c = 255;
 
-    if (min_c > GreedyMaxComb)
-      min_c -= GreedyMaxComb;
+    if (min_c > max_comb)
+      min_c -= max_comb;
     else
       min_c = 0;
 
@@ -159,12 +182,12 @@ greedyDScaler_C (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
     /* Do motion compensation for luma, i.e. how much
      * the weave pixel differs */
     mov_l = ABS (l2_l - lp2_l);
-    if (mov_l > GreedyMotionThreshold)
-      mov_l -= GreedyMotionThreshold;
+    if (mov_l > motion_threshold)
+      mov_l -= motion_threshold;
     else
       mov_l = 0;
 
-    mov_l = mov_l * GreedyMotionSense;
+    mov_l = mov_l * motion_sense;
     if (mov_l > 256)
       mov_l = 256;
 
@@ -211,11 +234,13 @@ greedyDScaler_C (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
 #endif
 
 static void
-deinterlace_frame_di_greedyh (GstDeinterlace2 * object)
+deinterlace_frame_di_greedyh (GstDeinterlaceMethod * d_method,
+    GstDeinterlace2 * object)
 {
-  void (*func) (uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
-      uint8_t * Dest, int size);
-
+  GstDeinterlaceMethodGreedyH *self =
+      GST_DEINTERLACE_METHOD_GREEDY_H (d_method);
+  GstDeinterlaceMethodGreedyHClass *klass =
+      GST_DEINTERLACE_METHOD_GREEDY_H_GET_CLASS (self);
   int InfoIsOdd = 0;
   int Line;
   unsigned int Pitch = object->field_stride;
@@ -226,20 +251,6 @@ deinterlace_frame_di_greedyh (GstDeinterlace2 * object)
 
   unsigned char *L2P;           // ptr to prev Line2
   unsigned char *Dest = GST_BUFFER_DATA (object->out_buf);
-
-#ifdef HAVE_CPU_I386
-  if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMXEXT) {
-    func = greedyDScaler_MMXEXT;
-  } else if (object->cpu_feature_flags & OIL_IMPL_FLAG_3DNOW) {
-    func = greedyDScaler_3DNOW;
-  } else if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMX) {
-    func = greedyDScaler_MMX;
-  } else {
-    func = greedyDScaler_C;
-  }
-#else
-  func = greedyDScaler_C;
-#endif
 
   // copy first even line no matter what, and the first odd line if we're
   // processing an EVEN field. (note diff from other deint rtns.)
@@ -277,7 +288,7 @@ deinterlace_frame_di_greedyh (GstDeinterlace2 * object)
   }
 
   for (Line = 0; Line < (object->field_height - 1); ++Line) {
-    func (L1, L2, L3, L2P, Dest, object->line_length);
+    klass->scanline (self, L1, L2, L3, L2P, Dest, object->line_length);
     Dest += object->output_stride;
     memcpy (Dest, L3, object->line_length);
     Dest += object->output_stride;
@@ -293,31 +304,115 @@ deinterlace_frame_di_greedyh (GstDeinterlace2 * object)
   }
 }
 
-static deinterlace_method_t greedyh_method = {
-  0,                            //DEINTERLACE_PLUGIN_API_VERSION,
-  "Motion Adaptive: Advanced Detection",
-  "AdaptiveAdvanced",
-  4,
-  0,
-  0,
-  0,
-  0,
-  0,
-  deinterlace_frame_di_greedyh,
-  {"Uses heuristics to detect motion in the input",
-        "frames and reconstruct image detail where",
-        "possible.  Use this for high quality output",
-        "even on monitors set to an arbitrary refresh",
-        "rate.",
-        "",
-        "Advanced detection uses linear interpolation",
-        "where motion is detected, using a four-field",
-        "buffer.  This is the Greedy: High Motion",
-      "deinterlacer from DScaler."}
+G_DEFINE_TYPE (GstDeinterlaceMethodGreedyH, gst_deinterlace_method_greedy_h,
+    GST_TYPE_DEINTERLACE_METHOD);
+
+enum
+{
+  ARG_0,
+  ARG_MAX_COMB,
+  ARG_MOTION_THRESHOLD,
+  ARG_MOTION_SENSE
 };
 
-deinterlace_method_t *
-dscaler_greedyh_get_method (void)
+static void
+gst_deinterlace_method_greedy_h_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
-  return &greedyh_method;
+  GstDeinterlaceMethodGreedyH *self = GST_DEINTERLACE_METHOD_GREEDY_H (object);
+
+  switch (prop_id) {
+    case ARG_MAX_COMB:
+      self->max_comb = g_value_get_uint (value);
+      break;
+    case ARG_MOTION_THRESHOLD:
+      self->motion_threshold = g_value_get_uint (value);
+      break;
+    case ARG_MOTION_SENSE:
+      self->motion_sense = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
+static void
+gst_deinterlace_method_greedy_h_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstDeinterlaceMethodGreedyH *self = GST_DEINTERLACE_METHOD_GREEDY_H (object);
+
+  switch (prop_id) {
+    case ARG_MAX_COMB:
+      g_value_set_uint (value, self->max_comb);
+      break;
+    case ARG_MOTION_THRESHOLD:
+      g_value_set_uint (value, self->motion_threshold);
+      break;
+    case ARG_MOTION_SENSE:
+      g_value_set_uint (value, self->motion_sense);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
+static void
+gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
+    klass)
+{
+  GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  guint cpu_flags = oil_cpu_get_flags ();
+
+  gobject_class->set_property = gst_deinterlace_method_greedy_h_set_property;
+  gobject_class->get_property = gst_deinterlace_method_greedy_h_get_property;
+
+  g_object_class_install_property (gobject_class, ARG_MAX_COMB,
+      g_param_spec_uint ("max-comb",
+          "Max comb",
+          "Max Comb", 0, 255, 5, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+      );
+
+  g_object_class_install_property (gobject_class, ARG_MOTION_THRESHOLD,
+      g_param_spec_uint ("motion-threshold",
+          "Motion Threshold",
+          "Motion Threshold",
+          0, 255, 25, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+      );
+
+  g_object_class_install_property (gobject_class, ARG_MOTION_SENSE,
+      g_param_spec_uint ("motion-sense",
+          "Motion Sense",
+          "Motion Sense",
+          0, 255, 30, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+      );
+
+  dim_class->fields_required = 4;
+  dim_class->deinterlace_frame = deinterlace_frame_di_greedyh;
+  dim_class->name = "Motion Adaptive: Advanced Detection";
+  dim_class->nick = "greedyh";
+  dim_class->latency = 1;
+
+#ifdef HAVE_CPU_I386
+  if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
+    klass->scanline = greedyDScaler_MMXEXT;
+  } else if (cpu_flags & OIL_IMPL_FLAG_3DNOW) {
+    klass->scanline = greedyDScaler_3DNOW;
+  } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {
+    klass->scanline = greedyDScaler_MMX;
+  } else {
+    klass->scanline = greedyDScaler_C;
+  }
+#else
+  klass->scanline = greedyDScaler_C;
+#endif
+}
+
+static void
+gst_deinterlace_method_greedy_h_init (GstDeinterlaceMethodGreedyH * self)
+{
+  self->max_comb = 5;
+  self->motion_threshold = 25;
+  self->motion_sense = 30;
 }

@@ -4,6 +4,8 @@
  * Copyright (c) 2000 Tom Barry  All rights reserved.
  * mmx.h port copyright (c) 2002 Billy Biggs <vektor@dumbterm.net>.
  *
+ * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -35,6 +37,30 @@
 #include "gstdeinterlace2.h"
 #include <string.h>
 
+#define GST_TYPE_DEINTERLACE_METHOD_GREEDY_L	(gst_deinterlace_method_greedy_l_get_type ())
+#define GST_IS_DEINTERLACE_METHOD_GREEDY_L(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_GREEDY_L))
+#define GST_IS_DEINTERLACE_METHOD_GREEDY_L_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DEINTERLACE_METHOD_GREEDY_L))
+#define GST_DEINTERLACE_METHOD_GREEDY_L_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DEINTERLACE_METHOD_GREEDY_L, GstDeinterlaceMethodGreedyLClass))
+#define GST_DEINTERLACE_METHOD_GREEDY_L(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DEINTERLACE_METHOD_GREEDY_L, GstDeinterlaceMethodGreedyL))
+#define GST_DEINTERLACE_METHOD_GREEDY_L_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEINTERLACE_METHOD_GREEDY_L, GstDeinterlaceMethodGreedyLClass))
+#define GST_DEINTERLACE_METHOD_GREEDY_L_CAST(obj)	((GstDeinterlaceMethodGreedyL*)(obj))
+
+GType gst_deinterlace_method_greedy_l_get_type (void);
+
+typedef struct
+{
+  GstDeinterlaceMethod parent;
+
+  guint max_comb;
+} GstDeinterlaceMethodGreedyL;
+
+typedef struct
+{
+  GstDeinterlaceMethodClass parent_class;
+  void (*scanline) (GstDeinterlaceMethodGreedyL * self, uint8_t * L2,
+      uint8_t * L1, uint8_t * L3, uint8_t * L2P, uint8_t * Dest, int size);
+} GstDeinterlaceMethodGreedyLClass;
+
 // This is a simple lightweight DeInterlace method that uses little CPU time
 // but gives very good results for low or intermedite motion.
 // It defers frames by one field, but that does not seem to produce noticeable
@@ -47,13 +73,13 @@
 // I'd intended this to be part of a larger more elaborate method added to 
 // Blended Clip but this give too good results for the CPU to ignore here.
 
-static const int GreedyMaxComb = 15;
-
 static inline void
-deinterlace_greedy_packed422_scanline_c (uint8_t * m0, uint8_t * t1,
+deinterlace_greedy_packed422_scanline_c (GstDeinterlaceMethodGreedyL * self,
+    uint8_t * m0, uint8_t * t1,
     uint8_t * b1, uint8_t * m2, uint8_t * output, int width)
 {
   int avg, l2_diff, lp2_diff, max, min, best;
+  guint max_comb = self->max_comb;
 
   // L2 == m0
   // L1 == t1
@@ -74,13 +100,13 @@ deinterlace_greedy_packed422_scanline_c (uint8_t * m0, uint8_t * t1,
     max = MAX (*t1, *b1);
     min = MIN (*t1, *b1);
 
-    if (max < 256 - GreedyMaxComb)
-      max += GreedyMaxComb;
+    if (max < 256 - max_comb)
+      max += max_comb;
     else
       max = 255;
 
-    if (min > GreedyMaxComb)
-      min -= GreedyMaxComb;
+    if (min > max_comb)
+      min -= max_comb;
     else
       min = 0;
 
@@ -98,22 +124,22 @@ deinterlace_greedy_packed422_scanline_c (uint8_t * m0, uint8_t * t1,
 #ifdef HAVE_CPU_I386
 #include "mmx.h"
 static void
-deinterlace_greedy_packed422_scanline_mmx (uint8_t * m0, uint8_t * t1,
+deinterlace_greedy_packed422_scanline_mmx (GstDeinterlaceMethodGreedyL * self,
+    uint8_t * m0, uint8_t * t1,
     uint8_t * b1, uint8_t * m2, uint8_t * output, int width)
 {
   mmx_t MaxComb;
-
   mmx_t ShiftMask;
 
   // How badly do we let it weave? 0-255
-  MaxComb.ub[0] = GreedyMaxComb;
-  MaxComb.ub[1] = GreedyMaxComb;
-  MaxComb.ub[2] = GreedyMaxComb;
-  MaxComb.ub[3] = GreedyMaxComb;
-  MaxComb.ub[4] = GreedyMaxComb;
-  MaxComb.ub[5] = GreedyMaxComb;
-  MaxComb.ub[6] = GreedyMaxComb;
-  MaxComb.ub[7] = GreedyMaxComb;
+  MaxComb.ub[0] = self->max_comb;
+  MaxComb.ub[1] = self->max_comb;
+  MaxComb.ub[2] = self->max_comb;
+  MaxComb.ub[3] = self->max_comb;
+  MaxComb.ub[4] = self->max_comb;
+  MaxComb.ub[5] = self->max_comb;
+  MaxComb.ub[6] = self->max_comb;
+  MaxComb.ub[7] = self->max_comb;
 
   ShiftMask.ub[0] = 0x7f;
   ShiftMask.ub[1] = 0x7f;
@@ -207,26 +233,28 @@ deinterlace_greedy_packed422_scanline_mmx (uint8_t * m0, uint8_t * t1,
   }
   emms ();
   if (width > 0)
-    deinterlace_greedy_packed422_scanline_c (m0, t1, b1, m2, output, width);
+    deinterlace_greedy_packed422_scanline_c (self, m0, t1, b1, m2, output,
+        width);
 }
 
 #include "sse.h"
 
 static void
-deinterlace_greedy_packed422_scanline_mmxext (uint8_t * m0, uint8_t * t1,
-    uint8_t * b1, uint8_t * m2, uint8_t * output, int width)
+deinterlace_greedy_packed422_scanline_mmxext (GstDeinterlaceMethodGreedyL *
+    self, uint8_t * m0, uint8_t * t1, uint8_t * b1, uint8_t * m2,
+    uint8_t * output, int width)
 {
   mmx_t MaxComb;
 
   // How badly do we let it weave? 0-255
-  MaxComb.ub[0] = GreedyMaxComb;
-  MaxComb.ub[1] = GreedyMaxComb;
-  MaxComb.ub[2] = GreedyMaxComb;
-  MaxComb.ub[3] = GreedyMaxComb;
-  MaxComb.ub[4] = GreedyMaxComb;
-  MaxComb.ub[5] = GreedyMaxComb;
-  MaxComb.ub[6] = GreedyMaxComb;
-  MaxComb.ub[7] = GreedyMaxComb;
+  MaxComb.ub[0] = self->max_comb;
+  MaxComb.ub[1] = self->max_comb;
+  MaxComb.ub[2] = self->max_comb;
+  MaxComb.ub[3] = self->max_comb;
+  MaxComb.ub[4] = self->max_comb;
+  MaxComb.ub[5] = self->max_comb;
+  MaxComb.ub[6] = self->max_comb;
+  MaxComb.ub[7] = self->max_comb;
 
   // L2 == m0
   // L1 == t1
@@ -299,17 +327,20 @@ deinterlace_greedy_packed422_scanline_mmxext (uint8_t * m0, uint8_t * t1,
   emms ();
 
   if (width > 0)
-    deinterlace_greedy_packed422_scanline_c (m0, t1, b1, m2, output, width);
+    deinterlace_greedy_packed422_scanline_c (self, m0, t1, b1, m2, output,
+        width);
 }
 
 #endif
 
 static void
-deinterlace_frame_di_greedy (GstDeinterlace2 * object)
+deinterlace_frame_di_greedy (GstDeinterlaceMethod * d_method,
+    GstDeinterlace2 * object)
 {
-  void (*func) (uint8_t * L2, uint8_t * L1, uint8_t * L3, uint8_t * L2P,
-      uint8_t * Dest, int size);
-
+  GstDeinterlaceMethodGreedyL *self =
+      GST_DEINTERLACE_METHOD_GREEDY_L (d_method);
+  GstDeinterlaceMethodGreedyLClass *klass =
+      GST_DEINTERLACE_METHOD_GREEDY_L_GET_CLASS (self);
   int InfoIsOdd = 0;
   int Line;
   unsigned int Pitch = object->field_stride;
@@ -319,18 +350,6 @@ deinterlace_frame_di_greedy (GstDeinterlace2 * object)
 
   unsigned char *L2P;           // ptr to prev Line2
   unsigned char *Dest = GST_BUFFER_DATA (object->out_buf);
-
-#ifdef HAVE_CPU_I386
-  if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMXEXT) {
-    func = deinterlace_greedy_packed422_scanline_mmxext;
-  } else if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMX) {
-    func = deinterlace_greedy_packed422_scanline_mmx;
-  } else {
-    func = deinterlace_greedy_packed422_scanline_c;
-  }
-#else
-  func = deinterlace_greedy_packed422_scanline_c;
-#endif
 
   // copy first even line no matter what, and the first odd line if we're
   // processing an EVEN field. (note diff from other deint rtns.)
@@ -368,7 +387,7 @@ deinterlace_frame_di_greedy (GstDeinterlace2 * object)
   }
 
   for (Line = 0; Line < (object->field_height - 1); ++Line) {
-    func (L2, L1, L3, L2P, Dest, object->line_length);
+    klass->scanline (self, L2, L1, L3, L2P, Dest, object->line_length);
     Dest += object->output_stride;
     memcpy (Dest, L3, object->line_length);
     Dest += object->output_stride;
@@ -384,31 +403,84 @@ deinterlace_frame_di_greedy (GstDeinterlace2 * object)
   }
 }
 
-static deinterlace_method_t greedyl_method = {
-  0,                            //DEINTERLACE_PLUGIN_API_VERSION,
-  "Motion Adaptive: Simple Detection",
-  "AdaptiveSimple",
-  4,
-  0,
-  0,
-  0,
-  0,
-  1,
-  deinterlace_frame_di_greedy,
-  {"Uses heuristics to detect motion in the input",
-        "frames and reconstruct image detail where",
-        "possible.  Use this for high quality output",
-        "even on monitors set to an arbitrary refresh",
-        "rate.",
-        "",
-        "Simple detection uses linear interpolation",
-        "where motion is detected, using a two-field",
-        "buffer.  This is the Greedy: Low Motion",
-      "deinterlacer from DScaler."}
+
+G_DEFINE_TYPE (GstDeinterlaceMethodGreedyL, gst_deinterlace_method_greedy_l,
+    GST_TYPE_DEINTERLACE_METHOD);
+
+enum
+{
+  ARG_0,
+  ARG_MAX_COMB
 };
 
-deinterlace_method_t *
-dscaler_greedyl_get_method (void)
+static void
+gst_deinterlace_method_greedy_l_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
-  return &greedyl_method;
+  GstDeinterlaceMethodGreedyL *self = GST_DEINTERLACE_METHOD_GREEDY_L (object);
+
+  switch (prop_id) {
+    case ARG_MAX_COMB:
+      self->max_comb = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
+static void
+gst_deinterlace_method_greedy_l_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstDeinterlaceMethodGreedyL *self = GST_DEINTERLACE_METHOD_GREEDY_L (object);
+
+  switch (prop_id) {
+    case ARG_MAX_COMB:
+      g_value_set_uint (value, self->max_comb);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
+static void
+gst_deinterlace_method_greedy_l_class_init (GstDeinterlaceMethodGreedyLClass *
+    klass)
+{
+  GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  guint cpu_flags = oil_cpu_get_flags ();
+
+  gobject_class->set_property = gst_deinterlace_method_greedy_l_set_property;
+  gobject_class->get_property = gst_deinterlace_method_greedy_l_get_property;
+
+  g_object_class_install_property (gobject_class, ARG_MAX_COMB,
+      g_param_spec_uint ("max-comb",
+          "Max comb",
+          "Max Comb", 0, 255, 15, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+      );
+
+  dim_class->fields_required = 4;
+  dim_class->deinterlace_frame = deinterlace_frame_di_greedy;
+  dim_class->name = "Motion Adaptive: Simple Detection";
+  dim_class->nick = "greedyl";
+  dim_class->latency = 1;
+
+#ifdef HAVE_CPU_I386
+  if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
+    klass->scanline = deinterlace_greedy_packed422_scanline_mmxext;
+  } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {
+    klass->scanline = deinterlace_greedy_packed422_scanline_mmx;
+  } else {
+    klass->scanline = deinterlace_greedy_packed422_scanline_c;
+  }
+#else
+  klass->scanline = deinterlace_greedy_packed422_scanline_c;
+#endif
+}
+
+static void
+gst_deinterlace_method_greedy_l_init (GstDeinterlaceMethodGreedyL * self)
+{
+  self->max_comb = 15;
 }

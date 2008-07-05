@@ -17,7 +17,6 @@ noinst_HEADERS = \
 	gstdeinterlace2.h \
 	tvtime/mmx.h \
 	tvtime/sse.h \
-	tvtime/greedyh.h \
 	tvtime/greedyh.asm \
 	tvtime/greedyhmacros.h \
 	tvtime/plugins.h \
