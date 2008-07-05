@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2005 Martin Eikermann <meiker@upb.de>
- * Copyright (C) 2008 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -45,28 +45,39 @@ G_BEGIN_DECLS
 typedef struct _GstDeinterlace2 GstDeinterlace2;
 typedef struct _GstDeinterlace2Class GstDeinterlace2Class;
 
-typedef struct deinterlace_setting_s deinterlace_setting_t;
-typedef struct deinterlace_method_s deinterlace_method_t;
+#define GST_TYPE_DEINTERLACE_METHOD		(gst_deinterlace_method_get_type ())
+#define GST_IS_DEINTERLACE_METHOD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD))
+#define GST_IS_DEINTERLACE_METHOD_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DEINTERLACE_METHOD))
+#define GST_DEINTERLACE_METHOD_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DEINTERLACE_METHOD, GstDeinterlaceMethodClass))
+#define GST_DEINTERLACE_METHOD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DEINTERLACE_METHOD, GstDeinterlaceMethod))
+#define GST_DEINTERLACE_METHOD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEINTERLACE_METHOD, GstDeinterlaceMethodClass))
+#define GST_DEINTERLACE_METHOD_CAST(obj)	((GstDeinterlaceMethod*)(obj))
 
-typedef void (*deinterlace_frame_t) (GstDeinterlace2 * object);
+typedef struct _GstDeinterlaceMethod GstDeinterlaceMethod;
+typedef struct _GstDeinterlaceMethodClass GstDeinterlaceMethodClass;
 
 /*
  * This structure defines the deinterlacer plugin.
  */
-struct deinterlace_method_s
-{
-  int version;
-  const char *name;
-  const char *short_name;
-  int fields_required;
-  int accelrequired;
-  int doscalerbob;
-  int numsettings;
-  deinterlace_setting_t *settings;
-  int scanlinemode;
-  deinterlace_frame_t deinterlace_frame;
-  const char *description[10];
+
+struct _GstDeinterlaceMethod {
+  GstObject parent;
 };
+
+struct _GstDeinterlaceMethodClass {
+  GstObjectClass parent_class;
+  guint fields_required;
+  guint latency;
+
+  gboolean available;
+
+  void (*deinterlace_frame) (GstDeinterlaceMethod *self, GstDeinterlace2 * object);
+
+  const gchar *name;
+  const gchar *nick;
+};
+
+GType gst_deinterlace_method_get_type (void);
 
 #define MAX_FIELD_HISTORY 10
 
@@ -74,8 +85,6 @@ struct deinterlace_method_s
 #define PICTURE_INTERLACED_BOTTOM 1
 #define PICTURE_INTERLACED_TOP 2
 #define PICTURE_INTERLACED_MASK (PICTURE_INTERLACED_BOTTOM | PICTURE_INTERLACED_TOP)
-
-typedef void (MEMCPY_FUNC) (void *pOutput, const void *pInput, size_t nSize);
 
 typedef struct
 {
@@ -87,7 +96,7 @@ typedef struct
 
 typedef enum
 {
-  GST_DEINTERLACE2_TOM,
+  GST_DEINTERLACE2_TOMSMOCOMP,
   GST_DEINTERLACE2_GREEDY_H,
   GST_DEINTERLACE2_GREEDY_L,
   GST_DEINTERLACE2_VFIR
@@ -115,7 +124,6 @@ struct _GstDeinterlace2
 
   guint history_count;
 
-  guint cpu_feature_flags;
   GstDeinterlace2FieldLayout field_layout;
 
   guint frame_size;
@@ -124,7 +132,7 @@ struct _GstDeinterlace2
   GstDeinterlace2Fields fields;
 
   GstDeinterlace2Methods method_id;
-  deinterlace_method_t *method;
+  GstDeinterlaceMethod *method;
 
   /* The most recent pictures 
      PictureHistory[0] is always the most recent.

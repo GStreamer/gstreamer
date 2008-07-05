@@ -1,5 +1,6 @@
 /**
  * Copyright (C) 2004 Billy Biggs <vektor@dumbterm.net>
+ * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,22 +32,28 @@
 #include "tomsmocomp/tomsmocompmacros.h"
 #include "x86-64_macros.inc"
 
-#define SearchEffortDefault 5
-#define UseStrangeBobDefault 0
+#define GST_TYPE_DEINTERLACE_METHOD_TOMSMOCOMP	(gst_deinterlace_method_tomsmocomp_get_type ())
+#define GST_IS_DEINTERLACE_METHOD_TOMSMOCOMP(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_TOMSMOCOMP))
+#define GST_IS_DEINTERLACE_METHOD_TOMSMOCOMP_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DEINTERLACE_METHOD_TOMSMOCOMP))
+#define GST_DEINTERLACE_METHOD_TOMSMOCOMP_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DEINTERLACE_METHOD_TOMSMOCOMP, GstDeinterlaceMethodTomsMoCompClass))
+#define GST_DEINTERLACE_METHOD_TOMSMOCOMP(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DEINTERLACE_METHOD_TOMSMOCOMP, GstDeinterlaceMethodTomsMoComp))
+#define GST_DEINTERLACE_METHOD_TOMSMOCOMP_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEINTERLACE_METHOD_TOMSMOCOMP, GstDeinterlaceMethodTomsMoCompClass))
+#define GST_DEINTERLACE_METHOD_TOMSMOCOMP_CAST(obj)	((GstDeinterlaceMethodTomsMoComp*)(obj))
 
-static long SearchEffort;
-static int UseStrangeBob;
-static int IsOdd;
-static const unsigned char *pWeaveSrc;
-static const unsigned char *pWeaveSrcP;
-static unsigned char *pWeaveDest;
-static const unsigned char *pCopySrc;
-static const unsigned char *pCopySrcP;
-static unsigned char *pCopyDest;
-static int src_pitch;
-static int dst_pitch;
-static int rowsize;
-static int FldHeight;
+GType gst_deinterlace_method_tomsmocomp_get_type (void);
+
+typedef struct
+{
+  GstDeinterlaceMethod parent;
+
+  guint search_effort;
+  gboolean strange_bob;
+} GstDeinterlaceMethodTomsMoComp;
+
+typedef struct
+{
+  GstDeinterlaceMethodClass parent_class;
+} GstDeinterlaceMethodTomsMoCompClass;
 
 static int
 Fieldcopy (void *dest, const void *src, size_t count,
@@ -90,71 +97,96 @@ Fieldcopy (void *dest, const void *src, size_t count,
 #undef  SSE_TYPE
 #undef  FUNCT_NAME
 
-static void
-tomsmocomp_init (void)
+G_DEFINE_TYPE (GstDeinterlaceMethodTomsMoComp,
+    gst_deinterlace_method_tomsmocomp, GST_TYPE_DEINTERLACE_METHOD);
+
+enum
 {
-  SearchEffort = SearchEffortDefault;
-  UseStrangeBob = UseStrangeBobDefault;
-}
+  ARG_0,
+  ARG_SEARCH_EFFORT,
+  ARG_STRANGE_BOB
+};
 
 static void
-tomsmocomp_filter_mmx (GstDeinterlace2 * object)
+gst_deinterlace_method_tomsmocomp_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
-  tomsmocompDScaler_MMX (object);
-}
+  GstDeinterlaceMethodTomsMoComp *self =
+      GST_DEINTERLACE_METHOD_TOMSMOCOMP (object);
 
-static void
-tomsmocomp_filter_3dnow (GstDeinterlace2 * object)
-{
-  tomsmocompDScaler_3DNOW (object);
-}
-
-static void
-tomsmocomp_filter_sse (GstDeinterlace2 * object)
-{
-  tomsmocompDScaler_SSE (object);
-}
-
-static void
-deinterlace_frame_di_tomsmocomp (GstDeinterlace2 * object)
-{
-  if (object->cpu_feature_flags & OIL_IMPL_FLAG_SSE) {
-    tomsmocomp_filter_sse (object);
-  } else if (object->cpu_feature_flags & OIL_IMPL_FLAG_3DNOW) {
-    tomsmocomp_filter_3dnow (object);
-  } else if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMX) {
-    tomsmocomp_filter_mmx (object);
-  } else {
-    g_assert_not_reached ();
+  switch (prop_id) {
+    case ARG_SEARCH_EFFORT:
+      self->search_effort = g_value_get_uint (value);
+      break;
+    case ARG_STRANGE_BOB:
+      self->strange_bob = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
 }
 
-static deinterlace_method_t tomsmocompmethod = {
-  0,                            //DEINTERLACE_PLUGIN_API_VERSION,
-  "Motion Adaptive: Motion Search",
-  "AdaptiveSearch",
-  4,
-  OIL_IMPL_FLAG_MMX,
-  0,
-  0,
-  0,
-  0,
-  deinterlace_frame_di_tomsmocomp,
-  {"Uses heuristics to detect motion in the input",
-        "frames and reconstruct image detail where",
-        "possible.  Use this for high quality output",
-        "even on monitors set to an arbitrary refresh",
-        "rate.",
-        "",
-        "Motion search mode finds and follows motion",
-        "vectors for accurate interpolation.  This is",
-        "the TomsMoComp deinterlacer from DScaler.",
-      ""}
-};
-
-deinterlace_method_t *
-dscaler_tomsmocomp_get_method (void)
+static void
+gst_deinterlace_method_tomsmocomp_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
-  tomsmocomp_init ();
-  return &tomsmocompmethod;
+  GstDeinterlaceMethodTomsMoComp *self =
+      GST_DEINTERLACE_METHOD_TOMSMOCOMP (object);
+
+  switch (prop_id) {
+    case ARG_SEARCH_EFFORT:
+      g_value_set_uint (value, self->search_effort);
+      break;
+    case ARG_STRANGE_BOB:
+      g_value_set_boolean (value, self->strange_bob);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
+static void
+    gst_deinterlace_method_tomsmocomp_class_init
+    (GstDeinterlaceMethodTomsMoCompClass * klass)
+{
+  GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  guint cpu_flags = oil_cpu_get_flags ();
+
+  gobject_class->set_property = gst_deinterlace_method_tomsmocomp_set_property;
+  gobject_class->get_property = gst_deinterlace_method_tomsmocomp_get_property;
+
+  g_object_class_install_property (gobject_class, ARG_SEARCH_EFFORT,
+      g_param_spec_uint ("search-effort",
+          "Search Effort",
+          "Search Effort", 0, 27, 5, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+      );
+
+  g_object_class_install_property (gobject_class, ARG_STRANGE_BOB,
+      g_param_spec_boolean ("strange-bob",
+          "Strange Bob",
+          "Use strange bob", FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+      );
+
+  dim_class->fields_required = 4;
+  dim_class->name = "Motion Adaptive: Motion Search";
+  dim_class->nick = "tomsmocomp";
+  dim_class->latency = 1;
+
+  if (cpu_flags & OIL_IMPL_FLAG_SSE) {
+    dim_class->deinterlace_frame = tomsmocompDScaler_SSE;
+  } else if (cpu_flags & OIL_IMPL_FLAG_3DNOW) {
+    dim_class->deinterlace_frame = tomsmocompDScaler_3DNOW;
+  } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {
+    dim_class->deinterlace_frame = tomsmocompDScaler_MMX;
+  } else {
+    dim_class->available = FALSE;
+  }
+}
+
+static void
+gst_deinterlace_method_tomsmocomp_init (GstDeinterlaceMethodTomsMoComp * self)
+{
+  self->search_effort = 5;
+  self->strange_bob = FALSE;
 }

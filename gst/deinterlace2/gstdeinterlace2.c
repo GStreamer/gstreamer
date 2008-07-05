@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2005 Martin Eikermann <meiker@upb.de>
- * Copyright (C) 2008 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -49,25 +49,56 @@ enum
   ARG_FIELD_LAYOUT
 };
 
-#define GST_TYPE_DEINTERLACE2_METHOD (gst_deinterlace2_method_get_type ())
-static GType
-gst_deinterlace2_method_get_type (void)
-{
-  static GType deinterlace2_method_type = 0;
+G_DEFINE_TYPE (GstDeinterlaceMethod, gst_deinterlace_method, GST_TYPE_OBJECT);
 
-  static const GEnumValue method_types[] = {
-    {GST_DEINTERLACE2_TOM, "Toms Motion Compensation", "tomsmc"},
+static void
+gst_deinterlace_method_class_init (GstDeinterlaceMethodClass * klass)
+{
+  klass->available = TRUE;
+}
+
+static void
+gst_deinterlace_method_init (GstDeinterlaceMethod * self)
+{
+
+}
+
+static void
+gst_deinterlace_method_deinterlace_frame (GstDeinterlaceMethod * self,
+    GstDeinterlace2 * object)
+{
+  GstDeinterlaceMethodClass *klass = GST_DEINTERLACE_METHOD_GET_CLASS (self);
+
+  klass->deinterlace_frame (self, object);
+}
+
+static gint
+gst_deinterlace_method_get_fields_required (GstDeinterlaceMethod * self)
+{
+  GstDeinterlaceMethodClass *klass = GST_DEINTERLACE_METHOD_GET_CLASS (self);
+
+  return klass->fields_required;
+}
+
+#define GST_TYPE_DEINTERLACE2_METHODS (gst_deinterlace2_methods_get_type ())
+static GType
+gst_deinterlace2_methods_get_type (void)
+{
+  static GType deinterlace2_methods_type = 0;
+
+  static const GEnumValue methods_types[] = {
+    {GST_DEINTERLACE2_TOMSMOCOMP, "Toms Motion Compensation", "tomsmocomp"},
     {GST_DEINTERLACE2_GREEDY_H, "Greedy High Motion", "greedyh"},
     {GST_DEINTERLACE2_GREEDY_L, "Greedy Low Motion", "greedyl"},
     {GST_DEINTERLACE2_VFIR, "Vertical Blur", "vfir"},
     {0, NULL, NULL},
   };
 
-  if (!deinterlace2_method_type) {
-    deinterlace2_method_type =
-        g_enum_register_static ("GstDeinterlace2Methods", method_types);
+  if (!deinterlace2_methods_type) {
+    deinterlace2_methods_type =
+        g_enum_register_static ("GstDeinterlace2Methods", methods_types);
   }
-  return deinterlace2_method_type;
+  return deinterlace2_methods_type;
 }
 
 #define GST_TYPE_DEINTERLACE2_FIELDS (gst_deinterlace2_fields_get_type ())
@@ -141,8 +172,66 @@ static const GstQueryType *gst_deinterlace2_src_query_types (GstPad * pad);
 
 static void gst_deinterlace2_reset (GstDeinterlace2 * object);
 
-GST_BOILERPLATE (GstDeinterlace2, gst_deinterlace2, GstElement,
-    GST_TYPE_ELEMENT);
+static void gst_deinterlace2_child_proxy_interface_init (gpointer g_iface,
+    gpointer iface_data);
+
+static void
+_do_init (GType object_type)
+{
+  const GInterfaceInfo child_proxy_interface_info = {
+    (GInterfaceInitFunc) gst_deinterlace2_child_proxy_interface_init,
+    NULL,                       /* interface_finalize */
+    NULL                        /* interface_data */
+  };
+
+  g_type_add_interface_static (object_type, GST_TYPE_CHILD_PROXY,
+      &child_proxy_interface_info);
+}
+
+GST_BOILERPLATE_FULL (GstDeinterlace2, gst_deinterlace2, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
+
+static void
+gst_deinterlace2_set_method (GstDeinterlace2 * object,
+    GstDeinterlace2Methods method)
+{
+
+  if (object->method) {
+    gst_child_proxy_child_removed (GST_OBJECT (object),
+        GST_OBJECT (object->method));
+    gst_object_unparent (GST_OBJECT (object->method));
+    object->method = NULL;
+  }
+
+  switch (method) {
+    case GST_DEINTERLACE2_TOMSMOCOMP:
+      object->method = g_object_new (GST_TYPE_DEINTERLACE_TOMSMOCOMP, NULL);
+      break;
+    case GST_DEINTERLACE2_GREEDY_H:
+      object->method = g_object_new (GST_TYPE_DEINTERLACE_GREEDY_H, NULL);
+      break;
+    case GST_DEINTERLACE2_GREEDY_L:
+      object->method = g_object_new (GST_TYPE_DEINTERLACE_GREEDY_L, NULL);
+      break;
+    case GST_DEINTERLACE2_VFIR:
+      object->method = g_object_new (GST_TYPE_DEINTERLACE_VFIR, NULL);
+      break;
+    default:
+      GST_WARNING ("Invalid Deinterlacer Method");
+      return;
+  }
+
+  object->method_id = method;
+
+  gst_object_set_name (GST_OBJECT (object->method), "method");
+  gst_object_set_parent (GST_OBJECT (object->method), GST_OBJECT (object));
+  gst_child_proxy_child_added (GST_OBJECT (object),
+      GST_OBJECT (object->method));
+
+  /* TODO: if current method requires less fields in the history,
+     pop the diff from field_history.
+   */
+}
 
 static void
 gst_deinterlace2_base_init (gpointer klass)
@@ -177,8 +266,9 @@ gst_deinterlace2_class_init (GstDeinterlace2Class * klass)
       g_param_spec_enum ("method",
           "Method",
           "Deinterlace Method",
-          GST_TYPE_DEINTERLACE2_METHOD,
-          GST_DEINTERLACE2_TOM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+          GST_TYPE_DEINTERLACE2_METHODS,
+          GST_DEINTERLACE2_TOMSMOCOMP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
   g_object_class_install_property (gobject_class, ARG_FIELDS,
@@ -200,6 +290,33 @@ gst_deinterlace2_class_init (GstDeinterlace2Class * klass)
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_deinterlace2_change_state);
+}
+
+static GstObject *
+gst_deinterlace2_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
+    guint index)
+{
+  GstDeinterlace2 *self = GST_DEINTERLACE2 (child_proxy);
+
+  g_return_val_if_fail (index == 0, NULL);
+
+  return gst_object_ref (self->method);
+}
+
+static guint
+gst_deinterlace2_child_proxy_get_children_count (GstChildProxy * child_proxy)
+{
+  return 1;
+}
+
+static void
+gst_deinterlace2_child_proxy_interface_init (gpointer g_iface,
+    gpointer iface_data)
+{
+  GstChildProxyInterface *iface = g_iface;
+
+  iface->get_child_by_index = gst_deinterlace2_child_proxy_get_child_by_index;
+  iface->get_children_count = gst_deinterlace2_child_proxy_get_children_count;
 }
 
 static void
@@ -231,9 +348,7 @@ gst_deinterlace2_init (GstDeinterlace2 * object, GstDeinterlace2Class * klass)
 
   gst_element_no_more_pads (GST_ELEMENT (object));
 
-  object->cpu_feature_flags = oil_cpu_get_flags ();
-
-  object->method = dscaler_tomsmocomp_get_method ();
+  gst_deinterlace2_set_method (object, GST_DEINTERLACE2_TOMSMOCOMP);
   object->field_layout = GST_DEINTERLACE2_LAYOUT_AUTO;
   object->fields = GST_DEINTERLACE2_ALL;
 
@@ -273,37 +388,6 @@ gst_deinterlace2_reset (GstDeinterlace2 * object)
   object->field_stride = 0;
 
   gst_deinterlace2_reset_history (object);
-}
-
-static void
-gst_deinterlace2_set_method (GstDeinterlace2 * object,
-    GstDeinterlace2Methods method)
-{
-
-  switch (method) {
-    case GST_DEINTERLACE2_TOM:
-      object->method_id = method;
-      object->method = dscaler_tomsmocomp_get_method ();
-      break;
-    case GST_DEINTERLACE2_GREEDY_H:
-      object->method_id = method;
-      object->method = dscaler_greedyh_get_method ();
-      break;
-    case GST_DEINTERLACE2_GREEDY_L:
-      object->method_id = method;
-      object->method = dscaler_greedyl_get_method ();
-      break;
-    case GST_DEINTERLACE2_VFIR:
-      object->method_id = method;
-      object->method = dscaler_vfir_get_method ();
-      break;
-    default:
-      GST_WARNING ("Invalid Deinterlacer Method");
-  }
-
-  /* TODO: if current method requires less fields in the history,
-     pop the diff from field_history.
-   */
 }
 
 static void
@@ -367,7 +451,14 @@ gst_deinterlace2_get_property (GObject * _object, guint prop_id,
 static void
 gst_deinterlace2_finalize (GObject * object)
 {
-  gst_deinterlace2_reset (GST_DEINTERLACE2 (object));
+  GstDeinterlace2 *self = GST_DEINTERLACE2 (object);
+
+  gst_deinterlace2_reset (self);
+
+  if (self->method) {
+    gst_object_unparent (GST_OBJECT (self->method));
+    self->method = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -456,6 +547,7 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
   GstDeinterlace2 *object = NULL;
   GstClockTime timestamp;
   GstFlowReturn ret = GST_FLOW_OK;
+  gint fields_required = 0;
 
   object = GST_DEINTERLACE2 (GST_PAD_PARENT (pad));
 
@@ -464,9 +556,11 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
 
   if (object->method != NULL) {
     int cur_field_idx = 0;
+    fields_required =
+        gst_deinterlace_method_get_fields_required (object->method);
 
     /* Not enough fields in the history */
-    if (object->history_count < object->method->fields_required + 1) {
+    if (object->history_count < fields_required + 1) {
       /* TODO: do bob or just forward frame */
       GST_DEBUG ("HistoryCount=%d", object->history_count);
       return GST_FLOW_OK;
@@ -479,7 +573,7 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
     if (object->fields == GST_DEINTERLACE2_BF)
       GST_DEBUG ("Bottom fields");
 
-    cur_field_idx = object->history_count - object->method->fields_required;
+    cur_field_idx = object->history_count - fields_required;
 
     if ((object->field_history[cur_field_idx].flags == PICTURE_INTERLACED_TOP
             && object->fields == GST_DEINTERLACE2_TF) ||
@@ -494,25 +588,23 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
         return ret;
 
       /* do magic calculus */
-      if (object->method->deinterlace_frame != NULL) {
-        object->method->deinterlace_frame (object);
+      gst_deinterlace_method_deinterlace_frame (object->method, object);
 
-        buf = gst_deinterlace2_pop_history (object);
-        timestamp = GST_BUFFER_TIMESTAMP (buf);
-        gst_buffer_unref (buf);
+      buf = gst_deinterlace2_pop_history (object);
+      timestamp = GST_BUFFER_TIMESTAMP (buf);
+      gst_buffer_unref (buf);
 
-        GST_BUFFER_TIMESTAMP (object->out_buf) = timestamp;
+      GST_BUFFER_TIMESTAMP (object->out_buf) = timestamp;
+      GST_BUFFER_DURATION (object->out_buf) =
+          GST_SECOND / object->frame_rate_d / object->frame_rate_n;
+      if (object->fields == GST_DEINTERLACE2_ALL)
         GST_BUFFER_DURATION (object->out_buf) =
-            GST_SECOND / object->frame_rate_d / object->frame_rate_n;
-        if (object->fields == GST_DEINTERLACE2_ALL)
-          GST_BUFFER_DURATION (object->out_buf) =
-              GST_BUFFER_DURATION (object->out_buf) / 2;
+            GST_BUFFER_DURATION (object->out_buf) / 2;
 
-        ret = gst_pad_push (object->srcpad, object->out_buf);
-        object->out_buf = NULL;
-        if (ret != GST_FLOW_OK)
-          return ret;
-      }
+      ret = gst_pad_push (object->srcpad, object->out_buf);
+      object->out_buf = NULL;
+      if (ret != GST_FLOW_OK)
+        return ret;
     }
     /* no calculation done: remove excess field */
     else if (object->field_history[cur_field_idx].flags ==
@@ -522,7 +614,7 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
       gst_buffer_unref (buf);
     }
 
-    cur_field_idx = object->history_count - object->method->fields_required;
+    cur_field_idx = object->history_count - fields_required;
 
     /* deinterlace bottom_field */
     if ((object->field_history[cur_field_idx].flags == PICTURE_INTERLACED_BOTTOM
@@ -538,26 +630,24 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
         return ret;
 
       /* do magic calculus */
-      if (object->method->deinterlace_frame != NULL) {
-        object->method->deinterlace_frame (object);
+      gst_deinterlace_method_deinterlace_frame (object->method, object);
 
-        buf = gst_deinterlace2_pop_history (object);
-        timestamp = GST_BUFFER_TIMESTAMP (buf);
-        gst_buffer_unref (buf);
+      buf = gst_deinterlace2_pop_history (object);
+      timestamp = GST_BUFFER_TIMESTAMP (buf);
+      gst_buffer_unref (buf);
 
-        GST_BUFFER_TIMESTAMP (object->out_buf) = timestamp;
+      GST_BUFFER_TIMESTAMP (object->out_buf) = timestamp;
+      GST_BUFFER_DURATION (object->out_buf) =
+          GST_SECOND / object->frame_rate_d / object->frame_rate_n;
+      if (object->fields == GST_DEINTERLACE2_ALL)
         GST_BUFFER_DURATION (object->out_buf) =
-            GST_SECOND / object->frame_rate_d / object->frame_rate_n;
-        if (object->fields == GST_DEINTERLACE2_ALL)
-          GST_BUFFER_DURATION (object->out_buf) =
-              GST_BUFFER_DURATION (object->out_buf) / 2;
+            GST_BUFFER_DURATION (object->out_buf) / 2;
 
-        ret = gst_pad_push (object->srcpad, object->out_buf);
-        object->out_buf = NULL;
+      ret = gst_pad_push (object->srcpad, object->out_buf);
+      object->out_buf = NULL;
 
-        if (ret != GST_FLOW_OK)
-          return ret;
-      }
+      if (ret != GST_FLOW_OK)
+        return ret;
     }
     /* no calculation done: remove excess field */
     else if (object->field_history[cur_field_idx].flags ==
@@ -757,6 +847,11 @@ gst_deinterlace2_src_query (GstPad * pad, GstQuery * query)
       if ((peer = gst_pad_get_peer (object->sinkpad))) {
         if ((res = gst_pad_query (peer, query))) {
           GstClockTime latency;
+          gint fields_required = 0;
+
+          if (object->method)
+            fields_required =
+                gst_deinterlace_method_get_fields_required (object->method);
 
           gst_query_parse_latency (query, &live, &min, &max);
 
@@ -766,7 +861,7 @@ gst_deinterlace2_src_query (GstPad * pad, GstQuery * query)
 
           /* add our own latency */
           latency =
-              gst_util_uint64_scale (object->method->fields_required *
+              gst_util_uint64_scale (fields_required *
               GST_SECOND, object->frame_rate_d, object->frame_rate_n);
           latency /= 2;
 

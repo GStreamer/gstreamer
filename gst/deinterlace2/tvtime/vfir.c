@@ -3,6 +3,7 @@
  * GStreamer
  * Copyright (C) 2004 Billy Biggs <vektor@dumbterm.net>
  * Copyright (c) 2001, 2002, 2003 Fabrice Bellard.
+ * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -35,6 +36,26 @@
 #include "_stdint.h"
 #include "gstdeinterlace2.h"
 #include <string.h>
+
+#define GST_TYPE_DEINTERLACE_METHOD_VFIR	(gst_deinterlace_method_vfir_get_type ())
+#define GST_IS_DEINTERLACE_METHOD_VFIR(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_VFIR))
+#define GST_IS_DEINTERLACE_METHOD_VFIR_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DEINTERLACE_METHOD_VFIR))
+#define GST_DEINTERLACE_METHOD_VFIR_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DEINTERLACE_METHOD_VFIR, GstDeinterlaceMethodVFIRClass))
+#define GST_DEINTERLACE_METHOD_VFIR(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DEINTERLACE_METHOD_VFIR, GstDeinterlaceMethodVFIR))
+#define GST_DEINTERLACE_METHOD_VFIR_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEINTERLACE_METHOD_VFIR, GstDeinterlaceMethodVFIRClass))
+#define GST_DEINTERLACE_METHOD_VFIR_CAST(obj)	((GstDeinterlaceMethodVFIR*)(obj))
+
+GType gst_deinterlace_method_vfir_get_type (void);
+
+typedef GstDeinterlaceMethod GstDeinterlaceMethodVFIR;
+
+typedef struct
+{
+  GstDeinterlaceMethodClass parent_class;
+  void (*scanline) (uint8_t * dst, uint8_t * lum_m4,
+      uint8_t * lum_m3, uint8_t * lum_m2,
+      uint8_t * lum_m1, uint8_t * lum, int size);
+} GstDeinterlaceMethodVFIRClass;
 
 /*
  * The MPEG2 spec uses a slightly harsher filter, they specify
@@ -122,24 +143,14 @@ deinterlace_line_mmx (uint8_t * dst, uint8_t * lum_m4,
 #endif
 
 static void
-deinterlace_frame_vfir (GstDeinterlace2 * object)
+deinterlace_frame_vfir (GstDeinterlaceMethod * d_method,
+    GstDeinterlace2 * object)
 {
-  void (*func) (uint8_t * dst, uint8_t * lum_m4,
-      uint8_t * lum_m3, uint8_t * lum_m2,
-      uint8_t * lum_m1, uint8_t * lum, int size);
+  GstDeinterlaceMethodVFIRClass *klass =
+      GST_DEINTERLACE_METHOD_VFIR_GET_CLASS (d_method);
   gint line = 0;
   uint8_t *cur_field, *last_field;
   uint8_t *t0, *b0, *tt1, *m1, *bb1, *out_data;
-
-#ifdef HAVE_CPU_I386
-  if (object->cpu_feature_flags & OIL_IMPL_FLAG_MMX) {
-    func = deinterlace_line_mmx;
-  } else {
-    func = deinterlace_line_c;
-  }
-#else
-  func = deinterlace_line_c;
-#endif
 
   cur_field =
       GST_BUFFER_DATA (object->field_history[object->history_count - 2].buf);
@@ -173,7 +184,7 @@ deinterlace_frame_vfir (GstDeinterlace2 * object)
       bb1 = tt1;
     }
 
-    func (out_data, tt1, t0, m1, b0, bb1, object->line_length);
+    klass->scanline (out_data, tt1, t0, m1, b0, bb1, object->line_length);
     out_data += object->output_stride;
     cur_field += object->field_stride;
     last_field += object->field_stride;
@@ -189,31 +200,33 @@ deinterlace_frame_vfir (GstDeinterlace2 * object)
   }
 }
 
-static deinterlace_method_t vfirmethod = {
-  0,                            //DEINTERLACE_PLUGIN_API_VERSION,
-  "Blur: Vertical",
-  "BlurVertical",
-  2,
-  0,
-  0,
-  0,
-  0,
-  1,
-  deinterlace_frame_vfir,
-  {"Avoids flicker by blurring consecutive frames",
-        "of input.  Use this if you want to run your",
-        "monitor at an arbitrary refresh rate and not",
-        "use much CPU, and are willing to sacrifice",
-        "detail.",
-        "",
-        "Vertical mode blurs favouring the most recent",
-        "field for less visible trails.  From the",
-        "deinterlacer filter in ffmpeg.",
-      ""}
-};
+G_DEFINE_TYPE (GstDeinterlaceMethodVFIR, gst_deinterlace_method_vfir,
+    GST_TYPE_DEINTERLACE_METHOD);
 
-deinterlace_method_t *
-dscaler_vfir_get_method (void)
+static void
+gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
 {
-  return &vfirmethod;
+  GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
+  guint cpu_flags = oil_cpu_get_flags ();
+
+  dim_class->fields_required = 2;
+  dim_class->deinterlace_frame = deinterlace_frame_vfir;
+  dim_class->name = "Blur Vertical";
+  dim_class->nick = "vfir";
+  dim_class->latency = 0;
+
+#ifdef HAVE_CPU_I386
+  if (cpu_flags & OIL_IMPL_FLAG_MMX) {
+    klass->scanline = deinterlace_line_mmx;
+  } else {
+    klass->scanline = deinterlace_line_c;
+  }
+#else
+  klass->scanline = deinterlace_line_c;
+#endif
+}
+
+static void
+gst_deinterlace_method_vfir_init (GstDeinterlaceMethodVFIR * self)
+{
 }

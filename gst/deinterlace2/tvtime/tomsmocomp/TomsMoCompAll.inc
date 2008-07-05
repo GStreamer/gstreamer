@@ -33,11 +33,11 @@
 #endif
 
 #if defined(IS_SSE)
-#define SEFUNC(x) Search_Effort_SSE_##x()
+#define SEFUNC(x) Search_Effort_SSE_##x(int src_pitch, int dst_pitch, int rowsize, const unsigned char *pWeaveSrc, const unsigned char *pWeaveSrcP, unsigned char *pWeaveDest, int IsOdd, const unsigned char *pCopySrc, const unsigned char *pCopySrcP, int FldHeight)
 #elif defined(IS_3DNOW)
-#define SEFUNC(x) Search_Effort_3DNOW_##x()
+#define SEFUNC(x) Search_Effort_3DNOW_##x(int src_pitch, int dst_pitch, int rowsize, const unsigned char *pWeaveSrc, const unsigned char *pWeaveSrcP, unsigned char *pWeaveDest, int IsOdd, const unsigned char *pCopySrc, const unsigned char *pCopySrcP, int FldHeight)
 #else
-#define SEFUNC(x) Search_Effort_MMX_##x()
+#define SEFUNC(x) Search_Effort_MMX_##x(int src_pitch, int dst_pitch, int rowsize, const unsigned char *pWeaveSrc, const unsigned char *pWeaveSrcP, unsigned char *pWeaveDest, int IsOdd, const unsigned char *pCopySrc, const unsigned char *pCopySrcP, int FldHeight)
 #endif
 
 #include "TomsMoCompAll2.inc"
@@ -48,9 +48,32 @@
 
 #undef USE_STRANGE_BOB
 
+#undef SEFUNC
+#if defined(IS_SSE)
+#define SEFUNC(x) Search_Effort_SSE_##x(src_pitch, dst_pitch, rowsize, pWeaveSrc, pWeaveSrcP, pWeaveDest, IsOdd, pCopySrc, pCopySrcP, FldHeight)
+#elif defined(IS_3DNOW)
+#define SEFUNC(x) Search_Effort_3DNOW_##x(src_pitch, dst_pitch, rowsize, pWeaveSrc, pWeaveSrcP, pWeaveDest, IsOdd, pCopySrc, pCopySrcP, FldHeight)
+#else
+#define SEFUNC(x) Search_Effort_MMX_##x(src_pitch, dst_pitch, rowsize, pWeaveSrc, pWeaveSrcP, pWeaveDest, IsOdd, pCopySrc, pCopySrcP, FldHeight)
+#endif
 
-void FUNCT_NAME(GstDeinterlace2* object)
+void FUNCT_NAME(GstDeinterlaceMethod *d_method, GstDeinterlace2* object)
 {
+  GstDeinterlaceMethodTomsMoComp *self = GST_DEINTERLACE_METHOD_TOMSMOCOMP (d_method);
+  long SearchEffort = self->search_effort;
+  int UseStrangeBob = self->strange_bob;
+  int IsOdd;
+  const unsigned char *pWeaveSrc;
+  const unsigned char *pWeaveSrcP;
+  unsigned char *pWeaveDest;
+  const unsigned char *pCopySrc;
+  const unsigned char *pCopySrcP;
+  unsigned char *pCopyDest;
+  int src_pitch;
+  int dst_pitch;
+  int rowsize;
+  int FldHeight;
+
   /* double stride do address just every odd/even scanline */
   src_pitch = object->field_stride;
   dst_pitch = object->output_stride;
@@ -80,10 +103,6 @@ void FUNCT_NAME(GstDeinterlace2* object)
   }
 
   
-#ifdef IS_SSE2
-  // SSE2 support temporarily deleted
-#endif
-
   // copy 1st and last weave lines 
   Fieldcopy(pWeaveDest, pCopySrc, rowsize,		
 	    1, dst_pitch*2, src_pitch);
