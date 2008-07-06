@@ -160,6 +160,8 @@ static void new_caps (GstPad * pad, GParamSpec * unused, GstDynamic * dynamic);
 static void queue_filled_cb (GstElement * queue, GstDecodeBin * decode_bin);
 static void queue_underrun_cb (GstElement * queue, GstDecodeBin * decode_bin);
 
+static gboolean is_demuxer_element (GstElement * srcelement);
+
 static GstElementClass *parent_class;
 static guint gst_decode_bin_signals[LAST_SIGNAL] = { 0 };
 
@@ -719,6 +721,45 @@ pad_probe (GstPad * pad, GstMiniObject * data, GstDecodeBin * decode_bin)
   return TRUE;
 }
 
+/* FIXME: this should be somehow merged with the queue code in
+ * try_to_link_1() to reduce code duplication */
+static GstPad *
+add_raw_queue (GstDecodeBin * decode_bin, GstPad * pad)
+{
+  GstElement *queue = NULL;
+  GstPad *queuesinkpad = NULL, *queuesrcpad = NULL;
+
+  queue = gst_element_factory_make ("queue", NULL);
+  decode_bin->queue_type = G_OBJECT_TYPE (queue);
+
+  g_object_set (G_OBJECT (queue), "max-size-buffers", 0, NULL);
+  g_object_set (G_OBJECT (queue), "max-size-time", G_GINT64_CONSTANT (0), NULL);
+  g_object_set (G_OBJECT (queue), "max-size-bytes", 8192, NULL);
+  gst_bin_add (GST_BIN (decode_bin), queue);
+  gst_element_set_state (queue, GST_STATE_READY);
+  queuesinkpad = gst_element_get_static_pad (queue, "sink");
+  queuesrcpad = gst_element_get_static_pad (queue, "src");
+
+  if (gst_pad_link (pad, queuesinkpad) != GST_PAD_LINK_OK) {
+    gst_element_set_state (queue, GST_STATE_NULL);
+    gst_object_unref (queuesrcpad);
+    gst_object_unref (queuesinkpad);
+    gst_bin_remove (GST_BIN (decode_bin), queue);
+    return NULL;
+  }
+
+  decode_bin->queues = g_list_append (decode_bin->queues, queue);
+  g_signal_connect (G_OBJECT (queue),
+      "overrun", G_CALLBACK (queue_filled_cb), decode_bin);
+  g_signal_connect (G_OBJECT (queue),
+      "underrun", G_CALLBACK (queue_underrun_cb), decode_bin);
+
+  gst_element_set_state (queue, GST_STATE_PAUSED);
+  gst_object_unref (queuesinkpad);
+
+  return queuesrcpad;
+}
+
 /* given a pad and a caps from an element, find the list of elements
  * that could connect to the pad
  *
@@ -771,6 +812,17 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     GstPad *ghost;
     PadProbeData *data;
 
+    /* If we're at a demuxer element but have raw data already
+     * we have to add a queue here. For non-raw data this is done
+     * in try_to_link_1() */
+    if (is_demuxer_element (element)) {
+      GST_DEBUG_OBJECT (decode_bin,
+          "Element %s is a demuxer, inserting a queue",
+          GST_OBJECT_NAME (element));
+
+      pad = add_raw_queue (decode_bin, pad);
+    }
+
     /* make a unique name for this new pad */
     padname = g_strdup_printf ("src%d", decode_bin->numpads);
     decode_bin->numpads++;
@@ -800,6 +852,11 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     GST_DEBUG_OBJECT (decode_bin, "emitted new-decoded-pad");
 
     g_free (padname);
+
+    /* If we're at a demuxer element pad was set to a queue's
+     * srcpad and must be unref'd here */
+    if (is_demuxer_element (element))
+      gst_object_unref (pad);
   } else {
     GList *to_try;
 

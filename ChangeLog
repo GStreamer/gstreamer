@@ -1,3 +1,15 @@
+2008-07-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Evgeniy Stepanov <eugeni dot stepanov at gmail dot com>
+
+	* gst/playback/gstdecodebin.c: (add_raw_queue), (close_pad_link):
+	Add a queue after a demuxer if the demuxer outputs raw data. This was
+	done before only for non-raw data but is required in this case too.
+	Fixes bug #540215.
+
+	decodebin2 doesn't have this issue because all streams of a group
+	go through multiqueue.
+
 2008-07-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
