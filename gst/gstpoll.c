@@ -88,10 +88,14 @@
 /* the poll/select call is also performed on a control socket, that way
  * we can send special commands to control it
  */
+/* FIXME: Shouldn't we check or return the return value
+ * of write()?
+ */
 #define SEND_COMMAND(set, command)                   \
 G_STMT_START {                                       \
   unsigned char c = command;                         \
-  write (set->control_write_fd.fd, &c, 1);           \
+  ssize_t res;                                       \
+  res = write (set->control_write_fd.fd, &c, 1);     \
 } G_STMT_END
 
 #define READ_COMMAND(set, command, res)              \

@@ -1,3 +1,10 @@
+2008-07-06  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Alessandro Decina <alessandro at nnva dot org>
+
+	* gst/gstpoll.c:
+	Fix "ignored return value" compiler warning with newer glibc.
+
 2008-07-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/gstchildproxy.c:
