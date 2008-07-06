@@ -481,6 +481,8 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
     
             gst_gl_display_set_client_draw_callback (glimage_sink->display, 
                 glimage_sink->clientDrawCallback);
+
+            gst_gl_display_resize_context (glimage_sink->display, glimage_sink->width, glimage_sink->height);
         }
 
         //blocking call
@@ -555,7 +557,7 @@ gst_glimage_sink_expose (GstXOverlay* overlay)
     GstGLImageSink* glimage_sink = GST_GLIMAGE_SINK (overlay);
 
     //redisplay opengl scene
-    if (glimage_sink->display)
+    if (glimage_sink->display && glimage_sink->window_id)
         gst_gl_display_redisplay (glimage_sink->display, 0, 0, 0);
 }
 
