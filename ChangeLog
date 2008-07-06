@@ -1,3 +1,10 @@
+2008-07-06  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll2.inc:
+	Mark internal processing functions as static inline for quite some
+	speedup as they're used only once and need to get many local variables
+	passed as parameter.
+
 2008-07-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/gstdeinterlace2.c:
