@@ -569,8 +569,8 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
 
     if (GST_BUFFER_DURATION_IS_VALID (buf))
       pkt.duration =
-          gst_util_uint64_scale_int (GST_BUFFER_DURATION (buf), AV_TIME_BASE,
-          GST_SECOND);
+          gst_ffmpeg_time_gst_to_ff (GST_BUFFER_DURATION (buf),
+              ffmpegmux->context->streams[best_pad->padnum]->time_base);
     else
       pkt.duration = 0;
     av_write_frame (ffmpegmux->context, &pkt);

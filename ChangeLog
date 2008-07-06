@@ -1,3 +1,11 @@
+2008-07-06  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	Based on a patch by: Aurelien Grimaud <gstelzz at yahoo dot fr>
+
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_collected):
+	Properly convert buffer duration to an ffmpeg packet duration.
+	Fixes #371939.
+
 2008-07-01  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/ffmpeg/gstffmpegdec.c:
