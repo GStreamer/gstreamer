@@ -1,5 +1,10 @@
 2008-07-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* tests/examples/seek/Makefile.am:
+	Fix out of tree build by adding all required CFLAGS.
+
+2008-07-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/playback/gstdecodebin.c: (add_raw_queue):
 	And ref the pad before returning it again when linking to the queue
 	failed. Otherwise we will unref the pad twice later and things break.
