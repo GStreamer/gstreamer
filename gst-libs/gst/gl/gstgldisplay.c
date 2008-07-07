@@ -347,9 +347,9 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
 }
 
 static void
-gst_gl_display_finalize (GObject *object)
+gst_gl_display_finalize (GObject* object)
 {
-    GstGLDisplay *display = GST_GL_DISPLAY (object);
+    GstGLDisplay* display = GST_GL_DISPLAY (object);
 
     //request glut window destruction
     //blocking call because display must be alive
@@ -439,6 +439,7 @@ gst_gl_display_finalize (GObject *object)
         gst_gl_display_glutThread = NULL;
         g_async_queue_unref (gst_gl_display_messageQueue);
         g_hash_table_unref  (gst_gl_display_map);
+        gst_gl_display_map = NULL;
     }
 }
 
@@ -498,7 +499,7 @@ gst_gl_display_thread_loop (void)
                 gst_gl_display_thread_dispatch_action (msg);
         }
     }
-    else g_print ("timeout reached in idle func\n");
+    else GST_DEBUG ("timeout reached in idle func\n");
 }
 
 
