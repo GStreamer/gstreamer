@@ -1,3 +1,12 @@
+2008-07-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/rtp/gstrtpspeexdepay.c: (gst_rtp_speex_depay_init),
+	(gst_rtp_speex_depay_process):
+	* gst/rtp/gstrtpspeexdepay.h:
+	Revert last change: Only the jitterbuffer is able to convert RTP to
+	Gstreamer timestamps and normal (de)payloaders should simply copy it.
+	Reopens bug #541787.
+
 2008-07-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/rtp/gstrtpvrawdepay.c:

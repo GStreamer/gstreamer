@@ -105,7 +105,6 @@ gst_rtp_speex_depay_init (GstRtpSPEEXDepay * rtpspeexdepay,
     GstRtpSPEEXDepayClass * klass)
 {
   GST_BASE_RTP_DEPAYLOAD (rtpspeexdepay)->clock_rate = 8000;
-  rtpspeexdepay->start_ts = 0;
 }
 
 static gint
@@ -203,15 +202,8 @@ gst_rtp_speex_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       gst_rtp_buffer_get_marker (buf),
       gst_rtp_buffer_get_timestamp (buf), gst_rtp_buffer_get_seq (buf));
 
-  GstRtpSPEEXDepay *speexdepayload = GST_RTP_SPEEX_DEPAY (depayload);
-  /* apply correct timestamp from rtp packet */
+  /* nothing special to be done */
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
-  if (speexdepayload->start_ts == 0)
-    speexdepayload->start_ts = gst_rtp_buffer_get_timestamp (buf);
-  GST_BUFFER_TIMESTAMP (outbuf) =
-      gst_util_uint64_scale (GST_SECOND,
-      gst_rtp_buffer_get_timestamp (buf) - speexdepayload->start_ts,
-      depayload->clock_rate);
 
   return outbuf;
 }
