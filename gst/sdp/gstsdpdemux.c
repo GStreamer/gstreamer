@@ -1120,7 +1120,7 @@ gst_sdp_demux_handle_message (GstBin * bin, GstMessage * message)
           GST_ELEMENT_ERROR (demux, RESOURCE, READ, (NULL),
               ("Could not receive any UDP packets for %.4f seconds, maybe your "
                   "firewall is blocking it.",
-                  gst_guint64_to_gdouble (demux->udp_timeout / 1000000)));
+                  gst_guint64_to_gdouble (demux->udp_timeout / 1000000.0)));
         }
         return;
       }
