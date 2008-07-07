@@ -323,7 +323,6 @@ gst_glimage_sink_stop (GstBaseSink* bsink)
     }
     if (glimage_sink->display) 
     {
-        gst_gl_display_set_visible_context (glimage_sink->display, FALSE);
         g_object_unref (glimage_sink->display);
         glimage_sink->display = NULL;
     }
@@ -410,6 +409,9 @@ gst_glimage_sink_set_caps (GstBaseSink* bsink, GstCaps* caps)
     glimage_sink->par_n = par_n;
     glimage_sink->par_d = par_d;
 
+    if (!glimage_sink->window_id)
+        gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (glimage_sink));
+
     return TRUE;
 }
 
@@ -432,8 +434,6 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
         if (glimage_sink->display == NULL) 
         {
             glimage_sink->display = g_object_ref (gl_buffer->display);
-
-            gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (glimage_sink));
 
             if (glimage_sink->window_id)
                 gst_gl_display_set_window_id (glimage_sink->display, glimage_sink->window_id);
@@ -461,10 +461,6 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
             
             //create a display
             glimage_sink->display = gst_gl_display_new ();
-
-            //Notify application to set window id now
-            if (!glimage_sink->window_id)
-                gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (glimage_sink));
 
             //init opengl context
             gst_gl_display_create_context (glimage_sink->display, 
@@ -531,7 +527,6 @@ gst_glimage_sink_set_xwindow_id (GstXOverlay* overlay, gulong window_id)
     GstGLImageSink* glimage_sink = GST_GLIMAGE_SINK (overlay);
 
     g_return_if_fail (GST_IS_GLIMAGE_SINK (overlay));
-    g_assert (glimage_sink->display != NULL);
 
     GST_DEBUG ("set_xwindow_id %ld", window_id);
 
