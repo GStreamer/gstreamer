@@ -107,8 +107,8 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
     gst_mini_object_unref (GST_MINI_OBJECT (pool));
     munmap ((void *) GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
 
-    GST_MINI_OBJECT_CLASS (v4l2buffer_parent_class)->
-        finalize (GST_MINI_OBJECT (buffer));
+    GST_MINI_OBJECT_CLASS (v4l2buffer_parent_class)->finalize (GST_MINI_OBJECT
+        (buffer));
   }
 }
 
@@ -240,8 +240,8 @@ gst_v4l2_buffer_pool_finalize (GstV4l2BufferPool * pool)
   if (pool->buffers)
     g_free (pool->buffers);
   pool->buffers = NULL;
-  GST_MINI_OBJECT_CLASS (buffer_pool_parent_class)->
-      finalize (GST_MINI_OBJECT (pool));
+  GST_MINI_OBJECT_CLASS (buffer_pool_parent_class)->finalize (GST_MINI_OBJECT
+      (pool));
 }
 
 static void
@@ -1176,11 +1176,23 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
   format.fmt.pix.width = width;
   format.fmt.pix.height = height;
   format.fmt.pix.pixelformat = pixelformat;
-  /* request whole frames; change when gstreamer supports interlaced video */
+  /* request whole frames; change when gstreamer supports interlaced video
+   * (INTERLACED mode returns frames where the fields have already been
+   *  combined, there are other modes for requesting fields individually) */
   format.fmt.pix.field = V4L2_FIELD_INTERLACED;
 
-  if (ioctl (fd, VIDIOC_S_FMT, &format) < 0)
-    goto set_fmt_failed;
+  if (ioctl (fd, VIDIOC_S_FMT, &format) < 0) {
+    if (errno != EINVAL)
+      goto set_fmt_failed;
+
+    /* try again with progressive video */
+    format.fmt.pix.width = width;
+    format.fmt.pix.height = height;
+    format.fmt.pix.pixelformat = pixelformat;
+    format.fmt.pix.field = V4L2_FIELD_NONE;
+    if (ioctl (fd, VIDIOC_S_FMT, &format) < 0)
+      goto set_fmt_failed;
+  }
 
   if (format.fmt.pix.width != width || format.fmt.pix.height != height)
     goto invalid_dimensions;
@@ -1500,6 +1512,7 @@ gst_v4l2src_get_nearest_size (GstV4l2Src * v4l2src, guint32 pixelformat,
 {
   struct v4l2_format fmt;
   int fd;
+  int r;
 
   g_return_val_if_fail (width != NULL, FALSE);
   g_return_val_if_fail (height != NULL, FALSE);
@@ -1518,7 +1531,17 @@ gst_v4l2src_get_nearest_size (GstV4l2Src * v4l2src, guint32 pixelformat,
   fmt.fmt.pix.pixelformat = pixelformat;
   fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
 
-  if (ioctl (fd, VIDIOC_TRY_FMT, &fmt) < 0) {
+  r = ioctl (fd, VIDIOC_TRY_FMT, &fmt);
+  if (r < 0 && errno == EINVAL) {
+    /* try again with progressive video */
+    fmt.fmt.pix.width = *width;
+    fmt.fmt.pix.height = *height;
+    fmt.fmt.pix.pixelformat = pixelformat;
+    fmt.fmt.pix.field = V4L2_FIELD_NONE;
+    r = ioctl (fd, VIDIOC_TRY_FMT, &fmt);
+  }
+
+  if (r < 0) {
     /* The driver might not implement TRY_FMT, in which case we will try
        S_FMT to probe */
     if (errno != ENOTTY)
@@ -1535,7 +1558,17 @@ gst_v4l2src_get_nearest_size (GstV4l2Src * v4l2src, guint32 pixelformat,
     fmt.fmt.pix.width = *width;
     fmt.fmt.pix.height = *height;
 
-    if (ioctl (fd, VIDIOC_S_FMT, &fmt) < 0)
+    r = ioctl (fd, VIDIOC_S_FMT, &fmt);
+    if (r < 0 && errno == EINVAL) {
+      /* try again with progressive video */
+      fmt.fmt.pix.width = *width;
+      fmt.fmt.pix.height = *height;
+      fmt.fmt.pix.pixelformat = pixelformat;
+      fmt.fmt.pix.field = V4L2_FIELD_NONE;
+      r = ioctl (fd, VIDIOC_S_FMT, &fmt);
+    }
+
+    if (r < 0)
       return FALSE;
   }
 
