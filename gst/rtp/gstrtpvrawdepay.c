@@ -24,6 +24,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include <string.h>
+#include <stdlib.h>
 #include "gstrtpvrawdepay.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpvrawdepay_debug);

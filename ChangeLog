@@ -1,3 +1,11 @@
+2008-07-07  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/rtp/gstrtpvrawdepay.c:
+	  Include stdlib.h for atoi().
+
+	* gst/rtsp/gstrtspsrc.c:
+	  Use floating point math for latencies < 0 sec in log output.
+
 2008-07-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Tomasz Grobelny <tomasz at grobelny dot oswiecenia dot net>
