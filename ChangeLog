@@ -1,3 +1,11 @@
+2008-07-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	patch by: Alessandro Decina
+
+	* gst/mpegtsparse/mpegtsparse.c:
+	Fix memory leak by unreffing structures when not needed.
+	Fixes #539292.
+
 2008-07-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/sdp/gstsdpdemux.c:

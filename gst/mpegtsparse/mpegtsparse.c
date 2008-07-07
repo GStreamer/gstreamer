@@ -1048,6 +1048,7 @@ static gboolean
 mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
 {
   gboolean res = TRUE;
+  GstStructure *structure = NULL;
 
   if (mpegts_parse_calc_crc32 (GST_BUFFER_DATA (section->buffer),
           GST_BUFFER_SIZE (section->buffer)) != 0) {
@@ -1057,59 +1058,41 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
 
   switch (section->table_id) {
     case 0x00:
-    {
       /* PAT */
-      GstStructure *pat_info;
-
-      pat_info = mpegts_packetizer_parse_pat (parse->packetizer, section);
-      if (pat_info)
-        mpegts_parse_apply_pat (parse, pat_info);
+      structure = mpegts_packetizer_parse_pat (parse->packetizer, section);
+      if (structure)
+        mpegts_parse_apply_pat (parse, structure);
       else
         res = FALSE;
 
       break;
-    }
     case 0x02:
-    {
-      /* PMT */
-      GstStructure *pmt_info;
-
-      pmt_info = mpegts_packetizer_parse_pmt (parse->packetizer, section);
-      if (pmt_info)
-        mpegts_parse_apply_pmt (parse, section->pid, pmt_info);
+      structure = mpegts_packetizer_parse_pmt (parse->packetizer, section);
+      if (structure)
+        mpegts_parse_apply_pmt (parse, section->pid, structure);
       else
         res = FALSE;
 
       break;
-    }
     case 0x40:
       /* NIT, actual network */
     case 0x41:
       /* NIT, other network */
-    {
-      GstStructure *nit_info;
-
-      nit_info = mpegts_packetizer_parse_nit (parse->packetizer, section);
-      if (nit_info)
-        mpegts_parse_apply_nit (parse, section->pid, nit_info);
+      structure = mpegts_packetizer_parse_nit (parse->packetizer, section);
+      if (structure)
+        mpegts_parse_apply_nit (parse, section->pid, structure);
       else
         res = FALSE;
 
       break;
-    }
     case 0x42:
     case 0x46:
-    {
-      /* SDT */
-      GstStructure *sdt_info;
-
-      sdt_info = mpegts_packetizer_parse_sdt (parse->packetizer, section);
-      if (sdt_info)
-        mpegts_parse_apply_sdt (parse, section->pid, sdt_info);
+      structure = mpegts_packetizer_parse_sdt (parse->packetizer, section);
+      if (structure)
+        mpegts_parse_apply_sdt (parse, section->pid, structure);
       else
         res = FALSE;
       break;
-    }
     case 0x4E:
     case 0x4F:
       /* EIT, present/following */
@@ -1146,20 +1129,18 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
     case 0x6E:
     case 0x6F:
       /* EIT, schedule */
-    {
-      /* EIT */
-      GstStructure *eit_info;
-
-      eit_info = mpegts_packetizer_parse_eit (parse->packetizer, section);
-      if (eit_info)
-        mpegts_parse_apply_eit (parse, section->pid, eit_info);
+      structure = mpegts_packetizer_parse_eit (parse->packetizer, section);
+      if (structure)
+        mpegts_parse_apply_eit (parse, section->pid, structure);
       else
         res = FALSE;
       break;
-    }
     default:
       break;
   }
+
+  if (structure)
+    gst_structure_free (structure);
 
   return res;
 }
