@@ -1,6 +1,12 @@
 2008-07-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/playback/gstdecodebin.c: (add_raw_queue):
+	And ref the pad before returning it again when linking to the queue
+	failed. Otherwise we will unref the pad twice later and things break.
+
+2008-07-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstdecodebin.c: (add_raw_queue):
 	If linking the raw pad with a queue fails, try it without a queue
 	instead of failing completely. This should never happen.
 

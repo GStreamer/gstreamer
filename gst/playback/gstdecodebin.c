@@ -747,7 +747,7 @@ add_raw_queue (GstDecodeBin * decode_bin, GstPad * pad)
     gst_object_unref (queuesrcpad);
     gst_object_unref (queuesinkpad);
     gst_bin_remove (GST_BIN (decode_bin), queue);
-    return pad;
+    return gst_object_ref (pad);
   }
 
   decode_bin->queues = g_list_append (decode_bin->queues, queue);
