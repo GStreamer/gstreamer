@@ -37,6 +37,7 @@ typedef struct _GstRtpSPEEXDepayClass GstRtpSPEEXDepayClass;
 struct _GstRtpSPEEXDepay
 {
   GstBaseRTPDepayload depayload;
+  guint64 start_ts;
 };
 
 struct _GstRtpSPEEXDepayClass

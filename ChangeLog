@@ -1,3 +1,14 @@
+2008-07-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Tomasz Grobelny <tomasz at grobelny dot oswiecenia dot net>
+
+	* gst/rtp/gstrtpspeexdepay.c: (gst_rtp_speex_depay_init),
+	(gst_rtp_speex_depay_process):
+	* gst/rtp/gstrtpspeexdepay.h:
+	Take timestamp from the RTP packet as a first step to fix problems
+	with transmission over RTP when the network is not reliable.
+	Fixes bug #541787.
+
 2008-07-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Tero Saarni <tero dot saarni at gmail dot com>
