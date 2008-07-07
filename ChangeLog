@@ -1,3 +1,8 @@
+2008-07-07  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/gstdebugutils.c:
+	Fix memleak
+
 2008-07-06  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Alessandro Decina <alessandro at nnva dot org>

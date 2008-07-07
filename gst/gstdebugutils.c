@@ -177,7 +177,7 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
 
   g_free (pad_name);
   g_free (element_name);
-
+  g_free (spc);
 }
 
 static void
@@ -331,6 +331,7 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
     }
     gst_object_unref (peer_pad);
   }
+  g_free (spc);
 }
 
 /*
