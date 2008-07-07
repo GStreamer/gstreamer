@@ -741,11 +741,13 @@ add_raw_queue (GstDecodeBin * decode_bin, GstPad * pad)
   queuesrcpad = gst_element_get_static_pad (queue, "src");
 
   if (gst_pad_link (pad, queuesinkpad) != GST_PAD_LINK_OK) {
+    GST_WARNING_OBJECT (decode_bin,
+        "Linking queue failed, trying without queue");
     gst_element_set_state (queue, GST_STATE_NULL);
     gst_object_unref (queuesrcpad);
     gst_object_unref (queuesinkpad);
     gst_bin_remove (GST_BIN (decode_bin), queue);
-    return NULL;
+    return pad;
   }
 
   decode_bin->queues = g_list_append (decode_bin->queues, queue);

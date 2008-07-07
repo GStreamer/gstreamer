@@ -1,5 +1,11 @@
 2008-07-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/playback/gstdecodebin.c: (add_raw_queue):
+	If linking the raw pad with a queue fails, try it without a queue
+	instead of failing completely. This should never happen.
+
+2008-07-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Evgeniy Stepanov <eugeni dot stepanov at gmail dot com>
 
 	* gst/playback/gstdecodebin.c: (add_raw_queue), (close_pad_link):
