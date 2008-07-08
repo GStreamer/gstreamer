@@ -757,10 +757,8 @@ GstCaps *
 gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
     const GstStructure * template)
 {
-  GstCaps *ret;
+  GstCaps *ret = gst_caps_new_empty ();
   GstStructure *tmp;
-
-  ret = gst_caps_new_empty ();
 
 #ifdef VIDIOC_ENUM_FRAMESIZES
   gint fd = v4l2src->v4l2object->video_fd;

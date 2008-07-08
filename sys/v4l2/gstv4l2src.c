@@ -424,8 +424,9 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
   GST_DEBUG_OBJECT (basesrc, "fixating caps %" GST_PTR_FORMAT, caps);
 
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
-    structure = gst_caps_get_structure (caps, i);
     const GValue *v;
+
+    structure = gst_caps_get_structure (caps, i);
 
     /* FIXME such sizes? we usually fixate to something in the 320x200
      * range... */

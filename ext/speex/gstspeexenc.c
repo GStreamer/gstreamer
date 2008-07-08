@@ -259,7 +259,7 @@ gst_speex_enc_sink_getcaps (GstPad * pad)
   if (peercaps) {
     if (!gst_caps_is_empty (peercaps) && !gst_caps_is_any (peercaps)) {
       GstStructure *ps = gst_caps_get_structure (peercaps, 0);
-      GstStructure *s = gst_caps_get_structure (caps, 0);;
+      GstStructure *s = gst_caps_get_structure (caps, 0);
       gint rate, channels;
 
       if (gst_structure_get_int (ps, "rate", &rate)) {

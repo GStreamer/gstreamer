@@ -1,3 +1,15 @@
+2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_uri_set_uri):
+	* ext/speex/gstspeexenc.c: (gst_speex_enc_sink_getcaps):
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_set_wp_config):
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_fixate):
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_probe_caps_for_format):
+	* tests/examples/equalizer/demo.c: (message_handler):
+	* tests/examples/spectrum/demo-audiotest.c: (message_handler):
+	* tests/examples/spectrum/demo-osssrc.c: (message_handler):
+	Don't use declarations after statements and variable length arrays.
+
 2008-07-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Daniel Drake <dsd at gentoo dot org>

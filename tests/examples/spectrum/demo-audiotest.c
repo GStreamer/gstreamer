@@ -98,7 +98,7 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
     const gchar *name = gst_structure_get_name (s);
 
     if (strcmp (name, "spectrum") == 0) {
-      gfloat spect[spect_bands];
+      gfloat *spect = g_new (gfloat, spect_bands);
       const GValue *list;
       const GValue *value;
       guint i;
@@ -109,6 +109,7 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
         spect[i] = height_scale * g_value_get_float (value);
       }
       draw_spectrum (spect);
+      g_free (spect);
     }
   }
   return TRUE;

@@ -1146,6 +1146,7 @@ gst_dv1394src_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
+
 static gchar **
 gst_dv1394src_uri_get_protocols (void)
 {
@@ -1153,6 +1154,7 @@ gst_dv1394src_uri_get_protocols (void)
 
   return protocols;
 }
+
 static const gchar *
 gst_dv1394src_uri_get_uri (GstURIHandler * handler)
 {
@@ -1165,10 +1167,7 @@ static gboolean
 gst_dv1394src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   gchar *protocol, *location;
-  gboolean ret;
-
-  ret = TRUE;
-
+  gboolean ret = TRUE;
   GstDV1394Src *gst_dv1394src = GST_DV1394SRC (handler);
 
   protocol = gst_uri_get_protocol (uri);
