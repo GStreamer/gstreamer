@@ -1,5 +1,11 @@
 2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* configure.ac:
+	Don't include ERROR_CFLAGS in GST_CXXFLAGS as it might include
+	flags that are invalid for C++. Fixes bug #516509.
+
+2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_uri_set_uri):
 	* ext/speex/gstspeexenc.c: (gst_speex_enc_sink_getcaps):
 	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_set_wp_config):
