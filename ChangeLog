@@ -1,5 +1,11 @@
 2008-07-08  Michael Smith <msmith@songbirdnest.com>
 
+	* sys/dshowdecwrapper/gstdshowaudiodec.c:
+	  Revert previous patch apart from typo fixes; the patch was not
+	  independently useful.
+
+2008-07-08  Michael Smith <msmith@songbirdnest.com>
+
 	Based on patch by: Alessandro Decina <alessandro@nnva.org>
 	* sys/dshowdecwrapper/gstdshowaudiodec.c:
 	* sys/dshowdecwrapper/gstdshowdecwrapper.h:

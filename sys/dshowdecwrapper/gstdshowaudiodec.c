@@ -112,9 +112,6 @@ static const long bitrates[2][3][16] = {
 #define GUID_MEDIASUBTYPE_WMS   {0x0000000a, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 }}
 #define GUID_MEDIASUBTYPE_MP3   {0x00000055, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 }}
 #define GUID_MEDIASUBTYPE_MPEG1AudioPayload {0x00000050, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9b, 0x71 }}
-#define GUID_MEDIASUBTYPE_AAC {0x000000FF, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9b, 0x71 }}
-#define GUID_MEDIASUBTYPE_AC3 {0x00002000, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9b, 0x71 }}
-
 
 static const CodecEntry audio_dec_codecs[] = {
   {"dshowadec_wma1",
@@ -179,7 +176,7 @@ static const CodecEntry audio_dec_codecs[] = {
       },
   {"dshowadec_mpeg1",
         "MPEG-1 Layer 1,2,3 Audio",
-        "MPEG Layer-3 Decoder, MP3 Decoder DMO",
+        "MPEG Layer-3 Decoder",
         0x00000055,
         GUID_MEDIATYPE_AUDIO, GUID_MEDIASUBTYPE_MP3,
         "audio/mpeg, "
@@ -192,31 +189,7 @@ static const CodecEntry audio_dec_codecs[] = {
         "width = (int) { 1, 8, 16 }, depth = (int) { 1, 8, 16 }, "
         "signed = (boolean) true, endianness = (int) "
         G_STRINGIFY (G_LITTLE_ENDIAN)
-      },
-  {"dshowadec_aac",
-        "AAC decoder",
-        "ffdshow",
-        0x000000FF,
-        GUID_MEDIATYPE_AUDIO, GUID_MEDIASUBTYPE_AAC,
-        "audio/mpeg, mpegversion = { 2, 4 }",
-        GUID_MEDIATYPE_AUDIO, GUID_MEDIASUBTYPE_PCM,
-        "audio/x-raw-int, "
-        "width = (int) { 1, 8, 16 }, depth = (int) { 1, 8, 16 }, "
-        "signed = (boolean) true, endianness = (int) "
-        G_STRINGIFY (G_LITTLE_ENDIAN)
-      },
-  {"dshowadec_ac3",
-        "AC3 decoder",
-        NULL,
-        0x00002000,
-        GUID_MEDIATYPE_AUDIO, GUID_MEDIASUBTYPE_AC3,
-        "audio/x-ac3",
-        GUID_MEDIATYPE_AUDIO, GUID_MEDIASUBTYPE_PCM,
-        "audio/x-raw-int, "
-        "width = (int) { 1, 8, 16 }, depth = (int) { 1, 8, 16 }, "
-        "signed = (boolean) true, endianness = (int) "
-        G_STRINGIFY (G_LITTLE_ENDIAN)
-      },
+      }
 };
 
 /* Private map used when dshowadec_mpeg is loaded with layer=1 or 2.
@@ -334,6 +307,7 @@ gst_dshowaudiodec_init (GstDshowAudioDec * adec,
   adec->rate = 0;
   adec->layer = 0;
   adec->codec_data = NULL;
+
   adec->last_ret = GST_FLOW_OK;
 
   CoInitializeEx (NULL, COINIT_MULTITHREADED);
@@ -608,7 +582,6 @@ gst_dshowaudiodec_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:{
       gst_dshowaudiodec_flush (adec);
-      adec->last_ret = GST_FLOW_OK;
       ret = gst_pad_event_default (pad, event);
       break;
     }
@@ -677,7 +650,6 @@ gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec)
   IPin *output_pin = NULL, *input_pin = NULL;
   IGstDshowInterface *gstdshowinterface = NULL;
   CodecEntry *codec_entry = klass->entry;
-  char err_buf[1024];
 
   if (adec->layer != 0) {
     if (adec->layer == 1 || adec->layer == 2) {
@@ -840,13 +812,8 @@ gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec)
       IFilterGraph_ConnectDirect (adec->filtergraph, output_pin, input_pin,
       NULL);
   if (hres != S_OK) {
-    if (!FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM,
-            0, hres, 0, err_buf, 1024, NULL))
-      err_buf[0] = 0;
-
     GST_ELEMENT_ERROR (adec, CORE, NEGOTIATION,
-        ("Can't connect fakesrc with decoder (error=%d %s)", hres, err_buf),
-        (NULL));
+        ("Can't connect fakesrc with decoder (error=%d)", hres), (NULL));
     goto end;
   }
 
@@ -891,7 +858,7 @@ gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec)
 
   IGstDshowInterface_gst_set_media_type (gstdshowinterface, &output_mediatype);
   IGstDshowInterface_gst_set_buffer_callback (gstdshowinterface,
-      (byte *) gst_dshowaudiodec_push_buffer, (byte *) adec);
+      gst_dshowaudiodec_push_buffer, (byte *) adec);
   IGstDshowInterface_Release (gstdshowinterface);
   gstdshowinterface = NULL;
 
@@ -928,25 +895,15 @@ gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec)
       IFilterGraph_ConnectDirect (adec->filtergraph, output_pin, input_pin,
       NULL);
   if (hres != S_OK) {
-    if (!FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM,
-            0, hres, 0, err_buf, 1024, NULL))
-      err_buf[0] = 0;
-
     GST_ELEMENT_ERROR (adec, CORE, NEGOTIATION,
-        ("Can't connect decoder with fakesink (error=%d %s)", hres, err_buf),
-        (NULL));
+        ("Can't connect decoder with fakesink (error=%d)", hres), (NULL));
     goto end;
   }
 
   hres = IMediaFilter_Run (adec->mediafilter, -1);
   if (hres != S_OK) {
-    if (!FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM,
-            0, hres, 0, err_buf, 1024, NULL))
-      err_buf[0] = 0;
-
     GST_ELEMENT_ERROR (adec, CORE, NEGOTIATION,
-        ("Can't run the directshow graph (error=%d %s)", hres, err_buf),
-        (NULL));
+        ("Can't run the directshow graph (error=%d)", hres), (NULL));
     goto end;
   }
 
