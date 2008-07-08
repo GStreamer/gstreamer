@@ -449,6 +449,8 @@ gst_child_proxy_base_init (gpointer g_class)
 	 *
 	 * Will be emitted after the @object was added to the @child_proxy.
 	 */
+    /* FIXME 0.11: use GST_TYPE_OBJECT as GstChildProxy only
+     * supports GstObjects */
     signals[CHILD_ADDED] =
         g_signal_new ("child-added", G_TYPE_FROM_CLASS (g_class),
         G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstChildProxyInterface,
@@ -462,6 +464,8 @@ gst_child_proxy_base_init (gpointer g_class)
 	 *
 	 * Will be emitted after the @object was removed from the @child_proxy.
 	 */
+    /* FIXME 0.11: use GST_TYPE_OBJECT as GstChildProxy only
+     * supports GstObjects */
     signals[CHILD_REMOVED] =
         g_signal_new ("child-removed", G_TYPE_FROM_CLASS (g_class),
         G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstChildProxyInterface,

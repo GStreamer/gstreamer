@@ -1,3 +1,10 @@
+2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/gstchildproxy.c: (gst_child_proxy_base_init):
+	Add FIXMEs for 0.11 to use GST_TYPE_OBJECT in the signature
+	of the the child-added / -removed signals as GstChildProxy
+	only supports GstObjects.
+
 2008-07-07  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/gstdebugutils.c:
