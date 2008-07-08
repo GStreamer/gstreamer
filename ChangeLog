@@ -1,3 +1,11 @@
+2008-07-08  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	patch by: Ilja Pavkovic <illsen@gumblfarz.de>
+
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/gstrfbsrc.h:
+	Add view-only property to ignore the navigation events
+
 2008-07-08  Michael Smith <msmith@songbirdnest.com>
 
 	* sys/dshowdecwrapper/gstdshowaudiodec.c:

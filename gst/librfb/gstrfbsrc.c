@@ -44,7 +44,8 @@ enum
   ARG_HEIGHT,
   ARG_INCREMENTAL,
   ARG_USE_COPYRECT,
-  ARG_SHARED
+  ARG_SHARED,
+  ARG_VIEWONLY
 };
 
 GST_DEBUG_CATEGORY_STATIC (rfbsrc_debug);
@@ -152,6 +153,9 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_SHARED,
       g_param_spec_boolean ("shared", "Share desktop with other clients",
           "Share desktop with other clients", TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_VIEWONLY,
+      g_param_spec_boolean ("view-only", "Only view the desktop",
+          "only view the desktop", FALSE, G_PARAM_READWRITE));
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rfb_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_rfb_src_event);
@@ -173,6 +177,8 @@ gst_rfb_src_init (GstRfbSrc * src, GstRfbSrcClass * klass)
   src->version_minor = 3;
 
   src->incremental_update = TRUE;
+
+  src->view_only = FALSE;
 
   src->decoder = rfb_decoder_new ();
 
@@ -280,6 +286,9 @@ gst_rfb_src_set_property (GObject * object, guint prop_id,
     case ARG_SHARED:
       src->decoder->shared_flag = g_value_get_boolean (value);
       break;
+    case ARG_VIEWONLY:
+      src->view_only = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -324,6 +333,9 @@ gst_rfb_src_get_property (GObject * object, guint prop_id,
       break;
     case ARG_SHARED:
       g_value_set_boolean (value, src->decoder->shared_flag);
+      break;
+    case ARG_VIEWONLY:
+      g_value_set_boolean (value, src->view_only);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -453,6 +465,11 @@ gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
+
+      /* if in view_only mode ignore the navigation event */
+      if (src->view_only)
+        break;
+
       structure = event->structure;
       event_type = gst_structure_get_string (structure, "event");
       gst_structure_get_double (structure, "pointer_x", &x);

@@ -55,6 +55,7 @@ struct _GstRfbSrc
   RfbDecoder *decoder;
   gboolean go;
   gboolean incremental_update;
+  gboolean view_only;
 
   guint button_mask;
 
