@@ -1,3 +1,9 @@
+2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	Don't include ERROR_CFLAGS in GST_CXXFLAGS as it might include
+	flags that are invalid for C++.
+
 2008-07-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Tal Shalif <tshalif at nargila dot org>
