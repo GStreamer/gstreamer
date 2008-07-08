@@ -428,9 +428,10 @@ static GList *
 _list_find_sorted_custom (GList * list, gconstpointer data, GCompareFunc func,
     GList ** prev_node)
 {
-  g_return_val_if_fail (func != NULL, list);
   GList *prev = list;
   gint cmp;
+
+  g_return_val_if_fail (func != NULL, list);
 
   while (list) {
     cmp = func (list->data, data);

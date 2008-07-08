@@ -1,5 +1,11 @@
 2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* libs/gst/controller/gstinterpolationcontrolsource.c:
+	(_list_find_sorted_custom):
+	Don't use declarations after statements.
+
+2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/gstchildproxy.c: (gst_child_proxy_base_init):
 	Add FIXMEs for 0.11 to use GST_TYPE_OBJECT in the signature
 	of the the child-added / -removed signals as GstChildProxy
