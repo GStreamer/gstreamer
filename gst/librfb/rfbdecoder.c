@@ -79,6 +79,7 @@ rfb_decoder_new (void)
   decoder->offset_y = 0;
   decoder->rect_width = 0;
   decoder->rect_height = 0;
+  decoder->shared_flag = TRUE;
 
   return decoder;
 }

@@ -43,7 +43,8 @@ enum
   ARG_WIDTH,
   ARG_HEIGHT,
   ARG_INCREMENTAL,
-  ARG_USE_COPYRECT
+  ARG_USE_COPYRECT,
+  ARG_SHARED
 };
 
 GST_DEBUG_CATEGORY_STATIC (rfbsrc_debug);
@@ -148,6 +149,9 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_USE_COPYRECT,
       g_param_spec_boolean ("use-copyrect", "Use copyrect encoding",
           "Use copyrect encoding", FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_SHARED,
+      g_param_spec_boolean ("shared", "Share desktop with other clients",
+          "Share desktop with other clients", TRUE, G_PARAM_READWRITE));
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rfb_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_rfb_src_event);
@@ -273,6 +277,9 @@ gst_rfb_src_set_property (GObject * object, guint prop_id,
     case ARG_USE_COPYRECT:
       src->decoder->use_copyrect = g_value_get_boolean (value);
       break;
+    case ARG_SHARED:
+      src->decoder->shared_flag = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -314,6 +321,9 @@ gst_rfb_src_get_property (GObject * object, guint prop_id,
       break;
     case ARG_USE_COPYRECT:
       g_value_set_boolean (value, src->decoder->use_copyrect);
+      break;
+    case ARG_SHARED:
+      g_value_set_boolean (value, src->decoder->shared_flag);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
