@@ -2,6 +2,13 @@
 
 	patch by: Ilja Pavkovic <illsen@gumblfarz.de>
 
+	* gst/librfb/rfbdecoder.c:
+	Implement ServerCutText message
+
+2008-07-08  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	patch by: Ilja Pavkovic <illsen@gumblfarz.de>
+
 	* gst/librfb/gstrfbsrc.c:
 	* gst/librfb/rfbdecoder.c:
 	Add property for shared desktop

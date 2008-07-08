@@ -810,7 +810,18 @@ rfb_decoder_state_set_colour_map_entries (RfbDecoder * decoder)
 static gboolean
 rfb_decoder_state_server_cut_text (RfbDecoder * decoder)
 {
-  g_critical ("not implemented");
+  guint8 *buffer;
+  gint cut_text_length;
 
-  return FALSE;
+  /* 3 bytes padding, 4 bytes cut_text_length */
+  buffer = rfb_decoder_read (decoder, 7);
+  cut_text_length = RFB_GET_UINT32 (buffer + 3);
+  g_free (buffer);
+
+  buffer = rfb_decoder_read (decoder, cut_text_length);
+  GST_DEBUG ("rfb_decoder_state_server_cut_text: throw away '%s'", buffer);
+  g_free (buffer);
+
+  decoder->state = rfb_decoder_state_normal;
+  return TRUE;
 }
