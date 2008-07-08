@@ -1,5 +1,11 @@
 2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* configure.ac:
+	Don't include ERROR_CFLAGS in GST_CXXFLAGS as it might include
+	flags that are invalid for C++.
+
+2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/spc/gstspc.c: (spc_setup):
 	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopTop.inc:
 	Don't use declarations after statements in the remaining code.
