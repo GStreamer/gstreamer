@@ -136,6 +136,9 @@ struct _QtDemuxStream
   /* video info */
   gint width;
   gint height;
+  /* aspect ratio */
+  gint display_width;
+  gint display_height;
   /* Numerator/denominator framerate */
   gint fps_n;
   gint fps_d;
@@ -2672,6 +2675,25 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
           "height", G_TYPE_INT, stream->height,
           "framerate", GST_TYPE_FRACTION, stream->fps_n, stream->fps_d, NULL);
 
+      /* calculate pixel-aspect-ratio using display width and height */
+      GST_DEBUG_OBJECT (qtdemux, "video size %dx%d, target display size %dx%d",
+          stream->width, stream->height,
+          stream->display_width, stream->display_height);
+
+      if (stream->display_width > 0 && stream->display_height > 0 &&
+          stream->width > 0 && stream->height > 0) {
+        gint n, d;
+
+        /* calculate the pixel aspect ratio using the display and pixel w/h */
+        n = stream->display_width * stream->height;
+        d = stream->display_height * stream->width;
+        if (n != d) {
+          GST_DEBUG_OBJECT (qtdemux, "setting PAR to %d/%d", n, d);
+          gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
+              GST_TYPE_FRACTION, n, d, NULL);
+        }
+      }
+
       depth = stream->bits_per_sample;
 
       /* more than 32 bits means grayscale */
@@ -3251,6 +3273,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   if (stream->subtype == FOURCC_vide) {
     guint32 fourcc;
+    const guint8 *tkhd_data = (const guint8 *) tkhd->data;
+    guint8 version;
 
     stream->sampled = TRUE;
 
@@ -3268,6 +3292,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     GST_LOG_OBJECT (qtdemux, "frame count:   %u",
         QT_UINT16 (stsd_data + offset + 48));
+
+    version = QT_UINT8 (tkhd_data + 8);
+    if (version == 1)
+      offset = 96;
+    else
+      offset = 84;
+    stream->display_width = (guint) QT_FP32 (tkhd_data + offset);
+    stream->display_height = (guint) QT_FP32 (tkhd_data + offset + 4);
 
     if (fourcc == FOURCC_drms)
       goto error_encrypted;
