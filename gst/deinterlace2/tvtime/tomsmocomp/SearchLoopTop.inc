@@ -17,6 +17,8 @@ int64_t Min_Vals  = 0x0000000000000000ull;
 int64_t Max_Vals  = 0x0000000000000000ull;
 int64_t ShiftMask = 0xfefffefffefffeffull;
 
+long oldbx;
+
 // long is int32 on ARCH_368, int64 on ARCH_AMD64. Declaring it this way
 // saves a lot of xor's to delete 64bit garbage.
 
@@ -90,8 +92,6 @@ long		dst_pitchw = dst_pitch; // local stor so asm can ref
 #define _YMask      "%17"
 #define _oldbx      "%18"
 #endif
-
-        long oldbx;
 
 	for (y=1; y < FldHeight-1; y++)	
 	{

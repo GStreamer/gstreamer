@@ -1,5 +1,11 @@
 2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/spc/gstspc.c: (spc_setup):
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopTop.inc:
+	Don't use declarations after statements in the remaining code.
+
+2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by:
 	  Jonathan Rosser <jonathan dot rosser at rd dot bbc dot co dot uk>
 

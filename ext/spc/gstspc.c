@@ -454,16 +454,19 @@ static gboolean
 spc_setup (GstSpcDec * spc)
 {
   guchar *data = GST_BUFFER_DATA (spc->buf);
+  spc_tag_info *info;
+  GstTagList *taglist;
+  guint64 total_duration;
 
   if (!spc_negotiate (spc)) {
     return FALSE;
   }
 
-  spc_tag_info *info = &(spc->tag_info);
+  info = &(spc->tag_info);
 
   spc_tag_get_info (data, GST_BUFFER_SIZE (spc->buf), info);
 
-  GstTagList *taglist = gst_tag_list_new ();
+  taglist = gst_tag_list_new ();
 
   if (info->title)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
@@ -506,8 +509,7 @@ spc_setup (GstSpcDec * spc)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER,
         info->emulator == EMU_ZSNES ? "ZSNES" : "Snes9x", NULL);
 
-  guint64 total_duration =
-      (guint64) (gst_spc_duration (spc) + gst_spc_fadeout (spc));
+  total_duration = (guint64) (gst_spc_duration (spc) + gst_spc_fadeout (spc));
 
   gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
       GST_TAG_DURATION, total_duration,
