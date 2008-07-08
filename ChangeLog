@@ -1,3 +1,15 @@
+2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by:
+	  Jonathan Rosser <jonathan dot rosser at rd dot bbc dot co dot uk>
+
+	* ext/metadata/metadataexif.c: (metadataparse_handle_unit_tags):
+	* ext/metadata/metadataxmp.c:
+	(metadataparse_xmp_iter_add_to_tag_list):
+	* ext/mythtv/gstmythtvsrc.c: (gst_mythtv_src_start):
+	* ext/timidity/gstwildmidi.c: (gst_wildmidi_loop):
+	Don't use declarations after statements.
+
 2008-07-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	patch by: Alessandro Decina

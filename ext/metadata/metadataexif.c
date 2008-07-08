@@ -757,10 +757,11 @@ metadataparse_handle_unit_tags (ExifEntry * entry, MEUserData * meudata,
 
       break;
     case EXIF_TAG_GPS_ALTITUDE_REF:
-      meudata->altitude_ref = entry->data[0];
-
+    {
       const GValue *value = gst_tag_list_get_value_index (meudata->taglist,
           GST_TAG_GPS_ALTITUDE, 0);
+
+      meudata->altitude_ref = entry->data[0];
 
       if (value) {
         gint n, d;
@@ -774,7 +775,7 @@ metadataparse_handle_unit_tags (ExifEntry * entry, MEUserData * meudata,
           }
         }
       }
-
+    }
       break;
     case EXIF_TAG_GPS_LATITUDE_REF:
     {

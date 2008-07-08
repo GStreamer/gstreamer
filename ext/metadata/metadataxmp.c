@@ -756,7 +756,7 @@ metadataparse_xmp_iter_add_to_tag_list (GstTagList * taglist,
     GstTagMergeMode mode, const char *path, const char *value,
     const SchemaMap * schema_map, const uint32_t opt)
 {
-
+  GType type;
   const SchemaTagMap *smaptag =
       metadataparse_xmp_get_tagsmap_from_path (schema_map, path, opt);
 
@@ -766,7 +766,7 @@ metadataparse_xmp_iter_add_to_tag_list (GstTagList * taglist,
   if (NULL == smaptag->gst_tag)
     goto done;
 
-  GType type = gst_tag_get_type (smaptag->gst_tag);
+  type = gst_tag_get_type (smaptag->gst_tag);
 
   switch (type) {
     case G_TYPE_STRING:

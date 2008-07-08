@@ -759,9 +759,11 @@ gst_wildmidi_loop (GstPad * sinkpad)
   }
 
   if (wildmidi->o_segment_changed) {
+    GstSegment *segment;
+
     GST_DEBUG_OBJECT (wildmidi, "segment changed");
 
-    GstSegment *segment = gst_wildmidi_get_segment (wildmidi, GST_FORMAT_TIME,
+    segment = gst_wildmidi_get_segment (wildmidi, GST_FORMAT_TIME,
         !wildmidi->o_new_segment);
 
     GST_LOG_OBJECT (wildmidi,

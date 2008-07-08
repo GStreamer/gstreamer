@@ -535,8 +535,8 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
   src->live_tv = gmyth_uri_is_livetv (gmyth_uri);
 
   if (src->live_tv) {
-    src->spawn_livetv = gmyth_livetv_new (src->backend_info);
     gchar *ch = gmyth_uri_get_channel_name (gmyth_uri);
+    src->spawn_livetv = gmyth_livetv_new (src->backend_info);
 
     if (ch != NULL)
       src->channel_name = ch;
