@@ -58,7 +58,7 @@
 typedef struct _CodecEntry {
   gchar *element_name;
   gchar *element_longname;
-  gchar *prefered_filter_substring;
+  gchar *preferred_filter_substring;
   gint32 format;
   GUID input_majortype;
   GUID input_subtype;

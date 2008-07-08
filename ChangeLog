@@ -1,3 +1,14 @@
+2008-07-08  Michael Smith <msmith@songbirdnest.com>
+
+	Based on patch by: Alessandro Decina <alessandro@nnva.org>
+	* sys/dshowdecwrapper/gstdshowaudiodec.c:
+	* sys/dshowdecwrapper/gstdshowdecwrapper.h:
+	* sys/dshowdecwrapper/gstdshowvideodec.c:
+	  Add AAC, AC3 to handled codecs.
+	  Fix handling of flush events.
+	  Improve debug/error output.
+	  Fix a number of typos in comments and variable names.
+
 2008-07-08  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	patch by: Ilja Pavkovic <illsen@gumblfarz.de>

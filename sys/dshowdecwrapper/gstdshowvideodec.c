@@ -978,7 +978,7 @@ gst_dshowvideodec_create_graph_and_filters (GstDshowVideoDec * vdec)
           klass->entry->input_subtype,
           klass->entry->output_majortype,
           klass->entry->output_subtype,
-          klass->entry->prefered_filter_substring, &vdec->decfilter)) {
+          klass->entry->preferred_filter_substring, &vdec->decfilter)) {
     GST_ELEMENT_ERROR (vdec, STREAM, FAILED, ("Can't create an instance "
             "of the decoder filter"), (NULL));
     goto error;
@@ -1111,7 +1111,7 @@ dshow_vdec_register (GstPlugin * plugin)
             video_dec_codecs[i].input_subtype,
             video_dec_codecs[i].output_majortype,
             video_dec_codecs[i].output_subtype,
-            video_dec_codecs[i].prefered_filter_substring, NULL)) {
+            video_dec_codecs[i].preferred_filter_substring, NULL)) {
 
       GST_CAT_DEBUG (dshowvideodec_debug, "Registering %s",
           video_dec_codecs[i].element_name);
