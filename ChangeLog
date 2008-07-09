@@ -1,3 +1,9 @@
+2008-07-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/festival/gstfestival.c:
+	  Add a note to the docs, that festival need to be running. Also log an
+	  error it it is not. Fixes #541327
+
 2008-07-08  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	patch by: Ilja Pavkovic <illsen@gumblfarz.de>
