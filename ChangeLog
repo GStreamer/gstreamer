@@ -1,3 +1,10 @@
+2008-07-10  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	Patch by: Thiago Sousa Santos <thiagoss at lcc dot ufcg dot edu dot br>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_audio_caps):
+	Correctly distinguish 8bit vs 16bit raw audio.  Fixes #542410.
+
 2008-07-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream),

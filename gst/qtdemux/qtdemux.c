@@ -4593,7 +4593,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "width = (int) 8, " "depth = (int) 8, " "signed = (boolean) false");
       break;
     case GST_MAKE_FOURCC ('t', 'w', 'o', 's'):
-      if (stream->bytes_per_frame == 1) {
+      if (stream->bytes_per_sample == 1) {
         _codec ("Raw 8-bit PCM audio");
         caps = gst_caps_from_string ("audio/x-raw-int, "
             "width = (int) 8, " "depth = (int) 8, " "signed = (boolean) true");
@@ -4607,7 +4607,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       }
       break;
     case GST_MAKE_FOURCC ('s', 'o', 'w', 't'):
-      if (stream->bytes_per_frame == 1) {
+      if (stream->bytes_per_sample == 1) {
         _codec ("Raw 8-bit PCM audio");
         caps = gst_caps_from_string ("audio/x-raw-int, "
             "width = (int) 8, " "depth = (int) 8, " "signed = (boolean) true");
