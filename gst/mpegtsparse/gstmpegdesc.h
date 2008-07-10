@@ -272,8 +272,8 @@
 #define DESC_DVB_EXTENDED_EVENT_iso639_language_code(desc) (desc + 3)
 #define DESC_DVB_EXTENDED_EVENT_items_length(desc) (desc[6])
 #define DESC_DVB_EXTENDED_EVENT_items(desc) (desc + 7) 
-#define DESC_DVB_EXTENDED_EVENT_text_length(desc) (desc[6 + DESC_DVB_EXTENDED_EVENT_items_length(desc)])
-#define DESC_DVB_EXTENDED_EVENT_text(desc) (desc + 6 + DESC_DVB_EXTENDED_EVENT_items_length(desc) + 1)
+#define DESC_DVB_EXTENDED_EVENT_text_length(desc) (desc[7 + DESC_DVB_EXTENDED_EVENT_items_length(desc)])
+#define DESC_DVB_EXTENDED_EVENT_text(desc) (desc + 7 + DESC_DVB_EXTENDED_EVENT_items_length(desc) + 1)
 
 /* DVB Satellite Delivery System Descriptor */
 #define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_frequency(desc)	(desc + 2)
