@@ -22,17 +22,15 @@
 /**
  * SECTION:element-audioresample
  *
- * <refsect2>
  * Audioresample resamples raw audio buffers to different sample rates using
  * a configurable windowing function to enhance quality.
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! audio/x-raw-int, rate=8000 ! alsasink
- * </programlisting>
- * Decode an Ogg/Vorbis downsample to 8Khz and play sound through alsa. 
+ * ]| Decode an Ogg/Vorbis downsample to 8Khz and play sound through alsa. 
  * To create the Ogg/Vorbis file refer to the documentation of vorbisenc.
- * </para>
  * </refsect2>
  *
  * Last reviewed on 2006-03-02 (0.10.4)
