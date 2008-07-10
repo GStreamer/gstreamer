@@ -1,5 +1,5 @@
 GstChildProxy GstObject
+GstTagSetter GstObject GstElement
 GstImplementsInterface GstObject GstElement
 GstXOverlay GstObject GstImplementsInterface GstElement
 GstMixer GstObject GstImplementsInterface GstElement
-GstTagSetter GstObject GstElement

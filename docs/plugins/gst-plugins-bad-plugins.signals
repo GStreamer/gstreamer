@@ -336,3 +336,10 @@ GstAppSrc *gstappsrc
 guint64  arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstDivxEnc::frame-encoded</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDivxEnc *gstdivxenc
+</SIGNAL>
+

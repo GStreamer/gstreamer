@@ -21,6 +21,18 @@
  * the process of copying it over that the xmms people probably won't want
  * any credit for it ;-)
  */
+/**
+ * SECTION:element-stereo
+ *
+ * Create a wide stereo effect.
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! stereo ! audioconvert ! audioresample ! alsasink
+ * ]| Play an Ogg/Vorbis file.
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

@@ -579,6 +579,20 @@ gst_speed_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-stereo</FILE>
+<TITLE>stereo</TITLE>
+GstStereo
+<SUBSECTION Standard>
+GstStereoClass
+GST_STEREO
+GST_STEREO_CLASS
+GST_IS_STEREO
+GST_IS_STEREO_CLASS
+GST_TYPE_STEREO
+gst_stereo_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-speexresample</FILE>
 <TITLE>speexresample</TITLE>
 GstSpeexResample
