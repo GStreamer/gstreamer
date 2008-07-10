@@ -37,6 +37,7 @@ static gboolean gst_gl_display_thread_check_msg_validity (GstGLDisplayMsg *msg);
 /* Called in the gl thread, protected by lock and unlock */
 static void gst_gl_display_thread_create_context (GstGLDisplay* display);
 static void gst_gl_display_thread_destroy_context (GstGLDisplay* display);
+static void gst_gl_display_thread_change_context (GstGLDisplay* display);
 static void gst_gl_display_thread_set_visible_context (GstGLDisplay* display);
 static void gst_gl_display_thread_resize_context (GstGLDisplay* display);
 static void gst_gl_display_thread_redisplay (GstGLDisplay* display);
@@ -126,6 +127,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     //conditions
     display->cond_create_context = g_cond_new ();
     display->cond_destroy_context = g_cond_new ();
+    display->cond_change_context = g_cond_new ();
     display->cond_gen_texture = g_cond_new ();
     display->cond_del_texture = g_cond_new ();
     display->cond_init_upload = g_cond_new ();   
@@ -414,6 +416,10 @@ gst_gl_display_finalize (GObject* object)
         g_cond_free (display->cond_gen_texture);
         display->cond_gen_texture = NULL;
     }
+    if (display->cond_change_context) {
+        g_cond_free (display->cond_change_context);
+        display->cond_change_context = NULL;
+    }
     if (display->cond_destroy_context) {
         g_cond_free (display->cond_destroy_context);
         display->cond_destroy_context = NULL;
@@ -516,6 +522,9 @@ gst_gl_display_thread_dispatch_action (GstGLDisplayMsg* msg)
         case GST_GL_DISPLAY_ACTION_DESTROY_CONTEXT:
             gst_gl_display_thread_destroy_context (msg->display);
             break;
+        case GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT:
+            gst_gl_display_thread_change_context (msg->display);
+            break;
 		case GST_GL_DISPLAY_ACTION_VISIBLE_CONTEXT:
             gst_gl_display_thread_set_visible_context (msg->display);
             break;
@@ -576,9 +585,11 @@ gst_gl_display_thread_check_msg_validity (GstGLDisplayMsg *msg)
     switch (msg->action)
     {
         case GST_GL_DISPLAY_ACTION_CREATE_CONTEXT:
+            //display is not in the map only when we want create one
             valid = TRUE;
             break;
         case GST_GL_DISPLAY_ACTION_DESTROY_CONTEXT:
+        case GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT:
 		case GST_GL_DISPLAY_ACTION_VISIBLE_CONTEXT:
         case GST_GL_DISPLAY_ACTION_RESIZE_CONTEXT:
         case GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT:
@@ -745,6 +756,16 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
 
     //release display destructor
     g_cond_signal (display->cond_destroy_context);
+}
+
+
+/* Called in the gl thread */
+static void
+gst_gl_display_thread_change_context (GstGLDisplay *display)
+{
+    glutSetWindow (display->glutWinId);
+    glutChangeWindow (display->winId);
+    g_cond_signal (display->cond_change_context);
 }
 
 
@@ -1884,8 +1905,9 @@ gst_gl_display_set_window_id (GstGLDisplay* display, gulong winId)
     static gint y_pos = 0;
 
     gst_gl_display_lock (display);
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DESTROY_CONTEXT, display);
-    g_cond_wait (display->cond_destroy_context, display->mutex);
+    //display->winId = winId;
+    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT, display);
+    g_cond_wait (display->cond_change_context, display->mutex);
     gst_gl_display_unlock (display);
 
     if (g_hash_table_size (gst_gl_display_map) == 0)

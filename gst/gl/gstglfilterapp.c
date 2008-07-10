@@ -124,7 +124,7 @@ static void
 gst_gl_filter_app_get_property (GObject* object, guint prop_id,
     GValue* value, GParamSpec* pspec)
 {
-    //GstGLFilterApp *filter = GST_GL_FILTER_APP (object);
+    //GstGLFilterApp* filter = GST_GL_FILTER_APP (object);
 
     switch (prop_id) 
     {

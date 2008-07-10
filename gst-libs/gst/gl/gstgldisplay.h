@@ -60,6 +60,7 @@ typedef enum {
 typedef enum {
     GST_GL_DISPLAY_ACTION_CREATE_CONTEXT,
     GST_GL_DISPLAY_ACTION_DESTROY_CONTEXT,
+    GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT,
 	GST_GL_DISPLAY_ACTION_VISIBLE_CONTEXT,
     GST_GL_DISPLAY_ACTION_RESIZE_CONTEXT,
     GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT,
@@ -118,6 +119,7 @@ struct _GstGLDisplay {
     //conditions
     GCond* cond_create_context;
     GCond* cond_destroy_context;
+    GCond* cond_change_context;
     GCond* cond_gen_texture;
     GCond* cond_del_texture;
     GCond* cond_init_upload;

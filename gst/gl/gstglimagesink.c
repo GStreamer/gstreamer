@@ -277,14 +277,12 @@ gst_glimage_sink_change_state (GstElement* element, GstStateChange transition)
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
-            /* FIXME clear window */
             glimage_sink->fps_n = 0;
             glimage_sink->fps_d = 1;
             GST_VIDEO_SINK_WIDTH (glimage_sink) = 0;
             GST_VIDEO_SINK_HEIGHT (glimage_sink) = 0;
             break;
         case GST_STATE_CHANGE_READY_TO_NULL:
-            /* FIXME dispose of window */
             break;
         default:
             break;
@@ -534,15 +532,7 @@ gst_glimage_sink_set_xwindow_id (GstXOverlay* overlay, gulong window_id)
       return;
 
     if (window_id)
-    {
-        //if (glimage_sink->window_id && ddrawsink->isInternal) 
-        //close internal window
-
         glimage_sink->window_id = window_id;
-    }
-
-    //Handle the case where window_id is 0 and we want the sink to 
-    //create a new window when playback was already started (after set_caps)
 }
 
 
