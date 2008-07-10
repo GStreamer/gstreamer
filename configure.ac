@@ -271,8 +271,10 @@ if test x$PERL_PATH = xno; then
 fi
 
 dnl we require flex and bison for building the parser
-AG_GST_BISON_CHECK
-AG_GST_FLEX_CHECK
+if test "x$GST_DISABLE_PARSE" != xyes; then
+  AG_GST_BISON_CHECK
+  AG_GST_FLEX_CHECK
+fi
 
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")

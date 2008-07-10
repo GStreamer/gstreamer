@@ -1,3 +1,8 @@
+2008-07-09  Michael Smith <msmith@songbirdnest.com>
+
+	* configure.ac:
+	  Don't require flex and bison if the parser is disabled.
+
 2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* libs/gst/controller/gstinterpolationcontrolsource.c:
