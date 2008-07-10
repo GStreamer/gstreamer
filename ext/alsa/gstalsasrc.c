@@ -21,20 +21,15 @@
 
 /**
  * SECTION:element-alsasrc
- * @short_description: capture audio from an alsa device
  * @see_also: alsasink, alsamixer
  *
- * <refsect2>
- * <para>
  * This element reads data from an audio card using the ALSA API.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * Record from a sound card using ALSA and encode to Ogg/Vorbis.
- * </para>
- * <programlisting>
+ * |[
  * gst-launch -v alsasrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=alsasrc.ogg
- * </programlisting>
+ * ]| Record from a sound card using ALSA and encode to Ogg/Vorbis.
  * </refsect2>
  *
  * Last reviewed on 2006-03-01 (0.10.4)

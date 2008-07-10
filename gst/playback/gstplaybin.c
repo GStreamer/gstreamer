@@ -20,12 +20,9 @@
 /**
  * SECTION:element-playbin
  *
- * <refsect2>
- * <para>
  * Playbin provides a stand-alone everything-in-one abstraction for an
  * audio and/or video player.
- * </para>
- * <para>
+ *
  * It can handle both audio and video files and features
  * <itemizedlist>
  * <listitem>
@@ -54,36 +51,33 @@
  * volume control
  * </listitem>
  * </itemizedlist>
- * </para>
+ *
+ * <refsect2>
  * <title>Usage</title>
  * <para>
  * A playbin element can be created just like any other element using
- * gst_element_factory_make(). The file/URI to play should be set via the "uri"
+ * gst_element_factory_make(). The file/URI to play should be set via the #GstPlayBin:uri
  * property. This must be an absolute URI, relative file paths are not allowed.
  * Example URIs are file:///home/joe/movie.avi or http://www.joedoe.com/foo.ogg
- * </para>
- * <para>
+ *
  * Playbin is a #GstPipeline. It will notify the application of everything
  * that's happening (errors, end of stream, tags found, state changes, etc.)
  * by posting messages on its #GstBus. The application needs to watch the
  * bus.
- * </para>
- * <para>
+ *
  * Playback can be initiated by setting the element to PLAYING state using
  * gst_element_set_state(). Note that the state change will take place in
  * the background in a separate thread, when the function returns playback
  * is probably not happening yet and any errors might not have occured yet.
  * Applications using playbin should ideally be written to deal with things
  * completely asynchroneous.
- * </para>
- * <para>
+ *
  * When playback has finished (an EOS message has been received on the bus)
  * or an error has occured (an ERROR message has been received on the bus) or
  * the user wants to play a different track, playbin should be set back to
- * READY or NULL state, then the "uri" property should be set to the new
- * location and then playbin be set to PLAYING state again.
- * </para>
- * <para>
+ * READY or NULL state, then the #GstPlayBin:uri property should be set to the
+ * new location and then playbin be set to PLAYING state again.
+ *
  * Seeking can be done using gst_element_seek_simple() or gst_element_seek()
  * on the playbin element. Again, the seek will not be executed
  * instantaneously, but will be done in a background thread. When the seek
@@ -91,35 +85,34 @@
  * may wait for the seek to finish (or fail) using gst_element_get_state() with
  * -1 as the timeout, but this will block the user interface and is not
  * recommended at all.
- * </para>
- * <para>
+ *
  * Applications may query the current position and duration of the stream
  * via gst_element_query_position() and gst_element_query_duration() and
  * setting the format passed to GST_FORMAT_TIME. If the query was successful,
  * the duration or position will have been returned in units of nanoseconds.
  * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Advanced Usage: specifying the audio and video sink</title>
  * <para>
  * By default, if no audio sink or video sink has been specified via the
- * "audio-sink" or "video-sink" property, playbin will use the autoaudiosink
- * and autovideosink elements to find the first-best available output method.
+ * #GstPlayBin:audio-sink or #GstPlayBin:video-sink property, playbin will use
+ * the autoaudiosink and autovideosink elements to find the first-best
+ * available output method.
  * This should work in most cases, but is not always desirable. Often either
  * the user or application might want to specify more explicitly what to use
  * for audio and video output.
- * </para>
- * <para>
+ *
  * If the application wants more control over how audio or video should be
  * output, it may create the audio/video sink elements itself (for example
  * using gst_element_factory_make()) and provide them to playbin using the
- * "audio-sink" or "video-sink" property.
- * </para>
- * <para>
+ * #GstPlayBin:audio-sink or #GstPlayBin:video-sink property.
+ *
  * GNOME-based applications, for example, will usually want to create
  * gconfaudiosink and gconfvideosink elements and make playbin use those,
  * so that output happens to whatever the user has configured in the GNOME
  * Multimedia System Selector confinguration dialog.
- * </para>
- * <para>
+ *
  * The sink elements do not necessarily need to be ready-made sinks. It is
  * possible to create container elements that look like a sink to playbin,
  * but in reality contain a number of custom elements linked together. This
@@ -128,23 +121,23 @@
  * it to the sink pad of the first element within the bin. This can be used
  * for a number of purposes, for example to force output to a particular
  * format or to modify or observe the data before it is output.
- * </para>
- * <para>
+ *
  * It is also possible to 'suppress' audio and/or video output by using
  * 'fakesink' elements (or capture it from there using the fakesink element's
  * "handoff" signal, which, nota bene, is fired from the streaming thread!).
  * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Retrieving Tags and Other Meta Data</title>
  * <para>
  * Most of the common meta data (artist, title, etc.) can be retrieved by
  * watching for TAG messages on the pipeline's bus (see above).
- * </para>
- * <para>
+ *
  * Other more specific meta information like width/height/framerate of video
  * streams or samplerate/number of channels of audio streams can be obtained
- * using the "stream-info" property, which will return a GList of stream info
- * objects, one for each stream. These are opaque objects that can only be
- * accessed via the standard GObject property interface, ie. g_object_get().
+ * using the  #GstPlayBaseBin:stream-info property, which will return a GList of
+ * stream info objects, one for each stream. These are opaque objects that can
+ * only be accessed via the standard GObject property interface, ie. g_object_get().
  * Each stream info object has the following properties:
  * <itemizedlist>
  * <listitem>"object" (GstObject) (the decoder source pad usually)</listitem>
@@ -155,14 +148,15 @@
  * <listitem>"language-code" (string) (ISO-639 language code for this stream, mostly used for audio/subtitle streams)</listitem>
  * <listitem>"codec" (string) (format this stream was encoded in)</listitem>
  * </itemizedlist>
- * Stream information from the stream-info properties is best queried once
+ * Stream information from the #GstPlayBaseBin:stream-info property is best queried once
  * playbin has changed into PAUSED or PLAYING state (which can be detected
- * via a state-changed message on the bus where old_state=READY and
+ * via a state-changed message on the #GstBus where old_state=READY and
  * new_state=PAUSED), since before that the list might not be complete yet or
  * not contain all available information (like language-codes).
  * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Buffering</title>
- * <para>
  * Playbin handles buffering automatically for the most part, but applications
  * need to handle parts of the buffering process as well. Whenever playbin is
  * buffering, it will post BUFFERING messages on the bus with a percentage
@@ -171,9 +165,7 @@
  * They may also want to convey the buffering progress to the user in some
  * way. Here is how to extract the percentage information from the message
  * (requires GStreamer >= 0.10.11):
- * </para>
- * <para>
- * <programlisting>
+ * |[
  * switch (GST_MESSAGE_TYPE (msg)) {
  *   case GST_MESSAGE_BUFFERING: {
  *     gint percent = 0;
@@ -183,21 +175,21 @@
  *   }
  *   ...
  * }
- * </programlisting>
+ * ]|
  * Note that applications should keep/set the pipeline in the PAUSED state when
  * a BUFFERING message is received with a buffer percent value < 100 and set
  * the pipeline back to PLAYING state when a BUFFERING message with a value
  * of 100 percent is received (if PLAYING is the desired state, that is).
- * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Embedding the video window in your application</title>
- * <para>
  * By default, playbin (or rather the video sinks used) will create their own
  * window. Applications will usually want to force output to a window of their
  * own, however. This can be done using the GstXOverlay interface, which most
  * video sinks implement. See the documentation there for more details.
- * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Specifying which CD/DVD device to use</title>
- * <para>
  * The device to use for CDs/DVDs needs to be set on the source element
  * playbin creates before it is opened. The only way to do this at the moment
  * is to connect to playbin's "notify::source" signal, which will be emitted
@@ -206,35 +198,24 @@
  * property and set it appropriately. In future ways might be added to specify
  * the device as part of the URI, but at the time of writing this is not
  * possible yet.
- * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Examples</title>
- * <para>
- * Here is a simple pipeline to play back a video or audio file:
- * <programlisting>
+ * |[
  * gst-launch -v playbin uri=file:///path/to/somefile.avi
- * </programlisting>
- * This will play back the given AVI video file, given that the video and
+ * ]| This will play back the given AVI video file, given that the video and
  * audio decoders required to decode the content are installed. Since no
  * special audio sink or video sink is supplied (not possible via gst-launch),
  * playbin will try to find a suitable audio and video sink automatically
  * using the autoaudiosink and autovideosink elements.
- * </para>
- * <para>
- * Here is a another pipeline to play track 4 of an audio CD:
- * <programlisting>
+ * |[
  * gst-launch -v playbin uri=cdda://4
- * </programlisting>
- * This will play back track 4 on an audio CD in your disc drive (assuming
+ * ]| This will play back track 4 on an audio CD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
- * </para>
- * <para>
- * Here is a another pipeline to play title 1 of a DVD:
- * <programlisting>
+ * |[
  * gst-launch -v playbin uri=dvd://1
- * </programlisting>
- * This will play back title 1 of a DVD in your disc drive (assuming
+ * ]| This will play back title 1 of a DVD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
- * </para>
  * </refsect2>
  */
 

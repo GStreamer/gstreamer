@@ -289,6 +289,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstVideoTestSrc::peer-alloc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Peer Alloc</NICK>
+<BLURB>Ask the peer to allocate an output buffer.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstVideoscale::method</NAME>
 <TYPE>GstVideoscaleMethod</TYPE>
 <RANGE></RANGE>
@@ -851,11 +861,11 @@
 <ARG>
 <NAME>GstVorbisEnc::quality</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[-0.1,1]</RANGE>
+<RANGE>[-0,1,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Quality</NICK>
 <BLURB>Specify quality instead of specifying a particular bitrate.</BLURB>
-<DEFAULT>0.3</DEFAULT>
+<DEFAULT>0,3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1175,7 +1185,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Volume</NICK>
 <BLURB>Volume of test signal.</BLURB>
-<DEFAULT>0.8</DEFAULT>
+<DEFAULT>0,8</DEFAULT>
 </ARG>
 
 <ARG>

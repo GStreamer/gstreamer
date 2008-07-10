@@ -21,20 +21,15 @@
 
 /**
  * SECTION:element-oggdemux
- * @short_description: a demuxer for ogg files
  * @see_also: <link linkend="gst-plugins-base-plugins-oggmux">oggmux</link>
  *
- * <refsect2>
- * <para>
  * This element demuxes ogg files into their encoded audio and video components.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=test.ogg ! oggdemux ! vorbisdec ! audioconvert ! alsasink
- * </programlisting>
- * Decodes the vorbis audio stored inside an ogg container.
- * </para>
+ * ]| Decodes the vorbis audio stored inside an ogg container.
  * </refsect2>
  *
  * Last reviewed on 2006-12-30 (0.10.5)

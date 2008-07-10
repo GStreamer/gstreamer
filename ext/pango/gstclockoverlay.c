@@ -22,30 +22,23 @@
  * SECTION:element-clockoverlay
  * @see_also: #GstTextOverlay, #GstTimeOverlay
  *
- * <refsect2>
- * <para>
  * This element overlays the current clock time on top of a video
  * stream. You can position the text and configure the font details
  * using the properties of the #GstTextOverlay class. By default, the
  * time is displayed in the top left corner of the picture, with some
  * padding to the left and to the top.
- * </para>
- * <para>
- * Here is a simple pipeline that displays the current time in the top left
- * corner of the video picture:
- * <programlisting>
+ *
+ * <refsect2>
+ * <title>Example launch lines</title>
+ * |[
  * gst-launch -v videotestsrc ! clockoverlay ! xvimagesink
- * </programlisting>
- * </para>
- * <para>
- * Here is another pipeline that displays the current time with some leading
+ * ]| Display the current time in the top left corner of the video picture
+ * |[
+ * gst-launch -v videotestsrc ! clockoverlay halign=right valign=bottom text="Edge City" shaded-background=true ! ffmpegcolorspace ! ximagesink
+ * ]| Another pipeline that displays the current time with some leading
  * text in the bottom right corner of the video picture, with the background
  * of the text being shaded in order to make it more legible on top of a
- * bright video background:
- * <programlisting>
- * gst-launch -v videotestsrc ! clockoverlay halign=right valign=bottom text="Edge City" shaded-background=true ! ffmpegcolorspace ! ximagesink
- * </programlisting>
- * </para>
+ * bright video background.
  * </refsect2>
  */
 

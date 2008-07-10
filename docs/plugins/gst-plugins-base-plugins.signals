@@ -321,3 +321,27 @@ GstPlayBin2 *gstplaybin2
 GstCaps *arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstPlayBin2::get-audio-pad</NAME>
+<RETURNS>GstPad*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin2 *gstplaybin2
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin2::get-text-pad</NAME>
+<RETURNS>GstPad*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin2 *gstplaybin2
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin2::get-video-pad</NAME>
+<RETURNS>GstPad*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin2 *gstplaybin2
+gint  arg1
+</SIGNAL>
+

@@ -21,33 +21,30 @@
  * SECTION:element-theoraenc
  * @see_also: theoradec, oggmux
  *
- * <refsect2>
- * <para>
  * This element encodes raw video into a Theora stream.
  * <ulink url="http://www.theora.org/">Theora</ulink> is a royalty-free
  * video codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
  * Foundation</ulink>, based on the VP3 codec.
- * </para>
- * <para>
+ *
  * The theora codec internally only supports encoding of images that are a
  * multiple of 16 pixels in both X and Y direction. It is however perfectly
  * possible to encode images with other dimensions because an arbitrary
  * rectangular cropping region can be set up. This element will automatically
  * set up a correct cropping region if the dimensions are not multiples of 16
- * pixels. The "border" and "center" properties control how this cropping
- * region will be set up.
- * </para>
- * <para>
- * To control the quality of the encoding, the "bitrate" and "quality"
- * properties can be used. These two properties are mutualy exclusive. Setting
- * the bitrate property will produce a constant bitrate (CBR) stream while
- * setting the quality property will produce a variable bitrate (VBR) stream.
- * </para>
+ * pixels. The #GstTheoraEnc::border and #GstTheoraEnc::center properties
+ * control how this cropping region will be set up.
+ *
+ * To control the quality of the encoding, the #GstTheoraEnc::bitrate and
+ * #GstTheoraEnc::quality properties can be used. These two properties are
+ * mutualy exclusive. Setting the bitrate property will produce a constant
+ * bitrate (CBR) stream while setting the quality property will produce a
+ * variable bitrate (VBR) stream.
+ *
+ * <refsect2>
  * <title>Example pipeline</title>
- * <programlisting>
+ * |[
  * gst-launch -v videotestsrc num-buffers=1000 ! theoraenc ! oggmux ! filesink location=videotestsrc.ogg
- * </programlisting>
- * This example pipeline will encode a test video source to theora muxed in an
+ * ]| This example pipeline will encode a test video source to theora muxed in an
  * ogg container. Refer to the theoradec documentation to decode the create
  * stream.
  * </refsect2>

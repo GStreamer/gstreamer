@@ -370,6 +370,13 @@ GstOggMuxClass
 </SECTION>
 
 <SECTION>
+<FILE>gstplaybasebin</FILE>
+<TITLE>GstPlayBaseBin</TITLE>
+GstPlayBaseBin
+<SUBSECTION Standard>
+</SECTION>
+
+<SECTION>
 <FILE>element-playbin</FILE>
 <TITLE>playbin</TITLE>
 GstPlayBin

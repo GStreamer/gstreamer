@@ -21,43 +21,36 @@
 
 /**
  * SECTION:element-multifdsink
- * @short_description: Send data to multiple file descriptors
  * @see_also: tcpserversink
  *
- * <refsect2>
- * <para>
  * This plugin writes incoming data to a set of file descriptors. The
- * file descriptors can be added to multifdsink by emitting the "add" signal. 
- * For each descriptor added, the "client-added" signal will be called.
- * </para>
- * <para>
- * As of version 0.10.8, a client can also be added with the "add-full" signal
+ * file descriptors can be added to multifdsink by emitting the #GstMultiFdSink::add signal. 
+ * For each descriptor added, the #GstMultiFdSink::client-added signal will be called.
+ *
+ * As of version 0.10.8, a client can also be added with the #GstMultiFdSink::add-full signal
  * that allows for more control over what and how much data a client 
  * initially receives.
- * </para>
- * <para>
- * Clients can be removed from multifdsink by emitting the "remove" signal. For
- * each descriptor removed, the "client-removed" signal will be called. The
- * "client-removed" signal can also be fired when multifdsink decides that a
+ *
+ * Clients can be removed from multifdsink by emitting the #GstMultiFdSink::remove signal. For
+ * each descriptor removed, the #GstMultiFdSink::client-removed signal will be called. The
+ * #GstMultiFdSink::client-removed signal can also be fired when multifdsink decides that a
  * client is not active anymore or, depending on the value of the
- * "recover-policy" property, if the client is reading too slowly.
+ * #GstMultiFdSink:recover-policy property, if the client is reading too slowly.
  * In all cases, multifdsink will never close a file descriptor itself.
  * The user of multifdsink is responsible for closing all file descriptors.
- * This can for example be done in response to the "client-fd-removed" signal.
+ * This can for example be done in response to the #GstMultiFdSink::client-fd-removed signal.
  * Note that multifdsink still has a reference to the file descriptor when the
- * "client-removed" signal is emitted, so that "get-stats" can be performed on
+ * #GstMultiFdSink::client-removed signal is emitted, so that "get-stats" can be performed on
  * the descriptor; it is therefore not safe to close the file descriptor in
- * the "client-removed" signal handler, and you should use the 
- * "client-fd-removed" signal to safely close the fd.
- * </para>
- * <para>
+ * the #GstMultiFdSink::client-removed signal handler, and you should use the 
+ * #GstMultiFdSink::client-fd-removed signal to safely close the fd.
+ *
  * Multifdsink internally keeps a queue of the incoming buffers and uses a
  * separate thread to send the buffers to the clients. This ensures that no
  * client write can block the pipeline and that clients can read with different
  * speeds.
- * </para>
- * <para>
- * When adding a client to multifdsink, the "sync-method" property will define
+ *
+ * When adding a client to multifdsink, the #GstMultiFdSink:sync-method property will define
  * which buffer in the queued buffers will be sent first to the client. Clients 
  * can be sent the most recent buffer (which might not be decodable by the 
  * client if it is not a keyframe), the next keyframe received in 
@@ -65,48 +58,42 @@
  * last received keyframe (which will cause a simple burst-on-connect). 
  * Multifdsink will always keep at least one keyframe in its internal buffers
  * when the sync-mode is set to latest-keyframe.
- * </para>
- * <para>
- * As of version 0.10.8, there are additional values for the sync-method 
+ *
+ * As of version 0.10.8, there are additional values for the #GstMultiFdSink:sync-method 
  * property to allow finer control over burst-on-connect behaviour. By selecting
  * the 'burst' method a minimum burst size can be chosen, 'burst-keyframe'
  * additionally requires that the burst begin with a keyframe, and 
  * 'burst-with-keyframe' attempts to burst beginning with a keyframe, but will
  * prefer a minimum burst size even if it requires not starting with a keyframe.
- * </para>
- * <para>
+ *
  * Multifdsink can be instructed to keep at least a minimum amount of data
  * expressed in time or byte units in its internal queues with the the 
- * "time-min" and "bytes-min" properties respectively. These properties are
- * useful if the application adds clients with the "add-full" signal to
- * make sure that a burst connect can actually be honored. 
- * </para>
- * <para>
+ * #GstMultiFdSink:time-min and #GstMultiFdSink:bytes-min properties respectively.
+ * These properties are useful if the application adds clients with the 
+ * #GstMultiFdSink::add-full signal to make sure that a burst connect can
+ * actually be honored. 
+ *
  * When streaming data, clients are allowed to read at a different rate than
  * the rate at which multifdsink receives data. If the client is reading too
  * fast, no data will be send to the client until multifdsink receives more
  * data. If the client, however, reads too slowly, data for that client will be 
  * queued up in multifdsink. Two properties control the amount of data 
- * (buffers) that is queued in multifdsink: "buffers-max" and 
- * "buffers-soft-max". A client that falls behind by "buffers-max" is removed 
- * from multifdsink forcibly.
- * </para>
- * <para>
- * A client with a lag of at least "buffers-soft-max" enters the recovery
- * procedure which is controlled with the "recover-policy" property. A recover
- * policy of NONE will do nothing, RESYNC_LATEST will send the most recently
+ * (buffers) that is queued in multifdsink: #GstMultiFdSink:buffers-max and 
+ * #GstMultiFdSink:buffers-soft-max. A client that falls behind by
+ * #GstMultiFdSink:buffers-max is removed from multifdsink forcibly.
+ *
+ * A client with a lag of at least #GstMultiFdSink:buffers-soft-max enters the recovery
+ * procedure which is controlled with the #GstMultiFdSink:recover-policy property.
+ * A recover policy of NONE will do nothing, RESYNC_LATEST will send the most recently
  * received buffer as the next buffer for the client, RESYNC_SOFT_LIMIT
  * positions the client to the soft limit in the buffer queue and
  * RESYNC_KEYFRAME positions the client at the most recent keyframe in the
  * buffer queue.
- * </para>
- * <para>
+ *
  * multifdsink will by default synchronize on the clock before serving the 
  * buffers to the clients. This behaviour can be disabled by setting the sync 
  * property to FALSE. Multifdsink will by default not do QoS and will never
  * drop late buffers.
- * </para>
- * </refsect2>
  *
  * Last reviewed on 2006-09-12 (0.10.10)
  */

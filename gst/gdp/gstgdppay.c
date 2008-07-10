@@ -21,18 +21,14 @@
  * SECTION:element-gdppay
  * @see_also: gdpdepay
  *
- * <refsect2>
- * <para>
  * This element payloads GStreamer buffers and events using the
  * GStreamer Data Protocol.
- * </para>
- * <para>
- * <programlisting>
+ *
+ * <refsect2>
+ * |[
  * gst-launch -v -m videotestsrc num-buffers=50 ! gdppay ! filesink location=test.gdp
- * </programlisting>
- * This pipeline creates a serialized video stream that can be played back
+ * ]| This pipeline creates a serialized video stream that can be played back
  * with the example shown in gdpdepay.
- * </para>
  * </refsect2>
  */
 

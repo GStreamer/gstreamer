@@ -20,34 +20,27 @@
 /**
  * SECTION:element-vorbistag
  * @see_also: #oggdemux, #oggmux, #vorbisparse, #GstTagSetter
- * @short_description: retags vorbis streams 
  *
- * <refsect2>
- * <para>
  * The vorbistags element can change the tag contained within a raw
  * vorbis stream. Specifically, it modifies the comments header packet
  * of the vorbis stream.
- * </para>
- * <para>
+ *
  * The element will also process the stream as the #vorbisparse element does
  * so it can be used when remuxing an Ogg Vorbis stream, without additional
  * elements.
- * </para>
- * <para>
+ *
  * Applications can set the tags to write using the #GstTagSetter interface.
  * Tags contained withing the vorbis bitstream will be picked up
  * automatically (and merged according to the merge mode set via the tag
  * setter interface).
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * This element is not useful with gst-launch, because it does not support
- * setting the tags on a #GstTagSetter interface. Conceptually, the element
- * will usually be used like:
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=foo.ogg ! oggdemux ! vorbistag ! oggmux ! filesink location=bar.ogg
- * </programlisting>
- * </para>
+ * ]| This element is not useful with gst-launch, because it does not support
+ * setting the tags on a #GstTagSetter interface. Conceptually, the element
+ * will usually be used in this order though.
  * </refsect2>
  */
 

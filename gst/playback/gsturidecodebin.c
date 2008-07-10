@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-uridecodebin
- * @short_description: decoder for an uri
  *
  * Decodes data from a URI into raw media.
  */

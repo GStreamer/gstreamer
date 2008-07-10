@@ -90,5 +90,10 @@
     <xi:include href="xml/plugin-ximagesink.xml" />
     <xi:include href="xml/plugin-xvimagesink.xml" />
   </chapter>
+
+  <chapter>
+    <title>gst-plugins-base Classes</title>
+    <xi:include href="xml/gstplaybasebin.xml" />
+  </chapter>
 </book>
 

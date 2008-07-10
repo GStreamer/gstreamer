@@ -21,41 +21,28 @@
 
 /**
  * SECTION:element-giosrc
- * @short_description: Read from any GIO-supported location
  * @see_also: #GstFileSrc, #GstGnomeVFSSrc, #GstGioSink
  *
- * <refsect2>
- * <para>
  * This plugin reads data from a local or remote location specified
  * by an URI. This location can be specified using any protocol supported by
  * the GIO library or it's VFS backends. Common protocols are 'file', 'http',
  * 'ftp', or 'smb'.
- * </para>
- * <para>
- * Example pipeline:
- * <programlisting>
+ *
+ * <refsect2>
+ * <title>Example launch lines</title>
+ * |[
  * gst-launch -v giosrc location=file:///home/joe/foo.xyz ! fakesink
- * </programlisting>
- * The above pipeline will simply read a local file and do nothing with the
+ * ]| The above pipeline will simply read a local file and do nothing with the
  * data read. Instead of giosrc, we could just as well have used the
  * filesrc element here.
- * </para>
- * <para>
- * Another example pipeline:
- * <programlisting>
+ * |[
  * gst-launch -v giosrc location=smb://othercomputer/foo.xyz ! filesink location=/home/joe/foo.xyz
- * </programlisting>
- * The above pipeline will copy a file from a remote host to the local file
+ * ]| The above pipeline will copy a file from a remote host to the local file
  * system using the Samba protocol.
- * </para>
- * <para>
- * Yet another example pipeline:
- * <programlisting>
+ * |[
  * gst-launch -v giosrc location=http://music.foobar.com/demo.mp3 ! mad ! audioconvert ! audioresample ! alsasink
- * </programlisting>
- * The above pipeline will read and decode and play an mp3 file from a
+ * ]| The above pipeline will read and decode and play an mp3 file from a
  * web server using the http protocol.
- * </para>
  * </refsect2>
  */
 

@@ -25,36 +25,27 @@
 
 /**
  * SECTION:element-gnomevfssink
- * @short_description: Write a stream to a GnomeVFS URI
  * @see_also: #GstFileSink, #GstGnomeVFSSrc
  *
- * <refsect2>
- * <para>
  * This plugin writes incoming data to a local or remote location specified
  * by an URI. This location can be specified using any protocol supported by
  * the GnomeVFS library. Common protocols are 'file', 'ftp', or 'smb'.
- * </para>
- * <para>
- * Example pipeline:
- * <programlisting>
+ *
+ * Applications can connect to the #GstGnomeVFSSink::allow-overwrite signal to
+ * receive a callback when an existing file will be overwritten. The return
+ * value of the signal will determine if gnomevfssink will overwrite the
+ * resource or abort with an error.
+ *
+ * <refsect2>
+ * <title>Example launch lines</title>
+ * |[
  * gst-launch -v filesrc location=input.xyz ! gnomevfssink location=file:///home/joe/out.xyz
- * </programlisting>
- * The above pipeline will simply copy a local file. Instead of gnomevfssink,
+ * ]| The above pipeline will simply copy a local file. Instead of gnomevfssink,
  * we could just as well have used the filesink element here.
- * </para>
- * <para>
- * Another example pipeline:
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=foo.mp3 ! mad ! flacenc ! gnomevfssink location=smb://othercomputer/foo.flac
- * </programlisting>
- * The above pipeline will re-encode an mp3 file into FLAC format and store
+ * ]| The above pipeline will re-encode an mp3 file into FLAC format and store
  * it on a remote host using the Samba protocol.
- * </para>
- * <para>
- * Applications can connect to the allow-overwrite signal to receive a callback when an
- * existing file will be overwritten. The return value of the signal will determine if
- * gnomevfssink will overwrite the resource or abort with an error.
- * </para>
  * </refsect2>
  *
  * Last reviewed on 2006-02-28 (0.10.4)

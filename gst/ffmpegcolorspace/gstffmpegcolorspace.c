@@ -22,13 +22,13 @@
 /**
  * SECTION:element-ffmpegcolorspace
  *
+ * Convert video frames between a great variety of colorspace formats.
+ *
  * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v videotestsrc ! video/x-raw-yuv,format=\(fourcc\)YUY2 ! ffmpegcolorspace ! ximagesink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

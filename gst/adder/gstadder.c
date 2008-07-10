@@ -23,22 +23,17 @@
 /**
  * SECTION:element-adder
  *
- * <refsect2>
- * <para>
- * The Adder allows to mix several streams into one by adding the data.
+ * The adder allows to mix several streams into one by adding the data.
  * Mixed data is clamped to the min/max values of the data format.
- * </para>
+ *
+ * The adder currently mixes all data received on the sinkpads as soon as
+ * possible without trying to synchronize the streams.
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch audiotestsrc freq=100 ! adder name=mix ! audioconvert ! alsasink audiotestsrc freq=500 ! mix.
- * </programlisting>
- * This pipeline produces two sine waves mixed together.
- * </para>
- * <para>
- * The Adder currently mixes all data received on the sinkpads as soon as possible
- * without trying to synchronize the streams.
- * </para>
+ * ]| This pipeline produces two sine waves mixed together.
  * </refsect2>
  *
  * Last reviewed on 2006-05-09 (0.10.7)

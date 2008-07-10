@@ -21,21 +21,18 @@
 
 /**
  * SECTION:element-giostreamsrc
- * @short_description: Reads data from a GIO GInputStream
  *
- * <refsect2>
- * <para>
  * This plugin reads data from a custom GIO #GInputStream.
- * </para>
- * <para>
+ *
  * It can, for example, be used to read data from memory with a
  * #GMemoryInputStream or to read from a file with a
  * #GFileInputStream.
- * </para>
+ *
+ * <refsect2>
  * <title>Example code</title>
  * <para>
  * The following example reads data from a #GMemoryOutputStream.
- * <programlisting>
+ * |[
 
 #include &lt;gst/gst.h&gt;
 #include &lt;gio/gio.h&gt;
@@ -60,7 +57,7 @@ g_object_set (G_OBJECT (src), "stream", stream, NULL);
 
 ...
 
- * </programlisting>
+ * ]|
  * </para>
  * </refsect2>
  */

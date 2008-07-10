@@ -22,30 +22,23 @@
  * SECTION:element-timeoverlay
  * @see_also: #GstTextOverlay, #GstClockOverlay
  *
- * <refsect2>
- * <para>
  * This element overlays the buffer time stamps of a video stream on
  * top of itself. You can position the text and configure the font details
  * using the properties of the #GstTextOverlay class. By default, the
  * time stamp is displayed in the top left corner of the picture, with some
  * padding to the left and to the top.
- * </para>
- * <para>
- * Here is a simple pipeline that displays the time stamps in the top left
- * corner of the video picture:
- * <programlisting>
+ *
+ * <refsect2>
+ * |[
  * gst-launch -v videotestsrc ! timeoverlay ! xvimagesink
- * </programlisting>
- * </para>
- * <para>
- * Here is another pipeline that displays the time stamps with some leading
+ * ]| Display the time stamps in the top left
+ * corner of the video picture.
+ * |[
+ * gst-launch -v videotestsrc ! timeoverlay halign=right valign=bottom text="Stream time:" shaded-background=true ! xvimagesink
+ * ]| Another pipeline that displays the time stamps with some leading
  * text in the bottom right corner of the video picture, with the background
  * of the text being shaded in order to make it more legible on top of a
- * bright video background:
- * <programlisting>
- * gst-launch -v videotestsrc ! timeoverlay halign=right valign=bottom text="Stream time:" shaded-background=true ! xvimagesink
- * </programlisting>
- * </para>
+ * bright video background.
  * </refsect2>
  */
 

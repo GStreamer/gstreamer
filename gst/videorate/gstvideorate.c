@@ -19,61 +19,50 @@
 
 /**
  * SECTION:element-videorate
- * @short_description: retimestamps and drops/duplicates video frames to
- *  match the source pad's framerate and create a perfect stream
  *
- * <refsect2>
- * <para>
  * This element takes an incoming stream of timestamped video frames.
  * It will produce a perfect stream that matches the source pad's framerate.
  *
  * The correction is performed by dropping and duplicating frames, no fancy
  * algorithm is used to interpolate frames (yet).
- * </para>
- * <para>
+ *
  * By default the element will simply negotiate the same framerate on its
  * source and sink pad.
- * </para>
- * <para>
+ *
  * This operation is useful to link to elements that require a perfect stream.
  * Typical examples are formats that do not store timestamps for video frames,
  * but only store a framerate, like Ogg and AVI.
- * </para>
- * <para>
+ *
  * A conversion to a specific framerate can be forced by using filtered caps on
  * the source pad.
- * </para>
- * <para>
- * The properties "in", "out", "duplicate" and "drop" can be read to obtain
- * information about number of input frames, output frames, dropped frames
- * (i.e. the number of unused input frames) and duplicated frames (i.e. the
- *  number of times an input frame was duplicated, beside being used normally).
+ *
+ * The properties #GstVideoRate:in, #GstVideoRate:out, #GstVideoRate:duplicate
+ * and #GstVideoRate:drop can be read to obtain information about number of
+ * input frames, output frames, dropped frames (i.e. the number of unused input
+ * frames) and duplicated frames (i.e. the number of times an input frame was
+ * duplicated, beside being used normally).
  *
  * An input stream that needs no adjustments will thus never have dropped or
  * duplicated frames.
  *
- * When the "silent" property is set to FALSE, a GObject property notification
- * will be emitted whenever one of the "duplicate" or "drop" values changes.
+ * When the #GstVideoRate:silent property is set to FALSE, a GObject property
+ * notification will be emitted whenever one of the #GstVideoRate:duplicate or
+ * #GstVideoRate:drop values changes.
  * This can potentially cause performance degradation.
  * Note that property notification will happen from the streaming thread, so
  * applications should be prepared for this.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videorate ! video/x-raw-yuv,framerate=15/1 ! xvimagesink
- * </programlisting>
- * Decode an Ogg/Theora file and adjust the framerate to 15 fps before playing.
+ * ]| Decode an Ogg/Theora file and adjust the framerate to 15 fps before playing.
  * To create the test Ogg/Theora file refer to the documentation of theoraenc.
- * </para>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v v4lsrc ! videorate ! video/x-raw-yuv,framerate=25/2 ! theoraenc ! oggmux ! filesink location=v4l.ogg
- * </programlisting>
- * Capture video from a V4L device, and adjust the stream to 12.5 fps before
+ * ]| Capture video from a V4L device, and adjust the stream to 12.5 fps before
  * encoding to Ogg/Theora.
- * </para>
-  * </refsect2>
+ * </refsect2>
  *
  * Last reviewed on 2006-09-02 (0.10.11)
  */

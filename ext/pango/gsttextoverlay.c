@@ -24,36 +24,31 @@
  * SECTION:element-textoverlay
  * @see_also: #GstTextRender, #GstClockOverlay, #GstTimeOverlay, #GstSubParse
  *
- * <refsect2>
- * <para>
  * This plugin renders text on top of a video stream. This can be either
  * static text or text from buffers received on the text sink pad, e.g.
  * as produced by the subparse element. If the text sink pad is not linked,
  * the text set via the "text" property will be rendered. If the text sink
  * pad is linked, text will be rendered as it is received on that pad,
  * honouring and matching the buffer timestamps of both input streams.
- * </para>
- * <para>
+ * 
  * The text can contain newline characters and text wrapping is enabled by
  * default.
- * </para>
- * <para>
- * Here is a simple pipeline that displays a static text in the top left
- * corner of the video picture:
- * <programlisting>
+ *
+ * <refsect2>
+ * <title>Example launch lines</title>
+ * |[
  * gst-launch -v videotestsrc ! textoverlay text="Room A" valign=top halign=left ! xvimagesink
- * </programlisting>
- * </para>
- * <para>
- * Here is another pipeline that displays subtitles from an .srt subtitle
+ * ]| Here is a simple pipeline that displays a static text in the top left
+ * corner of the video picture 
+ * |[
+ * gst-launch -v filesrc location=subtitles.srt ! subparse ! txt.   videotestsrc ! timeoverlay ! textoverlay name=txt shaded-background=yes ! xvimagesink
+ * ]| Here is another pipeline that displays subtitles from an .srt subtitle
  * file, centered at the bottom of the picture and with a rectangular shading
  * around the text in the background:
- * <programlisting>
- * gst-launch -v filesrc location=subtitles.srt ! subparse ! txt.   videotestsrc ! timeoverlay ! textoverlay name=txt shaded-background=yes ! xvimagesink
- * </programlisting>
+ * <para>
  * If you do not have such a subtitle file, create one looking like this
  * in a text editor:
- * <programlisting>
+ * |[
  * 1
  * 00:00:03,000 --> 00:00:05,000
  * Hello? (3-5s)
@@ -67,7 +62,7 @@
  * 00:00:18,826 --> 00:01:02,886
  * Uh? What are you talking about?
  * I don&apos;t understand  (18-62s)
- * </programlisting>
+ * ]|
  * </para>
  * </refsect2>
  */

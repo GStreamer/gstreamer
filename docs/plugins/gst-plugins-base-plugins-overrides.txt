@@ -9,6 +9,11 @@ struct _GstDecodeBin2 {
 };
 </STRUCT>
 <STRUCT>
+<NAME>GstPlayBaseBin</NAME>
+struct _GstPlayBaseBin {
+};
+</STRUCT>
+<STRUCT>
 <NAME>GstPlayBin</NAME>
 struct _GstPlayBin {
 };

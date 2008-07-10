@@ -20,39 +20,30 @@
 
 /**
  * SECTION:element-vorbisparse
- * @short_description: parses vorbis streams 
  * @see_also: vorbisdec, oggdemux, theoraparse
  *
- * <refsect2>
- * <para>
  * The vorbisparse element will parse the header packets of the Vorbis
  * stream and put them as the streamheader in the caps. This is used in the
  * multifdsink case where you want to stream live vorbis streams to multiple
  * clients, each client has to receive the streamheaders first before they can
  * consume the vorbis packets.
- * </para>
- * <para>
+ *
  * This element also makes sure that the buffers that it pushes out are properly
  * timestamped and that their offset and offset_end are set. The buffers that
  * vorbisparse outputs have all of the metadata that oggmux expects to receive,
  * which allows you to (for example) remux an ogg/vorbis file.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisparse ! fakesink
- * </programlisting>
- * This pipeline shows that the streamheader is set in the caps, and that each
+ * ]| This pipeline shows that the streamheader is set in the caps, and that each
  * buffer has the timestamp, duration, offset, and offset_end set.
- * </para>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=sine.ogg ! oggdemux ! vorbisparse \
  *            ! oggmux ! filesink location=sine-remuxed.ogg
- * </programlisting>
- * This pipeline shows remuxing. sine-remuxed.ogg might not be exactly the same
+ * ]| This pipeline shows remuxing. sine-remuxed.ogg might not be exactly the same
  * as sine.ogg, but they should produce exactly the same decoded data.
- * </para>
  * </refsect2>
  *
  * Last reviewed on 2006-04-01 (0.10.4.1)

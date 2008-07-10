@@ -22,20 +22,15 @@
 
 /**
  * SECTION:element-alsasink
- * @short_description: play audio to an ALSA device
  * @see_also: alsasrc, alsamixer
  *
- * <refsect2>
- * <para>
  * This element renders raw audio samples using the ALSA api.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * Play an Ogg/Vorbis file.
- * </para>
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! alsasink
- * </programlisting>
+ * ]| Play an Ogg/Vorbis file.
  * </refsect2>
  *
  * Last reviewed on 2006-03-01 (0.10.4)

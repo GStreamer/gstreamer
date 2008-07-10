@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-decodebin2
- * @short_description: Next-generation automatic decoding bin
  *
  * #GstBin that auto-magically constructs a decoding pipeline using available
  * decoders and demuxers via auto-plugging.

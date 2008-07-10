@@ -20,21 +20,16 @@
 
 /**
  * SECTION:element-oggmux
- * @short_description: a muxer for ogg files
  * @see_also: <link linkend="gst-plugins-base-plugins-deoggmux">oggdemux</link>
  *
- * <refsect2>
- * <para>
  * This element merges streams (audio and video) into ogg files.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch v4l2src num-buffers=500 ! video/x-raw-yuv,width=320,height=240 ! ffmpegcolorspace ! theoraenc ! oggmux ! filesink location=video.ogg
- * </programlisting>
- * Encodes a video stream captured from a v4l2-compatible camera to Ogg/Theora
+ * ]| Encodes a video stream captured from a v4l2-compatible camera to Ogg/Theora
  * (the encoding will stop automatically after 500 frames)
- * </para>
  * </refsect2>
  *
  * Last reviewed on 2008-02-06 (0.10.17)
