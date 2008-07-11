@@ -4,6 +4,7 @@ Makefile.in
 *-decl.txt
 *-decl-list.txt
 *-undocumented.txt
+*-undeclared.txt
 *-unused.txt
 
 tmpl
