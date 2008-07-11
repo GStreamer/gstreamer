@@ -22,8 +22,6 @@
  * edge [ constraint=false ];
  * edge [ minlen=0 ];
  *   does not create spacial dependency
- * node [ margin="0.02,0.01" ];
- *   space surrounding the label
  */
 
 #include "gst_private.h"
@@ -126,9 +124,11 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
   GstElement *target_element;
   GstPad *target_pad, *tmp_pad;
   GstPadDirection dir;
+  GstPadTemplate *pad_templ;
+  GstPadPresence presence;
   gchar *pad_name, *element_name;
   gchar *target_pad_name, *target_element_name;
-  gchar *color_name;
+  gchar *color_name, *style_name;
   gchar *spc = NULL;
 
   spc = g_malloc (1 + indent * 2);
@@ -152,10 +152,19 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
         } else {
           target_element_name = "";
         }
+        style_name = "filled,solid";
+        if ((pad_templ = gst_pad_get_pad_template (target_pad))) {
+          presence = GST_PAD_TEMPLATE_PRESENCE (pad_templ);
+          if (presence == GST_PAD_SOMETIMES) {
+            style_name = "filled,dotted";
+          } else if (presence == GST_PAD_REQUEST) {
+            style_name = "filled,dashed";
+          }
+        }
         fprintf (out,
-            "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\"];\n",
+            "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\", height=\"0.2\", style=\"%s\"];\n",
             spc, target_element_name, target_pad_name, color_name,
-            GST_OBJECT_NAME (target_pad));
+            GST_OBJECT_NAME (target_pad), style_name);
         g_free (target_pad_name);
         if (target_element) {
           g_free (target_element_name);
@@ -171,9 +180,19 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
             GST_PAD_SINK) ? "#aaaaff" : "#cccccc");
   }
   /* pads */
+  style_name = "filled,solid";
+  if ((pad_templ = gst_pad_get_pad_template (pad))) {
+    presence = GST_PAD_TEMPLATE_PRESENCE (pad_templ);
+    if (presence == GST_PAD_SOMETIMES) {
+      style_name = "filled,dotted";
+    } else if (presence == GST_PAD_REQUEST) {
+      style_name = "filled,dashed";
+    }
+  }
   fprintf (out,
-      "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\"];\n",
-      spc, element_name, pad_name, color_name, GST_OBJECT_NAME (pad));
+      "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\", height=\"0.2\", style=\"%s\"];\n",
+      spc, element_name, pad_name, color_name, GST_OBJECT_NAME (pad),
+      style_name);
 
   g_free (pad_name);
   g_free (element_name);
@@ -526,7 +545,7 @@ _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
         "  nodesep=.1;\n"
         "  ranksep=.2;\n"
         "  label=\"<%s>\\n%s%s%s\";\n"
-        "  node [style=filled, shape=box, fontsize=\"7\", fontname=\"Bitstream Vera Sans\"];\n"
+        "  node [style=filled, shape=box, fontsize=\"7\", fontname=\"Bitstream Vera Sans\", margin=\"0.0,0.0\"];\n"
         "  edge [labelfontsize=\"7\", fontsize=\"7\", labelfontname=\"Bitstream Vera Sans\", fontname=\"Bitstream Vera Sans\"];\n"
         "\n", G_OBJECT_TYPE_NAME (bin), GST_OBJECT_NAME (bin),
         (state_name ? state_name : ""), (param_name ? param_name : "")

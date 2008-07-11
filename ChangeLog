@@ -1,3 +1,9 @@
+2008-07-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstdebugutils.c:
+	  Give request and sometimes pads a different shpe style. Condense the
+	  graphs a little more.
+
 2008-07-09  Michael Smith <msmith@songbirdnest.com>
 
 	* configure.ac:
