@@ -88,6 +88,7 @@ struct _resinDvdSrc
   gboolean	flushing_seek;
   gboolean	need_segment;
   gboolean	active_highlight;
+  gboolean      in_still_state;
 
   GstBuffer	*alloc_buf;
   GstBuffer	*next_buf;
@@ -128,6 +129,12 @@ struct _resinDvdSrc
 
   gboolean have_pci;
   pci_t cur_pci;
+
+  /* Current state tracking */
+  gint8         cur_audio_phys_stream;
+  gint8         cur_spu_phys_stream;
+  gboolean      cur_spu_forced_only;
+  guint32       cur_clut[16];
 };
 
 struct _resinDvdSrcClass 

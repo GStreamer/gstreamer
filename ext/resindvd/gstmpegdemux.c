@@ -35,7 +35,7 @@
 
 /* The SCR_MUNGE value is used to offset the scr_adjust value, to avoid
  * ever generating a negative timestamp */
-#define SCR_MUNGE (2 * GST_SECOND)
+#define SCR_MUNGE (10 * GST_SECOND)
 
 /* We clamp scr delta with 0 so negative bytes won't be possible */
 #define GSTTIME_TO_BYTES(time) \
@@ -266,6 +266,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
     case ST_GST_VIDEO_MPEG1_OR_2:
     {
       gint mpeg_version = 1;
+
       if (stream_type == ST_VIDEO_MPEG2 ||
           (stream_type == ST_GST_VIDEO_MPEG1_OR_2 && demux->is_mpeg2_pack)) {
         mpeg_version = 2;
@@ -584,19 +585,35 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
 
   if (strcmp (type, "dvd-lang-codes") == 0) {
     GstEvent **p_ev;
+
     /* Store the language codes event on the element, then iterate over the 
      * streams it specifies and retrieve them. The stream creation code then 
      * creates the pad appropriately and sends tag events as needed */
     p_ev = &demux->lang_codes;
     gst_event_replace (p_ev, event);
 
-    GST_ERROR_OBJECT (demux, "*********************\nLang codes event %s",
-        gst_structure_to_string (structure));
-
     GST_DEBUG_OBJECT (demux, "Handling language codes event");
 
-    /* Create a video pad to ensure have it before emit no more pads */
+    /* Create a video pad to ensure it exists before emit no more pads */
     temp = gst_flups_demux_get_stream (demux, 0xe0, ST_VIDEO_MPEG2);
+    /* Send a video format event downstream */
+    {
+      gboolean is_widescreen, is_pal;
+
+      if (gst_structure_get_boolean (structure,
+              "video-widescreen", &is_widescreen) &&
+          gst_structure_get_boolean (structure, "video-pal-format", &is_pal)) {
+        GstEvent *v_format;
+        GstStructure *v_struct;
+
+        v_struct = gst_structure_new ("application/x-gst-dvd",
+            "event", G_TYPE_STRING, "dvd-video-format",
+            "video-widescreen", G_TYPE_BOOLEAN, is_widescreen,
+            "video-pal-format", G_TYPE_BOOLEAN, is_pal, NULL);
+        v_format = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, v_struct);
+        gst_pad_push_event (temp->pad, v_format);
+      }
+    }
 
     /* Read out the languages for audio streams and request each one that 
      * is present */
@@ -646,6 +663,7 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
     /* And subtitle streams */
     for (i = 0; i < MAX_DVD_SUBPICTURE_STREAMS; i++) {
       gint stream_format;
+
       g_snprintf (cur_stream_name, 32, "subpicture-%d-format", i);
 
       if (!gst_structure_get_int (structure, cur_stream_name, &stream_format))

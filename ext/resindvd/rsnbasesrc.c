@@ -1046,9 +1046,6 @@ rsn_base_src_perform_seek (RsnBaseSrc * src, GstEvent * event, gboolean unlock)
           FALSE, seeksegment.rate, seeksegment.applied_rate,
           seeksegment.format, seeksegment.last_stop,
           seeksegment.stop, seeksegment.time);
-
-      gst_segment_set_last_stop (&src->segment, GST_FORMAT_TIME,
-          seeksegment.last_stop);
     }
 
     if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {

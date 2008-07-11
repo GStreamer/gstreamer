@@ -273,8 +273,6 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       rsn_audiomunge_reset (munge);
-
-      g_print ("***********  AUDIO MUNGE: FLUSH\n");
       ret = gst_pad_push_event (munge->srcpad, event);
       break;
     case GST_EVENT_NEWSEGMENT:
@@ -299,11 +297,6 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
           rate, arate, format, start, stop, time);
 
       if (munge->have_audio) {
-        g_print ("***********  AUDIO MUNGE NEWSEG: start %" GST_TIME_FORMAT
-            " stop %" GST_TIME_FORMAT " accum now %" GST_TIME_FORMAT
-            "\n", GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
-            GST_TIME_ARGS (segment->accum));
-
         ret = gst_pad_push_event (munge->srcpad, event);
         break;
       }
@@ -319,21 +312,23 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
        * in the closing segment.
        */
       if (segment->accum >= AUDIO_FILL_THRESHOLD || munge->in_still) {
-        g_print ("***********  Send audio mebbe: accum = %" GST_TIME_FORMAT
+        g_print ("***********  Sending audio fill: accum = %" GST_TIME_FORMAT
             " still-state=%d\n", GST_TIME_ARGS (segment->accum),
             munge->in_still);
+
         /* Just generate a 100ms silence buffer for now. FIXME: Fill the gap */
         if (rsn_audiomunge_make_audio (munge, segment->start,
                 GST_SECOND / 10) == GST_FLOW_OK)
           munge->have_audio = TRUE;
       } else {
-        g_print ("***********  below thresh: accum = %" GST_TIME_FORMAT
-            "\n", GST_TIME_ARGS (segment->accum));
+        GST_LOG_OBJECT (munge, "Not sending audio fill buffer: "
+            "segment accum below thresh: accum = %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (segment->accum));
       }
 
-      g_print ("***********  AUDIO MUNGE NEWSEG: start %" GST_TIME_FORMAT
-          " stop %" GST_TIME_FORMAT " accum now %" GST_TIME_FORMAT
-          "\n", GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
+      GST_DEBUG_OBJECT (munge, "Sending newsegment: start %" GST_TIME_FORMAT
+          " stop %" GST_TIME_FORMAT " accum now %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
           GST_TIME_ARGS (segment->accum));
 
       ret = gst_pad_push_event (munge->srcpad, event);
@@ -342,6 +337,7 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     {
       const GstStructure *s = gst_event_get_structure (event);
+
       if (s && gst_structure_has_name (s, "application/x-gst-dvd"))
         rsn_audiomunge_handle_dvd_event (munge, event);
 

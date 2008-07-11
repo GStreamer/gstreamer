@@ -44,12 +44,13 @@ typedef struct _RsnDvdBinClass RsnDvdBinClass;
 #define DVD_ELEM_MQUEUE 2
 #define DVD_ELEM_SPU    3
 #define DVD_ELEM_VIDDEC 4
-#define DVD_ELEM_AUDDEC 5
-#define DVD_ELEM_VIDQ   6
-#define DVD_ELEM_SPU_SELECT 7
-#define DVD_ELEM_AUD_SELECT 8
-#define DVD_ELEM_AUD_MUNGE 9
-#define DVD_ELEM_LAST   10
+#define DVD_ELEM_PARSET 5
+#define DVD_ELEM_AUDDEC 6
+#define DVD_ELEM_VIDQ   7
+#define DVD_ELEM_SPU_SELECT 8
+#define DVD_ELEM_AUD_SELECT 9
+#define DVD_ELEM_AUD_MUNGE 10
+#define DVD_ELEM_LAST   11
 
 struct _RsnDvdBin
 {

@@ -1,3 +1,38 @@
+2008-07-11  Jan Schmidt  <thaytan@noraisin.net>
+
+	* docs/plugins/.cvsignore:
+	Ignore *-undeclared.txt
+
+	* ext/resindvd/rsnaudiomunge.c:
+	Turn g_print's into debug statements.
+
+	* ext/resindvd/resin-play:
+	* ext/resindvd/Makefile.am:
+	* ext/resindvd/resindvdbin.c:
+	* ext/resindvd/resindvdbin.h:
+	* ext/resindvd/rsnparsetter.c:
+	* ext/resindvd/rsnparsetter.h:
+	* ext/resindvd/rsnwrappedbuffer.c:
+	* ext/resindvd/rsnwrappedbuffer.h:
+	Add a bloated implementation of a really simple idea: Replace the
+	pixel-aspect-ratio in the output video with a prescribed one when
+	necessary. There must be an easier way.
+
+	Split the dvdspu out of the resindvdbin and put out the subpicture
+	stream on the subpicture pad.
+
+	* ext/resindvd/gstmpegdemux.c:
+	Send video-aspect events down the pipe from the demuxer.
+
+	* ext/resindvd/resindvdsrc.c:
+	* ext/resindvd/resindvdsrc.h:
+	Handle timed-stills somewhat using g_cond_timed_wait, with a FIXME
+	to make it use clock-waiting later.
+
+	* ext/resindvd/rsnbasesrc.c:
+	Don't overwrite the last_stop in the basesrc segment after a seamless
+	seek.
+
 2008-07-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/mpegtspacketizer.c:
