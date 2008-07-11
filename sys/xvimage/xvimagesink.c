@@ -20,8 +20,6 @@
 /**
  * SECTION:element-xvimagesink
  *
- * <refsect2>
- * <para>
  * XvImageSink renders video frames to a drawable (XWindow) on a local display
  * using the XVideo extension. Rendering to a remote display is theorically
  * possible but i doubt that the XVideo extension is actually available when
@@ -29,17 +27,19 @@
  * application through the XOverlay interface and will then render video frames
  * in this drawable. If no Window ID was provided by the application, the
  * element will create its own internal window and render into it.
- * </para>
+ *
+ * <refsect2>
  * <title>Scaling</title>
  * <para>
  * The XVideo extension, when it's available, handles hardware accelerated
  * scaling of video frames. This means that the element will just accept
  * incoming video frames no matter their geometry and will then put them to the
- * drawable scaling them on the fly. Using the
- * <link linkend="GstXvImageSink--force-aspect-ratio">force-aspect-ratio</link>
+ * drawable scaling them on the fly. Using the #GstXvImageSink:force-aspect-ratio
  * property it is possible to enforce scaling with a constant aspect ratio,
  * which means drawing black borders around the video frame.
  * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Events</title>
  * <para>
  * XvImageSink creates a thread to handle events coming from the drawable. There
@@ -52,11 +52,12 @@
  * paused, it will receive expose events from the drawable and draw the latest
  * frame with correct borders/aspect-ratio.
  * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Pixel aspect ratio</title>
  * <para>
  * When changing state to GST_STATE_READY, XvImageSink will open a connection to
- * the display specified in the
- * <link linkend="GstXvImageSink--display">display</link> property or the
+ * the display specified in the #GstXvImageSink:display property or the
  * default display if nothing specified. Once this connection is open it will
  * inspect the display configuration including the physical display geometry and
  * then calculate the pixel aspect ratio. When receiving video frames with a
@@ -64,28 +65,24 @@
  * display the video frames correctly on display's pixel aspect ratio.
  * Sometimes the calculated pixel aspect ratio can be wrong, it is
  * then possible to enforce a specific pixel aspect ratio using the
- * <link linkend="GstXvImageSink--pixel-aspect-ratio">pixel-aspect-ratio</link>
- * property.
+ * #GstXvImageSink:pixel-aspect-ratio property.
  * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Examples</title>
- * <para>
- * Here is a simple pipeline to test hardware scaling :
- * <programlisting>
+ * |[
  * gst-launch -v videotestsrc ! xvimagesink
- * </programlisting>
+ * ]| A pipeline to test hardware scaling.
  * When the test video signal appears you can resize the window and see that
- * video frames are scaled through hardware (no extra CPU cost). You can try
- * again setting the force-aspect-ratio property to true and observe the borders
- * drawn around the scaled image respecting aspect ratio.
- * <programlisting>
+ * video frames are scaled through hardware (no extra CPU cost).
+ * |[
  * gst-launch -v videotestsrc ! xvimagesink force-aspect-ratio=true
- * </programlisting>
- * </para>
- * <para>
- * Here is a simple pipeline to test navigation events :
- * <programlisting>
+ * ]| Same pipeline with #GstXvImageSink:force-aspect-ratio property set to true
+ * You can observe the borders drawn around the scaled image respecting aspect
+ * ratio.
+ * |[
  * gst-launch -v videotestsrc ! navigationtest ! xvimagesink
- * </programlisting>
+ * ]| A pipeline to test navigation events.
  * While moving the mouse pointer over the test signal you will see a black box
  * following the mouse pointer. If you press the mouse button somewhere on the
  * video and release it somewhere else a green box will appear where you pressed
@@ -95,25 +92,17 @@
  * original video frame geometry so that the box can be drawn to the correct
  * position. This also handles borders correctly, limiting coordinates to the
  * image area
- * </para>
- * <para>
- * Here is a simple pipeline to test pixel aspect ratio :
- * <programlisting>
+ * |[
  * gst-launch -v videotestsrc ! video/x-raw-yuv, pixel-aspect-ratio=(fraction)4/3 ! xvimagesink
- * </programlisting>
- * This is faking a 4/3 pixel aspect ratio caps on video frames produced by
+ * ]| This is faking a 4/3 pixel aspect ratio caps on video frames produced by
  * videotestsrc, in most cases the pixel aspect ratio of the display will be
  * 1/1. This means that XvImageSink will have to do the scaling to convert
  * incoming frames to a size that will match the display pixel aspect ratio
  * (from 320x240 to 320x180 in this case). Note that you might have to escape
  * some characters for your shell like '\(fraction\)'.
- * </para>
- * <para>
- * Here is a test pipeline to test the colorbalance interface :
- * <programlisting>
+ * |[
  * gst-launch -v videotestsrc ! xvimagesink hue=100 saturation=-100 brightness=100
- * </programlisting>
- * </para>
+ * ]| Demonstrates how to use the colorbalance interface.
  * </refsect2>
  */
 

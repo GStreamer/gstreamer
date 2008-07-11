@@ -20,14 +20,13 @@
 /**
  * SECTION:element-ximagesink
  *
- * <refsect2>
- * <para>
  * XImageSink renders video frames to a drawable (XWindow) on a local or remote
  * display. This element can receive a Window ID from the application through
  * the XOverlay interface and will then render video frames in this drawable.
  * If no Window ID was provided by the application, the element will create its
  * own internal window and render into it.
- * </para>
+ *
+ * <refsect2>
  * <title>Scaling</title>
  * <para>
  * As standard XImage rendering to a drawable is not scaled, XImageSink will use
@@ -37,12 +36,13 @@
  * or that an element generating the video frames can generate them with a 
  * different geometry. This mechanism is handled during buffer allocations, for
  * each allocation request the video sink will check the drawable geometry, look
- * at the
- * <link linkend="GstXImageSink--force-aspect-ratio">force-aspect-ratio</link>
- * property, calculate the geometry of desired video frames and then check that
- * the peer pad accept those new caps. If it does it will then allocate a buffer
- * in video memory with this new geometry and return it with the new caps.
+ * at the #GstXImageSink:force-aspect-ratio property, calculate the geometry of
+ * desired video frames and then check that the peer pad accept those new caps.
+ * If it does it will then allocate a buffer in video memory with this new
+ * geometry and return it with the new caps.
  * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Events</title>
  * <para>
  * XImageSink creates a thread to handle events coming from the drawable. There
@@ -55,11 +55,12 @@
  * paused, it will receive expose events from the drawable and draw the latest
  * frame with correct borders/aspect-ratio.
  * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Pixel aspect ratio</title>
  * <para>
  * When changing state to GST_STATE_READY, XImageSink will open a connection to
- * the display specified in the
- * <link linkend="GstXImageSink--display">display</link> property or the default
+ * the display specified in the #GstXImageSink:display property or the default
  * display if nothing specified. Once this connection is open it will inspect 
  * the display configuration including the physical display geometry and 
  * then calculate the pixel aspect ratio. When caps negotiation will occur, the
@@ -67,43 +68,34 @@
  * sure that incoming video frames will have the correct pixel aspect ratio for
  * this display. Sometimes the calculated pixel aspect ratio can be wrong, it is
  * then possible to enforce a specific pixel aspect ratio using the
- * <link linkend="GstXImageSink--pixel-aspect-ratio">pixel-aspect-ratio</link>
- * property.
+ * #GstXImageSink:pixel-aspect-ratio property.
  * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Examples</title>
- * <para>
- * Here is a simple pipeline to test reverse negotiation :
- * <programlisting>
+ * |[
  * gst-launch -v videotestsrc ! queue ! ximagesink
- * </programlisting>
- * When the test video signal appears you can resize the window and see that
- * scaled buffers of the desired size are going to arrive with a short delay.
- * This illustrates how buffers of desired size are allocated along the way.
- * If you take away the queue, scaling will happen almost immediately.
- * </para>
- * <para>
- * Here is a simple pipeline to test navigation events :
- * <programlisting>
+ * ]| A pipeline to test reverse negotiation. When the test video signal appears
+ * you can resize the window and see that scaled buffers of the desired size are
+ * going to arrive with a short delay. This illustrates how buffers of desired
+ * size are allocated along the way. If you take away the queue, scaling will
+ * happen almost immediately.
+ * |[
  * gst-launch -v videotestsrc ! navigationtest ! ffmpegcolorspace ! ximagesink
- * </programlisting>
+ * ]| A pipeline to test navigation events.
  * While moving the mouse pointer over the test signal you will see a black box
  * following the mouse pointer. If you press the mouse button somewhere on the 
  * video and release it somewhere else a green box will appear where you pressed
  * the button and a red one where you released it. (The navigationtest element
  * is part of gst-plugins-good.)
- * </para>
- * <para>
- * Here is a simple pipeline to test pixel aspect ratio :
- * <programlisting>
+ * |[
  * gst-launch -v videotestsrc ! video/x-raw-rgb, pixel-aspect-ratio=(fraction)4/3 ! videoscale ! ximagesink
- * </programlisting>
- * This is faking a 4/3 pixel aspect ratio caps on video frames produced by
+ * ]| This is faking a 4/3 pixel aspect ratio caps on video frames produced by
  * videotestsrc, in most cases the pixel aspect ratio of the display will be
  * 1/1. This means that videoscale will have to do the scaling to convert 
  * incoming frames to a size that will match the display pixel aspect ratio
  * (from 320x240 to 320x180 in this case). Note that you might have to escape 
  * some characters for your shell like '\(fraction\)'.
- * </para>
  * </refsect2>
  */
 
