@@ -1,3 +1,8 @@
+2008-07-11  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):
+	Prevent likely segfault on EMPTY provided caps.
+
 2008-07-06  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	Based on a patch by: Aurelien Grimaud <gstelzz at yahoo dot fr>

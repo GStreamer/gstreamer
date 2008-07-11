@@ -1598,12 +1598,14 @@ void
 gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     enum CodecType codec_type, const GstCaps * caps, AVCodecContext * context)
 {
-  GstStructure *str = gst_caps_get_structure (caps, 0);
+  GstStructure *str;
   const GValue *value;
   const GstBuffer *buf;
 
-  if (!context)
+  if (!context || !gst_caps_get_size (caps))
     return;
+
+  str = gst_caps_get_structure (caps, 0);
 
   /* extradata parsing (esds [mpeg4], wma/wmv, msmpeg4v1/2/3, etc.) */
   if ((value = gst_structure_get_value (str, "codec_data"))) {
