@@ -28,9 +28,6 @@
  * It supports integer to float conversion, width/depth conversion,
  * signedness and endianness conversion and channel transformations.
  *
- * Some format conversion are not carried out in an optimal way right now.
- * E.g. converting from double to float would cause a loss of precision.
- *
  * <refsect2>
  * <title>Example launch line</title>
  * |[

@@ -1,5 +1,10 @@
 2008-07-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/audioconvert/gstaudioconvert.c:
+	  Remove now obsolete note in the docs.
+
+2008-07-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-base-plugins-overrides.txt:
 	* docs/plugins/gst-plugins-base-plugins-sections.txt:
