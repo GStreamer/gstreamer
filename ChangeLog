@@ -1,3 +1,8 @@
+2008-07-11  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/sidplay/Makefile.am:
+	Fix the build.
+
 2008-07-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
