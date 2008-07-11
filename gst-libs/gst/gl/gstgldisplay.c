@@ -1906,8 +1906,10 @@ gst_gl_display_set_window_id (GstGLDisplay* display, gulong winId)
 
     gst_gl_display_lock (display);
     //display->winId = winId;
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT, display);
-    g_cond_wait (display->cond_change_context, display->mutex);
+    //gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT, display);
+    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DESTROY_CONTEXT, display);
+    //g_cond_wait (display->cond_change_context, display->mutex);
+    g_cond_wait (display->cond_destroy_context, display->mutex);
     gst_gl_display_unlock (display);
 
     if (g_hash_table_size (gst_gl_display_map) == 0)
