@@ -1,3 +1,9 @@
+2008-07-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstdebugutils.c:
+	  Squeeze ghost-pad links and remove <> from classname labels to save
+	  more horizontal space.
+
 2008-07-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstdebugutils.c:

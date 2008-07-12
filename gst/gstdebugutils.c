@@ -20,8 +20,8 @@
  */
 /* TODO:
  * edge [ constraint=false ];
- * edge [ minlen=0 ];
- *   does not create spacial dependency
+ *   this creates strange graphs ("minlen=0" is better)
+ * try puting src/sink ghostpads for each bin into invisible clusters
  */
 
 #include "gst_private.h"
@@ -280,7 +280,7 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
             target_element_name = "";
           }
           /* src ghostpad relationship */
-          fprintf (out, "%s%s_%s -> %s_%s [style=dashed]\n", spc,
+          fprintf (out, "%s%s_%s -> %s_%s [style=dashed, minlen=0]\n", spc,
               target_element_name, target_pad_name, element_name, pad_name);
 
           g_free (target_pad_name);
@@ -305,7 +305,7 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
             target_element_name = "";
           }
           /* sink ghostpad relationship */
-          fprintf (out, "%s%s_%s -> %s_%s [style=dashed]\n", spc,
+          fprintf (out, "%s%s_%s -> %s_%s [style=dashed, minlen=0]\n", spc,
               peer_element_name, peer_pad_name,
               target_element_name, target_pad_name);
           /* FIXME: we are missing links from the proxy pad
@@ -399,7 +399,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
         fprintf (out, "%s  fontsize=\"8\";\n", spc);
         fprintf (out, "%s  style=filled;\n", spc);
         fprintf (out, "%s  color=black;\n\n", spc);
-        fprintf (out, "%s  label=\"<%s>\\n%s%s%s\";\n", spc,
+        fprintf (out, "%s  label=\"%s\\n%s%s%s\";\n", spc,
             G_OBJECT_TYPE_NAME (element), GST_OBJECT_NAME (element),
             (state_name ? state_name : ""), (param_name ? param_name : "")
             );
