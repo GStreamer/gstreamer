@@ -675,8 +675,7 @@ scan_and_update_registry (GstRegistry * default_registry,
   GST_DEBUG ("scanning paths added via --gst-plugin-path");
   for (l = plugin_paths; l != NULL; l = l->next) {
     GST_INFO ("Scanning plugin path: \"%s\"", (gchar *) l->data);
-    /* FIXME: add changed |= here as well? */
-    gst_registry_scan_path (default_registry, (gchar *) l->data);
+    changed |= gst_registry_scan_path (default_registry, (gchar *) l->data);
   }
   /* keep plugin_paths around in case a re-scan is forced later on */
 

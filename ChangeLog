@@ -1,5 +1,10 @@
 2008-07-12  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/gst.c:
+	Fix scanning of paths given via --gst-plugin-path. Fixes bug #542175.
+
+2008-07-12  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: tmatth <le dot businessman at gmail dot com>
 
 	* docs/pwg/building-testapp.xml:
