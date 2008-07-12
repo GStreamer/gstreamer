@@ -86,7 +86,7 @@ static void gst_gl_display_thread_do_download_draw (GstGLDisplay* display);
 static GHashTable* gst_gl_display_map = NULL;
 
 //all glut functions and opengl primitives are called in this thread
-static GThread* gst_gl_display_glutThread = NULL;
+static GThread* gst_gl_display_gl_thread = NULL;
 
 //-timepoped by glutIdleFunc
 static GAsyncQueue* gst_gl_display_messageQueue = NULL;
@@ -437,12 +437,13 @@ gst_gl_display_finalize (GObject* object)
     if (display->use_fbo_stuff)
         display->use_fbo_stuff = NULL;
 
-    //at this step, the next condition imply that the last display has been pushed
+    //at this step, the next condition implies that 
+    //the last display has been removed
     if (g_hash_table_size (gst_gl_display_map) == 0)
     {
-        g_thread_join (gst_gl_display_glutThread);
+        g_thread_join (gst_gl_display_gl_thread);
         g_print ("gl thread joined\n");
-        gst_gl_display_glutThread = NULL;
+        gst_gl_display_gl_thread = NULL;
         g_async_queue_unref (gst_gl_display_messageQueue);
         g_hash_table_unref  (gst_gl_display_map);
         gst_gl_display_map = NULL;
@@ -468,6 +469,7 @@ gst_gl_display_thread_func (GstGLDisplay *display)
     //Should be pass through a glimagesink property
     glutInit(&argc, &argv);
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
+    //glutSetOption(GLUT_RENDERING_CONTEXT, GLUT_USE_CURRENT_CONTEXT);
 
     glutIdleFunc (gst_gl_display_thread_loop);
 
@@ -1683,7 +1685,7 @@ gst_gl_display_create_context (GstGLDisplay *display,
     {
         gst_gl_display_messageQueue = g_async_queue_new ();
 		gst_gl_display_map = g_hash_table_new (g_direct_hash, g_direct_equal);
-        gst_gl_display_glutThread = g_thread_create (
+        gst_gl_display_gl_thread = g_thread_create (
             (GThreadFunc) gst_gl_display_thread_func, display, TRUE, NULL);
         g_cond_wait (display->cond_create_context, display->mutex);
     }
@@ -1926,19 +1928,26 @@ gst_gl_display_set_window_id (GstGLDisplay* display, gulong winId)
 {
     static gint y_pos = 0;
 
+#if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__)
+
     gst_gl_display_lock (display);
-    //display->winId = winId;
-    //gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT, display);
+    display->winId = winId;
+    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT, display);
+    g_cond_wait (display->cond_change_context, display->mutex);
+    gst_gl_display_unlock (display);
+
+#else
+
+    gst_gl_display_lock (display);
     gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DESTROY_CONTEXT, display);
-    //g_cond_wait (display->cond_change_context, display->mutex);
     g_cond_wait (display->cond_destroy_context, display->mutex);
     gst_gl_display_unlock (display);
 
     if (g_hash_table_size (gst_gl_display_map) == 0)
     {
-        g_thread_join (gst_gl_display_glutThread);
+        g_thread_join (gst_gl_display_gl_thread);
         g_print ("gl thread joined when setting winId\n");
-        gst_gl_display_glutThread = NULL;
+        gst_gl_display_gl_thread = NULL;
         g_async_queue_unref (gst_gl_display_messageQueue);
         g_hash_table_unref  (gst_gl_display_map);
         gst_gl_display_map = NULL;
@@ -1954,6 +1963,7 @@ gst_gl_display_set_window_id (GstGLDisplay* display, gulong winId)
     //init colorspace conversion if needed
     gst_gl_display_init_upload (display, display->upload_video_format, 
         display->upload_width, display->upload_height);
+#endif
 }
 
 
