@@ -67,12 +67,12 @@ void gst_gl_display_check_framebuffer_status (void);
 
 /* To not make gst_gl_display_thread_do_upload
  * and gst_gl_display_thread_do_download too big */
-static void gst_gl_display_thread_do_upload_make (GstGLDisplay* display, GLuint* pTexture, 
+static void gst_gl_display_thread_do_upload_make (GstGLDisplay* display, GLuint* pTexture,
                                                   GLuint* pTexture_u, GLuint* pTexture_v);
 static void gst_gl_display_thread_do_upload_fill (GstGLDisplay* display, GLuint* pTexture,
                                                   GLuint* pTexture_u, GLuint* pTexture_v,
                                                   GstVideoFormat* pVideo_format);
-static void gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture, 
+static void gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
                                                   GLuint texture_u, GLuint texture_v,
                                                   GstVideoFormat video_format);
 static void gst_gl_display_thread_do_download_draw (GstGLDisplay* display);
@@ -130,13 +130,13 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->cond_change_context = g_cond_new ();
     display->cond_gen_texture = g_cond_new ();
     display->cond_del_texture = g_cond_new ();
-    display->cond_init_upload = g_cond_new ();   
+    display->cond_init_upload = g_cond_new ();
     display->cond_do_upload = g_cond_new ();
     display->cond_init_download = g_cond_new ();
     display->cond_do_download = g_cond_new ();
     display->cond_gen_fbo = g_cond_new ();
     display->cond_use_fbo = g_cond_new ();
-    display->cond_del_fbo = g_cond_new (); 
+    display->cond_del_fbo = g_cond_new ();
     display->cond_gen_shader = g_cond_new ();
     display->cond_del_shader = g_cond_new ();
 
@@ -437,7 +437,7 @@ gst_gl_display_finalize (GObject* object)
     if (display->use_fbo_stuff)
         display->use_fbo_stuff = NULL;
 
-    //at this step, the next condition implies that 
+    //at this step, the next condition implies that
     //the last display has been removed
     if (g_hash_table_size (gst_gl_display_map) == 0)
     {
@@ -544,7 +544,7 @@ gst_gl_display_thread_dispatch_action (GstGLDisplayMsg* msg)
             break;
         case GST_GL_DISPLAY_ACTION_INIT_UPLOAD:
             gst_gl_display_thread_init_upload (msg->display);
-            break;      
+            break;
         case GST_GL_DISPLAY_ACTION_DO_UPLOAD:
             gst_gl_display_thread_do_upload (msg->display);
             break;
@@ -553,10 +553,10 @@ gst_gl_display_thread_dispatch_action (GstGLDisplayMsg* msg)
             break;
         case GST_GL_DISPLAY_ACTION_DO_DOWNLOAD:
             gst_gl_display_thread_do_download (msg->display);
-            break;     
+            break;
         case GST_GL_DISPLAY_ACTION_GEN_FBO:
             gst_gl_display_thread_gen_fbo (msg->display);
-            break;   
+            break;
         case GST_GL_DISPLAY_ACTION_USE_FBO:
             gst_gl_display_thread_use_fbo (msg->display);
             break;
@@ -597,13 +597,13 @@ gst_gl_display_thread_check_msg_validity (GstGLDisplayMsg *msg)
         case GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT:
         case GST_GL_DISPLAY_ACTION_GEN_TEXTURE:
         case GST_GL_DISPLAY_ACTION_DEL_TEXTURE:
-        case GST_GL_DISPLAY_ACTION_INIT_UPLOAD:        
+        case GST_GL_DISPLAY_ACTION_INIT_UPLOAD:
         case GST_GL_DISPLAY_ACTION_DO_UPLOAD:
         case GST_GL_DISPLAY_ACTION_INIT_DOWNLOAD:
-        case GST_GL_DISPLAY_ACTION_DO_DOWNLOAD:      
+        case GST_GL_DISPLAY_ACTION_DO_DOWNLOAD:
         case GST_GL_DISPLAY_ACTION_GEN_FBO:
         case GST_GL_DISPLAY_ACTION_USE_FBO:
-        case GST_GL_DISPLAY_ACTION_DEL_FBO:       
+        case GST_GL_DISPLAY_ACTION_DEL_FBO:
         case GST_GL_DISPLAY_ACTION_GEN_SHADER:
         case GST_GL_DISPLAY_ACTION_DEL_SHADER:
             //msg is out of date if the associated display is not in the map
@@ -721,7 +721,7 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
     glutReshapeFunc (NULL);
     glutDestroyWindow (display->glutWinId);
 
-    //colorspace_conversion specific 
+    //colorspace_conversion specific
     switch (display->colorspace_conversion)
     {
         case GST_GL_DISPLAY_CONVERSION_MESA:
@@ -839,7 +839,7 @@ static void
 gst_gl_display_thread_init_upload (GstGLDisplay *display)
 {
     glutSetWindow (display->glutWinId);
-    
+
     //Frame buffer object is a requirement for every cases
     if (GLEW_EXT_framebuffer_object)
     {
@@ -944,7 +944,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
                             break;
                         default:
                             g_assert_not_reached ();
-                    }     
+                    }
 	            }
                 //check if YCBCR MESA is available
 	            else if (GLEW_MESA_ycbcr_texture)
@@ -953,7 +953,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
                     g_print ("Context %d, ARB_fragment_shader supported: no\n", display->glutWinId);
                     g_print ("Context %d, GLEW_ARB_imaging supported: no\n", display->glutWinId);
                     g_print ("Context %d, GLEW_MESA_ycbcr_texture supported: yes\n", display->glutWinId);
-                    
+
                     display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
 
                     switch (display->upload_video_format)
@@ -970,7 +970,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
                             break;
                         default:
                             g_assert_not_reached ();
-                    }     
+                    }
                 }
                 //check if color matrix is available
 	            else if (GLEW_ARB_imaging)
@@ -978,7 +978,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
                     //GLSL is not available on your drivers, switch to Color Matrix
                     g_print ("Context %d, ARB_fragment_shader supported: no\n", display->glutWinId);
                     g_print ("Context %d, GLEW_ARB_imaging supported: yes\n", display->glutWinId);
-                    
+
                     display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MATRIX;
                 }
                 else
@@ -986,7 +986,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
                     g_print ("Context %d, ARB_fragment_shader supported: no\n", display->glutWinId);
                     g_print ("Context %d, GLEW_ARB_imaging supported: no\n", display->glutWinId);
                     g_print ("Context %d, GLEW_MESA_ycbcr_texture supported: no\n", display->glutWinId);
-                    
+
                     //turn off the pipeline because colorspace conversion is not possible
                     display->isAlive = FALSE;
                 }
@@ -1075,7 +1075,7 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
             case GST_VIDEO_FORMAT_RGB:
             case GST_VIDEO_FORMAT_BGR:
             case GST_VIDEO_FORMAT_YUY2:
-            case GST_VIDEO_FORMAT_UYVY:           
+            case GST_VIDEO_FORMAT_UYVY:
             case GST_VIDEO_FORMAT_AYUV:
                 //only one attached texture is needed
                 break;
@@ -1128,7 +1128,7 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
             GL_FRAMEBUFFER_COMPLETE_EXT);
 
         //unbind the FBO
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);    
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
     else
     {
@@ -1187,12 +1187,12 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
                             break;
                         default:
                             g_assert_not_reached ();
-                    }                                                                
+                    }
                 }
                 else
                 {
                     //turn off the pipeline because colorspace conversion is not possible
-                    GST_DEBUG ("Context %d, ARB_fragment_shader supported: no", display->glutWinId); 
+                    GST_DEBUG ("Context %d, ARB_fragment_shader supported: no", display->glutWinId);
                     display->isAlive = FALSE;
                 }
             }
@@ -1292,11 +1292,11 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
     switch (display->use_fbo_projection)
     {
         case GST_GL_DISPLAY_PROJECTION_ORTHO2D:
-            gluOrtho2D(display->use_fbo_proj_param1, display->use_fbo_proj_param2, 
+            gluOrtho2D(display->use_fbo_proj_param1, display->use_fbo_proj_param2,
                 display->use_fbo_proj_param3, display->use_fbo_proj_param4);
             break;
         case GST_GL_DISPLAY_PROJECTION_PERSPECIVE:
-            gluPerspective(display->use_fbo_proj_param1, display->use_fbo_proj_param2, 
+            gluPerspective(display->use_fbo_proj_param1, display->use_fbo_proj_param2,
                 display->use_fbo_proj_param3, display->use_fbo_proj_param4);
             break;
         default:
@@ -1314,7 +1314,7 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //the opengl scene
-    display->use_fbo_scene_cb (display->input_texture_width, display->input_texture_height, 
+    display->use_fbo_scene_cb (display->input_texture_width, display->input_texture_height,
         display->input_texture, display->use_fbo_stuff);
 
     glDrawBuffer(GL_NONE);
@@ -1357,8 +1357,8 @@ static void
 gst_gl_display_thread_gen_shader (GstGLDisplay* display)
 {
     glutSetWindow (display->glutWinId);
-    if (GLEW_ARB_fragment_shader)                
-        display->gen_handle_shader = 
+    if (GLEW_ARB_fragment_shader)
+        display->gen_handle_shader =
             gst_gl_display_load_fragment_shader (display->gen_text_shader);
     else
     {
@@ -1403,8 +1403,8 @@ gst_gl_display_unlock (GstGLDisplay * display)
 }
 
 
-/* Post a message that will be handled by the gl thread 
- * Must be preceded by gst_gl_display_lock 
+/* Post a message that will be handled by the gl thread
+ * Must be preceded by gst_gl_display_lock
  * and followed by gst_gl_display_unlock
  * Called in the public functions */
 void
@@ -1571,7 +1571,7 @@ gst_gl_display_glgen_texture (GstGLDisplay* display, guint* pTexture)
 }
 
 
-/* Delete a texture, actually the texture is just added to the pool 
+/* Delete a texture, actually the texture is just added to the pool
  * Called in the gl thread */
 void
 gst_gl_display_gldel_texture (GstGLDisplay* display, guint* pTexture)
@@ -1662,7 +1662,7 @@ gst_gl_display_new (void)
 }
 
 
-/* Create an opengl context (one context for one GstGLDisplay) 
+/* Create an opengl context (one context for one GstGLDisplay)
  * Called by the first gl element of a video/x-raw-gl flow */
 void
 gst_gl_display_create_context (GstGLDisplay *display,
@@ -1789,7 +1789,7 @@ gst_gl_display_init_upload (GstGLDisplay* display, GstVideoFormat video_format,
 /* Called by the first gl element of a video/x-raw-gl flow */
 void
 gst_gl_display_do_upload (GstGLDisplay* display, guint texture,
-                          gint data_width, gint data_height, 
+                          gint data_width, gint data_height,
                           gpointer data)
 {
     gst_gl_display_lock (display);
@@ -1926,44 +1926,13 @@ gst_gl_display_del_shader (GstGLDisplay* display, GLhandleARB shader)
 void
 gst_gl_display_set_window_id (GstGLDisplay* display, gulong winId)
 {
-    static gint y_pos = 0;
-
-#if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__)
-
+    //used only when glimagesink is connected to a gl flow
+    //otehrwise it can directly create the gl context using the winId
     gst_gl_display_lock (display);
     display->winId = winId;
     gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT, display);
     g_cond_wait (display->cond_change_context, display->mutex);
     gst_gl_display_unlock (display);
-
-#else
-
-    gst_gl_display_lock (display);
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DESTROY_CONTEXT, display);
-    g_cond_wait (display->cond_destroy_context, display->mutex);
-    gst_gl_display_unlock (display);
-
-    if (g_hash_table_size (gst_gl_display_map) == 0)
-    {
-        g_thread_join (gst_gl_display_gl_thread);
-        g_print ("gl thread joined when setting winId\n");
-        gst_gl_display_gl_thread = NULL;
-        g_async_queue_unref (gst_gl_display_messageQueue);
-        g_hash_table_unref  (gst_gl_display_map);
-        gst_gl_display_map = NULL;
-    }
-
-    //init opengl context
-    gst_gl_display_create_context (display,
-        50, y_pos++ * (display->upload_height+50) + 50,
-        display->upload_width, display->upload_height,
-        winId,
-        TRUE);
-
-    //init colorspace conversion if needed
-    gst_gl_display_init_upload (display, display->upload_video_format, 
-        display->upload_width, display->upload_height);
-#endif
 }
 
 
@@ -2225,8 +2194,8 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay* display, GLuint* pTexture,
 
 /* called by gst_gl_display_thread_do_upload (in the gl thread) */
 void
-gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture, 
-                                      GLuint texture_u, GLuint texture_v, 
+gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
+                                      GLuint texture_u, GLuint texture_v,
                                       GstVideoFormat video_format)
 {
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->upload_fbo);
@@ -2378,7 +2347,7 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
 			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);               
+			    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			}
 			break;
 
@@ -2399,7 +2368,7 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
     glEnd ();
 
     glDrawBuffer(GL_NONE);
-    
+
     //we are done with the shader
     if (display->colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
         glUseProgramObjectARB (0);
@@ -2579,7 +2548,7 @@ gst_gl_display_thread_do_download_draw (GstGLDisplay* display)
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->download_fbo);
     glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
 
-    switch (video_format) 
+    switch (video_format)
     {
         case GST_VIDEO_FORMAT_RGBx:
             glReadPixels (0, 0, width, height, GL_RGBA,
