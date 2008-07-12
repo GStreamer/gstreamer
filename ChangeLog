@@ -1,3 +1,11 @@
+2008-07-12  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: tmatth <le dot businessman at gmail dot com>
+
+	* docs/pwg/building-testapp.xml:
+	Don't use an undeclared variable in the example program.
+	Fixes bug #542573.
+
 2008-07-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstdebugutils.c:

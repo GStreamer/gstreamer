@@ -187,6 +187,8 @@ main (gint   argc,
   /* run */
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
+    GstMessage *msg;
+
     g_print ("Failed to start up pipeline!\n");
 
     /* check if there is an error message with details on the bus */
