@@ -718,17 +718,29 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
     glutSetWindow (display->glutWinId);
     glutReshapeFunc (NULL);
     glutDestroyWindow (display->glutWinId);
-    glUseProgramObjectARB (0);
 
-    glDeleteObjectARB (display->GLSLProgram_YUY2);
-    glDeleteObjectARB (display->GLSLProgram_UYVY);
-    glDeleteObjectARB (display->GLSLProgram_I420_YV12);
-    glDeleteObjectARB (display->GLSLProgram_AYUV);
-
-    glDeleteObjectARB (display->GLSLProgram_to_YUY2);
-    glDeleteObjectARB (display->GLSLProgram_to_UYVY);
-    glDeleteObjectARB (display->GLSLProgram_to_I420_YV12);
-    glDeleteObjectARB (display->GLSLProgram_to_AYUV);
+    //colorspace_conversion specific 
+    switch (display->colorspace_conversion)
+    {
+        case GST_GL_DISPLAY_CONVERSION_MESA:
+        case GST_GL_DISPLAY_CONVERSION_MATRIX:
+            break;
+        case GST_GL_DISPLAY_CONVERSION_GLSL:
+            {
+                glUseProgramObjectARB (0);
+                glDeleteObjectARB (display->GLSLProgram_YUY2);
+                glDeleteObjectARB (display->GLSLProgram_UYVY);
+                glDeleteObjectARB (display->GLSLProgram_I420_YV12);
+                glDeleteObjectARB (display->GLSLProgram_AYUV);
+                glDeleteObjectARB (display->GLSLProgram_to_YUY2);
+                glDeleteObjectARB (display->GLSLProgram_to_UYVY);
+                glDeleteObjectARB (display->GLSLProgram_to_I420_YV12);
+                glDeleteObjectARB (display->GLSLProgram_to_AYUV);
+            }
+            break;
+        default:
+            g_assert_not_reached ();
+    }
 
     glDeleteFramebuffersEXT (1, &display->upload_fbo);
     glDeleteRenderbuffersEXT(1, &display->upload_depth_buffer);
@@ -1305,7 +1317,9 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
 
     glDrawBuffer(GL_NONE);
 
-    glUseProgramObjectARB (0);
+    //in case of the developer forgot the de-init use of GLSL in the scene code
+    if (display->colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
+        glUseProgramObjectARB (0);
 
     glDisable(GL_TEXTURE_RECTANGLE_ARB);
 
@@ -1341,8 +1355,14 @@ static void
 gst_gl_display_thread_gen_shader (GstGLDisplay* display)
 {
     glutSetWindow (display->glutWinId);
-    display->gen_handle_shader = 
-        gst_gl_display_load_fragment_shader (display->gen_text_shader);
+    if (GLEW_ARB_fragment_shader)                
+        display->gen_handle_shader = 
+            gst_gl_display_load_fragment_shader (display->gen_text_shader);
+    else
+    {
+        g_print ("One of the filter required ARB_fragment_shader\n");
+        display->isAlive = FALSE;
+    }
     g_cond_signal (display->cond_gen_shader);
 }
 
@@ -1455,7 +1475,9 @@ void gst_gl_display_on_draw(void)
 
     //opengl scene
 
-    glUseProgramObjectARB (0);
+    //make sure that the environnement is clean
+    if (display->colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
+        glUseProgramObjectARB (0);
     glDisable (GL_TEXTURE_RECTANGLE_ARB);
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
 
@@ -2367,8 +2389,10 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
     glEnd ();
 
     glDrawBuffer(GL_NONE);
-
-    glUseProgramObjectARB (0);
+    
+    //we are done with the shader
+    if (display->colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
+        glUseProgramObjectARB (0);
 
     glDisable(GL_TEXTURE_RECTANGLE_ARB);
 
