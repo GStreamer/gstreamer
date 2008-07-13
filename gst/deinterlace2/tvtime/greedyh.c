@@ -215,12 +215,12 @@ greedyDScaler_C (GstDeinterlaceMethodGreedyH * self, uint8_t * L1, uint8_t * L2,
 #undef IS_MMXEXT
 #undef FUNCT_NAME
 
-#define IS_TDNOW
-#define SIMD_TYPE TDNOW
+#define IS_3DNOW
+#define SIMD_TYPE 3DNOW
 #define FUNCT_NAME greedyDScaler_3DNOW
 #include "greedyh.asm"
 #undef SIMD_TYPE
-#undef IS_TDNOW
+#undef IS_3DNOW
 #undef FUNCT_NAME
 
 #define IS_MMX

@@ -32,8 +32,8 @@
 #undef SEFUNC
 #endif
 
-#if defined(IS_SSE)
-#define SEFUNC(x) Search_Effort_SSE_##x(int src_pitch, int dst_pitch, int rowsize, const unsigned char *pWeaveSrc, const unsigned char *pWeaveSrcP, unsigned char *pWeaveDest, int IsOdd, const unsigned char *pCopySrc, const unsigned char *pCopySrcP, int FldHeight)
+#if defined(IS_MMXEXT)
+#define SEFUNC(x) Search_Effort_MMXEXT_##x(int src_pitch, int dst_pitch, int rowsize, const unsigned char *pWeaveSrc, const unsigned char *pWeaveSrcP, unsigned char *pWeaveDest, int IsOdd, const unsigned char *pCopySrc, const unsigned char *pCopySrcP, int FldHeight)
 #elif defined(IS_3DNOW)
 #define SEFUNC(x) Search_Effort_3DNOW_##x(int src_pitch, int dst_pitch, int rowsize, const unsigned char *pWeaveSrc, const unsigned char *pWeaveSrcP, unsigned char *pWeaveDest, int IsOdd, const unsigned char *pCopySrc, const unsigned char *pCopySrcP, int FldHeight)
 #else
@@ -49,8 +49,8 @@
 #undef USE_STRANGE_BOB
 
 #undef SEFUNC
-#if defined(IS_SSE)
-#define SEFUNC(x) Search_Effort_SSE_##x(src_pitch, dst_pitch, rowsize, pWeaveSrc, pWeaveSrcP, pWeaveDest, IsOdd, pCopySrc, pCopySrcP, FldHeight)
+#if defined(IS_MMXEXT)
+#define SEFUNC(x) Search_Effort_MMXEXT_##x(src_pitch, dst_pitch, rowsize, pWeaveSrc, pWeaveSrcP, pWeaveDest, IsOdd, pCopySrc, pCopySrcP, FldHeight)
 #elif defined(IS_3DNOW)
 #define SEFUNC(x) Search_Effort_3DNOW_##x(src_pitch, dst_pitch, rowsize, pWeaveSrc, pWeaveSrcP, pWeaveDest, IsOdd, pCopySrc, pCopySrcP, FldHeight)
 #else
@@ -231,7 +231,7 @@ void FUNCT_NAME(GstDeinterlaceMethod *d_method, GstDeinterlace2* object)
 	}
     }
 
-#ifdef ARCH_386
+#ifdef HAVE_CPU_I386
   __asm__ __volatile__("emms");
 #endif
 }

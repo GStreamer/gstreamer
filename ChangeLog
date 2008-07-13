@@ -1,3 +1,16 @@
+2008-07-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/tvtime/greedyh.asm:
+	* gst/deinterlace2/tvtime/greedyh.c:
+	* gst/deinterlace2/tvtime/greedyhmacros.h:
+	Some cleanup, use 3DNOW instead of TDNOW in macros.
+
+	* gst/deinterlace2/tvtime/tomsmocomp.c:
+	(gst_deinterlace_method_tomsmocomp_class_init):
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h:
+	The SSE method in fact only needs MMXEXT, declare it as such.
+
 2008-07-11  Jan Schmidt  <thaytan@noraisin.net>
 
 	* docs/plugins/.cvsignore:

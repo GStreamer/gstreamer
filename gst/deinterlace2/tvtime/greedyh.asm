@@ -184,7 +184,7 @@ FUNCT_NAME (GstDeinterlaceMethodGreedyH *self, uint8_t * L1, uint8_t * L2, uint8
       "psubusb %[MotionThreshold], %%mm0\n\t"   // test Threshold, clear chroma change >>>??
       "pmullw  %[MotionSense], %%mm0\n\t"       // mul by user factor, keep low 16 bits
       "movq    %[QW256], %%mm7\n\t"
-#if SIMD_TYPE == MMXEXT
+#ifdef IS_MMXEXT
       "pminsw  %%mm7,        %%mm0\n\t" // max = 256
 #else
       "paddusw %[QW256B],    %%mm0\n\t" // add, may sat at fff..

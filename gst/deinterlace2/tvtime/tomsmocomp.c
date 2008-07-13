@@ -74,27 +74,27 @@ Fieldcopy (void *dest, const void *src, size_t count,
 
 
 #define IS_MMX
-#define SSE_TYPE MMX
+#define SIMD_TYPE MMX
 #define FUNCT_NAME tomsmocompDScaler_MMX
 #include "tomsmocomp/TomsMoCompAll.inc"
 #undef  IS_MMX
-#undef  SSE_TYPE
+#undef  SIMD_TYPE
 #undef  FUNCT_NAME
 
 #define IS_3DNOW
-#define SSE_TYPE 3DNOW
+#define SIMD_TYPE 3DNOW
 #define FUNCT_NAME tomsmocompDScaler_3DNOW
 #include "tomsmocomp/TomsMoCompAll.inc"
 #undef  IS_3DNOW
-#undef  SSE_TYPE
+#undef  SIMD_TYPE
 #undef  FUNCT_NAME
 
-#define IS_SSE
-#define SSE_TYPE SSE
-#define FUNCT_NAME tomsmocompDScaler_SSE
+#define IS_MMXEXT
+#define SIMD_TYPE MMXEXT
+#define FUNCT_NAME tomsmocompDScaler_MMXEXT
 #include "tomsmocomp/TomsMoCompAll.inc"
-#undef  IS_SSE
-#undef  SSE_TYPE
+#undef  IS_MMXEXT
+#undef  SIMD_TYPE
 #undef  FUNCT_NAME
 
 G_DEFINE_TYPE (GstDeinterlaceMethodTomsMoComp,
@@ -173,8 +173,8 @@ static void
   dim_class->nick = "tomsmocomp";
   dim_class->latency = 1;
 
-  if (cpu_flags & OIL_IMPL_FLAG_SSE) {
-    dim_class->deinterlace_frame = tomsmocompDScaler_SSE;
+  if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
+    dim_class->deinterlace_frame = tomsmocompDScaler_MMXEXT;
   } else if (cpu_flags & OIL_IMPL_FLAG_3DNOW) {
     dim_class->deinterlace_frame = tomsmocompDScaler_3DNOW;
   } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {
