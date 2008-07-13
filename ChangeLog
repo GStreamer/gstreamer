@@ -1,6 +1,14 @@
 2008-07-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/tvtime/greedyh.asm:
+	Always use the C implementation if width is not a multiple of 4. The
+	assembly optimized version only handle this and calling the C
+	implementation for the remaining part doesn't work because it needs
+	previous calculations.
+
+2008-07-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/tvtime/greedyh.asm:
 	* gst/deinterlace2/tvtime/greedyh.c:
 	* gst/deinterlace2/tvtime/greedyhmacros.h:
 	Some cleanup, use 3DNOW instead of TDNOW in macros.
