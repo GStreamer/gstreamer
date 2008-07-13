@@ -626,6 +626,15 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   mpeg2dec->decoded_height = info->sequence->height;
   mpeg2dec->total_frames = 0;
 
+  /* mpeg2 video can only be from 16x16 to 4096x4096. Everything
+   * else is a corrupted files */
+  if (mpeg2dec->width > 4096 || mpeg2dec->width < 16 ||
+      mpeg2dec->height > 4096 || mpeg2dec->height < 16) {
+    GST_ERROR_OBJECT (mpeg2dec, "Invalid frame dimensions: %d x %d",
+        mpeg2dec->width, mpeg2dec->height);
+    return GST_FLOW_ERROR;
+  }
+
   /* set framerate */
   mpeg2dec->fps_n = 27000000;
   mpeg2dec->fps_d = info->sequence->frame_period;

@@ -1,3 +1,11 @@
+2008-07-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (handle_sequence):
+	Don't allow width/height outside the spec (i.e. smaller than 16
+	and higher than 4096). Such files are corrupted ones and setting
+	caps that are not a subset of the template caps confuses playbin.
+	Fixes bug #542646.
+
 2008-07-11  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/sidplay/Makefile.am:
