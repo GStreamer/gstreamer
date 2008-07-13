@@ -48,6 +48,11 @@ FUNCT_NAME (GstDeinterlaceMethodGreedyH *self, uint8_t * L1, uint8_t * L2, uint8
 
   int64_t QW256B;
   int64_t LastAvg = 0;          //interp value from left qword
+ 
+  // FIXME: Use C implementation if the width is not a multiple of 4
+  // Do something more optimal later
+  if (size % 8 != 0)
+    greedyDScaler_C (self, L1, L2, L3, L2P, Dest, size);
 
   // Set up our two parms that are actually evaluated for each pixel
   i = self->max_comb;
@@ -241,9 +246,4 @@ FUNCT_NAME (GstDeinterlaceMethodGreedyH *self, uint8_t * L1, uint8_t * L2, uint8
       /* FIXME: breaks unless compiling with -mmmx
          "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7", */
       "memory", "cc");
-
-      if (size % 8 != 0) {
-        int offset = GST_ROUND_DOWN_8 (size);
-        greedyDScaler_C (self, L1 + offset, L2 + offset, L3 + offset, L2P + offset, Dest + offset, size % 8);
-      }
 }
