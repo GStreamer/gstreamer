@@ -1,3 +1,11 @@
+2008-07-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/elements/cmmldec.c: (GST_START_TEST):
+	* tests/check/elements/rtp-payloading.c: (rtp_pipeline_create),
+	(rtp_pipeline_run):
+	* tests/check/elements/souphttpsrc.c: (souphttpsrc_suite):
+	Don't use declarations after statements.
+
 2008-07-14  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/jpeg/gstjpegdec.c:

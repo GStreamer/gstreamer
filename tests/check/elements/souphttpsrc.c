@@ -31,7 +31,9 @@
 #include <gst/check/gstcheck.h>
 
 static int http_port = 0, https_port = 0;
+
 gboolean redirect = TRUE;
+
 static const char **cookies = NULL;
 
 static int run_server (int *http_port, int *https_port);
@@ -50,11 +52,17 @@ int
 run_test (const char *format, ...)
 {
   GstStateChangeReturn ret;
+
   GstElement *pipe, *src, *sink;
+
   GstBuffer *buf = NULL;
+
   GstMessage *msg;
+
   gchar *url;
+
   va_list args;
+
   int rc = -1;
 
   pipe = gst_pipeline_new (NULL);
@@ -97,6 +105,7 @@ run_test (const char *format, ...)
       GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
     gchar *debug = NULL;
+
     GError *err = NULL;
 
     gst_message_parse_error (msg, &err, &debug);
@@ -222,6 +231,7 @@ got_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
 GST_START_TEST (test_icy_stream)
 {
   GstElement *pipe, *src, *sink;
+
   GstMessage *msg;
 
   pipe = gst_pipeline_new (NULL);
@@ -301,12 +311,16 @@ GST_END_TEST;
 static Suite *
 souphttpsrc_suite (void)
 {
+  Suite *s;
+
+  TCase *tc_chain, *tc_internet;
+
   g_type_init ();
   g_thread_init (NULL);
 
-  Suite *s = suite_create ("souphttpsrc");
-  TCase *tc_chain = tcase_create ("general");
-  TCase *tc_internet = tcase_create ("internet");
+  s = suite_create ("souphttpsrc");
+  tc_chain = tcase_create ("general");
+  tc_internet = tcase_create ("internet");
 
   suite_add_tcase (s, tc_chain);
   run_server (&http_port, &https_port);
@@ -331,7 +345,9 @@ static void
 do_get (SoupMessage * msg, const char *path)
 {
   char *uri;
+
   int buflen = 4096;
+
   SoupKnownStatusCode status = SOUP_STATUS_OK;
 
   uri = soup_uri_to_string (soup_message_get_uri (msg), FALSE);
@@ -413,10 +429,15 @@ int
 run_server (int *http_port, int *https_port)
 {
   SoupServer *server, *ssl_server;
+
   int port = SOUP_ADDRESS_ANY_PORT;
+
   int ssl_port = SOUP_ADDRESS_ANY_PORT;
+
   const char *ssl_cert_file = G_STRINGIFY (CHECKDATA_DIR) "/test-cert.pem";
+
   const char *ssl_key_file = G_STRINGIFY (CHECKDATA_DIR) "/test-key.pem";
+
   static int server_running = 0;
 
   if (server_running)

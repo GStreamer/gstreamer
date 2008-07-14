@@ -54,7 +54,9 @@ rtp_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_ERROR:
     {
       GError *err;
+
       gchar *debug;
+
       gchar *element_name;
 
       element_name = (message->src) ? gst_object_get_name (message->src) : NULL;
@@ -104,13 +106,17 @@ rtp_pipeline_create (const char *frame_data, int frame_data_size,
 {
   gchar *pipeline_name;
 
+  rtp_pipeline *p;
+
+  GstCaps *caps;
+
   /* Check parameters. */
   if (!frame_data || !pay || !depay) {
     return NULL;
   }
 
   /* Allocate memory for the RTP pipeline. */
-  rtp_pipeline *p = (rtp_pipeline *) malloc (sizeof (rtp_pipeline));
+  p = (rtp_pipeline *) malloc (sizeof (rtp_pipeline));
 
   p->frame_data = frame_data;
   p->frame_data_size = frame_data_size;
@@ -159,7 +165,7 @@ rtp_pipeline_create (const char *frame_data, int frame_data_size,
   g_object_set (p->fdsrc, "num-buffers", p->frame_count * LOOP_COUNT, NULL);
 
   /* Set caps filters. */
-  GstCaps *caps = gst_caps_from_string (filtercaps);
+  caps = gst_caps_from_string (filtercaps);
 
   g_object_set (p->capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
@@ -217,6 +223,10 @@ rtp_pipeline_run (rtp_pipeline * p)
 {
   GMainLoop *mainloop = NULL;
 
+  GstBus *bus;
+
+  gint i;
+
   /* Check parameters. */
   if (p == NULL) {
     return;
@@ -229,7 +239,7 @@ rtp_pipeline_run (rtp_pipeline * p)
   }
 
   /* Add bus callback. */
-  GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (p->pipeline));
+  bus = gst_pipeline_get_bus (GST_PIPELINE (p->pipeline));
 
   gst_bus_add_watch (bus, rtp_bus_callback, (gpointer) mainloop);
   gst_object_unref (bus);
@@ -239,10 +249,9 @@ rtp_pipeline_run (rtp_pipeline * p)
 
   /* TODO: Writing may need some changes... */
 
-  int i = 0;
-
-  for (; i < LOOP_COUNT; i++) {
+  for (i = 0; i < LOOP_COUNT; i++) {
     const char *frame_data_pointer = p->frame_data;
+
     int frame_count = p->frame_count;
 
     /* Write in to the pipe. */
@@ -296,7 +305,9 @@ static char rtp_ilbc_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_ilbc_frame_data_size = 20;
+
 static int rtp_ilbc_frame_count = 1;
 
 GST_START_TEST (rtp_ilbc)
@@ -311,7 +322,9 @@ static char rtp_gsm_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_gsm_frame_data_size = 20;
+
 static int rtp_gsm_frame_count = 1;
 
 GST_START_TEST (rtp_gsm)
@@ -327,7 +340,9 @@ static char rtp_amr_frame_data[] =
   0x7a, 0x37, 0x16, 0x41, 0x41, 0xc0, 0x00, 0x0d, 0xcd, 0x12, 0xed,
   0xad, 0x80, 0x00, 0x00, 0x11, 0x31, 0x00, 0x00, 0x0d, 0xa0
 };
+
 static int rtp_amr_frame_data_size = 32;
+
 static int rtp_amr_frame_count = 1;
 
 GST_START_TEST (rtp_amr)
@@ -342,7 +357,9 @@ static char rtp_pcma_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_pcma_frame_data_size = 20;
+
 static int rtp_pcma_frame_count = 1;
 
 GST_START_TEST (rtp_pcma)
@@ -357,7 +374,9 @@ static char rtp_pcmu_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_pcmu_frame_data_size = 20;
+
 static int rtp_pcmu_frame_count = 1;
 
 GST_START_TEST (rtp_pcmu)
@@ -372,7 +391,9 @@ static char rtp_mpa_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_mpa_frame_data_size = 20;
+
 static int rtp_mpa_frame_count = 1;
 
 GST_START_TEST (rtp_mpa)
@@ -386,7 +407,9 @@ static char rtp_h263_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_h263_frame_data_size = 20;
+
 static int rtp_h263_frame_count = 1;
 
 GST_START_TEST (rtp_h263)
@@ -401,7 +424,9 @@ static char rtp_h263p_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_h263p_frame_data_size = 20;
+
 static int rtp_h263p_frame_count = 1;
 
 GST_START_TEST (rtp_h263p)
@@ -416,7 +441,9 @@ static char rtp_h264_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_h264_frame_data_size = 20;
+
 static int rtp_h264_frame_count = 1;
 
 GST_START_TEST (rtp_h264)
@@ -430,7 +457,9 @@ static char rtp_L16_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_L16_frame_data_size = 20;
+
 static int rtp_L16_frame_count = 1;
 
 GST_START_TEST (rtp_L16)
@@ -446,7 +475,9 @@ static char rtp_mp2t_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_mp2t_frame_data_size = 20;
+
 static int rtp_mp2t_frame_count = 1;
 
 GST_START_TEST (rtp_mp2t)
@@ -461,7 +492,9 @@ static char rtp_mp4v_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_mp4v_frame_data_size = 20;
+
 static int rtp_mp4v_frame_count = 1;
 
 GST_START_TEST (rtp_mp4v)
@@ -476,7 +509,9 @@ static char rtp_mp4g_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_mp4g_frame_data_size = 20;
+
 static int rtp_mp4g_frame_count = 1;
 
 GST_START_TEST (rtp_mp4g)
@@ -492,7 +527,9 @@ static char rtp_theora_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_theora_frame_data_size = 20;
+
 static int rtp_theora_frame_count = 1;
 
 GST_START_TEST (rtp_theora)
@@ -507,7 +544,9 @@ static char rtp_vorbis_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static int rtp_vorbis_frame_data_size = 20;
+
 static int rtp_vorbis_frame_count = 1;
 
 GST_START_TEST (rtp_vorbis)
@@ -527,6 +566,7 @@ static Suite *
 rtp_payloading_suite ()
 {
   Suite *s = suite_create ("rtp_data_test");
+
   TCase *tc_chain = tcase_create ("linear");
 
   /* Set timeout to 60 seconds. */

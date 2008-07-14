@@ -87,12 +87,19 @@ G_STMT_START {                                                          \
 } G_STMT_END;
 
 static GstElement *cmmldec;
+
 static GstBus *bus;
+
 static GstFlowReturn flow;
+
 GList *buffers;
+
 static GList *current_buf;
+
 static gint64 granulerate;
+
 static guint8 granuleshift;
+
 static GstPad *srcpad, *sinkpad;
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -111,6 +118,7 @@ static GstBuffer *
 buffer_new (const gchar * buffer_data, guint size)
 {
   GstBuffer *buffer;
+
   GstCaps *caps;
 
   buffer = gst_buffer_new_and_alloc (size);
@@ -205,8 +213,11 @@ static GObject *
 cmml_tag_message_pop (GstBus * bus, const gchar * tag)
 {
   GstMessage *message;
+
   GstTagList *taglist;
+
   const GValue *value;
+
   GObject *obj;
 
   message = gst_bus_poll (bus, GST_MESSAGE_TAG, 0);
@@ -232,7 +243,9 @@ static void
 check_headers ()
 {
   GObject *head_tag;
+
   gchar *title, *base;
+
   GValueArray *meta;
 
   /* push the ident header */
@@ -276,7 +289,9 @@ push_clip_full (const gchar * name, const gchar * track, const gchar * template,
     GstClockTime prev, GstClockTime start)
 {
   gchar *clip;
+
   gint64 keyindex, keyoffset, granulepos;
+
   GstFlowReturn res;
 
   if (track == NULL)
@@ -328,7 +343,9 @@ check_output_clip (const gchar * name, const gchar * track,
 GST_START_TEST (test_dec)
 {
   GstClockTime clip1_start = 1 * GST_SECOND + 234 * GST_MSECOND;
+
   GstClockTime clip2_start = clip1_start;
+
   GstClockTime clip3_start =
       ((100 * 3600) + (59 * 60) + 59) * GST_SECOND + 678 * GST_MSECOND;
 
@@ -374,13 +391,21 @@ GST_END_TEST;
 GST_START_TEST (test_tags)
 {
   GObject *tag;
+
   gboolean empty;
+
   gchar *id, *track;
+
   gint64 start_time, end_time;
+
   gchar *anchor_href, *anchor_text;
+
   gchar *img_src, *img_alt;
+
   gchar *desc;
+
   GValueArray *meta;
+
   GstClockTime clip1_start;
 
   check_headers ();
@@ -427,18 +452,24 @@ GST_END_TEST;
 GST_START_TEST (test_wait_clip_end)
 {
   GObject *tag;
+
   gchar *id;
+
   GstClockTime end_time = 0;
+
+  GstClockTime clip1_start = 1 * GST_SECOND + 234 * GST_MSECOND;
+
+  GstClockTime clip2_start = 2 * GST_SECOND + 234 * GST_MSECOND;
+
+  GstClockTime clip3_start = 3 * GST_SECOND + 234 * GST_MSECOND;
+
+  GstClockTime clip3_end = 4 * GST_SECOND + 234 * GST_MSECOND;
+
+  GstClockTime clip4_start = 5 * GST_SECOND + 234 * GST_MSECOND;
 
   g_object_set (cmmldec, "wait-clip-end-time", TRUE, NULL);
 
   check_headers ();
-
-  GstClockTime clip1_start = 1 * GST_SECOND + 234 * GST_MSECOND;
-  GstClockTime clip2_start = 2 * GST_SECOND + 234 * GST_MSECOND;
-  GstClockTime clip3_start = 3 * GST_SECOND + 234 * GST_MSECOND;
-  GstClockTime clip3_end = 4 * GST_SECOND + 234 * GST_MSECOND;
-  GstClockTime clip4_start = 5 * GST_SECOND + 234 * GST_MSECOND;
 
   flow = push_clip ("clip-1", "default", 0, clip1_start);
   fail_unless_equals_flow_return (flow, GST_FLOW_OK);
@@ -521,8 +552,11 @@ GST_END_TEST;
 GST_START_TEST (test_sink_query_convert)
 {
   guint64 keyindex, keyoffset, granulepos;
+
   GstClockTime index_time, offset_time;
+
   GstFormat dstfmt = GST_FORMAT_TIME;
+
   gint64 dstval;
 
   /* send headers to set the granulerate */
@@ -550,6 +584,7 @@ Suite *
 cmmldec_suite ()
 {
   Suite *s = suite_create ("cmmldec");
+
   TCase *tc_general = tcase_create ("general");
 
   suite_add_tcase (s, tc_general);
