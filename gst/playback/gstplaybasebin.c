@@ -791,6 +791,8 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     prename = "text";
   else if (type == GST_STREAM_TYPE_AUDIO)
     prename = "audio";
+  else if (type == GST_STREAM_TYPE_SUBPICTURE)
+    prename = "subpicture";
   else
     g_return_if_reached ();
 
@@ -1337,6 +1339,9 @@ new_decoded_pad_full (GstElement * element, GstPad * pad, gboolean last,
   if (g_str_has_prefix (mimetype, "audio/") &&
       parent != GST_OBJECT_CAST (play_base_bin->subtitle)) {
     type = GST_STREAM_TYPE_AUDIO;
+  } else if (g_str_has_prefix (mimetype, "video/x-dvd-subpicture") &&
+      parent != GST_OBJECT_CAST (play_base_bin->subtitle)) {
+    type = GST_STREAM_TYPE_SUBPICTURE;
   } else if (g_str_has_prefix (mimetype, "video/") &&
       parent != GST_OBJECT_CAST (play_base_bin->subtitle)) {
     type = GST_STREAM_TYPE_VIDEO;
@@ -1569,7 +1574,7 @@ static const gchar *no_media_mimes[] = {
 
 /* mime types we consider raw media */
 static const gchar *raw_mimes[] = {
-  "audio/x-raw", "video/x-raw", NULL
+  "audio/x-raw", "video/x-raw", "video/x-dvd-subpicture", NULL
 };
 
 #define IS_STREAM_URI(uri)          (array_has_value (stream_uris, uri))

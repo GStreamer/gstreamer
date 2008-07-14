@@ -262,6 +262,7 @@ struct _GstPlayBin
   GstElement *pending_visualisation;
   GstElement *volume_element;
   GstElement *textoverlay_element;
+  GstElement *spu_element;
   gfloat volume;
 
   /* these are the currently active sinks */
@@ -431,6 +432,7 @@ gst_play_bin_init (GstPlayBin * play_bin)
   play_bin->pending_visualisation = NULL;
   play_bin->volume_element = NULL;
   play_bin->textoverlay_element = NULL;
+  play_bin->spu_element = NULL;
   play_bin->volume = 1.0;
   play_bin->sinks = NULL;
   play_bin->frame = NULL;
@@ -475,6 +477,10 @@ gst_play_bin_dispose (GObject * object)
   if (play_bin->textoverlay_element != NULL) {
     gst_object_unref (play_bin->textoverlay_element);
     play_bin->textoverlay_element = NULL;
+  }
+  if (play_bin->spu_element != NULL) {
+    gst_object_unref (play_bin->spu_element);
+    play_bin->spu_element = NULL;
   }
   g_free (play_bin->font_desc);
   play_bin->font_desc = NULL;
@@ -911,7 +917,7 @@ link_failed:
  *  | tbin                  +-------------+            |
  *  |          +-----+      | textoverlay |   +------+ |
  *  |          | csp | +--video_sink      |   | vbin | |
- * video_sink-sink  src+ +-text_sink     src-sink    | |
+ * video_sink-sink  src+ +-text_sink    src---sink   | |
  *  |          +-----+   |  +-------------+   +------+ |
  * text_sink-------------+                             |
  *  +--------------------------------------------------+
@@ -920,15 +926,10 @@ link_failed:
  *  videosink without the text_sink pad.
  */
 static GstElement *
-gen_text_element (GstPlayBin * play_bin)
+add_text_element (GstPlayBin * play_bin, GstElement * vbin)
 {
-  GstElement *element, *csp, *overlay, *vbin;
+  GstElement *element, *csp, *overlay;
   GstPad *pad;
-
-  /* Create the video rendering bin, error is posted when this fails. */
-  vbin = gen_video_element (play_bin);
-  if (!vbin)
-    return NULL;
 
   /* Text overlay */
   overlay = gst_element_factory_make ("textoverlay", "overlay");
@@ -969,6 +970,13 @@ gen_text_element (GstPlayBin * play_bin)
   gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
   gst_object_unref (pad);
 
+  /* If the vbin provides a subpicture sink pad, ghost it too */
+  pad = gst_element_get_static_pad (vbin, "subpicture_sink");
+  if (pad) {
+    gst_element_add_pad (element, gst_ghost_pad_new ("subpicture_sink", pad));
+    gst_object_unref (pad);
+  }
+
   /* Set state to READY */
   gst_element_set_state (element, GST_STATE_READY);
 
@@ -980,6 +988,74 @@ no_overlay:
     post_missing_element_message (play_bin, "textoverlay");
     GST_WARNING_OBJECT (play_bin,
         "No overlay (pango) element, subtitles disabled");
+    return vbin;
+  }
+}
+
+/* make an element for rendering DVD subpictures onto output video
+ *
+ *  +---------------------------------------------+
+ *  | tbin                   +--------+           |
+ *  |          +-----+       |        |  +------+ |
+ *  |          | csp | src-videosink  |  | vbin | |
+ * video_sink-sink  src+     |       src-sink   | |
+ *  |          +-----+   +subpicture  |  +------+ |
+ * subpicture_pad--------+   +--------+           |
+ *  +---------- ----------------------------------+
+ *
+ */
+static GstElement *
+add_spu_element (GstPlayBin * play_bin, GstElement * vbin)
+{
+  GstElement *element, *csp, *overlay;
+  GstPad *pad;
+
+  /* DVD spu overlay */
+  GST_DEBUG_OBJECT (play_bin, "Attempting to insert DVD SPU element");
+
+  overlay = gst_element_factory_make ("dvdspu", "overlay");
+
+  /* If no overlay return the video bin without subpicture support. */
+  if (!overlay)
+    goto no_overlay;
+
+  /* Create our bin */
+  element = gst_bin_new ("spubin");
+
+  /* Take a ref */
+  play_bin->spu_element = GST_ELEMENT_CAST (gst_object_ref (overlay));
+
+  /* we know this will succeed, as the video bin already created one before */
+  csp = gst_element_factory_make ("ffmpegcolorspace", "spucsp");
+
+  /* Add our elements */
+  gst_bin_add_many (GST_BIN_CAST (element), csp, overlay, vbin, NULL);
+
+  /* Link */
+  gst_element_link_pads (csp, "src", overlay, "video");
+  gst_element_link_pads (overlay, "src", vbin, "sink");
+
+  /* Add ghost pad on the subpicture bin so it looks like vbin */
+  pad = gst_element_get_static_pad (csp, "sink");
+  gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
+  gst_object_unref (pad);
+
+  pad = gst_element_get_static_pad (overlay, "subpicture");
+  gst_element_add_pad (element, gst_ghost_pad_new ("subpicture_sink", pad));
+  gst_object_unref (pad);
+
+  /* Set state to READY */
+  gst_element_set_state (element, GST_STATE_READY);
+
+  return element;
+
+  /* ERRORS */
+no_overlay:
+  {
+    post_missing_element_message (play_bin, "dvdspu");
+    GST_WARNING_OBJECT (play_bin,
+        "No DVD overlay (dvdspu) element. "
+        "menu highlight/subtitles unavailable");
     return vbin;
   }
 }
@@ -1479,8 +1555,10 @@ static gboolean
 setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
 {
   GstPlayBin *play_bin = GST_PLAY_BIN (play_base_bin);
+  gboolean have_video = FALSE;
   gboolean need_vis = FALSE;
   gboolean need_text = FALSE;
+  gboolean need_spu = FALSE;
   GstPad *textsrcpad = NULL, *pad = NULL, *origtextsrcpad = NULL;
   GstElement *sink;
   gboolean res = TRUE;
@@ -1492,10 +1570,12 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
   GST_DEBUG_OBJECT (play_base_bin, "setupsinks");
 
   /* find out what to do */
-  if (group->type[GST_STREAM_TYPE_VIDEO - 1].npads > 0 &&
-      group->type[GST_STREAM_TYPE_TEXT - 1].npads > 0) {
+  have_video = (group->type[GST_STREAM_TYPE_VIDEO - 1].npads > 0);
+  need_spu = (group->type[GST_STREAM_TYPE_SUBPICTURE - 1].npads != 0);
+
+  if (have_video && group->type[GST_STREAM_TYPE_TEXT - 1].npads > 0) {
     need_text = TRUE;
-  } else if (group->type[GST_STREAM_TYPE_VIDEO - 1].npads == 0 &&
+  } else if (!have_video &&
       group->type[GST_STREAM_TYPE_AUDIO - 1].npads > 0 &&
       play_bin->visualisation != NULL) {
     need_vis = TRUE;
@@ -1521,12 +1601,23 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
   }
 
   /* link video */
-  if (group->type[GST_STREAM_TYPE_VIDEO - 1].npads > 0) {
+  if (have_video) {
+    /* Create the video rendering bin, error is posted when this fails. */
+    sink = gen_video_element (play_bin);
+    if (!sink)
+      return FALSE;
+    if (need_spu) {
+      sink = add_spu_element (play_bin, sink);
+    }
+
     if (need_text) {
       GstObject *parent = NULL, *grandparent = NULL;
       GstPad *ghost = NULL;
 
-      sink = gen_text_element (play_bin);
+      /* Add the subtitle overlay element into the video sink */
+      sink = add_text_element (play_bin, sink);
+
+      /* Link the incoming subtitle stream into the output bin */
       textsrcpad =
           gst_element_get_static_pad (group->type[GST_STREAM_TYPE_TEXT -
               1].preroll, "src");
@@ -1589,8 +1680,6 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
 
       gst_object_unref (parent);
       gst_object_unref (grandparent);
-    } else {
-      sink = gen_video_element (play_bin);
     }
   beach:
     if (!sink)
@@ -1605,6 +1694,30 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
     if (origtextsrcpad) {
       gst_pad_set_blocked_async (origtextsrcpad, FALSE, dummy_blocked_cb, NULL);
       gst_object_unref (origtextsrcpad);
+    }
+
+    /* If we have a DVD subpicture stream, link it to the SPU now */
+    if (need_spu) {
+      GstPad *subpic_pad;
+      GstPad *spu_sink_pad;
+
+      subpic_pad =
+          gst_element_get_static_pad (group->type[GST_STREAM_TYPE_SUBPICTURE
+              - 1].preroll, "src");
+      spu_sink_pad = gst_element_get_static_pad (sink, "subpicture_sink");
+      if (subpic_pad && spu_sink_pad) {
+        GST_LOG_OBJECT (play_bin, "Linking DVD subpicture stream onto SPU");
+        gst_pad_set_blocked_async (subpic_pad, TRUE, dummy_blocked_cb, NULL);
+        if (gst_pad_link (subpic_pad, spu_sink_pad) != GST_PAD_LINK_OK) {
+          GST_WARNING_OBJECT (play_bin,
+              "Failed to link DVD subpicture stream onto SPU");
+        }
+        gst_pad_set_blocked_async (subpic_pad, FALSE, dummy_blocked_cb, NULL);
+      }
+      if (subpic_pad)
+        gst_object_unref (subpic_pad);
+      if (spu_sink_pad)
+        gst_object_unref (spu_sink_pad);
     }
   }
 

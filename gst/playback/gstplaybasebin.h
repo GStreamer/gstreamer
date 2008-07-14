@@ -63,8 +63,8 @@ typedef struct
     GstElement  *preroll;
     GstElement  *selector;
     gboolean     done;
-#define NUM_TYPES 3
-  } type[NUM_TYPES]; /* AUDIO, VIDEO, TEXT */
+#define NUM_TYPES 4
+  } type[NUM_TYPES]; /* AUDIO, VIDEO, TEXT, SUBPIC */
 } GstPlayBaseGroup;
 
 struct _GstPlayBaseBin {

@@ -1,3 +1,13 @@
+2008-07-14  Jan Schmidt  <thaytan@noraisin.net>
+
+	* gst/playback/gstplaybasebin.c:
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c:
+	* gst/playback/gststreamselector.c:
+	First stab at integrating DVD subpicture overlay into
+	playbin. Successfully plugs and plays, but the queues need
+	shrinking - 3 seconds of video is too much buffering.
+
 2008-07-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audioconvert/gstaudioconvert.c:

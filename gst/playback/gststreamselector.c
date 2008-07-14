@@ -254,12 +254,14 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
   gboolean forward = TRUE;
   GstStreamSelector *sel;
   GstSelectorPad *selpad;
+  GstPad *active_sinkpad;
 
   sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
   selpad = GST_SELECTOR_PAD_CAST (pad);
 
   /* only forward if we are dealing with the active sinkpad */
-  forward = gst_stream_selector_is_active_sinkpad (sel, pad);
+  active_sinkpad = gst_stream_selector_activate_sinkpad (sel, pad);
+  forward = (active_sinkpad == pad);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
