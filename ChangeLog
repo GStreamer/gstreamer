@@ -1,3 +1,13 @@
+2008-07-14  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/deinterlace2/tvtime/greedy.c:
+	(gst_deinterlace_method_greedy_l_class_init):
+	* gst/deinterlace2/tvtime/greedyh.c:
+	(gst_deinterlace_method_greedy_h_class_init):
+	* gst/deinterlace2/tvtime/vfir.c:
+	(gst_deinterlace_method_vfir_class_init):
+	Fix build on x86_64
+
 2008-07-14  Jan Schmidt  <thaytan@noraisin.net>
 
 	* ext/resindvd/gstmpegdemux.c:
