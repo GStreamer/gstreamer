@@ -207,7 +207,9 @@ static void
 gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
 {
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
+#ifdef HAVE_CPU_I386
   guint cpu_flags = oil_cpu_get_flags ();
+#endif
 
   dim_class->fields_required = 2;
   dim_class->deinterlace_frame = deinterlace_frame_vfir;

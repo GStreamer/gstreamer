@@ -363,7 +363,9 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
 {
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
+#ifdef HAVE_CPU_I386
   guint cpu_flags = oil_cpu_get_flags ();
+#endif
 
   gobject_class->set_property = gst_deinterlace_method_greedy_h_set_property;
   gobject_class->get_property = gst_deinterlace_method_greedy_h_get_property;
