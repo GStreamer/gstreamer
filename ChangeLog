@@ -1,5 +1,12 @@
 2008-07-14  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/udp/gstudpnetutils.c:
+	EAI_ADDRFAMILY was obsoleted in BSD at some point. Define it to the
+	old value (1) if it's not defined which should not cause any problems
+	as we're using it internal only anyway.
+
+2008-07-14  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Alessandro Decina <alessandro at nnva dot org>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_riff_parse_vprp):
