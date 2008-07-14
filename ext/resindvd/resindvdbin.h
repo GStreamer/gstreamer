@@ -65,6 +65,11 @@ struct _RsnDvdBin
 
   GstPad *video_pad;
   GstPad *audio_pad;
+  GstPad *subpicture_pad;
+
+  gboolean video_added;
+  gboolean audio_added;
+  gboolean subpicture_added;
 
   GList *mq_req_pads;
 };

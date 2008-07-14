@@ -1,3 +1,22 @@
+2008-07-14  Jan Schmidt  <thaytan@noraisin.net>
+
+	* ext/resindvd/gstmpegdemux.c:
+	Remove whitespace line.
+
+	* ext/resindvd/resindvdbin.c:
+	* ext/resindvd/resindvdbin.h:
+	Make it so that audio/video pads aren't added to the bin
+	until after data flow starts.
+
+	* ext/resindvd/resin-play:
+	Move video buffer queue outside resindvdbin
+
+	* ext/resindvd/resindvdsrc.c:
+	Check that the nav_clock_id didn't already get unscheduled.
+
+	* gst/dvdspu/gstdvdspu.c:
+	Remove assert that sometimes triggers erroneously.
+
 2008-07-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/tvtime/greedyh.asm:

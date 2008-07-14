@@ -1556,8 +1556,10 @@ rsn_dvdsrc_nav_clock_cb (GstClock * clock, GstClockTime time, GstClockID id,
   g_mutex_lock (src->dvd_lock);
 
   /* Destroy the clock id that caused this callback */
-  gst_clock_id_unref (src->nav_clock_id);
-  src->nav_clock_id = NULL;
+  if (src->nav_clock_id) {
+    gst_clock_id_unref (src->nav_clock_id);
+    src->nav_clock_id = NULL;
+  }
 
   while (src->pending_nav_blocks) {
     RsnDvdPendingNav *cur = (RsnDvdPendingNav *) src->pending_nav_blocks->data;

@@ -7,6 +7,7 @@ else
 fi
 
 gst-launch rsndvdbin name=dvd "$DEVICE_OPT" \
-   dvd. ! dvdspu name=spu ! ffmpegcolorspace ! videoscale ! ximagesink force-aspect-ratio=true \
-   dvd. ! spu. \
+   dvdspu name=spu ! ffmpegcolorspace ! videoscale ! ximagesink force-aspect-ratio=true \
+   dvd. ! queue max-size-buffers=3 max-size-bytes=0 ! spu.video \
+   dvd. ! spu.subpicture \
    dvd. ! audioconvert ! autoaudiosink $@

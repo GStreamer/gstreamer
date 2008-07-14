@@ -37,6 +37,7 @@ GST_DEBUG_CATEGORY_EXTERN (resindvd_debug);
 #define GST_CAT_DEFAULT resindvd_debug
 
 #define DECODEBIN_AUDIO 0
+#define USE_VIDEOQ 0
 
 #define DVDBIN_LOCK(d) g_mutex_lock((d)->dvd_lock)
 #define DVDBIN_UNLOCK(d) g_mutex_unlock((d)->dvd_lock)
@@ -98,6 +99,8 @@ static void rsn_dvdbin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstStateChangeReturn rsn_dvdbin_change_state (GstElement * element,
     GstStateChange transition);
+static void dvdbin_pad_blocked_cb (GstPad * pad, gboolean blocked,
+    RsnDvdBin * dvdbin);
 
 static void
 rsn_dvdbin_base_init (gpointer gclass)
@@ -337,7 +340,6 @@ create_elements (RsnDvdBin * dvdbin)
 {
   GstPad *src = NULL;
   GstPad *sink = NULL;
-  GstPad *ghost = NULL;
 
   if (!try_create_piece (dvdbin, DVD_ELEM_SOURCE, NULL,
           RESIN_TYPE_DVDSRC, "dvdsrc", "DVD source")) {
@@ -378,19 +380,18 @@ create_elements (RsnDvdBin * dvdbin)
   g_signal_connect (G_OBJECT (dvdbin->pieces[DVD_ELEM_VIDDEC]),
       "new-decoded-pad", G_CALLBACK (viddec_pad_added), dvdbin);
 
-#if 1
   if (!try_create_piece (dvdbin, DVD_ELEM_PARSET, NULL, RSN_TYPE_RSNPARSETTER,
           "rsnparsetter", "Aspect ratio adjustment"))
     return FALSE;
-#else
-  if (!try_create_piece (dvdbin, DVD_ELEM_PARSET, "identity", 0,
-          "rsnparsetter", "Aspect ratio adjustment"))
-    return FALSE;
-#endif
 
+#if USE_VIDEOQ
+  /* Add a small amount of queueing after the video decoder. */
   if (!try_create_piece (dvdbin, DVD_ELEM_VIDQ, "queue", 0, "vid_q",
           "video decoder buffer"))
     return FALSE;
+  g_object_set (dvdbin->pieces[DVD_ELEM_VIDQ],
+      "max-size-time", G_GUINT64_CONSTANT (0), "max-size-bytes", 0,
+      "max-size-buffers", 3, NULL);
 
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_PARSET], "src");
   sink = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_VIDQ], "sink");
@@ -398,21 +399,21 @@ create_elements (RsnDvdBin * dvdbin)
     goto failed_vidq_connect;
   if (GST_PAD_LINK_FAILED (gst_pad_link (src, sink)))
     goto failed_vidq_connect;
-
-  g_object_set (dvdbin->pieces[DVD_ELEM_VIDQ],
-      "max-size-time", G_GUINT64_CONSTANT (0), "max-size-bytes", 0,
-      "max-size-buffers", 3, NULL);
+  gst_object_unref (src);
+  gst_object_unref (sink);
+  src = sink = NULL;
 
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_VIDQ], "src");
+#else
+  src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_PARSET], "src");
+#endif
   if (src == NULL)
-    goto failed_vidq_ghost;
-  ghost = gst_ghost_pad_new ("video", src);
-  if (ghost == NULL)
-    goto failed_vidq_ghost;
-  if (!gst_element_add_pad (GST_ELEMENT (dvdbin), ghost))
-    goto failed_vidq_ghost;
+    goto failed_video_ghost;
+  dvdbin->video_pad = gst_ghost_pad_new ("video", src);
+  if (dvdbin->video_pad == NULL)
+    goto failed_video_ghost;
   gst_object_unref (src);
-  ghost = src = sink = NULL;
+  src = NULL;
 
   if (!try_create_piece (dvdbin, DVD_ELEM_SPU_SELECT, NULL,
           RSN_TYPE_STREAM_SELECTOR, "subpselect", "Subpicture stream selector"))
@@ -421,13 +422,14 @@ create_elements (RsnDvdBin * dvdbin)
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_SPU_SELECT], "src");
   if (src == NULL)
     goto failed_spu_ghost;
-  ghost = gst_ghost_pad_new ("subpicture", src);
-  if (ghost == NULL)
+  dvdbin->subpicture_pad = gst_ghost_pad_new ("subpicture", src);
+  if (dvdbin->subpicture_pad == NULL)
     goto failed_spu_ghost;
-  if (!gst_element_add_pad (GST_ELEMENT (dvdbin), ghost))
-    goto failed_spu_ghost;
+  gst_pad_set_active (dvdbin->subpicture_pad, TRUE);
+  gst_pad_set_blocked_async (dvdbin->subpicture_pad, TRUE,
+      (GstPadBlockCallback) dvdbin_pad_blocked_cb, dvdbin);
   gst_object_unref (src);
-  ghost = src = sink = NULL;
+  src = NULL;
 
   if (!try_create_piece (dvdbin, DVD_ELEM_AUD_SELECT, NULL,
           RSN_TYPE_STREAM_SELECTOR, "audioselect", "Audio stream selector"))
@@ -478,13 +480,14 @@ create_elements (RsnDvdBin * dvdbin)
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_AUD_MUNGE], "src");
   if (src == NULL)
     goto failed_aud_ghost;
-  ghost = gst_ghost_pad_new ("audio", src);
-  if (ghost == NULL)
+  dvdbin->audio_pad = gst_ghost_pad_new ("audio", src);
+  if (dvdbin->audio_pad == NULL)
     goto failed_aud_ghost;
-  if (!gst_element_add_pad (GST_ELEMENT (dvdbin), ghost))
-    goto failed_aud_ghost;
+  gst_pad_set_active (dvdbin->audio_pad, TRUE);
+  gst_pad_set_blocked_async (dvdbin->audio_pad, TRUE,
+      (GstPadBlockCallback) dvdbin_pad_blocked_cb, dvdbin);
   gst_object_unref (src);
-  ghost = src = sink = NULL;
+  src = NULL;
 
   return TRUE;
 
@@ -492,11 +495,13 @@ failed_connect:
   GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
       ("Could not connect DVD source and demuxer elements"));
   goto error_out;
+#if USE_VIDEOQ
 failed_vidq_connect:
   GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
       ("Could not connect DVD aspect ratio adjuster and video buffer elements"));
   goto error_out;
-failed_vidq_ghost:
+#endif
+failed_video_ghost:
   GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
       ("Could not ghost SPU output pad"));
   goto error_out;
@@ -513,8 +518,6 @@ failed_aud_ghost:
       ("Could not ghost audio output pad"));
   goto error_out;
 error_out:
-  if (ghost != NULL)
-    gst_object_unref (ghost);
   if (src != NULL)
     gst_object_unref (src);
   if (sink != NULL)
@@ -550,6 +553,27 @@ remove_elements (RsnDvdBin * dvdbin)
     } else
       DVDBIN_UNLOCK (dvdbin);
   }
+  if (dvdbin->video_pad) {
+    if (dvdbin->video_added)
+      gst_element_remove_pad (GST_ELEMENT (dvdbin), dvdbin->video_pad);
+    else
+      gst_object_unref (dvdbin->video_pad);
+  }
+  if (dvdbin->audio_pad) {
+    if (dvdbin->audio_added)
+      gst_element_remove_pad (GST_ELEMENT (dvdbin), dvdbin->audio_pad);
+    else
+      gst_object_unref (dvdbin->audio_pad);
+  }
+  if (dvdbin->subpicture_pad) {
+    if (dvdbin->subpicture_added)
+      gst_element_remove_pad (GST_ELEMENT (dvdbin), dvdbin->subpicture_pad);
+    else
+      gst_object_unref (dvdbin->subpicture_pad);
+  }
+
+  dvdbin->video_added = dvdbin->audio_added = dvdbin->subpicture_added = FALSE;
+  dvdbin->video_pad = dvdbin->audio_pad = dvdbin->subpicture_pad = NULL;
 }
 
 static GstPad *
@@ -657,6 +681,39 @@ failed:
 }
 
 static void
+dvdbin_pad_blocked_cb (GstPad * pad, gboolean blocked, RsnDvdBin * dvdbin)
+{
+  gboolean changed = FALSE;
+  if (!blocked)
+    return;
+
+  if (pad == dvdbin->subpicture_pad) {
+    if (!dvdbin->subpicture_added) {
+      gst_element_add_pad (GST_ELEMENT (dvdbin), dvdbin->subpicture_pad);
+      dvdbin->subpicture_added = TRUE;
+      changed = TRUE;
+    }
+
+    gst_pad_set_blocked_async (pad, FALSE,
+        (GstPadBlockCallback) dvdbin_pad_blocked_cb, dvdbin);
+  } else if (pad == dvdbin->audio_pad) {
+    if (!dvdbin->audio_added) {
+      gst_element_add_pad (GST_ELEMENT (dvdbin), dvdbin->audio_pad);
+      dvdbin->audio_added = TRUE;
+      changed = TRUE;
+    }
+
+    gst_pad_set_blocked_async (pad, FALSE,
+        (GstPadBlockCallback) dvdbin_pad_blocked_cb, dvdbin);
+  }
+
+  if (changed &&
+      dvdbin->video_added && dvdbin->audio_added && dvdbin->subpicture_added) {
+    gst_element_no_more_pads (GST_ELEMENT (dvdbin));
+  }
+}
+
+static void
 viddec_pad_added (GstElement * element, GstPad * pad, gboolean last,
     RsnDvdBin * dvdbin)
 {
@@ -668,6 +725,16 @@ viddec_pad_added (GstElement * element, GstPad * pad, gboolean last,
   gst_pad_link (pad, q_pad);
 
   gst_object_unref (q_pad);
+
+  if (!dvdbin->video_added) {
+    gst_pad_set_active (dvdbin->video_pad, TRUE);
+    gst_element_add_pad (GST_ELEMENT (dvdbin), dvdbin->video_pad);
+    dvdbin->video_added = TRUE;
+
+    if (dvdbin->video_added && dvdbin->audio_added && dvdbin->subpicture_added) {
+      gst_element_no_more_pads (GST_ELEMENT (dvdbin));
+    }
+  }
 }
 
 #if DECODEBIN_AUDIO
@@ -750,7 +817,6 @@ rsn_dvdbin_change_state (GstElement * element, GstStateChange transition)
         remove_elements (dvdbin);
         return GST_STATE_CHANGE_FAILURE;
       }
-      gst_element_no_more_pads (GST_ELEMENT (dvdbin));
       break;
     default:
       break;

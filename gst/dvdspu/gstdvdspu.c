@@ -1094,7 +1094,7 @@ gst_dvd_spu_advance_spu (GstDVDSpu * dvdspu, GstClockTime new_ts)
 
     /* If we get here, we have an SPU buffer, and it's time to process the
      * next cmd */
-    g_assert (state->buf != NULL && state->next_ts <= new_ts);
+    g_assert (state->buf != NULL);
 
     GST_DEBUG_OBJECT (dvdspu, "Executing cmd blk with TS %" GST_TIME_FORMAT
         " @ offset %u", GST_TIME_ARGS (state->next_ts), state->cur_cmd_blk);
