@@ -223,8 +223,8 @@ error_overflow:
  * gst_video_format_parse_caps:
  * @caps: the #GstCaps to parse
  * @format: the #GstVideoFormat of the video represented by @caps (output)
- * @width: the width of the video represented by @caps (output)
- * @height: the height of the video represented by @caps (output)
+ * @width: the width of the video represented by @caps, may be NULL (output)
+ * @height: the height of the video represented by @caps, may be NULL (output)
  *
  * Determines the #GstVideoFormat of @caps and places it in the location
  * pointed to by @format.  Extracts the size of the video and places it
@@ -243,7 +243,9 @@ gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
   GstStructure *structure;
   gboolean ok = TRUE;
 
-  if (!gst_caps_is_fixed (caps))
+  /* caps must hold exactly 1 structure to be unambiguous,
+   * but need not be fixed to determine format */
+  if (gst_caps_get_size (caps) != 1)
     return FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
