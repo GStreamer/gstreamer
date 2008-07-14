@@ -1,3 +1,10 @@
+2008-07-14  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Alessandro Decina <alessandro at nnva dot org>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_riff_parse_vprp):
+	Fix build of avidemux on big endian architectures.
+
 2008-07-10  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	Patch by: Thiago Sousa Santos <thiagoss at lcc dot ufcg dot edu dot br>

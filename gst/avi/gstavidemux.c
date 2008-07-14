@@ -1254,7 +1254,7 @@ gst_avi_demux_riff_parse_vprp (GstElement * element,
   for (k = 0; k < vprp->fields; k++) {
     gst_riff_vprp_video_field_desc *fd;
 
-    fd = &(vidpad->vprp.field_info[k]);
+    fd = &vprp->field_info[k];
     fd->compressed_bm_height = GUINT32_FROM_LE (fd->compressed_bm_height);
     fd->compressed_bm_width = GUINT32_FROM_LE (fd->compressed_bm_width);
     fd->valid_bm_height = GUINT32_FROM_LE (fd->valid_bm_height);
@@ -1811,8 +1811,8 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
 
     target->index_nr = i;
     target->flags =
-        (entry.
-        flags & GST_RIFF_IF_KEYFRAME) ? GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME : 0;
+        (entry.flags & GST_RIFF_IF_KEYFRAME) ? GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME
+        : 0;
     target->size = entry.size;
     target->offset = entry.offset + 8;
 
