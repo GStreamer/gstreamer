@@ -20,8 +20,7 @@
 /**
  * SECTION:element-jpegdec
  *
- * Decodes jpeg images. If there is no framerate set on sink caps, it sends EOS
- * after the first picture.
+ * Decodes jpeg images.
  */
 
 #ifdef HAVE_CONFIG_H
