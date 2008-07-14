@@ -180,7 +180,7 @@ gst_tag_inject_start (GstBaseTransform * trans)
   GstTagInject *self = GST_TAG_INJECT (trans);
 
   /* send tags */
-  if (!gst_tag_list_is_empty (self->tags)) {
+  if (self->tags && !gst_tag_list_is_empty (self->tags)) {
     gst_element_found_tags (GST_ELEMENT (trans),
         gst_tag_list_copy (self->tags));
   }

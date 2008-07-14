@@ -1,5 +1,10 @@
 2008-07-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/debug/gsttaginject.c: (gst_tag_inject_start):
+	Don't pass NULL taglists to gst_tag_list_is_empty().
+
+2008-07-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/elements/cmmldec.c: (GST_START_TEST):
 	* tests/check/elements/rtp-payloading.c: (rtp_pipeline_create),
 	(rtp_pipeline_run):
