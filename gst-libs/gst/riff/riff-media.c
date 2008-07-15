@@ -75,6 +75,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
               "blue_mask", G_TYPE_INT, 0xff0000, NULL);
         } else {
           GST_WARNING ("Unhandled DIB RGB depth: %d", bpp);
+          return NULL;
         }
       } else {
         /* for template */
@@ -344,9 +345,11 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
     case GST_MAKE_FOURCC ('3', 'i', 'v', 'd'):
     case GST_MAKE_FOURCC ('3', 'I', 'V', 'D'):
+      caps = gst_caps_new_simple ("video/x-msmpeg",
+          "msmpegversion", G_TYPE_INT, 43, NULL);
       if (codec_name)
         *codec_name = g_strdup ("Microsoft MPEG-4 4.3");        /* FIXME? */
-      return gst_caps_from_string ("video/x-msmpeg, msmpegversion = (int) 43");
+      break;
 
     case GST_MAKE_FOURCC ('3', 'I', 'V', '1'):
     case GST_MAKE_FOURCC ('3', 'I', 'V', '2'):
