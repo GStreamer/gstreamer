@@ -1,23 +1,18 @@
 
 plugin_LTLIBRARIES = libgstopengl.la
 
-noinst_PROGRAMS = color_matrix
-
 AM_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 AM_LIBS = $(GST_BASE_LIBS)
 
 libgstopengl_la_SOURCES = \
+	gstopengl.c \
 	glimagesink.c \
 	glimagesink.h \
-	gstopengl.c \
-	gstglupload.c \
-	gstgldownload.c \
-	gstgltestsrc.c \
-	gstgltestsrc.h \
-	gltestsrc.c \
-	gltestsrc.h \
-	gstglfilterexample.c \
-	gstglconvert.c
+	gstglgraphicmaker.c \
+	gstglgraphicmaker.h \
+	gstglvideomaker.c \
+	gstglvideomaker.h 
+
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
 # (like in AM_CFLAGS)?
 libgstopengl_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \

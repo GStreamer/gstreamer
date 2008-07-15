@@ -1,19 +1,5 @@
 
 known issues:
 
-  - negotiation is shite.  I don't want to know about any failed
-    negotiations or failed prerolls.
-
-  - teardown sometimes fails.
-
-  - sharing a GL context among a bunch of elements that stomp all
-    over it is potential fail.
-
-
-intel driver:
-
-  - rendering to texture ignores the color matrix.  This causes any
-    YUV->RGB conversion to fail.
-
-  - YUY2 and UYVY conversions in the driver use the wrong matrix.
+  - 
 
