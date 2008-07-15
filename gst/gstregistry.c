@@ -27,7 +27,6 @@
  * @see_also: #GstPlugin, #GstPluginFeature
  *
  * One registry holds the metadata of a set of plugins.
- * All registries build the #GstRegistryPool.
  *
  * <emphasis role="bold">Design:</emphasis>
  *

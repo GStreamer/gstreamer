@@ -36,11 +36,8 @@
  * #GstPluginInitFunc function that was provided in the
  * <symbol>gst_plugin_desc</symbol>.
  *
- * Once you have a handle to a #GstPlugin (e.g. from the #GstRegistryPool), you
+ * Once you have a handle to a #GstPlugin (e.g. from the #GstRegistry), you
  * can add any object that subclasses #GstPluginFeature.
- *
- * Use gst_plugin_find_feature() and gst_plugin_get_feature_list() to find
- * features in a plugin.
  *
  * Usually plugins are always automaticlly loaded so you don't need to call
  * gst_plugin_load() explicitly to bring it into memory. There are options to

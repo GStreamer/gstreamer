@@ -1,3 +1,11 @@
+2008-07-15  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/gstplugin.c:
+	* gst/gstregistry.c:
+	  GstRegistryPool doesn't exist; don't refer to it in docs.
+	  Don't refer to functions that don't exist in docs, it's
+	  unhelpful.
+
 2008-07-12  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/gst.c:
