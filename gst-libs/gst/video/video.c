@@ -243,9 +243,7 @@ gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
   GstStructure *structure;
   gboolean ok = TRUE;
 
-  /* caps must hold exactly 1 structure to be unambiguous,
-   * but need not be fixed to determine format */
-  if (gst_caps_get_size (caps) != 1)
+  if (!gst_caps_is_fixed (caps))
     return FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
