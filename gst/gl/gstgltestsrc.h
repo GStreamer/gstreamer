@@ -96,8 +96,8 @@ struct _GstGLTestSrc {
     gint rate_numerator;
     gint rate_denominator;
 
-    guint fbo;
-    guint depthbuffer;
+    GLuint fbo;
+    GLuint depthbuffer;
 
     GstGLBuffer* buffer;
 
