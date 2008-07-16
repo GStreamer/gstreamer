@@ -504,10 +504,11 @@ codec_search_done:
     goto could_not_load;
   }
 
-  lib->Init = rv_init;
-  lib->Free = rv_free;
-  lib->Transform = rv_transform;
-  lib->Message = rv_custom_msg;
+  lib->Init = (guint32 (*)(gpointer, gpointer)) rv_init;
+  lib->Free = (guint32 (*)(gpointer)) rv_free;
+  lib->Transform = (guint32 (*)(gchar *, gchar *, gpointer, gpointer, gpointer))
+      rv_transform;
+  lib->Message = (guint32 (*)(gpointer, gpointer)) rv_custom_msg;
   lib->module = module;
 
   dec->error_count = 0;

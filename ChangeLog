@@ -1,3 +1,8 @@
+2008-07-16  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/real/gstrealvideodec.c: (open_library):
+	Add some casts to fix the build on Forte
+
 2008-07-14  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/deinterlace2/tvtime/greedy.c:
