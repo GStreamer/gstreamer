@@ -253,12 +253,12 @@ void gst_gl_display_set_visible_context (GstGLDisplay* display, gboolean visible
 void gst_gl_display_resize_context (GstGLDisplay* display, gint width, gint height);
 gboolean gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width, gint height);
 
-void gst_gl_display_gen_texture (GstGLDisplay* display, guint* pTexture);
-void gst_gl_display_del_texture (GstGLDisplay* display, guint texture);
+void gst_gl_display_gen_texture (GstGLDisplay* display, GLuint* pTexture);
+void gst_gl_display_del_texture (GstGLDisplay* display, GLuint texture);
 
 void gst_gl_display_init_upload (GstGLDisplay* display, GstVideoFormat video_format,
                                  guint gl_width, guint gl_height);
-void gst_gl_display_do_upload (GstGLDisplay* display, guint texture,
+void gst_gl_display_do_upload (GstGLDisplay* display, GLuint texture,
                                gint data_width, gint data_height, 
                                gpointer data);
 void gst_gl_display_init_download (GstGLDisplay* display, GstVideoFormat video_format, 
@@ -268,15 +268,15 @@ void gst_gl_display_do_download (GstGLDisplay* display, GLuint texture,
                                  gpointer data);
 
 void gst_gl_display_gen_fbo (GstGLDisplay* display, gint width, gint height, 
-                             guint* fbo, guint* depthbuffer);
+                             GLuint* fbo, GLuint* depthbuffer);
 void gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint texture_fbo_height,
-                             guint fbo, guint depth_buffer, guint texture_fbo, GLCB cb,
-                             gint input_texture_width, gint input_texture_height, guint input_texture,
+                             GLuint fbo, GLuint depth_buffer, GLuint texture_fbo, GLCB cb,
+                             gint input_texture_width, gint input_texture_height, GLuint input_texture,
                              gdouble proj_param1, gdouble proj_param2,
                              gdouble proj_param3, gdouble proj_param4,
                              GstGLDisplayProjection projection, gpointer* stuff);
-void gst_gl_display_del_fbo (GstGLDisplay* display, guint fbo, 
-                             guint depth_buffer);
+void gst_gl_display_del_fbo (GstGLDisplay* display, GLuint fbo, 
+                             GLuint depth_buffer);
 
 void gst_gl_display_gen_shader (GstGLDisplay* display, gchar* textShader, GLhandleARB* handleShader);
 void gst_gl_display_del_shader (GstGLDisplay* display, GLhandleARB shader);

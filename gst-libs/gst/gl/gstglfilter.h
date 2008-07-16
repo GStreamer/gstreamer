@@ -57,8 +57,8 @@ struct _GstGLFilter
 
     gint width;
     gint height;
-    guint fbo;
-    guint depthbuffer;
+    GLuint fbo;
+    GLuint depthbuffer;
 };
 
 struct _GstGLFilterClass
