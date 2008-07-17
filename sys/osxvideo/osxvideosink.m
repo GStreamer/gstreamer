@@ -475,10 +475,10 @@ static GstFlowReturn
 gst_osx_video_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstOSXVideoSink *osxvideosink;
+  char *viewdata;
 
   osxvideosink = GST_OSX_VIDEO_SINK (bsink);
-
-  char *viewdata =[osxvideosink->osxwindow->gstview getTextureBuffer];
+  viewdata = [osxvideosink->osxwindow->gstview getTextureBuffer];
 
   GST_DEBUG ("show_frame");
   memcpy (viewdata, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));

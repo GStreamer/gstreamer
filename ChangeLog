@@ -1,3 +1,9 @@
+2008-07-17  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* sys/osxvideo/osxvideosink.m:
+	Fix minor build issues on macosx.
+	Fixes #543054
+
 2008-07-17  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac::
