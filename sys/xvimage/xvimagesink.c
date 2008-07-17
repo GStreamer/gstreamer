@@ -426,9 +426,9 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
   handler = XSetErrorHandler (gst_xvimagesink_handle_xerror);
 
   /* Trying to create a 1x1 picture */
-  GST_DEBUG ("XvShmCreateImage of 1x1");
+  GST_DEBUG ("XvShmCreateImage of 100x100");
   xvimage = XvShmCreateImage (xcontext->disp, xcontext->xv_port_id,
-      xcontext->im_format, NULL, 1, 1, &SHMInfo);
+      xcontext->im_format, NULL, 100, 100, &SHMInfo);
 
   /* Might cause an error, sync to ensure it is noticed */
   XSync (xcontext->disp, FALSE);
@@ -452,29 +452,34 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
     goto beach;
   }
 
-  /* Delete the shared memory segment as soon as we manage to attach.
-   * This way, it will be deleted as soon as we detach later, and not
-   * leaked if we crash. */
-  shmctl (SHMInfo.shmid, IPC_RMID, NULL);
-
   xvimage->data = SHMInfo.shmaddr;
   SHMInfo.readOnly = FALSE;
 
   if (XShmAttach (xcontext->disp, &SHMInfo) == 0) {
     GST_WARNING ("Failed to XShmAttach");
+    /* Clean up the shared memory segment */
+    shmctl (SHMInfo.shmid, IPC_RMID, NULL);
     goto beach;
   }
 
   /* Sync to ensure we see any errors we caused */
   XSync (xcontext->disp, FALSE);
 
-  GST_DEBUG ("XServer ShmAttached to 0x%x, id 0x%lx", SHMInfo.shmid,
-      SHMInfo.shmseg);
+  /* Delete the shared memory segment as soon as everyone is attached.
+   * This way, it will be deleted as soon as we detach later, and not
+   * leaked if we crash. */
+  shmctl (SHMInfo.shmid, IPC_RMID, NULL);
 
   if (!error_caught) {
+    GST_DEBUG ("XServer ShmAttached to 0x%x, id 0x%lx", SHMInfo.shmid,
+        SHMInfo.shmseg);
+
     did_attach = TRUE;
     /* store whether we succeeded in result */
     result = TRUE;
+  } else {
+    GST_WARNING ("MIT-SHM extension check failed at XShmAttach. "
+        "Not using shared memory.");
   }
 
 beach:
@@ -626,15 +631,13 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
       goto beach_unlocked;
     }
 
-    /* Delete the shared memory segment as soon as we manage to attach.
-     * This way, it will be deleted as soon as we detach later, and not
-     * leaked if we crash. */
-    shmctl (xvimage->SHMInfo.shmid, IPC_RMID, NULL);
-
     xvimage->xvimage->data = xvimage->SHMInfo.shmaddr;
     xvimage->SHMInfo.readOnly = FALSE;
 
     if (XShmAttach (xvimagesink->xcontext->disp, &xvimage->SHMInfo) == 0) {
+      /* Clean up the shared memory segment */
+      shmctl (xvimage->SHMInfo.shmid, IPC_RMID, NULL);
+
       g_mutex_unlock (xvimagesink->x_lock);
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
@@ -643,6 +646,12 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
     }
 
     XSync (xvimagesink->xcontext->disp, FALSE);
+
+    /* Delete the shared memory segment as soon as we everyone is attached.
+     * This way, it will be deleted as soon as we detach later, and not
+     * leaked if we crash. */
+    shmctl (xvimage->SHMInfo.shmid, IPC_RMID, NULL);
+
     GST_DEBUG_OBJECT (xvimagesink, "XServer ShmAttached to 0x%x, id 0x%lx",
         xvimage->SHMInfo.shmid, xvimage->SHMInfo.shmseg);
   } else

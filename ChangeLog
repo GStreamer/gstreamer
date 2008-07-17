@@ -1,3 +1,15 @@
+2008-07-17  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_check_xshm_calls),
+	(gst_ximagesink_ximage_new):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls),
+	(gst_xvimagesink_xvimage_new):
+
+	Apparently on Solaris and OS/X (at least), it's not legal to ask the
+	X server to attach to a shared memory segment after we've deleted it,
+	with the result that MIT-SHM is disabled. Instead, remove it only after 
+	X succeeds in attaching too.
+
 2008-07-16  David Schleef  <ds@schleef.org>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c:

@@ -361,21 +361,23 @@ gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
     goto beach;
   }
 
-  /* Delete the shared memory segment as soon as we manage to attach. 
-   * This way, it will be deleted as soon as we detach later, and not
-   * leaked if we crash. */
-  shmctl (SHMInfo.shmid, IPC_RMID, NULL);
-
   ximage->data = SHMInfo.shmaddr;
   SHMInfo.readOnly = FALSE;
 
   if (XShmAttach (xcontext->disp, &SHMInfo) == 0) {
     GST_WARNING ("Failed to XShmAttach");
+    /* Clean up shm seg */
+    shmctl (SHMInfo.shmid, IPC_RMID, NULL);
     goto beach;
   }
 
   /* Sync to ensure we see any errors we caused */
   XSync (xcontext->disp, FALSE);
+
+  /* Delete the shared memory segment as soon as everyone is attached. 
+   * This way, it will be deleted as soon as we detach later, and not
+   * leaked if we crash. */
+  shmctl (SHMInfo.shmid, IPC_RMID, NULL);
 
   if (!error_caught) {
     did_attach = TRUE;
@@ -480,15 +482,13 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
       goto beach;
     }
 
-    /* Now that we've attached, we can delete the shared memory segment.
-     * This way, it will be deleted as soon as we detach later, and not
-     * leaked if we crash. */
-    shmctl (ximage->SHMInfo.shmid, IPC_RMID, NULL);
-
     ximage->ximage->data = ximage->SHMInfo.shmaddr;
     ximage->SHMInfo.readOnly = FALSE;
 
     if (XShmAttach (ximagesink->xcontext->disp, &ximage->SHMInfo) == 0) {
+      /* Clean up shm seg */
+      shmctl (ximage->SHMInfo.shmid, IPC_RMID, NULL);
+
       g_mutex_unlock (ximagesink->x_lock);
       GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
@@ -497,6 +497,12 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
     }
 
     XSync (ximagesink->xcontext->disp, FALSE);
+
+    /* Now that everyone has attached, we can delete the shared memory segment.
+     * This way, it will be deleted as soon as we detach later, and not
+     * leaked if we crash. */
+    shmctl (ximage->SHMInfo.shmid, IPC_RMID, NULL);
+
   } else
 #endif /* HAVE_XSHM */
   {
