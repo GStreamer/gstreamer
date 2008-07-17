@@ -1,3 +1,9 @@
+2008-07-16  David Schleef  <ds@schleef.org>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	* gst/audiotestsrc/gstaudiotestsrc.h:
+	  Add 'ticks', a 1/30 second sine wave pulse every second.
+
 2008-07-15  David Schleef  <ds@schleef.org>
 
 	* gst-libs/gst/video/video.c: Revert ABI change.

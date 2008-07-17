@@ -121,6 +121,7 @@ gst_audiostestsrc_wave_get_type (void)
     {GST_AUDIO_TEST_SRC_WAVE_WHITE_NOISE, "White noise", "white-noise"},
     {GST_AUDIO_TEST_SRC_WAVE_PINK_NOISE, "Pink noise", "pink-noise"},
     {GST_AUDIO_TEST_SRC_WAVE_SINE_TAB, "Sine table", "sine table"},
+    {GST_AUDIO_TEST_SRC_WAVE_TICKS, "Periodic Ticks", "ticks"},
     {0, NULL, NULL},
   };
 
@@ -659,6 +660,41 @@ static ProcessFunc sine_table_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_sine_table_double
 };
 
+#define DEFINE_TICKS(type,scale) \
+static void \
+gst_audio_test_src_create_tick_##type (GstAudioTestSrc * src, g##type * samples) \
+{ \
+  gint i; \
+  gdouble step, scl; \
+  \
+  step = M_PI_M2 * src->freq / src->samplerate; \
+  scl = 1024.0 / M_PI_M2; \
+  \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    src->accumulator += step; \
+    if (src->accumulator >= M_PI_M2) \
+      src->accumulator -= M_PI_M2; \
+    \
+    if ((src->n_samples + i)%src->samplerate < 1600) { \
+      samples[i] = (g##type) scale * src->wave_table[(gint) (src->accumulator * scl)]; \
+    } else { \
+      samples[i] = 0; \
+    } \
+  } \
+}
+
+DEFINE_TICKS (int16, 32767.0);
+DEFINE_TICKS (int32, 2147483647.0);
+DEFINE_TICKS (float, 1.0);
+DEFINE_TICKS (double, 1.0);
+
+static ProcessFunc tick_funcs[] = {
+  (ProcessFunc) gst_audio_test_src_create_tick_int16,
+  (ProcessFunc) gst_audio_test_src_create_tick_int32,
+  (ProcessFunc) gst_audio_test_src_create_tick_float,
+  (ProcessFunc) gst_audio_test_src_create_tick_double
+};
+
 /*
  * gst_audio_test_src_change_wave:
  * Assign function pointer of wave genrator.
@@ -697,6 +733,10 @@ gst_audio_test_src_change_wave (GstAudioTestSrc * src)
     case GST_AUDIO_TEST_SRC_WAVE_SINE_TAB:
       gst_audio_test_src_init_sine_table (src);
       src->process = sine_table_funcs[src->format];
+      break;
+    case GST_AUDIO_TEST_SRC_WAVE_TICKS:
+      gst_audio_test_src_init_sine_table (src);
+      src->process = tick_funcs[src->format];
       break;
     default:
       GST_ERROR ("invalid wave-form");
