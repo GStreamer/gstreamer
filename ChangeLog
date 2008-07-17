@@ -1,5 +1,13 @@
 2008-07-17  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* configure.ac::
+	* ext/taglib/Makefile.am::
+	  Only use -Wno-attributes (which is there to work around a
+	  bug in the taglib 1.5 headers) if the c++ compiler actually
+	  supports it (#543255).
+
+2008-07-17  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	Patch by: Benoit Fouet <benoit.fouet purplelabs com>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_negotiate):

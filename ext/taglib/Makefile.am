@@ -7,8 +7,8 @@ libgsttaglib_la_CFLAGS = \
 	$(TAGLIB_CFLAGS)
 libgsttaglib_la_CXXFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_CXXFLAGS) -Wno-attributes \
-	$(TAGLIB_CFLAGS)
+	$(GST_CXXFLAGS) \
+	$(TAGLIB_CXXFLAGS)
 libgsttaglib_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) \
 	$(GST_LIBS) \

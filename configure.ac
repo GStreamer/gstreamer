@@ -904,6 +904,14 @@ AG_GST_CHECK_FEATURE(TAGLIB, [taglib tagging library], taglib, [
   if test "x$HAVE_CXX" != "xyes"; then
     USE_TAGLIB=false
     AC_MSG_NOTICE([Not building taglib plugin: no C++ compiler found])
+  else
+    dnl work around bug in taglib 1.5 headers, remove once there is a 1.6
+    AS_CXX_COMPILER_FLAG([-Wno-attributes], [
+        TAGLIB_CXXFLAGS="$TAGLIB_CFLAGS -Wno-attributes"
+      ], [
+        TAGLIB_CXXFLAGS="$TAGLIB_CFLAGS"
+    ])
+    AC_SUBST(TAGLIB_CXXFLAGS)
   fi
 ])
 
