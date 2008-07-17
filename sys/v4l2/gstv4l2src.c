@@ -476,8 +476,7 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
   peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
   GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
   if (peercaps && !gst_caps_is_any (peercaps)) {
-    GstCaps *icaps;
-
+    GstCaps *icaps = NULL;
     int i;
 
     /* Prefer the first caps we are compatible with that the peer proposed */

@@ -1,3 +1,10 @@
+2008-07-17  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: Benoit Fouet <benoit.fouet purplelabs com>
+
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_negotiate):
+	  Avoid compiler warning by initialising variable to NULL (#543259).
+
 2008-07-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/debug/gsttaginject.c: (gst_tag_inject_start):
