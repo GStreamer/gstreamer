@@ -1,5 +1,11 @@
 2008-07-17  Jan Schmidt  <Jan.Schmidt@sun.com>
 
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls):
+	Oops - set the size of the image used for probing back to 1x1, for
+	consistency with ximagesink
+
+2008-07-17  Jan Schmidt  <Jan.Schmidt@sun.com>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_check_xshm_calls),
 	(gst_ximagesink_ximage_new):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls),

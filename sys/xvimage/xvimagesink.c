@@ -426,9 +426,9 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
   handler = XSetErrorHandler (gst_xvimagesink_handle_xerror);
 
   /* Trying to create a 1x1 picture */
-  GST_DEBUG ("XvShmCreateImage of 100x100");
+  GST_DEBUG ("XvShmCreateImage of 1x1");
   xvimage = XvShmCreateImage (xcontext->disp, xcontext->xv_port_id,
-      xcontext->im_format, NULL, 100, 100, &SHMInfo);
+      xcontext->im_format, NULL, 1, 1, &SHMInfo);
 
   /* Might cause an error, sync to ensure it is noticed */
   XSync (xcontext->disp, FALSE);
