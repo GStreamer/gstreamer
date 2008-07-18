@@ -670,24 +670,22 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
         GString* opengl_version = g_string_truncate (g_string_new ((gchar*) glGetString (GL_VERSION)), 3);
         gint opengl_version_major = 0;
         gint opengl_version_minor = 0;
-        GString* glew_version = g_string_truncate (g_string_new ((gchar*) glewGetString (GLEW_VERSION)), 3);
-        gint glew_version_major = 0;
-        gint glew_version_minor = 0;
 
         sscanf(opengl_version->str, "%d.%d", &opengl_version_major, &opengl_version_minor);
-        sscanf(glew_version->str, "%d.%d", &glew_version_major, &glew_version_minor);
 
         g_print ("GL_VERSION: %s\n", glGetString (GL_VERSION));
         g_print ("GLEW_VERSION: %s\n", glewGetString (GLEW_VERSION));
+        g_print ("GL_SHADING_LANGUAGE_VERSION: %s\n", glGetString (GL_SHADING_LANGUAGE_VERSION));
 
         g_print ("GL_VENDOR: %s\n", glGetString (GL_VENDOR));
         g_print ("GL_RENDERER: %s\n", glGetString (GL_RENDERER));
 
         g_string_free (opengl_version, TRUE);
-        g_string_free (glew_version, TRUE);
 
-        if ((opengl_version_major < 1 && opengl_version_minor < 4) ||
-            (glew_version_major   < 1 && glew_version_minor   < 4) )
+        if ((opengl_version_major  < 1) ||
+            (GLEW_VERSION_MAJOR    < 1) ||
+            (opengl_version_major < 2 && opengl_version_major >= 1 && opengl_version_minor < 4) ||
+            (GLEW_VERSION_MAJOR   < 2 && GLEW_VERSION_MAJOR   >= 1 && GLEW_VERSION_MINOR   < 4) )
         {
             //turn off the pipeline, the old drivers are not yet supported
             g_print ("Required OpenGL >= 1.4.0 and Glew >= 1.4.0\n");

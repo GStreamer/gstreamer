@@ -62,10 +62,11 @@ static const gchar *convolution_fragment_source =
   "uniform float norm_offset;"
   "uniform float kernel[9];"
   "void main () {"
-  "  vec2 offset[9];"
-  "  offset = vec2[] ( vec2(-1.0,-1.0), vec2( 0.0,-1.0), vec2( 1.0,-1.0),"
-  "                    vec2(-1.0, 0.0), vec2( 0.0, 0.0), vec2( 1.0, 0.0),"
-  "                    vec2(-1.0, 1.0), vec2( 0.0, 1.0), vec2( 1.0, 1.0) );"
+  "  const int N = 9;"
+  "  const vec2 offset[N] = vec2[N] ("
+  "      vec2(-1.0,-1.0), vec2( 0.0,-1.0), vec2( 1.0,-1.0),"
+  "      vec2(-1.0, 0.0), vec2( 0.0, 0.0), vec2( 1.0, 0.0),"
+  "      vec2(-1.0, 1.0), vec2( 0.0, 1.0), vec2( 1.0, 1.0) );"
   "  vec2 texturecoord = gl_TexCoord[0].st;"
   "  int i;"
   "  vec4 sum = vec4 (0.0);"
@@ -111,8 +112,19 @@ gst_gl_filter_laplacian_reset (GstGLFilter* filter)
 {
   GstGLFilterLaplacian* laplacian_filter = GST_GL_FILTER_LAPLACIAN(filter);
 
-  //blocking call, wait the opengl thread has destroyed the shader program
-  g_object_unref (G_OBJECT (laplacian_filter->shader));
+  //I commented the following line to avoid a crash for now
+  //It crashs because when unreferencing the GstGLShader
+  //if ref is down to 0 it causes a finalize then a gst_gl_shader_release
+  //then a glDeleteObjectARB
+  //and this glDeleteObjectARB must be executed in by (in) the gl thread
+  //How to do that so ? Easy, using the gst_gl_display_del_shader method
+  //but I have not modified it yet (*1*) to use GstGLShader
+  //I'll do that soon so just comment the following line for now
+  //g_object_unref (G_OBJECT (laplacian_filter->shader));
+
+  //blocking call, wait the opengl thread has destroyed the GstGLShader
+  //Commented for the reason *1*
+  //gst_gl_display_del_shader (filter->display, laplacian_filter->shader);
 }
 
 static void
@@ -149,6 +161,11 @@ gst_gl_filter_laplacian_init_shader (GstGLFilter* filter)
 //  GstGLFilterLaplacian* laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
     
   // at the moment I do everything in the laplacian_callback
+  // ok, then for the same reason *1* explained in the 
+  // gst_gl_filter_laplacian_reset method I comment the following line
+
+  //blocking call, wait the opengl thread has destroyed the shader program
+  //gst_gl_display_del_shader (filter->display, laplacian_filter->shader);
 }
 
 static gboolean
@@ -181,12 +198,16 @@ gst_gl_filter_laplacian_callback (gint width, gint height, guint texture, gpoint
   glLoadIdentity ();
 
   /* compile and link the shader (if not done previously) */
+  //FIXME: do it in the gst_gl_filter_laplacian_init_shader method
   if (!laplacian_filter->shader)
+  {
     laplacian_filter->shader = gst_gl_shader_new ();
-  
-  g_return_if_fail (
-    gst_gl_shader_compile_and_check (laplacian_filter->shader, convolution_fragment_source,
-				     GST_GL_SHADER_FRAGMENT_SOURCE));
+
+    g_return_if_fail (
+        gst_gl_shader_compile_and_check (laplacian_filter->shader, convolution_fragment_source,
+	        GST_GL_SHADER_FRAGMENT_SOURCE));
+  }
+
   gst_gl_shader_use (laplacian_filter->shader);
 
   glActiveTexture (GL_TEXTURE0);
