@@ -23,10 +23,11 @@
 #include "config.h"
 #endif
 
-#include "gstdeinterlace2.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <liboil/liboil.h>
 
+#include "gstdeinterlace2.h"
 #include "tvtime/plugins.h"
 
 #include <string.h>
@@ -95,7 +96,9 @@ gst_deinterlace2_methods_get_type (void)
   static GType deinterlace2_methods_type = 0;
 
   static const GEnumValue methods_types[] = {
+#if 0
     {GST_DEINTERLACE2_TOMSMOCOMP, "Toms Motion Compensation", "tomsmocomp"},
+#endif
     {GST_DEINTERLACE2_GREEDY_H, "Greedy High Motion", "greedyh"},
     {GST_DEINTERLACE2_GREEDY_L, "Greedy Low Motion", "greedyl"},
     {GST_DEINTERLACE2_VFIR, "Vertical Blur", "vfir"},
@@ -212,9 +215,11 @@ gst_deinterlace2_set_method (GstDeinterlace2 * self,
   }
 
   switch (method) {
+#if 0
     case GST_DEINTERLACE2_TOMSMOCOMP:
       self->method = g_object_new (GST_TYPE_DEINTERLACE_TOMSMOCOMP, NULL);
       break;
+#endif
     case GST_DEINTERLACE2_GREEDY_H:
       self->method = g_object_new (GST_TYPE_DEINTERLACE_GREEDY_H, NULL);
       break;
@@ -270,8 +275,7 @@ gst_deinterlace2_class_init (GstDeinterlace2Class * klass)
           "Method",
           "Deinterlace Method",
           GST_TYPE_DEINTERLACE2_METHODS,
-          GST_DEINTERLACE2_TOMSMOCOMP,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+          GST_DEINTERLACE2_GREEDY_H, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
   g_object_class_install_property (gobject_class, ARG_FIELDS,
@@ -351,7 +355,7 @@ gst_deinterlace2_init (GstDeinterlace2 * self, GstDeinterlace2Class * klass)
 
   gst_element_no_more_pads (GST_ELEMENT (self));
 
-  gst_deinterlace2_set_method (self, GST_DEINTERLACE2_TOMSMOCOMP);
+  gst_deinterlace2_set_method (self, GST_DEINTERLACE2_GREEDY_H);
   self->field_layout = GST_DEINTERLACE2_LAYOUT_AUTO;
   self->fields = GST_DEINTERLACE2_ALL;
 
