@@ -1,3 +1,10 @@
+2008-07-18  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream),
+	(qtdemux_parse_trak):
+	Revert ISO base media spec based pixel-aspect-ratio calculation.
+	Fixes #543300.
+
 2008-07-17  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* sys/osxvideo/osxvideosink.m:
