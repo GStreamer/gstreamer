@@ -110,7 +110,7 @@ gst_gl_filter_laplacian_init (GstGLFilterLaplacian* filter,
 static void
 gst_gl_filter_laplacian_reset (GstGLFilter* filter)
 {
-  GstGLFilterLaplacian* laplacian_filter = GST_GL_FILTER_LAPLACIAN(filter);
+  //GstGLFilterLaplacian* laplacian_filter = GST_GL_FILTER_LAPLACIAN(filter);
 
   //I commented the following line to avoid a crash for now
   //It crashs because when unreferencing the GstGLShader
