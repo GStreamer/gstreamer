@@ -121,7 +121,7 @@ deinterlace_greedy_packed422_scanline_c (GstDeinterlaceMethodGreedyL * self,
   }
 }
 
-#ifdef HAVE_CPU_I386
+#ifdef BUILD_X86_ASM
 #include "mmx.h"
 static void
 deinterlace_greedy_packed422_scanline_mmx (GstDeinterlaceMethodGreedyL * self,
@@ -449,7 +449,7 @@ gst_deinterlace_method_greedy_l_class_init (GstDeinterlaceMethodGreedyLClass *
 {
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
-#ifdef HAVE_CPU_I386
+#ifdef BUILD_X86_ASM
   guint cpu_flags = oil_cpu_get_flags ();
 #endif
 
@@ -468,7 +468,7 @@ gst_deinterlace_method_greedy_l_class_init (GstDeinterlaceMethodGreedyLClass *
   dim_class->nick = "greedyl";
   dim_class->latency = 1;
 
-#ifdef HAVE_CPU_I386
+#ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
     klass->scanline = deinterlace_greedy_packed422_scanline_mmxext;
   } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {

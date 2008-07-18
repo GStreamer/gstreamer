@@ -1,3 +1,26 @@
+2008-07-18  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* gst/deinterlace2/Makefile.am:
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace2_methods_get_type), (gst_deinterlace2_set_method),
+	(gst_deinterlace2_class_init), (gst_deinterlace2_init):
+	* gst/deinterlace2/gstdeinterlace2.h:
+	* gst/deinterlace2/tvtime/greedy.c:
+	(gst_deinterlace_method_greedy_l_class_init):
+	* gst/deinterlace2/tvtime/greedyh.c:
+	(gst_deinterlace_method_greedy_h_class_init):
+	* gst/deinterlace2/tvtime/vfir.c:
+	(gst_deinterlace_method_vfir_class_init):
+	Disable the tomsmocomp algorithm for this release as it's buggy
+	and has no C implementation yet.
+
+	Build the deinterlace2 plugin on all architectures but still mark it
+	as experimental.
+	
+	Build the x86 inline assembly only if GCC inline assembly is supported
+	and only on x86 or amd64. Fixes bug #543286.
+
 2008-07-16  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst/real/gstrealvideodec.c: (open_library):

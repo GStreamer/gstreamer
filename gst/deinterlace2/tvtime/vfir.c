@@ -90,7 +90,7 @@ deinterlace_line_c (uint8_t * dst, uint8_t * lum_m4,
   }
 }
 
-#ifdef HAVE_CPU_I386
+#ifdef BUILD_X86_ASM
 #include "mmx.h"
 static void
 deinterlace_line_mmx (uint8_t * dst, uint8_t * lum_m4,
@@ -207,7 +207,7 @@ static void
 gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
 {
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
-#ifdef HAVE_CPU_I386
+#ifdef BUILD_X86_ASM
   guint cpu_flags = oil_cpu_get_flags ();
 #endif
 
@@ -217,7 +217,7 @@ gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
   dim_class->nick = "vfir";
   dim_class->latency = 0;
 
-#ifdef HAVE_CPU_I386
+#ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMX) {
     klass->scanline = deinterlace_line_mmx;
   } else {

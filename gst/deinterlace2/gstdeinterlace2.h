@@ -22,12 +22,17 @@
 #ifndef __GST_DEINTERLACE_2_H__
 #define __GST_DEINTERLACE_2_H__
 
-#include <liboil/liboil.h>
-#include <liboil/liboilfunction.h>
-#include <liboil/liboilcpu.h>
-
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <liboil/liboil.h>
+#include <liboil/liboilcpu.h>
+#include <liboil/liboilfunction.h>
+
+#ifdef HAVE_GCC_ASM
+#if defined(HAVE_CPU_I386) || defined(HAVE_CPU_X86_64)
+#define BUILD_X86_ASM
+#endif
+#endif
 
 G_BEGIN_DECLS
 

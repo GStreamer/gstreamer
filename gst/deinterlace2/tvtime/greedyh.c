@@ -205,7 +205,7 @@ greedyDScaler_C (GstDeinterlaceMethodGreedyH * self, uint8_t * L1, uint8_t * L2,
   }
 }
 
-#ifdef HAVE_CPU_I386
+#ifdef BUILD_X86_ASM
 
 #define IS_MMXEXT
 #define SIMD_TYPE MMXEXT
@@ -363,7 +363,7 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
 {
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
-#ifdef HAVE_CPU_I386
+#ifdef BUILD_X86_ASM
   guint cpu_flags = oil_cpu_get_flags ();
 #endif
 
@@ -396,7 +396,7 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
   dim_class->nick = "greedyh";
   dim_class->latency = 1;
 
-#ifdef HAVE_CPU_I386
+#ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
     klass->scanline = greedyDScaler_MMXEXT;
   } else if (cpu_flags & OIL_IMPL_FLAG_3DNOW) {

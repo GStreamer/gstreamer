@@ -146,9 +146,6 @@ AS_GCC_INLINE_ASSEMBLY([HAVE_GCC_ASM=yes], [HAVE_GCC_ASM=no])
 if test x$HAVE_GCC_ASM = xyes ; then
   AC_DEFINE(HAVE_GCC_ASM, 1,
     [Define if compiler supports gcc inline assembly])
-else
-  AC_MSG_WARN([Not building deinterlace2 plugin, needs GCC inline assembly for now])
-  AG_GST_DISABLE_PLUGIN(deinterlace2)
 fi
 AM_CONDITIONAL(HAVE_GCC_ASM, test "x$HAVE_GCC_ASM" = "xyes")
 
@@ -287,9 +284,6 @@ dnl real plugin only works on i386 and x86_64 for the time being.
 if test "x$HAVE_CPU_I386" != "xyes" && test "x$HAVE_CPU_X86_64" != "xyes"; then
   AC_MSG_WARN([Not building real plugin, only works on 32bit and 64bit x86 platforms])
   AG_GST_DISABLE_PLUGIN(real)
-
-  AC_MSG_WARN([Not building deinterlace2 plugin, only works on 32bit and 64bit x86 platforms for now])
-  AG_GST_DISABLE_PLUGIN(deinterlace2)
 fi
 
 dnl disable experimental plug-ins
