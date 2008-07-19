@@ -1,5 +1,10 @@
 2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* configure.ac:
+	0.10.8.2 pre-release
+
+2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* ext/Makefile.am:
 	Finish hooking up pulseaudio plugin to the build.
 
