@@ -1,5 +1,15 @@
 2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* ext/soup/gstsouphttpsrc.c:
+	Fix Soup HTTP source seeking.
+	Patch By: Wouter Cloetens  <wouter at mind be>
+	Fixes: #540300
+
+	* tests/check/elements/.cvsignore:
+	Ignore new check programs.
+
+2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* configure.ac:
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:

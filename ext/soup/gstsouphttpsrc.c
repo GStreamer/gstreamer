@@ -922,6 +922,7 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src)
           *cookie);
     }
   }
+  src->retry = FALSE;
 
   g_signal_connect (src->msg, "got_headers",
       G_CALLBACK (gst_soup_http_src_got_headers_cb), src);
@@ -965,7 +966,7 @@ gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   src->outbuf = outbuf;
   do {
     if (src->interrupted) {
-      gst_soup_http_src_cancel_message (src);
+      GST_DEBUG_OBJECT (src, "interrupted");
       break;
     }
     if (src->retry) {
