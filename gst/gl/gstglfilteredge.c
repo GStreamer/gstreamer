@@ -55,6 +55,37 @@ static gboolean gst_gl_filter_edge_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 static void gst_gl_filter_edge_callback (gint width, gint height, guint texture, gpointer stuff);
 
+static const gchar *sobel_fragment_source = 
+    "uniform sampler2DRect tex;\n"
+    "void main(void) {\n"
+    "  const int N = 8;\n"
+    "  const vec2 delta[N] = vec2[N](\n"
+    "    vec2( -1.0,  -1.0 ),\n" 
+    "    vec2( -1.0 ,  0.0 ),\n"
+    "    vec2( -1.0 ,  1.0 ),\n"
+    "    vec2(  0.0 ,  1.0 ),\n"
+    "    vec2(  1.0 ,  1.0 ),\n"
+    "    vec2(  1.0 ,  0.0 ),\n"
+    "    vec2(  1.0 , -1.0 ),\n"
+    "    vec2(  0.0 , -1.0 )\n"
+    "  );\n"
+    "  const float filterH[N] = float[N]\n"
+    "    (-1.0, 0.0, 1.0, 2.0, 1.0, 0.0, -1.0, -2.0);\n"
+    "  const float filterV[N] = float[N]\n"
+    "    (-1.0, -2.0, -1.0, 0.0, 1.0, 2.0, 1.0, 0.0);\n"
+    "  float gH = 0.0;\n"
+    "  float gV = 0.0;\n"
+    "  int i;\n"
+    "  vec2 nxy = gl_TexCoord[0].xy;\n"
+    "  for (i = 0; i < N; i++) {\n"
+    "    vec4 vcolor_i = texture2DRect(tex, nxy + delta[i]);\n"
+    "    float gray_i = (vcolor_i.r + vcolor_i.g + vcolor_i.b) / 3.0;\n"
+    "    gH += gH +  filterH[i] * gray_i;\n"
+    "    gV += gV +  filterV[i] * gray_i;\n"
+    "  }\n"
+    "  float g = sqrt(gH * gH + gV * gV) / 256.0;\n"
+    "  gl_FragColor = vec4(g, g, g, 1.0);\n"
+    "}\n";
 
 static void
 gst_gl_filter_edge_base_init (gpointer klass)
@@ -82,38 +113,7 @@ static void
 gst_gl_filter_edge_init (GstGLFilterEdge* filter,
     GstGLFilterEdgeClass* klass)
 {
-    filter->handleShader = 0;
-    filter->textShader =
-        "uniform sampler2DRect tex;\n"
-	    "void main(void) {\n"
-        "  const int N = 8;\n"
-        "  const vec2 delta[N] = vec2[N](\n"
-        "    vec2( -1.0,  -1.0 ),\n" 
-        "    vec2( -1.0 ,  0.0 ),\n"
-        "    vec2( -1.0 ,  1.0 ),\n"
-        "    vec2(  0.0 ,  1.0 ),\n"
-        "    vec2(  1.0 ,  1.0 ),\n"
-        "    vec2(  1.0 ,  0.0 ),\n"
-        "    vec2(  1.0 , -1.0 ),\n"
-        "    vec2(  0.0 , -1.0 )\n"
-        "  );\n"
-        "  const float filterH[N] = float[N]\n"
-        "    (-1.0, 0.0, 1.0, 2.0, 1.0, 0.0, -1.0, -2.0);\n"
-        "  const float filterV[N] = float[N]\n"
-        "    (-1.0, -2.0, -1.0, 0.0, 1.0, 2.0, 1.0, 0.0);\n"
-        "  float gH = 0.0;\n"
-        "  float gV = 0.0;\n"
-        "  int i;\n"
-        "  vec2 nxy = gl_TexCoord[0].xy;\n"
-        "  for (i = 0; i < N; i++) {\n"
-        "    vec4 vcolor_i = texture2DRect(tex, nxy + delta[i]);\n"
-        "    float gray_i = (vcolor_i.r + vcolor_i.g + vcolor_i.b) / 3.0;\n"
-        "    gH += gH +  filterH[i] * gray_i;\n"
-        "    gV += gV +  filterV[i] * gray_i;\n"
-        "  }\n"
-        "  float g = sqrt(gH * gH + gV * gV) / 256.0;\n"
-	    "  gl_FragColor = vec4(g, g, g, 1.0);\n"
-	    "}\n";
+    filter->shader = NULL;  
 }
 
 static void
@@ -121,8 +121,8 @@ gst_gl_filter_edge_reset (GstGLFilter* filter)
 {
     GstGLFilterEdge* edge_filter = GST_GL_FILTER_EDGE(filter);
 
-    //blocking call, wait the opengl thread has destroyed the shader program
-    gst_gl_display_del_shader (filter->display, edge_filter->handleShader);
+    //blocking call, wait the opengl thread has destroyed the shader
+    gst_gl_display_del_shader (filter->display, edge_filter->shader);
 }
 
 static void
@@ -159,7 +159,7 @@ gst_gl_filter_edge_init_shader (GstGLFilter* filter)
     GstGLFilterEdge* edge_filter = GST_GL_FILTER_EDGE (filter);
     
     //blocking call, wait the opengl thread has compiled the shader program
-    gst_gl_display_gen_shader (filter->display, edge_filter->textShader, &edge_filter->handleShader);
+    gst_gl_display_gen_shader (filter->display, sobel_fragment_source, &edge_filter->shader);
 }
 
 static gboolean
@@ -188,11 +188,10 @@ gst_gl_filter_edge_callback (gint width, gint height, guint texture, gpointer st
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
 
-    glUseProgramObjectARB (edge_filter->handleShader);
+    gst_gl_shader_use (edge_filter->shader);
 
     glActiveTextureARB(GL_TEXTURE0_ARB);
-    i = glGetUniformLocationARB (edge_filter->handleShader, "tex");
-    glUniform1iARB (i, 0);
+    gst_gl_shader_set_uniform_1i  (edge_filter->shader, "tex", 0);
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
     glBegin (GL_QUADS);

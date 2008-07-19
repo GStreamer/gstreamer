@@ -22,7 +22,6 @@
 #define _GST_GL_FILTERLAPLACIAN_H_
 
 #include <gstglfilter.h>
-#include <gstglshader.h>
 
 G_BEGIN_DECLS
 

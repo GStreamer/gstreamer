@@ -38,9 +38,7 @@ typedef struct _GstGLFilterEdgeClass GstGLFilterEdgeClass;
 struct _GstGLFilterEdge
 {
     GstGLFilter filter;
-
-    gchar* textShader;
-    GLhandleARB handleShader;
+    GstGLShader *shader;
 };
 
 struct _GstGLFilterEdgeClass

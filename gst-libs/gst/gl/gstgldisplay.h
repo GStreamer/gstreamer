@@ -27,6 +27,8 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
+#include "gstglshader.h"
+
 #define GST_TYPE_GL_DISPLAY \
       (gst_gl_display_get_type())
 #define GST_GL_DISPLAY(obj) \
@@ -204,31 +206,31 @@ struct _GstGLDisplay {
     GLuint ouput_texture_height;
 
     //action gen and del shader
-    gchar* gen_text_shader;
-    GLhandleARB gen_handle_shader;
-    GLhandleARB del_handle_shader;
+    const gchar* gen_text_shader;
+    GstGLShader* gen_shader;
+    GstGLShader* del_shader;
 
     //fragement shader upload
-	gchar* textFProgram_YUY2_UYVY;
-	GLhandleARB GLSLProgram_YUY2;
-	GLhandleARB GLSLProgram_UYVY;
+	gchar* text_shader_upload_YUY2_UYVY;
+	GstGLShader* shader_upload_YUY2;
+	GstGLShader* shader_upload_UYVY;
 
-	gchar* textFProgram_I420_YV12;
-	GLhandleARB GLSLProgram_I420_YV12;
+	gchar* text_shader_upload_I420_YV12;
+	GstGLShader* shader_upload_I420_YV12;
 
-	gchar* textFProgram_AYUV;
-	GLhandleARB GLSLProgram_AYUV;
+	gchar* text_shader_upload_AYUV;
+	GstGLShader* shader_upload_AYUV;
 
     //fragement shader download
-    gchar* textFProgram_to_YUY2_UYVY;
-	GLhandleARB GLSLProgram_to_YUY2;
-	GLhandleARB GLSLProgram_to_UYVY;
+    gchar* text_shader_download_YUY2_UYVY;
+	GstGLShader* shader_download_YUY2;
+	GstGLShader* shader_download_UYVY;
 
-    gchar* textFProgram_to_I420_YV12;
-	GLhandleARB GLSLProgram_to_I420_YV12;
+    gchar* text_shader_download_I420_YV12;
+	GstGLShader* shader_download_I420_YV12;
 
-    gchar* textFProgram_to_AYUV;
-	GLhandleARB GLSLProgram_to_AYUV;
+    gchar* text_shader_download_AYUV;
+	GstGLShader* shader_download_AYUV;
 };
 
 
@@ -278,8 +280,8 @@ void gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint
 void gst_gl_display_del_fbo (GstGLDisplay* display, GLuint fbo, 
                              GLuint depth_buffer);
 
-void gst_gl_display_gen_shader (GstGLDisplay* display, gchar* textShader, GLhandleARB* handleShader);
-void gst_gl_display_del_shader (GstGLDisplay* display, GLhandleARB shader);
+void gst_gl_display_gen_shader (GstGLDisplay* display, const gchar* textShader, GstGLShader** shader);
+void gst_gl_display_del_shader (GstGLDisplay* display, GstGLShader* shader);
 
 void gst_gl_display_set_window_id (GstGLDisplay* display, gulong winId);
 void gst_gl_display_set_client_reshape_callback (GstGLDisplay* display, CRCB cb);
