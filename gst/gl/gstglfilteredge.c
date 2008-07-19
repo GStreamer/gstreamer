@@ -183,7 +183,6 @@ static void
 gst_gl_filter_edge_callback (gint width, gint height, guint texture, gpointer stuff)
 {
     GstGLFilterEdge* edge_filter = GST_GL_FILTER_EDGE (stuff);
-    gint i=0;
     
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
