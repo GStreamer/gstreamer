@@ -469,6 +469,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstUDPSrc::auto-multicast</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Auto Multicast</NICK>
+<BLURB>Automatically join/leave multicast groups.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSMPTE::border</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -1386,6 +1396,16 @@
 <NICK>VBR</NICK>
 <BLURB>Enable variable bit-rate.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpeexEnc::mode</NAME>
+<TYPE>GstSpeexEncMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>The encoding mode.</BLURB>
+<DEFAULT>Auto</DEFAULT>
 </ARG>
 
 <ARG>

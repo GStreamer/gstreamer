@@ -1,3 +1,21 @@
+2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/gst-plugins-good-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* tests/check/Makefile.am:
+
+	Move replaygain and interleave plugins from -bad.
+	Fixes: #543406
+	Fixes: #536228
+
 2008-07-18  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream),

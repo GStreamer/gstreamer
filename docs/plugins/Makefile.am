@@ -126,6 +126,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/goom/gstgoom.h \
 	$(top_srcdir)/gst/icydemux/gsticydemux.h \
 	$(top_srcdir)/gst/id3demux/gstid3demux.h \
+	$(top_srcdir)/gst/interleave/deinterleave.h \
+	$(top_srcdir)/gst/interleave/interleave.h \
 	$(top_srcdir)/gst/level/gstlevel.h \
 	$(top_srcdir)/gst/monoscope/gstmonoscope.h \
 	$(top_srcdir)/gst/multifile/gstmultifilesink.h \
@@ -133,6 +135,9 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/multipart/multipartdemux.h \
 	$(top_srcdir)/gst/multipart/multipartmux.h \
 	$(top_srcdir)/gst/qtdemux/qtdemux.h \
+	$(top_srcdir)/gst/replaygain/gstrganalysis.h \
+	$(top_srcdir)/gst/replaygain/gstrglimiter.h \
+	$(top_srcdir)/gst/replaygain/gstrgvolume.h \
 	$(top_srcdir)/gst/rtsp/gstrtpdec.h \
 	$(top_srcdir)/gst/rtsp/gstrtspsrc.h \
 	$(top_srcdir)/gst/smpte/gstsmpte.h \

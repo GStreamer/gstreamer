@@ -354,6 +354,22 @@ gst_cdio_cdda_src_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-deinterleave</FILE>
+<TITLE>deinterleave</TITLE>
+GstDeinterleave
+<SUBSECTION Standard>
+GST_DEINTERLEAVE
+GST_DEINTERLEAVE_CLASS
+GST_DEINTERLEAVE_GET_CLASS
+GST_IS_DEINTERLEAVE
+GST_IS_DEINTERLEAVE_CLASS
+GST_TYPE_DEINTERLEAVE
+GstDeinterleaveClass
+GstDeinterleaveFunc
+gst_deinterleave_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-directdrawsink</FILE>
 <TITLE>directdrawsink</TITLE>
 GstDirectDrawSink
@@ -647,6 +663,22 @@ GST_ID3V2_MUX_CLASS
 GST_IS_ID3V2_MUX
 GST_IS_ID3V2_MUX_CLASS
 gst_id3v2_mux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-interleave</FILE>
+<TITLE>interleave</TITLE>
+GstInterleave
+<SUBSECTION Standard>
+GST_INTERLEAVE
+GST_INTERLEAVE_CLASS
+GST_INTERLEAVE_GET_CLASS
+GST_IS_INTERLEAVE
+GST_IS_INTERLEAVE_CLASS
+GST_TYPE_INTERLEAVE
+GstInterleaveClass
+GstInterleaveFunc
+gst_interleave_get_type
 </SECTION>
 
 <SECTION>
@@ -963,6 +995,48 @@ GST_QTDEMUX_CLASS
 GST_QTDEMUX_MAX_STREAMS
 GST_TYPE_QTDEMUX
 gst_qtdemux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rganalysis</FILE>
+<TITLE>rganalysis</TITLE>
+GstRgAnalysis
+<SUBSECTION Standard>
+GstRgAnalysisClass
+GST_RG_ANALYSIS
+GST_RG_ANALYSIS_CLASS
+GST_IS_RG_ANALYSIS
+GST_IS_RG_ANALYSIS_CLASS
+GST_TYPE_RG_ANALYSIS
+gst_rg_analysis_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rglimiter</FILE>
+<TITLE>rglimiter</TITLE>
+GstRgLimiter
+<SUBSECTION Standard>
+GstRgLimiterClass
+GST_RG_LIMITER
+GST_RG_LIMITER_CLASS
+GST_IS_RG_LIMITER
+GST_IS_RG_LIMITER_CLASS
+GST_TYPE_RG_LIMITER
+gst_rg_limiter_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rgvolume</FILE>
+<TITLE>rgvolume</TITLE>
+GstRgVolume
+<SUBSECTION Standard>
+GstRgVolumeClass
+GST_RG_VOLUME
+GST_RG_VOLUME_CLASS
+GST_IS_RG_VOLUME
+GST_TYPE_RG_VOLUME
+GST_IS_RG_VOLUME_CLASS
+gst_rg_volume_get_type
 </SECTION>
 
 <SECTION>

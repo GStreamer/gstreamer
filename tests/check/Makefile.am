@@ -78,12 +78,17 @@ check_PROGRAMS = \
 	elements/audiowsinclimit \
 	elements/avimux \
 	elements/avisubtitle \
+	elements/deinterleave \
 	elements/equalizer \
 	elements/icydemux \
 	elements/id3demux \
+	elements/interleave \
 	elements/level \
 	elements/matroskamux \
 	elements/multifile \
+	elements/rganalysis \
+	elements/rglimiter \
+	elements/rgvolume \
 	elements/rtp-payloading \
 	elements/spectrum \
 	elements/videocrop \
@@ -128,6 +133,11 @@ elements_cmmldec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_cmmlenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 elements_alphacolor_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+
+elements_deinterleave_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+elements_deinterleave_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
+elements_interleave_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+elements_interleave_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
 
 elements_souphttpsrc_CFLAGS = -DCHECKDATA_DIR="$(srcdir)" $(SOUP_CFLAGS) $(AM_CFLAGS)
 elements_souphttpsrc_LDADD = $(SOUP_LIBS) $(LDADD)

@@ -295,6 +295,7 @@ AG_GST_CHECK_PLUGIN(effectv)
 AG_GST_CHECK_PLUGIN(equalizer)
 AG_GST_CHECK_PLUGIN(id3demux)
 AG_GST_CHECK_PLUGIN(icydemux)
+AG_GST_CHECK_PLUGIN(interleave)
 AG_GST_CHECK_PLUGIN(flx)
 AG_GST_CHECK_PLUGIN(goom)
 AG_GST_CHECK_PLUGIN(goom2k1)
@@ -305,6 +306,7 @@ AG_GST_CHECK_PLUGIN(monoscope)
 AG_GST_CHECK_PLUGIN(multifile)
 AG_GST_CHECK_PLUGIN(multipart)
 AG_GST_CHECK_PLUGIN(qtdemux)
+AG_GST_CHECK_PLUGIN(replaygain)
 AG_GST_CHECK_PLUGIN(rtp)
 AG_GST_CHECK_PLUGIN(rtsp)
 AG_GST_CHECK_PLUGIN(smpte)
@@ -1050,6 +1052,7 @@ gst/effectv/Makefile
 gst/equalizer/Makefile
 gst/id3demux/Makefile
 gst/icydemux/Makefile
+gst/interleave/Makefile
 gst/goom/Makefile
 gst/goom2k1/Makefile
 gst/law/Makefile
@@ -1059,6 +1062,7 @@ gst/monoscope/Makefile
 gst/multifile/Makefile
 gst/multipart/Makefile
 gst/qtdemux/Makefile
+gst/replaygain/Makefile
 gst/rtp/Makefile
 gst/rtsp/Makefile
 gst/smpte/Makefile

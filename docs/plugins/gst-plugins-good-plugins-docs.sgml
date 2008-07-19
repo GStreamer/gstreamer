@@ -35,6 +35,7 @@
     <xi:include href="xml/element-cdiocddasrc.xml" />
     <xi:include href="xml/element-cmmldec.xml" />
     <xi:include href="xml/element-cmmlenc.xml" />
+    <xi:include href="xml/element-deinterleave.xml" />
     <xi:include href="xml/element-directdrawsink.xml" />
     <xi:include href="xml/element-directsoundsink.xml" />
     <xi:include href="xml/element-dv1394src.xml" />
@@ -54,6 +55,7 @@
     <xi:include href="xml/element-icydemux.xml" />
     <xi:include href="xml/element-id3demux.xml" />
     <xi:include href="xml/element-id3v2mux.xml" />
+    <xi:include href="xml/element-interleave.xml" />
     <xi:include href="xml/element-jpegdec.xml" />
     <xi:include href="xml/element-jpegenc.xml" />
     <xi:include href="xml/element-level.xml" />
@@ -76,6 +78,9 @@
     <xi:include href="xml/element-pulsesrc.xml" />
     <xi:include href="xml/element-pulsemixer.xml" />
     <xi:include href="xml/element-qtdemux.xml" />
+    <xi:include href="xml/element-rganalysis.xml" />
+    <xi:include href="xml/element-rglimiter.xml" />
+    <xi:include href="xml/element-rgvolume.xml" />
     <xi:include href="xml/element-rtpdec.xml" />
     <xi:include href="xml/element-rtspsrc.xml" />
     <xi:include href="xml/element-smokedec.xml" />
@@ -134,6 +139,7 @@
     <xi:include href="xml/plugin-halelements.xml" />
     <xi:include href="xml/plugin-icydemux.xml" />
     <xi:include href="xml/plugin-id3demux.xml" />
+    <xi:include href="xml/plugin-interleave.xml" />
     <xi:include href="xml/plugin-jpeg.xml" />
     <xi:include href="xml/plugin-level.xml" />
     <xi:include href="xml/plugin-matroska.xml" />
@@ -148,6 +154,7 @@
     <xi:include href="xml/plugin-png.xml" />
     <xi:include href="xml/plugin-pulseaudio.xml" />
     <xi:include href="xml/plugin-quicktime.xml" />
+    <xi:include href="xml/plugin-replaygain.xml" />
     <xi:include href="xml/plugin-rtp.xml" />
     <xi:include href="xml/plugin-rtsp.xml" />
     <xi:include href="xml/plugin-shout2send.xml" />
