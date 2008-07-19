@@ -1,3 +1,40 @@
+2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* gst/interleave/Makefile.am:
+	* gst/interleave/deinterleave.c:
+	* gst/interleave/deinterleave.h:
+	* gst/interleave/interleave.c:
+	* gst/interleave/interleave.h:
+	* gst/interleave/plugin.c:
+	* gst/interleave/plugin.h:
+	* gst/replaygain/Makefile.am:
+	* gst/replaygain/gstrganalysis.c:
+	* gst/replaygain/gstrganalysis.h:
+	* gst/replaygain/gstrglimiter.c:
+	* gst/replaygain/gstrglimiter.h:
+	* gst/replaygain/gstrgvolume.c:
+	* gst/replaygain/gstrgvolume.h:
+	* gst/replaygain/replaygain.c:
+	* gst/replaygain/replaygain.h:
+	* gst/replaygain/rganalysis.c:
+	* gst/replaygain/rganalysis.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/deinterleave.c:
+	* tests/check/elements/interleave.c:
+	* tests/check/elements/rganalysis.c:
+	* tests/check/elements/rglimiter.c:
+	* tests/check/elements/rgvolume.c:
+	Remove interleave and replaygain plugins that have moved to -good
+
 2008-07-18  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:

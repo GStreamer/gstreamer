@@ -168,6 +168,7 @@ FESTIVAL_DEFAULT_SERVER_PORT
 FESTIVAL_DEFAULT_TEXT_MODE
 </SECTION>
 
+<SECTION>
 <FILE>element-input-selector</FILE>
 <TITLE>input-selector</TITLE>
 GstInputSelector
@@ -199,38 +200,6 @@ GST_IS_IVORBIS_DEC
 GST_IS_IVORBIS_DEC_CLASS
 GST_TYPE_IVORBIS_DEC
 gst_ivorbis_dec_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-interleave</FILE>
-<TITLE>interleave</TITLE>
-GstInterleave
-<SUBSECTION Standard>
-GST_INTERLEAVE
-GST_INTERLEAVE_CLASS
-GST_INTERLEAVE_GET_CLASS
-GST_IS_INTERLEAVE
-GST_IS_INTERLEAVE_CLASS
-GST_TYPE_INTERLEAVE
-GstInterleaveClass
-GstInterleaveFunc
-gst_interleave_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-deinterleave</FILE>
-<TITLE>deinterleave</TITLE>
-GstDeinterleave
-<SUBSECTION Standard>
-GST_DEINTERLEAVE
-GST_DEINTERLEAVE_CLASS
-GST_DEINTERLEAVE_GET_CLASS
-GST_IS_DEINTERLEAVE
-GST_IS_DEINTERLEAVE_CLASS
-GST_TYPE_DEINTERLEAVE
-GstDeinterleaveClass
-GstDeinterleaveFunc
-gst_deinterleave_get_type
 </SECTION>
 
 <SECTION>
@@ -378,48 +347,6 @@ GST_IS_OUTPUT_SELECTOR
 GST_IS_OUTPUT_SELECTOR_CLASS
 GST_TYPE_OUTPUT_SELECTOR
 gst_output_selector_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-rganalysis</FILE>
-<TITLE>rganalysis</TITLE>
-GstRgAnalysis
-<SUBSECTION Standard>
-GstRgAnalysisClass
-GST_RG_ANALYSIS
-GST_RG_ANALYSIS_CLASS
-GST_IS_RG_ANALYSIS
-GST_IS_RG_ANALYSIS_CLASS
-GST_TYPE_RG_ANALYSIS
-gst_rg_analysis_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-rglimiter</FILE>
-<TITLE>rglimiter</TITLE>
-GstRgLimiter
-<SUBSECTION Standard>
-GstRgLimiterClass
-GST_RG_LIMITER
-GST_RG_LIMITER_CLASS
-GST_IS_RG_LIMITER
-GST_IS_RG_LIMITER_CLASS
-GST_TYPE_RG_LIMITER
-gst_rg_limiter_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-rgvolume</FILE>
-<TITLE>rgvolume</TITLE>
-GstRgVolume
-<SUBSECTION Standard>
-GstRgVolumeClass
-GST_RG_VOLUME
-GST_RG_VOLUME_CLASS
-GST_IS_RG_VOLUME
-GST_TYPE_RG_VOLUME
-GST_IS_RG_VOLUME_CLASS
-gst_rg_volume_get_type
 </SECTION>
 
 <SECTION>
