@@ -2321,8 +2321,6 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
 		case GST_VIDEO_FORMAT_YUY2:
 		case GST_VIDEO_FORMAT_UYVY:
 			{
-                gint i=0;
-
 			    GstGLShader* shader_upload_YUY2_UYVY = NULL;
 
 			    switch (video_format)
@@ -2363,8 +2361,6 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
 		case GST_VIDEO_FORMAT_I420:
 		case GST_VIDEO_FORMAT_YV12:
 			{
-				gint i=0;
-
 				gst_gl_shader_use (display->shader_upload_I420_YV12);
 
 				glMatrixMode (GL_PROJECTION);
@@ -2398,8 +2394,6 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
 
 		case GST_VIDEO_FORMAT_AYUV:
 			{
-                gint i=0;
-
 			    gst_gl_shader_use (display->shader_upload_AYUV);
 
 			    glMatrixMode (GL_PROJECTION);
@@ -2498,7 +2492,6 @@ gst_gl_display_thread_do_download_draw (GstGLDisplay* display)
         case GST_VIDEO_FORMAT_YUY2:
         case GST_VIDEO_FORMAT_UYVY:
             {
-                gint i=0;
                 GstGLShader* shader_download_YUY2_UYVY = NULL;
 
 				switch (video_format)
@@ -2532,8 +2525,6 @@ gst_gl_display_thread_do_download_draw (GstGLDisplay* display)
         case GST_VIDEO_FORMAT_I420:
         case GST_VIDEO_FORMAT_YV12:
 	        {
-                gint i=0;
-
                 glDrawBuffers(3, display->multipleRT);
 
                 glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -2556,8 +2547,6 @@ gst_gl_display_thread_do_download_draw (GstGLDisplay* display)
 
         case GST_VIDEO_FORMAT_AYUV:
             {
-	            gint i=0;
-
                 glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 
                 glClearColor(0.0, 0.0, 0.0, 0.0);
