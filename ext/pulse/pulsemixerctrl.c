@@ -490,6 +490,9 @@ gst_pulsemixer_ctrl_timeout_event (pa_mainloop_api * a, pa_time_event * e,
 static void
 restart_time_event (GstPulseMixerCtrl * c)
 {
+  struct timeval tv;
+  pa_mainloop_api *api;
+
   g_assert (c);
 
   if (c->time_event)
@@ -498,9 +501,8 @@ restart_time_event (GstPulseMixerCtrl * c)
   /* Updating the volume too often will cause a lot of traffic
    * when accessing a networked server. Therefore we make sure
    * to update the volume only once every 50ms */
-  struct timeval tv;
 
-  pa_mainloop_api *api = pa_threaded_mainloop_get_api (c->mainloop);
+  api = pa_threaded_mainloop_get_api (c->mainloop);
 
   c->time_event =
       api->time_new (api, pa_timeval_add (pa_gettimeofday (&tv), UPDATE_DELAY),

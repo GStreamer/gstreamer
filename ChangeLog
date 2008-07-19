@@ -1,5 +1,13 @@
 2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* ext/Makefile.am:
+	Finish hooking up pulseaudio plugin to the build.
+
+	* ext/pulse/pulsemixerctrl.c:
+	Fix compilation error.
+
+2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* po/LINGUAS:
 	* po/lt.po:
 	Add new lithunian translation, and add french to the LINGUAS

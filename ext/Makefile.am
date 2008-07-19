@@ -94,6 +94,13 @@ else
 DV1394_DIR =
 endif
 
+if USE_PULSE
+PULSE_DIR = pulse
+else
+PULSE_DIR =
+endif
+
+
 if USE_SHOUT2
 SHOUT2_DIR = shout2
 else
@@ -141,6 +148,7 @@ SUBDIRS = \
 	$(LIBMNG_DIR) \
 	$(LIBPNG_DIR) \
 	$(MIKMOD_DIR) \
+	$(PULSE_DIR) \
 	$(SHOUT2_DIR) \
 	$(SOUP_DIR) \
 	$(SPEEX_DIR) \
@@ -162,6 +170,7 @@ DIST_SUBDIRS = \
 	ladspa \
 	libcaca \
 	libpng \
+	pulse \
 	raw1394 \
 	shout2 \
 	soup \
