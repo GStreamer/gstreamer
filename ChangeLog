@@ -1,5 +1,10 @@
 2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* ext/Makefile.am:
+	Dist and recurse into resindvd subdir
+
+2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* configure.ac:
 	Remove interleave and replaygain configure.ac pieces too
 

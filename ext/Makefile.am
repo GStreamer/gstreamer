@@ -308,6 +308,7 @@ SUBDIRS=\
 	$(DIRECTFB_DIR) \
 	$(DIVX_DIR) \
 	$(DTS_DIR) \
+	$(DVDNAV_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(GSM_DIR) \
@@ -369,6 +370,7 @@ DIST_SUBDIRS = \
 	nas \
 	neon \
 	ofa \
+	resindvd \
 	sdl \
 	sndfile \
 	soundtouch \
