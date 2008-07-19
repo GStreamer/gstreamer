@@ -1,5 +1,10 @@
 2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* configure.ac:
+	Remove interleave and replaygain configure.ac pieces too
+
+2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* po/LINGUAS:
 	* po/lt.po:
 	Add new lithunian translation, and add french to the LINGUAS

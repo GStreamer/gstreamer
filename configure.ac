@@ -248,7 +248,6 @@ AG_GST_CHECK_PLUGIN(filter)
 AG_GST_CHECK_PLUGIN(flv)
 AG_GST_CHECK_PLUGIN(freeze)
 AG_GST_CHECK_PLUGIN(h264parse)
-AG_GST_CHECK_PLUGIN(interleave)
 AG_GST_CHECK_PLUGIN(librfb)
 AG_GST_CHECK_PLUGIN(modplug)
 AG_GST_CHECK_PLUGIN(mpegtsparse)
@@ -259,7 +258,6 @@ AG_GST_CHECK_PLUGIN(nsf)
 AG_GST_CHECK_PLUGIN(nuvdemux)
 AG_GST_CHECK_PLUGIN(rawparse)
 AG_GST_CHECK_PLUGIN(real)
-AG_GST_CHECK_PLUGIN(replaygain)
 AG_GST_CHECK_PLUGIN(rtpmanager)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(selector)
@@ -1209,7 +1207,6 @@ gst/filter/Makefile
 gst/flv/Makefile
 gst/freeze/Makefile
 gst/h264parse/Makefile
-gst/interleave/Makefile
 gst/librfb/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
@@ -1220,7 +1217,6 @@ gst/mve/Makefile
 gst/nsf/Makefile
 gst/nuvdemux/Makefile
 gst/rawparse/Makefile
-gst/replaygain/Makefile
 gst/rtpmanager/Makefile
 gst/sdp/Makefile
 gst/selector/Makefile
