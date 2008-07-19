@@ -1,5 +1,12 @@
 2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* po/LINGUAS:
+	* po/lt.po:
+	Add new lithunian translation, and add french to the LINGUAS
+	file.
+
+2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* ext/soup/gstsouphttpsrc.c:
 	Fix Soup HTTP source seeking.
 	Patch By: Wouter Cloetens  <wouter at mind be>
