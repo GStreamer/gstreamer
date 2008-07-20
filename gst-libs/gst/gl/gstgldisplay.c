@@ -1498,8 +1498,9 @@ gst_gl_display_thread_gen_shader (GstGLDisplay* display)
     }
     else
     {
-        g_print ("One of the filter required ARB_fragment_shader\n");
+        g_warning ("One of the filter required ARB_fragment_shader\n");
         display->isAlive = FALSE;
+        display->gen_shader = NULL;
     }
     g_cond_signal (display->cond_gen_shader);
 }
@@ -1510,8 +1511,11 @@ static void
 gst_gl_display_thread_del_shader (GstGLDisplay* display)
 {
     glutSetWindow (display->glutWinId);
-    g_object_unref (G_OBJECT (display->del_shader));
-    display->del_shader = NULL;
+    if (display->del_shader)
+    {
+        g_object_unref (G_OBJECT (display->del_shader));
+        display->del_shader = NULL;
+    }
     g_cond_signal (display->cond_del_shader);
 }
 
