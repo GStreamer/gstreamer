@@ -547,6 +547,12 @@ gst_gl_test_src_create (GstPushSrc* psrc, GstBuffer** buffer)
     outbuf = gst_gl_buffer_new (src->display,
         src->width, src->height);
 
+    if (!outbuf->texture)
+    {
+        gst_buffer_unref (outbuf);
+        goto eos; 
+    }
+
     gst_buffer_set_caps (GST_BUFFER (outbuf),
         GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
 
@@ -561,13 +567,17 @@ gst_gl_test_src_create (GstPushSrc* psrc, GstBuffer** buffer)
     src->buffer = outbuf;
  
     //blocking call, generate a FBO
-    gst_gl_display_use_fbo (src->display, src->width, src->height,
-        src->fbo, src->depthbuffer, outbuf->texture,
-        gst_gl_test_src_callback,
-        0, 0, 0, //no input texture
-        0, src->width, 0, src->height,
-        GST_GL_DISPLAY_PROJECTION_ORTHO2D,
-        (gpointer)src);
+    if(!gst_gl_display_use_fbo (src->display, src->width, src->height,
+            src->fbo, src->depthbuffer, outbuf->texture,
+            gst_gl_test_src_callback,
+            0, 0, 0, //no input texture
+            0, src->width, 0, src->height,
+            GST_GL_DISPLAY_PROJECTION_ORTHO2D,
+            (gpointer)src))
+    {
+        gst_buffer_unref (outbuf);
+        goto eos; 
+    }
 
     GST_BUFFER_TIMESTAMP (GST_BUFFER (outbuf)) =
         src->timestamp_offset + src->running_time;

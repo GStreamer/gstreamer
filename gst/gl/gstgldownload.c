@@ -307,8 +307,10 @@ gst_gl_download_transform (GstBaseTransform* trans, GstBuffer* inbuf,
         GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
 
     //blocking call
-    gst_gl_display_do_download(download->display, gl_inbuf->texture, 
-        gl_inbuf->width, gl_inbuf->height, GST_BUFFER_DATA (outbuf));
+    if (gst_gl_display_do_download(download->display, gl_inbuf->texture, 
+            gl_inbuf->width, gl_inbuf->height, GST_BUFFER_DATA (outbuf)))
+        return GST_FLOW_OK;
+    else
+        return GST_FLOW_UNEXPECTED;
 
-    return GST_FLOW_OK;
 }

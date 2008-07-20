@@ -449,7 +449,10 @@ gst_gl_upload_prepare_output_buffer (GstBaseTransform* trans,
     *buf = GST_BUFFER (gl_outbuf);
     gst_buffer_set_caps (*buf, caps);
 
-    return GST_FLOW_OK;
+    if (gl_outbuf->texture)
+        return GST_FLOW_OK;
+    else
+        return GST_FLOW_UNEXPECTED;
 }
 
 
@@ -467,8 +470,9 @@ gst_gl_upload_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     //Depending on the colorspace, video is upload into several textures.
     //However, there is only one output texture. The one attached
     //to the upload FBO.
-    gst_gl_display_do_upload (upload->display, gl_outbuf->texture, 
-        upload->video_width, upload->video_height, GST_BUFFER_DATA (inbuf));
-
-    return GST_FLOW_OK;
+    if (gst_gl_display_do_upload (upload->display, gl_outbuf->texture, 
+            upload->video_width, upload->video_height, GST_BUFFER_DATA (inbuf)))
+        return GST_FLOW_OK;
+    else
+        return GST_FLOW_UNEXPECTED;
 }

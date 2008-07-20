@@ -438,6 +438,7 @@ gst_gl_colorscale_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     GstBuffer* outbuf)
 {
     GstGLColorscale* colorscale = GST_GL_COLORSCALE (trans);
+    gboolean isAlive = TRUE;
 
     //blocking call
     GstGLBuffer* gl_temp_buffer = gst_gl_buffer_new (colorscale->display,
@@ -447,7 +448,7 @@ gst_gl_colorscale_transform (GstBaseTransform* trans, GstBuffer* inbuf,
         GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf));
 
     //blocking call
-    gst_gl_display_do_upload (colorscale->display, gl_temp_buffer->texture, 
+    isAlive = gst_gl_display_do_upload (colorscale->display, gl_temp_buffer->texture, 
         colorscale->input_video_width, colorscale->input_video_height, 
         GST_BUFFER_DATA (inbuf));
 
@@ -455,11 +456,14 @@ gst_gl_colorscale_transform (GstBaseTransform* trans, GstBuffer* inbuf,
       GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
 
     //blocking call
-    gst_gl_display_do_download(colorscale->display, gl_temp_buffer->texture, 
+    isAlive &= gst_gl_display_do_download(colorscale->display, gl_temp_buffer->texture, 
         gl_temp_buffer->width, gl_temp_buffer->height, 
         GST_BUFFER_DATA (outbuf));
 
     gst_buffer_unref (gl_temp_buffer);
 
-    return GST_FLOW_OK;
+    if (isAlive)
+        return GST_FLOW_OK;
+    else 
+        return GST_FLOW_UNEXPECTED;
 }

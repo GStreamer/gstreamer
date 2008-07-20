@@ -501,10 +501,9 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
     glimage_sink->stored_buffer = gl_buffer;
 
     //redisplay opengl scene
-    isAlive = gst_gl_display_redisplay (glimage_sink->display, 
-        gl_buffer->texture, gl_buffer->width, gl_buffer->height);
-
-    if (isAlive)
+    if (gl_buffer->texture &&
+        gst_gl_display_redisplay (glimage_sink->display, 
+            gl_buffer->texture, gl_buffer->width, gl_buffer->height))
         return GST_FLOW_OK;
     else
         return GST_FLOW_UNEXPECTED;;
