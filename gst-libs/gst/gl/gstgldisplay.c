@@ -163,7 +163,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     display->upload_width = 0;
     display->upload_height = 0;
     display->upload_video_format = 0;
-    display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_GLSL;
+    display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
     display->upload_data_with = 0;
     display->upload_data_height = 0;
     display->upload_data = NULL;
@@ -674,7 +674,8 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
 
         g_print ("GL_VERSION: %s\n", glGetString (GL_VERSION));
         g_print ("GLEW_VERSION: %s\n", glewGetString (GLEW_VERSION));
-        g_print ("GL_SHADING_LANGUAGE_VERSION: %s\n", glGetString (GL_SHADING_LANGUAGE_VERSION));
+        if (glGetString (GL_SHADING_LANGUAGE_VERSION))
+            g_print ("GL_SHADING_LANGUAGE_VERSION: %s\n", glGetString (GL_SHADING_LANGUAGE_VERSION));
 
         g_print ("GL_VENDOR: %s\n", glGetString (GL_VENDOR));
         g_print ("GL_RENDERER: %s\n", glGetString (GL_RENDERER));
@@ -687,7 +688,7 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
             (GLEW_VERSION_MAJOR   < 2 && GLEW_VERSION_MAJOR   >= 1 && GLEW_VERSION_MINOR   < 4) )
         {
             //turn off the pipeline, the old drivers are not yet supported
-            g_print ("Required OpenGL >= 1.4.0 and Glew >= 1.4.0\n");
+            g_warning ("Required OpenGL >= 1.4.0 and Glew >= 1.4.0\n");
             display->isAlive = FALSE;
         }
     }
@@ -773,14 +774,41 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
             g_assert_not_reached ();
     }
 
-    glDeleteFramebuffersEXT (1, &display->upload_fbo);
-    glDeleteRenderbuffersEXT(1, &display->upload_depth_buffer);
-
-    glDeleteFramebuffersEXT (1, &display->download_fbo);
-    glDeleteRenderbuffersEXT(1, &display->download_depth_buffer);
-    glDeleteTextures (1, &display->download_texture);
-    glDeleteTextures (1, &display->download_texture_u);
-    glDeleteTextures (1, &display->download_texture_v);
+    if (display->upload_fbo)
+    {
+        glDeleteFramebuffersEXT (1, &display->upload_fbo);
+        display->upload_fbo = 0;
+    }
+    if (display->upload_depth_buffer)
+    {
+        glDeleteRenderbuffersEXT(1, &display->upload_depth_buffer);
+        display->upload_depth_buffer = 0;
+    }
+    if (display->download_fbo)
+    {
+        glDeleteFramebuffersEXT (1, &display->download_fbo);
+        display->download_fbo = 0;
+    }
+    if (display->download_depth_buffer)
+    {
+        glDeleteRenderbuffersEXT(1, &display->download_depth_buffer);
+        display->download_depth_buffer = 0;
+    }
+    if (display->download_texture)
+    {
+        glDeleteTextures (1, &display->download_texture);
+        display->download_texture = 0;
+    }
+    if (display->download_texture_u)
+    {
+        glDeleteTextures (1, &display->download_texture_u);
+        display->download_texture_u = 0;
+    }
+    if (display->download_texture_v)
+    {
+        glDeleteTextures (1, &display->download_texture_v);
+        display->download_texture_v = 0;
+    }
 
     //clean up the texture pool
     while (g_queue_get_length (display->texturePool))
@@ -1435,10 +1463,16 @@ gst_gl_display_thread_del_fbo (GstGLDisplay* display)
 {
     glutSetWindow (display->glutWinId);
 
-    glDeleteFramebuffersEXT (1, &display->del_fbo);
-    glDeleteRenderbuffersEXT(1, &display->del_depth_buffer);
-    display->del_fbo = 0;
-    display->del_depth_buffer = 0;
+    if (display->del_fbo)
+    {
+        glDeleteFramebuffersEXT (1, &display->del_fbo);
+        display->del_fbo = 0;
+    }
+    if (display->del_depth_buffer)
+    {
+        glDeleteRenderbuffersEXT(1, &display->del_depth_buffer);
+        display->del_depth_buffer = 0;
+    }
 
     g_cond_signal (display->cond_del_fbo);
 }
@@ -1659,18 +1693,23 @@ void gst_gl_display_on_close (void)
 void
 gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture)
 {
-    //check if there is a texture available in the pool
-    GstGLDisplayTex* tex = g_queue_pop_head (display->texturePool);
-    if (tex)
+    if (display->isAlive)
     {
-        *pTexture = tex->texture;
-        g_free (tex);
+        //check if there is a texture available in the pool
+        GstGLDisplayTex* tex = g_queue_pop_head (display->texturePool);
+        if (tex)
+        {
+            *pTexture = tex->texture;
+            g_free (tex);
+        }
+        //otherwise one more texture is generated
+        //note that this new texture is added in the pool
+        //only after being used
+        else
+            glGenTextures (1, pTexture);
     }
-    //otherwise one more texture is generated
-    //note that this new texture is added in the pool
-    //only after being used
     else
-        glGenTextures (1, pTexture);
+        *pTexture = 0;
 }
 
 
@@ -1803,13 +1842,16 @@ gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width , gi
 
     gst_gl_display_lock (display);
     isAlive = display->isAlive;
-    if (texture)
+    if (isAlive)
     {
-        display->redisplay_texture = texture;
-        display->redisplay_texture_width = width;
-        display->redisplay_texture_height = height;
+        if (texture)
+        {
+            display->redisplay_texture = texture;
+            display->redisplay_texture_width = width;
+            display->redisplay_texture_height = height;
+        }
+        gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT, display);
     }
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT, display);
     gst_gl_display_unlock (display);
 
     return isAlive;
@@ -1856,19 +1898,27 @@ gst_gl_display_init_upload (GstGLDisplay* display, GstVideoFormat video_format,
 
 
 /* Called by the first gl element of a video/x-raw-gl flow */
-void
+gboolean
 gst_gl_display_do_upload (GstGLDisplay* display, GLuint texture,
                           gint data_width, gint data_height,
                           gpointer data)
 {
+    gboolean isAlive = TRUE;
+    
     gst_gl_display_lock (display);
-    display->upload_texture = texture;
-    display->upload_data_with = data_width;
-    display->upload_data_height = data_height;
-    display->upload_data = data;
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DO_UPLOAD, display);
-    g_cond_wait (display->cond_do_upload, display->mutex);
+    isAlive = display->isAlive;
+    if (isAlive)
+    {
+        display->upload_texture = texture;
+        display->upload_data_with = data_width;
+        display->upload_data_height = data_height;
+        display->upload_data = data;
+        gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DO_UPLOAD, display);
+        g_cond_wait (display->cond_do_upload, display->mutex);
+    }
     gst_gl_display_unlock (display);
+
+    return isAlive;
 }
 
 
@@ -1888,20 +1938,28 @@ gst_gl_display_init_download (GstGLDisplay* display, GstVideoFormat video_format
 
 
 /* Called by the gldownload and glcolorscale element */
-void
+gboolean
 gst_gl_display_do_download (GstGLDisplay* display, GLuint texture,
                             gint width, gint height,
                             gpointer data)
 {
+    gboolean isAlive = TRUE;
+    
     gst_gl_display_lock (display);
-    //data size is aocciated to the glcontext size
-    display->download_data = data;
-    display->ouput_texture = texture;
-    display->ouput_texture_width = width;
-    display->ouput_texture_height = height;
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DO_DOWNLOAD, display);
-    g_cond_wait (display->cond_do_download, display->mutex);
+    isAlive = display->isAlive;
+    if (isAlive)
+    {
+        //data size is aocciated to the glcontext size
+        display->download_data = data;
+        display->ouput_texture = texture;
+        display->ouput_texture_width = width;
+        display->ouput_texture_height = height;
+        gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DO_DOWNLOAD, display);
+        g_cond_wait (display->cond_do_download, display->mutex);
+    }
     gst_gl_display_unlock (display);
+
+    return isAlive;
 }
 
 
@@ -1911,18 +1969,21 @@ gst_gl_display_gen_fbo (GstGLDisplay* display, gint width, gint height,
                         GLuint* fbo, GLuint* depthbuffer)
 {
     gst_gl_display_lock (display);
-    display->gen_fbo_width = width;
-    display->gen_fbo_height = height;
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_GEN_FBO, display);
-    g_cond_wait (display->cond_gen_fbo, display->mutex);
-    *fbo = display->generated_fbo;
-    *depthbuffer = display->generated_depth_buffer;
+    if (display->isAlive)
+    {
+        display->gen_fbo_width = width;
+        display->gen_fbo_height = height;
+        gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_GEN_FBO, display);
+        g_cond_wait (display->cond_gen_fbo, display->mutex);
+        *fbo = display->generated_fbo;
+        *depthbuffer = display->generated_depth_buffer;
+    }
     gst_gl_display_unlock (display);
 }
 
 
 /* Called by glfilter */
-void
+gboolean
 gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint texture_fbo_height,
                         GLuint fbo, GLuint depth_buffer, GLuint texture_fbo, GLCB cb,
                         gint input_texture_width, gint input_texture_height, GLuint input_texture,
@@ -1930,25 +1991,33 @@ gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint text
                         gdouble proj_param3, gdouble proj_param4,
                         GstGLDisplayProjection projection, gpointer* stuff)
 {
+    gboolean isAlive = TRUE;
+    
     gst_gl_display_lock (display);
-    display->use_fbo = fbo;
-    display->use_depth_buffer = depth_buffer;
-    display->use_fbo_texture = texture_fbo;
-    display->use_fbo_width = texture_fbo_width;
-    display->use_fbo_height = texture_fbo_height;
-    display->use_fbo_scene_cb = cb;
-    display->use_fbo_proj_param1 = proj_param1;
-    display->use_fbo_proj_param2 = proj_param2;
-    display->use_fbo_proj_param3 = proj_param3;
-    display->use_fbo_proj_param4 = proj_param4;
-    display->use_fbo_projection = projection;
-    display->use_fbo_stuff = stuff;
-    display->input_texture_width = input_texture_width;
-    display->input_texture_height = input_texture_height;
-    display->input_texture = input_texture;
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_USE_FBO, display);
-    g_cond_wait (display->cond_use_fbo, display->mutex);
+    isAlive = display->isAlive;
+    if (isAlive)
+    {
+        display->use_fbo = fbo;
+        display->use_depth_buffer = depth_buffer;
+        display->use_fbo_texture = texture_fbo;
+        display->use_fbo_width = texture_fbo_width;
+        display->use_fbo_height = texture_fbo_height;
+        display->use_fbo_scene_cb = cb;
+        display->use_fbo_proj_param1 = proj_param1;
+        display->use_fbo_proj_param2 = proj_param2;
+        display->use_fbo_proj_param3 = proj_param3;
+        display->use_fbo_proj_param4 = proj_param4;
+        display->use_fbo_projection = projection;
+        display->use_fbo_stuff = stuff;
+        display->input_texture_width = input_texture_width;
+        display->input_texture_height = input_texture_height;
+        display->input_texture = input_texture;
+        gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_USE_FBO, display);
+        g_cond_wait (display->cond_use_fbo, display->mutex);
+    }
     gst_gl_display_unlock (display);
+
+    return isAlive;
 }
 
 

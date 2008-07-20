@@ -260,7 +260,10 @@ gst_gl_filter_prepare_output_buffer (GstBaseTransform* trans,
     *buf = GST_BUFFER (gl_outbuf);
     gst_buffer_set_caps (*buf, caps);
 
-    return GST_FLOW_OK;
+    if (gl_outbuf->texture)
+        return GST_FLOW_OK;
+    else
+        return GST_FLOW_UNEXPECTED;
 }
 
 static gboolean
