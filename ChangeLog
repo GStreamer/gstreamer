@@ -1,5 +1,13 @@
 2008-07-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* configure.ac:
+	* ext/ladspa/Makefile.am:
+	Link the ladspa plugin with -ldl. It's needed for dlopen() and friends
+	for loading the ladspa plugins and previously was linked in by
+	gmodule. Fixes bug #543848.
+
+2008-07-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/modplug/libmodplug/Makefile.am:
 	Use GST_CXXFLAGS instead of GST_CFLAGS for CXXFLAGS. GST_CFLAGS
 	can contain compiler parameters that are invalid for C++.

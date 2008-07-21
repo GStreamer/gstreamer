@@ -660,7 +660,15 @@ dnl *** ladspa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
 AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
   AC_CHECK_HEADER(ladspa.h, HAVE_LADSPA="yes", HAVE_LADSPA="no")
+  save_cflags="$CFLAGS"
+  CFLAGS="$CFLAGS -D_GNU_SOURCE"
+  
+  AC_CHECK_LIB(dl, dlopen,
+    LADSPA_LIBS="-ldl",
+    HAVE_LADSPA="no")
+  CFLAGS="$save_cflags"
 ])
+AC_SUBST(LADSPA_LIBS)
 
 dnl *** libmms ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMMS, true)
