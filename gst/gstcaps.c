@@ -1406,6 +1406,8 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
  * Creates a new #GstCaps that contains all the formats that are in
  * either @caps1 and @caps2.
  *
+ * This function deals correctly with passing NULL for any of the caps.
+ *
  * Returns: the new #GstCaps
  */
 GstCaps *
@@ -1413,6 +1415,15 @@ gst_caps_union (const GstCaps * caps1, const GstCaps * caps2)
 {
   GstCaps *dest1;
   GstCaps *dest2;
+
+  if (!caps1 && !caps2)
+    return gst_caps_new_empty ();
+
+  if (!caps1 || gst_caps_is_empty (caps1))
+    return gst_caps_copy (caps2);
+
+  if (!caps2 || gst_caps_is_empty (caps2))
+    return gst_caps_copy (caps1);
 
   if (gst_caps_is_any (caps1) || gst_caps_is_any (caps2))
     return gst_caps_new_any ();
