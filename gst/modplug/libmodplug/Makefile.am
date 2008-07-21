@@ -1,6 +1,6 @@
 noinst_LTLIBRARIES = libmodplug.la
 
-libmodplug_la_CXXFLAGS = $(GST_CFLAGS) -D_REENTRANT
+libmodplug_la_CXXFLAGS = $(GST_CXXFLAGS) -D_REENTRANT
 libmodplug_la_LDFLAGS = -module -avoid-version
 libmodplug_la_SOURCES = tables.cpp         \
                         sndmix.cpp         \

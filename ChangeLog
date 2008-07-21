@@ -1,5 +1,12 @@
 2008-07-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/modplug/libmodplug/Makefile.am:
+	Use GST_CXXFLAGS instead of GST_CFLAGS for CXXFLAGS. GST_CFLAGS
+	can contain compiler parameters that are invalid for C++.
+	Fixes bug #543860.
+
+2008-07-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/resindvd/Makefile.am:
 	Dist missing header files. Fixes bug #543861.
 
