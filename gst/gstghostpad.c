@@ -1025,7 +1025,8 @@ gst_ghost_pad_get_target (GstGhostPad * gpad)
  * @newtarget: the new pad target
  *
  * Set the new target of the ghostpad @gpad. Any existing target
- * is unlinked and links to the new target are established.
+ * is unlinked and links to the new target are established. if @newtarget is
+ * NULL the target will be cleared.
  *
  * Returns: TRUE if the new target could be set. This function can return FALSE
  * when the internal pads could not be linked.
@@ -1043,7 +1044,10 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   GST_PROXY_LOCK (gpad);
   internal = GST_PROXY_PAD_INTERNAL (gpad);
 
-  GST_DEBUG_OBJECT (gpad, "set target %s:%s", GST_DEBUG_PAD_NAME (newtarget));
+  if (newtarget)
+    GST_DEBUG_OBJECT (gpad, "set target %s:%s", GST_DEBUG_PAD_NAME (newtarget));
+  else
+    GST_DEBUG_OBJECT (gpad, "clearing target");
 
   /* clear old target */
   if ((oldtarget = GST_PROXY_PAD_TARGET (gpad))) {
