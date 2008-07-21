@@ -517,11 +517,6 @@ AG_GST_CHECK_FEATURE(DVDNAV, [dvdnav library], resindvd, [
       AC_DEFINE(DVDNAV_OLD, 1, [Define if an old libdvdnav is used])      
     fi
   fi
-  dnl now check for dvdread/nav_print.h - see #133002
-  AC_CHECK_HEADER(dvdread/nav_print.h, , [
-      AC_MSG_WARN([header dvdread/nav_print.h from dvdread missing])
-      HAVE_DVDNAV="no"
-  ], [ #include "_stdint.h" ])
   AS_SCRUB_INCLUDE(DVDNAV_CFLAGS)
 ])
 

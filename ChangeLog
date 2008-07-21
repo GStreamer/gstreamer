@@ -1,3 +1,10 @@
+2008-07-21  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	Don't check for nav_print.h any more - it should be included in
+	the libdvdnav development package if libdvdnav headers depend on it.
+	Fixes: #543846
+
 2008-07-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
