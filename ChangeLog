@@ -1,3 +1,8 @@
+2008-07-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/resindvd/Makefile.am:
+	Dist missing header files. Fixes bug #543861.
+
 2008-07-19  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

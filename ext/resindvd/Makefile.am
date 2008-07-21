@@ -30,4 +30,6 @@ noinst_HEADERS = resindvdbin.h \
         gstmpegdesc.h \
         gstmpegdemux.h \
         gstpesfilter.h \
-	rsnparsetter.h
+	rsnparsetter.h \
+	rsnwrappedbuffer.h
+
