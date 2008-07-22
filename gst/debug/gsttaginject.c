@@ -21,7 +21,7 @@
 /**
  * SECTION:element-taginject
  *
- * Element that inject new metadata tags, but passes incomming data through
+ * Element that injects new metadata tags, but passes incomming data through
  * unmodified.
  * |[
  * gst-launch audiotestsrc num-buffers=100 ! taginject tags="title=testsrc,artist=gstreamer" ! vorbisenc ! oggmux ! filesink location=test.ogg
@@ -67,8 +67,8 @@ static void gst_tag_inject_set_property (GObject * object, guint prop_id,
 static void gst_tag_inject_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-/*static GstFlowReturn gst_tag_inject_transform_ip (GstBaseTransform * trans,
-    GstBuffer * buf); */
+static GstFlowReturn gst_tag_inject_transform_ip (GstBaseTransform * trans,
+    GstBuffer * buf);
 static gboolean gst_tag_inject_start (GstBaseTransform * trans);
 
 
@@ -120,8 +120,8 @@ gst_tag_inject_class_init (GstTagInjectClass * klass)
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_tag_inject_finalize);
 
-  /*gstbasetrans_class->transform_ip =
-     GST_DEBUG_FUNCPTR (gst_tag_inject_transform_ip); */
+  gstbasetrans_class->transform_ip =
+      GST_DEBUG_FUNCPTR (gst_tag_inject_transform_ip);
 
   gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_tag_inject_start);
 }
@@ -132,15 +132,22 @@ gst_tag_inject_init (GstTagInject * self, GstTagInjectClass * g_class)
   self->tags = NULL;
 }
 
-/*
 static GstFlowReturn
 gst_tag_inject_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstTagInject *self = GST_TAG_INJECT (trans);
 
+  if (G_UNLIKELY (!self->tags_sent)) {
+    self->tags_sent = TRUE;
+    /* send tags */
+    if (self->tags && !gst_tag_list_is_empty (self->tags)) {
+      gst_element_found_tags (GST_ELEMENT (trans),
+          gst_tag_list_copy (self->tags));
+    }
+  }
+
   return GST_FLOW_OK;
 }
-*/
 
 static void
 gst_tag_inject_set_property (GObject * object, guint prop_id,
@@ -179,11 +186,8 @@ gst_tag_inject_start (GstBaseTransform * trans)
 {
   GstTagInject *self = GST_TAG_INJECT (trans);
 
-  /* send tags */
-  if (self->tags && !gst_tag_list_is_empty (self->tags)) {
-    gst_element_found_tags (GST_ELEMENT (trans),
-        gst_tag_list_copy (self->tags));
-  }
+  /* we need to sent tags _transform_ip() once */
+  self->tags_sent = FALSE;
 
   return TRUE;
 }

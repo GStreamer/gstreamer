@@ -54,6 +54,7 @@ struct _GstTagInject {
 
   /*< private >*/
   GstTagList *tags;
+  gboolean tags_sent;
 };
 
 struct _GstTagInjectClass {
