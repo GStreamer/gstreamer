@@ -894,7 +894,7 @@ gst_value_set_double_range (GValue * value, gdouble start, gdouble end)
  *
  * Gets the minimum of the range specified by @value.
  *
- * Returns: the minumum of the range
+ * Returns: the minimum of the range
  */
 gdouble
 gst_value_get_double_range_min (const GValue * value)
@@ -1127,7 +1127,7 @@ gst_value_set_fraction_range_full (GValue * value,
  *
  * Gets the minimum of the range specified by @value.
  *
- * Returns: the minumum of the range
+ * Returns: the minimum of the range
  */
 const GValue *
 gst_value_get_fraction_range_min (const GValue * value)
