@@ -1063,6 +1063,9 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
 gboolean
 gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
 {
+  /* FIXME 0.11: NULL pointers are no valid Caps but indicate an error
+   * So there should be an assertion that caps1 and caps2 != NULL */
+
   /* NULL <-> NULL is allowed here */
   if (caps1 == caps2)
     return TRUE;
@@ -1406,8 +1409,6 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
  * Creates a new #GstCaps that contains all the formats that are in
  * either @caps1 and @caps2.
  *
- * This function deals correctly with passing NULL for any of the caps.
- *
  * Returns: the new #GstCaps
  */
 GstCaps *
@@ -1416,13 +1417,14 @@ gst_caps_union (const GstCaps * caps1, const GstCaps * caps2)
   GstCaps *dest1;
   GstCaps *dest2;
 
-  if (!caps1 && !caps2)
-    return gst_caps_new_empty ();
+  /* NULL pointers are no correct GstCaps */
+  g_return_val_if_fail (caps1 != NULL, NULL);
+  g_return_val_if_fail (caps2 != NULL, NULL);
 
-  if (!caps1 || gst_caps_is_empty (caps1))
+  if (gst_caps_is_empty (caps1))
     return gst_caps_copy (caps2);
 
-  if (!caps2 || gst_caps_is_empty (caps2))
+  if (gst_caps_is_empty (caps2))
     return gst_caps_copy (caps1);
 
   if (gst_caps_is_any (caps1) || gst_caps_is_any (caps2))

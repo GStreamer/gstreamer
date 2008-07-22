@@ -1,6 +1,13 @@
 2008-07-22  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/gstcaps.c:
+	Previous commit was wrong NULL caps does not exist
+	and indicate an error, so also add a FIXME to
+	gst_caps_is_equal where NULL caps are accepted.
+
+2008-07-22  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/gstcaps.c:
 	Allow passing of NULL to gst_caps_union
 
 2008-07-21  Thijs Vermeir  <thijsvermeir@gmail.com>
