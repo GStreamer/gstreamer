@@ -1,3 +1,13 @@
+2008-07-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlame.c: (gst_lame_class_init), (gst_lame_init),
+	(gst_lame_set_property), (gst_lame_get_property), (gst_lame_setup):
+	* ext/lame/gstlame.h:
+	Fix build with lame >= 3.97. The padding type and cwlimit settings
+	are deprecated now and the function declarations are hidden in the
+	headers so deprecate the GObject properties for them and remove them
+	in 0.11. Fixes bug #544039.
+
 2008-07-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (handle_sequence):
