@@ -838,8 +838,6 @@ gst_dtmf_src_negotiate (GstBaseSrc * basesrc)
     gint sample_rate;
     GstCaps *temp = NULL;
 
-    g_debug ("HAS PEERCAPS %s", gst_caps_to_string (peercaps));
-
     /* peer provides caps we can use to fixate, intersect. This always returns a
      * writable caps. */
     temp = gst_caps_intersect (srccaps, peercaps);
@@ -878,10 +876,6 @@ gst_dtmf_src_negotiate (GstBaseSrc * basesrc)
   }
 
   ret = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), srccaps);
-
-  g_warning ("negotiated %s", gst_caps_to_string (srccaps));
-
-
 
   gst_caps_unref (srccaps);
 
