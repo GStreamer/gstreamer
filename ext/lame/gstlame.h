@@ -69,7 +69,6 @@ struct _GstLame {
   gboolean copyright;
   gboolean original;
   gboolean error_protection;
-  gint padding_type;
   gboolean extension;
   gboolean strict_iso;
   gboolean disable_reservoir;
@@ -88,7 +87,6 @@ struct _GstLame {
   gboolean no_ath;
   gint ath_type;
   gint ath_lower;
-  gint cwlimit;
   gboolean allow_diff_short;
   gboolean no_short_blocks;
   gboolean emphasis;

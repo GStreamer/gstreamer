@@ -242,7 +242,7 @@ enum
   ARG_COPYRIGHT,
   ARG_ORIGINAL,
   ARG_ERROR_PROTECTION,
-  ARG_PADDING_TYPE,
+  ARG_PADDING_TYPE,             /* FIXME: remove in 0.11 */
   ARG_EXTENSION,
   ARG_STRICT_ISO,
   ARG_DISABLE_RESERVOIR,
@@ -259,7 +259,7 @@ enum
   ARG_ATH_SHORT,
   ARG_NO_ATH,
   ARG_ATH_LOWER,
-  ARG_CWLIMIT,
+  ARG_CWLIMIT,                  /* FIXME: remove in 0.11 */
   ARG_ALLOW_DIFF_SHORT,
   ARG_NO_SHORT_BLOCKS,
   ARG_EMPHASIS,
@@ -400,7 +400,8 @@ gst_lame_class_init (GstLameClass * klass)
       g_param_spec_boolean ("error-protection", "Error protection",
           "Adds 16 bit checksum to every frame", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PADDING_TYPE,
-      g_param_spec_enum ("padding-type", "Padding type", "Padding type",
+      g_param_spec_enum ("padding-type", "Padding type", "Padding type "
+          "(DEPRECATED: this setting has no effect)",
           GST_TYPE_LAME_PADDING, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EXTENSION,
       g_param_spec_boolean ("extension", "Extension", "Extension", TRUE,
@@ -468,7 +469,8 @@ gst_lame_class_init (GstLameClass * klass)
           G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CWLIMIT,
       g_param_spec_int ("cwlimit", "Cwlimit",
-          "Compute tonality up to freq (in kHz) default 8.8717", 0, 50000, 0,
+          "Compute tonality up to freq (in kHz) default 8.8717 "
+          "(DEPRECATED: this setting has no effect)", 0, 50000, 0,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALLOW_DIFF_SHORT,
       g_param_spec_boolean ("allow-diff-short", "Allow diff short",
@@ -613,7 +615,6 @@ gst_lame_init (GstLame * lame)
   lame->copyright = lame_get_copyright (lame->lgf);
   lame->original = lame_get_original (lame->lgf);
   lame->error_protection = lame_get_error_protection (lame->lgf);
-  lame->padding_type = lame_get_padding_type (lame->lgf);
   lame->extension = lame_get_extension (lame->lgf);
   lame->strict_iso = lame_get_strict_ISO (lame->lgf);
   lame->disable_reservoir = lame_get_disable_reservoir (lame->lgf);
@@ -645,7 +646,6 @@ gst_lame_init (GstLame * lame)
   lame->no_ath = lame_get_noATH (lame->lgf);
   /*  lame->ath_type = lame_get_ATHtype (lame->lgf); */
   lame->ath_lower = lame_get_ATHlower (lame->lgf);
-  lame->cwlimit = 8.8717;       /* lame_get_cwlimit (lame->lgf); => 0 */
   lame->allow_diff_short = lame_get_allow_diff_short (lame->lgf);
   lame->no_short_blocks = TRUE; /* lame_get_no_short_blocks (lame->lgf); */
   lame->emphasis = lame_get_emphasis (lame->lgf);
@@ -743,7 +743,6 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
       lame->error_protection = g_value_get_boolean (value);
       break;
     case ARG_PADDING_TYPE:
-      lame->padding_type = g_value_get_int (value);
       break;
     case ARG_EXTENSION:
       lame->extension = g_value_get_boolean (value);
@@ -797,7 +796,6 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
       lame->ath_lower = g_value_get_int (value);
       break;
     case ARG_CWLIMIT:
-      lame->cwlimit = g_value_get_int (value);
       break;
     case ARG_ALLOW_DIFF_SHORT:
       lame->allow_diff_short = g_value_get_boolean (value);
@@ -858,7 +856,6 @@ gst_lame_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, lame->error_protection);
       break;
     case ARG_PADDING_TYPE:
-      g_value_set_enum (value, lame->padding_type);
       break;
     case ARG_EXTENSION:
       g_value_set_boolean (value, lame->extension);
@@ -912,7 +909,6 @@ gst_lame_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, lame->ath_lower);
       break;
     case ARG_CWLIMIT:
-      g_value_set_int (value, lame->cwlimit);
       break;
     case ARG_ALLOW_DIFF_SHORT:
       g_value_set_boolean (value, lame->allow_diff_short);
@@ -1207,7 +1203,6 @@ gst_lame_setup (GstLame * lame)
   CHECK_ERROR (lame_set_copyright (lame->lgf, lame->copyright));
   CHECK_ERROR (lame_set_original (lame->lgf, lame->original));
   CHECK_ERROR (lame_set_error_protection (lame->lgf, lame->error_protection));
-  CHECK_ERROR (lame_set_padding_type (lame->lgf, lame->padding_type));
   CHECK_ERROR (lame_set_extension (lame->lgf, lame->extension));
   CHECK_ERROR (lame_set_strict_ISO (lame->lgf, lame->strict_iso));
   CHECK_ERROR (lame_set_disable_reservoir (lame->lgf, lame->disable_reservoir));
@@ -1232,7 +1227,6 @@ gst_lame_setup (GstLame * lame)
   CHECK_ERROR (lame_set_ATHshort (lame->lgf, lame->ath_short));
   CHECK_ERROR (lame_set_noATH (lame->lgf, lame->no_ath));
   CHECK_ERROR (lame_set_ATHlower (lame->lgf, lame->ath_lower));
-  CHECK_ERROR (lame_set_cwlimit (lame->lgf, lame->cwlimit));
   CHECK_ERROR (lame_set_allow_diff_short (lame->lgf, lame->allow_diff_short));
   CHECK_ERROR (lame_set_no_short_blocks (lame->lgf, lame->no_short_blocks));
   CHECK_ERROR (lame_set_emphasis (lame->lgf, lame->emphasis));
