@@ -677,8 +677,6 @@ gst_timidity_loop (GstPad * sinkpad)
   }
 
   if (timidity->o_segment_changed) {
-    GST_DEBUG_OBJECT (timidity, "segment changed");
-
     GstSegment *segment = gst_timidity_get_segment (timidity, GST_FORMAT_TIME,
         !timidity->o_new_segment);
 
