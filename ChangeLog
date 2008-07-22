@@ -1,3 +1,19 @@
+2008-07-22  Michael Smith <msmith@songbirdnest.com>
+
+	* configure.ac:
+	  Remove AC_ISC_POSIX macro; it's broken on some platforms and not needed.
+	  Add check (taken from -base) for winsock, adds WIN32_LIBS
+	* gst/Makefile.am:
+	  Add WIN32_LIBS to LIBADD for libgstreamer. Needed now that gstpoll uses
+	  winsock.
+	  Define GST_EXPORTS when building libgstreamer (only used on win32)
+	* gst/gst_private.h:
+	* gst/gstinfo.h:
+	  Use GST_EXPORT instead of locally-defined (and incorrect IMPORT_SYMBOL)
+	  for symbols that we need to export in both these files.
+	* gst/gstpoll.c:
+	  Include gst_private.h higher up to avoid some compile problems on win32.
+
 2008-07-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/gstvalue.c:

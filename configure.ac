@@ -287,10 +287,6 @@ AG_GST_PLUGIN_DOCS([1.3],[2.1])
 
 dnl *** checks for libraries ***
 
-dnl For interactive UNIX (a Sun thing)
-dnl FIXME: this adds -lcposix to LIBS, but I doubt we use LIBS
-AC_ISC_POSIX
-
 dnl check for libm, for sin()
 AC_CHECK_LIBM
 AC_SUBST(LIBM)
@@ -325,6 +321,13 @@ dnl Check for valgrind.h
 dnl separate from HAVE_VALGRIND because you can have the program, but not
 dnl the dev package
 AC_CHECK_HEADERS([valgrind/valgrind.h], HAVE_VALGRIND_H=yes)
+
+dnl used in gst/gstpoll.c
+AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
+if test "x$HAVE_WINSOCK2_H" = "xyes"; then
+  WIN32_LIBS="-lws2_32"
+  AC_SUBST(WIN32_LIBS)
+fi
 
 dnl *** checks for types/defines ***
 

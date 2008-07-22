@@ -56,6 +56,8 @@
 #include "config.h"
 #endif
 
+#include "gst_private.h"
+
 #include <sys/types.h>
 
 #ifdef HAVE_UNISTD_H
@@ -79,8 +81,6 @@
 
 /* OS/X needs this because of bad headers */
 #include <string.h>
-
-#include "gst_private.h"
 
 #include "gstpoll.h"
 

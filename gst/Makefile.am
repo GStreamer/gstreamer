@@ -138,6 +138,7 @@ DISTCLEANFILES = $(built_header_configure)
 
 libgstreamer_@GST_MAJORMINOR@_la_CFLAGS =		\
 	-D_GNU_SOURCE					\
+	-DGST_EXPORTS					\
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer 		\
 	-DGST_MAJORMINOR=\""$(GST_MAJORMINOR)"\" 	\
 	-DGST_DISABLE_DEPRECATED			\
@@ -147,6 +148,7 @@ libgstreamer_@GST_MAJORMINOR@_la_CFLAGS =		\
 libgstreamer_@GST_MAJORMINOR@_la_LIBADD =		\
 	$(GST_PARSE_LA)					\
 	$(GST_ALL_LIBS)					\
+	$(WIN32_LIBS)					\
 	$(XML_LIBS)
 
 libgstreamer_@GST_MAJORMINOR@_la_LDFLAGS =		\

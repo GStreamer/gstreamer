@@ -28,17 +28,6 @@
 #include <glib-object.h>
 #include <gst/gstconfig.h>
 
-
-#ifndef _MSC_VER
-#define IMPORT_SYMBOL
-#else /* _MSC_VER */
-#ifndef LIBGSTREAMER_EXPORTS
-#define IMPORT_SYMBOL __declspec(dllimport)
-#else
-#define IMPORT_SYMBOL 
-#endif
-#endif
-
 #ifndef M_PI
 #define M_PI  3.14159265358979323846
 #endif
@@ -422,7 +411,7 @@ extern gboolean			__gst_debug_enabled;
 
 /* since 0.10.7, the min debug level, used for quickly discarding debug
  * messages that fall under the threshold. */
-extern IMPORT_SYMBOL GstDebugLevel            __gst_debug_min; 
+GST_EXPORT GstDebugLevel            __gst_debug_min; 
 
 /**
  * GST_CAT_LEVEL_LOG:

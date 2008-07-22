@@ -93,47 +93,37 @@ gboolean 		gst_registry_xml_write_cache 	(GstRegistry * registry, const char *lo
 
 #ifndef GST_DISABLE_GST_DEBUG
 
-#ifndef _MSC_VER
-#define IMPORT_SYMBOL
-#else /* _MSC_VER */
-#ifndef LIBGSTREAMER_EXPORTS
-#define IMPORT_SYMBOL __declspec(dllimport)
-#else
-#define IMPORT_SYMBOL 
-#endif
-#endif
-
 #include <gst/gstinfo.h>
 
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_GST_INIT;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_AUTOPLUG;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PARENTAGE;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_STATES;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_SCHEDULING;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_BUFFER;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_BUS;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_CAPS;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_CLOCK;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_ELEMENT_PADS;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PADS;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PIPELINE;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PLUGIN_LOADING;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PLUGIN_INFO;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PROPERTIES;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_XML;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_NEGOTIATION;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_REFCOUNTING;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_ERROR_SYSTEM;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_EVENT;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_MESSAGE;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PARAMS;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_CALL_TRACE;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_SIGNAL;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PROBE;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_REGISTRY;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_QOS;
-extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_TYPES; /* FIXME 0.11: remove? */
+GST_EXPORT GstDebugCategory *GST_CAT_GST_INIT;
+GST_EXPORT GstDebugCategory *GST_CAT_AUTOPLUG;
+GST_EXPORT GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT;
+GST_EXPORT GstDebugCategory *GST_CAT_PARENTAGE;
+GST_EXPORT GstDebugCategory *GST_CAT_STATES;
+GST_EXPORT GstDebugCategory *GST_CAT_SCHEDULING;
+GST_EXPORT GstDebugCategory *GST_CAT_BUFFER;
+GST_EXPORT GstDebugCategory *GST_CAT_BUS;
+GST_EXPORT GstDebugCategory *GST_CAT_CAPS;
+GST_EXPORT GstDebugCategory *GST_CAT_CLOCK;
+GST_EXPORT GstDebugCategory *GST_CAT_ELEMENT_PADS;
+GST_EXPORT GstDebugCategory *GST_CAT_PADS;
+GST_EXPORT GstDebugCategory *GST_CAT_PIPELINE;
+GST_EXPORT GstDebugCategory *GST_CAT_PLUGIN_LOADING;
+GST_EXPORT GstDebugCategory *GST_CAT_PLUGIN_INFO;
+GST_EXPORT GstDebugCategory *GST_CAT_PROPERTIES;
+GST_EXPORT GstDebugCategory *GST_CAT_XML;
+GST_EXPORT GstDebugCategory *GST_CAT_NEGOTIATION;
+GST_EXPORT GstDebugCategory *GST_CAT_REFCOUNTING;
+GST_EXPORT GstDebugCategory *GST_CAT_ERROR_SYSTEM;
+GST_EXPORT GstDebugCategory *GST_CAT_EVENT;
+GST_EXPORT GstDebugCategory *GST_CAT_MESSAGE;
+GST_EXPORT GstDebugCategory *GST_CAT_PARAMS;
+GST_EXPORT GstDebugCategory *GST_CAT_CALL_TRACE;
+GST_EXPORT GstDebugCategory *GST_CAT_SIGNAL;
+GST_EXPORT GstDebugCategory *GST_CAT_PROBE;
+GST_EXPORT GstDebugCategory *GST_CAT_REGISTRY;
+GST_EXPORT GstDebugCategory *GST_CAT_QOS;
+GST_EXPORT GstDebugCategory *GST_CAT_TYPES; /* FIXME 0.11: remove? */
 
 #else
 
