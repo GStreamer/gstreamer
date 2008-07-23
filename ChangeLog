@@ -1,3 +1,15 @@
+2008-07-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/audioconvert/audioconvert.h:
+	* gst/audioconvert/gstaudioquantize.c:
+	(gst_audio_quantize_setup_dither),
+	(gst_audio_quantize_free_dither):
+	* gst/audioconvert/gstfastrandom.h:
+	Implement a linear congruential generator as pseudo random number
+	generator for the dither noise. This is about 2 times faster than
+	using GLib's mersenne twister. Also this uses only integer math for
+	generating integers while GLib internally uses floating point math.
+
 2008-07-23  Michael Smith <msmith@songbirdnest.com>
 
 	* configure.ac:

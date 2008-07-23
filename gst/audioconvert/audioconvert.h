@@ -121,8 +121,6 @@ struct _AudioConvertCtx
 
   GstAudioConvertDithering dither;
   GstAudioConvertNoiseShaping ns;
-  /* random number generate for dither noise */
-  GRand *dither_random;
   /* last random number generated per channel for hifreq TPDF dither */
   gpointer last_random;
   /* contains the past quantization errors, error[out_channels][count] */
