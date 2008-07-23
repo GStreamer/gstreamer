@@ -1,3 +1,8 @@
+2008-07-23  Michael Smith <msmith@songbirdnest.com>
+
+	* configure.ac:
+	  Remove AC_ISC_POSIX; it breaks on some systems and is not needed.
+
 2008-07-23  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Damien Lespiau  <damien.lespiau gmail com>

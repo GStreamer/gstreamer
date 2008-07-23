@@ -141,10 +141,6 @@ AG_GST_PLUGIN_DOCS([1.3],[2.1])
 
 dnl *** checks for libraries ***
 
-dnl For interactive UNIX (a Sun thing)
-dnl FIXME: this adds -lcposix to LIBS, but I doubt we use LIBS
-AC_ISC_POSIX
-
 dnl libm, for sin() etc.
 AC_CHECK_LIBM
 AC_SUBST(LIBM)
