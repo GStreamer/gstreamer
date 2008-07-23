@@ -1,3 +1,9 @@
+2008-07-23  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ffmpegrev:
+	Updating to today's ffmpeg upstream revision, mostly to fix a security
+	issue.
+
 2008-07-11  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):
