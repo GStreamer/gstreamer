@@ -1,3 +1,8 @@
+2008-07-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* docs/manual/basics-bus.xml:
+	Correct typo. Fixes bug #544320.
+
 2008-07-22  Michael Smith <msmith@songbirdnest.com>
 
 	* configure.ac:

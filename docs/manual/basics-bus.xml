@@ -23,7 +23,7 @@
       <itemizedlist>
         <listitem>
           <para>
-            Run a GLib/Gtk+ main loop (or iterate the defauly GLib main
+            Run a GLib/Gtk+ main loop (or iterate the default GLib main
             context yourself regularly) and attach some kind of watch to the
             bus. This way the GLib main loop will check the bus for new
             messages and notify you whenever there are messages.
