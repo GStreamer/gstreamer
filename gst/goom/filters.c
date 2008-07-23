@@ -14,11 +14,18 @@
 
 /* #define _DEBUG_PIXEL */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
+
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#endif
 
 #include "goom_filters.h"
 #include "goom_graphic.h"

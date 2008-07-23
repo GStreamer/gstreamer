@@ -69,7 +69,7 @@ gst_udp_get_addr (const char *hostname, int port, struct sockaddr_storage *addr)
   memset (&hints, 0, sizeof (hints));
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_DGRAM;
-  snprintf (service, sizeof (service) - 1, "%d", port);
+  g_snprintf (service, sizeof (service) - 1, "%d", port);
   service[sizeof (service) - 1] = '\0';
 
   if ((ret = getaddrinfo (hostname, (port == -1) ? NULL : service, &hints,
@@ -176,7 +176,11 @@ gst_udp_join_group (int sockfd, struct sockaddr_storage *addr)
       break;
     }
     default:
+#ifdef G_OS_WIN32
+      WSASetLastError (WSAEAFNOSUPPORT);
+#else
       errno = EAFNOSUPPORT;
+#endif
   }
   return ret;
 }
@@ -219,7 +223,11 @@ gst_udp_leave_group (int sockfd, struct sockaddr_storage *addr)
       break;
 
     default:
+#ifdef G_OS_WIN32
+      WSASetLastError (WSAEAFNOSUPPORT);
+#else
       errno = EAFNOSUPPORT;
+#endif
   }
 
   return ret;
@@ -248,7 +256,11 @@ gst_udp_is_multicast (struct sockaddr_storage *addr)
       break;
 
     default:
+#ifdef G_OS_WIN32
+      WSASetLastError (WSAEAFNOSUPPORT);
+#else
       errno = EAFNOSUPPORT;
+#endif
   }
 
   return ret;

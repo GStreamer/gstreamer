@@ -7,12 +7,18 @@
  * (c)2000-2003, by iOS-software.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
+
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#endif
 
 #include "goom.h"
 #include "goom_tools.h"

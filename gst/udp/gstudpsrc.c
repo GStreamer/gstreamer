@@ -518,7 +518,11 @@ no_select:
     }
       break;
     default:
+#ifdef G_OS_WIN32
+      WSASetLastError (WSAEAFNOSUPPORT);
+#else
       errno = EAFNOSUPPORT;
+#endif
       goto receive_error;
   }
   GST_LOG_OBJECT (udpsrc, "read %d bytes", (int) readsize);

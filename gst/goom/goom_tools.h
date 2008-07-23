@@ -1,6 +1,8 @@
 #ifndef _GOOMTOOLS_H
 #define _GOOMTOOLS_H
 
+#include "goom_config.h"
+
 /**
  * Random number generator wrapper for faster random number.
  */
