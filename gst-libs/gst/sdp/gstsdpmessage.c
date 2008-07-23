@@ -1876,10 +1876,10 @@ gst_sdp_message_parse_buffer (const guint8 * data, guint size,
 static void
 print_media (GstSDPMedia * media)
 {
-  g_print ("   media:       '%s'\n", media->media);
+  g_print ("   media:       '%s'\n", GST_STR_NULL (media->media));
   g_print ("   port:        '%u'\n", media->port);
   g_print ("   num_ports:   '%u'\n", media->num_ports);
-  g_print ("   proto:       '%s'\n", media->proto);
+  g_print ("   proto:       '%s'\n", GST_STR_NULL (media->proto));
   if (media->fmts->len > 0) {
     guint i;
 
@@ -1888,10 +1888,10 @@ print_media (GstSDPMedia * media)
       g_print ("    format  '%s'\n", g_array_index (media->fmts, gchar *, i));
     }
   }
-  g_print ("   information: '%s'\n", media->information);
+  g_print ("   information: '%s'\n", GST_STR_NULL (media->information));
   g_print ("   key:\n");
-  g_print ("    type:       '%s'\n", media->key.type);
-  g_print ("    data:       '%s'\n", media->key.data);
+  g_print ("    type:       '%s'\n", GST_STR_NULL (media->key.type));
+  g_print ("    data:       '%s'\n", GST_STR_NULL (media->key.data));
   if (media->attributes->len > 0) {
     guint i;
 

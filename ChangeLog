@@ -1,3 +1,12 @@
+2008-07-23  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: Damien Lespiau  <damien.lespiau gmail com>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c: (print_media):
+	  Use GST_STR_NULL to avoid crashes with libcs that don't
+	  like NULL strings in printf args (such as the win32 one).
+	  Fixes #544306.
+
 2008-07-17  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls):
