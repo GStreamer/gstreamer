@@ -185,7 +185,7 @@ main (gint   argc,
       gchar *argv[])
 {
   GMainLoop *loop;
-  GstElement *pipeline, *filesrc, *typefind;
+  GstElement *pipeline, *filesrc, *typefind, *fakesink;
   GstBus *bus;
 
   /* init GStreamer */
@@ -210,10 +210,11 @@ main (gint   argc,
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
   typefind = gst_element_factory_make ("typefind", "typefinder");
   g_signal_connect (typefind, "have-type", G_CALLBACK (cb_typefound), loop);
+  fakesink = gst_element_factory_make ("fakesink", "sink");
 
   /* setup */
-  gst_bin_add_many (GST_BIN (pipeline), filesrc, typefind, NULL);
-  gst_element_link (filesrc, typefind);
+  gst_bin_add_many (GST_BIN (pipeline), filesrc, typefind, fakesink, NULL);
+  gst_element_link_many (filesrc, typefind, fakesink, NULL);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   g_main_loop_run (loop);
 

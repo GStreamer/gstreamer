@@ -1,3 +1,9 @@
+2008-07-24  Rene Stadler  <mail@renestadler.de>
+
+	* docs/manual/advanced-autoplugging.xml: Add fakesink to example
+	code to close the pipeline graph.  This prevents the program from
+	printing internal data flow errors.
+
 2008-07-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* docs/manual/basics-bus.xml:
