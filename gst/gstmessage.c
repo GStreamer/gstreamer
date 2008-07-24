@@ -329,7 +329,7 @@ gst_message_new_eos (GstObject * src)
  * gst_message_new_error:
  * @src: The object originating the message.
  * @error: The GError for this message.
- * @debug: A debugging string for something or other.
+ * @debug: A debugging string.
  *
  * Create a new error message. The message will copy @error and
  * @debug. This message is posted by element when a fatal event
@@ -359,7 +359,7 @@ gst_message_new_error (GstObject * src, GError * error, const gchar * debug)
  * gst_message_new_warning:
  * @src: The object originating the message.
  * @error: The GError for this message.
- * @debug: A debugging string for something or other.
+ * @debug: A debugging string.
  *
  * Create a new warning message. The message will make copies of @error and
  * @debug.
@@ -387,7 +387,7 @@ gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
  * gst_message_new_info:
  * @src: The object originating the message.
  * @error: The GError for this message.
- * @debug: A debugging string for something or other.
+ * @debug: A debugging string.
  *
  * Create a new info message. The message will make copies of @error and
  * @debug.
