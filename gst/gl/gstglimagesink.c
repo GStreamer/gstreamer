@@ -418,7 +418,6 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
 {
     GstGLImageSink* glimage_sink = NULL;
     GstGLBuffer* gl_buffer = NULL;
-    gboolean isAlive = TRUE;
 
     glimage_sink = GST_GLIMAGE_SINK (bsink);
 
