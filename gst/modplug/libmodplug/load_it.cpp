@@ -869,7 +869,8 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 		{
 			MODCOMMAND *pzc = Patterns[npat];
 			UINT nz = PatternSize[npat] * m_nChannels;
-			for (UINT iz=0; iz<nz; iz++)
+            INT iz;
+			for (iz=0; iz<nz; iz++)
 			{
 				if ((pzc[iz].note) || (pzc[iz].instr)
 				 || (pzc[iz].volcmd) || (pzc[iz].command)) break;

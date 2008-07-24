@@ -730,7 +730,7 @@ public:
         /* Read/Write sample functions */
         signed char GetDeltaValue(signed char prev, UINT n) const { return (signed char)(prev + CompressionTable[n & 0x0F]); }
         UINT PackSample(int &sample, int next);
-        BOOL CanPackSample(LPSTR pSample, UINT nLen, UINT nPacking, BYTE *result=NULL);
+        BOOL CanPackSample(signed char * pSample, UINT nLen, UINT nPacking, BYTE *result=NULL);
         UINT ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR pMemFile, DWORD dwMemLength);
         BOOL DestroySample(UINT nSample);
         BOOL DestroyInstrument(UINT nInstr);

@@ -820,7 +820,7 @@ UINT CSoundFile::PackSample(int &sample, int next)
 }
 
 
-BOOL CSoundFile::CanPackSample(LPSTR pSample, UINT nLen, UINT nPacking, BYTE *result)
+BOOL CSoundFile::CanPackSample(signed char * pSample, UINT nLen, UINT nPacking, BYTE *result)
 //-----------------------------------------------------------------------------------
 {
 	int pos, old, oldpos, besttable = 0;

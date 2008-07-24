@@ -10,7 +10,7 @@
 #define _STDAFX_H_
 
 
-#ifdef MSC_VER
+#ifdef _MSC_VER
 
 #pragma warning (disable:4201)
 #pragma warning (disable:4514)

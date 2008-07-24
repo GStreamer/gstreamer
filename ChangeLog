@@ -1,3 +1,18 @@
+2008-07-23  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/festival/gstfestival.c:
+	  Guard unistd.h with HAVE_UNISTD_H
+	* gst/modplug/libmodplug/load_it.cpp:
+	* gst/modplug/libmodplug/sndfile.cpp:
+	* gst/modplug/libmodplug/sndfile.h:
+	* gst/modplug/libmodplug/stdafx.h:
+	  Support for compiling with MSVC: use _MSC_VER for detecting MSVC instead
+	  of MSC_VER. Make CanPackSamples take the type it's passed. Change scope
+	  of a variable in load_it.cpp to MSVC's scoping rules.
+	* gst/sdp/gstsdpdemux.c:
+	  Guard unistd.h with HAVE_UNISTD_H
+	  Fixes #544457.
+
 2008-07-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/timidity/gsttimidity.c:
