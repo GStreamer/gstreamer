@@ -1,3 +1,8 @@
+2008-07-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/examples/seek/seek.c:
+	  Use 64 bit constant GST_CLOCK_TIME_NONE instead of plain -1.
+
 2008-07-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/audioconvert/audioconvert.h:

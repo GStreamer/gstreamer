@@ -1288,7 +1288,8 @@ do_seek (GtkWidget * widget)
 
   if (rate >= 0) {
     s_event = gst_event_new_seek (rate,
-        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_SET, -1);
+        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_SET,
+        GST_CLOCK_TIME_NONE);
     GST_DEBUG ("seek with rate %lf to %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT,
         rate, GST_TIME_ARGS (real), GST_TIME_ARGS (duration));
   } else {
@@ -1603,7 +1604,7 @@ rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
   if (rate >= 0) {
     s_event = gst_event_new_seek (rate,
         GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, position,
-        GST_SEEK_TYPE_SET, -1);
+        GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
   } else {
     s_event = gst_event_new_seek (rate,
         GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
