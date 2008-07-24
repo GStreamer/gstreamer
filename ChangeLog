@@ -1,3 +1,12 @@
+2008-07-25  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.7.3 pre-release
+
+	* po/LINGUAS:
+	* po/id.po:
+	Add Indonesian translation.
+
 2008-07-23  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/festival/gstfestival.c:
