@@ -85,6 +85,7 @@ struct _GstBaseSrc {
   gint		 blocksize;	/* size of buffers when operating push based */
   gboolean	 can_activate_push;	/* some scheduling properties */
   GstActivateMode pad_mode;
+  gboolean       seekable; /* not used anymore */
   gboolean       random_access;
 
   GstClockID     clock_id;	/* for syncing */

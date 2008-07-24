@@ -1,5 +1,10 @@
 2008-07-24  Thijs Vermeir  <thijsvermeir@gmail.com>
 
+	* libs/gst/base/gstbasesrc.h:
+	revert the changes to the header file for the ABI.
+
+2008-07-24  Thijs Vermeir  <thijsvermeir@gmail.com>
+
 	* libs/gst/base/gstbasesrc.c:
 	* libs/gst/base/gstbasesrc.h:
 	Don't cache the seekable status.
