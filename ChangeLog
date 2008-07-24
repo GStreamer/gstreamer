@@ -1,3 +1,12 @@
+2008-07-25  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.8.3 pre-release
+
+	* po/LINGUAS:
+	* po/pt_BR.po:
+	Add pt_BR translation
+
 2008-07-23  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/goom/convolve_fx.c:
