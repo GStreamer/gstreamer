@@ -319,6 +319,7 @@ static GstFlowReturn gst_base_src_pad_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buf);
 static GstFlowReturn gst_base_src_get_range (GstBaseSrc * src, guint64 offset,
     guint length, GstBuffer ** buf);
+static gboolean gst_base_src_seekable (GstBaseSrc * src);
 
 static void
 gst_base_src_base_init (gpointer g_class)
@@ -794,7 +795,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
     case GST_QUERY_SEEKING:
     {
       gst_query_set_seeking (query, src->segment.format,
-          src->seekable, 0, src->segment.duration);
+          gst_base_src_seekable (src), 0, src->segment.duration);
       res = TRUE;
       break;
     }
@@ -1446,6 +1447,17 @@ wrong_mode:
 }
 
 static gboolean
+gst_base_src_seekable (GstBaseSrc * src)
+{
+  GstBaseSrcClass *bclass;
+  bclass = GST_BASE_SRC_GET_CLASS (src);
+  if (bclass->is_seekable)
+    return bclass->is_seekable (src);
+  else
+    return FALSE;
+}
+
+static gboolean
 gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
 {
   gboolean result;
@@ -1453,7 +1465,7 @@ gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       /* is normally called when in push mode */
-      if (!src->seekable)
+      if (!gst_base_src_seekable (src))
         goto not_seekable;
 
       result = gst_base_src_perform_seek (src, event, TRUE);
@@ -2347,6 +2359,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   GstBaseSrcClass *bclass;
   gboolean result;
   guint64 size;
+  gboolean seekable;
 
   if (GST_OBJECT_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED))
     return TRUE;
@@ -2391,16 +2404,11 @@ gst_base_src_start (GstBaseSrc * basesrc)
       G_GINT64_FORMAT, basesrc->segment.format, result, size,
       basesrc->segment.duration);
 
-  /* check if we can seek */
-  if (bclass->is_seekable)
-    basesrc->seekable = bclass->is_seekable (basesrc);
-  else
-    basesrc->seekable = FALSE;
-
-  GST_DEBUG_OBJECT (basesrc, "is seekable: %d", basesrc->seekable);
+  seekable = gst_base_src_seekable (basesrc);
+  GST_DEBUG_OBJECT (basesrc, "is seekable: %d", seekable);
 
   /* update for random access flag */
-  basesrc->random_access = basesrc->seekable &&
+  basesrc->random_access = seekable &&
       basesrc->segment.format == GST_FORMAT_BYTES;
 
   GST_DEBUG_OBJECT (basesrc, "is random_access: %d", basesrc->random_access);
