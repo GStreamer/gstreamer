@@ -1,3 +1,8 @@
+2008-07-25  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/gstelement.h:
+	Fix link in documentation.
+
 2008-07-24  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/gstmessage.c:

@@ -265,8 +265,8 @@ typedef enum
 /**
  * GST_ELEMENT_ERROR:
  * @el:     the element that generates the error
- * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #GstGError)
- * @code:   error code defined for that domain (see #GstGError)
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #gstreamer-GstGError)
+ * @code:   error code defined for that domain (see #gstreamer-GstGError)
  * @text:   the message to display (format string and args enclosed in
             parentheses)
  * @debug:  debugging information for the message (format string and args
