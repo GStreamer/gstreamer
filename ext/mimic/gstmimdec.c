@@ -204,8 +204,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
     frame_body = (guchar *) gst_adapter_peek (mimdec->adapter, mimdec->payload_size);
 
     if (mimdec->dec == NULL) {
-      GstEvent * event;
-      gboolean result;
+      GstEvent * event = NULL;
+      gboolean result = TRUE;
 
       /* Check if its a keyframe, otherwise skip it */
       if (GUINT32_FROM_LE(*((guint32 *) (frame_body + 12))) != 0) {
@@ -248,10 +248,13 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
         goto out;
       }
 
-      event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-          mimdec->current_ts * GST_MSECOND, -1, 0);
+      if (mimdec->need_newsegment)
+        event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+            mimdec->current_ts * GST_MSECOND, -1, 0);
+      mimdec->need_newsegment = FALSE;
       GST_OBJECT_UNLOCK (mimdec);
-      result = gst_pad_push_event (mimdec->srcpad, event);
+      if (event)
+        result = gst_pad_push_event (mimdec->srcpad, event);
       GST_OBJECT_LOCK (mimdec);
       if (!result)
       {
@@ -313,11 +316,11 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
 {
   GstMimDec *mimdec;
 
+  mimdec = GST_MIMDEC (element);
+
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      mimdec = GST_MIMDEC (element);
       if (mimdec->dec != NULL) {
-        GST_OBJECT_LOCK (element);
         mimic_close (mimdec->dec);
         mimdec->dec = NULL;
         mimdec->buffer_size = -1;
@@ -326,6 +329,11 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
         mimdec->current_ts = -1;
         GST_OBJECT_UNLOCK (element);
       }
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_OBJECT_LOCK (element);
+      mimdec->need_newsegment = TRUE;
+      GST_OBJECT_UNLOCK (element);
       break;
     default:
       break;
@@ -344,12 +352,61 @@ gst_mimdec_sink_event (GstPad *pad, GstEvent *event)
    * Ignore upstream newsegment event, its EVIL, we should implement
    * proper seeking instead
    */
-  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT)
-    gst_event_unref (event);
-  else
-    res = gst_pad_push_event (mimdec->srcpad, event);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+      {
+        gboolean update;
+        GstFormat format;
+        gdouble rate, arate;
+        gint64 start, stop, time;
+
+        gst_event_parse_new_segment_full (event, &update, &rate, &arate,
+            &format, &start, &stop, &time);
+
+        /* we need TIME and a positive rate */
+        if (format != GST_FORMAT_TIME)
+          goto newseg_wrong_format;
+
+        if (rate <= 0.0)
+          goto newseg_wrong_rate;
+
+        GST_OBJECT_LOCK (mimdec);
+        mimdec->need_newsegment = FALSE;
+        GST_OBJECT_UNLOCK (mimdec);
+
+        res = gst_pad_push_event (mimdec->srcpad, event);
+      }
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_OBJECT_LOCK (mimdec);
+      mimdec->need_newsegment = TRUE;
+      GST_OBJECT_UNLOCK (mimdec);
+
+      res = gst_pad_push_event (mimdec->srcpad, event);
+      break;
+    default:
+      res = gst_pad_push_event (mimdec->srcpad, event);
+      break;
+  }
+
+ done:
 
   gst_object_unref (mimdec);
 
-  return TRUE;
+  return res;
+
+ newseg_wrong_format:
+  {
+    GST_DEBUG_OBJECT (mimdec, "received non TIME newsegment");
+    gst_event_unref (event);
+    goto done;
+  }
+ newseg_wrong_rate:
+  {
+    GST_DEBUG_OBJECT (mimdec, "negative rates not supported yet");
+    gst_event_unref (event);
+    goto done;
+  }
+
+
 }
