@@ -67,6 +67,8 @@ static GstStateChangeReturn
                      gst_mimdec_change_state (GstElement     *element,
                                               GstStateChange  transition);
 
+static gboolean gst_mimdec_sink_event (GstPad *pad, GstEvent *event);
+
 
 GST_BOILERPLATE (GstMimDec, gst_mimdec, GstElement, GST_TYPE_ELEMENT);
 
@@ -114,6 +116,7 @@ gst_mimdec_init (GstMimDec *mimdec, GstMimDecClass *klass)
       gst_static_pad_template_get (&sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (mimdec), mimdec->sinkpad);
   gst_pad_set_chain_function (mimdec->sinkpad, gst_mimdec_chain);
+  gst_pad_set_event_function (mimdec->sinkpad, gst_mimdec_sink_event);
 
   mimdec->srcpad = gst_pad_new_from_template (
       gst_static_pad_template_get (&src_factory), "src");
@@ -340,4 +343,24 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
   }
 
   return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+}
+
+static gboolean
+gst_mimdec_sink_event (GstPad *pad, GstEvent *event)
+{
+  gboolean res = TRUE;
+  GstMimDec *mimdec = GST_MIMDEC (gst_pad_get_parent (pad));
+
+  /*
+   * Ignore upstream newsegment event, its EVIL, we should implement
+   * proper seeking instead
+   */
+  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT)
+    gst_event_unref (event);
+  else
+    res = gst_pad_push_event (mimdec->srcpad, event);
+
+  gst_object_unref (mimdec);
+
+  return TRUE;
 }
