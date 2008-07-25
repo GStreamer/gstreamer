@@ -128,9 +128,7 @@ gst_mimdec_init (GstMimDec *mimdec, GstMimDecClass *klass)
   mimdec->buffer_size = -1;
   mimdec->have_header = FALSE;
   mimdec->payload_size = -1;
-  mimdec->last_ts = -1;
   mimdec->current_ts = -1;
-  mimdec->gst_timestamp = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -165,9 +163,6 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
   gst_adapter_push (mimdec->adapter, buf);
 
   GST_OBJECT_LOCK (mimdec);
-
-  if (!GST_CLOCK_TIME_IS_VALID (mimdec->gst_timestamp))
-    mimdec->gst_timestamp = GST_BUFFER_TIMESTAMP (in);
 
   // do we have enough bytes to read a header
   while (gst_adapter_available (mimdec->adapter) >= (mimdec->have_header ? mimdec->payload_size : 24)) {
@@ -328,9 +323,7 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
         mimdec->buffer_size = -1;
         mimdec->have_header = FALSE;
         mimdec->payload_size = -1;
-        mimdec->gst_timestamp = GST_CLOCK_TIME_NONE;
         mimdec->current_ts = -1;
-        mimdec->last_ts = -1;
         GST_OBJECT_UNLOCK (element);
       }
       break;
