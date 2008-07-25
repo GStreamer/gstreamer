@@ -1,3 +1,10 @@
+2008-07-25  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment):
+	Fix segment-stop regression.
+	Add documentation regarding segments in quicktime files by Wim Taymans.
+	Fixes #544509
+
 2008-07-25  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

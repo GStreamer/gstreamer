@@ -97,6 +97,64 @@ struct _QtDemuxSample
   gboolean keyframe;            /* TRUE when this packet is a keyframe */
 };
 
+/*
+ * Quicktime has tracks and segments. A track is a continuous piece of
+ * multimedia content. The track is not always played from start to finish but
+ * instead, pieces of the track are 'cut out' and played in sequence. This is
+ * what the segments do.
+ *
+ * Inside the track we have keyframes (K) and delta frames. The track has its
+ * own timing, which starts from 0 and extends to end. The position in the track
+ * is called the media_time.
+ *
+ * The segments now describe the pieces that should be played from this track
+ * and are basically tupples of media_time/duration/rate entries. We can have
+ * multiple segments and they are all played after one another. An example:
+ *
+ * segment 1: media_time: 1 second, duration: 1 second, rate 1
+ * segment 2: media_time: 3 second, duration: 2 second, rate 2
+ *
+ * To correctly play back this track, one must play: 1 second of media starting
+ * from media_time 1 followed by 2 seconds of media starting from media_time 3
+ * at a rate of 2.
+ *
+ * Each of the segments will be played at a specific time, the first segment at
+ * time 0, the second one after the duration of the first one, etc.. Note that
+ * the time in resulting playback is not identical to the media_time of the
+ * track anymore.
+ *
+ * Visually, assuming the track has 4 second of media_time:
+ *
+ *                (a)                   (b)          (c)              (d)
+ *         .-----------------------------------------------------------.
+ * track:  | K.....K.........K........K.......K.......K...........K... |
+ *         '-----------------------------------------------------------'
+ *         0              1              2              3              4    
+ *           .------------^              ^   .----------^              ^
+ *          /              .-------------'  /       .------------------'
+ *         /              /          .-----'       /
+ *         .--------------.         .--------------.
+ *         | segment 1    |         | segment 2    |
+ *         '--------------'         '--------------'
+ *       
+ * The challenge here is to cut out the right pieces of the track for each of
+ * the playback segments. This fortunatly can easily be done with the SEGMENT
+ * events of gstreamer.
+ *
+ * For playback of segment 1, we need to provide the decoder with the keyframe
+ * (a), in the above figure, but we must instruct it only to output the decoded
+ * data between second 1 and 2. We do this with a SEGMENT event for 1 to 2, time
+ * position set to the time of the segment: 0.
+ *
+ * We then proceed to push data from keyframe (a) to frame (b). The decoder
+ * decodes but clips all before media_time 1.
+ * 
+ * After finishing a segment, we push out a new SEGMENT event with the clipping
+ * boundaries of the new data.
+ *
+ * This is a good usecase for the GStreamer accumulated SEGMENT events.
+ */
+
 struct _QtDemuxSegment
 {
   /* global time and duration, all gst time */
@@ -1270,7 +1328,19 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     return FALSE;
   }
 
-  stop = segment->media_stop;
+  /* qtdemux->segment.stop is in outside-time-realm, whereas
+   * segment->media_stop is in track-time-realm.
+   * 
+   * In order to compare the two, we need to bring segment.stop
+   * into the track-time-realm */
+
+  if (qtdemux->segment.stop == -1)
+    stop = segment->media_stop;
+  else
+    stop =
+        MIN (segment->media_stop,
+        qtdemux->segment.stop - segment->time + segment->media_start);
+
   if (qtdemux->segment.rate >= 0) {
     start = MIN (segment->media_start + seg_time, stop);
     time = offset;
