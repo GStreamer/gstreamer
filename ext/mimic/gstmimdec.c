@@ -212,6 +212,14 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       GstEvent * event;
       gboolean result;
 
+      /* Check if its a keyframe, otherwise skip it */
+      if (GUINT32_FROM_LE(*((guint32 *) (frame_body + 12))) != 0) {
+        gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
+        mimdec->have_header = FALSE;
+        res = GST_FLOW_OK;
+        goto out;
+      }
+
       mimdec->dec = mimic_open ();
       if (mimdec->dec == NULL) {
         GST_WARNING_OBJECT (mimdec, "mimic_open error\n");
