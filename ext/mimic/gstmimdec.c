@@ -38,7 +38,7 @@ GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("video/x-msnmsgr-webcam")
+  GST_STATIC_CAPS ("video/x-mimic")
 );
 
 static GstStaticPadTemplate src_factory =
