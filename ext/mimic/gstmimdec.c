@@ -254,7 +254,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       }
 
       event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-          mimdec->gst_timestamp, -1, mimdec->gst_timestamp);
+          mimdec->current_ts * GST_MSECOND, -1, 0);
       GST_OBJECT_UNLOCK (mimdec);
       result = gst_pad_push_event (mimdec->srcpad, event);
       GST_OBJECT_LOCK (mimdec);
@@ -279,19 +279,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       goto out;
     }
 
-    GST_BUFFER_TIMESTAMP(out_buf) = mimdec->gst_timestamp;
-
-    if (mimdec->last_ts != -1) {
-      int diff = mimdec->current_ts - mimdec->last_ts;
-      if (diff < 0 || diff > 5000) {
-        diff = 1000;
-        mimdec->gst_timestamp = GST_CLOCK_TIME_NONE;
-      }
-      if (GST_CLOCK_TIME_IS_VALID (mimdec->gst_timestamp))
-        mimdec->gst_timestamp += diff * GST_MSECOND;
-    }
-    mimdec->last_ts = mimdec->current_ts;
-
+    GST_BUFFER_TIMESTAMP(out_buf) = mimdec->current_ts * GST_MSECOND;
 
     mimic_get_property(mimdec->dec, "width", &width);
     mimic_get_property(mimdec->dec, "height", &height);
