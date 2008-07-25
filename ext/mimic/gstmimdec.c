@@ -243,7 +243,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       }
 
       event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-          0, -1, 0);
+          mimdec->gst_timestamp, -1, mimdec->gst_timestamp);
       GST_OBJECT_UNLOCK (mimdec);
       result = gst_pad_push_event (mimdec->srcpad, event);
       GST_OBJECT_LOCK (mimdec);
