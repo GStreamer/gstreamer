@@ -1,3 +1,18 @@
+2008-07-26  Stefan Kost  <ensonic@users.sf.net>
+
+	patch by: Luc Pionchon <luc.pionchon@nokia.com>
+
+	* docs/manual/advanced-threads.xml:
+	* docs/manual/diagrams-pipelines.svg:
+	* docs/manual/hello-world.png:
+	* docs/manual/linked-elements.png:
+	* docs/manual/mime-world.png:
+	* docs/manual/queue.png:
+	* docs/manual/thread-buffering.png:
+	* docs/manual/thread-synchronizing.png:
+	  Replace one diagram with two separate ones and updates others.
+	  Fixes #542401.
+
 2008-07-25  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/gstelement.h:

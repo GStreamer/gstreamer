@@ -24,9 +24,17 @@
           Data buffering, for example when dealing with network streams or
           when recording data from a live stream such as a video or audio
           card. Short hickups elsewhere in the pipeline will not cause data
-          loss. See <xref linkend="section-queues-img"/> for a visualization
-          of this idea.
+          loss.
         </para>
+	<figure float="1" id="section-thread-buffering-img">
+	  <title>Data buffering, from a networked source</title>
+	  <mediaobject>
+            <imageobject>
+              <imagedata scale="75" fileref="images/thread-buffering.&image;" format="&IMAGE;"/>
+            </imageobject>
+	  </mediaobject>
+	</figure>
+
       </listitem>
       <listitem>
         <para>
@@ -34,17 +42,17 @@
           both video and audio data. By using threads for both outputs, they
           will run independently and their synchronization will be better.
         </para>
+	<figure float="1" id="section-thread-synchronizing-img">
+	  <title>Synchronizing audio and video sinks</title>
+	  <mediaobject>
+            <imageobject>
+              <imagedata scale="75" fileref="images/thread-synchronizing.&image;" format="&IMAGE;"/>
+            </imageobject>
+	  </mediaobject>
+	</figure>
       </listitem>
     </itemizedlist>
 
-    <figure float="1" id="section-queues-img">
-      <title>a two-threaded decoder with a queue</title>
-      <mediaobject>
-        <imageobject>
-          <imagedata scale="75" fileref="images/queue.&image;" format="&IMAGE;"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
 
     <para>
       Above, we've mentioned the <quote>queue</quote> element several times
