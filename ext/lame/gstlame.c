@@ -630,18 +630,13 @@ gst_lame_init (GstLame * lame)
   lame->disable_reservoir = lame_get_disable_reservoir (lame->lgf);
   lame->vbr = vbr_off;          /* lame_get_VBR (lame->lgf); */
   lame->vbr_quality = 5;
-#if 0
+
   /* Replaced by our own more informative constants, 
      rather than LAME's defaults */
   lame->vbr_mean_bitrate = lame_get_VBR_mean_bitrate_kbps (lame->lgf);
   lame->vbr_min_bitrate = lame_get_VBR_min_bitrate_kbps (lame->lgf);
-  lame->vbr_max_bitrate = 0;    /* lame_get_VBR_max_bitrate_kbps (lame->lgf);
-                                 * => 0/no vbr possible */
-#else
-  lame->vbr_mean_bitrate = DEFAULT_MEAN_VBR_BITRATE;
-  lame->vbr_min_bitrate = DEFAULT_MIN_VBR_BITRATE;
-  lame->vbr_max_bitrate = DEFAULT_MAX_VBR_BITRATE;
-#endif
+  lame->vbr_max_bitrate = lame_get_VBR_max_bitrate_kbps (lame->lgf);
+  /* => 0/no vbr possible */
   lame->vbr_hard_min = lame_get_VBR_hard_min (lame->lgf);
   /* lame->lowpass_freq = 50000;    lame_get_lowpassfreq (lame->lgf);
    * => 0/lowpass on everything ? */
