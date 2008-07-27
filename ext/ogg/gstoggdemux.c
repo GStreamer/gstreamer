@@ -598,9 +598,6 @@ gst_ogg_pad_parse_skeleton_fisbone (GstOggPad * pad, ogg_packet * packet)
     data += 3;
 
     fisbone_pad->start_time = ogg->prestime - ogg->basetime;
-    fisbone_pad->start_time += gst_annodex_granule_to_time (start_granule,
-        fisbone_pad->granulerate_n, fisbone_pad->granulerate_d,
-        fisbone_pad->granuleshift);
 
     GST_INFO_OBJECT (pad->ogg, "skeleton fisbone parsed "
         "(serialno: %08x start time: %" GST_TIME_FORMAT
@@ -1410,6 +1407,7 @@ gst_ogg_demux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&ogg_demux_src_template_factory));
 }
+
 static void
 gst_ogg_demux_class_init (GstOggDemuxClass * klass)
 {
