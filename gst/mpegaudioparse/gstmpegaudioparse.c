@@ -185,9 +185,8 @@ mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
     guint * put_crc)
 {
   guint length;
-
   gulong mode, samplerate, bitrate, layer, channels, padding, crc;
-
+  gulong version;
   gint lsf, mpg25;
 
   GEnumValue *mode_enum;
@@ -199,6 +198,8 @@ mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
     lsf = 1;
     mpg25 = 1;
   }
+
+  version = 1 + lsf + mpg25;
 
   layer = 4 - ((header >> 17) & 0x3);
 
@@ -235,12 +236,12 @@ mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
 
   GST_DEBUG_OBJECT (mp3parse, "Calculated mp3 frame length of %u bytes",
       length);
-  GST_DEBUG_OBJECT (mp3parse, "samplerate = %lu, bitrate = %lu, layer = %lu, "
-      "channels = %lu, mode = %s", samplerate, bitrate, layer, channels,
-      mode_enum->value_nick);
+  GST_DEBUG_OBJECT (mp3parse, "samplerate = %lu, bitrate = %lu, version = %lu, "
+      "layer = %lu, channels = %lu, mode = %s", samplerate, bitrate, version,
+      layer, channels, mode_enum->value_nick);
 
   if (put_version)
-    *put_version = lsf ? 2 : 1;
+    *put_version = version;
   if (put_layer)
     *put_layer = layer;
   if (put_channels)
@@ -258,16 +259,18 @@ mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
 }
 
 static GstCaps *
-mp3_caps_create (guint layer, guint channels, guint samplerate)
+mp3_caps_create (guint version, guint layer, guint channels, guint samplerate)
 {
   GstCaps *new;
 
+  g_assert (version);
   g_assert (layer);
   g_assert (samplerate);
   g_assert (channels);
 
   new = gst_caps_new_simple ("audio/mpeg",
       "mpegversion", G_TYPE_INT, 1,
+      "mpegaudioversion", G_TYPE_INT, version,
       "layer", G_TYPE_INT, layer,
       "rate", G_TYPE_INT, samplerate,
       "channels", G_TYPE_INT, channels, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
@@ -1317,10 +1320,11 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
       }
 
       if (channels != mp3parse->channels ||
-          rate != mp3parse->rate || layer != mp3parse->layer) {
+          rate != mp3parse->rate || layer != mp3parse->layer ||
+          version != mp3parse->version) {
         GstCaps *caps;
 
-        caps = mp3_caps_create (layer, channels, rate);
+        caps = mp3_caps_create (version, layer, channels, rate);
         gst_pad_set_caps (mp3parse->srcpad, caps);
         gst_caps_unref (caps);
 

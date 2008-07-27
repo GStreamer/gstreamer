@@ -506,6 +506,7 @@ gst_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstLame *lame;
   gint out_samplerate;
+  gint version;
   GstStructure *structure;
   GstCaps *othercaps;
 
@@ -531,9 +532,18 @@ gst_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
         out_samplerate, lame->samplerate);
   }
 
+  version = lame_get_version (lame->lgf);
+  if (version == 0)
+    version = 2;
+  else if (version == 1)
+    version = 1;
+  else if (version == 2)
+    version = 3;
+
   othercaps =
       gst_caps_new_simple ("audio/mpeg",
       "mpegversion", G_TYPE_INT, 1,
+      "mpegaudioversion", G_TYPE_INT, version,
       "layer", G_TYPE_INT, 3,
       "channels", G_TYPE_INT, lame->mode == MONO ? 1 : lame->num_channels,
       "rate", G_TYPE_INT, out_samplerate, NULL);

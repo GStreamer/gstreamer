@@ -1,3 +1,12 @@
+2008-07-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlame.c: (gst_lame_sink_setcaps):
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(mp3_type_frame_length_from_header), (mp3_caps_create),
+	(gst_mp3parse_chain):
+	Put the MPEG audio version into the caps as "mpegaudioversion".
+	This is different from "mpegversion".
+
 2008-07-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/lame/gstlame.c: (gst_lame_class_init), (gst_lame_init),
