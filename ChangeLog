@@ -1,3 +1,8 @@
+2008-07-28  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.8.4 pre-release
+
 2008-07-25  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment):
