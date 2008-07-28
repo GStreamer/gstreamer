@@ -2530,6 +2530,26 @@ speex_type_find (GstTypeFind * tf, gpointer private)
   }
 }
 
+/*** audio/x-celt ***/
+
+static GstStaticCaps celt_caps = GST_STATIC_CAPS ("audio/x-celt");
+
+#define CELT_CAPS (gst_static_caps_get(&celt_caps))
+static void
+celt_type_find (GstTypeFind * tf, gpointer private)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 8);
+
+  if (data) {
+    /* 8 byte string "CELT   " */
+    if (memcmp (data, "CELT    ", 8) != 0)
+      return;
+
+    /* TODO: Check other values of the CELT header */
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, CELT_CAPS);
+  }
+}
+
 /*** application/x-ogg-skeleton ***/
 static GstStaticCaps ogg_skeleton_caps =
 GST_STATIC_CAPS ("application/x-ogg-skeleton, parsed=(boolean)FALSE");
@@ -3166,6 +3186,8 @@ plugin_init (GstPlugin * plugin)
       ogmtext_type_find, NULL, OGMTEXT_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-speex", GST_RANK_PRIMARY,
       speex_type_find, NULL, SPEEX_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-celt", GST_RANK_PRIMARY,
+      celt_type_find, NULL, CELT_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-ogg-skeleton", GST_RANK_PRIMARY,
       oggskel_type_find, NULL, OGG_SKELETON_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "text/x-cmml", GST_RANK_PRIMARY, cmml_type_find,

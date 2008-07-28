@@ -1,3 +1,9 @@
+2008-07-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c: (celt_type_find),
+	(plugin_init):
+	Add simple typefinder for the CELT codec (www.celt-codec.org).
+
 2008-07-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Jan Gerber <j at oil21 dot org>
