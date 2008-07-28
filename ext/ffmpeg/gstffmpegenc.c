@@ -527,6 +527,14 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
         oclass->in_plugin->name, pix_fmt, ffmpegenc->context->pix_fmt);
     return FALSE;
   }
+  /* we may have failed mapping caps to a pixfmt,
+   * and quite some codecs do not make up their own mind about that
+   * in any case, _NONE can never work out later on */
+  if (oclass->in_plugin->type == CODEC_TYPE_VIDEO && pix_fmt == PIX_FMT_NONE) {
+    GST_DEBUG_OBJECT (ffmpegenc, "ffenc_%s: Failed to determine input format",
+        oclass->in_plugin->name);
+    return FALSE;
+  }
 
   /* some codecs support more than one format, first auto-choose one */
   GST_DEBUG_OBJECT (ffmpegenc, "picking an output format ...");
@@ -652,8 +660,12 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
   memcpy (GST_BUFFER_DATA (outbuf), ffmpegenc->working_buf, ret_size);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
-  if (!ffmpegenc->context->coded_frame->key_frame)
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+  /* buggy codec may not set coded_frame */
+  if (ffmpegenc->context->coded_frame) {
+    if (!ffmpegenc->context->coded_frame->key_frame)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+  } else
+    GST_WARNING_OBJECT (ffmpegenc, "codec did not provide keyframe info");
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegenc->srcpad));
 
   gst_buffer_unref (inbuf);

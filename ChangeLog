@@ -1,3 +1,13 @@
+2008-07-28  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_pixfmt):
+	Recognize video/x-raw-gray and map to proper pixfmt.
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_setcaps),
+	(gst_ffmpegenc_chain_video):
+	Fail negotiation if pixfmt cannot be determined from input caps.
+	Prevent segfault accessing non-existant coded_frame, provide some
+	warning debug output instead.
+
 2008-07-23  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ffmpegrev:

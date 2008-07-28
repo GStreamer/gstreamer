@@ -1556,6 +1556,17 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
         }
       }
     }
+  } else if (strcmp (gst_structure_get_name (structure),
+          "video/x-raw-gray") == 0) {
+    gint bpp = 0;
+
+    if (gst_structure_get_int (structure, "bpp", &bpp)) {
+      switch (bpp) {
+        case 8:
+          context->pix_fmt = PIX_FMT_GRAY8;
+          break;
+      }
+    }
   }
 }
 
