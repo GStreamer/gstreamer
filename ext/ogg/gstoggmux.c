@@ -104,7 +104,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-theora; "
-        "audio/x-vorbis; audio/x-flac; audio/x-speex; "
+        "audio/x-vorbis; audio/x-flac; audio/x-speex; audio/x-celt; "
         "application/x-ogm-video; application/x-ogm-audio; video/x-dirac; "
         "video/x-smoke; text/x-cmml, encoded = (boolean) TRUE")
     );

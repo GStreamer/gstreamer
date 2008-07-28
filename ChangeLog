@@ -1,5 +1,10 @@
 2008-07-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/ogg/gstoggmux.c:
+	Allow muxing of CELT into Ogg streams.
+
+2008-07-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/typefind/gsttypefindfunctions.c: (celt_type_find),
 	(plugin_init):
 	Add simple typefinder for the CELT codec (www.celt-codec.org).
