@@ -924,8 +924,14 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
     goto convert_failed;
 
   /* convert to stream time */
-  if ((chain = pad->chain))
-    current_time = current_time - chain->segment_start + chain->begin_time;
+  if ((chain = pad->chain)) {
+    gint64 chain_start = 0;
+
+    if (chain->segment_start != GST_CLOCK_TIME_NONE)
+      chain_start = chain->segment_start;
+
+    current_time = current_time - chain_start + chain->begin_time;
+  }
 
   /* and store as the current position */
   gst_segment_set_last_stop (&ogg->segment, GST_FORMAT_TIME, current_time);
@@ -2085,10 +2091,14 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
     /* create the segment event to close the current segment */
     if ((chain = ogg->current_chain)) {
       GstEvent *newseg;
+      gint64 chain_start = 0;
+
+      if (chain->segment_start != GST_CLOCK_TIME_NONE)
+        chain_start = chain->segment_start;
 
       newseg = gst_event_new_new_segment (TRUE, ogg->segment.rate,
-          GST_FORMAT_TIME, ogg->segment.start + chain->segment_start,
-          ogg->segment.last_stop + chain->segment_start, ogg->segment.time);
+          GST_FORMAT_TIME, ogg->segment.start + chain_start,
+          ogg->segment.last_stop + chain_start, ogg->segment.time);
 
       /* send segment on old chain, FIXME, must be sent from streaming thread. */
       gst_ogg_demux_send_event (ogg, newseg);
@@ -2756,15 +2766,18 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
     chain = gst_ogg_demux_find_chain (ogg, serialno);
     if (chain) {
       GstEvent *event;
+      gint64 start = 0;
+
+      if (chain->segment_start != GST_CLOCK_TIME_NONE)
+        start = chain->segment_start;
 
       /* create the newsegment event we are going to send out */
       event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
-          GST_FORMAT_TIME, chain->segment_start, chain->segment_stop,
-          chain->begin_time);
+          GST_FORMAT_TIME, start, chain->segment_stop, chain->begin_time);
 
       GST_DEBUG_OBJECT (ogg,
           "segment: start %" GST_TIME_FORMAT ", stop %" GST_TIME_FORMAT
-          ", time %" GST_TIME_FORMAT, GST_TIME_ARGS (chain->segment_start),
+          ", time %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
           GST_TIME_ARGS (chain->segment_stop),
           GST_TIME_ARGS (chain->begin_time));
 

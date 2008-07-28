@@ -1,5 +1,12 @@
 2008-07-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain_peer),
+	(gst_ogg_demux_perform_seek), (gst_ogg_demux_handle_page):
+	Don't use GST_CLOCK_TIME_NONE as start of NEWSEGMENT events.
+	This fixes a critical warning.
+
+2008-07-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/ogg/gstoggmux.c:
 	Allow muxing of CELT into Ogg streams.
 
