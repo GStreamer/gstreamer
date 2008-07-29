@@ -1,5 +1,12 @@
 2008-07-29  Stefan Kost  <ensonic@users.sf.net>
 
+	* plugins/elements/gsttee.c:
+	* plugins/elements/gsttee.h:
+	  Reverting as not everything is clear yet. Needs some general design
+	  work.
+
+2008-07-29  Stefan Kost  <ensonic@users.sf.net>
+
 	* ChangeLog:
 	  ChangeLog surgery for tee commit.
 

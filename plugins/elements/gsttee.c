@@ -99,10 +99,6 @@ typedef struct
   GstFlowReturn result;
 } PushData;
 
-/* quark to keep track of which pads need events forwarded */
-static GQuark need_events;
-
-
 static GstPad *gst_tee_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused);
 static void gst_tee_release_pad (GstElement * element, GstPad * pad);
@@ -117,13 +113,10 @@ static GstFlowReturn gst_tee_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_tee_buffer_alloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
 static gboolean gst_tee_sink_activate_push (GstPad * pad, gboolean active);
-static gboolean gst_tee_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_tee_src_check_get_range (GstPad * pad);
 static gboolean gst_tee_src_activate_pull (GstPad * pad, gboolean active);
 static GstFlowReturn gst_tee_src_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buf);
-static GstPadLinkReturn gst_tee_src_link (GstPad * pad, GstPad * peer);
-
 
 
 static void
@@ -142,26 +135,17 @@ gst_tee_base_init (gpointer g_class)
       gst_static_pad_template_get (&tee_src_template));
 
   push_data = g_quark_from_static_string ("tee-push-data");
-  need_events = g_quark_from_static_string ("tee-need-events");
-}
-
-static void
-gst_tee_reset (GstTee * tee)
-{
-  g_free (tee->last_message);
-  tee->last_message = NULL;
-
-  if (tee->tags)
-    gst_tag_list_free (tee->tags);
-  tee->tags = NULL;
-
-  tee->have_events = FALSE;
 }
 
 static void
 gst_tee_finalize (GObject * object)
 {
-  gst_tee_reset (GST_TEE (object));
+  GstTee *tee;
+
+  tee = GST_TEE (object);
+
+  g_free (tee->last_message);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -224,46 +208,10 @@ gst_tee_init (GstTee * tee, GstTeeClass * g_class)
       GST_DEBUG_FUNCPTR (gst_tee_buffer_alloc));
   gst_pad_set_activatepush_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tee_sink_activate_push));
-  gst_pad_set_event_function (tee->sinkpad, gst_tee_sink_event);
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
 
-  gst_tee_reset (tee);
-}
-
-static gboolean
-gst_tee_sink_event (GstPad * pad, GstEvent * event)
-{
-  gboolean res;
-  GstTee *tee;
-
-  tee = GST_TEE (gst_pad_get_parent (pad));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_TAG:{
-      GstTagList *list;
-
-      GST_DEBUG_OBJECT (tee, "got a tag event");
-      gst_event_parse_tag (event, &list);
-      if (tee->tags) {
-        gst_tag_list_insert (tee->tags, list, GST_TAG_MERGE_PREPEND);
-      } else {
-        tee->tags = gst_tag_list_copy (list);
-      }
-      tee->have_events = TRUE;
-    }
-      break;
-    case GST_EVENT_EOS:
-      /* re-gather events on next run */
-      gst_tee_reset (tee);
-      break;
-    default:
-      break;
-  }
-  res = gst_pad_event_default (pad, event);
-  gst_object_unref (tee);
-
-  return res;
+  tee->last_message = NULL;
 }
 
 static GstPad *
@@ -323,7 +271,6 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
       GST_DEBUG_FUNCPTR (gst_tee_src_check_get_range));
   gst_pad_set_getrange_function (srcpad,
       GST_DEBUG_FUNCPTR (gst_tee_src_get_range));
-  gst_pad_set_link_function (srcpad, GST_DEBUG_FUNCPTR (gst_tee_src_link));
   gst_element_add_pad (GST_ELEMENT_CAST (tee), srcpad);
 
   return srcpad;
@@ -494,7 +441,7 @@ gst_tee_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   if ((allocpad = tee->allocpad)) {
     /* if we had a previous pad we used for allocating a buffer, continue using
      * it. */
-    GST_LOG_OBJECT (tee, "using pad %s:%s for alloc",
+    GST_DEBUG_OBJECT (tee, "using pad %s:%s for alloc",
         GST_DEBUG_PAD_NAME (allocpad));
     gst_object_ref (allocpad);
     GST_OBJECT_UNLOCK (tee);
@@ -537,18 +484,6 @@ gst_tee_do_push (GstTee * tee, GstPad * pad, GstBuffer * buffer)
     /* don't push on the pad we're pulling from */
     res = GST_FLOW_OK;
   } else {
-
-    if (G_UNLIKELY (GPOINTER_TO_INT (g_object_get_qdata (G_OBJECT (pad),
-                    need_events)))) {
-      g_object_set_qdata (G_OBJECT (pad), need_events, NULL);
-
-      if (tee->tags) {
-        gst_pad_push_event (pad,
-            gst_event_new_tag (gst_tag_list_copy (tee->tags)));
-      }
-      GST_DEBUG_OBJECT (tee, "events sent on %s:%s", GST_DEBUG_PAD_NAME (pad));
-    }
-
     res = gst_pad_push (pad, gst_buffer_ref (buffer));
   }
   return res;
@@ -666,11 +601,11 @@ gst_tee_chain (GstPad * pad, GstBuffer * buffer)
 
   tee = GST_TEE (gst_pad_get_parent (pad));
 
-  GST_LOG_OBJECT (tee, "received buffer %p", buffer);
+  GST_DEBUG_OBJECT (tee, "received buffer %p", buffer);
 
   res = gst_tee_handle_buffer (tee, buffer);
 
-  GST_LOG_OBJECT (tee, "handled buffer %s", gst_flow_get_name (res));
+  GST_DEBUG_OBJECT (tee, "handled buffer %s", gst_flow_get_name (res));
 
   gst_object_unref (tee);
 
@@ -855,27 +790,4 @@ gst_tee_src_get_range (GstPad * pad, guint64 offset, guint length,
   gst_object_unref (tee);
 
   return ret;
-}
-
-static GstPadLinkReturn
-gst_tee_src_link (GstPad * pad, GstPad * peer)
-{
-  GstPadLinkReturn result = GST_PAD_LINK_OK;
-  GstTee *tee;
-
-  tee = GST_TEE (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (tee, "linking source pad");
-
-  if (GST_PAD_LINKFUNC (peer)) {
-    result = GST_PAD_LINKFUNC (peer) (peer, pad);
-  }
-
-  if (GST_PAD_LINK_SUCCESSFUL (result) && tee->have_events) {
-    /* mark dynamically linked elements */
-    g_object_set_qdata (G_OBJECT (pad), need_events, GINT_TO_POINTER (TRUE));
-  }
-  gst_object_unref (tee);
-
-  return result;
 }
