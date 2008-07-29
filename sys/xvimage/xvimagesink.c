@@ -188,7 +188,9 @@ enum
   ARG_DEVICE,
   ARG_DEVICE_NAME,
   ARG_HANDLE_EXPOSE,
-  ARG_DOUBLE_BUFFER
+  ARG_DOUBLE_BUFFER,
+  ARG_AUTOPAINT_COLORKEY,
+  ARG_COLORKEY
 };
 
 static GstVideoSinkClass *parent_class = NULL;
@@ -1361,7 +1363,9 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
       if (!strcmp (attr[i].name, autopaint)) {
         const Atom atom = XInternAtom (xcontext->disp, autopaint, False);
 
-        XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom, 1);
+        /* turn on autopaint colorkey */
+        XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
+            (xvimagesink->autopaint_colorkey ? 1 : 0));
         todo--;
       } else if (!strcmp (attr[i].name, dbl_buffer)) {
         const Atom atom = XInternAtom (xcontext->disp, dbl_buffer, False);
@@ -1395,6 +1399,8 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
           ckey = (1 << 16) | (2 << 8) | 3;
         else
           set_attr = FALSE;
+
+        xvimagesink->colorkey = (1 << 16) | (2 << 8) | 3;
 
         if (set_attr) {
           ckey = CLAMP (ckey, (guint32) attr[i].min_value,
@@ -2899,6 +2905,9 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
     case ARG_DOUBLE_BUFFER:
       xvimagesink->double_buffer = g_value_get_boolean (value);
       break;
+    case ARG_AUTOPAINT_COLORKEY:
+      xvimagesink->autopaint_colorkey = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2966,6 +2975,12 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
     case ARG_DOUBLE_BUFFER:
       g_value_set_boolean (value, xvimagesink->double_buffer);
       break;
+    case ARG_AUTOPAINT_COLORKEY:
+      g_value_set_boolean (value, xvimagesink->autopaint_colorkey);
+      break;
+    case ARG_COLORKEY:
+      g_value_set_int (value, xvimagesink->colorkey);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3006,6 +3021,8 @@ gst_xvimagesink_reset (GstXvImageSink * xvimagesink)
   }
 
   gst_xvimagesink_xcontext_clear (xvimagesink);
+
+  xvimagesink->colorkey = -1;
 }
 
 /* Finalize is called only once, dispose can be called multiple times.
@@ -3077,6 +3094,9 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
   xvimagesink->handle_events = TRUE;
   xvimagesink->par = NULL;
   xvimagesink->handle_expose = TRUE;
+  xvimagesink->autopaint_colorkey = TRUE;
+
+  xvimagesink->colorkey = -1;
 }
 
 static void
@@ -3157,6 +3177,14 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
       g_param_spec_boolean ("double-buffer", "Double-buffer",
           "Whether to double-buffer the output", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_AUTOPAINT_COLORKEY,
+      g_param_spec_boolean ("autopaint-colorkey", "Autofill with colorkey",
+          "Whether to autofill overlay with colorkey", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_COLORKEY,
+      g_param_spec_int ("colorkey", "Colorkey",
+          "Color to use for the overlay mask", G_MININT, G_MAXINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_xvimagesink_finalize;
 

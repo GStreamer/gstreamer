@@ -263,8 +263,12 @@ struct _GstXvImageSink {
   gint saturation;
   gboolean cb_changed;
 
-  guint video_width, video_height;     /* size of incoming video;
-                                        * used as the size for XvImage */
+  /* size of incoming video, used as the size for XvImage */
+  guint video_width, video_height;
+
+  /* port attributes */
+  gboolean autopaint_colorkey;
+  gint colorkey;
 };
 
 struct _GstXvImageSinkClass {
