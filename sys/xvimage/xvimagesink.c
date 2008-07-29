@@ -1049,16 +1049,13 @@ gst_xvimagesink_update_colorbalance (GstXvImageSink * xvimagesink)
       convert_coef = (channel->max_value - channel->min_value) / 2000.0;
 
       if (g_ascii_strcasecmp (channel->label, "XV_HUE") == 0) {
-        value = (xvimagesink->hue + 1000) * convert_coef + channel->min_value;
+        value = xvimagesink->hue;
       } else if (g_ascii_strcasecmp (channel->label, "XV_SATURATION") == 0) {
-        value = (xvimagesink->saturation + 1000) * convert_coef +
-            channel->min_value;
+        value = xvimagesink->saturation;
       } else if (g_ascii_strcasecmp (channel->label, "XV_CONTRAST") == 0) {
-        value = (xvimagesink->contrast + 1000) * convert_coef +
-            channel->min_value;
+        value = xvimagesink->contrast;
       } else if (g_ascii_strcasecmp (channel->label, "XV_BRIGHTNESS") == 0) {
-        value = (xvimagesink->brightness + 1000) * convert_coef +
-            channel->min_value;
+        value = xvimagesink->brightness;
       } else {
         g_warning ("got an unknown channel %s", channel->label);
         g_object_unref (channel);
@@ -1070,8 +1067,11 @@ gst_xvimagesink_update_colorbalance (GstXvImageSink * xvimagesink)
       prop_atom =
           XInternAtom (xvimagesink->xcontext->disp, channel->label, True);
       if (prop_atom != None) {
+        int xv_value;
+        xv_value =
+            floor (0.5 + (value + 1000) * convert_coef + channel->min_value);
         XvSetPortAttribute (xvimagesink->xcontext->disp,
-            xvimagesink->xcontext->xv_port_id, prop_atom, value);
+            xvimagesink->xcontext->xv_port_id, prop_atom, xv_value);
       }
       g_mutex_unlock (xvimagesink->x_lock);
 
@@ -1765,8 +1765,8 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
         XvGetPortAttribute (xcontext->disp, xcontext->xv_port_id,
             prop_atom, &val);
         /* Normalize val to [-1000, 1000] */
-        val = -1000 + 2000 * (val - channel->min_value) /
-            (channel->max_value - channel->min_value);
+        val = floor (0.5 + -1000 + 2000 * (val - channel->min_value) /
+            (double) (channel->max_value - channel->min_value));
 
         if (!g_ascii_strcasecmp (channels[i], "XV_HUE"))
           xvimagesink->hue = val;
@@ -2659,8 +2659,8 @@ gst_xvimagesink_colorbalance_set_value (GstColorBalance * balance,
   xvimagesink->cb_changed = TRUE;
 
   /* Normalize val to [-1000, 1000] */
-  value = -1000 + 2000 * (value - channel->min_value) /
-      (channel->max_value - channel->min_value);
+  value = floor (0.5 + -1000 + 2000 * (value - channel->min_value) /
+      (double) (channel->max_value - channel->min_value));
 
   if (g_ascii_strcasecmp (channel->label, "XV_HUE") == 0) {
     xvimagesink->hue = value;

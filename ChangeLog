@@ -1,3 +1,11 @@
+2008-07-28  David Schleef  <ds@schleef.org>
+
+	* sys/xvimage/xvimagesink.c:
+	  Fix rounding errors when converting colorbalance values
+	  between hardware and object property ranges.  Partial
+	  fix for #537889, however, there still seems to be a small
+	  drift problem that could be totem's fault.
+
 2008-07-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain_peer),
