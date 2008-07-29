@@ -78,6 +78,9 @@ struct _GstTee {
   GstActivateMode sink_mode;
   GstTeePullMode  pull_mode;
   GstPad         *pull_pad;
+
+  GstTagList *tags;
+  gboolean have_events;
 };
 
 struct _GstTeeClass {

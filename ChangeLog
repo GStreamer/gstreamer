@@ -1,3 +1,9 @@
+2008-07-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* plugins/elements/gsttee.c:
+	* plugins/elements/gsttee.h:
+	  Relay tag events in tee. Fixes parts of #474016.
+
 2008-07-28  Michael Smith <msmith@songbirdnest.com>
 
 	* configure.ac:
