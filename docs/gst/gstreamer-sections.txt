@@ -358,7 +358,6 @@ gst_clock_id_unschedule
 gst_clock_id_compare_func
 gst_clock_id_ref
 gst_clock_id_unref
-GST_TYPE_CLOCK_TIME
 <SUBSECTION Standard>
 GST_CLOCK
 GST_IS_CLOCK
@@ -951,7 +950,6 @@ GstDebugMessage
 gst_debug_color_flags_get_type
 gst_debug_level_get_type
 gst_debug_graph_details_get_type
-IMPORT_SYMBOL
 M_PI
 </SECTION>
 
@@ -1717,7 +1715,6 @@ gst_preset_get_type
 <TITLE>GstQuery</TITLE>
 GstQuery
 GstQueryType
-GST_QUERY_TYPE
 GST_QUERY_TYPE_NAME
 GstQueryTypeDefinition
 
@@ -2231,7 +2228,6 @@ gst_uri_handler_get_uri
 gst_uri_handler_set_uri
 gst_uri_handler_new_uri
 <SUBSECTION Standard>
-GstURIHandlerInterface
 GST_URI_HANDLER
 GST_IS_URI_HANDLER
 GST_URI_HANDLER_CLASS

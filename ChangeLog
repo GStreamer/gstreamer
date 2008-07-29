@@ -1,5 +1,10 @@
 2008-07-29  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-sections.txt:
+	  Cleanup section-file.
+
+2008-07-29  Stefan Kost  <ensonic@users.sf.net>
+
 	* plugins/elements/gsttee.c:
 	* plugins/elements/gsttee.h:
 	  Relay tag events in tee. Fixes parts of #474016.
