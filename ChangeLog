@@ -1,3 +1,16 @@
+2008-07-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlame.c: (gst_lame_class_init), (gst_lame_init),
+	(gst_lame_chain), (gst_lame_get_default_settings), (plugin_init):
+	* ext/lame/gstlame.h:
+	Get the defaults settings of LAME in the plugin initialization
+	function and return FALSE here if something goes wrong. This removes
+	the hacky failing instance init function.
+
+	Use LAMEs default value for all settings instead of overwriting some
+	of them. Overwriting some of them gives unexpected results if one only
+	sets a preset. Fixes bug #498004.
+
 2008-07-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/lame/gstlame.c: (gst_lame_init):
