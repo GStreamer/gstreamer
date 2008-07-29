@@ -1,5 +1,10 @@
 2008-07-29  Stefan Kost  <ensonic@users.sf.net>
 
+	* ChangeLog:
+	  ChangeLog surgery for tee commit.
+
+2008-07-29  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	  Cleanup section-file.
 
@@ -8,6 +13,7 @@
 	* plugins/elements/gsttee.c:
 	* plugins/elements/gsttee.h:
 	  Relay tag events in tee. Fixes parts of #474016.
+	  Downgrades 3 reoccurring debugs to log.
 
 2008-07-28  Michael Smith <msmith@songbirdnest.com>
 
