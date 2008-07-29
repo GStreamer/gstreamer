@@ -1,5 +1,11 @@
 2008-07-29  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	  Aggregate short reads and add some comments and debug logging.
+	  Fixes #537380
+
+2008-07-29  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/playback/gstplaybasebin.c:
 	  Fix property doc markup (its not a signal).
 

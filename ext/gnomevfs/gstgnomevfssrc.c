@@ -497,6 +497,13 @@ gst_gnome_vfs_src_received_headers_callback (gconstpointer in,
   if (!src->iradio_mode)
     return;
 
+  GST_DEBUG_OBJECT (src, "receiving internet radio metadata\n");
+
+  /* FIXME: Could we use "Accept-Ranges: bytes"
+   * http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.5
+   * to enable pull-mode?
+   */
+
   for (i = in_args->headers; i; i = i->next) {
     char *data = (char *) i->data;
     char *key = data;
@@ -509,6 +516,8 @@ gst_gnome_vfs_src_received_headers_callback (gconstpointer in,
     g_strstrip (value);
     if (!strlen (value))
       continue;
+
+    GST_LOG_OBJECT (src, "data %s", data);
 
     /* Icecast stuff */
     if (strncmp (data, "icy-metaint:", 12) == 0) {      /* ugh */
@@ -594,6 +603,7 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   GstBuffer *buf;
   GnomeVFSFileSize readbytes;
   guint8 *data;
+  guint todo;
   GstGnomeVFSSrc *src;
 
   src = GST_GNOME_VFS_SRC (basesrc);
@@ -605,7 +615,7 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   if (G_UNLIKELY (src->curoffset != offset)) {
     GST_DEBUG ("need to seek");
     if (src->seekable) {
-      GST_DEBUG ("seeking to %lld", offset);
+      GST_DEBUG ("seeking to %" G_GUINT64_FORMAT, offset);
       res = gnome_vfs_seek (src->handle, GNOME_VFS_SEEK_START, offset);
       if (res != GNOME_VFS_OK)
         goto seek_failed;
@@ -618,20 +628,29 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   buf = gst_buffer_new_and_alloc (size);
 
   data = GST_BUFFER_DATA (buf);
+
+  todo = size;
+  while (todo > 0) {
+    /* this can return less that we ask for */
+    res = gnome_vfs_read (src->handle, data, todo, &readbytes);
+
+    if (G_UNLIKELY (res == GNOME_VFS_ERROR_EOF || (res == GNOME_VFS_OK
+                && readbytes == 0)))
+      goto eos;
+
+    if (G_UNLIKELY (res != GNOME_VFS_OK))
+      goto read_failed;
+
+    if (readbytes < todo) {
+      data = &data[readbytes];
+      todo -= readbytes;
+    } else {
+      todo = 0;
+    }
+    GST_LOG ("  got size %" G_GUINT64_FORMAT, readbytes);
+  }
   GST_BUFFER_OFFSET (buf) = src->curoffset;
-
-  res = gnome_vfs_read (src->handle, data, size, &readbytes);
-
-  if (G_UNLIKELY (res == GNOME_VFS_ERROR_EOF || (res == GNOME_VFS_OK
-              && readbytes == 0)))
-    goto eos;
-
-  GST_BUFFER_SIZE (buf) = readbytes;
-
-  if (G_UNLIKELY (res != GNOME_VFS_OK))
-    goto read_failed;
-
-  src->curoffset += readbytes;
+  src->curoffset += size;
 
   /* we're done, return the buffer */
   *buffer = buf;
