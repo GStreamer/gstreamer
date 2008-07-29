@@ -324,6 +324,7 @@ AC_CHECK_HEADERS([valgrind/valgrind.h], HAVE_VALGRIND_H=yes)
 
 dnl used in gst/gstpoll.c
 AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
+AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
 if test "x$HAVE_WINSOCK2_H" = "xyes"; then
   WIN32_LIBS="-lws2_32"
   AC_SUBST(WIN32_LIBS)

@@ -10,7 +10,11 @@ else
 if HAVE_SYS_SOCKET_H
 SUBDIRS_NET = net
 else
+if HAVE_WINSOCK2_H
+SUBDIRS_NET = net
+else
 SUBDIRS_NET =
+endif
 endif
 endif
 

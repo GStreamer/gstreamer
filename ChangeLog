@@ -1,3 +1,9 @@
+2008-07-28  Michael Smith <msmith@songbirdnest.com>
+
+	* configure.ac:
+	* libs/gst/Makefile.am:
+	  Build the net library if we have winsock2.
+
 2008-07-26  Stefan Kost  <ensonic@users.sf.net>
 
 	patch by: Luc Pionchon <luc.pionchon@nokia.com>
