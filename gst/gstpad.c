@@ -2725,6 +2725,7 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
 {
   GstPad *peer;
   GstFlowReturn ret;
+  GstCaps *newcaps;
   gboolean caps_changed;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
@@ -2752,28 +2753,28 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
     goto peer_error;
 
   /* FIXME, move capnego this into a base class? */
-  caps = GST_BUFFER_CAPS (*buf);
+  newcaps = GST_BUFFER_CAPS (*buf);
 
   /* Lock for checking caps, pretty pointless as the _pad_push() function might
    * change it concurrently, one of the problems with automatic caps setting in
    * pad_alloc_and_set_caps. Worst case, if does a check too much, but only
    * when there is heavy renegotiation going on in both directions. */
   GST_OBJECT_LOCK (pad);
-  caps_changed = caps && caps != GST_PAD_CAPS (pad);
+  caps_changed = newcaps && newcaps != GST_PAD_CAPS (pad);
   GST_OBJECT_UNLOCK (pad);
 
   /* we got a new datatype on the pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
     GST_DEBUG_OBJECT (pad,
         "caps changed from %" GST_PTR_FORMAT " to %p %" GST_PTR_FORMAT,
-        GST_PAD_CAPS (pad), caps, caps);
-    if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, setcaps)))
+        GST_PAD_CAPS (pad), newcaps, newcaps);
+    if (G_UNLIKELY (!gst_pad_configure_src (pad, newcaps, setcaps)))
       goto not_negotiated;
-  } else {
-    /* sanity check (only if caps haven't changed) */
-    if (G_UNLIKELY (GST_BUFFER_SIZE (*buf) < size))
-      goto wrong_size_fallback;
   }
+
+  /* sanity check (only if caps are the same) */
+  if (G_LIKELY (newcaps == caps) && G_UNLIKELY (GST_BUFFER_SIZE (*buf) < size))
+    goto wrong_size_fallback;
 
   return ret;
 

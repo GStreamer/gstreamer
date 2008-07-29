@@ -1,3 +1,9 @@
+2008-07-29  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstpad.c: (gst_pad_alloc_buffer_full):
+	  Only sanity-check the buffer size if requested_caps == buffer_caps
+	  (ie. don't take pad caps into account, they're not relevant here)
+
 2008-07-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* plugins/elements/gsttee.c:
