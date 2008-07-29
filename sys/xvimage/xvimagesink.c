@@ -3168,19 +3168,48 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
       g_param_spec_string ("device-name", "Adaptor name",
           "The name of the video adaptor", NULL,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstXvImageSink:handle-expose
+   *
+   * When enabled, the current frame will always be drawn in response to X
+   * Expose.
+   *
+   * Since: 0.10.14
+   */
   g_object_class_install_property (gobject_class, ARG_HANDLE_EXPOSE,
       g_param_spec_boolean ("handle-expose", "Handle expose",
           "When enabled, "
           "the current frame will always be drawn in response to X Expose "
           "events", TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstXvImageSink:double-buffer
+   *
+   * Whether to double-buffer the output.
+   *
+   * Since: 0.10.14
+   */
   g_object_class_install_property (gobject_class, ARG_DOUBLE_BUFFER,
       g_param_spec_boolean ("double-buffer", "Double-buffer",
           "Whether to double-buffer the output", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstXvImageSink:autopaint-colorkey
+   *
+   * Whether to autofill overlay with colorkey
+   *
+   * Since: 0.10.21
+   */
   g_object_class_install_property (gobject_class, ARG_AUTOPAINT_COLORKEY,
       g_param_spec_boolean ("autopaint-colorkey", "Autofill with colorkey",
           "Whether to autofill overlay with colorkey", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstXvImageSink:colorkey
+   *
+   * Color to use for the overlay mask.
+   *
+   * Since: 0.10.21
+   */
   g_object_class_install_property (gobject_class, ARG_COLORKEY,
       g_param_spec_int ("colorkey", "Colorkey",
           "Color to use for the overlay mask", G_MININT, G_MAXINT, 0,

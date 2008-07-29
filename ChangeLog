@@ -1,5 +1,14 @@
 2008-07-29  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/playback/gstplaybasebin.c:
+	  Fix property doc markup (its not a signal).
+
+	* sys/xvimage/xvimagesink.c:
+	  Add since tag for new proeprties (also add sice tags fro the last two
+	  other additions).
+
+2008-07-29  Stefan Kost  <ensonic@users.sf.net>
+
 	* sys/xvimage/xvimagesink.c:
 	* sys/xvimage/xvimagesink.h:
 	  Add autofill/colorkey properties. Fixes #538656.

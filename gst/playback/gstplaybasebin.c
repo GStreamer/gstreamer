@@ -201,7 +201,7 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
           "ISO-8859-15 will be assumed.", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin::connection-speed
+   * GstPlayBin:connection-speed
    *
    * Network connection speed in kbps (0 = unknown)
    *
