@@ -1377,7 +1377,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
         /* Set the colorkey to something that is dark but hopefully won't randomly
          * appear on the screen elsewhere (ie not black or greys) */
         const Atom atom = XInternAtom (xcontext->disp, colorkey, False);
-        guint32 ckey;
+        guint32 ckey = 0;
         guint32 keymask;
         gint bits;
         gboolean set_attr = TRUE;

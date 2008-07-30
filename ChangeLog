@@ -1,3 +1,9 @@
+2008-07-30  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support):
+	Fix a "may be used uninitialized in this function" which weirdly only
+	appears on macosx (?).
+
 2008-07-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/riff/riff-ids.h:
