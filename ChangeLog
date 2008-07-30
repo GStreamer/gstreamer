@@ -1,3 +1,8 @@
+2008-07-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/riff/riff-ids.h:
+	  Adding acid chunk for tempo and loop information.
+
 2008-07-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/xvimage/Makefile.am:
