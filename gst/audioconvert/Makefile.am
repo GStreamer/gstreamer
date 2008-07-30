@@ -18,6 +18,7 @@ noinst_HEADERS = \
 	audioconvert.h \
 	gstchannelmix.h \
 	gstaudioquantize.h \
+	gstfastrandom.h \
 	plugin.h
 
 #TESTS = channelmixtest

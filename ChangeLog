@@ -1,3 +1,8 @@
+2008-07-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/audioconvert/Makefile.am:
+	  Dist recently-added gstfastrandom.h.
+
 2008-07-30  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support):
