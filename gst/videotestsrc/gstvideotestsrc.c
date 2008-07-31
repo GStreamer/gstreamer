@@ -310,9 +310,12 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
 
 /* threadsafe because this gets called as the plugin is loaded */
 static GstCaps *
-gst_video_test_src_getcaps (GstBaseSrc * unused)
+gst_video_test_src_getcaps (GstBaseSrc * bsrc)
 {
   static GstCaps *capslist = NULL;
+  GstVideoTestSrc *videotestsrc;
+
+  videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
   if (!capslist) {
     GstCaps *caps;
@@ -544,8 +547,8 @@ static GstFlowReturn
 gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
 {
   GstVideoTestSrc *src;
-  gulong newsize;
-  GstBuffer *outbuf;
+  gulong newsize, size;
+  GstBuffer *outbuf = NULL;
   GstFlowReturn res;
   GstClockTime next_time;
 
@@ -573,7 +576,19 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
         &outbuf);
     if (res != GST_FLOW_OK)
       goto no_buffer;
-  } else {
+
+    /* the buffer could have renegotiated, we need to discard any buffers of the
+     * wrong size. */
+    size = GST_BUFFER_SIZE (outbuf);
+    newsize = gst_video_test_src_get_size (src, src->width, src->height);
+
+    if (size != newsize) {
+      gst_buffer_unref (outbuf);
+      outbuf = NULL;
+    }
+  }
+
+  if (outbuf == NULL) {
     outbuf = gst_buffer_new_and_alloc (newsize);
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
   }

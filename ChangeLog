@@ -1,5 +1,13 @@
 2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_video_test_src_getcaps),
+	(gst_video_test_src_create):
+	Discard buffers of the wrong size after renegotiation, this is perfectly
+	possible with things like capsfilter that could suggest caps changes
+	upstream without knowing the size of the buffer.
+
+2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* tests/icles/.cvsignore:
 	* tests/icles/Makefile.am:
 	* tests/icles/test-scale.c: (make_pipeline), (main):
