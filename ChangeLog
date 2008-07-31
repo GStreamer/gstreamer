@@ -1,5 +1,12 @@
 2008-07-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: Robert Schwebel <r.schwebel@pengutronix.de>
+
+	* gst/gst.c:
+	Include gstconfig.h as macros from it are used. Fixes bug #545607.
+
+2008-07-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* configure.ac:
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/gstreamer.types:
