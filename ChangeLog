@@ -1,5 +1,10 @@
 2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* docs/design/part-TODO.txt:
+	Add some thoughts and problems with upstream renegotiation.
+
+2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstpad.c: (gst_pad_acceptcaps_default),
 	(gst_pad_configure_src), (gst_pad_alloc_buffer_full):
 	Remove silly redundant debug.

@@ -76,6 +76,13 @@ API/ABI
   * maybe this name is overloaded. We need to look at some more use cases before
     trying to fix this.
 
+- rethink the way we do upstream renegotiation. Currently it's done with
+  pad_alloc but this has many issues such as only being able to suggest 1 format
+  and the need to allocate a buffer of this suggested format (some elements such
+  as capsfilter only know about the format, not the size). We would ideally like
+  to let upstream renegotiate a new format just like it did when it started.
+  This could, for example, easily be triggered with a RENEGOTIATE event.
+
 
 IMPLEMENTATION
 --------------
