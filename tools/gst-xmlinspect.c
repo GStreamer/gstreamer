@@ -133,7 +133,6 @@ print_query_types (const GstQueryType * types, gint pfx)
 static void
 print_event_masks (const GstEventMask * masks, gint pfx)
 {
-#ifndef GST_DISABLE_ENUMTYPES
   GType event_type;
   GEnumClass *klass;
   GType event_flags;
@@ -177,7 +176,6 @@ print_event_masks (const GstEventMask * masks, gint pfx)
 
     masks++;
   }
-#endif
 }
 #endif
 
@@ -539,11 +537,9 @@ print_element_info (GstElementFactory * factory)
   }
   PUT_END_TAG (1, "clocking-interaction");
 
-#ifndef GST_DISABLE_INDEX
   if (gst_element_is_indexable (element)) {
     PUT_STRING (1, "<indexing-capabilities/>");
   }
-#endif
 
   PUT_START_TAG (1, "pads");
   if (element->numpads) {

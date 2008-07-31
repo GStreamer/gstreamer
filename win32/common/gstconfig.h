@@ -59,10 +59,7 @@
 #define GST_DISABLE_TRACE 1
 #define GST_DISABLE_ALLOC_TRACE 1
 #define GST_DISABLE_REGISTRY 1
-#define GST_DISABLE_ENUMTYPES 1
-#define GST_DISABLE_INDEX 1
 #define GST_DISABLE_PLUGIN 1
-#define GST_DISABLE_URI 1
 #define GST_HAVE_GLIB_2_8 1
 #endif
 
@@ -95,16 +92,7 @@
 /* #undef GST_DISABLE_REGISTRY */
 
 /* DOES NOT WORK */
-/* #undef GST_DISABLE_ENUMTYPES */
-
-/* DOES NOT WORK */
-/* #undef GST_DISABLE_INDEX */
-
-/* DOES NOT WORK */
 /* #undef GST_DISABLE_PLUGIN */
-
-/* DOES NOT WORK */
-/* #undef GST_DISABLE_URI */
 
 /* printf extension format */
 /**

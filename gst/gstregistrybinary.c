@@ -481,9 +481,7 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
     str = gst_caps_to_string (copy);
     gst_caps_unref (copy);
     gst_registry_binary_save_string (list, str);
-  }
-#ifndef GST_DISABLE_INDEX
-  else if (GST_IS_INDEX_FACTORY (feature)) {
+  } else if (GST_IS_INDEX_FACTORY (feature)) {
     GstIndexFactory *factory = GST_INDEX_FACTORY (feature);
 
     pf = g_malloc (sizeof (GstBinaryPluginFeature));
@@ -492,9 +490,7 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
 
     /* pack element factory strings */
     gst_registry_binary_save_const_string (list, factory->longdesc);
-  }
-#endif
-  else {
+  } else {
     GST_WARNING ("unhandled feature type '%s'", type_name);
   }
 
@@ -941,9 +937,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
         factory->extensions[i] = str;
       }
     }
-  }
-#ifndef GST_DISABLE_INDEX
-  else if (GST_IS_INDEX_FACTORY (feature)) {
+  } else if (GST_IS_INDEX_FACTORY (feature)) {
     GstIndexFactory *factory = GST_INDEX_FACTORY (feature);
 
     align (*in);
@@ -952,9 +946,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
 
     /* unpack index factory strings */
     unpack_string (*in, factory->longdesc);
-  }
-#endif
-  else {
+  } else {
     GST_WARNING ("unhandled factory type : %s", G_OBJECT_TYPE_NAME (feature));
     goto fail;
   }
@@ -1070,9 +1062,7 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   /* make sure these types exist */
   GST_TYPE_ELEMENT_FACTORY;
   GST_TYPE_TYPE_FIND_FACTORY;
-#ifndef GST_DISABLE_INDEX
   GST_TYPE_INDEX_FACTORY;
-#endif
 
   timer = g_timer_new ();
 

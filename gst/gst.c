@@ -986,14 +986,9 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_task_get_type ());
   g_type_class_ref (gst_clock_get_type ());
 
-#ifndef GST_DISABLE_INDEX
   g_type_class_ref (gst_index_factory_get_type ());
-#endif /* GST_DISABLE_INDEX */
-#ifndef GST_DISABLE_URI
   gst_uri_handler_get_type ();
-#endif /* GST_DISABLE_URI */
 
-#ifndef GST_DISABLE_ENUMTYPES
   g_type_class_ref (gst_object_flags_get_type ());
   g_type_class_ref (gst_bin_flags_get_type ());
   g_type_class_ref (gst_buffer_flag_get_type ());
@@ -1051,7 +1046,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_uri_type_get_type ());
   g_type_class_ref (gst_parse_error_get_type ());
   g_type_class_ref (gst_parse_flags_get_type ());
-#endif
 
   gst_structure_get_type ();
   _gst_value_initialize ();
@@ -1330,10 +1324,7 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_bin_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_bus_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_task_get_type ()));
-#ifndef GST_DISABLE_INDEX
   g_type_class_unref (g_type_class_peek (gst_index_factory_get_type ()));
-#endif /* GST_DISABLE_INDEX */
-#ifndef GST_DISABLE_ENUMTYPES
   g_type_class_unref (g_type_class_peek (gst_object_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_bin_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_buffer_flag_get_type ()));
@@ -1392,7 +1383,6 @@ gst_deinit (void)
           ()));
   g_type_class_unref (g_type_class_peek (gst_uri_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_parse_error_get_type ()));
-#endif
   g_type_class_unref (g_type_class_peek (gst_param_spec_fraction_get_type ()));
 
   gst_deinitialized = TRUE;

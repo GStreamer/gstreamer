@@ -30,28 +30,10 @@ else
 GST_TRACE_SRC = gsttrace.c
 endif
 
-if GST_DISABLE_ENUMTYPES
-GST_ENUMTYPES_SRC =
-else
-GST_ENUMTYPES_SRC = gstenumtypes.c
-endif
-
-if GST_DISABLE_INDEX
-GST_INDEX_SRC =
-else
-GST_INDEX_SRC = gstindex.c gstindexfactory.c
-endif
-
 if GST_DISABLE_PLUGIN
 GST_PLUGIN_SRC =
 else
 GST_PLUGIN_SRC = gstplugin.c
-endif
-
-if GST_DISABLE_URI
-GST_URI_SRC =
-else
-GST_URI_SRC = gsturi.c
 endif
 
 SUBDIRS = $(SUBDIRS_PARSE)
@@ -63,7 +45,7 @@ DIST_SUBDIRS = parse
 
 built_header_configure = gstconfig.h gstversion.h
 built_header_make = gstenumtypes.h gstmarshal.h
-built_source_make = $(GST_ENUMTYPES_SRC) gstmarshal.c
+built_source_make = gstenumtypes.c gstmarshal.c
 
 EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstmarshal.list gsttrace.c gstxml.c \
@@ -90,7 +72,8 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstfilter.c		\
 	gstformat.c		\
 	gstghostpad.c		\
-	$(GST_INDEX_SRC)	\
+	gstindex.c 		\
+	gstindexfactory.c 	\
 	gstinfo.c		\
 	gstinterface.c		\
 	gstiterator.c		\
@@ -116,7 +99,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	$(GST_TRACE_SRC)	\
 	gsttypefind.c		\
 	gsttypefindfactory.c	\
-	$(GST_URI_SRC)		\
+	gsturi.c		\
 	gstutils.c		\
 	gstvalue.c		\
 	gstparse.c		\

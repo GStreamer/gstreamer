@@ -370,13 +370,11 @@ load_feature (xmlTextReaderPtr reader)
             g_free (s);
           }
         }
-#ifndef GST_DISABLE_INDEX
       } else if (GST_IS_INDEX_FACTORY (feature)) {
         GstIndexFactory *factory = GST_INDEX_FACTORY (feature);
 
         if (g_str_equal (tag, "longdesc"))
           read_string (reader, &factory->longdesc, TRUE);
-#endif
       }
     }
   }
@@ -516,9 +514,7 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
   /* make sure these types exist */
   GST_TYPE_ELEMENT_FACTORY;
   GST_TYPE_TYPE_FIND_FACTORY;
-#ifndef GST_DISABLE_INDEX
   GST_TYPE_INDEX_FACTORY;
-#endif
 
   timer = g_timer_new ();
 
@@ -774,12 +770,10 @@ gst_registry_xml_save_feature (GstRegistry * registry,
         i++;
       }
     }
-#ifndef GST_DISABLE_INDEX
   } else if (GST_IS_INDEX_FACTORY (feature)) {
     if (!gst_registry_save_escaped (registry, "  ", "longdesc",
             GST_INDEX_FACTORY (feature)->longdesc))
       return FALSE;
-#endif
   }
   return TRUE;
 }

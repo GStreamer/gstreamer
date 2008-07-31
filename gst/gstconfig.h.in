@@ -59,10 +59,7 @@
 #define GST_DISABLE_TRACE 1
 #define GST_DISABLE_ALLOC_TRACE 1
 #define GST_DISABLE_REGISTRY 1
-#define GST_DISABLE_ENUMTYPES 1
-#define GST_DISABLE_INDEX 1
 #define GST_DISABLE_PLUGIN 1
-#define GST_DISABLE_URI 1
 #define GST_DISABLE_XML 1
 #define GST_DISABLE_LOADSAVE_REGISTRY 1
 #define GST_HAVE_GLIB_2_8 1
@@ -133,18 +130,8 @@
 @GST_DISABLE_XML_DEFINE@
 
 /* FIXME: test and document these! */
-/* Configure the use of glib enumtypes (useful for introspection)
- * see http://bugzilla.gnome.org/show_bug.cgi?id=342564
- */
-@GST_DISABLE_ENUMTYPES_DEFINE@
-/* Configure the use of indizies for seeking
- * (not used in plugins right now)
- */
-@GST_DISABLE_INDEX_DEFINE@
 /* Configures the use of external plugins */
 @GST_DISABLE_PLUGIN_DEFINE@
-/* Configures the use of uri-handlers */
-@GST_DISABLE_URI_DEFINE@
 
 /* printf extension format */
 /**

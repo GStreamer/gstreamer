@@ -109,24 +109,10 @@ else
   GST_REGISTRY_DOC_TYPES=
 fi
 AC_SUBST(GST_REGISTRY_DOC_TYPES)
-AG_GST_CHECK_SUBSYSTEM_DISABLE(ENUMTYPES,[enum types])
-AM_CONDITIONAL(GST_DISABLE_ENUMTYPES, test "x$GST_DISABLE_ENUMTYPES" = "xyes")
-AG_GST_CHECK_SUBSYSTEM_DISABLE(INDEX,[index])
-AM_CONDITIONAL(GST_DISABLE_INDEX, test "x$GST_DISABLE_INDEX" = "xyes")
-dnl define a substitution to use in docs/gst/gstreamer.types
-if test "x$GST_DISABLE_INDEX" = "xyes"
-then
-  GST_INDEX_DOC_TYPES="%"
-else
-  GST_INDEX_DOC_TYPES=
-fi
-AC_SUBST(GST_INDEX_DOC_TYPES)
 AG_GST_CHECK_SUBSYSTEM_DISABLE(NET,[network distribution])
 AM_CONDITIONAL(GST_DISABLE_NET, test "x$GST_DISABLE_NET" = "xyes")
 AG_GST_CHECK_SUBSYSTEM_DISABLE(PLUGIN,[plugin])
 AM_CONDITIONAL(GST_DISABLE_PLUGIN, test "x$GST_DISABLE_PLUGIN" = "xyes")
-AG_GST_CHECK_SUBSYSTEM_DISABLE(URI,[uri handlers])
-AM_CONDITIONAL(GST_DISABLE_URI, test "x$GST_DISABLE_URI" = "xyes")
 
 AG_GST_ARG_DEBUG
 AG_GST_ARG_PROFILING
@@ -673,7 +659,6 @@ docs/Makefile
 docs/design/Makefile
 docs/faq/Makefile
 docs/gst/Makefile
-docs/gst/gstreamer.types
 docs/libs/Makefile
 docs/plugins/Makefile
 docs/manual/Makefile

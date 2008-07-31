@@ -122,7 +122,6 @@ print_query_types (const GstQueryType * types)
   }
 }
 
-#ifndef GST_DISABLE_ENUMTYPES
 #if 0
 static void
 print_event_masks (const GstEventMask * masks)
@@ -170,12 +169,6 @@ print_event_masks (const GstEventMask * masks)
 
     masks++;
   }
-}
-#endif
-#else
-static void
-print_event_masks (const GstEventMask * masks)
-{
 }
 #endif
 
@@ -704,7 +697,6 @@ print_clocking_info (GstElement * element)
   }
 }
 
-#ifndef GST_DISABLE_INDEX
 static void
 print_index_info (GstElement * element)
 {
@@ -717,12 +709,6 @@ print_index_info (GstElement * element)
     n_print ("Element has no indexing capabilities.\n");
   }
 }
-#else
-static void
-print_index_info (GstElement * element)
-{
-}
-#endif
 
 static void
 print_uri_handler_info (GstElement * element)
@@ -982,18 +968,14 @@ print_element_list (gboolean print_all)
           g_print ("%s:  %s: %s\n", plugin->desc.name,
               GST_PLUGIN_FEATURE_NAME (factory),
               gst_element_factory_get_longname (factory));
-      }
-#ifndef GST_DISABLE_INDEX
-      else if (GST_IS_INDEX_FACTORY (feature)) {
+      } else if (GST_IS_INDEX_FACTORY (feature)) {
         GstIndexFactory *factory;
 
         factory = GST_INDEX_FACTORY (feature);
         if (!print_all)
           g_print ("%s:  %s: %s\n", plugin->desc.name,
               GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
-      }
-#endif
-      else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
+      } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
         GstTypeFindFactory *factory;
 
         factory = GST_TYPE_FIND_FACTORY (feature);
@@ -1079,17 +1061,13 @@ print_plugin_features (GstPlugin * plugin)
       n_print ("  %s: %s\n", GST_PLUGIN_FEATURE_NAME (factory),
           gst_element_factory_get_longname (factory));
       num_elements++;
-    }
-#ifndef GST_DISABLE_INDEX
-    else if (GST_IS_INDEX_FACTORY (feature)) {
+    } else if (GST_IS_INDEX_FACTORY (feature)) {
       GstIndexFactory *factory;
 
       factory = GST_INDEX_FACTORY (feature);
       n_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
       num_indexes++;
-    }
-#endif
-    else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
+    } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
       GstTypeFindFactory *factory;
 
       factory = GST_TYPE_FIND_FACTORY (feature);
@@ -1136,14 +1114,12 @@ print_element_features (const gchar * element_name)
   GstPluginFeature *feature;
 
   /* FIXME implement other pretty print function for these */
-#ifndef GST_DISABLE_INDEX
   feature = gst_default_registry_find_feature (element_name,
       GST_TYPE_INDEX_FACTORY);
   if (feature) {
     n_print ("%s: an index\n", element_name);
     return 0;
   }
-#endif
   feature = gst_default_registry_find_feature (element_name,
       GST_TYPE_TYPE_FIND_FACTORY);
   if (feature) {

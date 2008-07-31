@@ -222,9 +222,7 @@ static void bin_push_state_continue (BinContinueData * data);
 static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
 static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
 
-#ifndef GST_DISABLE_INDEX
 static void gst_bin_set_index_func (GstElement * element, GstIndex * index);
-#endif
 static GstClock *gst_bin_provide_clock_func (GstElement * element);
 static gboolean gst_bin_set_clock_func (GstElement * element, GstClock * clock);
 
@@ -438,9 +436,7 @@ gst_bin_class_init (GstBinClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_bin_change_state_func);
   gstelement_class->get_state = GST_DEBUG_FUNCPTR (gst_bin_get_state_func);
-#ifndef GST_DISABLE_INDEX
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_bin_set_index_func);
-#endif
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_bin_provide_clock_func);
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_bin_set_clock_func);
@@ -570,7 +566,6 @@ gst_bin_get_property (GObject * object, guint prop_id,
  *
  * MT safe
  */
-#ifndef GST_DISABLE_INDEX
 static void
 gst_bin_set_index_func (GstElement * element, GstIndex * index)
 {
@@ -587,7 +582,6 @@ gst_bin_set_index_func (GstElement * element, GstIndex * index)
   }
   GST_OBJECT_UNLOCK (bin);
 }
-#endif
 
 /* set the clock on all elements in this bin
  *
@@ -2963,6 +2957,7 @@ bin_query_duration_fold (GstElement * item, GValue * ret, QueryFold * fold)
   gst_object_unref (item);
   return TRUE;
 }
+
 static void
 bin_query_duration_done (GstBin * bin, QueryFold * fold)
 {
@@ -3002,6 +2997,7 @@ bin_query_position_fold (GstElement * item, GValue * ret, QueryFold * fold)
   gst_object_unref (item);
   return TRUE;
 }
+
 static void
 bin_query_position_done (GstBin * bin, QueryFold * fold)
 {

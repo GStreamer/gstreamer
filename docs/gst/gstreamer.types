@@ -30,7 +30,7 @@ gst_tag_setter_get_type
 gst_task_get_type
 gst_type_find_factory_get_type
 gst_uri_handler_get_type
-@GST_LOADSAVE_DOC_TYPES@gst_xml_get_type
+gst_xml_get_type
 
 % these are not GObject derived types
 % this works with gtk-doc 1.10 at least

@@ -528,7 +528,6 @@ gst_element_get_base_time (GstElement * element)
   return result;
 }
 
-#ifndef GST_DISABLE_INDEX
 /**
  * gst_element_is_indexable:
  * @element: a #GstElement.
@@ -601,7 +600,6 @@ gst_element_get_index (GstElement * element)
 
   return result;
 }
-#endif
 
 /**
  * gst_element_add_pad:

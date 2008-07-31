@@ -1,9 +1,3 @@
-if GST_DISABLE_INDEX
-SUBDIRS_INDEX =
-else
-SUBDIRS_INDEX = indexers
-endif
-
-SUBDIRS = elements $(SUBDIRS_INDEX)
+SUBDIRS = elements indexers
 
 DIST_SUBDIRS = elements indexers

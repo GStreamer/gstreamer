@@ -1,3 +1,37 @@
+2008-07-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types:
+	* docs/gst/gstreamer.types.in:
+	* gst/Makefile.am:
+	* gst/gst.c:
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_set_index_func):
+	* gst/gstconfig.h.in:
+	* gst/gstelement.c: (gst_element_get_index):
+	* gst/gstregistrybinary.c: (gst_registry_binary_save_feature),
+	(gst_registry_binary_load_feature),
+	(gst_registry_binary_read_cache):
+	* gst/gstregistryxml.c: (load_feature),
+	(gst_registry_xml_read_cache), (gst_registry_xml_save_feature):
+	* plugins/Makefile.am:
+	* tools/gst-indent:
+	* tools/gst-inspect.c: (print_index_info), (print_element_list),
+	(print_plugin_features), (print_element_features):
+	* tools/gst-xmlinspect.c: (print_event_masks),
+	(print_element_info):
+	* win32/common/gstconfig.h:
+	Remove GST_DISABLE_(ENUMTYPES|INDEX|URI) everywhere.
+
+	Disabling the indexers and URI handler code will only reduce the
+	required amount of memory by a very small amount but on the other hand
+	requires much more maintaince work. Apart from that many places of
+	code are broken when disabling them.
+
+	Disabling the enum types doesn't reduce the required amount of memory
+	by more than a few bytes and makes it hard to fix bugs like #539772,
+	i.e. use the enums as GObject properties.
+
 2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/design/part-TODO.txt:

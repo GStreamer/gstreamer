@@ -1,7 +1,6 @@
 #!/bin/sh
 indent \
   --braces-on-if-line \
-  --blank-lines-after-declarations \
   --case-brace-indentation0 \
   --case-indentation2 \
   --braces-after-struct-decl-line \
