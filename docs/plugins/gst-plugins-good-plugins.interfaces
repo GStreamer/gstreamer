@@ -1,35 +1,38 @@
 GstBin GstChildProxy
 GstPipeline GstChildProxy
-GstHalAudioSink GstChildProxy
-GstHalAudioSrc GstChildProxy
+GstRTSPSrc GstChildProxy GstURIHandler
+GstRgVolume GstChildProxy
+GstAutoVideoSink GstChildProxy
+GstAutoAudioSink GstChildProxy
 GstGConfVideoSink GstChildProxy
 GstGConfVideoSrc GstChildProxy
 GstSwitchSink GstChildProxy
 GstGConfAudioSink GstChildProxy
 GstGConfAudioSrc GstChildProxy
-GstRTSPSrc GstChildProxy GstURIHandler
-GstAutoVideoSink GstChildProxy
-GstAutoAudioSink GstChildProxy
-GstShout2send GstTagSetter
-GstUDPSink GstURIHandler
-GstDV1394Src GstURIHandler GstPropertyProbe
-GstCddaBaseSrc GstURIHandler
-GstCdioCddaSrc GstURIHandler
-GstSoupHTTPSrc GstURIHandler
-GstOssSrc GstImplementsInterface GstMixer
-GstV4l2Src GstPropertyProbe GstImplementsInterface GstTuner GstColorBalance GstVideoOrientation
-GstUDPSrc GstURIHandler
-GstTagLibMux GstTagSetter
-GstId3v2Mux GstTagSetter
-GstApev2Mux GstTagSetter
+GstHalAudioSink GstChildProxy
+GstHalAudioSrc GstChildProxy
+GstAviMux GstTagSetter
+GstMatroskaMux GstTagSetter
 GstVideoBalance GstImplementsInterface GstColorBalance
 GstIirEqualizer GstChildProxy
 GstIirEqualizerNBands GstChildProxy
 GstIirEqualizer3Bands GstChildProxy
 GstIirEqualizer10Bands GstChildProxy
-GstSpeexEnc GstTagSetter
-GstFlacEnc GstTagSetter
-GstOssMixerElement GstImplementsInterface GstMixer
 GstVideoMixer GstChildProxy
-GstMatroskaMux GstTagSetter
-GstAviMux GstTagSetter
+GstUDPSrc GstURIHandler
+GstV4l2Src GstImplementsInterface GstColorBalance GstTuner GstVideoOrientation GstPropertyProbe
+GstOssSrc GstImplementsInterface GstMixer
+GstPulseSrc GstImplementsInterface GstMixer
+GstDV1394Src GstURIHandler GstPropertyProbe
+GstSoupHTTPSrc GstURIHandler
+GstCddaBaseSrc GstURIHandler
+GstCdioCddaSrc GstURIHandler
+GstUDPSink GstURIHandler
+GstShout2send GstTagSetter
+GstOssMixerElement GstImplementsInterface GstMixer
+GstSpeexEnc GstTagSetter
+GstTagLibMux GstTagSetter
+GstId3v2Mux GstTagSetter
+GstApev2Mux GstTagSetter
+GstFlacEnc GstTagSetter
+GstPulseMixer GstImplementsInterface GstMixer GstPropertyProbe

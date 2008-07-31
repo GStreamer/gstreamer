@@ -19368,3 +19368,133 @@
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstDeinterleave::keep-positions</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keep positions</NICK>
+<BLURB>Keep the original channel positions on the output buffers.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterleave::channel-positions</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel positions</NICK>
+<BLURB>Channel positions used on the output.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterleave::channel-positions-from-input</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel positions from input</NICK>
+<BLURB>Take channel positions from the input.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgVolume::album-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Album mode</NICK>
+<BLURB>Prefer album over track gain.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgVolume::fallback-gain</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-60,60]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fallback gain</NICK>
+<BLURB>Gain for streams missing tags [dB].</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgVolume::headroom</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,60]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Headroom</NICK>
+<BLURB>Extra headroom [dB].</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgVolume::pre-amp</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-60,60]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pre-amp</NICK>
+<BLURB>Extra gain [dB].</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgVolume::result-gain</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-120,120]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Result-gain</NICK>
+<BLURB>Applied gain [dB].</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgVolume::target-gain</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-120,120]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Target-gain</NICK>
+<BLURB>Applicable gain [dB].</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgLimiter::enabled</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Enabled</NICK>
+<BLURB>Enable processing.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgAnalysis::forced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Forced</NICK>
+<BLURB>Analyze even if ReplayGain tags exist.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgAnalysis::num-tracks</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of album tracks</NICK>
+<BLURB>Number of remaining album tracks.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgAnalysis::reference-level</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,150]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reference level</NICK>
+<BLURB>Reference level [dB].</BLURB>
+<DEFAULT>89</DEFAULT>
+</ARG>
+

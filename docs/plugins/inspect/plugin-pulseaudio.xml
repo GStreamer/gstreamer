@@ -1,12 +1,12 @@
 <plugin>
   <name>pulseaudio</name>
-  <description>PulseAudio Elements Plugin</description>
+  <description>PulseAudio plugin library</description>
   <filename>../../ext/pulse/.libs/libgstpulse.so</filename>
   <basename>libgstpulse.so</basename>
-  <version>0.10.8.1</version>
+  <version>0.10.9</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

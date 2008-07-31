@@ -35,6 +35,17 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
 
  <release>
   <Version>
+   <revision>0.10.9</revision>
+   <branch>0.10</branch>
+   <name>Steam Train Rolling</name>
+   <created>2008-07-31</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.9.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.9.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.8</revision>
    <branch>0.10</branch>
    <name>One For The Money</name>

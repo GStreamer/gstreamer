@@ -3,11 +3,11 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.10.8.1</version>
+  <version>0.10.9</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <package>GStreamer Good Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>asteriskh263</name>
@@ -207,6 +207,48 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-rtp, media=(string){ video, audio }, payload=(int)[ 96, 127 ], encoding-name=(string)DV, clock-rate=(int)90000, encode=(string){ SD-VCR/525-60, SD-VCR/625-50, HD-VCR/1125-60, HD-VCR/1250-50, SDL-VCR/525-60, SDL-VCR/625-50, 306M/525-60, 306M/625-50, 314M-25/525-60, 314M-25/625-50, 314M-50/525-60, 314M-50/625-50 }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpg726depay</name>
+      <longname>RTP packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts G.726 audio from RTP packets</description>
+      <author>Axis Communications &lt;dev-gstreamer@axis.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-adpcm, channels=(int)1, rate=(int)8000, bitrate=(int){ 16000, 24000, 32000, 40000 }, layout=(string)g726</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], encoding-name=(string){ G726, G726-16, G726-24, G726-32, G726-40 }, clock-rate=(int)8000</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpg726pay</name>
+      <longname>RTP packet payloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payload-encodes G.726 audio into a RTP packet</description>
+      <author>Axis Communications &lt;dev-gstreamer@axis.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-adpcm, channels=(int)1, rate=(int)8000, bitrate=(int){ 16000, 24000, 32000, 40000 }, layout=(string)g726</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string){ G726-16, G726-24, G726-32, G726-40 }</details>
         </caps>
       </pads>
     </element>
@@ -852,7 +894,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)THEORA</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)THEORA, delivery-method=(string)inline</details>
         </caps>
         <caps>
           <name>src</name>
@@ -873,7 +915,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)THEORA</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)THEORA, delivery-method=(string)inline</details>
         </caps>
         <caps>
           <name>sink</name>
@@ -922,6 +964,48 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-vorbis</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpvrawdepay</name>
+      <longname>RTP packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts raw video from RTP packets (RFC 4175)</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb; video/x-raw-yuv</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)RAW</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpvrawpay</name>
+      <longname>RTP packet payloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payload raw video as RTP packets (RFC 4175)</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)RAW, sampling=(string){ RGB, RGBA, BGR, BGRA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1 }, depth=(string){ 8, 10, 12, 16 }, colorimetry=(string){ BT601-5, BT709-2, SMPTE240M }</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]; video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]; video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]; video/x-raw-yuv, format=(fourcc){ AYUV, UYVY, I420, Y41B }, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]</details>
         </caps>
       </pads>
     </element>

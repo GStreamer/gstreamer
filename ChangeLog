@@ -1,3 +1,10 @@
+=== release 0.10.9 ===
+
+2008-07-31  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.9, "Steam Train Rolling"
+
 2008-07-31  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/soup/gstsouphttpsrc.c:
@@ -535,7 +542,7 @@
 
 2008-06-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
-	Patch by: mersad <mersad at axis dot com>
+	Patch by: Mersad Jelacic <mersad at axis dot com>
 
 	* gst/rtp/Makefile.am:
 	* gst/rtp/gstrtp.c: (plugin_init):
@@ -1474,7 +1481,7 @@
 
 2008-05-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
-	Patch by: j^ <j at oil21 dot org>
+	Patch by: Jan Gerber <j at oil21 dot org>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):
 	Add caps for DVCPRO50 and DVCPRO HD PAL/NTSC. See #526481.
