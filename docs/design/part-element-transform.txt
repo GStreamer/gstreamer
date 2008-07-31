@@ -163,11 +163,14 @@ Negotiation
    - start from src aps, these caps are fixed.
    - check if the caps are acceptable for us as src caps. This is usually
      enforced by the padtemplate of the element.
-   - check if the caps are acceptable for the peer. If this is possible, we can
+   - calculate all caps we can transform too with transform_caps()
+   - if the original caps are a subset of the transforms, try to see if the
+     the caps are acceptable for the peer. If this is possible, we can
      perform passthrough and make src == dest.  This is performed by simply
      calling gst_pad_peer_accept_caps().
-   - if the caps are not acceptable, we need to transform to something,
-     for each of the transformed caps retrieved with transform_caps():
+   - if the caps are not fixed, we need to fixate it, start by taking the peer
+     caps and intersect with them.
+   - for each of the transformed caps retrieved with transform_caps():
       - try to fixate the caps with fixate_caps()
       - if the caps are fixated, check if the peer accepts them with
 	_peer_accept_caps(), if the peer accepts, we have found a dest caps.
@@ -474,3 +477,8 @@ Use cases
      sinkpad
    - resizing the videosink makes videoscale perform the scaling.
    
+Problematic
+-----------
+
+    filesrc location=~/media/moveyourfeet.mov ! decodebin !
+    ffmpegcolorspace ! videoscale ! ffmpegcolorspace ! ximagesink -v

@@ -1,5 +1,10 @@
 2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* docs/design/part-element-transform.txt:
+	Update docs.
+
+2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* plugins/elements/gstqueue.c: (gst_queue_init),
 	(gst_queue_acceptcaps):
 	Add and use a custom acceptcaps function instead of falling back to the
