@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
  *
@@ -27,7 +27,7 @@
 #define GST_CAT_DEFAULT gst_gl_filter_laplacian_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails element_details = 
+static const GstElementDetails element_details =
   GST_ELEMENT_DETAILS ("OpenGL laplacian filter",
 		       "Filter/Effect",
 		       "Laplacian Convolution Demo Filter",
@@ -55,7 +55,7 @@ static gboolean gst_gl_filter_laplacian_filter (GstGLFilter * filter,
 						GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 static void gst_gl_filter_laplacian_callback (gint width, gint height, guint texture, gpointer stuff);
 
-static const gchar *convolution_fragment_source = 
+static const gchar *convolution_fragment_source =
   "#extension GL_ARB_texture_rectangle : enable\n"
   "uniform sampler2DRect tex;"
   "uniform float norm_const;"
@@ -122,7 +122,7 @@ gst_gl_filter_laplacian_set_property (GObject* object, guint prop_id,
 {
   //GstGLFilterLaplacian *filter = GST_GL_FILTER_LAPLACIAN (object);
 
-  switch (prop_id) 
+  switch (prop_id)
   {
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -136,7 +136,7 @@ gst_gl_filter_laplacian_get_property (GObject* object, guint prop_id,
 {
   //GstGLFilterLaplacian *filter = GST_GL_FILTER_LAPLACIAN (object);
 
-  switch (prop_id) 
+  switch (prop_id)
   {
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -148,7 +148,7 @@ static void
 gst_gl_filter_laplacian_init_shader (GstGLFilter* filter)
 {
   GstGLFilterLaplacian* laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
-    
+
   //blocking call, wait the opengl thread has compiled the shader
   gst_gl_display_gen_shader (filter->display, convolution_fragment_source, &laplacian_filter->shader);
 }
@@ -158,8 +158,8 @@ gst_gl_filter_laplacian_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 				GstGLBuffer* outbuf)
 {
   gpointer laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
-    
-  //blocking call, generate a FBO
+
+  //blocking call, use a FBO
   gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
 			  filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filter_laplacian_callback,
 			  inbuf->width, inbuf->height, inbuf->texture,
@@ -178,7 +178,7 @@ gst_gl_filter_laplacian_callback (gint width, gint height, guint texture, gpoint
   gfloat kernel[9] = {  0.0, -1.0,  0.0,
 		       -1.0,  4.0, -1.0,
 		        0.0, -1.0,  0.0  };
-    
+
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
 
@@ -192,7 +192,7 @@ gst_gl_filter_laplacian_callback (gint width, gint height, guint texture, gpoint
   gst_gl_shader_set_uniform_1fv (laplacian_filter->shader, "kernel", 9, kernel);
   gst_gl_shader_set_uniform_1f  (laplacian_filter->shader, "norm_const", 1.0);
   gst_gl_shader_set_uniform_1f  (laplacian_filter->shader, "norm_offset", 0.0); //set to 0.5 to preserve overall greylevel
-  
+
 
   glBegin (GL_QUADS);
   glTexCoord2i (0, 0);
@@ -202,6 +202,6 @@ gst_gl_filter_laplacian_callback (gint width, gint height, guint texture, gpoint
   glTexCoord2i (width, height);
   glVertex2f (1.0f, 1.0f);
   glTexCoord2i (0, height);
-  glVertex2f (-1.0f, 1.0f);     
+  glVertex2f (-1.0f, 1.0f);
   glEnd ();
 }
