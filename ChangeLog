@@ -1,5 +1,11 @@
 2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_set_property),
+	(gst_capsfilter_get_property), (gst_capsfilter_transform_caps):
+	Make setting the caps more threadsafe.
+
+2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/design/part-element-transform.txt:
 	Update docs.
 

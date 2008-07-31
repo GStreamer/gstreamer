@@ -143,8 +143,11 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
         gst_caps_ref (new_caps);
       }
 
+      GST_OBJECT_LOCK (capsfilter);
       old_caps = capsfilter->filter_caps;
       capsfilter->filter_caps = new_caps;
+      GST_OBJECT_UNLOCK (capsfilter);
+
       gst_caps_unref (old_caps);
 
       GST_DEBUG_OBJECT (capsfilter, "set new caps %" GST_PTR_FORMAT, new_caps);
@@ -168,7 +171,9 @@ gst_capsfilter_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_FILTER_CAPS:
+      GST_OBJECT_LOCK (capsfilter);
       gst_value_set_caps (value, capsfilter->filter_caps);
+      GST_OBJECT_UNLOCK (capsfilter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -191,9 +196,17 @@ gst_capsfilter_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps)
 {
   GstCapsFilter *capsfilter = GST_CAPSFILTER (base);
-  GstCaps *ret;
+  GstCaps *ret, *filter_caps;
 
-  ret = gst_caps_intersect (caps, capsfilter->filter_caps);
+  GST_OBJECT_LOCK (capsfilter);
+  filter_caps = gst_caps_ref (capsfilter->filter_caps);
+  GST_OBJECT_UNLOCK (capsfilter);
+
+  ret = gst_caps_intersect (caps, filter_caps);
+  GST_DEBUG_OBJECT (capsfilter, "filter:    %" GST_PTR_FORMAT, filter_caps);
+  GST_DEBUG_OBJECT (capsfilter, "intersect: %" GST_PTR_FORMAT, ret);
+
+  gst_caps_unref (filter_caps);
 
   return ret;
 }
