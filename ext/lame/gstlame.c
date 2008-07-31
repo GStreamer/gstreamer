@@ -405,7 +405,7 @@ gst_lame_class_init (GstLameClass * klass)
       g_param_spec_int ("bitrate", "Bitrate (kb/s)",
           "Bitrate in kbit/sec (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, "
           "112, 128, 160, 192, 224, 256 or 320)",
-          8, 320, gst_lame_default_settings.bitrate, G_PARAM_READWRITE));
+          0, 320, gst_lame_default_settings.bitrate, G_PARAM_READWRITE));
   /* compression ratio set to 0.0 by default otherwise it overrides the bitrate setting */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_COMPRESSION_RATIO, g_param_spec_float ("compression_ratio",
@@ -1321,7 +1321,7 @@ gst_lame_get_default_settings (void)
   gst_lame_default_settings.original = lame_get_original (lgf);
   gst_lame_default_settings.error_protection = lame_get_error_protection (lgf);
   gst_lame_default_settings.extension = lame_get_extension (lgf);
-  gst_lame_default_settings.strict_iso = FALSE; /* lame_get_strict_ISO (lgf); */
+  gst_lame_default_settings.strict_iso = lame_get_strict_ISO (lgf);
   gst_lame_default_settings.disable_reservoir =
       lame_get_disable_reservoir (lgf);
   gst_lame_default_settings.vbr = lame_get_VBR (lgf);
