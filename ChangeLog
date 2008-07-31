@@ -1,5 +1,13 @@
 2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstpad.c: (gst_pad_acceptcaps_default),
+	(gst_pad_configure_src), (gst_pad_alloc_buffer_full):
+	Remove silly redundant debug.
+	Add some more debug info.
+	Clarify the docs regarding new caps received from pad_alloc.
+
+2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_set_property),
 	(gst_capsfilter_get_property), (gst_capsfilter_transform_caps):
 	Make setting the caps more threadsafe.

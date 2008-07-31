@@ -2233,8 +2233,6 @@ gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (pad, "intersection %" GST_PTR_FORMAT, intersect);
 
   result = !gst_caps_is_empty (intersect);
-  if (!result)
-    GST_DEBUG_OBJECT (pad, "intersection gave empty caps");
 
   gst_caps_unref (allowed);
   gst_caps_unref (intersect);
@@ -2463,11 +2461,11 @@ gst_pad_configure_src (GstPad * pad, GstCaps * caps, gboolean dosetcaps)
   if (!gst_pad_accept_caps (pad, caps))
     goto not_accepted;
 
-  if (dosetcaps)
+  if (dosetcaps) {
     res = gst_pad_set_caps (pad, caps);
-  else
+  } else {
     res = TRUE;
-
+  }
   return res;
 
 not_accepted:
@@ -2733,7 +2731,8 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (size >= 0, GST_FLOW_ERROR);
 
-  GST_DEBUG_OBJECT (pad, "offset %" G_GUINT64_FORMAT ", size %d", offset, size);
+  GST_DEBUG_OBJECT (pad, "offset %" G_GUINT64_FORMAT ", size %d, caps %"
+      GST_PTR_FORMAT, offset, size, caps);
 
   GST_OBJECT_LOCK (pad);
   while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
@@ -2839,7 +2838,9 @@ wrong_size_fallback:
  *
  * A new, empty #GstBuffer will be put in the @buf argument.
  * You need to check the caps of the buffer after performing this
- * function and renegotiate to the format if needed.
+ * function and renegotiate to the format if needed. If the caps changed, it is
+ * possible that the buffer returned in @buf is not of the right size for the
+ * new format, @buf needs to be unreffed and reallocated if this is the case.
  *
  * Returns: a result code indicating success of the operation. Any
  * result code other than #GST_FLOW_OK is an error and @buf should
@@ -2869,6 +2870,10 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
  * In addition to the function gst_pad_alloc_buffer(), this function
  * automatically calls gst_pad_set_caps() when the caps of the
  * newly allocated buffer are different from the @pad caps.
+ *
+ * After a renegotiation, the size of the new buffer returned in @buf could
+ * be of the wrong size for the new format and must be unreffed an reallocated
+ * in that case.
  *
  * Returns: a result code indicating success of the operation. Any
  * result code other than #GST_FLOW_OK is an error and @buf should
