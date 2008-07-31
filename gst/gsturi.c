@@ -336,7 +336,7 @@ gst_uri_protocol_is_valid (const gchar * protocol)
  * @uri: A URI string
  *
  * Tests if the given string is a valid URI identifier. URIs start with a valid
- * protocol followed by "://" and maybe a string identifying the location.
+ * scheme followed by ":" and maybe a string identifying the location.
  *
  * Returns: TRUE if the string is a valid URI
  */
@@ -349,7 +349,7 @@ gst_uri_is_valid (const gchar * uri)
 
   gst_uri_protocol_check_internal (uri, &endptr);
 
-  return (*endptr == ':' && *(endptr + 1) == '/' && *(endptr + 2) == '/');
+  return *endptr == ':';
 }
 
 /**
@@ -369,7 +369,7 @@ gst_uri_get_protocol (const gchar * uri)
   g_return_val_if_fail (uri != NULL, NULL);
   g_return_val_if_fail (gst_uri_is_valid (uri), NULL);
 
-  colon = strstr (uri, "://");
+  colon = strstr (uri, ":");
 
   return g_ascii_strdown (uri, colon - uri);
 }
@@ -394,7 +394,7 @@ gst_uri_has_protocol (const gchar * uri, const gchar * protocol)
   g_return_val_if_fail (protocol != NULL, FALSE);
   g_return_val_if_fail (gst_uri_is_valid (uri), FALSE);
 
-  colon = strstr (uri, "://");
+  colon = strstr (uri, ":");
 
   if (colon == NULL)
     return FALSE;
@@ -721,7 +721,7 @@ gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   GstURIHandlerInterface *iface;
   gboolean ret;
-  gchar *new_uri, *protocol, *location;
+  gchar *new_uri, *protocol, *location, *colon;
 
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), FALSE);
   g_return_val_if_fail (gst_uri_is_valid (uri), FALSE);
@@ -731,8 +731,11 @@ gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri)
   g_return_val_if_fail (iface->set_uri != NULL, FALSE);
 
   protocol = gst_uri_get_protocol (uri);
-  location = gst_uri_get_location (uri);
-  new_uri = g_strdup_printf ("%s://%s", protocol, location);
+
+  colon = strstr (uri, ":");
+  location = g_strdup (colon);
+
+  new_uri = g_strdup_printf ("%s%s", protocol, location);
 
   ret = iface->set_uri (handler, uri);
 

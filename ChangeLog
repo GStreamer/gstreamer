@@ -1,3 +1,10 @@
+2008-07-31  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/gsturi.c:
+	  Be more liberal in what URIs we accept.
+	  Do not unescape bits of the URI for no apparent reason before passing to
+	  the element. Fixes #545352.
+
 2008-07-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Robert Schwebel <r.schwebel@pengutronix.de>
