@@ -438,7 +438,10 @@ gst_play_sink_set_vis_plugin (GstPlaySink * playsink, GstElement * vis)
 
   /* block the pad, the next time the callback is called we can change the
    * visualisation. It's possible that this never happens or that the pad was
-   * already blocked. */
+   * already blocked. If the callback never happens, we don't have new data so
+   * we don't need the new vis plugin. If the pad was already blocked, the
+   * function returns FALSE but the previous pad block will do the right thing
+   * anyway. */
   GST_DEBUG_OBJECT (playsink, "blocking vis pad");
   gst_pad_set_blocked_async (chain->blockpad, TRUE, gst_play_sink_vis_blocked,
       playsink);

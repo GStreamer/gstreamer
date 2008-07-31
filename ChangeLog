@@ -1,5 +1,10 @@
 2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstplaysink.c: (gst_play_sink_set_vis_plugin):
+	Add some more comments.
+
+2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/videotestsrc/gstvideotestsrc.c: (gst_video_test_src_getcaps),
 	(gst_video_test_src_create):
 	Discard buffers of the wrong size after renegotiation, this is perfectly
