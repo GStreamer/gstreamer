@@ -1,3 +1,10 @@
+2008-07-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/icles/.cvsignore:
+	* tests/icles/Makefile.am:
+	* tests/icles/test-scale.c: (make_pipeline), (main):
+	Add dynamic rescaling tests for the new basetransform.
+
 2008-07-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/audioconvert/Makefile.am:
