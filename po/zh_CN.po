@@ -1,395 +1,397 @@
-# SOME DESCRIPTIVE TITLE.
+# Chinese (simplified) translation about gst-plugins-good.
 # This file is put in the public domain.
 # Funda Wang <fundawang@linux.net.cn>, 2005.
+# Ji ZhengYu <zhengyuji@gmail.com>, 2008
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-04-13 19:09+0100\n"
-"PO-Revision-Date: 2006-04-16 18:50+0800\n"
-"Last-Translator: Funda Wang <fundawang@linux.net.cn>\n"
-"Language-Team: Chinese (simplified) <i18n-translation@lists.linux.net.cn>\n"
+"POT-Creation-Date: 2008-07-28 21:14+0100\n"
+"PO-Revision-Date: 2008-07-20 09:48中国标准时间\n"
+"Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
+"Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
+"sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ext/cdio/gstcdiocddasrc.c:205
 msgid "Could not read from CD."
-msgstr ""
+msgstr "无法从 CD 中读取。"
 
-#: ext/cdio/gstcdiocddasrc.c:283
+#: ext/cdio/gstcdiocddasrc.c:280
 msgid "Could not open CD device for reading."
-msgstr ""
+msgstr "无法打开 CD 设备读取。"
 
-#: ext/cdio/gstcdiocddasrc.c:290
+#: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
-msgstr ""
+msgstr "非音频 CD 盘。"
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
-msgstr ""
+msgstr "无法建立与音频服务器的连接"
 
 #: ext/esd/esdsink.c:269
 msgid "Failed to query sound server capabilities"
-msgstr ""
+msgstr "查寻音频服务器的服务失败"
 
-#: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
-#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1120
-#: gst/avi/gstavidemux.c:3779 gst/avi/gstavidemux.c:3787
+#: ext/flac/gstflacdec.c:1254 ext/libpng/gstpngdec.c:329
+#: ext/libpng/gstpngdec.c:517 ext/wavpack/gstwavpackparse.c:1167
+#: gst/avi/gstavidemux.c:4114 gst/avi/gstavidemux.c:4122
 msgid "Internal data stream error."
 msgstr "内部数据流错误。"
 
-#: ext/jpeg/gstjpegdec.c:1042
+#: ext/jpeg/gstjpegdec.c:1041
 msgid "Failed to decode JPEG image"
-msgstr ""
+msgstr "解码 JPEG 图像出错"
 
 #: ext/shout2/gstshout2.c:558
 msgid "Could not connect to server"
-msgstr ""
+msgstr "无法连接至服务器"
 
-#: gst/avi/gstavimux.c:1479
+#: gst/avi/gstavimux.c:1605
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "没有或无效的输入音频，AVI 流将损坏。"
 
-#: gst/qtdemux/qtdemux.c:1029
+#: gst/qtdemux/qtdemux.c:1113
 msgid "This file is incomplete and cannot be played."
-msgstr ""
+msgstr "此文件不完整且无法播放。"
 
-#: gst/qtdemux/qtdemux.c:1814
+#: gst/qtdemux/qtdemux.c:1935
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "此文件不包含可播放的流。"
 
-#: gst/qtdemux/qtdemux.c:2654
+#: gst/qtdemux/qtdemux.c:2780
 msgid "The video in this file might not play correctly."
-msgstr ""
+msgstr "此文件中的视频可能无法正确播放。"
 
-#: gst/qtdemux/qtdemux.c:2729
+#: gst/qtdemux/qtdemux.c:2855
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr ""
+msgstr "此文件包含了太多的流。只播放前面 %d 个"
 
-#: gst/qtdemux/qtdemux.c:2991 gst/qtdemux/qtdemux.c:3588
+#: gst/qtdemux/qtdemux.c:3117 gst/qtdemux/qtdemux.c:3714
 msgid "This file is corrupt and cannot be played."
-msgstr ""
-
-#: gst/qtdemux/qtdemux.c:3595
-msgid "This file is encrypted and cannot be played."
-msgstr ""
+msgstr "此文件已损坏，无法播放。"
 
 #: gst/wavparse/gstwavparse.c:1777
-#, fuzzy
 msgid "Internal data flow error."
 msgstr "内部数据流错误。"
 
 #: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Volume"
-msgstr ""
+msgstr "音量"
 
 #: sys/oss/gstossmixertrack.c:99
 msgid "Bass"
-msgstr ""
+msgstr "低音(Bass)"
 
 #: sys/oss/gstossmixertrack.c:100
 msgid "Treble"
-msgstr ""
+msgstr "高音(Treble)"
 
 #: sys/oss/gstossmixertrack.c:101
 msgid "Synth"
-msgstr ""
+msgstr "合成器"
 
 #: sys/oss/gstossmixertrack.c:102
 msgid "PCM"
-msgstr ""
+msgstr "波形(PCM)"
 
 #: sys/oss/gstossmixertrack.c:103
 msgid "Speaker"
-msgstr ""
+msgstr "扬声器(Speaker)"
 
 #: sys/oss/gstossmixertrack.c:104
 msgid "Line-in"
-msgstr ""
+msgstr "线路输入(Line-in)"
 
 #: sys/oss/gstossmixertrack.c:105
 msgid "Microphone"
-msgstr ""
+msgstr "话筒"
 
 #: sys/oss/gstossmixertrack.c:106
 msgid "CD"
-msgstr ""
+msgstr "CD 音频"
 
 #: sys/oss/gstossmixertrack.c:107
 msgid "Mixer"
-msgstr ""
+msgstr "混音器"
 
 #: sys/oss/gstossmixertrack.c:108
 msgid "PCM-2"
-msgstr ""
+msgstr "PCM-2"
 
 #: sys/oss/gstossmixertrack.c:109
 msgid "Record"
-msgstr ""
+msgstr "录音"
 
 #: sys/oss/gstossmixertrack.c:110
 msgid "In-gain"
-msgstr ""
+msgstr "输入增益"
 
 #: sys/oss/gstossmixertrack.c:111
 msgid "Out-gain"
-msgstr ""
+msgstr "输出增益"
 
 #: sys/oss/gstossmixertrack.c:112
 msgid "Line-1"
-msgstr ""
+msgstr "线路1"
 
 #: sys/oss/gstossmixertrack.c:113
 msgid "Line-2"
-msgstr ""
+msgstr "线路2"
 
 #: sys/oss/gstossmixertrack.c:114
 msgid "Line-3"
-msgstr ""
+msgstr "线路3"
 
 #: sys/oss/gstossmixertrack.c:115
 msgid "Digital-1"
-msgstr ""
+msgstr "数字线路1"
 
 #: sys/oss/gstossmixertrack.c:116
 msgid "Digital-2"
-msgstr ""
+msgstr "数字线路2"
 
 #: sys/oss/gstossmixertrack.c:117
 msgid "Digital-3"
-msgstr ""
+msgstr "数字线路3"
 
 #: sys/oss/gstossmixertrack.c:118
 msgid "Phone-in"
-msgstr ""
+msgstr "话筒输入"
 
 #: sys/oss/gstossmixertrack.c:119
 msgid "Phone-out"
-msgstr ""
+msgstr "话筒输出"
 
 #: sys/oss/gstossmixertrack.c:120
 msgid "Video"
-msgstr ""
+msgstr "视频"
 
 #: sys/oss/gstossmixertrack.c:121
 msgid "Radio"
-msgstr ""
+msgstr "广播"
 
 #: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Monitor"
-msgstr ""
+msgstr "监控器"
 
 #: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
-msgstr ""
+msgstr "增益"
 
-#: sys/v4l2/gstv4l2src.c:1048 sys/v4l2/gstv4l2src.c:1094
+#: sys/v4l2/gstv4l2src.c:1226 sys/v4l2/gstv4l2src.c:1275
 #, c-format
 msgid "Error read()ing %d bytes on device '%s'."
-msgstr ""
+msgstr "读取设备‘%2$s’中的 %1$d 字节时出错。"
 
-#: sys/v4l2/gstv4l2src.c:1076
+#: sys/v4l2/gstv4l2src.c:1257
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
-msgstr ""
+msgstr "取得了 %u 的不需要的帧大小，而不是 %u。"
 
-#: sys/v4l2/v4l2_calls.c:83
+#: sys/v4l2/v4l2_calls.c:93
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
-msgstr ""
+msgstr "获取设备‘%s’的信息时出错:它不是一个 v4l2 驱动器，请检查是否为 v4l1。"
 
-#: sys/v4l2/v4l2_calls.c:120
+#: sys/v4l2/v4l2_calls.c:132
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr ""
+msgstr "查寻设备 %2$s 中的输入 %1$d 的属性时出错"
 
-#: sys/v4l2/v4l2_calls.c:150
+#: sys/v4l2/v4l2_calls.c:162
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr ""
+msgstr "获取设备 %2$s 上的微调钮 %1$d 的设置时出错"
 
-#: sys/v4l2/v4l2_calls.c:192
-#, c-format
+#: sys/v4l2/v4l2_calls.c:205
+#, fuzzy, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr ""
+msgstr "查寻设备 ‘%s’上的基准时出错"
 
-#: sys/v4l2/v4l2_calls.c:240
+#: sys/v4l2/v4l2_calls.c:254
 #, c-format
 msgid "Failed getting controls attributes on device '%s.'"
-msgstr ""
+msgstr "获取设备‘%s’上的控制属性时出错。"
 
-#: sys/v4l2/v4l2_calls.c:310
+#: sys/v4l2/v4l2_calls.c:331
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr ""
-
-#: sys/v4l2/v4l2_calls.c:428
-#, c-format
-msgid "Cannot identify device '%s'."
-msgstr ""
-
-#: sys/v4l2/v4l2_calls.c:435
-#, c-format
-msgid "This isn't a device '%s'."
-msgstr ""
-
-#: sys/v4l2/v4l2_calls.c:442
-#, c-format
-msgid "Could not open device '%s' for reading and writing."
-msgstr ""
+msgstr "获取设备‘%s’上的控制属性时出错。"
 
 #: sys/v4l2/v4l2_calls.c:449
 #, c-format
-msgid "Device '%s' is not a capture device."
-msgstr ""
+msgid "Cannot identify device '%s'."
+msgstr "无法确认设备‘%s’。"
 
-#: sys/v4l2/v4l2_calls.c:544
+#: sys/v4l2/v4l2_calls.c:456
 #, c-format
-msgid "Failed to set norm for device '%s'."
-msgstr ""
+msgid "This isn't a device '%s'."
+msgstr "不是设备‘%s’。"
 
-#: sys/v4l2/v4l2_calls.c:581
+#: sys/v4l2/v4l2_calls.c:463
+#, c-format
+msgid "Could not open device '%s' for reading and writing."
+msgstr "无法打开设备‘%s’读写。"
+
+#: sys/v4l2/v4l2_calls.c:470
+#, c-format
+msgid "Device '%s' is not a capture device."
+msgstr "‘%s’不是一个捕获设备。"
+
+#: sys/v4l2/v4l2_calls.c:565
+#, fuzzy, c-format
+msgid "Failed to set norm for device '%s'."
+msgstr "设置设备‘%s’的基准时出错。"
+
+#: sys/v4l2/v4l2_calls.c:603
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr ""
+msgstr "获取设备‘%s’的当前微调钮频率时出错。"
 
-#: sys/v4l2/v4l2_calls.c:622
+#: sys/v4l2/v4l2_calls.c:645
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
-msgstr ""
+msgstr "设置设备‘%s’的当前微调钮频率为 %lu Hz 时出错。"
 
-#: sys/v4l2/v4l2_calls.c:656
+#: sys/v4l2/v4l2_calls.c:679
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr ""
+msgstr "获取设备‘%s’的信号长度时出错。"
 
-#: sys/v4l2/v4l2_calls.c:692
+#: sys/v4l2/v4l2_calls.c:715
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr ""
+msgstr "获取设备‘%2$s’的控制器 %1$d 的值出错。"
 
-#: sys/v4l2/v4l2_calls.c:727
+#: sys/v4l2/v4l2_calls.c:750
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr ""
+msgstr "设置设备‘%3$s’的控制器 %2$d 的值为 %1$d 时出错。"
 
-#: sys/v4l2/v4l2_calls.c:756
+#: sys/v4l2/v4l2_calls.c:779
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
-msgstr ""
+msgstr "获取设备‘%s’上的当前输入出错。也许它是一个广播设备"
 
-#: sys/v4l2/v4l2_calls.c:778
+#: sys/v4l2/v4l2_calls.c:801
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr ""
+msgstr "设置设备 %2$s 上的输入 %1$d 时出错。"
 
 #: sys/v4l2/v4l2src_calls.c:364
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
-msgstr ""
+msgstr "无法对设备‘%s’中的缓冲区进行排序。"
 
 #: sys/v4l2/v4l2src_calls.c:543
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr ""
+msgstr "枚举设备‘%s’可能支持的视频格式时出错"
 
-#: sys/v4l2/v4l2src_calls.c:1064 sys/v4l2/v4l2src_calls.c:1081
-#: sys/v4l2/v4l2src_calls.c:1090
+#: sys/v4l2/v4l2src_calls.c:1089 sys/v4l2/v4l2src_calls.c:1106
+#: sys/v4l2/v4l2src_calls.c:1115
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
-msgstr ""
+msgstr "从设备‘%s’上获取视频的尝试失败了。"
 
-#: sys/v4l2/v4l2src_calls.c:1066
+#: sys/v4l2/v4l2src_calls.c:1091
 #, c-format
 msgid ""
 "The buffer type is not supported, or the index is out of bounds, or no "
 "buffers have been allocated yet, or the userptr or length are invalid. "
 "device %s"
 msgstr ""
+"不支持的缓冲区类型，或者索引超出范围了，或是还未分配缓冲区，或非法的用户指针"
+"或长度。设备 %s"
 
-#: sys/v4l2/v4l2src_calls.c:1075
+#: sys/v4l2/v4l2src_calls.c:1100
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr ""
+msgstr "从设备‘%s’上获取视频的尝试失败了。没有足够的内存。"
 
-#: sys/v4l2/v4l2src_calls.c:1075
+#: sys/v4l2/v4l2src_calls.c:1100
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-msgstr ""
+msgstr "内存不足无法对用户指针缓冲区进行排序。设备 %s。"
 
-#: sys/v4l2/v4l2src_calls.c:1083
+#: sys/v4l2/v4l2src_calls.c:1108
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
-msgstr ""
+msgstr "在 %d 次尝试后失败。设备 %s。系统错误: %s"
 
-#: sys/v4l2/v4l2src_calls.c:1092
+#: sys/v4l2/v4l2src_calls.c:1117
 #, c-format
 msgid "No free buffers found in the pool at index %d."
-msgstr ""
+msgstr "在内存池中 %d 处没有可分配的缓冲区。"
 
-#: sys/v4l2/v4l2src_calls.c:1171
+#: sys/v4l2/v4l2src_calls.c:1208
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr ""
+msgstr "无法获取设备‘%s’的参数"
 
-#: sys/v4l2/v4l2src_calls.c:1199
+#: sys/v4l2/v4l2src_calls.c:1236
 msgid "Video input device did not accept new frame rate setting."
-msgstr ""
+msgstr "视频输入设备不接受新的帧率设置。"
 
-#: sys/v4l2/v4l2src_calls.c:1216
+#: sys/v4l2/v4l2src_calls.c:1253
 #, c-format
 msgid "Device '%s' does not support video capture"
-msgstr ""
+msgstr "设备‘%s’不支持视频捕获"
 
-#: sys/v4l2/v4l2src_calls.c:1224 sys/v4l2/v4l2src_calls.c:1233
+#: sys/v4l2/v4l2src_calls.c:1261 sys/v4l2/v4l2src_calls.c:1270
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr ""
+msgstr "设备‘%s’不能在 %dx%d 处捕获"
 
-#: sys/v4l2/v4l2src_calls.c:1242
+#: sys/v4l2/v4l2src_calls.c:1279
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr ""
+msgstr "设备‘%s’无法以指定格式捕获"
 
-#: sys/v4l2/v4l2src_calls.c:1320
+#: sys/v4l2/v4l2src_calls.c:1357
 #, c-format
 msgid "Could not get buffers from device '%s'."
-msgstr ""
+msgstr "无法从设备‘%s’中获取缓冲区。"
 
-#: sys/v4l2/v4l2src_calls.c:1329
+#: sys/v4l2/v4l2src_calls.c:1366
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
-msgstr ""
+msgstr "无法从设备‘%s’中获取足够的缓冲区。"
 
-#: sys/v4l2/v4l2src_calls.c:1338
+#: sys/v4l2/v4l2src_calls.c:1375
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr ""
+msgstr "无法从设备‘%s’中映射出缓冲区"
 
-#: sys/v4l2/v4l2src_calls.c:1346
+#: sys/v4l2/v4l2src_calls.c:1383
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
+msgstr "设备‘%s’的驱动不支持任何已知的捕获方式。"
 
-#: sys/v4l2/v4l2src_calls.c:1391
+#: sys/v4l2/v4l2src_calls.c:1428
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
-msgstr ""
+msgstr "从设备‘%s’中启用流捕获时出错。"
 
-#: sys/v4l2/v4l2src_calls.c:1435
+#: sys/v4l2/v4l2src_calls.c:1472
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
-msgstr ""
+msgstr "从设备‘%s’中停止流捕获时出错。"
 
 #: sys/ximage/gstximagesrc.c:711
 msgid "Changing resolution at runtime is not yet supported."
-msgstr ""
+msgstr "尚不支持在运行时更改分辨率。"
 
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
-msgstr ""
+msgstr "没有时钟的话无法操作"
+
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "此文件已加密，无法播放。"

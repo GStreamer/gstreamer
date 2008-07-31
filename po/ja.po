@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good HEAD\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-04-13 19:09+0100\n"
+"POT-Creation-Date: 2008-07-28 21:14+0100\n"
 "PO-Revision-Date: 2006-08-08 19:05+0200\n"
 "Last-Translator: Takao Fujiwara <takao.fujiwara@sun.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -20,12 +20,12 @@ msgid "Could not read from CD."
 msgstr "ファイル \"%s\" に書き込むことができません。"
 
 # SUN REVIEWED
-#: ext/cdio/gstcdiocddasrc.c:283
+#: ext/cdio/gstcdiocddasrc.c:280
 msgid "Could not open CD device for reading."
 msgstr "CD デバイスを読み取り用に開くことができません。"
 
 # SUN REVIEWED
-#: ext/cdio/gstcdiocddasrc.c:290
+#: ext/cdio/gstcdiocddasrc.c:287
 #, fuzzy
 msgid "Disc is not an Audio CD."
 msgstr "デバイスが開いていません。"
@@ -38,13 +38,13 @@ msgstr ""
 msgid "Failed to query sound server capabilities"
 msgstr ""
 
-#: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
-#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1120
-#: gst/avi/gstavidemux.c:3779 gst/avi/gstavidemux.c:3787
+#: ext/flac/gstflacdec.c:1254 ext/libpng/gstpngdec.c:329
+#: ext/libpng/gstpngdec.c:517 ext/wavpack/gstwavpackparse.c:1167
+#: gst/avi/gstavidemux.c:4114 gst/avi/gstavidemux.c:4122
 msgid "Internal data stream error."
 msgstr ""
 
-#: ext/jpeg/gstjpegdec.c:1042
+#: ext/jpeg/gstjpegdec.c:1041
 msgid "Failed to decode JPEG image"
 msgstr ""
 
@@ -53,33 +53,29 @@ msgid "Could not connect to server"
 msgstr ""
 
 # SUN REVIEWED
-#: gst/avi/gstavimux.c:1479
+#: gst/avi/gstavimux.c:1605
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "入力オーディオが存在しないか無効であるため、AVI ストリームは壊れます。"
 
-#: gst/qtdemux/qtdemux.c:1029
+#: gst/qtdemux/qtdemux.c:1113
 msgid "This file is incomplete and cannot be played."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:1814
+#: gst/qtdemux/qtdemux.c:1935
 msgid "This file contains no playable streams."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:2654
+#: gst/qtdemux/qtdemux.c:2780
 msgid "The video in this file might not play correctly."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:2729
+#: gst/qtdemux/qtdemux.c:2855
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:2991 gst/qtdemux/qtdemux.c:3588
+#: gst/qtdemux/qtdemux.c:3117 gst/qtdemux/qtdemux.c:3714
 msgid "This file is corrupt and cannot be played."
-msgstr ""
-
-#: gst/qtdemux/qtdemux.c:3595
-msgid "This file is encrypted and cannot be played."
 msgstr ""
 
 #: gst/wavparse/gstwavparse.c:1777
@@ -216,105 +212,105 @@ msgstr "モニター"
 msgid "Gain"
 msgstr "ゲイン"
 
-#: sys/v4l2/gstv4l2src.c:1048 sys/v4l2/gstv4l2src.c:1094
+#: sys/v4l2/gstv4l2src.c:1226 sys/v4l2/gstv4l2src.c:1275
 #, c-format
 msgid "Error read()ing %d bytes on device '%s'."
 msgstr ""
 
-#: sys/v4l2/gstv4l2src.c:1076
+#: sys/v4l2/gstv4l2src.c:1257
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:83
+#: sys/v4l2/v4l2_calls.c:93
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:120
+#: sys/v4l2/v4l2_calls.c:132
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:150
+#: sys/v4l2/v4l2_calls.c:162
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:192
+#: sys/v4l2/v4l2_calls.c:205
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:240
+#: sys/v4l2/v4l2_calls.c:254
 #, c-format
 msgid "Failed getting controls attributes on device '%s.'"
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:310
+#: sys/v4l2/v4l2_calls.c:331
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:428
+#: sys/v4l2/v4l2_calls.c:449
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:435
+#: sys/v4l2/v4l2_calls.c:456
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr ""
 
 # SUN REVIEWED
-#: sys/v4l2/v4l2_calls.c:442
+#: sys/v4l2/v4l2_calls.c:463
 #, fuzzy, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "CD デバイスを読み取り用に開くことができません。"
 
-#: sys/v4l2/v4l2_calls.c:449
+#: sys/v4l2/v4l2_calls.c:470
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:544
+#: sys/v4l2/v4l2_calls.c:565
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:581
+#: sys/v4l2/v4l2_calls.c:603
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:622
+#: sys/v4l2/v4l2_calls.c:645
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:656
+#: sys/v4l2/v4l2_calls.c:679
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:692
+#: sys/v4l2/v4l2_calls.c:715
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:727
+#: sys/v4l2/v4l2_calls.c:750
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:756
+#: sys/v4l2/v4l2_calls.c:779
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:778
+#: sys/v4l2/v4l2_calls.c:801
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr ""
@@ -329,13 +325,13 @@ msgstr ""
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1064 sys/v4l2/v4l2src_calls.c:1081
-#: sys/v4l2/v4l2src_calls.c:1090
+#: sys/v4l2/v4l2src_calls.c:1089 sys/v4l2/v4l2src_calls.c:1106
+#: sys/v4l2/v4l2src_calls.c:1115
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1066
+#: sys/v4l2/v4l2src_calls.c:1091
 #, c-format
 msgid ""
 "The buffer type is not supported, or the index is out of bounds, or no "
@@ -343,78 +339,78 @@ msgid ""
 "device %s"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1075
+#: sys/v4l2/v4l2src_calls.c:1100
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1075
+#: sys/v4l2/v4l2src_calls.c:1100
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1083
+#: sys/v4l2/v4l2src_calls.c:1108
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1092
+#: sys/v4l2/v4l2src_calls.c:1117
 #, c-format
 msgid "No free buffers found in the pool at index %d."
 msgstr ""
 
 # SUN REVIEWED
-#: sys/v4l2/v4l2src_calls.c:1171
+#: sys/v4l2/v4l2src_calls.c:1208
 #, fuzzy, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "CD デバイスを読み取り用に開くことができません。"
 
-#: sys/v4l2/v4l2src_calls.c:1199
+#: sys/v4l2/v4l2src_calls.c:1236
 msgid "Video input device did not accept new frame rate setting."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1216
+#: sys/v4l2/v4l2src_calls.c:1253
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1224 sys/v4l2/v4l2src_calls.c:1233
+#: sys/v4l2/v4l2src_calls.c:1261 sys/v4l2/v4l2src_calls.c:1270
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1242
+#: sys/v4l2/v4l2src_calls.c:1279
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1320
+#: sys/v4l2/v4l2src_calls.c:1357
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1329
+#: sys/v4l2/v4l2src_calls.c:1366
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr ""
 
 # SUN REVIEWED
-#: sys/v4l2/v4l2src_calls.c:1338
+#: sys/v4l2/v4l2src_calls.c:1375
 #, fuzzy, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "CD デバイスを読み取り用に開くことができません。"
 
-#: sys/v4l2/v4l2src_calls.c:1346
+#: sys/v4l2/v4l2src_calls.c:1383
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1391
+#: sys/v4l2/v4l2src_calls.c:1428
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1435
+#: sys/v4l2/v4l2src_calls.c:1472
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr ""

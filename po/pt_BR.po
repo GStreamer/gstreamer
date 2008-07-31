@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-19 14:41+0100\n"
+"POT-Creation-Date: 2008-07-28 21:14+0100\n"
 "PO-Revision-Date: 2008-07-20 17:12-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -59,24 +59,24 @@ msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Entrada de áudio nula ou inválida, o fluxo do AVI pode estar corrompido."
 
-#: gst/qtdemux/qtdemux.c:1055
+#: gst/qtdemux/qtdemux.c:1113
 msgid "This file is incomplete and cannot be played."
 msgstr "Este arquivo está incompleto e não pôde ser reproduzido."
 
-#: gst/qtdemux/qtdemux.c:1865
+#: gst/qtdemux/qtdemux.c:1935
 msgid "This file contains no playable streams."
 msgstr "Este arquivo não contêm fluxos reproduzíveis."
 
-#: gst/qtdemux/qtdemux.c:2710
+#: gst/qtdemux/qtdemux.c:2780
 msgid "The video in this file might not play correctly."
 msgstr "O vídeo neste arquivo não pode ser reproduzido corretamente."
 
-#: gst/qtdemux/qtdemux.c:2785
+#: gst/qtdemux/qtdemux.c:2855
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Este arquivo contêm muitos fluxos. Apenas reproduzindo o primeiro %d"
 
-#: gst/qtdemux/qtdemux.c:3047 gst/qtdemux/qtdemux.c:3644
+#: gst/qtdemux/qtdemux.c:3117 gst/qtdemux/qtdemux.c:3714
 msgid "This file is corrupt and cannot be played."
 msgstr "Este arquivo está corrompido e não pôde ser reproduzido."
 

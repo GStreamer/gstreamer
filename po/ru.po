@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-04-13 19:09+0100\n"
+"POT-Creation-Date: 2008-07-28 21:14+0100\n"
 "PO-Revision-Date: 2008-04-02 08:43+0000\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -18,11 +18,11 @@ msgstr ""
 msgid "Could not read from CD."
 msgstr "Не удалось прочитать CD."
 
-#: ext/cdio/gstcdiocddasrc.c:283
+#: ext/cdio/gstcdiocddasrc.c:280
 msgid "Could not open CD device for reading."
 msgstr "Не удалось открыть CD-устройство для чтения."
 
-#: ext/cdio/gstcdiocddasrc.c:290
+#: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
 msgstr "Диск не является аудио-CD."
 
@@ -34,13 +34,13 @@ msgstr "Не удалось установить соединение с сер�
 msgid "Failed to query sound server capabilities"
 msgstr "Ошибка при запросе возможностей сервера звука"
 
-#: ext/flac/gstflacdec.c:1262 ext/libpng/gstpngdec.c:330
-#: ext/libpng/gstpngdec.c:518 ext/wavpack/gstwavpackparse.c:1120
-#: gst/avi/gstavidemux.c:3779 gst/avi/gstavidemux.c:3787
+#: ext/flac/gstflacdec.c:1254 ext/libpng/gstpngdec.c:329
+#: ext/libpng/gstpngdec.c:517 ext/wavpack/gstwavpackparse.c:1167
+#: gst/avi/gstavidemux.c:4114 gst/avi/gstavidemux.c:4122
 msgid "Internal data stream error."
 msgstr "Внутренняя ошибка потока данных."
 
-#: ext/jpeg/gstjpegdec.c:1042
+#: ext/jpeg/gstjpegdec.c:1041
 msgid "Failed to decode JPEG image"
 msgstr "Не удалось декодировать JPEG-изображение"
 
@@ -48,37 +48,33 @@ msgstr "Не удалось декодировать JPEG-изображение
 msgid "Could not connect to server"
 msgstr "Не удалось соединиться с сервером"
 
-#: gst/avi/gstavimux.c:1479
+#: gst/avi/gstavimux.c:1605
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Входящие аудио-данные отсутствуют или недействительны, поток AVI будет "
 "повреждён."
 
-#: gst/qtdemux/qtdemux.c:1029
+#: gst/qtdemux/qtdemux.c:1113
 msgid "This file is incomplete and cannot be played."
 msgstr "Файл не полон и не может быть воспроизведён."
 
-#: gst/qtdemux/qtdemux.c:1814
+#: gst/qtdemux/qtdemux.c:1935
 msgid "This file contains no playable streams."
 msgstr "Файл не содержит воспроизводимых потоков."
 
-#: gst/qtdemux/qtdemux.c:2654
+#: gst/qtdemux/qtdemux.c:2780
 msgid "The video in this file might not play correctly."
 msgstr "Видео из этого файла может быть воспроизведено некорректно."
 
-#: gst/qtdemux/qtdemux.c:2729
+#: gst/qtdemux/qtdemux.c:2855
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Файл содержит слишком много потоков. Будет воспроизведёно только первых %d"
 
-#: gst/qtdemux/qtdemux.c:2991 gst/qtdemux/qtdemux.c:3588
+#: gst/qtdemux/qtdemux.c:3117 gst/qtdemux/qtdemux.c:3714
 msgid "This file is corrupt and cannot be played."
 msgstr "Файл повреждён и не может быть воспроизведён."
-
-#: gst/qtdemux/qtdemux.c:3595
-msgid "This file is encrypted and cannot be played."
-msgstr "Файл зашифрован и не может быть воспроизведён."
 
 #: gst/wavparse/gstwavparse.c:1777
 msgid "Internal data flow error."
@@ -188,17 +184,17 @@ msgstr "Мониторинг"
 msgid "Gain"
 msgstr "Усиление"
 
-#: sys/v4l2/gstv4l2src.c:1048 sys/v4l2/gstv4l2src.c:1094
+#: sys/v4l2/gstv4l2src.c:1226 sys/v4l2/gstv4l2src.c:1275
 #, c-format
 msgid "Error read()ing %d bytes on device '%s'."
 msgstr "Ошибка чтения (read) %d байт из устройства «%s»."
 
-#: sys/v4l2/gstv4l2src.c:1076
+#: sys/v4l2/gstv4l2src.c:1257
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Получен неожиданный размер кадра: %u вместо %u."
 
-#: sys/v4l2/v4l2_calls.c:83
+#: sys/v4l2/v4l2_calls.c:93
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
@@ -207,90 +203,90 @@ msgstr ""
 "Ошибка получения возможностей устройства «%s»: драйвер устройства несовместим "
 "с v4l2. Проверьте, не использует ли устройство драйвер v4l1."
 
-#: sys/v4l2/v4l2_calls.c:120
+#: sys/v4l2/v4l2_calls.c:132
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
 msgstr "Ошибка запроса атрибутов входа %d устройства %s"
 
-#: sys/v4l2/v4l2_calls.c:150
+#: sys/v4l2/v4l2_calls.c:162
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr "Ошибка получения установок тюнера %d устройства «%s»."
 
-#: sys/v4l2/v4l2_calls.c:192
+#: sys/v4l2/v4l2_calls.c:205
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr "Ошибка запроса стандарта устройства «%s»."
 
-#: sys/v4l2/v4l2_calls.c:240
+#: sys/v4l2/v4l2_calls.c:254
 #, c-format
 msgid "Failed getting controls attributes on device '%s.'"
 msgstr "Ошибка получения атрибутов управления устройства «%s»."
 
-#: sys/v4l2/v4l2_calls.c:310
+#: sys/v4l2/v4l2_calls.c:331
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Ошибка получения атрибутов управления устройства «%s»."
 
-#: sys/v4l2/v4l2_calls.c:428
+#: sys/v4l2/v4l2_calls.c:449
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Не удаётся распознать устройство «%s»."
 
-#: sys/v4l2/v4l2_calls.c:435
+#: sys/v4l2/v4l2_calls.c:456
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "«%s» не является устройством."
 
-#: sys/v4l2/v4l2_calls.c:442
+#: sys/v4l2/v4l2_calls.c:463
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Не удалось открыть устройство «%s» для чтения и записи."
 
-#: sys/v4l2/v4l2_calls.c:449
+#: sys/v4l2/v4l2_calls.c:470
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "Устройство «%s» не является устройством захвата."
 
-#: sys/v4l2/v4l2_calls.c:544
+#: sys/v4l2/v4l2_calls.c:565
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Ошибка установки стандарта устройства «%s»."
 
-#: sys/v4l2/v4l2_calls.c:581
+#: sys/v4l2/v4l2_calls.c:603
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr "Ошибка получения текущей частоты тюнера устройства «%s»."
 
-#: sys/v4l2/v4l2_calls.c:622
+#: sys/v4l2/v4l2_calls.c:645
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr "Ошибка установки текущей частоты тюнера устройства «%s» в %lu Гц."
 
-#: sys/v4l2/v4l2_calls.c:656
+#: sys/v4l2/v4l2_calls.c:679
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "Ошибка получения мощности сигнала для устройства «%s»."
 
-#: sys/v4l2/v4l2_calls.c:692
+#: sys/v4l2/v4l2_calls.c:715
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Ошибка получения значения управляющего параметра %d устройства «%s»."
 
-#: sys/v4l2/v4l2_calls.c:727
+#: sys/v4l2/v4l2_calls.c:750
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
 "Ошибка установки значения %d для управляющего параметра %d устройства «%s»."
 
-#: sys/v4l2/v4l2_calls.c:756
+#: sys/v4l2/v4l2_calls.c:779
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Не удалось определить активный вход устройства «%s». Возможно, это радио-"
 "устройство"
 
-#: sys/v4l2/v4l2_calls.c:778
+#: sys/v4l2/v4l2_calls.c:801
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Не удалось выбрать вход %d для устройства %s"
@@ -307,13 +303,13 @@ msgstr ""
 "Не удалось создать список видео-форматов, с которыми может работать "
 "устройство «%s»"
 
-#: sys/v4l2/v4l2src_calls.c:1064 sys/v4l2/v4l2src_calls.c:1081
-#: sys/v4l2/v4l2src_calls.c:1090
+#: sys/v4l2/v4l2src_calls.c:1089 sys/v4l2/v4l2src_calls.c:1106
+#: sys/v4l2/v4l2src_calls.c:1115
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Ошибка при попытке получения кадров видео с устройства «%s»."
 
-#: sys/v4l2/v4l2src_calls.c:1066
+#: sys/v4l2/v4l2src_calls.c:1091
 #, c-format
 msgid ""
 "The buffer type is not supported, or the index is out of bounds, or no "
@@ -323,81 +319,81 @@ msgstr ""
 "Неподдерживаемый тип буфера, либо индекс вне диапазона, либо буферы не были "
 "распределены, либо неверные значения длины или userptr (устройство %s)"
 
-#: sys/v4l2/v4l2src_calls.c:1075
+#: sys/v4l2/v4l2src_calls.c:1100
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
 msgstr ""
 "Ошибка при попытке получения кадров видео с устройства «%s». Не хватает "
 "памяти."
 
-#: sys/v4l2/v4l2src_calls.c:1075
+#: sys/v4l2/v4l2src_calls.c:1100
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr ""
 "не хватает памяти для постановки в очередь буфера пользовательского "
 "указателя (устройство %s)"
 
-#: sys/v4l2/v4l2src_calls.c:1083
+#: sys/v4l2/v4l2src_calls.c:1108
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Ошибка после %d попыток. Устройство: %s. Системная ошибка: %s"
 
-#: sys/v4l2/v4l2src_calls.c:1092
+#: sys/v4l2/v4l2src_calls.c:1117
 #, c-format
 msgid "No free buffers found in the pool at index %d."
 msgstr "В пуле не найдено свободных буферов для индекса %d."
 
-#: sys/v4l2/v4l2src_calls.c:1171
+#: sys/v4l2/v4l2src_calls.c:1208
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Не удалось получить параметры устройства «%s»"
 
-#: sys/v4l2/v4l2src_calls.c:1199
+#: sys/v4l2/v4l2src_calls.c:1236
 msgid "Video input device did not accept new frame rate setting."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1216
+#: sys/v4l2/v4l2src_calls.c:1253
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Устройство «%s» не поддерживает видеозахват"
 
-#: sys/v4l2/v4l2src_calls.c:1224 sys/v4l2/v4l2src_calls.c:1233
+#: sys/v4l2/v4l2src_calls.c:1261 sys/v4l2/v4l2src_calls.c:1270
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Устройство «%s» не может осуществить захват при размерах %dx%d"
 
-#: sys/v4l2/v4l2src_calls.c:1242
+#: sys/v4l2/v4l2src_calls.c:1279
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Устройство «%s» не может осуществить захват в указанном формате"
 
-#: sys/v4l2/v4l2src_calls.c:1320
+#: sys/v4l2/v4l2src_calls.c:1357
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Не удалось получить буферы устройства «%s»"
 
-#: sys/v4l2/v4l2src_calls.c:1329
+#: sys/v4l2/v4l2src_calls.c:1366
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Не удалось получить необходимое количество буферов устройства «%s»"
 
-#: sys/v4l2/v4l2src_calls.c:1338
+#: sys/v4l2/v4l2src_calls.c:1375
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Не удалось распределить буферы устройства «%s»"
 
-#: sys/v4l2/v4l2src_calls.c:1346
+#: sys/v4l2/v4l2src_calls.c:1383
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
 "Драйвер устройства «%s» не поддерживает ни один из известных методов захвата."
 
-#: sys/v4l2/v4l2src_calls.c:1391
+#: sys/v4l2/v4l2src_calls.c:1428
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Ошибка при запуске потока захвата с устройства «%s»."
 
-#: sys/v4l2/v4l2src_calls.c:1435
+#: sys/v4l2/v4l2src_calls.c:1472
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Ошибка при остановке потока захвата с устройства «%s»."
@@ -411,6 +407,9 @@ msgstr ""
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Операция невозможна без часов"
+
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Файл зашифрован и не может быть воспроизведён."
 
 #~ msgid "Could not set parameters on device '%s'"
 #~ msgstr "Не удалось установить параметры устройства «%s»"
