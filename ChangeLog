@@ -1,3 +1,11 @@
+2008-07-31  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	Don't throw an error when soup completes a msg with status
+	'cancelled', as that indicates we cancelled a request while
+	shutting down or seeking, and it's not an error.
+	Fixes: #540300 again.
+
 2008-07-28  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

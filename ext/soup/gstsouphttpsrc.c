@@ -703,9 +703,11 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     src->ret = GST_FLOW_CUSTOM_ERROR;
   } else if (G_UNLIKELY (src->session_io_status !=
           GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
-    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-        ("%s", msg->reason_phrase),
-        ("libsoup status code %d", msg->status_code));
+    if (msg->status_code != SOUP_STATUS_CANCELLED) {
+      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+          ("%s", msg->reason_phrase),
+          ("libsoup status code %d", msg->status_code));
+    }
   }
   if (src->loop)
     g_main_loop_quit (src->loop);
