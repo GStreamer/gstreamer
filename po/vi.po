@@ -1,14 +1,14 @@
 # Vietnamese translation for GST Plugins Bad.
 # Copyright © 2008 Free Software Foundation, Inc.
-# This file is distributed under the same license as the gst-plugins-bad-0.10.5.2 package.
+# This file is distributed under the same license as the gst-plugins-bad-0.10.6.3 package.
 # Clytie Siddall <clytie@riverland.net.au>, 2007-2008.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.5.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.6.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-04-13 21:50+0100\n"
-"PO-Revision-Date: 2008-02-10 18:04+1030\n"
+"POT-Creation-Date: 2008-07-19 14:58+0100\n"
+"PO-Revision-Date: 2008-04-22 17:54+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -26,7 +26,7 @@ msgstr "Chưa ghi rõ tên tập tin để ghi vào."
 msgid "Could not open file \"%s\" for writing."
 msgstr "Không thể mở tập tin « %s » để ghi."
 
-#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:739
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:735
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
@@ -35,22 +35,22 @@ msgstr "Lỗi luồng dữ liệu nội bộ."
 msgid "Could not write to file \"%s\"."
 msgstr "Không thể ghi vào tập tin « %s »."
 
-#: sys/dvb/gstdvbsrc.c:704 sys/dvb/gstdvbsrc.c:785
+#: sys/dvb/gstdvbsrc.c:694 sys/dvb/gstdvbsrc.c:775
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Thiết bị « %s » không tồn tại."
 
-#: sys/dvb/gstdvbsrc.c:708
+#: sys/dvb/gstdvbsrc.c:698
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Không thể mở thiết bị giao diện « %s »."
 
-#: sys/dvb/gstdvbsrc.c:720
+#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Không thể lấy thiết lập từ thiết bị giao diện « %s »."
 
-#: sys/dvb/gstdvbsrc.c:789
+#: sys/dvb/gstdvbsrc.c:779
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Không thể mở tập tin « %s » để đọc."

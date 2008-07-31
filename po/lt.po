@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.6.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-04-13 21:50+0100\n"
+"POT-Creation-Date: 2008-07-19 14:58+0100\n"
 "PO-Revision-Date: 2008-05-14 02:13+0300\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -14,7 +14,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.4\n"
-"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%"
+"100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 msgid "No file name specified for writing."
@@ -25,7 +26,7 @@ msgstr "Nenurodytas failo rašymui pavadinimas."
 msgid "Could not open file \"%s\" for writing."
 msgstr "Nepavyko atverti failo „%s“ rašymui."
 
-#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:739
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:735
 msgid "Internal data stream error."
 msgstr "Vidinė duomenų srauto klaida."
 
@@ -34,22 +35,22 @@ msgstr "Vidinė duomenų srauto klaida."
 msgid "Could not write to file \"%s\"."
 msgstr "Nepavyko rašyti į failą „%s“."
 
-#: sys/dvb/gstdvbsrc.c:704 sys/dvb/gstdvbsrc.c:785
+#: sys/dvb/gstdvbsrc.c:694 sys/dvb/gstdvbsrc.c:775
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Įrenginys „%s“ neegzistuoja."
 
-#: sys/dvb/gstdvbsrc.c:708
+#: sys/dvb/gstdvbsrc.c:698
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nepavyko atverti išorinės pusės įrenginio „%s“."
 
-#: sys/dvb/gstdvbsrc.c:720
+#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nepavyko gauti nustatymų iš išorinės pusės įrenginio „%s“."
 
-#: sys/dvb/gstdvbsrc.c:789
+#: sys/dvb/gstdvbsrc.c:779
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nepavyko atverti failo „%s“ skaitymui."
