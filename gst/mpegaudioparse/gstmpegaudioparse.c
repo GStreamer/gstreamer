@@ -128,7 +128,7 @@ static GstStateChangeReturn gst_mp3parse_change_state (GstElement * element,
     GstStateChange transition);
 
 static gboolean mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
-    gint64 bytepos, GstClockTime * ts);
+    gint64 bytepos, GstClockTime * ts, gboolean from_total_time);
 static gboolean
 mp3parse_total_bytes (GstMPEGAudioParse * mp3parse, gint64 * total);
 static gboolean
@@ -525,10 +525,10 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
         GstClockTime seg_start, seg_stop, seg_pos;
 
         /* stop time is allowed to be open-ended, but not start & pos */
-        if (!mp3parse_bytepos_to_time (mp3parse, stop, &seg_stop))
+        if (!mp3parse_bytepos_to_time (mp3parse, stop, &seg_stop, FALSE))
           seg_stop = GST_CLOCK_TIME_NONE;
-        if (mp3parse_bytepos_to_time (mp3parse, start, &seg_start) &&
-            mp3parse_bytepos_to_time (mp3parse, pos, &seg_pos)) {
+        if (mp3parse_bytepos_to_time (mp3parse, start, &seg_start, FALSE) &&
+            mp3parse_bytepos_to_time (mp3parse, pos, &seg_pos, FALSE)) {
           gst_event_unref (event);
           event = gst_event_new_new_segment_full (update, rate, applied_rate,
               GST_FORMAT_TIME, seg_start, seg_stop, seg_pos);
@@ -667,7 +667,7 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
 
     /* No timestamp yet, convert our offset to a timestamp if we can, or
      * start at 0 */
-    if (mp3parse_bytepos_to_time (mp3parse, mp3parse->cur_offset, &ts) &&
+    if (mp3parse_bytepos_to_time (mp3parse, mp3parse->cur_offset, &ts, FALSE) &&
         GST_CLOCK_TIME_IS_VALID (ts))
       GST_BUFFER_TIMESTAMP (outbuf) = ts;
     else {
@@ -1550,7 +1550,7 @@ mp3parse_total_time (GstMPEGAudioParse * mp3parse, GstClockTime * total)
     return FALSE;
 
   if (total_bytes != -1
-      && !mp3parse_bytepos_to_time (mp3parse, total_bytes, total))
+      && !mp3parse_bytepos_to_time (mp3parse, total_bytes, total, TRUE))
     return FALSE;
 
   return TRUE;
@@ -1640,7 +1640,7 @@ no_bitrate:
 
 static gboolean
 mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
-    gint64 bytepos, GstClockTime * ts)
+    gint64 bytepos, GstClockTime * ts, gboolean from_total_time)
 {
   gint64 total_bytes;
 
@@ -1657,7 +1657,7 @@ mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
   }
 
   /* If XING seek table exists use this for byte->time conversion */
-  if ((mp3parse->xing_flags & XING_TOC_FLAG) &&
+  if (!from_total_time && (mp3parse->xing_flags & XING_TOC_FLAG) &&
       mp3parse_total_bytes (mp3parse, &total_bytes) &&
       mp3parse_total_time (mp3parse, &total_time)) {
     gdouble fa, fb, fx;
@@ -1679,7 +1679,7 @@ mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
     return TRUE;
   }
 
-  if (mp3parse->vbri_seek_table &&
+  if (!from_total_time && mp3parse->vbri_seek_table &&
       mp3parse_total_bytes (mp3parse, &total_bytes) &&
       mp3parse_total_time (mp3parse, &total_time)) {
     gint i = 0;

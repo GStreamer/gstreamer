@@ -1,5 +1,17 @@
 2008-07-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_sink_event), (gst_mp3parse_emit_frame),
+	(mp3parse_total_time), (mp3parse_bytepos_to_time):
+	Don't recurse from mp3parse_bytepos_to_time() to mp3parse_total_time()
+	if we're called from there already. Otherwise we end up in a endless
+	recursion and crash with a stack overflow.
+
+	This can happen when a Xing or VBRI header with TOC exists but it
+	doesn't contain the total time. Fixes bug #545370.
+
+2008-07-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/lame/gstlame.c: (gst_lame_class_init),
 	(gst_lame_get_default_settings):
 	Use the default for the strict-iso property too.
