@@ -11,7 +11,7 @@
 <ARG>
 <NAME>GstPitch::pitch</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Pitch</NICK>
 <BLURB>Audio stream pitch.</BLURB>
@@ -21,7 +21,7 @@
 <ARG>
 <NAME>GstPitch::rate</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Rate</NICK>
 <BLURB>Audio stream rate.</BLURB>
@@ -31,7 +31,7 @@
 <ARG>
 <NAME>GstPitch::tempo</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Tempo</NICK>
 <BLURB>Audio stream tempo.</BLURB>
@@ -1331,7 +1331,7 @@
 <ARG>
 <NAME>GstSpeed::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,40]</RANGE>
+<RANGE>[0.1,40]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>speed</NICK>
 <BLURB>speed.</BLURB>
@@ -1835,6 +1835,26 @@
 <FLAGS>rw</FLAGS>
 <NICK>Use copyrect encoding</NICK>
 <BLURB>Use copyrect encoding.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRfbSrc::shared</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Share desktop with other clients</NICK>
+<BLURB>Share desktop with other clients.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRfbSrc::view-only</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Only view the desktop</NICK>
+<BLURB>only view the desktop.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -16835,7 +16855,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Dry-Wet-Balance</NICK>
 <BLURB>Dry-Wet-Balance.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17345,7 +17365,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/lib/RealPlayer10/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17385,7 +17405,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/lib/RealPlayer10/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17715,7 +17735,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern sensitivity</NICK>
 <BLURB>The sensitivity around the center for detecting the markers (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,3</DEFAULT>
+<DEFAULT>0.3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17755,7 +17775,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern center</NICK>
 <BLURB>The center of the black/white separation (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17905,7 +17925,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>stereo</NICK>
 <BLURB>stereo.</BLURB>
-<DEFAULT>0,1</DEFAULT>
+<DEFAULT>0.1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21891,5 +21911,45 @@
 <NICK>Scene-no-</NICK>
 <BLURB>Scene-no-.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDeinterlace2::fields</NAME>
+<TYPE>GstDeinterlace2Fields</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>fields</NICK>
+<BLURB>Fields to use for deinterlacing.</BLURB>
+<DEFAULT>All fields</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDeinterlace2::method</NAME>
+<TYPE>GstDeinterlace2Methods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Method</NICK>
+<BLURB>Deinterlace Method.</BLURB>
+<DEFAULT>Greedy High Motion</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDeinterlace2::tff</NAME>
+<TYPE>GstDeinterlace2FieldLayout</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>tff</NICK>
+<BLURB>Deinterlace top field first.</BLURB>
+<DEFAULT>Auto detection</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>RsnDvdBin::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>DVD device location.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 

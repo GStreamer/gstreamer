@@ -14,9 +14,6 @@
 /* Location of registry */
 #define GST_CACHE_DIR PREFIX "\\var\\cache"
 
-/* macro to use to show function name */
-#undef GST_FUNCTION
-
 /* Defined if gcov is enabled to force a rebuild due to config.h changing */
 #undef GST_GCOV_ENABLED
 
@@ -202,7 +199,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.7"
+#define VERSION "0.10.8"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

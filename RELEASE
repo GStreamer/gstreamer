@@ -1,14 +1,16 @@
 
-Release notes for GStreamer Bad Plug-ins 0.10.7 "House of Cards"
+Release notes for GStreamer Bad Plug-ins 0.10.8 "Vapour Trails"
         
 
 
 The GStreamer team is proud to announce a new release
-in the 0.10.x stable series of the GStreamer Bad Plug-ins.
+in the 0.10.x stable series of the
+GStreamer Bad Plug-ins.
 
 
 The 0.10.x series is a stable series targeted at end users.
-It is, parallel installable with the older 0.8.x series.
+It is not API or ABI compatible with the stable 0.8.x series.
+It is, however, parallel installable with the 0.8.x series.
 
 
 
@@ -58,65 +60,60 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * OSS v4 support
-      * libdc1394 2.0.0 support
-      * AAC support fixes
-      * RTP support improved
-      * New OFA element
-      * SRT subtitle encoder added
-      * Windows Inet support for http/ftp
-      * Fixes in dc1394, MIDI, MPEG-2 encoding, MythTV input, NAS
-      * Fixes in Bayer decoder, replaygain analysis, GSM decoder
-      * DVB/MPEG-TS support improved
-      * NSF decoder updated
-      * 'metadata' plugin enhancements
-      * Dirac encoder ported to libschroedinger
-      * mplex element ported to 0.10
-      * VCD/CDXA parser ported to 0.10
-      * Directshow wrapper improvements
-      * 'selector' plugin enhancements
-      * souphttpsrc moved to the -good module
-      * Various other fixes and enhancements
+      * Support shared desktops in RFB input
+      * Make the Quicktime codec wrapper work on win32
+      * Experimental DVD navigation support
+      * Support AAC/H.264 in FLV files
+      * Fixes in the DirectShow codec wrapper
+      * Fix the Real codec wrapper plugin
+      * New deinterlace2 plugin incorporating TVtime deinterlacers
+      * Handle seeking, timestamps, duration in RAW video/audio parsers
+      * New DirectShow video sink for Win32
+      * FAAD reverse playback support
+      * OSS4 support improvements
+      * MythTV seeking support
+      * SPC decoder now supports seeking, tags and duration queries
+      * Replaygain elements moved to Good
+      * Deinterleave/interleave elements fixed and moved to Good
+      * MPEG-4 video stream parser fixes
+      * Improved MPEG-TS parsing for DVB support
+      * Improvements in App source/sink
+      * RTP manager enhancements
 
 Bugs fixed in this release
      
-      * 498237 : nsfdec crash with SK8ORDIE.
-      * 529378 : faad leaks GstAudioChannelPosition
-      * 351309 : New Element: gst-puid
-      * 469979 : [faad] Could not map channel positions - setting caps on ...
-      * 494499 : replaygain analysis slowdown on low volume (denormals)
-      * 514948 : [souphttpsrc] configurable buffer size setting and zero-copy
-      * 514964 : [dc1394] port to new stable 2.0.x API
-      * 517937 : various C89 fixes
-      * 518227 : test/icles/metadata_editor.c does not compile on Windows
-      * 518722 : [souphttpsrc] append cookie headers to HTTP request
-      * 519905 : [mvedemux] fix audio discontinuity
-      * 520329 : [PATCH] mjpegtools: mplex ported to 0.10 and mpeg2enc upd...
-      * 520626 : Implement collision and loop detection in rtpmanager
-      * 520892 : [dshowvideosrc] latency and shutdown improvements
-      * 520894 : rtpmanager rtcp thread shutdown deadlock
-      * 520897 : new element: wininetsrc
-      * 521749 : [souphttpsrc] unit test fails on mandriva cooker
-      * 522134 : [souphttpsrc] Playback should continue seamlessly on serv...
-      * 522212 : wrong origin
-      * 522884 : gstneonhttpsrc does not handle the HTTP status 303 correc...
-      * 523854 : [souphttpsrc] Glitches and crackling when playing things ...
-      * 524035 : [neonhttpsrc] fails to compile with libneon 0.28.x
-      * 525271 : [new plugin] srtenc
-      * 526337 : souphttpsrc ignores connections error
-      * 527622 : [flvdemux] crash in FLV demuxer
-      * 528000 : [timidity] Doesn't dist all files correctly
-      * 528011 : [dc1394] Shouldn't be included in the states test
-      * 528245 : rtpbin element leaks
-      * 528266 : [ofa] Unit test fails because of different fingerprints
-      * 528614 : timeout introduced in poll loop for fd in dvbsrc causes b...
-      * 529283 : [ofa] Unit test leaks tag string
-      * 529285 : [rganalysis] Unit test leaks a GstTagList
-      * 517854 : DirectFB check fails
-      * 517895 : nas plugin no longer builds (configure.ac error)
-      * 517896 : PATCH: fix building of mpeg2enc plugin with even newer mj...
-      * 525100 : does not build with --disable-external
-      * 481354 : [wavparse] does not play 700Hz GSM 6.10 wav file
+      * 533736 : [mythtvsrc] Seeking doesn't work
+      * 544050 : ext/timidity/gsttimidity.c :  ISO C90 forbids mixed decla...
+      * 454151 : SPC plugin enhancements (patch)
+      * 506594 : [interleave] doesn't work with channels > 1
+      * 521392 : Proposed patches for bayer2rgb encoding
+      * 525613 : [wildmidi] [PATCH] initializes library multiple times
+      * 528618 : amrwb plugin do not build without warning with the 3ggp s...
+      * 529359 : BBC Real Audio stream is just noise
+      * 530611 : [gstsrtenc] declare variables at beginning of block
+      * 531840 : QuickTime wrapper doesn't work on Win32
+      * 531955 : gstrtpsession doesn't send RTCP bye on EOS
+      * 532723 : mpeg4videoparse should parse the codec data
+      * 533435 : wildmidi does not work
+      * 533559 : mpeg4videoparse should skip garbage
+      * 535043 : VCD plugin only plays first track
+      * 536042 : mpeg4videoparse broken on big endian architectures
+      * 536258 : interleave doesn't close properly
+      * 536856 : rtpmanager deadlocks when receiving new data while going ...
+      * 538560 : [mpegtsparse] static caps reference counter incremented i...
+      * 539292 : memory leak in mpegtsparse
+      * 539601 : [realvideodec] not-negotiated error if codec lib isn't found
+      * 541522 : cross mingw32 gcc: festival plugin compilation fix
+      * 541543 : fix HAVE_OSS4 detection code in configure.ac
+      * 543286 : deinterlace2 doesn't build outside gcc
+      * 543846 : [resindvd] Impossible to build from the first configure r...
+      * 543848 : [ladspa] Needs to link with -ldl for dlopen() and friends
+      * 543860 : [modplug] Uses CFLAGS for CXXFLAGS
+      * 543861 : [resindvd] Some files not disted
+      * 544457 : -bad doesn't compile with MSVC
+      * 526905 : [musepack] Port to the new libmpcdec API
+      * 532011 : Deadlock in rtpsession
+      * 536309 : Seeking in pipeline with videoparse crashes
 
 Download
 
@@ -146,33 +143,33 @@ Applications
   
 Contributors to this release
     
-      * Andreas Henriksson
+      * Alessandro Decina
       * Andy Wingo
+      * Bastien Nocera
+      * Brian Koropoff
+      * Clive Wright
       * Damien Lespiau
-      * Daniel Fischer
       * David Schleef
-      * Ed Catmur
-      * Edgard Lima
       * Edward Hervey
-      * Emilio Pozuelo Monfort
-      * Eric Buehl
+      * Håvard Graff
+      * Ilja Pavkovic
       * Jan Schmidt
-      * Jan de Groot
       * Jens Granseuer
       * Julien Moutte
-      * Kapil Agrawal
       * Mark Nauwelaerts
+      * Martin Eikermann
+      * Michael Smith
       * Ole André Vadla Ravnås
       * Olivier Crete
       * Peter Kjellerstedt
-      * Rene Stadler
+      * Ryan Houdek
       * Sebastian Dröge
+      * Sebastian Pölsterl
+      * Sebastien Merle
       * Sjoerd Simons
       * Stefan Kost
       * Thijs Vermeir
       * Tim-Philipp Müller
-      * William M. Brack
       * Wim Taymans
-      * Wouter Cloetens
       * Zaheer Abbas Merali
  

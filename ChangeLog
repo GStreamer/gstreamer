@@ -1,3 +1,10 @@
+=== release 0.10.8 ===
+
+2008-07-28  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.8, "Vapour Trails"
+
 2008-07-25  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
@@ -1282,7 +1289,7 @@
 
 2008-06-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
-	Based on a patch by:  Sonicadvance1 at GMAIL dot COM
+	Based on a patch by: Ryan Houdek <Sonicadvance1 at GMAIL dot COM>
 
 	* ext/timidity/gstwildmidi.c: (gst_wildmidi_init),
 	(gst_wildmidi_change_state), (plugin_init):

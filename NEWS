@@ -1,4 +1,61 @@
-This is GStreamer Bad Plug-ins 0.10.7, "House of Cards"
+This is GStreamer Bad Plug-ins 0.10.8, "Vapour Trails"
+
+Changes since 0.10.7:
+
+      * Support shared desktops in RFB input
+      * Make the Quicktime codec wrapper work on win32
+      * Experimental DVD navigation support
+      * Support AAC/H.264 in FLV files
+      * Fixes in the DirectShow codec wrapper
+      * Fix the Real codec wrapper plugin
+      * New deinterlace2 plugin incorporating TVtime deinterlacers
+      * Handle seeking, timestamps, duration in RAW video/audio parsers
+      * New DirectShow video sink for Win32
+      * FAAD reverse playback support
+      * OSS4 support improvements
+      * MythTV seeking support
+      * SPC decoder now supports seeking, tags and duration queries
+      * Replaygain elements moved to Good
+      * Deinterleave/interleave elements fixed and moved to Good
+      * MPEG-4 video stream parser fixes
+      * Improved MPEG-TS parsing for DVB support
+      * Improvements in App source/sink
+      * RTP manager enhancements
+
+Bugs fixed since 0.10.7:
+
+      * 533736 : [mythtvsrc] Seeking doesn't work
+      * 544050 : ext/timidity/gsttimidity.c :  ISO C90 forbids mixed decla...
+      * 454151 : SPC plugin enhancements (patch)
+      * 506594 : [interleave] doesn't work with channels > 1
+      * 521392 : Proposed patches for bayer2rgb encoding
+      * 525613 : [wildmidi] [PATCH] initializes library multiple times
+      * 528618 : amrwb plugin do not build without warning with the 3ggp s...
+      * 529359 : BBC Real Audio stream is just noise
+      * 530611 : [gstsrtenc] declare variables at beginning of block
+      * 531840 : QuickTime wrapper doesn't work on Win32
+      * 531955 : gstrtpsession doesn't send RTCP bye on EOS
+      * 532723 : mpeg4videoparse should parse the codec data
+      * 533435 : wildmidi does not work
+      * 533559 : mpeg4videoparse should skip garbage
+      * 535043 : VCD plugin only plays first track
+      * 536042 : mpeg4videoparse broken on big endian architectures
+      * 536258 : interleave doesn't close properly
+      * 536856 : rtpmanager deadlocks when receiving new data while going ...
+      * 538560 : [mpegtsparse] static caps reference counter incremented i...
+      * 539292 : memory leak in mpegtsparse
+      * 539601 : [realvideodec] not-negotiated error if codec lib isn't found
+      * 541522 : cross mingw32 gcc: festival plugin compilation fix
+      * 541543 : fix HAVE_OSS4 detection code in configure.ac
+      * 543286 : deinterlace2 doesn't build outside gcc
+      * 543846 : [resindvd] Impossible to build from the first configure r...
+      * 543848 : [ladspa] Needs to link with -ldl for dlopen() and friends
+      * 543860 : [modplug] Uses CFLAGS for CXXFLAGS
+      * 543861 : [resindvd] Some files not disted
+      * 544457 : -bad doesn't compile with MSVC
+      * 526905 : [musepack] Port to the new libmpcdec API
+      * 532011 : Deadlock in rtpsession
+      * 536309 : Seeking in pipeline with videoparse crashes
 
 Changes since 0.10.6:
     
