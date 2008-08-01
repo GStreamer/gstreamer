@@ -659,6 +659,7 @@ docs/Makefile
 docs/design/Makefile
 docs/faq/Makefile
 docs/gst/Makefile
+docs/gst/gstreamer.types
 docs/libs/Makefile
 docs/plugins/Makefile
 docs/manual/Makefile

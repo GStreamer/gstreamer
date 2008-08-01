@@ -1,5 +1,12 @@
 2008-08-01  Stefan Kost  <ensonic@users.sf.net>
 
+	* configure.ac:
+	* docs/gst/gstreamer.types:
+	  Revert 'accidential' change of the configure option removal. We still
+	  need to generate the types file in configure --disable-load-save.
+
+2008-08-01  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gsttaglist.h:
 	  Add new taglist item GST_TAG_KEYWORDS, needed for #520694 .
