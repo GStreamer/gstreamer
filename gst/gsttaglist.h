@@ -674,6 +674,15 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  */
 #define GST_TAG_BEATS_PER_MINUTE       "beats-per-minute"
 
+/**
+ * GST_TAG_KEYWORDS:
+ *
+ * series of keywords describing the content (string).
+ *
+ * Since: 0.10.21
+ */
+#define GST_TAG_KEYWORDS               "keywords"
+
 G_END_DECLS
 
 #endif /* __GST_TAGLIST_H__ */

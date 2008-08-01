@@ -1,3 +1,9 @@
+2008-08-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttaglist.h:
+	  Add new taglist item GST_TAG_KEYWORDS, needed for #520694 .
+
 2008-08-01  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gstpadtemplate.c:
