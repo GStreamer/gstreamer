@@ -110,17 +110,12 @@ GST_STATIC_PAD_TEMPLATE ("sink%d",
     );
 
 static void gst_adder_class_init (GstAdderClass * klass);
-
 static void gst_adder_init (GstAdder * adder);
-
 static void gst_adder_finalize (GObject * object);
 
 static gboolean gst_adder_setcaps (GstPad * pad, GstCaps * caps);
-
 static gboolean gst_adder_query (GstPad * pad, GstQuery * query);
-
 static gboolean gst_adder_src_event (GstPad * pad, GstEvent * event);
-
 static gboolean gst_adder_sink_event (GstPad * pad, GstEvent * event);
 
 static GstPad *gst_adder_request_new_pad (GstElement * element,
@@ -222,11 +217,8 @@ static gboolean
 gst_adder_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstAdder *adder;
-
   GList *pads;
-
   GstStructure *structure;
-
   const char *media_type;
 
   adder = GST_ADDER (GST_PAD_PARENT (pad));
@@ -336,13 +328,9 @@ static gboolean
 gst_adder_query_duration (GstAdder * adder, GstQuery * query)
 {
   gint64 max;
-
   gboolean res;
-
   GstFormat format;
-
   GstIterator *it;
-
   gboolean done;
 
   /* parse format */
@@ -412,13 +400,9 @@ static gboolean
 gst_adder_query_latency (GstAdder * adder, GstQuery * query)
 {
   GstClockTime min, max;
-
   gboolean live;
-
   gboolean res;
-
   GstIterator *it;
-
   gboolean done;
 
   res = TRUE;
@@ -443,11 +427,8 @@ gst_adder_query_latency (GstAdder * adder, GstQuery * query)
       case GST_ITERATOR_OK:
       {
         GstPad *pad = GST_PAD_CAST (item);
-
         GstQuery *peerquery;
-
         GstClockTime min_cur, max_cur;
-
         gboolean live_cur;
 
         peerquery = gst_query_new_latency ();
@@ -504,7 +485,6 @@ static gboolean
 gst_adder_query (GstPad * pad, GstQuery * query)
 {
   GstAdder *adder = GST_ADDER (gst_pad_get_parent (pad));
-
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -573,7 +553,6 @@ static gboolean
 forward_event (GstAdder * adder, GstEvent * event)
 {
   gboolean ret;
-
   GstIterator *it;
   GValue vret = { 0 };
 
@@ -599,7 +578,6 @@ static gboolean
 gst_adder_src_event (GstPad * pad, GstEvent * event)
 {
   GstAdder *adder;
-
   gboolean result;
 
   adder = GST_ADDER (gst_pad_get_parent (pad));
@@ -612,9 +590,7 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEEK:
     {
       GstSeekFlags flags;
-
       GstSeekType curtype;
-
       gint64 cur;
 
       /* parse the seek parameters */
@@ -630,7 +606,6 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
          * when all pads received a FLUSH_STOP. */
         gst_pad_push_event (adder->srcpad, gst_event_new_flush_start ());
       }
-
       /* now wait for the collected to be finished and mark a new
        * segment */
       GST_OBJECT_LOCK (adder->collect);
@@ -662,7 +637,6 @@ static gboolean
 gst_adder_sink_event (GstPad * pad, GstEvent * event)
 {
   GstAdder *adder;
-
   gboolean ret;
 
   adder = GST_ADDER (gst_pad_get_parent (pad));
@@ -694,15 +668,10 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
 static void
 gst_adder_class_init (GstAdderClass * klass)
 {
-  GObjectClass *gobject_class;
-
-  GstElementClass *gstelement_class;
-
-  gobject_class = (GObjectClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_adder_finalize);
-
-  gstelement_class = (GstElementClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_adder_src_template));
@@ -841,17 +810,11 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
    * - push out the output buffer
    */
   GstAdder *adder;
-
   guint size;
-
   GSList *collected;
-
   GstBuffer *outbuf;
-
   GstFlowReturn ret;
-
   gpointer outbytes;
-
   gboolean empty = TRUE;
 
   adder = GST_ADDER (user_data);
@@ -874,11 +837,8 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
     GstCollectData *data;
-
     guint8 *bytes;
-
     guint len;
-
     GstBuffer *inbuf;
 
     data = (GstCollectData *) collected->data;
@@ -1013,7 +973,6 @@ static GstStateChangeReturn
 gst_adder_change_state (GstElement * element, GstStateChange transition)
 {
   GstAdder *adder;
-
   GstStateChangeReturn ret;
 
   adder = GST_ADDER (element);

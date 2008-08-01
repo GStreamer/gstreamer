@@ -1,5 +1,11 @@
 2008-08-01  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/adder/gstadder.c:
+	  Cleanup lots of empty lines that came from gst-indent going havoc
+	  before I added the INDENT_ON/OFF marker some time agao.
+
+2008-08-01  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* gst-libs/gst/riff/riff-read.c:
 	  Bump requirement to latest core and use new tag for riff formats.
