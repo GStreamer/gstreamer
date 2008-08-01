@@ -1013,9 +1013,17 @@ gst_ffmpeg_cfg_fill_context (GstFFMpegEnc * ffmpegenc, AVCodecContext * context)
     context_offset = qdata->offset - CONTEXT_CONFIG_OFFSET;
     if (gst_ffmpeg_cfg_codec_has_pspec (klass->in_plugin->id, pspec)
         && context_offset >= 0) {
-      /* memcpy a bit heavy for a small copy, but hardly part of 'inner loop' */
-      memcpy (G_STRUCT_MEMBER_P (context, context_offset),
-          G_STRUCT_MEMBER_P (ffmpegenc, qdata->offset), qdata->size);
+      if (G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_STRING) {
+        /* make a copy for ffmpeg, it will likely free only some,
+         * but in any case safer than a potential double free */
+        G_STRUCT_MEMBER (gchar *, context, context_offset) =
+            g_strdup (G_STRUCT_MEMBER (gchar *, ffmpegenc, qdata->offset));
+      } else {
+        /* memcpy a bit heavy for a small copy,
+         * but hardly part of 'inner loop' */
+        memcpy (G_STRUCT_MEMBER_P (context, context_offset),
+            G_STRUCT_MEMBER_P (ffmpegenc, qdata->offset), qdata->size);
+      }
     }
     list = list->next;
   }

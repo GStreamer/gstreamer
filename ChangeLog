@@ -1,3 +1,10 @@
+2008-08-01  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_cfg_fill_context):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_getcaps):
+	Latest ffmpeg revision's avcodec_close frees more; use safer coding to
+	prevent double free and other related segfaults.
+
 2008-07-28  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_pixfmt):

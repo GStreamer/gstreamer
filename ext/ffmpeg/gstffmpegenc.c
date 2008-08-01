@@ -283,7 +283,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) GST_PAD_PARENT (pad);
   GstFFMpegEncClass *oclass =
       (GstFFMpegEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
-  AVCodecContext *ctx;
+  AVCodecContext *ctx = NULL;
   enum PixelFormat pixfmt;
   GstCaps *caps = NULL;
 
@@ -306,21 +306,6 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   }
 
   /* create cache etc. */
-  ctx = avcodec_alloc_context ();
-  if (!ctx) {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-    GST_DEBUG_OBJECT (ffmpegenc, "no context, return template caps %"GST_PTR_FORMAT, caps);
-    return caps;
-  }
-
-  /* set some default properties */
-  ctx->width = DEFAULT_WIDTH;
-  ctx->height = DEFAULT_HEIGHT;
-  ctx->time_base.num = DEFAULT_FRAME_RATE_BASE;
-  ctx->time_base.den = 25 * DEFAULT_FRAME_RATE_BASE;
-  ctx->bit_rate = DEFAULT_VIDEO_BITRATE;
-  /* makes it silent */
-  ctx->strict_std_compliance = -1;
 
   /* shut up the logging while we autoprobe; we don't want warnings and
    * errors about unsupported formats */
@@ -334,6 +319,23 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   GST_DEBUG_OBJECT (ffmpegenc, "probing caps");
   for (pixfmt = 0; pixfmt < PIX_FMT_NB; pixfmt++) {
     GstCaps *tmpcaps;
+
+    /* need to start with a fresh codec_context each time around, since
+     * codec_close may have released stuff causing the next pass to segfault */
+    ctx = avcodec_alloc_context ();
+    if (!ctx) {
+      GST_DEBUG_OBJECT (ffmpegenc, "no context");
+      break;
+    }
+
+    /* set some default properties */
+    ctx->width = DEFAULT_WIDTH;
+    ctx->height = DEFAULT_HEIGHT;
+    ctx->time_base.num = DEFAULT_FRAME_RATE_BASE;
+    ctx->time_base.den = 25 * DEFAULT_FRAME_RATE_BASE;
+    ctx->bit_rate = DEFAULT_VIDEO_BITRATE;
+    /* makes it silent */
+    ctx->strict_std_compliance = -1;
 
     ctx->pix_fmt = pixfmt;
     if (gst_ffmpeg_avcodec_open (ctx, oclass->in_plugin) >= 0 &&
@@ -353,8 +355,8 @@ gst_ffmpegenc_getcaps (GstPad * pad)
     }
     if (ctx->priv_data)
       gst_ffmpeg_avcodec_close (ctx);
+    av_free (ctx);
   }
-  av_free (ctx);
 #ifndef GST_DISABLE_GST_DEBUG
   _shut_up_I_am_probing = FALSE;
 #endif
@@ -362,7 +364,8 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   /* make sure we have something */
   if (!caps) {
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-    GST_DEBUG_OBJECT (ffmpegenc, "probing gave nothing, return template %"GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (ffmpegenc, "probing gave nothing, "
+        "return template %" GST_PTR_FORMAT, caps);
     return caps;
   }
 
