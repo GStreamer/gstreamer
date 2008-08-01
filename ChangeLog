@@ -1,3 +1,13 @@
+2008-08-01  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstpadtemplate.c:
+	  (gst_pad_template_class_init), (gst_static_pad_template_get),
+	  (gst_pad_template_new), (gst_pad_template_pad_created),
+	  (gst_pad_template_set_property), (gst_pad_template_get_property):
+	  Add "name-template", "direction", "presence" and "caps" properties,
+	  so that gst_pad_template_new() is just a thin wrapper around
+	  g_object_new(), which is better for bindings. (Fixes: #539772)
+
 2008-07-31  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/gsturi.c:
