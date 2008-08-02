@@ -96,11 +96,10 @@ static GstStaticPadTemplate videosink_templ =
     );
 
 #define COMMON_AUDIO_CAPS \
-  "channels = (int) [ 1, 8 ], " \
-  "rate = (int) [ 8000, 96000 ]"
+  "channels = (int) [ 1, MAX ], " \
+  "rate = (int) [ 1, MAX ]"
 
 /* FIXME:
- * * audio/x-raw-float: endianness needs defining.
  * * require codec data, etc as needed
  */
 static GstStaticPadTemplate audiosink_templ =
@@ -128,6 +127,22 @@ static GstStaticPadTemplate audiosink_templ =
         "depth = (int) 16, "
         "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, "
         "signed = (boolean) true, "
+        COMMON_AUDIO_CAPS ";"
+        "audio/x-raw-int, "
+        "width = (int) 24, "
+        "depth = (int) 24, "
+        "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, "
+        "signed = (boolean) true, "
+        COMMON_AUDIO_CAPS ";"
+        "audio/x-raw-int, "
+        "width = (int) 32, "
+        "depth = (int) 32, "
+        "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, "
+        "signed = (boolean) true, "
+        COMMON_AUDIO_CAPS ";"
+        "audio/x-raw-float, "
+        "width = (int) [ 32, 64 ], "
+        "endianness = (int) LITTLE_ENDIAN, "
         COMMON_AUDIO_CAPS ";"
         "audio/x-tta, "
         "width = (int) { 8, 16, 24 }, "
@@ -1034,8 +1049,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     return TRUE;
   } else if (!strcmp (mimetype, "audio/x-raw-int")) {
     gint endianness, width, depth;
-
-    gboolean signedness;
+    gboolean signedness = G_LITTLE_ENDIAN;
 
     if (!gst_structure_get_int (structure, "width", &width) ||
         !gst_structure_get_int (structure, "depth", &depth) ||
@@ -1055,8 +1069,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       return FALSE;
     }
 
-    /* where is this spec'ed out? (tpm) */
-    if ((width == 8 && signedness) || (width == 16 && !signedness)) {
+    /* FIXME: where is this spec'ed out? (tpm) */
+    if ((width == 8 && signedness) || (width >= 16 && !signedness)) {
       GST_DEBUG_OBJECT (mux, "8-bit PCM must be unsigned, 16-bit PCM signed");
       return FALSE;
     }
@@ -1069,7 +1083,17 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
     return TRUE;
   } else if (!strcmp (mimetype, "audio/x-raw-float")) {
-    /* FIXME: endianness is undefined */
+    gint width;
+
+    if (!gst_structure_get_int (structure, "width", &width)) {
+      GST_DEBUG_OBJECT (mux, "broken caps, width field missing");
+      return FALSE;
+    }
+
+    audiocontext->bitdepth = width;
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_PCM_FLOAT);
+
+    return TRUE;
   } else if (!strcmp (mimetype, "audio/x-vorbis")) {
     const GValue *streamheader;
 
