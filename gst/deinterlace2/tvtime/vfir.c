@@ -47,15 +47,9 @@
 
 GType gst_deinterlace_method_vfir_get_type (void);
 
-typedef GstDeinterlaceMethod GstDeinterlaceMethodVFIR;
+typedef GstDeinterlaceSimpleMethod GstDeinterlaceMethodVFIR;
 
-typedef struct
-{
-  GstDeinterlaceMethodClass parent_class;
-  void (*scanline) (uint8_t * dst, uint8_t * lum_m4,
-      uint8_t * lum_m3, uint8_t * lum_m2,
-      uint8_t * lum_m1, uint8_t * lum, int size);
-} GstDeinterlaceMethodVFIRClass;
+typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodVFIRClass;
 
 /*
  * The MPEG2 spec uses a slightly harsher filter, they specify
@@ -68,11 +62,16 @@ typedef struct
   * C implementation.
   */
 static inline void
-deinterlace_line_c (uint8_t * dst, uint8_t * lum_m4,
-    uint8_t * lum_m3, uint8_t * lum_m2,
-    uint8_t * lum_m1, uint8_t * lum, int size)
+deinterlace_line_c (GstDeinterlaceMethod * self, GstDeinterlace2 * parent,
+    guint8 * dst, GstDeinterlaceScanlineData * scanlines, gint width)
 {
-  int sum;
+  gint sum;
+  guint8 *lum_m4 = scanlines->tt1;
+  guint8 *lum_m3 = scanlines->t0;
+  guint8 *lum_m2 = scanlines->m1;
+  guint8 *lum_m1 = scanlines->b0;
+  guint8 *lum = scanlines->bb1;
+  gint size = width * 2;
 
   for (; size >= 0; size--) {
     sum = -lum_m4[0];
@@ -93,11 +92,15 @@ deinterlace_line_c (uint8_t * dst, uint8_t * lum_m4,
 #ifdef BUILD_X86_ASM
 #include "mmx.h"
 static void
-deinterlace_line_mmx (uint8_t * dst, uint8_t * lum_m4,
-    uint8_t * lum_m3, uint8_t * lum_m2,
-    uint8_t * lum_m1, uint8_t * lum, int size)
+deinterlace_line_mmx (GstDeinterlaceMethod * self, GstDeinterlace2 * parent,
+    guint8 * dst, GstDeinterlaceScanlineData * scanlines, gint width)
 {
   mmx_t rounder;
+  guint8 *lum_m4 = scanlines->tt1;
+  guint8 *lum_m3 = scanlines->t0;
+  guint8 *lum_m2 = scanlines->m1;
+  guint8 *lum_m1 = scanlines->b0;
+  guint8 *lum = scanlines->bb1;
 
   rounder.uw[0] = 4;
   rounder.uw[1] = 4;
@@ -106,7 +109,7 @@ deinterlace_line_mmx (uint8_t * dst, uint8_t * lum_m4,
   pxor_r2r (mm7, mm7);
   movq_m2r (rounder, mm6);
 
-  for (; size > 3; size -= 4) {
+  for (; width > 1; width -= 2) {
     movd_m2r (*lum_m4, mm0);
     movd_m2r (*lum_m3, mm1);
     movd_m2r (*lum_m2, mm2);
@@ -137,94 +140,44 @@ deinterlace_line_mmx (uint8_t * dst, uint8_t * lum_m4,
   emms ();
 
   /* Handle odd widths */
-  if (size > 0)
-    deinterlace_line_c (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
+  if (width > 0) {
+    scanlines->tt1 = lum_m4;
+    scanlines->t0 = lum_m3;
+    scanlines->m1 = lum_m2;
+    scanlines->b0 = lum_m1;
+    scanlines->bb1 = lum;
+
+    deinterlace_line_c (self, parent, dst, scanlines, width);
+  }
 }
 #endif
 
-static void
-deinterlace_frame_vfir (GstDeinterlaceMethod * d_method,
-    GstDeinterlace2 * object)
-{
-  GstDeinterlaceMethodVFIRClass *klass =
-      GST_DEINTERLACE_METHOD_VFIR_GET_CLASS (d_method);
-  gint line = 0;
-  uint8_t *cur_field, *last_field;
-  uint8_t *t0, *b0, *tt1, *m1, *bb1, *out_data;
-
-  cur_field =
-      GST_BUFFER_DATA (object->field_history[object->history_count - 2].buf);
-  last_field =
-      GST_BUFFER_DATA (object->field_history[object->history_count - 1].buf);
-
-  out_data = GST_BUFFER_DATA (object->out_buf);
-
-  if (object->field_history[object->history_count - 2].flags ==
-      PICTURE_INTERLACED_BOTTOM) {
-    memcpy (out_data, cur_field, object->line_length);
-    out_data += object->output_stride;
-  }
-
-  memcpy (out_data, cur_field, object->line_length);
-  out_data += object->output_stride;
-  line++;
-
-  for (; line < object->field_height; line++) {
-    t0 = cur_field;
-    b0 = cur_field + object->field_stride;
-
-    tt1 = last_field;
-    m1 = last_field + object->field_stride;
-    bb1 = last_field + (object->field_stride * 2);
-
-    /* set valid data for corner cases */
-    if (line == 1) {
-      tt1 = bb1;
-    } else if (line == object->field_height - 1) {
-      bb1 = tt1;
-    }
-
-    klass->scanline (out_data, tt1, t0, m1, b0, bb1, object->line_length);
-    out_data += object->output_stride;
-    cur_field += object->field_stride;
-    last_field += object->field_stride;
-
-    memcpy (out_data, cur_field, object->line_length);
-    out_data += object->output_stride;
-  }
-
-  if (object->field_history[object->history_count - 2].flags ==
-      PICTURE_INTERLACED_TOP) {
-    /* double the last scanline of the top field */
-    memcpy (out_data, cur_field, object->line_length);
-  }
-}
-
 G_DEFINE_TYPE (GstDeinterlaceMethodVFIR, gst_deinterlace_method_vfir,
-    GST_TYPE_DEINTERLACE_METHOD);
+    GST_TYPE_DEINTERLACE_SIMPLE_METHOD);
 
 static void
 gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
 {
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
+  GstDeinterlaceSimpleMethodClass *dism_class =
+      (GstDeinterlaceSimpleMethodClass *) klass;
 #ifdef BUILD_X86_ASM
   guint cpu_flags = oil_cpu_get_flags ();
 #endif
 
   dim_class->fields_required = 2;
-  dim_class->deinterlace_frame = deinterlace_frame_vfir;
   dim_class->name = "Blur Vertical";
   dim_class->nick = "vfir";
   dim_class->latency = 0;
 
 #ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMX) {
-    klass->scanline = deinterlace_line_mmx;
+    dism_class->interpolate_scanline = deinterlace_line_mmx;
   } else {
-    klass->scanline = deinterlace_line_c;
+    dism_class->interpolate_scanline = deinterlace_line_c;
   }
 #else
-  klass->scanline = deinterlace_line_c;
+  dism_class->interpolate_scanline = deinterlace_line_c;
 #endif
 }
 
