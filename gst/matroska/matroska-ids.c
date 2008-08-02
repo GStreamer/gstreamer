@@ -112,9 +112,5 @@ gst_matroska_track_init_subtitle_context (GstMatroskaTrackContext ** p_context)
 void
 gst_matroska_register_tags (void)
 {
-  /* FIXME: Remove this when we depend on core 0.10.21 */
-  if (!gst_tag_exists (GST_TAG_ATTACHMENT))
-    gst_tag_register (GST_TAG_ATTACHMENT, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
-        "attachment", "file attached to this stream", gst_tag_merge_use_first);
   /* TODO: register other custom tags */
 }

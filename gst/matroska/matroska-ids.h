@@ -580,12 +580,6 @@ gboolean gst_matroska_track_init_video_context    (GstMatroskaTrackContext ** p_
 gboolean gst_matroska_track_init_audio_context    (GstMatroskaTrackContext ** p_context);
 gboolean gst_matroska_track_init_subtitle_context (GstMatroskaTrackContext ** p_context);
 
-
-/* FIXME: remove when we depend on core 0.10.21 */
-#ifndef GST_TAG_ATTACHMENT
-#define GST_TAG_ATTACHMENT "attachment"
-#endif
-
 void gst_matroska_register_tags (void);
 
 #endif /* __GST_MATROSKA_IDS_H__ */

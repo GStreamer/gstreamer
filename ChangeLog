@@ -1,6 +1,13 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
+	* gst/matroska/matroska-ids.c: (gst_matroska_register_tags):
+	* gst/matroska/matroska-ids.h:
+	Build depend on core CVS for the attachment tag.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
 	* gst/matroska/Makefile.am:
 	* gst/matroska/lzo.c: (get_byte), (get_len), (copy),
 	(copy_backptr), (lzo1x_decode), (main):
