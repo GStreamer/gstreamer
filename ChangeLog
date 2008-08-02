@@ -1,5 +1,11 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/gstdeinterlace2.c: (gst_deinterlace2_chain):
+	Respect the latency of the deinterlacing algorithm for the timestamps
+	of every buffer.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/tvtime/greedyh.asm:
 	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
 	Add the MMX registers to the clobbered registers only if __MMX__ is
