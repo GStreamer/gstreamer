@@ -1,5 +1,17 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_create_uid),
+	(gst_matroska_mux_reset), (gst_matroska_mux_start):
+	Add locking to the global array of used track UIDs to prevent random
+	crashes if more than a single matrosmux instance is used.
+
+	Use 64 bit values for the track UIDs.
+
+	Use the global GRandom of GLib instead of creating our own one
+	for the few random numbers we need every single time.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/flac/gstflacdec.c: (gst_flac_dec_setup_seekable_decoder),
 	(gst_flac_dec_setup_stream_decoder),
 	(gst_flac_dec_update_metadata):

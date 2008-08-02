@@ -1,6 +1,7 @@
 /* GStreamer Matroska muxer/demuxer
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  * (c) 2005 Michal Benes <michal.benes@xeris.cz>
+ * (c) 2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * matroska-mux.c: matroska file/stream muxer
  *
@@ -140,6 +141,7 @@ GST_STATIC_PAD_TEMPLATE ("subtitle_%d",
     GST_STATIC_CAPS_ANY);
 
 static GArray *used_uids;
+G_LOCK_DEFINE_STATIC (used_uids);
 
 static void gst_matroska_mux_add_interfaces (GType type);
 
@@ -174,7 +176,7 @@ static void gst_matroska_mux_get_property (GObject * object,
 static void gst_matroska_mux_reset (GstElement * element);
 
 /* uid generation */
-static guint32 gst_matroska_mux_create_uid ();
+static guint64 gst_matroska_mux_create_uid ();
 
 static gboolean theora_streamheader_to_codecdata (const GValue * streamheader,
     GstMatroskaTrackContext * context);
@@ -301,27 +303,30 @@ gst_matroska_mux_finalize (GObject * object)
  *
  * Returns: New track UID.
  */
-static guint32
+static guint64
 gst_matroska_mux_create_uid (void)
 {
-  guint32 uid = 0;
+  guint64 uid = 0;
 
-  GRand *rand = g_rand_new ();
+  G_LOCK (used_uids);
 
-  /* FIXME: array needs locking or moved into instance structure */
+  if (!used_uids)
+    used_uids = g_array_sized_new (FALSE, FALSE, sizeof (guint64), 10);
+
   while (!uid) {
     guint i;
 
-    uid = g_rand_int (rand);
+    uid = (((guint64) g_random_int ()) << 32) | g_random_int ();
     for (i = 0; i < used_uids->len; i++) {
-      if (g_array_index (used_uids, guint32, i) == uid) {
+      if (g_array_index (used_uids, guint64, i) == uid) {
         uid = 0;
         break;
       }
     }
     g_array_append_val (used_uids, uid);
   }
-  g_free (rand);
+
+  G_UNLOCK (used_uids);
   return uid;
 }
 
@@ -406,13 +411,6 @@ gst_matroska_mux_reset (GstElement * element)
   /* reset timers */
   mux->time_scale = GST_MSECOND;
   mux->duration = 0;
-
-  /* reset uid array */
-  if (used_uids) {
-    g_array_free (used_uids, TRUE);
-  }
-  /* arbitrary size, 10 should be enough in most cases */
-  used_uids = g_array_sized_new (FALSE, FALSE, sizeof (guint32), 10);
 
   /* reset cluster */
   mux->cluster = 0;
@@ -1376,7 +1374,6 @@ static void
 gst_matroska_mux_start (GstMatroskaMux * mux)
 {
   GstEbmlWrite *ebml = mux->ebml_write;
-
   guint32 seekhead_id[] = { GST_MATROSKA_ID_SEGMENTINFO,
     GST_MATROSKA_ID_TRACKS,
     GST_MATROSKA_ID_CUES,
@@ -1384,18 +1381,11 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     0
   };
   guint64 master, child;
-
   GSList *collected;
-
   int i;
-
   guint tracknum = 1;
-
   GstClockTime duration = 0;
-
-  guint32 *segment_uid = (guint32 *) g_malloc (16);
-
-  GRand *rand = g_rand_new ();
+  guint32 segment_uid[4];
   GTimeVal time = { 0, 0 };
 
   /* we start with a EBML header */
@@ -1424,12 +1414,10 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   mux->info_pos = ebml->pos;
   master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEGMENTINFO);
   for (i = 0; i < 4; i++) {
-    segment_uid[i] = g_rand_int (rand);
+    segment_uid[i] = g_random_int ();
   }
-  g_free (rand);
   gst_ebml_write_binary (ebml, GST_MATROSKA_ID_SEGMENTUID,
       (guint8 *) segment_uid, 16);
-  g_free (segment_uid);
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TIMECODESCALE, mux->time_scale);
   mux->duration_pos = ebml->pos;
   /* get duration */
