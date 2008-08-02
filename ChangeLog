@@ -1,5 +1,11 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/tvtime/vfir.c: (deinterlace_line_c),
+	(deinterlace_line_mmx), (gst_deinterlace_method_vfir_class_init):
+	Implement the VFIR deinterlacing method as simple method.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/gstdeinterlace2.c:
 	(gst_deinterlace_simple_method_interpolate_scanline),
 	(gst_deinterlace_simple_method_copy_scanline),
