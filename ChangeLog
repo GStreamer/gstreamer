@@ -1,5 +1,18 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace_simple_method_interpolate_scanline),
+	(gst_deinterlace_simple_method_copy_scanline),
+	(gst_deinterlace_simple_method_deinterlace_frame),
+	(gst_deinterlace_simple_method_class_init),
+	(gst_deinterlace_simple_method_init):
+	* gst/deinterlace2/gstdeinterlace2.h:
+	Add a GstDeinterlaceSimpleMethod subclass of GstDeinterlaceMethod that
+	can be used by simple deinterlacing methods. They only have to provide
+	a function for interpolating a scanline or copying a scanline.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/gstdeinterlace2.c: (gst_deinterlace2_chain):
 	Respect the latency of the deinterlacing algorithm for the timestamps
 	of every buffer.
