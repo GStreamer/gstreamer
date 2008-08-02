@@ -128,14 +128,11 @@ gst_deinterlace_simple_method_deinterlace_frame (GstDeinterlaceMethod * self,
   g_assert (dm_class->fields_required <= 4);
 
   if (dm_class->fields_required >= 2)
-    field1 = field0 =
-        GST_BUFFER_DATA (parent->field_history[cur_field_idx + 1].buf);
+    field1 = GST_BUFFER_DATA (parent->field_history[cur_field_idx + 1].buf);
   if (dm_class->fields_required >= 3)
-    field1 = field0 =
-        GST_BUFFER_DATA (parent->field_history[cur_field_idx + 2].buf);
+    field2 = GST_BUFFER_DATA (parent->field_history[cur_field_idx + 2].buf);
   if (dm_class->fields_required >= 4)
-    field1 = field0 =
-        GST_BUFFER_DATA (parent->field_history[cur_field_idx + 3].buf);
+    field3 = GST_BUFFER_DATA (parent->field_history[cur_field_idx + 3].buf);
 
 
   if (cur_field_flags == PICTURE_INTERLACED_BOTTOM) {
@@ -259,10 +256,18 @@ gst_deinterlace2_methods_get_type (void)
   static GType deinterlace2_methods_type = 0;
 
   static const GEnumValue methods_types[] = {
-    {GST_DEINTERLACE2_TOMSMOCOMP, "Toms Motion Compensation", "tomsmocomp"},
-    {GST_DEINTERLACE2_GREEDY_H, "Greedy High Motion", "greedyh"},
-    {GST_DEINTERLACE2_GREEDY_L, "Greedy Low Motion", "greedyl"},
-    {GST_DEINTERLACE2_VFIR, "Vertical Blur", "vfir"},
+    {GST_DEINTERLACE2_TOMSMOCOMP, "Motion Adaptive: Motion Search",
+        "tomsmocomp"},
+    {GST_DEINTERLACE2_GREEDY_H, "Motion Adaptive: Advanced Detection",
+        "greedyh"},
+    {GST_DEINTERLACE2_GREEDY_L, "Motion Adaptive: Simple Detection", "greedyl"},
+    {GST_DEINTERLACE2_VFIR, "Blur Vertical", "vfir"},
+    {GST_DEINTERLACE2_LINEAR, "Television: Full resolution", "linear"},
+    {GST_DEINTERLACE2_LINEAR_BLEND, "Blur: Temporal", "linearblend"},
+    {GST_DEINTERLACE2_SCALER_BOB, "Double lines", "scalerbob"},
+    {GST_DEINTERLACE2_WEAVE, "Weave", "weave"},
+    {GST_DEINTERLACE2_WEAVE_TFF, "Progressive: Top Field First", "weavetff"},
+    {GST_DEINTERLACE2_WEAVE_BFF, "Progressive: Bottom Field First", "weavebff"},
     {0, NULL, NULL},
   };
 
@@ -388,6 +393,24 @@ gst_deinterlace2_set_method (GstDeinterlace2 * self,
       break;
     case GST_DEINTERLACE2_VFIR:
       self->method = g_object_new (GST_TYPE_DEINTERLACE_VFIR, NULL);
+      break;
+    case GST_DEINTERLACE2_LINEAR:
+      self->method = g_object_new (GST_TYPE_DEINTERLACE_LINEAR, NULL);
+      break;
+    case GST_DEINTERLACE2_LINEAR_BLEND:
+      self->method = g_object_new (GST_TYPE_DEINTERLACE_LINEAR_BLEND, NULL);
+      break;
+    case GST_DEINTERLACE2_SCALER_BOB:
+      self->method = g_object_new (GST_TYPE_DEINTERLACE_SCALER_BOB, NULL);
+      break;
+    case GST_DEINTERLACE2_WEAVE:
+      self->method = g_object_new (GST_TYPE_DEINTERLACE_WEAVE, NULL);
+      break;
+    case GST_DEINTERLACE2_WEAVE_TFF:
+      self->method = g_object_new (GST_TYPE_DEINTERLACE_WEAVE_TFF, NULL);
+      break;
+    case GST_DEINTERLACE2_WEAVE_BFF:
+      self->method = g_object_new (GST_TYPE_DEINTERLACE_WEAVE_BFF, NULL);
       break;
     default:
       GST_WARNING ("Invalid Deinterlacer Method");

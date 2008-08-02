@@ -32,17 +32,23 @@
 #define GST_TYPE_DEINTERLACE_GREEDY_H (gst_deinterlace_method_greedy_h_get_type ())
 #define GST_TYPE_DEINTERLACE_GREEDY_L (gst_deinterlace_method_greedy_l_get_type ())
 #define GST_TYPE_DEINTERLACE_VFIR (gst_deinterlace_method_vfir_get_type ())
+#define GST_TYPE_DEINTERLACE_LINEAR (gst_deinterlace_method_linear_get_type ())
+#define GST_TYPE_DEINTERLACE_LINEAR_BLEND (gst_deinterlace_method_linear_blend_get_type ())
+#define GST_TYPE_DEINTERLACE_SCALER_BOB (gst_deinterlace_method_scaler_bob_get_type ())
+#define GST_TYPE_DEINTERLACE_WEAVE (gst_deinterlace_method_weave_get_type ())
+#define GST_TYPE_DEINTERLACE_WEAVE_TFF (gst_deinterlace_method_weave_tff_get_type ())
+#define GST_TYPE_DEINTERLACE_WEAVE_BFF (gst_deinterlace_method_weave_bff_get_type ())
 
 GType gst_deinterlace_method_tomsmocomp_get_type (void);
 GType gst_deinterlace_method_greedy_h_get_type (void);
 GType gst_deinterlace_method_greedy_l_get_type (void);
 GType gst_deinterlace_method_vfir_get_type (void);
 
-//void linear_plugin_init( void );
-//void scalerbob_plugin_init( void );
-//void linearblend_plugin_init( void );
-//void weave_plugin_init( void );
-//void weavetff_plugin_init( void );
-//void weavebff_plugin_init( void );
+GType gst_deinterlace_method_linear_get_type (void);
+GType gst_deinterlace_method_linear_blend_get_type (void);
+GType gst_deinterlace_method_scaler_bob_get_type (void);
+GType gst_deinterlace_method_weave_get_type (void);
+GType gst_deinterlace_method_weave_tff_get_type (void);
+GType gst_deinterlace_method_weave_bff_get_type (void);
 
 #endif /* TVTIME_PLUGINS_H_INCLUDED */
