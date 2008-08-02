@@ -1,3 +1,10 @@
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/flac/gstflacdec.c: (gst_flac_dec_setup_seekable_decoder),
+	(gst_flac_dec_setup_stream_decoder),
+	(gst_flac_dec_update_metadata):
+	Always post the audio-codec tag, not only if other tags are present.
+
 2008-08-02  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

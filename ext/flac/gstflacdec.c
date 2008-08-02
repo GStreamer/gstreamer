@@ -338,6 +338,10 @@ gst_flac_dec_setup_seekable_decoder (GstFlacDec * dec)
 {
   gst_flac_dec_reset_decoders (dec);
 
+  dec->tags = gst_tag_list_new ();
+  gst_tag_list_add (dec->tags, GST_TAG_MERGE_REPLACE,
+      GST_TAG_AUDIO_CODEC, "FLAC", NULL);
+
 #ifdef LEGACY_FLAC
   dec->seekable_decoder = FLAC__seekable_stream_decoder_new ();
 
@@ -374,6 +378,10 @@ static void
 gst_flac_dec_setup_stream_decoder (GstFlacDec * dec)
 {
   gst_flac_dec_reset_decoders (dec);
+
+  dec->tags = gst_tag_list_new ();
+  gst_tag_list_add (dec->tags, GST_TAG_MERGE_REPLACE,
+      GST_TAG_AUDIO_CODEC, "FLAC", NULL);
 
   dec->adapter = gst_adapter_new ();
 
@@ -421,7 +429,10 @@ gst_flac_dec_update_metadata (GstFlacDec * flacdec,
 
   guint num, i;
 
-  list = gst_tag_list_new ();
+  if (flacdec->tags)
+    list = flacdec->tags;
+  else
+    flacdec->tags = list = gst_tag_list_new ();
 
   num = metadata->data.vorbis_comment.num_comments;
   GST_DEBUG ("%u tag(s) found", num);
@@ -441,14 +452,6 @@ gst_flac_dec_update_metadata (GstFlacDec * flacdec,
 
     g_free (vc);
   }
-
-  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-      GST_TAG_AUDIO_CODEC, "FLAC", NULL);
-
-  if (flacdec->tags)
-    gst_tag_list_free (flacdec->tags);
-  flacdec->tags = list;
-
 
   return TRUE;
 }
