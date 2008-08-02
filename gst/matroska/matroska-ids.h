@@ -554,6 +554,19 @@ typedef struct _Wavpack4Header {
   guint32 crc;           /* crc for actual decoded data                    */
 } Wavpack4Header;
 
+typedef enum {
+  GST_MATROSKA_TRACK_ENCODING_SCOPE_FRAME = (1<<0),
+  GST_MATROSKA_TRACK_ENCODING_SCOPE_CODEC_DATA = (1<<1),
+  GST_MATROSKA_TRACK_ENCODING_SCOPE_NEXT_CONTENT_ENCODING = (1<<2)
+} GstMatroskaTrackEncodingScope;
+
+typedef enum {
+  GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_ZLIB = 0,
+  GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_BZLIB = 1,
+  GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_LZO1X = 2,
+  GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_HEADERSTRIP = 3
+} GstMatroskaTrackCompressionAlgorithm;
+
 typedef struct _GstMatroskaTrackEncoding {
   guint   order;
   guint   scope     : 3;

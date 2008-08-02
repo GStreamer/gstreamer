@@ -933,15 +933,22 @@ AG_GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
   AC_SUBST(WAVPACK_LIBS)
 ])
 
-dnl *** qtdemux & id3demux prefer to have zlib ***
+dnl *** qtdemux & id3demux & matroska prefer to have zlib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ZLIB, true)
-AG_GST_CHECK_FEATURE(ZLIB, [zlib support for id3demux/qtdemux],, [
+AG_GST_CHECK_FEATURE(ZLIB, [zlib support for id3demux/qtdemux/matroska],, [
   AG_GST_CHECK_LIBHEADER(ZLIB,
     z, uncompress,, zlib.h, [
     HAVE_ZLIB="yes"
     ZLIB_LIBS="-lz"
     AC_SUBST(ZLIB_LIBS)
   ])
+])
+
+dnl *** matroska prefers to have bz2 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_BZ2, true)
+AG_GST_CHECK_FEATURE(BZ2, [bz2 library for matroska ],, [
+  AG_GST_CHECK_LIBHEADER(BZ2, bz2, BZ2_bzCompress, ,bzlib.h, BZ2_LIBS="-lbz2")
+  AC_SUBST(BZ2_LIBS)
 ])
 
 else

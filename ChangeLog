@@ -1,5 +1,29 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* configure.ac:
+	* gst/matroska/Makefile.am:
+	* gst/matroska/lzo.c: (get_byte), (get_len), (copy),
+	(copy_backptr), (lzo1x_decode), (main):
+	* gst/matroska/lzo.h:
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_read_track_encoding),
+	(gst_matroska_decompress_data), (gst_matroska_decode_data),
+	(gst_matroska_decode_buffer),
+	(gst_matroska_decode_content_encodings),
+	(gst_matroska_demux_read_track_encodings),
+	(gst_matroska_demux_add_stream),
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock):
+	* gst/matroska/matroska-ids.h:
+	Decode the codec private data and following ContentEncoding if
+	necessary.
+
+	Support bzip2, lzo and header stripped compression. For lzo use the
+	ffmpeg lzo implementation as liblzo is GPL licensed.
+	
+	Fix zlib decompression.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/matroska/matroska-mux.c:
 	(gst_matroska_mux_audio_pad_setcaps):
 	Fix muxing of MP3/MP2 with different MPEG versions by calculating the

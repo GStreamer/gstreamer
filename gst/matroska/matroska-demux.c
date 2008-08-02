@@ -54,6 +54,12 @@
 #include <zlib.h>
 #endif
 
+#ifdef HAVE_BZ2
+#include <bzlib.h>
+#endif
+
+#include "lzo.h"
+
 #include "matroska-demux.h"
 #include "matroska-ids.h"
 
@@ -462,10 +468,6 @@ gst_matroska_demux_read_track_encoding (GstMatroskaDemux * demux,
               G_GUINT64_FORMAT, num);
           ret = GST_FLOW_ERROR;
           break;
-        } else if (num & 0x4) {
-          GST_ERROR_OBJECT (demux, "Unsupported ContentEncodingScope %"
-              G_GUINT64_FORMAT, num);
-          ret = GST_FLOW_ERROR;
         }
 
         GST_DEBUG_OBJECT (demux, "ContentEncodingScope: %" G_GUINT64_FORMAT,
@@ -521,11 +523,6 @@ gst_matroska_demux_read_track_encoding (GstMatroskaDemux * demux,
               }
               if (num > 3) {
                 GST_ERROR_OBJECT (demux, "Invalid ContentCompAlgo %"
-                    G_GUINT64_FORMAT, num);
-                ret = GST_FLOW_ERROR;
-                break;
-              } else if (num != 0) {
-                GST_ERROR_OBJECT (demux, "Unsupported ContentCompAlgo %"
                     G_GUINT64_FORMAT, num);
                 ret = GST_FLOW_ERROR;
                 break;
@@ -596,6 +593,317 @@ gst_matroska_demux_read_track_encoding (GstMatroskaDemux * demux,
   return ret;
 }
 
+static gboolean
+gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
+    guint8 ** data_out, guint * size_out,
+    GstMatroskaTrackCompressionAlgorithm algo)
+{
+  guint8 *new_data = NULL;
+  guint new_size = 0;
+
+  guint8 *data = *data_out;
+  guint size = *size_out;
+
+  gboolean ret = TRUE;
+
+  if (algo == GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_ZLIB) {
+#ifdef HAVE_ZLIB
+    /* zlib encoded data */
+    z_stream zstream;
+    guint orig_size;
+    int result;
+
+    orig_size = size;
+    zstream.zalloc = (alloc_func) 0;
+    zstream.zfree = (free_func) 0;
+    zstream.opaque = (voidpf) 0;
+    if (inflateInit (&zstream) != Z_OK) {
+      GST_WARNING ("zlib initialization failed.");
+      ret = FALSE;
+      goto out;
+    }
+    zstream.next_in = (Bytef *) data;
+    zstream.avail_in = orig_size;
+    new_size = orig_size;
+    new_data = g_malloc (new_size);
+    zstream.avail_out = new_size;
+    zstream.next_out = (Bytef *) new_data;
+
+    do {
+      result = inflate (&zstream, Z_NO_FLUSH);
+      if (result != Z_OK && result != Z_STREAM_END) {
+        GST_WARNING ("zlib decompression failed.");
+        g_free (new_data);
+        inflateEnd (&zstream);
+        break;
+      }
+      new_size += 4000;
+      new_data = g_realloc (new_data, new_size);
+      zstream.next_out = (Bytef *) (new_data + zstream.total_out);
+      zstream.avail_out += 4000;
+    } while (zstream.avail_in != 0 && result != Z_STREAM_END);
+
+    if (result != Z_STREAM_END) {
+      ret = FALSE;
+      goto out;
+    } else {
+      new_size = zstream.total_out;
+      inflateEnd (&zstream);
+    }
+#else
+    GST_WARNING ("zlib encoded tracks not supported.");
+    ret = FALSE;
+    goto out;
+#endif
+  } else if (algo == GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_BZLIB) {
+#ifdef HAVE_BZ2
+    /* bzip2 encoded data */
+    bz_stream bzstream;
+    guint orig_size;
+    int result;
+
+    bzstream.bzalloc = NULL;
+    bzstream.bzfree = NULL;
+    bzstream.opaque = NULL;
+    orig_size = size;
+
+    if ((result = BZ2_bzDecompressInit (&bzstream, 0, 0)) != BZ_OK) {
+      GST_WARNING ("bzip2 initialization failed.");
+      ret = FALSE;
+      goto out;
+    }
+
+    bzstream.next_in = (char *) data;
+    bzstream.avail_in = orig_size;
+    new_size = orig_size;
+    new_data = g_malloc (new_size);
+    bzstream.avail_out = new_size;
+    bzstream.next_out = (char *) new_data;
+
+    do {
+      result = BZ2_bzDecompress (&bzstream);
+      if (result != BZ_OK && result != BZ_STREAM_END) {
+        GST_WARNING ("bzip2 decompression failed.");
+        g_free (new_data);
+        BZ2_bzDecompressEnd (&bzstream);
+        break;
+      }
+      new_size += 4000;
+      new_data = g_realloc (new_data, new_size);
+      bzstream.next_out = (char *) (new_data + bzstream.total_out_lo32);
+      bzstream.avail_out += 4000;
+    } while (bzstream.avail_in != 0 && result != BZ_STREAM_END);
+
+    if (result != BZ_STREAM_END) {
+      ret = FALSE;
+      goto out;
+    } else {
+      new_size = bzstream.total_out_lo32;
+      BZ2_bzDecompressEnd (&bzstream);
+    }
+#else
+    GST_WARNING ("bzip2 encoded tracks not supported.");
+    ret = FALSE;
+    goto out;
+#endif
+  } else if (algo == GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_LZO1X) {
+    /* lzo encoded data */
+    int result;
+    int orig_size, out_size;
+
+    orig_size = size;
+    out_size = size;
+    new_size = size;
+    new_data = g_malloc (new_size);
+
+    do {
+      orig_size = size;
+      out_size = new_size;
+
+      result = lzo1x_decode (new_data, &out_size, data, &orig_size);
+
+      if (orig_size > 0) {
+        new_size += 4000;
+        new_data = g_realloc (new_data, new_size);
+      }
+    } while (orig_size > 0 && result == LZO_OUTPUT_FULL);
+
+    new_size -= out_size;
+
+    if (result != LZO_OUTPUT_FULL) {
+      GST_WARNING ("lzo decompression failed");
+      g_free (new_data);
+
+      ret = FALSE;
+      goto out;
+    }
+
+  } else if (algo == GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_HEADERSTRIP) {
+    /* header stripped encoded data */
+    if (enc->comp_settings_length > 0) {
+      new_data = g_malloc (size + enc->comp_settings_length);
+      new_size = size + enc->comp_settings_length;
+
+      memcpy (new_data, enc->comp_settings, enc->comp_settings_length);
+      memcpy (new_data + enc->comp_settings_length, data, size);
+    }
+  } else {
+    g_assert_not_reached ();
+  }
+
+out:
+
+  if (!ret) {
+    *data_out = NULL;
+    *size_out = 0;
+  } else {
+    *data_out = new_data;
+    *size_out = new_size;
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
+    guint * size_out, GstMatroskaTrackEncodingScope scope, gboolean free)
+{
+  guint8 *data;
+  guint size;
+  gboolean ret = TRUE;
+  gint i;
+
+  g_return_val_if_fail (encodings != NULL, FALSE);
+  g_return_val_if_fail (data_out != NULL && *data_out != NULL, FALSE);
+  g_return_val_if_fail (size_out != NULL, FALSE);
+
+  data = *data_out;
+  size = *size_out;
+
+  for (i = 0; i < encodings->len; i++) {
+    GstMatroskaTrackEncoding *enc =
+        &g_array_index (encodings, GstMatroskaTrackEncoding, i);
+    guint8 *new_data = NULL;
+    guint new_size = 0;
+
+    if ((enc->scope & scope) == 0)
+      continue;
+
+    /* Encryption not supported yet */
+    if (enc->type != 0) {
+      ret = FALSE;
+      break;
+    }
+
+    new_data = data;
+    new_size = size;
+
+    ret =
+        gst_matroska_decompress_data (enc, &new_data, &new_size,
+        enc->comp_algo);
+
+    if (!ret)
+      break;
+
+    if ((data == *data_out && free) || (data != *data_out))
+      g_free (data);
+
+    data = new_data;
+    size = new_size;
+  }
+
+  if (!ret) {
+    if ((data == *data_out && free) || (data != *data_out))
+      g_free (data);
+
+    *data_out = NULL;
+    *size_out = 0;
+  } else {
+    *data_out = data;
+    *size_out = size;
+  }
+
+  return ret;
+}
+
+static GstBuffer *
+gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
+{
+  guint8 *data;
+  guint size;
+  GstBuffer *new_buf;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
+
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+
+  g_return_val_if_fail (data != NULL && size > 0, buf);
+
+  if (gst_matroska_decode_data (context->encodings, &data, &size,
+          GST_MATROSKA_TRACK_ENCODING_SCOPE_FRAME, FALSE)) {
+    new_buf = gst_buffer_new ();
+    GST_BUFFER_MALLOCDATA (new_buf) = (guint8 *) data;
+    GST_BUFFER_DATA (new_buf) = (guint8 *) data;
+    GST_BUFFER_SIZE (new_buf) = size;
+
+    gst_buffer_unref (buf);
+    buf = new_buf;
+
+    return buf;
+  } else {
+    gst_buffer_unref (buf);
+    return NULL;
+  }
+}
+
+static GstFlowReturn
+gst_matroska_decode_content_encodings (GArray * encodings)
+{
+  gint i;
+
+  if (encodings == NULL)
+    return GST_FLOW_OK;
+
+  for (i = 0; i < encodings->len; i++) {
+    GstMatroskaTrackEncoding *enc =
+        &g_array_index (encodings, GstMatroskaTrackEncoding, i);
+    GstMatroskaTrackEncoding *enc2;
+    guint8 *data = NULL;
+    guint size;
+
+    if ((enc->
+            scope & GST_MATROSKA_TRACK_ENCODING_SCOPE_NEXT_CONTENT_ENCODING) ==
+        0)
+      continue;
+
+    /* Encryption not supported yet */
+    if (enc->type != 0)
+      return GST_FLOW_ERROR;
+
+    if (i + 1 >= encodings->len)
+      return GST_FLOW_ERROR;
+
+    enc2 = &g_array_index (encodings, GstMatroskaTrackEncoding, i + 1);
+
+    if (enc->comp_settings_length == 0)
+      continue;
+
+    data = enc->comp_settings;
+    size = enc->comp_settings_length;
+
+    if (!gst_matroska_decompress_data (enc, &data, &size, enc->comp_algo))
+      return GST_FLOW_ERROR;
+
+    g_free (enc->comp_settings);
+
+    enc->comp_settings = data;
+    enc->comp_settings_length = size;
+  }
+
+  return GST_FLOW_OK;
+}
+
 static GstFlowReturn
 gst_matroska_demux_read_track_encodings (GstMatroskaDemux * demux,
     GstMatroskaTrackContext * context)
@@ -648,9 +956,7 @@ gst_matroska_demux_read_track_encodings (GstMatroskaDemux * demux,
   g_array_sort (context->encodings,
       (GCompareFunc) gst_matroska_demux_encoding_cmp);
 
-  /* TODO: Decompress & decrypt ContentEncodings if necessary */
-
-  return ret;
+  return gst_matroska_decode_content_encodings (context->encodings);
 }
 
 static gboolean
@@ -1355,7 +1661,16 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
 
   DEBUG_ELEMENT_STOP (demux, ebml, "TrackEntry", ret);
 
-  /* TODO: decompress/decrypt codec private if necessary */
+  /* Decode codec private data if necessary */
+  if (context->encodings && context->encodings->len > 0 && context->codec_priv
+      && context->codec_priv_size > 0) {
+    if (!gst_matroska_decode_data (context->encodings,
+            (guint8 **) & context->codec_priv, &context->codec_priv_size,
+            GST_MATROSKA_TRACK_ENCODING_SCOPE_CODEC_DATA, TRUE)) {
+      GST_WARNING_OBJECT (demux, "Decoding codec private data failed");
+      ret = GST_FLOW_ERROR;
+    }
+  }
 
   if (context->type == 0 || context->codec_id == NULL || (ret != GST_FLOW_OK
           && ret != GST_FLOW_UNEXPECTED)) {
@@ -3496,100 +3811,6 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
   return GST_FLOW_OK;
 }
 
-static GstBuffer *
-gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
-{
-  gint i;
-
-  g_assert (context->encodings != NULL);
-
-  for (i = 0; i < context->encodings->len; i++) {
-    GstMatroskaTrackEncoding *enc;
-    guint8 *new_data = NULL;
-    guint new_size = 0;
-    GstBuffer *new_buf;
-
-    enc = &g_array_index (context->encodings, GstMatroskaTrackEncoding, i);
-
-    /* Currently only compression is supported */
-    if (enc->type != 0)
-      break;
-
-    /* FIXME: use enc->scope ! only necessary to decode buffer if scope & 0x1 */
-
-    if (enc->comp_algo == 0) {
-#ifdef HAVE_ZLIB
-      /* zlib encoded track */
-      z_stream zstream;
-      guint orig_size;
-      int result;
-
-      orig_size = GST_BUFFER_SIZE (buf);
-      zstream.zalloc = (alloc_func) 0;
-      zstream.zfree = (free_func) 0;
-      zstream.opaque = (voidpf) 0;
-      if (inflateInit (&zstream) != Z_OK) {
-        GST_WARNING ("zlib initialization failed.");
-        break;
-      }
-      zstream.next_in = (Bytef *) GST_BUFFER_DATA (buf);
-      zstream.avail_in = orig_size;
-      new_size = orig_size;
-      new_data = g_malloc (new_size);
-      zstream.avail_out = new_size;
-      /* FIXME: not exactly fast, right? */
-      do {
-        new_size += 4000;
-        new_data = g_realloc (new_data, new_size);
-        zstream.next_out = (Bytef *) (new_data + zstream.total_out);
-        result = inflate (&zstream, Z_NO_FLUSH);
-        if (result != Z_OK && result != Z_STREAM_END) {
-          GST_WARNING ("zlib decompression failed.");
-          g_free (new_data);
-          inflateEnd (&zstream);
-          break;
-        }
-        zstream.avail_out += 4000;
-      } while (zstream.avail_out == 4000 &&
-          zstream.avail_in != 0 && result != Z_STREAM_END);
-
-      new_size = zstream.total_out;
-      inflateEnd (&zstream);
-#else
-      GST_WARNING ("zlib encoded tracks not supported.");
-      break;
-#endif
-/* FIXME: add bzip/lzo support, what is header stripped?
- * it's insane and requires deeper knowledge of the used codec
- */
-    } else if (enc->comp_algo == 1) {
-      GST_WARNING ("BZIP encoded tracks not supported.");
-      break;
-    } else if (enc->comp_algo == 2) {
-      GST_WARNING ("LZO encoded tracks not supported.");
-      break;
-    } else if (enc->comp_algo == 3) {
-      GST_WARNING ("Header-stripped tracks not supported.");
-      break;
-    } else {
-      g_assert_not_reached ();
-    }
-
-    g_assert (new_data != NULL);
-
-    new_buf = gst_buffer_new ();
-    GST_BUFFER_MALLOCDATA (new_buf) = (guint8 *) new_data;
-    GST_BUFFER_DATA (new_buf) = (guint8 *) new_data;
-    GST_BUFFER_SIZE (new_buf) = new_size;
-    gst_buffer_copy_metadata (new_buf, buf, GST_BUFFER_COPY_TIMESTAMPS);
-
-    gst_buffer_unref (buf);
-    buf = new_buf;
-  }
-
-  return buf;
-}
-
 static GstFlowReturn
 gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     guint64 cluster_time, gboolean is_simpleblock)
@@ -3804,7 +4025,17 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         g_free (stream->codec_state);
         stream->codec_state = data;
         stream->codec_state_size = data_len;
-        /* TODO: decompress/decrypt if necessary */
+
+        /* Decode if necessary */
+        if (stream->encodings && stream->encodings->len > 0
+            && stream->codec_state && stream->codec_state_size > 0) {
+          if (!gst_matroska_decode_data (stream->encodings,
+                  (guint8 **) & stream->codec_state, &stream->codec_state_size,
+                  GST_MATROSKA_TRACK_ENCODING_SCOPE_CODEC_DATA, TRUE)) {
+            GST_WARNING_OBJECT (demux, "Decoding codec state failed");
+          }
+        }
+
         GST_DEBUG_OBJECT (demux, "CodecState of %u bytes",
             stream->codec_state_size);
         break;
@@ -3880,6 +4111,11 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       if (stream->encodings != NULL && stream->encodings->len > 0)
         sub = gst_matroska_decode_buffer (stream, sub);
 
+      if (sub == NULL) {
+        GST_WARNING_OBJECT (demux, "Decoding buffer failed");
+        goto next_lace;
+      }
+
       GST_BUFFER_TIMESTAMP (sub) = lace_time;
 
       if (lace_time != GST_CLOCK_TIME_NONE) {
@@ -3950,6 +4186,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       /* combine flows */
       ret = gst_matroska_demux_combine_flows (demux, stream, ret);
 
+    next_lace:
       size -= lace_size[n];
       if (lace_time != GST_CLOCK_TIME_NONE)
         lace_time += duration / laces;
