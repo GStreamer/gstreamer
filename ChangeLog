@@ -1,3 +1,11 @@
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Tal Shalif <tshalif at nargila dot org>
+
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_initsdl):
+	Use g_setenv() and g_unsetenv() instead of setenv() to fix compilation
+	with mingw. Fixes bug #545247.
+
 2008-08-02  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

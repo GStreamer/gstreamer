@@ -593,12 +593,12 @@ gst_sdlvideosink_initsdl (GstSDLVideoSink * sdlvideosink)
   }
 
   if (!sdlvideosink->xwindow_id) {
-    unsetenv ("SDL_WINDOWID");
+    g_unsetenv ("SDL_WINDOWID");
   } else {
     char SDL_hack[32];
 
     sprintf (SDL_hack, "%lu", sdlvideosink->xwindow_id);
-    setenv ("SDL_WINDOWID", SDL_hack, 1);
+    g_setenv ("SDL_WINDOWID", SDL_hack, 1);
   }
 
   /* Initialize the SDL library */
