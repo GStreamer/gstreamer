@@ -972,6 +972,18 @@ AG_GST_CHECK_FEATURE(WILDMIDI, [wildmidi midi soft synth plugin], wildmidi, [
   AC_SUBST(WILDMIDI_LIBS)
 ])
 
+dnl *** twolame ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_TWOLAME, true)
+AG_GST_CHECK_FEATURE(TWOLAME, [twolame], twolame, [
+  PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.0, [
+      HAVE_TWOLAME="yes"], [
+      HAVE_TWOLAME="no"
+      AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(TWOLAME_CFLAGS)
+  AC_SUBST(TWOLAME_LIBS)
+])
+
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
 AG_GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink sdlaudiosink, [
@@ -1137,6 +1149,7 @@ AM_CONDITIONAL(USE_NAS, false)
 AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_OFA, false)
 AM_CONDITIONAL(USE_OSS4, false)
+AM_CONDITIONAL(USE_TWOLAME, false)
 AM_CONDITIONAL(USE_SDL, false)
 AM_CONDITIONAL(USE_SNDFILE, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
@@ -1290,6 +1303,7 @@ ext/mythtv/Makefile
 ext/neon/Makefile
 ext/ofa/Makefile
 ext/resindvd/Makefile
+ext/twolame/Makefile
 ext/sdl/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile

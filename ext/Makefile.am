@@ -222,6 +222,12 @@ TIMIDITY_DIR=
 endif
 endif
 
+if USE_TWOLAME
+TWOLAME_DIR=twolame
+else
+TWOLAME_DIR=
+endif
+
 # if USE_POLYP
 # POLYP_DIR=polyp
 # else
@@ -347,6 +353,7 @@ SUBDIRS=\
 	$(TARKIN_DIR) \
 	$(THEORA_DIR) \
 	$(TIMIDITY_DIR) \
+	$(TWOLAME_DIR) \
 	$(X264_DIR) \
 	$(XINE_DIR) \
 	$(XVID_DIR)

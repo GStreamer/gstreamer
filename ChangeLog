@@ -2,6 +2,24 @@
 
 	* configure.ac:
 	* ext/Makefile.am:
+	* ext/twolame/Makefile.am:
+	* ext/twolame/gsttwolame.c: (gst_two_lame_mode_get_type),
+	(gst_two_lame_padding_get_type), (gst_two_lame_emphasis_get_type),
+	(gst_two_lame_release_memory), (gst_two_lame_finalize),
+	(gst_two_lame_base_init), (gst_two_lame_class_init),
+	(gst_two_lame_src_setcaps), (gst_two_lame_sink_setcaps),
+	(gst_two_lame_init), (gst_two_lame_set_property),
+	(gst_two_lame_get_property), (gst_two_lame_sink_event),
+	(gst_two_lame_chain), (gst_two_lame_setup),
+	(gst_two_lame_change_state), (gst_two_lame_get_default_settings),
+	(plugin_init):
+	* ext/twolame/gsttwolame.h:
+	Add TwoLAME MP2 encoding element, based on the LAME element.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/Makefile.am:
 	* ext/celt/Makefile.am:
 	* ext/celt/gstcelt.c: (plugin_init):
 	* ext/celt/gstceltdec.c: (gst_celt_dec_base_init),
