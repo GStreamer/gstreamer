@@ -46,7 +46,7 @@ deinterlace_scanline_scaler_bob (GstDeinterlaceMethod * self,
     GstDeinterlace2 * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
-  memcpy (out, scanlines->t0, parent->line_length);
+  oil_memcpy (out, scanlines->t0, parent->line_length);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodScalerBob, gst_deinterlace_method_scaler_bob,

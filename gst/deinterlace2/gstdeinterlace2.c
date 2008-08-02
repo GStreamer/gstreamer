@@ -98,7 +98,7 @@ gst_deinterlace_simple_method_interpolate_scanline (GstDeinterlaceMethod * self,
     GstDeinterlace2 * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
-  memcpy (out, scanlines->m1, parent->line_length);
+  oil_memcpy (out, scanlines->m1, parent->line_length);
 }
 
 static void
@@ -106,7 +106,7 @@ gst_deinterlace_simple_method_copy_scanline (GstDeinterlaceMethod * self,
     GstDeinterlace2 * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
-  memcpy (out, scanlines->m0, parent->line_length);
+  oil_memcpy (out, scanlines->m0, parent->line_length);
 }
 
 static void
@@ -137,11 +137,11 @@ gst_deinterlace_simple_method_deinterlace_frame (GstDeinterlaceMethod * self,
 
   if (cur_field_flags == PICTURE_INTERLACED_BOTTOM) {
     /* double the first scanline of the bottom field */
-    memcpy (out, field0, parent->line_length);
+    oil_memcpy (out, field0, parent->line_length);
     out += parent->output_stride;
   }
 
-  memcpy (out, field0, parent->line_length);
+  oil_memcpy (out, field0, parent->line_length);
   out += parent->output_stride;
 
   for (line = 2; line <= parent->field_height; line++) {
@@ -226,7 +226,7 @@ gst_deinterlace_simple_method_deinterlace_frame (GstDeinterlaceMethod * self,
 
   if (cur_field_flags == PICTURE_INTERLACED_TOP) {
     /* double the last scanline of the top field */
-    memcpy (out, field0, parent->line_length);
+    oil_memcpy (out, field0, parent->line_length);
   }
 }
 
