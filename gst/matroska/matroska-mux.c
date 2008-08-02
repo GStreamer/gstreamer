@@ -978,27 +978,38 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     switch (mpegversion) {
       case 1:{
         gint layer;
-
-        /* FIXME: number of samples per frame also depends on the mpegversion
-         * which we don't pass as a caps field
-         */
+        gint version = 1;
+        gint spf;
 
         gst_structure_get_int (structure, "layer", &layer);
+
+        if (!gst_structure_get_int (structure, "mpegaudioversion", &version)) {
+          GST_WARNING_OBJECT (mux,
+              "Unable to determine MPEG audio version, assuming 1");
+          version = 1;
+        }
+
+        if (layer == 1)
+          spf = 384;
+        else if (layer == 2)
+          spf = 1152;
+        else if (version == 2)
+          spf = 576;
+        else
+          spf = 1152;
+
+        context->default_duration =
+            gst_util_uint64_scale (GST_SECOND, spf, audiocontext->samplerate);
+
         switch (layer) {
           case 1:
             context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1);
-            context->default_duration =
-                384 * GST_SECOND / audiocontext->samplerate;
             break;
           case 2:
             context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L2);
-            context->default_duration =
-                1152 * GST_SECOND / audiocontext->samplerate;
             break;
           case 3:
             context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L3);
-            context->default_duration =
-                1152 * GST_SECOND / audiocontext->samplerate;
             break;
           default:
             return FALSE;
