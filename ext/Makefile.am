@@ -46,6 +46,12 @@ else
 CDAUDIO_DIR=
 endif
 
+if USE_CELT
+CELT_DIR=celt
+else
+CELT_DIR=
+endif
+
 if USE_DC1394
 DC1394_DIR=dc1394
 else
@@ -303,6 +309,7 @@ SUBDIRS=\
 	$(AUDIORESAMPLE_DIR) \
 	$(BZ2_DIR) \
 	$(CDAUDIO_DIR) \
+	$(CELT_DIR) \
 	$(DC1394_DIR) \
 	$(DIRAC_DIR) \
 	$(DIRECTFB_DIR) \

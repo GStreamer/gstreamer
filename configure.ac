@@ -369,6 +369,17 @@ AG_GST_CHECK_FEATURE(CDAUDIO, [cdaudio], cdaudio, [
   AC_SUBST(CDAUDIO_LIBS)
 ])
 
+dnl *** celt ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CELT, true)
+AG_GST_CHECK_FEATURE(CELT, [celt], celt, [
+  PKG_CHECK_MODULES(CELT, celt >= 0.4.0, [
+      HAVE_CELT="yes"], [
+      HAVE_CELT="no"
+      AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(CELT_CFLAGS)
+  AC_SUBST(CELT_LIBS)
+])
 
 dnl *** dc1394  ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DC1394, true)
@@ -1101,6 +1112,7 @@ AM_CONDITIONAL(USE_ALSA, false)
 AM_CONDITIONAL(USE_AMRWB, false)
 AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CDAUDIO, false)
+AM_CONDITIONAL(USE_CELT, false)
 AM_CONDITIONAL(USE_DC1394, false)
 AM_CONDITIONAL(USE_DIRECTFB, false)
 AM_CONDITIONAL(USE_DTS, false)
@@ -1254,6 +1266,7 @@ ext/amrwb/Makefile
 ext/alsaspdif/Makefile
 ext/bz2/Makefile
 ext/cdaudio/Makefile
+ext/celt/Makefile
 ext/dc1394/Makefile
 ext/dirac/Makefile
 ext/directfb/Makefile

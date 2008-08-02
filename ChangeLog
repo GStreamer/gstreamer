@@ -1,5 +1,36 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/celt/Makefile.am:
+	* ext/celt/gstcelt.c: (plugin_init):
+	* ext/celt/gstceltdec.c: (gst_celt_dec_base_init),
+	(gst_celt_dec_class_init), (gst_celt_dec_reset),
+	(gst_celt_dec_init), (celt_dec_convert),
+	(celt_get_sink_query_types), (celt_dec_sink_query),
+	(celt_get_src_query_types), (celt_dec_src_query),
+	(celt_dec_src_event), (celt_dec_sink_event),
+	(celt_dec_chain_parse_header), (celt_dec_chain_parse_comments),
+	(celt_dec_chain_parse_data), (celt_dec_chain),
+	(celt_dec_change_state):
+	* ext/celt/gstceltdec.h:
+	* ext/celt/gstceltenc.c: (gst_celt_enc_setup_interfaces),
+	(gst_celt_enc_base_init), (gst_celt_enc_class_init),
+	(gst_celt_enc_finalize), (gst_celt_enc_sink_setcaps),
+	(gst_celt_enc_sink_getcaps), (gst_celt_enc_convert_src),
+	(gst_celt_enc_convert_sink), (gst_celt_enc_get_latency),
+	(gst_celt_enc_get_query_types), (gst_celt_enc_src_query),
+	(gst_celt_enc_sink_query), (gst_celt_enc_init),
+	(gst_celt_enc_create_metadata_buffer), (gst_celt_enc_setup),
+	(gst_celt_enc_buffer_from_data), (gst_celt_enc_push_buffer),
+	(gst_celt_enc_set_header_on_caps), (gst_celt_enc_sinkevent),
+	(gst_celt_enc_chain), (gst_celt_enc_get_property),
+	(gst_celt_enc_set_property), (gst_celt_enc_change_state):
+	* ext/celt/gstceltenc.h:
+	Add CELT encoder and decoder elements based on the Speex elements.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Tal Shalif <tshalif at nargila dot org>
 
 	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_initsdl):
