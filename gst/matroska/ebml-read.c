@@ -112,7 +112,6 @@ static void
 gst_ebml_read_class_init (GstEbmlReadClass * klass)
 {
   GstElementClass *gstelement_class = (GstElementClass *) klass;
-
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
@@ -137,7 +136,6 @@ static GstStateChangeReturn
 gst_ebml_read_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-
   GstEbmlRead *ebml = GST_EBML_READ (element);
 
   switch (transition) {
@@ -183,7 +181,6 @@ static guint
 gst_ebml_read_element_level_up (GstEbmlRead * ebml)
 {
   guint num = 0;
-
   guint64 pos = ebml->offset;
 
   while (ebml->level != NULL) {
@@ -214,7 +211,6 @@ gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf,
    * We do it mainly to avoid pulling buffers of 1 byte all the time */
   if (ebml->cached_buffer) {
     guint64 cache_offset = GST_BUFFER_OFFSET (ebml->cached_buffer);
-
     guint cache_size = GST_BUFFER_SIZE (ebml->cached_buffer);
 
     if (cache_offset <= ebml->offset &&
@@ -313,13 +309,9 @@ static GstFlowReturn
 gst_ebml_read_element_id (GstEbmlRead * ebml, guint32 * id, guint * level_up)
 {
   guint8 *buf;
-
   gint len_mask = 0x80, read = 1, n = 1;
-
   guint32 total;
-
   guint8 b;
-
   GstFlowReturn ret;
 
   ret = gst_ebml_read_peek_bytes (ebml, 1, NULL, &buf);
@@ -373,13 +365,9 @@ gst_ebml_read_element_length (GstEbmlRead * ebml, guint64 * length,
     gint * rread)
 {
   GstFlowReturn ret;
-
   guint8 *buf;
-
   gint len_mask = 0x80, read = 1, n = 1, num_ffs = 0;
-
   guint64 total;
-
   guint8 b;
 
   ret = gst_ebml_read_peek_bytes (ebml, 1, NULL, &buf);
@@ -442,9 +430,7 @@ GstFlowReturn
 gst_ebml_peek_id (GstEbmlRead * ebml, guint * level_up, guint32 * id)
 {
   guint64 off;
-
   guint level_up_tmp = 0;
-
   GstFlowReturn ret;
 
   g_assert (level_up);
@@ -489,7 +475,6 @@ gint64
 gst_ebml_read_get_length (GstEbmlRead * ebml)
 {
   GstFormat fmt = GST_FORMAT_BYTES;
-
   gint64 end;
 
   /* FIXME: what to do if we don't get the upstream length */
@@ -523,9 +508,7 @@ GstFlowReturn
 gst_ebml_read_skip (GstEbmlRead * ebml)
 {
   guint64 length;
-
   guint32 id;
-
   GstFlowReturn ret;
 
   ret = gst_ebml_read_element_id (ebml, &id, NULL);
@@ -548,7 +531,6 @@ GstFlowReturn
 gst_ebml_read_buffer (GstEbmlRead * ebml, guint32 * id, GstBuffer ** buf)
 {
   guint64 length;
-
   GstFlowReturn ret;
 
   ret = gst_ebml_read_element_id (ebml, id, NULL);
@@ -579,7 +561,6 @@ gst_ebml_read_bytes (GstEbmlRead * ebml, guint32 * id, guint8 ** data,
     guint * size)
 {
   guint64 length;
-
   GstFlowReturn ret;
 
   *size = 0;
@@ -615,9 +596,7 @@ GstFlowReturn
 gst_ebml_read_uint (GstEbmlRead * ebml, guint32 * id, guint64 * num)
 {
   guint8 *data;
-
   guint size;
-
   GstFlowReturn ret;
 
   ret = gst_ebml_read_bytes (ebml, id, &data, &size);
@@ -649,11 +628,8 @@ GstFlowReturn
 gst_ebml_read_sint (GstEbmlRead * ebml, guint32 * id, gint64 * num)
 {
   guint8 *data;
-
   guint size;
-
   gboolean negative = 0;
-
   GstFlowReturn ret;
 
   ret = gst_ebml_read_bytes (ebml, id, &data, &size);
@@ -704,9 +680,7 @@ static gdouble
 _ext2dbl (guint8 * data)
 {
   struct _ext_float ext;
-
   guint64 m = 0;
-
   gint e, i;
 
   memcpy (&ext.exponent, data, 2);
@@ -733,9 +707,7 @@ GstFlowReturn
 gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
 {
   guint8 *data;
-
   guint size;
-
   GstFlowReturn ret;
 
   ret = gst_ebml_read_bytes (ebml, id, &data, &size);
@@ -779,9 +751,7 @@ GstFlowReturn
 gst_ebml_read_ascii (GstEbmlRead * ebml, guint32 * id, gchar ** str)
 {
   guint8 *data;
-
   guint size;
-
   GstFlowReturn ret;
 
   ret = gst_ebml_read_bytes (ebml, id, &data, &size);
@@ -830,7 +800,6 @@ GstFlowReturn
 gst_ebml_read_date (GstEbmlRead * ebml, guint32 * id, gint64 * date)
 {
   gint64 ebml_date;
-
   GstFlowReturn ret;
 
   ret = gst_ebml_read_sint (ebml, id, &ebml_date);
@@ -851,9 +820,7 @@ GstFlowReturn
 gst_ebml_read_master (GstEbmlRead * ebml, guint32 * id)
 {
   GstEbmlLevel *level;
-
   guint64 length;
-
   GstFlowReturn ret;
 
   ret = gst_ebml_read_element_id (ebml, id, NULL);
@@ -882,9 +849,7 @@ gst_ebml_read_binary (GstEbmlRead * ebml,
     guint32 * id, guint8 ** binary, guint64 * length)
 {
   guint8 *data;
-
   guint size;
-
   GstFlowReturn ret;
 
   ret = gst_ebml_read_bytes (ebml, id, &data, &size);
@@ -906,9 +871,7 @@ gst_ebml_read_header (GstEbmlRead * ebml, gchar ** doctype, guint * version)
 {
   /* this function is the first to be called */
   guint32 id;
-
   guint level_up;
-
   GstFlowReturn ret;
 
   /* default init */
