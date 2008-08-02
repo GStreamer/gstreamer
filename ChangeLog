@@ -1,5 +1,12 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/tvtime/greedyh.asm:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	Add the MMX registers to the clobbered registers only if __MMX__ is
+	defined.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/Makefile.am:
 	* gst/deinterlace2/gstdeinterlace2.c:
 	(gst_deinterlace2_methods_get_type), (gst_deinterlace2_set_method),
