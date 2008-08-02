@@ -5127,7 +5127,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     caps = gst_caps_new_simple ("audio/x-raw-int",
         "width", G_TYPE_INT, audiocontext->bitdepth,
         "depth", G_TYPE_INT, audiocontext->bitdepth,
-        "signed", G_TYPE_BOOLEAN, audiocontext->bitdepth == 8,
+        "signed", G_TYPE_BOOLEAN, audiocontext->bitdepth != 8,
         "endianness", G_TYPE_INT, endianness, NULL);
 
     *codec_name = g_strdup_printf ("Raw %d-bit PCM audio",

@@ -1,5 +1,11 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_audio_caps):
+	Fix demuxing of raw integer audio. The samples are unsigned only for 8
+	bit and signed otherwise, not the other way around.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/matroska/matroska-mux.c:
 	Add more raw YUV formats to the list of supported formats.
 
