@@ -47,7 +47,7 @@ deinterlace_scanline_weave (GstDeinterlaceMethod * self,
     GstDeinterlace2 * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
-  memcpy (out, scanlines->m1, parent->line_length);
+  oil_memcpy (out, scanlines->m1, parent->line_length);
 }
 
 static void
@@ -56,9 +56,9 @@ copy_scanline (GstDeinterlaceMethod * self, GstDeinterlace2 * parent,
 {
   /* FIXME: original code used m2 and m0 but this looks really bad */
   if (scanlines->bottom_field) {
-    memcpy (out, scanlines->bb0, parent->line_length);
+    oil_memcpy (out, scanlines->bb0, parent->line_length);
   } else {
-    memcpy (out, scanlines->bb2, parent->line_length);
+    oil_memcpy (out, scanlines->bb2, parent->line_length);
   }
 }
 

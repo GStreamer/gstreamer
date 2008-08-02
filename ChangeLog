@@ -1,5 +1,26 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace_simple_method_interpolate_scanline),
+	(gst_deinterlace_simple_method_copy_scanline),
+	(gst_deinterlace_simple_method_deinterlace_frame):
+	* gst/deinterlace2/tvtime/greedy.c: (deinterlace_frame_di_greedy):
+	* gst/deinterlace2/tvtime/greedyh.c:
+	(deinterlace_frame_di_greedyh):
+	* gst/deinterlace2/tvtime/scalerbob.c:
+	(deinterlace_scanline_scaler_bob):
+	* gst/deinterlace2/tvtime/tomsmocomp.c: (Fieldcopy):
+	* gst/deinterlace2/tvtime/weave.c: (deinterlace_scanline_weave),
+	(copy_scanline):
+	* gst/deinterlace2/tvtime/weavebff.c: (deinterlace_scanline_weave),
+	(copy_scanline):
+	* gst/deinterlace2/tvtime/weavetff.c: (deinterlace_scanline_weave),
+	(copy_scanline):
+	Use oil_memcpy() instead of memcpy() as it's faster for the sizes that
+	are usually used here.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/Makefile.am:
 	* gst/deinterlace2/gstdeinterlace2.c:
 	(gst_deinterlace_simple_method_deinterlace_frame),

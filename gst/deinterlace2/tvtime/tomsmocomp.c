@@ -65,7 +65,7 @@ Fieldcopy (void *dest, const void *src, size_t count,
   int i;
 
   for (i = 0; i < rows; i++) {
-    memcpy (pDest, pSrc, count);
+    oil_memcpy (pDest, pSrc, count);
     pSrc += src_pitch;
     pDest += dst_pitch;
   }

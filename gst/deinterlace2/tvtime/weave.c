@@ -47,14 +47,14 @@ deinterlace_scanline_weave (GstDeinterlaceMethod * self,
     GstDeinterlace2 * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
-  memcpy (out, scanlines->m1, parent->line_length);
+  oil_memcpy (out, scanlines->m1, parent->line_length);
 }
 
 static void
 copy_scanline (GstDeinterlaceMethod * self, GstDeinterlace2 * parent,
     guint8 * out, GstDeinterlaceScanlineData * scanlines, gint width)
 {
-  memcpy (out, scanlines->m0, parent->line_length);
+  oil_memcpy (out, scanlines->m0, parent->line_length);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodWeave, gst_deinterlace_method_weave,
