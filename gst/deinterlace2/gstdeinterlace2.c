@@ -592,9 +592,14 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
       /* do magic calculus */
       gst_deinterlace_method_deinterlace_frame (self->method, self);
 
-      buf = gst_deinterlace2_pop_history (self);
+      g_assert (self->history_count - 1 -
+          gst_deinterlace_method_get_latency (self->method) >= 0);
+      buf =
+          self->field_history[self->history_count - 1 -
+          gst_deinterlace_method_get_latency (self->method)].buf;
       timestamp = GST_BUFFER_TIMESTAMP (buf);
-      gst_buffer_unref (buf);
+
+      gst_buffer_unref (gst_deinterlace2_pop_history (self));
 
       GST_BUFFER_TIMESTAMP (self->out_buf) = timestamp;
       if (self->fields == GST_DEINTERLACE2_ALL)
@@ -611,8 +616,7 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
     else if (self->field_history[cur_field_idx].flags ==
         PICTURE_INTERLACED_TOP && self->fields == GST_DEINTERLACE2_BF) {
       GST_DEBUG ("Removing unused top field");
-      buf = gst_deinterlace2_pop_history (self);
-      gst_buffer_unref (buf);
+      gst_buffer_unref (gst_deinterlace2_pop_history (self));
     }
 
     cur_field_idx = self->history_count - fields_required;
@@ -635,9 +639,14 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
       /* do magic calculus */
       gst_deinterlace_method_deinterlace_frame (self->method, self);
 
-      buf = gst_deinterlace2_pop_history (self);
+      g_assert (self->history_count - 1 -
+          gst_deinterlace_method_get_latency (self->method) >= 0);
+      buf =
+          self->field_history[self->history_count - 1 -
+          gst_deinterlace_method_get_latency (self->method)].buf;
       timestamp = GST_BUFFER_TIMESTAMP (buf);
-      gst_buffer_unref (buf);
+
+      gst_buffer_unref (gst_deinterlace2_pop_history (self));
 
       GST_BUFFER_TIMESTAMP (self->out_buf) = timestamp;
       if (self->fields == GST_DEINTERLACE2_ALL)
@@ -655,8 +664,7 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
     else if (self->field_history[cur_field_idx].flags ==
         PICTURE_INTERLACED_BOTTOM && self->fields == GST_DEINTERLACE2_TF) {
       GST_DEBUG ("Removing unused bottom field");
-      buf = gst_deinterlace2_pop_history (self);
-      gst_buffer_unref (buf);
+      gst_buffer_unref (gst_deinterlace2_pop_history (self));
     }
   }
 
