@@ -130,7 +130,7 @@ static gboolean gst_matroska_demux_sink_activate_pull (GstPad * sinkpad,
 static gboolean gst_matroska_demux_sink_activate (GstPad * sinkpad);
 
 static gboolean gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
-    GstEvent * event);
+    GstPad * pad, GstEvent * event);
 static gboolean gst_matroska_demux_handle_src_event (GstPad * pad,
     GstEvent * event);
 static const GstQueryType *gst_matroska_demux_get_src_query_types (GstPad *
@@ -872,9 +872,8 @@ gst_matroska_decode_content_encodings (GArray * encodings)
     guint8 *data = NULL;
     guint size;
 
-    if ((enc->
-            scope & GST_MATROSKA_TRACK_ENCODING_SCOPE_NEXT_CONTENT_ENCODING) ==
-        0)
+    if ((enc->scope & GST_MATROSKA_TRACK_ENCODING_SCOPE_NEXT_CONTENT_ENCODING)
+        == 0)
       continue;
 
     /* Encryption not supported yet */
@@ -1915,8 +1914,8 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
 }
 
 static GstMatroskaIndex *
-gst_matroskademux_do_index_seek (GstMatroskaDemux * demux, gint64 seek_pos,
-    gint64 segment_stop, gboolean keyunit)
+gst_matroskademux_do_index_seek (GstMatroskaDemux * demux, guint track,
+    gint64 seek_pos, gint64 segment_stop, gboolean keyunit)
 {
   GstMatroskaIndex *entry = NULL;
   guint n;
@@ -1930,7 +1929,7 @@ gst_matroskademux_do_index_seek (GstMatroskaDemux * demux, gint64 seek_pos,
 
     index = &g_array_index (demux->index, GstMatroskaIndex, n);
 
-    if (index->time <= seek_pos)
+    if (index->time <= seek_pos && ((track && index->track == track) || !track))
       entry = index;
     else
       break;
@@ -1945,7 +1944,10 @@ gst_matroskademux_do_index_seek (GstMatroskaDemux * demux, gint64 seek_pos,
       GstMatroskaIndex *index;
       GstClockTimeDiff d_this, d_entry;
 
-      index = &g_array_index (demux->index, GstMatroskaIndex, n);
+      do {
+        index = &g_array_index (demux->index, GstMatroskaIndex, n);
+      } while (n++ < demux->index->len && ((track && index->track == track)
+              || !track));
 
       d_entry = GST_CLOCK_DIFF (entry->time, seek_pos);
       if (d_entry < 0)
@@ -1961,6 +1963,10 @@ gst_matroskademux_do_index_seek (GstMatroskaDemux * demux, gint64 seek_pos,
       }
     }
   }
+
+  if (entry == NULL && track)
+    entry = gst_matroskademux_do_index_seek (demux, 0,
+        seek_pos, segment_stop, keyunit);
 
   return entry;
 }
@@ -2004,7 +2010,7 @@ gst_matroska_demux_element_send_event (GstElement * element, GstEvent * event)
   g_return_val_if_fail (event != NULL, FALSE);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
-    res = gst_matroska_demux_handle_seek_event (demux, event);
+    res = gst_matroska_demux_handle_seek_event (demux, NULL, event);
   } else {
     GST_WARNING ("Unhandled event of type %s", GST_EVENT_TYPE_NAME (event));
     res = FALSE;
@@ -2015,7 +2021,7 @@ gst_matroska_demux_element_send_event (GstElement * element, GstEvent * event)
 
 static gboolean
 gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
-    GstEvent * event)
+    GstPad * pad, GstEvent * event)
 {
   GstMatroskaIndex *entry;
   GstSeekFlags flags;
@@ -2027,6 +2033,12 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   gint64 cur, stop;
   gint64 segment_start, segment_stop;
   gint i;
+  guint track = 0;
+
+  if (pad) {
+    GstMatroskaTrackContext *context = gst_pad_get_element_private (pad);
+    track = context->num;
+  }
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
@@ -2046,7 +2058,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   /* check sanity before we start flushing and all that */
   if (cur_type == GST_SEEK_TYPE_SET) {
     GST_OBJECT_LOCK (demux);
-    if (!gst_matroskademux_do_index_seek (demux, cur, -1, FALSE)) {
+    if (!gst_matroskademux_do_index_seek (demux, 0, cur, -1, FALSE)) {
       GST_DEBUG ("No matching seek entry in index");
       GST_OBJECT_UNLOCK (demux);
       return FALSE;
@@ -2100,7 +2112,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   GST_DEBUG ("New segment positions: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
       GST_TIME_ARGS (segment_start), GST_TIME_ARGS (segment_stop));
 
-  entry = gst_matroskademux_do_index_seek (demux, segment_start,
+  entry = gst_matroskademux_do_index_seek (demux, track, segment_start,
       segment_stop, keyunit);
 
   if (!entry) {
@@ -2198,7 +2210,7 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      res = gst_matroska_demux_handle_seek_event (demux, event);
+      res = gst_matroska_demux_handle_seek_event (demux, pad, event);
       break;
 
       /* events we don't need to handle */

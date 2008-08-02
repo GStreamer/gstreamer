@@ -1,5 +1,15 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/matroska/matroska-demux.c: (gst_matroskademux_do_index_seek),
+	(gst_matroska_demux_element_send_event),
+	(gst_matroska_demux_handle_seek_event),
+	(gst_matroska_demux_handle_src_event):
+	When receiving a SEEK event on a specific pad first search for a seek
+	table entry for the stream of the pad and then fall back to an entry
+	for a different stream.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* configure.ac:
 	* gst/matroska/matroska-ids.c: (gst_matroska_register_tags):
 	* gst/matroska/matroska-ids.h:
