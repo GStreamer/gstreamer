@@ -89,6 +89,169 @@ gst_deinterlace_method_get_latency (GstDeinterlaceMethod * self)
   return klass->latency;
 }
 
+
+G_DEFINE_TYPE (GstDeinterlaceSimpleMethod, gst_deinterlace_simple_method,
+    GST_TYPE_DEINTERLACE_METHOD);
+
+static void
+gst_deinterlace_simple_method_interpolate_scanline (GstDeinterlaceMethod * self,
+    GstDeinterlace2 * parent, guint8 * out,
+    GstDeinterlaceScanlineData * scanlines, gint width)
+{
+  memcpy (out, scanlines->m1, parent->line_length);
+}
+
+static void
+gst_deinterlace_simple_method_copy_scanline (GstDeinterlaceMethod * self,
+    GstDeinterlace2 * parent, guint8 * out,
+    GstDeinterlaceScanlineData * scanlines, gint width)
+{
+  memcpy (out, scanlines->m0, parent->line_length);
+}
+
+static void
+gst_deinterlace_simple_method_deinterlace_frame (GstDeinterlaceMethod * self,
+    GstDeinterlace2 * parent)
+{
+  GstDeinterlaceSimpleMethodClass *dsm_class =
+      GST_DEINTERLACE_SIMPLE_METHOD_GET_CLASS (self);
+  GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
+  GstDeinterlaceScanlineData scanlines;
+  guint8 *out = GST_BUFFER_DATA (parent->out_buf);
+  guint8 *field0 = NULL, *field1 = NULL, *field2 = NULL, *field3 = NULL;
+  gint cur_field_idx = parent->history_count - dm_class->fields_required;
+  guint cur_field_flags = parent->field_history[cur_field_idx].flags;
+  gint line;
+
+  field0 = GST_BUFFER_DATA (parent->field_history[cur_field_idx].buf);
+
+  g_assert (dm_class->fields_required <= 4);
+
+  if (dm_class->fields_required >= 2)
+    field1 = field0 =
+        GST_BUFFER_DATA (parent->field_history[cur_field_idx + 1].buf);
+  if (dm_class->fields_required >= 3)
+    field1 = field0 =
+        GST_BUFFER_DATA (parent->field_history[cur_field_idx + 2].buf);
+  if (dm_class->fields_required >= 4)
+    field1 = field0 =
+        GST_BUFFER_DATA (parent->field_history[cur_field_idx + 3].buf);
+
+
+  if (cur_field_flags == PICTURE_INTERLACED_BOTTOM) {
+    /* double the first scanline of the bottom field */
+    memcpy (out, field0, parent->line_length);
+    out += parent->output_stride;
+  }
+
+  memcpy (out, field0, parent->line_length);
+  out += parent->output_stride;
+
+  for (line = 2; line <= parent->field_height; line++) {
+
+    memset (&scanlines, 0, sizeof (scanlines));
+    scanlines.bottom_field = (cur_field_flags == PICTURE_INTERLACED_BOTTOM);
+
+    /* interp. scanline */
+    scanlines.t0 = field0;
+    scanlines.b0 = field0 + parent->field_stride;
+
+    if (field1 != NULL) {
+      scanlines.tt1 = field1;
+      scanlines.m1 = field1 + parent->field_stride;
+      scanlines.bb1 = field1 + parent->field_stride * 2;
+      field1 += parent->field_stride;
+    }
+
+    if (field2 != NULL) {
+      scanlines.t2 = field2;
+      scanlines.b2 = field2 + parent->field_stride;
+    }
+
+    if (field3 != NULL) {
+      scanlines.tt3 = field3;
+      scanlines.m3 = field3 + parent->field_stride;
+      scanlines.bb3 = field3 + parent->field_stride * 2;
+      field3 += parent->field_stride;
+    }
+
+    /* set valid data for corner cases */
+    if (line == 2) {
+      scanlines.tt1 = scanlines.bb1;
+      scanlines.tt3 = scanlines.bb3;
+    } else if (line == parent->field_height) {
+      scanlines.bb1 = scanlines.tt1;
+      scanlines.bb3 = scanlines.tt3;
+    }
+
+    dsm_class->interpolate_scanline (self, parent, out, &scanlines,
+        parent->frame_width);
+    out += parent->output_stride;
+
+    memset (&scanlines, 0, sizeof (scanlines));
+    scanlines.bottom_field = (cur_field_flags == PICTURE_INTERLACED_BOTTOM);
+
+    /* copy a scanline */
+    scanlines.tt0 = field0;
+    scanlines.m0 = field0 + parent->field_stride;
+    scanlines.bb0 = field0 + parent->field_stride * 2;
+    field0 += parent->field_stride;
+
+    if (field1 != NULL) {
+      scanlines.t1 = field1;
+      scanlines.b1 = field1 + parent->field_stride;
+    }
+
+    if (field2 != NULL) {
+      scanlines.tt2 = field2;
+      scanlines.m2 = field2 + parent->field_stride;
+      scanlines.bb2 = field2 + parent->field_stride * 2;
+      field2 += parent->field_stride;
+    }
+
+    if (field3 != NULL) {
+      scanlines.t3 = field3;
+      scanlines.b3 = field3 + parent->field_stride;
+    }
+
+    /* set valid data for corner cases */
+    if (line == parent->field_height) {
+      scanlines.bb0 = scanlines.tt0;
+      scanlines.b1 = scanlines.t1;
+      scanlines.bb2 = scanlines.tt2;
+      scanlines.b3 = scanlines.t3;
+    }
+
+    dsm_class->copy_scanline (self, parent, out, &scanlines,
+        parent->frame_width);
+    out += parent->output_stride;
+  }
+
+  if (cur_field_flags == PICTURE_INTERLACED_TOP) {
+    /* double the last scanline of the top field */
+    memcpy (out, field0, parent->line_length);
+  }
+}
+
+static void
+gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass *
+    klass)
+{
+  GstDeinterlaceMethodClass *dm_class = (GstDeinterlaceMethodClass *) klass;
+
+  dm_class->deinterlace_frame = gst_deinterlace_simple_method_deinterlace_frame;
+  dm_class->fields_required = 2;
+
+  klass->interpolate_scanline =
+      gst_deinterlace_simple_method_interpolate_scanline;
+  klass->copy_scanline = gst_deinterlace_simple_method_copy_scanline;
+}
+
+static void
+gst_deinterlace_simple_method_init (GstDeinterlaceSimpleMethod * self)
+{
+}
+
 #define GST_TYPE_DEINTERLACE2_METHODS (gst_deinterlace2_methods_get_type ())
 static GType
 gst_deinterlace2_methods_get_type (void)

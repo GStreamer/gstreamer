@@ -84,6 +84,68 @@ struct _GstDeinterlaceMethodClass {
 
 GType gst_deinterlace_method_get_type (void);
 
+#define GST_TYPE_DEINTERLACE_SIMPLE_METHOD		(gst_deinterlace_simple_method_get_type ())
+#define GST_IS_DEINTERLACE_SIMPLE_METHOD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_SIMPLE_METHOD))
+#define GST_IS_DEINTERLACE_SIMPLE_METHOD_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DEINTERLACE_SIMPLE_METHOD))
+#define GST_DEINTERLACE_SIMPLE_METHOD_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DEINTERLACE_SIMPLE_METHOD, GstDeinterlaceSimpleMethodClass))
+#define GST_DEINTERLACE_SIMPLE_METHOD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DEINTERLACE_SIMPLE_METHOD, GstDeinterlaceSimpleMethod))
+#define GST_DEINTERLACE_SIMPLE_METHOD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEINTERLACE_SIMPLE_METHOD, GstDeinterlaceSimpleMethodClass))
+#define GST_DEINTERLACE_SIMPLE_METHOD_CAST(obj)	((GstDeinterlaceSimpleMethod*)(obj))
+
+typedef struct _GstDeinterlaceSimpleMethod GstDeinterlaceSimpleMethod;
+typedef struct _GstDeinterlaceSimpleMethodClass GstDeinterlaceSimpleMethodClass;
+typedef struct _GstDeinterlaceScanlineData GstDeinterlaceScanlineData;
+
+/*
+ * This structure defines the simple deinterlacer plugin.
+ */
+
+struct _GstDeinterlaceScanlineData {
+ guint8 *tt0, *t0, *m0, *b0, *bb0;
+ guint8 *tt1, *t1, *m1, *b1, *bb1;
+ guint8 *tt2, *t2, *m2, *b2, *bb2;
+ guint8 *tt3, *t3, *m3, *b3, *bb3;
+ gboolean bottom_field;
+};
+
+/**
+ * For interpolate_scanline the input is:
+ *
+ * |   t-3       t-2       t-1       t
+ * | Field 3 | Field 2 | Field 1 | Field 0 |
+ * |  TT3    |         |   TT1   |         |
+ * |         |   T2    |         |   T0    |
+ * |   M3    |         |    M1   |         |
+ * |         |   B2    |         |   B0    |
+ * |  BB3    |         |   BB1   |         |
+ *
+ * For copy_scanline the input is:
+ *
+ * |   t-3       t-2       t-1       t
+ * | Field 3 | Field 2 | Field 1 | Field 0 |
+ * |         |   TT2   |         |  TT0    |
+ * |   T3    |         |   T1    |         |
+ * |         |    M2   |         |   M0    |
+ * |   B3    |         |   B1    |         |
+ * |         |   BB2   |         |  BB0    |
+ *
+ * All other values are NULL.
+ */
+
+struct _GstDeinterlaceSimpleMethod {
+  GstDeinterlaceMethod parent;
+};
+
+struct _GstDeinterlaceSimpleMethodClass {
+  GstDeinterlaceMethodClass parent_class;
+
+  void (*interpolate_scanline) (GstDeinterlaceMethod *self, GstDeinterlace2 * parent, guint8 *out, GstDeinterlaceScanlineData *scanlines, gint width);
+  void (*copy_scanline) (GstDeinterlaceMethod *self, GstDeinterlace2 * parent, guint8 *out, GstDeinterlaceScanlineData *scanlines, gint width);
+};
+
+GType gst_deinterlace_simple_method_get_type (void);
+
+
 #define MAX_FIELD_HISTORY 10
 
 #define PICTURE_PROGRESSIVE 0
