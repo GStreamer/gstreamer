@@ -4546,7 +4546,7 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
         }
 
         if (ret != GST_FLOW_OK)
-          break;
+          return ret;
 
         demux->state = GST_MATROSKA_DEMUX_STATE_DATA;
         /* send initial discont */
@@ -4601,7 +4601,7 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
         return ret;
       break;
   }
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static GstFlowReturn
