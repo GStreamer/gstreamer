@@ -1,5 +1,14 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/Makefile.am:
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace2_methods_get_type), (gst_deinterlace2_set_method),
+	(gst_deinterlace2_class_init):
+	Enable tomsmocomp again as the C port will be ready for the next
+	release.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/gstdeinterlace2.c: (gst_deinterlace2_init),
 	(gst_greatest_common_divisor), (gst_fraction_double),
 	(gst_deinterlace2_getcaps), (gst_deinterlace2_setcaps):
