@@ -40,10 +40,6 @@ G_BEGIN_DECLS
 #define GST_IS_MATROSKA_DEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MATROSKA_DEMUX))
 
-/* The spec says that more than 127 stream is discouraged so
- * take this as a limit for now */
-#define GST_MATROSKA_DEMUX_MAX_STREAMS 127       
-
 typedef enum {
   GST_MATROSKA_DEMUX_STATE_START,
   GST_MATROSKA_DEMUX_STATE_HEADER,
@@ -61,7 +57,7 @@ typedef struct _GstMatroskaDemux {
 
   /* pads */
   GstPad                  *sinkpad;
-  GstMatroskaTrackContext *src[GST_MATROSKA_DEMUX_MAX_STREAMS];
+  GPtrArray               *src;
   GstClock                *clock;
   guint                    num_streams;
   guint                    num_v_streams;

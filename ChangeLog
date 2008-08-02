@@ -1,5 +1,21 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_finalize),
+	(gst_matroska_demux_class_init), (gst_matroska_demux_init),
+	(gst_matroska_demux_combine_flows), (gst_matroska_demux_reset),
+	(gst_matroska_demux_stream_from_num),
+	(gst_matroska_demux_tracknumber_unique),
+	(gst_matroska_demux_add_stream), (gst_matroska_demux_send_event),
+	(gst_matroska_demux_handle_seek_event),
+	(gst_matroska_demux_sync_streams),
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock),
+	(gst_matroska_demux_loop):
+	* gst/matroska/matroska-demux.h:
+	Allow an infinite number of stream inside Matroska containers and use
+	a GPtrArray for storing them instead of allowing "only" 127 streams.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/matroska/ebml-read.c: (gst_ebml_read_class_init),
 	(gst_ebml_read_change_state), (gst_ebml_read_element_level_up),
 	(gst_ebml_read_peek_bytes), (gst_ebml_read_element_id),
