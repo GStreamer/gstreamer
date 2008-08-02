@@ -1,5 +1,13 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/gstdeinterlace2.c: (gst_deinterlace2_init),
+	(gst_greatest_common_divisor), (gst_fraction_double),
+	(gst_deinterlace2_getcaps), (gst_deinterlace2_setcaps):
+	Don't use proxy_getcaps() but implement our own getcaps() function
+	that doubles/halfs the framerate if all fields should be sent out.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/twolame/Makefile.am:

@@ -171,6 +171,7 @@ static void gst_deinterlace2_set_property (GObject * self, guint prop_id,
 static void gst_deinterlace2_get_property (GObject * self, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstCaps *gst_deinterlace2_getcaps (GstPad * pad);
 static gboolean gst_deinterlace2_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_deinterlace2_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_deinterlace2_chain (GstPad * pad, GstBuffer * buffer);
@@ -337,7 +338,7 @@ gst_deinterlace2_init (GstDeinterlace2 * self, GstDeinterlace2Class * klass)
   gst_pad_set_setcaps_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_deinterlace2_setcaps));
   gst_pad_set_getcaps_function (self->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_deinterlace2_getcaps));
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
@@ -350,7 +351,7 @@ gst_deinterlace2_init (GstDeinterlace2 * self, GstDeinterlace2Class * klass)
   gst_pad_set_setcaps_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_deinterlace2_setcaps));
   gst_pad_set_getcaps_function (self->srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_deinterlace2_getcaps));
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   gst_element_no_more_pads (GST_ELEMENT (self));
@@ -667,6 +668,197 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
   return ret;
 }
 
+static gint
+gst_greatest_common_divisor (gint a, gint b)
+{
+  while (b != 0) {
+    int temp = a;
+
+    a = b;
+    b = temp % b;
+  }
+
+  return ABS (a);
+}
+
+static gboolean
+gst_fraction_double (gint * n_out, gint * d_out, gboolean half)
+{
+  gint n, d, gcd;
+
+  n = *n_out;
+  d = *d_out;
+
+  if (d == 0)
+    return FALSE;
+
+  if (n == 0 || (n == G_MAXINT && d == 1))
+    return TRUE;
+
+  gcd = gst_greatest_common_divisor (n, d);
+  n /= gcd;
+  d /= gcd;
+
+  if (!half) {
+    if (G_MAXINT / 2 >= ABS (n)) {
+      n *= 2;
+    } else if (d >= 2) {
+      d /= 2;
+    } else {
+      return FALSE;
+    }
+  } else {
+    if (G_MAXINT / 2 >= ABS (d)) {
+      d *= 2;
+    } else if (n >= 2) {
+      n /= 2;
+    } else {
+      return FALSE;
+    }
+  }
+
+  *n_out = n;
+  *d_out = d;
+
+  return TRUE;
+}
+
+static GstCaps *
+gst_deinterlace2_getcaps (GstPad * pad)
+{
+  GstCaps *ret;
+  GstDeinterlace2 *self = GST_DEINTERLACE2 (gst_pad_get_parent (pad));
+  GstPad *otherpad;
+  gint len;
+  const GstCaps *ourcaps;
+  GstCaps *peercaps;
+
+  GST_OBJECT_LOCK (self);
+
+  otherpad = (pad == self->srcpad) ? self->sinkpad : self->srcpad;
+
+  ourcaps = gst_pad_get_pad_template_caps (pad);
+  peercaps = gst_pad_peer_get_caps (otherpad);
+
+  if (peercaps) {
+    ret = gst_caps_intersect (ourcaps, peercaps);
+    gst_caps_unref (peercaps);
+  } else {
+    ret = gst_caps_copy (ourcaps);
+  }
+
+  GST_OBJECT_UNLOCK (self);
+
+  if (self->fields == GST_DEINTERLACE2_ALL) {
+    for (len = gst_caps_get_size (ret); len > 0; len--) {
+      GstStructure *s = gst_caps_get_structure (ret, len - 1);
+      const GValue *val;
+
+      val = gst_structure_get_value (s, "framerate");
+      if (!val)
+        continue;
+
+      if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION) {
+        gint n, d;
+
+        n = gst_value_get_fraction_numerator (val);
+        d = gst_value_get_fraction_denominator (val);
+
+        if (!gst_fraction_double (&n, &d, pad != self->srcpad)) {
+          goto error;
+        }
+
+        gst_structure_set (s, "framerate", GST_TYPE_FRACTION, n, d, NULL);
+      } else if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION_RANGE) {
+        const GValue *min, *max;
+        GValue nrange = { 0, }, nmin = {
+        0,}, nmax = {
+        0,};
+        gint n, d;
+
+        g_value_init (&nrange, GST_TYPE_FRACTION_RANGE);
+        g_value_init (&nmin, GST_TYPE_FRACTION);
+        g_value_init (&nmax, GST_TYPE_FRACTION);
+
+        min = gst_value_get_fraction_range_min (val);
+        max = gst_value_get_fraction_range_max (val);
+
+        n = gst_value_get_fraction_numerator (min);
+        d = gst_value_get_fraction_denominator (min);
+
+        if (!gst_fraction_double (&n, &d, pad != self->srcpad)) {
+          g_value_unset (&nrange);
+          g_value_unset (&nmax);
+          g_value_unset (&nmin);
+          goto error;
+        }
+
+        gst_value_set_fraction (&nmin, n, d);
+
+        n = gst_value_get_fraction_numerator (max);
+        d = gst_value_get_fraction_denominator (max);
+
+        if (!gst_fraction_double (&n, &d, pad != self->srcpad)) {
+          g_value_unset (&nrange);
+          g_value_unset (&nmax);
+          g_value_unset (&nmin);
+          goto error;
+        }
+
+        gst_value_set_fraction (&nmax, n, d);
+        gst_value_set_fraction_range (&nrange, &nmin, &nmax);
+
+        gst_structure_set_value (s, "framerate", &nrange);
+
+        g_value_unset (&nmin);
+        g_value_unset (&nmax);
+        g_value_unset (&nrange);
+      } else if (G_VALUE_TYPE (val) == GST_TYPE_LIST) {
+        const GValue *lval;
+        GValue nlist = { 0, };
+        GValue nval = { 0, };
+        gint i;
+
+        g_value_init (&nlist, GST_TYPE_LIST);
+        for (i = gst_value_list_get_size (val); i > 0; i--) {
+          gint n, d;
+
+          lval = gst_value_list_get_value (val, i);
+
+          if (G_VALUE_TYPE (lval) != GST_TYPE_FRACTION)
+            continue;
+
+          n = gst_value_get_fraction_numerator (lval);
+          d = gst_value_get_fraction_denominator (lval);
+
+          /* Double/Half the framerate but if this fails simply
+           * skip this value from the list */
+          if (!gst_fraction_double (&n, &d, pad != self->srcpad)) {
+            continue;
+          }
+
+          g_value_init (&nval, GST_TYPE_FRACTION);
+
+          gst_value_set_fraction (&nval, n, d);
+          gst_value_list_append_value (&nlist, &nval);
+          g_value_unset (&nval);
+        }
+        gst_structure_set_value (s, "framerate", &nlist);
+        g_value_unset (&nlist);
+      }
+    }
+  }
+
+  GST_DEBUG_OBJECT (pad, "Returning caps %" GST_PTR_FORMAT, ret);
+
+  return ret;
+
+error:
+  GST_ERROR_OBJECT (pad, "Unable to transform peer caps");
+  gst_caps_unref (ret);
+  return NULL;
+}
+
 static gboolean
 gst_deinterlace2_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -695,12 +887,10 @@ gst_deinterlace2_setcaps (GstPad * pad, GstCaps * caps)
   if (self->fields == GST_DEINTERLACE2_ALL) {
     gint fps_n = self->frame_rate_n, fps_d = self->frame_rate_d;
 
-    othercaps = gst_caps_copy (caps);
+    if (!gst_fraction_double (&fps_n, &fps_d, otherpad != self->srcpad))
+      goto invalid_caps;
 
-    if (otherpad == self->srcpad)
-      fps_n *= 2;
-    else
-      fps_d *= 2;
+    othercaps = gst_caps_copy (caps);
 
     gst_caps_set_simple (othercaps, "framerate", GST_TYPE_FRACTION, fps_n,
         fps_d, NULL);
@@ -748,12 +938,12 @@ done:
 
 invalid_caps:
   res = FALSE;
-  GST_ERROR_OBJECT (self, "Invalid caps: %" GST_PTR_FORMAT, caps);
+  GST_ERROR_OBJECT (pad, "Invalid caps: %" GST_PTR_FORMAT, caps);
   goto done;
 
 caps_not_accepted:
   res = FALSE;
-  GST_ERROR_OBJECT (self, "Caps not accepted: %" GST_PTR_FORMAT, othercaps);
+  GST_ERROR_OBJECT (pad, "Caps not accepted: %" GST_PTR_FORMAT, othercaps);
   gst_caps_unref (othercaps);
   goto done;
 }
