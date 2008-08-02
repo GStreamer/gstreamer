@@ -92,7 +92,8 @@ static GstStaticPadTemplate videosink_templ =
         "video/x-dirac, "
         COMMON_VIDEO_CAPS "; "
         "video/x-raw-yuv, "
-        "format = (fourcc) { YUY2, I420 }, " COMMON_VIDEO_CAPS)
+        "format = (fourcc) { YUY2, I420, YV12, UYVY, AYUV }, "
+        COMMON_VIDEO_CAPS)
     );
 
 #define COMMON_AUDIO_CAPS \

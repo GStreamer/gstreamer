@@ -1,6 +1,11 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/matroska/matroska-mux.c:
+	Add more raw YUV formats to the list of supported formats.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-mux.c:
 	(gst_matroska_mux_audio_pad_setcaps):
 	Add support for muxing raw float audio now that the spec defines the
 	endianness and add support for muxing raw integer audio with 24 and
