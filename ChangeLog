@@ -1,5 +1,41 @@
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/deinterlace2/Makefile.am:
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace_simple_method_deinterlace_frame),
+	(gst_deinterlace2_methods_get_type), (gst_deinterlace2_set_method):
+	* gst/deinterlace2/gstdeinterlace2.h:
+	* gst/deinterlace2/tvtime/linear.c:
+	(deinterlace_scanline_linear_c), (deinterlace_scanline_linear_mmx),
+	(deinterlace_scanline_linear_mmxext),
+	(gst_deinterlace_method_linear_class_init),
+	(gst_deinterlace_method_linear_init):
+	* gst/deinterlace2/tvtime/linearblend.c:
+	(deinterlace_scanline_linear_blend_c),
+	(deinterlace_scanline_linear_blend2_c),
+	(deinterlace_scanline_linear_blend_mmx),
+	(deinterlace_scanline_linear_blend2_mmx),
+	(gst_deinterlace_method_linear_blend_class_init),
+	(gst_deinterlace_method_linear_blend_init):
+	* gst/deinterlace2/tvtime/plugins.h:
+	* gst/deinterlace2/tvtime/scalerbob.c:
+	(deinterlace_scanline_scaler_bob),
+	(gst_deinterlace_method_scaler_bob_class_init),
+	(gst_deinterlace_method_scaler_bob_init):
+	* gst/deinterlace2/tvtime/weave.c: (deinterlace_scanline_weave),
+	(copy_scanline), (gst_deinterlace_method_weave_class_init),
+	(gst_deinterlace_method_weave_init):
+	* gst/deinterlace2/tvtime/weavebff.c: (deinterlace_scanline_weave),
+	(copy_scanline), (gst_deinterlace_method_weave_bff_class_init),
+	(gst_deinterlace_method_weave_bff_init):
+	* gst/deinterlace2/tvtime/weavetff.c: (deinterlace_scanline_weave),
+	(copy_scanline), (gst_deinterlace_method_weave_tff_class_init),
+	(gst_deinterlace_method_weave_tff_init):
+	Add the remaining tvtime deinterlacing methods and fix the
+	deinterlace_frame() implementation of GstDeinterlaceSimpleMethod.
+
+2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/deinterlace2/tvtime/vfir.c: (deinterlace_line_c),
 	(deinterlace_line_mmx), (gst_deinterlace_method_vfir_class_init):
 	Implement the VFIR deinterlacing method as simple method.

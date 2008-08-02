@@ -5,7 +5,13 @@ libgstdeinterlace2_la_SOURCES = \
 	tvtime/greedy.c \
 	tvtime/greedyh.c \
 	tvtime/vfir.c \
-	tvtime/tomsmocomp.c
+	tvtime/tomsmocomp.c \
+	tvtime/weavetff.c \
+	tvtime/weavebff.c \
+	tvtime/weave.c \
+	tvtime/linear.c \
+	tvtime/linearblend.c \
+	tvtime/scalerbob.c
 
 libgstdeinterlace2_la_CFLAGS = $(GST_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(LIBOIL_CFLAGS)
