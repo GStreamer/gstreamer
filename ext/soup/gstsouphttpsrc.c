@@ -495,8 +495,10 @@ gst_soup_http_src_unicodify (const gchar * str)
 static void
 gst_soup_http_src_cancel_message (GstSoupHTTPSrc * src)
 {
-  if (src->msg != NULL)
+  if (src->msg != NULL) {
+    src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_CANCELLED;
     soup_session_cancel_message (src->session, src->msg, SOUP_STATUS_CANCELLED);
+  }
   src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE;
   src->msg = NULL;
 }
@@ -695,19 +697,21 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
   }
   GST_DEBUG_OBJECT (src, "finished");
   src->ret = GST_FLOW_UNEXPECTED;
-  if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING &&
-      src->read_position > 0) {
+  if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_CANCELLED) {
+    /* gst_soup_http_src_cancel_message() triggered this; probably a seek
+     * that occurred in the QUEUEING state; i.e. before the connection setup
+     * was complete. Do nothing */
+  } else if (src->session_io_status ==
+      GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING && src->read_position > 0) {
     /* The server disconnected while streaming. Reconnect and seeking to the
      * last location. */
     src->retry = TRUE;
     src->ret = GST_FLOW_CUSTOM_ERROR;
   } else if (G_UNLIKELY (src->session_io_status !=
           GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
-    if (msg->status_code != SOUP_STATUS_CANCELLED) {
-      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-          ("%s", msg->reason_phrase),
-          ("libsoup status code %d", msg->status_code));
-    }
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+        ("%s", msg->reason_phrase),
+        ("libsoup status code %d", msg->status_code));
   }
   if (src->loop)
     g_main_loop_quit (src->loop);
@@ -850,6 +854,8 @@ gst_soup_http_src_response_cb (SoupSession * session, SoupMessage * msg,
     src->retry = TRUE;
   } else
     gst_soup_http_src_parse_status (msg, src);
+  /* The session's SoupMessage object expires after this callback returns. */
+  src->msg = NULL;
   g_main_loop_quit (src->loop);
 }
 
@@ -992,6 +998,9 @@ gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
         break;
       case GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING:
         gst_soup_http_src_session_unpause_message (src);
+        break;
+      case GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_CANCELLED:
+        /* Impossible. */
         break;
     }
 

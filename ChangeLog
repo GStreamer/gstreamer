@@ -1,3 +1,10 @@
+2008-08-02  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	* ext/soup/gstsouphttpsrc.h:
+	Fix seeking race condition in #540300
+	Patch By: Wouter Cloetens  <wouter at mind be>
+
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/matroska/matroska-demux.c: (gst_matroskademux_do_index_seek),
