@@ -554,11 +554,41 @@ gst_flac_enc_sink_getcaps (GstPad * pad)
   return ret;
 }
 
+static guint64
+gst_flac_enc_query_peer_total_samples (GstFlacEnc * flacenc, GstPad * pad)
+{
+  GstFormat fmt = GST_FORMAT_DEFAULT;
+  gint64 duration;
+
+  if (gst_pad_query_peer_duration (pad, &fmt, &duration)
+      && fmt == GST_FORMAT_DEFAULT && duration != GST_CLOCK_TIME_NONE)
+    goto done;
+
+  fmt = GST_FORMAT_TIME;
+
+  if (gst_pad_query_peer_duration (pad, &fmt, &duration) &&
+      fmt == GST_FORMAT_TIME && duration != GST_CLOCK_TIME_NONE) {
+    duration = GST_FRAMES_TO_CLOCK_TIME (duration, flacenc->sample_rate);
+
+    goto done;
+  }
+
+  GST_DEBUG_OBJECT (flacenc, "Upstream reported no total samples");
+  return GST_CLOCK_TIME_NONE;
+
+done:
+  GST_DEBUG_OBJECT (flacenc,
+      "Upstream reported %" G_GUINT64_FORMAT " total samples", duration);
+
+  return duration;
+}
+
 static gboolean
 gst_flac_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstFlacEnc *flacenc;
   GstStructure *structure;
+  guint64 total_samples = GST_CLOCK_TIME_NONE;
 
 #ifdef LEGACY_FLAC
   FLAC__SeekableStreamEncoderState state;
@@ -603,6 +633,8 @@ gst_flac_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   gst_caps_unref (caps);
 
+  total_samples = gst_flac_enc_query_peer_total_samples (flacenc, pad);
+
 #ifdef LEGACY_FLAC
   FLAC__seekable_stream_encoder_set_bits_per_sample (flacenc->encoder,
       flacenc->depth);
@@ -610,6 +642,10 @@ gst_flac_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
       flacenc->sample_rate);
   FLAC__seekable_stream_encoder_set_channels (flacenc->encoder,
       flacenc->channels);
+
+  if (total_samples != GST_CLOCK_TIME_NONE)
+    FLAC__seekable_stream_encoder_set_total_samples_estimate (flacenc->encoder,
+        total_samples);
 
   FLAC__seekable_stream_encoder_set_write_callback (flacenc->encoder,
       gst_flac_enc_write_callback);
@@ -623,6 +659,10 @@ gst_flac_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   FLAC__stream_encoder_set_bits_per_sample (flacenc->encoder, flacenc->depth);
   FLAC__stream_encoder_set_sample_rate (flacenc->encoder, flacenc->sample_rate);
   FLAC__stream_encoder_set_channels (flacenc->encoder, flacenc->channels);
+
+  if (total_samples != GST_CLOCK_TIME_NONE)
+    FLAC__stream_encoder_set_total_samples_estimate (flacenc->encoder,
+        total_samples);
 #endif
 
   gst_flac_enc_set_metadata (flacenc);
@@ -952,6 +992,8 @@ gst_flac_enc_write_callback (const FLAC__StreamEncoder * encoder,
       gst_flac_enc_process_stream_headers (flacenc);
       flacenc->got_headers = TRUE;
     }
+  } else if (flacenc->got_headers && samples == 0) {
+    GST_WARNING_OBJECT (flacenc, "Got header packet after data packets");
   }
 
   GST_LOG ("Pushing buffer: ts=%" GST_TIME_FORMAT ", samples=%u, size=%u, "

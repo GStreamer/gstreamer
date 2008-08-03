@@ -1,5 +1,17 @@
 2008-08-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/flac/gstflacenc.c: (gst_flac_enc_query_peer_total_samples),
+	(gst_flac_enc_sink_setcaps), (gst_flac_enc_write_callback):
+	Set an estimate for the total number of samples that will be encoded
+	if possible to help decoders if the streaminfo can't be rewritten
+	later (like when muxing into Ogg containers).
+
+	Add a warning if we get header packets after data packets as those
+	will get lost when muxing into Ogg, i.e. rewriting the headers doesn't
+	work.
+
+2008-08-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/flac/gstflacdec.c: (gst_flac_dec_metadata_callback),
 	(gst_flac_dec_write):
 	Support decoding of all depths between 4 and 32 bits and read the
