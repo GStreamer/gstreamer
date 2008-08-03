@@ -1,3 +1,9 @@
+2008-08-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/flac/gstflacenc.c: (gst_flac_enc_init),
+	(gst_flac_enc_sink_getcaps):
+	Support encoding of up to 8 channels.
+
 2008-08-02  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/soup/gstsouphttpsrc.c:

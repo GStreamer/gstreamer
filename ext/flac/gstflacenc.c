@@ -21,7 +21,7 @@
  *  - we assume timestamps start from 0 and that we get a perfect stream; we
  *    don't handle non-zero starts and mid-stream discontinuities, esp. not if
  *    we're muxing into ogg
- *  - need to support wider caps, flac can do 1-8 channels and 4-32 bit pcm
+ *  - need to support wider caps, 4-32 bit pcm
  *    http://flac.sourceforge.net/faq.html#general__channels
  *    it also support sampling rate from 1Hz - 655350Hz
  */
@@ -34,9 +34,51 @@
 
 #include <gstflacenc.h>
 #include <gst/audio/audio.h>
+#include <gst/audio/multichannel.h>
 #include <gst/tag/tag.h>
 #include <gst/gsttagsetter.h>
 
+/* Taken from http://flac.sourceforge.net/format.html#frame_header */
+static const GstAudioChannelPosition channel_positions[8][8] = {
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}, {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
+  /* FIXME: 7/8 channel layouts are not defined in the FLAC specs */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+      GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}, {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}
+};
 
 static const GstElementDetails flacenc_details =
 GST_ELEMENT_DETAILS ("FLAC audio encoder",
@@ -51,7 +93,7 @@ GST_ELEMENT_DETAILS ("FLAC audio encoder",
   "width = (int) 16, "              \
   "depth = (int) 16, "              \
   "rate = (int) [ 8000, 96000 ], " \
-  "channels = (int) [ 1, 2 ]"
+  "channels = (int) [ 1, 8 ]"
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -104,6 +146,7 @@ GST_BOILERPLATE_FULL (GstFlacEnc, gst_flac_enc, GstElement, GST_TYPE_ELEMENT,
 static void gst_flac_enc_finalize (GObject * object);
 
 static gboolean gst_flac_enc_sink_setcaps (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_flac_enc_sink_getcaps (GstPad * pad);
 static gboolean gst_flac_enc_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_flac_enc_chain (GstPad * pad, GstBuffer * buffer);
 
@@ -312,6 +355,8 @@ gst_flac_enc_init (GstFlacEnc * flacenc, GstFlacEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_flac_enc_chain));
   gst_pad_set_event_function (flacenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_flac_enc_sink_event));
+  gst_pad_set_getcaps_function (flacenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_flac_enc_sink_getcaps));
   gst_pad_set_setcaps_function (flacenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_flac_enc_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (flacenc), flacenc->sinkpad);
@@ -399,6 +444,63 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc)
 #endif
     g_warning ("Dude, i'm already initialized!");
   gst_tag_list_free (copy);
+}
+
+static GstCaps *
+gst_flac_enc_sink_getcaps (GstPad * pad)
+{
+  GstCaps *ret = NULL;
+
+  GST_OBJECT_LOCK (pad);
+
+  if (GST_PAD_CAPS (pad)) {
+    ret = gst_caps_ref (GST_PAD_CAPS (pad));
+  } else {
+    gint i, c;
+
+    ret = gst_caps_new_empty ();
+
+    gst_caps_append_structure (ret, gst_structure_new ("audio/x-raw-int",
+            "endianness", G_TYPE_INT, G_BYTE_ORDER,
+            "signed", G_TYPE_BOOLEAN, TRUE,
+            "width", G_TYPE_INT, 16,
+            "depth", G_TYPE_INT, 16,
+            "rate", GST_TYPE_INT_RANGE, 8000, 96000,
+            "channels", GST_TYPE_INT_RANGE, 1, 2, NULL));
+
+    for (i = 3; i <= 8; i++) {
+      GValue positions = { 0, };
+      GValue pos = { 0, };
+      GstStructure *s;
+
+      g_value_init (&positions, GST_TYPE_ARRAY);
+      g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
+
+      for (c = 0; c < i; c++) {
+        g_value_set_enum (&pos, channel_positions[i - 1][c]);
+        gst_value_array_append_value (&positions, &pos);
+      }
+      g_value_unset (&pos);
+
+      s = gst_structure_new ("audio/x-raw-int",
+          "endianness", G_TYPE_INT, G_BYTE_ORDER,
+          "signed", G_TYPE_BOOLEAN, TRUE,
+          "width", G_TYPE_INT, 16,
+          "depth", G_TYPE_INT, 16,
+          "rate", GST_TYPE_INT_RANGE, 8000, 96000,
+          "channels", G_TYPE_INT, i, NULL);
+      gst_structure_set_value (s, "channel-positions", &positions);
+      g_value_unset (&positions);
+
+      gst_caps_append_structure (ret, s);
+    }
+  }
+
+  GST_OBJECT_UNLOCK (pad);
+
+  GST_DEBUG_OBJECT (pad, "Return caps %" GST_PTR_FORMAT, ret);
+
+  return ret;
 }
 
 static gboolean
@@ -1056,38 +1158,38 @@ gst_flac_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_EXHAUSTIVE_MODEL_SEARCH:
 #ifdef LEGACY_FLAC
-      FLAC__seekable_stream_encoder_set_do_exhaustive_model_search (this->
-          encoder, g_value_get_boolean (value));
+      FLAC__seekable_stream_encoder_set_do_exhaustive_model_search
+          (this->encoder, g_value_get_boolean (value));
 #else
-      FLAC__stream_encoder_set_do_exhaustive_model_search (this->
-          encoder, g_value_get_boolean (value));
+      FLAC__stream_encoder_set_do_exhaustive_model_search (this->encoder,
+          g_value_get_boolean (value));
 #endif
       break;
     case PROP_MIN_RESIDUAL_PARTITION_ORDER:
 #ifdef LEGACY_FLAC
-      FLAC__seekable_stream_encoder_set_min_residual_partition_order (this->
-          encoder, g_value_get_uint (value));
+      FLAC__seekable_stream_encoder_set_min_residual_partition_order
+          (this->encoder, g_value_get_uint (value));
 #else
-      FLAC__stream_encoder_set_min_residual_partition_order (this->
-          encoder, g_value_get_uint (value));
+      FLAC__stream_encoder_set_min_residual_partition_order (this->encoder,
+          g_value_get_uint (value));
 #endif
       break;
     case PROP_MAX_RESIDUAL_PARTITION_ORDER:
 #ifdef LEGACY_FLAC
-      FLAC__seekable_stream_encoder_set_max_residual_partition_order (this->
-          encoder, g_value_get_uint (value));
+      FLAC__seekable_stream_encoder_set_max_residual_partition_order
+          (this->encoder, g_value_get_uint (value));
 #else
-      FLAC__stream_encoder_set_max_residual_partition_order (this->
-          encoder, g_value_get_uint (value));
+      FLAC__stream_encoder_set_max_residual_partition_order (this->encoder,
+          g_value_get_uint (value));
 #endif
       break;
     case PROP_RICE_PARAMETER_SEARCH_DIST:
 #ifdef LEGACY_FLAC
-      FLAC__seekable_stream_encoder_set_rice_parameter_search_dist (this->
-          encoder, g_value_get_uint (value));
+      FLAC__seekable_stream_encoder_set_rice_parameter_search_dist
+          (this->encoder, g_value_get_uint (value));
 #else
-      FLAC__stream_encoder_set_rice_parameter_search_dist (this->
-          encoder, g_value_get_uint (value));
+      FLAC__stream_encoder_set_rice_parameter_search_dist (this->encoder,
+          g_value_get_uint (value));
 #endif
       break;
     default:
@@ -1131,8 +1233,8 @@ gst_flac_enc_get_property (GObject * object, guint prop_id,
     case PROP_LOOSE_MID_SIDE_STEREO:
 #ifdef LEGACY_FLAC
       g_value_set_boolean (value,
-          FLAC__seekable_stream_encoder_get_loose_mid_side_stereo (this->
-              encoder));
+          FLAC__seekable_stream_encoder_get_loose_mid_side_stereo
+          (this->encoder));
 #else
       g_value_set_boolean (value,
           FLAC__stream_encoder_get_loose_mid_side_stereo (this->encoder));
@@ -1159,8 +1261,8 @@ gst_flac_enc_get_property (GObject * object, guint prop_id,
     case PROP_QLP_COEFF_PRECISION:
 #ifdef LEGACY_FLAC
       g_value_set_uint (value,
-          FLAC__seekable_stream_encoder_get_qlp_coeff_precision (this->
-              encoder));
+          FLAC__seekable_stream_encoder_get_qlp_coeff_precision
+          (this->encoder));
 #else
       g_value_set_uint (value,
           FLAC__stream_encoder_get_qlp_coeff_precision (this->encoder));
@@ -1169,8 +1271,8 @@ gst_flac_enc_get_property (GObject * object, guint prop_id,
     case PROP_QLP_COEFF_PREC_SEARCH:
 #ifdef LEGACY_FLAC
       g_value_set_boolean (value,
-          FLAC__seekable_stream_encoder_get_do_qlp_coeff_prec_search (this->
-              encoder));
+          FLAC__seekable_stream_encoder_get_do_qlp_coeff_prec_search
+          (this->encoder));
 #else
       g_value_set_boolean (value,
           FLAC__stream_encoder_get_do_qlp_coeff_prec_search (this->encoder));
@@ -1188,8 +1290,8 @@ gst_flac_enc_get_property (GObject * object, guint prop_id,
     case PROP_EXHAUSTIVE_MODEL_SEARCH:
 #ifdef LEGACY_FLAC
       g_value_set_boolean (value,
-          FLAC__seekable_stream_encoder_get_do_exhaustive_model_search (this->
-              encoder));
+          FLAC__seekable_stream_encoder_get_do_exhaustive_model_search
+          (this->encoder));
 #else
       g_value_set_boolean (value,
           FLAC__stream_encoder_get_do_exhaustive_model_search (this->encoder));
@@ -1198,30 +1300,30 @@ gst_flac_enc_get_property (GObject * object, guint prop_id,
     case PROP_MIN_RESIDUAL_PARTITION_ORDER:
 #ifdef LEGACY_FLAC
       g_value_set_uint (value,
-          FLAC__seekable_stream_encoder_get_min_residual_partition_order (this->
-              encoder));
+          FLAC__seekable_stream_encoder_get_min_residual_partition_order
+          (this->encoder));
 #else
       g_value_set_uint (value,
-          FLAC__stream_encoder_get_min_residual_partition_order (this->
-              encoder));
+          FLAC__stream_encoder_get_min_residual_partition_order
+          (this->encoder));
 #endif
       break;
     case PROP_MAX_RESIDUAL_PARTITION_ORDER:
 #ifdef LEGACY_FLAC
       g_value_set_uint (value,
-          FLAC__seekable_stream_encoder_get_max_residual_partition_order (this->
-              encoder));
+          FLAC__seekable_stream_encoder_get_max_residual_partition_order
+          (this->encoder));
 #else
       g_value_set_uint (value,
-          FLAC__stream_encoder_get_max_residual_partition_order (this->
-              encoder));
+          FLAC__stream_encoder_get_max_residual_partition_order
+          (this->encoder));
 #endif
       break;
     case PROP_RICE_PARAMETER_SEARCH_DIST:
 #ifdef LEGACY_FLAC
       g_value_set_uint (value,
-          FLAC__seekable_stream_encoder_get_rice_parameter_search_dist (this->
-              encoder));
+          FLAC__seekable_stream_encoder_get_rice_parameter_search_dist
+          (this->encoder));
 #else
       g_value_set_uint (value,
           FLAC__stream_encoder_get_rice_parameter_search_dist (this->encoder));
