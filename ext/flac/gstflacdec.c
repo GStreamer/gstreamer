@@ -218,8 +218,8 @@ GST_BOILERPLATE (GstFlacDec, gst_flac_dec, GstElement, GST_TYPE_ELEMENT);
     "endianness = (int) BYTE_ORDER, "                     \
     "signed = (boolean) true, "                           \
     "width = (int) { 8, 16, 32 }, "                       \
-    "depth = (int) { 8, 12, 16, 20, 24, 32 }, "           \
-    "rate = (int) [ 8000, 96000 ], "                      \
+    "depth = (int) [ 4, 32 ], "                           \
+    "rate = (int) [ 1, 655350 ], "                        \
     "channels = (int) [ 1, 8 ]"
 static void
 gst_flac_dec_base_init (gpointer g_class)
@@ -680,6 +680,7 @@ gst_flac_dec_metadata_callback (GstFlacDec * flacdec,
       flacdec->min_blocksize = metadata->data.stream_info.min_blocksize;
       flacdec->max_blocksize = metadata->data.stream_info.max_blocksize;
       flacdec->sample_rate = metadata->data.stream_info.sample_rate;
+      flacdec->depth = metadata->data.stream_info.bits_per_sample;
 
       GST_DEBUG_OBJECT (flacdec, "blocksize: min=%u, max=%u",
           flacdec->min_blocksize, flacdec->max_blocksize);
@@ -997,19 +998,12 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     const FLAC__int32 * const buffer[])
 {
   GstFlowReturn ret = GST_FLOW_OK;
-
   GstBuffer *outbuf;
-
   guint depth = frame->header.bits_per_sample;
-
   guint width;
-
   guint channels = frame->header.channels;
-
   guint samples = frame->header.blocksize;
-
   guint j, i;
-
   GstClockTime next;
 
   switch (depth) {
@@ -1024,6 +1018,23 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     case 24:
     case 32:
       width = 32;
+      break;
+    case 0:
+      if (flacdec->depth < 4 || flacdec->depth > 32) {
+        GST_ERROR_OBJECT (flacdec, "unsupported depth %d from STREAMINFO",
+            flacdec->depth);
+        ret = GST_FLOW_ERROR;
+        goto done;
+      }
+
+      depth = flacdec->depth;
+      if (depth < 9)
+        width = 8;
+      else if (depth < 17)
+        width = 16;
+      else
+        width = 32;
+
       break;
     default:
       GST_ERROR_OBJECT (flacdec, "unsupported depth %d", depth);
@@ -1101,7 +1112,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
 
   GST_BUFFER_DURATION (outbuf) = next - GST_BUFFER_TIMESTAMP (outbuf);
 
-  if (depth == 8) {
+  if (width == 8) {
     gint8 *outbuffer = (gint8 *) GST_BUFFER_DATA (outbuf);
 
     for (i = 0; i < samples; i++) {
@@ -1109,7 +1120,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         *outbuffer++ = (gint8) buffer[j][i];
       }
     }
-  } else if (depth == 12 || depth == 16) {
+  } else if (width == 16) {
     gint16 *outbuffer = (gint16 *) GST_BUFFER_DATA (outbuf);
 
     for (i = 0; i < samples; i++) {
@@ -1117,7 +1128,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         *outbuffer++ = (gint16) buffer[j][i];
       }
     }
-  } else if (depth == 20 || depth == 24 || depth == 32) {
+  } else if (width == 32) {
     gint32 *outbuffer = (gint32 *) GST_BUFFER_DATA (outbuf);
 
     for (i = 0; i < samples; i++) {

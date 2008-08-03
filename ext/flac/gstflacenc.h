@@ -58,6 +58,7 @@ struct _GstFlacEnc {
   guint64        samples_written;
   gboolean       eos;
   gint           channels;
+  gint           width;
   gint           depth;
   gint           sample_rate;
   gboolean       negotiated;

@@ -1,5 +1,22 @@
 2008-08-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/flac/gstflacdec.c: (gst_flac_dec_metadata_callback),
+	(gst_flac_dec_write):
+	Support decoding of all depths between 4 and 32 bits and read the
+	depth from the streaminfo header if needed. Also support all sampling
+	rates between 1 and 655350 Hz.
+
+	* ext/flac/gstflacenc.c:
+	(gst_flac_enc_caps_append_structure_with_widths),
+	(gst_flac_enc_sink_getcaps), (gst_flac_enc_sink_setcaps),
+	(gst_flac_enc_chain):
+	* ext/flac/gstflacenc.h:
+	Support encoding in all bit depths supported by the streamable
+	subformat (i.e. 8, 12, 16, 20 and 24 bits) and all sampling rates
+	between 1 Hz and 655350 Hz.
+
+2008-08-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/flac/gstflacenc.c: (gst_flac_enc_init),
 	(gst_flac_enc_sink_getcaps):
 	Support encoding of up to 8 channels.

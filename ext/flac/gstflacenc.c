@@ -21,9 +21,6 @@
  *  - we assume timestamps start from 0 and that we get a perfect stream; we
  *    don't handle non-zero starts and mid-stream discontinuities, esp. not if
  *    we're muxing into ogg
- *  - need to support wider caps, 4-32 bit pcm
- *    http://flac.sourceforge.net/faq.html#general__channels
- *    it also support sampling rate from 1Hz - 655350Hz
  */
 
 #ifdef HAVE_CONFIG_H
@@ -90,9 +87,23 @@ GST_ELEMENT_DETAILS ("FLAC audio encoder",
   "audio/x-raw-int, "               \
   "endianness = (int) BYTE_ORDER, " \
   "signed = (boolean) TRUE, "       \
+  "width = (int) 8, "               \
+  "depth = (int) 8, "               \
+  "rate = (int) [ 1, 655350 ], "    \
+  "channels = (int) [ 1, 8 ]; "     \
+  "audio/x-raw-int, "               \
+  "endianness = (int) BYTE_ORDER, " \
+  "signed = (boolean) TRUE, "       \
   "width = (int) 16, "              \
-  "depth = (int) 16, "              \
-  "rate = (int) [ 8000, 96000 ], " \
+  "depth = (int) { 12, 16 }, "      \
+  "rate = (int) [ 1, 655350 ], "    \
+  "channels = (int) [ 1, 8 ]; "     \
+  "audio/x-raw-int, "               \
+  "endianness = (int) BYTE_ORDER, " \
+  "signed = (boolean) TRUE, "       \
+  "width = (int) 32, "              \
+  "depth = (int) { 20, 24 }, "      \
+  "rate = (int) [ 1, 655350 ], "    \
   "channels = (int) [ 1, 8 ]"
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -446,6 +457,49 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc)
   gst_tag_list_free (copy);
 }
 
+static void
+gst_flac_enc_caps_append_structure_with_widths (GstCaps * caps,
+    GstStructure * s)
+{
+  GstStructure *tmp;
+  GValue list = { 0, };
+  GValue depth = { 0, };
+
+
+  tmp = gst_structure_copy (s);
+  gst_structure_set (tmp, "width", G_TYPE_INT, 8, "depth", G_TYPE_INT, 8, NULL);
+  gst_caps_append_structure (caps, tmp);
+
+  tmp = gst_structure_copy (s);
+
+  g_value_init (&depth, G_TYPE_INT);
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_set_int (&depth, 12);
+  gst_value_list_append_value (&list, &depth);
+  g_value_set_int (&depth, 16);
+  gst_value_list_append_value (&list, &depth);
+
+  gst_structure_set (tmp, "width", G_TYPE_INT, 16, NULL);
+  gst_structure_set_value (tmp, "depth", &list);
+  gst_caps_append_structure (caps, tmp);
+
+  g_value_reset (&list);
+
+  tmp = s;
+
+  g_value_set_int (&depth, 20);
+  gst_value_list_append_value (&list, &depth);
+  g_value_set_int (&depth, 24);
+  gst_value_list_append_value (&list, &depth);
+
+  gst_structure_set (tmp, "width", G_TYPE_INT, 32, NULL);
+  gst_structure_set_value (tmp, "depth", &list);
+  gst_caps_append_structure (caps, tmp);
+
+  g_value_unset (&list);
+  g_value_unset (&depth);
+}
+
 static GstCaps *
 gst_flac_enc_sink_getcaps (GstPad * pad)
 {
@@ -460,12 +514,11 @@ gst_flac_enc_sink_getcaps (GstPad * pad)
 
     ret = gst_caps_new_empty ();
 
-    gst_caps_append_structure (ret, gst_structure_new ("audio/x-raw-int",
+    gst_flac_enc_caps_append_structure_with_widths (ret,
+        gst_structure_new ("audio/x-raw-int",
             "endianness", G_TYPE_INT, G_BYTE_ORDER,
             "signed", G_TYPE_BOOLEAN, TRUE,
-            "width", G_TYPE_INT, 16,
-            "depth", G_TYPE_INT, 16,
-            "rate", GST_TYPE_INT_RANGE, 8000, 96000,
+            "rate", GST_TYPE_INT_RANGE, 1, 655350,
             "channels", GST_TYPE_INT_RANGE, 1, 2, NULL));
 
     for (i = 3; i <= 8; i++) {
@@ -485,14 +538,12 @@ gst_flac_enc_sink_getcaps (GstPad * pad)
       s = gst_structure_new ("audio/x-raw-int",
           "endianness", G_TYPE_INT, G_BYTE_ORDER,
           "signed", G_TYPE_BOOLEAN, TRUE,
-          "width", G_TYPE_INT, 16,
-          "depth", G_TYPE_INT, 16,
-          "rate", GST_TYPE_INT_RANGE, 8000, 96000,
+          "rate", GST_TYPE_INT_RANGE, 1, 655350,
           "channels", G_TYPE_INT, i, NULL);
       gst_structure_set_value (s, "channel-positions", &positions);
       g_value_unset (&positions);
 
-      gst_caps_append_structure (ret, s);
+      gst_flac_enc_caps_append_structure_with_widths (ret, s);
     }
   }
 
@@ -539,6 +590,7 @@ gst_flac_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   flacenc->channels = chans;
+  flacenc->width = width;
   flacenc->depth = depth;
   flacenc->sample_rate = rate;
 
@@ -1019,7 +1071,7 @@ gst_flac_enc_chain (GstPad * pad, GstBuffer * buffer)
   GstFlacEnc *flacenc;
   FLAC__int32 *data;
   gulong insize;
-  gint samples, depth;
+  gint samples, width;
   gulong i;
   FLAC__bool res;
 
@@ -1029,20 +1081,25 @@ gst_flac_enc_chain (GstPad * pad, GstBuffer * buffer)
   if (G_UNLIKELY (flacenc->depth == 0))
     return GST_FLOW_NOT_NEGOTIATED;
 
-  depth = flacenc->depth;
+  width = flacenc->width;
 
   insize = GST_BUFFER_SIZE (buffer);
-  samples = insize / ((depth + 7) >> 3);
+  samples = insize / (width >> 3);
 
   data = g_malloc (samples * sizeof (FLAC__int32));
 
-  if (depth == 8) {
+  if (width == 8) {
     gint8 *indata = (gint8 *) GST_BUFFER_DATA (buffer);
 
     for (i = 0; i < samples; i++)
       data[i] = (FLAC__int32) indata[i];
-  } else if (depth == 16) {
+  } else if (width == 16) {
     gint16 *indata = (gint16 *) GST_BUFFER_DATA (buffer);
+
+    for (i = 0; i < samples; i++)
+      data[i] = (FLAC__int32) indata[i];
+  } else if (width == 32) {
+    gint32 *indata = (gint32 *) GST_BUFFER_DATA (buffer);
 
     for (i = 0; i < samples; i++)
       data[i] = (FLAC__int32) indata[i];
