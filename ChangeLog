@@ -1,6 +1,12 @@
 2008-08-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gsttaglist.c:
+	  Argh. actually save the text before committing. Now adds
+	  gst_tag_merge_strings_with_comma() to gst_tag_register().
+
+2008-08-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gsttaglist.c:
 	* gst/gsttaglist.h:
 	  Do as tim pointed out and actually register the new tag. Also improve
 	  te docs and use gst_tag_merge_strings_with_comma() method to allow
