@@ -130,6 +130,8 @@ G_BEGIN_DECLS
 #define FOURCC_url_     GST_MAKE_FOURCC('u','r','l',' ')
 #define FOURCC_frma     GST_MAKE_FOURCC('f','r','m','a')
 #define FOURCC_ctts     GST_MAKE_FOURCC('c','t','t','s')
+#define FOURCC_keyw     GST_MAKE_FOURCC('k','e','y','w')
+#define FOURCC_kywd     GST_MAKE_FOURCC('k','y','w','d')
 
 /* Xiph fourcc */
 #define FOURCC_XiTh     GST_MAKE_FOURCC('X','i','T','h')

@@ -4033,6 +4033,17 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
   if (node) {
     qtdemux_tag_add_tmpo (qtdemux, GST_TAG_BEATS_PER_MINUTE, node);
   }
+
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC_keyw);
+  if (node) {
+    qtdemux_tag_add_str (qtdemux, GST_TAG_KEYWORDS, node);
+  } else {
+    node = qtdemux_tree_get_child_by_type (ilst, FOURCC_kywd);
+    if (node) {
+      qtdemux_tag_add_str (qtdemux, GST_TAG_KEYWORDS, node);
+    }
+  }
+
 }
 
 typedef struct

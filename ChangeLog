@@ -1,6 +1,12 @@
 2008-08-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/qtdemux/qtdemux.c:
+	* gst/qtdemux/qtdemux_fourcc.h:
+	  Add keyword tag support. Fixes #520694 for qtdemux.
+
+2008-08-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/qtdemux/qtdemux.c:
 	  Add support for tmpo tag (BPM).
 
 2008-08-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
