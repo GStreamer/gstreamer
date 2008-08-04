@@ -3816,6 +3816,32 @@ qtdemux_tag_add_num (GstQTDemux * qtdemux, const char *tag1,
 }
 
 static void
+qtdemux_tag_add_tmpo (GstQTDemux * qtdemux, const char *tag1, GNode * node)
+{
+  GNode *data;
+  int len;
+  int type;
+  int n1;
+
+  data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
+  if (data) {
+    len = QT_UINT32 (data->data);
+    type = QT_UINT32 ((guint8 *) data->data + 8);
+    GST_DEBUG_OBJECT (qtdemux, "have tempo tag, type=%d,len=%d", type, len);
+    /* some files wrongly have a type 0x0f=15, but it should be 0x15 */
+    if ((type == 0x00000015 || type == 0x0000000f) && len >= 16) {
+      n1 = QT_UINT16 ((guint8 *) data->data + 16);
+      if (n1) {
+        /* do not add bpm=0 */
+        GST_DEBUG_OBJECT (qtdemux, "adding tag %d", n1);
+        gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
+            tag1, (gdouble) n1, NULL);
+      }
+    }
+  }
+}
+
+static void
 qtdemux_tag_add_date (GstQTDemux * qtdemux, const char *tag, GNode * node)
 {
   GNode *data;
@@ -4001,6 +4027,11 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
     if (node) {
       qtdemux_tag_add_str (qtdemux, GST_TAG_GENRE, node);
     }
+  }
+
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC_tmpo);
+  if (node) {
+    qtdemux_tag_add_tmpo (qtdemux, GST_TAG_BEATS_PER_MINUTE, node);
   }
 }
 

@@ -1,3 +1,8 @@
+2008-08-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/qtdemux/qtdemux.c:
+	  Add support for tmpo tag (BPM).
+
 2008-08-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/flac/gstflacenc.c: (gst_flac_enc_query_peer_total_samples),
