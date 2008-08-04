@@ -292,8 +292,10 @@ GST_START_TEST (test_message_state_changed_children)
   fail_unless (pending == GST_STATE_VOID_PENDING);
 
   /* wait for async thread to settle down */
+  GST_DEBUG ("waiting for refcount");
   while (GST_OBJECT_REFCOUNT_VALUE (pipeline) > 3)
     THREAD_SWITCH ();
+  GST_DEBUG ("refcount <= 3 now");
 
   /* each object is referenced by a message;
    * base_src is blocked in the push and has an extra refcount.

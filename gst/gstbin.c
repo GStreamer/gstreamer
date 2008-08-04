@@ -195,6 +195,12 @@ GST_DEBUG_CATEGORY_STATIC (bin_debug);
 struct _GstBinPrivate
 {
   gboolean asynchandling;
+  /* if we get an ASYNC_DONE message from ourselves, this means that the
+   * subclass will simulate ASYNC behaviour without having ASYNC children. When
+   * such an ASYNC_DONE message is posted while we are doing a state change, we
+   * have to process the message after finishing the state change even when no
+   * child returned GST_STATE_CHANGE_ASYNC. */
+  gboolean pending_async_done;
 };
 
 typedef struct
@@ -215,7 +221,8 @@ static GstStateChangeReturn gst_bin_change_state_func (GstElement * element,
     GstStateChange transition);
 static GstStateChangeReturn gst_bin_get_state_func (GstElement * element,
     GstState * state, GstState * pending, GstClockTime timeout);
-static void bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret);
+static void bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
+    gboolean is_bin);
 static void bin_handle_async_start (GstBin * bin, gboolean new_base_time);
 static void bin_push_state_continue (BinContinueData * data);
 
@@ -942,7 +949,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
     }
     case GST_STATE_CHANGE_NO_PREROLL:
       /* ignore all async elements we might have and commit our state */
-      bin_handle_async_done (bin, ret);
+      bin_handle_async_done (bin, ret, FALSE);
       break;
     case GST_STATE_CHANGE_FAILURE:
       break;
@@ -1185,7 +1192,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
     else
       ret = GST_STATE_CHANGE_SUCCESS;
 
-    bin_handle_async_done (bin, ret);
+    bin_handle_async_done (bin, ret, FALSE);
   } else {
     GST_DEBUG_OBJECT (bin,
         "recalc state preroll: %d, other async: %d, this async %d",
@@ -2236,7 +2243,11 @@ done:
 
   GST_OBJECT_LOCK (bin);
   bin->polling = FALSE;
-  if (ret != GST_STATE_CHANGE_ASYNC) {
+  /* it's possible that we did not get ASYNC form the children while the bin is
+   * simulating ASYNC behaviour by posting an ASYNC_DONE message on the bus with
+   * itself as the source. In that case we still want to check if the state
+   * change completed. */
+  if (ret != GST_STATE_CHANGE_ASYNC && !bin->priv->pending_async_done) {
     /* no element returned ASYNC, we can just complete. */
     GST_DEBUG_OBJECT (bin, "no async elements");
     goto state_end;
@@ -2259,10 +2270,11 @@ done:
     bin_remove_messages (bin, NULL, GST_MESSAGE_ASYNC_DONE);
 
     GST_DEBUG_OBJECT (bin, "async elements commited");
-    bin_handle_async_done (bin, GST_STATE_CHANGE_SUCCESS);
+    bin_handle_async_done (bin, GST_STATE_CHANGE_SUCCESS, FALSE);
   }
 
 state_end:
+  bin->priv->pending_async_done = FALSE;
   GST_OBJECT_UNLOCK (bin);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
@@ -2518,7 +2530,7 @@ was_no_preroll:
  * This function is called with the OBJECT lock.
  */
 static void
-bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret)
+bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret, gboolean is_bin)
 {
   GstState current, pending, target;
   GstStateChangeReturn old_ret;
@@ -2633,6 +2645,8 @@ had_error:
 was_busy:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin, "state change busy");
+    if (is_bin)
+      bin->priv->pending_async_done = TRUE;
     return;
   }
 nothing_pending:
@@ -2869,6 +2883,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
     case GST_MESSAGE_ASYNC_DONE:
     {
       GstState target;
+      gboolean is_bin;
 
       GST_DEBUG_OBJECT (bin, "ASYNC_DONE message %p, %s", message,
           GST_OBJECT_NAME (src));
@@ -2879,6 +2894,11 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       if (target <= GST_STATE_READY)
         goto ignore_done_message;
 
+      /* check if the message came from the bin itself in which case the bin
+       * will simulate ASYNC behaviour without having ASYNC children (such as
+       * decodebin2) */
+      is_bin = (GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (bin));
+
       bin_replace_message (bin, message, GST_MESSAGE_ASYNC_START);
       /* if there are no more ASYNC_START messages, everybody posted
        * a ASYNC_DONE and we can post one on the bus. When checking, we
@@ -2888,7 +2908,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
         bin_remove_messages (bin, NULL, GST_MESSAGE_ASYNC_DONE);
 
         GST_DEBUG_OBJECT (bin, "async elements commited");
-        bin_handle_async_done (bin, GST_STATE_CHANGE_SUCCESS);
+        bin_handle_async_done (bin, GST_STATE_CHANGE_SUCCESS, is_bin);
       }
       GST_OBJECT_UNLOCK (bin);
       break;

@@ -1,3 +1,18 @@
+2008-08-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_remove_func),
+	(gst_bin_change_state_func), (bin_handle_async_done),
+	(gst_bin_handle_message_func):
+	Fix race for bins that simulate ASYNC state changes by inserting
+	ASYNC_START and ASYNC_DONE messages in their bus. We need to check for
+	pending ASYNC messages even when the bin does not have ASYNC children.
+	We note detect this behaviour because we will receive an ASYNC message
+	that is originating from the bin itself. 
+	Fixes races with decodebin2 state changes.
+
+	* tests/check/gst/gstbin.c: (GST_START_TEST):
+	Add some more debug.
+
 2008-08-04  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gsttaglist.c: (_gst_tag_initialize):
