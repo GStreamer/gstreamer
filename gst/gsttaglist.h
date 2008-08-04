@@ -677,7 +677,7 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
 /**
  * GST_TAG_KEYWORDS:
  *
- * series of keywords describing the content (string).
+ * comma separated keywords describing the content (string).
  *
  * Since: 0.10.21
  */

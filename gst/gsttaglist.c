@@ -245,7 +245,9 @@ _gst_tag_initialize (void)
       gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_BEATS_PER_MINUTE, GST_TAG_FLAG_META, G_TYPE_DOUBLE,
       _("beats per minute"), _("number of beats per minute in audio"), NULL);
-
+  gst_tag_register (GST_TAG_KEYWORDS, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("keywords"), _("comma separated keywords describing the content"),
+      NULL);
 }
 
 /**
