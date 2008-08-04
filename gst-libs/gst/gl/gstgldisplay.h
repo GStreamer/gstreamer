@@ -154,7 +154,7 @@ struct _GstGLDisplay {
   //upload
   GLuint upload_fbo;
   GLuint upload_depth_buffer;
-  GLuint upload_texture;
+  GLuint upload_outtex;
   GLuint upload_intex;
   GLuint upload_intex_u;
   GLuint upload_intex_v;
