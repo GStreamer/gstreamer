@@ -227,6 +227,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   //YUY2:r,g,a
   //UYVY:a,b,r
   display->text_shader_upload_YUY2_UYVY =
+    "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect Ytex, UVtex;\n"
     "void main(void) {\n"
     "  float fx, fy, y, u, v, r, g, b;\n"
@@ -245,6 +246,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     "}\n";
 
   display->text_shader_upload_I420_YV12 =
+    "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect Ytex,Utex,Vtex;\n"
     "void main(void) {\n"
     "  float r,g,b,y,u,v;\n"
@@ -262,6 +264,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     "}\n";
 
   display->text_shader_upload_AYUV =
+    "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;\n"
     "void main(void) {\n"
     "  float r,g,b,y,u,v;\n"
@@ -281,6 +284,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   //YUY2:y2,u,y1,v
   //UYVY:v,y1,u,y2
   display->text_shader_download_YUY2_UYVY =
+    "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;\n"
     "void main(void) {\n"
     "  float fx,fy,r,g,b,r2,g2,b2,y1,y2,u,v;\n"
@@ -304,6 +308,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     "}\n";
 
   display->text_shader_download_I420_YV12 =
+    "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;\n"
     "uniform float w, h;\n"
     "void main(void) {\n"
@@ -328,6 +333,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     "}\n";
 
   display->text_shader_download_AYUV =
+    "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;\n"
     "void main(void) {\n"
     "  float r,g,b,y,u,v;\n"
@@ -727,42 +733,42 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
   {
     glUseProgramObjectARB (0);
     if (display->shader_upload_YUY2)
-    {           
+    {
       g_object_unref (G_OBJECT (display->shader_upload_YUY2));
       display->shader_upload_YUY2 = NULL;
     }
     if (display->shader_upload_UYVY)
-    { 
+    {
       g_object_unref (G_OBJECT (display->shader_upload_UYVY));
       display->shader_upload_UYVY = NULL;
     }
     if (display->shader_upload_I420_YV12)
-    { 
+    {
       g_object_unref (G_OBJECT (display->shader_upload_I420_YV12));
       display->shader_upload_I420_YV12 = NULL;
     }
     if (display->shader_upload_AYUV)
-    { 
+    {
       g_object_unref (G_OBJECT (display->shader_upload_AYUV));
       display->shader_upload_AYUV = NULL;
     }
     if (display->shader_download_YUY2)
-    { 
+    {
       g_object_unref (G_OBJECT (display->shader_download_YUY2));
       display->shader_download_YUY2 = NULL;
     }
     if (display->shader_download_UYVY)
-    { 
+    {
       g_object_unref (G_OBJECT (display->shader_download_UYVY));
       display->shader_download_UYVY = NULL;
     }
     if (display->shader_download_I420_YV12)
-    { 
+    {
       g_object_unref (G_OBJECT (display->shader_download_I420_YV12));
       display->shader_download_I420_YV12 = NULL;
     }
     if (display->shader_download_AYUV)
-    { 
+    {
       g_object_unref (G_OBJECT (display->shader_download_AYUV));
       display->shader_download_AYUV = NULL;
     }
@@ -822,7 +828,7 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
     glDeleteTextures (1, &display->upload_intex_v);
     display->upload_intex = 0;
   }
-    
+
 
   //clean up the texture pool
   while (g_queue_get_length (display->texturePool))
@@ -999,7 +1005,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
 	sprintf (text_shader_upload_YUY2, display->text_shader_upload_YUY2_UYVY, 'r', 'g', 'a');
 
 	display->shader_upload_YUY2 = gst_gl_shader_new ();
-	if(!gst_gl_shader_compile_and_check (display->shader_upload_YUY2, 
+	if(!gst_gl_shader_compile_and_check (display->shader_upload_YUY2,
 					     text_shader_upload_YUY2, GST_GL_SHADER_FRAGMENT_SOURCE))
 	{
 	  display->isAlive = FALSE;
@@ -1014,7 +1020,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
 	sprintf (text_shader_upload_UYVY, display->text_shader_upload_YUY2_UYVY, 'a', 'b', 'r');
 
 	display->shader_upload_UYVY = gst_gl_shader_new ();
-	if(!gst_gl_shader_compile_and_check (display->shader_upload_UYVY, 
+	if(!gst_gl_shader_compile_and_check (display->shader_upload_UYVY,
 					     text_shader_upload_UYVY, GST_GL_SHADER_FRAGMENT_SOURCE))
 	{
 	  display->isAlive = FALSE;
@@ -1026,7 +1032,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
       case GST_VIDEO_FORMAT_I420:
       case GST_VIDEO_FORMAT_YV12:
 	display->shader_upload_I420_YV12 = gst_gl_shader_new ();
-	if(!gst_gl_shader_compile_and_check (display->shader_upload_I420_YV12, 
+	if(!gst_gl_shader_compile_and_check (display->shader_upload_I420_YV12,
 					     display->text_shader_upload_I420_YV12, GST_GL_SHADER_FRAGMENT_SOURCE))
 	{
 	  display->isAlive = FALSE;
@@ -1036,7 +1042,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
 	break;
       case GST_VIDEO_FORMAT_AYUV:
 	display->shader_upload_AYUV = gst_gl_shader_new ();
-	if(!gst_gl_shader_compile_and_check (display->shader_upload_AYUV, 
+	if(!gst_gl_shader_compile_and_check (display->shader_upload_AYUV,
 					     display->text_shader_upload_AYUV, GST_GL_SHADER_FRAGMENT_SOURCE))
 	{
 	  display->isAlive = FALSE;
@@ -1046,7 +1052,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
 	break;
       default:
 	g_assert_not_reached ();
-      } 
+      }
     }
     //check if YCBCR MESA is available
     else if (GLEW_MESA_ycbcr_texture)
@@ -1261,9 +1267,9 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
       {
 	gchar text_shader_download_YUY2[2048];
 	sprintf (text_shader_download_YUY2, display->text_shader_download_YUY2_UYVY, "y2,u,y1,v");
-  
+
 	display->shader_download_YUY2 = gst_gl_shader_new ();
-	if(!gst_gl_shader_compile_and_check (display->shader_download_YUY2, 
+	if(!gst_gl_shader_compile_and_check (display->shader_download_YUY2,
 					     text_shader_download_YUY2, GST_GL_SHADER_FRAGMENT_SOURCE))
 	{
 	  display->isAlive = FALSE;
@@ -1276,9 +1282,9 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
       {
 	gchar text_shader_download_UYVY[2048];
 	sprintf (text_shader_download_UYVY, display->text_shader_download_YUY2_UYVY, "v,y1,u,y2");
-                                
+
 	display->shader_download_UYVY = gst_gl_shader_new ();
-	if(!gst_gl_shader_compile_and_check (display->shader_download_UYVY, 
+	if(!gst_gl_shader_compile_and_check (display->shader_download_UYVY,
 					     text_shader_download_UYVY, GST_GL_SHADER_FRAGMENT_SOURCE))
 	{
 	  display->isAlive = FALSE;
@@ -1290,7 +1296,7 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
       case GST_VIDEO_FORMAT_I420:
       case GST_VIDEO_FORMAT_YV12:
 	display->shader_download_I420_YV12 = gst_gl_shader_new ();
-	if(!gst_gl_shader_compile_and_check (display->shader_download_I420_YV12, 
+	if(!gst_gl_shader_compile_and_check (display->shader_download_I420_YV12,
 					     display->text_shader_download_I420_YV12, GST_GL_SHADER_FRAGMENT_SOURCE))
 	{
 	  display->isAlive = FALSE;
@@ -1300,7 +1306,7 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
 	break;
       case GST_VIDEO_FORMAT_AYUV:
 	display->shader_download_AYUV = gst_gl_shader_new ();
-	if(!gst_gl_shader_compile_and_check (display->shader_download_AYUV, 
+	if(!gst_gl_shader_compile_and_check (display->shader_download_AYUV,
 					     display->text_shader_download_AYUV, GST_GL_SHADER_FRAGMENT_SOURCE))
 	{
 	  display->isAlive = FALSE;
@@ -1490,7 +1496,7 @@ gst_gl_display_thread_gen_shader (GstGLDisplay* display)
   {
     display->gen_shader = gst_gl_shader_new ();
 
-    if (!gst_gl_shader_compile_and_check (display->gen_shader, 
+    if (!gst_gl_shader_compile_and_check (display->gen_shader,
 					  display->gen_text_shader,
 					  GST_GL_SHADER_FRAGMENT_SOURCE))
     {
@@ -1911,7 +1917,7 @@ gst_gl_display_do_upload (GstGLDisplay *display, GLuint texture,
                           gpointer data)
 {
   gboolean isAlive = TRUE;
-    
+
   gst_gl_display_lock (display);
   isAlive = display->isAlive;
   if (isAlive)
@@ -1951,7 +1957,7 @@ gst_gl_display_do_download (GstGLDisplay* display, GLuint texture,
                             gpointer data)
 {
   gboolean isAlive = TRUE;
-    
+
   gst_gl_display_lock (display);
   isAlive = display->isAlive;
   if (isAlive)
@@ -1999,7 +2005,7 @@ gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint text
                         GstGLDisplayProjection projection, gpointer* stuff)
 {
   gboolean isAlive = TRUE;
-    
+
   gst_gl_display_lock (display);
   isAlive = display->isAlive;
   if (isAlive)
@@ -2112,10 +2118,10 @@ void gst_gl_display_thread_do_upload_make (GstGLDisplay *display)
   gint width = display->upload_data_with;
   gint height = display->upload_data_height;
 
-  if (display->upload_intex == 0) 
+  if (display->upload_intex == 0)
   {
     glGenTextures (1, &display->upload_intex);
-    
+
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
     switch (display->upload_video_format)
     {
@@ -2131,13 +2137,13 @@ void gst_gl_display_thread_do_upload_make (GstGLDisplay *display)
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
 		    width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       break;
-      
+
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
 		    width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
       break;
-      
+
     case GST_VIDEO_FORMAT_YUY2:
       switch (display->colorspace_conversion)
       {
@@ -2146,7 +2152,7 @@ void gst_gl_display_thread_do_upload_make (GstGLDisplay *display)
 	glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
 		      width, height,
 		      0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
-	
+
 	if (display->upload_intex_u == 0) {
 	  glGenTextures (1, &display->upload_intex_u);
 	  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
@@ -2189,13 +2195,13 @@ void gst_gl_display_thread_do_upload_make (GstGLDisplay *display)
 	g_assert_not_reached ();
       }
       break;
-      
+
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
 		    width, height,
 		    0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-      
+
       if (display->upload_intex_u == 0) {
 	glGenTextures (1, &display->upload_intex_u);
 	glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
@@ -2214,7 +2220,7 @@ void gst_gl_display_thread_do_upload_make (GstGLDisplay *display)
 		      0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
       }
       break;
-      
+
     default:
       g_assert_not_reached ();
     }
@@ -2612,9 +2618,9 @@ gst_gl_display_thread_do_download_draw (GstGLDisplay *display)
 
     glActiveTextureARB(GL_TEXTURE0_ARB);
     gst_gl_shader_set_uniform_1i (display->shader_download_I420_YV12, "tex", 0);
-    gst_gl_shader_set_uniform_1f (display->shader_download_I420_YV12, "w", 
+    gst_gl_shader_set_uniform_1f (display->shader_download_I420_YV12, "w",
 				  (gfloat)display->ouput_texture_width);
-    gst_gl_shader_set_uniform_1f (display->shader_download_I420_YV12, "h", 
+    gst_gl_shader_set_uniform_1f (display->shader_download_I420_YV12, "h",
 				  (gfloat)display->ouput_texture_height);
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->ouput_texture);
   }
@@ -2656,8 +2662,8 @@ gst_gl_display_thread_do_download_draw (GstGLDisplay *display)
 
   glDrawBuffer(GL_NONE);
 
-  //dot not check if GLSL is available 
-  //because for now download is not available 
+  //dot not check if GLSL is available
+  //because for now download is not available
   //without GLSL
   glUseProgramObjectARB (0);
 
