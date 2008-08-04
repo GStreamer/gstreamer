@@ -66,14 +66,9 @@ void gst_gl_display_check_framebuffer_status (void);
 
 /* To not make gst_gl_display_thread_do_upload
  * and gst_gl_display_thread_do_download too big */
-static void gst_gl_display_thread_do_upload_make (GstGLDisplay* display, GLuint* pTexture,
-                                                  GLuint* pTexture_u, GLuint* pTexture_v);
-static void gst_gl_display_thread_do_upload_fill (GstGLDisplay* display, GLuint* pTexture,
-                                                  GLuint* pTexture_u, GLuint* pTexture_v,
-                                                  GstVideoFormat* pVideo_format);
-static void gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
-                                                  GLuint texture_u, GLuint texture_v,
-                                                  GstVideoFormat video_format);
+static void gst_gl_display_thread_do_upload_make (GstGLDisplay *display);
+static void gst_gl_display_thread_do_upload_fill (GstGLDisplay *display, GstVideoFormat* pVideo_format);
+static void gst_gl_display_thread_do_upload_draw (GstGLDisplay *display, GstVideoFormat video_format);
 static void gst_gl_display_thread_do_download_draw (GstGLDisplay* display);
 
 
@@ -160,6 +155,9 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   display->upload_fbo = 0;
   display->upload_depth_buffer = 0;
   display->upload_texture = 0;
+  display->upload_intex = 0;
+  display->upload_intex_u = 0;
+  display->upload_intex_v = 0;
   display->upload_width = 0;
   display->upload_height = 0;
   display->upload_video_format = 0;
@@ -809,6 +807,22 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
     glDeleteTextures (1, &display->download_texture_v);
     display->download_texture_v = 0;
   }
+  if (display->upload_intex != 0)
+  {
+    glDeleteTextures (1, &display->upload_intex);
+    display->upload_intex = 0;
+  }
+  if (display->upload_intex_v != 0)
+  {
+    glDeleteTextures (1, &display->upload_intex_v);
+    display->upload_intex = 0;
+  }
+  if (display->upload_intex_v != 0)
+  {
+    glDeleteTextures (1, &display->upload_intex_v);
+    display->upload_intex = 0;
+  }
+    
 
   //clean up the texture pool
   while (g_queue_get_length (display->texturePool))
@@ -1095,24 +1109,14 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
 static void
 gst_gl_display_thread_do_upload (GstGLDisplay * display)
 {
-  GLuint texture = 0;
-  GLuint texture_u = 0;
-  GLuint texture_v = 0;
   GstVideoFormat video_format = 0;
 
   glutSetWindow (display->glutWinId);
 
-  gst_gl_display_thread_do_upload_make (display, &texture, &texture_u, &texture_v);
-  gst_gl_display_thread_do_upload_fill (display, &texture, &texture_u, &texture_v,
-					&video_format);
-  gst_gl_display_thread_do_upload_draw (display, texture, texture_u, texture_v,
-					video_format);
+  gst_gl_display_thread_do_upload_make (display);
+  gst_gl_display_thread_do_upload_fill (display, &video_format);
+  gst_gl_display_thread_do_upload_draw (display, video_format);
 
-  gst_gl_display_gldel_texture (display, &texture);
-  if (texture_u)
-    gst_gl_display_gldel_texture (display, &texture_u);
-  if (texture_v)
-    gst_gl_display_gldel_texture (display, &texture_v);
   g_cond_signal (display->cond_do_upload);
 }
 
@@ -2105,121 +2109,124 @@ gst_gl_display_set_client_draw_callback (GstGLDisplay * display, CDCB cb)
 
 
 /* called by gst_gl_display_thread_do_upload (in the gl thread) */
-void gst_gl_display_thread_do_upload_make (GstGLDisplay* display, GLuint* pTexture,
-                                           GLuint* pTexture_u, GLuint* pTexture_v)
+void gst_gl_display_thread_do_upload_make (GstGLDisplay *display)
 {
   gint width = display->upload_data_with;
   gint height = display->upload_data_height;
 
-  gst_gl_display_glgen_texture (display, pTexture);
-
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
-  switch (display->upload_video_format)
+  if (display->upload_intex == 0) 
   {
-  case GST_VIDEO_FORMAT_RGBx:
-  case GST_VIDEO_FORMAT_BGRx:
-  case GST_VIDEO_FORMAT_xRGB:
-  case GST_VIDEO_FORMAT_xBGR:
-  case GST_VIDEO_FORMAT_RGBA:
-  case GST_VIDEO_FORMAT_BGRA:
-  case GST_VIDEO_FORMAT_ARGB:
-  case GST_VIDEO_FORMAT_ABGR:
-  case GST_VIDEO_FORMAT_AYUV:
-    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-		  width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    break;
-
-  case GST_VIDEO_FORMAT_RGB:
-  case GST_VIDEO_FORMAT_BGR:
-    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
-		  width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    break;
-
-  case GST_VIDEO_FORMAT_YUY2:
-    switch (display->colorspace_conversion)
+    glGenTextures (1, &display->upload_intex);
+    
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
+    switch (display->upload_video_format)
     {
-    case GST_GL_DISPLAY_CONVERSION_GLSL:
-    case GST_GL_DISPLAY_CONVERSION_MATRIX:
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
-		    width, height,
-		    0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
-
-      gst_gl_display_glgen_texture (display, pTexture_u);
-
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture_u);
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-		    width, height,
-		    0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_AYUV:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+		    width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       break;
-    case GST_GL_DISPLAY_CONVERSION_MESA:
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA,
-		    width, height,
-		    0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
+      
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
+		    width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
       break;
+      
+    case GST_VIDEO_FORMAT_YUY2:
+      switch (display->colorspace_conversion)
+      {
+      case GST_GL_DISPLAY_CONVERSION_GLSL:
+      case GST_GL_DISPLAY_CONVERSION_MATRIX:
+	glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
+		      width, height,
+		      0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
+	
+	if (display->upload_intex_u == 0) {
+	  glGenTextures (1, &display->upload_intex_u);
+	  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
+	  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+			width, height,
+			0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
+	}
+	break;
+      case GST_GL_DISPLAY_CONVERSION_MESA:
+	glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA,
+		      width, height,
+		      0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
+	break;
+      default:
+	g_assert_not_reached ();
+      }
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      switch (display->colorspace_conversion)
+      {
+      case GST_GL_DISPLAY_CONVERSION_GLSL:
+      case GST_GL_DISPLAY_CONVERSION_MATRIX:
+	glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
+		      width, height,
+		      0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
+	if (display->upload_intex_u == 0) {
+	  glGenTextures (1, &display->upload_intex_u);
+	  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
+	  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+			width, height,
+			0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
+	  break;
+	}
+      case GST_GL_DISPLAY_CONVERSION_MESA:
+	glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA,
+		      width, height,
+		      0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
+	break;
+      default:
+	g_assert_not_reached ();
+      }
+      break;
+      
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+		    width, height,
+		    0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+      
+      if (display->upload_intex_u == 0) {
+	glGenTextures (1, &display->upload_intex_u);
+	glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
+	glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+		      GST_ROUND_UP_2 (width) / 2,
+		      GST_ROUND_UP_2 (height) / 2,
+		      0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+      }
+
+      if (display->upload_intex_v == 0) {
+	glGenTextures (1, &display->upload_intex_v);
+	glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_v);
+	glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
+		      GST_ROUND_UP_2 (width) / 2,
+		      GST_ROUND_UP_2 (height) / 2,
+		      0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+      }
+      break;
+      
     default:
       g_assert_not_reached ();
     }
-    break;
-  case GST_VIDEO_FORMAT_UYVY:
-    switch (display->colorspace_conversion)
-    {
-    case GST_GL_DISPLAY_CONVERSION_GLSL:
-    case GST_GL_DISPLAY_CONVERSION_MATRIX:
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
-		    width, height,
-		    0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
-
-      gst_gl_display_glgen_texture (display, pTexture_u);
-
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture_u);
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-		    width, height,
-		    0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
-      break;
-    case GST_GL_DISPLAY_CONVERSION_MESA:
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA,
-		    width, height,
-		    0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
-      break;
-    default:
-      g_assert_not_reached ();
-    }
-    break;
-
-  case GST_VIDEO_FORMAT_I420:
-  case GST_VIDEO_FORMAT_YV12:
-    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-		  width, height,
-		  0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-
-    gst_gl_display_glgen_texture (display, pTexture_u);
-
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture_u);
-    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-		  GST_ROUND_UP_2 (width) / 2,
-		  GST_ROUND_UP_2 (height) / 2,
-		  0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-
-    gst_gl_display_glgen_texture (display, pTexture_v);
-
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture_v);
-    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-		  GST_ROUND_UP_2 (width) / 2,
-		  GST_ROUND_UP_2 (height) / 2,
-		  0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-    break;
-
-  default:
-    g_assert_not_reached ();
   }
 }
 
 
 /* called by gst_gl_display_thread_do_upload (in the gl thread) */
 void
-gst_gl_display_thread_do_upload_fill (GstGLDisplay* display, GLuint* pTexture,
-                                      GLuint* pTexture_u, GLuint* pTexture_v,
-                                      GstVideoFormat* pVideo_format)
+gst_gl_display_thread_do_upload_fill (GstGLDisplay* display, GstVideoFormat* pVideo_format)
 {
   gint width = display->upload_data_with;
   gint height = display->upload_data_height;
@@ -2227,7 +2234,7 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay* display, GLuint* pTexture,
   gpointer data = display->upload_data;
   *pVideo_format = video_format;
 
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
 
   switch (video_format) {
   case GST_VIDEO_FORMAT_RGBx:
@@ -2255,7 +2262,7 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay* display, GLuint* pTexture,
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
 		       GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
 
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture_u);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
 		       GST_ROUND_UP_2 (width) / 2, height,
 		       GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
@@ -2277,7 +2284,7 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay* display, GLuint* pTexture,
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
 		       GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
 
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture_u);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
 		       GST_ROUND_UP_2 (width) / 2, height,
 		       GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
@@ -2314,14 +2321,14 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay* display, GLuint* pTexture,
     glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
 		     GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture_u);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
     glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
 		     GST_ROUND_UP_2 (width) / 2, GST_ROUND_UP_2 (height) / 2,
 		     GL_LUMINANCE, GL_UNSIGNED_BYTE,
 		     (guint8 *) data +
 		     gst_video_format_get_component_offset (video_format, offsetU, width, height));
 
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture_v);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_v);
     glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
 		     GST_ROUND_UP_2 (width) / 2, GST_ROUND_UP_2 (height) / 2,
 		     GL_LUMINANCE, GL_UNSIGNED_BYTE,
@@ -2337,9 +2344,7 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay* display, GLuint* pTexture,
 
 /* called by gst_gl_display_thread_do_upload (in the gl thread) */
 void
-gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
-                                      GLuint texture_u, GLuint texture_v,
-                                      GstVideoFormat video_format)
+gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GstVideoFormat video_format)
 {
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->upload_fbo);
 
@@ -2383,7 +2388,7 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
     glLoadIdentity ();
 
     glEnable(GL_TEXTURE_RECTANGLE_ARB);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -2416,7 +2421,7 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
 
     glActiveTextureARB(GL_TEXTURE1_ARB);
     gst_gl_shader_set_uniform_1i (shader_upload_YUY2_UYVY, "UVtex", 1);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture_u);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -2424,7 +2429,7 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
 
     glActiveTextureARB(GL_TEXTURE0_ARB);
     gst_gl_shader_set_uniform_1i (shader_upload_YUY2_UYVY, "Ytex", 0);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -2442,7 +2447,7 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
 
     glActiveTextureARB(GL_TEXTURE1_ARB);
     gst_gl_shader_set_uniform_1i (display->shader_upload_I420_YV12, "Utex", 1);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture_u);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -2450,7 +2455,7 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
 
     glActiveTextureARB(GL_TEXTURE2_ARB);
     gst_gl_shader_set_uniform_1i (display->shader_upload_I420_YV12, "Vtex", 2);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture_v);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_v);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -2458,7 +2463,7 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
 
     glActiveTextureARB(GL_TEXTURE0_ARB);
     gst_gl_shader_set_uniform_1i (display->shader_upload_I420_YV12, "Ytex", 0);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -2475,7 +2480,7 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay* display, GLuint texture,
 
     glActiveTextureARB(GL_TEXTURE0_ARB);
     gst_gl_shader_set_uniform_1i (display->shader_upload_AYUV, "tex", 0);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
