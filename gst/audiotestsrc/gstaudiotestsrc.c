@@ -26,7 +26,8 @@
  * <title>Example launch line</title>
  * |[
  * gst-launch audiotestsrc ! audioconvert ! alsasink
- * ]| This pipeline produces a sine with default frequency (mid-C) and volume.
+ * ]| This pipeline produces a sine with default frequency, 440 Hz, and the
+ * default volume, 0.8 (relative to a maximum 1.0).
  * |[
  * gst-launch audiotestsrc wave=2 freq=200 ! audioconvert ! tee name=t ! queue ! alsasink t. ! queue ! libvisual_lv_scope ! ffmpegcolorspace ! xvimagesink
  * ]| In this example a saw wave is generated. The wave is shown using a

@@ -1,3 +1,8 @@
+2008-08-04  Andy Wingo  <wingo@pobox.com>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c: Very crucial and important
+	documentation fix.
+
 2008-08-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/adder/gstadder.c:
