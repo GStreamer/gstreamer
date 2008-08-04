@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
+
 #include <gst/gst.h>
 
 static GstElement *
