@@ -990,8 +990,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
       + (g_slist_length (avimux->sinkpads) * (100 + sizeof (gst_riff_strh_full)
           + sizeof (gst_riff_strf_vids)
           + sizeof (gst_riff_vprp)
-          + sizeof (gst_riff_strf_auds)
-          + ODML_SUPERINDEX_SIZE));
+          + sizeof (gst_riff_strf_auds) + 2 + ODML_SUPERINDEX_SIZE));
   buffer = gst_buffer_new_and_alloc (size);
   buffdata = GST_BUFFER_DATA (buffer);
   highmark = 0;
@@ -1042,7 +1041,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
       if (vidpad->vids_codec_data)
         codec_size = GST_BUFFER_SIZE (vidpad->vids_codec_data);
       strl_size = sizeof (gst_riff_strh_full) + sizeof (gst_riff_strf_vids)
-          + codec_size + 4 * 5 + ODML_SUPERINDEX_SIZE;
+          + GST_ROUND_UP_2 (codec_size) + 4 * 5 + ODML_SUPERINDEX_SIZE;
       if (vidpad->vprp.aspect) {
         /* let's be on the safe side */
         vidpad->vprp.fields = MIN (vidpad->vprp.fields,
@@ -1054,8 +1053,8 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     } else {
       if (audpad->auds_codec_data)
         codec_size = GST_BUFFER_SIZE (audpad->auds_codec_data);
-      strl_size = sizeof (gst_riff_strh_full) + sizeof (gst_riff_strf_auds)
-          + codec_size + 4 * 5 + ODML_SUPERINDEX_SIZE;
+      strl_size = sizeof (gst_riff_strh_full) + sizeof (gst_riff_strf_auds) + 2
+          + GST_ROUND_UP_2 (codec_size) + 4 * 5 + ODML_SUPERINDEX_SIZE;
     }
 
     /* stream list metadata */
@@ -1113,6 +1112,11 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
         buffdata += codec_size;
         highmark += codec_size;
       }
+      /* padding */
+      if (highmark & 0x1) {
+        highmark++;
+        buffdata++;
+      }
 
       /* add video property data, mainly for aspect ratio, if any */
       if (vprp_size) {
@@ -1153,7 +1157,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
       /* the audio header */
       memcpy (buffdata + 0, "strf", 4);
       GST_WRITE_UINT32_LE (buffdata + 4,
-          sizeof (gst_riff_strf_auds) + codec_size);
+          sizeof (gst_riff_strf_auds) + 2 + codec_size);
       /* the actual header */
       GST_WRITE_UINT16_LE (buffdata + 8, audpad->auds.format);
       GST_WRITE_UINT16_LE (buffdata + 10, audpad->auds.channels);
@@ -1161,8 +1165,9 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
       GST_WRITE_UINT32_LE (buffdata + 16, audpad->auds.av_bps);
       GST_WRITE_UINT16_LE (buffdata + 20, audpad->auds.blockalign);
       GST_WRITE_UINT16_LE (buffdata + 22, audpad->auds.size);
-      buffdata += 24;
-      highmark += 24;
+      GST_WRITE_UINT16_LE (buffdata + 24, codec_size);
+      buffdata += 26;
+      highmark += 26;
 
       /* include codec data, if any */
       if (codec_size) {
@@ -1171,6 +1176,11 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
 
         buffdata += codec_size;
         highmark += codec_size;
+      }
+      /* padding */
+      if (highmark & 0x1) {
+        highmark++;
+        buffdata++;
       }
     }
 

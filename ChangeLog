@@ -1,3 +1,9 @@
+2008-08-04  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavimux.c: (gst_avi_mux_riff_get_avi_header):
+	Provide cbSize field for audio extra_data size, and take care to
+	pad extra_data.
+
 2008-08-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/qtdemux/qtdemux.c:
