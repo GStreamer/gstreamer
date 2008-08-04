@@ -2296,13 +2296,12 @@ qtdemux_sink_activate_pull (GstPad * sinkpad, gboolean active)
   if (active) {
     demux->pullbased = TRUE;
     demux->segment_running = TRUE;
-    gst_pad_start_task (sinkpad, (GstTaskFunction) gst_qtdemux_loop, sinkpad);
+    return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_qtdemux_loop,
+        sinkpad);
   } else {
     demux->segment_running = FALSE;
-    gst_pad_stop_task (sinkpad);
+    return gst_pad_stop_task (sinkpad);
   }
-
-  return TRUE;
 }
 
 static gboolean

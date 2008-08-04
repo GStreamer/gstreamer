@@ -1,6 +1,12 @@
 2008-08-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/qtdemux/qtdemux.c:
+	  Return the result of gst_pad_{start,stop}_task instead of hard-coded
+	  TRUE.
+
+2008-08-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/qtdemux/qtdemux.c:
 	* gst/qtdemux/qtdemux_fourcc.h:
 	  Add keyword tag support. Fixes #520694 for qtdemux.
 
