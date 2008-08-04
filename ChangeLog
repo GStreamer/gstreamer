@@ -1,3 +1,8 @@
+2008-08-04  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gsttaglist.c: (_gst_tag_initialize):
+	  Fix typo.
+
 2008-08-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gsttaglist.c:
