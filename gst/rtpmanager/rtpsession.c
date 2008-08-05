@@ -1437,6 +1437,9 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
   if (!source)
     return;
 
+  /* we somehow need to transfer the clock_base and the base time to the next
+   * element, we use the offset and offset_end fields in the buffer for this
+   * hack */
   GST_BUFFER_OFFSET (packet->buffer) = source->clock_base;
   GST_BUFFER_OFFSET_END (packet->buffer) = source->clock_base_time;
 
@@ -1668,6 +1671,9 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 
   if (sess->sent_bye)
     goto ignore;
+
+  /* make writable, we might want to change the buffer */
+  buffer = gst_buffer_make_metadata_writable (buffer);
 
   /* start processing the compound packet */
   more = gst_rtcp_buffer_get_first_packet (buffer, &packet);

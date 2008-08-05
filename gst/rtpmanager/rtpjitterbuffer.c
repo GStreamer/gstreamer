@@ -339,6 +339,7 @@ no_skew:
  * Inserts @buf into the packet queue of @jbuf. The sequence number of the
  * packet will be used to sort the packets. This function takes ownerhip of
  * @buf when the function returns %TRUE.
+ * @buf should have writable metadata when calling this function.
  *
  * Returns: %FALSE if a packet with the same number already existed.
  */

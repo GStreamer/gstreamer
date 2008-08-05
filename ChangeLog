@@ -1,5 +1,23 @@
 2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Based on patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_chain), (gst_rtp_jitter_buffer_loop):
+	Make the buffer metadata writable before inserting it in the
+	jitterbuffer because the jitterbuffer will modify the timestamps.
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	Update method comment about requiring writable metadata on buffers.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_process_sr),
+	(rtp_session_process_rtcp):
+	Make the RTCP buffer metadata writable because we want to modify the
+	metadata.
+	Fixes #546312.
+
+2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/selector/gstinputselector.c: (gst_selector_pad_bufferalloc),
 	(gst_selector_pad_chain), (gst_input_selector_getcaps),
 	(gst_input_selector_activate_sinkpad):

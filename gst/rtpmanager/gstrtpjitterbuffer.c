@@ -927,6 +927,10 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
     }
   }
 
+  /* we need to make the metadata writable before pushing it in the jitterbuffer
+   * because the jitterbuffer will update the timestamp */
+  buffer = gst_buffer_make_metadata_writable (buffer);
+
   /* now insert the packet into the queue in sorted order. This function returns
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
    * have a duplicate. */
@@ -1236,8 +1240,8 @@ push_buffer:
   outbuf = rtp_jitter_buffer_pop (priv->jbuf);
 
   if (discont || priv->discont) {
-    /* set DISCONT flag when we missed a packet. */
-    outbuf = gst_buffer_make_metadata_writable (outbuf);
+    /* set DISCONT flag when we missed a packet. We pushed the buffer writable
+     * into the jitterbuffer so we can modify now. */
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
     priv->discont = FALSE;
   }
