@@ -1,3 +1,11 @@
+2008-08-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/wavparse/gstwavparse.c:
+	  Refactor wavparse. Call _reset() from dispose() and move old code from
+	  dispose into reset. This way we don't leak taglists when we abort
+	  parsing. Fix some comments. Move code for skipping a chunk into extra
+	  function. Replace chunk sizes with a const to ease readability.	  
+
 2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Aurelien Grimaud <gstelzz at yahoo dot fr>

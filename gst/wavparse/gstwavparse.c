@@ -142,48 +142,48 @@ gst_wavparse_class_init (GstWavParseClass * klass)
 }
 
 static void
-gst_wavparse_dispose (GObject * object)
+gst_wavparse_reset (GstWavParse * wav)
 {
-  GstWavParse *wav;
+  wav->state = GST_WAVPARSE_START;
 
-  GST_DEBUG ("WAV: Dispose");
-  wav = GST_WAVPARSE (object);
+  /* These will all be set correctly in the fmt chunk */
+  wav->depth = 0;
+  wav->rate = 0;
+  wav->width = 0;
+  wav->channels = 0;
+  wav->blockalign = 0;
+  wav->bps = 0;
+  wav->fact = 0;
+  wav->offset = 0;
+  wav->end_offset = 0;
+  wav->dataleft = 0;
+  wav->datasize = 0;
+  wav->datastart = 0;
+  wav->duration = 0;
+  wav->got_fmt = FALSE;
+  wav->first = TRUE;
 
+  if (wav->seek_event)
+    gst_event_unref (wav->seek_event);
+  wav->seek_event = NULL;
   if (wav->adapter) {
-    g_object_unref (wav->adapter);
+    gst_adapter_clear (wav->adapter);
     wav->adapter = NULL;
   }
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  if (wav->tags)
+    gst_tag_list_free (wav->tags);
+  wav->tags = NULL;
 }
 
 static void
-gst_wavparse_reset (GstWavParse * wavparse)
+gst_wavparse_dispose (GObject * object)
 {
-  wavparse->state = GST_WAVPARSE_START;
+  GstWavParse *wav = GST_WAVPARSE (object);
 
-  /* These will all be set correctly in the fmt chunk */
-  wavparse->depth = 0;
-  wavparse->rate = 0;
-  wavparse->width = 0;
-  wavparse->channels = 0;
-  wavparse->blockalign = 0;
-  wavparse->bps = 0;
-  wavparse->fact = 0;
-  wavparse->offset = 0;
-  wavparse->end_offset = 0;
-  wavparse->dataleft = 0;
-  wavparse->datasize = 0;
-  wavparse->datastart = 0;
-  wavparse->duration = 0;
-  wavparse->got_fmt = FALSE;
-  wavparse->first = TRUE;
+  GST_DEBUG_OBJECT (wav, "WAV: Dispose");
+  gst_wavparse_reset (wav);
 
-  if (wavparse->seek_event)
-    gst_event_unref (wavparse->seek_event);
-  wavparse->seek_event = NULL;
-  if (wavparse->adapter)
-    gst_adapter_clear (wavparse->adapter);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -269,6 +269,7 @@ uint64_ceiling_scale (guint64 val, guint64 num, guint64 denom)
 }
 
 
+/* FIXME: why is that not in use? */
 #if 0
 static void
 gst_wavparse_parse_adtl (GstWavParse * wavparse, int len)
@@ -978,7 +979,7 @@ no_format:
  *
  * Peek next chunk info (tag and size)
  *
- * Returns: %TRUE when one chunk info has been got from the adapter
+ * Returns: %TRUE when the chunk info (header) is available
  */
 static gboolean
 gst_wavparse_peek_chunk_info (GstWavParse * wav, guint32 * tag, guint32 * size)
@@ -1006,7 +1007,7 @@ gst_wavparse_peek_chunk_info (GstWavParse * wav, guint32 * tag, guint32 * size)
  *
  * Peek enough data for one full chunk
  *
- * Returns: %TRUE when one chunk has been got
+ * Returns: %TRUE when the full chunk is available
  */
 static gboolean
 gst_wavparse_peek_chunk (GstWavParse * wav, guint32 * tag, guint32 * size)
@@ -1059,6 +1060,27 @@ gst_wavparse_calculate_duration (GstWavParse * wav)
   return FALSE;
 }
 
+static void
+gst_waveparse_ignore_chunk (GstWavParse * wav, GstBuffer * buf, guint32 tag,
+    guint32 size)
+{
+  guint flush;
+
+  if (wav->streaming) {
+    if (!gst_wavparse_peek_chunk (wav, &tag, &size))
+      return;
+  }
+  GST_DEBUG_OBJECT (wav, "Ignoring tag %" GST_FOURCC_FORMAT,
+      GST_FOURCC_ARGS (tag));
+  flush = 8 + ((size + 1) & ~1);
+  wav->offset += flush;
+  if (wav->streaming) {
+    gst_adapter_flush (wav->adapter, flush);
+  } else {
+    gst_buffer_unref (buf);
+  }
+}
+
 static GstFlowReturn
 gst_wavparse_stream_headers (GstWavParse * wav)
 {
@@ -1073,6 +1095,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   GstFormat bformat;
   gint64 upstream_size = 0;
 
+  /* search for "_fmt" chunk, which should be first */
   while (!wav->got_fmt) {
     GstBuffer *extra;
 
@@ -1260,47 +1283,41 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         GST_DEBUG_OBJECT (wav, "datasize = %d", size);
         break;
       }
-      case GST_RIFF_TAG_fact:
+      case GST_RIFF_TAG_fact:{
         if (wav->format != GST_RIFF_WAVE_FORMAT_MPEGL12 &&
             wav->format != GST_RIFF_WAVE_FORMAT_MPEGL3) {
+          const guint data_size = 4;
+
           /* number of samples (for compressed formats) */
           if (wav->streaming) {
             const guint8 *data = NULL;
 
-            if (gst_adapter_available (wav->adapter) < 8 + 4) {
+            if (gst_adapter_available (wav->adapter) < 8 + data_size) {
               return GST_FLOW_OK;
             }
             gst_adapter_flush (wav->adapter, 8);
-            data = gst_adapter_peek (wav->adapter, 4);
+            data = gst_adapter_peek (wav->adapter, data_size);
             wav->fact = GST_READ_UINT32_LE (data);
-            gst_adapter_flush (wav->adapter, 4);
+            gst_adapter_flush (wav->adapter, data_size);
           } else {
             gst_buffer_unref (buf);
             if ((res =
-                    gst_pad_pull_range (wav->sinkpad, wav->offset + 8, 4,
-                        &buf)) != GST_FLOW_OK)
+                    gst_pad_pull_range (wav->sinkpad, wav->offset + 8,
+                        data_size, &buf)) != GST_FLOW_OK)
               goto header_read_error;
             wav->fact = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
             gst_buffer_unref (buf);
           }
           GST_DEBUG_OBJECT (wav, "have fact %u", wav->fact);
-          wav->offset += 8 + 4;
+          wav->offset += 8 + data_size;
           break;
-        }
-        /* fall-through */
-      default:
-        if (wav->streaming) {
-          if (!gst_wavparse_peek_chunk (wav, &tag, &size))
-            return GST_FLOW_OK;
-        }
-        GST_DEBUG_OBJECT (wav, "Ignoring tag %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (tag));
-        wav->offset += 8 + ((size + 1) & ~1);
-        if (wav->streaming) {
-          gst_adapter_flush (wav->adapter, 8 + ((size + 1) & ~1));
         } else {
-          gst_buffer_unref (buf);
+          gst_waveparse_ignore_chunk (wav, buf, tag, size);
         }
+        break;
+      }
+      default:
+        gst_waveparse_ignore_chunk (wav, buf, tag, size);
     }
 
     if (upstream_size && (wav->offset >= upstream_size)) {
