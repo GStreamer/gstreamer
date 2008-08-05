@@ -1316,6 +1316,40 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         }
         break;
       }
+      case GST_RIFF_TAG_acid:{
+        const gst_riff_acid *acid = NULL;
+        const guint data_size = sizeof (gst_riff_acid);
+
+        if (wav->streaming) {
+          if (gst_adapter_available (wav->adapter) < 8 + data_size) {
+            return GST_FLOW_OK;
+          }
+          gst_adapter_flush (wav->adapter, 8);
+          acid = (const gst_riff_acid *) gst_adapter_peek (wav->adapter,
+              data_size);
+        } else {
+          gst_buffer_unref (buf);
+          if ((res =
+                  gst_pad_pull_range (wav->sinkpad, wav->offset + 8,
+                      data_size, &buf)) != GST_FLOW_OK)
+            goto header_read_error;
+          acid = (const gst_riff_acid *) GST_BUFFER_DATA (buf);
+        }
+        GST_INFO_OBJECT (wav, "Have acid chunk");
+        /* send data as tags */
+        if (!wav->tags)
+          wav->tags = gst_tag_list_new ();
+        gst_tag_list_add (wav->tags, GST_TAG_MERGE_REPLACE,
+            GST_TAG_BEATS_PER_MINUTE, acid->tempo, NULL);
+
+        if (wav->streaming) {
+          gst_adapter_flush (wav->adapter, data_size);
+        } else {
+          gst_buffer_unref (buf);
+          wav->offset += 8 + data_size;
+        }
+        break;
+      }
       default:
         gst_waveparse_ignore_chunk (wav, buf, tag, size);
     }

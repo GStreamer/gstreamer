@@ -1,6 +1,12 @@
 2008-08-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/wavparse/gstwavparse.c:
+	  Handle the acid chunk and send tempo as part of tags. Other fields are
+	  interesting too, but need more tag-definitions. Fixes #545433.
+
+2008-08-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/wavparse/gstwavparse.c:
 	  Refactor wavparse. Call _reset() from dispose() and move old code from
 	  dispose into reset. This way we don't leak taglists when we abort
 	  parsing. Fix some comments. Move code for skipping a chunk into extra
