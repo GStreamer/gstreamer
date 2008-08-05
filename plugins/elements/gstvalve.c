@@ -212,18 +212,25 @@ gst_valve_prepare_output_buffer (GstBaseTransform *trans, GstBuffer * in_buf,
   }
   else
   {
+    /* Always return a reffed buffer, which in case of returning the input
+     * buffer means adding an extra ref to it */
     if (valve->discont)
     {
-      *out_buf = gst_buffer_make_metadata_writable (in_buf);
+      if (gst_buffer_is_metadata_writable (in_buf))
+      {
+        *out_buf = gst_buffer_ref (in_buf);
+      }
+      else
+      {
+        *out_buf = gst_buffer_create_sub (in_buf, 0, GST_BUFFER_SIZE (in_buf));
+      }
       GST_BUFFER_FLAG_SET (*out_buf, GST_BUFFER_FLAG_DISCONT);
       valve->discont = FALSE;
-
     }
     else
     {
-      *out_buf = in_buf;
+      *out_buf = gst_buffer_ref(in_buf);
     }
-    gst_buffer_ref (*out_buf);
   }
   GST_OBJECT_UNLOCK (GST_OBJECT (trans));
 
