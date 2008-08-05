@@ -63,12 +63,14 @@ message_loop (GstElement * element, GstTagList ** tags)
         return TRUE;
       case GST_MESSAGE_TAG:
       {
-        GstTagList *new_tags;
+        GstTagList *new_tags, *old_tags;
 
         gst_message_parse_tag (message, &new_tags);
-        if (*tags)
-          *tags = gst_tag_list_merge (*tags, new_tags, GST_TAG_MERGE_KEEP);
-        else
+        if (*tags) {
+          old_tags = *tags;
+          *tags = gst_tag_list_merge (old_tags, new_tags, GST_TAG_MERGE_KEEP);
+          gst_tag_list_free (old_tags);
+        } else
           *tags = new_tags;
         break;
       }
