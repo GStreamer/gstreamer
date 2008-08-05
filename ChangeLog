@@ -1,5 +1,12 @@
 2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Aurelien Grimaud <gstelzz at yahoo dot fr>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_alloc_udp_ports):
+	Improve udp port setup. Fixes #545710.
+
+2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtp/Makefile.am:
 	* gst/rtp/gstrtp.c: (plugin_init):
 	* gst/rtp/gstrtpmp1sdepay.c: (gst_rtp_mp1s_depay_base_init),

@@ -1007,27 +1007,45 @@ gst_rtspsrc_alloc_udp_ports (GstRTSPStream * stream,
 {
   GstRTSPSrc *src;
   GstStateChangeReturn ret;
-  GstElement *tmp, *udpsrc0, *udpsrc1;
+  GstElement *udpsrc0, *udpsrc1;
   gint tmp_rtp, tmp_rtcp;
   guint count;
 
   src = stream->parent;
 
-  tmp = NULL;
   udpsrc0 = NULL;
   udpsrc1 = NULL;
   count = 0;
 
+  /* Start with random port */
+  tmp_rtp = 0;
+
   /* try to allocate 2 UDP ports, the RTP port should be an even
    * number and the RTCP port should be the next (uneven) port */
 again:
-  udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, "udp://0.0.0.0:0", NULL);
+  udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, "udp://0.0.0.0", NULL);
   if (udpsrc0 == NULL)
     goto no_udp_protocol;
+  g_object_set (G_OBJECT (udpsrc0), "port", tmp_rtp, NULL);
 
   ret = gst_element_set_state (udpsrc0, GST_STATE_PAUSED);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    goto start_udp_failure;
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    if (tmp_rtp != 0) {
+      GST_DEBUG_OBJECT (src, "Unable to make udpsrc from RTP port %d", tmp_rtp);
+
+      tmp_rtp += 2;
+      if (++count > src->retry)
+        goto no_ports;
+
+      GST_DEBUG_OBJECT (src, "free RTP udpsrc");
+      gst_element_set_state (udpsrc0, GST_STATE_NULL);
+      gst_object_unref (udpsrc0);
+
+      GST_DEBUG_OBJECT (src, "retry %d", count);
+      goto again;
+    }
+    goto no_udp_protocol;
+  }
 
   g_object_get (G_OBJECT (udpsrc0), "port", &tmp_rtp, NULL);
   GST_DEBUG_OBJECT (src, "got RTP port %d", tmp_rtp);
@@ -1035,26 +1053,18 @@ again:
   /* check if port is even */
   if ((tmp_rtp & 0x01) != 0) {
     /* port not even, close and allocate another */
-    count++;
-    if (count > src->retry)
+    if (++count > src->retry)
       goto no_ports;
 
-    GST_DEBUG_OBJECT (src, "RTP port not even, retry %d", count);
-    /* have to keep port allocated so we can get a new one */
-    if (tmp != NULL) {
-      GST_DEBUG_OBJECT (src, "free temp");
-      gst_element_set_state (tmp, GST_STATE_NULL);
-      gst_object_unref (tmp);
-    }
-    tmp = udpsrc0;
+    GST_DEBUG_OBJECT (src, "RTP port not even");
+
+    GST_DEBUG_OBJECT (src, "free RTP udpsrc");
+    gst_element_set_state (udpsrc0, GST_STATE_NULL);
+    gst_object_unref (udpsrc0);
+
     GST_DEBUG_OBJECT (src, "retry %d", count);
+    tmp_rtp++;
     goto again;
-  }
-  /* free leftover temp element/port */
-  if (tmp) {
-    gst_element_set_state (tmp, GST_STATE_NULL);
-    gst_object_unref (tmp);
-    tmp = NULL;
   }
 
   /* allocate port+1 for RTCP now */
@@ -1068,10 +1078,26 @@ again:
 
   GST_DEBUG_OBJECT (src, "starting RTCP on port %d", tmp_rtcp);
   ret = gst_element_set_state (udpsrc1, GST_STATE_PAUSED);
-  /* FIXME, this could fail if the next port is not free, we
-   * should retry with another port then */
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    goto start_rtcp_failure;
+  /* tmp_rtcp port is busy already : retry to make rtp/rtcp pair */
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+
+    GST_DEBUG_OBJECT (src, "Unable to make udpsrc from RTCP port %d", tmp_rtcp);
+
+    if (++count > src->retry)
+      goto no_ports;
+
+    GST_DEBUG_OBJECT (src, "free RTP udpsrc");
+    gst_element_set_state (udpsrc0, GST_STATE_NULL);
+    gst_object_unref (udpsrc0);
+
+    GST_DEBUG_OBJECT (src, "free RTCP udpsrc");
+    gst_element_set_state (udpsrc1, GST_STATE_NULL);
+    gst_object_unref (udpsrc1);
+
+    tmp_rtp += 2;
+    GST_DEBUG_OBJECT (src, "retry %d", count);
+    goto again;
+  }
 
   /* all fine, do port check */
   g_object_get (G_OBJECT (udpsrc0), "port", rtpport, NULL);
@@ -1098,11 +1124,6 @@ no_udp_protocol:
     GST_DEBUG_OBJECT (src, "could not get UDP source");
     goto cleanup;
   }
-start_udp_failure:
-  {
-    GST_DEBUG_OBJECT (src, "could not start UDP source");
-    goto cleanup;
-  }
 no_ports:
   {
     GST_DEBUG_OBJECT (src, "could not allocate UDP port pair after %d retries",
@@ -1114,11 +1135,6 @@ no_udp_rtcp_protocol:
     GST_DEBUG_OBJECT (src, "could not get UDP source for RTCP");
     goto cleanup;
   }
-start_rtcp_failure:
-  {
-    GST_DEBUG_OBJECT (src, "could not start UDP source for RTCP");
-    goto cleanup;
-  }
 port_error:
   {
     GST_DEBUG_OBJECT (src, "ports don't match rtp: %d<->%d, rtcp: %d<->%d",
@@ -1127,10 +1143,6 @@ port_error:
   }
 cleanup:
   {
-    if (tmp) {
-      gst_element_set_state (tmp, GST_STATE_NULL);
-      gst_object_unref (tmp);
-    }
     if (udpsrc0) {
       gst_element_set_state (udpsrc0, GST_STATE_NULL);
       gst_object_unref (udpsrc0);
