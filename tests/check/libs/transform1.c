@@ -27,7 +27,7 @@
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstbasetransform.h>
 
-#undef FAILING_TESTS
+#define FAILING_TESTS
 
 #include "test_transform.c"
 
@@ -203,7 +203,11 @@ GST_START_TEST (basetransform_chain_pt2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+#if OPTIMIZED
   fail_unless (GST_BUFFER_CAPS (buffer) == caps);
+#else
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
+#endif
 
   gst_buffer_unref (buffer);
 
@@ -241,7 +245,11 @@ GST_START_TEST (basetransform_chain_pt2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (GST_BUFFER_SIZE (buffer) == 10);
+#if OPTIMIZED
   fail_unless (GST_BUFFER_CAPS (buffer) == caps);
+#else
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
+#endif
 
   gst_buffer_unref (buffer);
 
@@ -468,7 +476,11 @@ GST_START_TEST (basetransform_chain_ip2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+#if OPTIMIZED
   fail_unless (GST_BUFFER_CAPS (buffer) == caps);
+#else
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
+#endif
   gst_buffer_unref (buffer);
 
   /* with caps buffer */
@@ -503,7 +515,11 @@ GST_START_TEST (basetransform_chain_ip2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+#if OPTIMIZED
   fail_unless (GST_BUFFER_CAPS (buffer) == caps);
+#else
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
+#endif
 
   /* output buffer has refcount 1 */
   fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (buffer) == 1);
@@ -886,6 +902,7 @@ buffer_alloc_ct2 (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
     } else
       outcaps = gst_caps_ref (incaps);
   }
+  GST_DEBUG_OBJECT (pad, "expect %" GST_PTR_FORMAT, incaps);
 
   fail_unless (gst_caps_is_equal (caps, incaps));
 
@@ -943,6 +960,7 @@ GST_START_TEST (basetransform_chain_ct2)
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, incaps, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_ct2_called == TRUE);
+  gst_buffer_unref (buffer);
 
   /* with caps buffer */
   GST_DEBUG_OBJECT (trans, "alloc size 20, with wrong caps %" GST_PTR_FORMAT,
@@ -1099,6 +1117,7 @@ GST_START_TEST (basetransform_chain_ct3)
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, incaps, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_ct2_called == TRUE);
+  gst_buffer_unref (buffer);
 
   /* with caps buffer */
   GST_DEBUG_OBJECT (trans, "alloc size 20, with wrong caps %" GST_PTR_FORMAT,
@@ -1216,11 +1235,13 @@ GST_START_TEST (basetransform_chain_ct3)
   gst_buffer_set_caps (buffer, incaps);
 
   /* don't suggest anything else */
+  buffer_alloc_ct2_case = 1;
+  set_caps_ct2_case = 2;
   transform_ct2_called = FALSE;;
   buffer_alloc_ct2_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
-  fail_unless (transform_ct2_called == FALSE);
+  fail_unless (transform_ct2_called == TRUE);
 #ifdef FAILING_TESTS
   /* FIXME, pad alloc must be called to get the new caps, because we don't call
    * pad alloc */
@@ -1231,9 +1252,11 @@ GST_START_TEST (basetransform_chain_ct3)
   fail_unless (buffer != NULL);
 #ifdef FAILING_TESTS
   /* FIXME changing src caps should produce converted buffer */
+  GST_DEBUG_OBJECT (trans, "received caps %" GST_PTR_FORMAT,
+      GST_BUFFER_CAPS (buffer));
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), outcaps));
+  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
 #endif
-  fail_unless (GST_BUFFER_SIZE (buffer) == 10);
 
   /* output buffer has refcount 1 */
   fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (buffer) == 1);
@@ -1266,11 +1289,8 @@ GST_START_TEST (basetransform_chain_ct3)
   gst_buffer_set_caps (buffer, incaps);
 
   /* don't suggest anything else */
-#ifndef FAILING_TESTS
-  /* FIXME, above alloc reconfigured the transform */
   buffer_alloc_ct2_suggest = FALSE;
   buffer_alloc_ct2_case = 0;
-#endif
   transform_ct2_called = FALSE;;
   buffer_alloc_ct2_called = FALSE;
   res = gst_test_trans_push (trans, buffer);

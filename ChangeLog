@@ -1,3 +1,35 @@
+2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	Add new function:
+	API: GstBaseTransform::gst_base_transform_suggest()
+
+	* libs/gst/base/gstbasetransform.c: (gst_base_transform_finalize),
+	(gst_base_transform_init), (gst_base_transform_transform_caps),
+	(gst_base_transform_transform_size),
+	(gst_base_transform_configure_caps),
+	(gst_base_transform_can_transform),
+	(gst_base_transform_find_transform), (gst_base_transform_setcaps),
+	(gst_base_transform_prepare_output_buffer),
+	(gst_base_transform_buffer_alloc),
+	(gst_base_transform_handle_buffer), (gst_base_transform_getrange),
+	(gst_base_transform_chain), (gst_base_transform_activate),
+	(gst_base_transform_set_passthrough),
+	(gst_base_transform_is_passthrough),
+	(gst_base_transform_set_in_place),
+	(gst_base_transform_is_in_place), (gst_base_transform_update_qos),
+	(gst_base_transform_set_qos_enabled),
+	(gst_base_transform_is_qos_enabled),
+	(gst_base_transform_set_gap_aware), (gst_base_transform_suggest),
+	(gst_base_transform_reconfigure):
+	* libs/gst/base/gstbasetransform.h:
+	Rewrite of basetransform to perform negotiation outside of the
+	buffer_alloc functions.  Fixes #545853.
+
+	* tests/check/libs/transform1.c: (GST_START_TEST),
+	(buffer_alloc_ct2):
+	Update unit test.
+
 2008-08-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/gst/gstpreset.c:
