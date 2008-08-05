@@ -1,3 +1,9 @@
+2008-08-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/gst/gstpreset.c:
+	  Only run preset tests when $HOME is writable. Preliminary fix for
+	  #545433.
+
 2008-08-04  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_remove_func),

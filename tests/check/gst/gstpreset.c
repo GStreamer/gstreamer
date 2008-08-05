@@ -28,6 +28,8 @@
 #include <glib/gstdio.h>
 #include <gst/check/gstcheck.h>
 
+#include <unistd.h>
+
 static GType gst_preset_test_get_type (void);
 
 #define GST_TYPE_PRESET_TEST            (gst_preset_test_get_type ())
@@ -278,13 +280,23 @@ gst_preset_suite (void)
 {
   Suite *s = suite_create ("GstPreset");
   TCase *tc = tcase_create ("preset");
+  gchar *gst_dir;
+  gboolean can_write = FALSE;
+
+  /* cehck if we can create presets */
+  gst_dir = g_build_filename (g_get_home_dir (),
+      ".gstreamer-" GST_MAJORMINOR, NULL);
+  can_write = (g_access (gst_dir, R_OK | W_OK | X_OK) == 0);
+  g_free (gst_dir);
 
   suite_add_tcase (s, tc);
   tcase_add_test (tc, test_check);
   tcase_add_test (tc, test_load);
-  tcase_add_test (tc, test_add);
-  tcase_add_test (tc, test_del);
-  tcase_add_test (tc, test_two_instances);
+  if (can_write) {
+    tcase_add_test (tc, test_add);
+    tcase_add_test (tc, test_del);
+    tcase_add_test (tc, test_two_instances);
+  }
   tcase_add_unchecked_fixture (tc, test_setup, test_teardown);
 
   return s;
