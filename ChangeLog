@@ -1,5 +1,22 @@
 2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpmp1sdepay.c: (gst_rtp_mp1s_depay_base_init),
+	(gst_rtp_mp1s_depay_class_init), (gst_rtp_mp1s_depay_init),
+	(gst_rtp_mp1s_depay_setcaps), (gst_rtp_mp1s_depay_process),
+	(gst_rtp_mp1s_depay_set_property),
+	(gst_rtp_mp1s_depay_get_property),
+	(gst_rtp_mp1s_depay_change_state),
+	(gst_rtp_mp1s_depay_plugin_init):
+	* gst/rtp/gstrtpmp1sdepay.h:
+	Add MP1S depayloader.
+
+	* gst/rtsp/URLS:
+	Some more sample rtsp streams.
+
+2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtsp/URLS:
 	Add another URL.
 
