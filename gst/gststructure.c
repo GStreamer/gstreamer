@@ -2232,16 +2232,13 @@ gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
     const GValue *list_value;
     int i, n;
     const GValue *best = NULL;
-    GValue best_diff = { 0 };
-    GValue cur_diff = { 0 };
-    GValue target = { 0 };
-    gboolean res = FALSE;
+    gdouble target;
+    gdouble cur_diff;
+    gdouble best_diff = G_MAXDOUBLE;
 
-    g_value_init (&best_diff, GST_TYPE_FRACTION);
-    g_value_init (&cur_diff, GST_TYPE_FRACTION);
-    g_value_init (&target, GST_TYPE_FRACTION);
+    target = (gdouble) target_numerator / (gdouble) target_denominator;
 
-    gst_value_set_fraction (&target, target_numerator, target_denominator);
+    GST_DEBUG ("target %g, best %g", target, best_diff);
 
     best = NULL;
 
@@ -2249,28 +2246,32 @@ gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
     for (i = 0; i < n; i++) {
       list_value = gst_value_list_get_value (value, i);
       if (G_VALUE_TYPE (list_value) == GST_TYPE_FRACTION) {
+        gint num, denom;
+        gdouble list_double;
 
-        if (gst_value_compare (list_value, &target) == GST_VALUE_LESS_THAN)
-          gst_value_fraction_subtract (&cur_diff, &target, list_value);
-        else
-          gst_value_fraction_subtract (&cur_diff, list_value, &target);
+        num = gst_value_get_fraction_numerator (list_value);
+        denom = gst_value_get_fraction_denominator (list_value);
 
-        if (!best
-            || gst_value_compare (&cur_diff,
-                &best_diff) == GST_VALUE_LESS_THAN) {
+        list_double = ((gdouble) num / (gdouble) denom);
+        cur_diff = target - list_double;
+
+        GST_DEBUG ("curr diff %g, list %g", cur_diff, list_double);
+
+        if (cur_diff < 0)
+          cur_diff = -cur_diff;
+
+        if (!best || cur_diff < best_diff) {
+          GST_DEBUG ("new best %g", list_double);
           best = list_value;
-          g_value_copy (&cur_diff, &best_diff);
+          best_diff = cur_diff;
         }
       }
     }
     if (best != NULL) {
       gst_structure_set_value (structure, field_name, best);
-      res = TRUE;
+      return TRUE;
     }
-    g_value_unset (&best_diff);
-    g_value_unset (&cur_diff);
-    g_value_unset (&target);
-    return res;
   }
+
   return FALSE;
 }

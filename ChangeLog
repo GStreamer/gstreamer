@@ -1,5 +1,18 @@
 2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/gststructure.c:
+	(gst_structure_fixate_field_nearest_fraction):
+	Avoid overflows in fixation code when dealing with MAXINT values, which
+	v4l2src seems to do.
+	Fixes #546328.
+
+	* tests/check/gst/gststructure.c: (GST_START_TEST):
+	Make a unit test to check the fix. 
+
+2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* plugins/elements/gstcapsfilter.c: (copy_func),
 	(gst_capsfilter_set_property):
 	Use new caps suggestion feature of basetransform to request a caps

@@ -294,7 +294,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_fixate_frac_list)
 {
-  GstStructure *s;
+  GstStructure *s, *s2;
   GValue list = { 0 };
   GValue frac = { 0 };
   gchar *str;
@@ -319,6 +319,9 @@ GST_START_TEST (test_fixate_frac_list)
   GST_DEBUG ("list %s", str);
   g_free (str);
 
+  /* take copy */
+  s2 = gst_structure_copy (s);
+
   /* fixate to the nearest fraction, this should give 15/1 */
   fail_unless (gst_structure_fixate_field_nearest_fraction (s, "frac", 14, 1));
 
@@ -326,6 +329,16 @@ GST_START_TEST (test_fixate_frac_list)
   fail_unless (num == 15);
   fail_unless (denom == 1);
 
+  gst_structure_free (s);
+  s = s2;
+
+  /* fixate to the nearest fraction, this should give 30/1 */
+  fail_unless (gst_structure_fixate_field_nearest_fraction (s, "frac", G_MAXINT,
+          1));
+
+  fail_unless (gst_structure_get_fraction (s, "frac", &num, &denom));
+  fail_unless (num == 30);
+  fail_unless (denom == 1);
   gst_structure_free (s);
 }
 
