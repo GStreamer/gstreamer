@@ -1,5 +1,13 @@
 2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Håvard Graff <havard dot graff at tandberg dot com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_chain):
+	Fix debug by logging the right seqnum.
+
+2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Olivier Crete <tester at tester dot ca>
 
 	* gst/rtpmanager/gstrtpbin.c: (get_pt_map):
