@@ -682,7 +682,7 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
   guint bitrate = 0;
   gchar *encoder = NULL;
-  GstTagList *list;
+  GstTagList *list, *old_list;
   GstBuffer *buf;
 
   GST_DEBUG_OBJECT (vd, "parsing comment packet");
@@ -694,8 +694,11 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
       gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\003vorbis", 7,
       &encoder);
 
+  old_list = vd->taglist;
   vd->taglist = gst_tag_list_merge (vd->taglist, list, GST_TAG_MERGE_REPLACE);
 
+  if (old_list)
+    gst_tag_list_free (old_list);
   gst_tag_list_free (list);
   gst_buffer_unref (buf);
 

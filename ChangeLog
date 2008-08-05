@@ -1,3 +1,8 @@
+2008-08-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/vorbis/vorbisdec.c:
+	  Do not leak old taglist.
+
 2008-08-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/icles/test-scale.c:
