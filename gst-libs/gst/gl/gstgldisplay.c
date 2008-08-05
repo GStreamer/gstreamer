@@ -1454,10 +1454,10 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
 
   glDisable(GL_TEXTURE_RECTANGLE_ARB);
 
-  glPopMatrix();
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
   glPopAttrib();
 
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -2514,10 +2514,10 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay *display)
 
   glDisable(GL_TEXTURE_RECTANGLE_ARB);
 
-  glPopMatrix();
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
   glPopAttrib();
 
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -2669,10 +2669,10 @@ gst_gl_display_thread_do_download_draw (GstGLDisplay *display)
 
   glDisable(GL_TEXTURE_RECTANGLE_ARB);
 
-  glPopMatrix();
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
   glPopAttrib();
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
