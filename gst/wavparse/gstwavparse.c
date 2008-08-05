@@ -1255,7 +1255,6 @@ gst_wavparse_stream_headers (GstWavParse * wav)
      * So we have to go bit by bit until we find the 'data' header
      */
     switch (tag) {
-        /* TODO : Implement the various cases */
       case GST_RIFF_TAG_data:{
         GstFormat fmt;
 
@@ -1347,6 +1346,72 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         } else {
           gst_buffer_unref (buf);
           wav->offset += 8 + data_size;
+        }
+        break;
+      }
+        /* FIXME: all list tags after data are ignored in streaming mode */
+      case GST_RIFF_TAG_LIST:{
+        guint32 ltag;
+
+        if (wav->streaming) {
+          const guint8 *data = NULL;
+
+          if (gst_adapter_available (wav->adapter) < 12) {
+            return GST_FLOW_OK;
+          }
+          data = gst_adapter_peek (wav->adapter, 12);
+          ltag = GST_READ_UINT32_LE (data + 8);
+        } else {
+          gst_buffer_unref (buf);
+          if ((res =
+                  gst_pad_pull_range (wav->sinkpad, wav->offset, 12,
+                      &buf)) != GST_FLOW_OK)
+            goto header_read_error;
+          ltag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 8);
+        }
+        switch (ltag) {
+          case GST_RIFF_LIST_INFO:{
+            const guint data_size = size - 12;
+            GstTagList *new;
+
+            GST_INFO_OBJECT (wav, "Have LIST chunk INFO");
+            if (wav->streaming) {
+              gst_adapter_flush (wav->adapter, 12);
+              if (gst_adapter_available (wav->adapter) < data_size) {
+                return GST_FLOW_OK;
+              }
+              gst_buffer_unref (buf);
+              buf = gst_adapter_take_buffer (wav->adapter, data_size);
+            } else {
+              wav->offset += 12;
+              gst_buffer_unref (buf);
+              if ((res =
+                      gst_pad_pull_range (wav->sinkpad, wav->offset, data_size,
+                          &buf)) != GST_FLOW_OK)
+                goto header_read_error;
+            }
+            /* parse tags */
+            gst_riff_parse_info (GST_ELEMENT (wav), buf, &new);
+            if (new) {
+              GstTagList *old = wav->tags;
+              wav->tags = gst_tag_list_merge (old, new, GST_TAG_MERGE_REPLACE);
+              if (old)
+                gst_tag_list_free (old);
+              gst_tag_list_free (new);
+            }
+            if (wav->streaming) {
+              gst_adapter_flush (wav->adapter, data_size);
+            } else {
+              gst_buffer_unref (buf);
+              wav->offset += data_size;
+            }
+            break;
+          }
+          default:
+            GST_INFO_OBJECT (wav, "Ignoring LIST chunk %" GST_FOURCC_FORMAT,
+                GST_FOURCC_ARGS (ltag));
+            gst_waveparse_ignore_chunk (wav, buf, tag, size);
+            break;
         }
         break;
       }

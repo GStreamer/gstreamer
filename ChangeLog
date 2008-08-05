@@ -1,6 +1,12 @@
 2008-08-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/wavparse/gstwavparse.c:
+	  Handle the list chunk and use gst_riff_parse_info() to parse the info
+	  sub-chunk.
+
+2008-08-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/wavparse/gstwavparse.c:
 	  Handle the acid chunk and send tempo as part of tags. Other fields are
 	  interesting too, but need more tag-definitions. Fixes #545433.
 
