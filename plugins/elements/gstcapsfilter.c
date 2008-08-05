@@ -67,6 +67,7 @@ static void gst_capsfilter_set_property (GObject * object, guint prop_id,
 static void gst_capsfilter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_capsfilter_dispose (GObject * object);
+
 static GstCaps *gst_capsfilter_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps);
 static GstFlowReturn gst_capsfilter_transform_ip (GstBaseTransform * base,
@@ -124,6 +125,14 @@ gst_capsfilter_init (GstCapsFilter * filter, GstCapsFilterClass * g_class)
   filter->filter_caps = gst_caps_new_any ();
 }
 
+static gboolean
+copy_func (GQuark field_id, const GValue * value, GstStructure * dest)
+{
+  gst_structure_id_set_value (dest, field_id, value);
+
+  return TRUE;
+}
+
 static void
 gst_capsfilter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -133,7 +142,7 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_FILTER_CAPS:{
       GstCaps *new_caps;
-      GstCaps *old_caps;
+      GstCaps *old_caps, *suggest, *nego;
       const GstCaps *new_caps_val = gst_value_get_caps (value);
 
       if (new_caps_val == NULL) {
@@ -151,6 +160,44 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
       gst_caps_unref (old_caps);
 
       GST_DEBUG_OBJECT (capsfilter, "set new caps %" GST_PTR_FORMAT, new_caps);
+
+      /* filter the currently negotiated format against the new caps */
+      GST_OBJECT_LOCK (GST_BASE_TRANSFORM_SINK_PAD (object));
+      nego = GST_PAD_CAPS (GST_BASE_TRANSFORM_SINK_PAD (object));
+      if (nego) {
+        GstStructure *s1, *s2;
+
+        /* first check if the name is the same */
+        s1 = gst_caps_get_structure (nego, 0);
+        s2 = gst_caps_get_structure (new_caps, 0);
+
+        GST_DEBUG_OBJECT (capsfilter, "we had negotiated caps %" GST_PTR_FORMAT,
+            nego);
+
+        if (gst_structure_get_name_id (s1) == gst_structure_get_name_id (s2)) {
+          /* same name, copy all fields from the new caps into the previously
+           * negotiated caps */
+          suggest = gst_caps_copy (nego);
+          s1 = gst_caps_get_structure (suggest, 0);
+          gst_structure_foreach (s2, (GstStructureForeachFunc) copy_func, s1);
+          GST_DEBUG_OBJECT (capsfilter, "copied structure fields");
+        } else {
+          GST_DEBUG_OBJECT (capsfilter, "different structure names");
+          /* different names, we can only suggest the complete caps */
+          suggest = gst_caps_copy (new_caps);
+        }
+      } else {
+        GST_DEBUG_OBJECT (capsfilter, "no negotiated caps");
+        /* no previous caps, the getcaps function will be used to find suitable
+         * caps */
+        suggest = NULL;
+      }
+      GST_OBJECT_UNLOCK (GST_BASE_TRANSFORM_SINK_PAD (object));
+
+      if (suggest) {
+        gst_base_transform_suggest (GST_BASE_TRANSFORM (object), suggest, 0);
+        gst_caps_unref (suggest);
+      }
 
       /* FIXME: Need to activate these caps on the pads
        * http://bugzilla.gnome.org/show_bug.cgi?id=361718

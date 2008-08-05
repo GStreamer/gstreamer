@@ -1,5 +1,12 @@
 2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* plugins/elements/gstcapsfilter.c: (copy_func),
+	(gst_capsfilter_set_property):
+	Use new caps suggestion feature of basetransform to request a caps
+	negotiation upstream.
+
+2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/libs/gstreamer-libs-sections.txt:
 	Add new function:
 	API: GstBaseTransform::gst_base_transform_suggest()
