@@ -464,7 +464,7 @@ gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
   GST_INPUT_SELECTOR_LOCK (sel);
   active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
 
-  if (pad != active_sinkpad && !sel->select_all)
+  if (pad != active_sinkpad)
     goto not_active;
 
   GST_INPUT_SELECTOR_UNLOCK (sel);
@@ -550,7 +550,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   }
 
   /* Ignore buffers from pads except the selected one */
-  if (pad != active_sinkpad && !sel->select_all)
+  if (pad != active_sinkpad)
     goto ignore;
 
   if (G_UNLIKELY (sel->pending_close)) {
@@ -1016,16 +1016,20 @@ gst_input_selector_getcaps (GstPad * pad)
   GstCaps *caps;
 
   parent = gst_object_get_parent (GST_OBJECT (pad));
-  if (GST_INPUT_SELECTOR (parent)->select_all) {
-    caps = gst_pad_proxy_getcaps (pad);
-    goto done;
-  }
 
   otherpad = gst_input_selector_get_linked_pad (pad, FALSE);
+
   if (!otherpad) {
-    GST_DEBUG_OBJECT (parent,
-        "Pad %s:%s not linked, returning ANY", GST_DEBUG_PAD_NAME (pad));
-    caps = gst_caps_new_any ();
+    if (GST_INPUT_SELECTOR (parent)->select_all) {
+      GST_DEBUG_OBJECT (parent,
+          "Pad %s:%s not linked, returning merge of caps",
+          GST_DEBUG_PAD_NAME (pad));
+      caps = gst_pad_proxy_getcaps (pad);
+    } else {
+      GST_DEBUG_OBJECT (parent,
+          "Pad %s:%s not linked, returning ANY", GST_DEBUG_PAD_NAME (pad));
+      caps = gst_caps_new_any ();
+    }
   } else {
     GST_DEBUG_OBJECT (parent,
         "Pad %s:%s is linked (to %s:%s), returning peer caps",
@@ -1037,7 +1041,6 @@ gst_input_selector_getcaps (GstPad * pad)
     gst_object_unref (otherpad);
   }
 
-done:
   gst_object_unref (parent);
   return caps;
 }
@@ -1069,8 +1072,9 @@ gst_input_selector_activate_sinkpad (GstInputSelector * sel, GstPad * pad)
 
   selpad->active = TRUE;
   active_sinkpad = sel->active_sinkpad;
-  if (active_sinkpad == NULL) {
-    /* first pad we get activity on becomes the activated pad by default */
+  if (active_sinkpad == NULL || sel->select_all) {
+    /* first pad we get activity on becomes the activated pad by default, if we
+     * select all, we also remember the last used pad. */
     active_sinkpad = sel->active_sinkpad = gst_object_ref (pad);
     GST_DEBUG_OBJECT (sel, "Activating pad %s:%s", GST_DEBUG_PAD_NAME (pad));
   }
