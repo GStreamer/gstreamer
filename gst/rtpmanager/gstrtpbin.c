@@ -618,11 +618,24 @@ get_pt_map (GstRtpBinSession * session, guint pt)
   g_value_init (&ret, GST_TYPE_CAPS);
   g_value_set_boxed (&ret, NULL);
 
+  GST_RTP_SESSION_UNLOCK (session);
+
   g_signal_emitv (args, gst_rtp_bin_signals[SIGNAL_REQUEST_PT_MAP], 0, &ret);
+
+  GST_RTP_SESSION_LOCK (session);
 
   g_value_unset (&args[0]);
   g_value_unset (&args[1]);
   g_value_unset (&args[2]);
+
+  /* look in the cache again because we let the lock go */
+  caps = g_hash_table_lookup (session->ptmap, GINT_TO_POINTER (pt));
+  if (caps) {
+    gst_caps_ref (caps);
+    g_value_unset (&ret);
+    goto done;
+  }
+
   caps = (GstCaps *) g_value_dup_boxed (&ret);
   g_value_unset (&ret);
   if (!caps)

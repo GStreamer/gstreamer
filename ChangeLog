@@ -1,3 +1,11 @@
+2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtpmanager/gstrtpbin.c: (get_pt_map):
+	Release lock before emitting the request-pt-map signal.
+	Fixes #543480.
+
 2008-08-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/gstdeinterlace2.c:
