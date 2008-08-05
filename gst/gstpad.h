@@ -420,10 +420,12 @@ typedef void			(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
  * be processed by @pad. The function is mostly overridden by elements that can
  * provide a hardware buffer in order to avoid additional memcpy operations.
  *
- * The function can return a buffer that does not have @caps, in which case the
- * upstream element requests a format change. If a format change was requested,
- * the returned buffer will be one to hold the data of said new caps, so its
- * size might be different from @size.
+ * The function can return a buffer that has caps different from the requested
+ * @caps, in which case the upstream element requests a format change to this
+ * new caps.
+ * If a format change was requested, the returned buffer will be one to hold
+ * the data of said new caps, so its size might be different from the requested
+ * @size.
  *
  * When this function returns anything else than #GST_FLOW_OK, the buffer allocation
  * failed and @buf does not contain valid data.
