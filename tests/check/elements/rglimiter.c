@@ -176,6 +176,7 @@ GST_START_TEST (test_limiting)
 
   /* Mutable variant. */
   buf = create_test_buffer ();
+  GST_DEBUG ("push mutable buffer");
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
   fail_unless (g_list_length (buffers) == 1);
   out_buf = buffers->data;
@@ -188,6 +189,7 @@ GST_START_TEST (test_limiting)
   /* Extra ref: */
   gst_buffer_ref (buf);
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 2);
+  GST_DEBUG ("push immutable buffer");
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
   fail_unless (g_list_length (buffers) == 2);

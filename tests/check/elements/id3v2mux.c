@@ -367,6 +367,7 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask)
   /* set up identity to catch tag buffer */
   g_signal_connect (identity, "handoff", G_CALLBACK (identity_cb), &tagbuf);
 
+  GST_LOG ("setting and getting state ...");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_unless (gst_element_get_state (pipeline, NULL, NULL,
           -1) == GST_STATE_CHANGE_SUCCESS);

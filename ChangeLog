@@ -1,3 +1,12 @@
+2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/URLS:
+	Add another URL.
+
+	* tests/check/elements/id3v2mux.c: (test_taglib_id3mux_with_tags):
+	* tests/check/elements/rglimiter.c: (GST_START_TEST):
+	Add some more debug info.
+
 2008-08-04  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/avi/gstavimux.c: (gst_avi_mux_riff_get_avi_header):
