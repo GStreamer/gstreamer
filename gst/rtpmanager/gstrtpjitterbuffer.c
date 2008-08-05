@@ -918,10 +918,11 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
     if (rtp_jitter_buffer_get_ts_diff (priv->jbuf) >= latency_ts) {
       GstBuffer *old_buf;
 
-      GST_DEBUG_OBJECT (jitterbuffer, "Queue full, dropping old packet #%d",
-          seqnum);
-
       old_buf = rtp_jitter_buffer_pop (priv->jbuf);
+
+      GST_DEBUG_OBJECT (jitterbuffer, "Queue full, dropping old packet #%d",
+          gst_rtp_buffer_get_seq (old_buf));
+
       gst_buffer_unref (old_buf);
     }
   }
