@@ -1,5 +1,15 @@
 2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/selector/gstinputselector.c: (gst_selector_pad_bufferalloc),
+	(gst_selector_pad_chain), (gst_input_selector_getcaps),
+	(gst_input_selector_activate_sinkpad):
+	Move the select-all logic into the activation of the currently selected
+	pad. We want to remember the last pad with activity in select-all mode.
+	Fix the getcaps function, we can produce the union of the upstream caps
+	in select-all mode, not the intersection like proxy_getcaps() does.
+
+2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Håvard Graff <havard dot graff at tandberg dot com>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
