@@ -1,3 +1,8 @@
+2008-08-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	  Add audio/x-qdm for qtdemux.
+
 2008-08-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/vorbis/vorbisdec.c:

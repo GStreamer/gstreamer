@@ -112,6 +112,7 @@ static const FormatInfo formats[] = {
   {"audio/x-nist", "Sphere NIST", 0},
   {"audio/x-nsf", "Nintendo NSF", 0},
   {"audio/x-paris", "Ensoniq PARIS", 0},
+  {"audio/x-qdm", "QDesign Music (QDM)", 0},
   {"audio/x-qdm2", "QDesign Music (QDM) 2", 0},
   {"audio/x-ralf-mpeg4-generic", "Real Audio Lossless (RALF)", 0},
   {"audio/x-sds", "SDS", 0},
