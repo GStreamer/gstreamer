@@ -1,3 +1,35 @@
+2008-08-06  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Based on a patch by: Jonathan Matthew <notverysmart at gmail dot com>
+
+	* ext/flac/Makefile.am:
+	* ext/flac/gstflac.c: (plugin_init):
+	* ext/flac/gstflactag.c: (gst_flac_tag_setup_interfaces),
+	(gst_flac_tag_base_init), (gst_flac_tag_class_init),
+	(gst_flac_tag_dispose), (gst_flac_tag_init),
+	(gst_flac_tag_sink_setcaps), (gst_flac_tag_chain),
+	(gst_flac_tag_change_state):
+	* ext/flac/gstflactag.h:
+	Port flactag to 0.10, add documentation for it and clean it up a bit.
+	Fixes bug #413841.
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/gst-plugins-good-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* ext/flac/gstflacdec.c: (gst_flac_dec_base_init):
+	* ext/flac/gstflacdec.h:
+	* ext/flac/gstflacenc.c: (gst_flac_enc_base_init):
+	* ext/flac/gstflacenc.h:
+	Add flactag and flacenc to the documentation and mark
+	the private parts of the flacdec instance structure as private.
+
+	Also use gst_element_class_set_details_simple() in flacdec and
+	flacenc.
+
 2008-08-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/qtdemux/qtdemux.c:

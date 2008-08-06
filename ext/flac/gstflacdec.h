@@ -47,6 +47,8 @@ typedef struct _GstFlacDecClass GstFlacDecClass;
 struct _GstFlacDec {
   GstElement     element;
 
+  /* < private > */
+
 #if !defined(FLAC_API_VERSION_CURRENT) || FLAC_API_VERSION_CURRENT < 8
   FLAC__SeekableStreamDecoder *seekable_decoder; /* for pull-based operation  */
 #else

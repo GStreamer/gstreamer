@@ -84,6 +84,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/dv/gstdvdemux.h \
 	$(top_srcdir)/ext/esd/esdsink.h \
 	$(top_srcdir)/ext/flac/gstflacdec.h \
+	$(top_srcdir)/ext/flac/gstflacenc.h \
+	$(top_srcdir)/ext/flac/gstflactag.h \
 	$(top_srcdir)/ext/gdk_pixbuf/gstgdkpixbufsink.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosink.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosrc.h \

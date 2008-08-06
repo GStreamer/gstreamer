@@ -539,6 +539,34 @@ LEGACY_FLAC
 </SECTION>
 
 <SECTION>
+<FILE>element-flacenc</FILE>
+<TITLE>flacenc</TITLE>
+GstFlacEnc
+<SUBSECTION Standard>
+GstFlacEncClass
+GST_TYPE_FLAC_ENC
+GST_FLAC_ENC
+GST_FLAC_ENC_CLASS
+GST_IS_FLAC_ENC
+GST_IS_FLAC_ENC_CLASS
+gst_flac_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-flactag</FILE>
+<TITLE>flactag</TITLE>
+GstFlacTag
+<SUBSECTION Standard>
+GstFlacTagClass
+GST_TYPE_FLAC_TAG
+GST_FLAC_TAG
+GST_FLAC_TAG_CLASS
+GST_IS_FLAC_TAG
+GST_IS_FLAC_TAG_CLASS
+gst_flac_tag_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-gamma</FILE>
 <TITLE>gamma</TITLE>
 GstGamma

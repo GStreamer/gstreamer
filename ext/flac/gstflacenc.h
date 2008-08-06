@@ -45,6 +45,8 @@ typedef struct _GstFlacEncClass GstFlacEncClass;
 struct _GstFlacEnc {
   GstElement     element;
 
+  /* < private > */
+
   GstPad        *sinkpad;
   GstPad        *srcpad;
 

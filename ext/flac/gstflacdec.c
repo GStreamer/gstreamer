@@ -105,15 +105,7 @@ GST_DEBUG_CATEGORY_STATIC (flacdec_debug);
 
 static GstPadTemplate *src_template, *sink_template;
 
-static const GstElementDetails flacdec_details =
-GST_ELEMENT_DETAILS ("FLAC audio decoder",
-    "Codec/Decoder/Audio",
-    "Decodes FLAC lossless audio streams",
-    "Wim Taymans <wim@fluendo.com>");
-
-
 static void gst_flac_dec_finalize (GObject * object);
-
 static void gst_flac_dec_loop (GstPad * pad);
 
 static GstStateChangeReturn gst_flac_dec_change_state (GstElement * element,
@@ -237,7 +229,9 @@ gst_flac_dec_base_init (gpointer g_class)
       GST_PAD_ALWAYS, raw_caps);
   gst_element_class_add_pad_template (element_class, sink_template);
   gst_element_class_add_pad_template (element_class, src_template);
-  gst_element_class_set_details (element_class, &flacdec_details);
+  gst_element_class_set_details_simple (element_class, "FLAC audio decoder",
+      "Codec/Decoder/Audio",
+      "Decodes FLAC lossless audio streams", "Wim Taymans <wim@fluendo.com>");
 
   GST_DEBUG_CATEGORY_INIT (flacdec_debug, "flacdec", 0, "flac decoder");
 }

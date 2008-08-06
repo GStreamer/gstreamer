@@ -46,6 +46,8 @@
     <xi:include href="xml/element-equalizer-nbands.xml" />
     <xi:include href="xml/element-esdsink.xml" />
     <xi:include href="xml/element-flacdec.xml" />
+    <xi:include href="xml/element-flacenc.xml" />
+    <xi:include href="xml/element-flactag.xml" />
     <xi:include href="xml/element-gamma.xml" />
     <xi:include href="xml/element-gdkpixbufsink.xml" />
     <xi:include href="xml/element-goom.xml" />

@@ -23,7 +23,7 @@
 
 #include "gstflacenc.h"
 #include "gstflacdec.h"
-/* #include "gstflactag.h" */
+#include "gstflactag.h"
 
 #include <gst/tag/tag.h>
 #include <gst/gst-i18n-plugin.h>
@@ -43,11 +43,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "flacdec", GST_RANK_PRIMARY,
           GST_TYPE_FLAC_DEC))
     return FALSE;
-#if 0
   if (!gst_element_register (plugin, "flactag", GST_RANK_PRIMARY,
           gst_flac_tag_get_type ()))
     return FALSE;
-#endif
 
   gst_tag_register_musicbrainz_tags ();
 

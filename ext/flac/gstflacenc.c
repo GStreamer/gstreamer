@@ -77,12 +77,6 @@ static const GstAudioChannelPosition channel_positions[8][8] = {
       GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}
 };
 
-static const GstElementDetails flacenc_details =
-GST_ELEMENT_DETAILS ("FLAC audio encoder",
-    "Codec/Encoder/Audio",
-    "Encodes audio with the FLAC lossless audio encoder",
-    "Wim Taymans <wim.taymans@chello.be>");
-
 #define FLAC_SINK_CAPS \
   "audio/x-raw-int, "               \
   "endianness = (int) BYTE_ORDER, " \
@@ -261,7 +255,10 @@ gst_flac_enc_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details (element_class, &flacenc_details);
+  gst_element_class_set_details_simple (element_class, "FLAC audio encoder",
+      "Codec/Encoder/Audio",
+      "Encodes audio with the FLAC lossless audio encoder",
+      "Wim Taymans <wim.taymans@chello.be>");
 
   GST_DEBUG_CATEGORY_INIT (flacenc_debug, "flacenc", 0,
       "Flac encoding element");
