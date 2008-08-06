@@ -3606,6 +3606,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       gst_qtdemux_handle_esds (qtdemux, stream, esds, list);
     } else {
       switch (fourcc) {
+#if 0
+          /* FIXME: what is in the chunk? */
+        case FOURCC_QDMC:
+        {
+          gint len = QT_UINT32 (stsd_data);
+          /* seems to be always = 116 = 0x74 */
+          break;
+        }
+#endif
         case FOURCC_QDM2:
         {
           gint len = QT_UINT32 (stsd_data);
@@ -4778,6 +4787,10 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
+    case GST_MAKE_FOURCC ('Q', 'D', 'M', 'C'):
+      _codec ("QDesign Music");
+      caps = gst_caps_new_simple ("audio/x-qdm", NULL);
+      break;
     case GST_MAKE_FOURCC ('Q', 'D', 'M', '2'):
       _codec ("QDesign Music v.2");
       /* FIXME: QDesign music version 2 (no constant) */
@@ -4813,8 +4826,6 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case GST_MAKE_FOURCC ('q', 't', 'v', 'r'):
       /* ? */
-    case GST_MAKE_FOURCC ('Q', 'D', 'M', 'C'):
-      /* QDesign music */
     case GST_MAKE_FOURCC ('Q', 'c', 'l', 'p'):
       /* QUALCOMM PureVoice */
     default:

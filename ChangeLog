@@ -1,3 +1,9 @@
+2008-08-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/qtdemux/qtdemux.c:
+	  Use audio/x-qdm for caps. Collect some info - mplayer has a decoder
+	  for it but ffmpeg does not.
+
 2008-08-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/wavparse/gstwavparse.c:
