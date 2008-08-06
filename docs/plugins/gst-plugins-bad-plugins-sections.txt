@@ -55,6 +55,34 @@ gst_audio_parse_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-celtdec</FILE>
+<TITLE>celtdec</TITLE>
+GstCeltDec
+<SUBSECTION Standard>
+GstCeltDecClass
+GST_CELT_DEC
+GST_CELT_DEC_CLASS
+GST_IS_CELT_DEC
+GST_IS_CELT_DEC_CLASS
+GST_TYPE_CELT_DEC
+gst_celt_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-celtenc</FILE>
+<TITLE>celtenc</TITLE>
+GstCeltEnc
+<SUBSECTION Standard>
+GstCeltEncClass
+GST_CELT_ENC
+GST_CELT_ENC_CLASS
+GST_IS_CELT_ENC
+GST_IS_CELT_ENC_CLASS
+GST_TYPE_CELT_ENC
+gst_celt_enc_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-dc1394</FILE>
 <TITLE>dc1394</TITLE>
 GstDc1394
@@ -558,6 +586,20 @@ GST_IS_TIMIDITY
 GST_IS_TIMIDITY_CLASS
 GST_TYPE_TIMIDITY
 gst_timidity_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-twolame</FILE>
+<TITLE>twolame</TITLE>
+GstTwoLame
+<SUBSECTION Standard>
+GstTwoLameClass
+GST_TWO_LAME
+GST_TWO_LAME_CLASS
+GST_IS_TWO_LAME
+GST_IS_TWO_LAME_CLASS
+GST_TYPE_TWO_LAME
+gst_two_lame_get_type
 </SECTION>
 
 <SECTION>

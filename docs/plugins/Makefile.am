@@ -97,6 +97,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/amrwb/gstamrwbdec.h \
 	$(top_srcdir)/ext/amrwb/gstamrwbenc.h \
 	$(top_srcdir)/ext/amrwb/gstamrwbparse.h \
+	$(top_srcdir)/ext/celt/gstceltdec.h \
+	$(top_srcdir)/ext/celt/gstceltenc.h \
 	$(top_srcdir)/ext/dc1394/gstdc1394.h \
 	$(top_srcdir)/ext/directfb/dfbvideosink.h \
 	$(top_srcdir)/ext/ivorbis/vorbisdec.h \
@@ -112,6 +114,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/theora/theoradec.h \
 	$(top_srcdir)/ext/timidity/gsttimidity.h \
 	$(top_srcdir)/ext/timidity/gstwildmidi.h \
+	$(top_srcdir)/ext/twolame/gsttwolame.h \
 	$(top_srcdir)/gst/deinterlace/gstdeinterlace.h \
 	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \
 	$(top_srcdir)/gst/festival/gstfestival.h \

@@ -16,6 +16,8 @@
     <xi:include href="xml/element-amrwbenc.xml" />
     <xi:include href="xml/element-amrwbparse.xml" />
     <xi:include href="xml/element-audioparse.xml" />
+    <xi:include href="xml/element-celtdec.xml" />
+    <xi:include href="xml/element-celtenc.xml" />
     <xi:include href="xml/element-deinterlace.xml" />
     <xi:include href="xml/element-dfbvideosink.xml" />
     <xi:include href="xml/element-dvbsrc.xml" />
@@ -45,6 +47,7 @@
     <xi:include href="xml/element-stereo.xml" />
     <!--xi:include href="xml/element-theoradecexp.xml" /-->
     <xi:include href="xml/element-timidity.xml" />
+    <xi:include href="xml/element-twolame.xml" />
     <xi:include href="xml/element-trm.xml" />
     <xi:include href="xml/element-videoanalyse.xml" />
     <xi:include href="xml/element-videodetect.xml" />
@@ -63,6 +66,7 @@
     <xi:include href="xml/plugin-bz2.xml" />
     <xi:include href="xml/plugin-cdaudio.xml" />
     <xi:include href="xml/plugin-cdxaparse.xml" />
+    <xi:include href="xml/plugin-celt.xml" />
     <xi:include href="xml/plugin-dfbvideosink.xml" />
     <xi:include href="xml/plugin-dtsdec.xml" />
     <xi:include href="xml/plugin-dvbsrc.xml" />
@@ -109,6 +113,7 @@
     <xi:include href="xml/plugin-stereo.xml" />
     <xi:include href="xml/plugin-swfdec.xml" />
     <xi:include href="xml/plugin-timidity.xml" />
+    <xi:include href="xml/plugin-twolame.xml" />
     <xi:include href="xml/plugin-tremor.xml" />
     <xi:include href="xml/plugin-tta.xml" />
     <xi:include href="xml/plugin-vcdsrc.xml" />
