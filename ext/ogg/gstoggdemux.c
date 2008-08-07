@@ -3279,6 +3279,7 @@ gst_ogg_demux_plugin_init (GstPlugin * plugin)
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
       LOCALEDIR);
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
 
   return gst_element_register (plugin, "oggdemux", GST_RANK_PRIMARY,

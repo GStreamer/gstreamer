@@ -1,3 +1,23 @@
+2008-08-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: Frederic Crozat <fcrozat@mandriva.org>
+
+	* ext/alsa/gstalsaplugin.c: (plugin_init):
+	* ext/cdparanoia/gstcdparanoiasrc.c: (plugin_init):
+	* ext/gnomevfs/gstgnomevfs.c: (plugin_init):
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_plugin_init):
+	* gst-libs/gst/audio/gstbaseaudiosrc.c: (_do_init):
+	* gst-libs/gst/pbutils/pbutils.c: (gst_pb_utils_init):
+	* gst-libs/gst/tag/tags.c: (gst_tag_register_tags_internal):
+	* gst/playback/gstdecodebin.c: (plugin_init):
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_plugin_init):
+	* gst/playback/gstplayback.c: (plugin_init):
+	* gst/playback/gstqueue2.c: (plugin_init):
+	* gst/playback/gsturidecodebin.c: (gst_uri_decode_bin_plugin_init):
+	* sys/v4l/gstv4l.c: (plugin_init):
+	Make sure gettext returns translations in UTF-8 encoding rather
+	than in the current locale encoding (#546822).
+
 2008-08-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/pbutils/descriptions.c:
