@@ -1,3 +1,13 @@
+2008-08-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: Frederic Crozat <fcrozat@mandriva.org>
+
+	* ext/sndfile/gstsf.c: (plugin_init):
+	* sys/dvb/gstdvbsrc.c: (gst_dvbsrc_plugin_init):
+	* sys/oss4/oss4-audio.c: (plugin_init):
+	Make sure gettext returns translations in UTF-8 encoding rather
+	than in the current locale encoding (#546822).
+
 2008-08-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/twolame/gsttwolame.c: (gst_two_lame_sink_setcaps),
