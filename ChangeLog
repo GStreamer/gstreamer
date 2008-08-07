@@ -1,5 +1,24 @@
 2008-08-07  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-jack.xml
+	  Add new element to docs.
+
+	* ext/jack/gstjack.h
+	  Add missing file.
+
+	* ext/jack/gstjackaudiosrc.c:
+	* ext/jack/gstjackaudiosrc.h:
+	  Rename jackaudiosrc to jack_audio_src.
+
+2008-08-07  Stefan Kost  <ensonic@users.sf.net>
+
 	patch by: Tristan Matthews <tristan@sat.qc.ca>
 
 	* ext/jack/Makefile.am:

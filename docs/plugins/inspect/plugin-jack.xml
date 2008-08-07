@@ -3,11 +3,11 @@
   <description>Jack elements</description>
   <filename>../../ext/jack/.libs/libgstjack.so</filename>
   <basename>libgstjack.so</basename>
-  <version>0.10.8</version>
+  <version>0.10.8.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
-  <origin>Unknown package origin</origin>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>jackaudiosink</name>
@@ -19,6 +19,21 @@
         <caps>
           <name>sink</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int){ 1234 }, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>jackaudiosrc</name>
+      <longname>Audio Source (Jack)</longname>
+      <class>Source/Audio</class>
+      <description>Input from Jack</description>
+      <author>Tristan Matthews &lt;tristan@sat.qc.ca&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int){ 1234 }, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>

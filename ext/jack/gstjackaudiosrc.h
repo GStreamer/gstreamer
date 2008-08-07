@@ -53,9 +53,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_JACK_AUDIO_SRC             (gst_jackaudiosrc_get_type())
+#define GST_TYPE_JACK_AUDIO_SRC             (gst_jack_audio_src_get_type())
 #define GST_JACK_AUDIO_SRC(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_JACK_AUDIO_SRC,GstJackAudioSrc))
 #define GST_JACK_AUDIO_SRC_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_JACK_AUDIO_SRC,GstJackAudioSrcClass))
+#define GST_JACK_AUDIO_SRC_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_JACK_AUDIO_SRC,GstJackAudioSrcClass))
 #define GST_IS_JACK_AUDIO_SRC(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_JACK_AUDIO_SRC))
 #define GST_IS_JACK_AUDIO_SRC_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_JACK_AUDIO_SRC))
 
@@ -87,7 +88,7 @@ struct _GstJackAudioSrcClass
     GstBaseAudioSrcClass parent_class;
 };
 
-GType gst_jackaudiosrc_get_type (void);
+GType gst_jack_audio_src_get_type (void);
 
 G_END_DECLS
 

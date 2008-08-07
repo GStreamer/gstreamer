@@ -81,7 +81,7 @@
 #include "gstjackaudiosrc.h"
 #include "gstjackringbuffer.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_jackaudiosrc_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_jack_audio_src_debug);
 #define GST_CAT_DEFAULT gst_jackaudiosrc_debug
 
 static gboolean
@@ -644,7 +644,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define _do_init(bla) \
-  GST_DEBUG_CATEGORY_INIT(gst_jackaudiosrc_debug, "jacksrc", 0, "jacksrc element");
+  GST_DEBUG_CATEGORY_INIT(gst_jack_audio_src_debug, "jacksrc", 0, "jacksrc element");
 
 GST_BOILERPLATE_FULL (GstJackAudioSrc, gst_jackaudiosrc, GstBaseAudioSrc,
     GST_TYPE_BASE_AUDIO_SRC, _do_init);
@@ -692,9 +692,9 @@ gst_jackaudiosrc_class_init (GstJackAudioSrcClass * klass)
   gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
 
   gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_jackaudiosrc_set_property);
+      GST_DEBUG_FUNCPTR (gst_jack_audio_src_set_property);
   gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_jackaudiosrc_get_property);
+      GST_DEBUG_FUNCPTR (gst_jack_audio_src_get_property);
 
   g_object_class_install_property (gobject_class, PROP_CONNECT,
       g_param_spec_enum ("connect", "Connect",
@@ -706,9 +706,9 @@ gst_jackaudiosrc_class_init (GstJackAudioSrcClass * klass)
           "The Jack server to connect to (NULL = default)",
           DEFAULT_PROP_SERVER, G_PARAM_READWRITE));
 
-  gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_jackaudiosrc_getcaps);
+  gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_jack_audio_src_getcaps);
   gstbaseaudiosrc_class->create_ringbuffer =
-      GST_DEBUG_FUNCPTR (gst_jackaudiosrc_create_ringbuffer);
+      GST_DEBUG_FUNCPTR (gst_jack_audio_src_create_ringbuffer);
 
   /* ref class from a thread-safe context to work around missing bit of
    * thread-safety in GObject */

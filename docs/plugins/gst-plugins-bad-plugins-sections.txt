@@ -231,10 +231,24 @@ gst_ivorbis_dec_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-jackaudiosrc</FILE>
+<TITLE>jackaudiosrc</TITLE>
+GstJackAudioSrc
+<SUBSECTION Standard>
+GstJackAudioSrcClass
+GST_JACK_AUDIO_SRC
+GST_JACK_AUDIO_SRC_CLASS
+GST_JACK_AUDIO_SRC_GET_CLASS
+GST_IS_JACK_AUDIO_SRC
+GST_IS_JACK_AUDIO_SRC_CLASS
+GST_TYPE_JACK_AUDIO_SRC
+gst_jack_audio_src_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-jackaudiosink</FILE>
-GstJackAudioSink
 <TITLE>jackaudiosink</TITLE>
-GstJackConnect
+GstJackAudioSink
 <SUBSECTION Standard>
 GstJackAudioSinkClass
 GST_JACK_AUDIO_SINK
