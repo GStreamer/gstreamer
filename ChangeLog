@@ -1,3 +1,15 @@
+2008-08-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstcaps.c: (gst_caps_structure_is_subset_field):
+	Fix subset test.
+
+	* tests/check/gst/gstcaps.c: (GST_START_TEST):
+	Improve unit test subset tests and add a testcase for the subset failure
+	cases.
+
+	* tests/check/gst/gstvalue.c: (GST_START_TEST), (gst_value_suite):
+	Improve subtraction unit test.
+
 2008-08-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* plugins/elements/gsttee.c:

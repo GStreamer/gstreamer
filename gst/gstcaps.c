@@ -518,37 +518,43 @@ gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
   GstStructure *subtract_from = user_data;
   GValue subtraction = { 0, };
   const GValue *other;
-  gint res;
 
-  other = gst_structure_id_get_value (subtract_from, field_id);
-  if (!other) {
+  if (!(other = gst_structure_id_get_value (subtract_from, field_id)))
     /* field is missing in one set */
     return FALSE;
-  }
-  /*
-   * [1,2] - 1 = 2
-   * 1 - [1,2] = ???
-   */
-  if (!gst_value_subtract (&subtraction, other, value)) {
-    /* empty result -> values are the same, or first was a value and
-     * second was a list
-     * verify that result is empty by swapping args */
-    if (!gst_value_subtract (&subtraction, value, other)) {
-      return TRUE;
-    }
-    g_value_unset (&subtraction);
-    return FALSE;
-  }
 
-  res = gst_value_compare (&subtraction, other);
-  g_value_unset (&subtraction);
-
-  if (res == GST_VALUE_EQUAL) {
-    /* value was empty ? */
-    return FALSE;
-  } else {
+  /* equal values are subset */
+  if (gst_value_compare (other, value) == GST_VALUE_EQUAL)
     return TRUE;
+
+  /*
+   * 1 - [1,2] = empty
+   * -> !subset
+   *
+   * [1,2] - 1 = 2
+   *  -> 1 - [1,2] = empty
+   *  -> subset
+   *
+   * [1,3] - [1,2] = 3
+   * -> [1,2] - [1,3] = empty
+   * -> subset
+   *
+   * {1,2} - {1,3} = 2
+   * -> {1,3} - {1,2} = 3
+   * -> !subset
+   *
+   *  First caps subtraction needs to return a non-empty set, second
+   *  subtractions needs to give en empty set.
+   */
+  if (gst_value_subtract (&subtraction, other, value)) {
+    g_value_unset (&subtraction);
+    /* !empty result, swapping must be empty */
+    if (!gst_value_subtract (&subtraction, value, other))
+      return TRUE;
+
+    g_value_unset (&subtraction);
   }
+  return FALSE;
 }
 
 static gboolean

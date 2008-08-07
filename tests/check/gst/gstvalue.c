@@ -1506,6 +1506,54 @@ GST_START_TEST (test_value_subtract_fraction_range)
 
 GST_END_TEST;
 
+/* Test set subtraction operations on fraction lists */
+GST_START_TEST (test_value_subtract_fraction_list)
+{
+  GValue list1 = { 0 };
+  GValue list2 = { 0 };
+  GValue val1 = { 0 };
+  GValue val2 = { 0 };
+  GValue tmp = { 0 };
+  gboolean ret;
+
+  g_value_init (&list1, GST_TYPE_LIST);
+  g_value_init (&val1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&val1, 15, 2);
+  gst_value_list_append_value (&list1, &val1);
+  g_value_init (&tmp, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&tmp, 5, 1);
+  gst_value_list_append_value (&list1, &tmp);
+  g_value_unset (&tmp);
+
+  g_value_init (&list2, GST_TYPE_LIST);
+  g_value_init (&val2, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&val2, 15, 1);
+  gst_value_list_append_value (&list2, &val2);
+  g_value_init (&tmp, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&tmp, 5, 1);
+  gst_value_list_append_value (&list2, &tmp);
+  g_value_unset (&tmp);
+
+  /* should subtract all common elements */
+  ret = gst_value_subtract (&tmp, &list1, &list2);
+  fail_unless (ret == TRUE);
+  fail_unless (gst_value_compare (&tmp, &val1) == GST_VALUE_EQUAL);
+  g_value_unset (&val1);
+  g_value_unset (&tmp);
+
+  ret = gst_value_subtract (&tmp, &list2, &list1);
+  fail_unless (ret == TRUE);
+  fail_unless (gst_value_compare (&tmp, &val2) == GST_VALUE_EQUAL);
+  g_value_unset (&val2);
+  g_value_unset (&tmp);
+
+  g_value_unset (&list1);
+  g_value_unset (&list2);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_date)
 {
   GstStructure *s;
@@ -1726,6 +1774,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_value_subtract_double);
   tcase_add_test (tc_chain, test_value_subtract_fraction);
   tcase_add_test (tc_chain, test_value_subtract_fraction_range);
+  tcase_add_test (tc_chain, test_value_subtract_fraction_list);
   tcase_add_test (tc_chain, test_date);
   tcase_add_test (tc_chain, test_fraction_range);
   tcase_add_test (tc_chain, test_serialize_deserialize_caps);
