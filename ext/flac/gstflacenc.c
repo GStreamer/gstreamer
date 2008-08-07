@@ -797,6 +797,12 @@ gst_flac_enc_seek_callback (const FLAC__StreamEncoder * encoder,
     } else {
       GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " %s", absolute_byte_offset,
           "failed");
+#ifdef LEGACY_FLAC
+      return FLAC__SEEKABLE_STREAM_ENCODER_SEEK_STATUS_UNSUPPORTED;
+#else
+      return FLAC__STREAM_ENCODER_SEEK_STATUS_UNSUPPORTED;
+#endif
+
     }
   } else {
     GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " failed (no peer pad)",

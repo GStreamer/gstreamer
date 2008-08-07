@@ -1,3 +1,10 @@
+2008-08-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/flac/gstflacenc.c: (gst_flac_enc_seek_callback):
+	If seeking failed return the appropiate return value to FLAC.
+	Otherwise it thinks seeking was successfull and tries to rewrite
+	parts of the headers which then get appended to the output.
+
 2008-08-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Frederic Crozat <fcrozat@mandriva.org>
