@@ -62,11 +62,16 @@ GST_DEBUG_CATEGORY_STATIC (debug);
 /* TwoLAME can do MPEG-1, MPEG-2 so it has 6 possible
  * sample rates it supports */
 static GstStaticPadTemplate gst_two_lame_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
+    GST_STATIC_CAPS ("audio/x-raw-float, "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 32, "
+        "rate = (int) { 16000, 22050, 24000, 32000, 44100, 48000 }, "
+        "channels = (int) [ 1, 2 ]; "
+        "audio/x-raw-int, "
+        "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) true, "
         "width = (int) 16, "
         "depth = (int) 16, "
@@ -354,6 +359,11 @@ gst_two_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   twolame = GST_TWO_LAME (GST_PAD_PARENT (pad));
   structure = gst_caps_get_structure (caps, 0);
+
+  if (strcmp (gst_structure_get_name (structure), "audio/x-raw-int") == 0)
+    twolame->float_input = FALSE;
+  else
+    twolame->float_input = TRUE;
 
   if (!gst_structure_get_int (structure, "rate", &twolame->samplerate))
     goto no_rate;
@@ -720,27 +730,44 @@ gst_two_lame_chain (GstPad * pad, GstBuffer * buf)
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
-  num_samples = size / 2;
+  if (twolame->float_input)
+    num_samples = size / 4;
+  else
+    num_samples = size / 2;
 
   /* allocate space for output */
   mp3_buffer_size = 1.25 * num_samples + 16384;
   mp3_data = g_malloc (mp3_buffer_size);
 
   if (twolame->num_channels == 1) {
-    mp3_size = twolame_encode_buffer (twolame->glopts,
-        (short int *) data,
-        (short int *) data, num_samples, mp3_data, mp3_buffer_size);
+    if (twolame->float_input)
+      mp3_size = twolame_encode_buffer_float32 (twolame->glopts,
+          (float *) data,
+          (float *) data, num_samples, mp3_data, mp3_buffer_size);
+    else
+      mp3_size = twolame_encode_buffer (twolame->glopts,
+          (short int *) data,
+          (short int *) data, num_samples, mp3_data, mp3_buffer_size);
   } else {
-    mp3_size = twolame_encode_buffer_interleaved (twolame->glopts,
-        (short int *) data,
-        num_samples / twolame->num_channels, mp3_data, mp3_buffer_size);
+    if (twolame->float_input)
+      mp3_size = twolame_encode_buffer_float32_interleaved (twolame->glopts,
+          (float *) data,
+          num_samples / twolame->num_channels, mp3_data, mp3_buffer_size);
+    else
+      mp3_size = twolame_encode_buffer_interleaved (twolame->glopts,
+          (short int *) data,
+          num_samples / twolame->num_channels, mp3_data, mp3_buffer_size);
   }
 
   GST_LOG_OBJECT (twolame, "encoded %d bytes of audio to %d bytes of mp3",
       size, mp3_size);
 
-  duration = gst_util_uint64_scale_int (size, GST_SECOND,
-      2 * twolame->samplerate * twolame->num_channels);
+  if (twolame->float_input)
+    duration = gst_util_uint64_scale_int (size, GST_SECOND,
+        4 * twolame->samplerate * twolame->num_channels);
+  else
+    duration = gst_util_uint64_scale_int (size, GST_SECOND,
+        2 * twolame->samplerate * twolame->num_channels);
 
   if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE &&
       GST_BUFFER_DURATION (buf) != duration) {
