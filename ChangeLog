@@ -1,3 +1,13 @@
+2008-08-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: Frederic Crozat <fcrozat@mandriva.org>
+
+	* ext/dvdread/dvdreadsrc.c: (plugin_init):
+	* ext/lame/gstlame.c: (plugin_init):
+	* gst/asfdemux/gstasf.c: (plugin_init):
+	Make sure gettext returns translations in UTF-8 encoding rather
+	than in the current locale encoding (#546822).
+
 2008-07-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:

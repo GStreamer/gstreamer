@@ -1722,6 +1722,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
       LOCALEDIR);
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 
   if (!gst_element_register (plugin, "dvdreadsrc", GST_RANK_SECONDARY,
