@@ -283,7 +283,7 @@ activate_failed:
     if (tee->allocpad == srcpad)
       tee->allocpad = NULL;
     gst_object_unref (srcpad);
-    GST_OBJECT_LOCK (tee);
+    GST_OBJECT_UNLOCK (tee);
     return NULL;
   }
 }

@@ -1,3 +1,8 @@
+2008-08-07  Stefan Kost  <ensonic@users.sf.net>
+
+	* plugins/elements/gsttee.c:
+	  Unlock, instead of locking again.
+
 2008-08-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstpad.h:
