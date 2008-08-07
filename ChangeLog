@@ -1,3 +1,10 @@
+2008-08-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/twolame/gsttwolame.c: (gst_two_lame_sink_setcaps),
+	(gst_two_lame_chain):
+	* ext/twolame/gsttwolame.h:
+	Allow raw float samples as input for encoding.
+
 2008-08-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/jack/gstjackaudiosrc.c:
