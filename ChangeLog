@@ -1,3 +1,16 @@
+2008-08-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: Frederic Crozat <fcrozat@mandriva.org>
+
+	* ext/esd/gstesd.c: (plugin_init):
+	* ext/flac/gstflac.c: (plugin_init):
+	* ext/shout2/gstshout2.c: (plugin_init):
+	* ext/wavpack/gstwavpack.c: (plugin_init):
+	* sys/oss/gstossaudio.c: (plugin_init):
+	* sys/v4l2/gstv4l2.c: (plugin_init):
+	Make sure gettext returns translations in UTF-8 encoding rather
+	than in the current locale encoding (#546822).
+
 2008-08-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/flac/gstflacdec.c:
