@@ -41,7 +41,7 @@
  */
 
 /**
- * SECTION:element-jackaudiosrc
+ * SECTION:element-jack_audio_src
  * @see_also: #GstBaseAudioSrc, #GstRingBuffer
  *
  * A Src that inputs data from Jack ports.
@@ -82,7 +82,7 @@
 #include "gstjackringbuffer.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_jack_audio_src_debug);
-#define GST_CAT_DEFAULT gst_jackaudiosrc_debug
+#define GST_CAT_DEFAULT gst_jack_audio_src_debug
 
 static gboolean
 gst_jack_audio_src_allocate_channels (GstJackAudioSrc * src, gint channels)
@@ -646,24 +646,24 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define _do_init(bla) \
   GST_DEBUG_CATEGORY_INIT(gst_jack_audio_src_debug, "jacksrc", 0, "jacksrc element");
 
-GST_BOILERPLATE_FULL (GstJackAudioSrc, gst_jackaudiosrc, GstBaseAudioSrc,
+GST_BOILERPLATE_FULL (GstJackAudioSrc, gst_jack_audio_src, GstBaseAudioSrc,
     GST_TYPE_BASE_AUDIO_SRC, _do_init);
 
-static void gst_jackaudiosrc_set_property (GObject * object, guint prop_id,
+static void gst_jack_audio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_jackaudiosrc_get_property (GObject * object, guint prop_id,
+static void gst_jack_audio_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_jackaudiosrc_getcaps (GstBaseSrc * bsrc);
-static GstRingBuffer *gst_jackaudiosrc_create_ringbuffer (GstBaseAudioSrc *
+static GstCaps *gst_jack_audio_src_getcaps (GstBaseSrc * bsrc);
+static GstRingBuffer *gst_jack_audio_src_create_ringbuffer (GstBaseAudioSrc *
     src);
 
 /* GObject vmethod implementations */
 
 static void
-gst_jackaudiosrc_base_init (gpointer gclass)
+gst_jack_audio_src_base_init (gpointer gclass)
 {
-  static GstElementDetails gst_jackaudiosrc_details = {
+  static GstElementDetails gst_jack_audio_src_details = {
     "Audio Source (Jack)",
     "Source/Audio",
     "Input from Jack",
@@ -673,12 +673,12 @@ gst_jackaudiosrc_base_init (gpointer gclass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_set_details (element_class, &gst_jackaudiosrc_details);
+  gst_element_class_set_details (element_class, &gst_jack_audio_src_details);
 }
 
-/* initialize the jackaudiosrc's class */
+/* initialize the jack_audio_src's class */
 static void
-gst_jackaudiosrc_class_init (GstJackAudioSrcClass * klass)
+gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -723,7 +723,7 @@ gst_jackaudiosrc_class_init (GstJackAudioSrcClass * klass)
  * initialize instance structure
  */
 static void
-gst_jackaudiosrc_init (GstJackAudioSrc * src, GstJackAudioSrcClass * gclass)
+gst_jack_audio_src_init (GstJackAudioSrc * src, GstJackAudioSrcClass * gclass)
 {
   //gst_base_src_set_live(GST_BASE_SRC (src), TRUE);
   src->connect = DEFAULT_PROP_CONNECT;
@@ -733,7 +733,7 @@ gst_jackaudiosrc_init (GstJackAudioSrc * src, GstJackAudioSrcClass * gclass)
 }
 
 static void
-gst_jackaudiosrc_set_property (GObject * object, guint prop_id,
+gst_jack_audio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstJackAudioSrc *src = GST_JACK_AUDIO_SRC (object);
@@ -753,7 +753,7 @@ gst_jackaudiosrc_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_jackaudiosrc_get_property (GObject * object, guint prop_id,
+gst_jack_audio_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstJackAudioSrc *src = GST_JACK_AUDIO_SRC (object);
@@ -772,7 +772,7 @@ gst_jackaudiosrc_get_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_jackaudiosrc_getcaps (GstBaseSrc * bsrc)
+gst_jack_audio_src_getcaps (GstBaseSrc * bsrc)
 {
   GstJackAudioSrc *src = GST_JACK_AUDIO_SRC (bsrc);
   const char **ports;
@@ -829,7 +829,7 @@ no_client:
 }
 
 static GstRingBuffer *
-gst_jackaudiosrc_create_ringbuffer (GstBaseAudioSrc * src)
+gst_jack_audio_src_create_ringbuffer (GstBaseAudioSrc * src)
 {
   GstRingBuffer *buffer;
 

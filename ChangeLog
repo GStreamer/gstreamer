@@ -1,5 +1,10 @@
 2008-08-07  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/jack/gstjackaudiosrc.c:
+	  Try committing this once again. Now properly renamed.
+
+2008-08-07  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
