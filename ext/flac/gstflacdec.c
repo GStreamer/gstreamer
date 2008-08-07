@@ -205,6 +205,10 @@ static void gst_flac_dec_error_callback_stream (const FLAC__StreamDecoder *
 #endif
 
 GST_BOILERPLATE (GstFlacDec, gst_flac_dec, GstElement, GST_TYPE_ELEMENT);
+
+/* FIXME 0.11: Use width=32 for all depths and let audioconvert
+ * handle the conversions instead of doing it ourself.
+ */
 #define GST_FLAC_DEC_SRC_CAPS                             \
     "audio/x-raw-int, "                                   \
     "endianness = (int) BYTE_ORDER, "                     \
