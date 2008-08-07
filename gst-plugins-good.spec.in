@@ -37,6 +37,7 @@ BuildRequires:  gcc-c++
 @USE_SHOUT2_TRUE@BuildRequires: libshout-devel >= 2.0
 @USE_AALIB_TRUE@BuildRequires:  aalib-devel >= 1.3
 @USE_AALIB_TRUE@Provides:       gstreamer-aasink = %{version}-%{release}
+@USE_PULSE_TRUE@BuildRequires: pulseaudio-libs-devel
 
 %description
 GStreamer is a streaming media framework, based on graphs of filters which
@@ -137,21 +138,18 @@ rm -rf $RPM_BUILD_ROOT
 @USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesd.so
 @USE_FLAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstflac.so
 @USE_JPEG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjpeg.so
-# @USE_MIKMOD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmikmod.so
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
 @USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstossaudio.so
-## @USE_RAW1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 @USE_SPEEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstspeex.so
 @USE_GCONF_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgconfelements.so
 @USE_HAL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthalelements.so
-# @USE_LADSPA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
 @USE_SHOUT2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstshout2.so
 @USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaasink.so
 @USE_LIBDV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdv.so
 @USE_DV1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 @USE_WAVPACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwavpack.so
 @USE_SOUP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsouphttpsrc.so
-
+@USE_PULSE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpulse.so
 
 # schema files
 @USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas
