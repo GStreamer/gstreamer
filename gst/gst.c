@@ -585,6 +585,7 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
 #ifdef ENABLE_NLS
   setlocale (LC_ALL, "");
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 
 #ifndef GST_DISABLE_GST_DEBUG

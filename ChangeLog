@@ -1,3 +1,11 @@
+2008-08-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: Frederic Crozat <fcrozat@mandriva.org>
+
+	* gst/gst.c: (init_pre):
+	Make sure gettext returns translations in UTF-8 encoding rather
+	than in the current locale encoding (#546822).
+
 2008-08-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstcaps.c: (gst_caps_structure_is_subset_field):
