@@ -913,7 +913,8 @@ default_frame_sizes:
       /* if norm can't be used, copy the template framerate */
       gst_structure_set (tmp,
           "width", GST_TYPE_INT_RANGE, min_w, max_w,
-          "height", GST_TYPE_INT_RANGE, min_h, max_h, NULL);
+          "height", GST_TYPE_INT_RANGE, min_h, max_h,
+          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1, NULL);
     }
     gst_caps_append_structure (ret, tmp);
 
