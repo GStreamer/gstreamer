@@ -56,6 +56,7 @@ struct _GstTwoLame {
 
   gint samplerate;
   gint num_channels;
+  gboolean float_input;
   gboolean setup;
 
   gint mode;
