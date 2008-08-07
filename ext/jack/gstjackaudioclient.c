@@ -127,6 +127,9 @@ jack_shutdown_cb (void *arg)
   GstJackAudioConnection *conn = (GstJackAudioConnection *) arg;
   GList *walk;
 
+  GST_DEBUG ("disconnect client %s from server %s", conn->id,
+      GST_STR_NULL (conn->server));
+
   g_mutex_lock (conn->lock);
   for (walk = conn->src_clients; walk; walk = g_list_next (walk)) {
     GstJackAudioClient *client = (GstJackAudioClient *) walk->data;

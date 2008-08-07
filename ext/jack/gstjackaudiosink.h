@@ -27,6 +27,7 @@
 #include <gst/gst.h>
 #include <gst/audio/gstbaseaudiosink.h>
 
+#include "gstjack.h"
 #include "gstjackaudioclient.h"
 
 G_BEGIN_DECLS
@@ -40,22 +41,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstJackAudioSink GstJackAudioSink;
 typedef struct _GstJackAudioSinkClass GstJackAudioSinkClass;
-
-/**
- * GstJackConnect:
- * @GST_JACK_CONNECT_NONE: Don't automatically connect to physical ports.
- *     In this mode, the element will accept any number of input channels and will
- *     create (but not connect) an output port for each channel.
- * @GST_JACK_CONNECT_AUTO: In this mode, the element will try to connect each
- *     output port to a random physical jack input pin. The sink will
- *     expose the number of physical channels on its pad caps.
- *
- * Specify how the output ports will be connected.
- */
-typedef enum {
-  GST_JACK_CONNECT_NONE,
-  GST_JACK_CONNECT_AUTO
-} GstJackConnect;
 
 /**
  * GstJackAudioSink:
