@@ -1,3 +1,15 @@
+2008-08-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_sink_event),
+	(gst_ogg_mux_request_new_pad):
+	* ext/ogg/gstoggmux.h:
+	Don't pretend to support NEWSEGMENT events, instead override the
+	GstCollectPads event function to return FALSE on NEWSEGMENT events
+	and do the normal work for other events.
+
+	This prevents elements like flacenc to seek to the start and rewrite
+	some data which then results in a broken Ogg packet.
+
 2008-08-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Frederic Crozat <fcrozat@mandriva.org>

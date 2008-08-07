@@ -77,6 +77,8 @@ typedef struct
   gboolean new_page;            /* starting a new page */
   gboolean first_delta;         /* was the first packet in the page a delta */
   gboolean prev_delta;          /* was the previous buffer a delta frame */
+
+  GstPadEventFunction collect_event;
 }
 GstOggPad;
 

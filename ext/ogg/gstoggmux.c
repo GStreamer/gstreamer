@@ -300,6 +300,35 @@ gst_ogg_mux_sinkconnect (GstPad * pad, GstPad * peer)
   return GST_PAD_LINK_OK;
 }
 
+static gboolean
+gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstOggMux *ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
+  GstOggPad *ogg_pad = (GstOggPad *) gst_pad_get_element_private (pad);
+  gboolean ret;
+
+  GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
+      GST_DEBUG_PAD_NAME (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+      /* We don't support NEWSEGMENT events */
+      gst_event_unref (event);
+      ret = FALSE;
+      break;
+    default:
+      ret = TRUE;
+      break;
+  }
+
+  /* now GstCollectPads can take care of the rest, e.g. EOS */
+  if (ret)
+    ret = ogg_pad->collect_event (pad, event);
+
+  gst_object_unref (ogg_mux);
+  return ret;
+}
+
 static GstPad *
 gst_ogg_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * req_name)
@@ -359,11 +388,16 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       oggpad->first_delta = FALSE;
       oggpad->prev_delta = FALSE;
       oggpad->pagebuffers = g_queue_new ();
+
+      oggpad->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
+      gst_pad_set_event_function (newpad,
+          GST_DEBUG_FUNCPTR (gst_ogg_mux_sink_event));
     }
   }
 
   /* setup some pad functions */
   gst_pad_set_link_function (newpad, gst_ogg_mux_sinkconnect);
+
   /* dd the pad to the element */
   gst_element_add_pad (element, newpad);
 
