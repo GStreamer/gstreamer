@@ -1,5 +1,14 @@
 2008-08-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
+	* ext/x264/gstx264enc.c: (gst_x264_enc_log_callback),
+	(gst_x264_enc_finalize), (gst_x264_enc_header_buf),
+	(gst_x264_enc_set_src_caps), (gst_x264_enc_sink_set_caps),
+	(gst_x264_enc_flush_frames):
+	Coding style and layout; re-order some functions in more
+	typical and natural flow.
+
+2008-08-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
 	* ext/x264/Makefile.am:
 	* ext/x264/gstx264enc.c: (gst_x264_enc_set_src_caps),
 	(gst_x264_enc_sink_set_caps), (gst_x264_enc_init),
