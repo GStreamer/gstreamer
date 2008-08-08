@@ -82,12 +82,10 @@ struct _GstX264Enc
   gint stride[4], offset[4];
   gint image_size;
 
+  /* for b-frame delay handling */
+  GQueue *delay;
+
   GstClockTime last_timestamp;
-  GstClockTime *timestamp_queue;
-  GstClockTime *timestamp_queue_dur;
-  guint timestamp_queue_size;
-  guint timestamp_queue_head;
-  guint timestamp_queue_tail;
 
   guint8 *buffer;
   gulong buffer_size;

@@ -1,5 +1,19 @@
 2008-08-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
+	* ext/x264/Makefile.am:
+	* ext/x264/gstx264enc.c: (gst_x264_enc_set_src_caps),
+	(gst_x264_enc_sink_set_caps), (gst_x264_enc_init),
+	(gst_x264_enc_reset), (gst_x264_enc_finalize),
+	(gst_x264_enc_flush_frames), (gst_x264_enc_sink_event),
+	(gst_x264_enc_chain), (gst_x264_enc_encode_frame),
+	(gst_x264_enc_change_state), (gst_x264_enc_set_property):
+	* ext/x264/gstx264enc.h:
+	Use GQueue in stead of custom queue code.
+	Factorize flushing out encoder delayed frames.
+	Factorize initialization and state change reset.
+
+2008-08-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
 	* ext/x264/gstx264enc.h:
 	* sys/fbdev/gstfbdevsink.c:
 	Use configure-generated _stdint.h.
