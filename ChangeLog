@@ -1,3 +1,17 @@
+2008-08-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/Makefile.am:
+	* ext/x264/gstx264enc.c: (gst_x264_enc_header_buf),
+	(gst_x264_enc_sink_set_caps), (gst_x264_enc_base_init),
+	(gst_x264_enc_class_init), (gst_x264_enc_log_callback),
+	(gst_x264_enc_init), (gst_x264_enc_init_encoder),
+	(gst_x264_enc_finalize), (gst_x264_enc_chain),
+	(gst_x264_enc_encode_frame), (plugin_init):
+	* ext/x264/gstx264enc.h:
+	Use video format library and GST_WRITE_*_BE macros where applicable.
+	Use finalize in stead of dispose.
+	Set up debug category and log callback.
+
 2008-08-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Frederic Crozat <fcrozat@mandriva.org>
