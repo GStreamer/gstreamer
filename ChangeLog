@@ -1,3 +1,16 @@
+2008-08-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/flac/gstflacenc.c: (gst_flac_enc_write_callback),
+	(gst_flac_enc_check_discont), (gst_flac_enc_chain),
+	(gst_flac_enc_change_state):
+	* ext/flac/gstflacenc.h:
+	Handle non-zero start timestamps correctly, mark header packets as
+	IN_CAPS and print a warning and suggest using audiorate if stream
+	discontinuities are detected. When FLAC supports flushing the encoder
+	somehow this should be done for discontinuities instead.
+
+	Remove some unused variables from the instance struct.
+
 2008-08-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/flac/gstflacenc.c: (gst_flac_enc_seek_callback):

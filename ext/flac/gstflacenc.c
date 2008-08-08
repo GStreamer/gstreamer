@@ -17,10 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* FIXME:
- *  - we assume timestamps start from 0 and that we get a perfect stream; we
- *    don't handle non-zero starts and mid-stream discontinuities, esp. not if
- *    we're muxing into ogg
+/* TODO: - We currently don't handle discontinuities in the stream in a useful
+ *         way and instead rely on the developer plugging in audiorate if
+ *         the stream contains discontinuities.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -966,13 +965,14 @@ gst_flac_enc_write_callback (const FLAC__StreamEncoder * encoder,
   if (samples > 0 && flacenc->samples_written != (guint64) - 1) {
     guint64 granulepos;
 
-    GST_BUFFER_TIMESTAMP (outbuf) =
+    GST_BUFFER_TIMESTAMP (outbuf) = flacenc->start_ts +
         GST_FRAMES_TO_CLOCK_TIME (flacenc->samples_written,
         flacenc->sample_rate);
     GST_BUFFER_DURATION (outbuf) =
         GST_FRAMES_TO_CLOCK_TIME (samples, flacenc->sample_rate);
     /* offset_end = granulepos for ogg muxer */
-    granulepos = flacenc->samples_written + samples;
+    granulepos =
+        flacenc->granulepos_offset + flacenc->samples_written + samples;
     GST_BUFFER_OFFSET_END (outbuf) = granulepos;
     /* offset = timestamp corresponding to granulepos for ogg muxer
      * (see vorbisenc for a much more elaborate version of this) */
@@ -981,6 +981,10 @@ gst_flac_enc_write_callback (const FLAC__StreamEncoder * encoder,
   } else {
     GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_OFFSET (outbuf) =
+        flacenc->samples_written * flacenc->width * flacenc->channels;
+    GST_BUFFER_OFFSET_END (outbuf) = 0;
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_IN_CAPS);
   }
 
   /* we assume libflac passes us stuff neatly framed */
@@ -1110,6 +1114,27 @@ gst_flac_enc_sink_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_flac_enc_check_discont (GstFlacEnc * flacenc, GstClockTime expected,
+    GstClockTime timestamp)
+{
+  guint allowed_diff = GST_SECOND / flacenc->sample_rate / 2;
+
+  if ((timestamp + allowed_diff < expected)
+      || (timestamp > expected + allowed_diff)) {
+    GST_ELEMENT_WARNING (flacenc, STREAM, FORMAT, (NULL),
+        ("Stream discontinuity detected (wanted %" GST_TIME_FORMAT " got %"
+            GST_TIME_FORMAT "). The output will have wrong timestamps,"
+            " consider using audiorate to handle discontinuities"));
+    return TRUE;
+  }
+
+  /* TODO: Do something to handle discontinuities in the stream. The FLAC encoder
+   * unfortunately doesn't have any way to flush it's internal buffers */
+
+  return FALSE;
+}
+
 static GstFlowReturn
 gst_flac_enc_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -1127,6 +1152,34 @@ gst_flac_enc_chain (GstPad * pad, GstBuffer * buffer)
     return GST_FLOW_NOT_NEGOTIATED;
 
   width = flacenc->width;
+
+  /* Save the timestamp of the first buffer. This will be later
+   * used as offset for all following buffers */
+  if (flacenc->start_ts == GST_CLOCK_TIME_NONE) {
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+      flacenc->start_ts = GST_BUFFER_TIMESTAMP (buffer);
+      flacenc->granulepos_offset = gst_util_uint64_scale
+          (GST_BUFFER_TIMESTAMP (buffer), flacenc->sample_rate, GST_SECOND);
+    } else {
+      flacenc->start_ts = 0;
+      flacenc->granulepos_offset = 0;
+    }
+  }
+
+  /* Check if we have a continous stream, if not drop some samples or the buffer or
+   * insert some silence samples */
+  if (flacenc->next_ts != GST_CLOCK_TIME_NONE
+      && GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+    gst_flac_enc_check_discont (flacenc, flacenc->next_ts,
+        GST_BUFFER_TIMESTAMP (buffer));
+  }
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)
+      && GST_BUFFER_DURATION_IS_VALID (buffer))
+    flacenc->next_ts =
+        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer);
+  else
+    flacenc->next_ts = GST_CLOCK_TIME_NONE;
 
   insize = GST_BUFFER_SIZE (buffer);
   samples = insize / (width >> 3);
@@ -1449,6 +1502,9 @@ gst_flac_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       flacenc->stopped = FALSE;
+      flacenc->start_ts = GST_CLOCK_TIME_NONE;
+      flacenc->next_ts = GST_CLOCK_TIME_NONE;
+      flacenc->granulepos_offset = 0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     default:

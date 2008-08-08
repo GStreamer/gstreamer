@@ -54,19 +54,14 @@ struct _GstFlacEnc {
                              * correct flow return upstream in case the push
                              * fails for some reason */
 
-  gboolean       first;
-  GstBuffer     *first_buf;
   guint64        offset;
   guint64        samples_written;
-  gboolean       eos;
   gint           channels;
   gint           width;
   gint           depth;
   gint           sample_rate;
-  gboolean       negotiated;
   gint           quality;
   gboolean       stopped;
-  FLAC__int32   *data;
 
 #if !defined(FLAC_API_VERSION_CURRENT) || FLAC_API_VERSION_CURRENT < 8
   FLAC__SeekableStreamEncoder *encoder;
@@ -80,6 +75,11 @@ struct _GstFlacEnc {
   /* queue headers until we have them all so we can add streamheaders to caps */
   gboolean         got_headers;
   GList           *headers;
+
+  /* Timestamp and granulepos tracking */
+  GstClockTime     start_ts;
+  GstClockTime     next_ts;
+  guint64          granulepos_offset;
 };
 
 struct _GstFlacEncClass {
