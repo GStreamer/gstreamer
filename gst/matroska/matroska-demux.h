@@ -46,12 +46,6 @@ typedef enum {
   GST_MATROSKA_DEMUX_STATE_DATA
 } GstMatroskaDemuxState;
 
-typedef struct _GstMatroskaDemuxIndex {
-  guint64        pos;   /* of the corresponding *cluster*! */
-  guint16        track; /* reference to 'num' */
-  guint64        time;  /* in nanoseconds */
-} GstMatroskaDemuxIndex;
-
 typedef struct _GstMatroskaDemux {
   GstEbmlRead              parent;
 
@@ -93,6 +87,9 @@ typedef struct _GstMatroskaDemux {
   GstSegment               segment;
   gboolean                 segment_running;
   gint64                   duration;
+
+  GstEvent                *close_segment;
+  GstEvent                *new_segment;
 } GstMatroskaDemux;
 
 typedef struct _GstMatroskaDemuxClass {

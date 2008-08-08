@@ -1,5 +1,15 @@
 2008-08-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_reset),
+	(gst_matroska_demux_element_send_event),
+	(gst_matroska_demux_handle_seek_event), (gst_matroska_demux_loop):
+	* gst/matroska/matroska-demux.h:
+	Close the current segment if we're doing a non-flushing seek and send
+	the close-segment and the new segment of the seek from the streaming
+	thread.
+
+2008-08-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/flac/gstflacenc.c: (gst_flac_enc_write_callback),
 	(gst_flac_enc_check_discont), (gst_flac_enc_chain),
 	(gst_flac_enc_change_state):
