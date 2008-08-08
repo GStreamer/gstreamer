@@ -129,14 +129,16 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE (GstX264Enc, gst_x264_enc, GstElement, GST_TYPE_ELEMENT);
 
 static void gst_x264_enc_finalize (GObject * object);
+static void gst_x264_enc_reset (GstX264Enc * encoder);
 
 static gboolean gst_x264_enc_init_encoder (GstX264Enc * encoder);
 static void gst_x264_enc_close_encoder (GstX264Enc * encoder);
 
 static gboolean gst_x264_enc_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_x264_enc_chain (GstPad * pad, GstBuffer * buf);
+static void gst_x264_enc_flush_frames (GstX264Enc * encoder, gboolean send);
 static GstFlowReturn gst_x264_enc_encode_frame (GstX264Enc * encoder,
-    x264_picture_t * pic_in, int *i_nal);
+    x264_picture_t * pic_in, int *i_nal, gboolean send);
 static GstStateChangeReturn gst_x264_enc_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -145,67 +147,6 @@ static void gst_x264_enc_set_property (GObject * object, guint prop_id,
 static void gst_x264_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void
-gst_x264_enc_timestamp_queue_init (GstX264Enc * encoder)
-{
-  encoder->timestamp_queue_size = (2 + encoder->bframes + encoder->threads) * 2;
-  encoder->timestamp_queue_head = 0;
-  encoder->timestamp_queue_tail = 0;
-  encoder->timestamp_queue =
-      g_new (GstClockTime, encoder->timestamp_queue_size);
-  encoder->timestamp_queue_dur =
-      g_new (GstClockTime, encoder->timestamp_queue_size);
-}
-
-static void
-gst_x264_enc_timestamp_queue_free (GstX264Enc * encoder)
-{
-  if (encoder->timestamp_queue) {
-    g_free (encoder->timestamp_queue);
-    encoder->timestamp_queue = NULL;
-  }
-  if (encoder->timestamp_queue_dur) {
-    g_free (encoder->timestamp_queue_dur);
-    encoder->timestamp_queue_dur = NULL;
-  }
-
-  encoder->timestamp_queue_size = 0;
-  encoder->timestamp_queue_head = 0;
-  encoder->timestamp_queue_tail = 0;
-}
-
-static void
-gst_x264_enc_timestamp_queue_put (GstX264Enc * encoder, GstClockTime clock_time,
-    GstClockTime duration)
-{
-  encoder->timestamp_queue[encoder->timestamp_queue_tail] = clock_time;
-  encoder->timestamp_queue_dur[encoder->timestamp_queue_tail] = duration;
-  encoder->timestamp_queue_tail++;
-  encoder->timestamp_queue_tail %= encoder->timestamp_queue_size;
-
-  if (encoder->timestamp_queue_tail == encoder->timestamp_queue_head) {
-    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE,
-        ("Timestamp queue overflow."), ("FIX CODE"));
-  }
-}
-
-static void
-gst_x264_enc_timestamp_queue_get (GstX264Enc * encoder,
-    GstClockTime * clock_time, GstClockTime * duration)
-{
-  if (encoder->timestamp_queue_head == encoder->timestamp_queue_tail) {
-    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE,
-        ("Timestamp queue empty or after overflow."), ("FIX CODE"));
-    *clock_time = GST_CLOCK_TIME_NONE;
-    *duration = GST_CLOCK_TIME_NONE;
-    return;
-  }
-
-  *clock_time = encoder->timestamp_queue[encoder->timestamp_queue_head];
-  *duration = encoder->timestamp_queue_dur[encoder->timestamp_queue_head];
-  encoder->timestamp_queue_head++;
-  encoder->timestamp_queue_head %= encoder->timestamp_queue_size;
-}
 
 /*
  * Returns: Buffer with the stream headers.
@@ -284,7 +225,6 @@ static gboolean
 gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
-  GValue header = { 0, };
   GstBuffer *buf;
   GstCaps *outcaps;
   gboolean res;
@@ -292,19 +232,16 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   structure = gst_structure_copy (structure);
   gst_structure_set_name (structure, "video/x-h264");
+  outcaps = gst_caps_new_full (structure, NULL);
 
   if (!encoder->byte_stream) {
     buf = gst_x264_enc_header_buf (encoder);
     if (buf != NULL) {
-      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
-      g_value_init (&header, GST_TYPE_BUFFER);
-      gst_value_set_buffer (&header, buf);
-      gst_structure_set_value (structure, "codec_data", &header);
-      g_value_unset (&header);
+      gst_caps_set_simple (outcaps, "codec_data", GST_TYPE_BUFFER, buf, NULL);
+      gst_buffer_unref (buf);
     }
   }
 
-  outcaps = gst_caps_new_full (structure, NULL);
   res = gst_pad_set_caps (pad, outcaps);
   gst_caps_unref (outcaps);
 
@@ -335,18 +272,13 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
   /* If the encoder is initialized, do not
      reinitialize it again if not necessary */
   if (encoder->x264enc) {
-    GstFlowReturn flow_ret;
-    gint i_nal;
-
     if (width == encoder->width && height == encoder->height
         && fps_num == encoder->fps_num && fps_den == encoder->fps_den
         && par_num == encoder->par_num && par_den == encoder->par_den)
       return TRUE;
 
     /* clear out pending frames */
-    do {
-      flow_ret = gst_x264_enc_encode_frame (encoder, NULL, &i_nal);
-    } while (flow_ret == GST_FLOW_OK && i_nal > 0);
+    gst_x264_enc_flush_frames (encoder, TRUE);
 
     encoder->sps_id++;
   }
@@ -534,12 +466,7 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   gst_pad_use_fixed_caps (encoder->srcpad);
   gst_element_add_pad (GST_ELEMENT (encoder), encoder->srcpad);
 
-  /* initialize internals */
-  encoder->x264enc = NULL;
-
-  encoder->width = 16;
-  encoder->height = 16;
-
+  /* properties */
   encoder->threads = ARG_THREADS_DEFAULT;
   encoder->pass = ARG_PASS_DEFAULT;
   encoder->stats_file = g_strdup (ARG_STATS_FILE_DEFAULT);
@@ -559,18 +486,28 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->keyint_max = ARG_KEYINT_MAX_DEFAULT;
   encoder->cabac = ARG_CABAC_DEFAULT;
 
-  encoder->last_timestamp = GST_CLOCK_TIME_NONE;
-  gst_x264_enc_timestamp_queue_init (encoder);
-
+  /* resources */
+  encoder->delay = g_queue_new ();
   encoder->buffer_size = 1040000;
   encoder->buffer = g_malloc (encoder->buffer_size);
 
   x264_param_default (&encoder->x264param);
 
-  /* log callback setup */
+  /* log callback setup; part of parameters */
   encoder->x264param.pf_log = GST_DEBUG_FUNCPTR (gst_x264_enc_log_callback);
   encoder->x264param.p_log_private = encoder;
   encoder->x264param.i_log_level = X264_LOG_DEBUG;
+
+  gst_x264_enc_reset (encoder);
+}
+
+static void
+gst_x264_enc_reset (GstX264Enc * encoder)
+{
+  encoder->x264enc = NULL;
+  encoder->width = 0;
+  encoder->height = 0;
+  encoder->last_timestamp = GST_CLOCK_TIME_NONE;
 }
 
 /*
@@ -701,11 +638,29 @@ gst_x264_enc_finalize (GObject * object)
   encoder->stats_file = NULL;
   g_free (encoder->buffer);
   encoder->buffer = NULL;
+  g_queue_free (encoder->delay);
+  encoder->delay = NULL;
 
-  gst_x264_enc_timestamp_queue_free (encoder);
   gst_x264_enc_close_encoder (encoder);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_x264_enc_flush_frames (GstX264Enc * encoder, gboolean send)
+{
+  GstFlowReturn flow_ret;
+  gint i_nal;
+
+  /* first send the remaining frames */
+  if (encoder->x264enc)
+    do {
+      flow_ret = gst_x264_enc_encode_frame (encoder, NULL, &i_nal, send);
+    } while (flow_ret == GST_FLOW_OK && i_nal > 0);
+
+  /* in any case, make sure the delay queue is emptied */
+  while (!g_queue_is_empty (encoder->delay))
+    gst_buffer_unref (g_queue_pop_head (encoder->delay));
 }
 
 static gboolean
@@ -717,23 +672,17 @@ gst_x264_enc_sink_event (GstPad * pad, GstEvent * event)
   encoder = GST_X264_ENC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:{
-      GstFlowReturn flow_ret;
-      int i_nal;
-
-      /* first send the rest NAL units */
-      do {
-        flow_ret = gst_x264_enc_encode_frame (encoder, NULL, &i_nal);
-      } while (flow_ret == GST_FLOW_OK && i_nal > 0);
-
-      /* then push the EOS downstream */
-      ret = gst_pad_push_event (encoder->srcpad, event);
+    case GST_EVENT_EOS:
+      gst_x264_enc_flush_frames (encoder, TRUE);
       break;
-    }
+      /* no flushing if flush received,
+       * buffers in encoder are considered (in the) past */
     default:
-      ret = gst_pad_push_event (encoder->srcpad, event);
       break;
   }
+
+  ret = gst_pad_push_event (encoder->srcpad, event);
+
   gst_object_unref (encoder);
   return ret;
 }
@@ -775,8 +724,7 @@ gst_x264_enc_chain (GstPad * pad, GstBuffer * buf)
   }
 
   /* remember the timestamp and duration */
-  gst_x264_enc_timestamp_queue_put (encoder, GST_BUFFER_TIMESTAMP (buf),
-      GST_BUFFER_DURATION (buf));
+  g_queue_push_tail (encoder->delay, buf);
 
   /* set up input picture */
   memset (&pic_in, 0, sizeof (pic_in));
@@ -791,9 +739,9 @@ gst_x264_enc_chain (GstPad * pad, GstBuffer * buf)
   pic_in.i_type = X264_TYPE_AUTO;
   pic_in.i_pts = GST_BUFFER_TIMESTAMP (buf);
 
-  ret = gst_x264_enc_encode_frame (encoder, &pic_in, &i_nal);
+  ret = gst_x264_enc_encode_frame (encoder, &pic_in, &i_nal, TRUE);
 
-  gst_buffer_unref (buf);
+  /* input buffer is released later on */
   return ret;
 
 /* ERRORS */
@@ -816,9 +764,9 @@ wrong_buffer_size:
 
 static GstFlowReturn
 gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
-    int *i_nal)
+    int *i_nal, gboolean send)
 {
-  GstBuffer *out_buf = NULL;
+  GstBuffer *out_buf = NULL, *in_buf = NULL;
   x264_picture_t pic_out;
   x264_nal_t *nal;
   int i_size;
@@ -865,6 +813,20 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
     i_size += nal_size + 4;
   }
 
+  in_buf = g_queue_pop_head (encoder->delay);
+  if (in_buf) {
+    timestamp = GST_BUFFER_TIMESTAMP (in_buf);
+    duration = GST_BUFFER_DURATION (in_buf);
+    gst_buffer_unref (in_buf);
+  } else {
+    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, NULL,
+        ("Timestamp queue empty."));
+    return GST_FLOW_ERROR;
+  }
+
+  if (!send)
+    return GST_FLOW_OK;
+
   ret = gst_pad_alloc_buffer (encoder->srcpad, GST_BUFFER_OFFSET_NONE,
       i_size, GST_PAD_CAPS (encoder->srcpad), &out_buf);
   if (ret != GST_FLOW_OK)
@@ -873,11 +835,9 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   memcpy (GST_BUFFER_DATA (out_buf), encoder->buffer, i_size);
   GST_BUFFER_SIZE (out_buf) = i_size;
 
-  gst_x264_enc_timestamp_queue_get (encoder, &timestamp, &duration);
-
   /* PTS */
   GST_BUFFER_TIMESTAMP (out_buf) = pic_out.i_pts;
-  if (encoder->bframes) {
+  if (encoder->x264param.i_bframe) {
     /* When using B-frames, the frames will be reordered.
        Make PTS start one frame after DTS. */
     GST_BUFFER_TIMESTAMP (out_buf)
@@ -906,8 +866,10 @@ gst_x264_enc_change_state (GstElement * element, GstStateChange transition)
     goto out;
 
   switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_x264_enc_flush_frames (encoder, FALSE);
       gst_x264_enc_close_encoder (encoder);
+      gst_x264_enc_reset (encoder);
       break;
     default:
       break;
@@ -964,8 +926,6 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       break;
     case ARG_BFRAMES:
       encoder->bframes = g_value_get_uint (value);
-      gst_x264_enc_timestamp_queue_free (encoder);
-      gst_x264_enc_timestamp_queue_init (encoder);
       break;
     case ARG_B_PYRAMID:
       encoder->b_pyramid = g_value_get_boolean (value);
