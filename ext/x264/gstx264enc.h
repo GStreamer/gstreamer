@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <stdint.h>
+#include "_stdint.h"
 #include <x264.h>
 
 G_BEGIN_DECLS

@@ -35,7 +35,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include <stdint.h>
+#include "_stdint.h"
 
 #include "gstfbdevsink.h"
 

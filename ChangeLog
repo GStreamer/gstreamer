@@ -1,5 +1,11 @@
 2008-08-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
+	* ext/x264/gstx264enc.h:
+	* sys/fbdev/gstfbdevsink.c:
+	Use configure-generated _stdint.h.
+
+2008-08-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
 	* ext/x264/Makefile.am:
 	* ext/x264/gstx264enc.c: (gst_x264_enc_header_buf),
 	(gst_x264_enc_sink_set_caps), (gst_x264_enc_base_init),
