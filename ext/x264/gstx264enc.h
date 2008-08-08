@@ -22,7 +22,8 @@
 #define __GST_X264_ENC_H__
 
 #include <gst/gst.h>
-#include <_stdint.h>
+#include <gst/video/video.h>
+#include <stdint.h>
 #include <x264.h>
 
 G_BEGIN_DECLS
@@ -40,7 +41,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstX264Enc GstX264Enc;
 typedef struct _GstX264EncClass GstX264EncClass;
- 
+
 struct _GstX264Enc
 {
   GstElement element;
@@ -52,6 +53,7 @@ struct _GstX264Enc
   x264_t *x264enc;
   x264_param_t x264param;
 
+  /* properties */
   guint threads;
   guint pass;
   gchar *stats_file;
@@ -71,10 +73,14 @@ struct _GstX264Enc
   guint keyint_max;
   gboolean cabac;
 
+  /* input description */
+  GstVideoFormat format;
   gint width, height;
-  guint stride, luma_plane_size;
-  gint framerate_num, framerate_den;
+  gint fps_num, fps_den;
   gint par_num, par_den;
+  /* cache some format properties */
+  gint stride[4], offset[4];
+  gint image_size;
 
   GstClockTime last_timestamp;
   GstClockTime *timestamp_queue;

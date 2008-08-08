@@ -27,6 +27,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+GST_DEBUG_CATEGORY_STATIC (x264_enc_debug);
+#define GST_CAT_DEFAULT x264_enc_debug
 
 enum
 {
@@ -126,7 +128,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 GST_BOILERPLATE (GstX264Enc, gst_x264_enc, GstElement, GST_TYPE_ELEMENT);
 
-static void gst_x264_enc_dispose (GObject * object);
+static void gst_x264_enc_finalize (GObject * object);
 
 static gboolean gst_x264_enc_init_encoder (GstX264Enc * encoder);
 static void gst_x264_enc_close_encoder (GstX264Enc * encoder);
@@ -227,8 +229,7 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
 
   header_return = x264_encoder_headers (encoder->x264enc, &nal, &i_nal);
   if (header_return < 0) {
-    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE,
-        ("Encode x264 header failed."),
+    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, ("Encode x264 header failed."),
         ("x264_encoder_headers return code=%d", header_return));
     return NULL;
   }
@@ -238,8 +239,7 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   buffer = g_malloc (buffer_size);
 
   if (nal[1].i_type != 7 || nal[2].i_type != 8) {
-    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE,
-        ("Unexpected x264 header."),
+    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, ("Unexpected x264 header."),
         ("TODO avcC header construction for high profiles needs some work"));
     return NULL;
   }
@@ -258,23 +258,21 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
 
   i_data = buffer_size - i_size - 2;
   nal_size = x264_nal_encode (buffer + i_size + 2, &i_data, 0, &nal[1]);
-  buffer[i_size + 0] = (nal_size >> 8) & 0xff;
-  buffer[i_size + 1] = nal_size & 0xff;
+  GST_WRITE_UINT16_BE (buffer + i_size, nal_size);
   i_size += nal_size + 2;
 
   buffer[i_size++] = 1;         /* number of PPSs */
 
   i_data = buffer_size - i_size - 2;
   nal_size = x264_nal_encode (buffer + i_size + 2, &i_data, 0, &nal[2]);
-  buffer[i_size + 0] = (nal_size >> 8) & 0xff;
-  buffer[i_size + 1] = nal_size & 0xff;
+  GST_WRITE_UINT16_BE (buffer + i_size, nal_size);
   i_size += nal_size + 2;
 
   buf = gst_buffer_new_and_alloc (i_size);
 
   memcpy (GST_BUFFER_DATA (buf), buffer, i_size);
 
-  free (buffer);
+  g_free (buffer);
 
   return buf;
 }
@@ -317,61 +315,60 @@ static gboolean
 gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstX264Enc *encoder = GST_X264_ENC (GST_OBJECT_PARENT (pad));
-  GstStructure *structure;
-  const GValue *framerate, *par;
   gint width, height;
-  gint framerate_num, framerate_den;
+  gint fps_num, fps_den;
   gint par_num, par_den;
+  gint i;
 
-  structure = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (structure, "width", &width))
+  /* get info from caps */
+  /* only I420 supported for now; so apparently claims x264enc ? */
+  if (!gst_video_format_parse_caps (caps, &encoder->format, &width, &height) ||
+      encoder->format != GST_VIDEO_FORMAT_I420)
     return FALSE;
-  if (!gst_structure_get_int (structure, "height", &height))
+  if (!gst_video_parse_caps_framerate (caps, &fps_num, &fps_den))
     return FALSE;
-  if (!(framerate = gst_structure_get_value (structure, "framerate")))
-    return FALSE;
-  framerate_num = gst_value_get_fraction_numerator (framerate);
-  framerate_den = gst_value_get_fraction_denominator (framerate);
-  if (!(par = gst_structure_get_value (structure, "pixel-aspect-ratio"))) {
+  if (!gst_video_parse_caps_pixel_aspect_ratio (caps, &par_num, &par_den)) {
     par_num = 1;
     par_den = 1;
-  } else {
-    par_num = gst_value_get_fraction_numerator (par);
-    par_den = gst_value_get_fraction_denominator (par);
   }
 
   /* If the encoder is initialized, do not
      reinitialize it again if not necessary */
   if (encoder->x264enc) {
-    gboolean caps_same = width == encoder->width
-        && height == encoder->height
-        && framerate_num == encoder->framerate_num
-        && framerate_den == encoder->framerate_den
-        && par_num == encoder->par_num && par_den == encoder->par_den;
-
     GstFlowReturn flow_ret;
-    int i_nal;
+    gint i_nal;
 
-    if (caps_same)
-      /* Negotiating the same caps */
+    if (width == encoder->width && height == encoder->height
+        && fps_num == encoder->fps_num && fps_den == encoder->fps_den
+        && par_num == encoder->par_num && par_den == encoder->par_den)
       return TRUE;
 
+    /* clear out pending frames */
     do {
       flow_ret = gst_x264_enc_encode_frame (encoder, NULL, &i_nal);
     } while (flow_ret == GST_FLOW_OK && i_nal > 0);
 
     encoder->sps_id++;
   }
+
+  /* store input description */
   encoder->width = width;
   encoder->height = height;
-  encoder->framerate_num = framerate_num;
-  encoder->framerate_den = framerate_den;
+  encoder->fps_num = fps_num;
+  encoder->fps_den = fps_den;
   encoder->par_num = par_num;
   encoder->par_den = par_den;
 
-  /* FIXME: is this correct for odd widths/heights? (tpm) */
-  encoder->stride = encoder->width;
-  encoder->luma_plane_size = encoder->width * encoder->height;
+  /* prepare a cached image description  */
+  encoder->image_size = gst_video_format_get_size (encoder->format, width,
+      height);
+  for (i = 0; i < 3; ++i) {
+    /* only offsets now, is shifted later */
+    encoder->offset[i] = gst_video_format_get_component_offset (encoder->format,
+        i, width, height);
+    encoder->stride[i] = gst_video_format_get_row_stride (encoder->format,
+        i, width);
+  }
 
   if (!gst_x264_enc_init_encoder (encoder))
     return FALSE;
@@ -387,19 +384,16 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
 static void
 gst_x264_enc_base_init (gpointer g_class)
 {
-  static GstElementDetails plugin_details = {
-    "x264enc",
-    "Codec/Encoder/Video",
-    "H264 Encoder",
-    "Josef Zlomek <josef.zlomek@itonis.tv>"
-  };
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details_simple (element_class,
+      "x264enc", "Codec/Encoder/Video", "H264 Encoder",
+      "Josef Zlomek <josef.zlomek@itonis.tv>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &plugin_details);
 }
 
 static void
@@ -413,7 +407,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
 
   gobject_class->set_property = gst_x264_enc_set_property;
   gobject_class->get_property = gst_x264_enc_get_property;
-  gobject_class->dispose = gst_x264_enc_dispose;
+  gobject_class->finalize = gst_x264_enc_finalize;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_x264_enc_change_state);
@@ -489,6 +483,36 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           "Enable CABAC entropy coding", ARG_CABAC_DEFAULT, G_PARAM_READWRITE));
 }
 
+void
+gst_x264_enc_log_callback (gpointer private, gint level, const char *format,
+    va_list args)
+{
+  GstDebugLevel gst_level;
+  GObject *object = (GObject *) private;
+
+  switch (level) {
+    case X264_LOG_NONE:
+      gst_level = GST_LEVEL_NONE;
+      break;
+    case X264_LOG_ERROR:
+      gst_level = GST_LEVEL_ERROR;
+      break;
+    case X264_LOG_WARNING:
+      gst_level = GST_LEVEL_WARNING;
+      break;
+    case X264_LOG_INFO:
+      gst_level = GST_LEVEL_INFO;
+      break;
+      /* push x264enc debug down to our lower levels to avoid some clutter */
+    default:
+      gst_level = GST_LEVEL_LOG;
+      break;
+  }
+
+  gst_debug_log_valist (x264_enc_debug, gst_level, "", "", 0, object, format,
+      args);
+}
+
 /* initialize the new element
  * instantiate pads and add them to element
  * set functions
@@ -542,6 +566,11 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->buffer = g_malloc (encoder->buffer_size);
 
   x264_param_default (&encoder->x264param);
+
+  /* log callback setup */
+  encoder->x264param.pf_log = GST_DEBUG_FUNCPTR (gst_x264_enc_log_callback);
+  encoder->x264param.p_log_private = encoder;
+  encoder->x264param.i_log_level = X264_LOG_DEBUG;
 }
 
 /*
@@ -559,8 +588,8 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
   /* set up encoder parameters */
   encoder->x264param.i_threads = encoder->threads;
-  encoder->x264param.i_fps_num = encoder->framerate_num;
-  encoder->x264param.i_fps_den = encoder->framerate_den;
+  encoder->x264param.i_fps_num = encoder->fps_num;
+  encoder->x264param.i_fps_den = encoder->fps_den;
   encoder->x264param.i_width = encoder->width;
   encoder->x264param.i_height = encoder->height;
   if (encoder->par_den > 0) {
@@ -568,20 +597,20 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     encoder->x264param.vui.i_sar_height = encoder->par_den;
   }
   encoder->x264param.i_keyint_max = encoder->keyint_max ? encoder->keyint_max :
-      (2 * encoder->framerate_num / encoder->framerate_den);
+      (2 * encoder->fps_num / encoder->fps_den);
   encoder->x264param.b_cabac = encoder->cabac;
   encoder->x264param.b_aud = 1;
   encoder->x264param.i_sps_id = encoder->sps_id;
   if ((((encoder->height == 576) && ((encoder->width == 720)
                   || (encoder->width == 704) || (encoder->width == 352)))
           || ((encoder->height == 288) && (encoder->width == 352)))
-      && (encoder->framerate_den == 1) && (encoder->framerate_num == 25)) {
+      && (encoder->fps_den == 1) && (encoder->fps_num == 25)) {
     encoder->x264param.vui.i_vidformat = 1;     /* PAL */
   } else if ((((encoder->height == 480) && ((encoder->width == 720)
                   || (encoder->width == 704) || (encoder->width == 352)))
           || ((encoder->height == 240) && (encoder->width == 352)))
-      && (encoder->framerate_den == 1001) && ((encoder->framerate_num == 30000)
-          || (encoder->framerate_num == 24000))) {
+      && (encoder->fps_den == 1001) && ((encoder->fps_num == 30000)
+          || (encoder->fps_num == 24000))) {
     encoder->x264param.vui.i_vidformat = 2;     /* NTSC */
   } else
     encoder->x264param.vui.i_vidformat = 5;     /* unspecified */
@@ -664,7 +693,7 @@ gst_x264_enc_close_encoder (GstX264Enc * encoder)
 }
 
 static void
-gst_x264_enc_dispose (GObject * object)
+gst_x264_enc_finalize (GObject * object)
 {
   GstX264Enc *encoder = GST_X264_ENC (object);
 
@@ -676,7 +705,7 @@ gst_x264_enc_dispose (GObject * object)
   gst_x264_enc_timestamp_queue_free (encoder);
   gst_x264_enc_close_encoder (encoder);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -719,15 +748,14 @@ gst_x264_enc_chain (GstPad * pad, GstBuffer * buf)
   GstX264Enc *encoder = GST_X264_ENC (GST_OBJECT_PARENT (pad));
   GstFlowReturn ret;
   x264_picture_t pic_in;
-  int i_nal;
+  gint i_nal, i;
 
   if (G_UNLIKELY (encoder->x264enc == NULL))
     goto not_inited;
 
   /* create x264_picture_t from the buffer */
   /* mostly taken from mplayer (file ve_x264.c) */
-  /* FIXME: this looks wrong for odd widths/heights (tpm) */
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < encoder->luma_plane_size * 6 / 4))
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < encoder->image_size))
     goto wrong_buffer_size;
 
   /* ignore duplicated packets */
@@ -750,30 +778,21 @@ gst_x264_enc_chain (GstPad * pad, GstBuffer * buf)
   gst_x264_enc_timestamp_queue_put (encoder, GST_BUFFER_TIMESTAMP (buf),
       GST_BUFFER_DURATION (buf));
 
-  memset (&pic_in, 0, sizeof (x264_picture_t));
+  /* set up input picture */
+  memset (&pic_in, 0, sizeof (pic_in));
 
   pic_in.img.i_csp = X264_CSP_I420;
   pic_in.img.i_plane = 3;
-
-  /* FIXME: again, this looks wrong for odd widths/heights (tpm) */
-  pic_in.img.plane[0] = (guint8 *) (GST_BUFFER_DATA (buf));
-  pic_in.img.i_stride[0] = encoder->stride;
-
-  pic_in.img.plane[1] = pic_in.img.plane[0]
-      + encoder->luma_plane_size;
-  pic_in.img.i_stride[1] = encoder->stride / 2;
-
-  pic_in.img.plane[2] = pic_in.img.plane[1]
-      + encoder->luma_plane_size / 4;
-  pic_in.img.i_stride[2] = encoder->stride / 2;
-
-  pic_in.img.plane[3] = NULL;
-  pic_in.img.i_stride[3] = 0;
+  for (i = 0; i < 3; i++) {
+    pic_in.img.plane[i] = GST_BUFFER_DATA (buf) + encoder->offset[i];
+    pic_in.img.i_stride[i] = encoder->stride[i];
+  }
 
   pic_in.i_type = X264_TYPE_AUTO;
   pic_in.i_pts = GST_BUFFER_TIMESTAMP (buf);
 
   ret = gst_x264_enc_encode_frame (encoder, &pic_in, &i_nal);
+
   gst_buffer_unref (buf);
   return ret;
 
@@ -789,7 +808,7 @@ wrong_buffer_size:
     GST_ELEMENT_ERROR (encoder, STREAM, ENCODE,
         ("Encode x264 frame failed."),
         ("Wrong buffer size %d (should be %d)",
-            GST_BUFFER_SIZE (buf), encoder->luma_plane_size * 6 / 4));
+            GST_BUFFER_SIZE (buf), encoder->image_size));
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
@@ -817,8 +836,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
       &nal, i_nal, pic_in, &pic_out);
 
   if (encoder_return < 0) {
-    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE,
-        ("Encode x264 frame failed."),
+    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, ("Encode x264 frame failed."),
         ("x264_encoder_encode return code=%d", encoder_return));
     return GST_FLOW_ERROR;
   }
@@ -839,17 +857,10 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
 
     nal_size =
         x264_nal_encode (encoder->buffer + i_size + 4, &i_data, 0, &nal[i]);
-    if (encoder->byte_stream) {
-      encoder->buffer[i_size + 0] = 0;
-      encoder->buffer[i_size + 1] = 0;
-      encoder->buffer[i_size + 2] = 0;
-      encoder->buffer[i_size + 3] = 1;
-    } else {
-      encoder->buffer[i_size + 0] = (nal_size >> 24) & 0xff;
-      encoder->buffer[i_size + 1] = (nal_size >> 16) & 0xff;
-      encoder->buffer[i_size + 2] = (nal_size >> 8) & 0xff;
-      encoder->buffer[i_size + 3] = nal_size & 0xff;
-    }
+    if (encoder->byte_stream)
+      GST_WRITE_UINT32_BE (encoder->buffer + i_size, 1);
+    else
+      GST_WRITE_UINT32_BE (encoder->buffer + i_size, nal_size);
 
     i_size += nal_size + 4;
   }
@@ -870,7 +881,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
     /* When using B-frames, the frames will be reordered.
        Make PTS start one frame after DTS. */
     GST_BUFFER_TIMESTAMP (out_buf)
-        += GST_SECOND * encoder->framerate_den / encoder->framerate_num;
+        += GST_SECOND * encoder->fps_den / encoder->fps_num;
   }
 
   GST_BUFFER_DURATION (out_buf) = duration;
@@ -1053,6 +1064,9 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (x264_enc_debug, "x264enc", 0,
+      "h264 encoding element");
+
   return gst_element_register (plugin, "x264enc",
       GST_RANK_NONE, GST_TYPE_X264_ENC);
 }
