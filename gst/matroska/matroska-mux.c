@@ -484,7 +484,7 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
   GstMatroskaPad *collect_pad;
   GstMatroskaMux *mux;
   GstTagList *list;
-  gboolean ret;
+  gboolean ret = TRUE;
 
   mux = GST_MATROSKA_MUX (gst_pad_get_parent (pad));
 
@@ -507,12 +507,18 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       }
 
       break;
+    case GST_EVENT_NEWSEGMENT:
+      /* We don't support NEWSEGMENT events */
+      ret = FALSE;
+      gst_event_unref (event);
+      break;
     default:
       break;
   }
 
   /* now GstCollectPads can take care of the rest, e.g. EOS */
-  ret = mux->collect_event (pad, event);
+  if (ret)
+    ret = mux->collect_event (pad, event);
   gst_object_unref (mux);
 
   return ret;
@@ -948,7 +954,7 @@ flac_streamheader_to_codecdata (const GValue * streamheader,
     return FALSE;
   }
 
-  context->xiph_headers_to_skip = bufarr->len;
+  context->xiph_headers_to_skip = bufarr->len + 1;
 
   bufval = &g_array_index (bufarr, GValue, 0);
   if (G_VALUE_TYPE (bufval) != GST_TYPE_BUFFER) {
