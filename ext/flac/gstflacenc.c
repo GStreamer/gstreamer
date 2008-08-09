@@ -1125,7 +1125,8 @@ gst_flac_enc_check_discont (GstFlacEnc * flacenc, GstClockTime expected,
     GST_ELEMENT_WARNING (flacenc, STREAM, FORMAT, (NULL),
         ("Stream discontinuity detected (wanted %" GST_TIME_FORMAT " got %"
             GST_TIME_FORMAT "). The output will have wrong timestamps,"
-            " consider using audiorate to handle discontinuities"));
+            " consider using audiorate to handle discontinuities",
+            GST_TIME_ARGS (expected), GST_TIME_ARGS (timestamp)));
     return TRUE;
   }
 

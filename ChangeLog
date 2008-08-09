@@ -1,3 +1,8 @@
+2008-08-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/flac/gstflacenc.c: (gst_flac_enc_check_discont):
+	Actually provide the variables required for the format string.
+
 2008-08-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_reset),
