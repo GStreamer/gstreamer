@@ -1,5 +1,12 @@
 2008-08-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/matroska/matroska-mux.c: (flac_streamheader_to_codecdata),
+	(gst_matroska_mux_audio_pad_setcaps):
+	Add support for muxing FLAC into Matroska containers.
+	Fixes bug #311586.
+
+2008-08-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/flac/gstflacenc.c: (gst_flac_enc_check_discont):
 	Actually provide the variables required for the format string.
 
