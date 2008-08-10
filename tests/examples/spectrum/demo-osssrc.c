@@ -36,6 +36,7 @@ static guint spect_bands = 256;
 static gfloat height_scale = 1.0;
 
 static GtkWidget *drawingarea = NULL;
+static GstClock *sync_clock = NULL;
 
 static void
 on_window_destroy (GtkObject * object, gpointer user_data)
@@ -44,7 +45,7 @@ on_window_destroy (GtkObject * object, gpointer user_data)
   gtk_main_quit ();
 }
 
-gboolean
+static gboolean
 on_configure_event (GtkWidget * widget, GdkEventConfigure * event,
     gpointer user_data)
 {
@@ -79,8 +80,23 @@ draw_spectrum (gfloat * data)
   gdk_window_end_paint (drawingarea->window);
 }
 
+/* process delayed message */
+static gboolean
+delayed_spectrum_update (GstClock * sync_clock, GstClockTime time,
+    GstClockID id, gpointer user_data)
+{
+  if (!GST_CLOCK_TIME_IS_VALID (time))
+    goto done;
+
+  draw_spectrum ((gfloat *) user_data);
+
+done:
+  g_free (user_data);
+  return (TRUE);
+}
+
 /* receive spectral data from element message */
-gboolean
+static gboolean
 message_handler (GstBus * bus, GstMessage * message, gpointer data)
 {
   if (message->type == GST_MESSAGE_ELEMENT) {
@@ -88,18 +104,37 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
     const gchar *name = gst_structure_get_name (s);
 
     if (strcmp (name, "spectrum") == 0) {
-      gfloat *spect = g_new (gfloat, spect_bands);
-      const GValue *list;
-      const GValue *value;
-      guint i;
+      GstElement *spectrum = GST_ELEMENT (GST_MESSAGE_SRC (message));
+      GstClockTime timestamp, duration;
+      GstClockTime waittime = GST_CLOCK_TIME_NONE;
 
-      list = gst_structure_get_value (s, "magnitude");
-      for (i = 0; i < spect_bands; ++i) {
-        value = gst_value_list_get_value (list, i);
-        spect[i] = height_scale * g_value_get_float (value);
+      if (gst_structure_get_clock_time (s, "running-time", &timestamp) &&
+          gst_structure_get_clock_time (s, "duration", &duration)) {
+        /* wait for middle of buffer */
+        waittime = timestamp + duration / 2;
+      } else if (gst_structure_get_clock_time (s, "endtime", &timestamp)) {
+        waittime = timestamp;
       }
-      draw_spectrum (spect);
-      g_free (spect);
+      if (GST_CLOCK_TIME_IS_VALID (waittime)) {
+        GstClockID clock_id;
+        GstClockTime basetime = gst_element_get_base_time (spectrum);
+        gfloat *spect = g_new (gfloat, spect_bands);
+        const GValue *list;
+        const GValue *value;
+        guint i;
+
+        list = gst_structure_get_value (s, "magnitude");
+        for (i = 0; i < spect_bands; ++i) {
+          value = gst_value_list_get_value (list, i);
+          spect[i] = height_scale * g_value_get_float (value);
+        }
+
+        clock_id =
+            gst_clock_new_single_shot_id (sync_clock, waittime + basetime);
+        gst_clock_id_wait_async (clock_id, delayed_spectrum_update,
+            (gpointer) spect);
+        gst_clock_id_unref (clock_id);
+      }
     }
   }
   return TRUE;
@@ -136,6 +171,8 @@ main (int argc, char *argv[])
   gst_bus_add_watch (bus, message_handler, NULL);
   gst_object_unref (bus);
 
+  sync_clock = gst_pipeline_get_clock (GST_PIPELINE (bin));
+
   appwindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect (G_OBJECT (appwindow), "destroy",
       G_CALLBACK (on_window_destroy), NULL);
@@ -151,6 +188,7 @@ main (int argc, char *argv[])
   gtk_main ();
   gst_element_set_state (bin, GST_STATE_NULL);
 
+  gst_object_unref (sync_clock);
   gst_object_unref (bin);
 
   return 0;
