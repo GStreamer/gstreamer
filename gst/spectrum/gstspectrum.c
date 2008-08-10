@@ -36,8 +36,37 @@
  * <listitem>
  *   <para>
  *   #GstClockTime
+ *   <classname>&quot;timestamp&quot;</classname>:
+ *   the timestamp of the buffer that triggered the message.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #GstClockTime
+ *   <classname>&quot;stream-time&quot;</classname>:
+ *   the stream time of the buffer.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #GstClockTime
+ *   <classname>&quot;running-time&quot;</classname>:
+ *   the running_time of the buffer.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #GstClockTime
+ *   <classname>&quot;duration&quot;</classname>:
+ *   the duration of the buffer.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #GstClockTime
  *   <classname>&quot;endtime&quot;</classname>:
- *   the end time of the buffer that triggered the message. Always present.
+ *   the end time of the buffer that triggered the message as stream time (this
+ *   is deprecated, as it can be calculated from stream-time + duration)
  *   </para>
  * </listitem>
  * <listitem>
@@ -449,20 +478,34 @@ gst_spectrum_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 }
 
 static GstMessage *
-gst_spectrum_message_new (GstSpectrum * spectrum, GstClockTime endtime)
+gst_spectrum_message_new (GstSpectrum * spectrum, GstClockTime timestamp,
+    GstClockTime duration)
 {
+  GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (spectrum);
   GstStructure *s;
   GValue v = { 0, };
   GValue *l;
   guint i;
   gfloat *spect_magnitude = spectrum->spect_magnitude;
   gfloat *spect_phase = spectrum->spect_phase;
+  GstClockTime endtime, running_time, stream_time;
 
   GST_DEBUG_OBJECT (spectrum, "preparing message, spect = %p, bands =%d ",
       spect_magnitude, spectrum->bands);
 
-  s = gst_structure_new ("spectrum", "endtime", GST_TYPE_CLOCK_TIME,
-      endtime, NULL);
+  running_time = gst_segment_to_running_time (&trans->segment, GST_FORMAT_TIME,
+      timestamp);
+  stream_time = gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
+      timestamp);
+  /* endtime is for backwards compatibility */
+  endtime = stream_time + duration;
+
+  s = gst_structure_new ("spectrum",
+      "endtime", GST_TYPE_CLOCK_TIME, endtime,
+      "timestamp", G_TYPE_UINT64, timestamp,
+      "stream-time", G_TYPE_UINT64, stream_time,
+      "running-time", G_TYPE_UINT64, running_time,
+      "duration", G_TYPE_UINT64, duration, NULL);
 
   if (spectrum->message_magnitude) {
     /* FIXME 0.11: this should be an array, not a list */
@@ -640,11 +683,6 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   gint width = GST_AUDIO_FILTER (spectrum)->format.width / 8;
   gint nfft = 2 * spectrum->bands - 2;
 
-  GstClockTime endtime =
-      gst_segment_to_running_time (&trans->segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (in));
-  GstClockTime blktime = GST_FRAMES_TO_CLOCK_TIME (nfft, rate);
-
   GST_LOG_OBJECT (spectrum, "input size: %d bytes", GST_BUFFER_SIZE (in));
 
   /* can we do this nicer? */
@@ -659,13 +697,18 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
     spectrum->process (spectrum, samples);
 
+    if (G_UNLIKELY (!spectrum->num_frames)) {
+      /* remember start timestamp for message */
+      spectrum->message_ts = GST_BUFFER_TIMESTAMP (in);
+    }
     spectrum->num_frames += nfft;
-    endtime += blktime;
     /* do we need to message ? */
     if (spectrum->num_frames >=
         GST_CLOCK_TIME_TO_FRAMES (spectrum->interval, rate)) {
       if (spectrum->message) {
         GstMessage *m;
+        GstClockTime duration =
+            GST_FRAMES_TO_CLOCK_TIME (spectrum->num_frames, rate);
 
         /* Calculate average */
         for (i = 0; i < spectrum->bands; i++) {
@@ -673,7 +716,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
           spect_phase[i] /= spectrum->num_fft;
         }
 
-        m = gst_spectrum_message_new (spectrum, endtime);
+        m = gst_spectrum_message_new (spectrum, spectrum->message_ts, duration);
 
         gst_element_post_message (GST_ELEMENT (spectrum), m);
       }

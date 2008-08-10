@@ -60,7 +60,8 @@ struct _GstSpectrum {
   gint num_frames;              /* frame count (1 sample per channel)
                                  * since last emit */
   gint num_fft;                 /* number of FFTs since last emit */
-                                 
+  GstClockTime message_ts;      /* starttime for next message */
+
   /* <private> */
   gfloat *spect_magnitude;
   gfloat *spect_phase;

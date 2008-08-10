@@ -1,6 +1,15 @@
 2008-08-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/level/gstlevel.c:
+	  Little renaming (l -> level).
+
+	* gst/spectrum/gstspectrum.c:
+	* gst/spectrum/gstspectrum.h:
+	  Also send full timestamp/duration details here.
+
+2008-08-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/level/gstlevel.c:
 	* gst/level/gstlevel.h:
 	  Send same timestamp/duration details as videoanalysis. This gives
 	  applications better chance to sync analysis results with playback.

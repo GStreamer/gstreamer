@@ -499,7 +499,7 @@ gst_level_start (GstBaseTransform * trans)
 }
 
 static GstMessage *
-gst_level_message_new (GstLevel * l, GstClockTime timestamp,
+gst_level_message_new (GstLevel * level, GstClockTime timestamp,
     GstClockTime duration)
 {
   GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (l);
@@ -529,7 +529,7 @@ gst_level_message_new (GstLevel * l, GstClockTime timestamp,
 
   g_value_unset (&v);
 
-  return gst_message_new_element (GST_OBJECT (l), s);
+  return gst_message_new_element (GST_OBJECT (level), s);
 }
 
 static void
