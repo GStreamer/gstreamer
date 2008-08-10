@@ -315,3 +315,19 @@ gst_gl_filter_do_transform (GstGLFilter* filter,
 
     return TRUE;
 }
+
+/* convenience functions to simplify filter development */
+
+void
+gst_gl_filter_render_to_target (GstGLFilter *filter, 
+				GLuint input, GLuint target,
+				GLCB func, gpointer data)
+{
+     gst_gl_display_use_fbo (filter->display, filter->width, filter->height, 
+			     filter->fbo, filter->depthbuffer, target, 
+			     func, 
+			     filter->width, filter->height, input,
+			     0, filter->width, 0, filter->height,
+			     GST_GL_DISPLAY_PROJECTION_ORTHO2D,
+			     data);
+}

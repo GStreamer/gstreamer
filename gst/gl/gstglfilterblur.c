@@ -206,20 +206,10 @@ gst_gl_filterblur_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
   //blocking call, generate a texture using the pool
   gst_gl_display_gen_texture (filter->display, &midtexture) ;
 
-  //blocking call, use a FBO
-  gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
-			  filter->fbo, filter->depthbuffer, midtexture, gst_gl_filterblur_hcallback,
-			  inbuf->width, inbuf->height, inbuf->texture,
-			  0, filter->width, 0, filter->height,
-			  GST_GL_DISPLAY_PROJECTION_ORTHO2D, filterblur);
-
-
-  //blocking call, use a FBO
-  gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
-			  filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_filterblur_vcallback,
-			  inbuf->width, inbuf->height, midtexture,
-			  0, filter->width, 0, filter->height,
-			  GST_GL_DISPLAY_PROJECTION_ORTHO2D, filterblur);
+  gst_gl_filter_render_to_target (filter, inbuf->texture, midtexture, 
+				  gst_gl_filterblur_hcallback, filterblur);
+  gst_gl_filter_render_to_target (filter, midtexture, outbuf->texture, 
+				  gst_gl_filterblur_vcallback, filterblur);
 
   //blocking call, put the texture in the pool
   gst_gl_display_del_texture (filter->display, midtexture);
