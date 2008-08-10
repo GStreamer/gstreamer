@@ -1,3 +1,10 @@
+2008-08-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/level/gstlevel.c:
+	* gst/level/gstlevel.h:
+	  Send same timestamp/duration details as videoanalysis. This gives
+	  applications better chance to sync analysis results with playback.
+
 2008-08-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/matroska/matroska-mux.c:

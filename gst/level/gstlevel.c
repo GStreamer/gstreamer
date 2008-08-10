@@ -34,8 +34,37 @@
  * <listitem>
  *   <para>
  *   #GstClockTime
+ *   <classname>&quot;timestamp&quot;</classname>:
+ *   the timestamp of the buffer that triggered the message.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #GstClockTime
+ *   <classname>&quot;stream-time&quot;</classname>:
+ *   the stream time of the buffer.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #GstClockTime
+ *   <classname>&quot;running-time&quot;</classname>:
+ *   the running_time of the buffer.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #GstClockTime
+ *   <classname>&quot;duration&quot;</classname>:
+ *   the duration of the buffer.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #GstClockTime
  *   <classname>&quot;endtime&quot;</classname>:
- *   the end time of the buffer that triggered the message
+ *   the end time of the buffer that triggered the message as stream time (this
+ *   is deprecated, as it can be calculated from stream-time + duration)
  *   </para>
  * </listitem>
  * <listitem>
@@ -65,7 +94,7 @@
  *   the Root Mean Square (or average power) level in dB for each channel
  *   </para>
  * </listitem>
-  * </itemizedlist>
+ * </itemizedlist>
  * </para>
  * <title>Example application</title>
  * <para>
@@ -470,15 +499,29 @@ gst_level_start (GstBaseTransform * trans)
 }
 
 static GstMessage *
-gst_level_message_new (GstLevel * l, GstClockTime endtime)
+gst_level_message_new (GstLevel * l, GstClockTime timestamp,
+    GstClockTime duration)
 {
+  GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (l);
   GstStructure *s;
   GValue v = { 0, };
+  GstClockTime endtime, running_time, stream_time;
 
   g_value_init (&v, GST_TYPE_LIST);
 
-  s = gst_structure_new ("level", "endtime", GST_TYPE_CLOCK_TIME,
-      endtime, NULL);
+  running_time = gst_segment_to_running_time (&trans->segment, GST_FORMAT_TIME,
+      timestamp);
+  stream_time = gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
+      timestamp);
+  /* endtime is for backwards compatibility */
+  endtime = stream_time + duration;
+
+  s = gst_structure_new ("level",
+      "endtime", GST_TYPE_CLOCK_TIME, endtime,
+      "timestamp", G_TYPE_UINT64, timestamp,
+      "stream-time", G_TYPE_UINT64, stream_time,
+      "running-time", G_TYPE_UINT64, running_time,
+      "duration", G_TYPE_UINT64, duration, NULL);
   /* will copy-by-value */
   gst_structure_set_value (s, "rms", &v);
   gst_structure_set_value (s, "peak", &v);
@@ -600,6 +643,10 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
     }
   }
 
+  if (G_UNLIKELY (!filter->num_frames)) {
+    /* remember start timestamp for message */
+    filter->message_ts = GST_BUFFER_TIMESTAMP (in);
+  }
   filter->num_frames += num_frames;
 
   /* do we need to message ? */
@@ -607,16 +654,14 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       GST_CLOCK_TIME_TO_FRAMES (filter->interval, filter->rate)) {
     if (filter->message) {
       GstMessage *m;
-      GstClockTime endtime =
-          gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
-          GST_BUFFER_TIMESTAMP (in))
-          + GST_FRAMES_TO_CLOCK_TIME (num_frames, filter->rate);
+      GstClockTime duration =
+          GST_FRAMES_TO_CLOCK_TIME (filter->num_frames, filter->rate);
 
-      m = gst_level_message_new (filter, endtime);
+      m = gst_level_message_new (filter, filter->message_ts, duration);
 
       GST_LOG_OBJECT (filter,
-          "message: end time %" GST_TIME_FORMAT ", num_frames %d",
-          GST_TIME_ARGS (endtime), filter->num_frames);
+          "message: ts %" GST_TIME_FORMAT ", num_frames %d",
+          GST_TIME_ARGS (filter->message_ts), filter->num_frames);
 
       for (i = 0; i < filter->channels; ++i) {
         double RMS;

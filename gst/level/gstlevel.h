@@ -67,6 +67,7 @@ struct _GstLevel {
   gdouble decay_peak_falloff;   /* falloff in dB/sec */
   gint num_frames;              /* frame count (1 sample per channel)
                                  * since last emit */
+  GstClockTime message_ts;      /* starttime for next message */
 
   /* per-channel arrays for intermediate values */
   gdouble *CS;                  /* normalized Cumulative Square */
