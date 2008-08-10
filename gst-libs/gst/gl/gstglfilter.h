@@ -72,6 +72,13 @@ struct _GstGLFilterClass
 
 GType gst_gl_filter_get_type(void);
 
+
+void
+gst_gl_filter_render_to_target (GstGLFilter *filter, 
+				GLuint input, GLuint target,
+				GLCB func, gpointer data);
+
+
 G_END_DECLS
 
 #endif

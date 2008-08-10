@@ -1996,6 +1996,13 @@ gst_gl_display_gen_fbo (GstGLDisplay* display, gint width, gint height,
 
 
 /* Called by glfilter */
+/* this function really has to be simplified...  do we really need to
+   set projection this way? Wouldn't be better a set_projection
+   separate call? or just make glut functions available out of
+   gst-libs and call it if needed on drawcallback? -- Filippo */
+/* GLCB too.. I think that only needed parameters should be
+ * GstGLDisplay *display and gpointer data, or just gpointer data */
+/* ..everything here has to be simplified! */
 gboolean
 gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint texture_fbo_height,
                         GLuint fbo, GLuint depth_buffer, GLuint texture_fbo, GLCB cb,
