@@ -1,5 +1,10 @@
 2008-08-10  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/elements/level.c:
+	  Add a test for level in stereo mode.
+
+2008-08-10  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/examples/spectrum/demo-audiotest.c:
 	* tests/examples/spectrum/demo-osssrc.c:
 	  Demo how to draw analyzer results synced to the clock.
