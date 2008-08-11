@@ -105,7 +105,7 @@ gst_audio_frame_length (GstPad * pad, GstBuffer * buf)
  * Calculate length in nanoseconds of audio buffer @buf based on capabilities of
  * @pad.
  *
- * Return: the length.
+ * Returns: the length.
  */
 GstClockTime
 gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)

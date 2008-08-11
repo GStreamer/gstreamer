@@ -1,3 +1,11 @@
+2008-08-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/audio/audio.c:
+	  Fix doc comment syntax.
+
+	* gst-libs/gst/interfaces/propertyprobe.c:
+	  Add more doc-comments and a FIXME: for the signal.	
+
 2008-08-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_sink_event),

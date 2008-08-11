@@ -18,7 +18,15 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstpropertyprobe
+ * @short_description: Interface for probing possible property values
+ *
+ * The property probe is a way to autodetect allowed values for a GObject
+ * property. It's primary use is to autodetect device-names in several elements.
+ *
+ * The interface is implemented by many hardware sources and sinks.
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -69,6 +77,15 @@ gst_property_probe_iface_init (GstPropertyProbeInterface * iface)
   static gboolean initialized = FALSE;
 
   if (!initialized) {
+    /**
+     * GstPropertyProbe::probe-needed
+     * %pspec: #GParamSpec that needs a probe
+     *
+     */
+    /* FIXME:
+     * what is the purpose of this signal, I can't find any usage of it
+     * according to proto n *.h, it should be g_cclosure_marshal_VOID__PARAM
+     */
     gst_property_probe_signals[SIGNAL_PROBE_NEEDED] =
         g_signal_new ("probe-needed", G_TYPE_FROM_CLASS (iface),
         G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstPropertyProbeInterface,
@@ -91,7 +108,6 @@ gst_property_probe_iface_init (GstPropertyProbeInterface * iface)
  * Returns: the list of properties for which probing is supported
  * by this element.
  */
-
 const GList *
 gst_property_probe_get_properties (GstPropertyProbe * probe)
 {
@@ -107,6 +123,15 @@ gst_property_probe_get_properties (GstPropertyProbe * probe)
   return NULL;
 }
 
+/**
+ * gst_property_probe_get_property:
+ * @probe: the #GstPropertyProbe to get the properties for.
+ * @name: name of the property.
+ *
+ * Get #GParamSpec for a property for which probing is supported.
+ *
+ * Returns: the #GParamSpec of %NULL.
+ */
 const GParamSpec *
 gst_property_probe_get_property (GstPropertyProbe * probe, const gchar * name)
 {
@@ -127,6 +152,13 @@ gst_property_probe_get_property (GstPropertyProbe * probe, const gchar * name)
   return NULL;
 }
 
+/**
+ * gst_property_probe_probe_property:
+ * @probe: the #GstPropertyProbe to check.
+ * @pspec: #GParamSpec of the property.
+ *
+ * Runs a probe on the property specified by %pspec
+ */
 void
 gst_property_probe_probe_property (GstPropertyProbe * probe,
     const GParamSpec * pspec)
@@ -145,11 +177,10 @@ gst_property_probe_probe_property (GstPropertyProbe * probe,
 /**
  * gst_property_probe_probe_property_name:
  * @probe: the #GstPropertyProbe to check.
- * @name: name of the property to return.
+ * @name: name of the property.
  *
- * Runs a probe on the given property.
+ * Runs a probe on the property specified by %name.
  */
-
 void
 gst_property_probe_probe_property_name (GstPropertyProbe * probe,
     const gchar * name)
@@ -181,7 +212,6 @@ gst_property_probe_probe_property_name (GstPropertyProbe * probe,
  *
  * Returns: TRUE if the property needs a new probe, FALSE if not.
  */
-
 gboolean
 gst_property_probe_needs_probe (GstPropertyProbe * probe,
     const GParamSpec * pspec)
@@ -208,7 +238,6 @@ gst_property_probe_needs_probe (GstPropertyProbe * probe,
  *
  * Returns: TRUE if the property needs a new probe, FALSE if not.
  */
-
 gboolean
 gst_property_probe_needs_probe_name (GstPropertyProbe * probe,
     const gchar * name)
@@ -237,7 +266,6 @@ gst_property_probe_needs_probe_name (GstPropertyProbe * probe,
  *
  * Returns: A list of valid values for the given property.
  */
-
 GValueArray *
 gst_property_probe_get_values (GstPropertyProbe * probe,
     const GParamSpec * pspec)
@@ -264,7 +292,6 @@ gst_property_probe_get_values (GstPropertyProbe * probe,
  *
  * Returns: A list of valid values for the given property.
  */
-
 GValueArray *
 gst_property_probe_get_values_name (GstPropertyProbe * probe,
     const gchar * name)
@@ -294,7 +321,6 @@ gst_property_probe_get_values_name (GstPropertyProbe * probe,
  *
  * Returns: the list of valid values for this property.
  */
-
 GValueArray *
 gst_property_probe_probe_and_get_values (GstPropertyProbe * probe,
     const GParamSpec * pspec)
@@ -321,7 +347,6 @@ gst_property_probe_probe_and_get_values (GstPropertyProbe * probe,
  *
  * Returns: the list of valid values for this property.
  */
-
 GValueArray *
 gst_property_probe_probe_and_get_values_name (GstPropertyProbe * probe,
     const gchar * name)
