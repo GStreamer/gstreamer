@@ -104,18 +104,20 @@
 
     <para>
       The property probe is a way to autodetect allowed values for a
-      <classname>GObject</classname> property. It's primary use (and
-      the only thing that we currently use it for) is to autodetect
-      devices in several elements. For example, the OSS elements use
-      this interface to detect all OSS devices on a system. Applications
-      can then <quote>probe</quote> this property and get a list of
-      detected devices. Given the overlap between HAL and the practical
-      implementations of this interface, this might in time be deprecated
-      in favour of HAL.
+      <classname>GObject</classname> property. It's primary use is to autodetect
+      devices in several elements. For example, the OSS elements use this
+      interface to detect all OSS devices on a system. Applications can then
+      <quote>probe</quote> this property and get a list of detected devices.
     </para>
+    <note>
+      <para>
+        Given the overlap between HAL and the practical implementations of this
+        interface, this might in time be deprecated in favour of HAL.
+      </para>
+    </note>
     <para>
       This interface is currently implemented by many elements, including
-      the ALSA, OSS, Video4linux and Video4linux2 elements.
+      the ALSA, OSS, XVImageSink, Video4linux and Video4linux2 elements.
     </para>
   </sect1>
 

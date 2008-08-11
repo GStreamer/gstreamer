@@ -1,3 +1,9 @@
+2008-08-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/manual/advanced-interfaces.xml:
+	  Turn thoughts about HAL into a note-tag. Remove mentioning that is
+	  only used to discover devices.
+
 2008-08-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Frederic Crozat <fcrozat@mandriva.org>
