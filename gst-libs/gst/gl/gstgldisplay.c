@@ -1430,6 +1430,10 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
 			    GL_TEXTURE_RECTANGLE_ARB, display->use_fbo_texture, 0);
 
+  if (GLEW_ARB_fragment_shader)
+    gst_gl_shader_use (NULL);
+
+
   glPushAttrib(GL_VIEWPORT_BIT);
 
   glMatrixMode(GL_PROJECTION);
@@ -1466,13 +1470,7 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
 
   glDrawBuffer(GL_NONE);
 
-  //in case of the developer forgot the de-init use of GLSL in the scene code
-  if (display->colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
-    glUseProgramObjectARB (0);
-
-  glDisable(GL_TEXTURE_RECTANGLE_ARB);
-
-  glMatrixMode(GL_PROJECTION);
+    glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
