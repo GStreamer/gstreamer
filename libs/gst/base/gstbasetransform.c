@@ -1328,7 +1328,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 {
   GstBaseTransform *trans;
   GstBaseTransformPrivate *priv;
-  GstFlowReturn res;
+  GstFlowReturn res = GST_FLOW_OK;
   gboolean proxy = FALSE, suggest = FALSE;
   GstCaps *sink_suggest;
   guint size_suggest = 0;

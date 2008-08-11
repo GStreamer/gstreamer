@@ -1,3 +1,9 @@
+2008-08-11  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_buffer_alloc):
+	Fix a "may be used unitialized" warning.
+
 2008-08-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
