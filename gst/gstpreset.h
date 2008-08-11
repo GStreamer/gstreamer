@@ -32,14 +32,33 @@ G_BEGIN_DECLS
 #define GST_IS_PRESET(obj)            (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PRESET))
 #define GST_PRESET_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_PRESET, GstPresetInterface))
 
-
+/**
+ * GstPreset:
+ *
+ * Opaque #GstPreset data structure.
+ */
 typedef struct _GstPreset GstPreset; /* dummy object */
 typedef struct _GstPresetInterface GstPresetInterface;
 
+/**
+ * GstPresetInterface:
+ * @parent: parent interface type.
+ * @get_preset_names: virtual method to get list of presets
+ * @get_property_names: virtual methods to get properties that are persistent
+ * @load_preset: virtual methods to load a preset into properties
+ * @save_preset: virtual methods to save properties into a preset
+ * @rename_preset: virtual methods to rename a preset
+ * @delete_preset: virtual methods to remove a preset
+ * @set_meta: virtual methods to set textual meta data to a preset
+ * @get_meta: virtual methods to get textual meta data from a preset
+ *
+ * #GstPresetInterface interface.
+ */
 struct _GstPresetInterface
 {
   GTypeInterface parent;
 
+  /* methods */
   gchar**      (*get_preset_names)    (GstPreset *preset);
 
   gchar**      (*get_property_names)  (GstPreset *preset);

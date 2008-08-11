@@ -1,5 +1,11 @@
 2008-08-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpreset.h:
+	  Document preset-iface vmethods.
+
+2008-08-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/manual/advanced-interfaces.xml:
 	  Turn thoughts about HAL into a note-tag. Remove mentioning that is
 	  only used to discover devices.
