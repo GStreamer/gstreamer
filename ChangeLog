@@ -1,3 +1,14 @@
+2008-08-11  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	Check for sufficiently up-to-date x264 API.
+	* ext/x264/gstx264enc.c: (gst_x264_enc_pass_get_type),
+	(gst_x264_enc_base_init), (gst_x264_enc_class_init),
+	(gst_x264_enc_init), (gst_x264_enc_init_encoder),
+	(gst_x264_enc_set_property), (gst_x264_enc_get_property):
+	* ext/x264/gstx264enc.h:
+	Expose some more parameters of the x264 encoder as properties.
+
 2008-08-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/rtpmanager/gstrtpbin.c:
