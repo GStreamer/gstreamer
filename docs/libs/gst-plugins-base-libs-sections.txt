@@ -313,13 +313,13 @@ gst_cast_float
 <FILE>gstcolorbalance</FILE>
 <INCLUDE>gst/interfaces/color.h</INCLUDE>
 GstColorBalance
+GstColorBalanceClass
 GstColorBalanceType
 gst_color_balance_list_channels
 gst_color_balance_get_value
 gst_color_balance_set_value
 gst_color_balance_value_changed
 <SUBSECTION Standard>
-GstColorBalanceClass
 GST_COLOR_BALANCE
 GST_COLOR_BALANCE_CLASS
 GST_COLOR_BALANCE_GET_CLASS
@@ -336,8 +336,8 @@ gst_color_balance_type_get_type
 <FILE>gstcolorbalancechannel</FILE>
 <INCLUDE>gst/interfaces/colorbalancechannel.h</INCLUDE>
 GstColorBalanceChannel
-<SUBSECTION Standard>
 GstColorBalanceChannelClass
+<SUBSECTION Standard>
 GST_COLOR_BALANCE_CHANNEL
 GST_COLOR_BALANCE_CHANNEL_CLASS
 GST_IS_COLOR_BALANCE_CHANNEL
@@ -381,6 +381,7 @@ gst_mixer_message_parse_volume_changed
 gst_mixer_message_parse_options_list_changed
 
 <SUBSECTION Standard>
+GstMixer
 GstMixerClass
 GST_TYPE_MIXER
 GST_TYPE_MIXER_TYPE
@@ -476,6 +477,7 @@ gst_property_probe_get_type
 <FILE>gsttuner</FILE>
 <INCLUDE>gst/interfaces/tuner.h</INCLUDE>
 GstTuner
+GstTunerClass
 
 gst_tuner_list_channels
 gst_tuner_get_channel
@@ -497,7 +499,6 @@ gst_tuner_norm_changed
 gst_tuner_frequency_changed
 gst_tuner_signal_changed
 <SUBSECTION Standard>
-GstTunerClass
 GST_TYPE_TUNER
 GST_TUNER
 GST_TUNER_CLASS
@@ -564,13 +565,13 @@ gst_video_orientation_get_type
 <FILE>gstxoverlay</FILE>
 <INCLUDE>gst/interfaces/xoverlay.h</INCLUDE>
 GstXOverlay
+GstXOverlayClass
 gst_x_overlay_set_xwindow_id
 gst_x_overlay_got_xwindow_id
 gst_x_overlay_prepare_xwindow_id
 gst_x_overlay_expose
 gst_x_overlay_handle_events
 <SUBSECTION Standard>
-GstXOverlayClass
 GST_TYPE_X_OVERLAY
 GST_X_OVERLAY
 GST_X_OVERLAY_CLASS
@@ -791,6 +792,7 @@ GST_RIFF_xmpg
 GST_RIFF_y41p
 GST_RIFF_yuy2
 GST_RIFF_yv12
+
 gst_riff_create_audio_caps
 gst_riff_create_audio_template_caps
 gst_riff_create_iavs_caps

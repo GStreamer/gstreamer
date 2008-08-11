@@ -1,5 +1,11 @@
 2008-08-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/audio/gstaudiosrc.h:
+	  More docs and shuffling. What can we do with the hundreds of #defines.
+
+2008-08-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst-libs/gst/audio/audio.h:
 	* gst-libs/gst/audio/gstaudiofilter.h:
 	* gst-libs/gst/audio/gstringbuffer.h:

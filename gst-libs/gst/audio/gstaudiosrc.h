@@ -20,21 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* a base class for simple audio srcs.
- *
- * This base class only requires subclasses to implement a set
- * of simple functions.
- *
- * - open: open the device with the specified caps
- * - read: read samples to the audio device
- * - close: close the device
- * - delay: the number of samples queued in the device
- * - reset: unblock a read to the device and reset.
- *
- * All scheduling of samples and timestamps is done in this
- * base class.
- */
-
 #ifndef __GST_AUDIO_SRC_H__
 #define __GST_AUDIO_SRC_H__
 
@@ -53,6 +38,12 @@ G_BEGIN_DECLS
 typedef struct _GstAudioSrc GstAudioSrc;
 typedef struct _GstAudioSrcClass GstAudioSrcClass;
 
+/**
+ * GstAudioSrc:
+ * @element: parent class
+ *
+ * Base class for simple audio sources.
+ */
 struct _GstAudioSrc {
   GstBaseAudioSrc        element;
 
@@ -63,6 +54,20 @@ struct _GstAudioSrc {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstAudioSrcClass:
+ * @parent_class: the parent class.
+ * @open: open the device with the specified caps
+ * @prepare: configure device with format
+ * @unprepare: undo the configuration
+ * @close: close the device
+ * @read: read samples to the audio device
+ * @delay: the number of samples queued in the device
+ * @reset: unblock a read to the device and reset.
+ *
+ * #GstAudioSrc class. Override the vmethod to implement
+ * functionality.
+ */
 struct _GstAudioSrcClass {
   GstBaseAudioSrcClass parent_class;
 
