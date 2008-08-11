@@ -424,7 +424,7 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
 
   /* resources */
   encoder->delay = g_queue_new ();
-  encoder->buffer_size = 1040000;
+  encoder->buffer_size = 100000;
   encoder->buffer = g_malloc (encoder->buffer_size);
 
   x264_param_default (&encoder->x264param);
@@ -637,15 +637,17 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
     return NULL;
   }
 
-  /* This should be enough for a header buffer. */
-  buffer_size = 100000;
-  buffer = g_malloc (buffer_size);
-
-  if (nal[1].i_type != 7 || nal[2].i_type != 8) {
-    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, ("Unexpected x264 header."),
-        ("TODO avcC header construction for high profiles needs some work"));
+  /* x264 is expected to return an SEI (some identification info),
+   * followed by an SPS and PPS */
+  if (i_nal != 3 || nal[1].i_type != 7 || nal[2].i_type != 8) {
+    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, NULL,
+        ("Unexpected x264 header."));
     return NULL;
   }
+
+  /* nal payloads with emulation_prevention_three_byte, and some header data */
+  buffer_size = (nal[1].i_payload + nal[2].i_payload) * 4 + 100;
+  buffer = g_malloc (buffer_size);
 
   sps = nal[1].p_payload;
 
@@ -672,9 +674,7 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   i_size += nal_size + 2;
 
   buf = gst_buffer_new_and_alloc (i_size);
-
   memcpy (GST_BUFFER_DATA (buf), buffer, i_size);
-
   g_free (buffer);
 
   return buf;
@@ -906,12 +906,12 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
 
   i_size = 0;
   for (i = 0; i < *i_nal; i++) {
-    int i_data = encoder->buffer_size - i_size - 4;
+    gint i_data = encoder->buffer_size - i_size - 4;
 
-    if (i_data < encoder->buffer_size / 2) {
-      encoder->buffer_size *= 2;
+    if (i_data < nal[i].i_payload * 2) {
+      encoder->buffer_size += 2 * nal[i].i_payload;
       encoder->buffer = g_realloc (encoder->buffer, encoder->buffer_size);
-      i_data = encoder->buffer_size - i_size;
+      i_data = encoder->buffer_size - i_size - 4;
     }
 
     nal_size =
