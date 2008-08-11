@@ -502,7 +502,7 @@ static GstMessage *
 gst_level_message_new (GstLevel * level, GstClockTime timestamp,
     GstClockTime duration)
 {
-  GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (l);
+  GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (level);
   GstStructure *s;
   GValue v = { 0, };
   GstClockTime endtime, running_time, stream_time;

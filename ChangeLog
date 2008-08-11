@@ -1,3 +1,9 @@
+2008-08-11  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/level/gstlevel.c: (gst_level_message_new):
+	 Fix compilation (also known as the classic 'fix code that someone
+	 committed without compiling it first').
+
 2008-08-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/elements/level.c:
