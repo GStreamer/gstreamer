@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  *
@@ -28,7 +28,7 @@
 #define GST_CAT_DEFAULT gst_gl_upload_debug
 	GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails element_details = 
+static const GstElementDetails element_details =
     GST_ELEMENT_DETAILS ("OpenGL upload",
         "Filter/Effect",
         "A from video to GL flow filter",
@@ -80,7 +80,7 @@ static void gst_gl_upload_fixate_caps (GstBaseTransform* base, GstPadDirection d
     GstCaps* caps, GstCaps* othercaps);
 static gboolean gst_gl_upload_start (GstBaseTransform* bt);
 static gboolean gst_gl_upload_stop (GstBaseTransform* bt);
-static GstFlowReturn gst_gl_upload_prepare_output_buffer (GstBaseTransform* trans, 
+static GstFlowReturn gst_gl_upload_prepare_output_buffer (GstBaseTransform* trans,
     GstBuffer* input, gint size, GstCaps* caps, GstBuffer** buf);
 static GstFlowReturn gst_gl_upload_transform (GstBaseTransform* trans,
     GstBuffer* inbuf, GstBuffer * outbuf);
@@ -134,7 +134,7 @@ gst_gl_upload_set_property (GObject* object, guint prop_id,
 {
     //GstGLUpload* upload = GST_GL_UPLOAD (object);
 
-    switch (prop_id) 
+    switch (prop_id)
     {
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -148,7 +148,7 @@ gst_gl_upload_get_property (GObject* object, guint prop_id,
 {
     //GstGLUpload *upload = GST_GL_UPLOAD (object);
 
-    switch (prop_id) 
+    switch (prop_id)
     {
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -158,8 +158,8 @@ gst_gl_upload_get_property (GObject* object, guint prop_id,
 
 static void
 gst_gl_upload_reset (GstGLUpload* upload)
-{ 
-    if (upload->display) 
+{
+    if (upload->display)
     {
         g_object_unref (upload->display);
         upload->display = NULL;
@@ -194,7 +194,7 @@ gst_gl_upload_transform_caps (GstBaseTransform* bt,
 	const GValue* framerate_value = NULL;
 	const GValue* par_value = NULL;
 
-	GST_ERROR ("transform caps %" GST_PTR_FORMAT, caps);
+	GST_DEBUG ("transform caps %" GST_PTR_FORMAT, caps);
 
     framerate_value = gst_structure_get_value (structure, "framerate");
 	par_value = gst_structure_get_value (structure, "pixel-aspect-ratio");
@@ -206,7 +206,7 @@ gst_gl_upload_transform_caps (GstBaseTransform* bt,
 		gst_caps_append(newcaps, newothercaps);
 
     }
-	else 
+	else
         newcaps = gst_caps_new_simple ("video/x-raw-gl", NULL);
 
     structure = gst_structure_copy (gst_caps_get_structure (newcaps, 0));
@@ -214,7 +214,7 @@ gst_gl_upload_transform_caps (GstBaseTransform* bt,
     gst_structure_set (structure,
         "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-	
+
 	gst_structure_set_value (structure, "framerate", framerate_value);
 	if (par_value)
 		gst_structure_set_value (structure, "pixel-aspect-ratio", par_value);
@@ -224,7 +224,7 @@ gst_gl_upload_transform_caps (GstBaseTransform* bt,
 
     gst_caps_merge_structure (newcaps, gst_structure_copy (structure));
 
-	GST_ERROR ("new caps %" GST_PTR_FORMAT, newcaps);
+	GST_DEBUG ("new caps %" GST_PTR_FORMAT, newcaps);
 
 	return newcaps;
 }
@@ -250,7 +250,7 @@ gst_gl_upload_fixate_caps (GstBaseTransform* base, GstPadDirection direction,
     to_par = gst_structure_get_value (outs, "pixel-aspect-ratio");
 
     //we have both PAR but they might not be fixated
-    if (from_par && to_par) 
+    if (from_par && to_par)
     {
         gint from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
 
@@ -265,7 +265,7 @@ gst_gl_upload_fixate_caps (GstBaseTransform* base, GstPadDirection direction,
         from_par_d = gst_value_get_fraction_denominator (from_par);
 
         //fixate the out PAR
-        if (!gst_value_is_fixed (to_par)) 
+        if (!gst_value_is_fixed (to_par))
         {
           GST_DEBUG_OBJECT (base, "fixating to_par to %dx%d", from_par_n,
               from_par_d);
@@ -277,12 +277,12 @@ gst_gl_upload_fixate_caps (GstBaseTransform* base, GstPadDirection direction,
         to_par_d = gst_value_get_fraction_denominator (to_par);
 
         //f both width and height are already fixed, we can't do anything
-        //about it anymore 
+        //about it anymore
         if (gst_structure_get_int (outs, "width", &w))
             ++count;
         if (gst_structure_get_int (outs, "height", &h))
             ++count;
-        if (count == 2) 
+        if (count == 2)
         {
             GST_DEBUG_OBJECT (base, "dimensions already set to %dx%d, not fixating",
                 w, h);
@@ -293,7 +293,7 @@ gst_gl_upload_fixate_caps (GstBaseTransform* base, GstPadDirection direction,
         gst_structure_get_int (ins, "height", &from_h);
 
         if (!gst_video_calculate_display_ratio (&num, &den, from_w, from_h,
-                from_par_n, from_par_d, to_par_n, to_par_d)) 
+                from_par_n, from_par_d, to_par_n, to_par_d))
         {
           GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
               ("Error calculating the output scaled size - integer overflow"));
@@ -310,35 +310,35 @@ gst_gl_upload_fixate_caps (GstBaseTransform* base, GstPadDirection direction,
         //prefer those that have one of w/h the same as the incoming video
         //using wd / hd = num / den
 
-        //if one of the output width or height is fixed, we work from there 
-        if (h) 
+        //if one of the output width or height is fixed, we work from there
+        if (h)
         {
             GST_DEBUG_OBJECT (base, "height is fixed,scaling width");
             w = (guint) gst_util_uint64_scale_int (h, num, den);
-        } 
-        else if (w) 
+        }
+        else if (w)
         {
             GST_DEBUG_OBJECT (base, "width is fixed, scaling height");
             h = (guint) gst_util_uint64_scale_int (w, den, num);
-        } 
-        else 
+        }
+        else
         {
             //none of width or height is fixed, figure out both of them based only on
             //the input width and height
-            //check hd / den is an integer scale factor, and scale wd with the PAR 
-            if (from_h % den == 0) 
+            //check hd / den is an integer scale factor, and scale wd with the PAR
+            if (from_h % den == 0)
             {
                 GST_DEBUG_OBJECT (base, "keeping video height");
                 h = from_h;
                 w = (guint) gst_util_uint64_scale_int (h, num, den);
-            } 
-            else if (from_w % num == 0) 
+            }
+            else if (from_w % num == 0)
             {
                 GST_DEBUG_OBJECT (base, "keeping video width");
                 w = from_w;
                 h = (guint) gst_util_uint64_scale_int (w, den, num);
-            } 
-            else 
+            }
+            else
             {
                 GST_DEBUG_OBJECT (base, "approximating but keeping video height");
                 h = from_h;
@@ -350,14 +350,14 @@ gst_gl_upload_fixate_caps (GstBaseTransform* base, GstPadDirection direction,
         //now fixate
         gst_structure_fixate_field_nearest_int (outs, "width", w);
         gst_structure_fixate_field_nearest_int (outs, "height", h);
-    } 
-    else 
+    }
+    else
     {
         gint width, height;
 
-        if (gst_structure_get_int (ins, "width", &width)) 
+        if (gst_structure_get_int (ins, "width", &width))
         {
-          if (gst_structure_has_field (outs, "width")) 
+          if (gst_structure_has_field (outs, "width"))
             gst_structure_fixate_field_nearest_int (outs, "width", width);
         }
         if (gst_structure_get_int (ins, "height", &height)) {
@@ -387,7 +387,7 @@ gst_gl_upload_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     ret |= gst_video_format_parse_caps (incaps, &upload->video_format,
         &upload->video_width, &upload->video_height);
 
-    if (!ret) 
+    if (!ret)
     {
         GST_DEBUG ("caps connot be parsed");
         return FALSE;
@@ -395,14 +395,14 @@ gst_gl_upload_set_caps (GstBaseTransform* bt, GstCaps* incaps,
 
     //we have video and gl size, we can now init OpenGL stuffs
     upload->display = gst_gl_display_new ();
-  
+
     //init unvisible opengl context
-    gst_gl_display_create_context (upload->display, 
+    gst_gl_display_create_context (upload->display,
         50, y_pos++ * (upload->gl_height+50) + 50,
         upload->gl_width, upload->gl_height, 0, FALSE);
 
     //init colorspace conversion if needed
-    gst_gl_display_init_upload (upload->display, upload->video_format, 
+    gst_gl_display_init_upload (upload->display, upload->video_format,
         upload->gl_width, upload->gl_height);
 
     return ret;
@@ -418,18 +418,18 @@ gst_gl_upload_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
     gint height = 0;
 
     structure = gst_caps_get_structure (caps, 0);
-    if (gst_structure_has_name (structure, "video/x-raw-gl")) 
+    if (gst_structure_has_name (structure, "video/x-raw-gl"))
     {
         ret = gst_gl_buffer_parse_caps (caps, &width, &height);
-        if (ret) 
+        if (ret)
             *size = gst_gl_buffer_get_size (width, height);
-    } 
-    else 
+    }
+    else
     {
         GstVideoFormat video_format = GST_VIDEO_FORMAT_UNKNOWN;
 
         ret = gst_video_format_parse_caps (caps, &video_format, &width, &height);
-        if (ret) 
+        if (ret)
             *size = gst_video_format_get_size (video_format, width, height);
     }
 
@@ -470,7 +470,7 @@ gst_gl_upload_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     //Depending on the colorspace, video is upload into several textures.
     //However, there is only one output texture. The one attached
     //to the upload FBO.
-    if (gst_gl_display_do_upload (upload->display, gl_outbuf->texture, 
+    if (gst_gl_display_do_upload (upload->display, gl_outbuf->texture,
             upload->video_width, upload->video_height, GST_BUFFER_DATA (inbuf)))
         return GST_FLOW_OK;
     else
