@@ -14,6 +14,7 @@ GstRTSPSrc GstChildProxy GstURIHandler
 GstShout2send GstTagSetter
 GstUDPSink GstURIHandler
 GstDV1394Src GstURIHandler GstPropertyProbe
+GstHDV1394Src GstURIHandler GstPropertyProbe
 GstSoupHTTPSrc GstURIHandler
 GstPulseSrc GstImplementsInterface GstMixer
 GstOssSrc GstImplementsInterface GstMixer

@@ -39,6 +39,7 @@
     <xi:include href="xml/element-directdrawsink.xml" />
     <xi:include href="xml/element-directsoundsink.xml" />
     <xi:include href="xml/element-dv1394src.xml" />
+    <xi:include href="xml/element-hdv1394src.xml" />
     <xi:include href="xml/element-dvdec.xml" />
     <xi:include href="xml/element-dvdemux.xml" />
     <xi:include href="xml/element-equalizer-10bands.xml" />

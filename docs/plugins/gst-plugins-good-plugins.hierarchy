@@ -52,6 +52,7 @@ GObject
       GstBaseSrc
         GstPushSrc
           GstDV1394Src
+          GstHDV1394Src
           GstSoupHTTPSrc
           GstBaseAudioSrc
             GstAudioSrc

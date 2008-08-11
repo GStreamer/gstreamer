@@ -19498,3 +19498,53 @@
 <DEFAULT>89</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstHDV1394Src::channel</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,64]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Channel number for listening.</BLURB>
+<DEFAULT>63</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHDV1394Src::device-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>device name</NICK>
+<BLURB>user-friendly name of the device.</BLURB>
+<DEFAULT>"Default"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHDV1394Src::guid</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GUID</NICK>
+<BLURB>select one of multiple DV devices by its GUID. use a hexadecimal like 0xhhhhhhhhhhhhhhhh. (0 = no guid).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHDV1394Src::port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Port</NICK>
+<BLURB>Port number (-1 automatic).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHDV1394Src::use-avc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use AV/C</NICK>
+<BLURB>Use AV/C VTR control.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+

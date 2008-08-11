@@ -1,5 +1,15 @@
 2008-08-11  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	Integrate documentation for new hdv1394src element.
+
+2008-08-11  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* ext/raw1394/Makefile.am:
 	* ext/raw1394/gst1394.c: (plugin_init):
 	* ext/raw1394/gsthdv1394src.c: (_do_init),
