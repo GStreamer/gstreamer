@@ -124,19 +124,24 @@ static void gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
 static void
 gst_gl_filterblur_init_resources (GstGLFilter *filter)
 {
-//  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
+  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
 
-  /* dummy gl call to test if we really are in a  gl context */
-  g_print ("\nStart!!!: %s\n\n", glGetString (GL_VERSION));
+  glGenTextures (1, &filterblur->midtexture);
+  glBindTexture(GL_TEXTURE_RECTANGLE_ARB, filterblur->midtexture);
+  glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+	       filter->width, filter->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
 static void
 gst_gl_filterblur_reset_resources (GstGLFilter *filter)
 {
-//  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
+  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
 
-  /* dummy gl call to test if we really are in a  gl context */
-  g_print ("\nStop!!!: %s\n\n", glGetString (GL_VENDOR));
+  glDeleteTextures (1, &filterblur->midtexture);
 }
 
 static void
@@ -181,9 +186,6 @@ gst_gl_filter_filterblur_reset (GstGLFilter* filter)
 
   //blocking call, wait the opengl thread has destroyed the shader
   gst_gl_display_del_shader (filter->display, filterblur->shader1);
-
-  //blocking call, put the texture in the pool
-  gst_gl_display_del_texture (filter->display, filterblur->midtexture, filter->width, filter->height);
 }
 
 static void
@@ -216,9 +218,6 @@ static void
 gst_gl_filterblur_init_shader (GstGLFilter* filter)
 {
   GstGLFilterBlur* blur_filter = GST_GL_FILTERBLUR (filter);
-
-  //blocking call, generate a texture using the pool
-  gst_gl_display_gen_texture (filter->display, &blur_filter->midtexture, filter->width, filter->height) ;
 
   //blocking call, wait the opengl thread has compiled the shader
   gst_gl_display_gen_shader (filter->display, hconv9_fragment_source, &blur_filter->shader0);
