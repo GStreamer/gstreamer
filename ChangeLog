@@ -1,5 +1,10 @@
 2008-08-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst-libs/gst/audio/Makefile.am:
+	  Don't try to build that example anymore.
+
+2008-08-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst-libs/gst/audio/.cvsignore:
 	* gst-libs/gst/audio/Makefile.am:
 	* gst-libs/gst/audio/gstaudiofiltertemplate.c:

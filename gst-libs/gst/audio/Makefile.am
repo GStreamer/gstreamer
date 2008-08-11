@@ -9,7 +9,6 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 
 lib_LTLIBRARIES = \
 	libgstaudio-@GST_MAJORMINOR@.la
-noinst_LTLIBRARIES = libgstaudiofilterexample.la
 
 CLEANFILES = $(BUILT_SOURCES)
 
