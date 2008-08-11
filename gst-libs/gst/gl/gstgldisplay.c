@@ -2448,7 +2448,7 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay *display)
 {
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->upload_fbo);
 
-  /* no more needed? upload_uptex should already be in the pool */
+  /* no more needed? upload_outtex should already be in the pool */
   /* glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->upload_outtex); */
   /* glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, */
   /* 	       display->upload_width, display->upload_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL); */
