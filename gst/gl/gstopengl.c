@@ -25,7 +25,6 @@
 #include "gstgltestsrc.h"
 #include "gstglupload.h"
 #include "gstglfiltercube.h"
-#include "gstglfilteredge.h"
 #include "gstglfilterlaplacian.h"
 #include "gstglfilterapp.h"
 #include "gstgldownload.h"
@@ -64,11 +63,6 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glfilterblur",
           GST_RANK_NONE, gst_gl_filterblur_get_type())) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glfilteredge",
-          GST_RANK_NONE, GST_TYPE_GL_FILTER_EDGE)) {
     return FALSE;
   }
 
