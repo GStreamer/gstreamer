@@ -1724,10 +1724,11 @@ gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
   {
 
     gchar string_size[512];
+    GQueue* sub_texture_pool = NULL;
+   
     sprintf (string_size, "%dx%d", width, height);
-
+    sub_texture_pool = g_datalist_get_data(&display->texture_pool, string_size);
     //if the size is known
-    GQueue* sub_texture_pool = g_datalist_get_data(&display->texture_pool, string_size);
     if (sub_texture_pool)
     {
       //check if there is a texture available in the pool
@@ -1781,10 +1782,12 @@ gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
   //The pool of textures is deleted in the GstGLDisplay destructor
 
   gchar string_size[512];
+  GQueue* sub_texture_pool = NULL;
+  GstGLDisplayTex* tex = NULL;
+  
   sprintf (string_size, "%dx%d", width, height);
-
+  sub_texture_pool = g_datalist_get_data(&display->texture_pool, string_size);
   //if the size is known
-  GQueue* sub_texture_pool = g_datalist_get_data(&display->texture_pool, string_size);
   if (!sub_texture_pool)
   {
     sub_texture_pool = g_queue_new ();
@@ -1793,7 +1796,7 @@ gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
   }
 
   //contruct a sub texture pool element
-  GstGLDisplayTex* tex = g_new0 (GstGLDisplayTex, 1);
+  tex = g_new0 (GstGLDisplayTex, 1);
   tex->texture = *pTexture;
   *pTexture = 0;
 
