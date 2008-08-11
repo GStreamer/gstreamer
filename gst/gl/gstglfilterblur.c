@@ -183,7 +183,7 @@ gst_gl_filter_filterblur_reset (GstGLFilter* filter)
   gst_gl_display_del_shader (filter->display, filterblur->shader1);
 
   //blocking call, put the texture in the pool
-  gst_gl_display_del_texture (filter->display, filterblur->midtexture);
+  gst_gl_display_del_texture (filter->display, filterblur->midtexture, filter->width, filter->height);
 }
 
 static void
@@ -218,7 +218,7 @@ gst_gl_filterblur_init_shader (GstGLFilter* filter)
   GstGLFilterBlur* blur_filter = GST_GL_FILTERBLUR (filter);
 
   //blocking call, generate a texture using the pool
-  gst_gl_display_gen_texture (filter->display, &blur_filter->midtexture) ;
+  gst_gl_display_gen_texture (filter->display, &blur_filter->midtexture, filter->width, filter->height) ;
 
   //blocking call, wait the opengl thread has compiled the shader
   gst_gl_display_gen_shader (filter->display, hconv9_fragment_source, &blur_filter->shader0);

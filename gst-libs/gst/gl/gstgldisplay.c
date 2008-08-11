@@ -62,8 +62,9 @@ void gst_gl_display_post_message (GstGLDisplayAction action, GstGLDisplay* displ
 void gst_gl_display_on_resize(gint width, gint height);
 void gst_gl_display_on_draw (void);
 void gst_gl_display_on_close (void);
-void gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture);
-void gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture);
+void gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint width, GLint height);
+void gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint width, GLint height);
+void gst_gl_display_destroynotify_func_pool (gpointer data);
 void gst_gl_display_check_framebuffer_status (void);
 
 /* To not make gst_gl_display_thread_do_upload
@@ -118,7 +119,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   display->win_ypos = 0;
   display->visible = FALSE;
   display->isAlive = TRUE;
-  display->texturePool = g_queue_new ();
+  g_datalist_init (&display->texture_pool);
 
   //conditions
   display->cond_create_context = g_cond_new ();
@@ -148,7 +149,11 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
 
   //action gen and del texture
   display->gen_texture = 0;
+  display->gen_texture_width = 0;
+  display->gen_texture_height = 0;
   display->del_texture = 0;
+  display->del_texture_width = 0;
+  display->del_texture_height = 0;
 
   //client callbacks
   display->clientReshapeCallback = NULL;
@@ -366,9 +371,9 @@ gst_gl_display_finalize (GObject* object)
   g_cond_wait (display->cond_destroy_context, display->mutex);
   gst_gl_display_unlock (display);
 
-  if (display->texturePool) {
-    g_queue_free (display->texturePool);
-    display->texturePool = NULL;
+  if (display->texture_pool) {
+    g_datalist_init (&display->texture_pool);
+    display->texture_pool = NULL;
   }
   if (display->title) {
     g_string_free (display->title, TRUE);
@@ -608,7 +613,7 @@ gst_gl_display_thread_check_msg_validity (GstGLDisplayMsg *msg)
   case GST_GL_DISPLAY_ACTION_VISIBLE_CONTEXT:
   case GST_GL_DISPLAY_ACTION_RESIZE_CONTEXT:
   case GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT:
-  case GST_GL_DISPLAY_ACTION_GENERIC:    
+  case GST_GL_DISPLAY_ACTION_GENERIC:
   case GST_GL_DISPLAY_ACTION_GEN_TEXTURE:
   case GST_GL_DISPLAY_ACTION_DEL_TEXTURE:
   case GST_GL_DISPLAY_ACTION_INIT_UPLOAD:
@@ -840,14 +845,8 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
     display->upload_intex = 0;
   }
 
-
   //clean up the texture pool
-  while (g_queue_get_length (display->texturePool))
-  {
-    GstGLDisplayTex* tex = g_queue_pop_head (display->texturePool);
-    glDeleteTextures (1, &tex->texture);
-    g_free (tex);
-  }
+  g_datalist_clear (&display->texture_pool);
 
   g_hash_table_remove (gst_gl_display_map, GINT_TO_POINTER (display->glutWinId));
   g_print ("Context %d destroyed\n", display->glutWinId);
@@ -914,7 +913,8 @@ gst_gl_display_thread_gen_texture (GstGLDisplay * display)
 {
   glutSetWindow (display->glutWinId);
   //setup a texture to render to (this one will be in a gl buffer)
-  gst_gl_display_glgen_texture (display, &display->gen_texture);
+  gst_gl_display_glgen_texture (display, &display->gen_texture,
+    display->gen_texture_width, display->gen_texture_height);
   g_cond_signal (display->cond_gen_texture);
 }
 
@@ -924,7 +924,8 @@ static void
 gst_gl_display_thread_del_texture (GstGLDisplay* display)
 {
   glutSetWindow (display->glutWinId);
-  gst_gl_display_gldel_texture (display, &display->del_texture);
+  gst_gl_display_gldel_texture (display, &display->del_texture,
+    display->del_texture_width, display->del_texture_height);
   g_cond_signal (display->cond_del_texture);
 }
 
@@ -1135,6 +1136,7 @@ gst_gl_display_thread_do_upload (GstGLDisplay *display)
 {
   glutSetWindow (display->glutWinId);
 
+  //FIXME:call upload_make function in thread_init_upload instead of calling it here
   gst_gl_display_thread_do_upload_make (display);
   gst_gl_display_thread_do_upload_fill (display);
   gst_gl_display_thread_do_upload_draw (display);
@@ -1419,12 +1421,8 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
 
   //setup a texture to render to
   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->use_fbo_texture);
-  glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-	       display->use_fbo_width, display->use_fbo_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  /*glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+	       display->use_fbo_width, display->use_fbo_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);*/
 
   //attach the texture to the FBO to renderer to
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
@@ -1720,22 +1718,54 @@ void gst_gl_display_on_close (void)
 /* Generate a texture if no one is available in the pool
  * Called in the gl thread */
 void
-gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture)
+gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint width, GLint height)
 {
   if (display->isAlive)
   {
-    //check if there is a texture available in the pool
-    GstGLDisplayTex* tex = g_queue_pop_head (display->texturePool);
-    if (tex)
+
+    gchar string_size[512];
+    sprintf (string_size, "%dx%d", width, height);
+
+    //if the size is known
+    GQueue* sub_texture_pool = g_datalist_get_data(&display->texture_pool, string_size);
+    if (sub_texture_pool)
     {
-      *pTexture = tex->texture;
-      g_free (tex);
+      //check if there is a texture available in the pool
+      GstGLDisplayTex* tex = g_queue_pop_head (sub_texture_pool);
+      if (tex)
+      {
+        *pTexture = tex->texture;
+        g_free (tex);
+      }
+      //otherwise one more texture is generated
+      //note that this new texture is added in the pool
+      //only after being used
+      else
+      {
+        glGenTextures (1, pTexture);
+        glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
+        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+          width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      }
+
     }
-    //otherwise one more texture is generated
-    //note that this new texture is added in the pool
-    //only after being used
+    //should be factorized
     else
+    {
       glGenTextures (1, pTexture);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
+      glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+        width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    }
+
   }
   else
     *pTexture = 0;
@@ -1745,18 +1775,44 @@ gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture)
 /* Delete a texture, actually the texture is just added to the pool
  * Called in the gl thread */
 void
-gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture)
+gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint width, GLint height)
 {
   //Each existing texture is destroyed only when the pool is destroyed
   //The pool of textures is deleted in the GstGLDisplay destructor
 
-  //contruct a texture pool element
+  gchar string_size[512];
+  sprintf (string_size, "%dx%d", width, height);
+
+  //if the size is known
+  GQueue* sub_texture_pool = g_datalist_get_data(&display->texture_pool, string_size);
+  if (!sub_texture_pool)
+  {
+    sub_texture_pool = g_queue_new ();
+    g_datalist_set_data_full(&display->texture_pool, string_size,
+      sub_texture_pool, gst_gl_display_destroynotify_func_pool);
+  }
+
+  //contruct a sub texture pool element
   GstGLDisplayTex* tex = g_new0 (GstGLDisplayTex, 1);
   tex->texture = *pTexture;
   *pTexture = 0;
 
   //add tex to the pool, it makes texture allocation reusable
-  g_queue_push_tail (display->texturePool, tex);
+  g_queue_push_tail (sub_texture_pool, tex);
+}
+
+
+/* call when a sub texture pool is removed from the data list */
+void gst_gl_display_destroynotify_func_pool (gpointer data)
+{
+  GQueue* sub_texture_pool = (GQueue*) data;
+
+  while (g_queue_get_length (sub_texture_pool))
+  {
+    GstGLDisplayTex* tex = g_queue_pop_head (sub_texture_pool);
+    glDeleteTextures (1, &tex->texture);
+    g_free (tex);
+  }
 }
 
 
@@ -1886,9 +1942,9 @@ gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width , gi
   return isAlive;
 }
 
-void 
+void
 gst_gl_display_thread_add (GstGLDisplay *display,
-			   GstGLDisplayThreadFunc func, gpointer data) 
+			   GstGLDisplayThreadFunc func, gpointer data)
 {
   gst_gl_display_lock (display);
   display->data = data;
@@ -1900,9 +1956,11 @@ gst_gl_display_thread_add (GstGLDisplay *display,
 
 /* Called by gst_gl_buffer_new */
 void
-gst_gl_display_gen_texture (GstGLDisplay* display, GLuint* pTexture)
+gst_gl_display_gen_texture (GstGLDisplay* display, GLuint* pTexture, GLint width, GLint height)
 {
   gst_gl_display_lock (display);
+  display->gen_texture_width = width;
+  display->gen_texture_height = height;
   gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_GEN_TEXTURE, display);
   g_cond_wait (display->cond_gen_texture, display->mutex);
   *pTexture = display->gen_texture;
@@ -1912,10 +1970,12 @@ gst_gl_display_gen_texture (GstGLDisplay* display, GLuint* pTexture)
 
 /* Called by gst_gl_buffer_finalize */
 void
-gst_gl_display_del_texture (GstGLDisplay* display, GLuint texture)
+gst_gl_display_del_texture (GstGLDisplay* display, GLuint texture, GLint width, GLint height)
 {
   gst_gl_display_lock (display);
   display->del_texture = texture;
+  display->del_texture_width = width;
+  display->del_texture_height = height;
   gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DEL_TEXTURE, display);
   g_cond_wait (display->cond_del_texture, display->mutex);
   gst_gl_display_unlock (display);
@@ -2152,6 +2212,7 @@ void gst_gl_display_thread_do_upload_make (GstGLDisplay *display)
   gint width = display->upload_data_with;
   gint height = display->upload_data_height;
 
+  //FIXME:remove the next check then call this function in thread_init_upload
   if (display->upload_intex == 0)
   {
     glGenTextures (1, &display->upload_intex);
