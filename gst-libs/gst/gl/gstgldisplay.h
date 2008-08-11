@@ -66,6 +66,7 @@ typedef enum {
   GST_GL_DISPLAY_ACTION_VISIBLE_CONTEXT,
   GST_GL_DISPLAY_ACTION_RESIZE_CONTEXT,
   GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT,
+  GST_GL_DISPLAY_ACTION_GENERIC,
   GST_GL_DISPLAY_ACTION_GEN_TEXTURE,
   GST_GL_DISPLAY_ACTION_DEL_TEXTURE,
   GST_GL_DISPLAY_ACTION_INIT_UPLOAD, 
@@ -99,6 +100,8 @@ typedef struct _GstGLDisplayTex {
 typedef void (* CRCB) ( GLuint, GLuint );
 typedef gboolean (* CDCB) ( GLuint, GLuint, GLuint);
 
+typedef void (* GstGLDisplayThreadFunc) (GstGLDisplay *display, gpointer data);
+
 //opengl scene callback
 typedef void (* GLCB) ( gint, gint, guint, gpointer stuff);
 
@@ -122,6 +125,7 @@ struct _GstGLDisplay {
   GCond* cond_create_context;
   GCond* cond_destroy_context;
   GCond* cond_change_context;
+  GCond* cond_generic;
   GCond* cond_gen_texture;
   GCond* cond_del_texture;
   GCond* cond_init_upload;
@@ -133,6 +137,10 @@ struct _GstGLDisplay {
   GCond* cond_del_fbo;
   GCond* cond_gen_shader;
   GCond* cond_del_shader;
+
+  //generic gl code
+  GstGLDisplayThreadFunc generic_callback;
+  gpointer data;
 
   //action redisplay
   GLuint redisplay_texture;
@@ -257,6 +265,9 @@ void gst_gl_display_create_context (GstGLDisplay* display,
 void gst_gl_display_set_visible_context (GstGLDisplay* display, gboolean visible);
 void gst_gl_display_resize_context (GstGLDisplay* display, gint width, gint height);
 gboolean gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width, gint height);
+
+void gst_gl_display_thread_add (GstGLDisplay *display,
+				GstGLDisplayThreadFunc func, gpointer data);
 
 void gst_gl_display_gen_texture (GstGLDisplay* display, GLuint* pTexture);
 void gst_gl_display_del_texture (GstGLDisplay* display, GLuint texture);

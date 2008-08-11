@@ -196,6 +196,22 @@ gst_gl_filterblur_draw_texture (GstGLFilterBlur * filterblur, GLuint tex)
   glEnd ();
 }
 
+static void
+change_view (GstGLDisplay *display, gpointer data)
+{
+//  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (data);
+
+  const double mirrormatrix[16] = {
+    -1.0, 0.0, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 1.0
+  };
+  
+  glMatrixMode (GL_MODELVIEW);
+  glLoadMatrixd (mirrormatrix);
+}
+
 static gboolean
 gst_gl_filterblur_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 				GstGLBuffer* outbuf)
@@ -208,6 +224,9 @@ gst_gl_filterblur_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 
   gst_gl_filter_render_to_target (filter, inbuf->texture, midtexture, 
 				  gst_gl_filterblur_hcallback, filterblur);
+
+  gst_gl_display_thread_add (filter->display, change_view, filterblur);
+
   gst_gl_filter_render_to_target (filter, midtexture, outbuf->texture, 
 				  gst_gl_filterblur_vcallback, filterblur);
 

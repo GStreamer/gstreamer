@@ -41,6 +41,7 @@ static void gst_gl_display_thread_change_context (GstGLDisplay* display);
 static void gst_gl_display_thread_set_visible_context (GstGLDisplay* display);
 static void gst_gl_display_thread_resize_context (GstGLDisplay* display);
 static void gst_gl_display_thread_redisplay (GstGLDisplay* display);
+static void gst_gl_display_thread_run_generic (GstGLDisplay *display);
 static void gst_gl_display_thread_gen_texture (GstGLDisplay* display);
 static void gst_gl_display_thread_del_texture (GstGLDisplay* display);
 static void gst_gl_display_thread_init_upload (GstGLDisplay* display);
@@ -122,6 +123,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   display->cond_create_context = g_cond_new ();
   display->cond_destroy_context = g_cond_new ();
   display->cond_change_context = g_cond_new ();
+  display->cond_generic = g_cond_new ();
   display->cond_gen_texture = g_cond_new ();
   display->cond_del_texture = g_cond_new ();
   display->cond_init_upload = g_cond_new ();
@@ -419,6 +421,10 @@ gst_gl_display_finalize (GObject* object)
     g_cond_free (display->cond_gen_texture);
     display->cond_gen_texture = NULL;
   }
+  if (display->cond_gen_texture) {
+    g_cond_free (display->cond_gen_texture);
+    display->cond_gen_texture = NULL;
+  }
   if (display->cond_change_context) {
     g_cond_free (display->cond_change_context);
     display->cond_change_context = NULL;
@@ -539,6 +545,9 @@ gst_gl_display_thread_dispatch_action (GstGLDisplayMsg* msg)
   case GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT:
     gst_gl_display_thread_redisplay (msg->display);
     break;
+  case GST_GL_DISPLAY_ACTION_GENERIC:
+    gst_gl_display_thread_run_generic (msg->display);
+    break;
   case GST_GL_DISPLAY_ACTION_GEN_TEXTURE:
     gst_gl_display_thread_gen_texture (msg->display);
     break;
@@ -598,6 +607,7 @@ gst_gl_display_thread_check_msg_validity (GstGLDisplayMsg *msg)
   case GST_GL_DISPLAY_ACTION_VISIBLE_CONTEXT:
   case GST_GL_DISPLAY_ACTION_RESIZE_CONTEXT:
   case GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT:
+  case GST_GL_DISPLAY_ACTION_GENERIC:    
   case GST_GL_DISPLAY_ACTION_GEN_TEXTURE:
   case GST_GL_DISPLAY_ACTION_DEL_TEXTURE:
   case GST_GL_DISPLAY_ACTION_INIT_UPLOAD:
@@ -889,6 +899,13 @@ gst_gl_display_thread_redisplay (GstGLDisplay * display)
   glutPostRedisplay ();
 }
 
+static void
+gst_gl_display_thread_run_generic (GstGLDisplay *display)
+{
+  glutSetWindow (display->glutWinId);
+  display->generic_callback (display, display->data);
+  g_cond_signal (display->cond_generic);
+}
 
 /* Called in the gl thread */
 static void
@@ -1870,6 +1887,17 @@ gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width , gi
   return isAlive;
 }
 
+void 
+gst_gl_display_thread_add (GstGLDisplay *display,
+			   GstGLDisplayThreadFunc func, gpointer data) 
+{
+  gst_gl_display_lock (display);
+  display->data = data;
+  display->generic_callback = func;
+  gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_GENERIC, display);
+  g_cond_wait (display->cond_generic, display->mutex);
+  gst_gl_display_unlock (display);
+}
 
 /* Called by gst_gl_buffer_new */
 void
