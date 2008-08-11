@@ -171,7 +171,7 @@ gst_dshowaudiosrc_class_init (GstDshowAudioSrcClass * klass)
 
   g_object_class_install_property
       (gobject_class, PROP_DEVICE_NAME,
-      g_param_spec_string ("device_name", "Device name",
+      g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the sound device", NULL, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (dshowaudiosrc_debug, "dshowaudiosrc", 0,
@@ -253,7 +253,7 @@ gst_dshowaudiosrc_probe_get_properties (GstPropertyProbe * probe)
   if (!props) {
     GParamSpec *pspec;
 
-    pspec = g_object_class_find_property (klass, "device_name");
+    pspec = g_object_class_find_property (klass, "device-name");
     props = g_list_append (props, pspec);
   }
 

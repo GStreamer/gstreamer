@@ -1847,7 +1847,8 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
 
   rtpbin = session->bin;
 
-  GST_DEBUG_OBJECT (rtpbin, "new SSRC pad %08x", ssrc);
+  GST_DEBUG_OBJECT (rtpbin, "new SSRC pad %08x, %s:%s", ssrc,
+      GST_DEBUG_PAD_NAME (pad));
 
   GST_RTP_BIN_SHUTDOWN_LOCK (rtpbin, shutdown);
 

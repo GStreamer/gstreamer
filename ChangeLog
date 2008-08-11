@@ -1,3 +1,13 @@
+2008-08-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  Print the pad-name in debug log.
+
+	* sys/dshowsrcwrapper/gstdshowaudiosrc.c:
+	* sys/dshowsrcwrapper/gstdshowvideosrc.c:
+	  Use "-" instead of "_" in property names. Can we call them just
+	  "device" like everywhere else?
+
 2008-08-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/x264/gstx264enc.c: (gst_x264_enc_log_callback),
