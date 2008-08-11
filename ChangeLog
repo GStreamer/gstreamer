@@ -1,3 +1,10 @@
+2008-08-11  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  Properly aggregate flow returns for both push and pull mode, so we shut 
+	  down if all pads are unlinked. 
+	  Fixes #546859.
+
 2008-08-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Frederic Crozat <fcrozat@mandriva.org>

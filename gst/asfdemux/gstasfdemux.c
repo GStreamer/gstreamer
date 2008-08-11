@@ -26,9 +26,6 @@
  * - _chain(): fix newsegment events for live streams where timestamps don't
  *   start at zero (need sample files/streams for this)
  *
- * - _push_buffer():
- *   aggregate flow return values correctly
- *
  * - fix packet parsing:
  *   there's something wrong with timestamps for packets with keyframes,
  *   and durations too.
@@ -708,6 +705,26 @@ parse_failed:
 }
 
 static GstFlowReturn
+gst_asf_demux_aggregate_flow_return (GstASFDemux * demux)
+{
+  int i;
+  GST_DEBUG_OBJECT (demux, "Aggregating");
+
+  for (i = 0; i < demux->num_streams; i++) {
+    if (demux->stream[i].active) {
+      GstFlowReturn flowret = demux->stream[i].last_flow;
+      GST_DEBUG_OBJECT (demux, "Aggregating: flow %i return %s", i,
+          gst_flow_get_name (flowret));
+      if (flowret != GST_FLOW_NOT_LINKED)
+        return flowret;
+    }
+  }
+
+  /* If we got here, then all our active streams are not linked */
+  return GST_FLOW_NOT_LINKED;
+}
+
+static GstFlowReturn
 gst_asf_demux_chain (GstPad * pad, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
@@ -1162,14 +1179,14 @@ gst_asf_demux_find_stream_with_complete_payload (GstASFDemux * demux)
   return best_stream;
 }
 
-static void
+static GstFlowReturn
 gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
 {
   AsfStream *stream;
 
   if (G_UNLIKELY (!demux->activated_streams)) {
     if (!gst_asf_demux_check_activate_streams (demux, force))
-      return;
+      return GST_FLOW_OK;
     /* streams are now activated */
   }
 
@@ -1241,6 +1258,8 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
     payload->buf = NULL;
     g_array_remove_index (stream->payloads, 0);
   }
+
+  return gst_asf_demux_aggregate_flow_return (demux);
 }
 
 static void
@@ -1251,8 +1270,10 @@ gst_asf_demux_loop (GstASFDemux * demux)
   guint64 off;
 
   if (demux->state == GST_ASF_DEMUX_STATE_HEADER) {
-    if (!gst_asf_demux_pull_headers (demux))
+    if (!gst_asf_demux_pull_headers (demux)) {
+      flow = GST_FLOW_ERROR;
       goto pause;
+    }
 
     gst_asf_demux_pull_indices (demux);
   }
@@ -1271,9 +1292,10 @@ gst_asf_demux_loop (GstASFDemux * demux)
     GST_DEBUG_OBJECT (demux, "got flow %s", gst_flow_get_name (flow));
     if (flow == GST_FLOW_UNEXPECTED)
       goto eos;
-    else if (!GST_FLOW_IS_FATAL (flow))
+    else if (!GST_FLOW_IS_FATAL (flow)) {
+      GST_DEBUG_OBJECT (demux, "Not fatal");
       goto pause;
-    else
+    } else
       goto read_failed;
   }
 
@@ -1284,7 +1306,7 @@ gst_asf_demux_loop (GstASFDemux * demux)
 
   gst_buffer_unref (buf);
 
-  gst_asf_demux_push_complete_payloads (demux, FALSE);
+  flow = gst_asf_demux_push_complete_payloads (demux, FALSE);
 
   ++demux->packet;
 
@@ -1293,10 +1315,10 @@ gst_asf_demux_loop (GstASFDemux * demux)
     goto eos;
   }
 
-  /* FIXME: aggregate flow returns from the various streams */
-
-  if (flow != GST_FLOW_OK)
+  if (flow != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (demux, "pushing complete payloads failed");
     goto pause;
+  }
 
   /* check if we're at the end of the configured segment */
   /* FIXME: check if segment end reached etc. */
@@ -1305,11 +1327,16 @@ gst_asf_demux_loop (GstASFDemux * demux)
 
 eos:
   {
-    /* if we haven't actived our streams yet, this might be because we have
+    /* if we haven't activated our streams yet, this might be because we have
      * less data queued than required for preroll; force stream activation and
      * send any pending payloads before sending EOS */
     if (!demux->activated_streams)
-      gst_asf_demux_push_complete_payloads (demux, TRUE);
+      flow = gst_asf_demux_push_complete_payloads (demux, TRUE);
+
+    if (flow != GST_FLOW_OK && flow != GST_FLOW_UNEXPECTED) {
+      GST_DEBUG_OBJECT (demux, "pushing complete payloads failed");
+      goto pause;
+    }
 
     if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
       gint64 stop;
@@ -1329,21 +1356,30 @@ eos:
       gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
     }
     /* ... and fall through to pause */
+    GST_DEBUG_OBJECT (demux, "EOSing");
   }
 pause:
   {
     GST_DEBUG_OBJECT (demux, "pausing task");
     demux->segment_running = FALSE;
     gst_pad_pause_task (demux->sinkpad);
+
+    /* For the error cases (not EOS) */
+    if (flow != GST_FLOW_OK && flow != GST_FLOW_UNEXPECTED) {
+      /* Post an error. Hopefully something else already has, but if not... */
+      GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+          (_("Internal data stream error.")),
+          ("streaming stopped, reason %s", gst_flow_get_name (flow)));
+    }
     return;
   }
 
 /* ERRORS */
 read_failed:
   {
-    /* upstream should already have posted an error */
-    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL), ("pull_range failed"));
+    GST_DEBUG_OBJECT (demux, "Read failed, doh");
     gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
+    flow = GST_FLOW_UNEXPECTED;
     goto pause;
   }
 parse_error:
@@ -1352,6 +1388,7 @@ parse_error:
     GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
         ("Error parsing ASF packet %u", (guint) demux->packet));
     gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
+    flow = GST_FLOW_ERROR;
     goto pause;
   }
 }
@@ -3205,8 +3242,6 @@ static GstFlowReturn
 gst_asf_demux_push_buffer (GstASFDemux * demux, AsfStream * stream,
     GstBuffer * buf)
 {
-  GstFlowReturn ret;
-
   buf = gst_buffer_make_metadata_writable (buf);
 
   /* need to send tags? */
@@ -3246,13 +3281,9 @@ gst_asf_demux_push_buffer (GstASFDemux * demux, AsfStream * stream,
     stream->discont = FALSE;
   }
 
-  ret = gst_pad_push (stream->pad, buf);
+  stream->last_flow = gst_pad_push (stream->pad, buf);
 
-  /* FIXME: aggreate flow values properly */
-  if (ret == GST_FLOW_NOT_LINKED)
-    ret = GST_FLOW_OK;
-
-  return ret;
+  return stream->last_flow;
 }
 
 static GstFlowReturn
@@ -3773,7 +3804,6 @@ gst_asf_demux_handle_data (GstASFDemux * demux, guint8 ** p_data,
     if (ret != GST_FLOW_OK) {
       GST_DEBUG ("process_segment %u returned %s", segment,
           gst_asf_get_flow_name (ret));
-      return ret;
     }
   }
 
@@ -3804,7 +3834,7 @@ gst_asf_demux_handle_data (GstASFDemux * demux, guint8 ** p_data,
     }
   }
 
-  return GST_FLOW_OK;
+  return gst_asf_demux_aggregate_flow_return (demux);
 }
 
 static const GstQueryType *
