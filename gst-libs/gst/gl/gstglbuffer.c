@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  *
@@ -30,7 +30,8 @@ static void
 gst_gl_buffer_finalize (GstGLBuffer* buffer)
 {
     //blocking call, put the texture in the pool
-    gst_gl_display_del_texture (buffer->display, buffer->texture);
+    gst_gl_display_del_texture (buffer->display, buffer->texture,
+      buffer->width, buffer->height);
 
     g_object_unref (buffer->display);
 
@@ -100,7 +101,7 @@ gst_gl_buffer_new (GstGLDisplay* display,
     GST_BUFFER_SIZE (gl_buffer) = gst_gl_buffer_get_size (gl_width, gl_height);
 
     //blocking call, generate a texture using the pool
-    gst_gl_display_gen_texture (gl_buffer->display, &gl_buffer->texture) ;
+    gst_gl_display_gen_texture (gl_buffer->display, &gl_buffer->texture, gl_width, gl_height) ;
 
     return gl_buffer;
 }

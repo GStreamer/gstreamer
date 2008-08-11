@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
@@ -70,16 +70,16 @@ typedef enum {
   GST_GL_DISPLAY_ACTION_GENERIC,
   GST_GL_DISPLAY_ACTION_GEN_TEXTURE,
   GST_GL_DISPLAY_ACTION_DEL_TEXTURE,
-  GST_GL_DISPLAY_ACTION_INIT_UPLOAD, 
+  GST_GL_DISPLAY_ACTION_INIT_UPLOAD,
   GST_GL_DISPLAY_ACTION_DO_UPLOAD,
   GST_GL_DISPLAY_ACTION_INIT_DOWNLOAD,
-  GST_GL_DISPLAY_ACTION_DO_DOWNLOAD,   
-  GST_GL_DISPLAY_ACTION_GEN_FBO, 
+  GST_GL_DISPLAY_ACTION_DO_DOWNLOAD,
+  GST_GL_DISPLAY_ACTION_GEN_FBO,
   GST_GL_DISPLAY_ACTION_USE_FBO,
-  GST_GL_DISPLAY_ACTION_DEL_FBO,  
+  GST_GL_DISPLAY_ACTION_DEL_FBO,
   GST_GL_DISPLAY_ACTION_GEN_SHADER,
   GST_GL_DISPLAY_ACTION_DEL_SHADER
-	
+
 } GstGLDisplayAction;
 
 
@@ -87,7 +87,7 @@ typedef enum {
 typedef struct _GstGLDisplayMsg {
   GstGLDisplayAction action;
   gint glutWinId;
-  GstGLDisplay* display; 
+  GstGLDisplay* display;
 } GstGLDisplayMsg;
 
 
@@ -111,7 +111,7 @@ struct _GstGLDisplay {
 
   //thread safe
   GMutex* mutex;
-    
+
   //gl context
   gint glutWinId;
   gulong winId;
@@ -120,8 +120,8 @@ struct _GstGLDisplay {
   gint win_ypos;
   gboolean visible;
   gboolean isAlive;
-  GQueue* texturePool;
-    
+  GData* texture_pool;
+
   //conditions
   GCond* cond_create_context;
   GCond* cond_destroy_context;
@@ -154,7 +154,11 @@ struct _GstGLDisplay {
 
   //action gen and del texture
   GLuint gen_texture;
+  GLuint gen_texture_width;
+  GLuint gen_texture_height;
   GLuint del_texture;
+  GLuint del_texture_width;
+  GLuint del_texture_height;
 
   //client callbacks
   CRCB clientReshapeCallback;
@@ -180,7 +184,7 @@ struct _GstGLDisplay {
   GLuint gen_fbo_height;
   GLuint generated_fbo;
   GLuint generated_depth_buffer;
-    
+
   //filter use fbo
   GLuint use_fbo;
   GLuint use_depth_buffer;
@@ -255,11 +259,11 @@ GType gst_gl_display_get_type (void);
 
 //------------------------------------------------------------
 //-------------------- Public declarations ------------------
-//------------------------------------------------------------ 
+//------------------------------------------------------------
 GstGLDisplay* gst_gl_display_new (void);
 
-void gst_gl_display_create_context (GstGLDisplay* display, 
-                                    GLint x, GLint y, 
+void gst_gl_display_create_context (GstGLDisplay* display,
+                                    GLint x, GLint y,
                                     GLint width, GLint height,
                                     gulong winId,
                                     gboolean visible);
@@ -270,21 +274,21 @@ gboolean gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint w
 void gst_gl_display_thread_add (GstGLDisplay *display,
 				GstGLDisplayThreadFunc func, gpointer data);
 
-void gst_gl_display_gen_texture (GstGLDisplay* display, GLuint* pTexture);
-void gst_gl_display_del_texture (GstGLDisplay* display, GLuint texture);
+void gst_gl_display_gen_texture (GstGLDisplay* display, GLuint* pTexture, GLint width, GLint height);
+void gst_gl_display_del_texture (GstGLDisplay* display, GLuint texture, GLint width, GLint height);
 
 void gst_gl_display_init_upload (GstGLDisplay* display, GstVideoFormat video_format,
                                  guint gl_width, guint gl_height);
 gboolean gst_gl_display_do_upload (GstGLDisplay* display, GLuint texture,
-                                   gint data_width, gint data_height, 
+                                   gint data_width, gint data_height,
                                    gpointer data);
-void gst_gl_display_init_download (GstGLDisplay* display, GstVideoFormat video_format, 
+void gst_gl_display_init_download (GstGLDisplay* display, GstVideoFormat video_format,
                                    gint width, gint height);
 gboolean gst_gl_display_do_download (GstGLDisplay* display, GLuint texture,
                                      gint width, gint height,
                                      gpointer data);
 
-void gst_gl_display_gen_fbo (GstGLDisplay* display, gint width, gint height, 
+void gst_gl_display_gen_fbo (GstGLDisplay* display, gint width, gint height,
                              GLuint* fbo, GLuint* depthbuffer);
 gboolean gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint texture_fbo_height,
                                  GLuint fbo, GLuint depth_buffer, GLuint texture_fbo, GLCB cb,
@@ -292,7 +296,7 @@ gboolean gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, 
                                  gdouble proj_param1, gdouble proj_param2,
                                  gdouble proj_param3, gdouble proj_param4,
                                  GstGLDisplayProjection projection, gpointer* stuff);
-void gst_gl_display_del_fbo (GstGLDisplay* display, GLuint fbo, 
+void gst_gl_display_del_fbo (GstGLDisplay* display, GLuint fbo,
                              GLuint depth_buffer);
 
 void gst_gl_display_gen_shader (GstGLDisplay* display, const gchar* textShader, GstGLShader** shader);
