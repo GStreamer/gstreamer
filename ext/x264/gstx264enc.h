@@ -55,7 +55,8 @@ struct _GstX264Enc
 
   /* properties */
   guint threads;
-  guint pass;
+  gint pass;
+  guint quantizer;
   gchar *stats_file;
   gboolean byte_stream;
   guint bitrate;
@@ -65,6 +66,7 @@ struct _GstX264Enc
   gboolean dct8x8;
   guint ref;
   guint bframes;
+  gboolean b_adapt;
   gboolean b_pyramid;
   gboolean weightb;
   guint sps_id;
@@ -72,6 +74,13 @@ struct _GstX264Enc
   guint vbv_buf_capacity;
   guint keyint_max;
   gboolean cabac;
+  gfloat ip_factor;
+  gfloat pb_factor;
+  guint qp_min;
+  guint qp_max;
+  guint qp_step;
+  guint noise_reduction;
+  gboolean interlaced;
 
   /* input description */
   GstVideoFormat format;

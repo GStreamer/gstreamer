@@ -1,6 +1,7 @@
 /* GStreamer H264 encoder plugin
  * Copyright (C) 2005 Michal Benes <michal.benes@itonis.tv>
  * Copyright (C) 2005 Josef Zlomek <josef.zlomek@itonis.tv>
+ * Copyright (C) 2008 Mark Nauwelaerts <mnauw@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -35,6 +36,8 @@ enum
   ARG_0,
   ARG_THREADS,
   ARG_PASS,
+  ARG_PASS_NEW,
+  ARG_QUANTIZER,
   ARG_STATS_FILE,
   ARG_BYTE_STREAM,
   ARG_BITRATE,
@@ -45,32 +48,82 @@ enum
   ARG_DCT8x8,
   ARG_REF,
   ARG_BFRAMES,
+  ARG_B_ADAPT,
   ARG_B_PYRAMID,
   ARG_WEIGHTB,
   ARG_SPS_ID,
   ARG_TRELLIS,
   ARG_KEYINT_MAX,
-  ARG_CABAC
+  ARG_CABAC,
+  ARG_QP_MIN,
+  ARG_QP_MAX,
+  ARG_QP_STEP,
+  ARG_IP_FACTOR,
+  ARG_PB_FACTOR,
+  ARG_NR,
+  ARG_INTERLACED
 };
 
-#define ARG_THREADS_DEFAULT 1
-#define ARG_PASS_DEFAULT 0
-#define ARG_STATS_FILE_DEFAULT "x264.log"
-#define ARG_BYTE_STREAM_DEFAULT FALSE
-#define ARG_BITRATE_DEFAULT (2 * 1024)
-#define ARG_VBV_BUF_CAPACITY_DEFAULT 600
-#define ARG_ME_DEFAULT X264_ME_HEX
-#define ARG_SUBME_DEFAULT 1
-#define ARG_ANALYSE_DEFAULT 0
-#define ARG_DCT8x8_DEFAULT FALSE
-#define ARG_REF_DEFAULT 1
-#define ARG_BFRAMES_DEFAULT 0
-#define ARG_B_PYRAMID_DEFAULT FALSE
-#define ARG_WEIGHTB_DEFAULT FALSE
-#define ARG_SPS_ID_DEFAULT 0
-#define ARG_TRELLIS_DEFAULT TRUE
-#define ARG_KEYINT_MAX_DEFAULT 0
-#define ARG_CABAC_DEFAULT TRUE
+#define ARG_THREADS_DEFAULT            1
+#define ARG_PASS_DEFAULT               0
+#define ARG_PASS_NEW_DEFAULT           0
+#define ARG_QUANTIZER_DEFAULT          21
+#define ARG_STATS_FILE_DEFAULT         "x264.log"
+#define ARG_BYTE_STREAM_DEFAULT        FALSE
+#define ARG_BITRATE_DEFAULT            (2 * 1024)
+#define ARG_VBV_BUF_CAPACITY_DEFAULT   600
+#define ARG_ME_DEFAULT                 X264_ME_HEX
+#define ARG_SUBME_DEFAULT              1
+#define ARG_ANALYSE_DEFAULT            0
+#define ARG_DCT8x8_DEFAULT             FALSE
+#define ARG_REF_DEFAULT                1
+#define ARG_BFRAMES_DEFAULT            0
+#define ARG_B_ADAPT_DEFAULT            TRUE
+#define ARG_B_PYRAMID_DEFAULT          FALSE
+#define ARG_WEIGHTB_DEFAULT            FALSE
+#define ARG_SPS_ID_DEFAULT             0
+#define ARG_TRELLIS_DEFAULT            TRUE
+#define ARG_KEYINT_MAX_DEFAULT         0
+#define ARG_CABAC_DEFAULT              TRUE
+#define ARG_QP_MIN_DEFAULT             10
+#define ARG_QP_MAX_DEFAULT             51
+#define ARG_QP_STEP_DEFAULT            4
+#define ARG_IP_FACTOR_DEFAULT          1.4
+#define ARG_PB_FACTOR_DEFAULT          1.3
+#define ARG_NR_DEFAULT                 0
+#define ARG_INTERLACED_DEFAULT         FALSE
+
+enum
+{
+  GST_X264_ENC_PASS_CBR = 0,
+  GST_X264_ENC_PASS_QUANT,
+  GST_X264_ENC_PASS_QUAL,
+  GST_X264_ENC_PASS_PASS1 = 0x11,
+  GST_X264_ENC_PASS_PASS2,
+  GST_X264_ENC_PASS_PASS3
+};
+
+#define GST_X264_ENC_PASS_TYPE (gst_x264_enc_pass_get_type())
+static GType
+gst_x264_enc_pass_get_type (void)
+{
+  static GType pass_type = 0;
+
+  static const GEnumValue pass_types[] = {
+    {GST_X264_ENC_PASS_CBR, "Constant Bitrate Encoding", "cbr"},
+    {GST_X264_ENC_PASS_QUANT, "Constant Quantizer", "quant"},
+    {GST_X264_ENC_PASS_QUAL, "Constant Quality", "qual"},
+    {GST_X264_ENC_PASS_PASS1, "VBR Encoding - Pass 1", "pass1"},
+    {GST_X264_ENC_PASS_PASS2, "VBR Encoding - Pass 2", "pass2"},
+    {GST_X264_ENC_PASS_PASS3, "VBR Encoding - Pass 3", "pass3"},
+    {0, NULL, NULL}
+  };
+
+  if (!pass_type) {
+    pass_type = g_enum_register_static ("GstX264EncPass", pass_types);
+  }
+  return pass_type;
+}
 
 #define GST_X264_ENC_ME_TYPE (gst_x264_enc_me_get_type())
 static GType
@@ -155,7 +208,8 @@ gst_x264_enc_base_init (gpointer g_class)
 
   gst_element_class_set_details_simple (element_class,
       "x264enc", "Codec/Encoder/Video", "H264 Encoder",
-      "Josef Zlomek <josef.zlomek@itonis.tv>");
+      "Josef Zlomek <josef.zlomek@itonis.tv>, "
+      "Mark Nauwelaerts <mnauw@users.sf.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -181,27 +235,36 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_THREADS,
       g_param_spec_uint ("threads", "Threads",
-          "Number of threads used by the codec", 1, 4, ARG_THREADS_DEFAULT,
-          G_PARAM_READWRITE));
+          "Number of threads used by the codec (0 for automatic)",
+          0, 4, ARG_THREADS_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_PASS_NEW,
+      g_param_spec_enum ("pass-new", "Encoding pass/type",
+          "Encoding pass/type", GST_X264_ENC_PASS_TYPE,
+          ARG_PASS_NEW_DEFAULT, G_PARAM_READWRITE));
+  /* FIXME 0.11: remove pass property and use the one above */
   g_object_class_install_property (gobject_class, ARG_PASS,
       g_param_spec_uint ("pass", "Pass",
           "Pass of multipass encoding (0=single pass; 1=first pass, 2=middle pass, 3=last pass)",
           0, 3, ARG_PASS_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_QUANTIZER,
+      g_param_spec_uint ("quantizer", "Constant Quantizer",
+          "Constant quantizer or quality to apply",
+          1, 50, ARG_QUANTIZER_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_STATS_FILE,
-      g_param_spec_string ("stats_file", "Stats File",
-          "Filename for multipass statistics", ARG_STATS_FILE_DEFAULT,
-          G_PARAM_READWRITE));
+      g_param_spec_string ("stats-file", "Stats File",
+          "Filename for multipass statistics",
+          ARG_STATS_FILE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BYTE_STREAM,
-      g_param_spec_boolean ("byte_stream", "Byte Stream",
-          "Generate byte stream format of NALU", ARG_BYTE_STREAM_DEFAULT,
-          G_PARAM_READWRITE));
+      g_param_spec_boolean ("byte-stream", "Byte Stream",
+          "Generate byte stream format of NALU",
+          ARG_BYTE_STREAM_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate", "Bitrate in kbit/sec", 1,
           100 * 1024, ARG_BITRATE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_VBV_BUF_CAPACITY,
-      g_param_spec_uint ("vbv_buf_capacity", "VBV buffer capacity",
-          "Size of the VBV buffer in milliseconds", 300,
-          10000, ARG_VBV_BUF_CAPACITY_DEFAULT, G_PARAM_READWRITE));
+      g_param_spec_uint ("vbv-buf-capacity", "VBV buffer capacity",
+          "Size of the VBV buffer in milliseconds",
+          300, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_ME,
       g_param_spec_enum ("me", "Motion Estimation",
           "Integer pixel motion estimation method", GST_X264_ENC_ME_TYPE,
@@ -215,18 +278,22 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           GST_X264_ENC_ANALYSE_TYPE, ARG_ANALYSE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_DCT8x8,
       g_param_spec_boolean ("dct8x8", "DCT8x8",
-          "Adaptive spatial transform size", ARG_DCT8x8_DEFAULT,
-          G_PARAM_READWRITE));
+          "Adaptive spatial transform size",
+          ARG_DCT8x8_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_REF,
       g_param_spec_uint ("ref", "Reference Frames",
-          "Number of reference frames", 1, 12, ARG_REF_DEFAULT,
-          G_PARAM_READWRITE));
+          "Number of reference frames",
+          1, 12, ARG_REF_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BFRAMES,
       g_param_spec_uint ("bframes", "B-Frames",
-          "Number of B-frames between I and P", 0, 4, ARG_BFRAMES_DEFAULT,
-          G_PARAM_READWRITE));
+          "Number of B-frames between I and P",
+          0, 4, ARG_BFRAMES_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_B_ADAPT,
+      g_param_spec_boolean ("b-adapt", "B-Adapt",
+          "Automatically decide how many B-frames to use",
+          ARG_B_ADAPT_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_B_PYRAMID,
-      g_param_spec_boolean ("b_pyramid", "B-Pyramid",
+      g_param_spec_boolean ("b-pyramid", "B-Pyramid",
           "Keep some B-frames as references", ARG_B_PYRAMID_DEFAULT,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_WEIGHTB,
@@ -234,20 +301,45 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           "Weighted prediction for B-frames", ARG_WEIGHTB_DEFAULT,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_SPS_ID,
-      g_param_spec_uint ("sps_id", "SPS ID",
-          "SPS and PPS ID number", 0, 31, ARG_SPS_ID_DEFAULT,
-          G_PARAM_READWRITE));
+      g_param_spec_uint ("sps-id", "SPS ID",
+          "SPS and PPS ID number",
+          0, 31, ARG_SPS_ID_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_TRELLIS,
       g_param_spec_boolean ("trellis", "Trellis quantization",
           "Enable trellis searched quantization", ARG_TRELLIS_DEFAULT,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_KEYINT_MAX,
       g_param_spec_uint ("key_int_max", "Key-frame maximal interval",
-          "Maximal distance between two key-frames (0 for automatic)", 0,
-          G_MAXINT, ARG_KEYINT_MAX_DEFAULT, G_PARAM_READWRITE));
+          "Maximal distance between two key-frames (0 for automatic)",
+          0, G_MAXINT, ARG_KEYINT_MAX_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_CABAC,
       g_param_spec_boolean ("cabac", "Use CABAC",
           "Enable CABAC entropy coding", ARG_CABAC_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_QP_MIN,
+      g_param_spec_uint ("qp-min", "Minimum Quantizer",
+          "Minimum quantizer", 1, 51, ARG_QP_MIN_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_QP_MAX,
+      g_param_spec_uint ("qp-max", "Maximum Quantizer",
+          "Maximum quantizer", 1, 51, ARG_QP_MAX_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_QP_STEP,
+      g_param_spec_uint ("qp-step", "Maximum Quantizer Difference",
+          "Maximum quantizer difference between frames",
+          1, 50, ARG_QP_STEP_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_IP_FACTOR,
+      g_param_spec_float ("ip-factor", "IP-Factor",
+          "Quantizer factor between I- and P-frames",
+          0, 2, ARG_IP_FACTOR_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_PB_FACTOR,
+      g_param_spec_float ("pb-factor", "PB-Factor",
+          "Quantizer factor between P- and B-frames",
+          0, 2, ARG_PB_FACTOR_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_NR,
+      g_param_spec_uint ("noise-reduction", "Noise Reducation",
+          "Noise reduction strength",
+          0, 100000, ARG_NR_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_INTERLACED,
+      g_param_spec_boolean ("interlaced", "Interlaced",
+          "Interlaced material", ARG_INTERLACED_DEFAULT, G_PARAM_READWRITE));
 }
 
 void
@@ -303,7 +395,8 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
 
   /* properties */
   encoder->threads = ARG_THREADS_DEFAULT;
-  encoder->pass = ARG_PASS_DEFAULT;
+  encoder->pass = ARG_PASS_NEW_DEFAULT;
+  encoder->quantizer = ARG_QUANTIZER_DEFAULT;
   encoder->stats_file = g_strdup (ARG_STATS_FILE_DEFAULT);
   encoder->byte_stream = ARG_BYTE_STREAM_DEFAULT;
   encoder->bitrate = ARG_BITRATE_DEFAULT;
@@ -314,12 +407,20 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->dct8x8 = ARG_DCT8x8_DEFAULT;
   encoder->ref = ARG_REF_DEFAULT;
   encoder->bframes = ARG_BFRAMES_DEFAULT;
+  encoder->b_adapt = ARG_B_ADAPT_DEFAULT;
   encoder->b_pyramid = ARG_B_PYRAMID_DEFAULT;
   encoder->weightb = ARG_WEIGHTB_DEFAULT;
   encoder->sps_id = ARG_SPS_ID_DEFAULT;
   encoder->trellis = ARG_TRELLIS_DEFAULT;
   encoder->keyint_max = ARG_KEYINT_MAX_DEFAULT;
   encoder->cabac = ARG_CABAC_DEFAULT;
+  encoder->qp_min = ARG_QP_MIN_DEFAULT;
+  encoder->qp_max = ARG_QP_MAX_DEFAULT;
+  encoder->qp_step = ARG_QP_STEP_DEFAULT;
+  encoder->ip_factor = ARG_IP_FACTOR_DEFAULT;
+  encoder->pb_factor = ARG_PB_FACTOR_DEFAULT;
+  encoder->noise_reduction = ARG_NR_DEFAULT;
+  encoder->interlaced = ARG_INTERLACED_DEFAULT;
 
   /* resources */
   encoder->delay = g_queue_new ();
@@ -372,8 +473,12 @@ gst_x264_enc_finalize (GObject * object)
 static gboolean
 gst_x264_enc_init_encoder (GstX264Enc * encoder)
 {
+  guint pass = 0;
+
   /* make sure that the encoder is closed */
   gst_x264_enc_close_encoder (encoder);
+
+  GST_OBJECT_LOCK (encoder);
 
   /* set up encoder parameters */
   encoder->x264param.i_threads = encoder->threads;
@@ -405,30 +510,51 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     encoder->x264param.vui.i_vidformat = 5;     /* unspecified */
   encoder->x264param.analyse.i_trellis = encoder->trellis ? 1 : 0;
   encoder->x264param.analyse.b_psnr = 0;
-  /*encoder->x264param.analyse.b_ssim = 0; */
   encoder->x264param.analyse.i_me_method = encoder->me;
   encoder->x264param.analyse.i_subpel_refine = encoder->subme;
   encoder->x264param.analyse.inter = encoder->analyse;
   encoder->x264param.analyse.b_transform_8x8 = encoder->dct8x8;
   encoder->x264param.analyse.b_weighted_bipred = encoder->weightb;
-  /*encoder->x264param.analyse.i_noise_reduction = 600; */
+  encoder->x264param.analyse.i_noise_reduction = encoder->noise_reduction;
   encoder->x264param.i_frame_reference = encoder->ref;
   encoder->x264param.i_bframe = encoder->bframes;
   encoder->x264param.b_bframe_pyramid = encoder->b_pyramid;
-  encoder->x264param.b_bframe_adaptive = 0;
+  encoder->x264param.b_bframe_adaptive = encoder->b_adapt;
+  encoder->x264param.b_interlaced = encoder->interlaced;
   encoder->x264param.b_deblocking_filter = 1;
   encoder->x264param.i_deblocking_filter_alphac0 = 0;
   encoder->x264param.i_deblocking_filter_beta = 0;
-#ifdef X264_RC_ABR
-  encoder->x264param.rc.i_rc_method = X264_RC_ABR;
-#endif
-  encoder->x264param.rc.i_bitrate = encoder->bitrate;
-  encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
-  encoder->x264param.rc.i_vbv_buffer_size
-      = encoder->x264param.rc.i_vbv_max_bitrate
-      * encoder->vbv_buf_capacity / 1000;
+  encoder->x264param.rc.f_ip_factor = encoder->ip_factor;
+  encoder->x264param.rc.f_pb_factor = encoder->pb_factor;
 
   switch (encoder->pass) {
+    case GST_X264_ENC_PASS_QUANT:
+      encoder->x264param.rc.i_rc_method = X264_RC_CQP;
+      encoder->x264param.rc.i_qp_constant = encoder->quantizer;
+      break;
+    case GST_X264_ENC_PASS_QUAL:
+      encoder->x264param.rc.i_rc_method = X264_RC_CRF;
+      encoder->x264param.rc.f_rf_constant = encoder->quantizer;
+      break;
+    case GST_X264_ENC_PASS_CBR:
+    case GST_X264_ENC_PASS_PASS1:
+    case GST_X264_ENC_PASS_PASS2:
+    case GST_X264_ENC_PASS_PASS3:
+    default:
+      encoder->x264param.rc.i_rc_method = X264_RC_ABR;
+      encoder->x264param.rc.i_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_vbv_buffer_size
+          = encoder->x264param.rc.i_vbv_max_bitrate
+          * encoder->vbv_buf_capacity / 1000;
+      encoder->x264param.rc.i_qp_min = encoder->qp_min;
+      encoder->x264param.rc.i_qp_max = encoder->qp_max;
+      encoder->x264param.rc.i_qp_step = encoder->qp_step;
+      pass = encoder->pass & 0xF;
+      break;
+  }
+
+  switch (pass) {
     case 0:
       encoder->x264param.rc.b_stat_read = 0;
       encoder->x264param.rc.b_stat_write = 0;
@@ -445,6 +571,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
       encoder->x264param.rc.b_stat_read = 0;
       encoder->x264param.rc.b_stat_write = 1;
       break;
+      /* FIXME 0.11: settings for these passes must be swapped; 2: ro, 3: r/w */
     case 2:
       encoder->x264param.rc.b_stat_read = 1;
       encoder->x264param.rc.b_stat_write = 1;
@@ -456,6 +583,8 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   }
   encoder->x264param.rc.psz_stat_in = encoder->stats_file;
   encoder->x264param.rc.psz_stat_out = encoder->stats_file;
+
+  GST_OBJECT_UNLOCK (encoder);
 
   encoder->x264enc = x264_encoder_open (&encoder->x264param);
   if (!encoder->x264enc) {
@@ -883,16 +1012,36 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstX264Enc *encoder;
+  GstState state;
 
   encoder = GST_X264_ENC (object);
 
-  /* FIXME: should probably do locking or check state */
+  GST_OBJECT_LOCK (encoder);
+  /* state at least matters for sps, bytestream, pass,
+   * and so by extension ... */
+  state = GST_STATE (encoder);
+  if (state != GST_STATE_READY && state != GST_STATE_NULL)
+    goto wrong_state;
+
   switch (prop_id) {
     case ARG_THREADS:
       encoder->threads = g_value_get_uint (value);
       break;
     case ARG_PASS:
-      encoder->pass = g_value_get_uint (value);
+    {
+      guint pass = g_value_get_uint (value);
+
+      if (pass)
+        encoder->pass = GST_X264_ENC_PASS_PASS1 + (pass - 1);
+      else
+        encoder->pass = GST_X264_ENC_PASS_CBR;
+      break;
+    }
+    case ARG_PASS_NEW:
+      encoder->pass = g_value_get_enum (value);
+      break;
+    case ARG_QUANTIZER:
+      encoder->quantizer = g_value_get_uint (value);
       break;
     case ARG_STATS_FILE:
       if (encoder->stats_file)
@@ -926,6 +1075,9 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
     case ARG_BFRAMES:
       encoder->bframes = g_value_get_uint (value);
       break;
+    case ARG_B_ADAPT:
+      encoder->b_adapt = g_value_get_boolean (value);
+      break;
     case ARG_B_PYRAMID:
       encoder->b_pyramid = g_value_get_boolean (value);
       break;
@@ -944,9 +1096,39 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
     case ARG_CABAC:
       encoder->cabac = g_value_get_boolean (value);
       break;
+    case ARG_QP_MIN:
+      encoder->qp_min = g_value_get_uint (value);
+      break;
+    case ARG_QP_MAX:
+      encoder->qp_max = g_value_get_uint (value);
+      break;
+    case ARG_QP_STEP:
+      encoder->qp_step = g_value_get_uint (value);
+      break;
+    case ARG_IP_FACTOR:
+      encoder->ip_factor = g_value_get_float (value);
+      break;
+    case ARG_PB_FACTOR:
+      encoder->pb_factor = g_value_get_float (value);
+      break;
+    case ARG_NR:
+      encoder->noise_reduction = g_value_get_uint (value);
+      break;
+    case ARG_INTERLACED:
+      encoder->interlaced = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
+  }
+  GST_OBJECT_UNLOCK (encoder);
+  return;
+
+  /* ERROR */
+wrong_state:
+  {
+    GST_DEBUG_OBJECT (encoder, "setting property in wrong state");
+    GST_OBJECT_UNLOCK (encoder);
   }
 }
 
@@ -958,13 +1140,22 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
 
   encoder = GST_X264_ENC (object);
 
-  /* FIXME: should probably do locking or check state */
+  GST_OBJECT_LOCK (encoder);
   switch (prop_id) {
     case ARG_THREADS:
       g_value_set_uint (value, encoder->threads);
       break;
     case ARG_PASS:
-      g_value_set_uint (value, encoder->pass);
+      if (encoder->pass < GST_X264_ENC_PASS_PASS1)
+        g_value_set_uint (value, 0);
+      else
+        g_value_set_uint (value, encoder->pass - GST_X264_ENC_PASS_PASS1 + 1);
+      break;
+    case ARG_PASS_NEW:
+      g_value_set_enum (value, encoder->pass);
+      break;
+    case ARG_QUANTIZER:
+      g_value_set_uint (value, encoder->quantizer);
       break;
     case ARG_STATS_FILE:
       g_value_set_string (value, encoder->stats_file);
@@ -996,6 +1187,9 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
     case ARG_BFRAMES:
       g_value_set_uint (value, encoder->bframes);
       break;
+    case ARG_B_ADAPT:
+      g_value_set_boolean (value, encoder->b_adapt);
+      break;
     case ARG_B_PYRAMID:
       g_value_set_boolean (value, encoder->b_pyramid);
       break;
@@ -1011,13 +1205,35 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
     case ARG_KEYINT_MAX:
       g_value_set_uint (value, encoder->keyint_max);
       break;
+    case ARG_QP_MIN:
+      g_value_set_uint (value, encoder->qp_min);
+      break;
+    case ARG_QP_MAX:
+      g_value_set_uint (value, encoder->qp_max);
+      break;
+    case ARG_QP_STEP:
+      g_value_set_uint (value, encoder->qp_step);
+      break;
     case ARG_CABAC:
       g_value_set_boolean (value, encoder->cabac);
+      break;
+    case ARG_IP_FACTOR:
+      g_value_set_float (value, encoder->ip_factor);
+      break;
+    case ARG_PB_FACTOR:
+      g_value_set_float (value, encoder->pb_factor);
+      break;
+    case ARG_NR:
+      g_value_set_uint (value, encoder->noise_reduction);
+      break;
+    case ARG_INTERLACED:
+      g_value_set_boolean (value, encoder->interlaced);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (encoder);
 }
 
 static gboolean
