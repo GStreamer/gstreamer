@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgst1394.la
 
-libgst1394_la_SOURCES = gst1394.c gst1394probe.c gstdv1394src.c
+libgst1394_la_SOURCES = gst1394.c gst1394probe.c gstdv1394src.c gsthdv1394src.c
 libgst1394_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
@@ -13,4 +13,4 @@ libgst1394_la_LIBADD = \
 	$(DV1394_LIBS)
 libgst1394_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstdv1394src.h gst1394probe.h
+noinst_HEADERS = gstdv1394src.h gst1394probe.h gsthdv1394src.h

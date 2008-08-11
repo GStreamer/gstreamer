@@ -25,12 +25,16 @@
 
 
 #include "gstdv1394src.h"
+#include "gsthdv1394src.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "dv1394src", GST_RANK_NONE,
           GST_TYPE_DV1394SRC))
+    return FALSE;
+  if (!gst_element_register (plugin, "hdv1394src", GST_RANK_NONE,
+          GST_TYPE_HDV1394SRC))
     return FALSE;
 
   return TRUE;
@@ -39,5 +43,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "1394",
-    "Source for DV data via IEEE1394 interface",
+    "Source for video data via IEEE1394 interface",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

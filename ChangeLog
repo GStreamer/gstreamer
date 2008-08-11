@@ -1,5 +1,25 @@
 2008-08-11  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* ext/raw1394/Makefile.am:
+	* ext/raw1394/gst1394.c: (plugin_init):
+	* ext/raw1394/gsthdv1394src.c: (_do_init),
+	(gst_hdv1394src_base_init), (gst_hdv1394src_class_init),
+	(gst_hdv1394src_init), (gst_hdv1394src_dispose),
+	(gst_hdv1394src_set_property), (gst_hdv1394src_get_property),
+	(gst_hdv1394src_from_raw1394handle),
+	(gst_hdv1394src_iec61883_receive), (gst_hdv1394src_bus_reset),
+	(gst_hdv1394src_create), (gst_hdv1394src_discover_avc_node),
+	(gst_hdv1394src_start), (gst_hdv1394src_stop),
+	(gst_hdv1394src_unlock), (gst_hdv1394src_update_device_name),
+	(gst_hdv1394src_uri_get_type), (gst_hdv1394src_uri_get_protocols),
+	(gst_hdv1394src_uri_get_uri), (gst_hdv1394src_uri_set_uri),
+	(gst_hdv1394src_uri_handler_init):
+	* ext/raw1394/gsthdv1394src.h:
+	mpeg2-ts (HDV) variant of firewire capture element.
+	Fixes #350830
+
+2008-08-11  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/level/gstlevel.c: (gst_level_message_new):
 	 Fix compilation (also known as the classic 'fix code that someone
 	 committed without compiling it first').
