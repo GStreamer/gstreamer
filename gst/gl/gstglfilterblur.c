@@ -39,6 +39,8 @@ struct _GstGLFilterBlur
   GstGLFilter filter;
   GstGLShader *shader0;
   GstGLShader *shader1;
+
+  GLuint midtexture;
 };
 
 struct _GstGLFilterBlurClass
@@ -119,22 +121,22 @@ static void gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
 static void gst_gl_filterblur_vcallback (gint width, gint height, guint texture, gpointer stuff);
 
 
-static void 
+static void
 gst_gl_filterblur_init_resources (GstGLFilter *filter)
 {
 //  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
-  
+
   /* dummy gl call to test if we really are in a  gl context */
   g_print ("\nStart!!!: %s\n\n", glGetString (GL_VERSION));
 }
 
-static void 
+static void
 gst_gl_filterblur_reset_resources (GstGLFilter *filter)
 {
 //  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
 
   /* dummy gl call to test if we really are in a  gl context */
-  g_print ("\nStop!!!: %s\n\n", glGetString (GL_VENDOR)); 
+  g_print ("\nStop!!!: %s\n\n", glGetString (GL_VENDOR));
 }
 
 static void
@@ -166,6 +168,7 @@ gst_gl_filterblur_init (GstGLFilterBlur * filterblur, GstGLFilterBlurClass * kla
 {
   filterblur->shader0 = NULL;
   filterblur->shader1 = NULL;
+  filterblur->midtexture = 0;
 }
 
 static void
@@ -178,6 +181,9 @@ gst_gl_filter_filterblur_reset (GstGLFilter* filter)
 
   //blocking call, wait the opengl thread has destroyed the shader
   gst_gl_display_del_shader (filter->display, filterblur->shader1);
+
+  //blocking call, put the texture in the pool
+  gst_gl_display_del_texture (filter->display, filterblur->midtexture);
 }
 
 static void
@@ -210,6 +216,9 @@ static void
 gst_gl_filterblur_init_shader (GstGLFilter* filter)
 {
   GstGLFilterBlur* blur_filter = GST_GL_FILTERBLUR (filter);
+
+  //blocking call, generate a texture using the pool
+  gst_gl_display_gen_texture (filter->display, &blur_filter->midtexture) ;
 
   //blocking call, wait the opengl thread has compiled the shader
   gst_gl_display_gen_shader (filter->display, hconv9_fragment_source, &blur_filter->shader0);
@@ -252,7 +261,7 @@ change_view (GstGLDisplay *display, gpointer data)
     0.0, 0.0, 1.0, 0.0,
     0.0, 0.0, 0.0, 1.0
   };
-  
+
   glMatrixMode (GL_MODELVIEW);
   glLoadMatrixd (mirrormatrix);
 }
@@ -261,22 +270,15 @@ static gboolean
 gst_gl_filterblur_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 				GstGLBuffer* outbuf)
 {
-  gpointer filterblur = GST_GL_FILTERBLUR(filter);
-  GLuint midtexture = 0;
+  GstGLFilterBlur* filterblur = GST_GL_FILTERBLUR(filter);
 
-  //blocking call, generate a texture using the pool
-  gst_gl_display_gen_texture (filter->display, &midtexture) ;
-
-  gst_gl_filter_render_to_target (filter, inbuf->texture, midtexture, 
+  gst_gl_filter_render_to_target (filter, inbuf->texture, filterblur->midtexture,
 				  gst_gl_filterblur_hcallback, filterblur);
 
   gst_gl_display_thread_add (filter->display, change_view, filterblur);
 
-  gst_gl_filter_render_to_target (filter, midtexture, outbuf->texture, 
+  gst_gl_filter_render_to_target (filter, filterblur->midtexture, outbuf->texture,
 				  gst_gl_filterblur_vcallback, filterblur);
-
-  //blocking call, put the texture in the pool
-  gst_gl_display_del_texture (filter->display, midtexture);
 
   return TRUE;
 }
