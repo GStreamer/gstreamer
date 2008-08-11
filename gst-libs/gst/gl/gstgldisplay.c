@@ -2398,6 +2398,9 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay *display)
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
 			    GL_TEXTURE_RECTANGLE_ARB, display->upload_outtex, 0);
 
+  if (GLEW_ARB_fragment_shader)
+    gst_gl_shader_use (NULL);
+
   glPushAttrib(GL_VIEWPORT_BIT);
 
   glMatrixMode(GL_PROJECTION);
