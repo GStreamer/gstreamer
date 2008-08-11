@@ -1,3 +1,10 @@
+2008-08-11  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/gstregistrybinary.c:
+	  Don't use g_mkstmp() on win32, it's unsafe if glib is using a different
+	  libc.
+	  Fixes #544776.
+
 2008-08-11  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* libs/gst/base/gstbasetransform.c:

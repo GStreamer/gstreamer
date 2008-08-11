@@ -215,15 +215,169 @@ _gst_crc32 (guint32 crc, const gchar * buf, guint len)
 
 /* Registry saving */
 
+#ifdef G_OS_WIN32
+/* On win32, we can't use g_mkstmp(), because of cross-DLL file I/O problems.
+ * So, we just create the entire binary registry in memory, then write it out
+ * with g_file_set_contents(), which creates a temporary file internally
+ */
+
+typedef struct BinaryRegistryCache
+{
+  const char *location;
+  guint8 *mem;
+  gssize len;
+} BinaryRegistryCache;
+
+static BinaryRegistryCache *
+gst_registry_binary_cache_init (GstRegistry * registry, const char *location)
+{
+  BinaryRegistryCache *cache = g_new0 (BinaryRegistryCache, 1);
+  cache->location = location;
+  return cache;
+}
+
+static int
+gst_registry_binary_cache_write (GstRegistry * registry,
+    BinaryRegistryCache * cache, unsigned long offset,
+    const void *data, int length)
+{
+  cache->len = MAX (offset + length, cache->len);
+  cache->mem = g_realloc (cache->mem, cache->len);
+
+  memcpy (cache->mem + offset, data, length);
+
+  return length;
+}
+
+static gboolean
+gst_registry_binary_cache_finish (GstRegistry * registry,
+    BinaryRegistryCache * cache, gboolean success)
+{
+  gboolean ret = TRUE;
+  GError *error = NULL;
+  if (!g_file_set_contents (cache->location, (const gchar *) cache->mem,
+          cache->len, &error)) {
+    GST_ERROR ("Failed to write to cache file: %s", error->message);
+    g_error_free (error);
+    ret = FALSE;
+  }
+
+  g_free (cache->mem);
+  g_free (cache);
+  return ret;
+}
+
+#else
+typedef struct BinaryRegistryCache
+{
+  const char *location;
+  char *tmp_location;
+  unsigned long currentoffset;
+} BinaryRegistryCache;
+
+static BinaryRegistryCache *
+gst_registry_binary_cache_init (GstRegistry * registry, const char *location)
+{
+  BinaryRegistryCache *cache = g_new0 (BinaryRegistryCache, 1);
+
+  cache->location = location;
+  cache->tmp_location = g_strconcat (location, ".tmpXXXXXX", NULL);
+  registry->cache_file = g_mkstemp (cache->tmp_location);
+  if (registry->cache_file == -1) {
+    gchar *dir;
+
+    /* oops, I bet the directory doesn't exist */
+    dir = g_path_get_dirname (location);
+    g_mkdir_with_parents (dir, 0777);
+    g_free (dir);
+
+    /* the previous g_mkstemp call overwrote the XXXXXX placeholder ... */
+    g_free (cache->tmp_location);
+    cache->tmp_location = g_strconcat (location, ".tmpXXXXXX", NULL);
+    registry->cache_file = g_mkstemp (cache->tmp_location);
+
+    if (registry->cache_file == -1) {
+      GST_DEBUG ("g_mkstemp() failed: %s", g_strerror (errno));
+      g_free (cache->tmp_location);
+      g_free (cache);
+      return NULL;
+    }
+  }
+
+  return cache;
+}
+
+static int
+gst_registry_binary_cache_write (GstRegistry * registry,
+    BinaryRegistryCache * cache, unsigned long offset,
+    const void *data, int length)
+{
+  long written;
+  if (offset != cache->currentoffset) {
+    if (lseek (registry->cache_file, offset, SEEK_SET) != 0) {
+      GST_ERROR ("Seeking to new offset failed");
+      return FALSE;
+    }
+    cache->currentoffset = offset;
+  }
+
+  written = write (registry->cache_file, data, length);
+  if (written != length) {
+    GST_ERROR ("Failed to write to cache file");
+  }
+  cache->currentoffset += written;
+
+  return written;
+}
+
+static gboolean
+gst_registry_binary_cache_finish (GstRegistry * registry,
+    BinaryRegistryCache * cache, gboolean success)
+{
+  if (close (registry->cache_file) < 0)
+    goto close_failed;
+
+  if (success) {
+    /* Only do the rename if we wrote the entire file successfully */
+    if (g_rename (cache->tmp_location, cache->location) < 0)
+      goto rename_failed;
+  }
+
+  g_free (cache->tmp_location);
+  g_free (cache);
+  GST_INFO ("Wrote binary registry cache");
+  return TRUE;
+
+fail_after_close:
+  {
+    g_remove (cache->tmp_location);
+    g_free (cache->tmp_location);
+    g_free (cache);
+    return FALSE;
+  }
+close_failed:
+  {
+    GST_ERROR ("close() failed: %s", g_strerror (errno));
+    goto fail_after_close;
+  }
+rename_failed:
+  {
+    GST_ERROR ("g_rename() failed: %s", g_strerror (errno));
+    goto fail_after_close;
+  }
+}
+#endif
+
 /*
- * gst_registry_binary_write:
+ * gst_registry_binary_write_chunk:
  *
  * Write from a memory location to the registry cache file
  *
  * Returns: %TRUE for success
  */
 inline static gboolean
-gst_registry_binary_write (GstRegistry * registry, const void *mem,
+gst_registry_binary_write_chunk (GstRegistry * registry,
+    BinaryRegistryCache * cache, const void *mem,
     const gssize size, unsigned long *file_position, gboolean align,
     guint32 * crc32)
 {
@@ -233,23 +387,26 @@ gst_registry_binary_write (GstRegistry * registry, const void *mem,
   /* Padding to insert the struct that requiere word alignment */
   if ((align) && (alignment (*file_position) != 0)) {
     padsize = ALIGNMENT - alignment (*file_position);
-    if (write (registry->cache_file, padder, padsize) != padsize) {
+    if (gst_registry_binary_cache_write (registry, cache, *file_position,
+            padder, padsize) != padsize) {
       GST_ERROR ("Failed to write binary registry padder");
       return FALSE;
     }
     if (padsize > 0)
       *crc32 = _gst_crc32 (*crc32, padder, padsize);
-    *file_position = *file_position + padsize;
+    *file_position += padsize;
   }
 
-  if (write (registry->cache_file, mem, size) != size) {
+  if (gst_registry_binary_cache_write (registry, cache, *file_position,
+          mem, size) != size) {
     GST_ERROR ("Failed to write binary registry element");
     return FALSE;
   }
   if (size > 0)
     *crc32 = _gst_crc32 (*crc32, mem, size);
 
-  *file_position = *file_position + size;
+  *file_position += size;
+
   return TRUE;
 }
 
@@ -575,7 +732,6 @@ fail:
   return FALSE;
 }
 
-
 /**
  * gst_registry_binary_write_cache:
  * @registry: a #GstRegistry
@@ -589,35 +745,14 @@ gboolean
 gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
 {
   GList *walk;
-  gchar *tmp_location;
   GstBinaryRegistryMagic magic;
   GList *to_write = NULL;
   unsigned long file_position = 0;
+  BinaryRegistryCache *cache;
 
   GST_INFO ("Building binary registry cache image");
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
-  tmp_location = g_strconcat (location, ".tmpXXXXXX", NULL);
-  registry->cache_file = g_mkstemp (tmp_location);
-  if (registry->cache_file == -1) {
-    gchar *dir;
-
-    /* oops, I bet the directory doesn't exist */
-    dir = g_path_get_dirname (location);
-    g_mkdir_with_parents (dir, 0777);
-    g_free (dir);
-
-    /* the previous g_mkstemp call overwrote the XXXXXX placeholder ... */
-    g_free (tmp_location);
-    tmp_location = g_strconcat (location, ".tmpXXXXXX", NULL);
-    registry->cache_file = g_mkstemp (tmp_location);
-
-    if (registry->cache_file == -1) {
-      GST_DEBUG ("g_mkstemp() failed: %s", g_strerror (errno));
-      g_free (tmp_location);
-      return FALSE;
-    }
-  }
 
   if (!gst_registry_binary_initialize_magic (&magic))
     goto fail;
@@ -648,9 +783,14 @@ gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
 
   GST_INFO ("Writing binary registry cache");
 
+  cache = gst_registry_binary_cache_init (registry, location);
+  if (!cache)
+    goto fail_free_list;
+
   /* write magic */
-  if (write (registry->cache_file, &magic,
-          sizeof (GstBinaryRegistryMagic)) != sizeof (GstBinaryRegistryMagic)) {
+  if (gst_registry_binary_cache_write (registry, cache, file_position,
+          &magic, sizeof (GstBinaryRegistryMagic)) !=
+      sizeof (GstBinaryRegistryMagic)) {
     GST_ERROR ("Failed to write binary registry magic");
     goto fail_free_list;
   }
@@ -660,7 +800,7 @@ gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
   for (walk = to_write; walk; walk = g_list_next (walk)) {
     GstBinaryChunk *cur = walk->data;
 
-    if (!gst_registry_binary_write (registry, cur->data, cur->size,
+    if (!gst_registry_binary_write_chunk (registry, cache, cur->data, cur->size,
             &file_position, cur->align, &magic.crc32)) {
       if (!(cur->flags & GST_BINARY_REGISTRY_FLAG_CONST))
         g_free (cur->data);
@@ -675,29 +815,15 @@ gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
   }
   g_list_free (to_write);
 
-  if (lseek (registry->cache_file, 0, SEEK_SET) != 0) {
-    GST_ERROR ("Seeking to rewrite the binary registry CRC32 failed");
-  } else {
-    if (write (registry->cache_file, &magic,
-            sizeof (GstBinaryRegistryMagic)) != sizeof (GstBinaryRegistryMagic))
-      GST_ERROR ("Failed to rewrite binary registry magic");
+  if (gst_registry_binary_cache_write (registry, cache, 0, &magic,
+          sizeof (GstBinaryRegistryMagic)) != sizeof (GstBinaryRegistryMagic)) {
+    GST_ERROR ("Failed to rewrite binary registry magic");
+    return FALSE;
   }
 
-  if (close (registry->cache_file) < 0)
-    goto close_failed;
+  if (!gst_registry_binary_cache_finish (registry, cache, TRUE))
+    return FALSE;
 
-  if (g_file_test (tmp_location, G_FILE_TEST_EXISTS)) {
-#ifdef WIN32
-    g_remove (location);
-#endif
-    if (g_rename (tmp_location, location) < 0)
-      goto rename_failed;
-  } else {
-    /* FIXME: shouldn't we return FALSE here? */
-  }
-
-  g_free (tmp_location);
-  GST_INFO ("Wrote binary registry cache");
   return TRUE;
 
   /* Errors */
@@ -711,28 +837,13 @@ fail_free_list:
       g_free (cur);
     }
     g_list_free (to_write);
+
+    (void) gst_registry_binary_cache_finish (registry, cache, FALSE);
     /* fall through */
   }
 fail:
   {
-    (void) close (registry->cache_file);
-    /* fall through */
-  }
-fail_after_close:
-  {
-    g_remove (tmp_location);
-    g_free (tmp_location);
     return FALSE;
-  }
-close_failed:
-  {
-    GST_ERROR ("close() failed: %s", g_strerror (errno));
-    goto fail_after_close;
-  }
-rename_failed:
-  {
-    GST_ERROR ("g_rename() failed: %s", g_strerror (errno));
-    goto fail_after_close;
   }
 }
 
