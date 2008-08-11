@@ -426,6 +426,19 @@
   )
 )
 
+(define-flags DebugGraphDetails
+  (in-module "Gst")
+  (c-name "GstDebugGraphDetails")
+  (gtype-id "GST_TYPE_DEBUG_GRAPH_DETAILS")
+  (values
+    '("media-type" "GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE")
+    '("caps-details" "GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS")
+    '("non-default-params" "GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS")
+    '("states" "GST_DEBUG_GRAPH_SHOW_STATES")
+    '("all" "GST_DEBUG_GRAPH_SHOW_ALL")
+  )
+)
+
 (define-flags ElementFlags
   (in-module "Gst")
   (c-name "GstElementFlags")

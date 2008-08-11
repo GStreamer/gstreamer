@@ -16,8 +16,11 @@ ignore
    GstURIHandler__proxy_do_get_protocols_full
    GstURIHandler__do_get_type_full
    GstURIHandler__proxy_do_get_type_full
+   GST_DEBUG_BIN_TO_DOT_FILE
+   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS
 %%
 ignore-type
    GstLFOControlSource
    GstLFOWaveform
+   GstDebugGraphDetails
 %%

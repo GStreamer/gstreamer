@@ -1,3 +1,11 @@
+2008-08-11  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gst-0.10.15.ignore:
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	Add gstdebugutils.[ch] methods that weren't wrapped previously.
+	We can now dump pipeline graphviz files from python ! :)
+
 2008-07-02  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* configure.ac:
