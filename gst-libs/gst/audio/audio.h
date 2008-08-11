@@ -77,6 +77,12 @@ G_BEGIN_DECLS
  */
 #define GST_AUDIO_DEF_RATE 44100
 
+/**
+ * GST_AUDIO_INT_PAD_TEMPLATE_CAPS:
+ * 
+ * Template caps for integer audio. Can be used when defining a 
+ * #GstStaticPadTemplate
+ */
 #define GST_AUDIO_INT_PAD_TEMPLATE_CAPS \
   "audio/x-raw-int, " \
   "rate = (int) [ 1, MAX ], " \
@@ -86,7 +92,12 @@ G_BEGIN_DECLS
   "depth = (int) [ 1, 32 ], " \
   "signed = (boolean) { true, false }"
 
-/* "standard" int audio is native order, 16 bit stereo. */
+/**
+ * GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS:
+ * 
+ * Template caps for 16bit integer stereo audio in native byte-order.
+ * Can be used when defining a #GstStaticPadTemplate
+ */
 #define GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS \
   "audio/x-raw-int, " \
   "rate = (int) [ 1, MAX ], " \
@@ -96,6 +107,12 @@ G_BEGIN_DECLS
   "depth = (int) 16, " \
   "signed = (boolean) true"
 
+/**
+ * GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS:
+ * 
+ * Template caps for float audio. Can be used when defining a 
+ * #GstStaticPadTemplate
+ */
 #define GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS \
   "audio/x-raw-float, " \
   "rate = (int) [ 1, MAX ], " \
@@ -103,7 +120,12 @@ G_BEGIN_DECLS
   "endianness = (int) { LITTLE_ENDIAN , BIG_ENDIAN }, " \
   "width = (int) { 32, 64 }"
 
-/* "standard" float audio is native order, 32 bit mono. */
+/**
+ * GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS:
+ * 
+ * Template caps for 32bit float mono audio in native byte-order.
+ * Can be used when defining a #GstStaticPadTemplate
+ */
 #define GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS \
   "audio/x-raw-float, " \
   "width = (int) 32, " \

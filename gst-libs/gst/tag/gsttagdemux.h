@@ -53,6 +53,7 @@ typedef enum {
 
 /**
  * GstTagDemux:
+ * @element: parent element
  *
  * Opaque #GstTagDemux structure.
  *

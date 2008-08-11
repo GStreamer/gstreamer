@@ -61,6 +61,7 @@ struct _GstAudioFilter {
 
 /**
  * GstAudioFilterClass:
+ * @basetransformclass: parent class
  * @setup: virtual function called whenever the format changes
  *
  * In addition to the @setup virtual function, you should also override the

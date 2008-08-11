@@ -35,9 +35,26 @@ G_BEGIN_DECLS
 #define GST_PROPERTY_PROBE_GET_IFACE(obj) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_PROPERTY_PROBE, GstPropertyProbeInterface))
 
+/**
+ * GstPropertyProbe:
+ *
+ * Opaque #GstPropertyProbe data structure.
+ */
 typedef struct _GstPropertyProbe GstPropertyProbe; /* dummy typedef */
+typedef struct _GstPropertyProbeInterface GstPropertyProbeInterface;
 
-typedef struct _GstPropertyProbeInterface {
+/**
+ * GstPropertyProbeInterface:
+ * @klass: parent interface type.
+ * @probe_needed: default signal handler
+ * @get_properties: virtual method to get list of pobable properties
+ * @needs_probe: virtual method to tell if probe need update
+ * @probe_property: virtual method to probe a property
+ * @get_values: virtual method to get probe results for a property
+ *
+ * #GstPropertyProbeInterface interface.
+ */
+struct _GstPropertyProbeInterface {
   GTypeInterface klass;
 
   /* signals */
@@ -56,8 +73,9 @@ typedef struct _GstPropertyProbeInterface {
                                    guint             prop_id,
                                    const GParamSpec *pspec);
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
-} GstPropertyProbeInterface;
+};
 
 GType        gst_property_probe_get_type       (void);
 

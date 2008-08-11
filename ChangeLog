@@ -1,5 +1,14 @@
 2008-08-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst-libs/gst/audio/audio.h:
+	* gst-libs/gst/audio/gstaudiofilter.h:
+	* gst-libs/gst/audio/gstringbuffer.h:
+	* gst-libs/gst/interfaces/propertyprobe.h:
+	* gst-libs/gst/tag/gsttagdemux.h:
+	  Reducing number of dundocumented symbols.
+
+2008-08-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst-libs/gst/audio/audio.c:
 	  Fix doc comment syntax.
 

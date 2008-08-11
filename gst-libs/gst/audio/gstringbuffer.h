@@ -181,6 +181,8 @@ typedef enum
  * @segtotal: the total number of segments
  * @bytes_per_sample: number of bytes in one sample
  * @silence_sample: bytes representing one sample of silence
+ * @seglatency: number of segments queued in the lower level device,
+ *  defaults to segtotal
  *
  * The structure containing the format specification of the ringbuffer.
  */
@@ -285,6 +287,7 @@ struct _GstRingBuffer {
 
 /**
  * GstRingBufferClass:
+ * @parent_class: parent class
  * @open_device:  open the device, don't set any params or allocate anything
  * @acquire: allocate the resources for the ringbuffer using the given spec
  * @release: free resources of the ringbuffer
