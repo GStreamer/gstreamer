@@ -1,5 +1,13 @@
 2008-08-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst-libs/gst/audio/.cvsignore:
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/audio/gstaudiofiltertemplate.c:
+	* gst-libs/gst/audio/make_filter:
+	  Move audiofiltertemplate to gst-template.
+
+2008-08-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* gst-libs/gst/audio/gstaudiosrc.h:
 	  More docs and shuffling. What can we do with the hundreds of #defines.
