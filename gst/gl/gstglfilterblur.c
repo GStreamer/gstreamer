@@ -94,6 +94,25 @@ static gboolean gst_gl_filterblur_filter (GstGLFilter * filter,
 static void gst_gl_filterblur_hcallback (gint width, gint height, guint texture, gpointer stuff);
 static void gst_gl_filterblur_vcallback (gint width, gint height, guint texture, gpointer stuff);
 
+
+static void 
+gst_gl_filterblur_init_resources (GstGLFilter *filter)
+{
+//  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
+  
+  /* dummy gl call to test if we really are in a  gl context */
+  g_print ("\nStart!!!: %s\n\n", glGetString (GL_VERSION));
+}
+
+static void 
+gst_gl_filterblur_reset_resources (GstGLFilter *filter)
+{
+//  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
+
+  /* dummy gl call to test if we really are in a  gl context */
+  g_print ("\nStop!!!: %s\n\n", glGetString (GL_VENDOR)); 
+}
+
 static void
 gst_gl_filterblur_base_init (gpointer klass)
 {
@@ -112,6 +131,8 @@ gst_gl_filterblur_class_init (GstGLFilterBlurClass * klass)
   gobject_class->get_property = gst_gl_filterblur_get_property;
 
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filterblur_filter;
+  GST_GL_FILTER_CLASS (klass)->display_init_cb = gst_gl_filterblur_init_resources;
+  GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_filterblur_reset_resources;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filterblur_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_filterblur_reset;
 }

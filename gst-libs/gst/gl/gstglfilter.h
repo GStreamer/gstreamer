@@ -1,6 +1,7 @@
 /* 
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
+ * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -40,34 +41,42 @@ typedef struct _GstGLFilterClass GstGLFilterClass;
 
 
 typedef gboolean (*GstGLFilterSetCaps) (GstGLFilter* filter, 
-    GstCaps* incaps, GstCaps* outcaps);
+					GstCaps* incaps, GstCaps* outcaps);
 typedef gboolean (*GstGLFilterProcessFunc) (GstGLFilter *filter,
-    GstGLBuffer *inbuf, GstGLBuffer *outbuf);
+					    GstGLBuffer *inbuf, GstGLBuffer *outbuf);
 typedef void (*GstGLFilterOnInitFBO) (GstGLFilter *filter);
 typedef void (*GstGLFilterOnReset) (GstGLFilter *filter);
 
+typedef void (*GstGLFilterGLStartFunc) (GstGLFilter *filter);
+typedef void (*GstGLFilterGLStopFunc) (GstGLFilter *filter);
+
 struct _GstGLFilter
 {
-    GstBaseTransform base_transform;
+  GstBaseTransform base_transform;
 
-    GstPad *srcpad;
-    GstPad *sinkpad;
+  GstPad *srcpad;
+  GstPad *sinkpad;
 
-    GstGLDisplay *display;
+  GstGLDisplay *display;
 
-    gint width;
-    gint height;
-    GLuint fbo;
-    GLuint depthbuffer;
+  gint width;
+  gint height;
+  GLuint fbo;
+  GLuint depthbuffer;
 };
 
 struct _GstGLFilterClass
 {
-    GstBaseTransformClass base_transform_class;
-    GstGLFilterSetCaps set_caps;
-    GstGLFilterProcessFunc filter;
-    GstGLFilterOnInitFBO onInitFBO;
-    GstGLFilterOnReset onReset;
+  GstBaseTransformClass base_transform_class;
+  GstGLFilterSetCaps set_caps;
+  GstGLFilterProcessFunc filter;
+  GstGLFilterOnInitFBO onInitFBO;
+  
+  GstGLFilterOnReset onReset;
+
+  /* useful to init and cleanup custom gl resources */
+  GstGLFilterGLStartFunc display_init_cb; /* run arbitrary gl code at start */
+  GstGLFilterGLStopFunc display_reset_cb; /* run arbitrary gl code at stop */
 };
 
 GType gst_gl_filter_get_type(void);
