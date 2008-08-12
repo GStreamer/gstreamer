@@ -430,6 +430,7 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
   GstStructure *structure;
   gboolean ret = TRUE;
   gint clock_rate;
+  GstRTPMuxPadPrivate *padpriv = gst_pad_get_element_private (pad);
 
   rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
 
@@ -440,6 +441,10 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
 
   if (!ret)
     goto out;
+
+  if (gst_structure_get_uint (structure, "clock-base", &padpriv->clock_base)) {
+    padpriv->have_base = TRUE;
+  }
 
   caps = gst_caps_make_writable (caps);
 
