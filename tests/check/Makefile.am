@@ -57,10 +57,17 @@ else
 check_timidity=
 endif
 
+if USE_X264
+check_x264enc=elements/x264enc
+else
+check_x264enc=
+endif
+
 
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
-	elements/mplex
+	elements/mplex \
+	elements/x264enc
 
 # valgrind testing
 VALGRIND_TESTS_DISABLE = \
@@ -73,6 +80,7 @@ check_PROGRAMS = \
 	$(check_neon)      \
 	$(check_ofa)        \
 	$(check_timidity)  \
+	$(check_x264enc)   \
 	elements/selector \
 	elements/y4menc
 

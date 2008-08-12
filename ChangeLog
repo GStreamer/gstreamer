@@ -1,3 +1,14 @@
+2008-08-12  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* ext/x264/gstx264enc.c:
+	* tests/check/Makefile.am:
+	* tests/check/elements/x264enc.c: (setup_x264enc),
+	(cleanup_x264enc), (GST_START_TEST), (x264enc_suite), (main):
+	Add documentation and unit test for x264enc.
+
 2008-08-11  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/x264/gstx264enc.c: (gst_x264_enc_init),

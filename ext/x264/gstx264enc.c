@@ -19,6 +19,36 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-x264enc
+ * @see_also: faac
+ *
+ * This element encodes raw video into a H264 compressed data,
+ * also otherwise known as MPEG-4 AVC (Advanced Video Codec).
+ *
+ * The #GstX264Enc:pass-new property controls the type of encoding.  In case of Constant
+ * Bitrate Encoding (actually ABR), the #GstX264Enc:bitrate will determine the quality
+ * of the encoding.  This will similarly be the case if this target bitrate
+ * is to obtained in multiple (2 or 3) pass encoding.
+ * Alternatively, one may choose to perform Constant Quantizer or Quality encoding,
+ * in which case the #GstX264Enc:quantizer property controls much of the outcome.
+ *
+ * <refsect2>
+ * <title>Example pipeline</title>
+ * |[
+ * gst-launch -v videotestsrc num-buffers=1000 ! x264enc qp-min=18 ! \
+ *   avimux ! filesink location=videotestsrc.avi
+ * ]| This example pipeline will encode a test video source to H264 muxed in an
+ * AVI container, while ensuring a sane minimum quantization factor to avoid
+ * some (excessive) waste.
+ * |[
+ * gst-launch -v videotestsrc num-buffers=1000 ! x264enc pass-new=quant ! \
+ *   matroskamux ! filesink location=videotestsrc.avi
+ * ]| This example pipeline will encode a test video source to H264 using fixed
+ * quantization, and muxes it in a Matroska container.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
