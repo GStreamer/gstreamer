@@ -427,7 +427,7 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
       NULL);
 
   GST_DEBUG_OBJECT (rtp_mux,
-      "seting caps %" GST_PTR_FORMAT " on src pad..", caps);
+      "setting caps %" GST_PTR_FORMAT " on src pad..", caps);
   ret = gst_pad_set_caps (rtp_mux->srcpad, caps);
 
  out:
