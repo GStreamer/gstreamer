@@ -352,8 +352,8 @@ gst_rtp_mux_readjust_rtp_timestamp (GstRTPMux * rtp_mux, GstPad * pad,
     sink_ts_base = padpriv->clock_base;
 
   ts = gst_rtp_buffer_get_timestamp (buffer) - sink_ts_base + rtp_mux->ts_base;
-  GST_DEBUG_OBJECT (rtp_mux, "Re-adjusting RTP ts %u to %u",
-          gst_rtp_buffer_get_timestamp (buffer), ts);
+  GST_LOG_OBJECT (rtp_mux, "Re-adjusting RTP ts %u to %u",
+      gst_rtp_buffer_get_timestamp (buffer), ts);
   gst_rtp_buffer_set_timestamp (buffer, ts);
 }
 
@@ -368,12 +368,11 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
   buffer = gst_buffer_make_writable(buffer);
 
   rtp_mux->seqnum++;
-  GST_LOG_OBJECT (rtp_mux, "setting RTP seqnum %d", rtp_mux->seqnum);
   gst_rtp_buffer_set_seq (buffer, rtp_mux->seqnum);
   gst_rtp_buffer_set_ssrc (buffer, rtp_mux->current_ssrc);
   gst_rtp_mux_readjust_rtp_timestamp (rtp_mux, pad, buffer);
-  GST_DEBUG_OBJECT (rtp_mux, "Pushing packet size %d, seq=%d, ts=%u",
-          GST_BUFFER_SIZE (buffer), rtp_mux->seqnum);
+  GST_LOG_OBJECT (rtp_mux, "Pushing packet size %d, seq=%d, ts=%u",
+      GST_BUFFER_SIZE (buffer), rtp_mux->seqnum);
 
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (rtp_mux->srcpad));
 
