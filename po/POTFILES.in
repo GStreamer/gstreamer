@@ -1,4 +1,3 @@
-ext/cdio/gstcdiocddasrc.c
 ext/esd/esdsink.c
 ext/flac/gstflacdec.c
 ext/jpeg/gstjpegdec.c

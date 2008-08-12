@@ -1,3 +1,24 @@
+2008-08-12  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* ext/Makefile.am:
+	* ext/cdio/Makefile.am:
+	* ext/cdio/gstcdio.c:
+	* ext/cdio/gstcdio.h:
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/cdio/gstcdiocddasrc.h:
+
+	Pull changes from 0.10.9.2 pre-release branch moving the libcdio
+	CDDA source to -ugly.
+
+	* po/LINGUAS:
+	* po/POTFILES.in:
+	* po/id.po:
+	Pull in new translation from 0.10.9.2 release branch.
+
 2008-08-11  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* docs/plugins/Makefile.am:

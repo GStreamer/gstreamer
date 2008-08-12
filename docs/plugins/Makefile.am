@@ -79,7 +79,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/annodex/gstcmmldec.h \
 	$(top_srcdir)/ext/annodex/gstcmmlenc.h \
 	$(top_srcdir)/ext/cairo/gsttimeoverlay.h \
-	$(top_srcdir)/ext/cdio/gstcdiocddasrc.h \
 	$(top_srcdir)/ext/dv/gstdvdec.h \
 	$(top_srcdir)/ext/dv/gstdvdemux.h \
 	$(top_srcdir)/ext/esd/esdsink.h \
