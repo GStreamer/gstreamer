@@ -416,12 +416,21 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
     ret = gst_rtp_mux_set_clock_rate (rtp_mux, clock_rate);
   }
 
-  if (ret) {
-    GST_DEBUG_OBJECT (rtp_mux,
-            "seting caps %" GST_PTR_FORMAT " on src pad..", caps);
-    ret = gst_pad_set_caps (rtp_mux->srcpad, caps);
-  }
+  if (!ret)
+    goto out;
 
+  caps = gst_caps_make_writable (caps);
+
+  gst_caps_set_simple (caps,
+      "clock-base", G_TYPE_UINT, rtp_mux->ts_base,
+      "seqnum-base", G_TYPE_UINT, rtp_mux->seqnum_base,
+      NULL);
+
+  GST_DEBUG_OBJECT (rtp_mux,
+      "seting caps %" GST_PTR_FORMAT " on src pad..", caps);
+  ret = gst_pad_set_caps (rtp_mux->srcpad, caps);
+
+ out:
   gst_object_unref (rtp_mux);
 
   return ret;
