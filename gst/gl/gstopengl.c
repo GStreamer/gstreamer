@@ -31,6 +31,7 @@
 #include "gstglimagesink.h"
 #include "gstglcolorscale.h"
 
+GType gst_gl_effects_get_type (void);
 GType gst_gl_filter_app_get_type (void);
 GType gst_gl_filter_cube_get_type (void);
 GType gst_gl_filterblur_get_type (void);
@@ -58,6 +59,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glfiltercube",
           GST_RANK_NONE, GST_TYPE_GL_FILTER_CUBE)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "gleffects",
+          GST_RANK_NONE, gst_gl_effects_get_type())) {
     return FALSE;
   }
 
