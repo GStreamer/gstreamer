@@ -23,10 +23,10 @@
  * SECTION:element-x264enc
  * @see_also: faac
  *
- * This element encodes raw video into a H264 compressed data,
+ * This element encodes raw video into H264 compressed data,
  * also otherwise known as MPEG-4 AVC (Advanced Video Codec).
  *
- * The #GstX264Enc:pass-new property controls the type of encoding.  In case of Constant
+ * The #GstX264Enc:pass property controls the type of encoding.  In case of Constant
  * Bitrate Encoding (actually ABR), the #GstX264Enc:bitrate will determine the quality
  * of the encoding.  This will similarly be the case if this target bitrate
  * is to obtained in multiple (2 or 3) pass encoding.
@@ -42,7 +42,7 @@
  * AVI container, while ensuring a sane minimum quantization factor to avoid
  * some (excessive) waste.
  * |[
- * gst-launch -v videotestsrc num-buffers=1000 ! x264enc pass-new=quant ! \
+ * gst-launch -v videotestsrc num-buffers=1000 ! x264enc pass=quant ! \
  *   matroskamux ! filesink location=videotestsrc.avi
  * ]| This example pipeline will encode a test video source to H264 using fixed
  * quantization, and muxes it in a Matroska container.
@@ -66,7 +66,6 @@ enum
   ARG_0,
   ARG_THREADS,
   ARG_PASS,
-  ARG_PASS_NEW,
   ARG_QUANTIZER,
   ARG_STATS_FILE,
   ARG_BYTE_STREAM,
@@ -96,7 +95,6 @@ enum
 
 #define ARG_THREADS_DEFAULT            1
 #define ARG_PASS_DEFAULT               0
-#define ARG_PASS_NEW_DEFAULT           0
 #define ARG_QUANTIZER_DEFAULT          21
 #define ARG_STATS_FILE_DEFAULT         "x264.log"
 #define ARG_BYTE_STREAM_DEFAULT        FALSE
@@ -126,7 +124,7 @@ enum
 enum
 {
   GST_X264_ENC_PASS_CBR = 0,
-  GST_X264_ENC_PASS_QUANT,
+  GST_X264_ENC_PASS_QUANT = 0x04,
   GST_X264_ENC_PASS_QUAL,
   GST_X264_ENC_PASS_PASS1 = 0x11,
   GST_X264_ENC_PASS_PASS2,
@@ -267,15 +265,10 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       g_param_spec_uint ("threads", "Threads",
           "Number of threads used by the codec (0 for automatic)",
           0, 4, ARG_THREADS_DEFAULT, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_PASS_NEW,
-      g_param_spec_enum ("pass-new", "Encoding pass/type",
-          "Encoding pass/type", GST_X264_ENC_PASS_TYPE,
-          ARG_PASS_NEW_DEFAULT, G_PARAM_READWRITE));
-  /* FIXME 0.11: remove pass property and use the one above */
   g_object_class_install_property (gobject_class, ARG_PASS,
-      g_param_spec_uint ("pass", "Pass",
-          "Pass of multipass encoding (0=single pass; 1=first pass, 2=middle pass, 3=last pass)",
-          0, 3, ARG_PASS_DEFAULT, G_PARAM_READWRITE));
+      g_param_spec_enum ("pass", "Encoding pass/type",
+          "Encoding pass/type", GST_X264_ENC_PASS_TYPE,
+          ARG_PASS_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_QUANTIZER,
       g_param_spec_uint ("quantizer", "Constant Quantizer",
           "Constant quantizer or quality to apply",
@@ -425,7 +418,7 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
 
   /* properties */
   encoder->threads = ARG_THREADS_DEFAULT;
-  encoder->pass = ARG_PASS_NEW_DEFAULT;
+  encoder->pass = ARG_PASS_DEFAULT;
   encoder->quantizer = ARG_QUANTIZER_DEFAULT;
   encoder->stats_file = g_strdup (ARG_STATS_FILE_DEFAULT);
   encoder->byte_stream = ARG_BYTE_STREAM_DEFAULT;
@@ -601,14 +594,13 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
       encoder->x264param.rc.b_stat_read = 0;
       encoder->x264param.rc.b_stat_write = 1;
       break;
-      /* FIXME 0.11: settings for these passes must be swapped; 2: ro, 3: r/w */
     case 2:
       encoder->x264param.rc.b_stat_read = 1;
-      encoder->x264param.rc.b_stat_write = 1;
+      encoder->x264param.rc.b_stat_write = 0;
       break;
     case 3:
       encoder->x264param.rc.b_stat_read = 1;
-      encoder->x264param.rc.b_stat_write = 0;
+      encoder->x264param.rc.b_stat_write = 1;
       break;
   }
   encoder->x264param.rc.psz_stat_in = encoder->stats_file;
@@ -1058,16 +1050,6 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       encoder->threads = g_value_get_uint (value);
       break;
     case ARG_PASS:
-    {
-      guint pass = g_value_get_uint (value);
-
-      if (pass)
-        encoder->pass = GST_X264_ENC_PASS_PASS1 + (pass - 1);
-      else
-        encoder->pass = GST_X264_ENC_PASS_CBR;
-      break;
-    }
-    case ARG_PASS_NEW:
       encoder->pass = g_value_get_enum (value);
       break;
     case ARG_QUANTIZER:
@@ -1176,12 +1158,6 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       g_value_set_uint (value, encoder->threads);
       break;
     case ARG_PASS:
-      if (encoder->pass < GST_X264_ENC_PASS_PASS1)
-        g_value_set_uint (value, 0);
-      else
-        g_value_set_uint (value, encoder->pass - GST_X264_ENC_PASS_PASS1 + 1);
-      break;
-    case ARG_PASS_NEW:
       g_value_set_enum (value, encoder->pass);
       break;
     case ARG_QUANTIZER:

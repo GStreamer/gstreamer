@@ -17000,12 +17000,12 @@
 
 <ARG>
 <NAME>GstX264Enc::pass</NAME>
-<TYPE>guint</TYPE>
-<RANGE><= 3</RANGE>
+<TYPE>GstX264EncPass</TYPE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Pass</NICK>
-<BLURB>Pass of multipass encoding (0=single pass; 1=first pass, 2=middle pass, 3=last pass).</BLURB>
-<DEFAULT>0</DEFAULT>
+<NICK>Encoding pass/type</NICK>
+<BLURB>Encoding pass/type.</BLURB>
+<DEFAULT>Constant Bitrate Encoding</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17051,10 +17051,10 @@
 <ARG>
 <NAME>GstX264Enc::threads</NAME>
 <TYPE>guint</TYPE>
-<RANGE>[1,4]</RANGE>
+<RANGE><= 4</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Threads</NICK>
-<BLURB>Number of threads used by the codec.</BLURB>
+<BLURB>Number of threads used by the codec (0 for automatic).</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -17086,6 +17086,96 @@
 <NICK>Weighted B-Frames</NICK>
 <BLURB>Weighted prediction for B-frames.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::b-adapt</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Adapt</NICK>
+<BLURB>Automatically decide how many B-frames to use.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::interlaced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced</NICK>
+<BLURB>Interlaced material.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::ip-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,2]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IP-Factor</NICK>
+<BLURB>Quantizer factor between I- and P-frames.</BLURB>
+<DEFAULT>1.4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::noise-reduction</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 100000</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Reducation</NICK>
+<BLURB>Noise reduction strength.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::pb-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,2]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>PB-Factor</NICK>
+<BLURB>Quantizer factor between P- and B-frames.</BLURB>
+<DEFAULT>1.3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::qp-max</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,51]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer</NICK>
+<BLURB>Maximum quantizer.</BLURB>
+<DEFAULT>51</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::qp-min</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,51]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Quantizer</NICK>
+<BLURB>Minimum quantizer.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::qp-step</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,50]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer Difference</NICK>
+<BLURB>Maximum quantizer difference between frames.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::quantizer</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,50]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constant Quantizer</NICK>
+<BLURB>Constant quantizer or quality to apply.</BLURB>
+<DEFAULT>21</DEFAULT>
 </ARG>
 
 <ARG>

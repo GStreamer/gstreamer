@@ -1,5 +1,15 @@
 2008-08-12  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	Integrate new properties into documentation.
+	* ext/x264/gstx264enc.c: (gst_x264_enc_class_init),
+	(gst_x264_enc_init), (gst_x264_enc_init_encoder),
+	(gst_x264_enc_set_property), (gst_x264_enc_get_property):
+	Fix up API prior to eventual plugin move.
+	API: GstX264Enc:pass (provides more options, and changed to enum)
+
+2008-08-12  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
