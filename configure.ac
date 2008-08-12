@@ -5,7 +5,7 @@ dnl please read gstreamer/docs/random/autotools before changing this file
 dnl initialize autoconf
 dnl releases only do -Wall, cvs and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for cvs/prerelease
-AC_INIT(GStreamer Ugly Plug-ins, 0.10.8.1,
+AC_INIT(GStreamer Ugly Plug-ins, 0.10.8.2,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-ugly)
 
@@ -234,6 +234,12 @@ AG_GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnb, [
 		      AC_SUBST(AMRNB_LIBS))
 ])
 
+dnl *** cdio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CDIO, true)
+AG_GST_CHECK_FEATURE(CDIO, [cdio library], cdio, [
+  AG_GST_PKG_CHECK_MODULES(CDIO, libcdio >= 0.76)
+])
+
 dnl *** dvdread ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVDREAD, true)
 AG_GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
@@ -353,6 +359,7 @@ dnl but we still need to set the conditionals
 
 AM_CONDITIONAL(USE_A52DEC, false)
 AM_CONDITIONAL(USE_AMRNB, false)
+AM_CONDITIONAL(USE_CDIO, false)
 AM_CONDITIONAL(USE_DVDREAD, false)
 AM_CONDITIONAL(USE_DVDNAV, false)
 AM_CONDITIONAL(USE_LAME, false)
@@ -432,6 +439,7 @@ gst/synaesthesia/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/amrnb/Makefile
+ext/cdio/Makefile
 ext/dvdnav/Makefile
 ext/dvdread/Makefile
 ext/lame/Makefile

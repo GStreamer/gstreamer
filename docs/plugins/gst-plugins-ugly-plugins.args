@@ -5,7 +5,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Allow diff short</NICK>
 <BLURB>Allow diff short.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -15,7 +15,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ATH lower</NICK>
 <BLURB>lowers ATH by x dB.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -25,7 +25,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ATH only</NICK>
 <BLURB>Ignore GPSYCHO completely, use ATH only.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -35,13 +35,13 @@
 <FLAGS>rw</FLAGS>
 <NICK>ATH short</NICK>
 <BLURB>Ignore GPSYCHO for short blocks, use ATH only.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstLame::bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[8,320]</RANGE>
+<RANGE>[0,320]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bitrate (kb/s)</NICK>
 <BLURB>Bitrate in kbit/sec (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256 or 320).</BLURB>
@@ -65,7 +65,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Copyright</NICK>
 <BLURB>Mark as copyright.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -74,7 +74,7 @@
 <RANGE>[0,50000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Cwlimit</NICK>
-<BLURB>Compute tonality up to freq (in kHz) default 8.8717.</BLURB>
+<BLURB>Compute tonality up to freq (in kHz) default 8.8717 (DEPRECATED: this setting has no effect).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -95,7 +95,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Emphasis</NICK>
 <BLURB>Emphasis.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -105,7 +105,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Error protection</NICK>
 <BLURB>Adds 16 bit checksum to every frame.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -115,7 +115,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Extension</NICK>
 <BLURB>Extension.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -125,7 +125,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Force ms</NICK>
 <BLURB>Force ms_stereo on all frames.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -135,7 +135,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Free format</NICK>
 <BLURB>Produce a free format bitstream.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -151,11 +151,11 @@
 <ARG>
 <NAME>GstLame::highpass-width</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Highpass width</NICK>
 <BLURB>frequency(kHz) - default 15% of highpass freq.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -165,17 +165,17 @@
 <FLAGS>rw</FLAGS>
 <NICK>Lowpass freq</NICK>
 <BLURB>frequency(kHz), lowpass filter cutoff above freq.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>17000</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstLame::lowpass-width</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Lowpass width</NICK>
 <BLURB>frequency(kHz) - default 15% of lowpass freq.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -185,7 +185,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mode</NICK>
 <BLURB>Encoding mode.</BLURB>
-<DEFAULT>Stereo</DEFAULT>
+<DEFAULT>Joint Stereo</DEFAULT>
 </ARG>
 
 <ARG>
@@ -195,7 +195,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>No ath</NICK>
 <BLURB>turns ATH down to a flat noise floor.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -205,7 +205,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>No short blocks</NICK>
 <BLURB>Do not use short blocks.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -214,7 +214,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Original</NICK>
-<BLURB>Mark as non-original.</BLURB>
+<BLURB>Mark as original.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -224,7 +224,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Padding type</NICK>
-<BLURB>Padding type.</BLURB>
+<BLURB>Padding type (DEPRECATED: this setting has no effect).</BLURB>
 <DEFAULT>No Padding</DEFAULT>
 </ARG>
 
@@ -245,7 +245,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Quality</NICK>
 <BLURB>Quality of algorithm used for encoding.</BLURB>
-<DEFAULT>5 - Default</DEFAULT>
+<DEFAULT>3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -281,17 +281,17 @@
 <ARG>
 <NAME>GstLame::vbr-max-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[8,320]</RANGE>
+<RANGE>[0,320]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>VBR max bitrate</NICK>
 <BLURB>Specify maximum VBR bitrate (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256 or 320).</BLURB>
-<DEFAULT>160</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstLame::vbr-mean-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[8,320]</RANGE>
+<RANGE>[0,320]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>VBR mean bitrate</NICK>
 <BLURB>Specify mean VBR bitrate.</BLURB>
@@ -301,11 +301,11 @@
 <ARG>
 <NAME>GstLame::vbr-min-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[8,320]</RANGE>
+<RANGE>[0,320]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>VBR min bitrate</NICK>
 <BLURB>Specify minimum VBR bitrate (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256 or 320).</BLURB>
-<DEFAULT>112</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -315,7 +315,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>VBR Quality</NICK>
 <BLURB>VBR Quality.</BLURB>
-<DEFAULT>5 - Default</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -676,5 +676,15 @@
 <NICK>Band Mode</NICK>
 <BLURB>Encoding Band Mode (Kbps).</BLURB>
 <DEFAULT>MR122</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCdioCddaSrc::read-speed</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Read speed</NICK>
+<BLURB>Read from device at the specified speed (-1 = default).</BLURB>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 

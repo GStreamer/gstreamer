@@ -11,34 +11,32 @@ GObject
         GstPipeline
       GstASFDemux
       GstRTSPWMS
-      GstDvdLpcmDec
-      GstDvdSubDec
-      GstDvdSubParse
-      AC3IEC
       GstXingMux
       GstMPEGAudioParse
       GstMPEGParse
         GstMPEGDemux
           GstDVDDemux
+      AC3IEC
+      GstDvdSubDec
+      GstDvdSubParse
+      GstDvdLpcmDec
       GstRMDemux
       GstRealAudioDemux
       GstRDTDepay
       GstRDTManager
       GstRTSPReal
-      GstSynaesthesia
-      GstA52Dec
-      GstAmrnbDec
-      GstAmrnbParse
-      GstAmrnbEnc
+      GstLame
       GstBaseSrc
         GstPushSrc
           GstDvdReadSrc
-      GstLame
+          GstCddaBaseSrc
+            GstCdioCddaSrc
+      GstSidDec
       GstMad
       GstID3TagBase
         GstID3Tag
+      GstA52Dec
       GstMpeg2dec
-      GstSidDec
     GstBus
     GstTask
     GstClock
