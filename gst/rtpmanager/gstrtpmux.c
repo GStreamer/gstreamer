@@ -66,6 +66,11 @@ enum
 #define DEFAULT_SSRC             -1
 #define DEFAULT_CLOCK_RATE        0
 
+typedef struct {
+  gboolean have_base;
+  guint clock_base;
+} GstRTPMuxPadPrivate;
+
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -86,6 +91,7 @@ static void gst_rtp_mux_finalize (GObject * object);
 
 static GstPad *gst_rtp_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
+static void gst_rtp_mux_release_pad (GstElement * element, GstPad *pad);
 static GstFlowReturn gst_rtp_mux_chain (GstPad * pad,
     GstBuffer * buffer);
 static gboolean gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps);
@@ -176,6 +182,7 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
           0, G_MAXUINT, DEFAULT_SSRC, G_PARAM_READWRITE));
 
   gstelement_class->request_new_pad = gst_rtp_mux_request_new_pad;
+  gstelement_class->release_pad = gst_rtp_mux_release_pad;
   gstelement_class->change_state = gst_rtp_mux_change_state;
 
   klass->chain_func = gst_rtp_mux_chain;
@@ -274,6 +281,7 @@ static void
 gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
 {
   GstRTPMuxClass *klass;
+  GstRTPMuxPadPrivate *padpriv = g_slice_new0 (GstRTPMuxPadPrivate);
 
   klass = GST_RTP_MUX_GET_CLASS (rtp_mux);
 
@@ -286,6 +294,8 @@ gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
 
   /* This could break with gstreamer 0.10.9 */
   gst_pad_set_active (sinkpad, TRUE);
+
+  gst_pad_set_element_private (sinkpad, padpriv);
 
   /* dd the pad to the element */
   gst_element_add_pad (GST_ELEMENT (rtp_mux), sinkpad);
@@ -315,6 +325,18 @@ gst_rtp_mux_request_new_pad (GstElement * element,
     GST_WARNING_OBJECT (rtp_mux, "failed to create request pad");
 
   return newpad;
+}
+
+static void
+gst_rtp_mux_release_pad (GstElement * element, GstPad *pad)
+{
+  GstRTPMuxPadPrivate *padpriv = gst_pad_get_element_private (pad);
+
+  if (padpriv)
+    g_slice_free (GstRTPMuxPadPrivate, padpriv);
+  gst_pad_set_element_private (pad, NULL);
+
+  gst_element_remove_pad (element, pad);
 }
 
 static guint32
