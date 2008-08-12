@@ -1,3 +1,14 @@
+2008-08-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/interfaces/propertyprobe.h:
+	  Remove double "interface" from doc-string.
+
+	* gst-libs/gst/interfaces/xoverlay.h:
+	  Document interface.
+
+	* gst-libs/gst/riff/riff.c:
+	  Add basic doc blobs.
+
 2008-08-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/audio/Makefile.am:

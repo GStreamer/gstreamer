@@ -52,7 +52,7 @@ typedef struct _GstPropertyProbeInterface GstPropertyProbeInterface;
  * @probe_property: virtual method to probe a property
  * @get_values: virtual method to get probe results for a property
  *
- * #GstPropertyProbeInterface interface.
+ * #GstPropertyProbe interface.
  */
 struct _GstPropertyProbeInterface {
   GTypeInterface klass;

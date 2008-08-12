@@ -41,8 +41,22 @@ G_BEGIN_DECLS
 #define GST_X_OVERLAY_GET_CLASS(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_X_OVERLAY, GstXOverlayClass))
 
+/**
+ * GstXOverlay:
+ *
+ * Opaque #GstXOverlay data structure.
+ */
 typedef struct _GstXOverlay GstXOverlay;
 
+/**
+ * GstXOverlayClass:
+ * @klass: parent interface type.
+ * @set_xwindow_id: virtual method to configure the XWindow id
+ * @expose: virtual method to handle expose events
+ * @handle_events: virtual method to handle events
+ *
+ * #GstXOverlay interface
+ */
 typedef struct _GstXOverlayClass {
   GTypeInterface klass;
 
