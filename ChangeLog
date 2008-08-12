@@ -1,5 +1,12 @@
 2008-08-12  Stefan Kost  <ensonic@users.sf.net>
 
+	* pkgconfig/gstreamer-uninstalled.pc.in:
+	* pkgconfig/gstreamer.pc.in:
+	  Remove -lgstcontrol-0.10 which never worked anyway as the lib is
+	  called gstcontroller-0.10.
+
+2008-08-12  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstchildproxy.h:
 	* gst/gstpreset.h:
 	  Remove double interface from doc-string.	  

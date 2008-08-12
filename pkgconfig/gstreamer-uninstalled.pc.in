@@ -6,8 +6,6 @@ includedir=${pcfiledir}/..
 toolsdir=${pcfiledir}/../tools
 pluginsdir=${pcfiledir}/..
 
-gstcontrol_libs=-lgstcontrol-@GST_MAJORMINOR@
-
 Name: GStreamer Uninstalled
 Description: Streaming media framework, Not Installed
 Version: @VERSION@
