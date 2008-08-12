@@ -1,5 +1,15 @@
 2008-08-12  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
+	* ext/x264/gstx264enc.c: (gst_x264_enc_reset),
+	(gst_x264_enc_chain), (gst_x264_enc_encode_frame):
+	* ext/x264/gstx264enc.h:
+	Do not deal with duplicated input (timestamps).  If needed,
+	a generic element can do so.
+	Do not manipulate input timestamps on the way out,
+	since that shifts the timeline and A/V sync.
+
+2008-08-12  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
 	* docs/plugins/gst-plugins-bad-plugins.args:
 	Integrate new properties into documentation.
 	* ext/x264/gstx264enc.c: (gst_x264_enc_class_init),

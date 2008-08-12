@@ -94,8 +94,6 @@ struct _GstX264Enc
   /* for b-frame delay handling */
   GQueue *delay;
 
-  GstClockTime last_timestamp;
-
   guint8 *buffer;
   gulong buffer_size;
 };
