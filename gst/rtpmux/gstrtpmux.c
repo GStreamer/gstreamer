@@ -339,41 +339,18 @@ gst_rtp_mux_release_pad (GstElement * element, GstPad *pad)
   gst_element_remove_pad (element, pad);
 }
 
-static guint32
-gst_rtp_mux_get_buffer_ts_base (GstRTPMux * rtp_mux, GstBuffer * buffer)
-{
-  GstCaps *caps;
-  GstStructure *structure;
-  const GValue *value;
-  guint32 ts_base;
-
-  caps = gst_buffer_get_caps (buffer);
-  g_return_val_if_fail (caps != NULL, 0);
-
-  structure = gst_caps_get_structure (caps, 0);
-  g_return_val_if_fail (structure != NULL, 0);
-
-  value = gst_structure_get_value (structure, "clock-base");
-
-  if (value)
-    ts_base = g_value_get_uint (value);
-  else
-    ts_base = 0;
-
-  gst_caps_unref (caps);
-
-  GST_DEBUG_OBJECT (rtp_mux, "sink's ts-base: %u", ts_base);
-  return ts_base;
-}
-
 /* Put our own clock-base on the buffer */
 static void
-gst_rtp_mux_readjust_rtp_timestamp (GstRTPMux * rtp_mux, GstBuffer * buffer)
+gst_rtp_mux_readjust_rtp_timestamp (GstRTPMux * rtp_mux, GstPad * pad,
+    GstBuffer * buffer)
 {
   guint32 ts;
-  guint32 sink_ts_base;
+  guint32 sink_ts_base = 0;
+  GstRTPMuxPadPrivate *padpriv = gst_pad_get_element_private (pad);
 
-  sink_ts_base = gst_rtp_mux_get_buffer_ts_base (rtp_mux, buffer);
+  if (padpriv->have_base)
+    sink_ts_base = padpriv->clock_base;
+
   ts = gst_rtp_buffer_get_timestamp (buffer) - sink_ts_base + rtp_mux->ts_base;
   GST_DEBUG_OBJECT (rtp_mux, "Re-adjusting RTP ts %u to %u",
           gst_rtp_buffer_get_timestamp (buffer), ts);
@@ -394,7 +371,7 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
   GST_LOG_OBJECT (rtp_mux, "setting RTP seqnum %d", rtp_mux->seqnum);
   gst_rtp_buffer_set_seq (buffer, rtp_mux->seqnum);
   gst_rtp_buffer_set_ssrc (buffer, rtp_mux->current_ssrc);
-  gst_rtp_mux_readjust_rtp_timestamp (rtp_mux, buffer);
+  gst_rtp_mux_readjust_rtp_timestamp (rtp_mux, pad, buffer);
   GST_DEBUG_OBJECT (rtp_mux, "Pushing packet size %d, seq=%d, ts=%u",
           GST_BUFFER_SIZE (buffer), rtp_mux->seqnum - 1);
 
