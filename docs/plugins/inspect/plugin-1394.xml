@@ -1,6 +1,6 @@
 <plugin>
   <name>1394</name>
-  <description>Source for DV data via IEEE1394 interface</description>
+  <description>Source for video data via IEEE1394 interface</description>
   <filename>../../ext/raw1394/.libs/libgst1394.so</filename>
   <basename>libgst1394.so</basename>
   <version>0.10.9</version>
@@ -24,6 +24,21 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-dv, format=(string){ NTSC, PAL }, systemstream=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>hdv1394src</name>
+      <longname>Firewire (1394) HDV video source</longname>
+      <class>Source/Video</class>
+      <description>Source for MPEG-TS video data from firewire port</description>
+      <author>Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpegts, systemstream=(boolean)true, packetsize=(int)188</details>
         </caps>
       </pads>
     </element>

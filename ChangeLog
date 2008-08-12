@@ -1,3 +1,9 @@
+2008-08-12  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* docs/plugins/inspect/plugin-1394.xml:
+	Whoops, forgot one doc file for people who can't/don't build the
+	raw1394 plugin.
+
 2008-08-12  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/plugins/Makefile.am:
