@@ -38,7 +38,7 @@
  * of the lock, the peer element must send an event of type
  * GST_EVENT_CUSTOM_DOWNSTREAM_OOB, having a
  * structure of name "stream-lock" with only one boolean field:
- * "lock". If this field is set to TRUE, the request is for the 
+ * "lock". If this field is set to TRUE, the request is for the
  * acquisition of the lock, otherwise it is for release of the lock.
  * </para>
  * <para>For example, the following code in an upstream peer element
@@ -54,7 +54,7 @@
  *
  * structure = gst_structure_new ("stream-lock",
  *                    "lock", G_TYPE_BOOLEAN, TRUE, NULL);
- * 
+ *
  * event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, structure);
  * gst_pad_push_event (dtmfsrc->srcpad, event);
  * </programlisting>
@@ -157,7 +157,7 @@ gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstRTPDTMFMux *mux;
   GstFlowReturn ret;
-  
+
   mux = GST_RTP_DTMF_MUX (gst_pad_get_parent (pad));
 
   GST_OBJECT_LOCK (mux);
@@ -175,7 +175,7 @@ gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
     else
       ret = GST_FLOW_ERROR;
   }
-    
+
   gst_object_unref (mux);
   return ret;
 }

@@ -189,7 +189,7 @@ static gboolean gst_rtp_mux_src_event (GstPad * pad,
   GstPad *sinkpad;
   gboolean result = FALSE;
   gboolean done = FALSE;
-  
+
   rtp_mux = gst_pad_get_parent_element (pad);
   g_return_val_if_fail (rtp_mux != NULL, FALSE);
 
@@ -228,7 +228,7 @@ gst_rtp_mux_init (GstRTPMux * rtp_mux)
           "src"), "src");
   gst_pad_set_event_function (rtp_mux->srcpad, gst_rtp_mux_src_event);
   gst_element_add_pad (GST_ELEMENT (rtp_mux), rtp_mux->srcpad);
-  
+
   rtp_mux->ssrc = DEFAULT_SSRC;
   rtp_mux->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   rtp_mux->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
@@ -250,7 +250,7 @@ gst_rtp_mux_create_sinkpad (GstRTPMux * rtp_mux, GstPadTemplate * templ)
 {
   GstPad *newpad = NULL;
   GstPadTemplate * class_templ;
-  
+
   class_templ = gst_element_class_get_pad_template (
           GST_ELEMENT_GET_CLASS (rtp_mux), "sink_%d");
 
@@ -276,7 +276,7 @@ gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
   GstRTPMuxClass *klass;
 
   klass = GST_RTP_MUX_GET_CLASS (rtp_mux);
-  
+
   /* setup some pad functions */
   gst_pad_set_setcaps_function (sinkpad, gst_rtp_mux_setcaps);
   if (klass->chain_func)
@@ -324,7 +324,7 @@ gst_rtp_mux_get_buffer_ts_base (GstRTPMux * rtp_mux, GstBuffer * buffer)
   GstStructure *structure;
   const GValue *value;
   guint32 ts_base;
-   
+
   caps = gst_buffer_get_caps (buffer);
   g_return_val_if_fail (caps != NULL, 0);
 
@@ -333,13 +333,13 @@ gst_rtp_mux_get_buffer_ts_base (GstRTPMux * rtp_mux, GstBuffer * buffer)
 
   value = gst_structure_get_value (structure, "clock-base");
 
-  if (value) 
+  if (value)
     ts_base = g_value_get_uint (value);
   else
     ts_base = 0;
-  
+
   gst_caps_unref (caps);
-  
+
   GST_DEBUG_OBJECT (rtp_mux, "sink's ts-base: %u", ts_base);
   return ts_base;
 }
@@ -363,7 +363,7 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstRTPMux *rtp_mux;
   GstFlowReturn ret;
-  
+
   rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
 
   buffer = gst_buffer_make_writable(buffer);
@@ -377,7 +377,7 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
           GST_BUFFER_SIZE (buffer), rtp_mux->seqnum - 1);
 
   ret = gst_pad_push (rtp_mux->srcpad, buffer);
-    
+
   gst_object_unref (rtp_mux);
   return ret;
 }
@@ -493,7 +493,7 @@ gst_rtp_mux_set_property (GObject * object,
   }
 }
 
-static void 
+static void
 gst_rtp_mux_ready_to_paused (GstRTPMux * rtp_mux)
 {
   if (rtp_mux->ssrc == -1)
@@ -506,7 +506,7 @@ gst_rtp_mux_ready_to_paused (GstRTPMux * rtp_mux)
   else
     rtp_mux->seqnum_base = rtp_mux->seqnum_offset;
   rtp_mux->seqnum = rtp_mux->seqnum_base;
-      
+
   if (rtp_mux->ts_offset == -1)
     rtp_mux->ts_base = g_random_int ();
   else
