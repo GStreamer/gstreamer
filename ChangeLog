@@ -1,3 +1,24 @@
+2008-08-12  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* ext/Makefile.am:
+	* ext/cdio/Makefile.am:
+	* ext/cdio/gstcdio.c:
+	* ext/cdio/gstcdio.h:
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/cdio/gstcdiocddasrc.h:
+
+	Remove libcdio based cdda src that's moved to -ugly
+
+	* po/LINGUAS:
+	* po/POTFILES.in:
+	* po/id.po:
+	New translation.
+
 === release 0.10.9 ===
 
 2008-07-31  Jan Schmidt <jan.schmidt@sun.com>

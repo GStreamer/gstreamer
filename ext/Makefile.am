@@ -16,12 +16,6 @@ else
 CAIRO_DIR =
 endif
 
-if USE_CDIO
-CDIO_DIR = cdio
-else
-CDIO_DIR =
-endif
-
 if USE_ESD
 ESD_DIR = esd
 else
@@ -135,7 +129,6 @@ SUBDIRS = \
 	$(AALIB_DIR) \
 	$(ANNODEX_DIR) \
 	$(CAIRO_DIR) \
-	$(CDIO_DIR) \
 	$(DV1394_DIR) \
 	$(ESD_DIR) \
 	$(FLAC_DIR) \
@@ -159,7 +152,6 @@ DIST_SUBDIRS = \
 	aalib \
 	annodex \
 	cairo \
-	cdio \
 	dv \
 	esd \
 	flac \

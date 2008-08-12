@@ -340,20 +340,6 @@ gst_cmml_enc_plugin_init
 </SECTION>
 
 <SECTION>
-<FILE>element-cdiocddasrc</FILE>
-<TITLE>cdiocddasrc</TITLE>
-GstCdioCddaSrc
-<SUBSECTION Standard>
-GstCdioCddaSrcClass
-GST_TYPE_CDIO_CDDA_SRC
-GST_CDIO_CDDA_SRC
-GST_CDIO_CDDA_SRC_CLASS
-GST_IS_CDIO_CDDA_SRC
-GST_IS_CDIO_CDDA_SRC_CLASS
-gst_cdio_cdda_src_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-deinterleave</FILE>
 <TITLE>deinterleave</TITLE>
 GstDeinterleave

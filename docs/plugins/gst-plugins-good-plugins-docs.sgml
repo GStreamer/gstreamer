@@ -32,7 +32,6 @@
     <xi:include href="xml/element-avisubtitle.xml" />
     <xi:include href="xml/element-cacasink.xml" />
     <xi:include href="xml/element-cairotimeoverlay.xml" />
-    <xi:include href="xml/element-cdiocddasrc.xml" />
     <xi:include href="xml/element-cmmldec.xml" />
     <xi:include href="xml/element-cmmlenc.xml" />
     <xi:include href="xml/element-deinterleave.xml" />
@@ -119,7 +118,6 @@
     <xi:include href="xml/plugin-avi.xml" />
     <xi:include href="xml/plugin-cacasink.xml" />
     <xi:include href="xml/plugin-cairo.xml" />
-    <xi:include href="xml/plugin-cdio.xml" />
     <xi:include href="xml/plugin-cutter.xml" />
     <xi:include href="xml/plugin-debug.xml" />
     <xi:include href="xml/plugin-directdraw.xml" />
