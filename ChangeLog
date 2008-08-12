@@ -1,3 +1,9 @@
+2008-08-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstbasetransform.c:
+	  Fix headings in docs and gtk-doc warnings.
+
 2008-08-11  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/gstregistrybinary.c:

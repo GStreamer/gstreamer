@@ -33,14 +33,11 @@
  *   <listitem><para>live sources</para></listitem>
  * </itemizedlist>
  *
- * <refsect2>
- * <para>
  * The source can be configured to operate in any #GstFormat with the
  * gst_base_src_set_format() method. The currently set format determines 
  * the format of the internal #GstSegment and any #GST_EVENT_NEWSEGMENT 
  * events. The default format for #GstBaseSrc is #GST_FORMAT_BYTES.
- * </para>
- * <para>
+ *
  * #GstBaseSrc always supports push mode scheduling. If the following
  * conditions are met, it also supports pull mode scheduling:
  * <itemizedlist>
@@ -49,12 +46,10 @@
  *   <listitem><para>#GstBaseSrc::is_seekable returns %TRUE.</para>
  *   </listitem>
  * </itemizedlist>
- * </para>
- * <para>
+ * 
  * Since 0.10.9, any #GstBaseSrc can enable pull based scheduling at any 
  * time by overriding #GstBaseSrc::check_get_range so that it returns %TRUE. 
- * </para>
- * <para>
+ * 
  * If all the conditions are met for operating in pull mode, #GstBaseSrc is
  * automatically seekable in push mode as well. The following conditions must 
  * be met to make the element seekable in push mode when the format is not
@@ -71,40 +66,34 @@
  *     #GstBaseSrc::do_seek is implemented, performs the seek and returns %TRUE.
  *   </para></listitem>
  * </itemizedlist>
- * </para>
- * <para>
+ * 
  * When the element does not meet the requirements to operate in pull mode,
  * the offset and length in the #GstBaseSrc::create method should be ignored.
  * It is recommended to subclass #GstPushSrc instead, in this situation. If the
  * element can operate in pull mode but only with specific offsets and
  * lengths, it is allowed to generate an error when the wrong values are passed
  * to the #GstBaseSrc::create function.
- * </para>
- * <para>
+ * 
  * #GstBaseSrc has support for live sources. Live sources are sources that when
  * paused discard data, such as audio or video capture devices. A typical live
  * source also produces data at a fixed rate and thus provides a clock to publish
  * this rate.
  * Use gst_base_src_set_live() to activate the live source mode.
- * </para>
- * <para>
+ * 
  * A live source does not produce data in the PAUSED state. This means that the 
  * #GstBaseSrc::create method will not be called in PAUSED but only in PLAYING.
  * To signal the pipeline that the element will not produce data, the return
  * value from the READY to PAUSED state will be #GST_STATE_CHANGE_NO_PREROLL.
- * </para>
- * <para>
+ * 
  * A typical live source will timestamp the buffers it creates with the 
  * current running time of the pipeline. This is one reason why a live source
  * can only produce data in the PLAYING state, when the clock is actually 
  * distributed and running. 
- * </para>
- * <para>
+ * 
  * Live sources that synchronize and block on the clock (an audio source, for
  * example) can since 0.10.12 use gst_base_src_wait_playing() when the ::create
  * function was interrupted by a state change to PAUSED.
- * </para>
- * <para>
+ * 
  * The #GstBaseSrc::get_times method can be used to implement pseudo-live 
  * sources.
  * It only makes sense to implement the ::get_times function if the source is 
@@ -113,21 +102,17 @@
  * the timestamps are transformed into the current running_time.
  * The base source will then wait for the calculated running_time before pushing
  * out the buffer.
- * </para>
- * <para>
+ * 
  * For live sources, the base class will by default report a latency of 0.
  * For pseudo live sources, the base class will by default measure the difference
  * between the first buffer timestamp and the start time of get_times and will
  * report this value as the latency. 
  * Subclasses should override the query function when this behaviour is not
  * acceptable.
- * </para>
- * <para>
+ * 
  * There is only support in #GstBaseSrc for exactly one source pad, which 
  * should be named "src". A source implementation (subclass of #GstBaseSrc) 
  * should install a pad template in its class_init function, like so:
- * </para>
- * <para>
  * <programlisting>
  * static void
  * my_element_class_init (GstMyElementClass *klass)
@@ -141,7 +126,8 @@
  *   gst_element_class_set_details (gstelement_class, &amp;details);
  * }
  * </programlisting>
- * </para>
+ *
+ * <refsect2>
  * <title>Controlled shutdown of live sources in applications</title>
  * <para>
  * Applications that record from a live source may want to stop recording
@@ -152,23 +138,19 @@
  * event down the pipeline. The application would then wait for an
  * EOS message posted on the pipeline's bus to know when all data has
  * been processed and the pipeline can safely be stopped.
- * </para>
- * <para>
+ * 
  * Since GStreamer 0.10.16 an application may send an EOS event to a source
  * element to make it perform the EOS logic (send EOS event downstream or post a
  * #GST_MESSAGE_SEGMENT_DONE on the bus). This can typically be done
  * with the gst_element_send_event() function on the element or its parent bin.
- * </para>
- * <para>
+ * 
  * After the EOS has been sent to the element, the application should wait for
  * an EOS message to be posted on the pipeline's bus. Once this EOS message is
  * received, it may safely shut down the entire pipeline.
- * </para>
- * <para>
+ * 
  * The old behaviour for controlled shutdown introduced since GStreamer 0.10.3
  * is still available but deprecated as it is dangerous and less flexible.
- * </para>
- * <para>
+ * 
  * Last reviewed on 2007-12-19 (0.10.16)
  * </para>
  * </refsect2>

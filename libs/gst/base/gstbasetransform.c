@@ -44,7 +44,9 @@
  *    </para></listitem>
  * </itemizedlist>
  *
- * Use Cases:
+ * <refsect2>
+ * <title>Use Cases</title>
+ * <para>
  * <orderedlist>
  * <listitem>
  *   <itemizedlist><title>Passthrough mode</title>
@@ -158,8 +160,12 @@
  *   </itemizedlist>
  * </listitem>
  * </orderedlist>
- *
- * <itemizedlist><title>Sub-class settable flags on GstBaseTransform</title>
+ * </para>
+ * </refsect2>
+ * <refsect2>
+ * <title>Sub-class settable flags on GstBaseTransform</title>
+ * <para>
+ * <itemizedlist>
  * <listitem><para>
  *   <itemizedlist><title>passthrough</title>
  *     <listitem><para>
@@ -188,8 +194,9 @@
  *   </itemizedlist>
  * </para></listitem>
  * </itemizedlist>
- *
-*/
+ * </para>
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -2108,9 +2115,9 @@ gst_base_transform_is_in_place (GstBaseTransform * trans)
  * when a QOS event is received but subclasses can provide custom information
  * when needed.
  *
- * Since: 0.10.5
- *
  * MT safe.
+ *
+ * Since: 0.10.5
  */
 void
 gst_base_transform_update_qos (GstBaseTransform * trans,
@@ -2136,9 +2143,9 @@ gst_base_transform_update_qos (GstBaseTransform * trans,
  *
  * Enable or disable QoS handling in the transform.
  *
- * Since: 0.10.5
- *
  * MT safe.
+ *
+ * Since: 0.10.5
  */
 void
 gst_base_transform_set_qos_enabled (GstBaseTransform * trans, gboolean enabled)
@@ -2160,9 +2167,9 @@ gst_base_transform_set_qos_enabled (GstBaseTransform * trans, gboolean enabled)
  *
  * Returns: TRUE if QoS is enabled.
  *
- * Since: 0.10.5
- *
  * MT safe.
+ *
+ * Since: 0.10.5
  */
 gboolean
 gst_base_transform_is_qos_enabled (GstBaseTransform * trans)
@@ -2190,9 +2197,9 @@ gst_base_transform_is_qos_enabled (GstBaseTransform * trans)
  * correctly, i.e. it can assume that the buffer contains neutral data but must
  * unset the flag if the output is no neutral data.
  *
- * Since: 0.10.16
- *
  * MT safe.
+ *
+ * Since: 0.10.16
  */
 void
 gst_base_transform_set_gap_aware (GstBaseTransform * trans, gboolean gap_aware)
@@ -2208,7 +2215,8 @@ gst_base_transform_set_gap_aware (GstBaseTransform * trans, gboolean gap_aware)
 /**
  * gst_base_transform_suggest:
  * @trans: a #GstBaseTransform
- * @gcaps: caps to suggest
+ * @caps: caps to suggest
+ * @size: buffer size to suggest
  *
  * Instructs @trans to suggest new @caps upstream.
  *
