@@ -466,7 +466,6 @@ gst_x264_enc_reset (GstX264Enc * encoder)
   encoder->x264enc = NULL;
   encoder->width = 0;
   encoder->height = 0;
-  encoder->last_timestamp = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -840,22 +839,6 @@ gst_x264_enc_chain (GstPad * pad, GstBuffer * buf)
   if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < encoder->image_size))
     goto wrong_buffer_size;
 
-  /* ignore duplicated packets */
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buf))) {
-    if (GST_CLOCK_TIME_IS_VALID (encoder->last_timestamp)) {
-      GstClockTimeDiff diff =
-          GST_BUFFER_TIMESTAMP (buf) - encoder->last_timestamp;
-      if (diff <= 0) {
-        GST_ELEMENT_WARNING (encoder, STREAM, ENCODE,
-            ("Duplicated packet in input, dropping"),
-            ("Time difference was -%" GST_TIME_FORMAT, GST_TIME_ARGS (-diff)));
-        gst_buffer_unref (buf);
-        return GST_FLOW_OK;
-      }
-    }
-    encoder->last_timestamp = GST_BUFFER_TIMESTAMP (buf);
-  }
-
   /* remember the timestamp and duration */
   g_queue_push_tail (encoder->delay, buf);
 
@@ -969,14 +952,11 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   GST_BUFFER_SIZE (out_buf) = i_size;
 
   /* PTS */
+  /* FIXME ??: maybe use DTS here, since:
+   * - it is so practiced by other encoders,
+   * - downstream (e.g. muxers) might not enjoy non-monotone timestamps,
+   *   whereas a decoder can also deal with DTS */
   GST_BUFFER_TIMESTAMP (out_buf) = pic_out.i_pts;
-  if (encoder->x264param.i_bframe) {
-    /* When using B-frames, the frames will be reordered.
-       Make PTS start one frame after DTS. */
-    GST_BUFFER_TIMESTAMP (out_buf)
-        += GST_SECOND * encoder->fps_den / encoder->fps_num;
-  }
-
   GST_BUFFER_DURATION (out_buf) = duration;
 
   if (pic_out.i_type == X264_TYPE_IDR) {
