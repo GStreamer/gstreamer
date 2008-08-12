@@ -14,6 +14,8 @@
 
 	Remove libcdio based cdda src that's moved to -ugly
 
+	0.10.9.2 pre-release. 
+
 	* po/LINGUAS:
 	* po/POTFILES.in:
 	* po/id.po:
