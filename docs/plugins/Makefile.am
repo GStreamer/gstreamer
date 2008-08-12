@@ -109,6 +109,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/metadata/gstmetadatademux.h \
 	$(top_srcdir)/ext/metadata/gstmetadatamux.h \
 	$(top_srcdir)/ext/mpeg2enc/gstmpeg2enc.hh \
+	$(top_srcdir)/ext/mplex/gstmplex.hh \
 	$(top_srcdir)/ext/mythtv/gstmythtvsrc.h \
 	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
 	$(top_srcdir)/ext/sdl/sdlvideosink.h \

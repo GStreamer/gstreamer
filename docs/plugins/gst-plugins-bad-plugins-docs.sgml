@@ -37,6 +37,7 @@
     <xi:include href="xml/element-metadatamux.xml" />
     <xi:include href="xml/element-modplug.xml" />
     <xi:include href="xml/element-mpeg2enc.xml" />
+    <xi:include href="xml/element-mplex.xml" />
     <xi:include href="xml/element-mythtvsrc.xml" />
     <xi:include href="xml/element-nuvdemux.xml" />
     <xi:include href="xml/element-output-selector.xml" />
@@ -91,6 +92,7 @@
     <xi:include href="xml/plugin-mms.xml" />
     <xi:include href="xml/plugin-modplug.xml" />
     <xi:include href="xml/plugin-mpeg2enc.xml" />
+    <xi:include href="xml/plugin-mplex.xml" />
     <xi:include href="xml/plugin-mpeg4videoparse.xml" />
     <xi:include href="xml/plugin-mpegtsparse.xml" />
     <xi:include href="xml/plugin-mpegvideoparse.xml" />

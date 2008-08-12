@@ -107,6 +107,7 @@ GObject
       GstGSMEnc
       GstGSMDec
       GstMpeg2enc
+      GstMplex
       GstMusepackDec
       GstTRM
       GstPitch

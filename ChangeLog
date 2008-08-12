@@ -3,6 +3,18 @@
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* ext/mplex/gstmplex.cc:
+	Update and add documentation for mplex.
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	Documentation update.
+
+2008-08-12  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
 	* ext/x264/gstx264enc.c:
 	* tests/check/Makefile.am:
 	* tests/check/elements/x264enc.c: (setup_x264enc),

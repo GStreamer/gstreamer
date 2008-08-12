@@ -24,13 +24,13 @@
  * SECTION:element-mpeg2enc
  * @see_also: mpeg2dec
  *
- * This element encodes raw video into an MPEG ?? stream using the
+ * This element encodes raw video into an MPEG-1/2 elementary stream using the
  * <ulink url="http://mjpeg.sourceforge.net/">mjpegtools</ulink> library.
  * Documentation on MPEG encoding in general can be found in the 
- * <ulink url="https://sourceforge.net/docman/display_doc.php?docid=3456&group_id=5776#s7">MJPEG Howto</ulink>
+ * <ulink url="https://sourceforge.net/docman/display_doc.php?docid=3456&group_id=5776">MJPEG Howto</ulink>
  * and on the various available parameters in the documentation
  * of the mpeg2enc tool in particular, which shares options with this element.
- * 
+ *
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
