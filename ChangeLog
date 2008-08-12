@@ -1,3 +1,12 @@
+2008-08-12  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.4.2 pre-release.
+
+	* docs/Makefile.am:
+	Disable recursion into the plugins docs directory - there's no
+	docs in there anyway, and it breaks distcheck.
+
 2008-08-01  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_cfg_fill_context):

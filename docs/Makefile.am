@@ -1,11 +1,11 @@
 if ENABLE_GTK_DOC
-GTK_DOC_DIRS = plugins
+GTK_DOC_DIRS = # plugins
 else
 GTK_DOC_DIRS =
 endif
 
 SUBDIRS = $(GTK_DOC_DIRS)
-DIST_SUBDIRS = plugins
+DIST_SUBDIRS = # plugins
 
 EXTRA_DIST = \
 	version.entities.in
