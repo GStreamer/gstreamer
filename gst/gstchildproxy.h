@@ -47,7 +47,7 @@ typedef struct _GstChildProxyInterface GstChildProxyInterface;
  * @get_child_by_index: virtual method to fetch the child
  * @get_children_count: virtual method to get the children count
  *
- * #GstChildProxyInterface interface.
+ * #GstChildProxy interface.
  */
 struct _GstChildProxyInterface
 {

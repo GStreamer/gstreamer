@@ -1,5 +1,11 @@
 2008-08-12  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstchildproxy.h:
+	* gst/gstpreset.h:
+	  Remove double interface from doc-string.	  
+
+2008-08-12  Stefan Kost  <ensonic@users.sf.net>
+
 	* libs/gst/base/gstbasesrc.c:
 	* libs/gst/base/gstbasetransform.c:
 	  Fix headings in docs and gtk-doc warnings.

@@ -52,7 +52,7 @@ typedef struct _GstPresetInterface GstPresetInterface;
  * @set_meta: virtual methods to set textual meta data to a preset
  * @get_meta: virtual methods to get textual meta data from a preset
  *
- * #GstPresetInterface interface.
+ * #GstPreset interface.
  */
 struct _GstPresetInterface
 {
