@@ -373,7 +373,7 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
   gst_rtp_buffer_set_ssrc (buffer, rtp_mux->current_ssrc);
   gst_rtp_mux_readjust_rtp_timestamp (rtp_mux, pad, buffer);
   GST_DEBUG_OBJECT (rtp_mux, "Pushing packet size %d, seq=%d, ts=%u",
-          GST_BUFFER_SIZE (buffer), rtp_mux->seqnum - 1);
+          GST_BUFFER_SIZE (buffer), rtp_mux->seqnum);
 
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (rtp_mux->srcpad));
 
