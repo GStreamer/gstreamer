@@ -1071,12 +1071,18 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
       GstClockTime min_latency, max_latency;
 
       /* device must be open */
-      if (!GST_V4L2_IS_OPEN (src->v4l2object))
+      if (!GST_V4L2_IS_OPEN (src->v4l2object)) {
+        GST_WARNING_OBJECT (src,
+            "Can't give latency since device isn't open !");
         goto done;
+      }
 
       /* we must have a framerate */
-      if (src->fps_n <= 0 || src->fps_d <= 0)
+      if (src->fps_n <= 0 || src->fps_d <= 0) {
+        GST_WARNING_OBJECT (src,
+            "Can't give latency since framerate isn't fixated !");
         goto done;
+      }
 
       /* min latency is the time to capture one frame */
       min_latency =

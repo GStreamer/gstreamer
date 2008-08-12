@@ -1214,7 +1214,9 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
   /* Note: V4L2 provides the frame interval, we have the frame rate */
   if (fractions_are_equal (stream.parm.capture.timeperframe.numerator,
           stream.parm.capture.timeperframe.denominator, fps_d, fps_n)) {
-    GST_LOG_OBJECT (v4l2src, "Desired framerate already set, nothing to do");
+    GST_LOG_OBJECT (v4l2src, "Desired framerate already set");
+    v4l2src->fps_n = fps_n;
+    v4l2src->fps_d = fps_d;
     goto done;
   }
 
