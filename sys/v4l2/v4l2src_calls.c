@@ -1132,19 +1132,10 @@ qbuf_failed:
 */
 }
 
-static gboolean
-fractions_are_equal (gint num1, gint den1, gint num2, gint den2)
-{
-  GValue fraction1 = { 0, }, fraction2 = {
-  0,};
-
-  g_value_init (&fraction1, GST_TYPE_FRACTION);
-  g_value_init (&fraction2, GST_TYPE_FRACTION);
-  gst_value_set_fraction (&fraction1, num1, den1);
-  gst_value_set_fraction (&fraction2, num2, den2);
-  /* we know we don't have to unset the values in this case */
-  return (gst_value_compare (&fraction1, &fraction2) == GST_VALUE_EQUAL);
-}
+/* Note about fraction simplification
+ * n1/d1 == n2/d2  is also written as  n1 == ( n2 * d1 ) / d2
+ */
+#define fractions_are_equal(n1,d1,n2,d2) ((n1) == gst_util_uint64_scale_int((n2), (d1), (d2)))
 
 /******************************************************
  * gst_v4l2src_set_capture():

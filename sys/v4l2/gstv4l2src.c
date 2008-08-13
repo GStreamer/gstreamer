@@ -1089,8 +1089,7 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
           gst_util_uint64_scale_int (GST_SECOND, src->fps_d, src->fps_n);
 
       /* max latency is total duration of the frame buffer */
-      /* FIXME: what to use here? */
-      max_latency = 1 * min_latency;
+      max_latency = src->num_buffers * min_latency;
 
       GST_DEBUG_OBJECT (bsrc,
           "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
