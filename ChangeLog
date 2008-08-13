@@ -1,3 +1,8 @@
+2008-08-13  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* configure.ac:
+	Remove more cdio stuff (moved to ugly)
+
 2008-08-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Laszlo Pandy <laszlok2 at gmail dot com>

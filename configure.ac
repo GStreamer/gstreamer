@@ -660,12 +660,6 @@ AG_GST_CHECK_FEATURE(CAIRO, [Cairo graphics rendering], cairo, [
   AG_GST_PKG_CHECK_MODULES(CAIRO, cairo >= 1.0.0)
 ])
 
-dnl *** cdio ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_CDIO, true)
-AG_GST_CHECK_FEATURE(CDIO, [cdio library], cdio, [
-  AG_GST_PKG_CHECK_MODULES(CDIO, libcdio >= 0.76)
-])
-
 dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
 AG_GST_CHECK_FEATURE(ESD, [ESounD sound daemon], esdsink, [
@@ -967,7 +961,6 @@ AM_CONDITIONAL(USE_XSHM, false)
 AM_CONDITIONAL(USE_AALIB, false)
 AM_CONDITIONAL(USE_ANNODEX, false)
 AM_CONDITIONAL(USE_CAIRO, false)
-AM_CONDITIONAL(USE_CDIO, false)
 AM_CONDITIONAL(USE_ESD, false)
 AM_CONDITIONAL(USE_FLAC, false)
 AM_CONDITIONAL(USE_GCONF, false)
@@ -1087,7 +1080,6 @@ ext/Makefile
 ext/aalib/Makefile
 ext/annodex/Makefile
 ext/cairo/Makefile
-ext/cdio/Makefile
 ext/dv/Makefile
 ext/esd/Makefile
 ext/flac/Makefile
