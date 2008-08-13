@@ -171,8 +171,8 @@ gst_pulsemixer_init (GstPulseMixer * this, GstPulseMixerClass * g_class)
   this->device = NULL;
 
   this->probe =
-      gst_pulseprobe_new (G_OBJECT_GET_CLASS (this), PROP_DEVICE, this->device,
-      TRUE, TRUE);
+      gst_pulseprobe_new (G_OBJECT (this), G_OBJECT_GET_CLASS (this),
+      PROP_DEVICE, this->device, TRUE, TRUE);
 }
 
 static void
