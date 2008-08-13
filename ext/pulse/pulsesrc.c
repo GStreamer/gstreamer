@@ -58,7 +58,8 @@ GST_DEBUG_CATEGORY_EXTERN (pulse_debug);
 enum
 {
   PROP_SERVER = 1,
-  PROP_DEVICE
+  PROP_DEVICE,
+  PROP_DEVICE_NAME
 };
 
 static GstAudioSrcClass *parent_class = NULL;
@@ -233,6 +234,12 @@ gst_pulsesrc_class_init (gpointer g_class, gpointer class_data)
       g_param_spec_string ("device", "Source",
           "The PulseAudio source device to connect to", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_DEVICE_NAME,
+      g_param_spec_string ("device-name", "Device name",
+          "Human-readable name of the sound device", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -358,6 +365,15 @@ gst_pulsesrc_get_property (GObject * object,
 
     case PROP_DEVICE:
       g_value_set_string (value, pulsesrc->device);
+      break;
+
+    case PROP_DEVICE_NAME:
+
+      if (pulsesrc->mixer)
+        g_value_set_string (value, pulsesrc->mixer->description);
+      else
+        g_value_set_string (value, NULL);
+
       break;
 
     default:
@@ -493,9 +509,8 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   if (!pulsesrc->context
       || pa_context_get_state (pulsesrc->context) != PA_CONTEXT_READY) {
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Bad context state: %s",
-            pulsesrc->
-            context ? pa_strerror (pa_context_errno (pulsesrc->context)) :
-            NULL), (NULL));
+            pulsesrc->context ? pa_strerror (pa_context_errno (pulsesrc->
+                    context)) : NULL), (NULL));
     goto unlock_and_fail;
   }
 

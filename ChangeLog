@@ -1,5 +1,15 @@
 2008-08-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: Laszlo Pandy <laszlok2 at gmail dot com>
+
+	* ext/pulse/pulsesrc.c: (gst_pulsesrc_class_init),
+	(gst_pulsesrc_get_property):
+	Add "device-name" property, which provides a human readable string
+	for the audio device, to make it more consisten with other audio
+	sources. Fixes bug #547519.
+
+2008-08-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/pulse/pulsemixer.c: (gst_pulsemixer_change_state):
 	* ext/pulse/pulsemixerctrl.c: (gst_pulsemixer_ctrl_subscribe_cb),
 	(gst_pulsemixer_ctrl_open), (gst_pulsemixer_ctrl_new),
