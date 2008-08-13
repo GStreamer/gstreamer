@@ -253,6 +253,19 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     "  gl_FragColor = vec4(r, g, b, 1.0);\n"
     "}\n";
 
+  //it works on nvidia+linux but
+  //there is a bug on ATI+win32 (I think only ATI)
+  //and the follwing 3 lines:
+  //"  y=texture2DRect(Ytex,nxy).r;\n"
+  //"  u=texture2DRect(Utex,nxy*0.5).r;\n"
+  //"  v=texture2DRect(Vtex,nxy*0.5).r;\n"
+  //has to be replaced by :
+  //"  y=texture2DRect(Ytex,nxy0.5).r;\n"
+  //"  u=texture2DRect(Utex,nxy).r;\n"
+  //"  v=texture2DRect(Vtex,nxy*0.5).r;\n"
+  //
+  //so we have to set a display->hardware (ATI/ NVIDIA)
+  //and check it etc...
   display->text_shader_upload_I420_YV12 =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect Ytex,Utex,Vtex;\n"
@@ -1725,7 +1738,7 @@ gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
 
     gchar string_size[512];
     GQueue* sub_texture_pool = NULL;
-   
+
     sprintf (string_size, "%dx%d", width, height);
     sub_texture_pool = g_datalist_get_data(&display->texture_pool, string_size);
     //if the size is known
@@ -1784,7 +1797,7 @@ gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
   gchar string_size[512];
   GQueue* sub_texture_pool = NULL;
   GstGLDisplayTex* tex = NULL;
-  
+
   sprintf (string_size, "%dx%d", width, height);
   sub_texture_pool = g_datalist_get_data(&display->texture_pool, string_size);
   //if the size is known
@@ -2410,6 +2423,10 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
       offsetU = 1;
       offsetV = 2;
       break;
+    //it works on ati+win32 but we have to use the same offset as
+    //I420 on nvidia + linux (I mean offsetU = 1; offsetV = 2;)
+    //So we have to set a display->hardware (ATI o/ NVIDIA) and
+    //etc...
     case GST_VIDEO_FORMAT_YV12:
       offsetU = 2;
       offsetV = 1;
