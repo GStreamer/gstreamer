@@ -916,7 +916,6 @@ check_collision (RTPSession * sess, RTPSource * source,
     /* This is not our local source, but lets check if two remote
      * source collide
      */
-
     if (rtp) {
       if (source->have_rtp_from) {
         if (gst_netaddress_equal (&source->rtp_from, &arrival->address))
@@ -938,8 +937,9 @@ check_collision (RTPSession * sess, RTPSource * source,
         return FALSE;
       }
     }
-
-    /* In this case, we have third-party collision or loop */
+    /* We received RTP or RTCP from this source before but the network address
+     * changed. In this case, we have third-party collision or loop */
+    GST_DEBUG ("we have a third-party collision or loop");
 
     /* FIXME: Log 3rd party collision somehow
      * Maybe should be done in upper layer, only the SDES can tell us
@@ -1026,7 +1026,7 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
  * rtp_session_get_internal_source:
  * @sess: a #RTPSession
  *
- * Get the internal #RTPSource of @session.
+ * Get the internal #RTPSource of @sess.
  *
  * Returns: The internal #RTPSource. g_object_unref() after usage.
  */
@@ -1040,6 +1040,48 @@ rtp_session_get_internal_source (RTPSession * sess)
   result = g_object_ref (sess->source);
 
   return result;
+}
+
+/**
+ * rtp_session_set_internal_ssrc:
+ * @sess: a #RTPSession
+ * @ssrc: an SSRC
+ *
+ * Set the SSRC of @sess to @ssrc.
+ */
+void
+rtp_session_set_internal_ssrc (RTPSession * sess, guint32 ssrc)
+{
+  RTP_SESSION_LOCK (sess);
+  g_hash_table_steal (sess->ssrcs[sess->mask_idx],
+      GINT_TO_POINTER (sess->source->ssrc));
+
+  sess->source->ssrc = ssrc;
+  rtp_source_reset (sess->source);
+
+  g_hash_table_insert (sess->ssrcs[sess->mask_idx],
+      GINT_TO_POINTER (sess->source->ssrc), sess->source);
+  RTP_SESSION_UNLOCK (sess);
+}
+
+/**
+ * rtp_session_get_internal_ssrc:
+ * @sess: a #RTPSession
+ *
+ * Get the internal SSRC of @sess.
+ *
+ * Returns: The SSRC of the session. 
+ */
+guint32
+rtp_session_get_internal_ssrc (RTPSession * sess)
+{
+  guint32 ssrc;
+
+  RTP_SESSION_LOCK (sess);
+  ssrc = sess->source->ssrc;
+  RTP_SESSION_UNLOCK (sess);
+
+  return ssrc;
 }
 
 /**
@@ -2285,6 +2327,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   }
 
   /* check for outdated collisions */
+  GST_DEBUG ("checking collision list");
   item = g_list_first (sess->conflicting_addresses);
   while (item) {
     RTPConflictingAddress *known_conflict = item->data;
@@ -2294,12 +2337,14 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
             RTCP_INTERVAL_COLLISION_TIMEOUT)) {
       sess->conflicting_addresses =
           g_list_delete_link (sess->conflicting_addresses, item);
+      GST_DEBUG ("collision %p timed out", known_conflict);
       g_free (known_conflict);
     }
     item = next_item;
   }
 
   if (sess->change_ssrc) {
+    GST_DEBUG ("need to change our SSRC (%08x)", sess->source->ssrc);
     g_hash_table_steal (sess->ssrcs[sess->mask_idx],
         GINT_TO_POINTER (sess->source->ssrc));
 
@@ -2313,6 +2358,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     sess->bye_reason = NULL;
     sess->sent_bye = FALSE;
     sess->change_ssrc = FALSE;
+    GST_DEBUG ("changed our SSRC to %08x", sess->source->ssrc);
   }
   RTP_SESSION_UNLOCK (sess);
 

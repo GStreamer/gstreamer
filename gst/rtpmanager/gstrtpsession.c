@@ -237,6 +237,7 @@ struct _GstRtpSessionPrivate
 {
   GMutex *lock;
   GstClock *sysclock;
+
   RTPSession *session;
 
   /* thread for sending out RTCP */
@@ -1845,4 +1846,10 @@ exists:
 static void
 gst_rtp_session_release_pad (GstElement * element, GstPad * pad)
 {
+}
+
+void
+gst_rtp_session_set_ssrc (GstRtpSession * sess, guint32 ssrc)
+{
+  rtp_session_set_internal_ssrc (sess->priv->session, ssrc);
 }

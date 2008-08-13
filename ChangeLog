@@ -1,3 +1,25 @@
+2008-08-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_associate),
+	(gst_rtp_bin_sync_chain), (new_ssrc_pad_found):
+	Reset rtp timestamp interpollation when we detect a gap when the
+	clock_base changed.
+	Don't try to adjust the ts-offset when it's too big (> 3seconds)
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_set_ssrc):
+	* gst/rtpmanager/gstrtpsession.h:
+	Add method to set session SSRC.
+
+	* gst/rtpmanager/rtpsession.c: (check_collision),
+	(rtp_session_set_internal_ssrc), (rtp_session_get_internal_ssrc),
+	(rtp_session_on_timeout):
+	* gst/rtpmanager/rtpsession.h:
+	Added debugging for the collision checks.
+	Add method to change the internal SSRC of the session.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_process_rtp):
+	Reset the clock base when we detect large jumps in the seqnums.
+
 2008-08-12  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/x264/gstx264enc.c: (gst_x264_enc_reset),
