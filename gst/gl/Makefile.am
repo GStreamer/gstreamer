@@ -30,7 +30,8 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectssources.c \
 	effects/gstgleffectssources.h \
 	effects/gstgleffectidentity.c \
-	effects/gstgleffectmirror.c
+	effects/gstgleffectmirror.c \
+	effects/gstgleffectsqueeze.c
 	
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around

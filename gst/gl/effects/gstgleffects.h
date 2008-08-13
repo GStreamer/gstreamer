@@ -77,6 +77,7 @@ void gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex);
 
 void gst_gl_effects_identity (GstGLEffects *effects);
 void gst_gl_effects_mirror (GstGLEffects *effects);
+void gst_gl_effects_squeeze (GstGLEffects *effects);
 
 G_END_DECLS
 

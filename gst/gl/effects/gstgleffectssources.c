@@ -23,7 +23,8 @@
 /* A common file for sources is needed since shader sources can be
  * generic and reused by several effects */
 
-/* Mirror */
+
+/* Mirror effect */
 const gchar *mirror_fragment_source =
   "#extension GL_ARB_texture_rectangle : enable\n"
   "uniform sampler2DRect tex;"
@@ -38,3 +39,23 @@ const gchar *mirror_fragment_source =
   "  vec4 color = texture2DRect (tex, texturecoord); "
   "  gl_FragColor = color * gl_Color;"
   "}";
+
+
+/* Squeeze effect */
+const gchar *squeeze_fragment_source =
+"#extension GL_ARB_texture_rectangle : enable\n"
+"uniform sampler2DRect tex;"
+"uniform float width, height;"
+"void main () {"
+"  vec2 tex_size = vec2 (width, height);"
+"  vec2 texturecoord = gl_TexCoord[0].xy;"
+"  vec2 normcoord;"
+"  normcoord = texturecoord / tex_size - 1.0; "
+"  float r = length (normcoord);"
+"  r = pow(r, 0.40)*1.3;"
+"  normcoord = normcoord / r;"
+"  texturecoord = (normcoord + 1.0) * tex_size;"
+"  vec4 color = texture2DRect (tex, texturecoord); "
+"  gl_FragColor = color * gl_Color;"
+"}";
+

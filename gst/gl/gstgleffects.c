@@ -57,6 +57,7 @@ static const GstElementDetails element_details = GST_ELEMENT_DETAILS (
 typedef enum {
   GST_GL_EFFECT_IDENTITY,
   GST_GL_EFFECT_MIRROR,
+  GST_GL_EFFECT_SQUEEZE,
   GST_GL_N_EFFECTS
 } GstGLEffectsEffect;
 
@@ -68,6 +69,7 @@ gst_gl_effects_effect_get_type (void)
   static const GEnumValue effect_types [] = {
     { GST_GL_EFFECT_IDENTITY, "Do nothing Effect", "identity" },
     { GST_GL_EFFECT_MIRROR, "Mirror Effect", "mirror" },
+    { GST_GL_EFFECT_SQUEEZE, "Squeeze Effect", "squeeze" },
     { 0, NULL, NULL }
   };
 
@@ -213,6 +215,9 @@ gst_gl_effects_set_effect (GstGLEffects *effects, gint effect_type) {
     break;
   case GST_GL_EFFECT_MIRROR:
     effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_mirror;
+    break;
+  case GST_GL_EFFECT_SQUEEZE:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_squeeze;
     break;
   default:
     g_assert_not_reached ();
