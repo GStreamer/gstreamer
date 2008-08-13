@@ -396,7 +396,8 @@ gst_gl_colorscale_set_caps (GstBaseTransform* bt, GstCaps* incaps,
 
     //blocking call, init colorspace conversion if needed
     gst_gl_display_init_upload (colorscale->display, colorscale->input_video_format,
-        colorscale->output_video_width, colorscale->output_video_height);
+        colorscale->output_video_width, colorscale->output_video_height,
+        colorscale->input_video_width, colorscale->input_video_height);
 
     //blocking call, init colorspace conversion if needed
     gst_gl_display_init_download (colorscale->display, colorscale->output_video_format,

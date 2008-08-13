@@ -175,7 +175,7 @@ struct _GstGLDisplay {
   GLuint upload_height;
   GstVideoFormat upload_video_format;
   GstGLDisplayConversion colorspace_conversion;
-  gint upload_data_with;
+  gint upload_data_width;
   gint upload_data_height;
   gpointer upload_data;
 
@@ -278,7 +278,8 @@ void gst_gl_display_gen_texture (GstGLDisplay* display, GLuint* pTexture, GLint 
 void gst_gl_display_del_texture (GstGLDisplay* display, GLuint texture, GLint width, GLint height);
 
 void gst_gl_display_init_upload (GstGLDisplay* display, GstVideoFormat video_format,
-                                 guint gl_width, guint gl_height);
+                                 guint gl_width, guint gl_height,
+                                 gint video_width, gint video_height);
 gboolean gst_gl_display_do_upload (GstGLDisplay* display, GLuint texture,
                                    gint data_width, gint data_height,
                                    gpointer data);

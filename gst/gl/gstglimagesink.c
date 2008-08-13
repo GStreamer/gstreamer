@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  *
@@ -88,7 +88,7 @@ GST_BOILERPLATE_FULL (GstGLImageSink, gst_glimage_sink, GstVideoSink,
 static void
 gst_glimage_sink_init_interfaces (GType type)
 {
- 
+
   static const GInterfaceInfo implements_info = {
     (GInterfaceInitFunc) gst_glimage_sink_implements_init,
     NULL,
@@ -139,12 +139,12 @@ gst_glimage_sink_class_init (GstGLImageSinkClass* klass)
 
     g_object_class_install_property (gobject_class, PROP_CLIENT_RESHAPE_CALLBACK,
       g_param_spec_pointer ("client_reshape_callback", "Client reshape callback",
-          "Define a custom reshape callback in a client code", 
+          "Define a custom reshape callback in a client code",
           G_PARAM_WRITABLE));
 
     g_object_class_install_property (gobject_class, PROP_CLIENT_DRAW_CALLBACK,
       g_param_spec_pointer ("client_draw_callback", "Client draw callback",
-          "Define a custom draw callback in a client code", 
+          "Define a custom draw callback in a client code",
           G_PARAM_WRITABLE));
 
     gobject_class->finalize = gst_glimage_sink_finalize;
@@ -182,7 +182,7 @@ gst_glimage_sink_set_property (GObject* object, guint prop_id,
 
     glimage_sink = GST_GLIMAGE_SINK (object);
 
-    switch (prop_id) 
+    switch (prop_id)
     {
         case ARG_DISPLAY:
         {
@@ -215,7 +215,7 @@ gst_glimage_sink_finalize (GObject* object)
 
     glimage_sink = GST_GLIMAGE_SINK (object);
 
-    if (glimage_sink->caps) 
+    if (glimage_sink->caps)
         gst_caps_unref (glimage_sink->caps);
 
     g_free (glimage_sink->display_name);
@@ -231,7 +231,7 @@ gst_glimage_sink_get_property (GObject* object, guint prop_id,
 
     glimage_sink = GST_GLIMAGE_SINK (object);
 
-    switch (prop_id) 
+    switch (prop_id)
     {
         case ARG_DISPLAY:
             g_value_set_string (value, glimage_sink->display_name);
@@ -256,7 +256,7 @@ gst_glimage_sink_change_state (GstElement* element, GstStateChange transition)
 
     glimage_sink = GST_GLIMAGE_SINK (element);
 
-    switch (transition) 
+    switch (transition)
     {
         case GST_STATE_CHANGE_NULL_TO_READY:
             break;
@@ -272,7 +272,7 @@ gst_glimage_sink_change_state (GstElement* element, GstStateChange transition)
     if (ret == GST_STATE_CHANGE_FAILURE)
         return ret;
 
-    switch (transition) 
+    switch (transition)
     {
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
             break;
@@ -314,12 +314,12 @@ gst_glimage_sink_stop (GstBaseSink* bsink)
 
     glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-    if (glimage_sink->stored_buffer) 
+    if (glimage_sink->stored_buffer)
     {
         gst_buffer_unref (glimage_sink->stored_buffer);
         glimage_sink->stored_buffer = NULL;
     }
-    if (glimage_sink->display) 
+    if (glimage_sink->display)
     {
         g_object_unref (glimage_sink->display);
         glimage_sink->display = NULL;
@@ -346,12 +346,12 @@ gst_glimage_sink_get_times (GstBaseSink* bsink, GstBuffer* buf,
 
     glimagesink = GST_GLIMAGE_SINK (bsink);
 
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) 
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf))
     {
         *start = GST_BUFFER_TIMESTAMP (buf);
-        if (GST_BUFFER_DURATION_IS_VALID (buf)) 
+        if (GST_BUFFER_DURATION_IS_VALID (buf))
             *end = *start + GST_BUFFER_DURATION (buf);
-        else 
+        else
         {
             if (glimagesink->fps_n > 0) {
             *end = *start +
@@ -422,57 +422,58 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
     glimage_sink = GST_GLIMAGE_SINK (bsink);
 
     //is gl
-    if (glimage_sink->is_gl) 
+    if (glimage_sink->is_gl)
     {
         //increment gl buffer ref before storage
         gl_buffer = GST_GL_BUFFER (gst_buffer_ref (buf));
 
         //if glimagesink has not the display yet
-        if (glimage_sink->display == NULL) 
+        if (glimage_sink->display == NULL)
         {
             glimage_sink->display = g_object_ref (gl_buffer->display);
 
             if (glimage_sink->window_id)
                 gst_gl_display_set_window_id (glimage_sink->display, glimage_sink->window_id);
 
-            gst_gl_display_set_client_reshape_callback (glimage_sink->display, 
+            gst_gl_display_set_client_reshape_callback (glimage_sink->display,
                 glimage_sink->clientReshapeCallback);
-    
-            gst_gl_display_set_client_draw_callback (glimage_sink->display, 
+
+            gst_gl_display_set_client_draw_callback (glimage_sink->display,
                 glimage_sink->clientDrawCallback);
 
             gst_gl_display_resize_context (glimage_sink->display, glimage_sink->width, glimage_sink->height);
 
             gst_gl_display_set_visible_context (glimage_sink->display, TRUE);
-        } 
-    } 
+        }
+    }
     //is not gl
-    else 
-    {	
+    else
+    {
         //if glimagesink has not the display yet
-        if (glimage_sink->display == NULL) 
+        if (glimage_sink->display == NULL)
         {
-  
+
             //do not stack when multiple windows
             static gint y_pos = 0;
-            
+
             //create a display
             glimage_sink->display = gst_gl_display_new ();
 
             //init opengl context
-            gst_gl_display_create_context (glimage_sink->display, 
-                50, y_pos++ * (glimage_sink->height+50) + 50, 
-                glimage_sink->width, glimage_sink->height, 
+            gst_gl_display_create_context (glimage_sink->display,
+                50, y_pos++ * (glimage_sink->height+50) + 50,
+                glimage_sink->width, glimage_sink->height,
                 glimage_sink->window_id, TRUE);
 
             //init colorspace conversion if needed
-            gst_gl_display_init_upload (glimage_sink->display, glimage_sink->format, 
+            gst_gl_display_init_upload (glimage_sink->display, glimage_sink->format,
+                glimage_sink->width, glimage_sink->height,
                 glimage_sink->width, glimage_sink->height);
 
-            gst_gl_display_set_client_reshape_callback (glimage_sink->display, 
+            gst_gl_display_set_client_reshape_callback (glimage_sink->display,
                 glimage_sink->clientReshapeCallback);
-    
-            gst_gl_display_set_client_draw_callback (glimage_sink->display, 
+
+            gst_gl_display_set_client_draw_callback (glimage_sink->display,
                 glimage_sink->clientDrawCallback);
 
             gst_gl_display_resize_context (glimage_sink->display, glimage_sink->width, glimage_sink->height);
@@ -490,7 +491,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
     }
 
     //the buffer is cleared when an other comes in
-    if (glimage_sink->stored_buffer) 
+    if (glimage_sink->stored_buffer)
     {
         gst_buffer_unref (glimage_sink->stored_buffer);
         glimage_sink->stored_buffer = NULL;
@@ -501,7 +502,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
 
     //redisplay opengl scene
     if (gl_buffer->texture &&
-        gst_gl_display_redisplay (glimage_sink->display, 
+        gst_gl_display_redisplay (glimage_sink->display,
             gl_buffer->texture, gl_buffer->width, gl_buffer->height))
         return GST_FLOW_OK;
     else
@@ -526,7 +527,7 @@ gst_glimage_sink_set_xwindow_id (GstXOverlay* overlay, gulong window_id)
 
     GST_DEBUG ("set_xwindow_id %ld", window_id);
 
-    if (glimage_sink->window_id == window_id) 
+    if (glimage_sink->window_id == window_id)
       return;
 
     if (window_id)

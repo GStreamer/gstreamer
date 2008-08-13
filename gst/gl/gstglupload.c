@@ -403,7 +403,8 @@ gst_gl_upload_set_caps (GstBaseTransform* bt, GstCaps* incaps,
 
     //init colorspace conversion if needed
     gst_gl_display_init_upload (upload->display, upload->video_format,
-        upload->gl_width, upload->gl_height);
+        upload->gl_width, upload->gl_height,
+        upload->video_width, upload->video_height);
 
     return ret;
 }
