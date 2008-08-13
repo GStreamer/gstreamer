@@ -1,3 +1,8 @@
+2008-08-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/spectrum/gstspectrum.c:
+	  Don't terminate on fabs(in)>1.0. Init doubles as doubles.
+
 2008-08-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_query):

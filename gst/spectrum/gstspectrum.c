@@ -626,11 +626,9 @@ process_f##width (GstSpectrum *spectrum, const g##type *samples) \
   \
   for (i = 0, j = 0; i < nfft; i++) { \
     /* convert to mono */ \
-    for (k = 0, acc = 0; k < channels; k++) \
+    for (k = 0, acc = 0.0; k < channels; k++) \
       acc += samples[j++]; \
     in[i] = (g##type) (acc / channels); \
-    if (abs (in[i]) > 1.0) \
-      g_assert_not_reached(); \
   } \
   \
   if (!spectrum->fft_ctx) { \
