@@ -207,15 +207,15 @@ gst_pulsemixer_set_property (GObject * object,
     case PROP_SERVER:
       g_free (this->server);
       this->server = g_value_dup_string (value);
+
+      if (this->probe)
+        gst_pulseprobe_set_server (this->probe, this->server);
+
       break;
 
     case PROP_DEVICE:
       g_free (this->device);
       this->device = g_value_dup_string (value);
-
-      if (this->probe)
-        gst_pulseprobe_set_server (this->probe, this->device);
-
       break;
 
     default:

@@ -2,6 +2,14 @@
 
 	Patch by: Laszlo Pandy <laszlok2 at gmail dot com>
 
+	* ext/pulse/pulsemixer.c: (gst_pulsemixer_set_property):
+	Fix property probing after the device property is set by calling
+	set_server when the server property changes. Fixes bug #547518.
+
+2008-08-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Laszlo Pandy <laszlok2 at gmail dot com>
+
 	* ext/pulse/pulsesink.c: (gst_pulsesink_interface_supported),
 	(gst_pulsesink_implements_interface_init),
 	(gst_pulsesink_init_interfaces), (gst_pulsesink_init),
