@@ -103,6 +103,46 @@ static gboolean gst_pulsesink_event (GstBaseSink * sink, GstEvent * event);
 # define ENDIANNESS   "BIG_ENDIAN, LITTLE_ENDIAN"
 #endif
 
+GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSink, gst_pulsesink);
+
+static gboolean
+gst_pulsesink_interface_supported (GstImplementsInterface *
+    iface, GType interface_type)
+{
+  GstPulseSink *this = GST_PULSESINK (iface);
+
+  if (interface_type == GST_TYPE_PROPERTY_PROBE && this->probe)
+    return TRUE;
+
+  return FALSE;
+}
+
+static void
+gst_pulsesink_implements_interface_init (GstImplementsInterfaceClass * klass)
+{
+  klass->supported = gst_pulsesink_interface_supported;
+}
+
+static void
+gst_pulsesink_init_interfaces (GType type)
+{
+  static const GInterfaceInfo implements_iface_info = {
+    (GInterfaceInitFunc) gst_pulsesink_implements_interface_init,
+    NULL,
+    NULL,
+  };
+  static const GInterfaceInfo probe_iface_info = {
+    (GInterfaceInitFunc) gst_pulsesink_property_probe_interface_init,
+    NULL,
+    NULL,
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
+      &implements_iface_info);
+  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
+      &probe_iface_info);
+}
+
 static void
 gst_pulsesink_base_init (gpointer g_class)
 {
@@ -208,6 +248,8 @@ gst_pulsesink_init (GTypeInstance * instance, gpointer g_class)
 
   e = pa_threaded_mainloop_start (pulsesink->mainloop);
   g_assert (e == 0);
+
+  pulsesink->probe = gst_pulseprobe_new (G_OBJECT_GET_CLASS (pulsesink), PROP_DEVICE, pulsesink->device, TRUE, FALSE);  /* TRUE for sinks, FALSE for sources */
 }
 
 static void
@@ -251,6 +293,11 @@ gst_pulsesink_finalize (GObject * object)
 
   pa_threaded_mainloop_free (pulsesink->mainloop);
 
+  if (pulsesink->probe) {
+    gst_pulseprobe_free (pulsesink->probe);
+    pulsesink->probe = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -270,6 +317,10 @@ gst_pulsesink_set_property (GObject * object,
     case PROP_SERVER:
       g_free (pulsesink->server);
       pulsesink->server = g_value_dup_string (value);
+
+      if (pulsesink->probe)
+        gst_pulseprobe_set_server (pulsesink->probe, pulsesink->server);
+
       break;
 
     case PROP_DEVICE:
@@ -438,16 +489,14 @@ gst_pulsesink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   if (!pulsesink->context
       || pa_context_get_state (pulsesink->context) != PA_CONTEXT_READY) {
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED, ("Bad context state: %s",
-            pulsesink->
-            context ? pa_strerror (pa_context_errno (pulsesink->context)) :
-            NULL), (NULL));
+            pulsesink->context ? pa_strerror (pa_context_errno (pulsesink->
+                    context)) : NULL), (NULL));
     goto unlock_and_fail;
   }
 
   if (!(pulsesink->stream = pa_stream_new (pulsesink->context,
-              pulsesink->
-              stream_name ? pulsesink->stream_name : "Playback Stream",
-              &pulsesink->sample_spec,
+              pulsesink->stream_name ? pulsesink->
+              stream_name : "Playback Stream", &pulsesink->sample_spec,
               gst_pulse_gst_to_channel_map (&channel_map, spec)))) {
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
         ("Failed to create stream: %s",
@@ -766,6 +815,8 @@ gst_pulsesink_get_type (void)
 
     pulsesink_type = g_type_register_static (GST_TYPE_AUDIO_SINK,
         "GstPulseSink", &pulsesink_info, 0);
+
+    gst_pulsesink_init_interfaces (pulsesink_type);
   }
 
   return pulsesink_type;

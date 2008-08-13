@@ -28,6 +28,8 @@
 #include <pulse/pulseaudio.h>
 #include <pulse/thread-mainloop.h>
 
+#include "pulseprobe.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_PULSESINK \
@@ -56,6 +58,8 @@ struct _GstPulseSink
   pa_stream *stream;
 
   pa_sample_spec sample_spec;
+
+  GstPulseProbe *probe;
 
   int operation_success;
 };

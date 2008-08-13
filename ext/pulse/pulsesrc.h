@@ -29,6 +29,7 @@
 #include <pulse/thread-mainloop.h>
 
 #include "pulsemixerctrl.h"
+#include "pulseprobe.h"
 
 G_BEGIN_DECLS
 
@@ -63,6 +64,7 @@ struct _GstPulseSrc
   size_t read_buffer_length;
 
   GstPulseMixerCtrl *mixer;
+  GstPulseProbe *probe;
 };
 
 struct _GstPulseSrcClass

@@ -98,6 +98,8 @@ static GstStateChangeReturn gst_pulsesrc_change_state (GstElement *
 # define ENDIANNESS   "BIG_ENDIAN, LITTLE_ENDIAN"
 #endif
 
+GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSrc, gst_pulsesrc);
+
 static gboolean
 gst_pulsesrc_interface_supported (GstImplementsInterface *
     iface, GType interface_type)
@@ -105,6 +107,9 @@ gst_pulsesrc_interface_supported (GstImplementsInterface *
   GstPulseSrc *this = GST_PULSESRC (iface);
 
   if (interface_type == GST_TYPE_MIXER && this->mixer)
+    return TRUE;
+
+  if (interface_type == GST_TYPE_PROPERTY_PROBE && this->probe)
     return TRUE;
 
   return FALSE;
@@ -129,10 +134,17 @@ gst_pulsesrc_init_interfaces (GType type)
     NULL,
     NULL,
   };
+  static const GInterfaceInfo probe_iface_info = {
+    (GInterfaceInitFunc) gst_pulsesrc_property_probe_interface_init,
+    NULL,
+    NULL,
+  };
 
   g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
       &implements_iface_info);
   g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_iface_info);
+  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
+      &probe_iface_info);
 }
 
 static void
@@ -246,6 +258,8 @@ gst_pulsesrc_init (GTypeInstance * instance, gpointer g_class)
   g_assert (e == 0);
 
   pulsesrc->mixer = NULL;
+
+  pulsesrc->probe = gst_pulseprobe_new (G_OBJECT_GET_CLASS (pulsesrc), PROP_DEVICE, pulsesrc->device, FALSE, TRUE);     /* FALSE for sinks, TRUE for sources */
 }
 
 static void
@@ -288,6 +302,11 @@ gst_pulsesrc_finalize (GObject * object)
   if (pulsesrc->mixer)
     gst_pulsemixer_ctrl_free (pulsesrc->mixer);
 
+  if (pulsesrc->probe) {
+    gst_pulseprobe_free (pulsesrc->probe);
+    pulsesrc->probe = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -308,6 +327,10 @@ gst_pulsesrc_set_property (GObject * object,
     case PROP_SERVER:
       g_free (pulsesrc->server);
       pulsesrc->server = g_value_dup_string (value);
+
+      if (pulsesrc->probe)
+        gst_pulseprobe_set_server (pulsesrc->probe, pulsesrc->server);
+
       break;
 
     case PROP_DEVICE:
@@ -470,9 +493,8 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   if (!pulsesrc->context
       || pa_context_get_state (pulsesrc->context) != PA_CONTEXT_READY) {
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Bad context state: %s",
-            pulsesrc->
-            context ? pa_strerror (pa_context_errno (pulsesrc->context)) :
-            NULL), (NULL));
+            pulsesrc->context ? pa_strerror (pa_context_errno (pulsesrc->
+                    context)) : NULL), (NULL));
     goto unlock_and_fail;
   }
 

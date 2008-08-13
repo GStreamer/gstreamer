@@ -1,3 +1,21 @@
+2008-08-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Laszlo Pandy <laszlok2 at gmail dot com>
+
+	* ext/pulse/pulsesink.c: (gst_pulsesink_interface_supported),
+	(gst_pulsesink_implements_interface_init),
+	(gst_pulsesink_init_interfaces), (gst_pulsesink_init),
+	(gst_pulsesink_finalize), (gst_pulsesink_set_property),
+	(gst_pulsesink_get_type):
+	* ext/pulse/pulsesink.h:
+	* ext/pulse/pulsesrc.c: (gst_pulsesrc_interface_supported),
+	(gst_pulsesrc_init_interfaces), (gst_pulsesrc_init),
+	(gst_pulsesrc_finalize), (gst_pulsesrc_set_property):
+	* ext/pulse/pulsesrc.h:
+	Implement GstPropertyProbe interface on pulsesink for detecting
+	sink devices and on pulsesrc for detecting source devices.
+	Fixes bugs #547227 and #547217.
+
 2008-08-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/spectrum/gstspectrum.c:
