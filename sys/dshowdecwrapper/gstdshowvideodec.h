@@ -92,6 +92,8 @@ struct _GstDshowVideoDec
 
   /* current segment */
   GstSegment *segment;
+
+  gboolean comInitialized;
 };
 
 struct _GstDshowVideoDecClass

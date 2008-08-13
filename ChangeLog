@@ -1,3 +1,14 @@
+2008-08-13  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/dshowdecwrapper/gstdshowaudiodec.c:
+	* sys/dshowdecwrapper/gstdshowaudiodec.h:
+	* sys/dshowdecwrapper/gstdshowvideodec.c:
+	* sys/dshowdecwrapper/gstdshowvideodec.h:
+	* sys/dshowvideosink/dshowvideosink.cpp:
+	* sys/dshowvideosink/dshowvideosink.h:
+	  Initialise COM with default flags.
+	  Only deinitialise if the initialisation was successful.
+
 2008-08-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_associate),

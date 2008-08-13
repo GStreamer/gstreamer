@@ -306,6 +306,7 @@ gst_dshowvideodec_init (GstDshowVideoDec * vdec,
     GstDshowVideoDecClass * vdec_class)
 {
   GstElementClass *element_class = GST_ELEMENT_GET_CLASS (vdec);
+  HRESULT hr;
 
   /* setup pads */
   vdec->sinkpad =
@@ -337,7 +338,10 @@ gst_dshowvideodec_init (GstDshowVideoDec * vdec,
   vdec->srccaps = NULL;
   vdec->segment = gst_segment_new ();
 
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
+  hr = CoInitialize (0);
+  if (SUCCEEDED (hr)) {
+    vdec->comInitialized = TRUE;
+  }
 }
 
 static void
@@ -350,7 +354,10 @@ gst_dshowvideodec_dispose (GObject * object)
     vdec->segment = NULL;
   }
 
-  CoUninitialize ();
+  if (vdec->comInitialized) {
+    CoUninitialize ();
+    vdec->comInitialized = FALSE;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1099,11 +1106,13 @@ dshow_vdec_register (GstPlugin * plugin)
     (GInstanceInitFunc) gst_dshowvideodec_init,
   };
   gint i;
+  HRESULT hr;
 
   GST_DEBUG_CATEGORY_INIT (dshowvideodec_debug, "dshowvideodec", 0,
       "Directshow filter video decoder");
 
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
+  hr = CoInitialize (0);
+
   for (i = 0; i < sizeof (video_dec_codecs) / sizeof (CodecEntry); i++) {
     GType type;
 
@@ -1133,6 +1142,8 @@ dshow_vdec_register (GstPlugin * plugin)
     }
   }
 
-  CoUninitialize ();
+  if (SUCCEEDED (hr))
+    CoUninitialize ();
+
   return TRUE;
 }

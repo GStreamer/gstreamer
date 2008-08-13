@@ -275,6 +275,7 @@ gst_dshowaudiodec_init (GstDshowAudioDec * adec,
     GstDshowAudioDecClass * adec_class)
 {
   GstElementClass *element_class = GST_ELEMENT_GET_CLASS (adec);
+  HRESULT hr;
 
   /* setup pads */
   adec->sinkpad =
@@ -310,7 +311,10 @@ gst_dshowaudiodec_init (GstDshowAudioDec * adec,
 
   adec->last_ret = GST_FLOW_OK;
 
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
+  hr = CoInitialize (0);
+  if (SUCCEEDED (hr)) {
+    adec->comInitialized = TRUE;
+  }
 }
 
 static void
@@ -328,7 +332,10 @@ gst_dshowaudiodec_dispose (GObject * object)
     adec->codec_data = NULL;
   }
 
-  CoUninitialize ();
+  if (adec->comInitialized) {
+    CoUninitialize ();
+    adec->comInitialized = FALSE;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1141,11 +1148,12 @@ dshow_adec_register (GstPlugin * plugin)
     (GInstanceInitFunc) gst_dshowaudiodec_init,
   };
   gint i;
+  HRESULT hr;
 
   GST_DEBUG_CATEGORY_INIT (dshowaudiodec_debug, "dshowaudiodec", 0,
       "Directshow filter audio decoder");
 
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
+  hr = CoInitialize (0);
   for (i = 0; i < sizeof (audio_dec_codecs) / sizeof (CodecEntry); i++) {
     GType type;
 
@@ -1175,6 +1183,8 @@ dshow_adec_register (GstPlugin * plugin)
     }
   }
 
-  CoUninitialize ();
+  if (SUCCEEDED (hr))
+    CoUninitialize ();
+
   return TRUE;
 }

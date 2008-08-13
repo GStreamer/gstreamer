@@ -98,6 +98,8 @@ struct _GstDshowAudioDec
 
   /* timestamp of the next buffer */
   GstClockTime timestamp;
+
+  gboolean comInitialized;
 };
 
 struct _GstDshowAudioDecClass

@@ -91,6 +91,8 @@ struct _GstDshowVideoSink
 
   /* If we use an app-supplied window, we need to hook its WNDPROC */
   WNDPROC prevWndProc;
+
+  gboolean comInitialized;
 };
 
 struct _GstDshowVideoSinkClass

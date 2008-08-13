@@ -211,9 +211,13 @@ gst_dshowvideosink_clear (GstDshowVideoSink *sink)
 static void
 gst_dshowvideosink_init (GstDshowVideoSink * sink, GstDshowVideoSinkClass * klass)
 {
+  HRESULT hr;
+
   gst_dshowvideosink_clear (sink);
 
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
+  hr = CoInitialize (0);
+  if (SUCCEEDED(hr))
+    sink->comInitialized = TRUE;
 
   /* TODO: Copied from GstVideoSink; should we use that as base class? */
   /* 20ms is more than enough, 80-130ms is noticable */
@@ -229,7 +233,10 @@ gst_dshowvideosink_finalize (GObject * gobject)
   if (sink->preferredrenderer)
     g_free (sink->preferredrenderer);
 
-  CoUninitialize ();
+  if (sink->comInitialized) {
+    CoUninitialize ();
+    sink->comInitialized = FALSE;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
