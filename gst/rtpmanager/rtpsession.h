@@ -264,6 +264,10 @@ gchar*          rtp_session_get_sdes_string        (RTPSession *sess, GstRTCPSDE
 
 /* handling sources */
 RTPSource*      rtp_session_get_internal_source    (RTPSession *sess);
+
+void            rtp_session_set_internal_ssrc      (RTPSession *sess, guint32 ssrc);
+guint32         rtp_session_get_internal_ssrc      (RTPSession *sess);
+
 gboolean        rtp_session_add_source             (RTPSession *sess, RTPSource *src);
 guint           rtp_session_get_num_sources        (RTPSession *sess);
 guint           rtp_session_get_num_active_sources (RTPSession *sess);

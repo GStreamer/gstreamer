@@ -923,11 +923,13 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
     } else {
       /* unacceptable jump */
       stats->bad_seq = (seqnr + 1) & (RTP_SEQ_MOD - 1);
+      src->clock_base = -1;
       goto bad_sequence;
     }
   } else {
     /* duplicate or reordered packet, will be filtered by jitterbuffer. */
     GST_WARNING ("duplicate or reordered packet");
+    src->clock_base = -1;
   }
 
   src->stats.octets_received += arrival->payload_len;

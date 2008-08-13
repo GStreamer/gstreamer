@@ -119,6 +119,7 @@
 
 #include "gstrtpbin-marshal.h"
 #include "gstrtpbin.h"
+#include "gstrtpsession.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_bin_debug);
 #define GST_CAT_DEFAULT gst_rtp_bin_debug
@@ -317,6 +318,7 @@ struct _GstRtpBinStream
   gint64 unix_delta;
 
   /* for lip-sync */
+  guint64 last_clock_base;
   guint64 clock_base;
   guint64 clock_base_time;
   gint clock_rate;
@@ -876,13 +878,18 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
         else
           diff = ostream->ts_offset - ostream->prev_ts_offset;
 
+        GST_DEBUG_OBJECT (bin,
+            "ts-offset %" G_GUINT64_FORMAT ", prev %" G_GUINT64_FORMAT
+            ", diff: %" G_GINT64_FORMAT, ostream->ts_offset,
+            ostream->prev_ts_offset, diff);
+
         /* only change diff when it changed more than 1 millisecond. This
          * compensates for rounding errors in NTP to RTP timestamp
          * conversions */
-        if (diff > GST_MSECOND)
+        if (diff > GST_MSECOND && diff < (3 * GST_SECOND)) {
           g_object_set (ostream->buffer, "ts-offset", ostream->ts_offset, NULL);
-
-        ostream->prev_ts_offset = ostream->ts_offset;
+          ostream->prev_ts_offset = ostream->ts_offset;
+        }
       }
       GST_DEBUG_OBJECT (bin, "stream SSRC %08x, delta %" G_GINT64_FORMAT,
           ostream->ssrc, ostream->ts_offset);
@@ -929,6 +936,9 @@ gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
   guint32 rtptime;
   gboolean have_sr, have_sdes;
   gboolean more;
+  guint64 clock_base;
+
+  clock_base = GST_BUFFER_OFFSET (buffer);
 
   stream = gst_pad_get_element_private (pad);
   bin = stream->bin;
@@ -937,6 +947,14 @@ gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
 
   if (!gst_rtcp_buffer_validate (buffer))
     goto invalid_rtcp;
+
+  /* clock base changes when there is a huge gap in the timestamps or seqnum.
+   * When this happens we don't want to calculate the extended timestamp based
+   * on the previous one but reset the calculation. */
+  if (stream->last_clock_base != clock_base) {
+    stream->last_extrtptime = -1;
+    stream->last_clock_base = clock_base;
+  }
 
   have_sr = FALSE;
   have_sdes = FALSE;
@@ -989,7 +1007,7 @@ gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
             gst_rtcp_packet_sdes_get_entry (&packet, &type, &len, &data);
 
             if (type == GST_RTCP_SDES_CNAME) {
-              stream->clock_base = GST_BUFFER_OFFSET (buffer);
+              stream->clock_base = clock_base;
               stream->clock_base_time = GST_BUFFER_OFFSET_END (buffer);
               /* associate the stream to CNAME */
               gst_rtp_bin_associate (bin, stream, len, data);
@@ -1876,6 +1894,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
           gst_caps_to_string (caps), GST_DEBUG_PAD_NAME (pad));
     }
 
+    stream->last_clock_base = -1;
     if (gst_structure_get_uint (s, "clock-base", &val))
       stream->clock_base = val;
     else
