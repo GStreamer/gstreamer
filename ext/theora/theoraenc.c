@@ -226,7 +226,7 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
   /* general encoding stream options */
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Compressed video bitrate (kbps)",
-          0, 2000, THEORA_DEF_BITRATE,
+          0, (1 << 24) - 1, THEORA_DEF_BITRATE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_QUALITY,
       g_param_spec_int ("quality", "Quality", "Video quality", 0, 63,

@@ -1,3 +1,8 @@
+2008-08-12  David Schleef  <ds@schleef.org>
+
+	* ext/theora/theoraenc.c: Remove the 2000 kbit limit to bitrate,
+	  since it has no basis in libtheora.
+
 2008-08-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/interfaces/propertyprobe.h:
