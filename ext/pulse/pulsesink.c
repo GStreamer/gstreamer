@@ -65,6 +65,8 @@ enum
 {
   PROP_SERVER = 1,
   PROP_DEVICE,
+  PROP_DEVICE_NAME,
+  PROP_VOLUME
 };
 
 static GstAudioSinkClass *parent_class = NULL;
@@ -96,6 +98,9 @@ static guint gst_pulsesink_delay (GstAudioSink * asink);
 static void gst_pulsesink_reset (GstAudioSink * asink);
 
 static gboolean gst_pulsesink_event (GstBaseSink * sink, GstEvent * event);
+
+static GstStateChangeReturn gst_pulsesink_change_state (GstElement *
+    element, GstStateChange transition);
 
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
 # define ENDIANNESS   "LITTLE_ENDIAN, BIG_ENDIAN"
@@ -196,9 +201,8 @@ gst_pulsesink_class_init (gpointer g_class, gpointer class_data)
 {
 
   GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
   GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (g_class);
-
   GstAudioSinkClass *gstaudiosink_class = GST_AUDIO_SINK_CLASS (g_class);
 
   parent_class = g_type_class_peek_parent (g_class);
@@ -207,6 +211,9 @@ gst_pulsesink_class_init (gpointer g_class, gpointer class_data)
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pulsesink_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pulsesink_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pulsesink_get_property);
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_pulsesink_change_state);
 
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_pulsesink_event);
 
@@ -228,6 +235,18 @@ gst_pulsesink_class_init (gpointer g_class, gpointer class_data)
       g_param_spec_string ("device", "Sink",
           "The PulseAudio sink device to connect to", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_DEVICE_NAME,
+      g_param_spec_string ("device-name", "Device name",
+          "Human-readable name of the sound device", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+#if 0
+  g_object_class_install_property (gobject_class,
+      PROP_VOLUME,
+      g_param_spec_double ("volume", "Volume",
+          "Volume of this stream", 0.0, 10.0, 1.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 }
 
 static void
@@ -250,6 +269,7 @@ gst_pulsesink_init (GTypeInstance * instance, gpointer g_class)
   g_assert (e == 0);
 
   pulsesink->probe = gst_pulseprobe_new (G_OBJECT (pulsesink), G_OBJECT_GET_CLASS (pulsesink), PROP_DEVICE, pulsesink->device, TRUE, FALSE);    /* TRUE for sinks, FALSE for sources */
+  pulsesink->mixer = NULL;
 }
 
 static void
@@ -298,6 +318,11 @@ gst_pulsesink_finalize (GObject * object)
     pulsesink->probe = NULL;
   }
 
+  if (pulsesink->mixer) {
+    gst_pulsemixer_ctrl_free (pulsesink->mixer);
+    pulsesink->mixer = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -306,6 +331,57 @@ gst_pulsesink_dispose (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
+
+#if 0
+static void
+gst_pulsesink_set_volume (GstPulseSink * pulsesink, gdouble volume)
+{
+  if (pulsesink->mixer && pulsesink->mixer->track->num_channels > 0) {
+    gint *volumes = g_new0 (gint, pulsesink->mixer->track->num_channels);
+    gint i;
+
+    g_print ("setting volume for real\n");
+
+    for (i = 0; i < pulsesink->mixer->track->num_channels; i++)
+      volumes[i] = volume;
+
+    gst_pulsemixer_ctrl_set_volume (pulsesink->mixer, pulsesink->mixer->track,
+        volumes);
+
+    pulsesink->volume = volume;
+    g_free (volumes);
+  } else {
+    pulsesink->volume = volume;
+  }
+}
+
+static gdouble
+gst_pulsesink_get_volume (GstPulseSink * pulsesink)
+{
+  if (pulsesink->mixer && pulsesink->mixer->track->num_channels > 0) {
+    gint *volumes = g_new0 (gint, pulsesink->mixer->track->num_channels);
+    gdouble volume = 0.0;
+    gint i;
+
+    gst_pulsemixer_ctrl_get_volume (pulsesink->mixer, pulsesink->mixer->track,
+        volumes);
+
+    for (i = 0; i < pulsesink->mixer->track->num_channels; i++)
+      volume += volumes[i];
+    volume /= pulsesink->mixer->track->num_channels;
+
+    pulsesink->volume = volume;
+
+    g_free (volumes);
+
+    g_print ("real volume: %lf\n", volume);
+
+    return volume;
+  } else {
+    return pulsesink->volume;
+  }
+}
+#endif
 
 static void
 gst_pulsesink_set_property (GObject * object,
@@ -328,6 +404,12 @@ gst_pulsesink_set_property (GObject * object,
       pulsesink->device = g_value_dup_string (value);
       break;
 
+#if 0
+    case PROP_VOLUME:
+      gst_pulsesink_set_volume (pulsesink, g_value_get_double (value));
+      break;
+#endif
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -349,6 +431,19 @@ gst_pulsesink_get_property (GObject * object,
     case PROP_DEVICE:
       g_value_set_string (value, pulsesink->device);
       break;
+
+    case PROP_DEVICE_NAME:
+      if (pulsesink->mixer)
+        g_value_set_string (value, pulsesink->mixer->description);
+      else
+        g_value_set_string (value, NULL);
+      break;
+
+#if 0
+    case PROP_VOLUME:
+      g_value_set_double (value, gst_pulsesink_get_volume (pulsesink));
+      break;
+#endif
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -543,6 +638,10 @@ gst_pulsesink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   spec->bytes_per_sample = pa_frame_size (&pulsesink->sample_spec);
   memset (spec->silence_sample, 0, spec->bytes_per_sample);
+
+#if 0
+  gst_pulsesink_set_volume (pulsesink, pulsesink->volume);
+#endif
 
   return TRUE;
 
@@ -794,6 +893,43 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
   }
 
   return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
+}
+
+static GstStateChangeReturn
+gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
+{
+  GstPulseSink *this = GST_PULSESINK (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+
+      if (!this->mixer) {
+        this->mixer =
+            gst_pulsemixer_ctrl_new (G_OBJECT (this), this->server,
+            this->device, GST_PULSEMIXER_SINK);
+      }
+      break;
+
+    case GST_STATE_CHANGE_READY_TO_NULL:
+
+      if (this->mixer) {
+#if 0
+        this->volume = gst_pulsesink_get_volume (this);
+#endif
+        gst_pulsemixer_ctrl_free (this->mixer);
+        this->mixer = NULL;
+      }
+
+      break;
+
+    default:
+      ;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 GType

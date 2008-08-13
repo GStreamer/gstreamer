@@ -29,6 +29,7 @@
 #include <pulse/thread-mainloop.h>
 
 #include "pulseprobe.h"
+#include "pulsemixerctrl.h"
 
 G_BEGIN_DECLS
 
@@ -59,7 +60,12 @@ struct _GstPulseSink
 
   pa_sample_spec sample_spec;
 
+  GstPulseMixerCtrl *mixer;
   GstPulseProbe *probe;
+
+#if 0
+  gdouble volume;
+#endif
 
   int operation_success;
 };
