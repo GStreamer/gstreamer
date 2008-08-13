@@ -63,7 +63,7 @@ typedef void (* GstGLEffectProcessFunc) (GstGLEffects *effects);
 struct _GstGLEffects
 {
   GstGLFilter filter;
-  
+
   GstGLEffectProcessFunc effect;
 
   GLuint intexture;
@@ -125,9 +125,9 @@ gst_gl_effects_effect_get_type (void)
     { GST_GL_EFFECT_TEST, "Test Effect", "test" },
     { 0, NULL, NULL }
   };
-     
+
   if (!gl_effects_effect_type) {
-    gl_effects_effect_type = 
+    gl_effects_effect_type =
       g_enum_register_static ("GstGLEffectsEffect", effect_types);
   }
   return gl_effects_effect_type;
@@ -150,7 +150,7 @@ gst_gl_effects_init_gl_resources (GstGLFilter *filter)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
   gint i;
-  
+
   for (i=0; i<NEEDED_TEXTURES; i++) {
     glGenTextures (1, &effects->midtexture[i]);
     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, effects->midtexture[i]);
@@ -271,7 +271,7 @@ gst_gl_effects_identity (GstGLEffects *effects) {
 static void
 gst_gl_effects_init (GstGLEffects * effects, GstGLEffectsClass * klass)
 {
-  effects->shaderstable = g_hash_table_new_full (g_str_hash, 
+  effects->shaderstable = g_hash_table_new_full (g_str_hash,
 						 g_str_equal,
 						 NULL,
 						 g_object_unref);
@@ -304,11 +304,11 @@ static void
 gst_gl_effects_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (object);
+  //GstGLEffects *effects = GST_GL_EFFECTS (object);
 
   switch (prop_id) {
   case PROP_EFFECT:
-    gst_gl_effects_set_effect (effects, g_value_get_enum (value));
+    //gst_gl_effects_set_effect (effects, g_value_get_enum (value));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -330,8 +330,8 @@ gst_gl_effects_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 
   effects->intexture = inbuf->texture;
   effects->outtexture = outbuf->texture;
-  
+
   effects->effect (effects);
-  
+
   return TRUE;
 }

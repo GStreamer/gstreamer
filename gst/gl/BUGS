@@ -1,5 +1,22 @@
 
 known issues:
 
-  - 
+  - gst-launch-0.10 videotestsrc ! glupload ! gldownload ! glimagesink  
+    (or glcolorspace instead of glupload ! gldownload)  
+    -> crash on linux when stopping (num_buffers=N or after clicking on the window cross)
+    (was working on win32)
+    (gst-launch-0.10 videotestsrc ! glupload ! gldownload ! glupload ! gldownload ! glupload ! gldownload ! ximagesink 
+    crash when stopping)
+    (but not gst-launch-0.10 videotestsrc ! glupload ! gldownload ! glupload ! gldownload ! ximagesink)
+    log: (  Définition du pipeline à READY (prêt)...
+            Context 1 destroyed
+            Définition du pipeline à NULL...
+            Caught SIGSEGV accessing address 0x40 )
 
+  - gst-launch-0.10 videotestsrc ! tee name=t t. ! queue ! glimagesink t. ! queue ! glimagesink t. ! queue ! glimagesink
+    -> crash on linux when stopping (was working on win32 too)
+    It look likes it's related to the first issue.
+
+  - gst-launch-0.10 videotestsrc ! "video/x-raw-yuv, format=(fourcc)YV12" ! glimagesink
+    -> wrong color on linux (it look likes it uses text_shader_upload_I420 instead of YV12)
+    (I remember it was working on win32, so maybe we have made a regression)

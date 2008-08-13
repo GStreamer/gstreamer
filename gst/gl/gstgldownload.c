@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  *
@@ -27,7 +27,7 @@
 #define GST_CAT_DEFAULT gst_gl_download_debug
 	GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails element_details = 
+static const GstElementDetails element_details =
     GST_ELEMENT_DETAILS ("OpenGL video maker",
         "Filter/Effect",
         "A from GL to video flow filter",
@@ -127,7 +127,7 @@ gst_gl_download_set_property (GObject* object, guint prop_id,
 {
     //GstGLDownload *download = GST_GL_DOWNLOAD (object);
 
-    switch (prop_id) 
+    switch (prop_id)
     {
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -153,7 +153,7 @@ gst_gl_download_get_property (GObject* object, guint prop_id,
 static void
 gst_gl_download_reset (GstGLDownload* download)
 {
-    if (download->display) 
+    if (download->display)
     {
         g_object_unref (download->display);
         download->display = NULL;
@@ -194,7 +194,7 @@ gst_gl_download_transform_caps (GstBaseTransform * bt,
 
     download = GST_GL_DOWNLOAD (bt);
 
-    GST_ERROR ("transform caps %" GST_PTR_FORMAT, caps);
+    GST_DEBUG ("transform caps %" GST_PTR_FORMAT, caps);
 
     structure = gst_caps_get_structure (caps, 0);
 
@@ -203,7 +203,7 @@ gst_gl_download_transform_caps (GstBaseTransform * bt,
     framerate_value = gst_structure_get_value (structure, "framerate");
     par_value = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
-    if (direction == GST_PAD_SINK) 
+    if (direction == GST_PAD_SINK)
     {
 	    newothercaps = gst_caps_new_simple ("video/x-raw-rgb", NULL);
 	    newstruct = gst_caps_get_structure (newothercaps, 0);
@@ -217,7 +217,7 @@ gst_gl_download_transform_caps (GstBaseTransform * bt,
 						       1, 1, NULL);
 	    newcaps = gst_caps_new_simple ("video/x-raw-yuv", NULL);
 	    gst_caps_append(newcaps, newothercaps);
-    } 
+    }
     else newcaps = gst_caps_new_simple ("video/x-raw-gl", NULL);
 
     newstruct = gst_caps_get_structure (newcaps, 0);
@@ -230,7 +230,7 @@ gst_gl_download_transform_caps (GstBaseTransform * bt,
 	    gst_structure_set (newstruct, "pixel-aspect-ratio", GST_TYPE_FRACTION,
 	                       1, 1, NULL);
 
-    GST_ERROR ("new caps %" GST_PTR_FORMAT, newcaps);
+    GST_DEBUG ("new caps %" GST_PTR_FORMAT, newcaps);
 
     return newcaps;
 }
@@ -249,7 +249,7 @@ gst_gl_download_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     ret = gst_video_format_parse_caps (outcaps, &download->video_format,
         &download->width, &download->height);
 
-    if (!ret) 
+    if (!ret)
     {
         GST_ERROR ("bad caps");
         return FALSE;
@@ -268,17 +268,17 @@ gst_gl_download_get_unit_size (GstBaseTransform* trans, GstCaps* caps,
 	gint height;
 
 	structure = gst_caps_get_structure (caps, 0);
-	if (gst_structure_has_name (structure, "video/x-raw-gl")) 
+	if (gst_structure_has_name (structure, "video/x-raw-gl"))
 	{
 		ret = gst_gl_buffer_parse_caps (caps, &width, &height);
-		if (ret) 
+		if (ret)
 			*size = gst_gl_buffer_get_size (width, height);
-	} 
-	else 
+	}
+	else
 	{
 		GstVideoFormat video_format;
 		ret = gst_video_format_parse_caps (caps, &video_format, &width, &height);
-		if (ret) 
+		if (ret)
 			*size = gst_video_format_get_size (video_format, width, height);
 	}
 
@@ -292,7 +292,7 @@ gst_gl_download_transform (GstBaseTransform* trans, GstBuffer* inbuf,
     GstGLDownload* download = GST_GL_DOWNLOAD (trans);
     GstGLBuffer* gl_inbuf = GST_GL_BUFFER (inbuf);
 
-    if (download->display == NULL) 
+    if (download->display == NULL)
     {
         download->display = g_object_ref (gl_inbuf->display);
 
@@ -300,14 +300,14 @@ gst_gl_download_transform (GstBaseTransform* trans, GstBuffer* inbuf,
         gst_gl_display_init_download (download->display, download->video_format,
             download->width, download->height);
     }
-    else 
+    else
         g_assert (download->display == gl_inbuf->display);
 
     GST_DEBUG ("making video %p size %d",
         GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
 
     //blocking call
-    if (gst_gl_display_do_download(download->display, gl_inbuf->texture, 
+    if (gst_gl_display_do_download(download->display, gl_inbuf->texture,
             gl_inbuf->width, gl_inbuf->height, GST_BUFFER_DATA (outbuf)))
         return GST_FLOW_OK;
     else
