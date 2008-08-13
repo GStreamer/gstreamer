@@ -816,8 +816,11 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
       spec->rate) - timestamp;
 
   GST_OBJECT_LOCK (src);
-  clock = GST_ELEMENT_CLOCK (src);
-  if (clock != NULL && clock != src->clock) {
+  if (!(clock = GST_ELEMENT_CLOCK (src)))
+    goto no_sync;
+
+  if (clock != src->clock) {
+    /* we are slaved, check how to handle this */
     switch (src->priv->slave_method) {
       case GST_BASE_AUDIO_SRC_SLAVE_RESAMPLE:
         /* not implemented, use retimestamp algorithm. This algorithm should
@@ -852,7 +855,19 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
       case GST_BASE_AUDIO_SRC_SLAVE_NONE:
         break;
     }
+  } else {
+    GstClockTime base_time;
+
+    /* we are not slaved, subtract base_time */
+    base_time = GST_ELEMENT_CAST (src)->base_time;
+
+    if (timestamp > base_time)
+      timestamp -= base_time;
+    else
+      timestamp = 0;
   }
+
+no_sync:
   GST_OBJECT_UNLOCK (src);
 
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
