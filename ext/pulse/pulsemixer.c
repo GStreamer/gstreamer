@@ -271,8 +271,8 @@ gst_pulsemixer_change_state (GstElement * element, GstStateChange transition)
 
       if (!this->mixer)
         this->mixer =
-            gst_pulsemixer_ctrl_new (this->server, this->device,
-            GST_PULSEMIXER_UNKNOWN);
+            gst_pulsemixer_ctrl_new (G_OBJECT (this), this->server,
+            this->device, GST_PULSEMIXER_UNKNOWN);
 
       break;
 

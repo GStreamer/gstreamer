@@ -114,7 +114,7 @@ gst_pulseprobe_open (GstPulseProbe * c)
 
   if (!(c->context =
           pa_context_new (pa_threaded_mainloop_get_api (c->mainloop), name))) {
-    GST_WARNING ("Failed to create context");
+    GST_WARNING_OBJECT (c->object, "Failed to create context");
     goto unlock_and_fail;
   }
 
@@ -122,7 +122,7 @@ gst_pulseprobe_open (GstPulseProbe * c)
       c);
 
   if (pa_context_connect (c->context, c->server, 0, NULL) < 0) {
-    GST_WARNING ("Failed to connect context: %s",
+    GST_WARNING_OBJECT (c->object, "Failed to connect context: %s",
         pa_strerror (pa_context_errno (c->context)));
     goto unlock_and_fail;
   }
@@ -131,7 +131,7 @@ gst_pulseprobe_open (GstPulseProbe * c)
   pa_threaded_mainloop_wait (c->mainloop);
 
   if (pa_context_get_state (c->context) != PA_CONTEXT_READY) {
-    GST_WARNING ("Failed to connect context: %s",
+    GST_WARNING_OBJECT (c->object, "Failed to connect context: %s",
         pa_strerror (pa_context_errno (c->context)));
     goto unlock_and_fail;
   }
@@ -155,7 +155,7 @@ unlock_and_fail:
 
 #define CHECK_DEAD_GOTO(c, label) do { \
 if (!(c)->context || pa_context_get_state((c)->context) != PA_CONTEXT_READY) { \
-    GST_WARNING("Not connected: %s", (c)->context ? pa_strerror(pa_context_errno((c)->context)) : "NULL"); \
+    GST_WARNING_OBJECT((c)->object, "Not connected: %s", (c)->context ? pa_strerror(pa_context_errno((c)->context)) : "NULL"); \
     goto label; \
 } \
 } while(0);
@@ -173,7 +173,7 @@ gst_pulseprobe_enumerate (GstPulseProbe * c)
     if (!(o =
             pa_context_get_sink_info_list (c->context,
                 gst_pulseprobe_sink_info_cb, c))) {
-      GST_WARNING ("Failed to get sink info: %s",
+      GST_WARNING_OBJECT (c->object, "Failed to get sink info: %s",
           pa_strerror (pa_context_errno (c->context)));
       goto unlock_and_fail;
     }
@@ -185,7 +185,7 @@ gst_pulseprobe_enumerate (GstPulseProbe * c)
     }
 
     if (!c->operation_success) {
-      GST_WARNING ("Failed to get sink info: %s",
+      GST_WARNING_OBJECT (c->object, "Failed to get sink info: %s",
           pa_strerror (pa_context_errno (c->context)));
       goto unlock_and_fail;
     }
@@ -200,7 +200,7 @@ gst_pulseprobe_enumerate (GstPulseProbe * c)
     if (!(o =
             pa_context_get_source_info_list (c->context,
                 gst_pulseprobe_source_info_cb, c))) {
-      GST_WARNING ("Failed to get source info: %s",
+      GST_WARNING_OBJECT (c->object, "Failed to get source info: %s",
           pa_strerror (pa_context_errno (c->context)));
       goto unlock_and_fail;
     }
@@ -212,7 +212,7 @@ gst_pulseprobe_enumerate (GstPulseProbe * c)
     }
 
     if (!c->operation_success) {
-      GST_WARNING ("Failed to get sink info: %s",
+      GST_WARNING_OBJECT (c->object, "Failed to get sink info: %s",
           pa_strerror (pa_context_errno (c->context)));
       goto unlock_and_fail;
     }
@@ -258,12 +258,13 @@ gst_pulseprobe_close (GstPulseProbe * c)
 }
 
 GstPulseProbe *
-gst_pulseprobe_new (GObjectClass * klass, guint prop_id, const gchar * server,
-    gboolean sinks, gboolean sources)
+gst_pulseprobe_new (GObject * object, GObjectClass * klass, guint prop_id,
+    const gchar * server, gboolean sinks, gboolean sources)
 {
   GstPulseProbe *c = NULL;
 
   c = g_new (GstPulseProbe, 1);
+  c->object = g_object_ref (object);
   c->server = g_strdup (server);
   c->enumerate_sinks = sinks;
   c->enumerate_sources = sources;
@@ -293,6 +294,8 @@ gst_pulseprobe_free (GstPulseProbe * c)
   g_list_foreach (c->devices, (GFunc) g_free, NULL);
   g_list_free (c->devices);
 
+  g_object_unref (c->object);
+
   g_free (c);
 }
 
@@ -310,7 +313,7 @@ gst_pulseprobe_needs_probe (GstPulseProbe * c, guint prop_id,
   if (prop_id == c->prop_id)
     return !c->devices_valid;
 
-  G_OBJECT_WARN_INVALID_PROPERTY_ID (c, prop_id, pspec);
+  G_OBJECT_WARN_INVALID_PROPERTY_ID (c->object, prop_id, pspec);
   return FALSE;
 }
 
@@ -320,7 +323,7 @@ gst_pulseprobe_probe_property (GstPulseProbe * c, guint prop_id,
 {
 
   if (prop_id != c->prop_id) {
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (c, prop_id, pspec);
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (c->object, prop_id, pspec);
     return;
   }
 
@@ -339,7 +342,7 @@ gst_pulseprobe_get_values (GstPulseProbe * c, guint prop_id,
   GList *item;
 
   if (prop_id != c->prop_id) {
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (c, prop_id, pspec);
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (c->object, prop_id, pspec);
     return NULL;
   }
 
@@ -349,7 +352,8 @@ gst_pulseprobe_get_values (GstPulseProbe * c, guint prop_id,
   array = g_value_array_new (g_list_length (c->devices));
   g_value_init (&value, G_TYPE_STRING);
   for (item = c->devices; item != NULL; item = item->next) {
-    GST_WARNING ("device found: %s", (const gchar *) item->data);
+    GST_WARNING_OBJECT (c->object, "device found: %s",
+        (const gchar *) item->data);
     g_value_set_string (&value, (const gchar *) item->data);
     g_value_array_append (array, &value);
   }

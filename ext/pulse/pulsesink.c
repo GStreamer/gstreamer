@@ -249,7 +249,7 @@ gst_pulsesink_init (GTypeInstance * instance, gpointer g_class)
   e = pa_threaded_mainloop_start (pulsesink->mainloop);
   g_assert (e == 0);
 
-  pulsesink->probe = gst_pulseprobe_new (G_OBJECT_GET_CLASS (pulsesink), PROP_DEVICE, pulsesink->device, TRUE, FALSE);  /* TRUE for sinks, FALSE for sources */
+  pulsesink->probe = gst_pulseprobe_new (G_OBJECT (pulsesink), G_OBJECT_GET_CLASS (pulsesink), PROP_DEVICE, pulsesink->device, TRUE, FALSE);    /* TRUE for sinks, FALSE for sources */
 }
 
 static void
@@ -489,14 +489,16 @@ gst_pulsesink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   if (!pulsesink->context
       || pa_context_get_state (pulsesink->context) != PA_CONTEXT_READY) {
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED, ("Bad context state: %s",
-            pulsesink->context ? pa_strerror (pa_context_errno (pulsesink->
-                    context)) : NULL), (NULL));
+            pulsesink->
+            context ? pa_strerror (pa_context_errno (pulsesink->context)) :
+            NULL), (NULL));
     goto unlock_and_fail;
   }
 
   if (!(pulsesink->stream = pa_stream_new (pulsesink->context,
-              pulsesink->stream_name ? pulsesink->
-              stream_name : "Playback Stream", &pulsesink->sample_spec,
+              pulsesink->
+              stream_name ? pulsesink->stream_name : "Playback Stream",
+              &pulsesink->sample_spec,
               gst_pulse_gst_to_channel_map (&channel_map, spec)))) {
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
         ("Failed to create stream: %s",

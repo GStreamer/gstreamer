@@ -259,7 +259,7 @@ gst_pulsesrc_init (GTypeInstance * instance, gpointer g_class)
 
   pulsesrc->mixer = NULL;
 
-  pulsesrc->probe = gst_pulseprobe_new (G_OBJECT_GET_CLASS (pulsesrc), PROP_DEVICE, pulsesrc->device, FALSE, TRUE);     /* FALSE for sinks, TRUE for sources */
+  pulsesrc->probe = gst_pulseprobe_new (G_OBJECT (pulsesrc), G_OBJECT_GET_CLASS (pulsesrc), PROP_DEVICE, pulsesrc->device, FALSE, TRUE);        /* FALSE for sinks, TRUE for sources */
 }
 
 static void
@@ -493,8 +493,9 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   if (!pulsesrc->context
       || pa_context_get_state (pulsesrc->context) != PA_CONTEXT_READY) {
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Bad context state: %s",
-            pulsesrc->context ? pa_strerror (pa_context_errno (pulsesrc->
-                    context)) : NULL), (NULL));
+            pulsesrc->
+            context ? pa_strerror (pa_context_errno (pulsesrc->context)) :
+            NULL), (NULL));
     goto unlock_and_fail;
   }
 
@@ -666,7 +667,7 @@ gst_pulsesrc_delay (GstAudioSrc * asrc)
       goto unlock_and_fail;
     }
 
-    GST_WARNING ("Not data while querying latency");
+    GST_WARNING_OBJECT (pulsesrc, "Not data while querying latency");
     t = 0;
   } else if (negative)
     t = 0;
@@ -691,8 +692,8 @@ gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
 
       if (!this->mixer)
         this->mixer =
-            gst_pulsemixer_ctrl_new (this->server, this->device,
-            GST_PULSEMIXER_SOURCE);
+            gst_pulsemixer_ctrl_new (G_OBJECT (this), this->server,
+            this->device, GST_PULSEMIXER_SOURCE);
 
       break;
 

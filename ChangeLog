@@ -1,5 +1,28 @@
 2008-08-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/pulse/pulsemixer.c: (gst_pulsemixer_change_state):
+	* ext/pulse/pulsemixerctrl.c: (gst_pulsemixer_ctrl_subscribe_cb),
+	(gst_pulsemixer_ctrl_open), (gst_pulsemixer_ctrl_new),
+	(gst_pulsemixer_ctrl_free), (gst_pulsemixer_ctrl_timeout_event):
+	* ext/pulse/pulsemixerctrl.h:
+	* ext/pulse/pulseprobe.c: (gst_pulseprobe_open),
+	(gst_pulseprobe_enumerate), (gst_pulseprobe_new),
+	(gst_pulseprobe_free), (gst_pulseprobe_needs_probe),
+	(gst_pulseprobe_probe_property), (gst_pulseprobe_get_values):
+	* ext/pulse/pulseprobe.h:
+	* ext/pulse/pulsesink.c: (gst_pulsesink_init):
+	* ext/pulse/pulsesrc.c: (gst_pulsesrc_init), (gst_pulsesrc_delay),
+	(gst_pulsesrc_change_state):
+	Improve debugging a bit by including the parent object in pulsemixerctrl
+	and pulseprobe objects and using GST_WARNING_OBJECT instead of
+	GST_WARNING.
+
+	Use the parent GObject subclass instead of a random struct as GObject
+	parameter for G_OBJECT_WARN_INVALID_PROPERTY_ID. This fixes a crash
+	when probing for another property than "device".
+
+2008-08-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Laszlo Pandy <laszlok2 at gmail dot com>
 
 	* ext/pulse/pulsemixer.c: (gst_pulsemixer_set_property):

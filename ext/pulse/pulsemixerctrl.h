@@ -42,6 +42,8 @@ typedef enum
 
 struct _GstPulseMixerCtrl
 {
+  GObject *object;
+
   GList *tracklist;
 
   gchar *server, *device;
@@ -67,7 +69,7 @@ struct _GstPulseMixerCtrl
   gboolean update_volume, update_mute;
 };
 
-GstPulseMixerCtrl *gst_pulsemixer_ctrl_new (const gchar * server,
+GstPulseMixerCtrl *gst_pulsemixer_ctrl_new (GObject *object, const gchar * server,
     const gchar * device, GstPulseMixerType type);
 void gst_pulsemixer_ctrl_free (GstPulseMixerCtrl * mixer);
 
