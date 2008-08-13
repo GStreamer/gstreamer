@@ -18,13 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include <gstglfilter.h>
-//#include "effects/shadersources.h"
-//#include "effects/textures.h"
+#include "effects/gstgleffects.h"
 
 #define GST_TYPE_GL_EFFECTS            (gst_gl_effects_get_type())
 #define GST_GL_EFFECTS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_EFFECTS,GstGLEffects))
@@ -33,52 +27,11 @@
 #define GST_IS_GL_EFFECTS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) , GST_TYPE_GL_EFFECTS))
 #define GST_GL_EFFECTS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) , GST_TYPE_GL_EFFECTS,GstGLEffectsClass))
 
-typedef struct _GstGLEffects GstGLEffects;
-typedef struct _GstGLEffectsClass GstGLEffectsClass;
-
 typedef enum {
   GST_GL_EFFECT_IDENTITY,
-  GST_GL_EFFECT_SQUEEZE,
-  GST_GL_EFFECT_STRETCH,
-  GST_GL_EFFECT_TUNNEL,
-  GST_GL_EFFECT_FISHEYE,
-  GST_GL_EFFECT_TWIRL,
-  GST_GL_EFFECT_BULGE,
-  GST_GL_EFFECT_SQUARE,
   GST_GL_EFFECT_MIRROR,
-  GST_GL_EFFECT_HEAT,
-  GST_GL_EFFECT_SEPIA,
-  GST_GL_EFFECT_CROSS,
-  GST_GL_EFFECT_GLOW,
-  GST_GL_EFFECT_EMBOSS,
-  GST_GL_EFFECT_BACKGROUND,
-  GST_GL_EFFECT_TEST,
   GST_GL_N_EFFECTS
 } GstGLEffectsEffect;
-
-#define NEEDED_TEXTURES 10
-
-typedef void (* GstGLEffectProcessFunc) (GstGLEffects *effects);
-
-struct _GstGLEffects
-{
-  GstGLFilter filter;
-
-  GstGLEffectProcessFunc effect;
-
-  GLuint intexture;
-  GLuint midtexture[NEEDED_TEXTURES];
-  GLuint outtexture;
-
-  GHashTable *shaderstable;
-};
-
-struct _GstGLEffectsClass
-{
-  GstGLFilterClass filter_class;
-};
-
-GType gst_gl_effects_get_type (void);
 
 #define GST_CAT_DEFAULT gst_gl_effects_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -93,7 +46,6 @@ static void gst_gl_effects_set_property (GObject * object, guint prop_id,
 					 const GValue * value, GParamSpec * pspec);
 static void gst_gl_effects_get_property (GObject * object, guint prop_id,
 					 GValue * value, GParamSpec * pspec);
-static void gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex);
 
 static void gst_gl_effects_init_resources (GstGLFilter* filter);
 static void gst_gl_effects_reset_resources (GstGLFilter* filter);
@@ -108,21 +60,7 @@ gst_gl_effects_effect_get_type (void)
   static GType gl_effects_effect_type = 0;
   static const GEnumValue effect_types [] = {
     { GST_GL_EFFECT_IDENTITY, "Do nothing Effect", "identity" },
-    { GST_GL_EFFECT_SQUEEZE, "Squeeze Effect", "squeeze" },
-    { GST_GL_EFFECT_STRETCH, "Stretch Effect", "stretch" },
-    { GST_GL_EFFECT_FISHEYE, "FishEye Effect", "fisheye" },
-    { GST_GL_EFFECT_TWIRL, "Twirl Effect", "twirl" },
-    { GST_GL_EFFECT_BULGE, "Bulge Effect", "bulge" },
-    { GST_GL_EFFECT_TUNNEL, "Light Tunnel Effect", "tunnel" },
-    { GST_GL_EFFECT_SQUARE, "Square Effect", "square" },
     { GST_GL_EFFECT_MIRROR, "Mirror Effect", "mirror" },
-    { GST_GL_EFFECT_HEAT, "Heat Signature Effect", "heat" },
-    { GST_GL_EFFECT_SEPIA, "Sepia Tone Effect", "sepia" },
-    { GST_GL_EFFECT_CROSS, "Cross Processing Effect", "cross" },
-    { GST_GL_EFFECT_GLOW, "Glow Lighting Effect", "glow" },
-    { GST_GL_EFFECT_EMBOSS, "Emboss Convolution Effect", "emboss" },
-    { GST_GL_EFFECT_BACKGROUND, "Difference Matte Effect", "background" },
-    { GST_GL_EFFECT_TEST, "Test Effect", "test" },
     { 0, NULL, NULL }
   };
 
@@ -209,7 +147,7 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
 		       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
-static void
+void
 gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex)
 {
   GstGLFilter *filter = GST_GL_FILTER (effects);
@@ -288,15 +226,34 @@ gst_gl_effects_reset_resources (GstGLFilter* filter)
 }
 
 static void
+gst_gl_effects_set_effect (GstGLEffects *effects, gint effect_type) {
+
+  switch (effect_type) {
+  case GST_GL_EFFECT_IDENTITY:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_identity;
+    break;
+  case GST_GL_EFFECT_MIRROR:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_mirror;
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+  effects->current_effect = effect_type;
+}
+
+static void
 gst_gl_effects_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  /* GstGLEffects *effects = GST_GL_EFFECTS (object); */
+  GstGLEffects *effects = GST_GL_EFFECTS (object); 
 
   switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+  case PROP_EFFECT:
+    gst_gl_effects_set_effect (effects, g_value_get_enum (value));
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    break;
   }
 }
 
@@ -304,11 +261,11 @@ static void
 gst_gl_effects_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  //GstGLEffects *effects = GST_GL_EFFECTS (object);
+  GstGLEffects *effects = GST_GL_EFFECTS (object);
 
   switch (prop_id) {
   case PROP_EFFECT:
-    //gst_gl_effects_set_effect (effects, g_value_get_enum (value));
+    g_value_set_enum (value, effects->current_effect);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

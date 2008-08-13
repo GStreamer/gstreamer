@@ -1,0 +1,73 @@
+/*
+ * GStreamer
+ * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifndef __GST_GL_EFFECTS_H__
+#define __GST_GL_EFFECTS_H__
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <gstglfilter.h>
+
+G_BEGIN_DECLS
+
+#define GST_TYPE_GL_EFFECTS            (gst_gl_effects_get_type())
+#define GST_GL_EFFECTS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_EFFECTS,GstGLEffects))
+#define GST_IS_GL_EFFECTS(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_GL_EFFECTS))
+#define GST_GL_EFFECTS_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) , GST_TYPE_GL_EFFECTS,GstGLEffectsClass))
+#define GST_IS_GL_EFFECTS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) , GST_TYPE_GL_EFFECTS))
+#define GST_GL_EFFECTS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) , GST_TYPE_GL_EFFECTS,GstGLEffectsClass))
+
+typedef struct _GstGLEffects GstGLEffects;
+typedef struct _GstGLEffectsClass GstGLEffectsClass;
+
+typedef void (* GstGLEffectProcessFunc) (GstGLEffects *effects);
+
+#define NEEDED_TEXTURES 10
+
+struct _GstGLEffects
+{
+  GstGLFilter filter;
+
+  GstGLEffectProcessFunc effect;
+  gint current_effect;
+
+  GLuint intexture;
+  GLuint midtexture[NEEDED_TEXTURES];
+  GLuint outtexture;
+
+  GHashTable *shaderstable;
+};
+
+struct _GstGLEffectsClass
+{
+  GstGLFilterClass filter_class;
+};
+
+GType gst_gl_effects_get_type (void);
+
+void gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex);
+
+void gst_gl_effects_mirror (GstGLEffects *effects);
+
+G_END_DECLS
+
+#endif /*__GST_GL_EFFECTS_H__ */

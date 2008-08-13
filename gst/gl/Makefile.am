@@ -12,7 +12,6 @@ libgstopengl_la_SOURCES = \
 	gstglupload.h \
 	gstgldownload.c \
 	gstgldownload.h \
-	gstgleffects.c \ 
         gstglfilterblur.c \
 	gstglfiltercube.c \
 	gstglfiltercube.h \
@@ -25,7 +24,12 @@ libgstopengl_la_SOURCES = \
         gltestsrc.c \
         gltestsrc.h \
 	gstgltestsrc.c \
-	gstgltestsrc.h
+	gstgltestsrc.h \
+	gstgleffects.c \ 
+	effects/gstgleffects.h \
+	effects/gstgleffectsources.h \
+	effects/gstgleffectmirror.c
+	
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
 # (like in AM_CFLAGS)?
