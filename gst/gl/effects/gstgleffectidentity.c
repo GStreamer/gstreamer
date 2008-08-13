@@ -21,48 +21,20 @@
 #include <gstgleffects.h>
 
 static void
-gst_gl_effects_mirror_callback (gint width, gint height, guint texture, gpointer data)
+gst_gl_effects_identity_callback (gint width, gint height, guint texture, gpointer data)
 {
   GstGLEffects* effects = GST_GL_EFFECTS (data);
 
-  GstGLShader *shader;
-  gfloat tex_size[2];
-          
-  shader = g_hash_table_lookup (effects->shaderstable, "mirror0");
-  
-  if (!shader) {
-    shader = gst_gl_shader_new ();
-    g_hash_table_insert (effects->shaderstable, "mirror0", shader);
-  }
-  
-  g_return_if_fail (
-    gst_gl_shader_compile_and_check (shader, mirror_fragment_source,
-				     GST_GL_SHADER_FRAGMENT_SOURCE));
-
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
-  
-  gst_gl_shader_use (shader);
 
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-     
-  gst_gl_shader_set_uniform_1i (shader, "tex", 0);
-  
-  tex_size[0] = GST_GL_FILTER(effects)->width / 2.0;
-  tex_size[1] = GST_GL_FILTER(effects)->height / 2.0;
-
-  gst_gl_shader_set_uniform_1f (shader, "width", tex_size[0]); 
-  gst_gl_shader_set_uniform_1f (shader, "height", tex_size[1]);
-  
   gst_gl_effects_draw_texture (effects, texture);
 }
 
 void
-gst_gl_effects_mirror (GstGLEffects *effects) {
+gst_gl_effects_identity (GstGLEffects *effects) {
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
   gst_gl_filter_render_to_target (filter, effects->intexture, effects->outtexture,
-				  gst_gl_effects_mirror_callback, effects);
+				  gst_gl_effects_identity_callback, effects);
 }

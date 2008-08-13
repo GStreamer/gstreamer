@@ -18,7 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "effects/gstgleffects.h"
+#include <gstgleffects.h>
 
 #define GST_TYPE_GL_EFFECTS            (gst_gl_effects_get_type())
 #define GST_GL_EFFECTS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_EFFECTS,GstGLEffects))
@@ -26,12 +26,6 @@
 #define GST_GL_EFFECTS_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) , GST_TYPE_GL_EFFECTS,GstGLEffectsClass))
 #define GST_IS_GL_EFFECTS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) , GST_TYPE_GL_EFFECTS))
 #define GST_GL_EFFECTS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) , GST_TYPE_GL_EFFECTS,GstGLEffectsClass))
-
-typedef enum {
-  GST_GL_EFFECT_IDENTITY,
-  GST_GL_EFFECT_MIRROR,
-  GST_GL_N_EFFECTS
-} GstGLEffectsEffect;
 
 #define GST_CAT_DEFAULT gst_gl_effects_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -53,6 +47,19 @@ static void gst_gl_effects_reset_resources (GstGLFilter* filter);
 static gboolean gst_gl_effects_filter (GstGLFilter * filter,
 				       GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 
+static const GstElementDetails element_details = GST_ELEMENT_DETAILS (
+  "Gstreamer OpenGL Effects",
+  "Filter/Effect",
+  "GL Shading Language effects",
+  "Filippo Argiolas <filippo.argiolas@gmail.com>");
+
+
+typedef enum {
+  GST_GL_EFFECT_IDENTITY,
+  GST_GL_EFFECT_MIRROR,
+  GST_GL_N_EFFECTS
+} GstGLEffectsEffect;
+
 #define GST_TYPE_GL_EFFECTS_EFFECT (gst_gl_effects_effect_get_type ())
 static GType
 gst_gl_effects_effect_get_type (void)
@@ -71,18 +78,7 @@ gst_gl_effects_effect_get_type (void)
   return gl_effects_effect_type;
 }
 
-static const GstElementDetails element_details = GST_ELEMENT_DETAILS (
-  "Gstreamer OpenGL Effects",
-  "Filter/Effect",
-  "GL Shading Language effects",
-  "Filippo Argiolas <filippo.argiolas@gmail.com>");
-
-enum
-{
-  PROP_0,
-  PROP_EFFECT
-};
-
+/* init resources that need a gl context */
 static void
 gst_gl_effects_init_gl_resources (GstGLFilter *filter)
 {
@@ -101,6 +97,7 @@ gst_gl_effects_init_gl_resources (GstGLFilter *filter)
   }
 }
 
+/* free resources that need a gl context */
 static void
 gst_gl_effects_reset_gl_resources (GstGLFilter *filter)
 {
@@ -170,17 +167,7 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex)
   glEnd ();
 }
 
-static void
-gst_gl_effects_identity_callback (gint width, gint height, guint texture, gpointer data)
-{
-  GstGLEffects* effects = GST_GL_EFFECTS (data);
-
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
-
-  gst_gl_effects_draw_texture (effects, texture);
-}
-
+#if 0
 static void
 change_view (GstGLDisplay *display, gpointer data)
 {
@@ -196,15 +183,7 @@ change_view (GstGLDisplay *display, gpointer data)
   glMatrixMode (GL_MODELVIEW);
   glLoadMatrixd (mirrormatrix);
 }
-
-static void
-gst_gl_effects_identity (GstGLEffects *effects) {
-  GstGLFilter *filter = GST_GL_FILTER (effects);
-
-  gst_gl_display_thread_add (filter->display, change_view, effects);
-  gst_gl_filter_render_to_target (filter, effects->intexture, effects->outtexture,
-				  gst_gl_effects_identity_callback, effects);
-}
+#endif
 
 static void
 gst_gl_effects_init (GstGLEffects * effects, GstGLEffectsClass * klass)

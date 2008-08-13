@@ -26,8 +26,10 @@
 #endif
 
 #include <gstglfilter.h>
+#include <gstgleffectssources.h>
 
 G_BEGIN_DECLS
+
 
 #define GST_TYPE_GL_EFFECTS            (gst_gl_effects_get_type())
 #define GST_GL_EFFECTS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_EFFECTS,GstGLEffects))
@@ -62,10 +64,18 @@ struct _GstGLEffectsClass
   GstGLFilterClass filter_class;
 };
 
+enum
+{
+  PROP_0,
+  PROP_EFFECT
+};
+
+
 GType gst_gl_effects_get_type (void);
 
 void gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex);
 
+void gst_gl_effects_identity (GstGLEffects *effects);
 void gst_gl_effects_mirror (GstGLEffects *effects);
 
 G_END_DECLS
