@@ -251,6 +251,7 @@ struct _GstBaseTransformPrivate
   /* upstream caps and size suggestions */
   GstCaps *sink_suggest;
   guint size_suggest;
+  gint suggest_pending;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -474,6 +475,7 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
         GST_LOG_OBJECT (trans, "  to[%d]: %" GST_PTR_FORMAT, i, temp);
 
         temp = gst_caps_make_writable (temp);
+
         /* here we need to only append those structures, that are not yet
          * in there, we use the merge function for this */
         gst_caps_merge (ret, temp);
@@ -1062,7 +1064,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   GstBaseTransformClass *bclass;
   GstBaseTransformPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint outsize, newsize;
+  guint outsize, newsize, expsize;
   gboolean discard;
   GstCaps *incaps, *oldcaps, *newcaps;
 
@@ -1148,9 +1150,10 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     incaps = GST_PAD_CAPS (trans->sinkpad);
 
     /* it's possible that the buffer we got is of the wrong size, get the
-     * expected size here */
+     * expected size here, we will check the size if we are going to use the
+     * buffer later on. */
     gst_base_transform_transform_size (trans,
-        GST_PAD_SINK, incaps, GST_BUFFER_SIZE (in_buf), newcaps, &outsize);
+        GST_PAD_SINK, incaps, GST_BUFFER_SIZE (in_buf), newcaps, &expsize);
 
     /* check if we can convert the current incaps to the new target caps */
     can_convert =
@@ -1168,6 +1171,14 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       /* new format configure, and use the new output buffer */
       gst_pad_set_caps (trans->srcpad, newcaps);
       discard = FALSE;
+      /* if we got a buffer of the wrong size, discard it now and make sure we
+       * allocate a propertly sized buffer later. */
+      if (newsize != expsize) {
+        if (in_buf != *out_buf)
+          gst_buffer_unref (*out_buf);
+        *out_buf = NULL;
+      }
+      outsize = expsize;
     } else {
       GST_DEBUG_OBJECT (trans, "cannot perform transform on current buffer");
 
@@ -1189,7 +1200,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
         /* not a subset, we have a new upstream suggestion, remember it and
          * allocate a default buffer. First we try to convert the size */
         if (gst_base_transform_transform_size (trans,
-                GST_PAD_SRC, newcaps, outsize, othercaps, &size_suggest)) {
+                GST_PAD_SRC, newcaps, expsize, othercaps, &size_suggest)) {
 
           /* ok, remember the suggestions now */
           GST_DEBUG_OBJECT (trans,
@@ -1201,6 +1212,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
             gst_caps_unref (priv->sink_suggest);
           priv->sink_suggest = gst_caps_ref (othercaps);
           priv->size_suggest = size_suggest;
+          g_atomic_int_set (&trans->priv->suggest_pending, 1);
           GST_OBJECT_UNLOCK (trans->sinkpad);
         }
         gst_caps_unref (othercaps);
@@ -1209,19 +1221,12 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
         gst_buffer_unref (*out_buf);
       *out_buf = NULL;
     }
-
-    /* if we got a buffer of the wrong size, discard it now */
-    if (newsize != outsize) {
-      if (in_buf != *out_buf)
-        gst_buffer_unref (*out_buf);
-      *out_buf = NULL;
-      discard = FALSE;
-    }
   }
 
   if (*out_buf == NULL) {
     if (!discard) {
-      GST_DEBUG_OBJECT (trans, "make default output buffer");
+      GST_DEBUG_OBJECT (trans, "make default output buffer of size %d",
+          outsize);
       /* no valid buffer yet, make one */
       *out_buf = gst_buffer_new_and_alloc (outsize);
       gst_buffer_copy_metadata (*out_buf, in_buf,
@@ -1350,7 +1355,8 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
   /* we remember our previous alloc request to quickly see if we can proxy or
    * not. */
-  if (caps && gst_caps_is_equal (priv->sink_alloc, caps)) {
+  if (g_atomic_int_get (&priv->suggest_pending) == 0 && caps &&
+      gst_caps_is_equal (priv->sink_alloc, caps)) {
     /* we have seen this before, see if we need to proxy */
     GST_DEBUG_OBJECT (trans, "have old caps");
     sink_suggest = caps;
@@ -1376,6 +1382,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
       sink_suggest = caps;
       suggest = FALSE;
     }
+    g_atomic_int_set (&priv->suggest_pending, 0);
     GST_OBJECT_UNLOCK (pad);
 
     /* check if we actually handle this format on the sinkpad */
@@ -2233,7 +2240,7 @@ gst_base_transform_suggest (GstBaseTransform * trans, GstCaps * caps,
     gst_caps_unref (trans->priv->sink_suggest);
   trans->priv->sink_suggest = gst_caps_copy (caps);
   trans->priv->size_suggest = size;
-  gst_caps_replace (&trans->priv->sink_alloc, NULL);
+  g_atomic_int_set (&trans->priv->suggest_pending, 1);
   GST_DEBUG_OBJECT (trans, "new suggest %" GST_PTR_FORMAT, caps);
   GST_OBJECT_UNLOCK (trans->sinkpad);
 }

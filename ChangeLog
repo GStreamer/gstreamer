@@ -1,3 +1,23 @@
+2008-08-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_transform_caps),
+	(gst_base_transform_prepare_output_buffer),
+	(gst_base_transform_buffer_alloc), (gst_base_transform_suggest):
+	Don't overwrite the outsize when calculating the expected size of a new
+	buffer because we still need it in case we cannot process the new
+	buffer.
+	When converting the size of the new buffer to an upstream size, actually
+	use the expected size of the buffer, not some other random value.
+	Use an atomic int to signal that a new upstream caps suggestion is
+	available.
+	When we can convert the current buffer to a new format, check if the
+	buffer size is of the expected size and allocate a new buffer of the
+	expected size when this is not the case.
+
+	* tests/check/libs/transform1.c: (GST_START_TEST):
+	remove ifdeffed code from the unit test.
+
 2008-08-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* pkgconfig/gstreamer-uninstalled.pc.in:

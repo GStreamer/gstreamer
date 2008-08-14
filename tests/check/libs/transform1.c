@@ -27,8 +27,6 @@
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstbasetransform.h>
 
-#define FAILING_TESTS
-
 #include "test_transform.c"
 
 static gboolean buffer_alloc_pt1_called;
@@ -81,10 +79,8 @@ GST_START_TEST (basetransform_chain_pt1)
   set_caps_pt1_called = FALSE;;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
-#ifdef FAILING_TESTS
   /* FIXME, passthough without pad-alloc, do pad-alloc on the srcpad */
   fail_unless (buffer_alloc_pt1_called == TRUE);
-#endif
   fail_unless (set_caps_pt1_called == FALSE);
 
   buffer = gst_test_trans_pop (trans);
@@ -102,10 +98,8 @@ GST_START_TEST (basetransform_chain_pt1)
   set_caps_pt1_called = FALSE;;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
-#ifdef FAILING_TESTS
   /* FIXME, passthough without pad-alloc, do pad-alloc on the srcpad */
   fail_unless (buffer_alloc_pt1_called == TRUE);
-#endif
   fail_unless (set_caps_pt1_called == FALSE);
 
   buffer = gst_test_trans_pop (trans);
@@ -194,10 +188,8 @@ GST_START_TEST (basetransform_chain_pt2)
   set_caps_pt2_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
-#ifdef FAILING_TESTS
   /* FIXME, passthough without pad-alloc, do pad-alloc on the srcpad */
   fail_unless (buffer_alloc_pt1_called == TRUE);
-#endif
   fail_unless (set_caps_pt2_called == TRUE);
 
   buffer = gst_test_trans_pop (trans);
@@ -236,10 +228,8 @@ GST_START_TEST (basetransform_chain_pt2)
   set_caps_pt2_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
-#ifdef FAILING_TESTS
   /* FIXME, passthough without pad-alloc, do pad-alloc on the srcpad */
   fail_unless (buffer_alloc_pt1_called == TRUE);
-#endif
   fail_unless (set_caps_pt2_called == TRUE);
 
   buffer = gst_test_trans_pop (trans);
@@ -325,10 +315,8 @@ GST_START_TEST (basetransform_chain_ip1)
   fail_unless (res == GST_FLOW_OK);
   fail_unless (transform_ip_1_called == TRUE);
   fail_unless (transform_ip_1_writable == TRUE);
-#ifdef FAILING_TESTS
   /* FIXME, in-place without pad-alloc, do pad-alloc on the srcpad */
   fail_unless (buffer_alloc_pt1_called == TRUE);
-#endif
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
@@ -468,10 +456,8 @@ GST_START_TEST (basetransform_chain_ip2)
   fail_unless (transform_ip_1_called == TRUE);
   fail_unless (transform_ip_1_writable == TRUE);
   fail_unless (set_caps_1_called == TRUE);
-#ifdef FAILING_TESTS
   /* FIXME, in-place without pad-alloc, do pad-alloc on the srcpad */
   fail_unless (buffer_alloc_pt1_called == TRUE);
-#endif
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
@@ -673,11 +659,9 @@ GST_START_TEST (basetransform_chain_ct1)
   buffer_alloc_ct1_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, outcaps, &buffer);
   fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
-#ifdef FAILING_TESTS
   /* FIXME, why would this call the alloc function? we try to alloc something
    * with caps that are not supported on the sinkpad */
   fail_unless (buffer_alloc_ct1_called == FALSE);
-#endif
 
   /* with caps buffer */
   GST_DEBUG_OBJECT (trans, "alloc with caps, size 20");
@@ -763,12 +747,10 @@ GST_START_TEST (basetransform_chain_ct1)
   buffer_alloc_ct1_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, incaps, &buffer);
   fail_unless (res == GST_FLOW_OK);
-#ifdef FAILING_TESTS
   /* should not call pad-alloc because the caps and sizes are different, it
    * currently still calls the pad alloc for no reason and then throws away the
    * buffer. */
   fail_unless (buffer_alloc_ct1_called == FALSE);
-#endif
   fail_unless (GST_BUFFER_SIZE (buffer) == 10);
   gst_buffer_unref (buffer);
 
@@ -778,10 +760,8 @@ GST_START_TEST (basetransform_chain_ct1)
   buffer_alloc_ct1_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, outcaps, &buffer);
   fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
-#ifdef FAILING_TESTS
   /* should not call the pad-alloc function */
   fail_unless (buffer_alloc_ct1_called == FALSE);
-#endif
 
   gst_caps_unref (incaps);
   gst_caps_unref (outcaps);
@@ -970,10 +950,8 @@ GST_START_TEST (basetransform_chain_ct2)
   buffer_alloc_ct2_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, outcaps, &buffer);
   fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
-#ifdef FAILING_TESTS
   /* should not call pad-alloc because the caps and sizes are different */
   fail_unless (buffer_alloc_ct2_called == FALSE);
-#endif
 
   /* first try to push a buffer without caps, this should fail */
   buffer = gst_buffer_new_and_alloc (20);
@@ -1063,10 +1041,8 @@ GST_START_TEST (basetransform_chain_ct2)
   buffer_alloc_ct2_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, outcaps, &buffer);
   fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
-#ifdef FAILING_TESTS
   /* should not call the pad-alloc function */
   fail_unless (buffer_alloc_ct2_called == FALSE);
-#endif
 
   gst_caps_unref (incaps);
   gst_caps_unref (outcaps);
@@ -1127,10 +1103,8 @@ GST_START_TEST (basetransform_chain_ct3)
   buffer_alloc_ct2_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, outcaps, &buffer);
   fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
-#ifdef FAILING_TESTS
   /* should not call pad-alloc because the caps and sizes are different */
   fail_unless (buffer_alloc_ct2_called == FALSE);
-#endif
 
   /* first try to push a buffer without caps, this should fail */
   buffer = gst_buffer_new_and_alloc (20);
@@ -1163,9 +1137,7 @@ GST_START_TEST (basetransform_chain_ct3)
   fail_unless (res == GST_FLOW_OK);
   fail_unless (transform_ct2_called == FALSE);
   fail_unless (set_caps_ct2_called == TRUE);
-#ifdef FAILING_TESTS
   fail_unless (buffer_alloc_ct2_called == TRUE);
-#endif
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
@@ -1187,9 +1159,7 @@ GST_START_TEST (basetransform_chain_ct3)
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (transform_ct2_called == FALSE);
-#ifdef FAILING_TESTS
   fail_unless (buffer_alloc_ct2_called == TRUE);
-#endif
   /* after push, get rid of the final ref we had */
   gst_buffer_unref (buffer);
 
@@ -1220,10 +1190,8 @@ GST_START_TEST (basetransform_chain_ct3)
   buffer_alloc_ct2_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, outcaps, &buffer);
   fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
-#ifdef FAILING_TESTS
   /* FIXME should not call the pad-alloc function but it currently does */
   fail_unless (buffer_alloc_ct2_called == FALSE);
-#endif
 
   /* change the return value of the buffer-alloc function */
   GST_DEBUG_OBJECT (trans, "switching transform output");
@@ -1242,21 +1210,17 @@ GST_START_TEST (basetransform_chain_ct3)
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (transform_ct2_called == TRUE);
-#ifdef FAILING_TESTS
   /* FIXME, pad alloc must be called to get the new caps, because we don't call
    * pad alloc */
   fail_unless (buffer_alloc_ct2_called == TRUE);
-#endif
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-#ifdef FAILING_TESTS
   /* FIXME changing src caps should produce converted buffer */
   GST_DEBUG_OBJECT (trans, "received caps %" GST_PTR_FORMAT,
       GST_BUFFER_CAPS (buffer));
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), outcaps));
   fail_unless (GST_BUFFER_SIZE (buffer) == 20);
-#endif
 
   /* output buffer has refcount 1 */
   fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (buffer) == 1);
@@ -1272,15 +1236,11 @@ GST_START_TEST (basetransform_chain_ct3)
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, incaps, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_ct2_called == TRUE);
-#ifdef FAILING_TESTS
   /* FIXME a buffer alloc should never set caps */
   fail_unless (set_caps_ct2_called == FALSE);
-#endif
   fail_unless (GST_BUFFER_SIZE (buffer) == 10);
-#ifdef FAILING_TESTS
   /* FIXME, ideally we want to reuse these caps */
   fail_unless (GST_BUFFER_CAPS (buffer) == incaps);
-#endif
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
   gst_buffer_unref (buffer);
 
