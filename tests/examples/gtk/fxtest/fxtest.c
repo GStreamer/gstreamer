@@ -85,8 +85,9 @@ gint
 main (gint argc, gchar * argv[])
 {
   GstStateChangeReturn ret;
-  GstElement *src, *capsflt, *uload, *filter, *sink;
-  GstCaps *caps;
+  GstElement *uload, *filter, *sink;
+  GstElement *sourcebin;
+  GError *error = NULL;
 
   GtkWidget *window;
   GtkWidget *screen;
@@ -94,10 +95,37 @@ main (gint argc, gchar * argv[])
   GtkWidget *hbox;
   GtkWidget *play, *pause, *null, *ready;
 
-  gtk_init (&argc, &argv);
-  gst_init (&argc, &argv);
+  gchar **source_desc_array = NULL;
+  gchar *source_desc = NULL;
+
+  GOptionContext *context;
+  gboolean retval;
+  GOptionEntry options[] = {
+    { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &source_desc_array, NULL, NULL },
+    { NULL }
+  };
 
   g_set_application_name ("gst-gl-effects test app");
+  
+  context = g_option_context_new ("src ! ... ! identity");
+  g_option_context_add_main_entries (context, options, NULL);
+  retval = g_option_context_parse (context, &argc, &argv, &error);
+  g_assert (retval);
+  g_option_context_free (context);
+  
+  if (source_desc_array != NULL) {
+    source_desc = g_strjoinv (" ", source_desc_array);
+    g_strfreev (source_desc_array);
+  }
+  if (source_desc == NULL) {
+    g_print ("\nUsage: %s SOURCE_DESC\n\n", argv[0]);
+    g_print ("where SOURCE_DESC is a description of the source bin in gst-launch format\n");
+    g_print ("like: videotestsrc ! video/x-raw-rgb, width=352, heigth=288 ! identity\n\n");
+    return -1;
+  }
+
+  gtk_init (&argc, &argv);
+  gst_init (&argc, &argv);
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_container_set_border_width (GTK_CONTAINER (window), 3);
@@ -109,15 +137,18 @@ main (gint argc, gchar * argv[])
 
   pipeline = gst_pipeline_new ("pipeline");
 
-  src = gst_element_factory_make ("v4l2src", "myv4l2src");
-  capsflt = gst_element_factory_make ("capsfilter", "cflt");
+  sourcebin = gst_parse_bin_from_description (g_strdup (source_desc), TRUE, &error);
+  g_free (source_desc);
+  if (error)
+    g_error ("%s", error->message);
+
   uload = gst_element_factory_make ("glupload", "glu");
   filter = gst_element_factory_make ("gleffects", "flt");
   sink = gst_element_factory_make ("glimagesink", "glsink");
 
-  gst_bin_add_many (GST_BIN (pipeline), src, capsflt, uload, filter, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), sourcebin, uload, filter, sink, NULL);
 
-  if (!gst_element_link_many (src, capsflt, uload, filter, sink, NULL)) {
+  if (!gst_element_link_many (sourcebin, uload, filter, sink, NULL)) {
     g_print ("Failed to link one or more elements!\n");
     return -1;
   }
@@ -180,12 +211,6 @@ main (gint argc, gchar * argv[])
   gtk_container_add (GTK_CONTAINER (window), vbox);
 
   g_signal_connect (screen, "expose-event", G_CALLBACK (expose_cb), pipeline);
-
-  caps = gst_caps_new_simple ("video/x-raw-yuv",
-      "width", G_TYPE_INT, 640,
-      "height", G_TYPE_INT, 480, "framerate", GST_TYPE_FRACTION, 30, 1, NULL);
-  g_object_set (G_OBJECT (capsflt), "caps", caps, NULL);
-  gst_caps_unref (caps);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
