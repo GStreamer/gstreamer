@@ -247,6 +247,14 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("VideoSoft H.264");
       break;
 
+    case GST_MAKE_FOURCC ('L', '2', '6', '4'):
+      /* http://www.leadcodecs.com/Codecs/LEAD-H264.htm */
+      caps = gst_caps_new_simple ("video/x-h264",
+          "variant", G_TYPE_STRING, "lead", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Lead H.264");
+      break;
+
     case GST_MAKE_FOURCC ('S', 'E', 'D', 'G'):
       caps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT, 4, NULL);
@@ -1464,6 +1472,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('I', 'V', '4', '1'),
     GST_MAKE_FOURCC ('I', 'V', '5', '0'),
     GST_MAKE_FOURCC ('L', '2', '6', '3'),
+    GST_MAKE_FOURCC ('L', '2', '6', '4'),
     GST_MAKE_FOURCC ('M', '2', '6', '3'),
     GST_MAKE_FOURCC ('M', '4', 'S', '2'),
     GST_MAKE_FOURCC ('M', 'J', 'P', 'G'),

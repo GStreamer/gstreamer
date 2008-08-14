@@ -1,3 +1,8 @@
+2008-08-14  Julien Moutte  <julien@fluendo.com>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_video_template_caps): Add Lead H.264 variant.
+
 2008-08-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c:
