@@ -1,3 +1,14 @@
+2008-08-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buffer),
+	(gst_base_transform_buffer_alloc):
+	Go over the buffer_alloc function again and make sure we always end up
+	allocating a buffer.
+	Add some more docs.
+	Avoid doing pad alloc when we have a pending suggestion because we
+	cannot yet deal with changing caps in that case. Fixes #547728
+
 2008-08-14  Stefan Kost  <ensonic@users.sf.net>
 
 	patch by: Luc Pionchon <luc.pionchon@nokia.com>
