@@ -428,7 +428,8 @@ typedef void			(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
  * @size.
  *
  * When this function returns anything else than #GST_FLOW_OK, the buffer allocation
- * failed and @buf does not contain valid data.
+ * failed and @buf does not contain valid data. If the function returns #GST_FLOW_OK and
+ * the @buf is NULL, a #GstBuffer will be created with @caps, @offset and @size.
  *
  * By default this function returns a new buffer of @size and with @caps containing
  * purely malloced data. The buffer should be freed with gst_buffer_unref()
