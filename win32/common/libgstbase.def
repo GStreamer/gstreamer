@@ -45,6 +45,7 @@ EXPORTS
 	gst_base_transform_set_in_place
 	gst_base_transform_set_passthrough
 	gst_base_transform_set_qos_enabled
+	gst_base_transform_suggest
 	gst_base_transform_update_qos
 	gst_collect_pads_add_pad
 	gst_collect_pads_add_pad_full

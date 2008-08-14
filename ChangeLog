@@ -1,5 +1,10 @@
 2008-08-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* win32/common/libgstbase.def:
+	Add new method.
+
+2008-08-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* libs/gst/base/gstbasetransform.c:
 	(gst_base_transform_transform_caps),
 	(gst_base_transform_prepare_output_buffer),
@@ -13,7 +18,7 @@
 	available.
 	When we can convert the current buffer to a new format, check if the
 	buffer size is of the expected size and allocate a new buffer of the
-	expected size when this is not the case.
+	expected size when this is not the case. Fixes #546883.
 
 	* tests/check/libs/transform1.c: (GST_START_TEST):
 	remove ifdeffed code from the unit test.
