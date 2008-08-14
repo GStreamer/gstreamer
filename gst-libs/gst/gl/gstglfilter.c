@@ -109,6 +109,8 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
   klass->display_init_cb = NULL;
   klass->display_reset_cb = NULL;
   klass->onInitFBO = NULL;
+  klass->onStart = NULL;
+  klass->onStop = NULL;
   klass->onReset = NULL;
 }
 
@@ -179,6 +181,12 @@ gst_gl_filter_reset (GstGLFilter* filter)
 static gboolean
 gst_gl_filter_start (GstBaseTransform* bt)
 {
+  GstGLFilter *filter = GST_GL_FILTER (bt);
+  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
+
+  if (filter_class->onStart)
+    filter_class->onStart (filter);
+  
   return TRUE;
 }
 
@@ -186,6 +194,10 @@ static gboolean
 gst_gl_filter_stop (GstBaseTransform* bt)
 {
   GstGLFilter *filter = GST_GL_FILTER (bt);
+  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
+
+  if (filter_class->onStop)
+    filter_class->onStop (filter);
 
   gst_gl_filter_reset (filter);
 

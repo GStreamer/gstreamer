@@ -46,6 +46,8 @@ typedef gboolean (*GstGLFilterProcessFunc) (GstGLFilter *filter,
 					    GstGLBuffer *inbuf, GstGLBuffer *outbuf);
 typedef void (*GstGLFilterOnInitFBO) (GstGLFilter *filter);
 typedef void (*GstGLFilterOnReset) (GstGLFilter *filter);
+typedef void (*GstGLFilterOnStart) (GstGLFilter *filter);
+typedef void (*GstGLFilterOnStop) (GstGLFilter *filter);
 
 typedef void (*GstGLFilterGLStartFunc) (GstGLFilter *filter);
 typedef void (*GstGLFilterGLStopFunc) (GstGLFilter *filter);
@@ -72,6 +74,8 @@ struct _GstGLFilterClass
   GstGLFilterProcessFunc filter;
   GstGLFilterOnInitFBO onInitFBO;
   
+  GstGLFilterOnStart onStart;
+  GstGLFilterOnStop onStop;
   GstGLFilterOnReset onReset;
 
   /* useful to init and cleanup custom gl resources */
