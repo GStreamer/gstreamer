@@ -348,6 +348,8 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
       ret = "ITU H.264";
     else if (strcmp (variant, "videosoft") == 0)
       ret = "Videosoft H.264";
+    else if (strcmp (variant, "lead") == 0)
+      ret = "Lead H.264";
     else {
       GST_WARNING ("Unknown H264 variant '%s'", variant);
       ret = "H.264";

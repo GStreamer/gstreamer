@@ -1,3 +1,8 @@
+2008-08-14  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst-libs/gst/pbutils/descriptions.c: (format_info_get_desc):
+	  Add Lead H.264 here as well.
+
 2008-08-14  Julien Moutte  <julien@fluendo.com>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
