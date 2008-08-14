@@ -59,6 +59,8 @@ typedef enum {
   GST_GL_EFFECT_MIRROR,
   GST_GL_EFFECT_SQUEEZE,
   GST_GL_EFFECT_STRETCH,
+  GST_GL_EFFECT_HEAT,
+  GST_GL_EFFECT_SEPIA,
   GST_GL_EFFECT_GLOW,
   GST_GL_N_EFFECTS
 } GstGLEffectsEffect;
@@ -73,6 +75,8 @@ gst_gl_effects_effect_get_type (void)
     { GST_GL_EFFECT_MIRROR, "Mirror Effect", "mirror" },
     { GST_GL_EFFECT_SQUEEZE, "Squeeze Effect", "squeeze" },
     { GST_GL_EFFECT_STRETCH, "Stretch Effect", "stretch" },
+    { GST_GL_EFFECT_HEAT, "Heat Signature Effect", "heat" },
+    { GST_GL_EFFECT_SEPIA, "Sepia Toning Effect", "sepia" },
     { GST_GL_EFFECT_GLOW, "Glow Lighting Effect", "glow" },
     { 0, NULL, NULL }
   };
@@ -99,6 +103,12 @@ gst_gl_effects_set_effect (GstGLEffects *effects, gint effect_type) {
     break;
   case GST_GL_EFFECT_STRETCH:
     effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_stretch;
+    break;
+  case GST_GL_EFFECT_HEAT:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_heat;
+    break;
+  case GST_GL_EFFECT_SEPIA:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_sepia;
     break;
   case GST_GL_EFFECT_GLOW:
     effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_glow;
@@ -138,6 +148,10 @@ gst_gl_effects_reset_gl_resources (GstGLFilter *filter)
   for (i=0; i<10; i++) {
     glDeleteTextures (1, &effects->midtexture[i]);
     effects->midtexture[i] = 0;
+  }
+  for (i=0; i<GST_GL_EFFECTS_N_CURVES; i++) {
+    glDeleteTextures (1, &effects->curve[i]);
+    effects->curve[i] = 0;
   }
 }
 
@@ -217,10 +231,15 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex)
 static void
 gst_gl_effects_init (GstGLEffects * effects, GstGLEffectsClass * klass)
 {
+  gint i;
   effects->shaderstable = g_hash_table_new_full (g_str_hash,
 						 g_str_equal,
 						 NULL,
 						 g_object_unref);
+  for (i=0; i<GST_GL_EFFECTS_N_CURVES; i++) {
+    effects->curve[i] = 0;
+  }
+
   effects->effect = gst_gl_effects_identity;
 }
 

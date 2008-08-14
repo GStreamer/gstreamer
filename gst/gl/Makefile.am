@@ -29,10 +29,12 @@ libgstopengl_la_SOURCES = \
 	gstgleffects.h \
 	effects/gstgleffectssources.c \
 	effects/gstgleffectssources.h \
+	effects/gstgleffectscurves.h \
 	effects/gstgleffectidentity.c \
 	effects/gstgleffectmirror.c \
 	effects/gstgleffectsqueeze.c \
 	effects/gstgleffectstretch.c \
+	effects/gstgleffectlumatocurve.c \
 	effects/gstgleffectglow.c 
 	
 

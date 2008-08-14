@@ -45,6 +45,12 @@ typedef void (* GstGLEffectProcessFunc) (GstGLEffects *effects);
 
 #define NEEDED_TEXTURES 4
 
+enum {
+  GST_GL_EFFECTS_CURVE_HEAT,
+  GST_GL_EFFECTS_CURVE_SEPIA,
+  GST_GL_EFFECTS_N_CURVES
+};
+
 struct _GstGLEffects
 {
   GstGLFilter filter;
@@ -55,6 +61,8 @@ struct _GstGLEffects
   GLuint intexture;
   GLuint midtexture[NEEDED_TEXTURES];
   GLuint outtexture;
+
+  GLuint curve[GST_GL_EFFECTS_N_CURVES];
 
   GHashTable *shaderstable;
 };
@@ -79,6 +87,8 @@ void gst_gl_effects_identity (GstGLEffects *effects);
 void gst_gl_effects_mirror (GstGLEffects *effects);
 void gst_gl_effects_squeeze (GstGLEffects *effects);
 void gst_gl_effects_stretch (GstGLEffects *effects);
+void gst_gl_effects_heat (GstGLEffects *effects);
+void gst_gl_effects_sepia (GstGLEffects *effects);
 void gst_gl_effects_glow (GstGLEffects *effects);
 
 G_END_DECLS

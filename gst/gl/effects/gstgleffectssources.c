@@ -143,3 +143,16 @@ const gchar *sum_fragment_source =
 "  vec4 blendcolor = texture2DRect (blend, gl_TexCoord[0].st);"
 "  gl_FragColor = alpha * basecolor + beta * blendcolor;"
 "}";
+
+const gchar *luma_to_curve_fragment_source =
+"#extension GL_ARB_texture_rectangle : enable\n"
+"uniform sampler2DRect tex;"
+"uniform sampler1D curve;"
+"void main () {"
+"  vec2 texturecoord = gl_TexCoord[0].st;"
+"  vec4 color = texture2DRect (tex, texturecoord);"
+"  float luma = dot(color.rgb, vec3(0.2125, 0.7154, 0.0721));"
+"  vec4 outcolor;"
+"  color = texture1D(curve, luma);"
+"  gl_FragColor = color;"
+"}";
