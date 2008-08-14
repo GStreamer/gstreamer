@@ -29,6 +29,6 @@ const gchar *stretch_fragment_source;
 const gchar *luma_threshold_fragment_source;
 const gchar *hconv9_fragment_source;
 const gchar *vconv9_fragment_source;
-const gchar *blend_fragment_source;
+const gchar *sum_fragment_source;
 
 #endif /* __GST_GL_EFFECTS_SOURCES_H__ */

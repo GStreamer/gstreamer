@@ -145,7 +145,7 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture, gpointer 
   }
   
   g_return_if_fail (
-    gst_gl_shader_compile_and_check (shader, blend_fragment_source,
+    gst_gl_shader_compile_and_check (shader, sum_fragment_source,
 				     GST_GL_SHADER_FRAGMENT_SOURCE));
 
   glMatrixMode (GL_PROJECTION);
@@ -158,13 +158,15 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture, gpointer 
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, effects->intexture);
   glDisable(GL_TEXTURE_RECTANGLE_ARB);
   
+  gst_gl_shader_set_uniform_1f (shader, "alpha", 1.0);
   gst_gl_shader_set_uniform_1i (shader, "base", 2);
-  
+    
   glActiveTexture (GL_TEXTURE1);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
   glDisable(GL_TEXTURE_RECTANGLE_ARB);
   
+  gst_gl_shader_set_uniform_1f (shader, "beta", 1/3.5);
   gst_gl_shader_set_uniform_1i (shader, "blend", 1);
 
   gst_gl_effects_draw_texture (effects, texture);

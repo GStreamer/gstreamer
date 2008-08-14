@@ -132,12 +132,14 @@ const gchar *vconv9_fragment_source =
 "}";
 
 /* TODO: support several blend modes */
-const gchar *blend_fragment_source = 
+const gchar *sum_fragment_source = 
 "#extension GL_ARB_texture_rectangle : enable\n"
 "uniform sampler2DRect base;"
 "uniform sampler2DRect blend;"
+"uniform float alpha;"
+"uniform float beta;"
 "void main () {"
 "  vec4 basecolor = texture2DRect (base, gl_TexCoord[0].st);"
 "  vec4 blendcolor = texture2DRect (blend, gl_TexCoord[0].st);"
-"  gl_FragColor = basecolor + blendcolor / 3.5;"
+"  gl_FragColor = alpha * basecolor + beta * blendcolor;"
 "}";
