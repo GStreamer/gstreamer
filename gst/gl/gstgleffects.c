@@ -205,8 +205,8 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_effects_filter;
   GST_GL_FILTER_CLASS (klass)->display_init_cb = gst_gl_effects_init_gl_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_effects_reset_gl_resources;
-  GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_effects_init_resources;
-  GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_effects_reset_resources;
+  GST_GL_FILTER_CLASS (klass)->onStart = gst_gl_effects_init_resources;
+  GST_GL_FILTER_CLASS (klass)->onStop = gst_gl_effects_reset_resources;
 
   g_object_class_install_property (
     gobject_class,

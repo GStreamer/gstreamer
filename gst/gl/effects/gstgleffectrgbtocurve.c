@@ -29,11 +29,11 @@ static void gst_gl_effects_rgb_to_curve (GstGLEffects *effects,
 {
   GstGLShader *shader;
 
-  shader = g_hash_table_lookup (effects->shaderstable, "lumamap0");
+  shader = g_hash_table_lookup (effects->shaderstable, "rgbmap0");
   
   if (!shader) {
     shader = gst_gl_shader_new ();
-    g_hash_table_insert (effects->shaderstable, "lumamap0", shader);
+    g_hash_table_insert (effects->shaderstable, "rgbmap0", shader);
   }
 
   g_return_if_fail (
