@@ -1,3 +1,8 @@
+2008-08-14  David Schleef  <ds@schleef.org>
+
+	* gst/qtdemux/qtdemux.c: Add 'hdv6' as a HDV format for 1080i/60
+	  with 3:2 pulldown, i.e., 24p.
+
 2008-08-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/check/elements/level.c: (GST_START_TEST):

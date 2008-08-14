@@ -4515,6 +4515,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('h', 'd', 'v', '2'): // HDV 1080i60
     case GST_MAKE_FOURCC ('h', 'd', 'v', '3'): // HDV 1080i50
     case GST_MAKE_FOURCC ('h', 'd', 'v', '5'): // HDV 720p25
+    case GST_MAKE_FOURCC ('h', 'd', 'v', '6'): // HDV 1080i60
     case GST_MAKE_FOURCC ('m', 'x', '5', 'n'): // MPEG2 IMX NTSC 525/60 50mb/s produced by FCP
     case GST_MAKE_FOURCC ('m', 'x', '5', 'p'): // MPEG2 IMX PAL 625/60 50mb/s produced by FCP
     case GST_MAKE_FOURCC ('m', 'x', '4', 'n'): // MPEG2 IMX NTSC 525/60 40mb/s produced by FCP
