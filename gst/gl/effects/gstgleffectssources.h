@@ -26,6 +26,11 @@
 const gchar *mirror_fragment_source;
 const gchar *squeeze_fragment_source;
 const gchar *stretch_fragment_source;
+const gchar *tunnel_fragment_source;
+const gchar *fisheye_fragment_source;
+const gchar *twirl_fragment_source;
+const gchar *bulge_fragment_source;
+const gchar *square_fragment_source;
 const gchar *luma_threshold_fragment_source;
 const gchar *hconv9_fragment_source;
 const gchar *vconv9_fragment_source;

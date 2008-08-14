@@ -77,6 +77,105 @@ const gchar *stretch_fragment_source =
   "  gl_FragColor = color * gl_Color;"
   "}";
 
+/* Light Tunnel effect */
+const gchar *tunnel_fragment_source =
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect tex;"
+  "uniform float width, height;"
+  "void main () {"
+  "  vec2 tex_size = vec2 (width, height);"
+  "  vec2 texturecoord = gl_TexCoord[0].xy;"
+  "  vec2 normcoord;"
+  /* little trick with normalized coords to obtain a circle */
+  "  normcoord = texturecoord / tex_size.x - tex_size / tex_size.x;"
+  "  float r = length(normcoord);"
+  "  float phi = atan(normcoord.y, normcoord.x);"
+  "  r = clamp (r, 0.0, 0.5);" /* is there a way to do this without polars? */
+  "  normcoord.x = r * cos(phi);"
+  "  normcoord.y = r * sin(phi); "
+  "  texturecoord = (normcoord + tex_size/tex_size.x) * tex_size.x;"
+  "  vec4 color = texture2DRect (tex, texturecoord); "
+  "  gl_FragColor = color;"
+  "}";
+
+/* FishEye effect */
+const gchar *fisheye_fragment_source =
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect tex;"
+  "uniform float width, height;"
+  "void main () {"
+  "  vec2 tex_size = vec2 (width, height);"
+  "  vec2 texturecoord = gl_TexCoord[0].xy;"
+  "  vec2 normcoord;"
+  "  normcoord = texturecoord / tex_size - 1.0;"
+  "  float r =  length (normcoord);"
+  "  normcoord *= r/sqrt(2.0);"
+  "  texturecoord = (normcoord + 1.0) * tex_size;"
+  "  vec4 color = texture2DRect (tex, texturecoord);"
+  "  gl_FragColor = color;"
+  "}";
+
+
+/* Twirl effect */
+const gchar *twirl_fragment_source =
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect tex;"
+  "uniform float width, height;"
+  "void main () {"
+  "  vec2 tex_size = vec2 (width, height);"
+  "  vec2 texturecoord = gl_TexCoord[0].xy;"
+  "  vec2 normcoord;"
+  "  normcoord = texturecoord / tex_size - 1.0;"
+  "  float r =  length (normcoord);"
+  "  float phi = atan (normcoord.y, normcoord.x);"
+/* height dependent rotation coeff.. why the hell this angle has
+ * different effect with different sizes? */
+  "  phi += (1.0 - smoothstep (-0.6, 0.6, r)) * height * 2.0/100.0;" 
+  "  normcoord.x = r * cos(phi);"
+  "  normcoord.y = r * sin(phi);"
+  "  texturecoord = (normcoord + 1.0) * tex_size;"
+  "  vec4 color = texture2DRect (tex, texturecoord); "
+  "  gl_FragColor = color;"
+  "}";
+
+
+/* Bulge effect */
+const gchar *bulge_fragment_source =
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect tex;"
+  "uniform float width, height;"
+  "void main () {"
+  "  vec2 tex_size = vec2 (width, height);"
+  "  vec2 texturecoord = gl_TexCoord[0].xy;"
+  "  vec2 normcoord;"
+  "  normcoord = texturecoord / tex_size - 1.0;"
+  "  float r =  length (normcoord);"
+  "  normcoord *= smoothstep (-0.1, 0.5, r);"
+  "  texturecoord = (normcoord + 1.0) * tex_size;"
+  "  vec4 color = texture2DRect (tex, texturecoord);"
+  "  gl_FragColor = color;"
+  "}";
+
+
+/* Square Effect */
+const gchar *square_fragment_source =
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect tex;"
+  "uniform float width;"
+  "uniform float height;"
+  "void main () {"
+  "  vec2 tex_size = vec2 (width, height);"
+  "  vec2 texturecoord = gl_TexCoord[0].xy;"
+  "  vec2 normcoord;"
+  "  normcoord = texturecoord / tex_size - 1.0;"
+  "  float r = length (normcoord);"
+  "  normcoord *= 1.0 + smoothstep(0.25, 0.5, abs(normcoord));"
+  "  normcoord /= 2.0; /* zoom amount */"
+  "  texturecoord = (normcoord + 1.0) * tex_size;"
+  "  vec4 color = texture2DRect (tex, texturecoord);"
+  "  gl_FragColor = color * gl_Color;"
+  "}";
+
 
 const gchar *luma_threshold_fragment_source =
   "#extension GL_ARB_texture_rectangle : enable\n"
@@ -88,6 +187,7 @@ const gchar *luma_threshold_fragment_source =
   "  float luma = dot(color.rgb, vec3(0.2125, 0.7154, 0.0721));" /* BT.709 (from orange book) */
   "  gl_FragColor = vec4 (vec3 (smoothstep (0.30, 0.50, luma)), color.a);"
   "}";
+
 
 /* horizontal convolution */
 const gchar *hconv9_fragment_source =
@@ -110,6 +210,7 @@ const gchar *hconv9_fragment_source =
 "  gl_FragColor = sum + norm_offset;"
 "}";
 
+
 /* vertical convolution */
 const gchar *vconv9_fragment_source =
 "#extension GL_ARB_texture_rectangle : enable\n"
@@ -131,6 +232,7 @@ const gchar *vconv9_fragment_source =
 "  gl_FragColor = sum + norm_offset;"
 "}";
 
+
 /* TODO: support several blend modes */
 const gchar *sum_fragment_source = 
 "#extension GL_ARB_texture_rectangle : enable\n"
@@ -143,6 +245,7 @@ const gchar *sum_fragment_source =
 "  vec4 blendcolor = texture2DRect (blend, gl_TexCoord[0].st);"
 "  gl_FragColor = alpha * basecolor + beta * blendcolor;"
 "}";
+
 
 /* lut operations, map luma to tex1d, see orange book (chapter 19) */
 const gchar *luma_to_curve_fragment_source =
@@ -157,6 +260,7 @@ const gchar *luma_to_curve_fragment_source =
 "  color = texture1D(curve, luma);"
 "  gl_FragColor = color;"
 "}";
+
 
 /* lut operations, map rgb to tex1d, see orange book (chapter 19) */
 const gchar *rgb_to_curve_fragment_source =
@@ -173,5 +277,3 @@ const gchar *rgb_to_curve_fragment_source =
 "  outcolor.a = color.a;"
 "  gl_FragColor = outcolor;"
 "}";
-
-

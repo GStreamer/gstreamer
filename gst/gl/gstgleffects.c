@@ -59,6 +59,11 @@ typedef enum {
   GST_GL_EFFECT_MIRROR,
   GST_GL_EFFECT_SQUEEZE,
   GST_GL_EFFECT_STRETCH,
+  GST_GL_EFFECT_TUNNEL,
+  GST_GL_EFFECT_FISHEYE,
+  GST_GL_EFFECT_TWIRL,
+  GST_GL_EFFECT_BULGE,
+  GST_GL_EFFECT_SQUARE,
   GST_GL_EFFECT_HEAT,
   GST_GL_EFFECT_SEPIA,
   GST_GL_EFFECT_XPRO,
@@ -76,6 +81,11 @@ gst_gl_effects_effect_get_type (void)
     { GST_GL_EFFECT_MIRROR, "Mirror Effect", "mirror" },
     { GST_GL_EFFECT_SQUEEZE, "Squeeze Effect", "squeeze" },
     { GST_GL_EFFECT_STRETCH, "Stretch Effect", "stretch" },
+    { GST_GL_EFFECT_FISHEYE, "FishEye Effect", "fisheye" },
+    { GST_GL_EFFECT_TWIRL, "Twirl Effect", "twirl" },
+    { GST_GL_EFFECT_BULGE, "Bulge Effect", "bulge" },
+    { GST_GL_EFFECT_TUNNEL, "Light Tunnel Effect", "tunnel" },
+    { GST_GL_EFFECT_SQUARE, "Square Effect", "square" },
     { GST_GL_EFFECT_HEAT, "Heat Signature Effect", "heat" },
     { GST_GL_EFFECT_SEPIA, "Sepia Toning Effect", "sepia" },
     { GST_GL_EFFECT_XPRO, "Cross Processing Effect", "xpro" },
@@ -105,6 +115,21 @@ gst_gl_effects_set_effect (GstGLEffects *effects, gint effect_type) {
     break;
   case GST_GL_EFFECT_STRETCH:
     effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_stretch;
+    break;
+  case GST_GL_EFFECT_TUNNEL:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_tunnel;
+    break;
+  case GST_GL_EFFECT_FISHEYE:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_fisheye;
+    break;
+  case GST_GL_EFFECT_TWIRL:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_twirl;
+    break;
+  case GST_GL_EFFECT_BULGE:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_bulge;
+    break;
+  case GST_GL_EFFECT_SQUARE:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_square;
     break;
   case GST_GL_EFFECT_HEAT:
     effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_heat;

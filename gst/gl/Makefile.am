@@ -34,6 +34,11 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectmirror.c \
 	effects/gstgleffectsqueeze.c \
 	effects/gstgleffectstretch.c \
+	effects/gstgleffecttunnel.c \
+	effects/gstgleffectfisheye.c \
+	effects/gstgleffecttwirl.c \
+	effects/gstgleffectbulge.c \
+	effects/gstgleffectsquare.c \
 	effects/gstgleffectlumatocurve.c \
 	effects/gstgleffectrgbtocurve.c \
 	effects/gstgleffectglow.c 
