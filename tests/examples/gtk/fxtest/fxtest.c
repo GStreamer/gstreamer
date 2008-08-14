@@ -164,16 +164,17 @@ main (gint argc, gchar * argv[])
   combo = gtk_combo_box_new_text ();
 
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "identity");
+  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "mirror");
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "squeeze");
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "stretch");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "bulge");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "twirl");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "tunnel");
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "fisheye");
+  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "twirl");
+  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "bulge");
+  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "tunnel");
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "square");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "mirror");
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "heat");
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "xpro");
+  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "lumaxpro");
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "sepia");
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "glow");
 

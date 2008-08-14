@@ -105,3 +105,20 @@ gst_gl_effects_sepia (GstGLEffects *effects) {
   gst_gl_filter_render_to_target (filter, effects->intexture, effects->outtexture,
 				  gst_gl_effects_sepia_callback, effects);
 }
+
+static void gst_gl_effects_luma_xpro_callback (gint width, gint height, guint texture, gpointer data)
+{
+    GstGLEffects* effects = GST_GL_EFFECTS (data);
+    
+    gst_gl_effects_luma_to_curve (effects, luma_xpro_curve, GST_GL_EFFECTS_CURVE_LUMA_XPRO, 
+                                  width, height, texture);
+}
+
+void
+gst_gl_effects_luma_xpro (GstGLEffects *effects) {
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+
+  gst_gl_filter_render_to_target (filter, effects->intexture, effects->outtexture,
+				  gst_gl_effects_luma_xpro_callback, effects);
+}
+

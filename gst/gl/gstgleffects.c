@@ -67,6 +67,7 @@ typedef enum {
   GST_GL_EFFECT_HEAT,
   GST_GL_EFFECT_SEPIA,
   GST_GL_EFFECT_XPRO,
+  GST_GL_EFFECT_LUMA_XPRO,
   GST_GL_EFFECT_GLOW,
   GST_GL_N_EFFECTS
 } GstGLEffectsEffect;
@@ -89,6 +90,7 @@ gst_gl_effects_effect_get_type (void)
     { GST_GL_EFFECT_HEAT, "Heat Signature Effect", "heat" },
     { GST_GL_EFFECT_SEPIA, "Sepia Toning Effect", "sepia" },
     { GST_GL_EFFECT_XPRO, "Cross Processing Effect", "xpro" },
+    { GST_GL_EFFECT_LUMA_XPRO, "Luma Cross Processing Effect", "lumaxpro" },
     { GST_GL_EFFECT_GLOW, "Glow Lighting Effect", "glow" },
     { 0, NULL, NULL }
   };
@@ -139,6 +141,9 @@ gst_gl_effects_set_effect (GstGLEffects *effects, gint effect_type) {
     break;
   case GST_GL_EFFECT_XPRO:
     effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_xpro;
+    break;
+  case GST_GL_EFFECT_LUMA_XPRO:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_luma_xpro;
     break;
   case GST_GL_EFFECT_GLOW:
     effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_glow;
