@@ -67,6 +67,8 @@ struct _GstGLEffects
   GLuint curve[GST_GL_EFFECTS_N_CURVES];
 
   GHashTable *shaderstable;
+
+  gboolean horizontal_swap; /* switch left to right */
 };
 
 struct _GstGLEffectsClass
@@ -77,7 +79,8 @@ struct _GstGLEffectsClass
 enum
 {
   PROP_0,
-  PROP_EFFECT
+  PROP_EFFECT,
+  PROP_HSWAP
 };
 
 

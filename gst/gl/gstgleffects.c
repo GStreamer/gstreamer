@@ -222,6 +222,14 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
 		       GST_TYPE_GL_EFFECTS_EFFECT,
 		       GST_GL_EFFECT_IDENTITY,
 		       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (
+    gobject_class,
+    PROP_HSWAP,
+    g_param_spec_boolean ("hswap",
+                          "Horizontal Swap",
+                          "Switch video texture left to right, useful with webcams",
+                          FALSE,
+                          G_PARAM_READWRITE));
 }
 
 void
@@ -247,21 +255,21 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex)
   glEnd ();
 }
 
-/* static void */
-/* set_orizonthal_switch (GstGLDisplay *display, gpointer data) */
-/* { */
-/* //  GstGLEffects *effects = GST_GL_EFFECTS (data); */
+static void
+set_horizontal_swap (GstGLDisplay *display, gpointer data)
+{
+//  GstGLEffects *effects = GST_GL_EFFECTS (data);
 
-/*   const double mirrormatrix[16] = { */
-/*     -1.0, 0.0, 0.0, 0.0, */
-/*     0.0, 1.0, 0.0, 0.0, */
-/*     0.0, 0.0, 1.0, 0.0, */
-/*     0.0, 0.0, 0.0, 1.0 */
-/*   }; */
+  const double mirrormatrix[16] = {
+    -1.0, 0.0, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 1.0
+  };
 
-/*   glMatrixMode (GL_MODELVIEW); */
-/*   glLoadMatrixd (mirrormatrix); */
-/* } */
+  glMatrixMode (GL_MODELVIEW);
+  glLoadMatrixd (mirrormatrix);
+}
 
 static void
 gst_gl_effects_init (GstGLEffects * effects, GstGLEffectsClass * klass)
@@ -276,6 +284,7 @@ gst_gl_effects_init (GstGLEffects * effects, GstGLEffectsClass * klass)
   }
 
   effects->effect = gst_gl_effects_identity;
+  effects->horizontal_swap = FALSE;
 }
 
 static void
@@ -297,6 +306,9 @@ gst_gl_effects_set_property (GObject * object, guint prop_id,
   case PROP_EFFECT:
     gst_gl_effects_set_effect (effects, g_value_get_enum (value));
     break;
+  case PROP_HSWAP:
+    effects->horizontal_swap = g_value_get_boolean (value);
+    break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     break;
@@ -312,6 +324,9 @@ gst_gl_effects_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
   case PROP_EFFECT:
     g_value_set_enum (value, effects->current_effect);
+    break;
+  case PROP_HSWAP:
+    g_value_set_boolean (value, effects->horizontal_swap);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -333,6 +348,9 @@ gst_gl_effects_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 
   effects->intexture = inbuf->texture;
   effects->outtexture = outbuf->texture;
+
+  if (effects->horizontal_swap == TRUE)
+    gst_gl_display_thread_add (filter->display, set_horizontal_swap, effects);
 
   effects->effect (effects);
 
