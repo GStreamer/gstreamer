@@ -10,6 +10,26 @@
     rate. If no clock provider is available in a pipeline, the system clock
     is used instead.
   </para>
+  
+  <para>
+    &GStreamer; derives several times from the clock and the playback state.
+    It is important to note, that a  <emphasis>clock-time</emphasis> is
+    monotonically rising, but the value itself is not meaningful.
+    Subtracting the <emphasis>base-time</emphasis> yields the
+    <emphasis>running-time</emphasis>. It is the same as the
+    <emphasis>stream-time</emphasis> if one plays from start to end at original
+    rate. The <emphasis>stream-time</emphasis> indicates the position in the
+    media.
+  </para>
+
+  <figure float="1" id="chapter-clock-img">
+    <title>&GStreamer; clock and various times</title>
+    <mediaobject>
+      <imageobject>
+        <imagedata scale="75" fileref="images/clocks.&image;" format="&IMAGE;" />
+      </imageobject>
+    </mediaobject>  
+  </figure>
 
   <sect1 id="section-clocks-providers">
     <title>Clock providers</title>

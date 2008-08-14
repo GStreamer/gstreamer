@@ -1,3 +1,13 @@
+2008-08-14  Stefan Kost  <ensonic@users.sf.net>
+
+	patch by: Luc Pionchon <luc.pionchon@nokia.com>
+
+	* docs/manual/advanced-clocks.xml:
+	* docs/manual/clocks.png:
+	* docs/manual/diagrams-clocks.svg:
+	  Add one more image showing different times together with a describing
+	  paragraph. Fixes #547729.
+
 2008-08-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* win32/common/libgstbase.def:
