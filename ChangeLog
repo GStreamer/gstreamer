@@ -1,3 +1,8 @@
+2008-08-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/level.c: (GST_START_TEST):
+	Fix compilation some more.
+
 2008-08-14  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac::

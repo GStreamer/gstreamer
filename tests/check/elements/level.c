@@ -200,6 +200,7 @@ GST_START_TEST (test_int16_panned)
   const GValue *list, *value;
   GstClockTime endtime;
   gdouble dB;
+  gchar *fields[3] = { "rms", "peak", "decay" };
 
   level = setup_level ();
   g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);
@@ -248,7 +249,6 @@ GST_START_TEST (test_int16_panned)
       "level");
   fail_unless (gst_structure_get_clock_time (structure, "endtime", &endtime));
 
-  gchar *fields[3] = { "rms", "peak", "decay" };
   /* silence has 0 dB for rms, peak and decay */
   for (j = 0; j < 3; ++j) {
     list = gst_structure_get_value (structure, fields[j]);
