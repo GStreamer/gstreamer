@@ -43,7 +43,7 @@ typedef struct _GstGLEffectsClass GstGLEffectsClass;
 
 typedef void (* GstGLEffectProcessFunc) (GstGLEffects *effects);
 
-#define NEEDED_TEXTURES 10
+#define NEEDED_TEXTURES 4
 
 struct _GstGLEffects
 {
@@ -79,6 +79,7 @@ void gst_gl_effects_identity (GstGLEffects *effects);
 void gst_gl_effects_mirror (GstGLEffects *effects);
 void gst_gl_effects_squeeze (GstGLEffects *effects);
 void gst_gl_effects_stretch (GstGLEffects *effects);
+void gst_gl_effects_glow (GstGLEffects *effects);
 
 G_END_DECLS
 

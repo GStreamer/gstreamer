@@ -59,6 +59,7 @@ typedef enum {
   GST_GL_EFFECT_MIRROR,
   GST_GL_EFFECT_SQUEEZE,
   GST_GL_EFFECT_STRETCH,
+  GST_GL_EFFECT_GLOW,
   GST_GL_N_EFFECTS
 } GstGLEffectsEffect;
 
@@ -72,6 +73,7 @@ gst_gl_effects_effect_get_type (void)
     { GST_GL_EFFECT_MIRROR, "Mirror Effect", "mirror" },
     { GST_GL_EFFECT_SQUEEZE, "Squeeze Effect", "squeeze" },
     { GST_GL_EFFECT_STRETCH, "Stretch Effect", "stretch" },
+    { GST_GL_EFFECT_GLOW, "Glow Lighting Effect", "glow" },
     { 0, NULL, NULL }
   };
 
@@ -97,6 +99,9 @@ gst_gl_effects_set_effect (GstGLEffects *effects, gint effect_type) {
     break;
   case GST_GL_EFFECT_STRETCH:
     effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_stretch;
+    break;
+  case GST_GL_EFFECT_GLOW:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_glow;
     break;
   default:
     g_assert_not_reached ();
