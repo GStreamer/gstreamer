@@ -31,5 +31,6 @@ const gchar *hconv9_fragment_source;
 const gchar *vconv9_fragment_source;
 const gchar *sum_fragment_source;
 const gchar *luma_to_curve_fragment_source;
+const gchar *rgb_to_curve_fragment_source;
 
 #endif /* __GST_GL_EFFECTS_SOURCES_H__ */

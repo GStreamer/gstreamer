@@ -48,6 +48,7 @@ typedef void (* GstGLEffectProcessFunc) (GstGLEffects *effects);
 enum {
   GST_GL_EFFECTS_CURVE_HEAT,
   GST_GL_EFFECTS_CURVE_SEPIA,
+  GST_GL_EFFECTS_CURVE_XPRO,
   GST_GL_EFFECTS_N_CURVES
 };
 
@@ -89,6 +90,7 @@ void gst_gl_effects_squeeze (GstGLEffects *effects);
 void gst_gl_effects_stretch (GstGLEffects *effects);
 void gst_gl_effects_heat (GstGLEffects *effects);
 void gst_gl_effects_sepia (GstGLEffects *effects);
+void gst_gl_effects_xpro (GstGLEffects *effects);
 void gst_gl_effects_glow (GstGLEffects *effects);
 
 G_END_DECLS

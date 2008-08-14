@@ -35,6 +35,7 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectsqueeze.c \
 	effects/gstgleffectstretch.c \
 	effects/gstgleffectlumatocurve.c \
+	effects/gstgleffectrgbtocurve.c \
 	effects/gstgleffectglow.c 
 	
 

@@ -144,6 +144,7 @@ const gchar *sum_fragment_source =
 "  gl_FragColor = alpha * basecolor + beta * blendcolor;"
 "}";
 
+/* lut operations, map luma to tex1d, see orange book (chapter 19) */
 const gchar *luma_to_curve_fragment_source =
 "#extension GL_ARB_texture_rectangle : enable\n"
 "uniform sampler2DRect tex;"
@@ -156,3 +157,21 @@ const gchar *luma_to_curve_fragment_source =
 "  color = texture1D(curve, luma);"
 "  gl_FragColor = color;"
 "}";
+
+/* lut operations, map rgb to tex1d, see orange book (chapter 19) */
+const gchar *rgb_to_curve_fragment_source =
+"#extension GL_ARB_texture_rectangle : enable\n"
+"uniform sampler2DRect tex;"
+"uniform sampler1D curve;"
+"void main () {"
+"  vec2 texturecoord = gl_TexCoord[0].st;"
+"  vec4 color = texture2DRect (tex, texturecoord);"
+"  vec4 outcolor;"
+"  outcolor.r = texture1D(curve, color.r).r;"
+"  outcolor.g = texture1D(curve, color.g).g;"
+"  outcolor.b = texture1D(curve, color.b).b;"
+"  outcolor.a = color.a;"
+"  gl_FragColor = outcolor;"
+"}";
+
+
