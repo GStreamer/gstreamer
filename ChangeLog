@@ -1,3 +1,8 @@
+2008-08-14  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* configure.ac::
+	  Require -base CVS for wavparse acid chunk parsing.
+
 2008-08-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/pulse/pulsesink.c: (gst_pulsesink_class_init),
