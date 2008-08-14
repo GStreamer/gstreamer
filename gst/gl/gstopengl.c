@@ -30,6 +30,7 @@
 #include "gstgldownload.h"
 #include "gstglimagesink.h"
 #include "gstglcolorscale.h"
+#include "gstgleffects.h"
 
 GType gst_gl_effects_get_type (void);
 GType gst_gl_filter_app_get_type (void);
