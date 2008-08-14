@@ -53,11 +53,12 @@ static const GstElementDetails element_details = GST_ELEMENT_DETAILS (
   "GL Shading Language effects",
   "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
-
+/* dont' forget to edit the following when a new effect is added */
 typedef enum {
   GST_GL_EFFECT_IDENTITY,
   GST_GL_EFFECT_MIRROR,
   GST_GL_EFFECT_SQUEEZE,
+  GST_GL_EFFECT_STRETCH,
   GST_GL_N_EFFECTS
 } GstGLEffectsEffect;
 
@@ -70,6 +71,7 @@ gst_gl_effects_effect_get_type (void)
     { GST_GL_EFFECT_IDENTITY, "Do nothing Effect", "identity" },
     { GST_GL_EFFECT_MIRROR, "Mirror Effect", "mirror" },
     { GST_GL_EFFECT_SQUEEZE, "Squeeze Effect", "squeeze" },
+    { GST_GL_EFFECT_STRETCH, "Stretch Effect", "stretch" },
     { 0, NULL, NULL }
   };
 
@@ -78,6 +80,28 @@ gst_gl_effects_effect_get_type (void)
       g_enum_register_static ("GstGLEffectsEffect", effect_types);
   }
   return gl_effects_effect_type;
+}
+
+static void
+gst_gl_effects_set_effect (GstGLEffects *effects, gint effect_type) {
+
+  switch (effect_type) {
+  case GST_GL_EFFECT_IDENTITY:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_identity;
+    break;
+  case GST_GL_EFFECT_MIRROR:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_mirror;
+    break;
+  case GST_GL_EFFECT_SQUEEZE:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_squeeze;
+    break;
+  case GST_GL_EFFECT_STRETCH:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_stretch;
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+  effects->current_effect = effect_type;
 }
 
 /* init resources that need a gl context */
@@ -169,23 +193,21 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex)
   glEnd ();
 }
 
-#if 0
-static void
-change_view (GstGLDisplay *display, gpointer data)
-{
-//  GstGLEffects *effects = GST_GL_EFFECTS (data);
+/* static void */
+/* set_orizonthal_switch (GstGLDisplay *display, gpointer data) */
+/* { */
+/* //  GstGLEffects *effects = GST_GL_EFFECTS (data); */
 
-  const double mirrormatrix[16] = {
-    -1.0, 0.0, 0.0, 0.0,
-    0.0, 1.0, 0.0, 0.0,
-    0.0, 0.0, 1.0, 0.0,
-    0.0, 0.0, 0.0, 1.0
-  };
+/*   const double mirrormatrix[16] = { */
+/*     -1.0, 0.0, 0.0, 0.0, */
+/*     0.0, 1.0, 0.0, 0.0, */
+/*     0.0, 0.0, 1.0, 0.0, */
+/*     0.0, 0.0, 0.0, 1.0 */
+/*   }; */
 
-  glMatrixMode (GL_MODELVIEW);
-  glLoadMatrixd (mirrormatrix);
-}
-#endif
+/*   glMatrixMode (GL_MODELVIEW); */
+/*   glLoadMatrixd (mirrormatrix); */
+/* } */
 
 static void
 gst_gl_effects_init (GstGLEffects * effects, GstGLEffectsClass * klass)
@@ -204,25 +226,6 @@ gst_gl_effects_reset_resources (GstGLFilter* filter)
 
   g_hash_table_unref (effects->shaderstable);
   effects->shaderstable = NULL;
-}
-
-static void
-gst_gl_effects_set_effect (GstGLEffects *effects, gint effect_type) {
-
-  switch (effect_type) {
-  case GST_GL_EFFECT_IDENTITY:
-    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_identity;
-    break;
-  case GST_GL_EFFECT_MIRROR:
-    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_mirror;
-    break;
-  case GST_GL_EFFECT_SQUEEZE:
-    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_squeeze;
-    break;
-  default:
-    g_assert_not_reached ();
-  }
-  effects->current_effect = effect_type;
 }
 
 static void

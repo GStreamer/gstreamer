@@ -25,5 +25,6 @@
 
 const gchar *mirror_fragment_source;
 const gchar *squeeze_fragment_source;
+const gchar *stretch_fragment_source;
 
 #endif /* __GST_GL_EFFECTS_SOURCES_H__ */

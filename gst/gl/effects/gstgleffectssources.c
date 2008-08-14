@@ -59,3 +59,20 @@ const gchar *squeeze_fragment_source =
 "  gl_FragColor = color * gl_Color;"
 "}";
 
+
+/* Stretch Effect */
+const gchar *stretch_fragment_source =
+"#extension GL_ARB_texture_rectangle : enable\n"
+"uniform sampler2DRect tex;"
+"uniform float width, height;"
+"void main () {"
+"  vec2 tex_size = vec2 (width, height);"
+"  vec2 texturecoord = gl_TexCoord[0].xy;"
+"  vec2 normcoord;"
+"  normcoord = texturecoord / tex_size - 1.0;"
+"  float r = length (normcoord);"
+"  normcoord *= 2.0 - smoothstep(0.0, 0.7, r);"
+"  texturecoord = (normcoord + 1.0) * tex_size;"
+"  vec4 color = texture2DRect (tex, texturecoord);"
+"  gl_FragColor = color * gl_Color;"
+"}";
