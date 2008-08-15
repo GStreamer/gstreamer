@@ -65,6 +65,9 @@ struct _GstTee {
   GstElement      element;
 
   /*< private >*/
+  /* lock protecting dynamic pads */
+  GMutex         *dyn_lock;
+
   GstPad         *sinkpad;
   GstPad         *allocpad;
   gint            pad_counter;

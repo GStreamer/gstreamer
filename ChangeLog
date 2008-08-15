@@ -1,3 +1,19 @@
+2008-08-15  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+
+	* plugins/elements/gsttee.c: (gst_tee_finalize), (gst_tee_init),
+	(gst_tee_request_new_pad), (gst_tee_release_pad),
+	(gst_tee_find_buffer_alloc), (gst_tee_buffer_alloc):
+	* plugins/elements/gsttee.h:
+	Protect pad_alloc with a new lock so that we can be sure that nothing is
+	performing a pad_alloc when removing the pad. Fixes #547835.
+
+	* tests/check/elements/tee.c: (buffer_alloc_harness_setup),
+	(buffer_alloc_harness_teardown), (app_thread_func),
+	(final_sinkpad_bufferalloc), (GST_START_TEST), (tee_suite):
+	Added testcase for shutdown race.
+
 2008-08-14  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/gstpad.h:

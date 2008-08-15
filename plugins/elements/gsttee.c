@@ -62,6 +62,10 @@ gst_tee_pull_mode_get_type (void)
   return type;
 }
 
+/* lock to protect request pads from being removed while downstream */
+#define GST_TEE_DYN_LOCK(tee) g_mutex_lock ((tee)->dyn_lock)
+#define GST_TEE_DYN_UNLOCK(tee) g_mutex_unlock ((tee)->dyn_lock)
+
 #define DEFAULT_PROP_NUM_SRC_PADS	0
 #define DEFAULT_PROP_HAS_SINK_LOOP	FALSE
 #define DEFAULT_PROP_HAS_CHAIN		TRUE
@@ -97,6 +101,7 @@ typedef struct
 {
   gboolean pushed;
   GstFlowReturn result;
+  gboolean removed;
 } PushData;
 
 static GstPad *gst_tee_request_new_pad (GstElement * element,
@@ -145,6 +150,8 @@ gst_tee_finalize (GObject * object)
   tee = GST_TEE (object);
 
   g_free (tee->last_message);
+
+  g_mutex_free (tee->dyn_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -197,6 +204,8 @@ gst_tee_class_init (GstTeeClass * klass)
 static void
 gst_tee_init (GstTee * tee, GstTeeClass * g_class)
 {
+  tee->dyn_lock = g_mutex_new ();
+
   tee->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   tee->sink_mode = GST_ACTIVATE_NONE;
 
@@ -242,6 +251,7 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   data = g_new0 (PushData, 1);
   data->pushed = FALSE;
   data->result = GST_FLOW_NOT_LINKED;
+  data->removed = FALSE;
   g_object_set_qdata_full (G_OBJECT (srcpad), push_data, data, g_free);
 
   GST_OBJECT_UNLOCK (tee);
@@ -292,6 +302,7 @@ static void
 gst_tee_release_pad (GstElement * element, GstPad * pad)
 {
   GstTee *tee;
+  PushData *data;
 
   tee = GST_TEE (element);
 
@@ -302,9 +313,16 @@ gst_tee_release_pad (GstElement * element, GstPad * pad)
     tee->allocpad = NULL;
   GST_OBJECT_UNLOCK (tee);
 
+  /* wait for pending pad_alloc to finish */
+  GST_TEE_DYN_LOCK (tee);
+  /* mark the pad as removed so that future pad_alloc fails with NOT_LINKED. */
+  data = g_object_get_qdata (G_OBJECT (pad), push_data);
+  data->removed = TRUE;
+
   gst_pad_set_active (pad, FALSE);
 
   gst_element_remove_pad (GST_ELEMENT_CAST (tee), pad);
+  GST_TEE_DYN_UNLOCK (tee);
 }
 
 static void
@@ -373,7 +391,7 @@ gst_tee_get_property (GObject * object, guint prop_id, GValue * value,
 /* we have no previous source pad we can use to proxy the pad alloc. Loop over
  * the source pads, try to alloc a buffer on each one of them. Keep a reference
  * to the first pad that succeeds, we will be using it to alloc more buffers
- * later. */
+ * later.  must be called with the OBJECT_LOCK on tee. */
 static GstFlowReturn
 gst_tee_find_buffer_alloc (GstTee * tee, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
@@ -390,13 +408,20 @@ retry:
 
   while (pads) {
     GstPad *pad;
+    PushData *data;
 
     pad = GST_PAD_CAST (pads->data);
     gst_object_ref (pad);
     GST_DEBUG_OBJECT (tee, "try alloc on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
     GST_OBJECT_UNLOCK (tee);
 
-    res = gst_pad_alloc_buffer (pad, offset, size, caps, buf);
+    GST_TEE_DYN_LOCK (tee);
+    data = g_object_get_qdata (G_OBJECT (pad), push_data);
+    if (!data->removed)
+      res = gst_pad_alloc_buffer (pad, offset, size, caps, buf);
+    else
+      res = GST_FLOW_NOT_LINKED;
+    GST_TEE_DYN_UNLOCK (tee);
 
     GST_DEBUG_OBJECT (tee, "got return value %d", res);
 
@@ -409,6 +434,7 @@ retry:
        * need to unref the buffer */
       if (res == GST_FLOW_OK)
         gst_buffer_unref (*buf);
+      *buf = NULL;
       goto retry;
     }
     if (res == GST_FLOW_OK) {
@@ -439,6 +465,8 @@ gst_tee_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
   GST_OBJECT_LOCK (tee);
   if ((allocpad = tee->allocpad)) {
+    PushData *data;
+
     /* if we had a previous pad we used for allocating a buffer, continue using
      * it. */
     GST_DEBUG_OBJECT (tee, "using pad %s:%s for alloc",
@@ -446,7 +474,14 @@ gst_tee_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     gst_object_ref (allocpad);
     GST_OBJECT_UNLOCK (tee);
 
-    res = gst_pad_alloc_buffer (allocpad, offset, size, caps, buf);
+    GST_TEE_DYN_LOCK (tee);
+    data = g_object_get_qdata (G_OBJECT (allocpad), push_data);
+    if (!data->removed)
+      res = gst_pad_alloc_buffer (allocpad, offset, size, caps, buf);
+    else
+      res = GST_FLOW_NOT_LINKED;
+    GST_TEE_DYN_UNLOCK (tee);
+
     gst_object_unref (allocpad);
 
     GST_OBJECT_LOCK (tee);
