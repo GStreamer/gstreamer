@@ -32,14 +32,14 @@ GST_DEBUG_CATEGORY_STATIC (rtpvorbispay_debug);
 #define GST_CAT_DEFAULT (rtpvorbispay_debug)
 
 /* references:
- * http://svn.xiph.org/trunk/vorbis/doc/draft-ietf-avt-rtp-vorbis-04.txt
+ * http://www.rfc-editor.org/rfc/rfc5215.txt
  */
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_vorbispay_details =
 GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Codec/Payloader/Network",
-    "Payload-encode Vorbis audio into RTP packets (draft-01 RFC XXXX)",
+    "Payload-encode Vorbis audio into RTP packets (RFC 5215)",
     "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate gst_rtp_vorbis_pay_src_template =
@@ -54,11 +54,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
          *
          * "encoding-params = (string) <num channels>"
          * "configuration = (string) ANY"
-         */
-        /* All optional parameters
-         *
-         * "delivery-method = (string) { inline, in_band, out_band/<specific_name> } "
-         * "configuration-uri ="
          */
     )
     );
@@ -410,11 +405,7 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
   gst_basertppayload_set_options (basepayload, "audio", TRUE, "VORBIS",
       rtpvorbispay->rate);
   gst_basertppayload_set_outcaps (basepayload, "encoding-params", G_TYPE_STRING,
-      cstr, "configuration", G_TYPE_STRING, configuration,
-      "delivery-method", G_TYPE_STRING, "inline",
-      /* don't set the other defaults 
-       */
-      NULL);
+      cstr, "configuration", G_TYPE_STRING, configuration, NULL);
   g_free (cstr);
   g_free (configuration);
 

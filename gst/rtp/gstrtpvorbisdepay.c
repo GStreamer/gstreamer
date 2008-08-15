@@ -31,14 +31,14 @@ GST_DEBUG_CATEGORY_STATIC (rtpvorbisdepay_debug);
 #define GST_CAT_DEFAULT (rtpvorbisdepay_debug)
 
 /* references:
- * http://svn.xiph.org/trunk/vorbis/doc/draft-ietf-avt-rtp-vorbis-04.txt
+ * http://www.rfc-editor.org/rfc/rfc5215.txt
  */
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_vorbis_depay_details =
 GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Codec/Depayloader/Network",
-    "Extracts Vorbis Audio from RTP packets (draft-04 of RFC XXXX)",
+    "Extracts Vorbis Audio from RTP packets (RFC 5215)",
     "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate gst_rtp_vorbis_depay_sink_template =
@@ -53,11 +53,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
          *
          * "encoding-params = (string) <num channels>"
          * "configuration = (string) ANY" 
-         */
-        /* All optional parameters
-         *
-         * "delivery-method = (string) { inline, in_band, out_band/<specific_name> } " 
-         * "configuration-uri =" 
          */
     )
     );
@@ -330,7 +325,6 @@ gst_rtp_vorbis_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstStructure *structure;
   GstRtpVorbisDepay *rtpvorbisdepay;
   GstCaps *srccaps;
-  const gchar *delivery_method;
   const gchar *configuration;
   gint clock_rate;
 
@@ -342,29 +336,15 @@ gst_rtp_vorbis_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
     goto no_rate;
 
-  /* see how the configuration parameters will be transmitted */
-  delivery_method = gst_structure_get_string (structure, "delivery-method");
-
-  if (delivery_method) {
-    if (!g_ascii_strcasecmp (delivery_method, "inline")) {
-      /* configure string is in the caps */
-    } else if (!g_ascii_strcasecmp (delivery_method, "in_band")) {
-      /* headers will (also) be transmitted in the RTP packets */
-      goto unsupported_delivery_method;
-    } else if (g_str_has_prefix (delivery_method, "out_band/")) {
-      /* some other method of header delivery. */
-      goto unsupported_delivery_method;
-    } else
-      goto unsupported_delivery_method;
-  }
-
   /* read and parse configuration string */
   configuration = gst_structure_get_string (structure, "configuration");
-  if (configuration == NULL)
-    goto no_configuration;
-
-  if (!gst_rtp_vorbis_depay_parse_configuration (rtpvorbisdepay, configuration))
-    goto invalid_configuration;
+  if (configuration) {
+    if (!gst_rtp_vorbis_depay_parse_configuration (rtpvorbisdepay,
+            configuration))
+      goto invalid_configuration;
+  } else {
+    GST_WARNING_OBJECT (rtpvorbisdepay, "no configuration specified");
+  }
 
   /* caps seem good, configure element */
   depayload->clock_rate = clock_rate;
@@ -377,17 +357,6 @@ gst_rtp_vorbis_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   return TRUE;
 
   /* ERRORS */
-unsupported_delivery_method:
-  {
-    GST_ERROR_OBJECT (rtpvorbisdepay,
-        "unsupported delivery-method \"%s\" specified", delivery_method);
-    return FALSE;
-  }
-no_configuration:
-  {
-    GST_ERROR_OBJECT (rtpvorbisdepay, "no configuration specified");
-    return FALSE;
-  }
 invalid_configuration:
   {
     GST_ERROR_OBJECT (rtpvorbisdepay, "invalid configuration specified");
@@ -632,7 +601,7 @@ bad_packet:
   }
 switch_failed:
   {
-    GST_ELEMENT_ERROR (rtpvorbisdepay, STREAM, DECODE,
+    GST_ELEMENT_WARNING (rtpvorbisdepay, STREAM, DECODE,
         (NULL), ("Could not switch codebooks"));
     return NULL;
   }
