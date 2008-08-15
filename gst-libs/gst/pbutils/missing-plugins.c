@@ -136,6 +136,7 @@ copy_and_clean_caps (const GstCaps * caps)
    * range (and if we don't remove this then the app will have a much harder
    * time blacklisting formats it has unsuccessfully tried to install before) */
   gst_structure_remove_field (s, "width");
+  gst_structure_remove_field (s, "depth");
   gst_structure_remove_field (s, "height");
   gst_structure_remove_field (s, "channels");
   gst_structure_remove_field (s, "rate");
