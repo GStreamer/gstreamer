@@ -6,8 +6,6 @@
 #include <gst/interfaces/xoverlay.h>
 
 
-GstElement *pipeline;
-
 /* TODO: use x overlay in the proper way (like suggested in docs, see gtkxoverlay example) */
 static gboolean
 expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
@@ -20,7 +18,7 @@ expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
 }
 
 static void
-destroy_cb (gpointer data)
+destroy_cb (GtkWidget *widget, GdkEvent *event, GstElement *pipeline)
 {
   g_message ("destroy callback");
 
@@ -86,6 +84,7 @@ gint
 main (gint argc, gchar * argv[])
 {
   GstStateChangeReturn ret;
+  GstElement *pipeline;
   GstElement *uload, *filter, *sink;
   GstElement *sourcebin;
   GError *error = NULL;
@@ -139,11 +138,6 @@ main (gint argc, gchar * argv[])
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_container_set_border_width (GTK_CONTAINER (window), 3);
 
-  g_signal_connect (G_OBJECT (window), "delete-event",
-      G_CALLBACK (destroy_cb), NULL);
-  g_signal_connect (G_OBJECT (window), "destroy-event",
-      G_CALLBACK (destroy_cb), NULL);
-
   pipeline = gst_pipeline_new ("pipeline");
 
   uload = gst_element_factory_make ("glupload", "glu");
@@ -156,6 +150,11 @@ main (gint argc, gchar * argv[])
     g_print ("Failed to link one or more elements!\n");
     return -1;
   }
+
+  g_signal_connect (G_OBJECT (window), "delete-event",
+                    G_CALLBACK (destroy_cb), pipeline);
+  g_signal_connect (G_OBJECT (window), "destroy-event",
+                    G_CALLBACK (destroy_cb), pipeline);
 
   screen = gtk_drawing_area_new ();
 
