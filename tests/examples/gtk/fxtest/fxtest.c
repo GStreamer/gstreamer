@@ -8,6 +8,7 @@
 
 GstElement *pipeline;
 
+/* TODO: use x overlay in the proper way (like suggested in docs, see gtkxoverlay example) */
 static gboolean
 expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
 {
@@ -99,18 +100,22 @@ main (gint argc, gchar * argv[])
   gchar *source_desc = NULL;
 
   GOptionContext *context;
-  gboolean retval;
   GOptionEntry options[] = {
-    { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &source_desc_array, NULL, NULL },
+    { "source-bin", 's', 0, G_OPTION_ARG_STRING_ARRAY, &source_desc_array,
+      "Use a custom source bin description (gst-launch style)", NULL },
     { NULL }
   };
 
-  g_set_application_name ("gst-gl-effects test app");
-  
-  context = g_option_context_new ("src ! ... ! identity");
+  g_thread_init (NULL);
+
+  context = g_option_context_new (NULL);
   g_option_context_add_main_entries (context, options, NULL);
-  retval = g_option_context_parse (context, &argc, &argv, &error);
-  g_assert (retval);
+  g_option_context_add_group (context, gst_init_get_option_group ());
+  g_option_context_add_group (context, gtk_get_option_group (TRUE));
+  if (!g_option_context_parse (context, &argc, &argv, &error)) {
+    g_print ("Inizialization error: %s\n", GST_STR_NULL (error->message));
+    return -1;
+  }
   g_option_context_free (context);
   
   if (source_desc_array != NULL) {
@@ -118,14 +123,18 @@ main (gint argc, gchar * argv[])
     g_strfreev (source_desc_array);
   }
   if (source_desc == NULL) {
-    g_print ("\nUsage: %s SOURCE_DESC\n\n", argv[0]);
-    g_print ("where SOURCE_DESC is a description of the source bin in gst-launch format\n");
-    g_print ("like: videotestsrc ! video/x-raw-rgb, width=352, heigth=288 ! identity\n\n");
+    source_desc = g_strdup ("videotestsrc ! video/x-raw-rgb, width=352, height=288 ! identity");
+  }
+
+  sourcebin = gst_parse_bin_from_description (g_strdup (source_desc), TRUE, &error);
+  g_free (source_desc);
+  if (error) {
+    g_print ("Error while parsing source bin description: %s\n", 
+             GST_STR_NULL (error->message));
     return -1;
   }
 
-  gtk_init (&argc, &argv);
-  gst_init (&argc, &argv);
+  g_set_application_name ("gst-gl-effects test app");
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_container_set_border_width (GTK_CONTAINER (window), 3);
@@ -136,11 +145,6 @@ main (gint argc, gchar * argv[])
       G_CALLBACK (destroy_cb), NULL);
 
   pipeline = gst_pipeline_new ("pipeline");
-
-  sourcebin = gst_parse_bin_from_description (g_strdup (source_desc), TRUE, &error);
-  g_free (source_desc);
-  if (error)
-    g_error ("%s", error->message);
 
   uload = gst_element_factory_make ("glupload", "glu");
   filter = gst_element_factory_make ("gleffects", "flt");
@@ -219,13 +223,10 @@ main (gint argc, gchar * argv[])
     g_print ("Failed to start up pipeline!\n");
     return -1;
   }
-//     g_timeout_add (2000, (GSourceFunc) set_fx, filter);
 
   gtk_widget_show_all (GTK_WIDGET (window));
 
   gtk_main ();
-
-//     event_loop (pipeline);
 
   return 0;
 }
