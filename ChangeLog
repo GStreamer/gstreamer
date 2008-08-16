@@ -1,3 +1,12 @@
+2008-08-16  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_read_subindexes_pull),
+	(gst_avi_demux_read_subindexes_push):
+	Some AVI 2.0 (ODML) files don't respect the 'specifications' completely
+	and instead of using the 'ix##' nomenclature, use '##ix'.
+	They're still valid though, this fixes the duration and indexes for
+	virtually all the ODML files I have.
+
 2008-08-15  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Olivier Crete <tester at tester dot ca>

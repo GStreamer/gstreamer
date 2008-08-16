@@ -1120,8 +1120,10 @@ gst_avi_demux_read_subindexes_push (GstAviDemux * avi,
     for (i = 0; stream->indexes[i] != GST_BUFFER_OFFSET_NONE; i++) {
       if (!gst_avi_demux_peek_chunk (avi, &tag, &size))
         continue;
-      else if (tag != GST_MAKE_FOURCC ('i', 'x', '0' + stream->num / 10,
-              '0' + stream->num % 10)) {
+      else if ((tag != GST_MAKE_FOURCC ('i', 'x', '0' + stream->num / 10,
+                  '0' + stream->num % 10)) &&
+          (tag != GST_MAKE_FOURCC ('0' + stream->num / 10,
+                  '0' + stream->num % 10, 'i', 'x'))) {
         GST_WARNING_OBJECT (avi, "Not an ix## chunk (%" GST_FOURCC_FORMAT ")",
             GST_FOURCC_ARGS (tag));
         continue;
@@ -1171,8 +1173,12 @@ gst_avi_demux_read_subindexes_pull (GstAviDemux * avi,
       if (gst_riff_read_chunk (GST_ELEMENT (avi), avi->sinkpad,
               &stream->indexes[i], &tag, &buf) != GST_FLOW_OK)
         continue;
-      else if (tag != GST_MAKE_FOURCC ('i', 'x', '0' + stream->num / 10,
-              '0' + stream->num % 10)) {
+      else if ((tag != GST_MAKE_FOURCC ('i', 'x', '0' + stream->num / 10,
+                  '0' + stream->num % 10)) &&
+          (tag != GST_MAKE_FOURCC ('0' + stream->num / 10,
+                  '0' + stream->num % 10, 'i', 'x'))) {
+        /* Some ODML files (created by god knows what muxer) have a ##ix format
+         * instead of the 'official' ix##. They are still valid though. */
         GST_WARNING_OBJECT (avi, "Not an ix## chunk (%" GST_FOURCC_FORMAT ")",
             GST_FOURCC_ARGS (tag));
         gst_buffer_unref (buf);
