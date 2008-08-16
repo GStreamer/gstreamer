@@ -2342,8 +2342,7 @@ dv_type_find (GstTypeFind * tf, gpointer private)
   data = gst_type_find_peek (tf, 0, 5);
 
   /* check for DIF  and DV flag */
-  if (data && (data[0] == 0x1f) && (data[1] == 0x07) && (data[2] == 0x00) &&
-      ((data[4] & 0x01) == 0)) {
+  if (data && (data[0] == 0x1f) && (data[1] == 0x07) && (data[2] == 0x00)) {
     const gchar *format;
 
     if (data[3] & 0x80) {

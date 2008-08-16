@@ -1,3 +1,9 @@
+2008-08-16  David Schleef  <ds@schleef.org>
+
+	* gst/typefind/gsttypefindfunctions.c: DV typefinding.  Remove
+	  check for a bit that is 0 in IEC 61384, but not SMPTE 314M.
+	  Fixes #548065.
+
 2008-08-15  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst-libs/gst/pbutils/missing-plugins.c: (copy_and_clean_caps):
