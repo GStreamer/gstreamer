@@ -279,15 +279,6 @@ set_horizontal_swap (GstGLDisplay *display, gpointer data)
 static void
 gst_gl_effects_init (GstGLEffects * effects, GstGLEffectsClass * klass)
 {
-  gint i;
-  effects->shaderstable = g_hash_table_new_full (g_str_hash,
-						 g_str_equal,
-						 NULL,
-						 g_object_unref);
-  for (i=0; i<GST_GL_EFFECTS_N_CURVES; i++) {
-    effects->curve[i] = 0;
-  }
-
   effects->effect = gst_gl_effects_identity;
   effects->horizontal_swap = FALSE;
 }
@@ -296,6 +287,8 @@ static void
 gst_gl_effects_reset_resources (GstGLFilter* filter)
 {
   GstGLEffects* effects = GST_GL_EFFECTS(filter);
+
+//  g_message ("reset resources");
 
   g_hash_table_unref (effects->shaderstable);
   effects->shaderstable = NULL;
@@ -342,7 +335,21 @@ gst_gl_effects_get_property (GObject * object, guint prop_id,
 static void
 gst_gl_effects_init_resources (GstGLFilter* filter)
 {
-//  GstGLEffects* blur_filter = GST_GL_EFFECTS (filter);
+  GstGLEffects *effects = GST_GL_EFFECTS (filter);
+  gint i;
+//  g_message ("init resources");
+//  g_message ("init hashtable");
+  effects->shaderstable = g_hash_table_new_full (g_str_hash,
+						 g_str_equal,
+						 NULL,
+						 g_object_unref);
+//  g_message ("zero textures and curves");
+  for (i=0; i<NEEDED_TEXTURES; i++) {
+    effects->midtexture[i] = 0;
+  }
+  for (i=0; i<GST_GL_EFFECTS_N_CURVES; i++) {
+    effects->curve[i] = 0;
+  }
 }
 
 static gboolean
