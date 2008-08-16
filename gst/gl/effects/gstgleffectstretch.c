@@ -26,7 +26,6 @@ gst_gl_effects_stretch_callback (gint width, gint height, guint texture, gpointe
   GstGLEffects* effects = GST_GL_EFFECTS (data);
 
   GstGLShader *shader;
-  gfloat tex_size[2];
           
   shader = g_hash_table_lookup (effects->shaderstable, "stretch0");
   
@@ -50,11 +49,8 @@ gst_gl_effects_stretch_callback (gint width, gint height, guint texture, gpointe
      
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
   
-  tex_size[0] = GST_GL_FILTER(effects)->width / 2.0;
-  tex_size[1] = GST_GL_FILTER(effects)->height / 2.0;
-
-  gst_gl_shader_set_uniform_1f (shader, "width", tex_size[0]); 
-  gst_gl_shader_set_uniform_1f (shader, "height", tex_size[1]);
+  gst_gl_shader_set_uniform_1f (shader, "width", width / 2.0); 
+  gst_gl_shader_set_uniform_1f (shader, "height", height / 2.0);
   
   gst_gl_effects_draw_texture (effects, texture);
 }
