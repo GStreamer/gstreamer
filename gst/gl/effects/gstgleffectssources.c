@@ -313,7 +313,7 @@ const gchar *sin_fragment_source =
 "  HSL = rgb2hsl (color.rgb);"
 /* move hls discontinuity away from the desired red zone so we can use
  * smoothstep.. to try: convert degrees in radiants, divide by 2 and
- * smoothstep sine */
+ * smoothstep cosine */
 "  HSL.x += 180.0;"
 "  if ((HSL.x) > 360.0) HSL.x -= 360.0;"
 /* damn, it is extremely hard to get rid of human face reds! */
