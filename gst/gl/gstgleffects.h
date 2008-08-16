@@ -101,6 +101,7 @@ void gst_gl_effects_heat (GstGLEffects *effects);
 void gst_gl_effects_sepia (GstGLEffects *effects);
 void gst_gl_effects_xpro (GstGLEffects *effects);
 void gst_gl_effects_luma_xpro (GstGLEffects *effects);
+void gst_gl_effects_sin (GstGLEffects *effects);
 void gst_gl_effects_glow (GstGLEffects *effects);
 
 G_END_DECLS

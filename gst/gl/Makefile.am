@@ -41,6 +41,7 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectsquare.c \
 	effects/gstgleffectlumatocurve.c \
 	effects/gstgleffectrgbtocurve.c \
+	effects/gstgleffectsin.c \
 	effects/gstgleffectglow.c 
 	
 
