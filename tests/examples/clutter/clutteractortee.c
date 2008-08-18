@@ -41,9 +41,6 @@ struct GstGLClutterActor_ {
 
 typedef struct GstGLClutterActor_ GstGLClutterActor;
 
-static ClutterX11FilterReturn event_filter (XEvent *ev, ClutterEvent *cev,
-                                            gpointer data);
-
 static gboolean
 create_actor (GstGLClutterActor *actor) {
   static gint xpos = 0;
@@ -115,22 +112,6 @@ apply_fx (GstElement *element, const gchar *fx)
 }
 #endif
 
-
-static ClutterX11FilterReturn
-event_filter (XEvent *ev, ClutterEvent *cev, gpointer data)
-{
-  gint i;
-  GstElement **sink = data;
-  switch (ev->type) {
-  case Expose:
-    for (i=0; i<N_ACTORS; i++) {
-      gst_x_overlay_expose (GST_X_OVERLAY (sink[i]));
-    }
-  default:
-    return CLUTTER_X11_FILTER_CONTINUE;
-  }
-}
-
 int
 main (int argc, char *argv[])
 {
@@ -201,8 +182,6 @@ main (int argc, char *argv[])
                       queue[i], upload[i], effect[i], sink[i], NULL);
   }
 
-  clutter_x11_add_filter (event_filter, sink);
-    
   gst_element_link_many (srcbin, tee, NULL);
 
   for (i=0; i<N_ACTORS; i++) {
