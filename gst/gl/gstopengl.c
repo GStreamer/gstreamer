@@ -40,6 +40,7 @@ GType gst_gl_filter_edge_get_type (void);
 GType gst_gl_filter_laplacian_get_type (void);
 #ifdef HAVE_GDKPIXBUF
 GType gst_gl_pixbufoverlay_get_type (void);
+GType gst_gl_differencematte_get_type (void);
 #endif
 
 #define GST_CAT_DEFAULT gst_gl_gstgl_debug
@@ -70,6 +71,11 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, gst_gl_pixbufoverlay_get_type())) {
     return FALSE;
   }
+  if (!gst_element_register (plugin, "gldifferencematte",
+          GST_RANK_NONE, gst_gl_differencematte_get_type())) {
+    return FALSE;
+  }
+
 #endif
 
   if (!gst_element_register (plugin, "gleffects",

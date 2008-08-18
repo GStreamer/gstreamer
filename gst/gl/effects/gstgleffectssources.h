@@ -18,8 +18,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gstgleffects.h>
-
 #ifndef __GST_GL_EFFECTS_SOURCES_H__
 #define __GST_GL_EFFECTS_SOURCES_H__
 
@@ -38,5 +36,7 @@ const gchar *sum_fragment_source;
 const gchar *luma_to_curve_fragment_source;
 const gchar *rgb_to_curve_fragment_source;
 const gchar *sin_fragment_source;
+const gchar *interpolate_fragment_source;
+const gchar *difference_fragment_source;
 
 #endif /* __GST_GL_EFFECTS_SOURCES_H__ */

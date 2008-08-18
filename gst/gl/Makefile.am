@@ -45,7 +45,7 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectglow.c 
 	
 if HAVE_GDKPIXBUF
-libgstopengl_la_SOURCES += gstglpixbufoverlay.c
+libgstopengl_la_SOURCES += gstglpixbufoverlay.c gstgldifferencematte.c
 endif
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around

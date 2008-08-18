@@ -23,6 +23,7 @@
 #endif
 
 #include <gstglfilter.h>
+#include <gstgleffectssources.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #define GST_TYPE_GL_PIXBUFOVERLAY            (gst_gl_pixbufoverlay_get_type())
@@ -78,17 +79,6 @@ static const GstElementDetails element_details = GST_ELEMENT_DETAILS (
   "Filter/Effect",
   "Overlay GL video texture with a gdkpixbuf",
   "Filippo Argiolas <filippo.argiolas@gmail.com>");
-
-static const gchar *interpolate_fragment_source = 
-  "#extension GL_ARB_texture_rectangle : enable\n"
-  "uniform sampler2DRect base;"
-  "uniform sampler2DRect blend;"
-  "void main () {"
-  "vec4 basecolor = texture2DRect (base, gl_TexCoord[0].st);"
-  "vec4 blendcolor = texture2DRect (blend, gl_TexCoord[0].st);"
-  "vec4 white = vec4(1.0);"
-  "gl_FragColor = blendcolor + (1 - blendcolor.a) * basecolor;"
-  "}";
 
 enum
 {
@@ -206,7 +196,6 @@ gst_gl_pixbufoverlay_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
   case PROP_LOCATION:
     if (pixbufoverlay->location != NULL) g_free (pixbufoverlay->location);
-    g_message ("\nHEERE\n");
     pixbufoverlay->pbuf_has_changed = TRUE;
     pixbufoverlay->location = g_value_dup_string (value);
     break;
@@ -288,8 +277,6 @@ gst_gl_pixbufoverlay_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
   GError *error = NULL;
 
   if (pixbufoverlay->pbuf_has_changed && (pixbufoverlay->location != NULL)) {
-    g_message ("RECEIVED: %s", pixbufoverlay->location);
-    
     pixbuf = gdk_pixbuf_new_from_file (pixbufoverlay->location, &error);
     if (pixbuf) {
       pixbufoverlay->pixbuf = gdk_pixbuf_scale_simple (pixbuf,

@@ -18,6 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <gstgleffects.h>
 #include <gstgleffectssources.h>
 
 /* A common file for sources is needed since shader sources can be
@@ -346,3 +347,24 @@ const gchar *sin_fragment_source =
 "  float alpha = a - b;"
 "  gl_FragColor = color * alpha + luma * (1.0 - alpha);"
 "}";
+
+const gchar *interpolate_fragment_source = 
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect base;"
+  "uniform sampler2DRect blend;"
+  "void main () {"
+  "vec4 basecolor = texture2DRect (base, gl_TexCoord[0].st);"
+  "vec4 blendcolor = texture2DRect (blend, gl_TexCoord[0].st);"
+  "vec4 white = vec4(1.0);"
+  "gl_FragColor = blendcolor + (1.0 - blendcolor.a) * basecolor;"
+  "}";
+
+const gchar *difference_fragment_source =
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect saved;"
+  "uniform sampler2DRect current;"
+  "void main () {"
+  "vec4 savedcolor = texture2DRect (saved, gl_TexCoord[0].st);"
+  "vec4 currentcolor = texture2DRect (current, gl_TexCoord[0].st);"
+  "gl_FragColor = vec4 (step (0.12, length (savedcolor - currentcolor)));"
+  "}";
