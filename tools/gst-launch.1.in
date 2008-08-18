@@ -398,6 +398,13 @@ Path of the plugin registry file. Default is
 GStreamer was compiled for, e.g. 'i486', 'i686', 'x86-64', 'ppc', etc. (check
 the output of "uname -i" and "uname -m" for details).
 .TP
+\fBGST_REGISTRY_UPDATE\fR
+Set to "no" to force GStreamer to assume that no plugins have changed,
+been added or been removed. This will make GStreamer skip the initial check
+whether a rebuild of the registry cache is required or not. This may be useful
+in embedded environments where the installed plugins never change. Do not
+use this option in any other setup.
+.TP
 \fBGST_PLUGIN_PATH\fR
 Specifies a list of directories to scan for additional plugins.
 These take precedence over the system plugins.
