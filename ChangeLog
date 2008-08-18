@@ -1,3 +1,8 @@
+2008-08-18  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* configure.ac:
+	Check if bz2 is installed (#548304)
+
 2008-08-12  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

@@ -199,6 +199,9 @@ case $host_os in
 esac
 AC_SUBST(DARWIN_LDFLAGS)
 
+dnl *** Check for bz2
+AG_GST_CHECK_LIBHEADER(BZ2, bz2, BZ2_bzlibVersion, , bzlib.h,, AC_ERROR([libz2 is required]))
+
 dnl *** configure external libs ***
 
 HAVE_FFMPEG_UNINSTALLED=1
