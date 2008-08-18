@@ -509,8 +509,9 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   if (!pulsesrc->context
       || pa_context_get_state (pulsesrc->context) != PA_CONTEXT_READY) {
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Bad context state: %s",
-            pulsesrc->context ? pa_strerror (pa_context_errno (pulsesrc->
-                    context)) : NULL), (NULL));
+            pulsesrc->
+            context ? pa_strerror (pa_context_errno (pulsesrc->context)) :
+            NULL), (NULL));
     goto unlock_and_fail;
   }
 
@@ -553,9 +554,6 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   }
 
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
-
-  spec->bytes_per_sample = pa_frame_size (&pulsesrc->sample_spec);
-  memset (spec->silence_sample, 0, spec->bytes_per_sample);
 
   return TRUE;
 
