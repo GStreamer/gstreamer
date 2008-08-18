@@ -359,6 +359,19 @@ const gchar *interpolate_fragment_source =
   "gl_FragColor = blendcolor + (1.0 - blendcolor.a) * basecolor;"
   "}";
 
+const gchar *texture_interp_fragment_source = 
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect base;"
+  "uniform sampler2DRect blend;"
+  "uniform sampler2DRect alpha;"
+  "void main () {"
+  "vec4 basecolor = texture2DRect (base, gl_TexCoord[0].st);"
+  "vec4 blendcolor = texture2DRect (blend, gl_TexCoord[0].st);"
+  "vec4 alphacolor = texture2DRect (alpha, gl_TexCoord[0].st);"
+//  "gl_FragColor = alphacolor;"
+  "gl_FragColor = (alphacolor * blendcolor) + (1.0 - alphacolor) * basecolor;"
+  "}";
+
 const gchar *difference_fragment_source =
   "#extension GL_ARB_texture_rectangle : enable\n"
   "uniform sampler2DRect saved;"

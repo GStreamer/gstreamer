@@ -46,6 +46,7 @@ struct _GstGLDifferenceMatte
   GLuint savedbgtexture;
   GLuint newbgtexture;
   GLuint midtexture[4];
+  GLuint intexture;
 };
 
 struct _GstGLDifferenceMatteClass
@@ -96,8 +97,17 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter *filter)
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (filter);
   gint i;
 
-  for (i=0; i<3; i++)
+  for (i=0; i<4; i++) {
+    glGenTextures (1, &differencematte->midtexture[i]);
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, differencematte->midtexture[i]);
+    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+		 filter->width, filter->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
     differencematte->shader[i] = gst_gl_shader_new ();
+  }
 
   g_return_if_fail (
     gst_gl_shader_compile_and_check (differencematte->shader[0],
@@ -109,12 +119,13 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter *filter)
 				     GST_GL_SHADER_FRAGMENT_SOURCE));
   
   g_return_if_fail (
-    gst_gl_shader_compile_and_check (differencematte->shader[1],
+    gst_gl_shader_compile_and_check (differencematte->shader[2],
                                      vconv9_fragment_source,
 				     GST_GL_SHADER_FRAGMENT_SOURCE));
+  
   g_return_if_fail (
-    gst_gl_shader_compile_and_check (differencematte->shader[1],
-                                     interpolate_fragment_source,
+    gst_gl_shader_compile_and_check (differencematte->shader[3],
+                                     texture_interp_fragment_source,
 				     GST_GL_SHADER_FRAGMENT_SOURCE));
 }
 
@@ -127,8 +138,10 @@ gst_gl_differencematte_reset_gl_resources (GstGLFilter *filter)
   
   glDeleteTextures (1, &differencematte->savedbgtexture);
   glDeleteTextures (1, &differencematte->newbgtexture);
-  for (i=0; i<3; i++)
+  for (i=0; i<4; i++) {
     g_object_unref (differencematte->shader[i]);
+    glDeleteTextures (1, &differencematte->midtexture[i]);
+  }
 }
 
 static void
@@ -258,33 +271,6 @@ gst_gl_differencematte_save_texture (gint width, gint height, guint texture, gpo
   gst_gl_differencematte_draw_texture (differencematte, texture);
 }
 
-static void
-gst_gl_differencematte_callback (gint width, gint height, guint texture, gpointer stuff)
-{
-  GstGLDifferenceMatte* differencematte = GST_GL_DIFFERENCEMATTE (stuff);
-  
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
-
-  gst_gl_shader_use (differencematte->shader[0]);
-
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable(GL_TEXTURE_RECTANGLE_ARB);
-  
-  gst_gl_shader_set_uniform_1i (differencematte->shader[0], "current", 0);
-
-  glActiveTexture (GL_TEXTURE2);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->savedbgtexture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
-
-  gst_gl_shader_set_uniform_1i (differencematte->shader[0], "saved", 2);
-
-  gst_gl_differencematte_draw_texture (differencematte, texture);
-}
-
 static void init_pixbuf_texture (GstGLDisplay *display, gpointer data)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (data);
@@ -310,6 +296,126 @@ static void init_pixbuf_texture (GstGLDisplay *display, gpointer data)
   }
 }
 
+static void
+gst_gl_differencematte_diff (gint width, gint height, guint texture, gpointer stuff)
+{
+  GstGLDifferenceMatte* differencematte = GST_GL_DIFFERENCEMATTE (stuff);
+  
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  gst_gl_shader_use (differencematte->shader[0]);
+
+  glActiveTexture (GL_TEXTURE0);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glDisable(GL_TEXTURE_RECTANGLE_ARB);
+  
+  gst_gl_shader_set_uniform_1i (differencematte->shader[0], "current", 0);
+
+  glActiveTexture (GL_TEXTURE2);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->savedbgtexture);
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+
+  gst_gl_shader_set_uniform_1i (differencematte->shader[0], "saved", 2);
+
+  gst_gl_differencematte_draw_texture (differencematte, texture);
+}
+
+static void
+gst_gl_differencematte_hblur (gint width, gint height, guint texture, gpointer stuff)
+{
+  GstGLDifferenceMatte* differencematte = GST_GL_DIFFERENCEMATTE (stuff);
+  gfloat gauss_kernel[9] = { 
+    0.026995, 0.064759, 0.120985,
+    0.176033, 0.199471, 0.176033,
+    0.120985, 0.064759, 0.026995
+  };
+
+  
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  gst_gl_shader_use (differencematte->shader[1]);
+
+  glActiveTexture (GL_TEXTURE0);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glDisable(GL_TEXTURE_RECTANGLE_ARB);
+  
+  gst_gl_shader_set_uniform_1i (differencematte->shader[1], "tex", 0);
+
+  gst_gl_shader_set_uniform_1fv (differencematte->shader[1], "kernel", 9, gauss_kernel);
+  gst_gl_shader_set_uniform_1f (differencematte->shader[1], "norm_const", 0.977016f);
+  gst_gl_shader_set_uniform_1f (differencematte->shader[1], "norm_offset", 0.0f);
+
+  gst_gl_differencematte_draw_texture (differencematte, texture);
+}
+
+static void
+gst_gl_differencematte_vblur (gint width, gint height, guint texture, gpointer stuff)
+{
+  GstGLDifferenceMatte* differencematte = GST_GL_DIFFERENCEMATTE (stuff);
+  gfloat gauss_kernel[9] = { 
+    0.026995, 0.064759, 0.120985,
+    0.176033, 0.199471, 0.176033,
+    0.120985, 0.064759, 0.026995
+  };
+  
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  gst_gl_shader_use (differencematte->shader[2]);
+
+  glActiveTexture (GL_TEXTURE0);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glDisable(GL_TEXTURE_RECTANGLE_ARB);
+
+  gst_gl_shader_set_uniform_1i (differencematte->shader[2], "tex", 0);
+
+  gst_gl_shader_set_uniform_1fv (differencematte->shader[2], "kernel", 9, gauss_kernel);
+  gst_gl_shader_set_uniform_1f (differencematte->shader[2], "norm_const", 0.977016f);
+  gst_gl_shader_set_uniform_1f (differencematte->shader[2], "norm_offset", 0.0f);
+  
+  gst_gl_differencematte_draw_texture (differencematte, texture);
+}
+
+static void
+gst_gl_differencematte_interp (gint width, gint height, guint texture, gpointer stuff)
+{
+  GstGLDifferenceMatte* differencematte = GST_GL_DIFFERENCEMATTE (stuff);
+  
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  gst_gl_shader_use (differencematte->shader[3]);
+
+  glActiveTexture (GL_TEXTURE0);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glDisable(GL_TEXTURE_RECTANGLE_ARB);
+  
+  gst_gl_shader_set_uniform_1i (differencematte->shader[3], "base", 0);
+
+  glActiveTexture (GL_TEXTURE1);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->newbgtexture);
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+
+  gst_gl_shader_set_uniform_1i (differencematte->shader[3], "blend", 1);
+
+  glActiveTexture (GL_TEXTURE2);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->midtexture[2]);
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+
+  gst_gl_shader_set_uniform_1i (differencematte->shader[3], "alpha", 2);
+
+  gst_gl_differencematte_draw_texture (differencematte, texture);
+}
+
 static gboolean
 gst_gl_differencematte_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 				GstGLBuffer* outbuf)
@@ -317,6 +423,8 @@ gst_gl_differencematte_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
   GstGLDifferenceMatte* differencematte = GST_GL_DIFFERENCEMATTE(filter);
   GdkPixbuf *pixbuf;
   GError *error = NULL;
+
+  differencematte->intexture = inbuf->texture;
 
   if (differencematte->bg_has_changed && (differencematte->location != NULL)) {
     pixbuf = gdk_pixbuf_new_from_file (differencematte->location, &error);
@@ -343,8 +451,20 @@ gst_gl_differencematte_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
     differencematte->bg_has_changed = FALSE;
   }
 
-  gst_gl_filter_render_to_target (filter, inbuf->texture, outbuf->texture,
-				  gst_gl_differencematte_callback, differencematte);
+  gst_gl_filter_render_to_target (filter, inbuf->texture, differencematte->midtexture[0],
+				  gst_gl_differencematte_diff, differencematte);
+  gst_gl_filter_render_to_target (filter, 
+                                  differencematte->midtexture[0],
+                                  differencematte->midtexture[1],
+				  gst_gl_differencematte_hblur, differencematte);
+  gst_gl_filter_render_to_target (filter, 
+                                  differencematte->midtexture[1],
+                                  differencematte->midtexture[2],
+				  gst_gl_differencematte_vblur, differencematte);
+  gst_gl_filter_render_to_target (filter, 
+                                  inbuf->texture,
+                                  outbuf->texture,
+				  gst_gl_differencematte_interp, differencematte);
 
   return TRUE;
 }
