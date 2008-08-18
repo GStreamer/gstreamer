@@ -1,3 +1,11 @@
+2008-08-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buffer):
+	If the element is configured in passthrough mode but the
+	prepare_output_buffer gave us a new output buffer, discard that buffer
+	and reuse the input buffer.
+
 2008-08-15  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>

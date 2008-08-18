@@ -1236,6 +1236,13 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       *out_buf = in_buf;
     }
   } else {
+    if (trans->passthrough && in_buf != *out_buf) {
+      /* we are asked to perform a passthrough transform but the input and
+       * output buffers are different. We have to discard the output buffer and
+       * reuse the input buffer. */
+      GST_DEBUG_OBJECT (trans, "passthrough but different buffers");
+      discard = TRUE;
+    }
     if (discard) {
       GST_DEBUG_OBJECT (trans, "discard buffer, reuse input buffer");
       gst_buffer_unref (*out_buf);
