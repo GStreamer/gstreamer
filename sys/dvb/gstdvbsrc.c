@@ -141,6 +141,8 @@ gst_dvbsrc_modulation_get_type (void)
     {QAM_128, "QAM 128", "QAM 128"},
     {QAM_256, "QAM 256", "QAM 256"},
     {QAM_AUTO, "AUTO", "AUTO"},
+    {VSB_8, "8VSB", "8VSB"},
+    {VSB_16, "16VSB", "16VSB"},
     {0, NULL, NULL},
   };
 
@@ -745,6 +747,11 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object)
           G_TYPE_BOOLEAN, fe_info.caps % FE_CAN_HIERARCHY_AUTO, "auto-fec",
           G_TYPE_BOOLEAN, fe_info.caps & FE_CAN_FEC_AUTO, NULL);
       break;
+    case FE_ATSC:
+      adapter_desc = "ATSC";
+      adapter_structure = gst_structure_new ("dvb-adapter",
+          "type", G_TYPE_STRING, adapter_desc, NULL);
+      break;
     default:
       g_error ("Unknown frontend type: %d", object->adapter_type);
       adapter_structure = gst_structure_new ("dvb-adapter",
@@ -1275,6 +1282,11 @@ gst_dvbsrc_tune (GstDvbSrc * object)
         feparams.u.qam.fec_inner = object->code_rate_hp;
         feparams.u.qam.modulation = object->modulation;
         feparams.u.qam.symbol_rate = sym_rate;
+        break;
+      case FE_ATSC:
+        GST_INFO_OBJECT (object, "Tuning ATSC to %d", freq);
+        feparams.frequency = freq;
+        feparams.u.vsb.modulation = object->modulation;
         break;
       default:
         g_error ("Unknown frontend type: %d", object->adapter_type);

@@ -101,6 +101,15 @@ parse_channels_conf_from_file (const gchar * filename)
           g_hash_table_insert (params, g_strdup ("frequency"),
               g_strdup (fields[1]));
           parsed = TRUE;
+        } else if (numfields == 6) {
+          /* atsc (vsb/qam) */
+          g_hash_table_insert (params, g_strdup ("type"), g_strdup ("atsc"));
+          g_hash_table_insert (params, g_strdup ("modulation"),
+              g_strdup (fields[2]));
+
+          g_hash_table_insert (params, g_strdup ("frequency"),
+              g_strdup (fields[1]));
+          parsed = TRUE;
         }
         if (parsed) {
           g_hash_table_insert (params, g_strdup ("sid"),
@@ -352,6 +361,22 @@ set_properties_for_channel (GObject * dvbbasebin, const gchar * channel_name)
           g_object_set (dvbbasebin, "inversion", 1, NULL);
         else
           g_object_set (dvbbasebin, "inversion", 2, NULL);
+      } else if (strcmp (type, "atsc") == 0) {
+        gchar *val;
+
+        ret = TRUE;
+
+        val = g_hash_table_lookup (params, "modulation");
+        if (strcmp (val, "QAM_64") == 0)
+          g_object_set (dvbbasebin, "modulation", 3, NULL);
+        else if (strcmp (val, "QAM_256") == 0)
+          g_object_set (dvbbasebin, "modulation", 5, NULL);
+        else if (strcmp (val, "8VSB") == 0)
+          g_object_set (dvbbasebin, "modulation", 7, NULL);
+        else if (strcmp (val, "16VSB") == 0)
+          g_object_set (dvbbasebin, "modulation", 8, NULL);
+        else
+          ret = FALSE;
       }
     }
     destroy_channels_hash (channels);
