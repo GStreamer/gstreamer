@@ -41,6 +41,9 @@ struct GstGLClutterActor_ {
 
 typedef struct GstGLClutterActor_ GstGLClutterActor;
 
+static ClutterX11FilterReturn event_filter (XEvent *ev, ClutterEvent *cev,
+                                            gpointer data);
+
 static gboolean
 create_actor (GstGLClutterActor *actor) {
   static gint xpos = 0;
@@ -112,6 +115,22 @@ apply_fx (GstElement *element, const gchar *fx)
 }
 #endif
 
+
+static ClutterX11FilterReturn
+event_filter (XEvent *ev, ClutterEvent *cev, gpointer data)
+{
+  gint i;
+  GstElement **sink = data;
+  switch (ev->type) {
+  case Expose:
+    for (i=0; i<N_ACTORS; i++) {
+      gst_x_overlay_expose (GST_X_OVERLAY (sink[i]));
+    }
+  default:
+    return CLUTTER_X11_FILTER_CONTINUE;
+  }
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -181,7 +200,9 @@ main (int argc, char *argv[])
     gst_bin_add_many (GST_BIN (pipeline), 
                       queue[i], upload[i], effect[i], sink[i], NULL);
   }
-  
+
+  clutter_x11_add_filter (event_filter, sink);
+    
   gst_element_link_many (srcbin, tee, NULL);
 
   for (i=0; i<N_ACTORS; i++) {
@@ -195,7 +216,7 @@ main (int argc, char *argv[])
     g_message ("setting effect %d on %s", i+1, gst_element_get_name (effect[i]));
     g_object_set (G_OBJECT (effect[i]), "effect", i+1, NULL);
   }
-  
+
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, actor);
