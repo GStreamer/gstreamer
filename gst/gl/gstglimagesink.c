@@ -277,6 +277,7 @@ gst_glimage_sink_change_state (GstElement* element, GstStateChange transition)
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
+            gst_glimage_sink_stop (GST_BASE_SINK (glimage_sink));
             glimage_sink->fps_n = 0;
             glimage_sink->fps_d = 1;
             GST_VIDEO_SINK_WIDTH (glimage_sink) = 0;
