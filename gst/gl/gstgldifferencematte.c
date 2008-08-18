@@ -172,7 +172,6 @@ gst_gl_differencematte_class_init (GstGLDifferenceMatteClass * klass)
                                    g_param_spec_string ("location",
                                                         "Background image location", 
                                                         "Background image location" 
-                                                        "(when set a snapshot of the background will be taken)", 
                                                         NULL, G_PARAM_READWRITE));
 }
 

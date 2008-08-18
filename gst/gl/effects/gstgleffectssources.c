@@ -368,7 +368,6 @@ const gchar *texture_interp_fragment_source =
   "vec4 basecolor = texture2DRect (base, gl_TexCoord[0].st);"
   "vec4 blendcolor = texture2DRect (blend, gl_TexCoord[0].st);"
   "vec4 alphacolor = texture2DRect (alpha, gl_TexCoord[0].st);"
-//  "gl_FragColor = alphacolor;"
   "gl_FragColor = (alphacolor * blendcolor) + (1.0 - alphacolor) * basecolor;"
   "}";
 
