@@ -49,8 +49,8 @@ gst_gl_effects_square_callback (gint width, gint height, guint texture, gpointer
      
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
   
-  gst_gl_shader_set_uniform_1f (shader, "width", width / 2.0); 
-  gst_gl_shader_set_uniform_1f (shader, "height", height / 2.0);
+  gst_gl_shader_set_uniform_1f (shader, "width", (gfloat) width / 2.0f); 
+  gst_gl_shader_set_uniform_1f (shader, "height", (gfloat) height / 2.0f);
   
   gst_gl_effects_draw_texture (effects, texture);
 }

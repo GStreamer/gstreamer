@@ -170,11 +170,11 @@ gst_gl_pixbufoverlay_draw_texture (GstGLPixbufOverlay * pixbufoverlay, GLuint te
 
   glTexCoord2f (0.0, 0.0);
   glVertex2f (-1.0, -1.0);
-  glTexCoord2f (filter->width, 0.0);
+  glTexCoord2f ((gfloat)filter->width, 0.0);
   glVertex2f (1.0, -1.0);
-  glTexCoord2f (filter->width, filter->height);
+  glTexCoord2f ((gfloat)filter->width, (gfloat)filter->height);
   glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, filter->height);
+  glTexCoord2f (0.0, (gfloat)filter->height);
   glVertex2f (-1.0, 1.0);
 
   glEnd ();

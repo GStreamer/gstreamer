@@ -20,9 +20,9 @@
 
 #include <gstgleffects.h>
 
-static gfloat gauss_kernel[9] = { 0.060493, 0.075284, 0.088016, 
-                                  0.096667, 0.099736, 0.096667, 
-                                  0.088016, 0.075284, 0.060493 };
+static gfloat gauss_kernel[9] = { 0.060493f, 0.075284f, 0.088016f, 
+                                  0.096667f, 0.099736f, 0.096667f, 
+                                  0.088016f, 0.075284f, 0.060493f };
 
 static void
 gst_gl_effects_glow_step_one (gint width, gint height, guint texture, gpointer data)
@@ -89,8 +89,8 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture, gpointer s
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
 
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "norm_const", 0.740656);
-  gst_gl_shader_set_uniform_1f (shader, "norm_offset", 0.0);
+  gst_gl_shader_set_uniform_1f (shader, "norm_const", 0.740656f);
+  gst_gl_shader_set_uniform_1f (shader, "norm_offset", 0.0f);
 
   gst_gl_effects_draw_texture (effects, texture);
 }
@@ -125,8 +125,8 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture, gpointer
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
 
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "norm_const", 0.740656);
-  gst_gl_shader_set_uniform_1f (shader, "norm_offset", 0.0);
+  gst_gl_shader_set_uniform_1f (shader, "norm_const", 0.740656f);
+  gst_gl_shader_set_uniform_1f (shader, "norm_offset", 0.0f);
 
   gst_gl_effects_draw_texture (effects, texture);
 }
@@ -166,7 +166,7 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture, gpointer 
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
   glDisable(GL_TEXTURE_RECTANGLE_ARB);
   
-  gst_gl_shader_set_uniform_1f (shader, "beta", 1/3.5);
+  gst_gl_shader_set_uniform_1f (shader, "beta", (gfloat) 1/3.5f);
   gst_gl_shader_set_uniform_1i (shader, "blend", 1);
 
   gst_gl_effects_draw_texture (effects, texture);
