@@ -129,9 +129,7 @@ const gchar *twirl_fragment_source =
   "  normcoord = texturecoord / tex_size - 1.0;"
   "  float r =  length (normcoord);"
   "  float phi = atan (normcoord.y, normcoord.x);"
-/* height dependent rotation coeff.. why the hell this angle has
- * different effect with different sizes? */
-  "  phi += (1.0 - smoothstep (-0.6, 0.6, r)) * height * 2.0/100.0;" 
+  "  phi += (1.0 - smoothstep (-0.6, 0.6, r)) * 4.8;" 
   "  normcoord.x = r * cos(phi);"
   "  normcoord.y = r * sin(phi);"
   "  texturecoord = (normcoord + 1.0) * tex_size;"
