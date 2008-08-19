@@ -35,6 +35,20 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+#ifdef G_OS_WIN32
+#include <io.h>                 /* lseek, open, close, read */
+/* On win32, stat* default to 32 bit; we need the 64-bit
+ * variants, so explicitly define it that way. */
+#define stat __stat64
+#define fstat _fstat64
+#undef lseek
+#define lseek _lseeki64
+#undef off_t
+#define off_t guint64
+/* Prevent stat.h from defining the stat* functions as
+ * _stat*, since we're explicitly overriding that */
+#undef _INC_STAT_INL
+#endif
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -44,10 +58,6 @@
 
 #ifdef HAVE_MMAP
 # include <sys/mman.h>
-#endif
-
-#ifdef HAVE_WIN32
-#  include <io.h>               /* lseek, open, close, read */
 #endif
 
 #include <errno.h>
@@ -73,6 +83,34 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 #ifndef O_BINARY
 #define O_BINARY (0)
 #endif
+
+/* Copy of glib's g_open due to win32 libc/cross-DLL brokenness: we can't
+ * use the 'file descriptor' opened in glib (and returned from this function)
+ * in this library, as they may have unrelated C runtimes. */
+int
+gst_open (const gchar * filename, int flags, int mode)
+{
+#ifdef G_OS_WIN32
+  wchar_t *wfilename = g_utf8_to_utf16 (filename, -1, NULL, NULL, NULL);
+  int retval;
+  int save_errno;
+
+  if (wfilename == NULL) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  retval = _wopen (wfilename, flags, mode);
+  save_errno = errno;
+
+  g_free (wfilename);
+
+  errno = save_errno;
+  return retval;
+#else
+  return open (filename, flags, mode);
+#endif
+}
 
 
 /**********************************************************************
@@ -909,7 +947,7 @@ gst_file_src_start (GstBaseSrc * basesrc)
   GST_INFO_OBJECT (src, "opening file %s", src->filename);
 
   /* open the file */
-  src->fd = open (src->filename, O_RDONLY | O_BINARY);
+  src->fd = gst_open (src->filename, O_RDONLY | O_BINARY, 0);
 
   if (src->fd < 0)
     goto open_failed;
@@ -1086,6 +1124,7 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     return TRUE;
   } else {
     location = gst_uri_get_location (uri);
+    GST_LOG_OBJECT (src, "Location '%s' found from uri '%s'", location, uri);
   }
 
   if (!location)
