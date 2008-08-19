@@ -253,27 +253,16 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     "  gl_FragColor = vec4(r, g, b, 1.0);\n"
     "}\n";
 
-  //it works on nvidia+linux but
-  //there is a bug on ATI+win32 (I think only ATI)
-  //and the follwing 3 lines:
-  //"  y=texture2DRect(Ytex,nxy).r;\n"
-  //"  u=texture2DRect(Utex,nxy*0.5).r;\n"
-  //"  v=texture2DRect(Vtex,nxy*0.5).r;\n"
-  //has to be replaced by :
-  //"  y=texture2DRect(Ytex,nxy0.5).r;\n"
-  //"  u=texture2DRect(Utex,nxy).r;\n"
-  //"  v=texture2DRect(Vtex,nxy*0.5).r;\n"
-  //
-  //so we have to set a display->hardware (ATI/ NVIDIA)
-  //and check it etc...
+  //ATI: "*0.5", ""
+  //normal: "", "*0.5"
   display->text_shader_upload_I420_YV12 =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect Ytex,Utex,Vtex;\n"
     "void main(void) {\n"
     "  float r,g,b,y,u,v;\n"
     "  vec2 nxy=gl_TexCoord[0].xy;\n"
-    "  y=texture2DRect(Ytex,nxy).r;\n"
-    "  u=texture2DRect(Utex,nxy*0.5).r;\n"
+    "  y=texture2DRect(Ytex,nxy%s).r;\n"
+    "  u=texture2DRect(Utex,nxy%s).r;\n"
     "  v=texture2DRect(Vtex,nxy*0.5).r;\n"
     "  y=1.1643*(y-0.0625);\n"
     "  u=u-0.5;\n"
@@ -1063,15 +1052,23 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
       break;
       case GST_VIDEO_FORMAT_I420:
       case GST_VIDEO_FORMAT_YV12:
+      {
+    gchar text_shader_upload_I420_YV12[2048];
+    if (g_strncasecmp ("ATI", glGetString (GL_VENDOR), 3) == 0)
+        sprintf (text_shader_upload_I420_YV12, display->text_shader_upload_I420_YV12, "*0.5", "");
+    else
+        sprintf (text_shader_upload_I420_YV12, display->text_shader_upload_I420_YV12, "", "*0.5");
+
 	display->shader_upload_I420_YV12 = gst_gl_shader_new ();
 	if(!gst_gl_shader_compile_and_check (display->shader_upload_I420_YV12,
-					     display->text_shader_upload_I420_YV12, GST_GL_SHADER_FRAGMENT_SOURCE))
+					     text_shader_upload_I420_YV12, GST_GL_SHADER_FRAGMENT_SOURCE))
 	{
 	  display->isAlive = FALSE;
 	  g_object_unref (G_OBJECT (display->shader_upload_I420_YV12));
 	  display->shader_upload_I420_YV12 = NULL;
 	}
-	break;
+      }
+	  break;
       case GST_VIDEO_FORMAT_AYUV:
 	display->shader_upload_AYUV = gst_gl_shader_new ();
 	if(!gst_gl_shader_compile_and_check (display->shader_upload_AYUV,
