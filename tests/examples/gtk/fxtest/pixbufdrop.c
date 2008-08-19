@@ -2,7 +2,13 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+
+#ifdef WIN32
+#include <gdk/gdkwin32.h>
+#else
 #include <gdk/gdkx.h>
+#endif
+
 #include <gst/interfaces/xoverlay.h>
 
 static gint delay = 0;
