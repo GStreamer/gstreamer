@@ -35,7 +35,7 @@ create_window (GstBus *bus, GstMessage *message, GtkWidget *widget)
 
 #ifdef WIN32
     gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-        reinterpret_cast<gulong>GDK_WINDOW_HWND(widget->window));
+        (gulong)GDK_WINDOW_HWND(widget->window));
 #else
     gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
         GDK_WINDOW_XWINDOW(widget->window));
