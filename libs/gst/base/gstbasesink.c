@@ -2108,6 +2108,9 @@ no_timestamp:
   }
 }
 
+/* called before and after calling the render vmethod. It keeps track of how
+ * much time was spent in the render method and is used to check if we are
+ * flooded */
 static void
 gst_base_sink_do_render_stats (GstBaseSink * basesink, gboolean start)
 {
@@ -2205,6 +2208,12 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
     if (bclass->event)
       event_res = bclass->event (basesink, event);
 
+    /* when we get here we could be flushing again when the event handler calls
+     * _wait_eos() or releases the preroll lock in any other way.
+     * We have to ignore this object in that case. */
+    if (G_UNLIKELY (basesink->flushing))
+      goto flushing;
+
     if (G_LIKELY (event_res)) {
       switch (type) {
         case GST_EVENT_EOS:
@@ -2250,6 +2259,12 @@ dropped:
     priv->dropped++;
     GST_DEBUG_OBJECT (basesink, "buffer late, dropping");
     goto done;
+  }
+flushing:
+  {
+    GST_DEBUG_OBJECT (basesink, "we are flushing, ignore object");
+    gst_mini_object_unref (obj);
+    return GST_FLOW_WRONG_STATE;
   }
 }
 
