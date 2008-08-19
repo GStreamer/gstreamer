@@ -2209,8 +2209,7 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
       event_res = bclass->event (basesink, event);
 
     /* when we get here we could be flushing again when the event handler calls
-     * _wait_eos() or releases the preroll lock in any other way.
-     * We have to ignore this object in that case. */
+     * _wait_eos(). We have to ignore this object in that case. */
     if (G_UNLIKELY (basesink->flushing))
       goto flushing;
 
@@ -2523,8 +2522,11 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
             GST_MINI_OBJECT_CAST (event), FALSE);
         if (G_UNLIKELY (ret != GST_FLOW_OK))
           result = FALSE;
-        else
+        else {
+          GST_OBJECT_LOCK (basesink);
           basesink->have_newsegment = TRUE;
+          GST_OBJECT_UNLOCK (basesink);
+        }
       }
       GST_PAD_PREROLL_UNLOCK (pad);
       break;
@@ -2568,18 +2570,18 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
        * event. */
       gst_base_sink_set_flushing (basesink, pad, FALSE);
 
-      /* we need new segment info after the flush. */
-      gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
-      gst_segment_init (basesink->abidata.ABI.clip_segment,
-          GST_FORMAT_UNDEFINED);
-      basesink->have_newsegment = FALSE;
-
       /* for position reporting */
       GST_OBJECT_LOCK (basesink);
       basesink->priv->current_sstart = -1;
       basesink->priv->current_sstop = -1;
       basesink->priv->eos_rtime = -1;
+      basesink->have_newsegment = FALSE;
       GST_OBJECT_UNLOCK (basesink);
+
+      /* we need new segment info after the flush. */
+      gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
+      gst_segment_init (basesink->abidata.ABI.clip_segment,
+          GST_FORMAT_UNDEFINED);
 
       gst_event_unref (event);
       break;
@@ -2687,12 +2689,14 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
           ("Received buffer without a new-segment. Assuming timestamps start from 0."));
     }
 
-    basesink->have_newsegment = TRUE;
     /* this means this sink will assume timestamps start from 0 */
+    GST_OBJECT_LOCK (basesink);
     clip_segment->start = 0;
     clip_segment->stop = -1;
     basesink->segment.start = 0;
     basesink->segment.stop = -1;
+    basesink->have_newsegment = TRUE;
+    GST_OBJECT_UNLOCK (basesink);
   }
 
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
@@ -2973,48 +2977,55 @@ static gboolean
 gst_base_sink_negotiate_pull (GstBaseSink * basesink)
 {
   GstCaps *caps;
-  GstPad *pad;
+  gboolean result;
 
-  GST_OBJECT_LOCK (basesink);
-  pad = basesink->sinkpad;
-  gst_object_ref (pad);
-  GST_OBJECT_UNLOCK (basesink);
+  result = FALSE;
 
-  caps = gst_pad_get_allowed_caps (pad);
-  if (gst_caps_is_empty (caps))
+  /* this returns the intersection between our caps and the peer caps. If there
+   * is no peer, it returns NULL and we can't operate in pull mode so we can
+   * fail the negotiation. */
+  caps = gst_pad_get_allowed_caps (GST_BASE_SINK_PAD (basesink));
+  if (caps == NULL || gst_caps_is_empty (caps))
     goto no_caps_possible;
 
+  GST_DEBUG_OBJECT (basesink, "allowed caps: %" GST_PTR_FORMAT, caps);
+
   caps = gst_caps_make_writable (caps);
+  /* get the first (prefered) format */
   gst_caps_truncate (caps);
-  gst_pad_fixate_caps (pad, caps);
+  /* try to fixate */
+  gst_pad_fixate_caps (GST_BASE_SINK_PAD (basesink), caps);
+
+  GST_DEBUG_OBJECT (basesink, "fixated to: %" GST_PTR_FORMAT, caps);
 
   if (gst_caps_is_any (caps)) {
     GST_DEBUG_OBJECT (basesink, "caps were ANY after fixating, "
         "allowing pull()");
     /* neither side has template caps in this case, so they are prepared for
        pull() without setcaps() */
-  } else {
-    if (!gst_pad_set_caps (pad, caps))
+    result = TRUE;
+  } else if (gst_caps_is_fixed (caps)) {
+    if (!gst_pad_set_caps (GST_BASE_SINK_PAD (basesink), caps))
       goto could_not_set_caps;
+    result = TRUE;
   }
 
   gst_caps_unref (caps);
-  gst_object_unref (pad);
 
-  return TRUE;
+  return result;
 
 no_caps_possible:
   {
     GST_INFO_OBJECT (basesink, "Pipeline could not agree on caps");
     GST_DEBUG_OBJECT (basesink, "get_allowed_caps() returned EMPTY");
-    gst_object_unref (pad);
+    if (caps)
+      gst_caps_unref (caps);
     return FALSE;
   }
 could_not_set_caps:
   {
     GST_INFO_OBJECT (basesink, "Could not set caps: %" GST_PTR_FORMAT, caps);
     gst_caps_unref (caps);
-    gst_object_unref (pad);
     return FALSE;
   }
 }
@@ -3049,7 +3060,9 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
           gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
           gst_segment_init (basesink->abidata.ABI.clip_segment,
               GST_FORMAT_UNDEFINED);
+          GST_OBJECT_LOCK (basesink);
           basesink->have_newsegment = TRUE;
+          GST_OBJECT_UNLOCK (basesink);
 
           /* set the pad mode before starting the task so that it's in the
              correct state for the new thread. also the sink set_caps function
@@ -3232,16 +3245,16 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       if (G_UNLIKELY (basesink->eos))
         goto in_eos;
 
-      /* in PAUSE we cannot read from the clock so we
-       * report time based on the last seen timestamp. */
-      if (GST_STATE (basesink) == GST_STATE_PAUSED)
-        goto in_pause;
-
-      /* We get position from clock only in PLAYING, we checked
-       * the PAUSED case above, so this is check is to test 
-       * READY and NULL, where the position is always 0 */
-      if (GST_STATE (basesink) != GST_STATE_PLAYING)
+      /* we can only get the segment when we are not NULL or READY */
+      if (!basesink->have_newsegment)
         goto wrong_state;
+
+      /* when not in PLAYING or when we're busy with a state change, we
+       * cannot read from the clock so we report time based on the
+       * last seen timestamp. */
+      if (GST_STATE (basesink) != GST_STATE_PLAYING ||
+          GST_STATE_PENDING (basesink) != GST_STATE_VOID_PENDING)
+        goto in_pause;
 
       /* we need to sync on the clock. */
       if (basesink->sync == FALSE)
@@ -3441,10 +3454,10 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
        * is no data flow in READY so we can safely assume we need to preroll. */
       GST_PAD_PREROLL_LOCK (basesink->sinkpad);
       GST_DEBUG_OBJECT (basesink, "READY to PAUSED");
+      basesink->have_newsegment = FALSE;
       gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
       gst_segment_init (basesink->abidata.ABI.clip_segment,
           GST_FORMAT_UNDEFINED);
-      basesink->have_newsegment = FALSE;
       basesink->offset = 0;
       basesink->have_preroll = FALSE;
       basesink->need_preroll = TRUE;
@@ -3578,6 +3591,18 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_PAD_PREROLL_LOCK (basesink->sinkpad);
+      /* start by reseting our position state with the object lock so that the
+       * position query gets the right idea. We do this before we post the
+       * messages so that the message handlers pick this up. */
+      GST_OBJECT_LOCK (basesink);
+      basesink->have_newsegment = FALSE;
+      priv->current_sstart = -1;
+      priv->current_sstop = -1;
+      priv->have_latency = FALSE;
+      GST_OBJECT_UNLOCK (basesink);
+
+      gst_base_sink_set_last_buffer (basesink, NULL);
+
       if (!priv->commited) {
         if (priv->async_enabled) {
           GST_DEBUG_OBJECT (basesink, "PAUSED to READY, posting async-done");
@@ -3593,10 +3618,6 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       } else {
         GST_DEBUG_OBJECT (basesink, "PAUSED to READY, don't need_preroll");
       }
-      priv->current_sstart = -1;
-      priv->current_sstop = -1;
-      priv->have_latency = FALSE;
-      gst_base_sink_set_last_buffer (basesink, NULL);
       GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:

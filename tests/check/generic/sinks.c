@@ -1079,8 +1079,8 @@ GST_START_TEST (test_async_done)
   format = GST_FORMAT_TIME;
   position = -1;
   qret = gst_element_query_position (sink, &format, &position);
-  fail_unless (qret == FALSE, "position wrong");
-  fail_unless (position == -1, "position is wrong");
+  fail_unless (qret == TRUE, "position wrong");
+  fail_unless (position == 10 * GST_SECOND, "position is wrong");
 
   /* Since we are paused and the preroll queue has a length of 2, this function
    * will return immediatly, the preroll handoff will be called and the stream
@@ -1217,8 +1217,8 @@ GST_START_TEST (test_async_done_eos)
   format = GST_FORMAT_TIME;
   position = -1;
   qret = gst_element_query_position (sink, &format, &position);
-  fail_unless (qret == FALSE, "position wrong");
-  fail_unless (position == -1, "position is wrong");
+  fail_unless (qret == TRUE, "position wrong");
+  fail_unless (position == 10 * GST_SECOND, "position is wrong");
 
   /* Since we are paused and the preroll queue has a length of 1, this function
    * will return immediatly. The EOS will complete the preroll and the  

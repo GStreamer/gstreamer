@@ -1,5 +1,25 @@
 2008-08-19  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_render_object),
+	(gst_base_sink_event), (gst_base_sink_chain_unlocked),
+	(gst_base_sink_negotiate_pull), (gst_base_sink_pad_activate_pull),
+	(gst_base_sink_get_position), (gst_base_sink_change_state):
+	Improve position reporting in the flushing state.
+	Also report the position when we are not yet prerolled but we
+	have a newsegment event. Fixes #543444.
+	Improve the pull-based negotiation code.
+
+	* tests/check/elements/fakesink.c: (GST_START_TEST),
+	(fakesink_suite):
+	Add testcase for position reporting while flushing in PAUSED and
+	PLAYING.
+
+	* tests/check/generic/sinks.c: (GST_START_TEST):
+	Update unit-test, we can now query the position as soon as we receive a
+	NEWSEGMENT event.
+
+2008-08-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Based on patch by: Jason Zhao <e3423c at motorola dot com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_render_object):

@@ -523,17 +523,306 @@ GST_START_TEST (test_eos2)
 
 GST_END_TEST;
 
+/* test position reporting before, during and after flush 
+ * in PAUSED and PLAYING */
+GST_START_TEST (test_position)
+{
+  GstElement *pipeline, *sink;
+  GstPad *sinkpad;
+  GstStateChangeReturn ret;
+  gboolean qret;
+  GstFormat qformat;
+  gint64 qcur;
+  GstBuffer *buffer;
+  GstFlowReturn fret;
+  ChainData *data;
+  GstEvent *event;
+  gboolean eret;
+  gint i;
+
+  /* create sink */
+  pipeline = gst_pipeline_new ("pipeline");
+  fail_if (pipeline == NULL);
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  fail_if (sink == NULL);
+  g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
+  g_object_set (G_OBJECT (sink), "num-buffers", 2, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  sinkpad = gst_element_get_static_pad (sink, "sink");
+  fail_if (sinkpad == NULL);
+
+  /* do position query, this should fail, we have nothing received yet */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == FALSE);
+
+  ret = gst_element_set_state (pipeline, GST_STATE_READY);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+
+  /* do position query, this should fail, we have nothing received yet */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == FALSE);
+
+  /* make pipeline and element ready to accept data */
+  ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC);
+
+  /* do position query, this should fail, we have nothing received yet */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == FALSE);
+
+  /* send segment, this should work */
+  {
+    GST_DEBUG ("sending segment");
+    event = gst_event_new_new_segment (FALSE,
+        1.0, GST_FORMAT_TIME, 1 * GST_SECOND, 3 * GST_SECOND, 1 * GST_SECOND);
+
+    eret = gst_pad_send_event (sinkpad, event);
+    fail_if (eret == FALSE);
+  }
+
+  /* FIXME, do position query, this should succeed with the time value from the
+   * segment. */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == TRUE);
+  fail_unless (qcur == 1 * GST_SECOND);
+
+  /* send buffer that we will flush out */
+  buffer = gst_buffer_new ();
+  GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+
+  GST_DEBUG ("sending buffer");
+
+  /* this buffer causes the sink to preroll */
+  data = chain_async (sinkpad, buffer);
+  fail_if (data == NULL);
+
+  /* wait for preroll */
+  ret = gst_element_get_state (pipeline, NULL, NULL, -1);
+
+  /* do position query, this should succeed with the time value from the
+   * segment. */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == TRUE);
+  fail_unless (qcur == 1 * GST_SECOND);
+
+  /* start flushing, no timing is affected yet */
+  {
+    GST_DEBUG ("sending flush_start");
+    event = gst_event_new_flush_start ();
+
+    eret = gst_pad_send_event (sinkpad, event);
+    fail_if (eret == FALSE);
+  }
+
+  /* preroll buffer is flushed out */
+  fret = chain_async_return (data);
+  fail_unless (fret == GST_FLOW_WRONG_STATE);
+
+  /* do position query, this should succeed with the time value from the
+   * segment before the flush. */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == TRUE);
+  fail_unless (qcur == 1 * GST_SECOND);
+
+  /* stop flushing, timing is affected now */
+  {
+    GST_DEBUG ("sending flush_stop");
+    event = gst_event_new_flush_stop ();
+
+    eret = gst_pad_send_event (sinkpad, event);
+    fail_if (eret == FALSE);
+  }
+
+  /* do position query, this should fail, the segment is flushed */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == FALSE);
+
+  /* send segment, this should work */
+  {
+    GST_DEBUG ("sending segment");
+    event = gst_event_new_new_segment (FALSE,
+        1.0, GST_FORMAT_TIME, 2 * GST_SECOND, 4 * GST_SECOND, 1 * GST_SECOND);
+
+    eret = gst_pad_send_event (sinkpad, event);
+    fail_if (eret == FALSE);
+  }
+
+  /* send buffer that should return OK */
+  buffer = gst_buffer_new ();
+  GST_BUFFER_TIMESTAMP (buffer) = 3 * GST_SECOND;
+  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+
+  GST_DEBUG ("sending buffer");
+
+  /* this buffer causes the sink to preroll */
+  data = chain_async (sinkpad, buffer);
+  fail_if (data == NULL);
+
+  /* wait for preroll */
+  ret = gst_element_get_state (pipeline, NULL, NULL, -1);
+
+  /* do position query, this should succeed with the time value from the
+   * segment. */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == TRUE);
+  fail_unless (qcur == 1 * GST_SECOND);
+
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+
+  /* position now is increasing but never exceeds the boundaries of the segment */
+  for (i = 0; i < 5; i++) {
+    qformat = GST_FORMAT_TIME;
+    qret = gst_element_query_position (sink, &qformat, &qcur);
+    GST_DEBUG ("position %" GST_TIME_FORMAT, GST_TIME_ARGS (qcur));
+    fail_unless (qret == TRUE);
+    fail_unless (qcur >= 1 * GST_SECOND && qcur <= 3 * GST_SECOND);
+    g_usleep (1000 * 250);
+  }
+
+  /* preroll buffer is rendered, we expect one more buffer after this one */
+  fret = chain_async_return (data);
+  fail_unless (fret == GST_FLOW_OK);
+
+  /* after rendering the position must be bigger then the stream_time of the
+   * buffer */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == TRUE);
+  fail_unless (qcur >= 2 * GST_SECOND && qcur <= 3 * GST_SECOND);
+
+  /* start flushing in PLAYING */
+  {
+    GST_DEBUG ("sending flush_start");
+    event = gst_event_new_flush_start ();
+
+    eret = gst_pad_send_event (sinkpad, event);
+    fail_if (eret == FALSE);
+  }
+
+  /* this should now just report the stream time of the last buffer */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == TRUE);
+  fail_unless (qcur == 2 * GST_SECOND);
+
+  {
+    GST_DEBUG ("sending flush_stop");
+    event = gst_event_new_flush_stop ();
+
+    eret = gst_pad_send_event (sinkpad, event);
+    fail_if (eret == FALSE);
+  }
+
+  /* do position query, this should fail, the segment is flushed */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == FALSE);
+
+  /* send segment, this should work */
+  {
+    GST_DEBUG ("sending segment");
+    event = gst_event_new_new_segment (FALSE,
+        1.0, GST_FORMAT_TIME, 2 * GST_SECOND, 4 * GST_SECOND, 1 * GST_SECOND);
+
+    eret = gst_pad_send_event (sinkpad, event);
+    fail_if (eret == FALSE);
+  }
+
+  /* send buffer that should return UNEXPECTED */
+  buffer = gst_buffer_new ();
+  GST_BUFFER_TIMESTAMP (buffer) = 3 * GST_SECOND;
+  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+
+  GST_DEBUG ("sending buffer");
+
+  /* this buffer causes the sink to preroll */
+  data = chain_async (sinkpad, buffer);
+  fail_if (data == NULL);
+
+  /* wait for preroll */
+  ret = gst_element_get_state (pipeline, NULL, NULL, -1);
+
+  /* preroll buffer is rendered, we expect no more buffer after this one */
+  fret = chain_async_return (data);
+  fail_unless (fret == GST_FLOW_UNEXPECTED);
+
+  /* do position query, this should succeed with the stream time of the buffer
+   * against the clock. Since the buffer is synced against the clock, the time
+   * should be at least the stream time of the buffer. */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == TRUE);
+  fail_unless (qcur >= 2 * GST_SECOND && qcur <= 3 * GST_SECOND);
+
+  /* wait 2 more seconds, enough to test if the position was clipped correctly
+   * against the segment */
+  g_usleep (2 * G_USEC_PER_SEC);
+
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == TRUE);
+  fail_unless (qcur == 3 * GST_SECOND);
+
+  GST_DEBUG ("going to PAUSED");
+
+  ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC);
+
+  /* we report the time of the last start of the buffer. This is slightly
+   * incorrect, we should report the exact time when we paused but there is no
+   * record of that anywhere */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == TRUE);
+  fail_unless (qcur == 2 * GST_SECOND);
+
+  ret = gst_element_set_state (pipeline, GST_STATE_READY);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+
+  /* fails again because we are in the wrong state */
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == FALSE);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  qformat = GST_FORMAT_TIME;
+  qret = gst_element_query_position (sink, &qformat, &qcur);
+  fail_unless (qret == FALSE);
+
+  gst_object_unref (sinkpad);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 fakesink_suite (void)
 {
   Suite *s = suite_create ("fakesink");
   TCase *tc_chain = tcase_create ("general");
 
+  tcase_set_timeout (tc_chain, 20);
+
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_clipping);
   tcase_add_test (tc_chain, test_preroll_sync);
   tcase_add_test (tc_chain, test_eos);
   tcase_add_test (tc_chain, test_eos2);
+  tcase_add_test (tc_chain, test_position);
 
   return s;
 }
