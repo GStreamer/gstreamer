@@ -44,6 +44,8 @@ static void gst_gl_effects_get_property (GObject * object, guint prop_id,
 static void gst_gl_effects_init_resources (GstGLFilter* filter);
 static void gst_gl_effects_reset_resources (GstGLFilter* filter);
 
+static void gst_gl_effects_ghash_func_clean (gpointer key, gpointer value, gpointer data);
+
 static gboolean gst_gl_effects_filter (GstGLFilter * filter,
 				       GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 
@@ -284,12 +286,31 @@ gst_gl_effects_init (GstGLEffects * effects, GstGLEffectsClass * klass)
 }
 
 static void
+gst_gl_effects_ghash_func_clean (gpointer key, gpointer value, gpointer data)
+{
+  GstGLShader* shader = (GstGLShader*) value;
+  GstGLFilter* filter = (GstGLFilter*) data;
+
+  //blocking call, wait the opengl thread has destroyed the shader
+  gst_gl_display_del_shader (filter->display, shader);
+
+  value = NULL;
+}
+
+static void
 gst_gl_effects_reset_resources (GstGLFilter* filter)
 {
   GstGLEffects* effects = GST_GL_EFFECTS(filter);
 
 //  g_message ("reset resources");
 
+  //release shaders in the gl thread
+  g_hash_table_foreach (effects->shaderstable, gst_gl_effects_ghash_func_clean,
+    filter);
+
+  //clean the htable without calling values destructors
+  //because shaders have been released in the glthread
+  //through the foreach func
   g_hash_table_unref (effects->shaderstable);
   effects->shaderstable = NULL;
 }
@@ -298,7 +319,7 @@ static void
 gst_gl_effects_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (object); 
+  GstGLEffects *effects = GST_GL_EFFECTS (object);
 
   switch (prop_id) {
   case PROP_EFFECT:
@@ -339,10 +360,8 @@ gst_gl_effects_init_resources (GstGLFilter* filter)
   gint i;
 //  g_message ("init resources");
 //  g_message ("init hashtable");
-  effects->shaderstable = g_hash_table_new_full (g_str_hash,
-						 g_str_equal,
-						 NULL,
-						 g_object_unref);
+  effects->shaderstable = g_hash_table_new (g_str_hash,
+						 g_str_equal);
 //  g_message ("zero textures and curves");
   for (i=0; i<NEEDED_TEXTURES; i++) {
     effects->midtexture[i] = 0;
