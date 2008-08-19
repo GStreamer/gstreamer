@@ -79,7 +79,7 @@ GST_ELEMENT_DETAILS ("WAV audio muxer",
     "channels = (int) [ 1, 2 ], "        \
     "endianness = (int) LITTLE_ENDIAN, " \
     "width = (int) 32, "                 \
-    "depth = (int) [ 25, 32 ], "         \
+    "depth = (int) { 24, 32 }, "         \
     "signed = (boolean) true"            \
     "; "                                 \
     "audio/x-raw-int, "                  \
@@ -87,7 +87,7 @@ GST_ELEMENT_DETAILS ("WAV audio muxer",
     "channels = (int) [ 1, 2 ], "        \
     "endianness = (int) LITTLE_ENDIAN, " \
     "width = (int) 24, "                 \
-    "depth = (int) [ 17, 24 ], "         \
+    "depth = (int) 24, "                 \
     "signed = (boolean) true"            \
     "; "                                 \
     "audio/x-raw-int, "                  \
@@ -95,14 +95,14 @@ GST_ELEMENT_DETAILS ("WAV audio muxer",
     "channels = (int) [ 1, 2 ], "        \
     "endianness = (int) LITTLE_ENDIAN, " \
     "width = (int) 16, "                 \
-    "depth = (int) [ 9, 16 ], "          \
+    "depth = (int) 16, "                 \
     "signed = (boolean) true"            \
     "; "                                 \
     "audio/x-raw-int, "                  \
     "rate = (int) [ 1, MAX ], "          \
     "channels = (int) [ 1, 2 ], "        \
     "width = (int) 8, "                  \
-    "depth = (int) [ 1, 8 ], "           \
+    "depth = (int) 8, "                  \
     "signed = (boolean) false"
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",

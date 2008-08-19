@@ -1,3 +1,8 @@
+2008-08-19  David Schleef  <ds@schleef.org>
+
+	* gst/wavenc/gstwavenc.c: Remove depth ranges and replace
+	with sane values.  Fixes #548530.
+
 2008-08-18  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/pulse/pulsesink.c: (gst_pulsesink_prepare):
