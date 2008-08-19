@@ -194,11 +194,11 @@ gst_gl_differencematte_draw_texture (GstGLDifferenceMatte * differencematte, GLu
 
   glTexCoord2f (0.0, 0.0);
   glVertex2f (-1.0, -1.0);
-  glTexCoord2f (filter->width, 0.0);
+  glTexCoord2f ((gfloat)filter->width, 0.0);
   glVertex2f (1.0, -1.0);
-  glTexCoord2f (filter->width, filter->height);
+  glTexCoord2f ((gfloat)filter->width, (gfloat)filter->height);
   glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, filter->height);
+  glTexCoord2f (0.0, (gfloat)filter->height);
   glVertex2f (-1.0, 1.0);
 
   glEnd ();
@@ -333,9 +333,9 @@ gst_gl_differencematte_hblur (gint width, gint height, guint texture, gpointer s
 {
   GstGLDifferenceMatte* differencematte = GST_GL_DIFFERENCEMATTE (stuff);
   gfloat gauss_kernel[9] = { 
-    0.026995, 0.064759, 0.120985,
-    0.176033, 0.199471, 0.176033,
-    0.120985, 0.064759, 0.026995
+    0.026995f, 0.064759f, 0.120985f,
+    0.176033f, 0.199471f, 0.176033f,
+    0.120985f, 0.064759f, 0.026995f
   };
   
   glMatrixMode (GL_PROJECTION);
@@ -362,9 +362,9 @@ gst_gl_differencematte_vblur (gint width, gint height, guint texture, gpointer s
 {
   GstGLDifferenceMatte* differencematte = GST_GL_DIFFERENCEMATTE (stuff);
   gfloat gauss_kernel[9] = { 
-    0.026995, 0.064759, 0.120985,
-    0.176033, 0.199471, 0.176033,
-    0.120985, 0.064759, 0.026995
+    0.026995f, 0.064759f, 0.120985f,
+    0.176033f, 0.199471f, 0.176033f,
+    0.120985f, 0.064759f, 0.026995f
   };
   
   glMatrixMode (GL_PROJECTION);
