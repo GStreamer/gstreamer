@@ -238,6 +238,7 @@ dnl *** plug-ins to include ***
 
 dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(app)
+AG_GST_CHECK_PLUGIN(apex)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(deinterlace)
@@ -1126,6 +1127,14 @@ AG_GST_CHECK_FEATURE(WININET, [Windows internet library], wininet, [
       [HAVE_WININET="yes"], [HAVE_WININET="no"])
 ])
 
+dnl *** acm ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_ACM, true)
+AG_GST_CHECK_FEATURE(ACM, [Windows ACM library], acm, [
+  AC_MSG_CHECKING([Checking for ACM support])
+  AC_CHECK_HEADERS([windows.h msacm.h],
+      [HAVE_ACM="yes"], [HAVE_ACM="no"])
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -1174,6 +1183,7 @@ AM_CONDITIONAL(USE_X264, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
 AM_CONDITIONAL(USE_WININET, false)
+AM_CONDITIONAL(USE_ACM, false)
 
 fi dnl of EXT plugins
 
@@ -1237,6 +1247,7 @@ AC_CONFIG_FILES(
 Makefile
 gst-plugins-bad.spec
 gst/Makefile
+gst/apex/Makefile
 gst/app/Makefile
 gst/bayer/Makefile
 gst/cdxaparse/Makefile
@@ -1276,6 +1287,7 @@ gst-libs/gst/app/Makefile
 gst-libs/gst/dshow/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
+sys/acmenc/Makefile
 sys/dshowsrcwrapper/Makefile
 sys/dshowvideosink/Makefile
 sys/dvb/Makefile
@@ -1308,6 +1320,7 @@ ext/ladspa/Makefile
 ext/libmms/Makefile
 ext/Makefile
 ext/nas/Makefile
+ext/mozilla/Makefile
 ext/mpeg2enc/Makefile
 ext/mplex/Makefile
 ext/musepack/Makefile
