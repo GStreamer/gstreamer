@@ -238,7 +238,6 @@ dnl *** plug-ins to include ***
 
 dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(app)
-AG_GST_CHECK_PLUGIN(apex)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(deinterlace)
@@ -1247,7 +1246,6 @@ AC_CONFIG_FILES(
 Makefile
 gst-plugins-bad.spec
 gst/Makefile
-gst/apex/Makefile
 gst/app/Makefile
 gst/bayer/Makefile
 gst/cdxaparse/Makefile
@@ -1320,7 +1318,6 @@ ext/ladspa/Makefile
 ext/libmms/Makefile
 ext/Makefile
 ext/nas/Makefile
-ext/mozilla/Makefile
 ext/mpeg2enc/Makefile
 ext/mplex/Makefile
 ext/musepack/Makefile
