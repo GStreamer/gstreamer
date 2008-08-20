@@ -306,6 +306,7 @@ gst_base_transform_set_qos_enabled
 gst_base_transform_update_qos
 gst_base_transform_set_gap_aware
 gst_base_transform_suggest
+gst_base_transform_reconfigure
 
 GST_BASE_TRANSFORM_SINK_NAME
 GST_BASE_TRANSFORM_SRC_NAME

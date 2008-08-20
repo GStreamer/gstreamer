@@ -1,3 +1,14 @@
+2008-08-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_handle_buffer), (gst_base_transform_getrange),
+	(gst_base_transform_chain), (gst_base_transform_suggest),
+	(gst_base_transform_reconfigure):
+	* libs/gst/base/gstbasetransform.h:
+	Implement method for reconfiguring basetransform.
+	API: GstBaseTransform::gst_base_transform_reconfigure()
+
 2008-08-20  Stefan Kost  <ensonic@users.sf.net>
 
 	patch by: Murray Cumming <murrayc@murrayc.com>

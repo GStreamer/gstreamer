@@ -258,6 +258,7 @@ void            gst_base_transform_set_gap_aware    (GstBaseTransform *trans,
 
 void		gst_base_transform_suggest          (GstBaseTransform *trans,
 	                                             GstCaps *caps, guint size);
+void		gst_base_transform_reconfigure      (GstBaseTransform *trans);
 G_END_DECLS
 
 #endif /* __GST_BASE_TRANSFORM_H__ */

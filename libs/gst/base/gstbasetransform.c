@@ -252,6 +252,8 @@ struct _GstBaseTransformPrivate
   GstCaps *sink_suggest;
   guint size_suggest;
   gint suggest_pending;
+
+  gboolean reconfigure;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -1663,10 +1665,26 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
 {
   GstBaseTransformClass *bclass;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean want_in_place;
+  gboolean want_in_place, reconfigure;
   GstClockTime qostime;
+  GstCaps *incaps;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  if (G_LIKELY ((incaps = GST_BUFFER_CAPS (inbuf)))) {
+    GST_OBJECT_LOCK (trans);
+    reconfigure = trans->priv->reconfigure;
+    trans->priv->reconfigure = FALSE;
+    GST_OBJECT_UNLOCK (trans);
+
+    if (G_UNLIKELY (reconfigure)) {
+      /* if we need to reconfigure we pretend a buffer with new caps arrived. This
+       * will reconfigure the transform with the new output format. We can only
+       * do this if the buffer actually has caps. */
+      if (!gst_base_transform_setcaps (trans->sinkpad, incaps))
+        goto not_negotiated;
+    }
+  }
 
   if (GST_BUFFER_OFFSET_IS_VALID (inbuf))
     GST_DEBUG_OBJECT (trans, "handling buffer %p of size %d and offset %"
@@ -1820,7 +1838,9 @@ gst_base_transform_getrange (GstPad * pad, guint64 offset,
 
   ret = gst_pad_pull_range (trans->sinkpad, offset, length, &inbuf);
   if (ret == GST_FLOW_OK) {
+    GST_BASE_TRANSFORM_LOCK (trans);
     ret = gst_base_transform_handle_buffer (trans, inbuf, buffer);
+    GST_BASE_TRANSFORM_UNLOCK (trans);
   }
 
   gst_object_unref (trans);
@@ -1847,7 +1867,9 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   /* protect transform method and concurrent buffer alloc */
+  GST_BASE_TRANSFORM_LOCK (trans);
   ret = gst_base_transform_handle_buffer (trans, buffer, &outbuf);
+  GST_BASE_TRANSFORM_UNLOCK (trans);
 
   /* outbuf can be NULL, this means a dropped buffer, if we have a buffer but
    * GST_BASE_TRANSFORM_FLOW_DROPPED we will not push either. */
@@ -2249,7 +2271,8 @@ gst_base_transform_set_gap_aware (GstBaseTransform * trans, gboolean gap_aware)
  * @caps: caps to suggest
  * @size: buffer size to suggest
  *
- * Instructs @trans to suggest new @caps upstream.
+ * Instructs @trans to suggest new @caps upstream. A copy of @caps will be
+ * taken.
  *
  * Since: 0.10.21
  */
@@ -2262,27 +2285,31 @@ gst_base_transform_suggest (GstBaseTransform * trans, GstCaps * caps,
   GST_OBJECT_LOCK (trans->sinkpad);
   if (trans->priv->sink_suggest)
     gst_caps_unref (trans->priv->sink_suggest);
-  trans->priv->sink_suggest = gst_caps_copy (caps);
+  if (caps)
+    caps = gst_caps_copy (caps);
+  trans->priv->sink_suggest = caps;
   trans->priv->size_suggest = size;
   g_atomic_int_set (&trans->priv->suggest_pending, 1);
   GST_DEBUG_OBJECT (trans, "new suggest %" GST_PTR_FORMAT, caps);
   GST_OBJECT_UNLOCK (trans->sinkpad);
 }
 
-#if 0
 /**
  * gst_base_transform_reconfigure:
  * @trans: a #GstBaseTransform
  *
  * Instructs @trans to renegotiate a new downstream transform on the next
- * buffer.
- *
- * Note: Not yet implemented.
+ * buffer. This function is typically called after properties on the transform
+ * were set that influence the output format.
  *
  * Since: 0.10.21
  */
 void
 gst_base_transform_reconfigure (GstBaseTransform * trans)
 {
+  g_return_if_fail (GST_IS_BASE_TRANSFORM (trans));
+
+  GST_OBJECT_LOCK (trans);
+  trans->priv->reconfigure = TRUE;
+  GST_OBJECT_UNLOCK (trans);
 }
-#endif
