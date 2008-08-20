@@ -105,9 +105,14 @@ enum
 };
 
 #define CLOSE_IF_REQUESTED(udpctx)                                        \
-  if ((!udpctx->externalfd) || (udpctx->externalfd && udpctx->closefd))   \
+G_STMT_START {                                                            \
+  if ((!udpctx->externalfd) || (udpctx->externalfd && udpctx->closefd)) { \
     CLOSE_SOCKET(udpctx->sock);                                           \
-  udpctx->sock = -1;
+    if (udpctx->sock == udpctx->sockfd)                                   \
+      udpctx->sockfd = DEFAULT_SOCKFD;                                    \
+  }                                                                       \
+  udpctx->sock = DEFAULT_SOCK;                                            \
+} G_STMT_END
 
 static void gst_multiudpsink_base_init (gpointer g_class);
 static void gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass);
@@ -332,7 +337,7 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   WSA_STARTUP (sink);
 
   sink->client_lock = g_mutex_new ();
-  sink->sock = -1;
+  sink->sock = DEFAULT_SOCK;
   sink->sockfd = DEFAULT_SOCKFD;
   sink->closefd = DEFAULT_CLOSEFD;
   sink->externalfd = (sink->sockfd != -1);
@@ -351,6 +356,9 @@ gst_multiudpsink_finalize (GObject * object)
 
   g_list_foreach (sink->clients, (GFunc) free_client, NULL);
   g_list_free (sink->clients);
+
+  if (sink->sockfd >= 0 && sink->closefd)
+    CLOSE_SOCKET (sink->sockfd);
 
   g_mutex_free (sink->client_lock);
 
@@ -517,6 +525,9 @@ gst_multiudpsink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SOCKFD:
+      if (udpsink->sockfd >= 0 && udpsink->sockfd != udpsink->sock &&
+          udpsink->closefd)
+        CLOSE_SOCKET (udpsink->sockfd);
       udpsink->sockfd = g_value_get_int (value);
       GST_DEBUG_OBJECT (udpsink, "setting SOCKFD to %d", udpsink->sockfd);
       break;

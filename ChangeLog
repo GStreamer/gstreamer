@@ -1,5 +1,19 @@
 2008-08-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Peter Kjellerstedt <pkj at axis com>
+
+	* gst/udp/gstdynudpsink.c: (gst_dynudpsink_init),
+	(gst_dynudpsink_finalize), (gst_dynudpsink_set_property),
+	(gst_dynudpsink_init_send), (gst_dynudpsink_close):
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_init),
+	(gst_multiudpsink_finalize), (gst_multiudpsink_set_property):
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_finalize),
+	(gst_udpsrc_set_property):
+	Avoid leaking internally allocated file descriptors when setting
+	custom file descriptors. Fixes #543101.
+
+2008-08-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_stream_configure_udp_sink):
 	Don't try to configure RTCP back to the server when the server did not
 	give us a valid port number.

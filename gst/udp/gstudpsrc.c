@@ -141,13 +141,6 @@ typedef int socklen_t;
 GST_DEBUG_CATEGORY_STATIC (udpsrc_debug);
 #define GST_CAT_DEFAULT (udpsrc_debug)
 
-#define CLOSE_IF_REQUESTED(udpctx)                                        \
-G_STMT_START {                                                            \
-  if ((!udpctx->externalfd) || (udpctx->externalfd && udpctx->closefd))   \
-    CLOSE_SOCKET(udpctx->sock.fd);                                        \
-  udpctx->sock.fd = -1;                                                   \
-} G_STMT_END
-
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -190,6 +183,16 @@ enum
 
   PROP_LAST
 };
+
+#define CLOSE_IF_REQUESTED(udpctx)                                        \
+G_STMT_START {                                                            \
+  if ((!udpctx->externalfd) || (udpctx->externalfd && udpctx->closefd)) { \
+    CLOSE_SOCKET(udpctx->sock.fd);                                        \
+    if (udpctx->sock.fd == udpctx->sockfd)                                \
+      udpctx->sockfd = UDP_DEFAULT_SOCKFD;                                \
+  }                                                                       \
+  udpctx->sock.fd = UDP_DEFAULT_SOCK;                                     \
+} G_STMT_END
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
@@ -348,7 +351,10 @@ gst_udpsrc_finalize (GObject * object)
   g_free (udpsrc->multi_group);
   g_free (udpsrc->uri);
 
-  WSA_CLEANUP (src);
+  if (udpsrc->sockfd >= 0 && udpsrc->closefd)
+    CLOSE_SOCKET (udpsrc->sockfd);
+
+  WSA_CLEANUP (object);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -671,6 +677,9 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     }
     case PROP_SOCKFD:
+      if (udpsrc->sockfd >= 0 && udpsrc->sockfd != udpsrc->sock.fd &&
+          udpsrc->closefd)
+        CLOSE_SOCKET (udpsrc->sockfd);
       udpsrc->sockfd = g_value_get_int (value);
       GST_DEBUG ("setting SOCKFD to %d", udpsrc->sockfd);
       break;

@@ -41,11 +41,6 @@
 GST_DEBUG_CATEGORY_STATIC (dynudpsink_debug);
 #define GST_CAT_DEFAULT (dynudpsink_debug)
 
-#define CLOSE_IF_REQUESTED(udpctx)                                      \
-  if ((!udpctx->externalfd) || (udpctx->externalfd && udpctx->closefd)) \
-    CLOSE_SOCKET(udpctx->sock);                                         \
-  udpctx->sock = -1;
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -79,6 +74,16 @@ enum
   PROP_SOCKFD,
   PROP_CLOSEFD
 };
+
+#define CLOSE_IF_REQUESTED(udpctx)                                        \
+G_STMT_START {                                                            \
+  if ((!udpctx->externalfd) || (udpctx->externalfd && udpctx->closefd)) { \
+    CLOSE_SOCKET(udpctx->sock);                                           \
+    if (udpctx->sock == udpctx->sockfd)                                   \
+      udpctx->sockfd = UDP_DEFAULT_SOCKFD;                                \
+  }                                                                       \
+  udpctx->sock = -1;                                                      \
+} G_STMT_END
 
 static void gst_dynudpsink_base_init (gpointer g_class);
 static void gst_dynudpsink_class_init (GstDynUDPSink * klass);
@@ -179,11 +184,7 @@ gst_dynudpsink_class_init (GstDynUDPSink * klass)
 static void
 gst_dynudpsink_init (GstDynUDPSink * sink)
 {
-  GstDynUDPSink *udpsink;
-
   WSA_STARTUP (sink);
-
-  udpsink = GST_DYNUDPSINK (sink);
 
   sink->sockfd = UDP_DEFAULT_SOCKFD;
   sink->closefd = UDP_DEFAULT_CLOSEFD;
@@ -195,6 +196,13 @@ gst_dynudpsink_init (GstDynUDPSink * sink)
 static void
 gst_dynudpsink_finalize (GObject * object)
 {
+  GstDynUDPSink *udpsink;
+
+  udpsink = GST_DYNUDPSINK (object);
+
+  if (udpsink->sockfd >= 0 && udpsink->closefd)
+    CLOSE_SOCKET (udpsink->sockfd);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 
   WSA_CLEANUP (object);
@@ -265,6 +273,9 @@ gst_dynudpsink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SOCKFD:
+      if (udpsink->sockfd >= 0 && udpsink->sockfd != udpsink->sock &&
+          udpsink->closefd)
+        CLOSE_SOCKET (udpsink->sockfd);
       udpsink->sockfd = g_value_get_int (value);
       GST_DEBUG ("setting SOCKFD to %d", udpsink->sockfd);
       break;
@@ -309,7 +320,7 @@ gst_dynudpsink_init_send (GstDynUDPSink * sink)
 
   if (sink->sockfd == -1) {
     /* create sender socket if none available */
-    if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
+    if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
       goto no_socket;
 
     bc_val = 1;
@@ -348,8 +359,7 @@ gst_dynudpsink_get_stats (GstDynUDPSink * sink, const gchar * host, gint port)
 static void
 gst_dynudpsink_close (GstDynUDPSink * sink)
 {
-  if (sink->sock != -1)
-    CLOSE_IF_REQUESTED (sink);
+  CLOSE_IF_REQUESTED (sink);
 }
 
 static GstStateChangeReturn
