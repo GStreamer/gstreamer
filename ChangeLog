@@ -1,5 +1,12 @@
 2008-08-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtsp/gstrtspgoogle.c:
+	Things that can happen when your brain is in google mode trying to
+	deal with their google rtsp server extensions and trying to type your
+	google mail account.
+
+2008-08-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtsp/Makefile.am:
 	* gst/rtsp/gstrtsp.c: (plugin_init):
 	* gst/rtsp/gstrtspgoogle.c: (gst_rtsp_google_before_send),

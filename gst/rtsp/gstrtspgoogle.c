@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2008> Wim Taymans <wim.taymans@google.com>
+ * Copyright (C) <2008> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
