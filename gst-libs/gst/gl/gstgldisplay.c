@@ -2425,8 +2425,17 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
     //So we have to set a display->hardware (ATI o/ NVIDIA) and
     //etc...
     case GST_VIDEO_FORMAT_YV12:
-      offsetU = 2;
-      offsetV = 1;
+
+      if (g_ascii_strncasecmp ("ATI", (gchar *) glGetString (GL_VENDOR), 3) == 0)
+      {
+        offsetU = 2;
+        offsetV = 1;
+      }
+      else
+      {
+        offsetU = 1;
+        offsetV = 2;
+      }
       break;
     default:
       g_assert_not_reached ();
