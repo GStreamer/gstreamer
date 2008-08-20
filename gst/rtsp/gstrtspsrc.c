@@ -2057,6 +2057,11 @@ gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
   else
     port = transport->server_port.max;
 
+  /* it's possible that the server does not want us to send RTCP in which case
+   * the port is -1 */
+  if (port == -1)
+    goto no_port;
+
   /* first take the source, then the endpoint to figure out where to send
    * the RTCP. */
   destination = transport->source;
@@ -2113,6 +2118,11 @@ no_sink_element:
   {
     GST_DEBUG_OBJECT (src, "no UDP sink element found");
     return FALSE;
+  }
+no_port:
+  {
+    GST_DEBUG_OBJECT (src, "no valid port, ignoring RTCP for this stream");
+    return TRUE;
   }
 }
 

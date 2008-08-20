@@ -1,5 +1,11 @@
 2008-08-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_stream_configure_udp_sink):
+	Don't try to configure RTCP back to the server when the server did not
+	give us a valid port number.
+
+2008-08-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/videobox/gstvideobox.c: (gst_video_box_set_property):
 	Use new basetransform method to renegotiate. Fixes #544956.
 
