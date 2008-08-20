@@ -186,6 +186,9 @@ gst_pulse_channel_map_to_gst (const pa_channel_map * map,
     }
   }
 
+  if (!invalid && !gst_audio_check_channel_positions (pos, spec->channels))
+    invalid = TRUE;
+
   if (invalid) {
     for (i = 0; i < spec->channels; i++)
       pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;

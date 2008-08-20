@@ -157,7 +157,6 @@ gst_pulsemixer_ctrl_subscribe_cb (pa_context * context,
     pa_subscription_event_type_t t, uint32_t idx, void *userdata)
 {
   GstPulseMixerCtrl *c = GST_PULSEMIXER_CTRL (userdata);
-
   pa_operation *o = NULL;
 
   /* Called from the background thread! */
@@ -207,9 +206,7 @@ static gboolean
 gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
 {
   int e;
-
   gchar *name = gst_pulse_client_name ();
-
   pa_operation *o = NULL;
 
   g_assert (c);
@@ -442,7 +439,6 @@ gst_pulsemixer_ctrl_timeout_event (pa_mainloop_api * a, pa_time_event * e,
     const struct timeval *tv, void *userdata)
 {
   pa_operation *o;
-
   GstPulseMixerCtrl *c = GST_PULSEMIXER_CTRL (userdata);
 
   if (c->update_volume) {
@@ -516,7 +512,6 @@ gst_pulsemixer_ctrl_set_volume (GstPulseMixerCtrl * c, GstMixerTrack * track,
     gint * volumes)
 {
   pa_cvolume v;
-
   int i;
 
   g_assert (c);

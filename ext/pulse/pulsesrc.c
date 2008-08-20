@@ -62,10 +62,6 @@ enum
   PROP_DEVICE_NAME
 };
 
-static GstAudioSrcClass *parent_class = NULL;
-
-GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS (GstPulseSrc, gst_pulsesrc);
-
 static void gst_pulsesrc_destroy_stream (GstPulseSrc * pulsesrc);
 
 static void gst_pulsesrc_destroy_context (GstPulseSrc * pulsesrc);
@@ -96,13 +92,18 @@ static gboolean gst_pulsesrc_negotiate (GstBaseSrc * basesrc);
 static GstStateChangeReturn gst_pulsesrc_change_state (GstElement *
     element, GstStateChange transition);
 
+static void gst_pulsesrc_init_interfaces (GType type);
+
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
 # define ENDIANNESS   "LITTLE_ENDIAN, BIG_ENDIAN"
 #else
 # define ENDIANNESS   "BIG_ENDIAN, LITTLE_ENDIAN"
 #endif
 
+GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS (GstPulseSrc, gst_pulsesrc);
 GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSrc, gst_pulsesrc);
+GST_BOILERPLATE_FULL (GstPulseSrc, gst_pulsesrc, GstAudioSrc,
+    GST_TYPE_AUDIO_SRC, gst_pulsesrc_init_interfaces);
 
 static gboolean
 gst_pulsesrc_interface_supported (GstImplementsInterface *
@@ -201,14 +202,12 @@ gst_pulsesrc_base_init (gpointer g_class)
 }
 
 static void
-gst_pulsesrc_class_init (gpointer g_class, gpointer class_data)
+gst_pulsesrc_class_init (GstPulseSrcClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-  GstAudioSrcClass *gstaudiosrc_class = GST_AUDIO_SRC_CLASS (g_class);
-  GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (g_class);
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  parent_class = g_type_class_peek_parent (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstAudioSrcClass *gstaudiosrc_class = GST_AUDIO_SRC_CLASS (klass);
+  GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_pulsesrc_change_state);
@@ -246,11 +245,8 @@ gst_pulsesrc_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
-gst_pulsesrc_init (GTypeInstance * instance, gpointer g_class)
+gst_pulsesrc_init (GstPulseSrc * pulsesrc, GstPulseSrcClass * klass)
 {
-
-  GstPulseSrc *pulsesrc = GST_PULSESRC (instance);
-
   int e;
 
   pulsesrc->server = pulsesrc->device = NULL;
@@ -653,8 +649,9 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
   if (!pulsesrc->context
       || pa_context_get_state (pulsesrc->context) != PA_CONTEXT_READY) {
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Bad context state: %s",
-            pulsesrc->context ? pa_strerror (pa_context_errno (pulsesrc->
-                    context)) : NULL), (NULL));
+            pulsesrc->
+            context ? pa_strerror (pa_context_errno (pulsesrc->context)) :
+            NULL), (NULL));
     goto unlock_and_fail;
   }
 
@@ -844,32 +841,4 @@ gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return GST_STATE_CHANGE_SUCCESS;
-}
-
-GType
-gst_pulsesrc_get_type (void)
-{
-  static GType pulsesrc_type = 0;
-
-  if (!pulsesrc_type) {
-
-    static const GTypeInfo pulsesrc_info = {
-      sizeof (GstPulseSrcClass),
-      gst_pulsesrc_base_init,
-      NULL,
-      gst_pulsesrc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstPulseSrc),
-      0,
-      gst_pulsesrc_init,
-    };
-
-    pulsesrc_type = g_type_register_static (GST_TYPE_AUDIO_SRC,
-        "GstPulseSrc", &pulsesrc_info, 0);
-
-    gst_pulsesrc_init_interfaces (pulsesrc_type);
-  }
-
-  return pulsesrc_type;
 }

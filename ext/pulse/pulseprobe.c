@@ -99,7 +99,6 @@ static gboolean
 gst_pulseprobe_open (GstPulseProbe * c)
 {
   int e;
-
   gchar *name = gst_pulse_client_name ();
 
   g_assert (c);

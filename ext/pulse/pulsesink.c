@@ -69,8 +69,6 @@ enum
   PROP_VOLUME
 };
 
-static GstAudioSinkClass *parent_class = NULL;
-
 static void gst_pulsesink_destroy_stream (GstPulseSink * pulsesink);
 
 static void gst_pulsesink_destroy_context (GstPulseSink * pulsesink);
@@ -102,6 +100,8 @@ static gboolean gst_pulsesink_event (GstBaseSink * sink, GstEvent * event);
 static GstStateChangeReturn gst_pulsesink_change_state (GstElement *
     element, GstStateChange transition);
 
+static void gst_pulsesink_init_interfaces (GType type);
+
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
 # define ENDIANNESS   "LITTLE_ENDIAN, BIG_ENDIAN"
 #else
@@ -109,6 +109,8 @@ static GstStateChangeReturn gst_pulsesink_change_state (GstElement *
 #endif
 
 GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSink, gst_pulsesink);
+GST_BOILERPLATE_FULL (GstPulseSink, gst_pulsesink, GstAudioSink,
+    GST_TYPE_AUDIO_SINK, gst_pulsesink_init_interfaces);
 
 static gboolean
 gst_pulsesink_interface_supported (GstImplementsInterface *
@@ -197,15 +199,12 @@ gst_pulsesink_base_init (gpointer g_class)
 }
 
 static void
-gst_pulsesink_class_init (gpointer g_class, gpointer class_data)
+gst_pulsesink_class_init (GstPulseSinkClass * klass)
 {
-
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (g_class);
-  GstAudioSinkClass *gstaudiosink_class = GST_AUDIO_SINK_CLASS (g_class);
-
-  parent_class = g_type_class_peek_parent (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
+  GstAudioSinkClass *gstaudiosink_class = GST_AUDIO_SINK_CLASS (klass);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pulsesink_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pulsesink_finalize);
@@ -250,11 +249,8 @@ gst_pulsesink_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
-gst_pulsesink_init (GTypeInstance * instance, gpointer g_class)
+gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
 {
-
-  GstPulseSink *pulsesink = GST_PULSESINK (instance);
-
   int e;
 
   pulsesink->server = pulsesink->device = pulsesink->stream_name = NULL;
@@ -510,7 +506,6 @@ static gboolean
 gst_pulsesink_open (GstAudioSink * asink)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (asink);
-
   gchar *name = gst_pulse_client_name ();
 
   pa_threaded_mainloop_lock (pulsesink->mainloop);
@@ -568,15 +563,13 @@ static gboolean
 gst_pulsesink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 {
   pa_buffer_attr buf_attr;
-
   pa_channel_map channel_map;
-
   GstPulseSink *pulsesink = GST_PULSESINK (asink);
 
   if (!gst_pulse_fill_sample_spec (spec, &pulsesink->sample_spec)) {
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, SETTINGS,
         ("Invalid sample specification."), (NULL));
-    goto unlock_and_fail;
+    goto fail;
   }
 
   pa_threaded_mainloop_lock (pulsesink->mainloop);
@@ -584,14 +577,16 @@ gst_pulsesink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   if (!pulsesink->context
       || pa_context_get_state (pulsesink->context) != PA_CONTEXT_READY) {
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED, ("Bad context state: %s",
-            pulsesink->context ? pa_strerror (pa_context_errno (pulsesink->
-                    context)) : NULL), (NULL));
+            pulsesink->
+            context ? pa_strerror (pa_context_errno (pulsesink->context)) :
+            NULL), (NULL));
     goto unlock_and_fail;
   }
 
   if (!(pulsesink->stream = pa_stream_new (pulsesink->context,
-              pulsesink->stream_name ? pulsesink->
-              stream_name : "Playback Stream", &pulsesink->sample_spec,
+              pulsesink->
+              stream_name ? pulsesink->stream_name : "Playback Stream",
+              &pulsesink->sample_spec,
               gst_pulse_gst_to_channel_map (&channel_map, spec)))) {
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
         ("Failed to create stream: %s",
@@ -641,8 +636,9 @@ gst_pulsesink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   return TRUE;
 
 unlock_and_fail:
-
   pa_threaded_mainloop_unlock (pulsesink->mainloop);
+
+fail:
   return FALSE;
 }
 
@@ -669,7 +665,6 @@ static guint
 gst_pulsesink_write (GstAudioSink * asink, gpointer data, guint length)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (asink);
-
   size_t sum = 0;
 
   pa_threaded_mainloop_lock (pulsesink->mainloop);
@@ -724,7 +719,6 @@ static guint
 gst_pulsesink_delay (GstAudioSink * asink)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (asink);
-
   pa_usec_t t;
 
   pa_threaded_mainloop_lock (pulsesink->mainloop);
@@ -768,7 +762,6 @@ static void
 gst_pulsesink_reset (GstAudioSink * asink)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (asink);
-
   pa_operation *o = NULL;
 
   pa_threaded_mainloop_lock (pulsesink->mainloop);
@@ -925,32 +918,4 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return GST_STATE_CHANGE_SUCCESS;
-}
-
-GType
-gst_pulsesink_get_type (void)
-{
-  static GType pulsesink_type = 0;
-
-  if (!pulsesink_type) {
-
-    static const GTypeInfo pulsesink_info = {
-      sizeof (GstPulseSinkClass),
-      gst_pulsesink_base_init,
-      NULL,
-      gst_pulsesink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstPulseSink),
-      0,
-      gst_pulsesink_init,
-    };
-
-    pulsesink_type = g_type_register_static (GST_TYPE_AUDIO_SINK,
-        "GstPulseSink", &pulsesink_info, 0);
-
-    gst_pulsesink_init_interfaces (pulsesink_type);
-  }
-
-  return pulsesink_type;
 }

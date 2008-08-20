@@ -134,7 +134,6 @@ static void
 gst_pulsemixer_class_init (GstPulseMixerClass * g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
   GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
 
   gstelement_class->change_state =
@@ -200,7 +199,6 @@ static void
 gst_pulsemixer_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-
   GstPulseMixer *this = GST_PULSEMIXER (object);
 
   switch (prop_id) {
@@ -228,11 +226,9 @@ static void
 gst_pulsemixer_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-
   GstPulseMixer *this = GST_PULSEMIXER (object);
 
   switch (prop_id) {
-
     case PROP_SERVER:
       g_value_set_string (value, this->server);
       break;
@@ -242,7 +238,6 @@ gst_pulsemixer_get_property (GObject * object,
       break;
 
     case PROP_DEVICE_NAME:
-
       if (this->mixer) {
         char *t = g_strdup_printf ("%s: %s",
             this->mixer->type == GST_PULSEMIXER_SINK ? "Playback" : "Capture",

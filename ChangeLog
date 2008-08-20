@@ -1,3 +1,24 @@
+2008-08-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/pulse/pulsemixer.c: (gst_pulsemixer_class_init),
+	(gst_pulsemixer_set_property), (gst_pulsemixer_get_property):
+	* ext/pulse/pulsemixerctrl.c: (gst_pulsemixer_ctrl_subscribe_cb),
+	(gst_pulsemixer_ctrl_open), (gst_pulsemixer_ctrl_timeout_event),
+	(gst_pulsemixer_ctrl_set_volume):
+	* ext/pulse/pulsemixertrack.c: (gst_pulsemixer_track_new):
+	* ext/pulse/pulseprobe.c: (gst_pulseprobe_open):
+	* ext/pulse/pulsesink.c: (gst_pulsesink_class_init),
+	(gst_pulsesink_init), (gst_pulsesink_open),
+	(gst_pulsesink_prepare), (gst_pulsesink_write),
+	(gst_pulsesink_delay), (gst_pulsesink_reset):
+	* ext/pulse/pulsesrc.c: (gst_pulsesrc_class_init),
+	(gst_pulsesrc_init):
+	Use GST_BOILERPLATE everywhere and fix coding style at some places.
+	Fix a locking issue in pulsesink's prepare function.
+
+	* ext/pulse/pulseutil.c: (gst_pulse_channel_map_to_gst):
+	Check if the created channel layout is valid for GStreamer.
+
 2008-08-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtsp/gstrtspgoogle.c:

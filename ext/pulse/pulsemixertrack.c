@@ -47,7 +47,6 @@ GstMixerTrack *
 gst_pulsemixer_track_new (GstPulseMixerCtrl * control)
 {
   GstPulseMixerTrack *pulsetrack;
-
   GstMixerTrack *track;
 
   pulsetrack = g_object_new (GST_TYPE_PULSEMIXER_TRACK, NULL);
