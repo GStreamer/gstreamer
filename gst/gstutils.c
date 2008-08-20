@@ -3,7 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2002 Thomas Vander Stichele <thomas@apestaart.org>
  *
- * gstutils.c: Utility functions: gtk_get_property stuff, etc.
+ * gstutils.c: Utility functions
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -2419,6 +2419,11 @@ gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
  *
  * If the buffers point to contiguous areas of memory, the buffer
  * is created without copying the data.
+ *
+ * This is a convenience function for C programmers. See also 
+ * gst_buffer_merge(), which does the same thing without 
+ * unreffing the input parameters. Language bindings without 
+ * explicit reference counting should not wrap this function.
  *
  * Returns: the new #GstBuffer which is the concatenation of the source buffers.
  */

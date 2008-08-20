@@ -1,5 +1,16 @@
 2008-08-20  Stefan Kost  <ensonic@users.sf.net>
 
+	patch by: Murray Cumming <murrayc@murrayc.com>
+
+	* gst/gstutils.c:
+	  Mention that this is just like gst_buffer_merge() but with extra
+	  unreffing for C coders. Advise language bindings not to wrap it.
+	  Fixes Bug #533856.
+	  
+	  Also fix file comment.
+
+2008-08-20  Stefan Kost  <ensonic@users.sf.net>
+
 	reviewed by: Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* plugins/elements/gstfakesink.c:
