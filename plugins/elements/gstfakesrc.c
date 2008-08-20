@@ -449,8 +449,7 @@ gst_fake_src_event_handler (GstBaseSrc * basesrc, GstEvent * event)
     g_object_notify (G_OBJECT (src), "last_message");
   }
 
-
-  return TRUE;
+  return GST_BASE_SRC_CLASS (parent_class)->event (basesrc, event);
 }
 
 static void
