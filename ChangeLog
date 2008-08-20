@@ -1,3 +1,8 @@
+2008-08-20  Tim-Philipp Müller  <tim at collabora co uk>
+
+	* ext/flac/gstflacenc.c:
+	  Fix compilation against older libflac versions.
+
 2008-08-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/pulse/pulsemixer.c: (gst_pulsemixer_class_init),
