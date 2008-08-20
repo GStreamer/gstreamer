@@ -37,8 +37,6 @@ struct _GstGLPixbufOverlay
 {
   GstGLFilter filter;
 
-  GstGLShader *shader;
-  
   gchar *location;
   gboolean pbuf_has_changed;
 
@@ -97,13 +95,7 @@ enum
 static void
 gst_gl_pixbufoverlay_init_gl_resources (GstGLFilter *filter)
 {
-  GstGLPixbufOverlay *pixbufoverlay = GST_GL_PIXBUFOVERLAY (filter);
-
-  pixbufoverlay->shader = gst_gl_shader_new ();
-
-  g_return_if_fail (
-    gst_gl_shader_compile_and_check (pixbufoverlay->shader, interpolate_fragment_source,
-				     GST_GL_SHADER_FRAGMENT_SOURCE));
+//  GstGLPixbufOverlay *pixbufoverlay = GST_GL_PIXBUFOVERLAY (filter);
 }
 
 /* free resources that need a gl context */
@@ -113,7 +105,6 @@ gst_gl_pixbufoverlay_reset_gl_resources (GstGLFilter *filter)
   GstGLPixbufOverlay *pixbufoverlay = GST_GL_PIXBUFOVERLAY (filter);
   
   glDeleteTextures (1, &pixbufoverlay->pbuftexture);
-  g_object_unref (pixbufoverlay->shader);
 }
 
 static void
@@ -168,13 +159,36 @@ gst_gl_pixbufoverlay_draw_texture (GstGLPixbufOverlay * pixbufoverlay, GLuint te
   glVertex2f (-1.0, 1.0);
 
   glEnd ();
+
+  if (pixbufoverlay->pbuftexture == 0) return;
+
+  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, pixbufoverlay->pbuftexture);
+
+  glBegin (GL_QUADS);
+
+  glTexCoord2f (0.0, 0.0);
+  glVertex2f (-1.0, -1.0);
+  glTexCoord2f ((gfloat)filter->width, 0.0);
+  glVertex2f (1.0, -1.0);
+  glTexCoord2f ((gfloat)filter->width, (gfloat)filter->height);
+  glVertex2f (1.0, 1.0);
+  glTexCoord2f (0.0, (gfloat)filter->height);
+  glVertex2f (-1.0, 1.0);
+
+  glEnd ();
+
+
+  glFlush ();
 }
 
 static void
 gst_gl_pixbufoverlay_init (GstGLPixbufOverlay * pixbufoverlay, 
                            GstGLPixbufOverlayClass * klass)
 {
-  pixbufoverlay->shader = NULL;
   pixbufoverlay->location = NULL;
   pixbufoverlay->pixbuf = NULL;
   pixbufoverlay->pbuftexture = 0;
@@ -234,22 +248,6 @@ gst_gl_pixbufoverlay_callback (gint width, gint height, guint texture, gpointer 
   
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
-
-  gst_gl_shader_use (pixbufoverlay->shader);
-
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable(GL_TEXTURE_RECTANGLE_ARB);
-  
-  gst_gl_shader_set_uniform_1i (pixbufoverlay->shader, "base", 0);
-
-  glActiveTexture (GL_TEXTURE3);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, pixbufoverlay->pbuftexture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
-
-  gst_gl_shader_set_uniform_1i (pixbufoverlay->shader, "blend", 3);
 
   gst_gl_pixbufoverlay_draw_texture (pixbufoverlay, texture);
 }
