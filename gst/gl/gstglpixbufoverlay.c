@@ -41,7 +41,10 @@ struct _GstGLPixbufOverlay
   gboolean pbuf_has_changed;
 
   GdkPixbuf *pixbuf;
+  gfloat width, height;
   GLuint pbuftexture;
+
+//  gboolean stretch;
 };
 
 struct _GstGLPixbufOverlayClass
@@ -82,8 +85,8 @@ enum
 {
   PROP_0,
   PROP_LOCATION,
+//  PROP_STRETCH,
   /* future properties? */
-  /* PROP_STRETCH, */
   /* PROP_WIDTH, */
   /* PROP_HEIGHT, */
   /* PROP_XPOS, */
@@ -136,12 +139,23 @@ gst_gl_pixbufoverlay_class_init (GstGLPixbufOverlayClass * klass)
                                                         "Location of the image", 
                                                         "Location of the image", 
                                                         NULL, G_PARAM_READWRITE));
+  /*
+  g_object_class_install_property (gobject_class,
+                                   PROP_STRETCH,
+                                   g_param_spec_boolean ("stretch",
+                                                         "Stretch the image to texture size", 
+                                                         "Stretch the image to fit video texture size", 
+                                                         TRUE, G_PARAM_READWRITE));
+  */
 }
 
 void
 gst_gl_pixbufoverlay_draw_texture (GstGLPixbufOverlay * pixbufoverlay, GLuint tex)
 {
   GstGLFilter *filter = GST_GL_FILTER (pixbufoverlay);
+
+  gfloat width = (gfloat) filter->width;
+  gfloat height = (gfloat) filter->height;
 
   glActiveTexture (GL_TEXTURE0);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
@@ -151,16 +165,21 @@ gst_gl_pixbufoverlay_draw_texture (GstGLPixbufOverlay * pixbufoverlay, GLuint te
 
   glTexCoord2f (0.0, 0.0);
   glVertex2f (-1.0, -1.0);
-  glTexCoord2f ((gfloat)filter->width, 0.0);
+  glTexCoord2f (width, 0.0);
   glVertex2f (1.0, -1.0);
-  glTexCoord2f ((gfloat)filter->width, (gfloat)filter->height);
+  glTexCoord2f (width, height);
   glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, (gfloat)filter->height);
+  glTexCoord2f (0.0, height);
   glVertex2f (-1.0, 1.0);
 
   glEnd ();
 
   if (pixbufoverlay->pbuftexture == 0) return;
+
+//  if (pixbufoverlay->stretch) {
+    width = pixbufoverlay->width;
+    height = pixbufoverlay->height;
+//  }
 
   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_BLEND);
@@ -172,11 +191,11 @@ gst_gl_pixbufoverlay_draw_texture (GstGLPixbufOverlay * pixbufoverlay, GLuint te
 
   glTexCoord2f (0.0, 0.0);
   glVertex2f (-1.0, -1.0);
-  glTexCoord2f ((gfloat)filter->width, 0.0);
+  glTexCoord2f (width, 0.0);
   glVertex2f (1.0, -1.0);
-  glTexCoord2f ((gfloat)filter->width, (gfloat)filter->height);
+  glTexCoord2f (width, height);
   glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, (gfloat)filter->height);
+  glTexCoord2f (0.0, height);
   glVertex2f (-1.0, 1.0);
 
   glEnd ();
@@ -192,6 +211,10 @@ gst_gl_pixbufoverlay_init (GstGLPixbufOverlay * pixbufoverlay,
   pixbufoverlay->location = NULL;
   pixbufoverlay->pixbuf = NULL;
   pixbufoverlay->pbuftexture = 0;
+  pixbufoverlay->pbuftexture = 0;
+  pixbufoverlay->width = 0;
+  pixbufoverlay->height = 0;
+//  pixbufoverlay->stretch = TRUE;
   pixbufoverlay->pbuf_has_changed = FALSE;
 }
 
@@ -213,6 +236,10 @@ gst_gl_pixbufoverlay_set_property (GObject * object, guint prop_id,
     pixbufoverlay->pbuf_has_changed = TRUE;
     pixbufoverlay->location = g_value_dup_string (value);
     break;
+/*  case PROP_STRETCH:
+    pixbufoverlay->stretch = g_value_get_boolean (value);
+    break;
+*/
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     break;
@@ -229,6 +256,10 @@ gst_gl_pixbufoverlay_get_property (GObject * object, guint prop_id,
   case PROP_LOCATION:
     g_value_set_string (value, pixbufoverlay->location);
     break;
+/*  case PROP_STRETCH:
+    g_value_set_boolean (value, pixbufoverlay->stretch);
+    break;
+*/
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     break;
@@ -255,13 +286,12 @@ gst_gl_pixbufoverlay_callback (gint width, gint height, guint texture, gpointer 
 static void init_pixbuf_texture (GstGLDisplay *display, gpointer data)
 {
   GstGLPixbufOverlay *pixbufoverlay = GST_GL_PIXBUFOVERLAY (data);
-  GstGLFilter *filter = GST_GL_FILTER (data);
   
   glDeleteTextures (1, &pixbufoverlay->pbuftexture);
   glGenTextures (1, &pixbufoverlay->pbuftexture);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, pixbufoverlay->pbuftexture);
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-                filter->width, filter->height, 0,
+                pixbufoverlay->width, pixbufoverlay->height, 0,
                 gdk_pixbuf_get_has_alpha (pixbufoverlay->pixbuf) ? GL_RGBA : GL_RGB,
                 GL_UNSIGNED_BYTE, gdk_pixbuf_get_pixels (pixbufoverlay->pixbuf));
 }
@@ -271,28 +301,22 @@ gst_gl_pixbufoverlay_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 				GstGLBuffer* outbuf)
 {
   GstGLPixbufOverlay* pixbufoverlay = GST_GL_PIXBUFOVERLAY(filter);
-  GdkPixbuf *pixbuf;
   GError *error = NULL;
 
   if (pixbufoverlay->pbuf_has_changed && (pixbufoverlay->location != NULL)) {
-    pixbuf = gdk_pixbuf_new_from_file (pixbufoverlay->location, &error);
-    if (pixbuf) {
-      pixbufoverlay->pixbuf = gdk_pixbuf_scale_simple (pixbuf,
-                                                     filter->width,
-                                                     filter->height,
-                                                     GDK_INTERP_BILINEAR);
-      gdk_pixbuf_unref (pixbuf);
-      if (pixbufoverlay->pixbuf != NULL) {
-        gst_gl_display_thread_add (filter->display, init_pixbuf_texture, pixbufoverlay);
-        gdk_pixbuf_unref (pixbufoverlay->pixbuf);
-      }
+    pixbufoverlay->pixbuf = gdk_pixbuf_new_from_file (pixbufoverlay->location, &error);
+    if (pixbufoverlay->pixbuf != NULL) {
+      pixbufoverlay->width = (gfloat) gdk_pixbuf_get_width (pixbufoverlay->pixbuf);
+      pixbufoverlay->height = (gfloat) gdk_pixbuf_get_height (pixbufoverlay->pixbuf);
+      gst_gl_display_thread_add (filter->display, init_pixbuf_texture, pixbufoverlay);
+      gdk_pixbuf_unref (pixbufoverlay->pixbuf);
     } else {
-      if (error != NULL && error->message != NULL)
-        g_warning ("unable to load %s: %s", pixbufoverlay->location, error->message);
+    if (error != NULL && error->message != NULL)
+      g_warning ("unable to load %s: %s", pixbufoverlay->location, error->message);
     }
     pixbufoverlay->pbuf_has_changed = FALSE;
   }
-
+  
   gst_gl_filter_render_to_target (filter, inbuf->texture, outbuf->texture,
 				  gst_gl_pixbufoverlay_callback, pixbufoverlay);
 
