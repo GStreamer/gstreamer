@@ -1,3 +1,26 @@
+2008-08-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/Makefile.am:
+	* gst/rtsp/gstrtsp.c: (plugin_init):
+	* gst/rtsp/gstrtspgoogle.c: (gst_rtsp_google_before_send),
+	(gst_rtsp_google_after_send), (gst_rtsp_google_get_transports),
+	(_do_init), (gst_rtsp_google_base_init),
+	(gst_rtsp_google_class_init), (gst_rtsp_google_init),
+	(gst_rtsp_google_finalize), (gst_rtsp_google_change_state),
+	(gst_rtsp_google_extension_init):
+	* gst/rtsp/gstrtspgoogle.h:
+	Add google RTSP extension, it can only handle udp and responds with
+	unsupported if we do anything else. Fixes #546465.
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_connection_send),
+	(gst_rtspsrc_connection_receive), (gst_rtspsrc_loop_send_cmd),
+	(gst_rtspsrc_create_transports_string),
+	(gst_rtspsrc_setup_streams), (gst_rtspsrc_open),
+	(gst_rtspsrc_close), (gst_rtspsrc_pause):
+	Make transport setup code a bit better using GString.
+	Add some more debug.
+	Check for closed connections before doing anything on them.
+
 2008-08-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/pulse/pulsesrc.c: (gst_pulsesrc_class_init),

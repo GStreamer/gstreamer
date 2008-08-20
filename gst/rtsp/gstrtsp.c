@@ -47,6 +47,7 @@
 
 #include "gstrtpdec.h"
 #include "gstrtspsrc.h"
+#include "gstrtspgoogle.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -57,6 +58,10 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "rtpdec", GST_RANK_NONE, GST_TYPE_RTP_DEC))
     return FALSE;
 
+  if (!gst_element_register (plugin, "rtspgoogle", GST_RANK_SECONDARY,
+          GST_TYPE_RTSP_GOOGLE)) {
+    return FALSE;
+  }
   return TRUE;
 }
 
