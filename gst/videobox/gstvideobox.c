@@ -305,6 +305,7 @@ gst_video_box_set_property (GObject * object, guint prop_id,
       break;
   }
   video_box_recalc_transform (video_box);
+  gst_base_transform_reconfigure (GST_BASE_TRANSFORM (video_box));
   GST_BASE_TRANSFORM_UNLOCK (GST_BASE_TRANSFORM_CAST (video_box));
 }
 
