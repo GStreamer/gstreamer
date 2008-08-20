@@ -26,7 +26,6 @@
 #define __GST_VALVE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
 
@@ -50,7 +49,7 @@ typedef struct _GstValvePrivate GstValvePrivate;
 
 struct _GstValve
 {
-  GstBaseTransform parent;
+  GstElement parent;
 
   /* Protected by the object lock */
   gboolean      drop;
@@ -58,7 +57,8 @@ struct _GstValve
   /* Protected by the stream lock*/
   gboolean      discont;
 
-  GstPadBufferAllocFunction original_allocfunc;
+  GstPad        *srcpad;
+  GstPad        *sinkpad;
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
@@ -66,7 +66,7 @@ struct _GstValve
 
 struct _GstValveClass
 {
-  GstBaseTransformClass parent_class;
+  GstElementClass parent_class;
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
