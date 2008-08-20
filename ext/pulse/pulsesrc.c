@@ -84,11 +84,14 @@ static gboolean gst_pulsesrc_close (GstAudioSrc * asrc);
 
 static gboolean gst_pulsesrc_prepare (GstAudioSrc * asrc,
     GstRingBufferSpec * spec);
+
 static gboolean gst_pulsesrc_unprepare (GstAudioSrc * asrc);
 
 static guint gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data,
     guint length);
 static guint gst_pulsesrc_delay (GstAudioSrc * asrc);
+
+static gboolean gst_pulsesrc_negotiate (GstBaseSrc * basesrc);
 
 static GstStateChangeReturn gst_pulsesrc_change_state (GstElement *
     element, GstStateChange transition);
@@ -200,11 +203,9 @@ gst_pulsesrc_base_init (gpointer g_class)
 static void
 gst_pulsesrc_class_init (gpointer g_class, gpointer class_data)
 {
-
   GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-
   GstAudioSrcClass *gstaudiosrc_class = GST_AUDIO_SRC_CLASS (g_class);
-
+  GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (g_class);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
   parent_class = g_type_class_peek_parent (g_class);
@@ -216,6 +217,8 @@ gst_pulsesrc_class_init (gpointer g_class, gpointer class_data)
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pulsesrc_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pulsesrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pulsesrc_get_property);
+
+  gstbasesrc_class->negotiate = GST_DEBUG_FUNCPTR (gst_pulsesrc_negotiate);
 
   gstaudiosrc_class->open = GST_DEBUG_FUNCPTR (gst_pulsesrc_open);
   gstaudiosrc_class->close = GST_DEBUG_FUNCPTR (gst_pulsesrc_close);
@@ -490,80 +493,6 @@ gst_pulsesrc_close (GstAudioSrc * asrc)
 }
 
 static gboolean
-gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
-{
-  pa_buffer_attr buf_attr;
-
-  pa_channel_map channel_map;
-
-  GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
-
-  if (!gst_pulse_fill_sample_spec (spec, &pulsesrc->sample_spec)) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, SETTINGS,
-        ("Invalid sample specification."), (NULL));
-    goto unlock_and_fail;
-  }
-
-  pa_threaded_mainloop_lock (pulsesrc->mainloop);
-
-  if (!pulsesrc->context
-      || pa_context_get_state (pulsesrc->context) != PA_CONTEXT_READY) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Bad context state: %s",
-            pulsesrc->
-            context ? pa_strerror (pa_context_errno (pulsesrc->context)) :
-            NULL), (NULL));
-    goto unlock_and_fail;
-  }
-
-  if (!(pulsesrc->stream = pa_stream_new (pulsesrc->context,
-              "Record Stream",
-              &pulsesrc->sample_spec,
-              gst_pulse_gst_to_channel_map (&channel_map, spec)))) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
-        ("Failed to create stream: %s",
-            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
-    goto unlock_and_fail;
-  }
-
-  pa_stream_set_state_callback (pulsesrc->stream, gst_pulsesrc_stream_state_cb,
-      pulsesrc);
-  pa_stream_set_read_callback (pulsesrc->stream, gst_pulsesrc_stream_request_cb,
-      pulsesrc);
-
-  memset (&buf_attr, 0, sizeof (buf_attr));
-  buf_attr.maxlength = spec->segtotal * spec->segsize * 2;
-  buf_attr.fragsize = spec->segsize;
-
-  if (pa_stream_connect_record (pulsesrc->stream, pulsesrc->device, &buf_attr,
-          PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE |
-          PA_STREAM_NOT_MONOTONOUS) < 0) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
-        ("Failed to connect stream: %s",
-            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
-    goto unlock_and_fail;
-  }
-
-  /* Wait until the stream is ready */
-  pa_threaded_mainloop_wait (pulsesrc->mainloop);
-
-  if (pa_stream_get_state (pulsesrc->stream) != PA_STREAM_READY) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
-        ("Failed to connect stream: %s",
-            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
-    goto unlock_and_fail;
-  }
-
-  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
-
-  return TRUE;
-
-unlock_and_fail:
-
-  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
-  return FALSE;
-}
-
-static gboolean
 gst_pulsesrc_unprepare (GstAudioSrc * asrc)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
@@ -693,6 +622,194 @@ unlock_and_fail:
 
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
   return 0;
+}
+
+static gboolean
+gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
+{
+  pa_channel_map channel_map;
+  GstStructure *s;
+  gboolean need_channel_layout = FALSE;
+  GstRingBufferSpec spec;
+
+  memset (&spec, 0, sizeof (GstRingBufferSpec));
+  spec.latency_time = GST_SECOND;
+  if (!gst_ring_buffer_parse_caps (&spec, caps)) {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, SETTINGS,
+        ("Can't parse caps."), (NULL));
+    goto fail;
+  }
+  /* Keep the refcount of the caps at 1 to make them writable */
+  gst_caps_unref (spec.caps);
+
+  if (!gst_pulse_fill_sample_spec (&spec, &pulsesrc->sample_spec)) {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, SETTINGS,
+        ("Invalid sample specification."), (NULL));
+    goto fail;
+  }
+
+  pa_threaded_mainloop_lock (pulsesrc->mainloop);
+
+  if (!pulsesrc->context
+      || pa_context_get_state (pulsesrc->context) != PA_CONTEXT_READY) {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Bad context state: %s",
+            pulsesrc->context ? pa_strerror (pa_context_errno (pulsesrc->
+                    context)) : NULL), (NULL));
+    goto unlock_and_fail;
+  }
+
+  s = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_has_field (s, "channel-layout") ||
+      !gst_pulse_gst_to_channel_map (&channel_map, &spec)) {
+    if (spec.channels == 1)
+      pa_channel_map_init_mono (&channel_map);
+    else if (spec.channels == 2)
+      pa_channel_map_init_stereo (&channel_map);
+    else
+      need_channel_layout = TRUE;
+  }
+
+  if (!(pulsesrc->stream = pa_stream_new (pulsesrc->context,
+              "Record Stream",
+              &pulsesrc->sample_spec,
+              (need_channel_layout) ? NULL : &channel_map))) {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
+        ("Failed to create stream: %s",
+            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+    goto unlock_and_fail;
+  }
+
+  if (need_channel_layout) {
+    const pa_channel_map *m = pa_stream_get_channel_map (pulsesrc->stream);
+
+    gst_pulse_channel_map_to_gst (m, &spec);
+    caps = spec.caps;
+  }
+
+  GST_DEBUG_OBJECT (pulsesrc, "Caps are %" GST_PTR_FORMAT, caps);
+
+  pa_stream_set_state_callback (pulsesrc->stream, gst_pulsesrc_stream_state_cb,
+      pulsesrc);
+  pa_stream_set_read_callback (pulsesrc->stream, gst_pulsesrc_stream_request_cb,
+      pulsesrc);
+
+  return TRUE;
+
+unlock_and_fail:
+  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
+
+fail:
+  return FALSE;
+}
+
+/* This is essentially gst_base_src_negotiate_default() but the caps
+ * are guaranteed to have a channel layout for > 2 channels
+ */
+static gboolean
+gst_pulsesrc_negotiate (GstBaseSrc * basesrc)
+{
+  GstCaps *thiscaps;
+  GstCaps *caps = NULL;
+  GstCaps *peercaps = NULL;
+  gboolean result = FALSE;
+
+  /* first see what is possible on our source pad */
+  thiscaps = gst_pad_get_caps (GST_BASE_SRC_PAD (basesrc));
+  GST_DEBUG_OBJECT (basesrc, "caps of src: %" GST_PTR_FORMAT, thiscaps);
+  /* nothing or anything is allowed, we're done */
+  if (thiscaps == NULL || gst_caps_is_any (thiscaps))
+    goto no_nego_needed;
+
+  /* get the peer caps */
+  peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
+  GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
+  if (peercaps) {
+    GstCaps *icaps;
+
+    /* get intersection */
+    icaps = gst_caps_intersect (thiscaps, peercaps);
+    GST_DEBUG_OBJECT (basesrc, "intersect: %" GST_PTR_FORMAT, icaps);
+    gst_caps_unref (thiscaps);
+    gst_caps_unref (peercaps);
+    if (icaps) {
+      /* take first (and best, since they are sorted) possibility */
+      caps = gst_caps_copy_nth (icaps, 0);
+      gst_caps_unref (icaps);
+    }
+  } else {
+    /* no peer, work with our own caps then */
+    caps = thiscaps;
+  }
+  if (caps) {
+    caps = gst_caps_make_writable (caps);
+    gst_caps_truncate (caps);
+
+    /* now fixate */
+    if (!gst_caps_is_empty (caps)) {
+      gst_pad_fixate_caps (GST_BASE_SRC_PAD (basesrc), caps);
+      GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
+
+      if (gst_caps_is_any (caps)) {
+        /* hmm, still anything, so element can do anything and
+         * nego is not needed */
+        result = TRUE;
+      } else if (gst_caps_is_fixed (caps)) {
+        /* yay, fixed caps, use those then */
+        result = gst_pulsesrc_create_stream (GST_PULSESRC (basesrc), caps);
+        if (result)
+          gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
+        result = TRUE;
+      }
+    }
+    gst_caps_unref (caps);
+  }
+  return result;
+
+no_nego_needed:
+  {
+    GST_DEBUG_OBJECT (basesrc, "no negotiation needed");
+    if (thiscaps)
+      gst_caps_unref (thiscaps);
+    return TRUE;
+  }
+}
+
+static gboolean
+gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
+{
+  pa_buffer_attr buf_attr;
+  GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
+
+  memset (&buf_attr, 0, sizeof (buf_attr));
+  buf_attr.maxlength = spec->segtotal * spec->segsize * 2;
+  buf_attr.fragsize = spec->segsize;
+
+  if (pa_stream_connect_record (pulsesrc->stream, pulsesrc->device, &buf_attr,
+          PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE |
+          PA_STREAM_NOT_MONOTONOUS) < 0) {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
+        ("Failed to connect stream: %s",
+            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+    goto unlock_and_fail;
+  }
+
+  /* Wait until the stream is ready */
+  pa_threaded_mainloop_wait (pulsesrc->mainloop);
+
+  if (pa_stream_get_state (pulsesrc->stream) != PA_STREAM_READY) {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
+        ("Failed to connect stream: %s",
+            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+    goto unlock_and_fail;
+  }
+
+  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
+
+  return TRUE;
+
+unlock_and_fail:
+  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
+  return FALSE;
 }
 
 static GstStateChangeReturn

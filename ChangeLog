@@ -1,3 +1,15 @@
+2008-08-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/pulse/pulsesrc.c: (gst_pulsesrc_class_init),
+	(gst_pulsesrc_create_stream), (gst_pulsesrc_negotiate),
+	(gst_pulsesrc_prepare):
+	* ext/pulse/pulseutil.c: (gst_pulse_gst_to_channel_map),
+	(gst_pulse_channel_map_to_gst):
+	* ext/pulse/pulseutil.h:
+	If downstream provides no channel layout and >2 channels should be
+	used use the default layout that pulseaudio chooses and also
+	add this layout to the caps. Fixes bug #547258.
+
 2008-08-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Peter Kjellerstedt <pkj at axis com>

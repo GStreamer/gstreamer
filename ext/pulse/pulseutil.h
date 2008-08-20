@@ -32,6 +32,9 @@ gboolean gst_pulse_fill_sample_spec (GstRingBufferSpec * spec,
 gchar *gst_pulse_client_name (void);
 
 pa_channel_map *gst_pulse_gst_to_channel_map (pa_channel_map * map,
+    const GstRingBufferSpec * spec);
+
+GstRingBufferSpec *gst_pulse_channel_map_to_gst (const pa_channel_map * map,
     GstRingBufferSpec * spec);
 
 #endif
