@@ -1054,7 +1054,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
       case GST_VIDEO_FORMAT_YV12:
       {
     gchar text_shader_upload_I420_YV12[2048];
-    if (g_strncasecmp ("ATI", glGetString (GL_VENDOR), 3) == 0)
+    if (g_ascii_strncasecmp ("ATI", (gchar *) glGetString (GL_VENDOR), 3) == 0)
         sprintf (text_shader_upload_I420_YV12, display->text_shader_upload_I420_YV12, "*0.5", "");
     else
         sprintf (text_shader_upload_I420_YV12, display->text_shader_upload_I420_YV12, "", "*0.5");
