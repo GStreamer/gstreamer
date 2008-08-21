@@ -800,12 +800,10 @@ gst_directdraw_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
   if (buf) {
     /* save a reference to the input buffer */
-    if (ddrawsink->last_buffer != buf) {
-      if (ddrawsink->last_buffer) {
-        gst_buffer_unref (ddrawsink->last_buffer);
-      }
-    }
-    ddrawsink->last_buffer = gst_buffer_ref (buf);
+    gst_buffer_ref (buf);
+    if (ddrawsink->last_buffer != NULL)
+      gst_buffer_unref (ddrawsink->last_buffer);
+    ddrawsink->last_buffer = buf;
   } else {
     /* use last buffer */
     buf = ddrawsink->last_buffer;
