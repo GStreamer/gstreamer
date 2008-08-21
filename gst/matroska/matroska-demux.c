@@ -3904,7 +3904,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
         /* fetch stream from num */
         stream_num = gst_matroska_demux_stream_from_num (demux, num);
-        if (size <= 3 || stream_num < 0 || stream_num >= demux->num_streams) {
+        if (size < 3 || stream_num < 0 || stream_num >= demux->num_streams) {
           gst_buffer_unref (buf);
           buf = NULL;
           GST_WARNING_OBJECT (demux, "Invalid stream %d or size %u", stream_num,
@@ -4134,9 +4134,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     for (n = 0; n < laces; n++) {
       GstBuffer *sub;
       GstClockTimeDiff diff;
-
-      if (lace_size[n] == 0)
-        continue;
 
       sub = gst_buffer_create_sub (buf,
           GST_BUFFER_SIZE (buf) - size, lace_size[n]);

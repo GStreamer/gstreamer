@@ -1,3 +1,10 @@
+2008-08-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock):
+	Allow zero sized blocks instead of returning GST_FLOW_OK. Such blocks
+	are used for text/plain subtitles as a gap-filler in some files.
+
 2008-08-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_v4l2fourcc_to_structure),
