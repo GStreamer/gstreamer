@@ -1,3 +1,45 @@
+2008-08-21  Stefan Kost  <ensonic@users.sf.net>
+
+	patch by: Leandro Melo de Sales <leandroal@gmail.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.prerequisites:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	* docs/plugins/inspect/plugin-dccp.xml:
+	* gst/dccp/Makefile.am:
+	* gst/dccp/gstdccp.c:
+	* gst/dccp/gstdccp.h:
+	* gst/dccp/gstdccpclientsink.c:
+	* gst/dccp/gstdccpclientsink.h:
+	* gst/dccp/gstdccpclientsrc.c:
+	* gst/dccp/gstdccpclientsrc.h:
+	* gst/dccp/gstdccpplugin.c:
+	* gst/dccp/gstdccpserversink.c:
+	* gst/dccp/gstdccpserversink.h:
+	* gst/dccp/gstdccpserversrc.c:
+	* gst/dccp/gstdccpserversrc.h:
+	* tests/icles/dccp/README:
+	* tests/icles/dccp/call/README:
+	* tests/icles/dccp/call/DCCPClient.c:
+	* tests/icles/dccp/call/DCCPServer.c:
+	* tests/icles/dccp/file/DCCPClientSaveFile.c:
+	* tests/icles/dccp/file/DCCPServerSendFile.c:
+	* tests/icles/dccp/mic/DCCPClientPlayMic.c:
+	* tests/icles/dccp/mic/DCCPServerMic.c:
+	* tests/icles/dccp/mp3/DCCPClientPlayMP3.c:
+	* tests/icles/dccp/mp3/DCCPServerSendMP3.c:
+	* tests/icles/dccp/mp3Speex/DCCPClientPlaySpeexMP3.c:
+	* tests/icles/dccp/mp3Speex/DCCPServerSendSpeexMP3.c:
+	* tests/icles/dccp/mp3Stream/DCCPClientPlayMP3Stream.c:
+	* tests/icles/dccp/mp3Stream/DCCPServerSendMP3Stream.c:
+	  Add dccp plugin. Fixes #542390.
+
 2008-08-20  Tim-Philipp Müller  <tim at collabora co uk>
 
 	* configure.ac:

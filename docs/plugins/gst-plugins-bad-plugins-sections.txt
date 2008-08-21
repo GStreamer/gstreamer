@@ -97,6 +97,62 @@ gst_dc1394_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-dccpclientsink</FILE>
+<TITLE>dccpclientsink</TITLE>
+GstDCCPClientSink
+<SUBSECTION Standard>
+GstDCCPClientSinkClass
+GST_DCCP_CLIENT_SINK
+GST_DCCP_CLIENT_SINK_CLASS
+GST_IS_DCCP_CLIENT_SINK
+GST_IS_DCCP_CLIENT_SINK_CLASS
+GST_TYPE_DCCP_CLIENT_SINK
+gst_dccp_client_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-dccpclientsrc</FILE>
+<TITLE>dccpclientsrc</TITLE>
+GstDCCPClientSrc
+<SUBSECTION Standard>
+GstDCCPClientSrcClass
+GST_DCCP_CLIENT_SRC
+GST_DCCP_CLIENT_SRC_CLASS
+GST_IS_DCCP_CLIENT_SRC
+GST_IS_DCCP_CLIENT_SRC_CLASS
+GST_TYPE_DCCP_CLIENT_SRC
+gst_dccp_client_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-dccpserversink</FILE>
+<TITLE>dccpserversink</TITLE>
+GstDCCPServerSink
+<SUBSECTION Standard>
+GstDCCPServerSinkClass
+GST_DCCP_SERVER_SINK
+GST_DCCP_SERVER_SINK_CLASS
+GST_IS_DCCP_SERVER_SINK
+GST_IS_DCCP_SERVER_SINK_CLASS
+GST_TYPE_DCCP_SERVER_SINK
+gst_dccp_server_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-dccpserversrc</FILE>
+<TITLE>dccpserversrc</TITLE>
+GstDCCPServerSrc
+<SUBSECTION Standard>
+GstDCCPServerSrcClass
+GST_DCCP_SERVER_SRC
+GST_DCCP_SERVER_SRC_CLASS
+GST_IS_DCCP_SERVER_SRC
+GST_IS_DCCP_SERVER_SRC_CLASS
+GST_TYPE_DCCP_SERVER_SRC
+gst_dccp_server_src_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-deinterlace</FILE>
 <TITLE>deinterlace</TITLE>
 GstDeinterlace

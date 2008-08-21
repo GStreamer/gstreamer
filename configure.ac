@@ -240,6 +240,7 @@ dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(app)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(cdxaparse)
+AG_GST_CHECK_PLUGIN(dccp)
 AG_GST_CHECK_PLUGIN(deinterlace)
 AG_GST_CHECK_PLUGIN(deinterlace2)
 AG_GST_CHECK_PLUGIN(dvdspu)
@@ -1249,6 +1250,7 @@ gst/Makefile
 gst/app/Makefile
 gst/bayer/Makefile
 gst/cdxaparse/Makefile
+gst/dccp/Makefile
 gst/deinterlace/Makefile
 gst/deinterlace2/Makefile
 gst/dvdspu/Makefile

@@ -1,0 +1,52 @@
+Applications
+
+If you want to compile the applications you will need to run this command-line:
+gcc -Wall $(pkg-config --cflags --libs gstreamer-0.10) <applicationName>.c -o <applicationName>
+
+To run:
+./<applicationName>
+
+
+Command-line
+
+###### Pipe to transmit a file #
+
+* Server:
+gst-launch -v filesrc location=file ! dccpserversink port=9011 ccid=2
+
+* Client:
+gst-launch -v dccpclientsrc host=localhost port=9011 ccid=2 ! filesink location=fileDist
+
+###### Pipe to transmit from the microphone #
+
+* Server:
+gst-launch -v alsasrc ! dccpserversink port=9011 ccid=2
+
+* Client:
+gst-launch -v dccpclientsrc host=localhost port=9011 ccid=2 caps="audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)32, depth=(int)32, rate=(int)44100, channels=(int)2" ! alsasink
+
+###### Pipe to transmit a MP3 #
+
+* Server:
+gst-launch -v filesrc location=music.mp3 ! mad ! dccpserversink port=9011 ccid=2
+
+* Client:
+gst-launch -v dccpclientsrc host=localhost port=9011 ccid=2 caps="audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)32, depth=(int)32, rate=(int)44100, channels=(int)2" ! alsasink
+
+###### Pipe to stream a MP3 #
+
+* Server:
+gst-launch -v filesrc location=music.mp3 ! mp3parse ! dccpserversink port=9011 ccid=2
+
+* Client:
+gst-launch -v dccpclientsrc host=localhost port=9011 ccid=2 ! decodebin ! alsasink
+-- We also tested with mpg123, to use it: mpg123 dccp://localhost:9011
+
+###### Pipe to transmit a MP3 with dccp, speex and rtp #
+
+* Server:
+gst-launch -v filesrc location=music.mp3 ! mad ! audioconvert ! capsfilter caps="audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)44100, channels=(int)1" ! speexenc ! rtpspeexpay ! dccpserversink port=9011 ccid=2
+
+* Client:
+gst-launch -v dccpclientsrc host=localhost port=9011 ccid=2 caps="application/x-rtp, media=(string)audio, payload=(int)110, clock-rate=(int)44100, encoding-name=(string)SPEEX, ssrc=(guint)152981653, clock-base=(guint)1553719649, seqnum-base=(guint)3680, encoding-params=(string)1" ! rtpspeexdepay ! speexdec ! alsasink
+

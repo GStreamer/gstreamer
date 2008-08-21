@@ -1,20 +1,21 @@
 GstBin GstChildProxy
 GstPipeline GstChildProxy
-GstSDPDemux GstChildProxy
-GstRgVolume GstChildProxy
+RsnDvdBin GstChildProxy GstURIHandler
+DvbBaseBin GstChildProxy GstURIHandler
 GstRtpBin GstChildProxy
 GstRtpClient GstChildProxy
-DvbBaseBin GstChildProxy GstURIHandler
-GstAppSrc GstURIHandler
-GstVCDSrc GstURIHandler
-GstOss4Source GstImplementsInterface GstPropertyProbe GstMixer
-GstMMS GstURIHandler
-GstNeonhttpSrc GstURIHandler
-GstMythtvSrc GstURIHandler
-GstGLImageSink GstImplementsInterface GstXOverlay
-GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
-GstOss4Sink GstPropertyProbe
-GstDeinterlace2 GstChildProxy
-GstOss4Mixer GstImplementsInterface GstPropertyProbe GstMixer
-GstCDAudio GstURIHandler
+GstRgVolume GstChildProxy
+GstSDPDemux GstChildProxy
 GstMetadataMux GstTagSetter
+GstMythtvSrc GstURIHandler
+GstNeonhttpSrc GstURIHandler
+GstMMS GstURIHandler
+GstOss4Source GstImplementsInterface GstPropertyProbe GstMixer
+GstVCDSrc GstURIHandler
+GstAppSrc GstURIHandler
+GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
+GstGLImageSink GstImplementsInterface GstXOverlay
+GstOss4Sink GstPropertyProbe
+GstCDAudio GstURIHandler
+GstOss4Mixer GstImplementsInterface GstPropertyProbe GstMixer
+GstDeinterlace2 GstChildProxy

@@ -17000,12 +17000,12 @@
 
 <ARG>
 <NAME>GstX264Enc::pass</NAME>
-<TYPE>GstX264EncPass</TYPE>
-<RANGE></RANGE>
+<TYPE>guint</TYPE>
+<RANGE><= 3</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Encoding pass/type</NICK>
-<BLURB>Encoding pass/type.</BLURB>
-<DEFAULT>Constant Bitrate Encoding</DEFAULT>
+<NICK>Pass</NICK>
+<BLURB>Pass of multipass encoding (0=single pass; 1=first pass, 2=middle pass, 3=last pass).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17051,10 +17051,10 @@
 <ARG>
 <NAME>GstX264Enc::threads</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= 4</RANGE>
+<RANGE>[1,4]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Threads</NICK>
-<BLURB>Number of threads used by the codec (0 for automatic).</BLURB>
+<BLURB>Number of threads used by the codec.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -22020,7 +22020,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Method</NICK>
 <BLURB>Deinterlace Method.</BLURB>
-<DEFAULT>Toms Motion Compensation</DEFAULT>
+<DEFAULT>Motion Adaptive: Motion Search</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22231,5 +22231,225 @@
 <NICK>Server</NICK>
 <BLURB>The Jack server to connect to (NULL = default).</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPClientSrc::caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps</NICK>
+<BLURB>The caps of the source pad.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPClientSrc::ccid</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 2</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>CCID</NICK>
+<BLURB>The Congestion Control IDentified to be used.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPClientSrc::close-socket</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Close socket</NICK>
+<BLURB>Close socket at the end of stream.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPClientSrc::host</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Host</NICK>
+<BLURB>The host IP address to receive packets from.</BLURB>
+<DEFAULT>"127.0.0.1"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPClientSrc::port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Port</NICK>
+<BLURB>The port to receive the packets from, 0=allocate.</BLURB>
+<DEFAULT>5001</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPClientSrc::sockfd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Socket fd</NICK>
+<BLURB>The socket file descriptor.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPServerSink::ccid</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 2</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>CCID</NICK>
+<BLURB>The Congestion Control IDentified to be used.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPServerSink::close-socket</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Close</NICK>
+<BLURB>Close socket at end of stream.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPServerSink::port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Port</NICK>
+<BLURB>The port to receive the packets from, 0=allocate.</BLURB>
+<DEFAULT>5001</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPServerSink::sockfd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Socket fd</NICK>
+<BLURB>The client socket file descriptor.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPServerSink::wait-connections</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Wait connections</NICK>
+<BLURB>Wait for many client connections.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPClientSink::ccid</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 2</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>CCID</NICK>
+<BLURB>The Congestion Control IDentified to be used.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPClientSink::close-socket</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Close</NICK>
+<BLURB>Close socket at end of stream.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPClientSink::host</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Host</NICK>
+<BLURB>The host IP address to send packets to.</BLURB>
+<DEFAULT>"127.0.0.1"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPClientSink::port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Port</NICK>
+<BLURB>The port to receive the packets from, 0=allocate.</BLURB>
+<DEFAULT>5001</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPClientSink::sockfd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Socket fd</NICK>
+<BLURB>The socket file descriptor.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPServerSrc::caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps</NICK>
+<BLURB>The caps of the source pad.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPServerSrc::ccid</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 2</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>CCID</NICK>
+<BLURB>The Congestion Control IDentified to be used.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPServerSrc::close-socket</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Close socket</NICK>
+<BLURB>Close socket at the end of stream.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPServerSrc::host</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Host</NICK>
+<BLURB>The hostname to listen as.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPServerSrc::port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Port</NICK>
+<BLURB>The port to receive the packets from, 0=allocate.</BLURB>
+<DEFAULT>5001</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDCCPServerSrc::sockfd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Socket fd</NICK>
+<BLURB>The client socket file descriptor.</BLURB>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 

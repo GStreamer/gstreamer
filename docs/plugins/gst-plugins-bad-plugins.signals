@@ -343,3 +343,35 @@ guint64  arg1
 GstDivxEnc *gstdivxenc
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstDCCPClientSrc::connected</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
+GstDCCPClientSrc *gstdccpclientsrc
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDCCPServerSink::connected</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
+GstDCCPServerSink *gstdccpserversink
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDCCPClientSink::connected</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
+GstDCCPClientSink *gstdccpclientsink
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDCCPServerSrc::connected</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
+GstDCCPServerSrc *gstdccpserversrc
+gint  arg1
+</SIGNAL>
+

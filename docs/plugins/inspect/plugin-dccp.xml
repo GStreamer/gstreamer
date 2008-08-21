@@ -1,0 +1,73 @@
+<plugin>
+  <name>dccp</name>
+  <description>transfer data over the network via DCCP.</description>
+  <filename>../../gst/dccp/.libs/libgstdccp.so</filename>
+  <basename>libgstdccp.so</basename>
+  <version>0.10.8.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>DCCP</package>
+  <origin>http://garage.maemo.org/projects/ephone</origin>
+  <elements>
+    <element>
+      <name>dccpclientsink</name>
+      <longname>DCCP client sink</longname>
+      <class>Sink/Network</class>
+      <description>Send data as a client over the network via DCCP</description>
+      <author>E-Phone Team at Federal University of Campina Grande &lt;leandroal@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>dccpclientsrc</name>
+      <longname>DCCP client source</longname>
+      <class>Source/Network</class>
+      <description>Receive data as a client over the network via DCCP</description>
+      <author>E-Phone Team at Federal University of Campina Grande &lt;leandroal@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>dccpserversink</name>
+      <longname>DCCP server sink</longname>
+      <class>Sink/Network</class>
+      <description>Send data as a server over the network via DCCP</description>
+      <author>E-Phone Team at Federal University of Campina Grande &lt;leandroal@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>dccpserversrc</name>
+      <longname>DCCP server source</longname>
+      <class>Source/Network</class>
+      <description>Receive data as a server over the network via DCCP</description>
+      <author>E-Phone Team at Federal University of Campina Grande &lt;leandroal@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
