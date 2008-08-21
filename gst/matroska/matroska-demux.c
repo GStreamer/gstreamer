@@ -4214,8 +4214,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
     next_lace:
       size -= lace_size[n];
-      if (lace_time != GST_CLOCK_TIME_NONE)
+      if (lace_time != GST_CLOCK_TIME_NONE && duration)
         lace_time += duration / laces;
+      else
+        lace_time = GST_CLOCK_TIME_NONE;
     }
   }
 

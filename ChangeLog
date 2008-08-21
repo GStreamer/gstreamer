@@ -1,5 +1,14 @@
 2008-08-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock):
+	If the duration of a block is unknown only use the timestamp for the
+	first lace and use GST_CLOCK_TIME_NONE as duration for the following
+	laces. Otherwise every lace has the same timestamp which leads to
+	various problems. Really fixes bug #548831.
+
+2008-08-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/wavenc/gstwavenc.c: (gst_wavenc_chain):
 	If we're not allowing width!=depth in wavenc we should also disable
 	the code that was added to support width!=depth.
