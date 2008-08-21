@@ -1,5 +1,14 @@
 2008-08-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream):
+	Don't calculate the default duration of a frame from the audio sampling
+	rate. This only works for raw audio if every frame contains a single
+	sample and results in broken buffer durations for other formats
+	if no specified default duration is given or the blocks have no
+	duration. Fixes bug #548831.
+
+2008-08-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/matroska/matroska-demux.c:
 	(gst_matroska_demux_parse_blockgroup_or_simpleblock):
 	Allow zero sized blocks instead of returning GST_FLOW_OK. Such blocks

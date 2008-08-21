@@ -1391,10 +1391,6 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
                 break;
               }
 
-              if (context->default_duration == 0)
-                context->default_duration =
-                    gst_gdouble_to_guint64 ((gdouble) GST_SECOND * (1.0 / num));
-
               GST_DEBUG_OBJECT (demux, "TrackAudioSamplingFrequency: %lf", num);
               audiocontext->samplerate = num;
               break;
