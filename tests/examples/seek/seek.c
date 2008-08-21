@@ -1846,14 +1846,17 @@ vis_combo_cb (GtkComboBox * combo, GstPipeline * pipeline)
 
   /* get the selected index and get the factory for this index */
   index = gtk_combo_box_get_active (GTK_COMBO_BOX (vis_combo));
-  entry = &g_array_index (vis_entries, VisEntry, index);
-  /* create an instance of the element from the factory */
-  element = gst_element_factory_create (entry->factory, NULL);
-  if (!element)
-    return;
+  if (vis_entries->len > 0) {
+    entry = &g_array_index (vis_entries, VisEntry, index);
 
-  /* set vis plugin for playbin2 */
-  g_object_set (pipeline, "vis-plugin", element, NULL);
+    /* create an instance of the element from the factory */
+    element = gst_element_factory_create (entry->factory, NULL);
+    if (!element)
+      return;
+
+    /* set vis plugin for playbin2 */
+    g_object_set (pipeline, "vis-plugin", element, NULL);
+  }
 }
 
 static void

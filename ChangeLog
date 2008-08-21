@@ -1,3 +1,8 @@
+2008-08-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/examples/seek/seek.c:
+	  Don't crash when having no visualisations.
+
 2008-08-16  David Schleef  <ds@schleef.org>
 
 	* gst/typefind/gsttypefindfunctions.c: DV typefinding.  Remove
