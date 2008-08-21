@@ -120,7 +120,7 @@ struct _GstGLDisplay {
   gint win_ypos;
   gboolean visible;
   gboolean isAlive;
-  GData* texture_pool;
+  GHashTable* texture_pool;
 
   //conditions
   GCond* cond_create_context;

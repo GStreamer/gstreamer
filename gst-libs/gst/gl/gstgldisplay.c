@@ -64,7 +64,7 @@ void gst_gl_display_on_draw (void);
 void gst_gl_display_on_close (void);
 void gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint width, GLint height);
 void gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint width, GLint height);
-void gst_gl_display_destroynotify_func_pool (gpointer data);
+gboolean gst_gl_display_texture_pool_func_clean (gpointer key, gpointer value, gpointer data);
 void gst_gl_display_check_framebuffer_status (void);
 
 /* To not make gst_gl_display_thread_do_upload
@@ -119,7 +119,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   display->win_ypos = 0;
   display->visible = FALSE;
   display->isAlive = TRUE;
-  g_datalist_init (&display->texture_pool);
+  display->texture_pool = g_hash_table_new (g_str_hash, g_str_equal);
 
   //conditions
   display->cond_create_context = g_cond_new ();
@@ -374,7 +374,9 @@ gst_gl_display_finalize (GObject* object)
   gst_gl_display_unlock (display);
 
   if (display->texture_pool) {
-    g_datalist_init (&display->texture_pool);
+    //texture pool is empty after destroying the gl context
+    g_assert (g_hash_table_size (display->texture_pool) == 0);
+    g_hash_table_unref (display->texture_pool);
     display->texture_pool = NULL;
   }
   if (display->title) {
@@ -462,7 +464,7 @@ gst_gl_display_finalize (GObject* object)
     g_print ("gl thread joined\n");
     gst_gl_display_gl_thread = NULL;
     g_async_queue_unref (gst_gl_display_messageQueue);
-    g_hash_table_unref  (gst_gl_display_map);
+    g_hash_table_unref (gst_gl_display_map);
     gst_gl_display_map = NULL;
   }
 }
@@ -524,7 +526,7 @@ gst_gl_display_thread_loop (void)
 	gst_gl_display_thread_dispatch_action (msg);
     }
   }
-  else GST_DEBUG ("timeout reached in idle func\n");
+  else g_print ("timeout reached in idle func\n");
 }
 
 
@@ -682,7 +684,7 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
   err = glewInit();
   if (err != GLEW_OK)
   {
-    GST_DEBUG ("Error: %s", glewGetErrorString(err));
+    g_print ("Error: %s\n", glewGetErrorString(err));
     display->isAlive = FALSE;
   }
   else
@@ -726,7 +728,7 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
 
   //check glut id validity
   g_assert (glutGetWindow() == glutWinId);
-  GST_DEBUG ("Context %d initialized", display->glutWinId);
+  g_print ("Context %d initialized\n", display->glutWinId);
 
   //release display constructor
   g_cond_signal (display->cond_create_context);
@@ -848,7 +850,8 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
   }
 
   //clean up the texture pool
-  g_datalist_clear (&display->texture_pool);
+  g_hash_table_foreach_remove (display->texture_pool, gst_gl_display_texture_pool_func_clean,
+    NULL);
 
   g_hash_table_remove (gst_gl_display_map, GINT_TO_POINTER (display->glutWinId));
   g_print ("Context %d destroyed\n", display->glutWinId);
@@ -1718,7 +1721,7 @@ void gst_gl_display_on_close (void)
   //glutGetWindow return 0 if no windows exists, then g_hash_table_lookup return NULL
   if (display == NULL) return;
 
-  GST_DEBUG ("on close");
+  g_print ("on close\n");
 
   gst_gl_display_lock (display);
   display->isAlive = FALSE;
@@ -1738,7 +1741,7 @@ gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
     GQueue* sub_texture_pool = NULL;
 
     sprintf (string_size, "%dx%d", width, height);
-    sub_texture_pool = g_datalist_get_data(&display->texture_pool, string_size);
+    sub_texture_pool = g_hash_table_lookup (display->texture_pool, string_size);
     //if the size is known
     if (sub_texture_pool)
     {
@@ -1797,13 +1800,15 @@ gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
   GstGLDisplayTex* tex = NULL;
 
   sprintf (string_size, "%dx%d", width, height);
-  sub_texture_pool = g_datalist_get_data(&display->texture_pool, string_size);
+  sub_texture_pool = g_hash_table_lookup (display->texture_pool, string_size);
   //if the size is known
   if (!sub_texture_pool)
   {
     sub_texture_pool = g_queue_new ();
-    g_datalist_set_data_full(&display->texture_pool, string_size,
-      sub_texture_pool, gst_gl_display_destroynotify_func_pool);
+    g_hash_table_insert (display->texture_pool, string_size, sub_texture_pool);
+
+    g_print ("texture pool insert: %s\n", string_size);
+    g_print ("texture pool size: %d\n", g_hash_table_size (display->texture_pool));
   }
 
   //contruct a sub texture pool element
@@ -1816,17 +1821,21 @@ gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
 }
 
 
-/* call when a sub texture pool is removed from the data list */
-void gst_gl_display_destroynotify_func_pool (gpointer data)
+/* call when a sub texture pool is removed from the texture pool (ghash table) */
+gboolean gst_gl_display_texture_pool_func_clean (gpointer key, gpointer value, gpointer data)
 {
-  GQueue* sub_texture_pool = (GQueue*) data;
+  GQueue* sub_texture_pool = (GQueue*) value;
 
-  while (g_queue_get_length (sub_texture_pool))
+  while (g_queue_get_length (sub_texture_pool) > 0)
   {
     GstGLDisplayTex* tex = g_queue_pop_head (sub_texture_pool);
     glDeleteTextures (1, &tex->texture);
     g_free (tex);
   }
+
+  g_queue_free (sub_texture_pool);
+
+  return TRUE;
 }
 
 
