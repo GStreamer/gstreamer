@@ -1,3 +1,9 @@
+2008-08-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_default_negotiate):
+	Use the result from gst_pad_set_caps() instead of assuming the element
+	always accepted the caps computed by the default negotiate function.
+
 2008-08-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/libs/gstreamer-libs-sections.txt:

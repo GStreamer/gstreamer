@@ -2303,9 +2303,9 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
          * nego is not needed */
         result = TRUE;
       } else if (gst_caps_is_fixed (caps)) {
-        /* yay, fixed caps, use those then */
-        gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
-        result = TRUE;
+        /* yay, fixed caps, use those then, it's possible that the subclass does
+         * not accept this caps after all and we have to fail. */
+        result = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
       }
     }
     gst_caps_unref (caps);
