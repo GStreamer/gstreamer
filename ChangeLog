@@ -1,3 +1,11 @@
+2008-08-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_handle_data_packet):
+	Take the current timestamp instead of timestamp+duration for the offset.
+	This offset will later be used for calculating the timestamp and
+	otherwise vorbisdec will interpolate timestamps wrong if upstream
+	only sends timestamps and no granulepos.
+
 2008-08-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/examples/seek/seek.c:

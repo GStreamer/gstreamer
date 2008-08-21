@@ -1017,8 +1017,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
         GST_TIME_ARGS (GST_BUFFER_DURATION (out)),
         GST_TIME_ARGS (vd->cur_timestamp + GST_BUFFER_DURATION (out)));
     vd->cur_timestamp += GST_BUFFER_DURATION (out);
-    GST_BUFFER_OFFSET (out) = GST_CLOCK_TIME_TO_FRAMES (vd->cur_timestamp,
-        vd->vi.rate);
+    GST_BUFFER_OFFSET (out) = GST_CLOCK_TIME_TO_FRAMES (timestamp, vd->vi.rate);
     GST_BUFFER_OFFSET_END (out) = GST_BUFFER_OFFSET (out) + sample_count;
   } else {
     /* we have incoming granulepos */
