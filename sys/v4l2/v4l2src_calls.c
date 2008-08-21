@@ -406,7 +406,9 @@ gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool)
 #define YUV_ODD_BASE_RANK   50
 #define RGB_ODD_BASE_RANK   25
 #define BAYER_BASE_RANK     15
+#define S910_BASE_RANK      10
 #define GREY_BASE_RANK       5
+#define PWC_BASE_RANK        1
 
 static gint
 gst_v4l2src_format_get_rank (guint32 fourcc)
@@ -469,6 +471,14 @@ gst_v4l2src_format_get_rank (guint32 fourcc)
 
     case V4L2_PIX_FMT_SBGGR8:
       return BAYER_BASE_RANK;
+
+    case V4L2_PIX_FMT_SN9C10X:
+      return S910_BASE_RANK;
+
+    case V4L2_PIX_FMT_PWC1:
+      return PWC_BASE_RANK;
+    case V4L2_PIX_FMT_PWC2:
+      return PWC_BASE_RANK;
 
     default:
       break;
@@ -770,11 +780,16 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
   size.index = 0;
   size.pixel_format = pixelformat;
 
+  GST_DEBUG_OBJECT (v4l2src, "Enumerating frame sizes");
+
   if (ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) < 0)
     goto enum_framesizes_failed;
 
   if (size.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
     do {
+      GST_LOG_OBJECT (v4l2src, "got discrete frame size %dx%d",
+          size.discrete.width, size.discrete.height);
+
       w = MIN (size.discrete.width, G_MAXINT);
       h = MIN (size.discrete.height, G_MAXINT);
 
@@ -788,7 +803,16 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
 
       size.index++;
     } while (ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) >= 0);
+    GST_DEBUG_OBJECT (v4l2src, "done iterating discrete frame sizes");
   } else if (size.type == V4L2_FRMSIZE_TYPE_STEPWISE) {
+    GST_DEBUG_OBJECT (v4l2src, "we have stepwise frame sizes:");
+    GST_DEBUG_OBJECT (v4l2src, "min width:   %d", size.stepwise.min_width);
+    GST_DEBUG_OBJECT (v4l2src, "min height:  %d", size.stepwise.min_height);
+    GST_DEBUG_OBJECT (v4l2src, "max width:   %d", size.stepwise.max_width);
+    GST_DEBUG_OBJECT (v4l2src, "min height:  %d", size.stepwise.max_height);
+    GST_DEBUG_OBJECT (v4l2src, "step width:  %d", size.stepwise.step_width);
+    GST_DEBUG_OBJECT (v4l2src, "step height: %d", size.stepwise.step_height);
+
     for (w = size.stepwise.min_width, h = size.stepwise.min_height;
         w < size.stepwise.max_width && h < size.stepwise.max_height;
         w += size.stepwise.step_width, h += size.stepwise.step_height) {
@@ -803,8 +827,15 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
       if (tmp)
         results = g_list_prepend (results, tmp);
     }
+    GST_DEBUG_OBJECT (v4l2src, "done iterating stepwise frame sizes");
   } else if (size.type == V4L2_FRMSIZE_TYPE_CONTINUOUS) {
     guint32 maxw, maxh;
+
+    GST_DEBUG_OBJECT (v4l2src, "we have continuous frame sizes:");
+    GST_DEBUG_OBJECT (v4l2src, "min width:   %d", size.stepwise.min_width);
+    GST_DEBUG_OBJECT (v4l2src, "min height:  %d", size.stepwise.min_height);
+    GST_DEBUG_OBJECT (v4l2src, "max width:   %d", size.stepwise.max_width);
+    GST_DEBUG_OBJECT (v4l2src, "min height:  %d", size.stepwise.max_height);
 
     w = MAX (size.stepwise.min_width, 1);
     h = MAX (size.stepwise.min_height, 1);

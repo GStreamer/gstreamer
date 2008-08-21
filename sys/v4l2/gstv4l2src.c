@@ -581,15 +581,6 @@ gst_v4l2src_v4l2fourcc_to_structure (guint32 fourcc)
 {
   GstStructure *structure = NULL;
 
-  /* FIXME: new FourCCs
-     camera: ZC0301 PC Camera
-     driver: zc0301
-     BA81, S910, PWC1, PWC2
-
-     camera:
-     driver:
-   */
-
   switch (fourcc) {
     case V4L2_PIX_FMT_MJPEG:   /* Motion-JPEG */
     case V4L2_PIX_FMT_JPEG:    /* JFIF JPEG */
@@ -748,9 +739,26 @@ gst_v4l2src_v4l2fourcc_to_structure (guint32 fourcc)
       break;
     case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
       break;
+#ifdef V4L2_PIX_FMT_SBGGR8
     case V4L2_PIX_FMT_SBGGR8:
       structure = gst_structure_new ("video/x-raw-bayer", NULL);
       break;
+#endif
+#ifdef V4L2_PIX_FMT_SN9C10X
+    case V4L2_PIX_FMT_SN9C10X:
+      structure = gst_structure_new ("video/x-sonix", NULL);
+      break;
+#endif
+#ifdef V4L2_PIX_FMT_PWC1
+    case V4L2_PIX_FMT_PWC1:
+      structure = gst_structure_new ("video/x-pwc1", NULL);
+      break;
+#endif
+#ifdef V4L2_PIX_FMT_PWC2
+    case V4L2_PIX_FMT_PWC2:
+      structure = gst_structure_new ("video/x-pwc2", NULL);
+      break;
+#endif
     default:
       GST_DEBUG ("Unknown fourcc 0x%08x %" GST_FOURCC_FORMAT,
           fourcc, GST_FOURCC_ARGS (fourcc));
@@ -988,8 +996,22 @@ gst_v4l2_get_caps_info (GstV4l2Src * v4l2src, GstCaps * caps,
     fourcc = V4L2_PIX_FMT_DV;
   } else if (strcmp (mimetype, "image/jpeg") == 0) {
     fourcc = V4L2_PIX_FMT_JPEG;
+#ifdef V4L2_PIX_FMT_SBGGR8
   } else if (strcmp (mimetype, "video/x-raw-bayer") == 0) {
     fourcc = V4L2_PIX_FMT_SBGGR8;
+#endif
+#ifdef V4L2_PIX_FMT_SN9C10X
+  } else if (strcmp (mimetype, "video/x-sonix") == 0) {
+    fourcc = V4L2_PIX_FMT_SN9C10X;
+#endif
+#ifdef V4L2_PIX_FMT_PWC1
+  } else if (strcmp (mimetype, "video/x-pwc1") == 0) {
+    fourcc = V4L2_PIX_FMT_PWC1;
+#endif
+#ifdef V4L2_PIX_FMT_PWC2
+  } else if (strcmp (mimetype, "video/x-pwc2") == 0) {
+    fourcc = V4L2_PIX_FMT_PWC2;
+#endif
   }
 
   if (fourcc == 0)
