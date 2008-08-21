@@ -1,3 +1,9 @@
+2008-08-21  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_buffer_alloc,
+	  gst_directdraw_sink_bufferpool_clear):
+	  Fix two more buffer ref leaks.
+
 2008-08-21  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>

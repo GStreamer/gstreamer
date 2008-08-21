@@ -614,6 +614,7 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
               !gst_directdraw_sink_surface_check (ddrawsink, surface))
           ) {
         gst_directdraw_sink_surface_destroy (ddrawsink, surface);
+        gst_buffer_unref (surface);
         surface = NULL;
       } else {
         /* We found a suitable surface */
@@ -1897,6 +1898,7 @@ gst_directdraw_sink_bufferpool_clear (GstDirectDrawSink * ddrawsink)
     ddrawsink->buffer_pool = g_slist_delete_link (ddrawsink->buffer_pool,
         ddrawsink->buffer_pool);
     gst_directdraw_sink_surface_destroy (ddrawsink, surface);
+    gst_buffer_unref (surface);
   }
   g_mutex_unlock (ddrawsink->pool_lock);
 }
