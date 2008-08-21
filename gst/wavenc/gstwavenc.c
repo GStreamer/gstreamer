@@ -608,7 +608,6 @@ gst_wavenc_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-#if 0
 /* Copied from gst-plugins-base/gst/audioconvert/audioconvert.c */
 #define READ24_FROM_LE(p) (p[0] | (p[1] << 8) | (p[2] << 16))
 #define WRITE24_TO_LE(p,v) p[0] = v & 0xff; p[1] = (v >> 8) & 0xff; p[2] = (v >> 16) & 0xff
@@ -654,7 +653,6 @@ gst_wavenc_format_samples (GstBuffer * buf, guint width, guint depth)
 
 #undef READ24_FROM_LE
 #undef WRITE24_TO_LE
-#endif
 
 static GstFlowReturn
 gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
@@ -681,16 +679,12 @@ gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (wavenc, "pushing %u bytes raw audio, ts=%" GST_TIME_FORMAT,
       GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
-#if 0
   if (wavenc->width != wavenc->depth) {
     buf = gst_buffer_make_writable (buf);
     gst_wavenc_format_samples (buf, wavenc->width, wavenc->depth);
   } else {
-#endif
     buf = gst_buffer_make_metadata_writable (buf);
-#if 0
   }
-#endif
 
   gst_buffer_set_caps (buf, GST_PAD_CAPS (wavenc->srcpad));
   GST_BUFFER_OFFSET (buf) = WAV_HEADER_LEN + wavenc->length;
