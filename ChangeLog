@@ -1,5 +1,11 @@
 2008-08-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/autodetect/Makefile.am:
+	Don't link the autodetect plugin with GConf as it doesn't
+	use GConf. Fixes bug #545463.
+
+2008-08-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/matroska/ebml-read.c: (gst_ebml_read_element_id),
 	(gst_ebml_read_element_length), (gst_ebml_read_uint),
 	(gst_ebml_read_sint), (gst_ebml_read_float),
