@@ -1,3 +1,10 @@
+2008-08-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_chain):
+	If a buffer arrives with a timestamp before the timestamp+duration
+	of the previous buffer clip it instead of dropping it completely.
+	Slight improvement for the unfixable bug #548913.
+
 2008-08-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_handle_data_packet):

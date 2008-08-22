@@ -284,6 +284,7 @@ static const GstAudioChannelPosition vorbischannelpositions[][8] = {
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
       },
 };
+
 static GstCaps *
 gst_vorbis_enc_generate_sink_caps (void)
 {
@@ -1161,13 +1162,29 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
 
   if (vorbisenc->expected_ts != GST_CLOCK_TIME_NONE &&
       GST_BUFFER_TIMESTAMP (buffer) < vorbisenc->expected_ts) {
+    guint64 diff = vorbisenc->expected_ts - GST_BUFFER_TIMESTAMP (buffer);
+    guint64 diff_bytes;
+
     GST_WARNING_OBJECT (vorbisenc, "Buffer is older than previous "
         "timestamp + duration (%" GST_TIME_FORMAT "< %" GST_TIME_FORMAT
-        "), cannot handle. Dropping buffer.",
+        "), cannot handle. Clipping buffer.",
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
         GST_TIME_ARGS (vorbisenc->expected_ts));
-    gst_buffer_unref (buffer);
-    return GST_FLOW_OK;
+
+    diff_bytes =
+        GST_CLOCK_TIME_TO_FRAMES (diff,
+        vorbisenc->frequency) * vorbisenc->channels * sizeof (gfloat);
+    if (diff_bytes >= GST_BUFFER_SIZE (buffer)) {
+      gst_buffer_unref (buffer);
+      return GST_FLOW_OK;
+    }
+    buffer = gst_buffer_make_metadata_writable (buffer);
+    GST_BUFFER_DATA (buffer) += diff_bytes;
+    GST_BUFFER_SIZE (buffer) -= diff_bytes;
+
+    GST_BUFFER_TIMESTAMP (buffer) += diff;
+    if (GST_BUFFER_DURATION_IS_VALID (buffer))
+      GST_BUFFER_DURATION (buffer) -= diff;
   }
 
   if (gst_vorbis_enc_buffer_check_discontinuous (vorbisenc, buffer) && !first) {
