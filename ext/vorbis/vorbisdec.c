@@ -1427,6 +1427,7 @@ vorbis_dec_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (vd, "PAUSED -> READY, clearing vorbis structures");
+      vd->initialized = FALSE;
       vorbis_block_clear (&vd->vb);
       vorbis_dsp_clear (&vd->vd);
       vorbis_comment_clear (&vd->vc);

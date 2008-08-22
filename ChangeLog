@@ -1,3 +1,9 @@
+2008-08-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_change_state):
+	Reset variable so that query and convert fail after going back to
+	READY. Fixes #548898.
+
 2008-08-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_chain):
