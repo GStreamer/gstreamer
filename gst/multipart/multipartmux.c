@@ -291,6 +291,8 @@ gst_multipart_mux_get_mime (GstMultipartMux * mux, GstStructure * s)
   GstMultipartMuxClass *klass;
   const gchar *mime;
   const gchar *name;
+  gint rate;
+  gint channels;
 
   klass = GST_MULTIPART_MUX_GET_CLASS (mux);
 
@@ -301,6 +303,17 @@ gst_multipart_mux_get_mime (GstMultipartMux * mux, GstStructure * s)
   if (mime == NULL) {
     /* no mime type mapping, use name */
     mime = name;
+  }
+  /* RFC2046 requires audio/basic to be mulaw 8000Hz mono */
+  if (g_ascii_strcasecmp (mime, "audio/basic") == 0) {
+    if (gst_structure_get_int (s, "rate", &rate) &&
+        gst_structure_get_int (s, "channels", &channels)) {
+      if (rate != 8000 || channels != 1) {
+        mime = name;
+      }
+    } else {
+      mime = name;
+    }
   }
   return mime;
 }

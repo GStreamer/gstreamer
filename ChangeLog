@@ -1,3 +1,9 @@
+2008-08-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/multipart/multipartdemux.c:
+	* gst/multipart/multipartmux.c:
+	Conform to RFC2046. audio/basic is mulaw 8000Hz mono.
+
 2008-08-21  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
 	* sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_buffer_alloc,

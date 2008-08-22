@@ -108,7 +108,8 @@ typedef struct
 
 /* convert from mime types to gst structure names. Add more when needed. */
 static const GstNamesMap gstnames[] = {
-  {"audio/basic", "audio/x-mulaw"},
+  /* RFC 2046 says audio/basic is mulaw, mono, 8000Hz */
+  {"audio/basic", "audio/x-mulaw, channels=1, rate=8000"},
   {NULL, NULL}
 };
 
@@ -221,6 +222,7 @@ gst_multipart_demux_get_gstname (GstMultipartDemux * demux, gchar * mimetype)
     /* no gst name mapping, use mime type */
     gstname = mimetype;
   }
+  GST_DEBUG_OBJECT (demux, "gst name for %s is %s", mimetype, gstname);
   return gstname;
 }
 
@@ -264,6 +266,7 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
     /* take the mime type, convert it to the caps name */
     capsname = gst_multipart_demux_get_gstname (demux, mime);
     caps = gst_caps_from_string (capsname);
+    GST_DEBUG_OBJECT (demux, "caps for pad: %s", capsname);
     gst_pad_use_fixed_caps (pad);
     gst_pad_set_caps (pad, caps);
     gst_caps_unref (caps);
@@ -515,6 +518,8 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
     GST_DEBUG_OBJECT (multipart,
         "pushing buffer with timestamp %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
+    GST_DEBUG_OBJECT (multipart, "buffer has caps %s",
+        gst_caps_to_string (GST_BUFFER_CAPS (outbuf)));
     res = gst_pad_push (srcpad->pad, outbuf);
     if (res != GST_FLOW_OK)
       break;
