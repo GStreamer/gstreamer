@@ -1,3 +1,13 @@
+2008-08-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	  Add, but commented out xml/element-dc1394.xml. Its documented, but
+	  I can't get it to be build.
+
+	* ext/celt/gstceltdec.c:
+	* ext/celt/gstceltenc.c:
+	  Fix doc warnings and reformat the doc block.
+
 2008-08-21  Stefan Kost  <ensonic@users.sf.net>
 
 	patch by: Leandro Melo de Sales <leandroal@gmail.com>

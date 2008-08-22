@@ -24,20 +24,15 @@
 
 /**
  * SECTION:element-celtenc
- * @short_description: an encoder that encodes raw audio to CELT
  * @see_also: celtdec, oggmux
  *
- * <refsect2>
- * <para>
  * This element raw audio to CELT.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! celtenc ! oggmux ! filesink location=sine.ogg
- * </programlisting>
- * Encode a test sine signal to Ogg/CELT.
- * </para>
+ * ]| Encode a test sine signal to Ogg/CELT.
  * </refsect2>
  */
 

@@ -25,20 +25,15 @@
 
 /**
  * SECTION:element-celtdec
- * @short_description: a decoder that decodes CELT to raw audio
  * @see_also: celtenc, oggdemux
  *
- * <refsect2>
- * <para>
  * This element decodes a CELT stream to raw integer audio.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=celt.ogg ! oggdemux ! celtdec ! audioconvert ! audioresample ! alsasink
- * </programlisting>
- * Decode an Ogg/Celt file. To create an Ogg/Celt file refer to the documentation of celtenc.
- * </para>
+ * ]| Decode an Ogg/Celt file. To create an Ogg/Celt file refer to the documentation of celtenc.
  * </refsect2>
  */
 
