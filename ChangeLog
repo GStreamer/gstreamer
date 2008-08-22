@@ -1,3 +1,21 @@
+2008-08-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/ebml-read.c: (gst_ebml_read_element_id),
+	(gst_ebml_read_element_length), (gst_ebml_read_uint),
+	(gst_ebml_read_sint), (gst_ebml_read_float),
+	(gst_ebml_read_header):
+	Change some GST_ELEMENT_ERRORs to GST_ERROR_OBJECT to make it
+	possible to ignore errors and not post any ERROR messages on
+	the bus.
+
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_contents):
+	Ignore any errors and not just EOS when parsing the contents of
+	a SeekHead. Errors here are usually caused by truncated files
+	and playback of the file works fine. Fixes playback of the
+	audio_only_chapter_seekbroken.mka file from the MPlayer samples
+	archive.
+
 2008-08-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/multipart/multipartdemux.c:

@@ -4536,9 +4536,9 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_SEEKENTRY:
       {
         ret = gst_matroska_demux_parse_contents_seekentry (demux);
-        /* Ignore EOS here */
-        if (ret == GST_FLOW_UNEXPECTED) {
-          GST_DEBUG_OBJECT (demux, "Ignoring EOS");
+        /* Ignore EOS and errors here */
+        if (ret != GST_FLOW_OK) {
+          GST_DEBUG_OBJECT (demux, "Ignoring %s", gst_flow_get_name (ret));
           ret = GST_FLOW_OK;
         }
         break;
@@ -4555,6 +4555,7 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux)
       break;
     }
   }
+
   DEBUG_ELEMENT_STOP (demux, ebml, "SeekHead", ret);
 
   return ret;
