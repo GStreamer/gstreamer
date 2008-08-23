@@ -1,5 +1,13 @@
 2008-08-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: Mike Ruprecht <cmaiku at gmail dot com>
+
+	* sys/v4l/gstv4lelement.c: (gst_v4l_class_probe_devices):
+	Reprobe devices again instead of taking a cached list as new
+	devices could've been plugged in. Fixes bug #549062.
+
+2008-08-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Alessandro Dessina <alessandro nnva org>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_deactivate_current_chain),

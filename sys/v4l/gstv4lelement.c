@@ -114,7 +114,7 @@ gst_v4l_class_probe_devices (GstV4lElementClass * klass, gboolean check)
   static gboolean init = FALSE;
   static GList *devices = NULL;
 
-  if (!init && !check) {
+  if (!check) {
     gchar *dev_base[] = { "/dev/video", "/dev/v4l/video", NULL };
     gint base, n, fd;
 
@@ -122,7 +122,7 @@ gst_v4l_class_probe_devices (GstV4lElementClass * klass, gboolean check)
       GList *item = devices;
       gchar *device = item->data;
 
-      devices = g_list_remove (devices, item);
+      devices = g_list_remove (devices, device);
       g_free (device);
     }
 
