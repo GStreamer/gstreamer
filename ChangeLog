@@ -1,3 +1,12 @@
+2008-08-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Alessandro Dessina <alessandro nnva org>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_deactivate_current_chain),
+	(gst_ogg_demux_activate_chain):
+	Don't add pads and activate them for skeleton streams. These are already
+	handled inside oggdemux. Fixes bug #537599.
+
 2008-08-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_change_state):

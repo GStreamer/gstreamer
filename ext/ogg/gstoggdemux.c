@@ -1746,6 +1746,9 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
+    if (pad->is_skeleton)
+      continue;
+
     gst_pad_push_event (GST_PAD_CAST (pad), gst_event_new_eos ());
 
     GST_DEBUG_OBJECT (ogg, "removing pad %" GST_PTR_FORMAT, pad);
@@ -1786,6 +1789,10 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
       GstOggPad *pad;
 
       pad = g_array_index (chain->streams, GstOggPad *, i);
+
+      if (pad->is_skeleton)
+        continue;
+
       GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
 
       /* mark discont */
