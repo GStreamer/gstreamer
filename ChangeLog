@@ -1,5 +1,14 @@
 2008-08-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+        Patch by: Filippo Argiolas <filippo dot argiolas at gmail dot com>
+
+	* sys/v4l2/gstv4l2tuner.c: (gst_v4l2_tuner_set_norm_and_notify):
+	v4l2src doesn't have a property named "norm" so don't try to notify
+	about changes to that property. The "norm" property and related
+	code are commented out currently. Fixes bug #549090.
+
+2008-08-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
         Patch by: Mike Ruprecht <cmaiku at gmail dot com>
 
 	* sys/v4l2/gstv4l2object.c: (gst_v4l2_class_probe_devices):

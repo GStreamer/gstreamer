@@ -207,7 +207,9 @@ gst_v4l2_tuner_set_norm_and_notify (GstV4l2Object * v4l2object,
     GstTunerNorm * norm)
 {
   if (gst_v4l2_tuner_set_norm (v4l2object, norm)) {
+#if 0
     g_object_notify (G_OBJECT (v4l2object->element), "norm");
+#endif
   }
 }
 
