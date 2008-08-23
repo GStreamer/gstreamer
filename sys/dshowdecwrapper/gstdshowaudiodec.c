@@ -79,19 +79,8 @@ static gboolean gst_dshowaudiodec_flush (GstDshowAudioDec * adec);
 static gboolean gst_dshowaudiodec_get_filter_settings (GstDshowAudioDec * adec);
 static gboolean gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec);
 
-/* global variable */
-static const long bitrates[2][3][16] = {
+static const long mpeg_bitrates[2][3][16] = {
   /* mpeg 1 */
-  {
-        /* one list per layer 1-3 */
-        {0, 32000, 48000, 56000, 64000, 80000, 96000, 112000, 128000, 144000,
-            160000, 176000, 192000, 224000, 256000, 0},
-        {0, 8000, 16000, 24000, 32000, 40000, 48000, 56000, 64000, 80000, 96000,
-            112000, 128000, 144000, 160000, 0},
-        {0, 8000, 16000, 24000, 32000, 40000, 48000, 56000, 64000, 80000, 96000,
-            112000, 128000, 144000, 160000, 0},
-      },
-  /* mpeg 2 */
   {
         /* one list per layer 1-3 */
         {0, 32000, 64000, 96000, 128000, 160000, 192000, 224000, 256000,
@@ -100,6 +89,16 @@ static const long bitrates[2][3][16] = {
             160000, 192000, 224000, 256000, 320000, 384000, 0},
         {0, 32000, 40000, 48000, 56000, 64000, 80000, 96000, 112000,
             128000, 160000, 192000, 224000, 256000, 320000, 0},
+      },
+  /* mpeg 2 */
+  {
+        /* one list per layer 1-3 */
+        {0, 32000, 48000, 56000, 64000, 80000, 96000, 112000, 128000, 144000,
+            160000, 176000, 192000, 224000, 256000, 0},
+        {0, 8000, 16000, 24000, 32000, 40000, 48000, 56000, 64000, 80000, 96000,
+            112000, 128000, 144000, 160000, 0},
+        {0, 8000, 16000, 24000, 32000, 40000, 48000, 56000, 64000, 80000, 96000,
+            112000, 128000, 144000, 160000, 0},
       }
 };
 
@@ -746,11 +745,11 @@ gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec)
         break;
     };
 
-    version = (b1 >> 3) & 1;
+    version = ((b1 >> 3) & 1) ? 0 : 1;
     if (layer == 1) {
       samples = 384;
     } else {
-      if (version == 0) {
+      if (version == 1) {
         samples = 576;
       } else {
         samples = 1152;
@@ -758,7 +757,7 @@ gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec)
     }
     mpeg1_format->wfx.nBlockAlign = (WORD) samples;
     mpeg1_format->wfx.nSamplesPerSec = adec->rate;
-    mpeg1_format->dwHeadBitrate = bitrates[version][layer - 1][b2 >> 4];
+    mpeg1_format->dwHeadBitrate = mpeg_bitrates[version][layer - 1][b2 >> 4];
     mpeg1_format->wfx.nAvgBytesPerSec = mpeg1_format->dwHeadBitrate / 8;
   } else {
     size = sizeof (WAVEFORMATEX) +

@@ -1,3 +1,10 @@
+2008-08-22  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/dshowdecwrapper/gstdshowaudiodec.c:
+	  Flip mpeg1/mpeg2 arrays for mpeg audio. Detect which type the audio
+	  is correctly, instead of backwards. No functional changes, since this
+	  mistake was completely self-consistent.
+
 2008-08-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
