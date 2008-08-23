@@ -75,7 +75,7 @@ gst_v4l2_class_probe_devices (GstElementClass * klass, gboolean check,
   static gboolean init = FALSE;
   static GList *devices = NULL;
 
-  if (!init && !check) {
+  if (!check) {
     const gchar *dev_base[] = { "/dev/video", "/dev/v4l2/video", NULL };
     gint base, n, fd;
 
@@ -83,7 +83,7 @@ gst_v4l2_class_probe_devices (GstElementClass * klass, gboolean check,
       GList *item = devices;
       gchar *device = item->data;
 
-      devices = g_list_remove (devices, item);
+      devices = g_list_remove (devices, device);
       g_free (device);
     }
 
@@ -439,8 +439,8 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
     gst_tuner_set_channel (tuner, channel);
   } else {
     channel =
-        GST_TUNER_CHANNEL (gst_tuner_get_channel (GST_TUNER (v4l2object->
-                element)));
+        GST_TUNER_CHANNEL (gst_tuner_get_channel (GST_TUNER
+            (v4l2object->element)));
     if (channel) {
       g_free (v4l2object->channel);
       v4l2object->channel = g_strdup (channel->label);

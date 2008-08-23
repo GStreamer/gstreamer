@@ -1,3 +1,11 @@
+2008-08-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+        Patch by: Mike Ruprecht <cmaiku at gmail dot com>
+
+	* sys/v4l2/gstv4l2object.c: (gst_v4l2_class_probe_devices):
+	Reprobe devices again instead of taking a cached list as new
+	devices could've been plugged in. Fixes bug #549062.
+
 2008-08-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/autodetect/Makefile.am:
