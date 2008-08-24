@@ -1,5 +1,13 @@
 2008-08-24  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
+	* configure.ac:
+	* gst/pcapparse/Makefile.am:
+	* gst/pcapparse/gstpcapparse.c:
+	* gst/pcapparse/gstpcapparse.h:
+	  New plugin: pcapparse (#520899).
+
+2008-08-24  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
 	patch by: Haakon Sporsheim <hakon.sporsheim@tandberg.com>
 
 	* configure.ac:
