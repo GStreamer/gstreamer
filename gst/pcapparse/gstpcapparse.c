@@ -20,13 +20,18 @@
 /**
  * SECTION:element-pcapparse
  *
+ * Extracts payloads from Ethernet-encapsulated IP packets, currently limited
+ * to UDP. Use #GstPcapParse:src-ip, #GstPcapParse:dst-ip,
+ * #GstPcapParse:src-port and #GstPcapParse:dst-port to restrict which packets
+ * should be included.
+ *
  * <refsect2>
- * <title>Example launch line</title>
- * <para>
- * <programlisting>
- * gst-launch-0.10 -v filesrc location=h264crasher.pcap ! pcapparse ! rtph264depay ! ffdec_h264 ! fakesink
- * </programlisting>
- * </para>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch-0.10 filesrc location=h264crasher.pcap ! pcapparse ! rtph264depay
+ * ! ffdec_h264 ! fakesink
+ * ]| Read from a pcap dump file using filesrc, extract the raw UDP packets,
+ * depayload and decode them.
  * </refsect2>
  */
 

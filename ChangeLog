@@ -1,5 +1,12 @@
 2008-08-24  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
+	* gst/pcapparse/gstpcapparse.c:
+	* sys/winscreencap/gstdx9screencapsrc.c:
+	* sys/winscreencap/gstgdiscreencapsrc.c:
+	  Added documentation blobs. Thanks to Stefan for noticing!
+
+2008-08-24  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
 	* configure.ac:
 	* gst/pcapparse/Makefile.am:
 	* gst/pcapparse/gstpcapparse.c:

@@ -17,6 +17,31 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-gdiscreencapsrc
+ *
+ * This element uses GDI to capture the desktop or a portion of it.
+ * The default is capturing the whole desktop, but #GstGDIScreenCapSrc:x,
+ * #GstGDIScreenCapSrc:y, #GstGDIScreenCapSrc:width and
+ * #GstGDIScreenCapSrc:height can be used to select a particular region.
+ * Use #GstGDIScreenCapSrc:monitor for changing which monitor to capture
+ * from.
+ *
+ * Set #GstGDIScreenCapSrc:cursor to TRUE to include the mouse cursor.
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch gdiscreencapsrc ! ffmpegcolorspace ! dshowvideosink
+ * ]| Capture the desktop and display it.
+ * |[
+ * gst-launch gdiscreencapsrc x=100 y=100 width=320 height=240 cursor=TRUE
+ * ! ffmpegcolorspace ! dshowvideosink
+ * ]| Capture a portion of the desktop, including the mouse cursor, and
+ * display it.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
