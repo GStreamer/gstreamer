@@ -174,7 +174,7 @@ struct _GstGLDisplay {
   GLuint upload_width;
   GLuint upload_height;
   GstVideoFormat upload_video_format;
-  GstGLDisplayConversion colorspace_conversion;
+  GstGLDisplayConversion upload_colorspace_conversion;
   gint upload_data_width;
   gint upload_data_height;
   gpointer upload_data;

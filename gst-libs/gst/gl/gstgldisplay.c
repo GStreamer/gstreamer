@@ -72,8 +72,8 @@ void gst_gl_display_check_framebuffer_status (void);
 static void gst_gl_display_thread_do_upload_make (GstGLDisplay *display);
 static void gst_gl_display_thread_do_upload_fill (GstGLDisplay *display);
 static void gst_gl_display_thread_do_upload_draw (GstGLDisplay *display);
-static void gst_gl_display_thread_do_download_draw (GstGLDisplay *display);
-
+static void gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay *display);
+static void gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay *display);
 
 //------------------------------------------------------------
 //-------------------- GL context management -----------------
@@ -169,7 +169,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   display->upload_width = 0;
   display->upload_height = 0;
   display->upload_video_format = 0;
-  display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
+  display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
   display->upload_data_width = 0;
   display->upload_data_height = 0;
   display->upload_data = NULL;
@@ -689,7 +689,7 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
   }
   else
   {
-    //OpenGL > 2.1.0 and Glew > 1.5.0
+    //OpenGL > 1.2.0 and Glew > 1.4.0
     GString* opengl_version = g_string_truncate (g_string_new ((gchar*) glGetString (GL_VERSION)), 3);
     gint opengl_version_major = 0;
     gint opengl_version_minor = 0;
@@ -708,11 +708,11 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
 
     if ((opengl_version_major  < 1) ||
 	(GLEW_VERSION_MAJOR    < 1) ||
-	(opengl_version_major < 2 && opengl_version_major >= 1 && opengl_version_minor < 4) ||
+	(opengl_version_major < 2 && opengl_version_major >= 1 && opengl_version_minor < 2) ||
 	(GLEW_VERSION_MAJOR   < 2 && GLEW_VERSION_MAJOR   >= 1 && GLEW_VERSION_MINOR   < 4) )
     {
       //turn off the pipeline, the old drivers are not yet supported
-      g_warning ("Required OpenGL >= 1.4.0 and Glew >= 1.4.0\n");
+      g_warning ("Required OpenGL >= 1.2.0 and Glew >= 1.4.0\n");
       display->isAlive = FALSE;
     }
   }
@@ -744,7 +744,7 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
   glutDestroyWindow (display->glutWinId);
 
   //colorspace_conversion specific
-  switch (display->colorspace_conversion)
+  switch (display->upload_colorspace_conversion)
   {
   case GST_GL_DISPLAY_CONVERSION_MESA:
   case GST_GL_DISPLAY_CONVERSION_MATRIX:
@@ -941,57 +941,6 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
 {
   glutSetWindow (display->glutWinId);
 
-  //Frame buffer object is a requirement for every cases
-  if (GLEW_EXT_framebuffer_object)
-  {
-    //a texture must be attached to the FBO
-    GLuint fake_texture = 0;
-
-    g_print ("Context %d, EXT_framebuffer_object supported: yes\n", display->glutWinId);
-
-    //-- init intput frame buffer object (video -> GL)
-
-    //setup FBO
-    glGenFramebuffersEXT (1, &display->upload_fbo);
-    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->upload_fbo);
-
-    //setup the render buffer for depth
-    glGenRenderbuffersEXT(1, &display->upload_depth_buffer);
-    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->upload_depth_buffer);
-    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
-			     display->upload_width, display->upload_height);
-
-    //a fake texture is attached to the upload FBO (cannot init without it)
-    glGenTextures (1, &fake_texture);
-    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, fake_texture);
-    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-		 display->upload_width, display->upload_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-    //attach the texture to the FBO to renderer to
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-			      GL_TEXTURE_RECTANGLE_ARB, fake_texture, 0);
-
-    //attach the depth render buffer to the FBO
-    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
-				 GL_RENDERBUFFER_EXT, display->upload_depth_buffer);
-
-    gst_gl_display_check_framebuffer_status();
-
-    g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
-	      GL_FRAMEBUFFER_COMPLETE_EXT);
-
-    //unbind the FBO
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
-    glDeleteTextures (1, &fake_texture);
-  }
-  else
-  {
-    //turn off the pipeline because Frame buffer object is a requirement
-    g_print ("Context %d, EXT_framebuffer_object supported: no\n", display->glutWinId);
-    display->isAlive = FALSE;
-  }
-
   switch (display->upload_video_format)
   {
   case GST_VIDEO_FORMAT_RGBx:
@@ -1013,13 +962,64 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
   case GST_VIDEO_FORMAT_AYUV:
     //color space conversion is needed
   {
-    //check if fragment shader is available, then load them
+	  //Frame buffer object is a requirement for every cases
+    if (GLEW_EXT_framebuffer_object)
+    {
+	    //a texture must be attached to the FBO
+	    GLuint fake_texture = 0;
+
+	    g_print ("Context %d, EXT_framebuffer_object supported: yes\n", display->glutWinId);
+
+	    //-- init intput frame buffer object (video -> GL)
+
+	    //setup FBO
+	    glGenFramebuffersEXT (1, &display->upload_fbo);
+	    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->upload_fbo);
+
+	    //setup the render buffer for depth
+	    glGenRenderbuffersEXT(1, &display->upload_depth_buffer);
+	    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->upload_depth_buffer);
+	    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
+				     display->upload_width, display->upload_height);
+
+	    //a fake texture is attached to the upload FBO (cannot init without it)
+	    glGenTextures (1, &fake_texture);
+	    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, fake_texture);
+	    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+		     display->upload_width, display->upload_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	    //attach the texture to the FBO to renderer to
+	    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+				      GL_TEXTURE_RECTANGLE_ARB, fake_texture, 0);
+
+	    //attach the depth render buffer to the FBO
+	    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
+				     GL_RENDERBUFFER_EXT, display->upload_depth_buffer);
+
+	    gst_gl_display_check_framebuffer_status();
+
+	    g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
+		      GL_FRAMEBUFFER_COMPLETE_EXT);
+
+	    //unbind the FBO
+	    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+	    glDeleteTextures (1, &fake_texture);
+    }
+    else
+    {
+	    //turn off the pipeline because Frame buffer object is a not present
+	    g_print ("Context %d, EXT_framebuffer_object supported: no\n", display->glutWinId);
+	    display->isAlive = FALSE;
+    }
+	  
+	  //check if fragment shader is available, then load them
     /* shouldn't we require ARB_shading_language_100? --Filippo */
     if (GLEW_ARB_fragment_shader)
     {
       g_print ("Context %d, ARB_fragment_shader supported: yes\n", display->glutWinId);
 
-      display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_GLSL;
+      display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_GLSL;
 
       switch (display->upload_video_format)
       {
@@ -1085,6 +1085,9 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
       default:
 	g_assert_not_reached ();
       }
+
+      //alloc texture (related to upload) memory only on time
+      gst_gl_display_thread_do_upload_make (display);
     }
     //check if YCBCR MESA is available
     else if (GLEW_MESA_ycbcr_texture)
@@ -1094,7 +1097,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
       g_print ("Context %d, GLEW_ARB_imaging supported: no\n", display->glutWinId);
       g_print ("Context %d, GLEW_MESA_ycbcr_texture supported: yes\n", display->glutWinId);
 
-      display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
+      display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
 
       switch (display->upload_video_format)
       {
@@ -1117,9 +1120,10 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
     {
       //GLSL is not available on your drivers, switch to Color Matrix
       g_print ("Context %d, ARB_fragment_shader supported: no\n", display->glutWinId);
+      g_print ("Context %d, GLEW_MESA_ycbcr_texture supported: no\n", display->glutWinId);
       g_print ("Context %d, GLEW_ARB_imaging supported: yes\n", display->glutWinId);
 
-      display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MATRIX;
+      display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MATRIX;
 
       //turn off the pipeline because we do not support it yet
       display->isAlive = FALSE;
@@ -1139,9 +1143,6 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
     g_assert_not_reached ();
   }
 
-  //alloc texture (related to upload) memory only on time
-  gst_gl_display_thread_do_upload_make (display);
-
   g_cond_signal (display->cond_init_upload);
 }
 
@@ -1153,7 +1154,48 @@ gst_gl_display_thread_do_upload (GstGLDisplay *display)
   glutSetWindow (display->glutWinId);
 
   gst_gl_display_thread_do_upload_fill (display);
-  gst_gl_display_thread_do_upload_draw (display);
+
+  switch (display->upload_video_format) 
+  {
+  case GST_VIDEO_FORMAT_RGBx:
+  case GST_VIDEO_FORMAT_BGRx:
+  case GST_VIDEO_FORMAT_xRGB:
+  case GST_VIDEO_FORMAT_xBGR:
+  case GST_VIDEO_FORMAT_RGBA:
+  case GST_VIDEO_FORMAT_BGRA:
+  case GST_VIDEO_FORMAT_ARGB:
+  case GST_VIDEO_FORMAT_ABGR:
+  case GST_VIDEO_FORMAT_RGB:
+  case GST_VIDEO_FORMAT_BGR:
+    //color space conversion is not needed
+    break;
+  case GST_VIDEO_FORMAT_YUY2:
+  case GST_VIDEO_FORMAT_UYVY:
+  case GST_VIDEO_FORMAT_I420:
+  case GST_VIDEO_FORMAT_YV12:
+  case GST_VIDEO_FORMAT_AYUV:
+    {
+      switch (display->upload_colorspace_conversion) 
+      {
+      case GST_GL_DISPLAY_CONVERSION_GLSL:
+        //color space conversion is needed
+        gst_gl_display_thread_do_upload_draw (display);
+        break;
+      case GST_GL_DISPLAY_CONVERSION_MATRIX:
+        //color space conversion is needed
+        //not yet supported
+        break;
+      case GST_GL_DISPLAY_CONVERSION_MESA:
+        //color space conversion is not needed
+        break;
+      default:
+	      g_assert_not_reached ();
+      }
+    }
+    break;
+  default:
+	  g_assert_not_reached ();
+  }
 
   g_cond_signal (display->cond_do_upload);
 }
@@ -1165,59 +1207,47 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
 {
   glutSetWindow (display->glutWinId);
 
-  if (GLEW_EXT_framebuffer_object)
+  switch (display->download_video_format)
   {
-    GST_DEBUG ("Context %d, EXT_framebuffer_object supported: yes", display->glutWinId);
+  case GST_VIDEO_FORMAT_RGBx:
+  case GST_VIDEO_FORMAT_BGRx:
+  case GST_VIDEO_FORMAT_xRGB:
+  case GST_VIDEO_FORMAT_xBGR:
+  case GST_VIDEO_FORMAT_RGBA:
+  case GST_VIDEO_FORMAT_BGRA:
+  case GST_VIDEO_FORMAT_ARGB:
+  case GST_VIDEO_FORMAT_ABGR:
+  case GST_VIDEO_FORMAT_RGB:
+  case GST_VIDEO_FORMAT_BGR:
+    //color space conversion is not needed
+    break;
+  case GST_VIDEO_FORMAT_YUY2:
+  case GST_VIDEO_FORMAT_UYVY:
+  case GST_VIDEO_FORMAT_I420:
+  case GST_VIDEO_FORMAT_YV12:
+  case GST_VIDEO_FORMAT_AYUV:
+    //color space conversion is needed
+  {
 
-    //-- init output frame buffer object (GL -> video)
-
-    //setup FBO
-    glGenFramebuffersEXT (1, &display->download_fbo);
-    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->download_fbo);
-
-    //setup the render buffer for depth
-    glGenRenderbuffersEXT(1, &display->download_depth_buffer);
-    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->download_depth_buffer);
-    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
-			     display->download_width, display->download_height);
-
-    //setup a first texture to render to
-    glGenTextures (1, &display->download_texture);
-    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->download_texture);
-    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-		 display->download_width, display->download_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    //attach the first texture to the FBO to renderer to
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-			      GL_TEXTURE_RECTANGLE_ARB, display->download_texture, 0);
-
-    switch (display->download_video_format)
+    if (GLEW_EXT_framebuffer_object)
     {
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-    case GST_VIDEO_FORMAT_AYUV:
-      //only one attached texture is needed
-      break;
+      GST_DEBUG ("Context %d, EXT_framebuffer_object supported: yes", display->glutWinId);
 
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-      //setup a second texture to render to
-      glGenTextures (1, &display->download_texture_u);
-      glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->download_texture_u);
+      //-- init output frame buffer object (GL -> video)
+
+      //setup FBO
+      glGenFramebuffersEXT (1, &display->download_fbo);
+      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->download_fbo);
+
+      //setup the render buffer for depth
+      glGenRenderbuffersEXT(1, &display->download_depth_buffer);
+      glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->download_depth_buffer);
+      glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
+			       display->download_width, display->download_height);
+
+      //setup a first texture to render to
+      glGenTextures (1, &display->download_texture);
+      glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->download_texture);
       glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
 		   display->download_width, display->download_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -1225,49 +1255,78 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-      //attach the second texture to the FBO to renderer to
-      glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT,
-				GL_TEXTURE_RECTANGLE_ARB, display->download_texture_u, 0);
+      //attach the first texture to the FBO to renderer to
+      glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+			        GL_TEXTURE_RECTANGLE_ARB, display->download_texture, 0);
 
-      //setup a third texture to render to
-      glGenTextures (1, &display->download_texture_v);
-      glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->download_texture_v);
-      glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-		   display->download_width, display->download_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      switch (display->download_video_format)
+      {
+      case GST_VIDEO_FORMAT_YUY2:
+      case GST_VIDEO_FORMAT_UYVY:
+      case GST_VIDEO_FORMAT_AYUV:
+        //only one attached texture is needed
+        break;
 
-      //attach the third texture to the FBO to renderer to
-      glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT2_EXT,
-				GL_TEXTURE_RECTANGLE_ARB, display->download_texture_v, 0);
+      case GST_VIDEO_FORMAT_I420:
+      case GST_VIDEO_FORMAT_YV12:
+        //setup a second texture to render to
+        glGenTextures (1, &display->download_texture_u);
+        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->download_texture_u);
+        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+		     display->download_width, display->download_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-      display->multipleRT[0] = GL_COLOR_ATTACHMENT0_EXT;
-      display->multipleRT[1] = GL_COLOR_ATTACHMENT1_EXT;
-      display->multipleRT[2] = GL_COLOR_ATTACHMENT2_EXT;
-      break;
-    default:
-      g_assert_not_reached ();
+        //attach the second texture to the FBO to renderer to
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT,
+				  GL_TEXTURE_RECTANGLE_ARB, display->download_texture_u, 0);
+
+        //setup a third texture to render to
+        glGenTextures (1, &display->download_texture_v);
+        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->download_texture_v);
+        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+		     display->download_width, display->download_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        //attach the third texture to the FBO to renderer to
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT2_EXT,
+				  GL_TEXTURE_RECTANGLE_ARB, display->download_texture_v, 0);
+
+        display->multipleRT[0] = GL_COLOR_ATTACHMENT0_EXT;
+        display->multipleRT[1] = GL_COLOR_ATTACHMENT1_EXT;
+        display->multipleRT[2] = GL_COLOR_ATTACHMENT2_EXT;
+        break;
+      default:
+        g_assert_not_reached ();
+      }
+
+      //attach the depth render buffer to the FBO
+      glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
+				   GL_RENDERBUFFER_EXT, display->download_depth_buffer);
+
+      gst_gl_display_check_framebuffer_status();
+
+      g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
+	        GL_FRAMEBUFFER_COMPLETE_EXT);
+
+      //unbind the FBO
+      glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+      }
+      else
+      {
+        //turn off the pipeline because Frame buffer object is a requirement
+        g_print ("Context %d, EXT_framebuffer_object supported: no\n", display->glutWinId);
+        display->isAlive = FALSE;
+      }
     }
-
-    //attach the depth render buffer to the FBO
-    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
-				 GL_RENDERBUFFER_EXT, display->download_depth_buffer);
-
-    gst_gl_display_check_framebuffer_status();
-
-    g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
-	      GL_FRAMEBUFFER_COMPLETE_EXT);
-
-    //unbind the FBO
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-  }
-  else
-  {
-    //turn off the pipeline because Frame buffer object is a requirement
-    g_print ("Context %d, EXT_framebuffer_object supported: no\n", display->glutWinId);
-    display->isAlive = FALSE;
+    break;
+  default:
+    g_assert_not_reached ();
   }
 
   switch (display->download_video_format)
@@ -1373,7 +1432,33 @@ static void
 gst_gl_display_thread_do_download (GstGLDisplay * display)
 {
   glutSetWindow (display->glutWinId);
-  gst_gl_display_thread_do_download_draw (display);
+  
+  switch (display->download_video_format)
+  {
+  case GST_VIDEO_FORMAT_RGBx:
+  case GST_VIDEO_FORMAT_BGRx:
+  case GST_VIDEO_FORMAT_xRGB:
+  case GST_VIDEO_FORMAT_xBGR:
+  case GST_VIDEO_FORMAT_RGBA:
+  case GST_VIDEO_FORMAT_BGRA:
+  case GST_VIDEO_FORMAT_ARGB:
+  case GST_VIDEO_FORMAT_ABGR:
+  case GST_VIDEO_FORMAT_RGB:
+  case GST_VIDEO_FORMAT_BGR:
+    //color space conversion is not needed
+    gst_gl_display_thread_do_download_draw_rgb (display);
+    break;
+  case GST_VIDEO_FORMAT_YUY2:
+  case GST_VIDEO_FORMAT_UYVY:
+  case GST_VIDEO_FORMAT_I420:
+  case GST_VIDEO_FORMAT_YV12:
+  case GST_VIDEO_FORMAT_AYUV:
+    //color space conversion is needed
+    gst_gl_display_thread_do_download_draw_yuv (display);
+    break;
+  default:
+    g_assert_not_reached ();
+  }
   g_cond_signal (display->cond_do_download);
 }
 
@@ -1435,8 +1520,6 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
 
   //setup a texture to render to
   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->use_fbo_texture);
-  /*glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-	       display->use_fbo_width, display->use_fbo_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);*/
 
   //attach the texture to the FBO to renderer to
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
@@ -1656,7 +1739,7 @@ void gst_gl_display_on_draw(void)
   //opengl scene
 
   //make sure that the environnement is clean
-  if (display->colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
+  if (display->upload_colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
     glUseProgramObjectARB (0);
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
@@ -2243,75 +2326,25 @@ void gst_gl_display_thread_do_upload_make (GstGLDisplay *display)
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
   switch (display->upload_video_format)
   {
-  case GST_VIDEO_FORMAT_RGBx:
-  case GST_VIDEO_FORMAT_BGRx:
-  case GST_VIDEO_FORMAT_xRGB:
-  case GST_VIDEO_FORMAT_xBGR:
-  case GST_VIDEO_FORMAT_RGBA:
-  case GST_VIDEO_FORMAT_BGRA:
-  case GST_VIDEO_FORMAT_ARGB:
-  case GST_VIDEO_FORMAT_ABGR:
-  case GST_VIDEO_FORMAT_AYUV:
-    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-      width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    break;
-
-  case GST_VIDEO_FORMAT_RGB:
-  case GST_VIDEO_FORMAT_BGR:
-    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
-      width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    break;
-
   case GST_VIDEO_FORMAT_YUY2:
-    switch (display->colorspace_conversion)
-    {
-    case GST_GL_DISPLAY_CONVERSION_GLSL:
-    case GST_GL_DISPLAY_CONVERSION_MATRIX:
-glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
+  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
         width, height,
         0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
-
-if (display->upload_intex_u == 0) {
   glGenTextures (1, &display->upload_intex_u);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
     width, height,
     0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
-}
-break;
-    case GST_GL_DISPLAY_CONVERSION_MESA:
-glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA,
-        width, height,
-        0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
-break;
-    default:
-g_assert_not_reached ();
-    }
     break;
   case GST_VIDEO_FORMAT_UYVY:
-    switch (display->colorspace_conversion)
-    {
-    case GST_GL_DISPLAY_CONVERSION_GLSL:
-    case GST_GL_DISPLAY_CONVERSION_MATRIX:
 glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
         width, height,
         0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
-if (display->upload_intex_u == 0) {
   glGenTextures (1, &display->upload_intex_u);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
     width, height,
     0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
-  break;
-}
-    case GST_GL_DISPLAY_CONVERSION_MESA:
-glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA,
-        width, height,
-        0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
-break;
-    default:
-g_assert_not_reached ();
-    }
     break;
 
   case GST_VIDEO_FORMAT_I420:
@@ -2320,23 +2353,19 @@ g_assert_not_reached ();
       width, height,
       0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
 
-    if (display->upload_intex_u == 0) {
 glGenTextures (1, &display->upload_intex_u);
 glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_u);
 glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
         GST_ROUND_UP_2 (width) / 2,
         GST_ROUND_UP_2 (height) / 2,
         0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-    }
 
-    if (display->upload_intex_v == 0) {
 glGenTextures (1, &display->upload_intex_v);
 glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_v);
 glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
         GST_ROUND_UP_2 (width) / 2,
         GST_ROUND_UP_2 (height) / 2,
         0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-    }
     break;
 
   default:
@@ -2353,9 +2382,42 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
   gint height = display->upload_data_height;
   gpointer data = display->upload_data;
 
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
+  switch (display->upload_video_format) 
+  {
+  case GST_VIDEO_FORMAT_RGB:
+  case GST_VIDEO_FORMAT_BGR:
+  case GST_VIDEO_FORMAT_RGBx:
+  case GST_VIDEO_FORMAT_BGRx:
+  case GST_VIDEO_FORMAT_xRGB:
+  case GST_VIDEO_FORMAT_xBGR:
+  case GST_VIDEO_FORMAT_RGBA:
+  case GST_VIDEO_FORMAT_BGRA:
+  case GST_VIDEO_FORMAT_ARGB:
+  case GST_VIDEO_FORMAT_ABGR:
+    //color space conversion is not needed
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_outtex);
+    break;
+  case GST_VIDEO_FORMAT_YUY2:
+  case GST_VIDEO_FORMAT_UYVY:
+  case GST_VIDEO_FORMAT_I420:
+  case GST_VIDEO_FORMAT_YV12:
+  case GST_VIDEO_FORMAT_AYUV:
+    //color space conversion is needed
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
+    break;
+  default:
+	  g_assert_not_reached ();
+  }
 
   switch (display->upload_video_format) {
+  case GST_VIDEO_FORMAT_RGB:
+    glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+		     GL_RGB, GL_UNSIGNED_BYTE, data);
+    break;
+  case GST_VIDEO_FORMAT_BGR:
+    glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+		     GL_BGR, GL_UNSIGNED_BYTE, data);
+    break;
   case GST_VIDEO_FORMAT_RGBx:
     glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
 		     GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -2374,7 +2436,7 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
 		     GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
     break;
   case GST_VIDEO_FORMAT_YUY2:
-    switch (display->colorspace_conversion)
+    switch (display->upload_colorspace_conversion)
     {
     case GST_GL_DISPLAY_CONVERSION_GLSL:
     case GST_GL_DISPLAY_CONVERSION_MATRIX:
@@ -2389,14 +2451,13 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
     case GST_GL_DISPLAY_CONVERSION_MESA:
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
 		       GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, data);
-      display->upload_video_format = GST_VIDEO_FORMAT_RGBx;
       break;
     default:
       g_assert_not_reached ();
     }
     break;
   case GST_VIDEO_FORMAT_UYVY:
-    switch (display->colorspace_conversion)
+    switch (display->upload_colorspace_conversion)
     {
     case GST_GL_DISPLAY_CONVERSION_GLSL:
     case GST_GL_DISPLAY_CONVERSION_MATRIX:
@@ -2411,7 +2472,6 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
     case GST_GL_DISPLAY_CONVERSION_MESA:
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
 		       GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, data);
-      display->upload_video_format = GST_VIDEO_FORMAT_RGBx;
       break;
     default:
       g_assert_not_reached ();
@@ -2480,15 +2540,6 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay *display)
 {
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->upload_fbo);
 
-  /* no more needed? upload_outtex should already be in the pool */
-  /* glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->upload_outtex); */
-  /* glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, */
-  /* 	       display->upload_width, display->upload_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL); */
-  /* glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR); */
-  /* glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR); */
-  /* glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); */
-  /* glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); */
-
   //attach the texture to the FBO to renderer to
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
 			    GL_TEXTURE_RECTANGLE_ARB, display->upload_outtex, 0);
@@ -2515,24 +2566,6 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay *display)
 
   switch (display->upload_video_format)
   {
-  case GST_VIDEO_FORMAT_RGBx:
-  case GST_VIDEO_FORMAT_BGRx:
-  case GST_VIDEO_FORMAT_xRGB:
-  case GST_VIDEO_FORMAT_xBGR:
-  {
-    glMatrixMode (GL_PROJECTION);
-    glLoadIdentity ();
-
-    glEnable(GL_TEXTURE_RECTANGLE_ARB);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  }
-  break;
-
   case GST_VIDEO_FORMAT_YUY2:
   case GST_VIDEO_FORMAT_UYVY:
   {
@@ -2643,7 +2676,7 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay *display)
   glDrawBuffer(GL_NONE);
 
   //we are done with the shader
-  if (display->colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
+  if (display->upload_colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
     glUseProgramObjectARB (0);
 
   glDisable(GL_TEXTURE_RECTANGLE_ARB);
@@ -2662,7 +2695,43 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay *display)
 
 /* called by gst_gl_display_thread_do_download (in the gl thread) */
 void
-gst_gl_display_thread_do_download_draw (GstGLDisplay *display)
+gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay *display)
+{
+  gint width = display->download_width;
+  gint height = display->download_height;
+  GstVideoFormat video_format = display->download_video_format;
+  gpointer data = display->download_data;
+  
+  glEnable (GL_TEXTURE_RECTANGLE_ARB); 
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->ouput_texture);
+  
+  switch (video_format)
+  {
+  case GST_VIDEO_FORMAT_RGBx:
+  case GST_VIDEO_FORMAT_BGRx:
+  case GST_VIDEO_FORMAT_RGBA:
+  case GST_VIDEO_FORMAT_BGRA:
+  case GST_VIDEO_FORMAT_xBGR:
+  case GST_VIDEO_FORMAT_xRGB:
+  case GST_VIDEO_FORMAT_ARGB:
+  case GST_VIDEO_FORMAT_ABGR:
+    glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+		  GL_UNSIGNED_BYTE, data);
+    break;
+  case GST_VIDEO_FORMAT_RGB:
+  case GST_VIDEO_FORMAT_BGR:
+    glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
+		  GL_UNSIGNED_BYTE, data);
+    break;
+  default:
+      g_assert_not_reached ();
+    }
+}
+
+
+/* called by gst_gl_display_thread_do_download (in the gl thread) */
+void
+gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay *display)
 {
   gint width = display->download_width;
   gint height = display->download_height;
@@ -2686,24 +2755,6 @@ gst_gl_display_thread_do_download_draw (GstGLDisplay *display)
 
   switch (video_format)
   {
-  case GST_VIDEO_FORMAT_RGBx:
-  case GST_VIDEO_FORMAT_BGRx:
-  case GST_VIDEO_FORMAT_xRGB:
-  case GST_VIDEO_FORMAT_xBGR:
-  {
-    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glMatrixMode (GL_PROJECTION);
-    glLoadIdentity ();
-
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->ouput_texture);
-    glEnable(GL_TEXTURE_RECTANGLE_ARB);
-  }
-  break;
-
   case GST_VIDEO_FORMAT_YUY2:
   case GST_VIDEO_FORMAT_UYVY:
   {
@@ -2818,18 +2869,6 @@ gst_gl_display_thread_do_download_draw (GstGLDisplay *display)
 
   switch (video_format)
   {
-  case GST_VIDEO_FORMAT_RGBx:
-    glReadPixels (0, 0, width, height, GL_RGBA,
-		  GL_UNSIGNED_BYTE, data);
-    break;
-  case GST_VIDEO_FORMAT_BGRx:
-    glReadPixels (0, 0, width, height, GL_BGRA,
-		  GL_UNSIGNED_BYTE, data);
-    break;
-  case GST_VIDEO_FORMAT_xBGR:
-    glReadPixels (0, 0, width, height, GL_RGBA,
-		  GL_UNSIGNED_INT_8_8_8_8, data);
-    break;
   case GST_VIDEO_FORMAT_AYUV:
   case GST_VIDEO_FORMAT_xRGB:
     glReadPixels (0, 0, width, height, GL_BGRA,
