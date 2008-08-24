@@ -1019,7 +1019,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
 	      display->isAlive = FALSE;
         break;
       }
-      
+
       display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_GLSL;
 
       switch (display->upload_video_format)
@@ -1156,7 +1156,7 @@ gst_gl_display_thread_do_upload (GstGLDisplay *display)
 
   gst_gl_display_thread_do_upload_fill (display);
 
-  switch (display->upload_video_format) 
+  switch (display->upload_video_format)
   {
   case GST_VIDEO_FORMAT_RGBx:
   case GST_VIDEO_FORMAT_BGRx:
@@ -1176,7 +1176,7 @@ gst_gl_display_thread_do_upload (GstGLDisplay *display)
   case GST_VIDEO_FORMAT_YV12:
   case GST_VIDEO_FORMAT_AYUV:
     {
-      switch (display->upload_colorspace_conversion) 
+      switch (display->upload_colorspace_conversion)
       {
       case GST_GL_DISPLAY_CONVERSION_GLSL:
         //color space conversion is needed
@@ -1433,7 +1433,7 @@ static void
 gst_gl_display_thread_do_download (GstGLDisplay * display)
 {
   glutSetWindow (display->glutWinId);
-  
+
   switch (display->download_video_format)
   {
   case GST_VIDEO_FORMAT_RGBx:
@@ -2386,7 +2386,7 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
   gint height = display->upload_data_height;
   gpointer data = display->upload_data;
 
-  switch (display->upload_video_format) 
+  switch (display->upload_video_format)
   {
   case GST_VIDEO_FORMAT_RGB:
   case GST_VIDEO_FORMAT_BGR:
@@ -2701,14 +2701,12 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay *display)
 void
 gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay *display)
 {
-  gint width = display->download_width;
-  gint height = display->download_height;
   GstVideoFormat video_format = display->download_video_format;
   gpointer data = display->download_data;
-  
-  glEnable (GL_TEXTURE_RECTANGLE_ARB); 
+
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->ouput_texture);
-  
+
   switch (video_format)
   {
   case GST_VIDEO_FORMAT_RGBx:
