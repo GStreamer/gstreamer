@@ -962,63 +962,64 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
   case GST_VIDEO_FORMAT_AYUV:
     //color space conversion is needed
   {
-	  //Frame buffer object is a requirement for every cases
-    if (GLEW_EXT_framebuffer_object)
-    {
-	    //a texture must be attached to the FBO
-	    GLuint fake_texture = 0;
-
-	    g_print ("Context %d, EXT_framebuffer_object supported: yes\n", display->glutWinId);
-
-	    //-- init intput frame buffer object (video -> GL)
-
-	    //setup FBO
-	    glGenFramebuffersEXT (1, &display->upload_fbo);
-	    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->upload_fbo);
-
-	    //setup the render buffer for depth
-	    glGenRenderbuffersEXT(1, &display->upload_depth_buffer);
-	    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->upload_depth_buffer);
-	    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
-				     display->upload_width, display->upload_height);
-
-	    //a fake texture is attached to the upload FBO (cannot init without it)
-	    glGenTextures (1, &fake_texture);
-	    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, fake_texture);
-	    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-		     display->upload_width, display->upload_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-	    //attach the texture to the FBO to renderer to
-	    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-				      GL_TEXTURE_RECTANGLE_ARB, fake_texture, 0);
-
-	    //attach the depth render buffer to the FBO
-	    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
-				     GL_RENDERBUFFER_EXT, display->upload_depth_buffer);
-
-	    gst_gl_display_check_framebuffer_status();
-
-	    g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
-		      GL_FRAMEBUFFER_COMPLETE_EXT);
-
-	    //unbind the FBO
-	    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
-	    glDeleteTextures (1, &fake_texture);
-    }
-    else
-    {
-	    //turn off the pipeline because Frame buffer object is a not present
-	    g_print ("Context %d, EXT_framebuffer_object supported: no\n", display->glutWinId);
-	    display->isAlive = FALSE;
-    }
-	  
 	  //check if fragment shader is available, then load them
     /* shouldn't we require ARB_shading_language_100? --Filippo */
     if (GLEW_ARB_fragment_shader)
     {
       g_print ("Context %d, ARB_fragment_shader supported: yes\n", display->glutWinId);
 
+      //Frame buffer object is a requirement for every cases
+      if (GLEW_EXT_framebuffer_object)
+      {
+	      //a texture must be attached to the FBO
+	      GLuint fake_texture = 0;
+
+	      g_print ("Context %d, EXT_framebuffer_object supported: yes\n", display->glutWinId);
+
+	      //-- init intput frame buffer object (video -> GL)
+
+	      //setup FBO
+	      glGenFramebuffersEXT (1, &display->upload_fbo);
+	      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->upload_fbo);
+
+	      //setup the render buffer for depth
+	      glGenRenderbuffersEXT(1, &display->upload_depth_buffer);
+	      glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, display->upload_depth_buffer);
+	      glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
+				       display->upload_width, display->upload_height);
+
+	      //a fake texture is attached to the upload FBO (cannot init without it)
+	      glGenTextures (1, &fake_texture);
+	      glBindTexture(GL_TEXTURE_RECTANGLE_ARB, fake_texture);
+	      glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+		       display->upload_width, display->upload_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	      //attach the texture to the FBO to renderer to
+	      glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+				        GL_TEXTURE_RECTANGLE_ARB, fake_texture, 0);
+
+	      //attach the depth render buffer to the FBO
+	      glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
+				       GL_RENDERBUFFER_EXT, display->upload_depth_buffer);
+
+	      gst_gl_display_check_framebuffer_status();
+
+	      g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
+		        GL_FRAMEBUFFER_COMPLETE_EXT);
+
+	      //unbind the FBO
+	      glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+	      glDeleteTextures (1, &fake_texture);
+      }
+      else
+      {
+	      //turn off the pipeline because Frame buffer object is a not present
+	      g_print ("Context %d, EXT_framebuffer_object supported: no\n", display->glutWinId);
+	      display->isAlive = FALSE;
+        break;
+      }
+      
       display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_GLSL;
 
       switch (display->upload_video_format)
