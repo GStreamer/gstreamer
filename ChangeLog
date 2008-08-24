@@ -1,5 +1,25 @@
 2008-08-24  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/winks/Makefile.am:
+	* sys/winks/gstksclock.c:
+	* sys/winks/gstksclock.h:
+	* sys/winks/gstksvideodevice.c:
+	* sys/winks/gstksvideodevice.h:
+	* sys/winks/gstksvideosrc.c:
+	* sys/winks/gstksvideosrc.h:
+	* sys/winks/kshelpers.c:
+	* sys/winks/kshelpers.h:
+	* sys/winks/ksvideohelpers.c:
+	* sys/winks/ksvideohelpers.h:
+	  New plugin for low-latency video capture on Windows (#519935).
+
+	  Uses Kernel Streaming, the lowest level API for doing video capture
+	  on Windows (more or less just raw ioctls).
+
+2008-08-24  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
 	* gst/pcapparse/gstpcapparse.c:
 	* sys/winscreencap/gstdx9screencapsrc.c:
 	* sys/winscreencap/gstgdiscreencapsrc.c:
