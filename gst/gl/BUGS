@@ -1,8 +1,3 @@
 
 known issues:
 
-  - gst-launch-0.10 videotestsrc ! "video/x-raw-yuv, format=(fourcc)YV12" ! glimagesink
-    -> wrong color on linux
-    ok it comes from hardware, it seems that on ati+win32 it works, 
-    but on nvidia+linux we do not need to make a disctinction between I420 and YV12
-    (see comments in gst/gl/gstgldisplay.c line 256 and line 2426)

@@ -69,8 +69,11 @@ static GstStaticPadTemplate gst_glimage_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_GL_VIDEO_CAPS ";"
+        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
+        GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR ";"
         GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
     );
 
