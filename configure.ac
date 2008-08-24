@@ -1296,6 +1296,7 @@ sys/oss4/Makefile
 sys/qtwrapper/Makefile
 sys/vcd/Makefile
 sys/wininet/Makefile
+sys/winscreencap/Makefile
 examples/Makefile
 examples/app/Makefile
 examples/directfb/Makefile

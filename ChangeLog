@@ -1,3 +1,18 @@
+2008-08-24  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	patch by: Haakon Sporsheim <hakon.sporsheim@tandberg.com>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/winscreencap/Makefile.am:
+	* sys/winscreencap/gstdx9screencapsrc.c:
+	* sys/winscreencap/gstdx9screencapsrc.h:
+	* sys/winscreencap/gstgdiscreencapsrc.c:
+	* sys/winscreencap/gstgdiscreencapsrc.h:
+	* sys/winscreencap/gstwinscreencap.c:
+	* sys/winscreencap/gstwinscreencap.h:
+	  New plugin: winscreencap (#463941).
+
 2008-08-22  Michael Smith <msmith@songbirdnest.com>
 
 	* sys/dshowdecwrapper/gstdshowaudiodec.c:
