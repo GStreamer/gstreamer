@@ -2327,6 +2327,9 @@ void gst_gl_display_thread_do_upload_make (GstGLDisplay *display)
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
   switch (display->upload_video_format)
   {
+  case GST_VIDEO_FORMAT_AYUV:
+		glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+	    width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   case GST_VIDEO_FORMAT_YUY2:
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
         width, height,
