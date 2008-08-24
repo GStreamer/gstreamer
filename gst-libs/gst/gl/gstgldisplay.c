@@ -2493,12 +2493,13 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
       offsetU = 1;
       offsetV = 2;
       break;
-    //it works on ati+win32 but we have to use the same offset as
-    //I420 on nvidia + linux (I mean offsetU = 1; offsetV = 2;)
-    //So we have to set a display->hardware (ATI o/ NVIDIA) and
-    //etc...
     case GST_VIDEO_FORMAT_YV12:
-
+      //WIN32
+#if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__)
+      offsetU = 2;
+      offsetV = 1;
+      //LINUX
+#elseif
       if (g_ascii_strncasecmp ("ATI", (gchar *) glGetString (GL_VENDOR), 3) == 0)
       {
         offsetU = 2;
@@ -2509,6 +2510,7 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
         offsetU = 1;
         offsetV = 2;
       }
+#endif
       break;
     default:
       g_assert_not_reached ();
