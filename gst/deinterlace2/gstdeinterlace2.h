@@ -74,8 +74,6 @@ struct _GstDeinterlaceMethodClass {
   guint fields_required;
   guint latency;
 
-  gboolean available;
-
   void (*deinterlace_frame) (GstDeinterlaceMethod *self, GstDeinterlace2 * parent);
 
   const gchar *name;

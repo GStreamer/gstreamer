@@ -1,10 +1,8 @@
 // -*- c++ -*-       
 
-#ifdef IS_SSE2
-//sse2 code deleted for now
-#else
-
 // Version for non-SSE2
+
+#ifndef IS_C
 
 #ifdef SKIP_SEARCH
             "movq    %%mm6, %%mm0\n\t"            // just use the results of our wierd bob
@@ -59,6 +57,7 @@
             V_MOVNTQ ("(%"XAX", %%"XDX")", "%%mm0")
             //      pavgb   mm1, qword ptr["XBX"+"XCX"]
             V_PAVGB ("%%mm1", "(%%"XBX", %%"XCX")", "%%mm2", _ShiftMask)
+	    //FIXME: XDX or XAX!!
             "addq   "_dst_pitchw", %%"XBX
             //      movntq  qword ptr["XAX"+"XDX"], mm1
             V_MOVNTQ ("(%%"XAX", %%"XDX")", "%%mm1")
@@ -71,7 +70,6 @@
            LEAX"    8(%%"XDX"), %%"XDX"\n\t"       // bump offset pointer
            CMPX"    "_Last8", %%"XDX"\n\t"       // done with line?
            "jb      1b\n\t"                    // y
-#endif
 
            MOVX" "_oldbx", %%"XBX"\n\t"
 
@@ -114,3 +112,51 @@
     }
     
     return 0;
+#else
+#ifdef SKIP_SEARCH
+            out = best;            // just use the results of our wierd bob
+#else
+            diff = diff - MIN (diff, 10) - 4;
+	    if (diff < 0)
+	      out = weave;
+	    else
+	      out = best;
+
+	    out = CLAMP (out, MinVals, MaxVals);
+#endif
+
+#ifdef USE_VERTICAL_FILTER
+            pDest[x] = (out + pBob[0]) / 2;
+	    pDest[x + dst_pitchw] = (pBob[src_pitch2] + out) / 2;
+#else
+            pDest[x] = out;
+#endif
+            pBob += 1;
+            pBobP += 1;
+            pSrc += 1;
+            pSrcP += 1;
+	}
+        // adjust for next line
+        pSrc  = src_pitch2 * (y+1) + pWeaveSrc;
+        pSrcP = src_pitch2 * (y+1) + pWeaveSrcP;
+        pDest = dst_pitch2 * (y+1) + pWeaveDest + dst_pitch2;
+
+
+	if (TopFirst)
+	{
+		pBob = pCopySrc + src_pitch2;
+		pBobP = pCopySrcP + src_pitch2;
+	}
+	else
+	{
+		pBob =  pCopySrc;
+		pBobP =  pCopySrcP;
+	}
+
+        pBob  += src_pitch2 * (y+1);
+        pBobP += src_pitch2 * (y+1);
+    }
+    
+    return 0;
+
+#endif

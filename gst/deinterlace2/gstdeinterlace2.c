@@ -55,7 +55,7 @@ G_DEFINE_TYPE (GstDeinterlaceMethod, gst_deinterlace_method, GST_TYPE_OBJECT);
 static void
 gst_deinterlace_method_class_init (GstDeinterlaceMethodClass * klass)
 {
-  klass->available = TRUE;
+
 }
 
 static void
