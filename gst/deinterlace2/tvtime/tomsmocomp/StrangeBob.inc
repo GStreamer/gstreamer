@@ -4,7 +4,7 @@
 		// Assume our pixels are layed out as follows with x the calc'd bob value
 		// and the other pixels are from the current field
 		//  
-		//		  j a b c k		current field
+		//	  j a b c k		current field
 		//            x			calculated line
 		//        m d e f n		current field
 		//
@@ -25,6 +25,8 @@
         //  avg(b,e)
         // end if
         // pickup any thing not yet set with avg(b,e)
+
+#ifndef IS_C
 
 		// j, n
         "pxor %%mm5, %%mm5\n\t"
@@ -48,7 +50,7 @@
 		"movq    -4(%%"XBX"), %%mm0\n\t"		// value j
 		"movq    4(%%"XBX", %%"XCX"), %%mm1\n\t"	// value n
 		"movq	%%mm0, %%mm2\n\t"					
-		"pavgb	%%mm1, %%mm2\n\t"					// avg(j,n)
+		V_PAVGB ("%%mm2", "%%mm1", "%%mm3", _ShiftMask)	// avg(j,n)
         "movq	%%mm0, %%mm3\n\t"
 		"psubusb	%%mm1, %%mm0\n\t"
 		"psubusb %%mm3, %%mm1\n\t"
@@ -60,7 +62,6 @@
 		"pcmpeqb %%mm3, %%mm1\n\t"			// now ff where abs(j,n) < Thres, else 00	
 
         "pand    %%mm4, %%mm1\n\t"
-        
         "pand    %%mm1, %%mm2\n\t"
         "pand    %%mm1, %%mm0\n\t"
 
@@ -320,3 +321,68 @@
 		"por		%%mm2, %%mm6\n\t"			// our x2 value
 		"por		%%mm1, %%mm7\n\t"			// our x2 diffs
 		"movq	%%mm7, %%mm4\n\t"			// save as bob uncertainty indicator
+
+#else
+
+        diff = -1;
+	best = 0;
+	// j, n
+        if (ABS (pBob[-2] - pBob[src_pitch2 - 4]) < DiffThres &&
+	    ABS (pBob[-4] - pBob[src_pitch2 + 4]) > DiffThres) {
+	   best = (pBob[-2] + pBob[src_pitch2 - 4]) / 2;
+	   diff = ABS (pBob[-2] - pBob[src_pitch2 - 4]);
+	}
+
+        // k & m
+        if (ABS (pBob[2] - pBob[src_pitch2 + 4]) < DiffThres &&
+	    ABS (pBob[4] - pBob[src_pitch2 - 4]) > DiffThres) {
+	   best = (pBob[4] + pBob[src_pitch2 - 4]) / 2;
+	   diff = ABS (pBob[4] - pBob[src_pitch2 - 4]);
+	}
+
+        // c & d
+	if (ABS (pBob[0] - pBob[src_pitch2 + 2]) < DiffThres &&
+	    ABS (pBob[2] - pBob[src_pitch2 - 2]) > DiffThres) {
+	   best = (pBob[2] + pBob[src_pitch2 - 2]) / 2;
+	   diff = ABS (pBob[2] - pBob[src_pitch2 - 2]);
+	}
+
+        // a & f
+	if (ABS (pBob[0] - pBob[src_pitch2 - 2]) < DiffThres &&
+	    ABS (pBob[-2] - pBob[src_pitch2 + 2]) > DiffThres) {
+	   best = (pBob[-2] + pBob[src_pitch2 + 2]) / 2;
+	   diff = ABS (pBob[-2] - pBob[src_pitch2 + 2]);
+	}
+
+	// b,e
+	if (ABS (pBob[0] - pBob[src_pitch2]) < DiffThres) {
+	   best = (pBob[0] + pBob[src_pitch2]) / 2;
+	   diff = ABS (pBob[0] - pBob[src_pitch2]);
+	}
+
+// We will also calc here the max/min values to later limit comb
+// so the max excursion will not exceed the Max_Comb constant
+
+#ifdef SKIP_SEARCH
+		best = CLAMP (best, MIN (pBob[src_pitch2], pBob[0]), MAX (pBob[src_pitch2], pBob[0]));
+#else
+		mov = MAX (ABS (pBob[0] - pBobP[0]), ABS (pBob[src_pitch2] - pBobP[src_pitch2]));
+
+		MinVals = 0;
+		MaxVals = 255;
+		if (mov > DiffThres) {
+		  MinVals = MAX (MIN (pBob[0], pBob[src_pitch2]), best);
+		  MaxVals = MIN (MAX (pBob[0], pBob[src_pitch2]), best);
+		}
+
+		best = CLAMP (best, MIN (pBob[src_pitch2], pBob[0]), MAX (pBob[src_pitch2], pBob[0]));
+#endif
+
+		avg = (pBob[src_pitch2] + pBob[0]) / 2;
+		diff2 = ABS (pBob[src_pitch2] - pBob[0]);
+
+		if (diff == -1 || diff2 < diff) {
+		  best = avg;
+		  diff = diff2;
+		}
+#endif

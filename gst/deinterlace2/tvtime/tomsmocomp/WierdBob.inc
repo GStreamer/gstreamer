@@ -13,6 +13,7 @@
 		 
 		// selected for the	smallest of abs(a,f), abs(c,d), or abs(b,e), etc.
 
+#ifndef IS_C
 		// a,f
 		"movq    -2(%%"XBX"), %%mm0\n\t"		// value a from top left		
 		"movq    2(%%"XBX", %%"XCX"), %%mm1\n\t"	// value f from bottom right			
@@ -175,6 +176,7 @@
 		"pxor	%%mm4, %%mm4\n\t"			
 		"psubusb %%mm7, %%mm3\n\t"			// nonzero where new weights bigger, else 0
 		"pcmpeqb %%mm4, %%mm3\n\t"			// now ff where new better, else 00	
+
 		"pcmpeqb	%%mm3, %%mm4\n\t"			// here ff where old better, else 00
 
 		"pand	%%mm3, %%mm1\n\t"
@@ -187,3 +189,59 @@
 		"por		%%mm1, %%mm7\n\t"			// our x2 diffs
 		"movq	%%mm7, %%mm4\n\t"			// save as bob uncertainty indicator
 
+#else
+
+        // a,f
+        best = (pBob[-2] + pBob[src_pitch2 + 2]) / 2;
+	diff = ABS (pBob[-2] - pBob[src_pitch2 + 2]);
+
+        // c,d
+	if (ABS (pBob[2] - pBob[src_pitch2 - 2]) < diff) {
+          best = (pBob[2] + pBob[src_pitch2 - 2]) / 2;
+	  diff = ABS (pBob[2] - pBob[src_pitch2 - 2]);
+	}
+
+	// j,n
+	if (ABS (pBob[-4] - pBob[src_pitch2 + 4]) < diff) {
+          best = (pBob[-4] + pBob[src_pitch2 + 4]) / 2;
+	  diff = ABS (pBob[-4] - pBob[src_pitch2 + 4]);
+	}
+
+	// k,m
+	if (ABS (pBob[4] - pBob[src_pitch2 - 4]) < diff) {
+          best = (pBob[4] + pBob[src_pitch2 - 4]) / 2;
+	  diff = ABS (pBob[-4] - pBob[src_pitch2 - 4]);
+	}
+
+	// k,m
+	if (ABS (pBob[4] - pBob[src_pitch2 - 4]) < diff) {
+          best = (pBob[4] + pBob[src_pitch2 - 4]) / 2;
+	  diff = ABS (pBob[-4] - pBob[src_pitch2 - 4]);
+	}
+
+// We will also calc here the max/min values to later limit comb
+// so the max excursion will not exceed the Max_Comb constant
+
+#ifdef SKIP_SEARCH
+		best = CLAMP (best, MIN (pBob[src_pitch2], pBob[0]), MAX (pBob[src_pitch2], pBob[0]));
+#else
+		mov = MAX (ABS (pBob[0] - pBobP[0]), ABS (pBob[src_pitch2] - pBobP[src_pitch2]));
+
+		MinVals = 0;
+		MaxVals = 255;
+		if (mov > Max_Mov) {
+		  MinVals = MAX (MIN (pBob[0], pBob[src_pitch2]), best);
+		  MaxVals = MIN (MAX (pBob[0], pBob[src_pitch2]), best);
+		}
+
+		best = CLAMP (best, MIN (pBob[src_pitch2], pBob[0]), MAX (pBob[src_pitch2], pBob[0]));
+#endif
+
+		avg = (pBob[src_pitch2] + pBob[0]) / 2;
+		diff2 = ABS (pBob[src_pitch2] - pBob[0]);
+
+		if (diff2 < diff) {
+		  best = avg;
+		  diff = diff2;
+		}
+#endif

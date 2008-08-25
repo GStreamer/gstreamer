@@ -1,8 +1,6 @@
 #include <string.h>
 #include <math.h>
 
-#define USE_FOR_DSCALER
-
 // Define a few macros for CPU dependent instructions. 
 // I suspect I don't really understand how the C macro preprocessor works but
 // this seems to get the job done.          // TRB 7/01

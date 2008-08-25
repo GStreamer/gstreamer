@@ -29,9 +29,6 @@
 #include "gstdeinterlace2.h"
 #include "plugins.h"
 
-#include "tomsmocomp/tomsmocompmacros.h"
-#include "x86-64_macros.inc"
-
 #define GST_TYPE_DEINTERLACE_METHOD_TOMSMOCOMP	(gst_deinterlace_method_tomsmocomp_get_type ())
 #define GST_IS_DEINTERLACE_METHOD_TOMSMOCOMP(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_TOMSMOCOMP))
 #define GST_IS_DEINTERLACE_METHOD_TOMSMOCOMP_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DEINTERLACE_METHOD_TOMSMOCOMP))
@@ -72,6 +69,20 @@ Fieldcopy (void *dest, const void *src, size_t count,
   return 0;
 }
 
+#define USE_FOR_DSCALER
+
+#define IS_C
+#define SIMD_TYPE C
+#define FUNCT_NAME tomsmocompDScaler_C
+#include "tomsmocomp/TomsMoCompAll.inc"
+#undef  IS_C
+#undef  SIMD_TYPE
+#undef  FUNCT_NAME
+
+#ifdef BUILD_X86_ASM
+
+#include "tomsmocomp/tomsmocompmacros.h"
+#include "x86-64_macros.inc"
 
 #define IS_MMX
 #define SIMD_TYPE MMX
@@ -96,6 +107,8 @@ Fieldcopy (void *dest, const void *src, size_t count,
 #undef  IS_MMXEXT
 #undef  SIMD_TYPE
 #undef  FUNCT_NAME
+
+#endif
 
 G_DEFINE_TYPE (GstDeinterlaceMethodTomsMoComp,
     gst_deinterlace_method_tomsmocomp, GST_TYPE_DEINTERLACE_METHOD);
@@ -173,6 +186,7 @@ static void
   dim_class->nick = "tomsmocomp";
   dim_class->latency = 1;
 
+#ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
     dim_class->deinterlace_frame = tomsmocompDScaler_MMXEXT;
   } else if (cpu_flags & OIL_IMPL_FLAG_3DNOW) {
@@ -180,8 +194,11 @@ static void
   } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {
     dim_class->deinterlace_frame = tomsmocompDScaler_MMX;
   } else {
-    dim_class->available = FALSE;
+    dim_class->deinterlace_frame = tomsmocompDScaler_C;
   }
+#else
+  dim_class->deinterlace_frame = tomsmocompDScaler_C;
+#endif
 }
 
 static void

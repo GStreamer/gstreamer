@@ -6,6 +6,8 @@ const unsigned char* pSrc;
 const unsigned char* pBob;
 const unsigned char* pBobP;
 
+#ifndef IS_C
+
 int64_t Max_Mov   = 0x0404040404040404ull; 
 int64_t DiffThres = 0x0f0f0f0f0f0f0f0full; 
 int64_t YMask     = 0x00ff00ff00ff00ffull; // keeps only luma
@@ -19,6 +21,14 @@ int64_t ShiftMask = 0xfefffefffefffeffull;
 
 long oldbx;
 
+#else
+
+#ifdef USE_STRANGE_BOB
+int64_t DiffThres = 0x0f;
+#endif
+
+#endif
+
 // long is int32 on ARCH_368, int64 on ARCH_AMD64. Declaring it this way
 // saves a lot of xor's to delete 64bit garbage.
 
@@ -30,15 +40,23 @@ long	    src_pitch2 = 2 * src_pitch;		// even & odd lines are interleaved in Avi
 
 
 long	    dst_pitch2 = 2 * dst_pitch;
+#ifdef IS_C
+
+long     x,best,diff,avg,diff2,out;
+#endif
 long     y;
 
-#ifdef IS_SSE2
+#if defined(IS_SSE2)
 long     Last8 = (rowsize-16);			// ofs to last 16 bytes in row for SSE2
+#elif defined(IS_C)
+long     Last8 = (rowsize-4);                   // ofs to last two pixel in row
 #else
 long     Last8 = (rowsize-8);			// ofs to last 8 bytes in row
 #endif
 
-long		dst_pitchw = dst_pitch; // local stor so asm can ref
+#ifndef IS_C
+long	dst_pitchw = dst_pitch; // local stor so asm can ref
+#endif
 	pSrc  = pWeaveSrc;			// points 1 weave line above
 	pSrcP = pWeaveSrcP;			// " 
 
@@ -70,6 +88,8 @@ long		dst_pitchw = dst_pitch; // local stor so asm can ref
 		pBob =  pCopySrc;
 		pBobP =  pCopySrcP;
 	}
+
+#ifndef IS_C
 
 #ifndef _pBob
 #define _pBob       "%0"
@@ -110,11 +130,6 @@ long		dst_pitchw = dst_pitch; // local stor so asm can ref
              // Save "XBX" (-fPIC)
 	     MOVX" %%"XBX", "_oldbx"\n\t"
              
-#ifdef IS_SSE2
-             
-             // sse2 code deleted for now
-
-#else
              // simple bob first 8 bytes
              MOVX"	"_pBob",        %%"XBX"\n\t"
              MOVX"	"_src_pitch2",  %%"XCX"\n\t"
@@ -189,5 +204,61 @@ long		dst_pitchw = dst_pitch; // local stor so asm can ref
              // from the Bob value instead of the avg distance from that value.
              // our best and only rating so far
              "pcmpeqb	%%mm7, %%mm7\n\t"			// ffff, say we didn't find anything good yet
+
+#else
+
+	for (y=1; y < FldHeight-1; y++)
+	{
+#ifdef USE_VERTICAL_FILTER
+             pDest[0] = (3 * pBob[0] + pBob[src_pitch2]) / 4;
+             pDest[1] = (3 * pBob[1] + pBob[src_pitch2 + 1]) / 4;
+             pDest[2] = (3 * pBob[2] + pBob[src_pitch2 + 2]) / 4;
+             pDest[3] = (3 * pBob[3] + pBob[src_pitch2 + 3]) / 4;
+	     pDest[dst_pitchw] = (pBob[0] + 3 * pBob[src_pitch2]) / 4;
+	     pDest[dst_pitchw + 1] = (pBob[1] + 3 * pBob[src_pitch2 + 1]) / 4;
+	     pDest[dst_pitchw + 2] = (pBob[2] + 3 * pBob[src_pitch2 + 2]) / 4;
+	     pDest[dst_pitchw + 3] = (pBob[3] + 3 * pBob[src_pitch2 + 3]) / 4;
+
+             // simple bob last byte
+	     pDest[Last8] = (3 * pBob[Last8] + pBob[Last8 + src_pitch2]) / 4;
+	     pDest[Last8 + 1] = (3 * pBob[Last8 + 1] + pBob[Last8 + src_pitch2 + 1]) / 4;
+	     pDest[Last8 + 2] = (3 * pBob[Last8 + 2] + pBob[Last8 + src_pitch2 + 2]) / 4;
+	     pDest[Last8 + 3] = (3 * pBob[Last8 + 3] + pBob[Last8 + src_pitch2 + 3]) / 4;
+	     pDest[Last8 + src_pitch2] = (pBob[Last8] + 3 * pBob[Last8 + src_pitch2]) / 4;
+	     pDest[Last8 + src_pitch2 + 1] = (pBob[Last8 + 1] + 3 * pBob[Last8 + src_pitch2 + 1]) / 4;
+	     pDest[Last8 + src_pitch2 + 2] = (pBob[Last8 + 2] + 3 * pBob[Last8 + src_pitch2 + 2]) / 4;
+	     pDest[Last8 + src_pitch2 + 3] = (pBob[Last8 + 3] + 3 * pBob[Last8 + src_pitch2 + 3]) / 4;
+#else
+             pDest[0] = (pBob[0] + pBob[src_pitch2 + 1]) / 2;
+             pDest[1] = (pBob[1] + pBob[src_pitch2 + 1]) / 2;
+             pDest[2] = (pBob[2] + pBob[src_pitch2 + 2]) / 2;
+             pDest[3] = (pBob[3] + pBob[src_pitch2 + 3]) / 2;
+
+             // simple bob last byte
+	     pDest[Last8] = (pBob[Last8] + pBob[Last8 + src_pitch2]) / 2;
+	     pDest[Last8 + 1] = (pBob[Last8 + 1] + pBob[Last8 + src_pitch2 + 1]) / 2;
+	     pDest[Last8 + 2] = (pBob[Last8 + 2] + pBob[Last8 + src_pitch2 + 2]) / 2;
+	     pDest[Last8 + 3] = (pBob[Last8 + 3] + pBob[Last8 + src_pitch2 + 3]) / 2;
+#endif
+
+             pBob += 4;
+	     pBobP += 4;
+	     pSrc += 4;
+	     pSrcP += 4;
+
+             for (x=4; x < Last8; x += 1) {
+
+#ifdef USE_STRANGE_BOB
+#include "StrangeBob.inc"
+#else
+#include "WierdBob.inc"
+#endif
+
+             // We will keep a slight bias to using the weave pixels
+             // from the current location, by rating them by the min distance
+             // from the Bob value instead of the avg distance from that value.
+             // our best and only rating so far
+             diff = 255;
+
 
 #endif

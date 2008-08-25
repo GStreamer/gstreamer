@@ -1,3 +1,22 @@
+2008-08-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace_method_class_init):
+	* gst/deinterlace2/gstdeinterlace2.h:
+	* gst/deinterlace2/tvtime/tomsmocomp.c:
+	(gst_deinterlace_method_tomsmocomp_class_init):
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopTop.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/StrangeBob.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll2.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/WierdBob.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h:
+	First part of the C implementation of the tomsmocomp deinterlacing
+	algorithm. This only supports search-effort=0 currently, is painfully
+	slow and needs some cleanup later when all search-effort settings
+	are implemented in C.
+
 2008-08-24  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
 	* configure.ac:
