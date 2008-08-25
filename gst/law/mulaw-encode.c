@@ -194,6 +194,7 @@ gst_mulawenc_init (GstMuLawEnc * mulawenc)
   mulawenc->srcpad = gst_pad_new_from_template (mulawenc_src_template, "src");
   gst_pad_set_setcaps_function (mulawenc->srcpad, mulawenc_setcaps);
   gst_pad_set_getcaps_function (mulawenc->srcpad, mulawenc_getcaps);
+  gst_pad_use_fixed_caps (mulawenc->srcpad);
   gst_element_add_pad (GST_ELEMENT (mulawenc), mulawenc->srcpad);
 
   /* init rest */
@@ -225,17 +226,23 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
+
+  ret = gst_pad_alloc_buffer_and_set_caps (mulawenc->srcpad,
+      GST_BUFFER_OFFSET_NONE, mulaw_size, GST_PAD_CAPS (mulawenc->srcpad),
+      &outbuf);
+  if (ret != GST_FLOW_OK)
+    goto alloc_failed;
+
   if (duration == -1) {
     duration = gst_util_uint64_scale_int (mulaw_size,
         GST_SECOND, mulawenc->rate * mulawenc->channels);
   }
 
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (mulawenc->srcpad,
-      GST_BUFFER_OFFSET_NONE, mulaw_size, GST_PAD_CAPS (mulawenc->srcpad),
-      &outbuf);
-  if (ret != GST_FLOW_OK)
-    goto alloc_failed;
+  if (GST_BUFFER_SIZE (outbuf) < mulaw_size) {
+    /* pad-alloc can suggest a smaller size */
+    gst_buffer_unref (outbuf);
+    outbuf = gst_buffer_new_and_alloc (mulaw_size);
+  }
 
   mulaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
 

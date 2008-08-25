@@ -1,3 +1,15 @@
+2008-08-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/law/alaw-encode.c: (gst_alaw_enc_init), (gst_alaw_enc_chain):
+	* gst/law/mulaw-conversion.c:
+	* gst/law/mulaw-encode.c: (gst_mulawenc_init),
+	(gst_mulawenc_chain):
+	The encoder can't really renegotiate at the time they perform a
+	pad-alloc so make the srcpads use fixed caps.
+	Check the buffer size after a pad-alloc because the returned size might
+	not be right when the downstream element does not know the size of the
+	new buffer (capsfilter). Fixes #549073.
+
 2008-08-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
         Patch by: Filippo Argiolas <filippo dot argiolas at gmail dot com>

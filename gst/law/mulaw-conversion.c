@@ -25,7 +25,7 @@
 
 #include <glib.h>
 
-/* #define ZEROTRAP *//* turn on the trap as per the MIL-STD */
+#undef ZEROTRAP                 /* turn on the trap as per the MIL-STD */
 #define BIAS 0x84               /* define the add-in bias for 16 bit samples */
 #define CLIP 32635
 

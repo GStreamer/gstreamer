@@ -421,6 +421,7 @@ gst_alaw_enc_init (GstALawEnc * alawenc, GstALawEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_alaw_enc_setcaps));
   gst_pad_set_getcaps_function (alawenc->srcpad,
       GST_DEBUG_FUNCPTR (gst_alaw_enc_getcaps));
+  gst_pad_use_fixed_caps (alawenc->srcpad);
   gst_element_add_pad (GST_ELEMENT (alawenc), alawenc->srcpad);
 
   /* init rest */
@@ -457,17 +458,23 @@ gst_alaw_enc_chain (GstPad * pad, GstBuffer * buffer)
   GST_LOG_OBJECT (alawenc, "buffer with ts=%" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
 
-  if (duration == GST_CLOCK_TIME_NONE) {
-    duration = gst_util_uint64_scale_int (alaw_size,
-        GST_SECOND, alawenc->rate * alawenc->channels);
-  }
-
   ret =
       gst_pad_alloc_buffer_and_set_caps (alawenc->srcpad,
       GST_BUFFER_OFFSET_NONE, alaw_size, GST_PAD_CAPS (alawenc->srcpad),
       &outbuf);
   if (ret != GST_FLOW_OK)
     goto done;
+
+  if (duration == GST_CLOCK_TIME_NONE) {
+    duration = gst_util_uint64_scale_int (alaw_size,
+        GST_SECOND, alawenc->rate * alawenc->channels);
+  }
+
+  if (GST_BUFFER_SIZE (outbuf) < alaw_size) {
+    /* pad-alloc can return a smaller buffer */
+    gst_buffer_unref (outbuf);
+    outbuf = gst_buffer_new_and_alloc (alaw_size);
+  }
 
   alaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
 
