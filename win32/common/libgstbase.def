@@ -41,6 +41,7 @@ EXPORTS
 	gst_base_transform_is_in_place
 	gst_base_transform_is_passthrough
 	gst_base_transform_is_qos_enabled
+	gst_base_transform_reconfigure
 	gst_base_transform_set_gap_aware
 	gst_base_transform_set_in_place
 	gst_base_transform_set_passthrough

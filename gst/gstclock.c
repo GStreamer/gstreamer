@@ -1263,6 +1263,10 @@ gst_clock_add_observation (GstClock * clock, GstClockTime slave,
 
   GST_CLOCK_SLAVE_LOCK (clock);
 
+  GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, clock,
+      "adding observation slave %" GST_TIME_FORMAT ", master %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (slave), GST_TIME_ARGS (master));
+
   clock->times[(4 * clock->time_index)] = slave;
   clock->times[(4 * clock->time_index) + 2] = master;
 
