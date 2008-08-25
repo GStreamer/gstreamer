@@ -1,3 +1,20 @@
+2008-08-25  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_send_event),
+	(gst_matroska_demux_video_caps), (gst_matroska_demux_audio_caps):
+	* gst/matroska/matroska-mux.c:
+	(gst_matroska_mux_video_pad_setcaps),
+	(gst_matroska_mux_audio_pad_setcaps), (gst_matroska_mux_finish):
+	Add Real[Audio|Video] support to Matroska containers.
+	It works fine for:
+	* decoding real audio/video streams contained in mkv
+	* 'transmuxing' real (.rm) files into .mkv files
+	It will not work though for encoding real[audio/video] streams that
+	don't contain the 'mdpr_data' extra data on the caps.
+	The reason why this will not work is because I never intended to
+	duplicate virtually all the 'mdpr' block creation into mkvmux.
+	Fixes #536067
+
 2008-08-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/law/alaw-encode.c: (gst_alaw_enc_init), (gst_alaw_enc_chain):

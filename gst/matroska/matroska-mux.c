@@ -91,6 +91,9 @@ static GstStaticPadTemplate videosink_templ =
         "video/x-theora; "
         "video/x-dirac, "
         COMMON_VIDEO_CAPS "; "
+        "video/x-pn-realvideo, "
+        "rmversion = (int) [1, 4], "
+        COMMON_VIDEO_CAPS "; "
         "video/x-raw-yuv, "
         "format = (fourcc) { YUY2, I420, YV12, UYVY, AYUV }, "
         COMMON_VIDEO_CAPS)
@@ -149,7 +152,9 @@ static GstStaticPadTemplate audiosink_templ =
         COMMON_AUDIO_CAPS ";"
         "audio/x-tta, "
         "width = (int) { 8, 16, 24 }, "
-        "channels = (int) { 1, 2 }, " "rate = (int) [ 8000, 96000 ]")
+        "channels = (int) { 1, 2 }, " "rate = (int) [ 8000, 96000 ]; "
+        "audio/x-pn-realaudio, "
+        "raversion = (int) { 1, 2, 8 }, " COMMON_AUDIO_CAPS ";")
     );
 
 static GstStaticPadTemplate subtitlesink_templ =
@@ -752,6 +757,45 @@ skip_details:
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MSMPEG4V3);
 
     return TRUE;
+  } else if (!strcmp (mimetype, "video/x-pn-realvideo")) {
+    gint rmversion;
+    const GValue *mdpr_data;
+
+    gst_structure_get_int (structure, "rmversion", &rmversion);
+    switch (rmversion) {
+      case 1:
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO1);
+        break;
+      case 2:
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO2);
+        break;
+      case 3:
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO3);
+        break;
+      case 4:
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO4);
+        break;
+      default:
+        return FALSE;
+    }
+
+    mdpr_data = gst_structure_get_value (structure, "mdpr_data");
+    if (mdpr_data != NULL) {
+      guint8 *priv_data = NULL;
+      guint priv_data_size = 0;
+
+      GstBuffer *codec_data_buf = g_value_peek_pointer (mdpr_data);
+
+      priv_data_size = GST_BUFFER_SIZE (codec_data_buf);
+      priv_data = g_malloc0 (priv_data_size);
+
+      memcpy (priv_data, GST_BUFFER_DATA (codec_data_buf), priv_data_size);
+
+      context->codec_priv = priv_data;
+      context->codec_priv_size = priv_data_size;
+    }
+
+    return TRUE;
   }
 
   return FALSE;
@@ -1202,6 +1246,42 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     gst_structure_get_int (structure, "width", &width);
     audiocontext->bitdepth = width;
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_TTA);
+
+    return TRUE;
+  } else if (!strcmp (mimetype, "audio/x-pn-realaudio")) {
+    gint raversion;
+    const GValue *mdpr_data;
+
+    gst_structure_get_int (structure, "raversion", &raversion);
+    switch (raversion) {
+      case 1:
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4);
+        break;
+      case 2:
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_REAL_28_8);
+        break;
+      case 8:
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_REAL_COOK);
+        break;
+      default:
+        return FALSE;
+    }
+
+    mdpr_data = gst_structure_get_value (structure, "mdpr_data");
+    if (mdpr_data != NULL) {
+      guint8 *priv_data = NULL;
+      guint priv_data_size = 0;
+
+      GstBuffer *codec_data_buf = g_value_peek_pointer (mdpr_data);
+
+      priv_data_size = GST_BUFFER_SIZE (codec_data_buf);
+      priv_data = g_malloc0 (priv_data_size);
+
+      memcpy (priv_data, GST_BUFFER_DATA (codec_data_buf), priv_data_size);
+
+      context->codec_priv = priv_data;
+      context->codec_priv_size = priv_data_size;
+    }
 
     return TRUE;
   }
@@ -1686,6 +1766,8 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
 
   if (tags != NULL) {
     guint64 master_tags, master_tag;
+
+    GST_DEBUG ("Writing tags");
 
     /* TODO: maybe limit via the TARGETS id by looking at the source pad */
     mux->tags_pos = ebml->pos;

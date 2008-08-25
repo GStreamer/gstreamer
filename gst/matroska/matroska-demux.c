@@ -1995,6 +1995,8 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
     gst_pad_push_event (stream->pad, event);
 
     if (stream->pending_tags) {
+      GST_DEBUG_OBJECT (demux, "Sending pending_tags %p for pad %s:%s",
+          stream->pending_tags, GST_DEBUG_PAD_NAME (stream->pad));
       gst_element_found_tags_for_pad (GST_ELEMENT (demux), stream->pad,
           stream->pending_tags);
       stream->pending_tags = NULL;
@@ -5091,6 +5093,29 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
 
     caps = gst_caps_new_simple ("video/x-pn-realvideo",
         "rmversion", G_TYPE_INT, rmversion, NULL);
+    GST_DEBUG ("data:%p, size:0x%x", data, size);
+    /* We need to extract the extradata ! */
+    if (data && (size >= 0x22)) {
+      GstBuffer *priv;
+      guint rformat;
+      guint subformat;
+
+      gst_util_dump_mem (data, size);
+      gst_util_dump_mem (data + 0x1a, size - 0x1a);
+
+      subformat = GST_READ_UINT32_BE (data + 0x1a);
+      rformat = GST_READ_UINT32_BE (data + 0x1e);
+
+      priv = gst_buffer_new_and_alloc (size - 0x1a);
+
+      memcpy (GST_BUFFER_DATA (priv), data + 0x1a, size - 0x1a);
+      gst_caps_set_simple (caps,
+          "codec_data", GST_TYPE_BUFFER, priv,
+          "format", G_TYPE_INT, rformat,
+          "subformat", G_TYPE_INT, subformat, NULL);
+      gst_buffer_unref (priv);
+
+    }
     *codec_name = g_strdup_printf ("RealVideo %d.0", rmversion);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_THEORA)) {
     caps = gst_caps_new_simple ("video/x-theora", NULL);
@@ -5425,8 +5450,47 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       raversion = 8;
     else
       raversion = 2;
+
     caps = gst_caps_new_simple ("audio/x-pn-realaudio",
         "raversion", G_TYPE_INT, raversion, NULL);
+    /* Extract extra information from caps, mapping varies based on codec */
+    if (data && (size >= 0x50)) {
+      GstBuffer *priv;
+      guint flavor;
+      guint packet_size;
+      guint height;
+      guint leaf_size;
+      guint sample_width;
+      guint extra_data_size;
+
+      GST_ERROR ("real audio raversion:%d", raversion);
+      gst_util_dump_mem (data, size);
+      if (raversion == 8) {
+        /* COOK */
+        flavor = GST_READ_UINT16_BE (data + 22);
+        packet_size = GST_READ_UINT32_BE (data + 24);
+        height = GST_READ_UINT16_BE (data + 40);
+        leaf_size = GST_READ_UINT16_BE (data + 44);
+        sample_width = GST_READ_UINT16_BE (data + 58);
+        extra_data_size = GST_READ_UINT32_BE (data + 74);
+
+        GST_ERROR
+            ("flavor:%d, packet_size:%d, height:%d, leaf_size:%d, sample_width:%d, extra_data_size:%d",
+            flavor, packet_size, height, leaf_size, sample_width,
+            extra_data_size);
+        gst_caps_set_simple (caps, "flavor", G_TYPE_INT, flavor, "packet_size",
+            G_TYPE_INT, packet_size, "height", G_TYPE_INT, height, "leaf_size",
+            G_TYPE_INT, leaf_size, "width", G_TYPE_INT, sample_width, NULL);
+
+        if ((size - 78) >= extra_data_size) {
+          priv = gst_buffer_new_and_alloc (extra_data_size);
+          memcpy (GST_BUFFER_DATA (priv), data + 78, extra_data_size);
+          gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
+          gst_buffer_unref (priv);
+        }
+      }
+    }
+
     *codec_name = g_strdup_printf ("RealAudio %d.0", raversion);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_SIPR)) {
     caps = gst_caps_new_simple ("audio/x-sipro", NULL);
