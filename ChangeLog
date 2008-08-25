@@ -1,6 +1,13 @@
 2008-08-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstbin.c: (gst_bin_element_set_state):
+	Take the (recursive) state lock between getting the locked state of an
+	element and changing the element state. This allows the application to
+	lock an element's state and then change its state without races.
+
+2008-08-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstbin.c: (gst_bin_element_set_state):
 	When an element is in the locked state we still want to update the
 	base_time of the element.
 

@@ -1871,6 +1871,8 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
   /* set base_time on child */
   gst_element_set_base_time (element, base_time);
 
+  GST_STATE_LOCK (element);
+
   /* peel off the locked flag */
   GST_OBJECT_LOCK (element);
   locked = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
@@ -1929,6 +1931,8 @@ no_preroll:
   /* change state */
   ret = gst_element_set_state (element, next);
 
+  GST_STATE_UNLOCK (element);
+
   return ret;
 
 locked:
@@ -1936,12 +1940,14 @@ locked:
     GST_DEBUG_OBJECT (element,
         "element is locked, return previous return %s",
         gst_element_state_change_return_get_name (ret));
+    GST_STATE_UNLOCK (element);
     return ret;
   }
 was_busy:
   {
     GST_DEBUG_OBJECT (element, "element was busy, delaying state change");
     GST_OBJECT_UNLOCK (bin);
+    GST_STATE_UNLOCK (element);
     return GST_STATE_CHANGE_ASYNC;
   }
 }
