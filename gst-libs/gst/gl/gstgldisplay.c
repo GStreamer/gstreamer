@@ -2329,7 +2329,8 @@ void gst_gl_display_thread_do_upload_make (GstGLDisplay *display)
   {
   case GST_VIDEO_FORMAT_AYUV:
 		glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-	    width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	    width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, NULL);
+    break;
   case GST_VIDEO_FORMAT_YUY2:
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
         width, height,
@@ -2499,7 +2500,7 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
       offsetU = 2;
       offsetV = 1;
       //LINUX
-#elseif
+#else
       if (g_ascii_strncasecmp ("ATI", (gchar *) glGetString (GL_VENDOR), 3) == 0)
       {
         offsetU = 2;
@@ -2711,20 +2712,26 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay *display)
 
   switch (video_format)
   {
-  case GST_VIDEO_FORMAT_RGBx:
-  case GST_VIDEO_FORMAT_BGRx:
   case GST_VIDEO_FORMAT_RGBA:
-  case GST_VIDEO_FORMAT_BGRA:
-  case GST_VIDEO_FORMAT_xBGR:
+  case GST_VIDEO_FORMAT_RGBx:
   case GST_VIDEO_FORMAT_xRGB:
   case GST_VIDEO_FORMAT_ARGB:
-  case GST_VIDEO_FORMAT_ABGR:
     glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
 		  GL_UNSIGNED_BYTE, data);
     break;
+  case GST_VIDEO_FORMAT_BGRx:
+  case GST_VIDEO_FORMAT_BGRA:
+  case GST_VIDEO_FORMAT_xBGR:
+  case GST_VIDEO_FORMAT_ABGR:
+    glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
+		  GL_UNSIGNED_BYTE, data);
+    break;
   case GST_VIDEO_FORMAT_RGB:
-  case GST_VIDEO_FORMAT_BGR:
     glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
+		  GL_UNSIGNED_BYTE, data);
+    break;
+  case GST_VIDEO_FORMAT_BGR:
+    glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGR,
 		  GL_UNSIGNED_BYTE, data);
     break;
   default:
@@ -2896,8 +2903,23 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay *display)
       offsetV = 2;
       break;
     case GST_VIDEO_FORMAT_YV12:
+      //WIN32
+#if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__)
       offsetU = 2;
       offsetV = 1;
+      //LINUX
+#else
+      if (g_ascii_strncasecmp ("ATI", (gchar *) glGetString (GL_VENDOR), 3) == 0)
+      {
+        offsetU = 2;
+        offsetV = 1;
+      }
+      else
+      {
+        offsetU = 1;
+        offsetV = 2;
+      }
+#endif
       break;
     default:
       g_assert_not_reached ();
