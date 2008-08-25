@@ -1,3 +1,9 @@
+2008-08-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstbin.c: (gst_bin_element_set_state):
+	When an element is in the locked state we still want to update the
+	base_time of the element.
+
 2008-08-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_default_negotiate):

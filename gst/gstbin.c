@@ -1868,6 +1868,9 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
   gboolean locked;
   GList *found;
 
+  /* set base_time on child */
+  gst_element_set_base_time (element, base_time);
+
   /* peel off the locked flag */
   GST_OBJECT_LOCK (element);
   locked = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
@@ -1922,9 +1925,6 @@ no_preroll:
       "setting element %s to %s, base_time %" GST_TIME_FORMAT,
       GST_ELEMENT_NAME (element), gst_element_state_get_name (next),
       GST_TIME_ARGS (base_time));
-
-  /* set base_time on child */
-  gst_element_set_base_time (element, base_time);
 
   /* change state */
   ret = gst_element_set_state (element, next);
