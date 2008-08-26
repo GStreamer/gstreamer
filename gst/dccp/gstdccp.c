@@ -118,7 +118,7 @@ gst_dccp_read_buffer (GstElement * this, int socket, GstBuffer ** buf)
   *buf = gst_buffer_new_and_alloc (readsize);
   bytes_read = read (socket, GST_BUFFER_DATA (*buf), readsize);
 
-  GST_LOG_OBJECT (this, "bytes read %d\n", bytes_read);
+  GST_LOG_OBJECT (this, "bytes read %" G_GSIZE_FORMAT, bytes_read);
   GST_LOG_OBJECT (this, "returning buffer of size %d", GST_BUFFER_SIZE (*buf));
 
   return GST_FLOW_OK;
@@ -285,10 +285,10 @@ gst_dccp_send_buffer (GstElement * this, GstBuffer * buffer, int client_sock_fd,
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
 
-  GST_LOG_OBJECT (this, "writing %d bytes\n", size);
+  GST_LOG_OBJECT (this, "writing %" G_GSIZE_FORMAT " bytes", size);
 
   if (packet_size < 0) {
-    GST_LOG_OBJECT (this, "error getting MTU\n");
+    GST_LOG_OBJECT (this, "error getting MTU");
     return GST_FLOW_ERROR;
   }
 
@@ -429,14 +429,14 @@ gst_dccp_set_sock_windowsize (GstElement * element, int sock, int winSize,
      * since some OS's don't show the corrected value until then. */
     rc = setsockopt (sock, SOL_DCCP, SO_RCVBUF,
         (char *) &winSize, sizeof (winSize));
-    GST_DEBUG_OBJECT (element, "set rcv sockbuf: %d\n", winSize);
+    GST_DEBUG_OBJECT (element, "set rcv sockbuf: %d", winSize);
   } else {
     /* send buffer -- set
      * note: results are verified after connect() or listen(),
      * since some OS's don't show the corrected value until then. */
     rc = setsockopt (sock, SOL_DCCP, SO_SNDBUF,
         (char *) &winSize, sizeof (winSize));
-    GST_DEBUG_OBJECT (element, "set snd sockbuf: %d\n", winSize);
+    GST_DEBUG_OBJECT (element, "set snd sockbuf: %d", winSize);
   }
 
   if (rc < 0) {

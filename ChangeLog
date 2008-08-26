@@ -1,5 +1,13 @@
 2008-08-26  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst/dccp/gstdccp.c: (gst_dccp_read_buffer),
+	(gst_dccp_send_buffer), (gst_dccp_set_sock_windowsize):
+	size_t's size varies by platform/architecture. Use glib convenience
+	macro instead. Fixes build on macosx.
+	Remove ending '\n' in debug statements.
+
+2008-08-26  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/pcapparse/gstpcapparse.c: (gst_pcap_parse_class_init):
 	Remove unused code and fix includes.
 
