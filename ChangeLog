@@ -1,3 +1,13 @@
+2008-08-26  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopTop.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/StrangeBob.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/WierdBob.inc:
+	Unroll the loop to handle two bytes at once. This should give
+	a small speedup and makes it possible to handle chroma and luma
+	different which is needed later.
+
 2008-08-26  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/dccp/gstdccpserversink.c:
