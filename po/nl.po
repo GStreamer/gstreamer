@@ -1,40 +1,53 @@
-# translation of gst-plugins-ugly-0.10.6.2.po to Dutch
+# translation of gst-plugins-ugly-0.10.8.2.po to Dutch
 # Copyright (C) 2004, 2007, 2008 Free Software Foundation, Inc.
 #
+# This file is distributed under the same license as the gst-plugins-ugly package.
 # Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly-0.10.6.2\n"
+"Project-Id-Version: gst-plugins-ugly-0.10.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-05-10 16:16+0100\n"
-"PO-Revision-Date: 2008-02-09 21:28+0100\n"
+"POT-Creation-Date: 2008-08-11 23:34+0100\n"
+"PO-Revision-Date: 2008-08-12 23:49+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
+"X-Generator: LoKalize 0.2\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
-#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/cdio/gstcdiocddasrc.c:205
+msgid "Could not read from CD."
+msgstr "Kan niet van de CD lezen."
+
+#: ext/cdio/gstcdiocddasrc.c:280
+msgid "Could not open CD device for reading."
+msgstr "Kan het CD-apparaat niet openen voor lezen."
+
+#: ext/cdio/gstcdiocddasrc.c:287
+msgid "Disc is not an Audio CD."
+msgstr "De schrijf is geen audio-CD"
+
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "Kan DVD niet openen"
 
-#: ext/dvdnav/dvdnavsrc.c:1823
+#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr "Ongeldige titelinformatie op de DVD."
 
-#: ext/dvdnav/dvdnavsrc.c:1969
+#: ext/dvdnav/dvdnavsrc.c:1968
 msgid "Could not read title information for DVD."
 msgstr "Kan de titelinformatie van de DVD niet lezen."
 
-#: ext/dvdnav/dvdnavsrc.c:1991
+#: ext/dvdnav/dvdnavsrc.c:1990
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Kan het DVD-apparaat '%s' niet openen."
 
-#: ext/dvdnav/dvdnavsrc.c:1997
+#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr "Kan op PGC gebaseerd zoeken niet instellen."
 
@@ -58,12 +71,12 @@ msgstr ""
 "Kan de DVD-titel %d niet openen. Interactieve titels worden door dit element "
 "niet ondersteund"
 
-#: ext/lame/gstlame.c:581
+#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
 "Kan de LAME-encoder niet configureren. Controleer uw encodingparameters."
 
-#: ext/lame/gstlame.c:715
+#: ext/lame/gstlame.c:718
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -72,10 +85,13 @@ msgstr ""
 "De gevraagde bitsnelheid %d kbits/s voor eigenschap '%s' is niet toegestaan. "
 "De bitsnelheid is gewijzigd in %d kbits/s."
 
-#: gst/asfdemux/gstasfdemux.c:328
+#: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."
 msgstr "Deze stroom bevat geen gegevens."
 
-#: gst/asfdemux/gstasfdemux.c:3111
-msgid "This file is encrypted and cannot be played."
-msgstr "Dit bestand is geëncrypt en kan niet afgespeeld worden."
+#: gst/asfdemux/gstasfdemux.c:1371
+msgid "Internal data stream error."
+msgstr "Fout met interne gegevensstroom."
+
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Dit bestand is geëncrypt en kan niet afgespeeld worden."

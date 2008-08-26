@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-05-10 16:16+0100\n"
+"POT-Creation-Date: 2008-08-11 23:34+0100\n"
 "PO-Revision-Date: 2008-04-03 10:10+0700\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -14,25 +14,39 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/cdio/gstcdiocddasrc.c:205
+#, fuzzy
+msgid "Could not read from CD."
+msgstr "Не удалось прочесть сведения о разделах для DVD."
+
+#: ext/cdio/gstcdiocddasrc.c:280
+#, fuzzy
+msgid "Could not open CD device for reading."
+msgstr "Не удалось открыть DVD-раздел %d"
+
+#: ext/cdio/gstcdiocddasrc.c:287
+msgid "Disc is not an Audio CD."
+msgstr ""
+
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "Не удалось открыть DVD"
 
-#: ext/dvdnav/dvdnavsrc.c:1823
+#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr "Неверные сведения о разделах на DVD."
 
-#: ext/dvdnav/dvdnavsrc.c:1969
+#: ext/dvdnav/dvdnavsrc.c:1968
 msgid "Could not read title information for DVD."
 msgstr "Не удалось прочесть сведения о разделах для DVD."
 
-#: ext/dvdnav/dvdnavsrc.c:1991
+#: ext/dvdnav/dvdnavsrc.c:1990
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Ошибка при открытии DVD-устройства «%s»."
 
-#: ext/dvdnav/dvdnavsrc.c:1997
+#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr "Не удалось переключиться в режим PGC-позиционирования."
 
@@ -56,12 +70,12 @@ msgstr ""
 "Не удалось открыть DVD-раздел %d. Интерактивные разделы не поддерживаются "
 "этим элементом"
 
-#: ext/lame/gstlame.c:581
+#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
 "Ошибка конфигурирования кодировщика LAME. Проверьте параметры кодирования."
 
-#: ext/lame/gstlame.c:715
+#: ext/lame/gstlame.c:718
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -70,10 +84,13 @@ msgstr ""
 "Запрошенный битрейт в %d кбит/с для свойства «%s» недопустим. Битрейт был "
 "изменён на %d кбит/с."
 
-#: gst/asfdemux/gstasfdemux.c:328
+#: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."
 msgstr "Поток не содержит данных."
 
-#: gst/asfdemux/gstasfdemux.c:3111
-msgid "This file is encrypted and cannot be played."
-msgstr "Файл зашифрован и не может быть воспроизведён."
+#: gst/asfdemux/gstasfdemux.c:1371
+msgid "Internal data stream error."
+msgstr ""
+
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Файл зашифрован и не может быть воспроизведён."

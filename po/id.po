@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.7.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-11 23:34+0100\n"
-"PO-Revision-Date: 2008-08-02 22:28+0700\n"
+"PO-Revision-Date: 2008-08-13 20:19+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -15,18 +15,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ext/cdio/gstcdiocddasrc.c:205
-#, fuzzy
 msgid "Could not read from CD."
-msgstr "Tak dapat membaca informasi judul untuk DVD."
+msgstr "Tak dapat membaca dari CD."
 
 #: ext/cdio/gstcdiocddasrc.c:280
-#, fuzzy
 msgid "Could not open CD device for reading."
-msgstr "Tak dapat membuka judul DVD %d"
+msgstr "Tak dapat membuka divais CD untuk dibaca."
 
 #: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
-msgstr ""
+msgstr "Cakram bukan CD Audio."
 
 #: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
@@ -89,7 +87,4 @@ msgstr "Arus ini tidak berisi data."
 
 #: gst/asfdemux/gstasfdemux.c:1371
 msgid "Internal data stream error."
-msgstr ""
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Berkas ini terenkripsi dan tak dapat diputar."
+msgstr "Galat arus data internal."

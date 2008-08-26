@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-05-10 16:16+0100\n"
+"POT-Creation-Date: 2008-08-11 23:34+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -16,26 +16,40 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/cdio/gstcdiocddasrc.c:205
+#, fuzzy
+msgid "Could not read from CD."
+msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
+
+#: ext/cdio/gstcdiocddasrc.c:280
+msgid "Could not open CD device for reading."
+msgstr "ସି.ଡି. ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+
+#: ext/cdio/gstcdiocddasrc.c:287
+#, fuzzy
+msgid "Disc is not an Audio CD."
+msgstr "ଯନ୍ତ୍ର ଖୋଲାଯାଇ ନାହିଁ."
+
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr ""
 
-#: ext/dvdnav/dvdnavsrc.c:1823
+#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr ""
 
-#: ext/dvdnav/dvdnavsrc.c:1969
+#: ext/dvdnav/dvdnavsrc.c:1968
 #, fuzzy
 msgid "Could not read title information for DVD."
 msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
 
-#: ext/dvdnav/dvdnavsrc.c:1991
+#: ext/dvdnav/dvdnavsrc.c:1990
 #, fuzzy, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
-#: ext/dvdnav/dvdnavsrc.c:1997
+#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
@@ -57,23 +71,23 @@ msgid ""
 "element"
 msgstr ""
 
-#: ext/lame/gstlame.c:581
+#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
 
-#: ext/lame/gstlame.c:715
+#: ext/lame/gstlame.c:718
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:328
+#: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:3111
-msgid "This file is encrypted and cannot be played."
+#: gst/asfdemux/gstasfdemux.c:1371
+msgid "Internal data stream error."
 msgstr ""
 
 #~ msgid "Could not open file \"%s\" for writing."
@@ -215,9 +229,6 @@ msgstr ""
 #~ msgid "PC Speaker"
 #~ msgstr "ସ୍ବରବର୍ଦ୍ଧକ ୟନ୍ତ୍ର"
 
-#~ msgid "Could not open CD device for reading."
-#~ msgstr "ସି.ଡି. ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
-
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
@@ -240,9 +251,6 @@ msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "\"%s\" ଯନ୍ତ୍ର ପଢ଼ିବା ଓ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
-
-#~ msgid "Device is not open."
-#~ msgstr "ଯନ୍ତ୍ର ଖୋଲାଯାଇ ନାହିଁ."
 
 #~ msgid "Device is open."
 #~ msgstr "ଯନ୍ତ୍ର ଖୋଲାଯାଇଚ୍ଛି."

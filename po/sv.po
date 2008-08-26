@@ -1,38 +1,51 @@
 # Swedish translation for gst-plugins-ugly.
-# This file is put in the public domain.
+# Copyright (C) 2007, 2008 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-ugly package.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.6.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-05-10 16:16+0100\n"
-"PO-Revision-Date: 2008-02-09 20:42+0100\n"
+"POT-Creation-Date: 2008-08-11 23:34+0100\n"
+"PO-Revision-Date: 2008-08-12 23:05+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/cdio/gstcdiocddasrc.c:205
+msgid "Could not read from CD."
+msgstr "Kunde inte läsa från cd."
+
+#: ext/cdio/gstcdiocddasrc.c:280
+msgid "Could not open CD device for reading."
+msgstr "Kunde inte öppna cd-enheten för läsning."
+
+#: ext/cdio/gstcdiocddasrc.c:287
+msgid "Disc is not an Audio CD."
+msgstr "Skivan är inte en ljud-cd."
+
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "Kunde inte öppna dvd"
 
-#: ext/dvdnav/dvdnavsrc.c:1823
+#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr "Ogiltig titelinformation på dvd."
 
-#: ext/dvdnav/dvdnavsrc.c:1969
+#: ext/dvdnav/dvdnavsrc.c:1968
 msgid "Could not read title information for DVD."
 msgstr "Kunde inte läsa titelinformation för dvd."
 
-#: ext/dvdnav/dvdnavsrc.c:1991
+#: ext/dvdnav/dvdnavsrc.c:1990
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Misslyckades med att öppna dvd-enheten \"%s\"."
 
-#: ext/dvdnav/dvdnavsrc.c:1997
+#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr "Misslyckades med att ställa in PGC-baserad spolning."
 
@@ -56,13 +69,13 @@ msgstr ""
 "Kunde inte öppna dvd-titel %d. Interaktiva titlar stöds inte av det här "
 "elementet"
 
-#: ext/lame/gstlame.c:581
+#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
 "Misslyckades med att konfigurera LAME-kodaren. Kontrollera dina "
 "kodningsparametrar."
 
-#: ext/lame/gstlame.c:715
+#: ext/lame/gstlame.c:718
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -71,10 +84,13 @@ msgstr ""
 "Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. "
 "Bitfrekvensen ändrades till %d kbit/s."
 
-#: gst/asfdemux/gstasfdemux.c:328
+#: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."
 msgstr "Den här strömmen innehåller inget data."
 
-#: gst/asfdemux/gstasfdemux.c:3111
-msgid "This file is encrypted and cannot be played."
-msgstr "Den här filen är krypterad och kan inte spelas upp."
+#: gst/asfdemux/gstasfdemux.c:1371
+msgid "Internal data stream error."
+msgstr "Fel i intern dataström."
+
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Den här filen är krypterad och kan inte spelas upp."

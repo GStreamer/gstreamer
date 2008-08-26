@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.6.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-05-10 16:16+0100\n"
-"PO-Revision-Date: 2008-02-10 12:17+0800\n"
+"POT-Creation-Date: 2008-08-11 23:34+0100\n"
+"PO-Revision-Date: 2008-08-14 21:17+0800\n"
 "Last-Translator: LI Daobing <lidaobing@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
 "sourceforge.net>\n"
@@ -17,25 +17,37 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/cdio/gstcdiocddasrc.c:205
+msgid "Could not read from CD."
+msgstr "无法读取CD。"
+
+#: ext/cdio/gstcdiocddasrc.c:280
+msgid "Could not open CD device for reading."
+msgstr "无法打开以读方式打开CD设备。"
+
+#: ext/cdio/gstcdiocddasrc.c:287
+msgid "Disc is not an Audio CD."
+msgstr "盘类型不是音频CD。"
+
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "无法打开 DVD"
 
-#: ext/dvdnav/dvdnavsrc.c:1823
+#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr "无效的 DVD 标题信息。"
 
-#: ext/dvdnav/dvdnavsrc.c:1969
+#: ext/dvdnav/dvdnavsrc.c:1968
 msgid "Could not read title information for DVD."
 msgstr "无法读取为 DVD 读取标题信息。"
 
-#: ext/dvdnav/dvdnavsrc.c:1991
+#: ext/dvdnav/dvdnavsrc.c:1990
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "无法打开 DVD 设备 '%s'。"
 
-#: ext/dvdnav/dvdnavsrc.c:1997
+#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr "设置基于 PGC 的定位失败。"
 
@@ -57,21 +69,21 @@ msgid ""
 "element"
 msgstr "无法打开 DVD 标题 %d. 这个元素不支持互动标题"
 
-#: ext/lame/gstlame.c:581
+#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr "设置 LAME 编码器失败. 请检查你的编码参数."
 
-#: ext/lame/gstlame.c:715
+#: ext/lame/gstlame.c:718
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr "不允许的比特率 %d kbit/s 于 '%s'. 比特率已改变成 %d kbit/s."
 
-#: gst/asfdemux/gstasfdemux.c:328
+#: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."
 msgstr "这个串流中没有包含数据."
 
-#: gst/asfdemux/gstasfdemux.c:3111
-msgid "This file is encrypted and cannot be played."
-msgstr "这个文件是加密的, 不能播放."
+#: gst/asfdemux/gstasfdemux.c:1371
+msgid "Internal data stream error."
+msgstr "内部数据流错误。"

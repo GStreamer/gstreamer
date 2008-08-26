@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.7.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-05-10 16:16+0100\n"
+"POT-Creation-Date: 2008-08-11 23:34+0100\n"
 "PO-Revision-Date: 2008-05-11 20:55+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -17,25 +17,39 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.7b3\n"
 
-#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/cdio/gstcdiocddasrc.c:205
+#, fuzzy
+msgid "Could not read from CD."
+msgstr "Không thể đọc thông tin tựa đề đối với đĩa DVD."
+
+#: ext/cdio/gstcdiocddasrc.c:280
+#, fuzzy
+msgid "Could not open CD device for reading."
+msgstr "Không thể mở đĩa DVD tên %d"
+
+#: ext/cdio/gstcdiocddasrc.c:287
+msgid "Disc is not an Audio CD."
+msgstr ""
+
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "Không thể mở đĩa DVD"
 
-#: ext/dvdnav/dvdnavsrc.c:1823
+#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr "Đĩa DVD có thông tin tựa đề sai."
 
-#: ext/dvdnav/dvdnavsrc.c:1969
+#: ext/dvdnav/dvdnavsrc.c:1968
 msgid "Could not read title information for DVD."
 msgstr "Không thể đọc thông tin tựa đề đối với đĩa DVD."
 
-#: ext/dvdnav/dvdnavsrc.c:1991
+#: ext/dvdnav/dvdnavsrc.c:1990
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Lỗi mở thiết bị đĩa DVD « %s »."
 
-#: ext/dvdnav/dvdnavsrc.c:1997
+#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr "Lỗi đặt cách tìm nơi dựa vào PGC."
 
@@ -57,11 +71,11 @@ msgid ""
 "element"
 msgstr "Không thể mở đĩa DVD tên %d. Phần tử này không hỗ trợ tên tương tác."
 
-#: ext/lame/gstlame.c:581
+#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr "Lỗi cấu hình bộ biên mã LAME. Hãy kiểm tra các tham số biên mã."
 
-#: ext/lame/gstlame.c:715
+#: ext/lame/gstlame.c:718
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -70,10 +84,13 @@ msgstr ""
 "Không cho phép tỷ lệ đã yêu cầu %d kbit/giây cho thuộc tính « %s » nên tỷ lệ "
 "bit bị thay đổi thành %d kbit/g."
 
-#: gst/asfdemux/gstasfdemux.c:328
+#: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."
 msgstr "Luồng này không chứa dữ liệu."
 
-#: gst/asfdemux/gstasfdemux.c:3111
-msgid "This file is encrypted and cannot be played."
-msgstr "Tập tin này bị mật mã nên không chạy được."
+#: gst/asfdemux/gstasfdemux.c:1371
+msgid "Internal data stream error."
+msgstr ""
+
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Tập tin này bị mật mã nên không chạy được."

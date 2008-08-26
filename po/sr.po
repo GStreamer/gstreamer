@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-05-10 16:16+0100\n"
+"POT-Creation-Date: 2008-08-11 23:34+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,26 +16,40 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/cdio/gstcdiocddasrc.c:205
+#, fuzzy
+msgid "Could not read from CD."
+msgstr "Не могу да пишем у датотеку „%s“."
+
+#: ext/cdio/gstcdiocddasrc.c:280
+msgid "Could not open CD device for reading."
+msgstr "Не могу да отворим ЦД уређај ради читања."
+
+#: ext/cdio/gstcdiocddasrc.c:287
+#, fuzzy
+msgid "Disc is not an Audio CD."
+msgstr "Уређај није отворен."
+
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr ""
 
-#: ext/dvdnav/dvdnavsrc.c:1823
+#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr ""
 
-#: ext/dvdnav/dvdnavsrc.c:1969
+#: ext/dvdnav/dvdnavsrc.c:1968
 #, fuzzy
 msgid "Could not read title information for DVD."
 msgstr "Не могу да пишем у датотеку „%s“."
 
-#: ext/dvdnav/dvdnavsrc.c:1991
+#: ext/dvdnav/dvdnavsrc.c:1990
 #, fuzzy, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Не могу да затворим ВСД датотеку „%s“."
 
-#: ext/dvdnav/dvdnavsrc.c:1997
+#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
@@ -57,23 +71,23 @@ msgid ""
 "element"
 msgstr ""
 
-#: ext/lame/gstlame.c:581
+#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
 
-#: ext/lame/gstlame.c:715
+#: ext/lame/gstlame.c:718
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:328
+#: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:3111
-msgid "This file is encrypted and cannot be played."
+#: gst/asfdemux/gstasfdemux.c:1371
+msgid "Internal data stream error."
 msgstr ""
 
 #~ msgid "Could not open file \"%s\" for writing."
@@ -212,9 +226,6 @@ msgstr ""
 #~ msgid "PC Speaker"
 #~ msgstr "Звучник"
 
-#~ msgid "Could not open CD device for reading."
-#~ msgstr "Не могу да отворим ЦД уређај ради читања."
-
 # Виртуелни Систем Датотека
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Не могу да отворим ВСД датотеку „%s“ ради читања."
@@ -236,9 +247,6 @@ msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
-
-#~ msgid "Device is not open."
-#~ msgstr "Уређај није отворен."
 
 #~ msgid "Device is open."
 #~ msgstr "Уређај је отворен."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-05-10 16:16+0100\n"
+"POT-Creation-Date: 2008-08-11 23:34+0100\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -15,26 +15,40 @@ msgstr ""
 "Content-Type: text/plain; charset=iso-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1982
+#: ext/cdio/gstcdiocddasrc.c:205
+#, fuzzy
+msgid "Could not read from CD."
+msgstr "Kon nie skryf na lêer \"%s\" nie."
+
+#: ext/cdio/gstcdiocddasrc.c:280
+msgid "Could not open CD device for reading."
+msgstr "Kon nie CD-toestel oopmaak om te lees nie."
+
+#: ext/cdio/gstcdiocddasrc.c:287
+#, fuzzy
+msgid "Disc is not an Audio CD."
+msgstr "Toestel is nie oop nie."
+
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr ""
 
-#: ext/dvdnav/dvdnavsrc.c:1823
+#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr ""
 
-#: ext/dvdnav/dvdnavsrc.c:1969
+#: ext/dvdnav/dvdnavsrc.c:1968
 #, fuzzy
 msgid "Could not read title information for DVD."
 msgstr "Kon nie skryf na lêer \"%s\" nie."
 
-#: ext/dvdnav/dvdnavsrc.c:1991
+#: ext/dvdnav/dvdnavsrc.c:1990
 #, fuzzy, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
 
-#: ext/dvdnav/dvdnavsrc.c:1997
+#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
@@ -56,23 +70,23 @@ msgid ""
 "element"
 msgstr ""
 
-#: ext/lame/gstlame.c:581
+#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
 
-#: ext/lame/gstlame.c:715
+#: ext/lame/gstlame.c:718
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:328
+#: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:3111
-msgid "This file is encrypted and cannot be played."
+#: gst/asfdemux/gstasfdemux.c:1371
+msgid "Internal data stream error."
 msgstr ""
 
 #~ msgid "Could not open file \"%s\" for writing."
@@ -211,9 +225,6 @@ msgstr ""
 #~ msgid "PC Speaker"
 #~ msgstr "Luidspreker"
 
-#~ msgid "Could not open CD device for reading."
-#~ msgstr "Kon nie CD-toestel oopmaak om te lees nie."
-
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Kon nie vfs-lêer \"%s\" oopmaak vir lees nie."
 
@@ -234,9 +245,6 @@ msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Kon nie toestel \"%s\" oopmaak vir lees en skryf nie."
-
-#~ msgid "Device is not open."
-#~ msgstr "Toestel is nie oop nie."
 
 #~ msgid "Device is open."
 #~ msgstr "Toestel is oop."
