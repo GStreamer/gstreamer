@@ -1,0 +1,11 @@
+Makefile
+Makefile.in
+*.o
+*.lo
+*.la
+.deps
+.libs
+goomsl_lex.c
+goomsl_yacc.c
+goomsl_yacc.h
+
