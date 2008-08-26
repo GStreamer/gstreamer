@@ -1,5 +1,12 @@
 2008-08-26  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst/dccp/gstdccpserversink.c:
+	* gst/dccp/gstdccpserversink.h:
+	Don't put globals only used by one '.c' file in a header !
+	Declare it as static, fixes build on macosx.
+
+2008-08-26  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/dccp/gstdccp.c: (gst_dccp_send_buffer):
 	Whoops, that was one fix too much :)
 

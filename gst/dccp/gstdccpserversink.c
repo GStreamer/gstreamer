@@ -74,7 +74,9 @@ enum
   PROP_WAIT_CONNECTIONS
 };
 
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_t accept_thread_id;
+
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 static gboolean gst_dccp_server_sink_stop (GstBaseSink * bsink);
 
 GST_DEBUG_CATEGORY_STATIC (dccpserversink_debug);

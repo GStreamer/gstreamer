@@ -58,8 +58,6 @@ struct _Client
   GstFlowReturn flow_status;
 };
 
-pthread_t accept_thread_id;
-
 struct _GstDCCPServerSink
 {
   GstBaseSink element;
