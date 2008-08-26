@@ -67,6 +67,7 @@ struct _GstOsxRingBuffer {
 	GstRingBuffer         object;
 	
 	AudioDeviceID  device_id;
+    AudioStreamID  stream_id;
 	gboolean io_proc_active;
 	guint buffer_len;
 	GstOsxAudioElementInterface* element;

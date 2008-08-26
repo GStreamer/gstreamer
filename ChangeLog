@@ -1,3 +1,19 @@
+2008-08-26  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/osxaudio/Makefile.am:
+	* sys/osxaudio/gstosxaudio.c:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosink.h:
+	* sys/osxaudio/gstosxaudiosrc.c:
+	* sys/osxaudio/gstosxaudiosrc.h:
+	* sys/osxaudio/gstosxringbuffer.c:
+	* sys/osxaudio/gstosxringbuffer.h:
+	  Rewrite caps setting and ring buffer initialisation.
+	  Previously we never told CoreAudio what format we were going to send it,
+	  so it only worked due to luck, and not at all on some hardware.
+	  Now we explicitly advertise what formats the hardware supports, and then
+	  configure the selected one correctly.
+
 2008-08-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/v4l2/gstv4l2object.c:

@@ -65,7 +65,8 @@ struct _GstOsxAudioSrc
 {
   GstBaseAudioSrc src;
 
-  GstOsxRingBuffer *ringbuffer;
+  AudioDeviceID device_id;
+  AudioStreamID stream_id;
 };
 
 struct _GstOsxAudioSrcClass 

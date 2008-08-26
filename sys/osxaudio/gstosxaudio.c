@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
+ * Copyright (C) 2007,2008 Pioneers of the Inevitable <songbird@songbirdnest.com>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -16,7 +17,8 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  * 
- * The development of this code was made possible due to the involvement of Pioneers of the * Inevitable, the creators of the Songbird Music player
+ * The development of this code was made possible due to the involvement of 
+ * Pioneers of the Inevitable, the creators of the Songbird Music player
  * 
  */
 
@@ -49,28 +51,19 @@
 #include "gstosxaudioelement.h"
 #include "gstosxaudiosink.h"
 #include "gstosxaudiosrc.h"
-extern gchar *__gst_osxaudio_plugin_dir;
-
-GST_DEBUG_CATEGORY (osxaudio_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstaudio"))
-    return FALSE;
 
-
-  if (!gst_element_register (plugin, "osxaudiosink", GST_RANK_PRIMARY,
-          GST_TYPE_OSXAUDIOSINK)) {
+  if (!gst_element_register (plugin, "fixedosxaudiosink", GST_RANK_PRIMARY + 1,
+          GST_TYPE_OSX_AUDIO_SINK)) {
     return FALSE;
   }
-  if (!gst_element_register (plugin, "osxaudiosrc", GST_RANK_PRIMARY,
-          GST_TYPE_OSXAUDIOSRC)) {
+  if (!gst_element_register (plugin, "fixedosxaudiosrc", GST_RANK_PRIMARY + 1,
+          GST_TYPE_OSX_AUDIO_SRC)) {
     return FALSE;
   }
-
-  GST_DEBUG_CATEGORY_INIT (osxaudio_debug, "osx", 0, "OSX audio elements");
-
 
   return TRUE;
 }

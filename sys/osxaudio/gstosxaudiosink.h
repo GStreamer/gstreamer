@@ -71,7 +71,8 @@ struct _GstOsxAudioSink
 {
   GstBaseAudioSink sink;
 
-  GstOsxRingBuffer *ringbuffer;
+  AudioDeviceID device_id;
+  AudioStreamID stream_id;
 };
 
 struct _GstOsxAudioSinkClass 

@@ -137,37 +137,7 @@ static void
 gst_osx_ring_buffer_init (GstOsxRingBuffer * ringbuffer,
     GstOsxRingBufferClass * g_class)
 {
-  OSStatus status;
-  UInt32 propertySize;
-
-  /* currently do bugger all */
-  GST_DEBUG ("osx ring buffer init");
-  propertySize = sizeof (ringbuffer->device_id);
-  status =
-      AudioHardwareGetProperty (kAudioHardwarePropertyDefaultOutputDevice,
-      &propertySize, &(ringbuffer->device_id));
-  GST_DEBUG ("osx ring buffer called AudioHardwareGetProperty");
-  if (status) {
-    GST_WARNING ("AudioHardwareGetProperty returned %d", (int) status);
-  } else {
-    GST_DEBUG ("AudioHardwareGetProperty returned 0");
-  }
-  if (ringbuffer->device_id == kAudioDeviceUnknown) {
-    GST_DEBUG ("AudioHardwareGetProperty: device_id is kAudioDeviceUnknown");
-  }
-  GST_DEBUG ("AudioHardwareGetProperty: device_id is %lu",
-      ringbuffer->device_id);
-  /* get requested buffer length */
-  propertySize = sizeof (ringbuffer->buffer_len);
-  status =
-      AudioDeviceGetProperty (ringbuffer->device_id, 0, false,
-      kAudioDevicePropertyBufferSize, &propertySize, &ringbuffer->buffer_len);
-  if (status) {
-    GST_WARNING
-        ("AudioDeviceGetProperty returned %d when getting kAudioDevicePropertyBufferSize",
-        (int) status);
-  }
-  GST_DEBUG ("%5d ringbuffer->buffer_len", (int) ringbuffer->buffer_len);
+  /* Nothing to do right now */
 }
 
 static void
@@ -199,15 +169,65 @@ gst_osx_ring_buffer_close_device (GstRingBuffer * buf)
 static gboolean
 gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 {
-  /* stub, we need to allocate ringbuffer memory */
+  /* Configure the output stream and allocate ringbuffer memory */
   GstOsxRingBuffer *osxbuf;
+  AudioStreamBasicDescription asbd;
+  AudioStreamBasicDescription asbd2;
+  OSStatus status;
+  UInt32 buffer_len;
+  UInt32 propertySize;
 
   osxbuf = GST_OSX_RING_BUFFER (buf);
 
-  spec->segsize = osxbuf->buffer_len;
+  /* Fill out the audio description we're going to be using */
+  asbd.mFormatID = kAudioFormatLinearPCM;
+  asbd.mSampleRate = (double) spec->rate;
+  asbd.mChannelsPerFrame = spec->channels;
+  asbd.mFormatFlags = kAudioFormatFlagsNativeFloatPacked;
+  asbd.mBytesPerFrame = spec->channels * sizeof (float);
+  asbd.mBitsPerChannel = sizeof (float) * 8;
+  asbd.mBytesPerPacket = spec->channels * sizeof (float);
+  asbd.mFramesPerPacket = 1;
+  asbd.mReserved = 0;
+
+  GST_LOG_OBJECT (osxbuf, "Format: %x, %f, %d, %x, %d, %d, %d, %d, %d",
+      asbd.mFormatID,
+      asbd.mSampleRate,
+      asbd.mChannelsPerFrame,
+      asbd.mFormatFlags,
+      asbd.mBytesPerFrame,
+      asbd.mBitsPerChannel,
+      asbd.mBytesPerPacket, asbd.mFramesPerPacket, asbd.mReserved);
+
+  GST_DEBUG_OBJECT (osxbuf, "Using stream_id %d, setting output format",
+      (int) osxbuf->stream_id);
+
+  propertySize = sizeof (asbd);
+  status = AudioStreamSetProperty (osxbuf->stream_id, NULL,     /* Change immediately */
+      0,                        /* Master channel */
+      kAudioStreamPropertyVirtualFormat, propertySize, &asbd);
+
+  if (status) {
+    GST_WARNING_OBJECT (osxbuf, "Failed to set output description: %lx",
+        status);
+    return FALSE;
+  }
+
+  /* get requested buffer length to use */
+  propertySize = sizeof (buffer_len);
+  status = AudioDeviceGetProperty (osxbuf->device_id, 0, false, /* TODO, this should be true for the source element */
+      kAudioDevicePropertyBufferSize, &propertySize, &buffer_len);
+
+  if (status) {
+    GST_WARNING_OBJECT (osxbuf,
+        "AudioDeviceGetProperty returned %d when getting "
+        "kAudioDevicePropertyBufferSize", (int) status);
+  }
+  GST_DEBUG_OBJECT (osxbuf, "%5d osxbuf->buffer_len", (int) buffer_len);
+  spec->segsize = buffer_len;
   spec->segtotal = 16;
 
-  GST_DEBUG ("osx ring buffer acquire");
+  GST_DEBUG_OBJECT (osxbuf, "osx ring buffer acquired");
 
   buf->data = gst_buffer_new_and_alloc (spec->segtotal * spec->segsize);
   memset (GST_BUFFER_DATA (buf->data), 0, GST_BUFFER_SIZE (buf->data));
