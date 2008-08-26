@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-28 21:14+0100\n"
+"POT-Creation-Date: 2008-08-11 23:36+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -15,20 +15,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-
-#: ext/cdio/gstcdiocddasrc.c:205
-#, fuzzy
-msgid "Could not read from CD."
-msgstr "Не могу да пишем у датотеку „%s“."
-
-#: ext/cdio/gstcdiocddasrc.c:280
-msgid "Could not open CD device for reading."
-msgstr "Не могу да отворим ЦД уређај ради читања."
-
-#: ext/cdio/gstcdiocddasrc.c:287
-#, fuzzy
-msgid "Disc is not an Audio CD."
-msgstr "Уређај није отворен."
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
@@ -406,6 +392,9 @@ msgstr ""
 #~ msgid "No filename specified."
 #~ msgstr "Име датотеке није задато."
 
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Не могу да пишем у датотеку „%s“."
+
 #~ msgid "Could not open audio device \"%s\" for writing."
 #~ msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
 
@@ -443,6 +432,9 @@ msgstr ""
 #~ msgid "PC Speaker"
 #~ msgstr "Звучник"
 
+#~ msgid "Could not open CD device for reading."
+#~ msgstr "Не могу да отворим ЦД уређај ради читања."
+
 # Виртуелни Систем Датотека
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Не могу да отворим ВСД датотеку „%s“ ради читања."
@@ -464,6 +456,9 @@ msgstr ""
 
 #~ msgid "No device specified."
 #~ msgstr "Уређај није наведен."
+
+#~ msgid "Device is not open."
+#~ msgstr "Уређај није отворен."
 
 #~ msgid "Device is open."
 #~ msgstr "Уређај је отворен."

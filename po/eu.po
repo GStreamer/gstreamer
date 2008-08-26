@@ -7,25 +7,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-28 21:14+0100\n"
+"POT-Creation-Date: 2008-08-11 23:36+0100\n"
 "PO-Revision-Date: 2005-12-02 16:50+0100\n"
 "Last-Translator: Mikel Olasagasti <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#: ext/cdio/gstcdiocddasrc.c:205
-msgid "Could not read from CD."
-msgstr ""
-
-#: ext/cdio/gstcdiocddasrc.c:280
-msgid "Could not open CD device for reading."
-msgstr ""
-
-#: ext/cdio/gstcdiocddasrc.c:287
-msgid "Disc is not an Audio CD."
-msgstr ""
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"

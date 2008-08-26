@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.7.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-28 21:14+0100\n"
+"POT-Creation-Date: 2008-08-11 23:36+0100\n"
 "PO-Revision-Date: 2008-06-04 22:02+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -16,18 +16,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
-
-#: ext/cdio/gstcdiocddasrc.c:205
-msgid "Could not read from CD."
-msgstr "No se pudo leer del CD."
-
-#: ext/cdio/gstcdiocddasrc.c:280
-msgid "Could not open CD device for reading."
-msgstr "No se pudo abrir el dispositivo de CD para leer."
-
-#: ext/cdio/gstcdiocddasrc.c:287
-msgid "Disc is not an Audio CD."
-msgstr "El disco no es un CD de sonido."
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
@@ -416,6 +404,15 @@ msgstr "El cambio de resolución durante la reproducción aún no está soportad
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "No se puede operar sin reloj"
+
+#~ msgid "Could not read from CD."
+#~ msgstr "No se pudo leer del CD."
+
+#~ msgid "Could not open CD device for reading."
+#~ msgstr "No se pudo abrir el dispositivo de CD para leer."
+
+#~ msgid "Disc is not an Audio CD."
+#~ msgstr "El disco no es un CD de sonido."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Este archivo está cifrado y no se puede reproducir."

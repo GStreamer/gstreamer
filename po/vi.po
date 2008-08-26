@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.7.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-28 21:14+0100\n"
+"POT-Creation-Date: 2008-08-11 23:36+0100\n"
 "PO-Revision-Date: 2008-04-22 17:52+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com> \n"
@@ -16,18 +16,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.7b3\n"
-
-#: ext/cdio/gstcdiocddasrc.c:205
-msgid "Could not read from CD."
-msgstr "Không thể đọc từ đĩa CD."
-
-#: ext/cdio/gstcdiocddasrc.c:280
-msgid "Could not open CD device for reading."
-msgstr "Không thể mở thiết bị đĩa CD để đọc."
-
-#: ext/cdio/gstcdiocddasrc.c:287
-msgid "Disc is not an Audio CD."
-msgstr "Đĩa không phải đĩa kiểu âm thanh."
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
@@ -403,6 +391,15 @@ msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi ch
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ."
+
+#~ msgid "Could not read from CD."
+#~ msgstr "Không thể đọc từ đĩa CD."
+
+#~ msgid "Could not open CD device for reading."
+#~ msgstr "Không thể mở thiết bị đĩa CD để đọc."
+
+#~ msgid "Disc is not an Audio CD."
+#~ msgstr "Đĩa không phải đĩa kiểu âm thanh."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Tập tin này bị mật mã nên không thể phát."

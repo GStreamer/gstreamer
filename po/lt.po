@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.7.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-28 21:14+0100\n"
+"POT-Creation-Date: 2008-08-11 23:36+0100\n"
 "PO-Revision-Date: 2008-07-09 13:37+0300\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -15,18 +15,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%"
 "100<10 || n%100>=20) ? 1 : 2);\n"
-
-#: ext/cdio/gstcdiocddasrc.c:205
-msgid "Could not read from CD."
-msgstr "Nepavyko skaityti iš CD."
-
-#: ext/cdio/gstcdiocddasrc.c:280
-msgid "Could not open CD device for reading."
-msgstr "Nepavyko atverti CD įrenginio skaitymui."
-
-#: ext/cdio/gstcdiocddasrc.c:287
-msgid "Disc is not an Audio CD."
-msgstr "Diskas nėra Audio CD"
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
@@ -390,6 +378,15 @@ msgstr ""
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Negalima veikti be laikrodžio"
+
+#~ msgid "Could not read from CD."
+#~ msgstr "Nepavyko skaityti iš CD."
+
+#~ msgid "Could not open CD device for reading."
+#~ msgstr "Nepavyko atverti CD įrenginio skaitymui."
+
+#~ msgid "Disc is not an Audio CD."
+#~ msgstr "Diskas nėra Audio CD"
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Šis failas užšifruotas ir negali būti pagrotas."

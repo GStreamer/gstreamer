@@ -8,25 +8,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.7.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-28 21:14+0100\n"
+"POT-Creation-Date: 2008-08-11 23:36+0100\n"
 "PO-Revision-Date: 2008-04-21 23:46+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#: ext/cdio/gstcdiocddasrc.c:205
-msgid "Could not read from CD."
-msgstr "Kunde inte läsa från cd-skiva."
-
-#: ext/cdio/gstcdiocddasrc.c:280
-msgid "Could not open CD device for reading."
-msgstr "Kunde inte öppna cd-enheten för läsning."
-
-#: ext/cdio/gstcdiocddasrc.c:287
-msgid "Disc is not an Audio CD."
-msgstr "Skivan är inte en ljud-cd."
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
@@ -407,6 +395,15 @@ msgstr "Ändring av upplösning vid körtid stöds inte än."
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Kan inte fungera utan en klocka"
+
+#~ msgid "Could not read from CD."
+#~ msgstr "Kunde inte läsa från cd-skiva."
+
+#~ msgid "Could not open CD device for reading."
+#~ msgstr "Kunde inte öppna cd-enheten för läsning."
+
+#~ msgid "Disc is not an Audio CD."
+#~ msgstr "Skivan är inte en ljud-cd."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Den här filen är krypterad och kan inte spelas upp."

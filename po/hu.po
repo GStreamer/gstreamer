@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.7.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-28 21:14+0100\n"
+"POT-Creation-Date: 2008-08-11 23:36+0100\n"
 "PO-Revision-Date: 2008-05-12 03:37+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -18,18 +18,6 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "X-Rosetta-Export-Date: 2007-07-27 19:18:15+0000\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
-
-#: ext/cdio/gstcdiocddasrc.c:205
-msgid "Could not read from CD."
-msgstr "A CD nem olvasható."
-
-#: ext/cdio/gstcdiocddasrc.c:280
-msgid "Could not open CD device for reading."
-msgstr "Nem lehet olvasásra megnyitni a CD-eszközt."
-
-#: ext/cdio/gstcdiocddasrc.c:287
-msgid "Disc is not an Audio CD."
-msgstr "A lemez nem hang CD."
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
@@ -412,6 +400,15 @@ msgstr "A felbontás módosítása futás közben még nem támogatott."
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Óra nélkül lehetetlen a működés"
+
+#~ msgid "Could not read from CD."
+#~ msgstr "A CD nem olvasható."
+
+#~ msgid "Could not open CD device for reading."
+#~ msgstr "Nem lehet olvasásra megnyitni a CD-eszközt."
+
+#~ msgid "Disc is not an Audio CD."
+#~ msgstr "A lemez nem hang CD."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Ez a fájl titkosítva van és nem játszható le."

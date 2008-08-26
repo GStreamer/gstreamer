@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.7.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-28 21:14+0100\n"
+"POT-Creation-Date: 2008-08-11 23:36+0100\n"
 "PO-Revision-Date: 2008-06-17 09:55+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -15,18 +15,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
-
-#: ext/cdio/gstcdiocddasrc.c:205
-msgid "Could not read from CD."
-msgstr "Kan niet van CD lezen."
-
-#: ext/cdio/gstcdiocddasrc.c:280
-msgid "Could not open CD device for reading."
-msgstr "Kan het CD-apparaat niet openen voor lezen."
-
-#: ext/cdio/gstcdiocddasrc.c:287
-msgid "Disc is not an Audio CD."
-msgstr "Schijf is geen audio-CD."
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
@@ -403,6 +391,15 @@ msgstr "Tijdens het draaien kan de resolutie nog niet gewijzigd worden."
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Kan niet werken zonder een klok."
+
+#~ msgid "Could not read from CD."
+#~ msgstr "Kan niet van CD lezen."
+
+#~ msgid "Could not open CD device for reading."
+#~ msgstr "Kan het CD-apparaat niet openen voor lezen."
+
+#~ msgid "Disc is not an Audio CD."
+#~ msgstr "Schijf is geen audio-CD."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Dit bestand is versleuteld en kan niet afgespeeld worden."

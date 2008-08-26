@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.7.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-28 21:14+0100\n"
+"POT-Creation-Date: 2008-08-11 23:36+0100\n"
 "PO-Revision-Date: 2008-05-02 05:56+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -17,18 +17,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-
-#: ext/cdio/gstcdiocddasrc.c:205
-msgid "Could not read from CD."
-msgstr "Nezdařilo se čtení z CD."
-
-#: ext/cdio/gstcdiocddasrc.c:280
-msgid "Could not open CD device for reading."
-msgstr "Zařízení CD nelze otevřít ke čtení."
-
-#: ext/cdio/gstcdiocddasrc.c:287
-msgid "Disc is not an Audio CD."
-msgstr "Disk není zvukovým CD."
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
@@ -408,6 +396,15 @@ msgstr "Změna rozlišení za běhu doposud není podporována."
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Není možné fungovat bez hodin"
+
+#~ msgid "Could not read from CD."
+#~ msgstr "Nezdařilo se čtení z CD."
+
+#~ msgid "Could not open CD device for reading."
+#~ msgstr "Zařízení CD nelze otevřít ke čtení."
+
+#~ msgid "Disc is not an Audio CD."
+#~ msgstr "Disk není zvukovým CD."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Tento soubor je šifrován a nelze jej přehrát."

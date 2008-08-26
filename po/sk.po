@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.6.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-28 21:14+0100\n"
+"POT-Creation-Date: 2008-08-11 23:36+0100\n"
 "PO-Revision-Date: 2008-02-19 07:17+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -16,18 +16,6 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\\n\n"
 "X-Generator: KBabel 1.11.4\n"
 "X-Poedit-Country: SLOVAKIA\n"
-
-#: ext/cdio/gstcdiocddasrc.c:205
-msgid "Could not read from CD."
-msgstr "Nepodarilo sa čítať z CD."
-
-#: ext/cdio/gstcdiocddasrc.c:280
-msgid "Could not open CD device for reading."
-msgstr "Nepodarilo sa otvoriť zariadenie CD pre čítanie."
-
-#: ext/cdio/gstcdiocddasrc.c:287
-msgid "Disc is not an Audio CD."
-msgstr "Tento disk nie je zvukové CD."
 
 #: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
 msgid "Could not establish connection to sound server"
@@ -408,6 +396,15 @@ msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
+
+#~ msgid "Could not read from CD."
+#~ msgstr "Nepodarilo sa čítať z CD."
+
+#~ msgid "Could not open CD device for reading."
+#~ msgstr "Nepodarilo sa otvoriť zariadenie CD pre čítanie."
+
+#~ msgid "Disc is not an Audio CD."
+#~ msgstr "Tento disk nie je zvukové CD."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Tento súbor je zašifrovaný a nedá sa prehrať."

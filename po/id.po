@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.8.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.9.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-11 23:36+0100\n"
-"PO-Revision-Date: 2008-08-02 23:58+0700\n"
+"PO-Revision-Date: 2008-08-13 20:20+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -388,12 +388,3 @@ msgstr "Mengubah resolusi saat waktu berjalan belum didukung."
 #: sys/ximage/gstximagesrc.c:725
 msgid "Cannot operate without a clock"
 msgstr "Tak dapat beroperasi tanpa jam"
-
-#~ msgid "Could not read from CD."
-#~ msgstr "Tak dapat membaca dari CD."
-
-#~ msgid "Could not open CD device for reading."
-#~ msgstr "Tak dapat membuka divais CD untuk dibaca."
-
-#~ msgid "Disc is not an Audio CD."
-#~ msgstr "Cakram bukan CD Audio."
