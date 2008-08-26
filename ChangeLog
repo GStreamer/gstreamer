@@ -1,5 +1,10 @@
 2008-08-27  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* gst-plugins-good.doap:
+	Pull in 0.10.10 doap entry from release branch
+
+2008-08-27  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* configure.ac:
 	Update version number to reflect 0.10.10 release from
 	branch.
