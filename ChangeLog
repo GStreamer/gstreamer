@@ -1,3 +1,10 @@
+2008-08-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_start),
+	(gst_ring_buffer_stop):
+	Also allow the case where the ringbuffer was paused when we try to stop
+	it so that the basesrc stop function is still called.
+
 2008-08-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Mike Ruprecht <cmaiku at gmail dot com>

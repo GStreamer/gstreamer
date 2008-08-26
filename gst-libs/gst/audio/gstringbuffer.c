@@ -857,13 +857,14 @@ gst_ring_buffer_start (GstRingBuffer * buf)
       GST_RING_BUFFER_STATE_STOPPED, GST_RING_BUFFER_STATE_STARTED);
 
   if (!res) {
+    GST_DEBUG_OBJECT (buf, "was not stopped, try paused");
     /* was not stopped, try from paused */
     res = g_atomic_int_compare_and_exchange (&buf->state,
         GST_RING_BUFFER_STATE_PAUSED, GST_RING_BUFFER_STATE_STARTED);
     if (!res) {
       /* was not paused either, must be started then */
       res = TRUE;
-      GST_DEBUG_OBJECT (buf, "was started");
+      GST_DEBUG_OBJECT (buf, "was not paused, must have been started");
       goto done;
     }
     resume = TRUE;
@@ -1016,10 +1017,16 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
       GST_RING_BUFFER_STATE_STARTED, GST_RING_BUFFER_STATE_STOPPED);
 
   if (!res) {
-    /* was not started, must be stopped then */
-    GST_DEBUG_OBJECT (buf, "was not started");
-    res = TRUE;
-    goto done;
+    GST_DEBUG_OBJECT (buf, "was not started, try paused");
+    /* was not started, try from paused */
+    res = g_atomic_int_compare_and_exchange (&buf->state,
+        GST_RING_BUFFER_STATE_PAUSED, GST_RING_BUFFER_STATE_STOPPED);
+    if (!res) {
+      /* was not paused either, must have been stopped then */
+      res = TRUE;
+      GST_DEBUG_OBJECT (buf, "was not paused, must have been stopped");
+      goto done;
+    }
   }
 
   /* signal any waiters */
