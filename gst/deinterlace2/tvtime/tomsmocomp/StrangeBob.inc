@@ -324,65 +324,112 @@
 
 #else
 
-        diff = -1;
-	best = 0;
+        diff[0] = -1;
+        diff[1] = -1;
+	best[0] = 0;
+	best[1] = 0;
 	// j, n
         if (ABS (pBob[-2] - pBob[src_pitch2 - 4]) < DiffThres &&
 	    ABS (pBob[-4] - pBob[src_pitch2 + 4]) > DiffThres) {
-	   best = (pBob[-2] + pBob[src_pitch2 - 4]) / 2;
-	   diff = ABS (pBob[-2] - pBob[src_pitch2 - 4]);
+	   best[0] = (pBob[-2] + pBob[src_pitch2 - 4]) / 2;
+	   diff[0] = ABS (pBob[-2] - pBob[src_pitch2 - 4]);
+	}
+        if (ABS (pBob[-1] - pBob[src_pitch2 - 3]) < DiffThres &&
+	    ABS (pBob[-3] - pBob[src_pitch2 + 5]) > DiffThres) {
+	   best[1] = (pBob[-1] + pBob[src_pitch2 - 3]) / 2;
+	   diff[1] = ABS (pBob[-1] - pBob[src_pitch2 - 3]);
 	}
 
         // k & m
         if (ABS (pBob[2] - pBob[src_pitch2 + 4]) < DiffThres &&
 	    ABS (pBob[4] - pBob[src_pitch2 - 4]) > DiffThres) {
-	   best = (pBob[4] + pBob[src_pitch2 - 4]) / 2;
-	   diff = ABS (pBob[4] - pBob[src_pitch2 - 4]);
+	   best[0] = (pBob[4] + pBob[src_pitch2 - 4]) / 2;
+	   diff[0] = ABS (pBob[4] - pBob[src_pitch2 - 4]);
+	}
+
+        if (ABS (pBob[3] - pBob[src_pitch2 + 5]) < DiffThres &&
+	    ABS (pBob[5] - pBob[src_pitch2 - 3]) > DiffThres) {
+	   best[1] = (pBob[5] + pBob[src_pitch2 - 3]) / 2;
+	   diff[1] = ABS (pBob[5] - pBob[src_pitch2 - 3]);
 	}
 
         // c & d
 	if (ABS (pBob[0] - pBob[src_pitch2 + 2]) < DiffThres &&
 	    ABS (pBob[2] - pBob[src_pitch2 - 2]) > DiffThres) {
-	   best = (pBob[2] + pBob[src_pitch2 - 2]) / 2;
-	   diff = ABS (pBob[2] - pBob[src_pitch2 - 2]);
+	   best[0] = (pBob[2] + pBob[src_pitch2 - 2]) / 2;
+	   diff[0] = ABS (pBob[2] - pBob[src_pitch2 - 2]);
+	}
+
+	if (ABS (pBob[1] - pBob[src_pitch2 + 3]) < DiffThres &&
+	    ABS (pBob[3] - pBob[src_pitch2 - 1]) > DiffThres) {
+	   best[1] = (pBob[3] + pBob[src_pitch2 - 1]) / 2;
+	   diff[1] = ABS (pBob[3] - pBob[src_pitch2 - 1]);
 	}
 
         // a & f
 	if (ABS (pBob[0] - pBob[src_pitch2 - 2]) < DiffThres &&
 	    ABS (pBob[-2] - pBob[src_pitch2 + 2]) > DiffThres) {
-	   best = (pBob[-2] + pBob[src_pitch2 + 2]) / 2;
-	   diff = ABS (pBob[-2] - pBob[src_pitch2 + 2]);
+	   best[0] = (pBob[-2] + pBob[src_pitch2 + 2]) / 2;
+	   diff[0] = ABS (pBob[-2] - pBob[src_pitch2 + 2]);
+	}
+
+	if (ABS (pBob[1] - pBob[src_pitch2 - 1]) < DiffThres &&
+	    ABS (pBob[-1] - pBob[src_pitch2 + 3]) > DiffThres) {
+	   best[1] = (pBob[-1] + pBob[src_pitch2 + 3]) / 2;
+	   diff[1] = ABS (pBob[-1] - pBob[src_pitch2 + 3]);
 	}
 
 	// b,e
 	if (ABS (pBob[0] - pBob[src_pitch2]) < DiffThres) {
-	   best = (pBob[0] + pBob[src_pitch2]) / 2;
-	   diff = ABS (pBob[0] - pBob[src_pitch2]);
+	   best[0] = (pBob[0] + pBob[src_pitch2]) / 2;
+	   diff[0] = ABS (pBob[0] - pBob[src_pitch2]);
 	}
+
+	if (ABS (pBob[1] - pBob[src_pitch2 + 1]) < DiffThres) {
+	   best[1] = (pBob[1] + pBob[src_pitch2 + 1]) / 2;
+	   diff[1] = ABS (pBob[1] - pBob[src_pitch2 + 1]);
+	}
+
 
 // We will also calc here the max/min values to later limit comb
 // so the max excursion will not exceed the Max_Comb constant
 
 #ifdef SKIP_SEARCH
-		best = CLAMP (best, MIN (pBob[src_pitch2], pBob[0]), MAX (pBob[src_pitch2], pBob[0]));
+		best[0] = CLAMP (best[0], MIN (pBob[src_pitch2], pBob[0]), MAX (pBob[src_pitch2], pBob[0]));
+		best[1] = CLAMP (best[1], MIN (pBob[src_pitch2 + 1], pBob[1]), MAX (pBob[src_pitch2 + 1], pBob[1]));
 #else
-		mov = MAX (ABS (pBob[0] - pBobP[0]), ABS (pBob[src_pitch2] - pBobP[src_pitch2]));
+		mov[0] = MAX (ABS (pBob[0] - pBobP[0]), ABS (pBob[src_pitch2] - pBobP[src_pitch2]));
+		mov[1] = MAX (ABS (pBob[1] - pBobP[1]), ABS (pBob[src_pitch2 + 1] - pBobP[src_pitch2 + 1]));
 
-		MinVals = 0;
-		MaxVals = 255;
-		if (mov > DiffThres) {
-		  MinVals = MAX (MIN (pBob[0], pBob[src_pitch2]), best);
-		  MaxVals = MIN (MAX (pBob[0], pBob[src_pitch2]), best);
+		MinVals[0] = 0;
+		MinVals[1] = 0;
+		MaxVals[0] = 255;
+		MaxVals[1] = 255;
+		if (mov[0] > DiffThres) {
+		  MinVals[0] = MAX (MIN (pBob[0], pBob[src_pitch2]), best[0]);
+		  MaxVals[0] = MIN (MAX (pBob[0], pBob[src_pitch2]), best[0]);
+		}
+		
+		if (mov[1] > DiffThres) {
+		  MinVals[1] = MAX (MIN (pBob[1], pBob[src_pitch2+1]), best[1]);
+		  MaxVals[1] = MIN (MAX (pBob[1], pBob[src_pitch2+1]), best[1]);
 		}
 
-		best = CLAMP (best, MIN (pBob[src_pitch2], pBob[0]), MAX (pBob[src_pitch2], pBob[0]));
+		best[0] = CLAMP (best[0], MIN (pBob[src_pitch2], pBob[0]), MAX (pBob[src_pitch2], pBob[0]));
+		best[1] = CLAMP (best[1], MIN (pBob[src_pitch2 + 1], pBob[1]), MAX (pBob[src_pitch2 + 1], pBob[1]));
 #endif
+		avg[0] = (pBob[src_pitch2] + pBob[0]) / 2;
+		avg[1] = (pBob[src_pitch2 + 1] + pBob[1]) / 2;
+		diff2[0] = ABS (pBob[src_pitch2 + 1] - pBob[1]);
+		diff2[1] = ABS (pBob[src_pitch2 + 1] - pBob[1]);
 
-		avg = (pBob[src_pitch2] + pBob[0]) / 2;
-		diff2 = ABS (pBob[src_pitch2] - pBob[0]);
+		if (diff[0] == -1 || diff2[0] < diff[0]) {
+		  best[0] = avg[0];
+		  diff[0] = diff2[0];
+		}
 
-		if (diff == -1 || diff2 < diff) {
-		  best = avg;
-		  diff = diff2;
+		if (diff[1] == -1 || diff2[1] < diff[1]) {
+		  best[1] = avg[1];
+		  diff[1] = diff2[1];
 		}
 #endif

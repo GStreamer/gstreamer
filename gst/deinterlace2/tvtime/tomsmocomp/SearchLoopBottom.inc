@@ -114,27 +114,39 @@
     return 0;
 #else
 #ifdef SKIP_SEARCH
-            out = best;            // just use the results of our wierd bob
+            out[0] = best[0];            // just use the results of our wierd bob
+	    out[1] = best[1];
 #else
-            diff = diff - MIN (diff, 10) - 4;
-	    if (diff < 0)
-	      out = weave;
+            diff[0] = diff[0] - MIN (diff[0], 10) - 4;
+	    diff[1] = diff[1] - MIN (diff[1] - 10) - 4;
+	    if (diff[0] < 0)
+	      out[0] = weave[0];
 	    else
-	      out = best;
+	      out[0] = best[0];
+	    
+	    if (diff[1] < 0)
+	      out[1] = weave[1];
+	    else
+	      out[1] = best[1];
 
-	    out = CLAMP (out, MinVals, MaxVals);
+
+	    out[0] = CLAMP (out[0], MinVals[0], MaxVals[0]);
+	    out[1] = CLAMP (out[1], MinVals[1], MaxVals[1]);
 #endif
 
 #ifdef USE_VERTICAL_FILTER
-            pDest[x] = (out + pBob[0]) / 2;
-	    pDest[x + dst_pitchw] = (pBob[src_pitch2] + out) / 2;
+            pDest[x] = (out[0] + pBob[0]) / 2;
+	    pDest[x + dst_pitchw] = (pBob[src_pitch2] + out[0]) / 2;
+            pDest[x + 1] = (out[1] + pBob[1]) / 2;
+	    pDest[x + 1 + dst_pitchw] = (pBob[src_pitch2 + 1] + out[1]) / 2;
 #else
-            pDest[x] = out;
+            pDest[x] = out[0];
+	    pDest[x+1] = out[1];
 #endif
-            pBob += 1;
-            pBobP += 1;
-            pSrc += 1;
-            pSrcP += 1;
+            pBob += 2;
+            pBobP += 2;
+            pSrc += 2;
+            pSrcP += 2;
 	}
         // adjust for next line
         pSrc  = src_pitch2 * (y+1) + pWeaveSrc;
