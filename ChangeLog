@@ -1,3 +1,10 @@
+=== release 0.10.10 ===
+
+2008-08-26  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.10, "Barely moving"
+
 2008-08-12  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

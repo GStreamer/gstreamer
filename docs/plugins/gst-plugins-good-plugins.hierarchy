@@ -88,8 +88,6 @@ GObject
               GstPulseSrc
           GstDV1394Src
           GstSoupHTTPSrc
-          GstCddaBaseSrc
-            GstCdioCddaSrc
       GstBaseSink
         GstMultiFileSink
         GstMultiUDPSink

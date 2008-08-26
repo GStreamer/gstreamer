@@ -1,4 +1,12 @@
-This is GStreamer Good Plug-ins 0.10.9, "Steam Train Rolling"
+This is GStreamer Good Plug-ins 0.10.10, "Barely Moving"
+
+Changes since 0.10.9:
+
+      * Move the libcdio cddasrc element to -ugly, because of the GPL license
+
+Bugs fixed since 0.10.9:
+
+      * 413705 : [PLUGINS MOVE] gst-plugins-good contails GPL'ed libcdio p...
 
 Changes since 0.10.8:
 
