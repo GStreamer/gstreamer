@@ -492,7 +492,10 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
             event, gst_format_get_name (fmt));
         gst_event_unref (event);
         a52dec->sent_segment = FALSE;
-        /* set some dummy values, FIXME do proper conversion */
+        /* set some dummy values, FIXME: do proper conversion */
+        a52dec->time = start = pos = 0;
+        fmt = GST_FORMAT_TIME;
+        end = -1;
       } else {
         a52dec->time = start;
         a52dec->sent_segment = TRUE;
