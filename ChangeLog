@@ -1,5 +1,10 @@
 2008-08-26  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/icles/.cvsignore:
+	  Ignore more.
+
+2008-08-26  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/goom/.cvsignore:
 	* gst/goom2k1/.cvsignore:
 	  Ignore files.
