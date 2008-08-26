@@ -410,8 +410,6 @@ gst_text_overlay_render_text (GstCairoTextOverlay * overlay,
   if (textlen < 0)
     textlen = strlen (text);
 
-  string = g_strndup (text, textlen);
-
   if (overlay->need_render) {
     GST_DEBUG ("Rendering text '%s' on cairo RGBA surface", string);
   } else {
@@ -420,6 +418,8 @@ gst_text_overlay_render_text (GstCairoTextOverlay * overlay,
     g_return_if_fail (overlay->text_outline_image != NULL);
     return;
   }
+
+  string = g_strndup (text, textlen);
 
   overlay->text_fill_image =
       g_realloc (overlay->text_fill_image,

@@ -1,3 +1,7 @@
+2008-08-25  David Schleef  <ds@schleef.org>
+
+	* ext/cairo/gsttextoverlay.c: Fix obvious memleak.
+
 2008-08-25  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_send_event),
