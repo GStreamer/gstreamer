@@ -1,3 +1,8 @@
+2008-08-26  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/osxaudio/gstosxaudio.c:
+	  Revert accidental element rename from testing.
+
 2008-08-27  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst-plugins-good.doap:
