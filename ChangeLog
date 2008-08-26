@@ -1,5 +1,10 @@
 2008-08-26  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst/dccp/gstdccp.c: (gst_dccp_send_buffer):
+	Whoops, that was one fix too much :)
+
+2008-08-26  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/dccp/gstdccp.c: (gst_dccp_read_buffer),
 	(gst_dccp_send_buffer), (gst_dccp_set_sock_windowsize):
 	size_t's size varies by platform/architecture. Use glib convenience

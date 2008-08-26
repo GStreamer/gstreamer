@@ -285,7 +285,7 @@ gst_dccp_send_buffer (GstElement * this, GstBuffer * buffer, int client_sock_fd,
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
 
-  GST_LOG_OBJECT (this, "writing %" G_GSIZE_FORMAT " bytes", size);
+  GST_LOG_OBJECT (this, "writing %d bytes", size);
 
   if (packet_size < 0) {
     GST_LOG_OBJECT (this, "error getting MTU");
