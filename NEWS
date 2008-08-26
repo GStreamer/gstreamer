@@ -1,4 +1,25 @@
-This is GStreamer Ugly Plug-ins 0.10.8 "And yet"
+This is GStreamer Ugly Plug-ins 0.10.9 "Back The Way It Was"
+
+Changes since 0.10.8:
+
+      * Improvements in a52 and mp3 decoding
+      * Bug fixes in Xing header muxer
+      * MPEG demuxer improvements and dvdreadsrc bug-fixes
+      * Fix build with LAME 3.97 and above
+      * Fix LAME parameter settings to allow setting the bitrate properly
+
+Bugs fixed since 0.10.8:
+
+      * 476149 : Fix and add needed features to dvdnavsrc
+      * 490372 : Variable bit rates are limited to 160 kbps in higher qual...
+      * 498004 : preset is ignored by lame plugin
+      * 540194 : [mpegdemux] Doesn't handle files with a non-zero start ti...
+      * 542646 : gstreamer endless loop by zzuf sample
+      * 544039 : [lame] Doesn't build with 3.97
+      * 545370 : playing some mp3s segfaults
+      * 546859 : Asfdemux doesn't properly error out on not-linked
+      * 548194 : a52dec doesn't set up segment for raw files correctly.
+      * 537235 : [mp3parse] some mp3 files do not play with gstreamer
 
 Changes since 0.10.7:
     

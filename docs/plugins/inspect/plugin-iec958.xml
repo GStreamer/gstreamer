@@ -3,10 +3,10 @@
   <description>Convert raw AC3 into IEC958 (S/PDIF) frames</description>
   <filename>../../gst/iec958/.libs/libgstiec958.so</filename>
   <basename>libgstiec958.so</basename>
-  <version>0.10.8.1</version>
+  <version>0.10.9</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <package>GStreamer Ugly Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,16 +17,16 @@
       <author>Martin Soto &lt;martinsoto@users.sourceforge.net&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-private1-ac3; audio/x-ac3; audio/ac3</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-iec958, rate=(int){ 32000, 44100, 48000 }; audio/x-raw-int, endianness=(int)4321, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int){ 32000, 44100, 48000 }, channels=(int)2</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-private1-ac3; audio/x-ac3; audio/ac3</details>
         </caps>
       </pads>
     </element>

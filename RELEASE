@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.10.8 "And yet"
+Release notes for GStreamer Ugly Plug-ins 0.10.9 "Back The Way It Was"
         
 
 The GStreamer team is proud to announce a new release
@@ -50,29 +50,28 @@ contains a set of less supported plug-ins that haven't passed the
     rigorous quality testing we expect
 
 
-
   
 
 Features of this release
     
-      * ASF demuxer fixes
-      * MP3 parsing and Xing header output bug-fixes
-      * Real streaming and demuxing improvements
+      * Improvements in a52 and mp3 decoding
+      * Bug fixes in Xing header muxer
+      * MPEG demuxer improvements and dvdreadsrc bug-fixes
+      * Fix build with LAME 3.97 and above
+      * Fix LAME parameter settings to allow setting the bitrate properly
 
 Bugs fixed in this release
      
-      * 527572 : Crash in volume_process_int32
-      * 321857 : [mp3parse] needs to post DURATION message for VBR mp3s
-      * 428021 : [mad, mp3parse] better duration estimates for VBR
-      * 517985 : [lame] compile error on Solaris, broken GST_ELEMENT_ERROR...
-      * 518676 : xingmux doesn't work anymore
-      * 518933 : mp3 tags are not copied when converting to another format
-      * 521459 : RTSP extension for Real Audio doesn't extract  Author, Co...
-      * 524346 : Framerate not being displayed correctly on running gst-di...
-      * 529488 : [sidplay] Missing sentinel in function call
-      * 532807 : [rmdemux] Doesn't properly aggregate flow returns
-      * 533581 : [mad] inconsistent use of rate and channels
-      * 533832 : [rmdemux] reset variables on flush
+      * 476149 : Fix and add needed features to dvdnavsrc
+      * 490372 : Variable bit rates are limited to 160 kbps in higher qual...
+      * 498004 : preset is ignored by lame plugin
+      * 540194 : [mpegdemux] Doesn't handle files with a non-zero start ti...
+      * 542646 : gstreamer endless loop by zzuf sample
+      * 544039 : [lame] Doesn't build with 3.97
+      * 545370 : playing some mp3s segfaults
+      * 546859 : Asfdemux doesn't properly error out on not-linked
+      * 548194 : a52dec doesn't set up segment for raw files correctly.
+      * 537235 : [mp3parse] some mp3 files do not play with gstreamer
 
 Download
 
@@ -102,16 +101,14 @@ Applications
   
 Contributors to this release
     
-      * Damien Lespiau
-      * Edgard Lima
       * Edward Hervey
+      * Frederic Crozat
       * Jan Schmidt
-      * Julien Moutte
+      * Mark Nauwelaerts
       * Michael Smith
-      * Peter Kjellerstedt
-      * Pizpot Gargravarr
       * Sebastian Dröge
-      * Thiago Sousa Santos
+      * Stefan Kost
+      * Tal Shalif
       * Tim-Philipp Müller
       * Wim Taymans
  

@@ -1,3 +1,10 @@
+=== release 0.10.9 ===
+
+2008-08-26  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.9, "Back The Way It Was"
+
 2008-08-26  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/a52dec/gsta52dec.c:

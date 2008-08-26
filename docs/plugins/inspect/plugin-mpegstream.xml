@@ -3,10 +3,10 @@
   <description>MPEG system stream parser</description>
   <filename>../../gst/mpegstream/.libs/libgstmpegstream.so</filename>
   <basename>libgstmpegstream.so</basename>
-  <version>0.10.8.1</version>
+  <version>0.10.9</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <package>GStreamer Ugly Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,33 +17,21 @@
       <author>Martin Soto &lt;martinsoto@users.sourceforge.net&gt;</author>
       <pads>
         <caps>
-          <name>video_%02d</name>
+          <name>current_subpicture</name>
           <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>video/mpeg, mpegversion=(int){ 1, 2 }, systemstream=(boolean)false</details>
-        </caps>
-        <caps>
-          <name>audio_%02d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>audio/mpeg, mpegversion=(int)1</details>
-        </caps>
-        <caps>
-          <name>private_%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
           <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)2, systemstream=(boolean)true</details>
+          <details>video/x-dvd-subpicture</details>
         </caps>
         <caps>
-          <name>dvd_audio_%02d</name>
+          <name>subpicture_%d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
+          <details>video/x-dvd-subpicture</details>
+        </caps>
+        <caps>
+          <name>current_audio</name>
+          <direction>source</direction>
+          <presence>always</presence>
           <details>audio/mpeg, mpegversion=(int)1; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-dts</details>
         </caps>
         <caps>
@@ -53,22 +41,34 @@
           <details>video/mpeg, mpegversion=(int){ 1, 2 }, systemstream=(boolean)false</details>
         </caps>
         <caps>
-          <name>current_audio</name>
+          <name>dvd_audio_%02d</name>
           <direction>source</direction>
-          <presence>always</presence>
+          <presence>sometimes</presence>
           <details>audio/mpeg, mpegversion=(int)1; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-dts</details>
         </caps>
         <caps>
-          <name>subpicture_%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>video/x-dvd-subpicture</details>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)2, systemstream=(boolean)true</details>
         </caps>
         <caps>
-          <name>current_subpicture</name>
+          <name>private_%d</name>
           <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-dvd-subpicture</details>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>audio_%02d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/mpeg, mpegversion=(int)1</details>
+        </caps>
+        <caps>
+          <name>video_%02d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>video/mpeg, mpegversion=(int){ 1, 2 }, systemstream=(boolean)false</details>
         </caps>
       </pads>
     </element>
@@ -81,16 +81,10 @@
     Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
       <pads>
         <caps>
-          <name>video_%02d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>video/mpeg, mpegversion=(int){ 1, 2 }, systemstream=(boolean)false</details>
-        </caps>
-        <caps>
-          <name>audio_%02d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>audio/mpeg, mpegversion=(int)1</details>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int){ 1, 2 }, systemstream=(boolean)true</details>
         </caps>
         <caps>
           <name>private_%d</name>
@@ -99,10 +93,16 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int){ 1, 2 }, systemstream=(boolean)true</details>
+          <name>audio_%02d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/mpeg, mpegversion=(int)1</details>
+        </caps>
+        <caps>
+          <name>video_%02d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>video/mpeg, mpegversion=(int){ 1, 2 }, systemstream=(boolean)false</details>
         </caps>
       </pads>
     </element>
@@ -115,14 +115,14 @@
     Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>video/mpeg, mpegversion=(int)[ 1, 2 ], systemstream=(boolean)true</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>video/mpeg, mpegversion=(int)[ 1, 2 ], systemstream=(boolean)true</details>
         </caps>

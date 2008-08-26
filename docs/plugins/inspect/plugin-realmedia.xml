@@ -3,10 +3,10 @@
   <description>RealMedia demuxer and depayloader</description>
   <filename>../../gst/realmedia/.libs/libgstrmdemux.so</filename>
   <basename>libgstrmdemux.so</basename>
-  <version>0.10.8.1</version>
+  <version>0.10.9</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <package>GStreamer Ugly Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,16 +17,16 @@
       <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-pn-realaudio</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-pn-realaudio</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Lutz Mueller &lt;lutz at topfrose dot de&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/vnd.rn-realmedia</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>application/x-rdt, media=(string)application, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)X-REAL-RDT</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/vnd.rn-realmedia</details>
         </caps>
       </pads>
     </element>
@@ -59,14 +59,8 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>recv_rtp_sink_%d</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>application/x-rdt</details>
-        </caps>
-        <caps>
-          <name>recv_rtcp_sink_%d</name>
-          <direction>sink</direction>
+          <name>rtcp_src_%d</name>
+          <direction>source</direction>
           <presence>request</presence>
           <details>application/x-rtcp</details>
         </caps>
@@ -77,10 +71,16 @@
           <details>application/x-rdt</details>
         </caps>
         <caps>
-          <name>rtcp_src_%d</name>
-          <direction>source</direction>
+          <name>recv_rtcp_sink_%d</name>
+          <direction>sink</direction>
           <presence>request</presence>
           <details>application/x-rtcp</details>
+        </caps>
+        <caps>
+          <name>recv_rtp_sink_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rdt</details>
         </caps>
       </pads>
     </element>
@@ -92,10 +92,10 @@
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/vnd.rn-realmedia</details>
+          <name>audio_%02d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
         </caps>
         <caps>
           <name>video_%02d</name>
@@ -104,10 +104,10 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>audio_%02d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/vnd.rn-realmedia</details>
         </caps>
       </pads>
     </element>
