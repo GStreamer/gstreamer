@@ -1,3 +1,8 @@
+2008-08-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/cairo/gsttextoverlay.c:
+	  Fix compiler warning.
+
 2008-08-25  David Schleef  <ds@schleef.org>
 
 	* ext/cairo/gsttextoverlay.c: Fix obvious memleak.
