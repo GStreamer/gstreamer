@@ -40,15 +40,16 @@
  * - Implement support for timestamping the buffers.
  */
 
-#include "gstpcapparse.h"
-
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
 
+#include "gstpcapparse.h"
+
 #ifndef _MSC_VER
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <string.h>
 #else
 #include <winsock2.h>
 #endif
@@ -76,7 +77,6 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS_ANY);
 
 static void gst_pcap_parse_dispose (GObject * object);
-static void gst_pcap_parse_finalize (GObject * object);
 static void gst_pcap_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_pcap_parse_set_property (GObject * object, guint prop_id,
@@ -113,7 +113,6 @@ gst_pcap_parse_class_init (GstPcapParseClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->dispose = gst_pcap_parse_dispose;
-  gobject_class->finalize = gst_pcap_parse_finalize;
   gobject_class->get_property = gst_pcap_parse_get_property;
   gobject_class->set_property = gst_pcap_parse_set_property;
 
@@ -169,14 +168,6 @@ gst_pcap_parse_dispose (GObject * object)
   g_object_unref (self->adapter);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-gst_pcap_parse_finalize (GObject * object)
-{
-  GstPcapParse *self = GST_PCAP_PARSE (object);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static const gchar *

@@ -1,3 +1,8 @@
+2008-08-26  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/pcapparse/gstpcapparse.c: (gst_pcap_parse_class_init):
+	Remove unused code and fix includes.
+
 2008-08-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/gstdeinterlace2.c:
