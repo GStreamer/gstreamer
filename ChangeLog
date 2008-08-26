@@ -1,5 +1,11 @@
 2008-08-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/audio/gstaudiosink.c: (gst_audioringbuffer_stop):
+	Since we now call stop, we trigger this code path that causes a deadlock
+	is apparently not needed.
+
+2008-08-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_start),
 	(gst_ring_buffer_stop):
 	Also allow the case where the ringbuffer was paused when we try to stop

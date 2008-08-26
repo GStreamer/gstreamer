@@ -482,12 +482,13 @@ gst_audioringbuffer_stop (GstRingBuffer * buf)
     csink->reset (sink);
     GST_DEBUG_OBJECT (sink, "reset done");
   }
-
+#if 0
   if (abuf->running) {
     GST_DEBUG_OBJECT (sink, "stop, waiting...");
     GST_AUDIORING_BUFFER_WAIT (buf);
     GST_DEBUG_OBJECT (sink, "stopped");
   }
+#endif
 
   return TRUE;
 }
