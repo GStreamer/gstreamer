@@ -290,6 +290,12 @@ gst_v4l2_object_destroy (GstV4l2Object * v4l2object)
   if (v4l2object->videodev)
     g_free (v4l2object->videodev);
 
+  if (v4l2object->channel)
+    g_free (v4l2object->channel);
+
+  if (v4l2object->norm)
+    g_free (v4l2object->norm);
+
   g_free (v4l2object);
 }
 

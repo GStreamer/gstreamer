@@ -354,6 +354,11 @@ gst_v4l2src_dispose (GObject * object)
     gst_v4l2src_clear_format_list (v4l2src);
   }
 
+  if (v4l2src->probed_caps) {
+    gst_caps_unref (v4l2src->probed_caps);
+  }
+
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 

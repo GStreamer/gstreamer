@@ -70,6 +70,7 @@ struct _GstV4l2Buffer {
 
   struct v4l2_buffer vbuffer;
 
+  /* FIXME: have GstV4l2Src* instead, as this has GstV4l2BufferPool* */
   GstV4l2BufferPool *pool;
 };
 

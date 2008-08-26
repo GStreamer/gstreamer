@@ -67,6 +67,7 @@ static GstBufferClass *v4l2buffer_parent_class = NULL;
 static gboolean
 gst_v4l2src_get_nearest_size (GstV4l2Src * v4l2src, guint32 pixelformat,
     gint * width, gint * height);
+static void gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool);
 
 static void
 gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
@@ -113,12 +114,6 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
 }
 
 static void
-gst_v4l2_buffer_init (GstV4l2Buffer * xvimage, gpointer g_class)
-{
-  /* NOP */
-}
-
-static void
 gst_v4l2_buffer_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
@@ -144,7 +139,7 @@ gst_v4l2_buffer_get_type (void)
       NULL,
       sizeof (GstV4l2Buffer),
       0,
-      (GInstanceInitFunc) gst_v4l2_buffer_init,
+      NULL,
       NULL
     };
     _gst_v4l2_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
@@ -163,9 +158,8 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
 
   GST_LOG ("creating buffer %u, %p in pool %p", index, ret, pool);
 
-  ret->pool = pool;
-  gst_mini_object_ref (GST_MINI_OBJECT (pool));
-  memset (&ret->vbuffer, 0x00, sizeof (ret->vbuffer));
+  ret->pool =
+      (GstV4l2BufferPool *) gst_mini_object_ref (GST_MINI_OBJECT (pool));
 
   ret->vbuffer.index = index;
   ret->vbuffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -237,9 +231,11 @@ gst_v4l2_buffer_pool_finalize (GstV4l2BufferPool * pool)
   if (pool->video_fd >= 0)
     close (pool->video_fd);
 
-  if (pool->buffers)
+  if (pool->buffers) {
     g_free (pool->buffers);
-  pool->buffers = NULL;
+    pool->buffers = NULL;
+  }
+
   GST_MINI_OBJECT_CLASS (buffer_pool_parent_class)->finalize (GST_MINI_OBJECT
       (pool));
 }
@@ -326,7 +322,7 @@ buffer_new_failed:
   {
     gint errnosave = errno;
 
-    gst_mini_object_unref (GST_MINI_OBJECT (pool));
+    gst_v4l2_buffer_pool_destroy (pool);
 
     errno = errnosave;
 
@@ -379,10 +375,14 @@ gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool)
   pool->running = FALSE;
   g_mutex_unlock (pool->lock);
 
+  GST_DEBUG ("destroy pool");
+
   /* after this point, no more buffers will be queued or dequeued; no buffer
    * from pool->buffers that is NULL will be set to a buffer, and no buffer that
    * is not NULL will be pushed out. */
 
+  /* miniobjects have no dispose, so they can't break ref-cycles, as buffers ref
+   * the pool, we need to unref the buffer to properly finalize te pool */
   for (n = 0; n < pool->buffer_count; n++) {
     GstBuffer *buf;
 
@@ -956,7 +956,7 @@ default_frame_sizes:
 /******************************************************
  * gst_v4l2src_grab_frame ():
  *   grab a frame for capturing
- * return value: The captured frame number or -1 on error.
+ * return value: GST_FLOW_OK or GST_FLOW_ERROR
  ******************************************************/
 GstFlowReturn
 gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)

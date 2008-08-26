@@ -1,5 +1,15 @@
 2008-08-26  Stefan Kost  <ensonic@users.sf.net>
 
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2src.h:
+	* sys/v4l2/v4l2_calls.c:
+	* sys/v4l2/v4l2src_calls.c:
+	  Fix memory leaks. Small code cleanups : No need for empty _init(). No
+	  need to memset instance structures. Some more FIXME's and comments.
+
+2008-08-26  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/icles/.cvsignore:
 	  Ignore more.
 

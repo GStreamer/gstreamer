@@ -313,8 +313,9 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     channel->label = g_strdup ((const gchar *) control.name);
     v4l2channel->id = n;
 
-#if 0                           /* FIXME: it will be need just when handling private controls
-                                   (currently none of base controls are of this type) */
+#if 0
+    /* FIXME: it will be need just when handling private controls
+     *(currently none of base controls are of this type) */
     if (control.type == V4L2_CTRL_TYPE_MENU) {
       struct v4l2_querymenu menu, *mptr;
 
