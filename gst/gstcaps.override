@@ -451,3 +451,26 @@ _wrap_gst_caps__get___refcount__(PyGObject *self, void *closure)
     return PyInt_FromLong(GST_CAPS_REFCOUNT(self->obj));
 }
 
+%%
+override gst_caps_append_structure kwargs
+static PyObject *
+_wrap_gst_caps_append_structure(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "structure", NULL };
+    PyObject *py_structure;
+    GstStructure *structure = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O:GstCaps.append_structure", kwlist, &py_structure))
+        return NULL;
+    if (pyg_boxed_check(py_structure, GST_TYPE_STRUCTURE))
+        structure = gst_structure_copy(pyg_boxed_get(py_structure, GstStructure));
+    else {
+        PyErr_SetString(PyExc_TypeError, "structure should be a GstStructure");
+        return NULL;
+    }
+    pyg_begin_allow_threads;
+    gst_caps_append_structure(pyg_boxed_get(self, GstCaps), structure);
+    pyg_end_allow_threads;
+    Py_INCREF(Py_None);
+    return Py_None;
+}

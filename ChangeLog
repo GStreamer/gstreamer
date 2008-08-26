@@ -1,3 +1,10 @@
+2008-08-26  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gstcaps.override:
+	Override gst_caps_append_structure() and make a copy of the structure
+	given as argument.
+	Fixes #549450
+
 2008-08-11  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/gst-0.10.15.ignore:
