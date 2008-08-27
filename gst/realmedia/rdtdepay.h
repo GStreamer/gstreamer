@@ -47,6 +47,7 @@ struct _GstRDTDepay
   GstPad *srcpad;
 
   guint clock_rate;
+  guint32 next_seqnum;
 
   gboolean discont;
   GstBuffer *header;

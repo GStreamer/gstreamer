@@ -528,9 +528,15 @@ gst_rdt_manager_query_src (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
     {
+      GstClockTime latency;
+
+      latency = rdtmanager->latency * GST_MSECOND;
+
       /* we pretend to be live with a 3 second latency */
-      gst_query_set_latency (query, TRUE, 5 * GST_SECOND, -1);
-      GST_DEBUG_OBJECT (rdtmanager, "reporting 5 seconds of latency");
+      gst_query_set_latency (query, TRUE, latency, -1);
+
+      GST_DEBUG_OBJECT (rdtmanager, "reporting %" GST_TIME_FORMAT " of latency",
+          GST_TIME_ARGS (latency));
       res = TRUE;
       break;
     }

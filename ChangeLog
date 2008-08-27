@@ -1,5 +1,16 @@
 2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/realmedia/rdtdepay.c: (gst_rdt_depay_handle_data),
+	(gst_rdt_depay_change_state):
+	* gst/realmedia/rdtdepay.h:
+	Check seqnum gaps and drop duplicate packets or mark outgoing buffers
+	with a DISCONT flag when needed.
+
+	* gst/realmedia/rdtmanager.c: (gst_rdt_manager_query_src):
+	Report the configure latency instead of a hardcoded value.
+
+2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/realmedia/rdtmanager.c: (create_session), (activate_session),
 	(free_session), (gst_rdt_manager_query_src),
 	(gst_rdt_manager_src_activate_push),

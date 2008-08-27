@@ -222,6 +222,9 @@ gst_rdt_depay_handle_data (GstRDTDepay * rdtdepay, GstClockTime outtime,
   guint size;
   guint16 stream_id;
   guint32 timestamp;
+  gint gap;
+  guint16 seqnum;
+  gboolean discont;
 
   /* get pointers to the packet data */
   gst_rdt_packet_data_peek_data (packet, &data, &size);
@@ -236,6 +239,41 @@ gst_rdt_depay_handle_data (GstRDTDepay * rdtdepay, GstClockTime outtime,
   stream_id = gst_rdt_packet_data_get_stream_id (packet);
   timestamp = gst_rdt_packet_data_get_timestamp (packet);
 
+  seqnum = gst_rdt_packet_data_get_seq (packet);
+
+  GST_DEBUG_OBJECT (rdtdepay, "stream_id %u, timestamp %u, seqnum %d",
+      stream_id, timestamp, seqnum);
+
+  if (rdtdepay->next_seqnum != -1) {
+    gap = gst_rdt_buffer_compare_seqnum (seqnum, rdtdepay->next_seqnum);
+
+    /* if we have no gap, all is fine */
+    if (G_UNLIKELY (gap != 0)) {
+      GST_LOG_OBJECT (rdtdepay, "got packet %u, expected %u, gap %d", seqnum,
+          rdtdepay->next_seqnum, gap);
+      if (gap < 0) {
+        /* seqnum > next_seqnum, we are missing some packets, this is always a
+         * DISCONT. */
+        GST_LOG_OBJECT (rdtdepay, "%d missing packets", gap);
+        rdtdepay->discont = TRUE;
+      } else {
+        /* seqnum < next_seqnum, we have seen this packet before or the sender
+         * could be restarted. If the packet is not too old, we throw it away as
+         * a duplicate, otherwise we mark discont and continue. 100 misordered
+         * packets is a good threshold. See also RFC 4737. */
+        if (gap < 100)
+          goto dropping;
+
+        GST_LOG_OBJECT (rdtdepay,
+            "%d > 100, packet too old, sender likely restarted", gap);
+        rdtdepay->discont = TRUE;
+      }
+    }
+  }
+  rdtdepay->next_seqnum = (seqnum + 1);
+  if (rdtdepay->next_seqnum == 0xff00)
+    rdtdepay->next_seqnum = 0;
+
   GST_WRITE_UINT16_BE (outdata + 0, 0); /* version   */
   GST_WRITE_UINT16_BE (outdata + 2, size + 12); /* length    */
   GST_WRITE_UINT16_BE (outdata + 4, stream_id); /* stream    */
@@ -243,13 +281,19 @@ gst_rdt_depay_handle_data (GstRDTDepay * rdtdepay, GstClockTime outtime,
   GST_WRITE_UINT16_BE (outdata + 10, 0);        /* flags     */
   memcpy (outdata + 12, data, size);
 
-  GST_DEBUG_OBJECT (rdtdepay, "Passing on packet "
-      "stream_id=%u timestamp=%u, outtime %" GST_TIME_FORMAT, stream_id,
-      timestamp, GST_TIME_ARGS (outtime));
+  GST_DEBUG_OBJECT (rdtdepay, "Pushing packet, outtime %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (outtime));
 
   ret = gst_rdt_depay_push (rdtdepay, outbuf);
 
   return ret;
+
+  /* ERRORS */
+dropping:
+  {
+    GST_WARNING_OBJECT (rdtdepay, "%d <= 100, dropping old packet", gap);
+    return GST_FLOW_OK;
+  }
 }
 
 static GstFlowReturn
@@ -355,6 +399,7 @@ gst_rdt_depay_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      rdtdepay->next_seqnum = -1;
       break;
     default:
       break;
