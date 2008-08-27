@@ -1,5 +1,30 @@
 2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/realmedia/Makefile.am:
+	* gst/realmedia/gstrdtbuffer.c: (gst_rdt_buffer_validate_data),
+	(gst_rdt_buffer_validate), (gst_rdt_buffer_get_packet_count),
+	(read_packet_header), (gst_rdt_buffer_get_first_packet),
+	(gst_rdt_packet_move_to_next), (gst_rdt_packet_get_type),
+	(gst_rdt_packet_get_length), (gst_rdt_packet_to_buffer),
+	(gst_rdt_buffer_compare_seqnum), (gst_rdt_packet_data_get_seq),
+	(gst_rdt_packet_data_peek_data),
+	(gst_rdt_packet_data_get_stream_id),
+	(gst_rdt_packet_data_get_timestamp):
+	* gst/realmedia/gstrdtbuffer.h:
+	Add first support for parsing RDT messages.
+
+	* gst/realmedia/rdtjitterbuffer.c: (rdt_jitter_buffer_class_init),
+	(rdt_jitter_buffer_init), (rdt_jitter_buffer_finalize),
+	(rdt_jitter_buffer_new), (rdt_jitter_buffer_reset_skew),
+	(calculate_skew), (rdt_jitter_buffer_insert),
+	(rdt_jitter_buffer_pop), (rdt_jitter_buffer_peek),
+	(rdt_jitter_buffer_flush), (rdt_jitter_buffer_num_packets),
+	(rdt_jitter_buffer_get_ts_diff):
+	* gst/realmedia/rdtjitterbuffer.h:
+	Add first version of an RDT jitterbuffer.
+
+2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_init),
 	(find_seek_offset_time), (gst_rmdemux_reset), (gst_rmdemux_chain),
 	(gst_rmdemux_parse_mdpr), (gst_rmdemux_descramble_cook_audio),
