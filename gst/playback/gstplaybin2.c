@@ -1529,6 +1529,13 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
   GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
 }
 
+static void
+selector_blocked (GstPad * pad, gboolean blocked, gpointer user_data)
+{
+  /* no nothing */
+  GST_DEBUG_OBJECT (pad, "blocked callback, blocked: %d", blocked);
+}
+
 /* this function is called when a new pad is added to decodebin. We check the
  * type of the pad and add it to the selecter element of the group. 
  */
@@ -1580,6 +1587,11 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
     /* save source pad */
     select->srcpad = gst_element_get_static_pad (select->selector, "src");
+    /* block the selector srcpad. It's possible that multiple decodebins start
+     * pushing data into the selectors before we have a chance to collect all
+     * streams and connect the sinks, resulting in not-linked errors. After we
+     * configured the sinks we will unblock them all. */
+    gst_pad_set_blocked_async (select->srcpad, TRUE, selector_blocked, NULL);
   }
 
   /* get sinkpad for the new stream */
@@ -1755,6 +1767,17 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 
     /* signal the other decodebins that they can continue now. */
     GST_SOURCE_GROUP_LOCK (group);
+    /* unblock all selectors */
+    for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
+      GstSourceSelect *select = &group->selector[i];
+
+      if (select->selector) {
+        GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
+            select->srcpad);
+        gst_pad_set_blocked_async (select->srcpad, FALSE, selector_blocked,
+            NULL);
+      }
+    }
     GST_DEBUG_OBJECT (playbin, "signal other decodebins");
     GST_SOURCE_GROUP_BROADCAST (group);
     GST_SOURCE_GROUP_UNLOCK (group);

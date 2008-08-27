@@ -1,3 +1,11 @@
+2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c: (selector_blocked), (pad_added_cb),
+	(no_more_pads_cb):
+	Fix nasty race where multiple decodebins could start pushing data before
+	we manage to configure the sinks, resulting in not-linked errors in
+	typical RTSP streaming cases.
+
 2008-08-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/audio/gstaudiosink.c: (gst_audioringbuffer_stop):
