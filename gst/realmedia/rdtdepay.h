@@ -47,6 +47,9 @@ struct _GstRDTDepay
   GstPad *srcpad;
 
   guint clock_rate;
+
+  gboolean discont;
+  GstBuffer *header;
 };
 
 struct _GstRDTDepayClass

@@ -1,5 +1,18 @@
 2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/realmedia/rdtdepay.c: (gst_rdt_depay_class_init),
+	(gst_rdt_depay_finalize), (gst_rdt_depay_setcaps),
+	(gst_rdt_depay_push), (gst_rdt_depay_handle_data),
+	(gst_rdt_depay_chain), (gst_rdt_depay_change_state):
+	* gst/realmedia/rdtdepay.h:
+	Use new RDT parsing helper functions.
+	Copy discont flags correctly.
+	Push the header from the chain function instead of the setcaps function.
+	Copy incomming timestamp to the output buffers instead of doing magic
+	with the RDT timestamps.
+
+2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/realmedia/Makefile.am:
 	* gst/realmedia/gstrdtbuffer.c: (gst_rdt_buffer_validate_data),
 	(gst_rdt_buffer_validate), (gst_rdt_buffer_get_packet_count),

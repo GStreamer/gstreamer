@@ -23,6 +23,8 @@
 #endif
 
 #include <string.h>
+
+#include "gstrdtbuffer.h"
 #include "rdtdepay.h"
 
 GST_DEBUG_CATEGORY_STATIC (rdtdepay_debug);
@@ -71,8 +73,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 GST_BOILERPLATE (GstRDTDepay, gst_rdt_depay, GstElement, GST_TYPE_ELEMENT);
 
-static gboolean gst_rdt_depay_setcaps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_rdt_depay_chain (GstPad * pad, GstBuffer * buf);
+static void gst_rdt_depay_finalize (GObject * object);
 
 static void gst_rdt_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -81,6 +82,9 @@ static void gst_rdt_depay_get_property (GObject * object, guint prop_id,
 
 static GstStateChangeReturn gst_rdt_depay_change_state (GstElement *
     element, GstStateChange transition);
+
+static gboolean gst_rdt_depay_setcaps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_rdt_depay_chain (GstPad * pad, GstBuffer * buf);
 
 static void
 gst_rdt_depay_base_init (gpointer klass)
@@ -112,6 +116,8 @@ gst_rdt_depay_class_init (GstRDTDepayClass * klass)
   gobject_class->set_property = gst_rdt_depay_set_property;
   gobject_class->get_property = gst_rdt_depay_get_property;
 
+  gobject_class->finalize = gst_rdt_depay_finalize;
+
   gstelement_class->change_state = gst_rdt_depay_change_state;
 }
 
@@ -127,6 +133,19 @@ gst_rdt_depay_init (GstRDTDepay * rdtdepay, GstRDTDepayClass * klass)
   rdtdepay->srcpad =
       gst_pad_new_from_static_template (&gst_rdt_depay_src_template, "src");
   gst_element_add_pad (GST_ELEMENT_CAST (rdtdepay), rdtdepay->srcpad);
+}
+
+static void
+gst_rdt_depay_finalize (GObject * object)
+{
+  GstRDTDepay *rdtdepay;
+
+  rdtdepay = GST_RDT_DEPAY (object);
+
+  if (rdtdepay->header)
+    gst_buffer_unref (rdtdepay->header);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -155,20 +174,17 @@ gst_rdt_depay_setcaps (GstPad * pad, GstCaps * caps)
   if (!header)
     goto no_header;
 
-  /* need to ref because we are going to give away a ref in push */
-  gst_buffer_ref (header);
-
   /* caps seem good, configure element */
   rdtdepay->clock_rate = clock_rate;
 
   /* set caps on pad and on header */
   srccaps = gst_caps_new_simple ("application/vnd.rn-realmedia", NULL);
   gst_pad_set_caps (rdtdepay->srcpad, srccaps);
-  gst_buffer_set_caps (header, srccaps);
   gst_caps_unref (srccaps);
 
-  /* push header data first */
-  gst_pad_push (rdtdepay->srcpad, header);
+  if (rdtdepay->header)
+    gst_buffer_unref (rdtdepay->header);
+  rdtdepay->header = gst_buffer_ref (header);
 
   return TRUE;
 
@@ -180,110 +196,121 @@ no_header:
   }
 }
 
-#define ASSERT_SIZE(n) if (size < (n)) goto not_enough_data;
+static GstFlowReturn
+gst_rdt_depay_push (GstRDTDepay * rdtdepay, GstBuffer * buffer)
+{
+  GstFlowReturn ret;
+
+  gst_buffer_set_caps (buffer, GST_PAD_CAPS (rdtdepay->srcpad));
+
+  if (rdtdepay->discont) {
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+    rdtdepay->discont = FALSE;
+  }
+  ret = gst_pad_push (rdtdepay->srcpad, buffer);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_rdt_depay_handle_data (GstRDTDepay * rdtdepay, GstClockTime outtime,
+    GstRDTPacket * packet)
+{
+  GstFlowReturn ret;
+  GstBuffer *outbuf;
+  guint8 *data, *outdata;
+  guint size;
+  guint16 stream_id;
+  guint32 timestamp;
+
+  /* get pointers to the packet data */
+  gst_rdt_packet_data_peek_data (packet, &data, &size);
+
+  outbuf = gst_buffer_new_and_alloc (12 + size);
+  outdata = GST_BUFFER_DATA (outbuf);
+  GST_BUFFER_TIMESTAMP (outbuf) = outtime;
+
+  GST_DEBUG_OBJECT (rdtdepay, "have size %u", size);
+
+  /* copy over some things */
+  stream_id = gst_rdt_packet_data_get_stream_id (packet);
+  timestamp = gst_rdt_packet_data_get_timestamp (packet);
+
+  GST_WRITE_UINT16_BE (outdata + 0, 0); /* version   */
+  GST_WRITE_UINT16_BE (outdata + 2, size + 12); /* length    */
+  GST_WRITE_UINT16_BE (outdata + 4, stream_id); /* stream    */
+  GST_WRITE_UINT32_BE (outdata + 6, timestamp); /* timestamp */
+  GST_WRITE_UINT16_BE (outdata + 10, 0);        /* flags     */
+  memcpy (outdata + 12, data, size);
+
+  GST_DEBUG_OBJECT (rdtdepay, "Passing on packet "
+      "stream_id=%u timestamp=%u, outtime %" GST_TIME_FORMAT, stream_id,
+      timestamp, GST_TIME_ARGS (outtime));
+
+  ret = gst_rdt_depay_push (rdtdepay, outbuf);
+
+  return ret;
+}
 
 static GstFlowReturn
 gst_rdt_depay_chain (GstPad * pad, GstBuffer * buf)
 {
   GstRDTDepay *rdtdepay;
   GstFlowReturn ret;
-  GstBuffer *outbuf;
-  guint8 *data, *outdata;
-  guint size, channel = 0;
-  gboolean length_included_flag;
-  gboolean need_reliable_flag = 0;
-  gboolean is_reliable;
-  guint16 seq_no;
-  gboolean back_to_back;
-  gboolean slow_data;
-  guint asm_rule;
-  guint32 ts;
-  guint16 total_reliable;
-  guint16 packet_type, packet_length;
+  GstClockTime timestamp;
+  gboolean more;
+  GstRDTPacket packet;
 
   rdtdepay = GST_RDT_DEPAY (GST_PAD_PARENT (pad));
 
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    GST_LOG_OBJECT (rdtdepay, "received discont");
+    rdtdepay->discont = TRUE;
+  }
+
+  if (rdtdepay->header) {
+    GstBuffer *out;
+
+    out = rdtdepay->header;
+    rdtdepay->header = NULL;
+
+    /* push header data first */
+    ret = gst_rdt_depay_push (rdtdepay, out);
+  }
+
+  /* save timestamp */
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+
+  ret = GST_FLOW_OK;
+
+  GST_LOG_OBJECT (rdtdepay, "received buffer timestamp %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
   /* data is in RDT format. */
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  more = gst_rdt_buffer_get_first_packet (buf, &packet);
+  while (more) {
+    GstRDTType type;
 
-  while (size > 0) {
-    ASSERT_SIZE (1);
-    length_included_flag = (data[0] & 0x80) >> 7;
-    need_reliable_flag = (data[0] & 0x40) >> 6;
-    is_reliable = (data[0] & 0x01) >> 0;
-    channel = (data[0] & 0x3e) >> 1;
+    type = gst_rdt_packet_get_type (&packet);
+    GST_DEBUG_OBJECT (rdtdepay, "Have packet of type %04x", type);
 
-    GST_DEBUG_OBJECT (rdtdepay, "length_included_flag=%i "
-        "need_reliable_flag=%i is_reliable=%i", length_included_flag,
-        need_reliable_flag, is_reliable);
-
-    /* we can stop skipping */
-    if (!length_included_flag)
+    if (GST_RDT_IS_DATA_TYPE (type)) {
+      GST_DEBUG_OBJECT (rdtdepay, "We have a data packet");
+      ret = gst_rdt_depay_handle_data (rdtdepay, timestamp, &packet);
+    } else {
+      switch (type) {
+        default:
+          GST_DEBUG_OBJECT (rdtdepay, "Ignoring packet");
+          break;
+      }
+    }
+    if (ret != GST_FLOW_OK)
       break;
 
-    ASSERT_SIZE (5);
-    packet_type = GST_READ_UINT16_BE (data + 1);
-    packet_length = GST_READ_UINT16_BE (data + 3);
-
-    GST_DEBUG_OBJECT (rdtdepay, "Skipping packet of type %02x and length=%d...",
-        packet_type, packet_length);
-
-    ASSERT_SIZE (packet_length);
-    data += packet_length;
-    size -= packet_length;
+    more = gst_rdt_packet_move_to_next (&packet);
   }
-
-  ASSERT_SIZE (3);
-  seq_no = GST_READ_UINT16_BE (data + 1);
-
-  ASSERT_SIZE (4);
-  back_to_back = (data[3] >> 7) & 0x01;
-  slow_data = (data[3] >> 6) & 0x01;
-  asm_rule = ((data[3] << 2) & 0xf) >> 2;
-
-  ASSERT_SIZE (8);
-  ts = GST_READ_UINT32_BE (data + 4);
-
-  if (need_reliable_flag) {
-    ASSERT_SIZE (10);
-    total_reliable = GST_READ_UINT16_BE (data + 8);
-    data += 10;
-    size -= 10;
-  } else {
-    data += 9;
-    size -= 9;
-  }
-
-  GST_DEBUG_OBJECT (rdtdepay, "Passing on packet %d: "
-      "back_to_back=%i slow_data=%i asm_rule=%i timestamp=%u",
-      seq_no, back_to_back, slow_data, asm_rule, ts);
-
-  outbuf = gst_buffer_new_and_alloc (12 + size);
-  outdata = GST_BUFFER_DATA (outbuf);
-  GST_BUFFER_TIMESTAMP (outbuf) =
-      gst_util_uint64_scale_int (ts, GST_SECOND, rdtdepay->clock_rate);
-
-  GST_WRITE_UINT16_BE (outdata + 0, 0); /* version   */
-  GST_WRITE_UINT16_BE (outdata + 2, size + 12); /* length    */
-  GST_WRITE_UINT16_BE (outdata + 4, channel);   /* stream    */
-  GST_WRITE_UINT32_BE (outdata + 6, ts);        /* timestamp */
-  GST_WRITE_UINT16_BE (outdata + 10, 0);        /* flags     */
-  memcpy (outdata + 12, data, size);
-  gst_buffer_unref (buf);
-
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (rdtdepay->srcpad));
-  ret = gst_pad_push (rdtdepay->srcpad, outbuf);
 
   return ret;
-
-  /* ERRORS */
-not_enough_data:
-  {
-    GST_ELEMENT_WARNING (rdtdepay, STREAM, DECODE, (NULL),
-        ("Not enough data."));
-    return GST_FLOW_OK;
-  }
 }
 
 static void
@@ -336,6 +363,11 @@ gst_rdt_depay_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (rdtdepay->header)
+        gst_buffer_unref (rdtdepay->header);
+      rdtdepay->header = NULL;
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
