@@ -1,5 +1,14 @@
 2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/realmedia/rdtmanager.c: (create_session), (activate_session),
+	(free_session), (gst_rdt_manager_query_src),
+	(gst_rdt_manager_src_activate_push),
+	(gst_rdt_manager_handle_data_packet), (gst_rdt_manager_chain_rdt),
+	(gst_rdt_manager_loop), (create_recv_rtp):
+	Include the new rdt jitterbuffer in the session manager.
+
+2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/realmedia/rdtdepay.c: (gst_rdt_depay_class_init),
 	(gst_rdt_depay_finalize), (gst_rdt_depay_setcaps),
 	(gst_rdt_depay_push), (gst_rdt_depay_handle_data),
