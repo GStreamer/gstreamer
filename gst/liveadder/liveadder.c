@@ -897,10 +897,15 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
   GstFlowReturn ret = GST_FLOW_OK;
   GList *item = NULL;
   GstClockTime skip = 0;
+  gint64 drift = 0; /* Positive if new buffer after old buffer */
 
   GST_OBJECT_LOCK (adder);
 
   ret = adder->srcresult;
+
+  GST_DEBUG ("Incoming buffer time:%"GST_TIME_FORMAT" duration:%"GST_TIME_FORMAT,
+	     GST_TIME_ARGS(GST_BUFFER_TIMESTAMP(buffer)),
+	     GST_TIME_ARGS(GST_BUFFER_DURATION(buffer)));
 
   if (ret != GST_FLOW_OK)
   {
@@ -942,17 +947,28 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
   if (padprivate->segment.format != GST_FORMAT_TIME)
     goto invalid_segment;
 
+  buffer = gst_buffer_make_metadata_writable (buffer);
+
+  drift = GST_BUFFER_TIMESTAMP (buffer) - padprivate->expected_timestamp;
+
   /* Just see if we receive invalid timestamp/durations */
   if (GST_CLOCK_TIME_IS_VALID (padprivate->expected_timestamp) &&
       !GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DISCONT) &&
-      GST_BUFFER_TIMESTAMP(buffer) != padprivate->expected_timestamp)
+      (drift != 0)) {
     GST_LOG_OBJECT (adder,
         "Timestamp discontinuity without the DISCONT flag set"
-        " (expected %" GST_TIME_FORMAT ", got %" GST_TIME_FORMAT")",
+        " (expected %" GST_TIME_FORMAT ", got %" GST_TIME_FORMAT" drift:%ldms)",
         GST_TIME_ARGS (padprivate->expected_timestamp),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+		    GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+		    drift / GST_MSECOND);
 
-  buffer = gst_buffer_make_metadata_writable (buffer);
+    /* We accept drifts of 10ms*/
+    if (ABS(drift) < (10 * GST_MSECOND)) {
+      GST_DEBUG ("Correcting minor drift");
+      GST_BUFFER_TIMESTAMP (buffer) = padprivate->expected_timestamp;
+    }
+  }
+
 
   /* If there is no duration, lets set one */
   if (!GST_BUFFER_DURATION_IS_VALID (buffer)) {
@@ -976,8 +992,10 @@ gst_live_live_adder_chain (GstPad *pad, GstBuffer *buffer)
       adder->bps);
 
   /* buffer can be NULL if it's completely outside of the segment */
-  if (!buffer)
+  if (!buffer) {
+    GST_DEBUG ("Buffer completely outside of configured segment, dropping it");
     goto out;
+  }
 
   /*
    * Make sure all incoming buffers share the same timestamping
@@ -1296,6 +1314,10 @@ gst_live_adder_loop (gpointer data)
 
   if (newseg_event)
     gst_pad_push_event (adder->srcpad, newseg_event);
+
+  GST_DEBUG ("About to push buffer time:%"GST_TIME_FORMAT" duration:%"GST_TIME_FORMAT,
+	     GST_TIME_ARGS(GST_BUFFER_TIMESTAMP(buffer)),
+	     GST_TIME_ARGS(GST_BUFFER_DURATION(buffer)));
 
   result = gst_pad_push (adder->srcpad, buffer);
   if (result != GST_FLOW_OK)
