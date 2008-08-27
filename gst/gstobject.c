@@ -568,6 +568,7 @@ gst_object_default_deep_notify (GObject * object, GstObject * orig,
     g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
     g_object_get_property (G_OBJECT (orig), pspec->name, &value);
 
+    /* FIXME: handle flags */
     if (G_IS_PARAM_SPEC_ENUM (pspec)) {
       GEnumValue *enum_value;
 
@@ -1062,6 +1063,7 @@ gst_object_get_path_string (GstObject * object)
   GSList *parents;
   void *parent;
   gchar *prevpath, *path;
+  const gchar *typename;
   gchar *component;
   gchar *separator;
 
@@ -1090,16 +1092,25 @@ gst_object_get_path_string (GstObject * object)
    * decrease the refcounting on each element after we handled
    * it. */
   for (parents = parentage; parents; parents = g_slist_next (parents)) {
+    if (G_IS_OBJECT (parents->data)) {
+      typename = G_OBJECT_TYPE_NAME (parents->data);
+    } else {
+      typename = NULL;
+    }
     if (GST_IS_OBJECT (parents->data)) {
       GstObject *item = GST_OBJECT_CAST (parents->data);
       GstObjectClass *oclass = GST_OBJECT_GET_CLASS (item);
 
-      component = gst_object_get_name (item);
+      component = g_strdup_printf ("%s:%s", typename, GST_OBJECT_NAME (item));
       separator = oclass->path_string_separator;
       /* and unref now */
       gst_object_unref (item);
     } else {
-      component = g_strdup_printf ("%p", parents->data);
+      if (typename) {
+        component = g_strdup_printf ("%s:%p", typename, parents->data);
+      } else {
+        component = g_strdup_printf ("%p", parents->data);
+      }
       separator = "/";
     }
 

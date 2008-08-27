@@ -1,3 +1,9 @@
+2008-08-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstobject.c:
+	  Due to popular request also include ObjectType in
+	  gst_object_get_path_string(). Makes gst-launch -v bit more useful.
+
 2008-08-26  David Schleef  <ds@schleef.org>
 
 	* gst/gstutils.c: Remove check in gst_pad_query_convert() that
