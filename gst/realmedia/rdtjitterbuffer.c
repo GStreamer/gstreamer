@@ -360,6 +360,10 @@ rdt_jitter_buffer_insert (RDTJitterBuffer * jbuf, GstBuffer * buf,
   g_return_val_if_fail (more == TRUE, FALSE);
 
   seqnum = gst_rdt_packet_data_get_seq (&packet);
+  /* do skew calculation by measuring the difference between rtptime and the
+   * receive time, this function will retimestamp @buf with the skew corrected
+   * running time. */
+  rtptime = gst_rdt_packet_data_get_timestamp (&packet);
 
   /* loop the list to skip strictly smaller seqnum buffers */
   for (list = jbuf->packets->head; list; list = g_list_next (list)) {
@@ -385,11 +389,7 @@ rdt_jitter_buffer_insert (RDTJitterBuffer * jbuf, GstBuffer * buf,
       break;
   }
 
-  /* do skew calculation by measuring the difference between rtptime and the
-   * receive time, this function will retimestamp @buf with the skew corrected
-   * running time. */
-  //rtptime = gst_rtp_buffer_get_timestamp (buf);
-  rtptime = 0;
+
   if (clock_rate) {
     time = calculate_skew (jbuf, rtptime, time, clock_rate);
     GST_BUFFER_TIMESTAMP (buf) = time;

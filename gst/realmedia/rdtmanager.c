@@ -136,6 +136,10 @@ static GstPad *gst_rdt_manager_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_rdt_manager_release_pad (GstElement * element, GstPad * pad);
 
+static gboolean gst_rdt_manager_parse_caps (GstRDTManager * rdtmanager,
+    GstRDTManagerSession * session, GstCaps * caps);
+static gboolean gst_rdt_manager_setcaps (GstPad * pad, GstCaps * caps);
+
 static GstFlowReturn gst_rdt_manager_chain_rdt (GstPad * pad,
     GstBuffer * buffer);
 static GstFlowReturn gst_rdt_manager_chain_rtcp (GstPad * pad,
@@ -181,6 +185,7 @@ struct _GstRDTManagerSession
   guint8 pt;
   gint clock_rate;
   GstCaps *caps;
+  gint64 clock_base;
 
   GstSegment segment;
 
@@ -279,7 +284,14 @@ activate_session (GstRDTManager * rdtmanager, GstRDTManagerSession * session,
   g_signal_emitv (args, gst_rdt_manager_signals[SIGNAL_REQUEST_PT_MAP], 0,
       &ret);
 
-  caps = (GstCaps *) g_value_get_boxed (&ret);
+  g_value_unset (&args[0]);
+  g_value_unset (&args[1]);
+  g_value_unset (&args[2]);
+  caps = (GstCaps *) g_value_dup_boxed (&ret);
+  g_value_unset (&ret);
+
+  if (caps)
+    gst_rdt_manager_parse_caps (rdtmanager, session, caps);
 
   name = g_strdup_printf ("recv_rtp_src_%d_%u_%d", session->id, ssrc, pt);
   klass = GST_ELEMENT_GET_CLASS (rdtmanager);
@@ -288,6 +300,7 @@ activate_session (GstRDTManager * rdtmanager, GstRDTManagerSession * session,
   g_free (name);
 
   gst_pad_set_caps (session->recv_rtp_src, caps);
+  gst_caps_unref (caps);
 
   gst_pad_set_element_private (session->recv_rtp_src, session);
   gst_pad_set_query_function (session->recv_rtp_src, gst_rdt_manager_query_src);
@@ -649,6 +662,73 @@ duplicate:
     gst_buffer_unref (buffer);
     goto finished;
   }
+}
+
+static gboolean
+gst_rdt_manager_parse_caps (GstRDTManager * rdtmanager,
+    GstRDTManagerSession * session, GstCaps * caps)
+{
+  GstStructure *caps_struct;
+  guint val;
+
+  /* first parse the caps */
+  caps_struct = gst_caps_get_structure (caps, 0);
+
+  GST_DEBUG_OBJECT (rdtmanager, "got caps");
+
+  /* we need a clock-rate to convert the rtp timestamps to GStreamer time and to
+   * measure the amount of data in the buffer */
+  if (!gst_structure_get_int (caps_struct, "clock-rate", &session->clock_rate))
+    session->clock_rate = 1000;
+
+  if (session->clock_rate <= 0)
+    goto wrong_rate;
+
+  GST_DEBUG_OBJECT (rdtmanager, "got clock-rate %d", session->clock_rate);
+
+  /* gah, clock-base is uint. If we don't have a base, we will use the first
+   * buffer timestamp as the base time. This will screw up sync but it's better
+   * than nothing. */
+  if (gst_structure_get_uint (caps_struct, "clock-base", &val))
+    session->clock_base = val;
+  else
+    session->clock_base = -1;
+
+  GST_DEBUG_OBJECT (rdtmanager, "got clock-base %" G_GINT64_FORMAT,
+      session->clock_base);
+
+  /* first expected seqnum */
+  if (gst_structure_get_uint (caps_struct, "seqnum-base", &val))
+    session->next_seqnum = val;
+  else
+    session->next_seqnum = -1;
+
+  GST_DEBUG_OBJECT (rdtmanager, "got seqnum-base %d", session->next_seqnum);
+
+  return TRUE;
+
+  /* ERRORS */
+wrong_rate:
+  {
+    GST_DEBUG_OBJECT (rdtmanager, "Invalid clock-rate %d", session->clock_rate);
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_rdt_manager_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstRDTManager *rdtmanager;
+  GstRDTManagerSession *session;
+  gboolean res;
+
+  rdtmanager = GST_RDT_MANAGER (GST_PAD_PARENT (pad));
+  /* find session */
+  session = gst_pad_get_element_private (pad);
+
+  res = gst_rdt_manager_parse_caps (rdtmanager, session, caps);
+
+  return res;
 }
 
 static GstFlowReturn
@@ -1072,6 +1152,8 @@ create_recv_rtp (GstRDTManager * rdtmanager, GstPadTemplate * templ,
 
   session->recv_rtp_sink = gst_pad_new_from_template (templ, name);
   gst_pad_set_element_private (session->recv_rtp_sink, session);
+  gst_pad_set_setcaps_function (session->recv_rtp_sink,
+      gst_rdt_manager_setcaps);
   gst_pad_set_chain_function (session->recv_rtp_sink,
       gst_rdt_manager_chain_rdt);
   gst_pad_set_active (session->recv_rtp_sink, TRUE);

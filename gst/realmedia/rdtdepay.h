@@ -47,9 +47,16 @@ struct _GstRDTDepay
   GstPad *srcpad;
 
   guint clock_rate;
+  GstClockTime npt_start;
+  GstClockTime npt_stop;
+  gdouble play_speed;
+  gdouble play_scale;
+
   guint32 next_seqnum;
 
   gboolean discont;
+  gboolean need_newsegment;
+  GstSegment segment;
   GstBuffer *header;
 };
 

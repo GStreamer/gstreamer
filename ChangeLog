@@ -1,5 +1,28 @@
 2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/realmedia/rdtdepay.c: (gst_rdt_depay_init),
+	(gst_rdt_depay_setcaps), (gst_rdt_depay_sink_event),
+	(create_segment_event), (gst_rdt_depay_push),
+	(gst_rdt_depay_handle_data), (gst_rdt_depay_change_state):
+	* gst/realmedia/rdtdepay.h:
+	Parse other values from the incomming caps.
+	Add event handler to handle flushing and segments.
+	Create segment events.
+
+	* gst/realmedia/rdtjitterbuffer.c: (rdt_jitter_buffer_insert):
+	Do skew correction based on RDT timestamps.
+
+	* gst/realmedia/rdtmanager.c: (activate_session),
+	(gst_rdt_manager_parse_caps), (gst_rdt_manager_setcaps),
+	(create_recv_rtp):
+	Parse caps to get the clockrate needed for the jitterbuffer.
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_parse_video_packet):
+	Apply timestamp fixup after correcting for initial timestamp and
+	internal base timestamp corrections.
+
+2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/realmedia/rdtdepay.c: (gst_rdt_depay_handle_data),
 	(gst_rdt_depay_change_state):
 	* gst/realmedia/rdtdepay.h:

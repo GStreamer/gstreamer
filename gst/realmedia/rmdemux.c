@@ -2311,16 +2311,18 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
       stream->frag_length = 0;
 
       gst_buffer_set_caps (out, GST_PAD_CAPS (stream->pad));
+
+      if (timestamp != -1) {
+        if (rmdemux->first_ts != -1 && timestamp > rmdemux->first_ts)
+          timestamp -= rmdemux->first_ts;
+        else
+          timestamp = 0;
+
+        if (rmdemux->base_ts != -1)
+          timestamp += rmdemux->base_ts;
+      }
       timestamp =
           gst_rmdemux_fix_timestamp (rmdemux, stream, outdata, timestamp);
-
-      if (rmdemux->first_ts != -1 && timestamp > rmdemux->first_ts)
-        timestamp -= rmdemux->first_ts;
-      else
-        timestamp = 0;
-
-      if (rmdemux->base_ts != -1)
-        timestamp += rmdemux->base_ts;
 
       GST_BUFFER_TIMESTAMP (out) = timestamp;
 

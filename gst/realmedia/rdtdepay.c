@@ -84,6 +84,7 @@ static GstStateChangeReturn gst_rdt_depay_change_state (GstElement *
     element, GstStateChange transition);
 
 static gboolean gst_rdt_depay_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_rdt_depay_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_rdt_depay_chain (GstPad * pad, GstBuffer * buf);
 
 static void
@@ -127,6 +128,7 @@ gst_rdt_depay_init (GstRDTDepay * rdtdepay, GstRDTDepayClass * klass)
   rdtdepay->sinkpad =
       gst_pad_new_from_static_template (&gst_rdt_depay_sink_template, "sink");
   gst_pad_set_chain_function (rdtdepay->sinkpad, gst_rdt_depay_chain);
+  gst_pad_set_event_function (rdtdepay->sinkpad, gst_rdt_depay_sink_event);
   gst_pad_set_setcaps_function (rdtdepay->sinkpad, gst_rdt_depay_setcaps);
   gst_element_add_pad (GST_ELEMENT_CAST (rdtdepay), rdtdepay->sinkpad);
 
@@ -155,7 +157,7 @@ gst_rdt_depay_setcaps (GstPad * pad, GstCaps * caps)
   GstRDTDepay *rdtdepay;
   GstCaps *srccaps;
   gint clock_rate = 1000;       /* default */
-  const GValue *config;
+  const GValue *value;
   GstBuffer *header;
 
   rdtdepay = GST_RDT_DEPAY (GST_PAD_PARENT (pad));
@@ -166,13 +168,43 @@ gst_rdt_depay_setcaps (GstPad * pad, GstCaps * caps)
     gst_structure_get_int (structure, "clock-rate", &clock_rate);
 
   /* config contains the RealMedia header as a buffer. */
-  config = gst_structure_get_value (structure, "config");
-  if (!config)
+  value = gst_structure_get_value (structure, "config");
+  if (!value)
     goto no_header;
 
-  header = gst_value_get_buffer (config);
+  header = gst_value_get_buffer (value);
   if (!header)
     goto no_header;
+
+  /* get other values for newsegment */
+  value = gst_structure_get_value (structure, "npt-start");
+  if (value && G_VALUE_HOLDS_UINT64 (value))
+    rdtdepay->npt_start = g_value_get_uint64 (value);
+  else
+    rdtdepay->npt_start = 0;
+  GST_DEBUG_OBJECT (rdtdepay, "NPT start %" G_GUINT64_FORMAT,
+      rdtdepay->npt_start);
+
+  value = gst_structure_get_value (structure, "npt-stop");
+  if (value && G_VALUE_HOLDS_UINT64 (value))
+    rdtdepay->npt_stop = g_value_get_uint64 (value);
+  else
+    rdtdepay->npt_stop = -1;
+
+  GST_DEBUG_OBJECT (rdtdepay, "NPT stop %" G_GUINT64_FORMAT,
+      rdtdepay->npt_stop);
+
+  value = gst_structure_get_value (structure, "play-speed");
+  if (value && G_VALUE_HOLDS_DOUBLE (value))
+    rdtdepay->play_speed = g_value_get_double (value);
+  else
+    rdtdepay->play_speed = 1.0;
+
+  value = gst_structure_get_value (structure, "play-scale");
+  if (value && G_VALUE_HOLDS_DOUBLE (value))
+    rdtdepay->play_scale = g_value_get_double (value);
+  else
+    rdtdepay->play_scale = 1.0;
 
   /* caps seem good, configure element */
   rdtdepay->clock_rate = clock_rate;
@@ -196,10 +228,80 @@ no_header:
   }
 }
 
+static gboolean
+gst_rdt_depay_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstRDTDepay *depay;
+  gboolean res = TRUE;
+
+  depay = GST_RDT_DEPAY (GST_OBJECT_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      res = gst_pad_push_event (depay->srcpad, event);
+
+      gst_segment_init (&depay->segment, GST_FORMAT_UNDEFINED);
+      depay->need_newsegment = TRUE;
+      depay->next_seqnum = -1;
+      break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gboolean update;
+      gdouble rate;
+      GstFormat fmt;
+      gint64 start, stop, position;
+
+      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
+          &position);
+
+      gst_segment_set_newsegment (&depay->segment, update, rate, fmt,
+          start, stop, position);
+
+      /* don't pass the event downstream, we generate our own segment
+       * including the NTP time and other things we receive in caps */
+      gst_event_unref (event);
+      break;
+    }
+    default:
+      /* pass other events forward */
+      res = gst_pad_push_event (depay->srcpad, event);
+      break;
+  }
+  return res;
+}
+
+static GstEvent *
+create_segment_event (GstRDTDepay * depay, gboolean update,
+    GstClockTime position)
+{
+  GstEvent *event;
+  GstClockTime stop;
+
+  if (depay->npt_stop != -1)
+    stop = depay->npt_stop - depay->npt_start;
+  else
+    stop = -1;
+
+  event = gst_event_new_new_segment_full (update, depay->play_speed,
+      depay->play_scale, GST_FORMAT_TIME, position, stop,
+      position + depay->npt_start);
+
+  return event;
+}
+
 static GstFlowReturn
 gst_rdt_depay_push (GstRDTDepay * rdtdepay, GstBuffer * buffer)
 {
   GstFlowReturn ret;
+
+  if (rdtdepay->need_newsegment) {
+    GstEvent *event;
+
+    event = create_segment_event (rdtdepay, FALSE, 0);
+    gst_pad_push_event (rdtdepay->srcpad, event);
+
+    rdtdepay->need_newsegment = FALSE;
+  }
 
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (rdtdepay->srcpad));
 
@@ -224,7 +326,6 @@ gst_rdt_depay_handle_data (GstRDTDepay * rdtdepay, GstClockTime outtime,
   guint32 timestamp;
   gint gap;
   guint16 seqnum;
-  gboolean discont;
 
   /* get pointers to the packet data */
   gst_rdt_packet_data_peek_data (packet, &data, &size);
@@ -399,7 +500,9 @@ gst_rdt_depay_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_segment_init (&rdtdepay->segment, GST_FORMAT_UNDEFINED);
       rdtdepay->next_seqnum = -1;
+      rdtdepay->need_newsegment = TRUE;
       break;
     default:
       break;
