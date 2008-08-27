@@ -642,8 +642,6 @@ gst_query_new_convert (GstFormat src_format, gint64 value,
   GstQuery *query;
   GstStructure *structure;
 
-  g_return_val_if_fail (value >= 0, NULL);
-
   structure = gst_structure_empty_new ("GstQueryConvert");
   gst_structure_id_set (structure,
       GST_QUARK (SRC_FORMAT), GST_TYPE_FORMAT, src_format,

@@ -4,6 +4,7 @@
 	  src_val must be positive, because that's not a requirement.
 	  This causes problems with converting negative granulepos
 	  values for Dirac.
+	* gst/gstquery.c: Same, gst_query_new_convert().
 
 2008-08-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
