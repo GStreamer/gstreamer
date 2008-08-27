@@ -56,11 +56,11 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
 
-  if (!gst_element_register (plugin, "osxaudiosink", GST_RANK_PRIMARY + 1,
+  if (!gst_element_register (plugin, "osxaudiosink", GST_RANK_PRIMARY,
           GST_TYPE_OSX_AUDIO_SINK)) {
     return FALSE;
   }
-  if (!gst_element_register (plugin, "osxaudiosrc", GST_RANK_PRIMARY + 1,
+  if (!gst_element_register (plugin, "osxaudiosrc", GST_RANK_PRIMARY,
           GST_TYPE_OSX_AUDIO_SRC)) {
     return FALSE;
   }
