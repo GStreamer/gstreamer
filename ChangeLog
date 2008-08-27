@@ -1,3 +1,10 @@
+2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/selector/gstinputselector.c: (gst_input_selector_init),
+	(gst_input_selector_query):
+	Implement the LATENCY query in a better way by taking the latency of all
+	sinkpads and taking the min/max instead of just taking a random pad.
+
 2008-08-26  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:

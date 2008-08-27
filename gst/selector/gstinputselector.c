@@ -658,6 +658,7 @@ static GstStateChangeReturn gst_input_selector_change_state (GstElement *
 
 static GList *gst_input_selector_get_linked_pads (GstPad * pad);
 static GstCaps *gst_input_selector_getcaps (GstPad * pad);
+static gboolean gst_input_selector_query (GstPad * pad, GstQuery * query);
 static gint64 gst_input_selector_block (GstInputSelector * self);
 static void gst_input_selector_switch (GstInputSelector * self,
     GstPad * pad, gint64 stop_time, gint64 start_time);
@@ -809,6 +810,8 @@ gst_input_selector_init (GstInputSelector * sel)
       GST_DEBUG_FUNCPTR (gst_input_selector_get_linked_pads));
   gst_pad_set_getcaps_function (sel->srcpad,
       GST_DEBUG_FUNCPTR (gst_input_selector_getcaps));
+  gst_pad_set_query_function (sel->srcpad,
+      GST_DEBUG_FUNCPTR (gst_input_selector_query));
   gst_element_add_pad (GST_ELEMENT (sel), sel->srcpad);
   /* sinkpad management */
   sel->active_sinkpad = NULL;
@@ -1006,6 +1009,83 @@ gst_input_selector_get_linked_pad (GstPad * pad, gboolean strict)
   gst_object_unref (sel);
 
   return otherpad;
+}
+
+/* query on the srcpad. We override this function because by default it will
+ * only forward the query to one random sinkpad */
+static gboolean
+gst_input_selector_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res;
+  GstInputSelector *sel;
+
+  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      GList *walk;
+      GstClockTime resmin, resmax;
+      gboolean reslive;
+
+      resmin = 0;
+      resmax = -1;
+      reslive = FALSE;
+
+      /* assume FALSE, we become TRUE if one query succeeds */
+      res = FALSE;
+
+      /* perform the query on all sinkpads and combine the results. We take the
+       * max of min and the min of max for the result latency. */
+      GST_INPUT_SELECTOR_LOCK (sel);
+      for (walk = GST_ELEMENT_CAST (sel)->sinkpads; walk;
+          walk = g_list_next (walk)) {
+        GstPad *sinkpad = GST_PAD_CAST (walk->data);
+
+        if (gst_pad_peer_query (sinkpad, query)) {
+          GstClockTime min, max;
+          gboolean live;
+
+          /* one query succeeded, we succeed too */
+          res = TRUE;
+
+          gst_query_parse_latency (query, &live, &min, &max);
+
+          GST_DEBUG_OBJECT (sinkpad,
+              "peer latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
+              ", live %d", GST_TIME_ARGS (min), GST_TIME_ARGS (max), live);
+
+          if (live) {
+            if (min > resmin)
+              resmin = min;
+            if (resmax == -1)
+              resmax = max;
+            else if (max < resmax)
+              resmax = max;
+            if (reslive == FALSE)
+              reslive = live;
+          }
+        }
+      }
+      GST_INPUT_SELECTOR_UNLOCK (sel);
+      if (res) {
+        gst_query_set_latency (query, reslive, resmin, resmax);
+
+        GST_DEBUG_OBJECT (sel,
+            "total latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
+            ", live %d", GST_TIME_ARGS (resmin), GST_TIME_ARGS (resmax),
+            reslive);
+      }
+
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  gst_object_unref (sel);
+
+  return res;
 }
 
 static GstCaps *
