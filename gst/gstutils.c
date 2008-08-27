@@ -2788,7 +2788,6 @@ gst_pad_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (src_val >= 0, FALSE);
   g_return_val_if_fail (dest_format != NULL, FALSE);
   g_return_val_if_fail (dest_val != NULL, FALSE);
 

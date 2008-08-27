@@ -1,3 +1,10 @@
+2008-08-26  David Schleef  <ds@schleef.org>
+
+	* gst/gstutils.c: Remove check in gst_pad_query_convert() that
+	  src_val must be positive, because that's not a requirement.
+	  This causes problems with converting negative granulepos
+	  values for Dirac.
+
 2008-08-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstclock.c: (gst_clock_add_observation):
