@@ -1,3 +1,15 @@
+2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_init),
+	(find_seek_offset_time), (gst_rmdemux_reset), (gst_rmdemux_chain),
+	(gst_rmdemux_parse_mdpr), (gst_rmdemux_descramble_cook_audio),
+	(gst_rmdemux_descramble_dnet_audio),
+	(gst_rmdemux_parse_video_packet), (gst_rmdemux_parse_audio_packet):
+	* gst/realmedia/rmdemux.h:
+	Keep track of the first timestamp of the stream and add this to the
+	outgoing buffer timestamps so that we can handle live streams.
+	Set discont flag on the first buffers and after a seek.
+
 === release 0.10.9 ===
 
 2008-08-26  Jan Schmidt <jan.schmidt@sun.com>

@@ -113,6 +113,7 @@ struct _GstRMDemux {
   GstClockTime cur_timestamp;
 
   /* First timestamp */
+  GstClockTime base_ts;
   GstClockTime first_ts;
 
   int n_chunks;
