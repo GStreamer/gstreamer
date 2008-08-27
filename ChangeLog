@@ -1,3 +1,25 @@
+2008-08-27  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* sys/winks/gstksvideodevice.c (gst_ks_video_device_class_init,
+	  gst_ks_video_device_set_state):
+	  Don't set the pin state to KSSTATE_RUN from the streaming thread.
+	  Skip KSSTATE_ACQUIRE when changing pin state downwards.
+	  Be nice and specify G_PARAM_STATIC_STRINGS.
+	  Remove unused finalize method.
+
+	* sys/winks/gstksvideosrc.c (DEFAULT_ENABLE_QUIRKS, PROP_ENABLE_QUIRKS,
+	  enable_quirks, gst_ks_video_src_class_init, gst_ks_video_src_init,
+	  gst_ks_video_src_finalize, gst_ks_video_src_get_property,
+	  gst_ks_video_src_set_property, gst_ks_video_src_reset,
+	  gst_ks_video_src_apply_driver_quirks, gst_ks_video_src_change_state,
+	  gst_ks_video_src_set_caps):
+	  First driver quirk: work around Logitech's hostile driver software to
+	  improve stability and performance. See comments for details.
+	  Provide a property to disable driver quirks (enabled by default).
+	  Be nice and specify G_PARAM_STATIC_STRINGS.
+	  Remove unused dispose method.
+	  Tweak include order.
+
 2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/selector/gstinputselector.c: (gst_input_selector_init),

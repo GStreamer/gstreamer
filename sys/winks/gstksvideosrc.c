@@ -34,11 +34,11 @@
  * </refsect2>
  */
 
-#include "gstksvideosrc.h"
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
+
+#include "gstksvideosrc.h"
 
 #include "gstksclock.h"
 #include "gstksvideodevice.h"
@@ -52,6 +52,7 @@
 #define DEFAULT_DEVICE_INDEX    -1
 #define DEFAULT_ENSLAVE_KSCLOCK FALSE
 #define DEFAULT_DO_STATS        FALSE
+#define DEFAULT_ENABLE_QUIRKS   TRUE
 
 enum
 {
@@ -62,6 +63,7 @@ enum
   PROP_ENSLAVE_KSCLOCK,
   PROP_DO_STATS,
   PROP_FPS,
+  PROP_ENABLE_QUIRKS,
 };
 
 GST_DEBUG_CATEGORY (gst_ks_debug);
@@ -75,6 +77,7 @@ typedef struct
   gint device_index;
   gboolean enslave_ksclock;
   gboolean do_stats;
+  gboolean enable_quirks;
 
   /* State */
   GstKsClock *ksclock;
@@ -93,7 +96,6 @@ typedef struct
     (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_KS_VIDEO_SRC, \
     GstKsVideoSrcPrivate))
 
-static void gst_ks_video_src_dispose (GObject * object);
 static void gst_ks_video_src_finalize (GObject * object);
 static void gst_ks_video_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -150,7 +152,6 @@ gst_ks_video_src_class_init (GstKsVideoSrcClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstKsVideoSrcPrivate));
 
-  gobject_class->dispose = gst_ks_video_src_dispose;
   gobject_class->finalize = gst_ks_video_src_finalize;
   gobject_class->get_property = gst_ks_video_src_get_property;
   gobject_class->set_property = gst_ks_video_src_set_property;
@@ -171,26 +172,32 @@ gst_ks_video_src_class_init (GstKsVideoSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_PATH,
       g_param_spec_string ("device-path", "Device Path",
-          "The device path", DEFAULT_DEVICE_PATH, G_PARAM_READWRITE));
+          "The device path", DEFAULT_DEVICE_PATH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device Name",
           "The human-readable device name", DEFAULT_DEVICE_NAME,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DEVICE_INDEX,
       g_param_spec_int ("device-index", "Device Index",
           "The zero-based device index", -1, G_MAXINT, DEFAULT_DEVICE_INDEX,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ENSLAVE_KSCLOCK,
       g_param_spec_boolean ("enslave-ksclock", "Enslave the clock used by KS",
           "Enslave the clocked used by Kernel Streaming",
-          DEFAULT_ENSLAVE_KSCLOCK, G_PARAM_READWRITE));
+          DEFAULT_ENSLAVE_KSCLOCK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DO_STATS,
       g_param_spec_boolean ("do-stats", "Enable statistics",
-          "Enable logging of statistics", DEFAULT_DO_STATS, G_PARAM_READWRITE));
+          "Enable logging of statistics", DEFAULT_DO_STATS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FPS,
       g_param_spec_int ("fps", "Frames per second",
           "Last measured framerate, if statistics are enabled",
-          -1, G_MAXINT, -1, G_PARAM_READABLE));
+          -1, G_MAXINT, -1, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ENABLE_QUIRKS,
+      g_param_spec_boolean ("enable-quirks", "Enable quirks",
+          "Enable driver-specific quirks", DEFAULT_ENABLE_QUIRKS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gst_ks_debug, "ksvideosrc",
       0, "Kernel streaming video source");
@@ -212,20 +219,17 @@ gst_ks_video_src_init (GstKsVideoSrc * self, GstKsVideoSrcClass * gclass)
   priv->device_index = DEFAULT_DEVICE_INDEX;
   priv->enslave_ksclock = DEFAULT_ENSLAVE_KSCLOCK;
   priv->do_stats = DEFAULT_DO_STATS;
-}
-
-static void
-gst_ks_video_src_dispose (GObject * object)
-{
-  GstKsVideoSrc *self = GST_KS_VIDEO_SRC (object);
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  priv->enable_quirks = DEFAULT_ENABLE_QUIRKS;
 }
 
 static void
 gst_ks_video_src_finalize (GObject * object)
 {
   GstKsVideoSrc *self = GST_KS_VIDEO_SRC (object);
+  GstKsVideoSrcPrivate *priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
+
+  g_free (priv->device_name);
+  g_free (priv->device_path);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -259,6 +263,9 @@ gst_ks_video_src_get_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (object);
       g_value_set_int (value, priv->fps);
       GST_OBJECT_UNLOCK (object);
+      break;
+    case PROP_ENABLE_QUIRKS:
+      g_value_set_boolean (value, priv->enable_quirks);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -298,6 +305,9 @@ gst_ks_video_src_set_property (GObject * object, guint prop_id,
       priv->do_stats = g_value_get_boolean (value);
       GST_OBJECT_UNLOCK (object);
       break;
+    case PROP_ENABLE_QUIRKS:
+      priv->enable_quirks = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -317,6 +327,46 @@ gst_ks_video_src_reset (GstKsVideoSrc * self)
   /* Reset timestamping state */
   priv->offset = 0;
   priv->prev_ts = GST_CLOCK_TIME_NONE;
+}
+
+static void
+gst_ks_video_src_apply_driver_quirks (GstKsVideoSrc * self)
+{
+  GstKsVideoSrcPrivate *priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
+  HMODULE mod;
+
+  /*
+   * Logitech's driver software injects the following DLL into all processes
+   * spawned. This DLL does lots of nasty tricks, sitting in between the
+   * application and the low-level ntdll API (NtCreateFile, NtClose,
+   * NtDeviceIoControlFile, NtDuplicateObject, etc.), making all sorts
+   * of assumptions on which application threads do what.
+   *
+   * We could later work around this by having a worker-thread open the
+   * device, take care of doing set_caps() when asked to, closing the device
+   * when shutting down, and so forth.
+   *
+   * The only regression that this quirk causes is that the video effects
+   * feature doesn't work.
+   */
+  mod = GetModuleHandle ("LVPrcInj.dll");
+  if (mod != NULL) {
+    GST_DEBUG_OBJECT (self, "hostile Logitech DLL detected, neutralizing it");
+
+    /*
+     * We know that no-one's actually keeping this handle around to decrement
+     * its reference count, so we'll take care of that job. The DLL's DllMain
+     * implementation takes care of rolling back changes when it gets unloaded,
+     * so this seems to be the cleanest and most future-proof way that we can
+     * get rid of it...
+     */
+    FreeLibrary (mod);
+
+    /* Paranoia: verify that it's no longer there */
+    mod = GetModuleHandle ("LVPrcInj.dll");
+    if (mod != NULL)
+      GST_WARNING_OBJECT (self, "failed to neutralize hostile Logitech DLL");
+  }
 }
 
 static gboolean
@@ -448,6 +498,8 @@ gst_ks_video_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      if (priv->enable_quirks)
+        gst_ks_video_src_apply_driver_quirks (self);
       if (!gst_ks_video_src_open_device (self))
         goto open_failed;
       break;
@@ -508,7 +560,7 @@ gst_ks_video_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
   if (!gst_ks_video_device_set_caps (priv->device, caps))
     return FALSE;
 
-  if (!gst_ks_video_device_set_state (priv->device, KSSTATE_PAUSE))
+  if (!gst_ks_video_device_set_state (priv->device, KSSTATE_RUN))
     return FALSE;
 
   return TRUE;

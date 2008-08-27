@@ -88,7 +88,6 @@ typedef struct
     GstKsVideoDevicePrivate))
 
 static void gst_ks_video_device_dispose (GObject * object);
-static void gst_ks_video_device_finalize (GObject * object);
 static void gst_ks_video_device_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_ks_video_device_set_property (GObject * object, guint prop_id,
@@ -111,19 +110,18 @@ gst_ks_video_device_class_init (GstKsVideoDeviceClass * klass)
   g_type_class_add_private (klass, sizeof (GstKsVideoDevicePrivate));
 
   gobject_class->dispose = gst_ks_video_device_dispose;
-  gobject_class->finalize = gst_ks_video_device_finalize;
   gobject_class->get_property = gst_ks_video_device_get_property;
   gobject_class->set_property = gst_ks_video_device_set_property;
 
   g_object_class_install_property (gobject_class, PROP_CLOCK,
       g_param_spec_object ("clock", "Clock to use",
           "Clock to use", GST_TYPE_KS_CLOCK,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_PATH,
       g_param_spec_string ("device-path", "Device Path",
           "The device path", DEFAULT_DEVICE_PATH,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -151,14 +149,6 @@ gst_ks_video_device_dispose (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-gst_ks_video_device_finalize (GObject * object)
-{
-  GstKsVideoDevice *self = GST_KS_VIDEO_DEVICE (object);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -775,6 +765,10 @@ gst_ks_video_device_set_state (GstKsVideoDevice * self, KSSTATE state)
   while (priv->state != state) {
     KSSTATE next_state = priv->state + addend;
 
+    /* Skip the ACQUIRE step on the way down like DirectShow does */
+    if (addend < 0 && next_state == KSSTATE_ACQUIRE)
+      next_state = KSSTATE_STOP;
+
     GST_DEBUG ("Changing pin state from %s to %s",
         ks_state_to_string (priv->state), ks_state_to_string (next_state));
 
@@ -891,15 +885,6 @@ gst_ks_video_device_read_frame (GstKsVideoDevice * self, guint8 * buf,
 
   g_assert (priv->cur_media_type != NULL);
 
-  /* Set the state if needed */
-  if (G_UNLIKELY (priv->state != KSSTATE_RUN)) {
-    if (priv->clock != NULL)
-      gst_ks_clock_start (priv->clock);
-
-    if (!gst_ks_video_device_set_state (self, KSSTATE_RUN))
-      goto error_set_state;
-  }
-
   /* First time we're called, submit the requests. */
   if (G_UNLIKELY (!priv->requests_submitted)) {
     priv->requests_submitted = TRUE;
@@ -1001,13 +986,6 @@ gst_ks_video_device_read_frame (GstKsVideoDevice * self, guint8 * buf,
   return GST_FLOW_OK;
 
   /* ERRORS */
-error_set_state:
-  {
-    gst_ks_video_device_parse_win32_error ("gst_ks_video_device_set_state",
-        GetLastError (), error_code, error_str);
-
-    return GST_FLOW_ERROR;
-  }
 error_request_failed:
   {
     return GST_FLOW_ERROR;
