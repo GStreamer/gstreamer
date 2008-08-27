@@ -1,3 +1,13 @@
+2008-08-27  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* sys/osxaudio/gstosxaudiosink.c:
+	(gst_osx_audio_sink_select_device):
+	* sys/osxaudio/gstosxaudiosrc.c:
+	(gst_osx_audio_src_create_ringbuffer),
+	(gst_osx_audio_src_select_device):
+	* sys/osxaudio/gstosxringbuffer.c: (gst_osx_ring_buffer_acquire):
+	Fix the build on macosx.
+
 2008-08-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/icydemux/gsticydemux.c:

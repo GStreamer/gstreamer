@@ -172,7 +172,6 @@ gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   /* Configure the output stream and allocate ringbuffer memory */
   GstOsxRingBuffer *osxbuf;
   AudioStreamBasicDescription asbd;
-  AudioStreamBasicDescription asbd2;
   OSStatus status;
   UInt32 buffer_len;
   UInt32 propertySize;
@@ -190,14 +189,15 @@ gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   asbd.mFramesPerPacket = 1;
   asbd.mReserved = 0;
 
-  GST_LOG_OBJECT (osxbuf, "Format: %x, %f, %d, %x, %d, %d, %d, %d, %d",
-      asbd.mFormatID,
+  GST_LOG_OBJECT (osxbuf, "Format: %x, %f, %u, %x, %d, %d, %d, %d, %d",
+      (unsigned int) asbd.mFormatID,
       asbd.mSampleRate,
-      asbd.mChannelsPerFrame,
-      asbd.mFormatFlags,
-      asbd.mBytesPerFrame,
-      asbd.mBitsPerChannel,
-      asbd.mBytesPerPacket, asbd.mFramesPerPacket, asbd.mReserved);
+      (unsigned int) asbd.mChannelsPerFrame,
+      (unsigned int) asbd.mFormatFlags,
+      (unsigned int) asbd.mBytesPerFrame,
+      (unsigned int) asbd.mBitsPerChannel,
+      (unsigned int) asbd.mBytesPerPacket,
+      (unsigned int) asbd.mFramesPerPacket, (unsigned int) asbd.mReserved);
 
   GST_DEBUG_OBJECT (osxbuf, "Using stream_id %d, setting output format",
       (int) osxbuf->stream_id);

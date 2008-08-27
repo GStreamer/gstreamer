@@ -425,7 +425,8 @@ gst_osx_audio_sink_select_device (GstOsxAudioSink * osxsink)
 
     GST_DEBUG_OBJECT (osxsink,
         "Getting available streamids from %d (%d bytes)",
-        (int) (propertySize / sizeof (AudioStreamID)), propertySize);
+        (int) (propertySize / sizeof (AudioStreamID)),
+        (unsigned int) propertySize);
     streams = g_malloc (propertySize);
     status = AudioDeviceGetProperty (osxsink->device_id, 0,     /* Master channel */
         FALSE,                  /* isInput */
@@ -439,7 +440,8 @@ gst_osx_audio_sink_select_device (GstOsxAudioSink * osxsink)
     }
 
     GST_DEBUG_OBJECT (osxsink, "Getting streamid from %d (%d bytes)",
-        (int) (propertySize / sizeof (AudioStreamID)), propertySize);
+        (int) (propertySize / sizeof (AudioStreamID)),
+        (unsigned int) propertySize);
 
     if (propertySize >= sizeof (AudioStreamID)) {
       osxsink->stream_id = streams[0];

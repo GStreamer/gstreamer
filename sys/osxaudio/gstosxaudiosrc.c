@@ -227,8 +227,6 @@ static GstRingBuffer *
 gst_osx_audio_src_create_ringbuffer (GstBaseAudioSrc * src)
 {
   GstOsxAudioSrc *osxsrc;
-  OSStatus status;
-  UInt32 propertySize;
   GstOsxRingBuffer *ringbuffer;
 
   osxsrc = GST_OSX_AUDIO_SRC (src);
@@ -327,7 +325,8 @@ gst_osx_audio_src_select_device (GstOsxAudioSrc * osxsrc)
 
     GST_DEBUG_OBJECT (osxsrc,
         "Getting available streamids from %d (%d bytes)",
-        (int) (propertySize / sizeof (AudioStreamID)), propertySize);
+        (int) (propertySize / sizeof (AudioStreamID)),
+        (unsigned int) propertySize);
     streams = g_malloc (propertySize);
     status = AudioDeviceGetProperty (osxsrc->device_id, 0,      /* Master channel */
         FALSE,                  /* isInput */
@@ -341,7 +340,8 @@ gst_osx_audio_src_select_device (GstOsxAudioSrc * osxsrc)
     }
 
     GST_DEBUG_OBJECT (osxsrc, "Getting streamid from %d (%d bytes)",
-        (int) (propertySize / sizeof (AudioStreamID)), propertySize);
+        (int) (propertySize / sizeof (AudioStreamID)),
+        (unsigned int) propertySize);
 
     if (propertySize >= sizeof (AudioStreamID)) {
       osxsrc->stream_id = streams[0];
