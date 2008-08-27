@@ -1,3 +1,10 @@
+2008-08-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/icydemux/gsticydemux.c:
+	  Small docs fix: in the example pipeline, we need to pass
+	  iradio-mode=true to the source, so the server actually sends
+	  an ICY stream.
+
 2008-08-26  Michael Smith <msmith@songbirdnest.com>
 
 	* sys/osxaudio/gstosxaudio.c:

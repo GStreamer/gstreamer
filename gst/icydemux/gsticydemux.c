@@ -35,11 +35,12 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch gnomevfssrc location=http://some.server/ ! icydemux ! fakesink -t
+ * gst-launch souphttpsrc location=http://some.server/ iradio-mode=true ! icydemux ! fakesink -t
  * </programlisting>
  * This pipeline should read any available ICY tag information and output it.
  * The contents of the stream should be detected, and the appropriate mime
- * type set on buffers produced from icydemux.
+ * type set on buffers produced from icydemux. (Using gnomevfssrc, neonhttpsrc
+ * or giosrc instead of souphttpsrc should also work.)
  * </para>
  * </refsect2>
  */
