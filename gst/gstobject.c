@@ -1100,11 +1100,13 @@ gst_object_get_path_string (GstObject * object)
     if (GST_IS_OBJECT (parents->data)) {
       GstObject *item = GST_OBJECT_CAST (parents->data);
       GstObjectClass *oclass = GST_OBJECT_GET_CLASS (item);
+      gchar *objname = gst_object_get_name (item);
 
-      component = g_strdup_printf ("%s:%s", typename, GST_OBJECT_NAME (item));
+      component = g_strdup_printf ("%s:%s", typename, objname);
       separator = oclass->path_string_separator;
       /* and unref now */
       gst_object_unref (item);
+      g_free (objname);
     } else {
       if (typename) {
         component = g_strdup_printf ("%s:%p", typename, parents->data);

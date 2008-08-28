@@ -1,5 +1,10 @@
 2008-08-28  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstobject.c:
+	  Put the gst_object_get_name() back in.
+
+2008-08-28  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstpadtemplate.c:
 	  The old behaviour was that gst_pad_template_new() takes ownership of
 	  the caps. As we now call g_object_new() which calls g_object_set() and
