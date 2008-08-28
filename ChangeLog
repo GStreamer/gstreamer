@@ -1,5 +1,11 @@
 2008-08-28  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_aud_caps_new):
+	ffmpeg audio decoders can now do up to 6 channels... and actually
+	expose it properly. Don't expect any channel mapping though.
+
+2008-08-28  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* configure.ac:
 	Slim down the build of 'prefered' ffmpeg snapshot to disable compilation
 	of things we don't need.

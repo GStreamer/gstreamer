@@ -171,7 +171,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
   } else {
     caps = gst_caps_new_simple (mimetype,
         "rate", GST_TYPE_INT_RANGE, 8000, 96000,
-        "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+        "channels", GST_TYPE_INT_RANGE, 1, 6, NULL);
 
   }
 
