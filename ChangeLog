@@ -1,3 +1,38 @@
+2008-08-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Jérémie Bernard <gremimail at gmail dot com>
+
+	* configure.ac:
+	* ext/apexsink/LGPL-3.0.txt:
+	* ext/apexsink/Makefile.am:
+	* ext/apexsink/gstapexplugin.c: (plugin_init):
+	* ext/apexsink/gstapexraop.c: (g_strdel), (gst_apexraop_send),
+	(gst_apexraop_recv), (gst_apexraop_new), (gst_apexraop_free),
+	(gst_apexraop_set_host), (gst_apexraop_get_host),
+	(gst_apexraop_set_port), (gst_apexraop_get_port),
+	(gst_apexraop_set_useragent), (gst_apexraop_get_useragent),
+	(gst_apexraop_connect), (gst_apexraop_get_jacktype),
+	(gst_apexraop_get_jackstatus), (gst_apexraop_close),
+	(gst_apexraop_set_volume), (gst_apexraop_write_bits),
+	(gst_apexraop_write), (gst_apexraop_flush):
+	* ext/apexsink/gstapexraop.h:
+	* ext/apexsink/gstapexsink.c: (gst_apexsink_jackstatus_get_type),
+	(gst_apexsink_jacktype_get_type), (gst_apexsink_interfaces_init),
+	(gst_apexsink_implements_interface_init),
+	(gst_apexsink_mixer_interface_init),
+	(gst_apexsink_interface_supported),
+	(gst_apexsink_mixer_list_tracks), (gst_apexsink_mixer_set_volume),
+	(gst_apexsink_mixer_get_volume), (gst_apexsink_base_init),
+	(gst_apexsink_class_init), (gst_apexsink_init),
+	(gst_apexsink_set_property), (gst_apexsink_get_property),
+	(gst_apexsink_finalise), (gst_apexsink_open),
+	(gst_apexsink_prepare), (gst_apexsink_write),
+	(gst_apexsink_unprepare), (gst_apexsink_delay),
+	(gst_apexsink_reset), (gst_apexsink_close):
+	* ext/apexsink/gstapexsink.h:
+	Add apexsink for audio output to Apple AirPort Express Wireless
+	devices. Fixes bug #542510.
+
 2008-08-28  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_send_rtcp),

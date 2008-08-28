@@ -346,6 +346,129 @@ AG_GST_CHECK_FEATURE(AMRWB, [amrwb library], amrwb, [
                         AC_SUBST(AMRWB_LIBS))
 ])
 
+dnl *** apexsink ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_APEXSINK, true)
+AG_GST_CHECK_FEATURE(APEXSINK, [AirPort Express Wireless sink], apexsink, [
+
+  HAVE_APEXSINK="yes"
+  # The big search for OpenSSL
+  # copied from openssh's configure.ac
+  AC_ARG_WITH(ssl-dir,
+          [  --with-ssl-dir=PATH     Specify path to OpenSSL installation ],
+          [
+                  if test "x$withval" != "xno" ; then
+                          tryssldir=$withval
+                  fi
+          ]
+  )
+
+  AC_SEARCH_LIBS(socket, [socket])
+  AC_SEARCH_LIBS(gethostbyname, [nsl])
+
+  saved_LIBS="$LIBS"
+  saved_LDFLAGS="$LDFLAGS"
+  saved_CPPFLAGS="$CPPFLAGS"
+  if test "x$prefix" != "xNONE" ; then
+          tryssldir="$tryssldir $prefix"
+  fi
+  AC_CACHE_CHECK([for OpenSSL directory], ac_cv_openssldir, [
+          for ssldir in $tryssldir "" /usr/local/openssl /usr/lib/openssl /usr/local/ssl /usr/lib/ssl /usr/local /usr/athena /usr/pkg /opt /opt/openssl ; do
+                  CPPFLAGS="$saved_CPPFLAGS"
+                  LDFLAGS="$saved_LDFLAGS"
+                  LIBS="$saved_LIBS -lssl -lcrypto"
+
+                  # Skip directories if they don't exist
+                  if test ! -z "$ssldir" -a ! -d "$ssldir" ; then
+                          continue;
+                  fi
+                  if test ! -z "$ssldir" -a "x$ssldir" != "x/usr"; then
+                          # Try to use $ssldir/lib if it exists, otherwise
+                          # $ssldir
+                          if test -d "$ssldir/lib" ; then
+                                  LDFLAGS="-L$ssldir/lib $saved_LDFLAGS"
+                                  if test ! -z "$need_dash_r" ; then
+                                          LDFLAGS="-R$ssldir/lib $LDFLAGS"
+                                  fi
+                          else
+                                  LDFLAGS="-L$ssldir $saved_LDFLAGS"
+                                  if test ! -z "$need_dash_r" ; then
+                                          LDFLAGS="-R$ssldir $LDFLAGS"
+                                  fi
+                          fi
+                          # Try to use $ssldir/include if it exists, otherwise
+                          # $ssldir
+                          if test -d "$ssldir/include" ; then
+                                  CPPFLAGS="-I$ssldir/include $saved_CPPFLAGS"
+                          else
+                                  CPPFLAGS="-I$ssldir $saved_CPPFLAGS"
+                          fi
+                  fi
+
+                  # Basic test to check for compatible version and correct linking
+                  # *does not* test for RSA - that comes later.
+                  AC_TRY_RUN(
+                          [
+#include <string.h>
+#include <openssl/rand.h>
+int main(void)
+{
+        char a[2048];
+        memset(a, 0, sizeof(a));
+        RAND_add(a, sizeof(a), sizeof(a));
+        return(RAND_status() <= 0);
+}
+                          ],
+                          [
+                                  found_crypto=1
+                                  break;
+                          ], []
+                  )
+
+                  if test ! -z "$found_crypto" ; then
+                          break;
+                  fi
+          done
+
+          if test -z "$found_crypto" ; then
+                  HAVE_APEXSINK="no"
+          fi
+          if test -z "$ssldir" ; then
+                  ssldir="(system)"
+          fi
+
+          ac_cv_openssldir=$ssldir
+  ])
+  if (test ! -z "$ac_cv_openssldir" && test "x$ac_cv_openssldir" != "x(system)") ;
+   then
+          dnl Need to recover ssldir - test above runs in subshell
+          ssldir=$ac_cv_openssldir
+          if test ! -z "$ssldir" -a "x$ssldir" != "x/usr"; then
+                  # Try to use $ssldir/lib if it exists, otherwise
+                  # $ssldir
+                  if test -d "$ssldir/lib" ; then
+                          APEXSINK_LIBS="-L$ssldir/lib $saved_LDFLAGS"
+                          if test ! -z "$need_dash_r" ; then
+                                  APEXSINK_LIBS="-R$ssldir/lib $LDFLAGS"
+                          fi
+                  else
+                          APEXSINK_LDFLAGS="-L$ssldir $saved_LDFLAGS"
+                          if test ! -z "$need_dash_r" ; then
+                                  APEXSINK_LIBS="-R$ssldir $LDFLAGS"
+                          fi
+                  fi
+                  # Try to use $ssldir/include if it exists, otherwise
+                  # $ssldir
+                  if test -d "$ssldir/include" ; then
+                          APEXSINK_CFLAGS="-I$ssldir/include $saved_CPPFLAGS"
+                  else
+                          APEXSINK_CFLAGS="-I$ssldir $saved_CPPFLAGS"
+                  fi
+          fi
+  fi
+  APEXSINK_LIBS="$APEXSINK_LIBS $LIBS"
+  LIBS="$saved_LIBS"
+])
+
 dnl *** BZ2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_BZ2, true)
 AG_GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
@@ -1146,6 +1269,7 @@ AM_CONDITIONAL(USE_QUICKTIME, false)
 AM_CONDITIONAL(USE_VCD, false)
 AM_CONDITIONAL(USE_ALSA, false)
 AM_CONDITIONAL(USE_AMRWB, false)
+AM_CONDITIONAL(USE_APEXSINK, false)
 AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CDAUDIO, false)
 AM_CONDITIONAL(USE_CELT, false)
@@ -1308,6 +1432,7 @@ examples/directfb/Makefile
 examples/switch/Makefile
 ext/amrwb/Makefile
 ext/alsaspdif/Makefile
+ext/apexsink/Makefile
 ext/bz2/Makefile
 ext/cdaudio/Makefile
 ext/celt/Makefile
