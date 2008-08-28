@@ -1,3 +1,10 @@
+2008-08-28  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_loop):
+	Fix aggregated GST_FLOW_RETURN check for when to send an error message
+	on the bus.
+	Re-fixes #546859
+
 2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/realmedia/rdtdepay.c: (gst_rdt_depay_init),
