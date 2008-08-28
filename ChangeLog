@@ -1,3 +1,11 @@
+2008-08-27  Michael Smith <msmith@songbirdnest.com>
+
+	* configure.ac:
+	* gst/aiffparse/Makefile.am:
+	* gst/aiffparse/aiffparse.c:
+	* gst/aiffparse/aiffparse.h:
+	  Add an AIFF parsing element, heavily based on wavparse.
+
 2008-08-27  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
 	* sys/winks/gstksvideodevice.c (gst_ks_video_device_class_init,
