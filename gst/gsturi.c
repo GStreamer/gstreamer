@@ -424,6 +424,8 @@ gst_uri_get_location (const gchar * uri)
   g_return_val_if_fail (gst_uri_is_valid (uri), NULL);
 
   colon = strstr (uri, "://");
+  if (!colon)
+    return NULL;
 
   unescaped = unescape_string (colon + 3, "/");
 
