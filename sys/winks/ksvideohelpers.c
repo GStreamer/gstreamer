@@ -28,11 +28,13 @@ GST_DEBUG_CATEGORY_EXTERN (gst_ks_debug);
 
 static const GUID MEDIASUBTYPE_FOURCC =
     { 0x0 /* FourCC here */ , 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xAA, 0x00,
-        0x38, 0x9B, 0x71} };
+    0x38, 0x9B, 0x71}
+};
 
 extern const GUID MEDIASUBTYPE_I420 =
     { 0x30323449, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B,
-        0x71} };
+    0x71}
+};
 
 static GstStructure *
 ks_video_format_to_structure (GUID subtype_guid, GUID format_guid)
@@ -219,6 +221,8 @@ ks_video_media_type_free (KsVideoMediaType * media_type)
 {
   if (media_type == NULL)
     return;
+
+  g_free ((gpointer) media_type->range);
 
   g_free (media_type->format);
 

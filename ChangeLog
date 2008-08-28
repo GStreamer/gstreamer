@@ -1,3 +1,8 @@
+2008-08-28  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* sys/winks/ksvideohelpers.c (ks_video_media_type_free):
+	  Avoid leaking the KSDATARANGE member of each KsVideoMediaType.
+
 2008-08-28  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst/dccp/gstdccp.c:
