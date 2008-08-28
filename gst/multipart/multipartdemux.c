@@ -110,6 +110,10 @@ typedef struct
 static const GstNamesMap gstnames[] = {
   /* RFC 2046 says audio/basic is mulaw, mono, 8000Hz */
   {"audio/basic", "audio/x-mulaw, channels=1, rate=8000"},
+  {"audio/G726-16", "audio/x-adpcm, bitrate=16000"},
+  {"audio/G726-24", "audio/x-adpcm, bitrate=24000"},
+  {"audio/G726-32", "audio/x-adpcm, bitrate=32000"},
+  {"audio/G726-40", "audio/x-adpcm, bitrate=40000"},
   {NULL, NULL}
 };
 

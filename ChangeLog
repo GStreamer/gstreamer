@@ -1,3 +1,12 @@
+2008-08-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Mersad Jelacic <mersad at axis dot com>
+
+	* gst/multipart/multipartdemux.c:
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_get_mime):
+	Convert audio/x-adpcm to and from the audio/G726-X in the muxer and
+	demuxer. Fixes #549551.
+
 2008-08-27  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* sys/osxaudio/gstosxaudiosink.c:
