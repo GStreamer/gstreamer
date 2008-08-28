@@ -1,5 +1,13 @@
 2008-08-28  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstpadtemplate.c:
+	  The old behaviour was that gst_pad_template_new() takes ownership of
+	  the caps. As we now call g_object_new() which calls g_object_set() and
+	  which copies the caps, we have to unref them to not leak them. Fixes
+	  make valgrid for me.
+
+2008-08-28  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gsturi.c:
 	  Don't segfault on input like "tel:+1-123-555-1234".
 

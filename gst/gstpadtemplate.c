@@ -388,6 +388,9 @@ gst_pad_template_new (const gchar * name_template,
       "name", name_template, "name-template", name_template,
       "direction", direction, "presence", presence, "caps", caps, NULL);
 
+  if (caps)
+    gst_caps_unref (caps);
+
   return new;
 }
 
