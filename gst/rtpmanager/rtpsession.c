@@ -2300,6 +2300,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   if (is_rtcp_time (sess, current_time, &data)) {
     if (sess->source->received_bye) {
       /* generate BYE instead */
+      GST_DEBUG ("generating BYE message");
       session_bye (sess, &data);
       sess->sent_bye = TRUE;
     } else {
@@ -2367,11 +2368,14 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     /* close the RTCP packet */
     gst_rtcp_buffer_end (data.rtcp);
 
+    GST_DEBUG ("sending packet");
     if (sess->callbacks.send_rtcp)
       result = sess->callbacks.send_rtcp (sess, sess->source, data.rtcp,
-          sess->send_rtcp_user_data);
-    else
+          sess->sent_bye, sess->send_rtcp_user_data);
+    else {
+      GST_DEBUG ("freeing packet");
       gst_buffer_unref (data.rtcp);
+    }
   }
 
   return result;

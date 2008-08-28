@@ -1,3 +1,17 @@
+2008-08-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_send_rtcp),
+	(gst_rtp_session_event_send_rtp_sink):
+	Send EOS when the session object instructs us to.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_on_timeout):
+	* gst/rtpmanager/rtpsession.h:
+	Make it possible for the session manager to instruct us to send EOS. We
+	currently will EOS when the session is a sender and when the sender part
+	goes EOS. This is not entirely correct behaviour because the session
+	could still participate as a receiver.
+	Fixes #549409.
+
 2008-08-27  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/aiffparse/aiffparse.c:

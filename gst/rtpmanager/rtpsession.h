@@ -72,6 +72,7 @@ typedef GstFlowReturn (*RTPSessionSendRTP) (RTPSession *sess, RTPSource *src, Gs
  * @sess: an #RTPSession
  * @src: the #RTPSource
  * @buffer: the RTCP buffer ready for sending
+ * @eos: if an EOS event should be pushed
  * @user_data: user data specified when registering
  *
  * This callback will be called when @sess has @buffer ready for sending to
@@ -79,7 +80,8 @@ typedef GstFlowReturn (*RTPSessionSendRTP) (RTPSession *sess, RTPSource *src, Gs
  *
  * Returns: a #GstFlowReturn.
  */
-typedef GstFlowReturn (*RTPSessionSendRTCP) (RTPSession *sess, RTPSource *src, GstBuffer *buffer, gpointer user_data);
+typedef GstFlowReturn (*RTPSessionSendRTCP) (RTPSession *sess, RTPSource *src, GstBuffer *buffer, 
+    gboolean eos, gpointer user_data);
 
 /**
  * RTPSessionSyncRTCP:
