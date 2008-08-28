@@ -813,7 +813,7 @@ gst_aiffparse_stream_headers (AIFFParse * aiff)
                   &buf)) != GST_FLOW_OK)
         goto header_read_error;
       tag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
-      size = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 4);
+      size = GST_READ_UINT32_BE (GST_BUFFER_DATA (buf) + 4);
     }
 
     GST_INFO_OBJECT (aiff,

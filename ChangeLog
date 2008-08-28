@@ -1,5 +1,12 @@
 2008-08-27  Michael Smith <msmith@songbirdnest.com>
 
+	* gst/aiffparse/aiffparse.c:
+	  Read size of chunks preceeding the audio data with the
+	  correct endianness. Fixes playback of some files.
+	  Fixes #538500
+
+2008-08-27  Michael Smith <msmith@songbirdnest.com>
+
 	* configure.ac:
 	* gst/aiffparse/Makefile.am:
 	* gst/aiffparse/aiffparse.c:
