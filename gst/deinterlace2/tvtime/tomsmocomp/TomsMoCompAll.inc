@@ -186,52 +186,52 @@ void FUNCT_NAME(GstDeinterlaceMethod *d_method, GstDeinterlace2* object)
     {
       if (SearchEffort == 0)
 	{
-	  SEFUNC(0_SB);
+	  SEFUNC(0SB);
 	}
       else if (SearchEffort <= 1)
 	{
-	  SEFUNC(1_SB);
+	  SEFUNC(1SB);
 	}
       /*	else if (SearchEffort <= 2)
 		{
-		SEFUNC(2_SB);
+		SEFUNC(2SB);
 		}
       */
       else if (SearchEffort <= 3)
 	{
-	  SEFUNC(3_SB);
+	  SEFUNC(3SB);
 	}
       else if (SearchEffort <= 5)
 	{
-	  SEFUNC(5_SB);
+	  SEFUNC(5SB);
 	}
       else if (SearchEffort <= 9)
 	{
-	  SEFUNC(9_SB);
+	  SEFUNC(9SB);
 	}
       else if (SearchEffort <= 11)
 	{
-	  SEFUNC(11_SB);
+	  SEFUNC(11SB);
 	}
       else if (SearchEffort <= 13)
 	{
-	  SEFUNC(13_SB);
+	  SEFUNC(13SB);
 	}
       else if (SearchEffort <= 15)
 	{
-	  SEFUNC(15_SB);
+	  SEFUNC(15SB);
 	}
       else if (SearchEffort <= 19)
 	{
-	  SEFUNC(19_SB);
+	  SEFUNC(19SB);
 	}
       else if (SearchEffort <= 21)
 	{
-	  SEFUNC(21_SB);
+	  SEFUNC(21SB);
 	}
       else 
 	{
-	  SEFUNC(Max_SB);
+	  SEFUNC(MaxSB);
 	}
     }
 

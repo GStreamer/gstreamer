@@ -1,3 +1,14 @@
+2008-08-28  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/dccp/gstdccp.c:
+	* gst/dccp/gstdccpclientsrc.c:
+	Fix compilation on Solaris by including filio.h as needed.
+
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll2.inc:
+	Fix compilation with Forte - apparently it hates concatenating a
+	macro argument that starts with an underscore??
+
 2008-08-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Jérémie Bernard <gremimail at gmail dot com>

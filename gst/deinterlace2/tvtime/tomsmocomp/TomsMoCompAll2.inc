@@ -5,7 +5,7 @@
 #endif
 
 #ifdef USE_STRANGE_BOB
-#define SEARCH_EFFORT_FUNC(n) SEFUNC(n##_SB)
+#define SEARCH_EFFORT_FUNC(n) SEFUNC(n##SB)
 #else
 #define SEARCH_EFFORT_FUNC(n) SEFUNC(n)
 #endif
@@ -240,5 +240,4 @@ static inline int SEARCH_EFFORT_FUNC(Max)
 }
 
 #undef SEARCH_EFFORT_FUNC
-
 

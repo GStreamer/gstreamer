@@ -17,6 +17,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "gstdccp.h"
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -26,6 +30,10 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <string.h>
+
+#ifdef HAVE_FIONREAD_IN_SYS_FILIO
+#include <sys/filio.h>
+#endif
 
 /* Prototypes and definitions for private functions and not exported via gstdccp.h */
 gint gst_dccp_socket_write (int socket, const void *buf, size_t count,

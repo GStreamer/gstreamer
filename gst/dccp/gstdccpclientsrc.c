@@ -56,6 +56,11 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 
+#include <sys/ioctl.h>
+#ifdef HAVE_FIONREAD_IN_SYS_FILIO
+#include <sys/filio.h>
+#endif
+
 #define DCCP_DEFAULT_CAPS       NULL
 
 /* signals */
