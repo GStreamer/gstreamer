@@ -361,8 +361,10 @@ SUBDIRS=\
 DIST_SUBDIRS = \
 	alsaspdif \
 	amrwb \
+	apexsink \
 	bz2 \
 	cdaudio \
+	celt \
 	dc1394 \
 	dirac \
 	directfb \
@@ -392,5 +394,6 @@ DIST_SUBDIRS = \
 	swfdec \
 	theora \
 	timidity \
+	twolame \
 	x264 \
 	xvid

@@ -22,19 +22,13 @@ BuildRequires:    %{gstreamer}-devel >= %{gst_minver}
 
 BuildRequires:  gcc-c++
 @USE_LADSPA_TRUE@BuildRequires: ladspa-devel
-# @USE_AUDIOFILE_TRUE@Requires:      audiofile >= 0.2.1
-# @USE_AUDIOFILE_TRUE@BuildRequires: audiofile-devel >= 0.2.1
 @USE_FAAD_TRUE@BuildRequires:  faad2-devel >= 2.0
 @USE_GSM_TRUE@BuildRequires:  gsm-devel >= 1.0.10
-# @USE_HERMES_TRUE@Requires:      Hermes >= 1.3.0
-# @USE_HERMES_TRUE@BuildRequires: Hermes-devel >= 1.3.0
-# @USE_LIBFAME_TRUE@BuildRequires:  libfame-devel >= 0.9.0
 @USE_SDL_TRUE@Requires:      SDL >= 1.2.0
 @USE_SWFDEC_TRUE@BuildRequires:  swfdec-devel
 @USE_FAAD_TRUE@Provides:      gstreamer-faad = %{version}-%{release}
 @USE_FAAC_TRUE@Requires:      faac >= 1.23
 @USE_GSM_TRUE@Provides:       gstreamer-gsm = %{version}-%{release}
-# @USE_LIBFAME_TRUE@Provides:       gstreamer-libfame = %{version}-%{release}
 @USE_LIBMMS_TRUE@Requires: libmms >= 0.1
 @USE_MYTHTV_TRUE@Requires: gmyth
 @USE_X264_TRUE@Requires: x264
@@ -54,7 +48,7 @@ quality, even though they might work.
 %setup -q -n gst-plugins-bad-%{version}
 
 %build
-%configure
+%configure --enable-experimental
 
 make %{?_smp_mflags}
 
@@ -112,6 +106,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstselector.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsubenc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoss4audio.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace2.so
+%{_libdir}/gstreamer-%{majorminor}/libresindvd.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaiffparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdccp.so
+%{_libdir}/gstreamer-%{majorminor}/libgstpcapparse.so
+
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsrc.h
@@ -126,7 +126,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
 @USE_FAAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
 @USE_MUSICBRAINZ_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttrm.so
-# @USE_POLYP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libpolypaudio.so
 @USE_SDL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsdl.so
 @USE_SWFDEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstswfdec.so
 @USE_LIBMMS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmms.so
