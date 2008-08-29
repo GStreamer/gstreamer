@@ -446,12 +446,12 @@ int main(void)
                   # Try to use $ssldir/lib if it exists, otherwise
                   # $ssldir
                   if test -d "$ssldir/lib" ; then
-                          APEXSINK_LIBS="-L$ssldir/lib $saved_LDFLAGS"
+                          APEXSINK_LIBS="-L$ssldir/lib $LDFLAGS"
                           if test ! -z "$need_dash_r" ; then
                                   APEXSINK_LIBS="-R$ssldir/lib $LDFLAGS"
                           fi
                   else
-                          APEXSINK_LDFLAGS="-L$ssldir $saved_LDFLAGS"
+                          APEXSINK_LDFLAGS="-L$ssldir $LDFLAGS"
                           if test ! -z "$need_dash_r" ; then
                                   APEXSINK_LIBS="-R$ssldir $LDFLAGS"
                           fi
@@ -459,13 +459,17 @@ int main(void)
                   # Try to use $ssldir/include if it exists, otherwise
                   # $ssldir
                   if test -d "$ssldir/include" ; then
-                          APEXSINK_CFLAGS="-I$ssldir/include $saved_CPPFLAGS"
+                          APEXSINK_CFLAGS="-I$ssldir/include $CPPFLAGS"
                   else
-                          APEXSINK_CFLAGS="-I$ssldir $saved_CPPFLAGS"
+                          APEXSINK_CFLAGS="-I$ssldir $CPPFLAGS"
                   fi
           fi
   fi
   APEXSINK_LIBS="$APEXSINK_LIBS $LIBS"
+  AC_SUBST(APEXSINK_LIBS)
+  AC_SUBST(APEXSINK_CFLAGS)
+  CPPFLAGS="$saved_CPPFLAGS"
+  LDFLAGS="$saved_LDFLAGS"
   LIBS="$saved_LIBS"
 ])
 

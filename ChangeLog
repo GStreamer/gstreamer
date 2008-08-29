@@ -1,3 +1,8 @@
+2008-08-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	Fix CFLAGS and LIBS for the apexsink.
+
 2008-08-28  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
 	* sys/winks/ksvideohelpers.c (ks_video_media_type_free):
