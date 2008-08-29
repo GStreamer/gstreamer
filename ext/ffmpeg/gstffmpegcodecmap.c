@@ -169,9 +169,22 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
         "rate", G_TYPE_INT, context->sample_rate,
         "channels", G_TYPE_INT, context->channels, NULL);
   } else {
+    gint maxchannels;
+    /* Until decoders/encoders expose the maximum number of channels
+     * they support, we whitelist them here. */
+    switch (codec_id) {
+    case CODEC_ID_AC3:
+    case CODEC_ID_AAC:
+    case CODEC_ID_DTS:
+      maxchannels = 6;
+      break;
+    default:
+      maxchannels = 2;
+    }
+
     caps = gst_caps_new_simple (mimetype,
         "rate", GST_TYPE_INT_RANGE, 8000, 96000,
-        "channels", GST_TYPE_INT_RANGE, 1, 6, NULL);
+        "channels", GST_TYPE_INT_RANGE, 1, maxchannels, NULL);
 
   }
 

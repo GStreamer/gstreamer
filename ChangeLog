@@ -1,3 +1,11 @@
+2008-08-29  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_aud_caps_new):
+	Instead of marking all audio decoders/encoders as accepting up to 6
+	channels, we white-list those for which we are sure they can handle
+	those 6 channels.
+	Fixes #549799
+
 2008-08-28  Michael Smith <msmith@songbirdnest.com>
 
 	* ext/ffmpeg/gstffmpegdemux.c:
