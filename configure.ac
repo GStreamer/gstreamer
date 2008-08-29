@@ -138,6 +138,10 @@ AX_CREATE_STDINT_H
 
 dnl *** checks for types/defines ***
 
+dnl Check for FIONREAD ioctl declaration
+dnl used in gst/dccp
+GST_CHECK_FIONREAD
+
 dnl *** checks for structures ***
 
 dnl *** checks for compiler characteristics ***

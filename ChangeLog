@@ -1,3 +1,8 @@
+2008-08-29  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* configure.ac:
+	Commit FIONREAD	check, needed for the dccp src.
+
 2008-08-29  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/faac/gstfaac.c: (gst_faac_init), (gst_faac_sink_event),
