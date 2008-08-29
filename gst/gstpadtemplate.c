@@ -388,8 +388,13 @@ gst_pad_template_new (const gchar * name_template,
       "name", name_template, "name-template", name_template,
       "direction", direction, "presence", presence, "caps", caps, NULL);
 
+#if 0
+  /* FIXME: enable this after gst-ffmpeg-0.10.6 and
+   * gst-plugins-good-0.10.11 have been released.  Previous versions
+   * depend on broken core behavior. */
   if (caps)
     gst_caps_unref (caps);
+#endif
 
   return new;
 }
