@@ -35,15 +35,22 @@ plugin_init (GstPlugin * plugin)
   mulaw_caps = mulaw_factory ();
   linear_caps = linear_factory ();
 
+  gst_caps_ref (mulaw_caps);
+  gst_caps_ref (linear_caps);
   mulawenc_src_template =
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, mulaw_caps);
   mulawenc_sink_template =
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, linear_caps);
 
+  gst_caps_ref (mulaw_caps);
+  gst_caps_ref (linear_caps);
   mulawdec_src_template =
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, linear_caps);
   mulawdec_sink_template =
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, mulaw_caps);
+
+  gst_caps_unref (mulaw_caps);
+  gst_caps_unref (linear_caps);
 
   if (!gst_element_register (plugin, "mulawenc",
           GST_RANK_NONE, GST_TYPE_MULAWENC) ||
