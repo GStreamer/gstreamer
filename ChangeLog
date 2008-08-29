@@ -1,5 +1,10 @@
 2008-08-29  Jan Schmidt  <Jan.Schmidt@sun.com>
 
+	* ext/resindvd/resindvdbin.c:
+	Fix compiler warning on Forte.
+
+2008-08-29  Jan Schmidt  <Jan.Schmidt@sun.com>
+
 	* configure.ac:
 	Commit FIONREAD	check, needed for the dccp src.
 

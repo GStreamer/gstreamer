@@ -174,7 +174,7 @@ rsn_dvdbin_finalize (GObject * object)
 }
 
 /* URI interface */
-static guint
+static GstURIType
 rsn_dvdbin_uri_get_type (void)
 {
   return GST_URI_SRC;
