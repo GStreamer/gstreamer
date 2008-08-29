@@ -41,6 +41,9 @@ extern const char             g_log_domain_gstreamer[];
 #include "gstregistry.h"
 #include "gststructure.h"
 
+/* we need this in pretty much all files */
+#include "gstinfo.h"
+
 G_BEGIN_DECLS
 
 /* used by gstparse.c and grammar.y */
@@ -92,8 +95,6 @@ gboolean 		gst_registry_xml_write_cache 	(GstRegistry * registry, const char *lo
 /*** debugging categories *****************************************************/
 
 #ifndef GST_DISABLE_GST_DEBUG
-
-#include <gst/gstinfo.h>
 
 GST_EXPORT GstDebugCategory *GST_CAT_GST_INIT;
 GST_EXPORT GstDebugCategory *GST_CAT_AUTOPLUG;

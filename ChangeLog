@@ -1,3 +1,9 @@
+2008-08-29  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gst_private.h:
+	  Include gstinfo.h even if GST_DISABLE_GST_DEBUG is defined. Fixes
+	  build with --disable-gst-debug.
+
 2008-08-28  David Schleef  <ds@schleef.org>
 
 	* gst/gstpadtemplate.c: Revert last change, since it breaks
