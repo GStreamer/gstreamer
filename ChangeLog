@@ -1,3 +1,9 @@
+2008-08-28  Michael Smith <msmith@songbirdnest.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  gst_pad_template_new() takes ownership of caps; ref them beforehand
+	  since we want to keep using them afterwards.
+
 2008-08-28  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_aud_caps_new):

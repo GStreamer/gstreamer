@@ -188,12 +188,16 @@ gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass)
   g_free (details.description);
 
   /* pad templates */
+  gst_caps_ref (params->sinkcaps);
   sinktempl = gst_pad_template_new ("sink",
       GST_PAD_SINK, GST_PAD_ALWAYS, params->sinkcaps);
   videosrctempl = gst_pad_template_new ("video_%02d",
       GST_PAD_SRC, GST_PAD_SOMETIMES, params->videosrccaps);
   audiosrctempl = gst_pad_template_new ("audio_%02d",
       GST_PAD_SRC, GST_PAD_SOMETIMES, params->audiosrccaps);
+
+  params->videosrccaps = NULL;
+  params->audiosrccaps = NULL;
 
   gst_element_class_add_pad_template (element_class, videosrctempl);
   gst_element_class_add_pad_template (element_class, audiosrctempl);
