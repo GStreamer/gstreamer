@@ -1,3 +1,9 @@
+2008-08-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c: (gst_pad_get_internal_links_default):
+	Make the internal links function less thread-unsafe and add some
+	comments, dunno why.
+
 2008-08-29  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gst_private.h:

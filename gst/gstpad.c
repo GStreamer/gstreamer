@@ -2900,7 +2900,8 @@ gst_pad_alloc_buffer_and_set_caps (GstPad * pad, guint64 offset, gint size,
  * inside of the parent element.
  * This is the default handler, and thus returns a list of all of the
  * pads inside the parent element with opposite direction.
- * The caller must free this list after use.
+ *
+ * The caller must free this list after use with g_list_free().
  *
  * Returns: a newly allocated #GList of pads, or NULL if the pad has no parent.
  *
@@ -2911,34 +2912,38 @@ gst_pad_get_internal_links_default (GstPad * pad)
 {
   GList *res = NULL;
   GstElement *parent;
-  GList *parent_pads;
-  GstPadDirection direction;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  direction = pad->direction;
-
+  /* lock pad, check and ref parent */
+  GST_OBJECT_LOCK (pad);
   parent = GST_PAD_PARENT (pad);
-  if (!parent)
+  if (!parent || !GST_IS_ELEMENT (parent))
     goto no_parent;
 
-  parent_pads = parent->pads;
+  parent = gst_object_ref (parent);
+  GST_OBJECT_UNLOCK (pad);
 
-  while (parent_pads) {
-    GstPad *parent_pad = GST_PAD_CAST (parent_pads->data);
+  /* now lock the parent while we copy the pads */
+  GST_OBJECT_LOCK (parent);
+  if (pad->direction == GST_PAD_SRC)
+    res = g_list_copy (parent->sinkpads);
+  else
+    res = g_list_copy (parent->srcpads);
+  GST_OBJECT_UNLOCK (parent);
 
-    if (parent_pad->direction != direction) {
-      GST_DEBUG_OBJECT (pad, "adding pad %s:%s",
-          GST_DEBUG_PAD_NAME (parent_pad));
-      res = g_list_prepend (res, parent_pad);
-    }
-    parent_pads = g_list_next (parent_pads);
-  }
+  /* At this point pads can be changed and unreffed. Nothing we can do about it
+   * because for compatibility reasons this function cannot ref the pads or
+   * notify the app that the list changed. */
+
+  gst_object_unref (parent);
+
   return res;
 
 no_parent:
   {
     GST_DEBUG_OBJECT (pad, "no parent");
+    GST_OBJECT_LOCK (pad);
     return NULL;
   }
 }
