@@ -1,3 +1,11 @@
+2008-08-29  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/faac/gstfaac.c: (gst_faac_init), (gst_faac_sink_event),
+	(gst_faac_chain), (gst_faac_change_state):
+	* ext/faac/gstfaac.h:
+	Add code for calculating proper timestamp/duration for the trailing
+	encoded buffers that faac will output when receiving EOS.
+
 2008-08-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:

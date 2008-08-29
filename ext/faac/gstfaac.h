@@ -62,6 +62,9 @@ typedef struct _GstFaac {
   /* cache of the input */
   GstBuffer *cache;
   guint64 cache_time, cache_duration;
+
+  /* Expected timestamp of the next buffer to output */
+  GstClockTime next_ts;
 } GstFaac;
 
 typedef struct _GstFaacClass {
