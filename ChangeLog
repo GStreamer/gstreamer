@@ -1,5 +1,12 @@
 2008-08-29  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_finalize),
+	(gst_ffmpegdec_get_buffer), (gst_ffmpegdec_frame):
+	Finalizing a decoder that was never used shouldn't trigger an assertion.
+	Add debug messages for the two other g_assert_if_reached().
+
+2008-08-29  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_aud_caps_new):
 	Instead of marking all audio decoders/encoders as accepting up to 6
 	channels, we white-list those for which we are sure they can handle

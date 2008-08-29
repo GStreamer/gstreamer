@@ -358,12 +358,13 @@ gst_ffmpegdec_finalize (GObject * object)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) object;
 
-  g_assert (!ffmpegdec->opened);
+  if (ffmpegdec->opened) {
 
-  /* clean up remaining allocated data */
-  av_free (ffmpegdec->context);
-  av_free (ffmpegdec->picture);
-
+    /* clean up remaining allocated data */
+    av_free (ffmpegdec->context);
+    av_free (ffmpegdec->picture);
+    
+  }
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -862,6 +863,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
     }
     case CODEC_TYPE_AUDIO:
     default:
+      GST_ERROR_OBJECT (ffmpegdec, "_get_buffer() should never get called for non-video buffers !");
       g_assert_not_reached ();
       break;
   }
@@ -1856,6 +1858,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
           in_duration, &outbuf, ret);
       break;
     default:
+      GST_ERROR_OBJECT (ffmpegdec, "Asked to decode non-audio/video frame !");
       g_assert_not_reached ();
       break;
   }
