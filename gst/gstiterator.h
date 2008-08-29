@@ -51,7 +51,7 @@ typedef struct _GstIterator GstIterator;
  * @GST_ITERATOR_ITEM_PASS:  Return item
  * @GST_ITERATOR_ITEM_END:   Stop after this item.
  *
- * The result of a GstIteratorItemFunction.
+ * The result of a #GstIteratorItemFunction.
  */
 typedef enum {
   GST_ITERATOR_ITEM_SKIP	= 0,
@@ -63,8 +63,8 @@ typedef enum {
  * GstIteratorDisposeFunction:
  * @owner: the owner of the iterator
  *
- * The function that will be called when a GList iterator is freed. The
- * owner of the GList iterator can then clean up its resources.
+ * The function that will be called when a #GList iterator is freed. The
+ * owner of the #GList iterator can then clean up its resources.
  */
 typedef void		  (*GstIteratorDisposeFunction)	(gpointer owner);
 
@@ -128,7 +128,7 @@ typedef void		  (*GstIteratorFreeFunction)	(GstIterator *it);
 /**
  * GstIteratorFoldFunction:
  * @item: the item to fold
- * @ret: a GValue collecting the result
+ * @ret: a #GValue collecting the result
  * @user_data: data passed to gst_iterator_fold()
  *
  * A function to be passed to gst_iterator_fold().
@@ -186,7 +186,7 @@ typedef gboolean	  (*GstIteratorFoldFunction)    (gpointer item, GValue *ret, gp
  *          created.
  * @master_cookie: A pointer to the master cookie.
  *
- * GstIterator base structure. The values of this structure are 
+ * #GstIterator base structure. The values of this structure are 
  * protected for subclasses, use the methods to use the #GstIterator.
  */
 struct _GstIterator {

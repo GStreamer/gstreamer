@@ -1,5 +1,12 @@
 2008-08-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstiterator.c:
+	* gst/gstiterator.h:
+	After 3 years it's about time to revise the documentation of the
+	iterator objects.
+
+2008-08-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstpad.c: (gst_pad_get_internal_links_default):
 	Make the internal links function less thread-unsafe and add some
 	comments, dunno why.
