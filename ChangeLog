@@ -1,3 +1,8 @@
+2008-08-29  David Schleef  <ds@schleef.org>
+
+	* ext/dirac/gstdiracenc.cc: Fix EOS handling.  Clean up at
+	  object disposal.  Handle 4:2:2 and 4:4:4 video.
+
 2008-08-29  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* ext/resindvd/resindvdbin.c:
