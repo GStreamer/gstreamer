@@ -353,6 +353,9 @@ gst_dirac_enc_finalize (GObject * object)
     dirac_encoder_close (dirac_enc->encoder);
     dirac_enc->encoder = NULL;
   }
+  if (dirac_enc->srccaps) {
+    gst_caps_unref (dirac_enc->srccaps);
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -856,6 +859,7 @@ gst_dirac_enc_chain (GstPad * pad, GstBuffer * buf)
 
   ret = gst_dirac_enc_process (dirac_enc, FALSE);
 
+  gst_buffer_unref (buf);
   gst_object_unref (dirac_enc);
 
   return ret;

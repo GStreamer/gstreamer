@@ -1,3 +1,7 @@
+2008-08-30  David Schleef  <ds@schleef.org>
+
+	* ext/dirac/gstdiracenc.cc: Fix some memleaks.
+
 2008-08-29  David Schleef  <ds@schleef.org>
 
 	* ext/dirac/gstdiracenc.cc: Fix EOS handling.  Clean up at
