@@ -558,17 +558,26 @@ GST_START_TEST (test_ghost_pads_new_from_template)
   GstPadTemplate *padtempl, *ghosttempl;
 
   GstCaps *padcaps, *ghostcaps, *newcaps;
+  GstCaps *copypadcaps;
 
   padcaps = gst_caps_from_string ("some/caps");
   fail_unless (padcaps != NULL);
   ghostcaps = gst_caps_from_string ("some/caps;some/other-caps");
   fail_unless (ghostcaps != NULL);
 
+  copypadcaps = gst_caps_copy (padcaps);
   padtempl = gst_pad_template_new ("padtempl", GST_PAD_SINK,
-      GST_PAD_ALWAYS, gst_caps_copy (padcaps));
+      GST_PAD_ALWAYS, copypadcaps);
   fail_unless (padtempl != NULL);
   ghosttempl = gst_pad_template_new ("ghosttempl", GST_PAD_SINK,
       GST_PAD_ALWAYS, ghostcaps);
+
+  /* FIXME : We should not have to unref those caps, but due to 
+   * a bug in gst_pad_template_new() not stealing the refcount of
+   * the given caps we have to. */
+  gst_caps_unref (ghostcaps);
+  gst_caps_unref (copypadcaps);
+
 
   sinkpad = gst_pad_new_from_template (padtempl, "sinkpad");
   fail_unless (sinkpad != NULL);
@@ -602,17 +611,27 @@ GST_START_TEST (test_ghost_pads_new_no_target_from_template)
   GstPadTemplate *padtempl, *ghosttempl;
 
   GstCaps *padcaps, *ghostcaps, *newcaps;
+  GstCaps *copypadcaps, *copyghostcaps;
 
   padcaps = gst_caps_from_string ("some/caps");
   fail_unless (padcaps != NULL);
   ghostcaps = gst_caps_from_string ("some/caps;some/other-caps");
   fail_unless (ghostcaps != NULL);
 
+  copypadcaps = gst_caps_copy (padcaps);
+  copyghostcaps = gst_caps_copy (ghostcaps);
+
   padtempl = gst_pad_template_new ("padtempl", GST_PAD_SINK,
-      GST_PAD_ALWAYS, gst_caps_copy (padcaps));
+      GST_PAD_ALWAYS, copypadcaps);
   fail_unless (padtempl != NULL);
   ghosttempl = gst_pad_template_new ("ghosttempl", GST_PAD_SINK,
-      GST_PAD_ALWAYS, gst_caps_copy (ghostcaps));
+      GST_PAD_ALWAYS, copyghostcaps);
+
+  /* FIXME : We should not have to unref those caps, but due to 
+   * a bug in gst_pad_template_new() not stealing the refcount of
+   * the given caps we have to. */
+  gst_caps_unref (copyghostcaps);
+  gst_caps_unref (copypadcaps);
 
   sinkpad = gst_pad_new_from_template (padtempl, "sinkpad");
   fail_unless (sinkpad != NULL);

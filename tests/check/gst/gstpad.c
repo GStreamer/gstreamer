@@ -203,10 +203,15 @@ static gboolean
 name_is_valid (const gchar * name, GstPadPresence presence)
 {
   GstPadTemplate *new;
+  GstCaps *any = GST_CAPS_ANY;
 
-  new = gst_pad_template_new (name, GST_PAD_SRC, presence, GST_CAPS_ANY);
+  new = gst_pad_template_new (name, GST_PAD_SRC, presence, any);
   if (new) {
     gst_object_unref (GST_OBJECT (new));
+    /* FIXME : We should not have to unref those caps, but due to 
+     * a bug in gst_pad_template_new() not stealing the refcount of
+     * the given caps we have to. */
+    gst_caps_unref (any);
     return TRUE;
   }
   return FALSE;
@@ -463,16 +468,26 @@ GST_START_TEST (test_push_negotiation)
 {
   GstPad *src, *sink;
   GstPadLinkReturn plr;
-  GstPadTemplate *src_template = gst_pad_template_new ("src", GST_PAD_SRC,
-      GST_PAD_ALWAYS,
-      gst_caps_from_string ("audio/x-raw-int,width={16,32},depth={16,32}"));
-  GstPadTemplate *sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      gst_caps_from_string ("audio/x-raw-int,width=32,depth={16,32}"));
+  GstCaps *srccaps =
+      gst_caps_from_string ("audio/x-raw-int,width={16,32},depth={16,32}");
+  GstCaps *sinkcaps =
+      gst_caps_from_string ("audio/x-raw-int,width=32,depth={16,32}");
+  GstPadTemplate *src_template;
+  GstPadTemplate *sink_template;
   GstCaps *caps;
   GstBuffer *buffer;
 
   /* setup */
+  src_template = gst_pad_template_new ("src", GST_PAD_SRC,
+      GST_PAD_ALWAYS, srccaps);
+  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
+      GST_PAD_ALWAYS, sinkcaps);
+  /* FIXME : We should not have to unref those caps, but due to 
+   * a bug in gst_pad_template_new() not stealing the refcount of
+   * the given caps we have to. */
+  gst_caps_unref (srccaps);
+  gst_caps_unref (sinkcaps);
+
   sink = gst_pad_new_from_template (sink_template, "sink");
   fail_if (sink == NULL);
   gst_pad_set_chain_function (sink, gst_check_chain_func);
@@ -588,17 +603,23 @@ GST_START_TEST (test_get_caps_must_be_copy)
   caps = gst_caps_new_any ();
   templ =
       gst_pad_template_new ("test_templ", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
+  /* FIXME : This is not correct behaviour, but due to a bug with
+   * gst_pad_template_new() not stealing the refcount of the given caps,
+   * we need to unref it */
+  gst_caps_unref (caps);
+
   pad = gst_pad_new_from_template (templ, NULL);
   fail_unless (GST_PAD_CAPS (pad) == NULL, "caps present on pad");
+  /* This is a writable copy ! */
   caps = gst_pad_get_caps (pad);
 
   /* we must own the caps */
   ASSERT_OBJECT_REFCOUNT (caps, "caps", 1);
 
   /* cleanup */
+  gst_object_unref (templ);
   gst_caps_unref (caps);
   gst_object_unref (pad);
-  gst_object_unref (templ);
 }
 
 GST_END_TEST;

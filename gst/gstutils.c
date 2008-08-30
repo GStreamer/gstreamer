@@ -969,6 +969,12 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
 
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
       GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
+
+  /* FIXME : Because of a bug in gst_pad_template_new() by which is does not
+   * properly steal the refcount of the given caps, we have to unref these caps
+   * REVERT THIS WHEN FIXED !*/
+  gst_caps_unref (templcaps);
+
   foundpad = gst_element_request_compatible_pad (element, templ);
   gst_object_unref (templ);
 

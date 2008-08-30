@@ -1,3 +1,18 @@
+2008-08-30  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gstutils.c: (gst_element_get_compatible_pad):
+	* tests/check/gst/gstghostpad.c: (GST_START_TEST):
+	* tests/check/gst/gstpad.c: (name_is_valid), (GST_START_TEST):
+	Fix all leaks due to the bug in gst_pad_template_new() by which it does
+	not steal the refcount of the given caps as stated.
+
+	REVERT THIS COMMIT ONCE FIXED !
+	REVERT THIS COMMIT ONCE FIXED !
+	REVERT THIS COMMIT ONCE FIXED !
+	REVERT THIS COMMIT ONCE FIXED !
+	REVERT THIS COMMIT ONCE FIXED !
+	REVERT THIS COMMIT ONCE FIXED !
+
 2008-08-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstiterator.c:
