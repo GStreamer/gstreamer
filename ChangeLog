@@ -1,5 +1,10 @@
 2008-08-30  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* tests/check/Makefile.am:
+	libs/transform1 test requires libs/test_transform.c
+
+2008-08-30  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/gstpad.c: (gst_pad_get_internal_links_default):
 	Die evil deadlock, die !
 

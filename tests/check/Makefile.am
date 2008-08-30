@@ -128,6 +128,9 @@ noinst_HEADERS = \
 	libs/struct_ppc64.h \
 	libs/struct_x86_64.h
 
+EXTRA_DIST = \
+	libs/test_transform.c
+
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
 	$(GST_OBJ_LIBS) \
