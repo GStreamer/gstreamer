@@ -1,3 +1,11 @@
+2008-08-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: Jonathan Matthew  <notverysmart gmail com>
+
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	  Add typefinder for PDF documents (which is nice to have, since it's a
+	  common format, but also helps prevent false positives). Fixes #549814.
+
 2008-08-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstplaybin2.c: (selector_blocked), (pad_added_cb),

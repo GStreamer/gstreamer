@@ -3013,6 +3013,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *nsf_exts[] = { "nsf", NULL };
   static gchar *mid_exts[] = { "mid", "midi", NULL };
   static gchar *imelody_exts[] = { "imy", "ime", "imelody", NULL };
+  static gchar *pdf_exts[] = { "pdf", NULL };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
@@ -3220,6 +3221,8 @@ plugin_init (GstPlugin * plugin)
       vivo_type_find, vivo_exts, VIVO_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-nsf",
       GST_RANK_SECONDARY, nsf_exts, "NESM\x1a", 5, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "application/pdf",
+      GST_RANK_SECONDARY, pdf_exts, "%PDF-", 5, GST_TYPE_FIND_LIKELY);
   return TRUE;
 }
 
