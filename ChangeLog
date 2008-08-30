@@ -1,3 +1,15 @@
+2008-08-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* ext/raw1394/gsthdv1394src.c: (gst_hdv1394src_create):
+	* gst/alpha/gstalpha.c: (gst_alpha_get_unit_size):
+	* gst/audiofx/audiocheblimit.c: (generate_coefficients):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_src_convert):
+	* gst/matroska/ebml-read.c: (gst_ebml_read_element_id),
+	  (gst_ebml_read_element_length):
+	* gst/matroska/matroska-demux.c:
+	  (gst_matroska_demux_check_subtitle_buffer):
+	  Make stuff compile with GST_DISABLE_GST_DEBUG.
+
 2008-08-28  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/law/alaw.c:

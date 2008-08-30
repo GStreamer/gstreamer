@@ -327,11 +327,9 @@ gst_ebml_read_element_id (GstEbmlRead * ebml, guint32 * id, guint * level_up)
     len_mask >>= 1;
   }
   if (read > 4) {
-    guint64 pos = ebml->offset;
-
     GST_ERROR_OBJECT (ebml,
         "Invalid EBML ID size tag (0x%x) at position %" G_GUINT64_FORMAT " (0x%"
-        G_GINT64_MODIFIER "x)", (guint) b, pos, pos);
+        G_GINT64_MODIFIER "x)", (guint) b, ebml->offset, ebml->offset);
     return GST_FLOW_ERROR;
   }
 
@@ -383,11 +381,9 @@ gst_ebml_read_element_length (GstEbmlRead * ebml, guint64 * length,
     len_mask >>= 1;
   }
   if (read > 8) {
-    guint64 pos = ebml->offset;
-
     GST_ERROR_OBJECT (ebml,
         "Invalid EBML length size tag (0x%x) at position %" G_GUINT64_FORMAT
-        " (0x%" G_GINT64_MODIFIER "x)", (guint) b, pos, pos);
+        " (0x%" G_GINT64_MODIFIER "x)", (guint) b, ebml->offset, ebml->offset);
     return GST_FLOW_ERROR;
   }
 

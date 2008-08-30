@@ -400,12 +400,10 @@ gst_avi_demux_src_convert (GstPad * pad,
     GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
 {
-  gboolean res = TRUE;
-  GstAviDemux *avidemux = GST_AVI_DEMUX (GST_PAD_PARENT (pad));
-
   avi_stream_context *stream = gst_pad_get_element_private (pad);
+  gboolean res = TRUE;
 
-  GST_LOG_OBJECT (avidemux,
+  GST_LOG_OBJECT (pad,
       "Received  src_format:%s, src_value:%" G_GUINT64_FORMAT
       ", dest_format:%s", gst_format_get_name (src_format), src_value,
       gst_format_get_name (*dest_format));
@@ -470,7 +468,7 @@ gst_avi_demux_src_convert (GstPad * pad,
   }
 
 done:
-  GST_LOG_OBJECT (avidemux,
+  GST_LOG_OBJECT (pad,
       "Returning res:%d dest_format:%s dest_value:%" G_GUINT64_FORMAT, res,
       gst_format_get_name (*dest_format), *dest_value);
   return res;

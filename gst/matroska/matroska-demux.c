@@ -3777,7 +3777,6 @@ static GstFlowReturn
 gst_matroska_demux_check_subtitle_buffer (GstElement * element,
     GstMatroskaTrackContext * stream, GstBuffer ** buf)
 {
-  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
   GstMatroskaTrackSubtitleContext *sub_stream;
   const gchar *encoding, *data;
   GError *err = NULL;
@@ -3794,7 +3793,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
     if (g_utf8_validate (data, size, NULL)) {
       return GST_FLOW_OK;
     }
-    GST_WARNING_OBJECT (demux, "subtitle stream %d is not valid UTF-8, this "
+    GST_WARNING_OBJECT (element, "subtitle stream %d is not valid UTF-8, this "
         "is broken according to the matroska specification", stream->num);
     sub_stream->invalid_utf8 = TRUE;
   }
@@ -3813,7 +3812,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
       NULL, NULL, &err);
 
   if (err) {
-    GST_LOG_OBJECT (demux, "could not convert string from '%s' to UTF-8: %s",
+    GST_LOG_OBJECT (element, "could not convert string from '%s' to UTF-8: %s",
         encoding, err->message);
     g_error_free (err);
     g_free (utf8);
@@ -3824,7 +3823,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
         NULL, NULL, NULL);
   }
 
-  GST_LOG_OBJECT (demux, "converted subtitle text from %s to UTF-8 %s",
+  GST_LOG_OBJECT (element, "converted subtitle text from %s to UTF-8 %s",
       encoding, (err) ? "(using ISO-8859-15 as fallback)" : "");
 
   if (utf8 == NULL)

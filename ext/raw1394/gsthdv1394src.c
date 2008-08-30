@@ -406,7 +406,9 @@ gst_hdv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
 
       goto told_to_stop;
     } else if (G_LIKELY (pollfds[0].revents & POLLIN)) {
-      int pt = dv1394src->frame_sequence;
+      int pt;
+
+      pt = dv1394src->frame_sequence;
       /* shouldn't block in theory */
       GST_LOG ("Iterating ! (%d)", dv1394src->frame_sequence);
       raw1394_loop_iterate (dv1394src->handle);

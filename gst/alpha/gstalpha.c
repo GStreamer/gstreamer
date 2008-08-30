@@ -395,7 +395,6 @@ static gboolean
 gst_alpha_get_unit_size (GstBaseTransform * btrans,
     GstCaps * caps, guint * size)
 {
-  GstAlpha *alpha = GST_ALPHA (btrans);
   GstVideoFormat format;
   gint width, height;
 
@@ -404,7 +403,7 @@ gst_alpha_get_unit_size (GstBaseTransform * btrans,
 
   *size = gst_video_format_get_size (format, width, height);
 
-  GST_DEBUG_OBJECT (alpha, "unit size = %d for format %d w %d height %d",
+  GST_DEBUG_OBJECT (btrans, "unit size = %d for format %d w %d height %d",
       *size, format, width, height);
 
   return TRUE;

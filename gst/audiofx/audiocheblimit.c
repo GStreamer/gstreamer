@@ -604,6 +604,8 @@ generate_coefficients (GstAudioChebLimit * filter)
         filter->type, filter->poles, filter->cutoff, filter->ripple);
     GST_LOG_OBJECT (filter, "%.2f dB gain @ 0 Hz",
         20.0 * log10 (calculate_gain (a, b, np, np, 1.0, 0.0)));
+
+#ifndef GST_DISABLE_GST_DEBUG
     {
       gdouble wc =
           2.0 * M_PI * (filter->cutoff /
@@ -614,6 +616,8 @@ generate_coefficients (GstAudioChebLimit * filter)
           20.0 * log10 (calculate_gain (a, b, np, np, zr, zi)),
           (int) filter->cutoff);
     }
+#endif
+
     GST_LOG_OBJECT (filter, "%.2f dB gain @ %d Hz",
         20.0 * log10 (calculate_gain (a, b, np, np, -1.0, 0.0)),
         GST_AUDIO_FILTER (filter)->format.rate / 2);
