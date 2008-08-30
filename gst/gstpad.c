@@ -2943,7 +2943,7 @@ gst_pad_get_internal_links_default (GstPad * pad)
 no_parent:
   {
     GST_DEBUG_OBJECT (pad, "no parent");
-    GST_OBJECT_LOCK (pad);
+    GST_OBJECT_UNLOCK (pad);
     return NULL;
   }
 }
