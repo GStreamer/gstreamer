@@ -112,7 +112,7 @@ gst_cmml_parser_parse_chunk (GstCmmlParser * parser,
 
     GST_DEBUG ("Error occurred decoding chunk %s", data);
     g_set_error (err,
-        GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, xml_error->message);
+        GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, "%s", xml_error->message);
     return FALSE;
   }
 

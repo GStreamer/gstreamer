@@ -1,3 +1,12 @@
+2008-08-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Craig Keogh <cskeogh at adam dot com dot au>
+
+	* ext/annodex/gstcmmlparser.c: (gst_cmml_parser_parse_chunk):
+	Fix compiler warnings caused by passing a string as format string
+	instead of "%s" and then the string. This is only exposed by -Wformat=2
+	as used by default on Ubuntu. Fixes bug #550015.
+
 2008-08-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* ext/raw1394/gsthdv1394src.c: (gst_hdv1394src_create):
