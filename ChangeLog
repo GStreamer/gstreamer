@@ -1,3 +1,10 @@
+2008-08-31  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ffmpegrev:
+	Adjust time of swscale checkout to ffmpeg revision being used.
+	* gst-libs/ext/Makefile.am:
+	Fix make distcheck
+
 2008-08-29  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_finalize),
