@@ -87,6 +87,9 @@ struct _GstWavpackEnc
 
   GstBuffer *pending_buffer;
   gint32 pending_offset;
+
+  GstClockTime timestamp_offset;
+  GstClockTime next_ts;
 };
 
 struct _GstWavpackEncClass

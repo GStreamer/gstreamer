@@ -1,5 +1,15 @@
 2008-08-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_reset),
+	(gst_wavpack_enc_push_block), (gst_wavpack_enc_chain):
+	* ext/wavpack/gstwavpackenc.h:
+	Handle non-zero start timestamps and stream discontinuities
+	correctly. This only has an effect if we're muxing into
+	a container format as the raw WavPack stream must contain
+	continous sample numbers.
+
+2008-08-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/speex/gstspeexenc.c: (gst_speex_enc_encode):
 	Correct the timestamp and granulepos calculation by one Speex
 	frame.

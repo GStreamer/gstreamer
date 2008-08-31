@@ -320,6 +320,9 @@ gst_wavpack_enc_reset (GstWavpackEnc * enc)
   enc->channels = 0;
   enc->channel_mask = 0;
   enc->need_channel_remap = FALSE;
+
+  enc->timestamp_offset = GST_CLOCK_TIME_NONE;
+  enc->next_ts = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -546,8 +549,8 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
 
   pad = (wid->correction) ? enc->wvcsrcpad : enc->srcpad;
   flow =
-      (wid->correction) ? &enc->
-      wvcsrcpad_last_return : &enc->srcpad_last_return;
+      (wid->correction) ? &enc->wvcsrcpad_last_return : &enc->
+      srcpad_last_return;
 
   *flow = gst_pad_alloc_buffer_and_set_caps (pad, GST_BUFFER_OFFSET_NONE,
       count, GST_PAD_CAPS (pad), &buffer);
@@ -611,7 +614,7 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
 
     /* set buffer timestamp, duration, offset, offset_end from
      * the wavpack header */
-    GST_BUFFER_TIMESTAMP (buffer) =
+    GST_BUFFER_TIMESTAMP (buffer) = enc->timestamp_offset +
         gst_util_uint64_scale_int (GST_SECOND, wph.block_index,
         enc->samplerate);
     GST_BUFFER_DURATION (buffer) =
@@ -704,6 +707,66 @@ gst_wavpack_enc_chain (GstPad * pad, GstBuffer * buf)
     }
     GST_DEBUG ("setup of encoding context successfull");
   }
+
+  /* Save the timestamp of the first buffer. This will be later
+   * used as offset for all following buffers */
+  if (enc->timestamp_offset == GST_CLOCK_TIME_NONE) {
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+      enc->timestamp_offset = GST_BUFFER_TIMESTAMP (buf);
+      enc->next_ts = GST_BUFFER_TIMESTAMP (buf);
+    } else {
+      enc->timestamp_offset = 0;
+      enc->next_ts = 0;
+    }
+  }
+
+  /* Check if we have a continous stream, if not drop some samples or the buffer or
+   * insert some silence samples */
+  if (enc->next_ts != GST_CLOCK_TIME_NONE &&
+      GST_BUFFER_TIMESTAMP (buf) < enc->next_ts) {
+    guint64 diff = enc->next_ts - GST_BUFFER_TIMESTAMP (buf);
+    guint64 diff_bytes;
+
+    GST_WARNING_OBJECT (enc, "Buffer is older than previous "
+        "timestamp + duration (%" GST_TIME_FORMAT "< %" GST_TIME_FORMAT
+        "), cannot handle. Clipping buffer.",
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (enc->next_ts));
+
+    diff_bytes =
+        GST_CLOCK_TIME_TO_FRAMES (diff, enc->samplerate) * enc->channels * 2;
+    if (diff_bytes >= GST_BUFFER_SIZE (buf)) {
+      gst_buffer_unref (buf);
+      return GST_FLOW_OK;
+    }
+    buf = gst_buffer_make_metadata_writable (buf);
+    GST_BUFFER_DATA (buf) += diff_bytes;
+    GST_BUFFER_SIZE (buf) -= diff_bytes;
+
+    GST_BUFFER_TIMESTAMP (buf) += diff;
+    if (GST_BUFFER_DURATION_IS_VALID (buf))
+      GST_BUFFER_DURATION (buf) -= diff;
+  }
+
+  /* Allow a diff of at most 5 ms */
+  if (enc->next_ts != GST_CLOCK_TIME_NONE
+      && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    if (GST_BUFFER_TIMESTAMP (buf) != enc->next_ts &&
+        GST_BUFFER_TIMESTAMP (buf) - enc->next_ts > 5 * GST_MSECOND) {
+      GST_WARNING_OBJECT (enc,
+          "Discontinuity detected: %" G_GUINT64_FORMAT " > %" G_GUINT64_FORMAT,
+          GST_BUFFER_TIMESTAMP (buf) - enc->next_ts, 5 * GST_MSECOND);
+
+      WavpackFlushSamples (enc->wp_context);
+      enc->timestamp_offset += (GST_BUFFER_TIMESTAMP (buf) - enc->next_ts);
+    }
+  }
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)
+      && GST_BUFFER_DURATION_IS_VALID (buf))
+    enc->next_ts = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
+  else
+    enc->next_ts = GST_CLOCK_TIME_NONE;
 
   if (enc->need_channel_remap) {
     buf = gst_buffer_make_writable (buf);
