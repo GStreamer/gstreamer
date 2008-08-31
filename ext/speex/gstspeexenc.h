@@ -92,7 +92,6 @@ struct _GstSpeexEnc {
 
   gboolean              setup;
   gboolean              header_sent;
-  gboolean              eos;
 
   guint64               samples_in;
   guint64               bytes_out;
@@ -103,11 +102,17 @@ struct _GstSpeexEnc {
 
   gint                  frame_size;
   guint64               frameno;
+  guint64               frameno_out;
 
   guint8                *comments;
   gint                  comment_len;
 
   gfloat                input[MAX_FRAME_SIZE];
+
+  /* Timestamp and granulepos tracking */
+  GstClockTime     start_ts;
+  GstClockTime     next_ts;
+  guint64          granulepos_offset;
 };
 
 struct _GstSpeexEncClass {
