@@ -1,5 +1,20 @@
 2008-08-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/celt/gstceltdec.c: (celt_dec_chain_parse_data):
+	Correctly take the granulepos from upstream if possible and
+	correctly handle the granulepos in various calculations: the
+	granulepos is the sample number of the _last_ sample in a frame, not
+	the first. 
+
+	* ext/celt/gstceltenc.c: (gst_celt_enc_sinkevent),
+	(gst_celt_enc_encode), (gst_celt_enc_chain),
+	(gst_celt_enc_change_state):
+	* ext/celt/gstceltenc.h:
+	Handle non-zero start timestamps in the encoder and detect/handle
+	stream discontinuities. Fixes bug #547075.
+
+2008-08-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Rov Juvano <rovjuvano at users dot sourceforge dot net>
 
 	* configure.ac:

@@ -618,6 +618,13 @@ celt_dec_chain_parse_data (GstCeltDec * dec, GstBuffer * buf,
     size = GST_BUFFER_SIZE (buf);
 
     GST_DEBUG_OBJECT (dec, "received buffer of size %u", size);
+    if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf)
+        && GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
+      dec->granulepos = GST_BUFFER_OFFSET_END (buf);
+      GST_DEBUG_OBJECT (dec,
+          "Taking granulepos from upstream: %" G_GUINT64_FORMAT,
+          dec->granulepos);
+    }
 
     /* copy timestamp */
   } else {
@@ -649,18 +656,19 @@ celt_dec_chain_parse_data (GstCeltDec * dec, GstBuffer * buf,
   if (dec->granulepos == -1) {
     if (dec->segment.format != GST_FORMAT_TIME) {
       GST_WARNING_OBJECT (dec, "segment not initialized or not TIME format");
-      dec->granulepos = 0;
+      dec->granulepos = dec->frame_size;
     } else {
       dec->granulepos = gst_util_uint64_scale_int (dec->segment.last_stop,
-          dec->header.sample_rate, GST_SECOND);
+          dec->header.sample_rate, GST_SECOND) + dec->frame_size;
     }
     GST_DEBUG_OBJECT (dec, "granulepos=%" G_GINT64_FORMAT, dec->granulepos);
   }
 
-  GST_BUFFER_OFFSET (outbuf) = dec->granulepos;
-  GST_BUFFER_OFFSET_END (outbuf) = dec->granulepos + dec->frame_size;
-  GST_BUFFER_TIMESTAMP (outbuf) = gst_util_uint64_scale_int (dec->granulepos,
-      GST_SECOND, dec->header.sample_rate);
+  GST_BUFFER_OFFSET (outbuf) = dec->granulepos - dec->frame_size;
+  GST_BUFFER_OFFSET_END (outbuf) = dec->granulepos;
+  GST_BUFFER_TIMESTAMP (outbuf) =
+      gst_util_uint64_scale_int (dec->granulepos - dec->frame_size, GST_SECOND,
+      dec->header.sample_rate);
   GST_BUFFER_DURATION (outbuf) = dec->frame_duration;
 
   dec->granulepos += dec->frame_size;

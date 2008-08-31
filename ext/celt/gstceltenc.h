@@ -76,6 +76,11 @@ struct _GstCeltEnc {
   GstTagList            *tags;
 
   guint64               frameno;
+  guint64               frameno_out;
+
+  GstClockTime     start_ts;
+  GstClockTime     next_ts;
+  guint64          granulepos_offset;
 };
 
 struct _GstCeltEncClass {

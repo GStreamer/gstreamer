@@ -48,6 +48,7 @@
 
 #include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
+#include <gst/audio/audio.h>
 #include "gstceltenc.h"
 
 GST_DEBUG_CATEGORY_STATIC (celtenc_debug);
@@ -98,6 +99,8 @@ static void gst_celt_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static GstStateChangeReturn gst_celt_enc_change_state (GstElement * element,
     GstStateChange transition);
+
+static GstFlowReturn gst_celt_enc_encode (GstCeltEnc * enc, gboolean flush);
 
 static void
 gst_celt_enc_setup_interfaces (GType celtenc_type)
@@ -676,7 +679,7 @@ gst_celt_enc_sinkevent (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      enc->eos = TRUE;
+      gst_celt_enc_encode (enc, TRUE);
       res = gst_pad_event_default (pad, event);
       break;
     case GST_EVENT_TAG:
@@ -701,6 +704,79 @@ gst_celt_enc_sinkevent (GstPad * pad, GstEvent * event)
   return res;
 }
 
+static GstFlowReturn
+gst_celt_enc_encode (GstCeltEnc * enc, gboolean flush)
+{
+
+  GstFlowReturn ret = GST_FLOW_OK;
+  gint frame_size = enc->frame_size;
+  gint bytes = frame_size * 2 * enc->channels;
+  gint bytes_per_packet =
+      (enc->bitrate * 1000 * enc->frame_size / enc->rate + 4) / 8;
+
+  if (flush && gst_adapter_available (enc->adapter) % bytes != 0) {
+    guint diff = gst_adapter_available (enc->adapter) % bytes;
+    GstBuffer *buf = gst_buffer_new_and_alloc (diff);
+
+    memset (GST_BUFFER_DATA (buf), 0, diff);
+    gst_adapter_push (enc->adapter, buf);
+  }
+
+
+  while (gst_adapter_available (enc->adapter) >= bytes) {
+    gint16 *data;
+    gint outsize;
+    GstBuffer *outbuf;
+
+    ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
+        GST_BUFFER_OFFSET_NONE, bytes_per_packet, GST_PAD_CAPS (enc->srcpad),
+        &outbuf);
+
+    if (GST_FLOW_OK != ret)
+      goto done;
+
+    data = (gint16 *) gst_adapter_take (enc->adapter, bytes);
+    enc->samples_in += frame_size;
+
+    GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)", frame_size, bytes);
+
+    outsize =
+        celt_encode (enc->state, data, GST_BUFFER_DATA (outbuf),
+        bytes_per_packet);
+
+    g_free (data);
+
+    if (outsize < 0) {
+      GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+
+    GST_BUFFER_TIMESTAMP (outbuf) = enc->start_ts +
+        gst_util_uint64_scale_int (enc->frameno_out * frame_size, GST_SECOND,
+        enc->rate);
+    GST_BUFFER_DURATION (outbuf) =
+        gst_util_uint64_scale_int (frame_size, GST_SECOND, enc->rate);
+    /* set gp time and granulepos; see gst-plugins-base/ext/ogg/README */
+    GST_BUFFER_OFFSET_END (outbuf) = enc->granulepos_offset +
+        ((enc->frameno + 1) * frame_size);
+    GST_BUFFER_OFFSET (outbuf) =
+        gst_util_uint64_scale_int (GST_BUFFER_OFFSET_END (outbuf), GST_SECOND,
+        enc->rate);
+
+    enc->frameno++;
+    enc->frameno_out++;
+
+    ret = gst_celt_enc_push_buffer (enc, outbuf);
+
+    if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret))
+      goto done;
+  }
+
+done:
+
+  return ret;
+}
 
 static GstFlowReturn
 gst_celt_enc_chain (GstPad * pad, GstBuffer * buf)
@@ -763,68 +839,80 @@ gst_celt_enc_chain (GstPad * pad, GstBuffer * buf)
     enc->header_sent = TRUE;
   }
 
-  {
-    gint frame_size = enc->frame_size;
-    gint bytes = frame_size * 2 * enc->channels;
-    gint bytes_per_packet =
-        (enc->bitrate * 1000 * enc->frame_size / enc->rate + 4) / 8;
+  GST_DEBUG_OBJECT (enc, "received buffer of %u bytes", GST_BUFFER_SIZE (buf));
 
-    GST_DEBUG_OBJECT (enc, "received buffer of %u bytes",
-        GST_BUFFER_SIZE (buf));
-
-    /* push buffer to adapter */
-    gst_adapter_push (enc->adapter, buf);
-    buf = NULL;
-
-    while (gst_adapter_available (enc->adapter) >= bytes) {
-      gint16 *data;
-      gint outsize;
-      GstBuffer *outbuf;
-
-      ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
-          GST_BUFFER_OFFSET_NONE, bytes_per_packet, GST_PAD_CAPS (enc->srcpad),
-          &outbuf);
-
-      if (GST_FLOW_OK != ret)
-        goto done;
-
-      data = (gint16 *) gst_adapter_take (enc->adapter, bytes);
-      enc->samples_in += frame_size;
-
-      GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)", frame_size,
-          bytes);
-
-      outsize =
-          celt_encode (enc->state, data, GST_BUFFER_DATA (outbuf),
-          bytes_per_packet);
-
-      g_free (data);
-
-      if (outsize < 0) {
-        GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
-        ret = GST_FLOW_ERROR;
-        goto done;
-      }
-
-      enc->frameno++;
-
-      GST_BUFFER_TIMESTAMP (outbuf) =
-          gst_util_uint64_scale_int (enc->frameno * frame_size, GST_SECOND,
-          enc->rate);
-      GST_BUFFER_DURATION (outbuf) =
-          gst_util_uint64_scale_int (frame_size, GST_SECOND, enc->rate);
-      /* set gp time and granulepos; see gst-plugins-base/ext/ogg/README */
-      GST_BUFFER_OFFSET_END (outbuf) = ((enc->frameno + 1) * frame_size);
-      GST_BUFFER_OFFSET (outbuf) =
-          gst_util_uint64_scale_int (GST_BUFFER_OFFSET_END (outbuf), GST_SECOND,
-          enc->rate);
-
-      ret = gst_celt_enc_push_buffer (enc, outbuf);
-
-      if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret))
-        goto done;
+  /* Save the timestamp of the first buffer. This will be later
+   * used as offset for all following buffers */
+  if (enc->start_ts == GST_CLOCK_TIME_NONE) {
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+      enc->start_ts = GST_BUFFER_TIMESTAMP (buf);
+      enc->granulepos_offset = gst_util_uint64_scale
+          (GST_BUFFER_TIMESTAMP (buf), enc->rate, GST_SECOND);
+    } else {
+      enc->start_ts = 0;
+      enc->granulepos_offset = 0;
     }
   }
+
+
+  /* Check if we have a continous stream, if not drop some samples or the buffer or
+   * insert some silence samples */
+  if (enc->next_ts != GST_CLOCK_TIME_NONE &&
+      GST_BUFFER_TIMESTAMP (buf) < enc->next_ts) {
+    guint64 diff = enc->next_ts - GST_BUFFER_TIMESTAMP (buf);
+    guint64 diff_bytes;
+
+    GST_WARNING_OBJECT (enc, "Buffer is older than previous "
+        "timestamp + duration (%" GST_TIME_FORMAT "< %" GST_TIME_FORMAT
+        "), cannot handle. Clipping buffer.",
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (enc->next_ts));
+
+    diff_bytes = GST_CLOCK_TIME_TO_FRAMES (diff, enc->rate) * enc->channels * 2;
+    if (diff_bytes >= GST_BUFFER_SIZE (buf)) {
+      gst_buffer_unref (buf);
+      return GST_FLOW_OK;
+    }
+    buf = gst_buffer_make_metadata_writable (buf);
+    GST_BUFFER_DATA (buf) += diff_bytes;
+    GST_BUFFER_SIZE (buf) -= diff_bytes;
+
+    GST_BUFFER_TIMESTAMP (buf) += diff;
+    if (GST_BUFFER_DURATION_IS_VALID (buf))
+      GST_BUFFER_DURATION (buf) -= diff;
+  }
+
+  if (enc->next_ts != GST_CLOCK_TIME_NONE
+      && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    guint64 max_diff =
+        gst_util_uint64_scale (enc->frame_size, GST_SECOND, enc->rate);
+
+    if (GST_BUFFER_TIMESTAMP (buf) != enc->next_ts &&
+        GST_BUFFER_TIMESTAMP (buf) - enc->next_ts > max_diff) {
+      GST_WARNING_OBJECT (enc,
+          "Discontinuity detected: %" G_GUINT64_FORMAT " > %" G_GUINT64_FORMAT,
+          GST_BUFFER_TIMESTAMP (buf) - enc->next_ts, max_diff);
+
+      gst_celt_enc_encode (enc, TRUE);
+
+      enc->frameno_out = 0;
+      enc->start_ts = GST_BUFFER_TIMESTAMP (buf);
+      enc->granulepos_offset = gst_util_uint64_scale
+          (GST_BUFFER_TIMESTAMP (buf), enc->rate, GST_SECOND);
+    }
+  }
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)
+      && GST_BUFFER_DURATION_IS_VALID (buf))
+    enc->next_ts = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
+  else
+    enc->next_ts = GST_CLOCK_TIME_NONE;
+
+  /* push buffer to adapter */
+  gst_adapter_push (enc->adapter, buf);
+  buf = NULL;
+
+  ret = gst_celt_enc_encode (enc, FALSE);
 
 done:
 
@@ -900,6 +988,10 @@ gst_celt_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       enc->frameno = 0;
       enc->samples_in = 0;
+      enc->frameno_out = 0;
+      enc->start_ts = GST_CLOCK_TIME_NONE;
+      enc->next_ts = GST_CLOCK_TIME_NONE;
+      enc->granulepos_offset = 0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* fall through */
