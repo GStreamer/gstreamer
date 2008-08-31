@@ -46,6 +46,7 @@
     <xi:include href="xml/element-mythtvsrc.xml" />
     <xi:include href="xml/element-nuvdemux.xml" />
     <xi:include href="xml/element-output-selector.xml" />
+    <xi:include href="xml/element-scaletempo.xml" />
     <xi:include href="xml/element-sdlaudiosink.xml" />
     <xi:include href="xml/element-sdlvideosink.xml" />
     <xi:include href="xml/element-sdpdemux.xml" />
@@ -112,6 +113,7 @@
     <xi:include href="xml/plugin-rawparse.xml" />
     <xi:include href="xml/plugin-real.xml" />
     <xi:include href="xml/plugin-rfbsrc.xml" />
+    <xi:include href="xml/plugin-scaletempo.xml" />
     <xi:include href="xml/plugin-sdl.xml" />
     <xi:include href="xml/plugin-sdp.xml" />
     <xi:include href="xml/plugin-selector.xml" />

@@ -1,3 +1,68 @@
+2008-08-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Rov Juvano <rovjuvano at users dot sourceforge dot net>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* examples/scaletempo/Makefile.am:
+	* examples/scaletempo/demo-gui.c: (pop_status_bar),
+	(status_bar_printf), (demo_gui_seek_bar_format), (update_position),
+	(demo_gui_seek_bar_change), (demo_gui_do_change_rate),
+	(demo_gui_do_set_rate), (demo_gui_do_rate_entered),
+	(demo_gui_do_toggle_advanced), (demo_gui_do_toggle_disabled),
+	(demo_gui_do_seek), (demo_gui_do_play), (demo_gui_do_pause),
+	(demo_gui_do_play_pause), (demo_gui_do_open_file),
+	(demo_gui_do_playlist_prev), (demo_gui_do_playlist_next),
+	(demo_gui_do_about_dialog), (demo_gui_do_quit),
+	(demo_gui_request_set_stride), (demo_gui_request_set_overlap),
+	(demo_gui_request_set_search), (demo_gui_rate_changed),
+	(demo_gui_playing_started), (demo_gui_playing_paused),
+	(demo_gui_playing_ended), (demo_gui_player_errored),
+	(demo_gui_stride_changed), (demo_gui_overlap_changed),
+	(demo_gui_search_changed), (demo_gui_set_player_func),
+	(demo_gui_set_playlist_func), (build_gvalue_array),
+	(create_action), (demo_gui_show_func), (demo_gui_set_player),
+	(demo_gui_set_playlist), (demo_gui_show), (demo_gui_get_property),
+	(demo_gui_set_property), (demo_gui_init), (demo_gui_class_init),
+	(demo_gui_get_type):
+	* examples/scaletempo/demo-gui.h:
+	* examples/scaletempo/demo-main.c: (handle_error_message),
+	(handle_quit), (main):
+	* examples/scaletempo/demo-player.c: (no_pipeline),
+	(demo_player_event_listener), (demo_player_state_changed_cb),
+	(demo_player_eos_cb), (demo_player_build_pipeline), (_set_rate),
+	(demo_player_scale_rate_func), (demo_player_set_rate_func),
+	(_set_state_and_wait), (demo_player_load_uri_func),
+	(demo_player_play_func), (demo_player_pause_func), (_seek_to),
+	(demo_player_seek_by_func), (demo_player_seek_to_func),
+	(demo_player_get_position_func), (demo_player_get_duration_func),
+	(demo_player_scale_rate), (demo_player_set_rate),
+	(demo_player_load_uri), (demo_player_play), (demo_player_pause),
+	(demo_player_seek_by), (demo_player_seek_to),
+	(demo_player_get_position), (demo_player_get_duration),
+	(demo_player_get_property), (demo_player_set_property),
+	(demo_player_init), (demo_player_class_init),
+	(demo_player_get_type):
+	* examples/scaletempo/demo-player.h:
+	* gst/scaletempo/Makefile.am:
+	* gst/scaletempo/gstscaletempo.c: (best_overlap_offset_float),
+	(best_overlap_offset_s16), (output_overlap_float),
+	(output_overlap_s16), (fill_queue), (reinit_buffers),
+	(gst_scaletempo_transform), (gst_scaletempo_transform_size),
+	(gst_scaletempo_sink_event), (gst_scaletempo_set_caps),
+	(gst_scaletempo_get_property), (gst_scaletempo_set_property),
+	(gst_scaletempo_base_init), (gst_scaletempo_class_init),
+	(gst_scaletempo_init):
+	* gst/scaletempo/gstscaletempo.h:
+	* gst/scaletempo/gstscaletempoplugin.c: (plugin_init):
+	Add scaletempo plugin, which allows to scale the speed of audio without
+	changing the pitch by handling seeks with a rate!=1.0.
+	Integrate it into the docs and add the example application for it.
+	Fixes bug #537700.
+
 2008-08-30  David Schleef  <ds@schleef.org>
 
 	* ext/dirac/gstdiracenc.cc: Fix some memleaks.
