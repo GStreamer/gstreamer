@@ -1,5 +1,10 @@
 2008-08-31  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* configure.ac:
+	0.10.4.3 pre-release
+
+2008-08-31  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* ffmpegrev:
 	Adjust time of swscale checkout to ffmpeg revision being used.
 	* gst-libs/ext/Makefile.am:
