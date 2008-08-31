@@ -1,5 +1,11 @@
 2008-08-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/speex/gstspeexenc.c: (gst_speex_enc_encode):
+	Correct the timestamp and granulepos calculation by one Speex
+	frame.
+
+2008-08-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/speex/gstspeexdec.c: (speex_dec_chain_parse_data):
 	Correctly take the granulepos from upstream if possible and
 	correctly handle the granulepos in various calculations: the

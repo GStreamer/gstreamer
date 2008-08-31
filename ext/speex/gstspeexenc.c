@@ -908,13 +908,13 @@ gst_speex_enc_encode (GstSpeexEnc * enc, gboolean flush)
     speex_bits_reset (&enc->bits);
 
     GST_BUFFER_TIMESTAMP (outbuf) = enc->start_ts +
-        gst_util_uint64_scale_int (enc->frameno_out * frame_size -
+        gst_util_uint64_scale_int ((enc->frameno_out - 1) * frame_size -
         enc->lookahead, GST_SECOND, enc->rate);
     GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (frame_size,
         GST_SECOND, enc->rate);
     /* set gp time and granulepos; see gst-plugins-base/ext/ogg/README */
     GST_BUFFER_OFFSET_END (outbuf) = enc->granulepos_offset +
-        ((enc->frameno_out + 1) * frame_size - enc->lookahead);
+        ((enc->frameno_out) * frame_size - enc->lookahead);
     GST_BUFFER_OFFSET (outbuf) =
         gst_util_uint64_scale_int (GST_BUFFER_OFFSET_END (outbuf), GST_SECOND,
         enc->rate);
