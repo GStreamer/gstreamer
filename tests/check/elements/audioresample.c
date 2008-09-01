@@ -57,7 +57,6 @@ setup_audioresample (int channels, int inrate, int outrate)
   GstElement *audioresample;
   GstCaps *caps;
   GstStructure *structure;
-  GstPad *pad;
 
   GST_DEBUG ("setup_audioresample");
   audioresample = gst_check_setup_element ("audioresample");
@@ -73,11 +72,8 @@ setup_audioresample (int channels, int inrate, int outrate)
       "could not set to paused");
 
   mysrcpad = gst_check_setup_src_pad (audioresample, &srctemplate, caps);
-  pad = gst_pad_get_peer (mysrcpad);
-  gst_pad_set_caps (pad, caps);
-  gst_object_unref (GST_OBJECT (pad));
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
-  gst_pad_set_active (mysrcpad, TRUE);
 
   caps = gst_caps_from_string (RESAMPLE_CAPS_TEMPLATE_STRING);
   structure = gst_caps_get_structure (caps, 0);
@@ -88,12 +84,11 @@ setup_audioresample (int channels, int inrate, int outrate)
   mysinkpad = gst_check_setup_sink_pad (audioresample, &sinktemplate, caps);
   /* this installs a getcaps func that will always return the caps we set
    * later */
+  gst_pad_set_caps (mysinkpad, caps);
   gst_pad_use_fixed_caps (mysinkpad);
-  pad = gst_pad_get_peer (mysinkpad);
-  gst_pad_set_caps (pad, caps);
-  gst_object_unref (GST_OBJECT (pad));
-  gst_caps_unref (caps);
+
   gst_pad_set_active (mysinkpad, TRUE);
+  gst_pad_set_active (mysrcpad, TRUE);
 
   return audioresample;
 }
@@ -126,8 +121,11 @@ fail_unless_perfect_stream (void)
     buffer = GST_BUFFER (l->data);
     ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
     GST_DEBUG ("buffer timestamp %" G_GUINT64_FORMAT ", duration %"
-        G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP (buffer),
-        GST_BUFFER_DURATION (buffer));
+        G_GUINT64_FORMAT " offset %" G_GUINT64_FORMAT " offset_end %"
+        G_GUINT64_FORMAT,
+        GST_BUFFER_TIMESTAMP (buffer),
+        GST_BUFFER_DURATION (buffer),
+        GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET_END (buffer));
 
     fail_unless_equals_uint64 (timestamp, GST_BUFFER_TIMESTAMP (buffer));
     fail_unless_equals_uint64 (offset, GST_BUFFER_OFFSET (buffer));
@@ -150,6 +148,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
   GstElement *audioresample;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
+  guint64 offset = 0;
 
   int i, j;
   gint16 *p;
@@ -167,8 +166,9 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
     inbuffer = gst_buffer_new_and_alloc (samples * 4);
     GST_BUFFER_DURATION (inbuffer) = samples * GST_SECOND / inrate;
     GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_DURATION (inbuffer) * (j - 1);
-    GST_BUFFER_OFFSET (inbuffer) = 0;
-    GST_BUFFER_OFFSET_END (inbuffer) = samples;
+    GST_BUFFER_OFFSET (inbuffer) = offset;
+    offset += samples;
+    GST_BUFFER_OFFSET_END (inbuffer) = offset;
 
     gst_buffer_set_caps (inbuffer, caps);
 
@@ -237,6 +237,9 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
   int i, j;
   gint16 *p;
 
+  GST_DEBUG ("inrate:%d outrate:%d samples:%d numbuffers:%d",
+      inrate, outrate, samples, numbuffers);
+
   audioresample = setup_audioresample (2, inrate, outrate);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
@@ -267,6 +270,11 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
       ++p;
     }
 
+    GST_DEBUG ("Sending Buffer time:%" G_GUINT64_FORMAT " duration:%"
+        G_GINT64_FORMAT " discont:%d offset:%" G_GUINT64_FORMAT " offset_end:%"
+        G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP (inbuffer),
+        GST_BUFFER_DURATION (inbuffer), GST_BUFFER_IS_DISCONT (inbuffer),
+        GST_BUFFER_OFFSET (inbuffer), GST_BUFFER_OFFSET_END (inbuffer));
     /* pushing gives away my reference ... */
     fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
 
@@ -274,9 +282,14 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
     outbuffer = g_list_nth_data (buffers, g_list_length (buffers) - 1);
     fail_if (outbuffer == NULL);
     fail_unless_equals_uint64 (ints, GST_BUFFER_TIMESTAMP (outbuffer));
+    GST_DEBUG ("Got Buffer time:%" G_GUINT64_FORMAT " duration:%"
+        G_GINT64_FORMAT " discont:%d offset:%" G_GUINT64_FORMAT " offset_end:%"
+        G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP (outbuffer),
+        GST_BUFFER_DURATION (outbuffer), GST_BUFFER_IS_DISCONT (outbuffer),
+        GST_BUFFER_OFFSET (outbuffer), GST_BUFFER_OFFSET_END (outbuffer));
     if (j > 1) {
       fail_unless (GST_BUFFER_IS_DISCONT (outbuffer),
-          "expected discont buffer");
+          "expected discont for buffer #%d", j);
     }
   }
 
