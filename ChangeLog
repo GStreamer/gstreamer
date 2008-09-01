@@ -1,5 +1,13 @@
 2008-09-01  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/gstpad.c: (gst_pad_iterate_internal_links_default),
+	(gst_pad_event_default_dispatch), (gst_pad_dispatcher):
+	Use thread-safe internal links iterator. Fixes #549504.
+
+2008-09-01  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Based on patch by: Olivier Crete <tester at tester dot ca>
 
 	* docs/gst/gstreamer-sections.txt:
