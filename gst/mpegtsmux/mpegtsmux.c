@@ -103,7 +103,7 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("video/mpeg, mpegversion=(int) { 1, 2 }, "
+    GST_STATIC_CAPS ("video/mpeg, mpegversion=(int) { 1, 2, 4 }, "
         "systemstream = (boolean) false; "
         "video/x-dirac;"
         "video/x-h264;" "audio/mpeg, mpegversion = (int) { 1, 2, 4 }")
@@ -361,11 +361,17 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data, GstPad * pad)
           ts_data->pid);
       ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_VIDEO_MPEG1,
           ts_data->pid);
-    } else {
+    } else if (mpegversion == 2) {
       GST_DEBUG_OBJECT (pad,
           "Creating MPEG Video, version 2 stream with PID 0x%04x",
           ts_data->pid);
       ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_VIDEO_MPEG2,
+          ts_data->pid);
+    } else {
+      GST_DEBUG_OBJECT (pad,
+          "Creating MPEG Video, version 4 stream with PID 0x%04x",
+          ts_data->pid);
+      ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_VIDEO_MPEG4,
           ts_data->pid);
     }
   }

@@ -1,3 +1,8 @@
+2008-09-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.c: (mpegtsmux_create_stream):
+	Add support for muxing MPEG4 video.
+
 2008-09-01  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/mpegtsmux/tsmux/tsmux.h:
