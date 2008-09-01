@@ -310,7 +310,7 @@
 	Check for Subversion presence.
 	Fixes #511011
 
-2008-04-19  Sebastian DrÃ¶ge  <slomo@circular-chaos.org>
+2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
 	(gst_ffmpeg_formatid_to_caps), (gst_ffmpeg_caps_to_codecid),
@@ -319,7 +319,7 @@
 	Add support for MusePack StreamVersion 7 and disable the StreamVersion
 	8 typefinder. Fixes bug #510745.
 
-2008-04-19  Sebastian DrÃ¶ge  <slomo@circular-chaos.org>
+2008-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
 	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_formatid_to_caps),
@@ -342,7 +342,7 @@
 	checkout manually synchronized, then. Update this when you update
 	FFMPEG_REVISION.
 
-2008-04-06  Sebastian DrÃ¶ge  <slomo@circular-chaos.org>
+2008-04-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
         Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
 
@@ -427,7 +427,7 @@
 	Add new variables for the output timestamp and duration to make the code
 	a little more clear.
 
-2008-01-26  Sebastian DrÃ¶ge  <slomo@circular-chaos.org>
+2008-01-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_video_frame):
 	Initialize hurry_up to 0 to fix "might be used uninitialized"
@@ -508,7 +508,7 @@
 	Add h263 to the list of codecs using the mpeg flags and options.
 	Add some more H263 specific flags. Fixes #421068.
 
-2008-01-22  Sebastian DrÃ¶ge  <slomo@circular-chaos.org>
+2008-01-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
 	Don't register typefinders for which we have better replacements
@@ -550,7 +550,7 @@
 	(gst_ffmpegdec_sink_event), (gst_ffmpegdec_change_state):
 	Add basic reverse playback for video.
 
-2008-01-10  Sebastian DrÃ¶ge  <slomo@circular-chaos.org>
+2008-01-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* autogen.sh:
 	  Add -Wno-portability to the automake parameters to stop warnings
@@ -571,7 +571,7 @@
 	* gst-libs/ext/Makefile.am:
 	  Remove trailing whitespace as warned by automake.
 
-2008-01-04  Sebastian DrÃ¶ge  <slomo@circular-chaos.org>
+2008-01-04  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
@@ -591,13 +591,13 @@
 	Fix demuxer to stop properly (emit an error message on the bus) if no
 	pads are linked. Use aggregated flow return values a bit more.
 
-2007-12-18  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* Makefile.am:
 	  Include common/win32.mak for CRLF check of win32 project
 	  files (see #393626).
 
-2007-12-17  Sebastian DrÃ¶ge  <slomo@circular-chaos.org>
+2007-12-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
 	(gst_ffmpeg_formatid_get_codecids),
@@ -633,7 +633,7 @@
 	Switch to latest upstream revision so we can have the split-up for
 	flac mmx optimizations.
 
-2007-12-15  Sebastian DrÃ¶ge  <slomo@circular-chaos.org>
+2007-12-15  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Based on a patch by:
 	    Hans de Goede <j dot w dot r degoede at hhs dot nl>
@@ -643,7 +643,7 @@
 	  NULL-terminate the GEnumValue arrays, otherwise they will cause
 	  crashes. Fixes #503733.
 
-2007-12-09  Sebastian DrÃ¶ge  <slomo@circular-chaos.org>
+2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
 	  Don't define GST_DISABLE_DEPRECATED for releases. Fixes #498181.
@@ -731,7 +731,7 @@
 
 2007-11-08  Edward Hervey  <bilboed@bilboed.com>
 
-	Patch by: Ole AndrÃ© Vadla RavnÃ¥s <ole dot andre dot ravnas at tandberg dot com>
+	Patch by: Ole André Vadla Ravnås <ole dot andre dot ravnas at tandberg dot com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):
 	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_init):
@@ -761,7 +761,7 @@
 	(gst_ffmpegdata_close):
 	gst-indent cleanup.
 
-2007-10-12  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2007-10-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
 	  Add big fat warning message with explanation when building
@@ -948,7 +948,7 @@
 	Be a bit smarter when clipping the frame without a duration, we don't
 	want the frame to extend to the end of the segment in this case.
 
-2007-05-24  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2007-05-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
 	  Add -no-undefined to GST_ALL_LDFLAGS; without it, no shared libs
@@ -1039,12 +1039,12 @@
 	Renamed the mpeg4 category to mpeg.
 	Fixes #403739
 
-2007-03-01  Sebastian DrÃ¶ge  <slomo@circular-chaos.org>
+2007-03-01  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
 	  Convert to new AG_GST style.
 
-2007-02-16  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2007-02-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_base_init),
 	(gst_ffmpegdec_register):
@@ -1075,7 +1075,7 @@
 	  My console is not your TODO list.
 	  If it were your TODO list, you would have DONE it by now.
 
-2007-02-09  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2007-02-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_register):
 	  ffmux_flv only accepts mpeg audio with a sample rate of 44100, 22050
@@ -1083,7 +1083,7 @@
 	  that encoding piplines at least have a chance to automatically
 	  negotiate to one of the allowed rates.
 
-2007-02-09  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2007-02-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_request_new_pad),
 	(gst_ffmpegmux_setcaps), (gst_ffmpegmux_collected):
@@ -1103,7 +1103,7 @@
 	register yuv4mpegpipe demuxer with MARGINAL rank to
 	make it also typically available for auto-plugging. Fixes #399108.
 
-2007-01-22  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2007-01-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Martin Szulecki  <gnomebugzilla at sukimashita com>
 
@@ -1167,7 +1167,7 @@
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_me_method_get_type):
 	Make the name of the motion-estimation method enum values meaningful.
 
-2007-01-07  SÃ©bastien Moutte  <sebastien@moutte.net>
+2007-01-07  Sébastien Moutte  <sebastien@moutte.net>
 	
 	* Makefile.am:
 	  Add win32/MANIFEST to EXTRA_DIST so win32 files will
@@ -1187,7 +1187,7 @@
 	  add a dep on the internal lib so the plugin gets rebuilt on
 	  code changes to the ffmpeg lib
 
-2007-01-03  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2007-01-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_class_init),
 	(gst_ffmpegenc_finalize):
@@ -1195,7 +1195,7 @@
 	  and potential crashes caused by them in some circumstances.
 	  Fixes #392395.
 
-2006-12-21  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-12-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_smpfmt):
 	  The "signed" field in raw audio caps is of boolean type, trying to
@@ -1206,7 +1206,7 @@
 	* configure.ac:
 	  fix quoting so it works for fedora autotools too
 
-2006-12-15  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-12-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/Makefile.am:
 	* tests/check/Makefile.am:
@@ -1420,7 +1420,7 @@
 	end up passing completely bogus data to the AVCodecContext.
 	Fixes #355584
 
-2006-10-05  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_get_stream):
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_setcaps):
@@ -1464,7 +1464,7 @@
 	gst-plugins-* alternative, to figure out which ones can move to
 	RANK_MARGINAL too.
 
-2006-09-29  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-09-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_register):
@@ -1733,20 +1733,20 @@
 	* configure.ac:
 	  fix test by finding base plugins
 
-2006-05-09  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/gst-ffmpeg.supp:
 	  Add missing file (which prepare-ChangeLog didn't pick up
 	  because it's empty).
 
-2006-05-09  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/generic/libavcodec-locking.c: (GST_START_TEST),
 	(simple_launch_lines_suite), (main):
 	  Only run test when encoder element is available (we might
 	  have been configured with --disable-encoders).
 
-2006-05-09  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Luca Ognibene  <luogni at tin dot it>
 
@@ -1756,7 +1756,7 @@
 	(main):
 	  Add test case for libavcodec locking
 
-2006-05-09  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* Makefile.am:
 	* configure.ac:
@@ -1795,7 +1795,7 @@
 	Refresh patches to incorporate MikeS' automake 1.9 changes from a
 	while back.
 
-2006-05-02  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-05-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
 	  Give ffmpeg demuxers a rank of NONE for the time being, so that
@@ -1902,7 +1902,7 @@
 	refactor some functions. Use GstSegment.
 	Implement simple QOS by using the ffmpeg hurry_up field.
 
-2006-04-06  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-04-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
 	  Register id3 demuxer, avi demuxer and ogg demuxer with
@@ -1947,7 +1947,7 @@
 	lock themselves. This fixes a deadlock when 
 	_open fails.
 
-2006-03-14  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
 	  Don't use gst_pad_alloc_buffer() for frames with palette,
@@ -1997,7 +1997,7 @@
 	Fix segmentation fault and memleak.
 	Fixes #332995 and #333001
 
-2006-02-24  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
 	  ... can't adjust buffer size of NULL buffers though
@@ -2009,7 +2009,7 @@
 	* gst-libs/ext/ffmpeg/autogen.sh:
 	  Allow automake 1.9
 
-2006-02-24  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_get_palette),
 	(gst_ffmpeg_set_palette):
@@ -2153,7 +2153,7 @@
 	  This allows playback of h263/3gp files taking fps from the demuxer,
 	  which before always set GST_CLOCK_TIME_NONE as timestamp.
 
-2006-02-04  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-02-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_get_palette):
 	  Buffers aren't boxed types any longer.
@@ -2202,7 +2202,7 @@
 	* docs/version.entities.in:
 	  First step at adding docs
 
-2006-01-26  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2006-01-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):
 	  Pad codec data buffer to a size that is a multiple of 16, which
@@ -2273,7 +2273,7 @@
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
 	Finer grained keyframe detection
 
-2005-12-16  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sebastien Cote
 	Patch by: Luca Ognibene
@@ -2288,7 +2288,7 @@
 	  Do proper locking around avcodec_open() and avcodec_close()
 	  (fixes #322254)
 
-2005-12-10  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2005-12-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/ext/Makefile.am:
 	  We need to use $(MAKE) here instead of 'make' (on some
@@ -2356,7 +2356,7 @@
 	(gst_ffmpegenc_setcaps), (gst_ffmpegenc_set_property),
 	(gst_ffmpegenc_get_property): Add rtp-payload-size property.
 
-2005-11-28  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2005-11-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_close),
 	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_add_pixel_aspect_ratio),
@@ -2408,7 +2408,7 @@
 	* ext/ffmpeg/gstffmpegdec.c (gst_ffmpegdec_sink_event): Run
 	update-funcnames.
 
-2005-11-21  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_sink_event):
 	  Remove GST_STREAM_LOCK here, it is not needed any longer.
@@ -2434,7 +2434,7 @@
 	* configure.ac (GST_PLUGIN_LDFLAGS): -no-undefined for better
 	debugging, allows dll builds on windows. Fixes #316076.
 
-2005-11-14  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2005-11-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),
 	(gst_ffmpegdec_sink_event):
@@ -2466,7 +2466,7 @@
 	* TODO:
 	  Add some TODO items for 0.9 cycle.
 
-2005-10-26  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
+2005-10-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
 	(gst_ffmpegdec_close), (gst_ffmpegdec_open),
@@ -3066,7 +3066,7 @@
 2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
-	  DonÂ´t SIGFPE right away.
+	  Don't SIGFPE right away.
 
 2005-01-31  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
@@ -3752,7 +3752,7 @@
 	* configure.ac:
 	  fix --export-symblos-regex to a working regex.
 
-2004-04-03  Tim-Philipp MÃ¼ller <t.i.m@zen.co.uk>
+2004-04-03  Tim-Philipp Müller <t.i.m@zen.co.uk>
 
 	reviewed by: David Schleef  <ds@schleef.org>
 
