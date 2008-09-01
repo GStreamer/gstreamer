@@ -1,3 +1,53 @@
+2008-09-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* gst/mpegtsmux/Makefile.am:
+	* gst/mpegtsmux/mpegtsmux.c: (mpegtsmux_base_init),
+	(mpegtsmux_class_init), (mpegtsmux_init), (mpegtsmux_dispose),
+	(gst_mpegtsmux_set_property), (gst_mpegtsmux_get_property),
+	(release_buffer_cb), (mpegtsmux_create_stream),
+	(mpegtsmux_create_streams), (mpegtsmux_choose_best_stream),
+	(mpegtsmux_collected), (mpegtsmux_request_new_pad),
+	(mpegtsmux_release_pad), (new_packet_cb),
+	(mpegtsdemux_prepare_srcpad), (mpegtsmux_change_state),
+	(plugin_init):
+	* gst/mpegtsmux/mpegtsmux.h:
+	* gst/mpegtsmux/mpegtsmux_aac.c: (mpegtsmux_prepare_aac):
+	* gst/mpegtsmux/mpegtsmux_aac.h:
+	* gst/mpegtsmux/mpegtsmux_h264.c: (mpegtsmux_prepare_h264):
+	* gst/mpegtsmux/mpegtsmux_h264.h:
+	* gst/mpegtsmux/tsmux/Makefile.am:
+	* gst/mpegtsmux/tsmux/crc.h:
+	* gst/mpegtsmux/tsmux/tsmux.c: (tsmux_new), (tsmux_set_write_func),
+	(tsmux_set_pat_frequency), (tsmux_get_pat_frequency), (tsmux_free),
+	(tsmux_program_new), (tsmux_set_pmt_frequency),
+	(tsmux_get_pmt_frequency), (tsmux_program_add_stream),
+	(tsmux_program_set_pcr_stream), (tsmux_get_new_pid),
+	(tsmux_create_stream), (tsmux_find_stream), (tsmux_packet_out),
+	(tsmux_write_adaptation_field), (tsmux_write_ts_header),
+	(tsmux_write_stream_packet), (tsmux_program_free),
+	(tsmux_write_section), (tsmux_write_section_hdr),
+	(tsmux_write_pat), (tsmux_write_pmt):
+	* gst/mpegtsmux/tsmux/tsmux.h:
+	* gst/mpegtsmux/tsmux/tsmuxcommon.h:
+	* gst/mpegtsmux/tsmux/tsmuxstream.c: (tsmux_stream_new),
+	(tsmux_stream_get_pid), (tsmux_stream_free),
+	(tsmux_stream_set_buffer_release_func), (tsmux_stream_consume),
+	(tsmux_stream_at_pes_start), (tsmux_stream_bytes_avail),
+	(tsmux_stream_bytes_in_buffer), (tsmux_stream_get_data),
+	(tsmux_stream_pes_header_length),
+	(tsmux_stream_find_pts_dts_within),
+	(tsmux_stream_write_pes_header), (tsmux_stream_add_data),
+	(tsmux_stream_get_es_descrs), (tsmux_stream_pcr_ref),
+	(tsmux_stream_pcr_unref), (tsmux_stream_is_pcr),
+	(tsmux_stream_get_pts):
+	* gst/mpegtsmux/tsmux/tsmuxstream.h:
+	Add Fluendo MPEG-TS muxer and libtsmux to gst-plugins-bad. This
+	is renamed to mpegtsmux to prevent conflicts. Also all relevant
+	informations about copyright and license are added to the top of
+	every file but apart from that no changes compared to the latest
+	SVN versions happened.
+
 2008-09-01  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/selector/gstinputselector.c: (gst_input_selector_init),

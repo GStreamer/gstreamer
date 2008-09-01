@@ -257,6 +257,7 @@ AG_GST_CHECK_PLUGIN(h264parse)
 AG_GST_CHECK_PLUGIN(librfb)
 AG_GST_CHECK_PLUGIN(modplug)
 AG_GST_CHECK_PLUGIN(mpegtsparse)
+AG_GST_CHECK_PLUGIN(mpegtsmux)
 AG_GST_CHECK_PLUGIN(mpeg4videoparse)
 AG_GST_CHECK_PLUGIN(mpegvideoparse)
 AG_GST_CHECK_PLUGIN(mve)
@@ -1399,6 +1400,8 @@ gst/librfb/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
 gst/mpegtsparse/Makefile
+gst/mpegtsmux/Makefile
+gst/mpegtsmux/tsmux/Makefile
 gst/mpeg4videoparse/Makefile
 gst/mpegvideoparse/Makefile
 gst/mve/Makefile
