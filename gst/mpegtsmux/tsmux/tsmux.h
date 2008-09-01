@@ -82,8 +82,8 @@
 
 #include <glib.h>
 
-#include <tsmux/tsmuxcommon.h>
-#include <tsmux/tsmuxstream.h>
+#include "tsmuxcommon.h"
+#include "tsmuxstream.h"
 
 G_BEGIN_DECLS
 

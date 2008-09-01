@@ -1,3 +1,9 @@
+2008-09-01  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsmux/tsmux/tsmux.h:
+	* gst/mpegtsmux/tsmux/tsmuxstream.h:
+	Fix build of mpegtsmux.
+	
 2008-09-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:

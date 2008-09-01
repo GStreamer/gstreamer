@@ -82,7 +82,7 @@
 
 #include <glib.h>
 
-#include <tsmux/tsmuxcommon.h>
+#include "tsmuxcommon.h"
 
 G_BEGIN_DECLS
 
