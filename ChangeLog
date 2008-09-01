@@ -1,3 +1,8 @@
+2008-09-01  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* configure.ac:
+	  Fix --disable-external
+
 2008-08-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_reset),
