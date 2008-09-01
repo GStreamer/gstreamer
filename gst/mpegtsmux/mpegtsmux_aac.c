@@ -93,7 +93,7 @@ GST_DEBUG_CATEGORY_EXTERN (mpegtsmux_debug);
 GstBuffer *
 mpegtsmux_prepare_aac (GstBuffer * buf, MpegTsPadData * data, MpegTsMux * mux)
 {
-  guint8 *adts_header = g_malloc0 (7);
+  guint8 adts_header[7] = { 0, };
   GstBuffer *out_buf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buf) + 7);
   gsize out_offset = 0;
   guint8 rate_idx = 0, channels = 0, obj_type = 0;
@@ -140,7 +140,6 @@ mpegtsmux_prepare_aac (GstBuffer * buf, MpegTsPadData * data, MpegTsMux * mux)
 
   /* Insert ADTS header */
   memcpy (GST_BUFFER_DATA (out_buf) + out_offset, adts_header, 7);
-  g_free (adts_header);
   out_offset += 7;
 
   /* Now copy complete frame */

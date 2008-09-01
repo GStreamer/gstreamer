@@ -1,5 +1,17 @@
 2008-09-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mpegtsmux/mpegtsmux_aac.c: (mpegtsmux_prepare_aac):
+	Allocate a fixed size buffer on the stack instead of using malloc().
+
+	* gst/mpegtsmux/tsmux/tsmux.c: (tsmux_new), (tsmux_free),
+	(tsmux_program_new), (tsmux_program_free):
+	* gst/mpegtsmux/tsmux/tsmuxstream.c: (tsmux_stream_new),
+	(tsmux_stream_free), (tsmux_stream_consume),
+	(tsmux_stream_add_data):
+	Use GSlice.
+
+2008-09-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mpegtsmux/mpegtsmux.c: (mpegtsmux_create_stream):
 	Add support for muxing MPEG4 video.
 

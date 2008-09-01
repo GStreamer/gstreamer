@@ -130,7 +130,7 @@ tsmux_new ()
 {
   TsMux *mux;
 
-  mux = g_new0 (TsMux, 1);
+  mux = g_slice_new0 (TsMux);
 
   mux->transport_id = TSMUX_DEFAULT_TS_ID;
 
@@ -229,7 +229,7 @@ tsmux_free (TsMux * mux)
   }
   g_list_free (mux->streams);
 
-  g_free (mux);
+  g_slice_free (TsMux, mux);
 }
 
 /**
@@ -252,7 +252,7 @@ tsmux_program_new (TsMux * mux)
   if (mux->nb_programs == TSMUX_MAX_PROGRAMS)
     return NULL;
 
-  program = g_new0 (TsMuxProgram, 1);
+  program = g_slice_new0 (TsMuxProgram);
 
   program->pmt_changed = TRUE;
   program->last_pmt_ts = -1;
@@ -811,7 +811,7 @@ tsmux_program_free (TsMuxProgram * program)
   g_return_if_fail (program != NULL);
 
   g_array_free (program->streams, TRUE);
-  g_free (program);
+  g_slice_free (TsMuxProgram, program);
 }
 
 static gboolean
