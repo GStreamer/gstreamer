@@ -464,7 +464,8 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
 /**
  * GST_TAG_LOCATION:
  *
- * original location of file as a URI (string)
+ * Origin of media as a URI (location, where the original of the file or stream
+ * is hosted) (string)
  */
 #define GST_TAG_LOCATION               "location"
 /**
@@ -682,6 +683,48 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  * Since: 0.10.21
  */
 #define GST_TAG_KEYWORDS               "keywords"
+
+/**
+ * GST_TAG_GEO_LOCATION_NAME:
+ *
+ * human readable descriptive location of where the media has been recorded or
+ * produced. (string).
+ *
+ * Since: 0.10.22
+ */
+#define GST_TAG_GEO_LOCATION_NAME               "geo-location-name"
+
+/**
+ * GST_TAG_GEO_LOCATION_LATITUDE:
+ *
+ * geo latitude location of where the media has been recorded or produced in
+ * degrees according to WGS84 (zero at the equator, negative values for southern
+ * latitudes) (double).
+ *
+ * Since: 0.10.22
+ */
+#define GST_TAG_GEO_LOCATION_LATITUDE               "geo-location-latitude"
+
+/**
+ * GST_TAG_GEO_LOCATION_LONGITUDE:
+ *
+ * geo longitude location of where the media has been recorded or produced in
+ * degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,
+ * negative values for western longitudes). (double).
+ *
+ * Since: 0.10.22
+ */
+#define GST_TAG_GEO_LOCATION_LONGITUDE               "geo-location-longitude"
+
+/**
+ * GST_TAG_GEO_LOCATION_ELEVATION:
+ *
+ * geo elevation of where the media has been recorded or produced in meters
+ * according to WGS84 (zero is average sea level) (double).
+ *
+ * Since: 0.10.22
+ */
+#define GST_TAG_GEO_LOCATION_ELEVATION               "geo-location-altitude"
 
 G_END_DECLS
 

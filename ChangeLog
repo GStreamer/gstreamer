@@ -1,3 +1,11 @@
+2008-09-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	  Add new tags for geo location and clarify purpose of existing location
+	  tag. Fixes #481169
+
 2008-09-01  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Olivier Crete <tester at tester dot ca>

@@ -153,18 +153,15 @@ _gst_tag_initialize (void)
   gst_tag_register (GST_TAG_LOCATION, GST_TAG_FLAG_META,
       G_TYPE_STRING,
       _("location"),
-      _("original location of file as a URI"),
+      _
+      ("Origin of media as a URI (location, where the original of the file or stream is hosted)"),
       gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_DESCRIPTION, GST_TAG_FLAG_META,
-      G_TYPE_STRING,
-      _("description"),
-      _("short text describing the content of the data"),
+  gst_tag_register (GST_TAG_DESCRIPTION, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("description"), _("short text describing the content of the data"),
       gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_VERSION, GST_TAG_FLAG_META,
-      G_TYPE_STRING, _("version"), _("version of this data"), NULL);
-  gst_tag_register (GST_TAG_ISRC, GST_TAG_FLAG_META,
-      G_TYPE_STRING,
-      _("ISRC"),
+  gst_tag_register (GST_TAG_VERSION, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("version"), _("version of this data"), NULL);
+  gst_tag_register (GST_TAG_ISRC, GST_TAG_FLAG_META, G_TYPE_STRING, _("ISRC"),
       _
       ("International Standard Recording Code - see http://www.ifpi.org/isrc/"),
       NULL);
@@ -248,6 +245,26 @@ _gst_tag_initialize (void)
   gst_tag_register (GST_TAG_KEYWORDS, GST_TAG_FLAG_META, G_TYPE_STRING,
       _("keywords"), _("comma separated keywords describing the content"),
       gst_tag_merge_strings_with_comma);
+  gst_tag_register (GST_TAG_GEO_LOCATION_NAME, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("geo location name"),
+      _
+      ("human readable descriptive location or where the media has been recorded or produced"),
+      NULL);
+  gst_tag_register (GST_TAG_GEO_LOCATION_LATITUDE, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("geo location latitude"),
+      _
+      ("geo latitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the equator, negative values for southern latitudes)"),
+      NULL);
+  gst_tag_register (GST_TAG_GEO_LOCATION_LONGITUDE, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("geo location longitude"),
+      _
+      ("geo longitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  negative values for western longitudes)"),
+      NULL);
+  gst_tag_register (GST_TAG_GEO_LOCATION_ELEVATION, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("geo location elevation"),
+      _
+      ("geo elevation of where the media has been recorded or produced in meters according to WGS84 (zero is average sea level)"),
+      NULL);
 }
 
 /**
