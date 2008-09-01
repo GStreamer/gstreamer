@@ -1,3 +1,12 @@
+2008-09-01  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/selector/gstinputselector.c: (gst_input_selector_init),
+	(gst_input_selector_event), (gst_input_selector_query):
+	Reuse the get_linked_pads for both source and sinkpads because they are
+	the same.
+	Implement a custum event handler and get the internally linked pad
+	directly instead of relying on the default (slower) implementation.
+
 2008-08-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/celt/gstceltdec.c: (celt_dec_chain_parse_data):
