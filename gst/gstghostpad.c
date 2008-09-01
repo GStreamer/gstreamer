@@ -172,6 +172,20 @@ gst_proxy_pad_do_internal_link (GstPad * pad)
   return res;
 }
 
+static GstIterator *
+gst_proxy_pad_do_iterate_internal_links (GstPad * pad)
+{
+  GstIterator *res = NULL;
+  GstPad *target = gst_proxy_pad_get_target (pad);
+
+  if (target) {
+    res = gst_pad_iterate_internal_links (target);
+    gst_object_unref (target);
+  }
+
+  return res;
+}
+
 static GstFlowReturn
 gst_proxy_pad_do_bufferalloc (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
@@ -415,6 +429,8 @@ gst_proxy_pad_init (GstProxyPad * ppad)
   gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_proxy_pad_do_query));
   gst_pad_set_internal_link_function (pad,
       GST_DEBUG_FUNCPTR (gst_proxy_pad_do_internal_link));
+  gst_pad_set_iterate_internal_links_function (pad,
+      GST_DEBUG_FUNCPTR (gst_proxy_pad_do_iterate_internal_links));
 
   gst_pad_set_getcaps_function (pad,
       GST_DEBUG_FUNCPTR (gst_proxy_pad_do_getcaps));

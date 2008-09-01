@@ -1338,10 +1338,16 @@ GstPadQueryTypeFunction
 gst_pad_get_query_types
 gst_pad_get_query_types_default
 
+gst_pad_set_iterate_internal_links_function
+GstPadIterIntLinkFunction
+gst_pad_iterate_internal_links
+gst_pad_iterate_internal_links_default
+
 gst_pad_set_internal_link_function
 GstPadIntLinkFunction
 gst_pad_get_internal_links
 gst_pad_get_internal_links_default
+
 gst_pad_load_and_link
 
 gst_pad_dispatcher
@@ -1433,6 +1439,7 @@ GST_PAD_FIXATECAPSFUNC
 GST_PAD_GETCAPSFUNC
 GST_PAD_GETRANGEFUNC
 GST_PAD_INTLINKFUNC
+GST_PAD_ITERINTLINKFUNC
 GST_PAD_IS_FLUSHING
 GST_PAD_LINKFUNC
 GST_PAD_QUERYFUNC

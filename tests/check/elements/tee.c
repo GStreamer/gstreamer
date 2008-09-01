@@ -345,6 +345,113 @@ GST_START_TEST (test_release_while_second_buffer_alloc)
 
 GST_END_TEST;
 
+/* Check the internal pads of tee */
+GST_START_TEST (test_internal_links)
+{
+  GstElement *tee;
+  GstPad *sinkpad, *srcpad1, *srcpad2;
+  GstIterator *it;
+  GstIteratorResult res;
+  gpointer val1, val2;
+
+  tee = gst_check_setup_element ("tee");
+
+  sinkpad = gst_element_get_static_pad (tee, "sink");
+  fail_unless (sinkpad != NULL);
+  it = gst_pad_iterate_internal_links (sinkpad);
+  fail_unless (it != NULL);
+
+  /* iterator should not return anything */
+  val1 = NULL;
+  res = gst_iterator_next (it, &val1);
+  fail_unless (res == GST_ITERATOR_DONE);
+  fail_unless (val1 == NULL);
+
+  srcpad1 = gst_element_get_request_pad (tee, "src%d");
+  fail_unless (srcpad1 != NULL);
+
+  /* iterator should resync */
+  res = gst_iterator_next (it, &val1);
+  fail_unless (res == GST_ITERATOR_RESYNC);
+  fail_unless (val1 == NULL);
+  gst_iterator_resync (it);
+
+  /* we should get something now */
+  res = gst_iterator_next (it, &val1);
+  fail_unless (res == GST_ITERATOR_OK);
+  fail_unless (GST_PAD_CAST (val1) == srcpad1);
+
+  gst_object_unref (val1);
+
+  val1 = NULL;
+  res = gst_iterator_next (it, &val1);
+  fail_unless (res == GST_ITERATOR_DONE);
+  fail_unless (val1 == NULL);
+
+  srcpad2 = gst_element_get_request_pad (tee, "src%d");
+  fail_unless (srcpad2 != NULL);
+
+  /* iterator should resync */
+  res = gst_iterator_next (it, &val1);
+  fail_unless (res == GST_ITERATOR_RESYNC);
+  fail_unless (val1 == NULL);
+  gst_iterator_resync (it);
+
+  /* we should get one of the 2 pads now */
+  res = gst_iterator_next (it, &val1);
+  fail_unless (res == GST_ITERATOR_OK);
+  fail_unless (GST_PAD_CAST (val1) == srcpad1
+      || GST_PAD_CAST (val1) == srcpad2);
+
+  /* and the other */
+  res = gst_iterator_next (it, &val2);
+  fail_unless (res == GST_ITERATOR_OK);
+  fail_unless (GST_PAD_CAST (val2) == srcpad1
+      || GST_PAD_CAST (val2) == srcpad2);
+  fail_unless (val1 != val2);
+  gst_object_unref (val1);
+  gst_object_unref (val2);
+
+  val1 = NULL;
+  res = gst_iterator_next (it, &val1);
+  fail_unless (res == GST_ITERATOR_DONE);
+  fail_unless (val1 == NULL);
+
+  gst_iterator_free (it);
+
+  /* get an iterator for the other direction */
+  it = gst_pad_iterate_internal_links (srcpad1);
+  fail_unless (it != NULL);
+
+  res = gst_iterator_next (it, &val1);
+  fail_unless (res == GST_ITERATOR_OK);
+  fail_unless (GST_PAD_CAST (val1) == sinkpad);
+  gst_object_unref (val1);
+
+  res = gst_iterator_next (it, &val1);
+  fail_unless (res == GST_ITERATOR_DONE);
+  gst_iterator_free (it);
+
+  it = gst_pad_iterate_internal_links (srcpad2);
+  fail_unless (it != NULL);
+
+  res = gst_iterator_next (it, &val1);
+  fail_unless (res == GST_ITERATOR_OK);
+  fail_unless (GST_PAD_CAST (val1) == sinkpad);
+  gst_object_unref (val1);
+
+  res = gst_iterator_next (it, &val1);
+  fail_unless (res == GST_ITERATOR_DONE);
+
+  gst_iterator_free (it);
+  gst_object_unref (srcpad1);
+  gst_object_unref (srcpad2);
+  gst_object_unref (sinkpad);
+  gst_object_unref (tee);
+}
+
+GST_END_TEST;
+
 static Suite *
 tee_suite (void)
 {
@@ -356,6 +463,7 @@ tee_suite (void)
   tcase_add_test (tc_chain, test_stress);
   tcase_add_test (tc_chain, test_release_while_buffer_alloc);
   tcase_add_test (tc_chain, test_release_while_second_buffer_alloc);
+  tcase_add_test (tc_chain, test_internal_links);
 
   return s;
 }

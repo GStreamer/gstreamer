@@ -347,6 +347,9 @@ gst_pad_init (GstPad * pad)
   GST_PAD_QUERYFUNC (pad) = GST_DEBUG_FUNCPTR (gst_pad_query_default);
   GST_PAD_INTLINKFUNC (pad) =
       GST_DEBUG_FUNCPTR (gst_pad_get_internal_links_default);
+  GST_PAD_ITERINTLINKFUNC (pad) =
+      GST_DEBUG_FUNCPTR (gst_pad_iterate_internal_links_default);
+
   GST_PAD_ACCEPTCAPSFUNC (pad) = GST_DEBUG_FUNCPTR (gst_pad_acceptcaps_default);
 
   pad->do_buffer_signals = 0;
@@ -1345,12 +1348,35 @@ gst_pad_get_query_types_default (GstPad * pad)
 }
 
 /**
+ * gst_pad_set_iterate_internal_links_function:
+ * @pad: a #GstPad of either direction.
+ * @iterintlink: the #GstPadIterIntLinkFunction to set.
+ *
+ * Sets the given internal link iterator function for the pad.
+ *
+ * Since: 0.10.21
+ */
+void
+gst_pad_set_iterate_internal_links_function (GstPad * pad,
+    GstPadIterIntLinkFunction iterintlink)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  GST_PAD_ITERINTLINKFUNC (pad) = iterintlink;
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "internal link iterator set to %s",
+      GST_DEBUG_FUNCPTR_NAME (iterintlink));
+}
+
+/**
  * gst_pad_set_internal_link_function:
  * @pad: a #GstPad of either direction.
  * @intlink: the #GstPadIntLinkFunction to set.
  *
  * Sets the given internal link function for the pad.
+ *
+ * Deprecated: Use the thread-safe gst_pad_set_iterate_internal_links_function()
  */
+#ifndef GST_REMOVE_DEPRECATED
 void
 gst_pad_set_internal_link_function (GstPad * pad, GstPadIntLinkFunction intlink)
 {
@@ -1360,6 +1386,7 @@ gst_pad_set_internal_link_function (GstPad * pad, GstPadIntLinkFunction intlink)
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "internal link set to %s",
       GST_DEBUG_FUNCPTR_NAME (intlink));
 }
+#endif /* GST_REMOVE_DEPRECATED */
 
 /**
  * gst_pad_set_link_function:
@@ -2892,6 +2919,148 @@ gst_pad_alloc_buffer_and_set_caps (GstPad * pad, guint64 offset, gint size,
   return gst_pad_alloc_buffer_full (pad, offset, size, caps, buf, TRUE);
 }
 
+
+#ifndef GST_REMOVE_DEPRECATED
+typedef struct
+{
+  GList *list;
+  guint32 cookie;
+} IntLinkIterData;
+
+static void
+int_link_iter_data_free (IntLinkIterData * data)
+{
+  g_list_free (data->list);
+  g_free (data);
+}
+#endif
+
+static GstIteratorItem
+iterate_pad (GstIterator * it, GstPad * pad)
+{
+  gst_object_ref (pad);
+  return GST_ITERATOR_ITEM_PASS;
+}
+
+/**
+ * gst_pad_iterate_internal_links_default:
+ * @pad: the #GstPad to get the internal links of.
+ *
+ * Iterate the list of pads to which the given pad is linked to inside of
+ * the parent element.
+ * This is the default handler, and thus returns an iterator of all of the
+ * pads inside the parent element with opposite direction.
+ *
+ * The caller must free this iterator after use with gst_iterator_free().
+ *
+ * Returns: a #GstIterator of #GstPad, or NULL if @pad has no parent. Unref each
+ * returned pad with gst_object_unref().
+ *
+ * Since: 0.10.21
+ */
+GstIterator *
+gst_pad_iterate_internal_links_default (GstPad * pad)
+{
+  GstIterator *res;
+  GstElement *parent = NULL;
+  GList **padlist;
+  guint32 *cookie;
+  gpointer owner;
+  GstIteratorDisposeFunction dispose;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+#ifndef GST_REMOVE_DEPRECATED
+  /* when we get here, the default handler for the iterate links is called,
+   * which means that the user has not installed a custom one. We first check if
+   * there is maybe a custom legacy function we can call. */
+  if (GST_PAD_INTLINKFUNC (pad) &&
+      GST_PAD_INTLINKFUNC (pad) != gst_pad_get_internal_links_default) {
+    IntLinkIterData *data;
+
+    /* make an iterator for the list. We can't protect the list with a
+     * cookie. If we would take the cookie of the parent element, we need to
+     * have a parent, which is not required for GST_PAD_INTLINKFUNC(). We could
+     * cache the per-pad list and invalidate the list when a new call to
+     * INTLINKFUNC() returned a different list but then this would only work if
+     * two concurrent iterators were used and the last iterator would still be
+     * thread-unsafe. Just don't use this method anymore. */
+    data = g_new0 (IntLinkIterData, 1);
+    data->list = GST_PAD_INTLINKFUNC (pad) (pad);
+    data->cookie = 0;
+
+    GST_WARNING_OBJECT (pad, "Making unsafe iterator");
+
+    cookie = &data->cookie;
+    padlist = &data->list;
+    owner = data;
+    dispose = (GstIteratorDisposeFunction) int_link_iter_data_free;
+  } else
+#endif
+  {
+    GST_OBJECT_LOCK (pad);
+    parent = GST_PAD_PARENT (pad);
+    if (!parent || !GST_IS_ELEMENT (parent))
+      goto no_parent;
+
+    gst_object_ref (parent);
+    GST_OBJECT_UNLOCK (pad);
+
+    if (pad->direction == GST_PAD_SRC)
+      padlist = &parent->sinkpads;
+    else
+      padlist = &parent->srcpads;
+
+    GST_DEBUG_OBJECT (pad, "Making iterator");
+
+    cookie = &parent->pads_cookie;
+    owner = parent;
+    dispose = (GstIteratorDisposeFunction) gst_object_unref;
+  }
+
+  res = gst_iterator_new_list (GST_TYPE_PAD,
+      GST_OBJECT_GET_LOCK (parent),
+      cookie, padlist, owner, (GstIteratorItemFunction) iterate_pad, dispose);
+
+  return res;
+
+  /* ERRORS */
+no_parent:
+  {
+    GST_OBJECT_UNLOCK (pad);
+    GST_DEBUG_OBJECT (pad, "no parent element");
+    return NULL;
+  }
+}
+
+/**
+ * gst_pad_iterate_internal_links:
+ * @pad: the GstPad to get the internal links of.
+ *
+ * Gets an iterator for the pads to which the given pad is linked to inside
+ * of the parent element.
+ *
+ * Each #GstPad element yielded by the iterator will have its refcount increased,
+ * so unref after use.
+ *
+ * Returns: a new #GstIterator of #GstPad or %NULL when the pad does not have an
+ * iterator function configured. Use gst_iterator_free() after usage.
+ *
+ * Since: 0.10.21
+ */
+GstIterator *
+gst_pad_iterate_internal_links (GstPad * pad)
+{
+  GstIterator *res = NULL;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  if (GST_PAD_ITERINTLINKFUNC (pad))
+    res = GST_PAD_ITERINTLINKFUNC (pad) (pad);
+
+  return res;
+}
+
 /**
  * gst_pad_get_internal_links_default:
  * @pad: the #GstPad to get the internal links of.
@@ -2906,7 +3075,11 @@ gst_pad_alloc_buffer_and_set_caps (GstPad * pad, guint64 offset, gint size,
  * Returns: a newly allocated #GList of pads, or NULL if the pad has no parent.
  *
  * Not MT safe.
+ *
+ * Deprecated: use the thread-safe gst_pad_iterate_internal_links() functions
+ * instead.
  */
+#ifndef GST_REMOVE_DEPRECATED
 GList *
 gst_pad_get_internal_links_default (GstPad * pad)
 {
@@ -2947,6 +3120,7 @@ no_parent:
     return NULL;
   }
 }
+#endif /* GST_REMOVE_DEPRECATED */
 
 /**
  * gst_pad_get_internal_links:
@@ -2959,7 +3133,10 @@ no_parent:
  * Returns: a newly allocated #GList of pads.
  *
  * Not MT safe.
+ * 
+ * Deprecated: Use the thread-safe gst_pad_iterate_internal_links() instead.
  */
+#ifndef GST_REMOVE_DEPRECATED
 GList *
 gst_pad_get_internal_links (GstPad * pad)
 {
@@ -2967,12 +3144,14 @@ gst_pad_get_internal_links (GstPad * pad)
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
+  GST_WARNING_OBJECT (pad, "Calling unsafe internal links");
+
   if (GST_PAD_INTLINKFUNC (pad))
     res = GST_PAD_INTLINKFUNC (pad) (pad);
 
   return res;
 }
-
+#endif /* GST_REMOVE_DEPRECATED */
 
 static gboolean
 gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)

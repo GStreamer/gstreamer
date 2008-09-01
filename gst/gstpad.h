@@ -308,11 +308,28 @@ typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad);
  * The signature of the internal pad link function.
  *
  * Returns: a newly allocated #GList of pads that are linked to the given pad on
- *  the inside of the parent element.
- *  The caller must call g_list_free() on it after use.
+ * the inside of the parent element.
+ *
+ * The caller must call g_list_free() on it after use.
+ *
+ * Deprecated: use the threadsafe #GstPadIterIntLinkFunction instead.
  */
 typedef GList*			(*GstPadIntLinkFunction)	(GstPad *pad);
 
+/**
+ * GstPadIterIntLinkFunction:
+ * @pad: The #GstPad to query.
+ *
+ * The signature of the internal pad link iterator function.
+ *
+ * Returns: a new #GstIterator that will iterate over all pads that are
+ * linked to the given pad on the inside of the parent element.
+ *
+ * the caller must call gst_iterator_free() after usage.
+ *
+ * Since 0.10.21
+ */
+typedef GstIterator*           (*GstPadIterIntLinkFunction)    (GstPad *pad);
 
 /* generic query function */
 /**
@@ -540,6 +557,7 @@ typedef struct _GstPadTemplate GstPadTemplate;
  * @bufferallocfunc: function to allocate a buffer for this pad
  * @do_buffer_signals: counter counting installed buffer signals
  * @do_event_signals: counter counting installed event signals
+ * @iterintlinkfunc: get the internal links iterator of this pad
  *
  * The #GstPad structure. Use the functions to update the variables.
  */
@@ -607,8 +625,12 @@ struct _GstPad {
   gint				 do_buffer_signals;
   gint				 do_event_signals;
 
+  /* ABI added */
+  /* iterate internal links */
+  GstPadIterIntLinkFunction     iterintlinkfunc;
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstPadClass {
@@ -645,6 +667,7 @@ struct _GstPadClass {
 #define GST_PAD_QUERYTYPEFUNC(pad)	(GST_PAD_CAST(pad)->querytypefunc)
 #define GST_PAD_QUERYFUNC(pad)		(GST_PAD_CAST(pad)->queryfunc)
 #define GST_PAD_INTLINKFUNC(pad)	(GST_PAD_CAST(pad)->intlinkfunc)
+#define GST_PAD_ITERINTLINKFUNC(pad)    (GST_PAD_CAST(pad)->iterintlinkfunc)
 
 #define GST_PAD_PEER(pad)		(GST_PAD_CAST(pad)->peer)
 #define GST_PAD_LINKFUNC(pad)		(GST_PAD_CAST(pad)->linkfunc)
@@ -864,6 +887,12 @@ gboolean		gst_pad_stop_task			(GstPad *pad);
 void			gst_pad_set_internal_link_function	(GstPad *pad, GstPadIntLinkFunction intlink);
 GList*			gst_pad_get_internal_links		(GstPad *pad);
 GList*			gst_pad_get_internal_links_default	(GstPad *pad);
+
+void                    gst_pad_set_iterate_internal_links_function (GstPad * pad,
+                                                                 GstPadIterIntLinkFunction iterintlink);
+GstIterator *           gst_pad_iterate_internal_links          (GstPad * pad);
+GstIterator *           gst_pad_iterate_internal_links_default  (GstPad * pad);
+
 
 /* generic query function */
 void			gst_pad_set_query_type_function		(GstPad *pad, GstPadQueryTypeFunction type_func);
