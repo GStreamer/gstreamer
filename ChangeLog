@@ -1,3 +1,10 @@
+2008-09-01  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c: (add_unref_pad_to_list),
+	(gst_pad_get_internal_links_default):
+	Add fallback when calling the deprecated function on an element that
+	implements the new internal_link handler.
+
 2008-09-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
