@@ -111,6 +111,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstaiffparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdccp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpcapparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegtsmux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstscaletempoplugin.so
 
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsink.h
@@ -145,6 +147,9 @@ rm -rf $RPM_BUILD_ROOT
 @USE_WILDMIDI_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
 
 %changelog
+* Mon Sep 1 2008 Christian Schaller <christian.schaller at collabora dot co uk>
+- Add tsmux and scaletempo plugins
+
 * Fri May 2 2008 Christian Schaller <christian.schaller at collabora dot co uk>
 - Add Wildmidi plugin
 

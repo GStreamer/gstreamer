@@ -5,5 +5,5 @@ else
 DIRECTFB_DIR=
 endif
 
-SUBDIRS= $(DIRECTFB_DIR) app switch
-DIST_SUBDIRS= directfb app switch
+SUBDIRS= $(DIRECTFB_DIR) app switch scaletempo
+DIST_SUBDIRS= directfb app switch scaletempo
