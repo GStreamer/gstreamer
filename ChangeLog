@@ -1,3 +1,11 @@
+2008-09-01  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* tests/check/elements/audioresample.c: (setup_audioresample),
+	(fail_unless_perfect_stream), (test_perfect_stream_instance),
+	(test_discont_stream_instance):
+	Now that GstBaseTransform is 'fixed' ... remove cruft from tests.
+	Add debugging for coherence.
+
 2008-08-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Jonathan Matthew  <notverysmart gmail com>
