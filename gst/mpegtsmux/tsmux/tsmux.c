@@ -609,7 +609,7 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
   guint8 *tmp;
   guint8 adaptation_flag;
   guint8 adapt_min_length = 0;
-  guint8 adapt_len;
+  guint8 adapt_len = 0;
   guint payload_len;
   gboolean write_adapt = FALSE;
 
@@ -659,8 +659,6 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
 
     /* Should have written at least the number of bytes we requested */
     g_assert (adapt_len >= adapt_min_length);
-  } else {
-    adapt_len = 0;
   }
 
   /* The amount of packet data we wrote is the remaining space after
