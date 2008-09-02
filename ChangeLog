@@ -1,3 +1,9 @@
+2008-09-02  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_parse_pack_start):
+	* gst/mpegdemux/gstmpegtsdemux.c: (gst_fluts_demux_data_cb):
+	Fix build on macosx.
+
 2008-09-02  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* configure.ac:
