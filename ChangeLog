@@ -1,3 +1,9 @@
+2008-09-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	* tests/check/libs/tag.c:
+	  Use new geo location tags from core. Fixes #481169
+
 2008-09-01  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* tests/check/elements/audioresample.c: (setup_audioresample),
