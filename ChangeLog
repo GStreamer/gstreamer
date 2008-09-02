@@ -1,3 +1,8 @@
+2008-09-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* po/LINGUAS:
+	  Add 'ca' to LINGUAS.
+
 2008-08-28  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_loop):
