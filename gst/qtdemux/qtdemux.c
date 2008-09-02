@@ -4673,6 +4673,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
   const GstStructure *s;
   const gchar *name;
 
+  GST_DEBUG_OBJECT (qtdemux, "resolve fourcc %08x", fourcc);
+
   switch (fourcc) {
     case GST_MAKE_FOURCC ('N', 'O', 'N', 'E'):
     case GST_MAKE_FOURCC ('r', 'a', 'w', ' '):
@@ -4745,22 +4747,31 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       /* FIXME */
       caps = gst_caps_from_string ("audio/x-alaw");
       break;
+    case 0x0200736d:
     case 0x6d730002:
       _codec ("Microsoft ADPCM");
       /* Microsoft ADPCM-ACM code 2 */
       caps = gst_caps_from_string ("audio/x-adpcm, "
           "layout = (string) microsoft");
       break;
+    case 0x1100736d:
     case 0x6d730011:
+      _codec ("IMA Loki SDL MJPEG ADPCM");
+      /* Loki ADPCM, See #550288 for a file that only decodes
+       * with the smjpeg variant of the ADPCM decoder. */
+      caps = gst_caps_from_string ("audio/x-adpcm, "
+          "layout = (string) smjpeg");
+      break;
+    case 0x1700736d:
     case 0x6d730017:
       _codec ("DVI/Intel IMA ADPCM");
       /* FIXME DVI/Intel IMA ADPCM/ACM code 17 */
       caps = gst_caps_from_string ("audio/x-adpcm, "
           "layout = (string) quicktime");
       break;
+    case 0x5500736d:
     case 0x6d730055:
       /* MPEG layer 3, CBR only (pre QT4.1) */
-    case 0x5500736d:
     case GST_MAKE_FOURCC ('.', 'm', 'p', '3'):
       _codec ("MPEG-1 layer 3");
       /* MPEG layer 3, CBR & VBR (QT4.1 and later) */

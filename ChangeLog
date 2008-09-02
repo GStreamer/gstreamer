@@ -1,3 +1,10 @@
+2008-09-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_audio_caps):
+	Add mapping for IMA Loki SDL MJPEG ADPCM codec.
+	Add some alternative byteswapped mappings that seem to pop up sometimes.
+	Fixes #550288.
+
 2008-09-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* po/LINGUAS:
