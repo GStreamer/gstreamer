@@ -724,7 +724,7 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  *
  * Since: 0.10.22
  */
-#define GST_TAG_GEO_LOCATION_ELEVATION               "geo-location-altitude"
+#define GST_TAG_GEO_LOCATION_ELEVATION               "geo-location-elevation"
 
 G_END_DECLS
 

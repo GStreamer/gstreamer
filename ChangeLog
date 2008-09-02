@@ -1,3 +1,8 @@
+2008-09-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gsttaglist.h:
+	  Fix actual tag name define after renaming from altitude to elevation.
+
 2008-09-01  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstpad.c: (add_unref_pad_to_list),
