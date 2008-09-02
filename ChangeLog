@@ -1,3 +1,11 @@
+2008-09-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* po/LINGUAS:
+	* po/POTFILES.in:
+	* po/POTFILES.skip:
+	  Add 'ca' to LINGUAS; add some more files with translations and some
+	  files which should be ignored by translation tools.
+
 2008-09-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/speex/gstspeexdec.c: (speex_dec_chain_parse_data):
