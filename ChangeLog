@@ -1,3 +1,28 @@
+2008-09-02  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* configure.ac:
+	* gst/mpegdemux/Makefile.am:
+	* gst/mpegdemux/flumpegdemux.c:
+	* gst/mpegdemux/flutspatinfo.c:
+	* gst/mpegdemux/flutspatinfo.h:
+	* gst/mpegdemux/flutspmtinfo.c:
+	* gst/mpegdemux/flutspmtinfo.h:
+	* gst/mpegdemux/flutspmtstreaminfo.c:
+	* gst/mpegdemux/flutspmtstreaminfo.h:
+	* gst/mpegdemux/gstmpegdefs.h:
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegdemux/gstmpegdemux.h:
+	* gst/mpegdemux/gstmpegdesc.c:
+	* gst/mpegdemux/gstmpegdesc.h:
+	* gst/mpegdemux/gstmpegtsdemux.c:
+	* gst/mpegdemux/gstmpegtsdemux.h:
+	* gst/mpegdemux/gstpesfilter.c:
+	* gst/mpegdemux/gstpesfilter.h:
+	* gst/mpegdemux/gstsectionfilter.c:
+	* gst/mpegdemux/gstsectionfilter.h:
+	Add Fluendo MPEG PS and TS demuxers to gst-plugins-bad. This
+	is now dual licensed MPL and LGPL.
+
 2008-09-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/mpegtsmux/mpegtsmux.c: (new_packet_cb):
