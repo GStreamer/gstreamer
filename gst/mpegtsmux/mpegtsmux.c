@@ -668,6 +668,8 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
       mux->last_flow_ret = GST_FLOW_ERROR;
       return FALSE;
     }
+    gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
+
     /* copies the ts data of 188 bytes to the m2ts buffer at an offset 
        of 4 bytes of timestamp  */
     memcpy (GST_BUFFER_DATA (buf) + 4, data, len);
@@ -710,6 +712,7 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
           out_buf = gst_adapter_take_buffer (mux->adapter, M2TS_PACKET_LENGTH);
           if (G_UNLIKELY (!out_buf))
             break;
+          gst_buffer_set_caps (out_buf, GST_PAD_CAPS (mux->srcpad));
 
           /*writing the 4  byte timestamp value */
           GST_WRITE_UINT32_BE (GST_BUFFER_DATA (out_buf), m2ts_pcr);
@@ -737,6 +740,7 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
       mux->last_flow_ret = GST_FLOW_ERROR;
       return FALSE;
     }
+    gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
 
     memcpy (GST_BUFFER_DATA (buf), data, len);
     GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;

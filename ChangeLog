@@ -1,3 +1,8 @@
+2008-09-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.c: (new_packet_cb):
+	Set caps on outgoing buffers.
+
 2008-09-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* ext/resindvd/plugin.c: (plugin_init):
