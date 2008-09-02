@@ -24,8 +24,7 @@
 #include <string.h>
 
 #include <gst/gst.h>
-// #include <gst/gst-i18n-plugin.h>
-#define _(s) s                  /* FIXME - add i18n bits to build */
+#include <gst/gst-i18n-plugin.h>
 
 #include "resindvdsrc.h"
 

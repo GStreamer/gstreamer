@@ -1,9 +1,11 @@
-# ext/audiofile/gstafsink.c
-# ext/audiofile/gstafsrc.c
-# sys/dxr3/dxr3audiosink.c
-# sys/dxr3/dxr3audiosink.c
-# sys/dxr3/dxr3videosink.c
+ext/resindvd/resindvdsrc.c
+ext/resindvd/rsnbasesrc.c
 ext/sndfile/gstsfsink.c
 ext/sndfile/gstsfsrc.c
+ext/twolame/gsttwolame.c
+gst/aiffparse/aiffparse.c
 gst/nuvdemux/gstnuvdemux.c
 sys/dvb/gstdvbsrc.c
+sys/oss4/oss4-mixer.c
+sys/oss4/oss4-sink.c
+sys/oss4/oss4-source.c

@@ -1,3 +1,19 @@
+2008-09-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* ext/resindvd/plugin.c: (plugin_init):
+	* ext/resindvd/resindvdsrc.c:
+	* ext/twolame/gsttwolame.c: (plugin_init):
+	* gst/aiffparse/aiffparse.c: (plugin_init):
+	  Enable/fix up translations for these plugins.
+
+	* po/LINGUAS:
+	  Add 'ca' to LINGUAS.
+
+	* po/POTFILES.in:
+	* po/POTFILES.skip:
+	  Add more files for translation and more files which tools
+	  should skip.
+
 2008-09-02  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/mpegtsmux/tsmux/tsmux.c: (tsmux_write_ts_header):
