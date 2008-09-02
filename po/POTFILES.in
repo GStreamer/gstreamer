@@ -9,12 +9,14 @@ gst/playback/gstdecodebin.c
 gst/playback/gstdecodebin2.c
 gst/playback/gstplaybasebin.c
 gst/playback/gstplaybin.c
+gst/playback/gstplaysink.c
 gst/playback/gstqueue2.c
 gst/playback/gsturidecodebin.c
 gst/tcp/gsttcp.c
 gst/tcp/gsttcpclientsink.c
 gst/tcp/gsttcpclientsrc.c
 gst-libs/gst/audio/gstbaseaudiosrc.c
+gst-libs/gst/tag/gsttagdemux.c
 gst-libs/gst/tag/tags.c
 gst-libs/gst/cdda/gstcddabasesrc.c
 gst-libs/gst/pbutils/descriptions.c
