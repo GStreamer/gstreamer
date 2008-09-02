@@ -685,26 +685,9 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
   for (i = 0; i < fpp; i++) {
     GstBuffer *outbuf;
     gint16 *out_data;
-    gint ret, j;
+    gint ret;
 
     GST_LOG_OBJECT (dec, "decoding frame %d/%d", i, fpp);
-
-    ret = speex_decode (dec->state, bits, dec->output);
-    if (ret == -1) {
-      /* uh? end of stream */
-      GST_WARNING_OBJECT (dec, "Unexpected end of stream found");
-      break;
-    } else if (ret == -2) {
-      GST_WARNING_OBJECT (dec, "Decoding error: corrupted stream?");
-      break;
-    }
-
-    if (bits && speex_bits_remaining (bits) < 0) {
-      GST_WARNING_OBJECT (dec, "Decoding overflow: corrupted stream?");
-      break;
-    }
-    if (dec->header->nb_channels == 2)
-      speex_decode_stereo (dec->output, dec->frame_size, &dec->stereo);
 
     res = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
         GST_BUFFER_OFFSET_NONE, dec->frame_size * dec->header->nb_channels * 2,
@@ -717,15 +700,28 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
 
     out_data = (gint16 *) GST_BUFFER_DATA (outbuf);
 
-    /*PCM saturation (just in case) */
-    for (j = 0; j < dec->frame_size * dec->header->nb_channels; j++) {
-      if (dec->output[j] > 32767.0)
-        out_data[j] = 32767;
-      else if (dec->output[i] < -32768.0)
-        out_data[j] = -32768;
-      else
-        out_data[j] = (gint16) dec->output[j];
+    ret = speex_decode_int (dec->state, bits, out_data);
+    if (ret == -1) {
+      /* uh? end of stream */
+      GST_WARNING_OBJECT (dec, "Unexpected end of stream found");
+      gst_buffer_unref (outbuf);
+      outbuf = NULL;
+      break;
+    } else if (ret == -2) {
+      GST_WARNING_OBJECT (dec, "Decoding error: corrupted stream?");
+      gst_buffer_unref (outbuf);
+      outbuf = NULL;
+      break;
     }
+
+    if (bits && speex_bits_remaining (bits) < 0) {
+      GST_WARNING_OBJECT (dec, "Decoding overflow: corrupted stream?");
+      gst_buffer_unref (outbuf);
+      outbuf = NULL;
+      break;
+    }
+    if (dec->header->nb_channels == 2)
+      speex_decode_stereo_int (out_data, dec->frame_size, &dec->stereo);
 
     if (dec->granulepos == -1) {
       if (dec->segment.format != GST_FORMAT_TIME) {

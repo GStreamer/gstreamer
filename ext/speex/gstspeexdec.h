@@ -63,8 +63,6 @@ struct _GstSpeexDec {
   SpeexCallback         callback;
   SpeexBits             bits;
 
-  gfloat                output[DEC_MAX_FRAME_SIZE];
-
   gboolean              enh;
 
   gint                  frame_size;

@@ -107,8 +107,6 @@ struct _GstSpeexEnc {
   guint8                *comments;
   gint                  comment_len;
 
-  gfloat                input[MAX_FRAME_SIZE];
-
   /* Timestamp and granulepos tracking */
   GstClockTime     start_ts;
   GstClockTime     next_ts;

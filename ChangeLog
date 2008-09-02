@@ -1,3 +1,15 @@
+2008-09-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/speex/gstspeexdec.c: (speex_dec_chain_parse_data):
+	* ext/speex/gstspeexdec.h:
+	* ext/speex/gstspeexenc.c: (gst_speex_enc_encode):
+	* ext/speex/gstspeexenc.h:
+	Use integer encoding and decoding functions instead of converting
+	the integer input to float in the element. The libspeex integer
+	functions are doing this for us already or, if libspeex was compiled
+	in integer mode, they're doing everything using integer arithmetics.
+	Also saves some copying around.
+
 2008-09-01  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac:

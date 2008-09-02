@@ -867,25 +867,21 @@ gst_speex_enc_encode (GstSpeexEnc * enc, gboolean flush)
 
   while (gst_adapter_available (enc->adapter) >= bytes) {
     gint16 *data;
-    gint i;
     gint outsize, written;
     GstBuffer *outbuf;
 
-    data = (gint16 *) gst_adapter_peek (enc->adapter, bytes);
-
-    for (i = 0; i < frame_size * enc->channels; i++) {
-      enc->input[i] = (gfloat) data[i];
-    }
-    gst_adapter_flush (enc->adapter, bytes);
+    data = (gint16 *) gst_adapter_take (enc->adapter, bytes);
 
     enc->samples_in += frame_size;
 
     GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)", frame_size, bytes);
 
     if (enc->channels == 2) {
-      speex_encode_stereo (enc->input, frame_size, &enc->bits);
+      speex_encode_stereo_int (data, frame_size, &enc->bits);
     }
-    speex_encode (enc->state, enc->input, &enc->bits);
+    speex_encode_int (enc->state, data, &enc->bits);
+
+    g_free (data);
 
     enc->frameno++;
     enc->frameno_out++;
