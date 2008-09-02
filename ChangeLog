@@ -1,3 +1,9 @@
+2008-09-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Disable subparse when xml is disabled. It woundn't work anyway. Fixes
+	  test runs.
+
 2008-09-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* po/POTFILES.in:

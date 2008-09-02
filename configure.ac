@@ -304,6 +304,13 @@ AG_GST_CHECK_PLUGIN(videorate)
 AG_GST_CHECK_PLUGIN(videoscale)
 AG_GST_CHECK_PLUGIN(volume)
 
+dnl check for gstreamer core features (subsystems)
+GST_CONFIGPATH=`$PKG_CONFIG --variable=includedir gstreamer-0.10`"/gst/gstconfig.h"
+AG_GST_PARSE_SUBSYSTEM_DISABLES($GST_CONFIGPATH)
+if test $GST_DISABLE_XML = "1"; then
+  AG_GST_DISABLE_PLUGIN(subparse)
+fi
+
 dnl disable plug-ins that require libxml2's HTML support if it is not available
 if test "x$HAVE_LIBXML_HTML" != "xyes"; then
   AG_GST_DISABLE_PLUGIN(subparse)
