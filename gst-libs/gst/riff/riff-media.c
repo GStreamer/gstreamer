@@ -1048,6 +1048,14 @@ gst_riff_create_audio_caps (guint16 codec_id,
       block_align = TRUE;
       break;
 
+    case GST_RIFF_WAVE_FORMAT_DSP_TRUESPEECH:
+      rate_min = 8000;
+      rate_max = 8000;
+      caps = gst_caps_new_simple ("audio/x-gst_ff-truespeech", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("DSP Group TrueSpeech");
+      break;
+
     case GST_RIFF_WAVE_FORMAT_GSM610:
     case GST_RIFF_WAVE_FORMAT_MSN:
       rate_min = 1;
@@ -1541,6 +1549,7 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_WMS,
     GST_RIFF_WAVE_FORMAT_ADPCM,
     GST_RIFF_WAVE_FORMAT_DVI_ADPCM,
+    GST_RIFF_WAVE_FORMAT_DSP_TRUESPEECH,
     GST_RIFF_WAVE_FORMAT_WMAV1,
     GST_RIFF_WAVE_FORMAT_WMAV2,
     GST_RIFF_WAVE_FORMAT_WMAV3,
