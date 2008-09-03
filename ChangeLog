@@ -1,3 +1,9 @@
+2008-09-03  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	Typefind video/mj2 and image/jp2 ISO JPEG2000 mime types.
+	Fixes #550638.
+
 2008-09-03  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

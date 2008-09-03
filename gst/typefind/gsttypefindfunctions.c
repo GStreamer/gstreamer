@@ -2954,6 +2954,8 @@ plugin_init (GstPlugin * plugin)
   static gchar *ogg_exts[] = { "anx", "ogg", "ogm", NULL };
   static gchar *qt_exts[] = { "mov", NULL };
   static gchar *qtif_exts[] = { "qif", "qtif", "qti", NULL };
+  static gchar *mj2_exts[] = { "mj2", NULL };
+  static gchar *jp2_exts[] = { "jp2", NULL };
   static gchar *rm_exts[] = { "ra", "ram", "rm", "rmvb", NULL };
   static gchar *swf_exts[] = { "swf", "swfl", NULL };
   static gchar *utf8_exts[] = { "txt", NULL };
@@ -3085,6 +3087,12 @@ plugin_init (GstPlugin * plugin)
       qt_type_find, qt_exts, QT_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "image/x-quicktime", GST_RANK_SECONDARY,
       qtif_type_find, qtif_exts, QTIF_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "image/jp2", GST_RANK_PRIMARY,
+      jp2_exts, "\000\000\000\014jP  \015\012\207\012\000\000\000\024ftypjp2 ",
+      24, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "video/mj2", GST_RANK_PRIMARY,
+      mj2_exts, "\000\000\000\014jP  \015\012\207\012\000\000\000\024ftypmjp2",
+      24, GST_TYPE_FIND_MAXIMUM);
 
   TYPE_FIND_REGISTER (plugin, "text/html", GST_RANK_SECONDARY, html_type_find,
       html_exts, HTML_CAPS, NULL, NULL);
