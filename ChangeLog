@@ -1,3 +1,12 @@
+=== release 0.10.5 ===
+
+2008-09-03  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  releasing 0.10.5, "This little piggy went to market"
+
 2008-09-03  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
