@@ -1,3 +1,14 @@
+2008-09-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* gst/subparse/Makefile.am:
+	* gst/subparse/gstsubparse.c:
+	* gst/subparse/samiparse.c:
+	* tests/check/elements/subparse.c:
+	  Rework last change, so that we build subparse, but just disable the
+	  sami parse functionality, if we're configured to not use xml. In the
+	  tests only the sami test is disabled now.
+
 2008-09-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

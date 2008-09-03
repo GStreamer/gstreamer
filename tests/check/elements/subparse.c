@@ -583,6 +583,7 @@ GST_START_TEST (test_subviewer2)
 
 GST_END_TEST;
 
+#ifndef GST_DISABLE_XML
 GST_START_TEST (test_sami)
 {
   SubParseInputChunk sami_input[] = {
@@ -618,6 +619,7 @@ GST_START_TEST (test_sami)
 }
 
 GST_END_TEST;
+#endif
 
 /* TODO:
  *  - add/modify tests so that lines aren't dogfed to the parsers in complete
@@ -646,7 +648,9 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_mpl2);
   tcase_add_test (tc_chain, test_subviewer);
   tcase_add_test (tc_chain, test_subviewer2);
+#ifndef GST_DISABLE_XML
   tcase_add_test (tc_chain, test_sami);
+#endif
   return s;
 }
 

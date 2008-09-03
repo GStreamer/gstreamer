@@ -19,8 +19,6 @@
 
 #include "samiparse.h"
 
-/* FIXME: use Makefile stuff */
-#ifndef GST_DISABLE_XML
 #include <libxml/HTMLparser.h>
 #include <string.h>
 
@@ -466,32 +464,3 @@ parse_sami (ParserState * state, const gchar * line)
   }
   return NULL;
 }
-
-#else /* GST_DISABLE_XML */
-
-gchar *
-parse_sami (ParserState * state, const gchar * line)
-{
-  /* our template caps should not include sami in this case */
-  g_assert_not_reached ();
-}
-
-void
-sami_context_init (ParserState * state)
-{
-  return;
-}
-
-void
-sami_context_deinit (ParserState * state)
-{
-  return;
-}
-
-void
-sami_context_reset (ParserState * state)
-{
-  return;
-}
-
-#endif /* GST_DISABLE_XML */

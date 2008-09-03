@@ -146,7 +146,9 @@ gst_sub_parse_dispose (GObject * object)
     g_string_free (subparse->textbuf, TRUE);
     subparse->textbuf = NULL;
   }
+#ifndef GST_DISABLE_XML
   sami_context_deinit (&subparse->state);
+#endif
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
@@ -882,9 +884,11 @@ parser_state_dispose (ParserState * state)
     g_string_free (state->buf, TRUE);
     state->buf = NULL;
   }
+#ifndef GST_DISABLE_XML
   if (state->user_data) {
     sami_context_reset (state);
   }
+#endif
 }
 
 /*
@@ -931,11 +935,13 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
     GST_LOG ("MPSub (time based) format detected");
     return GST_SUB_PARSE_FORMAT_MPSUB;
   }
+#ifndef GST_DISABLE_XML
   if (strstr (match_str, "<SAMI>") != NULL ||
       strstr (match_str, "<sami>") != NULL) {
     GST_LOG ("SAMI (time based) format detected");
     return GST_SUB_PARSE_FORMAT_SAMI;
   }
+#endif
   /* we're boldly assuming the first subtitle appears within the first hour */
   if (sscanf (match_str, "0:%02u:%02u:", &n1, &n2) == 2 ||
       sscanf (match_str, "0:%02u:%02u=", &n1, &n2) == 2 ||
@@ -986,10 +992,12 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
     case GST_SUB_PARSE_FORMAT_MPSUB:
       self->parse_line = parse_mpsub;
       return gst_caps_new_simple ("text/plain", NULL);
+#ifndef GST_DISABLE_XML
     case GST_SUB_PARSE_FORMAT_SAMI:
       self->parse_line = parse_sami;
       sami_context_init (&self->state);
       return gst_caps_new_simple ("text/x-pango-markup", NULL);
+#endif
     case GST_SUB_PARSE_FORMAT_TMPLAYER:
       self->parse_line = parse_tmplayer;
       self->state.max_duration = 5 * GST_SECOND;
@@ -1027,7 +1035,9 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
     /* flush the parser state */
     parser_state_init (&self->state);
     g_string_truncate (self->textbuf, 0);
+#ifndef GST_DISABLE_XML
     sami_context_reset (&self->state);
+#endif
     /* we could set a flag to make sure that the next buffer we push out also
      * has the DISCONT flag set, but there's no point really given that it's
      * subtitles which are discontinuous by nature. */
@@ -1272,15 +1282,19 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
  * also, give different  subtitle formats really different types */
 static GstStaticCaps mpl2_caps =
 GST_STATIC_CAPS ("application/x-subtitle-mpl2");
+#define SUB_CAPS (gst_static_caps_get (&sub_caps))
+
 static GstStaticCaps tmp_caps =
 GST_STATIC_CAPS ("application/x-subtitle-tmplayer");
-static GstStaticCaps smi_caps = GST_STATIC_CAPS ("application/x-subtitle-sami");
-static GstStaticCaps sub_caps = GST_STATIC_CAPS ("application/x-subtitle");
-
-#define SUB_CAPS (gst_static_caps_get (&sub_caps))
-#define SAMI_CAPS (gst_static_caps_get (&smi_caps))
 #define TMP_CAPS (gst_static_caps_get (&tmp_caps))
+
+static GstStaticCaps sub_caps = GST_STATIC_CAPS ("application/x-subtitle");
 #define MPL2_CAPS (gst_static_caps_get (&mpl2_caps))
+
+#ifndef GST_DISABLE_XML
+static GstStaticCaps smi_caps = GST_STATIC_CAPS ("application/x-subtitle-sami");
+#define SAMI_CAPS (gst_static_caps_get (&smi_caps))
+#endif
 
 static void
 gst_subparse_type_find (GstTypeFind * tf, gpointer private)
@@ -1311,10 +1325,12 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
       GST_DEBUG ("MPSub format detected");
       caps = SUB_CAPS;
       break;
+#ifndef GST_DISABLE_XML
     case GST_SUB_PARSE_FORMAT_SAMI:
       GST_DEBUG ("SAMI (time-based) format detected");
       caps = SAMI_CAPS;
       break;
+#endif
     case GST_SUB_PARSE_FORMAT_TMPLAYER:
       GST_DEBUG ("TMPlayer (time based) format detected");
       caps = TMP_CAPS;

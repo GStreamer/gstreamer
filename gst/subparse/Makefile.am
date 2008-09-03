@@ -1,12 +1,17 @@
 plugin_LTLIBRARIES = libgstsubparse.la
 
+if USE_XML
+SAMIPARSE_SOURCES = samiparse.c samiparse.h
+else
+SAMIPARSE_SOURCES = 
+endif
+
 libgstsubparse_la_SOURCES = \
 	gstssaparse.c \
 	gstssaparse.h \
 	gstsubparse.c \
 	gstsubparse.h \
-	samiparse.c \
-	samiparse.h \
+	$(SAMIPARSE_SOURCES) \
 	tmplayerparse.c \
 	tmplayerparse.h \
 	mpl2parse.c \
