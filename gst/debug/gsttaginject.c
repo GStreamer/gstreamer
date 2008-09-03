@@ -25,7 +25,10 @@
  * unmodified.
  * |[
  * gst-launch audiotestsrc num-buffers=100 ! taginject tags="title=testsrc,artist=gstreamer" ! vorbisenc ! oggmux ! filesink location=test.ogg
- * ]|
+ * ]| set title and artist
+ * |[
+ * gst-launch audiotestsrc num-buffers=100 ! taginject tags="keywords=\"testone,audio\",title=\"audio testtone\"" ! vorbisenc ! oggmux ! filesink location=test.ogg
+ * ]| set keywords and title demonstrating quoting of special chars
  */
 
 #ifdef HAVE_CONFIG_H
@@ -141,6 +144,7 @@ gst_tag_inject_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     self->tags_sent = TRUE;
     /* send tags */
     if (self->tags && !gst_tag_list_is_empty (self->tags)) {
+      GST_DEBUG ("tag event :%" GST_PTR_FORMAT, self->tags);
       gst_element_found_tags (GST_ELEMENT (trans),
           gst_tag_list_copy (self->tags));
     }
@@ -154,14 +158,17 @@ gst_tag_inject_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstTagInject *self = GST_TAG_INJECT (object);
-  gchar *structure;
 
   switch (prop_id) {
-    case PROP_TAGS:
-      structure = g_strdup_printf ("taglist,%s", g_value_get_string (value));
-      self->tags = gst_structure_from_string (structure, NULL);
+    case PROP_TAGS:{
+      gchar *structure =
+          g_strdup_printf ("taglist,%s", g_value_get_string (value));
+      if (!(self->tags = gst_structure_from_string (structure, NULL))) {
+        GST_WARNING ("unparsable taglist = '%s'", structure);
+      }
       g_free (structure);
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

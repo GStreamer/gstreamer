@@ -1,3 +1,9 @@
+2008-09-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/debug/gsttaginject.c:
+	  Add warning when tags parameter is unparsable and give example for
+	  quoting in the docs.
+
 2008-09-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_audio_caps):
