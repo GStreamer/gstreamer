@@ -1,3 +1,8 @@
+2008-09-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gsttaglist.h:
+	  Fix Since: markers for new geo tags.
+
 2008-09-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gsttaglist.h:

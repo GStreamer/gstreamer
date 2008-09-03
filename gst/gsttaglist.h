@@ -690,7 +690,7 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  * human readable descriptive location of where the media has been recorded or
  * produced. (string).
  *
- * Since: 0.10.22
+ * Since: 0.10.21
  */
 #define GST_TAG_GEO_LOCATION_NAME               "geo-location-name"
 
@@ -701,7 +701,7 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  * degrees according to WGS84 (zero at the equator, negative values for southern
  * latitudes) (double).
  *
- * Since: 0.10.22
+ * Since: 0.10.21
  */
 #define GST_TAG_GEO_LOCATION_LATITUDE               "geo-location-latitude"
 
@@ -712,7 +712,7 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  * degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,
  * negative values for western longitudes). (double).
  *
- * Since: 0.10.22
+ * Since: 0.10.21
  */
 #define GST_TAG_GEO_LOCATION_LONGITUDE               "geo-location-longitude"
 
@@ -722,7 +722,7 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  * geo elevation of where the media has been recorded or produced in meters
  * according to WGS84 (zero is average sea level) (double).
  *
- * Since: 0.10.22
+ * Since: 0.10.21
  */
 #define GST_TAG_GEO_LOCATION_ELEVATION               "geo-location-elevation"
 
