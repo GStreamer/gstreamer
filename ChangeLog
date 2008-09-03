@@ -1,3 +1,9 @@
+2008-09-03  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	Give the TrueSpeech audio codec a proper caps. This is now synchronized
+	with libriff in -base cvs.
+
 2008-08-31  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* configure.ac:

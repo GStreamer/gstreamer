@@ -774,6 +774,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vmnc", NULL);
     break;
 
+    case CODEC_ID_TRUESPEECH:
+    caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-truespeech", NULL);
+    break;
+
     case CODEC_ID_WS_VQA:
     case CODEC_ID_IDCIN:
     case CODEC_ID_8BPS:
@@ -800,7 +804,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_MMVIDEO:
     case CODEC_ID_ZMBV:
     case CODEC_ID_AVS:
-    case CODEC_ID_TRUESPEECH:
     case CODEC_ID_CAVS:
       buildcaps = TRUE;
       break;
