@@ -1,3 +1,14 @@
+2008-09-03  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
+	(gst_qtdemux_loop_state_header), (qtdemux_parse_node),
+	(qtdemux_parse_trak), (qtdemux_video_caps):
+	* gst/qtdemux/qtdemux.h:
+	* gst/qtdemux/qtdemux_fourcc.h:
+	* gst/qtdemux/qtdemux_types.c:
+	Add support for video/mj2 mime-type and its additional atoms/boxes.
+	Fixes #550646.
+
 2008-09-03  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/debug/gsttaginject.c:

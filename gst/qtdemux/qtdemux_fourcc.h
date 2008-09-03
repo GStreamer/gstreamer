@@ -24,6 +24,7 @@
 
 G_BEGIN_DECLS
 
+#define FOURCC_ftyp     GST_MAKE_FOURCC('f','t','y','p')
 #define FOURCC_moov     GST_MAKE_FOURCC('m','o','o','v')
 #define FOURCC_mvhd     GST_MAKE_FOURCC('m','v','h','d')
 #define FOURCC_clip     GST_MAKE_FOURCC('c','l','i','p')
@@ -132,6 +133,15 @@ G_BEGIN_DECLS
 #define FOURCC_ctts     GST_MAKE_FOURCC('c','t','t','s')
 #define FOURCC_keyw     GST_MAKE_FOURCC('k','e','y','w')
 #define FOURCC_kywd     GST_MAKE_FOURCC('k','y','w','d')
+
+/* ISO Motion JPEG 2000 fourcc */
+#define FOURCC_mjp2     GST_MAKE_FOURCC('m','j','p','2')
+#define FOURCC_jp2h     GST_MAKE_FOURCC('j','p','2','h')
+#define FOURCC_colr     GST_MAKE_FOURCC('c','o','l','r')
+#define FOURCC_fiel     GST_MAKE_FOURCC('f','i','e','l')
+#define FOURCC_jp2x     GST_MAKE_FOURCC('j','p','2','x')
+/* some buggy hardware's notion of mdhd */
+#define FOURCC_mhdr     GST_MAKE_FOURCC('m','h','d','r')
 
 /* Xiph fourcc */
 #define FOURCC_XiTh     GST_MAKE_FOURCC('X','i','T','h')

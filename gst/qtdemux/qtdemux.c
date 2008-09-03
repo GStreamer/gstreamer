@@ -259,7 +259,8 @@ static GstStaticPadTemplate gst_qtdemux_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/quicktime; audio/x-m4a; application/x-3gp")
+    GST_STATIC_CAPS ("video/quicktime; video/mj2; audio/x-m4a; "
+        "application/x-3gp")
     );
 
 static GstStaticPadTemplate gst_qtdemux_videosrc_template =
@@ -1032,6 +1033,7 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
           g_free (stream->segments);
         g_free (stream);
       }
+      qtdemux->major_brand = 0;
       qtdemux->n_streams = 0;
       qtdemux->n_video_streams = 0;
       qtdemux->n_audio_streams = 0;
@@ -1129,6 +1131,25 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       qtdemux->state = QTDEMUX_STATE_MOVIE;
       GST_DEBUG_OBJECT (qtdemux, "switching state to STATE_MOVIE (%d)",
           qtdemux->state);
+      break;
+    }
+    case FOURCC_ftyp:
+    {
+      GstBuffer *ftyp;
+
+      /* extract major brand; might come in handy for ISO vs QT issues */
+      ret = gst_pad_pull_range (qtdemux->sinkpad, cur_offset, length, &ftyp);
+      if (ret != GST_FLOW_OK)
+        goto beach;
+      cur_offset += length;
+      qtdemux->offset += length;
+      /* only consider at least a sufficiently complete ftyp atom */
+      if (length >= 20) {
+        qtdemux->major_brand = QT_FOURCC (GST_BUFFER_DATA (ftyp) + 8);
+        GST_DEBUG_OBJECT (qtdemux, "major brand: %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (qtdemux->major_brand));
+      }
+      gst_buffer_unref (ftyp);
       break;
     }
     default:
@@ -2627,6 +2648,11 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
         }
         break;
       }
+      case FOURCC_mjp2:
+      {
+        qtdemux_parse_container (qtdemux, node, buffer + 86, end);
+        break;
+      }
       case FOURCC_meta:
       {
         GST_DEBUG_OBJECT (qtdemux, "parsing meta atom");
@@ -3256,8 +3282,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   if (!(mdia = qtdemux_tree_get_child_by_type (trak, FOURCC_mdia)))
     goto corrupt_file;
 
-  if (!(mdhd = qtdemux_tree_get_child_by_type (mdia, FOURCC_mdhd)))
-    goto corrupt_file;
+  if (!(mdhd = qtdemux_tree_get_child_by_type (mdia, FOURCC_mdhd))) {
+    /* be nice for some crooked mjp2 files that use mhdr for mdhd */
+    if (qtdemux->major_brand != FOURCC_mjp2 ||
+        !(mdhd = qtdemux_tree_get_child_by_type (mdia, FOURCC_mhdr)))
+      goto corrupt_file;
+  }
 
   version = QT_UINT32 ((guint8 *) mdhd->data + 8);
   GST_LOG_OBJECT (qtdemux, "track version/flags: %08x", version);
@@ -3388,6 +3418,75 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             gst_caps_set_simple (stream->caps,
                 "codec_data", GST_TYPE_BUFFER, buf, NULL);
             gst_buffer_unref (buf);
+          }
+          break;
+        }
+        case FOURCC_mjp2:
+        {
+          GNode *jp2h, *colr, *mjp2, *field, *prefix;
+          const guint8 *data;
+          guint32 fourcc = 0;
+
+          GST_DEBUG_OBJECT (qtdemux, "found mjp2");
+          /* some required atoms */
+          mjp2 = qtdemux_tree_get_child_by_type (stsd, FOURCC_mjp2);
+          if (!mjp2)
+            break;
+          jp2h = qtdemux_tree_get_child_by_type (mjp2, FOURCC_jp2h);
+          if (!jp2h)
+            break;
+          colr = qtdemux_tree_get_child_by_type (jp2h, FOURCC_colr);
+          if (!colr)
+            break;
+          GST_DEBUG_OBJECT (qtdemux, "found colr");
+          /* try to extract colour space info */
+          if (QT_UINT8 (colr->data + 8) == 1) {
+            switch (QT_UINT32 (colr->data + 11)) {
+              case 16:
+                fourcc = GST_MAKE_FOURCC ('s', 'R', 'G', 'B');
+                break;
+              case 17:
+                fourcc = GST_MAKE_FOURCC ('G', 'R', 'A', 'Y');
+                break;
+              case 18:
+                fourcc = GST_MAKE_FOURCC ('s', 'Y', 'U', 'V');
+                break;
+              default:
+                break;
+            }
+          }
+
+          if (fourcc)
+            gst_caps_set_simple (stream->caps,
+                "fourcc", GST_TYPE_FOURCC, fourcc, NULL);
+
+          /* some optional atoms */
+          field = qtdemux_tree_get_child_by_type (mjp2, FOURCC_fiel);
+          prefix = qtdemux_tree_get_child_by_type (mjp2, FOURCC_jp2x);
+
+          /* indicate possible fields in caps */
+          if (field) {
+            data = field->data + 8;
+            if (*data != 1)
+              gst_caps_set_simple (stream->caps, "fields", G_TYPE_INT,
+                  (gint) * data, NULL);
+          }
+          /* add codec_data if provided */
+          if (prefix) {
+            GstBuffer *buf;
+            gint len;
+
+            GST_DEBUG_OBJECT (qtdemux, "found prefix data in stsd");
+            data = prefix->data;
+            len = QT_UINT32 (data);
+            if (len > 0x8) {
+              len -= 0x8;
+              buf = gst_buffer_new_and_alloc (len);
+              memcpy (GST_BUFFER_DATA (buf), data + 8, len);
+              gst_caps_set_simple (stream->caps,
+                  "codec_data", GST_TYPE_BUFFER, buf, NULL);
+              gst_buffer_unref (buf);
+            }
           }
           break;
         }
@@ -3611,6 +3710,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         case FOURCC_QDMC:
         {
           gint len = QT_UINT32 (stsd_data);
+
           /* seems to be always = 116 = 0x74 */
           break;
         }
@@ -4429,6 +4529,12 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('m', 'j', 'p', 'b'):
       _codec ("Motion-JPEG format B");
       caps = gst_caps_from_string ("video/x-mjpeg-b");
+      break;
+    case GST_MAKE_FOURCC ('m', 'j', 'p', '2'):
+      _codec ("JPEG-2000");
+      /* override to what it should be according to spec, avoid palette_data */
+      stream->bits_per_sample = 24;
+      caps = gst_caps_new_simple ("image/x-j2c", "fields", G_TYPE_INT, 1, NULL);
       break;
     case GST_MAKE_FOURCC ('S', 'V', 'Q', '3'):
       _codec ("Sorensen video v.3");
