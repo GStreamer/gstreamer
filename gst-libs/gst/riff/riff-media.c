@@ -1051,7 +1051,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
     case GST_RIFF_WAVE_FORMAT_DSP_TRUESPEECH:
       rate_min = 8000;
       rate_max = 8000;
-      caps = gst_caps_new_simple ("audio/x-gst_ff-truespeech", NULL);
+      caps = gst_caps_new_simple ("audio/x-truespeech", NULL);
       if (codec_name)
         *codec_name = g_strdup ("DSP Group TrueSpeech");
       break;

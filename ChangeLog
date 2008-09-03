@@ -1,5 +1,13 @@
 2008-09-03  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	Use a decent caps for TrueSpeech instead of a ffmpeg-specific one.
+	This will also be fixed for upcoming gst-ffmpeg release so that once
+	this release of -base is out, it will work with the latest gst-ffmpeg
+	release.
+
+2008-09-03  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps),
 	(gst_riff_create_audio_template_caps):
 	Add Truespeech mapping for RIFF formats (AVI/WAV).
