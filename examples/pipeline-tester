@@ -41,44 +41,44 @@ import debugslider
 data = (('Video capture via V4L',
          'v4lsrc name=source \n'
          '    ! videorate \n'
-         '    ! xvimagesink'),
+         '    ! ffmpegcolorspace ! autovideosink'),
         ('Video capture via V4L, fixed frame rate',
          'v4lsrc name=source autoprobe=false autoprobe-fps=false \n'
          '    ! video/x-raw-yuv,format=(fourcc)I420,framerate=(double)7.5 \n'
          '    ! videorate \n'
          '    ! ffmpegcolorspace \n'
-         '    ! xvimagesink'),
-        ('Sound capture via ALSA',
-         'alsasrc\n'
-         '    ! audio/x-raw-int,rate=22050,depth=16,channels=1,width=16,signed=(boolean)TRUE,endianness=1234\n'
+         '    ! autovideosink'),
+        ('Sound capture',
+         'gconfaudiosrc\n'
+         '    ! audio/x-raw-int,rate=22050,depth=16,channels=1,width=16,signed=(boolean)TRUE,endianness=(int)BYTE_ORDER\n'
          '    ! level message=true\n'
          '    ! fakesink'),
         ('Streaming Ogg/Theora+Vorbis playback, tee to disk',
          'gnomevfssrc location=http://gstreamer.freedesktop.org/media/small/cooldance.ogg \n'
          '    ! tee name=tee \n'
          '    tee. ! oggdemux name=demux \n'
-         '    demux. ! queue ! theoradec ! xvimagesink \n'
-         '    demux. ! queue ! vorbisdec ! audioconvert ! alsasink \n'
-         '    tee. ! queue ! filesink location=cooldance.ogg'),
+         '    demux. ! queue ! theoradec ! ffmpegcolorspace ! autovideosink \n'
+         '    demux. ! queue ! vorbisdec ! audioconvert ! autoaudiosink \n'
+         '    tee. ! queue ! filesink location=/tmp/cooldance.ogg'),
         ('Video test, YUV format',
          'videotestsrc \n'
          '    ! video/x-raw-yuv,format=(fourcc)I420 \n'
-         '    ! xvimagesink'),
+         '    ! ffmpegcolorspace ! autovideosink'),
         ('Video test, RGB format',
          'videotestsrc \n'
          '    ! video/x-raw-rgb,red_mask=0xff00 \n'
          '    ! ffmpegcolorspace \n'
-         '    ! ximagesink'),
+         '    ! autovideosink'),
         ('Software scaling',
          'videotestsrc \n'
          '    ! video/x-raw-rgb,height=200,width=320 \n'
          '    ! videoscale method=2 \n'
-         '    ! ximagesink'),
-        ('Reencode Vorbis to mulaw, play via ALSA',
-         'filesrc location=cooldance.ogg \n'
+         '    ! ffmpegcolorspace ! autovideosink'),
+        ('Reencode Vorbis to mulaw, play',
+         'filesrc location=/tmp/cooldance.ogg \n'
          '    ! oggdemux \n'
          '    ! vorbisdec ! audioconvert \n'
-         '    ! mulawenc ! mulawdec ! alsasink'),
+         '    ! mulawenc ! mulawdec ! autoaudiosink'),
         ('Capture DV via firewire, transcode into Ogg',
          'dv1394src \n'
          '    ! dvdemux name=demux \n'
@@ -93,7 +93,7 @@ data = (('Video capture via V4L',
          '    ! ffmpegcolorspace \n'
          '    ! theoraenc \n'
          '    ! oggmux name=mux \n'
-         '    ! filesink location=dv.ogg \n'
+         '    ! filesink location=/tmp/dv.ogg \n'
          ' \n'
          '    demux. \n'
          '    ! audio/x-raw-int \n'

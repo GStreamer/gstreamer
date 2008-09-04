@@ -1,3 +1,11 @@
+2008-09-04  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* examples/pipeline-tester:
+	Don't hardcode audio/video source and sinks, and instead use more
+	generic sources.
+	Based on a patch by Brian Cameron <brian.cameron@sun.com>
+	Fixes #517993
+
 2008-08-26  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/gstcaps.override:
