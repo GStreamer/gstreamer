@@ -1615,6 +1615,86 @@ gst_ffmpeg_caps_with_codectype (enum CodecType type,
   }
 }
 
+static void
+nal_escape (guint8 *dst, guint8 *src, guint size, guint *destsize)
+{
+  guint8 *dstp = dst;
+  guint8 *srcp = src;
+  guint8 *end = src + size;
+  gint count = 0;
+
+  while (srcp < end) {
+    if (count == 2 && *srcp <= 0x03 ) {
+      *dstp++ = 0x03;
+      count = 0;
+    }
+    if (*srcp == 0)
+      count++;
+    else
+      count = 0;
+
+    *dstp++ = *srcp++;
+  }
+  *destsize = dstp - dst;
+}
+
+/* copy the config, escaping NAL units as we iterate them, if something fails we
+ * copy everything and hope for the best. */
+static void
+copy_config (guint8 *dst, guint8 *src, guint size, guint *destsize)
+{
+  guint8 *dstp = dst;
+  guint8 *srcp = src;
+  gint cnt, i;
+  guint nalsize, esize;
+
+  goto full_copy;
+
+  /* check size */
+  if (size < 7)
+    goto full_copy;
+
+   /* check version */
+  if (*srcp != 1)
+    goto full_copy;
+
+  cnt = *(srcp + 5) & 0x1f;  /* Number of sps */
+
+  memcpy (dstp, srcp, 6);
+  srcp += 6;
+  dstp += 6;
+
+  for (i = 0; i < cnt; i++) {
+    nalsize = (srcp[0] << 8) | srcp[1];
+    nal_escape (dstp + 2, srcp + 2, nalsize, &esize);
+    dstp[0] = esize >> 8;
+    dstp[1] = esize & 0xff;
+    dstp += esize + 2;
+    srcp += nalsize + 2;
+  }
+
+  cnt = *(dstp++) = *(srcp++); /* Number of pps */
+
+  for (i = 0; i < cnt; i++) {
+    nalsize = (srcp[0] << 8) | srcp[1];
+    nal_escape (dstp + 2, srcp + 2, nalsize, &esize);
+    dstp[0] = esize >> 8;
+    dstp[1] = esize & 0xff;
+    dstp += esize + 2;
+    srcp += nalsize + 2;
+  }
+  *destsize = dstp - dst;
+
+  return;
+
+full_copy:
+  {
+    memcpy (dst, src, size);
+    *destsize = size;
+    return;
+  }
+}
+
 /*
  * caps_with_codecid () transforms a GstCaps for a known codec
  * ID into a filled-in context.
@@ -1636,20 +1716,40 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
   /* extradata parsing (esds [mpeg4], wma/wmv, msmpeg4v1/2/3, etc.) */
   if ((value = gst_structure_get_value (str, "codec_data"))) {
-    gint size;
+    guint size;
+    guint8 *data;
+    gboolean free = FALSE;
 
     buf = GST_BUFFER_CAST (gst_value_get_mini_object (value));
     size = GST_BUFFER_SIZE (buf);
+    data = GST_BUFFER_DATA (buf);
 
     /* free the old one if it is there */
     if (context->extradata)
       av_free (context->extradata);
 
-    /* allocate with enough padding */
-    context->extradata =
-        av_mallocz (GST_ROUND_UP_16 (size + FF_INPUT_BUFFER_PADDING_SIZE));
-    memcpy (context->extradata, GST_BUFFER_DATA (buf), size);
-    context->extradata_size = size;
+    if (codec_id == CODEC_ID_H264) {
+      guint extrasize;
+
+      /* ffmpeg h264 expects the codec_data to be escaped, there is no real
+       * reason for this but let's just escape it for now. Start by allocating
+       * enough space, x2 is more than enough. */
+      context->extradata =
+          av_mallocz (GST_ROUND_UP_16 (size * 2 + FF_INPUT_BUFFER_PADDING_SIZE));
+      copy_config (context->extradata, data, size, &extrasize);
+      context->extradata_size = extrasize;
+    }
+    else {
+      /* allocate with enough padding */
+      context->extradata =
+          av_mallocz (GST_ROUND_UP_16 (size + FF_INPUT_BUFFER_PADDING_SIZE));
+      memcpy (context->extradata, data, size);
+      context->extradata_size = size;
+    }
+
+    if (free)
+      gst_buffer_unref (buf);
+
     GST_DEBUG ("have codec data of size %d", size);
   } else if (context->extradata == NULL) {
     /* no extradata, alloc dummy with 0 sized, some codecs insist on reading

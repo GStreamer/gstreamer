@@ -1,3 +1,10 @@
+2008-09-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (nal_escape), (copy_config),
+	(gst_ffmpeg_caps_with_codecid):
+	Escape the codec_data for h264 before we put it in the extra_data
+	because ffmpeg expects it escaped.
+
 2008-09-04  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* configure.ac:
