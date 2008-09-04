@@ -1625,6 +1625,7 @@ nal_escape (guint8 *dst, guint8 *src, guint size, guint *destsize)
 
   while (srcp < end) {
     if (count == 2 && *srcp <= 0x03 ) {
+      GST_DEBUG ("added escape code");
       *dstp++ = 0x03;
       count = 0;
     }
@@ -1633,6 +1634,7 @@ nal_escape (guint8 *dst, guint8 *src, guint size, guint *destsize)
     else
       count = 0;
 
+    GST_DEBUG ("copy %02x, count %d", *srcp, count);
     *dstp++ = *srcp++;
   }
   *destsize = dstp - dst;
@@ -1648,8 +1650,6 @@ copy_config (guint8 *dst, guint8 *src, guint size, guint *destsize)
   gint cnt, i;
   guint nalsize, esize;
 
-  goto full_copy;
-
   /* check size */
   if (size < 7)
     goto full_copy;
@@ -1660,11 +1660,14 @@ copy_config (guint8 *dst, guint8 *src, guint size, guint *destsize)
 
   cnt = *(srcp + 5) & 0x1f;  /* Number of sps */
 
+  GST_DEBUG ("num SPS %d", cnt);
+
   memcpy (dstp, srcp, 6);
   srcp += 6;
   dstp += 6;
 
   for (i = 0; i < cnt; i++) {
+    GST_DEBUG ("copy SPS %d", i);
     nalsize = (srcp[0] << 8) | srcp[1];
     nal_escape (dstp + 2, srcp + 2, nalsize, &esize);
     dstp[0] = esize >> 8;
@@ -1675,7 +1678,10 @@ copy_config (guint8 *dst, guint8 *src, guint size, guint *destsize)
 
   cnt = *(dstp++) = *(srcp++); /* Number of pps */
 
+  GST_DEBUG ("num PPS %d", cnt);
+
   for (i = 0; i < cnt; i++) {
+    GST_DEBUG ("copy PPS %d", i);
     nalsize = (srcp[0] << 8) | srcp[1];
     nal_escape (dstp + 2, srcp + 2, nalsize, &esize);
     dstp[0] = esize >> 8;
@@ -1689,6 +1695,7 @@ copy_config (guint8 *dst, guint8 *src, guint size, guint *destsize)
 
 full_copy:
   {
+    GST_DEBUG ("something unexpected, doing full copy");
     memcpy (dst, src, size);
     *destsize = size;
     return;
@@ -1731,16 +1738,19 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     if (codec_id == CODEC_ID_H264) {
       guint extrasize;
 
+      GST_DEBUG ("copy, escaping codec_data %d", size);
       /* ffmpeg h264 expects the codec_data to be escaped, there is no real
        * reason for this but let's just escape it for now. Start by allocating
        * enough space, x2 is more than enough. */
       context->extradata =
           av_mallocz (GST_ROUND_UP_16 (size * 2 + FF_INPUT_BUFFER_PADDING_SIZE));
       copy_config (context->extradata, data, size, &extrasize);
+      GST_DEBUG ("escaped size: %d", extrasize);
       context->extradata_size = extrasize;
     }
     else {
       /* allocate with enough padding */
+      GST_DEBUG ("copy codec_data");
       context->extradata =
           av_mallocz (GST_ROUND_UP_16 (size + FF_INPUT_BUFFER_PADDING_SIZE));
       memcpy (context->extradata, data, size);

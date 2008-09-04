@@ -1,5 +1,11 @@
 2008-09-04  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (nal_escape), (copy_config),
+	(gst_ffmpeg_caps_with_codecid):
+	Add some debug that revealed that the escape code was disabled...
+
+2008-09-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),
 	(gst_ffmpegdec_chain):
 	If we have a parser and we did not consume any of the bytes of a new
