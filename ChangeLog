@@ -1,3 +1,14 @@
+2008-09-04  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* ext/flac/gstflacenc.c: (gst_flac_enc_class_init):
+	  Make sure the desired default values are actually set, not only
+	  registered as defaults (actual problem is that the stereo-specific
+	  values are only updated if channels==2, which is not the case yet
+	  when the object is created, so the default values for the
+	  mid-side-stereo and loose-mid-side-stereo settings are never
+	  set in _update_quality()). Makes flacenc create smaller files by
+	  default (for stereo input), and fixes #550791.
+
 2008-09-03  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),

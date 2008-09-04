@@ -280,68 +280,73 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
       g_param_spec_enum ("quality",
           "Quality",
           "Speed versus compression tradeoff",
-          GST_TYPE_FLAC_ENC_QUALITY, DEFAULT_QUALITY, G_PARAM_READWRITE));
+          GST_TYPE_FLAC_ENC_QUALITY, DEFAULT_QUALITY,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_STREAMABLE_SUBSET, g_param_spec_boolean ("streamable_subset",
           "Streamable subset",
           "true to limit encoder to generating a Subset stream, else false",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MID_SIDE_STEREO,
       g_param_spec_boolean ("mid_side_stereo", "Do mid side stereo",
           "Do mid side stereo (only for stereo input)",
-          flacenc_params[DEFAULT_QUALITY].mid_side, G_PARAM_READWRITE));
+          flacenc_params[DEFAULT_QUALITY].mid_side,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_LOOSE_MID_SIDE_STEREO, g_param_spec_boolean ("loose_mid_side_stereo",
           "Loose mid side stereo", "Loose mid side stereo",
-          flacenc_params[DEFAULT_QUALITY].loose_mid_side, G_PARAM_READWRITE));
+          flacenc_params[DEFAULT_QUALITY].loose_mid_side,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BLOCKSIZE,
       g_param_spec_uint ("blocksize", "Blocksize", "Blocksize in samples",
           FLAC__MIN_BLOCK_SIZE, FLAC__MAX_BLOCK_SIZE,
-          flacenc_params[DEFAULT_QUALITY].blocksize, G_PARAM_READWRITE));
+          flacenc_params[DEFAULT_QUALITY].blocksize,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_LPC_ORDER,
       g_param_spec_uint ("max_lpc_order", "Max LPC order",
           "Max LPC order; 0 => use only fixed predictors", 0,
           FLAC__MAX_LPC_ORDER, flacenc_params[DEFAULT_QUALITY].max_lpc_order,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_QLP_COEFF_PRECISION, g_param_spec_uint ("qlp_coeff_precision",
           "QLP coefficients precision",
           "Precision in bits of quantized linear-predictor coefficients; 0 = automatic",
           0, 32, flacenc_params[DEFAULT_QUALITY].qlp_coeff_precision,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_QLP_COEFF_PREC_SEARCH, g_param_spec_boolean ("qlp_coeff_prec_search",
           "Do QLP coefficients precision search",
           "false = use qlp_coeff_precision, "
           "true = search around qlp_coeff_precision, take best",
           flacenc_params[DEFAULT_QUALITY].qlp_coeff_prec_search,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ESCAPE_CODING,
       g_param_spec_boolean ("escape_coding", "Do Escape coding",
           "search for escape codes in the entropy coding stage "
           "for slightly better compression",
-          flacenc_params[DEFAULT_QUALITY].escape_coding, G_PARAM_READWRITE));
+          flacenc_params[DEFAULT_QUALITY].escape_coding,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_EXHAUSTIVE_MODEL_SEARCH,
       g_param_spec_boolean ("exhaustive_model_search",
           "Do exhaustive model search",
           "do exhaustive search of LP coefficient quantization (expensive!)",
           flacenc_params[DEFAULT_QUALITY].exhaustive_model_search,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_MIN_RESIDUAL_PARTITION_ORDER,
       g_param_spec_uint ("min_residual_partition_order",
           "Min residual partition order",
           "Min residual partition order (above 4 doesn't usually help much)", 0,
           16, flacenc_params[DEFAULT_QUALITY].min_residual_partition_order,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_MAX_RESIDUAL_PARTITION_ORDER,
       g_param_spec_uint ("max_residual_partition_order",
           "Max residual partition order",
           "Max residual partition order (above 4 doesn't usually help much)", 0,
           16, flacenc_params[DEFAULT_QUALITY].max_residual_partition_order,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_RICE_PARAMETER_SEARCH_DIST,
       g_param_spec_uint ("rice_parameter_search_dist",
@@ -349,7 +354,7 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
           "0 = try only calc'd parameter k; else try all [k-dist..k+dist] "
           "parameters, use best", 0, FLAC__MAX_RICE_PARTITION_ORDER,
           flacenc_params[DEFAULT_QUALITY].rice_parameter_search_dist,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->change_state = gst_flac_enc_change_state;
 }
@@ -380,6 +385,7 @@ gst_flac_enc_init (GstFlacEnc * flacenc, GstFlacEncClass * klass)
 
   flacenc->offset = 0;
   flacenc->samples_written = 0;
+  flacenc->channels = 0;
   gst_flac_enc_update_quality (flacenc, DEFAULT_QUALITY);
   flacenc->tags = gst_tag_list_new ();
   flacenc->got_headers = FALSE;
@@ -733,7 +739,7 @@ gst_flac_enc_update_quality (GstFlacEnc * flacenc, gint quality)
 
   g_object_freeze_notify (G_OBJECT (flacenc));
 
-  if (flacenc->channels == 2) {
+  if (flacenc->channels == 2 || flacenc->channels == 0) {
     DO_UPDATE (do_mid_side_stereo, mid_side, "mid_side_stereo");
     DO_UPDATE (loose_mid_side_stereo, loose_mid_side, "loose_mid_side");
   }
