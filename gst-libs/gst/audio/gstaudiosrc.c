@@ -439,10 +439,11 @@ gst_audioringbuffer_stop (GstRingBuffer * buf)
     csrc->reset (src);
     GST_DEBUG ("reset done");
   }
-
+#if 0
   GST_DEBUG ("stop, waiting...");
   GST_AUDIORING_BUFFER_WAIT (buf);
   GST_DEBUG ("stoped");
+#endif
 
   return TRUE;
 }

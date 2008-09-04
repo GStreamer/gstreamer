@@ -1,3 +1,9 @@
+2008-09-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiosrc.c: (gst_audioringbuffer_stop):
+	Disable a code path that is now called but causes a deadlock for some
+	reason and is unneeded.
+
 2008-09-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/xvimage/xvimagesink.c:
