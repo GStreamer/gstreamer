@@ -190,7 +190,8 @@ enum
   ARG_HANDLE_EXPOSE,
   ARG_DOUBLE_BUFFER,
   ARG_AUTOPAINT_COLORKEY,
-  ARG_COLORKEY
+  ARG_COLORKEY,
+  ARG_DRAW_BORDERS
 };
 
 static GstVideoSinkClass *parent_class = NULL;
@@ -761,7 +762,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
 
   /* Draw borders when displaying the first frame. After this
      draw borders only on expose event or after a size change. */
-  if (!xvimagesink->cur_image || xvimagesink->draw_border) {
+  if (!xvimagesink->cur_image || xvimagesink->redraw_border) {
     draw_border = TRUE;
   }
 
@@ -778,8 +779,8 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
 
   /* Expose sends a NULL image, we take the latest frame */
   if (!xvimage) {
-    draw_border = TRUE;
     if (xvimagesink->cur_image) {
+      draw_border = TRUE;
       xvimage = xvimagesink->cur_image;
     } else {
       g_mutex_unlock (xvimagesink->flow_lock);
@@ -806,10 +807,10 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
 
   g_mutex_lock (xvimagesink->x_lock);
 
-  if (draw_border) {
+  if (draw_border && xvimagesink->draw_borders) {
     gst_xvimagesink_xwindow_draw_borders (xvimagesink, xvimagesink->xwindow,
         result);
-    xvimagesink->draw_border = FALSE;
+    xvimagesink->redraw_border = FALSE;
   }
 
   /* We scale to the window's geometry */
@@ -2079,7 +2080,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   /* After a resize, we want to redraw the borders in case the new frame size 
    * doesn't cover the same area */
-  xvimagesink->draw_border = TRUE;
+  xvimagesink->redraw_border = TRUE;
 
   /* We renew our xvimage only if size or format changed;
    * the xvimage is the same size as the video pixel size */
@@ -2908,6 +2909,9 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
     case ARG_AUTOPAINT_COLORKEY:
       xvimagesink->autopaint_colorkey = g_value_get_boolean (value);
       break;
+    case ARG_DRAW_BORDERS:
+      xvimagesink->draw_borders = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2980,6 +2984,9 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
       break;
     case ARG_COLORKEY:
       g_value_set_int (value, xvimagesink->colorkey);
+      break;
+    case ARG_DRAW_BORDERS:
+      g_value_set_boolean (value, xvimagesink->draw_borders);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3097,6 +3104,7 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
   xvimagesink->autopaint_colorkey = TRUE;
 
   xvimagesink->colorkey = -1;
+  xvimagesink->draw_borders = TRUE;
 }
 
 static void
@@ -3214,6 +3222,19 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
       g_param_spec_int ("colorkey", "Colorkey",
           "Color to use for the overlay mask", G_MININT, G_MAXINT, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstXvImageSink:draw-borders
+   *
+   * Draw black borders when using GstXvImageSink:force-aspect-ratio to fill
+   * unused parts of the video area.
+   *
+   * Since: 0.10.22
+   */
+  g_object_class_install_property (gobject_class, ARG_DRAW_BORDERS,
+      g_param_spec_boolean ("draw-borders", "Colorkey",
+          "Draw black borders to fill unused area in force-aspect-ratio mode",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_xvimagesink_finalize;
 

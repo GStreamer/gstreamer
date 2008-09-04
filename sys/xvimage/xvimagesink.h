@@ -253,7 +253,7 @@ struct _GstXvImageSink {
   gboolean synchronous;
   gboolean double_buffer;
   gboolean keep_aspect;
-  gboolean draw_border;
+  gboolean redraw_border;
   gboolean handle_events;
   gboolean handle_expose;
 
@@ -269,6 +269,8 @@ struct _GstXvImageSink {
   /* port attributes */
   gboolean autopaint_colorkey;
   gint colorkey;
+  
+  gboolean draw_borders;
 };
 
 struct _GstXvImageSinkClass {

@@ -1,3 +1,14 @@
+2008-09-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/xvimage/xvimagesink.c:
+	* sys/xvimage/xvimagesink.h:
+	  Add a "draw-border" property that can be set to false to disable
+	  drawing borders.
+	  
+	* tests/icles/test-colorkey.c:
+	* tests/icles/Makefile.am:
+	  Add new test application for the colorkey handling.
+
 2008-09-03  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
