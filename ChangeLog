@@ -1,5 +1,17 @@
 2008-09-04  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),
+	(gst_ffmpegdec_chain):
+	If we have a parser and we did not consume any of the bytes of a new
+	buffer, make sure we submit the buffer again with its original timestamp
+	instead of a -1 timestamp. Fixes various h264 cases with reordered
+	frames.
+	If we have a discont and a timestamp but the first buffer after the
+	discont did not produce any data, make sure we set the timestamp on the
+	next buffer instead. Fixes initial timestamp on realaudio in many cases.
+
+2008-09-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (nal_escape), (copy_config),
 	(gst_ffmpeg_caps_with_codecid):
 	Escape the codec_data for h264 before we put it in the extra_data

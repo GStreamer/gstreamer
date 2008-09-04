@@ -71,6 +71,7 @@ struct _GstFFMpegDec
   } format;
   gboolean waiting_for_key;
   gboolean discont;
+  gboolean clear_ts;
   guint64 next_ts;
   guint64 in_ts;
   GstClockTime last_out;
@@ -1856,6 +1857,14 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       len =
           gst_ffmpegdec_audio_frame (ffmpegdec, data, size, in_timestamp,
           in_duration, &outbuf, ret);
+
+      /* if we did not get an output buffer and we have a pending discont, don't
+       * clear the input timestamps, we will put them on the next buffer because
+       * else we might create the first buffer with a very big timestamp gap. */
+      if (outbuf == NULL && ffmpegdec->discont) {
+        GST_DEBUG_OBJECT (ffmpegdec, "no buffer but keeping timestamp");
+	ffmpegdec->clear_ts = FALSE;
+      }
       break;
     default:
       GST_ERROR_OBJECT (ffmpegdec, "Asked to decode non-audio/video frame !");
@@ -1899,7 +1908,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       /* and off we go */
       *ret = gst_pad_push (ffmpegdec->srcpad, outbuf);
     } else {
-      /* reverse playback, queue frame till later */
+      /* reverse playback, queue frame till later when we get a discont. */
       GST_DEBUG_OBJECT (ffmpegdec, "queued frame");
       ffmpegdec->queued = g_list_prepend (ffmpegdec->queued, outbuf);
       *ret = GST_FLOW_OK;
@@ -2122,6 +2131,9 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     ffmpegdec->last_out = GST_CLOCK_TIME_NONE;
     ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
   }
+  /* by default we clear the input timestamp after decoding each frame so that
+   * interpollation can work. */
+  ffmpegdec->clear_ts = TRUE;
 
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
@@ -2198,9 +2210,16 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       GST_LOG_OBJECT (ffmpegdec, "consuming %d bytes. ts:%"
           GST_TIME_FORMAT, size, GST_TIME_ARGS (ffmpegdec->pctx->pts));
 
-      /* there is output, set pointers for next round. */
-      bsize -= res;
-      bdata += res;
+      if (res) {
+        /* there is output, set pointers for next round. */
+        bsize -= res;
+        bdata += res;
+      }
+      else {
+	/* Parser did not consume any data, make sure we don't clear the
+	 * timestamp for the next round */
+        ffmpegdec->clear_ts = FALSE;
+      }
 
       /* if there is no output, we must break and wait for more data. also the
        * timestamp in the context is not updated. */
@@ -2279,8 +2298,13 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 
     /* make sure we don't use the same old timestamp for the next frame and let
      * the interpollation take care of it. */
-    in_timestamp = GST_CLOCK_TIME_NONE;
-    in_duration = GST_CLOCK_TIME_NONE;
+    if (ffmpegdec->clear_ts) {
+      in_timestamp = GST_CLOCK_TIME_NONE;
+      in_duration = GST_CLOCK_TIME_NONE;
+    }
+    else {
+      ffmpegdec->clear_ts = TRUE;
+    }
 
     GST_LOG_OBJECT (ffmpegdec, "Before (while bsize>0).  bsize:%d , bdata:%p",
         bsize, bdata);
