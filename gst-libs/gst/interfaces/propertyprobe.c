@@ -143,8 +143,12 @@ gst_property_probe_get_property (GstPropertyProbe * probe, const gchar * name)
   while (pspecs) {
     const GParamSpec *pspec = pspecs->data;
 
-    if (!strcmp (pspec->name, name))
-      return pspec;
+    if (pspec) {
+      if (!strcmp (pspec->name, name))
+        return pspec;
+    } else {
+      GST_WARNING_OBJECT (probe, "NULL paramspec in property probe list");
+    }
 
     pspecs = pspecs->next;
   }

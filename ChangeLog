@@ -1,3 +1,8 @@
+2008-09-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/interfaces/propertyprobe.c:
+	  Check for NULL pointer, in the hope that this fixes #532864.
+
 2008-09-05  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_class_init):
