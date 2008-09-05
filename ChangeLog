@@ -1,3 +1,18 @@
+2008-09-05  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst-libs/gst/interfaces/propertyprobe.c:
+	  (gst_property_probe_get_properties),
+	  (gst_property_probe_get_property),
+	  (gst_property_probe_probe_property),
+	  (gst_property_probe_probe_property_name),
+	  (gst_property_probe_needs_probe),
+	  (gst_property_probe_needs_probe_name),
+	  (gst_property_probe_get_values),
+	  (gst_property_probe_get_values_name),
+	  (gst_property_probe_probe_and_get_values),
+	  (gst_property_probe_probe_and_get_values_name):
+	  More sanity checks for our second-favourite interface.
+
 2008-09-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/interfaces/propertyprobe.c:
