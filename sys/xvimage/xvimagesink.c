@@ -3229,7 +3229,7 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
    * Draw black borders when using GstXvImageSink:force-aspect-ratio to fill
    * unused parts of the video area.
    *
-   * Since: 0.10.22
+   * Since: 0.10.21
    */
   g_object_class_install_property (gobject_class, ARG_DRAW_BORDERS,
       g_param_spec_boolean ("draw-borders", "Colorkey",
