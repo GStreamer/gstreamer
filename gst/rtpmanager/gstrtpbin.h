@@ -74,6 +74,7 @@ struct _GstRtpBinClass {
   void     (*on_bye_ssrc)       (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_bye_timeout)    (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_timeout)        (GstRtpBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_sender_timeout) (GstRtpBin *rtpbin, guint session, guint32 ssrc);
 };
 
 GType gst_rtp_bin_get_type (void);

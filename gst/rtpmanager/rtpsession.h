@@ -228,6 +228,7 @@ struct _RTPSessionClass {
   void (*on_bye_ssrc)       (RTPSession *sess, RTPSource *source);
   void (*on_bye_timeout)    (RTPSession *sess, RTPSource *source);
   void (*on_timeout)        (RTPSession *sess, RTPSource *source);
+  void (*on_sender_timeout) (RTPSession *sess, RTPSource *source);
 };
 
 GType rtp_session_get_type (void);

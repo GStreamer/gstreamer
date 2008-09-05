@@ -170,8 +170,6 @@ rtp_source_init (RTPSource * src)
 
   src->payload = 0;
   src->clock_rate = -1;
-  src->clock_base = -1;
-  src->clock_base_time = -1;
   src->packets = g_queue_new ();
   src->seqnum_base = -1;
   src->last_rtptime = -1;
@@ -527,10 +525,6 @@ rtp_source_update_caps (RTPSource * src, GstCaps * caps)
   gst_structure_get_int (s, "clock-rate", &src->clock_rate);
   GST_DEBUG ("got clock-rate %d", src->clock_rate);
 
-  if (gst_structure_get_uint (s, "clock-base", &val))
-    src->clock_base = val;
-  GST_DEBUG ("got clock-base %" G_GINT64_FORMAT, src->clock_base);
-
   if (gst_structure_get_uint (s, "seqnum-base", &val))
     src->seqnum_base = val;
   GST_DEBUG ("got seqnum-base %" G_GINT32_FORMAT, src->seqnum_base);
@@ -771,13 +765,6 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
 
   rtptime = gst_rtp_buffer_get_timestamp (buffer);
 
-  /* no clock-base, take first rtptime as base */
-  if (src->clock_base == -1) {
-    GST_DEBUG ("using clock-base of %" G_GUINT32_FORMAT, rtptime);
-    src->clock_base = rtptime;
-    src->clock_base_time = arrival->timestamp;
-  }
-
   /* convert arrival time to RTP timestamp units, truncate to 32 bits, we don't
    * care about the absolute value, just the difference. */
   rtparrival = gst_util_uint64_scale_int (ntpnstime, clock_rate, GST_SECOND);
@@ -923,13 +910,11 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
     } else {
       /* unacceptable jump */
       stats->bad_seq = (seqnr + 1) & (RTP_SEQ_MOD - 1);
-      src->clock_base = -1;
       goto bad_sequence;
     }
   } else {
     /* duplicate or reordered packet, will be filtered by jitterbuffer. */
     GST_WARNING ("duplicate or reordered packet");
-    src->clock_base = -1;
   }
 
   src->stats.octets_received += arrival->payload_len;

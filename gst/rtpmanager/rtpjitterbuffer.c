@@ -104,6 +104,7 @@ rtp_jitter_buffer_reset_skew (RTPJitterBuffer * jbuf)
 {
   jbuf->base_time = -1;
   jbuf->base_rtptime = -1;
+  jbuf->base_extrtp = -1;
   jbuf->ext_rtptime = -1;
   jbuf->window_pos = 0;
   jbuf->window_filling = TRUE;
@@ -185,21 +186,23 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
 
   gstrtptime = gst_util_uint64_scale_int (ext_rtptime, GST_SECOND, clock_rate);
 
-again:
   /* first time, lock on to time and gstrtptime */
-  if (jbuf->base_time == -1)
+  if (G_UNLIKELY (jbuf->base_time == -1))
     jbuf->base_time = time;
-  if (jbuf->base_rtptime == -1)
+  if (G_UNLIKELY (jbuf->base_rtptime == -1)) {
     jbuf->base_rtptime = gstrtptime;
+    jbuf->base_extrtp = ext_rtptime;
+  }
 
-  if (gstrtptime >= jbuf->base_rtptime)
+  if (G_LIKELY (gstrtptime >= jbuf->base_rtptime))
     send_diff = gstrtptime - jbuf->base_rtptime;
   else {
     /* elapsed time at sender, timestamps can go backwards and thus be smaller
      * than our base time, take a new base time in that case. */
     GST_DEBUG ("backward timestamps at server, taking new base time");
-    jbuf->base_rtptime = gstrtptime;
     jbuf->base_time = time;
+    jbuf->base_rtptime = gstrtptime;
+    jbuf->base_extrtp = ext_rtptime;
     send_diff = 0;
   }
 
@@ -207,27 +210,6 @@ again:
       GST_TIME_FORMAT ", send_diff %" GST_TIME_FORMAT, ext_rtptime,
       GST_TIME_ARGS (gstrtptime), GST_TIME_ARGS (jbuf->base_rtptime),
       GST_TIME_ARGS (send_diff));
-
-  if (jbuf->prev_send_diff != -1 && time != -1) {
-    gint64 delta_diff;
-
-    if (send_diff > jbuf->prev_send_diff)
-      delta_diff = send_diff - jbuf->prev_send_diff;
-    else
-      delta_diff = jbuf->prev_send_diff - send_diff;
-
-    /* server changed rtp timestamps too quickly, reset skew detection and start
-     * again. This value is sortof arbitrary and can be a bad measurement up if
-     * there are many packets missing because then we get a big gap that is
-     * unrelated to a timestamp switch. */
-    if (delta_diff > GST_SECOND) {
-      GST_DEBUG ("delta changed too quickly %" GST_TIME_FORMAT " reset skew",
-          GST_TIME_ARGS (delta_diff));
-      rtp_jitter_buffer_reset_skew (jbuf);
-      goto again;
-    }
-  }
-  jbuf->prev_send_diff = send_diff;
 
   /* we don't have an arrival timestamp so we can't do skew detection. we
    * should still apply a timestamp based on RTP timestamp and base_time */
@@ -244,17 +226,30 @@ again:
   /* measure the diff */
   delta = ((gint64) recv_diff) - ((gint64) send_diff);
 
+  /* if the difference between the sender timeline and the receiver timeline
+   * changed too quickly we have to resync because the server likely restarted
+   * its timestamps. */
+  if (ABS (delta - jbuf->skew) > GST_SECOND) {
+    GST_DEBUG ("delta %" GST_TIME_FORMAT " too big, reset skew",
+        delta - jbuf->skew);
+    jbuf->base_time = time;
+    jbuf->base_rtptime = gstrtptime;
+    jbuf->base_extrtp = ext_rtptime;
+    send_diff = 0;
+    delta = 0;
+  }
+
   pos = jbuf->window_pos;
 
-  if (jbuf->window_filling) {
+  if (G_UNLIKELY (jbuf->window_filling)) {
     /* we are filling the window */
     GST_DEBUG ("filling %d, delta %" G_GINT64_FORMAT, pos, delta);
     jbuf->window[pos++] = delta;
     /* calc the min delta we observed */
-    if (pos == 1 || delta < jbuf->window_min)
+    if (G_UNLIKELY (pos == 1 || delta < jbuf->window_min))
       jbuf->window_min = delta;
 
-    if (send_diff >= MAX_TIME || pos >= MAX_WINDOW) {
+    if (G_UNLIKELY (send_diff >= MAX_TIME || pos >= MAX_WINDOW)) {
       jbuf->window_size = pos;
 
       /* window filled */
@@ -288,11 +283,11 @@ again:
     old = jbuf->window[pos];
     jbuf->window[pos++] = delta;
 
-    if (delta <= jbuf->window_min) {
+    if (G_UNLIKELY (delta <= jbuf->window_min)) {
       /* if the new value we inserted is smaller or equal to the current min,
        * it becomes the new min */
       jbuf->window_min = delta;
-    } else if (old == jbuf->window_min) {
+    } else if (G_UNLIKELY (old == jbuf->window_min)) {
       gint64 min = G_MAXINT64;
 
       /* if we removed the old min, we have to find a new min */
@@ -313,7 +308,7 @@ again:
         delta, jbuf->window_min);
   }
   /* wrap around in the window */
-  if (pos >= jbuf->window_size)
+  if (G_UNLIKELY (pos >= jbuf->window_size))
     pos = 0;
   jbuf->window_pos = pos;
 
@@ -382,14 +377,14 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
   time = calculate_skew (jbuf, rtptime, time, clock_rate);
   GST_BUFFER_TIMESTAMP (buf) = time;
 
-  if (list)
+  if (G_LIKELY (list))
     g_queue_insert_before (jbuf->packets, list, buf);
   else
     g_queue_push_tail (jbuf->packets, buf);
 
   /* tail was changed when we did not find a previous packet, we set the return
    * flag when requested. */
-  if (tail)
+  if (G_UNLIKELY (tail))
     *tail = (list == NULL);
 
   return TRUE;
@@ -513,4 +508,23 @@ rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
     result = (guint32) (high_ts + G_MAXUINT32 + 1 - low_ts);
   }
   return result;
+}
+
+/**
+ * rtp_jitter_buffer_get_sync:
+ * @jbuf: an #RTPJitterBuffer
+ * @rtptime: result RTP time
+ * @timestamp: result GStreamer timestamp
+ *
+ * Returns the relation between the RTP timestamp and the GStreamer timestamp
+ * used for constructing timestamps.
+ */
+void
+rtp_jitter_buffer_get_sync (RTPJitterBuffer * jbuf, guint64 * rtptime,
+    guint64 * timestamp)
+{
+  if (rtptime)
+    *rtptime = jbuf->base_extrtp;
+  if (timestamp)
+    *timestamp = jbuf->base_time + jbuf->skew;
 }

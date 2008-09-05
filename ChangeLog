@@ -1,3 +1,62 @@
+2008-09-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c: (on_sender_timeout),
+	(create_session), (gst_rtp_bin_associate),
+	(gst_rtp_bin_sync_chain), (gst_rtp_bin_class_init),
+	(gst_rtp_bin_request_new_pad):
+	* gst/rtpmanager/gstrtpbin.h:
+	Add signal to notify listeners when a sender becomes a receiver.
+	Tweak lip-sync code, don't store our own copy of the ts-offset of the
+	jitterbuffer, don't adjust sync if the change is less than 4msec.
+	Get the RTP timestamp <-> GStreamer timestamp relation directly from
+	the jitterbuffer instead of our inaccurate version from the source.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_chain), (gst_rtp_jitter_buffer_loop),
+	(gst_rtp_jitter_buffer_get_sync):
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	Add G_LIKELY macros, use global defines for max packet reorder and
+	dropouts.
+	Reset the jitterbuffer clock skew detection when packets seqnums are
+	changed unexpectedly.
+
+	* gst/rtpmanager/gstrtpsession.c: (on_sender_timeout),
+	(gst_rtp_session_class_init), (gst_rtp_session_init):
+	* gst/rtpmanager/gstrtpsession.h:
+	Add sender timeout signal.
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_reset_skew),
+	(calculate_skew), (rtp_jitter_buffer_insert),
+	(rtp_jitter_buffer_get_sync):
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	Add some G_LIKELY macros.
+	Keep track of the extended RTP timestamp so that we can report the RTP
+	timestamp <-> GStreamer timestamp relation for lip-sync.
+	Remove server timestamp gap detection code, the server can sometimes
+	make a huge gap in timestamps (talk spurts,...) see #549774.
+	Detect timetamp weirdness instead by observing the sender/receiver
+	timestamp relation and resync if it changes more than 1 second.
+	Add method to report about the current rtp <-> gst timestamp relation
+	which is needed for lip-sync.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_class_init),
+	(on_sender_timeout), (check_collision), (rtp_session_process_sr),
+	(session_cleanup):
+	* gst/rtpmanager/rtpsession.h:
+	Add sender timeout signal.
+	Remove inaccurate rtp <-> gst timestamp relation code, the
+	jitterbuffer can now do an accurate reporting about this.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_init),
+	(rtp_source_update_caps), (calculate_jitter),
+	(rtp_source_process_rtp):
+	* gst/rtpmanager/rtpsource.h:
+	Remove inaccurate rtp <-> gst timestamp relation code.
+
+	* gst/rtpmanager/rtpstats.h:
+	Define global max-reorder and max-dropout constants for use in various
+	subsystems.
+
 2008-09-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	patch by: Sebastian Pölsterl

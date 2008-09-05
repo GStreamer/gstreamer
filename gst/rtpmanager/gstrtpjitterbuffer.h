@@ -79,6 +79,9 @@ struct _GstRtpJitterBufferClass
 
 GType gst_rtp_jitter_buffer_get_type (void);
 
+void        gst_rtp_jitter_buffer_get_sync            (GstRtpJitterBuffer *buffer,
+                                                       guint64 *rtptime, guint64 *timestamp);
+
 G_END_DECLS
 
 #endif /* __GST_RTP_JITTER_BUFFER_H__ */

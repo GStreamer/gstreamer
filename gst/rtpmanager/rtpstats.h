@@ -150,10 +150,21 @@ typedef struct {
 #define RTP_STATS_RECEIVER_FRACTION     (1.0 - RTP_STATS_SENDER_FRACTION)
 
 /*
- * When receiving a BYE from a source, remove the source fomr the database
+ * When receiving a BYE from a source, remove the source from the database
  * after this timeout.
  */
 #define RTP_STATS_BYE_TIMEOUT           (2 * GST_SECOND)
+
+/*
+ * The maximum number of missing packets we tollerate. These are packets with a
+ * sequence number bigger than the last seen packet.
+ */
+#define RTP_MAX_DROPOUT      3000
+/*
+ * The maximum number of misordered packets we tollerate. These are packets with
+ * a sequence number smaller than the last seen packet.
+ */
+#define RTP_MAX_MISORDER     100
 
 /**
  * RTPSessionStats:

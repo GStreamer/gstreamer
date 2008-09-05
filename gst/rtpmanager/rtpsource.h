@@ -32,8 +32,6 @@
 #define RTP_DEFAULT_PROBATION   2
 
 #define RTP_SEQ_MOD          (1 << 16)
-#define RTP_MAX_DROPOUT      3000
-#define RTP_MAX_MISORDER     100
 
 typedef struct _RTPSource RTPSource;
 typedef struct _RTPSourceClass RTPSourceClass;
@@ -133,8 +131,6 @@ struct _RTPSource {
   GstCaps      *caps;
   gint          clock_rate;
   gint32        seqnum_base;
-  gint64        clock_base;
-  guint64       clock_base_time;
 
   GstClockTime  bye_time;
   GstClockTime  last_activity;
