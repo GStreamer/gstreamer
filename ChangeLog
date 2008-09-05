@@ -1,3 +1,10 @@
+2008-09-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	patch by: Sebastian Pölsterl
+
+	* sys/dvb/gstdvbsrc.c:
+	Add DVB Adapter name to structure sent over bus.
+
 2008-09-02  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_parse_pack_start):

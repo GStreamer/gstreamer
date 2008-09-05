@@ -683,6 +683,7 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object)
   char *adapter_desc = NULL;
   gchar *frontend_dev;
   GstStructure *adapter_structure;
+  char *adapter_name = NULL;
 
   frontend_dev = g_strdup_printf ("/dev/dvb/adapter%d/frontend%d",
       object->adapter_number, object->frontend_number);
@@ -717,18 +718,22 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object)
     return FALSE;
   }
 
+  adapter_name = g_strdup (fe_info.name);
+
   object->adapter_type = fe_info.type;
   switch (object->adapter_type) {
     case FE_QPSK:
       adapter_desc = "DVB-S";
       adapter_structure = gst_structure_new ("dvb-adapter",
           "type", G_TYPE_STRING, adapter_desc,
+          "name", G_TYPE_STRING, adapter_name,
           "auto-fec", G_TYPE_BOOLEAN, fe_info.caps & FE_CAN_FEC_AUTO, NULL);
       break;
     case FE_QAM:
       adapter_desc = "DVB-C";
       adapter_structure = gst_structure_new ("dvb-adapter",
           "type", G_TYPE_STRING, adapter_desc,
+          "name", G_TYPE_STRING, adapter_name,
           "auto-inversion", G_TYPE_BOOLEAN,
           fe_info.caps & FE_CAN_INVERSION_AUTO, "auto-qam", G_TYPE_BOOLEAN,
           fe_info.caps & FE_CAN_QAM_AUTO, "auto-fec", G_TYPE_BOOLEAN,
@@ -738,6 +743,7 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object)
       adapter_desc = "DVB-T";
       adapter_structure = gst_structure_new ("dvb-adapter",
           "type", G_TYPE_STRING, adapter_desc,
+          "name", G_TYPE_STRING, adapter_name,
           "auto-inversion", G_TYPE_BOOLEAN,
           fe_info.caps & FE_CAN_INVERSION_AUTO, "auto-qam", G_TYPE_BOOLEAN,
           fe_info.caps & FE_CAN_QAM_AUTO, "auto-transmission-mode",
@@ -758,10 +764,11 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object)
           "type", G_TYPE_STRING, "unknown", NULL);
   }
 
-  GST_INFO_OBJECT (object, "DVB card: %s ", fe_info.name);
+  GST_INFO_OBJECT (object, "DVB card: %s ", adapter_name);
   gst_element_post_message (GST_ELEMENT_CAST (object), gst_message_new_element
       (GST_OBJECT (object), adapter_structure));
   g_free (frontend_dev);
+  g_free (adapter_name);
   return TRUE;
 }
 
