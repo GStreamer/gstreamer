@@ -65,6 +65,7 @@
 
 #include "gstrtpjitterbuffer.h"
 #include "rtpjitterbuffer.h"
+#include "rtpstats.h"
 
 GST_DEBUG_CATEGORY (rtpjitterbuffer_debug);
 #define GST_CAT_DEFAULT (rtpjitterbuffer_debug)
@@ -108,7 +109,7 @@ enum
 
 #define JBUF_LOCK_CHECK(priv,label) G_STMT_START {    \
   JBUF_LOCK (priv);                                   \
-  if (priv->srcresult != GST_FLOW_OK)                 \
+  if (G_UNLIKELY (priv->srcresult != GST_FLOW_OK))    \
     goto label;                                       \
 } G_STMT_END
 
@@ -117,7 +118,7 @@ enum
 
 #define JBUF_WAIT_CHECK(priv,label) G_STMT_START {    \
   JBUF_WAIT(priv);                                    \
-  if (priv->srcresult != GST_FLOW_OK)                 \
+  if (G_UNLIKELY (priv->srcresult != GST_FLOW_OK))    \
     goto label;                                       \
 } G_STMT_END
 
@@ -830,12 +831,12 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
 
-  if (!gst_rtp_buffer_validate (buffer))
+  if (G_UNLIKELY (!gst_rtp_buffer_validate (buffer)))
     goto invalid_buffer;
 
   priv = jitterbuffer->priv;
 
-  if (priv->last_pt != gst_rtp_buffer_get_payload_type (buffer)) {
+  if (G_UNLIKELY (priv->last_pt != gst_rtp_buffer_get_payload_type (buffer))) {
     GstCaps *caps;
 
     priv->last_pt = gst_rtp_buffer_get_payload_type (buffer);
@@ -848,14 +849,14 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
     }
   }
 
-  if (priv->clock_rate == -1) {
+  if (G_UNLIKELY (priv->clock_rate == -1)) {
     guint8 pt;
 
     /* no clock rate given on the caps, try to get one with the signal */
     pt = gst_rtp_buffer_get_payload_type (buffer);
 
     gst_rtp_jitter_buffer_get_clock_rate (jitterbuffer, pt);
-    if (priv->clock_rate == -1)
+    if (G_UNLIKELY (priv->clock_rate == -1))
       goto not_negotiated;
   }
 
@@ -875,34 +876,41 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 
   JBUF_LOCK_CHECK (priv, out_flushing);
   /* don't accept more data on EOS */
-  if (priv->eos)
+  if (G_UNLIKELY (priv->eos))
     goto have_eos;
 
   /* let's check if this buffer is too late, we can only accept packets with
    * bigger seqnum than the one we last pushed. */
-  if (priv->last_popped_seqnum != -1) {
+  if (G_LIKELY (priv->last_popped_seqnum != -1)) {
     gint gap;
+    gboolean reset = FALSE;
 
     gap = gst_rtp_buffer_compare_seqnum (priv->last_popped_seqnum, seqnum);
 
-    if (gap <= 0) {
+    if (G_UNLIKELY (gap <= 0)) {
       /* priv->last_popped_seqnum >= seqnum, this packet is too late or the
        * sender might have been restarted with different seqnum. */
-      if (gap < -100) {
+      if (gap < -RTP_MAX_MISORDER) {
         GST_DEBUG_OBJECT (jitterbuffer, "reset: buffer too old %d", gap);
-        priv->last_popped_seqnum = -1;
-        priv->next_seqnum = -1;
+        reset = TRUE;
       } else {
         goto too_late;
       }
     } else {
       /* priv->last_popped_seqnum < seqnum, this is a new packet */
-      if (gap > 3000) {
+      if (G_UNLIKELY (gap > RTP_MAX_DROPOUT)) {
         GST_DEBUG_OBJECT (jitterbuffer, "reset: too many dropped packets %d",
             gap);
-        priv->last_popped_seqnum = -1;
-        priv->next_seqnum = -1;
+        reset = TRUE;
+      } else {
+        GST_DEBUG_OBJECT (jitterbuffer, "dropped packets %d but <= %d", gap,
+            RTP_MAX_DROPOUT);
       }
+    }
+    if (G_UNLIKELY (reset)) {
+      priv->last_popped_seqnum = -1;
+      priv->next_seqnum = -1;
+      rtp_jitter_buffer_reset_skew (priv->jbuf);
     }
   }
 
@@ -915,7 +923,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
     latency_ts =
         gst_util_uint64_scale_int (priv->latency_ms, priv->clock_rate, 1000);
 
-    if (rtp_jitter_buffer_get_ts_diff (priv->jbuf) >= latency_ts) {
+    if (G_UNLIKELY (rtp_jitter_buffer_get_ts_diff (priv->jbuf) >= latency_ts)) {
       GstBuffer *old_buf;
 
       old_buf = rtp_jitter_buffer_pop (priv->jbuf);
@@ -934,8 +942,8 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   /* now insert the packet into the queue in sorted order. This function returns
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
    * have a duplicate. */
-  if (!rtp_jitter_buffer_insert (priv->jbuf, buffer, timestamp,
-          priv->clock_rate, &tail))
+  if (G_UNLIKELY (!rtp_jitter_buffer_insert (priv->jbuf, buffer, timestamp,
+              priv->clock_rate, &tail)))
     goto duplicate;
 
   /* signal addition of new buffer when the _loop is waiting. */
@@ -944,7 +952,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 
   /* let's unschedule and unblock any waiting buffers. We only want to do this
    * when the tail buffer changed */
-  if (priv->clock_id && tail) {
+  if (G_UNLIKELY (priv->clock_id && tail)) {
     GST_DEBUG_OBJECT (jitterbuffer,
         "Unscheduling waiting buffer, new tail buffer");
     gst_clock_id_unschedule (priv->clock_id);
@@ -1051,12 +1059,12 @@ again:
   GST_DEBUG_OBJECT (jitterbuffer, "Peeking item");
   while (TRUE) {
     /* always wait if we are blocked */
-    if (!priv->blocked) {
+    if (G_LIKELY (!priv->blocked)) {
       /* if we have a packet, we can exit the loop and grab it */
       if (rtp_jitter_buffer_num_packets (priv->jbuf) > 0)
         break;
       /* no packets but we are EOS, do eos logic */
-      if (priv->eos)
+      if (G_UNLIKELY (priv->eos))
         goto do_eos;
     }
     /* underrun, wait for packets or flushing now */
@@ -1091,12 +1099,12 @@ again:
 
   /* get the gap between this and the previous packet. If we don't know the
    * previous packet seqnum assume no gap. */
-  if (next_seqnum != -1) {
+  if (G_LIKELY (next_seqnum != -1)) {
     gap = gst_rtp_buffer_compare_seqnum (next_seqnum, seqnum);
 
     /* if we have a packet that we already pushed or considered dropped, pop it
      * off and get the next packet */
-    if (gap < 0) {
+    if (G_UNLIKELY (gap < 0)) {
       GST_DEBUG_OBJECT (jitterbuffer, "Old packet #%d, next #%d dropping",
           seqnum, next_seqnum);
       outbuf = rtp_jitter_buffer_pop (priv->jbuf);
@@ -1116,7 +1124,7 @@ again:
    * determine if we have missing a packet. If we have a missing packet (which
    * must be before this packet) we can wait for it until the deadline for this
    * packet expires. */
-  if (gap != 0 && out_time != -1) {
+  if (G_UNLIKELY (gap != 0 && out_time != -1)) {
     GstClockID id;
     GstClockTime sync_time;
     GstClockReturn ret;
@@ -1188,8 +1196,9 @@ again:
     /* at this point, the clock could have been unlocked by a timeout, a new
      * tail element was added to the queue or because we are shutting down. Check
      * for shutdown first. */
-    if (priv->srcresult != GST_FLOW_OK)
-      goto flushing;
+    if G_UNLIKELY
+      ((priv->srcresult != GST_FLOW_OK))
+          goto flushing;
 
     /* if we got unscheduled and we are not flushing, it's because a new tail
      * element became available in the queue. Grab it and try to push or sync. */
@@ -1239,7 +1248,7 @@ push_buffer:
   /* when we get here we are ready to pop and push the buffer */
   outbuf = rtp_jitter_buffer_pop (priv->jbuf);
 
-  if (discont || priv->discont) {
+  if (G_UNLIKELY (discont || priv->discont)) {
     /* set DISCONT flag when we missed a packet. We pushed the buffer writable
      * into the jitterbuffer so we can modify now. */
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
@@ -1261,7 +1270,7 @@ push_buffer:
       "Pushing buffer %d, timestamp %" GST_TIME_FORMAT, seqnum,
       GST_TIME_ARGS (out_time));
   result = gst_pad_push (priv->srcpad, outbuf);
-  if (result != GST_FLOW_OK)
+  if (G_UNLIKELY (result != GST_FLOW_OK))
     goto pause;
 
   return;
@@ -1450,4 +1459,19 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+void
+gst_rtp_jitter_buffer_get_sync (GstRtpJitterBuffer * buffer, guint64 * rtptime,
+    guint64 * timestamp)
+{
+  GstRtpJitterBufferPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTP_JITTER_BUFFER (buffer));
+
+  priv = buffer->priv;
+
+  JBUF_LOCK (priv);
+  rtp_jitter_buffer_get_sync (priv->jbuf, rtptime, timestamp);
+  JBUF_UNLOCK (priv);
 }

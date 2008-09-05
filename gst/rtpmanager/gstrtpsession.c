@@ -193,6 +193,7 @@ enum
   SIGNAL_ON_BYE_SSRC,
   SIGNAL_ON_BYE_TIMEOUT,
   SIGNAL_ON_TIMEOUT,
+  SIGNAL_ON_SENDER_TIMEOUT,
   LAST_SIGNAL
 };
 
@@ -416,6 +417,13 @@ on_timeout (RTPSession * session, RTPSource * src, GstRtpSession * sess)
       src->ssrc);
 }
 
+static void
+on_sender_timeout (RTPSession * session, RTPSource * src, GstRtpSession * sess)
+{
+  g_signal_emit (sess, gst_rtp_session_signals[SIGNAL_ON_SENDER_TIMEOUT], 0,
+      src->ssrc);
+}
+
 GST_BOILERPLATE (GstRtpSession, gst_rtp_session, GstElement, GST_TYPE_ELEMENT);
 
 static void
@@ -574,6 +582,18 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
       g_signal_new ("on-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpSessionClass, on_timeout),
       NULL, NULL, g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
+  /**
+   * GstRtpSession::on-sender-timeout:
+   * @sess: the object which received the signal
+   * @ssrc: the SSRC 
+   *
+   * Notify of a sender SSRC that has timed out and became a receiver
+   */
+  gst_rtp_session_signals[SIGNAL_ON_SENDER_TIMEOUT] =
+      g_signal_new ("on-sender-timeout", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpSessionClass,
+          on_sender_timeout), NULL, NULL, g_cclosure_marshal_VOID__UINT,
+      G_TYPE_NONE, 1, G_TYPE_UINT);
 
   g_object_class_install_property (gobject_class, PROP_NTP_NS_BASE,
       g_param_spec_uint64 ("ntp-ns-base", "NTP base time",
@@ -655,6 +675,7 @@ gst_rtp_session_init (GstRtpSession * rtpsession, GstRtpSessionClass * klass)
   rtpsession->priv->lock = g_mutex_new ();
   rtpsession->priv->sysclock = gst_system_clock_obtain ();
   rtpsession->priv->session = rtp_session_new ();
+
   /* configure callbacks */
   rtp_session_set_callbacks (rtpsession->priv->session, &callbacks, rtpsession);
   /* configure signals */
@@ -674,6 +695,8 @@ gst_rtp_session_init (GstRtpSession * rtpsession, GstRtpSessionClass * klass)
       (GCallback) on_bye_timeout, rtpsession);
   g_signal_connect (rtpsession->priv->session, "on-timeout",
       (GCallback) on_timeout, rtpsession);
+  g_signal_connect (rtpsession->priv->session, "on-sender-timeout",
+      (GCallback) on_sender_timeout, rtpsession);
   rtpsession->priv->ptmap = g_hash_table_new_full (NULL, NULL, NULL,
       (GDestroyNotify) gst_caps_unref);
 

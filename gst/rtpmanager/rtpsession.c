@@ -40,6 +40,7 @@ enum
   SIGNAL_ON_BYE_SSRC,
   SIGNAL_ON_BYE_TIMEOUT,
   SIGNAL_ON_TIMEOUT,
+  SIGNAL_ON_SENDER_TIMEOUT,
   LAST_SIGNAL
 };
 
@@ -210,6 +211,18 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_TIMEOUT] =
       g_signal_new ("on-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_timeout),
+      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+      RTP_TYPE_SOURCE);
+  /**
+   * RTPSession::on-sender-timeout:
+   * @session: the object which received the signal
+   * @src: the RTPSource that timed out
+   *
+   * Notify of an SSRC that was a sender but timed out and became a receiver.
+   */
+  rtp_session_signals[SIGNAL_ON_SENDER_TIMEOUT] =
+      g_signal_new ("on-sender-timeout", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sender_timeout),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
       RTP_TYPE_SOURCE);
 
@@ -510,6 +523,15 @@ on_timeout (RTPSession * sess, RTPSource * source)
 {
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_TIMEOUT], 0, source);
+  RTP_SESSION_LOCK (sess);
+}
+
+static void
+on_sender_timeout (RTPSession * sess, RTPSource * source)
+{
+  RTP_SESSION_UNLOCK (sess);
+  g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SENDER_TIMEOUT], 0,
+      source);
   RTP_SESSION_LOCK (sess);
 }
 
@@ -908,9 +930,8 @@ check_collision (RTPSession * sess, RTPSource * source,
     RTPArrivalStats * arrival, gboolean rtp)
 {
   /* If we have not arrival address, we can't do collision checking */
-  if (!arrival->have_address) {
+  if (!arrival->have_address)
     return FALSE;
-  }
 
   if (sess->source != source) {
     /* This is not our local source, but lets check if two remote
@@ -1478,12 +1499,6 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
 
   if (!source)
     return;
-
-  /* we somehow need to transfer the clock_base and the base time to the next
-   * element, we use the offset and offset_end fields in the buffer for this
-   * hack */
-  GST_BUFFER_OFFSET (packet->buffer) = source->clock_base;
-  GST_BUFFER_OFFSET_END (packet->buffer) = source->clock_base_time;
 
   prevsender = RTP_SOURCE_IS_SENDER (source);
 
@@ -2096,6 +2111,7 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
 {
   gboolean remove = FALSE;
   gboolean byetimeout = FALSE;
+  gboolean sendertimeout = FALSE;
   gboolean is_sender, is_active;
   RTPSession *sess = data->sess;
   GstClockTime interval;
@@ -2138,6 +2154,7 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
             GST_TIME_ARGS (source->last_rtp_activity));
         source->is_sender = FALSE;
         sess->stats.sender_sources--;
+        sendertimeout = TRUE;
       }
     }
   }
@@ -2153,6 +2170,9 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
       on_bye_timeout (sess, source);
     else
       on_timeout (sess, source);
+  } else {
+    if (sendertimeout)
+      on_sender_timeout (sess, source);
   }
   return remove;
 }

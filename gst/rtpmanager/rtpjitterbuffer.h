@@ -22,7 +22,6 @@
 
 #include <gst/gst.h>
 #include <gst/rtp/gstrtcpbuffer.h>
-#include <gst/netbuffer/gstnetbuffer.h>
 
 typedef struct _RTPJitterBuffer RTPJitterBuffer;
 typedef struct _RTPJitterBufferClass RTPJitterBufferClass;
@@ -57,6 +56,7 @@ struct _RTPJitterBuffer {
   /* for calculating skew */
   GstClockTime   base_time;
   GstClockTime   base_rtptime;
+  GstClockTime   base_extrtp;
   guint64        ext_rtptime;
   gint64         window[RTP_JITTER_BUFFER_MAX_WINDOW];
   guint          window_pos;
@@ -89,5 +89,9 @@ void                  rtp_jitter_buffer_flush            (RTPJitterBuffer *jbuf)
 
 guint                 rtp_jitter_buffer_num_packets      (RTPJitterBuffer *jbuf);
 guint32               rtp_jitter_buffer_get_ts_diff      (RTPJitterBuffer *jbuf);
+
+void                  rtp_jitter_buffer_get_sync         (RTPJitterBuffer *jbuf, guint64 *rtptime,
+                                                          guint64 *timestamp);
+
 
 #endif /* __RTP_JITTER_BUFFER_H__ */
