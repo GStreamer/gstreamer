@@ -281,7 +281,6 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   static GLfloat	zrot = 0;
   
   GstGLBumper* bumper = GST_GL_BUMPER (stuff);
-  GstGLFilter* filter = GST_GL_FILTER (stuff);
   GLint locTangent = 0;
 
   //choose the lights
