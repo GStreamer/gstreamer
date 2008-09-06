@@ -25,6 +25,8 @@ libgstopengl_la_SOURCES = \
         gltestsrc.h \
 	gstgltestsrc.c \
 	gstgltestsrc.h \
+	gstglbumper.c \
+	gstglbumber.h \
 	gstgleffects.c \
 	gstgleffects.h \
 	effects/gstgleffectssources.c \

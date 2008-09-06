@@ -150,7 +150,7 @@ gst_gl_filter_laplacian_init_shader (GstGLFilter* filter)
   GstGLFilterLaplacian* laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, convolution_fragment_source, &laplacian_filter->shader);
+  gst_gl_display_gen_shader (filter->display, 0, convolution_fragment_source, &laplacian_filter->shader);
 }
 
 static gboolean

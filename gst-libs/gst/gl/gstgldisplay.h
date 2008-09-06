@@ -222,7 +222,8 @@ struct _GstGLDisplay {
   GLuint ouput_texture_height;
 
   //action gen and del shader
-  const gchar* gen_text_shader;
+  const gchar* gen_shader_fragment_source;
+  const gchar* gen_shader_vertex_source;
   GstGLShader* gen_shader;
   GstGLShader* del_shader;
 
@@ -300,7 +301,10 @@ gboolean gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, 
 void gst_gl_display_del_fbo (GstGLDisplay* display, GLuint fbo,
                              GLuint depth_buffer);
 
-void gst_gl_display_gen_shader (GstGLDisplay* display, const gchar* textShader, GstGLShader** shader);
+void gst_gl_display_gen_shader (GstGLDisplay* display, 
+                                const gchar* shader_vertex_source,
+                                const gchar* shader_fragment_source,
+                                GstGLShader** shader);
 void gst_gl_display_del_shader (GstGLDisplay* display, GstGLShader* shader);
 
 void gst_gl_display_set_window_id (GstGLDisplay* display, gulong winId);

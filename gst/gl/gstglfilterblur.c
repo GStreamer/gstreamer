@@ -220,10 +220,10 @@ gst_gl_filterblur_init_shader (GstGLFilter* filter)
   GstGLFilterBlur* blur_filter = GST_GL_FILTERBLUR (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, hconv9_fragment_source, &blur_filter->shader0);
+  gst_gl_display_gen_shader (filter->display, 0, hconv9_fragment_source, &blur_filter->shader0);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, vconv9_fragment_source, &blur_filter->shader1);
+  gst_gl_display_gen_shader (filter->display, 0, vconv9_fragment_source, &blur_filter->shader1);
 }
 
 static void

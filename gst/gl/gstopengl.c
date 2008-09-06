@@ -31,8 +31,10 @@
 #include "gstglimagesink.h"
 #include "gstglcolorscale.h"
 #include "gstgleffects.h"
+#include "gstglbumper.h"
 
 GType gst_gl_effects_get_type (void);
+GType gst_gl_bumper_get_type (void);
 GType gst_gl_filter_app_get_type (void);
 GType gst_gl_filter_cube_get_type (void);
 GType gst_gl_filterblur_get_type (void);
@@ -80,6 +82,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "gleffects",
           GST_RANK_NONE, gst_gl_effects_get_type())) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glbumper",
+          GST_RANK_NONE, gst_gl_bumper_get_type())) {
     return FALSE;
   }
 

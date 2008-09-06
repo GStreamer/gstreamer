@@ -490,6 +490,18 @@ gst_gl_shader_set_uniform_1i (GstGLShader * shader, const gchar * name,
   glUniform1iARB (location, value);
 }
 
+GLint 
+gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar *name)
+{
+  GstGLShaderPrivate *priv;
+
+  priv = shader->priv;
+
+  g_return_val_if_fail (priv->program_handle != 0, 0);
+
+  return glGetUniformLocationARB (priv->program_handle, name);
+}
+
 GQuark
 gst_gl_shader_error_quark (void)
 {

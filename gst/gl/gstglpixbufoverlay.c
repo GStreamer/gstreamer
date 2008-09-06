@@ -291,7 +291,7 @@ static void init_pixbuf_texture (GstGLDisplay *display, gpointer data)
   glGenTextures (1, &pixbufoverlay->pbuftexture);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, pixbufoverlay->pbuftexture);
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-                pixbufoverlay->width, pixbufoverlay->height, 0,
+                (gint)pixbufoverlay->width, (gint)pixbufoverlay->height, 0,
                 gdk_pixbuf_get_has_alpha (pixbufoverlay->pixbuf) ? GL_RGBA : GL_RGB,
                 GL_UNSIGNED_BYTE, gdk_pixbuf_get_pixels (pixbufoverlay->pixbuf));
 }
