@@ -89,6 +89,8 @@ void gst_gl_shader_set_uniform_1i (GstGLShader *shader, const gchar *name, gint 
 void gst_gl_shader_set_uniform_1f (GstGLShader *shader, const gchar *name, gfloat value);
 void gst_gl_shader_set_uniform_1fv (GstGLShader *shader, const gchar *name, guint count, gfloat * value);
 
+GLint gst_gl_shader_get_attribute_location (GstGLShader *shader, const gchar *name);
+
 G_END_DECLS
 
 #endif /* __GST_GL_SHADER_H__ */

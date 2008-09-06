@@ -216,7 +216,8 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   display->ouput_texture_height = 0;
 
   //action gen and del shader
-  display->gen_text_shader = NULL;
+  display->gen_shader_fragment_source = NULL;
+  display->gen_shader_vertex_source = NULL;
   display->gen_shader = NULL;
   display->del_shader = NULL;
 
@@ -1566,7 +1567,7 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
 
   glDrawBuffer(GL_NONE);
 
-    glMatrixMode(GL_PROJECTION);
+  glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
@@ -1606,11 +1607,28 @@ gst_gl_display_thread_gen_shader (GstGLDisplay* display)
   glutSetWindow (display->glutWinId);
   if (GLEW_ARB_fragment_shader)
   {
+    gboolean isAlive = TRUE;
+    GError *error = NULL;
+    
     display->gen_shader = gst_gl_shader_new ();
 
-    if (!gst_gl_shader_compile_and_check (display->gen_shader,
-					  display->gen_text_shader,
-					  GST_GL_SHADER_FRAGMENT_SOURCE))
+    if (display->gen_shader_vertex_source)
+      gst_gl_shader_set_vertex_source(display->gen_shader, display->gen_shader_vertex_source);
+
+    if (display->gen_shader_fragment_source)
+      gst_gl_shader_set_fragment_source(display->gen_shader, display->gen_shader_fragment_source);
+
+    gst_gl_shader_compile (display->gen_shader, &error);
+    if (error) 
+    {
+      g_warning ("%s", error->message);
+      g_error_free (error);
+      error = NULL;
+      gst_gl_shader_use (NULL);
+      isAlive = FALSE;
+    }
+
+    if (!isAlive)
     {
       display->isAlive = FALSE;
       g_object_unref (G_OBJECT (display->gen_shader));
@@ -2254,13 +2272,20 @@ gst_gl_display_del_fbo (GstGLDisplay* display, GLuint fbo,
 
 /* Called by glfilter */
 void
-gst_gl_display_gen_shader (GstGLDisplay* display, const gchar* textShader, GstGLShader** shader)
+gst_gl_display_gen_shader (GstGLDisplay* display, 
+                           const gchar* shader_vertex_source,
+                           const gchar* shader_fragment_source,
+                           GstGLShader** shader)
 {
   gst_gl_display_lock (display);
-  display->gen_text_shader = textShader;
+  display->gen_shader_vertex_source = shader_vertex_source;
+  display->gen_shader_fragment_source = shader_fragment_source;
   gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_GEN_SHADER, display);
   g_cond_wait (display->cond_gen_shader, display->mutex);
   *shader = display->gen_shader;
+  display->gen_shader = NULL;
+  display->gen_shader_vertex_source = NULL;
+  display->gen_shader_fragment_source = NULL;
   gst_gl_display_unlock (display);
 }
 
