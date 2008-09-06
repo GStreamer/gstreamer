@@ -1,3 +1,11 @@
+2008-09-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Fix type in error messgae.
+
+	* tests/check/.cvsignore:
+	  Ignore more files.
+
 2008-09-04  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (nal_escape), (copy_config),
