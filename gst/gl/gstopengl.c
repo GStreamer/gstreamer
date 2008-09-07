@@ -31,7 +31,9 @@
 #include "gstglimagesink.h"
 #include "gstglcolorscale.h"
 #include "gstgleffects.h"
+#ifdef HAVE_GDKPIXBUF
 #include "gstglbumper.h"
+#endif
 
 GType gst_gl_effects_get_type (void);
 GType gst_gl_filter_app_get_type (void);
