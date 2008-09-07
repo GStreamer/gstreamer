@@ -12,7 +12,7 @@ libgstopengl_la_SOURCES = \
 	gstglupload.h \
 	gstgldownload.c \
 	gstgldownload.h \
-        gstglfilterblur.c \
+    gstglfilterblur.c \
 	gstglfiltercube.c \
 	gstglfiltercube.h \
 	gstglfilterlaplacian.c \
@@ -21,12 +21,10 @@ libgstopengl_la_SOURCES = \
 	gstglfilterapp.h \
 	gstglcolorscale.c \
 	gstglcolorscale.h \
-        gltestsrc.c \
-        gltestsrc.h \
+    gltestsrc.c \
+    gltestsrc.h \
 	gstgltestsrc.c \
 	gstgltestsrc.h \
-	gstglbumper.c \
-	gstglbumber.h \
 	gstgleffects.c \
 	gstgleffects.h \
 	effects/gstgleffectssources.c \
@@ -44,10 +42,13 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectlumatocurve.c \
 	effects/gstgleffectrgbtocurve.c \
 	effects/gstgleffectsin.c \
-	effects/gstgleffectglow.c 
-	
+	effects/gstgleffectglow.c
+
 if HAVE_GDKPIXBUF
-libgstopengl_la_SOURCES += gstglpixbufoverlay.c gstgldifferencematte.c
+libgstopengl_la_SOURCES += gstglpixbufoverlay.c \
+                           gstgldifferencematte.c \
+                           gstglbumper.c \
+                           gstglbumber.h
 endif
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
