@@ -313,6 +313,7 @@ gst_selector_pad_reset (GstSelectorPad * pad)
   pad->active = FALSE;
   pad->eos = FALSE;
   pad->segment_pending = FALSE;
+  pad->discont = FALSE;
   gst_segment_init (&pad->segment, GST_FORMAT_UNDEFINED);
   GST_OBJECT_UNLOCK (pad);
 }
@@ -1244,6 +1245,34 @@ gst_input_selector_release_pad (GstElement * element, GstPad * pad)
   GST_INPUT_SELECTOR_UNLOCK (sel);
 }
 
+static void
+gst_input_selector_reset (GstInputSelector * sel)
+{
+  GList *walk;
+
+  GST_INPUT_SELECTOR_LOCK (sel);
+  /* clear active pad */
+  if (sel->active_sinkpad) {
+    gst_object_unref (sel->active_sinkpad);
+    sel->active_sinkpad = NULL;
+  }
+  /* reset segment */
+  gst_segment_init (&sel->segment, GST_FORMAT_UNDEFINED);
+  sel->pending_close = FALSE;
+  /* reset each of our sinkpads state */
+  for (walk = GST_ELEMENT_CAST (sel)->sinkpads; walk; walk = g_list_next (walk)) {
+    GstSelectorPad *selpad = GST_SELECTOR_PAD_CAST (walk->data);
+
+    gst_selector_pad_reset (selpad);
+
+    if (selpad->tags) {
+      gst_tag_list_free (selpad->tags);
+      selpad->tags = NULL;
+    }
+  }
+  GST_INPUT_SELECTOR_UNLOCK (sel);
+}
+
 static GstStateChangeReturn
 gst_input_selector_change_state (GstElement * element,
     GstStateChange transition)
@@ -1272,6 +1301,14 @@ gst_input_selector_change_state (GstElement * element,
   }
 
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_input_selector_reset (self);
+      break;
+    default:
+      break;
+  }
 
   return result;
 }
