@@ -1,3 +1,9 @@
+2008-09-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/selector/gstinputselector.c: (gst_selector_pad_reset),
+	(gst_input_selector_reset), (gst_input_selector_change_state):
+	Reset the selector state when going to READY.
+
 2008-09-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpbin.c: (on_sender_timeout),
