@@ -1,3 +1,13 @@
+2008-09-09  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/mpegdemux/flumpegdemux.c: (plugin_init):
+	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_sync_get_type),
+	(gst_flups_demux_get_type), (gst_flups_demux_plugin_init):
+	* gst/mpegdemux/gstmpegtsdemux.c: (gst_fluts_demux_get_type),
+	(gst_fluts_demux_plugin_init):
+	Fix conflicting public names in new mpeg demuxers.
+	Fixes #550468
+
 2008-09-08  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/aiffparse/aiffparse.c:

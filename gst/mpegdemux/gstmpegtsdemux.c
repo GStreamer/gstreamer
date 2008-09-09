@@ -226,10 +226,10 @@ gst_fluts_demux_get_type (void)
     };
 
     fluts_demux_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstFluTSDemux",
+        g_type_register_static (GST_TYPE_ELEMENT, "GstMpegTSDemux",
         &fluts_demux_info, 0);
 
-    GST_DEBUG_CATEGORY_INIT (gstflutsdemux_debug, "flutsdemux", 0,
+    GST_DEBUG_CATEGORY_INIT (gstflutsdemux_debug, "mpegtsdemux", 0,
         "MPEG program stream demultiplexer element");
   }
 
@@ -2622,7 +2622,7 @@ gst_fluts_demux_get_property (GObject * object, guint prop_id,
 gboolean
 gst_fluts_demux_plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "flutsdemux",
+  if (!gst_element_register (plugin, "mpegtsdemux",
           GST_RANK_PRIMARY, GST_TYPE_FLUTS_DEMUX))
     return FALSE;
 

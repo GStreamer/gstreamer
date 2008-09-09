@@ -53,9 +53,9 @@ GST_DEBUG_CATEGORY_EXTERN (gstflusectionfilter_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gstflupesfilter_debug, "flupesfilter", 0,
+  GST_DEBUG_CATEGORY_INIT (gstflupesfilter_debug, "mpegpesfilter", 0,
       "MPEG-TS/PS PES filter output");
-  GST_DEBUG_CATEGORY_INIT (gstflusectionfilter_debug, "flusectionfilter", 0,
+  GST_DEBUG_CATEGORY_INIT (gstflusectionfilter_debug, "mpegsectionfilter", 0,
       "MPEG-TS Section filter output");
 
   if (!gst_flups_demux_plugin_init (plugin))
@@ -68,7 +68,7 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "flumpegdemux",
+    "mpegdemux2",
     "MPEG demuxers",
     plugin_init, VERSION,
     GST_LICENSE_UNKNOWN, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

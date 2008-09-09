@@ -120,7 +120,7 @@ gst_flups_demux_sync_get_type (void)
   };
 
   if (sync_type == 0)
-    sync_type = g_enum_register_static ("GstFluPSDemuxSync", sync_types);
+    sync_type = g_enum_register_static ("GstPSDemuxSync", sync_types);
 
   return sync_type;
 }
@@ -209,10 +209,10 @@ gst_flups_demux_get_type (void)
     };
 
     flups_demux_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstFluPSDemux",
+        g_type_register_static (GST_TYPE_ELEMENT, "GstMpegPSDemux",
         &flups_demux_info, 0);
 
-    GST_DEBUG_CATEGORY_INIT (gstflupsdemux_debug, "flupsdemux", 0,
+    GST_DEBUG_CATEGORY_INIT (gstflupsdemux_debug, "mpegpsdemux", 0,
         "MPEG program stream demultiplexer element");
   }
 
@@ -1861,7 +1861,7 @@ gst_flups_demux_change_state (GstElement * element, GstStateChange transition)
 gboolean
 gst_flups_demux_plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "flupsdemux",
+  if (!gst_element_register (plugin, "mpegpsdemux",
           GST_RANK_PRIMARY, GST_TYPE_FLUPS_DEMUX))
     return FALSE;
 
