@@ -1,3 +1,10 @@
+2008-09-08  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/aiffparse/aiffparse.c:
+	  Support chunks in AIFF in any order in pull mode, and any order so
+	  long as we get COMM before the actual data (SSND) in push mode.
+	  Fixes playback of AIFC files.
+
 2008-09-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/selector/gstinputselector.c: (gst_selector_pad_reset),

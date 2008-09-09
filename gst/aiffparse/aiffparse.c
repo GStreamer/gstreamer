@@ -670,9 +670,15 @@ gst_aiffparse_parse_comm (AIFFParse * aiff, GstBuffer * buf)
      * either big or little endian */
     if (GST_READ_UINT32_LE (data + 18) == GST_MAKE_FOURCC ('N', 'O', 'N', 'E'))
       aiff->endianness = G_BIG_ENDIAN;
-    else if (GST_READ_UINT32_LE (data + 18) == GST_MAKE_FOURCC ('s', 'o', 'w',
-            't'))
+    else if (GST_READ_UINT32_LE (data + 18) ==
+        GST_MAKE_FOURCC ('s', 'o', 'w', 't'))
       aiff->endianness = G_LITTLE_ENDIAN;
+    else {
+      GST_WARNING_OBJECT (aiff, "Unsupported compression in AIFC "
+          "file: %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (GST_READ_UINT32_LE (data + 18)));
+      return FALSE;
+    }
   } else
     aiff->endianness = G_BIG_ENDIAN;
 
@@ -742,68 +748,17 @@ gst_aiffparse_stream_headers (AIFFParse * aiff)
   GstBuffer *buf;
   guint32 tag, size;
   gboolean gotdata = FALSE;
+  gboolean done = FALSE;
   GstEvent **event_p;
   GstFormat bformat;
   gint64 upstream_size = 0;
-
-  /* search for "comm" chunk, which should be first */
-  while (!aiff->got_comm) {
-    /* The header starts with a 'comm' tag */
-    if (aiff->streaming) {
-      if (!gst_aiffparse_peek_chunk (aiff, &tag, &size))
-        return GST_FLOW_OK;
-
-      gst_adapter_flush (aiff->adapter, 8);
-      aiff->offset += 8;
-
-      buf = gst_adapter_take_buffer (aiff->adapter, size);
-    } else {
-      if ((res = gst_aiffparse_read_chunk (aiff,
-                  &aiff->offset, &tag, &buf)) != GST_FLOW_OK)
-        return res;
-    }
-
-    /* TODO: allow some non-COMM chunks here */
-
-    if (tag != GST_MAKE_FOURCC ('C', 'O', 'M', 'M')) {
-      gst_buffer_unref (buf);
-      goto invalid_aiff;
-    }
-
-    if (!gst_aiffparse_parse_comm (aiff, buf)) {
-      gst_buffer_unref (buf);
-      goto parse_header_error;
-    }
-
-    /* do sanity checks of header fields */
-    if (aiff->channels == 0)
-      goto no_channels;
-    if (aiff->rate == 0)
-      goto no_rate;
-
-    GST_DEBUG_OBJECT (aiff, "creating the caps");
-
-    aiff->caps = gst_aiffparse_create_caps (aiff);
-    if (!aiff->caps)
-      goto unknown_format;
-
-    gst_pad_set_caps (aiff->srcpad, aiff->caps);
-
-    aiff->bytes_per_sample = aiff->channels * aiff->width / 8;
-    aiff->bps = aiff->bytes_per_sample * aiff->rate;
-
-    if (aiff->bytes_per_sample <= 0)
-      goto no_bytes_per_sample;
-
-    aiff->got_comm = TRUE;
-  }
 
   bformat = GST_FORMAT_BYTES;
   gst_pad_query_peer_duration (aiff->sinkpad, &bformat, &upstream_size);
   GST_DEBUG_OBJECT (aiff, "upstream size %" G_GUINT64_FORMAT, upstream_size);
 
   /* loop headers until we get data */
-  while (!gotdata) {
+  while (!done) {
     if (aiff->streaming) {
       if (!gst_aiffparse_peek_chunk_info (aiff, &tag, &size))
         return GST_FLOW_OK;
@@ -823,13 +778,58 @@ gst_aiffparse_stream_headers (AIFFParse * aiff)
     /* We just keep reading chunks until we find the one we're interested in.
      */
     switch (tag) {
+      case GST_MAKE_FOURCC ('C', 'O', 'M', 'M'):{
+        if (aiff->streaming) {
+          if (!gst_aiffparse_peek_chunk (aiff, &tag, &size))
+            return GST_FLOW_OK;
+
+          gst_adapter_flush (aiff->adapter, 8);
+          aiff->offset += 8;
+
+          buf = gst_adapter_take_buffer (aiff->adapter, size);
+        } else {
+          if ((res = gst_aiffparse_read_chunk (aiff,
+                      &aiff->offset, &tag, &buf)) != GST_FLOW_OK)
+            return res;
+        }
+
+        if (!gst_aiffparse_parse_comm (aiff, buf)) {
+          gst_buffer_unref (buf);
+          goto parse_header_error;
+        }
+
+        gst_buffer_unref (buf);
+
+        /* do sanity checks of header fields */
+        if (aiff->channels == 0)
+          goto no_channels;
+        if (aiff->rate == 0)
+          goto no_rate;
+
+        GST_DEBUG_OBJECT (aiff, "creating the caps");
+
+        aiff->caps = gst_aiffparse_create_caps (aiff);
+        if (!aiff->caps)
+          goto unknown_format;
+
+        gst_pad_set_caps (aiff->srcpad, aiff->caps);
+
+        aiff->bytes_per_sample = aiff->channels * aiff->width / 8;
+        aiff->bps = aiff->bytes_per_sample * aiff->rate;
+
+        if (aiff->bytes_per_sample <= 0)
+          goto no_bytes_per_sample;
+
+        aiff->got_comm = TRUE;
+        break;
+      }
       case GST_MAKE_FOURCC ('S', 'S', 'N', 'D'):{
         GstFormat fmt;
 
         GST_DEBUG_OBJECT (aiff, "Got 'SSND' TAG, size : %d", size);
+        gotdata = TRUE;
         if (aiff->streaming) {
           gst_adapter_flush (aiff->adapter, 8);
-          gotdata = TRUE;
         } else {
           gst_buffer_unref (buf);
         }
@@ -849,6 +849,9 @@ gst_aiffparse_stream_headers (AIFFParse * aiff)
           aiff->offset += size;
         }
         GST_DEBUG_OBJECT (aiff, "datasize = %d", size);
+        if (aiff->streaming) {
+          done = TRUE;
+        }
         break;
       }
       default:
@@ -857,8 +860,21 @@ gst_aiffparse_stream_headers (AIFFParse * aiff)
 
     if (upstream_size && (aiff->offset >= upstream_size)) {
       /* Now we have gone through the whole file */
-      gotdata = TRUE;
+      done = TRUE;
     }
+  }
+
+  /* We read all the chunks (in pull mode) or reached the SSND chunk
+   * (in push mode). We must have both COMM and SSND now; error out 
+   * otherwise.
+   */
+  if (!aiff->got_comm) {
+    GST_WARNING_OBJECT (aiff, "Failed to find COMM chunk");
+    goto no_header;
+  }
+  if (!gotdata) {
+    GST_WARNING_OBJECT (aiff, "Failed to find SSND chunk");
+    goto no_data;
   }
 
   GST_DEBUG_OBJECT (aiff, "Finished parsing headers");
@@ -888,11 +904,16 @@ gst_aiffparse_stream_headers (AIFFParse * aiff)
   return GST_FLOW_OK;
 
   /* ERROR */
-invalid_aiff:
+no_header:
   {
     GST_ELEMENT_ERROR (aiff, STREAM, TYPE_NOT_FOUND, (NULL),
-        ("Invalid AIFF header (no COMM at start): %"
-            GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag)));
+        ("Invalid AIFF header (no COMM found)"));
+    return GST_FLOW_ERROR;
+  }
+no_data:
+  {
+    GST_ELEMENT_ERROR (aiff, STREAM, TYPE_NOT_FOUND, (NULL),
+        ("Invalid AIFF: no SSND found"));
     return GST_FLOW_ERROR;
   }
 parse_header_error:
