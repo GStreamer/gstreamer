@@ -1,3 +1,11 @@
+2008-09-09  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* win32/common/config.h.in:
+	  Add GST_DATADIR, hard-code cpu to x86.
+
+	* win32/common/libgstreamer.def:
+	  Spaces to tabs.
+
 2008-09-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gsttaglist.h:
