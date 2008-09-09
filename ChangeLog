@@ -1,3 +1,18 @@
+2008-09-09  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/jp2k/Makefile.am:
+	* ext/jp2k/gstjasperdec.c: (gst_jasper_dec_base_init),
+	(gst_jasper_dec_class_init), (gst_jasper_dec_init),
+	(gst_jasper_dec_reset), (gst_jasper_dec_sink_setcaps),
+	(gst_jasper_dec_negotiate), (gst_jasper_dec_get_picture),
+	(gst_jasper_dec_chain), (gst_jasper_dec_set_property),
+	(gst_jasper_dec_get_property), (gst_jasper_dec_change_state),
+	(plugin_init):
+	* ext/jp2k/gstjasperdec.h:
+	Add jp2k plugin.  Fixes #550657.
+
 2008-09-09  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/mpegdemux/flumpegdemux.c: (plugin_init):

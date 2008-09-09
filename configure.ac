@@ -799,6 +799,14 @@ AG_GST_CHECK_FEATURE(JACK, Jack, jack, [
   AC_SUBST(JACK_LIBS)
 ])
 
+dnl *** jp2k ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_JP2K, true)
+AG_GST_CHECK_FEATURE(JP2K, [jp2k], jp2kdec, [
+  AG_GST_CHECK_LIBHEADER(JP2K, jasper, jas_stream_fopen, , jasper/jasper.h,
+    JP2K_LIBS="-ljasper")
+  AC_SUBST(JP2K_LIBS)
+])
+
 dnl *** ladspa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
 AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
@@ -1296,6 +1304,7 @@ AM_CONDITIONAL(USE_FBDEV, false)
 AM_CONDITIONAL(USE_GSM, false)
 AM_CONDITIONAL(USE_IVORBIS, false)
 AM_CONDITIONAL(USE_JACK, false)
+AM_CONDITIONAL(USE_JP2K, false)
 AM_CONDITIONAL(USE_LADSPA, false)
 AM_CONDITIONAL(USE_LIBMMS, false)
 AM_CONDITIONAL(USE_METADATA, false)
@@ -1463,6 +1472,7 @@ ext/faad/Makefile
 ext/gsm/Makefile
 ext/ivorbis/Makefile
 ext/jack/Makefile
+ext/jp2k/Makefile
 ext/ladspa/Makefile
 ext/libmms/Makefile
 ext/Makefile

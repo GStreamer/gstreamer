@@ -130,6 +130,12 @@ else
 JACK_DIR=
 endif
 
+if USE_JP2K
+JP2K_DIR = jp2k
+else
+JP2K_DIR =
+endif
+
 if USE_LADSPA
 LADSPA_DIR = ladspa
 else
@@ -329,6 +335,7 @@ SUBDIRS=\
 	$(HERMES_DIR) \
 	$(IVORBIS_DIR) \
 	$(JACK_DIR) \
+	$(JP2K_DIR) \
 	$(LADSPA_DIR) \
 	$(LCS_DIR) \
 	$(LIBFAME_DIR) \
@@ -374,6 +381,7 @@ DIST_SUBDIRS = \
 	ivorbis \
 	ladspa \
 	jack \
+	jp2k \
 	libmms \
 	dts \
 	divx \
