@@ -4164,6 +4164,27 @@
   (return-type "GList*")
 )
 
+(define-method set_iterate_internal_links_function
+  (of-object "GstPad")
+  (c-name "gst_pad_set_iterate_internal_links_function")
+  (return-type "none")
+  (parameters
+    '("GstPadIterIntLinkFunction" "iterintlink")
+  )
+)
+
+(define-method iterate_internal_links
+  (of-object "GstPad")
+  (c-name "gst_pad_iterate_internal_links")
+  (return-type "GstIterator*")
+)
+
+(define-method iterate_internal_links_default
+  (of-object "GstPad")
+  (c-name "gst_pad_iterate_internal_links_default")
+  (return-type "GstIterator*")
+)
+
 (define-method set_query_type_function
   (of-object "GstPad")
   (c-name "gst_pad_set_query_type_function")

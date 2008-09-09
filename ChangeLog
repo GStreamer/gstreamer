@@ -1,3 +1,12 @@
+2008-09-09  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* gst/base.defs:
+	* gst/gst-0.10.21.ignore:
+	* gst/gst.defs:
+	* gst/gstversion.override.in:
+	Add API additions for upcoming 0.10.21 core release
+
 2008-09-04  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* examples/pipeline-tester:

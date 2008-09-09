@@ -626,6 +626,22 @@
   )
 )
 
+(define-method suggest
+  (of-object "GstBaseTransform")
+  (c-name "gst_base_transform_suggest")
+  (return-type "none")
+  (parameters
+    '("GstCaps*" "caps")
+    '("guint" "size")
+  )
+)
+
+(define-method reconfigure
+  (of-object "GstBaseTransform")
+  (c-name "gst_base_transform_reconfigure")
+  (return-type "none")
+)
+
 (define-virtual transform_caps
   (of-object "GstBaseTransform")
   (return-type "GstCaps*")
