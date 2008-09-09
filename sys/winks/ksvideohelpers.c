@@ -422,6 +422,8 @@ ks_video_probe_filter_for_caps (HANDLE filter_handle)
           /* REVISIT: Each KSDATARANGE should start on a 64-bit boundary */
           range = (KSDATARANGE *) (((guchar *) range) + range->FormatSize);
         }
+
+        g_free (items);
       }
     }
   }

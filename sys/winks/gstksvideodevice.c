@@ -33,6 +33,9 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_ks_debug);
 #define GST_CAT_DEFAULT gst_ks_debug
 
+#define GST_DEBUG_IS_ENABLED() \
+    (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_DEBUG)
+
 enum
 {
   PROP_0,
@@ -81,6 +84,7 @@ typedef struct
   gulong num_requests;
   GArray *requests;
   GArray *request_events;
+  GstClockTime last_timestamp;
 } GstKsVideoDevicePrivate;
 
 #define GST_KS_VIDEO_DEVICE_GET_PRIVATE(o) \
@@ -301,6 +305,13 @@ gst_ks_video_device_prepare_buffers (GstKsVideoDevice * self)
   }
 
   g_array_append_val (priv->request_events, priv->cancel_event);
+
+  /*
+   * REVISIT: Could probably remove this later, for now it's here to help
+   *          track down the case where we capture old frames. This has been
+   *          observed with UVC cameras, presumably with some system load.
+   */
+  priv->last_timestamp = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -558,17 +569,28 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
   }
 
   /*
-   * Override the clock if we have one.
+   * Override the clock if we have one and the pin doesn't have any either.
    */
   if (priv->clock != NULL) {
-    HANDLE clock_handle = gst_ks_clock_get_handle (priv->clock);
+    HANDLE *cur_clock_handle = NULL;
+    gulong cur_clock_handle_size = sizeof (HANDLE);
 
-    if (ks_object_set_property (pin_handle, KSPROPSETID_Stream,
-            KSPROPERTY_STREAM_MASTERCLOCK, &clock_handle,
-            sizeof (clock_handle))) {
-      gst_ks_clock_prepare (priv->clock);
+    if (ks_object_get_property (pin_handle, KSPROPSETID_Stream,
+            KSPROPERTY_STREAM_MASTERCLOCK, (gpointer *) & cur_clock_handle,
+            &cur_clock_handle_size)) {
+      GST_DEBUG ("current master clock handle: 0x%08x", *cur_clock_handle);
+      CloseHandle (*cur_clock_handle);
+      g_free (cur_clock_handle);
     } else {
-      GST_WARNING ("failed to set pin's master clock");
+      HANDLE new_clock_handle = gst_ks_clock_get_handle (priv->clock);
+
+      if (ks_object_set_property (pin_handle, KSPROPSETID_Stream,
+              KSPROPERTY_STREAM_MASTERCLOCK, &new_clock_handle,
+              sizeof (new_clock_handle))) {
+        gst_ks_clock_prepare (priv->clock);
+      } else {
+        GST_WARNING ("failed to set pin's master clock");
+      }
     }
   }
 
@@ -779,7 +801,7 @@ gst_ks_video_device_set_state (GstKsVideoDevice * self, KSSTATE state)
 
       if (priv->state == KSSTATE_PAUSE && addend > 0)
         gst_ks_video_device_prepare_buffers (self);
-      else if (priv->state == KSSTATE_ACQUIRE && addend < 0)
+      else if (priv->state == KSSTATE_STOP && addend < 0)
         gst_ks_video_device_clear_buffers (self);
     } else {
       GST_WARNING ("Failed to change pin state to %s",
@@ -855,6 +877,15 @@ gst_ks_video_device_request_frame (GstKsVideoDevice * self, ReadRequest * req,
   params->header.FrameExtent = gst_ks_video_device_get_frame_size (self);
   params->header.Data = req->buf;
   params->frame_info.ExtendedHeaderSize = sizeof (KS_FRAME_INFO);
+
+  /*
+   * Clear the buffer like DirectShow does
+   *
+   * REVISIT: Could probably remove this later, for now it's here to help
+   *          track down the case where we capture old frames. This has been
+   *          observed with UVC cameras, presumably with some system load.
+   */
+  memset (params->header.Data, 0, params->header.FrameExtent);
 
   success = DeviceIoControl (priv->pin_handle, IOCTL_KS_READ_STREAM, NULL, 0,
       params, params->header.Size, &bytes_returned, &req->overlapped);
@@ -933,46 +964,89 @@ gst_ks_video_device_read_frame (GstKsVideoDevice * self, guint8 * buf,
       ResetEvent (req->overlapped.hEvent);
 
       if (success) {
-        /* Grab the frame data */
-        g_assert (buf_size >= req->params.header.DataUsed);
-        memcpy (buf, req->buf, req->params.header.DataUsed);
-        *bytes_read = req->params.header.DataUsed;
-        if (req->params.header.PresentationTime.Time != 0)
-          *presentation_time = req->params.header.PresentationTime.Time * 100;
-        else
-          *presentation_time = GST_CLOCK_TIME_NONE;
+        KSSTREAM_HEADER *hdr = &req->params.header;
+        KS_FRAME_INFO *frame_info = &req->params.frame_info;
+        GstClockTime timestamp = GST_CLOCK_TIME_NONE;
+        GstClockTime duration = GST_CLOCK_TIME_NONE;
 
-        if (priv->is_mjpeg) {
-          /*
-           * Workaround for cameras/drivers that intermittently provide us with
-           * incomplete or corrupted MJPEG frames.
-           *
-           * Happens with for instance Microsoft LifeCam VX-7000.
-           */
+        if (hdr->OptionsFlags & KSSTREAM_HEADER_OPTIONSF_TIMEVALID)
+          timestamp = hdr->PresentationTime.Time * 100;
 
-          gboolean valid = FALSE;
-          guint padding = 0;
+        if (hdr->OptionsFlags & KSSTREAM_HEADER_OPTIONSF_DURATIONVALID)
+          duration = hdr->Duration * 100;
 
-          /* JFIF SOI marker */
-          if (*bytes_read > MJPEG_MAX_PADDING
-              && buf[0] == 0xff && buf[1] == 0xd8) {
-            guint8 *p = buf + *bytes_read - 2;
+        /* Assume it's a good frame */
+        *bytes_read = hdr->DataUsed;
 
-            /* JFIF EOI marker (but skip any padding) */
-            while (padding < MJPEG_MAX_PADDING - 1 - 2 && !valid) {
-              if (p[0] == 0xff && p[1] == 0xd9) {
-                valid = TRUE;
-              } else {
-                padding++;
-                p--;
+        if (G_LIKELY (presentation_time != NULL))
+          *presentation_time = timestamp;
+
+        if (G_UNLIKELY (GST_DEBUG_IS_ENABLED ())) {
+          gchar *options_flags_str =
+              ks_options_flags_to_string (hdr->OptionsFlags);
+
+          GST_DEBUG ("PictureNumber=%" G_GUINT64_FORMAT ", DropCount=%"
+              G_GUINT64_FORMAT ", PresentationTime=%" GST_TIME_FORMAT
+              ", Duration=%" GST_TIME_FORMAT ", OptionsFlags=%s: %d bytes",
+              frame_info->PictureNumber, frame_info->DropCount,
+              GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration),
+              options_flags_str, hdr->DataUsed);
+
+          g_free (options_flags_str);
+        }
+
+        /* Protect against old frames. This should never happen, see previous
+         * comment on last_timestamp. */
+        if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (timestamp))) {
+          if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (priv->last_timestamp) &&
+                  timestamp < priv->last_timestamp)) {
+            GST_WARNING ("got an old frame (last_timestamp=%" GST_TIME_FORMAT
+                ", timestamp=%" GST_TIME_FORMAT ")",
+                GST_TIME_ARGS (priv->last_timestamp),
+                GST_TIME_ARGS (timestamp));
+            *bytes_read = 0;
+          } else {
+            priv->last_timestamp = timestamp;
+          }
+        }
+
+        if (*bytes_read > 0) {
+          /* Grab the frame data */
+          g_assert (buf_size >= hdr->DataUsed);
+          memcpy (buf, req->buf, hdr->DataUsed);
+
+          if (priv->is_mjpeg) {
+            /*
+             * Workaround for cameras/drivers that intermittently provide us
+             * with incomplete or corrupted MJPEG frames.
+             *
+             * Happens with for instance Microsoft LifeCam VX-7000.
+             */
+
+            gboolean valid = FALSE;
+            guint padding = 0;
+
+            /* JFIF SOI marker */
+            if (*bytes_read > MJPEG_MAX_PADDING
+                && buf[0] == 0xff && buf[1] == 0xd8) {
+              guint8 *p = buf + *bytes_read - 2;
+
+              /* JFIF EOI marker (but skip any padding) */
+              while (padding < MJPEG_MAX_PADDING - 1 - 2 && !valid) {
+                if (p[0] == 0xff && p[1] == 0xd9) {
+                  valid = TRUE;
+                } else {
+                  padding++;
+                  p--;
+                }
               }
             }
-          }
 
-          if (valid)
-            *bytes_read -= padding;
-          else
-            *bytes_read = 0;
+            if (valid)
+              *bytes_read -= padding;
+            else
+              *bytes_read = 0;
+          }
         }
       } else if (GetLastError () != ERROR_OPERATION_ABORTED)
         goto error_get_result;

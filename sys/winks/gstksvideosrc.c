@@ -45,12 +45,9 @@
 #include "kshelpers.h"
 #include "ksvideohelpers.h"
 
-#define ENABLE_CLOCK_DEBUG 0
-
 #define DEFAULT_DEVICE_PATH     NULL
 #define DEFAULT_DEVICE_NAME     NULL
 #define DEFAULT_DEVICE_INDEX    -1
-#define DEFAULT_ENSLAVE_KSCLOCK FALSE
 #define DEFAULT_DO_STATS        FALSE
 #define DEFAULT_ENABLE_QUIRKS   TRUE
 
@@ -60,7 +57,6 @@ enum
   PROP_DEVICE_PATH,
   PROP_DEVICE_NAME,
   PROP_DEVICE_INDEX,
-  PROP_ENSLAVE_KSCLOCK,
   PROP_DO_STATS,
   PROP_FPS,
   PROP_ENABLE_QUIRKS,
@@ -69,13 +65,30 @@ enum
 GST_DEBUG_CATEGORY (gst_ks_debug);
 #define GST_CAT_DEFAULT gst_ks_debug
 
+#define KS_WORKER_LOCK(priv) g_mutex_lock (priv->worker_lock)
+#define KS_WORKER_UNLOCK(priv) g_mutex_unlock (priv->worker_lock)
+#define KS_WORKER_WAIT(priv) \
+    g_cond_wait (priv->worker_notify_cond, priv->worker_lock)
+#define KS_WORKER_NOTIFY(priv) g_cond_signal (priv->worker_notify_cond)
+#define KS_WORKER_WAIT_FOR_RESULT(priv) \
+    g_cond_wait (priv->worker_result_cond, priv->worker_lock)
+#define KS_WORKER_NOTIFY_RESULT(priv) \
+    g_cond_signal (priv->worker_result_cond)
+
+typedef enum
+{
+  KS_WORKER_STATE_STARTING,
+  KS_WORKER_STATE_READY,
+  KS_WORKER_STATE_STOPPING,
+  KS_WORKER_STATE_ERROR,
+} KsWorkerState;
+
 typedef struct
 {
   /* Properties */
   gchar *device_path;
   gchar *device_name;
   gint device_index;
-  gboolean enslave_ksclock;
   gboolean do_stats;
   gboolean enable_quirks;
 
@@ -85,6 +98,20 @@ typedef struct
 
   guint64 offset;
   GstClockTime prev_ts;
+  gboolean running;
+
+  /* Worker thread */
+  GThread *worker_thread;
+  GMutex *worker_lock;
+  GCond *worker_notify_cond;
+  GCond *worker_result_cond;
+  KsWorkerState worker_state;
+
+  GstCaps *worker_pending_caps;
+  gboolean worker_setcaps_result;
+
+  gboolean worker_pending_run;
+  gboolean worker_run_result;
 
   /* Statistics */
   GstClockTime last_sampling;
@@ -182,10 +209,6 @@ gst_ks_video_src_class_init (GstKsVideoSrcClass * klass)
       g_param_spec_int ("device-index", "Device Index",
           "The zero-based device index", -1, G_MAXINT, DEFAULT_DEVICE_INDEX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_ENSLAVE_KSCLOCK,
-      g_param_spec_boolean ("enslave-ksclock", "Enslave the clock used by KS",
-          "Enslave the clocked used by Kernel Streaming",
-          DEFAULT_ENSLAVE_KSCLOCK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DO_STATS,
       g_param_spec_boolean ("do-stats", "Enable statistics",
           "Enable logging of statistics", DEFAULT_DO_STATS,
@@ -217,7 +240,6 @@ gst_ks_video_src_init (GstKsVideoSrc * self, GstKsVideoSrcClass * gclass)
   priv->device_path = DEFAULT_DEVICE_PATH;
   priv->device_name = DEFAULT_DEVICE_NAME;
   priv->device_index = DEFAULT_DEVICE_INDEX;
-  priv->enslave_ksclock = DEFAULT_ENSLAVE_KSCLOCK;
   priv->do_stats = DEFAULT_DO_STATS;
   priv->enable_quirks = DEFAULT_ENABLE_QUIRKS;
 }
@@ -250,9 +272,6 @@ gst_ks_video_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DEVICE_INDEX:
       g_value_set_int (value, priv->device_index);
-      break;
-    case PROP_ENSLAVE_KSCLOCK:
-      g_value_set_boolean (value, priv->enslave_ksclock);
       break;
     case PROP_DO_STATS:
       GST_OBJECT_LOCK (object);
@@ -292,14 +311,6 @@ gst_ks_video_src_set_property (GObject * object, guint prop_id,
     case PROP_DEVICE_INDEX:
       priv->device_index = g_value_get_int (value);
       break;
-    case PROP_ENSLAVE_KSCLOCK:
-      GST_OBJECT_LOCK (object);
-      if (priv->device == NULL)
-        priv->enslave_ksclock = g_value_get_boolean (value);
-      else
-        g_warning ("enslave-ksclock may only be changed while in NULL state");
-      GST_OBJECT_UNLOCK (object);
-      break;
     case PROP_DO_STATS:
       GST_OBJECT_LOCK (object);
       priv->do_stats = g_value_get_boolean (value);
@@ -327,6 +338,8 @@ gst_ks_video_src_reset (GstKsVideoSrc * self)
   /* Reset timestamping state */
   priv->offset = 0;
   priv->prev_ts = GST_CLOCK_TIME_NONE;
+
+  priv->running = FALSE;
 }
 
 static void
@@ -337,21 +350,17 @@ gst_ks_video_src_apply_driver_quirks (GstKsVideoSrc * self)
 
   /*
    * Logitech's driver software injects the following DLL into all processes
-   * spawned. This DLL does lots of nasty tricks, sitting in between the
+   * spawned. This DLL does some nasty tricks, sitting in between the
    * application and the low-level ntdll API (NtCreateFile, NtClose,
    * NtDeviceIoControlFile, NtDuplicateObject, etc.), making all sorts
-   * of assumptions on which application threads do what.
-   *
-   * We could later work around this by having a worker-thread open the
-   * device, take care of doing set_caps() when asked to, closing the device
-   * when shutting down, and so forth.
+   * of assumptions.
    *
    * The only regression that this quirk causes is that the video effects
    * feature doesn't work.
    */
   mod = GetModuleHandle ("LVPrcInj.dll");
   if (mod != NULL) {
-    GST_DEBUG_OBJECT (self, "hostile Logitech DLL detected, neutralizing it");
+    GST_DEBUG_OBJECT (self, "Logitech DLL detected, neutralizing it");
 
     /*
      * We know that no-one's actually keeping this handle around to decrement
@@ -365,7 +374,7 @@ gst_ks_video_src_apply_driver_quirks (GstKsVideoSrc * self)
     /* Paranoia: verify that it's no longer there */
     mod = GetModuleHandle ("LVPrcInj.dll");
     if (mod != NULL)
-      GST_WARNING_OBJECT (self, "failed to neutralize hostile Logitech DLL");
+      GST_WARNING_OBJECT (self, "failed to neutralize Logitech DLL");
   }
 }
 
@@ -404,18 +413,14 @@ gst_ks_video_src_open_device (GstKsVideoSrc * self)
     }
 
     if (match) {
-      priv->ksclock = NULL;
-
-      if (priv->enslave_ksclock) {
-        priv->ksclock = g_object_new (GST_TYPE_KS_CLOCK, NULL);
-        if (priv->ksclock != NULL && !gst_ks_clock_open (priv->ksclock)) {
-          g_object_unref (priv->ksclock);
-          priv->ksclock = NULL;
-        }
-
-        if (priv->ksclock == NULL)
-          GST_WARNING_OBJECT (self, "Failed to create/open KsClock");
+      priv->ksclock = g_object_new (GST_TYPE_KS_CLOCK, NULL);
+      if (priv->ksclock != NULL && !gst_ks_clock_open (priv->ksclock)) {
+        g_object_unref (priv->ksclock);
+        priv->ksclock = NULL;
       }
+
+      if (priv->ksclock == NULL)
+        GST_WARNING_OBJECT (self, "Failed to create/open KsClock");
 
       device = g_object_new (GST_TYPE_KS_VIDEO_DEVICE,
           "clock", priv->ksclock, "device-path", entry->path, NULL);
@@ -489,6 +494,114 @@ gst_ks_video_src_close_device (GstKsVideoSrc * self)
   gst_ks_video_src_reset (self);
 }
 
+/*
+ * Worker thread that takes care of starting, configuring and stopping things.
+ *
+ * This is needed because Logitech's driver software injects a DLL that
+ * intercepts API functions like NtCreateFile, NtClose, NtDeviceIoControlFile
+ * and NtDuplicateObject so that they can provide in-place video effects to
+ * existing applications. Their assumption is that at least one thread tainted
+ * by their code stays around for the lifetime of the capture.
+ */
+static gpointer
+gst_ks_video_src_worker_func (gpointer data)
+{
+  GstKsVideoSrc *self = data;
+  GstKsVideoSrcPrivate *priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
+
+  if (!gst_ks_video_src_open_device (self))
+    goto open_failed;
+
+  KS_WORKER_LOCK (priv);
+  priv->worker_state = KS_WORKER_STATE_READY;
+  KS_WORKER_NOTIFY_RESULT (priv);
+
+  while (priv->worker_state != KS_WORKER_STATE_STOPPING) {
+    KS_WORKER_WAIT (priv);
+
+    if (priv->worker_pending_caps != NULL) {
+      priv->worker_setcaps_result =
+          gst_ks_video_device_set_caps (priv->device,
+          priv->worker_pending_caps);
+
+      priv->worker_pending_caps = NULL;
+      KS_WORKER_NOTIFY_RESULT (priv);
+    } else if (priv->worker_pending_run) {
+      if (priv->ksclock != NULL)
+        gst_ks_clock_start (priv->ksclock);
+      priv->worker_run_result =
+          gst_ks_video_device_set_state (priv->device, KSSTATE_RUN);
+
+      priv->worker_pending_run = FALSE;
+      KS_WORKER_NOTIFY_RESULT (priv);
+    }
+  }
+
+  KS_WORKER_UNLOCK (priv);
+
+  gst_ks_video_src_close_device (self);
+
+  return NULL;
+
+  /* ERRORS */
+open_failed:
+  {
+    KS_WORKER_LOCK (priv);
+    priv->worker_state = KS_WORKER_STATE_ERROR;
+    KS_WORKER_NOTIFY_RESULT (priv);
+    KS_WORKER_UNLOCK (priv);
+
+    return NULL;
+  }
+}
+
+static gboolean
+gst_ks_video_src_start_worker (GstKsVideoSrc * self)
+{
+  GstKsVideoSrcPrivate *priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
+  gboolean result;
+
+  priv->worker_lock = g_mutex_new ();
+  priv->worker_notify_cond = g_cond_new ();
+  priv->worker_result_cond = g_cond_new ();
+
+  priv->worker_pending_caps = NULL;
+  priv->worker_pending_run = FALSE;
+
+  priv->worker_state = KS_WORKER_STATE_STARTING;
+  priv->worker_thread =
+      g_thread_create (gst_ks_video_src_worker_func, self, TRUE, NULL);
+
+  KS_WORKER_LOCK (priv);
+  while (priv->worker_state < KS_WORKER_STATE_READY)
+    KS_WORKER_WAIT_FOR_RESULT (priv);
+  result = priv->worker_state == KS_WORKER_STATE_READY;
+  KS_WORKER_UNLOCK (priv);
+
+  return result;
+}
+
+static void
+gst_ks_video_src_stop_worker (GstKsVideoSrc * self)
+{
+  GstKsVideoSrcPrivate *priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
+
+  KS_WORKER_LOCK (priv);
+  priv->worker_state = KS_WORKER_STATE_STOPPING;
+  KS_WORKER_NOTIFY (priv);
+  KS_WORKER_UNLOCK (priv);
+
+  g_thread_join (priv->worker_thread);
+  priv->worker_thread = NULL;
+
+  g_cond_free (priv->worker_result_cond);
+  priv->worker_result_cond = NULL;
+  g_cond_free (priv->worker_notify_cond);
+  priv->worker_notify_cond = NULL;
+  g_mutex_free (priv->worker_lock);
+  priv->worker_lock = NULL;
+}
+
 static GstStateChangeReturn
 gst_ks_video_src_change_state (GstElement * element, GstStateChange transition)
 {
@@ -500,7 +613,7 @@ gst_ks_video_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (priv->enable_quirks)
         gst_ks_video_src_apply_driver_quirks (self);
-      if (!gst_ks_video_src_open_device (self))
+      if (!gst_ks_video_src_start_worker (self))
         goto open_failed;
       break;
   }
@@ -509,7 +622,7 @@ gst_ks_video_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_ks_video_src_close_device (self);
+      gst_ks_video_src_stop_worker (self);
       break;
   }
 
@@ -518,6 +631,7 @@ gst_ks_video_src_change_state (GstElement * element, GstStateChange transition)
   /* ERRORS */
 open_failed:
   {
+    gst_ks_video_src_stop_worker (self);
     return GST_STATE_CHANGE_FAILURE;
   }
 }
@@ -529,7 +643,7 @@ gst_ks_video_src_set_clock (GstElement * element, GstClock * clock)
   GstKsVideoSrcPrivate *priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
 
   GST_OBJECT_LOCK (element);
-  if (priv->ksclock != NULL)
+  if (clock != NULL && priv->ksclock != NULL)
     gst_ks_clock_provide_master_clock (priv->ksclock, clock);
   GST_OBJECT_UNLOCK (element);
 
@@ -557,13 +671,14 @@ gst_ks_video_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
   if (priv->device == NULL)
     return FALSE;
 
-  if (!gst_ks_video_device_set_caps (priv->device, caps))
-    return FALSE;
+  KS_WORKER_LOCK (priv);
+  priv->worker_pending_caps = caps;
+  KS_WORKER_NOTIFY (priv);
+  while (priv->worker_pending_caps == caps)
+    KS_WORKER_WAIT_FOR_RESULT (priv);
+  KS_WORKER_UNLOCK (priv);
 
-  if (!gst_ks_video_device_set_state (priv->device, KSSTATE_RUN))
-    return FALSE;
-
-  return TRUE;
+  return priv->worker_setcaps_result;
 }
 
 static void
@@ -674,8 +789,12 @@ gst_ks_video_src_timestamp_buffer (GstKsVideoSrc * self, GstBuffer * buf,
       timestamp = 0;
 
     if (GST_CLOCK_TIME_IS_VALID (presentation_time)) {
-      GstClockTimeDiff diff = GST_CLOCK_DIFF (timestamp, presentation_time);
-      GST_DEBUG_OBJECT (self, "Diff between our and the driver's timestamp: %"
+      /*
+       * We don't use this for anything yet, need to ponder how to deal
+       * with pins that use an internal clock and timestamp from 0.
+       */
+      GstClockTimeDiff diff = GST_CLOCK_DIFF (presentation_time, timestamp);
+      GST_DEBUG_OBJECT (self, "diff between gst and driver timestamp: %"
           G_GINT64_FORMAT, diff);
     }
 
@@ -712,15 +831,11 @@ gst_ks_video_src_timestamp_buffer (GstKsVideoSrc * self, GstBuffer * buf,
         GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
       else if (delta_offset > 1) {
         guint lost = delta_offset - 1;
-#if ENABLE_CLOCK_DEBUG
         GST_INFO_OBJECT (self, "lost %d frame%s, setting discont flag",
             lost, (lost > 1) ? "s" : "");
-#endif
         GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       } else if (delta_offset == 0) {   /* overproduction, skip this frame */
-#if ENABLE_CLOCK_DEBUG
         GST_INFO_OBJECT (self, "skipping frame");
-#endif
         return FALSE;
       }
 
@@ -803,6 +918,19 @@ gst_ks_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   if (G_UNLIKELY (result != GST_FLOW_OK))
     goto error_alloc_buffer;
 
+  if (G_UNLIKELY (!priv->running)) {
+    KS_WORKER_LOCK (priv);
+    priv->worker_pending_run = TRUE;
+    KS_WORKER_NOTIFY (priv);
+    while (priv->worker_pending_run)
+      KS_WORKER_WAIT_FOR_RESULT (priv);
+    priv->running = priv->worker_run_result;
+    KS_WORKER_UNLOCK (priv);
+
+    if (!priv->running)
+      goto error_start_capture;
+  }
+
   do {
     gulong bytes_read;
 
@@ -830,6 +958,14 @@ error_no_caps:
   {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("not negotiated"), ("maybe setcaps failed?"));
+
+    return GST_FLOW_ERROR;
+  }
+error_start_capture:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
+        ("could not start capture"),
+        ("failed to change pin state to KSSTATE_RUN"));
 
     return GST_FLOW_ERROR;
   }

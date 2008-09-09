@@ -323,7 +323,7 @@ ks_state_to_string (KSSTATE state)
   if (flags & KSSTREAM_HEADER_OPTIONSF_##flag)\
   {\
     if (str->len > 0)\
-      g_string_append (str, " | ");\
+      g_string_append (str, "|");\
     g_string_append (str, G_STRINGIFY (flag));\
     flags &= ~KSSTREAM_HEADER_OPTIONSF_##flag;\
   }
@@ -336,21 +336,21 @@ ks_options_flags_to_string (gulong flags)
 
   str = g_string_sized_new (128);
 
+  CHECK_OPTIONS_FLAG (SPLICEPOINT);
+  CHECK_OPTIONS_FLAG (PREROLL);
   CHECK_OPTIONS_FLAG (DATADISCONTINUITY);
+  CHECK_OPTIONS_FLAG (TYPECHANGED);
+  CHECK_OPTIONS_FLAG (TIMEVALID);
+  CHECK_OPTIONS_FLAG (TIMEDISCONTINUITY);
+  CHECK_OPTIONS_FLAG (FLUSHONPAUSE);
   CHECK_OPTIONS_FLAG (DURATIONVALID);
   CHECK_OPTIONS_FLAG (ENDOFSTREAM);
-  CHECK_OPTIONS_FLAG (FLUSHONPAUSE);
-  CHECK_OPTIONS_FLAG (LOOPEDDATA);
-  CHECK_OPTIONS_FLAG (PREROLL);
-  CHECK_OPTIONS_FLAG (SPLICEPOINT);
-  CHECK_OPTIONS_FLAG (TIMEDISCONTINUITY);
-  CHECK_OPTIONS_FLAG (TIMEVALID);
-  CHECK_OPTIONS_FLAG (TYPECHANGED);
-  CHECK_OPTIONS_FLAG (VRAM_DATA_TRANSFER);
   CHECK_OPTIONS_FLAG (BUFFEREDTRANSFER);
+  CHECK_OPTIONS_FLAG (VRAM_DATA_TRANSFER);
+  CHECK_OPTIONS_FLAG (LOOPEDDATA);
 
   if (flags != 0)
-    g_string_append_printf (str, " | 0x%08x", flags);
+    g_string_append_printf (str, "|0x%08x", flags);
 
   ret = str->str;
   g_string_free (str, FALSE);
