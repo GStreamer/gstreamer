@@ -289,15 +289,17 @@ gst_ks_clock_worker_thread_func (gpointer data)
   gst_ks_clock_set_state_unlocked (self, KSSTATE_RUN);
 
   while (priv->worker_running) {
-    GTimeVal next_wakeup;
-
     if (priv->master_clock != NULL) {
       GstClockTime now = gst_clock_get_time (priv->master_clock);
       now /= 100;
 
-      if (!ks_object_set_property (priv->clock_handle, KSPROPSETID_Clock,
+      if (ks_object_set_property (priv->clock_handle, KSPROPSETID_Clock,
               KSPROPERTY_CLOCK_TIME, &now, sizeof (now))) {
-        GST_WARNING ("Failed to sync clock");
+        GST_DEBUG ("clock synchronized");
+        gst_object_unref (priv->master_clock);
+        priv->master_clock = NULL;
+      } else {
+        GST_WARNING ("failed to synchronize clock");
       }
     }
 
@@ -306,9 +308,7 @@ gst_ks_clock_worker_thread_func (gpointer data)
       g_cond_signal (priv->client_cond);
     }
 
-    g_get_current_time (&next_wakeup);
-    next_wakeup.tv_sec += 1;
-    g_cond_timed_wait (priv->worker_cond, priv->mutex, &next_wakeup);
+    g_cond_wait (priv->worker_cond, priv->mutex);
   }
 
   priv->worker_initialized = FALSE;
@@ -329,8 +329,7 @@ gst_ks_clock_start (GstKsClock * self)
     priv->worker_initialized = FALSE;
 
     priv->worker_thread =
-        g_thread_create_full (gst_ks_clock_worker_thread_func, self, 0, TRUE,
-        TRUE, G_THREAD_PRIORITY_HIGH, NULL);
+        g_thread_create (gst_ks_clock_worker_thread_func, self, TRUE, NULL);
   }
 
   while (!priv->worker_initialized)

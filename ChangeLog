@@ -1,5 +1,15 @@
 2008-09-10  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
+	* sys/winks/gstksclock.c (gst_ks_clock_worker_thread_func,
+	  gst_ks_clock_start):
+	  Synchronize KS clock as a single-shot operation for now, there's not
+	  much point in doing it periodically until we're actually using the
+	  KS timestamps for anything else than just discarding old frames.
+	* sys/winks/gstksvideosrc.c (gst_ks_video_src_open_device):
+	  Provide the GstClock when opening the device if we already have one.
+
+2008-09-10  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
 	* sys/winks/gstksvideodevice.c (GST_DEBUG_IS_ENABLED, last_timestamp,
 	  gst_ks_video_device_prepare_buffers, gst_ks_video_device_create_pin,
 	  gst_ks_video_device_set_state, gst_ks_video_device_request_frame,

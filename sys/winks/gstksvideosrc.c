@@ -414,13 +414,15 @@ gst_ks_video_src_open_device (GstKsVideoSrc * self)
 
     if (match) {
       priv->ksclock = g_object_new (GST_TYPE_KS_CLOCK, NULL);
-      if (priv->ksclock != NULL && !gst_ks_clock_open (priv->ksclock)) {
+      if (priv->ksclock != NULL && gst_ks_clock_open (priv->ksclock)) {
+        GstClock *clock = GST_ELEMENT_CLOCK (self);
+        if (clock != NULL)
+          gst_ks_clock_provide_master_clock (priv->ksclock, clock);
+      } else {
+        GST_WARNING_OBJECT (self, "failed to create/open KsClock");
         g_object_unref (priv->ksclock);
         priv->ksclock = NULL;
       }
-
-      if (priv->ksclock == NULL)
-        GST_WARNING_OBJECT (self, "Failed to create/open KsClock");
 
       device = g_object_new (GST_TYPE_KS_VIDEO_DEVICE,
           "clock", priv->ksclock, "device-path", entry->path, NULL);
