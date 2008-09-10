@@ -47,9 +47,23 @@
 #define __GST_DSHOWVIDEODEC_H__
 
 #include <gst/gst.h>
-#include "gstdshowdecwrapper.h"
+#include "gstdshowutil.h"
+#include "gstdshowfakesrc.h"
 
 G_BEGIN_DECLS
+
+typedef struct {
+  gchar *element_name;      /* The gst element factory name */
+  gchar *element_longname;  /* Description string for element */
+  gchar *preferred_filter_substring; /* TODO: Remove this? */
+  gint32 format;            /* ??? */
+  GUID input_majortype;
+  GUID input_subtype;
+  gchar *sinkcaps;          /* GStreamer caps of input format */
+  GUID output_majortype;
+  GUID output_subtype;
+  gchar *srccaps;
+} VideoCodecEntry;
 
 #define GST_TYPE_DSHOWVIDEODEC               (gst_dshowvideodec_get_type())
 #define GST_DSHOWVIDEODEC(obj)              (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DSHOWVIDEODEC,GstDshowVideoDec))
@@ -59,6 +73,8 @@ G_BEGIN_DECLS
 
 typedef struct _GstDshowVideoDec GstDshowVideoDec;
 typedef struct _GstDshowVideoDecClass GstDshowVideoDecClass;
+
+class VideoFakeSink;
 
 struct _GstDshowVideoDec
 {
@@ -77,10 +93,10 @@ struct _GstDshowVideoDec
   GList *mediatypes;
 
   /* filters interfaces */
-  IBaseFilter *srcfilter;
-  IGstDshowInterface *gstdshowsrcfilter;
+  FakeSrc *fakesrc;
+  VideoFakeSink *fakesink;
+
   IBaseFilter *decfilter;
-  IBaseFilter *sinkfilter;
 
   /* graph manager interfaces */
   IMediaFilter *mediafilter;
@@ -93,16 +109,46 @@ struct _GstDshowVideoDec
   /* current segment */
   GstSegment *segment;
 
+  gboolean setup;
+
   gboolean comInitialized;
 };
 
 struct _GstDshowVideoDecClass
 {
   GstElementClass parent_class;
-  const CodecEntry *entry;
+  const VideoCodecEntry *entry;
 };
 
 gboolean dshow_vdec_register (GstPlugin * plugin);
+
+const GUID CLSID_VideoFakeSink = 
+{ 0xff8f0c8e, 0x64f9, 0x4471,
+  { 0x96, 0x0e, 0xd2, 0xd3, 0x18, 0x87, 0x78, 0x9a} };
+
+class VideoFakeSink :  public CBaseRenderer
+{
+public:
+  VideoFakeSink(GstDshowVideoDec *dec) : 
+      m_hres(S_OK),
+      CBaseRenderer(CLSID_VideoFakeSink, L"VideoFakeSink", NULL, &m_hres),
+      mDec(dec) 
+  {};
+  virtual ~VideoFakeSink() {};
+
+  HRESULT DoRenderSample(IMediaSample *pMediaSample);
+  HRESULT CheckMediaType(const CMediaType *pmt);
+  HRESULT SetMediaType (AM_MEDIA_TYPE *pmt) 
+  {
+    m_MediaType.Set (*pmt);
+    return S_OK;
+  }
+
+protected:
+  HRESULT m_hres;
+  CMediaType m_MediaType;
+  GstDshowVideoDec *mDec;
+};
 
 G_END_DECLS
 

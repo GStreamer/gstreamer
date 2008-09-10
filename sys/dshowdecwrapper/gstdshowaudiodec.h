@@ -47,10 +47,20 @@
 #ifndef __GST_DSHOWAUDIODEC_H__
 #define __GST_DSHOWAUDIODEC_H__
 
+#include <atlbase.h>
+
 #include <gst/gst.h>
-#include "gstdshowdecwrapper.h"
+#include "gstdshowutil.h"
+#include "gstdshowfakesrc.h"
 
 G_BEGIN_DECLS
+
+typedef struct {
+  gchar *element_name;      /* The gst element factory name */
+  gchar *element_longname;  /* Description string for element */
+  gint32 format;            /* WAVEFORMATEX format */
+  gchar *sinkcaps;          /* GStreamer caps of input format */
+} AudioCodecEntry;
 
 #define GST_TYPE_DSHOWAUDIODEC               (gst_dshowaudiodec_get_type())
 #define GST_DSHOWAUDIODEC(obj)              (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DSHOWAUDIODEC,GstDshowAudioDec))
@@ -60,6 +70,8 @@ G_BEGIN_DECLS
 
 typedef struct _GstDshowAudioDec GstDshowAudioDec;
 typedef struct _GstDshowAudioDecClass GstDshowAudioDecClass;
+
+class AudioFakeSink;
 
 struct _GstDshowAudioDec
 {
@@ -72,14 +84,14 @@ struct _GstDshowAudioDec
   GstFlowReturn last_ret;
 
   /* filters interfaces*/
-  IBaseFilter *srcfilter;
-  IGstDshowInterface *gstdshowsrcfilter;
-  IBaseFilter *decfilter;
-  IBaseFilter *sinkfilter;
+  FakeSrc *fakesrc;
+  AudioFakeSink *fakesink;
+
+  CComPtr<IBaseFilter> decfilter;
   
   /* graph manager interfaces */  
-  IMediaFilter *mediafilter;
-  IFilterGraph *filtergraph;
+  CComPtr<IMediaFilter> mediafilter;
+  CComPtr<IFilterGraph> filtergraph;
 
   /* true when dshow graph is setup */
   gboolean setup;
@@ -105,10 +117,38 @@ struct _GstDshowAudioDec
 struct _GstDshowAudioDecClass
 {
   GstElementClass parent_class;
-  const CodecEntry *entry;
+  const AudioCodecEntry *entry;
 };
 
 gboolean dshow_adec_register (GstPlugin * plugin);
+
+const GUID CLSID_AudioFakeSink = 
+{ 0x3867f537, 0x3e3d, 0x44da, 
+  { 0xbb, 0xf2, 0x02, 0x48, 0x7b, 0xb0, 0xbc, 0xc4} };
+
+class AudioFakeSink :  public CBaseRenderer
+{
+public:
+  AudioFakeSink(GstDshowAudioDec *dec) : 
+      m_hres(S_OK),
+      CBaseRenderer(CLSID_AudioFakeSink, L"AudioFakeSink", NULL, &m_hres),
+      mDec(dec) 
+  {};
+  virtual ~AudioFakeSink() {};
+
+  HRESULT DoRenderSample(IMediaSample *pMediaSample);
+  HRESULT CheckMediaType(const CMediaType *pmt);
+  HRESULT SetMediaType (AM_MEDIA_TYPE *pmt) 
+  {
+    m_MediaType.Set (*pmt);
+    return S_OK;
+  }
+
+protected:
+  HRESULT m_hres;
+  CMediaType m_MediaType;
+  GstDshowAudioDec *mDec;
+};
 
 G_END_DECLS
 

@@ -1,3 +1,25 @@
+2008-09-10  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/dshowdecwrapper/Makefile.am:
+	* sys/dshowdecwrapper/gstdshowaudiodec.c:
+	* sys/dshowdecwrapper/gstdshowaudiodec.cpp:
+	* sys/dshowdecwrapper/gstdshowaudiodec.h:
+	* sys/dshowdecwrapper/gstdshowdecwrapper.c:
+	* sys/dshowdecwrapper/gstdshowdecwrapper.cpp:
+	* sys/dshowdecwrapper/gstdshowdecwrapper.h:
+	* sys/dshowdecwrapper/gstdshowfakesrc.cpp:
+	* sys/dshowdecwrapper/gstdshowfakesrc.h:
+	* sys/dshowdecwrapper/gstdshowutil.cpp:
+	* sys/dshowdecwrapper/gstdshowutil.h:
+	* sys/dshowdecwrapper/gstdshowvideodec.c:
+	* sys/dshowdecwrapper/gstdshowvideodec.cpp:
+	* sys/dshowdecwrapper/gstdshowvideodec.h:
+	  Major rewrite of dshowdecwrapper. Converts code to
+	  C++, moves to direct use of DirectShow base classes,
+	  make a lot of code clearer, simplify, etc.
+	  Fix decode of MP3 on Vista by working around an apparent
+	  bug in the decoder.
+
 2008-09-10  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
 	* sys/winks/gstksclock.c (gst_ks_clock_worker_thread_func,
