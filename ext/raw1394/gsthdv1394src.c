@@ -46,8 +46,8 @@
 
 #define SEND_COMMAND(src, command)          \
 G_STMT_START {                              \
-  unsigned char c; c = command;             \
-  write (WRITE_SOCKET(src), &c, 1);         \
+  int _res; unsigned char c; c = command;   \
+  _res = write (WRITE_SOCKET(src), &c, 1);  \
 } G_STMT_END
 
 #define READ_COMMAND(src, command, res)        \
