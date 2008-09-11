@@ -1,3 +1,8 @@
+2008-09-11  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* docs/manual/intro-motivation.xml::
+	  Remove some bits that no longer apply, update others (#551642).
+
 2008-09-09  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* win32/common/config.h.in:

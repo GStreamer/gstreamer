@@ -223,9 +223,7 @@
       <itemizedlist>
         <listitem>
 	  <para>
-	    using GLib's <function>g_mem_chunk</function> and fast
-            non-blocking allocation algorithms where possible to
-            minimize dynamic memory allocation.
+	    using GLib's <classname>GSlice</classname> allocator
 	  </para>
         </listitem>
         <listitem>
@@ -252,10 +250,7 @@
         </listitem>
         <listitem>
 	  <para>
-	    the use of cothreads to minimize the threading overhead.
-            Cothreads are a simple and fast user-space method for
-            switching between subtasks. Cothreads were measured to
-	    consume as little as 600 cpu cycles.
+	    dedicated streaming threads, with scheduling handled by the kernel.
 	  </para>
         </listitem>
         <listitem>
@@ -268,11 +263,6 @@
 	    using a plugin registry with the specifications of the plugins so 
 	    that the plugin loading can be delayed until the plugin is actually
 	    used.
-	  </para>
-        </listitem>
-        <listitem>
-	  <para>
-	    all critical data passing is free of locks and mutexes.
 	  </para>
         </listitem>
       </itemizedlist>
