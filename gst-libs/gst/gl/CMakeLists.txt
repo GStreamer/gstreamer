@@ -1,3 +1,4 @@
+#FIXME: generate config.h
 add_definitions(-DHAVE_CONFIG_H)
 
 include_directories(AFTER
@@ -14,7 +15,7 @@ add_library (gstgl STATIC
 	gstglbuffer.c
 	gstglfilter.c
 	gstglshader.c)
-  
+
 target_link_libraries(gstgl
   general gstfreeglut
   general ${GLEW_LIBRARY}

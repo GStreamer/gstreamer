@@ -12,7 +12,7 @@ libgstopengl_la_SOURCES = \
 	gstglupload.h \
 	gstgldownload.c \
 	gstgldownload.h \
-    gstglfilterblur.c \
+  gstglfilterblur.c \
 	gstglfiltercube.c \
 	gstglfiltercube.h \
 	gstglfilterlaplacian.c \
@@ -21,8 +21,8 @@ libgstopengl_la_SOURCES = \
 	gstglfilterapp.h \
 	gstglcolorscale.c \
 	gstglcolorscale.h \
-    gltestsrc.c \
-    gltestsrc.h \
+  gltestsrc.c \
+  gltestsrc.h \
 	gstgltestsrc.c \
 	gstgltestsrc.h \
 	gstgleffects.c \
