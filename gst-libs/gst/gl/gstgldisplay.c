@@ -30,8 +30,8 @@
  * N=1: errors
  * N=2: errors warnings
  * N=3: errors warnings infos
- * N=4: errors warnings infos logs
- * N=5: errors warnings infos logs .?.
+ * N=4: errors warnings infos 
+ * N=5: errors warnings infos logs
  */
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
@@ -133,7 +133,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   display->win_ypos = 0;
   display->visible = FALSE;
   display->isAlive = TRUE;
-  display->texture_pool = g_hash_table_new (g_str_hash, g_str_equal);
+  display->texture_pool = g_hash_table_new (g_int_hash, g_int_equal);
 
   //conditions
   display->cond_create_context = g_cond_new ();
@@ -1638,7 +1638,7 @@ gst_gl_display_thread_gen_shader (GstGLDisplay* display)
     gst_gl_shader_compile (display->gen_shader, &error);
     if (error) 
     {
-      g_warning ("%s", error->message);
+      GST_CAT_ERROR (GST_CAT_DEFAULT, "%s", error->message);
       g_error_free (error);
       error = NULL;
       gst_gl_shader_use (NULL);
@@ -1654,7 +1654,7 @@ gst_gl_display_thread_gen_shader (GstGLDisplay* display)
   }
   else
   {
-    g_warning ("One of the filter required ARB_fragment_shader\n");
+    GST_CAT_WARNING (GST_CAT_DEFAULT, "One of the filter required ARB_fragment_shader");
     display->isAlive = FALSE;
     display->gen_shader = NULL;
   }
@@ -1855,41 +1855,28 @@ gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
 {
   if (display->isAlive)
   {
-
-    gchar string_size[512];
     GQueue* sub_texture_pool = NULL;
 
-    sprintf (string_size, "%dx%d", width, height);
-    sub_texture_pool = g_hash_table_lookup (display->texture_pool, string_size);
-    //if the size is known
-    if (sub_texture_pool)
-    {
-      //check if there is a texture available in the pool
-      GstGLDisplayTex* tex = g_queue_pop_head (sub_texture_pool);
-      if (tex)
-      {
-        *pTexture = tex->texture;
-        g_free (tex);
-      }
-      //otherwise one more texture is generated
-      //note that this new texture is added in the pool
-      //only after being used
-      else
-      {
-        glGenTextures (1, pTexture);
-        glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
-        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-          width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      }
+    //make a unique key from w and h
+    //the key cannot be w*h because (4*6 = 6*4 = 2*12 = 12*2)
+    guint key = width;
+    key <<= 16;
+    key |= height;
+    sub_texture_pool = g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER(key));
 
+    //if there is a sub texture pool associated to th given key
+    if (sub_texture_pool && g_queue_get_length(sub_texture_pool) > 0)
+    {
+      //a texture is available in the pool
+      GstGLDisplayTex* tex = g_queue_pop_head (sub_texture_pool);
+      *pTexture = tex->texture;
+      g_free (tex);
+      GST_CAT_LOG (GST_CAT_DEFAULT, "get texture id:%d from the sub texture pool: %d",
+        *pTexture, key);
     }
-    //should be factorized
     else
     {
+      //sub texture pool does not exist yet or empty
       glGenTextures (1, pTexture);
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
       glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
@@ -1898,6 +1885,8 @@ gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+      GST_CAT_LOG (GST_CAT_DEFAULT, "generate texture id:%d", *pTexture);
     }
 
   }
@@ -1914,20 +1903,24 @@ gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
   //Each existing texture is destroyed only when the pool is destroyed
   //The pool of textures is deleted in the GstGLDisplay destructor
 
-  gchar string_size[512];
   GQueue* sub_texture_pool = NULL;
   GstGLDisplayTex* tex = NULL;
 
-  sprintf (string_size, "%dx%d", width, height);
-  sub_texture_pool = g_hash_table_lookup (display->texture_pool, string_size);
+  //make a unique key from w and h
+  //the key cannot be w*h because (4*6 = 6*4 = 2*12 = 12*2)
+  guint key = width;
+  key <<= 16;
+  key |= height;
+  sub_texture_pool = g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER(key));
+
   //if the size is known
   if (!sub_texture_pool)
   {
     sub_texture_pool = g_queue_new ();
-    g_hash_table_insert (display->texture_pool, string_size, sub_texture_pool);
+    g_hash_table_insert (display->texture_pool, GUINT_TO_POINTER(key), sub_texture_pool);
 
-    GST_CAT_INFO (GST_CAT_DEFAULT, "texture pool insert: %s", string_size);
-    GST_CAT_INFO (GST_CAT_DEFAULT, "texture pool size: %d", g_hash_table_size (display->texture_pool));
+    GST_CAT_INFO (GST_CAT_DEFAULT, "one more sub texture pool inserted: %d ", key);
+    GST_CAT_INFO (GST_CAT_DEFAULT, "nb sub texture pools: %d", g_hash_table_size (display->texture_pool));
   }
 
   //contruct a sub texture pool element
@@ -1937,6 +1930,10 @@ gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
 
   //add tex to the pool, it makes texture allocation reusable
   g_queue_push_tail (sub_texture_pool, tex);
+  GST_CAT_LOG (GST_CAT_DEFAULT, "texture id:%d added to the sub texture pool: %d", 
+    tex->texture, key);
+  GST_CAT_LOG (GST_CAT_DEFAULT, "%d texture(s) in the sub texture pool: %d", 
+    g_queue_get_length (sub_texture_pool), key);
 }
 
 
@@ -1949,6 +1946,7 @@ gboolean gst_gl_display_texture_pool_func_clean (gpointer key, gpointer value, g
   {
     GstGLDisplayTex* tex = g_queue_pop_head (sub_texture_pool);
     glDeleteTextures (1, &tex->texture);
+    GST_CAT_INFO (GST_CAT_DEFAULT, "texture id: %d deleted", tex->texture);
     g_free (tex);
   }
 
@@ -1974,7 +1972,7 @@ gst_gl_display_check_framebuffer_status(void)
     break;
 
   default:
-    GST_CAT_ERROR (GST_CAT_DEFAULT, "General FBO error\n");
+    GST_CAT_ERROR (GST_CAT_DEFAULT, "General FBO error");
   }
 }
 
