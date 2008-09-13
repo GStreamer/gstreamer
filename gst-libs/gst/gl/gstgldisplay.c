@@ -30,7 +30,7 @@
  * N=1: errors
  * N=2: errors warnings
  * N=3: errors warnings infos
- * N=4: errors warnings infos 
+ * N=4: errors warnings infos
  * N=5: errors warnings infos logs
  */
 
@@ -133,7 +133,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   display->win_ypos = 0;
   display->visible = FALSE;
   display->isAlive = TRUE;
-  display->texture_pool = g_hash_table_new (g_int_hash, g_int_equal);
+  display->texture_pool = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   //conditions
   display->cond_create_context = g_cond_new ();
@@ -699,7 +699,7 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
   err = glewInit();
   if (err != GLEW_OK)
   {
-    GST_CAT_ERROR_OBJECT (GST_CAT_DEFAULT, display, "Failed to init GLEW: %s", 
+    GST_CAT_ERROR_OBJECT (GST_CAT_DEFAULT, display, "Failed to init GLEW: %s",
       glewGetErrorString (err));
     display->isAlive = FALSE;
   }
@@ -1337,7 +1337,7 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
       }
       else
       {
-        //turn off the pipeline because Frame buffer object is a requirement when using filters 
+        //turn off the pipeline because Frame buffer object is a requirement when using filters
         //or when using GLSL colorspace conversion
         GST_CAT_WARNING (GST_CAT_DEFAULT, "Context %d, EXT_framebuffer_object supported: no", display->glutWinId);
         display->isAlive = FALSE;
@@ -1626,7 +1626,7 @@ gst_gl_display_thread_gen_shader (GstGLDisplay* display)
   {
     gboolean isAlive = TRUE;
     GError *error = NULL;
-    
+
     display->gen_shader = gst_gl_shader_new ();
 
     if (display->gen_shader_vertex_source)
@@ -1636,7 +1636,7 @@ gst_gl_display_thread_gen_shader (GstGLDisplay* display)
       gst_gl_shader_set_fragment_source(display->gen_shader, display->gen_shader_fragment_source);
 
     gst_gl_shader_compile (display->gen_shader, &error);
-    if (error) 
+    if (error)
     {
       GST_CAT_ERROR (GST_CAT_DEFAULT, "%s", error->message);
       g_error_free (error);
@@ -1859,9 +1859,9 @@ gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
 
     //make a unique key from w and h
     //the key cannot be w*h because (4*6 = 6*4 = 2*12 = 12*2)
-    guint key = width;
+    guint key = (gint)width;
     key <<= 16;
-    key |= height;
+    key |= (gint)height;
     sub_texture_pool = g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER(key));
 
     //if there is a sub texture pool associated to th given key
@@ -1908,9 +1908,9 @@ gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
 
   //make a unique key from w and h
   //the key cannot be w*h because (4*6 = 6*4 = 2*12 = 12*2)
-  guint key = width;
+  guint key = (gint)width;
   key <<= 16;
-  key |= height;
+  key |= (gint)height;
   sub_texture_pool = g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER(key));
 
   //if the size is known
@@ -1930,9 +1930,9 @@ gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
 
   //add tex to the pool, it makes texture allocation reusable
   g_queue_push_tail (sub_texture_pool, tex);
-  GST_CAT_LOG (GST_CAT_DEFAULT, "texture id:%d added to the sub texture pool: %d", 
+  GST_CAT_LOG (GST_CAT_DEFAULT, "texture id:%d added to the sub texture pool: %d",
     tex->texture, key);
-  GST_CAT_LOG (GST_CAT_DEFAULT, "%d texture(s) in the sub texture pool: %d", 
+  GST_CAT_LOG (GST_CAT_DEFAULT, "%d texture(s) in the sub texture pool: %d",
     g_queue_get_length (sub_texture_pool), key);
 }
 
@@ -2287,7 +2287,7 @@ gst_gl_display_del_fbo (GstGLDisplay* display, GLuint fbo,
 
 /* Called by glfilter */
 void
-gst_gl_display_gen_shader (GstGLDisplay* display, 
+gst_gl_display_gen_shader (GstGLDisplay* display,
                            const gchar* shader_vertex_source,
                            const gchar* shader_fragment_source,
                            GstGLShader** shader)
