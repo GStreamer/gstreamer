@@ -164,7 +164,7 @@ typedef enum {
   GST_AUDIO_FIELD_ENDIANNESS    = (1 << 2),
   GST_AUDIO_FIELD_WIDTH         = (1 << 3),
   GST_AUDIO_FIELD_DEPTH         = (1 << 4),
-  GST_AUDIO_FIELD_SIGNED        = (1 << 5),
+  GST_AUDIO_FIELD_SIGNED        = (1 << 5)
 } GstAudioFieldFlag;
 #endif
 

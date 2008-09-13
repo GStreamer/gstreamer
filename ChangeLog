@@ -1,3 +1,9 @@
+2008-09-13  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst-libs/gst/audio/audio.h: (GST_AUDIO_FIELD_SIGNED):
+	  Remove trailing comma from enum list, which causes problems
+	  with -pendantic (#550729).
+
 2008-09-05  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst-libs/gst/interfaces/propertyprobe.c:
