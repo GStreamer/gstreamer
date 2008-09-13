@@ -1,3 +1,10 @@
+2008-09-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c: (create_session),
+	(gst_rtp_bin_associate), (gst_rtp_bin_sync_chain):
+	Do not try to adjust the offset of streams for which we have not yet
+	seen an SR packet. Avoids large ts-offsets in some cases.
+
 2008-09-10  Michael Smith <msmith@songbirdnest.com>
 
 	* sys/dshowdecwrapper/Makefile.am:

@@ -832,7 +832,9 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
       goto no_clock_rate;
   }
 
-  /* map last RTP time to local timeline using our clock-base */
+  /* take the extended rtptime we found in the SR packet and map it to the
+   * local rtptime. The local rtp time is used to construct timestamps on the
+   * buffers. */
   stream->local_rtp = stream->last_extrtptime - stream->clock_base;
 
   GST_DEBUG_OBJECT (bin,
@@ -840,12 +842,16 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
       ", local RTP %" G_GUINT64_FORMAT ", clock-rate %d", stream->clock_base,
       stream->last_extrtptime, stream->local_rtp, stream->clock_rate);
 
-  /* calculate local NTP time in gstreamer timestamp */
+  /* calculate local NTP time in gstreamer timestamp, we essentially perform the
+   * same conversion that a jitterbuffer would use to convert an rtp timestamp
+   * into a corresponding gstreamer timestamp. */
   stream->local_unix =
       gst_util_uint64_scale_int (stream->local_rtp, GST_SECOND,
       stream->clock_rate);
   stream->local_unix += stream->clock_base_time;
-  /* calculate delta between server and receiver */
+  /* calculate delta between server and receiver. last_unix is created by
+   * converting the ntptime in the last SR packet to a gstreamer timestamp. This
+   * delta expresses the difference to our timeline and the server timeline. */
   stream->unix_delta = stream->last_unix - stream->local_unix;
 
   GST_DEBUG_OBJECT (bin,
@@ -853,17 +859,28 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
       ", delta %" G_GINT64_FORMAT, stream->local_unix, stream->last_unix,
       stream->unix_delta);
 
-  /* recalc inter stream playout offset, but only if there are more than one
+  /* recalc inter stream playout offset, but only if there is more than one
    * stream. */
   if (client->nstreams > 1) {
     gint64 min;
 
-    /* calculate the min of all deltas */
+    /* calculate the min of all deltas, ignoring streams that did not yet have a
+     * valid unix_delta because we did not yet receive an SR packet for those
+     * streams. 
+     * We calculate the mininum because we would like to only apply positive
+     * offsets to streams, delaying their playback instead of trying to speed up
+     * other streams (which might be imposible when we have to create negative
+     * latencies).
+     * The stream that has the smalest diff is selected as the reference stream,
+     * all other streams will have a positive offset to this difference. */
     min = G_MAXINT64;
     for (walk = client->streams; walk; walk = g_slist_next (walk)) {
       GstRtpBinStream *ostream = (GstRtpBinStream *) walk->data;
 
-      if (ostream->unix_delta && ostream->unix_delta < min)
+      if (!ostream->have_sync)
+        continue;
+
+      if (ostream->unix_delta < min)
         min = ostream->unix_delta;
     }
 
@@ -875,6 +892,14 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
       GstRtpBinStream *ostream = (GstRtpBinStream *) walk->data;
       gint64 prev_ts_offset;
 
+      /* ignore streams for which we didn't receive an SR packet yet, we
+       * can't synchronize them yet. We can however sync other streams just
+       * fine. */
+      if (!ostream->have_sync)
+        continue;
+
+      /* calculate offset to our reference stream, this should always give a
+       * positive number. */
       ostream->ts_offset = ostream->unix_delta - min;
 
       g_object_get (ostream->buffer, "ts-offset", &prev_ts_offset, NULL);
@@ -905,6 +930,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     }
   }
   GST_RTP_BIN_UNLOCK (bin);
+
   return;
 
 no_clock_base:
@@ -958,7 +984,8 @@ gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
 
   /* get the last relation between the rtp timestamps and the gstreamer
    * timestamps. We get this info directly from the jitterbuffer which
-   * constructs gstreamer timestamps from rtp timestamps */
+   * constructs gstreamer timestamps from rtp timestamps and so it know exactly
+   * what the current situation is. */
   gst_rtp_jitter_buffer_get_sync (GST_RTP_JITTER_BUFFER (stream->buffer),
       &clock_base, &clock_base_time);
 
