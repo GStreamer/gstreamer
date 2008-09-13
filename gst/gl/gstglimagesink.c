@@ -109,6 +109,8 @@ gst_glimage_sink_init_interfaces (GType type)
 
   g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &xoverlay_info);
 
+  GST_DEBUG_CATEGORY_INIT (gst_debug_glimage_sink, "glimagesink", 0,
+    "OpenGL Video Sink");
 }
 
 static void

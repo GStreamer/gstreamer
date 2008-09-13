@@ -24,9 +24,23 @@
 #endif
 
 #include "gstgldisplay.h"
-#include <gst/gst.h>
 
-GST_BOILERPLATE (GstGLDisplay, gst_gl_display, GObject, G_TYPE_OBJECT);
+/*
+ * gst-launch-0.10 --gst-debug=gldisplay:N pipeline
+ * N=1: errors
+ * N=2: errors warnings
+ * N=3: errors warnings infos
+ * N=4: errors warnings infos logs
+ * N=5: errors warnings infos logs .?.
+ */
+
+GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
+#define GST_CAT_DEFAULT gst_gl_display_debug
+
+#define DEBUG_INIT(bla) \
+  GST_DEBUG_CATEGORY_INIT (gst_gl_display_debug, "gldisplay", 0, "opengl display");
+
+GST_BOILERPLATE_FULL (GstGLDisplay, gst_gl_display, GObject, G_TYPE_OBJECT, DEBUG_INIT);
 static void gst_gl_display_finalize (GObject* object);
 
 /* GL thread loop */
@@ -462,7 +476,7 @@ gst_gl_display_finalize (GObject* object)
   if (g_hash_table_size (gst_gl_display_map) == 0)
   {
     g_thread_join (gst_gl_display_gl_thread);
-    g_print ("gl thread joined\n");
+    GST_CAT_INFO (GST_CAT_DEFAULT, "gl thread joined");
     gst_gl_display_gl_thread = NULL;
     g_async_queue_unref (gst_gl_display_messageQueue);
     g_hash_table_unref (gst_gl_display_map);
@@ -497,9 +511,9 @@ gst_gl_display_thread_func (GstGLDisplay *display)
   gst_gl_display_thread_create_context (display);
   gst_gl_display_unlock (display);
 
-  g_print ("gl mainLoop started\n");
+  GST_CAT_INFO (GST_CAT_DEFAULT, "gl mainLoop started");
   glutMainLoop ();
-  g_print ("gl mainLoop exited\n");
+  GST_CAT_INFO (GST_CAT_DEFAULT, "gl mainLoop exited");
 
   return NULL;
 }
@@ -527,7 +541,7 @@ gst_gl_display_thread_loop (void)
 	gst_gl_display_thread_dispatch_action (msg);
     }
   }
-  else g_print ("timeout reached in idle func\n");
+  else GST_CAT_INFO (GST_CAT_DEFAULT, "timeout reached in idle func");
 }
 
 
@@ -674,7 +688,7 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
   display->title =  g_string_append (display->title, buffer);
   glutWinId = glutCreateWindow (display->title->str, display->winId);
 
-  g_print ("Context %d created\n", glutWinId);
+  GST_CAT_INFO (GST_CAT_DEFAULT, "Context %d created", glutWinId);
 
   if (display->visible)
     glutShowWindow ();
@@ -685,7 +699,8 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
   err = glewInit();
   if (err != GLEW_OK)
   {
-    g_print ("Error: %s\n", glewGetErrorString(err));
+    GST_CAT_ERROR_OBJECT (GST_CAT_DEFAULT, display, "Failed to init GLEW: %s", 
+      glewGetErrorString (err));
     display->isAlive = FALSE;
   }
   else
@@ -697,23 +712,23 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
 
     sscanf(opengl_version->str, "%d.%d", &opengl_version_major, &opengl_version_minor);
 
-    g_print ("GL_VERSION: %s\n", glGetString (GL_VERSION));
-    g_print ("GLEW_VERSION: %s\n", glewGetString (GLEW_VERSION));
+    GST_CAT_INFO (GST_CAT_DEFAULT, "GL_VERSION: %s", glGetString (GL_VERSION));
+    GST_CAT_INFO (GST_CAT_DEFAULT, "GLEW_VERSION: %s", glewGetString (GLEW_VERSION));
     if (glGetString (GL_SHADING_LANGUAGE_VERSION))
-      g_print ("GL_SHADING_LANGUAGE_VERSION: %s\n", glGetString (GL_SHADING_LANGUAGE_VERSION));
+      GST_CAT_INFO (GST_CAT_DEFAULT, "GL_SHADING_LANGUAGE_VERSION: %s", glGetString (GL_SHADING_LANGUAGE_VERSION));
 
-    g_print ("GL_VENDOR: %s\n", glGetString (GL_VENDOR));
-    g_print ("GL_RENDERER: %s\n", glGetString (GL_RENDERER));
+    GST_CAT_INFO (GST_CAT_DEFAULT, "GL_VENDOR: %s", glGetString (GL_VENDOR));
+    GST_CAT_INFO (GST_CAT_DEFAULT, "GL_RENDERER: %s", glGetString (GL_RENDERER));
 
     g_string_free (opengl_version, TRUE);
 
-    if ((opengl_version_major  < 1) ||
-	(GLEW_VERSION_MAJOR    < 1) ||
-	(opengl_version_major < 2 && opengl_version_major >= 1 && opengl_version_minor < 2) ||
-	(GLEW_VERSION_MAJOR   < 2 && GLEW_VERSION_MAJOR   >= 1 && GLEW_VERSION_MINOR   < 4) )
+    if ((opengl_version_major < 1) ||
+        (GLEW_VERSION_MAJOR   < 1) ||
+        (opengl_version_major < 2 && opengl_version_major >= 1 && opengl_version_minor < 2) ||
+        (GLEW_VERSION_MAJOR   < 2 && GLEW_VERSION_MAJOR   >= 1 && GLEW_VERSION_MINOR   < 4) )
     {
       //turn off the pipeline, the old drivers are not yet supported
-      g_warning ("Required OpenGL >= 1.2.0 and Glew >= 1.4.0\n");
+      GST_CAT_WARNING (GST_CAT_DEFAULT, "Required OpenGL >= 1.2.0 and Glew >= 1.4.0");
       display->isAlive = FALSE;
     }
   }
@@ -729,7 +744,7 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
 
   //check glut id validity
   g_assert (glutGetWindow() == glutWinId);
-  g_print ("Context %d initialized\n", display->glutWinId);
+  GST_CAT_INFO (GST_CAT_DEFAULT, "Context %d initialized", display->glutWinId);
 
   //release display constructor
   g_cond_signal (display->cond_create_context);
@@ -855,7 +870,7 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
     NULL);
 
   g_hash_table_remove (gst_gl_display_map, GINT_TO_POINTER (display->glutWinId));
-  g_print ("Context %d destroyed\n", display->glutWinId);
+  GST_CAT_INFO (GST_CAT_DEFAULT, "Context %d destroyed", display->glutWinId);
 
   //if the map is empty, leaveMainloop and join the thread
   if (g_hash_table_size (gst_gl_display_map) == 0)
@@ -967,7 +982,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
     /* shouldn't we require ARB_shading_language_100? --Filippo */
     if (GLEW_ARB_fragment_shader)
     {
-      g_print ("Context %d, ARB_fragment_shader supported: yes\n", display->glutWinId);
+      GST_CAT_INFO (GST_CAT_DEFAULT, "Context %d, ARB_fragment_shader supported: yes", display->glutWinId);
 
       //Frame buffer object is a requirement for every cases
       if (GLEW_EXT_framebuffer_object)
@@ -975,7 +990,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
 	      //a texture must be attached to the FBO
 	      GLuint fake_texture = 0;
 
-	      g_print ("Context %d, EXT_framebuffer_object supported: yes\n", display->glutWinId);
+	      GST_CAT_INFO (GST_CAT_DEFAULT, "Context %d, EXT_framebuffer_object supported: yes", display->glutWinId);
 
 	      //-- init intput frame buffer object (video -> GL)
 
@@ -1016,7 +1031,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
       else
       {
 	      //turn off the pipeline because Frame buffer object is a not present
-	      g_print ("Context %d, EXT_framebuffer_object supported: no\n", display->glutWinId);
+	      GST_CAT_WARNING (GST_CAT_DEFAULT, "Context %d, EXT_framebuffer_object supported: no", display->glutWinId);
 	      display->isAlive = FALSE;
         break;
       }
@@ -1095,9 +1110,9 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
     else if (GLEW_MESA_ycbcr_texture)
     {
       //GLSL and Color Matrix are not available on your drivers, switch to YCBCR MESA
-      g_print ("Context %d, ARB_fragment_shader supported: no\n", display->glutWinId);
-      g_print ("Context %d, GLEW_ARB_imaging supported: no\n", display->glutWinId);
-      g_print ("Context %d, GLEW_MESA_ycbcr_texture supported: yes\n", display->glutWinId);
+      GST_CAT_INFO (GST_CAT_DEFAULT, "Context %d, ARB_fragment_shader supported: no", display->glutWinId);
+      GST_CAT_INFO (GST_CAT_DEFAULT, "Context %d, GLEW_ARB_imaging supported: no", display->glutWinId);
+      GST_CAT_INFO (GST_CAT_DEFAULT, "Context %d, GLEW_MESA_ycbcr_texture supported: yes", display->glutWinId);
 
       display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
 
@@ -1121,20 +1136,21 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
     else if (GLEW_ARB_imaging)
     {
       //GLSL is not available on your drivers, switch to Color Matrix
-      g_print ("Context %d, ARB_fragment_shader supported: no\n", display->glutWinId);
-      g_print ("Context %d, GLEW_MESA_ycbcr_texture supported: no\n", display->glutWinId);
-      g_print ("Context %d, GLEW_ARB_imaging supported: yes\n", display->glutWinId);
+      GST_CAT_INFO (GST_CAT_DEFAULT, "Context %d, ARB_fragment_shader supported: no", display->glutWinId);
+      GST_CAT_INFO (GST_CAT_DEFAULT, "Context %d, GLEW_MESA_ycbcr_texture supported: no", display->glutWinId);
+      GST_CAT_INFO (GST_CAT_DEFAULT, "Context %d, GLEW_ARB_imaging supported: yes", display->glutWinId);
 
       display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MATRIX;
 
       //turn off the pipeline because we do not support it yet
+      GST_CAT_WARNING (GST_CAT_DEFAULT, "Colorspace conversion using Color Matrix is not yet supported");
       display->isAlive = FALSE;
     }
     else
     {
-      g_print ("Context %d, ARB_fragment_shader supported: no\n", display->glutWinId);
-      g_print ("Context %d, GLEW_ARB_imaging supported: no\n", display->glutWinId);
-      g_print ("Context %d, GLEW_MESA_ycbcr_texture supported: no\n", display->glutWinId);
+      GST_CAT_WARNING (GST_CAT_DEFAULT, "Context %d, ARB_fragment_shader supported: no", display->glutWinId);
+      GST_CAT_WARNING (GST_CAT_DEFAULT, "Context %d, GLEW_ARB_imaging supported: no", display->glutWinId);
+      GST_CAT_WARNING (GST_CAT_DEFAULT, "Context %d, GLEW_MESA_ycbcr_texture supported: no", display->glutWinId);
 
       //turn off the pipeline because colorspace conversion is not possible
       display->isAlive = FALSE;
@@ -1321,8 +1337,9 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
       }
       else
       {
-        //turn off the pipeline because Frame buffer object is a requirement
-        g_print ("Context %d, EXT_framebuffer_object supported: no\n", display->glutWinId);
+        //turn off the pipeline because Frame buffer object is a requirement when using filters 
+        //or when using GLSL colorspace conversion
+        GST_CAT_WARNING (GST_CAT_DEFAULT, "Context %d, EXT_framebuffer_object supported: no", display->glutWinId);
         display->isAlive = FALSE;
       }
     }
@@ -1823,7 +1840,7 @@ void gst_gl_display_on_close (void)
   //glutGetWindow return 0 if no windows exists, then g_hash_table_lookup return NULL
   if (display == NULL) return;
 
-  g_print ("on close\n");
+  GST_CAT_INFO (GST_CAT_DEFAULT, "on close");
 
   gst_gl_display_lock (display);
   display->isAlive = FALSE;
@@ -1909,8 +1926,8 @@ gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
     sub_texture_pool = g_queue_new ();
     g_hash_table_insert (display->texture_pool, string_size, sub_texture_pool);
 
-    g_print ("texture pool insert: %s\n", string_size);
-    g_print ("texture pool size: %d\n", g_hash_table_size (display->texture_pool));
+    GST_CAT_INFO (GST_CAT_DEFAULT, "texture pool insert: %s", string_size);
+    GST_CAT_INFO (GST_CAT_DEFAULT, "texture pool size: %d", g_hash_table_size (display->texture_pool));
   }
 
   //contruct a sub texture pool element
@@ -1953,11 +1970,11 @@ gst_gl_display_check_framebuffer_status(void)
     break;
 
   case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-    g_print ("GL_FRAMEBUFFER_UNSUPPORTED_EXT\n");
+    GST_CAT_ERROR (GST_CAT_DEFAULT, "GL_FRAMEBUFFER_UNSUPPORTED_EXT");
     break;
 
   default:
-    g_print ("General FBO error\n");
+    GST_CAT_ERROR (GST_CAT_DEFAULT, "General FBO error\n");
   }
 }
 

@@ -26,7 +26,7 @@
 
 
 #define GST_CAT_DEFAULT gst_gl_upload_debug
-	GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails element_details =
     GST_ELEMENT_DETAILS ("OpenGL upload",
