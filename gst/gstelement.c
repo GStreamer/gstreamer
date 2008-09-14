@@ -1840,6 +1840,7 @@ failed:
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
         "syncing state failed (%s)",
         gst_element_state_change_return_get_name (ret));
+    gst_object_unref (parent);
     return FALSE;
   }
 }
