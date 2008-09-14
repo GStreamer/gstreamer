@@ -44,6 +44,8 @@ static void gst_gl_effects_get_property (GObject * object, guint prop_id,
 static void gst_gl_effects_init_resources (GstGLFilter* filter);
 static void gst_gl_effects_reset_resources (GstGLFilter* filter);
 
+static void gst_gl_effects_on_init_gl_context (GstGLFilter* filter);
+
 static void gst_gl_effects_ghash_func_clean (gpointer key, gpointer value, gpointer data);
 
 static gboolean gst_gl_effects_filter (GstGLFilter * filter,
@@ -219,6 +221,7 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
   GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_effects_reset_gl_resources;
   GST_GL_FILTER_CLASS (klass)->onStart = gst_gl_effects_init_resources;
   GST_GL_FILTER_CLASS (klass)->onStop = gst_gl_effects_reset_resources;
+  GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_effects_on_init_gl_context;
 
   g_object_class_install_property (
     gobject_class,
@@ -369,6 +372,14 @@ gst_gl_effects_init_resources (GstGLFilter* filter)
   for (i=0; i<GST_GL_EFFECTS_N_CURVES; i++) {
     effects->curve[i] = 0;
   }
+}
+
+static void
+gst_gl_effects_on_init_gl_context (GstGLFilter* filter)
+{
+  //check that your hardware supports shader
+  //if not the pipeline correctly shut down
+  gst_gl_display_gen_shader (filter->display, 0, 0, NULL);
 }
 
 static gboolean
