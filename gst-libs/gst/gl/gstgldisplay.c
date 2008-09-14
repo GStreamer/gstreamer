@@ -1624,32 +1624,36 @@ gst_gl_display_thread_gen_shader (GstGLDisplay* display)
   glutSetWindow (display->glutWinId);
   if (GLEW_ARB_fragment_shader)
   {
-    gboolean isAlive = TRUE;
-    GError *error = NULL;
-
-    display->gen_shader = gst_gl_shader_new ();
-
-    if (display->gen_shader_vertex_source)
-      gst_gl_shader_set_vertex_source(display->gen_shader, display->gen_shader_vertex_source);
-
-    if (display->gen_shader_fragment_source)
-      gst_gl_shader_set_fragment_source(display->gen_shader, display->gen_shader_fragment_source);
-
-    gst_gl_shader_compile (display->gen_shader, &error);
-    if (error)
+    if (display->gen_shader_vertex_source ||
+         display->gen_shader_fragment_source)
     {
-      GST_CAT_ERROR (GST_CAT_DEFAULT, "%s", error->message);
-      g_error_free (error);
-      error = NULL;
-      gst_gl_shader_use (NULL);
-      isAlive = FALSE;
-    }
+      gboolean isAlive = TRUE;
+      GError *error = NULL;
+      
+      display->gen_shader = gst_gl_shader_new ();
 
-    if (!isAlive)
-    {
-      display->isAlive = FALSE;
-      g_object_unref (G_OBJECT (display->gen_shader));
-      display->gen_shader = NULL;
+      if (display->gen_shader_vertex_source)
+        gst_gl_shader_set_vertex_source(display->gen_shader, display->gen_shader_vertex_source);
+
+      if (display->gen_shader_fragment_source)
+        gst_gl_shader_set_fragment_source(display->gen_shader, display->gen_shader_fragment_source);
+
+      gst_gl_shader_compile (display->gen_shader, &error);
+      if (error)
+      {
+        GST_CAT_ERROR (GST_CAT_DEFAULT, "%s", error->message);
+        g_error_free (error);
+        error = NULL;
+        gst_gl_shader_use (NULL);
+        isAlive = FALSE;
+      }
+
+      if (!isAlive)
+      {
+        display->isAlive = FALSE;
+        g_object_unref (G_OBJECT (display->gen_shader));
+        display->gen_shader = NULL;
+      }
     }
   }
   else
@@ -2297,7 +2301,8 @@ gst_gl_display_gen_shader (GstGLDisplay* display,
   display->gen_shader_fragment_source = shader_fragment_source;
   gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_GEN_SHADER, display);
   g_cond_wait (display->cond_gen_shader, display->mutex);
-  *shader = display->gen_shader;
+  if (shader)
+    *shader = display->gen_shader;
   display->gen_shader = NULL;
   display->gen_shader_vertex_source = NULL;
   display->gen_shader_fragment_source = NULL;
