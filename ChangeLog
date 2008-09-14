@@ -1,3 +1,10 @@
+2008-09-14  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	Patch by: Jonathan Matthew <notverysmart@gmail.com>
+	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):
+	Add mapping for 'tiff' => image/tiff
+	Fixes #552213
+
 2008-09-11  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 

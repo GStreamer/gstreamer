@@ -4750,6 +4750,10 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("Dirac");
       caps = gst_caps_from_string ("video/x-dirac");
       break;
+    case GST_MAKE_FOURCC ('t', 'i', 'f', 'f'):
+      _codec ("TIFF still images");
+      caps = gst_caps_from_string ("image/tiff");
+      break;
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
     {
