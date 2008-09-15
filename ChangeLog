@@ -1,3 +1,10 @@
+2008-09-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Do not probe availability of check unit test library when cross
+	  compiling, as test would not work anyway. Also cleanup verbose output
+	  of the check test. Fixes #551952.
+
 2008-09-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Based on patch by: Antoine Tremblay <hexa00 at gmail dot com>

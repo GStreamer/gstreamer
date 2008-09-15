@@ -498,13 +498,13 @@ fi
 AC_SUBST(GST_DISABLE_XML_DEFINE)
 
 dnl check for "check", unit testing library/header
-AM_PATH_CHECK(0.9.2,
-    [
-        HAVE_CHECK=yes
-        AC_MSG_NOTICE(CHECK_CFLAGS: $CHECK_CFLAGS)
-        AC_MSG_NOTICE(CHECK_LIBS: $CHECK_LIBS)
-    ],
-    HAVE_CHECK=no)
+if test "$cross_compiling" != yes; then
+  AM_PATH_CHECK(0.9.2,
+      HAVE_CHECK=yes,
+      HAVE_CHECK=no)
+else
+  HAVE_CHECK=no
+fi
 AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
 
 dnl pkg-config check that for libcheck that works for cross-compiling
