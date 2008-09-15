@@ -67,15 +67,70 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         /* "maxdisplacement = (string) [1,MAX], " */
         /* "de-interleavebuffersize = (string) [1,MAX], " */
         /* Optional configuration parameters */
-        /* "sizelength = (string) [1, 16], " *//* max 16 bits, should be enough... */
-        /* "indexlength = (string) [1, 8], " */
-        /* "indexdeltalength = (string) [1, 8], " */
-        /* "ctsdeltalength = (string) [1, 64], " */
-        /* "dtsdeltalength = (string) [1, 64], " */
+        /* "sizelength = (string) [1, 32], " */
+        /* "indexlength = (string) [1, 32], " */
+        /* "indexdeltalength = (string) [1, 32], " */
+        /* "ctsdeltalength = (string) [1, 32], " */
+        /* "dtsdeltalength = (string) [1, 32], " */
         /* "randomaccessindication = (string) {0, 1}, " */
-        /* "streamstateindication = (string) [0, 64], " */
-        /* "auxiliarydatasizelength = (string) [0, 64]" */ )
+        /* "streamstateindication = (string) [0, 32], " */
+        /* "auxiliarydatasizelength = (string) [0, 32]" */ )
     );
+
+/* simple bitstream parser */
+typedef struct
+{
+  const guint8 *data;
+  const guint8 *end;
+  gint head;                    /* bitpos in the cache of next bit */
+  guint64 cache;                /* cached bytes */
+} GstBsParse;
+
+static void
+gst_bs_parse_init (GstBsParse * bs, const guint8 * data, guint size)
+{
+  bs->data = data;
+  bs->end = data + size;
+  bs->head = 0;
+  bs->cache = 0xffffffff;
+}
+
+static guint32
+gst_bs_parse_read (GstBsParse * bs, guint n)
+{
+  guint32 res = 0;
+  gint shift;
+
+  if (n == 0)
+    return res;
+
+  /* fill up the cache if we need to */
+  while (bs->head < n) {
+    if (bs->data >= bs->end) {
+      /* we're at the end, can't produce more than head number of bits */
+      n = bs->head;
+      break;
+    }
+    /* shift bytes in cache, moving the head bits of the cache left */
+    bs->cache = (bs->cache << 8) | *bs->data++;
+    bs->head += 8;
+  }
+
+  /* bring the required bits down and truncate */
+  if ((shift = bs->head - n) > 0)
+    res = bs->cache >> shift;
+  else
+    res = bs->cache;
+
+  /* mask out required bits */
+  if (n < 32)
+    res &= (1 << n) - 1;
+
+  bs->head = shift;
+
+  return res;
+}
+
 
 GST_BOILERPLATE (GstRtpMP4GDepay, gst_rtp_mp4g_depay, GstBaseRTPDepayload,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
@@ -261,22 +316,25 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   {
-    gint payload_len, payload_header;
+    gint payload_len, payload_AU;
     guint8 *payload;
     guint32 timestamp;
     guint AU_headers_len;
-    guint AU_size, AU_index;
+    guint AU_size, AU_index, payload_AU_size;
     gboolean M;
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
-    payload_header = 0;
 
     timestamp = gst_rtp_buffer_get_timestamp (buf);
     M = gst_rtp_buffer_get_marker (buf);
 
     if (rtpmp4gdepay->sizelength > 0) {
       gint num_AU_headers, AU_headers_bytes, i;
+      GstBsParse bs;
+
+      if (payload_len < 2)
+        goto short_payload;
 
       /* +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- .. -+-+-+-+-+-+-+-+-+-+
        * |AU-headers-length|AU-header|AU-header|      |AU-header|padding|
@@ -295,22 +353,67 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
       /* skip header */
       payload += 2;
-      /* skip special headers */
-      payload_header = 2 + AU_headers_bytes;
+      payload_len -= 2;
 
-      for (i = 0; i < num_AU_headers; i++) {
-        /* FIXME, use bits */
-        AU_size = ((payload[0] << 8) | payload[1]) >> 3;
-        AU_index = payload[1] & 0x7;
-        payload += 2;
+      if (payload_len < AU_headers_bytes)
+        goto short_payload;
 
-        GST_DEBUG_OBJECT (rtpmp4gdepay, "len, %d, size %d, index %d",
-            AU_headers_len, AU_size, AU_index);
+      /* skip special headers, point to first payload AU */
+      payload_AU = 2 + AU_headers_bytes;
+      payload_AU_size = payload_len - AU_headers_bytes;
+
+      /* point the bitstream parser to the first AU header bit */
+      gst_bs_parse_init (&bs, payload, payload_len);
+
+      for (i = 0; i < num_AU_headers && payload_AU_size > 0; i++) {
+        /* parse AU header
+         *  +---------------------------------------+
+         *  |     AU-size                           |
+         *  +---------------------------------------+
+         *  |     AU-Index / AU-Index-delta         |
+         *  +---------------------------------------+
+         *  |     CTS-flag                          |
+         *  +---------------------------------------+
+         *  |     CTS-delta                         |
+         *  +---------------------------------------+
+         *  |     DTS-flag                          |
+         *  +---------------------------------------+
+         *  |     DTS-delta                         |
+         *  +---------------------------------------+
+         *  |     RAP-flag                          |
+         *  +---------------------------------------+
+         *  |     Stream-state                      |
+         *  +---------------------------------------+
+         */
+        AU_size = gst_bs_parse_read (&bs, rtpmp4gdepay->sizelength);
+        if (i == 0)
+          AU_index = gst_bs_parse_read (&bs, rtpmp4gdepay->indexlength);
+        else
+          AU_index = gst_bs_parse_read (&bs, rtpmp4gdepay->indexdeltalength);
+        if (rtpmp4gdepay->ctsdeltalength > 0) {
+          if (gst_bs_parse_read (&bs, 1))
+            gst_bs_parse_read (&bs, rtpmp4gdepay->ctsdeltalength);
+        }
+        if (rtpmp4gdepay->dtsdeltalength > 0) {
+          if (gst_bs_parse_read (&bs, 1))
+            gst_bs_parse_read (&bs, rtpmp4gdepay->dtsdeltalength);
+        }
+        if (rtpmp4gdepay->randomaccessindication)
+          gst_bs_parse_read (&bs, 1);
+        if (rtpmp4gdepay->streamstateindication > 0)
+          gst_bs_parse_read (&bs, rtpmp4gdepay->streamstateindication);
+
+        GST_DEBUG_OBJECT (rtpmp4gdepay, "size %d, index %d", AU_size, AU_index);
+
+        /* fragmented pakets have the AU_size set to the size of the
+         * unfragmented AU. */
+        if (AU_size > payload_AU_size)
+          AU_size = payload_AU_size;
 
         /* collect stuff in the adapter, strip header from payload and push in
          * the adapter */
         outbuf =
-            gst_rtp_buffer_get_payload_subbuffer (buf, payload_header, AU_size);
+            gst_rtp_buffer_get_payload_subbuffer (buf, payload_AU, AU_size);
         gst_adapter_push (rtpmp4gdepay->adapter, outbuf);
 
         if (M) {
@@ -331,7 +434,8 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
           else
             gst_base_rtp_depayload_push (depayload, outbuf);
         }
-        payload_header += AU_size;
+        payload_AU += AU_size;
+        payload_AU_size -= AU_size;
       }
     } else {
       /* push complete buffer in adapter */
@@ -361,6 +465,12 @@ bad_packet:
   {
     GST_ELEMENT_WARNING (rtpmp4gdepay, STREAM, DECODE,
         ("Packet did not validate."), (NULL));
+    return NULL;
+  }
+short_payload:
+  {
+    GST_ELEMENT_WARNING (rtpmp4gdepay, STREAM, DECODE,
+        ("Packet payload was too short."), (NULL));
     return NULL;
   }
 }

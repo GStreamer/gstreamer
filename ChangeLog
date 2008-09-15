@@ -1,3 +1,14 @@
+2008-09-15  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpmp4gdepay.c: (gst_bs_parse_init),
+	(gst_bs_parse_read), (gst_rtp_mp4g_depay_process):
+	Change some of the ranges in the caps, mostly for the amount of bits we
+	can use.
+	Added a little bitstream parse and use it to parse the AU header fields.
+	Check for malformed and wrongly sized packets better.
+	Implement more header field parsing.
+	Handle the size of fragmented packets correctly.
+
 2008-09-14  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	Patch by: Jonathan Matthew <notverysmart@gmail.com>
